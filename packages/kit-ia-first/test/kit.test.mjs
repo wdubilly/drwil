@@ -296,3 +296,54 @@ test("ci: none : pas de CI, la couverture QUA-013 est signalée non exécutée (
   assert.match(r.stdout, /non exécuté : couverture CI de chaque contrôle.*aucune CI configurée/s);
 });
 
+test("lot 5 : check-file-size et check-code-rules livrés mais opt-in (pas lancés par défaut)", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  for (const f of ["check-file-size.mjs", "check-file-size.legacy.json", "check-code-rules.mjs"]) {
+    assert.ok(existsSync(join(dir, ".githooks", f)), f);
+  }
+  assert.equal(checks(dir).status, 0, "aucun des deux ne tourne tant que le projet ne les déclare pas");
+});
+
+test("check-file-size.mjs détecte un fichier trop gros une fois déclaré par le projet", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  const cfg = config(dir);
+  cfg.checks = [{ name: "taille des fichiers", run: "node .githooks/check-file-size.mjs src 10 ts" }];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+  mkdirSync(join(dir, "src"), { recursive: true });
+  writeFileSync(join(dir, "src/gros.ts"), "x\n".repeat(20));
+  const r = checks(dir);
+  assert.equal(r.status, 1);
+  assert.match(r.stdout + r.stderr, /src\/gros\.ts : 20 lignes, maximum 10/);
+});
+
+test("check-file-size.mjs : un plafond hérité laisse passer un fichier déjà gros mais pas plus gros", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  writeFileSync(join(dir, ".githooks/check-file-size.legacy.json"), JSON.stringify({ "src/legacy.ts": 25 }));
+  mkdirSync(join(dir, "src"), { recursive: true });
+  writeFileSync(join(dir, "src/legacy.ts"), "x\n".repeat(20));
+  let r = spawnSync(process.execPath, [".githooks/check-file-size.mjs", "src", "10", "ts"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  writeFileSync(join(dir, "src/legacy.ts"), "x\n".repeat(30));
+  r = spawnSync(process.execPath, [".githooks/check-file-size.mjs", "src", "10", "ts"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 1);
+  assert.match(r.stdout + r.stderr, /plafond hérité 25/);
+});
+
+test("check-code-rules.mjs : vide par défaut, toujours vert", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  const r = spawnSync(process.execPath, [".githooks/check-code-rules.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
+test("lot 5 : le module qualité front optionnel n'est pas installé par init/apply", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  for (const f of ["check-colors.mjs", "check-contrast.mjs"]) {
+    assert.ok(!existsSync(join(dir, ".githooks", f)), f);
+  }
+});
+
