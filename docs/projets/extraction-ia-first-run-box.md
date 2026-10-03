@@ -1,6 +1,6 @@
 # Projet : extraire l'architecture IA-first complète de run-box-v2 dans le kit
 
-**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 à 5 terminés** ; demandeur a validé le passage jusqu'au bout des lots restants (2026-10-04) ; lot 6 (adoption par l'IA) à suivre.
+**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 à 6 terminés** ; demandeur a validé le passage jusqu'au bout des lots restants (2026-10-04) ; lots 7 (traduction anglaise) et 8 (preuve « rien perdu ») à suivre.
 
 ## 1. Besoin
 
@@ -324,6 +324,34 @@ Confirmées par le demandeur le 2026-10-03 :
   plafond hérité qui ne peut pas remonter, règles vides toujours vertes,
   module qualité front non installé par `init`/`apply`). 24/24 tests
   verts ; contrôles racine drwil verts (`bash .githooks/run-checks.sh`).
-- **Prochaine étape** : lot 6 (adoption par l'IA : recette + skill
-  « adopter le kit », catalogue de contrats pour les pièces hors socle dont
-  la taille de fichiers).
+- **Lot 6 — Adoption par l'IA** : terminé. `docs/catalogue-contrats.md`
+  (nouveau, livré à tous les projets par défaut, sous `fr/base`) : 10
+  contrats génériques fréquents mais pas installés par défaut (SEC-001,
+  SEC-002, SEC-009, SEC-011, QUA-001, QUA-004, QUA-005, QUA-006, QUA-007,
+  QUA-014 — même numérotation que run-box-v2 par cohérence avec
+  l'inventaire du cadrage, sans collision avec le socle SEC-006/007,
+  QUA-011/013/015/016), chacun avec règle, périmètre et contrôle type. IDs
+  du catalogue préfixés `catalogue:` dans le tableau (réutilise le
+  mécanisme d'échappement déjà existant dans `check-docs.mjs` pour un ID
+  d'un autre dépôt, ex. `run-box-v2:QUA-011` — sinon QUA-011 refuse le
+  commit car l'ID n'est pas encore dans le registre du projet) ; retiré à
+  l'adoption quand la ligne migre vers `docs/contrats.md` sans ce préfixe.
+  `docs/recettes/adopter-le-kit.md` (nouveau) : recette en 5 étapes (relire
+  la stack détectée, remplir les `AGENTS.md` de couche à partir du code
+  existant, déclarer les contrôles de la pile dans `checks`, proposer les
+  contrats du catalogue un par un — chaque choix un `[décision]` du
+  demandeur, jamais tranché à sa place —, vérifier et committer par sujet).
+  Skill Claude Code `.claude/skills/adopter-le-kit/SKILL.md` (pointeur vers
+  la recette, même convention que `refactorer-sans-casser` ; seul `claude`
+  a un dossier `skills/` parmi les outils du kit, pas d'équivalent à livrer
+  pour `copilot`/`cursor`). Routage ajouté dans `AGENTS.md` (« adopter le
+  kit sur un projet existant »), paragraphe ajouté dans `docs/ia-first.md`
+  (section 3) et 2 phrases dans `docs/contrats.md` renvoyant au catalogue.
+  2 tests ajoutés (catalogue + recette + skill livrés par défaut ; skill
+  absent sans Claude Code). 26/26 tests verts ; contrôles racine drwil
+  verts.
+- **Prochaine étape** : lot 7 (traduction anglaise de tout le contenu livré
+  depuis le lot 1, y compris les ajouts du lot 6, et des stubs restés
+  minimaux comme `refactorer-sans-casser.md` anglais), puis lot 8 (preuve
+  « rien perdu » : `apply` sur une copie de run-box-v2, comparaison, table
+  de correspondance à jour).
