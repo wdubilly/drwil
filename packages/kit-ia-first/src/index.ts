@@ -43,6 +43,26 @@ const KIT_MECHANICS = ".githooks/";
 const LAYER_TEMPLATES = ["backend", "frontend"];
 const CI_FILES: Record<Ci, string[]> = { none: [], github: [".github/workflows/ia-first.yml"], gitlab: [".gitlab-ci.yml"] };
 
+// Commandes de test/lint à autoriser par défaut dans .claude/settings.json, selon la techno détectée
+// (modèle à compléter par le projet : docs/projets/extraction-ia-first-run-box.md, lot 3).
+const STACK_ALLOW: Record<string, string[]> = {
+  "Node.js": ["npm test:*", "npm run:*", "npx vitest:*", "npx tsc:*", "npx eslint:*"],
+  "Python": ["pytest:*", "python3 -m pytest:*"],
+  "Go": ["go test:*", "go build:*"],
+  "Rust": ["cargo test:*", "cargo build:*"],
+  "Java/Maven": ["mvn test:*"],
+  "JVM/Gradle": ["./gradlew test:*"],
+  ".NET": ["dotnet test:*"],
+  "Ruby": ["bundle exec rspec:*"],
+  "PHP": ["composer test:*"],
+};
+
+function stackAllow(stack: StackEntry[]): string {
+  const technos = new Set(stack.flatMap(s => s.technos.flatMap(t => Object.keys(STACK_ALLOW).filter(k => t.includes(k)))));
+  const commandes = [...technos].flatMap(t => STACK_ALLOW[t]);
+  return commandes.map(c => `,\n      "Bash(${c})"`).join("");
+}
+
 const TEXT = {
   fr: {
     description: "(à décrire : ce que fait l'application, pour qui)",
@@ -120,6 +140,10 @@ function render(content: string, r: Resolved, extra: Record<string, string> = {}
     ciLine: ciFile ? t.ciLine(ciFile) : "",
     indexFile: t.dirs.index,
     date: new Date().toISOString().slice(0, 10),
+    // Fichiers propres au kit à couvrir par le bloc cadrage de mecanique-ia-first.md (lignes vides si absents).
+    cadrageCi: ciFile ? `  - ${ciFile}` : "",
+    cadrageClaude: r.tools.includes("claude") ? "  - .claude/settings.json" : "",
+    stackAllowJson: stackAllow(r.stack),
     ...extra,
   };
   // Remplacement par fonction : une valeur contenant « $& » ou « $1 » doit rester littérale.

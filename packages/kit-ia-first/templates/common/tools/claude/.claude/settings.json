@@ -1,6 +1,107 @@
 {
+  "_comment": "Réglages Claude Code partagés par l'équipe (versionnés). Les préférences personnelles — plugins, exemptions — vont dans .claude/settings.local.json, gitignoré. MODÈLE : un verbe shell autorisé n'est PAS forcément inoffensif — les sous-options d'un verbe (git -c core.sshCommand=…, git --upload-pack=…, find -exec, rg --pre) escaladent un verbe autorisé vers une exécution de commande arbitraire. Donc : allow pour les verbes réellement utilisés au quotidien, ask pour ce qui réécrit l'historique ou touche au monde extérieur, deny pour les sous-options dangereuses. Ordre d'évaluation : deny → ask → allow, premier match gagne ; deny bat TOUJOURS allow. Les deny git neutralisent les leviers d'exécution arbitraire connus (--upload-pack / --receive-pack exécutent une commande côté « remote », --ext-diff, --exec-path, et le fourre-tout '-c <clé>=<valeur>' qui couvre core.sshCommand / core.pager / core.fsmonitor / protocol.ext / alias=!cmd) — au prix de bloquer aussi 'git -c user.email=…' bénin, ce qui est acceptable ici. defaultMode 'default' fait déjà demander tout Bash non listé. NOTE : ne jamais mettre un 'Bash' nu dans 'ask' — il matche toute commande et rendrait inaccessibles les allow ci-dessous. NOTE : les métacaractères shell (| ; && $() ``) ne sont PAS gérables ici : Claude Code découpe une commande composée sur les opérateurs et matche chaque sous-commande, donc l'opérateur n'apparaît jamais dans la chaîne matchée et une règle 'Bash(*|*)' ne matche jamais. C'est le rôle du hook PreToolUse .claude/hooks/garde-fou-bash.mjs, qui voit la commande brute et fait demander l'accord (jamais un refus sec) sur un fichier de secrets ou un pipe vers un shell ; les règles Read(…) de 'ask' couvrent la lecture des mêmes fichiers par les outils Read, Grep et Glob, que le hook Bash ne voit pas. Le hook PostToolUse .claude/hooks/rappel-cadrage.mjs rappelle à l'agent, sans rien demander ni refuser, un fichier de code écrit hors de toute fiche (docs/projets/mecanique-ia-first.md). Commandes de stack (allow) : ajoutées automatiquement d'après la techno détectée à l'installation (docs/projets/extraction-ia-first-run-box.md, lot 3) ; à compléter à la main pour une stack non reconnue.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/garde-fou-bash.mjs\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/rappel-cadrage.mjs\""
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
-    "allow": ["Read(**)"],
-    "ask": ["Write(**)", "Edit(**)", "MultiEdit(**)", "Bash(**)"]
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(sort:*)",
+      "Bash(cut:*)",
+      "Bash(tr:*)",
+      "Bash(diff:*)",
+      "Bash(jq:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(git status)",
+      "Bash(git status:*)",
+      "Bash(git branch:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git remote:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git for-each-ref:*)",
+      "Bash(git tag:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git reset:*)",
+      "Bash(node .githooks/run-checks.mjs)",
+      "Bash(bash .githooks/run-checks.mjs)"{{stackAllowJson}}
+    ],
+    "ask": [
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git push:*)",
+      "Bash(rm -rf:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(rsync:*)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.prod)",
+      "Read(**/id_rsa*)",
+      "Read(**/id_ed25519*)",
+      "Read(**/id_ecdsa*)",
+      "Read(**/*.pem)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)",
+      "Read(**/*.jks)",
+      "Read(**/.netrc)",
+      "Read(**/.pgpass)"
+    ],
+    "deny": [
+      "Bash(git *-c *)",
+      "Bash(git *--exec-path*)",
+      "Bash(git *--ext-diff*)",
+      "Bash(git *--receive-pack*)",
+      "Bash(git *--upload-pack*)",
+      "Bash(find *-delete*)",
+      "Bash(find *-exec*)",
+      "Bash(find *-execdir*)",
+      "Bash(find *-fprint*)",
+      "Bash(find *-okdir*)",
+      "Bash(rg *--pre*)",
+      "Bash(rg *--search-zip*)",
+      "Bash(sort *--compress-program*)",
+      "Bash(cat *.netrc)",
+      "Bash(cat *.pgpass)"
+    ],
+    "defaultMode": "default"
   }
 }
