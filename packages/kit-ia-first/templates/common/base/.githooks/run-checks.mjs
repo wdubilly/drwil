@@ -79,7 +79,11 @@ controle(T.docs, process.execPath, [".githooks/check-docs.mjs"]);
 
 if (full) {
   const tests = existsSync(".githooks") ? readdirSync(".githooks").filter((f) => f.endsWith(".test.mjs")) : [];
-  if (tests.length) controle(T.testsControles, process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))]);
+  // NODE_TEST_CONTEXT se propage aux enfants : si run-checks.mjs est lui-même
+  // lancé depuis un `node --test` (ex. le paquet du kit qui teste ce hook en
+  // bout en bout), ce `node --test` imbriqué serait sinon silencieusement
+  // sauté (avertissement « called recursively »), masquant un vrai échec.
+  if (tests.length) controle(T.testsControles, process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))], { env: { ...process.env, NODE_TEST_CONTEXT: undefined } });
   else nonExecutes.push(`${T.testsControles} (${T.aucunTest})`);
 }
 

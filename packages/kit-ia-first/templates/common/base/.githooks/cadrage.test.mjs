@@ -7,7 +7,10 @@ import { fnmatch, tropLarge, lireBloc, estDuCode, fichesCouvrant } from "./cadra
 
 test("fnmatch : * et ? traversent les séparateurs, le reste est littéral", () => {
   assert.equal(fnmatch("backend/app/x.py", "backend/app/x*"), true);
-  assert.equal(fnmatch("backend/app/sous/x.py", "backend/app/x*"), true);
+  // Le `*` peut avaler un `/` (traverse les séparateurs) tant que le reste du motif reste littéral.
+  assert.equal(fnmatch("backend/app/x/sous.py", "backend/app/x*"), true);
+  // Mais un chemin qui ne commence pas par la partie littérale du motif ne matche pas.
+  assert.equal(fnmatch("backend/app/sous/x.py", "backend/app/x*"), false);
   assert.equal(fnmatch("backend/autre/x.py", "backend/app/x*"), false);
 });
 
