@@ -1,6 +1,6 @@
 # Projet : extraire l'architecture IA-first complète de run-box-v2 dans le kit
 
-**Statut** : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; lot 1 en cours.
+**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 et 2 terminés** ; lot 3 (cadrage, filet Claude Code) à confirmer avec le demandeur avant de l'entamer.
 
 ## 1. Besoin
 
@@ -166,32 +166,47 @@ Confirmées par le demandeur le 2026-10-03 :
 
 ## 6. Reprise
 
-- **Dernier état** (2026-10-03, fin de session) : décisions de la section 5
-  toutes tranchées. Lot 1 commencé mais **aucun fichier du lot écrit** :
-  l'écriture du nouvel `AGENTS.md` du kit a été interrompue. Les textes de
-  run-box nécessaires au lot 1 ont été relus (AGENTS.md, docs/ia-first.md,
-  préambule des contrats, recettes, skills, AGENTS.md de couche, format de
-  l'index et des intentions).
-- **Défaut trouvé, à corriger en tête du lot 1** : `init` réécrit
-  `docs/contrats.md`, `docs/projets/en-attente.md`, `AGENTS.md` et les autres
-  docs du projet, donc efface contrats, chantiers et consignes ajoutés par le
-  projet. Correction prévue : `init` ne remplace que `.githooks/` (mécanique du
-  kit), tout le reste n'est écrit que s'il manque, option `--force` pour tout
-  réécrire.
-- **Contenu prévu du lot 1** (modèles français, `packages/kit-ia-first/templates/fr/`) : AGENTS.md
+- **Dernier état** (2026-10-04) : **lot 1 terminé**, tous les éléments écrits
+  dans `packages/kit-ia-first/templates/fr/` : correctif `init` (ne réécrit
+  que `.githooks/` par défaut, `--force` pour tout réécrire) ; `AGENTS.md`
   complet (12 règles de conduite, contrats à connaître, tableau « si tu
-  touches à… » générique, dossiers externes, conventions) ; `docs/ia-first.md`
-  complet ; `docs/contrats.md` en tableau (préambule, socle run-box-v2:QUA-011, run-box-v2:QUA-013,
-  run-box-v2:QUA-015, run-box-v2:SEC-006, run-box-v2:SEC-007 avec preuve honnête, « Hors registre ») et
-  check-docs qui lit les lignes du tableau ; index au format cases à cocher ;
-  `docs/intentions/README.md` complet ; fiche permanente
-  docs/projets/entretien-courant.md (à créer dans les modèles) ; recettes génériques (refactorer sans
+  touches à… » générique, dépôts externes en option, conventions) ;
+  `docs/ia-first.md` complet (7 sections, avec mention honnête de ce qui
+  n'est pas encore outillé) ; `docs/contrats.md` en tableau (préambule,
+  socle run-box-v2:QUA-011, run-box-v2:QUA-013, run-box-v2:QUA-015,
+  run-box-v2:SEC-006, run-box-v2:SEC-007, « Hors registre ») avec
+  `check-docs.mjs` qui lit les ID en ligne de tableau ; index
+  `docs/projets/en-attente.md` au format cases à cocher ;
+  `docs/intentions/README.md` complet avec modèle de fiche ; modèle de fiche
+  projet (`docs/projets/modele-fiche-projet.md`) ; fiche permanente
+  `docs/projets/entretien-courant.md` ; recettes génériques (refactorer sans
   casser complète, route API, écran, droits, accès, lancer en local,
-  déployer, sauvegarder, ouvrir un chantier avec modèles de fiche) ; un skill
-  Claude par recette ; AGENTS.md de couche à sections ; squelettes README,
-  INSTALL, sécurité, déploiement, fonctionnalités ; `.gitignore` et
-  `.env.example`. Anglais au lot 7 : d'ici là, `packages/kit-ia-first/templates/en/` est en retard.
-- **Travail non commité** : tout le travail du 2026-10-03 sur le kit et les
-  docs de drwil (aucun commit demandé). Tests du kit : 9/9 verts au dernier
-  passage (`npm test` dans `packages/kit-ia-first/`).
-- **Prochaine étape** : [IA] lot 1, en commençant par la correction de `init`.
+  déployer, sauvegarder) ; un skill Claude par recette (8 skills) ;
+  `AGENTS.md` de couche à sections (générique, backend, frontend) ;
+  squelettes README, INSTALL, sécurité, déploiement, fonctionnalités, charte
+  graphique ; `.gitignore` et `.env.example`. Anglais toujours au lot 7 :
+  `packages/kit-ia-first/templates/en/` reste en retard (ex. `docs/contracts.md`
+  a encore l'ancien contenu placeholder SEC-001).
+- **Non fait, hors périmètre du lot 1** : la recette « ouvrir un chantier »
+  et le rappel de cadrage bloquant restent au lot 3 ; le routage automatique
+  des petites tâches vers `entretien-courant.md` n'est pas outillé (fiche
+  créée, mais rien ne force son usage pour l'instant).
+- **Lot 2 terminé** (2026-10-04) : `check-docs.mjs` complet — chemins relatifs
+  à la couche (déjà couvert par le repli racine/dossier du doc, conservé) ;
+  préfixes connus resserrés (une citation sans extension et hors des
+  préfixes racine/couche n'est plus prise pour un chemin — corrige le faux
+  positif « minimal/complet », « init/apply » du point 8 de
+  `docs/projets/suites-kit-portable.md`) ; marqueur « (à créer) » accepté
+  après une citation ; ID de contrat défini plusieurs fois détecté ; QUA-015
+  (case ouverte sans marqueur `[IA]`/`[humain]`/`[décision]`, fiche de
+  projet sans Statut daté ni section Reprise, intention sans ses sections
+  obligatoires), avec exemption des modèles (`modele-*.md`) et de la fiche
+  permanente `entretien-courant.md`. 4 tests ajoutés (QUA-015, faux positif
+  barre oblique, doublon d'ID — en plus du test existant sur un chemin
+  inexistant et un ID absent).
+- **Travail non commité** : tout le travail du 2026-10-03 et du 2026-10-04
+  sur le kit et les docs de drwil (aucun commit demandé). Tests du kit :
+  13/13 verts au dernier passage (`npm test` dans `packages/kit-ia-first/`).
+- **Prochaine étape** : [décision] confirmer avec le demandeur le passage au
+  lot 3 (cadrage et filet Claude Code : cadrage, rappel à l'agent, garde-fou,
+  modèle de permissions, avec tests) avant de l'entamer.

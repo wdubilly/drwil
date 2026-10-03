@@ -1,6 +1,8 @@
 # Projet : suites du kit portable (points restés ouverts)
 
-**Statut** : en cours — point 6 fait le 2026-10-04, point 9 ouvert le même jour ; 8 points restants.
+**Statut** (2026-10-04) : en cours — points 6, 8 et 9 traités (via le projet
+d'extraction IA-first, voir `docs/projets/extraction-ia-first-run-box.md`) ;
+le point 5 (appliquer le kit à drwil) couvre aussi le reliquat du point 8.
 
 ## 1. Contexte
 
@@ -37,28 +39,27 @@ restés ouverts à la fin de ce travail.
    À vérifier en plus : les dossiers `.githooks`, `.github`, `.cursor` et
    `.claude` des modèles doivent bien finir dans le paquet publié.
 
-8. **Faux positifs et écarts relevés par check-docs.mjs** — [IA] Lancé sur
-   drwil le 2026-10-03, il signale 14 erreurs :
-   - des faux positifs : une alternative écrite avec une barre oblique entre
-     backticks (« minimal/full », « init/apply ») est prise pour un chemin ;
-   - des chemins relatifs au paquet plutôt qu'à la racine dans
-     `docs/intentions/packager-kit-ia-first.md` (dist/, templates/, bin/) ;
-   - deux vrais manques dans le `AGENTS.md` de drwil : docs/architecture.md
-     et .claude/skills/ n'existent pas.
-   Pistes : n'exiger que les citations qui ressemblent à un fichier ou à un
-   dossier connu, et corriger les citations de drwil.
+8. **Faux positifs et écarts relevés par check-docs.mjs** — [IA] corrigé le
+   2026-10-04 (lot 2 du projet d'extraction, voir
+   `docs/projets/extraction-ia-first-run-box.md`) : `check-docs.mjs` ne
+   prend plus pour un chemin une citation sans extension hors des préfixes
+   connus (ex. « minimal/complet », « init/apply »), test de non-régression
+   ajouté. Restent à vérifier une fois le point 5 fait (kit appliqué à
+   drwil) : les deux vrais manques relevés (docs/architecture.md,
+   .claude/skills/) et les chemins relatifs au paquet dans
+   `docs/intentions/packager-kit-ia-first.md`.
 
-9. **Aucun `.gitignore` dans les modèles du kit** — [IA] Relevé le 2026-10-04
-   en traitant le point 6 : `packages/kit-ia-first/templates/` ne fournit pas
-   de `.gitignore`, donc chaque dépôt créé par `init` reproduit le défaut
-   corrigé ici (dépendances et produits de build indexés). Piste : un modèle
-   commun (`node_modules/`, journaux, `.env` sauf exemple) complété par la
-   détection de stack pour les produits de build propres à chaque pile.
-   Critère de sortie : après un `init` sur un dépôt neuf, un `git status`
-   ne montre ni dépendance ni produit de build.
+9. **Aucun `.gitignore` dans les modèles du kit** — [IA] corrigé le
+   2026-10-04 (lot 1 du projet d'extraction) : `templates/common/base/`
+   fournit maintenant `.gitignore` et `.env.example`, générés par `init`.
+   Vérifié : `init` sur un dépôt neuf, `git status` ne montre ni
+   `node_modules/` ni produit de build.
 
 ## 3. Reprise
 
-- **Dernier état** (2026-10-04) : point 6 traité (`.gitignore` créé,
-  `node_modules/` et `dist/` désindexés). Les autres points restent entiers.
-- **Prochaine étape** : le point 5 (contrôles du dépôt drwil, QUA-013).
+- **Dernier état** (2026-10-04) : points 6, 8 et 9 traités, dans le cadre du
+  projet d'extraction IA-first (`docs/projets/extraction-ia-first-run-box.md`,
+  lots 1 et 2 terminés). Points 1, 2, 3, 5, 7 restent ouverts.
+- **Prochaine étape** : le point 5 (contrôles du dépôt drwil, QUA-013) —
+  reste le plus proche du projet d'extraction en cours (son lot 8, « preuve
+  rien perdu », l'exigera de toute façon).
