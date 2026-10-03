@@ -9,7 +9,13 @@ pas, aucun changement de comportement.
    au code.
 2. Découper par petites étapes, un commit chacune, contrôles verts à chaque
    fois (`node .githooks/run-checks.mjs`) : extraire d'abord la logique pure
-   (avec ses tests), puis le reste.
+   (avec ses tests), puis le reste. Un fichier qui dépasse un plafond
+   raisonnable est un signal à découper : le kit livre un garde-fou opt-in
+   (`.githooks/check-file-size.mjs`, plafonds hérités dans
+   `.githooks/check-file-size.legacy.json` — ils ne peuvent que baisser) et
+   un point d'extension vide pour des règles d'hygiène propres au projet
+   (`.githooks/check-code-rules.mjs`) ; à déclarer dans
+   `.drwil/ia-first.json → checks` une fois le projet prêt à les adopter.
 3. Aucun changement de comportement. Un bug trouvé en route : commit séparé
    avec son test, signalé (`AGENTS.md`, section Conduite).
 4. **Pièges déjà rencontrés** *(exemples génériques JS/TS, à compléter par le

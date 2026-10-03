@@ -12,6 +12,9 @@ fichiers:
   - .githooks/pre-commit
   - .githooks/pre-push
   - .githooks/commit-msg
+  - .githooks/check-file-size.mjs
+  - .githooks/check-file-size.legacy.json
+  - .githooks/check-code-rules.mjs
 {{cadrageCi}}
 {{cadrageClaude}}
 -->
@@ -37,4 +40,8 @@ hand-off doc).
   kit adds a new mechanics file (`.githooks/` or an AI tool setting), add it
   here. Lot 4 added `.githooks/check-control-coverage.mjs` (QUA-013),
   `.githooks/pre-push`, `.githooks/commit-msg` (shipped disabled) and
-  `.githooks/cadrage.test.mjs`.
+  `.githooks/cadrage.test.mjs`. Lot 5 added `.githooks/check-file-size.mjs`
+  and its legacy-ceiling file `.githooks/check-file-size.legacy.json`, plus
+  the empty extension point `.githooks/check-code-rules.mjs` — all three
+  shipped but **opt-in** (not run until the project declares them in
+  `.drwil/ia-first.json → checks`).

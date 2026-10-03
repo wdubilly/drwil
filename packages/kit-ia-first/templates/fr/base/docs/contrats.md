@@ -37,5 +37,6 @@ CI si configurée.
 |---|---|---|
 | Commits, données personnelles dans les sorties d'une IA, secrets dans les sorties d'outil, tests d'attaque sur cible réelle, doc à jour dans le même commit | conduite (humaine) | `AGENTS.md`, section Conduite |
 | Refactor sans changement de comportement | procédure (humaine) | `docs/recettes/refactorer-sans-casser.md` |
+| Taille des fichiers, règles d'hygiène du code propres au projet | outillage opt-in (pas de seuil universel) | `.githooks/check-file-size.mjs`, `.githooks/check-code-rules.mjs`, `docs/recettes/refactorer-sans-casser.md` |
 | Tests livrés avec tout nouveau composant | convention (humaine) | `AGENTS.md` de la couche concernée |
 

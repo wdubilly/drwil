@@ -12,6 +12,9 @@ fichiers:
   - .githooks/pre-commit
   - .githooks/pre-push
   - .githooks/commit-msg
+  - .githooks/check-file-size.mjs
+  - .githooks/check-file-size.legacy.json
+  - .githooks/check-code-rules.mjs
 {{cadrageCi}}
 {{cadrageClaude}}
 -->
@@ -35,4 +38,8 @@ Le code applicatif du projet : chaque chantier porte son propre bloc
   kit ajoute un nouveau fichier de mécanique (`.githooks/` ou un réglage
   d'outil IA), l'ajouter ici. Lot 4 a ajouté `.githooks/check-control-coverage.mjs`
   (QUA-013), `.githooks/pre-push`, `.githooks/commit-msg` (livré désactivé)
-  et `.githooks/cadrage.test.mjs`.
+  et `.githooks/cadrage.test.mjs`. Lot 5 a ajouté `.githooks/check-file-size.mjs`
+  et son fichier de plafonds hérités `.githooks/check-file-size.legacy.json`,
+  ainsi que le point d'extension vide `.githooks/check-code-rules.mjs` — les
+  trois livrés mais **opt-in** (pas lancés tant que le projet ne les déclare
+  pas dans `.drwil/ia-first.json → checks`).

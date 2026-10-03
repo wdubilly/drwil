@@ -1,6 +1,6 @@
 # Projet : extraire l'architecture IA-first complète de run-box-v2 dans le kit
 
-**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 à 4 terminés** ; demandeur a validé le passage jusqu'au bout des lots restants (2026-10-04) ; lot 5 (outillage du refactor) en cours.
+**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 à 5 terminés** ; demandeur a validé le passage jusqu'au bout des lots restants (2026-10-04) ; lot 6 (adoption par l'IA) à suivre.
 
 ## 1. Besoin
 
@@ -274,6 +274,56 @@ Confirmées par le demandeur le 2026-10-03 :
   exécuté). 19/19 tests verts. Note corrigée en passant : la section 4 de
   `docs/ia-first.md` disait encore « filet IA non outillé » alors que le
   lot 3 avait déjà livré les hooks Claude Code — texte mis à jour.
-- **Prochaine étape** : lot 5 (outillage du refactor : contrôle de taille
-  avec plafonds hérités, point d'extension des règles d'hygiène, module
-  qualité front optionnel).
+- **Lot 5 terminé** (2026-10-04) : outillage du refactor, **opt-in** (rien
+  lancé par défaut). `.githooks/check-file-size.mjs` : port générique de
+  `frontend/scripts/check-file-size.mjs` (racine, plafond de lignes et
+  extensions en arguments ; plafonds hérités dans
+  `.githooks/check-file-size.legacy.json`, à côté — ne peuvent que baisser
+  au fil des refactors, jamais remonter). `.githooks/check-code-rules.mjs` :
+  point d'extension vide (`regles = []`, toujours vert tant que le projet
+  n'y ajoute rien) ; les règles métier de run-box-v2
+  (`.githooks/check-code-rules.py` : imports privés interdits, imports
+  depuis un fichier de test interdits, module `lib/` sans test, export CSV
+  hors point de passage sûr, isolation du portail) citées en commentaire
+  comme exemples, pas installées — trop spécifiques à run-box pour un kit
+  générique. Module qualité front optionnel sous
+  `templates/common/optional/front-quality/` (`check-colors.mjs` :
+  couleurs en dur ou palette Tailwind hors charte ; `check-contrast.mjs` :
+  contraste RGAA/WCAG AA clair/sombre à partir d'un module de palette du
+  projet, port générique de `frontend/scripts/check-colors.mjs` et
+  `check-contrast.mjs`, charte Cobalt de run-box citée en exemple) — dossier
+  **non copié par `scaffold()`** (seuls `common/base`, `<lang>/base`,
+  `common/tools/<tool>`, `common/ci/<ci>` le sont), à activer manuellement
+  en attendant la recette d'adoption du lot 6 (README dédié dans le
+  dossier). Pas de nouveau contrat au registre : rangé en « Hors registre »
+  de `docs/contrats.md` (pas de seuil universel, chaque projet choisit le
+  sien) ; `QUA-001` n'est pas inventé ici pour ne pas risquer un ID à
+  renommer quand le catalogue de contrats du lot 6 sera posé. Recette
+  `docs/recettes/refactorer-sans-casser.md` mise à jour (étape 2 : un
+  fichier trop gros est un signal à découper, renvoie vers l'outillage).
+  Fiches mécanique FR/EN : les 3 nouveaux fichiers `.githooks/`
+  ajoutés au bloc `cadrage` (sinon `check-docs.mjs` les aurait refusés dès
+  le premier commit, comme pour tout fichier de code non couvert).
+  **2 bugs préexistants (lot 4) trouvés et corrigés en cours de route**,
+  tous deux dans `.githooks/cadrage.test.mjs` / `run-checks.mjs`, signalés
+  et corrigés (« laisser propre en passant ») : (1) l'assertion
+  `fnmatch("backend/app/sous/x.py", "backend/app/x*")` attendait `true` à
+  tort (le motif ne couvre que ce qui commence par sa partie littérale ;
+  corrigée en `false`, avec un vrai cas de traversée de séparateur ajouté :
+  `fnmatch("backend/app/x/sous.py", "backend/app/x*")`) ; (2) le pas « tests
+  des contrôles eux-mêmes » de `run-checks.mjs` relance `node --test` sur
+  les `.githooks/*.test.mjs` du projet, mais `NODE_TEST_CONTEXT` (mis par
+  Node quand on est déjà sous `node --test`) se propageait à ce sous-process
+  et le faisait **sauter silencieusement** (avertissement « called
+  recursively », code de sortie 0 sans qu'aucun test ne tourne) — masquait
+  le bug (1) à chaque `npm test` du paquet du kit (qui tourne lui-même sous
+  `node --test`), alors qu'un vrai commit humain (hors `node --test`)
+  l'aurait détecté immédiatement. Corrigé en effaçant `NODE_TEST_CONTEXT`
+  de l'environnement du sous-process. 5 tests ajoutés (fichiers livrés mais
+  non lancés par défaut, détection d'un fichier trop gros une fois déclaré,
+  plafond hérité qui ne peut pas remonter, règles vides toujours vertes,
+  module qualité front non installé par `init`/`apply`). 24/24 tests
+  verts ; contrôles racine drwil verts (`bash .githooks/run-checks.sh`).
+- **Prochaine étape** : lot 6 (adoption par l'IA : recette + skill
+  « adopter le kit », catalogue de contrats pour les pièces hors socle dont
+  la taille de fichiers).
