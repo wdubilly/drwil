@@ -169,7 +169,8 @@ async function writeOut(target: string, content: string, targetDir: string, shou
   if (existsSync(target) && !shouldOverwrite(relative(targetDir, target))) return;
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, content);
-  if (target.endsWith(".mjs") || basename(target) === "pre-commit") {
+  // commit-msg reste volontairement non exécutable (livré mais désactivé par défaut, lot 4).
+  if (target.endsWith(".mjs") || ["pre-commit", "pre-push"].includes(basename(target))) {
     try { await chmod(target, 0o755); } catch {}
   }
 }

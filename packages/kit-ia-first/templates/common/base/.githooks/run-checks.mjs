@@ -25,6 +25,8 @@ const T = {
     docs: "chemins et contrats cités dans la doc",
     testsControles: "tests des contrôles eux-mêmes",
     aucunTest: "aucun .githooks/*.test.mjs",
+    couvertureCi: "couverture CI de chaque contrôle (QUA-013)",
+    pasDeCi: "aucune CI configurée (ci: none) : pas de filet pour les contrôles dégradables",
     projet: "contrôles du projet (lint, tests…)",
     aucunCheck: "aucun déclaré dans .drwil/ia-first.json → checks",
     nonExecute: "non exécuté :",
@@ -38,6 +40,8 @@ const T = {
     docs: "paths and contracts cited in docs",
     testsControles: "tests of the checks themselves",
     aucunTest: "no .githooks/*.test.mjs",
+    couvertureCi: "CI coverage of each check (QUA-013)",
+    pasDeCi: "no CI configured (ci: none): no net for degradable checks",
     projet: "project checks (lint, tests…)",
     aucunCheck: "none declared in .drwil/ia-first.json → checks",
     nonExecute: "not run:",
@@ -77,6 +81,12 @@ if (full) {
   const tests = existsSync(".githooks") ? readdirSync(".githooks").filter((f) => f.endsWith(".test.mjs")) : [];
   if (tests.length) controle(T.testsControles, process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))]);
   else nonExecutes.push(`${T.testsControles} (${T.aucunTest})`);
+}
+
+if (full) {
+  const ciFiles = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
+  if (ciFiles.length) controle(T.couvertureCi, process.execPath, [".githooks/check-control-coverage.mjs"]);
+  else nonExecutes.push(`${T.couvertureCi} (${T.pasDeCi})`);
 }
 
 // Les contrôles propres à la stack (lint, typecheck, tests) sont déclarés par le projet, pas par le kit.

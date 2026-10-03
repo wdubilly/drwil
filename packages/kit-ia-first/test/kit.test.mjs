@@ -262,3 +262,37 @@ test("une valeur d'option inconnue est refusée", async () => {
   await assert.rejects(() => init({ targetDir: tmp(), tools: "claude,vim" }), /--tools/);
   await assert.rejects(() => init({ targetDir: tmp(), ci: "jenkins" }), /--ci/);
 });
+
+test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et commit-msg livrés", async () => {
+  for (const ci of ["github", "gitlab"]) {
+    const dir = tmp();
+    await quiet(() => init({ targetDir: dir, ci, git: false }));
+    const r = spawnSync(process.execPath, [".githooks/check-control-coverage.mjs"], { cwd: dir, encoding: "utf8" });
+    assert.equal(r.status, 0, `${ci} : ${r.stdout}${r.stderr}`);
+  }
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, ci: "github" }));
+  assert.ok(statSync(join(dir, ".githooks/pre-push")).mode & 0o100, "pre-push exécutable");
+  assert.ok(!(statSync(join(dir, ".githooks/commit-msg")).mode & 0o100), "commit-msg livré désactivé");
+  const r = checks(dir);
+  assert.equal(r.status, 0, r.stdout);
+  assert.match(r.stdout, /couverture CI de chaque contrôle/);
+});
+
+test("QUA-013 : un job CI qui ne se déclenche plus sur les bons chemins est détecté", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, ci: "gitlab", git: false }));
+  writeFileSync(join(dir, ".gitlab-ci.yml"), "checks:\n  image: node:20\n  rules:\n    - changes:\n        - frontend/**\n  script:\n    - node .githooks/run-checks.mjs\n");
+  const r = spawnSync(process.execPath, [".githooks/check-control-coverage.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /secrets-fichiers/);
+});
+
+test("ci: none : pas de CI, la couverture QUA-013 est signalée non exécutée (pas d'échec silencieux)", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, ci: "none" }));
+  const r = checks(dir);
+  assert.equal(r.status, 0, r.stdout);
+  assert.match(r.stdout, /non exécuté : couverture CI de chaque contrôle.*aucune CI configurée/s);
+});
+
