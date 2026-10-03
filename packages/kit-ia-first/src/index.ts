@@ -32,7 +32,12 @@ export interface InitOptions {
   /** CSV parmi TOOLS. Défaut : tous. */
   tools?: string;
   ci?: string;
+  /** `init` seul : réécrit tout (sinon seul .githooks/, mécanique du kit, est réécrit). */
+  force?: boolean;
 }
+
+/** Dossier dont `init` rafraîchit le contenu par défaut : la mécanique du kit, pas les docs du projet. */
+const KIT_MECHANICS = ".githooks/";
 
 // Couches qui ont une fiche dédiée dans templates/<lang>/layers ; les autres reçoivent generic.md.
 const LAYER_TEMPLATES = ["backend", "frontend"];
@@ -113,6 +118,7 @@ function render(content: string, r: Resolved, extra: Record<string, string> = {}
     description: r.opts.description ?? t.description,
     stack,
     ciLine: ciFile ? t.ciLine(ciFile) : "",
+    indexFile: t.dirs.index,
     date: new Date().toISOString().slice(0, 10),
     ...extra,
   };
@@ -132,8 +138,11 @@ async function walk(dir: string): Promise<string[]> {
   return files;
 }
 
-async function writeOut(target: string, content: string, overwrite: boolean): Promise<void> {
-  if (!overwrite && existsSync(target)) return;
+/** `shouldOverwrite` reçoit le chemin cible relatif à la racine du projet. */
+type Overwrite = (relTarget: string) => boolean;
+
+async function writeOut(target: string, content: string, targetDir: string, shouldOverwrite: Overwrite): Promise<void> {
+  if (existsSync(target) && !shouldOverwrite(relative(targetDir, target))) return;
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, content);
   if (target.endsWith(".mjs") || basename(target) === "pre-commit") {
@@ -142,34 +151,35 @@ async function writeOut(target: string, content: string, overwrite: boolean): Pr
 }
 
 /** Copie un dossier de modèles à la racine de la cible, en rendant les variables. */
-async function copyTree(srcDir: string, r: Resolved, overwrite: boolean): Promise<void> {
+async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite): Promise<void> {
   for (const file of await walk(srcDir)) {
-    await writeOut(join(r.opts.targetDir, relative(srcDir, file)), render(await readFile(file, "utf8"), r), overwrite);
+    const target = join(r.opts.targetDir, relative(srcDir, file));
+    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, shouldOverwrite);
   }
 }
 
-async function scaffold(r: Resolved, overwrite: boolean): Promise<void> {
+async function scaffold(r: Resolved, shouldOverwrite: Overwrite): Promise<void> {
   const langDir = join(templatesDir, r.lang);
-  await copyTree(join(templatesDir, "common", "base"), r, overwrite);
-  await copyTree(join(langDir, "base"), r, overwrite);
+  await copyTree(join(templatesDir, "common", "base"), r, shouldOverwrite);
+  await copyTree(join(langDir, "base"), r, shouldOverwrite);
   for (const tool of r.tools) {
-    await copyTree(join(templatesDir, "common", "tools", tool), r, overwrite);
-    await copyTree(join(langDir, "tools", tool), r, overwrite);
+    await copyTree(join(templatesDir, "common", "tools", tool), r, shouldOverwrite);
+    await copyTree(join(langDir, "tools", tool), r, shouldOverwrite);
   }
-  await copyTree(join(templatesDir, "common", "ci", r.ci), r, overwrite);
+  await copyTree(join(templatesDir, "common", "ci", r.ci), r, shouldOverwrite);
 
   for (const layer of r.layers) {
     const specific = join(langDir, "layers", `${layer}.md`);
     const source = LAYER_TEMPLATES.includes(layer) && existsSync(specific) ? specific : join(langDir, "layers", "generic.md");
     const up = "../".repeat(layer.split("/").filter(Boolean).length);
     const content = render(await readFile(source, "utf8"), r, { layer }).replace("`../AGENTS.md`", `\`${up}AGENTS.md\``);
-    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, overwrite);
+    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, shouldOverwrite);
   }
 
   // Un seul contenu de consignes (AGENTS.md) ; les outils qui ne le lisent pas nativement reçoivent un import.
   const pointers = [r.tools.includes("claude") && "CLAUDE.md", r.tools.includes("gemini") && "GEMINI.md"].filter(Boolean) as string[];
   for (const dir of [".", ...r.layers]) {
-    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", overwrite);
+    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite);
   }
 }
 
@@ -231,10 +241,16 @@ function reportStack(stack: StackEntry[]): void {
   else console.log("Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).");
 }
 
-/** Installe le kit en écrasant ses propres fichiers. */
+/**
+ * Installe le kit. Par défaut ne réécrase que `.githooks/` (mécanique du kit) ; le
+ * reste (AGENTS.md, docs/contrats.md, docs/projets/en-attente.md…) n'est écrit que
+ * s'il manque, pour ne pas effacer les contrats et chantiers ajoutés par le projet.
+ * `--force` réécrit tout, comme sur un dépôt neuf.
+ */
 export async function init(opts: InitOptions): Promise<void> {
   const r = resolve(opts, () => ["backend", "frontend"]);
-  await scaffold(r, true);
+  const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => rel.startsWith(KIT_MECHANICS);
+  await scaffold(r, shouldOverwrite);
   await writeConfig(r);
   reportStack(r.stack);
   if (opts.git !== false) setupGit(opts.targetDir, true);
@@ -244,7 +260,7 @@ export async function init(opts: InitOptions): Promise<void> {
 export async function apply(opts: InitOptions): Promise<void> {
   // Sur un projet existant, les couches sont les sous-dossiers où une stack a été trouvée.
   const r = resolve(opts, stack => stack.map(s => s.path).filter(p => p !== "."));
-  await scaffold(r, false);
+  await scaffold(r, () => false);
   if (!readConfig(opts.targetDir)) await writeConfig(r);
   reportStack(r.stack);
   // On n'initialise pas de dépôt sur un projet existant : on active seulement les hooks s'il y en a un.

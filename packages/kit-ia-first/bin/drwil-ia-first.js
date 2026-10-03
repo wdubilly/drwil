@@ -32,8 +32,9 @@ async function run(fn, opts, message) {
   }
 }
 
-addOptions(program.command("init").description("Initialize IA-first in current directory (overwrites kit files)"),
+addOptions(program.command("init").description("Initialize IA-first in current directory (refreshes .githooks/; use --force to overwrite everything)"),
   "Layers CSV (default: backend,frontend)")
+  .option("--force", "Overwrite every file, not just .githooks/ (erases project docs added since last install)")
   .action((opts) => run(init, opts, "IA-first scaffolding applied to"));
 
 addOptions(program.command("apply").description("Apply IA-first to existing project (never overwrites files)"),

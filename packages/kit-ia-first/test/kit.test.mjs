@@ -35,6 +35,21 @@ test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", a
   assert.match(r.stdout, /non exécuté : contrôles du projet/);
 });
 
+test("un second init ne réécrase que .githooks/, --force réécrit tout", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, name: "demo" }));
+  writeFileSync(join(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n");
+  appendFileSync(join(dir, ".githooks", "run-checks.mjs"), "\n// marque pour vérifier l'écrasement\n");
+
+  await quiet(() => init({ targetDir: dir, name: "demo" }));
+  assert.equal(read(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n", "docs du projet préservées sans --force");
+  assert.ok(!read(dir, ".githooks/run-checks.mjs").includes("marque pour vérifier"), ".githooks/ réécrit par défaut");
+
+  writeFileSync(join(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n");
+  await quiet(() => init({ targetDir: dir, name: "demo", force: true }));
+  assert.notEqual(read(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n", "--force réécrit aussi les docs");
+});
+
 test("le hook refuse un commit dont la doc cite un chemin inexistant", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir }));
