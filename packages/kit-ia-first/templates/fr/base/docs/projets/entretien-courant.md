@@ -5,9 +5,15 @@ séparé (faute corrigée, petit ajustement local signalé en passant…). Un
 sujet qui grossit ou qui demande une décision devient un chantier normal,
 listé dans `docs/projets/en-attente.md`.
 
-*(non encore outillé : un rappel de cadrage bloquant au commit, qui
-distinguerait automatiquement une petite tâche d'un chantier à part entière,
-est prévu mais pas encore installé par le kit — voir `docs/ia-first.md`)*
+Le contrôle au commit refuse un fichier de code qu'aucune fiche ne couvre
+(rappel de cadrage, bloquant — `docs/ia-first.md`, section 7). Pour une
+petite tâche, ajouter son chemin au bloc `cadrage` ci-dessous ; un motif trop
+large (`**`, `scripts/*`) est refusé, il faut nommer le fichier ou un motif
+précis.
+
+<!-- cadrage
+fichiers:
+-->
 
 ## Journal
 

@@ -1,6 +1,6 @@
 # Projet : extraire l'architecture IA-first complète de run-box-v2 dans le kit
 
-**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 et 2 terminés** ; lot 3 (cadrage, filet Claude Code) à confirmer avec le demandeur avant de l'entamer.
+**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1, 2 et 3 terminés** ; lot 4 (run-box-v2:QUA-013 complet et CI) à confirmer avec le demandeur avant de l'entamer.
 
 ## 1. Besoin
 
@@ -188,9 +188,9 @@ Confirmées par le demandeur le 2026-10-03 :
   `packages/kit-ia-first/templates/en/` reste en retard (ex. `docs/contracts.md`
   a encore l'ancien contenu placeholder SEC-001).
 - **Non fait, hors périmètre du lot 1** : la recette « ouvrir un chantier »
-  et le rappel de cadrage bloquant restent au lot 3 ; le routage automatique
-  des petites tâches vers `entretien-courant.md` n'est pas outillé (fiche
-  créée, mais rien ne force son usage pour l'instant).
+  reste à faire ; le routage automatique des petites tâches vers
+  `entretien-courant.md` n'est pas outillé (fiche créée, mais rien ne force
+  son usage pour l'instant).
 - **Lot 2 terminé** (2026-10-04) : `check-docs.mjs` complet — chemins relatifs
   à la couche (déjà couvert par le repli racine/dossier du doc, conservé) ;
   préfixes connus resserrés (une citation sans extension et hors des
@@ -204,9 +204,40 @@ Confirmées par le demandeur le 2026-10-03 :
   permanente `entretien-courant.md`. 4 tests ajoutés (QUA-015, faux positif
   barre oblique, doublon d'ID — en plus du test existant sur un chemin
   inexistant et un ID absent).
-- **Travail non commité** : tout le travail du 2026-10-03 et du 2026-10-04
-  sur le kit et les docs de drwil (aucun commit demandé). Tests du kit :
-  13/13 verts au dernier passage (`npm test` dans `packages/kit-ia-first/`).
+- **Travail non commité** : tout le travail du 2026-10-04 sur le lot 3 (aucun
+  commit demandé pour l'instant). Tests du kit : 16/16 verts au dernier
+  passage (`npm test` dans `packages/kit-ia-first/`).
+- **Lot 3 terminé** (2026-10-04) : cadrage et filet Claude Code, **bloquant au
+  commit** (décision du demandeur, différente de run-box qui le voulait non
+  bloquant). `.githooks/cadrage.mjs` : grammaire du bloc `cadrage` (porté en
+  Node), périmètre du code lu depuis la config du projet (`layers`,
+  `layerPrefixes`, `codePrefixes`, `extraCodeFiles`, `extraCodeGlobs`,
+  `ciFiles` — jusque-là non lus par aucun contrôle). Nouveau contrat
+  **QUA-016** (`docs/contrats.md`) : un fichier de code indexé hors de toute
+  fiche de `docs/projets/`, ou un bloc mal formé (sans « fichiers: », motif
+  trop large), fait échouer `check-docs.mjs`. Fiche
+  `docs/projets/mecanique-ia-first.md` (et son équivalent anglais minimal
+  `docs/projects/kit-mechanics.md`, pour ne pas casser le tout premier commit
+  d'une installation anglaise) : couvre les fichiers propres au kit
+  (`.githooks/*`, `.claude/settings.json` et le fichier de CI si installés).
+  `docs/projets/entretien-courant.md` et `docs/projets/modele-fiche-projet.md`
+  portent désormais un vrai bloc `cadrage` (exemple pour le modèle, vide à
+  compléter pour la fiche permanente). Deux hooks Claude Code en Node, sous
+  `.claude/hooks/` : `rappel-cadrage.mjs` (PostToolUse, informatif, jamais
+  bloquant) et `garde-fou-bash.mjs` (PreToolUse, demande l'accord sur un
+  fichier de secrets ou un pipe vers un shell dans une commande Bash, jamais
+  de refus sec). `.claude/settings.json` réécrit sur le modèle de run-box
+  (commentaire complet, allow/ask/deny, deny git qui bat toujours allow),
+  générique (plus de commande propre à un projet), avec les deux hooks
+  branchés et des commandes de stack ajoutées automatiquement selon la
+  techno détectée (`npm test`, `pytest`…, table à compléter dans
+  `src/index.ts` → `STACK_ALLOW`). 3 tests ajoutés (cadrage bloquant puis
+  débloqué par le bloc, motif trop large toujours refusé, les deux hooks
+  Claude Code) ; régression trouvée et corrigée en cours de route (une
+  installation anglaise avec git bloquait son premier commit faute de fiche
+  de mécanique — `docs/projects/kit-mechanics.md` corrige ça, test dédié
+  ajouté). 16/16 tests verts.
 - **Prochaine étape** : [décision] confirmer avec le demandeur le passage au
-  lot 3 (cadrage et filet Claude Code : cadrage, rappel à l'agent, garde-fou,
-  modèle de permissions, avec tests) avant de l'entamer.
+  lot 4 (run-box-v2:QUA-013 complet et CI : contrôles dégradables, couverture
+  CI vérifiée, jobs CI par sujet, pre-push, commit-msg optionnel) avant de
+  l'entamer.

@@ -169,3 +169,30 @@ une machine ne sait pas si un statut est vrai, mais un statut daté montre son
 âge. La justesse du contenu reste humaine. Exceptions au contrôle : les
 fichiers `docs/projets/modele-*.md` (modèles à copier, pas des fiches) et
 `docs/projets/entretien-courant.md` (fiche permanente, pas un chantier à lots).
+
+### Rappel de cadrage
+
+Un fichier de code ne doit pas rester détaché de tout chantier. Une fiche de
+`docs/projets/` porte, dans un commentaire HTML invisible au rendu, un bloc
+`cadrage` (un chemin ou un motif par ligne sous `fichiers:`) : il couvre les
+fichiers que ce chantier touche.
+
+- **Bloquant au commit** (`.githooks/check-docs.mjs`) : un fichier de code
+  indexé par git qu'aucun bloc ne couvre, ou un bloc mal formé (sans ligne
+  `fichiers:`, motif trop large comme `**` ou `scripts/*`), fait échouer le
+  contrôle. `docs/` et tout fichier markdown ne sont jamais du code.
+- **Rappel à l'agent, informatif** (Claude Code, hook PostToolUse
+  `.claude/hooks/rappel-cadrage.mjs`) : après l'écriture d'un fichier de code
+  hors fiche, un message lui est glissé ; rien n'est bloqué (le fichier est
+  déjà écrit), seul le commit le sera.
+- **Petite tâche** : se rattache à `docs/projets/entretien-courant.md`, sans
+  ouvrir de chantier séparé.
+- **Fichiers propres au kit** : couverts par `docs/projets/mecanique-ia-first.md`,
+  posée à l'installation.
+- **Garde-fou des commandes shell** (Claude Code, hook PreToolUse
+  `.claude/hooks/garde-fou-bash.mjs`) : demande l'accord sur un fichier de
+  secrets ou un pipe vers un shell dans une commande Bash ; ne bloque rien,
+  la personne décide.
+
+La grammaire du bloc (`.githooks/cadrage.mjs`) est partagée par le contrôle et
+le rappel : une seule source.

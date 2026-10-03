@@ -2,6 +2,17 @@
 
 **Statut** : cadré le AAAA-MM-JJ — lot 1 en cours.
 
+<!-- cadrage
+fichiers:
+  - backend/app/routers/exemple.py
+  - frontend/src/components/Exemple*
+-->
+
+(bloc `cadrage` : un chemin ou un motif par ligne, sous `fichiers:` ; couvre
+les fichiers de code que ce chantier touche, pour le rappel de cadrage —
+`docs/ia-first.md`, section 7. Un motif trop large, `**` ou `scripts/*`, est
+refusé : nommer le fichier ou un motif d'au moins deux dossiers.)
+
 ## 1. Besoin
 
 (ce que le projet doit produire, pour qui, et pourquoi maintenant)
