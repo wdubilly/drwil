@@ -11,11 +11,21 @@ const T = {
   fr: {
     chemin: (c) => `chemin cité introuvable \`${c}\``,
     contrat: (id, f) => `contrat ${id} absent de ${f}`,
+    doublon: (id, f) => `${f} : contrat ${id} défini plusieurs fois`,
+    marqueur: () => `case ouverte sans marqueur [IA], [humain] ou [décision]`,
+    statut: (f) => `${f} : pas de ligne « Statut » datée (AAAA-MM-JJ) en tête`,
+    reprise: (f) => `${f} : section « Reprise » absente (passation)`,
+    section: (f, s) => `${f} : section « ${s} » absente`,
     bilan: (n, e) => `check-docs : ${n} fichiers scannés, ${e} erreur(s)`,
   },
   en: {
     chemin: (c) => `cited path not found \`${c}\``,
     contrat: (id, f) => `contract ${id} missing from ${f}`,
+    doublon: (id, f) => `${f}: contract ${id} defined more than once`,
+    marqueur: () => `open item without an [AI], [human] or [decision] marker`,
+    statut: (f) => `${f}: no dated « Status » line (YYYY-MM-DD) at the top`,
+    reprise: (f) => `${f}: missing « Hand-off » section`,
+    section: (f, s) => `${f}: missing « ${s} » section`,
     bilan: (n, e) => `check-docs: ${n} files scanned, ${e} error(s)`,
   },
 }[lang];
@@ -24,6 +34,15 @@ const CODE_RE = /`([^`\s]+)`/g;
 const EXT_RE = /\.(md|mdc|mjs|cjs|js|ts|tsx|jsx|py|sh|json|ya?ml|toml|txt)$/;
 // Une ligne qui déclare le fichier facultatif ne doit pas faire échouer le contrôle.
 const OPTIONNEL_RE = /si présent|if present/i;
+// Un chemin prévu mais pas encore créé, marqué juste après la citation, n'est pas une erreur.
+const CREER_RE = /^\s*\(à créer\)|^\s*\(to create\)/i;
+const MARQUEURS_RE = /\[(IA|humain|décision|AI|human|decision)\]/i;
+const STATUT_RE = /^\*{0,2}(Statut|Status)\*{0,2}\s?:/;
+const DATE_RE = /\b\d{4}-\d{2}-\d{2}\b/;
+const SECTIONS_INTENTION_FR = ["## Besoin", "## Existant", "## Questions à trancher"];
+const SECTIONS_INTENTION_EN = ["## Need", "## Current state", "## Open questions"];
+// Modèles à copier et fiche permanente : pas des chantiers à lots, exemptés du contrôle QUA-015.
+const EXEMPTS_RE = /^modele-|^model-|^entretien-courant\.md$/;
 
 function loadConfig() {
   try {
@@ -50,9 +69,19 @@ function sources() {
   return [...new Set(found)].filter((p) => existsSync(p));
 }
 
+// Préfixes connus (racine + couches du projet) : une citation hors de ces préfixes et sans
+// extension reconnue n'est pas prise pour un chemin (ex. une alternative « minimal/complet »).
+const PREFIXES_RACINE = [
+  "docs/", ".githooks/", ".claude/", ".github/", ".cursor/", ".drwil/", "scripts/",
+  "AGENTS.md", "README.md", "INSTALL.md", "CLAUDE.md", "GEMINI.md",
+  ".gitlab-ci.yml", ".gitignore", ".env.example", "docker-compose.yml",
+];
+const prefixesConnus = [...PREFIXES_RACINE, ...(cfg.layers ?? []).map((l) => `${l}/`), ...(cfg.layerPrefixes ?? []).map((p) => `${p}/`)];
+
 function ressembleAUnChemin(s) {
   if (/^(https?:\/\/|-|\$)/.test(s) || /[<>{}*?|=:@]/.test(s)) return false;
-  return s.includes("/") || EXT_RE.test(s);
+  if (EXT_RE.test(s)) return true;
+  return prefixesConnus.some((p) => s.startsWith(p));
 }
 
 function cheminExiste(doc, cite) {
@@ -65,18 +94,27 @@ const prefixes = cfg.contractPrefixes ?? ["SEC", "QUA"];
 const idMotif = `(?<![\\w:-])(?:${prefixes.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})-\\d{3}\\b`;
 const contratsPath = join(root, cfg.dirs?.contracts ?? "docs/contrats.md");
 const definis = new Set();
+const erreurs = [];
 if (existsSync(contratsPath)) {
-  for (const m of readFileSync(contratsPath, "utf8").matchAll(new RegExp(`^##\\s+(${idMotif})`, "gm"))) definis.add(m[1]);
+  // Un ID se définit soit en titre (## ID — ...), soit en première cellule d'une ligne de tableau (| ID | ...).
+  const comptes = new Map();
+  for (const m of readFileSync(contratsPath, "utf8").matchAll(new RegExp(`^(?:##\\s+|\\|\\s*)(${idMotif})`, "gm"))) {
+    definis.add(m[1]);
+    comptes.set(m[1], (comptes.get(m[1]) ?? 0) + 1);
+  }
+  for (const [id, n] of comptes) if (n > 1) erreurs.push(T.doublon(id, relative(root, contratsPath)));
 }
 
-const erreurs = [];
 const docs = sources();
 for (const doc of docs) {
   const rel = relative(root, doc);
   readFileSync(doc, "utf8").split(/\r?\n/).forEach((ligne, i) => {
     if (!OPTIONNEL_RE.test(ligne)) {
-      for (const [, cite] of ligne.matchAll(CODE_RE)) {
-        if (ressembleAUnChemin(cite) && !cheminExiste(doc, cite)) erreurs.push(`${rel}:${i + 1} : ${T.chemin(cite)}`);
+      for (const m of ligne.matchAll(CODE_RE)) {
+        const cite = m[1];
+        if (ressembleAUnChemin(cite) && !CREER_RE.test(ligne.slice(m.index + m[0].length)) && !cheminExiste(doc, cite)) {
+          erreurs.push(`${rel}:${i + 1} : ${T.chemin(cite)}`);
+        }
       }
     }
     if (doc !== contratsPath) {
@@ -87,6 +125,41 @@ for (const doc of docs) {
   });
 }
 
+erreurs.push(...checkChantiers());
+
 for (const e of erreurs) console.log(`  ✗ ${e}`);
 console.log(T.bilan(docs.length, erreurs.length));
 process.exit(erreurs.length ? 1 : 0);
+
+// QUA-015 : chaque chantier se reprend à froid (marqueurs, statut daté, sections, Reprise).
+function checkChantiers() {
+  const erreurs = [];
+  const indexPath = join(root, cfg.dirs?.index ?? "docs/projets/en-attente.md");
+  if (existsSync(indexPath)) {
+    const relIndex = relative(root, indexPath);
+    readFileSync(indexPath, "utf8").split(/\r?\n/).forEach((ligne, i) => {
+      if (/^\s*-\s*\[ \]/.test(ligne) && !MARQUEURS_RE.test(ligne)) erreurs.push(`${relIndex}:${i + 1} : ${T.marqueur()}`);
+    });
+  }
+  const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projets");
+  const fiches = mdRecursif(projetsDir).filter((p) => p !== indexPath && !EXEMPTS_RE.test(relative(projetsDir, p)));
+  for (const fiche of fiches) checkFiche(fiche, erreurs, true);
+  const intentionsDir = join(root, cfg.dirs?.intentions ?? "docs/intentions");
+  const intentions = mdRecursif(intentionsDir).filter((p) => relative(intentionsDir, p) !== "README.md");
+  for (const fiche of intentions) checkFiche(fiche, erreurs, false);
+  return erreurs;
+}
+
+function checkFiche(fiche, erreurs, estProjet) {
+  const rel = relative(root, fiche);
+  const lignes = readFileSync(fiche, "utf8").split(/\r?\n/);
+  const debut = lignes.slice(0, 15).findIndex((l) => STATUT_RE.test(l));
+  if (debut === -1 || !DATE_RE.test(lignes.slice(debut, debut + 4).join(" "))) erreurs.push(T.statut(rel));
+  if (estProjet) {
+    if (!lignes.some((l) => l.startsWith("## Reprise") || l.startsWith("## Hand-off"))) erreurs.push(T.reprise(rel));
+  } else {
+    for (const s of lang === "en" ? SECTIONS_INTENTION_EN : SECTIONS_INTENTION_FR) {
+      if (!lignes.some((l) => l.startsWith(s))) erreurs.push(T.section(rel, s.slice(3)));
+    }
+  }
+}

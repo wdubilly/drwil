@@ -98,6 +98,58 @@ test("init avec CI GitLab", async () => {
   assert.deepEqual(config(dir).ciFiles, [".gitlab-ci.yml"]);
 });
 
+test("QUA-015 : marqueur de chantier, statut daté, section Reprise, chemin « à créer »", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+
+  // chemin « à créer » : accepté, pas une erreur.
+  appendFileSync(join(dir, "docs/ia-first.md"), "\nÀ écrire : `docs/futur.md` (à créer).\n");
+  let r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+
+  // case ouverte sans marqueur [IA]/[humain]/[décision].
+  appendFileSync(join(dir, "docs/projets/en-attente.md"), "\n## Test\n- [ ] sujet sans marqueur\n");
+  r = checks(dir);
+  assert.notEqual(r.status, 0);
+  assert.match(r.stdout, /en-attente\.md.*marqueur/);
+  // corrigé avant la suite, pour isoler chaque contrôle.
+  writeFileSync(
+    join(dir, "docs/projets/en-attente.md"),
+    read(dir, "docs/projets/en-attente.md").replace("- [ ] sujet sans marqueur", "- [ ] [IA] sujet avec marqueur"),
+  );
+
+  // fiche de projet sans Statut daté ni section Reprise.
+  writeFileSync(join(dir, "docs/projets/mon-chantier.md"), "# Mon chantier\n\nTexte.\n");
+  r = checks(dir);
+  assert.match(r.stdout, /mon-chantier\.md.*Statut/);
+  assert.match(r.stdout, /mon-chantier\.md.*Reprise/);
+  writeFileSync(join(dir, "docs/projets/mon-chantier.md"), "# Mon chantier\n\n**Statut** : 2026-10-04, fait.\n\n## Reprise\n\nRien à reprendre.\n");
+  r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+
+  // modèle et fiche permanente exemptés du contrôle.
+  writeFileSync(join(dir, "docs/projets/modele-exemple.md"), "# Modèle\n\nSans statut ni Reprise.\n");
+  r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
+test("une alternative écrite avec une barre oblique n'est pas prise pour un chemin", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  appendFileSync(join(dir, "docs/ia-first.md"), "\nChoisir entre `minimal/complet` ou `init/apply` selon le cas.\n");
+  const r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
+test("doublon d'ID dans le registre des contrats", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  appendFileSync(join(dir, "docs/contrats.md"), "\n| QUA-011 | doublon | — | — |\n");
+  const r = checks(dir);
+  assert.notEqual(r.status, 0);
+  assert.match(r.stdout, /QUA-011.*plusieurs fois/);
+});
+
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {
   const dir = tmp();
   mkdirSync(join(dir, "api")); mkdirSync(join(dir, "web"));
