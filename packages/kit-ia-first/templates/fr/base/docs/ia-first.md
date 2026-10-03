@@ -74,6 +74,12 @@ C'est le point qui distingue une architecture IA first d'un simple dépôt bien
 documenté : le dépôt **annonce** ce qu'il ne fait pas vérifier, au lieu de
 laisser croire que tout est contrôlé.
 
+Le socle de `docs/contrats.md` est volontairement minimal (vert dès le
+premier jour, sans hypothèse de stack). `docs/catalogue-contrats.md` liste
+des contrats génériques fréquents, pas installés par défaut : un projet les
+adopte un par un, avec `docs/recettes/adopter-le-kit.md` (ou le skill
+`adopter-le-kit`), chaque adoption restant une décision du demandeur.
+
 ## 4. Le contrôle est dans git, pas dans l'outil
 
 C'est la décision structurante du dépôt. Les contrôles vivent dans

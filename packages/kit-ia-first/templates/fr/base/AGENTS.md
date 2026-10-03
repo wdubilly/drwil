@@ -86,6 +86,7 @@ le projet complète la liste des contrats à connaître quelle que soit la tâch
 | une route API | `backend/AGENTS.md` (si présent) | `docs/recettes/ajouter-une-route-api.md` |
 | un écran | `frontend/AGENTS.md` (si présent) | `docs/recettes/ajouter-un-ecran-front.md` |
 | un gros fichier existant | `docs/contrats.md` | `docs/recettes/refactorer-sans-casser.md` |
+| adopter le kit sur un projet existant | `.drwil/ia-first.json`, `docs/catalogue-contrats.md` | `docs/recettes/adopter-le-kit.md` |
 | une idée à cadrer (intention) | `docs/intentions/README.md` | — |
 | un chantier en attente | `{{indexFile}}` | — |
 | l'organisation du dépôt pour un agent (règles, contrôles, skills) | `docs/ia-first.md` | — |

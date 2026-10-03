@@ -15,6 +15,10 @@ Où tournent les contrôles : hook pré-commit (`.githooks/run-checks.mjs`, à
 activer une fois par clone avec `git config core.hooksPath .githooks`) et la
 CI si configurée.
 
+Ce registre ne contient que le **socle** installé par défaut et les contrats
+propres à ce projet. `docs/catalogue-contrats.md` propose d'autres contrats
+génériques, pas encore adoptés (voir `docs/recettes/adopter-le-kit.md`).
+
 ## Sécurité (SEC)
 
 | ID | Règle | Périmètre | Source de vérité | Preuve | Raison |

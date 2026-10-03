@@ -347,3 +347,21 @@ test("lot 5 : le module qualité front optionnel n'est pas installé par init/ap
   }
 });
 
+test("lot 6 : catalogue de contrats et recette d'adoption livrés, skill Claude présent", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  for (const f of ["docs/catalogue-contrats.md", "docs/recettes/adopter-le-kit.md", ".claude/skills/adopter-le-kit/SKILL.md"]) {
+    assert.ok(existsSync(join(dir, f)), f);
+  }
+  assert.match(read(dir, "AGENTS.md"), /adopter-le-kit\.md/);
+  const r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
+test("lot 6 : le skill adopter-le-kit n'est pas livré sans Claude Code", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "codex", git: false }));
+  assert.ok(!existsSync(join(dir, ".claude")));
+  assert.ok(existsSync(join(dir, "docs/catalogue-contrats.md")));
+});
+
