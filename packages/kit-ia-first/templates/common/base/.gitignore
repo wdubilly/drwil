@@ -1,0 +1,28 @@
+# Secrets et configuration locale
+.env
+.env.local
+*.local
+
+# Dépendances et builds
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Résultats de tests et de couverture
+coverage/
+.coverage
+.coverage.*
+htmlcov/
+
+# Réglages d'outils IA : les réglages d'équipe (permissions, hooks) restent
+# versionnés ; les préférences personnelles ne le sont pas.
+.claude/settings.local.json
+
+# Système
+.DS_Store
