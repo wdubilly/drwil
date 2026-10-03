@@ -3,6 +3,8 @@
 // Lit .drwil/ia-first.json pour s'adapter aux couches, aux préfixes de contrats et à la langue.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
+import { execFileSync } from "node:child_process";
+import * as cadrage from "./cadrage.mjs";
 
 const root = process.cwd();
 const cfg = loadConfig();
@@ -16,6 +18,10 @@ const T = {
     statut: (f) => `${f} : pas de ligne « Statut » datée (AAAA-MM-JJ) en tête`,
     reprise: (f) => `${f} : section « Reprise » absente (passation)`,
     section: (f, s) => `${f} : section « ${s} » absente`,
+    horsFiche: (c) => `\`${c}\` : fichier de code hors de toute fiche de docs/projets/ (bloc cadrage)`,
+    cadrageEntete: (f) => `${f} : bloc cadrage sans ligne « fichiers: »`,
+    cadrageLigne: (f, l) => `${f} : ligne de cadrage non comprise « ${l} »`,
+    cadrageLarge: (f, m) => `${f} : motif de cadrage trop large « ${m} »`,
     bilan: (n, e) => `check-docs : ${n} fichiers scannés, ${e} erreur(s)`,
   },
   en: {
@@ -26,6 +32,10 @@ const T = {
     statut: (f) => `${f}: no dated « Status » line (YYYY-MM-DD) at the top`,
     reprise: (f) => `${f}: missing « Hand-off » section`,
     section: (f, s) => `${f}: missing « ${s} » section`,
+    horsFiche: (c) => `\`${c}\`: code file outside any docs/projets/ fiche (cadrage block)`,
+    cadrageEntete: (f) => `${f}: cadrage block without a « fichiers: » line`,
+    cadrageLigne: (f, l) => `${f}: cadrage line not understood « ${l} »`,
+    cadrageLarge: (f, m) => `${f}: cadrage pattern too broad « ${m} »`,
     bilan: (n, e) => `check-docs: ${n} files scanned, ${e} error(s)`,
   },
 }[lang];
@@ -43,6 +53,8 @@ const SECTIONS_INTENTION_FR = ["## Besoin", "## Existant", "## Questions à tran
 const SECTIONS_INTENTION_EN = ["## Need", "## Current state", "## Open questions"];
 // Modèles à copier et fiche permanente : pas des chantiers à lots, exemptés du contrôle QUA-015.
 const EXEMPTS_RE = /^modele-|^model-|^entretien-courant\.md$/;
+// Modèles à copier : jamais une vraie source de cadrage (leur bloc, s'il y en a un, n'est qu'un exemple).
+const MODELE_RE = /^modele-|^model-/;
 
 function loadConfig() {
   try {
@@ -126,6 +138,7 @@ for (const doc of docs) {
 }
 
 erreurs.push(...checkChantiers());
+erreurs.push(...checkCadrage());
 
 for (const e of erreurs) console.log(`  ✗ ${e}`);
 console.log(T.bilan(docs.length, erreurs.length));
@@ -147,6 +160,34 @@ function checkChantiers() {
   const intentionsDir = join(root, cfg.dirs?.intentions ?? "docs/intentions");
   const intentions = mdRecursif(intentionsDir).filter((p) => relative(intentionsDir, p) !== "README.md");
   for (const fiche of intentions) checkFiche(fiche, erreurs, false);
+  return erreurs;
+}
+
+// Rappel de cadrage, bloquant au commit (décision du demandeur, différente de run-box qui le
+// voulait non bloquant) : un fichier de code indexé doit être couvert par le bloc `cadrage` d'une
+// fiche de docs/projets/ (dont la fiche permanente « entretien courant » pour les petites tâches).
+function checkCadrage() {
+  const erreurs = [];
+  let indexes;
+  try {
+    indexes = execFileSync("git", ["ls-files"], { cwd: root, stdio: ["ignore", "pipe", "ignore"] })
+      .toString().split(/\r?\n/).filter(Boolean);
+  } catch {
+    return erreurs; // pas de dépôt git, ou git introuvable : rien à vérifier.
+  }
+  const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projets");
+  const fiches = mdRecursif(projetsDir).filter((p) => !MODELE_RE.test(relative(projetsDir, p)));
+  const fichesTexte = fiches.map((f) => [relative(root, f), readFileSync(f, "utf8")]);
+  for (const [rel, texte] of fichesTexte) {
+    const { problemes } = cadrage.lireBloc(texte);
+    for (const p of problemes) {
+      if (p.kind === "entete") erreurs.push(T.cadrageEntete(rel));
+      else if (p.kind === "ligne") erreurs.push(T.cadrageLigne(rel, p.ligne));
+      else if (p.kind === "large") erreurs.push(T.cadrageLarge(rel, p.motif));
+    }
+  }
+  const motifsParFiche = cadrage.motifsDuDepot(fichesTexte);
+  for (const c of cadrage.horsFiche(indexes, motifsParFiche, cfg)) erreurs.push(T.horsFiche(c));
   return erreurs;
 }
 

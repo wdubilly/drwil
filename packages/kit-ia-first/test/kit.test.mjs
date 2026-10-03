@@ -81,7 +81,8 @@ test("init en anglais, Codex seul, CI GitHub", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, lang: "en", tools: "codex", ci: "github", git: false }));
   for (const f of ["CLAUDE.md", "GEMINI.md", ".claude", ".cursor", "docs/contrats.md"]) assert.ok(!existsSync(join(dir, f)), f);
-  for (const f of ["AGENTS.md", "docs/contracts.md", "docs/recipes/add-an-api-route.md", ".github/workflows/ia-first.yml"]) {
+  for (const f of ["AGENTS.md", "docs/contracts.md", "docs/recipes/add-an-api-route.md", ".github/workflows/ia-first.yml",
+    "docs/projects/kit-mechanics.md"]) {
     assert.ok(existsSync(join(dir, f)), f);
   }
   assert.match(read(dir, "docs/architecture.md"), /Not decided/);
@@ -89,6 +90,13 @@ test("init en anglais, Codex seul, CI GitHub", async () => {
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout);
   assert.match(r.stdout, /not run: secrets/);
+});
+
+test("installation anglaise : le cadrage (QUA-016) ne bloque pas le premier commit", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, lang: "en" }));
+  assert.equal(git(dir, "add", "-A").status, 0);
+  assert.equal(git(dir, "commit", "-qm", "init").status, 0, "premier commit accepté");
 });
 
 test("init avec CI GitLab", async () => {
@@ -148,6 +156,69 @@ test("doublon d'ID dans le registre des contrats", async () => {
   const r = checks(dir);
   assert.notEqual(r.status, 0);
   assert.match(r.stdout, /QUA-011.*plusieurs fois/);
+});
+
+test("QUA-016 : rappel de cadrage, bloquant au commit, débloqué par le bloc cadrage", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir }));
+  assert.equal(git(dir, "add", "-A").status, 0);
+  assert.equal(git(dir, "commit", "-qm", "init").status, 0, "premier commit accepté (mecanique-ia-first.md couvre .githooks/)");
+
+  // un nouveau fichier de code hors de toute fiche bloque le commit.
+  mkdirSync(join(dir, "scripts"));
+  writeFileSync(join(dir, "scripts/tache.mjs"), "console.log('tache');\n");
+  git(dir, "add", "-A");
+  let r = git(dir, "commit", "-qm", "tache");
+  assert.notEqual(r.status, 0);
+  assert.match(r.stdout + r.stderr, /scripts\/tache\.mjs.*hors de toute fiche/);
+
+  // rattaché à la fiche « entretien courant », le commit passe.
+  writeFileSync(
+    join(dir, "docs/projets/entretien-courant.md"),
+    read(dir, "docs/projets/entretien-courant.md").replace("fichiers:\n-->", "fichiers:\n  - scripts/tache.mjs\n-->"),
+  );
+  git(dir, "add", "-A");
+  r = git(dir, "commit", "-qm", "tache rattachée");
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+
+  // un motif de cadrage trop large reste refusé.
+  writeFileSync(
+    join(dir, "docs/projets/entretien-courant.md"),
+    read(dir, "docs/projets/entretien-courant.md").replace("  - scripts/tache.mjs", "  - scripts/*"),
+  );
+  git(dir, "add", "-A");
+  r = git(dir, "commit", "-qm", "motif trop large");
+  assert.notEqual(r.status, 0);
+  assert.match(r.stdout + r.stderr, /motif de cadrage trop large/);
+});
+
+test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage glisse un message à l'agent", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+
+  const gardeFou = spawnSync(process.execPath, [".claude/hooks/garde-fou-bash.mjs"], {
+    cwd: dir, encoding: "utf8", input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat .env" } }),
+  });
+  assert.match(gardeFou.stdout, /"permissionDecision":"ask"/);
+  assert.match(gardeFou.stdout, /fichier \.env/);
+
+  const inoffensif = spawnSync(process.execPath, [".claude/hooks/garde-fou-bash.mjs"], {
+    cwd: dir, encoding: "utf8", input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat .env.example" } }),
+  });
+  assert.equal(inoffensif.stdout.trim(), "");
+
+  const rappel = spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
+    cwd: dir, encoding: "utf8",
+    input: JSON.stringify({ tool_name: "Write", tool_input: { file_path: join(dir, "scripts/nouveau.mjs") } }),
+  });
+  assert.match(rappel.stdout, /Rappel de cadrage/);
+  assert.match(rappel.stdout, /scripts\/nouveau\.mjs/);
+
+  const docIgnoree = spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
+    cwd: dir, encoding: "utf8",
+    input: JSON.stringify({ tool_name: "Write", tool_input: { file_path: join(dir, "docs/notes.md") } }),
+  });
+  assert.equal(docIgnoree.stdout.trim(), "");
 });
 
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {
