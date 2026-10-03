@@ -1,0 +1,4 @@
+ia-first:
+  image: node:20
+  script:
+    - node .githooks/run-checks.mjs

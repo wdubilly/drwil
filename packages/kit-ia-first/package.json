@@ -1,0 +1,26 @@
+{
+  "name": "@drwil/kit-ia-first",
+  "version": "0.0.1",
+  "type": "module",
+  "bin": {
+    "drwil-ia-first": "./bin/drwil-ia-first.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --build && node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "typescript": "^5.6.3"
+  }
+}

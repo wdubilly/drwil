@@ -1,0 +1,7 @@
+#!/bin/sh
+# Activé par `git config core.hooksPath .githooks`. Git for Windows exécute aussi ce script via son sh.
+if ! command -v node >/dev/null 2>&1; then
+  echo "[ia-first] node introuvable / not found : contrôles non exécutés, commit refusé." >&2
+  exit 1
+fi
+exec node "$(dirname "$0")/run-checks.mjs"

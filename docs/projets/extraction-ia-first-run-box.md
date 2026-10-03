@@ -1,0 +1,197 @@
+# Projet : extraire l'architecture IA-first complète de run-box-v2 dans le kit
+
+**Statut** : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; lot 1 en cours.
+
+## 1. Besoin
+
+Le kit (`packages/kit-ia-first/`) doit être l'extraction **complète** de
+l'architecture IA-first de run-box-v2, rendue générique et fonctionnelle pour
+n'importe quel projet. Règle du demandeur (2026-10-03) : **ne rien perdre** ;
+ce qui est trop propre à run-box n'est pas jeté, il est rendu générique
+(paramètre, modèle, exemple, point d'extension) ou classé explicitement
+« propre au projet » avec la raison.
+
+Constat du 2026-10-03 : le kit n'a repris qu'une fraction de l'architecture.
+Exemples mesurés : `docs/ia-first.md` 8 lignes dans le kit contre 227 dans
+run-box ; 2 contrats contre 31 ; 4 recettes de 3 à 10 lignes contre 11 ;
+0 skill contre 7 ; `AGENTS.md` de couche d'une ligne contre 44 à 63 lignes ;
+aucun des 11 fichiers de contrôle et de test de run-box n'est porté.
+
+## 2. Existant
+
+Relevé dans le code le 2026-10-03. Chemins run-box relatifs à la racine de
+run-box-v2 (dépôt voisin, non cités entre accents graves car absents d'ici).
+
+### 2.1 Ce qui fait l'architecture IA-first de run-box-v2
+
+Selon son propre descriptif (docs/ia-first.md de run-box) :
+
+1. Un point d'entrée unique et un contexte budgété (AGENTS.md, une fiche par
+   couche, chargement progressif).
+2. Une information, une seule source (skills = raccourcis vers les recettes,
+   contrats cités par ID).
+3. Des invariants outillés, et l'aveu de ce qui ne l'est pas (section
+   « Hors registre », preuves humaines nommées).
+4. Le contrôle est dans git (hooks), avec un filet propre à Claude Code en plus.
+5. Ce que l'agent doit prouver (tester ce que voit l'utilisateur, compte
+   rendu normatif, un contrôle qui échoue signale un contrat).
+6. Des limites assumées.
+7. Des chantiers exploitables à froid (intentions → index → fiches à lots,
+   marqueurs `[IA]`/`[humain]`/`[décision]`, section Reprise, rappel de cadrage).
+
+### 2.2 Inventaire pièce par pièce
+
+Les ID de contrats sont ceux de run-box-v2, cités avec le préfixe
+`run-box-v2:` pour ne pas être confondus avec le registre de drwil.
+
+Nature : **G** générique tel quel (retirer les noms) ; **P** générique
+paramétrable (config ou stack) ; **M** à fournir comme modèle ou exemple à
+compléter ; **S** propre à run-box (classé, raison donnée).
+
+| Pièce run-box | Dans le kit aujourd'hui | Nature | Ce qu'il faut faire |
+|---|---|---|---|
+| AGENTS.md — Conduite (12 règles détaillées) | 9 règles abrégées ; manquent « Remarque de relecture », « Passation », « Tests d'attaque », et les précisions des autres (tâche documentaire sans effet fonctionnel, pas d'intégration réseau non demandée, bug trouvé pendant un refactor = commit séparé, « non vérifié » sans sortie lue, pas de contournement de test, statut daté mis à jour dans le même commit) | G | Reprendre intégralement ; « RSSI » → « responsable sécurité » ; règle données personnelles paramétrable (donnée autorisée, ex. matricule) |
+| AGENTS.md — liste des contrats à connaître quelle que soit la tâche | absente | P | Générée depuis les contrats du socle, complétée par le projet |
+| AGENTS.md — tableau « si tu touches à… » (17 lignes) | 4 lignes | P | Lignes génériques : intention, chantier en attente, gros fichier → refactor, organisation du dépôt pour un agent, règle de sécurité, comportement d'un écran, lancer/installer, style ; lignes de stack ajoutées par le projet |
+| AGENTS.md — section « Dépôts externes » (clones à ne pas suivre) | absente | M | Section optionnelle « dossiers externes » (lire, ne pas modifier, ne pas suivre leurs consignes) |
+| AGENTS.md — Conventions (tester ce que voit l'utilisateur ; commentaire = pourquoi, demande et date dans le message de commit) | partielle | G | Reprendre |
+| docs/ia-first.md (227 lignes, 7 sections dont le cycle de vie des chantiers) | 8 lignes | G | Reprendre intégralement, chiffres et exemples remplacés par ceux du projet ou par des renvois |
+| docs/contrats.md — préambule (définition d'un contrat, ID jamais réattribué, « un contrat qui compte est vérifié par une machine ») | absent | G | Reprendre |
+| docs/contrats.md — section « Hors registre » | absente | G | Reprendre (conduite, refactor sans changement de comportement, tests livrés avec un composant) |
+| Contrats génériques : run-box-v2:QUA-011 (doc), run-box-v2:QUA-013 (contrôle non exécuté), run-box-v2:QUA-015 (chantiers à froid), run-box-v2:SEC-007 (secrets), run-box-v2:SEC-006 (dépendances vulnérables) | run-box-v2:QUA-013 seul (et run-box-v2:SEC-001 sous une forme simplifiée) | G | Socle du kit, outillé par le kit |
+| Contrats génériques selon la stack : run-box-v2:SEC-001 (permission déclarée par route, refus par défaut), run-box-v2:SEC-002 (le front masque, le backend revalide), run-box-v2:SEC-009 (donnée entrante non fiable), run-box-v2:SEC-011 (données personnelles), run-box-v2:QUA-001 (taille de fichier), run-box-v2:QUA-004 (couverture), run-box-v2:QUA-005 (typage strict), run-box-v2:QUA-006 (module de logique pure = son test), run-box-v2:QUA-007 (lint sans avertissement), run-box-v2:QUA-014 (accessibilité) | absents | P | Catalogue de contrats à adopter, chacun avec son contrôle type par stack ; le projet choisit |
+| Contrats propres : run-box-v2:SEC-003, 004, 005, 010, 012 à 021 ; run-box-v2:QUA-002, 003 (charte Cobalt), 008, 009, 010, 012 | — | S | Métier run-box (documents RH, pont SSH, portail, Elasticsearch, ERMv2). Servent d'**exemples** de contrats bien écrits dans le catalogue, sans être installés |
+| docs/recettes/refactorer-sans-casser.md (méthode : tests de caractérisation commités seuls d'abord, petites étapes un commit chacune, aucun changement de comportement, bug = commit séparé avec son test, pièges rencontrés, compilation de production) | 4 lignes génériques | G + M | Reprendre la méthode intégralement ; les pièges React deviennent une section « pièges déjà rencontrés » à alimenter par le projet (exemple fourni) |
+| Outillage du refactor : run-box-v2:QUA-001 et frontend/scripts/check-file-size.mjs (plafond de lignes, fichiers trop gros plafonnés à leur taille actuelle et qui ne peuvent que maigrir) ; ligne « un gros fichier existant » du tableau ; convention « tester ce que voit l'utilisateur » ; règle « bug trouvé pendant un refactor » ; modèle de découpage par couche | absent | P | Contrôle de taille générique en Node (extensions et plafond en config, liste des plafonds hérités), lié au contrat run-box-v2:QUA-001 du catalogue ; le reste via les pièces ci-dessus |
+| Recettes génériques : ajouter-une-route-api, ajouter-un-ecran-front, deployer-en-prod, lancer-en-local, modifier-les-droits, gerer-les-acces, sauvegarder-et-restaurer | 3 présentes, squelettiques | M | Structure et étapes génériques reprises (droits, tests, contrats cités) ; détails de stack à compléter par le projet |
+| Recettes propres : ajouter-une-commande-ssh, lancer-le-portail, deployer-backend-local | — | S | Pont SSH, portail, conteneur run-box. La première sert d'exemple de recette « opération sensible » |
+| .claude/skills/ (7 raccourcis vers les recettes) | aucun (README seul) | P | Un skill par recette du kit, généré avec `--tools claude` |
+| AGENTS.md de couche (Contexte, Pièges des tests, Contrats de la couche, Charte et recettes, Vérifier) | une ligne | M | Modèle à sections, rempli par le projet ou par l'IA à l'adoption |
+| docs/projets/en-attente.md (cases à cocher, marqueur obligatoire, sections par thème, statut jamais recopié) | tableau vide | G | Reprendre le format (contrôlé par run-box-v2:QUA-015) |
+| docs/intentions/README.md (définition, cycle de vie, forme contrôlée, table des fiches) | 3 lignes | G | Reprendre |
+| Modèles de fiche : intention (Statut, Besoin, Existant, Questions à trancher) ; projet (Statut daté, Besoin, Hors périmètre, Contraintes, Décisions, Points à trancher, Lots avec critère de sortie, Reprise, bloc cadrage) | absents | M | Fournir les deux modèles (dans `docs/ia-first.md` ou une recette « ouvrir un chantier ») |
+| .githooks/run-checks.sh (ordre des contrôles, blocs de tests en parallèle, journal affiché seulement en cas d'échec, compteurs de tests affichés même en succès, proxy d'entreprise, images Docker par empreinte) | run-checks.mjs séquentiel, sans compteurs | P | Parallélisme, journaux et compteurs en Node ; Docker et proxy en option documentée |
+| .githooks/check-docs.py : chemins (détection par préfixes connus, ce qui évite les faux positifs), chemins relatifs à la couche, mention « (à créer) », ID défini une seule fois, run-box-v2:QUA-015 (marqueurs, Statut daté, sections des intentions, Reprise des projets), avertissements de cadrage | chemins et ID seulement, avec des faux positifs | G | Porter tout en Node |
+| .githooks/cadrage.py + scripts/rappel-cadrage.py (fichier de code hors de toute fiche : rappel à l'agent et avertissement au commit, jamais bloquant) | retiré du kit le 2026-10-03 (copie vide) | P | Porter en Node ; périmètre du « code » lu dans les clés de config déjà prévues pour ça (`layerPrefixes`, `codePrefixes`, `extraCodeFiles`, `extraCodeGlobs`, `ciFiles`), qu'aucun contrôle ne lit aujourd'hui |
+| scripts/garde-fou-bash.py (hook Claude Code : demander l'accord sur un fichier de secrets ou un pipe vers un shell) | retiré du kit le 2026-10-03 (copie vide) | G | Porter en Node, message sans nom de projet |
+| .claude/settings.json (39 allow, 21 ask, 15 deny commentés, leviers d'exécution git et find neutralisés, deux hooks branchés) | 4 règles | P | Reprendre le modèle et son commentaire ; commandes de stack (npm, pytest…) selon la stack |
+| .githooks/checks.json + check-control-coverage.py (contrôle « dégradable » ⇒ job CI qui se déclenche sur les mêmes chemins) | absent ; clé `checks` sans notion de dégradable ni de job CI | P | Fusionner dans la config du kit et vérifier le fichier de CI généré |
+| .githooks/check-code-rules.py (règles d'hygiène machine) | absent | M + S | Point d'extension vide et documenté ; les règles de run-box (imports privés, CSV, isolation du portail) en exemples |
+| .githooks/test_*.py (7 fichiers) + .coveragerc (couverture 100 % des contrôles, job CI) | tests du kit dans le paquet, non livrés aux projets | G | Livrer les tests des contrôles avec les contrôles |
+| .githooks/pre-push | absent | G | Ajouter |
+| .githooks/commit-msg (refus de « Co-Authored-By ») | absent | P | Option, désactivée par défaut (décision ci-dessous) |
+| .gitlab-ci.yml (un job par sujet avec rules: changes : secrets, docs, checks-coverage, audit des dépendances, tests par couche) | un seul job | P | Jobs générés selon la stack et les contrôles déclarés, en GitHub et GitLab |
+| frontend/scripts/check-colors.mjs, check-contrast.mjs (charte, contraste clair/sombre) | absents | P | Module optionnel « qualité front » (charte et palette en config) |
+| README.md, INSTALL.md (dont « Utiliser un autre outil IA que Claude »), docs/architecture.md, docs/securite.md (modèle, preuves automatisées, tests d'attaque faits et à faire), docs/deploiement.md, docs/fonctionnalites.md, docs/charte-graphique.md | architecture.md seul | M | Squelettes à sections, cités par AGENTS.md |
+| .env.example, .gitignore (run-box-v2:SEC-007) | absents | G | Générer (`.env` ignoré, `.env.example` versionné) |
+| e2e/ (Playwright dans Docker, jeux de données factices) | absent | S | Infrastructure propre ; le principe (« neutraliser les dépendances réelles, tout en CI ») va dans la fiche modèle ou une recette optionnelle |
+| scripts/sauvegarder.sh, restaurer.sh, deploy-*.sh, exercice-sauvegarde/ | absents | S | Propres à la production run-box ; la recette générique « sauvegarder et restaurer » renvoie à des scripts du projet |
+| keycloak/, portal/, docker-compose*.yml, dossier-modernisation.html | — | S | Application, pas architecture IA-first |
+
+## 3. Comment rendre l'ensemble générique et fonctionnel
+
+1. **Socle de méthode** (toujours installé) : les textes de run-box repris mot
+   pour mot, avec le spécifique retiré ou remplacé par une variable.
+2. **Socle de contrats outillé par le kit** : run-box-v2:QUA-011, run-box-v2:QUA-013, run-box-v2:QUA-015,
+   run-box-v2:SEC-007, run-box-v2:SEC-006 (ce dernier selon la stack). Un projet installé est vert
+   le premier jour et ne prétend rien de plus.
+3. **Catalogue de contrats à adopter**, avec leur contrôle type par stack ; les
+   contrats métier de run-box y servent d'exemples, pas d'installation.
+4. **Contrôles en Node, pilotés par la config** (périmètre du code, contrôles
+   déclarés, dégradable et job CI, plafonds de taille).
+5. **Adoption par l'IA** : une recette « adopter le kit » (et son skill)
+   demande à l'agent de relever la stack, remplir les `AGENTS.md` de couche,
+   déclarer les contrôles et proposer les contrats du catalogue, chaque choix
+   restant une `[décision]` de l'utilisateur. C'est le prolongement de la
+   détection de stack de `apply`.
+6. **Critère « rien perdu »** : le tableau 2.2 devient une table de
+   correspondance vérifiée — chaque fichier IA-first de run-box a un
+   équivalent dans le kit ou une ligne S justifiée.
+
+## 4. Lots proposés
+
+Chaque lot : tests du kit verts (`npm test` dans le paquet), contrôles d'un
+projet généré verts, doc du kit à jour dans le même commit.
+
+- **Lot 1 — Méthode et docs** [IA] : AGENTS.md complet, `docs/ia-first.md`
+  complet, préambule et « Hors registre » des contrats, socle de contrats,
+  format de l'index et des intentions, modèles de fiche, recettes génériques
+  (dont refactorer-sans-casser complète), skills, squelettes de docs produit,
+  `.gitignore` et `.env.example`. Sortie : chaque ligne G et M du tableau 2.2
+  pour ces pièces est couverte.
+- **Lot 2 — check-docs complet** [IA] : préfixes, couche, « (à créer) »,
+  ID unique, run-box-v2:QUA-015, avec tests. Sortie : faux positifs du point 8 de
+  `docs/projets/suites-kit-portable.md` supprimés.
+- **Lot 3 — Cadrage et filet Claude Code** [IA] : cadrage, rappel à l'agent,
+  garde-fou, modèle de permissions, avec tests.
+- **Lot 4 — run-box-v2:QUA-013 complet et CI** [IA] : contrôles dégradables, couverture
+  CI vérifiée, jobs CI par sujet, pre-push, commit-msg optionnel, tests et
+  couverture des contrôles livrés aux projets.
+- **Lot 5 — Outillage du refactor** [IA] : contrôle de taille avec plafonds
+  hérités, point d'extension des règles d'hygiène, module optionnel qualité
+  front.
+- **Lot 6 — Adoption par l'IA** [IA] : recette et skill « adopter le kit »,
+  catalogue de contrats.
+- **Lot 7 — Anglais** [IA] : traduction de tout le contenu ajouté.
+- **Lot 8 — Preuve « rien perdu »** [IA] puis [humain] : `apply` sur une copie
+  de run-box-v2, comparaison avec l'original, table de correspondance à jour ;
+  relecture par le demandeur.
+
+## 5. Décisions
+
+Tranchées par le demandeur le 2026-10-03 :
+
+- Contrôles en **Node**.
+- Le kit installe **seulement le socle de contrats** ; le reste va au catalogue.
+- Rappel de cadrage **bloquant au commit** (choix différent de run-box, qui
+  le voulait non bloquant pour ne pas lasser). Le rappel à l'agent après
+  écriture reste informatif (le fichier est déjà écrit). docs/ et les fichiers .md
+  n'en relèvent jamais. Les petites tâches se rattachent à une fiche
+  permanente « entretien courant » ; les motifs trop larges restent refusés.
+- Anglais **traduit en fin de projet** (lot 7) : le moins cher, le contenu
+  n'est traduit qu'une fois stabilisé.
+- Module **qualité front** (couleurs dans le seul dossier du thème, contraste
+  clair et sombre) **fourni en option**, désactivé par défaut, proposé par la
+  recette d'adoption quand un front est détecté ; palette en config, charte
+  Cobalt de run-box en exemple ; Tailwind d'abord.
+
+Confirmées par le demandeur le 2026-10-03 :
+
+- Registre des contrats en **tableau**, une ligne par contrat (plus court à
+  charger pour un agent, ID unique facile à contrôler ; le détail long renvoie
+  au fichier source de vérité).
+- Hook commit-msg refusant « Co-Authored-By » **fourni mais désactivé par
+  défaut** (règle propre à run-box ; des outils IA ajoutent cette ligne par
+  défaut et des équipes la veulent pour tracer les contributions IA).
+
+## 6. Reprise
+
+- **Dernier état** (2026-10-03, fin de session) : décisions de la section 5
+  toutes tranchées. Lot 1 commencé mais **aucun fichier du lot écrit** :
+  l'écriture du nouvel `AGENTS.md` du kit a été interrompue. Les textes de
+  run-box nécessaires au lot 1 ont été relus (AGENTS.md, docs/ia-first.md,
+  préambule des contrats, recettes, skills, AGENTS.md de couche, format de
+  l'index et des intentions).
+- **Défaut trouvé, à corriger en tête du lot 1** : `init` réécrit
+  `docs/contrats.md`, `docs/projets/en-attente.md`, `AGENTS.md` et les autres
+  docs du projet, donc efface contrats, chantiers et consignes ajoutés par le
+  projet. Correction prévue : `init` ne remplace que `.githooks/` (mécanique du
+  kit), tout le reste n'est écrit que s'il manque, option `--force` pour tout
+  réécrire.
+- **Contenu prévu du lot 1** (modèles français, `packages/kit-ia-first/templates/fr/`) : AGENTS.md
+  complet (12 règles de conduite, contrats à connaître, tableau « si tu
+  touches à… » générique, dossiers externes, conventions) ; `docs/ia-first.md`
+  complet ; `docs/contrats.md` en tableau (préambule, socle run-box-v2:QUA-011, run-box-v2:QUA-013,
+  run-box-v2:QUA-015, run-box-v2:SEC-006, run-box-v2:SEC-007 avec preuve honnête, « Hors registre ») et
+  check-docs qui lit les lignes du tableau ; index au format cases à cocher ;
+  `docs/intentions/README.md` complet ; fiche permanente
+  docs/projets/entretien-courant.md (à créer dans les modèles) ; recettes génériques (refactorer sans
+  casser complète, route API, écran, droits, accès, lancer en local,
+  déployer, sauvegarder, ouvrir un chantier avec modèles de fiche) ; un skill
+  Claude par recette ; AGENTS.md de couche à sections ; squelettes README,
+  INSTALL, sécurité, déploiement, fonctionnalités ; `.gitignore` et
+  `.env.example`. Anglais au lot 7 : d'ici là, `packages/kit-ia-first/templates/en/` est en retard.
+- **Travail non commité** : tout le travail du 2026-10-03 sur le kit et les
+  docs de drwil (aucun commit demandé). Tests du kit : 9/9 verts au dernier
+  passage (`npm test` dans `packages/kit-ia-first/`).
+- **Prochaine étape** : [IA] lot 1, en commençant par la correction de `init`.

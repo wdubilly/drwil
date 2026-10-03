@@ -1,0 +1,42 @@
+{
+  "projectName": "drwil",
+  "projectShort": "drwil",
+  "lang": "fr",
+  "layers": [
+    "core",
+    "adapters",
+    "plugin-opencode",
+    "mcp-server",
+    "kit-ia-first"
+  ],
+  "contractPrefixes": [
+    "SEC",
+    "QUA"
+  ],
+  "dirs": {
+    "projects": "docs/projets",
+    "intentions": "docs/intentions",
+    "recettes": "docs/recettes",
+    "contracts": "docs/contrats.md",
+    "index": "docs/projets/en-attente.md"
+  },
+  "layerPrefixes": [
+    "app",
+    "tests",
+    "src",
+    "scripts"
+  ],
+  "codePrefixes": [
+    "scripts",
+    ".githooks",
+    "e2e"
+  ],
+  "extraCodeFiles": [],
+  "extraCodeGlobs": [
+    "docker-compose*.yml"
+  ],
+  "ciFiles": [
+    ".gitlab-ci.yml"
+  ],
+  "mode": "full"
+}

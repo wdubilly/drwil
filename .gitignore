@@ -1,0 +1,19 @@
+# Dépendances
+node_modules/
+
+# Produits de build (régénérés par `tsc --build`)
+dist/
+*.tsbuildinfo
+
+# Caches Python (contrôles de .githooks/ et scripts/)
+__pycache__/
+*.py[cod]
+
+# Journaux et fichiers temporaires
+*.log
+.DS_Store
+
+# Variables d'environnement (jamais de secret dans le dépôt)
+.env
+.env.*
+!.env.example
