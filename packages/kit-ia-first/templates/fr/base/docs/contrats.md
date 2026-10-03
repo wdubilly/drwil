@@ -1,17 +1,40 @@
 # Contrats (source unique des invariants)
 
-Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs : citer l'ID.
+**Source unique des invariants du projet.** Les autres documents (`AGENTS.md`,
+les `AGENTS.md` de couche, recettes, skills) citent un contrat par son ID et
+ne recopient pas sa règle.
 
-## SEC-001 — Portée des droits
-**Règle** : Les droits d'accès sont décidés par le backend.
-**Périmètre** : Toutes les routes exposées.
-**Source de vérité** : Code backend (couche autorisations).
-**Preuve** : Tests d'autorisation.
-**Raison** : Principe de défense en profondeur.
+Un **contrat** est un invariant du produit ou du code dont la violation se
+constate objectivement (dans le dépôt ou à l'exécution). Il a un ID stable
+(jamais réattribué, même retiré), une règle normative, un périmètre, une
+source de vérité (le code qui l'implémente), une preuve et une raison.
+Principe : **un contrat qui compte est vérifié par une machine** ; une preuve
+**humaine** est signalée comme telle : c'est le prochain contrôle à outiller.
 
-## QUA-013 — Contrôle non exécuté n'est pas passé
-**Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé.
-**Périmètre** : Tout contrôle listé dans les vérifs.
-**Source de vérité** : `.githooks/run-checks.mjs` et son historique d'exécution.
-**Preuve** : Sortie lue du contrôle concerné.
-**Raison** : Empêcher l'affirmation sans exécution.
+Où tournent les contrôles : hook pré-commit (`.githooks/run-checks.mjs`, à
+activer une fois par clone avec `git config core.hooksPath .githooks`) et la
+CI si configurée.
+
+## Sécurité (SEC)
+
+| ID | Règle | Périmètre | Source de vérité | Preuve | Raison |
+|---|---|---|---|---|---|
+| SEC-006 | Aucune dépendance avec une faille connue. | dépendances du projet | manifeste de dépendances (ex. package.json, requirements.txt) | audit déclaré par le projet (`.drwil/ia-first.json` → `checks`), hook + CI | une bibliothèque vulnérable annule le reste |
+| SEC-007 | Pas de secret dans le dépôt (`.env`, clés, mots de passe, configs clients). | tout le dépôt et son historique | — | gitleaks : fichiers indexés (hook, si installé) + historique complet (job CI, si configuré) | fuite irréversible une fois poussée |
+
+## Qualité (QUA)
+
+| ID | Règle | Périmètre | Source de vérité | Preuve | Raison |
+|---|---|---|---|---|---|
+| QUA-011 | Tout chemin du dépôt et tout ID de contrat cités dans la doc et les skills existent (ID définis une seule fois au registre). | `AGENTS.md`, les `AGENTS.md` de couche, `docs/`, `.claude/skills/` | — | `.githooks/check-docs.mjs` (hook + CI) | une doc fausse égare les IA |
+| QUA-013 | Aucun contrôle ne peut disparaître sans que cela se voie. Un contrôle qui ne peut pas s'exécuter sur un poste (outil absent) n'est jamais qu'un avertissement, jamais un succès silencieux. | les contrôles de `.githooks/run-checks.mjs` | `.githooks/run-checks.mjs` et son historique d'exécution | **machine** : chaque contrôle finit « échec », « OK » ou « non exécuté », jamais masqué | un contrôle qui peut ne pas tourner sans le dire est un contrôle qui, à terme, ne prouve plus rien |
+| QUA-015 | Chantiers exploitables à froid : chaque case ouverte de l'index des chantiers porte un marqueur `[IA]`, `[humain]` ou `[décision]` ; chaque fiche de `docs/projets/` et de `docs/intentions/` (hors index et README) a une ligne « Statut » en tête, datée (AAAA-MM-JJ) ; chaque fiche d'intention a les sections « Besoin », « Existant » et « Questions à trancher » ; chaque fiche de projet a une section « Reprise » (passation). | `docs/projets/`, `docs/intentions/` | `docs/ia-first.md` (section 7) | `.githooks/check-docs.mjs` (hook + CI) ; justesse du statut et du contenu : **humain** | un agent reprend un chantier à froid : sans statut ni marqueur, il refait le travail, tente un geste humain ou tranche à la place du demandeur |
+
+## Hors registre (ce ne sont pas des contrats)
+
+| Règle | Nature | Où elle vit |
+|---|---|---|
+| Commits, données personnelles dans les sorties d'une IA, secrets dans les sorties d'outil, tests d'attaque sur cible réelle, doc à jour dans le même commit | conduite (humaine) | `AGENTS.md`, section Conduite |
+| Refactor sans changement de comportement | procédure (humaine) | `docs/recettes/refactorer-sans-casser.md` |
+| Tests livrés avec tout nouveau composant | convention (humaine) | `AGENTS.md` de la couche concernée |
+
