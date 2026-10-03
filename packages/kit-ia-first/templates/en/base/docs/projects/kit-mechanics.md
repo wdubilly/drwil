@@ -6,8 +6,12 @@
 fichiers:
   - .githooks/run-checks.mjs
   - .githooks/check-docs.mjs
+  - .githooks/check-control-coverage.mjs
   - .githooks/cadrage.mjs
+  - .githooks/cadrage.test.mjs
   - .githooks/pre-commit
+  - .githooks/pre-push
+  - .githooks/commit-msg
 {{cadrageCi}}
 {{cadrageClaude}}
 -->
@@ -31,4 +35,6 @@ hand-off doc).
 
 - **Last state**: fiche shipped at install time, nothing to hand off. If the
   kit adds a new mechanics file (`.githooks/` or an AI tool setting), add it
-  here.
+  here. Lot 4 added `.githooks/check-control-coverage.mjs` (QUA-013),
+  `.githooks/pre-push`, `.githooks/commit-msg` (shipped disabled) and
+  `.githooks/cadrage.test.mjs`.

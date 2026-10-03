@@ -89,16 +89,26 @@ réglage d'assistant :
 
 Ce que `.githooks/run-checks.mjs` enchaîne, dans l'ordre : secrets (gitleaks, si
 installé), références de la doc (QUA-011), tests des contrôles eux-mêmes
-(s'il y en a), puis les contrôles propres au projet déclarés dans
-`.drwil/ia-first.json` (clé `checks`).
+(s'il y en a), couverture CI de chaque contrôle (QUA-013, s'il y a une CI),
+puis les contrôles propres au projet déclarés dans `.drwil/ia-first.json`
+(clé `checks`).
 
 Un détail fait que ce contrôle est réellement exécuté plutôt que contourné :
 **un contrôle qui ne tourne pas se voit** (QUA-013) — un contrôle qui ne peut
 pas s'exécuter sur un poste (outil absent) finit « non exécuté », jamais
-masqué en succès silencieux.
+masqué en succès silencieux. Un contrôle **dégradable** (ex. secrets, sans
+gitleaks) doit en plus avoir un job de CI qui se déclenche sur les mêmes
+chemins : `.githooks/check-control-coverage.mjs` le vérifie en relisant le
+fichier de CI, pas seulement en constatant que le job existe (un job qui
+existe mais ne se déclenche jamais ne couvre rien). Le même hook rejoue au
+push (`.githooks/pre-push`), pour rattraper un commit passé avec
+`--no-verify`. Un hook `commit-msg` (refus de la ligne « Co-Authored-By ») est
+livré mais désactivé par défaut (`chmod +x .githooks/commit-msg` pour
+l'activer).
 
-*(Filet propre à un outil IA, en plus et jamais à la place des hooks git : non
-encore outillé par ce kit — voir `docs/projets/` si un chantier le prévoit.)*
+*(Filet propre à un outil IA, en plus et jamais à la place des hooks git :
+voir la section « Rappel de cadrage » plus bas pour ce que le kit outille
+déjà avec Claude Code.)*
 
 ## 5. Ce que l'agent doit prouver de son travail
 

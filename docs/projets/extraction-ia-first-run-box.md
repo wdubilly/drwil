@@ -1,6 +1,6 @@
 # Projet : extraire l'architecture IA-first complète de run-box-v2 dans le kit
 
-**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1, 2 et 3 terminés** ; lot 4 (run-box-v2:QUA-013 complet et CI) à confirmer avec le demandeur avant de l'entamer.
+**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 à 4 terminés** ; demandeur a validé le passage jusqu'au bout des lots restants (2026-10-04) ; lot 5 (outillage du refactor) en cours.
 
 ## 1. Besoin
 
@@ -237,7 +237,43 @@ Confirmées par le demandeur le 2026-10-03 :
   installation anglaise avec git bloquait son premier commit faute de fiche
   de mécanique — `docs/projects/kit-mechanics.md` corrige ça, test dédié
   ajouté). 16/16 tests verts.
-- **Prochaine étape** : [décision] confirmer avec le demandeur le passage au
-  lot 4 (run-box-v2:QUA-013 complet et CI : contrôles dégradables, couverture
-  CI vérifiée, jobs CI par sujet, pre-push, commit-msg optionnel) avant de
-  l'entamer.
+- **Demandeur (2026-10-04)** : « va jusqu'au bout sans moi » — autorise
+  l'enchaînement des lots 4 à 8 sans confirmation intermédiaire ; commits
+  réguliers par sujet, toujours sans push.
+- **Lot 4 terminé** (2026-10-04) : run-box-v2:QUA-013 complet et CI.
+  `.githooks/check-control-coverage.mjs` : port Node de
+  `check-control-coverage.py` — un contrôle **dégradable** (ex. secrets sans
+  gitleaks) doit avoir un job CI qui se déclenche réellement sur les mêmes
+  chemins (relit `.gitlab-ci.yml` ou le workflow GitHub, pas seulement
+  l'existence du job). Contrôles du socle déclarés en dur
+  (secrets-fichiers, docs-references, controles-autotest) ; un contrôle du
+  projet (`.drwil/ia-first.json` → `checks`) peut se couvrir lui aussi en
+  ajoutant `chemins`/`ciJob`/`degradable`. Câblé dans `run-checks.mjs`
+  (non exécuté, pas en échec silencieux, si `ci: none`). Job CI renommé
+  `checks` dans les deux fichiers de CI (au lieu de `ia-first` côté
+  GitLab) pour une seule convention de nom. `.githooks/pre-push` ajouté
+  (mêmes contrôles qu'au commit, rattrape un `--no-verify` ou un hook pas
+  encore activé) ; `.githooks/commit-msg` ajouté (refuse « Co-Authored-By »),
+  **livré désactivé par défaut** (non exécutable à l'installation —
+  `chmod +x` pour l'activer), conformément à la décision du demandeur.
+  `.githooks/cadrage.test.mjs` livré aux projets (pas seulement au paquet
+  du kit) : premier contrôle du kit qui s'auto-teste chez le projet, repris
+  automatiquement par le pas « tests des contrôles eux-mêmes ».
+  **Simplification assumée** (à documenter, pas cachée) : contrairement à
+  run-box-v2 (un job CI par sujet, avec Docker et des runners dédiés par
+  stack), le kit garde **un seul job CI** (`checks`) qui lance
+  `run-checks.mjs` au complet ; GitHub Actions ne filtre pas un job par
+  chemin nativement (seul `on: paths:` existe, au niveau du workflow), et le
+  kit ne suppose aucun Docker. Le fractionnement par sujet reste une option
+  future si une stack lente (ex. e2e) le justifie — pas reproduit pour ne
+  pas imposer une complexité que rien ne demande aujourd'hui. Pas de mesure
+  de couverture des contrôles eux-mêmes (`.coveragerc` équivalent) : jugé
+  hors de portée raisonnable pour ce lot, à réévaluer si un vrai besoin se
+  présente. 3 tests ajoutés (couverture verte par défaut GitHub + GitLab,
+  détection d'un job qui ne se déclenche plus, `ci: none` signalé non
+  exécuté). 19/19 tests verts. Note corrigée en passant : la section 4 de
+  `docs/ia-first.md` disait encore « filet IA non outillé » alors que le
+  lot 3 avait déjà livré les hooks Claude Code — texte mis à jour.
+- **Prochaine étape** : lot 5 (outillage du refactor : contrôle de taille
+  avec plafonds hérités, point d'extension des règles d'hygiène, module
+  qualité front optionnel).
