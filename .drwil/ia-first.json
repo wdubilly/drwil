@@ -36,7 +36,7 @@
     "docker-compose*.yml"
   ],
   "ciFiles": [
-    ".gitlab-ci.yml"
+    ".github/workflows/ia-first.yml"
   ],
   "mode": "full"
 }

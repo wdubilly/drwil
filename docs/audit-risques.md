@@ -8,7 +8,7 @@
 | ID | Risque | Catégorie | Gravité | Fichiers concernés | Action proposée |
 |---|---|---|---|---|---|
 | RSK-1 | Aucun contrôle projet déclaré (lint/tests/typecheck) | Sécurité/Qualité | 🔴 | `.drwil/ia-first.json`, `.githooks/run-checks.mjs` | Déclarer les contrôles réels du dépôt dans `.drwil/ia-first.json` → `checks` |
-| RSK-2 | Pas de CI configurée pour couvrir les contrôles (QUA-013 non exécuté) | Tests | 🔴 | `.drwil/ia-first.json` (`ciFiles: []`), `.githooks/run-checks.mjs` | Activer `.github/workflows/ia-first.yml` (livré mais non raccordé) ou le fichier GitLab CI générique (non utilisé ici) |
+| RSK-2 | ~~Pas de CI configurée pour couvrir les contrôles (QUA-013 non exécuté)~~ **corrigé le 2026-10-04** | Tests | ✅ | `.drwil/ia-first.json` (`ciFiles`), `.githooks/run-checks.mjs` | `ciFiles` pointait sur un fichier GitLab CI inexistant alors que `.github/workflows/ia-first.yml` tourne déjà — corrigé pour pointer dessus |
 | RSK-3 | Compatibilité Windows/macOS jamais testée | Stabilité | 🟠 | `docs/projets/suites-kit-portable.md` (point 1), `packages/kit-ia-first/src/index.ts` | Tester `init`/`apply` sur les trois OS, idéalement en matrice CI |
 | RSK-4 | `apply`/`init` ne nettoient jamais les fichiers obsolètes d'une version antérieure du kit | Code mort | 🟠 | `docs/projets/suites-kit-portable.md` (point 3), `packages/kit-ia-first/src/index.ts` | Définir une liste de fichiers retirés par version, ne supprimer que les fichiers identiques à un ancien modèle |
 | RSK-5 | Les contrôles `.githooks/check-docs.mjs` et `.githooks/run-checks.mjs` installés sur drwil n'ont pas de test propre côté dépôt (seul `.githooks/cadrage.test.mjs` existe) | Tests | 🟡 | `.githooks/cadrage.test.mjs`, `.githooks/check-docs.mjs`, `.githooks/run-checks.mjs` | Ajouter des cas de non-régression ciblés (secrets absents, `checks` vide, CI absente) |
@@ -27,16 +27,22 @@
 - **Correctif recommandé** : déclarer les contrôles effectifs de drwil
   (TypeScript `tsc --build`, `node --test` du kit, etc.) dans `checks`.
 
-### RSK-2 — Pas de CI pour couvrir les contrôles
+### RSK-2 — Pas de CI pour couvrir les contrôles (corrigé le 2026-10-04)
 - **Attendu** : `docs/contrats.md` (QUA-013) exige qu'au moins une CI
   exécute les mêmes contrôles qu'en local.
-- **Codé réellement** : `.drwil/ia-first.json` → `ciFiles: []`. Le dépôt
-  possède pourtant `.github/workflows/ia-first.yml` (livré par `apply()`),
-  non déclaré donc non vérifié par `.githooks/run-checks.mjs`.
-- **Risque encouru** : une régression locale non détectée peut être
-  poussée sans filet CI.
-- **Correctif recommandé** : ajouter `.github/workflows/ia-first.yml` à
-  `ciFiles` une fois son déclenchement vérifié.
+- **Constaté** : `.drwil/ia-first.json` → `ciFiles: [".gitlab-ci.yml"]`,
+  un fichier inexistant (reliquat du portage depuis run-box-v2, qui
+  était sur GitLab) — le dépôt possède pourtant déjà
+  `.github/workflows/ia-first.yml`, livré par `apply()` et actif, mais
+  jamais déclaré donc jamais vérifié par `.githooks/run-checks.mjs`
+  (`.githooks/check-control-coverage.mjs` passait silencieusement, sans rien
+  vérifier, faute de trouver le fichier déclaré).
+- **Risque encouru** : une régression locale non détectée pouvait être
+  poussée sans filet CI réel (fausse confiance : le contrôle « passait »
+  sans rien tester).
+- **Correctif appliqué** : `ciFiles` pointe maintenant sur
+  `.github/workflows/ia-first.yml`. Preuve : `.githooks/check-control-coverage.mjs`
+  vérifie désormais réellement les jobs du workflow GitHub (0 erreur).
 
 ### RSK-3 — Compatibilité multi-plateforme non démontrée
 - **Attendu** : `docs/projets/suites-kit-portable.md`, point 1, liste
