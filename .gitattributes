@@ -1,0 +1,5 @@
+# Les runners Windows de GitHub Actions font le checkout en CRLF par défaut
+# (core.autocrlf=true). Plusieurs contrôles et templates du kit comparent du
+# texte sur un `\n` littéral (docs/projets/suites-kit-portable.md) : forcer
+# le LF au checkout, quel que soit l'OS, évite de les casser en silence.
+* text=auto eol=lf

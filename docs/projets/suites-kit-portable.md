@@ -96,6 +96,22 @@ restés ouverts à la fin de ce travail.
    ne se lit plus, zéro motif, zéro fichier couvert. Corrigé en acceptant
    un `\r` optionnel avant le `\n` de cette regex (`\r?\n`) ; vérifié avec
    un texte CRLF construit à la main (`lireBloc()` retrouve bien son motif).
+   Run suivant (`37238482363`) : le premier commit passe enfin, mais le même
+   test échoue plus loin (`assert.equal` de la 3ᵉ étape, « 1 !== 0 ») :
+   (l) le test attache scripts/tache.mjs à la fiche
+   `entretien-courant.md` via `.replace("fichiers:\n-->", ...)`, un `\n`
+   littéral — sur un checkout Windows (CRLF), le contenu lu est
+   `"fichiers:\r\n-->"`, le replace ne trouve rien, la fiche n'est jamais
+   modifiée et le commit reste refusé. Root cause commune aux bugs (k) et
+   (l) : ce dépôt n'a jamais eu de `.gitattributes`, donc les runners
+   Windows de GitHub Actions font leur `git checkout` avec
+   `core.autocrlf=true` (réglage par défaut de l'image), qui convertit tout
+   fichier texte en CRLF — tout code qui compare un contenu lu sur un `\n`
+   littéral (regex ou `.replace()`) est silencieusement cassé.
+   Corrigé à la racine : ajout d'un `.gitattributes` (`* text=auto
+   eol=lf`), qui force le LF au checkout quel que soit l'OS ou la
+   configuration locale de `core.autocrlf` — plus robuste qu'un correctif
+   au cas par cas dans chaque script.
    Tests locaux 40/40 verts après ces 5 corrections ; résultat du nouveau
    run CI à confirmer (voir section Reprise).
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien
