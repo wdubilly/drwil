@@ -42,11 +42,22 @@ request, instead of direct commits on the main branch.
   (human review), that person closes the card at merge time — not
   before.
 
+## What the kit checks (QUA-017)
+
+- `.githooks/run-checks.mjs` (so `pre-commit` and `pre-push`) refuses to
+  commit or push directly to the main branch (`master`/`main`) — except
+  for the very first commit of a freshly initialized repository
+  (bootstrap). No setting disables this check.
+- This check never runs in CI: it only applies locally, at commit/push
+  time, not when CI replays an already-made push (a merge landing on the
+  main branch is legitimate).
+
 ## What the kit does not do
 
-- No automatic check verifies the branch name or requires a pull/merge
-  request to exist before a commit: this is a documented convention here,
-  not a blocking hook.
+- No automatic check verifies the branch **name**
+  (`chantier/<card-slug>` stays a documented convention, not enforced)
+  or requires a pull/merge request to exist before a commit on a
+  non-main branch.
 - The kit does not open or merge pull/merge requests on the human's
   behalf (no GitHub/GitLab API calls): only description templates are
   provided.

@@ -61,15 +61,39 @@ continue à committer directement dessus.
   recettes précédentes (cf. `docs/projets/informer-capacites-drwil.md`).
 
 ## Hors périmètre
-- Tout contrôle automatique (hook) qui vérifierait le nom de branche ou
-  imposerait la présence d'une pull/merge request avant de committer :
-  resterait une convention documentée, pas un contrôle bloquant.
+- Tout contrôle automatique (hook) qui vérifierait le **nom** de branche
+  ou imposerait la présence d'une pull/merge request avant de committer
+  sur une branche non principale : reste une convention documentée, pas
+  un contrôle bloquant.
 - Intégration avec l'API GitHub/GitLab (ouverture automatique de MR par
   script) : hors périmètre, le kit reste un ensemble de conventions et de
   gabarits statiques, pas un outil d'automatisation git.
 - Changement du comportement de QUA-015 : l'avertissement non bloquant
   existant reste suffisant, pas de nouvelle règle de cohérence liée aux
   branches.
+
+## Révision (2026-10-05) : décision 6 — contrat QUA-017
+
+La décision initiale ci-dessus (« tout contrôle automatique... resterait
+une convention documentée, pas un contrôle bloquant ») est partiellement
+révisée à la demande explicite de l'utilisateur : commiter ou pousser
+**directement sur la branche principale** (`master`/`main`) devient un
+contrat bloquant (QUA-017, voir `docs/contrats.md`), pas seulement une
+convention. Ce qui reste hors périmètre (inchangé) : le contrôle du
+**nom** de branche et l'exigence d'une pull/merge request existante.
+
+Arbitrages tranchés via `ask_user` :
+- Bloquant (pas un avertissement).
+- Portée : commit **et** push (les deux hooks appellent déjà
+  `.githooks/run-checks.mjs`, donc un seul contrôle couvre les deux).
+- Appliqué immédiatement sur drwil lui-même (dogfooding).
+- Pas de porte de sortie configurable dans `.drwil/ia-first.json`
+  (contrairement à QUA-016/cadrage).
+- Exceptions techniques, pas des choix arbitraires : le tout premier
+  commit d'un dépôt fraîchement initialisé reste toléré (sinon
+  `drwil init` ne pourrait jamais committer) ; le contrôle ne tourne
+  jamais en CI (sinon un merge légitime sur la branche principale
+  casserait la CI rétroactivement).
 
 ## Critères de sortie
 - Recette livrée en FR et EN, dans le dépôt drwil et dans les deux jeux
@@ -79,3 +103,6 @@ continue à committer directement dessus.
   installés selon le `ci` choisi, testés par le kit.
 - `AGENTS.md`/`README.md` mentionnent la nouvelle recette.
 - Tests du kit et `check-docs`/`run-checks` verts.
+- Contrat QUA-017 documenté dans `docs/contrats.md`, implémenté dans
+  `.githooks/run-checks.mjs` (+ template synchronisé), testé par le kit,
+  appliqué sur drwil lui-même.
