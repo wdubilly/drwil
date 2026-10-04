@@ -6,6 +6,7 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSy
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { init, apply } from "../dist/index.js";
 
 const tmp = () => mkdtempSync(join(tmpdir(), "drwil-"));
@@ -544,7 +545,7 @@ test("module optionnel tableau de bord : génère un HTML lisant chantiers et co
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = join(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url).pathname);
+  const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
   writeFileSync(join(dir, "docs/projets/un-chantier.md"),
     "# Projet : un chantier\n\n**Statut** : cadré le 2026-10-04 — lot 1 en cours.\n\n" +
@@ -565,7 +566,7 @@ test("module optionnel tableau de bord : agrège .drwil/usage.jsonl par chantier
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = join(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url).pathname);
+  const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
 
   // Sans fichier usage.jsonl : pas de régression, message d'absence explicite.
@@ -593,7 +594,7 @@ test("module optionnel tableau de bord : affiche les derniers audits, sans régr
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = join(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url).pathname);
+  const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
 
   // Sans rapport d'audit : pas de régression, message d'absence explicite.
@@ -619,7 +620,7 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = join(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url).pathname);
+  const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
 
   // rapport récent : pas d'avertissement.

@@ -53,6 +53,19 @@ restés ouverts à la fin de ce travail.
    chemins avant de les comparer (le fichier visé par un `Write` n'existe pas
    encore). Reproduit et vérifié corrigé localement (dossier project
    symlinké, `init()` réel, hook appelé en sous-processus).
+   Run suivant (`37237345116`) : `checks`, `kit-tests (ubuntu-latest)` et
+   `kit-tests (macos-latest)` verts ; Windows seul encore rouge, nouveaux
+   bugs trouvés : (f) le test du tableau de bord construisait un chemin avec
+   `new URL(...).pathname`, qui sur Windows garde le `/` devant la lettre de
+   lecteur (`/D:/...`) — remplacé par `fileURLToPath()` (fait pour ça,
+   portable) ; (g) `realpathAncetre()` du hook (bug (e) ci-dessus) découpait
+   le chemin à la main avec `lastIndexOf("/")`, qui ne trouve rien sur un
+   chemin à `\` — remplacé par `path.basename()`/`dirname()` ; (h)
+   `.githooks/check-file-size.mjs` affichait les chemins avec `\` (non comparables aux
+   plafonds hérités, écrits en `/`) — normalisé. Un échec sur ce run reste
+   inexpliqué (QUA-016 bloquant : le tout premier commit, qui ne devrait
+   déclencher aucun rappel de cadrage, est pourtant refusé) ; à investiguer
+   sur le prochain run une fois (f)(g)(h) poussés.
    Tests locaux 40/40 verts après ces 5 corrections ; résultat du nouveau
    run CI à confirmer (voir section Reprise).
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien

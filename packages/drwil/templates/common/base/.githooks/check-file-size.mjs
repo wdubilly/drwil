@@ -35,7 +35,7 @@ function* sources(dir) {
 const erreurs = [];
 if (existsSync(root)) {
   for (const path of sources(root)) {
-    const fichier = relative(".", path);
+    const fichier = relative(".", path).replace(/\\/g, "/");
     const lignes = readFileSync(path, "utf8").split("\n").length - 1;
     const plafond = legacy[fichier] ?? maxLines;
     if (lignes > plafond) {

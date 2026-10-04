@@ -11,7 +11,7 @@
 // | "off" désactive aussi ce rappel). La grammaire vient de .githooks/cadrage.mjs,
 // la même que le contrôle au commit.
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 
 // Claude Code invoque le hook avec le dossier du projet en cwd.
 const RACINE = process.cwd();
@@ -42,7 +42,7 @@ function realpathAncetre(chemin) {
   let c = resolve(chemin);
   const reste = [];
   while (!existsSync(c)) {
-    reste.unshift(c.slice(c.lastIndexOf("/") + 1));
+    reste.unshift(basename(c));
     const parent = dirname(c);
     if (parent === c) return resolve(chemin);
     c = parent;
