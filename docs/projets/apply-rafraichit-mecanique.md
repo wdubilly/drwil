@@ -1,6 +1,6 @@
 # Projet : `apply()` rafraîchit la mécanique du kit et signale la dérive de prose
 
-**Statut** (2026-10-04) : cadré — lot 1 prêt à démarrer sur confirmation.
+**Statut** (2026-10-04) : lot 1 livré (détection et signalement de la dérive). Lot 2 (résolution) non tranché, voir section 6.
 
 <!-- cadrage
 fichiers:
@@ -85,13 +85,15 @@ section 6)
 
 ## 6. Lots
 
-- **Lot 1 — détecter et signaler la dérive** [IA] : à la fin de `apply()`
-  (et `init()`, par cohérence), pour tout fichier de la base déjà présent
-  dans le projet cible, comparer au template (nombre de lignes + sections
-  `##`) et afficher la liste des fichiers dérivés en sortie. Aucune
-  réécriture. Critère de sortie : test cas passant (fichier identique → rien
-  signalé) et cas non passant (fichier dérivé, comme les 3 recettes
-  constatées en section 1 → signalé), 34/34 tests existants toujours verts.
+- **Lot 1 — détecter et signaler la dérive** [IA] — **fait le 2026-10-04**.
+  Implémenté dans `packages/drwil/src/index.ts` : `detecterDerive()` compare
+  nombre de lignes + sections `##` entre un fichier déjà présent et le
+  template rendu ; `writeOut()` l'appelle quand un fichier existant n'est
+  pas réécrit ; `reportDerives()` affiche la liste en fin de `init()`/
+  `apply()`. Aucune réécriture automatique. Test dédié : fichier identique
+  → rien signalé, fichier raccourci (reproduisant le cas des recettes
+  dérivées constaté en section 1) → signalé, jamais modifié sur disque.
+  39/39 tests verts.
 - **Lot 2 — proposer une résolution pour la mécanique du kit** [IA/décision] :
   pour les fichiers de `.githooks/`, `.claude/settings.json` et le fichier
   de CI spécifiquement (ceux sans personnalisation légitime attendue), aller
@@ -102,14 +104,13 @@ section 6)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-04) : fiche créée après constat de la dérive sur
-  drwil (AGENTS.md/docs/ia-first.md/docs/contrats.md restés sur une version
-  pré-kit ; les fichiers obsolètes sous `.githooks/` jamais nettoyés par `apply()`
-  qui ne réécrit rien, contrairement à `init()`). Preuve étendue le même
-  jour : diff systématique des 13 recettes racine contre le template, 3
-  dérivées (voir section 1). Les 3 points à trancher sont maintenant
-  tranchés (section 4) : un seul traitement (diffuser et signaler, jamais
-  réécrire à l'aveugle), sortie en fin de `apply()`/`init()`, comparaison
-  lignes + sections. Aucun code touché.
+- **Dernier état** (2026-10-04) : lot 1 livré. `detecterDerive()`,
+  `writeOut()`, `copyTree()`, `scaffold()`, `reportDerives()`, `init()` et
+  `apply()` modifiés dans `packages/drwil/src/index.ts` pour signaler (sans
+  jamais réécrire) tout fichier de la base déjà présent qui diffère du
+  template (nombre de lignes ou sections `##` manquantes). Test dédié
+  ajouté dans `packages/drwil/test/kit.test.mjs`. 39/39 tests verts,
+  `.githooks/run-checks.mjs` vert.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] confirmer l'ouverture du lot 1.
+- **Prochaine étape** : [humain/décision] trancher le détail du lot 2
+  (résolution de la mécanique du kit) avant de l'ouvrir — voir section 6.

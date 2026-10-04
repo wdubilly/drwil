@@ -352,6 +352,24 @@ test("apply sur un projet existant : stack et couches découvertes, rien d'écra
   assert.equal(r.status, 0, r.stdout);
 });
 
+test("apply() signale (sans réécrire) un fichier déjà présent qui a dérivé du template", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false, layers: "backend,frontend" }));
+
+  // fichier identique au template (mêmes couches entre init et apply) : pas signalé.
+  let lignes = await capture(() => apply({ targetDir: dir, git: false, layers: "backend,frontend" }));
+  assert.ok(!lignes.some((l) => l.includes("dérivés")), lignes.join("\n"));
+
+  // une recette dérive (contenu raccourci, une section en moins) : signalée, jamais réécrite.
+  const avant = read(dir, "docs/recettes/refactorer-sans-casser.md");
+  writeFileSync(join(dir, "docs/recettes/refactorer-sans-casser.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n");
+  lignes = await capture(() => apply({ targetDir: dir, git: false, layers: "backend,frontend" }));
+  assert.ok(lignes.some((l) => l.includes("dérivés")), lignes.join("\n"));
+  assert.ok(lignes.some((l) => l.includes("docs/recettes/refactorer-sans-casser.md")), lignes.join("\n"));
+  assert.equal(read(dir, "docs/recettes/refactorer-sans-casser.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n", "jamais réécrit automatiquement");
+  assert.notEqual(read(dir, "docs/recettes/refactorer-sans-casser.md"), avant);
+});
+
 test("un contrat préfixé par un autre dépôt n'est pas cherché dans le registre local", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, git: false }));

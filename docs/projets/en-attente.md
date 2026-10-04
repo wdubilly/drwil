@@ -40,9 +40,10 @@ Sans tag, un sujet est considéré `[P2]`.
   quand aucune stack n'est détectée à l'`init` — fait le 2026-10-04 (commit
   52bb22b) — `docs/projets/signaler-couches-par-defaut.md`.
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [IA] [P2] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
+- [ ] [IA] [décision] [P2] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
   et signale la dérive de prose (AGENTS.md, docs/ia-first.md, docs/contrats.md
-  restés sur une version pré-kit chez drwil) — cadré, lot 1 prêt —
+  restés sur une version pré-kit chez drwil) — lot 1 (détection et
+  signalement) fait le 2026-10-04 ; lot 2 (résolution) reste à trancher —
   `docs/projets/apply-rafraichit-mecanique.md`.
 - [x] [IA] [P2] Rappeler quand l'audit d'opportunité ou de risques/dette est
   périmé (> 30 jours depuis le dernier scan), dans le tableau de bord et

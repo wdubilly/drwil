@@ -165,8 +165,27 @@ async function walk(dir: string): Promise<string[]> {
 /** `shouldOverwrite` reçoit le chemin cible relatif à la racine du projet. */
 type Overwrite = (relTarget: string) => boolean;
 
-async function writeOut(target: string, content: string, targetDir: string, shouldOverwrite: Overwrite): Promise<void> {
-  if (existsSync(target) && !shouldOverwrite(relative(targetDir, target))) return;
+// Compare un fichier déjà présent (non réécrit) au contenu du template : signalement seul, jamais
+// de réécriture automatique (décision du 2026-10-04, docs/projets/apply-rafraichit-mecanique.md).
+// Critère volontairement grossier (nombre de lignes + sections `##` manquantes), pas un diff complet.
+function detecterDerive(target: string, contenuModele: string): boolean {
+  const existant = readFileSync(target, "utf8");
+  if (existant === contenuModele) return false;
+  const lignes = (s: string) => s.split(/\r?\n/).length;
+  const sections = (s: string) => new Set(s.match(/^##[^\n]*$/gm) ?? []);
+  const sectionsModele = sections(contenuModele);
+  const sectionsExistantes = sections(existant);
+  const sectionManquante = [...sectionsModele].some((s) => !sectionsExistantes.has(s));
+  return lignes(existant) !== lignes(contenuModele) || sectionManquante;
+}
+
+async function writeOut(
+  target: string, content: string, targetDir: string, shouldOverwrite: Overwrite, derives?: string[],
+): Promise<void> {
+  if (existsSync(target) && !shouldOverwrite(relative(targetDir, target))) {
+    if (derives && detecterDerive(target, content)) derives.push(relative(targetDir, target));
+    return;
+  }
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, content);
   // commit-msg reste volontairement non exécutable (livré mais désactivé par défaut, lot 4).
@@ -176,35 +195,35 @@ async function writeOut(target: string, content: string, targetDir: string, shou
 }
 
 /** Copie un dossier de modèles à la racine de la cible, en rendant les variables. */
-async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite): Promise<void> {
+async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite, derives?: string[]): Promise<void> {
   for (const file of await walk(srcDir)) {
     const target = join(r.opts.targetDir, relative(srcDir, file));
-    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, shouldOverwrite);
+    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, shouldOverwrite, derives);
   }
 }
 
-async function scaffold(r: Resolved, shouldOverwrite: Overwrite): Promise<void> {
+async function scaffold(r: Resolved, shouldOverwrite: Overwrite, derives?: string[]): Promise<void> {
   const langDir = join(templatesDir, r.lang);
-  await copyTree(join(templatesDir, "common", "base"), r, shouldOverwrite);
-  await copyTree(join(langDir, "base"), r, shouldOverwrite);
+  await copyTree(join(templatesDir, "common", "base"), r, shouldOverwrite, derives);
+  await copyTree(join(langDir, "base"), r, shouldOverwrite, derives);
   for (const tool of r.tools) {
-    await copyTree(join(templatesDir, "common", "tools", tool), r, shouldOverwrite);
-    await copyTree(join(langDir, "tools", tool), r, shouldOverwrite);
+    await copyTree(join(templatesDir, "common", "tools", tool), r, shouldOverwrite, derives);
+    await copyTree(join(langDir, "tools", tool), r, shouldOverwrite, derives);
   }
-  await copyTree(join(templatesDir, "common", "ci", r.ci), r, shouldOverwrite);
+  await copyTree(join(templatesDir, "common", "ci", r.ci), r, shouldOverwrite, derives);
 
   for (const layer of r.layers) {
     const specific = join(langDir, "layers", `${layer}.md`);
     const source = LAYER_TEMPLATES.includes(layer) && existsSync(specific) ? specific : join(langDir, "layers", "generic.md");
     const up = "../".repeat(layer.split("/").filter(Boolean).length);
     const content = render(await readFile(source, "utf8"), r, { layer }).replace("`../AGENTS.md`", `\`${up}AGENTS.md\``);
-    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, shouldOverwrite);
+    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, shouldOverwrite, derives);
   }
 
   // Un seul contenu de consignes (AGENTS.md) ; les outils qui ne le lisent pas nativement reçoivent un import.
   const pointers = [r.tools.includes("claude") && "CLAUDE.md", r.tools.includes("gemini") && "GEMINI.md"].filter(Boolean) as string[];
   for (const dir of [".", ...r.layers]) {
-    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite);
+    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite, derives);
   }
 }
 
@@ -279,6 +298,14 @@ function reportStack(r: Resolved): void {
   }
 }
 
+// Jamais de réécriture automatique : juste informer qu'un fichier déjà présent a dérivé du
+// template du kit (mécanique ou prose), à comparer/mettre à jour à la main si besoin.
+function reportDerives(derives: string[]): void {
+  if (!derives.length) return;
+  console.log(`⚠ Fichiers dérivés du template du kit (nombre de lignes ou sections différents, jamais réécrits automatiquement) :`);
+  for (const d of derives) console.log(`  - ${d}`);
+}
+
 /**
  * Installe le kit. Par défaut ne réécrase que `.githooks/` (mécanique du kit) ; le
  * reste (AGENTS.md, docs/contrats.md, docs/projets/en-attente.md…) n'est écrit que
@@ -288,9 +315,11 @@ function reportStack(r: Resolved): void {
 export async function init(opts: InitOptions): Promise<void> {
   const r = resolve(opts, () => ["backend", "frontend"]);
   const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => rel.startsWith(KIT_MECHANICS);
-  await scaffold(r, shouldOverwrite);
+  const derives: string[] = [];
+  await scaffold(r, shouldOverwrite, derives);
   await writeConfig(r);
   reportStack(r);
+  reportDerives(derives);
   if (opts.git !== false) setupGit(opts.targetDir, true);
 }
 
@@ -298,9 +327,11 @@ export async function init(opts: InitOptions): Promise<void> {
 export async function apply(opts: InitOptions): Promise<void> {
   // Sur un projet existant, les couches sont les sous-dossiers où une stack a été trouvée.
   const r = resolve(opts, stack => stack.map(s => s.path).filter(p => p !== "."));
-  await scaffold(r, () => false);
+  const derives: string[] = [];
+  await scaffold(r, () => false, derives);
   if (!readConfig(opts.targetDir)) await writeConfig(r);
   reportStack(r);
+  reportDerives(derives);
   // On n'initialise pas de dépôt sur un projet existant : on active seulement les hooks s'il y en a un.
   if (opts.git !== false) setupGit(opts.targetDir, false);
 }
