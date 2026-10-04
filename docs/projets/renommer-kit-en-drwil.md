@@ -1,7 +1,7 @@
 # Projet : le kit de gouvernance IA-first devient le paquet `drwil`
 
-**Statut** (2026-10-04) : décidé sur le principe — points à trancher avant
-lot 1 (section 5).
+**Statut** (2026-10-04) : décidé sur le principe — 2 points restent à
+trancher avant lot 1 (section 5).
 
 <!-- cadrage
 fichiers:
@@ -54,12 +54,11 @@ Décisions déjà tranchées par le demandeur :
 - (2026-10-04) Nom du paquet : `drwil` — tranche la question 2 de
   `docs/intentions/packager-kit-ia-first.md`.
 - (2026-10-04) Pas de retouche des docs produit à la racine pour l'instant.
+- (2026-10-04) Dossier renommé en `packages/drwil/` (cohérence avec le nom
+  du paquet, pas de dossier `packages/kit-ia-first/` conservé).
 
 ## 5. Points à trancher
 
-- [décision] Renommer le dossier `packages/kit-ia-first/` en
-  `packages/drwil/` (cohérence avec le nom du paquet), ou garder le nom de
-  dossier actuel et ne changer que `package.json` → `name: "drwil"` ?
 - [décision] Nom du binaire CLI : garder `drwil-ia-first` (déjà posé,
   fonctionne) ou simplifier en `drwil` (`npx drwil init`) ? Un `bin: drwil`
   entrerait en conflit potentiel avec un paquet npm existant nommé `drwil`
@@ -85,6 +84,7 @@ Décisions déjà tranchées par le demandeur :
   `packages/kit-ia-first/test/kit.test.mjs`, `tsconfig.json`,
   `.drwil/ia-first.json`, et plusieurs docs/fiches). Aucun code touché.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher la section 5, puis proposer les
-  lots (renommage package.json/dossier/bin, mise à jour des imports/chemins
-  relatifs, mise à jour des citations dans les docs, build + tests verts).
+- **Prochaine étape** : [décision] trancher les 2 points restants de la
+  section 5, puis proposer les lots (renommage package.json/dossier/bin,
+  mise à jour des imports/chemins relatifs, mise à jour des citations dans
+  les docs, build + tests verts).
