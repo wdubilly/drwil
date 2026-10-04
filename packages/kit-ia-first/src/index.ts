@@ -264,9 +264,16 @@ function setupGit(targetDir: string, allowInit: boolean): void {
   console.log("Hooks activés (core.hooksPath = .githooks).");
 }
 
-function reportStack(stack: StackEntry[]): void {
-  if (stack.length) console.log(`Stack détectée : ${stack.map(s => `${s.path} → ${s.technos.join(", ")}`).join(" ; ")}`);
-  else console.log("Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).");
+function reportStack(r: Resolved): void {
+  if (r.stack.length) {
+    console.log(`Stack détectée : ${r.stack.map(s => `${s.path} → ${s.technos.join(", ")}`).join(" ; ")}`);
+    return;
+  }
+  console.log("Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).");
+  // Défaut écrit sur le disque sans que l'utilisateur l'ait demandé explicitement : le signaler.
+  if (r.opts.layers === undefined && r.layers.length) {
+    console.log(`Couches par défaut écrites : ${r.layers.join(", ")} — modifiable avec --layers.`);
+  }
 }
 
 /**
@@ -280,7 +287,7 @@ export async function init(opts: InitOptions): Promise<void> {
   const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => rel.startsWith(KIT_MECHANICS);
   await scaffold(r, shouldOverwrite);
   await writeConfig(r);
-  reportStack(r.stack);
+  reportStack(r);
   if (opts.git !== false) setupGit(opts.targetDir, true);
 }
 
@@ -290,7 +297,7 @@ export async function apply(opts: InitOptions): Promise<void> {
   const r = resolve(opts, stack => stack.map(s => s.path).filter(p => p !== "."));
   await scaffold(r, () => false);
   if (!readConfig(opts.targetDir)) await writeConfig(r);
-  reportStack(r.stack);
+  reportStack(r);
   // On n'initialise pas de dépôt sur un projet existant : on active seulement les hooks s'il y en a un.
   if (opts.git !== false) setupGit(opts.targetDir, false);
 }

@@ -13,6 +13,11 @@ const quiet = async (fn) => {
   console.log = console.warn = () => {};
   try { return await fn(); } finally { console.log = log; console.warn = warn; }
 };
+const capture = async (fn) => {
+  const log = console.log, lines = [];
+  console.log = (...a) => lines.push(a.join(" "));
+  try { await fn(); return lines; } finally { console.log = log; }
+};
 const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: { ...process.env, CI: "" } });
 const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8" });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
@@ -33,6 +38,19 @@ test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", a
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /non exécuté : contrôles du projet/);
+});
+
+test("init sans stack détectée : signale explicitement les couches par défaut", async () => {
+  const dir = tmp();
+  const lines = await capture(() => init({ targetDir: dir, name: "demo", git: false }));
+  assert.ok(lines.some(l => l.includes("Couches par défaut écrites : backend, frontend")), lines.join("\n"));
+  assert.ok(lines.some(l => l.includes("--layers")), lines.join("\n"));
+});
+
+test("init avec --layers explicite : pas de message de défaut", async () => {
+  const dir = tmp();
+  const lines = await capture(() => init({ targetDir: dir, name: "demo", git: false, layers: "admin" }));
+  assert.ok(!lines.some(l => l.includes("Couches par défaut")), lines.join("\n"));
 });
 
 test("un second init ne réécrase que .githooks/, --force réécrit tout", async () => {

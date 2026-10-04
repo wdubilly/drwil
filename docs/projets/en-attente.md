@@ -33,6 +33,9 @@ Sans tag, un sujet est considéré `[P2]`.
 - [ ] [décision] [P1] Renommer le paquet `@drwil/kit-ia-first` en `drwil`
   (dossier, bin, citations dans les docs) —
   `docs/projets/renommer-kit-en-drwil.md`.
+- [ ] [IA] [P2] Signaler explicitement les couches par défaut (backend,frontend)
+  quand aucune stack n'est détectée à l'`init` — cadré, lot 1 prêt —
+  `docs/projets/signaler-couches-par-defaut.md`.
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
 - [ ] [décision] [P2] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
   et signale la dérive de prose (AGENTS.md, docs/ia-first.md, docs/contrats.md
