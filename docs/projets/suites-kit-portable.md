@@ -2,7 +2,8 @@
 
 **Statut** (2026-10-04) : en cours — points 5, 6, 8 et 9 traités (via le projet
 d'extraction IA-first, voir `docs/projets/extraction-ia-first-run-box.md`) ;
-restent 1, 2, 3, 7.
+point 1 livré (matrice CI), à confirmer vert sur le run déclenché par ce
+commit ; restent 2, 3, 7.
 
 ## 1. Contexte
 
@@ -16,7 +17,12 @@ restés ouverts à la fin de ce travail.
 1. **Windows et macOS** — [IA] Le code n'utilise rien de propre à Linux
    (Node, `sh` de Git pour le hook), mais rien n'a été testé ailleurs.
    Sortie : `npm test` vert sur Windows (Git for Windows) et macOS, idéalement
-   via une matrice CI.
+   via une matrice CI. **Lot livré le 2026-10-04** : job `kit-tests` ajouté à
+   `.github/workflows/ia-first.yml` (matrice `ubuntu-latest`,
+   `windows-latest`, `macos-latest`, `npm test --workspace packages/drwil`) ;
+   job `checks` (suite complète, dépend de gitleaks) laissé ubuntu seul.
+   Résultat du run CI déclenché par ce commit à vérifier après le push (voir
+   section Reprise).
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien
    les fichiers de renvoi générés (.cursor/rules/ia-first.mdc et
    .github/copilot-instructions.md dans les projets générés).
@@ -66,7 +72,11 @@ restés ouverts à la fin de ce travail.
 
 - **Dernier état** (2026-10-04) : points 5, 6, 8 et 9 traités. Point 5 : kit
   appliqué réellement à drwil, `.githooks/pre-commit` actif, premier vrai
-  commit passé (0 erreur `check-docs`). Points 1, 2, 3, 7 restent ouverts.
-- **Prochaine étape** : au choix du demandeur parmi les points 1
-  (Windows/macOS), 2 (Cursor/Copilot), 3 (migration d'ancienne version) ou 7
-  (publication npm) — aucun n'est plus urgent qu'un autre à ce stade.
+  commit passé (0 erreur `check-docs`). Point 1 : job `kit-tests` (matrice
+  Windows/macOS/Linux) ajouté à `.github/workflows/ia-first.yml`, à vérifier
+  vert sur le run déclenché par ce commit (lien à ajouter une fois constaté).
+  Points 2, 3, 7 restent ouverts.
+- **Prochaine étape** : [humain] constater le résultat du run CI
+  déclenché par ce commit (3 OS verts pour clore le point 1) ; sinon, au
+  choix du demandeur parmi les points 2 (Cursor/Copilot), 3 (migration
+  d'ancienne version) ou 7 (publication npm).
