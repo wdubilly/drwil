@@ -139,6 +139,15 @@ test("QUA-015 : marqueur de chantier, statut daté, section Reprise, chemin « �
   writeFileSync(join(dir, "docs/projets/modele-exemple.md"), "# Modèle\n\nSans statut ni Reprise.\n");
   r = checks(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
+
+  // fiche suivant à la lettre le modèle fourni : sections numérotées (« ## 7. Reprise »)
+  // et Statut avec date entre parenthèses — doit passer, pas seulement la forme minimale ci-dessus.
+  writeFileSync(
+    join(dir, "docs/projets/chantier-modele.md"),
+    "# Projet : chantier\n\n**Statut** (2026-10-04) : cadré le 2026-10-04 — lot 1 en cours.\n\n## 6. Lots\n\nTexte.\n\n## 7. Reprise\n\n- **Dernier état** (2026-10-04) : rien à signaler.\n",
+  );
+  r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
 test("une alternative écrite avec une barre oblique n'est pas prise pour un chemin", async () => {

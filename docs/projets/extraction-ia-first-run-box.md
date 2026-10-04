@@ -12,7 +12,7 @@ ce qui est trop propre à run-box n'est pas jeté, il est rendu générique
 « propre au projet » avec la raison.
 
 Constat du 2026-10-03 : le kit n'a repris qu'une fraction de l'architecture.
-Exemples mesurés : `docs/ia-first.md` 8 lignes dans le kit contre 227 dans
+Exemples mesurés : `packages/kit-ia-first/templates/fr/base/docs/ia-first.md` 8 lignes dans le kit contre 227 dans
 run-box ; 2 contrats contre 31 ; 4 recettes de 3 à 10 lignes contre 11 ;
 0 skill contre 7 ; `AGENTS.md` de couche d'une ligne contre 44 à 63 lignes ;
 aucun des 11 fichiers de contrôle et de test de run-box n'est porté.
@@ -69,7 +69,7 @@ compléter ; **S** propre à run-box (classé, raison donnée).
 | AGENTS.md de couche (Contexte, Pièges des tests, Contrats de la couche, Charte et recettes, Vérifier) | une ligne | M | Modèle à sections, rempli par le projet ou par l'IA à l'adoption |
 | docs/projets/en-attente.md (cases à cocher, marqueur obligatoire, sections par thème, statut jamais recopié) | tableau vide | G | Reprendre le format (contrôlé par run-box-v2:QUA-015) |
 | docs/intentions/README.md (définition, cycle de vie, forme contrôlée, table des fiches) | 3 lignes | G | Reprendre |
-| Modèles de fiche : intention (Statut, Besoin, Existant, Questions à trancher) ; projet (Statut daté, Besoin, Hors périmètre, Contraintes, Décisions, Points à trancher, Lots avec critère de sortie, Reprise, bloc cadrage) | absents | M | Fournir les deux modèles (dans `docs/ia-first.md` ou une recette « ouvrir un chantier ») |
+| Modèles de fiche : intention (Statut, Besoin, Existant, Questions à trancher) ; projet (Statut daté, Besoin, Hors périmètre, Contraintes, Décisions, Points à trancher, Lots avec critère de sortie, Reprise, bloc cadrage) | absents | M | Fournir les deux modèles (dans docs/ia-first.md ou une recette « ouvrir un chantier ») |
 | .githooks/run-checks.sh (ordre des contrôles, blocs de tests en parallèle, journal affiché seulement en cas d'échec, compteurs de tests affichés même en succès, proxy d'entreprise, images Docker par empreinte) | run-checks.mjs séquentiel, sans compteurs | P | Parallélisme, journaux et compteurs en Node ; Docker et proxy en option documentée |
 | .githooks/check-docs.py : chemins (détection par préfixes connus, ce qui évite les faux positifs), chemins relatifs à la couche, mention « (à créer) », ID défini une seule fois, run-box-v2:QUA-015 (marqueurs, Statut daté, sections des intentions, Reprise des projets), avertissements de cadrage | chemins et ID seulement, avec des faux positifs | G | Porter tout en Node |
 | .githooks/cadrage.py + scripts/rappel-cadrage.py (fichier de code hors de toute fiche : rappel à l'agent et avertissement au commit, jamais bloquant) | retiré du kit le 2026-10-03 (copie vide) | P | Porter en Node ; périmètre du « code » lu dans les clés de config déjà prévues pour ça (`layerPrefixes`, `codePrefixes`, `extraCodeFiles`, `extraCodeGlobs`, `ciFiles`), qu'aucun contrôle ne lit aujourd'hui |
@@ -97,17 +97,17 @@ Résultat : chaque ligne **G** et **P** a son équivalent dans le kit (AGENTS.md
 lignes ; docs/contrats.md avec préambule et « Hors registre » ; 8 recettes
 génériques + 8 skills ; catalogue de contrats avec les 10 contrats
 catalogués ; module qualité front optionnel ; contrôles Node ---
-`check-docs.mjs`, `check-control-coverage.mjs`, `check-file-size.mjs`,
-`check-code-rules.mjs`, `cadrage.mjs` --- avec `pre-push`/`commit-msg`).
+`.githooks/check-docs.mjs`, `.githooks/check-control-coverage.mjs`, `.githooks/check-file-size.mjs`,
+`.githooks/check-code-rules.mjs`, `.githooks/cadrage.mjs` --- avec `pre-push`/`commit-msg`).
 Chaque ligne **S** reste absente du kit, à raison (métier run-box : RH, pont
 SSH, portail, Elasticsearch, ERMv2, e2e Playwright, scripts de sauvegarde
 prod). Écart assumé déjà documenté lors du lot 4 : pas de `.coveragerc`
 équivalent (mesure de couverture des contrôles eux-mêmes), jugé hors de
-portée raisonnable — `cadrage.test.mjs` reste le seul contrôle qui s'auto-teste
+portée raisonnable — `.githooks/cadrage.test.mjs` reste le seul contrôle qui s'auto-teste
 chez le projet. `apply()` testé sur la copie de run-box-v2 : stack détectée
 correctement sur les 4 couches (`backend` → Python/FastAPI, `frontend` →
 Node/React/Vite/TS, `e2e` → Node.js, `portal` → Python/FastAPI), aucun
-fichier existant écrasé (`git status` : uniquement des ajouts). `check-docs.mjs`
+fichier existant écrasé (`git status` : uniquement des ajouts). `.githooks/check-docs.mjs`
 lancé sur cette copie signale, comme attendu, des centaines de fichiers de
 code existants hors de tout bloc `cadrage` : c'est le rôle de la recette
 `adopter-le-kit` (lot 6) de les répartir dans des fiches, pas quelque chose
@@ -138,7 +138,7 @@ que `apply()` doit faire seul — ce n'est donc pas un écart du kit.
 Chaque lot : tests du kit verts (`npm test` dans le paquet), contrôles d'un
 projet généré verts, doc du kit à jour dans le même commit.
 
-- **Lot 1 — Méthode et docs** [IA] : AGENTS.md complet, `docs/ia-first.md`
+- **Lot 1 — Méthode et docs** [IA] : AGENTS.md complet, `packages/kit-ia-first/templates/fr/base/docs/ia-first.md`
   complet, préambule et « Hors registre » des contrats, socle de contrats,
   format de l'index et des intentions, modèles de fiche, recettes génériques
   (dont refactorer-sans-casser complète), skills, squelettes de docs produit,
@@ -177,8 +177,8 @@ Tranchées par le demandeur le 2026-10-03 :
   Reprise) : sévérité rendue réglable par projet (`.drwil/ia-first.json` ->
   `cadrage`), **par défaut `avertissement`** (jamais bloquant), `bloquant`
   pour retrouver le comportement initial, `off` pour tout désactiver. Ne
-  touche que ce contrôle (QUA-016) ; le reste de `check-docs.mjs` (chemins,
-  contrats, QUA-015…) reste toujours bloquant.
+  touche que ce contrôle (`kit:QUA-016`) ; le reste de `.githooks/check-docs.mjs` (chemins,
+  contrats, `kit:QUA-015`…) reste toujours bloquant.
 - Anglais **traduit en fin de projet** (lot 7) : le moins cher, le contenu
   n'est traduit qu'une fois stabilisé.
 - Module **qualité front** (couleurs dans le seul dossier du thème, contraste
@@ -202,11 +202,11 @@ Confirmées par le demandeur le 2026-10-03 :
   que `.githooks/` par défaut, `--force` pour tout réécrire) ; `AGENTS.md`
   complet (12 règles de conduite, contrats à connaître, tableau « si tu
   touches à… » générique, dépôts externes en option, conventions) ;
-  `docs/ia-first.md` complet (7 sections, avec mention honnête de ce qui
+  `packages/kit-ia-first/templates/fr/base/docs/ia-first.md` complet (7 sections, avec mention honnête de ce qui
   n'est pas encore outillé) ; `docs/contrats.md` en tableau (préambule,
   socle run-box-v2:QUA-011, run-box-v2:QUA-013, run-box-v2:QUA-015,
   run-box-v2:SEC-006, run-box-v2:SEC-007, « Hors registre ») avec
-  `check-docs.mjs` qui lit les ID en ligne de tableau ; index
+  `.githooks/check-docs.mjs` qui lit les ID en ligne de tableau ; index
   `docs/projets/en-attente.md` au format cases à cocher ;
   `docs/intentions/README.md` complet avec modèle de fiche ; modèle de fiche
   projet (`docs/projets/modele-fiche-projet.md`) ; fiche permanente
@@ -216,23 +216,23 @@ Confirmées par le demandeur le 2026-10-03 :
   `AGENTS.md` de couche à sections (générique, backend, frontend) ;
   squelettes README, INSTALL, sécurité, déploiement, fonctionnalités, charte
   graphique ; `.gitignore` et `.env.example`. Anglais toujours au lot 7 :
-  `packages/kit-ia-first/templates/en/` reste en retard (ex. `docs/contracts.md`
+  `packages/kit-ia-first/templates/en/` reste en retard (ex. `packages/kit-ia-first/templates/en/base/docs/contracts.md`
   a encore l'ancien contenu placeholder SEC-001).
 - **Non fait, hors périmètre du lot 1** : la recette « ouvrir un chantier »
   reste à faire ; le routage automatique des petites tâches vers
   `entretien-courant.md` n'est pas outillé (fiche créée, mais rien ne force
   son usage pour l'instant).
-- **Lot 2 terminé** (2026-10-04) : `check-docs.mjs` complet — chemins relatifs
+- **Lot 2 terminé** (2026-10-04) : `.githooks/check-docs.mjs` complet — chemins relatifs
   à la couche (déjà couvert par le repli racine/dossier du doc, conservé) ;
   préfixes connus resserrés (une citation sans extension et hors des
   préfixes racine/couche n'est plus prise pour un chemin — corrige le faux
   positif « minimal/complet », « init/apply » du point 8 de
   `docs/projets/suites-kit-portable.md`) ; marqueur « (à créer) » accepté
-  après une citation ; ID de contrat défini plusieurs fois détecté ; QUA-015
+  après une citation ; ID de contrat défini plusieurs fois détecté ; `kit:QUA-015`
   (case ouverte sans marqueur `[IA]`/`[humain]`/`[décision]`, fiche de
   projet sans Statut daté ni section Reprise, intention sans ses sections
   obligatoires), avec exemption des modèles (`modele-*.md`) et de la fiche
-  permanente `entretien-courant.md`. 4 tests ajoutés (QUA-015, faux positif
+  permanente `entretien-courant.md`. 4 tests ajoutés (`kit:QUA-015`, faux positif
   barre oblique, doublon d'ID — en plus du test existant sur un chemin
   inexistant et un ID absent).
 - **Travail non commité** : tout le travail du 2026-10-04 sur le lot 3 (aucun
@@ -244,42 +244,42 @@ Confirmées par le demandeur le 2026-10-03 :
   Node), périmètre du code lu depuis la config du projet (`layers`,
   `layerPrefixes`, `codePrefixes`, `extraCodeFiles`, `extraCodeGlobs`,
   `ciFiles` — jusque-là non lus par aucun contrôle). Nouveau contrat
-  **QUA-016** (`docs/contrats.md`) : un fichier de code indexé hors de toute
+  **`kit:QUA-016`** (`docs/contrats.md`) : un fichier de code indexé hors de toute
   fiche de `docs/projets/`, ou un bloc mal formé (sans « fichiers: », motif
-  trop large), fait échouer `check-docs.mjs`. Fiche
+  trop large), fait échouer `.githooks/check-docs.mjs`. Fiche
   `docs/projets/mecanique-ia-first.md` (et son équivalent anglais minimal
-  `docs/projects/kit-mechanics.md`, pour ne pas casser le tout premier commit
+  `packages/kit-ia-first/templates/en/base/docs/projects/kit-mechanics.md`, pour ne pas casser le tout premier commit
   d'une installation anglaise) : couvre les fichiers propres au kit
   (`.githooks/*`, `.claude/settings.json` et le fichier de CI si installés).
   `docs/projets/entretien-courant.md` et `docs/projets/modele-fiche-projet.md`
   portent désormais un vrai bloc `cadrage` (exemple pour le modèle, vide à
   compléter pour la fiche permanente). Deux hooks Claude Code en Node, sous
-  `.claude/hooks/` : `rappel-cadrage.mjs` (PostToolUse, informatif, jamais
-  bloquant) et `garde-fou-bash.mjs` (PreToolUse, demande l'accord sur un
+  `.claude/hooks/` : `.claude/hooks/rappel-cadrage.mjs` (PostToolUse, informatif, jamais
+  bloquant) et `.claude/hooks/garde-fou-bash.mjs` (PreToolUse, demande l'accord sur un
   fichier de secrets ou un pipe vers un shell dans une commande Bash, jamais
   de refus sec). `.claude/settings.json` réécrit sur le modèle de run-box
   (commentaire complet, allow/ask/deny, deny git qui bat toujours allow),
   générique (plus de commande propre à un projet), avec les deux hooks
   branchés et des commandes de stack ajoutées automatiquement selon la
   techno détectée (`npm test`, `pytest`…, table à compléter dans
-  `src/index.ts` → `STACK_ALLOW`). 3 tests ajoutés (cadrage bloquant puis
+  `packages/kit-ia-first/src/index.ts` → `STACK_ALLOW`). 3 tests ajoutés (cadrage bloquant puis
   débloqué par le bloc, motif trop large toujours refusé, les deux hooks
   Claude Code) ; régression trouvée et corrigée en cours de route (une
   installation anglaise avec git bloquait son premier commit faute de fiche
-  de mécanique — `docs/projects/kit-mechanics.md` corrige ça, test dédié
+  de mécanique — `packages/kit-ia-first/templates/en/base/docs/projects/kit-mechanics.md` corrige ça, test dédié
   ajouté). 16/16 tests verts.
 - **Demandeur (2026-10-04)** : « va jusqu'au bout sans moi » — autorise
   l'enchaînement des lots 4 à 8 sans confirmation intermédiaire ; commits
   réguliers par sujet, toujours sans push.
 - **Lot 4 terminé** (2026-10-04) : run-box-v2:QUA-013 complet et CI.
   `.githooks/check-control-coverage.mjs` : port Node de
-  `check-control-coverage.py` — un contrôle **dégradable** (ex. secrets sans
+  check-control-coverage.py (run-box-v2) — un contrôle **dégradable** (ex. secrets sans
   gitleaks) doit avoir un job CI qui se déclenche réellement sur les mêmes
-  chemins (relit `.gitlab-ci.yml` ou le workflow GitHub, pas seulement
+  chemins (relit `packages/kit-ia-first/templates/common/ci/gitlab/.gitlab-ci.yml` ou le workflow GitHub, pas seulement
   l'existence du job). Contrôles du socle déclarés en dur
   (secrets-fichiers, docs-references, controles-autotest) ; un contrôle du
   projet (`.drwil/ia-first.json` → `checks`) peut se couvrir lui aussi en
-  ajoutant `chemins`/`ciJob`/`degradable`. Câblé dans `run-checks.mjs`
+  ajoutant `chemins`/`ciJob`/`degradable`. Câblé dans `.githooks/run-checks.mjs`
   (non exécuté, pas en échec silencieux, si `ci: none`). Job CI renommé
   `checks` dans les deux fichiers de CI (au lieu de `ia-first` côté
   GitLab) pour une seule convention de nom. `.githooks/pre-push` ajouté
@@ -293,7 +293,7 @@ Confirmées par le demandeur le 2026-10-03 :
   **Simplification assumée** (à documenter, pas cachée) : contrairement à
   run-box-v2 (un job CI par sujet, avec Docker et des runners dédiés par
   stack), le kit garde **un seul job CI** (`checks`) qui lance
-  `run-checks.mjs` au complet ; GitHub Actions ne filtre pas un job par
+  `.githooks/run-checks.mjs` au complet ; GitHub Actions ne filtre pas un job par
   chemin nativement (seul `on: paths:` existe, au niveau du workflow), et le
   kit ne suppose aucun Docker. Le fractionnement par sujet reste une option
   future si une stack lente (ex. e2e) le justifie — pas reproduit pour ne
@@ -303,46 +303,46 @@ Confirmées par le demandeur le 2026-10-03 :
   présente. 3 tests ajoutés (couverture verte par défaut GitHub + GitLab,
   détection d'un job qui ne se déclenche plus, `ci: none` signalé non
   exécuté). 19/19 tests verts. Note corrigée en passant : la section 4 de
-  `docs/ia-first.md` disait encore « filet IA non outillé » alors que le
+  `packages/kit-ia-first/templates/fr/base/docs/ia-first.md` disait encore « filet IA non outillé » alors que le
   lot 3 avait déjà livré les hooks Claude Code — texte mis à jour.
 - **Lot 5 terminé** (2026-10-04) : outillage du refactor, **opt-in** (rien
   lancé par défaut). `.githooks/check-file-size.mjs` : port générique de
-  `frontend/scripts/check-file-size.mjs` (racine, plafond de lignes et
+  frontend/scripts/check-file-size.mjs (run-box-v2, racine, plafond de lignes et
   extensions en arguments ; plafonds hérités dans
   `.githooks/check-file-size.legacy.json`, à côté — ne peuvent que baisser
   au fil des refactors, jamais remonter). `.githooks/check-code-rules.mjs` :
   point d'extension vide (`regles = []`, toujours vert tant que le projet
   n'y ajoute rien) ; les règles métier de run-box-v2
-  (`.githooks/check-code-rules.py` : imports privés interdits, imports
+  (check-code-rules.py (run-box-v2) : imports privés interdits, imports
   depuis un fichier de test interdits, module `lib/` sans test, export CSV
   hors point de passage sûr, isolation du portail) citées en commentaire
   comme exemples, pas installées — trop spécifiques à run-box pour un kit
   générique. Module qualité front optionnel sous
-  `templates/common/optional/front-quality/` (`check-colors.mjs` :
-  couleurs en dur ou palette Tailwind hors charte ; `check-contrast.mjs` :
+  `packages/kit-ia-first/templates/common/optional/front-quality/` (`packages/kit-ia-first/templates/common/optional/front-quality/check-colors.mjs` :
+  couleurs en dur ou palette Tailwind hors charte ; `packages/kit-ia-first/templates/common/optional/front-quality/check-contrast.mjs` :
   contraste RGAA/WCAG AA clair/sombre à partir d'un module de palette du
-  projet, port générique de `frontend/scripts/check-colors.mjs` et
-  `check-contrast.mjs`, charte Cobalt de run-box citée en exemple) — dossier
+  projet, port générique de frontend/scripts/check-colors.mjs (run-box-v2) et
+  check-contrast.mjs (run-box-v2), charte Cobalt de run-box citée en exemple) — dossier
   **non copié par `scaffold()`** (seuls `common/base`, `<lang>/base`,
   `common/tools/<tool>`, `common/ci/<ci>` le sont), à activer manuellement
   en attendant la recette d'adoption du lot 6 (README dédié dans le
   dossier). Pas de nouveau contrat au registre : rangé en « Hors registre »
   de `docs/contrats.md` (pas de seuil universel, chaque projet choisit le
-  sien) ; `QUA-001` n'est pas inventé ici pour ne pas risquer un ID à
+  sien) ; `catalogue:QUA-001` n'est pas inventé ici pour ne pas risquer un ID à
   renommer quand le catalogue de contrats du lot 6 sera posé. Recette
   `docs/recettes/refactorer-sans-casser.md` mise à jour (étape 2 : un
   fichier trop gros est un signal à découper, renvoie vers l'outillage).
   Fiches mécanique FR/EN : les 3 nouveaux fichiers `.githooks/`
-  ajoutés au bloc `cadrage` (sinon `check-docs.mjs` les aurait refusés dès
+  ajoutés au bloc `cadrage` (sinon `.githooks/check-docs.mjs` les aurait refusés dès
   le premier commit, comme pour tout fichier de code non couvert).
   **2 bugs préexistants (lot 4) trouvés et corrigés en cours de route**,
-  tous deux dans `.githooks/cadrage.test.mjs` / `run-checks.mjs`, signalés
+  tous deux dans `.githooks/cadrage.test.mjs` / `.githooks/run-checks.mjs`, signalés
   et corrigés (« laisser propre en passant ») : (1) l'assertion
   `fnmatch("backend/app/sous/x.py", "backend/app/x*")` attendait `true` à
   tort (le motif ne couvre que ce qui commence par sa partie littérale ;
   corrigée en `false`, avec un vrai cas de traversée de séparateur ajouté :
   `fnmatch("backend/app/x/sous.py", "backend/app/x*")`) ; (2) le pas « tests
-  des contrôles eux-mêmes » de `run-checks.mjs` relance `node --test` sur
+  des contrôles eux-mêmes » de `.githooks/run-checks.mjs` relance `node --test` sur
   les `.githooks/*.test.mjs` du projet, mais `NODE_TEST_CONTEXT` (mis par
   Node quand on est déjà sous `node --test`) se propageait à ce sous-process
   et le faisait **sauter silencieusement** (avertissement « called
@@ -358,15 +358,17 @@ Confirmées par le demandeur le 2026-10-03 :
 - **Lot 6 — Adoption par l'IA** : terminé. `docs/catalogue-contrats.md`
   (nouveau, livré à tous les projets par défaut, sous `fr/base`) : 10
   contrats génériques fréquents mais pas installés par défaut (SEC-001,
-  SEC-002, SEC-009, SEC-011, QUA-001, QUA-004, QUA-005, QUA-006, QUA-007,
-  QUA-014 — même numérotation que run-box-v2 par cohérence avec
-  l'inventaire du cadrage, sans collision avec le socle SEC-006/007,
-  QUA-011/013/015/016), chacun avec règle, périmètre et contrôle type. IDs
+  `catalogue:SEC-002`, `catalogue:SEC-009`, `catalogue:SEC-011`, `catalogue:QUA-001`,
+  `catalogue:QUA-004`, `catalogue:QUA-005`, `catalogue:QUA-006`, `catalogue:QUA-007`,
+  `catalogue:QUA-014` — même numérotation que run-box-v2 par cohérence avec
+  l'inventaire du cadrage, sans collision avec le socle `kit:SEC-006`/`kit:SEC-007`,
+  `kit:QUA-011`/`kit:QUA-013`/`kit:QUA-015`/`kit:QUA-016`), chacun avec règle, périmètre et contrôle type. IDs
   du catalogue préfixés `catalogue:` dans le tableau (réutilise le
-  mécanisme d'échappement déjà existant dans `check-docs.mjs` pour un ID
-  d'un autre dépôt, ex. `run-box-v2:QUA-011` — sinon QUA-011 refuse le
-  commit car l'ID n'est pas encore dans le registre du projet) ; retiré à
-  l'adoption quand la ligne migre vers `docs/contrats.md` sans ce préfixe.
+  mécanisme d'échappement déjà existant dans `.githooks/check-docs.mjs` pour un ID
+  d'un autre dépôt, ex. `run-box-v2:QUA-011` — sinon un identifiant non
+  préfixé refuse le commit car il n'est pas encore dans le registre du
+  projet) ; retiré à l'adoption quand la ligne migre vers `docs/contrats.md`
+  sans ce préfixe.
   `docs/recettes/adopter-le-kit.md` (nouveau) : recette en 5 étapes (relire
   la stack détectée, remplir les `AGENTS.md` de couche à partir du code
   existant, déclarer les contrôles de la pile dans `checks`, proposer les
@@ -376,39 +378,39 @@ Confirmées par le demandeur le 2026-10-03 :
   la recette, même convention que `refactorer-sans-casser` ; seul `claude`
   a un dossier `skills/` parmi les outils du kit, pas d'équivalent à livrer
   pour `copilot`/`cursor`). Routage ajouté dans `AGENTS.md` (« adopter le
-  kit sur un projet existant »), paragraphe ajouté dans `docs/ia-first.md`
+  kit sur un projet existant »), paragraphe ajouté dans `packages/kit-ia-first/templates/fr/base/docs/ia-first.md`
   (section 3) et 2 phrases dans `docs/contrats.md` renvoyant au catalogue.
   2 tests ajoutés (catalogue + recette + skill livrés par défaut ; skill
   absent sans Claude Code). 26/26 tests verts ; contrôles racine drwil
   verts.
 - **Lot 7 — Traduction anglaise** : terminé. Parité FR/EN atteinte (40
   fichiers de chaque côté). Découverte en relevant les écarts : `AGENTS.md`,
-  `docs/ia-first.md` et `docs/contrats.md` anglais n'étaient que des stubs
-  du tout premier commit (ex. `ia-first.md` : 9 lignes contre 214 en
+  `packages/kit-ia-first/templates/en/base/docs/ia-first.md` et `docs/contrats.md` anglais n'étaient que des stubs
+  du tout premier commit (ex. `packages/kit-ia-first/templates/en/base/docs/ia-first.md` : 9 lignes contre 214 en
   français), jamais mis à jour au fil des lots 2 à 6 — réécrits en entier
   (sections Conduite complète, tableau de routage complet, registre des 6
   contrats du socle, cycle de vie des chantiers, rappel de cadrage). Ajouté
   aussi : squelettes de docs produit (`README.md`, `INSTALL.md`,
-  `docs/security.md`, `docs/features.md`, `docs/style-guide.md`,
-  `docs/deployment.md`, `docs/projects/routine-maintenance.md`,
-  `docs/projects/model-project-sheet.md`), 5 recettes génériques manquantes
+  `packages/kit-ia-first/templates/en/base/docs/security.md`, `packages/kit-ia-first/templates/en/base/docs/features.md`, `packages/kit-ia-first/templates/en/base/docs/style-guide.md`,
+  `packages/kit-ia-first/templates/en/base/docs/deployment.md`, `packages/kit-ia-first/templates/en/base/docs/projects/routine-maintenance.md`,
+  `packages/kit-ia-first/templates/en/base/docs/projects/model-project-sheet.md`), 5 recettes génériques manquantes
   (`manage-access`, `run-locally`, `modify-permissions`,
   `backup-and-restore`) et le catalogue de contrats + recette d'adoption du
-  lot 6 (`docs/contracts-catalog.md`, `docs/recipes/adopt-the-kit.md`,
+  lot 6 (`packages/kit-ia-first/templates/en/base/docs/contracts-catalog.md`, `packages/kit-ia-first/templates/en/base/docs/recipes/adopt-the-kit.md`,
   préfixe `catalog:` repris du mécanisme français), 8 skills Claude Code
   manquants.
   **2 bugs pré-existants trouvés et corrigés en cours de route** (contenu
   français des lots 1/3/4, jamais exercés par un test avant le lot 7) : (1)
-  l'exemption QUA-015 de la fiche permanente « entretien courant » (pas un
+  l'exemption `kit:QUA-015` de la fiche permanente « entretien courant » (pas un
   chantier à lots) ne reconnaissait que le nom de fichier français en dur
-  dans `check-docs.mjs` ; ajouté `routine-maintenance.md` (nom anglais
+  dans `.githooks/check-docs.mjs` ; ajouté `packages/kit-ia-first/templates/en/base/docs/projects/routine-maintenance.md` (nom anglais
   retenu) à la regex d'exemption. (2) `CLAUDE.md`/`GEMINI.md` et les
   fichiers `.claude/skills/`, `.claude/hooks/rappel-cadrage.mjs`,
   `.claude/hooks/garde-fou-bash.mjs` étaient cités sans le marqueur « si
-  présent » dans `INSTALL.md`, `docs/contrats.md` et `docs/ia-first.md`
+  présent » dans `INSTALL.md`, `docs/contrats.md` et `packages/kit-ia-first/templates/en/base/docs/ia-first.md`
   alors qu'ils ne sont réellement présents que si Claude Code est
   sélectionné : une installation avec un seul autre outil faisait échouer
-  `check-docs.mjs` à raison. Marqué « si présent » sur ces citations
+  `.githooks/check-docs.mjs` à raison. Marqué « si présent » sur ces citations
   (FR et EN). 2 tests ajoutés (installation anglaise complète avec
   contrôles verts, parité du nombre de fichiers livrés FR/EN). 28/28 tests
   verts ; contrôles racine drwil verts.
@@ -435,13 +437,13 @@ Confirmées par le demandeur le 2026-10-03 :
   livré citait `docs/projets/extraction-ia-first-run-box.md` (fiche propre à
   drwil, absente de tout projet généré) comme explication de `STACK_ALLOW` ;
   remplacé par un renvoi au code source du kit. En testant un vrai commit
-  bloqué par QUA-016, le demandeur a demandé que ce blocage soit optionnel :
+  bloqué par `kit:QUA-016`, le demandeur a demandé que ce blocage soit optionnel :
   **sévérité du rappel de cadrage rendue réglable** par
   `.drwil/ia-first.json` -> `cadrage` (`avertissement` par défaut, jamais
   bloquant ; `bloquant` pour le comportement initial ; `off` pour tout
   désactiver), préservée d'une réinstallation comme `checks`. Ne s'applique
-  qu'à QUA-016 (fichier hors fiche, bloc mal formé) ; le reste de
-  `check-docs.mjs` reste toujours bloquant. `.claude/hooks/rappel-cadrage.mjs`
+  qu'à `kit:QUA-016` (fichier hors fiche, bloc mal formé) ; le reste de
+  `.githooks/check-docs.mjs` reste toujours bloquant. `.claude/hooks/rappel-cadrage.mjs`
   suit le même réglage (silencieux si `off`). Mis à jour : `docs/contrats.md`,
   `docs/ia-first.md` (section 7), `AGENTS.md`, `docs/projets/entretien-courant.md`,
   `docs/projets/mecanique-ia-first.md` — FR et EN. 2 tests ajoutés (défaut
@@ -453,7 +455,7 @@ Confirmées par le demandeur le 2026-10-03 :
   était utile. Réponse retenue : non (toute l'info est déjà en markdown
   versionné, un conteneur ajoute une surface à maintenir et un risque de
   désynchronisation) ; à la place, un **générateur statique sans serveur**
-  (`templates/common/optional/tableau-de-bord/tableau-de-bord.mjs`, module
+  (`packages/kit-ia-first/templates/common/optional/tableau-de-bord/tableau-de-bord.mjs`, module
   optionnel non copié par `scaffold()`, sur le modèle de `front-quality/`) :
   produit un unique fichier HTML, lancé à la main
   (`node .githooks/tableau-de-bord.mjs`), jamais en CI ni au commit. Scope
@@ -465,14 +467,14 @@ Confirmées par le demandeur le 2026-10-03 :
   registre (`docs/contrats.md`) et du catalogue, non installés
   (`docs/catalogue-contrats.md`), en reconnaissant les deux formats de
   définition (titre `## ID — ...` ou tableau `| ID | ... |`, même détection
-  que `check-docs.mjs`). Bilingue (FR/EN selon `.drwil/ia-first.json ->
+  que `.githooks/check-docs.mjs`). Bilingue (FR/EN selon `.drwil/ia-first.json ->
   lang`). Bugs trouvés et corrigés en testant sur le dépôt drwil lui-même :
   l'extraction du Statut doit tolérer une parenthèse (date) avant les deux-
   points, le titre de section Lots n'est pas toujours exactement « Lots »
   (ex. « Lots proposés »), et `docs/contrats.md` peut définir ses ID en
   titre (format réel de drwil) et pas seulement en tableau (format du
   template livré) — le parseur gère maintenant les deux. Recette
-  `docs/recettes/visualiser-avancement.md` / `docs/recipes/view-progress.md`
+  `docs/recettes/visualiser-avancement.md` / `packages/kit-ia-first/templates/en/base/docs/recipes/view-progress.md`
   et skill Claude Code associé (`visualiser-avancement` / `view-progress`,
   simple renvoi à la recette). 1 test ajouté (31/31 tests verts) ; contrôles
   racine drwil verts.

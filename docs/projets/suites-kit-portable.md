@@ -41,7 +41,7 @@ restés ouverts à la fin de ce travail.
 
 8. **Faux positifs et écarts relevés par check-docs.mjs** — [IA] corrigé le
    2026-10-04 (lot 2 du projet d'extraction, voir
-   `docs/projets/extraction-ia-first-run-box.md`) : `check-docs.mjs` ne
+   `docs/projets/extraction-ia-first-run-box.md`) : `.githooks/check-docs.mjs` ne
    prend plus pour un chemin une citation sans extension hors des préfixes
    connus (ex. « minimal/complet », « init/apply »), test de non-régression
    ajouté. Restent à vérifier une fois le point 5 fait (kit appliqué à

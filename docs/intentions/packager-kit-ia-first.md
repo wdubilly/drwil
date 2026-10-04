@@ -1,5 +1,7 @@
 # Intention : Packager @drwil/kit-ia-first sur npm
 
+**Statut** (2026-10-04) : en attente — questions à trancher non encore tranchées par le demandeur (voir `docs/projets/suites-kit-portable.md`, point 7).
+
 ## Besoin
 Rendre le kit IA-first (`@drwil/kit-ia-first`) facilement distribuable pour un usage en équipe et/ou hors environnement local, afin de pouvoir l'initialiser avec `npx @drwil/kit-ia-first init` sans dépendre d'un chemin absolu.
 

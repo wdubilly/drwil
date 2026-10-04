@@ -15,3 +15,38 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Source de vérité** : `.githooks/run-checks.sh` et son historique d'exécution.
 **Preuve** : Sortie lue du contrôle concerné.
 **Raison** : Empêcher l'affirmation sans exécution.
+
+## SEC-006 — Pas de dépendance vulnérable connue
+**Règle** : Aucune dépendance avec une faille connue.
+**Périmètre** : Dépendances du dépôt.
+**Source de vérité** : Manifeste de dépendances (`package.json`…), audit déclaré (`.drwil/ia-first.json` → `checks`).
+**Preuve** : Hook + CI.
+**Raison** : Une bibliothèque vulnérable annule le reste.
+
+## SEC-007 — Pas de secret dans le dépôt
+**Règle** : Pas de secret dans le dépôt (`.env`, clés, mots de passe, configs clients).
+**Périmètre** : Tout le dépôt et son historique.
+**Source de vérité** : gitleaks (fichiers indexés + historique, si configuré).
+**Preuve** : Hook + CI.
+**Raison** : Fuite irréversible une fois poussée.
+
+## QUA-011 — Doc jamais fausse
+**Règle** : Tout chemin du dépôt et tout ID de contrat cités dans la doc et les skills existent (ID définis une seule fois au registre).
+**Périmètre** : `AGENTS.md`, les `AGENTS.md` de couche, `docs/`, `.claude/skills/` (si présent).
+**Source de vérité** : `.githooks/check-docs.mjs`.
+**Preuve** : Hook + CI.
+**Raison** : Une doc fausse égare les IA.
+
+## QUA-015 — Chantiers exploitables à froid
+**Règle** : Chaque case ouverte de l'index des chantiers porte un marqueur `[IA]`, `[humain]` ou `[décision]` ; chaque fiche de `docs/projets/` et de `docs/intentions/` (hors index et README) a une ligne « Statut » en tête, datée (AAAA-MM-JJ) ; chaque fiche d'intention a les sections « Besoin », « Existant » et « Questions à trancher » ; chaque fiche de projet a une section « Reprise ».
+**Périmètre** : `docs/projets/`, `docs/intentions/`.
+**Source de vérité** : `docs/ia-first.md` (section 7).
+**Preuve** : `.githooks/check-docs.mjs` (hook + CI) ; justesse du contenu : humaine.
+**Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
+
+## QUA-016 — Rappel de cadrage
+**Règle** : Tout fichier de code indexé est couvert par le bloc `cadrage` d'une fiche de `docs/projets/` ; un bloc mal formé (sans `fichiers:`, motif trop large) est refusé. Sévérité réglable par projet (`.drwil/ia-first.json` -> `cadrage` : `avertissement` par défaut, `bloquant`, ou `off`).
+**Périmètre** : Tout le dépôt (fichiers indexés), hors `docs/` et le markdown.
+**Source de vérité** : `.githooks/cadrage.mjs`, `docs/ia-first.md` (section 7).
+**Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage).
+**Raison** : Du code détaché de tout chantier ne se retrouve plus.
