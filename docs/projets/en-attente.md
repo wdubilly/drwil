@@ -33,17 +33,21 @@ Sans tag, un sujet est considéré `[P2]`.
 - [ ] [décision] [P1] Renommer le paquet `@drwil/kit-ia-first` en `drwil`
   (dossier, bin, citations dans les docs) —
   `docs/projets/renommer-kit-en-drwil.md`.
-- [ ] [décision] [P2] Vérifier la cohérence case cochée ↔ statut de la fiche
+- [ ] [IA] [P2] Vérifier la cohérence case cochée ↔ statut de la fiche
   liée (désynchro constatée sur signaler-couches-par-defaut.md) — cadré,
   lot 1 prêt — `docs/projets/verifier-coherence-case-statut.md`.
 - [x] [IA] Signaler explicitement les couches par défaut (backend,frontend)
   quand aucune stack n'est détectée à l'`init` — fait le 2026-10-04 (commit
   52bb22b) — `docs/projets/signaler-couches-par-defaut.md`.
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [décision] [P2] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
+- [ ] [IA] [P2] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
   et signale la dérive de prose (AGENTS.md, docs/ia-first.md, docs/contrats.md
   restés sur une version pré-kit chez drwil) — cadré, lot 1 prêt —
   `docs/projets/apply-rafraichit-mecanique.md`.
+- [ ] [IA] [P2] Rappeler quand l'audit d'opportunité ou de risques/dette est
+  périmé (> 30 jours depuis le dernier scan), dans le tableau de bord et
+  en avertissement non bloquant de run-checks.mjs — cadré, lot 1 prêt —
+  `docs/projets/rappeler-peremption-audits.md`.
 - [ ] [décision] [P3] Skills Copilot CLI (parité fonctionnelle, pas mécanique :
   Copilot CLI déclenche par motif de fichier, pas par description comme
   Claude). 2 recettes s'y prêtent (route API → `applyTo: backend/**`, écran
