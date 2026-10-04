@@ -1,7 +1,27 @@
-# Pending work
+# Pending work — index
 
-Priority is informative only (not checked by check-docs.mjs): `P0` most
-urgent, `P1` high, `P2` normal (default if left blank), `P3` least urgent.
+One line per topic. Detail and **status** live in the linked sheet, the only
+source: this index copies no state. A topic without a link fits in two
+lines here. Unscoped ideas: `docs/intentions/README.md`. Writing rules:
+`docs/ia-first.md`, section 7.
 
-| Topic | Priority | Status | Note |
-|---|---|---|---|
+Mandatory marker on every open item (QUA-015): `[AI]` doable by an agent in
+the repo; `[human]` a gesture outside the repo (server, vault, approval,
+infrastructure); `[decision]` to be settled by the requester before any
+work. An agent does not attempt a `[human]` gesture and does not decide a
+`[decision]`: it raises it. Small tasks that don't justify a project:
+`docs/projects/routine-maintenance.md`.
+
+Optional priority, not checked by check-docs.mjs (plain convention): `[P0]`
+most urgent, `[P1]` high, `[P2]` normal, `[P3]` least urgent. Without a tag,
+a topic is considered `[P2]`.
+
+## Projects
+
+*(empty on install — one section per theme, one item per topic)*
+
+<!-- Example:
+- [ ] [AI] short title of the topic, link to a sheet if more than two lines
+  are needed, otherwise the topic fits here.
+- [x] topic delivered (YYYY-MM-DD).
+-->

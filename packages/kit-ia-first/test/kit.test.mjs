@@ -150,6 +150,25 @@ test("QUA-015 : marqueur de chantier, statut daté, section Reprise, chemin « �
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
+test("QUA-015 : l'index anglais (pending.md) vérifie aussi le marqueur de chantier", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, lang: "en", git: false }));
+
+  // case ouverte sans marqueur [AI]/[human]/[decision], côté anglais.
+  appendFileSync(join(dir, "docs/projects/pending.md"), "\n## Test\n- [ ] topic without marker\n");
+  let r = checks(dir);
+  assert.notEqual(r.status, 0);
+  assert.match(r.stdout, /pending\.md.*marker/);
+
+  // corrigé : contrôle vert.
+  writeFileSync(
+    join(dir, "docs/projects/pending.md"),
+    read(dir, "docs/projects/pending.md").replace("- [ ] topic without marker", "- [ ] [AI] topic with marker"),
+  );
+  r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
 test("une alternative écrite avec une barre oblique n'est pas prise pour un chemin", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, git: false }));
