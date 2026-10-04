@@ -1,5 +1,5 @@
 ---
-name: audit-risks-and-debt
+name: drwil-audit
 description: Analyze the repository (real cadrage, code, tests) to detect spec drift, dead code, security blind spots and test gaps, and produce docs/audit-risks.md. Use for a health review before a key milestone or on request.
 ---
 

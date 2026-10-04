@@ -1,5 +1,5 @@
 ---
-name: decouvrir-valeur-produit
+name: drwil-valeur
 description: Analyser le dépôt (cadrage, code existant) pour identifier les fonctionnalités à forte valeur métier les plus pertinentes à développer ensuite, et produire docs/decouverte-valeur.md. À utiliser pour cadrer la prochaine priorité produit.
 ---
 

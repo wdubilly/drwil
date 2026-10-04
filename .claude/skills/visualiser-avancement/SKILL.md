@@ -1,5 +1,5 @@
 ---
-name: visualiser-avancement
+name: drwil-avancement
 description: Générer un tableau de bord HTML statique (avancement des chantiers, couverture des contrats) sans rien déployer. À utiliser pour une vue d'ensemble rapide avant une réunion, une reprise de chantier ou une revue.
 ---
 

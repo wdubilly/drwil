@@ -1,5 +1,5 @@
 ---
-name: track-consumption-per-lot
+name: drwil-usage
 description: Record in .drwil/usage.jsonl the tokens consumed, the model used, and the setup time for a lot that just finished. Use when closing a lot, to feed the dashboard and the analysis reports.
 ---
 
