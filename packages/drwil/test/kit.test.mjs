@@ -578,3 +578,29 @@ test("module optionnel tableau de bord : affiche les derniers audits, sans régr
   assert.match(html, /Découverte de valeur et opportunités produit/);
   assert.match(html, /État du projet : exemple\./);
 });
+
+test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-checks.mjs", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
+  mkdirSync(join(dir, ".githooks"), { recursive: true });
+  const src = join(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url).pathname);
+  writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
+
+  // rapport récent : pas d'avertissement.
+  writeFileSync(join(dir, "docs/audit-risques.md"), "# Audit de risques et dette technique\n\n> Dernier scan : 2026-10-04\n\n## Synthèse\n");
+  let r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.doesNotMatch(read(dir, "docs/tableau-de-bord.html"), /à relancer/);
+  let checkR = checks(dir);
+  assert.doesNotMatch(checkR.stdout, /audit périmé/);
+
+  // rapport vieux de plus de 30 jours : avertissement visuel dans le tableau de bord, et dans
+  // run-checks.mjs (famille « non exécuté », jamais bloquant).
+  writeFileSync(join(dir, "docs/audit-risques.md"), "# Audit de risques et dette technique\n\n> Dernier scan : 2020-01-01\n\n## Synthèse\n");
+  r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(read(dir, "docs/tableau-de-bord.html"), /à relancer/);
+  checkR = checks(dir);
+  assert.equal(checkR.status, 0, "jamais bloquant : " + checkR.stdout + checkR.stderr);
+  assert.match(checkR.stdout, /audit périmé.*docs\/audit-risques\.md/);
+});

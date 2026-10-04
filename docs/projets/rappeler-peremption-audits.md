@@ -1,6 +1,6 @@
 # Projet : rappeler quand un audit (opportunité, risques) est périmé
 
-**Statut** (2026-10-04) : cadré — lot 1 prêt à démarrer sur confirmation.
+**Statut** (2026-10-04) : fait — lot 1 livré.
 
 <!-- cadrage
 fichiers:
@@ -77,4 +77,17 @@ fonction `lireAudit()`), mais ne la compare jamais à la date du jour.
 
 ## 7. Reprise
 
-(pas encore démarré)
+- **Dernier état** (2026-10-04) : lot 1 livré. Fonction de péremption
+  (dupliquée simplement dans les 2 scripts, pas de module commun, comme
+  autorisé par la fiche) : seuil 30 jours depuis le « Dernier scan »/
+  « Last scan » de `docs/audit-risques.md`/`docs/decouverte-valeur.md`
+  (ou leurs équivalents EN). `.githooks/tableau-de-bord.mjs`
+  (`rendreAudit()`) affiche « ⚠ scan vieux de N jours, à relancer » à
+  côté de la date ; `.githooks/run-checks.mjs` ajoute une ligne
+  « audit périmé (fichier, vieux de N jours) » dans `nonExecutes`
+  (jamais bloquant). Synchronisé vers les templates (`common/base`,
+  `common/optional/tableau-de-bord`). Test dédié (rapport récent → rien,
+  rapport > 30 jours → avertissement dans les deux scripts), 38/38 tests
+  verts.
+- **Travail non commité** : aucun après ce commit.
+- **Prochaine étape** : aucune (lot unique du projet).

@@ -33,6 +33,7 @@ const T = {
     pasDeConso: "(.drwil/usage.jsonl absent — aucune donnée de consommation)",
     derniersAudits: "Derniers audits",
     pasEncoreGenere: (f) => `(${f} absent — pas encore généré, voir le skill correspondant)`,
+    auditPerime: (n) => `⚠ scan vieux de ${n} jours, à relancer`,
   },
   en: {
     titre: (p) => `Dashboard — ${p}`,
@@ -54,6 +55,7 @@ const T = {
     pasDeConso: "(.drwil/usage.jsonl missing — no consumption data)",
     derniersAudits: "Latest audits",
     pasEncoreGenere: (f) => `(${f} missing — not generated yet, see the matching skill)`,
+    auditPerime: (n) => `⚠ scan ${n} days old, time to re-run`,
   },
 }[lang];
 const MODELE_RE = /^modele-|^model-/;
@@ -217,10 +219,25 @@ function lireAudit(chemin) {
   return { titre, entrees };
 }
 
+// Péremption d'un audit : plus de 30 jours depuis son « Dernier scan »/« Last scan ».
+// Retourne le nombre de jours si périmé, sinon null (date absente, illisible, ou récente).
+const SEUIL_PEREMPTION_JOURS = 30;
+function joursPeremption(audit) {
+  if (!audit) return null;
+  const entree = audit.entrees.find(([k]) => /^dernier scan|^last scan/i.test(k));
+  if (!entree) return null;
+  const m = entree[1].match(/\d{4}-\d{2}-\d{2}/);
+  if (!m) return null;
+  const jours = Math.floor((Date.now() - new Date(m[0]).getTime()) / 86400000);
+  return jours >= SEUIL_PEREMPTION_JOURS ? jours : null;
+}
+
 function rendreAudit(chemin, audit) {
   if (!audit) return `<p>${T.pasEncoreGenere(chemin)}</p>`;
   const meta = audit.entrees.map(([k, v]) => `${echapper(k)} : ${echapper(v)}`).join("<br>");
-  return `<h3>${echapper(audit.titre)} <small>(<code>${echapper(chemin)}</code>)</small></h3><p>${meta}</p>`;
+  const jours = joursPeremption(audit);
+  const avertissement = jours !== null ? ` <strong>${echapper(T.auditPerime(jours))}</strong>` : "";
+  return `<h3>${echapper(audit.titre)} <small>(<code>${echapper(chemin)}</code>)</small></h3><p>${meta}${avertissement}</p>`;
 }
 
 const { index, fiches } = lireFiches();

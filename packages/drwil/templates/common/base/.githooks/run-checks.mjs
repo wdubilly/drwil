@@ -32,6 +32,7 @@ const T = {
     nonExecute: "non exécuté :",
     echec: "échec :",
     ok: (n) => `contrôles exécutés : OK (${n} non exécuté(s), voir ci-dessus)`,
+    auditPerime: (f, n) => `audit périmé (${f}, vieux de ${n} jours) : à relancer`,
   },
   en: {
     secrets: "secrets (gitleaks)",
@@ -47,6 +48,7 @@ const T = {
     nonExecute: "not run:",
     echec: "failed:",
     ok: (n) => `checks run: OK (${n} not run, see above)`,
+    auditPerime: (f, n) => `stale audit (${f}, ${n} days old): time to re-run`,
   },
 }[lang];
 
@@ -97,6 +99,21 @@ if (full) {
 const checks = Array.isArray(cfg.checks) ? cfg.checks : [];
 if (!checks.length) nonExecutes.push(`${T.projet} (${T.aucunCheck})`);
 for (const c of checks) controle(c.name ?? c.run, c.run, [], { shell: true, cwd: c.cwd ? join(root, c.cwd) : root });
+
+// Rappel non bloquant (confort, pas un contrat) : un audit (opportunité, risques/dette) dont le
+// « Dernier scan »/« Last scan » date de plus de 30 jours gagnerait à être relancé.
+const SEUIL_PEREMPTION_JOURS = 30;
+for (const fichier of [
+  { fr: "docs/audit-risques.md", en: "docs/audit-risks.md" }[lang],
+  { fr: "docs/decouverte-valeur.md", en: "docs/value-discovery.md" }[lang],
+]) {
+  if (!existsSync(fichier)) continue;
+  const bloc = readFileSync(fichier, "utf8").split(/\r?\n/).find((l) => /^>\s*(dernier scan|last scan)/i.test(l));
+  const m = bloc?.match(/\d{4}-\d{2}-\d{2}/);
+  if (!m) continue;
+  const jours = Math.floor((Date.now() - new Date(m[0]).getTime()) / 86400000);
+  if (jours >= SEUIL_PEREMPTION_JOURS) nonExecutes.push(T.auditPerime(fichier, jours));
+}
 
 for (const c of nonExecutes) console.log(`[ia-first] ⚠ ${T.nonExecute} ${c}`);
 if (echecs.length) {

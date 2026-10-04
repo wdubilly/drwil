@@ -44,9 +44,9 @@ Sans tag, un sujet est considéré `[P2]`.
   et signale la dérive de prose (AGENTS.md, docs/ia-first.md, docs/contrats.md
   restés sur une version pré-kit chez drwil) — cadré, lot 1 prêt —
   `docs/projets/apply-rafraichit-mecanique.md`.
-- [ ] [IA] [P2] Rappeler quand l'audit d'opportunité ou de risques/dette est
+- [x] [IA] [P2] Rappeler quand l'audit d'opportunité ou de risques/dette est
   périmé (> 30 jours depuis le dernier scan), dans le tableau de bord et
-  en avertissement non bloquant de run-checks.mjs — cadré, lot 1 prêt —
+  en avertissement non bloquant de run-checks.mjs — fait le 2026-10-04 —
   `docs/projets/rappeler-peremption-audits.md`.
 - [ ] [IA] [P2] Manifeste des fichiers installés par le kit + commande de
   désinstallation propre (réutilise le mécanisme pressenti au point 3 de
