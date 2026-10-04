@@ -173,6 +173,12 @@ Tranchées par le demandeur le 2026-10-03 :
   écriture reste informatif (le fichier est déjà écrit). docs/ et les fichiers .md
   n'en relèvent jamais. Les petites tâches se rattachent à une fiche
   permanente « entretien courant » ; les motifs trop larges restent refusés.
+  **Révisé le 2026-10-04** (après l'épreuve de l'installation réelle, voir
+  Reprise) : sévérité rendue réglable par projet (`.drwil/ia-first.json` ->
+  `cadrage`), **par défaut `avertissement`** (jamais bloquant), `bloquant`
+  pour retrouver le comportement initial, `off` pour tout désactiver. Ne
+  touche que ce contrôle (QUA-016) ; le reste de `check-docs.mjs` (chemins,
+  contrats, QUA-015…) reste toujours bloquant.
 - Anglais **traduit en fin de projet** (lot 7) : le moins cher, le contenu
   n'est traduit qu'une fois stabilisé.
 - Module **qualité front** (couleurs dans le seul dossier du thème, contraste
@@ -423,3 +429,22 @@ Confirmées par le demandeur le 2026-10-03 :
   **Partie [humain] restante, non simulée par l'IA** : la relecture finale
   du demandeur sur la table de correspondance et la décision de clore le
   chantier `extraction-ia-first-run-box.md`.
+- **Revue post-lot 8 (2026-10-04)** : demandeur a fait vérifier l'absence de
+  fuite run-box/drwil et le fonctionnement réel du kit (voir aussi « Un vrai
+  commit git... » plus haut). **1 bug trouvé et corrigé** : `.claude/settings.json`
+  livré citait `docs/projets/extraction-ia-first-run-box.md` (fiche propre à
+  drwil, absente de tout projet généré) comme explication de `STACK_ALLOW` ;
+  remplacé par un renvoi au code source du kit. En testant un vrai commit
+  bloqué par QUA-016, le demandeur a demandé que ce blocage soit optionnel :
+  **sévérité du rappel de cadrage rendue réglable** par
+  `.drwil/ia-first.json` -> `cadrage` (`avertissement` par défaut, jamais
+  bloquant ; `bloquant` pour le comportement initial ; `off` pour tout
+  désactiver), préservée d'une réinstallation comme `checks`. Ne s'applique
+  qu'à QUA-016 (fichier hors fiche, bloc mal formé) ; le reste de
+  `check-docs.mjs` reste toujours bloquant. `.claude/hooks/rappel-cadrage.mjs`
+  suit le même réglage (silencieux si `off`). Mis à jour : `docs/contrats.md`,
+  `docs/ia-first.md` (section 7), `AGENTS.md`, `docs/projets/entretien-courant.md`,
+  `docs/projets/mecanique-ia-first.md` — FR et EN. 2 tests ajoutés (défaut
+  jamais bloquant, `off` silencieux y compris le rappel à l'agent), test
+  existant adapté (force `cadrage: "bloquant"` pour vérifier l'ancien
+  comportement). 30/30 tests verts ; contrôles racine drwil verts.

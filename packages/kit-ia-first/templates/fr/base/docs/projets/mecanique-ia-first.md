@@ -21,10 +21,12 @@ fichiers:
 
 ## 1. Besoin
 
-Le contrôle au commit (`.githooks/check-docs.mjs`) refuse tout fichier de
+Le contrôle au commit (`.githooks/check-docs.mjs`) signale tout fichier de
 code indexé qu'aucune fiche de `docs/projets/` ne couvre (rappel de
-cadrage, bloquant). Sans cette fiche, les fichiers posés par le kit lui-même
-bloqueraient le tout premier commit du projet.
+cadrage, sévérité réglable par `.drwil/ia-first.json` -> `cadrage` :
+`avertissement` par défaut, `bloquant` en option). Sans cette fiche, les
+fichiers posés par le kit lui-même seraient signalés dès le tout premier
+commit du projet (bloquant si le réglage `bloquant` est choisi).
 
 ## 2. Hors périmètre
 

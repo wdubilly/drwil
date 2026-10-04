@@ -23,6 +23,7 @@ const T = {
     cadrageLigne: (f, l) => `${f} : ligne de cadrage non comprise « ${l} »`,
     cadrageLarge: (f, m) => `${f} : motif de cadrage trop large « ${m} »`,
     bilan: (n, e) => `check-docs : ${n} fichiers scannés, ${e} erreur(s)`,
+    cadrageAvertissement: (n) => `check-docs : ${n} avertissement(s) de cadrage (QUA-016, non bloquant — réglage "cadrage" de .drwil/ia-first.json)`,
   },
   en: {
     chemin: (c) => `cited path not found \`${c}\``,
@@ -37,8 +38,14 @@ const T = {
     cadrageLigne: (f, l) => `${f}: cadrage line not understood « ${l} »`,
     cadrageLarge: (f, m) => `${f}: cadrage pattern too broad « ${m} »`,
     bilan: (n, e) => `check-docs: ${n} files scanned, ${e} error(s)`,
+    cadrageAvertissement: (n) => `check-docs: ${n} cadrage warning(s) (QUA-016, non-blocking — "cadrage" setting in .drwil/ia-first.json)`,
   },
 }[lang];
+
+// Sévérité du rappel de cadrage (QUA-016 seul ; le reste de check-docs reste toujours bloquant) :
+// "bloquant" (défaut historique), "avertissement" (jamais bloquant, juste affiché) ou "off" (désactivé).
+const CADRAGE_NIVEAUX = new Set(["bloquant", "avertissement", "off"]);
+const niveauCadrage = CADRAGE_NIVEAUX.has(cfg.cadrage) ? cfg.cadrage : "avertissement";
 
 const CODE_RE = /`([^`\s]+)`/g;
 const EXT_RE = /\.(md|mdc|mjs|cjs|js|ts|tsx|jsx|py|sh|json|ya?ml|toml|txt)$/;
@@ -138,10 +145,16 @@ for (const doc of docs) {
 }
 
 erreurs.push(...checkChantiers());
-erreurs.push(...checkCadrage());
+
+const problemesCadrage = niveauCadrage === "off" ? [] : checkCadrage();
+if (niveauCadrage === "bloquant") erreurs.push(...problemesCadrage);
 
 for (const e of erreurs) console.log(`  ✗ ${e}`);
 console.log(T.bilan(docs.length, erreurs.length));
+if (niveauCadrage === "avertissement" && problemesCadrage.length) {
+  for (const e of problemesCadrage) console.log(`  ⚠ ${e}`);
+  console.log(T.cadrageAvertissement(problemesCadrage.length));
+}
 process.exit(erreurs.length ? 1 : 0);
 
 // QUA-015 : chaque chantier se reprend à froid (marqueurs, statut daté, sections, Reprise).
@@ -163,9 +176,12 @@ function checkChantiers() {
   return erreurs;
 }
 
-// Rappel de cadrage, bloquant au commit (décision du demandeur, différente de run-box qui le
-// voulait non bloquant) : un fichier de code indexé doit être couvert par le bloc `cadrage` d'une
+// Rappel de cadrage : un fichier de code indexé doit être couvert par le bloc `cadrage` d'une
 // fiche de docs/projets/ (dont la fiche permanente « entretien courant » pour les petites tâches).
+// Sévérité réglable par projet (clé "cadrage" de .drwil/ia-first.json, défaut "avertissement") :
+// "bloquant" fait échouer le commit comme avant (choix initial du 2026-10-03, différent de
+// run-box qui le voulait non bloquant) ; "avertissement" affiche sans jamais bloquer ;
+// "off" désactive le contrôle. Ce réglage ne touche que ce contrôle, jamais le reste de check-docs.
 function checkCadrage() {
   const erreurs = [];
   let indexes;

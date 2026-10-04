@@ -193,14 +193,18 @@ Un fichier de code ne doit pas rester détaché de tout chantier. Une fiche de
 `cadrage` (un chemin ou un motif par ligne sous `fichiers:`) : il couvre les
 fichiers que ce chantier touche.
 
-- **Bloquant au commit** (`.githooks/check-docs.mjs`) : un fichier de code
-  indexé par git qu'aucun bloc ne couvre, ou un bloc mal formé (sans ligne
-  `fichiers:`, motif trop large comme `**` ou `scripts/*`), fait échouer le
-  contrôle. `docs/` et tout fichier markdown ne sont jamais du code.
+- **Sévérité réglable au commit** (`.githooks/check-docs.mjs`, réglage
+  `cadrage` de `.drwil/ia-first.json`) : un fichier de code indexé par git
+  qu'aucun bloc ne couvre, ou un bloc mal formé (sans ligne `fichiers:`,
+  motif trop large comme `**` ou `scripts/*`), est signalé. `avertissement`
+  (défaut) : jamais bloquant, juste affiché. `bloquant` : fait échouer le
+  contrôle. `off` : désactive le contrôle (et son rappel à l'agent).
+  `docs/` et tout fichier markdown ne sont jamais du code.
 - **Rappel à l'agent, informatif** (Claude Code, hook PostToolUse
   `.claude/hooks/rappel-cadrage.mjs`, si présent) : après l'écriture d'un
   fichier de code hors fiche, un message lui est glissé ; rien n'est
-  bloqué (le fichier est déjà écrit), seul le commit le sera.
+  bloqué (le fichier est déjà écrit), le commit suit le réglage `cadrage`
+  ci-dessus.
 - **Petite tâche** : se rattache à `docs/projets/entretien-courant.md`, sans
   ouvrir de chantier séparé.
 - **Fichiers propres au kit** : couverts par `docs/projets/mecanique-ia-first.md`,

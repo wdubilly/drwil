@@ -69,7 +69,8 @@ copy them elsewhere: cite the ID. Before a significant change, identify the
 applicable contracts and recipe. A failing check flags a contract: read
 that contract before bypassing anything. Always installed baseline:
 QUA-011 (docs), QUA-013 (a check that did not run is not a passed check),
-QUA-015 (cold-readable projects), QUA-016 (scoping reminder, blocking); the
+QUA-015 (cold-readable projects), QUA-016 (scoping reminder, configurable
+severity); the
 project completes the list of contracts to know regardless of the task.
 
 ## Load context progressively

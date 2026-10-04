@@ -158,9 +158,10 @@ test("doublon d'ID dans le registre des contrats", async () => {
   assert.match(r.stdout, /QUA-011.*plusieurs fois/);
 });
 
-test("QUA-016 : rappel de cadrage, bloquant au commit, débloqué par le bloc cadrage", async () => {
+test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc cadrage", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir }));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "bloquant" }));
   assert.equal(git(dir, "add", "-A").status, 0);
   assert.equal(git(dir, "commit", "-qm", "init").status, 0, "premier commit accepté (mecanique-ia-first.md couvre .githooks/)");
 
@@ -190,6 +191,41 @@ test("QUA-016 : rappel de cadrage, bloquant au commit, débloqué par le bloc ca
   r = git(dir, "commit", "-qm", "motif trop large");
   assert.notEqual(r.status, 0);
   assert.match(r.stdout + r.stderr, /motif de cadrage trop large/);
+});
+
+test("QUA-016 : réglage par défaut (avertissement), jamais bloquant", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir }));
+  assert.equal(config(dir).cadrage, "avertissement", "réglage par défaut écrit à l'installation");
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-qm", "init").status, 0);
+
+  mkdirSync(join(dir, "scripts"));
+  writeFileSync(join(dir, "scripts/tache.mjs"), "console.log('tache');\n");
+  git(dir, "add", "-A");
+  const r = git(dir, "commit", "-qm", "tache non cadrée");
+  assert.equal(r.status, 0, "jamais bloquant par défaut : " + r.stdout + r.stderr);
+  const direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.match(direct.stdout, /scripts\/tache\.mjs.*hors de toute fiche/, "affiché quand même, en avertissement");
+  assert.equal(direct.status, 0, "le contrôle reste vert malgré l'avertissement");
+});
+
+test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "off" }));
+
+  mkdirSync(join(dir, "scripts"));
+  writeFileSync(join(dir, "scripts/tache.mjs"), "console.log('tache');\n");
+  const direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.doesNotMatch(direct.stdout, /hors de toute fiche/);
+  assert.equal(direct.status, 0);
+
+  const rappel = spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
+    cwd: dir, encoding: "utf8",
+    input: JSON.stringify({ tool_name: "Write", tool_input: { file_path: join(dir, "scripts/tache.mjs") } }),
+  });
+  assert.equal(rappel.stdout.trim(), "", "le rappel à l'agent se tait aussi quand cadrage est désactivé");
 });
 
 test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage glisse un message à l'agent", async () => {

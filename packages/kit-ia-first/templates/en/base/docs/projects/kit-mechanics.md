@@ -21,10 +21,12 @@ fichiers:
 
 ## 1. Need
 
-The commit check (`.githooks/check-docs.mjs`) rejects any indexed code file
-not covered by a `docs/projects/` fiche (blocking cadrage reminder). Without
-this fiche, the files the kit itself writes would block the project's very
-first commit.
+The commit check (`.githooks/check-docs.mjs`) reports any indexed code file
+not covered by a `docs/projects/` fiche (scoping reminder, severity set in
+`.drwil/ia-first.json` -> `cadrage`: `avertissement` by default, `bloquant`
+optional). Without this fiche, the files the kit itself writes would be
+reported from the project's very first commit (blocking if `bloquant` is
+chosen).
 
 ## 2. Out of scope
 

@@ -188,14 +188,18 @@ A code file must not stay detached from every project. A sheet in
 `cadrage` block (one path or pattern per line under `fichiers:`): it covers
 the files this project touches.
 
-- **Blocking at commit** (`.githooks/check-docs.mjs`): a code file indexed
-  by git that no block covers, or a malformed block (no `fichiers:` line,
-  too broad a pattern like `**` or `scripts/*`), fails the check. `docs/`
-  and any markdown file are never code.
+- **Configurable severity at commit** (`.githooks/check-docs.mjs`,
+  `cadrage` setting in `.drwil/ia-first.json`): a code file indexed by git
+  that no block covers, or a malformed block (no `fichiers:` line, too
+  broad a pattern like `**` or `scripts/*`), is reported. `avertissement`
+  (default): never blocking, just shown. `bloquant`: fails the check.
+  `off`: disables the check (and its reminder to the agent). `docs/` and
+  any markdown file are never code.
 - **Reminder to the agent, informative** (Claude Code, PostToolUse hook
   `.claude/hooks/rappel-cadrage.mjs`, if present): after writing a code
   file outside any sheet, a message is slipped to it; nothing is blocked
-  (the file is already written), only the commit will be.
+  (the file is already written), the commit follows the `cadrage` setting
+  above.
 - **Small task**: attaches to `docs/projects/routine-maintenance.md`,
   without opening a separate project.
 - **Kit's own files**: covered by `docs/projects/kit-mechanics.md`, set up

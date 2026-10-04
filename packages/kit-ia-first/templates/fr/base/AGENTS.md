@@ -69,7 +69,8 @@ citer l'ID. Avant une modification importante, identifier les contrats et la
 recette qui s'appliquent. Un contrôle qui échoue signale un contrat : lire ce
 contrat avant de contourner quoi que ce soit. Socle toujours installé :
 QUA-011 (doc), QUA-013 (un contrôle qui n'a pas tourné n'est pas un contrôle
-passé), QUA-015 (chantiers à froid), QUA-016 (rappel de cadrage, bloquant) ;
+passé), QUA-015 (chantiers à froid), QUA-016 (rappel de cadrage, sévérité
+réglable) ;
 le projet complète la liste des contrats à connaître quelle que soit la tâche.
 
 ## Charger le contexte progressivement

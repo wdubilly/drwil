@@ -6,8 +6,9 @@
 // couvre, glisse un message à l'agent pour qu'il rattache le fichier à son
 // chantier (ou à docs/projets/entretien-courant.md pour une petite tâche).
 // Ne demande rien et ne refuse rien : toute entrée inattendue, voire une
-// exception, donne « pas de rappel » — le commit, lui, bloque (contrôle
-// bloquant, différent de run-box). La grammaire vient de .githooks/cadrage.mjs,
+// exception, donne « pas de rappel ». Le commit suit la sévérité réglée dans
+// .drwil/ia-first.json -> cadrage ("bloquant" | "avertissement", défaut ;
+// | "off" désactive aussi ce rappel). La grammaire vient de .githooks/cadrage.mjs,
 // la même que le contrôle au commit.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -58,6 +59,7 @@ async function rappel(entree, racine = RACINE) {
 
   const cadrage = await import(`file://${join(racine, ".githooks", "cadrage.mjs")}`);
   const cfg = loadConfig(racine);
+  if (cfg.cadrage === "off") return "";
   if (!cadrage.estDuCode(relatif, cfg)) return "";
 
   const projetsDir = join(racine, cfg.dirs?.projects ?? "docs/projets");
@@ -66,13 +68,16 @@ async function rappel(entree, racine = RACINE) {
   const motifsParFiche = cadrage.motifsDuDepot(fichesTexte);
   if (cadrage.fichesCouvrant(relatif, motifsParFiche).length) return "";
 
+  const suite = cfg.cadrage === "bloquant"
+    ? "Rien n'est bloqué ici ; le commit, lui, le sera."
+    : "Rien n'est bloqué ici, ni au commit (réglage \"cadrage\" de .drwil/ia-first.json).";
   return JSON.stringify({
     hookSpecificOutput: {
       hookEventName: "PostToolUse",
       additionalContext:
         `Rappel de cadrage : aucune fiche de docs/projets/ ne couvre ${relatif}. Ajouter ce chemin, ou un ` +
         "motif qui le couvre, au bloc « cadrage » de la fiche du chantier en cours (ou à " +
-        "docs/projets/entretien-courant.md pour une petite tâche). Rien n'est bloqué ici ; le commit, lui, le sera.",
+        `docs/projets/entretien-courant.md pour une petite tâche). ${suite}`,
     },
   });
 }
