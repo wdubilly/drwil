@@ -20,9 +20,9 @@ outil, pas seulement par un assistant donné :
 - `AGENTS.md` porte la règle de conduite, les contrats à connaître, le
   tableau « si tu touches à… lis d'abord », et l'ordre de chargement du
   contexte.
-- `CLAUDE.md` et `GEMINI.md` ne contiennent qu'une ligne, `@AGENTS.md`
-  (certains outils ne lisent pas `AGENTS.md` d'eux-mêmes) : il n'y a pas
-  deux copies de la consigne à synchroniser.
+- `CLAUDE.md` et `GEMINI.md`, si présents, ne contiennent qu'une ligne,
+  `@AGENTS.md` (certains outils ne lisent pas `AGENTS.md` d'eux-mêmes) : il
+  n'y a pas deux copies de la consigne à synchroniser.
 - Un `AGENTS.md` par couche : le contexte d'une tâche est lu dans le dossier
   touché, pas dans le dépôt entier. Chaque couche a la même redirection
   d'une ligne que la racine.
@@ -41,7 +41,7 @@ contexte chargé pour une tâche reste proportionné à la tâche.
 La duplication étant la première cause de doc fausse, le dépôt s'interdit de
 recopier :
 
-- les **skills** (`.claude/skills/`, si installés) sont des raccourcis, pas
+- les **skills** (`.claude/skills/`, si présent) sont des raccourcis, pas
   des recettes : chacun ne contient que le déclencheur et un renvoi vers la
   recette de `docs/recettes/`, qui est elle-même le fond ;
 - les `AGENTS.md` de couche ne recopient pas la règle d'un contrat, ils citent
@@ -198,16 +198,17 @@ fichiers que ce chantier touche.
   `fichiers:`, motif trop large comme `**` ou `scripts/*`), fait échouer le
   contrôle. `docs/` et tout fichier markdown ne sont jamais du code.
 - **Rappel à l'agent, informatif** (Claude Code, hook PostToolUse
-  `.claude/hooks/rappel-cadrage.mjs`) : après l'écriture d'un fichier de code
-  hors fiche, un message lui est glissé ; rien n'est bloqué (le fichier est
-  déjà écrit), seul le commit le sera.
+  `.claude/hooks/rappel-cadrage.mjs`, si présent) : après l'écriture d'un
+  fichier de code hors fiche, un message lui est glissé ; rien n'est
+  bloqué (le fichier est déjà écrit), seul le commit le sera.
 - **Petite tâche** : se rattache à `docs/projets/entretien-courant.md`, sans
   ouvrir de chantier séparé.
 - **Fichiers propres au kit** : couverts par `docs/projets/mecanique-ia-first.md`,
   posée à l'installation.
 - **Garde-fou des commandes shell** (Claude Code, hook PreToolUse
-  `.claude/hooks/garde-fou-bash.mjs`) : demande l'accord sur un fichier de
-  secrets ou un pipe vers un shell dans une commande Bash ; ne bloque rien,
+  `.claude/hooks/garde-fou-bash.mjs`, si présent) : demande l'accord sur un
+  fichier de secrets ou un pipe vers un shell dans une commande Bash ; ne
+  bloque rien,
   la personne décide.
 
 La grammaire du bloc (`.githooks/cadrage.mjs`) est partagée par le contrôle et

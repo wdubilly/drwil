@@ -52,7 +52,7 @@ const DATE_RE = /\b\d{4}-\d{2}-\d{2}\b/;
 const SECTIONS_INTENTION_FR = ["## Besoin", "## Existant", "## Questions à trancher"];
 const SECTIONS_INTENTION_EN = ["## Need", "## Current state", "## Open questions"];
 // Modèles à copier et fiche permanente : pas des chantiers à lots, exemptés du contrôle QUA-015.
-const EXEMPTS_RE = /^modele-|^model-|^entretien-courant\.md$/;
+const EXEMPTS_RE = /^modele-|^model-|^entretien-courant\.md$|^routine-maintenance\.md$/;
 // Modèles à copier : jamais une vraie source de cadrage (leur bloc, s'il y en a un, n'est qu'un exemple).
 const MODELE_RE = /^modele-|^model-/;
 

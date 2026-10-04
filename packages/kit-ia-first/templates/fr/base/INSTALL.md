@@ -19,5 +19,6 @@ Lancer et vérifier : `docs/recettes/lancer-en-local.md` (si présent).
 ## 4. Utiliser un autre outil IA que Claude
 
 `AGENTS.md` est l'entrée commune ; les fichiers propres à un outil (ex.
-`CLAUDE.md`, `GEMINI.md`) ne font que renvoyer à lui. Un nouvel outil : lui
-faire lire `AGENTS.md` en priorité, sans dupliquer son contenu.
+`CLAUDE.md`, `GEMINI.md` — si présents) ne font que renvoyer à lui. Un
+nouvel outil : lui faire lire `AGENTS.md` en priorité, sans dupliquer son
+contenu.
