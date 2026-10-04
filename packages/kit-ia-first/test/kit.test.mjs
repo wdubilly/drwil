@@ -485,3 +485,29 @@ test("module optionnel tableau de bord : agrège .drwil/usage.jsonl par chantier
   assert.match(html, />75</); // minutes cumulées
   assert.match(html, /claude-sonnet-5, gpt-5\.4/);
 });
+
+test("module optionnel tableau de bord : affiche les derniers audits, sans régression si absents", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
+  mkdirSync(join(dir, ".githooks"), { recursive: true });
+  const src = join(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url).pathname);
+  writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
+
+  // Sans rapport d'audit : pas de régression, message d'absence explicite.
+  let r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(read(dir, "docs/tableau-de-bord.html"), /audit-risques\.md absent/);
+
+  // Avec les deux rapports : titre et méta-bloc (citation en tête) repris tels quels.
+  writeFileSync(join(dir, "docs/audit-risques.md"),
+    "# Audit de risques et dette technique\n\n> Dernier scan : 2026-10-04\n> Niveau de santé global : 🟠 Fragile\n\n## Synthèse\n");
+  writeFileSync(join(dir, "docs/decouverte-valeur.md"),
+    "# Découverte de valeur et opportunités produit\n\n> Dernier scan : 2026-10-04\n> État du projet : exemple.\n\n## Opportunités\n");
+  r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const html = read(dir, "docs/tableau-de-bord.html");
+  assert.match(html, /Audit de risques et dette technique/);
+  assert.match(html, /Niveau de santé global : 🟠 Fragile/);
+  assert.match(html, /Découverte de valeur et opportunités produit/);
+  assert.match(html, /État du projet : exemple\./);
+});

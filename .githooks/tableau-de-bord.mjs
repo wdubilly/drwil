@@ -31,6 +31,8 @@ const T = {
     consommation: "Consommation (.drwil/usage.jsonl)",
     colonnesConso: ["Chantier", "Tokens (total)", "Durée (min)", "Modèles employés"],
     pasDeConso: "(.drwil/usage.jsonl absent — aucune donnée de consommation)",
+    derniersAudits: "Derniers audits",
+    pasEncoreGenere: (f) => `(${f} absent — pas encore généré, voir le skill correspondant)`,
   },
   en: {
     titre: (p) => `Dashboard — ${p}`,
@@ -50,6 +52,8 @@ const T = {
     consommation: "Consumption (.drwil/usage.jsonl)",
     colonnesConso: ["Project", "Tokens (total)", "Duration (min)", "Models used"],
     pasDeConso: "(.drwil/usage.jsonl missing — no consumption data)",
+    derniersAudits: "Latest audits",
+    pasEncoreGenere: (f) => `(${f} missing — not generated yet, see the matching skill)`,
   },
 }[lang];
 const MODELE_RE = /^modele-|^model-/;
@@ -192,12 +196,43 @@ function rendreConsommation(parChantier) {
   return `<table><thead><tr>${T.colonnesConso.map((c) => `<th>${echapper(c)}</th>`).join("")}</tr></thead><tbody>${lignes}</tbody></table>`;
 }
 
+// Lit le bloc de citation (« > Clé : valeur ») en tête d'un rapport d'audit généré par les skills
+// auditer-risques-et-dette / decouvrir-valeur-produit. Tolérant à l'absence (skill jamais lancé).
+function lireAudit(chemin) {
+  if (!existsSync(chemin)) return null;
+  const lignes = readFileSync(chemin, "utf8").split(/\r?\n/);
+  const titre = (lignes.find((l) => l.startsWith("# ")) ?? "").replace(/^#\s*/, "");
+  const metaLignes = [];
+  let dansBloc = false;
+  for (const l of lignes) {
+    if (l.startsWith(">")) { dansBloc = true; metaLignes.push(l.replace(/^>\s?/, "")); }
+    else if (dansBloc) break;
+  }
+  const entrees = [];
+  for (const l of metaLignes) {
+    const m = l.match(/^([^:]{2,40}?)\s*:\s*(.*)$/);
+    if (m) entrees.push([m[1].trim(), m[2].trim()]);
+    else if (entrees.length) entrees[entrees.length - 1][1] += " " + l.trim();
+  }
+  return { titre, entrees };
+}
+
+function rendreAudit(chemin, audit) {
+  if (!audit) return `<p>${T.pasEncoreGenere(chemin)}</p>`;
+  const meta = audit.entrees.map(([k, v]) => `${echapper(k)} : ${echapper(v)}`).join("<br>");
+  return `<h3>${echapper(audit.titre)} <small>(<code>${echapper(chemin)}</code>)</small></h3><p>${meta}</p>`;
+}
+
 const { index, fiches } = lireFiches();
 const cheminContrats = cfg.dirs?.contracts ?? "docs/contrats.md";
 const registre = lireContrats(join(root, cheminContrats));
 const catalogue = lireContrats(join(root, CATALOGUE));
 const usageParChantier = agregerUsage(lireUsage(join(root, ".drwil", "usage.jsonl")));
 const nomProjet = cfg.projectName ?? root;
+const cheminAuditRisques = { fr: "docs/audit-risques.md", en: "docs/audit-risks.md" }[lang];
+const cheminDecouverteValeur = { fr: "docs/decouverte-valeur.md", en: "docs/value-discovery.md" }[lang];
+const auditRisques = lireAudit(join(root, cheminAuditRisques));
+const decouverteValeur = lireAudit(join(root, cheminDecouverteValeur));
 
 const html = `<!doctype html>
 <html lang="${lang}">
@@ -234,6 +269,10 @@ ${fiches.map((f) => `<div class="fiche">
 <h2>${echapper(T.contrats)}</h2>
 ${rendreContrats(T.installes(cheminContrats), registre)}
 ${rendreContrats(T.catalogue(CATALOGUE), catalogue)}
+
+<h2>${echapper(T.derniersAudits)}</h2>
+${rendreAudit(cheminAuditRisques, auditRisques)}
+${rendreAudit(cheminDecouverteValeur, decouverteValeur)}
 
 <h2>${echapper(T.consommation)}</h2>
 ${rendreConsommation(usageParChantier)}
