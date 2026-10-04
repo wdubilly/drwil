@@ -429,6 +429,26 @@ test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et 
   assert.match(r.stdout, /couverture CI de chaque contrôle/);
 });
 
+test("gabarits de pull/merge request : livrés selon le ci et la langue choisis", async () => {
+  const cas = [
+    { lang: "fr", ci: "github", chemin: ".github/pull_request_template.md", motif: /Fiche concernée/ },
+    { lang: "fr", ci: "gitlab", chemin: ".gitlab/merge_request_templates/Default.md", motif: /Fiche concernée/ },
+    { lang: "en", ci: "github", chemin: ".github/pull_request_template.md", motif: /Related card/ },
+    { lang: "en", ci: "gitlab", chemin: ".gitlab/merge_request_templates/Default.md", motif: /Related card/ },
+  ];
+  for (const { lang, ci, chemin, motif } of cas) {
+    const dir = tmp();
+    await quiet(() => init({ targetDir: dir, lang, ci, git: false }));
+    assert.ok(existsSync(join(dir, chemin)), `${lang}/${ci} : ${chemin} absent`);
+    assert.match(read(dir, chemin), motif, `${lang}/${ci} : contenu inattendu`);
+  }
+  // ci: none n'installe aucun gabarit (rien à proposer sans plateforme de MR).
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, ci: "none", git: false }));
+  assert.ok(!existsSync(join(dir, ".github/pull_request_template.md")));
+  assert.ok(!existsSync(join(dir, ".gitlab/merge_request_templates/Default.md")));
+});
+
 test("QUA-013 : un job CI qui ne se déclenche plus sur les bons chemins est détecté", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, ci: "gitlab", git: false }));

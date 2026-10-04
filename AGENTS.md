@@ -51,6 +51,7 @@ Carte complète : `docs/architecture.md`.
 | un audit de risques/dette technique | `.drwil/ia-first.json` | `docs/recettes/auditer-risques-et-dette.md` |
 | le coût (tokens) d'un chantier | `.drwil/usage.jsonl` (si présent) | `docs/recettes/suivre-consommation-par-lot.md` |
 | une opportunité produit à explorer | `docs/decouverte-valeur.md` (si présent) | `docs/recettes/decouvrir-valeur-produit.md` |
+| travailler avec une branche/MR | — | `docs/recettes/travailler-en-branche.md` |
 
 ## Commandes
 

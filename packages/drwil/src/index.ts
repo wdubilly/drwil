@@ -220,6 +220,7 @@ async function scaffold(r: Resolved, shouldOverwrite: Overwrite, derives?: strin
     await copyTree(join(langDir, "tools", tool), r, shouldOverwrite, derives, manifest);
   }
   await copyTree(join(templatesDir, "common", "ci", r.ci), r, shouldOverwrite, derives, manifest);
+  await copyTree(join(langDir, "ci", r.ci), r, shouldOverwrite, derives, manifest);
 
   for (const layer of r.layers) {
     const specific = join(langDir, "layers", `${layer}.md`);

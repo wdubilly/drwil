@@ -33,3 +33,4 @@ once the stack has settled)*
 | Audit risks and technical debt | `docs/recipes/audit-risks-and-debt.md` |
 | Track a project's cost | `docs/recipes/track-consumption-per-lot.md` |
 | Explore product value | `docs/recipes/discover-product-value.md` |
+| Work with branches and merge/pull requests | `docs/recipes/working-with-branches.md` |

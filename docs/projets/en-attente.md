@@ -69,3 +69,6 @@ Sans tag, un sujet est considéré `[P2]`.
   aujourd'hui parmi les outils de drwil) pour découvrir les capacités du
   kit sans lire de prose — 3 points à trancher —
   `docs/projets/commande-slash-drwil.md`.
+- [x] [IA] [P2] Travailler avec des branches et des merge/pull requests :
+  recette dédiée (FR/EN) + gabarits de PR/MR (GitHub, GitLab) — fait le
+  2026-10-05 — `docs/projets/travailler-avec-branches-et-mr.md`.

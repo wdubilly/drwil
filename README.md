@@ -98,3 +98,4 @@ git config core.hooksPath .githooks
 | Auditer risques et dette technique | `docs/recettes/auditer-risques-et-dette.md` |
 | Suivre le coût d'un chantier | `docs/recettes/suivre-consommation-par-lot.md` |
 | Explorer la valeur produit | `docs/recettes/decouvrir-valeur-produit.md` |
+| Travailler avec des branches et des merge/pull requests | `docs/recettes/travailler-en-branche.md` |
