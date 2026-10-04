@@ -12,6 +12,12 @@ Priorité facultative, non vérifiée par check-docs.mjs (simple convention) :
 `[P0]` le plus urgent, `[P1]` élevée, `[P2]` normale, `[P3]` le moins urgent.
 Sans tag, un sujet est considéré `[P2]`.
 
+Un chantier dont la fiche est **entièrement** terminée (pas un simple point
+parmi d'autres) est condensé dans `docs/projets/journal.md` puis retiré de
+cet index, pas coché : voir `docs/recettes/travailler-en-branche.md`,
+section « Clôturer ». Les lignes cochées restantes concernent des points
+déjà faits d'une fiche qui reste ouverte par ailleurs.
+
 ## Kit IA-first
 
 - [ ] [humain] [P1] Extraire l'architecture IA-first complète de run-box-v2 dans
@@ -34,9 +40,6 @@ Sans tag, un sujet est considéré `[P2]`.
 - [x] [IA] Renommer le paquet `@drwil/kit-ia-first` en `drwil`
   (dossier, bin, citations dans les docs) — fait le 2026-10-04 —
   `docs/projets/renommer-kit-en-drwil.md`.
-- [x] [IA] [P2] Vérifier la cohérence case cochée ↔ statut de la fiche
-  liée (désynchro constatée sur signaler-couches-par-defaut.md) — fait
-  le 2026-10-04 — `docs/projets/verifier-coherence-case-statut.md`.
 - [x] [IA] Signaler explicitement les couches par défaut (backend,frontend)
   quand aucune stack n'est détectée à l'`init` — fait le 2026-10-04 (commit
   52bb22b) — `docs/projets/signaler-couches-par-defaut.md`.
@@ -46,30 +49,14 @@ Sans tag, un sujet est considéré `[P2]`.
   restés sur une version pré-kit chez drwil) — lot 1 (détection et
   signalement) fait le 2026-10-04 ; lot 2 (résolution) reste à trancher —
   `docs/projets/apply-rafraichit-mecanique.md`.
-- [x] [IA] [P2] Rappeler quand l'audit d'opportunité ou de risques/dette est
-  périmé (> 30 jours depuis le dernier scan), dans le tableau de bord et
-  en avertissement non bloquant de run-checks.mjs — fait le 2026-10-04 —
-  `docs/projets/rappeler-peremption-audits.md`.
 - [ ] [IA] [P2] Manifeste des fichiers installés par le kit + commande de
   désinstallation propre (réutilise le mécanisme pressenti au point 3 de
   suites-kit-portable.md) — lot 1 (manifeste) fait le 2026-10-04 ; lot 2
   (désinstallation) à ouvrir —
   `docs/projets/desinstaller-proprement.md`.
-- [x] [IA] [P2] Indexer dans AGENTS.md et README.md les recettes déjà
-  livrées au-delà de la gouvernance (audit, tableau de bord, suivi de
-  coût, découverte de valeur) — fait le 2026-10-04 —
-  `docs/projets/informer-capacites-drwil.md`.
 - [ ] [décision] [P3] Skills Copilot CLI (parité fonctionnelle, pas mécanique :
   Copilot CLI déclenche par motif de fichier, pas par description comme
   Claude). 2 recettes s'y prêtent (route API → `applyTo: backend/**`, écran
   front → `applyTo: frontend/**`) ; les 11 autres restent couvertes par
   `AGENTS.md`, déjà lu nativement. Sans risque pour ce que drwil enforce
   (hooks git, contrats) si non fait : confort de découverte, pas un contrôle.
-- [x] [IA] [P3] Commande `/drwil` (Claude Code seul le supporte
-  aujourd'hui parmi les outils de drwil) pour découvrir les capacités du
-  kit sans lire de prose —
-  `docs/projets/commande-slash-drwil.md`.
-- [x] [IA] [P2] Travailler avec des branches et des merge/pull requests :
-  recette dédiée (FR/EN) + gabarits de PR/MR (GitHub, GitLab) + contrat
-  QUA-017 — fait le 2026-10-05 —
-  `docs/projets/travailler-avec-branches-et-mr.md`.

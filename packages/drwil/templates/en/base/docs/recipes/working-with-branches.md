@@ -36,11 +36,21 @@ request, instead of direct commits on the main branch.
 
 - Once the pull/merge request is merged (merge or squash, project's
   choice, the kit doesn't impose anything here): set the card's Status to
-  "done", check its box in the index if it's listed there, delete the
-  branch.
+  "done", delete the branch.
 - If the merge is done by someone other than the author of the work
   (human review), that person closes the card at merge time — not
   before.
+- If the whole card is now finished (not just one lot among several of a
+  card that otherwise stays open): summarize the card into a short entry
+  in `docs/projects/journal.md` (date, title, key decisions, closing
+  commit/PR), delete the card file, then remove the matching line from
+  `docs/projects/pending.md` (don't check it: the journal becomes the
+  closing source, the index only lists remaining work). Nothing is
+  lost — the full history stays in git
+  (`git log --follow -- docs/projects/<card>.md`).
+- If the card still has open points elsewhere (multi-lot project), don't
+  condense anything: check the matching box in the index as before, the
+  card stays active until it's fully finished.
 
 ## What the kit checks (QUA-017)
 
