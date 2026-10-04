@@ -48,6 +48,10 @@ Sans tag, un sujet est considéré `[P2]`.
   périmé (> 30 jours depuis le dernier scan), dans le tableau de bord et
   en avertissement non bloquant de run-checks.mjs — cadré, lot 1 prêt —
   `docs/projets/rappeler-peremption-audits.md`.
+- [ ] [IA] [P2] Manifeste des fichiers installés par le kit + commande de
+  désinstallation propre (réutilise le mécanisme pressenti au point 3 de
+  suites-kit-portable.md) — cadré, lot 1 prêt —
+  `docs/projets/desinstaller-proprement.md`.
 - [ ] [décision] [P3] Skills Copilot CLI (parité fonctionnelle, pas mécanique :
   Copilot CLI déclenche par motif de fichier, pas par description comme
   Claude). 2 recettes s'y prêtent (route API → `applyTo: backend/**`, écran
