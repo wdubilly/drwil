@@ -83,6 +83,19 @@ restés ouverts à la fin de ce travail.
    Au passage, ajout de la sortie réelle de la commande (stdout+stderr) dans
    le message d'assertion du test QUA-016 pour ne plus dépendre d'un message
    statique si un échec Windows revient.
+   Run suivant (`37238176466`) : les deux hooks Claude Code corrigés — ne
+   reste qu'un seul échec Windows (QUA-016, premier commit refusé), et la
+   sortie réelle capturée cette fois montre la cause : les 11 fichiers
+   listés dans le bloc `cadrage` de `mecanique-ia-first.md` sont TOUS
+   signalés « hors de toute fiche », comme si ce bloc n'existait pas.
+   Cause : (k) les runners Windows de GitHub Actions font le `git checkout`
+   avec `core.autocrlf=true` par défaut (aucun `.gitattributes` dans ce
+   dépôt pour l'en empêcher), donc tous les fichiers .md sont récupérés en
+   CRLF ; `.githooks/cadrage.mjs` -> `BLOC_RE` attendait un `\n` strict juste après
+   `cadrage`, qui ne matche jamais un `<!-- cadrage\r\n` — le bloc entier
+   ne se lit plus, zéro motif, zéro fichier couvert. Corrigé en acceptant
+   un `\r` optionnel avant le `\n` de cette regex (`\r?\n`) ; vérifié avec
+   un texte CRLF construit à la main (`lireBloc()` retrouve bien son motif).
    Tests locaux 40/40 verts après ces 5 corrections ; résultat du nouveau
    run CI à confirmer (voir section Reprise).
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien

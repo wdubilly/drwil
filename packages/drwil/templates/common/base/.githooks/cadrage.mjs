@@ -14,7 +14,7 @@
 // d'une fiche, livrée ou non. Rien ici ne lève d'exception sur une fiche
 // illisible : le mécanisme aide, il ne doit jamais casser.
 
-const BLOC_RE = /<!--[ \t]*cadrage[ \t]*\n([\s\S]*?)-->/;
+const BLOC_RE = /<!--[ \t]*cadrage[ \t]*\r?\n([\s\S]*?)-->/;
 const ENTREE_RE = /^-[ \t]+(\S+)$/;
 const JOKERS = new Set(["*", "?", "["]);
 
