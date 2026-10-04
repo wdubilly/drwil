@@ -261,6 +261,9 @@ function setupGit(targetDir: string, allowInit: boolean): void {
     console.log("Dépôt git initialisé.");
   }
   git("config", "core.hooksPath", ".githooks");
+  // commit-msg est volontairement livré non exécutable (voir plus haut) : sans ce
+  // réglage, git redonne le même avertissement à chaque commit, du bruit permanent.
+  git("config", "advice.ignoredHook", "false");
   console.log("Hooks activés (core.hooksPath = .githooks).");
 }
 
