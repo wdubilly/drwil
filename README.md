@@ -62,6 +62,8 @@ mécanique concret :
 - Les contrôles (cohérence de la doc, détection de secrets, couverture des
   contrôles par la CI…) s'exécutent au commit (`.githooks/pre-commit`) et
   en CI.
+- Testé vert en CI sur Linux, macOS et Windows (matrice `kit-tests` de
+  `.github/workflows/`).
 - Pas encore publié sur npm : s'utilise aujourd'hui depuis un clone de ce
   dépôt (voir ci-dessous).
 
