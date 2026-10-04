@@ -1,6 +1,6 @@
 # Projet : extraire l'architecture IA-first complète de run-box-v2 dans le kit
 
-**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 à 7 terminés** ; demandeur a validé le passage jusqu'au bout des lots restants (2026-10-04) ; lot 8 (preuve « rien perdu ») à suivre.
+**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 à 8 terminés** (partie IA) ; **relecture humaine du lot 8 restant à faire par le demandeur** (voir section 6, dernière entrée).
 
 ## 1. Besoin
 
@@ -87,6 +87,31 @@ compléter ; **S** propre à run-box (classé, raison donnée).
 | e2e/ (Playwright dans Docker, jeux de données factices) | absent | S | Infrastructure propre ; le principe (« neutraliser les dépendances réelles, tout en CI ») va dans la fiche modèle ou une recette optionnelle |
 | scripts/sauvegarder.sh, restaurer.sh, deploy-*.sh, exercice-sauvegarde/ | absents | S | Propres à la production run-box ; la recette générique « sauvegarder et restaurer » renvoie à des scripts du projet |
 | keycloak/, portal/, docker-compose*.yml, dossier-modernisation.html | — | S | Application, pas architecture IA-first |
+
+**Vérification « rien perdu » (lot 8, 2026-10-04)** : tableau relu ligne par
+ligne contre le contenu livré par les lots 1 à 7
+(`packages/kit-ia-first/templates/`) et contre une copie de travail de
+run-box-v2 (`/tmp/run-box-v2-copy`, jetable, original jamais modifié).
+Résultat : chaque ligne **G** et **P** a son équivalent dans le kit (AGENTS.md
+12 règles + tableau de routage + dépôts externes ; docs/ia-first.md 215
+lignes ; docs/contrats.md avec préambule et « Hors registre » ; 8 recettes
+génériques + 8 skills ; catalogue de contrats avec les 10 contrats
+catalogués ; module qualité front optionnel ; contrôles Node ---
+`check-docs.mjs`, `check-control-coverage.mjs`, `check-file-size.mjs`,
+`check-code-rules.mjs`, `cadrage.mjs` --- avec `pre-push`/`commit-msg`).
+Chaque ligne **S** reste absente du kit, à raison (métier run-box : RH, pont
+SSH, portail, Elasticsearch, ERMv2, e2e Playwright, scripts de sauvegarde
+prod). Écart assumé déjà documenté lors du lot 4 : pas de `.coveragerc`
+équivalent (mesure de couverture des contrôles eux-mêmes), jugé hors de
+portée raisonnable — `cadrage.test.mjs` reste le seul contrôle qui s'auto-teste
+chez le projet. `apply()` testé sur la copie de run-box-v2 : stack détectée
+correctement sur les 4 couches (`backend` → Python/FastAPI, `frontend` →
+Node/React/Vite/TS, `e2e` → Node.js, `portal` → Python/FastAPI), aucun
+fichier existant écrasé (`git status` : uniquement des ajouts). `check-docs.mjs`
+lancé sur cette copie signale, comme attendu, des centaines de fichiers de
+code existants hors de tout bloc `cadrage` : c'est le rôle de la recette
+`adopter-le-kit` (lot 6) de les répartir dans des fiches, pas quelque chose
+que `apply()` doit faire seul — ce n'est donc pas un écart du kit.
 
 ## 3. Comment rendre l'ensemble générique et fonctionnel
 
@@ -381,6 +406,20 @@ Confirmées par le demandeur le 2026-10-03 :
   (FR et EN). 2 tests ajoutés (installation anglaise complète avec
   contrôles verts, parité du nombre de fichiers livrés FR/EN). 28/28 tests
   verts ; contrôles racine drwil verts.
-- **Prochaine étape** : lot 8 (preuve « rien perdu » : `apply` sur une
-  copie de run-box-v2, comparaison avec l'original, table de correspondance
-  à jour).
+- **Demandeur (2026-10-04)** : « ok va jusqu'au bout sans moi » — confirme
+  l'enchaînement du lot 8 sans confirmation intermédiaire.
+- **Lot 8 — Preuve « rien perdu »** : partie [IA] terminée. Méthode : copie
+  jetable de run-box-v2 dans `/tmp/run-box-v2-copy` (original jamais
+  modifié — plusieurs fichiers de `data/vm-snapshots/` illisibles en
+  copie, sans rapport avec l'architecture IA-first, ignorés), `apply()` du
+  kit lancé dessus. Résultat détaillé dans la note ajoutée après le tableau
+  2.2 : stack détectée sur les 4 couches, aucun fichier existant écrasé,
+  chaque ligne G/P du tableau a son équivalent vérifié dans le kit (lots
+  1 à 7), chaque ligne S reste bien exclue avec sa raison. Aucun écart
+  trouvé qui nécessite un correctif de code — seul écart déjà documenté
+  (lot 4) : pas de mesure de couverture des contrôles eux-mêmes, assumé.
+  `npm test` : 28/28 verts (inchangé, lot 8 n'a modifié aucun code du
+  kit, seulement la fiche de pilotage). Contrôles racine drwil verts.
+  **Partie [humain] restante, non simulée par l'IA** : la relecture finale
+  du demandeur sur la table de correspondance et la décision de clore le
+  chantier `extraction-ia-first-run-box.md`.
