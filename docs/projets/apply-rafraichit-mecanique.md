@@ -1,6 +1,6 @@
 # Projet : `apply()` rafraîchit la mécanique du kit et signale la dérive de prose
 
-**Statut** (2026-10-04) : proposé — points à trancher avant tout code (section 5).
+**Statut** (2026-10-04) : cadré — lot 1 prêt à démarrer sur confirmation.
 
 <!-- cadrage
 fichiers:
@@ -32,16 +32,15 @@ largement enrichi (méthode de refactor détaillée, garde-fou de taille de
 fichier...). La dérive de prose dépasse donc les 3 fichiers de gouvernance
 initialement constatés : elle touche aussi `docs/recettes/`.
 
-Deux natures de fichiers, deux traitements distincts :
-- **Mécanique du kit** (`.githooks/`, `.claude/settings.json`, fichier de CI) :
-  entièrement générée, aucune personnalisation légitime attendue. Risque
-  faible à rafraîchir automatiquement, comme `init()` le fait déjà
-  (`KIT_MECHANICS`).
-- **Prose de gouvernance** (`AGENTS.md`, `docs/ia-first.md`,
-  `docs/contrats.md`, recettes...) : personnalisation projet légitime et
-  attendue. Une fusion automatique de markdown libre risque de réintroduire
-  du contenu retiré sciemment, ou de dupliquer une section réécrite sous un
-  autre intitulé.
+Décidé le 2026-10-04 (voir section 4) : un seul traitement, pas deux — ni
+la mécanique ni la prose ne doivent être réécrites à l'aveugle. `apply()`
+diffuse (compare) tout fichier déjà présent face au template et, en cas
+d'écart, le signale (jamais de réécriture automatique silencieuse). Nuance
+du demandeur : `apply()` est censé être un geste ponctuel par projet (une
+seule adoption du kit) — ce chantier vise surtout le cas d'une
+ré-application après mise à jour du kit (nouvelle version de
+`packages/kit-ia-first`), drwil lui-même étant un cas particulier
+(ré-appliqué souvent, pour le dogfooding).
 
 ## 2. Hors périmètre
 
@@ -64,31 +63,42 @@ Deux natures de fichiers, deux traitements distincts :
 
 ## 4. Décisions
 
-(aucune encore — proposé à l'instant, points à trancher ci-dessous)
+- (2026-10-04) Pas de réécriture automatique aveugle, ni pour la mécanique
+  (`.githooks/`, `.claude/settings.json`, CI) ni pour la prose : `apply()`
+  diffuse systématiquement tout fichier déjà présent contre le template et
+  signale l'écart ; en cas de conflit sur la mécanique, il propose une
+  résolution (le détail de cette proposition reste à préciser au lot 2, ce
+  n'est pas forcément un écrasement).
+- (2026-10-04) Signalement affiché en sortie, à la fin de `apply()`/`init()`
+  (pas de commande séparée dédiée).
+- (2026-10-04) Le signalement compare à la fois le nombre de lignes et les
+  sections `##` manquantes.
+- (2026-10-04) Portée : toute la base du template (`common/base`,
+  `<lang>/base`, pas seulement les 3 fichiers de gouvernance initiaux) —
+  tranché par la preuve en section 1.
 
 ## 5. Points à trancher
 
-- [décision] Volet 1 : `apply()` doit-il traiter `.githooks/` (et
-  `.claude/settings.json`, le fichier de CI) comme `KIT_MECHANICS` et les
-  réécrire systématiquement, comme `init()` le fait déjà ? Risque accepté :
-  une personnalisation manuelle de ces fichiers sur un projet existant serait
-  écrasée sans préavis.
-- [décision] Volet 2 : forme du signalement de dérive de prose — une
-  nouvelle commande (`apply --check-drift` ?), une sortie systématique à la
-  fin de `apply()`/`init()` si les fichiers existent déjà, ou un contrôle à
-  part dans `.githooks/run-checks.mjs` ? Doit lister quoi précisément (nombre de
-  lignes ? sections `##` absentes du template ? les deux) ?
-- [x] [décision] Le signalement de dérive (volet 2) doit-il être retenu
-  seulement pour les 3 fichiers constatés (AGENTS.md, docs/ia-first.md,
-  docs/contrats.md) ou étendu à toute la base `common/base` et `<lang>/base`
-  du template ? → **Tranché le 2026-10-04, par la preuve** : étendu à toute
-  la base, au moins à `docs/recettes/` — 3 recettes sur 13 sont aussi
-  dérivées (voir section 1), le problème n'est pas limité aux 3 fichiers de
-  gouvernance.
+(aucun restant — les 3 points sont tranchés, voir section 4 ; des
+sous-questions de détail pourront apparaître en ouvrant le lot 2, voir
+section 6)
 
 ## 6. Lots
 
-(à proposer une fois les points à trancher tranchés)
+- **Lot 1 — détecter et signaler la dérive** [IA] : à la fin de `apply()`
+  (et `init()`, par cohérence), pour tout fichier de la base déjà présent
+  dans le projet cible, comparer au template (nombre de lignes + sections
+  `##`) et afficher la liste des fichiers dérivés en sortie. Aucune
+  réécriture. Critère de sortie : test cas passant (fichier identique → rien
+  signalé) et cas non passant (fichier dérivé, comme les 3 recettes
+  constatées en section 1 → signalé), 34/34 tests existants toujours verts.
+- **Lot 2 — proposer une résolution pour la mécanique du kit** [IA/décision] :
+  pour les fichiers de `.githooks/`, `.claude/settings.json` et le fichier
+  de CI spécifiquement (ceux sans personnalisation légitime attendue), aller
+  au-delà du simple signalement du lot 1 et proposer concrètement une
+  résolution (ex. diff unifié affiché + confirmation avant d'écraser,
+  détail exact à trancher à l'ouverture de ce lot). Critère de sortie :
+  reste à définir avec le lot.
 
 ## 7. Reprise
 
@@ -97,8 +107,9 @@ Deux natures de fichiers, deux traitements distincts :
   pré-kit ; les fichiers obsolètes sous `.githooks/` jamais nettoyés par `apply()`
   qui ne réécrit rien, contrairement à `init()`). Preuve étendue le même
   jour : diff systématique des 13 recettes racine contre le template, 3
-  dérivées (voir section 1) — le 3ᵉ point de la section 5 est tranché par
-  cette preuve. Aucun code touché.
+  dérivées (voir section 1). Les 3 points à trancher sont maintenant
+  tranchés (section 4) : un seul traitement (diffuser et signaler, jamais
+  réécrire à l'aveugle), sortie en fin de `apply()`/`init()`, comparaison
+  lignes + sections. Aucun code touché.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher les 2 points restants de la
-  section 5 avant d'ouvrir le lot 1.
+- **Prochaine étape** : [humain] confirmer l'ouverture du lot 1.
