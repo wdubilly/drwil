@@ -11,11 +11,12 @@
 // | "off" désactive aussi ce rappel). La grammaire vient de .githooks/cadrage.mjs,
 // la même que le contrôle au commit.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, relative, resolve } from "node:path";
 
-const ICI = dirname(fileURLToPath(import.meta.url));
-const RACINE = resolve(ICI, "..", "..");
+// Claude Code invoque le hook avec le dossier du projet en cwd : plus fiable que de
+// remonter depuis le chemin du script, qui peut traverser un lien symbolique (macOS
+// résout /tmp et /var vers /private/..., ce qui cassait la comparaison avec `chemin`).
+const RACINE = process.cwd();
 const OUTILS = new Set(["Edit", "Write", "MultiEdit"]);
 const MODELE_RE = /^modele-|^model-/;
 

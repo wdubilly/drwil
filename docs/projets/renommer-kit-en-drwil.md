@@ -18,7 +18,7 @@ Clarifié le 2026-10-04 avec le demandeur : drwil n'est pas un produit
 distinct qui *utiliserait* un kit — **drwil est le kit de gouvernance
 IA-first**, rien d'autre. Jusqu'ici, `packages/drwil` (nommé
 `@drwil/kit-ia-first`) cohabitait avec des docs produit à la racine
-(`DOC_TECHNICO_COMMERCIAL.md`, `docs/charte-graphique.md`,
+(DOC_TECHNICO_COMMERCIAL.md — doc personnelle non suivie par git —, `docs/charte-graphique.md`,
 `docs/decouverte-valeur.md`, `docs/securite.md`, `docs/deploiement.md`,
 `docs/fonctionnalites.md`) qui laissaient croire à un produit séparé — d'où
 la confusion « on travaille un projet dans le projet ».
@@ -30,8 +30,8 @@ Décisions déjà tranchées par le demandeur :
 
 ## 2. Hors périmètre
 
-- Les docs produit à la racine (`DOC_TECHNICO_COMMERCIAL.md`,
-  `docs/charte-graphique.md`, `docs/decouverte-valeur.md`,
+- Les docs produit à la racine (DOC_TECHNICO_COMMERCIAL.md — doc personnelle
+  non suivie par git —, `docs/charte-graphique.md`, `docs/decouverte-valeur.md`,
   `docs/securite.md`, `docs/deploiement.md`, `docs/fonctionnalites.md`) :
   décision explicite du demandeur de ne pas y toucher pour l'instant.
 - La publication npm effective (geste humain, authentification requise) :

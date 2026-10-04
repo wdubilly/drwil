@@ -29,8 +29,27 @@ restés ouverts à la fin de ce travail.
    si bien que tous les runs CI de ce dépôt échouaient depuis leur mise en
    place (constaté sur les 11 derniers runs, tous en échec) — corrigé en
    ajoutant `npm ci` avant `node .githooks/run-checks.mjs`.
-   Résultat du run CI déclenché par ce commit à vérifier après le push (voir
-   section Reprise).
+   Run suivant (`37236350487`) : `checks` passe les 45 tests Node mais échoue
+   sur `check-docs` (citation en backtick d'un fichier doc volontairement
+   gitignored, `docs/projets/renommer-kit-en-drwil.md` — corrigé, backticks
+   retirés) ; `kit-tests` échoue encore sur Windows et macOS, deux nouveaux
+   bugs trouvés et corrigés : (c) `writeOut()`/`copyTree()` comparaient un
+   chemin relatif à un préfixe POSIX (`.githooks/`) sans normaliser les
+   séparateurs — `path.relative()` rend des `\` sous Windows, si bien
+   qu'aucun fichier de `.githooks/` n'était jamais réécrit par un second
+   `init()` (`packages/drwil/src/index.ts`, nouvelle fonction `relPosix()`) ;
+   (d) deux assertions de test comparaient le bit d'exécution Unix
+   (`mode & 0o100`) de `pre-commit`/`pre-push`, qui n'existe pas sur NTFS
+   (`chmod` y est un no-op) — le test les saute désormais sous Windows
+   (`packages/drwil/test/kit.test.mjs`, fonction `executable()`) ; (e) le
+   hook `.claude/hooks/rappel-cadrage.mjs` calculait sa racine à partir du chemin du
+   script (`import.meta.url`), que macOS réécrit via le lien symbolique
+   `/var` → `/private/var` (tmp CI) — la comparaison avec le chemin reçu du
+   tool Claude Code (non résolu) ratait alors systématiquement et rendait le
+   hook silencieux ; corrigé en prenant `process.cwd()` comme racine
+   (Claude Code invoque déjà le hook avec le dossier du projet en cwd).
+   Tests locaux 40/40 verts après ces 5 corrections ; résultat du nouveau
+   run CI à confirmer (voir section Reprise).
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien
    les fichiers de renvoi générés (.cursor/rules/ia-first.mdc et
    .github/copilot-instructions.md dans les projets générés).
@@ -84,7 +103,7 @@ restés ouverts à la fin de ce travail.
   Windows/macOS/Linux) ajouté à `.github/workflows/ia-first.yml`, à vérifier
   vert sur le run déclenché par ce commit (lien à ajouter une fois constaté).
   Points 2, 3, 7 restent ouverts.
-- **Prochaine étape** : [humain] constater le résultat du run CI
+- **Prochaine étape** : [humain] constater le résultat du nouveau run CI
   déclenché par ce commit (3 OS verts pour clore le point 1) ; sinon, au
   choix du demandeur parmi les points 2 (Cursor/Copilot), 3 (migration
   d'ancienne version) ou 7 (publication npm).

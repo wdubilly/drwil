@@ -23,6 +23,9 @@ const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"]
 const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8" });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
 const config = (dir) => JSON.parse(read(dir, ".drwil/ia-first.json"));
+// NTFS n'a pas de bit d'exécution : sous Windows chmod est un no-op, donc ce contrôle
+// (déjà fait sur Linux/macOS par le test "lot 4 : commit-msg livré désactivé") n'a pas de sens.
+const executable = (dir, f) => process.platform === "win32" || Boolean(statSync(join(dir, f)).mode & 0o100);
 
 test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", async () => {
   const dir = tmp();
@@ -32,7 +35,7 @@ test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", a
     assert.ok(existsSync(join(dir, f)), f);
   }
   assert.ok(!existsSync(join(dir, ".githooks/run-checks.sh")) && !existsSync(join(dir, ".githooks/check-docs.py")), "plus de bash ni de python");
-  assert.ok(statSync(join(dir, ".githooks/pre-commit")).mode & 0o100, "pre-commit exécutable");
+  assert.ok(executable(dir, ".githooks/pre-commit"), "pre-commit exécutable");
   assert.equal(git(dir, "config", "core.hooksPath").stdout.trim(), ".githooks");
   assert.match(read(dir, "AGENTS.md"), /demo — Démo \$& littéral/);
   assert.match(read(dir, "docs/architecture.md"), /Non décidée/);
@@ -417,7 +420,7 @@ test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et 
   }
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, ci: "github" }));
-  assert.ok(statSync(join(dir, ".githooks/pre-push")).mode & 0o100, "pre-push exécutable");
+  assert.ok(executable(dir, ".githooks/pre-push"), "pre-push exécutable");
   assert.ok(!(statSync(join(dir, ".githooks/commit-msg")).mode & 0o100), "commit-msg livré désactivé");
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout);

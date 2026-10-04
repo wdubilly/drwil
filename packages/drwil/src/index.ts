@@ -180,16 +180,23 @@ function detecterDerive(target: string, contenuModele: string): boolean {
   return lignes(existant) !== lignes(contenuModele) || sectionManquante;
 }
 
+/** Chemin relatif en séparateurs `/`, pour que les comparaisons (préfixes, manifeste) soient
+ * indépendantes de l'OS : `path.relative` rend des `\` sous Windows. */
+function relPosix(from: string, to: string): string {
+  return relative(from, to).replace(/\\/g, "/");
+}
+
 async function writeOut(
   target: string, content: string, targetDir: string, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>,
 ): Promise<void> {
-  if (existsSync(target) && !shouldOverwrite(relative(targetDir, target))) {
-    if (derives && detecterDerive(target, content)) derives.push(relative(targetDir, target));
+  const rel = relPosix(targetDir, target);
+  if (existsSync(target) && !shouldOverwrite(rel)) {
+    if (derives && detecterDerive(target, content)) derives.push(rel);
     return;
   }
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, content);
-  if (manifest) manifest[relative(targetDir, target)] = sha256(content);
+  if (manifest) manifest[rel] = sha256(content);
   // commit-msg reste volontairement non exécutable (livré mais désactivé par défaut, lot 4).
   if (target.endsWith(".mjs") || ["pre-commit", "pre-push"].includes(basename(target))) {
     try { await chmod(target, 0o755); } catch {}
