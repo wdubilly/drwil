@@ -21,7 +21,10 @@ const capture = async (fn) => {
   try { await fn(); return lines; } finally { console.log = log; }
 };
 const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: { ...process.env, CI: "" } });
-const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8" });
+// CI retiré explicitement : un commit simulé représente toujours un geste
+// développeur local, même quand le test lui-même tourne dans une vraie CI
+// (qui positionne CI=true pour tout le job et désactiverait à tort QUA-017).
+const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: { ...process.env, CI: "" } });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
 const config = (dir) => JSON.parse(read(dir, ".drwil/ia-first.json"));
 // NTFS n'a pas de bit d'exécution : sous Windows chmod est un no-op, donc ce contrôle
