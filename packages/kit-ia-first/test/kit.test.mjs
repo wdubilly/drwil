@@ -365,3 +365,29 @@ test("lot 6 : le skill adopter-le-kit n'est pas livré sans Claude Code", async 
   assert.ok(existsSync(join(dir, "docs/catalogue-contrats.md")));
 });
 
+test("lot 7 : installation anglaise complète, contenu des lots 1 à 6 traduit, contrôles verts", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, lang: "en", git: false }));
+  for (const f of [
+    "README.md", "INSTALL.md", "docs/security.md", "docs/features.md", "docs/style-guide.md",
+    "docs/deployment.md", "docs/projects/routine-maintenance.md", "docs/projects/model-project-sheet.md",
+    "docs/recipes/manage-access.md", "docs/recipes/run-locally.md", "docs/recipes/modify-permissions.md",
+    "docs/recipes/backup-and-restore.md", "docs/contracts-catalog.md", "docs/recipes/adopt-the-kit.md",
+    ".claude/skills/adopt-the-kit/SKILL.md", ".claude/skills/refactor-without-breaking/SKILL.md",
+  ]) {
+    assert.ok(existsSync(join(dir, f)), f);
+  }
+  assert.match(read(dir, "docs/contracts-catalog.md"), /catalog:/);
+  const r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
+test("lot 7 : même nombre de fichiers livrés en français et en anglais", async () => {
+  const fr = tmp();
+  const en = tmp();
+  await quiet(() => init({ targetDir: fr, git: false }));
+  await quiet(() => init({ targetDir: en, lang: "en", git: false }));
+  const compter = (base) => spawnSync("find", [base, "-type", "f"], { encoding: "utf8" }).stdout.trim().split("\n").length;
+  assert.equal(compter(en), compter(fr));
+});
+
