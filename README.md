@@ -29,9 +29,27 @@ Le bénéfice est concret si :
   contournée, « corrigé » annoncé sans preuve) et vous voulez que ça ne
   se reproduise pas en silence.
 
-Moins utile pour un développeur solo sur un seul outil et un projet
-court : le bénéfice existe mais reste marginal face au coût
-d'installation.
+Même en solo, un projet qui s'étale sur plusieurs sessions en profite :
+on oublie aussi ses propres décisions et contraintes au bout de quelques
+semaines, pas seulement en équipe.
+
+## Pourquoi ça réduit le gaspillage IA
+
+Pas de chiffre annoncé ici (rien n'est mesuré à ce jour, voir
+`docs/recettes/suivre-consommation-par-lot.md`), mais un raisonnement
+mécanique concret :
+
+1. **Contexte chargé à la demande** : `AGENTS.md` de couche (pas tout le
+   dépôt) + chargement progressif (section « Charger le contexte »
+   d'`AGENTS.md`) — moins de tokens consommés pour comprendre avant
+   d'agir.
+2. **Cadrage avant code** : une demande ambiguë devient une fiche de
+   décision avant d'écrire — évite qu'un agent parte dans une mauvaise
+   direction et qu'il faille tout refaire (le vrai gaspillage de
+   tokens).
+3. **Preuve mécanique plutôt que relecture** : un contrat vérifié par un
+   contrôle évite les allers-retours de validation manuelle (« est-ce
+   bon ? » répété).
 
 > **Assistants de code** : commencer par `AGENTS.md` (conduite, contrats,
 > chargement du contexte).
