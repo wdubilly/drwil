@@ -1,5 +1,5 @@
 ---
-name: auditer-risques-et-dette
+name: drwil-audit
 description: Analyser le dépôt (cadrage réel, code, tests) pour détecter dérive de spec, code mort, angles morts de sécurité et trous de tests, et produire docs/audit-risques.md. À utiliser pour une revue de santé avant une étape clé ou à la demande.
 ---
 

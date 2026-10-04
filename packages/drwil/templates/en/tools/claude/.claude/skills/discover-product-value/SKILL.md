@@ -1,5 +1,5 @@
 ---
-name: discover-product-value
+name: drwil-value
 description: Analyze the repository (cadrage, existing code) to identify the business-value features most worth building next, and produce docs/value-discovery.md. Use to frame the next product priority.
 ---
 

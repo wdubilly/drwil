@@ -1,5 +1,5 @@
 ---
-name: view-progress
+name: drwil-progress
 description: Generate a static HTML dashboard (project progress, contract coverage) with nothing to deploy. Use for a quick overview before a meeting, resuming a project, or a review.
 ---
 

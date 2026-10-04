@@ -1,7 +1,7 @@
 # Projet : une commande `/drwil` pour découvrir les capacités du kit
 
-**Statut** (2026-10-04) : décisions prises, lots proposés — prêt à
-implémenter.
+**Statut** (2026-10-04) : fait — les 3 lots sont livrés (alias par
+capacité, commande générique `/drwil`, tests).
 
 <!-- cadrage
 fichiers:
@@ -104,10 +104,11 @@ description, pas par un nom tapé).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-04) : décisions tranchées, lots proposés,
-  implémentation en cours sur branche dédiée (contrat QUA-017).
-- **Travail non commité** : cette fiche seule au moment du cadrage ;
-  voir commits de la branche `chantier/commande-slash-drwil` pour la
-  suite.
-- **Prochaine étape** : lot 1 (alias) puis lot 2 (générique) puis lot 3
-  (tests).
+- **Dernier état** (2026-10-04) : les 3 lots livrés et testés (44/44,
+  `.githooks/run-checks.sh` vert). Skills `.claude/skills/*/SKILL.md` alias +
+  skill générique `drwil` présents en dogfood et dans les templates
+  FR/EN. Tests ajoutés dans `packages/drwil/test/kit.test.mjs`.
+- **Travail non commité** : aucun, tout part dans la branche
+  `chantier/commande-slash-drwil` avant fusion.
+- **Prochaine étape** : ouvrir la PR et fusionner (contrat QUA-017),
+  puis cocher la ligne dans `docs/projets/en-attente.md`.

@@ -1,5 +1,5 @@
 ---
-name: adopt-the-kit
+name: drwil-adopt
 description: Make the kit live on an existing project after `apply` — fill in the layer AGENTS.md files, declare the stack's checks, propose the catalog's contracts one by one (each choice stays a decision of the requester). Use when adopting the kit or resuming an ongoing adoption.
 ---
 

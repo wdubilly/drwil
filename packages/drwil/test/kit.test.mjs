@@ -565,6 +565,31 @@ test("lot 6 : le skill adopter-le-kit n'est pas livré sans Claude Code", async 
   assert.ok(existsSync(join(dir, "docs/catalogue-contrats.md")));
 });
 
+test("commande /drwil : skill générique et alias par capacité livrés avec Claude Code", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  assert.ok(existsSync(join(dir, ".claude/skills/drwil/SKILL.md")));
+  assert.match(read(dir, ".claude/skills/drwil/SKILL.md"), /disable-model-invocation: true/);
+  const alias = {
+    "adopter-le-kit": "drwil-adopter",
+    "auditer-risques-et-dette": "drwil-audit",
+    "decouvrir-valeur-produit": "drwil-valeur",
+    "suivre-consommation-par-lot": "drwil-conso",
+    "visualiser-avancement": "drwil-avancement",
+  };
+  for (const [skill, name] of Object.entries(alias)) {
+    assert.match(read(dir, `.claude/skills/${skill}/SKILL.md`), new RegExp(`^name: ${name}$`, "m"), skill);
+  }
+  const r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
+test("commande /drwil : pas livrée sans Claude Code", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "codex", git: false }));
+  assert.ok(!existsSync(join(dir, ".claude")));
+});
+
 test("lot 7 : installation anglaise complète, contenu des lots 1 à 6 traduit, contrôles verts", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, lang: "en", git: false }));

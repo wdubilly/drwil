@@ -1,5 +1,5 @@
 ---
-name: suivre-consommation-par-lot
+name: drwil-conso
 description: Enregistrer dans .drwil/usage.jsonl les tokens consommés, le modèle employé et le temps de mise en place d'un lot qui vient de se terminer. À utiliser en clôturant un lot, pour alimenter le tableau de bord et les rapports d'analyse.
 ---
 

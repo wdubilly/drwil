@@ -1,5 +1,5 @@
 ---
-name: adopter-le-kit
+name: drwil-adopter
 description: Faire vivre le kit sur un projet existant après `apply` — remplir les AGENTS.md de couche, déclarer les contrôles de la pile, proposer les contrats du catalogue un par un (chaque choix reste une décision du demandeur). À utiliser à l'adoption du kit ou pour reprendre une adoption en cours.
 ---
 
