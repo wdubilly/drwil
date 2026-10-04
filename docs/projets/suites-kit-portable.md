@@ -1,8 +1,8 @@
 # Projet : suites du kit portable (points restés ouverts)
 
-**Statut** (2026-10-04) : en cours — points 6, 8 et 9 traités (via le projet
+**Statut** (2026-10-04) : en cours — points 5, 6, 8 et 9 traités (via le projet
 d'extraction IA-first, voir `docs/projets/extraction-ia-first-run-box.md`) ;
-le point 5 (appliquer le kit à drwil) couvre aussi le reliquat du point 8.
+restent 1, 2, 3, 7.
 
 ## 1. Contexte
 
@@ -27,9 +27,15 @@ restés ouverts à la fin de ce travail.
    `init` supprime s'ils sont identiques au modèle d'origine.
 4. **Nom du projet par défaut** — validé le 2026-10-03 : sans `--name`, le
    nom est celui du dossier.
-5. **Contrôles du dépôt drwil lui-même** — [IA] Son propre `.githooks/` contient
-   encore les anciens scripts qui ne vérifient rien : ses contrôles « passent »
-   sans rien prouver (QUA-013). Piste : appliquer le kit à drwil.
+5. **Contrôles du dépôt drwil lui-même** — [IA] fait le 2026-10-04 : kit
+   appliqué réellement à drwil (voir `docs/projets/extraction-ia-first-run-box.md`,
+   section Reprise). Testé d'abord sur copie jetable (`/tmp`), bug du kit
+   trouvé et corrigé en chemin (regex Statut/Reprise trop strictes),
+   ~65 citations nettoyées dans la fiche d'extraction, 5 contrats socle
+   ajoutés à `docs/contrats.md` (SEC-006, SEC-007, QUA-011, QUA-015,
+   QUA-016). `.githooks/pre-commit` réellement actif depuis ce commit
+   (`check-docs` : 0 erreur, 5 avertissements QUA-016 non bloquants sur du
+   code legacy hors fiche — `scripts/garde-fou-bash.py`, anciens `.githooks/*.py`).
 6. **`node_modules/` indexé dans git** — fait le 2026-10-04. `.gitignore`
    créé à la racine (dépendances, produits de build, journaux, `.env`) et
    `node_modules/`, `packages/kit-ia-first/dist/` et `*.tsbuildinfo` retirés
@@ -44,10 +50,11 @@ restés ouverts à la fin de ce travail.
    `docs/projets/extraction-ia-first-run-box.md`) : `.githooks/check-docs.mjs` ne
    prend plus pour un chemin une citation sans extension hors des préfixes
    connus (ex. « minimal/complet », « init/apply »), test de non-régression
-   ajouté. Restent à vérifier une fois le point 5 fait (kit appliqué à
-   drwil) : les deux vrais manques relevés (docs/architecture.md,
-   .claude/skills/) et les chemins relatifs au paquet dans
-   `docs/intentions/packager-kit-ia-first.md`.
+   ajouté. Vérifié une fois le point 5 fait : les deux manques
+   (`docs/architecture.md`, `.claude/skills/`) sont désormais livrés par
+   `apply()` ; les chemins relatifs au paquet dans
+   `docs/projets/extraction-ia-first-run-box.md` ont été corrigés (préfixés
+   vers leur vrai emplacement dans `packages/kit-ia-first/`).
 
 9. **Aucun `.gitignore` dans les modèles du kit** — [IA] corrigé le
    2026-10-04 (lot 1 du projet d'extraction) : `templates/common/base/`
@@ -57,9 +64,9 @@ restés ouverts à la fin de ce travail.
 
 ## 3. Reprise
 
-- **Dernier état** (2026-10-04) : points 6, 8 et 9 traités, dans le cadre du
-  projet d'extraction IA-first (`docs/projets/extraction-ia-first-run-box.md`,
-  lots 1 et 2 terminés). Points 1, 2, 3, 5, 7 restent ouverts.
-- **Prochaine étape** : le point 5 (contrôles du dépôt drwil, QUA-013) —
-  reste le plus proche du projet d'extraction en cours (son lot 8, « preuve
-  rien perdu », l'exigera de toute façon).
+- **Dernier état** (2026-10-04) : points 5, 6, 8 et 9 traités. Point 5 : kit
+  appliqué réellement à drwil, `.githooks/pre-commit` actif, premier vrai
+  commit passé (0 erreur `check-docs`). Points 1, 2, 3, 7 restent ouverts.
+- **Prochaine étape** : au choix du demandeur parmi les points 1
+  (Windows/macOS), 2 (Cursor/Copilot), 3 (migration d'ancienne version) ou 7
+  (publication npm) — aucun n'est plus urgent qu'un autre à ce stade.
