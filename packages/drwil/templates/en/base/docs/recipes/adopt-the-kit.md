@@ -24,6 +24,10 @@ the requester's place (`AGENTS.md`, Conduct section).
    - `catalog:QUA-014` (contrast): copy
      `templates/common/optional/front-quality/` (see its README) if a
      front end is detected, then declare its two checks.
+   - `catalog:QUA-004` (coverage) and `catalog:QUA-017` (e2e): adopt in
+     that order — a low declared threshold first so as not to block a
+     project that is just starting, raised as you go, then automated e2e
+     on critical paths as proof of real behavioral coverage.
    - The catalog's other lines have no ready-made script: propose the
      detected stack's usual tool (lint, typecheck, coverage…).
 5. **Verify**: `node .githooks/run-checks.mjs` green, then one commit per

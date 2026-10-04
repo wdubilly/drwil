@@ -20,11 +20,21 @@ model of the lines below.
 | catalog:SEC-009 | Every incoming piece of data (request, uploaded file, webhook) is validated/sanitized at the boundary, never used as-is. | API entry points | systematic validation schema (e.g. zod, pydantic) on every route |
 | catalog:SEC-011 | Personal data: minimized, access-restricted, never in clear in a log or an AI output. | the whole repo | human review + grep of known fields in logs (partial proof, to document as such) |
 | catalog:QUA-001 | A code file does not exceed a line-count ceiling; a file already above it at adoption time is capped at its current size (can only shrink). | project source code | `.githooks/check-file-size.mjs` (shipped by the kit, opt-in — see `docs/recipes/refactor-without-breaking.md`) |
-| catalog:QUA-004 | Test coverage does not drop below a declared threshold. | project source code | coverage report of the stack's test tool, threshold in CI |
+| catalog:QUA-004 | Test coverage does not drop below a declared threshold; on a project already in test debt at adoption time, the threshold can apply only to the new/changed lines of a staged file (diff coverage), to catch up on untouched legacy code over time. | project source code | coverage report of the stack's test tool, threshold in CI; diff coverage tool (e.g. `diff-cover`, Codecov's "patch" coverage) if adopted on a project in debt |
 | catalog:QUA-005 | Strict typing enabled, no unjustified `any`/dynamic type. | project source code | the stack's compiler/typechecker strict mode |
 | catalog:QUA-006 | A pure-logic module (no side effect) has its test file right next to it. | project source code | lint rule or dedicated script depending on the stack |
 | catalog:QUA-007 | Lint tolerates no warning. | project source code | the stack's lint in strict mode (zero warning tolerated) |
 | catalog:QUA-014 | Text/background contrast per RGAA 4.1 / WCAG AA (4.5:1, 3:1 for large text), light and dark. | front-end screens | `.githooks/check-colors.mjs` (to create), `.githooks/check-contrast.mjs` (to create) — copied from `templates/common/optional/front-quality/` in the kit package, see its README |
+| catalog:QUA-017 | The project's critical paths are covered by an automated end-to-end test, replayed in CI. | the project's critical paths | e2e test (e.g. Playwright, Cypress) per path, dedicated CI job |
+
+`catalog:QUA-004` and `catalog:QUA-017` complement each other over time:
+start with a low declared coverage threshold (`catalog:QUA-004`) so as
+not to block a project that is just starting, raise it as you go, then
+aim for automated e2e on critical paths (`catalog:QUA-017`) as proof of
+real behavioral coverage — not just a line percentage. Unlike the other
+lines in this catalog, `catalog:QUA-017` is not a practice observed as-is
+in an existing project (its e2e stays
+manual there): it is a goal specific to drwil, not a direct carry-over.
 
 Contracts very specific to run-box-v2 (HR documents, SSH bridge, isolated
 portal, Elasticsearch, ERMv2…) are not reproduced here: they served as

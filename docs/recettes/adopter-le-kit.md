@@ -24,6 +24,11 @@ place du demandeur (`AGENTS.md`, section Conduite).
    - `catalogue:QUA-014` (contraste) : copier
      `templates/common/optional/front-quality/` (voir son README) si un
      front est détecté, puis déclarer ses deux contrôles.
+   - `catalogue:QUA-004` (couverture) et `catalogue:QUA-017` (e2e) :
+     adopter dans cet ordre — un seuil déclaré bas d'abord pour ne pas
+     bloquer un projet qui démarre, relevé au fil de l'eau, puis un e2e
+     automatisé sur les parcours critiques comme preuve de couverture
+     comportementale réelle.
    - Les autres lignes du catalogue n'ont pas de script tout fait : proposer
      l'outil usuel de la pile détectée (lint, typecheck, couverture…).
 5. **Vérifier** : `node .githooks/run-checks.mjs` vert, puis un commit par
