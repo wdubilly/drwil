@@ -1,6 +1,6 @@
 # Projet : informer de ce que drwil peut faire au-delà de la gouvernance
 
-**Statut** (2026-10-04) : cadré — lot 1 prêt à démarrer sur confirmation.
+**Statut** (2026-10-04) : fait — lots 1 et 2 livrés.
 
 <!-- cadrage
 fichiers:
@@ -99,4 +99,17 @@ Deux publics, deux points d'entrée distincts, chacun avec son trou :
 
 ## 7. Reprise
 
-(pas encore démarré)
+- **Dernier état** (2026-10-04) : lots 1 et 2 livrés. Nouvelle ligne
+  d'intitulé « Si on te demande… » dans le tableau « Charger le contexte
+  progressivement » des 2 `AGENTS.md` (FR/EN) et nouvelles lignes dans la
+  table « Documentation » des 2 `README.md` (FR/EN) des templates
+  (`packages/drwil/templates/`), + report identique sur `AGENTS.md` et
+  `README.md` à la racine de drwil (dogfooding, lot 2). 4 recettes
+  indexées côté FR, équivalents EN dans les templates sous
+  docs/recipes/ : docs/recettes/visualiser-avancement.md,
+  docs/recettes/auditer-risques-et-dette.md,
+  docs/recettes/suivre-consommation-par-lot.md,
+  docs/recettes/decouvrir-valeur-produit.md. 38/38 tests
+  verts, check-docs.mjs 0 erreur.
+- **Travail non commité** : aucun après ce commit.
+- **Prochaine étape** : aucune (les 2 lots du projet sont livrés).

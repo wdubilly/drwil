@@ -99,6 +99,13 @@ le projet complète la liste des contrats à connaître quelle que soit la tâch
 
 *(Lignes propres à la stack ajoutées par le projet au fil de l'eau.)*
 
+| Si on te demande… | Lis d'abord | Recette |
+|---|---|---|
+| où en est le projet | `{{indexFile}}` | `docs/recettes/visualiser-avancement.md` |
+| un audit de risques/dette technique | `.drwil/ia-first.json` | `docs/recettes/auditer-risques-et-dette.md` |
+| le coût (tokens) d'un chantier | `.drwil/usage.jsonl` (si présent) | `docs/recettes/suivre-consommation-par-lot.md` |
+| une opportunité produit à explorer | `docs/decouverte-valeur.md` (si présent) | `docs/recettes/decouvrir-valeur-produit.md` |
+
 ## Dépôts externes
 
 *(Section optionnelle : si ce dépôt contient des clones ou sous-modules

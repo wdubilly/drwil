@@ -45,6 +45,13 @@ Carte complète : `docs/architecture.md`.
 | refactor important | — | `docs/recettes/refactorer-sans-casser.md` |
 | déploiement | `docs/deploiement.md` (si présent) | `docs/recettes/deployer-en-prod.md` |
 
+| Si on te demande… | Lis d'abord | Recette |
+|---|---|---|
+| où en est le projet | `docs/projets/en-attente.md` | `docs/recettes/visualiser-avancement.md` |
+| un audit de risques/dette technique | `.drwil/ia-first.json` | `docs/recettes/auditer-risques-et-dette.md` |
+| le coût (tokens) d'un chantier | `.drwil/usage.jsonl` (si présent) | `docs/recettes/suivre-consommation-par-lot.md` |
+| une opportunité produit à explorer | `docs/decouverte-valeur.md` (si présent) | `docs/recettes/decouvrir-valeur-produit.md` |
+
 ## Commandes
 
 - Tout vérifier : `bash .githooks/run-checks.sh`

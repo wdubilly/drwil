@@ -92,3 +92,7 @@ git config core.hooksPath .githooks
 | Contrats optionnels à adopter sur un projet | `docs/catalogue-contrats.md` |
 | Procédures réutilisables (adopter le kit, auditer, etc.) | `docs/recettes/` |
 | Chantiers en attente | `docs/projets/en-attente.md` |
+| Voir où en est le projet | `docs/recettes/visualiser-avancement.md` |
+| Auditer risques et dette technique | `docs/recettes/auditer-risques-et-dette.md` |
+| Suivre le coût d'un chantier | `docs/recettes/suivre-consommation-par-lot.md` |
+| Explorer la valeur produit | `docs/recettes/decouvrir-valeur-produit.md` |

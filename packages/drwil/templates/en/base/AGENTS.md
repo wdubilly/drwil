@@ -99,6 +99,13 @@ project completes the list of contracts to know regardless of the task.
 
 *(Stack-specific rows added by the project as they go.)*
 
+| If you're asked for… | Read first | Recipe |
+|---|---|---|
+| the project's status | `{{indexFile}}` | `docs/recipes/view-progress.md` |
+| a risk/tech-debt audit | `.drwil/ia-first.json` | `docs/recipes/audit-risks-and-debt.md` |
+| the cost (tokens) of a project | `.drwil/usage.jsonl` (if present) | `docs/recipes/track-consumption-per-lot.md` |
+| a product opportunity to explore | `docs/value-discovery.md` (if present) | `docs/recipes/discover-product-value.md` |
+
 ## External repositories
 
 *(Optional section: if this repo contains clones or submodules of other

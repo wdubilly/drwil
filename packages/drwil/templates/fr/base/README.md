@@ -29,3 +29,7 @@ ajouter une fois la stack stabilisée)*
 | Procédures (lancer, déployer, ajouter une route, un écran…) | `docs/recettes/` |
 | Charte graphique | `docs/charte-graphique.md` (si présent) |
 | Chantiers en attente | `{{indexFile}}` |
+| Voir où en est le projet | `docs/recettes/visualiser-avancement.md` |
+| Auditer risques et dette technique | `docs/recettes/auditer-risques-et-dette.md` |
+| Suivre le coût d'un chantier | `docs/recettes/suivre-consommation-par-lot.md` |
+| Explorer la valeur produit | `docs/recettes/decouvrir-valeur-produit.md` |
