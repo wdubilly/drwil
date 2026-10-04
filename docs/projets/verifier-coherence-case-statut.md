@@ -1,6 +1,6 @@
 # Projet : vérifier la cohérence entre case de l'index et statut de la fiche
 
-**Statut** (2026-10-04) : cadré — lot 1 prêt à démarrer.
+**Statut** (2026-10-04) : fait — lot 1 livré.
 
 <!-- cadrage
 fichiers:
@@ -77,7 +77,18 @@ voir section 2.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-04) : les 4 points tranchés avec le demandeur.
-  Aucun code touché.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] coder le lot 1 avec preuve rouge/verte.
+- **Dernier état** (2026-10-04) : lot 1 livré. `checkCoherenceCaseStatut()` dans
+  `.githooks/check-docs.mjs` (+ template commun synchronisé) regroupe chaque
+  puce de `docs/projets/en-attente.md` (y compris les lignes indentées qui
+  prolongent une puce), extrait les fiches citées (`docs/projets/*.md`,
+  `docs/intentions/*.md`), compare la case à la présence de `fait`/`terminé`/
+  `clos` dans la ligne « Statut » de la fiche. Avertissement non bloquant
+  dans les deux sens, rattaché à QUA-015 (`docs/contrats.md` + 2 templates
+  FR/EN mis à jour). Preuve : test dédié (cas cohérent → rien, case ouverte
+  vs fiche terminée → signalé, case cochée vs fiche non terminée →
+  signalé), 37/37 tests verts. Vérifié sur drwil lui-même : repère bien
+  `signaler-couches-par-defaut.md` (l'exemple qui a motivé ce chantier) et 6
+  autres incohérences réelles, non corrigées ici (jugement de contenu, hors
+  périmètre de ce lot mécanique, voir section 2).
+- **Travail non commité** : aucun après ce commit.
+- **Prochaine étape** : aucune (lot unique du projet).

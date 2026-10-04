@@ -24,6 +24,9 @@ const T = {
     cadrageLarge: (f, m) => `${f} : motif de cadrage trop large « ${m} »`,
     bilan: (n, e) => `check-docs : ${n} fichiers scannés, ${e} erreur(s)`,
     cadrageAvertissement: (n) => `check-docs : ${n} avertissement(s) de cadrage (QUA-016, non bloquant — réglage "cadrage" de .drwil/ia-first.json)`,
+    coherenceOuverte: (fiche) => `case ouverte mais la fiche ${fiche} se dit déjà terminée (QUA-015)`,
+    coherenceCochee: (fiche) => `case cochée mais la fiche ${fiche} ne se dit pas terminée (QUA-015)`,
+    coherenceAvertissement: (n) => `check-docs : ${n} avertissement(s) de cohérence case/statut (QUA-015, non bloquant)`,
   },
   en: {
     chemin: (c) => `cited path not found \`${c}\``,
@@ -39,8 +42,15 @@ const T = {
     cadrageLarge: (f, m) => `${f}: cadrage pattern too broad « ${m} »`,
     bilan: (n, e) => `check-docs: ${n} files scanned, ${e} error(s)`,
     cadrageAvertissement: (n) => `check-docs: ${n} cadrage warning(s) (QUA-016, non-blocking — "cadrage" setting in .drwil/ia-first.json)`,
+    coherenceOuverte: (fiche) => `item unchecked but ${fiche} already says it is done (QUA-015)`,
+    coherenceCochee: (fiche) => `item checked but ${fiche} does not say it is done (QUA-015)`,
+    coherenceAvertissement: (n) => `check-docs: ${n} checkbox/status consistency warning(s) (QUA-015, non-blocking)`,
   },
 }[lang];
+
+// Mots-clés comptant pour un statut « terminé » (insensible à la casse), FR et EN.
+const STATUT_TERMINE_RE = /\b(fait|terminé|termine|clos|done|closed)\b/i;
+const CITATION_FICHE_RE = /`((?:docs\/projets|docs\/projects|docs\/intentions)\/[^`]+\.md)`/g;
 
 // Sévérité du rappel de cadrage (QUA-016 seul ; le reste de check-docs reste toujours bloquant) :
 // "bloquant" (défaut historique), "avertissement" (jamais bloquant, juste affiché) ou "off" (désactivé).
@@ -156,7 +166,52 @@ if (niveauCadrage === "avertissement" && problemesCadrage.length) {
   for (const e of problemesCadrage) console.log(`  ⚠ ${e}`);
   console.log(T.cadrageAvertissement(problemesCadrage.length));
 }
+const problemesCoherence = checkCoherenceCaseStatut();
+if (problemesCoherence.length) {
+  for (const e of problemesCoherence) console.log(`  ⚠ ${e}`);
+  console.log(T.coherenceAvertissement(problemesCoherence.length));
+}
 process.exit(erreurs.length ? 1 : 0);
+
+// QUA-015 (extension) : la case ([ ]/[x]) d'une ligne d'index doit refléter le statut réel de
+// la fiche qu'elle cite — avertissement non bloquant (même famille que QUA-016), car le texte de
+// « Statut » reste libre (prose), pas un champ structuré vérifiable à coup sûr.
+function checkCoherenceCaseStatut() {
+  const avertissements = [];
+  const indexPath = join(root, cfg.dirs?.index ?? "docs/projets/en-attente.md");
+  if (!existsSync(indexPath)) return avertissements;
+  const relIndex = relative(root, indexPath);
+  const lignes = readFileSync(indexPath, "utf8").split(/\r?\n/);
+  // regroupe chaque puce (une entrée peut s'étaler sur plusieurs lignes indentées, le markdown
+  // enveloppant les lignes longues) : une nouvelle puce commence à « - [ ] » ou « - [x] ».
+  let bullet = null;
+  const bullets = [];
+  for (let i = 0; i < lignes.length; i++) {
+    const m = /^\s*-\s*\[( |x|X)\]/.exec(lignes[i]);
+    if (m) {
+      bullet = { coche: m[1].toLowerCase() === "x", ligne: i + 1, texte: lignes[i] };
+      bullets.push(bullet);
+    } else if (bullet && lignes[i].trim() !== "" && /^\s+\S/.test(lignes[i])) {
+      bullet.texte += "\n" + lignes[i];
+    } else {
+      bullet = null;
+    }
+  }
+  for (const b of bullets) {
+    for (const m of b.texte.matchAll(CITATION_FICHE_RE)) {
+      const fichePath = join(root, m[1]);
+      if (!existsSync(fichePath)) continue; // signalé par ailleurs (chemin cité introuvable).
+      const fcLignes = readFileSync(fichePath, "utf8").split(/\r?\n/);
+      const debut = fcLignes.slice(0, 15).findIndex((l) => STATUT_RE.test(l));
+      if (debut === -1) continue; // signalé par ailleurs (pas de ligne Statut).
+      const statutTexte = fcLignes.slice(debut, debut + 4).join(" ");
+      const termine = STATUT_TERMINE_RE.test(statutTexte);
+      if (!b.coche && termine) avertissements.push(`${relIndex}:${b.ligne} : ${T.coherenceOuverte(m[1])}`);
+      else if (b.coche && !termine) avertissements.push(`${relIndex}:${b.ligne} : ${T.coherenceCochee(m[1])}`);
+    }
+  }
+  return avertissements;
+}
 
 // QUA-015 : chaque chantier se reprend à froid (marqueurs, statut daté, sections, Reprise).
 function checkChantiers() {

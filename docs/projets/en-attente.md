@@ -33,9 +33,9 @@ Sans tag, un sujet est considéré `[P2]`.
 - [x] [IA] Renommer le paquet `@drwil/kit-ia-first` en `drwil`
   (dossier, bin, citations dans les docs) — fait le 2026-10-04 —
   `docs/projets/renommer-kit-en-drwil.md`.
-- [ ] [IA] [P2] Vérifier la cohérence case cochée ↔ statut de la fiche
-  liée (désynchro constatée sur signaler-couches-par-defaut.md) — cadré,
-  lot 1 prêt — `docs/projets/verifier-coherence-case-statut.md`.
+- [x] [IA] [P2] Vérifier la cohérence case cochée ↔ statut de la fiche
+  liée (désynchro constatée sur signaler-couches-par-defaut.md) — fait
+  le 2026-10-04 — `docs/projets/verifier-coherence-case-statut.md`.
 - [x] [IA] Signaler explicitement les couches par défaut (backend,frontend)
   quand aucune stack n'est détectée à l'`init` — fait le 2026-10-04 (commit
   52bb22b) — `docs/projets/signaler-couches-par-defaut.md`.

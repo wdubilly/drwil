@@ -168,6 +168,36 @@ test("QUA-015 : marqueur de chantier, statut daté, section Reprise, chemin « �
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
+test("QUA-015 (extension) : incohérence case cochée/ouverte vs Statut de la fiche citée", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+
+  writeFileSync(join(dir, "docs/projets/mon-chantier.md"),
+    "# Mon chantier\n\n**Statut** (2026-10-04) : fait, lot 1 terminé.\n\n## Reprise\n\nRien à reprendre.\n");
+
+  // case restée ouverte alors que la fiche citée se dit déjà terminée : avertissement, pas bloquant.
+  appendFileSync(join(dir, "docs/projets/en-attente.md"),
+    "\n## Test\n- [ ] [IA] sujet déjà fait `docs/projets/mon-chantier.md`.\n");
+  let direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(direct.status, 0, "avertissement non bloquant : " + direct.stdout + direct.stderr);
+  assert.match(direct.stdout, /mon-chantier\.md.*QUA-015|QUA-015.*mon-chantier\.md/);
+
+  // corrigée (case cochée) : plus d'avertissement.
+  writeFileSync(join(dir, "docs/projets/en-attente.md"),
+    read(dir, "docs/projets/en-attente.md").replace("- [ ] [IA] sujet déjà fait", "- [x] [IA] sujet déjà fait"));
+  direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.doesNotMatch(direct.stdout, /cohérence case\/statut/);
+
+  // cas inverse : case cochée mais fiche pas terminée.
+  writeFileSync(join(dir, "docs/projets/autre-chantier.md"),
+    "# Autre chantier\n\n**Statut** (2026-10-04) : cadré, lot 1 en cours.\n\n## Reprise\n\nRien.\n");
+  appendFileSync(join(dir, "docs/projets/en-attente.md"),
+    "- [x] [IA] sujet pas fini `docs/projets/autre-chantier.md`.\n");
+  direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(direct.status, 0);
+  assert.match(direct.stdout, /autre-chantier\.md.*QUA-015|QUA-015.*autre-chantier\.md/);
+});
+
 test("QUA-015 : l'index anglais (pending.md) vérifie aussi le marqueur de chantier", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, lang: "en", git: false }));
