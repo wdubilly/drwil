@@ -1,6 +1,6 @@
 # Projet : le kit de gouvernance IA-first devient le paquet `drwil`
 
-**Statut** (2026-10-04) : décidé sur le principe — 2 points restent à
+**Statut** (2026-10-04) : décidé sur le principe — 1 point reste à
 trancher avant lot 1 (section 5).
 
 <!-- cadrage
@@ -56,15 +56,11 @@ Décisions déjà tranchées par le demandeur :
 - (2026-10-04) Pas de retouche des docs produit à la racine pour l'instant.
 - (2026-10-04) Dossier renommé en `packages/drwil/` (cohérence avec le nom
   du paquet, pas de dossier `packages/kit-ia-first/` conservé).
+- (2026-10-04) Binaire CLI simplifié en `drwil` (`npx drwil init`,
+  `npx drwil apply`), à la place de `drwil-ia-first`.
 
 ## 5. Points à trancher
 
-- [décision] Nom du binaire CLI : garder `drwil-ia-first` (déjà posé,
-  fonctionne) ou simplifier en `drwil` (`npx drwil init`) ? Un `bin: drwil`
-  entrerait en conflit potentiel avec un paquet npm existant nommé `drwil`
-  (nom désormais pris par ce même paquet, donc pas de conflit réel, mais à
-  confirmer qu'aucun autre outil global `drwil` n'est déjà installé sur les
-  postes concernés).
 - [décision] Dans la prose des docs (AGENTS.md, recettes, intentions...),
   remplacer systématiquement « kit IA-first » par « drwil » ou garder « kit
   IA-first » comme description du *contenu* et réserver « drwil » au nom du
@@ -84,7 +80,7 @@ Décisions déjà tranchées par le demandeur :
   `packages/kit-ia-first/test/kit.test.mjs`, `tsconfig.json`,
   `.drwil/ia-first.json`, et plusieurs docs/fiches). Aucun code touché.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher les 2 points restants de la
-  section 5, puis proposer les lots (renommage package.json/dossier/bin,
-  mise à jour des imports/chemins relatifs, mise à jour des citations dans
-  les docs, build + tests verts).
+- **Prochaine étape** : [décision] trancher le dernier point de la
+  section 5 (vocabulaire kit IA-first vs drwil), puis proposer les lots
+  (renommage package.json/dossier/bin, mise à jour des imports/chemins
+  relatifs, mise à jour des citations dans les docs, build + tests verts).
