@@ -1,4 +1,4 @@
 checks:
-  image: node:20
+  image: node:24
   script:
     - node .githooks/run-checks.mjs
