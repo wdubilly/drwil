@@ -18,6 +18,21 @@ Concrètement, le kit ajoute à un projet :
 Ce dépôt est le code source du kit, **appliqué à lui-même** (dogfooding) :
 il suit ses propres règles.
 
+## Pour qui
+
+Le bénéfice est concret si :
+- plusieurs outils IA cohabitent sur le même projet (Claude, Cursor,
+  Copilot…) et leurs règles divergent faute d'un point d'entrée commun ;
+- une tâche IA est régulièrement interrompue et reprise par quelqu'un
+  d'autre (agent ou humain) sans tout relire ;
+- un incident a déjà eu lieu (secret qui fuite, règle de sécurité
+  contournée, « corrigé » annoncé sans preuve) et vous voulez que ça ne
+  se reproduise pas en silence.
+
+Moins utile pour un développeur solo sur un seul outil et un projet
+court : le bénéfice existe mais reste marginal face au coût
+d'installation.
+
 > **Assistants de code** : commencer par `AGENTS.md` (conduite, contrats,
 > chargement du contexte).
 
