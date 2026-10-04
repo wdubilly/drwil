@@ -1,6 +1,6 @@
 # Projet : extraire l'architecture IA-first complète de run-box-v2 dans le kit
 
-**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 à 6 terminés** ; demandeur a validé le passage jusqu'au bout des lots restants (2026-10-04) ; lots 7 (traduction anglaise) et 8 (preuve « rien perdu ») à suivre.
+**Statut** (2026-10-04) : cadrage proposé le 2026-10-03 — 7 décisions tranchées le 2026-10-03 ; **lots 1 à 7 terminés** ; demandeur a validé le passage jusqu'au bout des lots restants (2026-10-04) ; lot 8 (preuve « rien perdu ») à suivre.
 
 ## 1. Besoin
 
@@ -350,8 +350,37 @@ Confirmées par le demandeur le 2026-10-03 :
   2 tests ajoutés (catalogue + recette + skill livrés par défaut ; skill
   absent sans Claude Code). 26/26 tests verts ; contrôles racine drwil
   verts.
-- **Prochaine étape** : lot 7 (traduction anglaise de tout le contenu livré
-  depuis le lot 1, y compris les ajouts du lot 6, et des stubs restés
-  minimaux comme `refactorer-sans-casser.md` anglais), puis lot 8 (preuve
-  « rien perdu » : `apply` sur une copie de run-box-v2, comparaison, table
-  de correspondance à jour).
+- **Lot 7 — Traduction anglaise** : terminé. Parité FR/EN atteinte (40
+  fichiers de chaque côté). Découverte en relevant les écarts : `AGENTS.md`,
+  `docs/ia-first.md` et `docs/contrats.md` anglais n'étaient que des stubs
+  du tout premier commit (ex. `ia-first.md` : 9 lignes contre 214 en
+  français), jamais mis à jour au fil des lots 2 à 6 — réécrits en entier
+  (sections Conduite complète, tableau de routage complet, registre des 6
+  contrats du socle, cycle de vie des chantiers, rappel de cadrage). Ajouté
+  aussi : squelettes de docs produit (`README.md`, `INSTALL.md`,
+  `docs/security.md`, `docs/features.md`, `docs/style-guide.md`,
+  `docs/deployment.md`, `docs/projects/routine-maintenance.md`,
+  `docs/projects/model-project-sheet.md`), 5 recettes génériques manquantes
+  (`manage-access`, `run-locally`, `modify-permissions`,
+  `backup-and-restore`) et le catalogue de contrats + recette d'adoption du
+  lot 6 (`docs/contracts-catalog.md`, `docs/recipes/adopt-the-kit.md`,
+  préfixe `catalog:` repris du mécanisme français), 8 skills Claude Code
+  manquants.
+  **2 bugs pré-existants trouvés et corrigés en cours de route** (contenu
+  français des lots 1/3/4, jamais exercés par un test avant le lot 7) : (1)
+  l'exemption QUA-015 de la fiche permanente « entretien courant » (pas un
+  chantier à lots) ne reconnaissait que le nom de fichier français en dur
+  dans `check-docs.mjs` ; ajouté `routine-maintenance.md` (nom anglais
+  retenu) à la regex d'exemption. (2) `CLAUDE.md`/`GEMINI.md` et les
+  fichiers `.claude/skills/`, `.claude/hooks/rappel-cadrage.mjs`,
+  `.claude/hooks/garde-fou-bash.mjs` étaient cités sans le marqueur « si
+  présent » dans `INSTALL.md`, `docs/contrats.md` et `docs/ia-first.md`
+  alors qu'ils ne sont réellement présents que si Claude Code est
+  sélectionné : une installation avec un seul autre outil faisait échouer
+  `check-docs.mjs` à raison. Marqué « si présent » sur ces citations
+  (FR et EN). 2 tests ajoutés (installation anglaise complète avec
+  contrôles verts, parité du nombre de fichiers livrés FR/EN). 28/28 tests
+  verts ; contrôles racine drwil verts.
+- **Prochaine étape** : lot 8 (preuve « rien perdu » : `apply` sur une
+  copie de run-box-v2, comparaison avec l'original, table de correspondance
+  à jour).
