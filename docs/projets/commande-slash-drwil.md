@@ -1,6 +1,7 @@
 # Projet : une commande `/drwil` pour découvrir les capacités du kit
 
-**Statut** (2026-10-04) : à cadrer — points ouverts ci-dessous.
+**Statut** (2026-10-04) : décisions prises, lots proposés — prêt à
+implémenter.
 
 <!-- cadrage
 fichiers:
@@ -16,12 +17,20 @@ coût existent. Certains outils IA supportent une commande explicite
 tapée (`/nom`) qui déclenche un prompt préécrit sans que personne n'ait à
 se souvenir qu'elle existe — plus fiable qu'un renvoi texte.
 
-Constat vérifié le 2026-10-04 (vérification `fetch_copilot_cli_documentation`
-et structure actuelle des templates) :
-- **Claude Code** : supporte des commandes personnalisées projet via
-  un dossier commands sous `.claude/` → `/<nom>` dans l'outil. Absent des
-  templates actuels (`packages/drwil/templates/fr/tools/claude/` ne
-  contient que `.claude/skills/` et `.claude/hooks/`).
+Constat vérifié le 2026-10-04 (doc officielle Claude Code,
+`code.claude.com/docs/en/slash-commands`) :
+- **Claude Code a fusionné les commandes personnalisées dans les
+  skills.** Un skill `.claude/skills/<nom>/SKILL.md` est déjà invocable
+  par `/<nom>` (nom du dossier) **et**, si le frontmatter porte un champ
+  `name:`, par `/<valeur de name>` — les deux invocations cohabitent,
+  ce n'est pas un remplacement. Pas besoin d'un dossier commands séparé
+  (ancien format, toujours supporté mais remplacé par les skills) : il
+  suffit d'ajouter/ajuster le champ `name:` des skills existants pour
+  leur donner un alias `/drwil-xxx`.
+- Un skill peut accepter un argument (`arguments:` + substitution `$nom`
+  dans le corps) et être invocable uniquement à la main avec
+  `disable-model-invocation: true` (pas de déclenchement automatique par
+  description).
 - **Copilot CLI** (cet outil) : expose `/skills` (gestion de skills) et
   charge les skills/agents d'un dossier `.github` via `/add-dir`, mais ne
   documente aucun mécanisme de commande slash personnalisée au niveau
@@ -31,9 +40,10 @@ et structure actuelle des templates) :
   tout lot).
 
 Donc une commande `/drwil` ne pourrait être livrée **nativement** que pour
-Claude Code aujourd'hui ; les autres outils resteraient couverts par
-l'indexation `AGENTS.md`/`README.md` (chantier séparé) et par les skills
-existants (déclenchés par description, pas par un nom tapé).
+Claude Code aujourd'hui, via le mécanisme skill existant ; les autres
+outils restent couverts par l'indexation `AGENTS.md`/`README.md`
+(chantier séparé) et par les skills existants (déclenchés par
+description, pas par un nom tapé).
 
 ## 2. Hors périmètre
 
@@ -54,32 +64,50 @@ existants (déclenchés par description, pas par un nom tapé).
 
 ## 4. Décisions
 
-(aucune — à trancher ci-dessous)
+- **Portée** : livrer uniquement pour Claude Code maintenant (pas
+  d'attente des autres outils).
+- **Contenu** : les deux mécanismes à la fois — un `/drwil` générique
+  qui affiche un menu des capacités sans argument, et des commandes
+  dédiées par capacité qui lancent directement leur recette.
+- **Nom** : une commande par capacité (`/drwil-audit`,
+  `/drwil-avancement`...) en plus du générique `/drwil`. Techniquement,
+  chaque skill pilotage existant garde son nom de dossier actuel
+  (invocable tel quel) et reçoit en plus un alias via le champ
+  frontmatter `name: drwil-xxx` (les deux invocations cohabitent, voir
+  section 1).
 
 ## 5. Points à trancher
 
-- [décision] Portée : livrer `/drwil` uniquement pour Claude Code
-  maintenant, ou attendre une confirmation que Copilot CLI/Codex/Cursor/
-  Gemini n'ont vraiment aucun équivalent avant de se limiter à un seul
-  outil ?
-- [décision] Contenu exact de la commande : doit-elle afficher un menu
-  (liste des recettes avec un renvoi) ou accepter un argument
-  (`/drwil audit`, `/drwil avancement`) pour lancer directement la
-  recette demandée ?
-- [décision] Nom de la commande : `/drwil` (générique, retrouve toutes
-  les capacités) ou une commande par capacité (`/drwil-audit`,
-  `/drwil-avancement`...) ?
+(aucun — tous tranchés, voir section 4)
 
 ## 6. Lots
 
-(pas encore proposés — dépend des décisions ci-dessus)
+- **Lot 1 — alias par capacité** : sur les 5 skills « pilotage »
+  (`adopter-le-kit`, `auditer-risques-et-dette`,
+  `decouvrir-valeur-produit`, `suivre-consommation-par-lot`,
+  `visualiser-avancement`, et leurs équivalents EN), ajouter/ajuster le
+  champ `name:` du frontmatter en `drwil-adopter`, `drwil-audit`,
+  `drwil-valeur`, `drwil-conso`, `drwil-avancement` (FR) et
+  `drwil-adopt`, `drwil-audit`, `drwil-value`, `drwil-usage`,
+  `drwil-progress` (EN). À faire dans le dépôt (dogfooding) et dans les
+  templates `packages/drwil/templates/{fr,en}/tools/claude/.claude/skills/`.
+- **Lot 2 — commande générique `/drwil`** : nouveau skill
+  `.claude/skills/drwil/SKILL.md` (à créer) avec `disable-model-invocation: true`
+  et un argument de capacité ; sans argument affiche la liste des 5
+  capacités et leur commande dédiée, avec argument reconnu renvoie
+  directement à la recette correspondante. Même traitement dogfood +
+  templates FR/EN.
+- **Lot 3 — tests et vérifications** : étendre
+  `packages/drwil/test/kit.test.mjs` pour vérifier la présence du
+  skill `drwil` et des alias après `init --tools claude`, absence sans
+  Claude Code. Relancer `.githooks/run-checks.sh`.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-04) : besoin posé, constat technique fait
-  (Claude Code seul supporte des commandes slash projet aujourd'hui
-  parmi les outils de drwil). 3 décisions à trancher avant de proposer
-  des lots.
-- **Travail non commité** : cette fiche seule.
-- **Prochaine étape** : [décision] le demandeur tranche les 3 points de
-  la section 5.
+- **Dernier état** (2026-10-04) : décisions tranchées, lots proposés,
+  implémentation en cours sur branche dédiée (contrat QUA-017).
+- **Travail non commité** : cette fiche seule au moment du cadrage ;
+  voir commits de la branche `chantier/commande-slash-drwil` pour la
+  suite.
+- **Prochaine étape** : lot 1 (alias) puis lot 2 (générique) puis lot 3
+  (tests).
