@@ -21,6 +21,14 @@ restés ouverts à la fin de ce travail.
    `.github/workflows/ia-first.yml` (matrice `ubuntu-latest`,
    `windows-latest`, `macos-latest`, `npm test --workspace packages/drwil`) ;
    job `checks` (suite complète, dépend de gitleaks) laissé ubuntu seul.
+   Deux bugs de portabilité trouvés et corrigés en route : (a) le script
+   `test` de `packages/drwil/package.json` passait un glob shell
+   (`test/*.test.mjs`) jamais expansé par `cmd.exe` sous Windows — remplacé
+   par `node --test` (découverte automatique, cross-plateforme) ; (b) le
+   job `checks` n'a jamais installé les dépendances (`npm ci` manquant),
+   si bien que tous les runs CI de ce dépôt échouaient depuis leur mise en
+   place (constaté sur les 11 derniers runs, tous en échec) — corrigé en
+   ajoutant `npm ci` avant `node .githooks/run-checks.mjs`.
    Résultat du run CI déclenché par ce commit à vérifier après le push (voir
    section Reprise).
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien

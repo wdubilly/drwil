@@ -10,6 +10,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - run: npm ci
       - run: node .githooks/run-checks.mjs
   # Portabilité du kit (point 1 de docs/projets/suites-kit-portable.md) :
   # npm test de packages/drwil (pas la suite complète run-checks.mjs, qui
