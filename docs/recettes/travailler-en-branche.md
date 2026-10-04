@@ -42,11 +42,22 @@ principale.
   travail (relecture humaine), c'est elle qui clôture la fiche au moment
   du merge — pas avant.
 
+## Ce que le kit vérifie (QUA-017)
+
+- `.githooks/run-checks.mjs` (donc `pre-commit` et `pre-push`) refuse de
+  commiter ou pousser directement sur la branche principale (`master`/
+  `main`) — sauf le tout premier commit d'un dépôt fraîchement initialisé
+  (bootstrap). Pas de réglage pour désactiver ce contrôle.
+- Ce contrôle ne tourne jamais en CI : il s'applique seulement en local,
+  au moment de committer/pousser, pas quand la CI rejoue un push déjà
+  fait (un merge qui atterrit sur la branche principale est légitime).
+
 ## Ce que le kit ne fait pas
 
-- Aucun contrôle automatique ne vérifie le nom de la branche ni n'impose
-  l'existence d'une pull/merge request avant un commit : c'est une
-  convention documentée ici, pas un hook bloquant.
+- Aucun contrôle automatique ne vérifie le **nom** de la branche
+  (`chantier/<slug-de-la-fiche>` reste une convention documentée, pas
+  vérifiée) ni n'impose l'existence d'une pull/merge request avant un
+  commit sur une branche non principale.
 - Le kit n'ouvre ni ne fusionne de pull/merge request à la place de
   l'humain (pas d'appel à l'API GitHub/GitLab) : seuls les gabarits de
   description sont fournis.

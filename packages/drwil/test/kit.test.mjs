@@ -246,6 +246,9 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
   assert.equal(git(dir, "add", "-A").status, 0);
   let rInit = git(dir, "commit", "-qm", "init");
   assert.equal(rInit.status, 0, `premier commit accepté (mecanique-ia-first.md couvre .githooks/) :\n${rInit.stdout}${rInit.stderr}`);
+  // QUA-017 ne tolère que le tout premier commit sur master : les commits suivants de
+  // ce test (sans rapport avec le workflow branche/MR testé ailleurs) se font sur une branche.
+  assert.equal(git(dir, "checkout", "-qb", "chantier/essai-cadrage").status, 0);
 
   // un nouveau fichier de code hors de toute fiche bloque le commit.
   mkdirSync(join(dir, "scripts"));
@@ -281,6 +284,8 @@ test("QUA-016 : réglage par défaut (avertissement), jamais bloquant", async ()
   assert.equal(config(dir).cadrage, "avertissement", "réglage par défaut écrit à l'installation");
   git(dir, "add", "-A");
   assert.equal(git(dir, "commit", "-qm", "init").status, 0);
+  // QUA-017 : commit suivant hors du périmètre testé ici, donc sur une branche.
+  assert.equal(git(dir, "checkout", "-qb", "chantier/essai-cadrage").status, 0);
 
   mkdirSync(join(dir, "scripts"));
   writeFileSync(join(dir, "scripts/tache.mjs"), "console.log('tache');\n");
@@ -411,6 +416,31 @@ test("une valeur d'option inconnue est refusée", async () => {
   await assert.rejects(() => init({ targetDir: tmp(), lang: "de" }), /--lang/);
   await assert.rejects(() => init({ targetDir: tmp(), tools: "claude,vim" }), /--tools/);
   await assert.rejects(() => init({ targetDir: tmp(), ci: "jenkins" }), /--ci/);
+});
+
+test("QUA-017 : pas de travail direct sur la branche principale après le premier commit", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir }));
+  git(dir, "add", "-A");
+  const premier = git(dir, "commit", "-qm", "premier commit");
+  assert.equal(premier.status, 0, "le tout premier commit d'un dépôt reste toléré (bootstrap) : " + premier.stdout + premier.stderr);
+
+  writeFileSync(join(dir, "docs/projets/entretien-courant.md"), read(dir, "docs/projets/entretien-courant.md") + "\n");
+  git(dir, "add", "-A");
+  const second = git(dir, "commit", "-qm", "second commit direct sur master");
+  assert.notEqual(second.status, 0, "un commit direct sur master après le premier est refusé (QUA-017)");
+  assert.match(second.stdout + second.stderr, /travail direct sur la branche principale/);
+
+  // en CI, le contrôle ne tourne jamais (sinon un merge légitime sur master casserait la CI après coup).
+  const enCi = spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: { ...process.env, CI: "1" } });
+  assert.doesNotMatch(enCi.stdout, /travail direct sur la branche principale/, "jamais vérifié en CI");
+
+  // sur une branche, un nouveau commit passe.
+  git(dir, "checkout", "-qb", "chantier/essai");
+  writeFileSync(join(dir, "docs/projets/entretien-courant.md"), read(dir, "docs/projets/entretien-courant.md") + "\n");
+  git(dir, "add", "-A");
+  const surBranche = git(dir, "commit", "-qm", "commit sur une branche");
+  assert.equal(surBranche.status, 0, "un commit sur une branche non principale n'est jamais bloqué : " + surBranche.stdout + surBranche.stderr);
 });
 
 test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et commit-msg livrés", async () => {

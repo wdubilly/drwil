@@ -29,6 +29,7 @@ const T = {
     pasDeCi: "aucune CI configurée (ci: none) : pas de filet pour les contrôles dégradables",
     projet: "contrôles du projet (lint, tests…)",
     aucunCheck: "aucun déclaré dans .drwil/ia-first.json → checks",
+    brancheProtegee: (b) => `travail direct sur la branche principale (${b}) : passer par une branche et une pull/merge request (voir docs/recettes/travailler-en-branche.md)`,
     nonExecute: "non exécuté :",
     echec: "échec :",
     ok: (n) => `contrôles exécutés : OK (${n} non exécuté(s), voir ci-dessus)`,
@@ -45,6 +46,7 @@ const T = {
     pasDeCi: "no CI configured (ci: none): no net for degradable checks",
     projet: "project checks (lint, tests…)",
     aucunCheck: "none declared in .drwil/ia-first.json → checks",
+    brancheProtegee: (b) => `direct work on the main branch (${b}): go through a branch and a pull/merge request (see docs/recipes/working-with-branches.md)`,
     nonExecute: "not run:",
     echec: "failed:",
     ok: (n) => `checks run: OK (${n} not run, see above)`,
@@ -78,6 +80,20 @@ if (full) {
 }
 
 controle(T.docs, process.execPath, [".githooks/check-docs.mjs"]);
+
+// QUA-017 : pas de travail direct sur la branche principale après le premier commit.
+// Jamais en CI (process.env.CI) : la CI tourne aussi sur master après un merge légitime,
+// qu'il ne faut pas bloquer rétroactivement — seuls les hooks locaux (pre-commit/pre-push) l'appliquent.
+if (!process.env.CI) {
+  const branche = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { encoding: "utf8" });
+  const nomBranche = branche.status === 0 ? branche.stdout.trim() : null;
+  if (nomBranche && ["master", "main"].includes(nomBranche)) {
+    // HEAD déjà existant = au moins un commit précédent sur cette branche : le tout premier
+    // commit du dépôt (HEAD pas encore créé) est le seul cas toléré (bootstrap).
+    const headExiste = spawnSync("git", ["rev-parse", "--verify", "HEAD"], { stdio: "ignore" }).status === 0;
+    if (headExiste) echecs.push(T.brancheProtegee(nomBranche));
+  }
+}
 
 if (full) {
   const tests = existsSync(".githooks") ? readdirSync(".githooks").filter((f) => f.endsWith(".test.mjs")) : [];

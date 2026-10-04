@@ -1,7 +1,7 @@
 # Projet : travailler avec des branches et des merge/pull requests
 
-**Statut** (2026-10-05) : fait — lots 1, 2 et 3 livrés, 41/41 tests verts,
-`check-docs`/`run-checks` verts sur drwil.
+**Statut** (2026-10-05) : en cours — lots 1, 2 et 3 livrés, lot 4
+(contrat QUA-017) en cours.
 
 <!-- cadrage
 fichiers:
@@ -19,6 +19,9 @@ fichiers:
   - packages/drwil/templates/en/base/README.md
   - AGENTS.md
   - README.md
+  - .githooks/run-checks.mjs
+  - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - docs/contrats.md
 -->
 Pas d'équivalent EN à la racine de drwil : le dépôt dogfood en FR
 uniquement (pas de dossier docs/recipes/ installé ici) ; l'EN vit seulement
@@ -31,10 +34,13 @@ partir d'une fiche, clôturer via une MR » et livrer des gabarits de
 pull/merge request, sans toucher aux contrôles existants (déjà
 agnostiques à la branche).
 
+Extension (2026-10-05) : la convention devient un contrat vérifié
+mécaniquement (QUA-017) — voir décision révisée dans l'intention.
+
 ## 2. Hors périmètre
 
-- Contrôle automatique du nom de branche ou de la présence d'une MR avant
-  de committer (convention documentée uniquement).
+- Contrôle automatique du nom de branche (`chantier/<slug>`) : reste une
+  convention documentée, non vérifiée.
 - Automatisation d'ouverture de MR via l'API GitHub/GitLab.
 - Changement de QUA-015 (l'avertissement non bloquant existant suffit).
 
@@ -50,6 +56,11 @@ agnostiques à la branche).
   (`packages/drwil/src/index.ts`), sur le modèle de `common/tools/<tool>`
   + `langDir/tools/<tool>` déjà en place.
 - `.githooks/check-docs.mjs` et les tests du kit doivent rester verts.
+- Lot 4 : le contrôle QUA-017 ne tourne jamais en CI (`process.env.CI`),
+  sinon un merge légitime sur la branche principale casserait la CI
+  rétroactivement. Le premier commit d'un dépôt fraîchement initialisé
+  reste toléré (bootstrap), sinon `drwil init` ne pourrait jamais faire
+  de premier commit.
 
 ## 4. Décisions
 
@@ -57,44 +68,50 @@ agnostiques à la branche).
   quelles (nommage `chantier/<slug>`, Statut "fait" seulement après
   fusion, recette dédiée FR+EN, gabarits GitHub+GitLab, aucun impact sur
   le bloc cadrage).
+- (2026-10-05) Lot 4 : la décision initiale « pas de contrôle bloquant »
+  est révisée à la demande explicite de l'utilisateur. Nouveau contrat
+  QUA-017 : bloquant, portée commit+push, appliqué immédiatement sur
+  drwil, sans porte de sortie configurable, sauf le tout premier commit
+  d'un dépôt (bootstrap) et sauf en CI (contrainte technique, pas un
+  choix — voir section 3).
 
 ## 5. Points à trancher
 
-(aucun — les décisions de l'intention couvrent le périmètre)
+(aucun — les décisions ci-dessus couvrent le périmètre du lot 4)
 
 ## 6. Lots
 
-- **Lot 1 — recette FR/EN** [IA] : créer
-  `docs/recettes/travailler-en-branche.md` (à créer) (racine, dogfooding) et
-  `packages/drwil/templates/fr/base/docs/recettes/travailler-en-branche.md` (à créer)
-  (template), + équivalent EN uniquement côté template (le dépôt drwil ne
-  dogfood qu'en FR) :
-  `packages/drwil/templates/en/base/docs/recipes/working-with-branches.md` (à créer).
-  Critère de sortie : `.githooks/check-docs.mjs` vert, symétrie FR/EN
-  testée.
-- **Lot 2 — gabarits de pull/merge request** [IA] : ajouter les gabarits
-  dans `templates/fr/ci/<ci>/` et `templates/en/ci/<ci>/` (nouveau,
-  symétrique à `templates/*/tools/<tool>`), + un appel `copyTree`
-  supplémentaire dans `scaffold()` pour les copier, + report à la racine
-  de drwil (dogfooding, `ci: github`). Critère de sortie : test du kit
-  vérifiant la présence du gabarit après `init` avec `ci: github` et
-  `ci: gitlab`, dans les deux langues.
-- **Lot 3 — indexation** [IA] : ajouter une ligne pour la nouvelle
-  recette dans les tableaux existants d'`AGENTS.md`/`README.md` (FR/EN,
-  templates + racine), même mécanique que
-  `docs/projets/informer-capacites-drwil.md`.
+- **Lot 1 — recette FR/EN** [IA] : fait.
+- **Lot 2 — gabarits de pull/merge request** [IA] : fait.
+- **Lot 3 — indexation** [IA] : fait.
+- **Lot 4 — contrat QUA-017** [IA] : ajouter l'entrée `docs/contrats.md`,
+  implémenter le contrôle dans `.githooks/run-checks.mjs` (+ template
+  synchronisé `packages/drwil/templates/common/base/.githooks/run-checks.mjs`),
+  mettre à jour la recette (section « Ce que le kit vérifie »), ajouter un
+  test du kit couvrant le blocage/la tolérance. Critère de sortie :
+  41+/41+ tests verts, `.githooks/check-docs.mjs`/`.githooks/run-checks.mjs` verts,
+  travail fait sur une branche (`chantier/travailler-avec-branches-et-mr`)
+  fusionnée via une pull request réelle (test en conditions réelles de la
+  recette elle-même).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-05) : 3 lots livrés — recette
-  `docs/recettes/travailler-en-branche.md` (FR, racine + template) et
-  `packages/drwil/templates/en/base/docs/recipes/working-with-branches.md`
-  (EN, template seul, pas de dogfooding EN à la racine) ; gabarits de
-  pull/merge request sous `templates/fr/ci/<ci>/` et
-  `templates/en/ci/<ci>/` (nouveau, copiés par un appel `copyTree`
-  supplémentaire dans `scaffold()`), reportés à la racine de drwil
-  (`.github/pull_request_template.md`) ; indexation dans les 2
-  `AGENTS.md` et 2 `README.md` des templates + racine. 41/41 tests
-  verts, `.githooks/check-docs.mjs`/`.githooks/run-checks.mjs` verts.
-- **Travail non commité** : tout ce qui précède, à committer.
-- **Prochaine étape** : aucune (chantier livré).
+- **Dernier état** (2026-10-05) : lots 1-3 livrés et committés
+  (`6b35c7b`, poussé directement sur master — avant l'existence de
+  QUA-017). Lot 4 fait sur la branche
+  `chantier/travailler-avec-branches-et-mr` : contrat QUA-017 documenté
+  (`docs/contrats.md` + catalogues templates FR/EN), implémenté dans
+  `.githooks/run-checks.mjs` (+ template synchronisé), recette mise à
+  jour (section « Ce que le kit vérifie »), test dédié ajouté
+  (`packages/drwil/test/kit.test.mjs`), 2 tests QUA-016 adaptés (commits
+  de test déplacés sur une branche, puisqu'ils enchaînaient plusieurs
+  commits directs sur master — ce que QUA-017 interdit désormais). 42/42
+  tests verts, `.githooks/check-docs.mjs`/`.githooks/run-checks.mjs`
+  verts sur drwil.
+- **Travail non commité** : voir le bloc cadrage ci-dessus, à committer
+  sur la branche (le dépôt drwil a déjà plus d'un commit sur master,
+  donc QUA-017 interdit désormais un commit direct dessus — ce chantier
+  est le premier test réel de la recette qu'il décrit).
+- **Prochaine étape** : committer sur la branche, pousser, ouvrir une
+  pull request réelle vers master, la fusionner, puis repasser le
+  Statut de cette fiche à "fait" et cocher sa case dans l'index.
