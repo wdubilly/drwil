@@ -1,14 +1,22 @@
 # drwil
 
-Kit de gouvernance IA-first pour projets logiciels : point d'entrée unique
-(`AGENTS.md`), un registre de contrats vérifiés par machine
-(`docs/contrats.md`), des contrôles Git (`.githooks/`) qui bloquent tout
-commit qui les viole — humain ou agent IA, quel que soit l'outil (Claude,
-Codex, Cursor, Gemini, Copilot).
+**Quand une IA (ou un humain) code sans cadre**, rien n'empêche un oubli
+de contexte entre deux sessions, une règle de sécurité non respectée, un
+« c'est corrigé » annoncé sans preuve, ou un secret qui fuite dans un
+commit. drwil installe dans un projet un **cadre vérifié
+automatiquement** : les règles importantes sont écrites une seule fois,
+et un contrôle Git les fait respecter à chaque commit — que ce soit vous
+ou une IA (Claude, Copilot, Cursor, Codex, Gemini) qui écrive le code.
+
+Concrètement, le kit ajoute à un projet :
+- un **point d'entrée unique** que toute IA lit en premier (`AGENTS.md`) ;
+- un **registre des règles qui comptent** (`docs/contrats.md`), chacune
+  avec sa preuve ;
+- des **contrôles Git** (`.githooks/`) qui bloquent un commit qui viole
+  une règle — en local et en CI.
 
 Ce dépôt est le code source du kit, **appliqué à lui-même** (dogfooding) :
-son propre `AGENTS.md`, ses propres contrôles et ses propres chantiers
-suivent les mêmes règles qu'un projet qui l'adopterait.
+il suit ses propres règles.
 
 > **Assistants de code** : commencer par `AGENTS.md` (conduite, contrats,
 > chargement du contexte).
