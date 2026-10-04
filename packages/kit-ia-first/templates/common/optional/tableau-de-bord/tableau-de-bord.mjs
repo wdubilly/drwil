@@ -28,6 +28,9 @@ const T = {
     installes: (f) => `Installés (${f} — socle du projet)`,
     catalogue: (f) => `Au catalogue, non installés (${f})`,
     colonnesSimples: ["ID", "Règle"],
+    consommation: "Consommation (.drwil/usage.jsonl)",
+    colonnesConso: ["Chantier", "Tokens (total)", "Durée (min)", "Modèles employés"],
+    pasDeConso: "(.drwil/usage.jsonl absent — aucune donnée de consommation)",
   },
   en: {
     titre: (p) => `Dashboard — ${p}`,
@@ -44,6 +47,9 @@ const T = {
     installes: (f) => `Installed (${f} — project baseline)`,
     catalogue: (f) => `In the catalogue, not installed (${f})`,
     colonnesSimples: ["ID", "Rule"],
+    consommation: "Consumption (.drwil/usage.jsonl)",
+    colonnesConso: ["Project", "Tokens (total)", "Duration (min)", "Models used"],
+    pasDeConso: "(.drwil/usage.jsonl missing — no consumption data)",
   },
 }[lang];
 const MODELE_RE = /^modele-|^model-/;
@@ -131,6 +137,29 @@ function echapper(s) {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// Lecture tolérante : une ligne mal formée (JSON invalide, champ manquant) est ignorée plutôt que
+// de faire planter tout le tableau de bord — le fichier reste alimenté à la main ou par l'IA.
+function lireUsage(chemin) {
+  if (!existsSync(chemin)) return [];
+  return readFileSync(chemin, "utf8").split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => { try { return JSON.parse(l); } catch { return null; } })
+    .filter((e) => e && typeof e.chantier === "string");
+}
+
+function agregerUsage(entrees) {
+  const parChantier = new Map();
+  for (const e of entrees) {
+    const acc = parChantier.get(e.chantier) ?? { tokens: 0, dureeMin: 0, modeles: new Set() };
+    acc.tokens += Number(e.tokens) || 0;
+    acc.dureeMin += Number(e.duree_min) || 0;
+    if (e.modele) acc.modeles.add(String(e.modele));
+    parChantier.set(e.chantier, acc);
+  }
+  return parChantier;
+}
+
 function rendreLots(lots) {
   if (!lots.length) return "";
   return `<ul class="lots">${lots.map((l) =>
@@ -155,10 +184,19 @@ function rendreContrats(titre, contrats) {
     `<tbody>${contrats.map((c) => `<tr><td><code>${echapper(c.id)}</code></td><td>${echapper(c.regle)}</td></tr>`).join("")}</tbody></table>`;
 }
 
+function rendreConsommation(parChantier) {
+  if (!parChantier.size) return `<p>${T.pasDeConso}</p>`;
+  const lignes = [...parChantier.entries()].map(([chantier, acc]) =>
+    `<tr><td><code>${echapper(chantier)}</code></td><td>${acc.tokens}</td><td>${acc.dureeMin}</td><td>${echapper([...acc.modeles].join(", "))}</td></tr>`,
+  ).join("");
+  return `<table><thead><tr>${T.colonnesConso.map((c) => `<th>${echapper(c)}</th>`).join("")}</tr></thead><tbody>${lignes}</tbody></table>`;
+}
+
 const { index, fiches } = lireFiches();
 const cheminContrats = cfg.dirs?.contracts ?? "docs/contrats.md";
 const registre = lireContrats(join(root, cheminContrats));
 const catalogue = lireContrats(join(root, CATALOGUE));
+const usageParChantier = agregerUsage(lireUsage(join(root, ".drwil", "usage.jsonl")));
 const nomProjet = cfg.projectName ?? root;
 
 const html = `<!doctype html>
@@ -196,6 +234,9 @@ ${fiches.map((f) => `<div class="fiche">
 <h2>${echapper(T.contrats)}</h2>
 ${rendreContrats(T.installes(cheminContrats), registre)}
 ${rendreContrats(T.catalogue(CATALOGUE), catalogue)}
+
+<h2>${echapper(T.consommation)}</h2>
+${rendreConsommation(usageParChantier)}
 </body>
 </html>
 `;

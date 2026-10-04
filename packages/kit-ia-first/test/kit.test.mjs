@@ -457,3 +457,31 @@ test("module optionnel tableau de bord : génère un HTML lisant chantiers et co
   assert.match(html, /SEC-006/);
   assert.match(html, /catalogue:SEC-001/);
 });
+
+test("module optionnel tableau de bord : agrège .drwil/usage.jsonl par chantier, sans régression si absent", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
+  mkdirSync(join(dir, ".githooks"), { recursive: true });
+  const src = join(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url).pathname);
+  writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
+
+  // Sans fichier usage.jsonl : pas de régression, message d'absence explicite.
+  let r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(read(dir, "docs/tableau-de-bord.html"), /usage\.jsonl absent/);
+
+  // Avec usage.jsonl : agrégation tokens/durée/modèles par chantier, lignes malformées ignorées.
+  mkdirSync(join(dir, ".drwil"), { recursive: true });
+  writeFileSync(join(dir, ".drwil/usage.jsonl"), [
+    JSON.stringify({ chantier: "un-chantier", lot: "Lot 1", tokens: 1000, modele: "claude-sonnet-5", duree_min: 30, date: "2026-10-04" }),
+    JSON.stringify({ chantier: "un-chantier", lot: "Lot 2", tokens: 2000, modele: "gpt-5.4", duree_min: 45, date: "2026-10-04" }),
+    "pas du JSON valide",
+  ].join("\n") + "\n");
+  r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const html = read(dir, "docs/tableau-de-bord.html");
+  assert.match(html, /un-chantier/);
+  assert.match(html, />3000</); // tokens cumulés
+  assert.match(html, />75</); // minutes cumulées
+  assert.match(html, /claude-sonnet-5, gpt-5\.4/);
+});

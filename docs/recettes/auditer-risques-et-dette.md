@@ -55,6 +55,12 @@ projet, selon ce gabarit :
 > Dernier scan : AAAA-MM-JJ
 > Niveau de santé global : 🔴 Critique / 🟠 Fragile / 🟢 Stable
 
+## Aperçu de consommation
+
+(si .drwil/usage.jsonl existe : tokens et minutes cumulés, modèles
+employés depuis le dernier scan — lire `docs/recettes/suivre-consommation-par-lot.md`.
+Sinon, omettre cette section plutôt que d'inventer un chiffre.)
+
 ## Synthèse
 
 | ID | Risque | Catégorie | Gravité | Fichiers concernés | Action proposée |

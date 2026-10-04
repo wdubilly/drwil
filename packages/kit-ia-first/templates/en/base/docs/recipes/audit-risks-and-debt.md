@@ -54,6 +54,12 @@ following this template:
 > Last scan: YYYY-MM-DD
 > Overall health: 🔴 Critical / 🟠 Fragile / 🟢 Stable
 
+## Consumption overview
+
+(if .drwil/usage.jsonl exists: cumulative tokens and minutes, models used
+since the last scan — see `docs/recipes/track-consumption-per-lot.md`.
+Otherwise, omit this section rather than inventing a figure.)
+
 ## Summary
 
 | ID | Risk | Category | Severity | Files involved | Proposed action |

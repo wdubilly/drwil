@@ -49,6 +49,12 @@ du projet, selon ce gabarit :
 > Dernier scan : AAAA-MM-JJ
 > État du projet : (résumé court de l'état actuel du code)
 
+## Aperçu de consommation
+
+(si .drwil/usage.jsonl existe : tokens et minutes cumulés, modèles
+employés depuis le dernier scan — lire `docs/recettes/suivre-consommation-par-lot.md`.
+Sinon, omettre cette section plutôt que d'inventer un chiffre.)
+
 ## Opportunités prioritaires (matrice valeur / effort)
 
 | ID | Fonctionnalité proposée | Pourquoi (valeur métier) | État du code existant | Effort | Action recommandée |

@@ -47,6 +47,12 @@ root, following this template:
 > Last scan: YYYY-MM-DD
 > Project state: (short summary of the current code state)
 
+## Consumption overview
+
+(if .drwil/usage.jsonl exists: cumulative tokens and minutes, models used
+since the last scan — see `docs/recipes/track-consumption-per-lot.md`.
+Otherwise, omit this section rather than inventing a figure.)
+
 ## Priority opportunities (value / effort matrix)
 
 | ID | Proposed feature | Why (business value) | Existing code state | Effort | Recommended action |
