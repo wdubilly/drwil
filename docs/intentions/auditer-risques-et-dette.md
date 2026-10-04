@@ -1,6 +1,7 @@
 # Intention : Packager un skill d'audit de risques et dette technique
 
-**Statut** (2026-10-04) : cadré — prêt à implémenter.
+**Statut** (2026-10-04) : fait — recette + skill packagés (FR/EN), testés
+sur drwil (`docs/audit-risques.md` généré, voir commit `bd9e51e`).
 
 ## Besoin
 Fournir dans le kit (`@drwil/kit-ia-first`) un skill/recette réutilisable qui
