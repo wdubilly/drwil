@@ -7,7 +7,7 @@
 
 | ID | Risque | Catégorie | Gravité | Fichiers concernés | Action proposée |
 |---|---|---|---|---|---|
-| RSK-1 | Aucun contrôle projet déclaré (lint/tests/typecheck) | Sécurité/Qualité | 🔴 | `.drwil/ia-first.json`, `.githooks/run-checks.mjs` | Déclarer les contrôles réels du dépôt dans `.drwil/ia-first.json` → `checks` |
+| RSK-1 | ~~Aucun contrôle projet déclaré (lint/tests/typecheck)~~ **corrigé le 2026-10-04** | Sécurité/Qualité | ✅ | `.drwil/ia-first.json`, `.githooks/run-checks.mjs` | `checks` déclare `npm test` (build + 36 tests) de `packages/kit-ia-first` |
 | RSK-2 | ~~Pas de CI configurée pour couvrir les contrôles (QUA-013 non exécuté)~~ **corrigé le 2026-10-04** | Tests | ✅ | `.drwil/ia-first.json` (`ciFiles`), `.githooks/run-checks.mjs` | `ciFiles` pointait sur un fichier GitLab CI inexistant alors que `.github/workflows/ia-first.yml` tourne déjà — corrigé pour pointer dessus |
 | RSK-3 | Compatibilité Windows/macOS jamais testée | Stabilité | 🟠 | `docs/projets/suites-kit-portable.md` (point 1), `packages/kit-ia-first/src/index.ts` | Tester `init`/`apply` sur les trois OS, idéalement en matrice CI |
 | RSK-4 | `apply`/`init` ne nettoient jamais les fichiers obsolètes d'une version antérieure du kit | Code mort | 🟠 | `docs/projets/suites-kit-portable.md` (point 3), `packages/kit-ia-first/src/index.ts` | Définir une liste de fichiers retirés par version, ne supprimer que les fichiers identiques à un ancien modèle |
@@ -15,17 +15,21 @@
 
 ## Détail des risques majeurs
 
-### RSK-1 — Contrôles projet non déclarés
+### RSK-1 — Contrôles projet non déclarés (corrigé le 2026-10-04)
 - **Attendu** : `.drwil/ia-first.json` prévoit une clé `checks` pour les
   contrôles réels de la pile (lint, typecheck, tests, build — voir
   `docs/recettes/adopter-le-kit.md`, étape 3).
-- **Codé réellement** : `.drwil/ia-first.json` ne contient aucune clé
-  `checks`. `.githooks/run-checks.mjs` le signale lui-même à chaque
+- **Constaté** : `.drwil/ia-first.json` ne contenait aucune clé
+  `checks`. `.githooks/run-checks.mjs` le signalait lui-même à chaque
   exécution (« non exécuté : contrôles du projet... aucun déclaré »).
-- **Risque encouru** : un commit peut passer sans qu'aucun test/lint réel
-  du dépôt (au-delà de la doc) n'ait tourné.
-- **Correctif recommandé** : déclarer les contrôles effectifs de drwil
-  (TypeScript `tsc --build`, `node --test` du kit, etc.) dans `checks`.
+- **Risque encouru** : un commit pouvait passer sans qu'aucun test/lint
+  réel du dépôt (au-delà de la doc) n'ait tourné.
+- **Correctif appliqué** : `checks` déclare désormais `npm test` dans
+  `packages/kit-ia-first` (`tsc --build && node --test`, couvre
+  compilation + 36 tests), rattaché au job CI `checks` existant (déjà
+  déclenché sur tout push, aucune CI à modifier). Preuve :
+  `.githooks/run-checks.mjs` exécute réellement le contrôle (0 non
+  exécuté), `.githooks/check-control-coverage.mjs` toujours vert.
 
 ### RSK-2 — Pas de CI pour couvrir les contrôles (corrigé le 2026-10-04)
 - **Attendu** : `docs/contrats.md` (QUA-013) exige qu'au moins une CI

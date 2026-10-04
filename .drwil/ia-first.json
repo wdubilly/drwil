@@ -38,5 +38,15 @@
   "ciFiles": [
     ".github/workflows/ia-first.yml"
   ],
-  "mode": "full"
+  "mode": "full",
+  "checks": [
+    {
+      "name": "kit-ia-first: build + tests",
+      "run": "npm test",
+      "cwd": "packages/kit-ia-first",
+      "ciJob": "checks",
+      "chemins": ["packages/kit-ia-first/**"],
+      "degradable": false
+    }
+  ]
 }
