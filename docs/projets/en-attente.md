@@ -24,8 +24,8 @@ Sans tag, un sujet est considéré `[P2]`.
 - [x] [IA] check-docs.mjs : faux positifs et écarts relevés dans drwil —
   corrigé le 2026-10-04 (lot 2 de l'extraction) —
   `docs/projets/suites-kit-portable.md` (point 8).
-- [ ] [IA] [P2] Tester le kit sous Windows et macOS — matrice CI ajoutée
-  le 2026-10-04, vert à confirmer sur le run déclenché par ce commit —
+- [x] [IA] [P2] Tester le kit sous Windows et macOS — matrice CI ajoutée
+  le 2026-10-04, verte sur les 3 OS (run CI `37238852012`) —
   `docs/projets/suites-kit-portable.md` (point 1).
 - [ ] [IA] [P3] Supprimer à l'`init` les fichiers obsolètes d'une ancienne version
   du kit — `docs/projets/suites-kit-portable.md` (point 3).

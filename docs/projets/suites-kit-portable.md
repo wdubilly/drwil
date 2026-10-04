@@ -2,8 +2,8 @@
 
 **Statut** (2026-10-04) : en cours — points 5, 6, 8 et 9 traités (via le projet
 d'extraction IA-first, voir `docs/projets/extraction-ia-first-run-box.md`) ;
-point 1 livré (matrice CI), à confirmer vert sur le run déclenché par ce
-commit ; restent 2, 3, 7.
+point 1 livré et confirmé vert sur les 3 OS (run CI `37238852012`) ;
+restent 2, 3, 7.
 
 ## 1. Contexte
 
@@ -112,8 +112,10 @@ restés ouverts à la fin de ce travail.
    eol=lf`), qui force le LF au checkout quel que soit l'OS ou la
    configuration locale de `core.autocrlf` — plus robuste qu'un correctif
    au cas par cas dans chaque script.
-   Tests locaux 40/40 verts après ces 5 corrections ; résultat du nouveau
-   run CI à confirmer (voir section Reprise).
+   Tests locaux 40/40 verts après ces 5 corrections ; **confirmé** par le
+   run CI `37238852012` : `checks`, `kit-tests (ubuntu-latest)`,
+   `kit-tests (macos-latest)` et `kit-tests (windows-latest)` tous verts.
+   Point livré.
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien
    les fichiers de renvoi générés (.cursor/rules/ia-first.mdc et
    .github/copilot-instructions.md dans les projets générés).
