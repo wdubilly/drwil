@@ -448,3 +448,31 @@ Confirmées par le demandeur le 2026-10-03 :
   jamais bloquant, `off` silencieux y compris le rappel à l'agent), test
   existant adapté (force `cadrage: "bloquant"` pour vérifier l'ancien
   comportement). 30/30 tests verts ; contrôles racine drwil verts.
+- **Module optionnel « tableau de bord »** (2026-10-04) : le demandeur a
+  demandé si un petit conteneur + interface web pour visualiser l'avancement
+  était utile. Réponse retenue : non (toute l'info est déjà en markdown
+  versionné, un conteneur ajoute une surface à maintenir et un risque de
+  désynchronisation) ; à la place, un **générateur statique sans serveur**
+  (`templates/common/optional/tableau-de-bord/tableau-de-bord.mjs`, module
+  optionnel non copié par `scaffold()`, sur le modèle de `front-quality/`) :
+  produit un unique fichier HTML, lancé à la main
+  (`node .githooks/tableau-de-bord.mjs`), jamais en CI ni au commit. Scope
+  cadré avec le demandeur : lots + contrats seulement (pas de volet
+  tests/contrôles). Respecte « une information, une seule source » : affiche
+  la ligne « Statut » et les lots de chaque fiche de `docs/projets/` tels
+  qu'écrits, sans recalculer un pourcentage ni un statut par lot (le format
+  générique ne le code pas structurellement) ; liste les contrats du
+  registre (`docs/contrats.md`) et du catalogue, non installés
+  (`docs/catalogue-contrats.md`), en reconnaissant les deux formats de
+  définition (titre `## ID — ...` ou tableau `| ID | ... |`, même détection
+  que `check-docs.mjs`). Bilingue (FR/EN selon `.drwil/ia-first.json ->
+  lang`). Bugs trouvés et corrigés en testant sur le dépôt drwil lui-même :
+  l'extraction du Statut doit tolérer une parenthèse (date) avant les deux-
+  points, le titre de section Lots n'est pas toujours exactement « Lots »
+  (ex. « Lots proposés »), et `docs/contrats.md` peut définir ses ID en
+  titre (format réel de drwil) et pas seulement en tableau (format du
+  template livré) — le parseur gère maintenant les deux. Recette
+  `docs/recettes/visualiser-avancement.md` / `docs/recipes/view-progress.md`
+  et skill Claude Code associé (`visualiser-avancement` / `view-progress`,
+  simple renvoi à la recette). 1 test ajouté (31/31 tests verts) ; contrôles
+  racine drwil verts.

@@ -427,3 +427,24 @@ test("lot 7 : même nombre de fichiers livrés en français et en anglais", asyn
   assert.equal(compter(en), compter(fr));
 });
 
+
+test("module optionnel tableau de bord : génère un HTML lisant chantiers et contrats tels quels", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
+  mkdirSync(join(dir, ".githooks"), { recursive: true });
+  const src = join(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url).pathname);
+  writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
+  writeFileSync(join(dir, "docs/projets/un-chantier.md"),
+    "# Projet : un chantier\n\n**Statut** : cadré le 2026-10-04 — lot 1 en cours.\n\n" +
+    "## 6. Lots\n\n- **Lot 1 — titre** [IA] : contenu. Critère de sortie : tests verts.\n\n" +
+    "## Reprise\n\n- **Dernier état** (2026-10-04) : ...\n");
+  const r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const html = read(dir, "docs/tableau-de-bord.html");
+  assert.match(html, /<html lang="fr">/);
+  assert.match(html, /un chantier/);
+  assert.match(html, /cadré le 2026-10-04 — lot 1 en cours\./);
+  assert.match(html, /Lot 1 — titre/);
+  assert.match(html, /SEC-006/);
+  assert.match(html, /catalogue:SEC-001/);
+});
