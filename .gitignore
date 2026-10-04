@@ -17,3 +17,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Tableau de bord généré (artefact dérivé, pas une source — voir
+# docs/recettes/visualiser-avancement.md)
+docs/tableau-de-bord.html
