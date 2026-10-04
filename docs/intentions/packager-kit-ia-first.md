@@ -1,6 +1,6 @@
 # Intention : Packager @drwil/kit-ia-first sur npm
 
-**Statut** (2026-10-04) : en attente — questions à trancher non encore tranchées par le demandeur (voir `docs/projets/suites-kit-portable.md`, point 7).
+**Statut** (2026-10-04) : en attente — questions à trancher non encore tranchées par le demandeur (voir `docs/projets/suites-kit-portable.md`, point 7). Audit du paquet fait le 2026-10-04 (voir « Constat vérifié » ci-dessous) : le paquet ne fonctionne pas en l'état, bloquant confirmé en conditions réelles.
 
 ## Besoin
 Rendre le kit IA-first (`@drwil/kit-ia-first`) facilement distribuable pour un usage en équipe et/ou hors environnement local, afin de pouvoir l'initialiser avec `npx @drwil/kit-ia-first init` sans dépendre d'un chemin absolu.
@@ -36,6 +36,24 @@ Rendre le kit IA-first (`@drwil/kit-ia-first`) facilement distribuable pour un u
 - `templates/` doivent être présents dans `dist` ou copiés ? Actuellement lus depuis `../templates` relatif à `dist`/`bin` → vérifier chemin dans build
 - Bin ESM (`type: module`) OK
 - Taille paquet raisonnable
+
+## Constat vérifié (2026-10-04)
+Simulation réelle : `npm pack` puis extraction dans un dossier propre, `npm
+install`, exécution de `node bin/drwil-ia-first.js`.
+
+- **🔴 Bloquant — le paquet ne fonctionne pas** : sans champ `files`, `npm
+  pack` respecte `.gitignore`, qui exclut `dist/`. Preuve : après
+  installation du tarball, `node bin/drwil-ia-first.js` échoue avec
+  `Cannot find module '.../dist/index.js'`. Le paquet inclut en revanche
+  `packages/kit-ia-first/src/` et `packages/kit-ia-first/test/kit.test.mjs`
+  (28 Ko), inutiles une fois publié.
+- **🟡 Nécessaire avant publication** : `README.md` à la racine du paquet
+  (absent — c'est la page affichée sur npm), `LICENSE` (absent de tout le
+  dépôt), champs `package.json` manquants (`license`, `repository`,
+  `description`, `engines`).
+- **🔵 Geste humain** : authentification npm — vérifié, ce poste n'est pas
+  connecté (`npm whoami` → `ENEEDAUTH`). La publication elle-même reste un
+  geste humain, jamais fait par un agent sans accord explicite.
 
 ## Décisions à prendre
 - Publier en 0.1.0 (beta)
