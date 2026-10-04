@@ -52,6 +52,10 @@ Sans tag, un sujet est considéré `[P2]`.
   désinstallation propre (réutilise le mécanisme pressenti au point 3 de
   suites-kit-portable.md) — cadré, lot 1 prêt —
   `docs/projets/desinstaller-proprement.md`.
+- [ ] [IA] [P2] Indexer dans AGENTS.md et README.md les recettes déjà
+  livrées au-delà de la gouvernance (audit, tableau de bord, suivi de
+  coût, découverte de valeur) — invisibles aujourd'hui — cadré, lot 1
+  prêt — `docs/projets/informer-capacites-drwil.md`.
 - [ ] [décision] [P3] Skills Copilot CLI (parité fonctionnelle, pas mécanique :
   Copilot CLI déclenche par motif de fichier, pas par description comme
   Claude). 2 recettes s'y prêtent (route API → `applyTo: backend/**`, écran
