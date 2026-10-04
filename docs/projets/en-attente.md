@@ -10,9 +10,10 @@ ne tranche pas une `[décision]` : il la pose.
 
 ## Kit IA-first
 
-- [ ] [IA] Extraire l'architecture IA-first complète de run-box-v2 dans le
-  kit (rien perdre, rendre générique), lots 1 à 8 — `docs/projets/extraction-ia-first-run-box.md`.
-- [ ] [IA] Aucun `.gitignore` dans les modèles du kit —
+- [ ] [humain] Extraire l'architecture IA-first complète de run-box-v2 dans
+  le kit (rien perdre, rendre générique), lots 1 à 8 terminés côté IA,
+  relecture humaine restante — `docs/projets/extraction-ia-first-run-box.md`.
+- [x] [IA] Aucun `.gitignore` dans les modèles du kit —
   `docs/projets/suites-kit-portable.md` (point 9).
 - [ ] [IA] Contrôles du dépôt drwil lui-même encore vides (QUA-013) —
   `docs/projets/suites-kit-portable.md` (point 5).
