@@ -4,7 +4,7 @@
 
 <!-- cadrage
 fichiers:
-  - packages/kit-ia-first/src/index.ts
+  - packages/drwil/src/index.ts
 -->
 
 ## 1. Besoin
@@ -74,7 +74,7 @@ mécanismes parallèles.
 ## 6. Lots
 
 - **Lot 1 — manifeste des fichiers installés** [IA] : dans `writeOut()`
-  (`packages/kit-ia-first/src/index.ts`), à chaque fichier réellement
+  (`packages/drwil/src/index.ts`), à chaque fichier réellement
   écrit (pas les fichiers ignorés car déjà présents), enregistrer son
   chemin relatif et l'empreinte sha256 de son contenu dans
   `.drwil/fichiers-installes.json` (à créer). Le manifeste est fusionné (jamais

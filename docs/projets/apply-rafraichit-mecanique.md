@@ -4,7 +4,7 @@
 
 <!-- cadrage
 fichiers:
-  - packages/kit-ia-first/src/index.ts
+  - packages/drwil/src/index.ts
 -->
 
 ## 1. Besoin
@@ -39,7 +39,7 @@ d'écart, le signale (jamais de réécriture automatique silencieuse). Nuance
 du demandeur : `apply()` est censé être un geste ponctuel par projet (une
 seule adoption du kit) — ce chantier vise surtout le cas d'une
 ré-application après mise à jour du kit (nouvelle version de
-`packages/kit-ia-first`), drwil lui-même étant un cas particulier
+`packages/drwil`), drwil lui-même étant un cas particulier
 (ré-appliqué souvent, pour le dogfooding).
 
 ## 2. Hors périmètre

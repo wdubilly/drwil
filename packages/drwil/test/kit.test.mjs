@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { init, apply } from "../dist/index.js";
 
-const tmp = () => mkdtempSync(join(tmpdir(), "kit-ia-first-"));
+const tmp = () => mkdtempSync(join(tmpdir(), "drwil-"));
 const quiet = async (fn) => {
   const log = console.log, warn = console.warn;
   console.log = console.warn = () => {};

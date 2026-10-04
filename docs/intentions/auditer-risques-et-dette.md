@@ -4,7 +4,7 @@
 sur drwil (`docs/audit-risques.md` généré, voir commit `bd9e51e`).
 
 ## Besoin
-Fournir dans le kit (`@drwil/kit-ia-first`) un skill/recette réutilisable qui
+Fournir dans le kit (`drwil`) un skill/recette réutilisable qui
 déclenche un audit de santé du dépôt (dérive de spec, code mort, angles
 morts de sécurité, trous de tests) et génère/maintient une fiche de synthèse
 (docs/00-friction-and-risk.md ou équivalent générique), au même titre que

@@ -7,10 +7,10 @@
 
 | ID | Risque | Catégorie | Gravité | Fichiers concernés | Action proposée |
 |---|---|---|---|---|---|
-| RSK-1 | ~~Aucun contrôle projet déclaré (lint/tests/typecheck)~~ **corrigé le 2026-10-04** | Sécurité/Qualité | ✅ | `.drwil/ia-first.json`, `.githooks/run-checks.mjs` | `checks` déclare `npm test` (build + 36 tests) de `packages/kit-ia-first` |
+| RSK-1 | ~~Aucun contrôle projet déclaré (lint/tests/typecheck)~~ **corrigé le 2026-10-04** | Sécurité/Qualité | ✅ | `.drwil/ia-first.json`, `.githooks/run-checks.mjs` | `checks` déclare `npm test` (build + 36 tests) de `packages/drwil` |
 | RSK-2 | ~~Pas de CI configurée pour couvrir les contrôles (QUA-013 non exécuté)~~ **corrigé le 2026-10-04** | Tests | ✅ | `.drwil/ia-first.json` (`ciFiles`), `.githooks/run-checks.mjs` | `ciFiles` pointait sur un fichier GitLab CI inexistant alors que `.github/workflows/ia-first.yml` tourne déjà — corrigé pour pointer dessus |
-| RSK-3 | Compatibilité Windows/macOS jamais testée | Stabilité | 🟠 | `docs/projets/suites-kit-portable.md` (point 1), `packages/kit-ia-first/src/index.ts` | Tester `init`/`apply` sur les trois OS, idéalement en matrice CI |
-| RSK-4 | `apply`/`init` ne nettoient jamais les fichiers obsolètes d'une version antérieure du kit | Code mort | 🟠 | `docs/projets/suites-kit-portable.md` (point 3), `packages/kit-ia-first/src/index.ts` | Définir une liste de fichiers retirés par version, ne supprimer que les fichiers identiques à un ancien modèle |
+| RSK-3 | Compatibilité Windows/macOS jamais testée | Stabilité | 🟠 | `docs/projets/suites-kit-portable.md` (point 1), `packages/drwil/src/index.ts` | Tester `init`/`apply` sur les trois OS, idéalement en matrice CI |
+| RSK-4 | `apply`/`init` ne nettoient jamais les fichiers obsolètes d'une version antérieure du kit | Code mort | 🟠 | `docs/projets/suites-kit-portable.md` (point 3), `packages/drwil/src/index.ts` | Définir une liste de fichiers retirés par version, ne supprimer que les fichiers identiques à un ancien modèle |
 | RSK-5 | Les contrôles `.githooks/check-docs.mjs` et `.githooks/run-checks.mjs` installés sur drwil n'ont pas de test propre côté dépôt (seul `.githooks/cadrage.test.mjs` existe) | Tests | 🟡 | `.githooks/cadrage.test.mjs`, `.githooks/check-docs.mjs`, `.githooks/run-checks.mjs` | Ajouter des cas de non-régression ciblés (secrets absents, `checks` vide, CI absente) |
 
 ## Détail des risques majeurs
@@ -25,7 +25,7 @@
 - **Risque encouru** : un commit pouvait passer sans qu'aucun test/lint
   réel du dépôt (au-delà de la doc) n'ait tourné.
 - **Correctif appliqué** : `checks` déclare désormais `npm test` dans
-  `packages/kit-ia-first` (`tsc --build && node --test`, couvre
+  `packages/drwil` (`tsc --build && node --test`, couvre
   compilation + 36 tests), rattaché au job CI `checks` existant (déjà
   déclenché sur tout push, aucune CI à modifier). Preuve :
   `.githooks/run-checks.mjs` exécute réellement le contrôle (0 non
@@ -51,7 +51,7 @@
 ### RSK-3 — Compatibilité multi-plateforme non démontrée
 - **Attendu** : `docs/projets/suites-kit-portable.md`, point 1, liste
   explicitement Windows/macOS comme non vérifiés.
-- **Codé réellement** : `packages/kit-ia-first/src/index.ts` écrit des
+- **Codé réellement** : `packages/drwil/src/index.ts` écrit des
   hooks Git (`.githooks/`) et des permissions d'exécution sans test hors
   Linux.
 - **Risque encouru** : `init`/`apply` peuvent échouer silencieusement ou
@@ -63,7 +63,7 @@
 - **Attendu** : `docs/projets/suites-kit-portable.md`, point 3, pose la
   question de la migration d'une ancienne version du kit comme non
   traitée.
-- **Codé réellement** : `packages/kit-ia-first/src/index.ts` (`scaffold`)
+- **Codé réellement** : `packages/drwil/src/index.ts` (`scaffold`)
   n'écrit que les fichiers manquants, ne supprime jamais un fichier retiré
   d'un modèle plus récent.
 - **Risque encouru** : après une mise à jour du kit, d'anciens fichiers
@@ -79,7 +79,7 @@
   indépendamment (cohérent avec l'esprit de `docs/recettes/refactorer-sans-casser.md`).
 - **Codé réellement** : seul `.githooks/cadrage.test.mjs` existe à la
   racine de drwil. `.githooks/check-docs.mjs` et `.githooks/run-checks.mjs`
-  sont bien testés côté kit (`packages/kit-ia-first/test/kit.test.mjs`,
+  sont bien testés côté kit (`packages/drwil/test/kit.test.mjs`,
   31 tests verts), mais pas sur leur copie réellement installée à la
   racine du dépôt.
 - **Risque encouru** : une modification manuelle future du fichier

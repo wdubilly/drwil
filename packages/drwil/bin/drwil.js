@@ -4,7 +4,7 @@ import { init, apply, TOOLS, CIS } from "../dist/index.js";
 
 const program = new Command();
 program
-  .name("drwil-ia-first")
+  .name("drwil")
   .description("Scaffold IA-first governance for a project (any OS, any AI tool, fr/en)")
   .version("0.0.1");
 

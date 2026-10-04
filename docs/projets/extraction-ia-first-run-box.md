@@ -4,7 +4,7 @@
 
 ## 1. Besoin
 
-Le kit (`packages/kit-ia-first/`) doit être l'extraction **complète** de
+Le kit (`packages/drwil/`) doit être l'extraction **complète** de
 l'architecture IA-first de run-box-v2, rendue générique et fonctionnelle pour
 n'importe quel projet. Règle du demandeur (2026-10-03) : **ne rien perdre** ;
 ce qui est trop propre à run-box n'est pas jeté, il est rendu générique
@@ -12,7 +12,7 @@ ce qui est trop propre à run-box n'est pas jeté, il est rendu générique
 « propre au projet » avec la raison.
 
 Constat du 2026-10-03 : le kit n'a repris qu'une fraction de l'architecture.
-Exemples mesurés : `packages/kit-ia-first/templates/fr/base/docs/ia-first.md` 8 lignes dans le kit contre 227 dans
+Exemples mesurés : `packages/drwil/templates/fr/base/docs/ia-first.md` 8 lignes dans le kit contre 227 dans
 run-box ; 2 contrats contre 31 ; 4 recettes de 3 à 10 lignes contre 11 ;
 0 skill contre 7 ; `AGENTS.md` de couche d'une ligne contre 44 à 63 lignes ;
 aucun des 11 fichiers de contrôle et de test de run-box n'est porté.
@@ -90,7 +90,7 @@ compléter ; **S** propre à run-box (classé, raison donnée).
 
 **Vérification « rien perdu » (lot 8, 2026-10-04)** : tableau relu ligne par
 ligne contre le contenu livré par les lots 1 à 7
-(`packages/kit-ia-first/templates/`) et contre une copie de travail de
+(`packages/drwil/templates/`) et contre une copie de travail de
 run-box-v2 (`/tmp/run-box-v2-copy`, jetable, original jamais modifié).
 Résultat : chaque ligne **G** et **P** a son équivalent dans le kit (AGENTS.md
 12 règles + tableau de routage + dépôts externes ; docs/ia-first.md 215
@@ -138,7 +138,7 @@ que `apply()` doit faire seul — ce n'est donc pas un écart du kit.
 Chaque lot : tests du kit verts (`npm test` dans le paquet), contrôles d'un
 projet généré verts, doc du kit à jour dans le même commit.
 
-- **Lot 1 — Méthode et docs** [IA] : AGENTS.md complet, `packages/kit-ia-first/templates/fr/base/docs/ia-first.md`
+- **Lot 1 — Méthode et docs** [IA] : AGENTS.md complet, `packages/drwil/templates/fr/base/docs/ia-first.md`
   complet, préambule et « Hors registre » des contrats, socle de contrats,
   format de l'index et des intentions, modèles de fiche, recettes génériques
   (dont refactorer-sans-casser complète), skills, squelettes de docs produit,
@@ -198,11 +198,11 @@ Confirmées par le demandeur le 2026-10-03 :
 ## 6. Reprise
 
 - **Dernier état** (2026-10-04) : **lot 1 terminé**, tous les éléments écrits
-  dans `packages/kit-ia-first/templates/fr/` : correctif `init` (ne réécrit
+  dans `packages/drwil/templates/fr/` : correctif `init` (ne réécrit
   que `.githooks/` par défaut, `--force` pour tout réécrire) ; `AGENTS.md`
   complet (12 règles de conduite, contrats à connaître, tableau « si tu
   touches à… » générique, dépôts externes en option, conventions) ;
-  `packages/kit-ia-first/templates/fr/base/docs/ia-first.md` complet (7 sections, avec mention honnête de ce qui
+  `packages/drwil/templates/fr/base/docs/ia-first.md` complet (7 sections, avec mention honnête de ce qui
   n'est pas encore outillé) ; `docs/contrats.md` en tableau (préambule,
   socle run-box-v2:QUA-011, run-box-v2:QUA-013, run-box-v2:QUA-015,
   run-box-v2:SEC-006, run-box-v2:SEC-007, « Hors registre ») avec
@@ -216,7 +216,7 @@ Confirmées par le demandeur le 2026-10-03 :
   `AGENTS.md` de couche à sections (générique, backend, frontend) ;
   squelettes README, INSTALL, sécurité, déploiement, fonctionnalités, charte
   graphique ; `.gitignore` et `.env.example`. Anglais toujours au lot 7 :
-  `packages/kit-ia-first/templates/en/` reste en retard (ex. `packages/kit-ia-first/templates/en/base/docs/contracts.md`
+  `packages/drwil/templates/en/` reste en retard (ex. `packages/drwil/templates/en/base/docs/contracts.md`
   a encore l'ancien contenu placeholder SEC-001).
 - **Non fait, hors périmètre du lot 1** : la recette « ouvrir un chantier »
   reste à faire ; le routage automatique des petites tâches vers
@@ -237,7 +237,7 @@ Confirmées par le demandeur le 2026-10-03 :
   inexistant et un ID absent).
 - **Travail non commité** : tout le travail du 2026-10-04 sur le lot 3 (aucun
   commit demandé pour l'instant). Tests du kit : 16/16 verts au dernier
-  passage (`npm test` dans `packages/kit-ia-first/`).
+  passage (`npm test` dans `packages/drwil/`).
 - **Lot 3 terminé** (2026-10-04) : cadrage et filet Claude Code, **bloquant au
   commit** (décision du demandeur, différente de run-box qui le voulait non
   bloquant). `.githooks/cadrage.mjs` : grammaire du bloc `cadrage` (porté en
@@ -248,7 +248,7 @@ Confirmées par le demandeur le 2026-10-03 :
   fiche de `docs/projets/`, ou un bloc mal formé (sans « fichiers: », motif
   trop large), fait échouer `.githooks/check-docs.mjs`. Fiche
   `docs/projets/mecanique-ia-first.md` (et son équivalent anglais minimal
-  `packages/kit-ia-first/templates/en/base/docs/projects/kit-mechanics.md`, pour ne pas casser le tout premier commit
+  `packages/drwil/templates/en/base/docs/projects/kit-mechanics.md`, pour ne pas casser le tout premier commit
   d'une installation anglaise) : couvre les fichiers propres au kit
   (`.githooks/*`, `.claude/settings.json` et le fichier de CI si installés).
   `docs/projets/entretien-courant.md` et `docs/projets/modele-fiche-projet.md`
@@ -262,11 +262,11 @@ Confirmées par le demandeur le 2026-10-03 :
   générique (plus de commande propre à un projet), avec les deux hooks
   branchés et des commandes de stack ajoutées automatiquement selon la
   techno détectée (`npm test`, `pytest`…, table à compléter dans
-  `packages/kit-ia-first/src/index.ts` → `STACK_ALLOW`). 3 tests ajoutés (cadrage bloquant puis
+  `packages/drwil/src/index.ts` → `STACK_ALLOW`). 3 tests ajoutés (cadrage bloquant puis
   débloqué par le bloc, motif trop large toujours refusé, les deux hooks
   Claude Code) ; régression trouvée et corrigée en cours de route (une
   installation anglaise avec git bloquait son premier commit faute de fiche
-  de mécanique — `packages/kit-ia-first/templates/en/base/docs/projects/kit-mechanics.md` corrige ça, test dédié
+  de mécanique — `packages/drwil/templates/en/base/docs/projects/kit-mechanics.md` corrige ça, test dédié
   ajouté). 16/16 tests verts.
 - **Demandeur (2026-10-04)** : « va jusqu'au bout sans moi » — autorise
   l'enchaînement des lots 4 à 8 sans confirmation intermédiaire ; commits
@@ -275,7 +275,7 @@ Confirmées par le demandeur le 2026-10-03 :
   `.githooks/check-control-coverage.mjs` : port Node de
   check-control-coverage.py (run-box-v2) — un contrôle **dégradable** (ex. secrets sans
   gitleaks) doit avoir un job CI qui se déclenche réellement sur les mêmes
-  chemins (relit `packages/kit-ia-first/templates/common/ci/gitlab/.gitlab-ci.yml` ou le workflow GitHub, pas seulement
+  chemins (relit `packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml` ou le workflow GitHub, pas seulement
   l'existence du job). Contrôles du socle déclarés en dur
   (secrets-fichiers, docs-references, controles-autotest) ; un contrôle du
   projet (`.drwil/ia-first.json` → `checks`) peut se couvrir lui aussi en
@@ -303,7 +303,7 @@ Confirmées par le demandeur le 2026-10-03 :
   présente. 3 tests ajoutés (couverture verte par défaut GitHub + GitLab,
   détection d'un job qui ne se déclenche plus, `ci: none` signalé non
   exécuté). 19/19 tests verts. Note corrigée en passant : la section 4 de
-  `packages/kit-ia-first/templates/fr/base/docs/ia-first.md` disait encore « filet IA non outillé » alors que le
+  `packages/drwil/templates/fr/base/docs/ia-first.md` disait encore « filet IA non outillé » alors que le
   lot 3 avait déjà livré les hooks Claude Code — texte mis à jour.
 - **Lot 5 terminé** (2026-10-04) : outillage du refactor, **opt-in** (rien
   lancé par défaut). `.githooks/check-file-size.mjs` : port générique de
@@ -318,8 +318,8 @@ Confirmées par le demandeur le 2026-10-03 :
   hors point de passage sûr, isolation du portail) citées en commentaire
   comme exemples, pas installées — trop spécifiques à run-box pour un kit
   générique. Module qualité front optionnel sous
-  `packages/kit-ia-first/templates/common/optional/front-quality/` (`packages/kit-ia-first/templates/common/optional/front-quality/check-colors.mjs` :
-  couleurs en dur ou palette Tailwind hors charte ; `packages/kit-ia-first/templates/common/optional/front-quality/check-contrast.mjs` :
+  `packages/drwil/templates/common/optional/front-quality/` (`packages/drwil/templates/common/optional/front-quality/check-colors.mjs` :
+  couleurs en dur ou palette Tailwind hors charte ; `packages/drwil/templates/common/optional/front-quality/check-contrast.mjs` :
   contraste RGAA/WCAG AA clair/sombre à partir d'un module de palette du
   projet, port générique de frontend/scripts/check-colors.mjs (run-box-v2) et
   check-contrast.mjs (run-box-v2), charte Cobalt de run-box citée en exemple) — dossier
@@ -378,36 +378,36 @@ Confirmées par le demandeur le 2026-10-03 :
   la recette, même convention que `refactorer-sans-casser` ; seul `claude`
   a un dossier `skills/` parmi les outils du kit, pas d'équivalent à livrer
   pour `copilot`/`cursor`). Routage ajouté dans `AGENTS.md` (« adopter le
-  kit sur un projet existant »), paragraphe ajouté dans `packages/kit-ia-first/templates/fr/base/docs/ia-first.md`
+  kit sur un projet existant »), paragraphe ajouté dans `packages/drwil/templates/fr/base/docs/ia-first.md`
   (section 3) et 2 phrases dans `docs/contrats.md` renvoyant au catalogue.
   2 tests ajoutés (catalogue + recette + skill livrés par défaut ; skill
   absent sans Claude Code). 26/26 tests verts ; contrôles racine drwil
   verts.
 - **Lot 7 — Traduction anglaise** : terminé. Parité FR/EN atteinte (40
   fichiers de chaque côté). Découverte en relevant les écarts : `AGENTS.md`,
-  `packages/kit-ia-first/templates/en/base/docs/ia-first.md` et `docs/contrats.md` anglais n'étaient que des stubs
-  du tout premier commit (ex. `packages/kit-ia-first/templates/en/base/docs/ia-first.md` : 9 lignes contre 214 en
+  `packages/drwil/templates/en/base/docs/ia-first.md` et `docs/contrats.md` anglais n'étaient que des stubs
+  du tout premier commit (ex. `packages/drwil/templates/en/base/docs/ia-first.md` : 9 lignes contre 214 en
   français), jamais mis à jour au fil des lots 2 à 6 — réécrits en entier
   (sections Conduite complète, tableau de routage complet, registre des 6
   contrats du socle, cycle de vie des chantiers, rappel de cadrage). Ajouté
   aussi : squelettes de docs produit (`README.md`, `INSTALL.md`,
-  `packages/kit-ia-first/templates/en/base/docs/security.md`, `packages/kit-ia-first/templates/en/base/docs/features.md`, `packages/kit-ia-first/templates/en/base/docs/style-guide.md`,
-  `packages/kit-ia-first/templates/en/base/docs/deployment.md`, `packages/kit-ia-first/templates/en/base/docs/projects/routine-maintenance.md`,
-  `packages/kit-ia-first/templates/en/base/docs/projects/model-project-sheet.md`), 5 recettes génériques manquantes
+  `packages/drwil/templates/en/base/docs/security.md`, `packages/drwil/templates/en/base/docs/features.md`, `packages/drwil/templates/en/base/docs/style-guide.md`,
+  `packages/drwil/templates/en/base/docs/deployment.md`, `packages/drwil/templates/en/base/docs/projects/routine-maintenance.md`,
+  `packages/drwil/templates/en/base/docs/projects/model-project-sheet.md`), 5 recettes génériques manquantes
   (`manage-access`, `run-locally`, `modify-permissions`,
   `backup-and-restore`) et le catalogue de contrats + recette d'adoption du
-  lot 6 (`packages/kit-ia-first/templates/en/base/docs/contracts-catalog.md`, `packages/kit-ia-first/templates/en/base/docs/recipes/adopt-the-kit.md`,
+  lot 6 (`packages/drwil/templates/en/base/docs/contracts-catalog.md`, `packages/drwil/templates/en/base/docs/recipes/adopt-the-kit.md`,
   préfixe `catalog:` repris du mécanisme français), 8 skills Claude Code
   manquants.
   **2 bugs pré-existants trouvés et corrigés en cours de route** (contenu
   français des lots 1/3/4, jamais exercés par un test avant le lot 7) : (1)
   l'exemption `kit:QUA-015` de la fiche permanente « entretien courant » (pas un
   chantier à lots) ne reconnaissait que le nom de fichier français en dur
-  dans `.githooks/check-docs.mjs` ; ajouté `packages/kit-ia-first/templates/en/base/docs/projects/routine-maintenance.md` (nom anglais
+  dans `.githooks/check-docs.mjs` ; ajouté `packages/drwil/templates/en/base/docs/projects/routine-maintenance.md` (nom anglais
   retenu) à la regex d'exemption. (2) `CLAUDE.md`/`GEMINI.md` et les
   fichiers `.claude/skills/`, `.claude/hooks/rappel-cadrage.mjs`,
   `.claude/hooks/garde-fou-bash.mjs` étaient cités sans le marqueur « si
-  présent » dans `INSTALL.md`, `docs/contrats.md` et `packages/kit-ia-first/templates/en/base/docs/ia-first.md`
+  présent » dans `INSTALL.md`, `docs/contrats.md` et `packages/drwil/templates/en/base/docs/ia-first.md`
   alors qu'ils ne sont réellement présents que si Claude Code est
   sélectionné : une installation avec un seul autre outil faisait échouer
   `.githooks/check-docs.mjs` à raison. Marqué « si présent » sur ces citations
@@ -455,7 +455,7 @@ Confirmées par le demandeur le 2026-10-03 :
   était utile. Réponse retenue : non (toute l'info est déjà en markdown
   versionné, un conteneur ajoute une surface à maintenir et un risque de
   désynchronisation) ; à la place, un **générateur statique sans serveur**
-  (`packages/kit-ia-first/templates/common/optional/tableau-de-bord/tableau-de-bord.mjs`, module
+  (`packages/drwil/templates/common/optional/tableau-de-bord/tableau-de-bord.mjs`, module
   optionnel non copié par `scaffold()`, sur le modèle de `front-quality/`) :
   produit un unique fichier HTML, lancé à la main
   (`node .githooks/tableau-de-bord.mjs`), jamais en CI ni au commit. Scope
@@ -474,7 +474,7 @@ Confirmées par le demandeur le 2026-10-03 :
   (ex. « Lots proposés »), et `docs/contrats.md` peut définir ses ID en
   titre (format réel de drwil) et pas seulement en tableau (format du
   template livré) — le parseur gère maintenant les deux. Recette
-  `docs/recettes/visualiser-avancement.md` / `packages/kit-ia-first/templates/en/base/docs/recipes/view-progress.md`
+  `docs/recettes/visualiser-avancement.md` / `packages/drwil/templates/en/base/docs/recipes/view-progress.md`
   et skill Claude Code associé (`visualiser-avancement` / `view-progress`,
   simple renvoi à la recette). 1 test ajouté (31/31 tests verts) ; contrôles
   racine drwil verts.

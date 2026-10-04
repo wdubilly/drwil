@@ -4,10 +4,10 @@
 
 <!-- cadrage
 fichiers:
-  - packages/kit-ia-first/templates/fr/base/AGENTS.md
-  - packages/kit-ia-first/templates/fr/base/README.md
-  - packages/kit-ia-first/templates/en/base/AGENTS.md
-  - packages/kit-ia-first/templates/en/base/README.md
+  - packages/drwil/templates/fr/base/AGENTS.md
+  - packages/drwil/templates/fr/base/README.md
+  - packages/drwil/templates/en/base/AGENTS.md
+  - packages/drwil/templates/en/base/README.md
 -->
 
 ## 1. Besoin
@@ -84,10 +84,10 @@ Deux publics, deux points d'entrée distincts, chacun avec son trou :
 ## 6. Lots
 
 - **Lot 1 — indexer les recettes dans les templates** [IA] : ajouter les
-  lignes dans `packages/kit-ia-first/templates/fr/base/AGENTS.md`,
-  `packages/kit-ia-first/templates/en/base/AGENTS.md` (tableau existant)
-  et `packages/kit-ia-first/templates/fr/base/README.md`,
-  `packages/kit-ia-first/templates/en/base/README.md` (table
+  lignes dans `packages/drwil/templates/fr/base/AGENTS.md`,
+  `packages/drwil/templates/en/base/AGENTS.md` (tableau existant)
+  et `packages/drwil/templates/fr/base/README.md`,
+  `packages/drwil/templates/en/base/README.md` (table
   « Documentation »). Critère de sortie : `npm test` (36 tests) toujours
   vert, y compris le test « même nombre de fichiers livrés en français
   et en anglais » ; `.githooks/check-docs.mjs` ne signale aucune

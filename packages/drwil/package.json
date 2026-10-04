@@ -1,9 +1,9 @@
 {
-  "name": "@drwil/kit-ia-first",
+  "name": "drwil",
   "version": "0.0.1",
   "type": "module",
   "bin": {
-    "drwil-ia-first": "./bin/drwil-ia-first.js"
+    "drwil": "./bin/drwil.js"
   },
   "exports": {
     ".": {

@@ -4,7 +4,7 @@
 
 <!-- cadrage
 fichiers:
-  - packages/kit-ia-first/templates/common/base/.githooks/check-docs.mjs
+  - packages/drwil/templates/common/base/.githooks/check-docs.mjs
 -->
 
 ## 1. Besoin

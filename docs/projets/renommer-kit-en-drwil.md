@@ -1,20 +1,22 @@
 # Projet : le kit de gouvernance IA-first devient le paquet `drwil`
 
-**Statut** (2026-10-04) : cadré — lot 1 prêt à démarrer sur confirmation.
+**Statut** (2026-10-04) : lots 1 et 2 faits — paquet renommé en `drwil`,
+toutes les citations mises à jour. Reste à trancher : publication npm
+effective (geste humain, voir `docs/intentions/packager-kit-ia-first.md`).
 
 <!-- cadrage
 fichiers:
-  - packages/kit-ia-first/package.json
-  - packages/kit-ia-first/bin
-  - packages/kit-ia-first/src
-  - packages/kit-ia-first/test
+  - packages/drwil/package.json
+  - packages/drwil/bin
+  - packages/drwil/src
+  - packages/drwil/test
 -->
 
 ## 1. Besoin
 
 Clarifié le 2026-10-04 avec le demandeur : drwil n'est pas un produit
 distinct qui *utiliserait* un kit — **drwil est le kit de gouvernance
-IA-first**, rien d'autre. Jusqu'ici, `packages/kit-ia-first` (nommé
+IA-first**, rien d'autre. Jusqu'ici, `packages/drwil` (nommé
 `@drwil/kit-ia-first`) cohabitait avec des docs produit à la racine
 (`DOC_TECHNICO_COMMERCIAL.md`, `docs/charte-graphique.md`,
 `docs/decouverte-valeur.md`, `docs/securite.md`, `docs/deploiement.md`,
@@ -54,7 +56,7 @@ Décisions déjà tranchées par le demandeur :
   `docs/intentions/packager-kit-ia-first.md`.
 - (2026-10-04) Pas de retouche des docs produit à la racine pour l'instant.
 - (2026-10-04) Dossier renommé en `packages/drwil/` (cohérence avec le nom
-  du paquet, pas de dossier `packages/kit-ia-first/` conservé).
+  du paquet, pas de dossier `packages/drwil/` conservé).
 - (2026-10-04) Binaire CLI simplifié en `drwil` (`npx drwil init`,
   `npx drwil apply`), à la place de `drwil-ia-first`.
 - (2026-10-04) Vocabulaire : remplacer systématiquement « kit IA-first »
@@ -68,7 +70,7 @@ Décisions déjà tranchées par le demandeur :
 ## 6. Lots
 
 - **Lot 1 — renommer le dossier et le paquet** [IA] : déplacer
-  `packages/kit-ia-first/` vers `packages/drwil/` ; `package.json` →
+  `packages/drwil/` vers `packages/drwil/` ; `package.json` →
   `name: "drwil"` (plus de scope `@drwil/`) ; `bin` →
   `{ "drwil": "./bin/drwil.js" }` (renommer le fichier bin existant) ;
   mettre à jour `tsconfig.json` et tout chemin relatif interne
@@ -78,7 +80,7 @@ Décisions déjà tranchées par le demandeur :
   dossier `/tmp` isolé (preuve manuelle).
 - **Lot 2 — mettre à jour les citations dans les docs** [IA] : sur les 13
   fichiers recensés citant `kit-ia-first` (voir section 7), remplacer les
-  chemins (`packages/kit-ia-first` → `packages/drwil`) et, dans la prose,
+  chemins (`packages/drwil` → `packages/drwil`) et, dans la prose,
   « kit IA-first » → « drwil » partout. Inclut
   `.drwil/ia-first.json` (racine drwil, dogfooding) et le contenu des
   templates du kit lui-même (`packages/drwil/templates/**`) qui
@@ -89,11 +91,20 @@ Décisions déjà tranchées par le demandeur :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-04) : fiche entièrement tranchée (5
-  décisions, section 5 vidée). Statut → cadré, 2 lots prêts. Recensement
-  fait : 13 fichiers citent `kit-ia-first`
-  (`packages/kit-ia-first/package.json`,
-  `packages/kit-ia-first/test/kit.test.mjs`, `tsconfig.json`,
-  `.drwil/ia-first.json`, et plusieurs docs/fiches). Aucun code touché.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] coder le lot 1 sur confirmation.
+- **Dernier état** (2026-10-04) : lot 1 fait (dossier → `packages/drwil/`,
+  `package.json` → `name: "drwil"`, bin → `drwil` (`packages/drwil/bin/drwil.js`),
+  `tsconfig.json` racine mis à jour, `node_modules` réinstallés proprement
+  depuis la racine du monorepo). Preuve : `npm test` vert dans
+  `packages/drwil/` (36 tests), `node packages/drwil/bin/drwil.js init`
+  testé depuis `/tmp` isolé, fonctionne. Lot 2 fait : 13 fichiers mis à
+  jour (chemins `packages/kit-ia-first` → `packages/drwil`, prose
+  `@drwil/kit-ia-first` → `drwil` dans `docs/decouverte-valeur.md`,
+  `docs/intentions/packager-kit-ia-first.md`,
+  `docs/intentions/auditer-risques-et-dette.md`) ; `.drwil/ia-first.json`
+  (`checks` → `packages/drwil`) corrigé en même temps (sinon
+  `.githooks/run-checks.mjs` aurait échoué). `.githooks/check-docs.mjs` :
+  0 erreur. `node .githooks/run-checks.mjs` : 36/36 verts.
+- **Travail non commité** : tout le travail ci-dessus, prêt à committer.
+- **Prochaine étape** : [humain] trancher la publication npm effective
+  (`docs/intentions/packager-kit-ia-first.md`) quand souhaité ; sinon
+  chantier terminé.

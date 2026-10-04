@@ -2,7 +2,7 @@
 
 > Dernier scan : 2026-10-04
 > État du projet : monorepo TypeScript déjà structuré autour de
-> `@drwil/kit-ia-first`. Le kit dispose d'un CLI `init/apply`, de templates
+> `drwil`. Le kit dispose d'un CLI `init/apply`, de templates
 > multilingues, de hooks et de skills Claude. Il est appliqué à drwil
 > lui-même ; plusieurs fonctionnalités sont cadrées mais encore non
 > implémentées.
@@ -11,19 +11,19 @@
 
 | ID | Fonctionnalité proposée | Pourquoi (valeur métier) | État du code existant | Effort | Action recommandée |
 |---|---|---|---|---|---|
-| OPT-1 | Publier `@drwil/kit-ia-first` sur npm | Rend le kit installable par une équipe ou depuis n'importe quel dépôt avec `npx`, au lieu de dépendre d'un checkout local. | Le package, son CLI, son build et ses templates existent déjà (`packages/kit-ia-first/package.json`, `packages/kit-ia-first/src/index.ts`, `packages/kit-ia-first/templates/`). L'intention de publication est déjà cadrée (`docs/intentions/packager-kit-ia-first.md`). | 🟡 Moyen | Trancher les questions ouvertes de la fiche, vérifier le tarball (`npm publish --dry-run`), publier une première version beta. |
-| OPT-2 | Ajouter le suivi générique des tokens au tableau de bord | Donne une visibilité sur le coût IA par chantier et par lot, directement dans l'outil de pilotage existant. | Le tableau de bord statique lit déjà les fiches projets, statuts et lots (`.githooks/tableau-de-bord.mjs`, module livré dans `packages/kit-ia-first/templates/common/optional/tableau-de-bord/tableau-de-bord.mjs`), mais aucune donnée de tokens n'est encore lue. Format et module déjà cadrés (`docs/intentions/surveiller-consommation-tokens.md`). | 🟡 Moyen | Implémenter la lecture/agrégation de .drwil/usage.jsonl, puis le module d'export Copilot CLI. |
+| OPT-1 | Publier `drwil` sur npm | Rend le kit installable par une équipe ou depuis n'importe quel dépôt avec `npx`, au lieu de dépendre d'un checkout local. | Le package, son CLI, son build et ses templates existent déjà (`packages/drwil/package.json`, `packages/drwil/src/index.ts`, `packages/drwil/templates/`). L'intention de publication est déjà cadrée (`docs/intentions/packager-kit-ia-first.md`). | 🟡 Moyen | Trancher les questions ouvertes de la fiche, vérifier le tarball (`npm publish --dry-run`), publier une première version beta. |
+| OPT-2 | Ajouter le suivi générique des tokens au tableau de bord | Donne une visibilité sur le coût IA par chantier et par lot, directement dans l'outil de pilotage existant. | Le tableau de bord statique lit déjà les fiches projets, statuts et lots (`.githooks/tableau-de-bord.mjs`, module livré dans `packages/drwil/templates/common/optional/tableau-de-bord/tableau-de-bord.mjs`), mais aucune donnée de tokens n'est encore lue. Format et module déjà cadrés (`docs/intentions/surveiller-consommation-tokens.md`). | 🟡 Moyen | Implémenter la lecture/agrégation de .drwil/usage.jsonl, puis le module d'export Copilot CLI. |
 | OPT-3 | Déclarer les contrôles projet réels (lint/tests/build) dans `.drwil/ia-first.json` | Un commit peut aujourd'hui passer sans qu'aucun contrôle réel (typecheck, tests) ne tourne — gain de fiabilité immédiat, sans nouveau code. | `.drwil/ia-first.json` → `checks` est vide ; `.githooks/run-checks.mjs` le signale déjà lui-même (« non exécuté »). Le constat est déjà posé dans `docs/audit-risques.md` (RSK-1). | 🟢 Faible | Ajouter les entrées `checks` (ex. `tsc --build`, `node --test` du kit) et vérifier `node .githooks/run-checks.mjs`. |
-| OPT-4 | Sécuriser la mise à jour d'une ancienne installation du kit | Évite les fichiers obsolètes et les migrations manuelles lors des mises à jour, ce qui réduit le coût d'adoption en équipe. | `apply()`/`init()` (`packages/kit-ia-first/src/index.ts`) n'écrasent ni ne suppriment jamais un fichier existant — un stub obsolète (`.githooks/cadrage.py`, `.githooks/check-docs.py`, déjà repérés comme code hors fiche) reste indéfiniment après upgrade. Besoin documenté (`docs/projets/suites-kit-portable.md`, point 3 ; `docs/audit-risques.md`, RSK-4). | 🟡 Moyen | Concevoir une liste versionnée de fichiers supprimables, ne supprimer que les fichiers identiques à un ancien modèle, tester sur un projet généré ancien. |
+| OPT-4 | Sécuriser la mise à jour d'une ancienne installation du kit | Évite les fichiers obsolètes et les migrations manuelles lors des mises à jour, ce qui réduit le coût d'adoption en équipe. | `apply()`/`init()` (`packages/drwil/src/index.ts`) n'écrasent ni ne suppriment jamais un fichier existant — un stub obsolète (`.githooks/cadrage.py`, `.githooks/check-docs.py`, déjà repérés comme code hors fiche) reste indéfiniment après upgrade. Besoin documenté (`docs/projets/suites-kit-portable.md`, point 3 ; `docs/audit-risques.md`, RSK-4). | 🟡 Moyen | Concevoir une liste versionnée de fichiers supprimables, ne supprimer que les fichiers identiques à un ancien modèle, tester sur un projet généré ancien. |
 
 ## Analyse détaillée des meilleures pistes
 
-### OPT-1 — Publier `@drwil/kit-ia-first` sur npm
+### OPT-1 — Publier `drwil` sur npm
 - **Problème résolu** : rendre le kit accessible hors du dépôt source,
-  notamment via `npx @drwil/kit-ia-first init`.
-- **Briques existantes réutilisables** : `packages/kit-ia-first/package.json`
-  (nom, bin déjà déclarés) ; `packages/kit-ia-first/src/index.ts`
-  (`init()`/`apply()` déjà fonctionnels) ; `packages/kit-ia-first/templates/`
+  notamment via `npx drwil init`.
+- **Briques existantes réutilisables** : `packages/drwil/package.json`
+  (nom, bin déjà déclarés) ; `packages/drwil/src/index.ts`
+  (`init()`/`apply()` déjà fonctionnels) ; `packages/drwil/templates/`
   (contenu complet, FR/EN).
 - **Ce qu'il reste à faire** : configurer `files`/`main`/`types`/`bin` et
   les scripts de publication, vérifier que `dist/`, `templates/`, `bin/`
@@ -36,7 +36,7 @@
   le coût IA engagé par lot ou chantier.
 - **Briques existantes réutilisables** : `.githooks/tableau-de-bord.mjs`
   (lecture des fiches, lots, statuts déjà en place) ; module optionnel
-  déjà livré dans `packages/kit-ia-first/templates/common/optional/tableau-de-bord/`.
+  déjà livré dans `packages/drwil/templates/common/optional/tableau-de-bord/`.
 - **Ce qu'il reste à faire** : documenter .drwil/usage.jsonl, agréger
   les tokens par chantier/lot, afficher l'indicateur sans régression si le
   fichier est absent, fournir le module optionnel d'export Copilot CLI.
@@ -50,7 +50,7 @@
   documentation est vérifiée.
 - **Briques existantes réutilisables** : `.githooks/run-checks.mjs` sait
   déjà exécuter et rapporter des `checks` déclarés (testé dans
-  `packages/kit-ia-first/test/kit.test.mjs`) ; il ne manque qu'une
+  `packages/drwil/test/kit.test.mjs`) ; il ne manque qu'une
   déclaration dans `.drwil/ia-first.json`.
 - **Ce qu'il reste à faire** : choisir les commandes réelles du monorepo
   (`tsc --build`, `node --test` du kit...) et les ajouter à `checks`.
@@ -63,7 +63,7 @@
   fichiers obsolètes dans le dépôt cible, source de confusion et de
   contrôles en double.
 - **Briques existantes réutilisables** : `scaffold()`/`apply()`
-  (`packages/kit-ia-first/src/index.ts`) centralisent déjà toute la copie
+  (`packages/drwil/src/index.ts`) centralisent déjà toute la copie
   et la politique de non-écrasement ; `docs/projets/suites-kit-portable.md`
   décrit précisément le problème.
 - **Ce qu'il reste à faire** : introduire une manifest de fichiers retirés

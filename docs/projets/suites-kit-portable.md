@@ -6,7 +6,7 @@ restent 1, 2, 3, 7.
 
 ## 1. Contexte
 
-Le 2026-10-03, le kit (`packages/kit-ia-first/`) est passé en Node seul, avec
+Le 2026-10-03, le kit (`packages/drwil/`) est passé en Node seul, avec
 `--tools`, `--ci`, `--lang fr|en` et la détection de stack ; ses tests
 (`npm test` dans le paquet) passent sous Linux. Les points ci-dessous sont
 restés ouverts à la fin de ce travail.
@@ -38,7 +38,7 @@ restés ouverts à la fin de ce travail.
    code legacy hors fiche — `scripts/garde-fou-bash.py`, anciens `.githooks/*.py`).
 6. **`node_modules/` indexé dans git** — fait le 2026-10-04. `.gitignore`
    créé à la racine (dépendances, produits de build, journaux, `.env`) et
-   `node_modules/`, `packages/kit-ia-first/dist/` et `*.tsbuildinfo` retirés
+   `node_modules/`, `packages/drwil/dist/` et `*.tsbuildinfo` retirés
    de l'index. `dist/` est ignoré car régénéré par `tsc --build` ; s'il doit
    figurer dans le paquet publié, le construire à la publication (point 7).
 7. **Publication npm** — [décision] Voir `docs/intentions/packager-kit-ia-first.md`.
@@ -54,7 +54,7 @@ restés ouverts à la fin de ce travail.
    (`docs/architecture.md`, `.claude/skills/`) sont désormais livrés par
    `apply()` ; les chemins relatifs au paquet dans
    `docs/projets/extraction-ia-first-run-box.md` ont été corrigés (préfixés
-   vers leur vrai emplacement dans `packages/kit-ia-first/`).
+   vers leur vrai emplacement dans `packages/drwil/`).
 
 9. **Aucun `.gitignore` dans les modèles du kit** — [IA] corrigé le
    2026-10-04 (lot 1 du projet d'extraction) : `templates/common/base/`

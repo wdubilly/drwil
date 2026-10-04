@@ -4,7 +4,7 @@
 
 <!-- cadrage
 fichiers:
-  - packages/kit-ia-first/src/index.ts
+  - packages/drwil/src/index.ts
 -->
 
 ## 1. Besoin
@@ -26,7 +26,7 @@ préalable découvre le défaut après coup, dans l'arborescence.
   utilisable sans IA (décision déjà actée en discussion, pas de fiche
   dédiée car pas de changement demandé).
 - Changer la détection de stack elle-même
-  (`packages/kit-ia-first/src/stack.ts`) : fonctionne déjà correctement
+  (`packages/drwil/src/stack.ts`) : fonctionne déjà correctement
   pour `apply()`.
 - Changer le défaut `backend,frontend` : reste le squelette conventionnel,
   seule sa visibilité change.
@@ -63,6 +63,6 @@ préalable découvre le défaut après coup, dans l'arborescence.
   (même scénario après correctif → « Couches par défaut écrites : backend,
   frontend — modifiable avec --layers. »). 2 tests ajoutés (cas passant et
   non passant). 36/36 tests verts, `.githooks/run-checks.mjs` vert sur drwil.
-- **Travail non commité** : `packages/kit-ia-first/src/index.ts`,
-  `packages/kit-ia-first/test/kit.test.mjs`.
+- **Travail non commité** : `packages/drwil/src/index.ts`,
+  `packages/drwil/test/kit.test.mjs`.
 - **Prochaine étape** : [humain] confirmer le commit.

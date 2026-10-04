@@ -41,11 +41,11 @@
   "mode": "full",
   "checks": [
     {
-      "name": "kit-ia-first: build + tests",
+      "name": "drwil: build + tests",
       "run": "npm test",
-      "cwd": "packages/kit-ia-first",
+      "cwd": "packages/drwil",
       "ciJob": "checks",
-      "chemins": ["packages/kit-ia-first/**"],
+      "chemins": ["packages/drwil/**"],
       "degradable": false
     }
   ]
