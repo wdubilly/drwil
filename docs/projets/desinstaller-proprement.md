@@ -1,6 +1,6 @@
 # Projet : manifeste des fichiers installés + désinstallation propre
 
-**Statut** (2026-10-04) : cadré — lot 1 prêt à démarrer sur confirmation.
+**Statut** (2026-10-04) : lot 1 livré (manifeste des fichiers installés). Lot 2 (désinstallation) non commencé.
 
 <!-- cadrage
 fichiers:
@@ -73,16 +73,19 @@ mécanismes parallèles.
 
 ## 6. Lots
 
-- **Lot 1 — manifeste des fichiers installés** [IA] : dans `writeOut()`
-  (`packages/drwil/src/index.ts`), à chaque fichier réellement
-  écrit (pas les fichiers ignorés car déjà présents), enregistrer son
-  chemin relatif et l'empreinte sha256 de son contenu dans
-  `.drwil/fichiers-installes.json` (à créer). Le manifeste est fusionné (jamais
-  réécrit intégralement) pour ne pas perdre les entrées d'une
-  installation précédente lors d'un `apply()` partiel. Critère de
-  sortie : test ajouté (`init` sur dossier vide → manifeste créé avec les
-  chemins attendus ; `apply` une 2ᵉ fois sans rien changer → manifeste
-  inchangé), tests existants toujours verts.
+- **Lot 1 — manifeste des fichiers installés** [IA] — **fait le 2026-10-04**.
+  Implémenté dans `packages/drwil/src/index.ts` : `writeOut()` enregistre
+  chemin relatif + empreinte sha256 de chaque fichier réellement écrit
+  dans un objet manifeste, passé par `copyTree()`/`scaffold()` ; `init()`
+  et `apply()` fusionnent ce manifeste avec .drwil/fichiers-installes.json
+  existant (jamais réécrit intégralement) via `writeManifest()`. Bug
+  rencontré et corrigé en cours de route : gitleaks (règle
+  `generic-api-key`) confondait les empreintes sha256 hexadécimales du
+  manifeste avec des clés secrètes → ajout de `.gitleaks.toml` (template
+  `common/base` + racine de drwil) avec une entrée d'allowlist dédiée à ce
+  fichier. Test dédié : manifeste créé avec les chemins attendus après
+  `init()`, inchangé après un `apply()` sans modification (fusion sans
+  perte). 40/40 tests verts.
 - **Lot 2 — commande de désinstallation** [IA] : nouvelle sous-commande
   CLI (`drwil uninstall`, ou `--uninstall` — à préciser à l'implémentation
   selon ce que `commander` permet le plus proprement). Lit le manifeste,
@@ -99,4 +102,14 @@ mécanismes parallèles.
 
 ## 7. Reprise
 
-(pas encore démarré)
+- **Dernier état** (2026-10-04) : lot 1 livré. `writeOut()`, `copyTree()`,
+  `scaffold()`, `init()` et `apply()` modifiés dans
+  `packages/drwil/src/index.ts` pour écrire/fusionner
+  .drwil/fichiers-installes.json (chemin + sha256) à chaque fichier
+  réellement écrit. `.gitleaks.toml` ajouté (template + racine) pour
+  éviter un faux positif gitleaks sur les empreintes sha256. Test dédié
+  ajouté dans `packages/drwil/test/kit.test.mjs`. 40/40 tests verts,
+  `.githooks/run-checks.mjs` vert.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [IA] ouvrir le lot 2 (sous-commande de
+  désinstallation qui consomme ce manifeste).

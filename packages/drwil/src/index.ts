@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile, readdir, chmod } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { detectStack, type StackEntry } from "./stack.js";
 
@@ -180,7 +181,7 @@ function detecterDerive(target: string, contenuModele: string): boolean {
 }
 
 async function writeOut(
-  target: string, content: string, targetDir: string, shouldOverwrite: Overwrite, derives?: string[],
+  target: string, content: string, targetDir: string, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>,
 ): Promise<void> {
   if (existsSync(target) && !shouldOverwrite(relative(targetDir, target))) {
     if (derives && detecterDerive(target, content)) derives.push(relative(targetDir, target));
@@ -188,6 +189,7 @@ async function writeOut(
   }
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, content);
+  if (manifest) manifest[relative(targetDir, target)] = sha256(content);
   // commit-msg reste volontairement non exécutable (livré mais désactivé par défaut, lot 4).
   if (target.endsWith(".mjs") || ["pre-commit", "pre-push"].includes(basename(target))) {
     try { await chmod(target, 0o755); } catch {}
@@ -195,36 +197,59 @@ async function writeOut(
 }
 
 /** Copie un dossier de modèles à la racine de la cible, en rendant les variables. */
-async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite, derives?: string[]): Promise<void> {
+async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>): Promise<void> {
   for (const file of await walk(srcDir)) {
     const target = join(r.opts.targetDir, relative(srcDir, file));
-    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, shouldOverwrite, derives);
+    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, shouldOverwrite, derives, manifest);
   }
 }
 
-async function scaffold(r: Resolved, shouldOverwrite: Overwrite, derives?: string[]): Promise<void> {
+async function scaffold(r: Resolved, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>): Promise<void> {
   const langDir = join(templatesDir, r.lang);
-  await copyTree(join(templatesDir, "common", "base"), r, shouldOverwrite, derives);
-  await copyTree(join(langDir, "base"), r, shouldOverwrite, derives);
+  await copyTree(join(templatesDir, "common", "base"), r, shouldOverwrite, derives, manifest);
+  await copyTree(join(langDir, "base"), r, shouldOverwrite, derives, manifest);
   for (const tool of r.tools) {
-    await copyTree(join(templatesDir, "common", "tools", tool), r, shouldOverwrite, derives);
-    await copyTree(join(langDir, "tools", tool), r, shouldOverwrite, derives);
+    await copyTree(join(templatesDir, "common", "tools", tool), r, shouldOverwrite, derives, manifest);
+    await copyTree(join(langDir, "tools", tool), r, shouldOverwrite, derives, manifest);
   }
-  await copyTree(join(templatesDir, "common", "ci", r.ci), r, shouldOverwrite, derives);
+  await copyTree(join(templatesDir, "common", "ci", r.ci), r, shouldOverwrite, derives, manifest);
 
   for (const layer of r.layers) {
     const specific = join(langDir, "layers", `${layer}.md`);
     const source = LAYER_TEMPLATES.includes(layer) && existsSync(specific) ? specific : join(langDir, "layers", "generic.md");
     const up = "../".repeat(layer.split("/").filter(Boolean).length);
     const content = render(await readFile(source, "utf8"), r, { layer }).replace("`../AGENTS.md`", `\`${up}AGENTS.md\``);
-    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, shouldOverwrite, derives);
+    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, shouldOverwrite, derives, manifest);
   }
 
   // Un seul contenu de consignes (AGENTS.md) ; les outils qui ne le lisent pas nativement reçoivent un import.
   const pointers = [r.tools.includes("claude") && "CLAUDE.md", r.tools.includes("gemini") && "GEMINI.md"].filter(Boolean) as string[];
   for (const dir of [".", ...r.layers]) {
-    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite, derives);
+    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite, derives, manifest);
   }
+}
+
+function sha256(content: string): string {
+  return createHash("sha256").update(content).digest("hex");
+}
+
+const MANIFEST_PATH = [".drwil", "fichiers-installes.json"];
+
+function readManifest(targetDir: string): Record<string, string> {
+  try {
+    return JSON.parse(readFileSync(join(targetDir, ...MANIFEST_PATH), "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+// Fusionné (jamais réécrit intégralement) : une installation partielle (apply ciblé)
+// ne doit pas perdre les entrées d'une installation précédente (contrainte section 3,
+// docs/projets/desinstaller-proprement.md).
+async function writeManifest(targetDir: string, manifest: Record<string, string>): Promise<void> {
+  const fusion = { ...readManifest(targetDir), ...manifest };
+  await mkdir(join(targetDir, ".drwil"), { recursive: true });
+  await writeFile(join(targetDir, ...MANIFEST_PATH), JSON.stringify(fusion, null, 2) + "\n");
 }
 
 function readConfig(targetDir: string): Record<string, unknown> | null {
@@ -316,7 +341,9 @@ export async function init(opts: InitOptions): Promise<void> {
   const r = resolve(opts, () => ["backend", "frontend"]);
   const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => rel.startsWith(KIT_MECHANICS);
   const derives: string[] = [];
-  await scaffold(r, shouldOverwrite, derives);
+  const manifest: Record<string, string> = {};
+  await scaffold(r, shouldOverwrite, derives, manifest);
+  await writeManifest(opts.targetDir, manifest);
   await writeConfig(r);
   reportStack(r);
   reportDerives(derives);
@@ -328,7 +355,9 @@ export async function apply(opts: InitOptions): Promise<void> {
   // Sur un projet existant, les couches sont les sous-dossiers où une stack a été trouvée.
   const r = resolve(opts, stack => stack.map(s => s.path).filter(p => p !== "."));
   const derives: string[] = [];
-  await scaffold(r, () => false, derives);
+  const manifest: Record<string, string> = {};
+  await scaffold(r, () => false, derives, manifest);
+  await writeManifest(opts.targetDir, manifest);
   if (!readConfig(opts.targetDir)) await writeConfig(r);
   reportStack(r);
   reportDerives(derives);

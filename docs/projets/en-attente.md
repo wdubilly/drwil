@@ -51,7 +51,8 @@ Sans tag, un sujet est considéré `[P2]`.
   `docs/projets/rappeler-peremption-audits.md`.
 - [ ] [IA] [P2] Manifeste des fichiers installés par le kit + commande de
   désinstallation propre (réutilise le mécanisme pressenti au point 3 de
-  suites-kit-portable.md) — cadré, lot 1 prêt —
+  suites-kit-portable.md) — lot 1 (manifeste) fait le 2026-10-04 ; lot 2
+  (désinstallation) à ouvrir —
   `docs/projets/desinstaller-proprement.md`.
 - [x] [IA] [P2] Indexer dans AGENTS.md et README.md les recettes déjà
   livrées au-delà de la gouvernance (audit, tableau de bord, suivi de

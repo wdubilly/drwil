@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSync, appendFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
 import { init, apply } from "../dist/index.js";
 
 const tmp = () => mkdtempSync(join(tmpdir(), "drwil-"));
@@ -368,6 +369,20 @@ test("apply() signale (sans réécrire) un fichier déjà présent qui a dériv�
   assert.ok(lignes.some((l) => l.includes("docs/recettes/refactorer-sans-casser.md")), lignes.join("\n"));
   assert.equal(read(dir, "docs/recettes/refactorer-sans-casser.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n", "jamais réécrit automatiquement");
   assert.notEqual(read(dir, "docs/recettes/refactorer-sans-casser.md"), avant);
+});
+
+test("init écrit un manifeste des fichiers installés (chemin + sha256), fusionné sans perte entre deux apply()", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  const manifeste = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  assert.ok(Object.keys(manifeste).length > 10, "plusieurs fichiers enregistrés");
+  assert.ok("AGENTS.md" in manifeste, "AGENTS.md présent");
+  assert.equal(manifeste["AGENTS.md"], createHash("sha256").update(read(dir, "AGENTS.md")).digest("hex"));
+
+  // apply() une 2ᵉ fois sans rien changer : le manifeste existant est conservé à l'identique (fusion, pas d'écrasement).
+  const avant = read(dir, ".drwil/fichiers-installes.json");
+  await quiet(() => apply({ targetDir: dir, git: false, layers: "backend,frontend" }));
+  assert.equal(read(dir, ".drwil/fichiers-installes.json"), avant);
 });
 
 test("un contrat préfixé par un autre dépôt n'est pas cherché dans le registre local", async () => {
