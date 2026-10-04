@@ -62,3 +62,7 @@ Sans tag, un sujet est considéré `[P2]`.
   front → `applyTo: frontend/**`) ; les 11 autres restent couvertes par
   `AGENTS.md`, déjà lu nativement. Sans risque pour ce que drwil enforce
   (hooks git, contrats) si non fait : confort de découverte, pas un contrôle.
+- [ ] [décision] [P3] Commande `/drwil` (Claude Code seul le supporte
+  aujourd'hui parmi les outils de drwil) pour découvrir les capacités du
+  kit sans lire de prose — 3 points à trancher —
+  `docs/projets/commande-slash-drwil.md`.
