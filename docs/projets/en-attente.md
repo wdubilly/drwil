@@ -30,8 +30,8 @@ Sans tag, un sujet est considéré `[P2]`.
   du kit — `docs/projets/suites-kit-portable.md` (point 3).
 - [ ] [humain] [P2] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projets/suites-kit-portable.md` (point 2).
-- [ ] [décision] [P1] Renommer le paquet `@drwil/kit-ia-first` en `drwil`
-  (dossier, bin, citations dans les docs) —
+- [ ] [IA] [P1] Renommer le paquet `@drwil/kit-ia-first` en `drwil`
+  (dossier, bin, citations dans les docs) — cadré, lot 1 prêt —
   `docs/projets/renommer-kit-en-drwil.md`.
 - [ ] [IA] [P2] Vérifier la cohérence case cochée ↔ statut de la fiche
   liée (désynchro constatée sur signaler-couches-par-defaut.md) — cadré,

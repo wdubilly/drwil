@@ -1,7 +1,6 @@
 # Projet : le kit de gouvernance IA-first devient le paquet `drwil`
 
-**Statut** (2026-10-04) : décidé sur le principe — 1 point reste à
-trancher avant lot 1 (section 5).
+**Statut** (2026-10-04) : cadré — lot 1 prêt à démarrer sur confirmation.
 
 <!-- cadrage
 fichiers:
@@ -58,29 +57,43 @@ Décisions déjà tranchées par le demandeur :
   du paquet, pas de dossier `packages/kit-ia-first/` conservé).
 - (2026-10-04) Binaire CLI simplifié en `drwil` (`npx drwil init`,
   `npx drwil apply`), à la place de `drwil-ia-first`.
+- (2026-10-04) Vocabulaire : remplacer systématiquement « kit IA-first »
+  par « drwil » dans la prose des docs (AGENTS.md, recettes, intentions),
+  pas de distinction contenu/produit.
 
 ## 5. Points à trancher
 
-- [décision] Dans la prose des docs (AGENTS.md, recettes, intentions...),
-  remplacer systématiquement « kit IA-first » par « drwil » ou garder « kit
-  IA-first » comme description du *contenu* et réserver « drwil » au nom du
-  paquet/produit ?
+(aucun — les 5 décisions ci-dessus couvrent le périmètre)
 
 ## 6. Lots
 
-(à proposer une fois la section 5 tranchée)
+- **Lot 1 — renommer le dossier et le paquet** [IA] : déplacer
+  `packages/kit-ia-first/` vers `packages/drwil/` ; `package.json` →
+  `name: "drwil"` (plus de scope `@drwil/`) ; `bin` →
+  `{ "drwil": "./bin/drwil.js" }` (renommer le fichier bin existant) ;
+  mettre à jour `tsconfig.json` et tout chemin relatif interne
+  (imports, `templatesDir`, scripts npm) qui référence l'ancien chemin.
+  Critère de sortie : `npm test` vert dans `packages/drwil/`
+  (build + 36 tests), `npx drwil init`/`apply` fonctionnels depuis un
+  dossier `/tmp` isolé (preuve manuelle).
+- **Lot 2 — mettre à jour les citations dans les docs** [IA] : sur les 13
+  fichiers recensés citant `kit-ia-first` (voir section 7), remplacer les
+  chemins (`packages/kit-ia-first` → `packages/drwil`) et, dans la prose,
+  « kit IA-first » → « drwil » partout. Inclut
+  `.drwil/ia-first.json` (racine drwil, dogfooding) et le contenu des
+  templates du kit lui-même (`packages/drwil/templates/**`) qui
+  s'auto-citent. Critère de sortie : `.githooks/check-docs.mjs` vert (0
+  chemin cité introuvable), relecture humaine des docs produit non
+  touchées (hors périmètre, section 2) pour confirmer qu'aucune n'a été
+  modifiée par erreur.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-04) : fiche créée après clarification du
-  demandeur (« Drwil est le nom du produit (outil) que le projet drwil met
-  en place » → « je veux construire le package de gouvernance qu'on
-  appellera drwil »). Recensement fait : 13 fichiers citent
-  `kit-ia-first` (`packages/kit-ia-first/package.json`,
+- **Dernier état** (2026-10-04) : fiche entièrement tranchée (5
+  décisions, section 5 vidée). Statut → cadré, 2 lots prêts. Recensement
+  fait : 13 fichiers citent `kit-ia-first`
+  (`packages/kit-ia-first/package.json`,
   `packages/kit-ia-first/test/kit.test.mjs`, `tsconfig.json`,
   `.drwil/ia-first.json`, et plusieurs docs/fiches). Aucun code touché.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher le dernier point de la
-  section 5 (vocabulaire kit IA-first vs drwil), puis proposer les lots
-  (renommage package.json/dossier/bin, mise à jour des imports/chemins
-  relatifs, mise à jour des citations dans les docs, build + tests verts).
+- **Prochaine étape** : [IA] coder le lot 1 sur confirmation.
