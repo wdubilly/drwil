@@ -13,7 +13,8 @@ Rendre le kit IA-first (`@drwil/kit-ia-first`) facilement distribuable pour un u
 
 ## Questions à trancher
 1. Scope de publication : privé (npm private org) ou public ?
-2. Nom du package : `@drwil/kit-ia-first` (déjà défini) OK ?
+2. ~~Nom du package~~ : tranché — `drwil`, voir
+   `docs/projets/renommer-kit-en-drwil.md`.
 3. Version initiale : 0.1.0 ou 1.0.0 ?
 4. Inclure `dist/` et `templates/` dans le paquet (files field) ?
 5. Automatiser build avant publish (prepublishOnly) ?

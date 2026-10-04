@@ -20,6 +20,18 @@ jamais nettoyés ni resynchronisés. `AGENTS.md`,
 une version antérieure au kit (56/9/52 lignes contre 121/219 lignes + section
 « Hors registre » dans le template), sans qu'aucun mécanisme ne le signale.
 
+Preuve étendue le 2026-10-04 (diff systématique des 13 recettes racine contre
+leur équivalent template) : 2 recettes (`docs/recettes/auditer-risques-et-dette.md`,
+`docs/recettes/decouvrir-valeur-produit.md`) sont identiques — pas de dérive. Mais 3 autres
+le sont réellement : `docs/recettes/ajouter-une-route-api.md` cite encore
+`.githooks/run-checks.sh` (mort, remplacé par `.githooks/run-checks.mjs`
+dans le template) ; `docs/recettes/deployer-en-prod.md` et
+`docs/recettes/refactorer-sans-casser.md`
+sont restées de courts gabarits alors que le template a depuis été
+largement enrichi (méthode de refactor détaillée, garde-fou de taille de
+fichier...). La dérive de prose dépasse donc les 3 fichiers de gouvernance
+initialement constatés : elle touche aussi `docs/recettes/`.
+
 Deux natures de fichiers, deux traitements distincts :
 - **Mécanique du kit** (`.githooks/`, `.claude/settings.json`, fichier de CI) :
   entièrement générée, aucune personnalisation légitime attendue. Risque
@@ -66,10 +78,13 @@ Deux natures de fichiers, deux traitements distincts :
   fin de `apply()`/`init()` si les fichiers existent déjà, ou un contrôle à
   part dans `.githooks/run-checks.mjs` ? Doit lister quoi précisément (nombre de
   lignes ? sections `##` absentes du template ? les deux) ?
-- [décision] Le signalement de dérive (volet 2) doit-il être retenu
+- [x] [décision] Le signalement de dérive (volet 2) doit-il être retenu
   seulement pour les 3 fichiers constatés (AGENTS.md, docs/ia-first.md,
   docs/contrats.md) ou étendu à toute la base `common/base` et `<lang>/base`
-  du template ?
+  du template ? → **Tranché le 2026-10-04, par la preuve** : étendu à toute
+  la base, au moins à `docs/recettes/` — 3 recettes sur 13 sont aussi
+  dérivées (voir section 1), le problème n'est pas limité aux 3 fichiers de
+  gouvernance.
 
 ## 6. Lots
 
@@ -80,7 +95,10 @@ Deux natures de fichiers, deux traitements distincts :
 - **Dernier état** (2026-10-04) : fiche créée après constat de la dérive sur
   drwil (AGENTS.md/docs/ia-first.md/docs/contrats.md restés sur une version
   pré-kit ; les fichiers obsolètes sous `.githooks/` jamais nettoyés par `apply()`
-  qui ne réécrit rien, contrairement à `init()`). Aucun code touché.
+  qui ne réécrit rien, contrairement à `init()`). Preuve étendue le même
+  jour : diff systématique des 13 recettes racine contre le template, 3
+  dérivées (voir section 1) — le 3ᵉ point de la section 5 est tranché par
+  cette preuve. Aucun code touché.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher la section 5 avant d'ouvrir le
-  lot 1.
+- **Prochaine étape** : [décision] trancher les 2 points restants de la
+  section 5 avant d'ouvrir le lot 1.

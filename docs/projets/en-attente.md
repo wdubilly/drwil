@@ -30,6 +30,9 @@ Sans tag, un sujet est considéré `[P2]`.
   du kit — `docs/projets/suites-kit-portable.md` (point 3).
 - [ ] [humain] [P2] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projets/suites-kit-portable.md` (point 2).
+- [ ] [décision] [P1] Renommer le paquet `@drwil/kit-ia-first` en `drwil`
+  (dossier, bin, citations dans les docs) —
+  `docs/projets/renommer-kit-en-drwil.md`.
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
 - [ ] [décision] [P2] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
   et signale la dérive de prose (AGENTS.md, docs/ia-first.md, docs/contrats.md
