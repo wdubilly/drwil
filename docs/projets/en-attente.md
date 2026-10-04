@@ -31,6 +31,9 @@ Sans tag, un sujet est considéré `[P2]`.
 - [ ] [humain] [P2] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projets/suites-kit-portable.md` (point 2).
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
+- [ ] [décision] [P2] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
+  et signale la dérive de prose (AGENTS.md, docs/ia-first.md, docs/contrats.md
+  restés sur une version pré-kit chez drwil) — `docs/projets/apply-rafraichit-mecanique.md`.
 - [ ] [décision] [P3] Skills Copilot CLI (parité fonctionnelle, pas mécanique :
   Copilot CLI déclenche par motif de fichier, pas par description comme
   Claude). 2 recettes s'y prêtent (route API → `applyTo: backend/**`, écran
