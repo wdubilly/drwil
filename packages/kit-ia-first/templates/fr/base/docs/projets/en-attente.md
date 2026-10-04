@@ -12,6 +12,10 @@ travail. Un agent ne tente pas un geste `[humain]` et ne tranche pas une
 `[décision]` : il la pose. Les petites tâches qui ne justifient pas un
 chantier : `docs/projets/entretien-courant.md`.
 
+Priorité facultative, non vérifiée par check-docs.mjs (simple convention) :
+`[P0]` le plus urgent, `[P1]` élevée, `[P2]` normale, `[P3]` le moins urgent.
+Sans tag, un sujet est considéré `[P2]`.
+
 ## Chantiers
 
 *(vide à l'installation — une section par thème, une case par sujet)*
