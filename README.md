@@ -71,7 +71,7 @@ mécanique concret :
 cd packages/drwil
 npm install
 npm run build
-npm test                 # 36 tests
+npm test                 # 40 tests
 
 # tester le CLI sur un dossier vide
 node bin/drwil.js init --name "MonProjet" --layers backend,frontend
