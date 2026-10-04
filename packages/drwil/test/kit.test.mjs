@@ -244,7 +244,8 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
   await quiet(() => init({ targetDir: dir }));
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "bloquant" }));
   assert.equal(git(dir, "add", "-A").status, 0);
-  assert.equal(git(dir, "commit", "-qm", "init").status, 0, "premier commit accepté (mecanique-ia-first.md couvre .githooks/)");
+  let rInit = git(dir, "commit", "-qm", "init");
+  assert.equal(rInit.status, 0, `premier commit accepté (mecanique-ia-first.md couvre .githooks/) :\n${rInit.stdout}${rInit.stderr}`);
 
   // un nouveau fichier de code hors de toute fiche bloque le commit.
   mkdirSync(join(dir, "scripts"));

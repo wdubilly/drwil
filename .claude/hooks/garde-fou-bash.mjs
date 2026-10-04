@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { pathToFileURL } from "node:url";
+
 // Garde-fou des commandes shell de Claude Code (hook PreToolUse, matcher Bash).
 //
 // Filet propre à l'outil, en plus des contrôles git (docs/ia-first.md, section 4) :
@@ -48,7 +50,7 @@ function main(entree) {
 
 export { raison, main };
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   let entree = "";
   process.stdin.on("data", (d) => { entree += d; });
   process.stdin.on("end", () => {

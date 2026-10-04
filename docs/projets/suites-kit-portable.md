@@ -66,6 +66,23 @@ restés ouverts à la fin de ce travail.
    inexpliqué (QUA-016 bloquant : le tout premier commit, qui ne devrait
    déclencher aucun rappel de cadrage, est pourtant refusé) ; à investiguer
    sur le prochain run une fois (f)(g)(h) poussés.
+   Run suivant (`37237787471`) : `checks`, `kit-tests (ubuntu-latest)` et
+   `kit-tests (macos-latest)` toujours verts ; Windows encore rouge mais
+   seulement 2 échecs restants (QUA-016 bloquant et le hook
+   garde-fou-bash/rappel-cadrage), cause trouvée dans les deux : (i)
+   `.claude/hooks/rappel-cadrage.mjs` faisait `import(\`file://${chemin}\`)`
+   à la main pour charger `.githooks/cadrage.mjs` — un chemin Windows (`D:\a\...`)
+   collé après `file://` n'est pas une URL de fichier valide, l'import lève
+   et le hook, dont les erreurs sont toutes avalées (« jamais casser »),
+   rend silencieusement une sortie vide ; (j) le point d'entrée CLI des deux
+   hooks (`.claude/hooks/rappel-cadrage.mjs` et `.claude/hooks/garde-fou-bash.mjs`) comparait
+   `import.meta.url` à `` `file://${process.argv[1]}` `` à la main — même
+   défaut, le hook ne s'exécutait jamais quand Claude Code l'invoque en
+   sous-processus sous Windows. Les deux corrigés avec `pathToFileURL()`
+   (node:url), seule façon portable de construire une URL de fichier.
+   Au passage, ajout de la sortie réelle de la commande (stdout+stderr) dans
+   le message d'assertion du test QUA-016 pour ne plus dépendre d'un message
+   statique si un échec Windows revient.
    Tests locaux 40/40 verts après ces 5 corrections ; résultat du nouveau
    run CI à confirmer (voir section Reprise).
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien

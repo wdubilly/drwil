@@ -12,6 +12,7 @@
 // la même que le contrôle au commit.
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 // Claude Code invoque le hook avec le dossier du projet en cwd.
 const RACINE = process.cwd();
@@ -72,7 +73,7 @@ async function rappel(entree, racine = RACINE) {
   const relatif = cheminRelatif(chemin, racine);
   if (!relatif) return "";
 
-  const cadrage = await import(`file://${join(racine, ".githooks", "cadrage.mjs")}`);
+  const cadrage = await import(pathToFileURL(join(racine, ".githooks", "cadrage.mjs")).href);
   const cfg = loadConfig(racine);
   if (cfg.cadrage === "off") return "";
   if (!cadrage.estDuCode(relatif, cfg)) return "";
@@ -108,7 +109,7 @@ async function main(entree) {
 
 export { rappel, main };
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   let entree = "";
   process.stdin.on("data", (d) => { entree += d; });
   process.stdin.on("end", async () => {
