@@ -10,12 +10,10 @@
 // .drwil/ia-first.json -> cadrage ("bloquant" | "avertissement", défaut ;
 // | "off" désactive aussi ce rappel). La grammaire vient de .githooks/cadrage.mjs,
 // la même que le contrôle au commit.
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 
-// Claude Code invoque le hook avec le dossier du projet en cwd : plus fiable que de
-// remonter depuis le chemin du script, qui peut traverser un lien symbolique (macOS
-// résout /tmp et /var vers /private/..., ce qui cassait la comparaison avec `chemin`).
+// Claude Code invoque le hook avec le dossier du projet en cwd.
 const RACINE = process.cwd();
 const OUTILS = new Set(["Edit", "Write", "MultiEdit"]);
 const MODELE_RE = /^modele-|^model-/;
@@ -36,9 +34,25 @@ function mdRecursif(dir) {
   });
 }
 
+/** Résout les liens symboliques jusqu'au premier ancêtre existant (le fichier visé par
+ * un Write n'existe pas encore), pour comparer deux chemins sur la même base réelle :
+ * macOS résout /tmp et /var vers /private/... au premier `cd`, ce que `resolve()` seul
+ * ne voit pas. */
+function realpathAncetre(chemin) {
+  let c = resolve(chemin);
+  const reste = [];
+  while (!existsSync(c)) {
+    reste.unshift(c.slice(c.lastIndexOf("/") + 1));
+    const parent = dirname(c);
+    if (parent === c) return resolve(chemin);
+    c = parent;
+  }
+  return reste.length ? join(realpathSync(c), ...reste) : realpathSync(c);
+}
+
 function cheminRelatif(chemin, racine) {
   try {
-    const r = relative(racine, resolve(chemin));
+    const r = relative(realpathAncetre(racine), realpathAncetre(chemin));
     return r.startsWith("..") ? null : r.replace(/\\/g, "/");
   } catch {
     return null;

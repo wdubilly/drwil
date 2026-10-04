@@ -46,8 +46,13 @@ restés ouverts à la fin de ce travail.
    script (`import.meta.url`), que macOS réécrit via le lien symbolique
    `/var` → `/private/var` (tmp CI) — la comparaison avec le chemin reçu du
    tool Claude Code (non résolu) ratait alors systématiquement et rendait le
-   hook silencieux ; corrigé en prenant `process.cwd()` comme racine
-   (Claude Code invoque déjà le hook avec le dossier du projet en cwd).
+   hook silencieux ; une première correction (racine = `process.cwd()`)
+   s'est révélée insuffisante — `process.cwd()` résout aussi les liens
+   symboliques (confirmé en reproduisant le symlink en local sur Linux). Le
+   vrai correctif résout en `realpath` le premier ancêtre existant des deux
+   chemins avant de les comparer (le fichier visé par un `Write` n'existe pas
+   encore). Reproduit et vérifié corrigé localement (dossier project
+   symlinké, `init()` réel, hook appelé en sous-processus).
    Tests locaux 40/40 verts après ces 5 corrections ; résultat du nouveau
    run CI à confirmer (voir section Reprise).
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien
