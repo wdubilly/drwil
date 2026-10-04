@@ -1,7 +1,8 @@
 # Projet : travailler avec des branches et des merge/pull requests
 
-**Statut** (2026-10-05) : en cours — lots 1, 2 et 3 livrés, lot 4
-(contrat QUA-017) en cours.
+**Statut** (2026-10-05) : fait — lots 1 à 4 livrés, 42/42 tests verts,
+`check-docs`/`run-checks` verts sur drwil. PR #1 fusionnée (merge, vrai
+test de la recette elle-même).
 
 <!-- cadrage
 fichiers:
@@ -96,22 +97,10 @@ mécaniquement (QUA-017) — voir décision révisée dans l'intention.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-05) : lots 1-3 livrés et committés
-  (`6b35c7b`, poussé directement sur master — avant l'existence de
-  QUA-017). Lot 4 fait sur la branche
-  `chantier/travailler-avec-branches-et-mr` : contrat QUA-017 documenté
-  (`docs/contrats.md` + catalogues templates FR/EN), implémenté dans
-  `.githooks/run-checks.mjs` (+ template synchronisé), recette mise à
-  jour (section « Ce que le kit vérifie »), test dédié ajouté
-  (`packages/drwil/test/kit.test.mjs`), 2 tests QUA-016 adaptés (commits
-  de test déplacés sur une branche, puisqu'ils enchaînaient plusieurs
-  commits directs sur master — ce que QUA-017 interdit désormais). 42/42
-  tests verts, `.githooks/check-docs.mjs`/`.githooks/run-checks.mjs`
-  verts sur drwil.
-- **Travail non commité** : voir le bloc cadrage ci-dessus, à committer
-  sur la branche (le dépôt drwil a déjà plus d'un commit sur master,
-  donc QUA-017 interdit désormais un commit direct dessus — ce chantier
-  est le premier test réel de la recette qu'il décrit).
-- **Prochaine étape** : committer sur la branche, pousser, ouvrir une
-  pull request réelle vers master, la fusionner, puis repasser le
-  Statut de cette fiche à "fait" et cocher sa case dans l'index.
+- **Dernier état** (2026-10-05) : lots 1-4 livrés. Lot 4 (contrat
+  QUA-017) fait sur la branche `chantier/travailler-avec-branches-et-mr`,
+  PR #1 ouverte puis fusionnée (merge, fast-forward côté GitHub — pas de
+  commit/push local, donc pas de conflit avec QUA-017). 42/42 tests
+  verts, `.githooks/check-docs.mjs`/`.githooks/run-checks.mjs` verts.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : aucune (chantier livré).
