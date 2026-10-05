@@ -817,8 +817,9 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
 });
 
 test("créer une release : détection du bump semver (Conventional Commits, best-effort)", async () => {
-  const src = fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
-  const { detecterBump, versionSuivante } = await import(src);
+  // import() dynamique : passer l'URL file:// telle quelle (pas de conversion
+  // en chemin OS) — un chemin Windows brut (d:\...) fait planter le loader ESM.
+  const { detecterBump, versionSuivante } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
 
   assert.equal(detecterBump([]), null, "aucun commit : rien à publier");
   assert.equal(detecterBump([{ sujet: "Manifeste des fichiers installés", corps: "" }]), "patch", "aucun préfixe reconnu : patch par défaut");
