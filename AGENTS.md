@@ -14,6 +14,10 @@ Carte complète : `docs/architecture.md`.
 
 - **Périmètre** : faire ce qui est demandé, pas plus. Aucun changement hors
   périmètre sans justification et sans demande explicite.
+- **Dépôt vs livrable (QUA-018)** : ce dépôt a deux casquettes — drwil-le-
+  dépôt (ce projet lui-même) et drwil-le-livrable (le gabarit de
+  `packages/drwil/templates/`, distribué via `npx`/`npm`). Si une demande
+  ne précise pas laquelle est visée, le demander avant d'agir.
 - **Commits** : en français ; ne commiter ni pousser que sur demande.
 - **Données personnelles** : une IA n'affiche jamais de donnée nominative de
   production dans ses sorties ou ses réponses.
