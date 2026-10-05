@@ -56,3 +56,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   front → `applyTo: frontend/**`) ; les 11 autres restent couvertes par
   `AGENTS.md`, déjà lu nativement. Sans risque pour ce que drwil enforce
   (hooks git, contrats) si non fait : confort de découverte, pas un contrôle.
+- [ ] [IA] [P2] Créer une release (tag + note GitHub) à chaque chantier
+  fusionné, module optionnel du kit activé en dogfood —
+  `docs/projets/creer-une-release.md`.

@@ -1,7 +1,7 @@
 ---
 name: drwil
-description: Point d'entrée pour découvrir les capacités de pilotage du kit drwil. Sans argument, affiche le menu des capacités et leur commande dédiée. Avec un argument (adopter, audit, valeur, conso, avancement), renvoie directement à la recette correspondante.
-argument-hint: "[adopter|audit|valeur|conso|avancement]"
+description: Point d'entrée pour découvrir les capacités de pilotage du kit drwil. Sans argument, affiche le menu des capacités et leur commande dédiée. Avec un argument (adopter, audit, valeur, conso, avancement, release), renvoie directement à la recette correspondante.
+argument-hint: "[adopter|audit|valeur|conso|avancement|release]"
 arguments: capacite
 disable-model-invocation: true
 ---
@@ -18,9 +18,10 @@ d'autre) :
 | `/drwil-valeur` | Découvrir la valeur produit | `docs/recettes/decouvrir-valeur-produit.md` |
 | `/drwil-conso` | Suivre la consommation par lot | `docs/recettes/suivre-consommation-par-lot.md` |
 | `/drwil-avancement` | Visualiser l'avancement | `docs/recettes/visualiser-avancement.md` |
+| `/drwil-release` | Créer une release (tag + note GitHub), module optionnel | `docs/recettes/creer-une-release.md` |
 
 Si `$capacite` correspond à l'une des valeurs `adopter`, `audit`,
-`valeur`, `conso`, `avancement`, appliquer directement la recette
+`valeur`, `conso`, `avancement`, `release`, appliquer directement la recette
 associée dans le tableau ci-dessus (ne pas la réécrire ici, la lire et
 la suivre). Sinon, signaler que la capacité n'est pas reconnue et
 réafficher le menu.
