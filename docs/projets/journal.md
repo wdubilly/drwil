@@ -94,3 +94,15 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   tarball npm (`npm pack`) de chaque paquet publiable attaché comme
   asset téléchargeable à la release (demande ultérieure).
 - **Clôturé par** : PR #8 (script + recette), #14 (tarball attaché).
+
+## 2026-10-05 — Skills Copilot CLI (parité fonctionnelle, pas mécanique)
+
+- **Décisions clés** : Copilot CLI déclenche un fichier par motif de
+  chemin (`applyTo`), pas par description sémantique comme Claude Code.
+  Sur les 13 recettes du kit, seules 2 s'y prêtent nativement (ciblent un
+  dossier précis) : route API (`applyTo: "backend/**"`) et écran front
+  (`applyTo: "frontend/**"`). Les 11 autres restent couvertes par
+  `AGENTS.md`, déjà lu nativement — pas de fichier dédié pour elles.
+  Livré via le mécanisme générique de copie `templates/<lang>/tools/<outil>`
+  déjà existant, aucun code de générateur ajouté.
+- **Clôturé par** : PR #17.

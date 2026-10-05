@@ -50,9 +50,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   restés sur une version pré-kit chez drwil) — lot 1 (détection et
   signalement) fait le 2026-10-04 ; lot 2 (résolution) reste à trancher —
   `docs/projets/apply-rafraichit-mecanique.md`.
-- [ ] [IA] [P3] Skills Copilot CLI (parité fonctionnelle, pas mécanique) —
-  décision prise, lot 1 codé et vérifié, reste à committer/fusionner —
-  `docs/projets/skills-copilot-cli.md`.
 - [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
