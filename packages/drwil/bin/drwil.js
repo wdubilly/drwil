@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { init, apply, uninstall, TOOLS, CIS } from "../dist/index.js";
+import { init, apply, uninstall, resoudreDerive, TOOLS, CIS } from "../dist/index.js";
 
 const program = new Command();
 program
@@ -55,6 +55,27 @@ program.command("uninstall")
       if (modified.length) {
         console.log("Modifiés depuis l'installation, non supprimés :");
         for (const r of modified) console.log(`  - ${r}`);
+      }
+    } catch (e) {
+      console.error(`✗ ${e.message}`);
+      process.exit(1);
+    }
+  });
+
+program.command("resoudre-derive")
+  .description("Resolve mechanics drift signaled by init()/apply() (.githooks/, .claude/settings.json, CI file): diff + confirmation, .bak backup before overwrite")
+  .option("--forcer", "Non-interactive: overwrite every drifted mechanics file without asking (scripted use)")
+  .action(async (opts) => {
+    try {
+      const { resolus, ignores } = await resoudreDerive({ targetDir: process.cwd(), forcer: opts.forcer });
+      if (!resolus.length && !ignores.length) console.log("Rien à résoudre : aucune dérive sur la mécanique du kit.");
+      if (resolus.length) {
+        console.log("Fichiers résolus (ancien sauvegardé en .bak) :");
+        for (const r of resolus) console.log(`  - ${r}`);
+      }
+      if (ignores.length) {
+        console.log("Dérive laissée en l'état (confirmation refusée ou terminal non interactif sans --forcer) :");
+        for (const r of ignores) console.log(`  - ${r}`);
       }
     } catch (e) {
       console.error(`✗ ${e.message}`);

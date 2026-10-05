@@ -354,6 +354,137 @@ export async function uninstall(opts: UninstallOptions): Promise<UninstallReport
   return { removed, modified };
 }
 
+// Reconstruit un `Resolved` minimal à partir de la config déjà écrite par init()/apply(), pour
+// relire ses décisions (lang, tools, ci, stack...) sans ré-exécuter la détection de pile — lot 2,
+// docs/projets/apply-rafraichit-mecanique.md.
+function resolveFromConfig(targetDir: string): Resolved {
+  const config = readConfig(targetDir);
+  if (!config) {
+    throw new Error(`projet non initialisé (${join(targetDir, ".drwil", "ia-first.json")} introuvable) : lancer « drwil init » d'abord`);
+  }
+  const opts: InitOptions = {
+    targetDir,
+    name: config.projectName as string | undefined,
+    short: config.projectShort as string | undefined,
+    contractPrefixes: Array.isArray(config.contractPrefixes) ? (config.contractPrefixes as string[]).join(",") : undefined,
+  };
+  return {
+    opts,
+    lang: pick((config.lang as string) ?? "fr", LANGS, "lang"),
+    layers: Array.isArray(config.layers) ? (config.layers as string[]) : [],
+    tools: Array.isArray(config.tools) ? (config.tools as string[]).map(t => pick(t, TOOLS, "tools")) : [],
+    ci: pick((config.ci as string) ?? "none", CIS, "ci"),
+    mode: pick((config.mode as string) ?? "full", ["minimal", "full"] as const, "mode"),
+    stack: Array.isArray(config.stack) ? (config.stack as StackEntry[]) : [],
+  };
+}
+
+// Périmètre du lot 2 (résolution) : seulement la mécanique « sans personnalisation légitime
+// attendue » — .githooks/, .claude/settings.json et le fichier de CI — jamais la prose
+// (AGENTS.md, docs/recettes/...), décision du 2026-10-05.
+async function rendusMecaniques(r: Resolved): Promise<Map<string, string>> {
+  const rendus = new Map<string, string>();
+  // `walkDir` : dossier parcouru ; `relBase` : dossier servant de référence pour le chemin relatif
+  // (garde le préfixe `.githooks/` au lieu de le perdre en marchant directement dans ce dossier).
+  const ajouter = async (walkDir: string, relBase: string) => {
+    for (const file of await walk(walkDir)) {
+      const target = join(r.opts.targetDir, relative(relBase, file));
+      rendus.set(target, render(await readFile(file, "utf8"), r));
+    }
+  };
+  const base = join(templatesDir, "common", "base");
+  await ajouter(join(base, ".githooks"), base);
+  if (r.tools.includes("claude")) {
+    const settings = join(templatesDir, "common", "tools", "claude", ".claude", "settings.json");
+    rendus.set(join(r.opts.targetDir, ".claude", "settings.json"), render(await readFile(settings, "utf8"), r));
+  }
+  if (r.ci !== "none") {
+    const srcCi = join(templatesDir, "common", "ci", r.ci);
+    await ajouter(srcCi, srcCi);
+  }
+  return rendus;
+}
+
+// Diff unifié minimal (ligne à ligne, plus proche possible, sans bibliothèque externe) : juste de
+// quoi montrer à l'utilisateur ce qui changerait avant confirmation — pas un outil de patch.
+function diffUnifie(ancien: string, nouveau: string): string {
+  const a = ancien.split(/\r?\n/);
+  const b = nouveau.split(/\r?\n/);
+  // Programmation dynamique (plus longue sous-séquence commune) : fichiers mécaniques courts, coût négligeable.
+  const lcs: number[][] = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = a.length - 1; i >= 0; i--) {
+    for (let j = b.length - 1; j >= 0; j--) {
+      lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+    }
+  }
+  const lignes: string[] = [];
+  let i = 0, j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { i++; j++; }
+    else if (lcs[i + 1][j] >= lcs[i][j + 1]) { lignes.push(`- ${a[i]}`); i++; }
+    else { lignes.push(`+ ${b[j]}`); j++; }
+  }
+  while (i < a.length) { lignes.push(`- ${a[i]}`); i++; }
+  while (j < b.length) { lignes.push(`+ ${b[j]}`); j++; }
+  return lignes.join("\n");
+}
+
+export interface ResoudreDeriveOptions {
+  targetDir: string;
+  /** Usage non interactif (scripté/CI) : écrase sans demander. Défaut `false` — sans elle, jamais
+   * d'écrasement sans confirmation explicite (décision du 2026-10-05). */
+  forcer?: boolean;
+}
+
+export interface ResoudreDeriveReport {
+  /** Fichiers mécaniques réécrits (confirmés, ou --forcer). */
+  resolus: string[];
+  /** Fichiers mécaniques en dérive mais laissés intacts (confirmation refusée). */
+  ignores: string[];
+}
+
+/** Résout la dérive des fichiers mécaniques (`.githooks/`, `.claude/settings.json`, fichier de
+ * CI) signalée par `apply()`/`init()` : affiche un diff, demande confirmation (sauf `--forcer`),
+ * sauvegarde l'ancien fichier en `.bak` avant d'écraser. Jamais appelée automatiquement par
+ * `init()`/`apply()` (lot 2, docs/projets/apply-rafraichit-mecanique.md). */
+export async function resoudreDerive(
+  opts: ResoudreDeriveOptions,
+  confirmer: (rel: string, diff: string) => boolean | Promise<boolean> = confirmerParDefaut,
+): Promise<ResoudreDeriveReport> {
+  const r = resolveFromConfig(opts.targetDir);
+  const rendus = await rendusMecaniques(r);
+  const resolus: string[] = [];
+  const ignores: string[] = [];
+  for (const [target, contenuModele] of rendus) {
+    if (!existsSync(target)) continue; // ce lot ne crée rien : seuls les fichiers déjà en dérive sont traités.
+    const rel = relPosix(opts.targetDir, target);
+    const existant = await readFile(target, "utf8");
+    if (existant === contenuModele) continue; // pas de dérive.
+    const ok = opts.forcer || await confirmer(rel, diffUnifie(existant, contenuModele));
+    if (!ok) { ignores.push(rel); continue; }
+    await writeFile(`${target}.bak`, existant);
+    await writeFile(target, contenuModele);
+    resolus.push(rel);
+  }
+  return { resolus, ignores };
+}
+
+// Confirmation interactive réelle (stdin) : séparée de resoudreDerive() pour rester testable sans
+// terminal (le test fournit un `confirmer` synthétique).
+async function confirmerParDefaut(rel: string, diff: string): Promise<boolean> {
+  console.log(`\n--- ${rel} ---`);
+  console.log(diff);
+  if (!process.stdin.isTTY) return false; // non interactif sans --forcer : jamais d'écrasement.
+  const { createInterface } = await import("node:readline/promises");
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const reponse = await rl.question(`Écraser ${rel} ? [o/N] `);
+    return /^o(ui)?$/i.test(reponse.trim());
+  } finally {
+    rl.close();
+  }
+}
+
 function readConfig(targetDir: string): Record<string, unknown> | null {
   try {
     return JSON.parse(readFileSync(join(targetDir, ".drwil", "ia-first.json"), "utf8"));

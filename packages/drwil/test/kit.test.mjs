@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { init, apply, uninstall } from "../dist/index.js";
+import { init, apply, uninstall, resoudreDerive } from "../dist/index.js";
 
 const tmp = () => mkdtempSync(join(tmpdir(), "drwil-"));
 const quiet = async (fn) => {
@@ -430,6 +430,63 @@ test("lot 2 (désinstallation) : dry-run par défaut, --yes supprime, fichier mo
   // le manifeste ne garde plus les entrées des fichiers réellement supprimés.
   const manifesteApres = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
   assert.ok(!(".githooks/check-docs.mjs" in manifesteApres));
+});
+
+test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .bak créé, --forcer fonctionnel", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+
+  const cible = ".githooks/check-docs.mjs";
+  const original = read(dir, cible);
+  writeFileSync(join(dir, cible), "// personnalisé par le projet\n" + original);
+
+  // rien à résoudre si pas de dérive (autre fichier, comparé au modèle exact).
+
+  // confirmation refusée : le fichier n'est jamais réécrit, pas de .bak, signalé dans `ignores`.
+  let rapport = await quiet(() => resoudreDerive({ targetDir: dir }, () => false));
+  assert.ok(rapport.ignores.includes(cible), rapport.ignores.join(","));
+  assert.ok(!rapport.resolus.length);
+  assert.equal(read(dir, cible), "// personnalisé par le projet\n" + original, "jamais réécrit sans confirmation");
+  assert.ok(!existsSync(join(dir, `${cible}.bak`)));
+
+  // confirmation acceptée : réécrit, .bak créé avec l'ancien contenu, diff transmis au confirmateur.
+  let diffRecu = "";
+  rapport = await quiet(() => resoudreDerive({ targetDir: dir }, (rel, diff) => { diffRecu = diff; return rel === cible; }));
+  assert.ok(rapport.resolus.includes(cible), rapport.resolus.join(","));
+  assert.match(diffRecu, /personnalisé par le projet/);
+  assert.equal(read(dir, cible), original, "réécrit avec le contenu du modèle");
+  assert.equal(read(dir, `${cible}.bak`), "// personnalisé par le projet\n" + original, ".bak garde l'ancien contenu");
+
+  // plus rien à résoudre une fois réécrit (confirmateur jamais appelé).
+  let appele = false;
+  rapport = await quiet(() => resoudreDerive({ targetDir: dir }, () => { appele = true; return true; }));
+  assert.ok(!appele);
+  assert.ok(!rapport.resolus.length && !rapport.ignores.length);
+
+  // --forcer : écrase sans passer par le confirmateur (dérive réintroduite pour le test).
+  writeFileSync(join(dir, cible), "// re-personnalisé\n" + original);
+  appele = false;
+  rapport = await quiet(() => resoudreDerive({ targetDir: dir, forcer: true }, () => { appele = true; return true; }));
+  assert.ok(!appele, "--forcer n'appelle jamais le confirmateur");
+  assert.ok(rapport.resolus.includes(cible));
+  assert.equal(read(dir, cible), original);
+});
+
+test("lot 2 (résolution de dérive) : jamais appliquée automatiquement par init()/apply(), ne crée aucun fichier absent", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+
+  // rien n'a dérivé juste après init() : aucune résolution nécessaire.
+  let rapport = await quiet(() => resoudreDerive({ targetDir: dir, forcer: true }));
+  assert.ok(!rapport.resolus.length && !rapport.ignores.length);
+
+  // un fichier mécanique absent (supprimé par le projet) n'est jamais recréé par resoudreDerive.
+  const absent = join(dir, ".githooks/check-docs.mjs");
+  const fs = await import("node:fs/promises");
+  await fs.rm(absent);
+  rapport = await quiet(() => resoudreDerive({ targetDir: dir, forcer: true }));
+  assert.ok(!rapport.resolus.includes(".githooks/check-docs.mjs"));
+  assert.ok(!existsSync(absent), "jamais recréé par resoudreDerive");
 });
 
 test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne version du kit, jamais modifié, est supprimé par init()/apply()", async () => {

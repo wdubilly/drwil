@@ -42,10 +42,11 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   quand aucune stack n'est détectée à l'`init` — fait le 2026-10-04 (commit
   52bb22b) — `docs/projets/signaler-couches-par-defaut.md`.
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [IA] [décision] [P2] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
+- [x] [IA] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
   et signale la dérive de prose (AGENTS.md, docs/ia-first.md, docs/contrats.md
-  restés sur une version pré-kit chez drwil) — lot 1 (détection et
-  signalement) fait le 2026-10-04 ; lot 2 (résolution) reste à trancher —
+  restés sur une version pré-kit chez drwil) — lots 1 et 2 faits le
+  2026-10-05 (détection/signalement, puis commande
+  `drwil resoudre-derive`) —
   `docs/projets/apply-rafraichit-mecanique.md`.
 - [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la

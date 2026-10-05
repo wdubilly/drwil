@@ -1,6 +1,6 @@
 # Projet : `apply()` rafraîchit la mécanique du kit et signale la dérive de prose
 
-**Statut** (2026-10-04) : lot 1 livré (détection et signalement de la dérive). Lot 2 (résolution) non tranché, voir section 6.
+**Statut** (2026-10-05) : lots 1 et 2 faits (détection, signalement et résolution de la dérive).
 
 <!-- cadrage
 fichiers:
@@ -76,6 +76,19 @@ ré-application après mise à jour du kit (nouvelle version de
 - (2026-10-04) Portée : toute la base du template (`common/base`,
   `<lang>/base`, pas seulement les 3 fichiers de gouvernance initiaux) —
   tranché par la preuve en section 1.
+- (2026-10-05) Résolution via une **commande dédiée séparée**
+  (`drwil resoudre-derive`), jamais déclenchée automatiquement par
+  `init()`/`apply()` : diff affiché par fichier mécanique en dérive
+  (`.githooks/`, `.claude/settings.json`, fichier de CI), confirmation
+  interactive (o/N) avant d'écraser ; une option `--forcer` permet un usage
+  non interactif (scripté), à l'opposé du comportement par défaut qui ne
+  **jamais** n'écrase sans confirmation explicite.
+- (2026-10-05) Avant tout écrasement : copie `.bak` du fichier mécanique
+  remplacé, à côté de l'original (filet de sécurité en plus de git).
+- (2026-10-05) Pas de liste d'exclusion dans `.drwil/ia-first.json` pour
+  marquer un fichier « sciemment personnalisé, ne plus signaler » : la
+  dérive reste toujours signalée, le projet trie lui-même à chaque lecture
+  du signalement (pas de mécanisme supplémentaire à maintenir).
 
 ## 5. Points à trancher
 
@@ -94,23 +107,31 @@ section 6)
   → rien signalé, fichier raccourci (reproduisant le cas des recettes
   dérivées constaté en section 1) → signalé, jamais modifié sur disque.
   39/39 tests verts.
-- **Lot 2 — proposer une résolution pour la mécanique du kit** [IA/décision] :
-  pour les fichiers de `.githooks/`, `.claude/settings.json` et le fichier
-  de CI spécifiquement (ceux sans personnalisation légitime attendue), aller
-  au-delà du simple signalement du lot 1 et proposer concrètement une
-  résolution (ex. diff unifié affiché + confirmation avant d'écraser,
-  détail exact à trancher à l'ouverture de ce lot). Critère de sortie :
-  reste à définir avec le lot.
+- **Lot 2 — proposer une résolution pour la mécanique du kit** [IA] —
+  **fait le 2026-10-05**. Nouvelle commande `drwil resoudre-derive`
+  (`packages/drwil/src/index.ts` : `resoudreDerive()`, `rendusMecaniques()`,
+  `resolveFromConfig()`, `diffUnifie()` ; `packages/drwil/bin/drwil.js`
+  exécute la
+  commande, `--forcer` en option). Scope exact : `.githooks/`,
+  `.claude/settings.json`, fichier de CI (lu depuis
+  `.drwil/ia-first.json`, jamais ré-exécuté la détection de pile). Pour
+  chaque fichier mécanique en dérive : diff unifié affiché (diff ligne à
+  ligne par plus longue sous-séquence commune, sans dépendance externe),
+  confirmation interactive (o/N) via `readline`, copie `.bak` avant
+  écrasement, jamais de création d'un fichier absent. `--forcer` court-circuite
+  la confirmation (jamais appelée). Terminal non interactif sans
+  `--forcer` : jamais d'écrasement (retombe sur le signalement du lot 1).
+  Tests dédiés dans `packages/drwil/test/kit.test.mjs` (confirmation
+  refusée/acceptée, `.bak`, re-exécution sans rien à résoudre, `--forcer`,
+  fichier absent jamais recréé). 54/54 tests verts,
+  `node .githooks/run-checks.mjs` vert.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-04) : lot 1 livré. `detecterDerive()`,
-  `writeOut()`, `copyTree()`, `scaffold()`, `reportDerives()`, `init()` et
-  `apply()` modifiés dans `packages/drwil/src/index.ts` pour signaler (sans
-  jamais réécrire) tout fichier de la base déjà présent qui diffère du
-  template (nombre de lignes ou sections `##` manquantes). Test dédié
-  ajouté dans `packages/drwil/test/kit.test.mjs`. 39/39 tests verts,
-  `.githooks/run-checks.mjs` vert.
+- **Dernier état** (2026-10-05) : lot 1 et lot 2 livrés (voir section 6).
+  Chantier terminé — rien ne reste à faire ici, sauf besoin futur non
+  anticipé (ex. extension du scope de `resoudre-derive`).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain/décision] trancher le détail du lot 2
-  (résolution de la mécanique du kit) avant de l'ouvrir — voir section 6.
+- **Prochaine étape** : [humain] relecture, puis fusion de la PR portant
+  ce chantier ; clôture (déplacer vers `docs/projets/journal.md`, retirer
+  de `docs/projets/en-attente.md`).
