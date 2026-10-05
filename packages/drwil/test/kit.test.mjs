@@ -815,3 +815,48 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
   assert.equal(checkR.status, 0, "jamais bloquant : " + checkR.stdout + checkR.stderr);
   assert.match(checkR.stdout, /audit périmé.*docs\/audit-risques\.md/);
 });
+
+test("créer une release : détection du bump semver (Conventional Commits, best-effort)", async () => {
+  // import() dynamique : passer l'URL file:// telle quelle (pas de conversion
+  // en chemin OS) — un chemin Windows brut (d:\...) fait planter le loader ESM.
+  const { detecterBump, versionSuivante } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
+
+  assert.equal(detecterBump([]), null, "aucun commit : rien à publier");
+  assert.equal(detecterBump([{ sujet: "Manifeste des fichiers installés", corps: "" }]), "patch", "aucun préfixe reconnu : patch par défaut");
+  assert.equal(detecterBump([{ sujet: "fix: corrige X", corps: "" }]), "patch");
+  assert.equal(detecterBump([{ sujet: "feat: ajoute Y", corps: "" }, { sujet: "fix: corrige X", corps: "" }]), "minor", "un feat l'emporte sur un simple fix");
+  assert.equal(detecterBump([{ sujet: "feat!: casse la compat", corps: "" }]), "major", "rupture annoncée (!) prioritaire");
+  assert.equal(detecterBump([{ sujet: "feat: ajoute Y", corps: "BREAKING CHANGE: change le format" }]), "major", "rupture annoncée dans le corps aussi détectée");
+
+  assert.equal(versionSuivante("v1.2.3", "patch"), "v1.2.4");
+  assert.equal(versionSuivante("v1.2.3", "minor"), "v1.3.0");
+  assert.equal(versionSuivante("v1.2.3", "major"), "v2.0.0");
+});
+
+test("créer une release : module optionnel (pas copié par défaut), recette/skill livrés en FR et EN, --dry-run sans réseau", async () => {
+  for (const lang of ["fr", "en"]) {
+    const dir = tmp();
+    await quiet(() => init({ targetDir: dir, lang, git: false }));
+    // Le script lui-même n'est jamais copié automatiquement.
+    assert.ok(!existsSync(join(dir, ".githooks/creer-release.mjs")), "le module optionnel ne doit pas être copié par défaut");
+    // La recette (toujours livrée) documente l'activation du module.
+    const recette = lang === "fr" ? "docs/recettes/creer-une-release.md" : "docs/recipes/create-a-release.md";
+    assert.match(read(dir, recette), /optionnel|optional/i);
+    // Le skill générique drwil mentionne la capacité release.
+    const menu = read(dir, ".claude/skills/drwil/SKILL.md");
+    assert.match(menu, /release/);
+  }
+
+  // Script utilisable en pratique : --dry-run, sans toucher au réseau ni créer de tag.
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: true }));
+  mkdirSync(join(dir, ".githooks"), { recursive: true });
+  const src = fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
+  writeFileSync(join(dir, ".githooks/creer-release.mjs"), readFileSync(src, "utf8"));
+  git(dir, "add", "-A");
+  git(dir, "commit", "-m", "feat: premier chantier");
+  const r = spawnSync(process.execPath, [".githooks/creer-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /v0\.1\.0/);
+  assert.match(r.stdout, /dry-run/);
+});

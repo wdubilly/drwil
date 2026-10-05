@@ -1,20 +1,38 @@
 # Installation par une autre personne
 
-Prérequis, étapes de clonage/configuration et premier démarrage, à détailler
-par le projet une fois la stack choisie.
+drwil n'est pas encore publié sur npm : il s'utilise depuis un clone de
+ce dépôt.
 
 ## 1. Prérequis
 
-*(outils à installer : runtime, gestionnaire de paquets, Docker…)*
+- Node.js (voir la matrice testée dans `.github/workflows/ia-first.yml`,
+  tests croisés Linux/macOS/Windows) ;
+- npm (fourni avec Node.js).
 
 ## 2. Cloner et configurer
 
-*(dépôt à cloner, fichier de configuration à remplir, ex. `.env` à partir de
-`.env.example`)*
+```bash
+git clone https://github.com/wdubilly/drwil.git
+cd drwil/packages/drwil
+npm install
+npm run build
+```
+
+Activer les contrôles Git du dépôt, une fois par clone :
+```bash
+git config core.hooksPath .githooks
+```
 
 ## 3. Premier démarrage et vérification
 
-Lancer et vérifier : `docs/recettes/lancer-en-local.md` (si présent).
+```bash
+npm test                 # suite de tests du paquet drwil
+
+# tester le CLI sur un dossier vide
+node bin/drwil.js init --name "MonProjet" --layers backend,frontend
+```
+
+Voir aussi `README.md` (section « Démarrer ») pour le détail à jour.
 
 ## 4. Utiliser un autre outil IA que Claude
 

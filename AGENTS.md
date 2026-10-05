@@ -52,6 +52,7 @@ Carte complète : `docs/architecture.md`.
 | le coût (tokens) d'un chantier | `.drwil/usage.jsonl` (si présent) | `docs/recettes/suivre-consommation-par-lot.md` |
 | une opportunité produit à explorer | `docs/decouverte-valeur.md` (si présent) | `docs/recettes/decouvrir-valeur-produit.md` |
 | travailler avec une branche/MR | — | `docs/recettes/travailler-en-branche.md` |
+| créer une release (tag + note GitHub) | `.githooks/creer-release.mjs` (si activé — module optionnel) | `docs/recettes/creer-une-release.md` |
 
 ## Commandes
 
