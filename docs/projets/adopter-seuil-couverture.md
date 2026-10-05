@@ -27,7 +27,7 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
 - Écrire les tests manquants pour atteindre 100 % dès ce chantier — relève
   de `docs/recettes/refactorer-sans-casser.md` ou d'un chantier dédié,
   lot par lot, une fois le contrôle en place.
-- `catalogue:QUA-017` (e2e) : étape suivante une fois ce contrat mûr,
+- `catalogue:QUA-020` (e2e) : étape suivante une fois ce contrat mûr,
   hors périmètre ici.
 - Corriger la citation obsolète de `.githooks/run-checks.sh` dans
   `docs/contrats.md` (QUA-013) et `AGENTS.md` (trouvée en marge, pas

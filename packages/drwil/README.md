@@ -71,6 +71,7 @@ as a second person would.
 | Picking up a piece of work cold (another agent, or weeks later) means re-reading everything to understand its state | Every work item under `docs/projets/` carries a dated status and a "resume" section; every entry in the backlog index states who must decide (`[AI]` / `[human]` / `[decision]`) | QUA-015 |
 | Code gets added with no link to any documented piece of work | Every tracked code file must be covered by the scoping block of a work item | QUA-016 |
 | A direct commit or push to the main branch bypasses review | Blocked after the very first commit: all work goes through a branch and a pull/merge request | QUA-017 |
+| A blocking check (test, hook, CI) gets disabled or skipped "just this once" to move forward | Silently bypassing a check is forbidden; a miscalibrated check gets fixed, not switched off | QUA-019 |
 | No branch protection available (private repo, free plan): a broken merge to `main` can go unnoticed | A GitHub/GitLab issue is opened automatically when CI breaks on the main branch (no duplicate if one is already open) | — (dedicated recipe) |
 
 ## What gets installed
@@ -262,6 +263,7 @@ the project (commits, PR descriptions, other docs):
 | QUA-015 | Every work item stays resumable cold (dated status + resume section) |
 | QUA-016 | Every tracked code file is covered by a scoping block |
 | QUA-017 | No direct commit/push to the main branch — branch + PR always required |
+| QUA-019 | A blocking check is never disabled or bypassed to make progress |
 
 A separate **catalog** (`docs/catalogue-contrats.md`) lists optional
 contracts a project can choose to adopt beyond this baseline.

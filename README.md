@@ -88,6 +88,7 @@ reasoning is concrete:
 | Code gets added with no link to any documented piece of work | Every tracked code file must be covered by the scoping block of a `docs/projets/` sheet | QUA-016 |
 | A direct commit or push to `master`/`main` bypasses review | Blocked after the very first commit: work goes through a branch + pull/merge request | QUA-017 |
 | On this repo specifically: confusing "this project" with "the template it ships" | An explicit reminder forces asking which of the two is meant before acting, in case of doubt | QUA-018 |
+| A blocking check (test, hook, CI) gets disabled or skipped "just this once" to move forward | Silently bypassing a check is forbidden; a miscalibrated check gets fixed, not switched off | QUA-019 |
 | No branch protection possible (private repo, free plan): a direct merge can break `master` unnoticed | A GitHub/GitLab issue is opened automatically if CI breaks on the main branch (no duplicate if one is already open) | — (dedicated recipe) |
 
 ## How it governs the AI
@@ -287,6 +288,7 @@ mécanique concret :
 | Du code est ajouté sans lien avec aucun chantier documenté | Tout fichier de code indexé doit être couvert par le bloc de cadrage d'une fiche de `docs/projets/` | QUA-016 |
 | Un commit ou push direct sur `master`/`main` contourne la revue | Bloqué après le tout premier commit (bootstrap toléré) : le travail passe par une branche + pull/merge request | QUA-017 |
 | Sur ce dépôt précisément : confondre « ce projet » et « le gabarit qu'il distribue » | Un rappel explicite force à demander lequel des deux est visé avant d'agir en cas de doute | QUA-018 |
+| Un contrôle bloquant (test, hook, CI) est désactivé ou sauté « juste cette fois » pour avancer | Contourner un contrôle en silence est interdit ; un contrôle mal calibré se corrige, ne se désactive pas | QUA-019 |
 | Pas de protection de branche possible (dépôt privé, plan gratuit) : un merge direct peut casser `master` sans que personne ne s'en rende compte | Une issue GitHub/GitLab est ouverte automatiquement si la CI casse sur la branche principale (pas de doublon si déjà ouverte) | — (recette dédiée) |
 
 ## Comment ça cadre l'IA

@@ -65,6 +65,13 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Preuve** : Humaine — la distinction demande une appréciation contextuelle, pas de hook automatisable.
 **Raison** : Un changement fait sans clarifier le périmètre risque de fuiter du dogfood vers le gabarit exporté (ou l'inverse), comme déjà vu pour le job CI de release (dogfood-only, pas destiné au gabarit).
 
+## QUA-019 — Pas de contournement d'un contrôle
+**Règle** : Un contrôle bloquant (test, hook, CI) n'est jamais désactivé, sauté (`--no-verify`, skip, flag d'exception) ni contourné pour faire avancer une tâche. S'il semble mal calibré pour un cas légitime, le signaler et proposer une correction du contrôle lui-même (ou ouvrir une fiche de décision), jamais le désactiver en silence.
+**Périmètre** : Tout contrôle de `.githooks/`, toute CI, tout test.
+**Source de vérité** : Ce contrat (rappelé dans `AGENTS.md`).
+**Preuve** : Humaine — un contournement laisse rarement une trace automatisable (voir `catalogue:QUA-009` pour le cas outillable d'un test désactivé).
+**Raison** : Contourner un contrôle masque silencieusement une régression ou un vrai problème ; c'est l'opposé de QUA-013 (un contrôle qui ne tourne pas ne prouve rien).
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test de `packages/drwil` ne descend pas sous le seuil déclaré : 85 % lignes, 60 % branches, 50 % fonctions (seuil de départ, relevé au fil de l'eau vers 100 % — voir `docs/projets/adopter-seuil-couverture.md`).
 **Périmètre** : `packages/drwil` (code du générateur ; `.githooks/*.mjs` pas encore inclus, voir la fiche).

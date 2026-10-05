@@ -41,7 +41,9 @@ Carte complète et stack : `docs/architecture.md`.
   lue, dire « non vérifié ».
 - **Cause avant correctif** : face à un bug ou un test rouge, reproduire puis
   établir la cause racine avant de modifier le code ; pas de correctif à
-  l'essai, pas de contournement d'un test pour le faire passer.
+  l'essai, pas de contournement d'un contrôle (test, hook, CI) pour le
+  faire passer (QUA-019) : s'il semble mal calibré, le dire et corriger le
+  contrôle lui-même, jamais le désactiver en silence.
 - **Laisser propre en passant** : une doc ou une fiche de chantier lue
   pendant une tâche et trouvée fausse (statut périmé, « en cours » déjà
   fait, chemin disparu) est corrigée dans un commit à part et signalée dans
@@ -70,7 +72,8 @@ recette qui s'appliquent. Un contrôle qui échoue signale un contrat : lire ce
 contrat avant de contourner quoi que ce soit. Socle toujours installé :
 QUA-011 (doc), QUA-013 (un contrôle qui n'a pas tourné n'est pas un contrôle
 passé), QUA-015 (chantiers à froid), QUA-016 (rappel de cadrage, sévérité
-réglable) ;
+réglable), QUA-017 (pas de travail direct sur la branche principale),
+QUA-019 (pas de contournement d'un contrôle) ;
 le projet complète la liste des contrats à connaître quelle que soit la tâche.
 
 ## Charger le contexte progressivement

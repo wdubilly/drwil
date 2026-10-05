@@ -41,7 +41,9 @@ Full map and stack: `docs/architecture.md`.
   "not verified".
 - **Cause before fix**: facing a bug or a red test, reproduce then
   establish the root cause before changing code; no trial fix, no bypassing
-  a test to make it pass.
+  a check (test, hook, CI) to make it pass (QUA-019): if it seems
+  miscalibrated, say so and fix the check itself, never disable it
+  silently.
 - **Leave it cleaner in passing**: a doc or project sheet read during a
   task and found wrong (stale status, "in progress" already done, a path
   that no longer exists) is corrected in a separate commit and reported in
@@ -70,7 +72,8 @@ applicable contracts and recipe. A failing check flags a contract: read
 that contract before bypassing anything. Always installed baseline:
 QUA-011 (docs), QUA-013 (a check that did not run is not a passed check),
 QUA-015 (cold-readable projects), QUA-016 (scoping reminder, configurable
-severity); the
+severity), QUA-017 (no direct work on the main branch), QUA-019 (no
+bypassing a check); the
 project completes the list of contracts to know regardless of the task.
 
 ## Load context progressively

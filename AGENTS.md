@@ -27,6 +27,10 @@ Carte complète : `docs/architecture.md`.
 - **Preuve avant annonce** : avant d'écrire « corrigé », « passe » ou
   « terminé », relancer le contrôle concerné et lire sa sortie.
 - **Cause avant correctif** : reproduire puis établir la cause racine avant de modifier le code.
+- **Pas de contournement (QUA-019)** : un contrôle bloquant (test, hook, CI)
+  n'est jamais désactivé, sauté (`--no-verify`, skip...) ni contourné pour
+  avancer. S'il semble mal calibré, le dire et proposer de le corriger,
+  jamais le désactiver en silence.
 - **Laisser propre en passant** : documenter et signaler tout écart trouvé.
 - **Compte rendu de fin de tâche** : fichiers créés/modifiés, contrôles lancés et résultats exacts, limites et ambiguïtés restantes.
 
