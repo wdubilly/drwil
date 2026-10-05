@@ -144,3 +144,21 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   branche via `git symbolic-ref --short HEAD` (fonctionne avant le tout
   premier commit), plus d'exception de bootstrap.
 - **Clôturé par** : PR #22.
+
+## 2026-10-05 — Garder le commit rapide sans perdre de contrôle
+
+- **Décisions clés** : au pre-commit seulement, un contrôle du projet qui
+  déclare `chemins` est reporté si aucun fichier indexé n'y correspond
+  (affiché « non exécuté », QUA-013) ; pre-push et CI lancent toujours tout
+  (QUA-019). Motifs partagés dans `.githooks/glob.mjs`. Dépôt : doublon
+  `npm test` supprimé, `chemins` élargis aux fichiers racine dont dépend le
+  contrôle. Tests du kit : dossiers temporaires supprimés après chaque test
+  (7919 restes avaient épuisé les inodes de `/tmp`), gardés si le test
+  échoue. Commit de doc seule : 0,7 s au lieu d'environ 37 s. Dépôt et
+  gabarit (QUA-018).
+- **Écarté** : limiter le déclenchement CI à `pull_request` (PR #32, fermée
+  sans fusion) — `push` teste la tête de branche, `pull_request` le résultat
+  de la fusion : ce ne sont pas des doublons, en supprimer un crée un trou.
+  La qualité prime sur la vitesse. [décision utilisateur]
+- **Reste** : note de version (ligne ouverte dans l'index).
+- **Clôturé par** : PR #31, commit `1df2b6b`.
