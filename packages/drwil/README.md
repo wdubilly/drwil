@@ -1,5 +1,286 @@
 # drwil
 
+**IA-first governance, scaffolded in one command and enforced on every commit.**
+
+drwil is a CLI and template kit that installs a verified, machine-checked
+governance layer into any software project — new or existing, any stack,
+any OS. It exists for one reason: when an AI coding assistant (or a human)
+writes code without a shared frame of reference, things quietly go wrong —
+context gets lost between sessions, a security rule gets skipped, "fixed"
+gets announced without proof, a secret leaks into a commit, a CI check
+silently stops running. drwil writes the rules that matter exactly once,
+in files every AI tool reads first, and backs them with Git hooks and CI
+checks that block a commit or a pull request when a rule is broken —
+whether the code was written by you or by Claude, GitHub Copilot, Cursor,
+Codex, or Gemini.
+
+This is not a linter and not a style guide. It is a governance contract
+between the rules you decide on and the mechanics that enforce them, so
+that "the rule is respected" is always a provable fact, never a claim.
+
+## Table of contents
+
+- [Who it's for](#whos-its-for)
+- [What problem it solves](#what-problem-it-solves)
+- [What gets installed](#what-gets-installed)
+- [How the governance loop works](#how-the-governance-loop-works)
+- [Installing](#installing)
+- [CLI reference](#cli-reference)
+- [Supported stacks, AI tools and CI providers](#supported-stacks-ai-tools-and-ci-providers)
+- [The contracts registry](#the-contracts-registry)
+- [Optional modules](#optional-modules-never-installed-by-default)
+- [Internationalization](#internationalization)
+- [Compatibility](#compatibility)
+- [Learn more](#learn-more)
+
+## Who it's for
+
+drwil pays off concretely when:
+
+- **Several AI coding tools work on the same project** (Claude Code,
+  GitHub Copilot, Cursor, Codex, Gemini…) and their instructions drift
+  apart because each tool has its own convention file and nothing keeps
+  them in sync.
+- **An AI task gets interrupted and resumed** by a different agent, a
+  different session, or a human — without that person re-reading the
+  entire conversation history to understand where things stand.
+- **A trust incident already happened** — a leaked secret, a bypassed
+  security rule, a "this is fixed" that turned out not to be — and you
+  want a mechanism that catches the next one automatically, not a promise
+  that it won't happen again.
+- **You want AI-written code to stay accountable**: every non-trivial
+  change traceable to a decision, every claim of "done" backed by a
+  re-run check, every important rule backed by a working test instead of
+  a comment nobody re-reads.
+
+Solo developers benefit too: a project spanning several weeks or months
+means *you* forget your own past decisions and constraints just as much
+as a second person would.
+
+## What problem it solves
+
+| Concrete problem | drwil's mechanism | Contract / proof |
+|---|---|---|
+| Every AI tool has its own rules file, and they drift apart for lack of a single source | One `AGENTS.md` at the project root, imported by each tool's own pointer file (`CLAUDE.md`, `.github/copilot-instructions.md`, `.cursor/rules`, etc., shipped according to the tools chosen at install time) — a single source of truth, never copy-pasted | — |
+| A doc references a file path or a contract ID that no longer exists | A Git hook refuses the commit if the docs cite a path or ID that isn't there | QUA-011 |
+| An agent claims "it's fixed" without having re-run the relevant check | Explicit convention (`AGENTS.md`): proof before claim — re-run the check and read its output before announcing success | — |
+| A secret (API key, password, `.env` content) lands in a commit | Secret scanning (gitleaks) on every commit and in CI, covering tracked files and history | SEC-007 |
+| A dependency has a known vulnerability and nobody notices | Dependency audit wired into the project's standard checks | SEC-006 |
+| A CI check gets silently removed or stops covering the right paths | A hook verifies every expected check actually runs in CI — an unexecuted check is never counted as passing | QUA-013 |
+| Picking up a piece of work cold (another agent, or weeks later) means re-reading everything to understand its state | Every work item under `docs/projets/` carries a dated status and a "resume" section; every entry in the backlog index states who must decide (`[AI]` / `[human]` / `[decision]`) | QUA-015 |
+| Code gets added with no link to any documented piece of work | Every tracked code file must be covered by the scoping block of a work item | QUA-016 |
+| A direct commit or push to the main branch bypasses review | Blocked after the very first commit: all work goes through a branch and a pull/merge request | QUA-017 |
+| No branch protection available (private repo, free plan): a broken merge to `main` can go unnoticed | A GitHub/GitLab issue is opened automatically when CI breaks on the main branch (no duplicate if one is already open) | — (dedicated recipe) |
+
+## What gets installed
+
+Running `init` (new project) or `apply` (existing project) adds:
+
+- **`AGENTS.md`** — the single entry point every AI assistant reads
+  first: project description, non-negotiable conduct rules (scope,
+  secrets, proof-before-claim, root-cause-before-fix), and a progressive
+  context-loading table (which doc to read for which kind of task).
+- **Per-tool pointer files** — `CLAUDE.md`, `.github/copilot-instructions.md`,
+  `.cursor/rules/`, `.codex/`, `.gemini/`, depending on the tools you
+  selected — each one simply imports `AGENTS.md` so the same rule never
+  needs to be written twice.
+- **`docs/contrats.md`** — the registry of rules that actually matter,
+  each one with an ID (`SEC-xxx`, `QUA-xxx`), a one-line description and
+  a pointer to the check that proves it.
+- **`.githooks/`** — Git hooks (`pre-commit` and friends) that run the
+  project's checks (`run-checks.mjs`/`run-checks.sh`) before every commit,
+  and the equivalent CI workflow (GitHub Actions or GitLab CI, your
+  choice) so the same checks run server-side too.
+- **`docs/recettes/`** — reusable step-by-step procedures (add an API
+  route, add a screen, refactor safely, deploy, audit risk, release…)
+  that both humans and AI assistants are expected to follow instead of
+  improvising each time.
+- **`docs/projets/`** — the work-item system: one dated, decision-driven
+  sheet per piece of work, an index of pending items, and a journal of
+  closed ones — so any session (human or AI) can resume work without
+  having to reconstruct context from chat history.
+- **An installed-files manifest** — a record of exactly which files the
+  kit installed and their fingerprint, used by `apply`/`uninstall` to
+  never silently overwrite or delete something you wrote yourself.
+
+Nothing above is ever force-installed over your own files on a repeat
+`apply`: existing files are left untouched and flagged if they have
+drifted from the shipped template (see `resoudre-derive` below).
+
+## How the governance loop works
+
+1. **A request comes in.** If it's ambiguous or has multiple reasonable
+   solutions, it becomes a scoping sheet in `docs/projets/` *before* any
+   code is written — open questions go to the human, not decided
+   silently by the assistant.
+2. **Code gets written**, following the project's own `AGENTS.md` and the
+   relevant recipe (`docs/recettes/`).
+3. **A commit is attempted.** `.githooks/pre-commit` runs the project's
+   checks: documentation consistency, secret scanning, test suite,
+   contract coverage, scoping coverage. The commit is rejected if any
+   rule is broken — no exception, no bootstrap loophole.
+4. **A pull/merge request is opened.** The same checks run again in CI,
+   so a bypassed local hook (or a contributor who skipped `git config
+   core.hooksPath .githooks`) still can't merge a rule violation.
+5. **Claims require proof.** Before an assistant writes "fixed" or
+   "passing", the convention requires re-running the relevant check and
+   reading its actual output — not assuming the earlier fix still holds.
+
+## Installing
+
+Both commands run **in the current directory** (`cd` into the project
+first); neither one creates a new folder.
+
+### `init` — brand-new project, or empty folder
+
+```bash
+mkdir MyProject && cd MyProject
+npx drwil init --name "MyProject" --lang en
+```
+
+Scaffolds the kit's full structure in the current folder (`AGENTS.md`,
+`docs/contrats.md`, Git hooks enabled). Re-running `init` only refreshes
+`.githooks/` by default (docs you've already written are left alone);
+`--force` overwrites everything, including project docs added since —
+reserve it for a deliberate reset.
+
+### `apply` — project that already exists
+
+```bash
+cd MyExistingProject
+npx drwil apply --lang en
+```
+
+For a repository that already has code, Git history, and dependencies in
+place. `apply` detects the stack present (backend/frontend subfolders,
+AI tools already configured) and installs the kit on top **without ever
+overwriting anything**: an existing file is left as-is, and flagged if it
+has drifted from the template since a previous install. This is the
+command to use to adopt drwil on an ongoing project.
+
+### `resoudre-derive` — resolve mechanics drift
+
+```bash
+npx drwil resoudre-derive
+```
+
+When `init`/`apply` detect that a mechanics file (`.githooks/`,
+`.claude/settings.json`, CI workflow file) has drifted from the version
+shipped by the kit, this command walks through each drifted file, shows a
+unified diff, and asks for confirmation before overwriting — always
+creating a `.bak` backup first, and never creating a file that doesn't
+exist yet. `--forcer` skips the confirmation for scripted/non-interactive
+use.
+
+### `uninstall` — remove the kit's mechanics
+
+```bash
+npx drwil uninstall          # dry-run: prints what would be removed
+npx drwil uninstall --yes    # actually removes the files
+```
+
+Driven by the installed-files manifest, so it only removes what the kit
+itself installed. Never touches `docs/projets/`, `docs/intentions/`, or
+`docs/recettes/` — your project's decisions and history are never
+deleted automatically.
+
+### Try it without publishing to npm
+
+If you're working from a clone of this repository rather than the
+published package:
+
+```bash
+cd packages/drwil
+npm install && npm run build
+npm pack                 # produces drwil-<version>.tgz
+npm install /path/to/drwil-<version>.tgz
+npx drwil init --name "MyProject"
+```
+
+## CLI reference
+
+Common options (both `init` and `apply`):
+
+| Option | Description | Default |
+|---|---|---|
+| `-n, --name <name>` | Project name | current folder name |
+| `-s, --short <short>` | Short name | — |
+| `-l, --lang <lang>` | Template language: `fr` or `en` | `fr` |
+| `--layers <layers>` | Comma-separated layers | detected (`apply`) / `backend,frontend` (`init`) |
+| `-d, --description <text>` | What the application does — fills `AGENTS.md` and `docs/architecture.md` | — |
+| `--tools <tools>` | AI tools to configure, CSV: `claude,codex,cursor,gemini,copilot` | all five |
+| `--ci <ci>` | CI workflow to generate: `none`, `github`, `gitlab` | `none` |
+| `--contract-prefixes <csv>` | Contract ID prefixes to use | `SEC,QUA` |
+| `--mode <mode>` | `minimal` or `full` | `full` |
+| `--no-git` | Skip `git init` and hook activation | — |
+| `--force` | (`init` only) Overwrite every file, not just `.githooks/` | — |
+
+Run `npx drwil init --help` or `npx drwil apply --help` for the live,
+authoritative list.
+
+## Supported stacks, AI tools and CI providers
+
+- **Layers**: `backend`, `frontend`, or `generic` (single-folder project)
+  — auto-detected by `apply`, explicit via `--layers` for `init`.
+- **AI tools**: Claude Code, GitHub Copilot, Cursor, Codex, Gemini — pick
+  any combination via `--tools`; each gets its own pointer file importing
+  the shared `AGENTS.md`.
+- **CI providers**: GitHub Actions, GitLab CI, or none — `--ci`.
+- **Operating systems**: the kit's own test suite runs green on Linux,
+  macOS and Windows (`kit-tests` matrix).
+
+## The contracts registry
+
+Every rule enforced by the kit's own hooks ships pre-registered in
+`docs/contrats.md`, each with a stable ID so it can be cited anywhere in
+the project (commits, PR descriptions, other docs):
+
+| ID | What it guarantees |
+|---|---|
+| SEC-001 | Scope of rights is explicit and reviewed |
+| SEC-006 | No dependency with a known vulnerability |
+| SEC-007 | No secret in the repository (tracked files + history) |
+| QUA-004 | Test coverage stays above a declared threshold |
+| QUA-011 | Documentation never cites a path or ID that doesn't exist |
+| QUA-013 | A check that doesn't actually run in CI is never counted as passed |
+| QUA-015 | Every work item stays resumable cold (dated status + resume section) |
+| QUA-016 | Every tracked code file is covered by a scoping block |
+| QUA-017 | No direct commit/push to the main branch — branch + PR always required |
+
+A separate **catalog** (`docs/catalogue-contrats.md`) lists optional
+contracts a project can choose to adopt beyond this baseline.
+
+## Optional modules (never installed by default)
+
+| Module | What it does | How to enable |
+|---|---|---|
+| `tableau-de-bord` (dashboard) | Static HTML page aggregating work items, contracts and audit history | Copy the script in, see its own README |
+| `front-quality` | Contrast/color-accessibility checks (RGAA/WCAG) for a front-end | Same as above |
+| `creer-une-release` | Git tag + GitHub release note, best-effort semver bump from Conventional Commits | Always manual, on explicit request — see `docs/recettes/creer-une-release.md` |
+
+## Internationalization
+
+Every template ships in **French and English** with equivalent content in
+both languages (checked by an automated test comparing file counts and
+structure) — pick with `--lang fr|en` at install time. This README itself
+follows the same convention: English first, French below.
+
+## Compatibility
+
+- Node.js, TypeScript-built CLI (`commander`-based).
+- Tested green in CI on Linux, macOS and Windows.
+- Not yet published to npm at the time of writing — install today from a
+  clone of the source repository or a `npm pack` tarball (see above).
+
+## Learn more
+
+Full source, documentation (recipes, contract catalog, architecture):
+<https://github.com/wdubilly/drwil>.
+
+---
+
+# drwil (Français)
+
 **Quand une IA (ou un humain) code sans cadre**, rien n'empêche un oubli
 de contexte entre deux sessions, une règle de sécurité non respectée, un
 « c'est corrigé » annoncé sans preuve, ou un secret qui fuite dans un

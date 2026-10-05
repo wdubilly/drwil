@@ -1,5 +1,208 @@
 # drwil
 
+**IA-first governance, scaffolded in one command and enforced on every commit.**
+
+> This repository is the source code of the drwil kit, **applied to
+> itself** (dogfooding): it follows its own rules. If you're looking for
+> the published package's own documentation (installation, CLI usage),
+> see [`packages/drwil/README.md`](packages/drwil/README.md) — this file
+> covers the same ground plus what's specific to developing the kit
+> itself.
+
+**When an AI coding assistant (or a human) writes code without a shared
+frame of reference**, nothing stops context from getting lost between
+sessions, a security rule from being skipped, a "fixed" being announced
+without proof, or a secret leaking into a commit. drwil installs a
+**machine-verified governance layer** into a project: the rules that
+matter are written exactly once, and a Git check enforces them on every
+commit — whether a human or an AI (Claude, Copilot, Cursor, Codex,
+Gemini) is writing the code.
+
+Concretely, the kit adds to a project:
+- a **single entry point** every AI reads first (`AGENTS.md`);
+- a **registry of the rules that matter** (`docs/contrats.md`), each with
+  its proof;
+- **Git checks** (`.githooks/`) that block a commit violating a rule —
+  locally and in CI.
+
+## Table of contents
+
+- [Who it's for](#whos-its-for)
+- [Why it reduces AI waste](#why-it-reduces-ai-waste)
+- [What drwil solves, and how](#what-drwil-solves-and-how)
+- [How it governs the AI](#how-it-governs-the-ai)
+- [How it governs the team](#how-it-governs-the-team-humans-and-ai-mixed)
+- [Optional modules](#optional-modules-never-installed-by-default)
+- [At a glance](#at-a-glance)
+- [Getting started (developing the kit itself)](#getting-started)
+- [Trying the package without publishing to npm](#trying-the-package-without-publishing-to-npm)
+- [Documentation map](#documentation-map)
+
+## Who it's for
+
+The benefit is concrete when:
+- **several AI tools coexist on the same project** (Claude, Cursor,
+  Copilot…) and their rules drift apart for lack of a shared entry
+  point;
+- **an AI task is regularly interrupted and resumed** by someone else
+  (agent or human) without re-reading everything;
+- **an incident already happened** (a leaked secret, a bypassed security
+  rule, a "fixed" announced without proof) and you want it not to
+  happen silently again.
+
+Even solo, a project spanning several sessions benefits: you forget your
+own past decisions and constraints after a few weeks too, not just a
+team.
+
+## Why it reduces AI waste
+
+No number is claimed here (nothing is measured to date, see
+`docs/recettes/suivre-consommation-par-lot.md`), but the mechanical
+reasoning is concrete:
+
+1. **Context loaded on demand**: layer-level `AGENTS.md` (not the whole
+   repo) + progressive loading (the "Load context" section of
+   `AGENTS.md`) — fewer tokens spent understanding before acting.
+2. **Scoping before code**: an ambiguous request becomes a decision sheet
+   before writing anything — avoids an agent heading the wrong way and
+   having to redo everything (the real token waste).
+3. **Mechanical proof instead of re-reading**: a contract verified by a
+   check avoids repeated manual validation round-trips ("is this
+   right?").
+
+> **Code assistants**: start with `AGENTS.md` (conduct rules, contracts,
+> context loading).
+
+## What drwil solves, and how
+
+| Concrete problem | drwil's mechanism | Contract / proof |
+|---|---|---|
+| Every AI tool (Claude, Cursor, Copilot…) has its own rules, which drift apart for lack of a shared entry point | A single `AGENTS.md` at the root, imported by each tool's own pointer file (`CLAUDE.md` here; Copilot/Cursor/Codex/Gemini equivalents shipped by the template depending on the tools chosen at install time) — one source, never copy-pasted | — |
+| A doc cites a path or a contract ID that no longer exists (or doesn't exist yet) | A hook refuses the commit if the docs cite a nonexistent path/ID | QUA-011 |
+| An agent claims "it's fixed" without having re-run the check | Explicit convention (`AGENTS.md`): proof before claim — re-run and read the output | — |
+| A secret (key, password, `.env`) lands in a commit | Secret detection (gitleaks) at commit time and in CI, covering tracked files and history | SEC-007 |
+| A dependency has a known flaw, nobody notices | Dependency audit wired into the project's standard checks | SEC-006 |
+| A CI check was silently removed or no longer covers the right paths | A hook verifies every expected check actually runs in CI — an unexecuted check is never counted as passed | QUA-013 |
+| A piece of work resumed cold (by another agent, or later) forces a full re-read to understand its state | Every sheet in `docs/projets/` has a dated Status and a Resume section; every index entry states who must decide (`[IA]`/`[humain]`/`[décision]`) | QUA-015 |
+| Code gets added with no link to any documented piece of work | Every tracked code file must be covered by the scoping block of a `docs/projets/` sheet | QUA-016 |
+| A direct commit or push to `master`/`main` bypasses review | Blocked after the very first commit: work goes through a branch + pull/merge request | QUA-017 |
+| On this repo specifically: confusing "this project" with "the template it ships" | An explicit reminder forces asking which of the two is meant before acting, in case of doubt | QUA-018 |
+| No branch protection possible (private repo, free plan): a direct merge can break `master` unnoticed | A GitHub/GitLab issue is opened automatically if CI breaks on the main branch (no duplicate if one is already open) | — (dedicated recipe) |
+
+## How it governs the AI
+
+- **Context loaded on demand**: layer-level `AGENTS.md` (not the whole
+  repo), documented progressive loading — an AI understands the rules
+  that apply to what it touches without ingesting everything every time.
+- **Scoping before code**: an ambiguous request becomes a decision sheet
+  (`docs/projets/`) before any code is written — open questions go to the
+  human, never decided on their behalf.
+- **Mechanical proof instead of re-reading**: a contract verified by a
+  check (hook + CI) avoids manual validation round-trips.
+- **Multi-tool, no drift**: Claude Code, GitHub Copilot, Cursor, Codex and
+  Gemini all read the same `AGENTS.md` via their own pointer file — a
+  rule changed once applies to every tool.
+- **Nothing is ever silently overwritten**: `apply()` (installing on an
+  existing project) detects a file already present that has drifted from
+  the template and flags it instead of rewriting it; a manifest (path +
+  fingerprint) tracks exactly what the kit installed.
+
+## How it governs the team (humans and AI mixed)
+
+- **Branch + review, systematically** (QUA-017): nobody (human or AI)
+  pushes directly to the main branch after the very first commit —
+  pull/merge request templates shipped depending on the CI chosen
+  (GitHub or GitLab).
+- **Traceable decision history**: `docs/contrats.md` (the rules that
+  matter, with their proof) and `docs/projets/` (work in progress and
+  closed, with dated decisions) replace oral decisions lost in a chat.
+- **Alert, not a priori blocking**: with no branch protection available
+  (free private repo), broken CI on the main branch opens an issue
+  automatically instead of relying on someone watching.
+- **Consumption and progress tracking**: an optional dashboard aggregates
+  work items, contracts and cost (tokens) per batch, to quickly answer
+  "where are we" and "what did it cost".
+
+## Optional modules (never installed by default)
+
+| Module | What it does | Activation |
+|---|---|---|
+| `tableau-de-bord` (dashboard) | HTML page aggregating the repo's work items, contracts and audits | copy the script, see its own README |
+| `front-quality` | Contrast/color check (RGAA/WCAG) for a front-end | same as above |
+| `creer-une-release` | Git tag + GitHub release note, best-effort semver bump (Conventional Commits) | `docs/recettes/creer-une-release.md` — always manual, on explicit request, never automatic |
+
+## At a glance
+
+- `packages/drwil/`: the package (`init`/`apply` CLI, FR/EN templates).
+- `init` scaffolds a brand-new project; `apply` installs the kit on an
+  existing project without ever overwriting anything.
+- Stacks detected or explicitly chosen (`backend`, `frontend`,
+  `generic`); AI tools (`claude`, `codex`, `cursor`, `gemini`,
+  `copilot`) and CI (`github`, `gitlab`, or none) chosen at install time.
+- Shipped in French and English, equivalent content in both languages
+  (verified by test).
+- Checks (doc consistency, secret detection, check-coverage-by-CI…) run
+  at commit time (`.githooks/pre-commit`) and in CI.
+- Tested green in CI on Linux, macOS and Windows (`kit-tests` matrix of
+  `.github/workflows/`).
+- Not yet published to npm: use today from a clone of this repository, or
+  via an `npm pack` tarball (see below).
+
+## Getting started
+
+(Developing the kit itself — for using the published CLI on your own
+project, see [`packages/drwil/README.md`](packages/drwil/README.md).)
+
+```bash
+cd packages/drwil
+npm install
+npm run build
+npm test                 # drwil package's test suite
+
+# try the CLI on an empty folder
+node bin/drwil.js init --name "MyProject" --layers backend,frontend
+```
+
+Enable the verification hooks, once per clone:
+```bash
+git config core.hooksPath .githooks
+```
+
+## Trying the package without publishing to npm
+
+```bash
+cd packages/drwil
+npm pack                 # auto-rebuilds (the "prepack" script), produces drwil-0.0.1.tgz
+```
+
+The `.tgz` file installs like any npm package, locally or for someone
+else:
+```bash
+npm install /path/to/drwil-0.0.1.tgz
+npx drwil init --name "MyProject"
+```
+Also works without a prior install: `npx /path/to/drwil-0.0.1.tgz init ...`.
+
+## Documentation map
+
+| Topic | Document |
+|---|---|
+| Lifecycle of a work item, scoping, cold resume | `docs/ia-first.md` |
+| Repository structure | `docs/architecture.md` |
+| Enforced rules (baseline contracts) | `docs/contrats.md` |
+| Optional contracts a project can adopt | `docs/catalogue-contrats.md` |
+| Reusable procedures (adopting the kit, auditing, etc.) | `docs/recettes/` |
+| Pending work items | `docs/projets/en-attente.md` |
+| Checking project progress | `docs/recettes/visualiser-avancement.md` |
+| Auditing risk and technical debt | `docs/recettes/auditer-risques-et-dette.md` |
+| Tracking the cost of a piece of work | `docs/recettes/suivre-consommation-par-lot.md` |
+| Exploring product value | `docs/recettes/decouvrir-valeur-produit.md` |
+| Working with branches and merge/pull requests | `docs/recettes/travailler-en-branche.md` |
+
+---
+
+# drwil (Français)
+
 **Quand une IA (ou un humain) code sans cadre**, rien n'empêche un oubli
 de contexte entre deux sessions, une règle de sécurité non respectée, un
 « c'est corrigé » annoncé sans preuve, ou un secret qui fuite dans un
