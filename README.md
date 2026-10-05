@@ -31,6 +31,7 @@ Concretely, the kit adds to a project:
 - [Why it reduces AI waste](#why-it-reduces-ai-waste)
 - [What drwil solves, and how](#what-drwil-solves-and-how)
 - [How it governs the AI](#how-it-governs-the-ai)
+- [How this compares to Spec-Driven Development](#how-this-compares-to-spec-driven-development)
 - [How it governs the team](#how-it-governs-the-team-humans-and-ai-mixed)
 - [Optional modules](#optional-modules-never-installed-by-default)
 - [At a glance](#at-a-glance)
@@ -106,6 +107,21 @@ reasoning is concrete:
   existing project) detects a file already present that has drifted from
   the template and flags it instead of rewriting it; a manifest (path +
   fingerprint) tracks exactly what the kit installed.
+
+## How this compares to Spec-Driven Development
+
+drwil shares one idea with Spec-Driven Development (SDD): an ambiguous
+request becomes a **written decision sheet before any code is written**,
+instead of being decided silently mid-implementation. That's where the
+similarity ends — drwil is not an SDD tool. It has no spec language, does
+not generate code from a formal spec, and does not execute a spec as a
+machine-verifiable contract end to end. Scoping-before-code is one piece
+of a broader governance layer: keeping every AI tool aligned on the same
+rules, blocking secrets and unproven "fixed" claims, and making sure a
+check that stops running in CI is never silently counted as passing.
+Think of it as **governance-first, not spec-first**: the contract that
+gets enforced is "this rule is checked", not "this spec generates this
+code".
 
 ## How it governs the team (humans and AI mixed)
 
