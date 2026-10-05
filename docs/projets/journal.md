@@ -57,3 +57,17 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   `actions/checkout`/`actions/setup-node` en v7, Node 20 → 24 (GitHub et
   GitLab, dogfood + templates).
 - **Clôturé par** : commit `92e2eec` (PR #4, `24e953b`).
+
+## 2026-10-05 — Manifeste des fichiers installés + désinstallation propre
+
+- **Décisions clés** : manifeste .drwil/fichiers-installes.json (chemin
+  + sha256) écrit/fusionné par `init()`/`apply()`, réutilisé par deux
+  mécanismes : la commande `drwil uninstall` (dry-run par défaut, `--yes`
+  pour confirmer, fichier modifié depuis l'installation jamais supprimé
+  automatiquement) et le nettoyage automatique des fichiers obsolètes de
+  `.githooks/` d'une ancienne version du kit (point 3 de
+  `suites-kit-portable.md`, traité avec ce chantier). `docs/projets/`,
+  `docs/intentions/`, `docs/recettes/` (et équivalents anglais) jamais
+  touchés dans les deux cas.
+- **Clôturé par** : PR #6.
+

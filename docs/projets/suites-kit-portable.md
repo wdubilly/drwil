@@ -1,9 +1,9 @@
 # Projet : suites du kit portable (points restés ouverts)
 
-**Statut** (2026-10-04) : en cours — points 5, 6, 8 et 9 traités (via le projet
+**Statut** (2026-10-05) : en cours — points 5, 6, 8 et 9 traités (via le projet
 d'extraction IA-first, voir `docs/projets/extraction-ia-first-run-box.md`) ;
-point 1 livré et confirmé vert sur les 3 OS (run CI `37238852012`) ;
-restent 2, 3, 7.
+point 1 livré et confirmé vert sur les 3 OS (run CI `37238852012`) ; point 3
+livré ; restent 2, 7.
 
 ## 1. Contexte
 
@@ -119,11 +119,24 @@ restés ouverts à la fin de ce travail.
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien
    les fichiers de renvoi générés (.cursor/rules/ia-first.mdc et
    .github/copilot-instructions.md dans les projets générés).
-3. **Mise à jour depuis une ancienne version** — [IA] `init` ne supprime pas
-   les fichiers obsolètes d'une version précédente du kit (anciens .py et
-   .sh de .githooks/) ; le nettoyage a été fait à la main sur
-   drwil_test_app. Piste : une liste des fichiers retirés par version, que
-   `init` supprime s'ils sont identiques au modèle d'origine.
+3. **Mise à jour depuis une ancienne version** — [IA] **livré le
+   2026-10-05** : `init`/`apply` lisent désormais l'ancien manifeste
+   (.drwil/fichiers-installes.json) avant d'écrire, et suppriment après
+   coup les fichiers de `.githooks/` qui n'existent plus dans le template
+   actuel — seulement s'ils n'ont jamais été modifiés depuis l'installation
+   (empreinte sha256 inchangée) ; un fichier modifié est conservé et
+   simplement ignoré. Mécanisme partagé avec la commande `uninstall`
+   (condensée dans `docs/projets/journal.md`, entrée du même jour) :
+   nouveau paramètre `attendus` threadé dans `writeOut()`/`copyTree()`/`scaffold()` pour
+   enregistrer tous les chemins cibles du template actuel (indépendamment de
+   la politique d'écrasement, qui ne réécrit jamais `.githooks/` déjà
+   présent — piège trouvé en chemin : comparer l'ancien manifeste au
+   `manifest` local de `scaffold()` aurait supprimé à tort tous les fichiers
+   `.githooks/` déjà installés, puisqu'ils n'apparaissent dans ce `manifest`
+   que s'ils ont été réellement (ré)écrits lors de cette exécution).
+   `docs/projets/`, `docs/intentions/`, `docs/recettes/` (et équivalents
+   anglais) jamais touchés. Tests ajoutés dans
+   `packages/drwil/test/kit.test.mjs` ; `npm test` : 46/46 verts.
 4. **Nom du projet par défaut** — validé le 2026-10-03 : sans `--name`, le
    nom est celui du dossier.
 5. **Contrôles du dépôt drwil lui-même** — [IA] fait le 2026-10-04 : kit
@@ -163,13 +176,11 @@ restés ouverts à la fin de ce travail.
 
 ## 3. Reprise
 
-- **Dernier état** (2026-10-04) : points 5, 6, 8 et 9 traités. Point 5 : kit
+- **Dernier état** (2026-10-05) : points 5, 6, 8 et 9 traités. Point 5 : kit
   appliqué réellement à drwil, `.githooks/pre-commit` actif, premier vrai
   commit passé (0 erreur `check-docs`). Point 1 : job `kit-tests` (matrice
-  Windows/macOS/Linux) ajouté à `.github/workflows/ia-first.yml`, à vérifier
-  vert sur le run déclenché par ce commit (lien à ajouter une fois constaté).
-  Points 2, 3, 7 restent ouverts.
-- **Prochaine étape** : [humain] constater le résultat du nouveau run CI
-  déclenché par ce commit (3 OS verts pour clore le point 1) ; sinon, au
-  choix du demandeur parmi les points 2 (Cursor/Copilot), 3 (migration
-  d'ancienne version) ou 7 (publication npm).
+  Windows/macOS/Linux) ajouté à `.github/workflows/ia-first.yml`, confirmé
+  vert sur les 3 OS (run `37238852012`). Point 3 : livré (voir détail
+  ci-dessus). Points 2, 7 restent ouverts.
+- **Prochaine étape** : [humain] au choix du demandeur parmi les points 2
+  (Cursor/Copilot) ou 7 (publication npm).
