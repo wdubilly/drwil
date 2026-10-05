@@ -5,6 +5,11 @@
   "bin": {
     "drwil": "./bin/drwil.js"
   },
+  "files": [
+    "dist",
+    "bin",
+    "templates"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -14,7 +19,8 @@
   "scripts": {
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
-    "test": "tsc --build && node --test"
+    "test": "tsc --build && node --test",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "commander": "^12.1.0"
