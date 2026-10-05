@@ -84,3 +84,13 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   les status checks avant de fusionner reste une étape manuelle.
 - **Clôturé par** : PR #7.
 
+## 2026-10-05 — Créer une release (tag + note GitHub), tarball npm attaché
+
+- **Décisions clés** : module optionnel (jamais installé par défaut),
+  activé en dogfood ; version calculée best-effort (Conventional
+  Commits) ; aucun fichier suivi modifié (compatible QUA-017) ; pas de
+  déclenchement automatique en CI — activation manuelle sur demande
+  explicite, comme un commit/push (revirement du 2026-10-06 initial) ;
+  tarball npm (`npm pack`) de chaque paquet publiable attaché comme
+  asset téléchargeable à la release (demande ultérieure).
+- **Clôturé par** : PR #8 (script + recette), #14 (tarball attaché).
