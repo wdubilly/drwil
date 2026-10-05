@@ -57,3 +57,10 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Source de vérité** : `docs/recettes/travailler-en-branche.md`.
 **Preuve** : `.githooks/run-checks.mjs` (hook uniquement, jamais en CI).
 **Raison** : Un commit ou un push direct sur la branche principale contourne la revue (pull/merge request) et casse le lien fiche ↔ branche décrit par la recette.
+
+## QUA-018 — Périmètre explicite : dépôt drwil vs livrable gabarit
+**Règle** : Ce dépôt a deux casquettes : drwil-le-dépôt (ce projet en tant que tel — son `AGENTS.md` racine, sa CI dogfood, ses `docs/`, ses chantiers) et drwil-le-livrable (le gabarit distribué via `npx`/`npm`, `packages/drwil/templates/`, copié dans tout projet généré). Si une demande ne précise pas clairement laquelle des deux casquettes est visée, l'IA doit le demander explicitement avant d'agir plutôt que de deviner.
+**Périmètre** : Toute modification susceptible de concerner `packages/drwil/templates/` et/ou son équivalent dogfood à la racine (`AGENTS.md`, `docs/`, `.github/workflows/`, `.githooks/`, `.claude/skills/`).
+**Source de vérité** : Ce contrat (rappelé dans `AGENTS.md`).
+**Preuve** : Humaine — la distinction demande une appréciation contextuelle, pas de hook automatisable.
+**Raison** : Un changement fait sans clarifier le périmètre risque de fuiter du dogfood vers le gabarit exporté (ou l'inverse), comme déjà vu pour le job CI de release (dogfood-only, pas destiné au gabarit).
