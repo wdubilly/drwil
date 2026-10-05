@@ -118,3 +118,29 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   confirmée le 2026-10-05.
 - **Clôturé par** : commit de clôture de ce journal (historique complet
   dans `git log --follow -- docs/projets/extraction-ia-first-run-box.md`).
+
+## 2026-10-05 — `apply()` rafraîchit la mécanique du kit et signale la dérive de prose
+
+- **Décisions clés** : `apply()` réécrit désormais `.githooks/` sans
+  condition (toujours mécanique, jamais de prose humaine dedans), signale
+  (sans jamais réécrire automatiquement) toute dérive détectée sur les
+  fichiers de prose partagée (`AGENTS.md`, `docs/ia-first.md`,
+  `docs/contrats.md`...). Lot 2 : nouvelle commande
+  `drwil resoudre-derive` qui affiche un diff unifié (LCS, sans dépendance
+  externe) fichier par fichier mécanique en dérive, demande confirmation
+  interactive (o/N), crée une copie `.bak` avant écrasement, ne crée
+  jamais un fichier absent ; `--forcer` court-circuite la confirmation.
+- **Clôturé par** : PR #21.
+
+## 2026-10-05 — `init()` crée toujours une branche avant le premier commit (jamais `master`)
+
+- **Décisions clés** : que se passe-t-il si une CI/branch protection
+  externe empêche tout push direct sur `master`, y compris pour le tout
+  premier commit d'un dépôt fraîchement initialisé ? Réponse tranchée
+  « simple » par le demandeur : `init()` crée et bascule systématiquement
+  sur une branche de travail (`chantier/installation-kit`) juste après
+  `git init`, avant tout commit — personne n'a donc plus jamais besoin de
+  pousser sur `master`. QUA-017 simplifié en conséquence : détection de
+  branche via `git symbolic-ref --short HEAD` (fonctionne avant le tout
+  premier commit), plus d'exception de bootstrap.
+- **Clôturé par** : PR #22.

@@ -37,8 +37,9 @@ Décisions déjà tranchées par le demandeur :
 - La publication npm effective (geste humain, authentification requise) :
   reste traitée par `docs/intentions/packager-kit-ia-first.md`, dont une
   question (nom du paquet) est résolue par ce projet-ci (voir section 4).
-- Le chantier `docs/projets/apply-rafraichit-mecanique.md` (mécanique
-  `apply()` et dérive de prose) : sujet séparé, pas rouvert ici.
+- Le chantier apply() rafraîchit la mécanique du kit (mécanique
+  `apply()` et dérive de prose, clôturé depuis, voir docs/projets/journal.md) :
+  sujet séparé, pas rouvert ici.
 
 ## 3. Contraintes
 

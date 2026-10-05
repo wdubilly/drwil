@@ -42,23 +42,11 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   quand aucune stack n'est détectée à l'`init` — fait le 2026-10-04 (commit
   52bb22b) — `docs/projets/signaler-couches-par-defaut.md`.
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
-- [x] [IA] `apply()` rafraîchit la mécanique du kit (`.githooks/`...)
-  et signale la dérive de prose (AGENTS.md, docs/ia-first.md, docs/contrats.md
-  restés sur une version pré-kit chez drwil) — lots 1 et 2 faits le
-  2026-10-05 (détection/signalement, puis commande
-  `drwil resoudre-derive`) —
-  `docs/projets/apply-rafraichit-mecanique.md`.
 - [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
   restent à trancher — `docs/intentions/importer-tickets-externes.md`.
-- [ ] [IA] [P2] `init()` crée toujours une branche de travail
-  (`chantier/installation-kit`) avant le premier commit, jamais `master` —
-  évite qu'une CI/branch protection externe bloque le premier push
-  recommandé par le kit ; simplifie QUA-017 (plus d'exception de
-  bootstrap) — lot 1 fait le 2026-10-05, en attente de fusion —
-  `docs/projets/init-cree-une-branche.md`.
-- [ ] [décision] [P2] Adopter un seuil de couverture de test
-  (`catalogue:QUA-004`) avec `c8` sur `packages/drwil` — seuil de départ,
-  portée du contrôle et caractère bloquant restent à trancher —
-  `docs/projets/adopter-seuil-couverture.md`.
+- [x] [décision] [P2] Adopter un seuil de couverture de test
+  (`catalogue:QUA-004`) avec `c8` sur `packages/drwil` — lots 1 et 2
+  faits le 2026-10-05, lot 3 (couverture 100 %) reste ouvert à la demande
+  du demandeur — `docs/projets/adopter-seuil-couverture.md`.
