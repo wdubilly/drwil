@@ -52,7 +52,13 @@ principale, calculés automatiquement, sans publication npm pour l'instant
 - 2026-10-05 : objectif interne (tags + notes GitHub), pas de publication
   npm pour l'instant (décision utilisateur).
 - 2026-10-05 : déclenchement automatique à chaque chantier fusionné sur
-  master (décision utilisateur).
+  master (décision utilisateur initiale).
+- 2026-10-06 : revu — pas de déclenchement automatique en CI. La release
+  est proposée à l'utilisateur et lancée seulement sur sa demande
+  explicite, comme pour un commit ou un push (décision utilisateur, annule
+  et remplace la décision du 2026-10-05). Le job CI `creer-release` est
+  retiré de `.github/workflows/ia-first.yml` ; le script et la recette
+  restent disponibles pour une exécution manuelle à la demande.
 - 2026-10-05 : version calculée depuis les messages de commit façon
   Conventional Commits, best-effort, sans contrat bloquant qui l'impose
   (décision utilisateur).
@@ -92,20 +98,23 @@ principale, calculés automatiquement, sans publication npm pour l'instant
   Critère de sortie : `node --test` sur
   `packages/drwil/test/kit.test.mjs` couvre la présence des fichiers
   livrés.
-- **Lot 4 — activation dogfood** [IA] : job `creer-release` ajouté à
-  `.github/workflows/ia-first.yml` de ce dépôt (seulement ici, pas dans le
-  gabarit exporté), déclenché sur push master après succès de `checks`
-  et `kit-tests`. Critère de sortie : CI verte après fusion, tag et
-  release visibles sur le dépôt GitHub.
+- **Lot 4 — activation dogfood (révisée)** [IA] : pas de job CI
+  automatique. Sur ce dépôt, la release reste une action manuelle sur
+  demande explicite de l'utilisateur, comme pour un commit/push :
+  `node .githooks/creer-release.mjs`. Critère de sortie : aucun job
+  `creer-release` dans `.github/workflows/ia-first.yml` ; recette à jour
+  sur ce point.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-05) : lots 1 à 4 faits — script
+- **Dernier état** (2026-10-06) : lots 1 à 3 faits et activés ; lot 4
+  révisé — pas de job CI automatique. Script
   `.githooks/creer-release.mjs` (détection bump + tag + release),
-  recette/skill FR/EN, job CI `creer-release` activé en dogfood. 49/49
-  tests verts, le contrôle des chemins/contrats cités et la couverture CI
-  (QUA-013) restent verts. Vérifié en conditions réelles (`--dry-run`) sur
-  ce dépôt : première version calculée `v0.1.0`.
+  recette/skill FR/EN. 49/49 tests verts, le contrôle des
+  chemins/contrats cités et la couverture CI (QUA-013) restent verts.
+  Vérifié en conditions réelles (`--dry-run`) sur ce dépôt : première
+  version calculée `v0.1.0`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] fusionner ce chantier et observer le
-  premier tag/release réel créé par le job CI sur master.
+- **Prochaine étape** : [humain] fusionner ce chantier. La release reste
+  ensuite une action manuelle, proposée par l'IA et lancée seulement sur
+  demande explicite de l'utilisateur.

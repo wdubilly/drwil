@@ -8,6 +8,7 @@
 // défaut sûr : bump "patch" si aucun type reconnu).
 // Usage : node creer-release.mjs [--dry-run]
 import { execFileSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 const dryRun = process.argv.includes("--dry-run");
 
@@ -92,4 +93,8 @@ function main() {
 
 // Ne s'exécute que lancé directement (node creer-release.mjs), pas quand
 // detecterBump/versionSuivante sont importées pour un test unitaire.
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// pathToFileURL (pas une concaténation "file://" + argv[1]) : sur Windows
+// process.argv[1] utilise des antislashs (D:\...) alors qu'import.meta.url
+// utilise des slashs (file:///D:/...) — la comparaison naïve échoue
+// silencieusement et main() ne s'exécute jamais.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

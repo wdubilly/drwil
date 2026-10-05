@@ -5,11 +5,13 @@ note de release, sans publier sur npm et sans committer le moindre
 fichier (compatible avec un contrat du type « pas de commit direct sur la
 branche principale », si adopté).
 
-Ce n'est **pas un contrôle installé par défaut** : le script qui calcule
-et pose la release est un module optionnel, comme le tableau de bord —
-voir le README de `templates/common/optional/creer-une-release/` (module
-du paquet du kit) pour l'activer (manuelle ou automatique en CI, à chaque
-merge sur la branche par défaut), copié en `.githooks/creer-release.mjs` (à créer).
+Ce n'est **pas un contrôle installé par défaut** dans le gabarit du kit :
+le script est un module optionnel, comme le tableau de bord — voir le
+README de `templates/common/optional/creer-une-release/` (module du
+paquet du kit). Sur ce dépôt, il est déjà activé en
+`.githooks/creer-release.mjs`. Comme un commit ou un push, ce script ne
+se lance que sur demande explicite de l'utilisateur, jamais tout seul en
+CI.
 
 ## Méthode (une fois le module activé)
 

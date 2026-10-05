@@ -52,21 +52,3 @@ jobs:
           else
             echo "Une issue de CI cassée est déjà ouverte, pas de doublon."
           fi
-  # Module optionnel « créer une release » activé sur ce dépôt (dogfood) :
-  # un tag Git + une note de release GitHub par chantier fusionné, jamais de
-  # fichier suivi modifié (compatible QUA-017) — voir
-  # docs/recettes/creer-une-release.md. Ne se déclenche que si les contrôles
-  # ont réussi, pour ne jamais taguer une CI rouge.
-  creer-release:
-    needs: [checks, kit-tests]
-    if: always() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.checks.result == 'success' && needs.kit-tests.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - run: node .githooks/creer-release.mjs
-        env:
-          GH_TOKEN: ${{ github.token }}

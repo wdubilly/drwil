@@ -8,8 +8,9 @@ adopted).
 This is **not installed by default**: the script that computes and posts
 the release is an optional module, like the dashboard — see the README
 in `templates/common/optional/creer-une-release/` (module shipped by the
-kit package) to activate it (manual or automatic in CI, on every merge
-to the default branch), copied to `.githooks/creer-release.mjs` (to create).
+kit package) to activate it, copied to
+`.githooks/creer-release.mjs` (to create). Like a commit or a push, this
+script only runs on the user's explicit request, never on its own in CI.
 
 ## Method (once the module is activated)
 
