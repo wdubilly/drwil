@@ -1,4 +1,38 @@
+stages:
+  - test
+  - alerte
+
 checks:
+  stage: test
   image: node:24
   script:
     - node .githooks/run-checks.mjs
+
+# Pas de protection de branche possible sur un plan GitLab équivalent (la
+# fusion reste un clic inconditionnel) : seule une alerte après coup est
+# possible. `when: on_failure` + stage dédiée : ne se déclenche que si un
+# job de la stage `test` a échoué, et seulement sur la branche principale.
+# Best-effort : le jeton de job peut ne pas avoir la permission d'écrire des
+# issues selon la configuration du projet GitLab — ce job échoue alors sans
+# bloquer `checks`. N'ouvre pas de doublon si une issue équivalente est déjà
+# ouverte.
+alerter-si-ci-cassee:
+  stage: alerte
+  image: alpine:3
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: on_failure
+  script:
+    - apk add --no-cache curl
+    - |
+      titre="CI cassée sur la branche principale (pipeline $CI_PIPELINE_ID)"
+      deja=$(curl -s --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/issues?state=open&search=$titre" | grep -c '"iid"')
+      if [ "$deja" = "0" ]; then
+        curl -s --request POST --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+          --data-urlencode "title=$titre" \
+          --data-urlencode "description=Un contrôle a échoué sur la branche principale ($CI_DEFAULT_BRANCH). Voir $CI_PIPELINE_URL. À corriger avant tout nouveau chantier." \
+          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/issues"
+      else
+        echo "Une issue de CI cassée est déjà ouverte, pas de doublon."
+      fi

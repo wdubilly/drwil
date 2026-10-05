@@ -71,3 +71,16 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   touchés dans les deux cas.
 - **Clôturé par** : PR #6.
 
+## 2026-10-05 — Alerter (et permettre de corriger) une CI cassée sur la branche principale
+
+- **Décisions clés** : la protection de branche GitHub (status checks
+  obligatoires avant merge) est indisponible sur ce dépôt (privé, plan
+  gratuit) — seule une alerte après coup est possible. Job CI dédié
+  `alerter-si-ci-cassee` (GitHub et GitLab, exporté dans le gabarit du
+  kit) : ouvre une issue avec un lien vers le run, seulement sur push vers
+  la branche par défaut, seulement si un contrôle a échoué, sans
+  recréer de doublon. N'empêche pas la fusion, ne corrige pas — alerte
+  seulement. Recette docs/recettes/travailler-en-branche.md mise à jour : vérifier
+  les status checks avant de fusionner reste une étape manuelle.
+- **Clôturé par** : PR #7.
+

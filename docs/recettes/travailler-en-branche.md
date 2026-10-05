@@ -31,6 +31,11 @@ principale.
 - Les contrôles (`.githooks/run-checks.mjs`)
   doivent être verts avant d'ouvrir la pull/merge request, pas seulement
   avant de la fusionner.
+- Avant de fusionner : vérifier que les status checks CI de la pull/merge
+  request sont verts (`gh pr checks <n> --watch` côté GitHub). Ce dépôt ne
+  peut pas forcer ce contrôle (protection de branche indisponible sur un
+  dépôt privé en plan gratuit) : c'est une vérification manuelle, pas
+  mécanique.
 
 ## Clôturer
 
@@ -62,6 +67,13 @@ principale.
 - Ce contrôle ne tourne jamais en CI : il s'applique seulement en local,
   au moment de committer/pousser, pas quand la CI rejoue un push déjà
   fait (un merge qui atterrit sur la branche principale est légitime).
+- Si la CI de la branche principale casse quand même (merge fusionné
+  trop vite, flakiness...) : un job CI dédié (`alerter-si-ci-cassee`,
+  GitHub et GitLab) ouvre automatiquement une issue avec un lien vers le
+  run en échec — seulement sur la branche principale, seulement si les
+  contrôles ont échoué, sans recréer de doublon si une issue équivalente
+  est déjà ouverte. Ce job alerte, il ne corrige pas : la correction reste
+  un chantier à part (fiche dédiée).
 
 ## Ce que le kit ne fait pas
 
