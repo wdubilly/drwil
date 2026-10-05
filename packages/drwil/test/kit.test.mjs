@@ -20,11 +20,16 @@ const capture = async (fn) => {
   console.log = (...a) => lines.push(a.join(" "));
   try { await fn(); return lines; } finally { console.log = log; }
 };
-const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: { ...process.env, CI: "" } });
-// CI retiré explicitement : un commit simulé représente toujours un geste
-// développeur local, même quand le test lui-même tourne dans une vraie CI
-// (qui positionne CI=true pour tout le job et désactiverait à tort QUA-017).
-const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: { ...process.env, CI: "" } });
+// CI et DRWIL_PUSH_TAGS_ONLY retirés explicitement : un commit/push simulé représente
+// toujours un geste développeur local isolé, même quand la suite elle-même tourne
+// dans une vraie CI (CI=true désactiverait à tort QUA-017) ou est déclenchée par le
+// vrai hook pre-push lors d'un vrai push de tag (DRWIL_PUSH_TAGS_ONLY=1 fuirait sinon
+// dans tous les commits/push simulés par les tests, qui doivent rester indépendants
+// du contexte qui a lancé la suite).
+const envTest = { ...process.env, CI: "" };
+delete envTest.DRWIL_PUSH_TAGS_ONLY;
+const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
+const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
 const config = (dir) => JSON.parse(read(dir, ".drwil/ia-first.json"));
 // NTFS n'a pas de bit d'exécution : sous Windows chmod est un no-op, donc ce contrôle

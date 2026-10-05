@@ -85,14 +85,32 @@ demandeur : la correction doit être propre, pas une solution de rechange.
   local : tag seul passe, `master` seul et le mélange tag+`master` restent
   refusés).
 
+- **Bug de fuite d'environnement découvert à la première vraie release, corrigé** :
+  en poussant réellement `v0.1.0` après le merge du lot 1, le vrai hook
+  `pre-push` positionne `DRWIL_PUSH_TAGS_ONLY=1` puis relance
+  `.githooks/run-checks.mjs`, qui lance `npm test` — ce test hérite la variable via
+  `process.env`. Les helpers `checks()`/`git()` de
+  `packages/drwil/test/kit.test.mjs` recopiaient `process.env` tel quel vers
+  les commits/push *simulés* par les tests, qui héritaient donc à tort de
+  cette même variable : les deux tests QUA-017 cessaient de bloquer un commit
+  direct sur `master` simulé, alors qu'ils devaient toujours le refuser.
+  Invisible en CI et en exécution directe de `npm test` (la variable n'y est
+  jamais positionnée) — reproduit uniquement via un vrai push de tag ou
+  `DRWIL_PUSH_TAGS_ONLY=1 node .githooks/run-checks.mjs`. Corrigé en
+  supprimant explicitement `DRWIL_PUSH_TAGS_ONLY` (et `CI`, déjà fait) de
+  l'environnement transmis par ces deux helpers, pour que chaque test
+  contrôle lui-même les variables qu'il veut simuler, indépendamment du
+  contexte qui a lancé la suite.
+
 ## 7. Reprise
 
 - **Dernier état** (2026-10-05) : lot 1 fait et vérifié (`node
   .githooks/check-docs.mjs` 0 erreur, `node .githooks/run-checks.mjs` et la
-  suite `packages/drwil/test/kit.test.mjs` verts, 55 tests). Le tag local
-  `v0.1.0` (posé lors d'une tentative de release précédente) n'a toujours pas
-  été poussé ni republié : à reprendre avec `/drwil-release` ou
-  `node .githooks/creer-release.mjs` une fois ce correctif mergé.
+  suite `packages/drwil/test/kit.test.mjs` verts, 55 tests), ainsi que le bug
+  de fuite d'environnement ci-dessus. Le tag local `v0.1.0` (posé lors d'une
+  tentative de release précédente) n'a toujours pas été poussé ni republié :
+  à reprendre avec `/drwil-release` ou `node .githooks/creer-release.mjs`
+  une fois ce correctif mergé.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] relancer la création de release (le tag
   `v0.1.0` existant localement peut être repoussé directement, ou
