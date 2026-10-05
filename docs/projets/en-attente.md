@@ -41,7 +41,7 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [x] [IA] Signaler explicitement les couches par défaut (backend,frontend)
   quand aucune stack n'est détectée à l'`init` — fait le 2026-10-04 (commit
   52bb22b) — `docs/projets/signaler-couches-par-defaut.md`.
-- [ ] [IA] [P1] Corriger le faux positif QUA-017 sur un push de tag (bloque
+- [x] [IA] [P1] Corriger le faux positif QUA-017 sur un push de tag (bloque
   toute release via `.githooks/creer-release.mjs` : push du tag refusé par
   `pre-push` qui ne regarde que la branche courante, pas la référence
   réellement poussée) — `docs/projets/corriger-qua017-push-tag.md`.

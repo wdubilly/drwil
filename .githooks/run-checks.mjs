@@ -87,7 +87,9 @@ controle(T.docs, process.execPath, [".githooks/check-docs.mjs"]);
 // `rev-parse --abbrev-ref HEAD`) fonctionne même avant le premier commit (HEAD non encore créé).
 // Jamais en CI (process.env.CI) : la CI tourne aussi sur master après un merge légitime,
 // qu'il ne faut pas bloquer rétroactivement — seuls les hooks locaux (pre-commit/pre-push) l'appliquent.
-if (!process.env.CI) {
+// Jamais non plus sur un push qui ne pousse que des tags (DRWIL_PUSH_TAGS_ONLY, positionné par
+// .githooks/pre-push d'après l'entrée standard du hook) : un tag ne modifie jamais une branche.
+if (!process.env.CI && process.env.DRWIL_PUSH_TAGS_ONLY !== "1") {
   const branche = spawnSync("git", ["symbolic-ref", "--short", "HEAD"], { encoding: "utf8" });
   const nomBranche = branche.status === 0 ? branche.stdout.trim() : null;
   if (nomBranche && ["master", "main"].includes(nomBranche)) echecs.push(T.brancheProtegee(nomBranche));

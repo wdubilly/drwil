@@ -1,12 +1,14 @@
 # Projet : corriger le faux positif QUA-017 sur un push de tag
 
-**Statut** : cadré le 2026-10-05 — lot 1 à faire.
+**Statut** : cadré le 2026-10-05 — fait (lot 1) le 2026-10-05.
 
 <!-- cadrage
 fichiers:
   - .githooks/pre-push
   - .githooks/run-checks.mjs
-  - .githooks/run-checks.test.mjs
+  - packages/drwil/templates/common/base/.githooks/pre-push
+  - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - packages/drwil/test/kit.test.mjs
 -->
 
 ## 1. Besoin
@@ -49,24 +51,20 @@ demandeur : la correction doit être propre, pas une solution de rechange.
 
 ## 4. Décisions
 
-(aucune encore — voir points à trancher ci-dessous)
+- Seul le contrôle QUA-017 est exempté sur un push ne contenant que des tags ;
+  les autres contrôles (secrets, doc, tests…) continuent de tourner en entier
+  via `.githooks/run-checks.mjs` (point à trancher 1 : option recommandée retenue).
+- Un push mixte (au moins une référence qui n'est pas un tag, ex. tag +
+  branche) reste bloqué par QUA-017 comme avant, par prudence (point à
+  trancher 2 : option « bloquer par prudence » retenue).
+- Windows : non vérifié manuellement sur un poste Windows, mais couvert par le
+  job `kit-tests (windows-latest)` de la CI, qui invoque le push réel (donc le
+  `sh` embarqué de Git for Windows) via le nouveau test (point à trancher 3 :
+  preuve indirecte par CI, pas de vérification humaine locale supplémentaire).
 
 ## 5. Points à trancher
 
-- [décision] Faut-il skipper uniquement le contrôle QUA-017 sur un push ne
-  contenant que des tags (recommandé : les autres contrôles — secrets, doc,
-  tests — restent utiles et rapides à rejouer), ou skipper tout
-  `.githooks/run-checks.mjs` dans ce cas précis (plus simple, mais perd la détection
-  de secret sur le tag lui-même, peu probable mais possible si le message du
-  tag contenait un secret) ?
-- [décision] Si le push mélange un tag et une branche (cas rare, ex. `git
-  push --tags` après avoir aussi poussé une branche) : bloquer par prudence
-  (dès qu'une des références poussées n'est pas un tag, QUA-017 s'applique
-  normalement), ou analyser chaque référence séparément ?
-- [décision] Sur Windows, Git for Windows exécute `pre-push` via son propre
-  `sh` (commentaire déjà présent dans le fichier) — confirmer que la lecture
-  de l'entrée standard fonctionne de façon identique sur les 3 OS testés en
-  CI (`kit-tests`), pas seulement sur Linux/macOS.
+(tranchés — voir section 4)
 
 ## 6. Lots
 
@@ -78,10 +76,24 @@ demandeur : la correction doit être propre, pas une solution de rechange.
   test qui simule les deux cas (tag seul / branche `master`). Critère de
   sortie : `node .githooks/creer-release.mjs` pousse effectivement le tag
   sans erreur sur ce dépôt ; un push direct de `master` reste refusé comme
-  avant (non-régression prouvée par test).
+  avant (non-régression prouvée par test). **Fait** : `.githooks/pre-push`
+  lit l'entrée standard et positionne `DRWIL_PUSH_TAGS_ONLY=1` quand seules
+  des références `refs/tags/*` sont poussées ; `.githooks/run-checks.mjs`
+  exempte QUA-017 uniquement dans ce cas. Même correctif recopié dans
+  `packages/drwil/templates/common/base/.githooks/` (livrable). Test ajouté
+  dans `packages/drwil/test/kit.test.mjs` (push réel vers un dépôt bare
+  local : tag seul passe, `master` seul et le mélange tag+`master` restent
+  refusés).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-05) : fiche cadrée, pas encore de code écrit.
+- **Dernier état** (2026-10-05) : lot 1 fait et vérifié (`node
+  .githooks/check-docs.mjs` 0 erreur, `node .githooks/run-checks.mjs` et la
+  suite `packages/drwil/test/kit.test.mjs` verts, 55 tests). Le tag local
+  `v0.1.0` (posé lors d'une tentative de release précédente) n'a toujours pas
+  été poussé ni republié : à reprendre avec `/drwil-release` ou
+  `node .githooks/creer-release.mjs` une fois ce correctif mergé.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 1.
+- **Prochaine étape** : [humain] relancer la création de release (le tag
+  `v0.1.0` existant localement peut être repoussé directement, ou
+  `.githooks/creer-release.mjs` relancé).

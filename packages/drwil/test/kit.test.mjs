@@ -586,6 +586,35 @@ test("QUA-017 : pas de travail direct sur la branche principale, même pour le t
   assert.equal(surBranche.status, 0, "un commit sur une branche non principale n'est jamais bloqué : " + surBranche.stdout + surBranche.stderr);
 });
 
+test("QUA-017 : un push ne contenant que des tags n'est jamais bloqué, un push de la branche principale continue de l'être", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir }));
+  git(dir, "add", "-A");
+  const premier = git(dir, "commit", "-qm", "premier commit");
+  assert.equal(premier.status, 0, premier.stdout + premier.stderr);
+
+  // scénario réel de `creer-release.mjs` : un tag posé puis poussé depuis master, après un merge légitime.
+  git(dir, "checkout", "-qb", "master");
+  git(dir, "tag", "v1.0.0");
+  git(dir, "tag", "v1.0.1");
+
+  const remote = tmp();
+  assert.equal(spawnSync("git", ["init", "-q", "--bare", remote]).status, 0);
+  git(dir, "remote", "add", "origin", remote);
+
+  const pousseTag = git(dir, "push", "-q", "origin", "v1.0.0");
+  assert.equal(pousseTag.status, 0, "un push ne poussant qu'un tag n'est plus bloqué par QUA-017 : " + pousseTag.stdout + pousseTag.stderr);
+  assert.doesNotMatch(pousseTag.stdout + pousseTag.stderr, /travail direct sur la branche principale/);
+
+  const pousseMaster = git(dir, "push", "-q", "origin", "master");
+  assert.notEqual(pousseMaster.status, 0, "un push direct de la branche principale reste refusé");
+  assert.match(pousseMaster.stdout + pousseMaster.stderr, /travail direct sur la branche principale/);
+
+  const pousseMixte = git(dir, "push", "-q", "origin", "v1.0.1", "master");
+  assert.notEqual(pousseMixte.status, 0, "un push mixte tag + branche principale reste refusé, par prudence");
+  assert.match(pousseMixte.stdout + pousseMixte.stderr, /travail direct sur la branche principale/);
+});
+
 test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et commit-msg livrés", async () => {
   for (const ci of ["github", "gitlab"]) {
     const dir = tmp();
