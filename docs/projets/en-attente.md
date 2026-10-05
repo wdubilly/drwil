@@ -56,3 +56,7 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   front → `applyTo: frontend/**`) ; les 11 autres restent couvertes par
   `AGENTS.md`, déjà lu nativement. Sans risque pour ce que drwil enforce
   (hooks git, contrats) si non fait : confort de découverte, pas un contrôle.
+- [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
+  dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
+  main — outil cible, mode d'authentification et ponctuel vs continu
+  restent à trancher — `docs/intentions/importer-tickets-externes.md`.
