@@ -1,76 +1,92 @@
 # Découverte de valeur et opportunités produit
 
-> Dernier scan : 2026-10-04
-> État du projet : monorepo TypeScript déjà structuré autour de
-> `drwil`. Le kit dispose d'un CLI `init/apply`, de templates
-> multilingues, de hooks et de skills Claude. Il est appliqué à drwil
-> lui-même ; plusieurs fonctionnalités sont cadrées mais encore non
-> implémentées.
+> Dernier scan : 2026-10-05
+> État du projet : monorepo TypeScript `drwil` (CLI `init`/`apply`,
+> templates FR/EN, hooks, skills Claude Code, instructions Copilot CLI).
+> Depuis le scan du 2026-10-04, plusieurs chantiers se sont clôturés
+> (manifeste d'installation + désinstallation propre, CI multi-OS stable,
+> alerte CI cassée, module de release avec tarball npm, suivi de
+> consommation dans le tableau de bord, skills Copilot CLI) : la plupart
+> des opportunités précédentes (OPT-2 à OPT-4 du scan précédent) sont
+> traitées. Ce scan en propose de nouvelles.
+
+## Aperçu de consommation
+
+Cumul enregistré dans `.drwil/usage.jsonl` (3 entrées, toutes datées du
+2026-10-04, modèle `claude-sonnet-5`) : 240 000 tokens, 160 minutes, sur 3
+lots du chantier `mecanique-ia-first` (audit de risques, découverte de
+valeur, suivi de consommation). Rien d'enregistré depuis sur les chantiers
+clôturés le 2026-10-05 — à vérifier si l'oubli est volontaire ou une
+fiche non rattachée.
 
 ## Opportunités prioritaires (matrice valeur / effort)
 
 | ID | Fonctionnalité proposée | Pourquoi (valeur métier) | État du code existant | Effort | Action recommandée |
 |---|---|---|---|---|---|
-| OPT-1 | Publier `drwil` sur npm | Rend le kit installable par une équipe ou depuis n'importe quel dépôt avec `npx`, au lieu de dépendre d'un checkout local. | Le package, son CLI, son build et ses templates existent déjà (`packages/drwil/package.json`, `packages/drwil/src/index.ts`, `packages/drwil/templates/`). L'intention de publication est déjà cadrée (`docs/intentions/packager-kit-ia-first.md`). | 🟡 Moyen | Trancher les questions ouvertes de la fiche, vérifier le tarball (`npm publish --dry-run`), publier une première version beta. |
-| OPT-2 | Ajouter le suivi générique des tokens au tableau de bord | Donne une visibilité sur le coût IA par chantier et par lot, directement dans l'outil de pilotage existant. | Le tableau de bord statique lit déjà les fiches projets, statuts et lots (`.githooks/tableau-de-bord.mjs`, module livré dans `packages/drwil/templates/common/optional/tableau-de-bord/tableau-de-bord.mjs`), mais aucune donnée de tokens n'est encore lue. Format et module déjà cadrés (`docs/intentions/surveiller-consommation-tokens.md`). | 🟡 Moyen | Implémenter la lecture/agrégation de .drwil/usage.jsonl, puis le module d'export Copilot CLI. |
-| OPT-3 | Déclarer les contrôles projet réels (lint/tests/build) dans `.drwil/ia-first.json` | Un commit peut aujourd'hui passer sans qu'aucun contrôle réel (typecheck, tests) ne tourne — gain de fiabilité immédiat, sans nouveau code. | `.drwil/ia-first.json` → `checks` est vide ; `.githooks/run-checks.mjs` le signale déjà lui-même (« non exécuté »). Le constat est déjà posé dans `docs/audit-risques.md` (RSK-1). | 🟢 Faible | Ajouter les entrées `checks` (ex. `tsc --build`, `node --test` du kit) et vérifier `node .githooks/run-checks.mjs`. |
-| OPT-4 | Sécuriser la mise à jour d'une ancienne installation du kit | Évite les fichiers obsolètes et les migrations manuelles lors des mises à jour, ce qui réduit le coût d'adoption en équipe. | `apply()`/`init()` (`packages/drwil/src/index.ts`) n'écrasent ni ne suppriment jamais un fichier existant — un stub obsolète (`.githooks/cadrage.py`, `.githooks/check-docs.py`, déjà repérés comme code hors fiche) reste indéfiniment après upgrade. Besoin documenté (`docs/projets/suites-kit-portable.md`, point 3 ; `docs/audit-risques.md`, RSK-4). | 🟡 Moyen | Concevoir une liste versionnée de fichiers supprimables, ne supprimer que les fichiers identiques à un ancien modèle, tester sur un projet généré ancien. |
+| OPT-1 | Corriger `.drwil/ia-first.json` pour que le rappel de cadrage (QUA-016) couvre le vrai code du kit | Vérifié en direct (`git add` + `node .githooks/cadrage.mjs` sur `packages/drwil/src/stack.ts`) : **aucun avertissement**, alors que c'est le cœur du générateur. Les couches déclarées (`core`, `adapters`, `plugin-opencode`, `mcp-server`, `kit-ia-first`) n'existent pas sur le disque (héritées de l'extraction run-box-v2) ; `layerPrefixes` (`app`, `tests`, `src`, `scripts`) ne matche pas `packages/drwil/src/`. Le filet de sécurité phare du kit (QUA-016) est aveugle sur son propre code. | Mécanisme déjà fonctionnel (`.githooks/cadrage.mjs`, `.githooks/check-docs.mjs`) : il suffit qu'un préfixe déclaré matche le vrai chemin. | 🟢 Faible | Remplacer les couches obsolètes par `packages/drwil/src`/`packages/drwil/test` dans `layers`/`layerPrefixes`/`codePrefixes` (à trancher : couche ou préfixe de code), vérifier que `node .githooks/cadrage.mjs` avertit désormais sur un changement de `packages/drwil/src/`. |
+| OPT-2 | Publier `drwil` sur npm | Rend le kit installable par une équipe via `npx drwil init`. Le blocage technique constaté le 2026-10-04 (`docs/intentions/packager-kit-ia-first.md`, « le paquet ne fonctionne pas en l'état ») est déjà levé : vérifié ce jour, `files` déclare bien `dist`/`bin`/`templates` dans `packages/drwil/package.json`, et `npm pack --dry-run` produit un tarball de 150 fichiers avec les gabarits Copilot inclus. | Build, CLI et templates fonctionnels et déjà empaquetables (vérifié). Reste la décision produit, pas la technique. | 🟢 Faible | Mettre à jour le constat de `docs/intentions/packager-kit-ia-first.md` (blocage levé), puis trancher les questions encore ouvertes (scope public/privé, version initiale, registry) pour publier une première version. |
+| OPT-3 | Adopter formellement `catalogue:QUA-005` (typage strict) dans `docs/contrats.md` | La pratique est déjà en place (`tsconfig.base.json` : `strict: true`, zéro usage de `any` dans `packages/drwil/src/*.ts` — vérifié) mais n'est pas déclarée comme contrat : rien n'empêche une régression future de passer inaperçue. | Contrat du catalogue déjà rédigé (`docs/catalogue-contrats.md`, ligne `catalogue:QUA-005`), contrôle déjà existant (mode strict du compilateur). | 🟢 Faible | Recopier la ligne dans `docs/contrats.md` (sans le préfixe `catalogue:`), la retirer du catalogue, vérifier `node .githooks/run-checks.sh`. |
+| OPT-4 | Trancher le lot 2 d'« apply() rafraîchit la mécanique » | Le lot 1 (détection de dérive de prose entre la version du kit et celle installée chez drwil) est fait depuis le 2026-10-04 ; sans le lot 2 (résolution), la détection reste silencieuse en pratique — aucune valeur perçue tant que rien n'agit sur le signal. | Détection déjà codée et testée (`docs/projets/apply-rafraichit-mecanique.md`). | 🟡 Moyen | Lire les points à trancher de la fiche, choisir une résolution (ex. proposer un diff, ouvrir une fiche dédiée par dérive détectée) avant de coder. |
 
 ## Analyse détaillée des meilleures pistes
 
-### OPT-1 — Publier `drwil` sur npm
-- **Problème résolu** : rendre le kit accessible hors du dépôt source,
-  notamment via `npx drwil init`.
+### OPT-1 — Réparer la couverture du rappel de cadrage sur le vrai code du kit
+- **Problème résolu** : aujourd'hui, modifier `packages/drwil/src/index.ts`
+  (le générateur `init`/`apply` lui-même) ne déclenche aucun rappel de
+  cadrage (QUA-016), contrairement à `scripts/` ou `.githooks/` qui sont
+  bien couverts — vérifié en direct dans cette session (voir tableau).
+- **Briques existantes réutilisables** : `.githooks/cadrage.mjs` (détection
+  par préfixe, déjà fonctionnelle) ; `.githooks/check-docs.mjs` (même
+  logique de préfixes connus) ; `.drwil/ia-first.json` (simple fichier de
+  config à corriger, pas de code à écrire).
+- **Ce qu'il reste à faire** : décider si `packages/drwil/src`/`test`
+  doivent être un `layer` (avec `AGENTS.md` dédié attendu) ou un préfixe de
+  code nu (`codePrefixes`, comme `scripts/`) — impact différent sur
+  `.githooks/check-docs.mjs`. Mettre à jour la config, vérifier avec un
+  changement factice staged.
+- **Impact si implémenté** : le contrôle le plus structurant du kit
+  (cadrage avant code) protège enfin son propre code, pas seulement les
+  scripts annexes — cohérence de dogfooding, risque de régression
+  silencieuse réduit.
+
+### OPT-2 — Publier `drwil` sur npm
+- **Problème résolu** : rendre le kit accessible hors du dépôt source
+  (`npx drwil init`), sans dépendre d'un chemin absolu local.
 - **Briques existantes réutilisables** : `packages/drwil/package.json`
-  (nom, bin déjà déclarés) ; `packages/drwil/src/index.ts`
-  (`init()`/`apply()` déjà fonctionnels) ; `packages/drwil/templates/`
-  (contenu complet, FR/EN).
-- **Ce qu'il reste à faire** : configurer `files`/`main`/`types`/`bin` et
-  les scripts de publication, vérifier que `dist/`, `templates/`, `bin/`
-  figurent dans le tarball, exécuter `npm publish --dry-run`.
-- **Impact si implémenté** : adoption plus simple du kit, reproductibilité
-  des installations, possibilité de l'utiliser comme produit distribué.
+  (nom, bin, `files` déjà corrects — vérifié) ; `packages/drwil/src/`
+  (`init()`/`apply()` fonctionnels, 52/52 tests verts) ;
+  `packages/drwil/templates/` (FR/EN complets, module de release qui sait
+  déjà produire un tarball npm en conditions réelles).
+- **Ce qu'il reste à faire** : rafraîchir le constat de l'intention (le
+  blocage qu'elle décrit n'existe plus), puis trancher scope de
+  publication, version initiale et registry.
+- **Impact si implémenté** : adoption en équipe simplifiée, kit
+  réellement distribuable comme annoncé dans le document technico-commercial
+  (DOC_TECHNICO_COMMERCIAL.md, volontairement hors suivi git).
 
-### OPT-2 — Suivre les tokens dans le tableau de bord
-- **Problème résolu** : le tableau de bord affiche l'avancement mais pas
-  le coût IA engagé par lot ou chantier.
-- **Briques existantes réutilisables** : `.githooks/tableau-de-bord.mjs`
-  (lecture des fiches, lots, statuts déjà en place) ; module optionnel
-  déjà livré dans `packages/drwil/templates/common/optional/tableau-de-bord/`.
-- **Ce qu'il reste à faire** : documenter .drwil/usage.jsonl, agréger
-  les tokens par chantier/lot, afficher l'indicateur sans régression si le
-  fichier est absent, fournir le module optionnel d'export Copilot CLI.
-- **Impact si implémenté** : meilleure maîtrise de la consommation IA,
-  comparaison de l'effort réel entre chantiers, sans dépendance à un seul
-  outil IA.
+### OPT-3 — Déclarer le typage strict comme contrat actif
+- **Problème résolu** : une pratique de qualité déjà respectée
+  (`strict: true`, 0 `any`) n'est protégée par aucun contrat documenté :
+  un futur assouplissement de `tsconfig` passerait sans alerte.
+- **Briques existantes réutilisables** : ligne prête dans
+  `docs/catalogue-contrats.md` (`catalogue:QUA-005`) ; contrôle déjà en
+  place (`tsc --build` dans les `checks` de `.drwil/ia-first.json`).
+- **Ce qu'il reste à faire** : déplacer la ligne du catalogue vers le
+  registre, aucun changement de code.
+- **Impact si implémenté** : plus petit effort de ce scan, ferme un trou
+  de gouvernance sans toucher une ligne de TypeScript.
 
-### OPT-3 — Déclarer les contrôles projet réels dans la config
-- **Problème résolu** : aucun contrôle réel (lint, typecheck, tests) du
-  dépôt n'est aujourd'hui câblé au hook de pre-commit — seule la
-  documentation est vérifiée.
-- **Briques existantes réutilisables** : `.githooks/run-checks.mjs` sait
-  déjà exécuter et rapporter des `checks` déclarés (testé dans
-  `packages/drwil/test/kit.test.mjs`) ; il ne manque qu'une
-  déclaration dans `.drwil/ia-first.json`.
-- **Ce qu'il reste à faire** : choisir les commandes réelles du monorepo
-  (`tsc --build`, `node --test` du kit...) et les ajouter à `checks`.
-- **Impact si implémenté** : fiabilité immédiate du filet de commit, sans
-  écrire une seule ligne de code nouveau — le plus petit effort de toute
-  cette liste.
-
-### OPT-4 — Sécuriser la mise à jour d'une ancienne installation
-- **Problème résolu** : une mise à jour du kit laisse aujourd'hui des
-  fichiers obsolètes dans le dépôt cible, source de confusion et de
-  contrôles en double.
-- **Briques existantes réutilisables** : `scaffold()`/`apply()`
-  (`packages/drwil/src/index.ts`) centralisent déjà toute la copie
-  et la politique de non-écrasement ; `docs/projets/suites-kit-portable.md`
-  décrit précisément le problème.
-- **Ce qu'il reste à faire** : introduire une manifest de fichiers retirés
-  par version, comparer le contenu avant suppression, couvrir par un test
-  de migration.
-- **Impact si implémenté** : mises à jour plus fiables, moins de nettoyage
-  manuel, meilleure adoption du kit en équipe.
+### OPT-4 — Résoudre la dérive de prose détectée par `apply()`
+- **Problème résolu** : la détection de dérive (AGENTS.md, docs/ia-first.md,
+  docs/contrats.md restés sur une version pré-kit) tourne déjà mais
+  n'aboutit à rien d'actionnable pour qui l'exécute.
+- **Briques existantes réutilisables** : lot 1 déjà codé et testé
+  (`docs/projets/apply-rafraichit-mecanique.md`).
+- **Ce qu'il reste à faire** : une décision de conception (comment
+  présenter/résoudre la dérive) avant tout code du lot 2.
+- **Impact si implémenté** : `apply()` devient réellement utile pour garder
+  un projet aligné avec les évolutions du kit, pas seulement pour les
+  détecter.
 
 ## Prochaine étape
 
