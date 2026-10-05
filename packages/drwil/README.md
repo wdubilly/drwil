@@ -17,22 +17,42 @@ Concrètement, le kit ajoute à un projet :
 
 ## Installer
 
+Les deux commandes s'exécutent **dans le dossier courant** (`cd` dans le
+projet avant de lancer la commande) ; aucune ne crée de nouveau dossier.
+Le choix entre les deux dépend de l'état du projet.
+
+### `init` — projet tout neuf, ou dossier vide
+
 ```bash
+mkdir MonProjet && cd MonProjet
 npx drwil init --name "MonProjet"
 ```
 
-Ou sur un projet déjà existant, sans rien écraser :
+Scaffolde la structure complète du kit dans le dossier courant
+(`AGENTS.md`, `docs/contrats.md`, hooks Git activés). Un deuxième
+`init` ne rafraîchit que `.githooks/` par défaut (les docs déjà
+écrites ne sont pas touchées) ; `--force` écrase tout, y compris les
+docs de projet ajoutées depuis — à réserver à un rattrapage volontaire.
+
+### `apply` — projet déjà existant
+
 ```bash
+cd MonProjetExistant
 npx drwil apply
 ```
 
-`init` scaffolde un projet neuf (dépôt Git, hooks activés) ; `apply`
-détecte la stack existante et installe le kit par-dessus — un fichier
-déjà présent qui a dérivé du gabarit est signalé, jamais réécrit.
+Pour un dépôt qui a déjà du code, un historique Git et des dépendances
+en place. `apply` détecte la stack présente (sous-dossiers
+backend/frontend, outils IA déjà configurés) et installe le kit
+par-dessus **sans jamais rien écraser** : un fichier déjà présent est
+laissé tel quel, et signalé s'il a dérivé du gabarit depuis une
+installation précédente. C'est la commande à utiliser pour adopter
+drwil sur un projet en cours.
 
-Options principales : `--lang fr|en`, `--layers backend,frontend`
-(détecté sinon), `--tools claude,copilot,cursor,codex,gemini`,
-`--ci github|gitlab|none`. Voir `npx drwil init --help`.
+Options principales (communes aux deux commandes) : `--lang fr|en`,
+`--layers backend,frontend` (détecté sinon), `--tools
+claude,copilot,cursor,codex,gemini`, `--ci github|gitlab|none`. Voir
+`npx drwil init --help` ou `npx drwil apply --help`.
 
 ## Ce que ça résout, et comment
 
