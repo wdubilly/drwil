@@ -26,7 +26,14 @@ tout seul en CI.
 3. Créer réellement : `node .githooks/creer-release.mjs` (tag annoté
    poussé sur `origin`, puis `gh release create --generate-notes` si
    `gh` est disponible et authentifié).
-4. Erreur de version pour une fois (tag mal calculé) : supprimer le tag
+4. Si le dépôt contient un ou plusieurs paquets npm publiables (un
+   `package.json`, si présent, suivi par Git, avec un `name`, sans
+   `"private": true`), un tarball (`npm pack`) est construit pour
+   chacun et attaché comme asset téléchargeable à la release GitHub —
+   utile pour donner le paquet à tester sans publier sur npm.
+   `--dry-run` liste les paquets qui seraient empaquetés sans rien
+   construire.
+5. Erreur de version pour une fois (tag mal calculé) : supprimer le tag
    (`git tag -d vX.Y.Z && git push origin :refs/tags/vX.Y.Z`) et relancer
    une fois la correction en place — jamais de réécriture de l'historique
    partagé.

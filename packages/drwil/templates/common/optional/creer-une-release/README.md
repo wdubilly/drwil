@@ -15,6 +15,19 @@ branche principale) sans PR supplémentaire.
   *patch* si aucun type `feat`/rupture reconnu), puis pose le tag + la
   release. Mode `--dry-run` : affiche la version calculée sans rien créer.
 
+## Tarball npm attaché à la release (téléchargeable)
+
+Si le dépôt contient un ou plusieurs paquets npm publiables (un
+`package.json`, si présent, suivi par Git, avec un `name`, sans
+`"private": true` — un monorepo avec `workspaces` et une racine privée
+n'en pose aucun problème : seuls les paquets non privés sont repérés),
+le script construit un tarball (`npm pack`) pour chacun et l'attache
+comme asset à la release GitHub. Quiconque visite la page de la release
+peut alors télécharger le `.tgz` directement, sans avoir besoin de
+cloner le dépôt ni de publier sur le registre npm. `--dry-run` liste
+les paquets qui seraient empaquetés sans construire ni attacher quoi
+que ce soit.
+
 ## Activation manuelle (sur demande explicite, comme un commit ou un push)
 
 Comme pour tout commit ou push, ce script ne doit jamais tourner tout
