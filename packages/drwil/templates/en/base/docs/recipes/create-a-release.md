@@ -25,7 +25,14 @@ script only runs on the user's explicit request, never on its own in CI.
 3. Create for real: `node .githooks/creer-release.mjs` (annotated tag
    pushed to `origin`, then `gh release create --generate-notes` if `gh`
    is available and authenticated).
-4. Wrong version for once (miscalculated tag): delete the tag (`git tag
+4. If the repo contains one or more publishable npm packages (a
+   `package.json`, if present, tracked by Git, with a `name`, without
+   `"private": true`), a tarball (`npm pack`) is built for each and
+   attached as a downloadable asset on the GitHub release — handy to
+   hand the package to someone to try without publishing to npm.
+   `--dry-run` lists the packages that would be packed without
+   building anything.
+5. Wrong version for once (miscalculated tag): delete the tag (`git tag
    -d vX.Y.Z && git push origin :refs/tags/vX.Y.Z`) and rerun once the
    fix is in place — never rewrite shared history.
 

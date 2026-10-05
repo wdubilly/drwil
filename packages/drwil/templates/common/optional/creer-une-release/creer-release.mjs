@@ -9,6 +9,9 @@
 // Usage : node creer-release.mjs [--dry-run]
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import { readFileSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, dirname } from "node:path";
 
 const dryRun = process.argv.includes("--dry-run");
 
@@ -63,6 +66,50 @@ export function versionSuivante(tag, bump) {
   return `v${maj}.${min}.${pat}`;
 }
 
+// Repère les paquets npm publiables du dépôt (package.json suivi par Git,
+// avec un "name" et sans "private": true) — ignore le package.json racine
+// d'un monorepo privé (workspaces) et tout paquet explicitement marqué privé.
+// Best-effort : un package.json illisible/invalide est ignoré, pas une erreur.
+export function paquetsPublics() {
+  let fichiers;
+  try {
+    fichiers = git(["ls-files", "--", "package.json", "*/package.json", "*/*/package.json", "*/*/*/package.json"])
+      .split("\n")
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+  const dossiers = [];
+  for (const f of fichiers) {
+    try {
+      const pkg = JSON.parse(readFileSync(f, "utf8"));
+      if (pkg.private || !pkg.name) continue;
+      dossiers.push(dirname(f));
+    } catch {
+      // package.json illisible ou invalide : ignoré, pas bloquant pour la release
+    }
+  }
+  return dossiers;
+}
+
+// Construit un tarball (npm pack) pour chaque paquet publiable trouvé, dans
+// un dossier temporaire, et renvoie les chemins des .tgz produits.
+function construireTarballs(dossiers) {
+  const sortie = [];
+  if (dossiers.length === 0) return sortie;
+  const dest = mkdtempSync(join(tmpdir(), "creer-release-"));
+  for (const dossier of dossiers) {
+    try {
+      const out = execFileSync("npm", ["pack", "--silent", "--pack-destination", dest], { cwd: dossier, encoding: "utf8" }).trim();
+      const nomFichier = out.split("\n").pop();
+      sortie.push(join(dest, nomFichier));
+    } catch (e) {
+      console.error(`[creer-release] "npm pack" a échoué pour ${dossier}, tarball non attaché : ${e.message}`);
+    }
+  }
+  return sortie;
+}
+
 function main() {
   const tag = dernierTag();
   const commits = commitsDepuis(tag);
@@ -75,6 +122,10 @@ function main() {
   console.log(`[creer-release] dernier tag : ${tag ?? "(aucun)"}`);
   console.log(`[creer-release] bump détecté : ${bump} (${commits.length} commit(s) analysé(s))`);
   console.log(`[creer-release] prochaine version : ${prochain}`);
+  const paquets = paquetsPublics();
+  if (paquets.length > 0) {
+    console.log(`[creer-release] tarball(s) à construire et attacher à la release : ${paquets.join(", ")}`);
+  }
   if (dryRun) {
     console.log("[creer-release] --dry-run : aucun tag ni release créé.");
     return;
@@ -83,11 +134,13 @@ function main() {
   git(["tag", "-a", prochain, "-m", `Release ${prochain}\n\n${notes}`]);
   git(["push", "origin", prochain]);
   console.log(`[creer-release] tag ${prochain} créé et poussé.`);
+  const tarballs = construireTarballs(paquets);
   try {
-    execFileSync("gh", ["release", "create", prochain, "--generate-notes"], { stdio: "inherit" });
+    execFileSync("gh", ["release", "create", prochain, ...tarballs, "--generate-notes"], { stdio: "inherit" });
+    if (tarballs.length > 0) console.log(`[creer-release] tarball(s) attaché(s) à la release : ${tarballs.join(", ")}`);
   } catch (e) {
     console.error(`[creer-release] tag créé, mais la release GitHub a échoué (gh indisponible ou permission insuffisante) : ${e.message}`);
-    console.error("[creer-release] rattraper à la main : gh release create " + prochain + " --generate-notes");
+    console.error("[creer-release] rattraper à la main : gh release create " + prochain + " --generate-notes" + (tarballs.length ? " " + tarballs.join(" ") : ""));
   }
 }
 

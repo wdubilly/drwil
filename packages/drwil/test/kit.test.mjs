@@ -860,3 +860,41 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
   assert.match(r.stdout, /v0\.1\.0/);
   assert.match(r.stdout, /dry-run/);
 });
+
+test("créer une release : repère les paquets npm publiables (package.json suivi, non private) pour le tarball de release", async () => {
+  const { paquetsPublics } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: true }));
+  // racine privée (monorepo), un paquet publiable dans packages/truc, un paquet explicitement privé ailleurs.
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "racine", private: true }));
+  mkdirSync(join(dir, "packages/truc"), { recursive: true });
+  writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc" }));
+  mkdirSync(join(dir, "packages/prive"), { recursive: true });
+  writeFileSync(join(dir, "packages/prive/package.json"), JSON.stringify({ name: "prive", private: true }));
+  git(dir, "add", "-A");
+  git(dir, "commit", "-m", "feat: ajoute des paquets de test");
+
+  const cwdAvant = process.cwd();
+  process.chdir(dir);
+  try {
+    const paquets = paquetsPublics();
+    assert.deepEqual(paquets.sort(), ["packages/truc"], "seul le paquet non private avec un name est retenu");
+  } finally {
+    process.chdir(cwdAvant);
+  }
+});
+
+test("créer une release : --dry-run liste le paquet npm à empaqueter quand il y en a un", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: true }));
+  mkdirSync(join(dir, ".githooks"), { recursive: true });
+  const src = fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
+  writeFileSync(join(dir, ".githooks/creer-release.mjs"), readFileSync(src, "utf8"));
+  mkdirSync(join(dir, "packages/truc"), { recursive: true });
+  writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc", version: "1.0.0" }));
+  git(dir, "add", "-A");
+  git(dir, "commit", "-m", "feat: ajoute un paquet publiable");
+  const r = spawnSync(process.execPath, [".githooks/creer-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /tarball.*packages\/truc/);
+});

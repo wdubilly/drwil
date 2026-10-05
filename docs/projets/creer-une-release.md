@@ -1,6 +1,6 @@
 # Projet : créer une release (tag + notes) à chaque chantier fusionné
 
-**Statut** : cadré le 2026-10-05 — lots 1 à 4 faits, à fusionner.
+**Statut** : cadré le 2026-10-05 — lots 1 à 5 faits, à fusionner.
 
 <!-- cadrage
 fichiers:
@@ -69,6 +69,12 @@ principale, calculés automatiquement, sans publication npm pour l'instant
   + script copiable, comme `tableau-de-bord`), **et** activé réellement
   sur ce dépôt (dogfood) — compromis demandé par l'utilisateur pour ne
   bloquer aucun projet généré tout en servant ici dès maintenant.
+- 2026-10-05 : la release attache en plus un **tarball npm téléchargeable**
+  (`npm pack`) pour chaque paquet publiable du dépôt (`package.json`
+  suivi, avec un `name`, sans `"private": true` — un monorepo avec
+  workspaces n'en pose aucun pour la racine privée), comme asset de la
+  release GitHub — pour donner le paquet à tester sans publier sur npm
+  (décision utilisateur, nouvelle demande après le chantier initial).
 
 ## 5. Points à trancher
 
@@ -104,17 +110,25 @@ principale, calculés automatiquement, sans publication npm pour l'instant
   `node .githooks/creer-release.mjs`. Critère de sortie : aucun job
   `creer-release` dans `.github/workflows/ia-first.yml` ; recette à jour
   sur ce point.
+- **Lot 5 — tarball npm attaché à la release** [IA] : `paquetsPublics()`
+  repère les `package.json` suivis par Git, avec un `name`, sans
+  `"private": true` (best-effort, ignore un `package.json` illisible) ;
+  `construireTarballs()` lance `npm pack` pour chacun dans un dossier
+  temporaire et renvoie les chemins des `.tgz` ; `main()` les passe à
+  `gh release create` comme assets. `--dry-run` liste les paquets qui
+  seraient empaquetés sans rien construire. Critère de sortie : tests
+  unitaires sur `paquetsPublics()` (racine privée ignorée, paquet privé
+  ignoré, paquet publiable retenu) et sur le `--dry-run` qui mentionne le
+  tarball ; vérifié en conditions réelles (`npm pack` exécuté à la main
+  sur `packages/drwil`, tarball installable).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-06) : lots 1 à 3 faits et activés ; lot 4
-  révisé — pas de job CI automatique. Script
-  `.githooks/creer-release.mjs` (détection bump + tag + release),
-  recette/skill FR/EN. 49/49 tests verts, le contrôle des
-  chemins/contrats cités et la couverture CI (QUA-013) restent verts.
-  Vérifié en conditions réelles (`--dry-run`) sur ce dépôt : première
-  version calculée `v0.1.0`.
+- **Dernier état** (2026-10-05) : lots 1 à 5 faits et activés. Script
+  `.githooks/creer-release.mjs` (détection bump + tag + release + tarball
+  npm attaché), recette/skill FR/EN à jour. 51/51 tests verts, le
+  contrôle des chemins/contrats cités et la couverture CI (QUA-013)
+  restent verts. Vérifié en conditions réelles : `npm pack` produit bien
+  `drwil-0.0.1.tgz` depuis `packages/drwil`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] fusionner ce chantier. La release reste
-  ensuite une action manuelle, proposée par l'IA et lancée seulement sur
-  demande explicite de l'utilisateur.
+- **Prochaine étape** : [humain] fusionner ce chantier.
