@@ -1,8 +1,7 @@
 # Intention : Travailler avec des branches et des merge/pull requests
 
 **Statut** (2026-10-05) : tranché — questions résolues (voir « Décisions
-prises »), passage en chantier d'implémentation dans
-`docs/projets/travailler-avec-branches-et-mr.md`.
+prises »), implémenté et clôturé (voir `docs/projets/journal.md`).
 
 ## Besoin
 Documenter et, si nécessaire, adapter le kit pour un usage courant avec des
@@ -58,7 +57,7 @@ continue à committer directement dessus.
   qui pointe vers la fiche `docs/projets/` concernée et une checklist des
   contrôles (`.githooks/run-checks.sh` vert, fiche à jour).
 - Indexer la nouvelle recette dans `AGENTS.md`/`README.md` comme les
-  recettes précédentes (cf. `docs/projets/informer-capacites-drwil.md`).
+  recettes précédentes (chantier clôturé, voir `docs/projets/journal.md`).
 
 ## Hors périmètre
 - Tout contrôle automatique (hook) qui vérifierait le **nom** de branche

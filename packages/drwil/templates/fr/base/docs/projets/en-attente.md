@@ -16,6 +16,12 @@ Priorité facultative, non vérifiée par check-docs.mjs (simple convention) :
 `[P0]` le plus urgent, `[P1]` élevée, `[P2]` normale, `[P3]` le moins urgent.
 Sans tag, un sujet est considéré `[P2]`.
 
+Un chantier dont la fiche est **entièrement** terminée (pas un simple point
+parmi d'autres) est condensé dans `docs/projets/journal.md` puis retiré de
+cet index, pas coché : voir `docs/recettes/travailler-en-branche.md`,
+section « Clôturer ». Les lignes cochées restantes concernent des points
+déjà faits d'une fiche qui reste ouverte par ailleurs.
+
 ## Chantiers
 
 *(vide à l'installation — une section par thème, une case par sujet)*

@@ -36,11 +36,22 @@ principale.
 
 - Une fois la pull/merge request fusionnée (merge ou squash, au choix du
   projet, le kit n'impose rien ici) : passer le Statut de la fiche à
-  "fait", cocher sa case dans l'index si elle y figure, supprimer la
-  branche.
+  "fait", supprimer la branche.
 - Si la fusion se fait par une autre personne que l'autrice/auteur du
   travail (relecture humaine), c'est elle qui clôture la fiche au moment
   du merge — pas avant.
+- Si la fiche entière est désormais terminée (pas un simple lot parmi
+  d'autres d'une fiche qui reste ouverte par ailleurs) : résumer la fiche
+  en une entrée courte dans `docs/projets/journal.md` (date, titre,
+  décisions clés, commit/PR de clôture), supprimer le fichier de la
+  fiche, puis retirer la ligne correspondante de `docs/projets/en-attente.md`
+  (pas la cocher : le journal devient la source de clôture, l'index ne
+  liste que le travail restant). Rien n'est perdu — l'historique complet
+  reste dans git (`git log --follow -- docs/projets/<fiche>.md`).
+- Si la fiche garde des points ouverts par ailleurs (chantier en
+  plusieurs lots), ne rien condenser : cocher la case correspondante dans
+  l'index comme avant, la fiche reste active tant qu'elle n'est pas
+  entièrement terminée.
 
 ## Ce que le kit vérifie (QUA-017)
 

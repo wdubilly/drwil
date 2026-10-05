@@ -16,6 +16,13 @@ Optional priority, not checked by check-docs.mjs (plain convention): `[P0]`
 most urgent, `[P1]` high, `[P2]` normal, `[P3]` least urgent. Without a tag,
 a topic is considered `[P2]`.
 
+A project whose card is **entirely** finished (not just one point among
+others) is condensed into `docs/projects/journal.md` then removed from
+this index, not checked: see
+`docs/recipes/working-with-branches.md`, "Closing" section. Remaining
+checked lines are already-done points of a card that stays open
+otherwise.
+
 ## Projects
 
 *(empty on install — one section per theme, one item per topic)*
