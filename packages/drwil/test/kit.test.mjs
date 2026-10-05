@@ -35,7 +35,9 @@ test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", a
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, name: "demo", description: "Démo $& littéral" }));
   for (const f of ["AGENTS.md", "CLAUDE.md", "GEMINI.md", ".claude/settings.json", ".cursor/rules/ia-first.mdc",
-    ".github/copilot-instructions.md", "backend/AGENTS.md", "frontend/CLAUDE.md", "docs/contrats.md", "docs/architecture.md"]) {
+    ".github/copilot-instructions.md", ".github/instructions/ajouter-une-route-api.instructions.md",
+    ".github/instructions/ajouter-un-ecran-front.instructions.md",
+    "backend/AGENTS.md", "frontend/CLAUDE.md", "docs/contrats.md", "docs/architecture.md"]) {
     assert.ok(existsSync(join(dir, f)), f);
   }
   assert.ok(!existsSync(join(dir, ".githooks/run-checks.sh")) && !existsSync(join(dir, ".githooks/check-docs.py")), "plus de bash ni de python");
@@ -686,6 +688,23 @@ test("commande /drwil : pas livrée sans Claude Code", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, tools: "codex", git: false }));
   assert.ok(!existsSync(join(dir, ".claude")));
+});
+
+test("skills Copilot CLI (applyTo) : parité fonctionnelle sur les 2 recettes qui s'y prêtent, FR et EN", async () => {
+  for (const lang of ["fr", "en"]) {
+    const dir = tmp();
+    await quiet(() => init({ targetDir: dir, lang, git: false }));
+    const api = lang === "fr" ? "ajouter-une-route-api" : "add-an-api-route";
+    const ecran = lang === "fr" ? "ajouter-un-ecran-front" : "add-a-frontend-screen";
+    const apiContent = read(dir, `.github/instructions/${api}.instructions.md`);
+    assert.match(apiContent, /applyTo:\s*"backend\/\*\*"/);
+    const ecranContent = read(dir, `.github/instructions/${ecran}.instructions.md`);
+    assert.match(ecranContent, /applyTo:\s*"frontend\/\*\*"/);
+  }
+  // Pas livré si Copilot n'est pas sélectionné.
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "codex", git: false }));
+  assert.ok(!existsSync(join(dir, ".github", "instructions")));
 });
 
 test("lot 7 : installation anglaise complète, contenu des lots 1 à 6 traduit, contrôles verts", async () => {
