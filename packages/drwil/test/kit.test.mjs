@@ -525,6 +525,38 @@ test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et 
   assert.match(r.stdout, /couverture CI de chaque contrôle/);
 });
 
+test("alerte CI cassée sur la branche principale : job dédié livré, GitHub et GitLab", async () => {
+  // GitHub : se déclenche seulement sur push vers la branche par défaut,
+  // seulement si checks (ou kit-tests) échoue, sans recréer de doublon.
+  const dirGh = tmp();
+  await quiet(() => init({ targetDir: dirGh, ci: "github", git: false }));
+  const gh = read(dirGh, ".github/workflows/ia-first.yml");
+  assert.match(gh, /alerter-si-ci-cassee:/);
+  assert.match(gh, /needs:\s*checks/);
+  assert.match(gh, /github\.event_name == 'push'/);
+  assert.match(gh, /github\.event\.repository\.default_branch/);
+  assert.match(gh, /needs\.checks\.result == 'failure'/);
+  assert.match(gh, /gh issue create/);
+  assert.match(gh, /pas de doublon/);
+
+  // GitLab : stage dédiée après `test`, déclenchée seulement sur la branche
+  // par défaut et seulement en cas d'échec d'un job de la stage `test`.
+  const dirGl = tmp();
+  await quiet(() => init({ targetDir: dirGl, ci: "gitlab", git: false }));
+  const gl = read(dirGl, ".gitlab-ci.yml");
+  assert.match(gl, /alerter-si-ci-cassee:/);
+  assert.match(gl, /stage: alerte/);
+  assert.match(gl, /CI_COMMIT_BRANCH == \$CI_DEFAULT_BRANCH/);
+  assert.match(gl, /when: on_failure/);
+  assert.match(gl, /pas de doublon/);
+
+  // Les deux restent couverts par QUA-013 (le nouveau job n'y casse rien).
+  for (const dir of [dirGh, dirGl]) {
+    const r = spawnSync(process.execPath, [".githooks/check-control-coverage.mjs"], { cwd: dir, encoding: "utf8" });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+  }
+});
+
 test("gabarits de pull/merge request : livrés selon le ci et la langue choisis", async () => {
   const cas = [
     { lang: "fr", ci: "github", chemin: ".github/pull_request_template.md", motif: /Fiche concernée/ },

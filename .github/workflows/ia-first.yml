@@ -27,3 +27,28 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm test --workspace packages/drwil
+  # Pas de protection de branche possible sur un dépôt privé en plan gratuit
+  # (le bouton « Merge » de GitHub.com reste inconditionnel) : seule une
+  # alerte après coup est possible. Se déclenche seulement sur push vers la
+  # branche principale (pas sur les pull/merge requests) et seulement si
+  # `checks` ou `kit-tests` a échoué ; n'ouvre pas de doublon si une issue
+  # équivalente est déjà ouverte.
+  alerter-si-ci-cassee:
+    needs: [checks, kit-tests]
+    if: always() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.checks.result == 'failure' || needs.kit-tests.result == 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Ouvrir une issue si la CI casse sur la branche principale
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          titre="CI cassée sur la branche principale (run ${{ github.run_id }})"
+          deja=$(gh issue list --repo "${{ github.repository }}" --search "CI cassée sur la branche principale in:title" --state open --json number --jq 'length')
+          if [ "$deja" = "0" ]; then
+            gh issue create --repo "${{ github.repository }}" --title "$titre" \
+              --body "Un contrôle a échoué sur la branche principale (${{ github.event.repository.default_branch }}). Voir ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. À corriger avant tout nouveau chantier."
+          else
+            echo "Une issue de CI cassée est déjà ouverte, pas de doublon."
+          fi
