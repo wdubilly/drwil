@@ -33,8 +33,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [x] [IA] [P2] Tester le kit sous Windows et macOS — matrice CI ajoutée
   le 2026-10-04, verte sur les 3 OS (run CI `37238852012`) —
   `docs/projets/suites-kit-portable.md` (point 1).
-- [ ] [IA] [P3] Supprimer à l'`init` les fichiers obsolètes d'une ancienne version
-  du kit — `docs/projets/suites-kit-portable.md` (point 3).
+- [x] [IA] [P3] Supprimer à l'`init` les fichiers obsolètes d'une ancienne version
+  du kit — fait le 2026-10-05 —
+  `docs/projets/suites-kit-portable.md` (point 3).
 - [ ] [humain] [P2] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projets/suites-kit-portable.md` (point 2).
 - [x] [IA] Renommer le paquet `@drwil/kit-ia-first` en `drwil`
@@ -49,11 +50,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   restés sur une version pré-kit chez drwil) — lot 1 (détection et
   signalement) fait le 2026-10-04 ; lot 2 (résolution) reste à trancher —
   `docs/projets/apply-rafraichit-mecanique.md`.
-- [ ] [IA] [P2] Manifeste des fichiers installés par le kit + commande de
-  désinstallation propre (réutilise le mécanisme pressenti au point 3 de
-  suites-kit-portable.md) — lot 1 (manifeste) fait le 2026-10-04 ; lot 2
-  (désinstallation) à ouvrir —
-  `docs/projets/desinstaller-proprement.md`.
 - [ ] [décision] [P3] Skills Copilot CLI (parité fonctionnelle, pas mécanique :
   Copilot CLI déclenche par motif de fichier, pas par description comme
   Claude). 2 recettes s'y prêtent (route API → `applyTo: backend/**`, écran

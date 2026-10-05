@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { init, apply } from "../dist/index.js";
+import { init, apply, uninstall } from "../dist/index.js";
 
 const tmp = () => mkdtempSync(join(tmpdir(), "drwil-"));
 const quiet = async (fn) => {
@@ -396,6 +396,69 @@ test("init écrit un manifeste des fichiers installés (chemin + sha256), fusion
   const avant = read(dir, ".drwil/fichiers-installes.json");
   await quiet(() => apply({ targetDir: dir, git: false, layers: "backend,frontend" }));
   assert.equal(read(dir, ".drwil/fichiers-installes.json"), avant);
+});
+
+test("lot 2 (désinstallation) : dry-run par défaut, --yes supprime, fichier modifié conservé, docs/projets jamais touché", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  assert.ok(existsSync(join(dir, ".githooks/check-docs.mjs")));
+
+  // dry-run (défaut) : rien n'est supprimé, juste rapporté.
+  let rapport = await uninstall({ targetDir: dir });
+  assert.ok(rapport.removed.includes(".githooks/check-docs.mjs"));
+  assert.ok(existsSync(join(dir, ".githooks/check-docs.mjs")), "dry-run ne supprime rien");
+  assert.ok(existsSync(join(dir, "AGENTS.md")));
+
+  // un fichier modifié depuis l'installation : jamais supprimé, listé à part.
+  writeFileSync(join(dir, "AGENTS.md"), read(dir, "AGENTS.md") + "\nLigne ajoutée par le projet.\n");
+  const empreinteModifiee = read(dir, "AGENTS.md");
+
+  // suppression réelle.
+  rapport = await uninstall({ targetDir: dir, dryRun: false });
+  assert.ok(!existsSync(join(dir, ".githooks/check-docs.mjs")), "fichier intact supprimé");
+  assert.ok(rapport.modified.includes("AGENTS.md"), "fichier modifié signalé");
+  assert.ok(existsSync(join(dir, "AGENTS.md")), "fichier modifié jamais supprimé");
+  assert.equal(read(dir, "AGENTS.md"), empreinteModifiee);
+
+  // docs/projets/, docs/intentions/, docs/recettes/ jamais touchés, même présents au manifeste.
+  const manifeste = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  assert.ok(Object.keys(manifeste).some((p) => p.startsWith("docs/projets/")));
+  assert.ok(existsSync(join(dir, "docs/projets/en-attente.md")), "docs/projets/ jamais supprimé par uninstall");
+
+  // le manifeste ne garde plus les entrées des fichiers réellement supprimés.
+  const manifesteApres = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  assert.ok(!(".githooks/check-docs.mjs" in manifesteApres));
+});
+
+test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne version du kit, jamais modifié, est supprimé par init()/apply()", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+
+  // simule un fichier d'une ancienne version du kit, plus présent dans le template actuel,
+  // mais déjà enregistré dans le manifeste (comme s'il avait été écrit par une version antérieure).
+  const obsolete = ".githooks/ancien-script.py";
+  const contenuObsolete = "# ancien script Python, retiré du kit depuis\n";
+  writeFileSync(join(dir, obsolete), contenuObsolete);
+  const manifeste = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  manifeste[obsolete] = createHash("sha256").update(contenuObsolete).digest("hex");
+  writeFileSync(join(dir, ".drwil/fichiers-installes.json"), JSON.stringify(manifeste, null, 2) + "\n");
+
+  // un fichier obsolète mais modifié depuis par le projet : jamais supprimé.
+  const obsoleteModifie = ".githooks/autre-ancien.sh";
+  const contenuInitial = "#!/bin/sh\n# ancien hook\n";
+  writeFileSync(join(dir, obsoleteModifie), contenuInitial);
+  manifeste[obsoleteModifie] = createHash("sha256").update(contenuInitial).digest("hex");
+  writeFileSync(join(dir, ".drwil/fichiers-installes.json"), JSON.stringify(manifeste, null, 2) + "\n");
+  writeFileSync(join(dir, obsoleteModifie), contenuInitial + "# modifié par le projet\n");
+
+  const lignes = await capture(() => init({ targetDir: dir, git: false }));
+  assert.ok(!existsSync(join(dir, obsolete)), "fichier obsolète non modifié supprimé");
+  assert.ok(existsSync(join(dir, obsoleteModifie)), "fichier obsolète mais modifié conservé");
+  assert.ok(lignes.some((l) => l.includes(obsolete)), lignes.join("\n"));
+
+  const manifesteApres = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  assert.ok(!(obsolete in manifesteApres), "entrée retirée du manifeste");
+  assert.ok(obsoleteModifie in manifesteApres, "entrée du fichier modifié conservée");
 });
 
 test("un contrat préfixé par un autre dépôt n'est pas cherché dans le registre local", async () => {

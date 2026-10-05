@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, readdir, chmod } from "node:fs/promises";
+import { mkdir, readFile, writeFile, readdir, chmod, rm } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -187,9 +187,10 @@ function relPosix(from: string, to: string): string {
 }
 
 async function writeOut(
-  target: string, content: string, targetDir: string, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>,
+  target: string, content: string, targetDir: string, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>, attendus?: string[],
 ): Promise<void> {
   const rel = relPosix(targetDir, target);
+  if (attendus) attendus.push(rel);
   if (existsSync(target) && !shouldOverwrite(rel)) {
     if (derives && detecterDerive(target, content)) derives.push(rel);
     return;
@@ -204,36 +205,36 @@ async function writeOut(
 }
 
 /** Copie un dossier de modèles à la racine de la cible, en rendant les variables. */
-async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>): Promise<void> {
+async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>, attendus?: string[]): Promise<void> {
   for (const file of await walk(srcDir)) {
     const target = join(r.opts.targetDir, relative(srcDir, file));
-    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, shouldOverwrite, derives, manifest);
+    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, shouldOverwrite, derives, manifest, attendus);
   }
 }
 
-async function scaffold(r: Resolved, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>): Promise<void> {
+async function scaffold(r: Resolved, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>, attendus?: string[]): Promise<void> {
   const langDir = join(templatesDir, r.lang);
-  await copyTree(join(templatesDir, "common", "base"), r, shouldOverwrite, derives, manifest);
-  await copyTree(join(langDir, "base"), r, shouldOverwrite, derives, manifest);
+  await copyTree(join(templatesDir, "common", "base"), r, shouldOverwrite, derives, manifest, attendus);
+  await copyTree(join(langDir, "base"), r, shouldOverwrite, derives, manifest, attendus);
   for (const tool of r.tools) {
-    await copyTree(join(templatesDir, "common", "tools", tool), r, shouldOverwrite, derives, manifest);
-    await copyTree(join(langDir, "tools", tool), r, shouldOverwrite, derives, manifest);
+    await copyTree(join(templatesDir, "common", "tools", tool), r, shouldOverwrite, derives, manifest, attendus);
+    await copyTree(join(langDir, "tools", tool), r, shouldOverwrite, derives, manifest, attendus);
   }
-  await copyTree(join(templatesDir, "common", "ci", r.ci), r, shouldOverwrite, derives, manifest);
-  await copyTree(join(langDir, "ci", r.ci), r, shouldOverwrite, derives, manifest);
+  await copyTree(join(templatesDir, "common", "ci", r.ci), r, shouldOverwrite, derives, manifest, attendus);
+  await copyTree(join(langDir, "ci", r.ci), r, shouldOverwrite, derives, manifest, attendus);
 
   for (const layer of r.layers) {
     const specific = join(langDir, "layers", `${layer}.md`);
     const source = LAYER_TEMPLATES.includes(layer) && existsSync(specific) ? specific : join(langDir, "layers", "generic.md");
     const up = "../".repeat(layer.split("/").filter(Boolean).length);
     const content = render(await readFile(source, "utf8"), r, { layer }).replace("`../AGENTS.md`", `\`${up}AGENTS.md\``);
-    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, shouldOverwrite, derives, manifest);
+    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, shouldOverwrite, derives, manifest, attendus);
   }
 
   // Un seul contenu de consignes (AGENTS.md) ; les outils qui ne le lisent pas nativement reçoivent un import.
   const pointers = [r.tools.includes("claude") && "CLAUDE.md", r.tools.includes("gemini") && "GEMINI.md"].filter(Boolean) as string[];
   for (const dir of [".", ...r.layers]) {
-    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite, derives, manifest);
+    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite, derives, manifest, attendus);
   }
 }
 
@@ -253,11 +254,104 @@ function readManifest(targetDir: string): Record<string, string> {
 
 // Fusionné (jamais réécrit intégralement) : une installation partielle (apply ciblé)
 // ne doit pas perdre les entrées d'une installation précédente (contrainte section 3,
-// docs/projets/desinstaller-proprement.md).
-async function writeManifest(targetDir: string, manifest: Record<string, string>): Promise<void> {
+// docs/projets/desinstaller-proprement.md). `obsoletes` : chemins supprimés par
+// nettoyerObsoletes() dans cette même exécution, retirés du manifeste fusionné
+// (sinon la fusion les réintroduirait).
+async function writeManifest(targetDir: string, manifest: Record<string, string>, obsoletes: string[] = []): Promise<void> {
   const fusion = { ...readManifest(targetDir), ...manifest };
+  for (const o of obsoletes) delete fusion[o];
   await mkdir(join(targetDir, ".drwil"), { recursive: true });
   await writeFile(join(targetDir, ...MANIFEST_PATH), JSON.stringify(fusion, null, 2) + "\n");
+}
+
+// Fiches et décisions produites par l'utilisateur/l'IA au fil du temps, jamais retirées
+// automatiquement (ni par le nettoyage d'obsolètes, ni par `uninstall`), même si leur contenu
+// initial (gabarit vide) a été copié par le kit — décision du 2026-10-04,
+// docs/projets/desinstaller-proprement.md.
+const PROTECTED_DIRS = ["docs/projets/", "docs/projects/", "docs/intentions/", "docs/recettes/", "docs/recipes/"];
+function estProtege(rel: string): boolean {
+  return PROTECTED_DIRS.some((p) => rel.startsWith(p));
+}
+
+// Fichiers écrits par une version antérieure du kit, absents de la version actuelle du template
+// (`attendus`), jamais modifiés depuis l'installation (empreinte inchangée) : supprimés.
+// Scopé à la mécanique du kit (même périmètre que KIT_MECHANICS) — jamais docs/projets/ etc.
+// (point 3, docs/projets/suites-kit-portable.md ; mécanisme partagé avec `uninstall`,
+// docs/projets/desinstaller-proprement.md).
+async function nettoyerObsoletes(targetDir: string, ancien: Record<string, string>, attendus: string[]): Promise<string[]> {
+  const attenduSet = new Set(attendus);
+  const supprimes: string[] = [];
+  for (const [rel, hash] of Object.entries(ancien)) {
+    if (!rel.startsWith(KIT_MECHANICS) || attenduSet.has(rel) || estProtege(rel)) continue;
+    const abs = join(targetDir, rel);
+    if (!existsSync(abs)) continue;
+    const actuel = sha256(await readFile(abs, "utf8"));
+    if (actuel !== hash) continue; // modifié depuis l'installation : jamais supprimé automatiquement.
+    await rm(abs);
+    supprimes.push(rel);
+  }
+  return supprimes;
+}
+
+// Supprime, de bas en haut, les dossiers devenus vides après une suppression de fichiers.
+async function purgerDossiersVides(targetDir: string, relSupprimes: string[]): Promise<void> {
+  const dossiers = new Set(relSupprimes.map((r) => dirname(join(targetDir, r))));
+  for (const depart of dossiers) {
+    let courant = depart;
+    while (courant !== targetDir && courant.startsWith(targetDir)) {
+      let entries: string[];
+      try {
+        entries = await readdir(courant);
+      } catch {
+        break;
+      }
+      if (entries.length) break;
+      // fs.rm exige recursive:true pour un dossier, même vide (sinon EISDIR).
+      await rm(courant, { recursive: true });
+      courant = dirname(courant);
+    }
+  }
+}
+
+export interface UninstallOptions {
+  targetDir: string;
+  /** Défaut `true` : liste ce qui serait supprimé sans rien toucher (décision du 2026-10-04,
+   * docs/projets/desinstaller-proprement.md — confirmation explicite avant suppression réelle). */
+  dryRun?: boolean;
+}
+
+export interface UninstallReport {
+  /** Fichiers supprimés (ou qui le seraient, en mode simulation). */
+  removed: string[];
+  /** Fichiers dont l'empreinte diffère du manifeste (modifiés depuis l'installation) : jamais supprimés. */
+  modified: string[];
+}
+
+/** Désinstalle la mécanique du kit à partir du manifeste des fichiers installés. Ne touche
+ * jamais `docs/projets/`, `docs/intentions/`, `docs/recettes/` (ni leurs équivalents anglais),
+ * ni un fichier modifié depuis l'installation (empreinte différente). */
+export async function uninstall(opts: UninstallOptions): Promise<UninstallReport> {
+  const manifest = readManifest(opts.targetDir);
+  const dryRun = opts.dryRun ?? true;
+  const removed: string[] = [];
+  const modified: string[] = [];
+  for (const [rel, hash] of Object.entries(manifest)) {
+    if (estProtege(rel)) continue;
+    const abs = join(opts.targetDir, rel);
+    if (!existsSync(abs)) continue;
+    const actuel = sha256(await readFile(abs, "utf8"));
+    if (actuel !== hash) { modified.push(rel); continue; }
+    removed.push(rel);
+  }
+  if (!dryRun) {
+    for (const rel of removed) await rm(join(opts.targetDir, rel));
+    const fusion = { ...manifest };
+    for (const rel of removed) delete fusion[rel];
+    await mkdir(join(opts.targetDir, ".drwil"), { recursive: true });
+    await writeFile(join(opts.targetDir, ...MANIFEST_PATH), JSON.stringify(fusion, null, 2) + "\n");
+    await purgerDossiersVides(opts.targetDir, removed);
+  }
+  return { removed, modified };
 }
 
 function readConfig(targetDir: string): Record<string, unknown> | null {
@@ -339,6 +433,12 @@ function reportDerives(derives: string[]): void {
   for (const d of derives) console.log(`  - ${d}`);
 }
 
+function reportObsoletes(obsoletes: string[]): void {
+  if (!obsoletes.length) return;
+  console.log(`Fichiers obsolètes d'une version antérieure du kit supprimés (jamais modifiés depuis l'installation) :`);
+  for (const o of obsoletes) console.log(`  - ${o}`);
+}
+
 /**
  * Installe le kit. Par défaut ne réécrase que `.githooks/` (mécanique du kit) ; le
  * reste (AGENTS.md, docs/contrats.md, docs/projets/en-attente.md…) n'est écrit que
@@ -350,11 +450,15 @@ export async function init(opts: InitOptions): Promise<void> {
   const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => rel.startsWith(KIT_MECHANICS);
   const derives: string[] = [];
   const manifest: Record<string, string> = {};
-  await scaffold(r, shouldOverwrite, derives, manifest);
-  await writeManifest(opts.targetDir, manifest);
+  const attendus: string[] = [];
+  const ancien = readManifest(opts.targetDir);
+  await scaffold(r, shouldOverwrite, derives, manifest, attendus);
+  const obsoletes = await nettoyerObsoletes(opts.targetDir, ancien, attendus);
+  await writeManifest(opts.targetDir, manifest, obsoletes);
   await writeConfig(r);
   reportStack(r);
   reportDerives(derives);
+  reportObsoletes(obsoletes);
   if (opts.git !== false) setupGit(opts.targetDir, true);
 }
 
@@ -364,11 +468,15 @@ export async function apply(opts: InitOptions): Promise<void> {
   const r = resolve(opts, stack => stack.map(s => s.path).filter(p => p !== "."));
   const derives: string[] = [];
   const manifest: Record<string, string> = {};
-  await scaffold(r, () => false, derives, manifest);
-  await writeManifest(opts.targetDir, manifest);
+  const attendus: string[] = [];
+  const ancien = readManifest(opts.targetDir);
+  await scaffold(r, () => false, derives, manifest, attendus);
+  const obsoletes = await nettoyerObsoletes(opts.targetDir, ancien, attendus);
+  await writeManifest(opts.targetDir, manifest, obsoletes);
   if (!readConfig(opts.targetDir)) await writeConfig(r);
   reportStack(r);
   reportDerives(derives);
+  reportObsoletes(obsoletes);
   // On n'initialise pas de dépôt sur un projet existant : on active seulement les hooks s'il y en a un.
   if (opts.git !== false) setupGit(opts.targetDir, false);
 }
