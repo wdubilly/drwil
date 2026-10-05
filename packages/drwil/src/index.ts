@@ -521,6 +521,11 @@ async function writeConfig(r: Resolved): Promise<void> {
   await writeFile(join(r.opts.targetDir, ".drwil", "ia-first.json"), JSON.stringify(config, null, 2) + "\n");
 }
 
+// Branche créée par `init()` avant le tout premier commit : personne n'a plus jamais besoin de
+// pousser sur master/main, même pour le bootstrap — décision du 2026-10-05,
+// docs/projets/init-cree-une-branche.md.
+const BRANCHE_INSTALLATION = "chantier/installation-kit";
+
 function setupGit(targetDir: string, allowInit: boolean): void {
   const git = (...args: string[]) => execFileSync("git", args, { cwd: targetDir, stdio: "pipe" }).toString().trim();
   try {
@@ -535,7 +540,9 @@ function setupGit(targetDir: string, allowInit: boolean): void {
       return;
     }
     git("init");
-    console.log("Dépôt git initialisé.");
+    // Avant tout commit : jamais sur master/main (cf. QUA-017, plus d'exception de bootstrap).
+    git("checkout", "-b", BRANCHE_INSTALLATION);
+    console.log(`Dépôt git initialisé, branche « ${BRANCHE_INSTALLATION} » créée (jamais de commit direct sur master/main).`);
   }
   git("config", "core.hooksPath", ".githooks");
   // commit-msg est volontairement livré non exécutable (voir plus haut) : sans ce

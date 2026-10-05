@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSync, appendFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSync, appendFileSync, cpSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -543,17 +543,35 @@ test("une valeur d'option inconnue est refusée", async () => {
   await assert.rejects(() => init({ targetDir: tmp(), ci: "jenkins" }), /--ci/);
 });
 
-test("QUA-017 : pas de travail direct sur la branche principale après le premier commit", async () => {
+test("QUA-017 : pas de travail direct sur la branche principale, même pour le tout premier commit", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir }));
+  // init() bascule déjà sur une branche de travail avant tout commit (plus jamais sur master/main).
+  const branche = git(dir, "symbolic-ref", "--short", "HEAD");
+  assert.equal(branche.stdout.trim(), "chantier/installation-kit", "init() laisse l'utilisateur sur une branche de travail, jamais master");
+
   git(dir, "add", "-A");
   const premier = git(dir, "commit", "-qm", "premier commit");
-  assert.equal(premier.status, 0, "le tout premier commit d'un dépôt reste toléré (bootstrap) : " + premier.stdout + premier.stderr);
+  assert.equal(premier.status, 0, "le premier commit sur la branche de travail passe : " + premier.stdout + premier.stderr);
 
+  // même le tout premier commit d'un dépôt est refusé s'il atterrit directement sur master (plus d'exception de bootstrap).
+  const autreDir = tmp();
+  git(autreDir, "init", "-qb", "master");
+  cpSync(join(dir, ".githooks"), join(autreDir, ".githooks"), { recursive: true });
+  git(autreDir, "config", "core.hooksPath", ".githooks");
+  writeFileSync(join(autreDir, "fichier.txt"), "contenu");
+  git(autreDir, "add", "-A");
+  const toutPremier = git(autreDir, "commit", "-qm", "tout premier commit direct sur master");
+  assert.notEqual(toutPremier.status, 0, "même le tout premier commit sur master est refusé (QUA-017, plus d'exception de bootstrap)");
+  assert.match(toutPremier.stdout + toutPremier.stderr, /travail direct sur la branche principale/);
+
+  // master n'existe même pas encore dans `dir` (jamais créé localement) : on simule le cas où
+  // il apparaît malgré tout (ex. remote déjà pourvu d'un master), pour vérifier qu'y commiter reste refusé.
+  git(dir, "checkout", "-qb", "master");
   writeFileSync(join(dir, "docs/projets/entretien-courant.md"), read(dir, "docs/projets/entretien-courant.md") + "\n");
   git(dir, "add", "-A");
-  const second = git(dir, "commit", "-qm", "second commit direct sur master");
-  assert.notEqual(second.status, 0, "un commit direct sur master après le premier est refusé (QUA-017)");
+  const second = git(dir, "commit", "-qm", "commit direct sur master");
+  assert.notEqual(second.status, 0, "un commit direct sur master est refusé (QUA-017)");
   assert.match(second.stdout + second.stderr, /travail direct sur la branche principale/);
 
   // en CI, le contrôle ne tourne jamais (sinon un merge légitime sur master casserait la CI après coup).

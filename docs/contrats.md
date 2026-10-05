@@ -52,8 +52,8 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 
 ## QUA-017 — Pas de travail direct sur la branche principale
-**Règle** : Après le tout premier commit d'un dépôt (celui qui crée `HEAD`), commiter ou pousser directement sur la branche principale (`master`/`main`) est refusé. Le travail doit passer par une branche (`docs/recettes/travailler-en-branche.md`) fusionnée ensuite via une pull/merge request. Pas de porte de sortie configurable (contrairement à QUA-016) : le premier commit d'un dépôt fraîchement initialisé reste toléré (bootstrap), tous les suivants sur la branche principale sont bloqués. Ce contrôle ne tourne jamais en CI (`process.env.CI`) : la CI s'exécute aussi sur la branche principale après un merge légitime, qu'il ne faut pas bloquer rétroactivement.
-**Périmètre** : Tout dépôt git ayant au moins un commit, en local uniquement (hooks `pre-commit`/`pre-push`).
+**Règle** : Commiter ou pousser directement sur la branche principale (`master`/`main`) est refusé, y compris le tout premier commit d'un dépôt. Le travail doit passer par une branche (`docs/recettes/travailler-en-branche.md`) fusionnée ensuite via une pull/merge request. `init()` crée et bascule systématiquement sur une branche de travail (`chantier/installation-kit`) juste après `git init`, avant tout commit : personne n'a donc jamais besoin de commiter sur la branche principale, même au bootstrap. Pas de porte de sortie configurable (contrairement à QUA-016). Ce contrôle ne tourne jamais en CI (`process.env.CI`) : la CI s'exécute aussi sur la branche principale après un merge légitime, qu'il ne faut pas bloquer rétroactivement.
+**Périmètre** : Tout dépôt git, y compris avant le tout premier commit, en local uniquement (hooks `pre-commit`/`pre-push`).
 **Source de vérité** : `docs/recettes/travailler-en-branche.md`.
 **Preuve** : `.githooks/run-checks.mjs` (hook uniquement, jamais en CI).
 **Raison** : Un commit ou un push direct sur la branche principale contourne la revue (pull/merge request) et casse le lien fiche ↔ branche décrit par la recette.

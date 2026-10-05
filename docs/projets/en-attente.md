@@ -52,6 +52,12 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
   restent à trancher — `docs/intentions/importer-tickets-externes.md`.
+- [ ] [IA] [P2] `init()` crée toujours une branche de travail
+  (`chantier/installation-kit`) avant le premier commit, jamais `master` —
+  évite qu'une CI/branch protection externe bloque le premier push
+  recommandé par le kit ; simplifie QUA-017 (plus d'exception de
+  bootstrap) — lot 1 fait le 2026-10-05, en attente de fusion —
+  `docs/projets/init-cree-une-branche.md`.
 - [ ] [décision] [P2] Adopter un seuil de couverture de test
   (`catalogue:QUA-004`) avec `c8` sur `packages/drwil` — seuil de départ,
   portée du contrôle et caractère bloquant restent à trancher —

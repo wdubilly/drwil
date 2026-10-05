@@ -12,6 +12,11 @@ request, instead of direct commits on the main branch.
   chantier/my-project.
 - The card already exists (scoping done) before opening the branch — no
   coding without a card, branch or not.
+- `init()` already creates a first working branch
+  (`chantier/installation-kit`) right after `git init`, before any commit:
+  on a brand-new repository, nobody needs to create a branch by hand for
+  the very first commit. Renaming this branch (or creating another one
+  named after the current card) is up to the project.
 
 ## During the work
 
@@ -55,9 +60,9 @@ request, instead of direct commits on the main branch.
 ## What the kit checks (QUA-017)
 
 - `.githooks/run-checks.mjs` (so `pre-commit` and `pre-push`) refuses to
-  commit or push directly to the main branch (`master`/`main`) — except
-  for the very first commit of a freshly initialized repository
-  (bootstrap). No setting disables this check.
+  commit or push directly to the main branch (`master`/`main`), including
+  a repository's very first commit: no more bootstrap exception. No
+  setting disables this check.
 - This check never runs in CI: it only applies locally, at commit/push
   time, not when CI replays an already-made push (a merge landing on the
   main branch is legitimate).

@@ -12,6 +12,11 @@ principale.
   travaille sur une branche nommée chantier/mon-chantier.
 - La fiche existe déjà (cadrage fait) avant d'ouvrir la branche — on ne
   code jamais sans fiche, branche ou pas.
+- `init()` crée déjà une première branche de travail
+  (`chantier/installation-kit`) juste après `git init`, avant tout commit :
+  sur un tout nouveau dépôt, personne n'a besoin de créer de branche à la
+  main pour le tout premier commit. Renommer cette branche (ou en créer
+  une autre nommée selon la fiche en cours) reste au choix du projet.
 
 ## Pendant le travail
 
@@ -57,8 +62,8 @@ principale.
 
 - `.githooks/run-checks.mjs` (donc `pre-commit` et `pre-push`) refuse de
   commiter ou pousser directement sur la branche principale (`master`/
-  `main`) — sauf le tout premier commit d'un dépôt fraîchement initialisé
-  (bootstrap). Pas de réglage pour désactiver ce contrôle.
+  `main`), y compris le tout premier commit d'un dépôt : plus d'exception
+  de bootstrap. Pas de réglage pour désactiver ce contrôle.
 - Ce contrôle ne tourne jamais en CI : il s'applique seulement en local,
   au moment de committer/pousser, pas quand la CI rejoue un push déjà
   fait (un merge qui atterrit sur la branche principale est légitime).

@@ -81,18 +81,16 @@ if (full) {
 
 controle(T.docs, process.execPath, [".githooks/check-docs.mjs"]);
 
-// QUA-017 : pas de travail direct sur la branche principale après le premier commit.
+// QUA-017 : jamais de travail direct sur la branche principale, y compris le tout premier commit
+// (plus d'exception de bootstrap : `init()` crée systématiquement une branche de travail avant tout
+// commit, voir docs/projets/init-cree-une-branche.md). `symbolic-ref` (contrairement à
+// `rev-parse --abbrev-ref HEAD`) fonctionne même avant le premier commit (HEAD non encore créé).
 // Jamais en CI (process.env.CI) : la CI tourne aussi sur master après un merge légitime,
 // qu'il ne faut pas bloquer rétroactivement — seuls les hooks locaux (pre-commit/pre-push) l'appliquent.
 if (!process.env.CI) {
-  const branche = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { encoding: "utf8" });
+  const branche = spawnSync("git", ["symbolic-ref", "--short", "HEAD"], { encoding: "utf8" });
   const nomBranche = branche.status === 0 ? branche.stdout.trim() : null;
-  if (nomBranche && ["master", "main"].includes(nomBranche)) {
-    // HEAD déjà existant = au moins un commit précédent sur cette branche : le tout premier
-    // commit du dépôt (HEAD pas encore créé) est le seul cas toléré (bootstrap).
-    const headExiste = spawnSync("git", ["rev-parse", "--verify", "HEAD"], { stdio: "ignore" }).status === 0;
-    if (headExiste) echecs.push(T.brancheProtegee(nomBranche));
-  }
+  if (nomBranche && ["master", "main"].includes(nomBranche)) echecs.push(T.brancheProtegee(nomBranche));
 }
 
 if (full) {
