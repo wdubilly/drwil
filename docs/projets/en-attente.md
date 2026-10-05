@@ -20,9 +20,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
-- [ ] [humain] [P1] Extraire l'architecture IA-first complète de run-box-v2 dans
-  le kit (rien perdre, rendre générique), lots 1 à 8 terminés côté IA,
-  relecture humaine restante — `docs/projets/extraction-ia-first-run-box.md`.
 - [x] [IA] Aucun `.gitignore` dans les modèles du kit —
   `docs/projets/suites-kit-portable.md` (point 9).
 - [x] [IA] Contrôles du dépôt drwil lui-même — fait le 2026-10-04 —

@@ -106,3 +106,15 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   Livré via le mécanisme générique de copie `templates/<lang>/tools/<outil>`
   déjà existant, aucun code de générateur ajouté.
 - **Clôturé par** : PR #17.
+
+## 2026-10-05 — Extraire l'architecture IA-first complète de run-box-v2 dans le kit
+
+- **Décisions clés** : extraction complète et rendue générique (pas de
+  report spécifique à run-box-v2), en 8 lots (tableau de correspondance
+  G/P/M/S, AGENTS.md, contrats, recettes, modèles de fiche, cadrage
+  réglable par projet, module tableau de bord). Lot 8 : preuve « rien
+  perdu » vérifiée sur une copie jetable de run-box-v2 (`apply()` réel,
+  aucun écart nécessitant un correctif). Relecture humaine finale
+  confirmée le 2026-10-05.
+- **Clôturé par** : commit de clôture de ce journal (historique complet
+  dans `git log --follow -- docs/projets/extraction-ia-first-run-box.md`).

@@ -1,9 +1,9 @@
 # Projet : suites du kit portable (points restés ouverts)
 
 **Statut** (2026-10-05) : en cours — points 5, 6, 8 et 9 traités (via le projet
-d'extraction IA-first, voir `docs/projets/extraction-ia-first-run-box.md`) ;
-point 1 livré et confirmé vert sur les 3 OS (run CI `37238852012`) ; point 3
-livré ; restent 2, 7.
+d'extraction IA-first, condensé dans docs/projets/journal.md) ;
+point 1 livré et confirmé vert sur les 3 OS (run CI `37238852012`) ; point 2
+confirmé par le demandeur le 2026-10-05 ; point 3 livré ; reste 7.
 
 ## 1. Contexte
 
@@ -118,7 +118,9 @@ restés ouverts à la fin de ce travail.
    Point livré.
 2. **Cursor et Copilot** — [humain] Vérifier dans ces outils qu'ils lisent bien
    les fichiers de renvoi générés (.cursor/rules/ia-first.mdc et
-   .github/copilot-instructions.md dans les projets générés).
+   .github/copilot-instructions.md dans les projets générés). **Confirmé
+   par le demandeur le 2026-10-05** : les deux outils lisent bien ces
+   fichiers. Point livré.
 3. **Mise à jour depuis une ancienne version** — [IA] **livré le
    2026-10-05** : `init`/`apply` lisent désormais l'ancien manifeste
    (.drwil/fichiers-installes.json) avant d'écrire, et suppriment après
@@ -140,8 +142,8 @@ restés ouverts à la fin de ce travail.
 4. **Nom du projet par défaut** — validé le 2026-10-03 : sans `--name`, le
    nom est celui du dossier.
 5. **Contrôles du dépôt drwil lui-même** — [IA] fait le 2026-10-04 : kit
-   appliqué réellement à drwil (voir `docs/projets/extraction-ia-first-run-box.md`,
-   section Reprise). Testé d'abord sur copie jetable (`/tmp`), bug du kit
+   appliqué réellement à drwil (voir le chantier d'extraction IA-first,
+   condensé dans docs/projets/journal.md). Testé d'abord sur copie jetable (`/tmp`), bug du kit
    trouvé et corrigé en chemin (regex Statut/Reprise trop strictes),
    ~65 citations nettoyées dans la fiche d'extraction, 5 contrats socle
    ajoutés à `docs/contrats.md` (SEC-006, SEC-007, QUA-011, QUA-015,
@@ -158,14 +160,14 @@ restés ouverts à la fin de ce travail.
    `.claude` des modèles doivent bien finir dans le paquet publié.
 
 8. **Faux positifs et écarts relevés par check-docs.mjs** — [IA] corrigé le
-   2026-10-04 (lot 2 du projet d'extraction, voir
-   `docs/projets/extraction-ia-first-run-box.md`) : `.githooks/check-docs.mjs` ne
+   2026-10-04 (lot 2 du projet d'extraction, condensé dans
+   docs/projets/journal.md) : `.githooks/check-docs.mjs` ne
    prend plus pour un chemin une citation sans extension hors des préfixes
    connus (ex. « minimal/complet », « init/apply »), test de non-régression
    ajouté. Vérifié une fois le point 5 fait : les deux manques
    (`docs/architecture.md`, `.claude/skills/`) sont désormais livrés par
-   `apply()` ; les chemins relatifs au paquet dans
-   `docs/projets/extraction-ia-first-run-box.md` ont été corrigés (préfixés
+   `apply()` ; les chemins relatifs au paquet dans la fiche d'extraction (condensée
+   depuis dans docs/projets/journal.md) ont été corrigés (préfixés
    vers leur vrai emplacement dans `packages/drwil/`).
 
 9. **Aucun `.gitignore` dans les modèles du kit** — [IA] corrigé le
