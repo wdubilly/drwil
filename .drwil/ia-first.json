@@ -47,6 +47,14 @@
       "ciJob": "checks",
       "chemins": ["packages/drwil/**"],
       "degradable": false
+    },
+    {
+      "name": "drwil: seuil de couverture (catalogue:QUA-004)",
+      "run": "npm run test:coverage",
+      "cwd": "packages/drwil",
+      "ciJob": "checks",
+      "chemins": ["packages/drwil/**"],
+      "degradable": false
     }
   ]
 }

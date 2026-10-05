@@ -54,3 +54,7 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
   restent à trancher — `docs/intentions/importer-tickets-externes.md`.
+- [ ] [décision] [P2] Adopter un seuil de couverture de test
+  (`catalogue:QUA-004`) avec `c8` sur `packages/drwil` — seuil de départ,
+  portée du contrôle et caractère bloquant restent à trancher —
+  `docs/projets/adopter-seuil-couverture.md`.

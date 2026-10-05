@@ -5,6 +5,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Rapport de couverture c8 (régénéré par `npm run test:coverage`)
+packages/drwil/coverage/
+
 # Caches Python (contrôles de .githooks/ et scripts/)
 __pycache__/
 *.py[cod]

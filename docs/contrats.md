@@ -64,3 +64,10 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Source de vérité** : Ce contrat (rappelé dans `AGENTS.md`).
 **Preuve** : Humaine — la distinction demande une appréciation contextuelle, pas de hook automatisable.
 **Raison** : Un changement fait sans clarifier le périmètre risque de fuiter du dogfood vers le gabarit exporté (ou l'inverse), comme déjà vu pour le job CI de release (dogfood-only, pas destiné au gabarit).
+
+## QUA-004 — Seuil de couverture de test
+**Règle** : La couverture de test de `packages/drwil` ne descend pas sous le seuil déclaré : 85 % lignes, 60 % branches, 50 % fonctions (seuil de départ, relevé au fil de l'eau vers 100 % — voir `docs/projets/adopter-seuil-couverture.md`).
+**Périmètre** : `packages/drwil` (code du générateur ; `.githooks/*.mjs` pas encore inclus, voir la fiche).
+**Source de vérité** : `packages/drwil/package.json` (script `test:coverage`, options `c8`).
+**Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`).
+**Raison** : Sans seuil vérifié, la couverture peut régresser silencieusement à chaque ajout de code.
