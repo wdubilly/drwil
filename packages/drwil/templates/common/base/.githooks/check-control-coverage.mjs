@@ -11,6 +11,7 @@
 // peuvent se couvrir eux aussi en ajoutant chemins + ciJob (et degradable si
 // besoin) — sinon ils ne sont pas vérifiés, par compatibilité.
 import { existsSync, readFileSync } from "node:fs";
+import { globEnRegex } from "./glob.mjs";
 
 const SOCLE = [
   {
@@ -52,27 +53,6 @@ const T = {
     jamaisRattrape: "; degradable: nothing catches it locally",
   },
 }[lang];
-
-/** Façon fnmatch de GitLab/GitHub : `**` traverse les `/`, `*` non. */
-function globEnRegex(glob) {
-  let sortie = "";
-  for (let i = 0; i < glob.length; ) {
-    if (glob.startsWith("**/", i)) {
-      sortie += "(?:.*/)?";
-      i += 3;
-    } else if (glob.startsWith("**", i)) {
-      sortie += ".*";
-      i += 2;
-    } else if (glob[i] === "*") {
-      sortie += "[^/]*";
-      i += 1;
-    } else {
-      sortie += glob[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      i += 1;
-    }
-  }
-  return new RegExp(`^${sortie}$`);
-}
 
 /** Un chemin concret sous un glob, pour savoir si une règle le déclencherait. */
 function echantillon(glob) {

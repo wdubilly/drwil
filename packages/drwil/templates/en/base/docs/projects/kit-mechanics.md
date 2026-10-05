@@ -7,6 +7,7 @@ fichiers:
   - .githooks/run-checks.mjs
   - .githooks/check-docs.mjs
   - .githooks/check-control-coverage.mjs
+  - .githooks/glob.mjs
   - .githooks/cadrage.mjs
   - .githooks/cadrage.test.mjs
   - .githooks/pre-commit

@@ -54,3 +54,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   (`catalogue:QUA-004`) avec `c8` sur `packages/drwil` — lots 1 et 2
   faits le 2026-10-05, lot 3 (couverture 100 %) reste ouvert à la demande
   du demandeur — `docs/projets/adopter-seuil-couverture.md`.
+- [ ] [IA] [P2] Garder le commit rapide : un contrôle du projet hors de ses
+  `chemins` est reporté au push/CI, plus de double exécution des tests —
+  `docs/projets/hook-commit-rapide.md`.

@@ -7,6 +7,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { globEnRegex } from "./glob.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 process.chdir(root);
@@ -29,6 +30,7 @@ const T = {
     pasDeCi: "aucune CI configurée (ci: none) : pas de filet pour les contrôles dégradables",
     projet: "contrôles du projet (lint, tests…)",
     aucunCheck: "aucun déclaré dans .drwil/ia-first.json → checks",
+    reporte: (n) => `${n} (aucun fichier indexé sous ses chemins : rejoué au push et en CI)`,
     brancheProtegee: (b) => `travail direct sur la branche principale (${b}) : passer par une branche et une pull/merge request (voir docs/recettes/travailler-en-branche.md)`,
     nonExecute: "non exécuté :",
     echec: "échec :",
@@ -46,6 +48,7 @@ const T = {
     pasDeCi: "no CI configured (ci: none): no net for degradable checks",
     projet: "project checks (lint, tests…)",
     aucunCheck: "none declared in .drwil/ia-first.json → checks",
+    reporte: (n) => `${n} (no staged file under its paths: replayed on push and in CI)`,
     brancheProtegee: (b) => `direct work on the main branch (${b}): go through a branch and a pull/merge request (see docs/recipes/working-with-branches.md)`,
     nonExecute: "not run:",
     echec: "failed:",
@@ -114,7 +117,27 @@ if (full) {
 // Les contrôles propres à la stack (lint, typecheck, tests) sont déclarés par le projet, pas par le kit.
 const checks = Array.isArray(cfg.checks) ? cfg.checks : [];
 if (!checks.length) nonExecutes.push(`${T.projet} (${T.aucunCheck})`);
-for (const c of checks) controle(c.name ?? c.run, c.run, [], { shell: true, cwd: c.cwd ? join(root, c.cwd) : root });
+// Au pre-commit seulement (DRWIL_HOOK=pre-commit, posé par .githooks/pre-commit), un contrôle qui
+// déclare `chemins` est reporté si aucun fichier indexé n'y correspond : un commit de doc ne relance
+// pas toute la suite de tests. Il reste affiché « non exécuté » (QUA-013) et le pre-push comme la CI
+// le rejouent toujours. Si git ne répond pas, tout tourne (jamais de report par défaut).
+function fichiersIndexes() {
+  if (process.env.DRWIL_HOOK !== "pre-commit") return null;
+  const r = spawnSync("git", ["diff", "--cached", "--name-only", "--no-renames", "-z"], { encoding: "utf8" });
+  return r.status === 0 ? r.stdout.split("\0").filter(Boolean) : null;
+}
+const indexes = fichiersIndexes();
+for (const c of checks) {
+  const nom = c.name ?? c.run;
+  if (indexes && Array.isArray(c.chemins) && c.chemins.length) {
+    const motifs = c.chemins.map(globEnRegex);
+    if (!indexes.some((f) => motifs.some((m) => m.test(f)))) {
+      nonExecutes.push(T.reporte(nom));
+      continue;
+    }
+  }
+  controle(nom, c.run, [], { shell: true, cwd: c.cwd ? join(root, c.cwd) : root });
+}
 
 // Rappel non bloquant (confort, pas un contrat) : un audit (opportunité, risques/dette) dont le
 // « Dernier scan »/« Last scan » date de plus de 30 jours gagnerait à être relancé.

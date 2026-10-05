@@ -95,6 +95,15 @@ installed), doc references (QUA-011), tests of the checks themselves (if
 any), CI coverage of each check (QUA-013, if there is a CI), then the
 project's own checks declared in `.drwil/ia-first.json` (`checks` key).
 
+To keep commits fast, a project check that declares `chemins` (patterns,
+e.g. `["src/**"]`) runs **at commit time** only if a staged file matches one
+of them; otherwise it ends up "not run", never hidden. Push
+(`.githooks/pre-push`), CI and a manual run of `.githooks/run-checks.mjs`
+always run it. Without `chemins`, it runs on every commit. Also list in
+`chemins` the files the check depends on outside its folder (root dependency
+manifest and lockfile, `.drwil/ia-first.json`…): otherwise a commit touching
+only them reruns it only on push.
+
 One detail makes this check actually run rather than get bypassed: **a
 check that did not run is visible** (QUA-013) — a check that cannot run on
 a workstation (missing tool) ends up "not run", never hidden as a silent

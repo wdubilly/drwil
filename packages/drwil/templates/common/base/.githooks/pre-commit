@@ -4,4 +4,5 @@ if ! command -v node >/dev/null 2>&1; then
   echo "[ia-first] node introuvable / not found : contrôles non exécutés, commit refusé." >&2
   exit 1
 fi
-exec node "$(dirname "$0")/run-checks.mjs"
+# DRWIL_HOOK : seul le commit peut reporter un contrôle du projet hors de ses `chemins` (voir run-checks.mjs).
+DRWIL_HOOK=pre-commit exec node "$(dirname "$0")/run-checks.mjs"

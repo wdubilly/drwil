@@ -1,15 +1,28 @@
 // Tests de bout en bout du kit : installe dans des dossiers temporaires et lance les vrais contrôles.
-import { test } from "node:test";
+import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSync, appendFileSync, cpSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSync, appendFileSync, cpSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { init, apply, uninstall, resoudreDerive } from "../dist/index.js";
 
-const tmp = () => mkdtempSync(join(tmpdir(), "drwil-"));
+// Chaque dossier temporaire est supprimé après son test : sans ça, la suite (lancée à chaque
+// commit par le hook) en laissait ~70 par passage et finissait par épuiser les inodes de /tmp.
+// Ceux d'un test en échec sont gardés (et affichés) pour le diagnostic.
+let dossiersDuTest = [];
+const tmp = () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-"));
+  dossiersDuTest.push(dir);
+  return dir;
+};
+afterEach((t) => {
+  if (t.passed === false) console.error(`dossiers gardés pour diagnostic (${t.name}) : ${dossiersDuTest.join(", ")}`);
+  else for (const dir of dossiersDuTest) rmSync(dir, { recursive: true, force: true });
+  dossiersDuTest = [];
+});
 const quiet = async (fn) => {
   const log = console.log, warn = console.warn;
   console.log = console.warn = () => {};
@@ -25,9 +38,11 @@ const capture = async (fn) => {
 // dans une vraie CI (CI=true désactiverait à tort QUA-017) ou est déclenchée par le
 // vrai hook pre-push lors d'un vrai push de tag (DRWIL_PUSH_TAGS_ONLY=1 fuirait sinon
 // dans tous les commits/push simulés par les tests, qui doivent rester indépendants
-// du contexte qui a lancé la suite).
+// du contexte qui a lancé la suite). DRWIL_HOOK de même : le vrai pre-commit du dépôt
+// drwil lance cette suite, ses contrôles ne doivent pas hériter du report au commit.
 const envTest = { ...process.env, CI: "" };
 delete envTest.DRWIL_PUSH_TAGS_ONLY;
+delete envTest.DRWIL_HOOK;
 const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
 const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
@@ -703,6 +718,31 @@ test("ci: none : pas de CI, la couverture QUA-013 est signalée non exécutée (
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout);
   assert.match(r.stdout, /non exécuté : couverture CI de chaque contrôle.*aucune CI configurée/s);
+});
+
+test("pre-commit : un contrôle du projet hors de ses chemins est reporté (visible), rejoué au push et en direct", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir }));
+  const cfg = config(dir);
+  cfg.checks = [{ name: "suite lourde", run: "node -e \"process.exit(1)\"", chemins: ["src/**"] }];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+  git(dir, "add", "-A");
+  const horsChemins = git(dir, "commit", "-qm", "rien sous src/");
+  assert.equal(horsChemins.status, 0, "aucun fichier indexé sous src/ : reporté, pas lancé : " + horsChemins.stdout + horsChemins.stderr);
+  assert.match(horsChemins.stdout + horsChemins.stderr, /non exécuté : suite lourde \(aucun fichier indexé sous ses chemins/);
+
+  mkdirSync(join(dir, "src"), { recursive: true });
+  writeFileSync(join(dir, "src/a.ts"), "export const a = 1;\n");
+  git(dir, "add", "-A");
+  const sousChemins = git(dir, "commit", "-qm", "touche src/");
+  assert.notEqual(sousChemins.status, 0, "un fichier indexé sous src/ : le contrôle tourne et échoue");
+  assert.match(sousChemins.stdout + sousChemins.stderr, /échec : suite lourde/);
+
+  // hors pre-commit (pre-push, CI, lancement manuel), jamais de report.
+  git(dir, "reset", "-q");
+  const direct = checks(dir);
+  assert.notEqual(direct.status, 0);
+  assert.match(direct.stdout, /échec : suite lourde/);
 });
 
 test("lot 5 : check-file-size et check-code-rules livrés mais opt-in (pas lancés par défaut)", async () => {

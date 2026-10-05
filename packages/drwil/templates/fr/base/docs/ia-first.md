@@ -99,6 +99,16 @@ installé), références de la doc (QUA-011), tests des contrôles eux-mêmes
 puis les contrôles propres au projet déclarés dans `.drwil/ia-first.json`
 (clé `checks`).
 
+Pour garder le commit rapide, un contrôle du projet qui déclare `chemins`
+(motifs, ex. `["src/**"]`) n'est lancé **au commit** que si un fichier
+indexé correspond à l'un d'eux ; sinon il finit « non exécuté », jamais
+masqué. Le push (`.githooks/pre-push`), la CI et un lancement manuel de
+`.githooks/run-checks.mjs` le lancent toujours. Sans `chemins`, il tourne à
+chaque commit. Lister aussi dans `chemins` les fichiers dont le contrôle
+dépend hors de son dossier (manifeste et verrou de dépendances à la racine,
+`.drwil/ia-first.json`…) : sinon un commit qui ne touche qu'eux ne le relance
+qu'au push.
+
 Un détail fait que ce contrôle est réellement exécuté plutôt que contourné :
 **un contrôle qui ne tourne pas se voit** (QUA-013) — un contrôle qui ne peut
 pas s'exécuter sur un poste (outil absent) finit « non exécuté », jamais
