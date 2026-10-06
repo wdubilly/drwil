@@ -68,7 +68,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   gouverne-t-il le travail d'agents au-delà du code ? Expérimentation après
   stabilisation du cœur, sans code pour l'instant —
   `docs/projets/v3-investigation-reporting-agent.md`.
-- [ ] [IA] [P1] Garde-fous qui tiennent sans la mémoire de l'agent :
-  QUA-016 bloquant, restes obsolètes supprimés, commande « Tout vérifier »
-  corrigée ; hooks Claude et contrôle « un changement, une fiche » à
-  trancher — `docs/projets/garde-fous-depot.md`.
+- [ ] [décision] [P2] Community Ready : fichiers et parcours pour qu'un
+  contributeur externe puisse participer sans demander au mainteneur ;
+  questions à trancher (langue, gabarit de PR, canal sécurité, contrats
+  COM) — `docs/intentions/community-ready.md`.
+- [ ] [IA] [P1] Garde-fous lot 3 : contrôle « un changement de code a sa
+  fiche » — à cadrer puis coder — `docs/projets/garde-fous-depot.md`.
