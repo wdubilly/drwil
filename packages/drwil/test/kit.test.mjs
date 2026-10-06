@@ -1481,3 +1481,74 @@ test("attest : aucune donnée sensible dans l'attestation (note caviardée, pas 
   assert.match(JSON.parse(brut).note, /\[CAVIARDÉ\]/);
   assert.ok(JSON.parse(brut).note.length <= 500);
 });
+
+// Intégration agent (docs/projets/integration-agent-verify.md) : `verify --agent` présente le verdict
+// sans recalculer de règle ; `attest` reste humain. Décision (a) : une attestation écrite à la main
+// n'est pas détectée comme fausse, la frontière est la revue du changement (dossier versionné).
+test("verify --agent : PASS, FAIL, ERROR et MANUAL présentés à l'agent, codes de sortie inchangés", async () => {
+  let r = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`")), "verify", "--agent");
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /Contracts: 1 PASS · 0 ATTESTED · 0 FAIL · 0 ERROR · 0 MANUAL/);
+  assert.match(r.stdout, /Verdict: GOVERNANCE: PASS \(exit 0\)/);
+  assert.match(r.stdout, /Next step: Work is verified by drwil/);
+  r = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `ko`")), "verify", "--agent");
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /GOVERNANCE: FAIL/);
+  assert.match(r.stdout, /Failing contracts \(fix them\):\n  - QUA-001/);
+  assert.match(r.stdout, /Do not claim the work is done/);
+  r = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `inexistant`")), "verify", "--agent");
+  assert.equal(r.status, 2, "ERROR reste ERROR");
+  assert.match(r.stdout, /GOVERNANCE: VERIFY ERROR/);
+  assert.match(r.stdout, /do not claim the work is verified/);
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture"));
+  r = cli(dir, "verify", "--agent");
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /Human attestation required\.\n  - QUA-001/);
+  assert.match(r.stdout, /HUMAN ACTION — for the human, in their own interactive terminal; never run it yourself:\n  drwil attest <CONTRACT_ID>/);
+  assert.ok(!existsSync(join(dir, ".drwil/evidence")), "verify --agent n'écrit rien, n'atteste rien");
+});
+
+test("/drwil verify (Claude) : adaptateur de la CLI, jamais d'attestation par l'agent ; consigne dans AGENTS.md", async () => {
+  for (const lang of ["fr", "en"]) {
+    const dir = tmp();
+    await quiet(() => init({ targetDir: dir, lang, tools: "claude", git: false }));
+    const skill = read(dir, ".claude/skills/drwil/SKILL.md");
+    assert.match(skill, /argument-hint: "\[verify\|/);
+    assert.match(skill, /npx drwil verify --agent/);
+    assert.doesNotMatch(skill.split("\n").find((l) => l.startsWith("argument-hint")), /attest/, "aucun argument attest");
+    assert.match(skill, lang === "fr" ? /Ne jamais exécuter `drwil attest`/ : /Never run `drwil attest`/);
+    assert.match(read(dir, "AGENTS.md"), /drwil verify --agent/);
+    assert.match(read(dir, "AGENTS.md"), lang === "fr" ? /un agent ne l'exécute jamais/ : /an agent never runs it/);
+  }
+});
+
+test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusés ; attestation manuelle visible en revue ; vraie attestation reconnue", async () => {
+  const dir = await projetAtteste(MANUEL);
+  const bin = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
+  const yes = cli(dir, "attest", "QUA-001", "--yes");
+  assert.notEqual(yes.status, 0, "aucun --yes");
+  const pipe = spawnSync(process.execPath, [bin, "attest", "QUA-001"], { cwd: dir, encoding: "utf8", env: envTest, input: "QUA-001\nQUA-001\n" });
+  assert.equal(pipe.status, 1);
+  writeFileSync(join(dir, "script.mjs"), `import { spawnSync } from "node:child_process";\nconst r = spawnSync(process.execPath, [${JSON.stringify(bin)}, "attest", "QUA-001"], { stdio: "pipe" });\nprocess.exit(r.status);\n`);
+  assert.equal(spawnSync(process.execPath, ["script.mjs"], { cwd: dir, env: envTest }).status, 1, "invocation depuis un script refusée");
+  assert.deepEqual(attestations(dir), [], "aucune attestation créée par ces tentatives");
+  // Leurres : une « attestation » hors du dossier versionné, ou sans statut ATTESTED, n'est jamais lue.
+  mkdirSync(join(dir, ".drwil/evidence/attestations"), { recursive: true });
+  const k = (await verify({ targetDir: dir })).contrats[0];
+  writeFileSync(join(dir, ".drwil/evidence/QUA-001.json"), JSON.stringify({ contract: "QUA-001", status: "ATTESTED", fingerprint: k.empreinte }));
+  writeFileSync(join(dir, ".drwil/evidence/attestations/QUA-001-pass.json"), JSON.stringify({ contract: "QUA-001", status: "PASS", fingerprint: k.empreinte }));
+  assert.equal((await verify({ targetDir: dir })).contrats[0].statut, "MANUAL");
+  // Décision (a) assumée : une attestation écrite à la main avec la bonne empreinte est acceptée ;
+  // elle n'échappe pas à la revue car son dossier est versionné (visible dans git status / la PR).
+  writeFileSync(join(dir, ".drwil/evidence/attestations/QUA-001-main.json"), JSON.stringify({ version: 1, contract: "QUA-001", status: "ATTESTED", attestedAt: "2026-10-06T10:00:00.000Z", fingerprint: k.empreinte }));
+  assert.equal((await verify({ targetDir: dir })).contrats[0].statut, "ATTESTED");
+  assert.match(git(dir, "status", "--porcelain", "--untracked-files=all").stdout, /\.drwil\/evidence\/attestations\/QUA-001-main\.json/, "visible en revue, jamais ignorée par git");
+  assert.doesNotMatch(git(dir, "status", "--porcelain", "--untracked-files=all").stdout, /\.drwil\/evidence\/QUA-001\.json/, "les évidences locales restent hors git");
+  // Vraie attestation humaine (confirmation simulée par l'API, la CLI exigeant un terminal) : reconnue.
+  const dir2 = await projetAtteste(MANUEL);
+  assert.equal((await attester({ targetDir: dir2, id: "QUA-001", confirmer: oui })).code, 0);
+  const r = cli(dir2, "verify", "--agent");
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /0 PASS · 1 ATTESTED/);
+  assert.match(r.stdout, /satisfied by a human attestation, not by an automated proof/);
+});

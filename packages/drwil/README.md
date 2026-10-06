@@ -267,6 +267,22 @@ the contract as `ATTESTED` — satisfied, but never shown as `PASS` — until th
 contract text or its proof definition changes, which makes the attestation
 stale. Exit 0: recorded; 1: refused or not eligible; 2: unknown contract.
 
+### Agent / human workflow (`verify --agent`, `/drwil verify`)
+
+```text
+Agent : drwil verify --agent    (Claude Code: /drwil verify)
+DRWIL : PASS / FAIL / ERROR / MANUAL
+Human : drwil attest <id>       (only if MANUAL, in their own terminal)
+Then  : drwil verify  →  GOVERNANCE: PASS
+```
+
+`--agent` prints, for any agent, the counts (PASS, ATTESTED, FAIL, ERROR,
+MANUAL), the verdict, the next step to take, and — when MANUAL — "Human
+attestation required.", the contracts and `drwil attest <CONTRACT_ID>` as a
+human action. It only formats `verify --json`; exit codes are unchanged.
+The installed `AGENTS.md` tells every agent to use it and never to run
+`drwil attest`.
+
 ### `doctor` — diagnose the installation
 
 ```bash

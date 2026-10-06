@@ -65,6 +65,9 @@ Carte complète : `docs/architecture.md`.
 ## Commandes
 
 - Tout vérifier : `bash .githooks/run-checks.sh`
+- Savoir si le travail est vérifié : `node packages/drwil/bin/drwil.js verify --agent`
+  (seul `GOVERNANCE: PASS` vaut validation). `drwil attest` est une action
+  **humaine** : un agent ne l'exécute jamais et n'écrit jamais d'attestation.
 - Activer les hooks (une fois par clone) : `git config core.hooksPath .githooks`
 
 ## Conventions

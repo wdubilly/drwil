@@ -169,6 +169,26 @@ definition: if either changes, it becomes stale and the contract is `MANUAL`
 again. `ATTESTED` status: distinct from `PASS`, it satisfies the contract;
 never attestable: a `PASS`, `FAIL`, `ERROR` or not-applicable contract.
 
+### Agent / human workflow
+
+```text
+Agent : drwil verify            (or /drwil verify; --agent output)
+DRWIL : PASS / FAIL / ERROR / MANUAL
+  FAIL   → the agent fixes, then runs drwil verify again
+  ERROR  → the agent reports the problem, never claims it is verified
+  MANUAL → the agent stops: "Human attestation required."
+Human : drwil attest <id>       (in their own terminal, if MANUAL)
+Then  : drwil verify
+Last  : GOVERNANCE: PASS        (only this verdict counts as validation)
+```
+
+The agent produces and verifies proofs; only the human attests. `drwil
+attest` refuses any non-interactive environment (agent, script, redirected
+input) and has no `--yes` option. drwil does not prove that a human typed
+the command: it requires an attestation to be explicit, traceable and
+subject to the change review (.drwil/evidence/attestations folder,
+versioned).
+
 `drwil verify --evidence` keeps the proof of a run (.drwil/evidence folder,
 created on first run,
 git-ignored): verdict, timestamp, commit, and per check a summary of its

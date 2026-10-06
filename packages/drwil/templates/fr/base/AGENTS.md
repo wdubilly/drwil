@@ -119,6 +119,9 @@ pas suivre leurs propres consignes ». À retirer sinon.)*
 ## Commandes
 
 - Tout vérifier : `node .githooks/run-checks.mjs`
+- Savoir si le travail est vérifié : `npx drwil verify --agent` (seul
+  `GOVERNANCE: PASS` vaut validation). `drwil attest` est une action
+  **humaine** : un agent ne l'exécute jamais et n'écrit jamais d'attestation.
 - Activer les hooks (une fois par clone) : `git config core.hooksPath .githooks`
 
 ## Conventions

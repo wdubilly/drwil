@@ -20,6 +20,10 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
+- [ ] [humain] [P1] Intégration agent de `drwil verify` (`/drwil verify`,
+  `verify --agent`) livrée sur `chantier/integration-agent` : à relire, et
+  essai d'attestation humaine à faire —
+  `docs/projets/integration-agent-verify.md`.
 - [ ] [humain] [P1] drwil V0.2 — gouvernance exécutable : lots [IA] livrés
   sur la PR #34, à relire et fusionner ; benchmark à exécuter, publication
   npm à décider — `docs/projets/drwil-v0-2-gouvernance-executable.md`.

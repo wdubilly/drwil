@@ -176,6 +176,26 @@ de sa preuve : si l'un change, elle devient obsolète et le contrat redevient
 `MANUAL`. Statut `ATTESTED` : distinct de `PASS`, il satisfait le contrat ;
 jamais attestable : un contrat `PASS`, `FAIL`, `ERROR` ou non applicable.
 
+### Workflow agent / humain
+
+```text
+Agent   : drwil verify            (ou /drwil verify ; sortie --agent)
+DRWIL   : PASS / FAIL / ERROR / MANUAL
+  FAIL   → l'agent corrige, puis relance drwil verify
+  ERROR  → l'agent signale le problème, ne prétend jamais que c'est vérifié
+  MANUAL → l'agent s'arrête : « Human attestation required. »
+Humain  : drwil attest <id>       (dans son terminal, si MANUAL)
+Puis    : drwil verify
+Enfin   : GOVERNANCE: PASS        (seul ce verdict vaut validation)
+```
+
+L'agent produit et vérifie des preuves ; l'humain seul atteste. `drwil
+attest` refuse tout environnement non interactif (agent, script, entrée
+redirigée) et n'a pas d'option `--yes`. drwil ne prouve pas qu'un humain a
+tapé la commande : il exige qu'une attestation soit explicite, traçable et
+soumise à la revue du changement (dossier .drwil/evidence/attestations,
+versionné).
+
 `drwil verify --evidence` conserve la preuve d'une exécution
 (dossier .drwil/evidence, créé à la première exécution, hors git) : verdict,
 horodatage, commit, et pour chaque

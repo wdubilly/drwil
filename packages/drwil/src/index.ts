@@ -9,6 +9,7 @@ import { detectStack, type StackEntry } from "./stack.js";
 export { detectStack, type StackEntry } from "./stack.js";
 export { verify, formaterVerdict, verdictJson, ecrireEvidence, caviarder, empreinte, lireAttestations, type Attestation, type Verdict, type ResultatContrat, type ResultatControle, type Statut } from "./verify.js";
 export { attester, resumeContrat, type ResultatAttestation } from "./attest.js";
+export { formaterPourAgent } from "./agent.js";
 export { doctor, formaterDiagnostic, diagnosticJson, listerContrats, type Diagnostic } from "./doctor.js";
 
 const __filename = fileURLToPath(import.meta.url);

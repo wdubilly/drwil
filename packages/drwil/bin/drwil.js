@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { init, apply, uninstall, resoudreDerive, verify, formaterVerdict, verdictJson, ecrireEvidence, attester, auditerApply, formaterAudit, doctor, formaterDiagnostic, diagnosticJson, listerContrats, TOOLS, CIS } from "../dist/index.js";
+import { init, apply, uninstall, resoudreDerive, verify, formaterVerdict, verdictJson, ecrireEvidence, attester, formaterPourAgent, auditerApply, formaterAudit, doctor, formaterDiagnostic, diagnosticJson, listerContrats, TOOLS, CIS } from "../dist/index.js";
 
 const program = new Command();
 program
@@ -111,12 +111,13 @@ program.command("verify")
   .description("Verify the project's contracts with the shared check engine: PASS (exit 0), FAIL or MANUAL REVIEW REQUIRED (exit 1), VERIFY ERROR (exit 2)")
   .option("--json", "Machine-readable output (stable format, version 1), same exit codes")
   .option("--evidence", "Also record the run as evidence in .drwil/evidence/ (verdict, timestamp, commit, redacted summaries)")
+  .option("--agent", "Output meant for an AI agent (counts, verdict, next step, human actions); same exit codes")
   .action((opts) => machine(async (o) => {
     const v = await verify(o);
     // L'évidence s'écrit à côté du verdict : son chemin va sur stderr pour ne pas casser le JSON de stdout.
     if (opts.evidence) console.error(`évidence : ${ecrireEvidence(o.targetDir, v)}`);
     return v;
-  }, opts.json, formaterVerdict, verdictJson));
+  }, opts.json, opts.agent ? (v) => formaterPourAgent(verdictJson(v)) : formaterVerdict, verdictJson));
 
 program.command("doctor")
   .description("Diagnose the drwil installation without running any check: healthy (exit 0), problems (exit 1), not a drwil project (exit 2)")
