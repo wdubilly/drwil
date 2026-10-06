@@ -403,6 +403,115 @@ Integrations can therefore remain thin adapters around the native CLI.
 
 ---
 
+## Installation
+
+DRWIL is not published on npm yet. Install it from the tarball attached to a
+GitHub release (Node.js 20+, and the GitHub CLI `gh` authenticated with access
+to the repository).
+
+### 1. Download the release tarball
+
+From your project folder:
+
+```bash
+gh release download v0.2.0 --repo wdubilly/drwil --pattern 'drwil-*.tgz'
+```
+
+### 2. Install it as a dev dependency
+
+```bash
+npm install -D ./drwil-*.tgz
+```
+
+`npx drwil` then uses this version. To avoid touching `package.json`, replace
+`npx drwil` with `npx --package ./drwil-*.tgz drwil` in the commands below.
+
+### 3. Set up DRWIL in the project
+
+```bash
+npx drwil apply --dry-run   # preview: what would be added, nothing is written
+npx drwil apply             # install, never overwriting an existing file
+```
+
+For an empty folder, use `npx drwil init` instead.
+
+**Upgrading a project that already had DRWIL:** `apply` never overwrites, so
+older hooks stay in place and are reported as drifted. Update the mechanics
+with a diff and a confirmation per file (a `.bak` backup is kept):
+
+```bash
+npx drwil resoudre-derive
+```
+
+Contracts still in the legacy table format remain readable, but stay `MANUAL`
+until they declare a control.
+
+### 4. Check the installation, then the governance
+
+```bash
+npx drwil doctor            # diagnosis, without running any control
+npx drwil contracts         # list and validate the contract registry
+npx drwil verify            # human-readable verdict
+npx drwil verify --agent    # output for an agent (Claude Code: /drwil verify)
+```
+
+### 5. Attest a MANUAL contract (human, in your own terminal)
+
+```bash
+npx drwil attest QUA-015 --note "sheets reviewed"
+npx drwil verify
+```
+
+### Good to know
+
+* `apply` enables the git hooks when it finds a git repository: direct commits
+  to `main`/`master` are then refused (QUA-017) — work on a branch.
+* Without gitleaks installed, the secrets contract (SEC-007) is `ERROR` in
+  `verify` (tool unavailable).
+* Without a CI configured, the CI-coverage contract (QUA-013) is `ERROR`
+  ("no CI configured").
+
+---
+
+## Slash commands (Claude Code)
+
+When Claude Code is among the configured tools (`--tools claude`, the
+default), DRWIL installs slash commands as Claude Code skills. They are thin
+entry points to the project's recipes (in `docs/`), which any other agent
+can read directly. Names below are for an English install; a French install
+(`--lang fr`) uses the French names shown in parentheses.
+
+### Governance
+
+| Command | What it does |
+| --- | --- |
+| `/drwil` | Menu of DRWIL capabilities and their commands |
+| `/drwil verify` | Is my work verified? Runs `drwil verify --agent` and follows the agent / human workflow |
+| `/drwil-adopt` (`/drwil-adopter`) | Make the kit live on an existing project after `apply` |
+| `/drwil-audit` | Audit risks and technical debt |
+| `/drwil-value` (`/drwil-valeur`) | Discover the next high-value product features |
+| `/drwil-usage` (`/drwil-conso`) | Record tokens, model and setup time for a finished lot |
+| `/drwil-progress` (`/drwil-avancement`) | Generate a static HTML progress dashboard |
+| `/drwil-release` | Tag and publish a GitHub release (optional module) |
+
+There is deliberately **no** `/drwil attest`: attestation is a human action,
+run by the human in their own terminal (`drwil attest <CONTRACT_ID>`).
+
+### Working recipes
+
+| Command | What it does |
+| --- | --- |
+| `/add-an-api-route` (`/ajouter-une-route-api`) | Add or change a backend API route with permissions and tests |
+| `/add-a-frontend-screen` (`/ajouter-un-ecran-front`) | Add a front-end screen consistent with the existing ones |
+| `/refactor-without-breaking` (`/refactorer-sans-casser`) | Restructure code without changing its behavior |
+| `/modify-permissions` (`/modifier-les-droits`) | Change roles or permissions, server and front aligned |
+| `/manage-access` (`/gerer-les-acces`) | Manage access through an external identity provider |
+| `/run-locally` (`/lancer-en-local`) | Run the project locally for development |
+| `/deploy-to-production` (`/deployer-en-prod`) | Deploy to production, only on explicit request |
+| `/backup-and-restore` (`/sauvegarder-et-restaurer`) | Back up or restore production data safely |
+
+---
+
 ## CLI
 
 The core interface is intentionally small.
