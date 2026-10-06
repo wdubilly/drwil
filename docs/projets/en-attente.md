@@ -64,3 +64,7 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [IA] [P2] Prochaine release : signaler dans la note de version que
   `chemins` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
   qui tourne au commit — voir `docs/projets/journal.md` (2026-10-05).
+- [ ] [décision] [P3] V3 — investigation & reporting par agent : DRWIL
+  gouverne-t-il le travail d'agents au-delà du code ? Expérimentation après
+  stabilisation du cœur, sans code pour l'instant —
+  `docs/projets/v3-investigation-reporting-agent.md`.
