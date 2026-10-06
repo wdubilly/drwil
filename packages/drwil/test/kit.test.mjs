@@ -1485,21 +1485,24 @@ test("attest : aucune donnée sensible dans l'attestation (note caviardée, pas 
 // Intégration agent (docs/projets/integration-agent-verify.md) : `verify --agent` présente le verdict
 // sans recalculer de règle ; `attest` reste humain. Décision (a) : une attestation écrite à la main
 // n'est pas détectée comme fausse, la frontière est la revue du changement (dossier versionné).
-test("verify --agent : PASS, FAIL, ERROR et MANUAL présentés à l'agent, codes de sortie inchangés", async () => {
+test("verify --agent : PASS sans action, FAIL à corriger, ERROR à résoudre, seul MANUAL demande une attestation humaine", async () => {
   let r = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`")), "verify", "--agent");
   assert.equal(r.status, 0);
   assert.match(r.stdout, /Contracts: 1 PASS · 0 ATTESTED · 0 FAIL · 0 ERROR · 0 MANUAL/);
   assert.match(r.stdout, /Verdict: GOVERNANCE: PASS \(exit 0\)/);
   assert.match(r.stdout, /Next step: Work is verified by drwil/);
+  assert.doesNotMatch(r.stdout, /Human attestation required|drwil attest/, "PASS : aucune action humaine");
   r = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `ko`")), "verify", "--agent");
   assert.equal(r.status, 1);
   assert.match(r.stdout, /GOVERNANCE: FAIL/);
   assert.match(r.stdout, /Failing contracts \(fix them\):\n  - QUA-001/);
   assert.match(r.stdout, /Do not claim the work is done/);
+  assert.doesNotMatch(r.stdout, /Human attestation required|drwil attest/, "FAIL : l'agent corrige, pas d'attestation");
   r = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `inexistant`")), "verify", "--agent");
   assert.equal(r.status, 2, "ERROR reste ERROR");
   assert.match(r.stdout, /GOVERNANCE: VERIFY ERROR/);
   assert.match(r.stdout, /do not claim the work is verified/);
+  assert.doesNotMatch(r.stdout, /Human attestation required|drwil attest/, "ERROR : problème de vérification à résoudre, pas d'attestation");
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture"));
   r = cli(dir, "verify", "--agent");
   assert.equal(r.status, 1);
