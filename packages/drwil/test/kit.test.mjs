@@ -1580,7 +1580,7 @@ test("paquet npm : aucun fichier du gabarit n'est retiré par npm, le .gitignore
   assert.match(read(dir, ".gitignore"), /!\.drwil\/evidence\/attestations\//);
 });
 
-// Un seul numéro de version (docs/projets/version-unique-paquet-tag.md).
+// Un seul numéro de version (docs/projets/journal.md, 2026-10-06).
 test("version unique : la release suit package.json et refuse un numéro déjà publié ou en recul ; --version lit package.json", async () => {
   const { deciderVersion } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
   const v = (version) => [{ dossier: "packages/drwil", version }];

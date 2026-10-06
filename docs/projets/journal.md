@@ -162,3 +162,20 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   La qualité prime sur la vitesse. [décision utilisateur]
 - **Reste** : note de version (ligne ouverte dans l'index).
 - **Clôturé par** : PR #31, commit `1df2b6b`.
+
+## 2026-10-06 — Un seul numéro de version (paquet, tag, `--version`)
+
+- **Décisions clés** : `package.json` est la source unique de la version ;
+  le tag en découle (et non l'inverse, qui obligerait le script de release
+  à commiter, contraire à QUA-017). `.githooks/creer-release.mjs` (dépôt et
+  gabarit) pose `v` + la version des paquets npm publiables et refuse, code
+  1 même en `--dry-run`, un tag existant, une version qui n'augmente pas ou
+  des paquets en désaccord ; sans paquet npm, calcul d'après les commits
+  inchangé. `drwil --version` lit `package.json`. [décision utilisateur]
+- **Écarté** : remplacer l'asset de la release `v0.2.1` par un paquet
+  construit après coup — il aurait attaché un code plus récent à un tag
+  plus ancien ; `v0.2.1` garde son asset, avec une note sur son `0.0.1`.
+- **Résultat** : `v0.3.0`, première release posée par le script avec tag,
+  tarball (`drwil-0.3.0.tgz`) et `--version` identiques.
+- **Clôturé par** : PR #45 (`3e859ed`) et #47 (`b49b3b2`), release `v0.3.0`.
+

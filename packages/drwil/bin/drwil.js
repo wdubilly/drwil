@@ -7,7 +7,7 @@ const program = new Command();
 program
   .name("drwil")
   .description("Scaffold IA-first governance for a project (any OS, any AI tool, fr/en)")
-  // Lue dans package.json, source unique de la version (docs/projets/version-unique-paquet-tag.md).
+  // Lue dans package.json, source unique de la version (docs/projets/journal.md, 2026-10-06 « Un seul numéro de version »).
   .version(JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version);
 
 function addOptions(cmd, layersHelp) {
