@@ -1555,3 +1555,17 @@ test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusé
   assert.match(r.stdout, /0 PASS · 1 ATTESTED/);
   assert.match(r.stdout, /satisfied by a human attestation, not by an automated proof/);
 });
+
+test("paquet npm : aucun fichier du gabarit n'est retiré par npm, le .gitignore livré arrive dans le projet", async () => {
+  const racine = fileURLToPath(new URL("../templates", import.meta.url));
+  const retires = spawnSync("find", [racine, "-name", ".gitignore", "-o", "-name", ".npmignore"], { encoding: "utf8" }).stdout.trim();
+  assert.equal(retires, "", "npm retire ces fichiers d'un paquet publié : les livrer sous un autre nom (NOMS_LIVRES)");
+  const pack = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["pack", "--dry-run", "--json"], { cwd: fileURLToPath(new URL("..", import.meta.url)), encoding: "utf8", shell: process.platform === "win32" });
+  assert.equal(pack.status, 0, pack.stderr);
+  const fichiers = JSON.parse(pack.stdout)[0].files.map((f) => f.path);
+  assert.ok(fichiers.includes("templates/common/base/gitignore"), "le .gitignore du gabarit est bien dans le paquet");
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  assert.ok(existsSync(join(dir, ".gitignore")) && !existsSync(join(dir, "gitignore")), "installé sous son vrai nom");
+  assert.match(read(dir, ".gitignore"), /!\.drwil\/evidence\/attestations\//);
+});

@@ -19,4 +19,4 @@ fichiers:
 
 | Date | Tâche | Statut |
 |---|---|---|
-*(vide à l'installation)*
+| 2026-10-06 | Le `.gitignore` du gabarit était absent du paquet npm (npm retire tout `.gitignore`) : livré sous le nom `gitignore`, renommé à l'installation (`packages/drwil/src/index.ts`) ; test via `npm pack --dry-run`. | fait |

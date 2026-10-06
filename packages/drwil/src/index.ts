@@ -217,10 +217,16 @@ async function writeOut(
   }
 }
 
+// npm retire tout fichier `.gitignore` d'un paquet publié : le gabarit le livre sous un autre nom,
+// rendu ici sous son vrai nom (le manifeste et la dérive ne voient que le nom final).
+const NOMS_LIVRES: Record<string, string> = { gitignore: ".gitignore" };
+
 /** Copie un dossier de modèles à la racine de la cible, en rendant les variables. */
 async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>, attendus?: string[]): Promise<void> {
   for (const file of await walk(srcDir)) {
-    const target = join(r.opts.targetDir, relative(srcDir, file));
+    const rel = relative(srcDir, file);
+    const nom = NOMS_LIVRES[basename(rel)];
+    const target = join(r.opts.targetDir, nom ? join(dirname(rel), nom) : rel);
     await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, shouldOverwrite, derives, manifest, attendus);
   }
 }
