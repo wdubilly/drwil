@@ -1,4 +1,4 @@
-# DRWIL
+# DRWIL — Governance Layer for AI Agents
 
 <p align="center">
   <strong>Governance for agent-produced work.</strong>
@@ -18,20 +18,26 @@
 
 ## What is DRWIL?
 
-DRWIL is a lightweight governance and verification layer for work produced with AI agents.
+DRWIL is a lightweight **governance and verification layer for AI agents**.
 
-It helps turn human intent into explicit, verifiable requirements — then checks whether the resulting work can actually prove those requirements.
+It sits between human intent and agent-produced work.
+
+The human defines what must be true.
+
+The agent produces the work.
+
+DRWIL verifies whether the important requirements can actually be proven.
 
 The core loop is:
 
 ```text
 HUMAN
   ↓
-Explicit requirements
+Intent / Specification
   ↓
 AGENT
   ↓
-Work + evidence
+Work + Evidence
   ↓
 DRWIL VERIFY
   ↓
@@ -43,6 +49,49 @@ Human attestation when required
 The principle is simple:
 
 > **The agent produces the work. DRWIL demands the proof.**
+
+---
+
+## The Agent Layer
+
+DRWIL is designed as a governance layer around the agent workflow, not as another AI agent.
+
+```text
+                 HUMAN
+                   │
+                   │ intent / requirements
+                   ▼
+             ┌─────────────┐
+             │  AI AGENT   │
+             │             │
+             │ Build       │
+             │   ↓         │
+             │ Prove       │
+             └──────┬──────┘
+                    │
+                    │ work + evidence
+                    ▼
+             ┌─────────────┐
+             │   DRWIL     │
+             │             │
+             │ Contracts   │
+             │ Controls    │
+             │ Evidence    │
+             │ Verify      │
+             └──────┬──────┘
+                    │
+                    ▼
+                 VERDICT
+```
+
+The separation is intentional:
+
+* **Human** defines what must be true.
+* **Agent** produces the work and available evidence.
+* **DRWIL** verifies declared obligations.
+* **Human** explicitly attests when mechanical verification is insufficient.
+
+DRWIL therefore acts as a **governance boundary around agent-produced work**.
 
 ---
 
@@ -148,15 +197,37 @@ DRWIL complements agent instructions rather than replacing them.
 
 ---
 
-## DRWIL and Specification-Driven Development
+## Specification-Driven Development
 
-DRWIL is built around a simple Specification-Driven Development (SDD) principle:
+Specification-Driven Development (SDD) is one of the natural ways to define the requirements that DRWIL governs:
 
-> **Define what must be true before asking an agent to build it.**
+> **Specify what must be true before asking an agent to build it.**
 
-AI agents are good at producing implementation. They are much less reliable when the requirements remain implicit, ambiguous, or scattered across instructions.
+```text
+                    DRWIL
+          Governance Layer
+                 │
+       ┌─────────┴─────────┐
+       │                   │
+      SDD              Other sources
+       │              of requirements
+       │                   │
+       └─────────┬─────────┘
+                 ↓
+              CONTRACTS
+                 ↓
+               AGENT
+                 ↓
+            WORK + PROOF
+                 ↓
+             DRWIL VERIFY
+                 ↓
+              VERDICT
+```
 
-DRWIL makes the specification part of the governance loop.
+AI agents are good at producing implementation. But when requirements remain implicit, ambiguous, or scattered across instructions, it becomes difficult to know whether the resulting work actually satisfies the intended specification.
+
+DRWIL makes the specification explicit and connects it to verification.
 
 ```text
 Human intent
@@ -174,7 +245,17 @@ DRWIL verification
 Verdict
 ```
 
-The distinction is important:
+### From specification to proof
+
+A specification describes the expected outcome.
+
+DRWIL adds a path from that specification to evidence:
+
+```text
+SPECIFY → BUILD → PROVE → VERIFY
+```
+
+The important distinction is:
 
 | Layer         | Question                               |
 | ------------- | -------------------------------------- |
@@ -185,33 +266,46 @@ The distinction is important:
 | DRWIL         | Is the obligation actually verified?   |
 | Human         | What still requires explicit judgment? |
 
-This makes DRWIL complementary to SDD rather than a replacement for it.
+Not every requirement needs to be automatically verifiable.
 
-### From specification to proof
+When a requirement can be checked mechanically, DRWIL executes the corresponding control.
 
-A specification normally describes the expected outcome.
+When it cannot, DRWIL reports `MANUAL` rather than silently treating the requirement as satisfied.
 
-DRWIL adds an explicit path from that specification to evidence:
-
-```text
-SPECIFY → BUILD → PROVE → VERIFY
-```
-
-The goal is not to make every requirement automatically testable.
-
-The goal is to make the verification state explicit.
-
-If a requirement can be checked mechanically, DRWIL executes the corresponding control.
-
-If it cannot, DRWIL reports `MANUAL` rather than silently treating the requirement as satisfied.
-
-This creates a useful boundary between:
+This creates a clear boundary between:
 
 * **what was requested;**
 * **what was implemented;**
-* **what was actually proven.**
+* **what was proven;**
+* **what still requires human judgment.**
 
-That boundary becomes especially important when the implementation is produced by an AI agent.
+### SDD for agent-produced work
+
+The role of DRWIL is not to replace Specification-Driven Development.
+
+It adds a governance layer around it:
+
+```text
+SDD
+Define what must be true
+        ↓
+AGENT
+Build the requested work
+        ↓
+DRWIL
+Demand evidence that the specification was satisfied
+        ↓
+HUMAN
+Attest only where mechanical verification is insufficient
+```
+
+This is especially important when the implementation is produced by an AI agent.
+
+The agent is responsible for producing the work.
+
+DRWIL is responsible for verifying the declared obligations.
+
+The human remains responsible for explicit attestation when the machine cannot reliably establish the result.
 
 ---
 
@@ -470,6 +564,35 @@ npx drwil verify
   `verify` (tool unavailable).
 * Without a CI configured, the CI-coverage contract (QUA-013) is `ERROR`
   ("no CI configured").
+
+---
+
+## Uninstalling
+
+DRWIL removes only what it installed, and never silently:
+
+```bash
+npx drwil uninstall         # dry-run: lists what would be removed
+npx drwil uninstall --yes   # actually removes those files
+```
+
+`uninstall` relies on the installed-files manifest that `init` and `apply` keep in the
+`.drwil/` folder:
+
+* it removes the files DRWIL installed **that are unchanged since installation**;
+* it lists the files you modified and leaves them in place;
+* it never touches the project's chantier, intention and recipe folders.
+
+It does not remove everything, on purpose. To finish cleaning up:
+
+```bash
+git config --unset core.hooksPath   # stop running the DRWIL git hooks
+npm uninstall -D drwil              # if installed as a dev dependency
+```
+
+Then decide yourself what to do with what remains — your contracts, the
+`.drwil/` folder (configuration, versioned human attestations) and any file
+listed as modified: DRWIL never deletes your governance history for you.
 
 ---
 
