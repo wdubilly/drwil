@@ -1,6 +1,6 @@
 # Projet : un seul numéro de version (paquet, tag, `--version`)
 
-**Statut** : cadré le 2026-10-06 — lot 1 livré sur la branche `chantier/version-unique`, en attente de fusion ; lot 2 après fusion.
+**Statut** : cadré le 2026-10-06 — lot 1 fusionné (#45) ; lot 2 (`v0.3.0`) en cours.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -58,16 +58,18 @@ npm affichent toujours à l'identique.
   version, refus, `--version` = `package.json`) ; recettes de release
   mises à jour. Critère de sortie : suite verte, `--dry-run` sur ce dépôt
   refuse `v0.2.1` (déjà publiée), ce qui prouve la garde.
-- **Lot 2 — Asset de la release `v0.2.1`** [IA, après fusion] : remplacer
-  `drwil-0.0.1.tgz` par `drwil-0.2.1.tgz` (`gh release upload --clobber`
-  puis suppression de l'ancien asset).
+- **Lot 2 — Première release alignée : `v0.3.0`** [IA] : remplacer l'asset
+  de `v0.2.1` aurait attaché le code actuel à un tag plus ancien (pire que
+  le décalage de numéro) : `v0.2.1` reste telle quelle, avec une note sur
+  son paquet en `0.0.1`. Le paquet passe en `0.3.0` dans une PR (version
+  mineure : le défaut de QUA-016 devient bloquant), puis
+  `node .githooks/creer-release.mjs` pose `v0.3.0` avec `drwil-0.3.0.tgz`.
+  [décision utilisateur, 2026-10-06]
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-06) : lot 1 livré — `deciderVersion` (dépôt et
-  gabarit), `packages/drwil/bin/drwil.js` lit `package.json`, paquet et racine en
-  `0.2.1`, recettes de release (dépôt, gabarit fr/en), test dédié ; suite
-  85/85. Sur ce dépôt, `--dry-run` refuse désormais `v0.2.1` (déjà publiée).
+- **Dernier état** (2026-10-06) : lot 1 fusionné (#45) ; lot 2 : paquet et
+  racine passés en `0.3.0` sur `chantier/version-0-3-0`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] relire et fusionner la PR ; puis [IA] lot 2
-  (asset de la release `v0.2.1`).
+- **Prochaine étape** : [IA] après fusion, `node .githooks/creer-release.mjs`
+  (`v0.3.0`) et note sur la release `v0.2.1`.
