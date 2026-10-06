@@ -1569,3 +1569,36 @@ test("paquet npm : aucun fichier du gabarit n'est retiré par npm, le .gitignore
   assert.ok(existsSync(join(dir, ".gitignore")) && !existsSync(join(dir, "gitignore")), "installé sous son vrai nom");
   assert.match(read(dir, ".gitignore"), /!\.drwil\/evidence\/attestations\//);
 });
+
+// Un seul numéro de version (docs/projets/version-unique-paquet-tag.md).
+test("version unique : la release suit package.json et refuse un numéro déjà publié ou en recul ; --version lit package.json", async () => {
+  const { deciderVersion } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
+  const v = (version) => [{ dossier: "packages/drwil", version }];
+  assert.deepEqual(deciderVersion({ dernier: "v0.2.0", bump: "patch", versions: v("0.3.0"), tagsExistants: ["v0.2.0"] }), { prochain: "v0.3.0", source: "package.json (packages/drwil)" });
+  assert.match(deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.1"), tagsExistants: ["v0.2.1"] }).erreur, /v0\.2\.1 existe déjà/);
+  assert.match(deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.0"), tagsExistants: [] }).erreur, /n'est pas supérieure au dernier tag/);
+  assert.match(deciderVersion({ dernier: null, bump: "patch", versions: [{ dossier: "a", version: "1.0.0" }, { dossier: "b", version: "1.1.0" }] }).erreur, /en désaccord/);
+  assert.match(deciderVersion({ dernier: null, bump: "patch", versions: v(undefined) }).erreur, /non semver/);
+  assert.deepEqual(deciderVersion({ dernier: "v1.2.3", bump: "minor", versions: [] }), { prochain: "v1.3.0", source: "commits" }, "sans paquet npm : calcul d'après les commits, inchangé");
+  assert.equal(deciderVersion({ dernier: "v1.2.3", bump: null, versions: v("9.9.9") }), null, "aucun commit : rien à publier");
+
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: true }));
+  mkdirSync(join(dir, ".githooks"), { recursive: true });
+  writeFileSync(join(dir, ".githooks/creer-release.mjs"), readFileSync(fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url)), "utf8"));
+  mkdirSync(join(dir, "packages/truc"), { recursive: true });
+  writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc", version: "1.0.0" }));
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "ajoute un paquet");
+  git(dir, "tag", "-a", "v1.0.0", "-m", "v1.0.0");
+  writeFileSync(join(dir, "packages/truc/a.txt"), "x");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "change sans changer la version");
+  const r = spawnSync(process.execPath, [".githooks/creer-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 1, "version non changée : release refusée, même en --dry-run");
+  assert.match(r.stderr, /v1\.0\.0 existe déjà/);
+
+  const pkg = JSON.parse(readFileSync(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8"));
+  const ver = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "--version"], { encoding: "utf8" });
+  assert.equal(ver.stdout.trim(), pkg.version, "drwil --version = package.json");
+});

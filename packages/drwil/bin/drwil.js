@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import { Command } from "commander";
 import { init, apply, uninstall, resoudreDerive, verify, formaterVerdict, verdictJson, ecrireEvidence, attester, formaterPourAgent, auditerApply, formaterAudit, doctor, formaterDiagnostic, diagnosticJson, listerContrats, TOOLS, CIS } from "../dist/index.js";
 
@@ -6,7 +7,8 @@ const program = new Command();
 program
   .name("drwil")
   .description("Scaffold IA-first governance for a project (any OS, any AI tool, fr/en)")
-  .version("0.0.1");
+  // Lue dans package.json, source unique de la version (docs/projets/version-unique-paquet-tag.md).
+  .version(JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version);
 
 function addOptions(cmd, layersHelp) {
   return cmd

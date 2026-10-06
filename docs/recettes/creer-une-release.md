@@ -18,16 +18,21 @@ CI.
 1. Aperçu sans rien créer : `node .githooks/creer-release.mjs --dry-run`
    — affiche le dernier tag, le bump détecté (majeur/mineur/patch) et la
    version suivante.
-2. Le bump est calculé *best-effort* depuis les messages de commit non-
-   merge depuis le dernier tag, façon Conventional Commits (`feat:` →
-   mineur, rupture annoncée → majeur, sinon patch par défaut). Aucun
-   format n'est imposé : un message sans préfixe reconnu reste couvert
-   par le défaut (patch).
+2. La version : s'il y a des paquets npm publiables (package.json suivi,
+   avec un `name`, sans `"private": true`), le tag est **`v` + leur
+   `version`** — source unique, décidée dans une PR avec
+   `npm version patch|minor|major --no-git-tag-version`. Le script refuse
+   (code 1, y compris en `--dry-run`) un tag déjà existant, une version qui
+   n'augmente pas ou des paquets en désaccord. Sans paquet npm, la version
+   est calculée *best-effort* depuis les messages de commit depuis le
+   dernier tag, façon Conventional Commits (`feat:` → mineur, rupture
+   annoncée → majeur, sinon patch par défaut) ; avec des paquets, ce calcul
+   n'est qu'une suggestion affichée.
 3. Créer réellement : `node .githooks/creer-release.mjs` (tag annoté
    poussé sur `origin`, puis `gh release create --generate-notes` si
    `gh` est disponible et authentifié).
 4. Si le dépôt contient un ou plusieurs paquets npm publiables
-   (`package.json` suivi, avec un `name`, sans `"private": true`), un
+   (package.json suivi, avec un `name`, sans `"private": true`), un
    tarball (`npm pack`) est construit pour chacun et attaché comme asset
    téléchargeable à la release GitHub — utile pour donner le paquet à
    tester sans publier sur npm (c'est le cas de `packages/drwil` sur ce

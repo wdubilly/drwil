@@ -17,11 +17,16 @@ script only runs on the user's explicit request, never on its own in CI.
 1. Preview without creating anything: `node .githooks/creer-release.mjs
    --dry-run` — shows the last tag, the detected bump (major/minor/patch)
    and the next version.
-2. The bump is computed *best-effort* from non-merge commit messages
-   since the last tag, Conventional-Commits style (`feat:` → minor, an
-   announced breaking change → major, otherwise patch by default). No
-   format is enforced: a message without a recognized prefix still falls
-   back to the default (patch).
+2. The version: when there are publishable npm packages (tracked
+   package.json, with a `name`, without `"private": true`), the tag is
+   **`v` + their `version`** — single source, decided in a PR with
+   `npm version patch|minor|major --no-git-tag-version`. The script refuses
+   (exit 1, `--dry-run` included) a tag that already exists, a version that
+   does not increase, or packages that disagree. Without an npm package,
+   the version is computed *best-effort* from commit messages since the
+   last tag, Conventional-Commits style (`feat:` → minor, announced
+   breaking change → major, otherwise patch by default); with packages,
+   that computation is only a displayed suggestion.
 3. Create for real: `node .githooks/creer-release.mjs` (annotated tag
    pushed to `origin`, then `gh release create --generate-notes` if `gh`
    is available and authenticated).

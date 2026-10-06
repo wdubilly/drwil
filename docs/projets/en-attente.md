@@ -68,3 +68,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   gouverne-t-il le travail d'agents au-delà du code ? Expérimentation après
   stabilisation du cœur, sans code pour l'instant —
   `docs/projets/v3-investigation-reporting-agent.md`.
+- [ ] [IA] [P2] Un seul numéro de version : la release suit `package.json`
+  (tag, tarball et `--version` identiques) —
+  `docs/projets/version-unique-paquet-tag.md`.

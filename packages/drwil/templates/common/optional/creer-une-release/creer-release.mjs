@@ -3,9 +3,10 @@
 // courant, pour tracer les chantiers fusionnés sans publier sur npm.
 // Ne modifie JAMAIS de fichier suivi (QUA-017 : pas de commit sur la
 // branche principale) : seuls un tag Git et une release GitHub (hors
-// dépôt) sont créés. Version calculée depuis les messages de commit
-// façon Conventional Commits, best-effort (aucun format n'est imposé —
-// défaut sûr : bump "patch" si aucun type reconnu).
+// dépôt) sont créés. Version : celle des paquets npm publiables du dépôt
+// (package.json, source unique décidée et relue en PR) ; à défaut de paquet
+// npm, calculée depuis les messages de commit façon Conventional Commits,
+// best-effort (défaut sûr : bump "patch" si aucun type reconnu).
 // Usage : node creer-release.mjs [--dry-run]
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -92,6 +93,40 @@ export function paquetsPublics() {
   return dossiers;
 }
 
+// Versions déclarées par les paquets publiables : [{ dossier, version }].
+export function versionsPaquets(dossiers) {
+  return dossiers.map((dossier) => {
+    try {
+      return { dossier, version: JSON.parse(readFileSync(join(dossier, "package.json"), "utf8")).version ?? null };
+    } catch {
+      return { dossier, version: null };
+    }
+  });
+}
+
+function comparer(a, b) {
+  const p = (v) => v.replace(/^v/, "").split(".").map((n) => parseInt(n, 10) || 0);
+  const [x, y] = [p(a), p(b)];
+  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] - y[i];
+  return 0;
+}
+
+// Décide la version de la release (pure, exportée pour les tests). Avec des paquets npm, le tag suit
+// leur package.json : un seul numéro pour le tag, le tarball et `--version`, jamais deux qui divergent.
+// Rend { prochain, source } ou { erreur } ; null s'il n'y a rien à publier.
+export function deciderVersion({ dernier, bump, versions = [], tagsExistants = [] }) {
+  if (!bump) return null;
+  if (!versions.length) return { prochain: dernier ? versionSuivante(dernier, bump) : "v0.1.0", source: "commits" };
+  const distinctes = [...new Set(versions.map((v) => v.version))];
+  if (distinctes.length > 1) return { erreur: `paquets en désaccord sur la version (${versions.map((v) => `${v.dossier}@${v.version}`).join(", ")}) : les aligner dans une PR` };
+  if (!/^\d+\.\d+\.\d+$/.test(distinctes[0] ?? "")) return { erreur: `version de paquet absente ou non semver (${distinctes[0]}) dans ${versions[0].dossier}/package.json` };
+  const prochain = `v${distinctes[0]}`;
+  const corriger = "changer la version dans une PR (npm version patch|minor|major --no-git-tag-version)";
+  if (tagsExistants.includes(prochain)) return { erreur: `${prochain} existe déjà : ${corriger}` };
+  if (dernier && comparer(prochain, dernier) <= 0) return { erreur: `${prochain} n'est pas supérieure au dernier tag ${dernier} : ${corriger}` };
+  return { prochain, source: `package.json (${versions.map((v) => v.dossier).join(", ")})` };
+}
+
 // Construit un tarball (npm pack) pour chaque paquet publiable trouvé, dans
 // un dossier temporaire, et renvoie les chemins des .tgz produits.
 function construireTarballs(dossiers) {
@@ -114,15 +149,22 @@ function main() {
   const tag = dernierTag();
   const commits = commitsDepuis(tag);
   const bump = detecterBump(commits);
-  if (!bump) {
+  const paquets = paquetsPublics();
+  const tagsExistants = git(["tag", "-l", "v*"]).split("\n").filter(Boolean);
+  const decision = deciderVersion({ dernier: tag, bump, versions: versionsPaquets(paquets), tagsExistants });
+  if (!decision) {
     console.log(`[creer-release] rien à publier depuis ${tag ?? "le début du dépôt"} (aucun commit).`);
     return;
   }
-  const prochain = tag ? versionSuivante(tag, bump) : "v0.1.0";
   console.log(`[creer-release] dernier tag : ${tag ?? "(aucun)"}`);
-  console.log(`[creer-release] bump détecté : ${bump} (${commits.length} commit(s) analysé(s))`);
-  console.log(`[creer-release] prochaine version : ${prochain}`);
-  const paquets = paquetsPublics();
+  if (decision.erreur) {
+    console.error(`[creer-release] ✗ release refusée : ${decision.erreur}`);
+    process.exitCode = 1;
+    return;
+  }
+  const prochain = decision.prochain;
+  console.log(`[creer-release] ${paquets.length ? "suggestion d'après les commits" : "bump détecté"} : ${bump} (${commits.length} commit(s) analysé(s))`);
+  console.log(`[creer-release] prochaine version : ${prochain} (source : ${decision.source})`);
   if (paquets.length > 0) {
     console.log(`[creer-release] tarball(s) à construire et attacher à la release : ${paquets.join(", ")}`);
   }
