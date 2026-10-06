@@ -5,6 +5,8 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { execFileSync } from "node:child_process";
 import * as cadrage from "./cadrage.mjs";
+import { controlesConnus, lireContrats, validerContrats } from "./contrats.mjs";
+import { verifierRisque } from "./risque.mjs";
 
 const root = process.cwd();
 const cfg = loadConfig();
@@ -27,6 +29,7 @@ const T = {
     coherenceOuverte: (fiche) => `case ouverte mais la fiche ${fiche} se dit déjà terminée (QUA-015)`,
     coherenceCochee: (fiche) => `case cochée mais la fiche ${fiche} ne se dit pas terminée (QUA-015)`,
     coherenceAvertissement: (n) => `check-docs : ${n} avertissement(s) de cohérence case/statut (QUA-015, non bloquant)`,
+    risqueAvertissement: (n) => `check-docs : ${n} avertissement(s) de niveau de risque (DRWIL-012, non bloquant)`,
   },
   en: {
     chemin: (c) => `cited path not found \`${c}\``,
@@ -45,6 +48,7 @@ const T = {
     coherenceOuverte: (fiche) => `item unchecked but ${fiche} already says it is done (QUA-015)`,
     coherenceCochee: (fiche) => `item checked but ${fiche} does not say it is done (QUA-015)`,
     coherenceAvertissement: (n) => `check-docs: ${n} checkbox/status consistency warning(s) (QUA-015, non-blocking)`,
+    risqueAvertissement: (n) => `check-docs: ${n} risk level warning(s) (DRWIL-012, non-blocking)`,
   },
 }[lang];
 
@@ -133,6 +137,11 @@ if (existsSync(contratsPath)) {
     comptes.set(m[1], (comptes.get(m[1]) ?? 0) + 1);
   }
   for (const [id, n] of comptes) if (n > 1) erreurs.push(T.doublon(id, relative(root, contratsPath)));
+  // DRWIL-002 : un contrat mal formé (contrôle inconnu, Règle ou preuve absente) est refusé dès le
+  // commit, avec le même lecteur que `drwil verify` ; les doublons sont déjà signalés ci-dessus.
+  for (const e of validerContrats(lireContrats(readFileSync(contratsPath, "utf8")), controlesConnus(cfg), lang)) {
+    if (e.type !== "doublon") erreurs.push(`${relative(root, contratsPath)}:${e.ligne} : ${e.message}`);
+  }
 }
 
 const docs = sources();
@@ -157,6 +166,21 @@ for (const doc of docs) {
 
 erreurs.push(...checkChantiers());
 
+// DRWIL-012 : niveau de risque des fiches de projet (ADR-004) ; la traçabilité QUA-016 ne change pas.
+const avertissementsRisque = [];
+{
+  const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projets");
+  const indexPath = join(root, cfg.dirs?.index ?? "docs/projets/en-attente.md");
+  // La fiche de mécanique du kit est livrée à chaque installation et ne décrit pas un chantier :
+  // l'avertir dès l'installation de tout projet serait du bruit, pas un signal.
+  const mecanique = /^mecanique-ia-first\.md$|^kit-mechanics\.md$/;
+  for (const fiche of mdRecursif(projetsDir).filter((p) => p !== indexPath && !EXEMPTS_RE.test(relative(projetsDir, p)) && !mecanique.test(relative(projetsDir, p)))) {
+    const r = verifierRisque(readFileSync(fiche, "utf8"), { idMotif, lang, ...(cfg.risque?.cheminsSensibles ? { sensibles: cfg.risque.cheminsSensibles } : {}) });
+    for (const e of r.erreurs) erreurs.push(`${relative(root, fiche)} : ${e}`);
+    for (const a of r.avertissements) avertissementsRisque.push(`${relative(root, fiche)} : ${a}`);
+  }
+}
+
 const problemesCadrage = niveauCadrage === "off" ? [] : checkCadrage();
 if (niveauCadrage === "bloquant") erreurs.push(...problemesCadrage);
 
@@ -170,6 +194,10 @@ const problemesCoherence = checkCoherenceCaseStatut();
 if (problemesCoherence.length) {
   for (const e of problemesCoherence) console.log(`  ⚠ ${e}`);
   console.log(T.coherenceAvertissement(problemesCoherence.length));
+}
+if (avertissementsRisque.length) {
+  for (const e of avertissementsRisque) console.log(`  ⚠ ${e}`);
+  console.log(T.risqueAvertissement(avertissementsRisque.length));
 }
 process.exit(erreurs.length ? 1 : 0);
 

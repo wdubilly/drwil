@@ -128,6 +128,52 @@ drifted from the shipped template (see `resoudre-derive` below).
    "passing", the convention requires re-running the relevant check and
    reading its actual output — not assuming the earlier fix still holds.
 
+## Five-minute example: RULE → PROOF → VERIFY
+
+From an empty folder. Every step below is replayed by the package's test
+suite (`test/kit.test.mjs`, "DRWIL-031"), so this example cannot silently
+go stale.
+
+1. **Install** (git repo, working branch and hooks are set up for you):
+
+   ```bash
+   mkdir demo && cd demo
+   npx drwil init --lang en --tools claude --ci github
+   ```
+
+2. **Declare a check** the engine can run, in `.drwil/ia-first.json` →
+   `checks`:
+
+   ```json
+   { "id": "unit-tests", "name": "unit tests", "run": "node --test" }
+   ```
+
+3. **State the rule** in `docs/contracts.md` — the contract names the
+   check, never the command:
+
+   ```markdown
+   ## QUA-020 — Unit tests pass
+   **Rule**: every unit test passes.
+   **Check**: `unit-tests`
+   ```
+
+4. **Write the work** — here, one test file `sum.test.mjs`:
+
+   ```js
+   import { test } from "node:test";
+   import assert from "node:assert/strict";
+   test("sum", () => assert.equal(1 + 1, 2));
+   ```
+
+5. **Verify**: `npx drwil verify` shows `QUA-020` as `PASS`. The overall
+   verdict of a fresh project is `GOVERNANCE: MANUAL REVIEW REQUIRED`
+   (exit 1): the baseline contracts keep a human part (`MANUAL`), and a
+   human part is never counted as a pass.
+
+6. **Break it**: change `2` into `3`; `npx drwil verify` now reports
+   `QUA-020` as `FAIL` with the failing output, and `GOVERNANCE: FAIL`
+   (exit 1). The work is not verified until the rule holds again.
+
 ## How this compares to Spec-Driven Development
 
 drwil shares one idea with Spec-Driven Development (SDD): an ambiguous
@@ -174,6 +220,75 @@ AI tools already configured) and installs the kit on top **without ever
 overwriting anything**: an existing file is left as-is, and flagged if it
 has drifted from the template since a previous install. This is the
 command to use to adopt drwil on an ongoing project.
+
+Before writing anything, `apply` audits the repository and prints a
+preview: detected stack, AI tool files already present, safeguards already
+in place (npm `test`/`lint` scripts, eslint, husky, pre-commit, gitleaks,
+CI, git hooks), the exact list of files it will add, and the existing
+files it will leave untouched. `npx drwil apply --dry-run` stops after the
+preview and writes nothing; the preview runs through the same code path as
+the real install, so it cannot drift from what `apply` actually does.
+
+### `verify` — validate the work against the project's contracts
+
+```bash
+npx drwil verify
+```
+
+Reads every contract in `docs/contrats.md` (or `docs/contracts.md`), runs
+the check each one names (`**Contrôle**`/`**Check**`) through the same
+engine as the git hooks (`.githooks/moteur.mjs`), and prints a verdict:
+`PASS` (exit 0), `FAIL` or `MANUAL REVIEW REQUIRED` (exit 1), `VERIFY
+ERROR` (exit 2). A contract with a human part is `MANUAL`, never `PASS`;
+an unknown check is an `ERROR`. See `docs/ia-first.md`, section 5, in an
+installed project.
+
+`npx drwil verify --json` prints only a stable JSON document (`version: 1`,
+`status`, `exitCode`, `contracts` counts, per-contract `results`) with the
+same exit codes; `fail` and `manual` stay distinct. Raw check output is not
+included. `--evidence` also records the run in `.drwil/evidence/` (git-ignored):
+verdict, timestamp, commit, and per-check summaries (last output lines,
+redacted: keys, tokens, `password=…`).
+
+### `attest` — explicit human proof for a MANUAL contract
+
+```bash
+npx drwil attest QUA-015 --note "sheets reviewed"
+```
+
+Only for a contract whose automated part passes and whose remaining proof is
+human (`Manual` field, or legacy contract without a check). Shows the
+contract, its rule and automated results, then asks you to type the contract
+ID in an interactive terminal (no `--yes`; scripts and agents are refused).
+The attestation (contract, `ATTESTED`, timestamp, git `user.name` marked as
+declarative, redacted note, fingerprint, commit) goes to
+`.drwil/evidence/attestations/`, which is versioned. `verify` then reports
+the contract as `ATTESTED` — satisfied, but never shown as `PASS` — until the
+contract text or its proof definition changes, which makes the attestation
+stale. Exit 0: recorded; 1: refused or not eligible; 2: unknown contract.
+
+### `doctor` — diagnose the installation
+
+```bash
+npx drwil doctor          # human-readable
+npx drwil doctor --json   # machine-readable (version 1)
+```
+
+Checks the installation without running any check: configuration,
+installed-files manifest, `AGENTS.md`, AI tool entry files, contract
+registry validity, contracts with an automated proof, git hooks
+(`core.hooksPath`), CI file, required tools (git, gitleaks). Exit 0:
+healthy (warnings allowed); 1: problems; 2: not a drwil project.
+
+### `contracts` — list and validate the contract registry
+
+```bash
+npx drwil contracts [--json]
+```
+
+Lists each contract with its checks and manual part, without running
+anything. Exit 0: valid registry; 2: invalid (unknown check, missing rule
+or proof, duplicate).
 
 ### `resoudre-derive` — resolve mechanics drift
 

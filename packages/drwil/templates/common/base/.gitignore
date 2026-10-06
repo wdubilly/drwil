@@ -26,3 +26,8 @@ htmlcov/
 
 # Système
 .DS_Store
+
+# Évidences de `drwil verify --evidence` (une par exécution, locales) ; les attestations
+# humaines (`drwil attest`) restent versionnées : elles se relisent en PR.
+.drwil/evidence/*
+!.drwil/evidence/attestations/

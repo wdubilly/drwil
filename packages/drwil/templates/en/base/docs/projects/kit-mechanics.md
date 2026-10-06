@@ -8,6 +8,11 @@ fichiers:
   - .githooks/check-docs.mjs
   - .githooks/check-control-coverage.mjs
   - .githooks/glob.mjs
+  - .githooks/moteur.mjs
+  - .githooks/contrats.mjs
+  - .githooks/contrats.test.mjs
+  - .githooks/risque.mjs
+  - .githooks/risque.test.mjs
   - .githooks/cadrage.mjs
   - .githooks/cadrage.test.mjs
   - .githooks/pre-commit

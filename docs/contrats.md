@@ -2,11 +2,23 @@
 
 Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs : citer l'ID.
 
+Preuve vérifiable (DRWIL-001, `docs/projets/drwil-v0-2-gouvernance-executable.md`) :
+`**Contrôle**` cite, entre backticks, l'identifiant d'un contrôle connu du
+moteur (socle de `.githooks/run-checks.mjs`, ou `id` d'un contrôle de
+`.drwil/ia-first.json` → `checks`) ; la commande n'est jamais recopiée ici.
+`**Manuel**` décrit la partie de la preuve qui reste humaine. Au moins l'un
+des deux ; un contrôle inconnu est une erreur de configuration.
+`**Sévérité**` (facultatif) : `bloquant` (défaut), `avertissement` ou
+`indicatif`. Seuls les contrats bloquants décident du verdict de
+`drwil verify` ; les autres sont exécutés et affichés sans changer son code
+de sortie.
+
 ## SEC-001 — Portée des droits
 **Règle** : Les droits d'accès sont décidés par le backend.
 **Périmètre** : Toutes les routes exposées.
 **Source de vérité** : Code backend (couche autorisations).
 **Preuve** : Tests d'autorisation.
+**Manuel** : tests d'autorisation propres au projet (drwil n'a pas de backend).
 **Raison** : Principe de défense en profondeur.
 
 ## QUA-013 — Contrôle non exécuté n'est pas passé
@@ -14,6 +26,8 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : Tout contrôle listé dans les vérifs.
 **Source de vérité** : `.githooks/run-checks.sh` et son historique d'exécution.
 **Preuve** : Sortie lue du contrôle concerné.
+**Contrôle** : `couverture-ci`
+**Manuel** : lecture de la sortie du contrôle concerné.
 **Raison** : Empêcher l'affirmation sans exécution.
 
 ## SEC-006 — Pas de dépendance vulnérable connue
@@ -21,6 +35,7 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : Dépendances du dépôt.
 **Source de vérité** : Manifeste de dépendances (`package.json`…), audit déclaré (`.drwil/ia-first.json` → `checks`).
 **Preuve** : Hook + CI.
+**Manuel** : aucun audit de dépendances déclaré dans ce dépôt (`.drwil/ia-first.json` → `checks`) : écart à outiller.
 **Raison** : Une bibliothèque vulnérable annule le reste.
 
 ## SEC-007 — Pas de secret dans le dépôt
@@ -28,6 +43,7 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : Tout le dépôt et son historique.
 **Source de vérité** : gitleaks (fichiers indexés + historique, si configuré).
 **Preuve** : Hook + CI.
+**Contrôle** : `secrets-fichiers`
 **Raison** : Fuite irréversible une fois poussée.
 
 ## QUA-011 — Doc jamais fausse
@@ -35,6 +51,7 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : `AGENTS.md`, les `AGENTS.md` de couche, `docs/`, `.claude/skills/` (si présent).
 **Source de vérité** : `.githooks/check-docs.mjs`.
 **Preuve** : Hook + CI.
+**Contrôle** : `docs-references`
 **Raison** : Une doc fausse égare les IA.
 
 ## QUA-015 — Chantiers exploitables à froid
@@ -42,6 +59,8 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : `docs/projets/`, `docs/intentions/`.
 **Source de vérité** : `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI) ; justesse du contenu : humaine.
+**Contrôle** : `docs-references`
+**Manuel** : justesse du contenu des fiches.
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
 
 ## QUA-016 — Rappel de cadrage
@@ -49,6 +68,8 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : Tout le dépôt (fichiers indexés), hors `docs/` et le markdown.
 **Source de vérité** : `.githooks/cadrage.mjs`, `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage).
+**Contrôle** : `docs-references`
+**Manuel** : en sévérité « avertissement », le contrôle passe malgré des fichiers hors cadrage : lire ses avertissements.
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 
 ## QUA-017 — Pas de travail direct sur la branche principale
@@ -56,6 +77,7 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : Tout dépôt git, y compris avant le tout premier commit, en local uniquement (hooks `pre-commit`/`pre-push`).
 **Source de vérité** : `docs/recettes/travailler-en-branche.md`.
 **Preuve** : `.githooks/run-checks.mjs` (hook uniquement, jamais en CI).
+**Contrôle** : `branche-principale`
 **Raison** : Un commit ou un push direct sur la branche principale contourne la revue (pull/merge request) et casse le lien fiche ↔ branche décrit par la recette.
 
 ## QUA-018 — Périmètre explicite : dépôt drwil vs livrable gabarit
@@ -63,6 +85,7 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : Toute modification susceptible de concerner `packages/drwil/templates/` et/ou son équivalent dogfood à la racine (`AGENTS.md`, `docs/`, `.github/workflows/`, `.githooks/`, `.claude/skills/`).
 **Source de vérité** : Ce contrat (rappelé dans `AGENTS.md`).
 **Preuve** : Humaine — la distinction demande une appréciation contextuelle, pas de hook automatisable.
+**Manuel** : appréciation contextuelle du périmètre.
 **Raison** : Un changement fait sans clarifier le périmètre risque de fuiter du dogfood vers le gabarit exporté (ou l'inverse), comme déjà vu pour le job CI de release (dogfood-only, pas destiné au gabarit).
 
 ## QUA-019 — Pas de contournement d'un contrôle
@@ -70,6 +93,7 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : Tout contrôle de `.githooks/`, toute CI, tout test.
 **Source de vérité** : Ce contrat (rappelé dans `AGENTS.md`).
 **Preuve** : Humaine — un contournement laisse rarement une trace automatisable (voir `catalogue:QUA-009` pour le cas outillable d'un test désactivé).
+**Manuel** : un contournement laisse rarement une trace automatisable.
 **Raison** : Contourner un contrôle masque silencieusement une régression ou un vrai problème ; c'est l'opposé de QUA-013 (un contrôle qui ne tourne pas ne prouve rien).
 
 ## QUA-004 — Seuil de couverture de test
@@ -77,4 +101,5 @@ Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs :
 **Périmètre** : `packages/drwil` (code du générateur ; `.githooks/*.mjs` pas encore inclus, voir la fiche).
 **Source de vérité** : `packages/drwil/package.json` (script `test:coverage`, options `c8`).
 **Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`).
+**Contrôle** : `couverture-tests`
 **Raison** : Sans seuil vérifié, la couverture peut régresser silencieusement à chaque ajout de code.

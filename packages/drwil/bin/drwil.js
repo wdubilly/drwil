@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { init, apply, uninstall, resoudreDerive, TOOLS, CIS } from "../dist/index.js";
+import { init, apply, uninstall, resoudreDerive, verify, formaterVerdict, verdictJson, ecrireEvidence, attester, auditerApply, formaterAudit, doctor, formaterDiagnostic, diagnosticJson, listerContrats, TOOLS, CIS } from "../dist/index.js";
 
 const program = new Command();
 program
@@ -37,9 +37,20 @@ addOptions(program.command("init").description("Initialize IA-first in current d
   .option("--force", "Overwrite every file, not just .githooks/ (erases project docs added since last install)")
   .action((opts) => run(init, opts, "IA-first scaffolding applied to"));
 
-addOptions(program.command("apply").description("Apply IA-first to existing project (never overwrites files)"),
+addOptions(program.command("apply").description("Apply IA-first to existing project (never overwrites files); audits the repo and previews what will be added first"),
   "Layers CSV (default: subfolders where a stack is detected)")
-  .action((opts) => run(apply, opts, "IA-first applied to"));
+  .option("--dry-run", "Only audit the repository and preview what would be added; write nothing")
+  .action(async (opts) => {
+    try {
+      console.log(formaterAudit(await auditerApply({ targetDir: process.cwd(), ...opts })));
+    } catch (e) {
+      console.error(`✗ ${e.message}`);
+      process.exit(1);
+    }
+    if (opts.dryRun) return;
+    console.log("");
+    await run(apply, opts, "IA-first applied to");
+  });
 
 program.command("uninstall")
   .description("Remove kit mechanics files, driven by the installed-files manifest (dry-run by default, never touches docs/projets, docs/intentions, docs/recettes)")
@@ -80,6 +91,71 @@ program.command("resoudre-derive")
     } catch (e) {
       console.error(`✗ ${e.message}`);
       process.exit(1);
+    }
+  });
+
+// --json : seul le JSON sort sur stdout (aucune ligne humaine), avec les mêmes codes de sortie.
+async function machine(fn, json, humain, versJson) {
+  try {
+    const r = await fn({ targetDir: process.cwd() });
+    console.log(json ? JSON.stringify(versJson(r), null, 2) : humain(r));
+    process.exit(r.code ?? r.exitCode);
+  } catch (e) {
+    if (json) console.log(JSON.stringify({ version: 1, status: "error", exitCode: 2, error: e.message }, null, 2));
+    else console.error(`✗ ${e.message}`);
+    process.exit(2);
+  }
+}
+
+program.command("verify")
+  .description("Verify the project's contracts with the shared check engine: PASS (exit 0), FAIL or MANUAL REVIEW REQUIRED (exit 1), VERIFY ERROR (exit 2)")
+  .option("--json", "Machine-readable output (stable format, version 1), same exit codes")
+  .option("--evidence", "Also record the run as evidence in .drwil/evidence/ (verdict, timestamp, commit, redacted summaries)")
+  .action((opts) => machine(async (o) => {
+    const v = await verify(o);
+    // L'évidence s'écrit à côté du verdict : son chemin va sur stderr pour ne pas casser le JSON de stdout.
+    if (opts.evidence) console.error(`évidence : ${ecrireEvidence(o.targetDir, v)}`);
+    return v;
+  }, opts.json, formaterVerdict, verdictJson));
+
+program.command("doctor")
+  .description("Diagnose the drwil installation without running any check: healthy (exit 0), problems (exit 1), not a drwil project (exit 2)")
+  .option("--json", "Machine-readable output (stable format, version 1), same exit codes")
+  .action((opts) => machine(doctor, opts.json, formaterDiagnostic, diagnosticJson));
+
+program.command("contracts")
+  .description("List and validate the project's contracts without running them: valid (exit 0), invalid registry (exit 2)")
+  .option("--json", "Machine-readable output (stable format, version 1)")
+  .action((opts) => machine(listerContrats, opts.json,
+    (r) => [`${r.registry ?? ""}`, ...r.contracts.map((k) => `  ${k.id.padEnd(8)} ${k.checks.length ? k.checks.join(", ") : "—"}${k.manual ? "  [manuel]" : ""}  ${k.title}`), ...r.errors.map((e) => `✗ ${e}`), ...(r.error ? [`✗ ${r.error}`] : [])].join("\n"),
+    (r) => r));
+
+program.command("attest <id>")
+  .description("Record an explicit human attestation for a MANUAL contract (interactive terminal only; tied to the contract's current text and proof)")
+  .option("--note <text>", "Short note kept with the attestation (redacted, 500 chars max)")
+  .action(async (id, opts) => {
+    // Jamais d'attestation sans humain devant un terminal : pas de --yes, pas de stdin redirigé.
+    if (!process.stdin.isTTY || !process.stdout.isTTY) {
+      console.error(`✗ attestation refusée : un terminal interactif est requis (un agent ou un script ne peut pas attester ${id})`);
+      process.exit(1);
+    }
+    const { createInterface } = await import("node:readline/promises");
+    try {
+      const r = await attester({
+        targetDir: process.cwd(), id, note: opts.note,
+        confirmer: async (resume) => {
+          console.log(`${resume}\n`);
+          const rl = createInterface({ input: process.stdin, output: process.stdout });
+          const saisie = await rl.question(`Pour attester, retapez l'identifiant du contrat (${id}) : `);
+          rl.close();
+          return saisie.trim() === id;
+        },
+      });
+      console.log(r.code === 0 ? `✓ ${r.message} : ${r.fichier} (à commiter avec le travail attesté)` : `✗ ${r.message}`);
+      process.exit(r.code);
+    } catch (e) {
+      console.error(`✗ ${e.message}`);
+      process.exit(2);
     }
   });
 

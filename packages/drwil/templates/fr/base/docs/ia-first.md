@@ -137,6 +137,59 @@ déjà avec Claude Code.)*
 - **Un contrôle qui échoue n'est pas une contrainte à contourner** : il
   signale un contrat, à lire avant toute accommodation.
 
+### `drwil verify` : la primitive de validation du travail
+
+`drwil verify` n'est pas un simple audit : c'est ce qui permet de dire
+qu'un travail est **vérifié**. La chaîne est intention (**Raison**) →
+exigence explicite (**Règle**) → preuve (**Contrôle**, **Manuel**) →
+verdict, pour chaque contrat de `docs/contrats.md` :
+
+- **Contrôle** cite l'identifiant d'un contrôle connu du moteur
+  (`.githooks/moteur.mjs`, le même que les hooks git ; ou `id` d'un
+  contrôle de `.drwil/ia-first.json` → `checks`). La commande n'est jamais
+  recopiée dans le contrat.
+- **Manuel** décrit la partie de la preuve qui reste humaine.
+
+Statut par contrat : `PASS` (tout est prouvé par un contrôle), `FAIL` (un
+contrôle échoue, la cause est affichée), `MANUAL` (une partie humaine
+reste, ou contrat historique sans contrôle — jamais compté comme PASS ; la
+partie automatisée est affichée à part), `ERROR` (contrôle inconnu,
+exigence ou preuve absente, outil indisponible). Tout contrat est bloquant.
+Verdict global et code de sortie : `GOVERNANCE: PASS` → 0 ;
+`GOVERNANCE: FAIL` ou `MANUAL REVIEW REQUIRED` → 1 ; `VERIFY ERROR` → 2.
+
+Priorité déterministe, par contrat comme pour le verdict global : FAIL >
+ERROR > MANUAL > PASS.
+Seuls les contrats **bloquants** (sévérité par défaut) décident du verdict ;
+un contrat `avertissement` ou `indicatif` est exécuté et affiché sans
+changer le code de sortie. Un registre mal formé reste une `ERROR`, quelle
+que soit la sévérité.
+
+**Attestation humaine** (`drwil attest <ID>`) : un contrat `MANUAL` dont la
+partie automatisée réussit peut recevoir une preuve humaine explicite. La
+commande affiche le contrat, sa règle et sa preuve automatisée, exige un
+terminal interactif et la saisie de l'identifiant (aucun `--yes` : un agent
+ou un script ne peut pas attester), puis écrit l'attestation dans
+.drwil/evidence/attestations, versionné pour être relu en revue.
+L'attestation est liée par empreinte au texte du contrat et à la définition
+de sa preuve : si l'un change, elle devient obsolète et le contrat redevient
+`MANUAL`. Statut `ATTESTED` : distinct de `PASS`, il satisfait le contrat ;
+jamais attestable : un contrat `PASS`, `FAIL`, `ERROR` ou non applicable.
+
+`drwil verify --evidence` conserve la preuve d'une exécution
+(dossier .drwil/evidence, créé à la première exécution, hors git) : verdict,
+horodatage, commit, et pour chaque
+contrôle un résumé de sa sortie, caviardé (clés, jetons, `password=…`) pour
+ne jamais conserver de secret (SEC-007).
+
+**`verify` est le gate de validation : un travail n'est vérifié par drwil
+que si `verify` rend PASS.** `FAIL` : il doit être corrigé. `MANUAL` : il
+n'est pas encore validé — jamais une réussite différée. `ERROR` : drwil ne
+peut pas établir le verdict. `verify` est la primitive sur laquelle un
+agent, un hook ou une CI pourront faire respecter ce gate ; il ne
+l'impose pas lui-même. Les hooks git n'en dépendent pas : ils utilisent le
+même moteur sans que drwil soit installé.
+
 ## 6. Limites assumées
 
 Ce que l'architecture ne fait pas, et qu'elle ne prétend pas faire :
@@ -153,6 +206,22 @@ Ce que l'architecture ne fait pas, et qu'elle ne prétend pas faire :
 
 Un agent reprend un chantier sans l'historique de la conversation qui l'a
 créé : tout ce qu'il lui faut doit être dans la fiche.
+
+**Niveaux de risque** (la cérémonie suit le risque, la traçabilité ne change
+jamais : QUA-016 s'applique à tout) :
+
+- **LOW** : petite tâche sans fiche dédiée, rattachée à
+  `docs/projets/entretien-courant.md`.
+- **MEDIUM** : fiche de projet avec cadrage (`**Risque** : MEDIUM`).
+- **HIGH** : fiche, section « Décisions », contrats concernés cités, preuves
+  (`drwil verify`). Un cadrage qui touche la mécanique de gouvernance
+  (`.githooks/`, CI, `.drwil/`) impose HIGH ; réglable par
+  `.drwil/ia-first.json` → `risque.cheminsSensibles`.
+
+Le niveau se déclare dans la fiche et ne peut que monter : un niveau plus
+bas que le minimum détecté, ou un HIGH sans Décisions ni contrat, est refusé
+au commit (`.githooks/check-docs.mjs`) ; une fiche sans champ « Risque »
+dont le cadrage impose HIGH reçoit un avertissement.
 
 - **Un index court, des fiches** : l'index des chantiers a une ligne par
   sujet et renvoie à la fiche dès qu'il y a plus de deux lignes à dire. Un

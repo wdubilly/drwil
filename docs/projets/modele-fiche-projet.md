@@ -1,6 +1,13 @@
 # Projet : titre court
 
 **Statut** : cadré le AAAA-MM-JJ — lot 1 en cours.
+**Risque** : MEDIUM
+
+(niveau de risque, DRWIL-012 : LOW n'a pas de fiche — se rattacher à
+`docs/projets/entretien-courant.md` ; MEDIUM : fiche + cadrage ; HIGH : en
+plus une section Décisions et les contrats concernés cités. Un cadrage qui
+touche `.githooks/`, la CI ou `.drwil/` impose HIGH ; on peut toujours
+monter, jamais descendre.)
 
 <!-- cadrage
 fichiers:

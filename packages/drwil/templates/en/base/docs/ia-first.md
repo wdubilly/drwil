@@ -131,6 +131,58 @@ already tools up with Claude Code.)*
 - **A failing check is not a constraint to bypass**: it flags a contract,
   to be read before any accommodation.
 
+### `drwil verify`: the work-validation primitive
+
+`drwil verify` is not just an audit: it is what lets you call a piece of
+work **verified**. The chain is intent (**Reason**) → explicit requirement
+(**Rule**) → proof (**Check**, **Manual**) → verdict, for each contract in
+`docs/contracts.md`:
+
+- **Check** names the identifier of a check known to the engine
+  (`.githooks/moteur.mjs`, the same one the git hooks use; or the `id` of a
+  check in `.drwil/ia-first.json` → `checks`). The command is never copied
+  into the contract.
+- **Manual** describes the part of the proof that stays human.
+
+Status per contract: `PASS` (fully proven by a check), `FAIL` (a check
+fails, its cause is shown), `MANUAL` (a human part remains, or a legacy
+contract without a check — never counted as PASS; the automated part is
+shown separately), `ERROR` (unknown check, missing requirement or proof,
+tool unavailable). Every contract is blocking. Overall verdict and exit
+code: `GOVERNANCE: PASS` → 0; `GOVERNANCE: FAIL` or `MANUAL REVIEW
+REQUIRED` → 1; `VERIFY ERROR` → 2.
+
+Deterministic priority, per contract and for the overall verdict: FAIL >
+ERROR > MANUAL > PASS.
+Only **blocking** contracts (the default severity) decide the verdict; a
+`warning` or `advisory` contract is run and shown without changing the exit
+code. A malformed registry stays an `ERROR`, whatever the severity.
+
+**Human attestation** (`drwil attest <ID>`): a `MANUAL` contract whose
+automated part passes can receive an explicit human proof. The command shows
+the contract, its rule and its automated proof, requires an interactive
+terminal and typing the contract identifier (no `--yes`: an agent or a
+script cannot attest), then writes the attestation to
+.drwil/evidence/attestations, versioned so it is reviewed. The
+attestation is bound by fingerprint to the contract text and its proof
+definition: if either changes, it becomes stale and the contract is `MANUAL`
+again. `ATTESTED` status: distinct from `PASS`, it satisfies the contract;
+never attestable: a `PASS`, `FAIL`, `ERROR` or not-applicable contract.
+
+`drwil verify --evidence` keeps the proof of a run (.drwil/evidence folder,
+created on first run,
+git-ignored): verdict, timestamp, commit, and per check a summary of its
+output, redacted (keys, tokens, `password=…`) so that no secret is ever kept
+(SEC-007).
+
+**`verify` is the validation gate: a piece of work is verified by drwil
+only if `verify` returns PASS.** `FAIL`: it must be fixed. `MANUAL`: it is
+not validated yet — never a deferred success. `ERROR`: drwil cannot
+establish the verdict. `verify` is the primitive an agent, a hook or a CI
+can build on to enforce this gate; it does not enforce it by itself. Git
+hooks do not depend on it: they use the same engine without drwil being
+installed.
+
 ## 6. Assumed limits
 
 What the architecture does not do, and does not claim to do:
@@ -147,6 +199,22 @@ What the architecture does not do, and does not claim to do:
 
 An agent picks a project back up without the conversation history that
 created it: everything it needs must be in the sheet.
+
+**Risk levels** (ceremony follows risk; traceability never changes:
+QUA-016 applies to everything):
+
+- **LOW**: small task without a dedicated sheet, attached to
+  `docs/projects/routine-maintenance.md`.
+- **MEDIUM**: project sheet with a scope (`**Risk**: MEDIUM`).
+- **HIGH**: sheet, "Decisions" section, related contracts cited, proofs
+  (`drwil verify`). A scope touching governance mechanics (`.githooks/`, CI,
+  `.drwil/`) requires HIGH; configurable via `.drwil/ia-first.json` →
+  `risque.cheminsSensibles`.
+
+The level is declared in the sheet and can only be raised: a level below
+the detected minimum, or a HIGH without Decisions or contract, is rejected
+at commit (`.githooks/check-docs.mjs`); a sheet without a "Risk" field whose
+scope requires HIGH gets a warning.
 
 - **A short index, sheets**: the project index has one line per topic and
   points to the sheet as soon as there's more than two lines to say. An

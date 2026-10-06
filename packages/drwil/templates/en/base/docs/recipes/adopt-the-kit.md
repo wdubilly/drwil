@@ -15,7 +15,7 @@ the requester's place (`AGENTS.md`, Conduct section).
    `node .githooks/run-checks.mjs` and at commit time.
 4. **Propose the catalog's contracts** (`docs/contracts-catalog.md`) one by
    one, with their typical check: the requester keeps the `[decision]` to
-   adopt each or not. An adopted contract: its line migrates from the
+   adopt each or not. An adopted contract: its catalog line becomes a section (`## ID — title`, Rule, Scope, Source of truth, Proof, Reason, Check and/or Manual) moved from the
    catalog to the project's registry (`docs/contracts.md`), with its check
    actually wired up (not a promise):
    - `catalog:QUA-001` (file size): `.githooks/check-file-size.mjs` is

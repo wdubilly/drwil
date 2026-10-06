@@ -41,6 +41,7 @@
   "mode": "full",
   "checks": [
     {
+      "id": "couverture-tests",
       "name": "drwil: build + tests + seuil de couverture (QUA-004)",
       "run": "npm run test:coverage",
       "cwd": "packages/drwil",
