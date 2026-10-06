@@ -148,6 +148,73 @@ DRWIL complements agent instructions rather than replacing them.
 
 ---
 
+## DRWIL and Specification-Driven Development
+
+DRWIL is built around a simple Specification-Driven Development (SDD) principle:
+
+> **Define what must be true before asking an agent to build it.**
+
+AI agents are good at producing implementation. They are much less reliable when the requirements remain implicit, ambiguous, or scattered across instructions.
+
+DRWIL makes the specification part of the governance loop.
+
+```text
+Human intent
+     ↓
+Specification
+     ↓
+Contracts
+     ↓
+Agent implementation
+     ↓
+Proofs / controls
+     ↓
+DRWIL verification
+     ↓
+Verdict
+```
+
+The distinction is important:
+
+| Layer         | Question                               |
+| ------------- | -------------------------------------- |
+| Specification | What should be true?                   |
+| Contract      | What obligation must be satisfied?     |
+| Control       | How can we prove it?                   |
+| Agent         | How do we build it?                    |
+| DRWIL         | Is the obligation actually verified?   |
+| Human         | What still requires explicit judgment? |
+
+This makes DRWIL complementary to SDD rather than a replacement for it.
+
+### From specification to proof
+
+A specification normally describes the expected outcome.
+
+DRWIL adds an explicit path from that specification to evidence:
+
+```text
+SPECIFY → BUILD → PROVE → VERIFY
+```
+
+The goal is not to make every requirement automatically testable.
+
+The goal is to make the verification state explicit.
+
+If a requirement can be checked mechanically, DRWIL executes the corresponding control.
+
+If it cannot, DRWIL reports `MANUAL` rather than silently treating the requirement as satisfied.
+
+This creates a useful boundary between:
+
+* **what was requested;**
+* **what was implemented;**
+* **what was actually proven.**
+
+That boundary becomes especially important when the implementation is produced by an AI agent.
+
+---
+
 ## A 30-second example
 
 A project can declare a contract:
