@@ -79,13 +79,12 @@ run and shown without changing its exit code.
 **Manual** : accuracy of the sheets' status and content.
 
 ## QUA-016 — Scoping reminder
-**Rule** : Scoping reminder: every indexed code file is covered by the `cadrage` block of a sheet in `docs/projects/`; a malformed block (no `fichiers:` line, too broad a pattern) is rejected. `docs/` and any markdown file are never code. Severity configurable per project (`.drwil/ia-first.json` -> `cadrage`: `avertissement` by default, never blocking; `bloquant` to restore the strict behaviour; `off` to disable).
+**Rule** : Scoping reminder: every indexed code file is covered by the `cadrage` block of a sheet in `docs/projects/`; a malformed block (no `fichiers:` line, too broad a pattern) is rejected. `docs/` and any markdown file are never code. Severity configurable per project (`.drwil/ia-first.json` -> `cadrage`: `bloquant` by default, refused at commit and, with Claude Code, before the write; `avertissement` to only report; `off` to disable). Outside the `bloquant` setting, this contract is not proven: add a Manual field to it.
 **Scope** : the whole repo (indexed files), excluding `docs/` and markdown
 **Source of truth** : `.githooks/cadrage.mjs`, `docs/ia-first.md` (section 7)
-**Proof** : `.githooks/check-docs.mjs` (hook + CI, severity per setting); informative reminder to the agent: `.claude/hooks/rappel-cadrage.mjs` (if present, silent if `cadrage: off`)
+**Proof** : `.githooks/check-docs.mjs` (hook + CI, severity per setting); agent side: `.claude/hooks/rappel-cadrage.mjs` (if present: refusal before the write when `bloquant`, reminder when `avertissement`, silent when `off`)
 **Reason** : code detached from any project gets lost, for an agent as much as for a person
 **Check** : `docs-references`
-**Manual** : in "avertissement" severity, the check passes despite unscoped files: read its warnings.
 
 ## QUA-017 — No direct work on the main branch
 **Rule** : No direct work on the main branch: committing or pushing directly to `master`/`main` is refused, including the very first commit. `init()` always switches to a working branch before any commit, with no configurable opt-out. Work must go through a branch (`docs/recipes/working-with-branches.md`) merged via a pull/merge request.

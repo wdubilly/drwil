@@ -7,4 +7,4 @@ Objectif : ajouter/modifier une route API proprement.
 2. Créer/adapter le schéma + route + service
 3. Ajouter tests (auth + happy path + cas d'erreur)
 4. Mettre à jour doc si besoin
-5. Lancer `bash .githooks/run-checks.sh` et lire la sortie
+5. Lancer `node .githooks/run-checks.mjs` et lire la sortie

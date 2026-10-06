@@ -71,3 +71,7 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [IA] [P2] Un seul numéro de version : la release suit `package.json`
   (tag, tarball et `--version` identiques) —
   `docs/projets/version-unique-paquet-tag.md`.
+- [ ] [IA] [P1] Garde-fous qui tiennent sans la mémoire de l'agent :
+  QUA-016 bloquant, restes obsolètes supprimés, commande « Tout vérifier »
+  corrigée ; hooks Claude et contrôle « un changement, une fiche » à
+  trancher — `docs/projets/garde-fous-depot.md`.

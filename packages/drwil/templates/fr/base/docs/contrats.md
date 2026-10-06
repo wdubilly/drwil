@@ -79,13 +79,12 @@ de sortie.
 **Manuel** : justesse du statut et du contenu des fiches.
 
 ## QUA-016 — Rappel de cadrage
-**Règle** : Rappel de cadrage : tout fichier de code indexé est couvert par le bloc `cadrage` d'une fiche de `docs/projets/` ; un bloc mal formé (sans ligne `fichiers:`, motif trop large) est refusé. `docs/` et tout fichier markdown ne sont jamais du code. Sévérité réglable par projet (`.drwil/ia-first.json` -> `cadrage` : `avertissement` par défaut, jamais bloquant ; `bloquant` pour revenir au comportement strict ; `off` pour désactiver).
+**Règle** : Rappel de cadrage : tout fichier de code indexé est couvert par le bloc `cadrage` d'une fiche de `docs/projets/` ; un bloc mal formé (sans ligne `fichiers:`, motif trop large) est refusé. `docs/` et tout fichier markdown ne sont jamais du code. Sévérité réglable par projet (`.drwil/ia-first.json` -> `cadrage` : `bloquant` par défaut, refus au commit et, avec Claude Code, avant l'écriture ; `avertissement` pour seulement signaler ; `off` pour désactiver). Hors réglage `bloquant`, ce contrat n'est pas prouvé : lui ajouter un champ Manuel.
 **Périmètre** : tout le dépôt (fichiers indexés), hors `docs/` et le markdown
 **Source de vérité** : `.githooks/cadrage.mjs`, `docs/ia-first.md` (section 7)
-**Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; rappel informatif à l'agent : `.claude/hooks/rappel-cadrage.mjs` (si présent, silencieux si `cadrage: off`)
+**Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; côté agent : `.claude/hooks/rappel-cadrage.mjs` (si présent : refus avant écriture en `bloquant`, rappel en `avertissement`, silencieux en `off`)
 **Raison** : du code détaché de tout chantier ne se retrouve plus, ni par un agent ni par une personne
 **Contrôle** : `docs-references`
-**Manuel** : en sévérité « avertissement », le contrôle passe malgré des fichiers hors cadrage : lire ses avertissements.
 
 ## QUA-017 — Pas de travail direct sur la branche principale
 **Règle** : Pas de travail direct sur la branche principale : commiter ou pousser directement sur `master`/`main` est refusé, y compris le tout premier commit. `init()` bascule systématiquement sur une branche de travail avant tout commit, sans porte de sortie configurable. Le travail doit passer par une branche (`docs/recettes/travailler-en-branche.md`) fusionnée via une pull/merge request.

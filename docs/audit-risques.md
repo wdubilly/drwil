@@ -67,8 +67,8 @@
   n'écrit que les fichiers manquants, ne supprime jamais un fichier retiré
   d'un modèle plus récent.
 - **Risque encouru** : après une mise à jour du kit, d'anciens fichiers
-  (ex. stubs Python déjà présents côté drwil : `.githooks/cadrage.py`,
-  `.githooks/check-docs.py`) restent indéfiniment, créant une confusion
+  (ex. stubs Python qui étaient présents côté drwil, cadrage.py et
+  check-docs.py dans .githooks, supprimés le 2026-10-06) restent indéfiniment, créant une confusion
   entre l'ancien et le nouveau contrôle actif.
 - **Correctif recommandé** : définir une liste de fichiers retirés par
   version et ne supprimer que ceux dont le contenu correspond encore à

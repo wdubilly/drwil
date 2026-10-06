@@ -313,12 +313,12 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
   assert.match(r.stdout + r.stderr, /motif de cadrage trop large/);
 });
 
-test("QUA-016 : réglage par défaut (avertissement), jamais bloquant", async () => {
+test("QUA-016 : réglage par défaut (bloquant) : premier commit accepté, code orphelin refusé ; avertissement toujours possible", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir }));
-  assert.equal(config(dir).cadrage, "avertissement", "réglage par défaut écrit à l'installation");
+  assert.equal(config(dir).cadrage, "bloquant", "réglage par défaut écrit à l'installation (docs/projets/garde-fous-depot.md)");
   git(dir, "add", "-A");
-  assert.equal(git(dir, "commit", "-qm", "init").status, 0);
+  assert.equal(git(dir, "commit", "-qm", "init").status, 0, "les fichiers du kit sont couverts : le premier commit passe");
   // QUA-017 : commit suivant hors du périmètre testé ici, donc sur une branche.
   assert.equal(git(dir, "checkout", "-qb", "chantier/essai-cadrage").status, 0);
 
@@ -326,10 +326,13 @@ test("QUA-016 : réglage par défaut (avertissement), jamais bloquant", async ()
   writeFileSync(join(dir, "scripts/tache.mjs"), "console.log('tache');\n");
   git(dir, "add", "-A");
   const r = git(dir, "commit", "-qm", "tache non cadrée");
-  assert.equal(r.status, 0, "jamais bloquant par défaut : " + r.stdout + r.stderr);
+  assert.notEqual(r.status, 0, "bloquant par défaut : code hors fiche refusé");
+  assert.match(r.stdout + r.stderr, /scripts\/tache\.mjs.*hors de toute fiche/);
+
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "avertissement" }));
   const direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
-  assert.match(direct.stdout, /scripts\/tache\.mjs.*hors de toute fiche/, "affiché quand même, en avertissement");
-  assert.equal(direct.status, 0, "le contrôle reste vert malgré l'avertissement");
+  assert.match(direct.stdout, /scripts\/tache\.mjs.*hors de toute fiche/, "en avertissement : affiché quand même");
+  assert.equal(direct.status, 0, "en avertissement : le contrôle reste vert");
 });
 
 test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async () => {
@@ -350,7 +353,7 @@ test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async 
   assert.equal(rappel.stdout.trim(), "", "le rappel à l'agent se tait aussi quand cadrage est désactivé");
 });
 
-test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage glisse un message à l'agent", async () => {
+test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse avant écriture (bloquant) ou rappelle (avertissement)", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
 
@@ -365,18 +368,25 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage glisse
   });
   assert.equal(inoffensif.stdout.trim(), "");
 
-  const rappel = spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
+  const hook = (evenement, chemin) => spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
     cwd: dir, encoding: "utf8",
-    input: JSON.stringify({ tool_name: "Write", tool_input: { file_path: join(dir, "scripts/nouveau.mjs") } }),
+    input: JSON.stringify({ hook_event_name: evenement, tool_name: "Write", tool_input: { file_path: join(dir, chemin) } }),
   });
+  // Défaut « bloquant » : refus AVANT l'écriture d'un fichier de code hors fiche (docs/projets/garde-fous-depot.md).
+  const refus = hook("PreToolUse", "scripts/nouveau.mjs");
+  assert.match(refus.stdout, /"permissionDecision":"deny"/);
+  assert.match(refus.stdout, /Écriture refusée \(QUA-016, cadrage bloquant\).*scripts\/nouveau\.mjs/);
+  assert.equal(hook("PreToolUse", "docs/notes.md").stdout.trim(), "", "la doc n'est jamais du code : jamais refusée");
+  assert.equal(hook("PostToolUse", "scripts/nouveau.mjs").stdout.trim(), "", "en bloquant, pas de rappel en double après coup");
+  // En « avertissement » : jamais de refus, un rappel après l'écriture.
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "avertissement" }));
+  assert.equal(hook("PreToolUse", "scripts/nouveau.mjs").stdout.trim(), "");
+  const rappel = hook("PostToolUse", "scripts/nouveau.mjs");
   assert.match(rappel.stdout, /Rappel de cadrage/);
   assert.match(rappel.stdout, /scripts\/nouveau\.mjs/);
-
-  const docIgnoree = spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
-    cwd: dir, encoding: "utf8",
-    input: JSON.stringify({ tool_name: "Write", tool_input: { file_path: join(dir, "docs/notes.md") } }),
-  });
-  assert.equal(docIgnoree.stdout.trim(), "");
+  // Le gabarit branche le hook avant l'écriture.
+  const reglages = read(dir, ".claude/settings.json");
+  assert.match(reglages, /"PreToolUse"[\s\S]*"Edit\|Write\|MultiEdit"[\s\S]*rappel-cadrage\.mjs[\s\S]*"PostToolUse"/);
 });
 
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {

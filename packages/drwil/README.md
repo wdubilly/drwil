@@ -90,7 +90,7 @@ Running `init` (new project) or `apply` (existing project) adds:
   each one with an ID (`SEC-xxx`, `QUA-xxx`), a one-line description and
   a pointer to the check that proves it.
 - **`.githooks/`** — Git hooks (`pre-commit` and friends) that run the
-  project's checks (`run-checks.mjs`/`run-checks.sh`) before every commit,
+  project's checks (`run-checks.mjs`) before every commit,
   and the equivalent CI workflow (GitHub Actions or GitLab CI, your
   choice) so the same checks run server-side too.
 - **`docs/recettes/`** — reusable step-by-step procedures (add an API

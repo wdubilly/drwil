@@ -25,7 +25,7 @@ fiche non rattachée.
 |---|---|---|---|---|---|
 | OPT-1 | Corriger `.drwil/ia-first.json` pour que le rappel de cadrage (QUA-016) couvre le vrai code du kit | Vérifié en direct (`git add` + `node .githooks/cadrage.mjs` sur `packages/drwil/src/stack.ts`) : **aucun avertissement**, alors que c'est le cœur du générateur. Les couches déclarées (`core`, `adapters`, `plugin-opencode`, `mcp-server`, `kit-ia-first`) n'existent pas sur le disque (héritées de l'extraction run-box-v2) ; `layerPrefixes` (`app`, `tests`, `src`, `scripts`) ne matche pas `packages/drwil/src/`. Le filet de sécurité phare du kit (QUA-016) est aveugle sur son propre code. | Mécanisme déjà fonctionnel (`.githooks/cadrage.mjs`, `.githooks/check-docs.mjs`) : il suffit qu'un préfixe déclaré matche le vrai chemin. | 🟢 Faible | Remplacer les couches obsolètes par `packages/drwil/src`/`packages/drwil/test` dans `layers`/`layerPrefixes`/`codePrefixes` (à trancher : couche ou préfixe de code), vérifier que `node .githooks/cadrage.mjs` avertit désormais sur un changement de `packages/drwil/src/`. |
 | OPT-2 | Publier `drwil` sur npm | Rend le kit installable par une équipe via `npx drwil init`. Le blocage technique constaté le 2026-10-04 (`docs/intentions/packager-kit-ia-first.md`, « le paquet ne fonctionne pas en l'état ») est déjà levé : vérifié ce jour, `files` déclare bien `dist`/`bin`/`templates` dans `packages/drwil/package.json`, et `npm pack --dry-run` produit un tarball de 150 fichiers avec les gabarits Copilot inclus. | Build, CLI et templates fonctionnels et déjà empaquetables (vérifié). Reste la décision produit, pas la technique. | 🟢 Faible | Mettre à jour le constat de `docs/intentions/packager-kit-ia-first.md` (blocage levé), puis trancher les questions encore ouvertes (scope public/privé, version initiale, registry) pour publier une première version. |
-| OPT-3 | Adopter formellement `catalogue:QUA-005` (typage strict) dans `docs/contrats.md` | La pratique est déjà en place (`tsconfig.base.json` : `strict: true`, zéro usage de `any` dans `packages/drwil/src/*.ts` — vérifié) mais n'est pas déclarée comme contrat : rien n'empêche une régression future de passer inaperçue. | Contrat du catalogue déjà rédigé (`docs/catalogue-contrats.md`, ligne `catalogue:QUA-005`), contrôle déjà existant (mode strict du compilateur). | 🟢 Faible | Recopier la ligne dans `docs/contrats.md` (sans le préfixe `catalogue:`), la retirer du catalogue, vérifier `node .githooks/run-checks.sh`. |
+| OPT-3 | Adopter formellement `catalogue:QUA-005` (typage strict) dans `docs/contrats.md` | La pratique est déjà en place (`tsconfig.base.json` : `strict: true`, zéro usage de `any` dans `packages/drwil/src/*.ts` — vérifié) mais n'est pas déclarée comme contrat : rien n'empêche une régression future de passer inaperçue. | Contrat du catalogue déjà rédigé (`docs/catalogue-contrats.md`, ligne `catalogue:QUA-005`), contrôle déjà existant (mode strict du compilateur). | 🟢 Faible | Recopier la ligne dans `docs/contrats.md` (sans le préfixe `catalogue:`), la retirer du catalogue, vérifier `node .githooks/run-checks.mjs`. |
 | OPT-4 | ~~Trancher le lot 2 d'« apply() rafraîchit la mécanique »~~ (clôturé le 2026-10-05, PR #21, voir docs/projets/journal.md) | — | — | — | Traité, gardé pour mémoire du scan du 2026-10-05. |
 
 ## Analyse détaillée des meilleures pistes
@@ -33,7 +33,7 @@ fiche non rattachée.
 ### OPT-1 — Réparer la couverture du rappel de cadrage sur le vrai code du kit
 - **Problème résolu** : aujourd'hui, modifier `packages/drwil/src/index.ts`
   (le générateur `init`/`apply` lui-même) ne déclenche aucun rappel de
-  cadrage (QUA-016), contrairement à `scripts/` ou `.githooks/` qui sont
+  cadrage (QUA-016), contrairement à scripts/ ou `.githooks/` qui sont
   bien couverts — vérifié en direct dans cette session (voir tableau).
 - **Briques existantes réutilisables** : `.githooks/cadrage.mjs` (détection
   par préfixe, déjà fonctionnelle) ; `.githooks/check-docs.mjs` (même
@@ -41,7 +41,7 @@ fiche non rattachée.
   config à corriger, pas de code à écrire).
 - **Ce qu'il reste à faire** : décider si `packages/drwil/src`/`test`
   doivent être un `layer` (avec `AGENTS.md` dédié attendu) ou un préfixe de
-  code nu (`codePrefixes`, comme `scripts/`) — impact différent sur
+  code nu (`codePrefixes`, comme scripts/) — impact différent sur
   `.githooks/check-docs.mjs`. Mettre à jour la config, vérifier avec un
   changement factice staged.
 - **Impact si implémenté** : le contrôle le plus structurant du kit

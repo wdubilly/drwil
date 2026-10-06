@@ -77,7 +77,7 @@ skills d'analyse (`auditer-risques-et-dette`, `decouvrir-valeur-produit`).
 - Facturation réelle / coût en euros (seulement un ordre de grandeur en
   tokens, pas de conversion monétaire).
 - Blocage de commit lié à un dépassement (informatif, pas un contrôle
-  bloquant — cohérent avec `cadrage` en `avertissement` par défaut).
+  bloquant — cohérent avec l'ancien défaut `avertissement` de `cadrage`, passé à `bloquant` le 2026-10-06).
 - Module autonome (.mjs) d'export automatique (impossible : les données de
   session ne sont accessibles qu'à l'agent IA lui-même, pas à un script
   externe) — remplacé par une recette suivie par l'IA.

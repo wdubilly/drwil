@@ -55,7 +55,7 @@ continue à committer directement dessus.
 - Gabarit de pull request GitHub et de merge request GitLab, livrés par
   `init`/`apply` selon le `ci` choisi (github/gitlab), avec une section
   qui pointe vers la fiche `docs/projets/` concernée et une checklist des
-  contrôles (`.githooks/run-checks.sh` vert, fiche à jour).
+  contrôles (`.githooks/run-checks.mjs` vert, fiche à jour).
 - Indexer la nouvelle recette dans `AGENTS.md`/`README.md` comme les
   recettes précédentes (chantier clôturé, voir `docs/projets/journal.md`).
 

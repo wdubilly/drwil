@@ -39,6 +39,7 @@
     ".github/workflows/ia-first.yml"
   ],
   "mode": "full",
+  "cadrage": "bloquant",
   "checks": [
     {
       "id": "couverture-tests",

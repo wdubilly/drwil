@@ -29,9 +29,9 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
   lot par lot, une fois le contrôle en place.
 - `catalogue:QUA-020` (e2e) : étape suivante une fois ce contrat mûr,
   hors périmètre ici.
-- Corriger la citation obsolète de `.githooks/run-checks.sh` dans
-  `docs/contrats.md` (QUA-013) et `AGENTS.md` (trouvée en marge, pas
-  encore traitée) — signalé, pas corrigé ici, sauf décision contraire.
+- Citation obsolète de l'ancien lanceur bash dans `docs/contrats.md`
+  (QUA-013) et `AGENTS.md` : corrigée le 2026-10-06 par
+  `docs/projets/garde-fous-depot.md`.
 
 ## 3. Contraintes
 

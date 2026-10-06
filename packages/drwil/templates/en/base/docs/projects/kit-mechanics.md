@@ -21,6 +21,10 @@ fichiers:
   - .githooks/check-file-size.mjs
   - .githooks/check-file-size.legacy.json
   - .githooks/check-code-rules.mjs
+  - .githooks/creer-release.mjs
+  - .githooks/tableau-de-bord.mjs
+  - .githooks/check-colors.mjs
+  - .githooks/check-contrast.mjs
 {{cadrageCi}}
 {{cadrageClaude}}
 -->
@@ -29,7 +33,7 @@ fichiers:
 
 The commit check (`.githooks/check-docs.mjs`) reports any indexed code file
 not covered by a `docs/projects/` fiche (scoping reminder, severity set in
-`.drwil/ia-first.json` -> `cadrage`: `avertissement` by default, `bloquant`
+`.drwil/ia-first.json` -> `cadrage`: `bloquant` by default, `avertissement`
 optional). Without this fiche, the files the kit itself writes would be
 reported from the project's very first commit (blocking if `bloquant` is
 chosen).
@@ -53,3 +57,6 @@ hand-off doc).
   the empty extension point `.githooks/check-code-rules.mjs` — all three
   shipped but **opt-in** (not run until the project declares them in
   `.drwil/ia-first.json → checks`).
+  The optional modules' files (release, dashboard, front quality) are
+  covered in advance: enabling them by copying into `.githooks/` never
+  blocks a commit, QUA-016 being `bloquant` by default.

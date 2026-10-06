@@ -527,8 +527,9 @@ async function writeConfig(r: Resolved): Promise<void> {
     // Les contrôles du projet sont saisis par l'utilisateur ou l'IA : une réinstallation ne doit pas les effacer.
     checks: Array.isArray(previous?.checks) ? previous.checks : [],
     // Sévérité du rappel de cadrage (QUA-016 seul) : "bloquant" | "avertissement" | "off".
-    // Défaut "avertissement" ; une valeur déjà choisie par le projet n'est jamais écrasée par une réinstallation.
-    cadrage: typeof previous?.cadrage === "string" ? previous.cadrage : "avertissement",
+    // Défaut "bloquant" (docs/projets/garde-fous-depot.md) ; une valeur déjà choisie par le projet
+    // n'est jamais écrasée par une réinstallation.
+    cadrage: typeof previous?.cadrage === "string" ? previous.cadrage : "bloquant",
     layerPrefixes: ["app", "tests", "src", "scripts"],
     codePrefixes: ["scripts", ".githooks", "e2e"],
     extraCodeFiles: [],

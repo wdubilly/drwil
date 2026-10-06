@@ -24,7 +24,7 @@ de sortie.
 ## QUA-013 — Contrôle non exécuté n'est pas passé
 **Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé.
 **Périmètre** : Tout contrôle listé dans les vérifs.
-**Source de vérité** : `.githooks/run-checks.sh` et son historique d'exécution.
+**Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/moteur.mjs`) et son historique d'exécution.
 **Preuve** : Sortie lue du contrôle concerné.
 **Contrôle** : `couverture-ci`
 **Manuel** : lecture de la sortie du contrôle concerné.
@@ -64,12 +64,11 @@ de sortie.
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
 
 ## QUA-016 — Rappel de cadrage
-**Règle** : Tout fichier de code indexé est couvert par le bloc `cadrage` d'une fiche de `docs/projets/` ; un bloc mal formé (sans `fichiers:`, motif trop large) est refusé. Sévérité réglable par projet (`.drwil/ia-first.json` -> `cadrage` : `avertissement` par défaut, `bloquant`, ou `off`).
+**Règle** : Tout fichier de code indexé est couvert par le bloc `cadrage` d'une fiche de `docs/projets/` ; un bloc mal formé (sans `fichiers:`, motif trop large) est refusé. Sévérité réglable par projet (`.drwil/ia-first.json` -> `cadrage` : `bloquant` par défaut et sur ce dépôt, `avertissement`, ou `off`). Hors réglage `bloquant`, ce contrat n'est pas prouvé : lui ajouter un champ Manuel.
 **Périmètre** : Tout le dépôt (fichiers indexés), hors `docs/` et le markdown.
 **Source de vérité** : `.githooks/cadrage.mjs`, `docs/ia-first.md` (section 7).
-**Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage).
+**Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/rappel-cadrage.mjs`.
 **Contrôle** : `docs-references`
-**Manuel** : en sévérité « avertissement », le contrôle passe malgré des fichiers hors cadrage : lire ses avertissements.
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 
 ## QUA-017 — Pas de travail direct sur la branche principale

@@ -21,6 +21,10 @@ fichiers:
   - .githooks/check-file-size.mjs
   - .githooks/check-file-size.legacy.json
   - .githooks/check-code-rules.mjs
+  - .githooks/creer-release.mjs
+  - .githooks/tableau-de-bord.mjs
+  - .githooks/check-colors.mjs
+  - .githooks/check-contrast.mjs
 {{cadrageCi}}
 {{cadrageClaude}}
 -->
@@ -30,7 +34,7 @@ fichiers:
 Le contrôle au commit (`.githooks/check-docs.mjs`) signale tout fichier de
 code indexé qu'aucune fiche de `docs/projets/` ne couvre (rappel de
 cadrage, sévérité réglable par `.drwil/ia-first.json` -> `cadrage` :
-`avertissement` par défaut, `bloquant` en option). Sans cette fiche, les
+`bloquant` par défaut, `avertissement` en option). Sans cette fiche, les
 fichiers posés par le kit lui-même seraient signalés dès le tout premier
 commit du projet (bloquant si le réglage `bloquant` est choisi).
 
@@ -51,3 +55,6 @@ Le code applicatif du projet : chaque chantier porte son propre bloc
   ainsi que le point d'extension vide `.githooks/check-code-rules.mjs` — les
   trois livrés mais **opt-in** (pas lancés tant que le projet ne les déclare
   pas dans `.drwil/ia-first.json → checks`).
+  Les fichiers des modules optionnels (release, tableau de bord, qualité
+  front) sont couverts d'avance : les activer en les copiant dans
+  `.githooks/` ne bloque aucun commit, QUA-016 étant `bloquant` par défaut.

@@ -1,15 +1,15 @@
 #!/usr/bin/env node
-// Rappel de cadrage pour Claude Code (hook PostToolUse sur Edit, Write et
-// MultiEdit ; docs/ia-first.md section 7, docs/projets/mecanique-ia-first.md).
-//
-// Après l'écriture d'un fichier de code qu'aucune fiche de docs/projets/ ne
-// couvre, glisse un message à l'agent pour qu'il rattache le fichier à son
-// chantier (ou à docs/projets/entretien-courant.md pour une petite tâche).
-// Ne demande rien et ne refuse rien : toute entrée inattendue, voire une
-// exception, donne « pas de rappel ». Le commit suit la sévérité réglée dans
-// .drwil/ia-first.json -> cadrage ("bloquant" | "avertissement", défaut ;
-// | "off" désactive aussi ce rappel). La grammaire vient de .githooks/cadrage.mjs,
-// la même que le contrôle au commit.
+// Cadrage côté agent pour Claude Code (Edit, Write, MultiEdit ; docs/ia-first.md
+// section 7, docs/projets/mecanique-ia-first.md), selon .drwil/ia-first.json -> cadrage :
+// - "bloquant" (défaut) : hook PreToolUse, REFUSE l'écriture d'un fichier de code
+//   qu'aucune fiche de docs/projets/ ne couvre, avant qu'elle ait lieu : l'agent doit
+//   d'abord rattacher le fichier à son chantier (ou à docs/projets/entretien-courant.md).
+//   Une règle qui ne tient que par la mémoire de l'agent n'est pas une garantie
+//   (docs/projets/garde-fous-depot.md) ; le commit refuse de toute façon.
+// - "avertissement" : hook PostToolUse, simple rappel après l'écriture.
+// - "off" : rien.
+// Toute entrée inattendue, voire une exception, donne « rien » (le hook git reste la
+// barrière). La grammaire vient de .githooks/cadrage.mjs, la même que le contrôle au commit.
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -84,9 +84,23 @@ async function rappel(entree, racine = RACINE) {
   const motifsParFiche = cadrage.motifsDuDepot(fichesTexte);
   if (cadrage.fichesCouvrant(relatif, motifsParFiche).length) return "";
 
-  const suite = cfg.cadrage === "bloquant"
-    ? "Rien n'est bloqué ici ; le commit, lui, le sera."
-    : "Rien n'est bloqué ici, ni au commit (réglage \"cadrage\" de .drwil/ia-first.json).";
+  const bloquant = (cfg.cadrage ?? "bloquant") === "bloquant";
+  // Sans nom d'événement (appel direct, ancienne configuration) : comportement PostToolUse.
+  const avant = evenement.hook_event_name === "PreToolUse";
+  if (avant && bloquant) {
+    return JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason:
+          `Écriture refusée (QUA-016, cadrage bloquant) : aucune fiche de docs/projets/ ne couvre ${relatif}. ` +
+          "Rattacher d'abord ce chemin, ou un motif qui le couvre, au bloc « cadrage » de la fiche du chantier " +
+          "en cours (ou à docs/projets/entretien-courant.md pour une petite tâche), puis réessayer.",
+      },
+    });
+  }
+  if (avant || bloquant) return "";
+  const suite = "Rien n'est bloqué ici, ni au commit (réglage \"cadrage\" de .drwil/ia-first.json : avertissement).";
   return JSON.stringify({
     hookSpecificOutput: {
       hookEventName: "PostToolUse",

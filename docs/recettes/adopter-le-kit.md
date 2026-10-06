@@ -15,7 +15,7 @@ place du demandeur (`AGENTS.md`, section Conduite).
    lancés par `node .githooks/run-checks.mjs` et au commit.
 4. **Proposer les contrats du catalogue** (`docs/catalogue-contrats.md`) un
    par un, avec leur contrôle type : le demandeur garde `[décision]` d'en
-   adopter ou non chacun. Un contrat adopté : sa ligne migre du catalogue au
+   adopter ou non chacun. Un contrat adopté : sa ligne du catalogue devient une section (`## ID — titre`, Règle, Périmètre, Source de vérité, Preuve, Raison, Contrôle et/ou Manuel) du
    registre du projet (`docs/contrats.md`), avec son contrôle réellement
    câblé (pas une promesse) :
    - `catalogue:QUA-001` (taille de fichier) : `.githooks/check-file-size.mjs`
