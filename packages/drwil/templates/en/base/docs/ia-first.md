@@ -366,9 +366,10 @@ commit, push, in CI and in `drwil verify`. Severity: `barriere` setting in
 `.drwil/ia-first.json` — `avertissement` (written by `drwil init`: gaps are
 shown, nothing is blocked), `bloquant`, `off`.
 
-- **Sheets always pass**: `docs/projects/` and `docs/intentions/`
-  (configurable list: `horsPerimetre`). Any other file, code or doc, is
-  subject to the scope.
+- **Sheets always pass**: `docs/projects/` and `docs/intentions/`, as do
+  human attestations, written by `drwil attest`:
+  `.drwil/evidence/attestations/` (if present) — configurable list: `horsPerimetre`. Any other file,
+  code or doc, is subject to the scope.
 - **At commit**: outside sheets, a commit is accepted only in
   `REALISATION`, for files covered by the active sheet's `cadrage` block
   **as it is in `HEAD`**. Widening one's scope thus takes a separate commit

@@ -16,7 +16,10 @@ import { pathToFileURL } from "node:url";
 import { fnmatch, lireBloc, normaliser } from "./cadrage.mjs";
 import { lireEtat } from "./etat.mjs";
 
-export const HORS_PERIMETRE = ["docs/projets/*", "docs/projects/*", "docs/intentions/*"];
+// Les attestations passent comme les fiches : preuve humaine déjà gardée par
+// `drwil attest` (terminal requis, empreinte du contrat), relue en revue ; les
+// soumettre au cadrage obligerait à élargir chaque fiche pour clore.
+export const HORS_PERIMETRE = ["docs/projets/*", "docs/projects/*", "docs/intentions/*", ".drwil/evidence/attestations/*"];
 export const TRAILER = "Drwil-Attente";
 const NIVEAUX = new Set(["off", "avertissement", "bloquant"]);
 const MARQUEUR = ".githooks/perimetre.mjs";

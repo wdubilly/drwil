@@ -376,9 +376,10 @@ tourne au commit, au push, en CI et dans `drwil verify`. Sévérité : réglage
 `barriere` de `.drwil/ia-first.json` — `avertissement` (écrit par `drwil
 init` : les écarts sont affichés, rien n'est bloqué), `bloquant`, `off`.
 
-- **Les fiches passent toujours** : `docs/projets/` et `docs/intentions/`
-  (liste réglable : `horsPerimetre`). Tout autre fichier, code ou doc, est
-  soumis au périmètre.
+- **Les fiches passent toujours** : `docs/projets/` et `docs/intentions/`,
+  ainsi que les attestations humaines, écrites par `drwil attest` :
+  `.drwil/evidence/attestations/` (si présent) — liste réglable : `horsPerimetre`.
+  Tout autre fichier, code ou doc, est soumis au périmètre.
 - **Au commit** : hors fiches, un commit n'est accepté qu'en `REALISATION`,
   pour des fichiers couverts par le bloc `cadrage` de la fiche active **tel
   qu'il est dans `HEAD`**. Élargir son périmètre demande donc un commit

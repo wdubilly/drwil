@@ -36,8 +36,10 @@ function depot(motifs = ["src/a.js"]) {
 const etat = (activite) => ({ version: 1, activite, attente_active: activite === "CADRAGE" ? null : FICHE, demande_active: null, depuis: null });
 const ecrireEtat = (racine, activite) => ecrire(racine, ".drwil/state.json", JSON.stringify(etat(activite)));
 
-test("hors fiches : seules les fiches échappent au périmètre", () => {
-  assert.deepEqual(horsFiches(["docs/projets/x.md", "docs/intentions/y.md", "docs/projects/z.md", "README.md", "src/a.js"]), ["README.md", "src/a.js"]);
+test("hors fiches : seules les fiches et les attestations échappent au périmètre", () => {
+  assert.deepEqual(horsFiches(["docs/projets/x.md", "docs/intentions/y.md", "docs/projects/z.md", ".drwil/evidence/attestations/QUA-013-2026-10-09T17-56-29-571Z.json", "README.md", "src/a.js"]), ["README.md", "src/a.js"]);
+  // Seules les attestations : le reste de .drwil/ (réglages, évidences locales) reste soumis.
+  assert.deepEqual(horsFiches([".drwil/ia-first.json", ".drwil/evidence/verify-x.json"]), [".drwil/ia-first.json", ".drwil/evidence/verify-x.json"]);
   assert.deepEqual(horsFiches(["docs/autre.md"], ["docs/*"]), [], "liste réglable");
 });
 

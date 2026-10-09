@@ -729,6 +729,12 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
 - **2026-10-09 — Sévérité de la barrière** : réglage `barriere`
   (`off` / `avertissement` / `bloquant`) ; `drwil init` écrit
   `avertissement`, ce dépôt est en `bloquant`.
+- **2026-10-09 — Attestations hors périmètre (révise le point 6)**. Les
+  attestations humaines (`.drwil/evidence/attestations/*`) passent toujours,
+  comme les fiches : `drwil attest` les garde déjà (terminal requis,
+  empreinte du contrat) et elles sont relues en revue. Constaté au premier
+  commit d'attestations après le Lot 4 : la barrière les refusait, ce qui
+  aurait obligé à élargir le cadrage de chaque fiche pour pouvoir clore.
 - **2026-10-09 — Clôture sur évidence de verify (point 5)**. `VERIFY → CLOTURE`
   reste une décision humaine et exige en plus la dernière évidence
   `.drwil/evidence/verify-*.json` (écrite par `drwil verify --evidence`) :
@@ -876,8 +882,7 @@ Et plus fondamentalement :
 
 ## Reprise
 
-- **Dernier état** (2026-10-09) : Lots 1 à 3 commités. Lot 4 réalisé (non
-  commité) : `preuveVerify` dans `.githooks/etat.mjs` — `VERIFY → CLOTURE`
+- **Dernier état** (2026-10-09) : Lots 1 à 4 commités. Lot 4 : `preuveVerify` dans `.githooks/etat.mjs` — `VERIFY → CLOTURE`
   refusé sans dernière évidence `drwil verify --evidence` au verdict `pass`
   ou `attested`, sur `HEAD`, arbre propre (aussi en mode agent) ; messages
   par verdict (FAIL/ERROR → REALISATION, MANUAL → `drwil attest`) ; règle
@@ -889,7 +894,9 @@ Et plus fondamentalement :
   locale) ; sur la branche principale elle-même, il n'y a rien à rejouer ;
   l'évidence de verify est hors git, donc falsifiable en local ; tout
   fichier non suivi et non ignoré empêche de clore.
-- **Travail non commité** : Lot 4 (décisions des points 5 et 8 dans la
-  fiche, code, tests et doc).
+- **Travail non commité** : aucun. Attestations humaines du 2026-10-09
+  (SEC-001, QUA-013, SEC-006, QUA-018, QUA-019) commitées après la
+  révision du point 6 (attestations hors périmètre) : `drwil verify` donne
+  `GOVERNANCE: PASS`.
 - **Prochaine étape** : [Humain + IA] Lot 5 — cycle complet sur un cas
   réel. Reste ouvert : point 10 (retrait propre de la gouvernance, Lot 6).
