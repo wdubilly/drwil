@@ -2,7 +2,7 @@
 
 **Risque** : HIGH
 
-**Statut** : cadré le 2026-10-07 — en attente de démarrage
+**Statut** : réalisé le 2026-10-09 (Lots 1 à 6) — en attente de relecture et de fusion de la branche `chantier/gouvernance-attente-active`
 
 <!-- cadrage
 fichiers:
@@ -919,7 +919,12 @@ Et plus fondamentalement :
   `/tmp/drwil-*` sans les supprimer (environ 2 100 par passage complet) ;
   au fil des passages, `/tmp` a manqué d'inodes (40 000 dossiers, nettoyés
   le 2026-10-09). Mis en attente : `docs/projets/tests-nettoyer-tmp.md`.
-- **Travail non commité** : Lot 6 (code, tests, doc, cette fiche).
-- **Prochaine étape** : commit du Lot 6, puis `PREUVES → VERIFY` (agent),
-  `CLOTURE` (humain) et clôture du chantier : statut de la fiche et case de
-  `docs/projets/en-attente.md`.
+- **Travail non commité** : aucun. Lot 6 commité, puis cycle
+  `PREUVES → VERIFY → CLOTURE → CADRAGE` (verify `GOVERNANCE: PASS`,
+  clôture faite par le demandeur dans un terminal : le préfixe `!` de
+  Claude Code ne donne pas de terminal interactif).
+- **Prochaine étape** : [humain] relire et fusionner la branche (PR). Après
+  la fusion : condenser la fiche dans `docs/projets/journal.md`, la
+  supprimer et retirer sa ligne de `docs/projets/en-attente.md`
+  (`docs/recettes/travailler-en-branche.md`, « Clôturer ») — en
+  repointant d'abord les documents qui la citent.
