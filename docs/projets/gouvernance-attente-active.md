@@ -923,6 +923,11 @@ Et plus fondamentalement :
   `PREUVES → VERIFY → CLOTURE → CADRAGE` (verify `GOVERNANCE: PASS`,
   clôture faite par le demandeur dans un terminal : le préfixe `!` de
   Claude Code ne donne pas de terminal interactif).
+- **Correctif CI** (2026-10-09) : la CI de la PR échouait sur
+  `README.md` (état local cité sans « (if present) ») ; le contrôle passait
+  en local parce que le fichier ignoré y existe. Corrigé, reproduit dans un
+  worktree sans état local. Écart mis en attente :
+  `docs/projets/citations-fichiers-ignores.md`.
 - **Prochaine étape** : [humain] relire et fusionner la branche (PR). Après
   la fusion : condenser la fiche dans `docs/projets/journal.md`, la
   supprimer et retirer sa ligne de `docs/projets/en-attente.md`
