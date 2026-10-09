@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Barrière de périmètre (docs/projets/gouvernance-attente-active.md, Lot 3), contrôle
+// Barrière de périmètre (docs/ia-first.md, « Barrière de périmètre »), contrôle
 // « perimetre-attente » du moteur (.githooks/moteur.mjs) : commit, push, CI, `drwil verify`.
 //
 // - Les fiches (docs/projets/, docs/intentions/…) sont toujours commitables.
