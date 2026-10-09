@@ -25,6 +25,19 @@ fichiers:
   - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
   - packages/drwil/bin/drwil.js
   - packages/drwil/src/index.ts
+  - packages/drwil/templates/common/base/.githooks/perimetre.mjs
+  - packages/drwil/templates/common/base/.githooks/perimetre.test.mjs
+  - packages/drwil/templates/common/base/.githooks/prepare-commit-msg
+  - packages/drwil/templates/common/base/.githooks/moteur.mjs
+  - packages/drwil/templates/common/base/.githooks/contrats.mjs
+  - packages/drwil/templates/common/base/.githooks/check-control-coverage.mjs
+  - .githooks/perimetre.mjs
+  - .githooks/perimetre.test.mjs
+  - .githooks/prepare-commit-msg
+  - .githooks/moteur.mjs
+  - .githooks/contrats.mjs
+  - .githooks/check-control-coverage.mjs
+  - .drwil/ia-first.json
 -->
 
 (cadrage du Lot 1 : lecteur d'état dans `.githooks/` — utilisable par le
@@ -694,6 +707,28 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
   doc, toujours autorisée), visible à part dans l'historique ; le code vient
   au commit suivant. Aucun agent ne peut élargir et utiliser son périmètre
   dans un même commit.
+- **2026-10-09 — Hors périmètre : les fiches seulement (point 6)**. Toujours
+  commitables : `docs/projets/`, `docs/intentions/` et leur équivalent anglais
+  (projects)
+  (cadrer, tenir sa fiche et la file d'attente). Tout le reste — code et
+  autre doc — doit figurer dans le cadrage de la fiche active. Liste
+  réglable (`horsPerimetre` de `.drwil/ia-first.json`), jamais un préfixe
+  implicite.
+- **2026-10-09 — Commit du périmètre en `REALISATION` seulement (point 7)**.
+  Hors fiches, un commit n'est accepté qu'en `REALISATION`, et seulement pour
+  des fichiers couverts par le cadrage de la fiche active lu dans `HEAD`.
+  Un correctif pendant `PREUVES` ou `VERIFY` impose de revenir en
+  `REALISATION`.
+- **2026-10-09 — CI : trailer `Drwil-Attente`**. Le hook `prepare-commit-msg`
+  (que Git ne saute jamais, même avec l'option qui saute `pre-commit`) ajoute
+  au message `Drwil-Attente: <fiche active>`. La CI, le pre-push et `drwil
+  verify` rejouent chaque commit de la branche contre le cadrage de cette
+  fiche dans le commit parent. Un commit est jugé selon les règles de son
+  parent : si la barrière n'y existait pas encore, il n'est pas contrôlé.
+  L'activité n'existe qu'en local : la CI ne contrôle que le périmètre.
+- **2026-10-09 — Sévérité de la barrière** : réglage `barriere`
+  (`off` / `avertissement` / `bloquant`) ; `drwil init` écrit
+  `avertissement`, ce dépôt est en `bloquant`.
 
 ## Contrats concernés
 
@@ -726,10 +761,10 @@ Les décisions suivantes doivent être explicitées avant leur implémentation l
 5. **Clôture**
    Quelles conditions permettent de passer de `VERIFY` à `CLOTURE`, puis de revenir à `CADRAGE` ?
 
-6. **Périmètre**
+6. **Périmètre** — tranché le 2026-10-09 (voir « Décisions »)
    Quels fichiers de gouvernance sont autorisés indépendamment du périmètre de réalisation ?
 
-7. **Contrôle de livraison**
+7. **Contrôle de livraison** — tranché le 2026-10-09 (voir « Décisions »)
    Quelles conditions exactes doivent être satisfaites pour autoriser le commit ?
 
 8. **Échec de contrôle**
