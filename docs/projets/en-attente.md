@@ -58,6 +58,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   `pre-push` qui ne regarde que la branche courante, pas la référence
   réellement poussée) — `docs/projets/corriger-qua017-push-tag.md`.
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
+- [ ] [décision] [P2] QUA-017 bloque un push qui ne fait que supprimer une
+  branche distante (faux positif, cousin du push de tag) —
+  `docs/projets/qua017-push-suppression.md`.
 - [ ] [décision] [P1] Vue de relecture : montrer à l'humain ce qui demande
   son jugement dans une PR (décisions, cadrage, règles, preuves,
   exceptions) — `docs/intentions/vue-de-relecture.md`.
