@@ -1,6 +1,6 @@
 # Projet : des garde-fous qui tiennent sans compter sur la mémoire de l'agent
 
-**Statut** : cadré le 2026-10-06 — lots 1 et 2 livrés sur la branche `chantier/garde-fous-depot`, en attente de fusion ; lot 3 à cadrer.
+**Statut** : cadré le 2026-10-06 — lots 1 et 2 fusionnés (PR #46) ; lot 3 à cadrer.
 **Risque** : HIGH
 
 <!-- cadrage
