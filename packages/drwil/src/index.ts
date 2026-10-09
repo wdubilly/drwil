@@ -530,6 +530,9 @@ async function writeConfig(r: Resolved): Promise<void> {
     // Défaut "bloquant" (docs/projets/garde-fous-depot.md) ; une valeur déjà choisie par le projet
     // n'est jamais écrasée par une réinstallation.
     cadrage: typeof previous?.cadrage === "string" ? previous.cadrage : "bloquant",
+    // Transitions de l'état de gouvernance (.githooks/etat.mjs) : "humain" (ouvrir, lancer la
+    // réalisation et clore exigent un terminal interactif) | "agent". Jamais écrasé.
+    transitions: typeof previous?.transitions === "string" ? previous.transitions : "humain",
     layerPrefixes: ["app", "tests", "src", "scripts"],
     codePrefixes: ["scripts", ".githooks", "e2e"],
     extraCodeFiles: [],

@@ -3,15 +3,15 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ACTIVITES, ETAT_NEUTRE, contexte, lireEtat, transitionAutorisee, validerEtat } from "./etat.mjs";
+import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, transitionAutorisee, validerEtat } from "./etat.mjs";
 
 const FICHE = "docs/projets/exemple.md";
 
-function depot({ etat, fiche = true, lang } = {}) {
+function depot({ etat, fiche = true, lang, config } = {}) {
   const racine = mkdtempSync(join(tmpdir(), "drwil-etat-"));
   mkdirSync(join(racine, ".drwil"));
   mkdirSync(join(racine, "docs", "projets"), { recursive: true });
-  if (lang) writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ lang }));
+  if (lang || config) writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ ...(lang ? { lang } : {}), ...config }));
   if (fiche) {
     writeFileSync(join(racine, FICHE), `# Projet : Exemple
 
@@ -125,4 +125,80 @@ test("contexte : un état invalide est signalé, pas masqué", () => {
 test("contexte en anglais selon .drwil/ia-first.json", () => {
   const racine = depot({ lang: "en" });
   assert.match(contexte(lireEtat(racine), racine), /Activity: CADRAGE/);
+});
+
+const MAINTENANT = "2026-10-09T12:00:00Z";
+const neutre = () => ({ etat: { ...ETAT_NEUTRE }, source: "absent", problemes: [] });
+
+test("préparer : ouvrir une attente exige une fiche existante", () => {
+  const racine = depot();
+  assert.deepEqual(preparerTransition(neutre(), "ATTENTE", { fiche: FICHE, maintenant: MAINTENANT }, racine).etat,
+    { version: 1, activite: "ATTENTE", attente_active: FICHE, demande_active: null, depuis: MAINTENANT });
+  assert.match(preparerTransition(neutre(), "ATTENTE", { maintenant: MAINTENANT }, racine).erreur, /--fiche/);
+  assert.match(preparerTransition(neutre(), "ATTENTE", { fiche: "docs/projets/absente.md", maintenant: MAINTENANT }, racine).erreur, /introuvable/);
+});
+
+test("préparer : transition interdite refusée, --fiche réservé à l'ouverture, abandon vers le neutre", () => {
+  const racine = depot();
+  assert.match(preparerTransition(neutre(), "REALISATION", { maintenant: MAINTENANT }, racine).erreur, /CADRAGE → REALISATION.*interdite/);
+  const enCours = { etat: actif("REALISATION"), source: "fichier", problemes: [] };
+  assert.match(preparerTransition(enCours, "PREUVES", { fiche: FICHE, maintenant: MAINTENANT }, racine).erreur, /--fiche/);
+  const suite = preparerTransition(enCours, "PREUVES", { demande: "Lot 2", maintenant: MAINTENANT }, racine).etat;
+  assert.equal(suite.attente_active, FICHE, "l'attente suit");
+  assert.equal(suite.demande_active, "Lot 2");
+  assert.deepEqual(preparerTransition(enCours, "CADRAGE", { maintenant: MAINTENANT }, racine).etat, { ...ETAT_NEUTRE, depuis: MAINTENANT });
+});
+
+test("humain requis (mode humain) : ouvrir, lancer la réalisation, clore ; rien en mode agent", () => {
+  assert.equal(exigeHumain("CADRAGE", "ATTENTE", "humain"), true);
+  assert.equal(exigeHumain("DEMANDE", "REALISATION", "humain"), true);
+  assert.equal(exigeHumain("VERIFY", "CLOTURE", "humain"), true);
+  assert.equal(exigeHumain("REALISATION", "PREUVES", "humain"), false);
+  assert.equal(exigeHumain("VERIFY", "REALISATION", "humain"), false, "retour sur la même attente");
+  assert.equal(exigeHumain("REALISATION", "CADRAGE", "humain"), false, "l'abandon resserre les droits");
+  for (const [de, vers] of [["CADRAGE", "ATTENTE"], ["DEMANDE", "REALISATION"], ["VERIFY", "CLOTURE"]]) assert.equal(exigeHumain(de, vers, "agent"), false);
+});
+
+test("passer (mode humain par défaut) : refus sans terminal interactif, état inchangé", async () => {
+  const racine = depot();
+  const r = await passer(racine, { vers: "ATTENTE", fiche: FICHE }, { tty: false, maintenant: MAINTENANT });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /terminal interactif/);
+  assert.equal(lireEtat(racine).source, "absent");
+});
+
+test("passer : avec un humain qui confirme, l'état est écrit ; sans confirmation, rien", async () => {
+  const racine = depot();
+  const refus = await passer(racine, { vers: "ATTENTE", fiche: FICHE }, { tty: true, confirmer: async () => false, maintenant: MAINTENANT });
+  assert.equal(refus.code, 1);
+  assert.equal(lireEtat(racine).source, "absent");
+  let question = "";
+  const ok = await passer(racine, { vers: "ATTENTE", fiche: FICHE }, { tty: true, confirmer: async (q) => { question = q; return true; }, maintenant: MAINTENANT });
+  assert.equal(ok.code, 0, ok.message);
+  assert.match(question, /ATTENTE/);
+  assert.equal(lireEtat(racine).etat.activite, "ATTENTE");
+  // Transition libre ensuite : pas de terminal requis.
+  assert.equal((await passer(racine, { vers: "DEMANDE", demande: "Lot 2" }, { tty: false, maintenant: MAINTENANT })).code, 0);
+  assert.equal(lireEtat(racine).etat.demande_active, "Lot 2");
+});
+
+test("passer (mode agent) : toute transition permise est libre ; une interdite reste refusée", async () => {
+  const racine = depot({ config: { transitions: "agent" } });
+  assert.equal((await passer(racine, { vers: "ATTENTE", fiche: FICHE }, { tty: false, maintenant: MAINTENANT })).code, 0);
+  const saut = await passer(racine, { vers: "VERIFY" }, { tty: false, maintenant: MAINTENANT });
+  assert.equal(saut.code, 1);
+  assert.match(saut.message, /interdite/);
+});
+
+test("passer : depuis un état invalide, on repart du neutre (signalé)", async () => {
+  const racine = depot({ etat: "{ cassé", config: { transitions: "agent" } });
+  const r = await passer(racine, { vers: "ATTENTE", fiche: FICHE }, { tty: false, maintenant: MAINTENANT });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /invalide/);
+  assert.equal(lireEtat(racine).etat.activite, "ATTENTE");
+});
+
+test("contexte : indique la commande de transition", () => {
+  const racine = depot();
+  assert.match(contexte(lireEtat(racine), racine), /node \.githooks\/etat\.mjs passer/);
 });

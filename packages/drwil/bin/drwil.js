@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { Command } from "commander";
 import { init, apply, uninstall, resoudreDerive, verify, formaterVerdict, verdictJson, ecrireEvidence, attester, formaterPourAgent, auditerApply, formaterAudit, doctor, formaterDiagnostic, diagnosticJson, listerContrats, TOOLS, CIS } from "../dist/index.js";
 
@@ -160,6 +162,22 @@ program.command("attest <id>")
       console.error(`✗ ${e.message}`);
       process.exit(2);
     }
+  });
+
+program.command("etat")
+  .description("Show the governance state, or change activity: drwil etat passer <ACTIVITY> [--fiche <sheet>] [--demande <text>]")
+  .argument("[args...]")
+  .allowUnknownOption()
+  .action(async (args) => {
+    // Façade : la logique et le garde-fou humain vivent dans .githooks/etat.mjs du projet,
+    // utilisable sans drwil installé ; une seule source.
+    const module = join(process.cwd(), ".githooks", "etat.mjs");
+    if (!existsSync(module)) {
+      console.error(`✗ ${module} introuvable : lancer « drwil apply » pour installer le lecteur d'état`);
+      process.exit(2);
+    }
+    const { principal } = await import(pathToFileURL(module).href);
+    process.exit(await principal(args, process.cwd()));
   });
 
 program.parse();

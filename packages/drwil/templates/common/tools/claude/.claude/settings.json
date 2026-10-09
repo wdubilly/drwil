@@ -104,6 +104,12 @@
       "Read(**/.pgpass)"
     ],
     "deny": [
+      "Bash(git *--no-verify*)",
+      "Bash(git commit -n*)",
+      "Bash(git commit * -n*)",
+      "Edit(**/.drwil/state.json)",
+      "Write(**/.drwil/state.json)",
+      "Bash(*.drwil/state.json*)",
       "Bash(git *-c *)",
       "Bash(git *--exec-path*)",
       "Bash(git *--ext-diff*)",

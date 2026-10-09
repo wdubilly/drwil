@@ -341,5 +341,20 @@ versionné.
   l'attente explicitement.
 - **Transitions** : une activité à la fois, retour à `REALISATION` après
   `PREUVES` ou `VERIFY` en échec, abandon vers `CADRAGE` depuis toute
-  activité. Pas encore de commande de transition ni de refus au commit :
-  l'état informe l'agent, il ne bloque rien à ce stade.
+  activité. Commande : `node .githooks/etat.mjs passer <ACTIVITE>
+  [--fiche <fiche>] [--demande <texte>]` (ou `drwil etat passer …`, simple
+  façade) ; `--fiche` ouvre une attente depuis `CADRAGE`.
+- **Qui décide** (réglage `transitions` de `.drwil/ia-first.json`) : `humain`
+  (défaut) — ouvrir une attente, lancer la réalisation (`DEMANDE →
+  REALISATION`) et clore (`VERIFY → CLOTURE`) exigent un terminal interactif
+  et la saisie de l'activité visée ; les autres transitions, qui resserrent
+  les droits ou reviennent en arrière, restent libres. `agent` : toute
+  transition permise est libre.
+- **Blocages côté outil** (Claude Code, règles `deny` de
+  `.claude/settings.json`, si présent) : `git … --no-verify`, `git commit -n` et
+  l'écriture directe de `.drwil/state.json` (si présent) sont refusés par
+  l'outil, pas par le modèle.
+- **Limites** : un agent qui a le shell peut toujours tricher en local
+  (réécrire l'état, simuler un terminal, option courte combinée). Le but est
+  une triche visible dans le diff et refusée en CI, pas impossible ; l'état
+  ne bloque encore aucun commit.

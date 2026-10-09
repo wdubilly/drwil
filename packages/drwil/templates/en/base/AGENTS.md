@@ -42,8 +42,10 @@ Full map and stack: `docs/architecture.md`.
 - **Governance state (any agent)**: first action of every task, run
   `node .githooks/etat.mjs` and follow its activity, expectation and scope;
   run it again when in doubt, never infer it from the conversation. Never
-  edit `.drwil/state.json` (if present) yourself: changing activity is a
-  human decision.
+  write `.drwil/state.json` (if present) by hand: change activity with
+  `node .githooks/etat.mjs passer <ACTIVITE>`; opening an expectation,
+  starting implementation and closing remain a human decision (`transitions`
+  setting in `.drwil/ia-first.json`).
 - **Cause before fix**: facing a bug or a red test, reproduce then
   establish the root cause before changing code; no trial fix, no bypassing
   a check (test, hook, CI) to make it pass (QUA-019): if it seems

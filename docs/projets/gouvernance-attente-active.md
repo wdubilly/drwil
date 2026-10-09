@@ -23,6 +23,8 @@ fichiers:
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/templates/fr/base/docs/projets/mecanique-ia-first.md
   - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
+  - packages/drwil/bin/drwil.js
+  - packages/drwil/src/index.ts
 -->
 
 (cadrage du Lot 1 : lecteur d'état dans `.githooks/` — utilisable par le
@@ -643,7 +645,9 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
 - **2026-10-09 — Dépôt et gabarit (QUA-018)** : le chantier vise les deux.
   Les hooks partagés sont écrits dans `packages/drwil/templates/common/base/.githooks/`
   et recopiés à l'identique dans `.githooks/` (dogfood) ; les transitions
-  passent par la CLI (`packages/drwil/src/`) ; `AGENTS.md`, `docs/` et
+  sont dans `.githooks/etat.mjs` (`node .githooks/etat.mjs passer …`,
+  utilisable sans `npx` par tout agent ou humain) et `drwil etat` n'en est
+  qu'une façade — révisé le 2026-10-09 ; `AGENTS.md`, `docs/` et
   `.gitignore` sont mis à jour des deux côtés.
 - **2026-10-09 — Sévérité réglable, sur le modèle de QUA-016** : la barrière est
   dans `base` avec un réglage `off` / `avertissement` / `bloquant` dans
@@ -662,6 +666,34 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
 - **2026-10-09 — Dogfood non bloqué** : ce clone travaille le chantier avec
   un `state.json` (si présent) local en `REALISATION` sur cette fiche, écrit à
   la main à la demande du demandeur en attendant la commande du Lot 2.
+- **2026-10-09 — Transitions réglables (points 3 et 4)** : réglage
+  `transitions` de `.drwil/ia-first.json`. `humain` (défaut) : ouvrir une
+  attente (`CADRAGE→ATTENTE`, avec `--fiche`), lancer la réalisation
+  (`DEMANDE→REALISATION`, seule transition qui autorise à modifier du code)
+  et clore (`VERIFY→CLOTURE`) exigent un terminal interactif et la saisie de
+  l'activité visée, comme `drwil attest` ; les autres transitions restent
+  libres. `agent` : toute transition permise par la machine d'état est libre.
+- **2026-10-09 — Garantie visée : triche détectable, refusée hors du poste**.
+  Un agent qui a le shell peut toujours tricher en local (réécrire
+  `state.json` (si présent), élargir un cadrage, `--no-verify`, modifier
+  `.githooks/`). Le chantier ne promet donc pas « triche impossible » mais :
+  rejeu du contrôle de périmètre en CI, sur les seules informations
+  versionnées (Lot 3) ; toute triche visible dans le diff de la MR ;
+  blocages réels quand l'outil les offre ; dernier mot à la relecture
+  humaine et à la protection de branche (QUA-017, QUA-019).
+- **2026-10-09 — Blocages côté outil (Lot 2)** : règles `deny` de
+  `.claude/settings.json` (dépôt et gabarit) sur `git … --no-verify`,
+  `git commit -n` et l'écriture de `.drwil/state.json` (si présent) par
+  Edit/Write — appliquées par Claude Code, pas par le modèle. Une option
+  courte combinée (`-anm`) peut échapper aux motifs : la CI rattrape.
+- **2026-10-09 — Élargissement du cadrage (point 12) : bloquant, cadrage lu
+  dans la version déjà commitée**. Le pre-commit vérifie les fichiers de code
+  contre le bloc `cadrage` de la fiche active tel qu'il est dans `HEAD` ; le
+  rejeu en CI, commit par commit, contre celui du commit parent. Élargir son
+  périmètre demande donc un commit séparé qui ne touche que la fiche (de la
+  doc, toujours autorisée), visible à part dans l'historique ; le code vient
+  au commit suivant. Aucun agent ne peut élargir et utiliser son périmètre
+  dans un même commit.
 
 ## Contrats concernés
 
@@ -685,10 +717,10 @@ Les décisions suivantes doivent être explicitées avant leur implémentation l
 2. **Machine d’état** — tranché le 2026-10-09 (voir « Décisions »)
    Quelles transitions entre activités sont autorisées ?
 
-3. **Activation**
+3. **Activation** — tranché le 2026-10-09 (voir « Décisions »)
    Quelle opération officielle permet de passer de `CADRAGE` à `ATTENTE` puis à `DEMANDE` ?
 
-4. **Réalisation**
+4. **Réalisation** — tranché le 2026-10-09 (voir « Décisions »)
    Quelle transition autorise effectivement les modifications applicatives ?
 
 5. **Clôture**
@@ -711,6 +743,9 @@ Les décisions suivantes doivent être explicitées avant leur implémentation l
 
 11. **Démarrage sans état** — tranché le 2026-10-09 (voir « Décisions »)
     Sur un clone neuf (aucun `state.json` (à créer)), DRWIL démarre-t-il en `CADRAGE` avec `attente_active = null` ? Le principe « au démarrage, DRWIL reprend toujours l'état persistant » doit préciser ce cas.
+
+12. **Élargissement du cadrage** (Lot 3) — tranché le 2026-10-09 (voir « Décisions »)
+    Un commit qui modifie à la fois le bloc `cadrage` de la fiche active et du code permet à l'agent d'élargir lui-même son périmètre. Faut-il le refuser (cadrage et code en commits séparés), ou seulement le signaler à la relecture ?
 
 ---
 
@@ -788,18 +823,22 @@ Et plus fondamentalement :
 
 ## Reprise
 
-- **Dernier état** (2026-10-09) : Lot 1 réalisé, à relire. Lecteur
-  `.githooks/etat.mjs` (schéma v1, activités, transitions, validation,
-  contexte fr/en) et ses 12 tests ; hook `SessionStart` de Claude ;
-  `.drwil/state.json` (si présent) ignoré par Git ; consignes `AGENTS.md` et
-  section « État de gouvernance » de `docs/ia-first.md`, côté dépôt et
-  gabarit ; test du kit. Les fiches mécanique du gabarit couvrent les deux
-  nouveaux hooks. `run-checks` vert ; `drwil verify --agent` :
-  MANUAL REVIEW REQUIRED (contrats à attester par un humain).
-- **Limites du Lot 1** : la lecture de l'état par un agent autre que Claude
-  Code repose sur la consigne d'`AGENTS.md` (barrière comportementale) ; seul
-  Claude Code la reçoit automatiquement. L'état n'est encore
-  écrit par aucune commande (Lot 2) et ne bloque rien (Lot 3).
-- **Travail non commité** : tout le Lot 1.
-- **Prochaine étape** : [humain] relire et commiter le Lot 1 ; puis [IA]
-  Lot 2 — commande de transition. Restent ouverts : points 3 à 8 et 10.
+- **Dernier état** (2026-10-09) : Lot 1 commité (`181b0f0`) : lecteur
+  `.githooks/etat.mjs`, contexte agnostique via `AGENTS.md`, hook
+  `SessionStart` de Claude, `.drwil/state.json` (si présent) ignoré par Git.
+  Lot 2 réalisé, à relire : commande `passer <ACTIVITE> [--fiche]
+  [--demande]` dans `.githooks/etat.mjs`, garde-fou terminal interactif selon le
+  réglage `transitions` (`humain` par défaut, écrit par `drwil init`),
+  façade `drwil etat`, règles `deny` de Claude (dépôt et gabarit), consignes
+  et doc à jour ; 20 tests d'`.githooks/etat.mjs`, 2 tests du kit ; `run-checks` vert.
+- **Limites** : un agent autre que Claude Code ne lit l'état que s'il suit
+  la consigne d'`AGENTS.md` ; messages de transition et de validation en
+  français seulement ; l'état ne bloque encore aucun commit (Lot 3). Ce
+  clone travaille avec un état en `REALISATION` écrit à la main avant que la
+  commande existe.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [IA] Lot 3 — barrière pre-commit (périmètre lu dans
+  `HEAD`) et rejeu du périmètre en CI. Restent ouverts : points 5 (conditions
+  de clôture), 6 (fichiers de gouvernance hors périmètre), 7 (conditions
+  exactes du commit), 8 (réaction à un échec de VERIFY) et 10 (retrait
+  propre).

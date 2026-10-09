@@ -331,6 +331,20 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
   the versioned sheet ("Hand-off" section) and re-activate the expectation
   explicitly.
 - **Transitions**: one activity at a time, back to `REALISATION` after
-  `PREUVES` or a failed `VERIFY`, abandon to `CADRAGE` from any activity. No
-  transition command nor commit refusal yet: the state informs the agent, it
-  blocks nothing at this stage.
+  `PREUVES` or a failed `VERIFY`, abandon to `CADRAGE` from any activity.
+  Command: `node .githooks/etat.mjs passer <ACTIVITE> [--fiche <sheet>]
+  [--demande <text>]` (or `drwil etat passer …`, a mere facade); `--fiche`
+  opens an expectation from `CADRAGE`.
+- **Who decides** (`transitions` setting in `.drwil/ia-first.json`): `humain`
+  (default) — opening an expectation, starting implementation (`DEMANDE →
+  REALISATION`) and closing (`VERIFY → CLOTURE`) require an interactive
+  terminal and typing the target activity; the other transitions, which
+  narrow rights or go back, stay free. `agent`: any allowed transition is
+  free.
+- **Tool-side blocks** (Claude Code, `deny` rules in
+  `.claude/settings.json`, if present): `git … --no-verify`, `git commit -n` and writing `.drwil/state.json`
+  (if present) directly are refused by the tool, not by the model.
+- **Limits**: an agent with a shell can still cheat locally (rewrite the
+  state, fake a terminal, combined short option). The aim is cheating that
+  shows in the diff and is refused in CI, not impossible cheating; the state
+  blocks no commit yet.

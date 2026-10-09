@@ -406,6 +406,29 @@ test("état de gouvernance : lecteur livré, state.json ignoré par Git, context
   assert.match(invalide.stdout, /État invalide/);
 });
 
+test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+  const fiche = "docs/projets/mecanique-ia-first.md";
+  const drwilEtat = (...args) => spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "etat", ...args], { cwd: dir, encoding: "utf8", env: envTest });
+
+  assert.equal(config(dir).transitions, "humain");
+  // Sans terminal interactif, ouvrir une attente est refusé en mode humain.
+  const refus = drwilEtat("passer", "ATTENTE", "--fiche", fiche);
+  assert.equal(refus.status, 1);
+  assert.match(refus.stderr, /terminal interactif/);
+  assert.ok(!existsSync(join(dir, ".drwil/state.json")), "état inchangé");
+  // En mode agent, la façade transmet --fiche au module du projet.
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), transitions: "agent" }));
+  const ok = drwilEtat("passer", "ATTENTE", "--fiche", fiche);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(drwilEtat().stdout, /Activité : ATTENTE/);
+
+  const deny = JSON.parse(read(dir, ".claude/settings.json")).permissions.deny;
+  for (const regle of ["Edit(**/.drwil/state.json)", "Write(**/.drwil/state.json)", "Bash(git commit -n*)"]) assert.ok(deny.includes(regle), regle);
+  assert.ok(deny.some((r) => r.includes("no-verify")));
+});
+
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {
   const dir = tmp();
   mkdirSync(join(dir, "api")); mkdirSync(join(dir, "web"));

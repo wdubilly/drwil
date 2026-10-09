@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 // État de gouvernance runtime : .drwil/state.json (docs/projets/gouvernance-attente-active.md).
 //
-// Seul lecteur de l'état : le contexte réinjecté à l'agent (hook SessionStart de
-// Claude, `node .githooks/etat.mjs`) et, plus tard, le pre-commit l'importent.
+// Seul lecteur et seul écrivain de l'état : le contexte réinjecté à l'agent
+// (`node .githooks/etat.mjs`, hook SessionStart de Claude), les transitions
+// (`node .githooks/etat.mjs passer <ACTIVITE>`, `drwil etat`) et, plus tard, le
+// pre-commit l'importent. Aucun outil d'agent n'est requis.
 // L'état est local (gitignoré) et ne contient que des références : le périmètre
 // autorisé vit dans le bloc `cadrage` de la fiche active, versionnée.
 // Fichier absent = CADRAGE neutre ; aucun état actif n'est jamais déduit.
 // Un état invalide est ramené au neutre ET signalé : jamais masqué, jamais permissif.
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
 import { lireBloc } from "./cadrage.mjs";
@@ -83,6 +85,59 @@ export function lireEtat(racine) {
   return problemes.length ? { etat: { ...ETAT_NEUTRE }, source: "fichier", problemes } : { etat, source: "fichier", problemes };
 }
 
+// Transitions qui ouvrent des droits ou closent : réservées à un humain en mode
+// « humain » (défaut). Les autres resserrent les droits ou reviennent en arrière.
+const HUMAINES = new Set(["CADRAGE>ATTENTE", "DEMANDE>REALISATION", "VERIFY>CLOTURE"]);
+
+export function exigeHumain(de, vers, mode) {
+  return mode !== "agent" && HUMAINES.has(`${de}>${vers}`);
+}
+
+/** Nouvel état après la transition `vers`, ou `{ erreur }` ; n'écrit rien. */
+export function preparerTransition(lu, vers, { fiche, demande, maintenant }, racine) {
+  const de = lu.etat.activite;
+  if (!transitionAutorisee(de, vers)) {
+    const permises = ACTIVITES.filter((a) => transitionAutorisee(de, a)).join(", ");
+    return { erreur: `transition ${de} → ${vers} interdite (depuis ${de} : ${permises})` };
+  }
+  if (fiche !== undefined && vers !== "ATTENTE") return { erreur: "--fiche ne sert qu'à ouvrir une attente (CADRAGE → ATTENTE)" };
+  let etat;
+  if (vers === "CADRAGE") {
+    etat = { ...ETAT_NEUTRE, depuis: maintenant };
+  } else if (vers === "ATTENTE") {
+    if (!fiche) return { erreur: "ouvrir une attente exige --fiche <docs/projets/….md>" };
+    etat = { version: 1, activite: "ATTENTE", attente_active: posix.normalize(fiche.replace(/\\/g, "/")), demande_active: demande ?? null, depuis: maintenant };
+  } else {
+    etat = { ...lu.etat, activite: vers, demande_active: demande ?? lu.etat.demande_active, depuis: maintenant };
+  }
+  const problemes = validerEtat(etat, racine);
+  return problemes.length ? { erreur: problemes.join(" ; ") } : { etat };
+}
+
+/**
+ * Applique une transition et écrit l'état. `{ code: 0 | 1, message }`.
+ * `confirmer(question)` n'est appelé que si un humain est requis, et seulement devant
+ * un terminal interactif : sans terminal, une transition humaine est refusée.
+ */
+export async function passer(racine, { vers, fiche, demande }, { tty = false, confirmer, maintenant = new Date().toISOString() } = {}) {
+  const lu = lireEtat(racine);
+  const reprise = lu.problemes.length ? `état précédent invalide, repris depuis le neutre (${lu.problemes.join(" ; ")}) ; ` : "";
+  const prep = preparerTransition(lu, vers, { fiche, demande, maintenant }, racine);
+  if (prep.erreur) return { code: 1, message: reprise + prep.erreur };
+  const de = lu.etat.activite;
+  if (exigeHumain(de, vers, config(racine).transitions)) {
+    if (!tty || typeof confirmer !== "function") {
+      return { code: 1, message: `${reprise}${de} → ${vers} est une décision humaine : terminal interactif requis (réglage « transitions » : humain)` };
+    }
+    if (!(await confirmer(`Pour passer de ${de} à ${vers}, retapez l'activité visée (${vers}) : `))) {
+      return { code: 1, message: "confirmation refusée : état inchangé" };
+    }
+  }
+  mkdirSync(join(racine, ".drwil"), { recursive: true });
+  writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(prep.etat, null, 2) + "\n");
+  return { code: 0, message: `${reprise}${de} → ${vers}` };
+}
+
 const TEXTES = {
   fr: {
     entete: "[drwil] État de gouvernance, lu sur disque (.drwil/state.json) — ne pas le déduire de la conversation.",
@@ -94,7 +149,7 @@ const TEXTES = {
     perimetre: "Périmètre autorisé (bloc cadrage de la fiche) :",
     sansPerimetre: "  (aucun bloc cadrage : aucun fichier de code autorisé)",
     regle: (r) => `Règle : ${r}`,
-    pied: "L'agent ne modifie jamais .drwil/state.json : changer d'activité est une décision humaine.",
+    pied: "Ne jamais écrire .drwil/state.json à la main. Changer d'activité : `node .githooks/etat.mjs passer <ACTIVITE>` (ouvrir une attente, lancer la réalisation et clore sont une décision humaine, sauf réglage « transitions » : agent).",
     regles: {
       CADRAGE: "lire, analyser, cadrer ; ne modifier aucun fichier de code.",
       ATTENTE: "formaliser l'attente dans sa fiche ; ne modifier aucun fichier de code.",
@@ -115,7 +170,7 @@ const TEXTES = {
     perimetre: "Allowed scope (cadrage block of the fiche):",
     sansPerimetre: "  (no cadrage block: no code file allowed)",
     regle: (r) => `Rule: ${r}`,
-    pied: "The agent never edits .drwil/state.json: changing activity is a human decision.",
+    pied: "Never write .drwil/state.json by hand. Change activity: `node .githooks/etat.mjs passer <ACTIVITE>` (opening an expectation, starting implementation and closing are a human decision, unless the \"transitions\" setting is agent).",
     regles: {
       CADRAGE: "read, analyse, frame; do not modify any code file.",
       ATTENTE: "write down the expectation in its fiche; do not modify any code file.",
@@ -128,13 +183,15 @@ const TEXTES = {
   },
 };
 
-function langue(racine) {
+function config(racine) {
   try {
-    return JSON.parse(readFileSync(join(racine, ".drwil", "ia-first.json"), "utf8")).lang === "en" ? "en" : "fr";
+    return JSON.parse(readFileSync(join(racine, ".drwil", "ia-first.json"), "utf8")) ?? {};
   } catch {
-    return "fr";
+    return {};
   }
 }
+
+const langue = (racine) => (config(racine).lang === "en" ? "en" : "fr");
 
 /** Contexte lisible à réinjecter à l'agent, construit uniquement depuis le disque. */
 export function contexte(lu, racine) {
@@ -162,13 +219,46 @@ export function contexte(lu, racine) {
   return lignes.join("\n");
 }
 
-// Exécution directe : `node .githooks/etat.mjs [--json]`. Ne casse jamais la session de l'agent.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const racine = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-  try {
-    const lu = lireEtat(racine);
-    console.log(process.argv.includes("--json") ? JSON.stringify(lu, null, 2) : contexte(lu, racine));
-  } catch (e) {
-    console.log(`[drwil] état de gouvernance illisible : ${e.message}`);
+/** Valeur de l'option `--nom valeur` dans `args`, ou undefined. */
+function option(args, nom) {
+  const i = args.indexOf(nom);
+  return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
+}
+
+/** Point d'entrée commun à `node .githooks/etat.mjs` et à `drwil etat`. Rend le code de sortie. */
+export async function principal(args, racine) {
+  if (args[0] !== "passer") {
+    // Lecture : ne casse jamais le démarrage de session d'un agent.
+    try {
+      const lu = lireEtat(racine);
+      console.log(args.includes("--json") ? JSON.stringify(lu, null, 2) : contexte(lu, racine));
+    } catch (e) {
+      console.log(`[drwil] état de gouvernance illisible : ${e.message}`);
+    }
+    return 0;
   }
+  const vers = args[1];
+  if (!vers || vers.startsWith("--")) {
+    console.error(`usage : node .githooks/etat.mjs passer <${ACTIVITES.join("|")}> [--fiche <docs/projets/….md>] [--demande <texte>]`);
+    return 2;
+  }
+  const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
+  const confirmer = async (question) => {
+    const { createInterface } = await import("node:readline/promises");
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    try {
+      return (await rl.question(question)).trim() === vers;
+    } finally {
+      rl.close();
+    }
+  };
+  const r = await passer(racine, { vers, fiche: option(args, "--fiche"), demande: option(args, "--demande") }, { tty, confirmer });
+  if (r.code === 0) console.log(`✓ ${r.message}\n\n${contexte(lireEtat(racine), racine)}`);
+  else console.error(`✗ ${r.message}`);
+  return r.code;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  // Racine = dossier courant, comme les autres hooks : aucune variable propre à un outil.
+  process.exitCode = await principal(process.argv.slice(2), process.cwd());
 }
