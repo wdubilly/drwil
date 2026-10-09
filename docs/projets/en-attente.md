@@ -61,6 +61,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [décision] [P1] Vue de relecture : montrer à l'humain ce qui demande
   son jugement dans une PR (décisions, cadrage, règles, preuves,
   exceptions) — `docs/intentions/vue-de-relecture.md`.
+- [ ] [décision] [P1] Bench avec / sans drwil : même consigne, même projet,
+  pour mesurer l'apport en qualité de livrable et en consommation de
+  tokens — `docs/intentions/bench-avec-sans-drwil.md`.
 - [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
