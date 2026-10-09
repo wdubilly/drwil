@@ -1,10 +1,36 @@
-import { test } from "node:test";
+import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { ajouterTrailer, controlerPerimetre, horsFiches, verifierIndex } from "./perimetre.mjs";
+
+// Chaque dossier temporaire est supprimé après son test : ces tests tournent à chaque commit,
+// et aussi dans chaque projet que génèrent les tests du kit ; sans ça, ils épuisaient les
+// inodes de /tmp (docs/projets/tests-nettoyer-tmp.md). Ceux d'un test en échec sont gardés
+// (et affichés) pour le diagnostic.
+let dossiersDuTest = [];
+const tmp = (prefixe) => {
+  const dir = mkdtempSync(join(tmpdir(), prefixe));
+  dossiersDuTest.push(dir);
+  return dir;
+};
+afterEach((t) => {
+  if (t.passed === false) console.error(`dossiers gardés pour diagnostic (${t.name}) : ${dossiersDuTest.join(", ")}`);
+  else {
+    for (const dir of dossiersDuTest) {
+      // macOS (CI) : ENOTEMPTY possible pendant la suppression ; rmSync réessaie. Un dossier
+      // résiduel ne doit pas faire échouer un test réussi : signalé.
+      try {
+        rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+      } catch (e) {
+        console.error(`dossier temporaire non supprimé (${t.name}) : ${dir} — ${e.code ?? e.message}`);
+      }
+    }
+  }
+  dossiersDuTest = [];
+});
 
 const FICHE = "docs/projets/exemple.md";
 const fiche = (motifs) => `# Projet : Exemple\n\n**Statut** : cadré le 2026-10-09.\n\n<!-- cadrage\nfichiers:\n${motifs.map((m) => `  - ${m}`).join("\n")}\n-->\n`;
@@ -22,7 +48,7 @@ function ecrire(racine, chemin, contenu) {
 
 /** Dépôt dont le premier commit contient la barrière (marqueur) et la fiche cadrée. */
 function depot(motifs = ["src/a.js"]) {
-  const racine = mkdtempSync(join(tmpdir(), "drwil-perimetre-"));
+  const racine = tmp("drwil-perimetre-");
   git(racine, "init", "-q", "-b", "main");
   git(racine, "config", "user.email", "test@example.invalid");
   git(racine, "config", "user.name", "Test");
@@ -135,7 +161,7 @@ test("branche (CI, pre-push, verify) : chaque commit rejoué contre le cadrage d
 });
 
 test("branche : un commit dont le parent n'a pas encore la barrière n'est pas contrôlé", () => {
-  const racine = mkdtempSync(join(tmpdir(), "drwil-perimetre-"));
+  const racine = tmp("drwil-perimetre-");
   git(racine, "init", "-q", "-b", "main");
   git(racine, "config", "user.email", "test@example.invalid");
   git(racine, "config", "user.name", "Test");

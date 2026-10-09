@@ -1,15 +1,41 @@
-import { test } from "node:test";
+import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, transitionAutorisee, validerEtat } from "./etat.mjs";
 
+// Chaque dossier temporaire est supprimé après son test : ces tests tournent à chaque commit,
+// et aussi dans chaque projet que génèrent les tests du kit ; sans ça, ils épuisaient les
+// inodes de /tmp (docs/projets/tests-nettoyer-tmp.md). Ceux d'un test en échec sont gardés
+// (et affichés) pour le diagnostic.
+let dossiersDuTest = [];
+const tmp = (prefixe) => {
+  const dir = mkdtempSync(join(tmpdir(), prefixe));
+  dossiersDuTest.push(dir);
+  return dir;
+};
+afterEach((t) => {
+  if (t.passed === false) console.error(`dossiers gardés pour diagnostic (${t.name}) : ${dossiersDuTest.join(", ")}`);
+  else {
+    for (const dir of dossiersDuTest) {
+      // macOS (CI) : ENOTEMPTY possible pendant la suppression ; rmSync réessaie. Un dossier
+      // résiduel ne doit pas faire échouer un test réussi : signalé.
+      try {
+        rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+      } catch (e) {
+        console.error(`dossier temporaire non supprimé (${t.name}) : ${dir} — ${e.code ?? e.message}`);
+      }
+    }
+  }
+  dossiersDuTest = [];
+});
+
 const FICHE = "docs/projets/exemple.md";
 
 function depot({ etat, fiche = true, lang, config } = {}) {
-  const racine = mkdtempSync(join(tmpdir(), "drwil-etat-"));
+  const racine = tmp("drwil-etat-");
   mkdirSync(join(racine, ".drwil"));
   mkdirSync(join(racine, "docs", "projets"), { recursive: true });
   if (lang || config) writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ ...(lang ? { lang } : {}), ...config }));

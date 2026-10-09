@@ -1,6 +1,6 @@
 # Projet : les tests des hooks nettoient leurs dossiers temporaires
 
-**Statut** : ouvert le 2026-10-09 — en attente de démarrage.
+**Statut** : réalisé le 2026-10-09 — en attente de relecture et de fusion.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -11,9 +11,9 @@ fichiers:
   - .githooks/perimetre.test.mjs
 -->
 
-(cadrage provisoire : les deux tests des hooks qui créent des dossiers
+(cadrage : les deux tests des hooks qui créent des dossiers
 `/tmp/drwil-etat-*` et `/tmp/drwil-perimetre-*` sans les supprimer, côté
-gabarit et dans la copie du dépôt. À confirmer au démarrage.)
+gabarit et dans la copie du dépôt — confirmé le 2026-10-09.)
 
 ## 1. Besoin
 
@@ -42,7 +42,23 @@ chaque projet généré par les tests du kit, d'où le volume.
 
 ## 4. Décisions
 
-(aucune encore)
+- **2026-10-09 — `afterEach` dans chaque fichier (point 5)** : on reprend
+  dans les deux fichiers le mécanisme des tests du kit (liste des dossiers
+  du test, suppression après un test réussi, dossiers gardés et affichés
+  en cas d'échec, suppression qui réessaie et signale sans faire échouer).
+  Pas de module partagé : aucun fichier de plus livré dans le gabarit.
+- **2026-10-09 — Branche empilée** : `chantier/tests-nettoyer-tmp` part de
+  `chantier/gouvernance-attente-active` (PR #1, non fusionnée), où vivent
+  cette fiche et la version actuelle des deux tests ; à rebaser sur
+  `master` après la fusion.
+- **2026-10-09 — Pas de nettoyage au démarrage des tests** : écarté. Après
+  le Lot 1, seuls un échec (dossiers gardés exprès), un plantage ou une
+  interruption laissent des dossiers, en petit nombre. Un balayage de
+  `/tmp/drwil-*` au démarrage pourrait supprimer les dossiers d'un autre
+  fichier de test lancé en parallèle par `node --test` (ou d'un autre
+  clone), détruirait le diagnostic d'un échec, et ajouterait du code au
+  gabarit pour un gain marginal. À reconsidérer seulement si des dossiers
+  s'accumulent de nouveau.
 
 ## Contrats concernés
 
@@ -53,8 +69,8 @@ chaque projet généré par les tests du kit, d'où le volume.
 
 ## 5. Points à trancher
 
-- [décision] Nettoyage par `after()` / `afterEach()` dans chaque fichier de
-  test, ou petite fonction partagée de création de dépôt temporaire ?
+- ~~Nettoyage par `afterEach()` ou fonction partagée~~ — tranché le
+  2026-10-09 (voir « Décisions »).
 
 ## 6. Lots
 
@@ -66,7 +82,13 @@ chaque projet généré par les tests du kit, d'où le volume.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-09) : fiche ouverte, rien de réalisé.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher le point 5, puis ouvrir une
-  attente sur cette fiche.
+- **Dernier état** (2026-10-09) : Lot 1 réalisé. `afterEach` dans
+  `.githooks/etat.test.mjs` et `.githooks/perimetre.test.mjs` (et leurs
+  copies du gabarit), sur le modèle des tests du kit. Mesuré : un passage
+  complet de `node .githooks/run-checks.mjs` laisse 0 dossier dans `/tmp`
+  (environ 2 100 avant). Non testé : la conservation des dossiers d'un
+  test en échec (même code que les tests du kit).
+- **Travail non commité** : aucun après le commit du Lot 1.
+- **Prochaine étape** : [humain] relire et fusionner la PR ; [IA] la
+  rebaser sur `master` après la fusion de la PR gouvernance. Attente close
+  le 2026-10-09 (verify `GOVERNANCE: PASS`).
