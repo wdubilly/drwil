@@ -38,6 +38,8 @@ fichiers:
   - .githooks/contrats.mjs
   - .githooks/check-control-coverage.mjs
   - .drwil/ia-first.json
+  - README.md
+  - packages/drwil/README.md
 -->
 
 (cadrage du Lot 1 : lecteur d'état dans `.githooks/` — utilisable par le
@@ -729,6 +731,16 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
 - **2026-10-09 — Sévérité de la barrière** : réglage `barriere`
   (`off` / `avertissement` / `bloquant`) ; `drwil init` écrit
   `avertissement`, ce dépôt est en `bloquant`.
+- **2026-10-09 — Retrait propre (point 10)**. Désactiver : `barriere: off`
+  coupe toute la gouvernance — ni barrière, ni trailer `Drwil-Attente`, ni
+  contexte d'activité réinjecté (seulement « gouvernance désactivée ») ; un
+  seul réglage, réversible, rien n'est supprimé. Désinstaller : `drwil
+  uninstall` liste `.drwil/state.json` (si présent) avec les fichiers
+  retirés et ne le supprime qu'avec `--yes` (état local, relu par rien
+  d'autre ; jamais de suppression silencieuse). La règle `deny`
+  `Bash(*.drwil/state.json*)`, qui bloque aussi les lectures shell, est
+  gardée : la lecture passe par `node .githooks/etat.mjs` ; limite
+  documentée. Cadrage du Lot 6 élargi aux deux README (doc de `uninstall`).
 - **2026-10-09 — Attestations hors périmètre (révise le point 6)**. Les
   attestations humaines (`.drwil/evidence/attestations/*`) passent toujours,
   comme les fiches : `drwil attest` les garde déjà (terminal requis,
@@ -797,7 +809,7 @@ Les décisions suivantes doivent être explicitées avant leur implémentation l
 9. **État runtime** — tranché le 2026-10-09 (voir « Décisions »)
    Quelles informations doivent rester exclusivement dans `state.json` (à créer) et quelles informations doivent rester dans les attentes/contrats versionnés ?
 
-10. **Réversibilité**
+10. **Réversibilité** — tranché le 2026-10-09 (voir « Décisions »)
     Comment supprimer la gouvernance proprement sans laisser de hook ou de configuration active ?
 
 11. **Démarrage sans état** — tranché le 2026-10-09 (voir « Décisions »)
@@ -901,7 +913,8 @@ Et plus fondamentalement :
   `drwil verify --evidence`, introuvable sans installation globale ; donner
   la forme complète (`npx drwil …`, ou `node packages/drwil/bin/drwil.js …`
   dans le dépôt drwil).
-- **Travail non commité** : cette mise à jour de la fiche.
+- **Travail non commité** : aucun. Lot 6 en cours : attente rouverte,
+  activité `DEMANDE` ; point 10 tranché, cadrage élargi aux README.
 - **Prochaine étape** : [Humain + IA] Lot 6 — documentation et réversibilité
   (point 10 : retrait propre de la gouvernance). Rouvrir une attente sur
   cette fiche : `node .githooks/etat.mjs passer ATTENTE --fiche
