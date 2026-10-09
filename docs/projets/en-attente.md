@@ -23,6 +23,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [IA] [P1] Gouvernance — Machine d'état et double barrière : état
   runtime `.drwil/state.json` (à créer), barrière comportementale + mécanique —
   `docs/projets/gouvernance-attente-active.md`.
+- [ ] [décision] [P2] Les tests des hooks laissent leurs dossiers dans `/tmp`
+  (inodes épuisés le 2026-10-09) : choisir la forme du nettoyage —
+  `docs/projets/tests-nettoyer-tmp.md`.
 - [ ] [humain] [P1] Intégration agent de `drwil verify` (`/drwil verify`,
   `verify --agent`) livrée sur `chantier/integration-agent` : à relire, et
   essai d'attestation humaine à faire —
