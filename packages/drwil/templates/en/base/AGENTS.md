@@ -39,6 +39,11 @@ Full map and stack: `docs/architecture.md`.
 - **Proof before claim**: before writing "fixed", "passes" or "done",
   rerun the relevant check and read its output; without a read output, say
   "not verified".
+- **Governance state (any agent)**: first action of every task, run
+  `node .githooks/etat.mjs` and follow its activity, expectation and scope;
+  run it again when in doubt, never infer it from the conversation. Never
+  edit `.drwil/state.json` (if present) yourself: changing activity is a
+  human decision.
 - **Cause before fix**: facing a bug or a red test, reproduce then
   establish the root cause before changing code; no trial fix, no bypassing
   a check (test, hook, CI) to make it pass (QUA-019): if it seems

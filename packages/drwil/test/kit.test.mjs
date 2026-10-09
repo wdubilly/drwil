@@ -389,6 +389,23 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
   assert.match(reglages, /"PreToolUse"[\s\S]*"Edit\|Write\|MultiEdit"[\s\S]*rappel-cadrage\.mjs[\s\S]*"PostToolUse"/);
 });
 
+test("état de gouvernance : lecteur livré, state.json ignoré par Git, contexte réinjecté au démarrage de Claude", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+
+  assert.match(read(dir, ".gitignore"), /^\.drwil\/state\.json$/m);
+  assert.match(read(dir, ".claude/settings.json"), /"SessionStart"[\s\S]*\.githooks\/etat\.mjs/);
+  // Sans state.json : CADRAGE neutre, jamais d'état actif déduit.
+  const neutre = spawnSync(process.execPath, [".githooks/etat.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(neutre.status, 0);
+  assert.match(neutre.stdout, /Activité : CADRAGE/);
+  // Un état invalide est signalé, sans faire échouer le démarrage de session.
+  writeFileSync(join(dir, ".drwil/state.json"), "{ cassé");
+  const invalide = spawnSync(process.execPath, [".githooks/etat.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(invalide.status, 0);
+  assert.match(invalide.stdout, /État invalide/);
+});
+
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {
   const dir = tmp();
   mkdirSync(join(dir, "api")); mkdirSync(join(dir, "web"));

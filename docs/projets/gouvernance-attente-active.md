@@ -21,6 +21,8 @@ fichiers:
   - packages/drwil/templates/en/base/docs/ia-first.md
   - docs/ia-first.md
   - packages/drwil/test/kit.test.mjs
+  - packages/drwil/templates/fr/base/docs/projets/mecanique-ia-first.md
+  - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
 -->
 
 (cadrage du Lot 1 : lecteur d'état dans `.githooks/` — utilisable par le
@@ -652,6 +654,14 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
   Limite connue : `--no-verify` reste possible en local et la CI ne peut pas
   rejouer le contrôle d'activité (`state.json` (à créer) non versionné) — seul
   le contrôle de périmètre est rejouable en CI.
+- **2026-10-09 — Agnostique de l'agent** : l'état et sa commande de lecture
+  (`node .githooks/etat.mjs`) ne dépendent d'aucun outil. Le canal universel
+  est `AGENTS.md` (première action de toute tâche : lancer la commande) ; un
+  hook de démarrage propre à un outil (Claude Code : SessionStart) n'est
+  qu'un accélérateur. La garantie reste dans Git (barrière du Lot 3).
+- **2026-10-09 — Dogfood non bloqué** : ce clone travaille le chantier avec
+  un `state.json` (si présent) local en `REALISATION` sur cette fiche, écrit à
+  la main à la demande du demandeur en attendant la commande du Lot 2.
 
 ## Contrats concernés
 
@@ -778,9 +788,18 @@ Et plus fondamentalement :
 
 ## Reprise
 
-- **Dernier état** (2026-10-09) : fiche cadrée ; points 1, 2, 9 et 11
-  tranchés (voir « Décisions ») ; aucun lot démarré, aucun code écrit.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] Lot 1 — ajouter à la fiche le bloc `cadrage` des
-  fichiers touchés, puis définir le schéma de `state.json` (à créer) et son
-  lecteur. Restent ouverts : points 3 à 8 et 10.
+- **Dernier état** (2026-10-09) : Lot 1 réalisé, à relire. Lecteur
+  `.githooks/etat.mjs` (schéma v1, activités, transitions, validation,
+  contexte fr/en) et ses 12 tests ; hook `SessionStart` de Claude ;
+  `.drwil/state.json` (si présent) ignoré par Git ; consignes `AGENTS.md` et
+  section « État de gouvernance » de `docs/ia-first.md`, côté dépôt et
+  gabarit ; test du kit. Les fiches mécanique du gabarit couvrent les deux
+  nouveaux hooks. `run-checks` vert ; `drwil verify --agent` :
+  MANUAL REVIEW REQUIRED (contrats à attester par un humain).
+- **Limites du Lot 1** : la lecture de l'état par un agent autre que Claude
+  Code repose sur la consigne d'`AGENTS.md` (barrière comportementale) ; seul
+  Claude Code la reçoit automatiquement. L'état n'est encore
+  écrit par aucune commande (Lot 2) et ne bloque rien (Lot 3).
+- **Travail non commité** : tout le Lot 1.
+- **Prochaine étape** : [humain] relire et commiter le Lot 1 ; puis [IA]
+  Lot 2 — commande de transition. Restent ouverts : points 3 à 8 et 10.

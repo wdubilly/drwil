@@ -39,6 +39,11 @@ Carte complète et stack : `docs/architecture.md`.
 - **Preuve avant annonce** : avant d'écrire « corrigé », « passe » ou
   « terminé », relancer le contrôle concerné et lire sa sortie ; sans sortie
   lue, dire « non vérifié ».
+- **État de gouvernance (tout agent)** : première action de toute tâche,
+  lancer `node .githooks/etat.mjs` et suivre son activité, son attente et son
+  périmètre ; le relancer en cas de doute, jamais le déduire de la
+  conversation. Ne jamais modifier `.drwil/state.json` (si présent) soi-même :
+  changer d'activité est une décision humaine.
 - **Cause avant correctif** : face à un bug ou un test rouge, reproduire puis
   établir la cause racine avant de modifier le code ; pas de correctif à
   l'essai, pas de contournement d'un contrôle (test, hook, CI) pour le

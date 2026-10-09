@@ -316,3 +316,30 @@ fichiers que ce chantier touche.
 
 La grammaire du bloc (`.githooks/cadrage.mjs`) est partagée par le contrôle et
 le rappel : une seule source.
+
+### État de gouvernance
+
+L'activité courante (`CADRAGE`, `ATTENTE`, `DEMANDE`, `REALISATION`,
+`PREUVES`, `VERIFY`, `CLOTURE`) et l'attente active vivent dans
+`.drwil/state.json` (si présent) : un état **local**, ignoré par Git, qui ne contient que
+des références (activité, chemin de la fiche active, demande active,
+horodatage). Le périmètre autorisé reste le bloc `cadrage` de la fiche,
+versionné.
+
+- **Lecture déterministe** (`.githooks/etat.mjs`, seul lecteur) :
+  `node .githooks/etat.mjs` affiche le contexte actif, `--json` l'état brut.
+  Sans fichier, l'état est `CADRAGE` neutre ; un état invalide est signalé
+  et traité comme neutre, jamais deviné.
+- **Agnostique de l'agent** : la source (`state.json`, si présent) et la commande
+  (`node .githooks/etat.mjs`) ne dépendent d'aucun outil. Le canal universel
+  est `AGENTS.md`, qui demande à tout agent de lancer la commande en début de
+  tâche. Un outil qui offre un hook de démarrage peut brancher la même
+  commande pour réinjecter le contexte automatiquement — c'est le cas de
+  Claude Code (hook SessionStart, si présent) ; ce n'est qu'un accélérateur.
+- **Reprise par une autre personne** : l'état d'un clone ne voyage pas ; on
+  reprend depuis la fiche versionnée (section « Reprise ») et on réactive
+  l'attente explicitement.
+- **Transitions** : une activité à la fois, retour à `REALISATION` après
+  `PREUVES` ou `VERIFY` en échec, abandon vers `CADRAGE` depuis toute
+  activité. Pas encore de commande de transition ni de refus au commit :
+  l'état informe l'agent, il ne bloque rien à ce stade.

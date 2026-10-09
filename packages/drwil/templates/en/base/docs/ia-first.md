@@ -308,3 +308,29 @@ the files this project touches.
 
 The block's grammar (`.githooks/cadrage.mjs`) is shared by the check and
 the reminder: a single source.
+
+### Governance state
+
+The current activity (`CADRAGE`, `ATTENTE`, `DEMANDE`, `REALISATION`,
+`PREUVES`, `VERIFY`, `CLOTURE`) and the active expectation live in
+`.drwil/state.json` (if present): a **local** state, ignored by Git, holding references
+only (activity, path of the active sheet, active request, timestamp). The
+allowed scope stays the sheet's `cadrage` block, which is versioned.
+
+- **Deterministic reading** (`.githooks/etat.mjs`, the only reader):
+  `node .githooks/etat.mjs` prints the active context, `--json` the raw
+  state. Without a file, the state is neutral `CADRAGE`; an invalid state is
+  reported and treated as neutral, never guessed.
+- **Agent-agnostic**: the source (`state.json`, if present) and the command
+  (`node .githooks/etat.mjs`) depend on no tool. The universal channel is
+  `AGENTS.md`, which asks every agent to run the command at the start of a
+  task. A tool offering a session-start hook can wire the same command to
+  re-inject the context automatically — Claude Code does (SessionStart hook,
+  if present); it is only an accelerator.
+- **Hand-off to someone else**: a clone's state does not travel; resume from
+  the versioned sheet ("Hand-off" section) and re-activate the expectation
+  explicitly.
+- **Transitions**: one activity at a time, back to `REALISATION` after
+  `PREUVES` or a failed `VERIFY`, abandon to `CADRAGE` from any activity. No
+  transition command nor commit refusal yet: the state informs the agent, it
+  blocks nothing at this stage.
