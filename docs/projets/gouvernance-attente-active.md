@@ -598,6 +598,36 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
   éléments versionnés (attente, fiche et sa section « Reprise », QUA-015), puis
   par une réactivation explicite de l'attente — jamais par la reprise de l'état
   d'un autre clone.
+- **2026-10-09 — Attente = fiche existante (point 1)** : l'attente active est une
+  fiche de `docs/projets/` (ou l'un de ses lots) ; pas de nouveau format
+  `ATT-XXX`. Ses contrats sont ceux de sa section « Contrats concernés ».
+- **2026-10-09 — Transitions linéaires avec retours (point 2)** : on avance d'une
+  activité à la fois, sans saut en avant ; retour à `REALISATION` depuis
+  `PREUVES` ou `VERIFY` en échec ; abandon vers `CADRAGE` possible depuis toute
+  activité, tracé.
+- **2026-10-09 — Périmètre dans la fiche versionnée (point 9)** : le périmètre
+  autorisé est le bloc `cadrage` de la fiche active. `state.json` (à créer) ne
+  contient que des références : activité, attente active (chemin de la fiche),
+  demande active, horodatage. L'exemple `perimetre_actif` des sections 4 et 6
+  est donc caduc.
+- **2026-10-09 — Démarrage sans état = `CADRAGE` neutre (point 11)** : sans
+  `state.json` (à créer), l'activité est `CADRAGE` et aucune attente n'est
+  active ; une modification de code est alors hors attente. Aucun état actif
+  n'est jamais créé implicitement.
+- **2026-10-09 — Dépôt et gabarit (QUA-018)** : le chantier vise les deux.
+  Les hooks partagés sont écrits dans `packages/drwil/templates/common/base/.githooks/`
+  et recopiés à l'identique dans `.githooks/` (dogfood) ; les transitions
+  passent par la CLI (`packages/drwil/src/`) ; `AGENTS.md`, `docs/` et
+  `.gitignore` sont mis à jour des deux côtés.
+- **2026-10-09 — Sévérité réglable, sur le modèle de QUA-016** : la barrière est
+  dans `base` avec un réglage `off` / `avertissement` / `bloquant` dans
+  `.drwil/ia-first.json`. `bloquant` pour ce dépôt, `avertissement` par défaut
+  dans le gabarit ; le retrait propre (Lot 6) passe par `off`. Raison : une
+  barrière bloquante dès l'installation refuserait tout commit de code hors
+  attente active, y compris l'entretien courant et les commits humains.
+  Limite connue : `--no-verify` reste possible en local et la CI ne peut pas
+  rejouer le contrôle d'activité (`state.json` (à créer) non versionné) — seul
+  le contrôle de périmètre est rejouable en CI.
 
 ## Contrats concernés
 
@@ -607,6 +637,7 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
   une source de vérité ; la reprise se fait depuis le disque.
 - **QUA-016** — Rappel de cadrage : le périmètre de l'attente prolonge le
   cadrage par fiche (Lot 3).
+- **QUA-018** — Périmètre explicite dépôt / gabarit : le chantier vise les deux.
 - **QUA-019** — Pas de contournement d'un contrôle : aucune procédure de
   contournement silencieux de la barrière mécanique.
 
@@ -614,10 +645,10 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
 
 Les décisions suivantes doivent être explicitées avant leur implémentation lorsqu’elles ne sont pas déjà couvertes par les règles DRWIL existantes :
 
-1. **Relation Attente / Contrat**
+1. **Relation Attente / Contrat** — tranché le 2026-10-09 (voir « Décisions »)
    Une attente référence-t-elle directement un ou plusieurs contrats existants ?
 
-2. **Machine d’état**
+2. **Machine d’état** — tranché le 2026-10-09 (voir « Décisions »)
    Quelles transitions entre activités sont autorisées ?
 
 3. **Activation**
@@ -638,13 +669,13 @@ Les décisions suivantes doivent être explicitées avant leur implémentation l
 8. **Échec de contrôle**
    Quel est le comportement lorsque VERIFY retourne `FAIL`, `ERROR`, `MANUAL` ou `ATTESTED` ?
 
-9. **État runtime**
+9. **État runtime** — tranché le 2026-10-09 (voir « Décisions »)
    Quelles informations doivent rester exclusivement dans `state.json` (à créer) et quelles informations doivent rester dans les attentes/contrats versionnés ?
 
 10. **Réversibilité**
     Comment supprimer la gouvernance proprement sans laisser de hook ou de configuration active ?
 
-11. **Démarrage sans état**
+11. **Démarrage sans état** — tranché le 2026-10-09 (voir « Décisions »)
     Sur un clone neuf (aucun `state.json` (à créer)), DRWIL démarre-t-il en `CADRAGE` avec `attente_active = null` ? Le principe « au démarrage, DRWIL reprend toujours l'état persistant » doit préciser ce cas.
 
 ---
@@ -723,8 +754,9 @@ Et plus fondamentalement :
 
 ## Reprise
 
-- **Dernier état** (2026-10-09) : fiche cadrée et versionnée ; aucun lot
-  démarré, aucun code écrit. Décidé : `state.json` (à créer) reste local.
+- **Dernier état** (2026-10-09) : fiche cadrée ; points 1, 2, 9 et 11
+  tranchés (voir « Décisions ») ; aucun lot démarré, aucun code écrit.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher les points 1 (attente / contrat),
-  2 (transitions), 9 (état runtime) et 11 (démarrage sans état) avant le Lot 1.
+- **Prochaine étape** : [IA] Lot 1 — ajouter à la fiche le bloc `cadrage` des
+  fichiers touchés, puis définir le schéma de `state.json` (à créer) et son
+  lecteur. Restent ouverts : points 3 à 8 et 10.
