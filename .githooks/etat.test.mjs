@@ -8,7 +8,7 @@ import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, prepar
 
 // Chaque dossier temporaire est supprimé après son test : ces tests tournent à chaque commit,
 // et aussi dans chaque projet que génèrent les tests du kit ; sans ça, ils épuisaient les
-// inodes de /tmp (docs/projets/tests-nettoyer-tmp.md). Ceux d'un test en échec sont gardés
+// inodes de /tmp. Ceux d'un test en échec sont gardés
 // (et affichés) pour le diagnostic.
 let dossiersDuTest = [];
 const tmp = (prefixe) => {

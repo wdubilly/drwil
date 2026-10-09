@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// État de gouvernance runtime : .drwil/state.json (docs/projets/gouvernance-attente-active.md).
+// État de gouvernance runtime : .drwil/state.json (docs/ia-first.md, « État de gouvernance »).
 //
 // Seul lecteur et seul écrivain de l'état : le contexte réinjecté à l'agent
 // (`node .githooks/etat.mjs`, hook SessionStart de Claude), les transitions
