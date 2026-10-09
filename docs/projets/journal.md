@@ -13,6 +13,10 @@ recette `docs/recettes/travailler-en-branche.md`, section « Clôturer ».
 
 Une entrée par chantier clôturé, la plus récente en dernier.
 
+Les numéros de PR cités avant le 2026-10-09 renvoient au dépôt privé
+archivé `wdubilly/drwil-archive` : le dépôt public, ouvert ce jour-là après
+réécriture de l'adresse e-mail des commits, recommence à la PR #1.
+
 ## 2026-10-04 — Vérifier la cohérence entre case de l'index et statut de la fiche
 
 - **Décisions clés** : avertissement non bloquant (QUA-015) quand une
@@ -179,3 +183,40 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   tarball (`drwil-0.3.0.tgz`) et `--version` identiques.
 - **Clôturé par** : PR #45 (`1191946`) et #47 (`347a75e`), release `v0.3.0`.
 
+## 2026-10-09 — Gouvernance : machine d'état et double barrière
+
+- **Décisions clés** : état de gouvernance local `.drwil/state.json` (si
+  présent), ignoré par Git, ne contenant que des références (activité,
+  fiche active, demande) ; l'attente active est une fiche existante, son
+  périmètre est son bloc `cadrage`. Transitions linéaires avec retours
+  (`node .githooks/etat.mjs passer …`) ; ouvrir une attente, lancer la
+  réalisation et clore sont humains par défaut (terminal interactif ;
+  réglage `transitions`). Barrière au commit : hors fiches et attestations,
+  un commit n'est accepté qu'en `REALISATION` et dans le cadrage lu dans
+  `HEAD` (élargir = commit séparé) ; trailer `Drwil-Attente` rejoué au
+  push, en CI et par `drwil verify`. Clôture sur l'évidence de `drwil
+  verify --evidence` (PASS ou ATTESTED, sur `HEAD`, arbre propre).
+  Sévérité `barriere` : `bloquant` ici, `avertissement` à l'installation,
+  `off` coupe toute la gouvernance ; `drwil uninstall` liste l'état local
+  et ne le supprime qu'avec `--yes`. [décisions utilisateur]
+- **Garantie visée** : triche détectable et refusée hors du poste, pas
+  impossible (un agent qui a le shell peut toujours réécrire l'état local).
+- **Limites** : la CI ne rejoue que le périmètre (l'activité est locale) ;
+  le préfixe `!` de Claude Code ne fournit pas de terminal interactif.
+- **Suites en attente** : citations de fichiers ignorés par Git, voie
+  légère pour les petites corrections sous barrière bloquante, vue de
+  relecture.
+- **Clôturé par** : PR #1 (`9ea50f5`) et la PR de clôture qui retire cette
+  fiche.
+
+## 2026-10-09 — Les tests des hooks nettoient leurs dossiers temporaires
+
+- **Décisions clés** : `afterEach` dans `.githooks/etat.test.mjs` et
+  `.githooks/perimetre.test.mjs`, sur le modèle des tests du kit (dossiers
+  supprimés après un test réussi, gardés et affichés en cas d'échec) ;
+  nettoyage au démarrage des tests écarté (risque avec les fichiers de
+  test lancés en parallèle, perte du diagnostic). [décisions utilisateur]
+- **Résultat** : un passage complet des contrôles laisse 0 dossier dans
+  `/tmp` (environ 2 100 avant ; 40 061 accumulés, inodes épuisés le
+  2026-10-09).
+- **Clôturé par** : PR #3 (`dce7464`).
