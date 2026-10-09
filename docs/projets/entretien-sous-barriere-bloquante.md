@@ -1,6 +1,6 @@
 # Projet : petite correction sous barrière bloquante
 
-**Statut** : ouvert le 2026-10-09 — en attente de décision.
+**Statut** : ouvert le 2026-10-09 — principe tranché, modalités à définir.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -34,7 +34,9 @@ transition humaine.
 
 ## 4. Décisions
 
-(aucune encore)
+- **2026-10-09 — Une voie légère, sur le principe** : oui. Tranché par le
+  demandeur à l'issue du correctif CI du même jour (une ligne de README,
+  trois transitions humaines). Modalités à définir (point 5).
 
 ## Contrats concernés
 
@@ -45,8 +47,9 @@ transition humaine.
 
 ## 5. Points à trancher
 
-- [décision] Faut-il une voie légère ? Si oui : quel périmètre (doc
-  seulement ?), quelle transition humaine unique, quelle clôture ?
+- ~~Faut-il une voie légère ?~~ — oui, tranché le 2026-10-09.
+- [décision] Modalités : quel périmètre (doc seulement ?), quelle
+  transition humaine unique, quelle clôture ?
 
 ## 6. Lots
 
@@ -56,4 +59,4 @@ transition humaine.
 
 - **Dernier état** (2026-10-09) : fiche ouverte, rien de réalisé.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher le point 5.
+- **Prochaine étape** : [décision] définir les modalités (point 5).
