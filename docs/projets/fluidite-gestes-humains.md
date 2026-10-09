@@ -113,8 +113,29 @@ l'humain : **lancer** (depuis le chat) et **fusionner**.
 ## 7. Reprise
 
 - **Dernier état** (2026-10-10) : fiche cadrée, décisions A, B et C prises ;
-  rien de réalisé.
-- **Travail non commité** : aucun après le commit de cette fiche.
-- **Prochaine étape** : [décision] trancher les points 5 ; puis [humain]
-  ouvrir l'attente et lancer la réalisation par l'ancien parcours (dernier
-  usage), et [IA] Lot 1.
+  rien de réalisé. Pistes discutées pour « lancer » dans le chat : commande
+  slash `/drwil-lancer` (sans argument : liste numérotée des fiches
+  cadrées), puis peut-être un sondage dont la réponse est lue par un hook
+  `PostToolUse` (à vérifier : le modèle ne doit pas pouvoir pré-remplir la
+  réponse). Principe agnostique retenu : cœur dans `.githooks/etat.mjs`,
+  adaptateur dans le chat seulement pour un outil qui passe le test témoin,
+  repli au terminal pour les autres ; aucun outil privilégié a priori.
+- **Test témoin** (2026-10-10, dépôt jetable hors du projet) : une commande
+  « drwil-temoin-cmd » du dossier des commandes de Claude Code
+  (`disable-model-invocation: true`)
+  contenant une ligne `` !`date … | tee -a temoin-cmd.txt` ``.
+  - Copilot CLI v1.0.91 lit les dossiers de skills et de commandes de Claude Code, mais
+    transmet la commande au modèle, qui l'exécute lui-même par un appel
+    Shell et la réécrit : pas de garantie, repli au terminal.
+  - Claude Code v2.1.296 exécute la ligne lui-même, sans appel d'outil du
+    modèle : garantie probable.
+  - Restent à faire dans Claude Code : le skill
+    « drwil-temoin » (même ligne) et le test de
+    triche (demander au modèle d'invoquer lui-même la commande ; aucune
+    nouvelle ligne ne doit s'écrire sans appel Bash visible).
+- **Points 5** : remplacés par le choix de la forme (commande slash ou
+  sondage), à trancher après le test témoin.
+- **Travail non commité** : aucun après le commit de cette reprise.
+- **Prochaine étape** : [humain] finir le test témoin dans Claude Code ;
+  [décision] choisir la forme ; puis ouvrir l'attente et lancer la
+  réalisation par l'ancien parcours (dernier usage) ; [IA] Lot 1.
