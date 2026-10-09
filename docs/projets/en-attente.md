@@ -64,6 +64,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [décision] [P1] Bench avec / sans drwil : même consigne, même projet,
   pour mesurer l'apport en qualité de livrable et en consommation de
   tokens — `docs/intentions/bench-avec-sans-drwil.md`.
+- [ ] [décision] [P1] Fluidité sans perte de rigueur : moins de gestes
+  humains, mieux placés (lancer, fusionner), décision dans le chat non
+  simulable, regroupements — `docs/intentions/fluidite-sans-perte-de-rigueur.md`.
 - [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
