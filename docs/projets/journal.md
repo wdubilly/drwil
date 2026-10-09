@@ -185,8 +185,8 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
 
 ## 2026-10-09 — Gouvernance : machine d'état et double barrière
 
-- **Décisions clés** : état de gouvernance local `.drwil/state.json` (si
-  présent), ignoré par Git, ne contenant que des références (activité,
+- **Décisions clés** : état de gouvernance local, ignoré par Git,
+  `.drwil/state.json` (si présent), ne contenant que des références (activité,
   fiche active, demande) ; l'attente active est une fiche existante, son
   périmètre est son bloc `cadrage`. Transitions linéaires avec retours
   (`node .githooks/etat.mjs passer …`) ; ouvrir une attente, lancer la
