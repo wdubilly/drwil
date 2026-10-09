@@ -882,21 +882,28 @@ Et plus fondamentalement :
 
 ## Reprise
 
-- **Dernier état** (2026-10-09) : Lots 1 à 4 commités. Lot 4 : `preuveVerify` dans `.githooks/etat.mjs` — `VERIFY → CLOTURE`
-  refusé sans dernière évidence `drwil verify --evidence` au verdict `pass`
-  ou `attested`, sur `HEAD`, arbre propre (aussi en mode agent) ; messages
-  par verdict (FAIL/ERROR → REALISATION, MANUAL → `drwil attest`) ; règle
-  de l'activité VERIFY réinjectée à l'agent ; doc « Clôture sur la preuve
-  de `drwil verify` » (fr/en) ; 7 tests.
+- **Dernier état** (2026-10-09) : Lots 1 à 4 commités ; Lot 5 réalisé par
+  un cycle de test réel sur cette fiche : `REALISATION → PREUVES → VERIFY →
+  CLOTURE → CADRAGE`. Constaté : commit de code refusé en `PREUVES` ;
+  fichiers hors cadrage refusés au commit (les attestations, ce qui a mené
+  à la révision du point 6) ; contrôles existants verts ; `drwil verify
+  --evidence` à `GOVERNANCE: PASS` accepté pour clore, clôture refusée à
+  l'agent sans terminal puis faite par le demandeur ; retour au neutre ;
+  l'état local ignoré par Git. Seul le cycle de test est clos : la fiche
+  reste ouverte pour le Lot 6.
 - **Limites** : un agent autre que Claude Code ne lit l'état que s'il suit
   la consigne d'`AGENTS.md` ; messages de transition et de validation d'état
   en français seulement ; la CI ne contrôle que le périmètre (l'activité est
   locale) ; sur la branche principale elle-même, il n'y a rien à rejouer ;
   l'évidence de verify est hors git, donc falsifiable en local ; tout
   fichier non suivi et non ignoré empêche de clore.
-- **Travail non commité** : aucun. Attestations humaines du 2026-10-09
-  (SEC-001, QUA-013, SEC-006, QUA-018, QUA-019) commitées après la
-  révision du point 6 (attestations hors périmètre) : `drwil verify` donne
-  `GOVERNANCE: PASS`.
-- **Prochaine étape** : [Humain + IA] Lot 5 — cycle complet sur un cas
-  réel. Reste ouvert : point 10 (retrait propre de la gouvernance, Lot 6).
+- **Écart à corriger (Lot 6)** : les messages de `.githooks/etat.mjs` citent
+  `drwil verify --evidence`, introuvable sans installation globale ; donner
+  la forme complète (`npx drwil …`, ou `node packages/drwil/bin/drwil.js …`
+  dans le dépôt drwil).
+- **Travail non commité** : cette mise à jour de la fiche.
+- **Prochaine étape** : [Humain + IA] Lot 6 — documentation et réversibilité
+  (point 10 : retrait propre de la gouvernance). Rouvrir une attente sur
+  cette fiche : `node .githooks/etat.mjs passer ATTENTE --fiche
+  docs/projets/gouvernance-attente-active.md` (décision humaine), puis
+  `DEMANDE` et `REALISATION`.
