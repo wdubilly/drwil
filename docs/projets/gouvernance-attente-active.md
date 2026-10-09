@@ -909,14 +909,17 @@ Et plus fondamentalement :
   locale) ; sur la branche principale elle-même, il n'y a rien à rejouer ;
   l'évidence de verify est hors git, donc falsifiable en local ; tout
   fichier non suivi et non ignoré empêche de clore.
-- **Écart à corriger (Lot 6)** : les messages de `.githooks/etat.mjs` citent
-  `drwil verify --evidence`, introuvable sans installation globale ; donner
-  la forme complète (`npx drwil …`, ou `node packages/drwil/bin/drwil.js …`
-  dans le dépôt drwil).
-- **Travail non commité** : aucun. Lot 6 en cours : attente rouverte,
-  activité `DEMANDE` ; point 10 tranché, cadrage élargi aux README.
-- **Prochaine étape** : [Humain + IA] Lot 6 — documentation et réversibilité
-  (point 10 : retrait propre de la gouvernance). Rouvrir une attente sur
-  cette fiche : `node .githooks/etat.mjs passer ATTENTE --fiche
-  docs/projets/gouvernance-attente-active.md` (décision humaine), puis
-  `DEMANDE` et `REALISATION`.
+- **Lot 6 réalisé** (2026-10-09) : `barriere: off` coupe aussi le trailer
+  et réduit le contexte à « gouvernance désactivée » ; `drwil uninstall`
+  liste l'état local et ne le supprime qu'avec `--yes` ; messages de
+  `.githooks/etat.mjs` avec la commande complète `npx drwil …` ; doc
+  « Désactiver ou retirer la gouvernance » (fr/en) et les deux README ;
+  4 tests.
+- **Écart signalé (hors périmètre)** : les tests créent des dossiers
+  `/tmp/drwil-*` sans les supprimer (environ 2 100 par passage complet) ;
+  au fil des passages, `/tmp` a manqué d'inodes (40 000 dossiers, nettoyés
+  le 2026-10-09). Mis en attente : `docs/projets/tests-nettoyer-tmp.md`.
+- **Travail non commité** : Lot 6 (code, tests, doc, cette fiche).
+- **Prochaine étape** : commit du Lot 6, puis `PREUVES → VERIFY` (agent),
+  `CLOTURE` (humain) et clôture du chantier : statut de la fiche et case de
+  `docs/projets/en-attente.md`.

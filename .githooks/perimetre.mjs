@@ -14,7 +14,7 @@
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { fnmatch, lireBloc, normaliser } from "./cadrage.mjs";
-import { lireEtat } from "./etat.mjs";
+import { gouvernanceDesactivee, lireEtat } from "./etat.mjs";
 
 // Les attestations passent comme les fiches : preuve humaine déjà gardée par
 // `drwil attest` (terminal requis, empreinte du contrat), relue en revue ; les
@@ -129,8 +129,9 @@ export function controlerPerimetre(racine, { cfg = {}, indexes = null, env = pro
   return { statut: "ok", problemes };
 }
 
-/** Ajoute `Drwil-Attente: <fiche active>` au message (hook prepare-commit-msg) ; rien sans attente. */
+/** Ajoute `Drwil-Attente: <fiche active>` au message (hook prepare-commit-msg) ; rien sans attente ni gouvernance. */
 export function ajouterTrailer(racine, fichierMessage) {
+  if (gouvernanceDesactivee(racine)) return;
   const { etat } = lireEtat(racine);
   if (!etat.attente_active) return;
   git(racine, ["interpret-trailers", "--in-place", "--if-exists", "replace", "--trailer", `${TRAILER}: ${etat.attente_active}`, fichierMessage]);

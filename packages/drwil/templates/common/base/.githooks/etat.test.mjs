@@ -294,3 +294,18 @@ test("clôture : hors dépôt git, refusée", () => {
   writeFileSync(join(racine, ".drwil", "evidence", "verify-a.json"), JSON.stringify({ status: "pass", commit: "x", dirtyWorktree: false }));
   assert.match(preuveVerify(racine).raison, /HEAD introuvable/);
 });
+
+test("barriere: off : contexte réduit à « gouvernance désactivée », même avec un état actif", () => {
+  for (const [lang, motif] of [["fr", /Gouvernance désactivée/], ["en", /Governance disabled/]]) {
+    const racine = depot({ etat: actif("REALISATION"), config: { barriere: "off", lang } });
+    const texte = contexte(lireEtat(racine), racine);
+    assert.match(texte, motif);
+    assert.doesNotMatch(texte, /REALISATION|cadrage/);
+  }
+});
+
+test("messages : commandes drwil complètes (npx), jamais « drwil » seul", () => {
+  const { racine } = depotEnVerify();
+  assert.match(preuveVerify(racine).raison, /`npx drwil verify --evidence`/);
+  assert.match(contexte(lireEtat(racine), racine), /`npx drwil verify --evidence`/);
+});

@@ -96,7 +96,7 @@ export function exigeHumain(de, vers, mode) {
   return mode !== "agent" && HUMAINES.has(`${de}>${vers}`);
 }
 
-const RELANCER = "relancer `drwil verify --evidence`";
+const RELANCER = "relancer `npx drwil verify --evidence`";
 
 /**
  * Dernière évidence de verify (.drwil/evidence/verify-*.json, hors git) : `{ ok: true }`
@@ -108,7 +108,7 @@ export function preuveVerify(racine) {
   const dossier = join(racine, ".drwil", "evidence");
   // Horodatage ISO dans le nom : l'ordre alphabétique est l'ordre chronologique.
   const noms = existsSync(dossier) ? readdirSync(dossier).filter((n) => /^verify-.+\.json$/.test(n)).sort() : [];
-  if (!noms.length) return { ok: false, raison: `aucune évidence de verify : lancer \`drwil verify --evidence\`` };
+  if (!noms.length) return { ok: false, raison: `aucune évidence de verify : lancer \`npx drwil verify --evidence\`` };
   const nom = noms.at(-1);
   let ev;
   try {
@@ -128,7 +128,7 @@ export function preuveVerify(racine) {
   }
   if (ev.status === "pass" || ev.status === "attested") return { ok: true };
   if (ev.status === "manual") {
-    return { ok: false, raison: "verdict MANUAL : un humain atteste (`drwil attest <ID>`), puis " + RELANCER };
+    return { ok: false, raison: "verdict MANUAL : un humain atteste (`npx drwil attest <ID>`), puis " + RELANCER };
   }
   if (ev.status === "fail" || ev.status === "error") {
     return { ok: false, raison: `verdict ${ev.status.toUpperCase()} : revenir en REALISATION (\`node .githooks/etat.mjs passer REALISATION\`) pour corriger` };
@@ -191,6 +191,7 @@ const TEXTES = {
   fr: {
     entete: "[drwil] État de gouvernance, lu sur disque (.drwil/state.json) — ne pas le déduire de la conversation.",
     absent: "(.drwil/state.json absent : état neutre)",
+    desactivee: "[drwil] Gouvernance désactivée (réglage « barriere » : off dans .drwil/ia-first.json) : aucune activité ni périmètre à suivre.",
     invalide: "⚠ État invalide, traité comme CADRAGE neutre :",
     activite: (a) => `Activité : ${a}`,
     attente: (a) => `Attente active : ${a ?? "aucune attente active"}`,
@@ -205,13 +206,14 @@ const TEXTES = {
       DEMANDE: "expliciter la demande de réalisation ; ne modifier encore aucun fichier de code.",
       REALISATION: "réaliser l'attente, en ne modifiant que les fichiers du périmètre ci-dessus.",
       PREUVES: "produire les preuves et lancer les contrôles ; un correctif demande de revenir en REALISATION.",
-      VERIFY: "lancer `drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en REALISATION ; MANUAL : attestation humaine (`drwil attest`), puis relancer.",
+      VERIFY: "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en REALISATION ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
       CLOTURE: "clore la fiche (statut, reprise), puis revenir en CADRAGE.",
     },
   },
   en: {
     entete: "[drwil] Governance state, read from disk (.drwil/state.json) — do not infer it from the conversation.",
     absent: "(.drwil/state.json missing: neutral state)",
+    desactivee: "[drwil] Governance disabled (\"barriere\" setting: off in .drwil/ia-first.json): no activity or scope to follow.",
     invalide: "⚠ Invalid state, treated as neutral CADRAGE:",
     activite: (a) => `Activity: ${a}`,
     attente: (a) => `Active expectation: ${a ?? "none"}`,
@@ -226,7 +228,7 @@ const TEXTES = {
       DEMANDE: "make the implementation request explicit; do not modify any code file yet.",
       REALISATION: "implement the expectation, modifying only the files in the scope above.",
       PREUVES: "produce evidence and run the checks; a fix means going back to REALISATION.",
-      VERIFY: "run `drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to REALISATION; MANUAL: human attestation (`drwil attest`), then run it again.",
+      VERIFY: "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to REALISATION; MANUAL: human attestation (`npx drwil attest`), then run it again.",
       CLOTURE: "close the fiche (status, hand-off), then go back to CADRAGE.",
     },
   },
@@ -242,9 +244,13 @@ function config(racine) {
 
 const langue = (racine) => (config(racine).lang === "en" ? "en" : "fr");
 
+/** `barriere: off` coupe toute la gouvernance (barrière, trailer, contexte) : retrait sans rien supprimer. */
+export const gouvernanceDesactivee = (racine) => config(racine).barriere === "off";
+
 /** Contexte lisible à réinjecter à l'agent, construit uniquement depuis le disque. */
 export function contexte(lu, racine) {
   const T = TEXTES[langue(racine)];
+  if (gouvernanceDesactivee(racine)) return T.desactivee;
   const { etat, source, problemes } = lu;
   const lignes = [T.entete];
   if (source === "absent") lignes.push(T.absent);

@@ -393,4 +393,26 @@ init` : les écarts sont affichés, rien n'est bloqué), `bloquant`, `off`.
   de son parent : si la barrière n'y existait pas encore, il n'est pas
   contrôlé. L'activité n'existant qu'en local, la CI ne contrôle que le
   périmètre.
-- **Retrait** : `barriere: off`.
+- **Retrait** : voir ci-dessous.
+
+### Désactiver ou retirer la gouvernance
+
+Aucune installation ne crée de verrou permanent : la gouvernance se coupe
+par un réglage, puis se retire avec le reste de la mécanique.
+
+- **Désactiver** (réversible, rien n'est supprimé) : `"barriere": "off"`
+  dans `.drwil/ia-first.json`. Plus de barrière au commit, au push ni en CI,
+  plus de trailer `Drwil-Attente`, et le contexte réinjecté à l'agent se
+  réduit à « gouvernance désactivée ». Remettre `avertissement` ou
+  `bloquant` la rétablit telle quelle.
+- **Retirer** : `npx drwil uninstall` (simulation : liste ce qui serait
+  supprimé), puis `npx drwil uninstall --yes`. Les fichiers de la mécanique
+  restés intacts sont supprimés (hooks, `.githooks/etat.mjs`, règles de
+  `.claude/settings.json` (si présent)) ; l'état local
+  `.drwil/state.json` (si présent) est listé avec eux et supprimé seulement
+  avec `--yes`. Les
+  fiches, les contrats et les attestations versionnées restent : c'est
+  l'historique du projet.
+- **Limite** : la règle `deny` de Claude Code sur l'état local
+  `.drwil/state.json` (si présent) refuse aussi toute commande shell qui cite ce chemin, même en
+  lecture ; lire l'état passe par `node .githooks/etat.mjs`.

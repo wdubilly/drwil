@@ -517,6 +517,18 @@ test("lot 2 (désinstallation) : dry-run par défaut, --yes supprime, fichier mo
   assert.ok(!(".githooks/check-docs.mjs" in manifesteApres));
 });
 
+test("lot 6 (gouvernance) : uninstall liste l'état local, ne le supprime qu'avec --yes", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  const etat = join(dir, ".drwil", "state.json");
+  writeFileSync(etat, JSON.stringify({ version: 1, activite: "CADRAGE", attente_active: null, demande_active: null, depuis: null }));
+  assert.ok((await uninstall({ targetDir: dir })).removed.includes(".drwil/state.json"));
+  assert.ok(existsSync(etat), "dry-run ne supprime pas l'état");
+  assert.ok((await uninstall({ targetDir: dir, dryRun: false })).removed.includes(".drwil/state.json"));
+  assert.ok(!existsSync(etat), "--yes supprime l'état local");
+  assert.ok(!(await uninstall({ targetDir: dir })).removed.includes(".drwil/state.json"), "absent : rien à lister");
+});
+
 test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .bak créé, --forcer fonctionnel", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, git: false }));

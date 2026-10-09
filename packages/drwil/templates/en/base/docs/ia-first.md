@@ -382,4 +382,25 @@ shown, nothing is blocked), `bloquant`, `off`.
   sheets without a trailer is refused. A commit is judged by its parent's
   rules: if the barrier did not exist there yet, it is not checked. The
   activity only exists locally, so CI only checks the scope.
-- **Removal**: `barriere: off`.
+- **Removal**: see below.
+
+### Disabling or removing governance
+
+No installation creates a permanent lock: governance is switched off by a
+setting, then removed with the rest of the mechanics.
+
+- **Disable** (reversible, nothing is deleted): `"barriere": "off"` in
+  `.drwil/ia-first.json`. No more barrier at commit, push or in CI, no more
+  `Drwil-Attente` trailer, and the context reinjected to the agent shrinks
+  to "governance disabled". Setting `avertissement` or `bloquant` back
+  restores it as it was.
+- **Remove**: `npx drwil uninstall` (dry run: lists what would be removed),
+  then `npx drwil uninstall --yes`. Mechanics files left untouched are
+  removed (hooks, `.githooks/etat.mjs`, rules of
+  `.claude/settings.json` (if present)); the local state
+  `.drwil/state.json` (if present) is listed with
+  them and deleted only with `--yes`. Sheets, contracts and versioned
+  attestations stay: they are the project's history.
+- **Limit**: Claude Code's `deny` rule on `.drwil/state.json` (if present)
+  also refuses any shell command that mentions that path, even a read;
+  reading the state goes through `node .githooks/etat.mjs`.

@@ -99,6 +99,16 @@ test("trailer : ajouté depuis l'état actif, rien en CADRAGE", () => {
   assert.equal(texte.match(/Drwil-Attente/g).length, 1, "jamais en double");
 });
 
+test("trailer : jamais ajouté quand la gouvernance est désactivée (barriere: off)", () => {
+  const racine = depot();
+  ecrireEtat(racine, "REALISATION");
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ barriere: "off" }));
+  const message = join(racine, "MSG");
+  writeFileSync(message, "Un commit\n");
+  ajouterTrailer(racine, message);
+  assert.doesNotMatch(readFileSync(message, "utf8"), /Drwil-Attente/);
+});
+
 test("branche (CI, pre-push, verify) : chaque commit rejoué contre le cadrage de son parent", () => {
   const racine = depot(["src/a.js"]);
   git(racine, "checkout", "-q", "-b", "chantier");

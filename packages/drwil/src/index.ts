@@ -362,6 +362,9 @@ export async function uninstall(opts: UninstallOptions): Promise<UninstallReport
     if (actuel !== hash) { modified.push(rel); continue; }
     removed.push(rel);
   }
+  // État de gouvernance local (gitignoré, hors manifeste) : relu par aucun autre outil une fois
+  // la mécanique retirée ; listé comme le reste, donc jamais supprimé en silence.
+  if (existsSync(join(opts.targetDir, ".drwil", "state.json"))) removed.push(".drwil/state.json");
   if (!dryRun) {
     for (const rel of removed) await rm(join(opts.targetDir, rel));
     const fusion = { ...manifest };
