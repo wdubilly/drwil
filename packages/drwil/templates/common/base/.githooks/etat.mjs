@@ -9,7 +9,10 @@
 // autorisé vit dans le bloc `cadrage` de la fiche active, versionnée.
 // Fichier absent = CADRAGE neutre ; aucun état actif n'est jamais déduit.
 // Un état invalide est ramené au neutre ET signalé : jamais masqué, jamais permissif.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+// Clore (VERIFY → CLOTURE) exige l'évidence de `drwil verify --evidence` : ce
+// fichier la lit, il n'exécute aucun contrôle (un seul moteur, ADR-003).
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
 import { lireBloc } from "./cadrage.mjs";
@@ -93,6 +96,46 @@ export function exigeHumain(de, vers, mode) {
   return mode !== "agent" && HUMAINES.has(`${de}>${vers}`);
 }
 
+const RELANCER = "relancer `drwil verify --evidence`";
+
+/**
+ * Dernière évidence de verify (.drwil/evidence/verify-*.json, hors git) : `{ ok: true }`
+ * si elle autorise la clôture, sinon `{ ok: false, raison }`. Verdict pass ou attested,
+ * sur le commit HEAD, arbre propre au moment de verify et maintenant : sinon, ce qui
+ * est clos ne serait pas ce qui a été vérifié.
+ */
+export function preuveVerify(racine) {
+  const dossier = join(racine, ".drwil", "evidence");
+  // Horodatage ISO dans le nom : l'ordre alphabétique est l'ordre chronologique.
+  const noms = existsSync(dossier) ? readdirSync(dossier).filter((n) => /^verify-.+\.json$/.test(n)).sort() : [];
+  if (!noms.length) return { ok: false, raison: `aucune évidence de verify : lancer \`drwil verify --evidence\`` };
+  const nom = noms.at(-1);
+  let ev;
+  try {
+    ev = JSON.parse(readFileSync(join(dossier, nom), "utf8"));
+  } catch {
+    return { ok: false, raison: `évidence ${nom} illisible : ${RELANCER}` };
+  }
+  const git = (...args) => {
+    const r = spawnSync("git", args, { cwd: racine, encoding: "utf8" });
+    return r.status === 0 ? r.stdout.trim() : null;
+  };
+  const head = git("rev-parse", "HEAD");
+  if (!head) return { ok: false, raison: "commit HEAD introuvable : la clôture se juge sur un travail commité" };
+  if (ev.commit !== head) return { ok: false, raison: `évidence ${nom} produite sur un autre commit que HEAD : ${RELANCER}` };
+  if (ev.dirtyWorktree !== false || git("status", "--porcelain") !== "") {
+    return { ok: false, raison: `arbre modifié (au moment de verify ou depuis) : commiter puis ${RELANCER}` };
+  }
+  if (ev.status === "pass" || ev.status === "attested") return { ok: true };
+  if (ev.status === "manual") {
+    return { ok: false, raison: "verdict MANUAL : un humain atteste (`drwil attest <ID>`), puis " + RELANCER };
+  }
+  if (ev.status === "fail" || ev.status === "error") {
+    return { ok: false, raison: `verdict ${ev.status.toUpperCase()} : revenir en REALISATION (\`node .githooks/etat.mjs passer REALISATION\`) pour corriger` };
+  }
+  return { ok: false, raison: `évidence ${nom} sans verdict reconnu : ${RELANCER}` };
+}
+
 /** Nouvel état après la transition `vers`, ou `{ erreur }` ; n'écrit rien. */
 export function preparerTransition(lu, vers, { fiche, demande, maintenant }, racine) {
   const de = lu.etat.activite;
@@ -125,6 +168,12 @@ export async function passer(racine, { vers, fiche, demande }, { tty = false, co
   const prep = preparerTransition(lu, vers, { fiche, demande, maintenant }, racine);
   if (prep.erreur) return { code: 1, message: reprise + prep.erreur };
   const de = lu.etat.activite;
+  // Avant la confirmation humaine : inutile de demander une décision que la preuve refuse.
+  // Vaut aussi en mode agent : le réglage « transitions » dit qui décide, pas sur quoi.
+  if (vers === "CLOTURE") {
+    const preuve = preuveVerify(racine);
+    if (!preuve.ok) return { code: 1, message: `${reprise}clôture refusée : ${preuve.raison}` };
+  }
   if (exigeHumain(de, vers, config(racine).transitions)) {
     if (!tty || typeof confirmer !== "function") {
       return { code: 1, message: `${reprise}${de} → ${vers} est une décision humaine : terminal interactif requis (réglage « transitions » : humain)` };
@@ -156,7 +205,7 @@ const TEXTES = {
       DEMANDE: "expliciter la demande de réalisation ; ne modifier encore aucun fichier de code.",
       REALISATION: "réaliser l'attente, en ne modifiant que les fichiers du périmètre ci-dessus.",
       PREUVES: "produire les preuves et lancer les contrôles ; un correctif demande de revenir en REALISATION.",
-      VERIFY: "lancer la vérification drwil ; seul son verdict compte, pas l'affirmation de l'agent.",
+      VERIFY: "lancer `drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en REALISATION ; MANUAL : attestation humaine (`drwil attest`), puis relancer.",
       CLOTURE: "clore la fiche (statut, reprise), puis revenir en CADRAGE.",
     },
   },
@@ -177,7 +226,7 @@ const TEXTES = {
       DEMANDE: "make the implementation request explicit; do not modify any code file yet.",
       REALISATION: "implement the expectation, modifying only the files in the scope above.",
       PREUVES: "produce evidence and run the checks; a fix means going back to REALISATION.",
-      VERIFY: "run drwil verification; only its verdict counts, not the agent's claim.",
+      VERIFY: "run `drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to REALISATION; MANUAL: human attestation (`drwil attest`), then run it again.",
       CLOTURE: "close the fiche (status, hand-off), then go back to CADRAGE.",
     },
   },

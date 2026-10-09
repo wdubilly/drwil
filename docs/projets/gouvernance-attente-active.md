@@ -729,6 +729,24 @@ Aucune installation ne doit créer de verrou permanent ou de modification destru
 - **2026-10-09 — Sévérité de la barrière** : réglage `barriere`
   (`off` / `avertissement` / `bloquant`) ; `drwil init` écrit
   `avertissement`, ce dépôt est en `bloquant`.
+- **2026-10-09 — Clôture sur évidence de verify (point 5)**. `VERIFY → CLOTURE`
+  reste une décision humaine et exige en plus la dernière évidence
+  `.drwil/evidence/verify-*.json` (écrite par `drwil verify --evidence`) :
+  verdict `pass` ou `attested`, commit égal à `HEAD`, arbre non modifié.
+  `.githooks/etat.mjs` ne fait que lire cette preuve : aucun second moteur, aucune
+  dépendance au paquet drwil. Le verify jugé est le verify complet (tous les
+  contrats bloquants) ; la section « Contrats concernés » de la fiche reste
+  informative. Limite : l'évidence est hors git, donc falsifiable en local
+  (même garantie que le reste : triche détectable, pas impossible).
+  `CLOTURE → CADRAGE` reste libre et remet l'état au neutre.
+- **2026-10-09 — Réaction aux verdicts (point 8)**. `PASS` et `ATTESTED`
+  permettent de clore. `FAIL` et `ERROR` renvoient en `REALISATION` (toute
+  correction, y compris de l'outillage, est une modification). `MANUAL` reste
+  en `VERIFY` : un humain atteste (`drwil attest`), puis on relance
+  `drwil verify --evidence`, qui donne `ATTESTED`. Les critères de recette
+  d'une fiche ne forment pas un système parallèle : un critère mécanique
+  devient un contrat avec `Contrôle`, un critère humain un contrat `MANUAL`
+  à attester.
 
 ## Contrats concernés
 
@@ -758,7 +776,7 @@ Les décisions suivantes doivent être explicitées avant leur implémentation l
 4. **Réalisation** — tranché le 2026-10-09 (voir « Décisions »)
    Quelle transition autorise effectivement les modifications applicatives ?
 
-5. **Clôture**
+5. **Clôture** — tranché le 2026-10-09 (voir « Décisions »)
    Quelles conditions permettent de passer de `VERIFY` à `CLOTURE`, puis de revenir à `CADRAGE` ?
 
 6. **Périmètre** — tranché le 2026-10-09 (voir « Décisions »)
@@ -767,7 +785,7 @@ Les décisions suivantes doivent être explicitées avant leur implémentation l
 7. **Contrôle de livraison** — tranché le 2026-10-09 (voir « Décisions »)
    Quelles conditions exactes doivent être satisfaites pour autoriser le commit ?
 
-8. **Échec de contrôle**
+8. **Échec de contrôle** — tranché le 2026-10-09 (voir « Décisions »)
    Quel est le comportement lorsque VERIFY retourne `FAIL`, `ERROR`, `MANUAL` ou `ATTESTED` ?
 
 9. **État runtime** — tranché le 2026-10-09 (voir « Décisions »)
@@ -858,18 +876,20 @@ Et plus fondamentalement :
 
 ## Reprise
 
-- **Dernier état** (2026-10-09) : Lots 1 et 2 commités. Lot 3 réalisé :
-  `.githooks/perimetre.mjs`, contrôle `perimetre-attente` du moteur (commit :
-  activité `REALISATION` et cadrage de la fiche active lu dans `HEAD` ; push,
-  CI et `drwil verify` : rejeu de chaque commit via le trailer
-  `Drwil-Attente`, cadrage lu dans le parent), hook `prepare-commit-msg`,
-  réglage `barriere` (`avertissement` à l'installation, `bloquant` ici),
-  doc « Barrière de périmètre », 9 tests de la barrière et test du kit.
+- **Dernier état** (2026-10-09) : Lots 1 à 3 commités. Lot 4 réalisé (non
+  commité) : `preuveVerify` dans `.githooks/etat.mjs` — `VERIFY → CLOTURE`
+  refusé sans dernière évidence `drwil verify --evidence` au verdict `pass`
+  ou `attested`, sur `HEAD`, arbre propre (aussi en mode agent) ; messages
+  par verdict (FAIL/ERROR → REALISATION, MANUAL → `drwil attest`) ; règle
+  de l'activité VERIFY réinjectée à l'agent ; doc « Clôture sur la preuve
+  de `drwil verify` » (fr/en) ; 7 tests.
 - **Limites** : un agent autre que Claude Code ne lit l'état que s'il suit
   la consigne d'`AGENTS.md` ; messages de transition et de validation d'état
   en français seulement ; la CI ne contrôle que le périmètre (l'activité est
-  locale) ; sur la branche principale elle-même, il n'y a rien à rejouer.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] Lot 4 — intégration avec VERIFY (points 5 :
-  conditions de clôture, et 8 : réaction quand la vérification drwil
-  échoue). Reste ouvert aussi : point 10 (retrait propre de la gouvernance).
+  locale) ; sur la branche principale elle-même, il n'y a rien à rejouer ;
+  l'évidence de verify est hors git, donc falsifiable en local ; tout
+  fichier non suivi et non ignoré empêche de clore.
+- **Travail non commité** : Lot 4 (décisions des points 5 et 8 dans la
+  fiche, code, tests et doc).
+- **Prochaine étape** : [Humain + IA] Lot 5 — cycle complet sur un cas
+  réel. Reste ouvert : point 10 (retrait propre de la gouvernance, Lot 6).

@@ -351,6 +351,16 @@ versionné.
   et la saisie de l'activité visée ; les autres transitions, qui resserrent
   les droits ou reviennent en arrière, restent libres. `agent` : toute
   transition permise est libre.
+- **Clôture sur la preuve de `drwil verify`** : `VERIFY → CLOTURE` exige en
+  plus, quel que soit le réglage `transitions`, la dernière évidence écrite
+  par `drwil verify --evidence` (`.drwil/evidence/` (si présent), hors git) : verdict
+  `PASS` ou `ATTESTED`, sur le commit `HEAD`, arbre non modifié. `.githooks/etat.mjs`
+  lit cette preuve sans rien exécuter : verify reste le seul juge, sur tous
+  les contrats bloquants. `FAIL` ou `ERROR` : revenir en `REALISATION` pour
+  corriger. `MANUAL` : un humain atteste (`drwil attest <ID>`), puis on
+  relance verify. Les critères de recette d'une fiche ne forment pas un
+  système parallèle : un critère vérifiable devient un contrat avec
+  `Contrôle`, un critère humain un contrat `MANUAL`.
 - **Blocages côté outil** (Claude Code, règles `deny` de
   `.claude/settings.json`, si présent) : `git … --no-verify`, `git commit -n` et
   l'écriture directe de `.drwil/state.json` (si présent) sont refusés par

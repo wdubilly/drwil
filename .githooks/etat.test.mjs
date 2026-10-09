@@ -1,9 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, transitionAutorisee, validerEtat } from "./etat.mjs";
+import { spawnSync } from "node:child_process";
+import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, transitionAutorisee, validerEtat } from "./etat.mjs";
 
 const FICHE = "docs/projets/exemple.md";
 
@@ -201,4 +202,95 @@ test("passer : depuis un état invalide, on repart du neutre (signalé)", async 
 test("contexte : indique la commande de transition", () => {
   const racine = depot();
   assert.match(contexte(lireEtat(racine), racine), /node \.githooks\/etat\.mjs passer/);
+});
+
+// Dépôt git commité, prêt à clore : l'évidence est jugée contre HEAD.
+function depotEnVerify(config) {
+  const racine = depot({ etat: actif("VERIFY"), config });
+  writeFileSync(join(racine, ".gitignore"), ".drwil/state.json\n.drwil/evidence/\n");
+  const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
+  git("init", "-q");
+  git("add", "-A");
+  git("commit", "-qm", "init");
+  const head = git("rev-parse", "HEAD").stdout.trim();
+  const evidence = (nom, contenu) => {
+    mkdirSync(join(racine, ".drwil", "evidence"), { recursive: true });
+    writeFileSync(join(racine, ".drwil", "evidence", nom), typeof contenu === "string" ? contenu : JSON.stringify({ version: 1, commit: head, dirtyWorktree: false, ...contenu }));
+  };
+  return { racine, evidence };
+}
+
+const humainOk = { tty: true, confirmer: async () => true, maintenant: MAINTENANT };
+
+test("clôture : sans évidence de verify, refusée avant toute question à l'humain", async () => {
+  const { racine } = depotEnVerify();
+  let demande = false;
+  const r = await passer(racine, { vers: "CLOTURE" }, { tty: true, confirmer: async () => (demande = true), maintenant: MAINTENANT });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /aucune évidence.*drwil verify --evidence/);
+  assert.equal(demande, false);
+  assert.equal(lireEtat(racine).etat.activite, "VERIFY");
+});
+
+test("clôture : PASS ou ATTESTED sur HEAD, arbre propre, autorise (puis confirmation humaine)", async () => {
+  for (const status of ["pass", "attested"]) {
+    const { racine, evidence } = depotEnVerify();
+    evidence("verify-2026-10-09T10-00-00-000Z.json", { status });
+    assert.deepEqual(preuveVerify(racine), { ok: true });
+    const r = await passer(racine, { vers: "CLOTURE" }, humainOk);
+    assert.equal(r.code, 0, r.message);
+    assert.equal(lireEtat(racine).etat.activite, "CLOTURE");
+  }
+});
+
+test("clôture : FAIL et ERROR renvoient en REALISATION, MANUAL à l'attestation humaine", () => {
+  const attendus = { fail: /FAIL.*passer REALISATION/, error: /ERROR.*passer REALISATION/, manual: /MANUAL.*drwil attest/ };
+  for (const [status, motif] of Object.entries(attendus)) {
+    const { racine, evidence } = depotEnVerify();
+    evidence("verify-2026-10-09T10-00-00-000Z.json", { status });
+    const p = preuveVerify(racine);
+    assert.equal(p.ok, false);
+    assert.match(p.raison, motif);
+  }
+});
+
+test("clôture : seule la dernière évidence compte", () => {
+  const { racine, evidence } = depotEnVerify();
+  evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass" });
+  evidence("verify-2026-10-09T11-00-00-000Z.json", { status: "fail" });
+  assert.match(preuveVerify(racine).raison, /FAIL/);
+});
+
+test("clôture : évidence d'un autre commit, d'un arbre modifié ou illisible, refusée", () => {
+  const autre = depotEnVerify();
+  autre.evidence("verify-a.json", { status: "pass", commit: "0".repeat(40) });
+  assert.match(preuveVerify(autre.racine).raison, /autre commit/);
+
+  const sale = depotEnVerify();
+  sale.evidence("verify-a.json", { status: "pass", dirtyWorktree: true });
+  assert.match(preuveVerify(sale.racine).raison, /arbre modifié/);
+
+  // Modifié après verify : ce qui serait clos n'est pas ce qui a été vérifié.
+  const apres = depotEnVerify();
+  apres.evidence("verify-a.json", { status: "pass" });
+  writeFileSync(join(apres.racine, FICHE), readFileSync(join(apres.racine, FICHE), "utf8") + "\nmodifié\n");
+  assert.match(preuveVerify(apres.racine).raison, /arbre modifié/);
+
+  const casse = depotEnVerify();
+  casse.evidence("verify-a.json", "{ cassé");
+  assert.match(preuveVerify(casse.racine).raison, /illisible/);
+});
+
+test("clôture : la preuve est exigée aussi en mode agent", async () => {
+  const { racine } = depotEnVerify({ transitions: "agent" });
+  const r = await passer(racine, { vers: "CLOTURE" }, { tty: false, maintenant: MAINTENANT });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /clôture refusée/);
+});
+
+test("clôture : hors dépôt git, refusée", () => {
+  const racine = depot({ etat: actif("VERIFY") });
+  mkdirSync(join(racine, ".drwil", "evidence"));
+  writeFileSync(join(racine, ".drwil", "evidence", "verify-a.json"), JSON.stringify({ status: "pass", commit: "x", dirtyWorktree: false }));
+  assert.match(preuveVerify(racine).raison, /HEAD introuvable/);
 });
