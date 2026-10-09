@@ -1,6 +1,6 @@
 # Projet : les tests des hooks nettoient leurs dossiers temporaires
 
-**Statut** : cadré le 2026-10-09 — lot 1 à démarrer.
+**Statut** : réalisé le 2026-10-09 — en attente de relecture et de fusion.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -74,8 +74,12 @@ chaque projet généré par les tests du kit, d'où le volume.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-09) : point 5 tranché, branche
-  `chantier/tests-nettoyer-tmp` créée ; rien de réalisé.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] ouvrir une attente sur cette fiche, puis
-  lancer la réalisation ; [IA] Lot 1.
+- **Dernier état** (2026-10-09) : Lot 1 réalisé. `afterEach` dans
+  `.githooks/etat.test.mjs` et `.githooks/perimetre.test.mjs` (et leurs
+  copies du gabarit), sur le modèle des tests du kit. Mesuré : un passage
+  complet de `node .githooks/run-checks.mjs` laisse 0 dossier dans `/tmp`
+  (environ 2 100 avant). Non testé : la conservation des dossiers d'un
+  test en échec (même code que les tests du kit).
+- **Travail non commité** : aucun après le commit du Lot 1.
+- **Prochaine étape** : [IA] `PREUVES → VERIFY`, puis [humain] clôture ;
+  rebaser la branche sur `master` après la fusion de la PR gouvernance.
