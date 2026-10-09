@@ -51,6 +51,14 @@ chaque projet généré par les tests du kit, d'où le volume.
   `chantier/gouvernance-attente-active` (PR #1, non fusionnée), où vivent
   cette fiche et la version actuelle des deux tests ; à rebaser sur
   `master` après la fusion.
+- **2026-10-09 — Pas de nettoyage au démarrage des tests** : écarté. Après
+  le Lot 1, seuls un échec (dossiers gardés exprès), un plantage ou une
+  interruption laissent des dossiers, en petit nombre. Un balayage de
+  `/tmp/drwil-*` au démarrage pourrait supprimer les dossiers d'un autre
+  fichier de test lancé en parallèle par `node --test` (ou d'un autre
+  clone), détruirait le diagnostic d'un échec, et ajouterait du code au
+  gabarit pour un gain marginal. À reconsidérer seulement si des dossiers
+  s'accumulent de nouveau.
 
 ## Contrats concernés
 
@@ -81,5 +89,6 @@ chaque projet généré par les tests du kit, d'où le volume.
   (environ 2 100 avant). Non testé : la conservation des dossiers d'un
   test en échec (même code que les tests du kit).
 - **Travail non commité** : aucun après le commit du Lot 1.
-- **Prochaine étape** : [IA] `PREUVES → VERIFY`, puis [humain] clôture ;
-  rebaser la branche sur `master` après la fusion de la PR gouvernance.
+- **Prochaine étape** : [humain] relire et fusionner la PR ; [IA] la
+  rebaser sur `master` après la fusion de la PR gouvernance. Attente close
+  le 2026-10-09 (verify `GOVERNANCE: PASS`).
