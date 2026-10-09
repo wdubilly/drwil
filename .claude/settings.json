@@ -1,5 +1,15 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.githooks/etat.mjs\""
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -36,6 +46,14 @@
     "allow": [
       "Read(**)"
     ],
-    "ask": []
+    "ask": [],
+    "deny": [
+      "Bash(git *--no-verify*)",
+      "Bash(git commit -n*)",
+      "Bash(git commit * -n*)",
+      "Edit(**/.drwil/state.json)",
+      "Write(**/.drwil/state.json)",
+      "Bash(*.drwil/state.json*)"
+    ]
   }
 }

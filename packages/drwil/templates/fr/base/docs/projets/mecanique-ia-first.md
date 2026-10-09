@@ -13,6 +13,11 @@ fichiers:
   - .githooks/contrats.test.mjs
   - .githooks/risque.mjs
   - .githooks/risque.test.mjs
+  - .githooks/etat.mjs
+  - .githooks/etat.test.mjs
+  - .githooks/perimetre.mjs
+  - .githooks/perimetre.test.mjs
+  - .githooks/prepare-commit-msg
   - .githooks/cadrage.mjs
   - .githooks/cadrage.test.mjs
   - .githooks/pre-commit

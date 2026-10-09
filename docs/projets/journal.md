@@ -18,20 +18,20 @@ Une entrée par chantier clôturé, la plus récente en dernier.
 - **Décisions clés** : avertissement non bloquant (QUA-015) quand une
   case de `docs/projets/en-attente.md` est cochée/ouverte alors que le
   Statut de la fiche citée dit le contraire.
-- **Clôturé par** : commit `a6becb6`.
+- **Clôturé par** : commit `b2751b4`.
 
 ## 2026-10-04 — Rappeler quand un audit (opportunité, risques) est périmé
 
 - **Décisions clés** : rappel non bloquant (> 30 jours depuis le dernier
   scan) dans le tableau de bord et dans `.githooks/run-checks.mjs`.
-- **Clôturé par** : commit `b572f47`.
+- **Clôturé par** : commit `6661e37`.
 
 ## 2026-10-04 — Informer de ce que drwil peut faire au-delà de la gouvernance
 
 - **Décisions clés** : indexer dans `AGENTS.md`/`README.md` les recettes
   déjà livrées (audit, tableau de bord, suivi de coût, découverte de
   valeur) pour qu'un humain les découvre sans lire toute la prose.
-- **Clôturé par** : commit `aff8879`.
+- **Clôturé par** : commit `a3d25f1`.
 
 ## 2026-10-04 — Une commande `/drwil` pour découvrir les capacités du kit
 
@@ -40,15 +40,15 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   + skill générique `/drwil` (menu sans argument, renvoi direct avec
   argument). Claude Code seul, les commandes personnalisées ayant
   fusionné avec les skills dans cet outil.
-- **Clôturé par** : commits `f52904f`/`fe4ce9e` (PR #3, `5d6ac23`).
+- **Clôturé par** : commits `cbe8a87`/`b123ef6` (PR #3, `d91f16a`).
 
 ## 2026-10-05 — Travailler avec des branches et des merge/pull requests
 
 - **Décisions clés** : contrat QUA-017 (pas de travail direct sur la
   branche principale après le premier commit, jamais vérifié en CI),
   recette dédiée FR/EN, gabarits de PR/MR (GitHub, GitLab).
-- **Clôturé par** : commits `6b35c7b`/`6124eed` (PR #1, `855f865`),
-  `efa120e` (PR #2, `b399782`).
+- **Clôturé par** : commits `525c662`/`3e36400` (PR #1, `77a23f9`),
+  `34b021a` (PR #2, `f90bd12`).
 
 ## 2026-10-05 — Réparer la CI (merges avec job rouge, actions Node 20 dépréciées)
 
@@ -56,7 +56,7 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   dans les tests (ne pas hériter du `CI=true` du job parent) ; monter
   `actions/checkout`/`actions/setup-node` en v7, Node 20 → 24 (GitHub et
   GitLab, dogfood + templates).
-- **Clôturé par** : commit `92e2eec` (PR #4, `24e953b`).
+- **Clôturé par** : commit `e5cb4c5` (PR #4, `ee34bc9`).
 
 ## 2026-10-05 — Manifeste des fichiers installés + désinstallation propre
 
@@ -161,7 +161,7 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   de la fusion : ce ne sont pas des doublons, en supprimer un crée un trou.
   La qualité prime sur la vitesse. [décision utilisateur]
 - **Reste** : note de version (ligne ouverte dans l'index).
-- **Clôturé par** : PR #31, commit `1df2b6b`.
+- **Clôturé par** : PR #31, commit `2b60585`.
 
 ## 2026-10-06 — Un seul numéro de version (paquet, tag, `--version`)
 
@@ -177,5 +177,5 @@ Une entrée par chantier clôturé, la plus récente en dernier.
   plus ancien ; `v0.2.1` garde son asset, avec une note sur son `0.0.1`.
 - **Résultat** : `v0.3.0`, première release posée par le script avec tag,
   tarball (`drwil-0.3.0.tgz`) et `--version` identiques.
-- **Clôturé par** : PR #45 (`3e859ed`) et #47 (`b49b3b2`), release `v0.3.0`.
+- **Clôturé par** : PR #45 (`1191946`) et #47 (`347a75e`), release `v0.3.0`.
 

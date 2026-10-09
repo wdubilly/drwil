@@ -389,6 +389,51 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
   assert.match(reglages, /"PreToolUse"[\s\S]*"Edit\|Write\|MultiEdit"[\s\S]*rappel-cadrage\.mjs[\s\S]*"PostToolUse"/);
 });
 
+test("état de gouvernance : lecteur livré, state.json ignoré par Git, contexte réinjecté au démarrage de Claude", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+
+  assert.match(read(dir, ".gitignore"), /^\.drwil\/state\.json$/m);
+  assert.match(read(dir, ".claude/settings.json"), /"SessionStart"[\s\S]*\.githooks\/etat\.mjs/);
+  // Sans state.json : CADRAGE neutre, jamais d'état actif déduit.
+  const neutre = spawnSync(process.execPath, [".githooks/etat.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(neutre.status, 0);
+  assert.match(neutre.stdout, /Activité : CADRAGE/);
+  // Un état invalide est signalé, sans faire échouer le démarrage de session.
+  writeFileSync(join(dir, ".drwil/state.json"), "{ cassé");
+  const invalide = spawnSync(process.execPath, [".githooks/etat.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(invalide.status, 0);
+  assert.match(invalide.stdout, /État invalide/);
+});
+
+test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+  const fiche = "docs/projets/mecanique-ia-first.md";
+  const drwilEtat = (...args) => spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "etat", ...args], { cwd: dir, encoding: "utf8", env: envTest });
+
+  assert.equal(config(dir).transitions, "humain");
+  // Sans terminal interactif, ouvrir une attente est refusé en mode humain.
+  const refus = drwilEtat("passer", "ATTENTE", "--fiche", fiche);
+  assert.equal(refus.status, 1);
+  assert.match(refus.stderr, /terminal interactif/);
+  assert.ok(!existsSync(join(dir, ".drwil/state.json")), "état inchangé");
+  // En mode agent, la façade transmet --fiche au module du projet.
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), transitions: "agent" }));
+  const ok = drwilEtat("passer", "ATTENTE", "--fiche", fiche);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(drwilEtat().stdout, /Activité : ATTENTE/);
+
+  // Barrière de périmètre : livrée en avertissement, hook du trailer exécutable, couverte par la fiche mécanique.
+  assert.equal(config(dir).barriere, "avertissement");
+  if (process.platform !== "win32") assert.ok(statSync(join(dir, ".githooks/prepare-commit-msg")).mode & 0o111, "prepare-commit-msg exécutable");
+  assert.match(read(dir, "docs/projets/mecanique-ia-first.md"), /\.githooks\/perimetre\.mjs/);
+
+  const deny = JSON.parse(read(dir, ".claude/settings.json")).permissions.deny;
+  for (const regle of ["Edit(**/.drwil/state.json)", "Write(**/.drwil/state.json)", "Bash(git commit -n*)"]) assert.ok(deny.includes(regle), regle);
+  assert.ok(deny.some((r) => r.includes("no-verify")));
+});
+
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {
   const dir = tmp();
   mkdirSync(join(dir, "api")); mkdirSync(join(dir, "web"));
@@ -470,6 +515,18 @@ test("lot 2 (désinstallation) : dry-run par défaut, --yes supprime, fichier mo
   // le manifeste ne garde plus les entrées des fichiers réellement supprimés.
   const manifesteApres = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
   assert.ok(!(".githooks/check-docs.mjs" in manifesteApres));
+});
+
+test("lot 6 (gouvernance) : uninstall liste l'état local, ne le supprime qu'avec --yes", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  const etat = join(dir, ".drwil", "state.json");
+  writeFileSync(etat, JSON.stringify({ version: 1, activite: "CADRAGE", attente_active: null, demande_active: null, depuis: null }));
+  assert.ok((await uninstall({ targetDir: dir })).removed.includes(".drwil/state.json"));
+  assert.ok(existsSync(etat), "dry-run ne supprime pas l'état");
+  assert.ok((await uninstall({ targetDir: dir, dryRun: false })).removed.includes(".drwil/state.json"));
+  assert.ok(!existsSync(etat), "--yes supprime l'état local");
+  assert.ok(!(await uninstall({ targetDir: dir })).removed.includes(".drwil/state.json"), "absent : rien à lister");
 });
 
 test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .bak créé, --forcer fonctionnel", async () => {

@@ -295,15 +295,16 @@ fichiers que ce chantier touche.
 - **Sévérité réglable au commit** (`.githooks/check-docs.mjs`, réglage
   `cadrage` de `.drwil/ia-first.json`) : un fichier de code indexé par git
   qu'aucun bloc ne couvre, ou un bloc mal formé (sans ligne `fichiers:`,
-  motif trop large comme `**` ou `scripts/*`), est signalé. `avertissement`
-  (défaut) : jamais bloquant, juste affiché. `bloquant` : fait échouer le
-  contrôle. `off` : désactive le contrôle (et son rappel à l'agent).
-  `docs/` et tout fichier markdown ne sont jamais du code.
-- **Rappel à l'agent, informatif** (Claude Code, hook PostToolUse
-  `.claude/hooks/rappel-cadrage.mjs`, si présent) : après l'écriture d'un
-  fichier de code hors fiche, un message lui est glissé ; rien n'est
-  bloqué (le fichier est déjà écrit), le commit suit le réglage `cadrage`
-  ci-dessus.
+  motif trop large comme `**` ou `scripts/*`), est signalé. `bloquant`
+  (écrit par `drwil init`) : fait échouer le contrôle. `avertissement` :
+  jamais bloquant, juste affiché (valeur retenue si le réglage est absent).
+  `off` : désactive le contrôle (et son rappel à l'agent). `docs/` et tout
+  fichier markdown ne sont jamais du code.
+- **Côté agent** (Claude Code, hook
+  `.claude/hooks/rappel-cadrage.mjs`, si présent), selon le même réglage : en `bloquant`, l'écriture d'un fichier
+  de code hors fiche est refusée avant d'avoir lieu (hook PreToolUse) ; en
+  `avertissement`, un rappel est glissé après l'écriture (hook PostToolUse),
+  rien n'est bloqué ; en `off`, rien.
 - **Petite tâche** : se rattache à `docs/projets/entretien-courant.md`, sans
   ouvrir de chantier séparé.
 - **Fichiers propres au kit** : couverts par `docs/projets/mecanique-ia-first.md`,
@@ -316,3 +317,102 @@ fichiers que ce chantier touche.
 
 La grammaire du bloc (`.githooks/cadrage.mjs`) est partagée par le contrôle et
 le rappel : une seule source.
+
+### État de gouvernance
+
+L'activité courante (`CADRAGE`, `ATTENTE`, `DEMANDE`, `REALISATION`,
+`PREUVES`, `VERIFY`, `CLOTURE`) et l'attente active vivent dans
+`.drwil/state.json` (si présent) : un état **local**, ignoré par Git, qui ne contient que
+des références (activité, chemin de la fiche active, demande active,
+horodatage). Le périmètre autorisé reste le bloc `cadrage` de la fiche,
+versionné.
+
+- **Lecture déterministe** (`.githooks/etat.mjs`, seul lecteur) :
+  `node .githooks/etat.mjs` affiche le contexte actif, `--json` l'état brut.
+  Sans fichier, l'état est `CADRAGE` neutre ; un état invalide est signalé
+  et traité comme neutre, jamais deviné.
+- **Agnostique de l'agent** : la source (`state.json`, si présent) et la commande
+  (`node .githooks/etat.mjs`) ne dépendent d'aucun outil. Le canal universel
+  est `AGENTS.md`, qui demande à tout agent de lancer la commande en début de
+  tâche. Un outil qui offre un hook de démarrage peut brancher la même
+  commande pour réinjecter le contexte automatiquement — c'est le cas de
+  Claude Code (hook SessionStart, si présent) ; ce n'est qu'un accélérateur.
+- **Reprise par une autre personne** : l'état d'un clone ne voyage pas ; on
+  reprend depuis la fiche versionnée (section « Reprise ») et on réactive
+  l'attente explicitement.
+- **Transitions** : une activité à la fois, retour à `REALISATION` après
+  `PREUVES` ou `VERIFY` en échec, abandon vers `CADRAGE` depuis toute
+  activité. Commande : `node .githooks/etat.mjs passer <ACTIVITE>
+  [--fiche <fiche>] [--demande <texte>]` (ou `drwil etat passer …`, simple
+  façade) ; `--fiche` ouvre une attente depuis `CADRAGE`.
+- **Qui décide** (réglage `transitions` de `.drwil/ia-first.json`) : `humain`
+  (défaut) — ouvrir une attente, lancer la réalisation (`DEMANDE →
+  REALISATION`) et clore (`VERIFY → CLOTURE`) exigent un terminal interactif
+  et la saisie de l'activité visée ; les autres transitions, qui resserrent
+  les droits ou reviennent en arrière, restent libres. `agent` : toute
+  transition permise est libre.
+- **Clôture sur la preuve de `drwil verify`** : `VERIFY → CLOTURE` exige en
+  plus, quel que soit le réglage `transitions`, la dernière évidence écrite
+  par `drwil verify --evidence` (`.drwil/evidence/` (si présent), hors git) : verdict
+  `PASS` ou `ATTESTED`, sur le commit `HEAD`, arbre non modifié. `.githooks/etat.mjs`
+  lit cette preuve sans rien exécuter : verify reste le seul juge, sur tous
+  les contrats bloquants. `FAIL` ou `ERROR` : revenir en `REALISATION` pour
+  corriger. `MANUAL` : un humain atteste (`drwil attest <ID>`), puis on
+  relance verify. Les critères de recette d'une fiche ne forment pas un
+  système parallèle : un critère vérifiable devient un contrat avec
+  `Contrôle`, un critère humain un contrat `MANUAL`.
+- **Blocages côté outil** (Claude Code, règles `deny` de
+  `.claude/settings.json`, si présent) : `git … --no-verify`, `git commit -n` et
+  l'écriture directe de `.drwil/state.json` (si présent) sont refusés par
+  l'outil, pas par le modèle.
+- **Limites** : un agent qui a le shell peut toujours tricher en local
+  (réécrire l'état, simuler un terminal, option courte combinée). Le but est
+  une triche visible dans le diff et refusée en CI, pas impossible.
+
+### Barrière de périmètre
+
+Contrôle `perimetre-attente` du moteur (`.githooks/perimetre.mjs`), qui
+tourne au commit, au push, en CI et dans `drwil verify`. Sévérité : réglage
+`barriere` de `.drwil/ia-first.json` — `avertissement` (écrit par `drwil
+init` : les écarts sont affichés, rien n'est bloqué), `bloquant`, `off`.
+
+- **Les fiches passent toujours** : `docs/projets/` et `docs/intentions/`,
+  ainsi que les attestations humaines, écrites par `drwil attest` :
+  `.drwil/evidence/attestations/` (si présent) — liste réglable : `horsPerimetre`.
+  Tout autre fichier, code ou doc, est soumis au périmètre.
+- **Au commit** : hors fiches, un commit n'est accepté qu'en `REALISATION`,
+  pour des fichiers couverts par le bloc `cadrage` de la fiche active **tel
+  qu'il est dans `HEAD`**. Élargir son périmètre demande donc un commit
+  séparé qui ne touche que la fiche ; le code vient au commit suivant.
+- **Trailer** : le hook `prepare-commit-msg` ajoute `Drwil-Attente: <fiche
+  active>` au message. Git ne saute jamais ce hook.
+- **Au push, en CI et dans `drwil verify`** : chaque commit de la branche
+  (depuis la branche principale, ou `DRWIL_BASE`) est rejoué contre le
+  cadrage de la fiche de son trailer, lu dans son commit parent. Un commit
+  hors fiches sans trailer est refusé. Un commit est jugé selon les règles
+  de son parent : si la barrière n'y existait pas encore, il n'est pas
+  contrôlé. L'activité n'existant qu'en local, la CI ne contrôle que le
+  périmètre.
+- **Retrait** : voir ci-dessous.
+
+### Désactiver ou retirer la gouvernance
+
+Aucune installation ne crée de verrou permanent : la gouvernance se coupe
+par un réglage, puis se retire avec le reste de la mécanique.
+
+- **Désactiver** (réversible, rien n'est supprimé) : `"barriere": "off"`
+  dans `.drwil/ia-first.json`. Plus de barrière au commit, au push ni en CI,
+  plus de trailer `Drwil-Attente`, et le contexte réinjecté à l'agent se
+  réduit à « gouvernance désactivée ». Remettre `avertissement` ou
+  `bloquant` la rétablit telle quelle.
+- **Retirer** : `npx drwil uninstall` (simulation : liste ce qui serait
+  supprimé), puis `npx drwil uninstall --yes`. Les fichiers de la mécanique
+  restés intacts sont supprimés (hooks, `.githooks/etat.mjs`, règles de
+  `.claude/settings.json` (si présent)) ; l'état local
+  `.drwil/state.json` (si présent) est listé avec eux et supprimé seulement
+  avec `--yes`. Les
+  fiches, les contrats et les attestations versionnées restent : c'est
+  l'historique du projet.
+- **Limite** : la règle `deny` de Claude Code sur l'état local
+  `.drwil/state.json` (si présent) refuse aussi toute commande shell qui cite ce chemin, même en
+  lecture ; lire l'état passe par `node .githooks/etat.mjs`.

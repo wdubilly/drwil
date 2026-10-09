@@ -1,0 +1,319 @@
+#!/usr/bin/env node
+// État de gouvernance runtime : .drwil/state.json (docs/projets/gouvernance-attente-active.md).
+//
+// Seul lecteur et seul écrivain de l'état : le contexte réinjecté à l'agent
+// (`node .githooks/etat.mjs`, hook SessionStart de Claude), les transitions
+// (`node .githooks/etat.mjs passer <ACTIVITE>`, `drwil etat`) et, plus tard, le
+// pre-commit l'importent. Aucun outil d'agent n'est requis.
+// L'état est local (gitignoré) et ne contient que des références : le périmètre
+// autorisé vit dans le bloc `cadrage` de la fiche active, versionnée.
+// Fichier absent = CADRAGE neutre ; aucun état actif n'est jamais déduit.
+// Un état invalide est ramené au neutre ET signalé : jamais masqué, jamais permissif.
+// Clore (VERIFY → CLOTURE) exige l'évidence de `drwil verify --evidence` : ce
+// fichier la lit, il n'exécute aucun contrôle (un seul moteur, ADR-003).
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { join, posix } from "node:path";
+import { pathToFileURL } from "node:url";
+import { lireBloc } from "./cadrage.mjs";
+
+export const ACTIVITES = ["CADRAGE", "ATTENTE", "DEMANDE", "REALISATION", "PREUVES", "VERIFY", "CLOTURE"];
+
+// Une activité à la fois ; retour à REALISATION après PREUVES ou VERIFY en échec ;
+// abandon vers CADRAGE depuis toute activité (décision du 2026-10-09).
+const SUIVANTES = {
+  CADRAGE: ["ATTENTE"],
+  ATTENTE: ["DEMANDE"],
+  DEMANDE: ["REALISATION"],
+  REALISATION: ["PREUVES"],
+  PREUVES: ["VERIFY", "REALISATION"],
+  VERIFY: ["CLOTURE", "REALISATION"],
+  CLOTURE: ["CADRAGE"],
+};
+
+export const ETAT_NEUTRE = Object.freeze({ version: 1, activite: "CADRAGE", attente_active: null, demande_active: null, depuis: null });
+
+const CHAMPS = new Set(Object.keys(ETAT_NEUTRE));
+const DOSSIERS_FICHES = ["docs/projets/", "docs/projects/"];
+const MODELE_RE = /^modele-|^model-/;
+const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+
+export function transitionAutorisee(de, vers) {
+  if (!ACTIVITES.includes(de) || !ACTIVITES.includes(vers) || de === vers) return false;
+  return vers === "CADRAGE" || SUIVANTES[de].includes(vers);
+}
+
+/** Problèmes de l'état (messages en français, liste vide si valide). */
+export function validerEtat(etat, racine) {
+  if (typeof etat !== "object" || etat === null || Array.isArray(etat)) return ["state.json doit contenir un objet JSON"];
+  const problemes = [];
+  for (const cle of Object.keys(etat)) if (!CHAMPS.has(cle)) problemes.push(`champ inconnu « ${cle} » (l'état ne contient que des références)`);
+  if (etat.version !== 1) problemes.push("version : 1 attendu");
+  if (!ACTIVITES.includes(etat.activite)) {
+    problemes.push(`activité inconnue « ${etat.activite} » (attendu : ${ACTIVITES.join(", ")})`);
+  } else if (etat.activite === "CADRAGE") {
+    if (etat.attente_active !== null || etat.demande_active !== null) problemes.push("en CADRAGE, aucune attente ni demande active");
+  } else if (etat.attente_active === null || etat.attente_active === undefined) {
+    problemes.push(`${etat.activite} : attente active requise`);
+  }
+  if (etat.attente_active !== null && etat.attente_active !== undefined) problemes.push(...validerAttente(etat.attente_active, racine));
+  if (etat.demande_active !== null && typeof etat.demande_active !== "string") problemes.push("demande_active : chaîne ou null attendu");
+  if (etat.depuis !== null && !(typeof etat.depuis === "string" && ISO_RE.test(etat.depuis) && !Number.isNaN(Date.parse(etat.depuis)))) {
+    problemes.push("depuis : horodatage ISO 8601 ou null attendu");
+  }
+  return problemes;
+}
+
+function validerAttente(attente, racine) {
+  if (typeof attente !== "string") return ["attente_active : chemin de fiche ou null attendu"];
+  const chemin = posix.normalize(attente.replace(/\\/g, "/"));
+  const dossier = DOSSIERS_FICHES.find((d) => chemin.startsWith(d));
+  if (!dossier || !chemin.endsWith(".md")) return [`attente_active : fiche .md de ${DOSSIERS_FICHES.join(" ou ")} attendue (« ${attente} »)`];
+  if (MODELE_RE.test(posix.basename(chemin))) return [`attente_active : « ${attente} » est un modèle, pas une fiche de chantier`];
+  if (!existsSync(join(racine, chemin))) return [`attente_active : fiche « ${attente} » introuvable`];
+  return [];
+}
+
+/** `{ etat, source: "absent" | "fichier", problemes }` ; un état invalide est remplacé par le neutre. */
+export function lireEtat(racine) {
+  const fichier = join(racine, ".drwil", "state.json");
+  if (!existsSync(fichier)) return { etat: { ...ETAT_NEUTRE }, source: "absent", problemes: [] };
+  let etat;
+  try {
+    etat = JSON.parse(readFileSync(fichier, "utf8"));
+  } catch {
+    return { etat: { ...ETAT_NEUTRE }, source: "fichier", problemes: ["state.json illisible (JSON invalide)"] };
+  }
+  const problemes = validerEtat(etat, racine);
+  return problemes.length ? { etat: { ...ETAT_NEUTRE }, source: "fichier", problemes } : { etat, source: "fichier", problemes };
+}
+
+// Transitions qui ouvrent des droits ou closent : réservées à un humain en mode
+// « humain » (défaut). Les autres resserrent les droits ou reviennent en arrière.
+const HUMAINES = new Set(["CADRAGE>ATTENTE", "DEMANDE>REALISATION", "VERIFY>CLOTURE"]);
+
+export function exigeHumain(de, vers, mode) {
+  return mode !== "agent" && HUMAINES.has(`${de}>${vers}`);
+}
+
+const RELANCER = "relancer `npx drwil verify --evidence`";
+
+/**
+ * Dernière évidence de verify (.drwil/evidence/verify-*.json, hors git) : `{ ok: true }`
+ * si elle autorise la clôture, sinon `{ ok: false, raison }`. Verdict pass ou attested,
+ * sur le commit HEAD, arbre propre au moment de verify et maintenant : sinon, ce qui
+ * est clos ne serait pas ce qui a été vérifié.
+ */
+export function preuveVerify(racine) {
+  const dossier = join(racine, ".drwil", "evidence");
+  // Horodatage ISO dans le nom : l'ordre alphabétique est l'ordre chronologique.
+  const noms = existsSync(dossier) ? readdirSync(dossier).filter((n) => /^verify-.+\.json$/.test(n)).sort() : [];
+  if (!noms.length) return { ok: false, raison: `aucune évidence de verify : lancer \`npx drwil verify --evidence\`` };
+  const nom = noms.at(-1);
+  let ev;
+  try {
+    ev = JSON.parse(readFileSync(join(dossier, nom), "utf8"));
+  } catch {
+    return { ok: false, raison: `évidence ${nom} illisible : ${RELANCER}` };
+  }
+  const git = (...args) => {
+    const r = spawnSync("git", args, { cwd: racine, encoding: "utf8" });
+    return r.status === 0 ? r.stdout.trim() : null;
+  };
+  const head = git("rev-parse", "HEAD");
+  if (!head) return { ok: false, raison: "commit HEAD introuvable : la clôture se juge sur un travail commité" };
+  if (ev.commit !== head) return { ok: false, raison: `évidence ${nom} produite sur un autre commit que HEAD : ${RELANCER}` };
+  if (ev.dirtyWorktree !== false || git("status", "--porcelain") !== "") {
+    return { ok: false, raison: `arbre modifié (au moment de verify ou depuis) : commiter puis ${RELANCER}` };
+  }
+  if (ev.status === "pass" || ev.status === "attested") return { ok: true };
+  if (ev.status === "manual") {
+    return { ok: false, raison: "verdict MANUAL : un humain atteste (`npx drwil attest <ID>`), puis " + RELANCER };
+  }
+  if (ev.status === "fail" || ev.status === "error") {
+    return { ok: false, raison: `verdict ${ev.status.toUpperCase()} : revenir en REALISATION (\`node .githooks/etat.mjs passer REALISATION\`) pour corriger` };
+  }
+  return { ok: false, raison: `évidence ${nom} sans verdict reconnu : ${RELANCER}` };
+}
+
+/** Nouvel état après la transition `vers`, ou `{ erreur }` ; n'écrit rien. */
+export function preparerTransition(lu, vers, { fiche, demande, maintenant }, racine) {
+  const de = lu.etat.activite;
+  if (!transitionAutorisee(de, vers)) {
+    const permises = ACTIVITES.filter((a) => transitionAutorisee(de, a)).join(", ");
+    return { erreur: `transition ${de} → ${vers} interdite (depuis ${de} : ${permises})` };
+  }
+  if (fiche !== undefined && vers !== "ATTENTE") return { erreur: "--fiche ne sert qu'à ouvrir une attente (CADRAGE → ATTENTE)" };
+  let etat;
+  if (vers === "CADRAGE") {
+    etat = { ...ETAT_NEUTRE, depuis: maintenant };
+  } else if (vers === "ATTENTE") {
+    if (!fiche) return { erreur: "ouvrir une attente exige --fiche <docs/projets/….md>" };
+    etat = { version: 1, activite: "ATTENTE", attente_active: posix.normalize(fiche.replace(/\\/g, "/")), demande_active: demande ?? null, depuis: maintenant };
+  } else {
+    etat = { ...lu.etat, activite: vers, demande_active: demande ?? lu.etat.demande_active, depuis: maintenant };
+  }
+  const problemes = validerEtat(etat, racine);
+  return problemes.length ? { erreur: problemes.join(" ; ") } : { etat };
+}
+
+/**
+ * Applique une transition et écrit l'état. `{ code: 0 | 1, message }`.
+ * `confirmer(question)` n'est appelé que si un humain est requis, et seulement devant
+ * un terminal interactif : sans terminal, une transition humaine est refusée.
+ */
+export async function passer(racine, { vers, fiche, demande }, { tty = false, confirmer, maintenant = new Date().toISOString() } = {}) {
+  const lu = lireEtat(racine);
+  const reprise = lu.problemes.length ? `état précédent invalide, repris depuis le neutre (${lu.problemes.join(" ; ")}) ; ` : "";
+  const prep = preparerTransition(lu, vers, { fiche, demande, maintenant }, racine);
+  if (prep.erreur) return { code: 1, message: reprise + prep.erreur };
+  const de = lu.etat.activite;
+  // Avant la confirmation humaine : inutile de demander une décision que la preuve refuse.
+  // Vaut aussi en mode agent : le réglage « transitions » dit qui décide, pas sur quoi.
+  if (vers === "CLOTURE") {
+    const preuve = preuveVerify(racine);
+    if (!preuve.ok) return { code: 1, message: `${reprise}clôture refusée : ${preuve.raison}` };
+  }
+  if (exigeHumain(de, vers, config(racine).transitions)) {
+    if (!tty || typeof confirmer !== "function") {
+      return { code: 1, message: `${reprise}${de} → ${vers} est une décision humaine : terminal interactif requis (réglage « transitions » : humain)` };
+    }
+    if (!(await confirmer(`Pour passer de ${de} à ${vers}, retapez l'activité visée (${vers}) : `))) {
+      return { code: 1, message: "confirmation refusée : état inchangé" };
+    }
+  }
+  mkdirSync(join(racine, ".drwil"), { recursive: true });
+  writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(prep.etat, null, 2) + "\n");
+  return { code: 0, message: `${reprise}${de} → ${vers}` };
+}
+
+const TEXTES = {
+  fr: {
+    entete: "[drwil] État de gouvernance, lu sur disque (.drwil/state.json) — ne pas le déduire de la conversation.",
+    absent: "(.drwil/state.json absent : état neutre)",
+    desactivee: "[drwil] Gouvernance désactivée (réglage « barriere » : off dans .drwil/ia-first.json) : aucune activité ni périmètre à suivre.",
+    invalide: "⚠ État invalide, traité comme CADRAGE neutre :",
+    activite: (a) => `Activité : ${a}`,
+    attente: (a) => `Attente active : ${a ?? "aucune attente active"}`,
+    demande: (d) => `Demande active : ${d ?? "aucune"}`,
+    perimetre: "Périmètre autorisé (bloc cadrage de la fiche) :",
+    sansPerimetre: "  (aucun bloc cadrage : aucun fichier de code autorisé)",
+    regle: (r) => `Règle : ${r}`,
+    pied: "Ne jamais écrire .drwil/state.json à la main. Changer d'activité : `node .githooks/etat.mjs passer <ACTIVITE>` (ouvrir une attente, lancer la réalisation et clore sont une décision humaine, sauf réglage « transitions » : agent).",
+    regles: {
+      CADRAGE: "lire, analyser, cadrer ; ne modifier aucun fichier de code.",
+      ATTENTE: "formaliser l'attente dans sa fiche ; ne modifier aucun fichier de code.",
+      DEMANDE: "expliciter la demande de réalisation ; ne modifier encore aucun fichier de code.",
+      REALISATION: "réaliser l'attente, en ne modifiant que les fichiers du périmètre ci-dessus.",
+      PREUVES: "produire les preuves et lancer les contrôles ; un correctif demande de revenir en REALISATION.",
+      VERIFY: "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en REALISATION ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
+      CLOTURE: "clore la fiche (statut, reprise), puis revenir en CADRAGE.",
+    },
+  },
+  en: {
+    entete: "[drwil] Governance state, read from disk (.drwil/state.json) — do not infer it from the conversation.",
+    absent: "(.drwil/state.json missing: neutral state)",
+    desactivee: "[drwil] Governance disabled (\"barriere\" setting: off in .drwil/ia-first.json): no activity or scope to follow.",
+    invalide: "⚠ Invalid state, treated as neutral CADRAGE:",
+    activite: (a) => `Activity: ${a}`,
+    attente: (a) => `Active expectation: ${a ?? "none"}`,
+    demande: (d) => `Active request: ${d ?? "none"}`,
+    perimetre: "Allowed scope (cadrage block of the fiche):",
+    sansPerimetre: "  (no cadrage block: no code file allowed)",
+    regle: (r) => `Rule: ${r}`,
+    pied: "Never write .drwil/state.json by hand. Change activity: `node .githooks/etat.mjs passer <ACTIVITE>` (opening an expectation, starting implementation and closing are a human decision, unless the \"transitions\" setting is agent).",
+    regles: {
+      CADRAGE: "read, analyse, frame; do not modify any code file.",
+      ATTENTE: "write down the expectation in its fiche; do not modify any code file.",
+      DEMANDE: "make the implementation request explicit; do not modify any code file yet.",
+      REALISATION: "implement the expectation, modifying only the files in the scope above.",
+      PREUVES: "produce evidence and run the checks; a fix means going back to REALISATION.",
+      VERIFY: "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to REALISATION; MANUAL: human attestation (`npx drwil attest`), then run it again.",
+      CLOTURE: "close the fiche (status, hand-off), then go back to CADRAGE.",
+    },
+  },
+};
+
+function config(racine) {
+  try {
+    return JSON.parse(readFileSync(join(racine, ".drwil", "ia-first.json"), "utf8")) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+const langue = (racine) => (config(racine).lang === "en" ? "en" : "fr");
+
+/** `barriere: off` coupe toute la gouvernance (barrière, trailer, contexte) : retrait sans rien supprimer. */
+export const gouvernanceDesactivee = (racine) => config(racine).barriere === "off";
+
+/** Contexte lisible à réinjecter à l'agent, construit uniquement depuis le disque. */
+export function contexte(lu, racine) {
+  const T = TEXTES[langue(racine)];
+  if (gouvernanceDesactivee(racine)) return T.desactivee;
+  const { etat, source, problemes } = lu;
+  const lignes = [T.entete];
+  if (source === "absent") lignes.push(T.absent);
+  if (problemes.length) lignes.push(T.invalide, ...problemes.map((p) => `  - ${p}`));
+  lignes.push(T.activite(etat.activite));
+  let attente = etat.attente_active;
+  let motifs = null;
+  if (attente) {
+    try {
+      const texte = readFileSync(join(racine, attente), "utf8");
+      const titre = /^#\s+(.+)$/m.exec(texte)?.[1]?.trim();
+      if (titre) attente = `${attente} — ${titre}`;
+      motifs = lireBloc(texte).motifs;
+    } catch {
+      motifs = [];
+    }
+  }
+  lignes.push(T.attente(attente), T.demande(etat.demande_active));
+  if (motifs) lignes.push(T.perimetre, ...(motifs.length ? motifs.map((m) => `  - ${m}`) : [T.sansPerimetre]));
+  lignes.push(T.regle(T.regles[etat.activite]), T.pied);
+  return lignes.join("\n");
+}
+
+/** Valeur de l'option `--nom valeur` dans `args`, ou undefined. */
+function option(args, nom) {
+  const i = args.indexOf(nom);
+  return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
+}
+
+/** Point d'entrée commun à `node .githooks/etat.mjs` et à `drwil etat`. Rend le code de sortie. */
+export async function principal(args, racine) {
+  if (args[0] !== "passer") {
+    // Lecture : ne casse jamais le démarrage de session d'un agent.
+    try {
+      const lu = lireEtat(racine);
+      console.log(args.includes("--json") ? JSON.stringify(lu, null, 2) : contexte(lu, racine));
+    } catch (e) {
+      console.log(`[drwil] état de gouvernance illisible : ${e.message}`);
+    }
+    return 0;
+  }
+  const vers = args[1];
+  if (!vers || vers.startsWith("--")) {
+    console.error(`usage : node .githooks/etat.mjs passer <${ACTIVITES.join("|")}> [--fiche <docs/projets/….md>] [--demande <texte>]`);
+    return 2;
+  }
+  const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
+  const confirmer = async (question) => {
+    const { createInterface } = await import("node:readline/promises");
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    try {
+      return (await rl.question(question)).trim() === vers;
+    } finally {
+      rl.close();
+    }
+  };
+  const r = await passer(racine, { vers, fiche: option(args, "--fiche"), demande: option(args, "--demande") }, { tty, confirmer });
+  if (r.code === 0) console.log(`✓ ${r.message}\n\n${contexte(lireEtat(racine), racine)}`);
+  else console.error(`✗ ${r.message}`);
+  return r.code;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  // Racine = dossier courant, comme les autres hooks : aucune variable propre à un outil.
+  process.exitCode = await principal(process.argv.slice(2), process.cwd());
+}

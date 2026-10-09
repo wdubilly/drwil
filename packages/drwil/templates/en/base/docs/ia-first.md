@@ -288,15 +288,16 @@ the files this project touches.
 - **Configurable severity at commit** (`.githooks/check-docs.mjs`,
   `cadrage` setting in `.drwil/ia-first.json`): a code file indexed by git
   that no block covers, or a malformed block (no `fichiers:` line, too
-  broad a pattern like `**` or `scripts/*`), is reported. `avertissement`
-  (default): never blocking, just shown. `bloquant`: fails the check.
-  `off`: disables the check (and its reminder to the agent). `docs/` and
-  any markdown file are never code.
-- **Reminder to the agent, informative** (Claude Code, PostToolUse hook
-  `.claude/hooks/rappel-cadrage.mjs`, if present): after writing a code
-  file outside any sheet, a message is slipped to it; nothing is blocked
-  (the file is already written), the commit follows the `cadrage` setting
-  above.
+  broad a pattern like `**` or `scripts/*`), is reported. `bloquant`
+  (written by `drwil init`): fails the check. `avertissement`: never
+  blocking, just shown (the value used when the setting is missing). `off`:
+  disables the check (and its reminder to the agent). `docs/` and any
+  markdown file are never code.
+- **Agent side** (Claude Code, hook
+  `.claude/hooks/rappel-cadrage.mjs`, if present), following the same setting: in `bloquant`, writing a code file
+  outside any sheet is refused before it happens (PreToolUse hook); in
+  `avertissement`, a reminder is slipped after the write (PostToolUse hook),
+  nothing is blocked; in `off`, nothing.
 - **Small task**: attaches to `docs/projects/routine-maintenance.md`,
   without opening a separate project.
 - **Kit's own files**: covered by `docs/projects/kit-mechanics.md`, set up
@@ -308,3 +309,98 @@ the files this project touches.
 
 The block's grammar (`.githooks/cadrage.mjs`) is shared by the check and
 the reminder: a single source.
+
+### Governance state
+
+The current activity (`CADRAGE`, `ATTENTE`, `DEMANDE`, `REALISATION`,
+`PREUVES`, `VERIFY`, `CLOTURE`) and the active expectation live in
+`.drwil/state.json` (if present): a **local** state, ignored by Git, holding references
+only (activity, path of the active sheet, active request, timestamp). The
+allowed scope stays the sheet's `cadrage` block, which is versioned.
+
+- **Deterministic reading** (`.githooks/etat.mjs`, the only reader):
+  `node .githooks/etat.mjs` prints the active context, `--json` the raw
+  state. Without a file, the state is neutral `CADRAGE`; an invalid state is
+  reported and treated as neutral, never guessed.
+- **Agent-agnostic**: the source (`state.json`, if present) and the command
+  (`node .githooks/etat.mjs`) depend on no tool. The universal channel is
+  `AGENTS.md`, which asks every agent to run the command at the start of a
+  task. A tool offering a session-start hook can wire the same command to
+  re-inject the context automatically — Claude Code does (SessionStart hook,
+  if present); it is only an accelerator.
+- **Hand-off to someone else**: a clone's state does not travel; resume from
+  the versioned sheet ("Hand-off" section) and re-activate the expectation
+  explicitly.
+- **Transitions**: one activity at a time, back to `REALISATION` after
+  `PREUVES` or a failed `VERIFY`, abandon to `CADRAGE` from any activity.
+  Command: `node .githooks/etat.mjs passer <ACTIVITE> [--fiche <sheet>]
+  [--demande <text>]` (or `drwil etat passer …`, a mere facade); `--fiche`
+  opens an expectation from `CADRAGE`.
+- **Who decides** (`transitions` setting in `.drwil/ia-first.json`): `humain`
+  (default) — opening an expectation, starting implementation (`DEMANDE →
+  REALISATION`) and closing (`VERIFY → CLOTURE`) require an interactive
+  terminal and typing the target activity; the other transitions, which
+  narrow rights or go back, stay free. `agent`: any allowed transition is
+  free.
+- **Closing on `drwil verify` evidence**: `VERIFY → CLOTURE` also requires,
+  whatever the `transitions` setting, the latest evidence written by
+  `drwil verify --evidence` (`.drwil/evidence/` (if present), not in git): verdict `PASS`
+  or `ATTESTED`, on the `HEAD` commit, clean worktree. `.githooks/etat.mjs` reads that
+  evidence without running anything: verify stays the only judge, over all
+  blocking contracts. `FAIL` or `ERROR`: go back to `REALISATION` to fix.
+  `MANUAL`: a human attests (`drwil attest <ID>`), then verify runs again. A
+  fiche's acceptance criteria are not a parallel system: a checkable
+  criterion becomes a contract with a `Check`, a human one a `MANUAL`
+  contract.
+- **Tool-side blocks** (Claude Code, `deny` rules in
+  `.claude/settings.json`, if present): `git … --no-verify`, `git commit -n` and writing `.drwil/state.json`
+  (if present) directly are refused by the tool, not by the model.
+- **Limits**: an agent with a shell can still cheat locally (rewrite the
+  state, fake a terminal, combined short option). The aim is cheating that
+  shows in the diff and is refused in CI, not impossible cheating.
+
+### Scope barrier
+
+The engine's `perimetre-attente` check (`.githooks/perimetre.mjs`), run at
+commit, push, in CI and in `drwil verify`. Severity: `barriere` setting in
+`.drwil/ia-first.json` — `avertissement` (written by `drwil init`: gaps are
+shown, nothing is blocked), `bloquant`, `off`.
+
+- **Sheets always pass**: `docs/projects/` and `docs/intentions/`, as do
+  human attestations, written by `drwil attest`:
+  `.drwil/evidence/attestations/` (if present) — configurable list: `horsPerimetre`. Any other file,
+  code or doc, is subject to the scope.
+- **At commit**: outside sheets, a commit is accepted only in
+  `REALISATION`, for files covered by the active sheet's `cadrage` block
+  **as it is in `HEAD`**. Widening one's scope thus takes a separate commit
+  touching only the sheet; the code comes in the next commit.
+- **Trailer**: the `prepare-commit-msg` hook adds `Drwil-Attente: <active
+  sheet>` to the message. Git never skips this hook.
+- **On push, in CI and in `drwil verify`**: each commit of the branch
+  (since the main branch, or `DRWIL_BASE`) is replayed against the cadrage
+  of its trailer's sheet, read in its parent commit. A commit outside
+  sheets without a trailer is refused. A commit is judged by its parent's
+  rules: if the barrier did not exist there yet, it is not checked. The
+  activity only exists locally, so CI only checks the scope.
+- **Removal**: see below.
+
+### Disabling or removing governance
+
+No installation creates a permanent lock: governance is switched off by a
+setting, then removed with the rest of the mechanics.
+
+- **Disable** (reversible, nothing is deleted): `"barriere": "off"` in
+  `.drwil/ia-first.json`. No more barrier at commit, push or in CI, no more
+  `Drwil-Attente` trailer, and the context reinjected to the agent shrinks
+  to "governance disabled". Setting `avertissement` or `bloquant` back
+  restores it as it was.
+- **Remove**: `npx drwil uninstall` (dry run: lists what would be removed),
+  then `npx drwil uninstall --yes`. Mechanics files left untouched are
+  removed (hooks, `.githooks/etat.mjs`, rules of
+  `.claude/settings.json` (if present)); the local state
+  `.drwil/state.json` (if present) is listed with
+  them and deleted only with `--yes`. Sheets, contracts and versioned
+  attestations stay: they are the project's history.
+- **Limit**: Claude Code's `deny` rule on `.drwil/state.json` (if present)
+  also refuses any shell command that mentions that path, even a read;
+  reading the state goes through `node .githooks/etat.mjs`.

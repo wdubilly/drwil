@@ -581,7 +581,13 @@ npx drwil uninstall --yes   # actually removes those files
 
 * it removes the files DRWIL installed **that are unchanged since installation**;
 * it lists the files you modified and leaves them in place;
+* it lists the local governance state, `.drwil/state.json` (if present,
+  git-ignored), and deletes it only with `--yes`;
 * it never touches the project's chantier, intention and recipe folders.
+
+To only switch governance off (reversible, nothing deleted), set
+`"barriere": "off"` in `.drwil/ia-first.json`: no scope barrier, no
+`Drwil-Attente` trailer, no activity context for the agent.
 
 It does not remove everything, on purpose. To finish cleaning up:
 

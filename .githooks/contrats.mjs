@@ -9,8 +9,8 @@
 // contrôle connu du moteur, entre backticks) et `**Manuel**` (partie de la
 // preuve qui reste humaine). La commande d'un contrôle ne vit jamais ici.
 
-/** Identifiants des étapes de .githooks/run-checks.mjs. Les trois premiers sont aussi ceux de SOCLE dans check-control-coverage.mjs. */
-export const CONTROLES_SOCLE = ["secrets-fichiers", "docs-references", "controles-autotest", "couverture-ci", "branche-principale"];
+/** Identifiants des étapes de .githooks/run-checks.mjs. Les quatre premiers sont aussi ceux de SOCLE dans check-control-coverage.mjs. */
+export const CONTROLES_SOCLE = ["secrets-fichiers", "docs-references", "perimetre-attente", "controles-autotest", "couverture-ci", "branche-principale"];
 
 const ID_RE = /^[A-Z][A-Z0-9]*-\d+$/;
 const CHAMP_CONTROLE = /^(contrôle|controle|check)$/i;

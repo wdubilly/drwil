@@ -13,6 +13,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { globEnRegex } from "./glob.mjs";
+import { controlerPerimetre } from "./perimetre.mjs";
 
 const TEXTES = {
   fr: {
@@ -21,6 +22,7 @@ const TEXTES = {
     pasDeGit: "pas de dépôt git",
     modeMinimal: "mode minimal",
     docs: "chemins et contrats cités dans la doc",
+    perimetre: "périmètre de l'attente",
     branche: "branche principale (QUA-017)",
     brancheCi: "jamais en CI",
     brancheTags: "push de tags uniquement",
@@ -37,6 +39,7 @@ const TEXTES = {
     pasDeGit: "not a git repository",
     modeMinimal: "minimal mode",
     docs: "paths and contracts cited in docs",
+    perimetre: "expectation scope",
     branche: "main branch (QUA-017)",
     brancheCi: "never in CI",
     brancheTags: "tags-only push",
@@ -99,6 +102,16 @@ export function controles(root, { cfg = {}, env = process.env, indexes = null, c
   });
 
   ajouter("docs-references", T.docs, (o, nom) => lancer(process.execPath, [".githooks/check-docs.mjs"], o, nom));
+
+  // Barrière de périmètre de l'attente (.githooks/perimetre.mjs) : au commit, l'état local ;
+  // ailleurs (push, CI, verify), rejeu de chaque commit de la branche via son trailer.
+  ajouter("perimetre-attente", T.perimetre, (o, nom) => {
+    o.avantLancement?.(nom);
+    const r = controlerPerimetre(root, { cfg, indexes, env });
+    const sortie = r.problemes.map((p) => `  ${r.statut === "echec" ? "✗" : "⚠"} ${p}`).join("\n");
+    if (sortie && o.stdio !== "pipe") console.log(sortie);
+    return { statut: r.statut, message: r.message, detail: r.detail, sortie };
+  });
 
   // QUA-017 : jamais de travail direct sur la branche principale, y compris le tout premier commit
   // (plus d'exception de bootstrap : `init()` crée systématiquement une branche de travail avant tout

@@ -20,6 +20,17 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
+- [ ] [IA] [P1] Gouvernance — Machine d'état et double barrière : état
+  runtime `.drwil/state.json` (à créer), barrière comportementale + mécanique —
+  `docs/projets/gouvernance-attente-active.md`.
+- [ ] [décision] [P2] Les tests des hooks laissent leurs dossiers dans `/tmp`
+  (inodes épuisés le 2026-10-09) : choisir la forme du nettoyage —
+  `docs/projets/tests-nettoyer-tmp.md`.
+- [ ] [décision] [P1] Un chemin cité ne vaut pas preuve s'il est ignoré par
+  Git (contrôle local divergent de la CI) —
+  `docs/projets/citations-fichiers-ignores.md`.
+- [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
+  légère décidée, modalités à définir — `docs/projets/entretien-sous-barriere-bloquante.md`.
 - [ ] [humain] [P1] Intégration agent de `drwil verify` (`/drwil verify`,
   `verify --agent`) livrée sur `chantier/integration-agent` : à relire, et
   essai d'attestation humaine à faire —

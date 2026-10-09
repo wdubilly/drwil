@@ -1,0 +1,7 @@
+#!/bin/sh
+# Barrière de périmètre (.githooks/perimetre.mjs) : ajoute « Drwil-Attente: <fiche active> »
+# au message, pour que la CI rejoue le commit contre le cadrage de cette fiche. Git ne saute
+# jamais ce hook, même avec l'option qui saute pre-commit. Ne bloque jamais : sans node ni
+# attente active, rien n'est ajouté et la CI refusera un commit hors fiches sans trailer.
+command -v node >/dev/null 2>&1 || exit 0
+exec node "$(dirname "$0")/perimetre.mjs" --trailer "$1"

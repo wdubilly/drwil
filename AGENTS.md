@@ -26,11 +26,24 @@ Carte complète : `docs/architecture.md`.
   même commit que le code qu'elle décrit. Une information a une seule source.
 - **Preuve avant annonce** : avant d'écrire « corrigé », « passe » ou
   « terminé », relancer le contrôle concerné et lire sa sortie.
+- **État de gouvernance (tout agent)** : première action de toute tâche,
+  lancer `node .githooks/etat.mjs` et suivre son activité, son attente et son
+  périmètre ; le relancer en cas de doute, jamais le déduire de la
+  conversation. Ne jamais écrire `.drwil/state.json` (si présent) à la main :
+  changer d'activité passe par `node .githooks/etat.mjs passer <ACTIVITE>` ;
+  ouvrir une attente, lancer la réalisation et clore restent une décision
+  humaine (réglage `transitions` de `.drwil/ia-first.json`).
+  Un commit hors du cadrage de la fiche active est refusé : élargir le
+  cadrage dans un commit séparé qui ne touche que la fiche.
 - **Cause avant correctif** : reproduire puis établir la cause racine avant de modifier le code.
 - **Pas de contournement (QUA-019)** : un contrôle bloquant (test, hook, CI)
   n'est jamais désactivé, sauté (`--no-verify`, skip...) ni contourné pour
   avancer. S'il semble mal calibré, le dire et proposer de le corriger,
   jamais le désactiver en silence.
+- **Références lisibles** : toute référence citée à un humain (ID de contrat,
+  numéro de point, de lot ou de décision d'une fiche) est suivie de ce
+  qu'elle désigne en clair — « QUA-016 (rappel de cadrage) », « point 12
+  (élargissement du cadrage) ». Un ID seul n'est pas lisible.
 - **Laisser propre en passant** : documenter et signaler tout écart trouvé.
 - **Compte rendu de fin de tâche** : fichiers créés/modifiés, contrôles lancés et résultats exacts, limites et ambiguïtés restantes.
 

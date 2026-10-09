@@ -330,7 +330,10 @@ npx drwil uninstall --yes    # actually removes the files
 Driven by the installed-files manifest, so it only removes what the kit
 itself installed. Never touches `docs/projets/`, `docs/intentions/`, or
 `docs/recettes/` — your project's decisions and history are never
-deleted automatically.
+deleted automatically. The local governance state,
+`.drwil/state.json` (if present, git-ignored), is listed too, and deleted only with `--yes`. To only switch
+governance off, without removing anything: `"barriere": "off"` in
+`.drwil/ia-first.json`.
 
 ### Try it without publishing to npm
 

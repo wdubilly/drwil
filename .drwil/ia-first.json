@@ -50,5 +50,7 @@
       "chemins": ["packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
       "degradable": false
     }
-  ]
+  ],
+  "transitions": "humain",
+  "barriere": "bloquant"
 }
