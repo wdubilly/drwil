@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "contract": "SEC-001",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-09T17:56:03.937Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "7e0b9f0f2deb69290eb49f9167acf7cdc3bd1eeae4e1a3cac39cfa42ca90b37d",
+  "commit": "5c64d6f87920880ef7d0573fbc93822bab07c65e",
+  "automated": []
+}
