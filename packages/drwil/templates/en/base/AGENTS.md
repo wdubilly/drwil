@@ -45,7 +45,9 @@ Full map and stack: `docs/architecture.md`.
   write `.drwil/state.json` (if present) by hand: change activity with
   `node .githooks/etat.mjs passer <ACTIVITE>`; opening an expectation,
   starting implementation and closing remain a human decision (`transitions`
-  setting in `.drwil/ia-first.json`).
+  setting in `.drwil/ia-first.json`). A commit outside the active sheet's
+  cadrage is refused: widen the cadrage in a separate commit touching only
+  the sheet.
 - **Cause before fix**: facing a bug or a red test, reproduce then
   establish the root cause before changing code; no trial fix, no bypassing
   a check (test, hook, CI) to make it pass (QUA-019): if it seems

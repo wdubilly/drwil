@@ -347,5 +347,28 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
   (if present) directly are refused by the tool, not by the model.
 - **Limits**: an agent with a shell can still cheat locally (rewrite the
   state, fake a terminal, combined short option). The aim is cheating that
-  shows in the diff and is refused in CI, not impossible cheating; the state
-  blocks no commit yet.
+  shows in the diff and is refused in CI, not impossible cheating.
+
+### Scope barrier
+
+The engine's `perimetre-attente` check (`.githooks/perimetre.mjs`), run at
+commit, push, in CI and in `drwil verify`. Severity: `barriere` setting in
+`.drwil/ia-first.json` — `avertissement` (written by `drwil init`: gaps are
+shown, nothing is blocked), `bloquant`, `off`.
+
+- **Sheets always pass**: `docs/projects/` and `docs/intentions/`
+  (configurable list: `horsPerimetre`). Any other file, code or doc, is
+  subject to the scope.
+- **At commit**: outside sheets, a commit is accepted only in
+  `REALISATION`, for files covered by the active sheet's `cadrage` block
+  **as it is in `HEAD`**. Widening one's scope thus takes a separate commit
+  touching only the sheet; the code comes in the next commit.
+- **Trailer**: the `prepare-commit-msg` hook adds `Drwil-Attente: <active
+  sheet>` to the message. Git never skips this hook.
+- **On push, in CI and in `drwil verify`**: each commit of the branch
+  (since the main branch, or `DRWIL_BASE`) is replayed against the cadrage
+  of its trailer's sheet, read in its parent commit. A commit outside
+  sheets without a trailer is refused. A commit is judged by its parent's
+  rules: if the barrier did not exist there yet, it is not checked. The
+  activity only exists locally, so CI only checks the scope.
+- **Removal**: `barriere: off`.

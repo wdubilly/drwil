@@ -424,6 +424,11 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
   assert.equal(ok.status, 0, ok.stderr);
   assert.match(drwilEtat().stdout, /Activité : ATTENTE/);
 
+  // Barrière de périmètre : livrée en avertissement, hook du trailer exécutable, couverte par la fiche mécanique.
+  assert.equal(config(dir).barriere, "avertissement");
+  if (process.platform !== "win32") assert.ok(statSync(join(dir, ".githooks/prepare-commit-msg")).mode & 0o111, "prepare-commit-msg exécutable");
+  assert.match(read(dir, "docs/projets/mecanique-ia-first.md"), /\.githooks\/perimetre\.mjs/);
+
   const deny = JSON.parse(read(dir, ".claude/settings.json")).permissions.deny;
   for (const regle of ["Edit(**/.drwil/state.json)", "Write(**/.drwil/state.json)", "Bash(git commit -n*)"]) assert.ok(deny.includes(regle), regle);
   assert.ok(deny.some((r) => r.includes("no-verify")));

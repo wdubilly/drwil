@@ -33,6 +33,8 @@ Carte complète : `docs/architecture.md`.
   changer d'activité passe par `node .githooks/etat.mjs passer <ACTIVITE>` ;
   ouvrir une attente, lancer la réalisation et clore restent une décision
   humaine (réglage `transitions` de `.drwil/ia-first.json`).
+  Un commit hors du cadrage de la fiche active est refusé : élargir le
+  cadrage dans un commit séparé qui ne touche que la fiche.
 - **Cause avant correctif** : reproduire puis établir la cause racine avant de modifier le code.
 - **Pas de contournement (QUA-019)** : un contrôle bloquant (test, hook, CI)
   n'est jamais désactivé, sauté (`--no-verify`, skip...) ni contourné pour

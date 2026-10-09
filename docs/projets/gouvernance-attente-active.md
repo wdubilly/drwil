@@ -858,22 +858,18 @@ Et plus fondamentalement :
 
 ## Reprise
 
-- **Dernier état** (2026-10-09) : Lot 1 commité (`181b0f0`) : lecteur
-  `.githooks/etat.mjs`, contexte agnostique via `AGENTS.md`, hook
-  `SessionStart` de Claude, `.drwil/state.json` (si présent) ignoré par Git.
-  Lot 2 réalisé, à relire : commande `passer <ACTIVITE> [--fiche]
-  [--demande]` dans `.githooks/etat.mjs`, garde-fou terminal interactif selon le
-  réglage `transitions` (`humain` par défaut, écrit par `drwil init`),
-  façade `drwil etat`, règles `deny` de Claude (dépôt et gabarit), consignes
-  et doc à jour ; 20 tests d'`.githooks/etat.mjs`, 2 tests du kit ; `run-checks` vert.
+- **Dernier état** (2026-10-09) : Lots 1 et 2 commités. Lot 3 réalisé :
+  `.githooks/perimetre.mjs`, contrôle `perimetre-attente` du moteur (commit :
+  activité `REALISATION` et cadrage de la fiche active lu dans `HEAD` ; push,
+  CI et `drwil verify` : rejeu de chaque commit via le trailer
+  `Drwil-Attente`, cadrage lu dans le parent), hook `prepare-commit-msg`,
+  réglage `barriere` (`avertissement` à l'installation, `bloquant` ici),
+  doc « Barrière de périmètre », 9 tests de la barrière et test du kit.
 - **Limites** : un agent autre que Claude Code ne lit l'état que s'il suit
-  la consigne d'`AGENTS.md` ; messages de transition et de validation en
-  français seulement ; l'état ne bloque encore aucun commit (Lot 3). Ce
-  clone travaille avec un état en `REALISATION` écrit à la main avant que la
-  commande existe.
+  la consigne d'`AGENTS.md` ; messages de transition et de validation d'état
+  en français seulement ; la CI ne contrôle que le périmètre (l'activité est
+  locale) ; sur la branche principale elle-même, il n'y a rien à rejouer.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] Lot 3 — barrière pre-commit (périmètre lu dans
-  `HEAD`) et rejeu du périmètre en CI. Restent ouverts : points 5 (conditions
-  de clôture), 6 (fichiers de gouvernance hors périmètre), 7 (conditions
-  exactes du commit), 8 (réaction à un échec de VERIFY) et 10 (retrait
-  propre).
+- **Prochaine étape** : [IA] Lot 4 — intégration avec VERIFY (points 5 :
+  conditions de clôture, et 8 : réaction quand la vérification drwil
+  échoue). Reste ouvert aussi : point 10 (retrait propre de la gouvernance).

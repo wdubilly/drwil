@@ -212,7 +212,7 @@ async function writeOut(
   await writeFile(target, content);
   if (manifest) manifest[rel] = sha256(content);
   // commit-msg reste volontairement non exécutable (livré mais désactivé par défaut, lot 4).
-  if (target.endsWith(".mjs") || ["pre-commit", "pre-push"].includes(basename(target))) {
+  if (target.endsWith(".mjs") || ["pre-commit", "pre-push", "prepare-commit-msg"].includes(basename(target))) {
     try { await chmod(target, 0o755); } catch {}
   }
 }
@@ -533,6 +533,9 @@ async function writeConfig(r: Resolved): Promise<void> {
     // Transitions de l'état de gouvernance (.githooks/etat.mjs) : "humain" (ouvrir, lancer la
     // réalisation et clore exigent un terminal interactif) | "agent". Jamais écrasé.
     transitions: typeof previous?.transitions === "string" ? previous.transitions : "humain",
+    // Barrière de périmètre de l'attente (.githooks/perimetre.mjs) : "off" | "avertissement" |
+    // "bloquant". "avertissement" à l'installation : le projet voit les écarts avant de durcir.
+    barriere: typeof previous?.barriere === "string" ? previous.barriere : "avertissement",
     layerPrefixes: ["app", "tests", "src", "scripts"],
     codePrefixes: ["scripts", ".githooks", "e2e"],
     extraCodeFiles: [],

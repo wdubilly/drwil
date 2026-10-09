@@ -357,5 +357,29 @@ versionné.
   l'outil, pas par le modèle.
 - **Limites** : un agent qui a le shell peut toujours tricher en local
   (réécrire l'état, simuler un terminal, option courte combinée). Le but est
-  une triche visible dans le diff et refusée en CI, pas impossible ; l'état
-  ne bloque encore aucun commit.
+  une triche visible dans le diff et refusée en CI, pas impossible.
+
+### Barrière de périmètre
+
+Contrôle `perimetre-attente` du moteur (`.githooks/perimetre.mjs`), qui
+tourne au commit, au push, en CI et dans `drwil verify`. Sévérité : réglage
+`barriere` de `.drwil/ia-first.json` — `avertissement` (écrit par `drwil
+init` : les écarts sont affichés, rien n'est bloqué), `bloquant`, `off`.
+
+- **Les fiches passent toujours** : `docs/projets/` et `docs/intentions/`
+  (liste réglable : `horsPerimetre`). Tout autre fichier, code ou doc, est
+  soumis au périmètre.
+- **Au commit** : hors fiches, un commit n'est accepté qu'en `REALISATION`,
+  pour des fichiers couverts par le bloc `cadrage` de la fiche active **tel
+  qu'il est dans `HEAD`**. Élargir son périmètre demande donc un commit
+  séparé qui ne touche que la fiche ; le code vient au commit suivant.
+- **Trailer** : le hook `prepare-commit-msg` ajoute `Drwil-Attente: <fiche
+  active>` au message. Git ne saute jamais ce hook.
+- **Au push, en CI et dans `drwil verify`** : chaque commit de la branche
+  (depuis la branche principale, ou `DRWIL_BASE`) est rejoué contre le
+  cadrage de la fiche de son trailer, lu dans son commit parent. Un commit
+  hors fiches sans trailer est refusé. Un commit est jugé selon les règles
+  de son parent : si la barrière n'y existait pas encore, il n'est pas
+  contrôlé. L'activité n'existant qu'en local, la CI ne contrôle que le
+  périmètre.
+- **Retrait** : `barriere: off`.

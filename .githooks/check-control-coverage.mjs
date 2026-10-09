@@ -27,6 +27,8 @@ const SOCLE = [
     chemins: ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "README.md", "INSTALL.md", "docs/**", ".claude/**", ".githooks/**"],
     ciJob: "checks",
   },
+  // Rejoué en CI sur chaque commit de la branche (trailer Drwil-Attente) : jamais dégradé.
+  { id: "perimetre-attente", degradable: false, chemins: ["**"], ciJob: "checks" },
   { id: "controles-autotest", degradable: false, chemins: [".githooks/**"], ciJob: "checks" },
 ];
 
