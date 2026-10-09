@@ -20,6 +20,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
+- [ ] [IA] [P1] Gouvernance — Machine d'état et double barrière : état
+  runtime `.drwil/state.json` (à créer), barrière comportementale + mécanique —
+  `docs/projets/gouvernance-attente-active.md`.
 - [ ] [humain] [P1] Intégration agent de `drwil verify` (`/drwil verify`,
   `verify --agent`) livrée sur `chantier/integration-agent` : à relire, et
   essai d'attestation humaine à faire —
