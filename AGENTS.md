@@ -38,6 +38,10 @@ Carte complète : `docs/architecture.md`.
   n'est jamais désactivé, sauté (`--no-verify`, skip...) ni contourné pour
   avancer. S'il semble mal calibré, le dire et proposer de le corriger,
   jamais le désactiver en silence.
+- **Références lisibles** : toute référence citée à un humain (ID de contrat,
+  numéro de point, de lot ou de décision d'une fiche) est suivie de ce
+  qu'elle désigne en clair — « QUA-016 (rappel de cadrage) », « point 12
+  (élargissement du cadrage) ». Un ID seul n'est pas lisible.
 - **Laisser propre en passant** : documenter et signaler tout écart trouvé.
 - **Compte rendu de fin de tâche** : fichiers créés/modifiés, contrôles lancés et résultats exacts, limites et ambiguïtés restantes.
 

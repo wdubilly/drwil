@@ -35,3 +35,7 @@ DOC_GOUVERNANCE_ET_USAGE.md
 # État de gouvernance runtime (activité et attente actives de ce clone) : local,
 # jamais versionné — la reprise passe par la fiche versionnée (docs/ia-first.md).
 .drwil/state.json
+
+# Réglages Claude Code personnels (plugins, exemptions) : jamais versionnés,
+# comme dans le gabarit.
+.claude/settings.local.json
