@@ -4,6 +4,30 @@
 
 **Statut** : cadré le 2026-10-07 — en attente de démarrage
 
+<!-- cadrage
+fichiers:
+  - packages/drwil/templates/common/base/.githooks/etat.mjs
+  - packages/drwil/templates/common/base/.githooks/etat.test.mjs
+  - .githooks/etat.mjs
+  - .githooks/etat.test.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/settings.json
+  - .claude/settings.json
+  - packages/drwil/templates/common/base/gitignore
+  - .gitignore
+  - packages/drwil/templates/fr/base/AGENTS.md
+  - packages/drwil/templates/en/base/AGENTS.md
+  - AGENTS.md
+  - packages/drwil/templates/fr/base/docs/ia-first.md
+  - packages/drwil/templates/en/base/docs/ia-first.md
+  - docs/ia-first.md
+  - packages/drwil/test/kit.test.mjs
+-->
+
+(cadrage du Lot 1 : lecteur d'état dans `.githooks/` — utilisable par le
+pre-commit sans dépendre de `npx` —, hook `SessionStart` de Claude, consignes
+et doc des deux côtés (QUA-018). Les copies de `.githooks/` restent
+identiques à celles du gabarit. Chaque lot suivant ajoute ses fichiers.)
+
 ---
 
 ## 1. Besoin
