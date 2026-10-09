@@ -288,15 +288,16 @@ the files this project touches.
 - **Configurable severity at commit** (`.githooks/check-docs.mjs`,
   `cadrage` setting in `.drwil/ia-first.json`): a code file indexed by git
   that no block covers, or a malformed block (no `fichiers:` line, too
-  broad a pattern like `**` or `scripts/*`), is reported. `avertissement`
-  (default): never blocking, just shown. `bloquant`: fails the check.
-  `off`: disables the check (and its reminder to the agent). `docs/` and
-  any markdown file are never code.
-- **Reminder to the agent, informative** (Claude Code, PostToolUse hook
-  `.claude/hooks/rappel-cadrage.mjs`, if present): after writing a code
-  file outside any sheet, a message is slipped to it; nothing is blocked
-  (the file is already written), the commit follows the `cadrage` setting
-  above.
+  broad a pattern like `**` or `scripts/*`), is reported. `bloquant`
+  (written by `drwil init`): fails the check. `avertissement`: never
+  blocking, just shown (the value used when the setting is missing). `off`:
+  disables the check (and its reminder to the agent). `docs/` and any
+  markdown file are never code.
+- **Agent side** (Claude Code, hook
+  `.claude/hooks/rappel-cadrage.mjs`, if present), following the same setting: in `bloquant`, writing a code file
+  outside any sheet is refused before it happens (PreToolUse hook); in
+  `avertissement`, a reminder is slipped after the write (PostToolUse hook),
+  nothing is blocked; in `off`, nothing.
 - **Small task**: attaches to `docs/projects/routine-maintenance.md`,
   without opening a separate project.
 - **Kit's own files**: covered by `docs/projects/kit-mechanics.md`, set up
