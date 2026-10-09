@@ -1,6 +1,6 @@
 # Projet : les tests des hooks nettoient leurs dossiers temporaires
 
-**Statut** : ouvert le 2026-10-09 — en attente de démarrage.
+**Statut** : cadré le 2026-10-09 — lot 1 à démarrer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -11,9 +11,9 @@ fichiers:
   - .githooks/perimetre.test.mjs
 -->
 
-(cadrage provisoire : les deux tests des hooks qui créent des dossiers
+(cadrage : les deux tests des hooks qui créent des dossiers
 `/tmp/drwil-etat-*` et `/tmp/drwil-perimetre-*` sans les supprimer, côté
-gabarit et dans la copie du dépôt. À confirmer au démarrage.)
+gabarit et dans la copie du dépôt — confirmé le 2026-10-09.)
 
 ## 1. Besoin
 
@@ -42,7 +42,15 @@ chaque projet généré par les tests du kit, d'où le volume.
 
 ## 4. Décisions
 
-(aucune encore)
+- **2026-10-09 — `afterEach` dans chaque fichier (point 5)** : on reprend
+  dans les deux fichiers le mécanisme des tests du kit (liste des dossiers
+  du test, suppression après un test réussi, dossiers gardés et affichés
+  en cas d'échec, suppression qui réessaie et signale sans faire échouer).
+  Pas de module partagé : aucun fichier de plus livré dans le gabarit.
+- **2026-10-09 — Branche empilée** : `chantier/tests-nettoyer-tmp` part de
+  `chantier/gouvernance-attente-active` (PR #1, non fusionnée), où vivent
+  cette fiche et la version actuelle des deux tests ; à rebaser sur
+  `master` après la fusion.
 
 ## Contrats concernés
 
@@ -53,8 +61,8 @@ chaque projet généré par les tests du kit, d'où le volume.
 
 ## 5. Points à trancher
 
-- [décision] Nettoyage par `after()` / `afterEach()` dans chaque fichier de
-  test, ou petite fonction partagée de création de dépôt temporaire ?
+- ~~Nettoyage par `afterEach()` ou fonction partagée~~ — tranché le
+  2026-10-09 (voir « Décisions »).
 
 ## 6. Lots
 
@@ -66,7 +74,8 @@ chaque projet généré par les tests du kit, d'où le volume.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-09) : fiche ouverte, rien de réalisé.
+- **Dernier état** (2026-10-09) : point 5 tranché, branche
+  `chantier/tests-nettoyer-tmp` créée ; rien de réalisé.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher le point 5, puis ouvrir une
-  attente sur cette fiche.
+- **Prochaine étape** : [humain] ouvrir une attente sur cette fiche, puis
+  lancer la réalisation ; [IA] Lot 1.
