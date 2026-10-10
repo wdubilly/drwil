@@ -20,6 +20,13 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
+- [ ] [IA] [P0] Livrable léger et sans casse : ni ralentir ni casser
+  l'utilisateur (tests des hooks hors de son commit, mise à jour sans
+  casse, budget de temps) — `docs/projets/livrable-leger-sans-casse.md`.
+- [ ] [IA] [P0] Dépôt et gabarit identiques, vérifié par un contrôle
+  (écarts corrigés ou déclarés) — `docs/projets/depot-gabarit-identiques.md`.
+- [ ] [IA] [P0] Couverture des hooks de gouvernance mesurée et
+  garantie par un seuil — `docs/projets/couverture-hooks.md`.
 - [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
   légère décidée, modalités à définir — `docs/projets/entretien-sous-barriere-bloquante.md`.
 - [ ] [humain] [P1] drwil V0.2 — gouvernance exécutable : lots [IA] livrés
@@ -47,6 +54,13 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [décision] [P1] Fabrique autonome graduée par le risque (forge,
   outillage, mutation, rôles séparés, auto-fusion LOW) —
   `docs/intentions/fabrique-autonome.md`.
+- [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
+  CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
+  `docs/intentions/forge-dans-le-livrable.md`.
+- [ ] [IA] [P2] Programmer la fusion automatique avant de revenir en
+  CADRAGE (ordre sûr dans la consigne) — `docs/projets/consigne-fusion-auto.md`.
+- [ ] [IA] [P1] README à jour du cycle de gouvernance (lancement,
+  fusion autorisée, forge) — `docs/projets/readme-a-jour.md`.
 - [ ] [décision] [P2] Non-régression continue : règle « défaut corrigé →
   test rattaché à un contrat », traçabilité dans `verify` —
   `docs/intentions/non-regression-continue.md`.
