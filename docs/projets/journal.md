@@ -238,3 +238,22 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
   vérifier par un test témoin ; sinon, consigne seule.
 - **Clôturé par** : PR #9 (`c46452a`) et la PR de clôture qui retire cette
   fiche.
+
+## 2026-10-10 — Tests des contrôles isolés des variables GIT_* du hook
+
+- **Constat** : un hook lancé par `git commit -a` (`GIT_INDEX_FILE`) ou
+  depuis un worktree (`GIT_DIR`) faisait agir les dépôts de test, et le
+  code testé, sur le dépôt lanceur : échecs à tort avec `-a` ; depuis un
+  worktree, commits parasites, `user.name=Test` et `core.bare=true` écrits
+  dans le vrai dépôt (réparé à la main, rien de poussé).
+- **Décisions clés** : corriger l'environnement des tests, pas les hooks
+  (hériter de ces variables y est voulu) ; retirer **toutes** les `GIT_*`
+  de `process.env` en tête de chaque fichier de test, car le code testé
+  lance aussi `git`. [décisions utilisateur]
+- **Résultat** : test de non-régression (relance des tests avec `GIT_DIR`
+  et `GIT_INDEX_FILE` vers un dépôt « victime », laissé intact), sauté
+  dans les projets générés par les tests du kit (+56 s sinon) ; le commit
+  du lot passe avec `git commit -a`. Piège noté : `NODE_TEST_CONTEXT`,
+  hérité de `node --test`, empêche un `node --test` enfant de lancer quoi
+  que ce soit.
+- **Clôturé par** : PR #16 (`f293222`).

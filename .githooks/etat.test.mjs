@@ -2,9 +2,14 @@ import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, fichesCadrees, lancer, rappelCourt, rappelSiChange, transitionAutorisee, validerEtat } from "./etat.mjs";
+
+// Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
+// hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
+for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
 // Chaque dossier temporaire est supprimé après son test : ces tests tournent à chaque commit,
 // et aussi dans chaque projet que génèrent les tests du kit ; sans ça, ils épuisaient les
@@ -404,4 +409,21 @@ test("lancer : fiche non cadrée, terminée ou modèle refusée ; mode agent lib
   }
   const agent = depotCadre({ transitions: "agent" }).racine;
   assert.equal(lancer(agent, FICHE).code, 0);
+});
+
+// L'enfant relance ces mêmes fichiers : sans garde, il se relancerait sans fin.
+test("variables GIT_* du lanceur (commit -a, worktree) : les tests n'agissent jamais sur le dépôt qui les lance", { skip: process.env.DRWIL_TESTS_ENFANT === "1" }, () => {
+  const victime = tmp("drwil-etat-victime-");
+  assert.equal(spawnSync("git", ["init", "-q", victime]).status, 0);
+  const config = readFileSync(join(victime, ".git", "config"), "utf8");
+  const ici = dirname(fileURLToPath(import.meta.url));
+  // NODE_TEST_CONTEXT, posé par node --test pour ses enfants : hérité, l'enfant ne lançait aucun test.
+  const { NODE_TEST_CONTEXT, ...env } = process.env;
+  const r = spawnSync(process.execPath, ["--test", join(ici, "etat.test.mjs"), join(ici, "perimetre.test.mjs")], {
+    encoding: "utf8",
+    env: { ...env, DRWIL_TESTS_ENFANT: "1", GIT_DIR: join(victime, ".git"), GIT_INDEX_FILE: join(victime, ".git", "index-du-hook") },
+  });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.notEqual(spawnSync("git", ["rev-parse", "--verify", "-q", "HEAD"], { cwd: victime }).status, 0, "un test a commité dans le dépôt lanceur");
+  assert.equal(readFileSync(join(victime, ".git", "config"), "utf8"), config, "un test a modifié la config du dépôt lanceur");
 });
