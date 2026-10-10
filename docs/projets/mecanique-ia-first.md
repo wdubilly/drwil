@@ -1,6 +1,6 @@
 # Projet : mécanique du kit IA-first (fichiers propres au kit)
 
-**Statut** : mécanique livrée à l'installation du kit, le 2026-10-04.
+**Statut** : référence — mécanique livrée à l'installation du kit, le 2026-10-04.
 
 <!-- cadrage
 fichiers:

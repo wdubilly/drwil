@@ -301,3 +301,37 @@ d'origine entre parenthèses).
   sur évidence de verify. L'élargissement du cadrage reste un commit
   séparé, à montrer par la vue de relecture
   (`docs/intentions/vue-de-relecture.md`). [décisions utilisateur] PR #10.
+
+## 2026-10-10 — Intégration agent de `drwil verify`, sans franchir la frontière d'attestation
+
+- **Décisions clés** : `drwil verify` est la primitive qu'un agent utilise
+  pour savoir si son travail est gouverné, sans rendre drwil dépendant d'un
+  agent ; l'agent produit des preuves, drwil les vérifie, l'humain seul
+  atteste. [décisions utilisateur]
+- **Résultat** : `drwil verify --agent` (verdict présenté à l'agent,
+  `packages/drwil/src/agent.ts`) ; argument `verify` du skill `/drwil`
+  (fr, en), sans argument `attest`, consigne dans `AGENTS.md` ; tests de la
+  frontière d'attestation (`--yes`, stdin redirigé, script, leurres) ; doc
+  « Workflow agent / humain ». Essai réel : attestations humaines du
+  2026-10-09 sur ce dépôt. Lots 1 à 5 faits le 2026-10-06 et le
+  2026-10-09 ; fiche condensée le 2026-10-10 (elle passait pour terminée à
+  cause d'un « essai réel fait » dans son statut).
+
+## 2026-10-10 — Une fiche terminée ne reste pas dans docs/projets/
+
+- **Constat** : cinq fiches terminées étaient restées en place, proposées
+  au lancement ; la détection de « terminée » cherchait « fait » n'importe
+  où dans le statut (faux positifs et faux négatifs).
+- **Décisions clés** : seul `**Statut** : terminé le AAAA-MM-JJ` vaut
+  terminée (`statutFiche`, définition unique d'`.githooks/etat.mjs`,
+  importée par check-docs) ; `référence — …` pour une fiche qui n'est pas
+  un chantier (`mecanique-ia-first.md`), jamais proposée au lancement ;
+  retour `CLOTURE → CADRAGE` refusé et erreur check-docs tant qu'une fiche
+  terminée est encore là ; la fiche « intégration agent de verify »
+  condensée. [décisions utilisateur]
+- **Résultat** : à la clôture de ce chantier, la fiche marquée terminée a
+  bien été refusée (retour en CADRAGE et check-docs) jusqu'à sa
+  condensation.
+- **Suite** : un sondage `/drwil-lancer` ordonné (priorité de l'index,
+  fiches non prêtes signalées, ordre des intentions), à cadrer.
+- **Clôturé par** : PR #20 (`bfe4011`).

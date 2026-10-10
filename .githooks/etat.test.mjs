@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, fichesCadrees, lancer, rappelCourt, rappelSiChange, transitionAutorisee, validerEtat } from "./etat.mjs";
+import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, fichesCadrees, lancer, rappelCourt, rappelSiChange, statutFiche, transitionAutorisee, validerEtat } from "./etat.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -398,13 +398,37 @@ function depotCadre(config) {
   const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
   writeFileSync(join(racine, ".gitignore"), ".drwil/\n");
   writeFileSync(join(racine, "docs", "projets", "sans-cadrage.md"), "# Sans cadrage\n");
-  writeFileSync(join(racine, "docs", "projets", "finie.md"), "# Finie\n\n**Statut** : fait le 2026-10-01.\n\n<!-- cadrage\nfichiers:\n  - src/x.ts\n-->\n");
+  writeFileSync(join(racine, "docs", "projets", "finie.md"), "# Finie\n\n**Statut** : terminé le 2026-10-01.\n\n<!-- cadrage\nfichiers:\n  - src/x.ts\n-->\n");
+  writeFileSync(join(racine, "docs", "projets", "reference.md"), "# Référence\n\n**Statut** : référence — mécanique du kit.\n\n<!-- cadrage\nfichiers:\n  - src/r.ts\n-->\n");
   writeFileSync(join(racine, "docs", "projets", "modele-fiche-projet.md"), "# Modèle\n\n<!-- cadrage\nfichiers:\n  - src/y.ts\n-->\n");
   git("init", "-q");
   git("add", "-A");
   git("commit", "-qm", "init");
   return { racine, git };
 }
+
+test("fiche terminée : seul le marqueur explicite compte ; référence reconnue", () => {
+  assert.equal(statutFiche("# F\n\n**Statut** : terminé le 2026-10-10.\n"), "terminee");
+  assert.equal(statutFiche("# F\n\n**Status**: done on 2026-10-10.\n"), "terminee");
+  assert.equal(statutFiche("# F\n\n**Statut** : référence — mécanique du kit.\n"), "reference");
+  assert.equal(statutFiche("# F\n\n**Status**: reference — kit mechanics.\n"), "reference");
+  for (const statut of ["cadré le 2026-10-06 — lots 1 à 4 livrés, essai réel fait.", "fait (lot 1) le 2026-10-05.", "terminé, sans date."]) {
+    assert.equal(statutFiche(`# F\n\n**Statut** : ${statut}\n`), "ouverte", statut);
+  }
+  assert.equal(statutFiche("# F\n\nSans statut.\n"), "ouverte");
+});
+
+test("clôture : retour en CADRAGE refusé si la fiche terminée est encore là", async () => {
+  const racine = depot({ etat: actif("CLOTURE"), fiche: false });
+  writeFileSync(join(racine, FICHE), "# Projet : Exemple\n\n**Statut** : terminé le 2026-10-10.\n");
+  const refus = await passer(racine, { vers: "CADRAGE" }, { tty: false, maintenant: MAINTENANT });
+  assert.equal(refus.code, 1);
+  assert.match(refus.message, /terminée.*journal/);
+  assert.equal(lireEtat(racine).etat.activite, "CLOTURE");
+  // Lots encore ouverts : la fiche reste, le retour passe.
+  writeFileSync(join(racine, FICHE), "# Projet : Exemple\n\n**Statut** : cadré — lot 1 fait, lot 2 ouvert.\n");
+  assert.equal((await passer(racine, { vers: "CADRAGE" }, { tty: false, maintenant: MAINTENANT })).code, 0);
+});
 
 test("fiches cadrées : bloc cadrage commité, non terminée, hors modèles", () => {
   const { racine } = depotCadre();

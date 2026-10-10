@@ -7,6 +7,7 @@ import { execFileSync } from "node:child_process";
 import * as cadrage from "./cadrage.mjs";
 import { controlesConnus, lireContrats, validerContrats } from "./contrats.mjs";
 import { verifierRisque } from "./risque.mjs";
+import { statutFiche } from "./etat.mjs";
 
 const root = process.cwd();
 const cfg = loadConfig();
@@ -28,6 +29,7 @@ const T = {
     cadrageAvertissement: (n) => `check-docs : ${n} avertissement(s) de cadrage (QUA-016, non bloquant — réglage "cadrage" de .drwil/ia-first.json)`,
     coherenceOuverte: (fiche) => `case ouverte mais la fiche ${fiche} se dit déjà terminée (QUA-015)`,
     coherenceCochee: (fiche) => `case cochée mais la fiche ${fiche} ne se dit pas terminée (QUA-015)`,
+    ficheTerminee: (fiche) => `${fiche} : fiche terminée encore présente — la condenser dans docs/projets/journal.md, la supprimer et retirer sa ligne de l'index (QUA-015)`,
     coherenceAvertissement: (n) => `check-docs : ${n} avertissement(s) de cohérence case/statut (QUA-015, non bloquant)`,
     risqueAvertissement: (n) => `check-docs : ${n} avertissement(s) de niveau de risque (DRWIL-012, non bloquant)`,
   },
@@ -47,13 +49,12 @@ const T = {
     cadrageAvertissement: (n) => `check-docs: ${n} cadrage warning(s) (QUA-016, non-blocking — "cadrage" setting in .drwil/ia-first.json)`,
     coherenceOuverte: (fiche) => `item unchecked but ${fiche} already says it is done (QUA-015)`,
     coherenceCochee: (fiche) => `item checked but ${fiche} does not say it is done (QUA-015)`,
+    ficheTerminee: (fiche) => `${fiche}: finished card still present — condense it into docs/projects/journal.md, delete it and remove its index line (QUA-015)`,
     coherenceAvertissement: (n) => `check-docs: ${n} checkbox/status consistency warning(s) (QUA-015, non-blocking)`,
     risqueAvertissement: (n) => `check-docs: ${n} risk level warning(s) (DRWIL-012, non-blocking)`,
   },
 }[lang];
 
-// Mots-clés comptant pour un statut « terminé » (insensible à la casse), FR et EN.
-const STATUT_TERMINE_RE = /\b(fait|terminé|termine|clos|done|closed)\b/i;
 const CITATION_FICHE_RE = /`((?:docs\/projets|docs\/projects|docs\/intentions)\/[^`]+\.md)`/g;
 
 // Sévérité du rappel de cadrage (QUA-016 seul ; le reste de check-docs reste toujours bloquant) :
@@ -229,11 +230,9 @@ function checkCoherenceCaseStatut() {
     for (const m of b.texte.matchAll(CITATION_FICHE_RE)) {
       const fichePath = join(root, m[1]);
       if (!existsSync(fichePath)) continue; // signalé par ailleurs (chemin cité introuvable).
-      const fcLignes = readFileSync(fichePath, "utf8").split(/\r?\n/);
-      const debut = fcLignes.slice(0, 15).findIndex((l) => STATUT_RE.test(l));
-      if (debut === -1) continue; // signalé par ailleurs (pas de ligne Statut).
-      const statutTexte = fcLignes.slice(debut, debut + 4).join(" ");
-      const termine = STATUT_TERMINE_RE.test(statutTexte);
+      const fcTexte = readFileSync(fichePath, "utf8");
+      if (!fcTexte.split(/\r?\n/).slice(0, 15).some((l) => STATUT_RE.test(l))) continue; // signalé par ailleurs (pas de ligne Statut).
+      const termine = statutFiche(fcTexte) === "terminee";
       if (!b.coche && termine) avertissements.push(`${relIndex}:${b.ligne} : ${T.coherenceOuverte(m[1])}`);
       else if (b.coche && !termine) avertissements.push(`${relIndex}:${b.ligne} : ${T.coherenceCochee(m[1])}`);
     }
@@ -293,10 +292,12 @@ function checkCadrage() {
 
 function checkFiche(fiche, erreurs, estProjet) {
   const rel = relative(root, fiche);
-  const lignes = readFileSync(fiche, "utf8").split(/\r?\n/);
+  const texte = readFileSync(fiche, "utf8");
+  const lignes = texte.split(/\r?\n/);
   const debut = lignes.slice(0, 15).findIndex((l) => STATUT_RE.test(l));
   if (debut === -1 || !DATE_RE.test(lignes.slice(debut, debut + 4).join(" "))) erreurs.push(T.statut(rel));
   if (estProjet) {
+    if (statutFiche(texte) === "terminee") erreurs.push(T.ficheTerminee(rel));
     // le modèle numérote ses sections (« ## 7. Reprise ») : la détection doit tolérer ce préfixe.
     if (!lignes.some((l) => /^##\s*(\d+\.\s*)?(Reprise|Hand-off)\b/.test(l))) erreurs.push(T.reprise(rel));
   } else {

@@ -25,10 +25,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   `docs/projets/citations-fichiers-ignores.md`.
 - [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
   légère décidée, modalités à définir — `docs/projets/entretien-sous-barriere-bloquante.md`.
-- [ ] [humain] [P1] Intégration agent de `drwil verify` (`/drwil verify`,
-  `verify --agent`) livrée sur `chantier/integration-agent` : à relire, et
-  essai d'attestation humaine à faire —
-  `docs/projets/integration-agent-verify.md`.
 - [ ] [humain] [P1] drwil V0.2 — gouvernance exécutable : lots [IA] livrés
   sur la PR #34, à relire et fusionner ; benchmark à exécuter, publication
   npm à décider — `docs/projets/drwil-v0-2-gouvernance-executable.md`.
@@ -57,9 +53,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [décision] [P1] Fabrique autonome graduée par le risque (forge,
   outillage, mutation, rôles séparés, auto-fusion LOW) —
   `docs/intentions/fabrique-autonome.md`.
-- [ ] [décision] [P1] Une fiche terminée ne reste pas dans `docs/projets/` :
-  détection explicite, refus au retour en CADRAGE, erreur check-docs —
-  `docs/projets/fiches-terminees-condensees.md`.
 - [ ] [décision] [P2] Non-régression continue : règle « défaut corrigé →
   test rattaché à un contrat », traçabilité dans `verify` —
   `docs/intentions/non-regression-continue.md`.
