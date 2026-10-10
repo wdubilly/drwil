@@ -139,7 +139,7 @@ export function controles(root, { cfg = {}, env = process.env, indexes = null, c
     const dossier = join(root, ".githooks");
     const tests = existsSync(dossier) ? readdirSync(dossier).filter((f) => f.endsWith(".test.mjs")) : [];
     // Ces tests éprouvent le code de drwil : ils restent dans son dépôt et ne ralentissent pas le
-    // commit d'un projet équipé, qui ne les reçoit pas (docs/projets/livrable-leger-sans-casse.md).
+    // commit d'un projet équipé, qui ne les reçoit pas.
     if (!tests.length) return { statut: "non-applicable", detail: T.aucunTest };
     return lancer(process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))], o, nom);
   });
