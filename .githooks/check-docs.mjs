@@ -2,7 +2,7 @@
 // Contrôle IA-first : chemins et contrats cités dans la doc.
 // Lit .drwil/ia-first.json pour s'adapter aux couches, aux préfixes de contrats et à la langue.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { execFileSync } from "node:child_process";
 import * as cadrage from "./cadrage.mjs";
 import { controlesConnus, lireContrats, validerContrats } from "./contrats.mjs";
@@ -119,9 +119,27 @@ function ressembleAUnChemin(s) {
   return prefixesConnus.some((p) => s.startsWith(p));
 }
 
-function cheminExiste(doc, cite) {
-  // Un chemin peut être relatif à la racine du dépôt ou au fichier qui le cite.
-  return existsSync(join(root, cite)) || existsSync(join(dirname(doc), cite));
+// Un chemin peut être relatif à la racine du dépôt ou au fichier qui le cite.
+const cheminsTrouves = (doc, cite) => [join(root, cite), join(dirname(doc), cite)].filter((p) => existsSync(p));
+
+/**
+ * Parmi ces chemins, ceux qu'ignore Git (un seul appel). Présents sur le poste mais absents en CI,
+ * ils ne prouvent pas une citation : sans ça, le contrôle local passait et la CI échouait. Par
+ * défaut, `check-ignore` ne signale pas un fichier suivi. Hors dépôt Git : aucun.
+ */
+// Chemins relatifs au format « / » : Git, même sous Windows, ne reconnaît pas comme ignoré un
+// chemin écrit avec des barres obliques inversées (CI Windows de la PR #26).
+const relPosix = (p) => relative(root, p).split(sep).join("/");
+
+function ignoresParGit(chemins) {
+  const rels = [...new Set(chemins.map(relPosix))].filter((r) => r && !r.startsWith(".."));
+  if (!rels.length) return new Set();
+  try {
+    const sortie = execFileSync("git", ["check-ignore", "--stdin"], { cwd: root, input: rels.join("\n"), stdio: ["pipe", "pipe", "ignore"] });
+    return new Set(sortie.toString().split(/\r?\n/).filter(Boolean));
+  } catch {
+    return new Set(); // code 1 : rien d'ignoré ; ou pas de dépôt git.
+  }
 }
 
 const prefixes = cfg.contractPrefixes ?? ["SEC", "QUA"];
@@ -146,14 +164,17 @@ if (existsSync(contratsPath)) {
 }
 
 const docs = sources();
+const citations = [];
 for (const doc of docs) {
   const rel = relative(root, doc);
-  readFileSync(doc, "utf8").split(/\r?\n/).forEach((ligne, i) => {
-    if (!OPTIONNEL_RE.test(ligne)) {
+  const lignesDoc = readFileSync(doc, "utf8").split(/\r?\n/);
+  lignesDoc.forEach((ligne, i) => {
+    // « (si présent) » peut tomber sur la ligne suivante après un retour à la ligne.
+    if (!OPTIONNEL_RE.test(ligne) && !OPTIONNEL_RE.test(lignesDoc[i + 1] ?? "")) {
       for (const m of ligne.matchAll(CODE_RE)) {
         const cite = m[1];
-        if (ressembleAUnChemin(cite) && !CREER_RE.test(ligne.slice(m.index + m[0].length)) && !cheminExiste(doc, cite)) {
-          erreurs.push(`${rel}:${i + 1} : ${T.chemin(cite)}`);
+        if (ressembleAUnChemin(cite) && !CREER_RE.test(ligne.slice(m.index + m[0].length))) {
+          citations.push({ lieu: `${rel}:${i + 1}`, cite, trouves: cheminsTrouves(doc, cite) });
         }
       }
     }
@@ -163,6 +184,11 @@ for (const doc of docs) {
       }
     }
   });
+}
+
+const ignores = ignoresParGit(citations.flatMap((c) => c.trouves));
+for (const c of citations) {
+  if (!c.trouves.some((p) => !ignores.has(relPosix(p)))) erreurs.push(`${c.lieu} : ${T.chemin(c.cite)}`);
 }
 
 erreurs.push(...checkChantiers());

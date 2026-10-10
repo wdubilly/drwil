@@ -129,6 +129,26 @@ test("le hook refuse un commit dont la doc cite un chemin inexistant", async () 
   assert.equal(git(dir, "rev-list", "--count", "HEAD").stdout.trim(), "1");
 });
 
+test("chemin cité : un fichier ignoré par Git ne vaut pas preuve (local = CI) ; « (si présent) » aussi sur la ligne suivante", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir }));
+  // Cas du 2026-10-09 : l'état local existe sur le poste, ignoré par Git, donc absent en CI.
+  writeFileSync(join(dir, ".drwil/state.json"), "{}\n");
+  const docsCheck = () => spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
+  assert.equal(docsCheck().status, 0, "point de départ propre");
+  appendFileSync(join(dir, "docs/ia-first.md"), "\nÉtat local : `.drwil/state.json`.\n");
+  let r = docsCheck();
+  assert.equal(r.status, 1, "ignoré par Git : refusé en local comme en CI");
+  assert.match(r.stdout + r.stderr, /\.drwil\/state\.json/);
+  // Un fichier suivi par Git reste une preuve valable.
+  writeFileSync(join(dir, "docs/ia-first.md"), read(dir, "docs/ia-first.md").replace("`.drwil/state.json`.", "`.drwil/ia-first.json`."));
+  assert.equal(docsCheck().status, 0, docsCheck().stdout);
+  // « (si présent) » reconnu sur la ligne suivante, après un retour à la ligne.
+  writeFileSync(join(dir, "docs/ia-first.md"), read(dir, "docs/ia-first.md").replace("`.drwil/ia-first.json`.", "`.drwil/state.json`\n(si présent)."));
+  r = docsCheck();
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
 test("les contrôles déclarés par le projet tournent et survivent à une réinstallation", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, git: false }));

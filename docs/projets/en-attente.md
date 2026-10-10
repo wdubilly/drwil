@@ -20,9 +20,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
-- [ ] [décision] [P1] Un chemin cité ne vaut pas preuve s'il est ignoré par
-  Git (contrôle local divergent de la CI) —
-  `docs/projets/citations-fichiers-ignores.md`.
 - [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
   légère décidée, modalités à définir — `docs/projets/entretien-sous-barriere-bloquante.md`.
 - [ ] [humain] [P1] drwil V0.2 — gouvernance exécutable : lots [IA] livrés
@@ -44,7 +41,7 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [humain] [P2] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projets/suites-kit-portable.md` (point 2).
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [décision] [P2] QUA-017 bloque un push qui ne fait que supprimer une
+- [ ] [IA] [P2] QUA-017 bloque un push qui ne fait que supprimer une
   branche distante (faux positif, cousin du push de tag) —
   `docs/projets/qua017-push-suppression.md`.
 - [ ] [humain] [P1] Protéger master : ruleset (checks obligatoires, pas

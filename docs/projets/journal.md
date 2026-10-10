@@ -369,3 +369,21 @@ d'origine entre parenthèses).
 - **Limite** : tant que l'agent partage l'identité du mainteneur, la
   garantie reste comportementale (voir `docs/intentions/fabrique-autonome.md`).
 - **Clôturé par** : PR #24 (lot 1) et PR #25 (essai, fusion automatique).
+
+## 2026-10-10 — Un chemin cité ignoré par Git ne vaut pas preuve
+
+- **Constat** : check-docs acceptait en local un chemin cité qui n'existait
+  que comme fichier ignoré par Git (état local, évidences) ; la CI, sans ce
+  fichier, échouait (2026-10-09, puis PR #11 et #13 le 2026-10-10). La
+  mention « (si présent) » n'était reconnue que sur la même ligne.
+- **Décisions clés** : erreur en local, comme en CI (un seul appel à
+  `git check-ignore`, qui ne signale pas un fichier suivi) ; « (si
+  présent) » reconnu aussi sur la ligne suivante. [décisions utilisateur]
+- **Résultat** : test du kit reproduisant le cas du 2026-10-09 ; dépôt et
+  gabarit identiques. Lancé avec « Fusion automatique ».
+- **Rouvert le même jour** : la CI Windows refusait le test (chemins envoyés
+  à `git check-ignore` avec des barres obliques inversées, non reconnus
+  comme ignorés) ; le ruleset a bloqué la fusion automatique, désarmée
+  avant le correctif ; chemins au format « / », CI Windows verte avant la
+  nouvelle clôture.
+- **Clôturé par** : PR #26 (`7dde03e`, correctif Windows `172b9f8`).
