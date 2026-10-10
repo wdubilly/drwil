@@ -31,7 +31,7 @@ convention de langue des commits proposée aux projets.
     `.claude/hooks/` : `saisie-drwil`, `garde-fou-bash`, `rappel-cadrage` ;
     modules optionnels `tableau-de-bord`, `creer-une-release` ;
   - noms d'activités (`CADRAGE`, `REALISATION`, `CLOTURE`…), écrits dans
-    `.drwil/state.json` ;
+    `.drwil/state.json` (si présent) ;
   - clés de `.drwil/ia-first.json` (`barriere`, `transitions`, `chemins`…),
     bloc `<!-- cadrage -->` des fiches, trailer `Drwil-Attente`,
     sous-commandes `etat.mjs passer` / `lancer` / `fiches` ;
