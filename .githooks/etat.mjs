@@ -156,12 +156,48 @@ export function statutFiche(texte) {
 }
 const LANCABLE_DEPUIS = new Set(["CADRAGE", "ATTENTE", "DEMANDE"]);
 
+const INDEX_DEFAUT = ["docs/projets/en-attente.md", "docs/projects/pending.md"];
+const PRIORITE_DEFAUT = 2;
+
+/** Priorité de chaque fiche citée par un sujet ouvert de l'index commité ([P0] à [P3], [P2] sans tag). */
+function prioritesIndex(racine) {
+  const priorites = new Map();
+  for (const chemin of [config(racine).dirs?.index, ...INDEX_DEFAUT].filter(Boolean)) {
+    const r = spawnSync("git", ["show", `HEAD:${chemin}`], { cwd: racine, encoding: "utf8" });
+    if (r.status !== 0) continue;
+    // Un sujet : sa ligne « - [ ] » et ses lignes de suite ; un point coché d'une fiche à plusieurs
+    // lots ne dit rien de la priorité du travail restant.
+    for (const sujet of r.stdout.split(/\r?\n(?=\s*- \[)/)) {
+      if (!/^\s*- \[ \]/.test(sujet)) continue;
+      const p = /\[P([0-3])\]/.exec(sujet)?.[1];
+      for (const m of sujet.matchAll(/`((?:docs\/projets|docs\/projects)\/[^`]+\.md)`/g)) {
+        if (!priorites.has(m[1])) priorites.set(m[1], p === undefined ? PRIORITE_DEFAUT : Number(p));
+      }
+    }
+    break;
+  }
+  return priorites;
+}
+
+/** `[décision]` encore ouvertes dans la section « Points à trancher » (« Points to decide »). */
+function decisionsOuvertes(texte) {
+  let dans = false;
+  let n = 0;
+  for (const ligne of texte.split(/\r?\n/)) {
+    if (/^##\s/.test(ligne)) dans = /^##\s*(\d+\.\s*)?(Points à trancher|Points to decide)\b/i.test(ligne);
+    else if (dans && /^\s*-\s*\[(décision|decision)\]/i.test(ligne)) n++;
+  }
+  return n;
+}
+
 /**
  * Fiches qu'on peut lancer : fiches de docs/projets/ (ou docs/projects/), hors modèles, non
  * terminées, dont le bloc `cadrage` existe dans HEAD — le cadrage validé est le cadrage commité,
- * comme pour la barrière. `[{ chemin, titre }]`, triées par chemin.
+ * comme pour la barrière. `[{ chemin, titre, priorite, decisions, prete }]` : prêtes d'abord (aucune
+ * décision ouverte), puis par priorité de l'index, puis par chemin.
  */
 export function fichesCadrees(racine) {
+  const priorites = prioritesIndex(racine);
   const fiches = [];
   for (const dossier of DOSSIERS_FICHES) {
     const abs = join(racine, dossier);
@@ -173,10 +209,12 @@ export function fichesCadrees(racine) {
       if (r.status !== 0 || !lireBloc(r.stdout).motifs.length) continue;
       // Une fiche de référence (mécanique du kit) garde son cadrage sans être un chantier à lancer.
       if (statutFiche(r.stdout) !== "ouverte") continue;
-      fiches.push({ chemin, titre: /^#\s+(.+)$/m.exec(r.stdout)?.[1]?.trim() ?? chemin });
+      const decisions = decisionsOuvertes(r.stdout);
+      const priorite = priorites.get(chemin) ?? PRIORITE_DEFAUT;
+      fiches.push({ chemin, titre: /^#\s+(.+)$/m.exec(r.stdout)?.[1]?.trim() ?? chemin, priorite: `P${priorite}`, decisions, prete: decisions === 0 });
     }
   }
-  return fiches;
+  return fiches.sort((a, b) => Number(b.prete) - Number(a.prete) || a.priorite.localeCompare(b.priorite) || a.chemin.localeCompare(b.chemin));
 }
 
 /**
@@ -422,7 +460,7 @@ export async function principal(args, racine) {
       const rl = createInterface({ input: process.stdin, output: process.stdout });
       try {
         if (!choix) {
-          console.log(fiches.map((f, i) => `${i + 1}. ${f.chemin} — ${f.titre}`).join("\n"));
+          console.log(fiches.map((f, i) => `${i + 1}. ${f.chemin} — ${f.titre} [${f.priorite}${f.prete ? "" : ` · non prête : ${f.decisions} décision(s) à trancher`}]`).join("\n"));
           const n = Number((await rl.question("Numéro de la fiche à lancer : ")).trim());
           choix = fiches[n - 1]?.chemin;
         }

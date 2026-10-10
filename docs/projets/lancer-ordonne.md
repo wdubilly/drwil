@@ -102,6 +102,21 @@ dépendre de ce dont l'agent se souvient :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] `/drwil-lancer`.
+- **Dernier état** (2026-10-10) : lots 1 et 2 réalisés.
+  `fichesCadrees` (`.githooks/etat.mjs`) ajoute `priorite` (sujet ouvert de
+  l'index commité, `P2` sans tag), `decisions` (lignes `[décision]` de la
+  section « Points à trancher » / « Points to decide ») et `prete`, et trie
+  prêtes d'abord, puis priorité, puis chemin ; la liste au terminal affiche
+  priorité et décisions. Skill de lancement (dépôt, gabarit fr et en) :
+  ordre de `fiches --json`, sections « Ordre proposé » des intentions,
+  message citant les intentions P1 à cadrer, recommandation de la première
+  fiche prête. Doc « Lancer et clore » (fr, en) à jour.
+- **Preuves** : test du tri (prêtes, priorité, `P2` par défaut, point coché
+  ignoré, format anglais) vu échouer avant le code ; `run-checks` vert
+  (67 + 90) ; sur ce dépôt, l'ordre calculé retrouve l'analyse faite à la
+  main le jour même.
+- **Limite** : le critère « un sondage réel dans l'ordre attendu » sera
+  vérifié au prochain `/drwil-lancer`, une fois le skill fusionné.
+- **Travail non commité** : le lot.
+- **Prochaine étape** : [IA] commit, vérification, clôture ; [humain]
+  fusion.
