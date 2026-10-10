@@ -45,8 +45,12 @@ principale.
 ## Clôturer
 
 - Une fois la pull/merge request fusionnée (merge ou squash, au choix du
-  projet, le kit n'impose rien ici) : passer le Statut de la fiche à
-  "fait", supprimer la branche.
+  projet, le kit n'impose rien ici) : supprimer la branche ; fiche
+  entièrement terminée : la condenser (ci-dessous) ; sinon mettre à jour
+  son Statut (lots faits, lots restants). Seul le marqueur
+  `**Statut** : terminé le AAAA-MM-JJ` dit qu'une fiche est terminée, et
+  une fiche qui le porte ne peut pas rester : check-docs la refuse, et le
+  retour en CADRAGE aussi tant qu'elle est là.
 - Si la fusion se fait par une autre personne que l'autrice/auteur du
   travail (relecture humaine), c'est elle qui clôture la fiche au moment
   du merge — pas avant.

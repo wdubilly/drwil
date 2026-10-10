@@ -40,8 +40,11 @@ request, instead of direct commits on the main branch.
 ## Closing
 
 - Once the pull/merge request is merged (merge or squash, project's
-  choice, the kit doesn't impose anything here): set the card's Status to
-  "done", delete the branch.
+  choice, the kit doesn't impose anything here): delete the branch; card
+  fully finished: condense it (below); otherwise update its Status (lots
+  done, lots left). Only the marker `**Status**: done on YYYY-MM-DD` says
+  a card is finished, and a card carrying it cannot stay: check-docs
+  refuses it, and so does going back to CADRAGE while it is there.
 - If the merge is done by someone other than the author of the work
   (human review), that person closes the card at merge time — not
   before.

@@ -3,6 +3,11 @@
 **Status**: scoped on YYYY-MM-DD — lot 1 in progress.
 **Risk**: MEDIUM
 
+(status: "scoped on …", "lot 1 in progress"…; a card that is not a
+project (kit mechanics): "reference — …", never offered for launch;
+"done on YYYY-MM-DD" only when condensing it: a card carrying it cannot
+stay — `docs/projects/journal.md`, then deletion.)
+
 (risk level, `docs/ia-first.md` section 7: LOW has no sheet — attach to
 `docs/projects/routine-maintenance.md`; MEDIUM: sheet + scope; HIGH: also a
 Decisions section and the related contracts cited. A scope touching

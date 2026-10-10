@@ -40,7 +40,7 @@ Cause aggravante : la détection d'une fiche « terminée » est floue. Le
 motif `STATUT_TERMINE_RE` (en double dans `.githooks/etat.mjs` et
 `.githooks/check-docs.mjs`) cherche un mot (« fait », « clos »…)
 **n'importe où** dans le statut : « essai réel fait » fait passer
-`integration-agent-verify.md` pour terminée ; « lots 1 et 2 faits » ne
+la fiche « intégration agent de verify » (condensée, voir le journal) pour terminée ; « lots 1 et 2 faits » ne
 compte pas ; « fait (lot 1) » d'une fiche à plusieurs lots compterait.
 Durcir un contrôle sur cette détection produirait de faux refus.
 
@@ -51,7 +51,7 @@ Intention :
    et se dit terminée (elle aurait dû être condensée) ;
 3. une fiche terminée encore présente devient une **erreur** de
    check-docs, plus un avertissement ;
-4. régler les deux cas restants : `integration-agent-verify.md`
+4. régler les deux cas restants : la fiche « intégration agent de verify » (condensée, voir le journal)
    (probablement terminée, citée par un commentaire de
    `packages/drwil/test/kit.test.mjs`) et `mecanique-ia-first.md` (fiche
    de référence, pas un chantier, mais proposée au lancement).
@@ -90,7 +90,7 @@ Intention :
   un statut « référence » reconnu ; elle garde son bloc `cadrage` mais
   n'est plus proposée par `/drwil-lancer` ; copies du gabarit (fr, en)
   ajoutées au cadrage. [décision utilisateur]
-- **2026-10-10 — `integration-agent-verify.md` terminée** (point 5) : à
+- **2026-10-10 — la fiche « intégration agent de verify » (condensée, voir le journal) terminée** (point 5) : à
   condenser au lot 2, commentaire de `packages/drwil/test/kit.test.mjs`
   repointé vers le journal. [décision utilisateur]
 
@@ -114,12 +114,31 @@ Intention :
   CADRAGE et erreur check-docs ; fiche à plusieurs lots ouverte → ni l'un
   ni l'autre ; « essai réel fait » n'est plus lu comme terminé) ;
   `node .githooks/run-checks.mjs` et CI verts.
-- **Lot 2 — cas restants** [IA] : `integration-agent-verify.md` et
+- **Lot 2 — cas restants** [IA] : la fiche « intégration agent de verify » (condensée, voir le journal) et
   `mecanique-ia-first.md` selon les décisions. Critère de sortie :
   `/drwil-lancer` ne propose plus que des chantiers réellement ouverts.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] `/drwil-lancer`.
+- **Dernier état** (2026-10-10) : lots 1 et 2 réalisés.
+  - `statutFiche` (`.githooks/etat.mjs`) : seule définition, importée par
+    `.githooks/check-docs.mjs` ; « terminee » seulement pour
+    `**Statut** : terminé le AAAA-MM-JJ` (ou `**Status**: done on …`),
+    « reference » pour `référence — …` ; l'ancien motif dupliqué est
+    supprimé.
+  - `fichesCadrees` exclut les fiches terminées et de référence ;
+    `CLOTURE → CADRAGE` refusé si la fiche active est encore là et
+    terminée ; règle de CLOTURE reformulée (fr, en).
+  - check-docs : fiche terminée encore présente = erreur ; cohérence
+    case/statut sur la même définition (les faux « terminée » de
+    l'intégration agent et de la publication npm ont disparu).
+  - `mecanique-ia-first.md` en « référence » (dépôt, gabarit fr et en) ;
+    modèles de fiche et recette « Clôturer » à jour ; la fiche
+    « intégration agent de verify » condensée dans le journal, commentaire
+    de `packages/drwil/test/kit.test.mjs` repointé.
+- **Preuves** : 3 tests d'`.githooks/etat.test.mjs` (marqueur, référence, refus au
+  retour en CADRAGE) vus échouer avant le code ; test QUA-015 du kit
+  réécrit (fiche terminée présente → erreur) ; `run-checks` vert (66 + 90).
+- **Travail non commité** : le lot.
+- **Prochaine étape** : [IA] commit, `PREUVES → VERIFY`, clôture ; [humain]
+  fusion.
