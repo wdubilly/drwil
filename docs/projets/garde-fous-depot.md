@@ -1,6 +1,6 @@
 # Projet : des garde-fous qui tiennent sans compter sur la mémoire de l'agent
 
-**Statut** : cadré le 2026-10-06 — lots 1 et 2 fusionnés (PR #46) ; lot 3 à cadrer.
+**Statut** : cadré le 2026-10-06 — lots 1 et 2 fusionnés (PR #46) ; lot 3 jugé couvert le 2026-10-10, clôture à lancer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -71,10 +71,19 @@ appartient à une fiche, pas qu'un changement a la sienne.
   gabarit livré passé à **bloquant** (les projets existants gardent leur
   réglage : `apply` ne l'écrase jamais). [décision utilisateur]
 
+- **2026-10-10 — Lot 3 déjà couvert** : « un changement de code a sa
+  fiche » est garanti par QUA-016 (rappel de cadrage, bloquant : tout
+  fichier de code indexé couvert par le cadrage d'une fiche) et par la
+  barrière de périmètre (en REALISATION, un commit ne touche que le cadrage
+  de la fiche active ; chaque commit d'une branche rejoué en CI contre le
+  cadrage de son parent). Pas de contrôle supplémentaire ; fiche à
+  condenser, commentaires de code qui la citent repointés vers le journal.
+  Trou connu, hors de ce lot : une fiche de référence (mécanique du kit)
+  couvre tout `.githooks/`. [décision utilisateur]
+
 ## 5. Points à trancher
 
-- [décision] Lot 3 : forme du contrôle « un changement de code a sa fiche »
-  (à cadrer avant tout code).
+- ~~Lot 3 : forme du contrôle~~ — tranché le 2026-10-10 (voir « Décisions »).
 
 ## 6. Lots
 

@@ -80,7 +80,7 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   contributeur externe puisse participer sans demander au mainteneur ;
   questions à trancher (langue, gabarit de PR, canal sécurité, contrats
   COM) — `docs/intentions/community-ready.md`.
-- [ ] [IA] [P1] Garde-fous lot 3 : contrôle « un changement de code a sa
-  fiche » — à cadrer puis coder — `docs/projets/garde-fous-depot.md`.
+- [ ] [IA] [P1] Garde-fous : lot 3 jugé couvert (QUA-016 et barrière de
+  périmètre) — clôture à faire — `docs/projets/garde-fous-depot.md`.
 - [ ] [décision] [P3] CI : matrice Windows et macOS sur les pull requests
   seulement (jobs divisés par deux) — `docs/projets/ci-matrice-sur-pr.md`.
