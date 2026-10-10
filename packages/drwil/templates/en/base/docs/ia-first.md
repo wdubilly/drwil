@@ -372,7 +372,8 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
 
 ### Starting and closing
 
-Two human gestures per chantier: **start** and **merge the PR**.
+Two human gestures per chantier: **start** and **merge the PR** — only one if the merge is
+authorised at start (below).
 
 - **Start**: from `CADRAGE`, `ATTENTE` or `DEMANDE`, a single decision moves
   to `REALISATION` on a **framed sheet** (`cadrage` block committed in
@@ -393,6 +394,15 @@ Two human gestures per chantier: **start** and **merge the PR**.
 - **Close**: free as soon as the `drwil verify` evidence is valid (see
   above); closing removes rights, and accepting the work remains the human
   PR merge.
+- **Merge authorised at start** (Claude Code): a second question of the
+  poll (`drwil-fusion`) lets the human accept in advance; their answer,
+  read by the hook, is kept in the local state (`fusion_autorisee`) until
+  going back to CADRAGE, never set by the agent (even with
+  `transitions: agent`). In CLOTURE, after verify PASS and pushing the
+  closing commit, the agent schedules `gh pr merge --auto --merge`: the
+  host only merges once the required checks pass ("Allow auto-merge"
+  repository setting required). In the terminal, `lancer` asks the same
+  question (type `FUSION`).
 - **Limit**: an agent with a shell could call these functions itself or
   rewrite the local state; Claude Code's `deny` rules block calling the hook
   directly, and cheating stays visible and refused off the machine (commit

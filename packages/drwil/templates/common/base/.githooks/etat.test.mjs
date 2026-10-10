@@ -455,6 +455,32 @@ test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans ta
   ]);
 });
 
+test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CLOTURE, effacée en CADRAGE", () => {
+  const { racine } = depotCadre({ transitions: "agent" });
+  assert.equal(lancer(racine, FICHE, { fusion: true }).code, 0);
+  assert.equal(lireEtat(racine).etat.fusion_autorisee, undefined, "un lancement par l'agent n'autorise jamais la fusion");
+  assert.doesNotMatch(contexte(lireEtat(racine), racine), /fusion automatique/i);
+  rmSync(join(racine, ".drwil", "state.json"));
+  assert.equal(lancer(racine, FICHE, { humain: true, fusion: true }).code, 0);
+  let lu = lireEtat(racine);
+  assert.deepEqual(lu.problemes, []);
+  assert.equal(lu.etat.fusion_autorisee, true);
+  assert.match(contexte(lu, racine), /fusion automatique autorisée/i);
+  for (const vers of ["PREUVES", "VERIFY"]) {
+    const r = preparerTransition(lu, vers, { maintenant: MAINTENANT }, racine);
+    assert.equal(r.etat.fusion_autorisee, true, vers);
+    lu = { ...lu, etat: r.etat };
+  }
+  assert.equal(preparerTransition({ ...lu, etat: { ...lu.etat, activite: "CLOTURE" } }, "CADRAGE", { maintenant: MAINTENANT }, racine).etat.fusion_autorisee, undefined);
+});
+
+test("validation : fusion_autorisee booléenne, jamais vraie en CADRAGE", () => {
+  const racine = depot();
+  assert.match(validerEtat(actif("REALISATION", { fusion_autorisee: "oui" }), racine)[0], /fusion_autorisee/);
+  assert.match(validerEtat({ ...ETAT_NEUTRE, fusion_autorisee: true }, racine)[0], /fusion_autorisee/);
+  assert.deepEqual(validerEtat(actif("CLOTURE", { fusion_autorisee: true }), racine), []);
+});
+
 test("fiches cadrées : bloc cadrage commité, non terminée, hors modèles", () => {
   const { racine } = depotCadre();
   assert.deepEqual(fichesCadrees(racine).map((f) => f.chemin), [FICHE]);

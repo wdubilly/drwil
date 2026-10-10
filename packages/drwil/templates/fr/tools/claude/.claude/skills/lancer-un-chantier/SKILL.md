@@ -23,13 +23,19 @@ de l'outil (`.claude/hooks/saisie-drwil.mjs`), qui fait la transition — jamais
      premières de la liste ; une fiche non prête garde sa place en fin, sa description dit
      « non prête : N décision(s) à trancher d'abord » ; l'humain peut taper un autre chemin dans
      « Autre ».
-   - Copilot CLI : `message` commençant par `drwil-lancer :`, choix = chemins exacts.
+   - Claude Code, **seconde question** du même sondage : `header` exactement `drwil-fusion`,
+     options « Fusion automatique » (l'agent programmera la fusion en CLOTURE) et « Fusion
+     manuelle », sans recommandation : c'est la décision d'acceptation, prise au lancement.
+   - Copilot CLI : `message` commençant par `drwil-lancer :`, choix = chemins exacts (pas de
+     seconde question : fusion manuelle).
    - **Recommander** : la première fiche prête, en premier, avec « (Recommandé) » et la raison
      dans sa **description** — jamais dans le libellé.
    - **Interdit** : remplir `answers` ou une valeur par défaut (`default`) : le hook refuse le
      sondage. L'humain choisit seul.
 4. Après la réponse, relire l'état : `node .githooks/etat.mjs`. En REALISATION sur la fiche
-   choisie : réaliser. Sinon : rapporter le refus tel quel, sans retenter autrement.
+   choisie : réaliser. Sinon : rapporter le refus tel quel, sans retenter autrement. Si l'état
+   dit « Fusion automatique autorisée » : en CLOTURE, après verify PASS et le push de la
+   clôture, programmer `gh pr merge --auto --merge` ; sinon, la fusion reste un geste humain.
 
 Sans sondage dans l'outil : donner à l'humain la commande `node .githooks/etat.mjs lancer`, à
 lancer dans un terminal interactif.

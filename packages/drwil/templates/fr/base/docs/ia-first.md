@@ -381,7 +381,8 @@ versionné.
 
 ### Lancer et clore
 
-Deux gestes humains par chantier : **lancer** et **fusionner la PR**.
+Deux gestes humains par chantier : **lancer** et **fusionner la PR** — un seul si la fusion
+est autorisée au lancement (ci-dessous).
 
 - **Lancer** : depuis `CADRAGE`, `ATTENTE` ou `DEMANDE`, une seule décision
   passe en `REALISATION` sur une **fiche cadrée** (bloc `cadrage` commité dans
@@ -403,6 +404,15 @@ Deux gestes humains par chantier : **lancer** et **fusionner la PR**.
 - **Clore** : libre dès que l'évidence de `drwil verify` est valide (voir
   ci-dessus) ; clore retire des droits, et l'acceptation du travail reste la
   fusion de la PR, humaine.
+- **Fusion autorisée au lancement** (Claude Code) : une seconde question du
+  sondage (`drwil-fusion`) permet à l'humain d'accepter à l'avance ; sa
+  réponse, lue par le hook, est gardée dans l'état local
+  (`fusion_autorisee`) jusqu'au retour en CADRAGE, jamais posée par l'agent
+  (même en mode `transitions: agent`). En CLOTURE, après verify PASS et le
+  push de la clôture, l'agent programme `gh pr merge --auto --merge` :
+  l'hébergeur ne fusionne qu'une fois les checks exigés passés (réglage
+  « Allow auto-merge » du dépôt requis). Au terminal, `lancer` pose la même
+  question (retaper `FUSION`).
 - **Limite** : un agent qui a le shell pourrait appeler lui-même ces
   fonctions ou réécrire l'état local ; les règles `deny` de Claude Code
   bloquent l'appel direct du hook, et la triche reste visible et refusée

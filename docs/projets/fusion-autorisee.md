@@ -1,6 +1,6 @@
 # Projet : fusion autorisée au lancement — un seul geste humain par chantier
 
-**Statut** : cadré le 2026-10-10 — décisions prises ; lot 0 [humain], puis lot 1 à lancer.
+**Statut** : cadré le 2026-10-10 — lots 0 et 1 faits, lot 2 (essai réel) à faire.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -115,6 +115,24 @@ deux ; la décision reste humaine, prise avant le travail.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lot 0 ; puis `/drwil-lancer`.
+- **Dernier état** (2026-10-10) : lot 0 fait par le demandeur
+  (`allow_auto_merge=true`, `delete_branch_on_merge=true` ; la branche de
+  la PR #23 a été supprimée par GitHub à la fusion). Lot 1 réalisé :
+  - état : champ facultatif `fusion_autorisee` (booléen, jamais vrai en
+    CADRAGE), posé par `lancer` seulement si le lancement est humain (même
+    en mode `transitions: agent`), gardé par les transitions jusqu'à
+    CLOTURE, effacé au retour en CADRAGE ; le contexte affiche la consigne
+    de fusion ; au terminal, `lancer` pose la question (retaper `FUSION`) ;
+  - hook du sondage (dépôt et gabarit, identiques) : seconde question
+    d'en-tête `drwil-fusion`, réponse « Fusion automatique » transmise à
+    `lancer` ; Copilot CLI sans seconde question (fusion manuelle) ;
+  - skill de lancement, doctrine « Lancer et clore » et recette de branche
+    à jour (dépôt, gabarit fr et en).
+- **Preuves** : 2 tests d'`.githooks/etat.test.mjs` vus échouer avant le
+  code ; test du hook étendu dans `packages/drwil/test/kit.test.mjs`
+  (autorisation seulement par la réponse humaine, sondage pré-rempli
+  refusé) ; `run-checks` vert (69 + 90).
+- **Travail non commité** : le lot 1.
+- **Prochaine étape** : [humain] fusionner la PR du lot 1 ; puis lot 2 :
+  lancer un chantier avec « Fusion automatique » et vérifier qu'il va
+  jusqu'à la fusion sans second geste.

@@ -49,6 +49,9 @@ principale.
 - Si la fusion se fait par une autre personne que l'autrice/auteur du
   travail (relecture humaine), c'est elle qui clôture la fiche au moment
   du merge — pas avant.
+- Fusion autorisée au lancement : l'agent programme `gh pr merge --auto
+  --merge` une fois la clôture poussée ; l'hébergeur fusionne après les
+  checks exigés, sans second geste.
 - Si la fiche entière est désormais terminée (pas un simple lot parmi
   d'autres d'une fiche qui reste ouverte par ailleurs) : résumer la fiche
   en une entrée courte dans `docs/projets/journal.md` (date, titre,
