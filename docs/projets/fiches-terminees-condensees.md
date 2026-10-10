@@ -1,6 +1,6 @@
 # Projet : une fiche terminée ne reste pas dans docs/projets/
 
-**Statut** : cadré le 2026-10-10 — décisions à prendre avant le lot 1.
+**Statut** : cadré le 2026-10-10 — décisions prises, lot 1 à lancer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -17,6 +17,8 @@ fichiers:
   - packages/drwil/templates/en/base/docs/recipes/working-with-branches.md
   - packages/drwil/templates/fr/base/docs/projets/modele-fiche-projet.md
   - packages/drwil/templates/en/base/docs/projects/model-project-sheet.md
+  - packages/drwil/templates/fr/base/docs/projets/mecanique-ia-first.md
+  - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
 -->
 
 (cadrage : la détection d'une fiche terminée, le retour en CADRAGE, le
@@ -76,6 +78,21 @@ Intention :
 - **2026-10-10 — Une fiche terminée ne reste pas** : elle est condensée
   dans le journal puis supprimée ; empêcher la récidive par le code plutôt
   que par la discipline. [décision utilisateur]
+- **2026-10-10 — Marqueur explicite** (point 5) : seul
+  `**Statut** : terminé le AAAA-MM-JJ`, en tête du statut, dit qu'une
+  fiche est terminée ; documenté dans le modèle de fiche. Fin du mot
+  cherché n'importe où. [décision utilisateur]
+- **2026-10-10 — Refus au retour en CADRAGE** (point 5) : si la fiche
+  active existe encore et porte ce marqueur, `CLOTURE → CADRAGE` est
+  refusé, avec la marche à suivre (condenser, supprimer). [décision
+  utilisateur]
+- **2026-10-10 — `mecanique-ia-first.md` exclue du lancement** (point 5) :
+  un statut « référence » reconnu ; elle garde son bloc `cadrage` mais
+  n'est plus proposée par `/drwil-lancer` ; copies du gabarit (fr, en)
+  ajoutées au cadrage. [décision utilisateur]
+- **2026-10-10 — `integration-agent-verify.md` terminée** (point 5) : à
+  condenser au lot 2, commentaire de `packages/drwil/test/kit.test.mjs`
+  repointé vers le journal. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -86,19 +103,7 @@ Intention :
 
 ## 5. Points à trancher
 
-- [décision] **Définition de « terminée »** : un marqueur explicite en
-  tête du statut (par ex. `**Statut** : terminé le AAAA-MM-JJ`), le seul
-  reconnu, à la place du mot cherché n'importe où ? Proposition : oui,
-  documenté dans le modèle de fiche.
-- [décision] **Refus ou avertissement au retour en CADRAGE** si la fiche
-  existe encore et se dit terminée ? Proposition : refus (la barrière est
-  bloquante ailleurs), avec la marche à suivre dans le message.
-- [décision] **`mecanique-ia-first.md`** : l'exclure de `/drwil-lancer`
-  (statut « référence » reconnu), ou la laisser lançable pour un chantier
-  sur la mécanique du kit ?
-- [décision] **`integration-agent-verify.md`** : confirmer qu'elle est
-  terminée (attestations du 2026-10-09), puis la condenser et repointer
-  le commentaire de `packages/drwil/test/kit.test.mjs`.
+- ~~Les quatre points~~ — tranchés le 2026-10-10 (voir « Décisions »).
 
 ## 6. Lots
 
@@ -116,7 +121,5 @@ Intention :
 ## 7. Reprise
 
 - **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : la fiche, l'intention « non-régression
-  continue » et leurs lignes d'index.
-- **Prochaine étape** : [décision] trancher les quatre points ; [IA]
-  commit de cadrage ; [humain] `/drwil-lancer`.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [humain] `/drwil-lancer`.
