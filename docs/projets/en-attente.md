@@ -88,5 +88,8 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   COM) — `docs/intentions/community-ready.md`.
 - [ ] [IA] [P1] Garde-fous lot 3 : contrôle « un changement de code a sa
   fiche » — à cadrer puis coder — `docs/projets/garde-fous-depot.md`.
+- [ ] [décision] [P1] Fusion autorisée au lancement : un seul geste humain
+  par chantier (`gh pr merge --auto` après CI verte) —
+  `docs/projets/fusion-autorisee.md`.
 - [ ] [décision] [P3] CI : matrice Windows et macOS sur les pull requests
   seulement (jobs divisés par deux) — `docs/projets/ci-matrice-sur-pr.md`.
