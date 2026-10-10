@@ -48,6 +48,9 @@ request, instead of direct commits on the main branch.
 - If the merge is done by someone other than the author of the work
   (human review), that person closes the card at merge time — not
   before.
+- Merge authorised at start: the agent schedules `gh pr merge --auto
+  --merge` once the closing commit is pushed; the host merges after the
+  required checks, with no second gesture.
 - If the whole card is now finished (not just one lot among several of a
   card that otherwise stays open): summarize the card into a short entry
   in `docs/projects/journal.md` (date, title, key decisions, closing

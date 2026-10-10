@@ -21,13 +21,19 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      (e.g. `docs/projects/<sheet>.md`), description = title. At most 4 options, the first of the
      list; a sheet that is not ready keeps its place at the end, its description says "not
      ready: N decision(s) to make first"; the human can type another path under "Other".
-   - Copilot CLI: `message` starting with `drwil-lancer :`, choices = exact paths.
+   - Claude Code, **second question** of the same poll: `header` exactly `drwil-fusion`,
+     options "Automatic merge" (the agent will schedule the merge in CLOTURE) and "Manual
+     merge", with no recommendation: it is the acceptance decision, taken at start.
+   - Copilot CLI: `message` starting with `drwil-lancer :`, choices = exact paths (no second
+     question: manual merge).
    - **Recommend**: the first ready sheet, first, with "(Recommended)" and the reason in
      its **description** — never in the label.
    - **Forbidden**: filling `answers` or a default value (`default`): the hook refuses the poll.
      The human chooses alone.
 4. After the answer, read the state again: `node .githooks/etat.mjs`. In REALISATION on the
-   chosen sheet: implement. Otherwise: report the refusal as is, without retrying another way.
+   chosen sheet: implement. Otherwise: report the refusal as is, without retrying another way. If the state
+   says "Automatic merge authorised": in CLOTURE, after verify PASS and pushing the closing
+   commit, schedule `gh pr merge --auto --merge`; otherwise the merge stays a human gesture.
 
 Without a poll in the tool: give the human the command `node .githooks/etat.mjs lancer`, to run
 in an interactive terminal.

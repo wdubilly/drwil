@@ -472,6 +472,19 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
   assert.match(r.stdout, /REALISATION \(lancé : docs\/projets\/essai\.md\)/);
   assert.equal(etat().activite, "REALISATION");
   assert.equal(etat().attente_active, fiche);
+  assert.equal(etat().fusion_autorisee, undefined, "sans seconde question, la fusion reste manuelle");
+
+  // Seconde question (en-tête drwil-fusion) : seule la réponse humaine autorise la fusion automatique.
+  rmSync(join(dir, ".drwil/state.json"));
+  const fusion = { question: "Fusion à la fin du chantier ?", header: "drwil-fusion", options: [{ label: "Fusion automatique", description: "…" }, { label: "Fusion manuelle", description: "…" }], multiSelect: false };
+  const claudeFusion = { questions: [...claude.questions, fusion] };
+  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: { ...claudeFusion, answers: { "Fusion à la fin du chantier ?": "Fusion automatique" } } }).status, 2);
+  hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: claudeFusion, tool_response: { ...claudeFusion, answers: { "Quelle fiche lancer ?": fiche, "Fusion à la fin du chantier ?": "Fusion manuelle" } } });
+  assert.equal(etat().fusion_autorisee, undefined);
+  rmSync(join(dir, ".drwil/state.json"));
+  const rf = hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: claudeFusion, tool_response: { ...claudeFusion, answers: { "Quelle fiche lancer ?": fiche, "Fusion à la fin du chantier ?": "Fusion automatique" } } });
+  assert.match(rf.stdout, /fusion automatique autorisée/i);
+  assert.equal(etat().fusion_autorisee, true);
 
   // Copilot CLI : même hook, réponse en texte libre ; une fiche non cadrée est refusée.
   rmSync(join(dir, ".drwil/state.json"));

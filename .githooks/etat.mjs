@@ -34,7 +34,8 @@ const SUIVANTES = {
 
 export const ETAT_NEUTRE = Object.freeze({ version: 1, activite: "CADRAGE", attente_active: null, demande_active: null, depuis: null });
 
-const CHAMPS = new Set(Object.keys(ETAT_NEUTRE));
+// fusion_autorisee : absent de l'état neutre, posé seulement par un lancement humain (`lancer`).
+const CHAMPS = new Set([...Object.keys(ETAT_NEUTRE), "fusion_autorisee"]);
 const DOSSIERS_FICHES = ["docs/projets/", "docs/projects/"];
 const MODELE_RE = /^modele-|^model-/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
@@ -59,6 +60,8 @@ export function validerEtat(etat, racine) {
   }
   if (etat.attente_active !== null && etat.attente_active !== undefined) problemes.push(...validerAttente(etat.attente_active, racine, etat.activite));
   if (etat.demande_active !== null && typeof etat.demande_active !== "string") problemes.push("demande_active : chaîne ou null attendu");
+  if (etat.fusion_autorisee !== undefined && typeof etat.fusion_autorisee !== "boolean") problemes.push("fusion_autorisee : booléen attendu");
+  else if (etat.fusion_autorisee === true && etat.activite === "CADRAGE") problemes.push("fusion_autorisee : jamais en CADRAGE (aucun chantier en cours)");
   if (etat.depuis !== null && !(typeof etat.depuis === "string" && ISO_RE.test(etat.depuis) && !Number.isNaN(Date.parse(etat.depuis)))) {
     problemes.push("depuis : horodatage ISO 8601 ou null attendu");
   }
@@ -223,7 +226,7 @@ export function fichesCadrees(racine) {
  * l'est seulement pour une réponse humaine à un sondage lue par le hook de l'outil, ou pour un
  * choix fait dans un terminal interactif. `{ code: 0 | 1, message }`.
  */
-export function lancer(racine, fiche, { humain = false, demande, maintenant = new Date().toISOString() } = {}) {
+export function lancer(racine, fiche, { humain = false, demande, fusion = false, maintenant = new Date().toISOString() } = {}) {
   const lu = lireEtat(racine);
   const de = lu.etat.activite;
   if (!LANCABLE_DEPUIS.has(de)) return { code: 1, message: `lancement refusé : activité ${de} (lancer se fait depuis CADRAGE, ATTENTE ou DEMANDE)` };
@@ -235,11 +238,13 @@ export function lancer(racine, fiche, { humain = false, demande, maintenant = ne
     return { code: 1, message: `lancement refusé : « ${fiche} » n'est pas une fiche cadrée (bloc cadrage commité, fiche non terminée)` };
   }
   const etat = { version: 1, activite: "REALISATION", attente_active: chemin, demande_active: demande ?? null, depuis: maintenant };
+  // Autoriser la fusion est une décision d'acceptation : humaine seulement, même en mode agent.
+  if (fusion === true && humain) etat.fusion_autorisee = true;
   const problemes = validerEtat(etat, racine);
   if (problemes.length) return { code: 1, message: `lancement refusé : ${problemes.join(" ; ")}` };
   mkdirSync(join(racine, ".drwil"), { recursive: true });
   writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(etat, null, 2) + "\n");
-  return { code: 0, message: `${de} → REALISATION (lancé : ${chemin})` };
+  return { code: 0, message: `${de} → REALISATION (lancé : ${chemin})${etat.fusion_autorisee ? " — fusion automatique autorisée" : ""}` };
 }
 
 /** Nouvel état après la transition `vers`, ou `{ erreur }` ; n'écrit rien. */
@@ -306,6 +311,7 @@ const TEXTES = {
     activite: (a) => `Activité : ${a}`,
     attente: (a) => `Attente active : ${a ?? "aucune attente active"}`,
     demande: (d) => `Demande active : ${d ?? "aucune"}`,
+    fusion: "Fusion automatique autorisée au lancement : en CLOTURE, après verify PASS et le push de la clôture, programmer `gh pr merge --auto --merge` (GitHub fusionne après les checks exigés).",
     perimetre: "Périmètre autorisé (bloc cadrage de la fiche) :",
     sansPerimetre: "  (aucun bloc cadrage : aucun fichier de code autorisé)",
     ficheSupprimee: "fiche supprimée (clôture)",
@@ -331,6 +337,7 @@ const TEXTES = {
     activite: (a) => `Activity: ${a}`,
     attente: (a) => `Active expectation: ${a ?? "none"}`,
     demande: (d) => `Active request: ${d ?? "none"}`,
+    fusion: "Automatic merge authorised at start: in CLOTURE, after verify PASS and pushing the closing commit, schedule `gh pr merge --auto --merge` (GitHub merges once the required checks pass).",
     perimetre: "Allowed scope (cadrage block of the fiche):",
     sansPerimetre: "  (no cadrage block: no code file allowed)",
     ficheSupprimee: "fiche deleted (closing)",
@@ -387,6 +394,7 @@ export function contexte(lu, racine) {
     }
   }
   lignes.push(T.attente(attente), T.demande(etat.demande_active));
+  if (etat.fusion_autorisee === true) lignes.push(T.fusion);
   if (motifs) lignes.push(T.perimetre, ...(motifs.length ? motifs.map((m) => `  - ${m}`) : [T.sansPerimetre]));
   lignes.push(T.regle(T.regles[etat.activite]), T.pied);
   return lignes.join("\n");
@@ -454,6 +462,7 @@ export async function principal(args, racine) {
     const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
     let choix = args[1];
     let humain = false;
+    let fusion = false;
     if (tty) {
       // Un terminal interactif : l'humain choisit lui-même (jamais de choix présélectionné).
       const { createInterface } = await import("node:readline/promises");
@@ -465,6 +474,7 @@ export async function principal(args, racine) {
           choix = fiches[n - 1]?.chemin;
         }
         humain = choix !== undefined && (await rl.question(`Lancer ${choix} ? Retapez LANCER : `)).trim() === "LANCER";
+        if (humain) fusion = (await rl.question("Fusion automatique à la fin du chantier ? Retapez FUSION, sinon Entrée : ")).trim() === "FUSION";
       } finally {
         rl.close();
       }
@@ -473,7 +483,7 @@ export async function principal(args, racine) {
         return 1;
       }
     }
-    const r = lancer(racine, choix, { humain, demande: option(args, "--demande") });
+    const r = lancer(racine, choix, { humain, fusion, demande: option(args, "--demande") });
     if (r.code === 0) console.log(`✓ ${r.message}\n\n${contexte(lireEtat(racine), racine)}`);
     else console.error(`✗ ${r.message}`);
     return r.code;
