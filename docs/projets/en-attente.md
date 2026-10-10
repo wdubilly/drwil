@@ -41,8 +41,8 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [humain] [P2] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projets/suites-kit-portable.md` (point 2).
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [humain] [P1] Protéger master : ruleset (checks obligatoires, pas
-  de push direct ni de contournement), CODEOWNERS, identité de l'agent —
+- [ ] [humain] [P1] Protéger master : ruleset, CODEOWNERS et ruleset versionné
+  faits ; reste le compte machine de l'agent (lot 3) —
   `docs/projets/proteger-master.md`.
 - [ ] [décision] [P1] Fabrique autonome graduée par le risque (forge,
   outillage, mutation, rôles séparés, auto-fusion LOW) —

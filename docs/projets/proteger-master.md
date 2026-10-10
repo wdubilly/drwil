@@ -1,6 +1,6 @@
 # Projet : protéger master — checks obligatoires, CODEOWNERS, identité de l'agent
 
-**Statut** : cadré le 2026-10-10 — lot 1 fait ; décisions prises ; lots 2 et 4 [IA] à lancer, lot 3 [humain] à préparer.
+**Statut** : cadré le 2026-10-10 — lots 1, 2 et 4 faits ; lot 3 [humain] (compte machine) à faire.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -130,9 +130,15 @@ Constat du 2026-10-10 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée ; ruleset prêt (JSON
-  préparé hors dépôt, réglages ci-dessus) ; rien d'appliqué.
-- **Travail non commité** : la fiche, l'intention liée et leurs lignes
-  d'index.
-- **Prochaine étape** : [humain] lot 1 ; [IA] commit de cadrage, puis lot
-  2 après `/drwil-lancer`.
+- **Dernier état** (2026-10-10) : lots 1, 2 et 4 faits.
+  - Lot 2 : `.github/CODEOWNERS`, lu par GitHub sans erreur ; sans effet
+    bloquant tant que la revue des code owners n'est pas exigée.
+  - Lot 4 : `.github/ruleset-master.json` (ruleset tel que GitHub le
+    renvoie) ; `.github/scripts/verifier-ruleset.mjs` compare à l'API
+    (0 si conforme, 1 si un paramètre diverge, vérifié en local) ; étape du
+    job `checks` : le jeton de CI lit bien les rulesets (CI de la PR #29
+    verte, « conforme »).
+- **Prochaine étape** : [humain] lot 3 — créer le compte machine de
+  l'agent, l'inviter en écriture sans admin, lui donner un jeton,
+  configurer le `gh` de l'agent ; puis ruleset à 1 approbation et revue
+  des code owners, via `--ecrire` et une PR.
