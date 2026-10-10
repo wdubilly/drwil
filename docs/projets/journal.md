@@ -220,3 +220,21 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
   `/tmp` (environ 2 100 avant ; 40 061 accumulés, inodes épuisés le
   2026-10-09).
 - **Clôturé par** : PR #3 (`dce7464`).
+
+## 2026-10-10 — Rappel court de l'état de gouvernance, seulement quand il change
+
+- **Décisions clés** : levier 7 de l'intention fluidité. `node
+  .githooks/etat.mjs rappel` produit un rappel de deux lignes (activité,
+  fiche active, périmètre, règle), injecté par le hook de saisie de Claude
+  Code (`UserPromptSubmit`) seulement si son empreinte diffère de la
+  dernière, gardée dans `.drwil/rappel.json` (ignoré par Git ; absent ou
+  illisible, le rappel est injecté). Les autres outils suivent la consigne
+  d'`AGENTS.md` (relancer l'état avant toute modification). Après un résumé
+  automatique du contexte, `SessionStart` le couvre déjà. Dépôt et gabarit,
+  doc fr/en, 4 tests. [décisions utilisateur]
+- **Garantie visée** : barrière comportementale seulement ; la garantie
+  reste dans Git (barrière au commit, CI).
+- **Suite ouverte** : [décision] Copilot CLI a-t-il un hook de saisie ? À
+  vérifier par un test témoin ; sinon, consigne seule.
+- **Clôturé par** : PR #9 (`c46452a`) et la PR de clôture qui retire cette
+  fiche.
