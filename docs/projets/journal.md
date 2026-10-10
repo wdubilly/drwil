@@ -350,3 +350,22 @@ d'origine entre parenthèses).
   `decisions`, `prete` et trie ; skill de lancement et doc à jour (dépôt,
   gabarit fr et en).
 - **Clôturé par** : PR #22 (`5957f51`).
+
+## 2026-10-10 — Fusion autorisée au lancement : un seul geste humain par chantier
+
+- **Constat** : l'agent fusionnait déjà avec le jeton du mainteneur ; le
+  geste humain de fusion se réduisait à un « oui », alors que la doctrine
+  en fait la décision d'acceptation.
+- **Décisions clés** : déplacer la décision au lancement (voie
+  intermédiaire avant la fabrique autonome) ; seconde question du sondage
+  (`drwil-fusion`), lue par le hook ; `fusion_autorisee` dans l'état local,
+  posé seulement par un lancement humain, gardé jusqu'à CLOTURE ; condition
+  verify PASS, tous niveaux de risque ; en CLOTURE, `gh pr merge --auto
+  --merge` ; réglages « Allow auto-merge » et suppression automatique des
+  branches activés. [décisions utilisateur]
+- **Résultat** : lot 1 par la PR #24 ; essai réel (lot 2) : ce chantier,
+  lancé avec « Fusion automatique », a sa PR #25 programmée en fusion
+  automatique dès la clôture.
+- **Limite** : tant que l'agent partage l'identité du mainteneur, la
+  garantie reste comportementale (voir `docs/intentions/fabrique-autonome.md`).
+- **Clôturé par** : PR #24 (lot 1) et PR #25 (essai, fusion automatique).
