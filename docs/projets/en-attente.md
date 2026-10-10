@@ -41,9 +41,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [humain] [P2] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projets/suites-kit-portable.md` (point 2).
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [IA] [P2] QUA-017 bloque un push qui ne fait que supprimer une
-  branche distante (faux positif, cousin du push de tag) —
-  `docs/projets/qua017-push-suppression.md`.
 - [ ] [humain] [P1] Protéger master : ruleset (checks obligatoires, pas
   de push direct ni de contournement), CODEOWNERS, identité de l'agent —
   `docs/projets/proteger-master.md`.
