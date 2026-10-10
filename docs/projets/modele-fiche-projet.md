@@ -3,6 +3,12 @@
 **Statut** : cadré le AAAA-MM-JJ — lot 1 en cours.
 **Risque** : MEDIUM
 
+(statut : « cadré le … », « lot 1 en cours »… ; une fiche qui n'est pas un
+chantier (mécanique du kit) : « référence — … », jamais proposée au
+lancement ; « terminé le AAAA-MM-JJ » seulement au moment de la condenser :
+une fiche qui le porte ne peut pas rester — `docs/projets/journal.md`, puis
+suppression.)
+
 (niveau de risque, DRWIL-012 : LOW n'a pas de fiche — se rattacher à
 `docs/projets/entretien-courant.md` ; MEDIUM : fiche + cadrage ; HIGH : en
 plus une section Décisions et les contrats concernés cités. Un cadrage qui

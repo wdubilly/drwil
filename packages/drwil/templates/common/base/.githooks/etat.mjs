@@ -141,8 +141,19 @@ export function preuveVerify(racine) {
   return { ok: false, raison: `évidence ${nom} sans verdict reconnu : ${RELANCER}` };
 }
 
-// Même motif que check-docs.mjs (QUA-015) : une fiche qui se dit terminée ne se lance plus.
-const STATUT_TERMINE_RE = /\b(fait|terminé|termine|clos|done|closed)\b/i;
+const STATUT_LIGNE_RE = /^\*\*(?:Statut|Status)\*\*\s*:\s*(.*)$/;
+
+/**
+ * « terminee », « reference » ou « ouverte » — seule définition, partagée avec check-docs.mjs.
+ * Seul un marqueur explicite en tête du statut compte : un mot cherché n'importe où (« essai réel
+ * fait », « fait (lot 1) » d'une fiche à plusieurs lots) donnait de faux « terminée ».
+ */
+export function statutFiche(texte) {
+  const statut = texte.split(/\r?\n/).slice(0, 15).map((l) => STATUT_LIGNE_RE.exec(l)).find(Boolean)?.[1] ?? "";
+  if (/^(?:terminé\s+le|done\s+on)\s+\d{4}-\d{2}-\d{2}\b/i.test(statut)) return "terminee";
+  if (/^(?:référence|reference)\b/i.test(statut)) return "reference";
+  return "ouverte";
+}
 const LANCABLE_DEPUIS = new Set(["CADRAGE", "ATTENTE", "DEMANDE"]);
 
 /**
@@ -160,9 +171,8 @@ export function fichesCadrees(racine) {
       if (!nom.endsWith(".md") || MODELE_RE.test(nom)) continue;
       const r = spawnSync("git", ["show", `HEAD:${chemin}`], { cwd: racine, encoding: "utf8" });
       if (r.status !== 0 || !lireBloc(r.stdout).motifs.length) continue;
-      const lignes = r.stdout.split(/\r?\n/);
-      const debut = lignes.slice(0, 15).findIndex((l) => /^\*\*Statut\*\*/.test(l));
-      if (debut >= 0 && STATUT_TERMINE_RE.test(lignes.slice(debut, debut + 4).join(" "))) continue;
+      // Une fiche de référence (mécanique du kit) garde son cadrage sans être un chantier à lancer.
+      if (statutFiche(r.stdout) !== "ouverte") continue;
       fiches.push({ chemin, titre: /^#\s+(.+)$/m.exec(r.stdout)?.[1]?.trim() ?? chemin });
     }
   }
@@ -232,6 +242,10 @@ export async function passer(racine, { vers, fiche, demande }, { tty = false, co
     const preuve = preuveVerify(racine);
     if (!preuve.ok) return { code: 1, message: `${reprise}clôture refusée : ${preuve.raison}` };
   }
+  const ficheActive = lu.etat.attente_active && join(racine, lu.etat.attente_active);
+  if (de === "CLOTURE" && vers === "CADRAGE" && ficheActive && existsSync(ficheActive) && statutFiche(readFileSync(ficheActive, "utf8")) === "terminee") {
+    return { code: 1, message: `${reprise}retour en CADRAGE refusé : ${lu.etat.attente_active} se dit terminée mais est encore là — la condenser dans docs/projets/journal.md, la supprimer et retirer sa ligne de l'index (recette « Clôturer »)` };
+  }
   if (exigeHumain(de, vers, config(racine).transitions)) {
     if (!tty || typeof confirmer !== "function") {
       return { code: 1, message: `${reprise}${de} → ${vers} est une décision humaine : terminal interactif requis (réglage « transitions » : humain)` };
@@ -268,7 +282,7 @@ const TEXTES = {
       REALISATION: "réaliser l'attente, en ne modifiant que les fichiers du périmètre (bloc cadrage de la fiche active).",
       PREUVES: "produire les preuves et lancer les contrôles ; un correctif demande de revenir en REALISATION.",
       VERIFY: "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en REALISATION ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
-      CLOTURE: "clore la fiche (statut, reprise), puis revenir en CADRAGE.",
+      CLOTURE: "fiche entièrement terminée : la condenser dans le journal puis la supprimer ; sinon mettre à jour statut et reprise ; puis revenir en CADRAGE.",
     },
   },
   en: {
@@ -293,7 +307,7 @@ const TEXTES = {
       REALISATION: "implement the expectation, modifying only the files in the scope (cadrage block of the active fiche).",
       PREUVES: "produce evidence and run the checks; a fix means going back to REALISATION.",
       VERIFY: "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to REALISATION; MANUAL: human attestation (`npx drwil attest`), then run it again.",
-      CLOTURE: "close the fiche (status, hand-off), then go back to CADRAGE.",
+      CLOTURE: "fiche fully finished: condense it into the journal, then delete it; otherwise update status and hand-off; then go back to CADRAGE.",
     },
   },
 };

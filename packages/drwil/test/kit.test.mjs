@@ -215,25 +215,30 @@ test("QUA-015 : marqueur de chantier, statut daté, section Reprise, chemin « �
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
-test("QUA-015 (extension) : incohérence case cochée/ouverte vs Statut de la fiche citée", async () => {
+test("QUA-015 (extension) : fiche terminée encore présente refusée ; case cochée vs fiche ouverte signalée", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, git: false }));
 
+  // « fait » dans le statut ne vaut pas terminée : seul le marqueur explicite compte.
   writeFileSync(join(dir, "docs/projets/mon-chantier.md"),
-    "# Mon chantier\n\n**Statut** (2026-10-04) : fait, lot 1 terminé.\n\n## Reprise\n\nRien à reprendre.\n");
-
-  // case restée ouverte alors que la fiche citée se dit déjà terminée : avertissement, pas bloquant.
+    "# Mon chantier\n\n**Statut** (2026-10-04) : cadré — essai réel fait, lot 2 ouvert.\n\n## Reprise\n\nRien à reprendre.\n");
   appendFileSync(join(dir, "docs/projets/en-attente.md"),
-    "\n## Test\n- [ ] [IA] sujet déjà fait `docs/projets/mon-chantier.md`.\n");
+    "\n## Test\n- [ ] [IA] sujet en cours `docs/projets/mon-chantier.md`.\n");
   let direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
-  assert.equal(direct.status, 0, "avertissement non bloquant : " + direct.stdout + direct.stderr);
-  assert.match(direct.stdout, /mon-chantier\.md.*QUA-015|QUA-015.*mon-chantier\.md/);
+  assert.equal(direct.status, 0, direct.stdout + direct.stderr);
+  assert.doesNotMatch(direct.stdout, /mon-chantier\.md/);
 
-  // corrigée (case cochée) : plus d'avertissement.
-  writeFileSync(join(dir, "docs/projets/en-attente.md"),
-    read(dir, "docs/projets/en-attente.md").replace("- [ ] [IA] sujet déjà fait", "- [x] [IA] sujet déjà fait"));
+  // fiche marquée terminée mais encore là : erreur bloquante (la condenser dans le journal, la supprimer).
+  writeFileSync(join(dir, "docs/projets/mon-chantier.md"),
+    "# Mon chantier\n\n**Statut** : terminé le 2026-10-10.\n\n## Reprise\n\nRien à reprendre.\n");
   direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
-  assert.doesNotMatch(direct.stdout, /cohérence case\/statut/);
+  assert.equal(direct.status, 1, direct.stdout + direct.stderr);
+  assert.match(direct.stdout + direct.stderr, /mon-chantier\.md.*terminée.*journal/);
+  rmSync(join(dir, "docs/projets/mon-chantier.md"));
+  writeFileSync(join(dir, "docs/projets/en-attente.md"),
+    read(dir, "docs/projets/en-attente.md").replace("- [ ] [IA] sujet en cours `docs/projets/mon-chantier.md`.\n", ""));
+  direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(direct.status, 0, direct.stdout + direct.stderr);
 
   // cas inverse : case cochée mais fiche pas terminée.
   writeFileSync(join(dir, "docs/projets/autre-chantier.md"),
@@ -1620,7 +1625,7 @@ test("attest : aucune donnée sensible dans l'attestation (note caviardée, pas 
   assert.ok(JSON.parse(brut).note.length <= 500);
 });
 
-// Intégration agent (docs/projets/integration-agent-verify.md) : `verify --agent` présente le verdict
+// Intégration agent (docs/projets/journal.md, 2026-10-10) : `verify --agent` présente le verdict
 // sans recalculer de règle ; `attest` reste humain. Décision (a) : une attestation écrite à la main
 // n'est pas détectée comme fausse, la frontière est la revue du changement (dossier versionné).
 test("verify --agent : PASS sans action, FAIL à corriger, ERROR à résoudre, seul MANUAL demande une attestation humaine", async () => {

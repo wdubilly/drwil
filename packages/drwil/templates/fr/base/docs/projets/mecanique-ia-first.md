@@ -1,6 +1,6 @@
 # Projet : mécanique du kit IA-first (fichiers propres au kit)
 
-**Statut** : mécanique livrée à l'installation du kit, le {{date}}.
+**Statut** : référence — mécanique livrée à l'installation du kit, le {{date}}.
 
 <!-- cadrage
 fichiers:

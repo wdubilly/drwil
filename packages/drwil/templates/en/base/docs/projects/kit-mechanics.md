@@ -1,6 +1,6 @@
 # Project: kit mechanics (files owned by the kit)
 
-**Status**: mechanics shipped at kit install time, {{date}}.
+**Status**: reference — mechanics shipped at kit install time, {{date}}.
 
 <!-- cadrage
 fichiers:
