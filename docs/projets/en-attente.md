@@ -47,16 +47,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   `docs/projets/suites-kit-portable.md` (point 3).
 - [ ] [humain] [P2] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projets/suites-kit-portable.md` (point 2).
-- [x] [IA] Renommer le paquet `@drwil/kit-ia-first` en `drwil`
-  (dossier, bin, citations dans les docs) — fait le 2026-10-04 —
-  `docs/projets/renommer-kit-en-drwil.md`.
-- [x] [IA] Signaler explicitement les couches par défaut (backend,frontend)
-  quand aucune stack n'est détectée à l'`init` — fait le 2026-10-04 (commit
-  52bb22b) — `docs/projets/signaler-couches-par-defaut.md`.
-- [x] [IA] [P1] Corriger le faux positif QUA-017 sur un push de tag (bloque
-  toute release via `.githooks/creer-release.mjs` : push du tag refusé par
-  `pre-push` qui ne regarde que la branche courante, pas la référence
-  réellement poussée) — `docs/projets/corriger-qua017-push-tag.md`.
 - [ ] [décision] [P1] Publication npm du kit — `docs/intentions/packager-kit-ia-first.md`.
 - [ ] [décision] [P2] QUA-017 bloque un push qui ne fait que supprimer une
   branche distante (faux positif, cousin du push de tag) —
@@ -76,15 +66,13 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [décision] [P1] Fluidité sans perte de rigueur : moins de gestes
   humains, mieux placés (lancer, fusionner), décision dans le chat non
   simulable, regroupements — `docs/intentions/fluidite-sans-perte-de-rigueur.md`.
-- [ ] [IA] [P1] Fluidité, levier 1 : lancer depuis le chat en un geste,
-  clôture automatique — `docs/projets/fluidite-gestes-humains.md`.
 - [ ] [décision] [P1] Livrable entièrement en anglais (gabarit, CLI, hooks,
   noms d'activités, configuration) — `docs/intentions/livrable-full-english.md`.
 - [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
   restent à trancher — `docs/intentions/importer-tickets-externes.md`.
-- [x] [décision] [P2] Adopter un seuil de couverture de test
+- [ ] [décision] [P2] Adopter un seuil de couverture de test
   (`catalogue:QUA-004`) avec `c8` sur `packages/drwil` — lots 1 et 2
   faits le 2026-10-05, lot 3 (couverture 100 %) reste ouvert à la demande
   du demandeur — `docs/projets/adopter-seuil-couverture.md`.

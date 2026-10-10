@@ -41,7 +41,7 @@ fiches (DRWIL-012, niveaux de risque).
   par une recette (`docs/recettes/suivre-consommation-par-lot.md`) ; aucun
   coupe-circuit automatique n'est possible sans mesure automatique.
 - **Lancer** : le réglage `transitions: agent` existe déjà
-  (`docs/projets/fluidite-gestes-humains.md`).
+  (`docs/projets/journal.md`, 2026-10-10, fiches condensées).
 
 ## Briques
 
