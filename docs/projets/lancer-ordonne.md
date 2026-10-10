@@ -1,6 +1,6 @@
 # Projet : /drwil-lancer propose les fiches dans le bon ordre
 
-**Statut** : cadré le 2026-10-10 — décisions à prendre avant le lot 1.
+**Statut** : cadré le 2026-10-10 — décisions prises, lot 1 à lancer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -66,6 +66,17 @@ dépendre de ce dont l'agent se souvient :
 - **2026-10-10 — Fiche à part** : le sondage ordonné est un chantier
   distinct de « une fiche terminée ne reste pas » (option b du
   demandeur). [décision utilisateur]
+- **2026-10-10 — Prêtes d'abord** (point 5) : fiches sans décision ouverte
+  d'abord, puis par priorité de l'index ; l'ordre des intentions
+  départage. [décision utilisateur]
+- **2026-10-10 — Non prêtes montrées en fin** (point 5) : après les fiches
+  prêtes, la description dit quoi trancher d'abord. [décision utilisateur]
+- **2026-10-10 — Ordre des intentions par la consigne du skill** (point
+  5) : l'agent lit les sections « Ordre proposé » ; pas de calcul dans
+  `.githooks/etat.mjs` tant que la consigne suffit. [décision utilisateur]
+- **2026-10-10 — Intentions P1 non cadrées signalées** (point 5) : citées
+  « à cadrer » dans le message qui accompagne le sondage, jamais proposées
+  au lancement. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -74,20 +85,7 @@ dépendre de ce dont l'agent se souvient :
 
 ## 5. Points à trancher
 
-- [décision] **Critère d'ordre** : priorité d'abord, puis préparation, puis
-  ordre des intentions ? Ou préparation d'abord (une fiche prête P2 avant
-  une fiche P1 bloquée) ? Proposition : fiches prêtes d'abord, puis par
-  priorité, l'ordre des intentions départageant.
-- [décision] **Fiches non prêtes** : les montrer en fin de sondage avec
-  « à trancher d'abord », ou les masquer ? Proposition : les montrer, la
-  description dit quoi trancher.
-- [décision] **Ordre des intentions** : calculé par `.githooks/etat.mjs` (lecture
-  des sections « Ordre proposé », fragile si le format varie) ou laissé au
-  jugement de l'agent, qui lit ces sections selon la consigne du skill ?
-  Proposition : consigne du skill d'abord ; calcul seulement si la consigne
-  ne suffit pas.
-- [décision] **Intentions à cadrer** : les signaler dans le message qui
-  accompagne le sondage, ou pas du tout ?
+- ~~Les quatre points~~ — tranchés le 2026-10-10 (voir « Décisions »).
 
 ## 6. Lots
 
@@ -105,6 +103,5 @@ dépendre de ce dont l'agent se souvient :
 ## 7. Reprise
 
 - **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : la fiche et sa ligne d'index.
-- **Prochaine étape** : [décision] trancher les quatre points ; [IA]
-  commit de cadrage ; [humain] `/drwil-lancer`.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [humain] `/drwil-lancer`.
