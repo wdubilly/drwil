@@ -61,6 +61,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [décision] [P2] QUA-017 bloque un push qui ne fait que supprimer une
   branche distante (faux positif, cousin du push de tag) —
   `docs/projets/qua017-push-suppression.md`.
+- [ ] [IA] [P1] Les tests des contrôles n'héritent pas des variables
+  `GIT_*` du hook : `git commit -a` refusé à tort, et depuis un worktree
+  les tests écrivent dans le vrai dépôt — `docs/projets/tests-env-git.md`.
 - [ ] [décision] [P1] Vue de relecture : montrer à l'humain ce qui demande
   son jugement dans une PR (décisions, cadrage, règles, preuves,
   exceptions) — `docs/intentions/vue-de-relecture.md`.
