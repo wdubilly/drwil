@@ -6,6 +6,10 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { ajouterTrailer, controlerPerimetre, horsFiches, verifierIndex } from "./perimetre.mjs";
 
+// Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
+// hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
+for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
+
 // Chaque dossier temporaire est supprimé après son test : ces tests tournent à chaque commit,
 // et aussi dans chaque projet que génèrent les tests du kit ; sans ça, ils épuisaient les
 // inodes de /tmp. Ceux d'un test en échec sont gardés

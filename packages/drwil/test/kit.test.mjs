@@ -9,6 +9,10 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { init, apply, uninstall, resoudreDerive, verify, formaterVerdict, verdictJson, doctor, auditerApply, formaterAudit, attester } from "../dist/index.js";
 
+// Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
+// hérités, ils font agir les projets de test (et leurs hooks) sur le dépôt qui lance la suite.
+for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
+
 // Chaque dossier temporaire est supprimé après son test : sans ça, la suite (lancée à chaque
 // commit par le hook) en laissait ~70 par passage et finissait par épuiser les inodes de /tmp.
 // Ceux d'un test en échec sont gardés (et affichés) pour le diagnostic.
@@ -53,6 +57,9 @@ const capture = async (fn) => {
 const envTest = { ...process.env, CI: "" };
 delete envTest.DRWIL_PUSH_TAGS_ONLY;
 delete envTest.DRWIL_HOOK;
+// Le test « variables GIT_* du lanceur » relance les tests des contrôles dans un enfant (~1 s) :
+// déjà exécuté sur ces mêmes fichiers dans le dépôt, il est sauté dans chaque projet généré ici.
+envTest.DRWIL_TESTS_ENFANT = "1";
 const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
 const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
