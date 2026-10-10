@@ -72,6 +72,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   simulable, regroupements — `docs/intentions/fluidite-sans-perte-de-rigueur.md`.
 - [ ] [IA] [P1] Fluidité, levier 1 : lancer depuis le chat en un geste,
   clôture automatique — `docs/projets/fluidite-gestes-humains.md`.
+- [ ] [IA] [P2] En CLOTURE, une fiche déjà supprimée (comme le veut la
+  recette « Clôturer ») ne rend pas l'état invalide —
+  `docs/projets/cloture-fiche-absente.md`.
 - [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
