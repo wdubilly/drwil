@@ -4,8 +4,8 @@
 // - "bloquant" (défaut) : hook PreToolUse, REFUSE l'écriture d'un fichier de code
 //   qu'aucune fiche de docs/projets/ ne couvre, avant qu'elle ait lieu : l'agent doit
 //   d'abord rattacher le fichier à son chantier (ou à docs/projets/entretien-courant.md).
-//   Une règle qui ne tient que par la mémoire de l'agent n'est pas une garantie
-//   (docs/projets/garde-fous-depot.md) ; le commit refuse de toute façon.
+//   Une règle qui ne tient que par la mémoire de l'agent n'est pas une garantie ;
+//   le commit refuse de toute façon.
 // - "avertissement" : hook PostToolUse, simple rappel après l'écriture.
 // - "off" : rien.
 // Toute entrée inattendue, voire une exception, donne « rien » (le hook git reste la

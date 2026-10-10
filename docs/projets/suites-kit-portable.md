@@ -149,7 +149,7 @@ restés ouverts à la fin de ce travail.
    ajoutés à `docs/contrats.md` (SEC-006, SEC-007, QUA-011, QUA-015,
    QUA-016). `.githooks/pre-commit` réellement actif depuis ce commit
    (`check-docs` : 0 erreur, 5 avertissements QUA-016 non bloquants sur du
-   code legacy hors fiche — ancien garde-fou Python de scripts/ et anciens .py de .githooks, supprimés le 2026-10-06 par `docs/projets/garde-fous-depot.md`).
+   code legacy hors fiche — ancien garde-fou Python de scripts/ et anciens .py de .githooks, supprimés le 2026-10-06 par le chantier « garde-fous », voir `docs/projets/journal.md`).
 6. **`node_modules/` indexé dans git** — fait le 2026-10-04. `.gitignore`
    créé à la racine (dépendances, produits de build, journaux, `.env`) et
    `node_modules/`, `packages/drwil/dist/` et `*.tsbuildinfo` retirés
