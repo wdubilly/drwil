@@ -75,6 +75,8 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [IA] [P2] En CLOTURE, une fiche déjà supprimée (comme le veut la
   recette « Clôturer ») ne rend pas l'état invalide —
   `docs/projets/cloture-fiche-absente.md`.
+- [ ] [décision] [P1] Livrable entièrement en anglais (gabarit, CLI, hooks,
+  noms d'activités, configuration) — `docs/intentions/livrable-full-english.md`.
 - [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
