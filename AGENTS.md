@@ -28,8 +28,9 @@ Carte complète : `docs/architecture.md`.
   « terminé », relancer le contrôle concerné et lire sa sortie.
 - **État de gouvernance (tout agent)** : première action de toute tâche,
   lancer `node .githooks/etat.mjs` et suivre son activité, son attente et son
-  périmètre ; le relancer en cas de doute, jamais le déduire de la
-  conversation. Ne jamais écrire `.drwil/state.json` (si présent) à la main :
+  périmètre ; le relancer en cas de doute et avant toute modification de
+  fichier si l'activité a pu changer, jamais le déduire de la conversation
+  (un outil qui le permet injecte un rappel court quand l'état change). Ne jamais écrire `.drwil/state.json` (si présent) à la main :
   changer d'activité passe par `node .githooks/etat.mjs passer <ACTIVITE>` ;
   ouvrir une attente, lancer la réalisation et clore restent une décision
   humaine (réglage `transitions` de `.drwil/ia-first.json`).

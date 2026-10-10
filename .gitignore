@@ -35,6 +35,9 @@ DOC_GOUVERNANCE_ET_USAGE.md
 # État de gouvernance runtime (activité et attente actives de ce clone) : local,
 # jamais versionné — la reprise passe par la fiche versionnée (docs/ia-first.md).
 .drwil/state.json
+# Empreinte du dernier rappel court injecté à l'agent (`node .githooks/etat.mjs rappel`) :
+# locale comme l'état, pour ne le réinjecter que s'il a changé.
+.drwil/rappel.json
 
 # Réglages Claude Code personnels (plugins, exemptions) : jamais versionnés,
 # comme dans le gabarit.

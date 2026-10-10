@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, transitionAutorisee, validerEtat } from "./etat.mjs";
+import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, rappelCourt, rappelSiChange, transitionAutorisee, validerEtat } from "./etat.mjs";
 
 // Chaque dossier temporaire est supprimé après son test : ces tests tournent à chaque commit,
 // et aussi dans chaque projet que génèrent les tests du kit ; sans ça, ils épuisaient les
@@ -334,4 +334,32 @@ test("messages : commandes drwil complètes (npx), jamais « drwil » seul", () 
   const { racine } = depotEnVerify();
   assert.match(preuveVerify(racine).raison, /`npx drwil verify --evidence`/);
   assert.match(contexte(lireEtat(racine), racine), /`npx drwil verify --evidence`/);
+});
+
+test("rappel court : activité, fiche et taille du périmètre en deux lignes ; état invalide signalé", () => {
+  const racine = depot({ etat: actif("REALISATION") });
+  const texte = rappelCourt(lireEtat(racine), racine);
+  assert.equal(texte.split("\n").length, 2);
+  assert.match(texte, /REALISATION · docs\/projets\/exemple\.md · périmètre : 2 fichier/);
+  assert.match(texte, /Règle : réaliser l'attente/);
+  const neutre = depot();
+  assert.match(rappelCourt(lireEtat(neutre), neutre), /CADRAGE · aucune attente active/);
+  const casse = depot({ etat: "{ cassé" });
+  assert.match(rappelCourt(lireEtat(casse), casse), /état invalide/);
+});
+
+test("rappel court : rien quand la gouvernance est désactivée (barriere: off)", () => {
+  const racine = depot({ etat: actif("REALISATION"), config: { barriere: "off" } });
+  assert.equal(rappelCourt(lireEtat(racine), racine), null);
+  assert.equal(rappelSiChange(racine), null);
+});
+
+test("rappel seulement si l'état a changé ; empreinte illisible : rappel injecté", async () => {
+  const racine = depot({ config: { transitions: "agent" } });
+  assert.match(rappelSiChange(racine), /CADRAGE/);
+  assert.equal(rappelSiChange(racine), null, "inchangé : rien");
+  assert.equal((await passer(racine, { vers: "ATTENTE", fiche: FICHE }, { tty: false, maintenant: MAINTENANT })).code, 0);
+  assert.match(rappelSiChange(racine), /ATTENTE/, "changé : rappel");
+  writeFileSync(join(racine, ".drwil", "rappel.json"), "{ cassé");
+  assert.match(rappelSiChange(racine), /ATTENTE/, "jamais masqué");
 });

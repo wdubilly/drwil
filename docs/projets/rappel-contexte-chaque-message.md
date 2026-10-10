@@ -1,6 +1,6 @@
 # Projet : rappel court de l'état de gouvernance à chaque message
 
-**Statut** : cadré le 2026-10-10 — en attente de démarrage.
+**Statut** : réalisé le 2026-10-10 — en attente de relecture et de fusion.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -99,7 +99,16 @@ périmètre, règle de l'activité.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : aucun après le commit de cette fiche.
-- **Prochaine étape** : [IA] vérifier que `SessionStart` se déclenche après un résumé du contexte ;
-  puis lancer.
+- **Dernier état** (2026-10-10) : Lot 1 réalisé. `node .githooks/etat.mjs
+  rappel` (rappel de deux lignes, injecté seulement si son empreinte diffère
+  de la dernière, gardée dans `.drwil/rappel.json` (si présent), ignoré par
+  Git) ; hook `UserPromptSubmit` dans les réglages Claude Code (dépôt et
+  gabarit) ; consigne d'`AGENTS.md` (relancer l'état avant toute
+  modification) ; doc « Rappel court » (fr/en) ; règle de REALISATION
+  reformulée (« ci-dessus » était faux hors du contexte complet) ; 4 tests.
+  Vérifié dans la doc de Claude Code : `SessionStart` se déclenche aussi
+  après un résumé automatique du contexte (`compact`), déjà couvert.
+- **Non vérifié** : le rappel visible dans une session réelle (critère de
+  sortie) — à observer après la fusion, au premier changement d'état.
+- **Travail non commité** : aucun après le commit du Lot 1.
+- **Prochaine étape** : [IA] `PREUVES → VERIFY`, clôture ; [humain] PR.

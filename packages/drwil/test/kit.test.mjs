@@ -406,6 +406,20 @@ test("état de gouvernance : lecteur livré, state.json ignoré par Git, context
   assert.match(invalide.stdout, /État invalide/);
 });
 
+test("rappel court : hook de saisie Claude livré, empreinte ignorée par Git, rien quand l'état n'a pas changé", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+
+  assert.match(read(dir, ".gitignore"), /^\.drwil\/rappel\.json$/m);
+  const reglages = JSON.parse(read(dir, ".claude/settings.json"));
+  assert.match(JSON.stringify(reglages.hooks.UserPromptSubmit), /\.githooks\/etat\.mjs\\" rappel/);
+  const rappel = () => spawnSync(process.execPath, [".githooks/etat.mjs", "rappel"], { cwd: dir, encoding: "utf8" });
+  const premier = rappel();
+  assert.equal(premier.status, 0);
+  assert.match(premier.stdout, /\[drwil\] Rappel : CADRAGE/);
+  assert.equal(rappel().stdout, "", "état inchangé : rien n'est injecté");
+});
+
 test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
