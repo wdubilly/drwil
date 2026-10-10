@@ -74,6 +74,9 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   clôture automatique — `docs/projets/fluidite-gestes-humains.md`.
 - [ ] [décision] [P1] Fluidité, levier 7 : rappel court de l'état à chaque
   message, contre la dérive — `docs/projets/rappel-contexte-chaque-message.md`.
+- [ ] [IA] [P2] En CLOTURE, une fiche déjà supprimée (comme le veut la
+  recette « Clôturer ») ne rend pas l'état invalide —
+  `docs/projets/cloture-fiche-absente.md`.
 - [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
