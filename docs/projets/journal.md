@@ -257,3 +257,17 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
   hérité de `node --test`, empêche un `node --test` enfant de lancer quoi
   que ce soit.
 - **Clôturé par** : PR #16 (`f293222`).
+
+## 2026-10-10 — En CLOTURE, une fiche déjà supprimée ne rend pas l'état invalide
+
+- **Constat** : la recette « Clôturer » supprime la fiche ; l'état la
+  jugeait ensuite introuvable (état invalide) et refusait le retour en
+  CADRAGE.
+- **Décisions clés** : tolérer l'absence de la fiche en CLOTURE seulement,
+  plutôt que changer l'ordre de la recette ; chemin, extension et modèle
+  toujours vérifiés ; contexte et rappel affichent « fiche supprimée
+  (clôture) » ; recette à jour (dépôt et gabarit, fr et en).
+  [décisions utilisateur]
+- **Reste ouvert** : avertir si la fiche existe encore au retour en
+  CADRAGE (proposition : non, une fiche peut garder des lots ouverts).
+- **Clôturé par** : PR #17 (`3c5e31a`).
