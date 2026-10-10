@@ -37,10 +37,10 @@ principale.
   doivent être verts avant d'ouvrir la pull/merge request, pas seulement
   avant de la fusionner.
 - Avant de fusionner : vérifier que les status checks CI de la pull/merge
-  request sont verts (`gh pr checks <n> --watch` côté GitHub). Ce dépôt ne
-  peut pas forcer ce contrôle (protection de branche indisponible sur un
-  dépôt privé en plan gratuit) : c'est une vérification manuelle, pas
-  mécanique.
+  request sont verts (`gh pr checks <n> --watch` côté GitHub). Depuis le
+  2026-10-10, ce dépôt les impose aussi côté forge (ruleset sur `master` :
+  checks obligatoires, branche à jour, aucun contournement —
+  `docs/projets/proteger-master.md`).
 
 ## Clôturer
 
@@ -58,6 +58,9 @@ principale.
   (pas la cocher : le journal devient la source de clôture, l'index ne
   liste que le travail restant). Rien n'est perdu — l'historique complet
   reste dans git (`git log --follow -- docs/projets/<fiche>.md`).
+- Gouvernance active : la fiche peut être supprimée pendant CLOTURE (l'état
+  la tolère absente dans cette seule activité), puis revenir en CADRAGE
+  (`node .githooks/etat.mjs passer CADRAGE`).
 - Si la fiche garde des points ouverts par ailleurs (chantier en
   plusieurs lots), ne rien condenser : cocher la case correspondante dans
   l'index comme avant, la fiche reste active tant qu'elle n'est pas

@@ -53,6 +53,9 @@ request, instead of direct commits on the main branch.
   closing source, the index only lists remaining work). Nothing is
   lost — the full history stays in git
   (`git log --follow -- docs/projects/<card>.md`).
+- Active governance: the card can be deleted during CLOTURE (the state
+  tolerates its absence in that activity only), then go back to CADRAGE
+  (`node .githooks/etat.mjs passer CADRAGE`).
 - If the card still has open points elsewhere (multi-lot project), don't
   condense anything: check the matching box in the index as before, the
   card stays active until it's fully finished.

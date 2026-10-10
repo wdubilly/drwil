@@ -53,6 +53,9 @@ principale.
   (pas la cocher : le journal devient la source de clôture, l'index ne
   liste que le travail restant). Rien n'est perdu — l'historique complet
   reste dans git (`git log --follow -- docs/projets/<fiche>.md`).
+- Gouvernance active : la fiche peut être supprimée pendant CLOTURE (l'état
+  la tolère absente dans cette seule activité), puis revenir en CADRAGE
+  (`node .githooks/etat.mjs passer CADRAGE`).
 - Si la fiche garde des points ouverts par ailleurs (chantier en
   plusieurs lots), ne rien condenser : cocher la case correspondante dans
   l'index comme avant, la fiche reste active tant qu'elle n'est pas

@@ -64,12 +64,12 @@ tolérée (c'est l'issue normale d'une clôture) et `passer CADRAGE` réussit.
   demandeur, de préférence à « supprimer la fiche seulement après le retour
   en CADRAGE » (qui aurait changé la recette). [décision utilisateur]
 
-- **2026-10-10 — Consigne de recette en plus du code** : la section
-  « Clôturer » de la recette de branche (dépôt et gabarit, fr et en) dit de
-  revenir en CADRAGE avant de supprimer la fiche ; cadrage élargi à ces
-  trois fichiers. En passant, la recette du dépôt disait la protection de
-  branche indisponible, faux depuis le ruleset sur `master`.
-  [décision utilisateur]
+- **2026-10-10 — Recette mise à jour avec le code** : la section
+  « Clôturer » de la recette de branche (dépôt et gabarit, fr et en) dit
+  que la fiche peut être supprimée pendant CLOTURE, puis qu'on revient en
+  CADRAGE ; cadrage élargi à ces trois fichiers. En passant, la recette du
+  dépôt disait la protection de branche indisponible, faux depuis le
+  ruleset sur `master`. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -95,6 +95,17 @@ tolérée (c'est l'issue normale d'une clôture) et `passer CADRAGE` réussit.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : la fiche elle-même et sa ligne d'index.
-- **Prochaine étape** : [IA] commit de cadrage ; [humain] `/drwil-lancer`.
+- **Dernier état** (2026-10-10) : Lot 1 réalisé. `validerAttente` ne
+  signale plus une fiche absente quand l'activité est CLOTURE (chemin,
+  extension et modèle toujours vérifiés) ; contexte et rappel court
+  affichent « fiche supprimée (clôture) » sans périmètre ; dépôt et
+  gabarit identiques ; recette « Clôturer » à jour (fr, en). 2 tests
+  (tolérance en CLOTURE seulement ; retour en CADRAGE accepté), vus
+  échouer avant la correction.
+- **Preuves** : `node .githooks/run-checks.mjs` vert (64 + 90 tests).
+- **Point resté ouvert** : l'avertissement si la fiche existe encore au
+  retour en CADRAGE (point 5) n'est pas tranché ; rien n'est codé pour.
+- **Travail non commité** : le lot.
+- **Prochaine étape** : [IA] commit, `PREUVES → VERIFY`, clôture (fiche
+  supprimée pendant CLOTURE : premier usage réel de la correction) ;
+  [humain] fusion de la PR.

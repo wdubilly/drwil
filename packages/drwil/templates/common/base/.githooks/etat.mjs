@@ -57,7 +57,7 @@ export function validerEtat(etat, racine) {
   } else if (etat.attente_active === null || etat.attente_active === undefined) {
     problemes.push(`${etat.activite} : attente active requise`);
   }
-  if (etat.attente_active !== null && etat.attente_active !== undefined) problemes.push(...validerAttente(etat.attente_active, racine));
+  if (etat.attente_active !== null && etat.attente_active !== undefined) problemes.push(...validerAttente(etat.attente_active, racine, etat.activite));
   if (etat.demande_active !== null && typeof etat.demande_active !== "string") problemes.push("demande_active : chaîne ou null attendu");
   if (etat.depuis !== null && !(typeof etat.depuis === "string" && ISO_RE.test(etat.depuis) && !Number.isNaN(Date.parse(etat.depuis)))) {
     problemes.push("depuis : horodatage ISO 8601 ou null attendu");
@@ -65,13 +65,15 @@ export function validerEtat(etat, racine) {
   return problemes;
 }
 
-function validerAttente(attente, racine) {
+function validerAttente(attente, racine, activite) {
   if (typeof attente !== "string") return ["attente_active : chemin de fiche ou null attendu"];
   const chemin = posix.normalize(attente.replace(/\\/g, "/"));
   const dossier = DOSSIERS_FICHES.find((d) => chemin.startsWith(d));
   if (!dossier || !chemin.endsWith(".md")) return [`attente_active : fiche .md de ${DOSSIERS_FICHES.join(" ou ")} attendue (« ${attente} »)`];
   if (MODELE_RE.test(posix.basename(chemin))) return [`attente_active : « ${attente} » est un modèle, pas une fiche de chantier`];
-  if (!existsSync(join(racine, chemin))) return [`attente_active : fiche « ${attente} » introuvable`];
+  // En CLOTURE, la recette « Clôturer » supprime la fiche : son absence est l'issue normale, et
+  // la refuser rendrait l'état invalide au moment même de revenir en CADRAGE.
+  if (!existsSync(join(racine, chemin)) && activite !== "CLOTURE") return [`attente_active : fiche « ${attente} » introuvable`];
   return [];
 }
 
@@ -254,6 +256,7 @@ const TEXTES = {
     demande: (d) => `Demande active : ${d ?? "aucune"}`,
     perimetre: "Périmètre autorisé (bloc cadrage de la fiche) :",
     sansPerimetre: "  (aucun bloc cadrage : aucun fichier de code autorisé)",
+    ficheSupprimee: "fiche supprimée (clôture)",
     regle: (r) => `Règle : ${r}`,
     rappel: (a, f, n) => `[drwil] Rappel : ${a}${f ? ` · ${f}` : " · aucune attente active"}${n === null ? "" : ` · périmètre : ${n} fichier(s) ou motif(s)`} (relire avec \`node .githooks/etat.mjs\`).`,
     rappelInvalide: "[drwil] Rappel : état invalide, traité comme CADRAGE neutre (détail : `node .githooks/etat.mjs`).",
@@ -278,6 +281,7 @@ const TEXTES = {
     demande: (d) => `Active request: ${d ?? "none"}`,
     perimetre: "Allowed scope (cadrage block of the fiche):",
     sansPerimetre: "  (no cadrage block: no code file allowed)",
+    ficheSupprimee: "fiche deleted (closing)",
     regle: (r) => `Rule: ${r}`,
     rappel: (a, f, n) => `[drwil] Reminder: ${a}${f ? ` · ${f}` : " · no active expectation"}${n === null ? "" : ` · scope: ${n} file(s) or pattern(s)`} (read again with \`node .githooks/etat.mjs\`).`,
     rappelInvalide: "[drwil] Reminder: invalid state, treated as neutral CADRAGE (details: `node .githooks/etat.mjs`).",
@@ -318,7 +322,9 @@ export function contexte(lu, racine) {
   lignes.push(T.activite(etat.activite));
   let attente = etat.attente_active;
   let motifs = null;
-  if (attente) {
+  if (attente && !existsSync(join(racine, attente))) {
+    attente = `${attente} — ${T.ficheSupprimee}`;
+  } else if (attente) {
     try {
       const texte = readFileSync(join(racine, attente), "utf8");
       const titre = /^#\s+(.+)$/m.exec(texte)?.[1]?.trim();
@@ -341,6 +347,9 @@ export function rappelCourt(lu, racine) {
   const { etat, problemes } = lu;
   const tete = problemes.length ? T.rappelInvalide : (() => {
     let n = null;
+    if (etat.attente_active && !existsSync(join(racine, etat.attente_active))) {
+      return T.rappel(etat.activite, `${etat.attente_active} (${T.ficheSupprimee})`, null);
+    }
     if (etat.attente_active) {
       try {
         n = lireBloc(readFileSync(join(racine, etat.attente_active), "utf8")).motifs.length;
