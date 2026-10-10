@@ -1,6 +1,6 @@
 # Projet : des README à jour du cycle de gouvernance
 
-**Statut** : cadré le 2026-10-10 — décisions à prendre avant le lot 1.
+**Statut** : cadré le 2026-10-10 — décisions prises, lot 1 à lancer.
 **Risque** : MEDIUM
 
 <!-- cadrage
@@ -49,6 +49,14 @@ toujours exacts.
 
 - **2026-10-10 — Revoir les README** : demandé par le demandeur.
   [décision utilisateur]
+- **2026-10-10 — Le README du paquet résume celui de la racine** (point 5) :
+  la racine reste la référence complète ; `packages/drwil/README.md`
+  devient un résumé court (installation, commandes, cycle) qui renvoie
+  vers elle. [décision utilisateur]
+- **2026-10-10 — Section courte** (point 5) : une section « Governance
+  workflow » (le cycle en un schéma, les gestes humains — lancer, fusion
+  autorisée —, la protection de la forge), avec renvois vers la doc du
+  gabarit ; pas de réécriture d'ensemble. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -57,12 +65,7 @@ toujours exacts.
 
 ## 5. Points à trancher
 
-- [décision] **Deux README ou une source** : garder deux textes (vitrine
-  GitHub et page npm) ou faire de l'un un résumé de l'autre, voire un seul
-  fichier ?
-- [décision] **Profondeur** : une section « Governance workflow » courte
-  (le cycle en un schéma, les deux gestes humains, renvois vers la doc) ou
-  une réécriture plus large ?
+- ~~Les deux points~~ — tranchés le 2026-10-10 (voir « Décisions »).
 
 ## 6. Lots
 
@@ -74,6 +77,5 @@ toujours exacts.
 ## 7. Reprise
 
 - **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : la fiche.
-- **Prochaine étape** : [décision] trancher les deux points ; puis
-  `/drwil-lancer`.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [humain] `/drwil-lancer`.

@@ -52,7 +52,7 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
   `docs/intentions/forge-dans-le-livrable.md`.
 - [ ] [IA] [P2] Programmer la fusion automatique avant de revenir en
   CADRAGE (ordre sûr dans la consigne) — `docs/projets/consigne-fusion-auto.md`.
-- [ ] [décision] [P1] README à jour du cycle de gouvernance (lancement,
+- [ ] [IA] [P1] README à jour du cycle de gouvernance (lancement,
   fusion autorisée, forge) — `docs/projets/readme-a-jour.md`.
 - [ ] [décision] [P2] Non-régression continue : règle « défaut corrigé →
   test rattaché à un contrat », traçabilité dans `verify` —
