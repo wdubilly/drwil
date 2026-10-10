@@ -79,6 +79,14 @@ l'humain : **lancer** (depuis le chat) et **fusionner**.
   geste supplémentaire ; l'élargissement reste un commit séparé, visible
   dans le diff et listé par la future vue de relecture. [décision
   utilisateur]
+- **2026-10-10 — Forme : un sondage** : `/drwil-lancer` ouvre un sondage
+  listant les fiches cadrées ; l'agent peut en recommander une (en tête,
+  marquée « (Recommandé) », avec sa raison) ; la réponse de l'humain,
+  recueillie par l'outil, déclenche la transition par un hook
+  (`PostToolUse`), pas par le modèle. À vérifier avant de coder : le modèle
+  ne peut pas pré-remplir la réponse ; le hook n'accepte qu'un libellé égal
+  au chemin exact d'une fiche cadrée. Sinon : commande slash avec argument,
+  puis terminal. [décision utilisateur]
 - **Limite connue** : l'agent peut modifier le hook ou les réglages de
   l'outil pour tricher ; visible dans le diff et hors cadrage (refusé par
   la barrière), même garantie que le reste : triche détectable, pas
@@ -133,9 +141,10 @@ l'humain : **lancer** (depuis le chat) et **fusionner**.
     « drwil-temoin » (même ligne) et le test de
     triche (demander au modèle d'invoquer lui-même la commande ; aucune
     nouvelle ligne ne doit s'écrire sans appel Bash visible).
-- **Points 5** : remplacés par le choix de la forme (commande slash ou
-  sondage), à trancher après le test témoin.
+- **Points 5** : forme tranchée le 2026-10-10 (sondage, voir
+  « Décisions ») ; reste à vérifier le pré-remplissage de la réponse.
 - **Travail non commité** : aucun après le commit de cette reprise.
-- **Prochaine étape** : [humain] finir le test témoin dans Claude Code ;
-  [décision] choisir la forme ; puis ouvrir l'attente et lancer la
+- **Prochaine étape** : [humain] finir le test témoin dans Claude Code
+  (skill, triche) et tester le sondage (réponse non pré-remplissable) ;
+  puis ouvrir l'attente et lancer la
   réalisation par l'ancien parcours (dernier usage) ; [IA] Lot 1.
