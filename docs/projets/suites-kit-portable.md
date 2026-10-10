@@ -31,7 +31,7 @@ restés ouverts à la fin de ce travail.
    ajoutant `npm ci` avant `node .githooks/run-checks.mjs`.
    Run suivant (`37236350487`) : `checks` passe les 45 tests Node mais échoue
    sur `check-docs` (citation en backtick d'un fichier doc volontairement
-   gitignored, `docs/projets/renommer-kit-en-drwil.md` — corrigé, backticks
+   gitignored, dans la fiche du renommage en `drwil` — corrigé, backticks
    retirés) ; `kit-tests` échoue encore sur Windows et macOS, deux nouveaux
    bugs trouvés et corrigés : (c) `writeOut()`/`copyTree()` comparaient un
    chemin relatif à un préfixe POSIX (`.githooks/`) sans normaliser les

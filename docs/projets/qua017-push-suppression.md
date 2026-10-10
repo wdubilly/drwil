@@ -22,7 +22,7 @@ Le 2026-10-09, depuis `master` à jour, `git push origin --delete
 sur la branche principale (master) ». Supprimer une branche distante ne
 touche pas la branche principale ; c'est un faux positif de QUA-017 (pas de
 travail direct sur la branche principale), cousin de celui du push de tag
-pur (`docs/projets/corriger-qua017-push-tag.md`).
+pur (corrigé le 2026-10-05, voir `docs/projets/journal.md`).
 
 Mécanique : pour une suppression, Git passe au hook pre-push une ligne dont
 le SHA local ne contient que des zéros. Le hook reconnaît déjà un push qui

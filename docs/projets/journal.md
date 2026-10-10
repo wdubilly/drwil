@@ -268,6 +268,36 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
   toujours vérifiés ; contexte et rappel affichent « fiche supprimée
   (clôture) » ; recette à jour (dépôt et gabarit, fr et en).
   [décisions utilisateur]
-- **Reste ouvert** : avertir si la fiche existe encore au retour en
-  CADRAGE (proposition : non, une fiche peut garder des lots ouverts).
+- **Point tranché ensuite** (2026-10-10) : une fiche terminée ne doit pas
+  rester dans `docs/projets/` ; empêcher la récidive est un chantier à
+  cadrer (refus au retour en CADRAGE, contrôle bloquant).
 - **Clôturé par** : PR #17 (`3c5e31a`).
+
+## 2026-10-10 — Fiches terminées restées en place, condensées a posteriori
+
+Cinq chantiers finis dont la fiche n'avait jamais été condensée ; ils
+restaient proposés au lancement. Condensés ce jour-là (dates de fin
+d'origine entre parenthèses).
+
+- **Signaler les couches par défaut non détectées** (2026-10-04) : sur un
+  `init` sans stack détectée, le kit annonce les couches écrites par défaut
+  (backend, frontend) et rappelle `--layers`. 2 tests. Commit `52bb22b`.
+- **Le kit devient le paquet `drwil`** (2026-10-04) : drwil *est* le kit ;
+  dossier `packages/drwil/`, paquet et bin `drwil`, citations mises à jour.
+  La publication npm reste une décision ouverte, portée par
+  `docs/intentions/packager-kit-ia-first.md`.
+- **Faux positif QUA-017 sur un push de tag** (2026-10-05) : le pre-push
+  ne bloque plus un push qui ne contient que des tags (il regarde les
+  références réellement poussées) ; releases débloquées (`v0.2.0`,
+  `v0.2.1`, `v0.3.0`).
+- **Journaliser la clôture des chantiers** (2026-10-05) : une fiche
+  entièrement terminée est condensée dans ce journal puis supprimée, sa
+  ligne retirée de l'index — recette `docs/recettes/travailler-en-branche.md`,
+  section « Clôturer ».
+- **Fluidité, levier 1 : lancer depuis le chat** (2026-10-10) : `/drwil-lancer`
+  ouvre un sondage des fiches cadrées, la réponse humaine (lue par un hook)
+  passe en REALISATION ; un sondage pré-rempli est refusé ; repli au
+  terminal `node .githooks/etat.mjs lancer` ; clôture sans geste humain
+  sur évidence de verify. L'élargissement du cadrage reste un commit
+  séparé, à montrer par la vue de relecture
+  (`docs/intentions/vue-de-relecture.md`). [décisions utilisateur] PR #10.

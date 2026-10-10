@@ -14,7 +14,7 @@ Rendre drwil facilement distribuable pour un usage en équipe et/ou hors environ
 ## Questions à trancher
 1. Scope de publication : privé (npm private org) ou public ?
 2. ~~Nom du package~~ : tranché — `drwil`, voir
-   `docs/projets/renommer-kit-en-drwil.md`.
+   `docs/projets/journal.md` (2026-10-10, fiches condensées).
 3. Version initiale : 0.1.0 ou 1.0.0 ?
 4. Inclure `dist/` et `templates/` dans le paquet (files field) ?
 5. Automatiser build avant publish (prepublishOnly) ?
