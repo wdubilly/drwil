@@ -16,6 +16,9 @@ fichiers:
   - packages/drwil/templates/common/base/.githooks/etat.test.mjs
   - packages/drwil/templates/common/base/.githooks/perimetre.test.mjs
   - packages/drwil/templates/common/base/.githooks/risque.test.mjs
+  - .drwil/ia-first.json
+  - packages/drwil/templates/fr/base/docs/ia-first.md
+  - packages/drwil/templates/en/base/docs/ia-first.md
 -->
 
 (cadrage : ce que le kit lance au commit de l'utilisateur, la sévérité des
@@ -83,6 +86,9 @@ Constats du même jour :
   commit d'un projet généré sur les trois OS, puis fixe la limite à la
   mesure plus une marge ; elle ne monte jamais sans décision. [décision
   utilisateur]
+- **2026-10-11 — Cadrage élargi** : le réglage « progressif » vit dans
+  `.drwil/ia-first.json` (ce dépôt le pose à « bloquant ») et se documente
+  dans la doc du gabarit (fr, en).
 
 ## Contrats concernés
 
