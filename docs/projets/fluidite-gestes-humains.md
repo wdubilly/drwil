@@ -22,6 +22,12 @@ fichiers:
   - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
   - packages/drwil/bin/drwil.js
   - packages/drwil/test/kit.test.mjs
+  - packages/drwil/templates/fr/tools/claude/.claude/skills/lancer-un-chantier/SKILL.md
+  - packages/drwil/templates/en/tools/claude/.claude/skills/start-a-chantier/SKILL.md
+  - .claude/skills/lancer-un-chantier/SKILL.md
+  - packages/drwil/templates/fr/tools/claude/.claude/skills/drwil/SKILL.md
+  - packages/drwil/templates/en/tools/claude/.claude/skills/drwil/SKILL.md
+  - .claude/skills/drwil/SKILL.md
 -->
 
 (cadrage : la logique de « lancer » dans `.githooks/etat.mjs` (tout outil),
