@@ -381,4 +381,9 @@ d'origine entre parenthèses).
   présent) » reconnu aussi sur la ligne suivante. [décisions utilisateur]
 - **Résultat** : test du kit reproduisant le cas du 2026-10-09 ; dépôt et
   gabarit identiques. Lancé avec « Fusion automatique ».
-- **Clôturé par** : PR #26 (`7dde03e`).
+- **Rouvert le même jour** : la CI Windows refusait le test (chemins envoyés
+  à `git check-ignore` avec des barres obliques inversées, non reconnus
+  comme ignorés) ; le ruleset a bloqué la fusion automatique, désarmée
+  avant le correctif ; chemins au format « / », CI Windows verte avant la
+  nouvelle clôture.
+- **Clôturé par** : PR #26 (`7dde03e`, correctif Windows `172b9f8`).
