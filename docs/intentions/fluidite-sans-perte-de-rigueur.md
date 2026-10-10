@@ -53,6 +53,11 @@ hors du poste) en sollicitant l'humain **moins souvent et au bon moment**.
 6. **Mesurer** : le bench (`docs/intentions/bench-avec-sans-drwil.md`)
    compte les sollicitations humaines par tâche, pour vérifier que la
    fluidité progresse sans perte de qualité.
+7. **Rappeler sans dériver** (ajouté le 2026-10-10) : à chaque message,
+   un rappel court de l'état lu sur disque (activité, fiche, périmètre),
+   pour que l'agent ne dérive pas au fil d'une longue session ; moins de
+   tentatives interdites, donc moins de refus et de reprises. Voir
+   `docs/projets/rappel-contexte-chaque-message.md`.
 
 ## Contraintes
 

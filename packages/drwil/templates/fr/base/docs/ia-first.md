@@ -337,6 +337,15 @@ versionné.
   tâche. Un outil qui offre un hook de démarrage peut brancher la même
   commande pour réinjecter le contexte automatiquement — c'est le cas de
   Claude Code (hook SessionStart, si présent) ; ce n'est qu'un accélérateur.
+- **Rappel court, seulement quand l'état change** : `node .githooks/etat.mjs
+  rappel` écrit deux lignes (activité, fiche, taille du périmètre, règle)
+  si elles diffèrent du dernier rappel injecté, rien sinon ; l'empreinte du
+  dernier rappel vit dans `.drwil/rappel.json` (si présent), local et ignoré
+  par Git comme l'état. Claude Code l'appelle à chaque message (hook
+  `UserPromptSubmit`) ; après un résumé automatique du contexte, le hook de
+  démarrage réinjecte l'état complet. Un outil sans hook de saisie suit la
+  consigne d'`AGENTS.md` : relancer l'état avant toute modification. C'est
+  une barrière comportementale : la garantie reste dans Git.
 - **Reprise par une autre personne** : l'état d'un clone ne voyage pas ; on
   reprend depuis la fiche versionnée (section « Reprise ») et on réactive
   l'attente explicitement.

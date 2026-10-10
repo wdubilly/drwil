@@ -12,6 +12,7 @@
 // Clore (VERIFY → CLOTURE) exige l'évidence de `drwil verify --evidence` : ce
 // fichier la lit, il n'exécute aucun contrôle (un seul moteur, ADR-003).
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -199,12 +200,14 @@ const TEXTES = {
     perimetre: "Périmètre autorisé (bloc cadrage de la fiche) :",
     sansPerimetre: "  (aucun bloc cadrage : aucun fichier de code autorisé)",
     regle: (r) => `Règle : ${r}`,
+    rappel: (a, f, n) => `[drwil] Rappel : ${a}${f ? ` · ${f}` : " · aucune attente active"}${n === null ? "" : ` · périmètre : ${n} fichier(s) ou motif(s)`} (relire avec \`node .githooks/etat.mjs\`).`,
+    rappelInvalide: "[drwil] Rappel : état invalide, traité comme CADRAGE neutre (détail : `node .githooks/etat.mjs`).",
     pied: "Ne jamais écrire .drwil/state.json à la main. Changer d'activité : `node .githooks/etat.mjs passer <ACTIVITE>` (ouvrir une attente, lancer la réalisation et clore sont une décision humaine, sauf réglage « transitions » : agent).",
     regles: {
       CADRAGE: "lire, analyser, cadrer ; ne modifier aucun fichier de code.",
       ATTENTE: "formaliser l'attente dans sa fiche ; ne modifier aucun fichier de code.",
       DEMANDE: "expliciter la demande de réalisation ; ne modifier encore aucun fichier de code.",
-      REALISATION: "réaliser l'attente, en ne modifiant que les fichiers du périmètre ci-dessus.",
+      REALISATION: "réaliser l'attente, en ne modifiant que les fichiers du périmètre (bloc cadrage de la fiche active).",
       PREUVES: "produire les preuves et lancer les contrôles ; un correctif demande de revenir en REALISATION.",
       VERIFY: "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en REALISATION ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
       CLOTURE: "clore la fiche (statut, reprise), puis revenir en CADRAGE.",
@@ -221,12 +224,14 @@ const TEXTES = {
     perimetre: "Allowed scope (cadrage block of the fiche):",
     sansPerimetre: "  (no cadrage block: no code file allowed)",
     regle: (r) => `Rule: ${r}`,
+    rappel: (a, f, n) => `[drwil] Reminder: ${a}${f ? ` · ${f}` : " · no active expectation"}${n === null ? "" : ` · scope: ${n} file(s) or pattern(s)`} (read again with \`node .githooks/etat.mjs\`).`,
+    rappelInvalide: "[drwil] Reminder: invalid state, treated as neutral CADRAGE (details: `node .githooks/etat.mjs`).",
     pied: "Never write .drwil/state.json by hand. Change activity: `node .githooks/etat.mjs passer <ACTIVITE>` (opening an expectation, starting implementation and closing are a human decision, unless the \"transitions\" setting is agent).",
     regles: {
       CADRAGE: "read, analyse, frame; do not modify any code file.",
       ATTENTE: "write down the expectation in its fiche; do not modify any code file.",
       DEMANDE: "make the implementation request explicit; do not modify any code file yet.",
-      REALISATION: "implement the expectation, modifying only the files in the scope above.",
+      REALISATION: "implement the expectation, modifying only the files in the scope (cadrage block of the active fiche).",
       PREUVES: "produce evidence and run the checks; a fix means going back to REALISATION.",
       VERIFY: "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to REALISATION; MANUAL: human attestation (`npx drwil attest`), then run it again.",
       CLOTURE: "close the fiche (status, hand-off), then go back to CADRAGE.",
@@ -274,6 +279,46 @@ export function contexte(lu, racine) {
   return lignes.join("\n");
 }
 
+/** Rappel court (deux lignes) de l'état, pour l'injecter à chaque message ; null si la gouvernance est désactivée. */
+export function rappelCourt(lu, racine) {
+  const T = TEXTES[langue(racine)];
+  if (gouvernanceDesactivee(racine)) return null;
+  const { etat, problemes } = lu;
+  const tete = problemes.length ? T.rappelInvalide : (() => {
+    let n = null;
+    if (etat.attente_active) {
+      try {
+        n = lireBloc(readFileSync(join(racine, etat.attente_active), "utf8")).motifs.length;
+      } catch {
+        n = 0;
+      }
+    }
+    return T.rappel(etat.activite, etat.attente_active, n);
+  })();
+  return `${tete}\n${T.regle(T.regles[etat.activite])}`;
+}
+
+const FICHIER_RAPPEL = [".drwil", "rappel.json"];
+
+/**
+ * Le rappel seulement s'il a changé depuis le dernier injecté (empreinte dans .drwil/rappel.json,
+ * local comme l'état) ; null sinon. Empreinte absente ou illisible : le rappel est injecté.
+ */
+export function rappelSiChange(racine) {
+  const texte = rappelCourt(lireEtat(racine), racine);
+  if (texte === null) return null;
+  const empreinte = createHash("sha256").update(texte).digest("hex");
+  const fichier = join(racine, ...FICHIER_RAPPEL);
+  try {
+    if (JSON.parse(readFileSync(fichier, "utf8")).empreinte === empreinte) return null;
+  } catch {}
+  try {
+    mkdirSync(join(racine, ".drwil"), { recursive: true });
+    writeFileSync(fichier, JSON.stringify({ empreinte }) + "\n");
+  } catch {}
+  return texte;
+}
+
 /** Valeur de l'option `--nom valeur` dans `args`, ou undefined. */
 function option(args, nom) {
   const i = args.indexOf(nom);
@@ -282,6 +327,14 @@ function option(args, nom) {
 
 /** Point d'entrée commun à `node .githooks/etat.mjs` et à `drwil etat`. Rend le code de sortie. */
 export async function principal(args, racine) {
+  if (args[0] === "rappel") {
+    // Hook de saisie (Claude Code : UserPromptSubmit) : n'écrit que si l'état a changé, ne casse jamais une saisie.
+    try {
+      const texte = rappelSiChange(racine);
+      if (texte) console.log(texte);
+    } catch {}
+    return 0;
+  }
   if (args[0] !== "passer") {
     // Lecture : ne casse jamais le démarrage de session d'un agent.
     try {

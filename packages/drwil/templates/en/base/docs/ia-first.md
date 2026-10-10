@@ -328,6 +328,16 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
   task. A tool offering a session-start hook can wire the same command to
   re-inject the context automatically — Claude Code does (SessionStart hook,
   if present); it is only an accelerator.
+- **Short reminder, only when the state changes**: `node .githooks/etat.mjs
+  rappel` prints two lines (activity, sheet, scope size, rule) if they
+  differ from the last reminder injected, nothing otherwise; the last
+  reminder's fingerprint lives in `.drwil/rappel.json` (if present), local
+  and git-ignored like the state. Claude Code calls it on every message
+  (`UserPromptSubmit` hook); after an automatic context summary, the
+  session-start hook re-injects the full state. A tool without a prompt
+  hook follows the `AGENTS.md` instruction: read the state again before
+  modifying any file. It is a behavioural barrier: the guarantee stays in
+  Git.
 - **Hand-off to someone else**: a clone's state does not travel; resume from
   the versioned sheet ("Hand-off" section) and re-activate the expectation
   explicitly.

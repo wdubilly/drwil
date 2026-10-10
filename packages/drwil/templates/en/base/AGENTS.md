@@ -41,7 +41,9 @@ Full map and stack: `docs/architecture.md`.
   "not verified".
 - **Governance state (any agent)**: first action of every task, run
   `node .githooks/etat.mjs` and follow its activity, expectation and scope;
-  run it again when in doubt, never infer it from the conversation. Never
+  run it again when in doubt and before modifying any file if the activity
+  may have changed, never infer it from the conversation (a tool that
+  allows it injects a short reminder when the state changes). Never
   write `.drwil/state.json` (if present) by hand: change activity with
   `node .githooks/etat.mjs passer <ACTIVITE>`; opening an expectation,
   starting implementation and closing remain a human decision (`transitions`
