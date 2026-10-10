@@ -61,6 +61,12 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [décision] [P2] QUA-017 bloque un push qui ne fait que supprimer une
   branche distante (faux positif, cousin du push de tag) —
   `docs/projets/qua017-push-suppression.md`.
+- [ ] [humain] [P1] Protéger master : ruleset (checks obligatoires, pas
+  de push direct ni de contournement), CODEOWNERS, identité de l'agent —
+  `docs/projets/proteger-master.md`.
+- [ ] [décision] [P1] Fabrique autonome graduée par le risque (forge,
+  outillage, mutation, rôles séparés, auto-fusion LOW) —
+  `docs/intentions/fabrique-autonome.md`.
 - [ ] [IA] [P1] Les tests des contrôles n'héritent pas des variables
   `GIT_*` du hook : `git commit -a` refusé à tort, et depuis un worktree
   les tests écrivent dans le vrai dépôt — `docs/projets/tests-env-git.md`.
