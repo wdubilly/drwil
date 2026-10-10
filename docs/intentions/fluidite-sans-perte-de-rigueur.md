@@ -56,8 +56,8 @@ hors du poste) en sollicitant l'humain **moins souvent et au bon moment**.
 7. **Rappeler sans dériver** (ajouté le 2026-10-10) : à chaque message,
    un rappel court de l'état lu sur disque (activité, fiche, périmètre),
    pour que l'agent ne dérive pas au fil d'une longue session ; moins de
-   tentatives interdites, donc moins de refus et de reprises. Voir
-   `docs/projets/rappel-contexte-chaque-message.md`.
+   tentatives interdites, donc moins de refus et de reprises. Fait : voir
+   `docs/projets/journal.md` (2026-10-10, rappel court de l'état).
 
 ## Contraintes
 
