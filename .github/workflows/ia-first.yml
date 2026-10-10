@@ -12,6 +12,11 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: node .githooks/run-checks.mjs
+      # La protection de master vit dans les réglages de GitHub : elle doit rester celle
+      # versionnée (.github/ruleset-master.json), sinon un changement passerait sans PR.
+      - run: node .github/scripts/verifier-ruleset.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
   # Portabilité du kit (point 1 de docs/projets/suites-kit-portable.md) :
   # npm test de packages/drwil (pas la suite complète run-checks.mjs, qui
   # dépend de gitleaks) doit rester vert sur les trois OS.
