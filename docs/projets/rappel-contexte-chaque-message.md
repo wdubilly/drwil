@@ -58,6 +58,14 @@ périmètre, règle de l'activité.
 - **2026-10-10 — Rappel court à chaque message** : retenu par le
   demandeur, comme levier 7 de l'intention fluidité, en fiche séparée du
   lancement depuis le chat. [décision utilisateur]
+- **2026-10-10 — Fréquence : le moins souvent possible, au moment utile**
+  (point 5 tranché) : au démarrage de la session (déjà en place,
+  `SessionStart`) ; après un résumé automatique du contexte (le même hook
+  le couvrirait dans Claude Code : à vérifier) ; et à un message seulement
+  si l'état a changé depuis le dernier rappel (lancement, clôture,
+  changement d'activité). Sinon rien n'est injecté, sans coût. Le moment
+  d'écrire un fichier est déjà couvert par le hook `rappel-cadrage`, qui
+  refuse l'écriture hors cadrage. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -68,8 +76,10 @@ périmètre, règle de l'activité.
 
 ## 5. Points à trancher
 
-- [décision] Fréquence : à chaque message, seulement quand l'état a changé
-  depuis le dernier rappel, ou tous les N messages ?
+- ~~Fréquence~~ — tranchée le 2026-10-10 (voir « Décisions »).
+- [décision] Où retenir le dernier rappel injecté (pour ne réinjecter que
+  sur changement) : fichier local ignoré par Git sous `.drwil/`, ce qui
+  ajoute `.gitignore` au cadrage, ou dossier temporaire du système ?
 - [décision] Copilot CLI : a-t-il un hook de saisie ? À vérifier par le
   test témoin ; sinon, consigne seule.
 
@@ -85,4 +95,6 @@ périmètre, règle de l'activité.
 
 - **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
 - **Travail non commité** : aucun après le commit de cette fiche.
-- **Prochaine étape** : [décision] trancher les points 5, puis lancer.
+- **Prochaine étape** : [décision] où retenir le dernier rappel ; [IA]
+  vérifier que `SessionStart` se déclenche après un résumé du contexte ;
+  puis lancer.
