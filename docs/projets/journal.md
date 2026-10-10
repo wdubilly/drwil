@@ -387,3 +387,19 @@ d'origine entre parenthèses).
   avant le correctif ; chemins au format « / », CI Windows verte avant la
   nouvelle clôture.
 - **Clôturé par** : PR #26 (`7dde03e`, correctif Windows `172b9f8`).
+
+## 2026-10-10 — QUA-017 ne bloque plus la suppression d'une branche distante
+
+- **Constat** : depuis `master`, `git push origin --delete <branche>` était
+  refusé par le pre-push (« travail direct sur la branche principale ») ;
+  faux positif cousin de celui du push de tag, contourné deux fois ce
+  jour-là par l'API GitHub.
+- **Décisions clés** : le pre-push reconnaît une suppression (SHA local
+  fait de zéros) ; un push de tags et/ou de suppressions seulement ne
+  déclenche pas QUA-017, avec un message dédié du moteur ; la suppression
+  de la branche principale est laissée au ruleset de l'hébergeur ; un push
+  mixte reste contrôlé. [décisions utilisateur]
+- **Résultat** : test du kit (cas du 2026-10-09) ; dépôt et gabarit ; CI
+  verte sur les trois OS **avant** la clôture. Lancé avec « Fusion
+  automatique ».
+- **Clôturé par** : PR #27 (`e3e87f4`).

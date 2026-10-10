@@ -12,19 +12,31 @@ fi
 # référence poussée sur l'entrée standard, `<local ref> <local sha1> <remote
 # ref> <remote sha1>` — seule source fiable de ce qui est réellement poussé
 # (contrairement à la branche courante, inchangée pendant un push de tag).
-# Dès qu'une référence poussée n'est pas un tag (ex. push mixte tag + branche),
-# le contrôle s'applique normalement, par prudence.
+# Une suppression de branche distante (SHA local fait de zéros) ne touche pas
+# non plus la branche principale ; la suppression de celle-ci est laissée à la
+# protection de branche de l'hébergeur. Dès qu'une référence poussée n'est ni un
+# tag ni une suppression (ex. push mixte + branche), le contrôle s'applique
+# normalement, par prudence.
 une_reference=0
 que_des_tags=1
+sans_branche=1
 while IFS=' ' read -r local_ref local_sha1 remote_ref remote_sha1; do
   une_reference=1
+  case "$local_sha1" in
+    *[!0]*) suppression=0 ;;
+    *) suppression=1 ;;
+  esac
   case "$remote_ref" in
     refs/tags/*) ;;
-    *) que_des_tags=0 ;;
+    *) que_des_tags=0
+       [ "$suppression" = "1" ] || sans_branche=0 ;;
   esac
 done
 
 if [ "$une_reference" = "1" ] && [ "$que_des_tags" = "1" ]; then
   DRWIL_PUSH_TAGS_ONLY=1 exec node "$(dirname "$0")/run-checks.mjs"
+fi
+if [ "$une_reference" = "1" ] && [ "$sans_branche" = "1" ]; then
+  DRWIL_PUSH_SANS_BRANCHE=1 exec node "$(dirname "$0")/run-checks.mjs"
 fi
 exec node "$(dirname "$0")/run-checks.mjs"

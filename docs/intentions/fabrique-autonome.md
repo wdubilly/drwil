@@ -34,9 +34,9 @@ fiches (DRWIL-012, niveaux de risque).
   - contrôle local divergent de la CI sur les fichiers ignorés par Git —
     corrigé le 2026-10-10 (PR #26) ;
   - faux positifs qui poussent au contournement : QUA-017 sur la
-    suppression d'une branche distante
-    (`docs/projets/qua017-push-suppression.md`), règle d'interdiction de
-    l'outil qui refuse un message de commit citant le fichier d'état.
+    suppression d'une branche distante (corrigé le 2026-10-10, PR #27),
+    règles d'interdiction de l'outil qui refusent un message de commit
+    citant le fichier d'état ou une commande contenant « -n ».
 - **Consommation** : `.drwil/usage.jsonl` (si présent) est rempli à la main
   par une recette (`docs/recettes/suivre-consommation-par-lot.md`) ; aucun
   coupe-circuit automatique n'est possible sans mesure automatique.
