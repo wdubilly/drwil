@@ -118,6 +118,31 @@ test("validation : demande_active et depuis bien typés", () => {
   assert.deepEqual(validerEtat(actif("DEMANDE", { demande_active: "Lot 1" }), racine), []);
 });
 
+test("clôture : fiche déjà supprimée tolérée en CLOTURE seulement, les autres règles de l'attente restent", () => {
+  const racine = depot({ fiche: false });
+  assert.deepEqual(validerEtat(actif("CLOTURE"), racine), []);
+  for (const activite of ["ATTENTE", "DEMANDE", "REALISATION", "PREUVES", "VERIFY"]) {
+    assert.match(validerEtat(actif(activite), racine)[0], /introuvable/, activite);
+  }
+  assert.match(validerEtat(actif("CLOTURE", { attente_active: "src/auth/login.ts" }), racine)[0], /docs\/projets\//);
+  assert.match(validerEtat(actif("CLOTURE", { attente_active: "docs/projets/modele-fiche-projet.md" }), racine)[0], /modèle/);
+});
+
+test("clôture : fiche supprimée selon la recette, retour en CADRAGE accepté ; contexte et rappel le disent", async () => {
+  const racine = depot({ etat: actif("CLOTURE"), fiche: false });
+  const lu = lireEtat(racine);
+  assert.deepEqual(lu.problemes, []);
+  const ctx = contexte(lu, racine);
+  assert.match(ctx, /fiche supprimée/);
+  assert.doesNotMatch(ctx, /Périmètre autorisé|invalide/);
+  assert.match(rappelCourt(lu, racine), /fiche supprimée/);
+  assert.doesNotMatch(rappelCourt(lu, racine), /invalide|périmètre/);
+  const r = await passer(racine, { vers: "CADRAGE" }, { tty: false, maintenant: MAINTENANT });
+  assert.equal(r.code, 0, r.message);
+  assert.doesNotMatch(r.message, /invalide/);
+  assert.equal(lireEtat(racine).etat.activite, "CADRAGE");
+});
+
 test("transitions : une activité à la fois, retours vers REALISATION, abandon vers CADRAGE", () => {
   assert.equal(transitionAutorisee("CADRAGE", "ATTENTE"), true);
   assert.equal(transitionAutorisee("CADRAGE", "REALISATION"), false, "pas de saut en avant");
