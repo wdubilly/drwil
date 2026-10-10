@@ -132,7 +132,10 @@ deux ; la décision reste humaine, prise avant le travail.
   code ; test du hook étendu dans `packages/drwil/test/kit.test.mjs`
   (autorisation seulement par la réponse humaine, sondage pré-rempli
   refusé) ; `run-checks` vert (69 + 90).
-- **Travail non commité** : le lot 1.
+- **Lot 2 en cours** (2026-10-10) : chantier relancé par `/drwil-lancer`
+  avec la réponse « Fusion automatique » ; l'état porte
+  `fusion_autorisee` et le contexte affiche la consigne de fusion.
+- **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] fusionner la PR du lot 1 ; puis lot 2 :
   lancer un chantier avec « Fusion automatique » et vérifier qu'il va
   jusqu'à la fusion sans second geste.
