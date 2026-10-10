@@ -403,3 +403,19 @@ d'origine entre parenthèses).
   verte sur les trois OS **avant** la clôture. Lancé avec « Fusion
   automatique ».
 - **Clôturé par** : PR #27 (`e3e87f4`).
+
+## 2026-10-10 — Des garde-fous qui tiennent sans compter sur la mémoire de l'agent
+
+- **Constat** (2026-10-06) : un changement de mécanique proposé sans fiche
+  n'avait été arrêté par rien ; QUA-016 était en « avertissement » avec du
+  code orphelin, « Tout vérifier » pointait un ancien lanceur qui avalait
+  les échecs, et les hooks Claude Code du dépôt n'étaient pas branchés.
+- **Décisions clés** : QUA-016 bloquant (dépôt et défaut du gabarit, sans
+  écraser le réglage des projets existants) ; restes obsolètes supprimés ;
+  hooks branchés, refus avant écriture d'un fichier de code hors fiche.
+  Le 2026-10-10, lot 3 (« un changement de code a sa fiche ») jugé couvert
+  par QUA-016 et la barrière de périmètre rejouée en CI : pas de contrôle
+  supplémentaire. Trou connu : une fiche de référence (mécanique du kit)
+  couvre tout `.githooks/`. [décisions utilisateur]
+- **Clôturé par** : lots 1 et 2 par la PR #46 de l'ancien dépôt
+  (2026-10-06) ; clôture par la PR de ce chantier.

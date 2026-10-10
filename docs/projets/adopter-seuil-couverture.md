@@ -30,8 +30,8 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
 - `catalogue:QUA-020` (e2e) : étape suivante une fois ce contrat mûr,
   hors périmètre ici.
 - Citation obsolète de l'ancien lanceur bash dans `docs/contrats.md`
-  (QUA-013) et `AGENTS.md` : corrigée le 2026-10-06 par
-  `docs/projets/garde-fous-depot.md`.
+  (QUA-013) et `AGENTS.md` : corrigée le 2026-10-06 par le chantier
+  « garde-fous » (voir `docs/projets/journal.md`).
 
 ## 3. Contraintes
 

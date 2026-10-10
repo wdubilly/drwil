@@ -349,7 +349,7 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
 test("QUA-016 : réglage par défaut (bloquant) : premier commit accepté, code orphelin refusé ; avertissement toujours possible", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir }));
-  assert.equal(config(dir).cadrage, "bloquant", "réglage par défaut écrit à l'installation (docs/projets/garde-fous-depot.md)");
+  assert.equal(config(dir).cadrage, "bloquant", "réglage par défaut écrit à l'installation (docs/projets/journal.md, garde-fous)");
   git(dir, "add", "-A");
   assert.equal(git(dir, "commit", "-qm", "init").status, 0, "les fichiers du kit sont couverts : le premier commit passe");
   // QUA-017 : commit suivant hors du périmètre testé ici, donc sur une branche.
@@ -405,7 +405,7 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
     cwd: dir, encoding: "utf8",
     input: JSON.stringify({ hook_event_name: evenement, tool_name: "Write", tool_input: { file_path: join(dir, chemin) } }),
   });
-  // Défaut « bloquant » : refus AVANT l'écriture d'un fichier de code hors fiche (docs/projets/garde-fous-depot.md).
+  // Défaut « bloquant » : refus AVANT l'écriture d'un fichier de code hors fiche (docs/projets/journal.md, garde-fous).
   const refus = hook("PreToolUse", "scripts/nouveau.mjs");
   assert.match(refus.stdout, /"permissionDecision":"deny"/);
   assert.match(refus.stdout, /Écriture refusée \(QUA-016, cadrage bloquant\).*scripts\/nouveau\.mjs/);
