@@ -17,7 +17,7 @@ explicite : dépôt drwil vs livrable gabarit) : le défaut touche les deux.)
 
 ## 1. Besoin
 
-Constaté le 2026-10-10 en clôturant `rappel-contexte-chaque-message.md`
+Constaté le 2026-10-10 en clôturant le rappel court (journal, 2026-10-10)
 (PR #11). La recette `docs/recettes/travailler-en-branche.md`, section
 « Clôturer », fait condenser la fiche dans `docs/projets/journal.md` puis
 **supprimer** le fichier. La règle de l'activité CLOTURE dit : « clore la
