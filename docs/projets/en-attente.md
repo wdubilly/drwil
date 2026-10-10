@@ -53,9 +53,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [décision] [P1] Fabrique autonome graduée par le risque (forge,
   outillage, mutation, rôles séparés, auto-fusion LOW) —
   `docs/intentions/fabrique-autonome.md`.
-- [ ] [IA] [P1] Une fiche terminée ne reste pas dans `docs/projets/` :
-  détection explicite, refus au retour en CADRAGE, erreur check-docs —
-  `docs/projets/fiches-terminees-condensees.md`.
 - [ ] [décision] [P2] Non-régression continue : règle « défaut corrigé →
   test rattaché à un contrat », traçabilité dans `verify` —
   `docs/intentions/non-regression-continue.md`.
