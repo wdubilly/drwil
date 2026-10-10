@@ -141,10 +141,29 @@ l'humain : **lancer** (depuis le chat) et **fusionner**.
     « drwil-temoin » (même ligne) et le test de
     triche (demander au modèle d'invoquer lui-même la commande ; aucune
     nouvelle ligne ne doit s'écrire sans appel Bash visible).
-- **Points 5** : forme tranchée le 2026-10-10 (sondage, voir
+- **Test du sondage** (2026-10-10, dépôt jetable, hooks `PreToolUse` et
+  `PostToolUse` sur `AskUserQuestion` qui consignent tout ce qu'ils
+  reçoivent) :
+  - **Claude Code v2.1.296** : avant l'affichage, une vraie demande
+    n'a pas de réponse ; après, la réponse de l'humain arrive dans
+    `tool_response.answers` (`{"<question>": "<libellé choisi>"}`),
+    avec la question et ses options exactes. Le modèle peut pré-remplir
+    `answers` (essai fait), mais : (1) un hook `PreToolUse` refuse
+    cette requête avant tout affichage ; (2) même sans ce hook, Claude Code
+    affiche quand même le sondage et transmet la réponse de l'humain (le
+    modèle avait mis « B », l'humain a choisi « A », `PostToolUse` a reçu
+    « A »). Deux protections indépendantes : la réponse lue après le
+    sondage vient de l'humain.
+  - **Copilot CLI v1.0.95** : déclenche les hooks de `.claude/settings.json`
+    sur son propre sondage (`ask_user`), sous le nom `AskUserQuestion`,
+    avec un autre format : entrée `message` et `requestedSchema` (options en
+    `enum`), réponse dans `tool_result.text_result_for_llm` en texte libre
+    (« User responded: Option B »). Non testé : pré-remplissage et
+    imitation de la réponse côté Copilot.
+ forme tranchée le 2026-10-10 (sondage, voir
   « Décisions ») ; reste à vérifier le pré-remplissage de la réponse.
 - **Travail non commité** : aucun après le commit de cette reprise.
-- **Prochaine étape** : [humain] finir le test témoin dans Claude Code
-  (skill, triche) et tester le sondage (réponse non pré-remplissable) ;
-  puis ouvrir l'attente et lancer la
+- **Prochaine étape** : [IA] vérifier côté Copilot CLI qu'une réponse ne
+  peut être ni pré-remplie ni imitée (sinon : Claude Code dans le chat,
+  terminal pour Copilot) ; puis ouvrir l'attente et lancer la
   réalisation par l'ancien parcours (dernier usage) ; [IA] Lot 1.
