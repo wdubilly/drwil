@@ -17,6 +17,8 @@ fichiers:
   - packages/drwil/templates/fr/base/docs/ia-first.md
   - packages/drwil/templates/en/base/docs/ia-first.md
   - packages/drwil/test/kit.test.mjs
+  - packages/drwil/templates/common/base/gitignore
+  - .gitignore
 -->
 
 (cadrage : un mode court de `.githooks/etat.mjs`, branché sur la saisie de
@@ -66,6 +68,11 @@ périmètre, règle de l'activité.
   changement d'activité). Sinon rien n'est injecté, sans coût. Le moment
   d'écrire un fichier est déjà couvert par le hook `rappel-cadrage`, qui
   refuse l'écriture hors cadrage. [décision utilisateur]
+- **2026-10-10 — Dernier rappel retenu comme l'état** : un fichier local
+  sous `.drwil/`, ignoré par Git, ne contenant que l'empreinte du dernier
+  rappel injecté ; absent ou illisible, le rappel est injecté (jamais
+  masqué). `.gitignore` (dépôt et gabarit) ajouté au cadrage. [décision
+  utilisateur]
 
 ## Contrats concernés
 
@@ -77,9 +84,8 @@ périmètre, règle de l'activité.
 ## 5. Points à trancher
 
 - ~~Fréquence~~ — tranchée le 2026-10-10 (voir « Décisions »).
-- [décision] Où retenir le dernier rappel injecté (pour ne réinjecter que
-  sur changement) : fichier local ignoré par Git sous `.drwil/`, ce qui
-  ajoute `.gitignore` au cadrage, ou dossier temporaire du système ?
+- ~~Où retenir le dernier rappel~~ — tranché le 2026-10-10 (voir
+  « Décisions »).
 - [décision] Copilot CLI : a-t-il un hook de saisie ? À vérifier par le
   test témoin ; sinon, consigne seule.
 
@@ -95,6 +101,5 @@ périmètre, règle de l'activité.
 
 - **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
 - **Travail non commité** : aucun après le commit de cette fiche.
-- **Prochaine étape** : [décision] où retenir le dernier rappel ; [IA]
-  vérifier que `SessionStart` se déclenche après un résumé du contexte ;
+- **Prochaine étape** : [IA] vérifier que `SessionStart` se déclenche après un résumé du contexte ;
   puis lancer.
