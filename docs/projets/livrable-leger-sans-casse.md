@@ -19,6 +19,8 @@ fichiers:
   - .drwil/ia-first.json
   - packages/drwil/templates/fr/base/docs/ia-first.md
   - packages/drwil/templates/en/base/docs/ia-first.md
+  - packages/drwil/templates/fr/base/docs/projets/mecanique-ia-first.md
+  - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
 -->
 
 (cadrage : ce que le kit lance au commit de l'utilisateur, la sévérité des
