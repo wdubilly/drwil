@@ -27,10 +27,10 @@ fiches (DRWIL-012, niveaux de risque).
   aucun CODEOWNERS ; l'agent agit avec le jeton du mainteneur — chantier
   `docs/projets/proteger-master.md`.
 - **Outillage fragile**, constaté le même jour :
-  - depuis un worktree, les tests des contrôles écrivent dans le vrai
-    dépôt (`docs/projets/tests-env-git.md`) — or un orchestrateur
-    d'agents parallèles passe justement par des worktrees ou des
-    conteneurs ;
+  - depuis un worktree, les tests des contrôles écrivaient dans le vrai
+    dépôt — corrigé le 2026-10-10 (`docs/projets/journal.md`, PR #16) ;
+    un orchestrateur d'agents parallèles passe justement par des worktrees
+    ou des conteneurs ;
   - contrôle local divergent de la CI sur les fichiers ignorés par Git
     (`docs/projets/citations-fichiers-ignores.md`) ;
   - faux positifs qui poussent au contournement : QUA-017 sur la
@@ -75,7 +75,7 @@ fiches (DRWIL-012, niveaux de risque).
 ## Ordre proposé
 
 0. **Protéger la forge** : `docs/projets/proteger-master.md` (sans code).
-1. **Fiabiliser l'outillage** : `docs/projets/tests-env-git.md`,
+1. **Fiabiliser l'outillage** : tests isolés des `GIT_*` (fait, PR #16),
    `docs/projets/citations-fichiers-ignores.md`, faux positifs.
 2. **Muscler les preuves** : mutation testing, CI indépendante.
 3. **Séparer les rôles** testeur, codeur, relecteur.
