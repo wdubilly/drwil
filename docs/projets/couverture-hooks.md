@@ -47,6 +47,11 @@ garantir par un seuil bloquant, puis relever les seuils.
 - Un seuil ne descend jamais (cliquet) : il part de la mesure réelle.
 - Lien avec `docs/projets/adopter-seuil-couverture.md`, dont le lot 3
   (100 % pour le paquet) reste « à la demande ».
+- Les tests ajoutés ne ralentissent pas l'utilisateur du kit : ils
+  tournent dans ce dépôt ; le commit des projets équipés n'en dépend plus
+  une fois `docs/projets/livrable-leger-sans-casse.md` réalisé, qui passe
+  avant ce chantier (principe « livrable léger, dépôt éprouvé »,
+  2026-10-10).
 
 ## 4. Décisions
 
