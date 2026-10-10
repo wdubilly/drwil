@@ -29,7 +29,7 @@ const TEXTES = {
     brancheSansBranche: "push de tags ou de suppressions de branches uniquement",
     brancheProtegee: (b) => `travail direct sur la branche principale (${b}) : passer par une branche et une pull/merge request (voir docs/recettes/travailler-en-branche.md)`,
     testsControles: "tests des contrôles eux-mêmes",
-    aucunTest: "aucun .githooks/*.test.mjs",
+    aucunTest: "tests propres au dépôt drwil, non livrés",
     couvertureCi: "couverture CI de chaque contrôle (QUA-013)",
     pasDeCi: "aucune CI configurée (ci: none) : pas de filet pour les contrôles dégradables",
     reporte: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
@@ -47,7 +47,7 @@ const TEXTES = {
     brancheSansBranche: "push of tags or branch deletions only",
     brancheProtegee: (b) => `direct work on the main branch (${b}): go through a branch and a pull/merge request (see docs/recipes/working-with-branches.md)`,
     testsControles: "tests of the checks themselves",
-    aucunTest: "no .githooks/*.test.mjs",
+    aucunTest: "tests owned by the drwil repository, not shipped",
     couvertureCi: "CI coverage of each check (QUA-013)",
     pasDeCi: "no CI configured (ci: none): no net for degradable checks",
     reporte: "no staged file under its paths: replayed on push and in CI",
@@ -138,7 +138,9 @@ export function controles(root, { cfg = {}, env = process.env, indexes = null, c
     if (!full) return { statut: "non-applicable", detail: T.modeMinimal };
     const dossier = join(root, ".githooks");
     const tests = existsSync(dossier) ? readdirSync(dossier).filter((f) => f.endsWith(".test.mjs")) : [];
-    if (!tests.length) return { statut: "non-execute", detail: T.aucunTest };
+    // Ces tests éprouvent le code de drwil : ils restent dans son dépôt et ne ralentissent pas le
+    // commit d'un projet équipé, qui ne les reçoit pas (docs/projets/livrable-leger-sans-casse.md).
+    if (!tests.length) return { statut: "non-applicable", detail: T.aucunTest };
     return lancer(process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))], o, nom);
   });
 

@@ -32,6 +32,8 @@ const T = {
     ficheTerminee: (fiche) => `${fiche} : fiche terminée encore présente — la condenser dans docs/projets/journal.md, la supprimer et retirer sa ligne de l'index (QUA-015)`,
     coherenceAvertissement: (n) => `check-docs : ${n} avertissement(s) de cohérence case/statut (QUA-015, non bloquant)`,
     risqueAvertissement: (n) => `check-docs : ${n} avertissement(s) de niveau de risque (DRWIL-012, non bloquant)`,
+    ignoreParGit: "fichier ignoré par Git : absent en CI (ajouter « (si présent) »)",
+    nouveauxAvertissement: (n) => `check-docs : ${n} avertissement(s) d'exigence récente (réglage « nouvellesExigences » : avertissement ; « bloquant » pour l'imposer)`,
   },
   en: {
     chemin: (c) => `cited path not found \`${c}\``,
@@ -52,6 +54,8 @@ const T = {
     ficheTerminee: (fiche) => `${fiche}: finished card still present — condense it into docs/projects/journal.md, delete it and remove its index line (QUA-015)`,
     coherenceAvertissement: (n) => `check-docs: ${n} checkbox/status consistency warning(s) (QUA-015, non-blocking)`,
     risqueAvertissement: (n) => `check-docs: ${n} risk level warning(s) (DRWIL-012, non-blocking)`,
+    ignoreParGit: "file ignored by Git: missing in CI (add \"(if present)\")",
+    nouveauxAvertissement: (n) => `check-docs: ${n} recent-requirement warning(s) (setting "nouvellesExigences": avertissement; "bloquant" to enforce it)`,
   },
 }[lang];
 
@@ -187,8 +191,14 @@ for (const doc of docs) {
 }
 
 const ignores = ignoresParGit(citations.flatMap((c) => c.trouves));
+// Exigence ajoutée après l'installation de projets déjà équipés : un fichier ignoré ne prouve plus
+// une citation. Bloquante seulement si le projet l'a (`nouvellesExigences` : "bloquant", défaut
+// des installations neuves) ; sinon signalée sans casser un commit qui passait.
+const nouvellesBloquantes = cfg.nouvellesExigences === "bloquant";
+const avertissementsNouveaux = [];
 for (const c of citations) {
-  if (!c.trouves.some((p) => !ignores.has(relPosix(p)))) erreurs.push(`${c.lieu} : ${T.chemin(c.cite)}`);
+  if (!c.trouves.length) erreurs.push(`${c.lieu} : ${T.chemin(c.cite)}`);
+  else if (!c.trouves.some((p) => !ignores.has(relPosix(p)))) (nouvellesBloquantes ? erreurs : avertissementsNouveaux).push(`${c.lieu} : ${T.chemin(c.cite)} — ${T.ignoreParGit}`);
 }
 
 erreurs.push(...checkChantiers());
@@ -225,6 +235,10 @@ if (problemesCoherence.length) {
 if (avertissementsRisque.length) {
   for (const e of avertissementsRisque) console.log(`  ⚠ ${e}`);
   console.log(T.risqueAvertissement(avertissementsRisque.length));
+}
+if (avertissementsNouveaux.length) {
+  for (const e of avertissementsNouveaux) console.log(`  ⚠ ${e}`);
+  console.log(T.nouveauxAvertissement(avertissementsNouveaux.length));
 }
 process.exit(erreurs.length ? 1 : 0);
 

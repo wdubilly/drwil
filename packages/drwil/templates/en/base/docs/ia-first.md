@@ -95,6 +95,16 @@ installed), doc references (QUA-011), tests of the checks themselves (if
 any), CI coverage of each check (QUA-013, if there is a CI), then the
 project's own checks declared in `.drwil/ia-first.json` (`checks` key).
 
+The tests of the checks exercise drwil's own code: they stay in the drwil
+repository and are not shipped, so they never slow down the project's
+commits (the check reports "not applicable"). A requirement added by a kit
+version released after the project was installed (today: a cited path that
+only exists as a file ignored by Git) follows the `nouvellesExigences`
+setting of `.drwil/ia-first.json`: `bloquant` for a fresh install,
+`avertissement` for a project that was already set up without it — an
+upgrade never breaks a commit that used to pass; `drwil apply` never
+hardens this setting, the project switches it to `bloquant` when it wants.
+
 To keep commits fast, a project check that declares `chemins` (patterns,
 e.g. `["src/**"]`) runs **at commit time** only if a staged file matches one
 of them; otherwise it ends up "not run", never hidden. Push

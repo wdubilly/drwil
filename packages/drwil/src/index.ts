@@ -539,6 +539,11 @@ async function writeConfig(r: Resolved): Promise<void> {
     // Barrière de périmètre de l'attente (.githooks/perimetre.mjs) : "off" | "avertissement" |
     // "bloquant". "avertissement" à l'installation : le projet voit les écarts avant de durcir.
     barriere: typeof previous?.barriere === "string" ? previous.barriere : "avertissement",
+    // Exigences ajoutées par une version du kit postérieure à l'installation (aujourd'hui : chemin
+    // cité qui n'existe que comme fichier ignoré par Git) : "bloquant" pour une installation neuve,
+    // "avertissement" pour un projet déjà équipé qui n'a pas encore ce réglage — une mise à jour ne
+    // casse jamais un commit qui passait. Jamais écrasé ensuite.
+    nouvellesExigences: typeof previous?.nouvellesExigences === "string" ? previous.nouvellesExigences : previous ? "avertissement" : "bloquant",
     layerPrefixes: ["app", "tests", "src", "scripts"],
     codePrefixes: ["scripts", ".githooks", "e2e"],
     extraCodeFiles: [],
@@ -704,7 +709,13 @@ export async function apply(opts: InitOptions): Promise<void> {
   await scaffold(r, () => false, derives, manifest, attendus);
   const obsoletes = await nettoyerObsoletes(opts.targetDir, ancien, attendus);
   await writeManifest(opts.targetDir, manifest, obsoletes);
-  if (!readConfig(opts.targetDir)) await writeConfig(r);
+  const existante = readConfig(opts.targetDir);
+  if (!existante) await writeConfig(r);
+  else if (existante.nouvellesExigences === undefined) {
+    // Seul ajout à une configuration existante : rendre visible le réglage des exigences récentes,
+    // à « avertissement » (une mise à jour ne durcit jamais) ; le reste n'est pas touché.
+    await writeFile(join(opts.targetDir, ".drwil", "ia-first.json"), JSON.stringify({ ...existante, nouvellesExigences: "avertissement" }, null, 2) + "\n");
+  }
   reportStack(r);
   reportDerives(derives);
   reportObsoletes(obsoletes);

@@ -2,7 +2,7 @@
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSync, appendFileSync, cpSync, rmSync } from "node:fs";
+import { existsSync, readdirSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSync, appendFileSync, cpSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -58,9 +58,6 @@ const envTest = { ...process.env, CI: "" };
 delete envTest.DRWIL_PUSH_TAGS_ONLY;
 delete envTest.DRWIL_PUSH_SANS_BRANCHE;
 delete envTest.DRWIL_HOOK;
-// Le test « variables GIT_* du lanceur » relance les tests des contrôles dans un enfant (~1 s) :
-// déjà exécuté sur ces mêmes fichiers dans le dépôt, il est sauté dans chaque projet généré ici.
-envTest.DRWIL_TESTS_ENFANT = "1";
 const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
 const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
@@ -148,6 +145,53 @@ test("chemin cité : un fichier ignoré par Git ne vaut pas preuve (local = CI) 
   writeFileSync(join(dir, "docs/ia-first.md"), read(dir, "docs/ia-first.md").replace("`.drwil/ia-first.json`.", "`.drwil/state.json`\n(si présent)."));
   r = docsCheck();
   assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
+test("livrable léger : un projet équipé ne reçoit ni ne lance les tests des hooks (code de drwil)", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir }));
+  const tests = readdirSync(join(dir, ".githooks")).filter((f) => f.endsWith(".test.mjs"));
+  assert.deepEqual(tests, [], "les tests des hooks restent dans le dépôt drwil");
+  const r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  // « Non applicable » est muet : ni lancement, ni « non exécuté » à signaler au projet.
+  assert.doesNotMatch(r.stdout + r.stderr, /tests des contrôles eux-mêmes/);
+});
+
+test("budget de temps : les contrôles au commit d'un projet équipé restent rapides", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir }));
+  const debut = performance.now();
+  const r = checks(dir);
+  const ms = Math.round(performance.now() - debut);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  // Mesure d'abord, sur les trois OS (CI) ; la limite est fixée ensuite à la mesure plus une marge.
+  console.log(`[budget-commit] ${process.platform} : ${ms} ms`);
+});
+
+test("mise à jour sans casse : une exigence ajoutée après l'installation avertit un projet existant, bloque une installation neuve", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir }));
+  assert.equal(config(dir).nouvellesExigences, "bloquant", "installation neuve : sévère d'emblée");
+  // Projet installé avant ce réglage (v0.3.0) : la clé n'existe pas.
+  const ancienne = { ...config(dir) };
+  delete ancienne.nouvellesExigences;
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(ancienne, null, 2));
+  writeFileSync(join(dir, ".drwil/state.json"), "{}\n");
+  appendFileSync(join(dir, "docs/ia-first.md"), "\nÉtat local : `.drwil/state.json`.\n");
+  const docsCheck = () => spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
+  let r = docsCheck();
+  assert.equal(r.status, 0, "projet existant : le commit qui passait passe encore\n" + r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /\.drwil\/state\.json/, "mais l'écart est signalé");
+  // La mise à jour pose « avertissement » pour ce projet, sans jamais durcir.
+  await quiet(() => apply({ targetDir: dir }));
+  assert.equal(config(dir).nouvellesExigences, "avertissement");
+  assert.equal(docsCheck().status, 0);
+  // Le projet choisit de durcir : la même citation devient bloquante, et une mise à jour garde ce choix.
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), nouvellesExigences: "bloquant" }, null, 2));
+  assert.equal(docsCheck().status, 1);
+  await quiet(() => apply({ targetDir: dir }));
+  assert.equal(config(dir).nouvellesExigences, "bloquant");
 });
 
 test("les contrôles déclarés par le projet tournent et survivent à une réinstallation", async () => {
