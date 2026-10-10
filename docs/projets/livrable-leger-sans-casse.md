@@ -1,6 +1,6 @@
 # Projet : un livrable qui ne ralentit ni ne casse l'utilisateur
 
-**Statut** : cadré le 2026-10-10 — décisions à prendre avant le lot 1.
+**Statut** : cadré le 2026-10-10 — décisions prises le 2026-10-11, lot 1 à lancer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -11,6 +11,11 @@ fichiers:
   - packages/drwil/templates/common/base/.githooks/check-docs.mjs
   - packages/drwil/src/index.ts
   - packages/drwil/test/kit.test.mjs
+  - packages/drwil/templates/common/base/.githooks/cadrage.test.mjs
+  - packages/drwil/templates/common/base/.githooks/contrats.test.mjs
+  - packages/drwil/templates/common/base/.githooks/etat.test.mjs
+  - packages/drwil/templates/common/base/.githooks/perimetre.test.mjs
+  - packages/drwil/templates/common/base/.githooks/risque.test.mjs
 -->
 
 (cadrage : ce que le kit lance au commit de l'utilisateur, la sévérité des
@@ -63,6 +68,21 @@ Constats du même jour :
 - **2026-10-10 — Livrable léger, dépôt éprouvé** : principe retenu par le
   demandeur, priorité 0, avant la couverture à 100 %. [décision
   utilisateur]
+- **2026-10-11 — Tests des hooks non livrés** (point 5) : les 5 fichiers
+  `.githooks/*.test.mjs` sortent du gabarit et restent dans ce dépôt
+  (lancés ici au commit et en CI) ; chez un projet existant, la mise à
+  jour les supprime s'ils sont intacts (mécanisme des fichiers obsolètes
+  d'`init` / `apply`) ; dans un projet sans ces tests, le contrôle
+  « tests des contrôles eux-mêmes » ne doit ni échouer ni se dire « non
+  exécuté » (QUA-013). [décision utilisateur]
+- **2026-10-11 — Un réglage « progressif » unique** (point 5) : les
+  exigences ajoutées après l'installation d'un projet restent en
+  avertissement chez lui ; une nouvelle installation les a bloquantes ;
+  `apply` ne durcit jamais. [décision utilisateur]
+- **2026-10-11 — Budget mesuré puis fixé** (point 5) : le lot 3 mesure le
+  commit d'un projet généré sur les trois OS, puis fixe la limite à la
+  mesure plus une marge ; elle ne monte jamais sans décision. [décision
+  utilisateur]
 
 ## Contrats concernés
 
@@ -72,15 +92,7 @@ Constats du même jour :
 
 ## 5. Points à trancher
 
-- [décision] **Tests des hooks chez l'utilisateur** : ne plus les livrer
-  (ils restent dans ce dépôt), ou les livrer sans les lancer par défaut ?
-- [décision] **Nouvelles exigences à la mise à jour** : un réglage de
-  sévérité par exigence (bloquant pour une nouvelle installation,
-  avertissement pour un projet existant), ou un seul réglage
-  « progressif » qui les regroupe ?
-- [décision] **Budget de temps au commit** : quelle limite, mesurée par
-  un test du kit (par ex. le commit d'un projet généré vide sous une
-  durée donnée) ?
+- ~~Les trois points~~ — tranchés le 2026-10-11 (voir « Décisions »).
 
 ## 6. Lots
 
@@ -99,6 +111,5 @@ Constats du même jour :
 ## 7. Reprise
 
 - **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : la fiche.
-- **Prochaine étape** : [décision] trancher les trois points ; puis
-  `/drwil-lancer`.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [humain] `/drwil-lancer`.

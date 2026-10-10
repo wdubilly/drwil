@@ -20,7 +20,7 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
-- [ ] [décision] [P0] Livrable léger et sans casse : ni ralentir ni casser
+- [ ] [IA] [P0] Livrable léger et sans casse : ni ralentir ni casser
   l'utilisateur (tests des hooks hors de son commit, mise à jour sans
   casse, budget de temps) — `docs/projets/livrable-leger-sans-casse.md`.
 - [ ] [IA] [P0] Dépôt et gabarit identiques, vérifié par un contrôle
