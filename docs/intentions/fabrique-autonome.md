@@ -31,8 +31,8 @@ fiches (DRWIL-012, niveaux de risque).
     dépôt — corrigé le 2026-10-10 (`docs/projets/journal.md`, PR #16) ;
     un orchestrateur d'agents parallèles passe justement par des worktrees
     ou des conteneurs ;
-  - contrôle local divergent de la CI sur les fichiers ignorés par Git
-    (`docs/projets/citations-fichiers-ignores.md`) ;
+  - contrôle local divergent de la CI sur les fichiers ignorés par Git —
+    corrigé le 2026-10-10 (PR #26) ;
   - faux positifs qui poussent au contournement : QUA-017 sur la
     suppression d'une branche distante
     (`docs/projets/qua017-push-suppression.md`), règle d'interdiction de
@@ -76,7 +76,7 @@ fiches (DRWIL-012, niveaux de risque).
 
 0. **Protéger la forge** : `docs/projets/proteger-master.md` (sans code).
 1. **Fiabiliser l'outillage** : tests isolés des `GIT_*` (fait, PR #16),
-   `docs/projets/citations-fichiers-ignores.md`, faux positifs.
+   citations de fichiers ignorés (fait, PR #26), faux positifs.
 2. **Muscler les preuves** : mutation testing, CI indépendante.
 3. **Séparer les rôles** testeur, codeur, relecteur.
 4. **Orchestrateur et bac à sable**, risque LOW seulement.

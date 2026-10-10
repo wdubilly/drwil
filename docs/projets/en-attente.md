@@ -20,9 +20,6 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
-- [ ] [IA] [P1] Un chemin cité ne vaut pas preuve s'il est ignoré par
-  Git (contrôle local divergent de la CI) —
-  `docs/projets/citations-fichiers-ignores.md`.
 - [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
   légère décidée, modalités à définir — `docs/projets/entretien-sous-barriere-bloquante.md`.
 - [ ] [humain] [P1] drwil V0.2 — gouvernance exécutable : lots [IA] livrés

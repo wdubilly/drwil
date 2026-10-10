@@ -46,8 +46,8 @@ hors du poste) en sollicitant l'humain **moins souvent et au bon moment**.
    une seule commande pour attester tous les contrats en attente (liste
    affichée, confirmation unique) ; questions groupées au démarrage d'un
    lot, choix recommandés appliqués par défaut sauf objection.
-4. **Supprimer les sources de reprises** : voir
-   `docs/projets/citations-fichiers-ignores.md` et
+4. **Supprimer les sources de reprises** : citations de fichiers ignorés
+   (fait le 2026-10-10, `docs/projets/journal.md`) et
    `docs/projets/entretien-sous-barriere-bloquante.md`.
 5. **Relire vite** : voir `docs/intentions/vue-de-relecture.md`.
 6. **Mesurer** : le bench (`docs/intentions/bench-avec-sans-drwil.md`)
