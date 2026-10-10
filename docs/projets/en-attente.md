@@ -20,6 +20,10 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
+- [ ] [décision] [P0] Dépôt et gabarit identiques, vérifié par un contrôle
+  (écarts corrigés ou déclarés) — `docs/projets/depot-gabarit-identiques.md`.
+- [ ] [décision] [P0] Couverture des hooks de gouvernance mesurée et
+  garantie par un seuil — `docs/projets/couverture-hooks.md`.
 - [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
   légère décidée, modalités à définir — `docs/projets/entretien-sous-barriere-bloquante.md`.
 - [ ] [humain] [P1] drwil V0.2 — gouvernance exécutable : lots [IA] livrés
