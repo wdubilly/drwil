@@ -1,6 +1,6 @@
 # Projet : dépôt et gabarit identiques, vérifié mécaniquement
 
-**Statut** : cadré le 2026-10-10 — décisions à prendre avant le lot 1.
+**Statut** : cadré le 2026-10-10 — décisions prises, lot 1 à lancer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -60,6 +60,16 @@ en CI.
 
 - **2026-10-10 — Priorité 0** : l'identité dépôt / gabarit devient
   mécanique. [décision utilisateur]
+- **2026-10-10 — Miroirs dérivés, exceptions déclarées** (point 5) : tout
+  fichier du dépôt qui a un homologue dans le gabarit est comparé ; seuls
+  les écarts voulus sont listés, avec leur raison. [décision utilisateur]
+- **2026-10-10 — `.claude/settings.json` aligné sur le gabarit** (point
+  5) : le dépôt utilise les réglages qu'il livre ; les préférences
+  personnelles restent dans `.claude/settings.local.json` (si présent). [décision
+  utilisateur]
+- **2026-10-10 — Preuve automatique de QUA-018** (point 5) : le contrôle
+  devient la preuve de QUA-018 (aujourd'hui seulement attesté). [décision
+  utilisateur]
 
 ## Contrats concernés
 
@@ -69,13 +79,7 @@ en CI.
 
 ## 5. Points à trancher
 
-- [décision] **Liste des miroirs** : dérivée automatiquement (tout fichier
-  du dépôt qui a un homologue dans le gabarit) ou liste explicite ?
-- [décision] **`.claude/settings.json`** : aligner le dépôt sur le gabarit,
-  ou déclarer l'écart voulu (lequel, pourquoi) ?
-- [décision] **Contrat dédié** : un nouveau contrat dans
-  `docs/contrats.md` (prouvé par ce contrôle), ou un simple contrôle
-  rattaché à QUA-018 ?
+- ~~Les trois points~~ — tranchés le 2026-10-10 (voir « Décisions »).
 
 ## 6. Lots
 
@@ -90,6 +94,5 @@ en CI.
 ## 7. Reprise
 
 - **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : la fiche.
-- **Prochaine étape** : [décision] trancher les trois points ; puis
-  `/drwil-lancer`.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [humain] `/drwil-lancer`.

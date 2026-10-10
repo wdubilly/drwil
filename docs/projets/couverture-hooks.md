@@ -1,6 +1,6 @@
 # Projet : mesurer et garantir la couverture des hooks de gouvernance
 
-**Statut** : cadré le 2026-10-10 — décisions à prendre avant le lot 1.
+**Statut** : cadré le 2026-10-10 — décisions prises, lot 1 à lancer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -52,6 +52,15 @@ garantir par un seuil bloquant, puis relever les seuils.
 
 - **2026-10-10 — Priorité 0** : mesurer et garantir la couverture des
   hooks de gouvernance. [décision utilisateur]
+- **2026-10-10 — 100 % d'emblée** (point 5) : la cible est 100 % pour les
+  hooks ; le seuil bloquant n'est activé qu'une fois atteint (lot 2).
+  Toute exclusion de couverture (code inatteignable) est justifiée en
+  commentaire et relue. [décision utilisateur]
+- **2026-10-10 — QUA-004 étendu** (point 5) : le contrat de couverture
+  porte le paquet et les hooks, avec un seuil par périmètre. [décision
+  utilisateur]
+- **2026-10-10 — Ce dépôt d'abord** (point 5) : la mesure des hooks n'est
+  pas livrée aux projets équipés pour l'instant. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -62,26 +71,20 @@ garantir par un seuil bloquant, puis relever les seuils.
 
 ## 5. Points à trancher
 
-- [décision] **Cible** : seuils de départ égaux à la mesure réelle des
-  hooks (cliquet, relevés par lots), ou 100 % visé d'emblée ?
-- [décision] **QUA-004** : étendre ce contrat aux hooks, ou un contrat à
-  part pour les hooks ?
-- [décision] **Livrable** : livrer aussi la mesure des hooks aux projets
-  équipés (leurs `.githooks/` sont les mêmes), ou ce dépôt seulement ?
+- ~~Les trois points~~ — tranchés le 2026-10-10 (voir « Décisions »).
 
 ## 6. Lots
 
-- **Lot 1 — mesurer** [IA] : c8 sur `.githooks/*.mjs` avec leurs tests,
-  contrôle déclaré, seuils selon la décision. Critère de sortie : le
-  rapport de couverture des hooks s'affiche au commit et en CI ; une
-  baisse sous le seuil fait échouer le contrôle.
-- **Lot 2 — relever** [IA] : tests ajoutés sur les zones non couvertes
-  les plus risquées (barrière, état, clôture), seuils relevés. Critère de
-  sortie : seuils relevés, contrôles verts.
+- **Lot 1 — mesurer et compléter** [IA] : c8 sur `.githooks/*.mjs` avec
+  leurs tests, rapport affiché au commit et en CI ; tests ajoutés jusqu'à
+  100 % (lignes, branches, fonctions). Critère de sortie : rapport à
+  100 %, contrôles verts.
+- **Lot 2 — garantir** [IA] : seuil bloquant à 100 % pour les hooks, QUA-004
+  étendu (`docs/contrats.md`). Critère de sortie : une baisse de couverture
+  des hooks fait échouer le contrôle.
 
 ## 7. Reprise
 
 - **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : la fiche.
-- **Prochaine étape** : [décision] trancher les trois points ; puis
-  `/drwil-lancer`.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [humain] `/drwil-lancer`.
