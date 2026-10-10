@@ -165,8 +165,11 @@ test("budget de temps : les contrôles au commit d'un projet équipé restent ra
   const r = checks(dir);
   const ms = Math.round(performance.now() - debut);
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  // Mesure d'abord, sur les trois OS (CI) ; la limite est fixée ensuite à la mesure plus une marge.
   console.log(`[budget-commit] ${process.platform} : ${ms} ms`);
+  // Mesuré le 2026-10-11 : Linux 107 ms (CI) et 369 ms (poste), macOS 361 ms, Windows 342 ms. Marge
+  // large pour le bruit des machines de CI partagées ; ne se relève que sur décision (cliquet).
+  const BUDGET_COMMIT_MS = 1500;
+  assert.ok(ms <= BUDGET_COMMIT_MS, `contrôles au commit d'un projet équipé : ${ms} ms, budget ${BUDGET_COMMIT_MS} ms`);
 });
 
 test("mise à jour sans casse : une exigence ajoutée après l'installation avertit un projet existant, bloque une installation neuve", async () => {

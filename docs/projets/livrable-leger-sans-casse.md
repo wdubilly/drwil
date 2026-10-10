@@ -118,6 +118,20 @@ Constats du même jour :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] `/drwil-lancer`.
+- **Dernier état** (2026-10-11) : lots 1, 2 et 3 réalisés.
+  - Lot 1 : les 5 tests `.githooks/*.test.mjs` sortis du gabarit (restés
+    dans ce dépôt) ; supprimés à la mise à jour s'ils sont intacts ; le
+    contrôle répond « non applicable » sans rien afficher ; fiches de
+    référence du gabarit à jour.
+  - Lot 2 : réglage `nouvellesExigences` (`bloquant` pour une installation
+    neuve, `avertissement` pour un projet existant, posé par `apply` s'il
+    manque, jamais durci) ; check-docs l'applique aux citations de
+    fichiers ignorés par Git ; ce dépôt à `bloquant` ; doc du gabarit (fr,
+    en) à jour.
+  - Lot 3 : test du kit qui mesure les contrôles au commit d'un projet
+    fraîchement équipé ; mesures du 2026-10-11 : Linux 107 ms (CI) et
+    369 ms (poste), macOS 361 ms, Windows 342 ms ; budget fixé à 1 500 ms.
+- **Preuves** : tests du kit vus échouer avant le code ; `run-checks` vert
+  (69 + 94) ; CI verte sur les trois OS avant de fixer le budget.
+- **Prochaine étape** : [IA] CI verte avec le budget actif, puis
+  vérification, clôture, fusion automatique.
