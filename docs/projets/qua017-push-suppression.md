@@ -9,6 +9,8 @@ fichiers:
   - .githooks/run-checks.mjs
   - packages/drwil/templates/common/base/.githooks/pre-push
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - .githooks/moteur.mjs
+  - packages/drwil/templates/common/base/.githooks/moteur.mjs
   - packages/drwil/test/kit.test.mjs
 -->
 
@@ -48,6 +50,9 @@ suppressions.
   le pre-push laisse passer toute suppression de branche distante ; la
   suppression de `master` est interdite côté GitHub par le ruleset
   (`docs/projets/proteger-master.md`). [décision utilisateur]
+- **2026-10-10 — Cadrage élargi à `.githooks/moteur.mjs`** : c'est lui qui
+  affiche « push de tags uniquement » ; une suppression doit être nommée
+  correctement, pas confondue avec un push de tags.
 
 ## Contrats concernés
 
