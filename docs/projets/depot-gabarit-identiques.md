@@ -55,8 +55,8 @@ en CI.
   celui de la couverture du paquet, donc rejoué au commit, au push et en CI.
 - Une information, une source : la liste des miroirs et des écarts voulus
   dans un seul fichier.
-- Principe « livrable léger, dépôt éprouvé » (2026-10-10,
-  `docs/projets/livrable-leger-sans-casse.md`) : un fichier propre au
+- Principe « livrable léger, dépôt éprouvé » (2026-10-10, voir
+  `docs/projets/journal.md`) : un fichier propre au
   dépôt (tests des hooks s'ils ne sont plus livrés, outils, mesures) est
   une exception déclarée, pas un écart à corriger.
 

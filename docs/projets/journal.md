@@ -419,3 +419,20 @@ d'origine entre parenthèses).
   couvre tout `.githooks/`. [décisions utilisateur]
 - **Clôturé par** : lots 1 et 2 par la PR #46 de l'ancien dépôt
   (2026-10-06) ; clôture par la PR de ce chantier.
+
+## 2026-10-11 — Un livrable qui ne ralentit ni ne casse l'utilisateur
+
+- **Principe** (demandeur, 2026-10-10) : distinguer ce qu'on livre et ce
+  dépôt, qui éprouve la solution ; ne ralentir ni casser l'utilisateur.
+- **Décisions clés** : les tests des hooks (`.githooks/*.test.mjs`) ne sont
+  plus livrés — ils restent ici, et une mise à jour les supprime chez un
+  projet s'ils sont intacts ; le contrôle répond « non applicable » sans
+  rien afficher. Réglage unique `nouvellesExigences` : `bloquant` pour une
+  installation neuve, `avertissement` pour un projet existant (posé par
+  `apply` s'il manque, jamais durci) — appliqué aux citations de fichiers
+  ignorés par Git ; ce dépôt à `bloquant`. Budget de temps au commit d'un
+  projet équipé mesuré puis fixé à 1 500 ms (mesures : 107 à 369 ms selon
+  l'OS). [décisions utilisateur]
+- **Relance** : un commentaire du moteur citait la fiche (dans le gabarit,
+  une fiche du dépôt absente des projets) ; corrigé avant la clôture.
+- **Clôturé par** : PR #31 (`8b23067`).

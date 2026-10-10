@@ -48,10 +48,9 @@ garantir par un seuil bloquant, puis relever les seuils.
 - Lien avec `docs/projets/adopter-seuil-couverture.md`, dont le lot 3
   (100 % pour le paquet) reste « à la demande ».
 - Les tests ajoutés ne ralentissent pas l'utilisateur du kit : ils
-  tournent dans ce dépôt ; le commit des projets équipés n'en dépend plus
-  une fois `docs/projets/livrable-leger-sans-casse.md` réalisé, qui passe
-  avant ce chantier (principe « livrable léger, dépôt éprouvé »,
-  2026-10-10).
+  tournent dans ce dépôt ; depuis le 2026-10-11, les projets équipés ne
+  les reçoivent plus (principe « livrable léger, dépôt éprouvé », voir
+  `docs/projets/journal.md`).
 
 ## 4. Décisions
 

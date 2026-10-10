@@ -10,16 +10,11 @@ fichiers:
   - .githooks/glob.mjs
   - .githooks/moteur.mjs
   - .githooks/contrats.mjs
-  - .githooks/contrats.test.mjs
   - .githooks/risque.mjs
-  - .githooks/risque.test.mjs
   - .githooks/etat.mjs
-  - .githooks/etat.test.mjs
   - .githooks/perimetre.mjs
-  - .githooks/perimetre.test.mjs
   - .githooks/prepare-commit-msg
   - .githooks/cadrage.mjs
-  - .githooks/cadrage.test.mjs
   - .githooks/pre-commit
   - .githooks/pre-push
   - .githooks/commit-msg
@@ -56,8 +51,8 @@ hand-off doc).
 - **Last state**: fiche shipped at install time, nothing to hand off. If the
   kit adds a new mechanics file (`.githooks/` or an AI tool setting), add it
   here. Lot 4 added `.githooks/check-control-coverage.mjs` (QUA-013),
-  `.githooks/pre-push`, `.githooks/commit-msg` (shipped disabled) and
-  `.githooks/cadrage.test.mjs`. Lot 5 added `.githooks/check-file-size.mjs`
+  `.githooks/pre-push` and `.githooks/commit-msg` (shipped disabled) (their
+  tests stay in the drwil repository, not shipped). Lot 5 added `.githooks/check-file-size.mjs`
   and its legacy-ceiling file `.githooks/check-file-size.legacy.json`, plus
   the empty extension point `.githooks/check-code-rules.mjs` — all three
   shipped but **opt-in** (not run until the project declares them in

@@ -99,6 +99,16 @@ installé), références de la doc (QUA-011), tests des contrôles eux-mêmes
 puis les contrôles propres au projet déclarés dans `.drwil/ia-first.json`
 (clé `checks`).
 
+Les tests des contrôles éprouvent le code de drwil : ils restent dans le
+dépôt drwil et ne sont pas livrés, pour ne pas ralentir le commit du projet
+(le contrôle répond « non applicable »). Une exigence ajoutée par une version
+du kit postérieure à l'installation (aujourd'hui : un chemin cité qui
+n'existe que comme fichier ignoré par Git) suit le réglage
+`nouvellesExigences` de `.drwil/ia-first.json` : `bloquant` pour une
+installation neuve, `avertissement` pour un projet déjà équipé qui ne l'avait
+pas — une mise à jour ne casse jamais un commit qui passait ; `drwil apply`
+ne durcit jamais ce réglage, le projet le passe à `bloquant` quand il veut.
+
 Pour garder le commit rapide, un contrôle du projet qui déclare `chemins`
 (motifs, ex. `["src/**"]`) n'est lancé **au commit** que si un fichier
 indexé correspond à l'un d'eux ; sinon il finit « non exécuté », jamais

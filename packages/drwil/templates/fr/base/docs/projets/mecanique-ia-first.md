@@ -10,16 +10,11 @@ fichiers:
   - .githooks/glob.mjs
   - .githooks/moteur.mjs
   - .githooks/contrats.mjs
-  - .githooks/contrats.test.mjs
   - .githooks/risque.mjs
-  - .githooks/risque.test.mjs
   - .githooks/etat.mjs
-  - .githooks/etat.test.mjs
   - .githooks/perimetre.mjs
-  - .githooks/perimetre.test.mjs
   - .githooks/prepare-commit-msg
   - .githooks/cadrage.mjs
-  - .githooks/cadrage.test.mjs
   - .githooks/pre-commit
   - .githooks/pre-push
   - .githooks/commit-msg
@@ -54,8 +49,8 @@ Le code applicatif du projet : chaque chantier porte son propre bloc
 - **Dernier état** : fiche posée à l'installation, rien à reprendre. Si le
   kit ajoute un nouveau fichier de mécanique (`.githooks/` ou un réglage
   d'outil IA), l'ajouter ici. Lot 4 a ajouté `.githooks/check-control-coverage.mjs`
-  (QUA-013), `.githooks/pre-push`, `.githooks/commit-msg` (livré désactivé)
-  et `.githooks/cadrage.test.mjs`. Lot 5 a ajouté `.githooks/check-file-size.mjs`
+  (QUA-013), `.githooks/pre-push` et `.githooks/commit-msg` (livré désactivé)
+  (ses tests restent dans le dépôt drwil, non livrés). Lot 5 a ajouté `.githooks/check-file-size.mjs`
   et son fichier de plafonds hérités `.githooks/check-file-size.legacy.json`,
   ainsi que le point d'extension vide `.githooks/check-code-rules.mjs` — les
   trois livrés mais **opt-in** (pas lancés tant que le projet ne les déclare
