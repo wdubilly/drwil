@@ -158,12 +158,21 @@ l'humain : **lancer** (depuis le chat) et **fusionner**.
     sur son propre sondage (`ask_user`), sous le nom `AskUserQuestion`,
     avec un autre format : entrée `message` et `requestedSchema` (options en
     `enum`), réponse dans `tool_result.text_result_for_llm` en texte libre
-    (« User responded: Option B »). Non testé : pré-remplissage et
-    imitation de la réponse côté Copilot.
+    (« User responded: Option B »). Triche : le modèle de Copilot refuse
+    de répondre à la place de l'humain ; une valeur par défaut (`default`
+    du schéma, mise à « B » à la demande) ne remplace pas la réponse —
+    le sondage s'affiche, « B » présélectionné, et le hook reçoit la
+    réponse de l'humain (« User responded: A »).
+  - **Conclusion** : le lancement par sondage est possible dans les deux
+    outils, par les mêmes hooks de `.claude/settings.json`, avec un
+    adaptateur pour chaque format de réponse. Garde-fous du sondage de
+    lancement : refuser une requête qui arrive avec des réponses
+    (Claude Code) ou une valeur par défaut (Copilot CLI) — une
+    présélection pousserait l'humain à valider le choix du modèle ; la
+    recommandation de l'agent passe par le libellé « (Recommandé) », jamais
+    par une présélection.
  forme tranchée le 2026-10-10 (sondage, voir
   « Décisions ») ; reste à vérifier le pré-remplissage de la réponse.
 - **Travail non commité** : aucun après le commit de cette reprise.
-- **Prochaine étape** : [IA] vérifier côté Copilot CLI qu'une réponse ne
-  peut être ni pré-remplie ni imitée (sinon : Claude Code dans le chat,
-  terminal pour Copilot) ; puis ouvrir l'attente et lancer la
+- **Prochaine étape** : [humain] ouvrir l'attente et lancer la
   réalisation par l'ancien parcours (dernier usage) ; [IA] Lot 1.
