@@ -9,6 +9,9 @@ fichiers:
   - .githooks/etat.test.mjs
   - packages/drwil/templates/common/base/.githooks/etat.mjs
   - packages/drwil/templates/common/base/.githooks/etat.test.mjs
+  - docs/recettes/travailler-en-branche.md
+  - packages/drwil/templates/fr/base/docs/recettes/travailler-en-branche.md
+  - packages/drwil/templates/en/base/docs/recipes/working-with-branches.md
 -->
 
 (cadrage : la validation de l'état et la transition `CLOTURE → CADRAGE` de
@@ -60,6 +63,13 @@ tolérée (c'est l'issue normale d'une clôture) et `passer CADRAGE` réussit.
 - **2026-10-10 — Tolérer une fiche absente en CLOTURE** : retenu par le
   demandeur, de préférence à « supprimer la fiche seulement après le retour
   en CADRAGE » (qui aurait changé la recette). [décision utilisateur]
+
+- **2026-10-10 — Consigne de recette en plus du code** : la section
+  « Clôturer » de la recette de branche (dépôt et gabarit, fr et en) dit de
+  revenir en CADRAGE avant de supprimer la fiche ; cadrage élargi à ces
+  trois fichiers. En passant, la recette du dépôt disait la protection de
+  branche indisponible, faux depuis le ruleset sur `master`.
+  [décision utilisateur]
 
 ## Contrats concernés
 
