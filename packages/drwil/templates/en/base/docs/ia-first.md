@@ -347,12 +347,13 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
   [--demande <text>]` (or `drwil etat passer …`, a mere facade); `--fiche`
   opens an expectation from `CADRAGE`.
 - **Who decides** (`transitions` setting in `.drwil/ia-first.json`): `humain`
-  (default) — opening an expectation, starting implementation (`DEMANDE →
-  REALISATION`) and closing (`VERIFY → CLOTURE`) require an interactive
-  terminal and typing the target activity; the other transitions, which
-  narrow rights or go back, stay free. `agent`: any allowed transition is
+  (default) — opening rights is a human decision: starting a chantier (see
+  "Starting and closing" below), or, step by step, opening an expectation
+  and moving from `DEMANDE` to `REALISATION` in an interactive terminal by
+  typing the target activity; the other transitions, which narrow rights or
+  go back, stay free, closing included. `agent`: any allowed transition is
   free.
-- **Closing on `drwil verify` evidence**: `VERIFY → CLOTURE` also requires,
+- **Closing on `drwil verify` evidence**: `VERIFY → CLOTURE` requires,
   whatever the `transitions` setting, the latest evidence written by
   `drwil verify --evidence` (`.drwil/evidence/` (if present), not in git): verdict `PASS`
   or `ATTESTED`, on the `HEAD` commit, clean worktree. `.githooks/etat.mjs` reads that
@@ -368,6 +369,32 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
 - **Limits**: an agent with a shell can still cheat locally (rewrite the
   state, fake a terminal, combined short option). The aim is cheating that
   shows in the diff and is refused in CI, not impossible cheating.
+
+### Starting and closing
+
+Two human gestures per chantier: **start** and **merge the PR**.
+
+- **Start**: from `CADRAGE`, `ATTENTE` or `DEMANDE`, a single decision moves
+  to `REALISATION` on a **framed sheet** (`cadrage` block committed in
+  `HEAD`, sheet not finished, templates excluded; list: `node
+  .githooks/etat.mjs fiches`). It applies to that committed cadrage.
+  - **In the chat** (`/drwil-lancer`, if present): the agent opens a poll of
+    the framed sheets and may recommend one (in the description, never by
+    preselection); it is the **human's answer**, read by a tool hook
+    (`.claude/hooks/saisie-drwil.mjs` (if present)), that starts — never the
+    model. The hook refuses a start poll that arrives with an answer already
+    filled or a default value. Checked on 2026-10-10 in Claude Code (an
+    answer pre-filled by the model is ignored by the tool) and in Copilot
+    CLI, which fires the same hooks on its own poll.
+  - **In a terminal** (any tool): `node .githooks/etat.mjs lancer` lists the
+    framed sheets, asks for a number, then for typing `LANCER`.
+- **Close**: free as soon as the `drwil verify` evidence is valid (see
+  above); closing removes rights, and accepting the work remains the human
+  PR merge.
+- **Limit**: an agent with a shell could call these functions itself or
+  rewrite the local state; Claude Code's `deny` rules block calling the hook
+  directly, and cheating stays visible and refused off the machine (commit
+  barrier, CI), as for the rest.
 
 ### Scope barrier
 

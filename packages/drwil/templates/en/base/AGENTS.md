@@ -45,9 +45,11 @@ Full map and stack: `docs/architecture.md`.
   may have changed, never infer it from the conversation (a tool that
   allows it injects a short reminder when the state changes). Never
   write `.drwil/state.json` (if present) by hand: change activity with
-  `node .githooks/etat.mjs passer <ACTIVITE>`; opening an expectation,
-  starting implementation and closing remain a human decision (`transitions`
-  setting in `.drwil/ia-first.json`). A commit outside the active sheet's
+  `node .githooks/etat.mjs passer <ACTIVITE>`; starting a chantier
+  remains a human decision (`/drwil-lancer`: a poll whose answer the human
+  chooses; or `node .githooks/etat.mjs lancer` in a terminal; `transitions`
+  setting in `.drwil/ia-first.json`); closing is free once the `drwil
+  verify` evidence is valid. A commit outside the active sheet's
   cadrage is refused: widen the cadrage in a separate commit touching only
   the sheet.
 - **Cause before fix**: facing a bug or a red test, reproduce then

@@ -1,6 +1,6 @@
 # Projet : deux gestes humains par chantier — lancer depuis le chat, fusionner
 
-**Statut** : cadré le 2026-10-10 — lot 1 à démarrer.
+**Statut** : réalisé le 2026-10-10 — en attente de relecture et de fusion.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -22,6 +22,12 @@ fichiers:
   - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
   - packages/drwil/bin/drwil.js
   - packages/drwil/test/kit.test.mjs
+  - packages/drwil/templates/fr/tools/claude/.claude/skills/lancer-un-chantier/SKILL.md
+  - packages/drwil/templates/en/tools/claude/.claude/skills/start-a-chantier/SKILL.md
+  - .claude/skills/lancer-un-chantier/SKILL.md
+  - packages/drwil/templates/fr/tools/claude/.claude/skills/drwil/SKILL.md
+  - packages/drwil/templates/en/tools/claude/.claude/skills/drwil/SKILL.md
+  - .claude/skills/drwil/SKILL.md
 -->
 
 (cadrage : la logique de « lancer » dans `.githooks/etat.mjs` (tout outil),
@@ -141,10 +147,50 @@ l'humain : **lancer** (depuis le chat) et **fusionner**.
     « drwil-temoin » (même ligne) et le test de
     triche (demander au modèle d'invoquer lui-même la commande ; aucune
     nouvelle ligne ne doit s'écrire sans appel Bash visible).
-- **Points 5** : forme tranchée le 2026-10-10 (sondage, voir
+- **Test du sondage** (2026-10-10, dépôt jetable, hooks `PreToolUse` et
+  `PostToolUse` sur `AskUserQuestion` qui consignent tout ce qu'ils
+  reçoivent) :
+  - **Claude Code v2.1.296** : avant l'affichage, une vraie demande
+    n'a pas de réponse ; après, la réponse de l'humain arrive dans
+    `tool_response.answers` (`{"<question>": "<libellé choisi>"}`),
+    avec la question et ses options exactes. Le modèle peut pré-remplir
+    `answers` (essai fait), mais : (1) un hook `PreToolUse` refuse
+    cette requête avant tout affichage ; (2) même sans ce hook, Claude Code
+    affiche quand même le sondage et transmet la réponse de l'humain (le
+    modèle avait mis « B », l'humain a choisi « A », `PostToolUse` a reçu
+    « A »). Deux protections indépendantes : la réponse lue après le
+    sondage vient de l'humain.
+  - **Copilot CLI v1.0.95** : déclenche les hooks de `.claude/settings.json`
+    sur son propre sondage (`ask_user`), sous le nom `AskUserQuestion`,
+    avec un autre format : entrée `message` et `requestedSchema` (options en
+    `enum`), réponse dans `tool_result.text_result_for_llm` en texte libre
+    (« User responded: Option B »). Triche : le modèle de Copilot refuse
+    de répondre à la place de l'humain ; une valeur par défaut (`default`
+    du schéma, mise à « B » à la demande) ne remplace pas la réponse —
+    le sondage s'affiche, « B » présélectionné, et le hook reçoit la
+    réponse de l'humain (« User responded: A »).
+  - **Conclusion** : le lancement par sondage est possible dans les deux
+    outils, par les mêmes hooks de `.claude/settings.json`, avec un
+    adaptateur pour chaque format de réponse. Garde-fous du sondage de
+    lancement : refuser une requête qui arrive avec des réponses
+    (Claude Code) ou une valeur par défaut (Copilot CLI) — une
+    présélection pousserait l'humain à valider le choix du modèle ; la
+    recommandation de l'agent passe par le libellé « (Recommandé) », jamais
+    par une présélection.
+ forme tranchée le 2026-10-10 (sondage, voir
   « Décisions ») ; reste à vérifier le pré-remplissage de la réponse.
 - **Travail non commité** : aucun après le commit de cette reprise.
-- **Prochaine étape** : [humain] finir le test témoin dans Claude Code
-  (skill, triche) et tester le sondage (réponse non pré-remplissable) ;
-  puis ouvrir l'attente et lancer la
-  réalisation par l'ancien parcours (dernier usage) ; [IA] Lot 1.
+- **Lot 1 réalisé** (2026-10-10) : `fichesCadrees` et `lancer` dans
+  `.githooks/etat.mjs` (commandes `fiches` et `lancer`, choix au terminal
+  puis retaper `LANCER`) ; clôture sans geste humain (évidence de verify
+  toujours exigée) ; hook `.claude/hooks/saisie-drwil.mjs` (si présent)
+  sur le sondage (refus d'une réponse ou d'une valeur par défaut, lancement
+  sur la réponse humaine, formats Claude Code et Copilot CLI) ; règle
+  `deny` sur l'appel du hook par le shell ; skill `/drwil-lancer` (fr/en),
+  listé par `/drwil` ; doc « Lancer et clore », `AGENTS.md` ; 3 tests
+  de `.githooks/etat.mjs`, 1 test du kit qui rejoue les formats relevés.
+- **Non vérifié** : un lancement réel depuis le chat (critère de sortie) —
+  au prochain chantier, après la fusion : `/drwil-lancer`.
+- **Travail non commité** : aucun après le commit du Lot 1.
+- **Prochaine étape** : [IA] `PREUVES → VERIFY` puis clôture (désormais
+  sans geste humain) ; [humain] PR.

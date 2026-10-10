@@ -23,6 +23,15 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/saisie-drwil.mjs\""
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
@@ -42,6 +51,15 @@
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/saisie-drwil.mjs\""
+          }
+        ]
+      },
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
@@ -114,6 +132,7 @@
       "Read(**/.pgpass)"
     ],
     "deny": [
+      "Bash(*saisie-drwil*)",
       "Bash(git *--no-verify*)",
       "Bash(git commit -n*)",
       "Bash(git commit * -n*)",

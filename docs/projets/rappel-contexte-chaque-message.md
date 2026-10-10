@@ -108,7 +108,8 @@ périmètre, règle de l'activité.
   reformulée (« ci-dessus » était faux hors du contexte complet) ; 4 tests.
   Vérifié dans la doc de Claude Code : `SessionStart` se déclenche aussi
   après un résumé automatique du contexte (`compact`), déjà couvert.
-- **Non vérifié** : le rappel visible dans une session réelle (critère de
-  sortie) — à observer après la fusion, au premier changement d'état.
+- **Vérifié en session réelle** (2026-10-10, après la fusion) : le rappel
+  apparaît à chaque changement d'état (ATTENTE, puis REALISATION) et rien
+  d'autre entre-temps.
 - **Travail non commité** : aucun après le commit du Lot 1.
 - **Prochaine étape** : [IA] `PREUVES → VERIFY`, clôture ; [humain] PR.

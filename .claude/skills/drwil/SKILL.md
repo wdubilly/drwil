@@ -20,6 +20,7 @@ d'autre) :
 | `/drwil-conso` | Suivre la consommation par lot | `docs/recettes/suivre-consommation-par-lot.md` |
 | `/drwil-avancement` | Visualiser l'avancement | `docs/recettes/visualiser-avancement.md` |
 | `/drwil-release` | Créer une release (tag + note GitHub), module optionnel | `docs/recettes/creer-une-release.md` |
+| `/drwil-lancer` | Lancer un chantier : sondage des fiches cadrées, la réponse humaine passe en REALISATION | `docs/ia-first.md` (« Lancer et clore ») |
 
 Si `$capacite` vaut `verify` : lancer `npx drwil verify --agent` à la racine
 du projet (la CLI `drwil` du projet est la source de vérité ; ne jamais
