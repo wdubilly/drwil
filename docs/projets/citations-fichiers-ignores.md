@@ -1,6 +1,6 @@
 # Projet : un chemin cité ne vaut pas preuve s'il est ignoré par Git
 
-**Statut** : ouvert le 2026-10-09 — en attente de démarrage.
+**Statut** : ouvert le 2026-10-09 — décisions prises le 2026-10-10, lot 1 à lancer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -36,7 +36,14 @@ présent) » n'est reconnue que sur la même ligne que le chemin ; un retour
 
 ## 4. Décisions
 
-(aucune encore)
+- **2026-10-10 — Erreur en local** : un chemin cité qui n'existe que comme
+  fichier ignoré par Git est une erreur de check-docs en local, comme en
+  CI ; le commit est refusé tout de suite plutôt qu'une CI rouge après le
+  push (constaté deux fois le 2026-10-10, PR #11 et #13). [décision
+  utilisateur]
+- **2026-10-10 — « (si présent) » aussi sur la ligne suivante** : un retour
+  à la ligne entre le chemin et la mention ne fait plus échouer la
+  citation. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -47,9 +54,7 @@ présent) » n'est reconnue que sur la même ligne que le chemin ; un retour
 
 ## 5. Points à trancher
 
-- [décision] Un chemin cité qui n'existe que comme fichier ignoré par Git :
-  erreur (comme en CI) ou avertissement ?
-- [décision] Reconnaître « (si présent) » sur la ligne suivante aussi ?
+- ~~Les points ouverts~~ — tranchés le 2026-10-10 (voir « Décisions »).
 
 ## 6. Lots
 

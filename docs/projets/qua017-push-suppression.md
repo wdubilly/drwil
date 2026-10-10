@@ -1,6 +1,6 @@
 # Projet : QUA-017 ne bloque pas un push qui ne fait que supprimer une branche distante
 
-**Statut** : ouvert le 2026-10-09 — en attente de démarrage.
+**Statut** : ouvert le 2026-10-09 — décisions prises le 2026-10-10, lot 1 à lancer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -44,7 +44,10 @@ suppressions.
 
 ## 4. Décisions
 
-(aucune encore)
+- **2026-10-10 — Suppression de la branche principale laissée au ruleset** :
+  le pre-push laisse passer toute suppression de branche distante ; la
+  suppression de `master` est interdite côté GitHub par le ruleset
+  (`docs/projets/proteger-master.md`). [décision utilisateur]
 
 ## Contrats concernés
 
@@ -55,9 +58,7 @@ suppressions.
 
 ## 5. Points à trancher
 
-- [décision] Une suppression de la branche principale distante elle-même
-  (`git push origin --delete master`) : refusée, ou laissée à la
-  protection de branche côté hébergeur ?
+- ~~Les points ouverts~~ — tranchés le 2026-10-10 (voir « Décisions »).
 
 ## 6. Lots
 
