@@ -335,3 +335,18 @@ d'origine entre parenthèses).
 - **Suite** : un sondage `/drwil-lancer` ordonné (priorité de l'index,
   fiches non prêtes signalées, ordre des intentions), à cadrer.
 - **Clôturé par** : PR #20 (`bfe4011`).
+
+## 2026-10-10 — /drwil-lancer propose les fiches dans le bon ordre
+
+- **Constat** : le sondage listait les fiches sans ordre ni état de
+  préparation ; la recommandation tenait à la mémoire de l'agent.
+- **Décisions clés** : fiches prêtes (aucune `[décision]` ouverte) d'abord,
+  puis par priorité de l'index (`P2` sans tag) ; les non prêtes en fin,
+  avec ce qu'il reste à trancher ; l'ordre proposé des intentions départage
+  par la consigne du skill (pas de calcul) ; les intentions P1 non cadrées
+  sont citées « à cadrer » dans le message du sondage. [décisions
+  utilisateur]
+- **Résultat** : `node .githooks/etat.mjs fiches --json` donne `priorite`,
+  `decisions`, `prete` et trie ; skill de lancement et doc à jour (dépôt,
+  gabarit fr et en).
+- **Clôturé par** : PR #22 (`5957f51`).

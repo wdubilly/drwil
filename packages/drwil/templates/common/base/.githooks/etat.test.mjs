@@ -430,6 +430,31 @@ test("clôture : retour en CADRAGE refusé si la fiche terminée est encore là"
   assert.equal((await passer(racine, { vers: "CADRAGE" }, { tty: false, maintenant: MAINTENANT })).code, 0);
 });
 
+test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans tag) ; décisions ouvertes comptées", () => {
+  const { racine, git } = depotCadre();
+  const fiche = (titre, points) => `# ${titre}\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/${titre}.ts\n-->\n\n## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n- [décision] hors section, non compté.\n`;
+  writeFileSync(join(racine, "docs", "projets", "bloquee.md"), fiche("bloquee", "- [décision] Choisir A ou B ?\n- ~~Tranché~~ — voir Décisions."));
+  writeFileSync(join(racine, "docs", "projets", "sans-tag.md"), fiche("sans-tag", "- ~~Tranché~~ — voir Décisions."));
+  writeFileSync(join(racine, "docs", "projets", "anglaise.md"), "# anglaise\n\n**Status**: scoped on 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/en.ts\n-->\n\n## 5. Points to decide\n\n- [decision] A or B?\n- [decision] C or D?\n");
+  writeFileSync(join(racine, "docs", "projets", "en-attente.md"), [
+    "# Index", "", "Priorité : `[P0]` le plus urgent.", "",
+    `- [ ] [IA] [P3] Exemple — \`${FICHE}\`.`,
+    "- [ ] [décision] [P1] Bloquée —", "  `docs/projets/bloquee.md`.",
+    "- [x] [IA] [P0] point fait d'une fiche ouverte — `docs/projets/sans-tag.md`.",
+    "- [ ] [IA] Sans tag — `docs/projets/sans-tag.md`.",
+    "- [ ] [IA] [P1] Anglaise — `docs/projets/anglaise.md`.", "",
+  ].join("\n"));
+  git("add", "-A");
+  git("commit", "-qm", "fiches");
+  const fiches = fichesCadrees(racine);
+  assert.deepEqual(fiches.map((f) => [f.chemin, f.priorite, f.decisions, f.prete]), [
+    ["docs/projets/sans-tag.md", "P2", 0, true],
+    [FICHE, "P3", 0, true],
+    ["docs/projets/anglaise.md", "P1", 2, false],
+    ["docs/projets/bloquee.md", "P1", 1, false],
+  ]);
+});
+
 test("fiches cadrées : bloc cadrage commité, non terminée, hors modèles", () => {
   const { racine } = depotCadre();
   assert.deepEqual(fichesCadrees(racine).map((f) => f.chemin), [FICHE]);

@@ -388,8 +388,10 @@ Deux gestes humains par chantier : **lancer** et **fusionner la PR**.
   `HEAD`, fiche non terminée, hors modèles ; liste : `node .githooks/etat.mjs
   fiches`). Elle porte sur ce cadrage commité.
   - **Dans le chat** (`/drwil-lancer`, si présent) : l'agent ouvre un sondage
-    des fiches cadrées et peut en recommander une (dans la description,
-    jamais par présélection) ; c'est la **réponse de l'humain**, lue par un
+    des fiches cadrées, dans l'ordre de `fiches --json` (fiches prêtes
+    d'abord, sans `[décision]` ouverte, puis par priorité de l'index ;
+    l'ordre proposé des intentions départage), et recommande la première
+    fiche prête (dans la description, jamais par présélection) ; c'est la **réponse de l'humain**, lue par un
     hook de l'outil (`.claude/hooks/saisie-drwil.mjs` (si présent)), qui
     lance — jamais le modèle. Le hook refuse un sondage de lancement qui
     arrive avec une réponse déjà remplie ou une valeur par défaut. Vérifié le

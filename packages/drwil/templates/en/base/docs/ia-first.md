@@ -379,8 +379,10 @@ Two human gestures per chantier: **start** and **merge the PR**.
   `HEAD`, sheet not finished, templates excluded; list: `node
   .githooks/etat.mjs fiches`). It applies to that committed cadrage.
   - **In the chat** (`/drwil-lancer`, if present): the agent opens a poll of
-    the framed sheets and may recommend one (in the description, never by
-    preselection); it is the **human's answer**, read by a tool hook
+    the framed sheets, in the order of `fiches --json` (ready sheets first,
+    no open `[decision]`, then by index priority; the intentions' proposed
+    order breaks ties), and recommends the first ready sheet (in the
+    description, never by preselection); it is the **human's answer**, read by a tool hook
     (`.claude/hooks/saisie-drwil.mjs` (if present)), that starts — never the
     model. The hook refuses a start poll that arrives with an answer already
     filled or a default value. Checked on 2026-10-10 in Claude Code (an
