@@ -45,8 +45,10 @@ Carte complète et stack : `docs/architecture.md`.
   fichier si l'activité a pu changer, jamais le déduire de la conversation
   (un outil qui le permet injecte un rappel court quand l'état change). Ne jamais écrire `.drwil/state.json` (si présent) à la main :
   changer d'activité passe par `node .githooks/etat.mjs passer <ACTIVITE>` ;
-  ouvrir une attente, lancer la réalisation et clore restent une décision
-  humaine (réglage `transitions` de `.drwil/ia-first.json`).
+  lancer un chantier reste une décision humaine (`/drwil-lancer` : sondage
+  dont l'humain choisit la réponse ; ou `node .githooks/etat.mjs lancer`
+  dans un terminal ; réglage `transitions` de `.drwil/ia-first.json`) ;
+  clore est libre une fois l'évidence de `drwil verify` valide.
   Un commit hors du cadrage de la fiche active est refusé : élargir le
   cadrage dans un commit séparé qui ne touche que la fiche.
 - **Cause avant correctif** : face à un bug ou un test rouge, reproduire puis

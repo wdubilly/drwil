@@ -355,13 +355,14 @@ versionné.
   [--fiche <fiche>] [--demande <texte>]` (ou `drwil etat passer …`, simple
   façade) ; `--fiche` ouvre une attente depuis `CADRAGE`.
 - **Qui décide** (réglage `transitions` de `.drwil/ia-first.json`) : `humain`
-  (défaut) — ouvrir une attente, lancer la réalisation (`DEMANDE →
-  REALISATION`) et clore (`VERIFY → CLOTURE`) exigent un terminal interactif
-  et la saisie de l'activité visée ; les autres transitions, qui resserrent
-  les droits ou reviennent en arrière, restent libres. `agent` : toute
-  transition permise est libre.
-- **Clôture sur la preuve de `drwil verify`** : `VERIFY → CLOTURE` exige en
-  plus, quel que soit le réglage `transitions`, la dernière évidence écrite
+  (défaut) — ouvrir des droits est une décision humaine : lancer un
+  chantier (voir « Lancer et clore » ci-dessous), ou, pas à pas, ouvrir une
+  attente et passer de `DEMANDE` à `REALISATION` dans un terminal interactif
+  en retapant l'activité visée ; les autres transitions, qui resserrent les
+  droits ou reviennent en arrière, restent libres, clôture comprise. `agent` :
+  toute transition permise est libre.
+- **Clôture sur la preuve de `drwil verify`** : `VERIFY → CLOTURE` exige,
+  quel que soit le réglage `transitions`, la dernière évidence écrite
   par `drwil verify --evidence` (`.drwil/evidence/` (si présent), hors git) : verdict
   `PASS` ou `ATTESTED`, sur le commit `HEAD`, arbre non modifié. `.githooks/etat.mjs`
   lit cette preuve sans rien exécuter : verify reste le seul juge, sur tous
@@ -377,6 +378,33 @@ versionné.
 - **Limites** : un agent qui a le shell peut toujours tricher en local
   (réécrire l'état, simuler un terminal, option courte combinée). Le but est
   une triche visible dans le diff et refusée en CI, pas impossible.
+
+### Lancer et clore
+
+Deux gestes humains par chantier : **lancer** et **fusionner la PR**.
+
+- **Lancer** : depuis `CADRAGE`, `ATTENTE` ou `DEMANDE`, une seule décision
+  passe en `REALISATION` sur une **fiche cadrée** (bloc `cadrage` commité dans
+  `HEAD`, fiche non terminée, hors modèles ; liste : `node .githooks/etat.mjs
+  fiches`). Elle porte sur ce cadrage commité.
+  - **Dans le chat** (`/drwil-lancer`, si présent) : l'agent ouvre un sondage
+    des fiches cadrées et peut en recommander une (dans la description,
+    jamais par présélection) ; c'est la **réponse de l'humain**, lue par un
+    hook de l'outil (`.claude/hooks/saisie-drwil.mjs` (si présent)), qui
+    lance — jamais le modèle. Le hook refuse un sondage de lancement qui
+    arrive avec une réponse déjà remplie ou une valeur par défaut. Vérifié le
+    2026-10-10 dans Claude Code (une réponse pré-remplie par le modèle est
+    ignorée par l'outil) et dans Copilot CLI, qui déclenche les mêmes hooks
+    sur son propre sondage.
+  - **Au terminal** (tout outil) : `node .githooks/etat.mjs lancer` liste les
+    fiches cadrées, fait choisir un numéro, puis retaper `LANCER`.
+- **Clore** : libre dès que l'évidence de `drwil verify` est valide (voir
+  ci-dessus) ; clore retire des droits, et l'acceptation du travail reste la
+  fusion de la PR, humaine.
+- **Limite** : un agent qui a le shell pourrait appeler lui-même ces
+  fonctions ou réécrire l'état local ; les règles `deny` de Claude Code
+  bloquent l'appel direct du hook, et la triche reste visible et refusée
+  hors du poste (barrière au commit, CI), comme pour le reste.
 
 ### Barrière de périmètre
 

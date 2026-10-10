@@ -420,6 +420,56 @@ test("rappel court : hook de saisie Claude livré, empreinte ignorée par Git, r
   assert.equal(rappel().stdout, "", "état inchangé : rien n'est injecté");
 });
 
+test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+  const fiche = "docs/projets/essai.md";
+  writeFileSync(join(dir, fiche), "# Projet : Essai\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/essai.ts\n-->\n");
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+
+  const reglages = JSON.parse(read(dir, ".claude/settings.json"));
+  for (const evenement of ["PreToolUse", "PostToolUse"]) {
+    assert.ok(reglages.hooks[evenement].some((h) => h.matcher === "AskUserQuestion" && /saisie-drwil\.mjs/.test(JSON.stringify(h.hooks))), evenement);
+  }
+  assert.ok(reglages.permissions.deny.includes("Bash(*saisie-drwil*)"), "l'agent ne peut pas appeler le hook lui-même par le shell");
+  assert.ok(existsSync(join(dir, ".claude/skills/lancer-un-chantier/SKILL.md")));
+
+  const hook = (entree) => spawnSync(process.execPath, [".claude/hooks/saisie-drwil.mjs"], { cwd: dir, encoding: "utf8", input: JSON.stringify(entree) });
+  const etat = () => (existsSync(join(dir, ".drwil/state.json")) ? JSON.parse(read(dir, ".drwil/state.json")) : null);
+  const claude = { questions: [{ question: "Quelle fiche lancer ?", header: "drwil-lancer", options: [{ label: fiche, description: "Essai" }, { label: "docs/projets/autre.md", description: "Autre" }], multiSelect: false }] };
+  const copilot = { message: "drwil-lancer : quelle fiche lancer ?", requestedSchema: { properties: { choix: { type: "string", enum: [fiche, "docs/projets/autre.md"] } } } };
+
+  // Le modèle ne répond pas à la place de l'humain et ne présélectionne rien : refusé avant l'affichage.
+  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: { ...claude, answers: { "Quelle fiche lancer ?": fiche } } }).status, 2);
+  const avecDefaut = structuredClone(copilot);
+  avecDefaut.requestedSchema.properties.choix.default = fiche;
+  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: avecDefaut }).status, 2);
+  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: claude }).status, 0, "un vrai sondage passe");
+  assert.equal(etat(), null, "rien n'est lancé avant la réponse");
+
+  // Un sondage qui n'est pas celui de drwil ne lance rien, même avec une fiche en réponse.
+  const autre = { questions: [{ ...claude.questions[0], header: "Autre" }] };
+  hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: autre, tool_response: { ...autre, answers: { "Quelle fiche lancer ?": fiche } } });
+  assert.equal(etat(), null);
+
+  // Claude Code : la réponse humaine arrive dans tool_response.answers.
+  const r = hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: claude, tool_response: { ...claude, answers: { "Quelle fiche lancer ?": fiche } } });
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /REALISATION \(lancé : docs\/projets\/essai\.md\)/);
+  assert.equal(etat().activite, "REALISATION");
+  assert.equal(etat().attente_active, fiche);
+
+  // Copilot CLI : même hook, réponse en texte libre ; une fiche non cadrée est refusée.
+  rmSync(join(dir, ".drwil/state.json"));
+  const refus = hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: copilot, tool_result: { result_type: "success", text_result_for_llm: "User responded: docs/projets/autre.md" } });
+  assert.match(refus.stdout, /n'est pas une fiche cadrée/);
+  assert.equal(etat(), null);
+  hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: copilot, tool_result: { result_type: "success", text_result_for_llm: `User responded: ${fiche}` } });
+  assert.equal(etat().activite, "REALISATION");
+});
+
 test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));

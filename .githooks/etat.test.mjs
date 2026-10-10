@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, rappelCourt, rappelSiChange, transitionAutorisee, validerEtat } from "./etat.mjs";
+import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, fichesCadrees, lancer, rappelCourt, rappelSiChange, transitionAutorisee, validerEtat } from "./etat.mjs";
 
 // Chaque dossier temporaire est supprimé après son test : ces tests tournent à chaque commit,
 // et aussi dans chaque projet que génèrent les tests du kit ; sans ça, ils épuisaient les
@@ -176,10 +176,10 @@ test("préparer : transition interdite refusée, --fiche réservé à l'ouvertur
   assert.deepEqual(preparerTransition(enCours, "CADRAGE", { maintenant: MAINTENANT }, racine).etat, { ...ETAT_NEUTRE, depuis: MAINTENANT });
 });
 
-test("humain requis (mode humain) : ouvrir, lancer la réalisation, clore ; rien en mode agent", () => {
+test("humain requis (mode humain) : ouvrir et lancer la réalisation, pas clore ; rien en mode agent", () => {
   assert.equal(exigeHumain("CADRAGE", "ATTENTE", "humain"), true);
   assert.equal(exigeHumain("DEMANDE", "REALISATION", "humain"), true);
-  assert.equal(exigeHumain("VERIFY", "CLOTURE", "humain"), true);
+  assert.equal(exigeHumain("VERIFY", "CLOTURE", "humain"), false, "clore retire des droits : libre sur évidence valide");
   assert.equal(exigeHumain("REALISATION", "PREUVES", "humain"), false);
   assert.equal(exigeHumain("VERIFY", "REALISATION", "humain"), false, "retour sur la même attente");
   assert.equal(exigeHumain("REALISATION", "CADRAGE", "humain"), false, "l'abandon resserre les droits");
@@ -246,8 +246,6 @@ function depotEnVerify(config) {
   return { racine, evidence };
 }
 
-const humainOk = { tty: true, confirmer: async () => true, maintenant: MAINTENANT };
-
 test("clôture : sans évidence de verify, refusée avant toute question à l'humain", async () => {
   const { racine } = depotEnVerify();
   let demande = false;
@@ -258,12 +256,12 @@ test("clôture : sans évidence de verify, refusée avant toute question à l'hu
   assert.equal(lireEtat(racine).etat.activite, "VERIFY");
 });
 
-test("clôture : PASS ou ATTESTED sur HEAD, arbre propre, autorise (puis confirmation humaine)", async () => {
+test("clôture : PASS ou ATTESTED sur HEAD, arbre propre, autorise sans geste humain", async () => {
   for (const status of ["pass", "attested"]) {
     const { racine, evidence } = depotEnVerify();
     evidence("verify-2026-10-09T10-00-00-000Z.json", { status });
     assert.deepEqual(preuveVerify(racine), { ok: true });
-    const r = await passer(racine, { vers: "CLOTURE" }, humainOk);
+    const r = await passer(racine, { vers: "CLOTURE" }, { tty: false, maintenant: MAINTENANT });
     assert.equal(r.code, 0, r.message);
     assert.equal(lireEtat(racine).etat.activite, "CLOTURE");
   }
@@ -362,4 +360,48 @@ test("rappel seulement si l'état a changé ; empreinte illisible : rappel injec
   assert.match(rappelSiChange(racine), /ATTENTE/, "changé : rappel");
   writeFileSync(join(racine, ".drwil", "rappel.json"), "{ cassé");
   assert.match(rappelSiChange(racine), /ATTENTE/, "jamais masqué");
+});
+
+// Dépôt git dont la fiche exemple (bloc cadrage) est commitée : une fiche cadrée.
+function depotCadre(config) {
+  const racine = depot({ config });
+  const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
+  writeFileSync(join(racine, ".gitignore"), ".drwil/\n");
+  writeFileSync(join(racine, "docs", "projets", "sans-cadrage.md"), "# Sans cadrage\n");
+  writeFileSync(join(racine, "docs", "projets", "finie.md"), "# Finie\n\n**Statut** : fait le 2026-10-01.\n\n<!-- cadrage\nfichiers:\n  - src/x.ts\n-->\n");
+  writeFileSync(join(racine, "docs", "projets", "modele-fiche-projet.md"), "# Modèle\n\n<!-- cadrage\nfichiers:\n  - src/y.ts\n-->\n");
+  git("init", "-q");
+  git("add", "-A");
+  git("commit", "-qm", "init");
+  return { racine, git };
+}
+
+test("fiches cadrées : bloc cadrage commité, non terminée, hors modèles", () => {
+  const { racine } = depotCadre();
+  assert.deepEqual(fichesCadrees(racine).map((f) => f.chemin), [FICHE]);
+  assert.equal(fichesCadrees(racine)[0].titre, "Projet : Exemple");
+  // Un cadrage seulement dans l'arbre de travail ne compte pas : c'est le cadrage commité qui est validé.
+  writeFileSync(join(racine, "docs", "projets", "sans-cadrage.md"), "# Sans cadrage\n\n<!-- cadrage\nfichiers:\n  - src/z.ts\n-->\n");
+  assert.deepEqual(fichesCadrees(racine).map((f) => f.chemin), [FICHE]);
+});
+
+test("lancer : un geste humain passe directement en REALISATION ; refusé à l'agent en mode humain", () => {
+  const { racine } = depotCadre();
+  const agent = lancer(racine, FICHE, { maintenant: MAINTENANT });
+  assert.equal(agent.code, 1);
+  assert.match(agent.message, /décision humaine/);
+  assert.equal(lireEtat(racine).source, "absent");
+  const ok = lancer(racine, FICHE, { humain: true, maintenant: MAINTENANT });
+  assert.equal(ok.code, 0, ok.message);
+  assert.deepEqual(lireEtat(racine).etat, { version: 1, activite: "REALISATION", attente_active: FICHE, demande_active: null, depuis: MAINTENANT });
+  assert.match(lancer(racine, FICHE, { humain: true }).message, /activité REALISATION/, "pas de relance en pleine réalisation");
+});
+
+test("lancer : fiche non cadrée, terminée ou modèle refusée ; mode agent libre", () => {
+  const { racine } = depotCadre();
+  for (const f of ["docs/projets/sans-cadrage.md", "docs/projets/finie.md", "docs/projets/modele-fiche-projet.md", "docs/projets/absente.md"]) {
+    assert.match(lancer(racine, f, { humain: true }).message, /n'est pas une fiche cadrée/, f);
+  }
+  const agent = depotCadre({ transitions: "agent" }).racine;
+  assert.equal(lancer(agent, FICHE).code, 0);
 });

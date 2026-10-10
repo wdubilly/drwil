@@ -165,7 +165,7 @@ program.command("attest <id>")
   });
 
 program.command("etat")
-  .description("Show the governance state, or change activity: drwil etat passer <ACTIVITY> [--fiche <sheet>] [--demande <text>]")
+  .description("Show the governance state, or act on it: drwil etat passer <ACTIVITY> [--fiche <sheet>] [--demande <text>] | lancer [<sheet>] | fiches [--json] | rappel")
   .argument("[args...]")
   .allowUnknownOption()
   .action(async (args) => {

@@ -89,9 +89,11 @@ export function lireEtat(racine) {
   return problemes.length ? { etat: { ...ETAT_NEUTRE }, source: "fichier", problemes } : { etat, source: "fichier", problemes };
 }
 
-// Transitions qui ouvrent des droits ou closent : réservées à un humain en mode
-// « humain » (défaut). Les autres resserrent les droits ou reviennent en arrière.
-const HUMAINES = new Set(["CADRAGE>ATTENTE", "DEMANDE>REALISATION", "VERIFY>CLOTURE"]);
+// Transitions qui ouvrent des droits : réservées à un humain en mode « humain » (défaut).
+// Les autres resserrent les droits ou reviennent en arrière. Clore n'en fait plus partie
+// (docs/ia-first.md, « Lancer et clore ») : clore retire des droits, exige l'évidence de
+// verify, et l'acceptation reste la fusion de la PR, humaine.
+const HUMAINES = new Set(["CADRAGE>ATTENTE", "DEMANDE>REALISATION"]);
 
 export function exigeHumain(de, vers, mode) {
   return mode !== "agent" && HUMAINES.has(`${de}>${vers}`);
@@ -135,6 +137,59 @@ export function preuveVerify(racine) {
     return { ok: false, raison: `verdict ${ev.status.toUpperCase()} : revenir en REALISATION (\`node .githooks/etat.mjs passer REALISATION\`) pour corriger` };
   }
   return { ok: false, raison: `évidence ${nom} sans verdict reconnu : ${RELANCER}` };
+}
+
+// Même motif que check-docs.mjs (QUA-015) : une fiche qui se dit terminée ne se lance plus.
+const STATUT_TERMINE_RE = /\b(fait|terminé|termine|clos|done|closed)\b/i;
+const LANCABLE_DEPUIS = new Set(["CADRAGE", "ATTENTE", "DEMANDE"]);
+
+/**
+ * Fiches qu'on peut lancer : fiches de docs/projets/ (ou docs/projects/), hors modèles, non
+ * terminées, dont le bloc `cadrage` existe dans HEAD — le cadrage validé est le cadrage commité,
+ * comme pour la barrière. `[{ chemin, titre }]`, triées par chemin.
+ */
+export function fichesCadrees(racine) {
+  const fiches = [];
+  for (const dossier of DOSSIERS_FICHES) {
+    const abs = join(racine, dossier);
+    if (!existsSync(abs)) continue;
+    for (const nom of readdirSync(abs).sort()) {
+      const chemin = dossier + nom;
+      if (!nom.endsWith(".md") || MODELE_RE.test(nom)) continue;
+      const r = spawnSync("git", ["show", `HEAD:${chemin}`], { cwd: racine, encoding: "utf8" });
+      if (r.status !== 0 || !lireBloc(r.stdout).motifs.length) continue;
+      const lignes = r.stdout.split(/\r?\n/);
+      const debut = lignes.slice(0, 15).findIndex((l) => /^\*\*Statut\*\*/.test(l));
+      if (debut >= 0 && STATUT_TERMINE_RE.test(lignes.slice(debut, debut + 4).join(" "))) continue;
+      fiches.push({ chemin, titre: /^#\s+(.+)$/m.exec(r.stdout)?.[1]?.trim() ?? chemin });
+    }
+  }
+  return fiches;
+}
+
+/**
+ * Lance un chantier en un geste : depuis CADRAGE, ATTENTE ou DEMANDE, passe directement en
+ * REALISATION sur une fiche cadrée. En mode « humain » (défaut), `humain` doit être vrai : il
+ * l'est seulement pour une réponse humaine à un sondage lue par le hook de l'outil, ou pour un
+ * choix fait dans un terminal interactif. `{ code: 0 | 1, message }`.
+ */
+export function lancer(racine, fiche, { humain = false, demande, maintenant = new Date().toISOString() } = {}) {
+  const lu = lireEtat(racine);
+  const de = lu.etat.activite;
+  if (!LANCABLE_DEPUIS.has(de)) return { code: 1, message: `lancement refusé : activité ${de} (lancer se fait depuis CADRAGE, ATTENTE ou DEMANDE)` };
+  if (config(racine).transitions !== "agent" && !humain) {
+    return { code: 1, message: "lancement refusé : c'est une décision humaine (sondage `/drwil-lancer`, ou terminal interactif)" };
+  }
+  const chemin = posix.normalize(String(fiche ?? "").trim().replace(/\\/g, "/"));
+  if (!fichesCadrees(racine).some((f) => f.chemin === chemin)) {
+    return { code: 1, message: `lancement refusé : « ${fiche} » n'est pas une fiche cadrée (bloc cadrage commité, fiche non terminée)` };
+  }
+  const etat = { version: 1, activite: "REALISATION", attente_active: chemin, demande_active: demande ?? null, depuis: maintenant };
+  const problemes = validerEtat(etat, racine);
+  if (problemes.length) return { code: 1, message: `lancement refusé : ${problemes.join(" ; ")}` };
+  mkdirSync(join(racine, ".drwil"), { recursive: true });
+  writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(etat, null, 2) + "\n");
+  return { code: 0, message: `${de} → REALISATION (lancé : ${chemin})` };
 }
 
 /** Nouvel état après la transition `vers`, ou `{ erreur }` ; n'écrit rien. */
@@ -202,7 +257,7 @@ const TEXTES = {
     regle: (r) => `Règle : ${r}`,
     rappel: (a, f, n) => `[drwil] Rappel : ${a}${f ? ` · ${f}` : " · aucune attente active"}${n === null ? "" : ` · périmètre : ${n} fichier(s) ou motif(s)`} (relire avec \`node .githooks/etat.mjs\`).`,
     rappelInvalide: "[drwil] Rappel : état invalide, traité comme CADRAGE neutre (détail : `node .githooks/etat.mjs`).",
-    pied: "Ne jamais écrire .drwil/state.json à la main. Changer d'activité : `node .githooks/etat.mjs passer <ACTIVITE>` (ouvrir une attente, lancer la réalisation et clore sont une décision humaine, sauf réglage « transitions » : agent).",
+    pied: "Ne jamais écrire .drwil/state.json à la main. Lancer un chantier : `/drwil-lancer` (sondage) ou `node .githooks/etat.mjs lancer` dans un terminal — décision humaine, sauf réglage « transitions » : agent. Changer d'activité : `node .githooks/etat.mjs passer <ACTIVITE>` ; clore est libre sur évidence de verify valide.",
     regles: {
       CADRAGE: "lire, analyser, cadrer ; ne modifier aucun fichier de code.",
       ATTENTE: "formaliser l'attente dans sa fiche ; ne modifier aucun fichier de code.",
@@ -226,7 +281,7 @@ const TEXTES = {
     regle: (r) => `Rule: ${r}`,
     rappel: (a, f, n) => `[drwil] Reminder: ${a}${f ? ` · ${f}` : " · no active expectation"}${n === null ? "" : ` · scope: ${n} file(s) or pattern(s)`} (read again with \`node .githooks/etat.mjs\`).`,
     rappelInvalide: "[drwil] Reminder: invalid state, treated as neutral CADRAGE (details: `node .githooks/etat.mjs`).",
-    pied: "Never write .drwil/state.json by hand. Change activity: `node .githooks/etat.mjs passer <ACTIVITE>` (opening an expectation, starting implementation and closing are a human decision, unless the \"transitions\" setting is agent).",
+    pied: "Never write .drwil/state.json by hand. Start a chantier: `/drwil-lancer` (poll) or `node .githooks/etat.mjs lancer` in a terminal — a human decision, unless the \"transitions\" setting is agent. Change activity: `node .githooks/etat.mjs passer <ACTIVITE>`; closing is free on valid verify evidence.",
     regles: {
       CADRAGE: "read, analyse, frame; do not modify any code file.",
       ATTENTE: "write down the expectation in its fiche; do not modify any code file.",
@@ -327,6 +382,41 @@ function option(args, nom) {
 
 /** Point d'entrée commun à `node .githooks/etat.mjs` et à `drwil etat`. Rend le code de sortie. */
 export async function principal(args, racine) {
+  if (args[0] === "fiches") {
+    const fiches = fichesCadrees(racine);
+    if (args.includes("--json")) console.log(JSON.stringify(fiches, null, 2));
+    else console.log(fiches.length ? fiches.map((f, i) => `${i + 1}. ${f.chemin} — ${f.titre}`).join("\n") : "(aucune fiche cadrée : bloc cadrage commité et fiche non terminée)");
+    return 0;
+  }
+  if (args[0] === "lancer") {
+    const fiches = fichesCadrees(racine);
+    const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
+    let choix = args[1];
+    let humain = false;
+    if (tty) {
+      // Un terminal interactif : l'humain choisit lui-même (jamais de choix présélectionné).
+      const { createInterface } = await import("node:readline/promises");
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      try {
+        if (!choix) {
+          console.log(fiches.map((f, i) => `${i + 1}. ${f.chemin} — ${f.titre}`).join("\n"));
+          const n = Number((await rl.question("Numéro de la fiche à lancer : ")).trim());
+          choix = fiches[n - 1]?.chemin;
+        }
+        humain = choix !== undefined && (await rl.question(`Lancer ${choix} ? Retapez LANCER : `)).trim() === "LANCER";
+      } finally {
+        rl.close();
+      }
+      if (!humain) {
+        console.error("✗ lancement non confirmé : état inchangé");
+        return 1;
+      }
+    }
+    const r = lancer(racine, choix, { humain, demande: option(args, "--demande") });
+    if (r.code === 0) console.log(`✓ ${r.message}\n\n${contexte(lireEtat(racine), racine)}`);
+    else console.error(`✗ ${r.message}`);
+    return r.code;
+  }
   if (args[0] === "rappel") {
     // Hook de saisie (Claude Code : UserPromptSubmit) : n'écrit que si l'état a changé, ne casse jamais une saisie.
     try {
@@ -347,7 +437,7 @@ export async function principal(args, racine) {
   }
   const vers = args[1];
   if (!vers || vers.startsWith("--")) {
-    console.error(`usage : node .githooks/etat.mjs passer <${ACTIVITES.join("|")}> [--fiche <docs/projets/….md>] [--demande <texte>]`);
+    console.error(`usage : node .githooks/etat.mjs passer <${ACTIVITES.join("|")}> [--fiche <docs/projets/….md>] [--demande <texte>] | lancer [<fiche>] | fiches [--json] | rappel`);
     return 2;
   }
   const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);

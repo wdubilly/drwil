@@ -1,6 +1,6 @@
 # Projet : deux gestes humains par chantier — lancer depuis le chat, fusionner
 
-**Statut** : cadré le 2026-10-10 — lot 1 à démarrer.
+**Statut** : réalisé le 2026-10-10 — en attente de relecture et de fusion.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -180,5 +180,17 @@ l'humain : **lancer** (depuis le chat) et **fusionner**.
  forme tranchée le 2026-10-10 (sondage, voir
   « Décisions ») ; reste à vérifier le pré-remplissage de la réponse.
 - **Travail non commité** : aucun après le commit de cette reprise.
-- **Prochaine étape** : [humain] ouvrir l'attente et lancer la
-  réalisation par l'ancien parcours (dernier usage) ; [IA] Lot 1.
+- **Lot 1 réalisé** (2026-10-10) : `fichesCadrees` et `lancer` dans
+  `.githooks/etat.mjs` (commandes `fiches` et `lancer`, choix au terminal
+  puis retaper `LANCER`) ; clôture sans geste humain (évidence de verify
+  toujours exigée) ; hook `.claude/hooks/saisie-drwil.mjs` (si présent)
+  sur le sondage (refus d'une réponse ou d'une valeur par défaut, lancement
+  sur la réponse humaine, formats Claude Code et Copilot CLI) ; règle
+  `deny` sur l'appel du hook par le shell ; skill `/drwil-lancer` (fr/en),
+  listé par `/drwil` ; doc « Lancer et clore », `AGENTS.md` ; 3 tests
+  de `.githooks/etat.mjs`, 1 test du kit qui rejoue les formats relevés.
+- **Non vérifié** : un lancement réel depuis le chat (critère de sortie) —
+  au prochain chantier, après la fusion : `/drwil-lancer`.
+- **Travail non commité** : aucun après le commit du Lot 1.
+- **Prochaine étape** : [IA] `PREUVES → VERIFY` puis clôture (désormais
+  sans geste humain) ; [humain] PR.
