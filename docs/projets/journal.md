@@ -227,7 +227,7 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
   .githooks/etat.mjs rappel` produit un rappel de deux lignes (activité,
   fiche active, périmètre, règle), injecté par le hook de saisie de Claude
   Code (`UserPromptSubmit`) seulement si son empreinte diffère de la
-  dernière, gardée dans `.drwil/rappel.json` (ignoré par Git ; absent ou
+  dernière, gardée dans `.drwil/rappel.json` (si présent ; ignoré par Git, absent ou
   illisible, le rappel est injecté). Les autres outils suivent la consigne
   d'`AGENTS.md` (relancer l'état avant toute modification). Après un résumé
   automatique du contexte, `SessionStart` le couvre déjà. Dépôt et gabarit,
