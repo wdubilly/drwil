@@ -26,6 +26,7 @@ const TEXTES = {
     branche: "branche principale (QUA-017)",
     brancheCi: "jamais en CI",
     brancheTags: "push de tags uniquement",
+    brancheSansBranche: "push de tags ou de suppressions de branches uniquement",
     brancheProtegee: (b) => `travail direct sur la branche principale (${b}) : passer par une branche et une pull/merge request (voir docs/recettes/travailler-en-branche.md)`,
     testsControles: "tests des contrôles eux-mêmes",
     aucunTest: "aucun .githooks/*.test.mjs",
@@ -43,6 +44,7 @@ const TEXTES = {
     branche: "main branch (QUA-017)",
     brancheCi: "never in CI",
     brancheTags: "tags-only push",
+    brancheSansBranche: "push of tags or branch deletions only",
     brancheProtegee: (b) => `direct work on the main branch (${b}): go through a branch and a pull/merge request (see docs/recipes/working-with-branches.md)`,
     testsControles: "tests of the checks themselves",
     aucunTest: "no .githooks/*.test.mjs",
@@ -120,10 +122,12 @@ export function controles(root, { cfg = {}, env = process.env, indexes = null, c
   // Jamais en CI (env.CI) : la CI tourne aussi sur master après un merge légitime,
   // qu'il ne faut pas bloquer rétroactivement — seuls les hooks locaux (pre-commit/pre-push) l'appliquent.
   // Jamais non plus sur un push qui ne pousse que des tags (DRWIL_PUSH_TAGS_ONLY, positionné par
-  // .githooks/pre-push d'après l'entrée standard du hook) : un tag ne modifie jamais une branche.
+  // .githooks/pre-push d'après l'entrée standard du hook) : un tag ne modifie jamais une branche ;
+  // ni une suppression de branche distante (DRWIL_PUSH_SANS_BRANCHE).
   ajouter("branche-principale", T.branche, () => {
     if (env.CI) return { statut: "non-applicable", detail: T.brancheCi };
     if (env.DRWIL_PUSH_TAGS_ONLY === "1") return { statut: "non-applicable", detail: T.brancheTags };
+    if (env.DRWIL_PUSH_SANS_BRANCHE === "1") return { statut: "non-applicable", detail: T.brancheSansBranche };
     const branche = spawnSync("git", ["symbolic-ref", "--short", "HEAD"], { cwd: root, encoding: "utf8" });
     const nomBranche = branche.status === 0 ? branche.stdout.trim() : null;
     if (nomBranche && ["master", "main"].includes(nomBranche)) return { statut: "echec", message: T.brancheProtegee(nomBranche) };

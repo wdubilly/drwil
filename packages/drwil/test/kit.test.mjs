@@ -56,6 +56,7 @@ const capture = async (fn) => {
 // drwil lance cette suite, ses contrôles ne doivent pas hériter du report au commit.
 const envTest = { ...process.env, CI: "" };
 delete envTest.DRWIL_PUSH_TAGS_ONLY;
+delete envTest.DRWIL_PUSH_SANS_BRANCHE;
 delete envTest.DRWIL_HOOK;
 // Le test « variables GIT_* du lanceur » relance les tests des contrôles dans un enfant (~1 s) :
 // déjà exécuté sur ces mêmes fichiers dans le dépôt, il est sauté dans chaque projet généré ici.
@@ -792,7 +793,7 @@ test("QUA-017 : pas de travail direct sur la branche principale, même pour le t
   assert.equal(surBranche.status, 0, "un commit sur une branche non principale n'est jamais bloqué : " + surBranche.stdout + surBranche.stderr);
 });
 
-test("QUA-017 : un push ne contenant que des tags n'est jamais bloqué, un push de la branche principale continue de l'être", async () => {
+test("QUA-017 : un push ne contenant que des tags ou des suppressions de branches n'est jamais bloqué, un push de la branche principale continue de l'être", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir }));
   git(dir, "add", "-A");
@@ -819,6 +820,20 @@ test("QUA-017 : un push ne contenant que des tags n'est jamais bloqué, un push 
   const pousseMixte = git(dir, "push", "-q", "origin", "v1.0.1", "master");
   assert.notEqual(pousseMixte.status, 0, "un push mixte tag + branche principale reste refusé, par prudence");
   assert.match(pousseMixte.stdout + pousseMixte.stderr, /travail direct sur la branche principale/);
+
+  // Cas du 2026-10-09 : depuis master, supprimer une branche distante (déjà fusionnée) ne touche
+  // pas la branche principale. Les branches sont poussées depuis elles-mêmes, puis on revient sur master.
+  for (const b of ["chantier/fini", "chantier/autre"]) {
+    git(dir, "checkout", "-qb", b);
+    assert.equal(git(dir, "push", "-q", "origin", b).status, 0, b);
+    git(dir, "checkout", "-q", "master");
+  }
+  const suppression = git(dir, "push", "-q", "origin", "--delete", "chantier/fini");
+  assert.equal(suppression.status, 0, "une suppression de branche distante n'est plus bloquée : " + suppression.stdout + suppression.stderr);
+  // « :branche » supprime, « master » pousse la branche principale (`--delete` supprimerait les deux).
+  const suppressionMixte = git(dir, "push", "-q", "origin", ":chantier/autre", "master");
+  assert.notEqual(suppressionMixte.status, 0, "suppression + branche principale : contrôlé, par prudence");
+  assert.match(suppressionMixte.stdout + suppressionMixte.stderr, /travail direct sur la branche principale/);
 });
 
 test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et commit-msg livrés", async () => {
