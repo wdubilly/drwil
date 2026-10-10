@@ -47,6 +47,13 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [décision] [P1] Fabrique autonome graduée par le risque (forge,
   outillage, mutation, rôles séparés, auto-fusion LOW) —
   `docs/intentions/fabrique-autonome.md`.
+- [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
+  CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
+  `docs/intentions/forge-dans-le-livrable.md`.
+- [ ] [IA] [P2] Programmer la fusion automatique avant de revenir en
+  CADRAGE (ordre sûr dans la consigne) — `docs/projets/consigne-fusion-auto.md`.
+- [ ] [décision] [P1] README à jour du cycle de gouvernance (lancement,
+  fusion autorisée, forge) — `docs/projets/readme-a-jour.md`.
 - [ ] [décision] [P2] Non-régression continue : règle « défaut corrigé →
   test rattaché à un contrat », traçabilité dans `verify` —
   `docs/intentions/non-regression-continue.md`.
