@@ -624,3 +624,18 @@ l'index ; texte intégral dans l'historique git
   ré-attestés par l'humain (empreinte changée par le champ « Tests »).
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/non-regression-continue`).
+
+## 2026-10-11 — Tester la CLI installée depuis le tarball, comme un utilisateur
+
+- **Besoin** : les tests exerçaient le code depuis le dépôt ; rien ne
+  vérifiait ce que reçoit un utilisateur (v1:PKG-004, v1:PKG-005).
+- **Résultat** : contrôle `tarball` (`outils/tester-tarball.mjs`, propre
+  au dépôt) : `npm pack`, contenu comparé à la liste attendue, installation
+  dans un projet vierge, puis `drwil --version`, `drwil init --ci github`
+  et `drwil verify` (verdict sans FAIL ni ERROR). Registre injoignable :
+  non exécuté, jamais vert (QUA-013). Vérifié en réel : un fichier glissé
+  dans le paquet et un `bin` cassé le font échouer.
+- **Relevé en route** : avec `init` par défaut (`ci: none`), `verify` rend
+  ERROR (QUA-013, pas de filet CI) sur un projet neuf ; comportement voulu,
+  le projet d'essai déclare donc une CI GitHub.
+- **Clôturé par** : la PR de ce chantier (branche `chantier/tester-tarball`).
