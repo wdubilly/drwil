@@ -89,6 +89,14 @@
       "ciJob": "checks",
       "chemins": ["package.json", "package-lock.json", "packages/*/package.json", "outils/audit-dependances.mjs", ".drwil/ia-first.json"],
       "degradable": false
+    },
+    {
+      "id": "tarball",
+      "name": "CLI installée depuis le tarball, comme un utilisateur (contenu, --version, init, verify)",
+      "run": "node outils/tester-tarball.mjs",
+      "ciJob": "checks",
+      "chemins": ["packages/drwil/**", "package.json", "package-lock.json", "outils/tester-tarball.mjs", ".drwil/ia-first.json"],
+      "degradable": false
     }
   ],
   "transitions": "humain",
