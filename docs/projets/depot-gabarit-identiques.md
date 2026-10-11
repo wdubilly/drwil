@@ -47,7 +47,8 @@ en CI.
 
 - Les projets équipés : ils n'ont pas de gabarit à comparer ; le contrôle
   est propre à ce dépôt.
-- La couverture des tests des hooks (`docs/projets/couverture-hooks.md`).
+- La couverture des tests des hooks (chantier clos le 2026-10-11, voir
+  `docs/projets/journal.md`).
 
 ## 3. Contraintes
 
