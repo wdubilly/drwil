@@ -76,7 +76,7 @@ convention de langue des commits proposée aux projets.
   `docs/projets/en-attente.md`) ; l'anglais se fait **avec la suppression
   de la duplication dépôt / gabarit** (vague 4), pour ne renommer qu'une
   fois. Précisé le 2026-10-12 : le dépôt s'installe depuis le gabarit
-  (`docs/projets/depot-installe-par-gabarit.md`), puis refactor, puis
+  (fait, `npm run installer-depot`, journal du 2026-10-12), puis refactor, puis
   anglais ; le renommage ne se fait donc qu'une fois, dans le gabarit.
 - **Compatibilité** (question 3, 2026-10-12) : **migration en une fois**
   par `drwil init` / `apply` (état, clés de configuration, blocs
@@ -109,7 +109,7 @@ convention de langue des commits proposée aux projets.
    fonctionnalité, avec quels lots livrables séparément ?
 7. **Langue des fichiers installés dans ce dépôt** (posée le 2026-10-12) :
    le dépôt s'installe depuis le gabarit
-   (`docs/projets/depot-installe-par-gabarit.md`) ; ses recettes et
+   (`npm run installer-depot`, journal du 2026-10-12) ; ses recettes et
    `docs/ia-first.md` deviendront donc anglais, alors que ses fiches,
    intentions et journal restent en français (question 4). Accepté tel
    quel, ou recettes du dépôt déclarées en écart ?

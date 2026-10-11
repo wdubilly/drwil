@@ -88,12 +88,11 @@ Ordre décidé le 2026-10-12 (demandeur) : duplication, puis refactor, puis
 anglais (avec `DRWIL-012`), puis fluidité et voie légère, puis vue de
 relecture.
 
-- [ ] [IA] [P1] Supprimer la duplication dépôt / gabarit : le dépôt
-  s'installe lui-même, copies versionnées (décidé le 2026-10-12) ; le
-  contrôle `miroirs-gabarit` sert de filet
-  (v1:INI-003, v1:INI-005) — `docs/projets/depot-installe-par-gabarit.md`.
-- [ ] [décision] [P1] Livrable en anglais seulement, mené avec la ligne
-  précédente pour ne renommer qu'une fois ; la langue du projet devient un
+Fait : duplication dépôt / gabarit supprimée, le dépôt s'installe depuis
+son gabarit (`npm run installer-depot`, journal du 2026-10-12).
+
+- [ ] [décision] [P1] Livrable en anglais seulement, renommé une seule
+  fois, dans le gabarit ; la langue du projet devient un
   réglage (`lang`) — `docs/intentions/livrable-full-english.md`.
 - [ ] [IA] [P1] Retirer l'identifiant interne `DRWIL-012` des deux messages
   livrés qui l'affichent (change une sortie), avec la ligne précédente —

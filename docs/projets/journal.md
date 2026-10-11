@@ -677,3 +677,36 @@ l'index ; texte intégral dans l'historique git
   de chantier est compté à part, jamais réparti.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/mesurer-consommation`).
+
+## 2026-10-12 — Le dépôt s'installe depuis son gabarit
+
+- **Besoin** : chaque changement d'un fichier livré se faisait deux fois
+  (gabarit et copie du dépôt) ; `miroirs-gabarit` ne faisait que vérifier
+  l'égalité des deux.
+- **Décisions clés** : le dépôt s'installe lui-même avec la CLI, plutôt que
+  des hooks générés au build ; copies versionnées, rafraîchies par une
+  commande, plutôt que générées à `npm install` ; premier chantier de la
+  vague 4. [décisions utilisateur]
+- **Inventaire** (lot 1) : une installation forcée sur une copie du dépôt
+  ne diffère que par les 17 écarts déclarés et `.drwil/ia-first.json`.
+  `apply --dry-run` n'en voit que 13 (dérive grossière : lignes et
+  sections). Défaut corrigé : cinq couches sans dossier dans `layers`.
+- **Résultat** : `npm run installer-depot` (`outils/installer-depot.mjs`,
+  `--dry-run` pour lister) lance la vraie CLI (`init --force`) dans une
+  copie temporaire des fichiers suivis, puis ne recopie que les fichiers
+  du gabarit des unités installées, hors écarts déclarés et hors
+  `.drwil/` ; modules optionnels recopiés depuis le gabarit. 8 tests, dont
+  un avec la vraie CLI. `miroirs-gabarit` indique la commande quand une
+  copie dérive ; `AGENTS.md`, la carte et la recette de travail en branche
+  disent qu'on n'édite que le gabarit.
+- **Éprouvé** : un hook modifié dans le gabarit seul, une commande, et
+  `miroirs-gabarit` repasse à 0 problème, `couverture-hooks` à 100 % ; une
+  copie modifiée directement est refusée, avec la commande dans le message.
+- **Limites** : un fichier retiré du gabarit reste dans le dépôt
+  (`miroirs-gabarit` le signale, la commande ne le supprime pas). Défaut du
+  livrable signalé, hors de ce chantier : `drwil init`, même sans
+  `--force`, réécrit `.drwil/ia-first.json` et remet `layerPrefixes`,
+  `codePrefixes`, `extraCodeFiles`, `extraCodeGlobs` et `ciFiles` à leurs
+  défauts.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/depot-installe-par-gabarit`).
