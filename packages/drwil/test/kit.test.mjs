@@ -589,6 +589,13 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
   const deny = JSON.parse(read(dir, ".claude/settings.json")).permissions.deny;
   for (const regle of ["Edit(**/.drwil/state.json)", "Write(**/.drwil/state.json)", "Bash(git commit -n*)"]) assert.ok(deny.includes(regle), regle);
   assert.ok(deny.some((r) => r.includes("no-verify")));
+  // L'option globale `git -c clé=valeur` (exécution arbitraire) est refusée en tête ; le motif large
+  // qui refusait aussi les options `-c` des sous-commandes (création de branche…) ne revient pas.
+  assert.ok(deny.includes("Bash(git -c *)"));
+  assert.ok(!deny.some((r) => /^Bash\(git \*.*-c \*\)$/.test(r)), "aucun refus de -c n'importe où dans une commande git");
+  // Ce que deviendrait un `-c` placé après une autre option globale : aucune autorisation git ne le couvre.
+  const allow = JSON.parse(read(dir, ".claude/settings.json")).permissions.allow;
+  assert.ok(allow.filter((r) => r.startsWith("Bash(git ")).every((r) => /^Bash\(git [a-z-]+(:\*)?\)$/.test(r)), "allow git = préfixes de sous-commande");
 });
 
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {
