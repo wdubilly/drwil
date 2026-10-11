@@ -3,7 +3,7 @@
 // (tests des contrôles eux-mêmes), comme tout .githooks/*.test.mjs.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fnmatch, tropLarge, lireBloc, estDuCode, fichesCouvrant } from "./cadrage.mjs";
+import { fnmatch, tropLarge, lireBloc, estDuCode, fichesCouvrant, normaliser } from "./cadrage.mjs";
 
 test("fnmatch : * et ? traversent les séparateurs, le reste est littéral", () => {
   assert.equal(fnmatch("backend/app/x.py", "backend/app/x*"), true);
@@ -41,4 +41,13 @@ test("fichesCouvrant : une fiche qui matche, une qui ne matche pas", () => {
   const motifs = new Map([["docs/projets/a.md", ["backend/app/x*"]]]);
   assert.deepEqual(fichesCouvrant("backend/app/x.py", motifs), ["docs/projets/a.md"]);
   assert.deepEqual(fichesCouvrant("backend/autre/y.py", motifs), []);
+});
+
+test("normaliser, estDuCode et tropLarge : cas limites (./ répétés, configuration vide, joker en tête)", () => {
+  assert.equal(normaliser("././a\\b"), "a/b");
+  assert.equal(estDuCode("z.txt", {}), false);
+  assert.equal(estDuCode("x/a.js", { layers: ["x"] }), true);
+  assert.equal(estDuCode("Makefile", { extraCodeFiles: ["Makefile"] }), true);
+  assert.equal(estDuCode(".gitlab-ci.yml", { ciFiles: [".gitlab-ci.yml"] }), true);
+  assert.equal(tropLarge("a*"), true);
 });

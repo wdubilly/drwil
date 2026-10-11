@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ajouterTrailer, controlerPerimetre, horsFiches, verifierIndex } from "./perimetre.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
@@ -184,4 +185,54 @@ test("branche sans référence : non exécuté, jamais un succès (QUA-013)", ()
   const racine = depot();
   git(racine, "branch", "-m", "travail");
   assert.equal(controlerPerimetre(racine, { cfg: { barriere: "bloquant" }, env: {} }).statut, "non-execute");
+});
+
+test("messages en anglais : activité, hors cadrage, commits sans trailer ou hors cadrage, échec", () => {
+  const cfg = { lang: "en" };
+  assert.match(verifierIndex({ fichiers: ["src/a.js"], etat: etat("CADRAGE"), motifs: [], cfg })[0], /^1 file\(s\) outside sheets committed in CADRAGE/);
+  assert.match(verifierIndex({ fichiers: ["src/b.js"], etat: etat("REALISATION"), motifs: ["src/a.js"], cfg })[0], /^src\/b\.js: outside the cadrage of docs\/projets\/exemple\.md/);
+  const racine = depot(["src/a.js"]);
+  git(racine, "checkout", "-q", "-b", "chantier");
+  ecrire(racine, "src/a.js", "a\n");
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "fiche absente du parent\n\nDrwil-Attente: docs/projets/absente.md");
+  ecrire(racine, "README.md", "r\n");
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "sans trailer");
+  const r = controlerPerimetre(racine, { cfg: { ...cfg, barriere: "bloquant" }, env: { DRWIL_BASE: "main" } });
+  assert.equal(r.message, "expectation scope: 2 problem(s) (blocking barrier)");
+  assert.match(r.problemes[0], /: src\/a\.js outside the cadrage of docs\/projets\/absente\.md \(in the parent\)$/);
+  assert.match(r.problemes[1], /: 1 file\(s\) outside sheets without a Drwil-Attente trailer$/);
+});
+
+test("liste hors périmètre réglable par la configuration", () => {
+  const racine = depot();
+  const r = controlerPerimetre(racine, { cfg: { barriere: "bloquant", horsPerimetre: ["src/*"] }, indexes: ["src/a.js"] });
+  assert.deepEqual(r, { statut: "ok", problemes: [] });
+});
+
+test("ligne de commande (prepare-commit-msg) : --trailer ajoute le trailer, sans fichier rien", () => {
+  const racine = depot();
+  ecrireEtat(racine, "REALISATION");
+  const message = join(racine, "MSG");
+  writeFileSync(message, "Un commit\n");
+  const script = fileURLToPath(new URL("./perimetre.mjs", import.meta.url));
+  assert.equal(spawnSync(process.execPath, [script, "--trailer"], { cwd: racine }).status, 0);
+  assert.equal(spawnSync(process.execPath, [script], { cwd: racine }).status, 0);
+  assert.doesNotMatch(readFileSync(message, "utf8"), /Drwil-Attente/);
+  assert.equal(spawnSync(process.execPath, [script, "--trailer", message], { cwd: racine }).status, 0);
+  assert.match(readFileSync(message, "utf8"), /^Drwil-Attente: docs\/projets\/exemple\.md$/m);
+});
+
+test("branche d'un clone : la référence est origin/HEAD", () => {
+  const racine = depot(["src/a.js"]);
+  git(racine, "update-ref", "refs/remotes/origin/principale", "HEAD");
+  git(racine, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/principale");
+  git(racine, "checkout", "-q", "-b", "chantier");
+  ecrire(racine, "src/b.js", "b\n");
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "hors cadrage\n\nDrwil-Attente: docs/projets/exemple.md");
+  const r = controlerPerimetre(racine, { cfg: { barriere: "bloquant" }, env: {} });
+  assert.equal(r.problemes.length, 1);
+  assert.match(r.problemes[0], /src\/b\.js/);
 });
