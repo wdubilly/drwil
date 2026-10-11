@@ -15,6 +15,7 @@ fichiers:
   - packages/drwil/README.md
   - README.md
   - INSTALL.md
+  - docs/architecture.md
   - packages/drwil/src/*
   - packages/drwil/test/*
   - packages/drwil/bin/*
