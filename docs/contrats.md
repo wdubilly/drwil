@@ -34,8 +34,8 @@ de sortie.
 **Règle** : Aucune dépendance avec une faille connue.
 **Périmètre** : Dépendances du dépôt.
 **Source de vérité** : Manifeste de dépendances (`package.json`…), audit déclaré (`.drwil/ia-first.json` → `checks`).
-**Preuve** : Hook + CI.
-**Manuel** : aucun audit de dépendances déclaré dans ce dépôt (`.drwil/ia-first.json` → `checks`) : écart à outiller.
+**Preuve** : Hook + CI : `outils/audit-dependances.mjs` lit la sortie JSON de `npm audit` (toutes les dépendances, production et développement) ; une faille high ou critical échoue, moderate et low sont affichées sans bloquer, un registre injoignable donne « audit non exécuté », jamais un succès (QUA-013). Au commit, il ne tourne que si le manifeste, le verrou ou l'outil changent ; toujours au push et en CI.
+**Contrôle** : `audit-dependances`
 **Raison** : Une bibliothèque vulnérable annule le reste.
 
 ## SEC-007 — Pas de secret dans le dépôt

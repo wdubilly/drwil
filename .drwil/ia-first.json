@@ -65,6 +65,14 @@
       "ciJob": "checks",
       "chemins": ["**"],
       "degradable": false
+    },
+    {
+      "id": "audit-dependances",
+      "name": "audit des dépendances, failles high et critical (SEC-006)",
+      "run": "node outils/audit-dependances.mjs",
+      "ciJob": "checks",
+      "chemins": ["package.json", "package-lock.json", "packages/*/package.json", "outils/audit-dependances.mjs", ".drwil/ia-first.json"],
+      "degradable": false
     }
   ],
   "transitions": "humain",
