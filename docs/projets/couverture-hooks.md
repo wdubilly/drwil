@@ -24,6 +24,18 @@ fichiers:
   - .githooks/run-checks.test.mjs
   - .githooks/tableau-de-bord.test.mjs
   - docs/contrats.md
+  - .githooks/run-checks.mjs
+  - .githooks/check-code-rules.mjs
+  - .githooks/check-file-size.mjs
+  - .githooks/creer-release.mjs
+  - .githooks/perimetre.mjs
+  - .githooks/tableau-de-bord.mjs
+  - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - packages/drwil/templates/common/base/.githooks/check-code-rules.mjs
+  - packages/drwil/templates/common/base/.githooks/check-file-size.mjs
+  - packages/drwil/templates/common/base/.githooks/perimetre.mjs
+  - packages/drwil/templates/common/optional/tableau-de-bord/tableau-de-bord.mjs
+  - packages/drwil/templates/common/optional/creer-une-release/creer-release.mjs
 -->
 
 (cadrage : la mesure de couverture et sa déclaration comme contrôle du
@@ -31,8 +43,9 @@ projet ; ce dépôt d'abord — QUA-018 (périmètre explicite : dépôt drwil v
 livrable gabarit) : livrer la mesure aux projets équipés est une question
 à trancher. Élargi le 2026-10-11 au lancement : les tests des hooks
 (lot 1) et `docs/contrats.md` (lot 2, QUA-004 étendu). Le code des hooks
-n'y est pas : une exclusion de couverture qui le toucherait sera posée
-au demandeur.)
+n'y était pas ; élargi le même jour aux six hooks à rendre testables et à
+leurs copies du gabarit (décisions « racine réglable » et « supprimer ou
+rendre testable » ci-dessous) : copies identiques, modifiées ensemble.)
 
 ## 1. Besoin
 
@@ -83,6 +96,15 @@ garantir par un seuil bloquant, puis relever les seuils.
   utilisateur]
 - **2026-10-10 — Ce dépôt d'abord** (point 5) : la mesure des hooks n'est
   pas livrée aux projets équipés pour l'instant. [décision utilisateur]
+- **2026-10-11 — Racine réglable** : `.githooks/run-checks.mjs` prend sa racine du
+  dossier courant, comme les autres hooks (git lance ses hooks depuis la
+  racine du dépôt), au lieu de l'emplacement du script ; il devient
+  testable sans relancer la suite du dépôt. Gabarit compris. [décision
+  utilisateur]
+- **2026-10-11 — Supprimer ou rendre testable** : plutôt que des
+  exclusions `c8 ignore`, le code inatteignable est retiré et le code
+  intestable en l'état est rendu testable, gabarit compris (QUA-018 :
+  le livrable change). [décision utilisateur]
 
 ## Contrats concernés
 
