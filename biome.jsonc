@@ -7,8 +7,10 @@
   "files": {
     "includes": ["**/*.js", "**/*.mjs", "**/*.ts", "!**/dist", "!**/node_modules"]
   },
-  // Aligné sur le style existant (guillemets doubles, points-virgules, 2 espaces, lignes longues) :
-  // le premier formatage change le moins de lignes possible.
+  // Proche du style existant (guillemets doubles, points-virgules, 2 espaces). Le premier formatage,
+  // le 2026-10-11, a réécrit une cinquantaine de fichiers en un commit isolé, sans aucun autre
+  // changement (décision du demandeur) ; mesuré à toutes les largeurs valides (jusqu'à 320), le diff
+  // restait d'environ 1 500 lignes : la largeur standard de 140 a été retenue.
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 140 },
   "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "always", "trailingCommas": "all" } },
   "linter": {
