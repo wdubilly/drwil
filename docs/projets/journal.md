@@ -485,3 +485,21 @@ d'origine entre parenthèses).
   travail, pas seulement l'index ; outiller SEC-006 (`npm audit`).
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/depot-gabarit-identiques`).
+
+## 2026-10-11 — Refus de l'option globale -c de git recalibré (réglages Claude livrés)
+
+- **Besoin** : le motif de refus large des réglages Claude livrés bloquait
+  aussi la création de branche, la réutilisation d'un message de commit et
+  tout texte cité contenant ces mots (trois faux positifs le même jour,
+  chacun contourné par une exception accordée par le demandeur).
+- **Décision clé** : refuser l'option seulement quand elle suit directement
+  git ; placée après une autre option globale, elle ne correspond à aucune
+  autorisation (toutes des préfixes de sous-commande) et Claude Code
+  demande l'accord. Faits vérifiés dans la documentation des permissions
+  de Claude Code. [décision utilisateur]
+- **Preuves** : test du paquet (règle en tête présente, motif large absent,
+  autorisations git restées des préfixes ; il échoue si l'ancien motif
+  revient) ; dans une session réelle, une branche se crée sans exception
+  et `git -c core.pager=cat status` reste refusé.
+- **Clôturé par** : la PR de ce chantier (branche `chantier/regle-git-c`),
+  fusion manuelle choisie au lancement.

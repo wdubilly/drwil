@@ -34,13 +34,14 @@ d'abord, d'où les seuils de couverture (vague 2) avant le refactoring de
 
 ## Vague 1 — hygiène et preuves (petits chantiers, risque faible)
 
+Ordre interne, dans l'ordre des lignes ci-dessous (décidé le 2026-10-11 ;
+à priorité égale, `/drwil-lancer` trie par nom de fichier : l'agent
+recommande la première fiche prête de cette liste). La règle `git -c`,
+première de la vague, est faite (voir `docs/projets/journal.md`).
+
 - [ ] [IA] [P0] Outiller SEC-006 : `npm audit` dans les contrôles déclarés,
   pour qu'une signature devienne une preuve (v1:SEC-008) —
   `docs/projets/outiller-sec-006.md`.
-- [ ] [IA] [P0] Règle de refus `Bash(git *-c *)` des réglages Claude livrés
-  mal calibrée : elle bloque aussi `git switch -c` (constaté le
-  2026-10-11) ; viser la seule option globale de git, avec un test
-  (livrable) — `docs/projets/regle-git-c.md`.
 - [ ] [IA] [P0] README à jour du cycle de gouvernance (lancement,
   fusion autorisée, forge) (v1:DOC-001, v1:DOC-003) — `docs/projets/readme-a-jour.md`.
 - [ ] [IA] [P0] Personnaliser `docs/architecture.md` du dépôt, resté au
