@@ -168,3 +168,20 @@ test("CI : jobs du gabarit présents, jobs propres déclarés, fuite d'un job pr
   ]);
   assert.deepEqual(verifier(depot(base), { ci: { fichier: ".gitlab-ci.yml" } }).problemes, [".gitlab-ci.yml : CI déclarée dans outils/miroirs.json sans homologue à comparer"]);
 });
+
+test("frontière du livrable : historique interne de drwil refusé dans tout le gabarit, fiches du gabarit permises", () => {
+  const racine = depot({
+    [`${G}/fr/base/docs/projets/modele.md`]: "# Modèle\n",
+    [`${G}/fr/base/docs/recettes/ok.md`]: "Voir `docs/projets/modele.md`. Exemple daté (2026-10-04). DRWIL et décision sans date.\n",
+    [`${G}/en/base/docs/recipes/x.md`]: "See PR #26.\nDecision of the requester, 2026-10-03.\n",
+    [`${G}/common/base/.githooks/y.mjs`]: "// ADR-003, Lot 4 a ajouté, port de run-box-v2\n// voir docs/projets/proteger-master.md\n",
+  });
+  assert.deepEqual(verifier(racine).problemes.filter((p) => p.includes("QUA-018")), [
+    `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « ADR-003 » (QUA-018)`,
+    `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « Lot 4 a ajouté » (QUA-018)`,
+    `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « run-box » (QUA-018)`,
+    `${G}/common/base/.githooks/y.mjs:2 : fiche propre au dépôt citée dans le livrable « proteger-master.md » (QUA-018)`,
+    `${G}/en/base/docs/recipes/x.md:1 : historique interne de drwil dans le livrable « PR #26 » (QUA-018)`,
+    `${G}/en/base/docs/recipes/x.md:2 : historique interne de drwil dans le livrable « Decision of the requester, 2026-10-03 » (QUA-018)`,
+  ]);
+});

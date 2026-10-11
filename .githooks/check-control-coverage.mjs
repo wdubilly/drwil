@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Port Node de run-box-v2:.githooks/check-control-coverage.py (QUA-013) : un
+// QUA-013 (contrôle non exécuté n'est pas passé) : un
 // contrôle « dégradable » (gitleaks absent…) qui ne tourne pas localement ne
 // doit avoir aucun angle mort — un job CI doit se déclencher sur les mêmes
 // chemins. Vérifier que le job existe ne suffit pas : un job peut exister et

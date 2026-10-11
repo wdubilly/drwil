@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Adaptateur git du moteur de contrôles (.githooks/moteur.mjs), lancé au commit
 // (pre-commit), au push (pre-push) et en CI. Il n'implémente aucun contrôle :
-// il les exécute via le moteur partagé avec `drwil verify` (ADR-003) et met en
+// il les exécute via le moteur partagé avec `drwil verify` et met en
 // forme la sortie pour un humain qui committe.
 // QUA-013 : un contrôle qui n'a pas tourné n'est pas un contrôle passé.
 // Chaque contrôle finit donc « échec », « OK » ou « non exécuté », jamais masqué.

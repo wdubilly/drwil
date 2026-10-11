@@ -7,7 +7,10 @@
 // 2. aucun fichier n'existe d'un seul côté sans être déclaré : fichier suivi du dépôt sans homologue
 //    dans les dossiers miroirs, ou fichier d'une partie du gabarit installée ici absent du dépôt ;
 // 3. la CI du dépôt contient tous les jobs de celle du gabarit, ses jobs en plus sont déclarés, et
-//    aucun job déclaré propre au dépôt n'apparaît dans le gabarit (la fuite qui a motivé QUA-018).
+//    aucun job déclaré propre au dépôt n'apparaît dans le gabarit (la fuite qui a motivé QUA-018) ;
+// 4. le contenu livré (tout packages/drwil/templates/, toutes langues) ne cite pas l'historique
+//    interne de drwil : numéro de PR, décision datée du demandeur, ADR, lot interne, projet
+//    d'origine, fiche qui n'existe que dans ce dépôt.
 // Hors de portée (à dire, pas à taire) : le contenu d'un écart déclaré, le texte des variables d'un
 // gabarit, le gabarit d'une autre langue que celle du dépôt, et la part humaine de QUA-018.
 // Usage : node outils/verifier-miroirs.mjs [racine]
@@ -154,6 +157,7 @@ export function verifier(racine, { lang = "fr", ecarts = {}, propresAuDepot = {}
   }
 
   if (ci) problemes.push(...verifierCi(racine, carte, ci));
+  problemes.push(...fuitesInternes(racine));
   return { compares, problemes };
 }
 
@@ -174,6 +178,36 @@ function verifierCi(racine, carte, { fichier, jobsPropresAuDepot = {} }) {
   for (const [j, raison] of Object.entries(jobsPropresAuDepot)) {
     if (!depot.includes(j)) problemes.push(`${fichier} : job « ${j} » déclaré propre au dépôt mais absent de sa CI`);
     if (raisonVide(raison)) problemes.push(`${fichier} : job « ${j} » déclaré propre au dépôt sans raison`);
+  }
+  return problemes;
+}
+
+// Références internes à drwil, sans sens pour un projet équipé.
+const HISTORIQUE_INTERNE = [
+  /PR #\d+/,
+  /\b[Dd][ée]cision[^.\n]{0,40}\d{4}-\d{2}-\d{2}/,
+  /\bADR-\d+/,
+  /\bLot \d+ (?:a ajouté|added)/,
+  /run-box/,
+];
+const FICHES_DU_GABARIT = ["fr/base/docs/projets", "en/base/docs/projects"];
+
+/** Lignes du gabarit qui citent l'historique interne de drwil, ou une fiche absente du gabarit. */
+export function fuitesInternes(racine) {
+  const gabarit = join(racine, GABARIT);
+  const fiches = new Set(FICHES_DU_GABARIT.flatMap((d) => fichiers(join(gabarit, d)).map((f) => f.split(sep).at(-1))));
+  const problemes = [];
+  for (const f of fichiers(gabarit).sort()) {
+    normaliser(readFileSync(f, "utf8")).split("\n").forEach((ligne, i) => {
+      const lieu = `${posix(relative(racine, f))}:${i + 1}`;
+      for (const motif of HISTORIQUE_INTERNE) {
+        const m = motif.exec(ligne);
+        if (m) problemes.push(`${lieu} : historique interne de drwil dans le livrable « ${m[0]} » (QUA-018)`);
+      }
+      for (const [, nom] of ligne.matchAll(/docs\/projec?ts\/([A-Za-z0-9_-]+\.md)/g)) {
+        if (!fiches.has(nom)) problemes.push(`${lieu} : fiche propre au dépôt citée dans le livrable « ${nom} » (QUA-018)`);
+      }
+    });
   }
   return problemes;
 }

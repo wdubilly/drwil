@@ -50,9 +50,9 @@ hand-off doc).
 
 - **Last state**: fiche shipped at install time, nothing to hand off. If the
   kit adds a new mechanics file (`.githooks/` or an AI tool setting), add it
-  here. Lot 4 added `.githooks/check-control-coverage.mjs` (QUA-013),
+  here. The kit also ships `.githooks/check-control-coverage.mjs` (QUA-013),
   `.githooks/pre-push` and `.githooks/commit-msg` (shipped disabled) (their
-  tests stay in the drwil repository, not shipped). Lot 5 added `.githooks/check-file-size.mjs`
+  tests stay in the drwil repository, not shipped), as well as `.githooks/check-file-size.mjs`
   and its legacy-ceiling file `.githooks/check-file-size.legacy.json`, plus
   the empty extension point `.githooks/check-code-rules.mjs` — all three
   shipped but **opt-in** (not run until the project declares them in

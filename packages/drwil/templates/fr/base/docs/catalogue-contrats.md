@@ -41,7 +41,3 @@ pas seulement un pourcentage de lignes. Contrairement aux autres lignes de
 ce catalogue, `catalogue:QUA-020` n'est pas une pratique observée telle
 quelle dans un projet existant (l'e2e y reste manuel) : c'est un objectif
 propre à drwil, pas un report direct.
-
-Les contrats très spécifiques à run-box-v2 (documents RH, pont SSH, portail
-isolé, Elasticsearch, ERMv2…) ne sont pas repris ici : ils ont servi
-d'**exemples** pendant la conception du kit, pas de modèle à installer.

@@ -6,7 +6,7 @@
 //   { "name": "règles d'hygiène", "run": "node .githooks/check-code-rules.mjs" }
 //
 // Chaque règle est une fonction (racine) => string[] d'erreurs. Exemples
-// (désactivés, tirés de run-box-v2, à adapter ou retirer) :
+// (désactivés, à adapter ou retirer) :
 //   - aucun import d'un nom privé (`_nom`) d'un autre module du même paquet ;
 //   - un module de logique pure a son fichier de test à côté ;
 //   - un export CSV passe par un point unique (échappement anti-injection) ;

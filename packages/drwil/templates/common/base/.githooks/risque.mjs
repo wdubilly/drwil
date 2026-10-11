@@ -1,6 +1,5 @@
-// Niveaux de risque d'une fiche de chantier (DRWIL-012, ADR-004 de
-// docs/projets/drwil-v0-2-gouvernance-executable.md) : la cérémonie suit le risque,
-// la traçabilité (QUA-016) ne change pas.
+// Niveaux de risque d'une fiche de chantier : la cérémonie suit le risque, la
+// traçabilité (QUA-016) ne change pas.
 // - LOW : rattaché à docs/projets/entretien-courant.md, pas de fiche dédiée ;
 // - MEDIUM : fiche avec cadrage ;
 // - HIGH : fiche, section Décisions, contrats concernés cités, preuves.

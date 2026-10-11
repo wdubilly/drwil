@@ -10,7 +10,7 @@
 // Fichier absent = CADRAGE neutre ; aucun état actif n'est jamais déduit.
 // Un état invalide est ramené au neutre ET signalé : jamais masqué, jamais permissif.
 // Clore (VERIFY → CLOTURE) exige l'évidence de `drwil verify --evidence` : ce
-// fichier la lit, il n'exécute aucun contrôle (un seul moteur, ADR-003).
+// fichier la lit, il n'exécute aucun contrôle (un seul moteur, .githooks/moteur.mjs).
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -21,7 +21,7 @@ import { lireBloc } from "./cadrage.mjs";
 export const ACTIVITES = ["CADRAGE", "ATTENTE", "DEMANDE", "REALISATION", "PREUVES", "VERIFY", "CLOTURE"];
 
 // Une activité à la fois ; retour à REALISATION après PREUVES ou VERIFY en échec ;
-// abandon vers CADRAGE depuis toute activité (décision du 2026-10-09).
+// abandon vers CADRAGE depuis toute activité.
 const SUIVANTES = {
   CADRAGE: ["ATTENTE"],
   ATTENTE: ["DEMANDE"],

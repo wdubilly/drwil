@@ -1,6 +1,6 @@
 // Lecture et validation du registre des contrats (docs/contrats.md, source
-// canonique : ADR-001 de docs/projets/drwil-v0-2-gouvernance-executable.md).
-// Sans dépendance, partagé par les hooks et `drwil verify` (ADR-003).
+// canonique des contrats). Sans dépendance, partagé par les hooks et
+// `drwil verify` (un seul moteur, .githooks/moteur.mjs).
 //
 // Deux formes lues :
 // - sections (forme cible) : `## ID — titre` puis des champs `**Nom** : valeur` ;
@@ -18,7 +18,7 @@ const CHAMP_MANUEL = /^(manuel|manual)$/i;
 const CHAMP_REGLE = /^(règle|regle|rule)$/i;
 const CHAMP_SEVERITE = /^(sévérité|severite|severity)$/i;
 
-// DRWIL-020 : seuls les contrats bloquants décident du gate de `drwil verify` ; les autres sont
+// Seuls les contrats bloquants décident du gate de `drwil verify` ; les autres sont
 // exécutés et affichés sans changer le code de sortie. Défaut : bloquant (comportement P0).
 export const SEVERITES = { bloquant: "bloquant", blocking: "bloquant", avertissement: "avertissement", warning: "avertissement", indicatif: "indicatif", advisory: "indicatif" };
 

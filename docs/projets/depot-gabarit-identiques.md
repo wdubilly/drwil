@@ -144,10 +144,16 @@ en CI.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-11) : lots 1, 2 et 3 réalisés ; contrôle
-  vert (77 fichiers comparés, 16 écarts, 9 déclarations « propre au
-  dépôt », 1 job de CI propre au dépôt) ; QUA-018 décrit ce que le
-  contrôle prouve et ce qu'il ne voit pas.
+- **Dernier état** (2026-10-11) : lots 1 à 4 réalisés ; contrôle vert
+  (77 fichiers comparés, 16 écarts, 9 déclarations « propre au dépôt »,
+  1 job de CI propre au dépôt, aucune référence interne dans le
+  livrable). QUA-018 décrit ce que le contrôle prouve et ce qu'il ne voit
+  pas.
+- **Reste à décider, hors de ce chantier** : deux messages livrés citent
+  encore l'identifiant interne `DRWIL-012` (changer une sortie) ; supprimer
+  la duplication elle-même (le dépôt s'installe lui-même, ou hooks
+  générés au build) ; le contrôle juge l'arbre de travail, pas seulement
+  ce qui est indexé.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] ré-attester QUA-018 (empreinte changée) ;
   puis [IA] `drwil verify`, clôture et fusion automatique (autorisée au

@@ -20,7 +20,6 @@
 // Générique : racine, module de palette et dossier de thème en arguments.
 // Le module de palette exporte des scales façon config Tailwind
 // (ex. { slate: { 50: "#...", 900: "#..." }, danger: { DEFAULT: "#..." } }).
-// Charte Cobalt de run-box-v2 en exemple de palette et de jetons.
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";

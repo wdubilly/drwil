@@ -1,4 +1,4 @@
-// Moteur de contrôles unique (ADR-003 de docs/projets/drwil-v0-2-gouvernance-executable.md) :
+// Moteur de contrôles unique :
 // .githooks/run-checks.mjs (adaptateur git) et `drwil verify` l'utilisent tous les deux,
 // aucun ne réimplémente un contrôle. Sans dépendance : les hooks restent autonomes.
 //
@@ -127,7 +127,7 @@ export function controles(root, { cfg = {}, env = process.env, indexes = null, c
 
   // QUA-017 : jamais de travail direct sur la branche principale, y compris le tout premier commit
   // (plus d'exception de bootstrap : `init()` crée systématiquement une branche de travail avant tout
-  // commit, voir docs/projets/init-cree-une-branche.md). `symbolic-ref` (contrairement à
+  // commit). `symbolic-ref` (contrairement à
   // `rev-parse --abbrev-ref HEAD`) fonctionne même avant le premier commit (HEAD non encore créé).
   // Jamais en CI (env.CI) : la CI tourne aussi sur master après un merge légitime,
   // qu'il ne faut pas bloquer rétroactivement — seuls les hooks locaux (pre-commit/pre-push) l'appliquent.

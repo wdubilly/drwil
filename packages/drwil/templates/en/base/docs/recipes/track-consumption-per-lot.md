@@ -9,7 +9,7 @@ commit, just to inform project tracking.
 Append-only file at the project root, one JSON line per lot closure:
 
 ```json
-{ "chantier": "extraction-ia-first-run-box", "lot": "Lot 8", "tokens": 42000, "modele": "claude-sonnet-5", "duree_min": 95, "date": "2026-10-04" }
+{ "chantier": "add-csv-export", "lot": "Lot 2", "tokens": 42000, "modele": "claude-sonnet-5", "duree_min": 95, "date": "2026-10-04" }
 ```
 
 - `chantier`: file name (without extension) of the `docs/projects/<project>.md`
