@@ -639,3 +639,17 @@ l'index ; texte intégral dans l'historique git
   ERROR (QUA-013, pas de filet CI) sur un projet neuf ; comportement voulu,
   le projet d'essai déclare donc une CI GitHub.
 - **Clôturé par** : la PR de ce chantier (branche `chantier/tester-tarball`).
+
+## 2026-10-11 — Gitleaks en CI : secrets prouvés, contrôle tarball vert
+
+- **Besoin** : relevé sur la PR #50 : sans gitleaks dans le job `checks`,
+  SEC-007 (pas de secret dans le dépôt) n'y était jamais prouvé (« non
+  exécuté »), et `verify` rendait ERROR dans le projet d'essai du contrôle
+  `tarball`, rouge en CI seulement.
+- **Décisions clés** : installer gitleaks en CI plutôt que tolérer un
+  « non exécuté » dans le contrôle `tarball`. [décision utilisateur]
+- **Résultat** : job `checks` : gitleaks 8.21.2 épinglé, archive vérifiée
+  par sa somme publiée, installé dans `~/.local/bin` ; en CI, historique
+  complet scanné (aucune fuite), `tarball` vert, 0 non exécuté.
+- **Clôturé par** : commit `064532e` (fusionné avec la PR #50) et la PR
+  de clôture (branche `chantier/cloture-gitleaks-en-ci`).
