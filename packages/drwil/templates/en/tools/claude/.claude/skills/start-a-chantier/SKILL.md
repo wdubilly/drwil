@@ -33,7 +33,11 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
 4. After the answer, read the state again: `node .githooks/etat.mjs`. In REALISATION on the
    chosen sheet: implement. Otherwise: report the refusal as is, without retrying another way. If the state
    says "Automatic merge authorised": in CLOTURE, after verify PASS and pushing the closing
-   commit, schedule `gh pr merge --auto --merge`; otherwise the merge stays a human gesture.
+   commit, in this order — wait until GitHub has computed the PR and, if it is behind the main
+   branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is
+   scheduled (`gh pr view --json autoMergeRequest`); only then go back to CADRAGE, which clears
+   the authorisation. On failure, stay in CLOTURE and report it. Otherwise the merge stays a
+   human gesture.
 
 Without a poll in the tool: give the human the command `node .githooks/etat.mjs lancer`, to run
 in an interactive terminal.
