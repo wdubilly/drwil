@@ -17,6 +17,12 @@ jobs:
       - run: node .github/scripts/verifier-ruleset.mjs
         env:
           GH_TOKEN: ${{ github.token }}
+      # La plus ancienne version de Node prise en charge (engines : >= 22) est testée ici, dans ce
+      # job exigé par la forge : une ligne de matrice en plus renommerait les checks exigés.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: node --version && npm test --workspace packages/drwil
   # Portabilité du kit (point 1 de docs/projets/suites-kit-portable.md) :
   # npm test de packages/drwil (pas la suite complète run-checks.mjs, qui
   # dépend de gitleaks) doit rester vert sur les trois OS.

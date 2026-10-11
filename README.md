@@ -500,7 +500,7 @@ Integrations can therefore remain thin adapters around the native CLI.
 ## Installation
 
 DRWIL is not published on npm yet. Install it from the tarball attached to a
-GitHub release (Node.js 20+, and the GitHub CLI `gh` authenticated with access
+GitHub release (Node.js 22+, and the GitHub CLI `gh` authenticated with access
 to the repository).
 
 ### 1. Download the release tarball
