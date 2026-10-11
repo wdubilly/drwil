@@ -12,6 +12,20 @@ fichiers:
   - docs/recettes/*.md
   - packages/drwil/templates/fr/base/docs/projets/modele-fiche-projet.md
   - packages/drwil/templates/fr/base/docs/intentions/README.md
+  - .githooks/check-code-rules.mjs
+  - .githooks/check-control-coverage.mjs
+  - .githooks/check-docs.mjs
+  - .githooks/commit-msg
+  - .githooks/etat.mjs
+  - .githooks/contrats.mjs
+  - .githooks/moteur.mjs
+  - .githooks/risque.mjs
+  - packages/drwil/templates/common/base/.githooks/*
+  - packages/drwil/templates/common/optional/front-quality/*
+  - packages/drwil/templates/fr/base/docs/catalogue-contrats.md
+  - packages/drwil/templates/en/base/docs/contracts-catalog.md
+  - packages/drwil/templates/fr/base/docs/projets/mecanique-ia-first.md
+  - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
   - .drwil/ia-first.json
   - .claude/settings.json
   - packages/drwil/templates/common/tools/claude/.claude/settings.json
@@ -26,7 +40,9 @@ hors de `.githooks/`, qui est lui-même un miroir du gabarit. Élargi le
 2026-10-11 au lancement : test du contrôle, `docs/contrats.md` (QUA-018
 prouvé par le contrôle), recettes côté dépôt et deux fichiers du gabarit
 susceptibles d'être alignés — élargi d'emblée pour ne rien modifier hors
-cadrage en clôture.)
+cadrage en clôture. Élargi le même jour pour le lot 4 (frontière dépôt /
+livrable) : hooks et documents du gabarit qui citent l'historique interne
+de drwil, et leurs copies du dépôt — commentaires et doc seulement.)
 
 ## 1. Besoin
 
@@ -115,6 +131,15 @@ en CI.
   propre au dépôt vers le gabarit refusée ; limites restantes écrites dans
   QUA-018. Critère de sortie : une fuite de job et un hook oublié dans le
   gabarit, simulés sur ce dépôt, font échouer le contrôle (vérifié).
+- **Lot 4 — frontière du contenu livré** [IA] (ajouté le 2026-10-11 à la
+  question « qu'est-ce qui est personnel au dépôt, qu'est-ce qui part dans
+  le paquet npm ? ») : aucun fichier propre au dépôt n'est dans le paquet
+  (vérifié : 177 fichiers, `dist/`, `bin/`, `templates/`), mais le contenu
+  livré citait l'historique interne de drwil (numéros de PR, lots,
+  décisions datées, projet d'origine, fiches de ce dépôt). Règle écrite
+  dans QUA-018, outillée par le contrôle, occurrences nettoyées.
+  Critère de sortie : contrôle vert, et une citation interne ajoutée au
+  gabarit le fait échouer.
 
 ## 7. Reprise
 
