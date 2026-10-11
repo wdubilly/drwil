@@ -24,7 +24,7 @@
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
     "test": "tsc --build && node --test",
-    "test:coverage": "tsc --build && c8 --check-coverage --lines 85 --branches 60 --functions 50 --reporter=text node --test",
+    "test:coverage": "tsc --build && c8 --check-coverage --lines 89 --branches 81 --functions 91 --reporter=text node --test",
     "prepack": "npm run build"
   },
   "dependencies": {
