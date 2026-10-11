@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "contract": "QUA-018",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-11T12:53:41.335Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "frontière dépôt/livrable uniquement ; ne vaut pas audit global",
+  "fingerprint": "b50056af6cb6ed9434a9ed5b309be3e7cc62ccb8cc26bfae18b41ba375acc445",
+  "commit": "a2a9fa42aaa2355c43e5314efd4cc8b85004097f",
+  "automated": [
+    {
+      "id": "miroirs-gabarit",
+      "status": "ok"
+    }
+  ]
+}

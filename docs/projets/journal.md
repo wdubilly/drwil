@@ -458,3 +458,30 @@ d'origine entre parenthèses).
   Relevé en route : la référence `origin/HEAD` d'un clone n'était jamais
   éprouvée par la barrière de périmètre.
 - **Clôturé par** : la PR de ce chantier (branche `chantier/couverture-hooks`).
+
+## 2026-10-11 — Dépôt et gabarit identiques, frontière du livrable vérifiée
+
+- **Besoin** (demandeur, 2026-10-10, priorité 0) : garder identiques les
+  copies du gabarit utilisées par ce dépôt reposait sur un `cp` à la main.
+- **Décisions clés** : miroirs dérivés des règles d'installation, écarts
+  voulus déclarés avec leur raison dans `outils/miroirs.json` ; le dépôt
+  utilise les réglages Claude qu'il livre ; le contrôle `miroirs-gabarit`
+  devient la preuve automatique (partielle) de QUA-018. À la question
+  « est-ce bien vrai ? », pas d'attestation sur une preuve surestimée :
+  fichiers d'un seul côté et jobs de CI vérifiés (une fuite de job du dépôt
+  vers le gabarit est refusée) ; puis frontière du contenu livré : aucune
+  référence à l'historique interne de drwil dans `packages/drwil/templates/`
+  (PR, décisions datées, ADR, lots, projet d'origine, fiches du dépôt),
+  occurrences nettoyées sans changement de comportement. QUA-018 écrit ce
+  que le contrôle prouve et ce qu'il ne voit pas ; ré-attesté par le
+  demandeur pour cette seule portée. [décisions utilisateur]
+- **Relevé en route** : la recette livrée de travail en branche omettait le
+  job `alerter-si-ci-cassee` (corrigé FR et EN) ; deux recettes du dépôt
+  étaient des ébauches appauvries ; `docs/architecture.md` du dépôt n'a
+  jamais été personnalisé.
+- **Suites à décider** : `DRWIL-012` encore affiché par deux messages
+  livrés ; supprimer la duplication elle-même (le dépôt s'installe
+  lui-même, ou hooks générés au build) ; le contrôle juge l'arbre de
+  travail, pas seulement l'index ; outiller SEC-006 (`npm audit`).
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/depot-gabarit-identiques`).

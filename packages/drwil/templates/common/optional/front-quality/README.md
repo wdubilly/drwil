@@ -17,8 +17,7 @@ de couleurs à faire respecter), en attendant la recette d'adoption dédiée.
 
 1. Copier les deux fichiers dans `.githooks/` du projet.
 2. Déclarer un module de palette (export de scales façon config Tailwind,
-   ex. `{ slate: { 50: "#...", 900: "#..." } }`) — voir l'exemple de la
-   charte Cobalt de run-box-v2 (`frontend/src/theme/palettes.js`).
+   ex. `{ slate: { 50: "#...", 900: "#..." } }`).
 3. Ajouter les deux contrôles à `.drwil/ia-first.json -> checks`, par
    exemple :
 

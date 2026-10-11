@@ -20,8 +20,10 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 
 ## Kit IA-first
 
-- [ ] [IA] [P0] Dépôt et gabarit identiques, vérifié par un contrôle
-  (écarts corrigés ou déclarés) — `docs/projets/depot-gabarit-identiques.md`.
+- [ ] [décision] [P1] Suites de la frontière dépôt / livrable : `DRWIL-012`
+  dans deux messages livrés, duplication dépôt / gabarit à supprimer,
+  outiller SEC-006 (`npm audit`) — voir `docs/projets/journal.md`
+  (2026-10-11).
 - [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
   légère décidée, modalités à définir — `docs/projets/entretien-sous-barriere-bloquante.md`.
 - [ ] [humain] [P1] drwil V0.2 — gouvernance exécutable : lots [IA] livrés

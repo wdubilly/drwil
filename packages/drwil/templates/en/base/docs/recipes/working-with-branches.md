@@ -36,6 +36,8 @@ request, instead of direct commits on the main branch.
 - Checks (`.githooks/run-checks.mjs`) must be
   green before opening the pull/merge request, not only before merging
   it.
+- Before merging: check that the pull/merge request CI status checks
+  are green (`gh pr checks <n> --watch` on GitHub).
 
 ## Closing
 
@@ -75,6 +77,12 @@ request, instead of direct commits on the main branch.
 - This check never runs in CI: it only applies locally, at commit/push
   time, not when CI replays an already-made push (a merge landing on the
   main branch is legitimate).
+- If the main branch CI breaks anyway (merge landed too fast,
+  flakiness...): a dedicated CI job (`alerter-si-ci-cassee`, GitHub and
+  GitLab) automatically opens an issue linking to the failed run — only
+  on the main branch, only when the checks failed, without creating a
+  duplicate if an equivalent issue is already open. This job alerts, it
+  does not fix: the fix remains a separate chantier (dedicated card).
 
 ## What the kit does not do
 

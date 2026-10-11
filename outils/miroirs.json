@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "ecarts": {
+    ".github/workflows/ia-first.yml": "Jobs vérifiés à part (clé ci) ; contenu différent : étapes propres au dépôt (npm ci, vérification du ruleset) et alerte qui dépend aussi de kit-tests.",
+    ".gitignore": "Entrées propres au dépôt (rapport de couverture, documents internes, évidences).",
+    "AGENTS.md": "Consignes propres à chaque projet (le gabarit n'en est que la base).",
+    "INSTALL.md": "Installation propre au dépôt drwil (clone, non publié sur npm).",
+    "README.md": "Présentation propre au dépôt drwil.",
+    "docs/catalogue-contrats.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : catalogue:QUA-004 adopté par ce dépôt, donc retiré de son catalogue.",
+    "docs/contrats.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : registre des contrats de drwil.",
+    "docs/ia-first.md": "Résumé de 17 lignes dans le dépôt, renvoi vers la doc complète du gabarit.",
+    "docs/intentions/README.md": "Table des fiches remplacée par un renvoi à l'index des chantiers (une information, une seule source).",
+    "docs/projets/en-attente.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : index des chantiers de drwil.",
+    "docs/projets/entretien-courant.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : entrées d'entretien de drwil.",
+    "docs/projets/journal.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : chantiers clôturés de drwil.",
+    "docs/projets/mecanique-ia-first.md": "Le cadrage du dépôt couvre en plus ses fichiers non livrés (tests des hooks, outils, modules optionnels installés).",
+    "docs/projets/modele-fiche-projet.md": "Renvoie à DRWIL-012 : la doc ia-first du dépôt est un résumé, sans la section 7 à laquelle renvoie le gabarit.",
+    "docs/recettes/creer-une-release.md": "Adaptée au dépôt : le module de release y est déjà activé, et le paquet empaqueté est packages/drwil.",
+    "docs/recettes/travailler-en-branche.md": "Une phrase propre au dépôt : ses checks sont aussi imposés côté forge (ruleset de master)."
+  },
+  "propresAuDepot": {
+    ".githooks/*.test.mjs": "Tests des hooks : éprouvent drwil ici, non livrés (principe « livrable léger, dépôt éprouvé », 2026-10-11).",
+    ".github/CODEOWNERS": "Forge de ce dépôt (docs/projets/proteger-master.md) ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
+    ".github/ruleset-master.json": "Forge de ce dépôt (docs/projets/proteger-master.md) ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
+    ".github/scripts/verifier-ruleset.mjs": "Forge de ce dépôt (docs/projets/proteger-master.md) ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
+    "docs/projets/": "Fiches des chantiers de drwil : contenu du projet, pas du gabarit.",
+    "docs/intentions/": "Intentions de drwil : contenu du projet, pas du gabarit.",
+    "docs/audit-risques.md": "Rapport généré pour ce dépôt par le skill d'audit (docs/recettes/auditer-risques-et-dette.md).",
+    "docs/decouverte-valeur.md": "Rapport généré pour ce dépôt par le skill de découverte de valeur.",
+    "docs/benchmark-protocole.md": "Protocole de mesure de drwil lui-même (bench avec et sans drwil)."
+  },
+  "propresAuGabarit": {},
+  "ci": {
+    "fichier": ".github/workflows/ia-first.yml",
+    "jobsPropresAuDepot": {
+      "kit-tests": "Portabilité du paquet testée sur Linux, Windows et macOS (docs/projets/suites-kit-portable.md, point 1)."
+    }
+  }
+}

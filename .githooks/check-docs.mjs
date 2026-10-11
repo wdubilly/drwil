@@ -132,7 +132,7 @@ const cheminsTrouves = (doc, cite) => [join(root, cite), join(dirname(doc), cite
  * défaut, `check-ignore` ne signale pas un fichier suivi. Hors dépôt Git : aucun.
  */
 // Chemins relatifs au format « / » : Git, même sous Windows, ne reconnaît pas comme ignoré un
-// chemin écrit avec des barres obliques inversées (CI Windows de la PR #26).
+// chemin écrit avec des barres obliques inversées (constaté en CI Windows).
 const relPosix = (p) => relative(root, p).split(sep).join("/");
 
 function ignoresParGit(chemins) {
@@ -160,7 +160,7 @@ if (existsSync(contratsPath)) {
     comptes.set(m[1], (comptes.get(m[1]) ?? 0) + 1);
   }
   for (const [id, n] of comptes) if (n > 1) erreurs.push(T.doublon(id, relative(root, contratsPath)));
-  // DRWIL-002 : un contrat mal formé (contrôle inconnu, Règle ou preuve absente) est refusé dès le
+  // Un contrat mal formé (contrôle inconnu, Règle ou preuve absente) est refusé dès le
   // commit, avec le même lecteur que `drwil verify` ; les doublons sont déjà signalés ci-dessus.
   for (const e of validerContrats(lireContrats(readFileSync(contratsPath, "utf8")), controlesConnus(cfg), lang)) {
     if (e.type !== "doublon") erreurs.push(`${relative(root, contratsPath)}:${e.ligne} : ${e.message}`);
@@ -203,7 +203,7 @@ for (const c of citations) {
 
 erreurs.push(...checkChantiers());
 
-// DRWIL-012 : niveau de risque des fiches de projet (ADR-004) ; la traçabilité QUA-016 ne change pas.
+// Niveau de risque des fiches de projet (la cérémonie suit le risque) ; la traçabilité QUA-016 ne change pas.
 const avertissementsRisque = [];
 {
   const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projets");
@@ -302,8 +302,7 @@ function checkChantiers() {
 // Rappel de cadrage : un fichier de code indexé doit être couvert par le bloc `cadrage` d'une
 // fiche de docs/projets/ (dont la fiche permanente « entretien courant » pour les petites tâches).
 // Sévérité réglable par projet (clé "cadrage" de .drwil/ia-first.json, défaut "avertissement") :
-// "bloquant" fait échouer le commit comme avant (choix initial du 2026-10-03, différent de
-// run-box qui le voulait non bloquant) ; "avertissement" affiche sans jamais bloquer ;
+// "bloquant" fait échouer le commit ; "avertissement" affiche sans jamais bloquer ;
 // "off" désactive le contrôle. Ce réglage ne touche que ce contrôle, jamais le reste de check-docs.
 function checkCadrage() {
   const erreurs = [];

@@ -57,6 +57,14 @@
       "ciJob": "checks",
       "chemins": [".githooks/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
       "degradable": false
+    },
+    {
+      "id": "miroirs-gabarit",
+      "name": "dépôt et gabarit identiques, écarts déclarés (QUA-018)",
+      "run": "node --test \"outils/*.test.mjs\" && node outils/verifier-miroirs.mjs",
+      "ciJob": "checks",
+      "chemins": ["**"],
+      "degradable": false
     }
   ],
   "transitions": "humain",

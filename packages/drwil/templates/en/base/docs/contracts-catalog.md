@@ -40,7 +40,3 @@ real behavioral coverage — not just a line percentage. Unlike the other
 lines in this catalog, `catalog:QUA-020` is not a practice observed as-is
 in an existing project (its e2e stays
 manual there): it is a goal specific to drwil, not a direct carry-over.
-
-Contracts very specific to run-box-v2 (HR documents, SSH bridge, isolated
-portal, Elasticsearch, ERMv2…) are not reproduced here: they served as
-**examples** during the kit's design, not a model to install.
