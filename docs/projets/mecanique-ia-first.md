@@ -19,6 +19,15 @@ fichiers:
   - .githooks/etat.test.mjs
   - .githooks/perimetre.mjs
   - .githooks/perimetre.test.mjs
+  - .githooks/check-code-rules.test.mjs
+  - .githooks/check-control-coverage.test.mjs
+  - .githooks/check-docs.test.mjs
+  - .githooks/check-file-size.test.mjs
+  - .githooks/creer-release.test.mjs
+  - .githooks/glob.test.mjs
+  - .githooks/moteur.test.mjs
+  - .githooks/run-checks.test.mjs
+  - .githooks/tableau-de-bord.test.mjs
   - .githooks/prepare-commit-msg
   - .githooks/pre-commit
   - .githooks/pre-push

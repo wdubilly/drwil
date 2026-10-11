@@ -153,7 +153,8 @@ function main() {
   const tagsExistants = git(["tag", "-l", "v*"]).split("\n").filter(Boolean);
   const decision = deciderVersion({ dernier: tag, bump, versions: versionsPaquets(paquets), tagsExistants });
   if (!decision) {
-    console.log(`[creer-release] rien à publier depuis ${tag ?? "le début du dépôt"} (aucun commit).`);
+    // Sans commit à publier, il y a forcément un tag : un dépôt sans commit échoue dès `git log`.
+    console.log(`[creer-release] rien à publier depuis ${tag} (aucun commit).`);
     return;
   }
   console.log(`[creer-release] dernier tag : ${tag ?? "(aucun)"}`);

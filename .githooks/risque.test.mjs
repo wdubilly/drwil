@@ -38,3 +38,9 @@ test("HIGH exige une section Décisions et un contrat cité", () => {
   assert.deepEqual(r.erreurs, ["risque HIGH sans section « Décisions »", "risque HIGH sans contrat concerné cité (ID du registre)"]);
   assert.deepEqual(verifierRisque(fiche("HIGH", [".githooks/moteur.mjs"], "## 4. Décisions\n\n- touche QUA-013.\n")).erreurs, []);
 });
+
+test("messages en anglais : niveau inconnu, niveau trop bas", () => {
+  const cadre = "<!-- cadrage\nfichiers:\n  - .githooks/a.mjs\n-->\n";
+  assert.deepEqual(verifierRisque(`**Risk**: HUGE\n${cadre}`, { lang: "en" }).erreurs, ["unknown risk level \"HUGE\" (LOW, MEDIUM or HIGH)"]);
+  assert.match(verifierRisque(`**Risk**: LOW\n${cadre}`, { lang: "en" }).erreurs[0], /^risk LOW declared, but the scope touches governance mechanics: HIGH at least/);
+});

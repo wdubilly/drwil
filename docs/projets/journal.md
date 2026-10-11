@@ -436,3 +436,25 @@ d'origine entre parenthèses).
 - **Relance** : un commentaire du moteur citait la fiche (dans le gabarit,
   une fiche du dépôt absente des projets) ; corrigé avant la clôture.
 - **Clôturé par** : PR #31 (`8b23067`).
+
+## 2026-10-11 — Couverture des hooks de gouvernance mesurée et garantie
+
+- **Besoin** (demandeur, 2026-10-10, priorité 0) : les hooks
+  (`.githooks/*.mjs`), qui gouvernent, n'étaient pas mesurés (37 % des
+  lignes au lancement).
+- **Décisions clés** : cible 100 % d'emblée, seuil bloquant une fois
+  atteint ; QUA-004 étendu (un seuil par périmètre : `packages/drwil` et
+  hooks) ; mesure propre à ce dépôt, non livrée. Au lieu d'exclusions
+  `c8 ignore`, code inatteignable retiré et code intestable rendu
+  testable, gabarit compris : `.githooks/run-checks.mjs` prend sa racine
+  du dépôt git du dossier courant (plus de l'emplacement du script),
+  logique de `.githooks/check-code-rules.mjs` et
+  `.githooks/check-file-size.mjs` exposée,
+  replis silencieux après git retirés de `.githooks/perimetre.mjs` (un échec casse
+  le contrôle au lieu de le faire passer à vide). [décisions utilisateur]
+- **Résultat** : 100 % lignes, branches, fonctions et instructions sur
+  les 14 hooks (contrôle `couverture-hooks`, `npm run test:hooks:coverage`) ;
+  une fonction non testée ajoutée à un hook fait échouer le contrôle.
+  Relevé en route : la référence `origin/HEAD` d'un clone n'était jamais
+  éprouvée par la barrière de périmètre.
+- **Clôturé par** : la PR de ce chantier (branche `chantier/couverture-hooks`).

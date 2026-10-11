@@ -49,6 +49,14 @@
       "ciJob": "checks",
       "chemins": ["packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
       "degradable": false
+    },
+    {
+      "id": "couverture-hooks",
+      "name": "hooks de gouvernance : tests + couverture (QUA-004)",
+      "run": "npm run test:hooks:coverage",
+      "ciJob": "checks",
+      "chemins": [".githooks/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "degradable": false
     }
   ],
   "transitions": "humain",

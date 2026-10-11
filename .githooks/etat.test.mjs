@@ -5,7 +5,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { ACTIVITES, ETAT_NEUTRE, contexte, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, fichesCadrees, lancer, rappelCourt, rappelSiChange, statutFiche, transitionAutorisee, validerEtat } from "./etat.mjs";
+import { PassThrough } from "node:stream";
+import { ACTIVITES, ETAT_NEUTRE, contexte, principal, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, fichesCadrees, lancer, rappelCourt, rappelSiChange, statutFiche, transitionAutorisee, validerEtat } from "./etat.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -526,4 +527,195 @@ test("variables GIT_* du lanceur (commit -a, worktree) : les tests n'agissent ja
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.notEqual(spawnSync("git", ["rev-parse", "--verify", "-q", "HEAD"], { cwd: victime }).status, 0, "un test a commité dans le dépôt lanceur");
   assert.equal(readFileSync(join(victime, ".git", "config"), "utf8"), config, "un test a modifié la config du dépôt lanceur");
+});
+
+// --- Commande `node .githooks/etat.mjs` (principal) et cas limites ---
+
+/** Exécute `fn` en capturant console.log et console.error. */
+async function capturer(fn) {
+  const sortie = [];
+  const erreurs = [];
+  const { log, error } = console;
+  console.log = (...m) => sortie.push(m.join(" "));
+  console.error = (...m) => erreurs.push(m.join(" "));
+  try {
+    const code = await fn();
+    return { code, sortie: sortie.join("\n"), erreurs: erreurs.join("\n") };
+  } finally {
+    Object.assign(console, { log, error });
+  }
+}
+
+/**
+ * Simule un terminal interactif : chaque invite (écriture se terminant par « : ») reçoit la
+ * réponse suivante. Rend aussi les invites vues.
+ */
+async function avecTerminal(reponses, fn) {
+  const entree = new PassThrough();
+  entree.isTTY = true;
+  const descripteur = Object.getOwnPropertyDescriptor(process, "stdin");
+  Object.defineProperty(process, "stdin", { value: entree, configurable: true });
+  const { isTTY } = process.stdout;
+  const ecrire = process.stdout.write;
+  const invites = [];
+  process.stdout.isTTY = true;
+  process.stdout.write = (morceau, ...reste) => {
+    const texte = String(morceau);
+    if (/: $/.test(texte)) {
+      invites.push(texte);
+      setImmediate(() => entree.write(`${reponses.shift() ?? ""}\n`));
+      return true;
+    }
+    return ecrire.call(process.stdout, morceau, ...reste);
+  };
+  try {
+    return { ...(await fn()), invites };
+  } finally {
+    process.stdout.write = ecrire;
+    process.stdout.isTTY = isTTY;
+    Object.defineProperty(process, "stdin", descripteur);
+  }
+}
+
+test("principal fiches : liste lisible, JSON, ou aucune fiche", async () => {
+  const { racine } = depotCadre();
+  let r = await capturer(() => principal(["fiches"], racine));
+  assert.equal(r.code, 0);
+  assert.equal(r.sortie, `1. ${FICHE} — Projet : Exemple`);
+  r = await capturer(() => principal(["fiches", "--json"], racine));
+  assert.equal(JSON.parse(r.sortie)[0].chemin, FICHE);
+  r = await capturer(() => principal(["fiches"], depot()));
+  assert.match(r.sortie, /^\(aucune fiche cadrée/);
+});
+
+test("principal lancer sans terminal : refusé en mode humain, lancé en mode agent (avec --demande)", async () => {
+  const humain = depotCadre().racine;
+  let r = await capturer(() => principal(["lancer", FICHE], humain));
+  assert.equal(r.code, 1);
+  assert.match(r.erreurs, /^✗ lancement refusé : c'est une décision humaine/);
+  const agent = depotCadre({ transitions: "agent" }).racine;
+  r = await capturer(() => principal(["lancer", FICHE, "--demande", "faire X"], agent));
+  assert.equal(r.code, 0, r.erreurs);
+  assert.match(r.sortie, /^✓ CADRAGE → REALISATION \(lancé : docs\/projets\/exemple\.md\)\n\n\[drwil\] État de gouvernance/);
+  assert.equal(lireEtat(agent).etat.demande_active, "faire X");
+  // --demande sans valeur : ignoré.
+  const autre = depotCadre({ transitions: "agent" }).racine;
+  await capturer(() => principal(["lancer", FICHE, "--demande"], autre));
+  assert.equal(lireEtat(autre).etat.demande_active, null);
+});
+
+test("principal lancer au terminal : l'humain choisit, confirme et décide de la fusion", async () => {
+  const { racine, git } = depotCadre();
+  writeFileSync(join(racine, "docs", "projets", "bloquee.md"), "# Bloquée\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/b.ts\n-->\n\n## Points à trancher\n\n- [décision] A ou B ?\n");
+  git("add", "-A");
+  git("commit", "-qm", "bloquee");
+  const r = await avecTerminal(["1", "LANCER", "FUSION"], () => capturer(() => principal(["lancer"], racine)));
+  assert.equal(r.code, 0, r.erreurs);
+  assert.match(r.sortie, /^1\. docs\/projets\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projets\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher\]/);
+  assert.deepEqual(r.invites.length, 3);
+  assert.equal(lireEtat(racine).etat.fusion_autorisee, true);
+});
+
+test("principal lancer au terminal : sans confirmation exacte ou numéro inconnu, rien ne change", async () => {
+  const { racine } = depotCadre();
+  let r = await avecTerminal(["oui"], () => capturer(() => principal(["lancer", FICHE], racine)));
+  assert.equal(r.code, 1);
+  assert.equal(r.erreurs, "✗ lancement non confirmé : état inchangé");
+  r = await avecTerminal(["9"], () => capturer(() => principal(["lancer"], racine)));
+  assert.equal(r.code, 1);
+  assert.equal(r.invites.length, 1);
+  r = await avecTerminal(["LANCER", ""], () => capturer(() => principal(["lancer", FICHE], racine)));
+  assert.equal(r.code, 0, r.erreurs);
+  assert.equal(lireEtat(racine).etat.fusion_autorisee, undefined);
+});
+
+test("principal rappel : affiché seulement quand l'état change", async () => {
+  const racine = depot();
+  assert.match((await capturer(() => principal(["rappel"], racine))).sortie, /^\[drwil\] Rappel/);
+  assert.equal((await capturer(() => principal(["rappel"], racine))).sortie, "");
+});
+
+test("principal rappel et lecture : une racine inutilisable ne casse jamais la session", async () => {
+  assert.deepEqual(await capturer(() => principal(["rappel"], null)), { code: 0, sortie: "", erreurs: "" });
+  const r = await capturer(() => principal([], null));
+  assert.equal(r.code, 0);
+  assert.match(r.sortie, /^\[drwil\] état de gouvernance illisible : /);
+});
+
+test("rappel court en anglais, fiche active", () => {
+  const racine = depot({ etat: actif("REALISATION"), lang: "en" });
+  assert.match(rappelCourt(lireEtat(racine), racine), /^\[drwil\] Reminder: REALISATION · docs\/projets\/exemple\.md · scope: 2 file\(s\)/);
+  const neutre = depot({ lang: "en" });
+  assert.match(rappelCourt(lireEtat(neutre), neutre), /^\[drwil\] Reminder: CADRAGE · no active expectation \(read again/);
+});
+
+test("principal lecture : contexte ou JSON", async () => {
+  const racine = depot({ etat: actif("REALISATION") });
+  assert.match((await capturer(() => principal([], racine))).sortie, /^\[drwil\] État de gouvernance/);
+  assert.equal(JSON.parse((await capturer(() => principal(["--json"], racine))).sortie).etat.activite, "REALISATION");
+});
+
+test("principal passer : usage sans activité, transition écrite ou refusée, confirmation au terminal", async () => {
+  const racine = depot({ config: { transitions: "agent" } });
+  for (const args of [["passer"], ["passer", "--fiche"]]) {
+    const r = await capturer(() => principal(args, racine));
+    assert.equal(r.code, 2);
+    assert.match(r.erreurs, /^usage : node \.githooks\/etat\.mjs passer </);
+  }
+  let r = await capturer(() => principal(["passer", "ATTENTE", "--fiche", FICHE, "--demande", "d"], racine));
+  assert.equal(r.code, 0, r.erreurs);
+  assert.match(r.sortie, /^✓ /);
+  r = await capturer(() => principal(["passer", "CLOTURE"], racine));
+  assert.equal(r.code, 1);
+  assert.match(r.erreurs, /^✗ /);
+  const humain = depot();
+  r = await avecTerminal(["ATTENTE"], () => capturer(() => principal(["passer", "ATTENTE", "--fiche", FICHE], humain)));
+  assert.equal(r.code, 0, r.erreurs);
+  assert.equal(lireEtat(humain).etat.activite, "ATTENTE");
+});
+
+test("ligne de commande : node etat.mjs lit l'état du dossier courant", () => {
+  const racine = depot();
+  const r = spawnSync(process.execPath, [fileURLToPath(new URL("./etat.mjs", import.meta.url))], { cwd: racine, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /Activité : CADRAGE/);
+});
+
+test("cas limites : attente non textuelle, verdict inconnu, configuration « null »", () => {
+  assert.deepEqual(validerEtat(actif("REALISATION", { attente_active: 5 }), depot()), ["attente_active : chemin de fiche ou null attendu"]);
+  const { racine, evidence } = depotEnVerify();
+  evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "bizarre" });
+  assert.match(preuveVerify(racine).raison, /sans verdict reconnu/);
+  const nulle = depot();
+  writeFileSync(join(nulle, ".drwil", "ia-first.json"), "null");
+  assert.match(contexte(lireEtat(nulle), nulle), /Activité : CADRAGE/);
+});
+
+test("fiche active sans titre, ou illisible (un dossier) : contexte et rappel tiennent", () => {
+  const sansTitre = depot({ etat: actif("REALISATION"), fiche: false });
+  writeFileSync(join(sansTitre, FICHE), "**Statut** : cadré le 2026-10-09.\n");
+  assert.match(contexte(lireEtat(sansTitre), sansTitre), /Attente active : docs\/projets\/exemple\.md\n/);
+  const dossier = depot({ etat: actif("REALISATION"), fiche: false });
+  mkdirSync(join(dossier, FICHE));
+  assert.match(contexte(lireEtat(dossier), dossier), /\(aucun bloc cadrage/);
+  assert.match(rappelCourt(lireEtat(dossier), dossier), /périmètre : 0 fichier/);
+});
+
+test("rappel : empreinte impossible à écrire, le rappel est quand même rendu", () => {
+  const racine = depot();
+  mkdirSync(join(racine, ".drwil", "rappel.json"));
+  assert.match(rappelSiChange(racine), /^\[drwil\] Rappel/);
+});
+
+test("fiches cadrées : index réglé, fiche sans titre ; lancer sans fiche ou avec une demande invalide", () => {
+  const { racine, git } = depotCadre({ dirs: { index: "suivi/index.md" }, transitions: "agent" });
+  mkdirSync(join(racine, "suivi"));
+  writeFileSync(join(racine, "suivi", "index.md"), "- [ ] [IA] [P0] `docs/projets/sans-titre.md`\n");
+  writeFileSync(join(racine, "docs", "projets", "sans-titre.md"), "**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/t.ts\n-->\n");
+  git("add", "-A");
+  git("commit", "-qm", "index");
+  const sansTitre = fichesCadrees(racine).find((f) => f.chemin === "docs/projets/sans-titre.md");
+  assert.deepEqual([sansTitre.titre, sansTitre.priorite], ["docs/projets/sans-titre.md", "P0"]);
+  assert.match(lancer(racine, undefined).message, /« undefined » n'est pas une fiche cadrée/);
+  assert.match(lancer(racine, FICHE, { demande: 5 }).message, /^lancement refusé : demande_active : chaîne ou null attendu/);
 });

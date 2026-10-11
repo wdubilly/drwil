@@ -128,3 +128,32 @@ test("sévérité : bloquant par défaut, synonymes anglais, valeur inconnue ref
   assert.deepEqual(k.map((c) => c.severite), ["avertissement", "indicatif", null]);
   assert.deepEqual(validerContrats(k, CONTROLES_SOCLE).map((e) => e.type), ["severite"]);
 });
+
+test("messages en anglais ; titre sans tiret, tableau sans règle", () => {
+  const contrats = lireContrats([
+    "## QUA-001",
+    "**Rule**: r",
+    "**Check**:",
+    "",
+    "**Severity**: bizarre",
+    "## QUA-002 — sans preuve",
+    "**Rule**: r",
+    "## QUA-003 — inconnu",
+    "**Rule**: r",
+    "**Check**: `fantome`",
+    "",
+    "| ID | Règle |",
+    "|---|---|",
+    "| QUA-004 | |",
+    "| QUA-005 |",
+  ].join("\n"));
+  assert.equal(contrats[0].titre, "");
+  assert.deepEqual(contrats.slice(3).map((k) => [k.id, k.titre, k.regle]), [["QUA-004", "", null], ["QUA-005", "", null]]);
+  const messages = validerContrats(contrats, ["docs-references"], "en").map((e) => e.message);
+  assert.deepEqual(messages, [
+    "QUA-001: empty Check field",
+    "QUA-001: unknown severity \"bizarre\" (blocking, warning or advisory)",
+    "QUA-002: no declared proof (Check or Manual field)",
+    "QUA-003: unknown check \"fantome\" (known: docs-references)",
+  ]);
+});
