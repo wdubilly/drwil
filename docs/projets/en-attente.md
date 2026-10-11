@@ -38,18 +38,17 @@ Ordre interne, dans l'ordre des lignes ci-dessous (décidé le 2026-10-11 ;
 à priorité égale, `/drwil-lancer` trie par nom de fichier : l'agent
 recommande la première fiche prête de cette liste). Faits, dans l'ordre :
 la règle `git -c`, puis SEC-006 outillé (voir `docs/projets/journal.md`).
+Le README est reporté après la vague 5.
 
-- [ ] [IA] [P0] README à jour du cycle de gouvernance (lancement,
-  fusion autorisée, forge) (v1:DOC-001, v1:DOC-003) — `docs/projets/readme-a-jour.md`.
 - [ ] [IA] [P0] Personnaliser `docs/architecture.md` du dépôt, resté au
-  modèle d'installation (v1:DOC-005, v1:ARC-001) — relevé dans
-  `docs/projets/journal.md` (2026-10-11).
+  modèle d'installation (v1:DOC-005, v1:ARC-001) —
+  `docs/projets/architecture-depot.md`.
 - [ ] [IA] [P0] Programmer la fusion automatique avant de revenir en
   CADRAGE (ordre sûr dans la consigne) ; vérifier d'abord ce qui est déjà
   fait — `docs/projets/consigne-fusion-auto.md`.
 - [ ] [IA] [P0] Lint, formateur et versions de Node déclarées (`engines`)
-  pour le paquet (v1:COD-002, v1:COD-003, v1:PKG-001) — classés
-  automatisables dans `docs/intentions/catalogue-cycle-de-vie.md`.
+  pour le paquet : Biome, Node 22 et 24 testés (v1:COD-002, v1:COD-003,
+  v1:PKG-001) — `docs/projets/lint-formateur-engines.md`.
 
 ## Vague 2 — rendre les décisions humaines prouvables, relever les preuves
 
@@ -114,6 +113,14 @@ la règle `git -c`, puis SEC-006 outillé (voir `docs/projets/journal.md`).
 - [ ] [IA] [P2] Prochaine release : signaler dans la note de version que
   `chemins` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
   qui tourne au commit — voir `docs/projets/journal.md` (2026-10-05).
+
+## Après la vague 5
+
+Décidé le 2026-10-11 : le README décrit le cycle de gouvernance, que les
+vagues 3 à 5 modifient ; l'écrire avant serait le réécrire.
+
+- [ ] [IA] [P3] README à jour du cycle de gouvernance (lancement,
+  fusion autorisée, forge) (v1:DOC-001, v1:DOC-003) — `docs/projets/readme-a-jour.md`.
 
 ## Ensuite
 

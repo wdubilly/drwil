@@ -522,3 +522,20 @@ d'origine entre parenthèses).
   `drwil verify` rend 6 PASS, 5 ATTESTED. Sur ce dépôt : aucune faille.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/outiller-sec-006`).
+
+## 2026-10-11 — Rangement : quatre intentions réalisées retirées de docs/intentions/
+
+Intentions déjà réalisées, restées dans `docs/intentions/` et absentes de
+l'index ; texte intégral dans l'historique git
+(`git log --follow -- docs/intentions/<nom>.md`).
+
+- **Audit de risques et dette technique** (fait le 2026-10-04) : recette et
+  skill livrés (FR et EN), testés sur drwil (`docs/audit-risques.md`).
+- **Découverte de valeur produit** (réalisée, statut resté « cadré — prêt
+  à implémenter ») : recette `docs/recettes/decouvrir-valeur-produit.md`,
+  skill et version livrée existent.
+- **Suivi de la consommation de tokens par lot** (fait le 2026-10-04) :
+  recette `docs/recettes/suivre-consommation-par-lot.md`, skill, tableau de
+  bord.
+- **Travail en branches et merge/pull requests** (tranché et clôturé le
+  2026-10-05) : recette `docs/recettes/travailler-en-branche.md`.
