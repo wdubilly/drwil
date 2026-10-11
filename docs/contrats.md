@@ -82,8 +82,9 @@ de sortie.
 ## QUA-018 — Périmètre explicite : dépôt drwil vs livrable gabarit
 **Règle** : Ce dépôt a deux casquettes : drwil-le-dépôt (ce projet en tant que tel — son `AGENTS.md` racine, sa CI dogfood, ses `docs/`, ses chantiers) et drwil-le-livrable (le gabarit distribué via `npx`/`npm`, `packages/drwil/templates/`, copié dans tout projet généré). Si une demande ne précise pas clairement laquelle des deux casquettes est visée, l'IA doit le demander explicitement avant d'agir plutôt que de deviner.
 **Périmètre** : Toute modification susceptible de concerner `packages/drwil/templates/` et/ou son équivalent dogfood à la racine (`AGENTS.md`, `docs/`, `.github/workflows/`, `.githooks/`, `.claude/skills/`).
-**Source de vérité** : Ce contrat (rappelé dans `AGENTS.md`).
-**Preuve** : Humaine — la distinction demande une appréciation contextuelle, pas de hook automatisable.
+**Source de vérité** : Ce contrat (rappelé dans `AGENTS.md`) ; écarts voulus entre dépôt et gabarit : `outils/miroirs.json`.
+**Preuve** : Mixte — le contrôle `miroirs-gabarit` (`outils/verifier-miroirs.mjs`) prouve qu'aucun fichier du dépôt ne diffère de son homologue du gabarit sans écart déclaré et justifié (aucune fuite silencieuse) ; demander la casquette visée avant d'agir reste une appréciation humaine.
+**Contrôle** : `miroirs-gabarit`
 **Manuel** : appréciation contextuelle du périmètre.
 **Raison** : Un changement fait sans clarifier le périmètre risque de fuiter du dogfood vers le gabarit exporté (ou l'inverse), comme déjà vu pour le job CI de release (dogfood-only, pas destiné au gabarit).
 
