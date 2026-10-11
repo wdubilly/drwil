@@ -46,6 +46,8 @@ tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
 de `docs/projets/adopter-seuil-couverture.md`) ; non-régression continue ;
 CLI testée depuis le tarball (journal, 2026-10-11).
 
+- [ ] [IA] [P1] Gitleaks en CI : SEC-007 prouvé en CI, contrôle tarball
+  vert (relevé sur la PR #50) — `docs/projets/gitleaks-en-ci.md`.
 - [ ] [humain] [P1] Protéger master : approbation humaine exigée sur les
   PR (aujourd'hui 0) et compte machine de l'agent (lot 3) (v1:GIT-004,
   v1:COD-010, v1:HOOK-014) — `docs/projets/proteger-master.md`.
