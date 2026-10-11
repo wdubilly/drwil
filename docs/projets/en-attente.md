@@ -84,10 +84,14 @@ session (`node outils/consommation.mjs`, journal du 2026-10-11).
 
 ## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 
-- [ ] [décision] [P1] Supprimer la duplication dépôt / gabarit (le dépôt
-  s'installe lui-même, ou hooks générés au build) ; le contrôle
-  `miroirs-gabarit` sert de filet pendant la bascule (v1:INI-003,
-  v1:INI-005) — voir `docs/projets/journal.md` (2026-10-11).
+Ordre décidé le 2026-10-12 (demandeur) : duplication, puis refactor, puis
+anglais (avec `DRWIL-012`), puis fluidité et voie légère, puis vue de
+relecture.
+
+- [ ] [IA] [P1] Supprimer la duplication dépôt / gabarit : le dépôt
+  s'installe lui-même, copies versionnées (décidé le 2026-10-12) ; le
+  contrôle `miroirs-gabarit` sert de filet
+  (v1:INI-003, v1:INI-005) — `docs/projets/depot-installe-par-gabarit.md`.
 - [ ] [décision] [P1] Livrable en anglais seulement, mené avec la ligne
   précédente pour ne renommer qu'une fois ; la langue du projet devient un
   réglage (`lang`) — `docs/intentions/livrable-full-english.md`.
@@ -95,12 +99,13 @@ session (`node outils/consommation.mjs`, journal du 2026-10-11).
   livrés qui l'affichent (change une sortie), avec la ligne précédente —
   voir `docs/projets/journal.md` (2026-10-11).
 - [ ] [décision] [P1] Refactoriser `packages/drwil/src/index.ts`
-  (724 lignes) et `.githooks/etat.mjs` (533 lignes) selon la recette ;
+  (810 lignes le 2026-10-12) et `.githooks/etat.mjs` (607 lignes) selon la recette ;
   adopter le garde-fou de taille livré (`catalogue:QUA-001`) —
   `docs/recettes/refactorer-sans-casser.md`.
-- [ ] [décision] [P1] Fluidité sans perte de rigueur, dont qui décide
-  chaque transition (agent ou humain), déclaré et affiché (v1:CTR-015,
-  v1:GOV-002) — `docs/intentions/fluidite-sans-perte-de-rigueur.md`.
+- [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
+  regroupement (PR, attestations) et qui décide chaque transition (agent ou
+  humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
+  `docs/intentions/fluidite-sans-perte-de-rigueur.md`.
 - [ ] [décision] [P1] Vue de relecture : montrer à l'humain ce qui demande
   son jugement dans une PR (décisions, cadrage, règles, preuves,
   exceptions) — `docs/intentions/vue-de-relecture.md`.

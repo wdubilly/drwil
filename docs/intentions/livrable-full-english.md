@@ -1,7 +1,7 @@
 # Intention : le livrable drwil entièrement en anglais
 
-**Statut** (2026-10-11) : à cadrer — questions 1, 4 et 5 tranchées ;
-restent le vocabulaire, la compatibilité et le découpage.
+**Statut** (2026-10-12) : à cadrer — questions 1, 3, 4 et 5 tranchées ;
+restent le vocabulaire et le découpage.
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (le livrable touche
 `.githooks/`, l'état `.drwil/` et la CI des projets qui l'adoptent).
@@ -75,7 +75,14 @@ convention de langue des commits proposée aux projets.
 - **Ordre** (question 5) : la publication passe en dernier (vague 7 de
   `docs/projets/en-attente.md`) ; l'anglais se fait **avec la suppression
   de la duplication dépôt / gabarit** (vague 4), pour ne renommer qu'une
-  fois.
+  fois. Précisé le 2026-10-12 : le dépôt s'installe depuis le gabarit
+  (`docs/projets/depot-installe-par-gabarit.md`), puis refactor, puis
+  anglais ; le renommage ne se fait donc qu'une fois, dans le gabarit.
+- **Compatibilité** (question 3, 2026-10-12) : **migration en une fois**
+  par `drwil init` / `apply` (état, clés de configuration, blocs
+  `cadrage`, trailers), sans alias. Raison : rien n'est encore publié sur
+  npm, presque aucun projet n'est concerné, et des alias seraient du code
+  en double à maintenir et à tester.
 
 ## Questions à trancher
 
@@ -86,7 +93,8 @@ convention de langue des commits proposée aux projets.
 2. **Vocabulaire** : traductions de référence pour fiche, chantier,
    cadrage, attente, intention, recette, contrat — un glossaire à fixer
    avant tout renommage.
-3. **Compatibilité** : lecture des anciens noms (activités, clés, bloc
+3. ~~**Compatibilité**~~ — tranchée le 2026-10-12 (voir « Décisions »).
+   Texte d'origine : lecture des anciens noms (activités, clés, bloc
    `cadrage`, trailer) en alias pendant une période, ou migration en une
    fois par `drwil init` / `apply` ?
 4. ~~**Ce dépôt**~~ — tranchée le 2026-10-11 (voir « Décisions »).
@@ -99,3 +107,9 @@ convention de langue des commits proposée aux projets.
    la première publication évite une migration aux premiers adoptants.
 6. **Découpage** : par couche (docs, puis CLI, puis hooks et état) ou par
    fonctionnalité, avec quels lots livrables séparément ?
+7. **Langue des fichiers installés dans ce dépôt** (posée le 2026-10-12) :
+   le dépôt s'installe depuis le gabarit
+   (`docs/projets/depot-installe-par-gabarit.md`) ; ses recettes et
+   `docs/ia-first.md` deviendront donc anglais, alors que ses fiches,
+   intentions et journal restent en français (question 4). Accepté tel
+   quel, ou recettes du dépôt déclarées en écart ?
