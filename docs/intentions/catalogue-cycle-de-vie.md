@@ -347,6 +347,17 @@ et doit le déclarer (v1:X-010).
 8. ~~Correspondance de QUA-018~~ — tranchée le 2026-10-11 : règle locale
    du profil DOGFOODING (voir « Décisions prises »).
 
+## Ordre proposé
+
+Le catalogue n'est pas un chantier unique : il se réalise au fil de la
+feuille de route, dont l'ordre vit dans une seule source, l'index
+`docs/projets/en-attente.md` (section « Ordre de réalisation », décidée le
+2026-10-11). Chaque chantier y cite les contrats `v1:` qu'il rend réels ;
+le **format** du catalogue (JSON, schéma, statuts) est en vague 4, avant
+toute publication npm, parce qu'il casse une compatibilité ; les contrats
+humains (v1:GOV, v1:IP, v1:DAT, v1:OPS) deviennent ensuite des listes de
+questions par profil.
+
 ## Critères de sortie du cadrage
 
 Aucune implémentation ne commence avant que **tous** soient remplis :
