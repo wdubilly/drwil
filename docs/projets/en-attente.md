@@ -43,14 +43,12 @@ après la vague 5.
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
-de `docs/projets/adopter-seuil-couverture.md`) ; non-régression continue
-(journal, 2026-10-11).
+de `docs/projets/adopter-seuil-couverture.md`) ; non-régression continue ;
+CLI testée depuis le tarball (journal, 2026-10-11).
 
 - [ ] [humain] [P1] Protéger master : approbation humaine exigée sur les
   PR (aujourd'hui 0) et compte machine de l'agent (lot 3) (v1:GIT-004,
   v1:COD-010, v1:HOOK-014) — `docs/projets/proteger-master.md`.
-- [ ] [IA] [P1] Tester la CLI installée depuis le tarball, comme un
-  utilisateur (v1:PKG-005, v1:PKG-004) — `docs/projets/tester-tarball.md`.
 
 ## Vague 3 — restructurations, protégées par les filets
 
