@@ -1,6 +1,6 @@
 # Projet : dépôt et gabarit identiques, vérifié mécaniquement
 
-**Statut** : cadré le 2026-10-10 — décisions prises, lot 1 à lancer.
+**Statut** : en cours depuis le 2026-10-11 — lots 1 et 2 réalisés sur la branche `chantier/depot-gabarit-identiques` ; QUA-018 à ré-attester par le demandeur, puis vérification et clôture.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -107,6 +107,12 @@ en CI.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
+- **Dernier état** (2026-10-11) : lot 1 (contrôle `miroirs-gabarit`,
+  77 fichiers comparés) et lot 2 (7 écarts traités : 3 alignés côté
+  dépôt, 1 corrigé dans le gabarit FR et EN, 4 déclarés par construction ;
+  16 écarts déclarés au total) commités ; QUA-018 prouvé en partie par le
+  contrôle.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] `/drwil-lancer`.
+- **Prochaine étape** : [humain] ré-attester QUA-018 (empreinte changée) ;
+  puis [IA] `drwil verify`, clôture et fusion automatique (autorisée au
+  lancement).
