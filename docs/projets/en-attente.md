@@ -37,12 +37,10 @@ d'abord, d'où les seuils de couverture (vague 2) avant le refactoring de
 Ordre interne, dans l'ordre des lignes ci-dessous (décidé le 2026-10-11 ;
 à priorité égale, `/drwil-lancer` trie par nom de fichier : l'agent
 recommande la première fiche prête de cette liste). Faits, dans l'ordre :
-la règle `git -c`, puis SEC-006 outillé (voir `docs/projets/journal.md`).
+la règle `git -c`, SEC-006 outillé, la carte du dépôt (voir
+`docs/projets/journal.md`).
 Le README est reporté après la vague 5.
 
-- [ ] [IA] [P0] Personnaliser `docs/architecture.md` du dépôt, resté au
-  modèle d'installation (v1:DOC-005, v1:ARC-001) —
-  `docs/projets/architecture-depot.md`.
 - [ ] [IA] [P0] Programmer la fusion automatique avant de revenir en
   CADRAGE (ordre sûr dans la consigne) ; vérifier d'abord ce qui est déjà
   fait — `docs/projets/consigne-fusion-auto.md`.
