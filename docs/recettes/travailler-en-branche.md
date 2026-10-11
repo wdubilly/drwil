@@ -27,6 +27,9 @@ principale.
   la fusion réelle faite. Un index (`docs/projets/en-attente.md`) qui
   coche une case avant la fusion serait incohérent avec l'état réel de la
   branche principale.
+- Dans ce dépôt, un fichier livré se modifie dans le gabarit
+  (`packages/drwil/templates/`) seulement, puis `npm run installer-depot`
+  en rafraîchit la copie installée, dans le même commit.
 
 ## Ouvrir la pull/merge request
 

@@ -17,7 +17,7 @@
     "docs/projets/mecanique-ia-first.md": "Le cadrage du dépôt couvre en plus ses fichiers non livrés (tests des hooks, outils, modules optionnels installés).",
     "docs/projets/modele-fiche-projet.md": "Renvoie à DRWIL-012 : la doc ia-first du dépôt est un résumé, sans la section 7 à laquelle renvoie le gabarit.",
     "docs/recettes/creer-une-release.md": "Adaptée au dépôt : le module de release y est déjà activé, et le paquet empaqueté est packages/drwil.",
-    "docs/recettes/travailler-en-branche.md": "Une phrase propre au dépôt : ses checks sont aussi imposés côté forge (ruleset de master)."
+    "docs/recettes/travailler-en-branche.md": "Deux phrases propres au dépôt : ses checks sont aussi imposés côté forge (ruleset de master), et un fichier livré s'y modifie dans le gabarit puis s'installe (npm run installer-depot)."
   },
   "propresAuDepot": {
     ".githooks/*.test.mjs": "Tests des hooks : éprouvent drwil ici, non livrés (principe « livrable léger, dépôt éprouvé », 2026-10-11).",
