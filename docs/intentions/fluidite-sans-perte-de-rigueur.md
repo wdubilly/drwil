@@ -1,7 +1,10 @@
 # Intention : fluidité sans perte de rigueur — solliciter l'humain juste
 
-**Statut** (2026-10-10) : à cadrer — intention posée par le demandeur,
-questions à trancher en fin de fiche.
+**Statut** (2026-10-12) : en partie réalisée — leviers 1 (lancer en un
+geste, clôture sur évidence de verify), 2 (décision lue par un hook, via
+`/drwil-lancer`) et 7 (rappel de l'état) faits le 2026-10-10, voir
+`docs/projets/journal.md` ; restent les questions 3 et 4, et l'affichage
+de qui décide chaque transition.
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (touche aux transitions
 humaines de la gouvernance).
@@ -70,11 +73,13 @@ hors du poste) en sollicitant l'humain **moins souvent et au bon moment**.
 
 ## Questions à trancher
 
-1. **Levier 1** : fusionner ATTENTE, DEMANDE et REALISATION en un seul
+1. ~~**Levier 1**~~ — tranchée le 2026-10-10 (journal, « Fluidité, levier 1 »).
+   Texte d'origine : fusionner ATTENTE, DEMANDE et REALISATION en un seul
    geste humain ? Rendre la clôture mécanique, la fusion de la PR tenant
    lieu de décision humaine ? (le levier le plus rentable : il supprime à
    lui seul la moitié des allers-retours au terminal)
-2. **Levier 2** : la décision par hook de saisie est-elle une garantie
+2. ~~**Levier 2**~~ — tranchée le 2026-10-10 (journal, « Fluidité, levier 1 »).
+   Texte d'origine : la décision par hook de saisie est-elle une garantie
    suffisante pour remplacer le terminal dans Claude Code ?
 3. **Levier 3** : une PR par session, ou une par chantier ? Attestation
    groupée : oui ou non ?
