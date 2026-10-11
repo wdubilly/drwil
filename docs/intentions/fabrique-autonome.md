@@ -85,7 +85,7 @@ fiches (DRWIL-012, niveaux de risque).
    (`docs/intentions/bench-avec-sans-drwil.md`).
 
 Précisé le 2026-10-11 (demandeur) : **mesurer avant de construire**. La
-mesure de la consommation (`docs/projets/mesurer-consommation.md`) et un
+mesure de la consommation (faite : `outils/consommation.mjs`) et un
 mini-banc avec / sans drwil (`docs/projets/mini-banc.md`) passent avant
 les restructurations (vague 3 de `docs/projets/en-attente.md`) ; les
 étapes 2 à 5 se décident ensuite sur ces chiffres. La fabrique passe **avant

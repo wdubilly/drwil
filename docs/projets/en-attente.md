@@ -75,9 +75,12 @@ Reporté par le demandeur le 2026-10-11 : la protection de master.
 
 ## Vague 3 — mesurer avant de construire
 
-- [ ] [IA] [P1] Mesurer la consommation de tokens par chantier, sans
-  saisie (journaux de session, une branche par chantier) —
-  `docs/projets/mesurer-consommation.md`.
+Fait : consommation de tokens par chantier, lue dans les journaux de
+session (`node outils/consommation.mjs`, journal du 2026-10-11).
+
+- [ ] [décision] [P1] Écrire automatiquement la consommation d'un chantier
+  à sa clôture (lot 2 de la mesure), une fois les chiffres jugés fiables —
+  voir `docs/projets/journal.md` (2026-10-11).
 - [ ] [IA] [P1] Mini-banc avec / sans drwil : 2 tâches, 3
   répétitions, juge indépendant, tokens mesurés —
   `docs/projets/mini-banc.md`.
