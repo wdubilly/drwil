@@ -1,7 +1,6 @@
 {
   "version": 1,
   "ecarts": {
-    ".claude/settings.json": "À aligner (lot 2) : le dépôt utilise les réglages qu'il livre (décision du 2026-10-10).",
     ".github/workflows/ia-first.yml": "CI du gabarit plus les jobs propres au dépôt (matrice kit-tests sur 3 OS, vérification du ruleset).",
     ".gitignore": "Entrées propres au dépôt (rapport de couverture, documents internes, évidences).",
     "AGENTS.md": "Consignes propres à chaque projet (le gabarit n'en est que la base).",
@@ -10,15 +9,13 @@
     "docs/catalogue-contrats.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : catalogue:QUA-004 adopté par ce dépôt, donc retiré de son catalogue.",
     "docs/contrats.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : registre des contrats de drwil.",
     "docs/ia-first.md": "Résumé de 17 lignes dans le dépôt, renvoi vers la doc complète du gabarit.",
-    "docs/intentions/README.md": "À aligner (lot 2) : la copie du dépôt a perdu la présentation et le modèle de fiche du gabarit.",
+    "docs/intentions/README.md": "Table des fiches remplacée par un renvoi à l'index des chantiers (une information, une seule source).",
     "docs/projets/en-attente.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : index des chantiers de drwil.",
     "docs/projets/entretien-courant.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : entrées d'entretien de drwil.",
     "docs/projets/journal.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : chantiers clôturés de drwil.",
     "docs/projets/mecanique-ia-first.md": "Le cadrage du dépôt couvre en plus ses fichiers non livrés (tests des hooks, outils, modules optionnels installés).",
-    "docs/projets/modele-fiche-projet.md": "À aligner (lot 2) : renvoi au niveau de risque formulé différemment.",
-    "docs/recettes/creer-une-release.md": "À aligner (lot 2).",
-    "docs/recettes/deployer-en-prod.md": "À aligner (lot 2).",
-    "docs/recettes/refactorer-sans-casser.md": "À aligner (lot 2).",
-    "docs/recettes/travailler-en-branche.md": "À aligner (lot 2) : la recette du gabarit omet le job alerter-si-ci-cassee qu'il livre."
+    "docs/projets/modele-fiche-projet.md": "Renvoie à DRWIL-012 : la doc ia-first du dépôt est un résumé, sans la section 7 à laquelle renvoie le gabarit.",
+    "docs/recettes/creer-une-release.md": "Adaptée au dépôt : le module de release y est déjà activé, et le paquet empaqueté est packages/drwil.",
+    "docs/recettes/travailler-en-branche.md": "Une phrase propre au dépôt : ses checks sont aussi imposés côté forge (ruleset de master)."
   }
 }
