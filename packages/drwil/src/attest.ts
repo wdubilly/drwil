@@ -43,9 +43,13 @@ export async function attester(o: AttestOptions): Promise<ResultatAttestation> {
   const k = v.contrats.find((c) => c.id === o.id);
   if (!k) return { code: 2, message: `contrat inconnu : ${o.id}` };
   if (k.statut === "PASS") return { code: 1, message: `${o.id} est déjà prouvé automatiquement (PASS) : rien à attester` };
-  if (k.statut === "ATTESTED") return { code: 1, message: `${o.id} a déjà une attestation valide (${k.attestation?.attestedAt}) : rien à attester` };
+  if (k.statut === "ATTESTED")
+    return { code: 1, message: `${o.id} a déjà une attestation valide (${k.attestation?.attestedAt}) : rien à attester` };
   if (!k.attestable) {
-    return { code: 1, message: `${o.id} n'est pas attestable (${k.statut}) : seule une partie humaine restante s'atteste, jamais un contrôle en échec, non exécuté ou non applicable — ${k.raisons.join(" ; ")}` };
+    return {
+      code: 1,
+      message: `${o.id} n'est pas attestable (${k.statut}) : seule une partie humaine restante s'atteste, jamais un contrôle en échec, non exécuté ou non applicable — ${k.raisons.join(" ; ")}`,
+    };
   }
   if (!(await o.confirmer(resumeContrat(k)))) return { code: 1, message: "attestation refusée : rien n'a été enregistré" };
 

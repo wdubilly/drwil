@@ -62,7 +62,10 @@ test("en anglais : échecs listés (message du contrôle ou son nom), aucun cont
     { docsOk: false, env: { DRWIL_HOOK: "pre-commit" }, indexer: ["src/a.js"] },
   );
   assert.equal(r.status, 1);
-  assert.match(r.stdout, /^\[ia-first\] ⚠ not run: project checks \(lint, tests…\) \(none declared in \.drwil\/ia-first\.json → checks\)$/m);
+  assert.match(
+    r.stdout,
+    /^\[ia-first\] ⚠ not run: project checks \(lint, tests…\) \(none declared in \.drwil\/ia-first\.json → checks\)$/m,
+  );
   assert.match(r.stdout, /^\[ia-first\] ✗ failed: paths and contracts cited in docs$/m);
   assert.match(r.stdout, /^\[ia-first\] ✗ failed: expectation scope: 1 problem\(s\) \(blocking barrier\)$/m);
   assert.doesNotMatch(r.stdout, /checks run: OK/);

@@ -63,12 +63,19 @@ function chemin({ gh = null, npm = null } = {}) {
   }
   return outils;
 }
-const lancer = (racine, args, PATH) => spawnSync(process.execPath, [SCRIPT, ...args], { cwd: racine, encoding: "utf8", env: { ...process.env, PATH } });
+const lancer = (racine, args, PATH) =>
+  spawnSync(process.execPath, [SCRIPT, ...args], { cwd: racine, encoding: "utf8", env: { ...process.env, PATH } });
 
 test("detecterBump : rien sans commit, patch par défaut, minor sur feat, major sur rupture", () => {
   assert.equal(detecterBump([]), null);
   assert.equal(detecterBump([{ sujet: "divers", corps: "" }]), "patch");
-  assert.equal(detecterBump([{ sujet: "feat(x): a", corps: "" }, { sujet: "fix: b", corps: "" }]), "minor");
+  assert.equal(
+    detecterBump([
+      { sujet: "feat(x): a", corps: "" },
+      { sujet: "fix: b", corps: "" },
+    ]),
+    "minor",
+  );
   assert.equal(detecterBump([{ sujet: "fix!: a", corps: "" }]), "major");
   assert.equal(detecterBump([{ sujet: "fix: a", corps: "BREAKING CHANGE: b" }]), "major");
   assert.equal(detecterBump([{ sujet: "BREAKING CHANGE partout", corps: "" }]), "major");
@@ -89,9 +96,15 @@ test("deciderVersion : commits seuls, paquets en désaccord, non semver, tag exi
   assert.match(deciderVersion({ bump: "patch", versions: [v("1.0.0", "a"), v("2.0.0", "b")] }).erreur, /désaccord.*a@1\.0\.0, b@2\.0\.0/);
   assert.match(deciderVersion({ bump: "patch", versions: [v(null)] }).erreur, /non semver \(null\) dans p\/package\.json/);
   assert.match(deciderVersion({ bump: "patch", versions: [v("1.0.0")], tagsExistants: ["v1.0.0"] }).erreur, /v1\.0\.0 existe déjà/);
-  assert.match(deciderVersion({ dernier: "v1.0.1", bump: "patch", versions: [v("1.0.0")] }).erreur, /n'est pas supérieure au dernier tag v1\.0\.1/);
+  assert.match(
+    deciderVersion({ dernier: "v1.0.1", bump: "patch", versions: [v("1.0.0")] }).erreur,
+    /n'est pas supérieure au dernier tag v1\.0\.1/,
+  );
   assert.match(deciderVersion({ dernier: "v1.0.0", bump: "patch", versions: [v("1.0.0")] }).erreur, /n'est pas supérieure/);
-  assert.deepEqual(deciderVersion({ dernier: "v0.9.9", bump: "patch", versions: [v("1.0.0", "a"), v("1.0.0", "b")] }), { prochain: "v1.0.0", source: "package.json (a, b)" });
+  assert.deepEqual(deciderVersion({ dernier: "v0.9.9", bump: "patch", versions: [v("1.0.0", "a"), v("1.0.0", "b")] }), {
+    prochain: "v1.0.0",
+    source: "package.json (a, b)",
+  });
   assert.deepEqual(deciderVersion({ dernier: "vx", bump: "patch", versions: [v("1.0.0")] }).prochain, "v1.0.0");
 });
 
@@ -128,7 +141,10 @@ test("importé, le script ne lance rien ; lancé sans commit depuis le dernier t
 });
 
 test("release refusée : paquets en désaccord", () => {
-  const { racine } = depot({ "a/package.json": JSON.stringify({ name: "a", version: "1.0.0" }), "b/package.json": JSON.stringify({ name: "b", version: "2.0.0" }) });
+  const { racine } = depot({
+    "a/package.json": JSON.stringify({ name: "a", version: "1.0.0" }),
+    "b/package.json": JSON.stringify({ name: "b", version: "2.0.0" }),
+  });
   const r = lancer(racine, ["--dry-run"], process.env.PATH);
   assert.equal(r.status, 1);
   assert.match(r.stdout, /dernier tag : \(aucun\)/);
@@ -143,7 +159,10 @@ test("--dry-run : version calculée, rien créé (avec et sans paquet)", () => {
   git(sans.racine, "commit", "-q", "-m", "fix: b", "-m", "corps");
   let r = lancer(sans.racine, ["--dry-run"], process.env.PATH);
   assert.equal(r.status, 0, r.stderr);
-  assert.match(r.stdout, /dernier tag : v1\.0\.0\n.*bump détecté : patch \(1 commit\(s\) analysé\(s\)\)\n.*prochaine version : v1\.0\.1 \(source : commits\)\n.*--dry-run/);
+  assert.match(
+    r.stdout,
+    /dernier tag : v1\.0\.0\n.*bump détecté : patch \(1 commit\(s\) analysé\(s\)\)\n.*prochaine version : v1\.0\.1 \(source : commits\)\n.*--dry-run/,
+  );
   assert.equal(git(sans.racine, "tag", "-l"), "v1.0.0");
   const avec = depot({ "a/package.json": JSON.stringify({ name: "a", version: "0.2.0" }) });
   r = lancer(avec.racine, ["--dry-run"], process.env.PATH);

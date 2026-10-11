@@ -46,7 +46,9 @@ function avecEnv(valeurs, fn) {
     Object.assign(process.env, avant);
   }
 }
-const dossierGit = dirname(spawnSync(process.platform === "win32" ? "where" : "which", ["git"], { encoding: "utf8" }).stdout.split(/\r?\n/)[0]);
+const dossierGit = dirname(
+  spawnSync(process.platform === "win32" ? "where" : "which", ["git"], { encoding: "utf8" }).stdout.split(/\r?\n/)[0],
+);
 /** gitleaks factice : note ses arguments et réussit. */
 function fauxGitleaks(dossier) {
   const chemin = join(dossier, "gitleaks");
@@ -94,7 +96,10 @@ test("secrets : indexés seulement au commit, tout l'historique en CI ; ~/.local
     assert.equal(executer(racine, "secrets-fichiers", { env: {} }).statut, "ok");
     assert.equal(executer(racine, "secrets-fichiers", { env: { CI: "true" } }).statut, "ok");
   });
-  const appels = spawnSync("cat", [join(outils, "appels")], { encoding: "utf8" }).stdout.trim().split("\n").filter((l) => l !== "version");
+  const appels = spawnSync("cat", [join(outils, "appels")], { encoding: "utf8" })
+    .stdout.trim()
+    .split("\n")
+    .filter((l) => l !== "version");
   assert.match(appels[0], /--pre-commit --staged/);
   assert.doesNotMatch(appels[1], /--staged/);
 });
@@ -117,7 +122,10 @@ test("docs-references : lance check-docs du projet ; son échec remonte", () => 
   assert.equal(executer(racine, "docs-references").statut, "echec");
   ecrire(racine, ".githooks/check-docs.mjs", "console.log('vu')\n");
   const annonces = [];
-  assert.deepEqual(executer(racine, "docs-references", {}, { stdio: "pipe", avantLancement: (n) => annonces.push(n) }), { statut: "ok", sortie: "vu\n" });
+  assert.deepEqual(executer(racine, "docs-references", {}, { stdio: "pipe", avantLancement: (n) => annonces.push(n) }), {
+    statut: "ok",
+    sortie: "vu\n",
+  });
   assert.deepEqual(annonces, ["chemins et contrats cités dans la doc"]);
 });
 
@@ -125,7 +133,12 @@ test("périmètre : bloquant = échec marqué ✗, avertissement = ok marqué �
   const racine = depot();
   const indexes = ["src/a.js"];
   const annonces = [];
-  const bloque = executer(racine, "perimetre-attente", { cfg: { barriere: "bloquant" }, indexes }, { stdio: "pipe", avantLancement: (n) => annonces.push(n) });
+  const bloque = executer(
+    racine,
+    "perimetre-attente",
+    { cfg: { barriere: "bloquant" }, indexes },
+    { stdio: "pipe", avantLancement: (n) => annonces.push(n) },
+  );
   assert.equal(bloque.statut, "echec");
   assert.match(bloque.sortie, /^ {2}✗ /);
   assert.deepEqual(annonces, ["périmètre de l'attente"]);
@@ -146,7 +159,10 @@ test("périmètre : bloquant = échec marqué ✗, avertissement = ok marqué �
 
 test("branche principale : refusée hors CI, tolérée pour un push sans branche, hors dépôt git", () => {
   assert.equal(executer(depot("master"), "branche-principale", { env: {} }).statut, "echec");
-  assert.match(executer(depot("main"), "branche-principale", { env: {}, cfg: { lang: "en" } }).message, /^direct work on the main branch \(main\)/);
+  assert.match(
+    executer(depot("main"), "branche-principale", { env: {}, cfg: { lang: "en" } }).message,
+    /^direct work on the main branch \(main\)/,
+  );
   assert.deepEqual(executer(depot("travail"), "branche-principale", { env: {} }), { statut: "ok" });
   assert.deepEqual(executer(tmp(), "branche-principale", { env: {} }), { statut: "ok" });
   const maitre = depot("master");
@@ -177,7 +193,13 @@ test("contrôles du projet : identifiant, nom, report au commit hors chemins, cw
   ecrire(racine, "sous/marque.js", "");
   const cfg = {
     checks: [
-      { id: "nomme", name: "Nommé", run: "node -e \"process.exit(require('fs').existsSync('marque.js') ? 0 : 1)\"", cwd: "sous", chemins: ["src/**"] },
+      {
+        id: "nomme",
+        name: "Nommé",
+        run: "node -e \"process.exit(require('fs').existsSync('marque.js') ? 0 : 1)\"",
+        cwd: "sous",
+        chemins: ["src/**"],
+      },
       { run: "node -e 0", chemins: [] },
     ],
   };
@@ -185,7 +207,10 @@ test("contrôles du projet : identifiant, nom, report au commit hors chemins, cw
   assert.equal(sans.nomme.nom, "Nommé");
   assert.equal(sans.nomme.executer({ stdio: "pipe" }).statut, "ok");
   const reporte = parId(controles(racine, { cfg, indexes: ["docs/a.md"] }));
-  assert.deepEqual(reporte.nomme.executer(), { statut: "non-execute", detail: "aucun fichier indexé sous ses chemins : rejoué au push et en CI" });
+  assert.deepEqual(reporte.nomme.executer(), {
+    statut: "non-execute",
+    detail: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
+  });
   assert.equal(reporte["projet:node -e 0"].executer({ stdio: "pipe" }).statut, "ok");
   const touche = parId(controles(racine, { cfg, indexes: ["src/x/y.js"] }));
   assert.equal(touche.nomme.executer({ stdio: "pipe" }).statut, "ok");

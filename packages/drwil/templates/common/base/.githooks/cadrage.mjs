@@ -43,7 +43,10 @@ export function estDuCode(chemin, cfg = {}) {
 
 /** Façon fnmatch : `*` et `?` traversent les `/`, le reste est littéral. */
 export function fnmatch(chemin, motif) {
-  const re = motif.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".");
+  const re = motif
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*")
+    .replace(/\?/g, ".");
   return new RegExp(`^${re}$`).test(chemin);
 }
 

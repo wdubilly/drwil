@@ -70,7 +70,8 @@ test("projet complet en français : index, fiches et lots, contrats, audits, con
         JSON.stringify({ chantier: "a", tokens: "x", modele: "m2" }),
         JSON.stringify({ chantier: "b" }),
       ].join("\n"),
-      "docs/audit-risques.md": "# Audit risques\n\n> Dernier scan : 2020-01-01\n> suite de la valeur\n> Périmètre : tout\n\n> hors du premier bloc : x\n",
+      "docs/audit-risques.md":
+        "# Audit risques\n\n> Dernier scan : 2020-01-01\n> suite de la valeur\n> Périmètre : tout\n\n> hors du premier bloc : x\n",
       "docs/decouverte-valeur.md": "> sans deux-points\n> Dernier scan : jamais\n",
     },
     ["docs/sortie.html"],

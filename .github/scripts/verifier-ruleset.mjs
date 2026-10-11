@@ -18,14 +18,25 @@ const gh = (...args) => JSON.parse(execFileSync("gh", ["api", ...args], { encodi
 
 /** Forme comparable : champs utiles seulement, clés triées, règles triées par type. */
 function normaliser(ruleset) {
-  const trier = (v) => (Array.isArray(v) ? v.map(trier) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, trier(v[k])])) : v);
+  const trier = (v) =>
+    Array.isArray(v)
+      ? v.map(trier)
+      : v && typeof v === "object"
+        ? Object.fromEntries(
+            Object.keys(v)
+              .sort()
+              .map((k) => [k, trier(v[k])]),
+          )
+        : v;
   const choisi = Object.fromEntries(CHAMPS.filter((c) => c in ruleset).map((c) => [c, ruleset[c]]));
   if (Array.isArray(choisi.rules)) choisi.rules = [...choisi.rules].sort((a, b) => String(a.type).localeCompare(String(b.type)));
   return trier(choisi);
 }
 
 function principal() {
-  const depot = process.env.GITHUB_REPOSITORY || execFileSync("gh", ["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"], { encoding: "utf8" }).trim();
+  const depot =
+    process.env.GITHUB_REPOSITORY ||
+    execFileSync("gh", ["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"], { encoding: "utf8" }).trim();
   const attendu = JSON.parse(readFileSync(FICHIER, "utf8"));
   const resume = gh(`repos/${depot}/rulesets`).find((r) => r.name === attendu.name);
   if (!resume) {

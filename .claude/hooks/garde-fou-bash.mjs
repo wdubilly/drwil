@@ -15,7 +15,10 @@ import { pathToFileURL } from "node:url";
 const AVANT = "(?<![\\w$\\\\])";
 const RISQUES = [
   // .env et .env.<suffixe>, mais pas .env.example ni .env.template (versionnés).
-  [new RegExp(`${AVANT}\\.env(?:\\.(?!example\\b|template\\b)[\\w-]+)?(?![\\w.-])`), "fichier .env (secrets) : utiliser .env.example, versionné et sans secret"],
+  [
+    new RegExp(`${AVANT}\\.env(?:\\.(?!example\\b|template\\b)[\\w-]+)?(?![\\w.-])`),
+    "fichier .env (secrets) : utiliser .env.example, versionné et sans secret",
+  ],
   // Clé SSH privée, nom complet (id_rsa_x compris), pas la clé publique.
   [/\bid_(?:rsa|ed25519|ecdsa|dsa)[\w-]*(?![\w-]|\.pub)/, "clé SSH privée"],
   [/[\w-]\.(?:pem|p12|pfx|jks)(?![\w.])/, "fichier de clé ou de certificat"],
@@ -52,7 +55,9 @@ export { raison, main };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   let entree = "";
-  process.stdin.on("data", (d) => { entree += d; });
+  process.stdin.on("data", (d) => {
+    entree += d;
+  });
   process.stdin.on("end", () => {
     const sortie = main(entree);
     if (sortie) console.log(sortie);

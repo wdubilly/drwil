@@ -24,7 +24,10 @@ function dernierTag() {
   try {
     // stderr capturé (pas "inherit") : l'absence de tag est l'état normal
     // d'un premier appel, pas une erreur à afficher à l'utilisateur.
-    return execFileSync("git", ["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return execFileSync("git", ["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
   } catch {
     return null; // aucun tag : première release
   }
@@ -61,9 +64,16 @@ export function detecterBump(commits) {
 export function versionSuivante(tag, bump) {
   const base = tag ? tag.replace(/^v/, "") : "0.0.0";
   let [maj, min, pat] = base.split(".").map((n) => parseInt(n, 10) || 0);
-  if (bump === "major") { maj += 1; min = 0; pat = 0; }
-  else if (bump === "minor") { min += 1; pat = 0; }
-  else { pat += 1; }
+  if (bump === "major") {
+    maj += 1;
+    min = 0;
+    pat = 0;
+  } else if (bump === "minor") {
+    min += 1;
+    pat = 0;
+  } else {
+    pat += 1;
+  }
   return `v${maj}.${min}.${pat}`;
 }
 
@@ -105,7 +115,11 @@ export function versionsPaquets(dossiers) {
 }
 
 function comparer(a, b) {
-  const p = (v) => v.replace(/^v/, "").split(".").map((n) => parseInt(n, 10) || 0);
+  const p = (v) =>
+    v
+      .replace(/^v/, "")
+      .split(".")
+      .map((n) => parseInt(n, 10) || 0);
   const [x, y] = [p(a), p(b)];
   for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] - y[i];
   return 0;
@@ -118,12 +132,17 @@ export function deciderVersion({ dernier, bump, versions = [], tagsExistants = [
   if (!bump) return null;
   if (!versions.length) return { prochain: dernier ? versionSuivante(dernier, bump) : "v0.1.0", source: "commits" };
   const distinctes = [...new Set(versions.map((v) => v.version))];
-  if (distinctes.length > 1) return { erreur: `paquets en désaccord sur la version (${versions.map((v) => `${v.dossier}@${v.version}`).join(", ")}) : les aligner dans une PR` };
-  if (!/^\d+\.\d+\.\d+$/.test(distinctes[0] ?? "")) return { erreur: `version de paquet absente ou non semver (${distinctes[0]}) dans ${versions[0].dossier}/package.json` };
+  if (distinctes.length > 1)
+    return {
+      erreur: `paquets en désaccord sur la version (${versions.map((v) => `${v.dossier}@${v.version}`).join(", ")}) : les aligner dans une PR`,
+    };
+  if (!/^\d+\.\d+\.\d+$/.test(distinctes[0] ?? ""))
+    return { erreur: `version de paquet absente ou non semver (${distinctes[0]}) dans ${versions[0].dossier}/package.json` };
   const prochain = `v${distinctes[0]}`;
   const corriger = "changer la version dans une PR (npm version patch|minor|major --no-git-tag-version)";
   if (tagsExistants.includes(prochain)) return { erreur: `${prochain} existe déjà : ${corriger}` };
-  if (dernier && comparer(prochain, dernier) <= 0) return { erreur: `${prochain} n'est pas supérieure au dernier tag ${dernier} : ${corriger}` };
+  if (dernier && comparer(prochain, dernier) <= 0)
+    return { erreur: `${prochain} n'est pas supérieure au dernier tag ${dernier} : ${corriger}` };
   return { prochain, source: `package.json (${versions.map((v) => v.dossier).join(", ")})` };
 }
 
@@ -164,7 +183,9 @@ function main() {
     return;
   }
   const prochain = decision.prochain;
-  console.log(`[creer-release] ${paquets.length ? "suggestion d'après les commits" : "bump détecté"} : ${bump} (${commits.length} commit(s) analysé(s))`);
+  console.log(
+    `[creer-release] ${paquets.length ? "suggestion d'après les commits" : "bump détecté"} : ${bump} (${commits.length} commit(s) analysé(s))`,
+  );
   console.log(`[creer-release] prochaine version : ${prochain} (source : ${decision.source})`);
   if (paquets.length > 0) {
     console.log(`[creer-release] tarball(s) à construire et attacher à la release : ${paquets.join(", ")}`);
@@ -183,7 +204,12 @@ function main() {
     if (tarballs.length > 0) console.log(`[creer-release] tarball(s) attaché(s) à la release : ${tarballs.join(", ")}`);
   } catch (e) {
     console.error(`[creer-release] tag créé, mais la release GitHub a échoué (gh indisponible ou permission insuffisante) : ${e.message}`);
-    console.error("[creer-release] rattraper à la main : gh release create " + prochain + " --generate-notes" + (tarballs.length ? " " + tarballs.join(" ") : ""));
+    console.error(
+      "[creer-release] rattraper à la main : gh release create " +
+        prochain +
+        " --generate-notes" +
+        (tarballs.length ? " " + tarballs.join(" ") : ""),
+    );
   }
 }
 

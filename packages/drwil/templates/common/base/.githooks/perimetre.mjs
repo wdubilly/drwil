@@ -26,7 +26,8 @@ const MARQUEUR = ".githooks/perimetre.mjs";
 
 const TEXTES = {
   fr: {
-    activite: (a, n) => `${n} fichier(s) hors fiches commité(s) en ${a} : seule l'activité REALISATION l'autorise (node .githooks/etat.mjs passer …)`,
+    activite: (a, n) =>
+      `${n} fichier(s) hors fiches commité(s) en ${a} : seule l'activité REALISATION l'autorise (node .githooks/etat.mjs passer …)`,
     horsCadrage: (f, fiche) => `${f} : hors du cadrage de ${fiche} (dans HEAD) — l'ajouter au bloc cadrage et commiter la fiche d'abord`,
     sansTrailer: (c, n) => `${c} : ${n} fichier(s) hors fiches sans trailer ${TRAILER}`,
     horsCadrageCommit: (c, f, fiche) => `${c} : ${f} hors du cadrage de ${fiche} (dans le parent)`,
@@ -34,7 +35,8 @@ const TEXTES = {
     echec: (n) => `périmètre de l'attente : ${n} problème(s) (barrière bloquante)`,
   },
   en: {
-    activite: (a, n) => `${n} file(s) outside sheets committed in ${a}: only the REALISATION activity allows it (node .githooks/etat.mjs passer …)`,
+    activite: (a, n) =>
+      `${n} file(s) outside sheets committed in ${a}: only the REALISATION activity allows it (node .githooks/etat.mjs passer …)`,
     horsCadrage: (f, fiche) => `${f}: outside the cadrage of ${fiche} (in HEAD) — add it to the cadrage block and commit the sheet first`,
     sansTrailer: (c, n) => `${c}: ${n} file(s) outside sheets without a ${TRAILER} trailer`,
     horsCadrageCommit: (c, f, fiche) => `${c}: ${f} outside the cadrage of ${fiche} (in the parent)`,
@@ -90,7 +92,9 @@ function verifierBranche(racine, base, { horsPerimetre, cfg }) {
   const problemes = [];
   // Aucun repli `?? ""` sur ces appels git : ils portent sur des commits existants (base issue de
   // merge-base) ; un échec doit casser le contrôle, pas le faire passer sans rien juger (QUA-013).
-  const commits = git(racine, ["rev-list", "--no-merges", "--reverse", `${base}..HEAD`]).split("\n").filter(Boolean);
+  const commits = git(racine, ["rev-list", "--no-merges", "--reverse", `${base}..HEAD`])
+    .split("\n")
+    .filter(Boolean);
   for (const c of commits) {
     const court = c.slice(0, 7);
     // Règles du parent : sans barrière dans le parent, le commit n'est pas jugé.
@@ -98,7 +102,10 @@ function verifierBranche(racine, base, { horsPerimetre, cfg }) {
     const fichiers = git(racine, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]).split("\n").filter(Boolean);
     const soumis = horsFiches(fichiers, horsPerimetre);
     if (!soumis.length) continue;
-    const valeurs = git(racine, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c]).split("\n").map((v) => v.trim()).filter(Boolean);
+    const valeurs = git(racine, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c])
+      .split("\n")
+      .map((v) => v.trim())
+      .filter(Boolean);
     const fiche = valeurs.at(-1);
     if (!fiche) {
       problemes.push(T.sansTrailer(court, soumis.length));
@@ -136,7 +143,15 @@ export function ajouterTrailer(racine, fichierMessage) {
   if (gouvernanceDesactivee(racine)) return;
   const { etat } = lireEtat(racine);
   if (!etat.attente_active) return;
-  git(racine, ["interpret-trailers", "--in-place", "--if-exists", "replace", "--trailer", `${TRAILER}: ${etat.attente_active}`, fichierMessage]);
+  git(racine, [
+    "interpret-trailers",
+    "--in-place",
+    "--if-exists",
+    "replace",
+    "--trailer",
+    `${TRAILER}: ${etat.attente_active}`,
+    fichierMessage,
+  ]);
 }
 
 // `node .githooks/perimetre.mjs --trailer <fichier>` (prepare-commit-msg). Ne bloque jamais le commit :

@@ -61,7 +61,19 @@ function echantillon(glob) {
   return glob.replace(/\*\*/g, "a/b").replace(/\*/g, "a");
 }
 
-const NON_JOBS = new Set(["stages", "variables", "default", "include", "workflow", "image", "services", "cache", "before_script", "after_script", "types"]);
+const NON_JOBS = new Set([
+  "stages",
+  "variables",
+  "default",
+  "include",
+  "workflow",
+  "image",
+  "services",
+  "cache",
+  "before_script",
+  "after_script",
+  "types",
+]);
 
 /** Nom de job GitLab -> { toujours, changes } (rules: changes:). */
 function jobsGitlab(texte) {
@@ -169,7 +181,7 @@ function couvre(job, chemin) {
 }
 
 const ciFiles = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
-const controles = [...SOCLE, ...((Array.isArray(cfg.checks) ? cfg.checks : []).filter((c) => c.ciJob))];
+const controles = [...SOCLE, ...(Array.isArray(cfg.checks) ? cfg.checks : []).filter((c) => c.ciJob)];
 const erreurs = [];
 
 for (const fichier of ciFiles) {

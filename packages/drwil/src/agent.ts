@@ -28,18 +28,24 @@ export function formaterPourAgent(j: VerdictJson): string {
     `Verdict: ${LIBELLES[j.status] ?? j.status} (exit ${j.exitCode})`,
     `Next step: ${CONDUITE[j.status] ?? CONDUITE.error}`,
   ];
-  if (j.status === "pass" && c.attested) l.push(`Note: ${c.attested} contract(s) are satisfied by a human attestation, not by an automated proof.`);
+  if (j.status === "pass" && c.attested)
+    l.push(`Note: ${c.attested} contract(s) are satisfied by a human attestation, not by an automated proof.`);
   const bloquants = j.results.filter((r) => r.severity === "blocking");
   const liste = (statut: string) => bloquants.filter((r) => r.status === statut);
-  for (const [statut, titre] of [["fail", "Failing contracts (fix them)"], ["error", "Contracts drwil could not verify"]] as const) {
+  for (const [statut, titre] of [
+    ["fail", "Failing contracts (fix them)"],
+    ["error", "Contracts drwil could not verify"],
+  ] as const) {
     if (!liste(statut).length) continue;
     l.push("", `${titre}:`);
-    for (const r of liste(statut)) l.push(`  - ${r.id} — ${r.title}: ${r.reasons.filter((x) => !x.endsWith("ok (automatisé)")).join(" ; ")}`);
+    for (const r of liste(statut))
+      l.push(`  - ${r.id} — ${r.title}: ${r.reasons.filter((x) => !x.endsWith("ok (automatisé)")).join(" ; ")}`);
   }
   const manuels = liste("manual");
   if (manuels.length) {
     l.push("", "Human attestation required.");
-    for (const r of manuels) l.push(`  - ${r.id} — ${r.title}${r.attestable ? "" : " (not attestable as is: needs a human decision first)"}`);
+    for (const r of manuels)
+      l.push(`  - ${r.id} — ${r.title}${r.attestable ? "" : " (not attestable as is: needs a human decision first)"}`);
     l.push(
       "HUMAN ACTION — for the human, in their own interactive terminal; never run it yourself:",
       "  drwil attest <CONTRACT_ID>",
@@ -47,7 +53,8 @@ export function formaterPourAgent(j: VerdictJson): string {
     );
   }
   const informatifs = j.results.filter((r) => r.severity !== "blocking" && r.status !== "pass" && r.status !== "attested");
-  if (informatifs.length) l.push("", `Non-blocking (informational): ${informatifs.map((r) => `${r.id} ${r.status.toUpperCase()}`).join(", ")}`);
+  if (informatifs.length)
+    l.push("", `Non-blocking (informational): ${informatifs.map((r) => `${r.id} ${r.status.toUpperCase()}`).join(", ")}`);
   if (j.errors.length) l.push("", "Registry errors:", ...j.errors.map((e) => `  - ${e}`));
   return l.join("\n");
 }

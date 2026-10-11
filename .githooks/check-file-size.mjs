@@ -44,7 +44,7 @@ export function verifier({ root, maxLines, extensions, legacy }) {
       erreurs.push(
         legacy[fichier]
           ? `${fichier} : ${lignes} lignes, plafond hérité ${plafond} (ne doit plus grossir, extraire plutôt)`
-          : `${fichier} : ${lignes} lignes, maximum ${maxLines} (découper)`
+          : `${fichier} : ${lignes} lignes, maximum ${maxLines} (découper)`,
       );
     }
   }

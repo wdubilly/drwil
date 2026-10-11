@@ -3,7 +3,26 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { Command } from "commander";
-import { init, apply, uninstall, resoudreDerive, verify, formaterVerdict, verdictJson, ecrireEvidence, attester, formaterPourAgent, auditerApply, formaterAudit, doctor, formaterDiagnostic, diagnosticJson, listerContrats, TOOLS, CIS } from "../dist/index.js";
+import {
+  init,
+  apply,
+  uninstall,
+  resoudreDerive,
+  verify,
+  formaterVerdict,
+  verdictJson,
+  ecrireEvidence,
+  attester,
+  formaterPourAgent,
+  auditerApply,
+  formaterAudit,
+  doctor,
+  formaterDiagnostic,
+  diagnosticJson,
+  listerContrats,
+  TOOLS,
+  CIS,
+} from "../dist/index.js";
 
 const program = new Command();
 program
@@ -36,13 +55,21 @@ async function run(fn, opts, message) {
   }
 }
 
-addOptions(program.command("init").description("Initialize IA-first in current directory (refreshes .githooks/; use --force to overwrite everything)"),
-  "Layers CSV (default: backend,frontend)")
+addOptions(
+  program
+    .command("init")
+    .description("Initialize IA-first in current directory (refreshes .githooks/; use --force to overwrite everything)"),
+  "Layers CSV (default: backend,frontend)",
+)
   .option("--force", "Overwrite every file, not just .githooks/ (erases project docs added since last install)")
   .action((opts) => run(init, opts, "IA-first scaffolding applied to"));
 
-addOptions(program.command("apply").description("Apply IA-first to existing project (never overwrites files); audits the repo and previews what will be added first"),
-  "Layers CSV (default: subfolders where a stack is detected)")
+addOptions(
+  program
+    .command("apply")
+    .description("Apply IA-first to existing project (never overwrites files); audits the repo and previews what will be added first"),
+  "Layers CSV (default: subfolders where a stack is detected)",
+)
   .option("--dry-run", "Only audit the repository and preview what would be added; write nothing")
   .action(async (opts) => {
     try {
@@ -56,8 +83,11 @@ addOptions(program.command("apply").description("Apply IA-first to existing proj
     await run(apply, opts, "IA-first applied to");
   });
 
-program.command("uninstall")
-  .description("Remove kit mechanics files, driven by the installed-files manifest (dry-run by default, never touches docs/projets, docs/intentions, docs/recettes)")
+program
+  .command("uninstall")
+  .description(
+    "Remove kit mechanics files, driven by the installed-files manifest (dry-run by default, never touches docs/projets, docs/intentions, docs/recettes)",
+  )
   .option("--yes", "Actually delete files (default: dry-run, only prints what would be removed)")
   .action(async (opts) => {
     try {
@@ -77,8 +107,11 @@ program.command("uninstall")
     }
   });
 
-program.command("resoudre-derive")
-  .description("Resolve mechanics drift signaled by init()/apply() (.githooks/, .claude/settings.json, CI file): diff + confirmation, .bak backup before overwrite")
+program
+  .command("resoudre-derive")
+  .description(
+    "Resolve mechanics drift signaled by init()/apply() (.githooks/, .claude/settings.json, CI file): diff + confirmation, .bak backup before overwrite",
+  )
   .option("--forcer", "Non-interactive: overwrite every drifted mechanics file without asking (scripted use)")
   .action(async (opts) => {
     try {
@@ -111,32 +144,62 @@ async function machine(fn, json, humain, versJson) {
   }
 }
 
-program.command("verify")
-  .description("Verify the project's contracts with the shared check engine: PASS (exit 0), FAIL or MANUAL REVIEW REQUIRED (exit 1), VERIFY ERROR (exit 2)")
+program
+  .command("verify")
+  .description(
+    "Verify the project's contracts with the shared check engine: PASS (exit 0), FAIL or MANUAL REVIEW REQUIRED (exit 1), VERIFY ERROR (exit 2)",
+  )
   .option("--json", "Machine-readable output (stable format, version 1), same exit codes")
   .option("--evidence", "Also record the run as evidence in .drwil/evidence/ (verdict, timestamp, commit, redacted summaries)")
   .option("--agent", "Output meant for an AI agent (counts, verdict, next step, human actions); same exit codes")
-  .action((opts) => machine(async (o) => {
-    const v = await verify(o);
-    // L'évidence s'écrit à côté du verdict : son chemin va sur stderr pour ne pas casser le JSON de stdout.
-    if (opts.evidence) console.error(`évidence : ${ecrireEvidence(o.targetDir, v)}`);
-    return v;
-  }, opts.json, opts.agent ? (v) => formaterPourAgent(verdictJson(v)) : formaterVerdict, verdictJson));
+  .action((opts) =>
+    machine(
+      async (o) => {
+        const v = await verify(o);
+        // L'évidence s'écrit à côté du verdict : son chemin va sur stderr pour ne pas casser le JSON de stdout.
+        if (opts.evidence) console.error(`évidence : ${ecrireEvidence(o.targetDir, v)}`);
+        return v;
+      },
+      opts.json,
+      opts.agent ? (v) => formaterPourAgent(verdictJson(v)) : formaterVerdict,
+      verdictJson,
+    ),
+  );
 
-program.command("doctor")
-  .description("Diagnose the drwil installation without running any check: healthy (exit 0), problems (exit 1), not a drwil project (exit 2)")
+program
+  .command("doctor")
+  .description(
+    "Diagnose the drwil installation without running any check: healthy (exit 0), problems (exit 1), not a drwil project (exit 2)",
+  )
   .option("--json", "Machine-readable output (stable format, version 1), same exit codes")
   .action((opts) => machine(doctor, opts.json, formaterDiagnostic, diagnosticJson));
 
-program.command("contracts")
+program
+  .command("contracts")
   .description("List and validate the project's contracts without running them: valid (exit 0), invalid registry (exit 2)")
   .option("--json", "Machine-readable output (stable format, version 1)")
-  .action((opts) => machine(listerContrats, opts.json,
-    (r) => [`${r.registry ?? ""}`, ...r.contracts.map((k) => `  ${k.id.padEnd(8)} ${k.checks.length ? k.checks.join(", ") : "—"}${k.manual ? "  [manuel]" : ""}  ${k.title}`), ...r.errors.map((e) => `✗ ${e}`), ...(r.error ? [`✗ ${r.error}`] : [])].join("\n"),
-    (r) => r));
+  .action((opts) =>
+    machine(
+      listerContrats,
+      opts.json,
+      (r) =>
+        [
+          `${r.registry ?? ""}`,
+          ...r.contracts.map(
+            (k) => `  ${k.id.padEnd(8)} ${k.checks.length ? k.checks.join(", ") : "—"}${k.manual ? "  [manuel]" : ""}  ${k.title}`,
+          ),
+          ...r.errors.map((e) => `✗ ${e}`),
+          ...(r.error ? [`✗ ${r.error}`] : []),
+        ].join("\n"),
+      (r) => r,
+    ),
+  );
 
-program.command("attest <id>")
-  .description("Record an explicit human attestation for a MANUAL contract (interactive terminal only; tied to the contract's current text and proof)")
+program
+  .command("attest <id>")
+  .description(
+    "Record an explicit human attestation for a MANUAL contract (interactive terminal only; tied to the contract's current text and proof)",
+  )
   .option("--note <text>", "Short note kept with the attestation (redacted, 500 chars max)")
   .action(async (id, opts) => {
     // Jamais d'attestation sans humain devant un terminal : pas de --yes, pas de stdin redirigé.
@@ -147,7 +210,9 @@ program.command("attest <id>")
     const { createInterface } = await import("node:readline/promises");
     try {
       const r = await attester({
-        targetDir: process.cwd(), id, note: opts.note,
+        targetDir: process.cwd(),
+        id,
+        note: opts.note,
         confirmer: async (resume) => {
           console.log(`${resume}\n`);
           const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -164,8 +229,11 @@ program.command("attest <id>")
     }
   });
 
-program.command("etat")
-  .description("Show the governance state, or act on it: drwil etat passer <ACTIVITY> [--fiche <sheet>] [--demande <text>] | lancer [<sheet>] | fiches [--json] | rappel")
+program
+  .command("etat")
+  .description(
+    "Show the governance state, or act on it: drwil etat passer <ACTIVITY> [--fiche <sheet>] [--demande <text>] | lancer [<sheet>] | fiches [--json] | rappel",
+  )
   .argument("[args...]")
   .allowUnknownOption()
   .action(async (args) => {

@@ -69,7 +69,9 @@ test("check-file-size : plafonds hérités lus, absents ou illisibles = aucun", 
   assert.deepEqual(lireHerites(join(dir, "absent.json")), {});
 });
 
-test("check-file-size : lancé via un lien symbolique, le contrôle tourne quand même", { skip: process.platform === "win32" ? "liens symboliques" : false }, () => {
+test("check-file-size : lancé via un lien symbolique, le contrôle tourne quand même", {
+  skip: process.platform === "win32" ? "liens symboliques" : false,
+}, () => {
   const dir = racine({ "src/gros.js": lignes(401) });
   symlinkSync(dirname(SCRIPT), join(dir, "hooks"));
   const r = spawnSync(process.execPath, [join(dir, "hooks", "check-file-size.mjs"), "src"], { cwd: dir, encoding: "utf8" });

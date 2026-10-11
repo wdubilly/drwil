@@ -7,7 +7,20 @@ import { fileURLToPath } from "node:url";
 import { detectStack, type StackEntry } from "./stack.js";
 
 export { detectStack, type StackEntry } from "./stack.js";
-export { verify, formaterVerdict, verdictJson, ecrireEvidence, caviarder, empreinte, lireAttestations, type Attestation, type Verdict, type ResultatContrat, type ResultatControle, type Statut } from "./verify.js";
+export {
+  verify,
+  formaterVerdict,
+  verdictJson,
+  ecrireEvidence,
+  caviarder,
+  empreinte,
+  lireAttestations,
+  type Attestation,
+  type Verdict,
+  type ResultatContrat,
+  type ResultatControle,
+  type Statut,
+} from "./verify.js";
 export { attester, resumeContrat, type ResultatAttestation } from "./attest.js";
 export { formaterPourAgent } from "./agent.js";
 export { doctor, formaterDiagnostic, diagnosticJson, listerContrats, type Diagnostic } from "./doctor.js";
@@ -19,9 +32,9 @@ const templatesDir = join(dirname(__dirname), "templates");
 export const LANGS = ["fr", "en"] as const;
 export const TOOLS = ["claude", "codex", "cursor", "gemini", "copilot"] as const;
 export const CIS = ["none", "github", "gitlab"] as const;
-type Lang = typeof LANGS[number];
-type Tool = typeof TOOLS[number];
-type Ci = typeof CIS[number];
+type Lang = (typeof LANGS)[number];
+type Tool = (typeof TOOLS)[number];
+type Ci = (typeof CIS)[number];
 
 export interface InitOptions {
   targetDir: string;
@@ -52,20 +65,20 @@ const CI_FILES: Record<Ci, string[]> = { none: [], github: [".github/workflows/i
 // (modèle à compléter par le projet : docs/projets/extraction-ia-first-run-box.md, lot 3).
 const STACK_ALLOW: Record<string, string[]> = {
   "Node.js": ["npm test:*", "npm run:*", "npx vitest:*", "npx tsc:*", "npx eslint:*"],
-  "Python": ["pytest:*", "python3 -m pytest:*"],
-  "Go": ["go test:*", "go build:*"],
-  "Rust": ["cargo test:*", "cargo build:*"],
+  Python: ["pytest:*", "python3 -m pytest:*"],
+  Go: ["go test:*", "go build:*"],
+  Rust: ["cargo test:*", "cargo build:*"],
   "Java/Maven": ["mvn test:*"],
   "JVM/Gradle": ["./gradlew test:*"],
   ".NET": ["dotnet test:*"],
-  "Ruby": ["bundle exec rspec:*"],
-  "PHP": ["composer test:*"],
+  Ruby: ["bundle exec rspec:*"],
+  PHP: ["composer test:*"],
 };
 
 function stackAllow(stack: StackEntry[]): string {
-  const technos = new Set(stack.flatMap(s => s.technos.flatMap(t => Object.keys(STACK_ALLOW).filter(k => t.includes(k)))));
-  const commandes = [...technos].flatMap(t => STACK_ALLOW[t]);
-  return commandes.map(c => `,\n      "Bash(${c})"`).join("");
+  const technos = new Set(stack.flatMap((s) => s.technos.flatMap((t) => Object.keys(STACK_ALLOW).filter((k) => t.includes(k)))));
+  const commandes = [...technos].flatMap((t) => STACK_ALLOW[t]);
+  return commandes.map((c) => `,\n      "Bash(${c})"`).join("");
 }
 
 const TEXT = {
@@ -76,7 +89,13 @@ const TEXT = {
     stackNote: "Détectée à l'installation d'après les fichiers de projet : à confirmer par l'utilisateur.",
     stackUndecided: "Non décidée. L'utilisateur la choisit ; une IA la propose et attend sa validation avant d'écrire du code applicatif.",
     ciLine: (f: string) => ` et en CI (\`${f}\`)`,
-    dirs: { projects: "docs/projets", intentions: "docs/intentions", recettes: "docs/recettes", contracts: "docs/contrats.md", index: "docs/projets/en-attente.md" },
+    dirs: {
+      projects: "docs/projets",
+      intentions: "docs/intentions",
+      recettes: "docs/recettes",
+      contracts: "docs/contrats.md",
+      index: "docs/projets/en-attente.md",
+    },
   },
   en: {
     description: "(to describe: what the application does, for whom)",
@@ -85,7 +104,13 @@ const TEXT = {
     stackNote: "Detected at install time from project files: to be confirmed by the user.",
     stackUndecided: "Not decided. The user chooses it; an AI proposes one and waits for approval before writing application code.",
     ciLine: (f: string) => ` and in CI (\`${f}\`)`,
-    dirs: { projects: "docs/projects", intentions: "docs/intentions", recettes: "docs/recipes", contracts: "docs/contracts.md", index: "docs/projects/pending.md" },
+    dirs: {
+      projects: "docs/projects",
+      intentions: "docs/intentions",
+      recettes: "docs/recipes",
+      contracts: "docs/contracts.md",
+      index: "docs/projects/pending.md",
+    },
   },
 };
 
@@ -100,7 +125,10 @@ interface Resolved {
 }
 
 function splitCsv(s?: string) {
-  return (s ?? "").split(",").map(x => x.trim()).filter(Boolean);
+  return (s ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
 function pick<T extends string>(value: string, allowed: readonly T[], option: string): T {
@@ -115,7 +143,7 @@ function resolve(opts: InitOptions, defaultLayers: (stack: StackEntry[]) => stri
   return {
     opts,
     lang: pick(opts.lang ?? "fr", LANGS, "lang"),
-    tools: splitCsv(opts.tools ?? TOOLS.join(",")).map(t => pick(t, TOOLS, "tools")),
+    tools: splitCsv(opts.tools ?? TOOLS.join(",")).map((t) => pick(t, TOOLS, "tools")),
     ci: pick(opts.ci ?? "none", CIS, "ci"),
     mode: pick(opts.mode ?? "full", ["minimal", "full"] as const, "mode"),
     layers: opts.layers !== undefined ? splitCsv(opts.layers) : defaultLayers(stack),
@@ -130,7 +158,7 @@ function projectName(r: Resolved): string {
 function render(content: string, r: Resolved, extra: Record<string, string> = {}): string {
   const t = TEXT[r.lang];
   const stack = r.stack.length
-    ? `${r.stack.map(s => `- \`${s.path === "." ? "./" : s.path + "/"}\` : ${s.technos.join(", ")}`).join("\n")}\n\n${t.stackNote}`
+    ? `${r.stack.map((s) => `- \`${s.path === "." ? "./" : s.path + "/"}\` : ${s.technos.join(", ")}`).join("\n")}\n\n${t.stackNote}`
     : t.stackUndecided;
   const ciFile = CI_FILES[r.ci][0];
   const values: Record<string, string> = {
@@ -161,7 +189,7 @@ async function walk(dir: string): Promise<string[]> {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     if (entry.name === "__pycache__") continue;
     const full = join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...await walk(full));
+    if (entry.isDirectory()) files.push(...(await walk(full)));
     else files.push(full);
   }
   return files;
@@ -195,7 +223,13 @@ function relPosix(from: string, to: string): string {
 let simulation: { crees: string[]; conserves: string[]; remplaces: string[] } | null = null;
 
 async function writeOut(
-  target: string, content: string, targetDir: string, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>, attendus?: string[],
+  target: string,
+  content: string,
+  targetDir: string,
+  shouldOverwrite: Overwrite,
+  derives?: string[],
+  manifest?: Record<string, string>,
+  attendus?: string[],
 ): Promise<void> {
   const rel = relPosix(targetDir, target);
   if (attendus) attendus.push(rel);
@@ -213,7 +247,9 @@ async function writeOut(
   if (manifest) manifest[rel] = sha256(content);
   // commit-msg reste volontairement non exécutable (livré mais désactivé par défaut, lot 4).
   if (target.endsWith(".mjs") || ["pre-commit", "pre-push", "prepare-commit-msg"].includes(basename(target))) {
-    try { await chmod(target, 0o755); } catch {}
+    try {
+      await chmod(target, 0o755);
+    } catch {}
   }
 }
 
@@ -222,7 +258,14 @@ async function writeOut(
 const NOMS_LIVRES: Record<string, string> = { gitignore: ".gitignore" };
 
 /** Copie un dossier de modèles à la racine de la cible, en rendant les variables. */
-async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>, attendus?: string[]): Promise<void> {
+async function copyTree(
+  srcDir: string,
+  r: Resolved,
+  shouldOverwrite: Overwrite,
+  derives?: string[],
+  manifest?: Record<string, string>,
+  attendus?: string[],
+): Promise<void> {
   for (const file of await walk(srcDir)) {
     const rel = relative(srcDir, file);
     const nom = NOMS_LIVRES[basename(rel)];
@@ -231,7 +274,13 @@ async function copyTree(srcDir: string, r: Resolved, shouldOverwrite: Overwrite,
   }
 }
 
-async function scaffold(r: Resolved, shouldOverwrite: Overwrite, derives?: string[], manifest?: Record<string, string>, attendus?: string[]): Promise<void> {
+async function scaffold(
+  r: Resolved,
+  shouldOverwrite: Overwrite,
+  derives?: string[],
+  manifest?: Record<string, string>,
+  attendus?: string[],
+): Promise<void> {
   const langDir = join(templatesDir, r.lang);
   await copyTree(join(templatesDir, "common", "base"), r, shouldOverwrite, derives, manifest, attendus);
   await copyTree(join(langDir, "base"), r, shouldOverwrite, derives, manifest, attendus);
@@ -253,7 +302,8 @@ async function scaffold(r: Resolved, shouldOverwrite: Overwrite, derives?: strin
   // Un seul contenu de consignes (AGENTS.md) ; les outils qui ne le lisent pas nativement reçoivent un import.
   const pointers = [r.tools.includes("claude") && "CLAUDE.md", r.tools.includes("gemini") && "GEMINI.md"].filter(Boolean) as string[];
   for (const dir of [".", ...r.layers]) {
-    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite, derives, manifest, attendus);
+    for (const p of pointers)
+      await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite, derives, manifest, attendus);
   }
 }
 
@@ -359,7 +409,10 @@ export async function uninstall(opts: UninstallOptions): Promise<UninstallReport
     const abs = join(opts.targetDir, rel);
     if (!existsSync(abs)) continue;
     const actuel = sha256(await readFile(abs, "utf8"));
-    if (actuel !== hash) { modified.push(rel); continue; }
+    if (actuel !== hash) {
+      modified.push(rel);
+      continue;
+    }
     removed.push(rel);
   }
   // État de gouvernance local (gitignoré, hors manifeste) : relu par aucun autre outil une fois
@@ -394,7 +447,7 @@ function resolveFromConfig(targetDir: string): Resolved {
     opts,
     lang: pick((config.lang as string) ?? "fr", LANGS, "lang"),
     layers: Array.isArray(config.layers) ? (config.layers as string[]) : [],
-    tools: Array.isArray(config.tools) ? (config.tools as string[]).map(t => pick(t, TOOLS, "tools")) : [],
+    tools: Array.isArray(config.tools) ? (config.tools as string[]).map((t) => pick(t, TOOLS, "tools")) : [],
     ci: pick((config.ci as string) ?? "none", CIS, "ci"),
     mode: pick((config.mode as string) ?? "full", ["minimal", "full"] as const, "mode"),
     stack: Array.isArray(config.stack) ? (config.stack as StackEntry[]) : [],
@@ -440,14 +493,28 @@ function diffUnifie(ancien: string, nouveau: string): string {
     }
   }
   const lignes: string[] = [];
-  let i = 0, j = 0;
+  let i = 0,
+    j = 0;
   while (i < a.length && j < b.length) {
-    if (a[i] === b[j]) { i++; j++; }
-    else if (lcs[i + 1][j] >= lcs[i][j + 1]) { lignes.push(`- ${a[i]}`); i++; }
-    else { lignes.push(`+ ${b[j]}`); j++; }
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+    } else if (lcs[i + 1][j] >= lcs[i][j + 1]) {
+      lignes.push(`- ${a[i]}`);
+      i++;
+    } else {
+      lignes.push(`+ ${b[j]}`);
+      j++;
+    }
   }
-  while (i < a.length) { lignes.push(`- ${a[i]}`); i++; }
-  while (j < b.length) { lignes.push(`+ ${b[j]}`); j++; }
+  while (i < a.length) {
+    lignes.push(`- ${a[i]}`);
+    i++;
+  }
+  while (j < b.length) {
+    lignes.push(`+ ${b[j]}`);
+    j++;
+  }
   return lignes.join("\n");
 }
 
@@ -482,8 +549,11 @@ export async function resoudreDerive(
     const rel = relPosix(opts.targetDir, target);
     const existant = await readFile(target, "utf8");
     if (existant === contenuModele) continue; // pas de dérive.
-    const ok = opts.forcer || await confirmer(rel, diffUnifie(existant, contenuModele));
-    if (!ok) { ignores.push(rel); continue; }
+    const ok = opts.forcer || (await confirmer(rel, diffUnifie(existant, contenuModele)));
+    if (!ok) {
+      ignores.push(rel);
+      continue;
+    }
     await writeFile(`${target}.bak`, existant);
     await writeFile(target, contenuModele);
     resolus.push(rel);
@@ -543,7 +613,8 @@ async function writeConfig(r: Resolved): Promise<void> {
     // cité qui n'existe que comme fichier ignoré par Git) : "bloquant" pour une installation neuve,
     // "avertissement" pour un projet déjà équipé qui n'a pas encore ce réglage — une mise à jour ne
     // casse jamais un commit qui passait. Jamais écrasé ensuite.
-    nouvellesExigences: typeof previous?.nouvellesExigences === "string" ? previous.nouvellesExigences : previous ? "avertissement" : "bloquant",
+    nouvellesExigences:
+      typeof previous?.nouvellesExigences === "string" ? previous.nouvellesExigences : previous ? "avertissement" : "bloquant",
     layerPrefixes: ["app", "tests", "src", "scripts"],
     codePrefixes: ["scripts", ".githooks", "e2e"],
     extraCodeFiles: [],
@@ -587,7 +658,7 @@ function setupGit(targetDir: string, allowInit: boolean): void {
 
 function reportStack(r: Resolved): void {
   if (r.stack.length) {
-    console.log(`Stack détectée : ${r.stack.map(s => `${s.path} → ${s.technos.join(", ")}`).join(" ; ")}`);
+    console.log(`Stack détectée : ${r.stack.map((s) => `${s.path} → ${s.technos.join(", ")}`).join(" ; ")}`);
     return;
   }
   console.log("Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).");
@@ -656,7 +727,8 @@ function protectionsExistantes(dir: string): string[] {
     const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
     for (const s of ["test", "lint", "typecheck"]) if (pkg.scripts?.[s]) p.push(`script npm « ${s} »`);
   } catch {}
-  if (["eslint.config.js", "eslint.config.mjs", ".eslintrc", ".eslintrc.js", ".eslintrc.json", ".eslintrc.cjs"].some(present)) p.push("eslint");
+  if (["eslint.config.js", "eslint.config.mjs", ".eslintrc", ".eslintrc.js", ".eslintrc.json", ".eslintrc.cjs"].some(present))
+    p.push("eslint");
   if (present("pyproject.toml") || present("ruff.toml")) p.push("configuration Python (pyproject/ruff)");
   if (present(".husky")) p.push("hooks husky");
   if (present(".pre-commit-config.yaml")) p.push("pre-commit");
@@ -664,7 +736,11 @@ function protectionsExistantes(dir: string): string[] {
   if (present(".github/workflows")) p.push("GitHub Actions");
   if (present(".gitlab-ci.yml")) p.push("GitLab CI");
   try {
-    const hooks = execFileSync("git", ["config", "core.hooksPath"], { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    const hooks = execFileSync("git", ["config", "core.hooksPath"], {
+      cwd: dir,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
     if (hooks) p.push(`hooks git (core.hooksPath = ${hooks})`);
   } catch {}
   return p;
@@ -672,8 +748,10 @@ function protectionsExistantes(dir: string): string[] {
 
 /** Aperçu d'`apply` (DRWIL-011) : audit du dépôt et liste exacte de ce qui serait créé, sans rien écrire. */
 export async function auditerApply(opts: InitOptions): Promise<AuditApply> {
-  const r = resolve(opts, stack => stack.map(s => s.path).filter(p => p !== "."));
-  const outilsPresents = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", ".cursor", ".github/copilot-instructions.md"].filter(f => existsSync(join(opts.targetDir, f)));
+  const r = resolve(opts, (stack) => stack.map((s) => s.path).filter((p) => p !== "."));
+  const outilsPresents = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", ".cursor", ".github/copilot-instructions.md"].filter((f) =>
+    existsSync(join(opts.targetDir, f)),
+  );
   const protections = protectionsExistantes(opts.targetDir);
   const derives: string[] = [];
   simulation = { crees: [], conserves: [], remplaces: [] };
@@ -690,18 +768,23 @@ export async function auditerApply(opts: InitOptions): Promise<AuditApply> {
 export function formaterAudit(a: AuditApply): string {
   const l = ["Analyse du dépôt…", ""];
   l.push("Détecté :");
-  l.push(a.stack.length ? `  stack : ${a.stack.map(s => `${s.path} → ${s.technos.join(", ")}`).join(" ; ")}` : "  stack : non détectée");
+  l.push(a.stack.length ? `  stack : ${a.stack.map((s) => `${s.path} → ${s.technos.join(", ")}`).join(" ; ")}` : "  stack : non détectée");
   l.push(`  outils IA déjà présents : ${a.outilsPresents.length ? a.outilsPresents.join(", ") : "aucun"}`);
-  l.push("", "Protections existantes :", ...(a.protections.length ? a.protections.map(p => `  ✓ ${p}`) : ["  aucune détectée"]));
-  l.push("", `Serait ajouté (${a.crees.length} fichier(s)) :`, ...a.crees.map(f => `  + ${f}`));
-  if (a.conserves.length) l.push("", `Déjà présents, laissés tels quels (${a.conserves.length}) :`, ...a.conserves.map(f => `  = ${f}${a.derives.includes(f) ? " (diffère du modèle du kit)" : ""}`));
+  l.push("", "Protections existantes :", ...(a.protections.length ? a.protections.map((p) => `  ✓ ${p}`) : ["  aucune détectée"]));
+  l.push("", `Serait ajouté (${a.crees.length} fichier(s)) :`, ...a.crees.map((f) => `  + ${f}`));
+  if (a.conserves.length)
+    l.push(
+      "",
+      `Déjà présents, laissés tels quels (${a.conserves.length}) :`,
+      ...a.conserves.map((f) => `  = ${f}${a.derives.includes(f) ? " (diffère du modèle du kit)" : ""}`),
+    );
   l.push("", "Rien ne sera écrasé.");
   return l.join("\n");
 }
 
 export async function apply(opts: InitOptions): Promise<void> {
   // Sur un projet existant, les couches sont les sous-dossiers où une stack a été trouvée.
-  const r = resolve(opts, stack => stack.map(s => s.path).filter(p => p !== "."));
+  const r = resolve(opts, (stack) => stack.map((s) => s.path).filter((p) => p !== "."));
   const derives: string[] = [];
   const manifest: Record<string, string> = {};
   const attendus: string[] = [];
@@ -714,7 +797,10 @@ export async function apply(opts: InitOptions): Promise<void> {
   else if (existante.nouvellesExigences === undefined) {
     // Seul ajout à une configuration existante : rendre visible le réglage des exigences récentes,
     // à « avertissement » (une mise à jour ne durcit jamais) ; le reste n'est pas touché.
-    await writeFile(join(opts.targetDir, ".drwil", "ia-first.json"), JSON.stringify({ ...existante, nouvellesExigences: "avertissement" }, null, 2) + "\n");
+    await writeFile(
+      join(opts.targetDir, ".drwil", "ia-first.json"),
+      JSON.stringify({ ...existante, nouvellesExigences: "avertissement" }, null, 2) + "\n",
+    );
   }
   reportStack(r);
   reportDerives(derives);

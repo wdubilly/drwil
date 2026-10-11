@@ -27,7 +27,11 @@ function verifier(fichiers, { depot = true } = {}) {
     writeFileSync(join(racine, chemin), contenu);
   }
   if (depot) {
-    for (const args of [["init", "-q"], ["add", "-A"]]) assert.equal(spawnSync("git", args, { cwd: racine }).status, 0);
+    for (const args of [
+      ["init", "-q"],
+      ["add", "-A"],
+    ])
+      assert.equal(spawnSync("git", args, { cwd: racine }).status, 0);
   }
   return spawnSync(process.execPath, [SCRIPT], { cwd: racine, encoding: "utf8" });
 }
@@ -111,7 +115,18 @@ function projetFautif(cfg) {
 }
 
 test("projet fautif en français : chaque règle bloque, cadrage et ignorés bloquants", () => {
-  const r = verifier(projetFautif({ lang: "fr", layers: ["app"], layerPrefixes: ["lib"], codePrefixes: ["src"], contractPrefixes: ["QUA"], cadrage: "bloquant", nouvellesExigences: "bloquant", risque: { cheminsSensibles: ["src/sensible/*"] } }));
+  const r = verifier(
+    projetFautif({
+      lang: "fr",
+      layers: ["app"],
+      layerPrefixes: ["lib"],
+      codePrefixes: ["src"],
+      contractPrefixes: ["QUA"],
+      cadrage: "bloquant",
+      nouvellesExigences: "bloquant",
+      risque: { cheminsSensibles: ["src/sensible/*"] },
+    }),
+  );
   assert.equal(r.status, 1, r.stdout);
   const attendus = [
     "AGENTS.md:1 : chemin cité introuvable `docs/absent.md`",
@@ -141,7 +156,26 @@ test("projet fautif en français : chaque règle bloque, cadrage et ignorés blo
     "avertissement(s) de niveau de risque",
   ];
   for (const a of attendus) assert.ok(r.stdout.includes(a), `attendu : ${a}\n${r.stdout}`);
-  for (const absent of ["dehors.txt", "futur.md", "option.md", "option2.md", "https", "minimal", "QUA-998", "QUA-003", "`AGENTS.md`", "app/AGENTS.md", "src/ok/a/b.js", "modele-fiche", "mecanique-ia-first.md : pas de champ", "sans-statut.md ne se dit", "inexistante.md ne se dit", "cadrage.md ne se dit", "README.md", "⚠ AGENTS.md"]) {
+  for (const absent of [
+    "dehors.txt",
+    "futur.md",
+    "option.md",
+    "option2.md",
+    "https",
+    "minimal",
+    "QUA-998",
+    "QUA-003",
+    "`AGENTS.md`",
+    "app/AGENTS.md",
+    "src/ok/a/b.js",
+    "modele-fiche",
+    "mecanique-ia-first.md : pas de champ",
+    "sans-statut.md ne se dit",
+    "inexistante.md ne se dit",
+    "cadrage.md ne se dit",
+    "README.md",
+    "⚠ AGENTS.md",
+  ]) {
     assert.ok(!r.stdout.includes(absent), `inattendu : ${absent}\n${r.stdout}`);
   }
 });
@@ -171,7 +205,7 @@ test("projet fautif en anglais : cadrage et fichiers ignorés en avertissement",
     "item unchecked but docs/projets/finie.md already says it is done",
     "item checked but docs/projets/ouverte.md does not say it is done",
     "checkbox/status consistency warning(s)",
-    "docs/projets/sensible.md : no \"Risk\" field although the scope requires HIGH",
+    'docs/projets/sensible.md : no "Risk" field although the scope requires HIGH',
     "risk level warning(s)",
     "⚠ AGENTS.md:2 : cited path not found `ignore.txt` — file ignored by Git",
     "recent-requirement warning(s)",
@@ -188,7 +222,10 @@ test("hors dépôt git, sans configuration ni registre : rien d'ignoré, pas de 
 
 test("aucune citation trouvée, dossiers réglés, cadrage désactivé : vert", () => {
   const r = verifier({
-    ".drwil/ia-first.json": JSON.stringify({ codePrefixes: ["src"], dirs: { projects: "suivi", intentions: "idees", contracts: "regles.md", index: "suivi/index.md" } }),
+    ".drwil/ia-first.json": JSON.stringify({
+      codePrefixes: ["src"],
+      dirs: { projects: "suivi", intentions: "idees", contracts: "regles.md", index: "suivi/index.md" },
+    }),
     "AGENTS.md": "Voir `docs/futur.md` (à créer). Contrat SEC-001.\n",
     "regles.md": "| SEC-001 | r |\n",
     "suivi/a.md": `# A\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- cadrage\nfichiers:\n  - src/a.js\n-->\n${reprise}`,

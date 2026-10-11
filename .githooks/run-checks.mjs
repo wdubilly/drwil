@@ -63,7 +63,9 @@ for (const fichier of [
   { fr: "docs/decouverte-valeur.md", en: "docs/value-discovery.md" }[lang],
 ]) {
   if (!existsSync(fichier)) continue;
-  const bloc = readFileSync(fichier, "utf8").split(/\r?\n/).find((l) => /^>\s*(dernier scan|last scan)/i.test(l));
+  const bloc = readFileSync(fichier, "utf8")
+    .split(/\r?\n/)
+    .find((l) => /^>\s*(dernier scan|last scan)/i.test(l));
   const m = bloc?.match(/\d{4}-\d{2}-\d{2}/);
   if (!m) continue;
   const jours = Math.floor((Date.now() - new Date(m[0]).getTime()) / 86400000);

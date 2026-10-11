@@ -2,12 +2,35 @@
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSync, appendFileSync, cpSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  readdirSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  statSync,
+  appendFileSync,
+  cpSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { init, apply, uninstall, resoudreDerive, verify, formaterVerdict, verdictJson, doctor, auditerApply, formaterAudit, attester } from "../dist/index.js";
+import {
+  init,
+  apply,
+  uninstall,
+  resoudreDerive,
+  verify,
+  formaterVerdict,
+  verdictJson,
+  doctor,
+  auditerApply,
+  formaterAudit,
+  attester,
+} from "../dist/index.js";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les projets de test (et leurs hooks) sur le dépôt qui lance la suite.
@@ -38,14 +61,26 @@ afterEach((t) => {
   dossiersDuTest = [];
 });
 const quiet = async (fn) => {
-  const log = console.log, warn = console.warn;
+  const log = console.log,
+    warn = console.warn;
   console.log = console.warn = () => {};
-  try { return await fn(); } finally { console.log = log; console.warn = warn; }
+  try {
+    return await fn();
+  } finally {
+    console.log = log;
+    console.warn = warn;
+  }
 };
 const capture = async (fn) => {
-  const log = console.log, lines = [];
+  const log = console.log,
+    lines = [];
   console.log = (...a) => lines.push(a.join(" "));
-  try { await fn(); return lines; } finally { console.log = log; }
+  try {
+    await fn();
+    return lines;
+  } finally {
+    console.log = log;
+  }
 };
 // CI et DRWIL_PUSH_TAGS_ONLY retirés explicitement : un commit/push simulé représente
 // toujours un geste développeur local isolé, même quand la suite elle-même tourne
@@ -59,7 +94,8 @@ delete envTest.DRWIL_PUSH_TAGS_ONLY;
 delete envTest.DRWIL_PUSH_SANS_BRANCHE;
 delete envTest.DRWIL_HOOK;
 const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
-const git = (dir, ...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
+const git = (dir, ...args) =>
+  spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
 const config = (dir) => JSON.parse(read(dir, ".drwil/ia-first.json"));
 // NTFS n'a pas de bit d'exécution : sous Windows chmod est un no-op, donc ce contrôle
@@ -69,13 +105,26 @@ const executable = (dir, f) => process.platform === "win32" || Boolean(statSync(
 test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, name: "demo", description: "Démo $& littéral" }));
-  for (const f of ["AGENTS.md", "CLAUDE.md", "GEMINI.md", ".claude/settings.json", ".cursor/rules/ia-first.mdc",
-    ".github/copilot-instructions.md", ".github/instructions/ajouter-une-route-api.instructions.md",
+  for (const f of [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    ".claude/settings.json",
+    ".cursor/rules/ia-first.mdc",
+    ".github/copilot-instructions.md",
+    ".github/instructions/ajouter-une-route-api.instructions.md",
     ".github/instructions/ajouter-un-ecran-front.instructions.md",
-    "backend/AGENTS.md", "frontend/CLAUDE.md", "docs/contrats.md", "docs/architecture.md"]) {
+    "backend/AGENTS.md",
+    "frontend/CLAUDE.md",
+    "docs/contrats.md",
+    "docs/architecture.md",
+  ]) {
     assert.ok(existsSync(join(dir, f)), f);
   }
-  assert.ok(!existsSync(join(dir, ".githooks/run-checks.sh")) && !existsSync(join(dir, ".githooks/check-docs.py")), "plus de bash ni de python");
+  assert.ok(
+    !existsSync(join(dir, ".githooks/run-checks.sh")) && !existsSync(join(dir, ".githooks/check-docs.py")),
+    "plus de bash ni de python",
+  );
   assert.ok(executable(dir, ".githooks/pre-commit"), "pre-commit exécutable");
   assert.equal(git(dir, "config", "core.hooksPath").stdout.trim(), ".githooks");
   assert.match(read(dir, "AGENTS.md"), /demo — Démo \$& littéral/);
@@ -88,14 +137,20 @@ test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", a
 test("init sans stack détectée : signale explicitement les couches par défaut", async () => {
   const dir = tmp();
   const lines = await capture(() => init({ targetDir: dir, name: "demo", git: false }));
-  assert.ok(lines.some(l => l.includes("Couches par défaut écrites : backend, frontend")), lines.join("\n"));
-  assert.ok(lines.some(l => l.includes("--layers")), lines.join("\n"));
+  assert.ok(
+    lines.some((l) => l.includes("Couches par défaut écrites : backend, frontend")),
+    lines.join("\n"),
+  );
+  assert.ok(
+    lines.some((l) => l.includes("--layers")),
+    lines.join("\n"),
+  );
 });
 
 test("init avec --layers explicite : pas de message de défaut", async () => {
   const dir = tmp();
   const lines = await capture(() => init({ targetDir: dir, name: "demo", git: false, layers: "admin" }));
-  assert.ok(!lines.some(l => l.includes("Couches par défaut")), lines.join("\n"));
+  assert.ok(!lines.some((l) => l.includes("Couches par défaut")), lines.join("\n"));
 });
 
 test("un second init ne réécrase que .githooks/, --force réécrit tout", async () => {
@@ -142,7 +197,10 @@ test("chemin cité : un fichier ignoré par Git ne vaut pas preuve (local = CI) 
   writeFileSync(join(dir, "docs/ia-first.md"), read(dir, "docs/ia-first.md").replace("`.drwil/state.json`.", "`.drwil/ia-first.json`."));
   assert.equal(docsCheck().status, 0, docsCheck().stdout);
   // « (si présent) » reconnu sur la ligne suivante, après un retour à la ligne.
-  writeFileSync(join(dir, "docs/ia-first.md"), read(dir, "docs/ia-first.md").replace("`.drwil/ia-first.json`.", "`.drwil/state.json`\n(si présent)."));
+  writeFileSync(
+    join(dir, "docs/ia-first.md"),
+    read(dir, "docs/ia-first.md").replace("`.drwil/ia-first.json`.", "`.drwil/state.json`\n(si présent)."),
+  );
   r = docsCheck();
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
@@ -201,7 +259,7 @@ test("les contrôles déclarés par le projet tournent et survivent à une réin
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, git: false }));
   const cfg = config(dir);
-  cfg.checks = [{ name: "tests unitaires", run: "node -e \"process.exit(3)\"" }];
+  cfg.checks = [{ name: "tests unitaires", run: 'node -e "process.exit(3)"' }];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
   const r = checks(dir);
   assert.equal(r.status, 1);
@@ -214,8 +272,13 @@ test("init en anglais, Codex seul, CI GitHub", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, lang: "en", tools: "codex", ci: "github", git: false }));
   for (const f of ["CLAUDE.md", "GEMINI.md", ".claude", ".cursor", "docs/contrats.md"]) assert.ok(!existsSync(join(dir, f)), f);
-  for (const f of ["AGENTS.md", "docs/contracts.md", "docs/recipes/add-an-api-route.md", ".github/workflows/ia-first.yml",
-    "docs/projects/kit-mechanics.md"]) {
+  for (const f of [
+    "AGENTS.md",
+    "docs/contracts.md",
+    "docs/recipes/add-an-api-route.md",
+    ".github/workflows/ia-first.yml",
+    "docs/projects/kit-mechanics.md",
+  ]) {
     assert.ok(existsSync(join(dir, f)), f);
   }
   assert.match(read(dir, "docs/architecture.md"), /Not decided/);
@@ -264,7 +327,10 @@ test("QUA-015 : marqueur de chantier, statut daté, section Reprise, chemin « �
   r = checks(dir);
   assert.match(r.stdout, /mon-chantier\.md.*Statut/);
   assert.match(r.stdout, /mon-chantier\.md.*Reprise/);
-  writeFileSync(join(dir, "docs/projets/mon-chantier.md"), "# Mon chantier\n\n**Statut** : 2026-10-04, fait.\n\n## Reprise\n\nRien à reprendre.\n");
+  writeFileSync(
+    join(dir, "docs/projets/mon-chantier.md"),
+    "# Mon chantier\n\n**Statut** : 2026-10-04, fait.\n\n## Reprise\n\nRien à reprendre.\n",
+  );
   r = checks(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
 
@@ -288,31 +354,37 @@ test("QUA-015 (extension) : fiche terminée encore présente refusée ; case coc
   await quiet(() => init({ targetDir: dir, git: false }));
 
   // « fait » dans le statut ne vaut pas terminée : seul le marqueur explicite compte.
-  writeFileSync(join(dir, "docs/projets/mon-chantier.md"),
-    "# Mon chantier\n\n**Statut** (2026-10-04) : cadré — essai réel fait, lot 2 ouvert.\n\n## Reprise\n\nRien à reprendre.\n");
-  appendFileSync(join(dir, "docs/projets/en-attente.md"),
-    "\n## Test\n- [ ] [IA] sujet en cours `docs/projets/mon-chantier.md`.\n");
+  writeFileSync(
+    join(dir, "docs/projets/mon-chantier.md"),
+    "# Mon chantier\n\n**Statut** (2026-10-04) : cadré — essai réel fait, lot 2 ouvert.\n\n## Reprise\n\nRien à reprendre.\n",
+  );
+  appendFileSync(join(dir, "docs/projets/en-attente.md"), "\n## Test\n- [ ] [IA] sujet en cours `docs/projets/mon-chantier.md`.\n");
   let direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(direct.status, 0, direct.stdout + direct.stderr);
   assert.doesNotMatch(direct.stdout, /mon-chantier\.md/);
 
   // fiche marquée terminée mais encore là : erreur bloquante (la condenser dans le journal, la supprimer).
-  writeFileSync(join(dir, "docs/projets/mon-chantier.md"),
-    "# Mon chantier\n\n**Statut** : terminé le 2026-10-10.\n\n## Reprise\n\nRien à reprendre.\n");
+  writeFileSync(
+    join(dir, "docs/projets/mon-chantier.md"),
+    "# Mon chantier\n\n**Statut** : terminé le 2026-10-10.\n\n## Reprise\n\nRien à reprendre.\n",
+  );
   direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(direct.status, 1, direct.stdout + direct.stderr);
   assert.match(direct.stdout + direct.stderr, /mon-chantier\.md.*terminée.*journal/);
   rmSync(join(dir, "docs/projets/mon-chantier.md"));
-  writeFileSync(join(dir, "docs/projets/en-attente.md"),
-    read(dir, "docs/projets/en-attente.md").replace("- [ ] [IA] sujet en cours `docs/projets/mon-chantier.md`.\n", ""));
+  writeFileSync(
+    join(dir, "docs/projets/en-attente.md"),
+    read(dir, "docs/projets/en-attente.md").replace("- [ ] [IA] sujet en cours `docs/projets/mon-chantier.md`.\n", ""),
+  );
   direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(direct.status, 0, direct.stdout + direct.stderr);
 
   // cas inverse : case cochée mais fiche pas terminée.
-  writeFileSync(join(dir, "docs/projets/autre-chantier.md"),
-    "# Autre chantier\n\n**Statut** (2026-10-04) : cadré, lot 1 en cours.\n\n## Reprise\n\nRien.\n");
-  appendFileSync(join(dir, "docs/projets/en-attente.md"),
-    "- [x] [IA] sujet pas fini `docs/projets/autre-chantier.md`.\n");
+  writeFileSync(
+    join(dir, "docs/projets/autre-chantier.md"),
+    "# Autre chantier\n\n**Statut** (2026-10-04) : cadré, lot 1 en cours.\n\n## Reprise\n\nRien.\n",
+  );
+  appendFileSync(join(dir, "docs/projets/en-attente.md"), "- [x] [IA] sujet pas fini `docs/projets/autre-chantier.md`.\n");
   direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(direct.status, 0);
   assert.match(direct.stdout, /autre-chantier\.md.*QUA-015|QUA-015.*autre-chantier\.md/);
@@ -427,7 +499,8 @@ test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async 
   assert.equal(direct.status, 0);
 
   const rappel = spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
-    cwd: dir, encoding: "utf8",
+    cwd: dir,
+    encoding: "utf8",
     input: JSON.stringify({ tool_name: "Write", tool_input: { file_path: join(dir, "scripts/tache.mjs") } }),
   });
   assert.equal(rappel.stdout.trim(), "", "le rappel à l'agent se tait aussi quand cadrage est désactivé");
@@ -438,20 +511,26 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
   await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
 
   const gardeFou = spawnSync(process.execPath, [".claude/hooks/garde-fou-bash.mjs"], {
-    cwd: dir, encoding: "utf8", input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat .env" } }),
+    cwd: dir,
+    encoding: "utf8",
+    input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat .env" } }),
   });
   assert.match(gardeFou.stdout, /"permissionDecision":"ask"/);
   assert.match(gardeFou.stdout, /fichier \.env/);
 
   const inoffensif = spawnSync(process.execPath, [".claude/hooks/garde-fou-bash.mjs"], {
-    cwd: dir, encoding: "utf8", input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat .env.example" } }),
+    cwd: dir,
+    encoding: "utf8",
+    input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat .env.example" } }),
   });
   assert.equal(inoffensif.stdout.trim(), "");
 
-  const hook = (evenement, chemin) => spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
-    cwd: dir, encoding: "utf8",
-    input: JSON.stringify({ hook_event_name: evenement, tool_name: "Write", tool_input: { file_path: join(dir, chemin) } }),
-  });
+  const hook = (evenement, chemin) =>
+    spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({ hook_event_name: evenement, tool_name: "Write", tool_input: { file_path: join(dir, chemin) } }),
+    });
   // Défaut « bloquant » : refus AVANT l'écriture d'un fichier de code hors fiche (docs/projets/journal.md, garde-fous).
   const refus = hook("PreToolUse", "scripts/nouveau.mjs");
   assert.match(refus.stdout, /"permissionDecision":"deny"/);
@@ -504,38 +583,81 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
   const fiche = "docs/projets/essai.md";
-  writeFileSync(join(dir, fiche), "# Projet : Essai\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/essai.ts\n-->\n");
+  writeFileSync(
+    join(dir, fiche),
+    "# Projet : Essai\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/essai.ts\n-->\n",
+  );
   git(dir, "init", "-q");
   git(dir, "add", "-A");
   git(dir, "commit", "-qm", "init");
 
   const reglages = JSON.parse(read(dir, ".claude/settings.json"));
   for (const evenement of ["PreToolUse", "PostToolUse"]) {
-    assert.ok(reglages.hooks[evenement].some((h) => h.matcher === "AskUserQuestion" && /saisie-drwil\.mjs/.test(JSON.stringify(h.hooks))), evenement);
+    assert.ok(
+      reglages.hooks[evenement].some((h) => h.matcher === "AskUserQuestion" && /saisie-drwil\.mjs/.test(JSON.stringify(h.hooks))),
+      evenement,
+    );
   }
   assert.ok(reglages.permissions.deny.includes("Bash(*saisie-drwil*)"), "l'agent ne peut pas appeler le hook lui-même par le shell");
   assert.ok(existsSync(join(dir, ".claude/skills/lancer-un-chantier/SKILL.md")));
 
-  const hook = (entree) => spawnSync(process.execPath, [".claude/hooks/saisie-drwil.mjs"], { cwd: dir, encoding: "utf8", input: JSON.stringify(entree) });
+  const hook = (entree) =>
+    spawnSync(process.execPath, [".claude/hooks/saisie-drwil.mjs"], { cwd: dir, encoding: "utf8", input: JSON.stringify(entree) });
   const etat = () => (existsSync(join(dir, ".drwil/state.json")) ? JSON.parse(read(dir, ".drwil/state.json")) : null);
-  const claude = { questions: [{ question: "Quelle fiche lancer ?", header: "drwil-lancer", options: [{ label: fiche, description: "Essai" }, { label: "docs/projets/autre.md", description: "Autre" }], multiSelect: false }] };
-  const copilot = { message: "drwil-lancer : quelle fiche lancer ?", requestedSchema: { properties: { choix: { type: "string", enum: [fiche, "docs/projets/autre.md"] } } } };
+  const claude = {
+    questions: [
+      {
+        question: "Quelle fiche lancer ?",
+        header: "drwil-lancer",
+        options: [
+          { label: fiche, description: "Essai" },
+          { label: "docs/projets/autre.md", description: "Autre" },
+        ],
+        multiSelect: false,
+      },
+    ],
+  };
+  const copilot = {
+    message: "drwil-lancer : quelle fiche lancer ?",
+    requestedSchema: { properties: { choix: { type: "string", enum: [fiche, "docs/projets/autre.md"] } } },
+  };
 
   // Le modèle ne répond pas à la place de l'humain et ne présélectionne rien : refusé avant l'affichage.
-  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: { ...claude, answers: { "Quelle fiche lancer ?": fiche } } }).status, 2);
+  assert.equal(
+    hook({
+      hook_event_name: "PreToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: { ...claude, answers: { "Quelle fiche lancer ?": fiche } },
+    }).status,
+    2,
+  );
   const avecDefaut = structuredClone(copilot);
   avecDefaut.requestedSchema.properties.choix.default = fiche;
   assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: avecDefaut }).status, 2);
-  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: claude }).status, 0, "un vrai sondage passe");
+  assert.equal(
+    hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: claude }).status,
+    0,
+    "un vrai sondage passe",
+  );
   assert.equal(etat(), null, "rien n'est lancé avant la réponse");
 
   // Un sondage qui n'est pas celui de drwil ne lance rien, même avec une fiche en réponse.
   const autre = { questions: [{ ...claude.questions[0], header: "Autre" }] };
-  hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: autre, tool_response: { ...autre, answers: { "Quelle fiche lancer ?": fiche } } });
+  hook({
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: autre,
+    tool_response: { ...autre, answers: { "Quelle fiche lancer ?": fiche } },
+  });
   assert.equal(etat(), null);
 
   // Claude Code : la réponse humaine arrive dans tool_response.answers.
-  const r = hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: claude, tool_response: { ...claude, answers: { "Quelle fiche lancer ?": fiche } } });
+  const r = hook({
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: claude,
+    tool_response: { ...claude, answers: { "Quelle fiche lancer ?": fiche } },
+  });
   assert.equal(r.status, 0);
   assert.match(r.stdout, /REALISATION \(lancé : docs\/projets\/essai\.md\)/);
   assert.equal(etat().activite, "REALISATION");
@@ -544,22 +666,57 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
 
   // Seconde question (en-tête drwil-fusion) : seule la réponse humaine autorise la fusion automatique.
   rmSync(join(dir, ".drwil/state.json"));
-  const fusion = { question: "Fusion à la fin du chantier ?", header: "drwil-fusion", options: [{ label: "Fusion automatique", description: "…" }, { label: "Fusion manuelle", description: "…" }], multiSelect: false };
+  const fusion = {
+    question: "Fusion à la fin du chantier ?",
+    header: "drwil-fusion",
+    options: [
+      { label: "Fusion automatique", description: "…" },
+      { label: "Fusion manuelle", description: "…" },
+    ],
+    multiSelect: false,
+  };
   const claudeFusion = { questions: [...claude.questions, fusion] };
-  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: { ...claudeFusion, answers: { "Fusion à la fin du chantier ?": "Fusion automatique" } } }).status, 2);
-  hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: claudeFusion, tool_response: { ...claudeFusion, answers: { "Quelle fiche lancer ?": fiche, "Fusion à la fin du chantier ?": "Fusion manuelle" } } });
+  assert.equal(
+    hook({
+      hook_event_name: "PreToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: { ...claudeFusion, answers: { "Fusion à la fin du chantier ?": "Fusion automatique" } },
+    }).status,
+    2,
+  );
+  hook({
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: claudeFusion,
+    tool_response: { ...claudeFusion, answers: { "Quelle fiche lancer ?": fiche, "Fusion à la fin du chantier ?": "Fusion manuelle" } },
+  });
   assert.equal(etat().fusion_autorisee, undefined);
   rmSync(join(dir, ".drwil/state.json"));
-  const rf = hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: claudeFusion, tool_response: { ...claudeFusion, answers: { "Quelle fiche lancer ?": fiche, "Fusion à la fin du chantier ?": "Fusion automatique" } } });
+  const rf = hook({
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: claudeFusion,
+    tool_response: { ...claudeFusion, answers: { "Quelle fiche lancer ?": fiche, "Fusion à la fin du chantier ?": "Fusion automatique" } },
+  });
   assert.match(rf.stdout, /fusion automatique autorisée/i);
   assert.equal(etat().fusion_autorisee, true);
 
   // Copilot CLI : même hook, réponse en texte libre ; une fiche non cadrée est refusée.
   rmSync(join(dir, ".drwil/state.json"));
-  const refus = hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: copilot, tool_result: { result_type: "success", text_result_for_llm: "User responded: docs/projets/autre.md" } });
+  const refus = hook({
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: copilot,
+    tool_result: { result_type: "success", text_result_for_llm: "User responded: docs/projets/autre.md" },
+  });
   assert.match(refus.stdout, /n'est pas une fiche cadrée/);
   assert.equal(etat(), null);
-  hook({ hook_event_name: "PostToolUse", tool_name: "AskUserQuestion", tool_input: copilot, tool_result: { result_type: "success", text_result_for_llm: `User responded: ${fiche}` } });
+  hook({
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: copilot,
+    tool_result: { result_type: "success", text_result_for_llm: `User responded: ${fiche}` },
+  });
   assert.equal(etat().activite, "REALISATION");
 });
 
@@ -567,7 +724,12 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
   const fiche = "docs/projets/mecanique-ia-first.md";
-  const drwilEtat = (...args) => spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "etat", ...args], { cwd: dir, encoding: "utf8", env: envTest });
+  const drwilEtat = (...args) =>
+    spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "etat", ...args], {
+      cwd: dir,
+      encoding: "utf8",
+      env: envTest,
+    });
 
   assert.equal(config(dir).transitions, "humain");
   // Sans terminal interactif, ouvrir une attente est refusé en mode humain.
@@ -583,11 +745,13 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
 
   // Barrière de périmètre : livrée en avertissement, hook du trailer exécutable, couverte par la fiche mécanique.
   assert.equal(config(dir).barriere, "avertissement");
-  if (process.platform !== "win32") assert.ok(statSync(join(dir, ".githooks/prepare-commit-msg")).mode & 0o111, "prepare-commit-msg exécutable");
+  if (process.platform !== "win32")
+    assert.ok(statSync(join(dir, ".githooks/prepare-commit-msg")).mode & 0o111, "prepare-commit-msg exécutable");
   assert.match(read(dir, "docs/projets/mecanique-ia-first.md"), /\.githooks\/perimetre\.mjs/);
 
   const deny = JSON.parse(read(dir, ".claude/settings.json")).permissions.deny;
-  for (const regle of ["Edit(**/.drwil/state.json)", "Write(**/.drwil/state.json)", "Bash(git commit -n*)"]) assert.ok(deny.includes(regle), regle);
+  for (const regle of ["Edit(**/.drwil/state.json)", "Write(**/.drwil/state.json)", "Bash(git commit -n*)"])
+    assert.ok(deny.includes(regle), regle);
   assert.ok(deny.some((r) => r.includes("no-verify")));
   // L'option globale `git -c clé=valeur` (exécution arbitraire) est refusée en tête ; le motif large
   // qui refusait aussi les options `-c` des sous-commandes (création de branche…) ne revient pas.
@@ -595,13 +759,17 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
   assert.ok(!deny.some((r) => /^Bash\(git \*.*-c \*\)$/.test(r)), "aucun refus de -c n'importe où dans une commande git");
   // Ce que deviendrait un `-c` placé après une autre option globale : aucune autorisation git ne le couvre.
   const allow = JSON.parse(read(dir, ".claude/settings.json")).permissions.allow;
-  assert.ok(allow.filter((r) => r.startsWith("Bash(git ")).every((r) => /^Bash\(git [a-z-]+(:\*)?\)$/.test(r)), "allow git = préfixes de sous-commande");
+  assert.ok(
+    allow.filter((r) => r.startsWith("Bash(git ")).every((r) => /^Bash\(git [a-z-]+(:\*)?\)$/.test(r)),
+    "allow git = préfixes de sous-commande",
+  );
 });
 
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {
   const dir = tmp();
-  mkdirSync(join(dir, "api")); mkdirSync(join(dir, "web"));
-  writeFileSync(join(dir, "api/pyproject.toml"), "[project]\ndependencies = [\"fastapi\"]\n");
+  mkdirSync(join(dir, "api"));
+  mkdirSync(join(dir, "web"));
+  writeFileSync(join(dir, "api/pyproject.toml"), '[project]\ndependencies = ["fastapi"]\n');
   writeFileSync(join(dir, "web/package.json"), JSON.stringify({ dependencies: { react: "18" }, devDependencies: { vite: "5" } }));
   writeFileSync(join(dir, "README.md"), "# existant\n");
   await quiet(() => apply({ targetDir: dir }));
@@ -610,7 +778,10 @@ test("apply sur un projet existant : stack et couches découvertes, rien d'écra
   assert.ok(!existsSync(join(dir, "backend")), "pas de couche inventée");
   const cfg = config(dir);
   assert.deepEqual(cfg.layers, ["api", "web"]);
-  assert.deepEqual(cfg.stack, [{ path: "api", technos: ["Python (FastAPI)"] }, { path: "web", technos: ["Node.js (React, Vite)"] }]);
+  assert.deepEqual(cfg.stack, [
+    { path: "api", technos: ["Python (FastAPI)"] },
+    { path: "web", technos: ["Node.js (React, Vite)"] },
+  ]);
   assert.match(read(dir, "docs/architecture.md"), /`web\/` : Node\.js \(React, Vite\)/);
   assert.match(read(dir, "api/AGENTS.md"), /couche api/);
   const r = checks(dir);
@@ -629,9 +800,19 @@ test("apply() signale (sans réécrire) un fichier déjà présent qui a dériv�
   const avant = read(dir, "docs/recettes/refactorer-sans-casser.md");
   writeFileSync(join(dir, "docs/recettes/refactorer-sans-casser.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n");
   lignes = await capture(() => apply({ targetDir: dir, git: false, layers: "backend,frontend" }));
-  assert.ok(lignes.some((l) => l.includes("dérivés")), lignes.join("\n"));
-  assert.ok(lignes.some((l) => l.includes("docs/recettes/refactorer-sans-casser.md")), lignes.join("\n"));
-  assert.equal(read(dir, "docs/recettes/refactorer-sans-casser.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n", "jamais réécrit automatiquement");
+  assert.ok(
+    lignes.some((l) => l.includes("dérivés")),
+    lignes.join("\n"),
+  );
+  assert.ok(
+    lignes.some((l) => l.includes("docs/recettes/refactorer-sans-casser.md")),
+    lignes.join("\n"),
+  );
+  assert.equal(
+    read(dir, "docs/recettes/refactorer-sans-casser.md"),
+    "# Refactorer\n\nTexte raccourci, une seule section.\n",
+    "jamais réécrit automatiquement",
+  );
   assert.notEqual(read(dir, "docs/recettes/refactorer-sans-casser.md"), avant);
 });
 
@@ -712,7 +893,12 @@ test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .
 
   // confirmation acceptée : réécrit, .bak créé avec l'ancien contenu, diff transmis au confirmateur.
   let diffRecu = "";
-  rapport = await quiet(() => resoudreDerive({ targetDir: dir }, (rel, diff) => { diffRecu = diff; return rel === cible; }));
+  rapport = await quiet(() =>
+    resoudreDerive({ targetDir: dir }, (rel, diff) => {
+      diffRecu = diff;
+      return rel === cible;
+    }),
+  );
   assert.ok(rapport.resolus.includes(cible), rapport.resolus.join(","));
   assert.match(diffRecu, /personnalisé par le projet/);
   assert.equal(read(dir, cible), original, "réécrit avec le contenu du modèle");
@@ -720,14 +906,24 @@ test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .
 
   // plus rien à résoudre une fois réécrit (confirmateur jamais appelé).
   let appele = false;
-  rapport = await quiet(() => resoudreDerive({ targetDir: dir }, () => { appele = true; return true; }));
+  rapport = await quiet(() =>
+    resoudreDerive({ targetDir: dir }, () => {
+      appele = true;
+      return true;
+    }),
+  );
   assert.ok(!appele);
   assert.ok(!rapport.resolus.length && !rapport.ignores.length);
 
   // --forcer : écrase sans passer par le confirmateur (dérive réintroduite pour le test).
   writeFileSync(join(dir, cible), "// re-personnalisé\n" + original);
   appele = false;
-  rapport = await quiet(() => resoudreDerive({ targetDir: dir, forcer: true }, () => { appele = true; return true; }));
+  rapport = await quiet(() =>
+    resoudreDerive({ targetDir: dir, forcer: true }, () => {
+      appele = true;
+      return true;
+    }),
+  );
   assert.ok(!appele, "--forcer n'appelle jamais le confirmateur");
   assert.ok(rapport.resolus.includes(cible));
   assert.equal(read(dir, cible), original);
@@ -774,7 +970,10 @@ test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne versio
   const lignes = await capture(() => init({ targetDir: dir, git: false }));
   assert.ok(!existsSync(join(dir, obsolete)), "fichier obsolète non modifié supprimé");
   assert.ok(existsSync(join(dir, obsoleteModifie)), "fichier obsolète mais modifié conservé");
-  assert.ok(lignes.some((l) => l.includes(obsolete)), lignes.join("\n"));
+  assert.ok(
+    lignes.some((l) => l.includes(obsolete)),
+    lignes.join("\n"),
+  );
 
   const manifesteApres = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
   assert.ok(!(obsolete in manifesteApres), "entrée retirée du manifeste");
@@ -844,7 +1043,11 @@ test("QUA-017 : pas de travail direct sur la branche principale, même pour le t
   writeFileSync(join(dir, "docs/projets/entretien-courant.md"), read(dir, "docs/projets/entretien-courant.md") + "\n");
   git(dir, "add", "-A");
   const surBranche = git(dir, "commit", "-qm", "commit sur une branche");
-  assert.equal(surBranche.status, 0, "un commit sur une branche non principale n'est jamais bloqué : " + surBranche.stdout + surBranche.stderr);
+  assert.equal(
+    surBranche.status,
+    0,
+    "un commit sur une branche non principale n'est jamais bloqué : " + surBranche.stdout + surBranche.stderr,
+  );
 });
 
 test("QUA-017 : un push ne contenant que des tags ou des suppressions de branches n'est jamais bloqué, un push de la branche principale continue de l'être", async () => {
@@ -883,7 +1086,11 @@ test("QUA-017 : un push ne contenant que des tags ou des suppressions de branche
     git(dir, "checkout", "-q", "master");
   }
   const suppression = git(dir, "push", "-q", "origin", "--delete", "chantier/fini");
-  assert.equal(suppression.status, 0, "une suppression de branche distante n'est plus bloquée : " + suppression.stdout + suppression.stderr);
+  assert.equal(
+    suppression.status,
+    0,
+    "une suppression de branche distante n'est plus bloquée : " + suppression.stdout + suppression.stderr,
+  );
   // « :branche » supprime, « master » pousse la branche principale (`--delete` supprimerait les deux).
   const suppressionMixte = git(dir, "push", "-q", "origin", ":chantier/autre", "master");
   assert.notEqual(suppressionMixte.status, 0, "suppression + branche principale : contrôlé, par prudence");
@@ -961,7 +1168,10 @@ test("gabarits de pull/merge request : livrés selon le ci et la langue choisis"
 test("QUA-013 : un job CI qui ne se déclenche plus sur les bons chemins est détecté", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, ci: "gitlab", git: false }));
-  writeFileSync(join(dir, ".gitlab-ci.yml"), "checks:\n  image: node:20\n  rules:\n    - changes:\n        - frontend/**\n  script:\n    - node .githooks/run-checks.mjs\n");
+  writeFileSync(
+    join(dir, ".gitlab-ci.yml"),
+    "checks:\n  image: node:20\n  rules:\n    - changes:\n        - frontend/**\n  script:\n    - node .githooks/run-checks.mjs\n",
+  );
   const r = spawnSync(process.execPath, [".githooks/check-control-coverage.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 1);
   assert.match(r.stdout, /secrets-fichiers/);
@@ -979,7 +1189,7 @@ test("pre-commit : un contrôle du projet hors de ses chemins est reporté (visi
   const dir = tmp();
   await quiet(() => init({ targetDir: dir }));
   const cfg = config(dir);
-  cfg.checks = [{ name: "suite lourde", run: "node -e \"process.exit(1)\"", chemins: ["src/**"] }];
+  cfg.checks = [{ name: "suite lourde", run: 'node -e "process.exit(1)"', chemins: ["src/**"] }];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
   git(dir, "add", "-A");
   const horsChemins = git(dir, "commit", "-qm", "rien sous src/");
@@ -1115,11 +1325,22 @@ test("lot 7 : installation anglaise complète, contenu des lots 1 à 6 traduit, 
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, lang: "en", git: false }));
   for (const f of [
-    "README.md", "INSTALL.md", "docs/security.md", "docs/features.md", "docs/style-guide.md",
-    "docs/deployment.md", "docs/projects/routine-maintenance.md", "docs/projects/model-project-sheet.md",
-    "docs/recipes/manage-access.md", "docs/recipes/run-locally.md", "docs/recipes/modify-permissions.md",
-    "docs/recipes/backup-and-restore.md", "docs/contracts-catalog.md", "docs/recipes/adopt-the-kit.md",
-    ".claude/skills/adopt-the-kit/SKILL.md", ".claude/skills/refactor-without-breaking/SKILL.md",
+    "README.md",
+    "INSTALL.md",
+    "docs/security.md",
+    "docs/features.md",
+    "docs/style-guide.md",
+    "docs/deployment.md",
+    "docs/projects/routine-maintenance.md",
+    "docs/projects/model-project-sheet.md",
+    "docs/recipes/manage-access.md",
+    "docs/recipes/run-locally.md",
+    "docs/recipes/modify-permissions.md",
+    "docs/recipes/backup-and-restore.md",
+    "docs/contracts-catalog.md",
+    "docs/recipes/adopt-the-kit.md",
+    ".claude/skills/adopt-the-kit/SKILL.md",
+    ".claude/skills/refactor-without-breaking/SKILL.md",
   ]) {
     assert.ok(existsSync(join(dir, f)), f);
   }
@@ -1137,17 +1358,18 @@ test("lot 7 : même nombre de fichiers livrés en français et en anglais", asyn
   assert.equal(compter(en), compter(fr));
 });
 
-
 test("module optionnel tableau de bord : génère un HTML lisant chantiers et contrats tels quels", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
-  writeFileSync(join(dir, "docs/projets/un-chantier.md"),
+  writeFileSync(
+    join(dir, "docs/projets/un-chantier.md"),
     "# Projet : un chantier\n\n**Statut** : cadré le 2026-10-04 — lot 1 en cours.\n\n" +
-    "## 6. Lots\n\n- **Lot 1 — titre** [IA] : contenu. Critère de sortie : tests verts.\n\n" +
-    "## Reprise\n\n- **Dernier état** (2026-10-04) : ...\n");
+      "## 6. Lots\n\n- **Lot 1 — titre** [IA] : contenu. Critère de sortie : tests verts.\n\n" +
+      "## Reprise\n\n- **Dernier état** (2026-10-04) : ...\n",
+  );
   const r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   const html = read(dir, "docs/tableau-de-bord.html");
@@ -1173,11 +1395,14 @@ test("module optionnel tableau de bord : agrège .drwil/usage.jsonl par chantier
 
   // Avec usage.jsonl : agrégation tokens/durée/modèles par chantier, lignes malformées ignorées.
   mkdirSync(join(dir, ".drwil"), { recursive: true });
-  writeFileSync(join(dir, ".drwil/usage.jsonl"), [
-    JSON.stringify({ chantier: "un-chantier", lot: "Lot 1", tokens: 1000, modele: "claude-sonnet-5", duree_min: 30, date: "2026-10-04" }),
-    JSON.stringify({ chantier: "un-chantier", lot: "Lot 2", tokens: 2000, modele: "gpt-5.4", duree_min: 45, date: "2026-10-04" }),
-    "pas du JSON valide",
-  ].join("\n") + "\n");
+  writeFileSync(
+    join(dir, ".drwil/usage.jsonl"),
+    [
+      JSON.stringify({ chantier: "un-chantier", lot: "Lot 1", tokens: 1000, modele: "claude-sonnet-5", duree_min: 30, date: "2026-10-04" }),
+      JSON.stringify({ chantier: "un-chantier", lot: "Lot 2", tokens: 2000, modele: "gpt-5.4", duree_min: 45, date: "2026-10-04" }),
+      "pas du JSON valide",
+    ].join("\n") + "\n",
+  );
   r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   const html = read(dir, "docs/tableau-de-bord.html");
@@ -1200,10 +1425,14 @@ test("module optionnel tableau de bord : affiche les derniers audits, sans régr
   assert.match(read(dir, "docs/tableau-de-bord.html"), /audit-risques\.md absent/);
 
   // Avec les deux rapports : titre et méta-bloc (citation en tête) repris tels quels.
-  writeFileSync(join(dir, "docs/audit-risques.md"),
-    "# Audit de risques et dette technique\n\n> Dernier scan : 2026-10-04\n> Niveau de santé global : 🟠 Fragile\n\n## Synthèse\n");
-  writeFileSync(join(dir, "docs/decouverte-valeur.md"),
-    "# Découverte de valeur et opportunités produit\n\n> Dernier scan : 2026-10-04\n> État du projet : exemple.\n\n## Opportunités\n");
+  writeFileSync(
+    join(dir, "docs/audit-risques.md"),
+    "# Audit de risques et dette technique\n\n> Dernier scan : 2026-10-04\n> Niveau de santé global : 🟠 Fragile\n\n## Synthèse\n",
+  );
+  writeFileSync(
+    join(dir, "docs/decouverte-valeur.md"),
+    "# Découverte de valeur et opportunités produit\n\n> Dernier scan : 2026-10-04\n> État du projet : exemple.\n\n## Opportunités\n",
+  );
   r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   const html = read(dir, "docs/tableau-de-bord.html");
@@ -1221,7 +1450,10 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
 
   // rapport récent : pas d'avertissement.
-  writeFileSync(join(dir, "docs/audit-risques.md"), "# Audit de risques et dette technique\n\n> Dernier scan : 2026-10-04\n\n## Synthèse\n");
+  writeFileSync(
+    join(dir, "docs/audit-risques.md"),
+    "# Audit de risques et dette technique\n\n> Dernier scan : 2026-10-04\n\n## Synthèse\n",
+  );
   let r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.doesNotMatch(read(dir, "docs/tableau-de-bord.html"), /à relancer/);
@@ -1230,7 +1462,10 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
 
   // rapport vieux de plus de 30 jours : avertissement visuel dans le tableau de bord, et dans
   // run-checks.mjs (famille « non exécuté », jamais bloquant).
-  writeFileSync(join(dir, "docs/audit-risques.md"), "# Audit de risques et dette technique\n\n> Dernier scan : 2020-01-01\n\n## Synthèse\n");
+  writeFileSync(
+    join(dir, "docs/audit-risques.md"),
+    "# Audit de risques et dette technique\n\n> Dernier scan : 2020-01-01\n\n## Synthèse\n",
+  );
   r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(read(dir, "docs/tableau-de-bord.html"), /à relancer/);
@@ -1242,14 +1477,31 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
 test("créer une release : détection du bump semver (Conventional Commits, best-effort)", async () => {
   // import() dynamique : passer l'URL file:// telle quelle (pas de conversion
   // en chemin OS) — un chemin Windows brut (d:\...) fait planter le loader ESM.
-  const { detecterBump, versionSuivante } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
+  const { detecterBump, versionSuivante } = await import(
+    new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url)
+  );
 
   assert.equal(detecterBump([]), null, "aucun commit : rien à publier");
-  assert.equal(detecterBump([{ sujet: "Manifeste des fichiers installés", corps: "" }]), "patch", "aucun préfixe reconnu : patch par défaut");
+  assert.equal(
+    detecterBump([{ sujet: "Manifeste des fichiers installés", corps: "" }]),
+    "patch",
+    "aucun préfixe reconnu : patch par défaut",
+  );
   assert.equal(detecterBump([{ sujet: "fix: corrige X", corps: "" }]), "patch");
-  assert.equal(detecterBump([{ sujet: "feat: ajoute Y", corps: "" }, { sujet: "fix: corrige X", corps: "" }]), "minor", "un feat l'emporte sur un simple fix");
+  assert.equal(
+    detecterBump([
+      { sujet: "feat: ajoute Y", corps: "" },
+      { sujet: "fix: corrige X", corps: "" },
+    ]),
+    "minor",
+    "un feat l'emporte sur un simple fix",
+  );
   assert.equal(detecterBump([{ sujet: "feat!: casse la compat", corps: "" }]), "major", "rupture annoncée (!) prioritaire");
-  assert.equal(detecterBump([{ sujet: "feat: ajoute Y", corps: "BREAKING CHANGE: change le format" }]), "major", "rupture annoncée dans le corps aussi détectée");
+  assert.equal(
+    detecterBump([{ sujet: "feat: ajoute Y", corps: "BREAKING CHANGE: change le format" }]),
+    "major",
+    "rupture annoncée dans le corps aussi détectée",
+  );
 
   assert.equal(versionSuivante("v1.2.3", "patch"), "v1.2.4");
   assert.equal(versionSuivante("v1.2.3", "minor"), "v1.3.0");
@@ -1330,7 +1582,7 @@ async function projetVerify(contrats, reglages = {}) {
   const cfg = { ...config(dir), ...reglages };
   cfg.checks = [
     { id: "ok", name: "toujours vert", run: 'node -e "process.exit(0)"' },
-    { id: "ko", name: "toujours rouge", run: 'node -e "console.log(\'cause du rouge\'); process.exit(1)"' },
+    { id: "ko", name: "toujours rouge", run: "node -e \"console.log('cause du rouge'); process.exit(1)\"" },
   ];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
   writeFileSync(join(dir, "docs/contrats.md"), `# Contrats\n\n${contrats}\n`);
@@ -1343,9 +1595,16 @@ test("verify : PASS (exit 0) quand toutes les obligations sont prouvées par un 
   const v = await verify({ targetDir: dir });
   assert.equal(v.statut, "PASS");
   assert.equal(v.code, 0);
-  assert.deepEqual(v.contrats.map((k) => [k.id, k.statut]), [["QUA-001", "PASS"]]);
+  assert.deepEqual(
+    v.contrats.map((k) => [k.id, k.statut]),
+    [["QUA-001", "PASS"]],
+  );
   assert.match(formaterVerdict(v), /GOVERNANCE: PASS/);
-  const cli = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify"], { cwd: dir, encoding: "utf8", env: envTest });
+  const cli = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify"], {
+    cwd: dir,
+    encoding: "utf8",
+    env: envTest,
+  });
   assert.equal(cli.status, 0, cli.stdout + cli.stderr);
 });
 
@@ -1362,11 +1621,16 @@ test("verify : FAIL (exit 1) dès qu'une obligation échoue, avec la cause visib
 });
 
 test("verify : MANUAL (exit 1, jamais PASS) pour une preuve humaine, partie automatisée affichée à part", async () => {
-  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture humaine") + contrat("QUA-002", "**Manuel** : appréciation"));
+  const dir = await projetVerify(
+    contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture humaine") + contrat("QUA-002", "**Manuel** : appréciation"),
+  );
   const v = await verify({ targetDir: dir });
   assert.equal(v.statut, "MANUAL");
   assert.equal(v.code, 1, "MANUAL empêche le 0 sans être une erreur technique");
-  assert.deepEqual(v.contrats.map((k) => k.statut), ["MANUAL", "MANUAL"]);
+  assert.deepEqual(
+    v.contrats.map((k) => k.statut),
+    ["MANUAL", "MANUAL"],
+  );
   const sortie = formaterVerdict(v);
   assert.match(sortie, /ok : ok \(automatisé\)/);
   assert.match(sortie, /humain requis : relecture humaine/);
@@ -1376,7 +1640,13 @@ test("verify : MANUAL (exit 1, jamais PASS) pour une preuve humaine, partie auto
 test("verify : contrat historique en tableau sans contrôle = MANUAL, jamais ignoré", async () => {
   const dir = await projetVerify(`| ID | Règle |\n|---|---|\n| SEC-006 | historique |\n\n${contrat("QUA-001", "**Contrôle** : `ok`")}`);
   const v = await verify({ targetDir: dir });
-  assert.deepEqual(v.contrats.map((k) => [k.id, k.statut]), [["SEC-006", "MANUAL"], ["QUA-001", "PASS"]]);
+  assert.deepEqual(
+    v.contrats.map((k) => [k.id, k.statut]),
+    [
+      ["SEC-006", "MANUAL"],
+      ["QUA-001", "PASS"],
+    ],
+  );
   assert.equal(v.statut, "MANUAL");
 });
 
@@ -1391,18 +1661,25 @@ test("verify : ERROR (exit 2) pour un contrôle inconnu, une obligation invérif
   assert.match(v.contrats[0].raisons.join(), /exigence absente/);
   assert.match(v.contrats[0].raisons.join(), /aucune preuve déclarée/);
 
-  v = await verify({ targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-001", "**Contrôle** : `ok`")) });
+  v = await verify({
+    targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-001", "**Contrôle** : `ok`")),
+  });
   assert.equal(v.statut, "ERROR");
   assert.match(v.erreurs.join(), /défini plusieurs fois/);
 
-  v = await verify({ targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `inexistant`") + contrat("QUA-002", "**Contrôle** : `ko`")) });
+  v = await verify({
+    targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `inexistant`") + contrat("QUA-002", "**Contrôle** : `ko`")),
+  });
   assert.equal(v.statut, "FAIL", "un échec établi l'emporte sur une erreur");
 });
 
 test("verify : ERROR (exit 2) sans moteur installé ou sans registre, hooks indépendants de drwil", async () => {
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`"));
   // Les hooks n'importent que .githooks/ : ils tournent sans drwil.
-  assert.doesNotMatch(read(dir, ".githooks/run-checks.mjs") + read(dir, ".githooks/moteur.mjs"), /from "drwil"|packages\/drwil|dist\/index/);
+  assert.doesNotMatch(
+    read(dir, ".githooks/run-checks.mjs") + read(dir, ".githooks/moteur.mjs"),
+    /from "drwil"|packages\/drwil|dist\/index/,
+  );
   writeFileSync(join(dir, "docs/contrats.md"), "# Contrats\n");
   let v = await verify({ targetDir: dir });
   assert.equal(v.code, 2);
@@ -1411,12 +1688,21 @@ test("verify : ERROR (exit 2) sans moteur installé ou sans registre, hooks ind�
   v = await verify({ targetDir: vide });
   assert.equal(v.code, 2);
   assert.match(v.erreurs.join(), /moteur de contrôles absent/);
-  const cli = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify"], { cwd: vide, encoding: "utf8", env: envTest });
+  const cli = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify"], {
+    cwd: vide,
+    encoding: "utf8",
+    env: envTest,
+  });
   assert.equal(cli.status, 2);
   assert.match(cli.stdout, /GOVERNANCE: VERIFY ERROR/);
 });
 
-const cliVerify = (dir) => spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify"], { cwd: dir, encoding: "utf8", env: envTest });
+const cliVerify = (dir) =>
+  spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify"], {
+    cwd: dir,
+    encoding: "utf8",
+    env: envTest,
+  });
 
 test("verify : exit 1 réel via la CLI pour FAIL et pour MANUAL, libellés distincts", async () => {
   const fail = cliVerify(await projetVerify(contrat("QUA-001", "**Contrôle** : `ko`")));
@@ -1465,7 +1751,11 @@ test("DRWIL-002 : check-docs refuse un contrat mal formé dès le commit (contr�
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, git: false }));
   const base = read(dir, "docs/contrats.md");
-  assert.equal(spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" }).status, 0, "le registre livré est valide");
+  assert.equal(
+    spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" }).status,
+    0,
+    "le registre livré est valide",
+  );
   writeFileSync(join(dir, "docs/contrats.md"), `${base}\n## QUA-020 — mal formé\n**Contrôle** : \`inexistant\`\n`);
   const r = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.notEqual(r.status, 0);
@@ -1473,10 +1763,17 @@ test("DRWIL-002 : check-docs refuse un contrat mal formé dès le commit (contr�
   assert.match(r.stdout + r.stderr, /QUA-020 : exigence absente/);
 });
 
-const cli = (dir, ...args) => spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), ...args], { cwd: dir, encoding: "utf8", env: envTest });
+const cli = (dir, ...args) =>
+  spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), ...args], {
+    cwd: dir,
+    encoding: "utf8",
+    env: envTest,
+  });
 
 test("DRWIL-004 : verify --json, format stable, rien d'autre sur stdout, mêmes codes de sortie", async () => {
-  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Manuel** : relecture") + contrat("QUA-003", "**Contrôle** : `ko`"));
+  const dir = await projetVerify(
+    contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Manuel** : relecture") + contrat("QUA-003", "**Contrôle** : `ko`"),
+  );
   const r = cli(dir, "verify", "--json");
   assert.equal(r.status, 1);
   const j = JSON.parse(r.stdout);
@@ -1484,7 +1781,14 @@ test("DRWIL-004 : verify --json, format stable, rien d'autre sur stdout, mêmes 
   assert.equal(j.status, "fail");
   assert.equal(j.exitCode, 1);
   assert.deepEqual(j.contracts, { total: 3, passed: 1, failed: 1, manual: 1, error: 0, attested: 0 }, "ajout compatible v1 : attested");
-  assert.deepEqual(j.results.map((k) => [k.id, k.status]), [["QUA-001", "pass"], ["QUA-002", "manual"], ["QUA-003", "fail"]]);
+  assert.deepEqual(
+    j.results.map((k) => [k.id, k.status]),
+    [
+      ["QUA-001", "pass"],
+      ["QUA-002", "manual"],
+      ["QUA-003", "fail"],
+    ],
+  );
   assert.equal(j.results[2].checks[0].status, "echec");
   assert.doesNotMatch(r.stdout, /cause du rouge/, "la sortie brute des contrôles n'est pas exposée");
   const manuel = cli(await projetVerify(contrat("QUA-001", "**Manuel** : relecture")), "verify", "--json");
@@ -1529,7 +1833,11 @@ test("DRWIL-011 : apply audite et prévisualise sans rien écrire ; l'aperçu co
   assert.ok(a.conserves.includes("CLAUDE.md") && !a.crees.includes("CLAUDE.md"));
   assert.ok(!existsSync(join(dir, "AGENTS.md")) && !existsSync(join(dir, ".drwil")), "l'aperçu n'écrit rien");
   assert.match(formaterAudit(a), /Rien ne sera écrasé/);
-  const dry = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "apply", "--dry-run", "--no-git"], { cwd: dir, encoding: "utf8", env: envTest });
+  const dry = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "apply", "--dry-run", "--no-git"], {
+    cwd: dir,
+    encoding: "utf8",
+    env: envTest,
+  });
   assert.equal(dry.status, 0, dry.stderr);
   assert.ok(!existsSync(join(dir, "AGENTS.md")), "--dry-run n'écrit rien");
   await quiet(() => apply({ targetDir: dir, git: false }));
@@ -1543,7 +1851,10 @@ test("DRWIL-012 : installation neuve sans bruit ; un risque déclaré trop bas e
   const propre = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(propre.status, 0, propre.stdout);
   assert.doesNotMatch(propre.stdout, /niveau de risque/, "aucun avertissement de risque à l'installation");
-  writeFileSync(join(dir, "docs/projets/toucher-hooks.md"), "# Projet : x\n\n**Statut** : cadré le 2026-10-06.\n**Risque** : LOW\n\n<!-- cadrage\nfichiers:\n  - .githooks/moteur.mjs\n-->\n\n## 7. Reprise\n\n- rien\n");
+  writeFileSync(
+    join(dir, "docs/projets/toucher-hooks.md"),
+    "# Projet : x\n\n**Statut** : cadré le 2026-10-06.\n**Risque** : LOW\n\n<!-- cadrage\nfichiers:\n  - .githooks/moteur.mjs\n-->\n\n## 7. Reprise\n\n- rien\n",
+  );
   const r = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.notEqual(r.status, 0);
   assert.match(r.stdout, /risque LOW déclaré.*HIGH au minimum/);
@@ -1552,9 +1863,15 @@ test("DRWIL-012 : installation neuve sans bruit ; un risque déclaré trop bas e
 test("DRWIL-013 : verify --evidence enregistre verdict, horodatage, commit et résumés caviardés", async () => {
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `fuite`"));
   const cfg = config(dir);
-  cfg.checks.push({ id: "fuite", name: "bavard", run: 'node -e "console.log(\'password=hunter2-tres-secret\'); console.log(\'jeton ghp_abcdefghijklmnopqrstuvwxyz0123\'); process.exit(1)"' });
+  cfg.checks.push({
+    id: "fuite",
+    name: "bavard",
+    run: "node -e \"console.log('password=hunter2-tres-secret'); console.log('jeton ghp_abcdefghijklmnopqrstuvwxyz0123'); process.exit(1)\"",
+  });
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
-  git(dir, "init", "-q"); git(dir, "add", "-A"); git(dir, "commit", "-qm", "x");
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "x");
   const r = cli(dir, "verify", "--json", "--evidence");
   assert.equal(r.status, 1);
   JSON.parse(r.stdout);
@@ -1573,10 +1890,23 @@ test("DRWIL-013 : verify --evidence enregistre verdict, horodatage, commit et r�
 
 test("DRWIL-020 : seuls les contrats bloquants décident du verdict ; avertissement et indicatif affichés", async () => {
   const avert = (id, ctl, sev) => contrat(id, `**Contrôle** : \`${ctl}\`\n**Sévérité** : ${sev}`);
-  let v = await verify({ targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + avert("QUA-002", "ko", "avertissement") + contrat("QUA-003", "**Manuel** : relecture\n**Sévérité** : indicatif")) });
+  let v = await verify({
+    targetDir: await projetVerify(
+      contrat("QUA-001", "**Contrôle** : `ok`") +
+        avert("QUA-002", "ko", "avertissement") +
+        contrat("QUA-003", "**Manuel** : relecture\n**Sévérité** : indicatif"),
+    ),
+  });
   assert.equal(v.statut, "PASS", "un avertissement en échec ne bloque pas le gate");
   assert.equal(v.code, 0);
-  assert.deepEqual(v.contrats.map((k) => [k.statut, k.severite]), [["PASS", "bloquant"], ["FAIL", "avertissement"], ["MANUAL", "indicatif"]]);
+  assert.deepEqual(
+    v.contrats.map((k) => [k.statut, k.severite]),
+    [
+      ["PASS", "bloquant"],
+      ["FAIL", "avertissement"],
+      ["MANUAL", "indicatif"],
+    ],
+  );
   assert.match(formaterVerdict(v), /1 avertissement\(s\) non satisfait\(s\), 1 indicatif\(s\) non satisfait\(s\)/);
   const j = JSON.parse(cli(await projetVerify(avert("QUA-002", "ko", "warning")), "verify", "--json").stdout);
   assert.deepEqual(j.bySeverity.warning, { total: 1, passed: 0, notPassed: 1 });
@@ -1592,8 +1922,14 @@ test("DRWIL-031 : l'exemple en 5 minutes du README est rejoué tel quel", async 
   const cfg = config(dir);
   cfg.checks = [{ id: "unit-tests", name: "unit tests", run: "node --test" }];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg, null, 2));
-  writeFileSync(join(dir, "docs/contracts.md"), read(dir, "docs/contracts.md") + "\n## QUA-020 — Unit tests pass\n**Rule**: every unit test passes.\n**Check**: `unit-tests`\n");
-  writeFileSync(join(dir, "sum.test.mjs"), 'import { test } from "node:test";\nimport assert from "node:assert/strict";\ntest("sum", () => assert.equal(1 + 1, 2));\n');
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    read(dir, "docs/contracts.md") + "\n## QUA-020 — Unit tests pass\n**Rule**: every unit test passes.\n**Check**: `unit-tests`\n",
+  );
+  writeFileSync(
+    join(dir, "sum.test.mjs"),
+    'import { test } from "node:test";\nimport assert from "node:assert/strict";\ntest("sum", () => assert.equal(1 + 1, 2));\n',
+  );
   let v = await verify({ targetDir: dir });
   assert.equal(v.contrats.find((k) => k.id === "QUA-020").statut, "PASS", formaterVerdict(v));
   assert.notEqual(v.statut, "PASS", "un projet neuf garde des contrats de socle MANUAL : jamais PASS d'office");
@@ -1614,7 +1950,12 @@ async function projetAtteste(contrats) {
   spawnSync("git", ["config", "user.name", "Testeuse"], { cwd: dir });
   return dir;
 }
-const attestations = (dir) => (existsSync(join(dir, ".drwil/evidence/attestations")) ? spawnSync("ls", [join(dir, ".drwil/evidence/attestations")], { encoding: "utf8" }).stdout.split("\n").filter(Boolean) : []);
+const attestations = (dir) =>
+  existsSync(join(dir, ".drwil/evidence/attestations"))
+    ? spawnSync("ls", [join(dir, ".drwil/evidence/attestations")], { encoding: "utf8" })
+        .stdout.split("\n")
+        .filter(Boolean)
+    : [];
 const MANUEL = contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture des fiches");
 
 test("attest : un MANUAL devient ATTESTED, verify le compte comme satisfait sans le confondre avec PASS", async () => {
@@ -1643,7 +1984,9 @@ test("attest : un MANUAL devient ATTESTED, verify le compte comme satisfait sans
 });
 
 test("attest : refus, contrat inconnu, contrat déjà PASS, contrat en échec", async () => {
-  const dir = await projetAtteste(MANUEL + contrat("QUA-002", "**Contrôle** : `ok`") + contrat("QUA-003", "**Contrôle** : `ko`\n**Manuel** : relecture"));
+  const dir = await projetAtteste(
+    MANUEL + contrat("QUA-002", "**Contrôle** : `ok`") + contrat("QUA-003", "**Contrôle** : `ko`\n**Manuel** : relecture"),
+  );
   let r = await attester({ targetDir: dir, id: "QUA-001", confirmer: non });
   assert.equal(r.code, 1);
   assert.match(r.message, /refusée/);
@@ -1665,7 +2008,10 @@ test("attest : obsolète si le contrat ou sa preuve change ; plusieurs attestati
   const dir = await projetAtteste(MANUEL);
   assert.equal((await attester({ targetDir: dir, id: "QUA-001", confirmer: oui, maintenant: new Date("2026-10-06T08:00:00Z") })).code, 0);
   assert.equal((await attester({ targetDir: dir, id: "QUA-001", confirmer: oui })).code, 1, "déjà attesté : pas de doublon");
-  writeFileSync(join(dir, "docs/contrats.md"), read(dir, "docs/contrats.md").replace("relecture des fiches", "relecture des fiches et des recettes"));
+  writeFileSync(
+    join(dir, "docs/contrats.md"),
+    read(dir, "docs/contrats.md").replace("relecture des fiches", "relecture des fiches et des recettes"),
+  );
   let v = await verify({ targetDir: dir });
   assert.equal(v.contrats[0].statut, "MANUAL", "contrat modifié : attestation obsolète, jamais une validation");
   assert.match(v.contrats[0].raisons.join(), /obsolète/);
@@ -1682,13 +2028,18 @@ test("attest : obsolète si le contrat ou sa preuve change ; plusieurs attestati
 
 test("attest : sévérités — seule une attestation de contrat bloquant pèse sur le verdict", async () => {
   const sev = (id, champs, s) => contrat(id, `${champs}\n**Sévérité** : ${s}`);
-  const dir = await projetAtteste(MANUEL + sev("QUA-002", "**Manuel** : relecture", "avertissement") + sev("QUA-003", "**Manuel** : relecture", "indicatif"));
+  const dir = await projetAtteste(
+    MANUEL + sev("QUA-002", "**Manuel** : relecture", "avertissement") + sev("QUA-003", "**Manuel** : relecture", "indicatif"),
+  );
   let v = await verify({ targetDir: dir });
   assert.equal(v.statut, "MANUAL", "le bloquant MANUAL décide");
   await attester({ targetDir: dir, id: "QUA-001", confirmer: oui });
   v = await verify({ targetDir: dir });
   assert.equal(v.statut, "PASS", "bloquant attesté ; avertissement et indicatif MANUAL restent informatifs");
-  assert.deepEqual(v.contrats.map((k) => k.statut), ["ATTESTED", "MANUAL", "MANUAL"]);
+  assert.deepEqual(
+    v.contrats.map((k) => k.statut),
+    ["ATTESTED", "MANUAL", "MANUAL"],
+  );
   await attester({ targetDir: dir, id: "QUA-003", confirmer: oui });
   v = await verify({ targetDir: dir });
   assert.equal(v.contrats[2].statut, "ATTESTED");
@@ -1697,12 +2048,26 @@ test("attest : sévérités — seule une attestation de contrat bloquant pèse 
 
 test("attest : aucun contournement (CLI sans terminal, attestation forgée, échec postérieur, non applicable)", async () => {
   const dir = await projetAtteste(MANUEL);
-  const cliAttest = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "attest", "QUA-001"], { cwd: dir, encoding: "utf8", env: envTest, input: "QUA-001\n" });
+  const cliAttest = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "attest", "QUA-001"], {
+    cwd: dir,
+    encoding: "utf8",
+    env: envTest,
+    input: "QUA-001\n",
+  });
   assert.equal(cliAttest.status, 1, "sans terminal interactif, pas d'attestation (agent, script, stdin redirigé)");
   assert.match(cliAttest.stderr, /terminal interactif est requis/);
   assert.deepEqual(attestations(dir), []);
   mkdirSync(join(dir, ".drwil/evidence/attestations"), { recursive: true });
-  writeFileSync(join(dir, ".drwil/evidence/attestations/QUA-001-forgee.json"), JSON.stringify({ version: 1, contract: "QUA-001", status: "ATTESTED", attestedAt: "2030-01-01T00:00:00.000Z", fingerprint: "0".repeat(64) }));
+  writeFileSync(
+    join(dir, ".drwil/evidence/attestations/QUA-001-forgee.json"),
+    JSON.stringify({
+      version: 1,
+      contract: "QUA-001",
+      status: "ATTESTED",
+      attestedAt: "2030-01-01T00:00:00.000Z",
+      fingerprint: "0".repeat(64),
+    }),
+  );
   let v = await verify({ targetDir: dir });
   assert.equal(v.contrats[0].statut, "MANUAL", "une empreinte qui ne correspond pas n'est jamais acceptée");
   await attester({ targetDir: dir, id: "QUA-001", confirmer: oui });
@@ -1719,7 +2084,12 @@ test("attest : aucun contournement (CLI sans terminal, attestation forgée, éch
 test("attest : aucune donnée sensible dans l'attestation (note caviardée, pas d'e-mail)", async () => {
   const dir = await projetAtteste(MANUEL);
   spawnSync("git", ["config", "user.email", "testeuse@exemple.invalid"], { cwd: dir });
-  const r = await attester({ targetDir: dir, id: "QUA-001", note: "ok avec password=hunter2 et ghp_abcdefghijklmnopqrstuvwxyz0123 " + "x".repeat(800), confirmer: oui });
+  const r = await attester({
+    targetDir: dir,
+    id: "QUA-001",
+    note: "ok avec password=hunter2 et ghp_abcdefghijklmnopqrstuvwxyz0123 " + "x".repeat(800),
+    confirmer: oui,
+  });
   assert.equal(r.code, 0);
   const brut = read(dir, r.fichier);
   assert.doesNotMatch(brut, /hunter2|ghp_abcdef|testeuse@exemple/);
@@ -1747,12 +2117,19 @@ test("verify --agent : PASS sans action, FAIL à corriger, ERROR à résoudre, s
   assert.equal(r.status, 2, "ERROR reste ERROR");
   assert.match(r.stdout, /GOVERNANCE: VERIFY ERROR/);
   assert.match(r.stdout, /do not claim the work is verified/);
-  assert.doesNotMatch(r.stdout, /Human attestation required|drwil attest/, "ERROR : problème de vérification à résoudre, pas d'attestation");
+  assert.doesNotMatch(
+    r.stdout,
+    /Human attestation required|drwil attest/,
+    "ERROR : problème de vérification à résoudre, pas d'attestation",
+  );
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture"));
   r = cli(dir, "verify", "--agent");
   assert.equal(r.status, 1);
   assert.match(r.stdout, /Human attestation required\.\n {2}- QUA-001/);
-  assert.match(r.stdout, /HUMAN ACTION — for the human, in their own interactive terminal; never run it yourself:\n {2}drwil attest <CONTRACT_ID>/);
+  assert.match(
+    r.stdout,
+    /HUMAN ACTION — for the human, in their own interactive terminal; never run it yourself:\n {2}drwil attest <CONTRACT_ID>/,
+  );
   assert.ok(!existsSync(join(dir, ".drwil/evidence")), "verify --agent n'écrit rien, n'atteste rien");
 });
 
@@ -1763,7 +2140,11 @@ test("/drwil verify (Claude) : adaptateur de la CLI, jamais d'attestation par l'
     const skill = read(dir, ".claude/skills/drwil/SKILL.md");
     assert.match(skill, /argument-hint: "\[verify\|/);
     assert.match(skill, /npx drwil verify --agent/);
-    assert.doesNotMatch(skill.split("\n").find((l) => l.startsWith("argument-hint")), /attest/, "aucun argument attest");
+    assert.doesNotMatch(
+      skill.split("\n").find((l) => l.startsWith("argument-hint")),
+      /attest/,
+      "aucun argument attest",
+    );
     assert.match(skill, lang === "fr" ? /Ne jamais exécuter `drwil attest`/ : /Never run `drwil attest`/);
     assert.match(read(dir, "AGENTS.md"), /drwil verify --agent/);
     assert.match(read(dir, "AGENTS.md"), lang === "fr" ? /un agent ne l'exécute jamais/ : /an agent never runs it/);
@@ -1775,23 +2156,54 @@ test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusé
   const bin = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
   const yes = cli(dir, "attest", "QUA-001", "--yes");
   assert.notEqual(yes.status, 0, "aucun --yes");
-  const pipe = spawnSync(process.execPath, [bin, "attest", "QUA-001"], { cwd: dir, encoding: "utf8", env: envTest, input: "QUA-001\nQUA-001\n" });
+  const pipe = spawnSync(process.execPath, [bin, "attest", "QUA-001"], {
+    cwd: dir,
+    encoding: "utf8",
+    env: envTest,
+    input: "QUA-001\nQUA-001\n",
+  });
   assert.equal(pipe.status, 1);
-  writeFileSync(join(dir, "script.mjs"), `import { spawnSync } from "node:child_process";\nconst r = spawnSync(process.execPath, [${JSON.stringify(bin)}, "attest", "QUA-001"], { stdio: "pipe" });\nprocess.exit(r.status);\n`);
+  writeFileSync(
+    join(dir, "script.mjs"),
+    `import { spawnSync } from "node:child_process";\nconst r = spawnSync(process.execPath, [${JSON.stringify(bin)}, "attest", "QUA-001"], { stdio: "pipe" });\nprocess.exit(r.status);\n`,
+  );
   assert.equal(spawnSync(process.execPath, ["script.mjs"], { cwd: dir, env: envTest }).status, 1, "invocation depuis un script refusée");
   assert.deepEqual(attestations(dir), [], "aucune attestation créée par ces tentatives");
   // Leurres : une « attestation » hors du dossier versionné, ou sans statut ATTESTED, n'est jamais lue.
   mkdirSync(join(dir, ".drwil/evidence/attestations"), { recursive: true });
   const k = (await verify({ targetDir: dir })).contrats[0];
-  writeFileSync(join(dir, ".drwil/evidence/QUA-001.json"), JSON.stringify({ contract: "QUA-001", status: "ATTESTED", fingerprint: k.empreinte }));
-  writeFileSync(join(dir, ".drwil/evidence/attestations/QUA-001-pass.json"), JSON.stringify({ contract: "QUA-001", status: "PASS", fingerprint: k.empreinte }));
+  writeFileSync(
+    join(dir, ".drwil/evidence/QUA-001.json"),
+    JSON.stringify({ contract: "QUA-001", status: "ATTESTED", fingerprint: k.empreinte }),
+  );
+  writeFileSync(
+    join(dir, ".drwil/evidence/attestations/QUA-001-pass.json"),
+    JSON.stringify({ contract: "QUA-001", status: "PASS", fingerprint: k.empreinte }),
+  );
   assert.equal((await verify({ targetDir: dir })).contrats[0].statut, "MANUAL");
   // Décision (a) assumée : une attestation écrite à la main avec la bonne empreinte est acceptée ;
   // elle n'échappe pas à la revue car son dossier est versionné (visible dans git status / la PR).
-  writeFileSync(join(dir, ".drwil/evidence/attestations/QUA-001-main.json"), JSON.stringify({ version: 1, contract: "QUA-001", status: "ATTESTED", attestedAt: "2026-10-06T10:00:00.000Z", fingerprint: k.empreinte }));
+  writeFileSync(
+    join(dir, ".drwil/evidence/attestations/QUA-001-main.json"),
+    JSON.stringify({
+      version: 1,
+      contract: "QUA-001",
+      status: "ATTESTED",
+      attestedAt: "2026-10-06T10:00:00.000Z",
+      fingerprint: k.empreinte,
+    }),
+  );
   assert.equal((await verify({ targetDir: dir })).contrats[0].statut, "ATTESTED");
-  assert.match(git(dir, "status", "--porcelain", "--untracked-files=all").stdout, /\.drwil\/evidence\/attestations\/QUA-001-main\.json/, "visible en revue, jamais ignorée par git");
-  assert.doesNotMatch(git(dir, "status", "--porcelain", "--untracked-files=all").stdout, /\.drwil\/evidence\/QUA-001\.json/, "les évidences locales restent hors git");
+  assert.match(
+    git(dir, "status", "--porcelain", "--untracked-files=all").stdout,
+    /\.drwil\/evidence\/attestations\/QUA-001-main\.json/,
+    "visible en revue, jamais ignorée par git",
+  );
+  assert.doesNotMatch(
+    git(dir, "status", "--porcelain", "--untracked-files=all").stdout,
+    /\.drwil\/evidence\/QUA-001\.json/,
+    "les évidences locales restent hors git",
+  );
   // Vraie attestation humaine (confirmation simulée par l'API, la CLI exigeant un terminal) : reconnue.
   const dir2 = await projetAtteste(MANUEL);
   assert.equal((await attester({ targetDir: dir2, id: "QUA-001", confirmer: oui })).code, 0);
@@ -1805,7 +2217,11 @@ test("paquet npm : aucun fichier du gabarit n'est retiré par npm, le .gitignore
   const racine = fileURLToPath(new URL("../templates", import.meta.url));
   const retires = spawnSync("find", [racine, "-name", ".gitignore", "-o", "-name", ".npmignore"], { encoding: "utf8" }).stdout.trim();
   assert.equal(retires, "", "npm retire ces fichiers d'un paquet publié : les livrer sous un autre nom (NOMS_LIVRES)");
-  const pack = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["pack", "--dry-run", "--json"], { cwd: fileURLToPath(new URL("..", import.meta.url)), encoding: "utf8", shell: process.platform === "win32" });
+  const pack = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["pack", "--dry-run", "--json"], {
+    cwd: fileURLToPath(new URL("..", import.meta.url)),
+    encoding: "utf8",
+    shell: process.platform === "win32",
+  });
   assert.equal(pack.status, 0, pack.stderr);
   const fichiers = JSON.parse(pack.stdout)[0].files.map((f) => f.path);
   assert.ok(fichiers.includes("templates/common/base/gitignore"), "le .gitignore du gabarit est bien dans le paquet");
@@ -1819,18 +2235,44 @@ test("paquet npm : aucun fichier du gabarit n'est retiré par npm, le .gitignore
 test("version unique : la release suit package.json et refuse un numéro déjà publié ou en recul ; --version lit package.json", async () => {
   const { deciderVersion } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
   const v = (version) => [{ dossier: "packages/drwil", version }];
-  assert.deepEqual(deciderVersion({ dernier: "v0.2.0", bump: "patch", versions: v("0.3.0"), tagsExistants: ["v0.2.0"] }), { prochain: "v0.3.0", source: "package.json (packages/drwil)" });
-  assert.match(deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.1"), tagsExistants: ["v0.2.1"] }).erreur, /v0\.2\.1 existe déjà/);
-  assert.match(deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.0"), tagsExistants: [] }).erreur, /n'est pas supérieure au dernier tag/);
-  assert.match(deciderVersion({ dernier: null, bump: "patch", versions: [{ dossier: "a", version: "1.0.0" }, { dossier: "b", version: "1.1.0" }] }).erreur, /en désaccord/);
+  assert.deepEqual(deciderVersion({ dernier: "v0.2.0", bump: "patch", versions: v("0.3.0"), tagsExistants: ["v0.2.0"] }), {
+    prochain: "v0.3.0",
+    source: "package.json (packages/drwil)",
+  });
+  assert.match(
+    deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.1"), tagsExistants: ["v0.2.1"] }).erreur,
+    /v0\.2\.1 existe déjà/,
+  );
+  assert.match(
+    deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.0"), tagsExistants: [] }).erreur,
+    /n'est pas supérieure au dernier tag/,
+  );
+  assert.match(
+    deciderVersion({
+      dernier: null,
+      bump: "patch",
+      versions: [
+        { dossier: "a", version: "1.0.0" },
+        { dossier: "b", version: "1.1.0" },
+      ],
+    }).erreur,
+    /en désaccord/,
+  );
   assert.match(deciderVersion({ dernier: null, bump: "patch", versions: v(undefined) }).erreur, /non semver/);
-  assert.deepEqual(deciderVersion({ dernier: "v1.2.3", bump: "minor", versions: [] }), { prochain: "v1.3.0", source: "commits" }, "sans paquet npm : calcul d'après les commits, inchangé");
+  assert.deepEqual(
+    deciderVersion({ dernier: "v1.2.3", bump: "minor", versions: [] }),
+    { prochain: "v1.3.0", source: "commits" },
+    "sans paquet npm : calcul d'après les commits, inchangé",
+  );
   assert.equal(deciderVersion({ dernier: "v1.2.3", bump: null, versions: v("9.9.9") }), null, "aucun commit : rien à publier");
 
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, git: true }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  writeFileSync(join(dir, ".githooks/creer-release.mjs"), readFileSync(fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url)), "utf8"));
+  writeFileSync(
+    join(dir, ".githooks/creer-release.mjs"),
+    readFileSync(fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url)), "utf8"),
+  );
   mkdirSync(join(dir, "packages/truc"), { recursive: true });
   writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc", version: "1.0.0" }));
   git(dir, "add", "-A");

@@ -15,7 +15,8 @@ const CATALOGUE = { fr: "docs/catalogue-contrats.md", en: "docs/contracts-catalo
 const T = {
   fr: {
     titre: (p) => `Tableau de bord — ${p}`,
-    genere: (d) => `Généré le ${d} depuis les fichiers du dépôt (rien n'est recalculé : statuts et lots affichés tels qu'écrits dans chaque fiche).`,
+    genere: (d) =>
+      `Généré le ${d} depuis les fichiers du dépôt (rien n'est recalculé : statuts et lots affichés tels qu'écrits dans chaque fiche).`,
     enAttente: "Chantiers en attente",
     chantiers: "Chantiers (fiches de docs/projets/)",
     contrats: "Contrats",
@@ -37,7 +38,8 @@ const T = {
   },
   en: {
     titre: (p) => `Dashboard — ${p}`,
-    genere: (d) => `Generated on ${d} from the repository files (nothing is recomputed: statuses and lots are shown as written in each fiche).`,
+    genere: (d) =>
+      `Generated on ${d} from the repository files (nothing is recomputed: statuses and lots are shown as written in each fiche).`,
     enAttente: "Pending work",
     chantiers: "Projects (docs/projects/ fiches)",
     contrats: "Contracts",
@@ -87,9 +89,7 @@ function lireFiches() {
     .filter((e) => e.isFile() && e.name.endsWith(".md") && !MODELE_RE.test(e.name))
     .map((e) => join(projetsDir, e.name));
   const index = existsSync(indexPath) ? readFileSync(indexPath, "utf8") : null;
-  const fiches = fichiers
-    .filter((f) => f !== indexPath)
-    .map((f) => analyserFiche(f, readFileSync(f, "utf8")));
+  const fiches = fichiers.filter((f) => f !== indexPath).map((f) => analyserFiche(f, readFileSync(f, "utf8")));
   return { index, fiches };
 }
 
@@ -111,7 +111,11 @@ function analyserFiche(chemin, texte) {
 
 function ligneDeTableau(ligne) {
   if (!/^\|.*\|$/.test(ligne.trim())) return null;
-  const cols = ligne.trim().slice(1, -1).split("|").map((c) => c.trim());
+  const cols = ligne
+    .trim()
+    .slice(1, -1)
+    .split("|")
+    .map((c) => c.trim());
   if (cols.every((c) => /^:?-+:?$/.test(c))) return null; // ligne de séparation du tableau markdown
   return cols;
 }
@@ -128,7 +132,10 @@ function lireContrats(chemin) {
       let regle = "";
       for (let j = i + 1; j < lignes.length && !/^##\s/.test(lignes[j]); j++) {
         const rm = lignes[j].match(/^\*{0,2}(Règle|Rule)\*{0,2}\s?:\s?(.*)$/i);
-        if (rm) { regle = rm[2].trim(); break; }
+        if (rm) {
+          regle = rm[2].trim();
+          break;
+        }
       }
       out.push({ id: titre[1], regle });
       continue;
@@ -147,10 +154,17 @@ function echapper(s) {
 // de faire planter tout le tableau de bord — le fichier reste alimenté à la main ou par l'IA.
 function lireUsage(chemin) {
   if (!existsSync(chemin)) return [];
-  return readFileSync(chemin, "utf8").split(/\r?\n/)
+  return readFileSync(chemin, "utf8")
+    .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean)
-    .map((l) => { try { return JSON.parse(l); } catch { return null; } })
+    .map((l) => {
+      try {
+        return JSON.parse(l);
+      } catch {
+        return null;
+      }
+    })
     .filter((e) => e && typeof e.chantier === "string");
 }
 
@@ -168,33 +182,43 @@ function agregerUsage(entrees) {
 
 function rendreLots(lots) {
   if (!lots.length) return "";
-  return `<ul class="lots">${lots.map((l) =>
-    `<li><span class="marqueur">[${echapper(l.marqueur)}]</span> <strong>${echapper(l.titre)}</strong> — ${echapper(l.texte)}</li>`,
-  ).join("")}</ul>`;
+  return `<ul class="lots">${lots
+    .map(
+      (l) =>
+        `<li><span class="marqueur">[${echapper(l.marqueur)}]</span> <strong>${echapper(l.titre)}</strong> — ${echapper(l.texte)}</li>`,
+    )
+    .join("")}</ul>`;
 }
 
 function rendreIndex(texte) {
   if (!texte) return `<p>${T.absent}</p>`;
   const lignes = texte.split(/\r?\n/).filter((l) => /^\s*-\s*\[[ xX]\]/.test(l));
   if (!lignes.length) return `<p>${T.aucuneCase}</p>`;
-  return `<ul class="index">${lignes.map((l) => {
-    const coche = /^\s*-\s*\[[xX]\]/.test(l);
-    const contenu = l.replace(/^\s*-\s*\[[ xX]\]\s*/, "");
-    return `<li class="${coche ? "fait" : "ouvert"}">${coche ? "☑" : "☐"} ${echapper(contenu)}</li>`;
-  }).join("")}</ul>`;
+  return `<ul class="index">${lignes
+    .map((l) => {
+      const coche = /^\s*-\s*\[[xX]\]/.test(l);
+      const contenu = l.replace(/^\s*-\s*\[[ xX]\]\s*/, "");
+      return `<li class="${coche ? "fait" : "ouvert"}">${coche ? "☑" : "☐"} ${echapper(contenu)}</li>`;
+    })
+    .join("")}</ul>`;
 }
 
 function rendreContrats(titre, contrats) {
   if (!contrats.length) return `<h3>${echapper(titre)}</h3><p>${T.aucun}</p>`;
-  return `<h3>${echapper(titre)}</h3><table><thead><tr>${T.colonnesSimples.map((c) => `<th>${echapper(c)}</th>`).join("")}</tr></thead>` +
-    `<tbody>${contrats.map((c) => `<tr><td><code>${echapper(c.id)}</code></td><td>${echapper(c.regle)}</td></tr>`).join("")}</tbody></table>`;
+  return (
+    `<h3>${echapper(titre)}</h3><table><thead><tr>${T.colonnesSimples.map((c) => `<th>${echapper(c)}</th>`).join("")}</tr></thead>` +
+    `<tbody>${contrats.map((c) => `<tr><td><code>${echapper(c.id)}</code></td><td>${echapper(c.regle)}</td></tr>`).join("")}</tbody></table>`
+  );
 }
 
 function rendreConsommation(parChantier) {
   if (!parChantier.size) return `<p>${T.pasDeConso}</p>`;
-  const lignes = [...parChantier.entries()].map(([chantier, acc]) =>
-    `<tr><td><code>${echapper(chantier)}</code></td><td>${acc.tokens}</td><td>${acc.dureeMin}</td><td>${echapper([...acc.modeles].join(", "))}</td></tr>`,
-  ).join("");
+  const lignes = [...parChantier.entries()]
+    .map(
+      ([chantier, acc]) =>
+        `<tr><td><code>${echapper(chantier)}</code></td><td>${acc.tokens}</td><td>${acc.dureeMin}</td><td>${echapper([...acc.modeles].join(", "))}</td></tr>`,
+    )
+    .join("");
   return `<table><thead><tr>${T.colonnesConso.map((c) => `<th>${echapper(c)}</th>`).join("")}</tr></thead><tbody>${lignes}</tbody></table>`;
 }
 
@@ -207,8 +231,10 @@ function lireAudit(chemin) {
   const metaLignes = [];
   let dansBloc = false;
   for (const l of lignes) {
-    if (l.startsWith(">")) { dansBloc = true; metaLignes.push(l.replace(/^>\s?/, "")); }
-    else if (dansBloc) break;
+    if (l.startsWith(">")) {
+      dansBloc = true;
+      metaLignes.push(l.replace(/^>\s?/, ""));
+    } else if (dansBloc) break;
   }
   const entrees = [];
   for (const l of metaLignes) {
@@ -276,11 +302,17 @@ th { background: #f4f4f8; }
 ${rendreIndex(index)}
 
 <h2>${echapper(T.chantiers)}</h2>
-${fiches.map((f) => `<div class="fiche">
+${
+  fiches
+    .map(
+      (f) => `<div class="fiche">
   <h3>${echapper(f.titre)} <small>(<code>${echapper(f.chemin)}</code>)</small></h3>
   <p class="statut">${f.statut ? echapper(T.statut(f.statut)) : echapper(T.pasDeStatut)}</p>
   ${rendreLots(f.lots)}
-</div>`).join("") || `<p>${T.aucuneFiche}</p>`}
+</div>`,
+    )
+    .join("") || `<p>${T.aucuneFiche}</p>`
+}
 
 <h2>${echapper(T.contrats)}</h2>
 ${rendreContrats(T.installes(cheminContrats), registre)}

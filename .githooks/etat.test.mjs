@@ -6,7 +6,24 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { PassThrough } from "node:stream";
-import { ACTIVITES, ETAT_NEUTRE, contexte, principal, exigeHumain, lireEtat, passer, preparerTransition, preuveVerify, fichesCadrees, lancer, rappelCourt, rappelSiChange, statutFiche, transitionAutorisee, validerEtat } from "./etat.mjs";
+import {
+  ACTIVITES,
+  ETAT_NEUTRE,
+  contexte,
+  principal,
+  exigeHumain,
+  lireEtat,
+  passer,
+  preparerTransition,
+  preuveVerify,
+  fichesCadrees,
+  lancer,
+  rappelCourt,
+  rappelSiChange,
+  statutFiche,
+  transitionAutorisee,
+  validerEtat,
+} from "./etat.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -46,7 +63,9 @@ function depot({ etat, fiche = true, lang, config } = {}) {
   mkdirSync(join(racine, "docs", "projets"), { recursive: true });
   if (lang || config) writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ ...(lang ? { lang } : {}), ...config }));
   if (fiche) {
-    writeFileSync(join(racine, FICHE), `# Projet : Exemple
+    writeFileSync(
+      join(racine, FICHE),
+      `# Projet : Exemple
 
 **Statut** : cadré le 2026-10-09.
 
@@ -55,7 +74,8 @@ fichiers:
   - src/auth/login.ts
   - tests/auth/login.test.ts
 -->
-`);
+`,
+    );
   }
   if (etat !== undefined) {
     writeFileSync(join(racine, ".drwil", "state.json"), typeof etat === "string" ? etat : JSON.stringify(etat));
@@ -63,7 +83,14 @@ fichiers:
   return racine;
 }
 
-const actif = (activite, extra = {}) => ({ version: 1, activite, attente_active: FICHE, demande_active: null, depuis: "2026-10-09T10:00:00Z", ...extra });
+const actif = (activite, extra = {}) => ({
+  version: 1,
+  activite,
+  attente_active: FICHE,
+  demande_active: null,
+  depuis: "2026-10-09T10:00:00Z",
+  ...extra,
+});
 
 test("sans state.json : CADRAGE neutre, jamais d'état actif implicite", () => {
   const lu = lireEtat(depot());
@@ -190,10 +217,18 @@ const neutre = () => ({ etat: { ...ETAT_NEUTRE }, source: "absent", problemes: [
 
 test("préparer : ouvrir une attente exige une fiche existante", () => {
   const racine = depot();
-  assert.deepEqual(preparerTransition(neutre(), "ATTENTE", { fiche: FICHE, maintenant: MAINTENANT }, racine).etat,
-    { version: 1, activite: "ATTENTE", attente_active: FICHE, demande_active: null, depuis: MAINTENANT });
+  assert.deepEqual(preparerTransition(neutre(), "ATTENTE", { fiche: FICHE, maintenant: MAINTENANT }, racine).etat, {
+    version: 1,
+    activite: "ATTENTE",
+    attente_active: FICHE,
+    demande_active: null,
+    depuis: MAINTENANT,
+  });
   assert.match(preparerTransition(neutre(), "ATTENTE", { maintenant: MAINTENANT }, racine).erreur, /--fiche/);
-  assert.match(preparerTransition(neutre(), "ATTENTE", { fiche: "docs/projets/absente.md", maintenant: MAINTENANT }, racine).erreur, /introuvable/);
+  assert.match(
+    preparerTransition(neutre(), "ATTENTE", { fiche: "docs/projets/absente.md", maintenant: MAINTENANT }, racine).erreur,
+    /introuvable/,
+  );
 });
 
 test("préparer : transition interdite refusée, --fiche réservé à l'ouverture, abandon vers le neutre", () => {
@@ -214,7 +249,12 @@ test("humain requis (mode humain) : ouvrir et lancer la réalisation, pas clore 
   assert.equal(exigeHumain("REALISATION", "PREUVES", "humain"), false);
   assert.equal(exigeHumain("VERIFY", "REALISATION", "humain"), false, "retour sur la même attente");
   assert.equal(exigeHumain("REALISATION", "CADRAGE", "humain"), false, "l'abandon resserre les droits");
-  for (const [de, vers] of [["CADRAGE", "ATTENTE"], ["DEMANDE", "REALISATION"], ["VERIFY", "CLOTURE"]]) assert.equal(exigeHumain(de, vers, "agent"), false);
+  for (const [de, vers] of [
+    ["CADRAGE", "ATTENTE"],
+    ["DEMANDE", "REALISATION"],
+    ["VERIFY", "CLOTURE"],
+  ])
+    assert.equal(exigeHumain(de, vers, "agent"), false);
 });
 
 test("passer (mode humain par défaut) : refus sans terminal interactif, état inchangé", async () => {
@@ -227,11 +267,26 @@ test("passer (mode humain par défaut) : refus sans terminal interactif, état i
 
 test("passer : avec un humain qui confirme, l'état est écrit ; sans confirmation, rien", async () => {
   const racine = depot();
-  const refus = await passer(racine, { vers: "ATTENTE", fiche: FICHE }, { tty: true, confirmer: async () => false, maintenant: MAINTENANT });
+  const refus = await passer(
+    racine,
+    { vers: "ATTENTE", fiche: FICHE },
+    { tty: true, confirmer: async () => false, maintenant: MAINTENANT },
+  );
   assert.equal(refus.code, 1);
   assert.equal(lireEtat(racine).source, "absent");
   let question = "";
-  const ok = await passer(racine, { vers: "ATTENTE", fiche: FICHE }, { tty: true, confirmer: async (q) => { question = q; return true; }, maintenant: MAINTENANT });
+  const ok = await passer(
+    racine,
+    { vers: "ATTENTE", fiche: FICHE },
+    {
+      tty: true,
+      confirmer: async (q) => {
+        question = q;
+        return true;
+      },
+      maintenant: MAINTENANT,
+    },
+  );
   assert.equal(ok.code, 0, ok.message);
   assert.match(question, /ATTENTE/);
   assert.equal(lireEtat(racine).etat.activite, "ATTENTE");
@@ -272,7 +327,10 @@ function depotEnVerify(config) {
   const head = git("rev-parse", "HEAD").stdout.trim();
   const evidence = (nom, contenu) => {
     mkdirSync(join(racine, ".drwil", "evidence"), { recursive: true });
-    writeFileSync(join(racine, ".drwil", "evidence", nom), typeof contenu === "string" ? contenu : JSON.stringify({ version: 1, commit: head, dirtyWorktree: false, ...contenu }));
+    writeFileSync(
+      join(racine, ".drwil", "evidence", nom),
+      typeof contenu === "string" ? contenu : JSON.stringify({ version: 1, commit: head, dirtyWorktree: false, ...contenu }),
+    );
   };
   return { racine, evidence };
 }
@@ -351,7 +409,10 @@ test("clôture : hors dépôt git, refusée", () => {
 });
 
 test("barriere: off : contexte réduit à « gouvernance désactivée », même avec un état actif", () => {
-  for (const [lang, motif] of [["fr", /Gouvernance désactivée/], ["en", /Governance disabled/]]) {
+  for (const [lang, motif] of [
+    ["fr", /Gouvernance désactivée/],
+    ["en", /Governance disabled/],
+  ]) {
     const racine = depot({ etat: actif("REALISATION"), config: { barriere: "off", lang } });
     const texte = contexte(lireEtat(racine), racine);
     assert.match(texte, motif);
@@ -399,8 +460,14 @@ function depotCadre(config) {
   const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
   writeFileSync(join(racine, ".gitignore"), ".drwil/\n");
   writeFileSync(join(racine, "docs", "projets", "sans-cadrage.md"), "# Sans cadrage\n");
-  writeFileSync(join(racine, "docs", "projets", "finie.md"), "# Finie\n\n**Statut** : terminé le 2026-10-01.\n\n<!-- cadrage\nfichiers:\n  - src/x.ts\n-->\n");
-  writeFileSync(join(racine, "docs", "projets", "reference.md"), "# Référence\n\n**Statut** : référence — mécanique du kit.\n\n<!-- cadrage\nfichiers:\n  - src/r.ts\n-->\n");
+  writeFileSync(
+    join(racine, "docs", "projets", "finie.md"),
+    "# Finie\n\n**Statut** : terminé le 2026-10-01.\n\n<!-- cadrage\nfichiers:\n  - src/x.ts\n-->\n",
+  );
+  writeFileSync(
+    join(racine, "docs", "projets", "reference.md"),
+    "# Référence\n\n**Statut** : référence — mécanique du kit.\n\n<!-- cadrage\nfichiers:\n  - src/r.ts\n-->\n",
+  );
   writeFileSync(join(racine, "docs", "projets", "modele-fiche-projet.md"), "# Modèle\n\n<!-- cadrage\nfichiers:\n  - src/y.ts\n-->\n");
   git("init", "-q");
   git("add", "-A");
@@ -413,7 +480,11 @@ test("fiche terminée : seul le marqueur explicite compte ; référence reconnue
   assert.equal(statutFiche("# F\n\n**Status**: done on 2026-10-10.\n"), "terminee");
   assert.equal(statutFiche("# F\n\n**Statut** : référence — mécanique du kit.\n"), "reference");
   assert.equal(statutFiche("# F\n\n**Status**: reference — kit mechanics.\n"), "reference");
-  for (const statut of ["cadré le 2026-10-06 — lots 1 à 4 livrés, essai réel fait.", "fait (lot 1) le 2026-10-05.", "terminé, sans date."]) {
+  for (const statut of [
+    "cadré le 2026-10-06 — lots 1 à 4 livrés, essai réel fait.",
+    "fait (lot 1) le 2026-10-05.",
+    "terminé, sans date.",
+  ]) {
     assert.equal(statutFiche(`# F\n\n**Statut** : ${statut}\n`), "ouverte", statut);
   }
   assert.equal(statutFiche("# F\n\nSans statut.\n"), "ouverte");
@@ -433,27 +504,45 @@ test("clôture : retour en CADRAGE refusé si la fiche terminée est encore là"
 
 test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans tag) ; décisions ouvertes comptées", () => {
   const { racine, git } = depotCadre();
-  const fiche = (titre, points) => `# ${titre}\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/${titre}.ts\n-->\n\n## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n- [décision] hors section, non compté.\n`;
-  writeFileSync(join(racine, "docs", "projets", "bloquee.md"), fiche("bloquee", "- [décision] Choisir A ou B ?\n- ~~Tranché~~ — voir Décisions."));
+  const fiche = (titre, points) =>
+    `# ${titre}\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/${titre}.ts\n-->\n\n## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n- [décision] hors section, non compté.\n`;
+  writeFileSync(
+    join(racine, "docs", "projets", "bloquee.md"),
+    fiche("bloquee", "- [décision] Choisir A ou B ?\n- ~~Tranché~~ — voir Décisions."),
+  );
   writeFileSync(join(racine, "docs", "projets", "sans-tag.md"), fiche("sans-tag", "- ~~Tranché~~ — voir Décisions."));
-  writeFileSync(join(racine, "docs", "projets", "anglaise.md"), "# anglaise\n\n**Status**: scoped on 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/en.ts\n-->\n\n## 5. Points to decide\n\n- [decision] A or B?\n- [decision] C or D?\n");
-  writeFileSync(join(racine, "docs", "projets", "en-attente.md"), [
-    "# Index", "", "Priorité : `[P0]` le plus urgent.", "",
-    `- [ ] [IA] [P3] Exemple — \`${FICHE}\`.`,
-    "- [ ] [décision] [P1] Bloquée —", "  `docs/projets/bloquee.md`.",
-    "- [x] [IA] [P0] point fait d'une fiche ouverte — `docs/projets/sans-tag.md`.",
-    "- [ ] [IA] Sans tag — `docs/projets/sans-tag.md`.",
-    "- [ ] [IA] [P1] Anglaise — `docs/projets/anglaise.md`.", "",
-  ].join("\n"));
+  writeFileSync(
+    join(racine, "docs", "projets", "anglaise.md"),
+    "# anglaise\n\n**Status**: scoped on 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/en.ts\n-->\n\n## 5. Points to decide\n\n- [decision] A or B?\n- [decision] C or D?\n",
+  );
+  writeFileSync(
+    join(racine, "docs", "projets", "en-attente.md"),
+    [
+      "# Index",
+      "",
+      "Priorité : `[P0]` le plus urgent.",
+      "",
+      `- [ ] [IA] [P3] Exemple — \`${FICHE}\`.`,
+      "- [ ] [décision] [P1] Bloquée —",
+      "  `docs/projets/bloquee.md`.",
+      "- [x] [IA] [P0] point fait d'une fiche ouverte — `docs/projets/sans-tag.md`.",
+      "- [ ] [IA] Sans tag — `docs/projets/sans-tag.md`.",
+      "- [ ] [IA] [P1] Anglaise — `docs/projets/anglaise.md`.",
+      "",
+    ].join("\n"),
+  );
   git("add", "-A");
   git("commit", "-qm", "fiches");
   const fiches = fichesCadrees(racine);
-  assert.deepEqual(fiches.map((f) => [f.chemin, f.priorite, f.decisions, f.prete]), [
-    ["docs/projets/sans-tag.md", "P2", 0, true],
-    [FICHE, "P3", 0, true],
-    ["docs/projets/anglaise.md", "P1", 2, false],
-    ["docs/projets/bloquee.md", "P1", 1, false],
-  ]);
+  assert.deepEqual(
+    fiches.map((f) => [f.chemin, f.priorite, f.decisions, f.prete]),
+    [
+      ["docs/projets/sans-tag.md", "P2", 0, true],
+      [FICHE, "P3", 0, true],
+      ["docs/projets/anglaise.md", "P1", 2, false],
+      ["docs/projets/bloquee.md", "P1", 1, false],
+    ],
+  );
 });
 
 test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CLOTURE, effacée en CADRAGE", () => {
@@ -469,15 +558,25 @@ test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CL
   assert.match(contexte(lu, racine), /fusion automatique autorisée/i);
   // Ordre sûr (PR #29 : fusion refusée, retour en CADRAGE quand même, autorisation perdue) : la PR
   // calculée et à jour, la fusion programmée puis vérifiée, et seulement ensuite le retour en CADRAGE.
-  assert.match(contexte(lu, racine), /mergeStateStatus.*BEHIND.*gh pr merge --auto --merge.*autoMergeRequest.*seulement ensuite revenir en CADRAGE.*rester en CLOTURE/s);
+  assert.match(
+    contexte(lu, racine),
+    /mergeStateStatus.*BEHIND.*gh pr merge --auto --merge.*autoMergeRequest.*seulement ensuite revenir en CADRAGE.*rester en CLOTURE/s,
+  );
   writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ transitions: "agent", lang: "en" }));
-  assert.match(contexte(lu, racine), /mergeStateStatus.*BEHIND.*gh pr merge --auto --merge.*autoMergeRequest.*only then go back to CADRAGE.*stay in CLOTURE/s);
+  assert.match(
+    contexte(lu, racine),
+    /mergeStateStatus.*BEHIND.*gh pr merge --auto --merge.*autoMergeRequest.*only then go back to CADRAGE.*stay in CLOTURE/s,
+  );
   for (const vers of ["PREUVES", "VERIFY"]) {
     const r = preparerTransition(lu, vers, { maintenant: MAINTENANT }, racine);
     assert.equal(r.etat.fusion_autorisee, true, vers);
     lu = { ...lu, etat: r.etat };
   }
-  assert.equal(preparerTransition({ ...lu, etat: { ...lu.etat, activite: "CLOTURE" } }, "CADRAGE", { maintenant: MAINTENANT }, racine).etat.fusion_autorisee, undefined);
+  assert.equal(
+    preparerTransition({ ...lu, etat: { ...lu.etat, activite: "CLOTURE" } }, "CADRAGE", { maintenant: MAINTENANT }, racine).etat
+      .fusion_autorisee,
+    undefined,
+  );
 });
 
 test("validation : fusion_autorisee booléenne, jamais vraie en CADRAGE", () => {
@@ -489,11 +588,17 @@ test("validation : fusion_autorisee booléenne, jamais vraie en CADRAGE", () => 
 
 test("fiches cadrées : bloc cadrage commité, non terminée, hors modèles", () => {
   const { racine } = depotCadre();
-  assert.deepEqual(fichesCadrees(racine).map((f) => f.chemin), [FICHE]);
+  assert.deepEqual(
+    fichesCadrees(racine).map((f) => f.chemin),
+    [FICHE],
+  );
   assert.equal(fichesCadrees(racine)[0].titre, "Projet : Exemple");
   // Un cadrage seulement dans l'arbre de travail ne compte pas : c'est le cadrage commité qui est validé.
   writeFileSync(join(racine, "docs", "projets", "sans-cadrage.md"), "# Sans cadrage\n\n<!-- cadrage\nfichiers:\n  - src/z.ts\n-->\n");
-  assert.deepEqual(fichesCadrees(racine).map((f) => f.chemin), [FICHE]);
+  assert.deepEqual(
+    fichesCadrees(racine).map((f) => f.chemin),
+    [FICHE],
+  );
 });
 
 test("lancer : un geste humain passe directement en REALISATION ; refusé à l'agent en mode humain", () => {
@@ -504,13 +609,24 @@ test("lancer : un geste humain passe directement en REALISATION ; refusé à l'a
   assert.equal(lireEtat(racine).source, "absent");
   const ok = lancer(racine, FICHE, { humain: true, maintenant: MAINTENANT });
   assert.equal(ok.code, 0, ok.message);
-  assert.deepEqual(lireEtat(racine).etat, { version: 1, activite: "REALISATION", attente_active: FICHE, demande_active: null, depuis: MAINTENANT });
+  assert.deepEqual(lireEtat(racine).etat, {
+    version: 1,
+    activite: "REALISATION",
+    attente_active: FICHE,
+    demande_active: null,
+    depuis: MAINTENANT,
+  });
   assert.match(lancer(racine, FICHE, { humain: true }).message, /activité REALISATION/, "pas de relance en pleine réalisation");
 });
 
 test("lancer : fiche non cadrée, terminée ou modèle refusée ; mode agent libre", () => {
   const { racine } = depotCadre();
-  for (const f of ["docs/projets/sans-cadrage.md", "docs/projets/finie.md", "docs/projets/modele-fiche-projet.md", "docs/projets/absente.md"]) {
+  for (const f of [
+    "docs/projets/sans-cadrage.md",
+    "docs/projets/finie.md",
+    "docs/projets/modele-fiche-projet.md",
+    "docs/projets/absente.md",
+  ]) {
     assert.match(lancer(racine, f, { humain: true }).message, /n'est pas une fiche cadrée/, f);
   }
   const agent = depotCadre({ transitions: "agent" }).racine;
@@ -518,7 +634,9 @@ test("lancer : fiche non cadrée, terminée ou modèle refusée ; mode agent lib
 });
 
 // L'enfant relance ces mêmes fichiers : sans garde, il se relancerait sans fin.
-test("variables GIT_* du lanceur (commit -a, worktree) : les tests n'agissent jamais sur le dépôt qui les lance", { skip: process.env.DRWIL_TESTS_ENFANT === "1" }, () => {
+test("variables GIT_* du lanceur (commit -a, worktree) : les tests n'agissent jamais sur le dépôt qui les lance", {
+  skip: process.env.DRWIL_TESTS_ENFANT === "1",
+}, () => {
   const victime = tmp("drwil-etat-victime-");
   assert.equal(spawnSync("git", ["init", "-q", victime]).status, 0);
   const config = readFileSync(join(victime, ".git", "config"), "utf8");
@@ -530,7 +648,11 @@ test("variables GIT_* du lanceur (commit -a, worktree) : les tests n'agissent ja
     env: { ...env, DRWIL_TESTS_ENFANT: "1", GIT_DIR: join(victime, ".git"), GIT_INDEX_FILE: join(victime, ".git", "index-du-hook") },
   });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.notEqual(spawnSync("git", ["rev-parse", "--verify", "-q", "HEAD"], { cwd: victime }).status, 0, "un test a commité dans le dépôt lanceur");
+  assert.notEqual(
+    spawnSync("git", ["rev-parse", "--verify", "-q", "HEAD"], { cwd: victime }).status,
+    0,
+    "un test a commité dans le dépôt lanceur",
+  );
   assert.equal(readFileSync(join(victime, ".git", "config"), "utf8"), config, "un test a modifié la config du dépôt lanceur");
 });
 
@@ -611,12 +733,18 @@ test("principal lancer sans terminal : refusé en mode humain, lancé en mode ag
 
 test("principal lancer au terminal : l'humain choisit, confirme et décide de la fusion", async () => {
   const { racine, git } = depotCadre();
-  writeFileSync(join(racine, "docs", "projets", "bloquee.md"), "# Bloquée\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/b.ts\n-->\n\n## Points à trancher\n\n- [décision] A ou B ?\n");
+  writeFileSync(
+    join(racine, "docs", "projets", "bloquee.md"),
+    "# Bloquée\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/b.ts\n-->\n\n## Points à trancher\n\n- [décision] A ou B ?\n",
+  );
   git("add", "-A");
   git("commit", "-qm", "bloquee");
   const r = await avecTerminal(["1", "LANCER", "FUSION"], () => capturer(() => principal(["lancer"], racine)));
   assert.equal(r.code, 0, r.erreurs);
-  assert.match(r.sortie, /^1\. docs\/projets\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projets\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher\]/);
+  assert.match(
+    r.sortie,
+    /^1\. docs\/projets\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projets\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher\]/,
+  );
   assert.deepEqual(r.invites.length, 3);
   assert.equal(lireEtat(racine).etat.fusion_autorisee, true);
 });
@@ -716,7 +844,10 @@ test("fiches cadrées : index réglé, fiche sans titre ; lancer sans fiche ou a
   const { racine, git } = depotCadre({ dirs: { index: "suivi/index.md" }, transitions: "agent" });
   mkdirSync(join(racine, "suivi"));
   writeFileSync(join(racine, "suivi", "index.md"), "- [ ] [IA] [P0] `docs/projets/sans-titre.md`\n");
-  writeFileSync(join(racine, "docs", "projets", "sans-titre.md"), "**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/t.ts\n-->\n");
+  writeFileSync(
+    join(racine, "docs", "projets", "sans-titre.md"),
+    "**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/t.ts\n-->\n",
+  );
   git("add", "-A");
   git("commit", "-qm", "index");
   const sansTitre = fichesCadrees(racine).find((f) => f.chemin === "docs/projets/sans-titre.md");

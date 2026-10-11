@@ -44,37 +44,75 @@ export async function doctor(opts: { targetDir: string }): Promise<Diagnostic> {
 
   point("installation", "Installation", "ok", ".drwil/ia-first.json");
   const manifeste = existsSync(join(root, ".drwil", "fichiers-installes.json"));
-  point("manifeste", "Manifeste", manifeste ? "ok" : "avertissement", manifeste ? ".drwil/fichiers-installes.json" : "absent : relancer `drwil apply` (uninstall et dérive en dépendent)");
+  point(
+    "manifeste",
+    "Manifeste",
+    manifeste ? "ok" : "avertissement",
+    manifeste ? ".drwil/fichiers-installes.json" : "absent : relancer `drwil apply` (uninstall et dérive en dépendent)",
+  );
   const agents = existsSync(join(root, "AGENTS.md"));
   point("agents", "AGENTS.md", agents ? "ok" : "probleme", agents ? "présent" : "absent : point d'entrée unique des agents");
 
   const outils: string[] = Array.isArray(cfg.tools) ? cfg.tools : [];
   const manquants = outils.filter((t) => FICHIERS_OUTILS[t] && !existsSync(join(root, FICHIERS_OUTILS[t])));
-  point("integrations", "Intégrations IA", manquants.length ? "probleme" : "ok", `${outils.length - manquants.length}/${outils.length}${manquants.length ? ` (manquant : ${manquants.map((t) => FICHIERS_OUTILS[t]).join(", ")})` : ""}`);
+  point(
+    "integrations",
+    "Intégrations IA",
+    manquants.length ? "probleme" : "ok",
+    `${outils.length - manquants.length}/${outils.length}${manquants.length ? ` (manquant : ${manquants.map((t) => FICHIERS_OUTILS[t]).join(", ")})` : ""}`,
+  );
 
   const contrats: any[] = lecteur.lireContrats(readFileSync(join(root, registre), "utf8"));
   const erreurs: { message: string }[] = lecteur.validerContrats(contrats, lecteur.controlesConnus(cfg), cfg.lang);
-  point("contrats", "Contrats", erreurs.length || !contrats.length ? "probleme" : "ok",
-    erreurs.length ? `${erreurs.length} erreur(s) : ${erreurs.map((e) => e.message).join(" ; ")}` : `${contrats.length} contrat(s) valide(s) (${registre})`);
+  point(
+    "contrats",
+    "Contrats",
+    erreurs.length || !contrats.length ? "probleme" : "ok",
+    erreurs.length
+      ? `${erreurs.length} erreur(s) : ${erreurs.map((e) => e.message).join(" ; ")}`
+      : `${contrats.length} contrat(s) valide(s) (${registre})`,
+  );
   const prouvables = contrats.filter((k) => k.controles?.length).length;
   const sansControle = contrats.filter((k) => !k.controles?.length).map((k) => k.id);
-  point("preuves", "Preuves automatisées", sansControle.length ? "avertissement" : "ok",
-    `${prouvables}/${contrats.length}${sansControle.length ? ` (sans Contrôle, toujours MANUAL : ${sansControle.join(", ")})` : ""}`);
+  point(
+    "preuves",
+    "Preuves automatisées",
+    sansControle.length ? "avertissement" : "ok",
+    `${prouvables}/${contrats.length}${sansControle.length ? ` (sans Contrôle, toujours MANUAL : ${sansControle.join(", ")})` : ""}`,
+  );
 
   const hooksPath = spawnSync("git", ["config", "core.hooksPath"], { cwd: root, encoding: "utf8" });
   const hooksActifs = hooksPath.status === 0 && hooksPath.stdout.trim() === ".githooks";
-  point("hooks", "Hooks git", hooksActifs ? "ok" : "probleme", hooksActifs ? "core.hooksPath = .githooks" : "inactifs : lancer `git config core.hooksPath .githooks`");
+  point(
+    "hooks",
+    "Hooks git",
+    hooksActifs ? "ok" : "probleme",
+    hooksActifs ? "core.hooksPath = .githooks" : "inactifs : lancer `git config core.hooksPath .githooks`",
+  );
 
   const ciFiles: string[] = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
   const ciAbsents = ciFiles.filter((f) => !existsSync(join(root, f)));
-  point("ci", "CI", !ciFiles.length ? "avertissement" : ciAbsents.length ? "probleme" : "ok",
-    !ciFiles.length ? "aucune CI configurée : pas de filet pour les contrôles dégradables (QUA-013)" : ciAbsents.length ? `fichier absent : ${ciAbsents.join(", ")}` : ciFiles.join(", "));
+  point(
+    "ci",
+    "CI",
+    !ciFiles.length ? "avertissement" : ciAbsents.length ? "probleme" : "ok",
+    !ciFiles.length
+      ? "aucune CI configurée : pas de filet pour les contrôles dégradables (QUA-013)"
+      : ciAbsents.length
+        ? `fichier absent : ${ciAbsents.join(", ")}`
+        : ciFiles.join(", "),
+  );
 
   const git = outilPresent("git", ["--version"]);
-  const gitleaks = outilPresent("gitleaks", ["version"]) || outilPresent(join(process.env.HOME ?? "", ".local", "bin", "gitleaks"), ["version"]);
+  const gitleaks =
+    outilPresent("gitleaks", ["version"]) || outilPresent(join(process.env.HOME ?? "", ".local", "bin", "gitleaks"), ["version"]);
   const full = (cfg.mode ?? "full") === "full";
-  point("outils", "Outils requis", !git ? "probleme" : full && !gitleaks ? "avertissement" : "ok",
-    `node ${process.version}, git ${git ? "présent" : "absent"}${full ? `, gitleaks ${gitleaks ? "présent" : "absent (secrets non contrôlés localement)"}` : ""}`);
+  point(
+    "outils",
+    "Outils requis",
+    !git ? "probleme" : full && !gitleaks ? "avertissement" : "ok",
+    `node ${process.version}, git ${git ? "présent" : "absent"}${full ? `, gitleaks ${gitleaks ? "présent" : "absent (secrets non contrôlés localement)"}` : ""}`,
+  );
 
   return { code: points.some((p) => p.etat === "probleme") ? 1 : 0, points };
 }
@@ -96,7 +134,12 @@ export function diagnosticJson(d: Diagnostic) {
     status: d.code === 0 ? "healthy" : d.code === 1 ? "problems" : "error",
     exitCode: d.code,
     ...(d.erreur ? { error: d.erreur } : {}),
-    checks: d.points.map((p) => ({ id: p.id, label: p.libelle, state: { ok: "ok", avertissement: "warning", probleme: "problem" }[p.etat], detail: p.detail })),
+    checks: d.points.map((p) => ({
+      id: p.id,
+      label: p.libelle,
+      state: { ok: "ok", avertissement: "warning", probleme: "problem" }[p.etat],
+      detail: p.detail,
+    })),
   };
 }
 
@@ -111,7 +154,14 @@ export async function listerContrats(opts: { targetDir: string }) {
     version: 1,
     exitCode: (erreurs.length ? 2 : 0) as 0 | 2,
     registry: registre,
-    contracts: contrats.map((k) => ({ id: k.id, title: k.titre, form: k.forme === "section" ? "section" : "table", rule: k.regle, checks: k.controles ?? [], manual: k.manuel })),
+    contracts: contrats.map((k) => ({
+      id: k.id,
+      title: k.titre,
+      form: k.forme === "section" ? "section" : "table",
+      rule: k.regle,
+      checks: k.controles ?? [],
+      manual: k.manuel,
+    })),
     errors: erreurs.map((e) => e.message),
   };
 }

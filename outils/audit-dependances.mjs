@@ -25,15 +25,26 @@ export function analyser(sortie) {
   }
   const comptes = j?.metadata?.vulnerabilities;
   if (j?.error || !comptes) {
-    return { statut: "non-execute", message: `audit non exécuté : registre injoignable (${j?.message ?? j?.error?.summary ?? "pas de résultat d'audit"})` };
+    return {
+      statut: "non-execute",
+      message: `audit non exécuté : registre injoignable (${j?.message ?? j?.error?.summary ?? "pas de résultat d'audit"})`,
+    };
   }
-  const resume = [...GRAVITES].reverse().filter((g) => g !== "info").map((g) => `${comptes[g] ?? 0} ${g}`).join(", ");
+  const resume = [...GRAVITES]
+    .reverse()
+    .filter((g) => g !== "info")
+    .map((g) => `${comptes[g] ?? 0} ${g}`)
+    .join(", ");
   const seuil = GRAVITES.indexOf(SEUIL);
   const bloquants = Object.entries(j.vulnerabilities ?? {})
     .filter(([, v]) => GRAVITES.indexOf(v.severity) >= seuil)
     .map(([nom, v]) => `${nom} (${v.severity})`)
     .sort();
-  if (bloquants.length) return { statut: "echec", message: `audit des dépendances : ${bloquants.length} faille(s) high ou critical — ${bloquants.join(", ")} (${resume})` };
+  if (bloquants.length)
+    return {
+      statut: "echec",
+      message: `audit des dépendances : ${bloquants.length} faille(s) high ou critical — ${bloquants.join(", ")} (${resume})`,
+    };
   return { statut: "ok", message: `audit des dépendances : aucune faille high ou critical (${resume})` };
 }
 
@@ -44,7 +55,9 @@ const npmAudit = () =>
 /** Lance l'audit (injectable pour les tests), affiche le résultat ; rend le code de sortie. */
 export function principal(lancer = npmAudit) {
   const r = lancer();
-  const { statut, message } = r.error ? { statut: "non-execute", message: `audit non exécuté : npm introuvable (${r.error.message})` } : analyser(r.stdout ?? "");
+  const { statut, message } = r.error
+    ? { statut: "non-execute", message: `audit non exécuté : npm introuvable (${r.error.message})` }
+    : analyser(r.stdout ?? "");
   if (statut === "ok") {
     console.log(message);
     return 0;

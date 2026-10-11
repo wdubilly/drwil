@@ -10,18 +10,26 @@ export interface StackEntry {
 const IGNORED_DIRS = new Set(["node_modules", "docs", "vendor", "dist", "build", "target", "venv", "scripts"]);
 
 function read(path: string): string {
-  try { return readFileSync(path, "utf8"); } catch { return ""; }
+  try {
+    return readFileSync(path, "utf8");
+  } catch {
+    return "";
+  }
 }
 
 function frameworks(text: string, table: Record<string, string>): string[] {
-  return Object.entries(table).filter(([needle]) => text.includes(needle)).map(([, name]) => name);
+  return Object.entries(table)
+    .filter(([needle]) => text.includes(needle))
+    .map(([, name]) => name);
 }
 
 function detectDir(dir: string): string[] {
   const technos: string[] = [];
   const has = (f: string) => existsSync(join(dir, f));
   let entries: string[] = [];
-  try { entries = readdirSync(dir); } catch {}
+  try {
+    entries = readdirSync(dir);
+  } catch {}
 
   if (has("package.json")) {
     let deps: Record<string, string> = {};
@@ -30,10 +38,20 @@ function detectDir(dir: string): string[] {
       deps = { ...pkg.dependencies, ...pkg.devDependencies };
     } catch {}
     const table: Record<string, string> = {
-      next: "Next.js", react: "React", vue: "Vue", "@angular/core": "Angular", svelte: "Svelte",
-      express: "Express", fastify: "Fastify", "@nestjs/core": "NestJS", vite: "Vite", typescript: "TypeScript",
+      next: "Next.js",
+      react: "React",
+      vue: "Vue",
+      "@angular/core": "Angular",
+      svelte: "Svelte",
+      express: "Express",
+      fastify: "Fastify",
+      "@nestjs/core": "NestJS",
+      vite: "Vite",
+      typescript: "TypeScript",
     };
-    const found = Object.entries(table).filter(([d]) => d in deps).map(([, n]) => n);
+    const found = Object.entries(table)
+      .filter(([d]) => d in deps)
+      .map(([, n]) => n);
     technos.push(`Node.js${found.length ? ` (${found.join(", ")})` : ""}`);
   }
   if (has("pyproject.toml") || has("requirements.txt") || has("setup.py")) {
@@ -57,7 +75,7 @@ function detectDir(dir: string): string[] {
     technos.push(`PHP${found.length ? ` (${found.join(", ")})` : ""}`);
   }
   if (has("Gemfile")) technos.push(`Ruby${read(join(dir, "Gemfile")).includes("rails") ? " (Rails)" : ""}`);
-  if (entries.some(f => f.endsWith(".csproj") || f.endsWith(".sln"))) technos.push(".NET");
+  if (entries.some((f) => f.endsWith(".csproj") || f.endsWith(".sln"))) technos.push(".NET");
   if (has("pubspec.yaml")) technos.push(`Dart${read(join(dir, "pubspec.yaml")).includes("flutter") ? " (Flutter)" : ""}`);
   return technos;
 }
@@ -70,8 +88,8 @@ export function detectStack(root: string): StackEntry[] {
   let subdirs: string[] = [];
   try {
     subdirs = readdirSync(root, { withFileTypes: true })
-      .filter(e => e.isDirectory() && !e.name.startsWith(".") && !IGNORED_DIRS.has(e.name))
-      .map(e => e.name)
+      .filter((e) => e.isDirectory() && !e.name.startsWith(".") && !IGNORED_DIRS.has(e.name))
+      .map((e) => e.name)
       .sort();
   } catch {}
   for (const name of subdirs) {

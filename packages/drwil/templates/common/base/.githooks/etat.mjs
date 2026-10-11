@@ -49,7 +49,8 @@ export function transitionAutorisee(de, vers) {
 export function validerEtat(etat, racine) {
   if (typeof etat !== "object" || etat === null || Array.isArray(etat)) return ["state.json doit contenir un objet JSON"];
   const problemes = [];
-  for (const cle of Object.keys(etat)) if (!CHAMPS.has(cle)) problemes.push(`champ inconnu « ${cle} » (l'état ne contient que des références)`);
+  for (const cle of Object.keys(etat))
+    if (!CHAMPS.has(cle)) problemes.push(`champ inconnu « ${cle} » (l'état ne contient que des références)`);
   if (etat.version !== 1) problemes.push("version : 1 attendu");
   if (!ACTIVITES.includes(etat.activite)) {
     problemes.push(`activité inconnue « ${etat.activite} » (attendu : ${ACTIVITES.join(", ")})`);
@@ -58,10 +59,13 @@ export function validerEtat(etat, racine) {
   } else if (etat.attente_active === null || etat.attente_active === undefined) {
     problemes.push(`${etat.activite} : attente active requise`);
   }
-  if (etat.attente_active !== null && etat.attente_active !== undefined) problemes.push(...validerAttente(etat.attente_active, racine, etat.activite));
+  if (etat.attente_active !== null && etat.attente_active !== undefined)
+    problemes.push(...validerAttente(etat.attente_active, racine, etat.activite));
   if (etat.demande_active !== null && typeof etat.demande_active !== "string") problemes.push("demande_active : chaîne ou null attendu");
-  if (etat.fusion_autorisee !== undefined && typeof etat.fusion_autorisee !== "boolean") problemes.push("fusion_autorisee : booléen attendu");
-  else if (etat.fusion_autorisee === true && etat.activite === "CADRAGE") problemes.push("fusion_autorisee : jamais en CADRAGE (aucun chantier en cours)");
+  if (etat.fusion_autorisee !== undefined && typeof etat.fusion_autorisee !== "boolean")
+    problemes.push("fusion_autorisee : booléen attendu");
+  else if (etat.fusion_autorisee === true && etat.activite === "CADRAGE")
+    problemes.push("fusion_autorisee : jamais en CADRAGE (aucun chantier en cours)");
   if (etat.depuis !== null && !(typeof etat.depuis === "string" && ISO_RE.test(etat.depuis) && !Number.isNaN(Date.parse(etat.depuis)))) {
     problemes.push("depuis : horodatage ISO 8601 ou null attendu");
   }
@@ -72,7 +76,8 @@ function validerAttente(attente, racine, activite) {
   if (typeof attente !== "string") return ["attente_active : chemin de fiche ou null attendu"];
   const chemin = posix.normalize(attente.replace(/\\/g, "/"));
   const dossier = DOSSIERS_FICHES.find((d) => chemin.startsWith(d));
-  if (!dossier || !chemin.endsWith(".md")) return [`attente_active : fiche .md de ${DOSSIERS_FICHES.join(" ou ")} attendue (« ${attente} »)`];
+  if (!dossier || !chemin.endsWith(".md"))
+    return [`attente_active : fiche .md de ${DOSSIERS_FICHES.join(" ou ")} attendue (« ${attente} »)`];
   if (MODELE_RE.test(posix.basename(chemin))) return [`attente_active : « ${attente} » est un modèle, pas une fiche de chantier`];
   // En CLOTURE, la recette « Clôturer » supprime la fiche : son absence est l'issue normale, et
   // la refuser rendrait l'état invalide au moment même de revenir en CADRAGE.
@@ -115,7 +120,11 @@ const RELANCER = "relancer `npx drwil verify --evidence`";
 export function preuveVerify(racine) {
   const dossier = join(racine, ".drwil", "evidence");
   // Horodatage ISO dans le nom : l'ordre alphabétique est l'ordre chronologique.
-  const noms = existsSync(dossier) ? readdirSync(dossier).filter((n) => /^verify-.+\.json$/.test(n)).sort() : [];
+  const noms = existsSync(dossier)
+    ? readdirSync(dossier)
+        .filter((n) => /^verify-.+\.json$/.test(n))
+        .sort()
+    : [];
   if (!noms.length) return { ok: false, raison: `aucune évidence de verify : lancer \`npx drwil verify --evidence\`` };
   const nom = noms.at(-1);
   let ev;
@@ -139,7 +148,10 @@ export function preuveVerify(racine) {
     return { ok: false, raison: "verdict MANUAL : un humain atteste (`npx drwil attest <ID>`), puis " + RELANCER };
   }
   if (ev.status === "fail" || ev.status === "error") {
-    return { ok: false, raison: `verdict ${ev.status.toUpperCase()} : revenir en REALISATION (\`node .githooks/etat.mjs passer REALISATION\`) pour corriger` };
+    return {
+      ok: false,
+      raison: `verdict ${ev.status.toUpperCase()} : revenir en REALISATION (\`node .githooks/etat.mjs passer REALISATION\`) pour corriger`,
+    };
   }
   return { ok: false, raison: `évidence ${nom} sans verdict reconnu : ${RELANCER}` };
 }
@@ -152,7 +164,12 @@ const STATUT_LIGNE_RE = /^\*\*(?:Statut|Status)\*\*\s*:\s*(.*)$/;
  * fait », « fait (lot 1) » d'une fiche à plusieurs lots) donnait de faux « terminée ».
  */
 export function statutFiche(texte) {
-  const statut = texte.split(/\r?\n/).slice(0, 15).map((l) => STATUT_LIGNE_RE.exec(l)).find(Boolean)?.[1] ?? "";
+  const statut =
+    texte
+      .split(/\r?\n/)
+      .slice(0, 15)
+      .map((l) => STATUT_LIGNE_RE.exec(l))
+      .find(Boolean)?.[1] ?? "";
   if (/^(?:terminé\s+le|done\s+on)\s+\d{4}-\d{2}-\d{2}\b/i.test(statut)) return "terminee";
   if (/^(?:référence|reference)\b/i.test(statut)) return "reference";
   return "ouverte";
@@ -214,10 +231,18 @@ export function fichesCadrees(racine) {
       if (statutFiche(r.stdout) !== "ouverte") continue;
       const decisions = decisionsOuvertes(r.stdout);
       const priorite = priorites.get(chemin) ?? PRIORITE_DEFAUT;
-      fiches.push({ chemin, titre: /^#\s+(.+)$/m.exec(r.stdout)?.[1]?.trim() ?? chemin, priorite: `P${priorite}`, decisions, prete: decisions === 0 });
+      fiches.push({
+        chemin,
+        titre: /^#\s+(.+)$/m.exec(r.stdout)?.[1]?.trim() ?? chemin,
+        priorite: `P${priorite}`,
+        decisions,
+        prete: decisions === 0,
+      });
     }
   }
-  return fiches.sort((a, b) => Number(b.prete) - Number(a.prete) || a.priorite.localeCompare(b.priorite) || a.chemin.localeCompare(b.chemin));
+  return fiches.sort(
+    (a, b) => Number(b.prete) - Number(a.prete) || a.priorite.localeCompare(b.priorite) || a.chemin.localeCompare(b.chemin),
+  );
 }
 
 /**
@@ -229,11 +254,16 @@ export function fichesCadrees(racine) {
 export function lancer(racine, fiche, { humain = false, demande, fusion = false, maintenant = new Date().toISOString() } = {}) {
   const lu = lireEtat(racine);
   const de = lu.etat.activite;
-  if (!LANCABLE_DEPUIS.has(de)) return { code: 1, message: `lancement refusé : activité ${de} (lancer se fait depuis CADRAGE, ATTENTE ou DEMANDE)` };
+  if (!LANCABLE_DEPUIS.has(de))
+    return { code: 1, message: `lancement refusé : activité ${de} (lancer se fait depuis CADRAGE, ATTENTE ou DEMANDE)` };
   if (config(racine).transitions !== "agent" && !humain) {
     return { code: 1, message: "lancement refusé : c'est une décision humaine (sondage `/drwil-lancer`, ou terminal interactif)" };
   }
-  const chemin = posix.normalize(String(fiche ?? "").trim().replace(/\\/g, "/"));
+  const chemin = posix.normalize(
+    String(fiche ?? "")
+      .trim()
+      .replace(/\\/g, "/"),
+  );
   if (!fichesCadrees(racine).some((f) => f.chemin === chemin)) {
     return { code: 1, message: `lancement refusé : « ${fiche} » n'est pas une fiche cadrée (bloc cadrage commité, fiche non terminée)` };
   }
@@ -260,7 +290,13 @@ export function preparerTransition(lu, vers, { fiche, demande, maintenant }, rac
     etat = { ...ETAT_NEUTRE, depuis: maintenant };
   } else if (vers === "ATTENTE") {
     if (!fiche) return { erreur: "ouvrir une attente exige --fiche <docs/projets/….md>" };
-    etat = { version: 1, activite: "ATTENTE", attente_active: posix.normalize(fiche.replace(/\\/g, "/")), demande_active: demande ?? null, depuis: maintenant };
+    etat = {
+      version: 1,
+      activite: "ATTENTE",
+      attente_active: posix.normalize(fiche.replace(/\\/g, "/")),
+      demande_active: demande ?? null,
+      depuis: maintenant,
+    };
   } else {
     etat = { ...lu.etat, activite: vers, demande_active: demande ?? lu.etat.demande_active, depuis: maintenant };
   }
@@ -286,12 +322,24 @@ export async function passer(racine, { vers, fiche, demande }, { tty = false, co
     if (!preuve.ok) return { code: 1, message: `${reprise}clôture refusée : ${preuve.raison}` };
   }
   const ficheActive = lu.etat.attente_active && join(racine, lu.etat.attente_active);
-  if (de === "CLOTURE" && vers === "CADRAGE" && ficheActive && existsSync(ficheActive) && statutFiche(readFileSync(ficheActive, "utf8")) === "terminee") {
-    return { code: 1, message: `${reprise}retour en CADRAGE refusé : ${lu.etat.attente_active} se dit terminée mais est encore là — la condenser dans docs/projets/journal.md, la supprimer et retirer sa ligne de l'index (recette « Clôturer »)` };
+  if (
+    de === "CLOTURE" &&
+    vers === "CADRAGE" &&
+    ficheActive &&
+    existsSync(ficheActive) &&
+    statutFiche(readFileSync(ficheActive, "utf8")) === "terminee"
+  ) {
+    return {
+      code: 1,
+      message: `${reprise}retour en CADRAGE refusé : ${lu.etat.attente_active} se dit terminée mais est encore là — la condenser dans docs/projets/journal.md, la supprimer et retirer sa ligne de l'index (recette « Clôturer »)`,
+    };
   }
   if (exigeHumain(de, vers, config(racine).transitions)) {
     if (!tty || typeof confirmer !== "function") {
-      return { code: 1, message: `${reprise}${de} → ${vers} est une décision humaine : terminal interactif requis (réglage « transitions » : humain)` };
+      return {
+        code: 1,
+        message: `${reprise}${de} → ${vers} est une décision humaine : terminal interactif requis (réglage « transitions » : humain)`,
+      };
     }
     if (!(await confirmer(`Pour passer de ${de} à ${vers}, retapez l'activité visée (${vers}) : `))) {
       return { code: 1, message: "confirmation refusée : état inchangé" };
@@ -306,17 +354,20 @@ const TEXTES = {
   fr: {
     entete: "[drwil] État de gouvernance, lu sur disque (.drwil/state.json) — ne pas le déduire de la conversation.",
     absent: "(.drwil/state.json absent : état neutre)",
-    desactivee: "[drwil] Gouvernance désactivée (réglage « barriere » : off dans .drwil/ia-first.json) : aucune activité ni périmètre à suivre.",
+    desactivee:
+      "[drwil] Gouvernance désactivée (réglage « barriere » : off dans .drwil/ia-first.json) : aucune activité ni périmètre à suivre.",
     invalide: "⚠ État invalide, traité comme CADRAGE neutre :",
     activite: (a) => `Activité : ${a}`,
     attente: (a) => `Attente active : ${a ?? "aucune attente active"}`,
     demande: (d) => `Demande active : ${d ?? "aucune"}`,
-    fusion: "Fusion automatique autorisée au lancement : en CLOTURE, après verify PASS et le push de la clôture, dans cet ordre : attendre que GitHub ait calculé la PR (`gh pr view --json mergeStateStatus`) et, si elle est en retard sur la branche principale (BEHIND), la mettre à jour ; programmer `gh pr merge --auto --merge` ; vérifier que la fusion est bien programmée (`gh pr view --json autoMergeRequest`) ; seulement ensuite revenir en CADRAGE, qui efface l'autorisation. En cas d'échec : rester en CLOTURE et le signaler.",
+    fusion:
+      "Fusion automatique autorisée au lancement : en CLOTURE, après verify PASS et le push de la clôture, dans cet ordre : attendre que GitHub ait calculé la PR (`gh pr view --json mergeStateStatus`) et, si elle est en retard sur la branche principale (BEHIND), la mettre à jour ; programmer `gh pr merge --auto --merge` ; vérifier que la fusion est bien programmée (`gh pr view --json autoMergeRequest`) ; seulement ensuite revenir en CADRAGE, qui efface l'autorisation. En cas d'échec : rester en CLOTURE et le signaler.",
     perimetre: "Périmètre autorisé (bloc cadrage de la fiche) :",
     sansPerimetre: "  (aucun bloc cadrage : aucun fichier de code autorisé)",
     ficheSupprimee: "fiche supprimée (clôture)",
     regle: (r) => `Règle : ${r}`,
-    rappel: (a, f, n) => `[drwil] Rappel : ${a}${f ? ` · ${f}` : " · aucune attente active"}${n === null ? "" : ` · périmètre : ${n} fichier(s) ou motif(s)`} (relire avec \`node .githooks/etat.mjs\`).`,
+    rappel: (a, f, n) =>
+      `[drwil] Rappel : ${a}${f ? ` · ${f}` : " · aucune attente active"}${n === null ? "" : ` · périmètre : ${n} fichier(s) ou motif(s)`} (relire avec \`node .githooks/etat.mjs\`).`,
     rappelInvalide: "[drwil] Rappel : état invalide, traité comme CADRAGE neutre (détail : `node .githooks/etat.mjs`).",
     pied: "Ne jamais écrire .drwil/state.json à la main. Lancer un chantier : `/drwil-lancer` (sondage) ou `node .githooks/etat.mjs lancer` dans un terminal — décision humaine, sauf réglage « transitions » : agent. Changer d'activité : `node .githooks/etat.mjs passer <ACTIVITE>` ; clore est libre sur évidence de verify valide.",
     regles: {
@@ -325,34 +376,40 @@ const TEXTES = {
       DEMANDE: "expliciter la demande de réalisation ; ne modifier encore aucun fichier de code.",
       REALISATION: "réaliser l'attente, en ne modifiant que les fichiers du périmètre (bloc cadrage de la fiche active).",
       PREUVES: "produire les preuves et lancer les contrôles ; un correctif demande de revenir en REALISATION.",
-      VERIFY: "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en REALISATION ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
-      CLOTURE: "fiche entièrement terminée : la condenser dans le journal puis la supprimer ; sinon mettre à jour statut et reprise ; puis revenir en CADRAGE.",
+      VERIFY:
+        "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en REALISATION ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
+      CLOTURE:
+        "fiche entièrement terminée : la condenser dans le journal puis la supprimer ; sinon mettre à jour statut et reprise ; puis revenir en CADRAGE.",
     },
   },
   en: {
     entete: "[drwil] Governance state, read from disk (.drwil/state.json) — do not infer it from the conversation.",
     absent: "(.drwil/state.json missing: neutral state)",
-    desactivee: "[drwil] Governance disabled (\"barriere\" setting: off in .drwil/ia-first.json): no activity or scope to follow.",
+    desactivee: '[drwil] Governance disabled ("barriere" setting: off in .drwil/ia-first.json): no activity or scope to follow.',
     invalide: "⚠ Invalid state, treated as neutral CADRAGE:",
     activite: (a) => `Activity: ${a}`,
     attente: (a) => `Active expectation: ${a ?? "none"}`,
     demande: (d) => `Active request: ${d ?? "none"}`,
-    fusion: "Automatic merge authorised at start: in CLOTURE, after verify PASS and pushing the closing commit, in this order: wait until GitHub has computed the PR (`gh pr view --json mergeStateStatus`) and, if it is behind the main branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is actually scheduled (`gh pr view --json autoMergeRequest`); only then go back to CADRAGE, which clears the authorisation. On failure: stay in CLOTURE and report it.",
+    fusion:
+      "Automatic merge authorised at start: in CLOTURE, after verify PASS and pushing the closing commit, in this order: wait until GitHub has computed the PR (`gh pr view --json mergeStateStatus`) and, if it is behind the main branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is actually scheduled (`gh pr view --json autoMergeRequest`); only then go back to CADRAGE, which clears the authorisation. On failure: stay in CLOTURE and report it.",
     perimetre: "Allowed scope (cadrage block of the fiche):",
     sansPerimetre: "  (no cadrage block: no code file allowed)",
     ficheSupprimee: "fiche deleted (closing)",
     regle: (r) => `Rule: ${r}`,
-    rappel: (a, f, n) => `[drwil] Reminder: ${a}${f ? ` · ${f}` : " · no active expectation"}${n === null ? "" : ` · scope: ${n} file(s) or pattern(s)`} (read again with \`node .githooks/etat.mjs\`).`,
+    rappel: (a, f, n) =>
+      `[drwil] Reminder: ${a}${f ? ` · ${f}` : " · no active expectation"}${n === null ? "" : ` · scope: ${n} file(s) or pattern(s)`} (read again with \`node .githooks/etat.mjs\`).`,
     rappelInvalide: "[drwil] Reminder: invalid state, treated as neutral CADRAGE (details: `node .githooks/etat.mjs`).",
-    pied: "Never write .drwil/state.json by hand. Start a chantier: `/drwil-lancer` (poll) or `node .githooks/etat.mjs lancer` in a terminal — a human decision, unless the \"transitions\" setting is agent. Change activity: `node .githooks/etat.mjs passer <ACTIVITE>`; closing is free on valid verify evidence.",
+    pied: 'Never write .drwil/state.json by hand. Start a chantier: `/drwil-lancer` (poll) or `node .githooks/etat.mjs lancer` in a terminal — a human decision, unless the "transitions" setting is agent. Change activity: `node .githooks/etat.mjs passer <ACTIVITE>`; closing is free on valid verify evidence.',
     regles: {
       CADRAGE: "read, analyse, frame; do not modify any code file.",
       ATTENTE: "write down the expectation in its fiche; do not modify any code file.",
       DEMANDE: "make the implementation request explicit; do not modify any code file yet.",
       REALISATION: "implement the expectation, modifying only the files in the scope (cadrage block of the active fiche).",
       PREUVES: "produce evidence and run the checks; a fix means going back to REALISATION.",
-      VERIFY: "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to REALISATION; MANUAL: human attestation (`npx drwil attest`), then run it again.",
-      CLOTURE: "fiche fully finished: condense it into the journal, then delete it; otherwise update status and hand-off; then go back to CADRAGE.",
+      VERIFY:
+        "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to REALISATION; MANUAL: human attestation (`npx drwil attest`), then run it again.",
+      CLOTURE:
+        "fiche fully finished: condense it into the journal, then delete it; otherwise update status and hand-off; then go back to CADRAGE.",
     },
   },
 };
@@ -405,20 +462,22 @@ export function rappelCourt(lu, racine) {
   const T = TEXTES[langue(racine)];
   if (gouvernanceDesactivee(racine)) return null;
   const { etat, problemes } = lu;
-  const tete = problemes.length ? T.rappelInvalide : (() => {
-    let n = null;
-    if (etat.attente_active && !existsSync(join(racine, etat.attente_active))) {
-      return T.rappel(etat.activite, `${etat.attente_active} (${T.ficheSupprimee})`, null);
-    }
-    if (etat.attente_active) {
-      try {
-        n = lireBloc(readFileSync(join(racine, etat.attente_active), "utf8")).motifs.length;
-      } catch {
-        n = 0;
-      }
-    }
-    return T.rappel(etat.activite, etat.attente_active, n);
-  })();
+  const tete = problemes.length
+    ? T.rappelInvalide
+    : (() => {
+        let n = null;
+        if (etat.attente_active && !existsSync(join(racine, etat.attente_active))) {
+          return T.rappel(etat.activite, `${etat.attente_active} (${T.ficheSupprimee})`, null);
+        }
+        if (etat.attente_active) {
+          try {
+            n = lireBloc(readFileSync(join(racine, etat.attente_active), "utf8")).motifs.length;
+          } catch {
+            n = 0;
+          }
+        }
+        return T.rappel(etat.activite, etat.attente_active, n);
+      })();
   return `${tete}\n${T.regle(T.regles[etat.activite])}`;
 }
 
@@ -454,7 +513,12 @@ export async function principal(args, racine) {
   if (args[0] === "fiches") {
     const fiches = fichesCadrees(racine);
     if (args.includes("--json")) console.log(JSON.stringify(fiches, null, 2));
-    else console.log(fiches.length ? fiches.map((f, i) => `${i + 1}. ${f.chemin} — ${f.titre}`).join("\n") : "(aucune fiche cadrée : bloc cadrage commité et fiche non terminée)");
+    else
+      console.log(
+        fiches.length
+          ? fiches.map((f, i) => `${i + 1}. ${f.chemin} — ${f.titre}`).join("\n")
+          : "(aucune fiche cadrée : bloc cadrage commité et fiche non terminée)",
+      );
     return 0;
   }
   if (args[0] === "lancer") {
@@ -469,12 +533,20 @@ export async function principal(args, racine) {
       const rl = createInterface({ input: process.stdin, output: process.stdout });
       try {
         if (!choix) {
-          console.log(fiches.map((f, i) => `${i + 1}. ${f.chemin} — ${f.titre} [${f.priorite}${f.prete ? "" : ` · non prête : ${f.decisions} décision(s) à trancher`}]`).join("\n"));
+          console.log(
+            fiches
+              .map(
+                (f, i) =>
+                  `${i + 1}. ${f.chemin} — ${f.titre} [${f.priorite}${f.prete ? "" : ` · non prête : ${f.decisions} décision(s) à trancher`}]`,
+              )
+              .join("\n"),
+          );
           const n = Number((await rl.question("Numéro de la fiche à lancer : ")).trim());
           choix = fiches[n - 1]?.chemin;
         }
         humain = choix !== undefined && (await rl.question(`Lancer ${choix} ? Retapez LANCER : `)).trim() === "LANCER";
-        if (humain) fusion = (await rl.question("Fusion automatique à la fin du chantier ? Retapez FUSION, sinon Entrée : ")).trim() === "FUSION";
+        if (humain)
+          fusion = (await rl.question("Fusion automatique à la fin du chantier ? Retapez FUSION, sinon Entrée : ")).trim() === "FUSION";
       } finally {
         rl.close();
       }
@@ -508,7 +580,9 @@ export async function principal(args, racine) {
   }
   const vers = args[1];
   if (!vers || vers.startsWith("--")) {
-    console.error(`usage : node .githooks/etat.mjs passer <${ACTIVITES.join("|")}> [--fiche <docs/projets/….md>] [--demande <texte>] | lancer [<fiche>] | fiches [--json] | rappel`);
+    console.error(
+      `usage : node .githooks/etat.mjs passer <${ACTIVITES.join("|")}> [--fiche <docs/projets/….md>] [--demande <texte>] | lancer [<fiche>] | fiches [--json] | rappel`,
+    );
     return 2;
   }
   const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
