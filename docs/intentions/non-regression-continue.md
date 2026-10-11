@@ -1,8 +1,7 @@
 # Intention : capitaliser sur les preuves pour une non-régression continue
 
-**Statut** (2026-10-10) : à cadrer — intention posée par le demandeur,
-recentrée sur ce qui manque réellement ; questions à trancher en fin de
-fiche.
+**Statut** (2026-10-11) : questions tranchées (séance de décision de la
+vague 2) — fiche de chantier à cadrer.
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (touche `verify`, les
 contrats et les contrôles).
@@ -79,16 +78,30 @@ nombre de preuves stockées.
   renforcent.
 - `docs/intentions/bench-avec-sans-drwil.md` : mesure de l'apport global.
 
+## Décisions prises (demandeur, 2026-10-11)
+
+- **Rattachement test ↔ contrat : les deux** — l'ID du contrat en tête du
+  nom du test, et un champ « Tests » dans le contrat ; un contrôle vérifie
+  leur cohérence.
+- **Règle « défaut corrigé → test vu échouer avant la correction » : la
+  recette d'abord** ; un contrôle viendra quand on saura le vérifier
+  mécaniquement sans faux positifs.
+- **Échec préexistant** : en cas d'échec, la CI rejoue le test sur la base
+  de la PR (preuve actuelle, pas d'historique).
+- **Pas de stockage parallèle des preuves ni de sélection des tests**
+  tant que la suite reste rapide.
+- **Ce dépôt d'abord, puis le livrable**, avec cette limite : dans un
+  projet équipé, l'utilisateur garde ses données (contrats, dont le champ
+  « Tests », recettes, noms de tests, contrôles déclarés) ; la mécanique
+  (hooks, lecture de la traçabilité par `drwil verify`) reste au kit —
+  `init` réécrit les hooks, `apply` signale toute dérive.
+
 ## Questions à trancher
 
-1. **Rattachement test ↔ contrat** : convention de nommage (ID du contrat
-   en tête du nom du test), champ dans le contrat (`docs/contrats.md`)
-   listant les tests, ou les deux ?
-2. **Règle « défaut corrigé → test »** : recette seule d'abord, ou contrôle
-   bloquant d'emblée (comment le vérifier mécaniquement) ?
-3. **Échec préexistant** : comparer à la dernière CI verte de la branche
-   principale, ou rejouer les tests sur la base de la PR ?
-4. **Stockage parallèle et sélection** : confirmer qu'on s'en passe tant
-   que la suite reste rapide ?
-5. **Livrable** : capacité du gabarit (QUA-018) ou d'abord pratique de ce
-   dépôt ?
+Toutes tranchées le 2026-10-11 (voir « Décisions prises ») :
+
+1. ~~Rattachement test ↔ contrat~~ — les deux, cohérence contrôlée.
+2. ~~Règle « défaut corrigé → test »~~ — la recette d'abord.
+3. ~~Échec préexistant~~ — rejouer sur la base de la PR en cas d'échec.
+4. ~~Stockage parallèle et sélection~~ — on s'en passe.
+5. ~~Livrable~~ — ce dépôt d'abord, puis le livrable (limite écrite).
