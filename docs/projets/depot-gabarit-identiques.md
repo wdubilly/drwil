@@ -20,6 +20,7 @@ fichiers:
   - .githooks/contrats.mjs
   - .githooks/moteur.mjs
   - .githooks/risque.mjs
+  - .githooks/run-checks.mjs
   - packages/drwil/templates/common/base/.githooks/*
   - packages/drwil/templates/common/optional/front-quality/*
   - packages/drwil/templates/fr/base/docs/catalogue-contrats.md
