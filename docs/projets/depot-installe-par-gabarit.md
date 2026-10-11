@@ -12,10 +12,14 @@ fichiers:
   - outils/installer-depot.test.mjs
   - package.json
   - .drwil/ia-first.json
+  - AGENTS.md
+  - docs/architecture.md
+  - docs/recettes/travailler-en-branche.md
 -->
 
 (le code de la CLI n'y est pas tant qu'un lot ne l'exige pas : l'y ajouter
-serait un élargissement, dans un commit séparé.)
+serait un élargissement, dans un commit séparé. Élargi le 2026-10-12 aux
+trois documents que nomme le lot 3.)
 
 ## 1. Besoin
 
