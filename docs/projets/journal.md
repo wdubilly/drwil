@@ -570,3 +570,28 @@ l'index ; texte intégral dans l'historique git
   de ce chantier.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/consigne-fusion-auto`).
+
+## 2026-10-11 — Lint, formatage et versions de Node (fin de la vague 1)
+
+- **Besoin** : aucun lint ni formateur ; aucun champ `engines`, et un
+  README qui promettait « Node.js 20+ » sans test.
+- **Décisions clés** : Biome, outil du dépôt jamais livré ; Node 22 et 24
+  déclarés et testés ; tout le code formaté une fois, en un commit isolé.
+  [décisions utilisateur]
+- **Résultat** :
+  - `engines` >= 22 ; Node 22 testé dans le job `checks`, déjà exigé par la
+    forge (une ligne de matrice aurait renommé les checks exigés) — vérifié
+    en CI sous Node 22.23.3 ;
+  - `biome.jsonc` : chaque règle désactivée avec sa raison (gabarits de
+    chaînes, `any` des données sans type de `packages/drwil/src/verify.ts` et
+    `packages/drwil/src/doctor.ts`, tri
+    des imports qui changerait l'ordre d'exécution des modules) ; écarts de
+    lint corrigés sans changement de comportement ;
+  - formatage en commit isolé (56 fichiers, dépôt et gabarit identiques) ;
+    contrôle `lint` (`biome ci`, avertissements bloquants) au commit, au
+    push et en CI ; un fichier mal formaté le fait échouer (vérifié).
+- **Relevé en route** : une première mesure du formatage était fausse (une
+  largeur de ligne hors limites rendait la configuration invalide, rien ne
+  s'exécutait) ; corrigée avant toute décision.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/lint-formateur-engines`).
