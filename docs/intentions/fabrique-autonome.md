@@ -88,7 +88,9 @@ Précisé le 2026-10-11 (demandeur) : **mesurer avant de construire**. La
 mesure de la consommation (`docs/projets/mesurer-consommation.md`) et un
 mini-banc avec / sans drwil (`docs/projets/mini-banc.md`) passent avant
 les restructurations (vague 3 de `docs/projets/en-attente.md`) ; les
-étapes 2 à 5 se décident ensuite sur ces chiffres. Premier relevé : le
+étapes 2 à 5 se décident ensuite sur ces chiffres. La fabrique passe **avant
+la publication** (vague 6, pilote dans ce dépôt ; publication en vague 7),
+avec la protection de master pour prérequis. Premier relevé : le
 contexte relu à chaque échange (cache lu) domine la consommation, devant
 le code produit — une fabrique sobre raccourcit d'abord les sessions.
 
@@ -120,3 +122,10 @@ le code produit — une fabrique sobre raccourcit d'abord les sessions.
 5. **Livrable** : la fabrique est-elle une capacité de drwil-le-livrable
    (gabarit) ou d'abord une pratique de ce dépôt (QUA-018) ?
 6. **Orchestrateur** : outil existant ou script du dépôt ; où tourne-t-il ?
+7. **Fabrique de feuille de route** (proposée le 2026-10-11) : une boucle
+   prend la prochaine fiche prête, ouvre une session neuve par fiche
+   (moins de contexte relu, donc moins de tokens), réalise, vérifie,
+   ouvre la PR, fusionne selon le risque, puis passe à la suivante ;
+   elle s'arrête sur une `[décision]` ou un geste `[humain]`, que le
+   demandeur tranche par lots. Chaque règle de conduite qui ne tient
+   aujourd'hui que par le prompt est candidate à devenir un contrôle.
