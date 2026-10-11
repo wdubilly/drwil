@@ -30,10 +30,10 @@ Chaque vague y contribue :
 |---|---|
 | 1 — hygiène et preuves | des contrôles fiables (fait) |
 | 2 — décisions prouvables | des filets avant de bouger le code |
-| 3 — mesurer | savoir ce que drwil apporte et coûte, en tokens et en qualité |
+| 3 — mesurer | savoir ce que coûte chaque chantier en tokens (fait) |
 | 4 — restructurations | un code et un cycle plus simples, un seul gabarit en anglais |
 | 5 — catalogue et profils | les contrats et leurs contrôles, choisis par profil de risque |
-| 6 — la fabrique | pilote autonome dans ce dépôt, gradué par le risque, sur les chiffres |
+| 6 — la fabrique | mini-banc avec / sans drwil, puis pilote autonome dans ce dépôt, gradué par le risque |
 | 7 — le produit | publier, quand tout est opérationnel |
 
 ## Ordre de réalisation (2026-10-11)
@@ -81,9 +81,6 @@ session (`node outils/consommation.mjs`, journal du 2026-10-11).
 - [ ] [décision] [P1] Écrire automatiquement la consommation d'un chantier
   à sa clôture (lot 2 de la mesure), une fois les chiffres jugés fiables —
   voir `docs/projets/journal.md` (2026-10-11).
-- [ ] [IA] [P1] Mini-banc avec / sans drwil : 2 tâches, 3
-  répétitions, juge indépendant, tokens mesurés —
-  `docs/projets/mini-banc.md`.
 
 ## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 
@@ -125,11 +122,16 @@ session (`node outils/consommation.mjs`, journal du 2026-10-11).
 ## Vague 6 — la fabrique, en pilote dans ce dépôt
 
 Prérequis : la protection de master (vague 2), reportée le 2026-10-11 :
-aucune fusion autonome sans elle.
+aucune fusion autonome sans elle. Le mini-banc y a été déplacé le
+2026-10-12 (demandeur) : il mesure le drwil restructuré qui fera tourner la
+fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
+- [ ] [IA] [P2] Mini-banc avec / sans drwil, en CI à la demande : 2
+  tâches, 3 répétitions, juge indépendant, tokens mesurés —
+  `docs/projets/mini-banc.md`.
 - [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
   mutation, rôles séparés, une session par fiche, auto-fusion LOW),
-  cadrée sur les chiffres de la vague 3 —
+  cadrée sur les chiffres du mini-banc et de la consommation —
   `docs/intentions/fabrique-autonome.md`.
 
 ## Vague 7 — le produit, quand tout est opérationnel

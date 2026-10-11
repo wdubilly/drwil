@@ -1,7 +1,7 @@
 # Intention : une fabrique autonome, graduée par le risque
 
-**Statut** (2026-10-11) : à cadrer, après les chiffres de la vague 3
-(« mesurer ») — intention posée par le demandeur à partir d'une analyse
+**Statut** (2026-10-12) : à cadrer, sur les chiffres de la consommation
+et du mini-banc (vague 6) — intention posée par le demandeur à partir d'une analyse
 externe, corrigée sur l'état réel du dépôt ; questions à trancher en fin
 de fiche.
 
@@ -85,10 +85,11 @@ fiches (DRWIL-012, niveaux de risque).
    (`docs/intentions/bench-avec-sans-drwil.md`).
 
 Précisé le 2026-10-11 (demandeur) : **mesurer avant de construire**. La
-mesure de la consommation (faite : `outils/consommation.mjs`) et un
-mini-banc avec / sans drwil (`docs/projets/mini-banc.md`) passent avant
-les restructurations (vague 3 de `docs/projets/en-attente.md`) ; les
-étapes 2 à 5 se décident ensuite sur ces chiffres. La fabrique passe **avant
+mesure de la consommation est faite (`outils/consommation.mjs`, vague 3
+de `docs/projets/en-attente.md`) ; le mini-banc avec / sans drwil
+(`docs/projets/mini-banc.md`) passe en tête de la vague 6, juste avant le
+pilote (déplacé le 2026-10-12) : il mesure le drwil restructuré qui fera
+tourner la fabrique. Les étapes 2 à 5 se décident sur ces chiffres. La fabrique passe **avant
 la publication** (vague 6, pilote dans ce dépôt ; publication en vague 7),
 avec la protection de master pour prérequis. Premier relevé : le
 contexte relu à chaque échange (cache lu) domine la consommation, devant
