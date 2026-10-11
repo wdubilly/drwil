@@ -7,6 +7,11 @@
 fichiers:
   - outils/verifier-miroirs.mjs
   - outils/miroirs.json
+  - outils/verifier-miroirs.test.mjs
+  - docs/contrats.md
+  - docs/recettes/*.md
+  - packages/drwil/templates/fr/base/docs/projets/modele-fiche-projet.md
+  - packages/drwil/templates/fr/base/docs/intentions/README.md
   - .drwil/ia-first.json
   - .claude/settings.json
   - packages/drwil/templates/common/tools/claude/.claude/settings.json
@@ -17,7 +22,11 @@ fichiers:
 (cadrage : un contrôle propre à ce dépôt, déclaré par le projet, et
 l'alignement des écarts trouvés, côté dépôt et côté gabarit — QUA-018
 (périmètre explicite : dépôt drwil vs livrable gabarit). Le contrôle vit
-hors de `.githooks/`, qui est lui-même un miroir du gabarit.)
+hors de `.githooks/`, qui est lui-même un miroir du gabarit. Élargi le
+2026-10-11 au lancement : test du contrôle, `docs/contrats.md` (QUA-018
+prouvé par le contrôle), recettes côté dépôt et deux fichiers du gabarit
+susceptibles d'être alignés — élargi d'emblée pour ne rien modifier hors
+cadrage en clôture.)
 
 ## 1. Besoin
 
