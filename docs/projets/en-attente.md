@@ -42,15 +42,12 @@ après la vague 5.
 ## Vague 2 — rendre les décisions humaines prouvables, relever les preuves
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
-tranchées.
+tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
+de `docs/projets/adopter-seuil-couverture.md`).
 
 - [ ] [humain] [P1] Protéger master : approbation humaine exigée sur les
   PR (aujourd'hui 0) et compte machine de l'agent (lot 3) (v1:GIT-004,
   v1:COD-010, v1:HOOK-014) — `docs/projets/proteger-master.md`.
-- [ ] [IA] [P1] Couverture du paquet : seuils relevés au réel, avec cliquet
-  (lot 3a, décidé le 2026-10-11 ; le 100 % reste à la demande) (v1:TST-005) ;
-  préalable au refactoring de `packages/drwil/src/index.ts` —
-  `docs/projets/adopter-seuil-couverture.md`.
 - [ ] [IA] [P1] Non-régression continue : recette « corriger un défaut »,
   tests rattachés aux contrats (nom et champ « Tests », cohérence
   contrôlée), échec préexistant signalé en CI (v1:TST-004) —
@@ -116,6 +113,10 @@ vagues 3 à 5 modifient ; l'écrire avant serait le réécrire.
 
 ## Ensuite
 
+- [ ] [décision] [P3] Couverture du paquet à 100 % (lot 3b, à la demande) :
+  trancher le script de release (mocker ou exclure) et mesurer aussi les
+  fichiers jamais importés (`--all`) —
+  `docs/projets/adopter-seuil-couverture.md`.
 - [ ] [décision] [P3] Bench avec / sans drwil : même consigne, même projet,
   pour mesurer l'apport en qualité de livrable et en consommation de
   tokens — `docs/intentions/bench-avec-sans-drwil.md`.
