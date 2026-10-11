@@ -35,8 +35,8 @@ d'abord, d'où les seuils de couverture (vague 2) avant le refactoring de
 ## Vague 1 — hygiène et preuves (petits chantiers, risque faible)
 
 - [ ] [IA] [P0] Outiller SEC-006 : `npm audit` dans les contrôles déclarés,
-  pour qu'une signature devienne une preuve (v1:SEC-008) — voir
-  `docs/projets/journal.md` (2026-10-11, suites de la frontière).
+  pour qu'une signature devienne une preuve (v1:SEC-008) —
+  `docs/projets/outiller-sec-006.md`.
 - [ ] [IA] [P0] Règle de refus `Bash(git *-c *)` des réglages Claude livrés
   mal calibrée : elle bloque aussi `git switch -c` (constaté le
   2026-10-11) ; viser la seule option globale de git, avec un test
