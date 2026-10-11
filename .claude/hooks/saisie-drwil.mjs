@@ -25,7 +25,13 @@ export function sondageLancement(entree) {
   // Claude Code : questions[{ question, header, options }], réponses dans `answers`.
   const q = Array.isArray(e.questions) ? e.questions.find((x) => x?.header === MARQUE) : null;
   const qFusion = q ? e.questions.find((x) => x?.header === MARQUE_FUSION) : null;
-  if (q) return { forme: "claude", question: q.question, questionFusion: qFusion?.question ?? null, prerempli: Boolean(e.answers && Object.keys(e.answers).length) };
+  if (q)
+    return {
+      forme: "claude",
+      question: q.question,
+      questionFusion: qFusion?.question ?? null,
+      prerempli: Boolean(e.answers && Object.keys(e.answers).length),
+    };
   // Copilot CLI : message + requestedSchema (options en `enum`), réponse en texte libre.
   if (typeof e.message === "string" && e.message.startsWith(MARQUE)) {
     const proprietes = Object.values(e.requestedSchema?.properties ?? {});
@@ -61,7 +67,9 @@ async function principal() {
   if (evenement === "PreToolUse") {
     if (!sondage.prerempli) return 0;
     // Code 2 : l'outil bloque l'appel et rend ce message au modèle.
-    console.error("drwil : sondage de lancement refusé — il ne doit contenir ni réponse ni valeur par défaut ; c'est l'humain qui choisit.");
+    console.error(
+      "drwil : sondage de lancement refusé — il ne doit contenir ni réponse ni valeur par défaut ; c'est l'humain qui choisit.",
+    );
     return 2;
   }
   if (evenement !== "PostToolUse") return 0;
@@ -69,7 +77,11 @@ async function principal() {
   if (!choix) return 0;
   const { lancer } = await import(pathToFileURL(join(RACINE, ".githooks", "etat.mjs")).href);
   const r = lancer(RACINE, choix, { humain: true, fusion: fusionAutorisee(entree, sondage) });
-  console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `[drwil] ${r.code === 0 ? "✓" : "✗"} ${r.message}` } }));
+  console.log(
+    JSON.stringify({
+      hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `[drwil] ${r.code === 0 ? "✓" : "✗"} ${r.message}` },
+    }),
+  );
   return 0;
 }
 

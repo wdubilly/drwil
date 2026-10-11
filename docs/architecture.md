@@ -10,7 +10,7 @@ Ce dépôt a deux casquettes (QUA-018) : **drwil-le-livrable**, le paquet npm `p
 
 ## Stack
 
-Node.js (CI sur Node 24 ; versions prises en charge à déclarer, `docs/projets/lint-formateur-engines.md`), TypeScript pour la CLI, JavaScript sans dépendance (modules `.githooks/*.mjs`) pour les hooks. Une seule dépendance d'exécution : `commander`.
+Node.js 22 et plus récent (`engines` du paquet ; CI sur Node 22 et 24), TypeScript pour la CLI, JavaScript sans dépendance (modules `.githooks/*.mjs`) pour les hooks. Une seule dépendance d'exécution : `commander`.
 
 ## Le livrable : `packages/drwil`
 

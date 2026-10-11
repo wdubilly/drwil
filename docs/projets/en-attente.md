@@ -32,18 +32,12 @@ ordre. Chaque ligne cite les contrats candidats `v1:` qu'elle rend réels
 d'abord, d'où les seuils de couverture (vague 2) avant le refactoring de
 `packages/drwil/src/index.ts` (vague 3).
 
-## Vague 1 — hygiène et preuves (petits chantiers, risque faible)
+## Vague 1 — hygiène et preuves : terminée le 2026-10-11
 
-Ordre interne, dans l'ordre des lignes ci-dessous (décidé le 2026-10-11 ;
-à priorité égale, `/drwil-lancer` trie par nom de fichier : l'agent
-recommande la première fiche prête de cette liste). Faits, dans l'ordre :
-la règle `git -c`, SEC-006 outillé, la carte du dépôt, la consigne de
-fusion automatique (voir `docs/projets/journal.md`).
-Le README est reporté après la vague 5.
-
-- [ ] [IA] [P0] Lint, formateur et versions de Node déclarées (`engines`)
-  pour le paquet : Biome, Node 22 et 24 testés (v1:COD-002, v1:COD-003,
-  v1:PKG-001) — `docs/projets/lint-formateur-engines.md`.
+Faite dans l'ordre : la règle `git -c` recalibrée, SEC-006 outillé, la
+carte du dépôt, la consigne de fusion automatique, lint, formatage et
+versions de Node (voir `docs/projets/journal.md`). Le README est reporté
+après la vague 5.
 
 ## Vague 2 — rendre les décisions humaines prouvables, relever les preuves
 

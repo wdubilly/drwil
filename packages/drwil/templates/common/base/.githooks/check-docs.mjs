@@ -26,14 +26,17 @@ const T = {
     cadrageLigne: (f, l) => `${f} : ligne de cadrage non comprise « ${l} »`,
     cadrageLarge: (f, m) => `${f} : motif de cadrage trop large « ${m} »`,
     bilan: (n, e) => `check-docs : ${n} fichiers scannés, ${e} erreur(s)`,
-    cadrageAvertissement: (n) => `check-docs : ${n} avertissement(s) de cadrage (QUA-016, non bloquant — réglage "cadrage" de .drwil/ia-first.json)`,
+    cadrageAvertissement: (n) =>
+      `check-docs : ${n} avertissement(s) de cadrage (QUA-016, non bloquant — réglage "cadrage" de .drwil/ia-first.json)`,
     coherenceOuverte: (fiche) => `case ouverte mais la fiche ${fiche} se dit déjà terminée (QUA-015)`,
     coherenceCochee: (fiche) => `case cochée mais la fiche ${fiche} ne se dit pas terminée (QUA-015)`,
-    ficheTerminee: (fiche) => `${fiche} : fiche terminée encore présente — la condenser dans docs/projets/journal.md, la supprimer et retirer sa ligne de l'index (QUA-015)`,
+    ficheTerminee: (fiche) =>
+      `${fiche} : fiche terminée encore présente — la condenser dans docs/projets/journal.md, la supprimer et retirer sa ligne de l'index (QUA-015)`,
     coherenceAvertissement: (n) => `check-docs : ${n} avertissement(s) de cohérence case/statut (QUA-015, non bloquant)`,
     risqueAvertissement: (n) => `check-docs : ${n} avertissement(s) de niveau de risque (DRWIL-012, non bloquant)`,
     ignoreParGit: "fichier ignoré par Git : absent en CI (ajouter « (si présent) »)",
-    nouveauxAvertissement: (n) => `check-docs : ${n} avertissement(s) d'exigence récente (réglage « nouvellesExigences » : avertissement ; « bloquant » pour l'imposer)`,
+    nouveauxAvertissement: (n) =>
+      `check-docs : ${n} avertissement(s) d'exigence récente (réglage « nouvellesExigences » : avertissement ; « bloquant » pour l'imposer)`,
   },
   en: {
     chemin: (c) => `cited path not found \`${c}\``,
@@ -51,11 +54,13 @@ const T = {
     cadrageAvertissement: (n) => `check-docs: ${n} cadrage warning(s) (QUA-016, non-blocking — "cadrage" setting in .drwil/ia-first.json)`,
     coherenceOuverte: (fiche) => `item unchecked but ${fiche} already says it is done (QUA-015)`,
     coherenceCochee: (fiche) => `item checked but ${fiche} does not say it is done (QUA-015)`,
-    ficheTerminee: (fiche) => `${fiche}: finished card still present — condense it into docs/projects/journal.md, delete it and remove its index line (QUA-015)`,
+    ficheTerminee: (fiche) =>
+      `${fiche}: finished card still present — condense it into docs/projects/journal.md, delete it and remove its index line (QUA-015)`,
     coherenceAvertissement: (n) => `check-docs: ${n} checkbox/status consistency warning(s) (QUA-015, non-blocking)`,
     risqueAvertissement: (n) => `check-docs: ${n} risk level warning(s) (DRWIL-012, non-blocking)`,
-    ignoreParGit: "file ignored by Git: missing in CI (add \"(if present)\")",
-    nouveauxAvertissement: (n) => `check-docs: ${n} recent-requirement warning(s) (setting "nouvellesExigences": avertissement; "bloquant" to enforce it)`,
+    ignoreParGit: 'file ignored by Git: missing in CI (add "(if present)")',
+    nouveauxAvertissement: (n) =>
+      `check-docs: ${n} recent-requirement warning(s) (setting "nouvellesExigences": avertissement; "bloquant" to enforce it)`,
   },
 }[lang];
 
@@ -93,11 +98,13 @@ function loadConfig() {
 
 function mdRecursif(dir) {
   if (!existsSync(dir)) return [];
-  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-    const p = join(dir, e.name);
-    if (e.isDirectory()) return mdRecursif(p);
-    return e.name.endsWith(".md") ? [p] : [];
-  }).sort();
+  return readdirSync(dir, { withFileTypes: true })
+    .flatMap((e) => {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) return mdRecursif(p);
+      return e.name.endsWith(".md") ? [p] : [];
+    })
+    .sort();
 }
 
 function sources() {
@@ -111,9 +118,22 @@ function sources() {
 // Préfixes connus (racine + couches du projet) : une citation hors de ces préfixes et sans
 // extension reconnue n'est pas prise pour un chemin (ex. une alternative « minimal/complet »).
 const PREFIXES_RACINE = [
-  "docs/", ".githooks/", ".claude/", ".github/", ".cursor/", ".drwil/", "scripts/",
-  "AGENTS.md", "README.md", "INSTALL.md", "CLAUDE.md", "GEMINI.md",
-  ".gitlab-ci.yml", ".gitignore", ".env.example", "docker-compose.yml",
+  "docs/",
+  ".githooks/",
+  ".claude/",
+  ".github/",
+  ".cursor/",
+  ".drwil/",
+  "scripts/",
+  "AGENTS.md",
+  "README.md",
+  "INSTALL.md",
+  "CLAUDE.md",
+  "GEMINI.md",
+  ".gitlab-ci.yml",
+  ".gitignore",
+  ".env.example",
+  "docker-compose.yml",
 ];
 const prefixesConnus = [...PREFIXES_RACINE, ...(cfg.layers ?? []).map((l) => `${l}/`), ...(cfg.layerPrefixes ?? []).map((p) => `${p}/`)];
 
@@ -139,7 +159,11 @@ function ignoresParGit(chemins) {
   const rels = [...new Set(chemins.map(relPosix))].filter((r) => r && !r.startsWith(".."));
   if (!rels.length) return new Set();
   try {
-    const sortie = execFileSync("git", ["check-ignore", "--stdin"], { cwd: root, input: rels.join("\n"), stdio: ["pipe", "pipe", "ignore"] });
+    const sortie = execFileSync("git", ["check-ignore", "--stdin"], {
+      cwd: root,
+      input: rels.join("\n"),
+      stdio: ["pipe", "pipe", "ignore"],
+    });
     return new Set(sortie.toString().split(/\r?\n/).filter(Boolean));
   } catch {
     return new Set(); // code 1 : rien d'ignoré ; ou pas de dépôt git.
@@ -198,7 +222,8 @@ const nouvellesBloquantes = cfg.nouvellesExigences === "bloquant";
 const avertissementsNouveaux = [];
 for (const c of citations) {
   if (!c.trouves.length) erreurs.push(`${c.lieu} : ${T.chemin(c.cite)}`);
-  else if (!c.trouves.some((p) => !ignores.has(relPosix(p)))) (nouvellesBloquantes ? erreurs : avertissementsNouveaux).push(`${c.lieu} : ${T.chemin(c.cite)} — ${T.ignoreParGit}`);
+  else if (!c.trouves.some((p) => !ignores.has(relPosix(p))))
+    (nouvellesBloquantes ? erreurs : avertissementsNouveaux).push(`${c.lieu} : ${T.chemin(c.cite)} — ${T.ignoreParGit}`);
 }
 
 erreurs.push(...checkChantiers());
@@ -211,8 +236,14 @@ const avertissementsRisque = [];
   // La fiche de mécanique du kit est livrée à chaque installation et ne décrit pas un chantier :
   // l'avertir dès l'installation de tout projet serait du bruit, pas un signal.
   const mecanique = /^mecanique-ia-first\.md$|^kit-mechanics\.md$/;
-  for (const fiche of mdRecursif(projetsDir).filter((p) => p !== indexPath && !EXEMPTS_RE.test(relative(projetsDir, p)) && !mecanique.test(relative(projetsDir, p)))) {
-    const r = verifierRisque(readFileSync(fiche, "utf8"), { idMotif, lang, ...(cfg.risque?.cheminsSensibles ? { sensibles: cfg.risque.cheminsSensibles } : {}) });
+  for (const fiche of mdRecursif(projetsDir).filter(
+    (p) => p !== indexPath && !EXEMPTS_RE.test(relative(projetsDir, p)) && !mecanique.test(relative(projetsDir, p)),
+  )) {
+    const r = verifierRisque(readFileSync(fiche, "utf8"), {
+      idMotif,
+      lang,
+      ...(cfg.risque?.cheminsSensibles ? { sensibles: cfg.risque.cheminsSensibles } : {}),
+    });
     for (const e of r.erreurs) erreurs.push(`${relative(root, fiche)} : ${e}`);
     for (const a of r.avertissements) avertissementsRisque.push(`${relative(root, fiche)} : ${a}`);
   }
@@ -271,7 +302,13 @@ function checkCoherenceCaseStatut() {
       const fichePath = join(root, m[1]);
       if (!existsSync(fichePath)) continue; // signalé par ailleurs (chemin cité introuvable).
       const fcTexte = readFileSync(fichePath, "utf8");
-      if (!fcTexte.split(/\r?\n/).slice(0, 15).some((l) => STATUT_RE.test(l))) continue; // signalé par ailleurs (pas de ligne Statut).
+      if (
+        !fcTexte
+          .split(/\r?\n/)
+          .slice(0, 15)
+          .some((l) => STATUT_RE.test(l))
+      )
+        continue; // signalé par ailleurs (pas de ligne Statut).
       const termine = statutFiche(fcTexte) === "terminee";
       if (!b.coche && termine) avertissements.push(`${relIndex}:${b.ligne} : ${T.coherenceOuverte(m[1])}`);
       else if (b.coche && !termine) avertissements.push(`${relIndex}:${b.ligne} : ${T.coherenceCochee(m[1])}`);
@@ -286,9 +323,11 @@ function checkChantiers() {
   const indexPath = join(root, cfg.dirs?.index ?? "docs/projets/en-attente.md");
   if (existsSync(indexPath)) {
     const relIndex = relative(root, indexPath);
-    readFileSync(indexPath, "utf8").split(/\r?\n/).forEach((ligne, i) => {
-      if (/^\s*-\s*\[ \]/.test(ligne) && !MARQUEURS_RE.test(ligne)) erreurs.push(`${relIndex}:${i + 1} : ${T.marqueur()}`);
-    });
+    readFileSync(indexPath, "utf8")
+      .split(/\r?\n/)
+      .forEach((ligne, i) => {
+        if (/^\s*-\s*\[ \]/.test(ligne) && !MARQUEURS_RE.test(ligne)) erreurs.push(`${relIndex}:${i + 1} : ${T.marqueur()}`);
+      });
   }
   const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projets");
   const fiches = mdRecursif(projetsDir).filter((p) => p !== indexPath && !EXEMPTS_RE.test(relative(projetsDir, p)));
@@ -309,7 +348,9 @@ function checkCadrage() {
   let indexes;
   try {
     indexes = execFileSync("git", ["ls-files"], { cwd: root, stdio: ["ignore", "pipe", "ignore"] })
-      .toString().split(/\r?\n/).filter(Boolean);
+      .toString()
+      .split(/\r?\n/)
+      .filter(Boolean);
   } catch {
     return erreurs; // pas de dépôt git, ou git introuvable : rien à vérifier.
   }

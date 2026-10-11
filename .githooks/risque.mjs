@@ -26,7 +26,8 @@ export function verifierRisque(texte, { sensibles = CHEMINS_SENSIBLES, idMotif =
   const T = {
     fr: {
       invalide: (v) => `niveau de risque « ${v} » inconnu (LOW, MEDIUM ou HIGH)`,
-      tropBas: (v, min) => `risque ${v} déclaré, mais le cadrage touche la mécanique de gouvernance : ${min} au minimum (forçable vers le haut seulement)`,
+      tropBas: (v, min) =>
+        `risque ${v} déclaré, mais le cadrage touche la mécanique de gouvernance : ${min} au minimum (forçable vers le haut seulement)`,
       absent: (min) => `pas de champ « Risque » alors que le cadrage impose ${min} (DRWIL-012)`,
       decisions: () => `risque HIGH sans section « Décisions »`,
       contrats: () => `risque HIGH sans contrat concerné cité (ID du registre)`,

@@ -59,7 +59,16 @@ function rgb(hex) {
 function mix(top, alpha, under) {
   const a = rgb(top);
   const b = rgb(under);
-  return "#" + a.map((c, i) => Math.round(c * alpha + b[i] * (1 - alpha)).toString(16).padStart(2, "0")).join("");
+  return (
+    "#" +
+    a
+      .map((c, i) =>
+        Math.round(c * alpha + b[i] * (1 - alpha))
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+  );
 }
 function luminance(hex) {
   const [r, g, b] = rgb(hex).map((c) => {

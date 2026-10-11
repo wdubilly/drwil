@@ -27,10 +27,27 @@ const SECTIONS = `# Contrats
 
 test("forme sections : Contrôle, Manuel, contrats sans champ", () => {
   const k = lireContrats(SECTIONS);
-  assert.deepEqual(k.map((c) => c.id), ["SEC-007", "QUA-015", "SEC-001", "QUA-099"]);
+  assert.deepEqual(
+    k.map((c) => c.id),
+    ["SEC-007", "QUA-015", "SEC-001", "QUA-099"],
+  );
   const { texte, ...champs } = k[0];
-  assert.deepEqual(champs, { id: "SEC-007", titre: "Pas de secret", ligne: 3, forme: "section", regle: "aucun secret.", controles: ["secrets-fichiers"], manuel: null, severite: "bloquant", severiteBrute: null });
-  assert.equal(texte, "## SEC-007 — Pas de secret\n**Règle** : aucun secret.\n**Contrôle** : `secrets-fichiers`", "texte brut de la section, sans la suivante");
+  assert.deepEqual(champs, {
+    id: "SEC-007",
+    titre: "Pas de secret",
+    ligne: 3,
+    forme: "section",
+    regle: "aucun secret.",
+    controles: ["secrets-fichiers"],
+    manuel: null,
+    severite: "bloquant",
+    severiteBrute: null,
+  });
+  assert.equal(
+    texte,
+    "## SEC-007 — Pas de secret\n**Règle** : aucun secret.\n**Contrôle** : `secrets-fichiers`",
+    "texte brut de la section, sans la suivante",
+  );
   assert.deepEqual(k[1].controles, ["docs-references", "couverture-ci"]);
   assert.equal(k[1].manuel, "justesse du contenu des fiches");
   assert.equal(k[2].controles, null);
@@ -63,11 +80,14 @@ test("forme tableau historique, avec ou sans colonnes Contrôle/Manuel", () => {
 | QUA-004 | Couverture | \`couverture-tests\` | — |
 | QUA-018 | Périmètre | — | appréciation humaine |
 `);
-  assert.deepEqual(k.map((c) => [c.id, c.forme, c.controles, c.manuel]), [
-    ["SEC-006", "tableau", null, null],
-    ["QUA-004", "tableau", ["couverture-tests"], null],
-    ["QUA-018", "tableau", null, "appréciation humaine"],
-  ]);
+  assert.deepEqual(
+    k.map((c) => [c.id, c.forme, c.controles, c.manuel]),
+    [
+      ["SEC-006", "tableau", null, null],
+      ["QUA-004", "tableau", ["couverture-tests"], null],
+      ["QUA-018", "tableau", null, "appréciation humaine"],
+    ],
+  );
 });
 
 test("validation : contrôle inconnu, aucune preuve, doublon, Contrôle vide ; tableau historique toléré", () => {
@@ -98,7 +118,10 @@ test("validation : contrôle inconnu, aucune preuve, doublon, Contrôle vide ; t
 });
 
 test("contrôles connus : socle + id des contrôles du projet", () => {
-  assert.deepEqual(controlesConnus({ checks: [{ id: "couverture-tests", run: "x" }, { run: "sans id" }] }), [...CONTROLES_SOCLE, "couverture-tests"]);
+  assert.deepEqual(controlesConnus({ checks: [{ id: "couverture-tests", run: "x" }, { run: "sans id" }] }), [
+    ...CONTROLES_SOCLE,
+    "couverture-tests",
+  ]);
   assert.deepEqual(controlesConnus(undefined), CONTROLES_SOCLE);
 });
 
@@ -125,35 +148,49 @@ test("sévérité : bloquant par défaut, synonymes anglais, valeur inconnue ref
 **Contrôle** : \`docs-references\`
 **Sévérité** : énorme
 `);
-  assert.deepEqual(k.map((c) => c.severite), ["avertissement", "indicatif", null]);
-  assert.deepEqual(validerContrats(k, CONTROLES_SOCLE).map((e) => e.type), ["severite"]);
+  assert.deepEqual(
+    k.map((c) => c.severite),
+    ["avertissement", "indicatif", null],
+  );
+  assert.deepEqual(
+    validerContrats(k, CONTROLES_SOCLE).map((e) => e.type),
+    ["severite"],
+  );
 });
 
 test("messages en anglais ; titre sans tiret, tableau sans règle", () => {
-  const contrats = lireContrats([
-    "## QUA-001",
-    "**Rule**: r",
-    "**Check**:",
-    "",
-    "**Severity**: bizarre",
-    "## QUA-002 — sans preuve",
-    "**Rule**: r",
-    "## QUA-003 — inconnu",
-    "**Rule**: r",
-    "**Check**: `fantome`",
-    "",
-    "| ID | Règle |",
-    "|---|---|",
-    "| QUA-004 | |",
-    "| QUA-005 |",
-  ].join("\n"));
+  const contrats = lireContrats(
+    [
+      "## QUA-001",
+      "**Rule**: r",
+      "**Check**:",
+      "",
+      "**Severity**: bizarre",
+      "## QUA-002 — sans preuve",
+      "**Rule**: r",
+      "## QUA-003 — inconnu",
+      "**Rule**: r",
+      "**Check**: `fantome`",
+      "",
+      "| ID | Règle |",
+      "|---|---|",
+      "| QUA-004 | |",
+      "| QUA-005 |",
+    ].join("\n"),
+  );
   assert.equal(contrats[0].titre, "");
-  assert.deepEqual(contrats.slice(3).map((k) => [k.id, k.titre, k.regle]), [["QUA-004", "", null], ["QUA-005", "", null]]);
+  assert.deepEqual(
+    contrats.slice(3).map((k) => [k.id, k.titre, k.regle]),
+    [
+      ["QUA-004", "", null],
+      ["QUA-005", "", null],
+    ],
+  );
   const messages = validerContrats(contrats, ["docs-references"], "en").map((e) => e.message);
   assert.deepEqual(messages, [
     "QUA-001: empty Check field",
-    "QUA-001: unknown severity \"bizarre\" (blocking, warning or advisory)",
+    'QUA-001: unknown severity "bizarre" (blocking, warning or advisory)',
     "QUA-002: no declared proof (Check or Manual field)",
-    "QUA-003: unknown check \"fantome\" (known: docs-references)",
+    'QUA-003: unknown check "fantome" (known: docs-references)',
   ]);
 });

@@ -28,7 +28,8 @@ const TEXTES = {
     brancheCi: "jamais en CI",
     brancheTags: "push de tags uniquement",
     brancheSansBranche: "push de tags ou de suppressions de branches uniquement",
-    brancheProtegee: (b) => `travail direct sur la branche principale (${b}) : passer par une branche et une pull/merge request (voir docs/recettes/travailler-en-branche.md)`,
+    brancheProtegee: (b) =>
+      `travail direct sur la branche principale (${b}) : passer par une branche et une pull/merge request (voir docs/recettes/travailler-en-branche.md)`,
     testsControles: "tests des contrôles eux-mêmes",
     aucunTest: "tests propres au dépôt drwil, non livrés",
     couvertureCi: "couverture CI de chaque contrôle (QUA-013)",
@@ -46,7 +47,8 @@ const TEXTES = {
     brancheCi: "never in CI",
     brancheTags: "tags-only push",
     brancheSansBranche: "push of tags or branch deletions only",
-    brancheProtegee: (b) => `direct work on the main branch (${b}): go through a branch and a pull/merge request (see docs/recipes/working-with-branches.md)`,
+    brancheProtegee: (b) =>
+      `direct work on the main branch (${b}): go through a branch and a pull/merge request (see docs/recipes/working-with-branches.md)`,
     testsControles: "tests of the checks themselves",
     aucunTest: "tests owned by the drwil repository, not shipped",
     couvertureCi: "CI coverage of each check (QUA-013)",
@@ -106,7 +108,8 @@ export function controles(root, { cfg = {}, env = process.env, indexes = null, c
     if (!full) return { statut: "non-applicable", detail: T.modeMinimal };
     const gitleaks = trouverGitleaks();
     if (!gitleaks) return { statut: "non-execute", detail: T.gitleaksAbsent };
-    if (spawnSync("git", ["rev-parse", "--git-dir"], { cwd: root, stdio: "ignore" }).status !== 0) return { statut: "non-execute", detail: T.pasDeGit };
+    if (spawnSync("git", ["rev-parse", "--git-dir"], { cwd: root, stdio: "ignore" }).status !== 0)
+      return { statut: "non-execute", detail: T.pasDeGit };
     // En CI (ou pour `drwil verify`) il n'y a rien d'indexé à juger : on analyse tout l'historique,
     // sinon une preuve de « pas de secret dans le dépôt » ne regarderait rien.
     const args = complet ? ["git", "--no-banner", "--redact", "."] : ["git", "--pre-commit", "--staged", "--no-banner", "--redact", "."];

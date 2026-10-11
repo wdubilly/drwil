@@ -38,7 +38,8 @@ afterEach((t) => {
 });
 
 const FICHE = "docs/projets/exemple.md";
-const fiche = (motifs) => `# Projet : Exemple\n\n**Statut** : cadré le 2026-10-09.\n\n<!-- cadrage\nfichiers:\n${motifs.map((m) => `  - ${m}`).join("\n")}\n-->\n`;
+const fiche = (motifs) =>
+  `# Projet : Exemple\n\n**Statut** : cadré le 2026-10-09.\n\n<!-- cadrage\nfichiers:\n${motifs.map((m) => `  - ${m}`).join("\n")}\n-->\n`;
 
 function git(racine, ...args) {
   const r = spawnSync("git", args, { cwd: racine, encoding: "utf8" });
@@ -64,13 +65,32 @@ function depot(motifs = ["src/a.js"]) {
   return racine;
 }
 
-const etat = (activite) => ({ version: 1, activite, attente_active: activite === "CADRAGE" ? null : FICHE, demande_active: null, depuis: null });
+const etat = (activite) => ({
+  version: 1,
+  activite,
+  attente_active: activite === "CADRAGE" ? null : FICHE,
+  demande_active: null,
+  depuis: null,
+});
 const ecrireEtat = (racine, activite) => ecrire(racine, ".drwil/state.json", JSON.stringify(etat(activite)));
 
 test("hors fiches : seules les fiches et les attestations échappent au périmètre", () => {
-  assert.deepEqual(horsFiches(["docs/projets/x.md", "docs/intentions/y.md", "docs/projects/z.md", ".drwil/evidence/attestations/QUA-013-2026-10-09T17-56-29-571Z.json", "README.md", "src/a.js"]), ["README.md", "src/a.js"]);
+  assert.deepEqual(
+    horsFiches([
+      "docs/projets/x.md",
+      "docs/intentions/y.md",
+      "docs/projects/z.md",
+      ".drwil/evidence/attestations/QUA-013-2026-10-09T17-56-29-571Z.json",
+      "README.md",
+      "src/a.js",
+    ]),
+    ["README.md", "src/a.js"],
+  );
   // Seules les attestations : le reste de .drwil/ (réglages, évidences locales) reste soumis.
-  assert.deepEqual(horsFiches([".drwil/ia-first.json", ".drwil/evidence/verify-x.json"]), [".drwil/ia-first.json", ".drwil/evidence/verify-x.json"]);
+  assert.deepEqual(horsFiches([".drwil/ia-first.json", ".drwil/evidence/verify-x.json"]), [
+    ".drwil/ia-first.json",
+    ".drwil/evidence/verify-x.json",
+  ]);
   assert.deepEqual(horsFiches(["docs/autre.md"], ["docs/*"]), [], "liste réglable");
 });
 
@@ -189,8 +209,14 @@ test("branche sans référence : non exécuté, jamais un succès (QUA-013)", ()
 
 test("messages en anglais : activité, hors cadrage, commits sans trailer ou hors cadrage, échec", () => {
   const cfg = { lang: "en" };
-  assert.match(verifierIndex({ fichiers: ["src/a.js"], etat: etat("CADRAGE"), motifs: [], cfg })[0], /^1 file\(s\) outside sheets committed in CADRAGE/);
-  assert.match(verifierIndex({ fichiers: ["src/b.js"], etat: etat("REALISATION"), motifs: ["src/a.js"], cfg })[0], /^src\/b\.js: outside the cadrage of docs\/projets\/exemple\.md/);
+  assert.match(
+    verifierIndex({ fichiers: ["src/a.js"], etat: etat("CADRAGE"), motifs: [], cfg })[0],
+    /^1 file\(s\) outside sheets committed in CADRAGE/,
+  );
+  assert.match(
+    verifierIndex({ fichiers: ["src/b.js"], etat: etat("REALISATION"), motifs: ["src/a.js"], cfg })[0],
+    /^src\/b\.js: outside the cadrage of docs\/projets\/exemple\.md/,
+  );
   const racine = depot(["src/a.js"]);
   git(racine, "checkout", "-q", "-b", "chantier");
   ecrire(racine, "src/a.js", "a\n");

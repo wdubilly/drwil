@@ -100,7 +100,7 @@ async function rappel(entree, racine = RACINE) {
     });
   }
   if (avant || bloquant) return "";
-  const suite = "Rien n'est bloqué ici, ni au commit (réglage \"cadrage\" de .drwil/ia-first.json : avertissement).";
+  const suite = 'Rien n\'est bloqué ici, ni au commit (réglage "cadrage" de .drwil/ia-first.json : avertissement).';
   return JSON.stringify({
     hookSpecificOutput: {
       hookEventName: "PostToolUse",
@@ -125,7 +125,9 @@ export { rappel, main };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   let entree = "";
-  process.stdin.on("data", (d) => { entree += d; });
+  process.stdin.on("data", (d) => {
+    entree += d;
+  });
   process.stdin.on("end", async () => {
     const sortie = await main(entree);
     if (sortie) console.log(sortie);

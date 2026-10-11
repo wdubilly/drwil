@@ -41,7 +41,8 @@ test("GitHub sans filtre de chemins : chaque job couvre tout", () => {
 });
 
 test("GitHub : job absent, aucun chemin, filtre paths qui ne couvre pas (dégradable signalé)", () => {
-  const workflow = "on:\n  push:\n    paths:\n      - 'src/**'\n      - \"docs/**\"\n    branches: [main]\nname: ci\njobs:\n  checks:\n    runs-on: x\n";
+  const workflow =
+    "on:\n  push:\n    paths:\n      - 'src/**'\n      - \"docs/**\"\n    branches: [main]\nname: ci\njobs:\n  checks:\n    runs-on: x\n";
   const r = projet(
     {
       lang: "fr",
@@ -58,7 +59,10 @@ test("GitHub : job absent, aucun chemin, filtre paths qui ne couvre pas (dégrad
   assert.match(r.stdout, /Contrôles \(QUA-013\)/);
   assert.match(r.stdout, /fantome : job CI « inexistant » absent/);
   assert.match(r.stdout, /vide : aucun chemin déclaré/);
-  assert.match(r.stdout, /secrets-fichiers : le job CI « checks » .* ne se déclenche pas sur `\*\*` \(changes : src\/\*\*, docs\/\*\*\) ; dégradable/);
+  assert.match(
+    r.stdout,
+    /secrets-fichiers : le job CI « checks » .* ne se déclenche pas sur `\*\*` \(changes : src\/\*\*, docs\/\*\*\) ; dégradable/,
+  );
   assert.doesNotMatch(r.stdout, /src : le job/);
 });
 
@@ -70,7 +74,7 @@ test("GitLab : rules: changes par job, en anglais", () => {
     "  script: run",
     "  rules:",
     "    - changes:",
-    "        - \"src/**\"",
+    '        - "src/**"',
     "      when: always",
     "toujours:",
     "  script: run",
@@ -92,25 +96,22 @@ test("GitLab : rules: changes par job, en anglais", () => {
   );
   assert.equal(r.status, 1);
   assert.match(r.stdout, /Checks \(QUA-013\)/);
-  assert.match(r.stdout, /secrets-fichiers: CI job "checks" \(\.gitlab-ci\.yml\) does not trigger on `\*\*` \(changes: src\/\*\*\); degradable/);
+  assert.match(
+    r.stdout,
+    /secrets-fichiers: CI job "checks" \(\.gitlab-ci\.yml\) does not trigger on `\*\*` \(changes: src\/\*\*\); degradable/,
+  );
   assert.match(r.stdout, /vide: no path declared/);
   assert.match(r.stdout, /fantome: CI job "inexistant" missing from \.gitlab-ci\.yml/);
   assert.doesNotMatch(r.stdout, /src: CI job|large: CI job/);
 });
 
 test("GitLab : job à rules sans changes, en anglais : « none »", () => {
-  const r = projet(
-    { lang: "en", ciFiles: [".gitlab-ci.yml"] },
-    { ".gitlab-ci.yml": "checks:\n  rules:\n    - if: $CI\n" },
-  );
+  const r = projet({ lang: "en", ciFiles: [".gitlab-ci.yml"] }, { ".gitlab-ci.yml": "checks:\n  rules:\n    - if: $CI\n" });
   assert.equal(r.status, 1);
   assert.match(r.stdout, /\(changes: none\)/);
 });
 
 test("GitHub en français : « aucun » quand le job n'a aucun déclencheur connu", () => {
-  const r = projet(
-    { ciFiles: [".gitlab-ci.yml"] },
-    { ".gitlab-ci.yml": "checks:\n  rules:\n    - when: manual\n" },
-  );
+  const r = projet({ ciFiles: [".gitlab-ci.yml"] }, { ".gitlab-ci.yml": "checks:\n  rules:\n    - when: manual\n" });
   assert.match(r.stdout, /\(changes : aucun\)/);
 });

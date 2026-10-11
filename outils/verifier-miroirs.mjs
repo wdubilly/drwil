@@ -67,7 +67,8 @@ export function homologues(racine, lang = "fr") {
   }
   for (const f of fichiers(join(gabarit, OPTIONNELS))) {
     const parties = posix(relative(join(gabarit, OPTIONNELS), f)).split("/");
-    if (f.endsWith(".mjs")) carte.set(`.githooks/${parties.at(-1)}`, { source: posix(relative(racine, f)), unite: `optional/${parties[0]}` });
+    if (f.endsWith(".mjs"))
+      carte.set(`.githooks/${parties.at(-1)}`, { source: posix(relative(racine, f)), unite: `optional/${parties[0]}` });
   }
   return carte;
 }
@@ -82,7 +83,10 @@ const normaliser = (texte) => texte.replace(/\r\n/g, "\n");
 export function correspond(installe, gabarit) {
   const [a, g] = [normaliser(installe), normaliser(gabarit)];
   if (!/{{\w+}}/.test(g)) return a === g;
-  const motif = g.split(/{{\w+}}/).map((m) => m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\s\\S]*?");
+  const motif = g
+    .split(/{{\w+}}/)
+    .map((m) => m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("[\\s\\S]*?");
   return new RegExp(`^${motif}$`).test(a);
 }
 
@@ -124,13 +128,17 @@ export function verifier(racine, { lang = "fr", ecarts = {}, propresAuDepot = {}
   for (const [installe, { source, unite }] of [...carte].sort(([a], [b]) => a.localeCompare(b))) {
     if (!present(installe)) {
       const declare = Object.hasOwn(propresAuGabarit, installe);
-      if (installees.has(unite) && !declare) problemes.push(`${installe} : présent dans le gabarit (${source}) mais absent du dépôt (le copier, ou le déclarer propre au gabarit dans outils/miroirs.json)`);
+      if (installees.has(unite) && !declare)
+        problemes.push(
+          `${installe} : présent dans le gabarit (${source}) mais absent du dépôt (le copier, ou le déclarer propre au gabarit dans outils/miroirs.json)`,
+        );
       continue;
     }
     compares++;
     const identique = correspond(readFileSync(join(racine, installe), "utf8"), readFileSync(join(racine, source), "utf8"));
     const declare = Object.hasOwn(ecarts, installe);
-    if (!identique && !declare) problemes.push(`${installe} : diffère de ${source} (corriger, ou déclarer l'écart et sa raison dans outils/miroirs.json)`);
+    if (!identique && !declare)
+      problemes.push(`${installe} : diffère de ${source} (corriger, ou déclarer l'écart et sa raison dans outils/miroirs.json)`);
     if (identique && declare) problemes.push(`${installe} : écart déclaré mais résolu (retirer sa ligne de outils/miroirs.json)`);
   }
 
@@ -140,19 +148,29 @@ export function verifier(racine, { lang = "fr", ecarts = {}, propresAuDepot = {}
   const declares = Object.keys(propresAuDepot).map((e) => [e, couvrePar(e)]);
   for (const f of suivis) {
     if (carte.has(f) || !zones.some((z) => f.startsWith(z))) continue;
-    if (!declares.some(([, couvre]) => couvre(f))) problemes.push(`${f} : présent dans le dépôt seulement (le livrer dans le gabarit, ou le déclarer propre au dépôt dans outils/miroirs.json)`);
+    if (!declares.some(([, couvre]) => couvre(f)))
+      problemes.push(
+        `${f} : présent dans le dépôt seulement (le livrer dans le gabarit, ou le déclarer propre au dépôt dans outils/miroirs.json)`,
+      );
   }
 
   for (const [chemin, raison] of Object.entries(ecarts)) {
-    if (!carte.has(chemin) || !present(chemin)) problemes.push(`${chemin} : écart déclaré sans fichier à comparer (retirer sa ligne de outils/miroirs.json)`);
+    if (!carte.has(chemin) || !present(chemin))
+      problemes.push(`${chemin} : écart déclaré sans fichier à comparer (retirer sa ligne de outils/miroirs.json)`);
     if (raisonVide(raison)) problemes.push(`${chemin} : écart déclaré sans raison`);
   }
   for (const [entree, couvre] of declares) {
-    if (!suivis.some((f) => couvre(f) && !carte.has(f))) problemes.push(`${entree} : déclaré propre au dépôt, mais ne couvre aucun fichier sans homologue (retirer sa ligne de outils/miroirs.json)`);
+    if (!suivis.some((f) => couvre(f) && !carte.has(f)))
+      problemes.push(
+        `${entree} : déclaré propre au dépôt, mais ne couvre aucun fichier sans homologue (retirer sa ligne de outils/miroirs.json)`,
+      );
     if (raisonVide(propresAuDepot[entree])) problemes.push(`${entree} : déclaré propre au dépôt sans raison`);
   }
   for (const [chemin, raison] of Object.entries(propresAuGabarit)) {
-    if (!carte.has(chemin) || present(chemin)) problemes.push(`${chemin} : déclaré propre au gabarit, mais absent du gabarit ou présent dans le dépôt (retirer sa ligne de outils/miroirs.json)`);
+    if (!carte.has(chemin) || present(chemin))
+      problemes.push(
+        `${chemin} : déclaré propre au gabarit, mais absent du gabarit ou présent dans le dépôt (retirer sa ligne de outils/miroirs.json)`,
+      );
     if (raisonVide(raison)) problemes.push(`${chemin} : déclaré propre au gabarit sans raison`);
   }
 
@@ -164,16 +182,21 @@ export function verifier(racine, { lang = "fr", ecarts = {}, propresAuDepot = {}
 /** Jobs de la CI : ceux du gabarit tous présents, ceux en plus déclarés, aucun déclaré qui fuit vers le gabarit. */
 function verifierCi(racine, carte, { fichier, jobsPropresAuDepot = {} }) {
   const homologue = carte.get(fichier);
-  if (!homologue || !existsSync(join(racine, fichier))) return [`${fichier} : CI déclarée dans outils/miroirs.json sans homologue à comparer`];
+  if (!homologue || !existsSync(join(racine, fichier)))
+    return [`${fichier} : CI déclarée dans outils/miroirs.json sans homologue à comparer`];
   const depot = jobs(readFileSync(join(racine, fichier), "utf8"));
   const gabarit = jobs(readFileSync(join(racine, homologue.source), "utf8"));
   const problemes = [];
   for (const j of gabarit) {
-    if (Object.hasOwn(jobsPropresAuDepot, j)) problemes.push(`${fichier} : job « ${j} » déclaré propre au dépôt mais présent dans le gabarit — fuite du dépôt vers le livrable (QUA-018)`);
+    if (Object.hasOwn(jobsPropresAuDepot, j))
+      problemes.push(
+        `${fichier} : job « ${j} » déclaré propre au dépôt mais présent dans le gabarit — fuite du dépôt vers le livrable (QUA-018)`,
+      );
     else if (!depot.includes(j)) problemes.push(`${fichier} : job « ${j} » du gabarit absent de la CI du dépôt`);
   }
   for (const j of depot) {
-    if (!gabarit.includes(j) && !Object.hasOwn(jobsPropresAuDepot, j)) problemes.push(`${fichier} : job « ${j} » propre au dépôt non déclaré (jobsPropresAuDepot dans outils/miroirs.json)`);
+    if (!gabarit.includes(j) && !Object.hasOwn(jobsPropresAuDepot, j))
+      problemes.push(`${fichier} : job « ${j} » propre au dépôt non déclaré (jobsPropresAuDepot dans outils/miroirs.json)`);
   }
   for (const [j, raison] of Object.entries(jobsPropresAuDepot)) {
     if (!depot.includes(j)) problemes.push(`${fichier} : job « ${j} » déclaré propre au dépôt mais absent de sa CI`);
@@ -198,16 +221,18 @@ export function fuitesInternes(racine) {
   const fiches = new Set(FICHES_DU_GABARIT.flatMap((d) => fichiers(join(gabarit, d)).map((f) => f.split(sep).at(-1))));
   const problemes = [];
   for (const f of fichiers(gabarit).sort()) {
-    normaliser(readFileSync(f, "utf8")).split("\n").forEach((ligne, i) => {
-      const lieu = `${posix(relative(racine, f))}:${i + 1}`;
-      for (const motif of HISTORIQUE_INTERNE) {
-        const m = motif.exec(ligne);
-        if (m) problemes.push(`${lieu} : historique interne de drwil dans le livrable « ${m[0]} » (QUA-018)`);
-      }
-      for (const [, nom] of ligne.matchAll(/docs\/projec?ts\/([A-Za-z0-9_-]+\.md)/g)) {
-        if (!fiches.has(nom)) problemes.push(`${lieu} : fiche propre au dépôt citée dans le livrable « ${nom} » (QUA-018)`);
-      }
-    });
+    normaliser(readFileSync(f, "utf8"))
+      .split("\n")
+      .forEach((ligne, i) => {
+        const lieu = `${posix(relative(racine, f))}:${i + 1}`;
+        for (const motif of HISTORIQUE_INTERNE) {
+          const m = motif.exec(ligne);
+          if (m) problemes.push(`${lieu} : historique interne de drwil dans le livrable « ${m[0]} » (QUA-018)`);
+        }
+        for (const [, nom] of ligne.matchAll(/docs\/projec?ts\/([A-Za-z0-9_-]+\.md)/g)) {
+          if (!fiches.has(nom)) problemes.push(`${lieu} : fiche propre au dépôt citée dans le livrable « ${nom} » (QUA-018)`);
+        }
+      });
   }
   return problemes;
 }
@@ -240,7 +265,9 @@ export function principal(racine) {
     suivis: git.stdout.split("\0").filter(Boolean),
   });
   for (const p of problemes) console.error(`  ✗ ${p}`);
-  console.log(`miroirs : ${compares} fichier(s) comparé(s) au gabarit, ${Object.keys(liste.ecarts ?? {}).length} écart(s) déclaré(s), ${problemes.length} problème(s)`);
+  console.log(
+    `miroirs : ${compares} fichier(s) comparé(s) au gabarit, ${Object.keys(liste.ecarts ?? {}).length} écart(s) déclaré(s), ${problemes.length} problème(s)`,
+  );
   return problemes.length ? 1 : 0;
 }
 

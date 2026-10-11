@@ -43,7 +43,7 @@ for (const path of sources(srcDir)) {
 if (erreurs.length) {
   console.error(
     `Couleurs hors charte (utiliser les classes de la palette du projet ou des variables CSS, voir docs/charte-graphique.md) :\n  ` +
-      erreurs.join("\n  ")
+      erreurs.join("\n  "),
   );
   process.exit(1);
 }

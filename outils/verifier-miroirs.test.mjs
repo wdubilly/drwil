@@ -23,7 +23,12 @@ function depot(fichiers, { git = false } = {}) {
     mkdirSync(dirname(join(racine, chemin)), { recursive: true });
     writeFileSync(join(racine, chemin), contenu);
   }
-  if (git) for (const args of [["init", "-q"], ["add", "-A"]]) assert.equal(spawnSync("git", args, { cwd: racine }).status, 0);
+  if (git)
+    for (const args of [
+      ["init", "-q"],
+      ["add", "-A"],
+    ])
+      assert.equal(spawnSync("git", args, { cwd: racine }).status, 0);
   return racine;
 }
 const base = {
@@ -52,7 +57,10 @@ test("homologues : chemins installés, dossier d'outil ou de CI retiré, gitigno
   assert.deepEqual(h("docs/recettes/r.md"), { source: `${G}/fr/base/docs/recettes/r.md`, unite: "base" });
   assert.deepEqual(h(".claude/settings.json"), { source: `${G}/common/tools/claude/.claude/settings.json`, unite: "tools/claude" });
   assert.deepEqual(h(".cursor/rules/x.mdc"), { source: `${G}/fr/tools/cursor/.cursor/rules/x.mdc`, unite: "tools/cursor" });
-  assert.deepEqual(h(".github/workflows/ia-first.yml"), { source: `${G}/common/ci/github/.github/workflows/ia-first.yml`, unite: "ci/github" });
+  assert.deepEqual(h(".github/workflows/ia-first.yml"), {
+    source: `${G}/common/ci/github/.github/workflows/ia-first.yml`,
+    unite: "ci/github",
+  });
   assert.deepEqual(h(".githooks/outil.mjs"), { source: `${G}/common/optional/module/outil.mjs`, unite: "optional/module" });
   assert.equal(carte.has("README.md"), false);
   assert.equal(carte.has("docs/recipes/r.md"), false, "seule la langue du projet");
@@ -99,9 +107,15 @@ test("principal : langue du projet, bilan affiché, liste illisible refusée", (
   console.log = (m) => journal.log.push(m);
   console.error = (m) => journal.error.push(m);
   try {
-    const ok = depot({ ...base, "outils/miroirs.json": JSON.stringify({ version: 2, ecarts: {}, propresAuDepot: { "outils/": "contrôle" } }) }, { git: true });
+    const ok = depot(
+      { ...base, "outils/miroirs.json": JSON.stringify({ version: 2, ecarts: {}, propresAuDepot: { "outils/": "contrôle" } }) },
+      { git: true },
+    );
     assert.equal(principal(ok), 0);
-    const en = depot({ ...base, ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "outils/miroirs.json": "{}", "docs/recipes/r.md": "autre\n" }, { git: true });
+    const en = depot(
+      { ...base, ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "outils/miroirs.json": "{}", "docs/recipes/r.md": "autre\n" },
+      { git: true },
+    );
     assert.equal(principal(en), 1);
     assert.equal(principal(depot(base)), 1);
     assert.equal(principal(depot({ ...base, "outils/miroirs.json": "{}" })), 1, "hors dépôt git : non exécuté, jamais vert");
@@ -115,31 +129,64 @@ test("principal : langue du projet, bilan affiché, liste illisible refusée", (
 });
 
 test("ligne de commande : racine en argument, code de sortie", () => {
-  const racine = depot({ ...base, "outils/miroirs.json": "{\"ecarts\":{},\"propresAuDepot\":{\"outils/\":\"contrôle\"}}", ".githooks/a.mjs": "modifié\n" }, { git: true });
+  const racine = depot(
+    { ...base, "outils/miroirs.json": '{"ecarts":{},"propresAuDepot":{"outils/":"contrôle"}}', ".githooks/a.mjs": "modifié\n" },
+    { git: true },
+  );
   const r = spawnSync(process.execPath, [SCRIPT, racine], { encoding: "utf8" });
   assert.equal(r.status, 1);
   assert.match(r.stderr, /✗ \.githooks\/a\.mjs : diffère/);
   // Sans argument : le dossier courant ; langue absente de la configuration : français.
-  const ok = depot({ ...base, ".drwil/ia-first.json": "{}", "outils/miroirs.json": "{\"ecarts\":{},\"propresAuDepot\":{\"outils/\":\"contrôle\"}}" }, { git: true });
+  const ok = depot(
+    { ...base, ".drwil/ia-first.json": "{}", "outils/miroirs.json": '{"ecarts":{},"propresAuDepot":{"outils/":"contrôle"}}' },
+    { git: true },
+  );
   assert.equal(spawnSync(process.execPath, [SCRIPT], { cwd: ok, encoding: "utf8" }).status, 0);
 });
 
 const suivis = (racine) => spawnSync("git", ["ls-files", "-z"], { cwd: racine, encoding: "utf8" }).stdout.split("\0").filter(Boolean);
 
 test("un seul côté : fichier du dépôt sans homologue dans un dossier miroir, ou d'une partie installée absente du dépôt", () => {
-  const racine = depot({ ...base, ".githooks/nouveau.mjs": "x\n", ".githooks/a.test.mjs": "t\n", "src/app.js": "hors miroirs\n", "docs/projets/f.md": "fiche\n" }, { git: true });
+  const racine = depot(
+    {
+      ...base,
+      ".githooks/nouveau.mjs": "x\n",
+      ".githooks/a.test.mjs": "t\n",
+      "src/app.js": "hors miroirs\n",
+      "docs/projets/f.md": "fiche\n",
+    },
+    { git: true },
+  );
   rmSync(join(racine, "docs/recettes/r.md"));
-  const { problemes } = verifier(racine, { suivis: suivis(racine), propresAuDepot: { ".githooks/*.test.mjs": "tests non livrés", "docs/projets/": "fiches" } });
-  assert.deepEqual(problemes, [
-    "docs/recettes/r.md : présent dans le gabarit (packages/drwil/templates/fr/base/docs/recettes/r.md) mais absent du dépôt (le copier, ou le déclarer propre au gabarit dans outils/miroirs.json)",
-    ".githooks/nouveau.mjs : présent dans le dépôt seulement (le livrer dans le gabarit, ou le déclarer propre au dépôt dans outils/miroirs.json)",
-  ], "docs/recettes/r.md était suivi : il n'est pas signalé comme propre au dépôt, seulement comme manquant ; src/ n'est pas un dossier miroir ; Cursor non installé n'est pas exigé");
-  assert.deepEqual(verifier(racine, { suivis: suivis(racine), propresAuDepot: { ".githooks/*.test.mjs": "t", ".githooks/nouveau.mjs": "local", "docs/projets/": "f" }, propresAuGabarit: { "docs/recettes/r.md": "pas utile ici" } }).problemes, []);
+  const { problemes } = verifier(racine, {
+    suivis: suivis(racine),
+    propresAuDepot: { ".githooks/*.test.mjs": "tests non livrés", "docs/projets/": "fiches" },
+  });
+  assert.deepEqual(
+    problemes,
+    [
+      "docs/recettes/r.md : présent dans le gabarit (packages/drwil/templates/fr/base/docs/recettes/r.md) mais absent du dépôt (le copier, ou le déclarer propre au gabarit dans outils/miroirs.json)",
+      ".githooks/nouveau.mjs : présent dans le dépôt seulement (le livrer dans le gabarit, ou le déclarer propre au dépôt dans outils/miroirs.json)",
+    ],
+    "docs/recettes/r.md était suivi : il n'est pas signalé comme propre au dépôt, seulement comme manquant ; src/ n'est pas un dossier miroir ; Cursor non installé n'est pas exigé",
+  );
+  assert.deepEqual(
+    verifier(racine, {
+      suivis: suivis(racine),
+      propresAuDepot: { ".githooks/*.test.mjs": "t", ".githooks/nouveau.mjs": "local", "docs/projets/": "f" },
+      propresAuGabarit: { "docs/recettes/r.md": "pas utile ici" },
+    }).problemes,
+    [],
+  );
 });
 
 test("déclarations honnêtes : propres au dépôt ou au gabarit inutiles ou sans raison", () => {
   const racine = depot(base, { git: true });
-  const { problemes } = verifier(racine, { suivis: suivis(racine), propresAuDepot: { "docs/vide/": " " }, propresAuGabarit: { ".githooks/a.mjs": "présent", "inconnu.md": "" } });
+  const { problemes } = verifier(racine, {
+    suivis: suivis(racine),
+    propresAuDepot: { "docs/vide/": " " },
+    propresAuGabarit: { ".githooks/a.mjs": "présent", "inconnu.md": "" },
+  });
   assert.deepEqual(problemes, [
     "docs/vide/ : déclaré propre au dépôt, mais ne couvre aucun fichier sans homologue (retirer sa ligne de outils/miroirs.json)",
     "docs/vide/ : déclaré propre au dépôt sans raison",
@@ -155,10 +202,16 @@ test("jobs : clés à deux espaces sous jobs:, fin de bloc à la clé suivante",
 
 test("CI : jobs du gabarit présents, jobs propres déclarés, fuite d'un job propre vers le gabarit refusée", () => {
   const ci = (d, g) => depot({ ...base, [`${G}/common/ci/github/.github/workflows/ia-first.yml`]: g, ".github/workflows/ia-first.yml": d });
-  const verif = (racine, jobsPropresAuDepot) => verifier(racine, { ecarts: { ".github/workflows/ia-first.yml": "jobs vérifiés à part" }, ci: { fichier: ".github/workflows/ia-first.yml", jobsPropresAuDepot } }).problemes;
+  const verif = (racine, jobsPropresAuDepot) =>
+    verifier(racine, {
+      ecarts: { ".github/workflows/ia-first.yml": "jobs vérifiés à part" },
+      ci: { fichier: ".github/workflows/ia-first.yml", jobsPropresAuDepot },
+    }).problemes;
   const ok = ci("jobs:\n  checks:\n  kit:\n", "jobs:\n  checks:\n");
   assert.deepEqual(verif(ok, { kit: "propre" }), []);
-  assert.deepEqual(verif(ok, {}), [".github/workflows/ia-first.yml : job « kit » propre au dépôt non déclaré (jobsPropresAuDepot dans outils/miroirs.json)"]);
+  assert.deepEqual(verif(ok, {}), [
+    ".github/workflows/ia-first.yml : job « kit » propre au dépôt non déclaré (jobsPropresAuDepot dans outils/miroirs.json)",
+  ]);
   const fuite = ci("jobs:\n  checks:\n  kit:\n", "jobs:\n  checks:\n  kit:\n  alerte:\n");
   assert.deepEqual(verif(fuite, { kit: "propre", absent: "" }), [
     ".github/workflows/ia-first.yml : job « kit » déclaré propre au dépôt mais présent dans le gabarit — fuite du dépôt vers le livrable (QUA-018)",
@@ -166,7 +219,9 @@ test("CI : jobs du gabarit présents, jobs propres déclarés, fuite d'un job pr
     ".github/workflows/ia-first.yml : job « absent » déclaré propre au dépôt mais absent de sa CI",
     ".github/workflows/ia-first.yml : job « absent » déclaré propre au dépôt sans raison",
   ]);
-  assert.deepEqual(verifier(depot(base), { ci: { fichier: ".gitlab-ci.yml" } }).problemes, [".gitlab-ci.yml : CI déclarée dans outils/miroirs.json sans homologue à comparer"]);
+  assert.deepEqual(verifier(depot(base), { ci: { fichier: ".gitlab-ci.yml" } }).problemes, [
+    ".gitlab-ci.yml : CI déclarée dans outils/miroirs.json sans homologue à comparer",
+  ]);
 });
 
 test("frontière du livrable : historique interne de drwil refusé dans tout le gabarit, fiches du gabarit permises", () => {
@@ -176,12 +231,15 @@ test("frontière du livrable : historique interne de drwil refusé dans tout le 
     [`${G}/en/base/docs/recipes/x.md`]: "See PR #26.\nDecision of the requester, 2026-10-03.\n",
     [`${G}/common/base/.githooks/y.mjs`]: "// ADR-003, Lot 4 a ajouté, port de run-box-v2\n// voir docs/projets/proteger-master.md\n",
   });
-  assert.deepEqual(verifier(racine).problemes.filter((p) => p.includes("QUA-018")), [
-    `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « ADR-003 » (QUA-018)`,
-    `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « Lot 4 a ajouté » (QUA-018)`,
-    `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « run-box » (QUA-018)`,
-    `${G}/common/base/.githooks/y.mjs:2 : fiche propre au dépôt citée dans le livrable « proteger-master.md » (QUA-018)`,
-    `${G}/en/base/docs/recipes/x.md:1 : historique interne de drwil dans le livrable « PR #26 » (QUA-018)`,
-    `${G}/en/base/docs/recipes/x.md:2 : historique interne de drwil dans le livrable « Decision of the requester, 2026-10-03 » (QUA-018)`,
-  ]);
+  assert.deepEqual(
+    verifier(racine).problemes.filter((p) => p.includes("QUA-018")),
+    [
+      `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « ADR-003 » (QUA-018)`,
+      `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « Lot 4 a ajouté » (QUA-018)`,
+      `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « run-box » (QUA-018)`,
+      `${G}/common/base/.githooks/y.mjs:2 : fiche propre au dépôt citée dans le livrable « proteger-master.md » (QUA-018)`,
+      `${G}/en/base/docs/recipes/x.md:1 : historique interne de drwil dans le livrable « PR #26 » (QUA-018)`,
+      `${G}/en/base/docs/recipes/x.md:2 : historique interne de drwil dans le livrable « Decision of the requester, 2026-10-03 » (QUA-018)`,
+    ],
+  );
 });

@@ -67,6 +67,14 @@
       "degradable": false
     },
     {
+      "id": "lint",
+      "name": "lint et formatage du code (Biome, avertissements bloquants)",
+      "run": "npm run lint",
+      "ciJob": "checks",
+      "chemins": ["**/*.js", "**/*.mjs", "**/*.ts", "biome.jsonc", "package.json", "package-lock.json"],
+      "degradable": false
+    },
+    {
       "id": "audit-dependances",
       "name": "audit des dépendances, failles high et critical (SEC-006)",
       "run": "node outils/audit-dependances.mjs",

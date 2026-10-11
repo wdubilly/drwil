@@ -90,7 +90,9 @@ export function empreinte(k: { texte?: string; controles?: string[] | null }, cf
     const c = checks.find((x) => x.id === id);
     return c ? { id, run: c.run, cwd: c.cwd ?? null } : { id };
   });
-  return createHash("sha256").update(JSON.stringify({ contrat: k.texte ?? "", preuve })).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify({ contrat: k.texte ?? "", preuve }))
+    .digest("hex");
 }
 
 export function lireAttestations(root: string): Attestation[] {
@@ -161,13 +163,18 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const { cfg, registre, moteur, lecteur } = projet;
   const tous: any[] = lecteur.lireContrats(readFileSync(join(root, registre), "utf8"));
   if (!tous.length) return erreurGlobale(`aucun contrat trouvé dans ${registre}`);
-  const contrats = opts.seulement ? tous.filter((k) => opts.seulement!.includes(k.id)) : tous;
+  const seulement = opts.seulement;
+  const contrats = seulement ? tous.filter((k) => seulement.includes(k.id)) : tous;
   const attestations = lireAttestations(root);
 
   // Un doublon rend le registre lui-même ambigu : erreur globale. Les autres erreurs portent sur un contrat.
   const erreurs: string[] = [];
   const parContrat = new Map<string, string[]>();
-  for (const e of lecteur.validerContrats(tous, lecteur.controlesConnus(cfg), cfg.lang) as { id: string; type: string; message: string }[]) {
+  for (const e of lecteur.validerContrats(tous, lecteur.controlesConnus(cfg), cfg.lang) as {
+    id: string;
+    type: string;
+    message: string;
+  }[]) {
     if (e.type === "doublon") erreurs.push(e.message);
     else parContrat.set(e.id, [...(parContrat.get(e.id) ?? []), e.message]);
   }
@@ -195,7 +202,11 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
         statuts.push("FAIL");
         raisons.push(`${r.id} : échec${r.message ? ` — ${r.message}` : ""}`);
         // Les dernières lignes de la sortie disent pourquoi, sans noyer le verdict.
-        const fin = (r.sortie ?? "").split(/\r?\n/).map((l) => l.trimEnd()).filter(Boolean).slice(-3);
+        const fin = (r.sortie ?? "")
+          .split(/\r?\n/)
+          .map((l) => l.trimEnd())
+          .filter(Boolean)
+          .slice(-3);
         for (const l of fin) raisons.push(`  │ ${l}`);
       } else if (r.statut === "non-execute") {
         statuts.push("ERROR");
@@ -216,7 +227,11 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     let statut = pire(statuts);
     // Attestable : seul le jugement humain manque. Jamais si un contrôle échoue, ne tourne pas ou ne
     // s'applique pas ici (l'attestation ne remplace pas une preuve automatique absente).
-    const attestable = statut === "MANUAL" && !parContrat.has(k.id) && controles.every((r) => r.statut === "ok") && (Boolean(k.manuel) || k.controles === null);
+    const attestable =
+      statut === "MANUAL" &&
+      !parContrat.has(k.id) &&
+      controles.every((r) => r.statut === "ok") &&
+      (Boolean(k.manuel) || k.controles === null);
     const actuelle = empreinte(k, cfg);
     let attestation: Attestation | null = null;
     const siennes = attestations.filter((a) => a.contract === k.id);
@@ -224,12 +239,27 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
       attestation = siennes.find((a) => a.fingerprint === actuelle) ?? null;
       if (attestation) {
         statut = "ATTESTED";
-        raisons.push(`attesté le ${attestation.attestedAt}${attestation.actor ? ` par ${attestation.actor.name} (${attestation.actor.source})` : ""}${attestation.note ? ` — ${attestation.note}` : ""}`);
+        raisons.push(
+          `attesté le ${attestation.attestedAt}${attestation.actor ? ` par ${attestation.actor.name} (${attestation.actor.source})` : ""}${attestation.note ? ` — ${attestation.note}` : ""}`,
+        );
       } else {
         raisons.push(`attestation du ${siennes[0].attestedAt} obsolète : le contrat ou sa preuve a changé depuis, à attester de nouveau`);
       }
     }
-    return { id: k.id, titre: k.titre, regle: k.regle ?? null, statut, attestation, attestable: attestable && !attestation, empreinte: actuelle, severite: (k.severite ?? "bloquant") as Severite, controles, manuel: k.manuel, raisons, configInvalide: parContrat.has(k.id) };
+    return {
+      id: k.id,
+      titre: k.titre,
+      regle: k.regle ?? null,
+      statut,
+      attestation,
+      attestable: attestable && !attestation,
+      empreinte: actuelle,
+      severite: (k.severite ?? "bloquant") as Severite,
+      controles,
+      manuel: k.manuel,
+      raisons,
+      configInvalide: parContrat.has(k.id),
+    };
   });
 
   const cites = new Set(contrats.flatMap((k) => k.controles ?? []));
@@ -258,7 +288,9 @@ export function formaterVerdict(v: Verdict): string {
   if (v.contrats.length) {
     lignes.push("Contrats");
     for (const k of v.contrats) {
-      lignes.push(`  ${SYMBOLES[k.statut]} ${k.statut.padEnd(6)} ${k.id.padEnd(8)} ${k.titre}${k.severite === "bloquant" ? "" : ` [${k.severite}]`}`);
+      lignes.push(
+        `  ${SYMBOLES[k.statut]} ${k.statut.padEnd(6)} ${k.id.padEnd(8)} ${k.titre}${k.severite === "bloquant" ? "" : ` [${k.severite}]`}`,
+      );
       for (const r of k.raisons) lignes.push(`             ${r}`);
     }
     lignes.push("");
@@ -266,14 +298,22 @@ export function formaterVerdict(v: Verdict): string {
   for (const e of v.erreurs) lignes.push(`! ${e}`);
   if (v.nonRattaches.length) lignes.push(`Contrôles cités par aucun contrat (non exécutés par verify) : ${v.nonRattaches.join(", ")}`);
   const compte = (s: Statut) => v.contrats.filter((k) => k.statut === s).length;
-  if (v.contrats.length) lignes.push(`${v.contrats.length} contrats : ${compte("PASS")} PASS, ${compte("ATTESTED")} ATTESTED, ${compte("FAIL")} FAIL, ${compte("MANUAL")} MANUAL, ${compte("ERROR")} ERROR`);
+  if (v.contrats.length)
+    lignes.push(
+      `${v.contrats.length} contrats : ${compte("PASS")} PASS, ${compte("ATTESTED")} ATTESTED, ${compte("FAIL")} FAIL, ${compte("MANUAL")} MANUAL, ${compte("ERROR")} ERROR`,
+    );
   const attestes = v.contrats.filter((k) => k.statut === "ATTESTED" && k.severite === "bloquant").length;
-  if (v.statut === "PASS" && attestes) lignes.push(`dont ${attestes} obligation(s) bloquante(s) validée(s) par attestation humaine, pas par une preuve automatique`);
+  if (v.statut === "PASS" && attestes)
+    lignes.push(`dont ${attestes} obligation(s) bloquante(s) validée(s) par attestation humaine, pas par une preuve automatique`);
   const aAttester = v.contrats.filter((k) => k.attestable).map((k) => k.id);
   if (aAttester.length) lignes.push(`Attestables par un humain (\`drwil attest <ID>\`) : ${aAttester.join(", ")}`);
   const bloquants = v.contrats.filter((k) => k.severite === "bloquant");
-  const nonSatisfaits = (s: Severite) => v.contrats.filter((k) => k.severite === s && k.statut !== "PASS" && k.statut !== "ATTESTED").length;
-  if (bloquants.length !== v.contrats.length) lignes.push(`dont ${bloquants.length} bloquant(s) (${bloquants.filter((k) => k.statut === "PASS" || k.statut === "ATTESTED").length} satisfait(s)), ${nonSatisfaits("avertissement")} avertissement(s) non satisfait(s), ${nonSatisfaits("indicatif")} indicatif(s) non satisfait(s) — seuls les bloquants décident du verdict`);
+  const nonSatisfaits = (s: Severite) =>
+    v.contrats.filter((k) => k.severite === s && k.statut !== "PASS" && k.statut !== "ATTESTED").length;
+  if (bloquants.length !== v.contrats.length)
+    lignes.push(
+      `dont ${bloquants.length} bloquant(s) (${bloquants.filter((k) => k.statut === "PASS" || k.statut === "ATTESTED").length} satisfait(s)), ${nonSatisfaits("avertissement")} avertissement(s) non satisfait(s), ${nonSatisfaits("indicatif")} indicatif(s) non satisfait(s) — seuls les bloquants décident du verdict`,
+    );
   lignes.push("", LIBELLES[v.statut]);
   return lignes.join("\n");
 }
@@ -289,20 +329,54 @@ export function verdictJson(v: Verdict) {
     version: 1,
     status: v.statut.toLowerCase(),
     exitCode: v.code,
-    contracts: { total: v.contrats.length, passed: compte("PASS"), failed: compte("FAIL"), manual: compte("MANUAL"), error: compte("ERROR"), attested: compte("ATTESTED") },
-    bySeverity: Object.fromEntries(([["blocking", "bloquant"], ["warning", "avertissement"], ["advisory", "indicatif"]] as const).map(([en, fr]) => {
-      const ks = v.contrats.filter((k) => k.severite === fr);
-      return [en, { total: ks.length, passed: ks.filter((k) => k.statut === "PASS").length, notPassed: ks.filter((k) => k.statut !== "PASS" && k.statut !== "ATTESTED").length }];
-    })),
+    contracts: {
+      total: v.contrats.length,
+      passed: compte("PASS"),
+      failed: compte("FAIL"),
+      manual: compte("MANUAL"),
+      error: compte("ERROR"),
+      attested: compte("ATTESTED"),
+    },
+    bySeverity: Object.fromEntries(
+      (
+        [
+          ["blocking", "bloquant"],
+          ["warning", "avertissement"],
+          ["advisory", "indicatif"],
+        ] as const
+      ).map(([en, fr]) => {
+        const ks = v.contrats.filter((k) => k.severite === fr);
+        return [
+          en,
+          {
+            total: ks.length,
+            passed: ks.filter((k) => k.statut === "PASS").length,
+            notPassed: ks.filter((k) => k.statut !== "PASS" && k.statut !== "ATTESTED").length,
+          },
+        ];
+      }),
+    ),
     results: v.contrats.map((k) => ({
       id: k.id,
       title: k.titre,
       status: k.statut.toLowerCase(),
       severity: { bloquant: "blocking", avertissement: "warning", indicatif: "advisory" }[k.severite],
-      checks: k.controles.map(({ id, statut, detail, message }) => ({ id, status: statut, ...(detail ? { detail } : {}), ...(message ? { message } : {}) })),
+      checks: k.controles.map(({ id, statut, detail, message }) => ({
+        id,
+        status: statut,
+        ...(detail ? { detail } : {}),
+        ...(message ? { message } : {}),
+      })),
       manual: k.manuel,
       attestable: k.attestable,
-      attestation: k.attestation ? { attestedAt: k.attestation.attestedAt, actor: k.attestation.actor, note: k.attestation.note, fingerprint: k.attestation.fingerprint } : null,
+      attestation: k.attestation
+        ? {
+            attestedAt: k.attestation.attestedAt,
+            actor: k.attestation.actor,
+            note: k.attestation.note,
+            fingerprint: k.attestation.fingerprint,
+          }
+        : null,
       reasons: k.raisons.filter((r) => !r.startsWith("  │")),
     })),
     errors: v.erreurs,
@@ -325,7 +399,8 @@ const MOTIFS_SECRETS: RegExp[] = [
 
 export function caviarder(texte: string): string {
   let t = texte;
-  for (const re of MOTIFS_SECRETS) t = t.replace(re, (m, prefixe) => (typeof prefixe === "string" && m.startsWith(prefixe) ? `${prefixe}[CAVIARDÉ]` : "[CAVIARDÉ]"));
+  for (const re of MOTIFS_SECRETS)
+    t = t.replace(re, (m, prefixe) => (typeof prefixe === "string" && m.startsWith(prefixe) ? `${prefixe}[CAVIARDÉ]` : "[CAVIARDÉ]"));
   return t;
 }
 
@@ -342,7 +417,15 @@ export function ecrireEvidence(root: string, v: Verdict, maintenant = new Date()
   };
   const commit = git("rev-parse", "HEAD");
   const modifie = commit ? Boolean(git("status", "--porcelain")) : null;
-  const resume = (sortie?: string) => caviarder((sortie ?? "").split(/\r?\n/).map((l) => l.trimEnd()).filter(Boolean).slice(-5).join("\n"));
+  const resume = (sortie?: string) =>
+    caviarder(
+      (sortie ?? "")
+        .split(/\r?\n/)
+        .map((l) => l.trimEnd())
+        .filter(Boolean)
+        .slice(-5)
+        .join("\n"),
+    );
   const evidence = {
     ...verdictJson(v),
     verifiedAt: maintenant.toISOString(),
@@ -351,7 +434,11 @@ export function ecrireEvidence(root: string, v: Verdict, maintenant = new Date()
     evidence: v.contrats.map((k) => ({
       id: k.id,
       status: k.statut.toLowerCase(),
-      checks: k.controles.map((c) => ({ id: c.id, status: c.statut, summary: c.statut === "ok" ? "ok" : resume(c.sortie) || caviarder(c.detail ?? c.message ?? "") })),
+      checks: k.controles.map((c) => ({
+        id: c.id,
+        status: c.statut,
+        summary: c.statut === "ok" ? "ok" : resume(c.sortie) || caviarder(c.detail ?? c.message ?? ""),
+      })),
       manual: k.manuel,
     })),
   };
