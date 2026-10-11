@@ -84,6 +84,11 @@ en CI.
 - **2026-10-10 — Preuve automatique de QUA-018** (point 5) : le contrôle
   devient la preuve de QUA-018 (aujourd'hui seulement attesté). [décision
   utilisateur]
+- **2026-10-11 — Pas d'attestation sur une preuve surestimée** : le
+  contrôle des lots 1 et 2 ne voyait ni les fichiers d'un seul côté ni le
+  contenu des écarts déclarés, dont la CI où avait eu lieu la fuite citée
+  par QUA-018. Lot 3 avant toute ré-attestation, limites écrites dans le
+  contrat. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -104,14 +109,19 @@ en CI.
 - **Lot 2 — alignement** [IA] : chaque écart de l'inventaire corrigé ou
   déclaré avec sa raison. Critère de sortie : contrôle vert sur ce dépôt,
   CI verte.
+- **Lot 3 — combler les angles morts** [IA] (ajouté le 2026-10-11, après
+  la question du demandeur « est-ce bien vrai ? ») : fichiers d'un seul
+  côté refusés sauf déclaration ; jobs de CI comparés, fuite d'un job
+  propre au dépôt vers le gabarit refusée ; limites restantes écrites dans
+  QUA-018. Critère de sortie : une fuite de job et un hook oublié dans le
+  gabarit, simulés sur ce dépôt, font échouer le contrôle (vérifié).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-11) : lot 1 (contrôle `miroirs-gabarit`,
-  77 fichiers comparés) et lot 2 (7 écarts traités : 3 alignés côté
-  dépôt, 1 corrigé dans le gabarit FR et EN, 4 déclarés par construction ;
-  16 écarts déclarés au total) commités ; QUA-018 prouvé en partie par le
-  contrôle.
+- **Dernier état** (2026-10-11) : lots 1, 2 et 3 réalisés ; contrôle
+  vert (77 fichiers comparés, 16 écarts, 9 déclarations « propre au
+  dépôt », 1 job de CI propre au dépôt) ; QUA-018 décrit ce que le
+  contrôle prouve et ce qu'il ne voit pas.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] ré-attester QUA-018 (empreinte changée) ;
   puis [IA] `drwil verify`, clôture et fusion automatique (autorisée au

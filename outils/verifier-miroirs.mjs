@@ -1,9 +1,17 @@
 #!/usr/bin/env node
-// Contrôle propre au dépôt drwil, jamais livré : tout fichier du dépôt qui a un homologue dans le
-// gabarit (packages/drwil/templates/) lui est identique, sauf écart déclaré avec sa raison dans
-// outils/miroirs.json. Preuve automatique de QUA-018 (dépôt drwil vs livrable gabarit) : sans lui,
-// garder les copies identiques reposait sur un `cp` à la main après chaque modification.
+// Contrôle propre au dépôt drwil, jamais livré : preuve automatique d'une partie de QUA-018 (dépôt
+// drwil vs livrable gabarit). Sans lui, garder les copies identiques reposait sur un `cp` à la main.
+// Vérifie, d'après outils/miroirs.json (écarts voulus, chacun avec sa raison) :
+// 1. tout fichier du dépôt qui a un homologue dans le gabarit (packages/drwil/templates/) lui est
+//    identique, sauf écart déclaré ;
+// 2. aucun fichier n'existe d'un seul côté sans être déclaré : fichier suivi du dépôt sans homologue
+//    dans les dossiers miroirs, ou fichier d'une partie du gabarit installée ici absent du dépôt ;
+// 3. la CI du dépôt contient tous les jobs de celle du gabarit, ses jobs en plus sont déclarés, et
+//    aucun job déclaré propre au dépôt n'apparaît dans le gabarit (la fuite qui a motivé QUA-018).
+// Hors de portée (à dire, pas à taire) : le contenu d'un écart déclaré, le texte des variables d'un
+// gabarit, le gabarit d'une autre langue que celle du dépôt, et la part humaine de QUA-018.
 // Usage : node outils/verifier-miroirs.mjs [racine]
+import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,21 +44,27 @@ function fichiers(dossier) {
   });
 }
 
-/** { chemin dans le dépôt : chemin dans le gabarit } pour chaque fichier du gabarit installable. */
+/**
+ * { chemin dans le dépôt : { source, unite } } pour chaque fichier installable du gabarit. L'unité
+ * (base, outil, CI ou module optionnel) s'installe en bloc : elle dit si un fichier absent manque.
+ */
 export function homologues(racine, lang = "fr") {
   const gabarit = join(racine, GABARIT);
   const carte = new Map();
   for (const [source, profondeur] of SOURCES) {
     const dossier = join(gabarit, source.replace("{lang}", lang));
     for (const f of fichiers(dossier)) {
-      const parties = posix(relative(dossier, f)).split("/").slice(profondeur);
-      const nom = NOMS_LIVRES[parties.at(-1)];
-      if (nom) parties[parties.length - 1] = nom;
-      carte.set(parties.join("/"), posix(relative(racine, f)));
+      const parties = posix(relative(dossier, f)).split("/");
+      const unite = profondeur ? `${source.split("/")[1]}/${parties[0]}` : "base";
+      const installe = parties.slice(profondeur);
+      const nom = NOMS_LIVRES[installe.at(-1)];
+      if (nom) installe[installe.length - 1] = nom;
+      carte.set(installe.join("/"), { source: posix(relative(racine, f)), unite });
     }
   }
   for (const f of fichiers(join(gabarit, OPTIONNELS))) {
-    if (f.endsWith(".mjs")) carte.set(`.githooks/${f.split(sep).at(-1)}`, posix(relative(racine, f)));
+    const parties = posix(relative(join(gabarit, OPTIONNELS), f)).split("/");
+    if (f.endsWith(".mjs")) carte.set(`.githooks/${parties.at(-1)}`, { source: posix(relative(racine, f)), unite: `optional/${parties[0]}` });
   }
   return carte;
 }
@@ -69,45 +83,130 @@ export function correspond(installe, gabarit) {
   return new RegExp(`^${motif}$`).test(a);
 }
 
+/** Une entrée déclarée : chemin exact, dossier (« docs/projets/ ») ou motif (« * » dans un segment). */
+function couvrePar(entree) {
+  if (entree.endsWith("/")) return (f) => f.startsWith(entree);
+  const re = new RegExp(`^${entree.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*")}$`);
+  return (f) => re.test(f);
+}
+
+/** Noms des jobs d'un workflow GitHub Actions (clés à deux espaces sous `jobs:`). */
+export function jobs(texte) {
+  const noms = [];
+  let dans = false;
+  for (const ligne of normaliser(texte).split("\n")) {
+    if (/^jobs:\s*$/.test(ligne)) dans = true;
+    else if (dans && /^\S/.test(ligne)) dans = false;
+    else if (dans) {
+      const m = /^ {2}([A-Za-z0-9_-]+):\s*$/.exec(ligne);
+      if (m) noms.push(m[1]);
+    }
+  }
+  return noms;
+}
+
+const raisonVide = (raison) => typeof raison !== "string" || !raison.trim();
+
 /**
- * Compare chaque fichier du dépôt présent à son homologue. Un fichier du gabarit sans copie dans le
- * dépôt (outil ou CI non installés ici) n'est pas comparé. Rend { compares, problemes }.
+ * Vérifie les miroirs. `suivis` : fichiers suivis par Git (chemins `/`), pour repérer ceux qui
+ * n'existent que dans le dépôt. Rend { compares, problemes }.
  */
-export function verifier(racine, { lang = "fr", ecarts = {} } = {}) {
+export function verifier(racine, { lang = "fr", ecarts = {}, propresAuDepot = {}, propresAuGabarit = {}, ci = null, suivis = [] } = {}) {
   const problemes = [];
   const carte = homologues(racine, lang);
+  const present = (f) => existsSync(join(racine, f));
+  const installees = new Set(["base", ...[...carte].filter(([f]) => present(f)).map(([, h]) => h.unite)]);
   let compares = 0;
-  for (const [installe, source] of [...carte].sort(([a], [b]) => a.localeCompare(b))) {
-    if (!existsSync(join(racine, installe))) continue;
+
+  for (const [installe, { source, unite }] of [...carte].sort(([a], [b]) => a.localeCompare(b))) {
+    if (!present(installe)) {
+      const declare = Object.hasOwn(propresAuGabarit, installe);
+      if (installees.has(unite) && !declare) problemes.push(`${installe} : présent dans le gabarit (${source}) mais absent du dépôt (le copier, ou le déclarer propre au gabarit dans outils/miroirs.json)`);
+      continue;
+    }
     compares++;
     const identique = correspond(readFileSync(join(racine, installe), "utf8"), readFileSync(join(racine, source), "utf8"));
     const declare = Object.hasOwn(ecarts, installe);
     if (!identique && !declare) problemes.push(`${installe} : diffère de ${source} (corriger, ou déclarer l'écart et sa raison dans outils/miroirs.json)`);
     if (identique && declare) problemes.push(`${installe} : écart déclaré mais résolu (retirer sa ligne de outils/miroirs.json)`);
   }
-  for (const [chemin, raison] of Object.entries(ecarts)) {
-    if (!carte.has(chemin) || !existsSync(join(racine, chemin))) problemes.push(`${chemin} : écart déclaré sans fichier à comparer (retirer sa ligne de outils/miroirs.json)`);
-    if (typeof raison !== "string" || !raison.trim()) problemes.push(`${chemin} : écart déclaré sans raison`);
+
+  // Dossiers miroirs : ceux où le gabarit installe des fichiers ; les fichiers de la racine du dépôt
+  // (package.json…) ne sont pas des miroirs.
+  const zones = [...new Set([...carte.keys()].filter((f) => f.includes("/")).map((f) => `${f.split("/")[0]}/`))];
+  const declares = Object.keys(propresAuDepot).map((e) => [e, couvrePar(e)]);
+  for (const f of suivis) {
+    if (carte.has(f) || !zones.some((z) => f.startsWith(z))) continue;
+    if (!declares.some(([, couvre]) => couvre(f))) problemes.push(`${f} : présent dans le dépôt seulement (le livrer dans le gabarit, ou le déclarer propre au dépôt dans outils/miroirs.json)`);
   }
+
+  for (const [chemin, raison] of Object.entries(ecarts)) {
+    if (!carte.has(chemin) || !present(chemin)) problemes.push(`${chemin} : écart déclaré sans fichier à comparer (retirer sa ligne de outils/miroirs.json)`);
+    if (raisonVide(raison)) problemes.push(`${chemin} : écart déclaré sans raison`);
+  }
+  for (const [entree, couvre] of declares) {
+    if (!suivis.some((f) => couvre(f) && !carte.has(f))) problemes.push(`${entree} : déclaré propre au dépôt, mais ne couvre aucun fichier sans homologue (retirer sa ligne de outils/miroirs.json)`);
+    if (raisonVide(propresAuDepot[entree])) problemes.push(`${entree} : déclaré propre au dépôt sans raison`);
+  }
+  for (const [chemin, raison] of Object.entries(propresAuGabarit)) {
+    if (!carte.has(chemin) || present(chemin)) problemes.push(`${chemin} : déclaré propre au gabarit, mais absent du gabarit ou présent dans le dépôt (retirer sa ligne de outils/miroirs.json)`);
+    if (raisonVide(raison)) problemes.push(`${chemin} : déclaré propre au gabarit sans raison`);
+  }
+
+  if (ci) problemes.push(...verifierCi(racine, carte, ci));
   return { compares, problemes };
 }
 
-/** Lit la langue du projet et la liste des écarts, vérifie, affiche ; rend le code de sortie. */
+/** Jobs de la CI : ceux du gabarit tous présents, ceux en plus déclarés, aucun déclaré qui fuit vers le gabarit. */
+function verifierCi(racine, carte, { fichier, jobsPropresAuDepot = {} }) {
+  const homologue = carte.get(fichier);
+  if (!homologue || !existsSync(join(racine, fichier))) return [`${fichier} : CI déclarée dans outils/miroirs.json sans homologue à comparer`];
+  const depot = jobs(readFileSync(join(racine, fichier), "utf8"));
+  const gabarit = jobs(readFileSync(join(racine, homologue.source), "utf8"));
+  const problemes = [];
+  for (const j of gabarit) {
+    if (Object.hasOwn(jobsPropresAuDepot, j)) problemes.push(`${fichier} : job « ${j} » déclaré propre au dépôt mais présent dans le gabarit — fuite du dépôt vers le livrable (QUA-018)`);
+    else if (!depot.includes(j)) problemes.push(`${fichier} : job « ${j} » du gabarit absent de la CI du dépôt`);
+  }
+  for (const j of depot) {
+    if (!gabarit.includes(j) && !Object.hasOwn(jobsPropresAuDepot, j)) problemes.push(`${fichier} : job « ${j} » propre au dépôt non déclaré (jobsPropresAuDepot dans outils/miroirs.json)`);
+  }
+  for (const [j, raison] of Object.entries(jobsPropresAuDepot)) {
+    if (!depot.includes(j)) problemes.push(`${fichier} : job « ${j} » déclaré propre au dépôt mais absent de sa CI`);
+    if (raisonVide(raison)) problemes.push(`${fichier} : job « ${j} » déclaré propre au dépôt sans raison`);
+  }
+  return problemes;
+}
+
+/** Lit la langue, la liste des écarts et les fichiers suivis, vérifie, affiche ; rend le code de sortie. */
 export function principal(racine) {
   let lang = "fr";
   try {
     lang = JSON.parse(readFileSync(join(racine, ".drwil", "ia-first.json"), "utf8")).lang === "en" ? "en" : "fr";
   } catch {}
-  let ecarts;
+  let liste;
   try {
-    ecarts = JSON.parse(readFileSync(join(racine, "outils", "miroirs.json"), "utf8")).ecarts ?? {};
+    liste = JSON.parse(readFileSync(join(racine, "outils", "miroirs.json"), "utf8"));
   } catch (e) {
     console.error(`miroirs : outils/miroirs.json illisible (${e.message})`);
     return 1;
   }
-  const { compares, problemes } = verifier(racine, { lang, ecarts });
+  const git = spawnSync("git", ["ls-files", "-z"], { cwd: racine, encoding: "utf8" });
+  // Hors dépôt git, les fichiers propres au dépôt ne se repèrent pas : le dire, jamais passer à vide (QUA-013).
+  if (git.status !== 0) {
+    console.error("miroirs : fichiers suivis illisibles (git ls-files) — contrôle non exécuté");
+    return 1;
+  }
+  const { compares, problemes } = verifier(racine, {
+    lang,
+    ecarts: liste.ecarts ?? {},
+    propresAuDepot: liste.propresAuDepot ?? {},
+    propresAuGabarit: liste.propresAuGabarit ?? {},
+    ci: liste.ci ?? null,
+    suivis: git.stdout.split("\0").filter(Boolean),
+  });
   for (const p of problemes) console.error(`  ✗ ${p}`);
-  console.log(`miroirs : ${compares} fichier(s) comparé(s) au gabarit, ${Object.keys(ecarts).length} écart(s) déclaré(s), ${problemes.length} problème(s)`);
+  console.log(`miroirs : ${compares} fichier(s) comparé(s) au gabarit, ${Object.keys(liste.ecarts ?? {}).length} écart(s) déclaré(s), ${problemes.length} problème(s)`);
   return problemes.length ? 1 : 0;
 }
 
