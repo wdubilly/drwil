@@ -1,6 +1,6 @@
 # Projet : mesurer la consommation de tokens par chantier, sans saisie
 
-**Statut** : cadré le 2026-10-11 — 3 décisions à trancher avant le lot 1.
+**Statut** : cadré le 2026-10-11 — décisions prises, lot 1 à lancer.
 **Risque** : MEDIUM
 
 <!-- cadrage
@@ -60,6 +60,14 @@ des sessions, et non le code écrit, est le premier poste à mesurer.
 
 - **2026-10-11 — Mesurer avant de construire** : une vague « mesurer »
   avant les restructurations. [décision utilisateur]
+- **2026-10-11 — Où va la mesure** : rapport à la demande d'abord ; la
+  ligne automatique à la clôture une fois les chiffres jugés fiables
+  (lot 2). [décision utilisateur]
+- **2026-10-11 — Unité** : les quatre catégories séparées (entrée,
+  sortie, cache lu, cache écrit), plus un total pondéré indicatif.
+  [décision utilisateur]
+- **2026-10-11 — Durée** : temps actif, pauses de plus de 15 minutes
+  retirées. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -69,16 +77,7 @@ des sessions, et non le code écrit, est le premier poste à mesurer.
 
 ## 5. Points à trancher
 
-- [décision] **Où va la mesure** : (a) rapport à la demande seulement
-  (`node outils/consommation.mjs`, à créer) ; (b) en plus, une ligne ajoutée
-  automatiquement à `.drwil/usage.jsonl` à la clôture d'un chantier.
-  Recommandé : (a) d'abord, (b) une fois les chiffres jugés fiables.
-- [décision] **Unité affichée** : les quatre catégories séparées (entrée,
-  sortie, cache lu, cache écrit) ou un total pondéré par leur prix
-  relatif. Recommandé : les quatre, plus un total pondéré indicatif.
-- [décision] **Durée** : temps entre la première et la dernière réponse
-  sur la branche, ou temps actif (pauses de plus de N minutes retirées).
-  Recommandé : temps actif, N = 15.
+(aucun : tranchés le 2026-10-11, voir « Décisions »)
 
 ## 6. Lots
 
@@ -95,5 +94,4 @@ des sessions, et non le code écrit, est le premier poste à mesurer.
 
 - **Dernier état** (2026-10-11) : fiche cadrée, rien de réalisé.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] les 3 points à trancher, puis
-  [humain] `/drwil-lancer`.
+- **Prochaine étape** : [humain] `/drwil-lancer`.

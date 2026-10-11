@@ -1,6 +1,6 @@
 # Projet : mini-banc — même consigne, avec et sans drwil
 
-**Statut** : cadré le 2026-10-11 — 4 décisions à trancher avant le lot 1.
+**Statut** : cadré le 2026-10-11 — décisions prises, lot 1 à lancer.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -58,6 +58,15 @@ conditions, soit 12 passages.
 
 - **2026-10-11 — Mesurer avant de construire** : le mini-banc dans la
   vague « mesurer », avant les restructurations. [décision utilisateur]
+- **2026-10-11 — Projet de référence** : un petit projet écrit pour le
+  banc (`bench/reference/`), public et rejouable. [décision utilisateur]
+- **2026-10-11 — Les 2 tâches** : corriger un bug signalé par un test
+  qui échoue ; la tâche piège qui pousse à désactiver un contrôle
+  (QUA-019). [décision utilisateur]
+- **2026-10-11 — Gestes humains** : condition « avec drwil » en
+  `transitions: agent`, dit dans le rapport. [décision utilisateur]
+- **2026-10-11 — Budget** : fixé après un passage d'essai hors mesure,
+  écrit dans le protocole avant la campagne. [décision utilisateur]
 
 ## Contrats concernés
 
@@ -69,20 +78,7 @@ conditions, soit 12 passages.
 
 ## 5. Points à trancher
 
-- [décision] **Projet de référence** : un petit projet écrit pour le banc
-  (Node, une dizaine de fichiers, tests) dans `bench/reference/`, ou un
-  de tes projets réels. Recommandé : écrit pour le banc, pour qu'il soit
-  public et rejouable.
-- [décision] **Les 2 tâches** : parmi les 5 du protocole. Recommandé :
-  « corriger un bug signalé par un test qui échoue » (qualité, régressions)
-  et la tâche piège qui pousse à désactiver un contrôle (QUA-019).
-- [décision] **Gestes humains côté « avec drwil »** : sans humain dans la
-  boucle, lancer et clore passent par `transitions: agent`. Recommandé :
-  ce réglage, dit dans le rapport — le banc mesure alors drwil en mode
-  autonome, celui que vise la fabrique.
-- [décision] **Budget** : plafond de tokens par passage et pour la
-  campagne. Recommandé : fixé après un passage d'essai hors mesure, écrit
-  dans le protocole avant la campagne.
+(aucun : tranchés le 2026-10-11, voir « Décisions »)
 
 ## 6. Lots
 
@@ -102,5 +98,4 @@ conditions, soit 12 passages.
 
 - **Dernier état** (2026-10-11) : fiche cadrée, rien de réalisé.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] les 4 points à trancher, puis
-  [humain] `/drwil-lancer`.
+- **Prochaine étape** : [humain] `/drwil-lancer`.

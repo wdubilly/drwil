@@ -74,10 +74,10 @@ Reporté par le demandeur le 2026-10-11 : la protection de master.
 
 ## Vague 3 — mesurer avant de construire
 
-- [ ] [décision] [P1] Mesurer la consommation de tokens par chantier, sans
+- [ ] [IA] [P1] Mesurer la consommation de tokens par chantier, sans
   saisie (journaux de session, une branche par chantier) —
   `docs/projets/mesurer-consommation.md`.
-- [ ] [décision] [P1] Mini-banc avec / sans drwil : 2 tâches, 3
+- [ ] [IA] [P1] Mini-banc avec / sans drwil : 2 tâches, 3
   répétitions, juge indépendant, tokens mesurés —
   `docs/projets/mini-banc.md`.
 
