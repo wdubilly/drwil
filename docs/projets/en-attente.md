@@ -46,6 +46,11 @@ déjà faits d'une fiche qui reste ouverte par ailleurs.
 - [ ] [humain] [P1] Protéger master : ruleset, CODEOWNERS et ruleset versionné
   faits ; reste le compte machine de l'agent (lot 3) —
   `docs/projets/proteger-master.md`.
+- [ ] [décision] Catalogue de contrats couvrant le cycle de vie logiciel
+  (source JSON, Markdown généré et divergence bloquante en CI, ID
+  conservés) : statuts, sévérité, porte avant publication, registre
+  client, collisions d'ID et doublons à trancher —
+  `docs/intentions/catalogue-cycle-de-vie.md`.
 - [ ] [décision] [P1] Fabrique autonome graduée par le risque (forge,
   outillage, mutation, rôles séparés, auto-fusion LOW) —
   `docs/intentions/fabrique-autonome.md`.
