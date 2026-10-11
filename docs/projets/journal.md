@@ -553,3 +553,20 @@ l'index ; texte intégral dans l'historique git
   existe ; écart déclaré dans `outils/miroirs.json`.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/architecture-depot`).
+
+## 2026-10-11 — Consigne de fusion automatique : ordre sûr avant le retour en CADRAGE
+
+- **Besoin** : sur la PR #29, la fusion automatique, programmée avant que
+  GitHub ait calculé la PR, a été refusée ; l'agent est revenu en CADRAGE
+  quand même et l'autorisation a été perdue. Sur la PR #38, une PR en
+  retard sur la branche principale n'était pas fusionnable.
+- **Décision clé** : inscrire l'ordre sûr dans la consigne, là où l'agent
+  la relit (contexte de gouvernance et skill de lancement). [décision
+  utilisateur]
+- **Résultat** : attendre la PR calculée et la mettre à jour si elle est en
+  retard, programmer la fusion, vérifier qu'elle est programmée, et
+  seulement ensuite revenir en CADRAGE ; en cas d'échec, rester en CLOTURE.
+  FR et EN, dépôt et gabarit ; test du contexte. Appliqué dès la clôture
+  de ce chantier.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/consigne-fusion-auto`).
