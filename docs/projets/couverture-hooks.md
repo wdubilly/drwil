@@ -1,6 +1,6 @@
 # Projet : mesurer et garantir la couverture des hooks de gouvernance
 
-**Statut** : cadré le 2026-10-10 — décisions prises, lot 1 à lancer.
+**Statut** : en cours depuis le 2026-10-11 — lots 1 et 2 réalisés sur la branche `chantier/couverture-hooks`, à vérifier puis clore.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -127,8 +127,15 @@ garantir par un seuil bloquant, puis relever les seuils.
   étendu (`docs/contrats.md`). Critère de sortie : une baisse de couverture
   des hooks fait échouer le contrôle.
 
+Les deux lots sont réalisés (2026-10-11) : 100 % lignes, branches,
+fonctions et instructions sur les 14 hooks, seuil bloquant ; une
+fonction non testée ajoutée à un hook fait sortir le contrôle en échec
+(vérifié puis retiré).
+
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
+- **Dernier état** (2026-10-11) : lots 1 et 2 réalisés et commités sur
+  `chantier/couverture-hooks`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] `/drwil-lancer`.
+- **Prochaine étape** : [IA] `drwil verify`, puis clôture et fusion
+  automatique (autorisée au lancement).
