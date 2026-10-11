@@ -25,12 +25,14 @@ fichiers:
   - .githooks/tableau-de-bord.test.mjs
   - docs/contrats.md
   - .githooks/run-checks.mjs
+  - .githooks/moteur.mjs
   - .githooks/check-code-rules.mjs
   - .githooks/check-file-size.mjs
   - .githooks/creer-release.mjs
   - .githooks/perimetre.mjs
   - .githooks/tableau-de-bord.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - packages/drwil/templates/common/base/.githooks/moteur.mjs
   - packages/drwil/templates/common/base/.githooks/check-code-rules.mjs
   - packages/drwil/templates/common/base/.githooks/check-file-size.mjs
   - packages/drwil/templates/common/base/.githooks/perimetre.mjs
@@ -96,11 +98,13 @@ garantir par un seuil bloquant, puis relever les seuils.
   utilisateur]
 - **2026-10-10 — Ce dépôt d'abord** (point 5) : la mesure des hooks n'est
   pas livrée aux projets équipés pour l'instant. [décision utilisateur]
-- **2026-10-11 — Racine réglable** : `.githooks/run-checks.mjs` prend sa racine du
-  dossier courant, comme les autres hooks (git lance ses hooks depuis la
-  racine du dépôt), au lieu de l'emplacement du script ; il devient
-  testable sans relancer la suite du dépôt. Gabarit compris. [décision
-  utilisateur]
+- **2026-10-11 — Racine réglable, sans régression** : `.githooks/run-checks.mjs`
+  garde sa racine (dossier parent de `.githooks/`) ; seule la variable
+  `DRWIL_RACINE`, posée par ses tests, la remplace. Une première version
+  (racine du dépôt git du dossier courant) changeait le cas d'un drwil
+  installé en sous-dossier d'un dépôt plus grand : écartée, le demandeur
+  exige aucune régression. Calcul de la racine dans `.githooks/moteur.mjs`
+  (fonction pure, testée). Gabarit compris. [décision utilisateur]
 - **2026-10-11 — Supprimer ou rendre testable** : plutôt que des
   exclusions `c8 ignore`, le code inatteignable est retiré et le code
   intestable en l'état est rendu testable, gabarit compris (QUA-018 :
