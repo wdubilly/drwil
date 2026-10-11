@@ -653,3 +653,27 @@ l'index ; texte intégral dans l'historique git
   complet scanné (aucune fuite), `tarball` vert, 0 non exécuté.
 - **Clôturé par** : commit `064532e` (fusionné avec la PR #50) et la PR
   de clôture (branche `chantier/cloture-gitleaks-en-ci`).
+
+## 2026-10-11 — Mesurer la consommation de tokens par chantier, sans saisie
+
+- **Besoin** : objectif d'une fabrique sobre en tokens sans aucune mesure ;
+  `.drwil/usage.jsonl` rempli à la main (3 lignes).
+- **Décisions clés** : rapport à la demande d'abord, ligne automatique à la
+  clôture une fois les chiffres jugés fiables (lot 2, rangé dans l'index) ;
+  quatre catégories (entrée, sortie, cache lu, cache écrit) plus un total
+  pondéré indicatif ; temps actif, pauses de plus de 15 minutes retirées.
+  [décisions utilisateur]
+- **Résultat** : `outils/consommation.mjs` (propre au dépôt) lit les
+  journaux de session de Claude Code du projet et attribue chaque réponse
+  à son chantier par la branche git (`chantier/<fiche>`) ; requête comptée
+  une fois ; jamais un contenu de conversation affiché (test dédié) ; sans
+  journal : « non mesuré » (QUA-013). Cohérent avec le relevé fait à la
+  main.
+- **Premier constat** (2026-10-11) : le cache lu (contexte relu à chaque
+  échange) fait l'essentiel du total pondéré, devant la sortie ; les
+  cadrages menés sur la branche principale, en longue session, sont le
+  premier poste de la journée.
+- **Limites** : Claude Code seulement ; le travail fait hors d'une branche
+  de chantier est compté à part, jamais réparti.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/mesurer-consommation`).
