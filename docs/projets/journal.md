@@ -710,3 +710,29 @@ l'index ; texte intégral dans l'historique git
   défauts.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/depot-installe-par-gabarit`).
+
+## 2026-10-12 — init et apply gardent les réglages d'un projet déjà installé
+
+- **Besoin** : relancer `drwil init`, geste de mise à jour du kit, effaçait
+  en silence les réglages du projet : préfixes de code (fichiers sortis du
+  rappel de cadrage, QUA-016), langue (documents français installés à côté
+  des anglais), outils (cinq réactivés), couches (`backend/`, `frontend/`
+  créés), CI, mode, nom. `apply` partait des mêmes défauts. Repéré par
+  l'inventaire du chantier précédent.
+- **Cause** : `writeConfig` écrivait ces réglages en dur, et la CLI donnait
+  un défaut à ses options : une option absente ne se distinguait pas d'un
+  choix explicite, la config existante n'était jamais relue.
+- **Décisions clés** : corriger avant le refactor de `packages/drwil/src/index.ts` ; une règle
+  pour `init` et `apply` (option absente = valeur installée, option passée
+  = elle l'emporte) ; `--force` garde la config ; la fusion `init`/`apply`
+  en une commande ira avec le passage à l'anglais. [décisions utilisateur]
+- **Résultat** : `resolve()` lit la config existante (CI déduite de
+  `ciFiles` pour une config sans clé `ci`) ; `writeConfig` reprend les
+  réglages saisis et toute clé inconnue du kit ; dossiers et fichiers de
+  CI recalculés seulement si la langue ou la CI changent ; options de la
+  CLI sans défaut propre, aide et README à jour. 4 tests (init, `--force`,
+  apply, CLI, option explicite) vus échouer avant la correction.
+- **Limites** : une config antérieure à la clé `tools` garde l'ancien
+  défaut (tous les outils) faute de choix enregistré.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/init-preserve-config`).

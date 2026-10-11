@@ -90,12 +90,10 @@ relecture. Inséré en tête le 2026-10-12 (demandeur) : le correctif
 d'`init` et `apply`, avant le refactor qui touche le même code.
 
 Fait : duplication dépôt / gabarit supprimée, le dépôt s'installe depuis
-son gabarit (`npm run installer-depot`, journal du 2026-10-12).
+son gabarit (`npm run installer-depot`) ; `init` et `apply` gardent les
+réglages d'un projet déjà installé (v1:INI-005, v1:INI-010) — journal du
+2026-10-12.
 
-- [ ] [IA] [P1] `init` et `apply` gardent les réglages d'un projet déjà
-  installé (aujourd'hui effacés en silence : préfixes de code, langue,
-  outils, couches, CI) (v1:INI-005, v1:INI-010) —
-  `docs/projets/init-preserve-config.md`.
 - [ ] [décision] [P1] Livrable en anglais seulement, renommé une seule
   fois, dans le gabarit ; la langue du projet devient un
   réglage (`lang`) — `docs/intentions/livrable-full-english.md`.

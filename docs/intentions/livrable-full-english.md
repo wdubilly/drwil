@@ -88,8 +88,8 @@ convention de langue des commits proposée aux projets.
   seule commande qui détecte une installation existante (neuf : installe ;
   existant : met à jour et signale la dérive) se fait avec ce chantier,
   qui renomme déjà l'interface, pour ne renommer qu'une fois. La reprise
-  des réglages existants est faite avant, à part
-  (`docs/projets/init-preserve-config.md`).
+  des réglages existants est faite avant, à part (journal du
+  2026-10-12, « init et apply gardent les réglages »).
 
 ## Questions à trancher
 
