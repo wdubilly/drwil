@@ -84,6 +84,13 @@ convention de langue des commits proposée aux projets.
   npm, presque aucun projet n'est concerné, et des alias seraient du code
   en double à maintenir et à tester.
 
+- **Commande unique** (2026-10-12) : fusionner `init` et `apply` en une
+  seule commande qui détecte une installation existante (neuf : installe ;
+  existant : met à jour et signale la dérive) se fait avec ce chantier,
+  qui renomme déjà l'interface, pour ne renommer qu'une fois. La reprise
+  des réglages existants est faite avant, à part
+  (`docs/projets/init-preserve-config.md`).
+
 ## Questions à trancher
 
 1. ~~**Le français**~~ — tranchée le 2026-10-11 (voir « Décisions »).
