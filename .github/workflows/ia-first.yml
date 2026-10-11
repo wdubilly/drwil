@@ -11,6 +11,15 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
+      # Sans gitleaks, SEC-007 (pas de secret) serait « non exécuté » ici, et verify en ERROR dans le
+      # projet d'essai du contrôle tarball (docs/projets/gitleaks-en-ci.md). Version épinglée, archive
+      # vérifiée par sa somme publiée ; installé là où le moteur le cherche (~/.local/bin).
+      - name: Installer gitleaks 8.21.2
+        run: |
+          curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
+          echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | sha256sum -c -
+          mkdir -p ~/.local/bin && tar -xzf gitleaks.tar.gz -C ~/.local/bin gitleaks && rm gitleaks.tar.gz
+          ~/.local/bin/gitleaks version
       - run: node .githooks/run-checks.mjs
       # La protection de master vit dans les réglages de GitHub : elle doit rester celle
       # versionnée (.github/ruleset-master.json), sinon un changement passerait sans PR.

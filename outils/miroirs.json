@@ -1,7 +1,7 @@
 {
   "version": 2,
   "ecarts": {
-    ".github/workflows/ia-first.yml": "Jobs vérifiés à part (clé ci) ; contenu différent : étapes propres au dépôt (npm ci, vérification du ruleset) et alerte qui dépend aussi de kit-tests.",
+    ".github/workflows/ia-first.yml": "Jobs vérifiés à part (clé ci) ; contenu différent : étapes propres au dépôt (npm ci, installation de gitleaks, vérification du ruleset) et alerte qui dépend aussi de kit-tests.",
     ".gitignore": "Entrées propres au dépôt (rapport de couverture, documents internes, évidences).",
     "AGENTS.md": "Consignes propres à chaque projet (le gabarit n'en est que la base).",
     "INSTALL.md": "Installation propre au dépôt drwil (clone, non publié sur npm).",
