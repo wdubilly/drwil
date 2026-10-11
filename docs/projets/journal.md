@@ -539,3 +539,17 @@ l'index ; texte intégral dans l'historique git
   bord.
 - **Travail en branches et merge/pull requests** (tranché et clôturé le
   2026-10-05) : recette `docs/recettes/travailler-en-branche.md`.
+
+## 2026-10-11 — docs/architecture.md : carte actuelle du dépôt
+
+- **Besoin** : la carte du dépôt était restée au modèle d'installation
+  (« à décrire »).
+- **Décision clé** : une carte courte de l'existant maintenant, plutôt que
+  d'attendre la fin des restructurations ; elle évolue avec le code
+  qu'elle décrit. [décision utilisateur]
+- **Résultat** : ce qu'est drwil et pour qui, ses deux casquettes
+  (QUA-018), la CLI et le gabarit du paquet, les hooks, les outils propres
+  au dépôt, la forge et les documents de gouvernance ; chaque chemin cité
+  existe ; écart déclaré dans `outils/miroirs.json`.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/architecture-depot`).

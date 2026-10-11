@@ -6,6 +6,7 @@
     "AGENTS.md": "Consignes propres à chaque projet (le gabarit n'en est que la base).",
     "INSTALL.md": "Installation propre au dépôt drwil (clone, non publié sur npm).",
     "README.md": "Présentation propre au dépôt drwil.",
+    "docs/architecture.md": "Carte propre au dépôt drwil (le gabarit livre le modèle à rendre).",
     "docs/catalogue-contrats.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : catalogue:QUA-004 adopté par ce dépôt, donc retiré de son catalogue.",
     "docs/contrats.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt : registre des contrats de drwil.",
     "docs/ia-first.md": "Résumé de 17 lignes dans le dépôt, renvoi vers la doc complète du gabarit.",
