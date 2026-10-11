@@ -9,12 +9,30 @@ fichiers:
   - package-lock.json
   - .drwil/ia-first.json
   - packages/drwil/package.json
+  - .githooks/cadrage.test.mjs
+  - .githooks/contrats.test.mjs
+  - .githooks/etat.test.mjs
+  - .githooks/perimetre.test.mjs
+  - .githooks/risque.test.mjs
+  - .githooks/check-code-rules.test.mjs
+  - .githooks/check-control-coverage.test.mjs
+  - .githooks/check-docs.test.mjs
+  - .githooks/check-file-size.test.mjs
+  - .githooks/creer-release.test.mjs
+  - .githooks/glob.test.mjs
+  - .githooks/moteur.test.mjs
+  - .githooks/run-checks.test.mjs
+  - .githooks/tableau-de-bord.test.mjs
+  - docs/contrats.md
 -->
 
 (cadrage : la mesure de couverture et sa déclaration comme contrôle du
 projet ; ce dépôt d'abord — QUA-018 (périmètre explicite : dépôt drwil vs
 livrable gabarit) : livrer la mesure aux projets équipés est une question
-à trancher.)
+à trancher. Élargi le 2026-10-11 au lancement : les tests des hooks
+(lot 1) et `docs/contrats.md` (lot 2, QUA-004 étendu). Le code des hooks
+n'y est pas : une exclusion de couverture qui le toucherait sera posée
+au demandeur.)
 
 ## 1. Besoin
 
