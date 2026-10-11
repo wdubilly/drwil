@@ -73,6 +73,11 @@ export function homologues(racine, lang = "fr") {
   return carte;
 }
 
+/** Unités installées dans le dépôt : la base, et toute unité dont un fichier au moins y est présent. */
+export function unitesInstallees(racine, carte) {
+  return new Set(["base", ...[...carte].filter(([f]) => existsSync(join(racine, f))).map(([, h]) => h.unite)]);
+}
+
 const normaliser = (texte) => texte.replace(/\r\n/g, "\n");
 
 /**
@@ -122,7 +127,7 @@ export function verifier(racine, { lang = "fr", ecarts = {}, propresAuDepot = {}
   const problemes = [];
   const carte = homologues(racine, lang);
   const present = (f) => existsSync(join(racine, f));
-  const installees = new Set(["base", ...[...carte].filter(([f]) => present(f)).map(([, h]) => h.unite)]);
+  const installees = unitesInstallees(racine, carte);
   let compares = 0;
 
   for (const [installe, { source, unite }] of [...carte].sort(([a], [b]) => a.localeCompare(b))) {
@@ -130,7 +135,7 @@ export function verifier(racine, { lang = "fr", ecarts = {}, propresAuDepot = {}
       const declare = Object.hasOwn(propresAuGabarit, installe);
       if (installees.has(unite) && !declare)
         problemes.push(
-          `${installe} : présent dans le gabarit (${source}) mais absent du dépôt (le copier, ou le déclarer propre au gabarit dans outils/miroirs.json)`,
+          `${installe} : présent dans le gabarit (${source}) mais absent du dépôt (npm run installer-depot, ou le déclarer propre au gabarit dans outils/miroirs.json)`,
         );
       continue;
     }
@@ -138,7 +143,9 @@ export function verifier(racine, { lang = "fr", ecarts = {}, propresAuDepot = {}
     const identique = correspond(readFileSync(join(racine, installe), "utf8"), readFileSync(join(racine, source), "utf8"));
     const declare = Object.hasOwn(ecarts, installe);
     if (!identique && !declare)
-      problemes.push(`${installe} : diffère de ${source} (corriger, ou déclarer l'écart et sa raison dans outils/miroirs.json)`);
+      problemes.push(
+        `${installe} : diffère de ${source} (modifier le gabarit puis lancer npm run installer-depot, ou déclarer l'écart et sa raison dans outils/miroirs.json)`,
+      );
     if (identique && declare) problemes.push(`${installe} : écart déclaré mais résolu (retirer sa ligne de outils/miroirs.json)`);
   }
 

@@ -86,7 +86,10 @@ test("verifier : un écart non déclaré échoue, un écart déclaré avec sa ra
   const racine = depot({ ...base, "docs/recettes/r.md": "# R modifiée\n" });
   const nonDeclare = verifier(racine);
   assert.equal(nonDeclare.problemes.length, 1);
-  assert.match(nonDeclare.problemes[0], /^docs\/recettes\/r\.md : diffère de packages\/drwil\/templates\/fr\/base\/docs\/recettes\/r\.md/);
+  assert.match(
+    nonDeclare.problemes[0],
+    /^docs\/recettes\/r\.md : diffère de packages\/drwil\/templates\/fr\/base\/docs\/recettes\/r\.md \(modifier le gabarit puis lancer npm run installer-depot/,
+  );
   assert.deepEqual(verifier(racine, { ecarts: { "docs/recettes/r.md": "propre au dépôt" } }).problemes, []);
 });
 
@@ -165,7 +168,7 @@ test("un seul côté : fichier du dépôt sans homologue dans un dossier miroir,
   assert.deepEqual(
     problemes,
     [
-      "docs/recettes/r.md : présent dans le gabarit (packages/drwil/templates/fr/base/docs/recettes/r.md) mais absent du dépôt (le copier, ou le déclarer propre au gabarit dans outils/miroirs.json)",
+      "docs/recettes/r.md : présent dans le gabarit (packages/drwil/templates/fr/base/docs/recettes/r.md) mais absent du dépôt (npm run installer-depot, ou le déclarer propre au gabarit dans outils/miroirs.json)",
       ".githooks/nouveau.mjs : présent dans le dépôt seulement (le livrer dans le gabarit, ou le déclarer propre au dépôt dans outils/miroirs.json)",
     ],
     "docs/recettes/r.md était suivi : il n'est pas signalé comme propre au dépôt, seulement comme manquant ; src/ n'est pas un dossier miroir ; Cursor non installé n'est pas exigé",
