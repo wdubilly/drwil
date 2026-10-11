@@ -1,6 +1,6 @@
 # Projet : le dépôt s'installe depuis son gabarit
 
-**Statut** : cadré le 2026-10-12 — décisions prises, lot 1 à lancer.
+**Statut** : en cours — lot 1 fait le 2026-10-12, lot 2 en cours.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -96,8 +96,36 @@ posée dans `docs/intentions/livrable-full-english.md` (question 7).
   Critère de sortie : `node .githooks/run-checks.mjs` vert, un essai de
   modification directe d'une copie refusé avec le bon message.
 
-## 7. Reprise
+## 7. Inventaire (lot 1, 2026-10-12)
 
-- **Dernier état** (2026-10-12) : fiche cadrée, rien de réalisé.
+Méthode : `drwil init --force --name drwil --ci github --tools
+claude,codex,gemini --layers "" --no-git` sur une copie du dépôt
+(`git archive HEAD`), puis diff exact avec le dépôt. `apply --dry-run` ne
+suffit pas : sa dérive est grossière (nombre de lignes, sections `##`) et
+ne voit pas 4 des 17 écarts déclarés.
+
+- **Identiques** : tous les fichiers installés hors écarts, y compris
+  `.claude/settings.json` (variable `stackAllowJson` rendue à l'identique),
+  `CLAUDE.md`, `GEMINI.md`, `.github/pull_request_template.md`.
+- **Différents** : exactement les 17 écarts déclarés de
+  `outils/miroirs.json`, plus `.drwil/ia-first.json`.
+- **Rien de supprimé** : le dépôt n'a pas de manifeste des fichiers
+  installés, donc aucun fichier n'est retiré comme obsolète.
+- **Hors installation** : les modules optionnels
+  (`.githooks/creer-release.mjs`, `.githooks/tableau-de-bord.mjs`) se copient à la main ; la commande du lot 2 doit
+  les rafraîchir aussi.
+- **Défaut corrigé** (commit séparé) : `layers` listait cinq couches sans
+  dossier, héritées du premier commit ; elles auraient créé cinq
+  `AGENTS.md` sans objet.
+- **À ne pas faire** : lancer `init` sur le dépôt. `writeConfig` réécrit
+  toujours `.drwil/ia-first.json` (même sans `--force`) et remet
+  `layerPrefixes`, `codePrefixes`, `extraCodeFiles`, `extraCodeGlobs`,
+  `ciFiles` à leurs défauts : la commande du lot 2 ne touche pas la config.
+  Défaut du livrable signalé, hors de ce chantier (le code de la CLI n'est
+  pas dans le cadrage).
+
+## 8. Reprise
+
+- **Dernier état** (2026-10-12) : lot 1 fait (inventaire ci-dessus).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancement par `/drwil-lancer`.
+- **Prochaine étape** : lot 2, commande d'installation du dépôt.
