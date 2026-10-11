@@ -9,11 +9,13 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:hooks:coverage": "c8 --all --include=.githooks/*.mjs --exclude=.githooks/*.test.mjs --reporter=text --temp-directory=node_modules/.cache/c8-hooks --report-dir=node_modules/.cache/c8-hooks node --test \".githooks/*.test.mjs\""
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
     "typescript": "^5.6.3",
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "c8": "^12.0.0"
   }
 }
