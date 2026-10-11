@@ -133,3 +133,8 @@ test("testsDuFichier : un exemple de test cité dans une chaîne n'est pas un te
   ].join("\n");
   assert.deepEqual(testsDuFichier(source), [{ nom: "vrai test", id: null }]);
 });
+
+// ESSAI JETABLE (PR d'essai, jamais fusionnée) : échoue seulement en CI pour éprouver le rejeu sur la base.
+test("essai : échec en CI seulement", () => {
+  assert.equal(process.env.CI ? "échec voulu" : "ok", "ok");
+});
