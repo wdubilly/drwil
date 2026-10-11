@@ -7,11 +7,13 @@
 // Chaque contrôle finit donc « échec », « OK » ou « non exécuté », jamais masqué.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { controles } from "./moteur.mjs";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+// Racine = celle du dépôt git du dossier courant (les consignes de couche le lancent depuis un
+// sous-dossier : `node ../.githooks/run-checks.mjs`), le dossier courant hors dépôt git. Pas
+// l'emplacement du script : ce serait intestable hors du dépôt drwil lui-même.
+const depot = spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" });
+const root = depot.status === 0 ? depot.stdout.trim() : process.cwd();
 process.chdir(root);
 
 let cfg = {};

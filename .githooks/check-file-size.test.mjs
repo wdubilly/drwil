@@ -5,6 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { lireHerites, verifier } from "./check-file-size.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./check-file-size.mjs", import.meta.url));
 let dossiers = [];
@@ -47,4 +48,23 @@ test("check-file-size : plafond et extensions en arguments ; racine absente ou p
   assert.match(lancer(dir, ".", "10", "py").stderr, /a\.py : 11 lignes, maximum 10/);
   assert.equal(lancer(dir, "absent").status, 0);
   assert.equal(lancer(dir).status, 0);
+});
+
+test("check-file-size : un plafond hérité tolère sa taille actuelle, pas davantage", () => {
+  const dir = racine({ "src/vieux.js": lignes(500), "src/gros.js": lignes(600) });
+  const avant = process.cwd();
+  try {
+    process.chdir(dir);
+    const erreurs = verifier({ root: "src", maxLines: 400, extensions: ["js"], legacy: { "src/vieux.js": 500, "src/gros.js": 550 } });
+    assert.deepEqual(erreurs, ["src/gros.js : 600 lignes, plafond hérité 550 (ne doit plus grossir, extraire plutôt)"]);
+  } finally {
+    process.chdir(avant);
+  }
+});
+
+test("check-file-size : plafonds hérités lus, absents ou illisibles = aucun", () => {
+  const dir = racine({ "ok.json": JSON.stringify({ "a.js": 3 }), "ko.json": "{ illisible" });
+  assert.deepEqual(lireHerites(join(dir, "ok.json")), { "a.js": 3 });
+  assert.deepEqual(lireHerites(join(dir, "ko.json")), {});
+  assert.deepEqual(lireHerites(join(dir, "absent.json")), {});
 });

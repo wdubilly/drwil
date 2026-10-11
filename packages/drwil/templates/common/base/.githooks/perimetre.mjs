@@ -88,15 +88,17 @@ function reference(racine, env) {
 function verifierBranche(racine, base, { horsPerimetre, cfg }) {
   const T = textes(cfg);
   const problemes = [];
-  const commits = (git(racine, ["rev-list", "--no-merges", "--reverse", `${base}..HEAD`]) ?? "").split("\n").filter(Boolean);
+  // Aucun repli `?? ""` sur ces appels git : ils portent sur des commits existants (base issue de
+  // merge-base) ; un échec doit casser le contrôle, pas le faire passer sans rien juger (QUA-013).
+  const commits = git(racine, ["rev-list", "--no-merges", "--reverse", `${base}..HEAD`]).split("\n").filter(Boolean);
   for (const c of commits) {
     const court = c.slice(0, 7);
     // Règles du parent : sans barrière dans le parent, le commit n'est pas jugé.
     if (git(racine, ["cat-file", "-e", `${c}^:${MARQUEUR}`]) === null) continue;
-    const fichiers = (git(racine, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]) ?? "").split("\n").filter(Boolean);
+    const fichiers = git(racine, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]).split("\n").filter(Boolean);
     const soumis = horsFiches(fichiers, horsPerimetre);
     if (!soumis.length) continue;
-    const valeurs = (git(racine, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c]) ?? "").split("\n").map((v) => v.trim()).filter(Boolean);
+    const valeurs = git(racine, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c]).split("\n").map((v) => v.trim()).filter(Boolean);
     const fiche = valeurs.at(-1);
     if (!fiche) {
       problemes.push(T.sansTrailer(court, soumis.length));
@@ -137,12 +139,9 @@ export function ajouterTrailer(racine, fichierMessage) {
   git(racine, ["interpret-trailers", "--in-place", "--if-exists", "replace", "--trailer", `${TRAILER}: ${etat.attente_active}`, fichierMessage]);
 }
 
-// `node .githooks/perimetre.mjs --trailer <fichier>` (prepare-commit-msg). Ne bloque jamais le commit.
+// `node .githooks/perimetre.mjs --trailer <fichier>` (prepare-commit-msg). Ne bloque jamais le commit :
+// ajouterTrailer ne lève pas, un échec de git laisse le message tel quel.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const i = process.argv.indexOf("--trailer");
-  if (i >= 0 && process.argv[i + 1]) {
-    try {
-      ajouterTrailer(process.cwd(), process.argv[i + 1]);
-    } catch {}
-  }
+  if (i >= 0 && process.argv[i + 1]) ajouterTrailer(process.cwd(), process.argv[i + 1]);
 }

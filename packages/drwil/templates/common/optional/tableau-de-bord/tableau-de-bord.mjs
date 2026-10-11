@@ -140,7 +140,7 @@ function lireContrats(chemin) {
 }
 
 function echapper(s) {
-  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 // Lecture tolérante : une ligne mal formée (JSON invalide, champ manquant) est ignorée plutôt que
@@ -223,7 +223,6 @@ function lireAudit(chemin) {
 // Retourne le nombre de jours si périmé, sinon null (date absente, illisible, ou récente).
 const SEUIL_PEREMPTION_JOURS = 30;
 function joursPeremption(audit) {
-  if (!audit) return null;
   const entree = audit.entrees.find(([k]) => /^dernier scan|^last scan/i.test(k));
   if (!entree) return null;
   const m = entree[1].match(/\d{4}-\d{2}-\d{2}/);

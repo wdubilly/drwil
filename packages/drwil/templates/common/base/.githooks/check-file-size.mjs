@@ -9,32 +9,34 @@
 // maigrir ; quand un refactor en réduit un, baisser ou retirer son plafond.
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join, relative, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const root = process.argv[2] ?? ".";
-const maxLines = Number(process.argv[3] ?? 400);
-const extensions = (process.argv[4] ?? "ts,tsx,js,jsx,py").split(",");
-const legacyPath = join(dirname(fileURLToPath(import.meta.url)), "check-file-size.legacy.json");
-let legacy = {};
-try {
-  legacy = JSON.parse(readFileSync(legacyPath, "utf8"));
-} catch {}
+/** Plafonds hérités ({ fichier: lignes }) ; fichier absent ou illisible : aucun. */
+export function lireHerites(chemin) {
+  try {
+    return JSON.parse(readFileSync(chemin, "utf8"));
+  } catch {
+    return {};
+  }
+}
 
-const extRe = new RegExp(`\\.(${extensions.join("|")})$`);
 const ignoreRe = /\.(test|spec)\.[^.]+$/;
 
-function* sources(dir) {
+function* sources(dir, extRe) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === "node_modules" || entry.name === "__pycache__" || entry.name.startsWith(".")) continue;
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) yield* sources(path);
+    if (entry.isDirectory()) yield* sources(path, extRe);
     else if (extRe.test(entry.name) && !ignoreRe.test(entry.name)) yield path;
   }
 }
 
-const erreurs = [];
-if (existsSync(root)) {
-  for (const path of sources(root)) {
+/** Fichiers trop gros sous `root` (chemins relatifs au dossier courant), un message par fichier. */
+export function verifier({ root, maxLines, extensions, legacy }) {
+  const extRe = new RegExp(`\\.(${extensions.join("|")})$`);
+  const erreurs = [];
+  if (!existsSync(root)) return erreurs;
+  for (const path of sources(root, extRe)) {
     const fichier = relative(".", path).replace(/\\/g, "/");
     const lignes = readFileSync(path, "utf8").split("\n").length - 1;
     const plafond = legacy[fichier] ?? maxLines;
@@ -46,9 +48,18 @@ if (existsSync(root)) {
       );
     }
   }
+  return erreurs;
 }
 
-if (erreurs.length) {
-  console.error("Fichiers trop gros :\n  " + erreurs.join("\n  "));
-  process.exit(1);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const erreurs = verifier({
+    root: process.argv[2] ?? ".",
+    maxLines: Number(process.argv[3] ?? 400),
+    extensions: (process.argv[4] ?? "ts,tsx,js,jsx,py").split(","),
+    legacy: lireHerites(join(dirname(fileURLToPath(import.meta.url)), "check-file-size.legacy.json")),
+  });
+  if (erreurs.length) {
+    console.error("Fichiers trop gros :\n  " + erreurs.join("\n  "));
+    process.exitCode = 1;
+  }
 }

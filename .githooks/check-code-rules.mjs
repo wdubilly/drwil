@@ -12,15 +12,20 @@
 //   - un export CSV passe par un point unique (échappement anti-injection) ;
 //   - un sous-système isolé n'importe jamais un paquet d'un autre.
 import { existsSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
 const regles = [
   // (racine) => { const erreurs = []; /* ... */ return erreurs; },
 ];
 
-const racine = process.argv[2] ?? ".";
-const erreurs = existsSync(racine) ? regles.flatMap((regle) => regle(racine)) : [];
-
-if (erreurs.length) {
+/** Applique `liste` (par défaut les règles ci-dessus) à `racine` ; affiche les erreurs, rend le code de sortie. */
+export function controler(racine, liste = regles) {
+  const erreurs = existsSync(racine) ? liste.flatMap((regle) => regle(racine)) : [];
+  if (!erreurs.length) return 0;
   console.error("Règles d'hygiène du code :\n  " + erreurs.join("\n  "));
-  process.exit(1);
+  return 1;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  process.exitCode = controler(process.argv[2] ?? ".");
 }
