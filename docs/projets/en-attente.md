@@ -40,7 +40,7 @@ d'abord, d'où les seuils de couverture (vague 2) avant le refactoring de
 - [ ] [IA] [P0] Règle de refus `Bash(git *-c *)` des réglages Claude livrés
   mal calibrée : elle bloque aussi `git switch -c` (constaté le
   2026-10-11) ; viser la seule option globale de git, avec un test
-  (livrable) — `packages/drwil/templates/common/tools/claude/.claude/settings.json`.
+  (livrable) — `docs/projets/regle-git-c.md`.
 - [ ] [IA] [P0] README à jour du cycle de gouvernance (lancement,
   fusion autorisée, forge) (v1:DOC-001, v1:DOC-003) — `docs/projets/readme-a-jour.md`.
 - [ ] [IA] [P0] Personnaliser `docs/architecture.md` du dépôt, resté au
