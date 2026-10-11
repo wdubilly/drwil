@@ -1,7 +1,8 @@
 # Intention : mesurer l'apport de drwil — même consigne, avec et sans drwil
 
-**Statut** (2026-10-11) : un mini-banc est cadré (`docs/projets/mini-banc.md`,
-vague 3 « mesurer ») ; le banc complet se décidera sur ses chiffres.
+**Statut** (2026-10-12) : un mini-banc est cadré (`docs/projets/mini-banc.md`,
+en tête de la vague 6, avant le pilote de la fabrique) ; le banc complet
+se décidera sur ses chiffres.
 
 **Projet** : DRWIL — **Niveau de risque** : MEDIUM.
 

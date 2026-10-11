@@ -23,7 +23,8 @@ touche `.github/`.)
 
 ## 1. Besoin
 
-Vague 3 (« mesurer ») de la feuille de route, décidée le 2026-10-11.
+Vague 6 de la feuille de route, en tête, avant le pilote de la fabrique
+(déplacé de la vague 3 le 2026-10-12, décision du demandeur).
 Intention `docs/intentions/bench-avec-sans-drwil.md` ; protocole complet
 `docs/benchmark-protocole.md` (5 tâches, 3 répétitions, aucune mesure à ce
 jour). Avant de construire la fabrique autonome, savoir **si drwil
@@ -67,6 +68,9 @@ conditions, soit 12 passages.
 
 - **2026-10-11 — Mesurer avant de construire** : le mini-banc dans la
   vague « mesurer », avant les restructurations. [décision utilisateur]
+  Revue le 2026-10-12 : déplacé en tête de la vague 6, avant le pilote de
+  la fabrique ; la mesure de consommation (faite) suffit à piloter les
+  vagues 4 et 5. [décision utilisateur]
 - **2026-10-11 — Projet de référence** : un petit projet écrit pour le
   banc (`bench/reference/`), public et rejouable. [décision utilisateur]
 - **2026-10-11 — Les 2 tâches** : corriger un bug signalé par un test
