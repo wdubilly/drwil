@@ -6,6 +6,7 @@
 <!-- cadrage
 fichiers:
   - .githooks/etat.mjs
+  - .githooks/etat.test.mjs
   - packages/drwil/templates/common/base/.githooks/etat.mjs
   - .claude/skills/lancer-un-chantier/SKILL.md
   - packages/drwil/templates/fr/tools/claude/.claude/skills/lancer-un-chantier/SKILL.md
@@ -14,7 +15,9 @@ fichiers:
 
 (cadrage : la ligne du contexte qui rappelle la fusion autorisée et la
 consigne du skill de lancement, côté dépôt et côté gabarit — QUA-018
-(périmètre explicite : dépôt drwil vs livrable gabarit).)
+(périmètre explicite : dépôt drwil vs livrable gabarit). Élargi au
+lancement, le 2026-10-11, au test du contexte, pour que la consigne ne
+régresse pas en silence.)
 
 ## 1. Besoin
 
