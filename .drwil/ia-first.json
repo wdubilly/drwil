@@ -75,6 +75,14 @@
       "degradable": false
     },
     {
+      "id": "tests-contrats",
+      "name": "tests rattachés aux contrats, cohérence dans les deux sens (non-régression)",
+      "run": "node outils/verifier-tests-contrats.mjs",
+      "ciJob": "checks",
+      "chemins": ["docs/contrats.md", "**/*.test.mjs", "packages/drwil/test/**", "outils/verifier-tests-contrats.mjs", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
       "id": "audit-dependances",
       "name": "audit des dépendances, failles high et critical (SEC-006)",
       "run": "node outils/audit-dependances.mjs",

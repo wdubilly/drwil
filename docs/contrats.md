@@ -28,6 +28,7 @@ de sortie.
 **Preuve** : Sortie lue du contrôle concerné.
 **Contrôle** : `couverture-ci`
 **Manuel** : lecture de la sortie du contrôle concerné.
+**Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
 
 ## SEC-006 — Pas de dépendance vulnérable connue
@@ -61,6 +62,7 @@ de sortie.
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI) ; justesse du contenu : humaine.
 **Contrôle** : `docs-references`
 **Manuel** : justesse du contenu des fiches.
+**Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
 
 ## QUA-016 — Rappel de cadrage
@@ -69,6 +71,7 @@ de sortie.
 **Source de vérité** : `.githooks/cadrage.mjs`, `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/rappel-cadrage.mjs`.
 **Contrôle** : `docs-references`
+**Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 
 ## QUA-017 — Pas de travail direct sur la branche principale
@@ -77,6 +80,7 @@ de sortie.
 **Source de vérité** : `docs/recettes/travailler-en-branche.md`.
 **Preuve** : `.githooks/run-checks.mjs` (hook uniquement, jamais en CI).
 **Contrôle** : `branche-principale`
+**Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un commit ou un push direct sur la branche principale contourne la revue (pull/merge request) et casse le lien fiche ↔ branche décrit par la recette.
 
 ## QUA-018 — Périmètre explicite : dépôt drwil vs livrable gabarit

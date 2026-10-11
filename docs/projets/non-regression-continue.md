@@ -47,8 +47,11 @@ v1:TST-004 (`docs/intentions/catalogue-cycle-de-vie.md`).
 - Cohérence vérifiée dans les deux sens : un fichier listé contient au
   moins un test au nom préfixé par l'ID du contrat ; un test préfixé par
   l'ID d'un contrat du registre est dans un fichier que ce contrat liste.
-  Un ID absent du registre en tête d'un nom de test est signalé (les
-  `DRWIL-…` actuels : à renommer ou à rattacher).
+  Seuls comptent les ID au préfixe d'un contrat du projet
+  (`.drwil/ia-first.json` → `contractPrefixes`) ; un tel ID absent du
+  registre est signalé. Précisé au lancement, le 2026-10-11 : les 8 tests
+  `DRWIL-…` citent des exigences de la fiche V0.2, pas des contrats ; ils
+  ne sont ni renommés ni rattachés.
 - La règle « défaut corrigé → test vu échouer avant la correction » est
   une recette, pas un contrôle (décision) : elle se suit, elle ne se
   vérifie pas encore mécaniquement.
