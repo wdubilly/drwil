@@ -467,6 +467,11 @@ test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CL
   assert.deepEqual(lu.problemes, []);
   assert.equal(lu.etat.fusion_autorisee, true);
   assert.match(contexte(lu, racine), /fusion automatique autorisée/i);
+  // Ordre sûr (PR #29 : fusion refusée, retour en CADRAGE quand même, autorisation perdue) : la PR
+  // calculée et à jour, la fusion programmée puis vérifiée, et seulement ensuite le retour en CADRAGE.
+  assert.match(contexte(lu, racine), /mergeStateStatus.*BEHIND.*gh pr merge --auto --merge.*autoMergeRequest.*seulement ensuite revenir en CADRAGE.*rester en CLOTURE/s);
+  writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ transitions: "agent", lang: "en" }));
+  assert.match(contexte(lu, racine), /mergeStateStatus.*BEHIND.*gh pr merge --auto --merge.*autoMergeRequest.*only then go back to CADRAGE.*stay in CLOTURE/s);
   for (const vers of ["PREUVES", "VERIFY"]) {
     const r = preparerTransition(lu, vers, { maintenant: MAINTENANT }, racine);
     assert.equal(r.etat.fusion_autorisee, true, vers);

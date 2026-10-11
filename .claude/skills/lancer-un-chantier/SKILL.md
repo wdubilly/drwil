@@ -35,7 +35,11 @@ de l'outil (`.claude/hooks/saisie-drwil.mjs`), qui fait la transition — jamais
 4. Après la réponse, relire l'état : `node .githooks/etat.mjs`. En REALISATION sur la fiche
    choisie : réaliser. Sinon : rapporter le refus tel quel, sans retenter autrement. Si l'état
    dit « Fusion automatique autorisée » : en CLOTURE, après verify PASS et le push de la
-   clôture, programmer `gh pr merge --auto --merge` ; sinon, la fusion reste un geste humain.
+   clôture, dans cet ordre — attendre que GitHub ait calculé la PR et, si elle est en retard
+   sur la branche principale (BEHIND), la mettre à jour ; programmer `gh pr merge --auto
+   --merge` ; vérifier que la fusion est programmée (`gh pr view --json autoMergeRequest`) ;
+   seulement ensuite revenir en CADRAGE, qui efface l'autorisation. En cas d'échec, rester en
+   CLOTURE et le signaler. Sinon, la fusion reste un geste humain.
 
 Sans sondage dans l'outil : donner à l'humain la commande `node .githooks/etat.mjs lancer`, à
 lancer dans un terminal interactif.
