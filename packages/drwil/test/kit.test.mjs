@@ -183,7 +183,7 @@ test("mise à jour sans casse : une exigence ajoutée après l'installation aver
   writeFileSync(join(dir, ".drwil/state.json"), "{}\n");
   appendFileSync(join(dir, "docs/ia-first.md"), "\nÉtat local : `.drwil/state.json`.\n");
   const docsCheck = () => spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
-  let r = docsCheck();
+  const r = docsCheck();
   assert.equal(r.status, 0, "projet existant : le commit qui passait passe encore\n" + r.stdout + r.stderr);
   assert.match(r.stdout + r.stderr, /\.drwil\/state\.json/, "mais l'écart est signalé");
   // La mise à jour pose « avertissement » pour ce projet, sans jamais durcir.
@@ -359,7 +359,7 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
   await quiet(() => init({ targetDir: dir }));
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "bloquant" }));
   assert.equal(git(dir, "add", "-A").status, 0);
-  let rInit = git(dir, "commit", "-qm", "init");
+  const rInit = git(dir, "commit", "-qm", "init");
   assert.equal(rInit.status, 0, `premier commit accepté (mecanique-ia-first.md couvre .githooks/) :\n${rInit.stdout}${rInit.stderr}`);
   // QUA-017 ne tolère que le tout premier commit sur master : les commits suivants de
   // ce test (sans rapport avec le workflow branche/MR testé ailleurs) se font sur une branche.
@@ -1740,7 +1740,7 @@ test("verify --agent : PASS sans action, FAIL à corriger, ERROR à résoudre, s
   r = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `ko`")), "verify", "--agent");
   assert.equal(r.status, 1);
   assert.match(r.stdout, /GOVERNANCE: FAIL/);
-  assert.match(r.stdout, /Failing contracts \(fix them\):\n  - QUA-001/);
+  assert.match(r.stdout, /Failing contracts \(fix them\):\n {2}- QUA-001/);
   assert.match(r.stdout, /Do not claim the work is done/);
   assert.doesNotMatch(r.stdout, /Human attestation required|drwil attest/, "FAIL : l'agent corrige, pas d'attestation");
   r = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `inexistant`")), "verify", "--agent");
@@ -1751,8 +1751,8 @@ test("verify --agent : PASS sans action, FAIL à corriger, ERROR à résoudre, s
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture"));
   r = cli(dir, "verify", "--agent");
   assert.equal(r.status, 1);
-  assert.match(r.stdout, /Human attestation required\.\n  - QUA-001/);
-  assert.match(r.stdout, /HUMAN ACTION — for the human, in their own interactive terminal; never run it yourself:\n  drwil attest <CONTRACT_ID>/);
+  assert.match(r.stdout, /Human attestation required\.\n {2}- QUA-001/);
+  assert.match(r.stdout, /HUMAN ACTION — for the human, in their own interactive terminal; never run it yourself:\n {2}drwil attest <CONTRACT_ID>/);
   assert.ok(!existsSync(join(dir, ".drwil/evidence")), "verify --agent n'écrit rien, n'atteste rien");
 });
 

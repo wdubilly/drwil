@@ -161,7 +161,8 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const { cfg, registre, moteur, lecteur } = projet;
   const tous: any[] = lecteur.lireContrats(readFileSync(join(root, registre), "utf8"));
   if (!tous.length) return erreurGlobale(`aucun contrat trouvé dans ${registre}`);
-  const contrats = opts.seulement ? tous.filter((k) => opts.seulement!.includes(k.id)) : tous;
+  const seulement = opts.seulement;
+  const contrats = seulement ? tous.filter((k) => seulement.includes(k.id)) : tous;
   const attestations = lireAttestations(root);
 
   // Un doublon rend le registre lui-même ambigu : erreur globale. Les autres erreurs portent sur un contrat.

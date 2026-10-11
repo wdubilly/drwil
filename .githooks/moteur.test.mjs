@@ -103,7 +103,7 @@ test("lancer : commande impossible à lancer = échec ; sortie capturée seuleme
   const racine = depot();
   // Dossier de travail absent : le processus ne démarre même pas (r.error).
   const cfg = { checks: [{ id: "x", run: "node -e 0", cwd: "absent" }] };
-  const r = parId(controles(racine, { cfg }))["x"].executer({ stdio: "pipe" });
+  const r = parId(controles(racine, { cfg })).x.executer({ stdio: "pipe" });
   assert.equal(r.statut, "echec");
   assert.ok(r.detail);
   // Sans options : stdio hérité, rien de capturé.
@@ -182,13 +182,13 @@ test("contrôles du projet : identifiant, nom, report au commit hors chemins, cw
     ],
   };
   const sans = parId(controles(racine, { cfg }));
-  assert.equal(sans["nomme"].nom, "Nommé");
-  assert.equal(sans["nomme"].executer({ stdio: "pipe" }).statut, "ok");
+  assert.equal(sans.nomme.nom, "Nommé");
+  assert.equal(sans.nomme.executer({ stdio: "pipe" }).statut, "ok");
   const reporte = parId(controles(racine, { cfg, indexes: ["docs/a.md"] }));
-  assert.deepEqual(reporte["nomme"].executer(), { statut: "non-execute", detail: "aucun fichier indexé sous ses chemins : rejoué au push et en CI" });
+  assert.deepEqual(reporte.nomme.executer(), { statut: "non-execute", detail: "aucun fichier indexé sous ses chemins : rejoué au push et en CI" });
   assert.equal(reporte["projet:node -e 0"].executer({ stdio: "pipe" }).statut, "ok");
   const touche = parId(controles(racine, { cfg, indexes: ["src/x/y.js"] }));
-  assert.equal(touche["nomme"].executer({ stdio: "pipe" }).statut, "ok");
+  assert.equal(touche.nomme.executer({ stdio: "pipe" }).statut, "ok");
   // checks absent ou mal formé : seuls les contrôles du socle.
   assert.equal(controles(racine, { cfg: { checks: {} } }).length, 6);
   assert.equal(controles(racine).length, 6);
