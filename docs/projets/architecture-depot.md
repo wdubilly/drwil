@@ -56,6 +56,8 @@ v1:ARC-001 (`docs/intentions/catalogue-cycle-de-vie.md`).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-11) : fiche cadrée, rien de réalisé.
+- **Dernier état** (2026-10-11) : lot 1 réalisé (carte du dépôt, écart
+  déclaré dans `outils/miroirs.json`).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] `/drwil-lancer`.
+- **Prochaine étape** : [IA] `drwil verify`, clôture et fusion automatique
+  (autorisée au lancement).
