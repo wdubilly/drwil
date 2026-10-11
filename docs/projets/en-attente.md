@@ -41,15 +41,20 @@ après la vague 5.
 
 ## Vague 2 — rendre les décisions humaines prouvables, relever les preuves
 
+Séance de décision tenue le 2026-10-11 : non-régression et couverture
+tranchées.
+
 - [ ] [humain] [P1] Protéger master : approbation humaine exigée sur les
   PR (aujourd'hui 0) et compte machine de l'agent (lot 3) (v1:GIT-004,
   v1:COD-010, v1:HOOK-014) — `docs/projets/proteger-master.md`.
-- [ ] [décision] [P1] Couverture du paquet : lot 3 de la fiche (cible
-  100 %, ouvert à la demande) ; au minimum relever les seuils vers les
-  chiffres réels, avec cliquet (v1:TST-005) ; préalable au refactoring de
-  `packages/drwil/src/index.ts` — `docs/projets/adopter-seuil-couverture.md`.
-- [ ] [décision] [P1] Non-régression continue : règle « défaut corrigé →
-  test rattaché à un contrat », traçabilité dans `verify` (v1:TST-004) —
+- [ ] [IA] [P1] Couverture du paquet : seuils relevés au réel, avec cliquet
+  (lot 3a, décidé le 2026-10-11 ; le 100 % reste à la demande) (v1:TST-005) ;
+  préalable au refactoring de `packages/drwil/src/index.ts` —
+  `docs/projets/adopter-seuil-couverture.md`.
+- [ ] [IA] [P1] Non-régression continue : questions tranchées le
+  2026-10-11 (ID du contrat dans le nom du test et champ « Tests »,
+  cohérence contrôlée ; recette d'abord ; rejeu sur la base en cas
+  d'échec ; ce dépôt d'abord), fiche à cadrer (v1:TST-004) —
   `docs/intentions/non-regression-continue.md`.
 - [ ] [IA] [P1] Tester la CLI installée depuis le tarball, comme un
   utilisateur (v1:PKG-005, v1:PKG-004) — classé automatisable dans

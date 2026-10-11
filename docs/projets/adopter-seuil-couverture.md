@@ -1,6 +1,6 @@
 # Projet : Adopter un seuil de couverture de test (catalogue:QUA-004)
 
-**Statut** : cadré le 2026-10-05 — lots 1 et 2 faits, lot 3 restant hors périmètre immédiat.
+**Statut** : cadré le 2026-10-05 — lots 1 et 2 faits ; lot 3a (seuils au réel, cliquet) décidé le 2026-10-11, à lancer ; lot 3b (100 %) à la demande.
 
 <!-- cadrage
 fichiers:
@@ -53,6 +53,10 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
   limitée à `packages/drwil` (code du générateur, pas `.githooks/*.mjs` pour
   ce lot) ; `degradable: false` dès le premier lot, cohérent avec le
   contrôle existant `drwil: build + tests`. [décision utilisateur]
+- **2026-10-11 — Vague 2 : seuils au réel, cliquet** : relever les seuils
+  aux chiffres mesurés, qui ne pourront plus baisser ; le 100 % reste un
+  objectif à part (lot 3b). Préalable au refactoring de
+  `packages/drwil/src/index.ts` (vague 3). [décision utilisateur]
 
 ## 5. Points à trancher
 
@@ -69,7 +73,12 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
   du catalogue vers `docs/contrats.md`. Critère de sortie : `node
   .githooks/run-checks.mjs` exécute le contrôle et le passe — vérifié,
   0 erreur.
-- **Lot 3 — Relever le seuil vers 100 %** [IA|humain|décision] : gardé en
+- **Lot 3a — Seuils au réel, cliquet** [IA] (décidé le 2026-10-11) :
+  seuils de `test:coverage` relevés aux chiffres mesurés au lancement
+  (mesure du 2026-10-11 : 89,62 % lignes, 81,67 % branches, 91,39 %
+  fonctions), arrondis à l'entier inférieur. Critère de sortie : contrôle
+  vert, et une baisse de couverture le fait échouer (vérifié).
+- **Lot 3b — Relever le seuil vers 100 %** [IA|humain|décision] : gardé en
   chantier ouvert le 2026-10-05, pas de date de reprise fixée. Trois zones
   non couvertes identifiées (mesure du 2026-10-05) :
   - `packages/drwil/src/stack.ts:45-58` — branches de détection de stack
@@ -100,7 +109,6 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
   verte. Lot 3 détaillé (3 zones précises) mais pas commencé — gardé en
   chantier à la demande du demandeur.
 - **Travail non commité** : aucun après ce commit.
-- **Prochaine étape** : [décision] trancher le traitement du script de
-  release (mocker vs exclure documenté, voir lot 3) avant de lancer le
-  lot 3 ; les deux autres zones (détection de stack et `setupGit`, voir
-  lot 3) peuvent démarrer dès que ce chantier est repris.
+- **Prochaine étape** : [humain] `/drwil-lancer` pour le lot 3a (vague 2,
+  décidé le 2026-10-11). Le lot 3b reste à la demande ; sa question sur le
+  script de release (mocker ou exclure) ne bloque pas le lot 3a.
