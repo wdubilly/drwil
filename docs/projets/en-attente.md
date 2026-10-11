@@ -51,14 +51,12 @@ tranchées.
   (lot 3a, décidé le 2026-10-11 ; le 100 % reste à la demande) (v1:TST-005) ;
   préalable au refactoring de `packages/drwil/src/index.ts` —
   `docs/projets/adopter-seuil-couverture.md`.
-- [ ] [IA] [P1] Non-régression continue : questions tranchées le
-  2026-10-11 (ID du contrat dans le nom du test et champ « Tests »,
-  cohérence contrôlée ; recette d'abord ; rejeu sur la base en cas
-  d'échec ; ce dépôt d'abord), fiche à cadrer (v1:TST-004) —
-  `docs/intentions/non-regression-continue.md`.
+- [ ] [IA] [P1] Non-régression continue : recette « corriger un défaut »,
+  tests rattachés aux contrats (nom et champ « Tests », cohérence
+  contrôlée), échec préexistant signalé en CI (v1:TST-004) —
+  `docs/projets/non-regression-continue.md`.
 - [ ] [IA] [P1] Tester la CLI installée depuis le tarball, comme un
-  utilisateur (v1:PKG-005, v1:PKG-004) — classé automatisable dans
-  `docs/intentions/catalogue-cycle-de-vie.md`.
+  utilisateur (v1:PKG-005, v1:PKG-004) — `docs/projets/tester-tarball.md`.
 
 ## Vague 3 — restructurations, protégées par les filets
 
