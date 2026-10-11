@@ -1,8 +1,9 @@
 # Intention : une fabrique autonome, graduée par le risque
 
-**Statut** (2026-10-10) : à cadrer — intention posée par le demandeur à
-partir d'une analyse externe, corrigée sur l'état réel du dépôt ; questions
-à trancher en fin de fiche.
+**Statut** (2026-10-11) : à cadrer, après les chiffres de la vague 3
+(« mesurer ») — intention posée par le demandeur à partir d'une analyse
+externe, corrigée sur l'état réel du dépôt ; questions à trancher en fin
+de fiche.
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (touche la gouvernance
 elle-même : qui fusionne, sur quelle preuve).
@@ -82,6 +83,14 @@ fiches (DRWIL-012, niveaux de risque).
 4. **Orchestrateur et bac à sable**, risque LOW seulement.
 5. **Élargir au MEDIUM**, sur les chiffres du bench
    (`docs/intentions/bench-avec-sans-drwil.md`).
+
+Précisé le 2026-10-11 (demandeur) : **mesurer avant de construire**. La
+mesure de la consommation (`docs/projets/mesurer-consommation.md`) et un
+mini-banc avec / sans drwil (`docs/projets/mini-banc.md`) passent avant
+les restructurations (vague 3 de `docs/projets/en-attente.md`) ; les
+étapes 2 à 5 se décident ensuite sur ces chiffres. Premier relevé : le
+contexte relu à chaque échange (cache lu) domine la consommation, devant
+le code produit — une fabrique sobre raccourcit d'abord les sessions.
 
 ## Liens
 

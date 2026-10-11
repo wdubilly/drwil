@@ -346,6 +346,24 @@ et doit le déclarer (v1:X-010).
    chaque inclusion.
 8. ~~Correspondance de QUA-018~~ — tranchée le 2026-10-11 : règle locale
    du profil DOGFOODING (voir « Décisions prises »).
+9. **Profils par risque du produit** (ajouté par le demandeur le
+   2026-10-11 : « une page HTML n'a pas les mêmes contraintes qu'un
+   logiciel bancaire »). Les trois profils (section 20) décrivent surtout
+   le *type* de dépôt ; proposition : un axe de **risque du produit** —
+   ce que coûte une erreur en production — qui choisit les contrats
+   applicables et leur sévérité :
+   - **LÉGER** (nouveau) : page statique, prototype, outil interne
+     jetable ; socle minimal (v1:SEC secrets, v1:GIT, v1:TST de base),
+     le reste en indicatif ;
+   - **CLIENT-STANDARD** : application métier courante ;
+   - **CLIENT-RENFORCE** : argent, santé, données sensibles, conformité
+     (le logiciel bancaire) ;
+   - **DOGFOODING** reste à part : il qualifie un dépôt qui produit un
+     paquet, et se cumule avec un niveau de risque.
+   À trancher : nombre de niveaux, choix du profil (déclaré à `init`,
+   questions posées par `drwil`, ou détecté puis confirmé), et le lien
+   avec les niveaux de risque des fiches (DRWIL-012), qui notent un
+   chantier et non le produit.
 
 ## Ordre proposé
 
@@ -353,7 +371,8 @@ Le catalogue n'est pas un chantier unique : il se réalise au fil de la
 feuille de route, dont l'ordre vit dans une seule source, l'index
 `docs/projets/en-attente.md` (section « Ordre de réalisation », décidée le
 2026-10-11). Chaque chantier y cite les contrats `v1:` qu'il rend réels ;
-le **format** du catalogue (JSON, schéma, statuts) est en vague 4, avant
+le **format** du catalogue (JSON, schéma, statuts) et les **profils**
+sont en vague 5 (renumérotée le 2026-10-11), avant
 toute publication npm, parce qu'il casse une compatibilité ; les contrats
 humains (v1:GOV, v1:IP, v1:DAT, v1:OPS) deviennent ensuite des listes de
 questions par profil.

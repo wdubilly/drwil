@@ -1,7 +1,7 @@
 # Intention : mesurer l'apport de drwil — même consigne, avec et sans drwil
 
-**Statut** (2026-10-10) : à cadrer — intention posée par le demandeur,
-questions à trancher en fin de fiche.
+**Statut** (2026-10-11) : un mini-banc est cadré (`docs/projets/mini-banc.md`,
+vague 3 « mesurer ») ; le banc complet se décidera sur ses chiffres.
 
 **Projet** : DRWIL — **Niveau de risque** : MEDIUM.
 
