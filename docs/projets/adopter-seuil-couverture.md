@@ -56,7 +56,8 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
 - **2026-10-11 — Vague 2 : seuils au réel, cliquet** : relever les seuils
   aux chiffres mesurés, qui ne pourront plus baisser ; le 100 % reste un
   objectif à part (lot 3b). Préalable au refactoring de
-  `packages/drwil/src/index.ts` (vague 3). [décision utilisateur]
+  `packages/drwil/src/index.ts` (vague 3, vague 4 depuis la
+  renumérotation du 2026-10-11). [décision utilisateur]
 
 ## 5. Points à trancher
 
