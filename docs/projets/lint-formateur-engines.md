@@ -8,6 +8,7 @@ fichiers:
   - package.json
   - package-lock.json
   - biome.json
+  - biome.jsonc
   - .drwil/ia-first.json
   - .github/workflows/ia-first.yml
   - .github/ruleset-master.json
