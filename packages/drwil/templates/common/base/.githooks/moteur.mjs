@@ -11,7 +11,8 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { globEnRegex } from "./glob.mjs";
 import { controlerPerimetre } from "./perimetre.mjs";
 
@@ -53,6 +54,15 @@ const TEXTES = {
     reporte: "no staged file under its paths: replayed on push and in CI",
   },
 };
+
+/**
+ * Racine du projet pour run-checks.mjs (`urlScript` : son import.meta.url) : le dossier parent de
+ * `.githooks/`, quel que soit le dossier courant. `DRWIL_RACINE` la remplace, pour ses tests
+ * seulement : sans elle, run-checks ne s'éprouverait que sur le dépôt drwil lui-même.
+ */
+export function racineDuProjet(urlScript, env = process.env) {
+  return env.DRWIL_RACINE || join(dirname(fileURLToPath(urlScript)), "..");
+}
 
 export function textes(lang) {
   return TEXTES[lang === "en" ? "en" : "fr"];

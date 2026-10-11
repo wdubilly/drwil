@@ -7,9 +7,9 @@
 // Les fichiers déjà trop gros avant l'adoption sont plafonnés à leur taille
 // actuelle dans check-file-size.legacy.json (à côté) : ils ne peuvent que
 // maigrir ; quand un refactor en réduit un, baisser ou retirer son plafond.
-import { readdirSync, readFileSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync, existsSync, realpathSync } from "node:fs";
 import { join, relative, dirname } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 /** Plafonds hérités ({ fichier: lignes }) ; fichier absent ou illisible : aucun. */
 export function lireHerites(chemin) {
@@ -51,7 +51,9 @@ export function verifier({ root, maxLines, extensions, legacy }) {
   return erreurs;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Lancé en ligne de commande (pas importé par un test) : chemins réels comparés, sinon un
+// .githooks/ en lien symbolique ferait passer le contrôle sans rien vérifier.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const erreurs = verifier({
     root: process.argv[2] ?? ".",
     maxLines: Number(process.argv[3] ?? 400),

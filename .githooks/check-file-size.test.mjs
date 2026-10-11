@@ -1,7 +1,7 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -67,4 +67,12 @@ test("check-file-size : plafonds hérités lus, absents ou illisibles = aucun", 
   assert.deepEqual(lireHerites(join(dir, "ok.json")), { "a.js": 3 });
   assert.deepEqual(lireHerites(join(dir, "ko.json")), {});
   assert.deepEqual(lireHerites(join(dir, "absent.json")), {});
+});
+
+test("check-file-size : lancé via un lien symbolique, le contrôle tourne quand même", { skip: process.platform === "win32" ? "liens symboliques" : false }, () => {
+  const dir = racine({ "src/gros.js": lignes(401) });
+  symlinkSync(dirname(SCRIPT), join(dir, "hooks"));
+  const r = spawnSync(process.execPath, [join(dir, "hooks", "check-file-size.mjs"), "src"], { cwd: dir, encoding: "utf8" });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /src\/gros\.js : 401 lignes/);
 });

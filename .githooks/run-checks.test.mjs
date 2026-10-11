@@ -26,11 +26,11 @@ function git(racine, ...args) {
 }
 
 /**
- * Lance run-checks dans un projet temporaire (dépôt git sur une branche de travail si `depot`).
+ * Lance run-checks sur un projet temporaire (dépôt git sur une branche de travail si `depot`).
  * check-docs y est un bouchon : ce test éprouve l'adaptateur, pas les contrôles (moteur.test.mjs).
  * HOME temporaire : un gitleaks de ~/.local/bin ne s'invite pas ; DRWIL_HOOK et CI fixés par le test.
  */
-function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [], sousDossier = "" } = {}) {
+function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] } = {}) {
   const racine = tmp();
   const tout = { ".githooks/check-docs.mjs": `process.exit(${docsOk ? 0 : 1});\n`, ...fichiers };
   for (const [chemin, contenu] of Object.entries(tout)) {
@@ -42,11 +42,12 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [],
     if (indexer.length) git(racine, "add", ...indexer);
   }
   const base = { ...process.env, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "" };
-  mkdirSync(join(racine, sousDossier), { recursive: true });
-  return spawnSync(process.execPath, [SCRIPT], { cwd: join(racine, sousDossier), encoding: "utf8", env: { ...base, ...env } });
+  // DRWIL_RACINE : sans elle, run-checks jugerait le dépôt drwil (parent de son .githooks/).
+  // Dossier courant ailleurs : seule la racine compte, comme pour un hook lancé depuis une couche.
+  return spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_RACINE: racine, ...env } });
 }
 
-test("racine = dossier courant : contrôles annoncés, non exécutés signalés, bilan OK", () => {
+test("racine du projet, pas le dossier courant : contrôles annoncés, non exécutés signalés, bilan OK", () => {
   const r = lancer({ ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "projet", run: "node -e 0" }] }) });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /^\[ia-first\] chemins et contrats cités dans la doc…$/m);
@@ -88,11 +89,5 @@ test("audits : périmé signalé (français), récent, sans date ou sans ligne d
   assert.doesNotMatch(r.stdout, /stale audit/);
   r = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "docs/value-discovery.md": "> Last scan: 2020-01-01\n" });
   assert.match(r.stdout, /⚠ not run: stale audit \(docs\/value-discovery\.md, \d+ days old\): time to re-run/);
-  assert.match(r.stdout, /checks run: OK/);
-});
-
-test("lancé depuis un sous-dossier du dépôt (consignes de couche) : la racine reste celle du dépôt", () => {
-  const r = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en", checks: [{ name: "projet", run: "node -e 0" }] }) }, { sousDossier: "backend" });
-  assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /checks run: OK/);
 });

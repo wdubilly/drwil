@@ -4,7 +4,8 @@ import { spawnSync } from "node:child_process";
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
-import { controles, textes } from "./moteur.mjs";
+import { controles, racineDuProjet, textes } from "./moteur.mjs";
+import { pathToFileURL } from "node:url";
 
 // Voir perimetre.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -191,4 +192,17 @@ test("contrôles du projet : identifiant, nom, report au commit hors chemins, cw
   // checks absent ou mal formé : seuls les contrôles du socle.
   assert.equal(controles(racine, { cfg: { checks: {} } }).length, 6);
   assert.equal(controles(racine).length, 6);
+});
+
+test("racineDuProjet : dossier parent de .githooks/ quel que soit le dossier courant ; DRWIL_RACINE la remplace", () => {
+  const url = pathToFileURL(join(tmpdir(), "projet", ".githooks", "run-checks.mjs")).href;
+  assert.equal(racineDuProjet(url, {}), join(tmpdir(), "projet"));
+  assert.equal(racineDuProjet(url, { DRWIL_RACINE: "/ailleurs" }), "/ailleurs");
+  const avant = process.env.DRWIL_RACINE;
+  delete process.env.DRWIL_RACINE;
+  try {
+    assert.equal(racineDuProjet(url), join(tmpdir(), "projet"));
+  } finally {
+    if (avant !== undefined) process.env.DRWIL_RACINE = avant;
+  }
 });

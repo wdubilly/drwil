@@ -11,8 +11,8 @@
 //   - un module de logique pure a son fichier de test à côté ;
 //   - un export CSV passe par un point unique (échappement anti-injection) ;
 //   - un sous-système isolé n'importe jamais un paquet d'un autre.
-import { existsSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { existsSync, realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const regles = [
   // (racine) => { const erreurs = []; /* ... */ return erreurs; },
@@ -26,6 +26,8 @@ export function controler(racine, liste = regles) {
   return 1;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Lancé en ligne de commande (pas importé par un test) : chemins réels comparés, sinon un
+// .githooks/ en lien symbolique ferait passer le contrôle sans rien vérifier.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   process.exitCode = controler(process.argv[2] ?? ".");
 }
