@@ -68,7 +68,7 @@
     },
     {
       "id": "lint",
-      "name": "lint du code (Biome, avertissements bloquants)",
+      "name": "lint et formatage du code (Biome, avertissements bloquants)",
       "run": "npm run lint",
       "ciJob": "checks",
       "chemins": ["**/*.js", "**/*.mjs", "**/*.ts", "biome.jsonc", "package.json", "package-lock.json"],

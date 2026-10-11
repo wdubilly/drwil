@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
-    "lint": "biome lint --error-on-warnings .",
+    "lint": "biome ci --error-on-warnings .",
     "test:hooks:coverage": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --statements 100 --all --include=.githooks/*.mjs --exclude=.githooks/*.test.mjs --reporter=text --temp-directory=node_modules/.cache/c8-hooks --report-dir=node_modules/.cache/c8-hooks node --test \".githooks/*.test.mjs\""
   },
   "devDependencies": {

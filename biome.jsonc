@@ -13,6 +13,9 @@
   // restait d'environ 1 500 lignes : la largeur standard de 140 a été retenue.
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 140 },
   "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "always", "trailingCommas": "all" } },
+  // Tri automatique des imports et exports (lancé par `biome ci`) : désactivé. Réordonner des imports
+  // peut changer l'ordre d'exécution des modules — un changement de comportement, pas de mise en forme.
+  "assist": { "enabled": false },
   "linter": {
     "enabled": true,
     "rules": {
