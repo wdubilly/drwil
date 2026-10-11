@@ -138,15 +138,38 @@ function pick<T extends string>(value: string, allowed: readonly T[], option: st
   return value as T;
 }
 
+const csv = (v: unknown) => (Array.isArray(v) ? v.join(",") : undefined);
+const texte = (v: unknown) => (typeof v === "string" ? v : undefined);
+
+/** CI d'une config existante : sa clé `ci`, sinon déduite de `ciFiles` (configs antérieures à la clé). */
+function ciDeConfig(config: Record<string, unknown>): string | undefined {
+  if (typeof config.ci === "string") return config.ci;
+  const premier = Array.isArray(config.ciFiles) ? config.ciFiles[0] : undefined;
+  return premier === undefined ? undefined : CIS.find((c) => CI_FILES[c][0] === premier);
+}
+
+/**
+ * Sur un projet déjà installé, une option absente prend la valeur de sa config : relancer
+ * l'installation pour mettre le kit à jour ne remet jamais un réglage choisi à son défaut
+ * (docs/projets/init-preserve-config.md). Une option passée l'emporte toujours.
+ */
 function resolve(opts: InitOptions, defaultLayers: (stack: StackEntry[]) => string[]): Resolved {
   const stack = detectStack(opts.targetDir);
+  const previous = readConfig(opts.targetDir) ?? {};
+  const merged: InitOptions = {
+    ...opts,
+    name: opts.name ?? texte(previous.projectName),
+    short: opts.short ?? texte(previous.projectShort),
+    contractPrefixes: opts.contractPrefixes ?? csv(previous.contractPrefixes),
+  };
+  const layers = opts.layers ?? csv(previous.layers);
   return {
-    opts,
-    lang: pick(opts.lang ?? "fr", LANGS, "lang"),
-    tools: splitCsv(opts.tools ?? TOOLS.join(",")).map((t) => pick(t, TOOLS, "tools")),
-    ci: pick(opts.ci ?? "none", CIS, "ci"),
-    mode: pick(opts.mode ?? "full", ["minimal", "full"] as const, "mode"),
-    layers: opts.layers !== undefined ? splitCsv(opts.layers) : defaultLayers(stack),
+    opts: merged,
+    lang: pick(opts.lang ?? texte(previous.lang) ?? "fr", LANGS, "lang"),
+    tools: splitCsv(opts.tools ?? csv(previous.tools) ?? TOOLS.join(",")).map((t) => pick(t, TOOLS, "tools")),
+    ci: pick(opts.ci ?? ciDeConfig(previous) ?? "none", CIS, "ci"),
+    mode: pick(opts.mode ?? texte(previous.mode) ?? "full", ["minimal", "full"] as const, "mode"),
+    layers: layers !== undefined ? splitCsv(layers) : defaultLayers(stack),
     stack,
   };
 }
@@ -587,7 +610,12 @@ function readConfig(targetDir: string): Record<string, unknown> | null {
 
 async function writeConfig(r: Resolved): Promise<void> {
   const previous = readConfig(r.opts.targetDir);
+  // Réglages saisis par le projet : repris tels quels ; ceux qui découlent d'une option (dossiers de
+  // la langue, fichiers de la CI) ne sont recalculés que si l'option a changé.
+  const garde = (cle: string, defaut: string[]) => (Array.isArray(previous?.[cle]) ? (previous[cle] as string[]) : defaut);
   const config = {
+    // Clés propres au projet, inconnues du kit : jamais perdues.
+    ...previous,
     projectName: projectName(r),
     projectShort: r.opts.short ?? projectName(r),
     lang: r.lang,
@@ -595,7 +623,7 @@ async function writeConfig(r: Resolved): Promise<void> {
     contractPrefixes: splitCsv(r.opts.contractPrefixes ?? "SEC,QUA"),
     tools: r.tools,
     ci: r.ci,
-    dirs: TEXT[r.lang].dirs,
+    dirs: previous?.dirs && previous.lang === r.lang ? previous.dirs : TEXT[r.lang].dirs,
     stack: r.stack,
     // Les contrôles du projet sont saisis par l'utilisateur ou l'IA : une réinstallation ne doit pas les effacer.
     checks: Array.isArray(previous?.checks) ? previous.checks : [],
@@ -615,11 +643,11 @@ async function writeConfig(r: Resolved): Promise<void> {
     // casse jamais un commit qui passait. Jamais écrasé ensuite.
     nouvellesExigences:
       typeof previous?.nouvellesExigences === "string" ? previous.nouvellesExigences : previous ? "avertissement" : "bloquant",
-    layerPrefixes: ["app", "tests", "src", "scripts"],
-    codePrefixes: ["scripts", ".githooks", "e2e"],
-    extraCodeFiles: [],
-    extraCodeGlobs: ["docker-compose*.yml"],
-    ciFiles: CI_FILES[r.ci],
+    layerPrefixes: garde("layerPrefixes", ["app", "tests", "src", "scripts"]),
+    codePrefixes: garde("codePrefixes", ["scripts", ".githooks", "e2e"]),
+    extraCodeFiles: garde("extraCodeFiles", []),
+    extraCodeGlobs: garde("extraCodeGlobs", ["docker-compose*.yml"]),
+    ciFiles: previous && ciDeConfig(previous) === r.ci ? garde("ciFiles", CI_FILES[r.ci]) : CI_FILES[r.ci],
     mode: r.mode,
   };
   await mkdir(join(r.opts.targetDir, ".drwil"), { recursive: true });

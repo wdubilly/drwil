@@ -2289,3 +2289,66 @@ test("version unique : la release suit package.json et refuse un numéro déjà 
   const ver = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "--version"], { encoding: "utf8" });
   assert.equal(ver.stdout.trim(), pkg.version, "drwil --version = package.json");
 });
+
+// Projet déjà installé avec des réglages choisis, différents de chaque défaut : relancer
+// l'installation ne doit en effacer aucun (docs/projets/init-preserve-config.md).
+const fichiersDe = (dir, sous = "") =>
+  readdirSync(join(dir, sous), { withFileTypes: true })
+    .flatMap((e) => (e.isDirectory() ? fichiersDe(dir, join(sous, e.name)) : [join(sous, e.name).replace(/\\/g, "/")]))
+    .sort();
+async function projetRegle() {
+  const dir = tmp();
+  await quiet(() =>
+    init({
+      targetDir: dir,
+      name: "demo",
+      lang: "en",
+      tools: "claude",
+      layers: "api",
+      ci: "github",
+      mode: "minimal",
+      contractPrefixes: "SEC",
+      git: false,
+    }),
+  );
+  const cfg = config(dir);
+  cfg.layerPrefixes = ["app", "lib"];
+  cfg.codePrefixes = [...cfg.codePrefixes, "tools"];
+  cfg.extraCodeFiles = ["Makefile"];
+  cfg.extraCodeGlobs = ["*.sql"];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg, null, 2) + "\n");
+  return { dir, cfg, fichiers: fichiersDe(dir) };
+}
+
+test("QUA-016 : init relancé sans option, puis avec --force, garde les réglages et n'ajoute aucun fichier", async () => {
+  const { dir, cfg, fichiers } = await projetRegle();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  assert.deepEqual(config(dir), cfg);
+  assert.deepEqual(fichiersDe(dir), fichiers);
+  await quiet(() => init({ targetDir: dir, force: true, git: false }));
+  assert.deepEqual(config(dir), cfg);
+  assert.deepEqual(fichiersDe(dir), fichiers);
+});
+
+test("QUA-016 : apply relancé sans option garde les réglages et n'ajoute aucun fichier", async () => {
+  const { dir, cfg, fichiers } = await projetRegle();
+  await quiet(() => apply({ targetDir: dir, git: false }));
+  assert.deepEqual(config(dir), cfg);
+  assert.deepEqual(fichiersDe(dir), fichiers);
+});
+
+test("QUA-016 : la CLI, init et apply sans option, garde les réglages d'un projet installé", async () => {
+  const { dir, cfg, fichiers } = await projetRegle();
+  for (const commande of ["init", "apply"]) {
+    const r = cli(dir, commande, "--no-git");
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.deepEqual(config(dir), cfg, commande);
+    assert.deepEqual(fichiersDe(dir), fichiers, commande);
+  }
+});
+
+test("init sur un projet installé : une option passée remplace sa valeur, les autres réglages restent", async () => {
+  const { dir, cfg } = await projetRegle();
+  await quiet(() => init({ targetDir: dir, ci: "none", mode: "full", git: false }));
+  assert.deepEqual(config(dir), { ...cfg, ci: "none", ciFiles: [], mode: "full" });
+});

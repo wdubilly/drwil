@@ -31,18 +31,24 @@ program
   // Lue dans package.json, source unique de la version (docs/projets/journal.md, 2026-10-06 « Un seul numéro de version »).
   .version(JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version);
 
+const DEFAUT = (v) => `(default: value of an installed project, else ${v})`;
+
 function addOptions(cmd, layersHelp) {
-  return cmd
-    .option("-n, --name <name>", "Project name (default: folder name)")
-    .option("-s, --short <short>", "Short name")
-    .option("-l, --lang <lang>", "Templates language (fr|en)", "fr")
-    .option("--layers <layers>", layersHelp)
-    .option("-d, --description <text>", "What the application does (fills AGENTS.md and docs/architecture.md)")
-    .option("--tools <tools>", `AI tools to configure, CSV (${TOOLS.join(",")})`, TOOLS.join(","))
-    .option("--ci <ci>", `CI file to generate (${CIS.join("|")})`, "none")
-    .option("--contract-prefixes <c>", "Contract prefixes CSV", "SEC,QUA")
-    .option("--mode <mode>", "minimal|full", "full")
-    .option("--no-git", "Do not run git init nor enable hooks");
+  return (
+    cmd
+      .option("-n, --name <name>", `Project name ${DEFAUT("folder name")}`)
+      .option("-s, --short <short>", "Short name")
+      // Aucun défaut ici : une option absente doit se distinguer d'un choix explicite, pour reprendre
+      // la config d'un projet déjà installé ; les défauts vivent dans resolve() (src/index.ts).
+      .option("-l, --lang <lang>", `Templates language (fr|en) ${DEFAUT("fr")}`)
+      .option("--layers <layers>", layersHelp)
+      .option("-d, --description <text>", "What the application does (fills AGENTS.md and docs/architecture.md)")
+      .option("--tools <tools>", `AI tools to configure, CSV (${TOOLS.join(",")}) ${DEFAUT("all")}`)
+      .option("--ci <ci>", `CI file to generate (${CIS.join("|")}) ${DEFAUT("none")}`)
+      .option("--contract-prefixes <c>", `Contract prefixes CSV ${DEFAUT("SEC,QUA")}`)
+      .option("--mode <mode>", `minimal|full ${DEFAUT("full")}`)
+      .option("--no-git", "Do not run git init nor enable hooks")
+  );
 }
 
 async function run(fn, opts, message) {
@@ -59,16 +65,19 @@ addOptions(
   program
     .command("init")
     .description("Initialize IA-first in current directory (refreshes .githooks/; use --force to overwrite everything)"),
-  "Layers CSV (default: backend,frontend)",
+  `Layers CSV ${DEFAUT("backend,frontend")}`,
 )
-  .option("--force", "Overwrite every file, not just .githooks/ (erases project docs added since last install)")
+  .option(
+    "--force",
+    "Overwrite every file, not just .githooks/ (erases project docs added since last install; keeps the settings of .drwil/ia-first.json)",
+  )
   .action((opts) => run(init, opts, "IA-first scaffolding applied to"));
 
 addOptions(
   program
     .command("apply")
     .description("Apply IA-first to existing project (never overwrites files); audits the repo and previews what will be added first"),
-  "Layers CSV (default: subfolders where a stack is detected)",
+  `Layers CSV ${DEFAUT("subfolders where a stack is detected")}`,
 )
   .option("--dry-run", "Only audit the repository and preview what would be added; write nothing")
   .action(async (opts) => {

@@ -205,7 +205,10 @@ Scaffolds the kit's full structure in the current folder (`AGENTS.md`,
 `docs/contrats.md`, Git hooks enabled). Re-running `init` only refreshes
 `.githooks/` by default (docs you've already written are left alone);
 `--force` overwrites everything, including project docs added since —
-reserve it for a deliberate reset.
+reserve it for a deliberate reset. Either way, the project's settings
+(`.drwil/ia-first.json`: language, tools, layers, CI, code prefixes…) are
+kept: an option you don't pass takes the installed value. To start the
+settings over, delete that file first.
 
 ### `apply` — project that already exists
 
@@ -350,7 +353,9 @@ npx drwil init --name "MyProject"
 
 ## CLI reference
 
-Common options (both `init` and `apply`):
+Common options (both `init` and `apply`). On a project already installed,
+an option you don't pass takes the value from `.drwil/ia-first.json`; the
+defaults below apply to a new install only.
 
 | Option | Description | Default |
 |---|---|---|
@@ -466,6 +471,10 @@ Scaffolde la structure complète du kit dans le dossier courant
 `init` ne rafraîchit que `.githooks/` par défaut (les docs déjà
 écrites ne sont pas touchées) ; `--force` écrase tout, y compris les
 docs de projet ajoutées depuis — à réserver à un rattrapage volontaire.
+Dans tous les cas, les réglages du projet (`.drwil/ia-first.json` :
+langue, outils, couches, CI, préfixes de code…) sont gardés : une option
+non passée reprend la valeur installée. Pour repartir de zéro sur les
+réglages, supprimer d'abord ce fichier.
 
 ### `apply` — projet déjà existant
 
