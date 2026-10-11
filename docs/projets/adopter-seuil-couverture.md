@@ -1,6 +1,6 @@
 # Projet : Adopter un seuil de couverture de test (catalogue:QUA-004)
 
-**Statut** : cadré le 2026-10-05 — lots 1 et 2 faits ; lot 3a (seuils au réel, cliquet) décidé le 2026-10-11, à lancer ; lot 3b (100 %) à la demande.
+**Statut** : cadré le 2026-10-05 — lots 1, 2 et 3a faits (seuils au réel, cliquet, le 2026-10-11) ; lot 3b (100 %) à la demande.
 
 <!-- cadrage
 fichiers:
@@ -78,6 +78,12 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
   (mesure du 2026-10-11 : 89,62 % lignes, 81,67 % branches, 91,39 %
   fonctions), arrondis à l'entier inférieur. Critère de sortie : contrôle
   vert, et une baisse de couverture le fait échouer (vérifié).
+  **Fait le 2026-10-11** : seuils 89 % lignes, 81 % branches, 91 %
+  fonctions ; QUA-004 à jour ; une fonction non testée ajoutée à
+  `packages/drwil/src/stack.ts` fait tomber la couverture à 87,86 % et le
+  contrôle échoue (vérifié, puis retirée). Limite relevée : sans `--all`,
+  c8 ne mesure que les fichiers chargés par les tests ; un fichier jamais
+  importé échapperait au calcul (à traiter avec le lot 3b).
 - **Lot 3b — Relever le seuil vers 100 %** [IA|humain|décision] : gardé en
   chantier ouvert le 2026-10-05, pas de date de reprise fixée. Trois zones
   non couvertes identifiées (mesure du 2026-10-05) :
@@ -104,11 +110,8 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-05) : lots 1 et 2 faits et vérifiés
-  (`node .githooks/run-checks.mjs` vert, 0 erreur), PR #19 ouverte et CI
-  verte. Lot 3 détaillé (3 zones précises) mais pas commencé — gardé en
-  chantier à la demande du demandeur.
-- **Travail non commité** : aucun après ce commit.
-- **Prochaine étape** : [humain] `/drwil-lancer` pour le lot 3a (vague 2,
-  décidé le 2026-10-11). Le lot 3b reste à la demande ; sa question sur le
-  script de release (mocker ou exclure) ne bloque pas le lot 3a.
+- **Dernier état** (2026-10-11) : lots 1, 2 et 3a faits ; seuils 89/81/91
+  avec cliquet.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [décision] lot 3b (100 %) à la demande, avec la
+  question du script de release (mocker ou exclure) et la limite `--all`.
