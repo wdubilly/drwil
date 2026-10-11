@@ -31,20 +31,21 @@ Chaque vague y contribue :
 | 1 — hygiène et preuves | des contrôles fiables (fait) |
 | 2 — décisions prouvables | des filets avant de bouger le code |
 | 3 — mesurer | savoir ce que drwil apporte et coûte, en tokens et en qualité |
-| 4 — restructurations | un code et un cycle plus simples, décidés sur les chiffres |
+| 4 — restructurations | un code et un cycle plus simples, un seul gabarit en anglais |
 | 5 — catalogue et profils | les contrats et leurs contrôles, choisis par profil de risque |
-| 6 — le produit | publier |
-| ensuite | la fabrique autonome, graduée par le risque, sur les chiffres du banc |
+| 6 — la fabrique | pilote autonome dans ce dépôt, gradué par le risque, sur les chiffres |
+| 7 — le produit | publier, quand tout est opérationnel |
 
 ## Ordre de réalisation (2026-10-11)
 
-Décidé par le demandeur le 2026-10-11, revu le même jour (**mesurer avant
-de construire** : vague 3 insérée, les suivantes renumérotées). Principe :
-**petits filets d'abord, mesure ensuite, restructurations après,
-publication en dernier** ; tout ce qui casse une compatibilité (noms,
+Décidé par le demandeur le 2026-10-11, revu le même jour : **mesurer avant
+de construire** (vague 3 insérée, les suivantes renumérotées), puis **la
+fabrique avant la publication**, repoussée en dernier, quand tout est
+opérationnel. Principe : **petits filets d'abord, mesure ensuite,
+restructurations après, publication en dernier** ; tout ce qui casse une compatibilité (noms,
 formats, sorties) passe **avant** la publication npm, quand il ne coûte
 encore aucune migration aux utilisateurs. Les priorités suivent les vagues
-(vague 1 : P0 ; vagues 2 à 4 : P1 ; vagues 5 et 6 : P2 ; ensuite : P3),
+(vague 1 : P0 ; vagues 2 à 4 : P1 ; vagues 5 à 7 : P2 ; ensuite : P3),
 pour que `/drwil-lancer` propose les chantiers dans cet ordre. Chaque ligne
 cite les contrats candidats `v1:` qu'elle rend réels
 (`docs/intentions/catalogue-cycle-de-vie.md`, annexe). Un refactoring suit
@@ -87,6 +88,12 @@ Reporté par le demandeur le 2026-10-11 : la protection de master.
   s'installe lui-même, ou hooks générés au build) ; le contrôle
   `miroirs-gabarit` sert de filet pendant la bascule (v1:INI-003,
   v1:INI-005) — voir `docs/projets/journal.md` (2026-10-11).
+- [ ] [décision] [P1] Livrable en anglais seulement, mené avec la ligne
+  précédente pour ne renommer qu'une fois ; la langue du projet devient un
+  réglage (`lang`) — `docs/intentions/livrable-full-english.md`.
+- [ ] [IA] [P1] Retirer l'identifiant interne `DRWIL-012` des deux messages
+  livrés qui l'affichent (change une sortie), avec la ligne précédente —
+  voir `docs/projets/journal.md` (2026-10-11).
 - [ ] [décision] [P1] Refactoriser `packages/drwil/src/index.ts`
   (724 lignes) et `.githooks/etat.mjs` (533 lignes) selon la recette ;
   adopter le garde-fou de taille livré (`catalogue:QUA-001`) —
@@ -100,7 +107,7 @@ Reporté par le demandeur le 2026-10-11 : la protection de master.
 - [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
   légère décidée, modalités à définir — `docs/projets/entretien-sous-barriere-bloquante.md`.
 
-## Vague 5 — catalogue et profils : ce qui casse une compatibilité, avant toute publication
+## Vague 5 — catalogue et profils (ce qui casse une compatibilité)
 
 - [ ] [décision] [P2] Trancher les questions du catalogue (statuts,
   sévérité et applicabilité, porte avant publication, registre client,
@@ -111,13 +118,18 @@ Reporté par le demandeur le 2026-10-11 : la protection de master.
   renforcé ; DOGFOODING à part) : contrats applicables et sévérité
   choisis par profil (v1:CTR-014, v1:HOOK-006) — question 9 de
   `docs/intentions/catalogue-cycle-de-vie.md`.
-- [ ] [décision] [P2] Livrable entièrement en anglais (gabarit, CLI, hooks,
-  noms d'activités, configuration) — `docs/intentions/livrable-full-english.md`.
-- [ ] [IA] [P2] Retirer l'identifiant interne `DRWIL-012` des deux messages
-  livrés qui l'affichent (change une sortie) — voir
-  `docs/projets/journal.md` (2026-10-11).
 
-## Vague 6 — le produit
+## Vague 6 — la fabrique, en pilote dans ce dépôt
+
+Prérequis : la protection de master (vague 2), reportée le 2026-10-11 :
+aucune fusion autonome sans elle.
+
+- [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
+  mutation, rôles séparés, une session par fiche, auto-fusion LOW),
+  cadrée sur les chiffres de la vague 3 —
+  `docs/intentions/fabrique-autonome.md`.
+
+## Vague 7 — le produit, quand tout est opérationnel
 
 - [ ] [décision] [P2] Publication npm du kit, avec une porte avant
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) —
@@ -133,10 +145,10 @@ Reporté par le demandeur le 2026-10-11 : la protection de master.
   `chemins` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
   qui tourne au commit — voir `docs/projets/journal.md` (2026-10-05).
 
-## Après la vague 6
+## Après la vague 7
 
 Décidé le 2026-10-11 : le README décrit le cycle de gouvernance, que les
-vagues 4 à 6 modifient ; l'écrire avant serait le réécrire.
+vagues 4 à 7 modifient ; l'écrire avant serait le réécrire.
 
 - [ ] [IA] [P3] README à jour du cycle de gouvernance (lancement,
   fusion autorisée, forge) (v1:DOC-001, v1:DOC-003) — `docs/projets/readme-a-jour.md`.
@@ -153,10 +165,6 @@ vagues 4 à 6 modifient ; l'écrire avant serait le réécrire.
   contributeur externe puisse participer sans demander au mainteneur ;
   questions à trancher (langue, gabarit de PR, canal sécurité, contrats
   COM) — `docs/intentions/community-ready.md`.
-- [ ] [décision] [P3] Fabrique autonome graduée par le risque (forge,
-  outillage, mutation, rôles séparés, auto-fusion LOW), cadrée sur les
-  chiffres de la vague 3 —
-  `docs/intentions/fabrique-autonome.md`.
 - [ ] [humain] [P3] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projets/suites-kit-portable.md` (point 2).
 - [ ] [décision] [P3] V3 — investigation & reporting par agent : DRWIL
