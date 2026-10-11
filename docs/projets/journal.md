@@ -595,3 +595,32 @@ l'index ; texte intégral dans l'historique git
   s'exécutait) ; corrigée avant toute décision.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/lint-formateur-engines`).
+
+## 2026-10-11 — Non-régression continue : tests rattachés aux contrats
+
+- **Besoin** : un défaut corrigé gardé par un test seulement par
+  discipline ; 18 tests sur 254 portaient l'ID d'un contrat, lien exploité
+  nulle part (v1:TST-004).
+- **Décisions clés** : rattachement par le nom du test (ID en tête) et par
+  le champ « Tests » du contrat (des fichiers), cohérence contrôlée ; la
+  règle « défaut corrigé → test vu échouer » est une recette, pas un
+  contrôle ; rejeu sur la base seulement en cas d'échec en CI ; ce dépôt
+  d'abord, livraison aux projets équipés dans un chantier à part.
+  [décisions utilisateur]
+- **Résultat** :
+  - recette `docs/recettes/corriger-un-defaut.md`, citée dans `AGENTS.md`,
+    propre au dépôt ;
+  - `outils/verifier-tests-contrats.mjs` (contrôle `tests-contrats`) :
+    cohérence dans les deux sens, seuls les préfixes de contrat comptent
+    (les tests `DRWIL-…` citent des exigences de fiche) ; QUA-013, QUA-015,
+    QUA-016, QUA-017 listent leurs tests (10 rattachés) ; un rattachement
+    retiré fait échouer le contrôle (vérifié) ;
+  - en CI, un échec des contrôles est rejoué sur la base de la PR :
+    annotation « introduit par cette PR » ou « déjà présent », verdict
+    inchangé ; éprouvé sur la PR d'essai #48, fermée sans fusion.
+- **Relevé en route** : le hook de commit a trouvé un défaut du contrôle
+  (exemples de tests écrits dans des chaînes comptés comme tests), corrigé
+  en suivant la recette, test vu échouer d'abord. QUA-013 et QUA-015
+  ré-attestés par l'humain (empreinte changée par le champ « Tests »).
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/non-regression-continue`).

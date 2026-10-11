@@ -23,6 +23,24 @@ jobs:
         with:
           node-version: 22
       - run: node --version && npm test --workspace packages/drwil
+      # Non-régression (docs/projets/non-regression-continue.md) : sur une PR en échec, les mêmes
+      # contrôles sont rejoués sur la base de la PR pour dire si l'échec était déjà là. Le verdict ne
+      # change pas — le job reste en échec : un échec préexistant se corrige aussi, il ne s'excuse pas.
+      - name: Échec introduit par la PR ou déjà présent sur sa base ?
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git worktree add ../base "$BASE"
+          cd ../base
+          if ! npm ci --silent; then
+            echo "::warning::Base $BASE non rejouée (installation impossible) : origine de l'échec inconnue, jamais présumée."
+          elif node .githooks/run-checks.mjs > ../base-checks.log 2>&1; then
+            echo "::error::Échec introduit par cette PR : la base ($BASE) passe les mêmes contrôles."
+          else
+            echo "::warning::Échec déjà présent sur la base de la PR ($BASE) : pas introduit par cette PR, à corriger quand même."
+            grep -F "✗" ../base-checks.log || true
+          fi
   # Portabilité du kit (point 1 de docs/projets/suites-kit-portable.md) :
   # npm test de packages/drwil (pas la suite complète run-checks.mjs, qui
   # dépend de gitleaks) doit rester vert sur les trois OS.
