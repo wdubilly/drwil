@@ -482,7 +482,8 @@ d'origine entre parenthèses).
 - **Suites à décider** : `DRWIL-012` encore affiché par deux messages
   livrés ; supprimer la duplication elle-même (le dépôt s'installe
   lui-même, ou hooks générés au build) ; le contrôle juge l'arbre de
-  travail, pas seulement l'index ; outiller SEC-006 (`npm audit`).
+  travail, pas seulement l'index ; outiller SEC-006 (`npm audit`, fait le
+  même jour, voir plus bas).
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/depot-gabarit-identiques`).
 
@@ -503,3 +504,21 @@ d'origine entre parenthèses).
   et `git -c core.pager=cat status` reste refusé.
 - **Clôturé par** : la PR de ce chantier (branche `chantier/regle-git-c`),
   fusion manuelle choisie au lancement.
+
+## 2026-10-11 — SEC-006 prouvé par un audit des dépendances
+
+- **Besoin** : SEC-006 (pas de dépendance vulnérable connue) ne reposait
+  que sur une attestation humaine du 2026-10-09, sans note ni outil.
+- **Décisions clés** : une faille high ou critical bloque, moderate et low
+  sont affichées ; toutes les dépendances (production et développement) ;
+  registre injoignable = échec explicite « audit non exécuté », jamais
+  vert ; ce dépôt seulement (le gabarit invite déjà chaque projet à
+  déclarer son audit). [décisions utilisateur]
+- **Résultat** : `outils/audit-dependances.mjs` lit la sortie JSON de
+  `npm audit` (même code de sortie pour une faille et un registre
+  injoignable : seule la sortie les distingue) ; contrôle
+  `audit-dependances` au commit (si le manifeste, le verrou ou l'outil
+  changent), au push et en CI. SEC-006 passe en PASS sans attestation :
+  `drwil verify` rend 6 PASS, 5 ATTESTED. Sur ce dépôt : aucune faille.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/outiller-sec-006`).
