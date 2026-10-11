@@ -96,7 +96,7 @@ de sortie.
 **Raison** : Contourner un contrôle masque silencieusement une régression ou un vrai problème ; c'est l'opposé de QUA-013 (un contrôle qui ne tourne pas ne prouve rien).
 
 ## QUA-004 — Seuil de couverture de test
-**Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 85 % lignes, 60 % branches, 50 % fonctions (seuil de départ, relevé au fil de l'eau vers 100 % — voir `docs/projets/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projets/couverture-hooks.md`).
+**Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 85 % lignes, 60 % branches, 50 % fonctions (seuil de départ, relevé au fil de l'eau vers 100 % — voir `docs/projets/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projets/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).
 **Source de vérité** : `packages/drwil/package.json` (script `test:coverage`) et `package.json` (script `test:hooks:coverage`), options `c8`.
 **Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`).
