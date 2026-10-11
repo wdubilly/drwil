@@ -67,6 +67,7 @@ Carte complète : `docs/architecture.md`.
 | une route API | `backend/AGENTS.md` (si présent) | `docs/recettes/ajouter-une-route-api.md` |
 | un écran | `frontend/AGENTS.md` (si présent) | `docs/recettes/ajouter-un-ecran-front.md` |
 | refactor important | — | `docs/recettes/refactorer-sans-casser.md` |
+| un défaut à corriger | `docs/contrats.md` | `docs/recettes/corriger-un-defaut.md` |
 | déploiement | `docs/deploiement.md` (si présent) | `docs/recettes/deployer-en-prod.md` |
 
 | Si on te demande… | Lis d'abord | Recette |
