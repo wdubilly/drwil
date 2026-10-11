@@ -2,13 +2,7 @@
   "projectName": "drwil",
   "projectShort": "drwil",
   "lang": "fr",
-  "layers": [
-    "core",
-    "adapters",
-    "plugin-opencode",
-    "mcp-server",
-    "kit-ia-first"
-  ],
+  "layers": [],
   "contractPrefixes": [
     "SEC",
     "QUA"

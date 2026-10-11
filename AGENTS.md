@@ -86,6 +86,12 @@ Carte complète : `docs/architecture.md`.
   (seul `GOVERNANCE: PASS` vaut validation). `drwil attest` est une action
   **humaine** : un agent ne l'exécute jamais et n'écrit jamais d'attestation.
 - Activer les hooks (une fois par clone) : `git config core.hooksPath .githooks`
+- Installer le dépôt depuis son gabarit : `npm run installer-depot`
+  (`-- --dry-run` pour lister sans écrire). On n'édite que le gabarit
+  (`packages/drwil/templates/`), jamais une copie installée dans le dépôt
+  (`.githooks/`, `.claude/`, recettes…) : le contrôle `miroirs-gabarit`
+  refuse toute copie qui en diffère, hors écarts déclarés dans
+  `outils/miroirs.json`.
 
 ## Conventions
 

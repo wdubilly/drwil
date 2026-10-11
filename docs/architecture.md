@@ -20,7 +20,7 @@ Node.js 22 et plus récent (`engines` du paquet ; CI sur Node 22 et 24), TypeScr
 
 ## Les contrôles : `.githooks/`
 
-Copies, dans ce dépôt, des hooks livrés (identiques, vérifié par le contrôle `miroirs-gabarit`) :
+Copies, dans ce dépôt, des hooks livrés : installées depuis le gabarit par `npm run installer-depot` (`outils/installer-depot.mjs`), jamais éditées ici ; identiques, vérifié par le contrôle `miroirs-gabarit`. Les tests des hooks, eux, s'écrivent ici :
 
 - `.githooks/moteur.mjs` : moteur unique des contrôles, partagé par les hooks et `drwil verify` ; `.githooks/run-checks.mjs` l'exécute au commit (`pre-commit`), au push (`pre-push`) et en CI.
 - Contrôles du socle : `.githooks/check-docs.mjs` (doc et contrats cités), `.githooks/perimetre.mjs` (barrière de périmètre de la fiche active), `.githooks/check-control-coverage.mjs` (couverture CI de chaque contrôle).
@@ -29,7 +29,7 @@ Copies, dans ce dépôt, des hooks livrés (identiques, vérifié par le contrô
 
 ## Propre au dépôt (jamais livré)
 
-- `outils/` : `outils/verifier-miroirs.mjs` et sa liste `outils/miroirs.json` (dépôt et gabarit identiques, écarts déclarés), `outils/audit-dependances.mjs` (SEC-006).
+- `outils/` : `outils/installer-depot.mjs` (le dépôt s'installe depuis son gabarit avec la vraie CLI, sans toucher à `.drwil/` ni aux écarts déclarés), `outils/verifier-miroirs.mjs` et sa liste `outils/miroirs.json` (dépôt et gabarit identiques, écarts déclarés), `outils/audit-dependances.mjs` (SEC-006).
 - Forge : `.github/workflows/ia-first.yml` (CI : contrôles, tests du paquet sur Linux, Windows et macOS), `.github/ruleset-master.json` et `.github/scripts/verifier-ruleset.mjs` (protection de `master`, vérifiée en CI), `.github/CODEOWNERS`.
 
 ## Gouvernance de ce dépôt
