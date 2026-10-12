@@ -70,6 +70,7 @@ files:
   - .gitleaks.toml
   - .env.example
   - package.json
+  - package-lock.json
   - AGENTS.md
   - INSTALL.md
   - README.md
