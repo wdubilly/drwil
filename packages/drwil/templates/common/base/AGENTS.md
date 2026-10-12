@@ -70,7 +70,7 @@ Full map and stack: `docs/architecture.md`.
   exact results, remaining limits and ambiguities. Present as proven only
   what a check actually verifies; the rest is labeled "human" or "not
   verified".
-- **Handoff**: before handing back, update the "Resuming work" section of
+- **Hand-off**: before handing back, update the "Hand-off" section of
   the touched project's brief (dated last state, uncommitted work, next
   step with its marker): that's what another agent, tool or person reads
   to pick it back up cold. Project lifecycle: `docs/ia-first.md`,

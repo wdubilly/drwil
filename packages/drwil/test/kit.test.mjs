@@ -2418,3 +2418,11 @@ test("caractérisation : git introuvable, l'installation se fait et le dit, sans
   assert.ok(existsSync(join(dir, "AGENTS.md")));
   assert.ok(!existsSync(join(dir, ".git")));
 });
+
+test("QUA-015 : une fiche écrite d'après le modèle livré a la section de passation que le contrôle attend", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, lang: "en", git: false }));
+  writeFileSync(join(dir, "docs/projects/une-fiche.md"), read(dir, "docs/projects/model-brief.md").replaceAll("YYYY-MM-DD", "2026-10-12"));
+  const r = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
+  assert.doesNotMatch(r.stdout + r.stderr, /Hand-off/);
+});

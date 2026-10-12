@@ -21,7 +21,7 @@ request, instead of direct commits on the main branch.
 ## During the work
 
 - The brief is updated **on the branch**, just like for direct work on the
-  main branch (Status, Increments, Resuming work).
+  main branch (Status, Increments, Hand-off).
 - The brief's Status stays "in progress" as long as the branch isn't
   merged, even if the work on it is finished: "done" is only said once
   the merge has actually happened. An index (`docs/projects/pending.md`)

@@ -11,5 +11,5 @@
 ## Checks
 
 - [ ] `.githooks/run-checks.mjs` (or `node .githooks/run-checks.mjs`) green
-- [ ] Brief up to date (Status, Resuming work) — Status only becomes "done"
+- [ ] Brief up to date (Status, Hand-off) — Status only becomes "done"
       after this merge request is merged

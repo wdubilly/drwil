@@ -51,7 +51,7 @@ its own)
 - **Increment 1 — title** [AI|human]: content. Exit criterion: what proves the
   increment is done (green tests, a passing check...).
 
-## 7. Resuming work
+## 7. Hand-off
 
 - **Last state** (YYYY-MM-DD): ...
 - **Uncommitted work**: ...
