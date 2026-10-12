@@ -1,6 +1,6 @@
 # Projet : la CLI en anglais (chantier C du livrable en anglais)
 
-**Statut** : en cours (2026-10-12) — lots 1 à 3 faits, lot 4 à faire.
+**Statut** : en cours (2026-10-12) — lots 1 à 4 faits, clôture à faire.
 **Risque** : HIGH
 
 <!-- scope
@@ -188,6 +188,8 @@ Aucun.
   (`--force`) ; `DRWIL-012` retiré des messages livrés. Docs alignées dans le
   même commit (README du paquet et du dépôt, recettes, carte) ; la note de
   version est livrée dans le paquet.
+- **Lot 4** (2026-10-12) : version 0.5.0 (racine, paquet, verrou) et note
+  de version (`packages/drwil/CHANGELOG.md`) ; plus aucune référence à
+  `apply` ni aux anciens noms hors note de version et journal.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 4, version 0.5.0 et note de version ;
-  [humain] ré-attester QUA-013 avant la clôture.
+- **Prochaine étape** : [humain] ré-attester QUA-013 ; [IA] clôture.
