@@ -1116,24 +1116,24 @@ test("alerte CI cassée sur la branche principale : job dédié livré, GitHub e
   const dirGh = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dirGh, ci: "github", git: false }));
   const gh = read(dirGh, ".github/workflows/ia-first.yml");
-  assert.match(gh, /alerter-si-ci-cassee:/);
+  assert.match(gh, /alert-if-ci-broken:/);
   assert.match(gh, /needs:\s*checks/);
   assert.match(gh, /github\.event_name == 'push'/);
   assert.match(gh, /github\.event\.repository\.default_branch/);
   assert.match(gh, /needs\.checks\.result == 'failure'/);
   assert.match(gh, /gh issue create/);
-  assert.match(gh, /pas de doublon/);
+  assert.match(gh, /no duplicate/);
 
   // GitLab : stage dédiée après `test`, déclenchée seulement sur la branche
   // par défaut et seulement en cas d'échec d'un job de la stage `test`.
   const dirGl = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dirGl, ci: "gitlab", git: false }));
   const gl = read(dirGl, ".gitlab-ci.yml");
-  assert.match(gl, /alerter-si-ci-cassee:/);
-  assert.match(gl, /stage: alerte/);
+  assert.match(gl, /alert-if-ci-broken:/);
+  assert.match(gl, /stage: alert$/m);
   assert.match(gl, /CI_COMMIT_BRANCH == \$CI_DEFAULT_BRANCH/);
   assert.match(gl, /when: on_failure/);
-  assert.match(gl, /pas de doublon/);
+  assert.match(gl, /no duplicate/);
 
   // Les deux restent couverts par QUA-013 (le nouveau job n'y casse rien).
   for (const dir of [dirGh, dirGl]) {
@@ -1489,35 +1489,35 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
 test("créer une release : détection du bump semver (Conventional Commits, best-effort)", async () => {
   // import() dynamique : passer l'URL file:// telle quelle (pas de conversion
   // en chemin OS) — un chemin Windows brut (d:\...) fait planter le loader ESM.
-  const { detecterBump, versionSuivante } = await import(
+  const { detectBump, nextVersion } = await import(
     new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url)
   );
 
-  assert.equal(detecterBump([]), null, "aucun commit : rien à publier");
+  assert.equal(detectBump([]), null, "aucun commit : rien à publier");
   assert.equal(
-    detecterBump([{ sujet: "Manifeste des fichiers installés", corps: "" }]),
+    detectBump([{ subject: "Manifeste des fichiers installés", body: "" }]),
     "patch",
     "aucun préfixe reconnu : patch par défaut",
   );
-  assert.equal(detecterBump([{ sujet: "fix: corrige X", corps: "" }]), "patch");
+  assert.equal(detectBump([{ subject: "fix: corrige X", body: "" }]), "patch");
   assert.equal(
-    detecterBump([
-      { sujet: "feat: ajoute Y", corps: "" },
-      { sujet: "fix: corrige X", corps: "" },
+    detectBump([
+      { subject: "feat: ajoute Y", body: "" },
+      { subject: "fix: corrige X", body: "" },
     ]),
     "minor",
     "un feat l'emporte sur un simple fix",
   );
-  assert.equal(detecterBump([{ sujet: "feat!: casse la compat", corps: "" }]), "major", "rupture annoncée (!) prioritaire");
+  assert.equal(detectBump([{ subject: "feat!: casse la compat", body: "" }]), "major", "rupture annoncée (!) prioritaire");
   assert.equal(
-    detecterBump([{ sujet: "feat: ajoute Y", corps: "BREAKING CHANGE: change le format" }]),
+    detectBump([{ subject: "feat: ajoute Y", body: "BREAKING CHANGE: change le format" }]),
     "major",
     "rupture annoncée dans le corps aussi détectée",
   );
 
-  assert.equal(versionSuivante("v1.2.3", "patch"), "v1.2.4");
-  assert.equal(versionSuivante("v1.2.3", "minor"), "v1.3.0");
-  assert.equal(versionSuivante("v1.2.3", "major"), "v2.0.0");
+  assert.equal(nextVersion("v1.2.3", "patch"), "v1.2.4");
+  assert.equal(nextVersion("v1.2.3", "minor"), "v1.3.0");
+  assert.equal(nextVersion("v1.2.3", "major"), "v2.0.0");
 });
 
 test("créer une release : module optionnel (pas copié par défaut), recette/skill livrés en FR et EN, --dry-run sans réseau", async () => {
@@ -1549,7 +1549,7 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
 });
 
 test("créer une release : repère les paquets npm publiables (package.json suivi, non private) pour le tarball de release", async () => {
-  const { paquetsPublics } = await import(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
+  const { publicPackages } = await import(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   // racine privée (monorepo), un paquet publiable dans packages/truc, un paquet explicitement privé ailleurs.
@@ -1564,7 +1564,7 @@ test("créer une release : repère les paquets npm publiables (package.json suiv
   const cwdAvant = process.cwd();
   process.chdir(dir);
   try {
-    const paquets = paquetsPublics();
+    const paquets = publicPackages();
     assert.deepEqual(paquets.sort(), ["packages/truc"], "seul le paquet non private avec un name est retenu");
   } finally {
     process.chdir(cwdAvant);
@@ -2245,38 +2245,38 @@ test("paquet npm : aucun fichier du gabarit n'est retiré par npm, le .gitignore
 
 // Un seul numéro de version (docs/projects/journal.md, 2026-10-06).
 test("version unique : la release suit package.json et refuse un numéro déjà publié ou en recul ; --version lit package.json", async () => {
-  const { deciderVersion } = await import(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
-  const v = (version) => [{ dossier: "packages/drwil", version }];
-  assert.deepEqual(deciderVersion({ dernier: "v0.2.0", bump: "patch", versions: v("0.3.0"), tagsExistants: ["v0.2.0"] }), {
-    prochain: "v0.3.0",
+  const { decideVersion } = await import(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
+  const v = (version) => [{ dir: "packages/drwil", version }];
+  assert.deepEqual(decideVersion({ latest: "v0.2.0", bump: "patch", versions: v("0.3.0"), existingTags: ["v0.2.0"] }), {
+    next: "v0.3.0",
     source: "package.json (packages/drwil)",
   });
   assert.match(
-    deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.1"), tagsExistants: ["v0.2.1"] }).erreur,
+    decideVersion({ latest: "v0.2.1", bump: "patch", versions: v("0.2.1"), existingTags: ["v0.2.1"] }).error,
     /v0\.2\.1 existe déjà/,
   );
   assert.match(
-    deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.0"), tagsExistants: [] }).erreur,
+    decideVersion({ latest: "v0.2.1", bump: "patch", versions: v("0.2.0"), existingTags: [] }).error,
     /n'est pas supérieure au dernier tag/,
   );
   assert.match(
-    deciderVersion({
-      dernier: null,
+    decideVersion({
+      latest: null,
       bump: "patch",
       versions: [
-        { dossier: "a", version: "1.0.0" },
-        { dossier: "b", version: "1.1.0" },
+        { dir: "a", version: "1.0.0" },
+        { dir: "b", version: "1.1.0" },
       ],
-    }).erreur,
+    }).error,
     /en désaccord/,
   );
-  assert.match(deciderVersion({ dernier: null, bump: "patch", versions: v(undefined) }).erreur, /non semver/);
+  assert.match(decideVersion({ latest: null, bump: "patch", versions: v(undefined) }).error, /non semver/);
   assert.deepEqual(
-    deciderVersion({ dernier: "v1.2.3", bump: "minor", versions: [] }),
-    { prochain: "v1.3.0", source: "commits" },
+    decideVersion({ latest: "v1.2.3", bump: "minor", versions: [] }),
+    { next: "v1.3.0", source: "commits" },
     "sans paquet npm : calcul d'après les commits, inchangé",
   );
-  assert.equal(deciderVersion({ dernier: "v1.2.3", bump: null, versions: v("9.9.9") }), null, "aucun commit : rien à publier");
+  assert.equal(decideVersion({ latest: "v1.2.3", bump: null, versions: v("9.9.9") }), null, "aucun commit : rien à publier");
 
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));

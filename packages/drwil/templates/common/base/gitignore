@@ -1,9 +1,9 @@
-# Secrets et configuration locale
+# Secrets and local configuration
 .env
 .env.local
 *.local
 
-# Dépendances et builds
+# Dependencies and builds
 node_modules/
 dist/
 build/
@@ -14,27 +14,27 @@ __pycache__/
 *.pyc
 .venv/
 
-# Résultats de tests et de couverture
+# Test and coverage results
 coverage/
 .coverage
 .coverage.*
 htmlcov/
 
-# Réglages d'outils IA : les réglages d'équipe (permissions, hooks) restent
-# versionnés ; les préférences personnelles ne le sont pas.
+# AI tool settings: team settings (permissions, hooks) stay versioned;
+# personal preferences do not.
 .claude/settings.local.json
 
-# Système
+# System
 .DS_Store
 
-# Évidences de `drwil verify --evidence` (une par exécution, locales) ; les attestations
-# humaines (`drwil attest`) restent versionnées : elles se relisent en PR.
+# Evidence of `drwil verify --evidence` (one per run, local); human attestations
+# (`drwil attest`) stay versioned: they are reviewed in PRs.
 .drwil/evidence/*
 !.drwil/evidence/attestations/
 
-# État de gouvernance runtime (activité et attente actives de ce clone) : local,
-# jamais versionné — la reprise passe par la fiche versionnée (docs/ia-first.md).
+# Runtime governance state (active activity and brief of this clone): local,
+# never versioned — resuming goes through the versioned brief (docs/ia-first.md).
 .drwil/state.json
-# Empreinte du dernier rappel court injecté à l'agent (`node .githooks/state.mjs reminder`) :
-# locale comme l'état, pour ne le réinjecter que s'il a changé.
+# Fingerprint of the last short reminder injected to the agent (`node .githooks/state.mjs reminder`):
+# local like the state, so it is only reinjected when it changed.
 .drwil/reminder.json

@@ -42,4 +42,4 @@ version"), not automatically at each merge.
 Accepted limit: designed for GitHub (`gh release create`). On GitLab, the
 Git tag is posted the same way (`git tag` + `git push`), but the release
 note has to be created through GitLab's Releases API (not covered here —
-to adapt, best effort as for `alerter-si-ci-cassee`).
+to adapt, best effort as for `alert-if-ci-broken`).

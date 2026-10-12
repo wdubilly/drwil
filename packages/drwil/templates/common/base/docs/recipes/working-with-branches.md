@@ -78,7 +78,7 @@ request, instead of direct commits on the main branch.
   time, not when CI replays an already-made push (a merge landing on the
   main branch is legitimate).
 - If the main branch CI breaks anyway (merge landed too fast,
-  flakiness...): a dedicated CI job (`alerter-si-ci-cassee`, GitHub and
+  flakiness...): a dedicated CI job (`alert-if-ci-broken`, GitHub and
   GitLab) automatically opens an issue linking to the failed run — only
   on the main branch, only when the checks failed, without creating a
   duplicate if an equivalent issue is already open. This job alerts, it

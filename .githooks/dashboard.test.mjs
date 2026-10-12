@@ -24,7 +24,7 @@ function generer(fichiers, args = [], sortie = "docs/dashboard.html") {
   }
   const r = spawnSync(process.execPath, [SCRIPT, ...args], { cwd: racine, encoding: "utf8" });
   assert.equal(r.status, 0, r.stderr);
-  assert.equal(r.stdout, `Tableau de bord généré : ${sortie}\n`);
+  assert.ok([`Tableau de bord généré : ${sortie}\n`, `Dashboard generated: ${sortie}\n`].includes(r.stdout), r.stdout);
   return readFileSync(join(racine, sortie), "utf8");
 }
 
@@ -80,7 +80,7 @@ test("projet complet en français : index, fiches et lots, contrats, audits, con
   assert.match(html, /<html lang="fr">/);
   assert.match(html, /Tableau de bord — Démo &lt;x&gt;/);
   assert.match(html, /☐ \[IA\] ouvert &amp; à faire/);
-  assert.match(html, /class="fait">☑ \[IA\] fait/);
+  assert.match(html, /class="done">☑ \[IA\] fait/);
   assert.match(html, /Fiche A <small>\(<code>docs\/projects\/a\.md<\/code>/);
   assert.match(html, /Statut : en cours\./);
   assert.match(html, /\[IA\]<\/span> <strong>Lot 1<\/strong> — premier/);
@@ -110,9 +110,9 @@ test("projet vide en anglais, dossiers réglés : chaque section dit son absence
   assert.match(html, /<html lang="en">/);
   assert.match(html, /Dashboard — /);
   assert.match(html, /\(no checkbox found\)/);
-  assert.match(html, /\(no fiche\)/);
+  assert.match(html, /\(no brief\)/);
   assert.match(html, /Installed \(regles\.md — project baseline\)<\/h3><p>\(none\)/);
-  assert.match(html, /In the catalogue, not installed \(docs\/contracts-catalog\.md\)<\/h3><p>\(none\)/);
+  assert.match(html, /In the catalog, not installed \(docs\/contracts-catalog\.md\)<\/h3><p>\(none\)/);
   assert.match(html, /Last scan : 2999-01-01<\/p>/);
   assert.match(html, /Scope : all<\/p>/);
   assert.match(html, /\(\.drwil\/usage\.jsonl missing/);

@@ -5,7 +5,7 @@ import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync }
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { deciderVersion, detecterBump, paquetsPublics, versionsPaquets, versionSuivante } from "./create-release.mjs";
+import { decideVersion, detectBump, publicPackages, packageVersions, nextVersion } from "./create-release.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -66,49 +66,49 @@ function chemin({ gh = null, npm = null } = {}) {
 const lancer = (racine, args, PATH) =>
   spawnSync(process.execPath, [SCRIPT, ...args], { cwd: racine, encoding: "utf8", env: { ...process.env, PATH } });
 
-test("detecterBump : rien sans commit, patch par défaut, minor sur feat, major sur rupture", () => {
-  assert.equal(detecterBump([]), null);
-  assert.equal(detecterBump([{ sujet: "divers", corps: "" }]), "patch");
+test("detectBump : rien sans commit, patch par défaut, minor sur feat, major sur rupture", () => {
+  assert.equal(detectBump([]), null);
+  assert.equal(detectBump([{ subject: "divers", body: "" }]), "patch");
   assert.equal(
-    detecterBump([
-      { sujet: "feat(x): a", corps: "" },
-      { sujet: "fix: b", corps: "" },
+    detectBump([
+      { subject: "feat(x): a", body: "" },
+      { subject: "fix: b", body: "" },
     ]),
     "minor",
   );
-  assert.equal(detecterBump([{ sujet: "fix!: a", corps: "" }]), "major");
-  assert.equal(detecterBump([{ sujet: "fix: a", corps: "BREAKING CHANGE: b" }]), "major");
-  assert.equal(detecterBump([{ sujet: "BREAKING CHANGE partout", corps: "" }]), "major");
+  assert.equal(detectBump([{ subject: "fix!: a", body: "" }]), "major");
+  assert.equal(detectBump([{ subject: "fix: a", body: "BREAKING CHANGE: b" }]), "major");
+  assert.equal(detectBump([{ subject: "BREAKING CHANGE partout", body: "" }]), "major");
 });
 
-test("versionSuivante : depuis rien ou un tag, chaque bump ; numéros illisibles à zéro", () => {
-  assert.equal(versionSuivante(null, "patch"), "v0.0.1");
-  assert.equal(versionSuivante("v1.2.3", "major"), "v2.0.0");
-  assert.equal(versionSuivante("v1.2.3", "minor"), "v1.3.0");
-  assert.equal(versionSuivante("v1.2.x", "patch"), "v1.2.1");
+test("nextVersion : depuis rien ou un tag, chaque bump ; numéros illisibles à zéro", () => {
+  assert.equal(nextVersion(null, "patch"), "v0.0.1");
+  assert.equal(nextVersion("v1.2.3", "major"), "v2.0.0");
+  assert.equal(nextVersion("v1.2.3", "minor"), "v1.3.0");
+  assert.equal(nextVersion("v1.2.x", "patch"), "v1.2.1");
 });
 
-test("deciderVersion : commits seuls, paquets en désaccord, non semver, tag existant ou pas supérieur", () => {
-  assert.equal(deciderVersion({ dernier: null, bump: null }), null);
-  assert.deepEqual(deciderVersion({ dernier: null, bump: "minor" }), { prochain: "v0.1.0", source: "commits" });
-  assert.deepEqual(deciderVersion({ dernier: "v1.0.0", bump: "minor" }), { prochain: "v1.1.0", source: "commits" });
-  const v = (version, dossier = "p") => ({ dossier, version });
-  assert.match(deciderVersion({ bump: "patch", versions: [v("1.0.0", "a"), v("2.0.0", "b")] }).erreur, /désaccord.*a@1\.0\.0, b@2\.0\.0/);
-  assert.match(deciderVersion({ bump: "patch", versions: [v(null)] }).erreur, /non semver \(null\) dans p\/package\.json/);
-  assert.match(deciderVersion({ bump: "patch", versions: [v("1.0.0")], tagsExistants: ["v1.0.0"] }).erreur, /v1\.0\.0 existe déjà/);
+test("decideVersion : commits seuls, paquets en désaccord, non semver, tag existant ou pas supérieur", () => {
+  assert.equal(decideVersion({ latest: null, bump: null }), null);
+  assert.deepEqual(decideVersion({ latest: null, bump: "minor" }), { next: "v0.1.0", source: "commits" });
+  assert.deepEqual(decideVersion({ latest: "v1.0.0", bump: "minor" }), { next: "v1.1.0", source: "commits" });
+  const v = (version, dossier = "p") => ({ dir: dossier, version });
+  assert.match(decideVersion({ bump: "patch", versions: [v("1.0.0", "a"), v("2.0.0", "b")] }).error, /désaccord.*a@1\.0\.0, b@2\.0\.0/);
+  assert.match(decideVersion({ bump: "patch", versions: [v(null)] }).error, /non semver \(null\) dans p\/package\.json/);
+  assert.match(decideVersion({ bump: "patch", versions: [v("1.0.0")], existingTags: ["v1.0.0"] }).error, /v1\.0\.0 existe déjà/);
   assert.match(
-    deciderVersion({ dernier: "v1.0.1", bump: "patch", versions: [v("1.0.0")] }).erreur,
+    decideVersion({ latest: "v1.0.1", bump: "patch", versions: [v("1.0.0")] }).error,
     /n'est pas supérieure au dernier tag v1\.0\.1/,
   );
-  assert.match(deciderVersion({ dernier: "v1.0.0", bump: "patch", versions: [v("1.0.0")] }).erreur, /n'est pas supérieure/);
-  assert.deepEqual(deciderVersion({ dernier: "v0.9.9", bump: "patch", versions: [v("1.0.0", "a"), v("1.0.0", "b")] }), {
-    prochain: "v1.0.0",
+  assert.match(decideVersion({ latest: "v1.0.0", bump: "patch", versions: [v("1.0.0")] }).error, /n'est pas supérieure/);
+  assert.deepEqual(decideVersion({ latest: "v0.9.9", bump: "patch", versions: [v("1.0.0", "a"), v("1.0.0", "b")] }), {
+    next: "v1.0.0",
     source: "package.json (a, b)",
   });
-  assert.deepEqual(deciderVersion({ dernier: "vx", bump: "patch", versions: [v("1.0.0")] }).prochain, "v1.0.0");
+  assert.deepEqual(decideVersion({ latest: "vx", bump: "patch", versions: [v("1.0.0")] }).next, "v1.0.0");
 });
 
-test("paquetsPublics et versionsPaquets : privés, sans nom, illisibles ignorés ; hors dépôt git, aucun", () => {
+test("publicPackages et packageVersions : privés, sans nom, illisibles ignorés ; hors dépôt git, aucun", () => {
   const { racine } = depot({
     "package.json": JSON.stringify({ name: "racine", private: true }),
     "a/package.json": JSON.stringify({ name: "a", version: "1.0.0" }),
@@ -119,14 +119,14 @@ test("paquetsPublics et versionsPaquets : privés, sans nom, illisibles ignorés
   const avant = process.cwd();
   try {
     process.chdir(racine);
-    assert.deepEqual(paquetsPublics(), ["a", "e"]);
-    assert.deepEqual(versionsPaquets(["a", "e", "absent"]), [
-      { dossier: "a", version: "1.0.0" },
-      { dossier: "e", version: null },
-      { dossier: "absent", version: null },
+    assert.deepEqual(publicPackages(), ["a", "e"]);
+    assert.deepEqual(packageVersions(["a", "e", "absent"]), [
+      { dir: "a", version: "1.0.0" },
+      { dir: "e", version: null },
+      { dir: "absent", version: null },
     ]);
     process.chdir(tmp());
-    assert.deepEqual(paquetsPublics(), []);
+    assert.deepEqual(publicPackages(), []);
   } finally {
     process.chdir(avant);
   }
@@ -207,4 +207,14 @@ test("gh indisponible : le tag reste, la commande de rattrapage est donnée (ave
   const avec = depot({ "a/package.json": JSON.stringify({ name: "a", version: "1.0.0" }) });
   r = lancer(avec.racine, [], chemin({ npm: 'echo "a-1.0.0.tgz"' }));
   assert.match(r.stderr, /gh release create v1\.0\.0 --generate-notes .*a-1\.0\.0\.tgz/);
+});
+
+test("--dry-run en anglais : messages selon .drwil/ia-first.json", () => {
+  const { racine } = depot({ ".drwil/ia-first.json": JSON.stringify({ lang: "en" }) }, ["feat: a"]);
+  const r = lancer(racine, ["--dry-run"], process.env.PATH);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(
+    r.stdout,
+    /latest tag: \(none\)\n.*detected bump: minor \(1 commit\(s\) analysed\)\n.*next version: v0\.1\.0 \(source: commits\)\n.*--dry-run: no tag nor release created/,
+  );
 });

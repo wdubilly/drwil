@@ -1,6 +1,6 @@
 # Projet : le cœur en anglais (chantier A du livrable en anglais)
 
-**Statut** : en cours (2026-10-12) — lots 1 et 2 faits, lots 3 et 4 à faire.
+**Statut** : en cours (2026-10-12) — lots 1 à 3 faits, lot 4 à faire.
 **Risque** : HIGH
 
 <!-- scope
@@ -227,11 +227,14 @@ Aucun.
 
 ## 8. Reprise
 
-- **Dernier état** (2026-10-12) : lots 1 et 2 faits ; lot 3 en cours : hooks
-  git et hooks Claude Code en anglais (identifiants, commentaires, messages
-  en dictionnaire fr/en, textes français inchangés) ; la CLI garde son
-  modèle français derrière un pont (`packages/drwil/src/verify.ts`).
+- **Dernier état** (2026-10-12) : lots 1, 2 et 3 faits. Lot 3 : hooks,
+  hooks Claude Code, modules optionnels, CI, `gitignore`, `.gitleaks.toml`,
+  `.env.example` et réglages Claude en anglais ; messages en dictionnaire
+  fr/en (textes français inchangés) ; la CLI garde son modèle français
+  derrière un pont (`packages/drwil/src/verify.ts`). Gardés tels quels, car
+  visibles hors des hooks : statuts du moteur, identifiants de contrôles,
+  sévérités, options `--fiche` / `--demande`, mots tapés `LANCER` /
+  `FUSION`, directive `contraste-fond:` du module front-quality.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] fin du lot 3 : modules optionnels, CI,
-  `gitignore`, `.gitleaks.toml`, `.env.example`, réglages Claude ; puis lot 4
-  (version mineure et note de version comprises).
+- **Prochaine étape** : [IA] lot 4, limites laissées par B (version
+  mineure et note de version comprises).
