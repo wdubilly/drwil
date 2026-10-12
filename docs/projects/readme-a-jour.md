@@ -8,6 +8,8 @@ files:
   - README.md
   - packages/drwil/README.md
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/docs/ia-first.md
+  - docs/ia-first.md
 -->
 
 (cadrage : le README de la racine (vitrine GitHub) et celui du paquet
@@ -75,6 +77,14 @@ toujours exacts.
   CLOSING, `drwil init` (plus d'`apply`), `/drwil-start`. Les restes de
   français de `README.md` (titres SEC-007, QUA-011) sont traduits.
   [décision utilisateur]
+
+- **2026-10-12 — Ton technico-commercial et restes à corriger**
+  (demandeur) : la section « gain » est écrite pour convaincre un
+  décideur technique (problème, garantie, preuve vérifiable), sans chiffre
+  non mesuré. Élargissement du cadrage : `docs/ia-first.md` du gabarit (et
+  sa copie dans le dépôt) cite encore `lancer`, `fiches --json` et
+  `<ACTIVITE>`, des restes du passage en anglais. La section française du
+  README du paquet reçoit aussi le cycle. [décision utilisateur]
 
 ## Contrats concernés
 
