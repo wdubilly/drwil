@@ -22,14 +22,14 @@ import {
   init,
   apply,
   uninstall,
-  resoudreDerive,
+  resolveDrift,
   verify,
-  formaterVerdict,
+  formatVerdict,
   verdictJson,
   doctor,
-  auditerApply,
-  formaterAudit,
-  attester,
+  auditApply,
+  formatAudit,
+  attest,
 } from "../dist/index.js";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
@@ -882,21 +882,21 @@ test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .
   // rien à résoudre si pas de dérive (autre fichier, comparé au modèle exact).
 
   // confirmation refusée : le fichier n'est jamais réécrit, pas de .bak, signalé dans `ignores`.
-  let rapport = await quiet(() => resoudreDerive({ targetDir: dir }, () => false));
-  assert.ok(rapport.ignores.includes(cible), rapport.ignores.join(","));
-  assert.ok(!rapport.resolus.length);
+  let rapport = await quiet(() => resolveDrift({ targetDir: dir }, () => false));
+  assert.ok(rapport.ignored.includes(cible), rapport.ignored.join(","));
+  assert.ok(!rapport.resolved.length);
   assert.equal(read(dir, cible), "// personnalisé par le projet\n" + original, "jamais réécrit sans confirmation");
   assert.ok(!existsSync(join(dir, `${cible}.bak`)));
 
   // confirmation acceptée : réécrit, .bak créé avec l'ancien contenu, diff transmis au confirmateur.
   let diffRecu = "";
   rapport = await quiet(() =>
-    resoudreDerive({ targetDir: dir }, (rel, diff) => {
+    resolveDrift({ targetDir: dir }, (rel, diff) => {
       diffRecu = diff;
       return rel === cible;
     }),
   );
-  assert.ok(rapport.resolus.includes(cible), rapport.resolus.join(","));
+  assert.ok(rapport.resolved.includes(cible), rapport.resolved.join(","));
   assert.match(diffRecu, /personnalisé par le projet/);
   assert.equal(read(dir, cible), original, "réécrit avec le contenu du modèle");
   assert.equal(read(dir, `${cible}.bak`), "// personnalisé par le projet\n" + original, ".bak garde l'ancien contenu");
@@ -904,25 +904,25 @@ test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .
   // plus rien à résoudre une fois réécrit (confirmateur jamais appelé).
   let appele = false;
   rapport = await quiet(() =>
-    resoudreDerive({ targetDir: dir }, () => {
+    resolveDrift({ targetDir: dir }, () => {
       appele = true;
       return true;
     }),
   );
   assert.ok(!appele);
-  assert.ok(!rapport.resolus.length && !rapport.ignores.length);
+  assert.ok(!rapport.resolved.length && !rapport.ignored.length);
 
   // --forcer : écrase sans passer par le confirmateur (dérive réintroduite pour le test).
   writeFileSync(join(dir, cible), "// re-personnalisé\n" + original);
   appele = false;
   rapport = await quiet(() =>
-    resoudreDerive({ targetDir: dir, forcer: true }, () => {
+    resolveDrift({ targetDir: dir, force: true }, () => {
       appele = true;
       return true;
     }),
   );
   assert.ok(!appele, "--forcer n'appelle jamais le confirmateur");
-  assert.ok(rapport.resolus.includes(cible));
+  assert.ok(rapport.resolved.includes(cible));
   assert.equal(read(dir, cible), original);
 });
 
@@ -931,16 +931,16 @@ test("lot 2 (résolution de dérive) : jamais appliquée automatiquement par ini
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
 
   // rien n'a dérivé juste après init() : aucune résolution nécessaire.
-  let rapport = await quiet(() => resoudreDerive({ targetDir: dir, forcer: true }));
-  assert.ok(!rapport.resolus.length && !rapport.ignores.length);
+  let rapport = await quiet(() => resolveDrift({ targetDir: dir, force: true }));
+  assert.ok(!rapport.resolved.length && !rapport.ignored.length);
 
-  // un fichier mécanique absent (supprimé par le projet) n'est jamais recréé par resoudreDerive.
+  // un fichier mécanique absent (supprimé par le projet) n'est jamais recréé par resolveDrift.
   const absent = join(dir, ".githooks/check-docs.mjs");
   const fs = await import("node:fs/promises");
   await fs.rm(absent);
-  rapport = await quiet(() => resoudreDerive({ targetDir: dir, forcer: true }));
-  assert.ok(!rapport.resolus.includes(".githooks/check-docs.mjs"));
-  assert.ok(!existsSync(absent), "jamais recréé par resoudreDerive");
+  rapport = await quiet(() => resolveDrift({ targetDir: dir, force: true }));
+  assert.ok(!rapport.resolved.includes(".githooks/check-docs.mjs"));
+  assert.ok(!existsSync(absent), "jamais recréé par resolveDrift");
 });
 
 test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne version du kit, jamais modifié, est supprimé par init()/apply()", async () => {
@@ -1609,13 +1609,13 @@ const contrat = (id, champs) => `## ${id} — titre ${id}\n**Règle** : exigence
 test("verify : PASS (exit 0) quand toutes les obligations sont prouvées par un contrôle", async () => {
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`"));
   const v = await verify({ targetDir: dir });
-  assert.equal(v.statut, "PASS");
+  assert.equal(v.status, "PASS");
   assert.equal(v.code, 0);
   assert.deepEqual(
-    v.contrats.map((k) => [k.id, k.statut]),
+    v.contracts.map((k) => [k.id, k.status]),
     [["QUA-001", "PASS"]],
   );
-  assert.match(formaterVerdict(v), /GOVERNANCE: PASS/);
+  assert.match(formatVerdict(v), /GOVERNANCE: PASS/);
   const cli = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify"], {
     cwd: dir,
     encoding: "utf8",
@@ -1627,10 +1627,10 @@ test("verify : PASS (exit 0) quand toutes les obligations sont prouvées par un 
 test("verify : FAIL (exit 1) dès qu'une obligation échoue, avec la cause visible", async () => {
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `ko`"));
   const v = await verify({ targetDir: dir });
-  assert.equal(v.statut, "FAIL");
+  assert.equal(v.status, "FAIL");
   assert.equal(v.code, 1);
-  assert.equal(v.contrats.find((k) => k.id === "QUA-002").statut, "FAIL");
-  const sortie = formaterVerdict(v);
+  assert.equal(v.contracts.find((k) => k.id === "QUA-002").status, "FAIL");
+  const sortie = formatVerdict(v);
   assert.match(sortie, /ko : échec/);
   assert.match(sortie, /cause du rouge/);
   assert.match(sortie, /GOVERNANCE: FAIL/);
@@ -1641,13 +1641,13 @@ test("verify : MANUAL (exit 1, jamais PASS) pour une preuve humaine, partie auto
     contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture humaine") + contrat("QUA-002", "**Manuel** : appréciation"),
   );
   const v = await verify({ targetDir: dir });
-  assert.equal(v.statut, "MANUAL");
+  assert.equal(v.status, "MANUAL");
   assert.equal(v.code, 1, "MANUAL empêche le 0 sans être une erreur technique");
   assert.deepEqual(
-    v.contrats.map((k) => k.statut),
+    v.contracts.map((k) => k.status),
     ["MANUAL", "MANUAL"],
   );
-  const sortie = formaterVerdict(v);
+  const sortie = formatVerdict(v);
   assert.match(sortie, /ok : ok \(automatisé\)/);
   assert.match(sortie, /humain requis : relecture humaine/);
   assert.match(sortie, /GOVERNANCE: MANUAL REVIEW REQUIRED/);
@@ -1657,36 +1657,36 @@ test("verify : contrat historique en tableau sans contrôle = MANUAL, jamais ign
   const dir = await projetVerify(`| ID | Règle |\n|---|---|\n| SEC-006 | historique |\n\n${contrat("QUA-001", "**Contrôle** : `ok`")}`);
   const v = await verify({ targetDir: dir });
   assert.deepEqual(
-    v.contrats.map((k) => [k.id, k.statut]),
+    v.contracts.map((k) => [k.id, k.status]),
     [
       ["SEC-006", "MANUAL"],
       ["QUA-001", "PASS"],
     ],
   );
-  assert.equal(v.statut, "MANUAL");
+  assert.equal(v.status, "MANUAL");
 });
 
 test("verify : ERROR (exit 2) pour un contrôle inconnu, une obligation invérifiable ou un doublon ; FAIL l'emporte", async () => {
   let v = await verify({ targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `inexistant`")) });
-  assert.equal(v.statut, "ERROR");
+  assert.equal(v.status, "ERROR");
   assert.equal(v.code, 2);
-  assert.match(v.contrats[0].raisons.join(), /contrôle inconnu « inexistant »/);
+  assert.match(v.contracts[0].reasons.join(), /contrôle inconnu « inexistant »/);
 
   v = await verify({ targetDir: await projetVerify("## QUA-001 — sans rien\n**Raison** : intention seule.\n") });
-  assert.equal(v.statut, "ERROR", "une obligation sans exigence ni preuve n'est jamais acceptée en silence");
-  assert.match(v.contrats[0].raisons.join(), /exigence absente/);
-  assert.match(v.contrats[0].raisons.join(), /aucune preuve déclarée/);
+  assert.equal(v.status, "ERROR", "une obligation sans exigence ni preuve n'est jamais acceptée en silence");
+  assert.match(v.contracts[0].reasons.join(), /exigence absente/);
+  assert.match(v.contracts[0].reasons.join(), /aucune preuve déclarée/);
 
   v = await verify({
     targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-001", "**Contrôle** : `ok`")),
   });
-  assert.equal(v.statut, "ERROR");
-  assert.match(v.erreurs.join(), /défini plusieurs fois/);
+  assert.equal(v.status, "ERROR");
+  assert.match(v.errors.join(), /défini plusieurs fois/);
 
   v = await verify({
     targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `inexistant`") + contrat("QUA-002", "**Contrôle** : `ko`")),
   });
-  assert.equal(v.statut, "FAIL", "un échec établi l'emporte sur une erreur");
+  assert.equal(v.status, "FAIL", "un échec établi l'emporte sur une erreur");
 });
 
 test("verify : ERROR (exit 2) sans moteur installé ou sans registre, hooks indépendants de drwil", async () => {
@@ -1699,11 +1699,11 @@ test("verify : ERROR (exit 2) sans moteur installé ou sans registre, hooks ind�
   writeFileSync(join(dir, "docs/contracts.md"), "# Contrats\n");
   let v = await verify({ targetDir: dir });
   assert.equal(v.code, 2);
-  assert.match(v.erreurs.join(), /aucun contrat/);
+  assert.match(v.errors.join(), /aucun contrat/);
   const vide = tmp();
   v = await verify({ targetDir: vide });
   assert.equal(v.code, 2);
-  assert.match(v.erreurs.join(), /moteur de contrôles absent/);
+  assert.match(v.errors.join(), /check engine missing/);
   const cli = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify"], {
     cwd: vide,
     encoding: "utf8",
@@ -1733,17 +1733,17 @@ test("verify : exit 1 réel via la CLI pour FAIL et pour MANUAL, libellés disti
 test("verify : outil indisponible (contrôle non exécuté) → ERROR, jamais PASS", async () => {
   // Sans CI configurée, `couverture-ci` ne peut pas tourner : la preuve n'est pas établie.
   const v = await verify({ targetDir: await projetVerify(contrat("QUA-013", "**Contrôle** : `couverture-ci`")) });
-  assert.equal(v.statut, "ERROR");
+  assert.equal(v.status, "ERROR");
   assert.equal(v.code, 2);
-  assert.match(v.contrats[0].raisons.join(), /couverture-ci : non exécuté/);
+  assert.match(v.contracts[0].reasons.join(), /couverture-ci : non exécuté/);
 });
 
 test("verify : contrôle non applicable dans ce contexte → MANUAL, jamais PASS", async () => {
   // En mode minimal, la recherche de secrets est exclue par conception : rien n'est prouvé.
   const v = await verify({ targetDir: await projetVerify(contrat("SEC-007", "**Contrôle** : `secrets-fichiers`"), { mode: "minimal" }) });
-  assert.equal(v.statut, "MANUAL");
+  assert.equal(v.status, "MANUAL");
   assert.equal(v.code, 1);
-  assert.match(v.contrats[0].raisons.join(), /secrets-fichiers : non applicable ici/);
+  assert.match(v.contracts[0].reasons.join(), /secrets-fichiers : non applicable ici/);
 });
 
 test("verify : priorité déterministe du verdict global FAIL > ERROR > MANUAL > PASS", async () => {
@@ -1759,7 +1759,7 @@ test("verify : priorité déterministe du verdict global FAIL > ERROR > MANUAL >
   ];
   for (const [contrats, statut, code] of cas) {
     const v = await verify({ targetDir: await projetVerify(contrats) });
-    assert.deepEqual([v.statut, v.code], [statut, code], contrats);
+    assert.deepEqual([v.status, v.code], [statut, code], contrats);
   }
 });
 
@@ -1820,13 +1820,13 @@ test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; con
   await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github" }));
   let d = await doctor({ targetDir: dir });
   assert.equal(d.code, 0, JSON.stringify(d.points));
-  assert.ok(d.points.find((p) => p.id === "hooks").etat === "ok");
-  assert.match(d.points.find((p) => p.id === "contrats").detail, /8 contrat\(s\) valide\(s\)/);
+  assert.ok(d.points.find((p) => p.id === "hooks").state === "ok");
+  assert.match(d.points.find((p) => p.id === "contracts").detail, /8 contrat\(s\) valide\(s\)/);
   git(dir, "config", "core.hooksPath", "ailleurs");
   spawnSync(process.execPath, ["-e", "require('fs').unlinkSync('CLAUDE.md')"], { cwd: dir });
   d = await doctor({ targetDir: dir });
   assert.equal(d.code, 1);
-  assert.equal(d.points.find((p) => p.id === "hooks").etat, "probleme");
+  assert.equal(d.points.find((p) => p.id === "hooks").state, "problem");
   assert.match(d.points.find((p) => p.id === "integrations").detail, /manquant : CLAUDE\.md/);
   const j = cli(dir, "doctor", "--json");
   assert.equal(j.status, 1);
@@ -1842,13 +1842,13 @@ test("DRWIL-011 : apply audite et prévisualise sans rien écrire ; l'aperçu co
   writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "x", scripts: { test: "node --test", lint: "eslint ." } }));
   writeFileSync(join(dir, ".eslintrc.json"), "{}");
   writeFileSync(join(dir, "CLAUDE.md"), "mes consignes à moi\n");
-  const a = await auditerApply({ lang: "fr", targetDir: dir, git: false });
+  const a = await auditApply({ lang: "fr", targetDir: dir, git: false });
   assert.ok(a.protections.includes("eslint") && a.protections.includes("script npm « test »"), a.protections.join());
-  assert.ok(a.outilsPresents.includes("CLAUDE.md"));
-  assert.ok(a.crees.includes("AGENTS.md") && a.crees.includes(".githooks/engine.mjs") && a.crees.includes(".drwil/ia-first.json"));
-  assert.ok(a.conserves.includes("CLAUDE.md") && !a.crees.includes("CLAUDE.md"));
+  assert.ok(a.aiTools.includes("CLAUDE.md"));
+  assert.ok(a.created.includes("AGENTS.md") && a.created.includes(".githooks/engine.mjs") && a.created.includes(".drwil/ia-first.json"));
+  assert.ok(a.kept.includes("CLAUDE.md") && !a.created.includes("CLAUDE.md"));
   assert.ok(!existsSync(join(dir, "AGENTS.md")) && !existsSync(join(dir, ".drwil")), "l'aperçu n'écrit rien");
-  assert.match(formaterAudit(a), /Rien ne sera écrasé/);
+  assert.match(formatAudit(a), /Rien ne sera écrasé/);
   const dry = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "apply", "--dry-run", "--no-git"], {
     cwd: dir,
     encoding: "utf8",
@@ -1857,7 +1857,7 @@ test("DRWIL-011 : apply audite et prévisualise sans rien écrire ; l'aperçu co
   assert.equal(dry.status, 0, dry.stderr);
   assert.ok(!existsSync(join(dir, "AGENTS.md")), "--dry-run n'écrit rien");
   await quiet(() => apply({ lang: "fr", targetDir: dir, git: false }));
-  for (const f of a.crees) assert.ok(existsSync(join(dir, f)), `annoncé et créé : ${f}`);
+  for (const f of a.created) assert.ok(existsSync(join(dir, f)), `annoncé et créé : ${f}`);
   assert.equal(read(dir, "CLAUDE.md"), "mes consignes à moi\n", "fichier existant jamais écrasé");
 });
 
@@ -1913,23 +1913,23 @@ test("DRWIL-020 : seuls les contrats bloquants décident du verdict ; avertissem
         contrat("QUA-003", "**Manuel** : relecture\n**Sévérité** : indicatif"),
     ),
   });
-  assert.equal(v.statut, "PASS", "un avertissement en échec ne bloque pas le gate");
+  assert.equal(v.status, "PASS", "un avertissement en échec ne bloque pas le gate");
   assert.equal(v.code, 0);
   assert.deepEqual(
-    v.contrats.map((k) => [k.statut, k.severite]),
+    v.contracts.map((k) => [k.status, k.severity]),
     [
       ["PASS", "bloquant"],
       ["FAIL", "avertissement"],
       ["MANUAL", "indicatif"],
     ],
   );
-  assert.match(formaterVerdict(v), /1 avertissement\(s\) non satisfait\(s\), 1 indicatif\(s\) non satisfait\(s\)/);
+  assert.match(formatVerdict(v), /1 avertissement\(s\) non satisfait\(s\), 1 indicatif\(s\) non satisfait\(s\)/);
   const j = JSON.parse(cli(await projetVerify(avert("QUA-002", "ko", "avertissement")), "verify", "--json").stdout);
   assert.deepEqual(j.bySeverity.warning, { total: 1, passed: 0, notPassed: 1 });
   v = await verify({ targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `ko`") + avert("QUA-002", "ok", "avertissement")) });
-  assert.equal(v.statut, "FAIL", "un bloquant en échec reste FAIL");
+  assert.equal(v.status, "FAIL", "un bloquant en échec reste FAIL");
   v = await verify({ targetDir: await projetVerify(avert("QUA-002", "inexistant", "indicatif")) });
-  assert.equal(v.statut, "ERROR", "un registre mal formé reste une ERROR, même sur un contrat indicatif");
+  assert.equal(v.status, "ERROR", "un registre mal formé reste une ERROR, même sur un contrat indicatif");
 });
 
 test("DRWIL-031 : l'exemple en 5 minutes du README est rejoué tel quel", async () => {
@@ -1947,12 +1947,12 @@ test("DRWIL-031 : l'exemple en 5 minutes du README est rejoué tel quel", async 
     'import { test } from "node:test";\nimport assert from "node:assert/strict";\ntest("sum", () => assert.equal(1 + 1, 2));\n',
   );
   let v = await verify({ targetDir: dir });
-  assert.equal(v.contrats.find((k) => k.id === "QUA-020").statut, "PASS", formaterVerdict(v));
-  assert.notEqual(v.statut, "PASS", "un projet neuf garde des contrats de socle MANUAL : jamais PASS d'office");
+  assert.equal(v.contracts.find((k) => k.id === "QUA-020").status, "PASS", formatVerdict(v));
+  assert.notEqual(v.status, "PASS", "un projet neuf garde des contrats de socle MANUAL : jamais PASS d'office");
   writeFileSync(join(dir, "sum.test.mjs"), read(dir, "sum.test.mjs").replace("1 + 1, 2", "1 + 1, 3"));
   v = await verify({ targetDir: dir });
-  assert.equal(v.contrats.find((k) => k.id === "QUA-020").statut, "FAIL");
-  assert.equal(v.statut, "FAIL");
+  assert.equal(v.contracts.find((k) => k.id === "QUA-020").status, "FAIL");
+  assert.equal(v.status, "FAIL");
   assert.equal(v.code, 1);
 });
 
@@ -1976,10 +1976,10 @@ const MANUEL = contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture 
 
 test("attest : un MANUAL devient ATTESTED, verify le compte comme satisfait sans le confondre avec PASS", async () => {
   const dir = await projetAtteste(MANUEL);
-  assert.equal((await verify({ targetDir: dir })).statut, "MANUAL");
-  const r = await attester({ targetDir: dir, id: "QUA-001", note: "fiches relues", confirmer: oui });
+  assert.equal((await verify({ targetDir: dir })).status, "MANUAL");
+  const r = await attest({ targetDir: dir, id: "QUA-001", note: "fiches relues", confirm: oui });
   assert.equal(r.code, 0, r.message);
-  const a = JSON.parse(read(dir, r.fichier));
+  const a = JSON.parse(read(dir, r.file));
   assert.equal(a.contract, "QUA-001");
   assert.equal(a.status, "ATTESTED");
   assert.match(a.attestedAt, /^\d{4}-\d{2}-\d{2}T/);
@@ -1988,10 +1988,10 @@ test("attest : un MANUAL devient ATTESTED, verify le compte comme satisfait sans
   assert.match(a.fingerprint, /^[0-9a-f]{64}$/);
   assert.deepEqual(a.automated, [{ id: "ok", status: "ok" }]);
   const v = await verify({ targetDir: dir });
-  assert.equal(v.contrats[0].statut, "ATTESTED", "jamais PASS : la preuve humaine reste visible");
-  assert.equal(v.statut, "PASS");
+  assert.equal(v.contracts[0].status, "ATTESTED", "jamais PASS : la preuve humaine reste visible");
+  assert.equal(v.status, "PASS");
   assert.equal(v.code, 0);
-  assert.match(formaterVerdict(v), /1 ATTESTED.*\n.*validée\(s\) par attestation humaine/);
+  assert.match(formatVerdict(v), /1 ATTESTED.*\n.*validée\(s\) par attestation humaine/);
   const j = verdictJson(v);
   assert.equal(j.version, 1);
   assert.equal(j.contracts.attested, 1);
@@ -2003,18 +2003,18 @@ test("attest : refus, contrat inconnu, contrat déjà PASS, contrat en échec", 
   const dir = await projetAtteste(
     MANUEL + contrat("QUA-002", "**Contrôle** : `ok`") + contrat("QUA-003", "**Contrôle** : `ko`\n**Manuel** : relecture"),
   );
-  let r = await attester({ targetDir: dir, id: "QUA-001", confirmer: non });
+  let r = await attest({ targetDir: dir, id: "QUA-001", confirm: non });
   assert.equal(r.code, 1);
   assert.match(r.message, /refusée/);
   assert.deepEqual(attestations(dir), [], "rien d'enregistré après un refus");
-  assert.equal((await verify({ targetDir: dir })).contrats[0].statut, "MANUAL");
-  r = await attester({ targetDir: dir, id: "QUA-999", confirmer: oui });
+  assert.equal((await verify({ targetDir: dir })).contracts[0].status, "MANUAL");
+  r = await attest({ targetDir: dir, id: "QUA-999", confirm: oui });
   assert.equal(r.code, 2);
   assert.match(r.message, /contrat inconnu/);
-  r = await attester({ targetDir: dir, id: "QUA-002", confirmer: oui });
+  r = await attest({ targetDir: dir, id: "QUA-002", confirm: oui });
   assert.equal(r.code, 1);
   assert.match(r.message, /déjà prouvé automatiquement/);
-  r = await attester({ targetDir: dir, id: "QUA-003", confirmer: oui });
+  r = await attest({ targetDir: dir, id: "QUA-003", confirm: oui });
   assert.equal(r.code, 1, "un contrôle en échec ne s'atteste jamais");
   assert.match(r.message, /n'est pas attestable \(FAIL\)/);
   assert.deepEqual(attestations(dir), []);
@@ -2022,24 +2022,24 @@ test("attest : refus, contrat inconnu, contrat déjà PASS, contrat en échec", 
 
 test("attest : obsolète si le contrat ou sa preuve change ; plusieurs attestations, la dernière valide compte", async () => {
   const dir = await projetAtteste(MANUEL);
-  assert.equal((await attester({ targetDir: dir, id: "QUA-001", confirmer: oui, maintenant: new Date("2026-10-06T08:00:00Z") })).code, 0);
-  assert.equal((await attester({ targetDir: dir, id: "QUA-001", confirmer: oui })).code, 1, "déjà attesté : pas de doublon");
+  assert.equal((await attest({ targetDir: dir, id: "QUA-001", confirm: oui, now: new Date("2026-10-06T08:00:00Z") })).code, 0);
+  assert.equal((await attest({ targetDir: dir, id: "QUA-001", confirm: oui })).code, 1, "déjà attesté : pas de doublon");
   writeFileSync(
     join(dir, "docs/contracts.md"),
     read(dir, "docs/contracts.md").replace("relecture des fiches", "relecture des fiches et des recettes"),
   );
   let v = await verify({ targetDir: dir });
-  assert.equal(v.contrats[0].statut, "MANUAL", "contrat modifié : attestation obsolète, jamais une validation");
-  assert.match(v.contrats[0].raisons.join(), /obsolète/);
-  assert.equal((await attester({ targetDir: dir, id: "QUA-001", confirmer: oui, maintenant: new Date("2026-10-06T09:00:00Z") })).code, 0);
+  assert.equal(v.contracts[0].status, "MANUAL", "contrat modifié : attestation obsolète, jamais une validation");
+  assert.match(v.contracts[0].reasons.join(), /obsolète/);
+  assert.equal((await attest({ targetDir: dir, id: "QUA-001", confirm: oui, now: new Date("2026-10-06T09:00:00Z") })).code, 0);
   assert.equal(attestations(dir).length, 2, "l'historique est conservé");
   v = await verify({ targetDir: dir });
-  assert.equal(v.contrats[0].statut, "ATTESTED");
-  assert.equal(v.contrats[0].attestation.attestedAt, "2026-10-06T09:00:00.000Z");
+  assert.equal(v.contracts[0].status, "ATTESTED");
+  assert.equal(v.contracts[0].attestation.attestedAt, "2026-10-06T09:00:00.000Z");
   const cfg = config(dir);
   cfg.checks.find((c) => c.id === "ok").run = 'node -e "process.exit(0)" # autre preuve';
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
-  assert.equal((await verify({ targetDir: dir })).contrats[0].statut, "MANUAL", "preuve modifiée : attestation obsolète");
+  assert.equal((await verify({ targetDir: dir })).contracts[0].status, "MANUAL", "preuve modifiée : attestation obsolète");
 });
 
 test("attest : sévérités — seule une attestation de contrat bloquant pèse sur le verdict", async () => {
@@ -2048,17 +2048,17 @@ test("attest : sévérités — seule une attestation de contrat bloquant pèse 
     MANUEL + sev("QUA-002", "**Manuel** : relecture", "avertissement") + sev("QUA-003", "**Manuel** : relecture", "indicatif"),
   );
   let v = await verify({ targetDir: dir });
-  assert.equal(v.statut, "MANUAL", "le bloquant MANUAL décide");
-  await attester({ targetDir: dir, id: "QUA-001", confirmer: oui });
+  assert.equal(v.status, "MANUAL", "le bloquant MANUAL décide");
+  await attest({ targetDir: dir, id: "QUA-001", confirm: oui });
   v = await verify({ targetDir: dir });
-  assert.equal(v.statut, "PASS", "bloquant attesté ; avertissement et indicatif MANUAL restent informatifs");
+  assert.equal(v.status, "PASS", "bloquant attesté ; avertissement et indicatif MANUAL restent informatifs");
   assert.deepEqual(
-    v.contrats.map((k) => k.statut),
+    v.contracts.map((k) => k.status),
     ["ATTESTED", "MANUAL", "MANUAL"],
   );
-  await attester({ targetDir: dir, id: "QUA-003", confirmer: oui });
+  await attest({ targetDir: dir, id: "QUA-003", confirm: oui });
   v = await verify({ targetDir: dir });
-  assert.equal(v.contrats[2].statut, "ATTESTED");
+  assert.equal(v.contracts[2].status, "ATTESTED");
   assert.deepEqual(verdictJson(v).bySeverity.advisory, { total: 1, passed: 0, notPassed: 0 });
 });
 
@@ -2085,29 +2085,29 @@ test("attest : aucun contournement (CLI sans terminal, attestation forgée, éch
     }),
   );
   let v = await verify({ targetDir: dir });
-  assert.equal(v.contrats[0].statut, "MANUAL", "une empreinte qui ne correspond pas n'est jamais acceptée");
-  await attester({ targetDir: dir, id: "QUA-001", confirmer: oui });
+  assert.equal(v.contracts[0].status, "MANUAL", "une empreinte qui ne correspond pas n'est jamais acceptée");
+  await attest({ targetDir: dir, id: "QUA-001", confirm: oui });
   const cfg = config(dir);
   cfg.checks.find((c) => c.id === "ok").run = cfg.checks.find((c) => c.id === "ko").run;
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
   v = await verify({ targetDir: dir });
-  assert.equal(v.contrats[0].statut, "FAIL", "une attestation ne masque jamais un contrôle en échec");
+  assert.equal(v.contracts[0].status, "FAIL", "une attestation ne masque jamais un contrôle en échec");
   const minimal = await projetVerify(contrat("SEC-007", "**Contrôle** : `secrets-fichiers`\n**Manuel** : relecture"), { mode: "minimal" });
-  const r = await attester({ targetDir: minimal, id: "SEC-007", confirmer: oui });
+  const r = await attest({ targetDir: minimal, id: "SEC-007", confirm: oui });
   assert.equal(r.code, 1, "un contrôle non applicable ne se remplace pas par une attestation");
 });
 
 test("attest : aucune donnée sensible dans l'attestation (note caviardée, pas d'e-mail)", async () => {
   const dir = await projetAtteste(MANUEL);
   spawnSync("git", ["config", "user.email", "testeuse@exemple.invalid"], { cwd: dir });
-  const r = await attester({
+  const r = await attest({
     targetDir: dir,
     id: "QUA-001",
     note: "ok avec password=hunter2 et ghp_abcdefghijklmnopqrstuvwxyz0123 " + "x".repeat(800),
-    confirmer: oui,
+    confirm: oui,
   });
   assert.equal(r.code, 0);
-  const brut = read(dir, r.fichier);
+  const brut = read(dir, r.file);
   assert.doesNotMatch(brut, /hunter2|ghp_abcdef|testeuse@exemple/);
   assert.match(JSON.parse(brut).note, /\[CAVIARDÉ\]/);
   assert.ok(JSON.parse(brut).note.length <= 500);
@@ -2187,16 +2187,16 @@ test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusé
   assert.deepEqual(attestations(dir), [], "aucune attestation créée par ces tentatives");
   // Leurres : une « attestation » hors du dossier versionné, ou sans statut ATTESTED, n'est jamais lue.
   mkdirSync(join(dir, ".drwil/evidence/attestations"), { recursive: true });
-  const k = (await verify({ targetDir: dir })).contrats[0];
+  const k = (await verify({ targetDir: dir })).contracts[0];
   writeFileSync(
     join(dir, ".drwil/evidence/QUA-001.json"),
-    JSON.stringify({ contract: "QUA-001", status: "ATTESTED", fingerprint: k.empreinte }),
+    JSON.stringify({ contract: "QUA-001", status: "ATTESTED", fingerprint: k.fingerprint }),
   );
   writeFileSync(
     join(dir, ".drwil/evidence/attestations/QUA-001-pass.json"),
-    JSON.stringify({ contract: "QUA-001", status: "PASS", fingerprint: k.empreinte }),
+    JSON.stringify({ contract: "QUA-001", status: "PASS", fingerprint: k.fingerprint }),
   );
-  assert.equal((await verify({ targetDir: dir })).contrats[0].statut, "MANUAL");
+  assert.equal((await verify({ targetDir: dir })).contracts[0].status, "MANUAL");
   // Décision (a) assumée : une attestation écrite à la main avec la bonne empreinte est acceptée ;
   // elle n'échappe pas à la revue car son dossier est versionné (visible dans git status / la PR).
   writeFileSync(
@@ -2206,10 +2206,10 @@ test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusé
       contract: "QUA-001",
       status: "ATTESTED",
       attestedAt: "2026-10-06T10:00:00.000Z",
-      fingerprint: k.empreinte,
+      fingerprint: k.fingerprint,
     }),
   );
-  assert.equal((await verify({ targetDir: dir })).contrats[0].statut, "ATTESTED");
+  assert.equal((await verify({ targetDir: dir })).contracts[0].status, "ATTESTED");
   assert.match(
     git(dir, "status", "--porcelain", "--untracked-files=all").stdout,
     /\.drwil\/evidence\/attestations\/QUA-001-main\.json/,
@@ -2222,7 +2222,7 @@ test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusé
   );
   // Vraie attestation humaine (confirmation simulée par l'API, la CLI exigeant un terminal) : reconnue.
   const dir2 = await projetAtteste(MANUEL);
-  assert.equal((await attester({ targetDir: dir2, id: "QUA-001", confirmer: oui })).code, 0);
+  assert.equal((await attest({ targetDir: dir2, id: "QUA-001", confirm: oui })).code, 0);
   const r = cli(dir2, "verify", "--agent");
   assert.equal(r.status, 0);
   assert.match(r.stdout, /0 PASS · 1 ATTESTED/);
@@ -2371,10 +2371,10 @@ test("init sur un projet installé : une option passée remplace sa valeur, les 
 
 // Caractérisation avant découpage d'index.ts (docs/projects/refactor-index-etat.md, lot 1) :
 // comportements actuels sans test, figés tels quels.
-test("caractérisation : resoudreDerive sur un dossier sans installation refuse, avec la commande à lancer", async () => {
+test("caractérisation : resolveDrift sur un dossier sans installation refuse, avec la commande à lancer", async () => {
   await assert.rejects(
-    resoudreDerive({ targetDir: tmp() }, () => true),
-    /projet non initialisé .*lancer « drwil init » d'abord/,
+    resolveDrift({ targetDir: tmp() }, () => true),
+    /project not initialised .*run "drwil init" first/,
   );
 });
 
@@ -2391,12 +2391,12 @@ test("caractérisation : dérive du fichier de CI, diff ligne à ligne (ajouts, 
   writeFileSync(join(dir, ci), modifie);
   let diff = "";
   const rapport = await quiet(() =>
-    resoudreDerive({ targetDir: dir }, (rel, d) => {
+    resolveDrift({ targetDir: dir }, (rel, d) => {
       if (rel === ci) diff = d;
       return false;
     }),
   );
-  assert.ok(rapport.ignores.includes(ci));
+  assert.ok(rapport.ignored.includes(ci));
   assert.match(diff, /^- /m);
   assert.match(diff, /^- # modifié$/m);
   assert.match(diff, /^- # inséré$/m);
@@ -2411,9 +2411,9 @@ test("caractérisation : sans confirmateur ni terminal, la dérive est montrée 
   writeFileSync(join(dir, cible), "// personnalisé\n");
   let rapport;
   const lignes = await capture(async () => {
-    rapport = await resoudreDerive({ targetDir: dir });
+    rapport = await resolveDrift({ targetDir: dir });
   });
-  assert.ok(rapport.ignores.includes(cible));
+  assert.ok(rapport.ignored.includes(cible));
   assert.ok(
     lignes.some((l) => l.includes("--- .githooks/check-docs.mjs ---")),
     lignes.join("\n"),
@@ -2429,7 +2429,7 @@ test("caractérisation : git introuvable, l'installation se fait et le dit, sans
     env: { ...envTest, PATH: "" },
   });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(r.stdout + r.stderr, /git introuvable : dépôt et hooks non configurés/);
+  assert.match(r.stdout + r.stderr, /git not found: repository and hooks not configured/);
   assert.ok(existsSync(join(dir, "AGENTS.md")));
   assert.ok(!existsSync(join(dir, ".git")));
 });
@@ -2502,7 +2502,7 @@ test("projet à l'ancien format : apply --dry-run annonce la migration sans rien
   versAncienFormat(dir);
   const avant = read(dir, ".drwil/ia-first.json");
 
-  const apercu = formaterAudit(await auditerApply({ lang: "fr", targetDir: dir }));
+  const apercu = formatAudit(await auditApply({ lang: "fr", targetDir: dir }));
   assert.match(apercu, /Migration de l'ancien format \(simulation, rien d'écrit\)/);
   assert.match(apercu, /docs\/projets\/ma-fiche\.md → docs\/projects\/ma-fiche\.md/);
   assert.equal(read(dir, ".drwil/ia-first.json"), avant, "l'aperçu n'écrit rien");

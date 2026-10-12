@@ -6,141 +6,166 @@ import { execFileSync } from "node:child_process";
 export { detectStack, type StackEntry } from "./stack.js";
 export {
   verify,
-  formaterVerdict,
+  formatVerdict,
   verdictJson,
-  ecrireEvidence,
-  caviarder,
-  empreinte,
-  lireAttestations,
+  writeEvidence,
+  redact,
+  fingerprint,
+  readAttestations,
   type Attestation,
   type Verdict,
-  type ResultatContrat,
-  type ResultatControle,
-  type Statut,
+  type ContractResult,
+  type CheckResult,
+  type Status,
 } from "./verify.js";
-export { attester, resumeContrat, type ResultatAttestation } from "./attest.js";
-export { formaterPourAgent } from "./agent.js";
-export { doctor, formaterDiagnostic, diagnosticJson, listerContrats, type Diagnostic } from "./doctor.js";
+export { attest, contractSummary, type AttestResult } from "./attest.js";
+export { formatForAgent } from "./agent.js";
+export { doctor, formatDiagnosis, diagnosisJson, listContracts, type Diagnosis } from "./doctor.js";
 export { LANGS, TOOLS, CIS, type InitOptions } from "./config.js";
-export { uninstall, type UninstallOptions, type UninstallReport } from "./manifeste.js";
-export { resoudreDerive, type ResoudreDeriveOptions, type ResoudreDeriveReport } from "./derive.js";
-export { auditerApply, formaterAudit, type AuditApply } from "./apercu.js";
-export { migrer, formaterMigration, type PlanMigration } from "./migration.js";
+export { uninstall, type UninstallOptions, type UninstallReport } from "./manifest.js";
+export { resolveDrift, type ResolveDriftOptions, type ResolveDriftReport } from "./drift.js";
+export { auditApply, formatAudit, type ApplyAudit } from "./preview.js";
+export { migrate, formatMigration, type MigrationPlan } from "./migration.js";
+export { fill, projectLang, type MessageLang } from "./i18n.js";
 import { KIT_MECHANICS, readConfig, resolve, writeConfig, type InitOptions, type Resolved } from "./config.js";
-import { scaffold, type Overwrite } from "./rendu.js";
-import { nettoyerObsoletes, readManifest, writeManifest } from "./manifeste.js";
-import { formaterMigration, migrer } from "./migration.js";
+import { fill, projectLang, type MessageLang } from "./i18n.js";
+import { scaffold, type Overwrite } from "./render.js";
+import { readManifest, removeObsolete, writeManifest } from "./manifest.js";
+import { formatMigration, migrate } from "./migration.js";
 
-// Branche créée par `init()` avant le tout premier commit : personne n'a plus jamais besoin de
-// pousser sur master/main, même pour le bootstrap — décision du 2026-10-05,
-// docs/projets/init-cree-une-branche.md.
-const BRANCHE_INSTALLATION = "workstream/kit-installation";
+// Branch created by `init()` before the very first commit: nobody ever needs to push to
+// master/main again, not even for the bootstrap.
+const INSTALL_BRANCH = "workstream/kit-installation";
 
-function setupGit(targetDir: string, allowInit: boolean): void {
+const TEXTS = {
+  fr: {
+    noGit: "⚠ git introuvable : dépôt et hooks non configurés (lancer `git init` puis `git config core.hooksPath .githooks`).",
+    noRepo: "⚠ pas de dépôt git : hooks non activés (lancer `git config core.hooksPath .githooks` après `git init`).",
+    repoCreated: "Dépôt git initialisé, branche « {0} » créée (jamais de commit direct sur master/main).",
+    hooksEnabled: "Hooks activés (core.hooksPath = .githooks).",
+    stack: "Stack détectée : {0}",
+    noStack: "Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).",
+    defaultLayers: "Couches par défaut écrites : {0} — modifiable avec --layers.",
+    drifted: "⚠ Fichiers dérivés du template du kit (nombre de lignes ou sections différents, jamais réécrits automatiquement) :",
+    obsolete: "Fichiers obsolètes d'une version antérieure du kit supprimés (jamais modifiés depuis l'installation) :",
+  },
+  en: {
+    noGit: "⚠ git not found: repository and hooks not configured (run `git init` then `git config core.hooksPath .githooks`).",
+    noRepo: "⚠ no git repository: hooks not enabled (run `git config core.hooksPath .githooks` after `git init`).",
+    repoCreated: 'Git repository initialised, branch "{0}" created (never a direct commit on master/main).',
+    hooksEnabled: "Hooks enabled (core.hooksPath = .githooks).",
+    stack: "Detected stack: {0}",
+    noStack: "Stack not detected: for the user to decide (see docs/architecture.md).",
+    defaultLayers: "Default layers written: {0} — can be changed with --layers.",
+    drifted: "⚠ Files drifted from the kit's template (different line count or sections, never rewritten automatically):",
+    obsolete: "Obsolete files of an earlier kit version removed (never modified since installation):",
+  },
+};
+
+function setupGit(targetDir: string, allowInit: boolean, lang: MessageLang): void {
+  const T = TEXTS[lang];
   const git = (...args: string[]) => execFileSync("git", args, { cwd: targetDir, stdio: "pipe" }).toString().trim();
   try {
     git("--version");
   } catch {
-    console.warn("⚠ git introuvable : dépôt et hooks non configurés (lancer `git init` puis `git config core.hooksPath .githooks`).");
+    console.warn(T.noGit);
     return;
   }
   if (!existsSync(join(targetDir, ".git"))) {
     if (!allowInit) {
-      console.warn("⚠ pas de dépôt git : hooks non activés (lancer `git config core.hooksPath .githooks` après `git init`).");
+      console.warn(T.noRepo);
       return;
     }
     git("init");
-    // Avant tout commit : jamais sur master/main (cf. QUA-017, plus d'exception de bootstrap).
-    git("checkout", "-b", BRANCHE_INSTALLATION);
-    console.log(`Dépôt git initialisé, branche « ${BRANCHE_INSTALLATION} » créée (jamais de commit direct sur master/main).`);
+    // Before any commit: never on master/main (see QUA-017, no more bootstrap exception).
+    git("checkout", "-b", INSTALL_BRANCH);
+    console.log(fill(T.repoCreated, INSTALL_BRANCH));
   }
   git("config", "core.hooksPath", ".githooks");
-  // commit-msg est volontairement livré non exécutable (voir plus haut) : sans ce
-  // réglage, git redonne le même avertissement à chaque commit, du bruit permanent.
+  // commit-msg is deliberately shipped non-executable: without this setting, git repeats the same
+  // warning at every commit, permanent noise.
   git("config", "advice.ignoredHook", "false");
-  console.log("Hooks activés (core.hooksPath = .githooks).");
+  console.log(T.hooksEnabled);
 }
 
 function reportStack(r: Resolved): void {
+  const T = TEXTS[r.lang];
   if (r.stack.length) {
-    console.log(`Stack détectée : ${r.stack.map((s) => `${s.path} → ${s.technos.join(", ")}`).join(" ; ")}`);
+    console.log(fill(T.stack, r.stack.map((s) => `${s.path} → ${s.technos.join(", ")}`).join(" ; ")));
     return;
   }
-  console.log("Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).");
-  // Défaut écrit sur le disque sans que l'utilisateur l'ait demandé explicitement : le signaler.
-  if (r.opts.layers === undefined && r.layers.length) {
-    console.log(`Couches par défaut écrites : ${r.layers.join(", ")} — modifiable avec --layers.`);
-  }
+  console.log(T.noStack);
+  // A default written to disk without the user explicitly asking for it: report it.
+  if (r.opts.layers === undefined && r.layers.length) console.log(fill(T.defaultLayers, r.layers.join(", ")));
 }
 
-// Jamais de réécriture automatique : juste informer qu'un fichier déjà présent a dérivé du
-// template du kit (mécanique ou prose), à comparer/mettre à jour à la main si besoin.
-function reportDerives(derives: string[]): void {
-  if (!derives.length) return;
-  console.log(`⚠ Fichiers dérivés du template du kit (nombre de lignes ou sections différents, jamais réécrits automatiquement) :`);
-  for (const d of derives) console.log(`  - ${d}`);
+// Never an automatic rewrite: only tells that an already present file drifted from the kit's
+// template (mechanics or prose), to compare/update by hand if needed.
+function reportDrifted(drifted: string[], lang: MessageLang): void {
+  if (!drifted.length) return;
+  console.log(TEXTS[lang].drifted);
+  for (const d of drifted) console.log(`  - ${d}`);
 }
 
-async function migrerAvant(targetDir: string): Promise<void> {
-  const lignes = formaterMigration(await migrer(targetDir));
-  if (lignes.length) console.log(lignes.join("\n"));
+function reportObsolete(obsolete: string[], lang: MessageLang): void {
+  if (!obsolete.length) return;
+  console.log(TEXTS[lang].obsolete);
+  for (const o of obsolete) console.log(`  - ${o}`);
 }
 
-function reportObsoletes(obsoletes: string[]): void {
-  if (!obsoletes.length) return;
-  console.log(`Fichiers obsolètes d'une version antérieure du kit supprimés (jamais modifiés depuis l'installation) :`);
-  for (const o of obsoletes) console.log(`  - ${o}`);
+async function migrateFirst(targetDir: string): Promise<void> {
+  const lines = formatMigration(await migrate(targetDir), false, projectLang(targetDir));
+  if (lines.length) console.log(lines.join("\n"));
 }
 
 /**
- * Installe le kit. Par défaut ne réécrase que `.githooks/` (mécanique du kit) ; le
- * reste (AGENTS.md, docs/contracts.md, docs/projects/pending.md…) n'est écrit que
- * s'il manque, pour ne pas effacer les contrats et chantiers ajoutés par le projet.
- * `--force` réécrit tout, comme sur un dépôt neuf.
+ * Installs the kit. By default only rewrites `.githooks/` (kit mechanics); the rest (AGENTS.md,
+ * docs/contracts.md, docs/projects/pending.md…) is only written if missing, so as not to erase the
+ * contracts and workstreams added by the project. `--force` rewrites everything, as on a new repository.
  */
 export async function init(opts: InitOptions): Promise<void> {
-  // Avant tout : un projet à l'ancien format passe aux noms anglais, que l'installation lit seuls.
-  await migrerAvant(opts.targetDir);
+  // First of all: a project in the old format moves to the English names, the only ones the install reads.
+  await migrateFirst(opts.targetDir);
   const r = resolve(opts, () => ["backend", "frontend"]);
   const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => rel.startsWith(KIT_MECHANICS);
-  const derives: string[] = [];
+  const drifted: string[] = [];
   const manifest: Record<string, string> = {};
-  const attendus: string[] = [];
-  const ancien = readManifest(opts.targetDir);
-  await scaffold(r, { shouldOverwrite, derives, manifest, attendus });
-  const obsoletes = await nettoyerObsoletes(opts.targetDir, ancien, attendus);
-  await writeManifest(opts.targetDir, manifest, obsoletes);
+  const expected: string[] = [];
+  const previous = readManifest(opts.targetDir);
+  await scaffold(r, { shouldOverwrite, drifted, manifest, expected });
+  const obsolete = await removeObsolete(opts.targetDir, previous, expected);
+  await writeManifest(opts.targetDir, manifest, obsolete);
   await writeConfig(r);
   reportStack(r);
-  reportDerives(derives);
-  reportObsoletes(obsoletes);
-  if (opts.git !== false) setupGit(opts.targetDir, true);
+  reportDrifted(drifted, r.lang);
+  reportObsolete(obsolete, r.lang);
+  if (opts.git !== false) setupGit(opts.targetDir, true, r.lang);
 }
 
 export async function apply(opts: InitOptions): Promise<void> {
-  await migrerAvant(opts.targetDir);
-  // Sur un projet existant, les couches sont les sous-dossiers où une stack a été trouvée.
+  await migrateFirst(opts.targetDir);
+  // On an existing project, the layers are the subfolders where a stack was found.
   const r = resolve(opts, (stack) => stack.map((s) => s.path).filter((p) => p !== "."));
-  const derives: string[] = [];
+  const drifted: string[] = [];
   const manifest: Record<string, string> = {};
-  const attendus: string[] = [];
-  const ancien = readManifest(opts.targetDir);
-  await scaffold(r, { shouldOverwrite: () => false, derives, manifest, attendus });
-  const obsoletes = await nettoyerObsoletes(opts.targetDir, ancien, attendus);
-  await writeManifest(opts.targetDir, manifest, obsoletes);
-  const existante = readConfig(opts.targetDir);
-  if (!existante) await writeConfig(r);
-  else if (existante.newRequirements === undefined) {
-    // Seul ajout à une configuration existante : rendre visible le réglage des exigences récentes,
-    // à « warning » (une mise à jour ne durcit jamais) ; le reste n'est pas touché.
+  const expected: string[] = [];
+  const previous = readManifest(opts.targetDir);
+  await scaffold(r, { shouldOverwrite: () => false, drifted, manifest, expected });
+  const obsolete = await removeObsolete(opts.targetDir, previous, expected);
+  await writeManifest(opts.targetDir, manifest, obsolete);
+  const existing = readConfig(opts.targetDir);
+  if (!existing) await writeConfig(r);
+  else if (existing.newRequirements === undefined) {
+    // Only addition to an existing config: make the recent-requirements setting visible, at
+    // "warning" (an update never hardens); the rest is not touched.
     await writeFile(
       join(opts.targetDir, ".drwil", "ia-first.json"),
-      JSON.stringify({ ...existante, newRequirements: "warning" }, null, 2) + "\n",
+      JSON.stringify({ ...existing, newRequirements: "warning" }, null, 2) + "\n",
     );
   }
   reportStack(r);
-  reportDerives(derives);
-  reportObsoletes(obsoletes);
-  // On n'initialise pas de dépôt sur un projet existant : on active seulement les hooks s'il y en a un.
-  if (opts.git !== false) setupGit(opts.targetDir, false);
+  reportDrifted(drifted, r.lang);
+  reportObsolete(obsolete, r.lang);
+  // No repository is initialised on an existing project: only the hooks are enabled if there is one.
+  if (opts.git !== false) setupGit(opts.targetDir, false, r.lang);
 }

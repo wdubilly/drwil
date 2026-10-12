@@ -102,16 +102,16 @@ export function installerAvecCli(racine, args) {
 }
 
 /**
- * Migration de l'ancien format par la CLI construite (`migrer`, idempotente ; rien d'écrit en
+ * Migration de l'ancien format par la CLI construite (`migrate`, idempotente ; rien d'écrit en
  * simulation). Rend { lignes } (résumé, vide si rien à migrer) ou { erreur }.
  */
 export function migrerAvecCli(racine, simulation) {
   const build = spawnSync("npm", ["run", "build", "--silent"], { cwd: racine, encoding: "utf8", shell: process.platform === "win32" });
   if (build.status !== 0) return { erreur: `construction de la CLI en échec (npm run build)\n${build.stdout}${build.stderr}` };
   const dist = pathToFileURL(join(racine, "packages", "drwil", "dist", "index.js")).href;
-  const code = `const { migrer, formaterMigration } = await import(${JSON.stringify(dist)});
+  const code = `const { migrate, formatMigration, projectLang } = await import(${JSON.stringify(dist)});
 const simulation = process.argv[2] === "1";
-console.log(formaterMigration(await migrer(process.argv[1], { simulation }), simulation).join("\\n"));`;
+console.log(formatMigration(await migrate(process.argv[1], { dryRun: simulation }), simulation, projectLang(process.argv[1])).join("\\n"));`;
   const r = spawnSync(process.execPath, ["--input-type=module", "-e", code, racine, simulation ? "1" : "0"], { encoding: "utf8" });
   if (r.status !== 0) return { erreur: `migration en échec\n${r.stdout}${r.stderr}` };
   return { lignes: r.stdout.split("\n").filter(Boolean) };

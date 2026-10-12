@@ -1,6 +1,6 @@
 # Projet : la CLI en anglais (chantier C du livrable en anglais)
 
-**Statut** : cadré le 2026-10-12 — lot 1 à lancer.
+**Statut** : en cours (2026-10-12) — lot 1 fait, lot 2 à faire.
 **Risque** : HIGH
 
 <!-- scope
@@ -161,6 +161,13 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-12) : cadré, décisions prises en conversation.
+- **Dernier état** (2026-10-12) : lot 1 fait. Code de la CLI en anglais
+  (fichiers renommés : render.ts, manifest.ts, drift.ts,
+  preview.ts) ; messages en dictionnaire fr/en par `packages/drwil/src/i18n.ts`
+  (langue du projet, ou celle demandée par `--lang` pour l'aperçu ; anglais
+  hors projet) ; pont de `packages/drwil/src/verify.ts` retiré ; empreinte des attestations
+  inchangée (clés hachées gardées). Trouvé en route : `doctor` cherchait le
+  manifeste sous son ancien nom et avertissait à tort (corrigé) ; la carte
+  `docs/architecture.md` décrivait encore un gabarit par langue (corrigé).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-lancer`).
+- **Prochaine étape** : [IA] lot 2, valeurs laissées par A et migration.

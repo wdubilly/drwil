@@ -1,12 +1,10 @@
-// Anciens noms français du kit et leurs noms anglais (glossaire de
-// docs/intentions/livrable-full-english.md) : seule source de la migration d'un projet équipé.
-// Migration en une fois, sans alias (décision du 2026-10-12) : après elle, les hooks ne lisent plus
-// que les noms anglais.
+// The kit's old French names and their English names: single source of the migration of an equipped
+// project. Migration in one go, without aliases: after it, the hooks only read the English names.
 
-/** Contenu du projet déplacé, jamais supprimé (fiches, index, contrats). Les fiches seront
- * déplacées une à une : docs/projets/<x>.md → docs/projects/<x>.md, sauf les noms ci-dessous. */
-export const DOSSIER_FICHES: [string, string] = ["docs/projets/", "docs/projects/"];
-export const DEPLACES: Record<string, string> = {
+/** Project content moved, never deleted (briefs, index, contracts). Briefs are moved one by one:
+ * docs/projets/<x>.md → docs/projects/<x>.md, except the names below. */
+export const BRIEF_DIR: [string, string] = ["docs/projets/", "docs/projects/"];
+export const MOVED: Record<string, string> = {
   "docs/projets/en-attente.md": "docs/projects/pending.md",
   "docs/projets/entretien-courant.md": "docs/projects/routine-maintenance.md",
   "docs/projets/mecanique-ia-first.md": "docs/projects/kit-mechanics.md",
@@ -17,7 +15,7 @@ export const DEPLACES: Record<string, string> = {
   ".drwil/rappel.json": ".drwil/reminder.json",
 };
 
-const RECETTES: Record<string, string> = {
+const RECIPES: Record<string, string> = {
   "adopter-le-kit": "adopt-the-kit",
   "ajouter-un-ecran-front": "add-a-frontend-screen",
   "ajouter-une-route-api": "add-an-api-route",
@@ -35,11 +33,11 @@ const RECETTES: Record<string, string> = {
   "visualiser-avancement": "view-progress",
 };
 const SKILLS: Record<string, string> = {
-  ...Object.fromEntries(Object.entries(RECETTES).filter(([fr]) => fr !== "travailler-en-branche")),
+  ...Object.fromEntries(Object.entries(RECIPES).filter(([fr]) => fr !== "travailler-en-branche")),
   "lancer-un-chantier": "start-a-workstream",
 };
 
-/** Hooks renommés : `.githooks/` et `.claude/hooks/`. */
+/** Renamed hooks: `.githooks/` and `.claude/hooks/`. */
 export const HOOKS: Record<string, string> = {
   ".githooks/etat.mjs": ".githooks/state.mjs",
   ".githooks/etat-textes.mjs": ".githooks/state-texts.mjs",
@@ -56,10 +54,10 @@ export const HOOKS: Record<string, string> = {
   ".claude/hooks/saisie-drwil.mjs": ".claude/hooks/prompt-hook.mjs",
 };
 
-/** Fichiers de l'ancien gabarit français remplacés par leur homologue anglais : supprimés s'ils
- * n'ont pas changé depuis l'installation, gardés et signalés sinon. */
-export const ANCIENS_DU_KIT: Record<string, string> = {
-  ...Object.fromEntries(Object.entries(RECETTES).map(([fr, en]) => [`docs/recettes/${fr}.md`, `docs/recipes/${en}.md`])),
+/** Files of the old French template replaced by their English counterpart: removed if they did not
+ * change since installation, kept and reported otherwise. */
+export const OLD_KIT_FILES: Record<string, string> = {
+  ...Object.fromEntries(Object.entries(RECIPES).map(([fr, en]) => [`docs/recettes/${fr}.md`, `docs/recipes/${en}.md`])),
   ...Object.fromEntries(Object.entries(SKILLS).map(([fr, en]) => [`.claude/skills/${fr}/SKILL.md`, `.claude/skills/${en}/SKILL.md`])),
   ".github/instructions/ajouter-un-ecran-front.instructions.md": ".github/instructions/add-a-frontend-screen.instructions.md",
   ".github/instructions/ajouter-une-route-api.instructions.md": ".github/instructions/add-an-api-route.instructions.md",
@@ -70,14 +68,14 @@ export const ANCIENS_DU_KIT: Record<string, string> = {
   ...HOOKS,
 };
 
-/** Mécanique du kit : un fichier inchangé depuis l'installation est supprimé, puis réécrit à neuf
- * par l'installation (il appelle les hooks sous leurs nouveaux noms). */
-export const MECANIQUE = [".githooks/", ".claude/hooks/", ".claude/settings.json"];
+/** Kit mechanics: a file unchanged since installation is removed, then written anew by the
+ * installation (it calls the hooks under their new names). */
+export const MECHANICS = [".githooks/", ".claude/hooks/", ".claude/settings.json"];
 
-/** Sous-commandes de `.githooks/state.mjs`, réécrites dans les références (docs, réglages). */
-export const SOUS_COMMANDES: Record<string, string> = { passer: "move", lancer: "start", fiches: "briefs", rappel: "reminder" };
+/** Subcommands of `.githooks/state.mjs`, rewritten in the references (docs, settings). */
+export const SUBCOMMANDS: Record<string, string> = { passer: "move", lancer: "start", fiches: "briefs", rappel: "reminder" };
 
-export const ACTIVITES: Record<string, string> = {
+export const ACTIVITIES: Record<string, string> = {
   CADRAGE: "SCOPING",
   ATTENTE: "EXPECTATION",
   DEMANDE: "REQUEST",
@@ -87,7 +85,7 @@ export const ACTIVITES: Record<string, string> = {
   CLOTURE: "CLOSING",
 };
 
-export const CHAMPS_ETAT: Record<string, string> = {
+export const STATE_FIELDS: Record<string, string> = {
   activite: "activity",
   attente_active: "active_brief",
   demande_active: "active_request",
@@ -95,27 +93,27 @@ export const CHAMPS_ETAT: Record<string, string> = {
   depuis: "since",
 };
 
-/** Clés de `.drwil/ia-first.json` ; les valeurs de sévérité et de transitions suivent. */
-export const CLES_CONFIG: Record<string, string> = {
+/** Keys of `.drwil/ia-first.json`; the severity and transitions values follow. */
+export const CONFIG_KEYS: Record<string, string> = {
   barriere: "scopeGate",
   cadrage: "scopeReminder",
   nouvellesExigences: "newRequirements",
   horsPerimetre: "outOfScope",
   risque: "risk",
 };
-export const CLES_CONFIG_IMBRIQUEES: Record<string, Record<string, string>> = {
+export const NESTED_CONFIG_KEYS: Record<string, Record<string, string>> = {
   dirs: { recettes: "recipes" },
   risk: { cheminsSensibles: "sensitivePaths" },
   checks: { chemins: "paths" },
 };
-export const VALEURS_CONFIG: Record<string, string> = { bloquant: "blocking", avertissement: "warning", humain: "human" };
+export const CONFIG_VALUES: Record<string, string> = { bloquant: "blocking", avertissement: "warning", humain: "human" };
 
-export const CHAMPS_USAGE: Record<string, string> = {
+export const USAGE_FIELDS: Record<string, string> = {
   chantier: "workstream",
   lot: "increment",
   modele: "model",
   duree_min: "duration_min",
 };
 
-/** Bloc de périmètre des fiches. */
-export const BLOC = { ancien: "<!-- cadrage", nouveau: "<!-- scope", cleAncienne: "fichiers:", cleNouvelle: "files:" };
+/** Scope block of the briefs. */
+export const BLOCK = { old: "<!-- cadrage", new: "<!-- scope", oldKey: "fichiers:", newKey: "files:" };

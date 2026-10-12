@@ -1,79 +1,109 @@
-// `drwil attest <ID>` (DRWIL-013, suite) : preuve humaine explicite et traçable d'un contrat MANUAL.
-// Ce n'est pas « l'utilisateur a tapé y » : l'attestation est liée par empreinte au texte du contrat
-// et à la définition de sa preuve ; si l'un change, elle devient obsolète et le contrat redevient
-// MANUAL. Elle s'enregistre dans .drwil/evidence/attestations/ (versionné, relu en PR).
+// `drwil attest <ID>` (DRWIL-013, continued): explicit and traceable human proof of a MANUAL contract.
+// It is not "the user typed y": the attestation is bound by fingerprint to the contract's text and to
+// the definition of its proof; if one changes, it becomes obsolete and the contract is MANUAL again.
+// It is recorded in .drwil/evidence/attestations/ (versioned, reviewed in PRs).
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { caviarder, DOSSIER_ATTESTATIONS, verify, type Attestation, type ResultatContrat } from "./verify.js";
+import { fill, type MessageLang } from "./i18n.js";
+import { ATTESTATIONS_DIR, redact, verify, type Attestation, type ContractResult } from "./verify.js";
 
 export interface AttestOptions {
   targetDir: string;
   id: string;
   note?: string;
   /**
-   * Confirmation humaine : reçoit le résumé affiché, rend true seulement si l'humain confirme.
-   * La CLI exige un terminal interactif et la saisie de l'identifiant du contrat ; aucun drapeau
-   * ne permet de s'en passer (un agent ou un script ne peut pas attester à la place d'un humain).
+   * Human confirmation: receives the summary shown, returns true only if the human confirms.
+   * The CLI requires an interactive terminal and typing the contract's identifier; no flag allows
+   * doing without (an agent or a script cannot attest in a human's place).
    */
-  confirmer: (resume: string) => Promise<boolean>;
-  maintenant?: Date;
+  confirm: (summary: string) => Promise<boolean>;
+  now?: Date;
 }
 
-export interface ResultatAttestation {
-  /** 0 : enregistrée ; 1 : refusée (non éligible ou non confirmée) ; 2 : contrat inconnu ou configuration invalide. */
+export interface AttestResult {
+  /** 0: recorded; 1: refused (not eligible or not confirmed); 2: unknown contract or invalid configuration. */
   code: 0 | 1 | 2;
   message: string;
-  fichier?: string;
+  file?: string;
 }
 
 const NOTE_MAX = 500;
 
-export function resumeContrat(k: ResultatContrat): string {
-  const l = [`${k.id} — ${k.titre}`, `Règle : ${k.regle ?? "—"}`];
-  if (k.controles.length) l.push("Preuve automatisée :", ...k.controles.map((c) => `  ✓ ${c.id} : ${c.statut}`));
-  else l.push("Preuve automatisée : aucune");
-  l.push(`Partie humaine à attester : ${k.manuel ?? "contrat historique sans contrôle : toute la preuve"}`);
+const TEXTS = {
+  fr: {
+    rule: "Règle : {0}",
+    automated: "Preuve automatisée :",
+    noAutomated: "Preuve automatisée : aucune",
+    human: "Partie humaine à attester : {0}",
+    legacy: "contrat historique sans contrôle : toute la preuve",
+    unknown: "contrat inconnu : {0}",
+    alreadyPass: "{0} est déjà prouvé automatiquement (PASS) : rien à attester",
+    alreadyAttested: "{0} a déjà une attestation valide ({1}) : rien à attester",
+    notAttestable:
+      "{0} n'est pas attestable ({1}) : seule une partie humaine restante s'atteste, jamais un contrôle en échec, non exécuté ou non applicable — {2}",
+    refused: "attestation refusée : rien n'a été enregistré",
+    declarative: "git config user.name, déclaratif",
+    done: "{0} attesté",
+  },
+  en: {
+    rule: "Rule: {0}",
+    automated: "Automated proof:",
+    noAutomated: "Automated proof: none",
+    human: "Human part to attest: {0}",
+    legacy: "legacy contract without a check: the whole proof",
+    unknown: "unknown contract: {0}",
+    alreadyPass: "{0} is already proven automatically (PASS): nothing to attest",
+    alreadyAttested: "{0} already has a valid attestation ({1}): nothing to attest",
+    notAttestable:
+      "{0} is not attestable ({1}): only a remaining human part can be attested, never a failing, not run or not applicable check — {2}",
+    refused: "attestation refused: nothing was recorded",
+    declarative: "git config user.name, declarative",
+    done: "{0} attested",
+  },
+};
+
+export function contractSummary(k: ContractResult, lang: MessageLang = "en"): string {
+  const T = TEXTS[lang];
+  const l = [`${k.id} — ${k.title}`, fill(T.rule, k.rule ?? "—")];
+  if (k.checks.length) l.push(T.automated, ...k.checks.map((c) => `  ✓ ${c.id} : ${c.status}`));
+  else l.push(T.noAutomated);
+  l.push(fill(T.human, k.manual ?? T.legacy));
   return l.join("\n");
 }
 
-export async function attester(o: AttestOptions): Promise<ResultatAttestation> {
-  const v = await verify({ targetDir: o.targetDir, seulement: [o.id] });
-  if (v.erreurs.length && !v.contrats.length) return { code: 2, message: v.erreurs.join(" ; ") };
-  const k = v.contrats.find((c) => c.id === o.id);
-  if (!k) return { code: 2, message: `contrat inconnu : ${o.id}` };
-  if (k.statut === "PASS") return { code: 1, message: `${o.id} est déjà prouvé automatiquement (PASS) : rien à attester` };
-  if (k.statut === "ATTESTED")
-    return { code: 1, message: `${o.id} a déjà une attestation valide (${k.attestation?.attestedAt}) : rien à attester` };
-  if (!k.attestable) {
-    return {
-      code: 1,
-      message: `${o.id} n'est pas attestable (${k.statut}) : seule une partie humaine restante s'atteste, jamais un contrôle en échec, non exécuté ou non applicable — ${k.raisons.join(" ; ")}`,
-    };
-  }
-  if (!(await o.confirmer(resumeContrat(k)))) return { code: 1, message: "attestation refusée : rien n'a été enregistré" };
+export async function attest(o: AttestOptions): Promise<AttestResult> {
+  const v = await verify({ targetDir: o.targetDir, only: [o.id] });
+  const T = TEXTS[v.lang];
+  if (v.errors.length && !v.contracts.length) return { code: 2, message: v.errors.join(" ; ") };
+  const k = v.contracts.find((c) => c.id === o.id);
+  if (!k) return { code: 2, message: fill(T.unknown, o.id) };
+  if (k.status === "PASS") return { code: 1, message: fill(T.alreadyPass, o.id) };
+  if (k.status === "ATTESTED") return { code: 1, message: fill(T.alreadyAttested, o.id, k.attestation?.attestedAt) };
+  if (!k.attestable) return { code: 1, message: fill(T.notAttestable, o.id, k.status, k.reasons.join(" ; ")) };
+  if (!(await o.confirm(contractSummary(k, v.lang)))) return { code: 1, message: T.refused };
 
   const git = (...args: string[]) => {
     const r = spawnSync("git", args, { cwd: o.targetDir, encoding: "utf8" });
     return r.status === 0 && r.stdout.trim() ? r.stdout.trim() : null;
   };
-  const nom = git("config", "user.name");
-  const maintenant = o.maintenant ?? new Date();
+  const name = git("config", "user.name");
+  const now = o.now ?? new Date();
   const attestation: Attestation = {
     version: 1,
     contract: k.id,
     status: "ATTESTED",
-    attestedAt: maintenant.toISOString(),
-    // Identité déclarative (aucun compte, aucune signature) ; jamais l'e-mail : inutile et personnel.
-    actor: nom ? { name: nom, source: "git config user.name, déclaratif" } : null,
-    note: o.note ? caviarder(o.note.trim()).slice(0, NOTE_MAX) || null : null,
-    fingerprint: k.empreinte,
+    attestedAt: now.toISOString(),
+    // Declarative identity (no account, no signature); never the e-mail: useless and personal.
+    actor: name ? { name, source: T.declarative } : null,
+    note: o.note ? redact(o.note.trim()).slice(0, NOTE_MAX) || null : null,
+    fingerprint: k.fingerprint,
     commit: git("rev-parse", "HEAD"),
-    automated: k.controles.map((c) => ({ id: c.id, status: c.statut })),
+    automated: k.checks.map((c) => ({ id: c.id, status: c.status })),
   };
-  const dossier = join(o.targetDir, ...DOSSIER_ATTESTATIONS);
-  mkdirSync(dossier, { recursive: true });
-  const fichier = `${k.id}-${attestation.attestedAt.replace(/[:.]/g, "-")}.json`;
-  writeFileSync(join(dossier, fichier), JSON.stringify(attestation, null, 2) + "\n");
-  return { code: 0, message: `${k.id} attesté`, fichier: [...DOSSIER_ATTESTATIONS, fichier].join("/") };
+  const dir = join(o.targetDir, ...ATTESTATIONS_DIR);
+  mkdirSync(dir, { recursive: true });
+  const file = `${k.id}-${attestation.attestedAt.replace(/[:.]/g, "-")}.json`;
+  writeFileSync(join(dir, file), JSON.stringify(attestation, null, 2) + "\n");
+  return { code: 0, message: fill(T.done, k.id), file: [...ATTESTATIONS_DIR, file].join("/") };
 }
