@@ -736,3 +736,32 @@ l'index ; texte intégral dans l'historique git
   défaut (tous les outils) faute de choix enregistré.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/init-preserve-config`).
+
+## 2026-10-12 — Découper index.ts, etat.mjs et verify.ts, plafond de 400 lignes
+
+- **Besoin** : trois fichiers trop gros, mêlant plusieurs sujets, avant le
+  passage à l'anglais qui les touchera tous ; une variable globale reliait
+  l'aperçu d'`apply` à l'écriture des fichiers ; le garde-fou de taille
+  livré n'était pas adopté par le dépôt.
+- **Décisions clés** : plafond de 400 lignes, le défaut du kit (d'où
+  verify.ts découpé aussi, aucun plafond hérité) ; etat.mjs découpé en
+  fichiers livrés, avec réexports ; un lot par fichier, une PR.
+  [décisions utilisateur]
+- **Résultat** : 4 tests de caractérisation d'abord (couverture
+  d'index.ts 96,2 → 98,4 % des lignes). index.ts 838 → 136 lignes, en
+  config.ts, rendu.ts, manifeste.ts, derive.ts, apercu.ts ;
+  `simulation` passée en paramètre. etat.mjs 607 → 393, en fiches.mjs
+  et etat-textes.mjs (gabarit, installés par `npm run installer-depot`).
+  verify.ts 450 → 343, présentation dans verdict.ts. Déplacements par
+  tranches de lignes vérifiées, sans recopie à la main. Contrôle
+  `taille-fichiers` (QUA-001) au commit, au push et en CI ; un fichier de
+  401 lignes refusé. Aucun changement de comportement : 102 tests du
+  paquet, 143 des hooks (100 %).
+- **Trouvé en route** : les nouveaux hooks devaient rejoindre le bloc
+  cadrage des fiches de référence du gabarit (mecanique-ia-first.md,
+  kit-mechanics.md), sinon un projet équipé les refusait (QUA-016) — vu
+  par la suite du paquet. Tout fichier ajouté à `.githooks/` du gabarit
+  doit y être listé. Cadrage élargi deux fois, chaque fois dans un commit
+  séparé.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/refactor-index-etat`).

@@ -91,8 +91,9 @@ d'`init` et `apply`, avant le refactor qui touche le même code.
 
 Fait : duplication dépôt / gabarit supprimée, le dépôt s'installe depuis
 son gabarit (`npm run installer-depot`) ; `init` et `apply` gardent les
-réglages d'un projet déjà installé (v1:INI-005, v1:INI-010) — journal du
-2026-10-12.
+réglages d'un projet déjà installé (v1:INI-005, v1:INI-010) ; index.ts,
+etat.mjs et verify.ts découpés, plafond de 400 lignes adopté (QUA-001) —
+journal du 2026-10-12.
 
 - [ ] [décision] [P1] Livrable en anglais seulement, renommé une seule
   fois, dans le gabarit ; la langue du projet devient un
@@ -100,10 +101,6 @@ réglages d'un projet déjà installé (v1:INI-005, v1:INI-010) — journal du
 - [ ] [IA] [P1] Retirer l'identifiant interne `DRWIL-012` des deux messages
   livrés qui l'affichent (change une sortie), avec la ligne précédente —
   voir `docs/projets/journal.md` (2026-10-11).
-- [ ] [IA] [P1] Découper `packages/drwil/src/index.ts` (838 lignes),
-  `.githooks/etat.mjs` (607) et `packages/drwil/src/verify.ts` (450) ;
-  adopter le plafond de 400 lignes (`catalogue:QUA-001`) —
-  `docs/projets/refactor-index-etat.md`.
 - [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
