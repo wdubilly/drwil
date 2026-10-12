@@ -3,7 +3,7 @@
 // dépôt pour l'instant. Source : les journaux de session de Claude Code
 // (~/.claude/projects/<chemin du projet, caractères non alphanumériques en « - »>/*.jsonl), où chaque
 // réponse de l'agent porte ses tokens, son modèle, son horodatage et la branche git du moment ; une
-// branche `chantier/<fiche>` par chantier suffit à attribuer la consommation.
+// branche `workstream/<fiche>` par chantier suffit à attribuer la consommation.
 // Les journaux contiennent toute la conversation : seuls les champs de consommation sont lus, jamais un
 // contenu de message n'est affiché ni écrit.
 // Usage : node outils/consommation.mjs [--depuis AAAA-MM-JJ (UTC)] [--json] [--journaux <dossier>] [racine]
@@ -63,11 +63,13 @@ export function lireJournal(texte) {
   return { reponses, illisibles };
 }
 
-/** Groupe d'une branche : le chantier pour `chantier/<fiche>`, sinon la branche elle-même. */
+/** Groupe d'une branche : le chantier pour `workstream/<fiche>` (ou `chantier/<fiche>`, préfixe des
+ * branches d'avant le livrable en anglais), sinon la branche elle-même. */
 export function groupe(branche) {
   if (!branche) return "(sans branche)";
   if (["master", "main"].includes(branche)) return "(branche principale : cadrages)";
-  return branche.startsWith("chantier/") ? branche.slice("chantier/".length) : `(branche ${branche})`;
+  const prefixe = ["workstream/", "chantier/"].find((p) => branche.startsWith(p));
+  return prefixe ? branche.slice(prefixe.length) : `(branche ${branche})`;
 }
 
 /** Temps actif : somme des écarts entre réponses successives, sans les pauses de plus de PAUSE_MS. */

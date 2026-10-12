@@ -1005,7 +1005,11 @@ test("QUA-017 : pas de travail direct sur la branche principale, même pour le t
   await quiet(() => init({ lang: "fr", targetDir: dir }));
   // init() bascule déjà sur une branche de travail avant tout commit (plus jamais sur master/main).
   const branche = git(dir, "symbolic-ref", "--short", "HEAD");
-  assert.equal(branche.stdout.trim(), "chantier/installation-kit", "init() laisse l'utilisateur sur une branche de travail, jamais master");
+  assert.equal(
+    branche.stdout.trim(),
+    "workstream/kit-installation",
+    "init() laisse l'utilisateur sur une branche de travail, jamais master",
+  );
 
   git(dir, "add", "-A");
   const premier = git(dir, "commit", "-qm", "premier commit");

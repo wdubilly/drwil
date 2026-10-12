@@ -233,9 +233,32 @@ test("mécanique : seuls les scripts sont réécrits, un binaire sous .githooks/
   ecrire(r, ".githooks/__pycache__/check-docs.pyc", binaire);
   ecrire(r, ".githooks/pre-push", '#!/bin/sh\nexec node "$(dirname "$0")/perimetre.mjs"\n');
   ecrire(r, ".githooks/check-docs.test.mjs", 'import "./etat.mjs";\n');
+  ecrire(
+    r,
+    ".drwil/state.json",
+    JSON.stringify({ version: 1, activite: "CADRAGE", attente_active: null, demande_active: null, depuis: null }),
+  );
   const plan = await migrer(r);
   assert.ok(readFileSync(join(r, ".githooks/__pycache__/check-docs.pyc")).equals(binaire));
   assert.ok(!plan.reecrits.includes(".githooks/__pycache__/check-docs.pyc"));
   assert.match(lire(r, ".githooks/pre-push"), /\/scope-gate\.mjs/);
   assert.match(lire(r, ".githooks/check-docs.test.mjs"), /\.\/state\.mjs/);
+});
+
+test("projet au nouveau format : les anciens noms cités dans sa prose ne sont jamais réécrits", async () => {
+  const r = mkdtempSync(join(tmpdir(), "drwil-migration-"));
+  dossiers.push(r);
+  const note =
+    "| Avant | Après |\n|---|---|\n| `docs/projets/`, `.githooks/etat.mjs passer` | `docs/projects/`, `.githooks/state.mjs move` |\n";
+  ecrire(r, "CHANGELOG.md", note);
+  ecrire(r, "docs/projects/journal.md", "Ancien bloc cité : `<!-- cadrage`, trailer `Drwil-Attente`.\n");
+  ecrire(r, ".drwil/ia-first.json", JSON.stringify({ scopeGate: "blocking", dirs: { recipes: "docs/recipes" } }));
+  ecrire(
+    r,
+    ".drwil/state.json",
+    JSON.stringify({ version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null }),
+  );
+  const plan = await migrer(r);
+  assert.deepEqual(plan, { deplaces: [], supprimes: [], gardes: [], conflits: [], reecrits: [] });
+  assert.equal(lire(r, "CHANGELOG.md"), note);
 });

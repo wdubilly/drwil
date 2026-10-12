@@ -190,6 +190,35 @@ function reecrireJson(
 }
 
 /**
+ * Le projet porte-t-il un signe de l'ancien format ? Sans aucun, la migration ne fait rien : un projet
+ * déjà migré (ou neuf) peut citer d'anciens noms dans sa prose (historique, note de version) sans
+ * qu'ils soient réécrits à chaque `init` / `apply`.
+ */
+function ancienFormat(racine: string, tous: string[]): boolean {
+  if (tous.some((f) => f.startsWith(DOSSIER_FICHES[0]) || DEPLACES[f] || ANCIENS_DU_KIT[f])) return true;
+  const config = lireJson(racine, ".drwil/ia-first.json") ?? {};
+  if (Object.keys(config).some((k) => k in CLES_CONFIG)) return true;
+  for (const [cle, sousCles] of Object.entries(CLES_CONFIG_IMBRIQUEES)) {
+    const v = config[cle];
+    const objets = Array.isArray(v) ? v : [v];
+    if (objets.some((o) => o && typeof o === "object" && Object.keys(o).some((k) => k in sousCles))) return true;
+  }
+  const etat = lireJson(racine, ".drwil/state.json") ?? {};
+  if (Object.keys(etat).some((k) => k in CHAMPS_ETAT && CHAMPS_ETAT[k] !== k)) return true;
+  if (
+    existsSync(join(racine, ".drwil/usage.jsonl")) &&
+    migrerUsage(lire(racine, ".drwil/usage.jsonl")) !== lire(racine, ".drwil/usage.jsonl")
+  )
+    return true;
+  return tous.some(
+    (f) =>
+      (f.startsWith(DOSSIER_FICHES[1]) || f.startsWith("docs/intentions/")) &&
+      f.endsWith(".md") &&
+      /^<!--\s*cadrage[ \t]*\r?$/m.test(lire(racine, f)),
+  );
+}
+
+/**
  * Migre en une fois un projet équipé par une version française du kit (sans alias, décision du
  * 2026-10-12) ; idempotente : sur un projet déjà migré, rien à faire. Le contenu du projet
  * (fiches, contrats, journal) n'est jamais supprimé ; un fichier du kit modifié à la main non plus.
@@ -202,6 +231,7 @@ export async function migrer(racine: string, { simulation = false } = {}): Promi
   const remplacer = remplaceur();
 
   const tous = fichiers(racine);
+  if (!ancienFormat(racine, tous)) return plan;
   const versDe = (rel: string) => DEPLACES[rel] ?? rel.replace(DOSSIER_FICHES[0], DOSSIER_FICHES[1]);
   const aDeplacer = tous.filter((f) => f.startsWith(DOSSIER_FICHES[0]) || DEPLACES[f]);
   const retraits = new Set<string>();

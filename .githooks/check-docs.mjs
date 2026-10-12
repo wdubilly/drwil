@@ -80,8 +80,13 @@ const MARKERS_RE = /\[(IA|humain|décision|AI|human|decision)\]/i;
 // tolerates a date in parentheses right after the word (e.g. "**Status** (2026-10-04):").
 const STATUS_RE = /^\*{0,2}(Statut|Status)\*{0,2}\s?(\([^)]*\))?\s?:/;
 const DATE_RE = /\b\d{4}-\d{2}-\d{2}\b/;
-const INTENT_SECTIONS_FR = ["## Besoin", "## Existant", "## Questions à trancher"];
-const INTENT_SECTIONS_EN = ["## Need", "## Current state", "## Open questions"];
+// Intent sections, accepted in either language (an intent written before the project switched
+// language stays valid); a missing one is named in the project's language.
+const INTENT_SECTIONS = [
+  ["## Besoin", "## Need"],
+  ["## Existant", "## Current state"],
+  ["## Questions à trancher", "## Open questions"],
+];
 // Models to copy and permanent brief: not workstreams with increments, exempt from the QUA-015 check.
 const EXEMPT_RE = /^modele-|^model-|^entretien-courant\.md$|^routine-maintenance\.md$|^journal\.md$/;
 // Models to copy: never a real source of scope (their block, if any, is only an example).
@@ -380,8 +385,8 @@ function checkBrief(brief, errors, isProject) {
     // the model numbers its sections ("## 7. Hand-off"): detection must tolerate that prefix.
     if (!lines.some((l) => /^##\s*(\d+\.\s*)?(Reprise|Hand-off)\b/.test(l))) errors.push(T.handOff(rel));
   } else {
-    for (const s of lang === "en" ? INTENT_SECTIONS_EN : INTENT_SECTIONS_FR) {
-      if (!lines.some((l) => l.startsWith(s))) errors.push(T.section(rel, s.slice(3)));
+    for (const names of INTENT_SECTIONS) {
+      if (!names.some((s) => lines.some((l) => l.startsWith(s)))) errors.push(T.section(rel, names[lang === "en" ? 1 : 0].slice(3)));
     }
   }
 }

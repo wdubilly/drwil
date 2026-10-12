@@ -260,3 +260,12 @@ test("cadrage désactivé : aucun rappel, même pour du code hors fiche", () => 
   assert.equal(r.status, 0, r.stdout);
   assert.doesNotMatch(r.stdout, /⚠/);
 });
+
+test("intention : intitulés acceptés dans les deux langues, l'absent nommé dans la langue du projet", () => {
+  const r = verifier({
+    "docs/intentions/mixte.md": "# Intention\n\n**Statut** : 2026-01-01\n\n## Need\n\n## Existant\n",
+  });
+  assert.equal(r.status, 1, r.stdout);
+  assert.doesNotMatch(r.stdout, /« (Besoin|Need|Existant|Current state) »/);
+  assert.match(r.stdout, /docs\/intentions\/mixte\.md : section « Questions à trancher » absente/);
+});

@@ -34,7 +34,7 @@ import { formaterMigration, migrer } from "./migration.js";
 // Branche créée par `init()` avant le tout premier commit : personne n'a plus jamais besoin de
 // pousser sur master/main, même pour le bootstrap — décision du 2026-10-05,
 // docs/projets/init-cree-une-branche.md.
-const BRANCHE_INSTALLATION = "chantier/installation-kit";
+const BRANCHE_INSTALLATION = "workstream/kit-installation";
 
 function setupGit(targetDir: string, allowInit: boolean): void {
   const git = (...args: string[]) => execFileSync("git", args, { cwd: targetDir, stdio: "pipe" }).toString().trim();

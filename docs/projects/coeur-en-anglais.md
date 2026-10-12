@@ -1,6 +1,6 @@
 # Projet : le cœur en anglais (chantier A du livrable en anglais)
 
-**Statut** : en cours (2026-10-12) — lots 1 à 3 faits, lot 4 à faire.
+**Statut** : en cours (2026-10-12) — lots 1 à 4 faits, clôture à faire.
 **Risque** : HIGH
 
 <!-- scope
@@ -237,5 +237,16 @@ Aucun.
   sévérités, options `--fiche` / `--demande`, mots tapés `LANCER` /
   `FUSION`, directive `contraste-fond:` du module front-quality.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 4, limites laissées par B (version
-  mineure et note de version comprises).
+- **Lot 4** (2026-10-12) : intitulés des intentions acceptés dans les deux
+  langues ; `outils/verifier-miroirs.mjs` sans tolérance d'anciens noms ;
+  préfixe de branche `workstream/` (branche d'installation
+  `workstream/kit-installation`) ; version 0.4.0 et note de version
+  (`packages/drwil/CHANGELOG.md`). Gardées hors lot : les tolérances de noms
+  français des modèles (modele-*, entretien-courant.md) dans les hooks.
+- **Correctif de la migration** (lot 4) : elle ne s'applique qu'à un projet
+  qui porte un signe de l'ancien format (ancien manifeste, dossiers ou
+  fichiers du kit, clés de config, champs d'état ou de consommation, bloc
+  `cadrage`) ; sinon, chaque `init` / `apply` réécrivait les anciens noms
+  cités dans la prose (constaté sur la note de version de ce dépôt).
+- **Prochaine étape** : [IA] clôture (journal, fiche supprimée, index), puis
+  fusion automatique autorisée au lancement.
