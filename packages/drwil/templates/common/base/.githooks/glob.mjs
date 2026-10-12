@@ -1,6 +1,6 @@
 // Correspondance de motifs partagée par run-checks.mjs (report au pre-commit)
 // et check-control-coverage.mjs (couverture CI) : les deux lisent les mêmes
-// `chemins` de .drwil/ia-first.json, ils doivent les interpréter pareil.
+// `paths` de .drwil/ia-first.json, ils doivent les interpréter pareil.
 
 /** Façon fnmatch de GitLab/GitHub : `**` traverse les `/`, `*` non. */
 export function globEnRegex(glob) {

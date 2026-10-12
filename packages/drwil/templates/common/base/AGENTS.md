@@ -40,14 +40,14 @@ Full map and stack: `docs/architecture.md`.
   rerun the relevant check and read its output; without a read output, say
   "not verified".
 - **Governance state (any agent)**: first action of every task, run
-  `node .githooks/etat.mjs` and follow its activity, expectation and scope;
+  `node .githooks/state.mjs` and follow its activity, expectation and scope;
   run it again when in doubt and before modifying any file if the activity
   may have changed, never infer it from the conversation (a tool that
   allows it injects a short reminder when the state changes). Never
   write `.drwil/state.json` (if present) by hand: change activity with
-  `node .githooks/etat.mjs passer <ACTIVITE>`; starting a workstream
+  `node .githooks/state.mjs move <ACTIVITE>`; starting a workstream
   remains a human decision (`/drwil-lancer`: a poll whose answer the human
-  chooses; or `node .githooks/etat.mjs lancer` in a terminal; `transitions`
+  chooses; or `node .githooks/state.mjs start` in a terminal; `transitions`
   setting in `.drwil/ia-first.json`); closing is free once the `drwil
   verify` evidence is valid. A commit outside the active brief's
   scoping is refused: widen the scoping in a separate commit touching only

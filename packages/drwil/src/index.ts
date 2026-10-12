@@ -25,10 +25,11 @@ export { LANGS, TOOLS, CIS, type InitOptions } from "./config.js";
 export { uninstall, type UninstallOptions, type UninstallReport } from "./manifeste.js";
 export { resoudreDerive, type ResoudreDeriveOptions, type ResoudreDeriveReport } from "./derive.js";
 export { auditerApply, formaterAudit, type AuditApply } from "./apercu.js";
-export { migrer, type PlanMigration } from "./migration.js";
+export { migrer, formaterMigration, type PlanMigration } from "./migration.js";
 import { KIT_MECHANICS, readConfig, resolve, writeConfig, type InitOptions, type Resolved } from "./config.js";
 import { scaffold, type Overwrite } from "./rendu.js";
 import { nettoyerObsoletes, readManifest, writeManifest } from "./manifeste.js";
+import { formaterMigration, migrer } from "./migration.js";
 
 // Branche créée par `init()` avant le tout premier commit : personne n'a plus jamais besoin de
 // pousser sur master/main, même pour le bootstrap — décision du 2026-10-05,
@@ -80,6 +81,11 @@ function reportDerives(derives: string[]): void {
   for (const d of derives) console.log(`  - ${d}`);
 }
 
+async function migrerAvant(targetDir: string): Promise<void> {
+  const lignes = formaterMigration(await migrer(targetDir));
+  if (lignes.length) console.log(lignes.join("\n"));
+}
+
 function reportObsoletes(obsoletes: string[]): void {
   if (!obsoletes.length) return;
   console.log(`Fichiers obsolètes d'une version antérieure du kit supprimés (jamais modifiés depuis l'installation) :`);
@@ -88,11 +94,13 @@ function reportObsoletes(obsoletes: string[]): void {
 
 /**
  * Installe le kit. Par défaut ne réécrase que `.githooks/` (mécanique du kit) ; le
- * reste (AGENTS.md, docs/contrats.md, docs/projets/en-attente.md…) n'est écrit que
+ * reste (AGENTS.md, docs/contracts.md, docs/projects/pending.md…) n'est écrit que
  * s'il manque, pour ne pas effacer les contrats et chantiers ajoutés par le projet.
  * `--force` réécrit tout, comme sur un dépôt neuf.
  */
 export async function init(opts: InitOptions): Promise<void> {
+  // Avant tout : un projet à l'ancien format passe aux noms anglais, que l'installation lit seuls.
+  await migrerAvant(opts.targetDir);
   const r = resolve(opts, () => ["backend", "frontend"]);
   const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => rel.startsWith(KIT_MECHANICS);
   const derives: string[] = [];
@@ -110,6 +118,7 @@ export async function init(opts: InitOptions): Promise<void> {
 }
 
 export async function apply(opts: InitOptions): Promise<void> {
+  await migrerAvant(opts.targetDir);
   // Sur un projet existant, les couches sont les sous-dossiers où une stack a été trouvée.
   const r = resolve(opts, (stack) => stack.map((s) => s.path).filter((p) => p !== "."));
   const derives: string[] = [];
@@ -121,12 +130,12 @@ export async function apply(opts: InitOptions): Promise<void> {
   await writeManifest(opts.targetDir, manifest, obsoletes);
   const existante = readConfig(opts.targetDir);
   if (!existante) await writeConfig(r);
-  else if (existante.nouvellesExigences === undefined) {
+  else if (existante.newRequirements === undefined) {
     // Seul ajout à une configuration existante : rendre visible le réglage des exigences récentes,
-    // à « avertissement » (une mise à jour ne durcit jamais) ; le reste n'est pas touché.
+    // à « warning » (une mise à jour ne durcit jamais) ; le reste n'est pas touché.
     await writeFile(
       join(opts.targetDir, ".drwil", "ia-first.json"),
-      JSON.stringify({ ...existante, nouvellesExigences: "avertissement" }, null, 2) + "\n",
+      JSON.stringify({ ...existante, newRequirements: "warning" }, null, 2) + "\n",
     );
   }
   reportStack(r);

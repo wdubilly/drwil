@@ -34,6 +34,9 @@ export interface PlanMigration {
 
 const IGNORES = new Set([".git", "node_modules", "dist", "build", "coverage", ".venv", "venv", "vendor", "target"]);
 const EXTENSIONS_TEXTE = [".md", ".mdc", ".json", ".yml", ".yaml", ".toml"];
+// Scripts de la mécanique (hooks .mjs, hooks git sans extension) : un autre fichier sous
+// `.githooks/` (cache Python, binaire) n'est jamais lu comme du texte.
+const SCRIPT_RE = /(\.m?js|\.cjs|\.sh|\/[^./]+)$/;
 // Lus et réécrits à part, champ par champ : jamais par simple remplacement de texte.
 const A_PART = new Set([
   ".drwil/ia-first.json",
@@ -227,7 +230,10 @@ export async function migrer(racine: string, { simulation = false } = {}): Promi
     const ici = retraits.has(f) ? versDe(f) : f;
     if (A_PART.has(ici) || A_PART.has(f)) continue;
     const texte = ecritures.get(ici) ?? lire(racine, f);
-    const estTexte = EXTENSIONS_TEXTE.some((e) => f.endsWith(e)) || basename(f) === ".gitignore" || MECANIQUE.some((m) => f.startsWith(m));
+    const estTexte =
+      EXTENSIONS_TEXTE.some((e) => f.endsWith(e)) ||
+      basename(f) === ".gitignore" ||
+      (MECANIQUE.some((m) => f.startsWith(m)) && SCRIPT_RE.test(f));
     if (!estTexte) continue;
     let nouveau = remplacer(texte);
     if (ici.startsWith(DOSSIER_FICHES[1]) || ici.startsWith("docs/intentions/"))
@@ -279,4 +285,23 @@ export async function migrer(racine: string, { simulation = false } = {}): Promi
   for (const rel of aRetirer) await rm(join(racine, rel), { force: true });
   await purgerDossiersVides(racine, aRetirer);
   return plan;
+}
+
+/** Résumé d'une migration de l'ancien format (vide si rien à migrer), partagé avec l'aperçu d'`apply`. */
+export function formaterMigration(p: PlanMigration, simulation = false): string[] {
+  const l: string[] = [];
+  const titre = (t: string, n: number) => l.push(`${t} (${n}) :`);
+  if (p.deplaces.length) titre(simulation ? "Serait déplacé vers son nom anglais" : "Déplacé vers son nom anglais", p.deplaces.length);
+  for (const d of p.deplaces) l.push(`  ${d.de} → ${d.vers}`);
+  if (p.supprimes.length)
+    titre(simulation ? "Ancien fichier du kit, inchangé, serait retiré" : "Ancien fichier du kit, inchangé, retiré", p.supprimes.length);
+  for (const s of p.supprimes) l.push(`  - ${s}`);
+  if (p.reecrits.length) titre(simulation ? "Serait réécrit aux noms anglais" : "Réécrit aux noms anglais", p.reecrits.length);
+  for (const r of p.reecrits) l.push(`  ~ ${r}`);
+  if (p.gardes.length) titre("⚠ Ancien fichier du kit modifié à la main, gardé : à reprendre", p.gardes.length);
+  for (const g of p.gardes) l.push(`  ! ${g}`);
+  if (p.conflits.length) titre("⚠ Déplacement impossible, la cible existe et a été modifiée : rien touché", p.conflits.length);
+  for (const c of p.conflits) l.push(`  ! ${c.de} → ${c.vers}`);
+  if (l.length) l.unshift(simulation ? "Migration de l'ancien format (simulation, rien d'écrit) :" : "Migration de l'ancien format :");
+  return l;
 }

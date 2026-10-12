@@ -64,7 +64,7 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
 
 ## 2026-10-05 — Manifeste des fichiers installés + désinstallation propre
 
-- **Décisions clés** : manifeste .drwil/fichiers-installes.json (chemin
+- **Décisions clés** : manifeste .drwil/installed-files.json (chemin
   + sha256) écrit/fusionné par `init()`/`apply()`, réutilisé par deux
   mécanismes : la commande `drwil uninstall` (dry-run par défaut, `--yes`
   pour confirmer, fichier modifié depuis l'installation jamais supprimé
@@ -171,7 +171,7 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
 
 - **Décisions clés** : `package.json` est la source unique de la version ;
   le tag en découle (et non l'inverse, qui obligerait le script de release
-  à commiter, contraire à QUA-017). `.githooks/creer-release.mjs` (dépôt et
+  à commiter, contraire à QUA-017). `.githooks/create-release.mjs` (dépôt et
   gabarit) pose `v` + la version des paquets npm publiables et refuse, code
   1 même en `--dry-run`, un tag existant, une version qui n'augmente pas ou
   des paquets en désaccord ; sans paquet npm, calcul d'après les commits
@@ -189,7 +189,7 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
   `.drwil/state.json` (si présent), ne contenant que des références (activité,
   fiche active, demande) ; l'attente active est une fiche existante, son
   périmètre est son bloc `cadrage`. Transitions linéaires avec retours
-  (`node .githooks/etat.mjs passer …`) ; ouvrir une attente, lancer la
+  (`node .githooks/state.mjs move …`) ; ouvrir une attente, lancer la
   réalisation et clore sont humains par défaut (terminal interactif ;
   réglage `transitions`). Barrière au commit : hors fiches et attestations,
   un commit n'est accepté qu'en `REALISATION` et dans le cadrage lu dans
@@ -211,8 +211,8 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
 
 ## 2026-10-09 — Les tests des hooks nettoient leurs dossiers temporaires
 
-- **Décisions clés** : `afterEach` dans `.githooks/etat.test.mjs` et
-  `.githooks/perimetre.test.mjs`, sur le modèle des tests du kit (dossiers
+- **Décisions clés** : `afterEach` dans `.githooks/state.test.mjs` et
+  `.githooks/scope-gate.test.mjs`, sur le modèle des tests du kit (dossiers
   supprimés après un test réussi, gardés et affichés en cas d'échec) ;
   nettoyage au démarrage des tests écarté (risque avec les fichiers de
   test lancés en parallèle, perte du diagnostic). [décisions utilisateur]
@@ -224,10 +224,10 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
 ## 2026-10-10 — Rappel court de l'état de gouvernance, seulement quand il change
 
 - **Décisions clés** : levier 7 de l'intention fluidité. `node
-  .githooks/etat.mjs rappel` produit un rappel de deux lignes (activité,
+  .githooks/state.mjs reminder` produit un rappel de deux lignes (activité,
   fiche active, périmètre, règle), injecté par le hook de saisie de Claude
   Code (`UserPromptSubmit`) seulement si son empreinte diffère de la
-  dernière, gardée dans `.drwil/rappel.json` (si présent ; ignoré par Git, absent ou
+  dernière, gardée dans `.drwil/reminder.json` (si présent ; ignoré par Git, absent ou
   illisible, le rappel est injecté). Les autres outils suivent la consigne
   d'`AGENTS.md` (relancer l'état avant toute modification). Après un résumé
   automatique du contexte, `SessionStart` le couvre déjà. Dépôt et gabarit,
@@ -297,7 +297,7 @@ d'origine entre parenthèses).
 - **Fluidité, levier 1 : lancer depuis le chat** (2026-10-10) : `/drwil-lancer`
   ouvre un sondage des fiches cadrées, la réponse humaine (lue par un hook)
   passe en REALISATION ; un sondage pré-rempli est refusé ; repli au
-  terminal `node .githooks/etat.mjs lancer` ; clôture sans geste humain
+  terminal `node .githooks/state.mjs start` ; clôture sans geste humain
   sur évidence de verify. L'élargissement du cadrage reste un commit
   séparé, à montrer par la vue de relecture
   (`docs/intentions/vue-de-relecture.md`). [décisions utilisateur] PR #10.
@@ -323,7 +323,7 @@ d'origine entre parenthèses).
   au lancement ; la détection de « terminée » cherchait « fait » n'importe
   où dans le statut (faux positifs et faux négatifs).
 - **Décisions clés** : seul `**Statut** : terminé le AAAA-MM-JJ` vaut
-  terminée (`statutFiche`, définition unique d'`.githooks/etat.mjs`,
+  terminée (`statutFiche`, définition unique d'`.githooks/state.mjs`,
   importée par check-docs) ; `référence — …` pour une fiche qui n'est pas
   un chantier (`docs/projects/kit-mechanics.md`), jamais proposée au lancement ;
   retour `CLOTURE → CADRAGE` refusé et erreur check-docs tant qu'une fiche
@@ -346,7 +346,7 @@ d'origine entre parenthèses).
   par la consigne du skill (pas de calcul) ; les intentions P1 non cadrées
   sont citées « à cadrer » dans le message du sondage. [décisions
   utilisateur]
-- **Résultat** : `node .githooks/etat.mjs fiches --json` donne `priorite`,
+- **Résultat** : `node .githooks/state.mjs briefs --json` donne `priorite`,
   `decisions`, `prete` et trie ; skill de lancement et doc à jour (dépôt,
   gabarit fr et en).
 - **Clôturé par** : PR #22 (`5957f51`).
@@ -450,7 +450,7 @@ d'origine entre parenthèses).
   du dépôt git du dossier courant (plus de l'emplacement du script),
   logique de `.githooks/check-code-rules.mjs` et
   `.githooks/check-file-size.mjs` exposée,
-  replis silencieux après git retirés de `.githooks/perimetre.mjs` (un échec casse
+  replis silencieux après git retirés de `.githooks/scope-gate.mjs` (un échec casse
   le contrôle au lieu de le faire passer à vide). [décisions utilisateur]
 - **Résultat** : 100 % lignes, branches, fonctions et instructions sur
   les 14 hooks (contrôle `couverture-hooks`, `npm run test:hooks:coverage`) ;

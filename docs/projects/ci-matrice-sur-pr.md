@@ -3,8 +3,8 @@
 **Statut** : ouvert le 2026-10-10 — en attente de démarrage.
 **Risque** : HIGH
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
   - .github/workflows/ia-first.yml
 -->
 
@@ -66,7 +66,7 @@ trou de test.
 - [décision] Un push direct sur la branche principale (fusion) : matrice
   complète (filet de sécurité) ou Ubuntu seul ?
 
-## 6. Lots
+## 6. Increments
 
 - **Lot 1 — matrice conditionnelle** [IA] : `kit-tests` lance Windows et
   macOS sur `pull_request` seulement, Ubuntu partout. Critère de sortie :

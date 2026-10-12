@@ -36,7 +36,7 @@ convention de langue des commits proposée aux projets.
     bloc `<!-- cadrage -->` des fiches, trailer `Drwil-Attente`,
     sous-commandes `etat.mjs passer` / `lancer` / `fiches` ;
   - identifiants et commentaires du code ; une partie des messages est
-    déjà bilingue (`TEXTES.fr` / `TEXTES.en` dans `.githooks/etat.mjs`).
+    déjà bilingue (`TEXTES.fr` / `TEXTES.en` dans `.githooks/state.mjs`).
 - Ce dépôt s'installe depuis son gabarit (`npm run installer-depot`) :
   renommer dans le gabarit suffit, la commande met les copies à jour.
 - `docs/intentions/community-ready.md` (question 1) pose seulement la

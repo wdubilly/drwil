@@ -7,14 +7,14 @@ adopted).
 
 This is **not installed by default** in the kit's template: the script
 is an optional module, like the dashboard — see the README in
-`templates/common/optional/creer-une-release/` (module shipped by the kit
+`templates/common/optional/create-release/` (module shipped by the kit
 package). On this repository, it is already activated as
-`.githooks/creer-release.mjs`. Like a commit or a push, this script only
+`.githooks/create-release.mjs`. Like a commit or a push, this script only
 runs on the user's explicit request, never on its own in CI.
 
 ## Method (once the module is activated)
 
-1. Preview without creating anything: `node .githooks/creer-release.mjs
+1. Preview without creating anything: `node .githooks/create-release.mjs
    --dry-run` — shows the last tag, the detected bump (major/minor/patch)
    and the next version.
 2. The version: when there are publishable npm packages (tracked
@@ -27,7 +27,7 @@ runs on the user's explicit request, never on its own in CI.
    last tag, Conventional-Commits style (`feat:` → minor, announced
    breaking change → major, otherwise patch by default); with packages,
    that computation is only a displayed suggestion.
-3. Create for real: `node .githooks/creer-release.mjs` (annotated tag
+3. Create for real: `node .githooks/create-release.mjs` (annotated tag
    pushed to `origin`, then `gh release create --generate-notes` if `gh`
    is available and authenticated).
 4. If the repo contains one or more publishable npm packages (tracked

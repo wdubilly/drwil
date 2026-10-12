@@ -10,7 +10,7 @@
   "dirs": {
     "projects": "docs/projects",
     "intentions": "docs/intentions",
-    "recettes": "docs/recipes",
+    "recipes": "docs/recipes",
     "contracts": "docs/contracts.md",
     "index": "docs/projects/pending.md"
   },
@@ -33,7 +33,7 @@
     ".github/workflows/ia-first.yml"
   ],
   "mode": "full",
-  "cadrage": "bloquant",
+  "scopeReminder": "blocking",
   "checks": [
     {
       "id": "couverture-tests",
@@ -41,7 +41,12 @@
       "run": "npm run test:coverage",
       "cwd": "packages/drwil",
       "ciJob": "checks",
-      "chemins": ["packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "paths": [
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
       "degradable": false
     },
     {
@@ -49,7 +54,12 @@
       "name": "hooks de gouvernance : tests + couverture (QUA-004)",
       "run": "npm run test:hooks:coverage",
       "ciJob": "checks",
-      "chemins": [".githooks/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
       "degradable": false
     },
     {
@@ -57,7 +67,13 @@
       "name": "fichiers de code sous 400 lignes, tests exclus (QUA-001)",
       "run": "node .githooks/check-file-size.mjs packages/drwil/src 400 ts && node .githooks/check-file-size.mjs packages/drwil/bin 400 js && node .githooks/check-file-size.mjs .githooks 400 mjs && node .githooks/check-file-size.mjs outils 400 mjs",
       "ciJob": "checks",
-      "chemins": ["packages/drwil/src/**", "packages/drwil/bin/**", ".githooks/**", "outils/**", ".drwil/ia-first.json"],
+      "paths": [
+        "packages/drwil/src/**",
+        "packages/drwil/bin/**",
+        ".githooks/**",
+        "outils/**",
+        ".drwil/ia-first.json"
+      ],
       "degradable": false
     },
     {
@@ -65,7 +81,9 @@
       "name": "dépôt et gabarit identiques, écarts déclarés (QUA-018)",
       "run": "node --test \"outils/*.test.mjs\" && node outils/verifier-miroirs.mjs",
       "ciJob": "checks",
-      "chemins": ["**"],
+      "paths": [
+        "**"
+      ],
       "degradable": false
     },
     {
@@ -73,7 +91,14 @@
       "name": "lint et formatage du code (Biome, avertissements bloquants)",
       "run": "npm run lint",
       "ciJob": "checks",
-      "chemins": ["**/*.js", "**/*.mjs", "**/*.ts", "biome.jsonc", "package.json", "package-lock.json"],
+      "paths": [
+        "**/*.js",
+        "**/*.mjs",
+        "**/*.ts",
+        "biome.jsonc",
+        "package.json",
+        "package-lock.json"
+      ],
       "degradable": false
     },
     {
@@ -81,7 +106,13 @@
       "name": "tests rattachés aux contrats, cohérence dans les deux sens (non-régression)",
       "run": "node outils/verifier-tests-contrats.mjs",
       "ciJob": "checks",
-      "chemins": ["docs/contracts.md", "**/*.test.mjs", "packages/drwil/test/**", "outils/verifier-tests-contrats.mjs", ".drwil/ia-first.json"],
+      "paths": [
+        "docs/contracts.md",
+        "**/*.test.mjs",
+        "packages/drwil/test/**",
+        "outils/verifier-tests-contrats.mjs",
+        ".drwil/ia-first.json"
+      ],
       "degradable": false
     },
     {
@@ -89,7 +120,13 @@
       "name": "audit des dépendances, failles high et critical (SEC-006)",
       "run": "node outils/audit-dependances.mjs",
       "ciJob": "checks",
-      "chemins": ["package.json", "package-lock.json", "packages/*/package.json", "outils/audit-dependances.mjs", ".drwil/ia-first.json"],
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "packages/*/package.json",
+        "outils/audit-dependances.mjs",
+        ".drwil/ia-first.json"
+      ],
       "degradable": false
     },
     {
@@ -97,11 +134,17 @@
       "name": "CLI installée depuis le tarball, comme un utilisateur (contenu, --version, init, verify)",
       "run": "node outils/tester-tarball.mjs",
       "ciJob": "checks",
-      "chemins": ["packages/drwil/**", "package.json", "package-lock.json", "outils/tester-tarball.mjs", ".drwil/ia-first.json"],
+      "paths": [
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        "outils/tester-tarball.mjs",
+        ".drwil/ia-first.json"
+      ],
       "degradable": false
     }
   ],
-  "transitions": "humain",
-  "barriere": "bloquant",
-  "nouvellesExigences": "bloquant"
+  "transitions": "human",
+  "scopeGate": "blocking",
+  "newRequirements": "blocking"
 }

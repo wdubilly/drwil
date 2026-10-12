@@ -4,7 +4,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, st
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { appliquer, argumentsInit, installerAvecCli, planifier, principal } from "./installer-depot.mjs";
+import { appliquer, argumentsInit, installerAvecCli, migrerAvecCli, planifier, principal } from "./installer-depot.mjs";
 import { verifier } from "./verifier-miroirs.mjs";
 
 const DEPOT = fileURLToPath(new URL("..", import.meta.url));
@@ -140,13 +140,20 @@ test("principal : simulation sans écriture, puis installation ; l'installateur 
     recus = args;
     return { dossier: dossier(installe) };
   };
-  const simule = capturer(() => principal(racine, { simulation: true, installer }));
+  const simulations = [];
+  const migrerDepot = (_, simulation) => {
+    simulations.push(simulation);
+    return { lignes: ["Migration de l'ancien format :"] };
+  };
+  const simule = capturer(() => principal(racine, { simulation: true, installer, migrerDepot }));
   assert.equal(simule.code, 0);
+  assert.match(simule.sortie, /^Migration de l'ancien format :/);
   assert.match(simule.sortie, /3 fichier\(s\) à écrire \(simulation, rien d'écrit\)/);
   assert.equal(readFileSync(join(racine, ".githooks/a.mjs"), "utf8"), "a v1\n");
   assert.equal(recus[recus.indexOf("--tools") + 1], "claude");
-  const reel = capturer(() => principal(racine, { installer }));
+  const reel = capturer(() => principal(racine, { installer, migrerDepot }));
   assert.equal(reel.code, 0);
+  assert.deepEqual(simulations, [true, false], "la migration suit la simulation");
   assert.match(reel.sortie, /~ \.githooks\/a\.mjs/);
   assert.match(reel.sortie, /\+ \.githooks\/nouveau\.mjs/);
   assert.equal(readFileSync(join(racine, ".githooks/a.mjs"), "utf8"), "a v2\n");
@@ -157,13 +164,27 @@ test("principal : config illisible, installation en échec ou fichier non produi
   assert.equal(sansConfig.code, 1);
   assert.match(sansConfig.sortie, /config illisible/);
   const racine = dossier(depot);
-  const echec = capturer(() => principal(racine, { installer: () => ({ erreur: "drwil init en échec" }) }));
+  const rien = () => ({ lignes: [] });
+  const migrationKo = capturer(() =>
+    principal(racine, { installer: () => assert.fail("jamais installé"), migrerDepot: () => ({ erreur: "migration en échec" }) }),
+  );
+  assert.equal(migrationKo.code, 1);
+  assert.match(migrationKo.sortie, /installer-depot : migration en échec/);
+  const echec = capturer(() => principal(racine, { installer: () => ({ erreur: "drwil init en échec" }), migrerDepot: rien }));
   assert.equal(echec.code, 1);
   assert.match(echec.sortie, /installer-depot : drwil init en échec/);
-  const incomplet = capturer(() => principal(racine, { installer: () => ({ dossier: dossier({ ".githooks/a.mjs": "a v2\n" }) }) }));
+  const incomplet = capturer(() =>
+    principal(racine, { installer: () => ({ dossier: dossier({ ".githooks/a.mjs": "a v2\n" }) }), migrerDepot: rien }),
+  );
   assert.equal(incomplet.code, 1);
   assert.match(incomplet.sortie, /attendu de l'installation/);
   assert.equal(readFileSync(join(racine, ".githooks/a.mjs"), "utf8"), "a v1\n");
+});
+
+test("migrerAvecCli : sans projet à construire, l'échec est rendu, rien n'est migré", () => {
+  const { erreur, lignes } = migrerAvecCli(dossier({}), true);
+  assert.equal(lignes, undefined);
+  assert.match(erreur, /construction de la CLI en échec/);
 });
 
 test("installerAvecCli : sans projet à construire, l'échec est rendu, jamais une installation vide", () => {
@@ -180,7 +201,7 @@ test("installerAvecCli : la vraie CLI installe le dépôt dans une copie tempora
   for (const f of [".githooks/run-checks.mjs", ".claude/settings.json", ".github/workflows/ia-first.yml", "AGENTS.md"])
     assert.ok(existsSync(join(d, f)), f);
   assert.equal(readFileSync(join(d, "CLAUDE.md"), "utf8"), "@AGENTS.md\n");
-  assert.ok(!existsSync(join(DEPOT, ".drwil", "fichiers-installes.json")));
+  assert.ok(!existsSync(join(DEPOT, ".drwil", "installed-files.json")));
   const echec = installerAvecCli(DEPOT, ["init", "--lang", "xx"]);
   assert.match(echec.erreur, /drwil init en échec/);
 });

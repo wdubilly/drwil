@@ -35,7 +35,7 @@ Actively look for:
    rule or edge case the code doesn't respect (or handles differently
    without the brief being updated).
 2. **Dead / orphan code**: files or dependencies referenced by no scoping
-   brief, nor imported anywhere (`cadrage` already warns at commit time
+   brief, nor imported anywhere (the scope reminder already warns at commit time
    about code outside any brief — QUA-016 — but doesn't catch dead code
    inside a covered brief).
 3. **Security/stability blind spots**: missing input validation, secrets

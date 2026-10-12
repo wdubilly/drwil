@@ -154,7 +154,7 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.
 - [ ] [IA] [P2] Prochaine release : signaler dans la note de version que
-  `chemins` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
+  `paths` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
   qui tourne au commit — voir `docs/projects/journal.md` (2026-10-05).
 
 ## Après la vague 7

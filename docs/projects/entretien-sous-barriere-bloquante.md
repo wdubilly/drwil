@@ -3,10 +3,10 @@
 **Statut** : ouvert le 2026-10-09 — principe tranché, modalités à définir.
 **Risque** : HIGH
 
-<!-- cadrage
-fichiers:
-  - packages/drwil/templates/common/base/.githooks/etat.mjs
-  - .githooks/etat.mjs
+<!-- scope
+files:
+  - packages/drwil/templates/common/base/.githooks/state.mjs
+  - .githooks/state.mjs
 -->
 
 (cadrage provisoire : dépend de la décision ; à confirmer au démarrage.)
@@ -51,7 +51,7 @@ transition humaine.
 - [décision] Modalités : quel périmètre (doc seulement ?), quelle
   transition humaine unique, quelle clôture ?
 
-## 6. Lots
+## 6. Increments
 
 - **Lot 1 — à définir après décision** [décision].
 

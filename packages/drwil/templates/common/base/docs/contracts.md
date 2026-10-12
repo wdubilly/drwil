@@ -22,7 +22,7 @@ other generic contracts, not yet adopted (see
 
 Verifiable proof (`drwil verify`, see `docs/ia-first.md`, section 5):
 `**Check**` names, in backticks, the identifier of a check known to the
-engine (`.githooks/moteur.mjs`, or the `id` of a check in
+engine (`.githooks/engine.mjs`, or the `id` of a check in
 `.drwil/ia-first.json` → `checks`); the command is never copied here.
 `**Manual**` describes the part of the proof that stays human. At least one
 of the two, plus a **Rule**; an unknown check is an error. A contract still
@@ -79,10 +79,10 @@ run and shown without changing its exit code.
 **Manual** : accuracy of the briefs' status and content.
 
 ## QUA-016 — Scoping reminder
-**Rule** : Scoping reminder: every indexed code file is covered by the `cadrage` block of a brief in `docs/projects/`; a malformed block (no `fichiers:` line, too broad a pattern) is rejected. `docs/` and any markdown file are never code. Severity configurable per project (`.drwil/ia-first.json` -> `cadrage`: `bloquant` by default, refused at commit and, with Claude Code, before the write; `avertissement` to only report; `off` to disable). Outside the `bloquant` setting, this contract is not proven: add a Manual field to it.
+**Rule** : Scoping reminder: every indexed code file is covered by the `scope` block of a brief in `docs/projects/`; a malformed block (no `files:` line, too broad a pattern) is rejected. `docs/` and any markdown file are never code. Severity configurable per project (`.drwil/ia-first.json` -> `scopeReminder`: `blocking` by default, refused at commit and, with Claude Code, before the write; `warning` to only report; `off` to disable). Outside the `blocking` setting, this contract is not proven: add a Manual field to it.
 **Scope** : the whole repo (indexed files), excluding `docs/` and markdown
-**Source of truth** : `.githooks/cadrage.mjs`, `docs/ia-first.md` (section 7)
-**Proof** : `.githooks/check-docs.mjs` (hook + CI, severity per setting); agent side: `.claude/hooks/rappel-cadrage.mjs` (if present: refusal before the write when `bloquant`, reminder when `avertissement`, silent when `off`)
+**Source of truth** : `.githooks/scope.mjs`, `docs/ia-first.md` (section 7)
+**Proof** : `.githooks/check-docs.mjs` (hook + CI, severity per setting); agent side: `.claude/hooks/scope-reminder.mjs` (if present: refusal before the write when `blocking`, reminder when `warning`, silent when `off`)
 **Reason** : code detached from any project gets lost, for an agent as much as for a person
 **Check** : `docs-references`
 

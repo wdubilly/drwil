@@ -27,13 +27,13 @@ Carte complète : `docs/architecture.md`.
 - **Preuve avant annonce** : avant d'écrire « corrigé », « passe » ou
   « terminé », relancer le contrôle concerné et lire sa sortie.
 - **État de gouvernance (tout agent)** : première action de toute tâche,
-  lancer `node .githooks/etat.mjs` et suivre son activité, son attente et son
+  lancer `node .githooks/state.mjs` et suivre son activité, son attente et son
   périmètre ; le relancer en cas de doute et avant toute modification de
   fichier si l'activité a pu changer, jamais le déduire de la conversation
   (un outil qui le permet injecte un rappel court quand l'état change). Ne jamais écrire `.drwil/state.json` (si présent) à la main :
-  changer d'activité passe par `node .githooks/etat.mjs passer <ACTIVITE>` ;
+  changer d'activité passe par `node .githooks/state.mjs move <ACTIVITE>` ;
   lancer un chantier reste une décision humaine (`/drwil-lancer` : sondage
-  dont l'humain choisit la réponse ; ou `node .githooks/etat.mjs lancer`
+  dont l'humain choisit la réponse ; ou `node .githooks/state.mjs start`
   dans un terminal ; réglage `transitions` de `.drwil/ia-first.json`) ;
   clore est libre une fois l'évidence de `drwil verify` valide.
   Un commit hors du cadrage de la fiche active est refusé : élargir le
@@ -77,7 +77,7 @@ Carte complète : `docs/architecture.md`.
 | le coût (tokens) d'un chantier | `.drwil/usage.jsonl` (si présent) | `docs/recipes/track-consumption-per-increment.md` |
 | une opportunité produit à explorer | `docs/decouverte-valeur.md` (si présent) | `docs/recipes/discover-product-value.md` |
 | travailler avec une branche/MR | — | `docs/recipes/working-with-branches.md` |
-| créer une release (tag + note GitHub) | `.githooks/creer-release.mjs` (si activé — module optionnel) | `docs/recipes/create-a-release.md` |
+| créer une release (tag + note GitHub) | `.githooks/create-release.mjs` (si activé — module optionnel) | `docs/recipes/create-a-release.md` |
 
 ## Commandes
 

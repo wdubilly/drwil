@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Voir perimetre.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
+// Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
 const SCRIPT = fileURLToPath(new URL("./run-checks.mjs", import.meta.url));
@@ -27,7 +27,7 @@ function git(racine, ...args) {
 
 /**
  * Lance run-checks sur un projet temporaire (dépôt git sur une branche de travail si `depot`).
- * check-docs y est un bouchon : ce test éprouve l'adaptateur, pas les contrôles (moteur.test.mjs).
+ * check-docs y est un bouchon : ce test éprouve l'adaptateur, pas les contrôles (engine.test.mjs).
  * HOME temporaire : un gitleaks de ~/.local/bin ne s'invite pas ; DRWIL_HOOK et CI fixés par le test.
  */
 function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] } = {}) {
@@ -58,7 +58,7 @@ test("racine du projet, pas le dossier courant : contrôles annoncés, non exéc
 
 test("en anglais : échecs listés (message du contrôle ou son nom), aucun contrôle du projet déclaré", () => {
   const r = lancer(
-    { ".drwil/ia-first.json": JSON.stringify({ lang: "en", barriere: "bloquant", checks: [] }), "src/a.js": "" },
+    { ".drwil/ia-first.json": JSON.stringify({ lang: "en", scopeGate: "blocking", checks: [] }), "src/a.js": "" },
     { docsOk: false, env: { DRWIL_HOOK: "pre-commit" }, indexer: ["src/a.js"] },
   );
   assert.equal(r.status, 1);

@@ -61,9 +61,9 @@ request, instead of direct commits on the main branch.
   closing source, the index only lists remaining work). Nothing is
   lost — the full history stays in git
   (`git log --follow -- docs/projects/<brief>.md`).
-- Active governance: the brief can be deleted during CLOTURE (the state
+- Active governance: the brief can be deleted during CLOSING (the state
   tolerates its absence in that activity only), then go back to Scoping
-  (`node .githooks/etat.mjs passer CADRAGE`).
+  (`node .githooks/state.mjs move SCOPING`).
 - If the brief still has open points elsewhere (multi-increment project), don't
   condense anything: check the matching box in the index as before, the
   brief stays active until it's fully finished.

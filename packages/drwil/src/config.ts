@@ -46,7 +46,7 @@ export const TEXT = {
   dirs: {
     projects: "docs/projects",
     intentions: "docs/intentions",
-    recettes: "docs/recipes",
+    recipes: "docs/recipes",
     contracts: "docs/contracts.md",
     index: "docs/projects/pending.md",
   },
@@ -169,22 +169,21 @@ export async function writeConfig(r: Resolved): Promise<void> {
     stack: r.stack,
     // Les contrôles du projet sont saisis par l'utilisateur ou l'IA : une réinstallation ne doit pas les effacer.
     checks: Array.isArray(previous?.checks) ? previous.checks : [],
-    // Sévérité du rappel de cadrage (QUA-016 seul) : "bloquant" | "avertissement" | "off".
-    // Défaut "bloquant" (docs/projets/garde-fous-depot.md) ; une valeur déjà choisie par le projet
+    // Sévérité du rappel de cadrage (QUA-016 seul) : "blocking" | "warning" | "off".
+    // Défaut "blocking" (docs/projets/garde-fous-depot.md) ; une valeur déjà choisie par le projet
     // n'est jamais écrasée par une réinstallation.
-    cadrage: typeof previous?.cadrage === "string" ? previous.cadrage : "bloquant",
-    // Transitions de l'état de gouvernance (.githooks/etat.mjs) : "humain" (ouvrir, lancer la
+    scopeReminder: typeof previous?.scopeReminder === "string" ? previous.scopeReminder : "blocking",
+    // Transitions de l'état de gouvernance (.githooks/state.mjs) : "human" (ouvrir, lancer la
     // réalisation et clore exigent un terminal interactif) | "agent". Jamais écrasé.
-    transitions: typeof previous?.transitions === "string" ? previous.transitions : "humain",
-    // Barrière de périmètre de l'attente (.githooks/perimetre.mjs) : "off" | "avertissement" |
-    // "bloquant". "avertissement" à l'installation : le projet voit les écarts avant de durcir.
-    barriere: typeof previous?.barriere === "string" ? previous.barriere : "avertissement",
+    transitions: typeof previous?.transitions === "string" ? previous.transitions : "human",
+    // Barrière de périmètre de l'attente (.githooks/scope-gate.mjs) : "off" | "warning" |
+    // "blocking". "warning" à l'installation : le projet voit les écarts avant de durcir.
+    scopeGate: typeof previous?.scopeGate === "string" ? previous.scopeGate : "warning",
     // Exigences ajoutées par une version du kit postérieure à l'installation (aujourd'hui : chemin
-    // cité qui n'existe que comme fichier ignoré par Git) : "bloquant" pour une installation neuve,
-    // "avertissement" pour un projet déjà équipé qui n'a pas encore ce réglage — une mise à jour ne
+    // cité qui n'existe que comme fichier ignoré par Git) : "blocking" pour une installation neuve,
+    // "warning" pour un projet déjà équipé qui n'a pas encore ce réglage — une mise à jour ne
     // casse jamais un commit qui passait. Jamais écrasé ensuite.
-    nouvellesExigences:
-      typeof previous?.nouvellesExigences === "string" ? previous.nouvellesExigences : previous ? "avertissement" : "bloquant",
+    newRequirements: typeof previous?.newRequirements === "string" ? previous.newRequirements : previous ? "warning" : "blocking",
     layerPrefixes: garde("layerPrefixes", ["app", "tests", "src", "scripts"]),
     codePrefixes: garde("codePrefixes", ["scripts", ".githooks", "e2e"]),
     extraCodeFiles: garde("extraCodeFiles", []),

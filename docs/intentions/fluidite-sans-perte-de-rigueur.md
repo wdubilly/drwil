@@ -27,7 +27,7 @@ hors du poste) en sollicitant l'humain **moins souvent et au bon moment**.
 
 - Gouvernance livrée le 2026-10-09 (`docs/projects/journal.md`, entrée
   « Gouvernance : machine d'état et double barrière ») : transitions par
-  `node .githooks/etat.mjs passer …`, humaines par défaut pour ouvrir une
+  `node .githooks/state.mjs move …`, humaines par défaut pour ouvrir une
   attente, lancer la réalisation et clore (terminal interactif).
 - Réglages `transitions` et `barriere` de `.drwil/ia-first.json`.
 - `drwil attest` : une attestation par contrat, dans un terminal.

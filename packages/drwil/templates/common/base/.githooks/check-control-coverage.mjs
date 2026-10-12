@@ -8,7 +8,7 @@
 //
 // Contrôles du socle, en dur (chaque nouveau contrôle de run-checks.mjs doit
 // être ajouté ici) ; les contrôles du projet (.drwil/ia-first.json → checks)
-// peuvent se couvrir eux aussi en ajoutant chemins + ciJob (et degradable si
+// peuvent se couvrir eux aussi en ajoutant paths + ciJob (et degradable si
 // besoin) — sinon ils ne sont pas vérifiés, par compatibilité.
 import { existsSync, readFileSync } from "node:fs";
 import { globEnRegex } from "./glob.mjs";
@@ -18,18 +18,18 @@ const SOCLE = [
     id: "secrets-fichiers",
     degradable: true,
     degradation: "gitleaks absent du poste : le hook ne contrôle pas les secrets",
-    chemins: ["**"],
+    paths: ["**"],
     ciJob: "checks",
   },
   {
     id: "docs-references",
     degradable: false,
-    chemins: ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "README.md", "INSTALL.md", "docs/**", ".claude/**", ".githooks/**"],
+    paths: ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "README.md", "INSTALL.md", "docs/**", ".claude/**", ".githooks/**"],
     ciJob: "checks",
   },
-  // Rejoué en CI sur chaque commit de la branche (trailer Drwil-Attente) : jamais dégradé.
-  { id: "perimetre-attente", degradable: false, chemins: ["**"], ciJob: "checks" },
-  { id: "controles-autotest", degradable: false, chemins: [".githooks/**"], ciJob: "checks" },
+  // Rejoué en CI sur chaque commit de la branche (trailer Drwil-Brief) : jamais dégradé.
+  { id: "perimetre-attente", degradable: false, paths: ["**"], ciJob: "checks" },
+  { id: "controles-autotest", degradable: false, paths: [".githooks/**"], ciJob: "checks" },
 ];
 
 let cfg = {};
@@ -192,11 +192,11 @@ for (const fichier of ciFiles) {
       erreurs.push(T.jobAbsent(c.id, c.ciJob, fichier));
       continue;
     }
-    if (!c.chemins?.length) {
+    if (!c.paths?.length) {
       erreurs.push(T.pasDeChemin(c.id));
       continue;
     }
-    for (const glob of c.chemins) {
+    for (const glob of c.paths) {
       if (!couvre(jobs[c.ciJob], echantillon(glob))) {
         const declenche = jobs[c.ciJob].changes.join(", ") || (lang === "en" ? "none" : "aucun");
         erreurs.push(T.neDeclenchePas(c.id, c.ciJob, glob, fichier, declenche) + (c.degradable ? T.jamaisRattrape : ""));

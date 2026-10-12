@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Adaptateur git du moteur de contrôles (.githooks/moteur.mjs), lancé au commit
+// Adaptateur git du moteur de contrôles (.githooks/engine.mjs), lancé au commit
 // (pre-commit), au push (pre-push) et en CI. Il n'implémente aucun contrôle :
 // il les exécute via le moteur partagé avec `drwil verify` et met en
 // forme la sortie pour un humain qui committe.
@@ -7,7 +7,7 @@
 // Chaque contrôle finit donc « échec », « OK » ou « non exécuté », jamais masqué.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { controles, racineDuProjet } from "./moteur.mjs";
+import { controles, racineDuProjet } from "./engine.mjs";
 
 const root = racineDuProjet(import.meta.url);
 process.chdir(root);
@@ -37,7 +37,7 @@ const T = {
 }[lang];
 
 // Au pre-commit seulement (DRWIL_HOOK=pre-commit, posé par .githooks/pre-commit), le moteur reporte
-// un contrôle du projet hors de ses `chemins`. Si git ne répond pas, tout tourne (jamais de report par défaut).
+// un contrôle du projet hors de ses `paths`. Si git ne répond pas, tout tourne (jamais de report par défaut).
 function fichiersIndexes() {
   if (process.env.DRWIL_HOOK !== "pre-commit") return null;
   const r = spawnSync("git", ["diff", "--cached", "--name-only", "--no-renames", "-z"], { encoding: "utf8" });

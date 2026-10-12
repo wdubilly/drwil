@@ -225,3 +225,17 @@ test("projet sans ancien format : rien à migrer, rien d'écrit", async () => {
   assert.deepEqual(await migrer(r), { deplaces: [], supprimes: [], gardes: [], conflits: [], reecrits: [] });
   assert.deepEqual(arbre(r), avant);
 });
+
+test("mécanique : seuls les scripts sont réécrits, un binaire sous .githooks/ n'est jamais touché", async () => {
+  const r = mkdtempSync(join(tmpdir(), "drwil-migration-"));
+  dossiers.push(r);
+  const binaire = Buffer.from([0xc3, 0x28, 0x2f, 0x65, 0x74, 0x61, 0x74, 0x2e, 0x6d, 0x6a, 0x73, 0x00, 0xff]); // « /etat.mjs » dans un binaire
+  ecrire(r, ".githooks/__pycache__/check-docs.pyc", binaire);
+  ecrire(r, ".githooks/pre-push", '#!/bin/sh\nexec node "$(dirname "$0")/perimetre.mjs"\n');
+  ecrire(r, ".githooks/check-docs.test.mjs", 'import "./etat.mjs";\n');
+  const plan = await migrer(r);
+  assert.ok(readFileSync(join(r, ".githooks/__pycache__/check-docs.pyc")).equals(binaire));
+  assert.ok(!plan.reecrits.includes(".githooks/__pycache__/check-docs.pyc"));
+  assert.match(lire(r, ".githooks/pre-push"), /\/scope-gate\.mjs/);
+  assert.match(lire(r, ".githooks/check-docs.test.mjs"), /\.\/state\.mjs/);
+});

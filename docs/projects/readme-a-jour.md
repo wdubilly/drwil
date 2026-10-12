@@ -3,8 +3,8 @@
 **Statut** : cadré le 2026-10-10 — décisions prises, lot 1 à lancer.
 **Risque** : MEDIUM
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
   - README.md
   - packages/drwil/README.md
 -->
@@ -21,7 +21,7 @@ Constat le même jour : `README.md` (986 lignes) et
 mentionnent aucun des mécanismes livrés ce jour-là ni la veille :
 
 - le cycle de gouvernance (activités CADRAGE → REALISATION → PREUVES →
-  VERIFY → CLOTURE, `node .githooks/etat.mjs`, barrière de périmètre,
+  VERIFY → CLOTURE, `node .githooks/state.mjs`, barrière de périmètre,
   rappel court de l'état) ;
 - le lancement par sondage (`/drwil-lancer`), l'ordre proposé (fiches
   prêtes, priorité) et la fusion autorisée au lancement ;
@@ -67,7 +67,7 @@ toujours exacts.
 
 - ~~Les deux points~~ — tranchés le 2026-10-10 (voir « Décisions »).
 
-## 6. Lots
+## 6. Increments
 
 - **Lot 1 — inventaire et réécriture** [IA] : liste des écarts entre les
   README et le code ; section sur le cycle de gouvernance selon les

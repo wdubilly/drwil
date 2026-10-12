@@ -1,3 +1,3 @@
-{ "chantier": "mecanique-ia-first", "lot": "Skill audit de risques et dette technique", "tokens": 90000, "modele": "claude-sonnet-5", "duree_min": 60, "date": "2026-10-04" }
-{ "chantier": "mecanique-ia-first", "lot": "Skill découverte de valeur produit", "tokens": 70000, "modele": "claude-sonnet-5", "duree_min": 45, "date": "2026-10-04" }
-{ "chantier": "mecanique-ia-first", "lot": "Suivi de consommation par lot (recette + tableau de bord)", "tokens": 80000, "modele": "claude-sonnet-5", "duree_min": 55, "date": "2026-10-04" }
+{"workstream":"mecanique-ia-first","increment":"Skill audit de risques et dette technique","tokens":90000,"model":"claude-sonnet-5","duration_min":60,"date":"2026-10-04"}
+{"workstream":"mecanique-ia-first","increment":"Skill découverte de valeur produit","tokens":70000,"model":"claude-sonnet-5","duration_min":45,"date":"2026-10-04"}
+{"workstream":"mecanique-ia-first","increment":"Suivi de consommation par lot (recette + tableau de bord)","tokens":80000,"model":"claude-sonnet-5","duration_min":55,"date":"2026-10-04"}

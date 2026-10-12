@@ -73,7 +73,7 @@ applicabilité, mécanisme de vérification) avant de devenir exécutable.
 `docs/projects/drwil-v0-2-gouvernance-executable.md` : ce fichier est
 aujourd'hui la source canonique) : 11 contrats — SEC-001, SEC-006,
 SEC-007, QUA-004, QUA-011, QUA-013, QUA-015, QUA-016, QUA-017, QUA-018,
-QUA-019. Champs lus par `.githooks/contrats.mjs` : Règle, Contrôle,
+QUA-019. Champs lus par `.githooks/contracts.mjs` : Règle, Contrôle,
 Manuel, Sévérité.
 
 - **Statuts produits par `drwil verify`** : PASS, FAIL, ERROR, MANUAL,
@@ -81,10 +81,10 @@ Manuel, Sévérité.
   contrat). Un contrôle non exécuté donne ERROR, jamais PASS (test
   « verify : outil indisponible (contrôle non exécuté) → ERROR, jamais
   PASS » de `packages/drwil/test/kit.test.mjs`). Le moteur
-  (`.githooks/moteur.mjs`) distingue en interne ok, echec, non-execute
+  (`.githooks/engine.mjs`) distingue en interne ok, echec, non-execute
   et non-applicable.
 - **Sévérités** : bloquant, avertissement, indicatif (DRWIL-020,
-  `SEVERITES` dans `.githooks/contrats.mjs`) ; seuls les contrats
+  `SEVERITES` dans `.githooks/contracts.mjs`) ; seuls les contrats
   bloquants décident du verdict de `verify`.
 - **Catalogue existant** : `docs/contracts-catalog.md`, 15 contrats
   préfixés `catalogue:` (non installés, adoptés un par un).
@@ -222,7 +222,7 @@ PARTIEL**, jamais AUTO ; la part humaine restante est nommée.
 | v1:CTR-006, v1:HOOK-012 | QUA-013 ; moteur (non-execute) ; `verify` (ERROR) | AUTO | livrable et dépôt |
 | v1:SEC-002 | SEC-007, contrôle `secrets-fichiers` (gitleaks) | AUTO, dégradable : sans gitleaks local, non exécuté, la CI rattrape | livrable et dépôt |
 | v1:TST-005 | QUA-004 | AUTO | dépôt |
-| v1:CTR-001 | doublons d'ID refusés (`.githooks/check-docs.mjs`, `.githooks/contrats.mjs`) | AUTO | livrable et dépôt |
+| v1:CTR-001 | doublons d'ID refusés (`.githooks/check-docs.mjs`, `.githooks/contracts.mjs`) | AUTO | livrable et dépôt |
 | v1:CTR-004, v1:CTR-005 | Contrôle ou Manuel exigé (`validerContrats`) | PARTIEL : présence vérifiée, pertinence humaine | livrable et dépôt |
 | v1:CTR-002 | Règle exigée | PARTIEL : présence vérifiée, mesurabilité humaine | livrable et dépôt |
 | v1:CTR-007 | évidence de `verify --evidence` liée au commit | AUTO | livrable et dépôt |

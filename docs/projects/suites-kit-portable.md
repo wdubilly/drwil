@@ -42,7 +42,7 @@ restés ouverts à la fin de ce travail.
    (`mode & 0o100`) de `pre-commit`/`pre-push`, qui n'existe pas sur NTFS
    (`chmod` y est un no-op) — le test les saute désormais sous Windows
    (`packages/drwil/test/kit.test.mjs`, fonction `executable()`) ; (e) le
-   hook `.claude/hooks/rappel-cadrage.mjs` calculait sa racine à partir du chemin du
+   hook `.claude/hooks/scope-reminder.mjs` calculait sa racine à partir du chemin du
    script (`import.meta.url`), que macOS réécrit via le lien symbolique
    `/var` → `/private/var` (tmp CI) — la comparaison avec le chemin reçu du
    tool Claude Code (non résolu) ratait alors systématiquement et rendait le
@@ -70,12 +70,12 @@ restés ouverts à la fin de ce travail.
    `kit-tests (macos-latest)` toujours verts ; Windows encore rouge mais
    seulement 2 échecs restants (QUA-016 bloquant et le hook
    garde-fou-bash/rappel-cadrage), cause trouvée dans les deux : (i)
-   `.claude/hooks/rappel-cadrage.mjs` faisait `import(\`file://${chemin}\`)`
-   à la main pour charger `.githooks/cadrage.mjs` — un chemin Windows (`D:\a\...`)
+   `.claude/hooks/scope-reminder.mjs` faisait `import(\`file://${chemin}\`)`
+   à la main pour charger `.githooks/scope.mjs` — un chemin Windows (`D:\a\...`)
    collé après `file://` n'est pas une URL de fichier valide, l'import lève
    et le hook, dont les erreurs sont toutes avalées (« jamais casser »),
    rend silencieusement une sortie vide ; (j) le point d'entrée CLI des deux
-   hooks (`.claude/hooks/rappel-cadrage.mjs` et `.claude/hooks/garde-fou-bash.mjs`) comparait
+   hooks (`.claude/hooks/scope-reminder.mjs` et `.claude/hooks/bash-guard.mjs`) comparait
    `import.meta.url` à `` `file://${process.argv[1]}` `` à la main — même
    défaut, le hook ne s'exécutait jamais quand Claude Code l'invoque en
    sous-processus sous Windows. Les deux corrigés avec `pathToFileURL()`
@@ -91,7 +91,7 @@ restés ouverts à la fin de ce travail.
    Cause : (k) les runners Windows de GitHub Actions font le `git checkout`
    avec `core.autocrlf=true` par défaut (aucun `.gitattributes` dans ce
    dépôt pour l'en empêcher), donc tous les fichiers .md sont récupérés en
-   CRLF ; `.githooks/cadrage.mjs` -> `BLOC_RE` attendait un `\n` strict juste après
+   CRLF ; `.githooks/scope.mjs` -> `BLOC_RE` attendait un `\n` strict juste après
    `cadrage`, qui ne matche jamais un `<!-- cadrage\r\n` — le bloc entier
    ne se lit plus, zéro motif, zéro fichier couvert. Corrigé en acceptant
    un `\r` optionnel avant le `\n` de cette regex (`\r?\n`) ; vérifié avec
@@ -123,7 +123,7 @@ restés ouverts à la fin de ce travail.
    fichiers. Point livré.
 3. **Mise à jour depuis une ancienne version** — [IA] **livré le
    2026-10-05** : `init`/`apply` lisent désormais l'ancien manifeste
-   (.drwil/fichiers-installes.json) avant d'écrire, et suppriment après
+   (.drwil/installed-files.json) avant d'écrire, et suppriment après
    coup les fichiers de `.githooks/` qui n'existent plus dans le template
    actuel — seulement s'ils n'ont jamais été modifiés depuis l'installation
    (empreinte sha256 inchangée) ; un fichier modifié est conservé et

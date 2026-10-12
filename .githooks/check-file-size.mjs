@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Garde-fou contre les fichiers géants (voir docs/recettes/refactorer-sans-casser.md).
+// Garde-fou contre les fichiers géants (voir docs/recipes/refactor-without-breaking.md).
 // Point d'extension à adopter : un projet qui veut ce contrôle l'ajoute à
 // .drwil/ia-first.json -> checks, par exemple :
 //   { "name": "taille des fichiers", "run": "node .githooks/check-file-size.mjs frontend/src" }

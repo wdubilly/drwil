@@ -9,17 +9,17 @@ commit, just to inform project tracking.
 Append-only file at the project root, one JSON line per increment closure:
 
 ```json
-{ "chantier": "add-csv-export", "lot": "Lot 2", "tokens": 42000, "modele": "claude-sonnet-5", "duree_min": 95, "date": "2026-10-04" }
+{ "workstream": "add-csv-export", "increment": "Lot 2", "tokens": 42000, "model": "claude-sonnet-5", "duration_min": 95, "date": "2026-10-04" }
 ```
 
-- `chantier`: file name (without extension) of the `docs/projects/<project>.md`
+- `workstream`: file name (without extension) of the `docs/projects/<project>.md`
   brief concerned.
-- `lot`: the increment's title as written in its brief (`## Lots`).
+- `increment`: the increment's title as written in its brief (`## Increments`).
 - `tokens`: order of magnitude of tokens consumed for this increment (integer).
-- `modele`: identifier of the model used (e.g. `claude-sonnet-5`). If
+- `model`: identifier of the model used (e.g. `claude-sonnet-5`). If
   several models were used on the same increment, either one line per model or
   `"mixte"`.
-- `duree_min`: setup time for the increment, in minutes.
+- `duration_min`: setup time for the increment, in minutes.
 - `date`: increment closure date (`YYYY-MM-DD`).
 
 The file is never recomputed: each line is written once, at increment closure,
@@ -33,16 +33,16 @@ the AI that, when closing an increment, appends the line:
 
 - **With Copilot CLI**: query `session_store_sql` (`session_usage` table
   for model and tokens; `turns`/`events` for the increment's start/end
-  timestamps, hence `duree_min`), then append the JSON line to
+  timestamps, hence `duration_min`), then append the JSON line to
   `.drwil/usage.jsonl` (to create).
 - **With another AI tool**, or without a queryable history: estimate by
-  hand (an order of magnitude is enough) and fill `modele` and
-  `duree_min` as best as possible rather than omitting the line.
+  hand (an order of magnitude is enough) and fill `model` and
+  `duration_min` as best as possible rather than omitting the line.
 
 ## Reading: the dashboard
 
 `docs/recipes/view-progress.md` (optional module
-`.githooks/tableau-de-bord.mjs` (to create)) reads `.drwil/usage.jsonl` (to create)
+`.githooks/dashboard.mjs` (to create)) reads `.drwil/usage.jsonl` (to create)
 if it exists
 and shows, per project: total tokens, total minutes and the list of
 models used. If the file is absent, the dashboard works exactly as

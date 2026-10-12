@@ -8,7 +8,7 @@ export function sha256(content: string): string {
   return createHash("sha256").update(content).digest("hex");
 }
 
-const MANIFEST_PATH = [".drwil", "fichiers-installes.json"];
+const MANIFEST_PATH = [".drwil", "installed-files.json"];
 
 export function readManifest(targetDir: string): Record<string, string> {
   try {

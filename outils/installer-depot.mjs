@@ -7,13 +7,15 @@
 // les fichiers du gabarit dont l'unité y est installée, hors écarts déclarés (outils/miroirs.json),
 // hors fichiers déclarés propres au gabarit et hors .drwil/. Les modules optionnels, que la CLI
 // n'installe pas, sont recopiés tels quels.
+// Avant d'installer, le dépôt passe de l'ancien format aux noms anglais avec la migration de la CLI
+// (docs/projects/coeur-en-anglais.md) : état, config, journal de consommation, blocs et chemins des fiches.
 // Hors de portée : un fichier retiré du gabarit reste dans le dépôt (miroirs-gabarit le signale).
 // Usage : node outils/installer-depot.mjs [--dry-run] [racine]
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { homologues, unitesInstallees } from "./verifier-miroirs.mjs";
 
 /** Arguments de `drwil init` qui reproduisent l'installation du dépôt, d'après sa config et ses unités. */
@@ -99,8 +101,24 @@ export function installerAvecCli(racine, args) {
   return { dossier };
 }
 
-/** Lit la config, installe, compare, écrit (sauf simulation) ; rend le code de sortie. */
-export function principal(racine, { simulation = false, installer = installerAvecCli } = {}) {
+/**
+ * Migration de l'ancien format par la CLI construite (`migrer`, idempotente ; rien d'écrit en
+ * simulation). Rend { lignes } (résumé, vide si rien à migrer) ou { erreur }.
+ */
+export function migrerAvecCli(racine, simulation) {
+  const build = spawnSync("npm", ["run", "build", "--silent"], { cwd: racine, encoding: "utf8", shell: process.platform === "win32" });
+  if (build.status !== 0) return { erreur: `construction de la CLI en échec (npm run build)\n${build.stdout}${build.stderr}` };
+  const dist = pathToFileURL(join(racine, "packages", "drwil", "dist", "index.js")).href;
+  const code = `const { migrer, formaterMigration } = await import(${JSON.stringify(dist)});
+const simulation = process.argv[2] === "1";
+console.log(formaterMigration(await migrer(process.argv[1], { simulation }), simulation).join("\\n"));`;
+  const r = spawnSync(process.execPath, ["--input-type=module", "-e", code, racine, simulation ? "1" : "0"], { encoding: "utf8" });
+  if (r.status !== 0) return { erreur: `migration en échec\n${r.stdout}${r.stderr}` };
+  return { lignes: r.stdout.split("\n").filter(Boolean) };
+}
+
+/** Lit la config, migre, installe, compare, écrit (sauf simulation) ; rend le code de sortie. */
+export function principal(racine, { simulation = false, installer = installerAvecCli, migrerDepot = migrerAvecCli } = {}) {
   let config;
   let miroirs;
   try {
@@ -110,6 +128,12 @@ export function principal(racine, { simulation = false, installer = installerAve
     console.error(`installer-depot : config illisible (${e.message})`);
     return 1;
   }
+  const migration = migrerDepot(racine, simulation);
+  if (migration.erreur) {
+    console.error(`installer-depot : ${migration.erreur}`);
+    return 1;
+  }
+  for (const l of migration.lignes) console.log(l);
   const { dossier, erreur } = installer(racine, argumentsInit(config, unitesInstallees(racine, homologues(racine))));
   if (erreur) {
     console.error(`installer-depot : ${erreur}`);

@@ -5,11 +5,11 @@ how contracts (`docs/contracts.md`) are covered, without deploying anything
 or recomputing a state that lives nowhere else.
 
 Steps:
-1. Copy the single file from `templates/common/optional/tableau-de-bord/`
+1. Copy the single file from `templates/common/optional/dashboard/`
    (optional module of the kit package, see its README) to
-   `.githooks/tableau-de-bord.mjs` (to create).
-2. Run it by hand: `node .githooks/tableau-de-bord.mjs` — writes
-   `docs/tableau-de-bord.html` (to create) by default. Never in CI or at
+   `.githooks/dashboard.mjs` (to create).
+2. Run it by hand: `node .githooks/dashboard.mjs` — writes
+   `docs/dashboard.html` (to create) by default. Never in CI or at
    commit time: it's a viewing tool, not a check.
 3. Open the generated file in a browser. Add its path to `.gitignore`
    (a derived artifact, not a source).

@@ -4,10 +4,10 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { execFileSync } from "node:child_process";
-import * as cadrage from "./cadrage.mjs";
-import { controlesConnus, lireContrats, validerContrats } from "./contrats.mjs";
-import { verifierRisque } from "./risque.mjs";
-import { statutFiche } from "./etat.mjs";
+import * as cadrage from "./scope.mjs";
+import { controlesConnus, lireContrats, validerContrats } from "./contracts.mjs";
+import { verifierRisque } from "./risk.mjs";
+import { statutFiche } from "./state.mjs";
 
 const root = process.cwd();
 const cfg = loadConfig();
@@ -21,22 +21,22 @@ const T = {
     statut: (f) => `${f} : pas de ligne « Statut » datée (AAAA-MM-JJ) en tête`,
     reprise: (f) => `${f} : section « Reprise » absente (passation)`,
     section: (f, s) => `${f} : section « ${s} » absente`,
-    horsFiche: (c) => `\`${c}\` : fichier de code hors de toute fiche de docs/projets/ (bloc cadrage)`,
-    cadrageEntete: (f) => `${f} : bloc cadrage sans ligne « fichiers: »`,
+    horsFiche: (c) => `\`${c}\` : fichier de code hors de toute fiche de docs/projects/ (bloc cadrage)`,
+    cadrageEntete: (f) => `${f} : bloc scope sans ligne « files: »`,
     cadrageLigne: (f, l) => `${f} : ligne de cadrage non comprise « ${l} »`,
     cadrageLarge: (f, m) => `${f} : motif de cadrage trop large « ${m} »`,
     bilan: (n, e) => `check-docs : ${n} fichiers scannés, ${e} erreur(s)`,
     cadrageAvertissement: (n) =>
-      `check-docs : ${n} avertissement(s) de cadrage (QUA-016, non bloquant — réglage "cadrage" de .drwil/ia-first.json)`,
+      `check-docs : ${n} avertissement(s) de cadrage (QUA-016, non bloquant — réglage "scopeReminder" de .drwil/ia-first.json)`,
     coherenceOuverte: (fiche) => `case ouverte mais la fiche ${fiche} se dit déjà terminée (QUA-015)`,
     coherenceCochee: (fiche) => `case cochée mais la fiche ${fiche} ne se dit pas terminée (QUA-015)`,
     ficheTerminee: (fiche) =>
-      `${fiche} : fiche terminée encore présente — la condenser dans docs/projets/journal.md, la supprimer et retirer sa ligne de l'index (QUA-015)`,
+      `${fiche} : fiche terminée encore présente — la condenser dans docs/projects/journal.md, la supprimer et retirer sa ligne de l'index (QUA-015)`,
     coherenceAvertissement: (n) => `check-docs : ${n} avertissement(s) de cohérence case/statut (QUA-015, non bloquant)`,
     risqueAvertissement: (n) => `check-docs : ${n} avertissement(s) de niveau de risque (DRWIL-012, non bloquant)`,
     ignoreParGit: "fichier ignoré par Git : absent en CI (ajouter « (si présent) »)",
     nouveauxAvertissement: (n) =>
-      `check-docs : ${n} avertissement(s) d'exigence récente (réglage « nouvellesExigences » : avertissement ; « bloquant » pour l'imposer)`,
+      `check-docs : ${n} avertissement(s) d'exigence récente (réglage « newRequirements » : warning ; « blocking » pour l'imposer)`,
   },
   en: {
     chemin: (c) => `cited path not found \`${c}\``,
@@ -46,12 +46,13 @@ const T = {
     statut: (f) => `${f}: no dated « Status » line (YYYY-MM-DD) at the top`,
     reprise: (f) => `${f}: missing « Hand-off » section`,
     section: (f, s) => `${f}: missing « ${s} » section`,
-    horsFiche: (c) => `\`${c}\`: code file outside any docs/projets/ fiche (cadrage block)`,
-    cadrageEntete: (f) => `${f}: cadrage block without a « fichiers: » line`,
-    cadrageLigne: (f, l) => `${f}: cadrage line not understood « ${l} »`,
-    cadrageLarge: (f, m) => `${f}: cadrage pattern too broad « ${m} »`,
+    horsFiche: (c) => `\`${c}\`: code file outside any docs/projects/ brief (scope block)`,
+    cadrageEntete: (f) => `${f}: scope block without a « files: » line`,
+    cadrageLigne: (f, l) => `${f}: scope line not understood « ${l} »`,
+    cadrageLarge: (f, m) => `${f}: scope pattern too broad « ${m} »`,
     bilan: (n, e) => `check-docs: ${n} files scanned, ${e} error(s)`,
-    cadrageAvertissement: (n) => `check-docs: ${n} cadrage warning(s) (QUA-016, non-blocking — "cadrage" setting in .drwil/ia-first.json)`,
+    cadrageAvertissement: (n) =>
+      `check-docs: ${n} scope warning(s) (QUA-016, non-blocking — "scopeReminder" setting in .drwil/ia-first.json)`,
     coherenceOuverte: (fiche) => `item unchecked but ${fiche} already says it is done (QUA-015)`,
     coherenceCochee: (fiche) => `item checked but ${fiche} does not say it is done (QUA-015)`,
     ficheTerminee: (fiche) =>
@@ -60,16 +61,16 @@ const T = {
     risqueAvertissement: (n) => `check-docs: ${n} risk level warning(s) (DRWIL-012, non-blocking)`,
     ignoreParGit: 'file ignored by Git: missing in CI (add "(if present)")',
     nouveauxAvertissement: (n) =>
-      `check-docs: ${n} recent-requirement warning(s) (setting "nouvellesExigences": avertissement; "bloquant" to enforce it)`,
+      `check-docs: ${n} recent-requirement warning(s) (setting "newRequirements": warning; "blocking" to enforce it)`,
   },
 }[lang];
 
 const CITATION_FICHE_RE = /`((?:docs\/projets|docs\/projects|docs\/intentions)\/[^`]+\.md)`/g;
 
 // Sévérité du rappel de cadrage (QUA-016 seul ; le reste de check-docs reste toujours bloquant) :
-// "bloquant" (défaut historique), "avertissement" (jamais bloquant, juste affiché) ou "off" (désactivé).
-const CADRAGE_NIVEAUX = new Set(["bloquant", "avertissement", "off"]);
-const niveauCadrage = CADRAGE_NIVEAUX.has(cfg.cadrage) ? cfg.cadrage : "avertissement";
+// "blocking" (défaut historique), "warning" (jamais bloquant, juste affiché) ou "off" (désactivé).
+const CADRAGE_NIVEAUX = new Set(["blocking", "warning", "off"]);
+const niveauCadrage = CADRAGE_NIVEAUX.has(cfg.scopeReminder) ? cfg.scopeReminder : "warning";
 
 const CODE_RE = /`([^`\s]+)`/g;
 const EXT_RE = /\.(md|mdc|mjs|cjs|js|ts|tsx|jsx|py|sh|json|ya?ml|toml|txt)$/;
@@ -173,7 +174,7 @@ function ignoresParGit(chemins) {
 const prefixes = cfg.contractPrefixes ?? ["SEC", "QUA"];
 // « autre-depot:QUA-011 » cite le contrat d'un autre dépôt : il n'est pas cherché dans ce registre.
 const idMotif = `(?<![\\w:-])(?:${prefixes.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})-\\d{3}\\b`;
-const contratsPath = join(root, cfg.dirs?.contracts ?? "docs/contrats.md");
+const contratsPath = join(root, cfg.dirs?.contracts ?? "docs/contracts.md");
 const definis = new Set();
 const erreurs = [];
 if (existsSync(contratsPath)) {
@@ -216,9 +217,9 @@ for (const doc of docs) {
 
 const ignores = ignoresParGit(citations.flatMap((c) => c.trouves));
 // Exigence ajoutée après l'installation de projets déjà équipés : un fichier ignoré ne prouve plus
-// une citation. Bloquante seulement si le projet l'a (`nouvellesExigences` : "bloquant", défaut
+// une citation. Bloquante seulement si le projet l'a (`newRequirements` : "blocking", défaut
 // des installations neuves) ; sinon signalée sans casser un commit qui passait.
-const nouvellesBloquantes = cfg.nouvellesExigences === "bloquant";
+const nouvellesBloquantes = cfg.newRequirements === "blocking";
 const avertissementsNouveaux = [];
 for (const c of citations) {
   if (!c.trouves.length) erreurs.push(`${c.lieu} : ${T.chemin(c.cite)}`);
@@ -231,8 +232,8 @@ erreurs.push(...checkChantiers());
 // Niveau de risque des fiches de projet (la cérémonie suit le risque) ; la traçabilité QUA-016 ne change pas.
 const avertissementsRisque = [];
 {
-  const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projets");
-  const indexPath = join(root, cfg.dirs?.index ?? "docs/projets/en-attente.md");
+  const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projects");
+  const indexPath = join(root, cfg.dirs?.index ?? "docs/projects/pending.md");
   // La fiche de mécanique du kit est livrée à chaque installation et ne décrit pas un chantier :
   // l'avertir dès l'installation de tout projet serait du bruit, pas un signal.
   const mecanique = /^mecanique-ia-first\.md$|^kit-mechanics\.md$/;
@@ -242,7 +243,7 @@ const avertissementsRisque = [];
     const r = verifierRisque(readFileSync(fiche, "utf8"), {
       idMotif,
       lang,
-      ...(cfg.risque?.cheminsSensibles ? { sensibles: cfg.risque.cheminsSensibles } : {}),
+      ...(cfg.risk?.sensitivePaths ? { sensibles: cfg.risk.sensitivePaths } : {}),
     });
     for (const e of r.erreurs) erreurs.push(`${relative(root, fiche)} : ${e}`);
     for (const a of r.avertissements) avertissementsRisque.push(`${relative(root, fiche)} : ${a}`);
@@ -250,11 +251,11 @@ const avertissementsRisque = [];
 }
 
 const problemesCadrage = niveauCadrage === "off" ? [] : checkCadrage();
-if (niveauCadrage === "bloquant") erreurs.push(...problemesCadrage);
+if (niveauCadrage === "blocking") erreurs.push(...problemesCadrage);
 
 for (const e of erreurs) console.log(`  ✗ ${e}`);
 console.log(T.bilan(docs.length, erreurs.length));
-if (niveauCadrage === "avertissement" && problemesCadrage.length) {
+if (niveauCadrage === "warning" && problemesCadrage.length) {
   for (const e of problemesCadrage) console.log(`  ⚠ ${e}`);
   console.log(T.cadrageAvertissement(problemesCadrage.length));
 }
@@ -278,7 +279,7 @@ process.exit(erreurs.length ? 1 : 0);
 // « Statut » reste libre (prose), pas un champ structuré vérifiable à coup sûr.
 function checkCoherenceCaseStatut() {
   const avertissements = [];
-  const indexPath = join(root, cfg.dirs?.index ?? "docs/projets/en-attente.md");
+  const indexPath = join(root, cfg.dirs?.index ?? "docs/projects/pending.md");
   if (!existsSync(indexPath)) return avertissements;
   const relIndex = relative(root, indexPath);
   const lignes = readFileSync(indexPath, "utf8").split(/\r?\n/);
@@ -320,7 +321,7 @@ function checkCoherenceCaseStatut() {
 // QUA-015 : chaque chantier se reprend à froid (marqueurs, statut daté, sections, Reprise).
 function checkChantiers() {
   const erreurs = [];
-  const indexPath = join(root, cfg.dirs?.index ?? "docs/projets/en-attente.md");
+  const indexPath = join(root, cfg.dirs?.index ?? "docs/projects/pending.md");
   if (existsSync(indexPath)) {
     const relIndex = relative(root, indexPath);
     readFileSync(indexPath, "utf8")
@@ -329,7 +330,7 @@ function checkChantiers() {
         if (/^\s*-\s*\[ \]/.test(ligne) && !MARQUEURS_RE.test(ligne)) erreurs.push(`${relIndex}:${i + 1} : ${T.marqueur()}`);
       });
   }
-  const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projets");
+  const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projects");
   const fiches = mdRecursif(projetsDir).filter((p) => p !== indexPath && !EXEMPTS_RE.test(relative(projetsDir, p)));
   for (const fiche of fiches) checkFiche(fiche, erreurs, true);
   const intentionsDir = join(root, cfg.dirs?.intentions ?? "docs/intentions");
@@ -339,9 +340,9 @@ function checkChantiers() {
 }
 
 // Rappel de cadrage : un fichier de code indexé doit être couvert par le bloc `cadrage` d'une
-// fiche de docs/projets/ (dont la fiche permanente « entretien courant » pour les petites tâches).
-// Sévérité réglable par projet (clé "cadrage" de .drwil/ia-first.json, défaut "avertissement") :
-// "bloquant" fait échouer le commit ; "avertissement" affiche sans jamais bloquer ;
+// fiche de docs/projects/ (dont la fiche permanente « entretien courant » pour les petites tâches).
+// Sévérité réglable par projet (clé "scopeReminder" de .drwil/ia-first.json, défaut "warning") :
+// "blocking" fait échouer le commit ; "warning" affiche sans jamais bloquer ;
 // "off" désactive le contrôle. Ce réglage ne touche que ce contrôle, jamais le reste de check-docs.
 function checkCadrage() {
   const erreurs = [];
@@ -354,7 +355,7 @@ function checkCadrage() {
   } catch {
     return erreurs; // pas de dépôt git, ou git introuvable : rien à vérifier.
   }
-  const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projets");
+  const projetsDir = join(root, cfg.dirs?.projects ?? "docs/projects");
   const fiches = mdRecursif(projetsDir).filter((p) => !MODELE_RE.test(relative(projetsDir, p)));
   const fichesTexte = fiches.map((f) => [relative(root, f), readFileSync(f, "utf8")]);
   for (const [rel, texte] of fichesTexte) {
