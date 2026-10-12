@@ -1,162 +1,154 @@
 #!/usr/bin/env node
-// Barrière de périmètre (docs/ia-first.md, « Barrière de périmètre »), contrôle
-// « perimetre-attente » du moteur (.githooks/engine.mjs) : commit, push, CI, `drwil verify`.
+// Scope gate (docs/ia-first.md, "Scope gate"), the engine's "perimetre-attente" check
+// (.githooks/engine.mjs): commit, push, CI, `drwil verify`.
 //
-// - Les fiches (docs/projects/, docs/intentions/…) sont toujours commitables.
-// - Au commit, tout autre fichier exige l'activité BUILD et doit être couvert par le
-//   bloc cadrage de la fiche active tel qu'il est dans HEAD : élargir son périmètre demande
-//   un commit séparé, visible à part.
-// - Ailleurs (pre-push, CI, verify), l'état local n'existe pas : chaque commit de la branche
-//   est rejoué contre le cadrage de la fiche de son trailer `Drwil-Brief`, lu dans son
-//   parent. Un commit est jugé selon les règles de son parent : sans barrière dans le parent,
-//   il n'est pas contrôlé.
-// Sévérité : réglage `scopeGate` (off | warning | blocking), warning si absent.
+// - Briefs (docs/projects/, docs/intentions/…) can always be committed.
+// - At commit time, any other file requires the BUILD activity and must be covered by the
+//   scope block of the active brief as it is in HEAD: widening its scope takes a separate
+//   commit, visible on its own.
+// - Elsewhere (pre-push, CI, verify), there is no local state: each commit of the branch is
+//   replayed against the scope of the brief named by its `Drwil-Brief` trailer, read in its
+//   parent. A commit is judged by its parent's rules: without a gate in the parent, it is not
+//   checked.
+// Severity: `scopeGate` setting (off | warning | blocking), warning if missing.
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { fnmatch, lireBloc, normaliser } from "./scope.mjs";
-import { gouvernanceDesactivee, lireEtat } from "./state.mjs";
+import { fnmatch, normalize, readBlock } from "./scope.mjs";
+import { governanceDisabled, readState } from "./state.mjs";
 
-// Les attestations passent comme les fiches : preuve humaine déjà gardée par
-// `drwil attest` (terminal requis, empreinte du contrat), relue en revue ; les
-// soumettre au cadrage obligerait à élargir chaque fiche pour clore.
-export const HORS_PERIMETRE = ["docs/projects/*", "docs/intentions/*", ".drwil/evidence/attestations/*"];
+// Attestations pass like briefs: a human proof already guarded by `drwil attest` (terminal
+// required, contract fingerprint), reviewed; subjecting them to the scope would force widening
+// every brief in order to close.
+export const OUT_OF_SCOPE = ["docs/projects/*", "docs/intentions/*", ".drwil/evidence/attestations/*"];
 export const TRAILER = "Drwil-Brief";
-const NIVEAUX = new Set(["off", "warning", "blocking"]);
-const MARQUEUR = ".githooks/scope-gate.mjs";
+const LEVELS = new Set(["off", "warning", "blocking"]);
+const MARKER = ".githooks/scope-gate.mjs";
 
-const TEXTES = {
+const TEXTS = {
   fr: {
     activity: (a, n) =>
       `${n} fichier(s) hors fiches commité(s) en ${a} : seule l'activité BUILD l'autorise (node .githooks/state.mjs move …)`,
-    horsCadrage: (f, fiche) => `${f} : hors du cadrage de ${fiche} (dans HEAD) — l'ajouter au bloc cadrage et commiter la fiche d'abord`,
-    sansTrailer: (c, n) => `${c} : ${n} fichier(s) hors fiches sans trailer ${TRAILER}`,
-    horsCadrageCommit: (c, f, fiche) => `${c} : ${f} hors du cadrage de ${fiche} (dans le parent)`,
-    sansReference: "aucune branche de référence (origin/HEAD, master, main, ou DRWIL_BASE)",
-    echec: (n) => `périmètre de l'attente : ${n} problème(s) (barrière bloquante)`,
+    outsideScope: (f, brief) => `${f} : hors du cadrage de ${brief} (dans HEAD) — l'ajouter au bloc scope et commiter la fiche d'abord`,
+    noTrailer: (c, n) => `${c} : ${n} fichier(s) hors fiches sans trailer ${TRAILER}`,
+    outsideScopeCommit: (c, f, brief) => `${c} : ${f} hors du cadrage de ${brief} (dans le parent)`,
+    noReference: "aucune branche de référence (origin/HEAD, master, main, ou DRWIL_BASE)",
+    failed: (n) => `périmètre de l'attente : ${n} problème(s) (barrière bloquante)`,
   },
   en: {
     activity: (a, n) =>
-      `${n} file(s) outside sheets committed in ${a}: only the BUILD activity allows it (node .githooks/state.mjs move …)`,
-    horsCadrage: (f, fiche) => `${f}: outside the scope of ${fiche} (in HEAD) — add it to the scope block and commit the brief first`,
-    sansTrailer: (c, n) => `${c}: ${n} file(s) outside sheets without a ${TRAILER} trailer`,
-    horsCadrageCommit: (c, f, fiche) => `${c}: ${f} outside the scope of ${fiche} (in the parent)`,
-    sansReference: "no reference branch (origin/HEAD, master, main, or DRWIL_BASE)",
-    echec: (n) => `expectation scope: ${n} problem(s) (blocking barrier)`,
+      `${n} file(s) outside briefs committed in ${a}: only the BUILD activity allows it (node .githooks/state.mjs move …)`,
+    outsideScope: (f, brief) => `${f}: outside the scope of ${brief} (in HEAD) — add it to the scope block and commit the brief first`,
+    noTrailer: (c, n) => `${c}: ${n} file(s) outside briefs without a ${TRAILER} trailer`,
+    outsideScopeCommit: (c, f, brief) => `${c}: ${f} outside the scope of ${brief} (in the parent)`,
+    noReference: "no reference branch (origin/HEAD, master, main, or DRWIL_BASE)",
+    failed: (n) => `brief scope: ${n} problem(s) (blocking gate)`,
   },
 };
 
-const textes = (cfg) => TEXTES[cfg?.lang === "en" ? "en" : "fr"];
+const texts = (cfg) => TEXTS[cfg?.lang === "en" ? "en" : "fr"];
 
-function git(racine, args) {
-  const r = spawnSync("git", args, { cwd: racine, encoding: "utf8" });
+function git(root, args) {
+  const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
   return r.status === 0 ? r.stdout : null;
 }
 
-/** Fichiers soumis au périmètre : tout sauf les fiches (liste réglable). */
-export function horsFiches(fichiers, outOfScope = HORS_PERIMETRE) {
-  return fichiers.map(normaliser).filter((f) => !outOfScope.some((m) => fnmatch(f, m)));
+/** Files subject to the scope: everything but briefs (configurable list). */
+export function outsideBriefFiles(files, outOfScope = OUT_OF_SCOPE) {
+  return files.map(normalize).filter((f) => !outOfScope.some((p) => fnmatch(f, p)));
 }
 
-const couvert = (f, motifs) => motifs.some((m) => fnmatch(f, m));
+const covered = (f, patterns) => patterns.some((p) => fnmatch(f, p));
 
-/** Problèmes d'un commit en préparation (pur). */
-export function verifierIndex({ fichiers, etat, motifs, outOfScope, cfg }) {
-  const T = textes(cfg);
-  const soumis = horsFiches(fichiers, outOfScope);
-  if (!soumis.length) return [];
-  if (etat.activity !== "BUILD") return [T.activity(etat.activity, soumis.length)];
-  return soumis.filter((f) => !couvert(f, motifs)).map((f) => T.horsCadrage(f, etat.active_brief));
+/** Problems of a commit being prepared (pure). */
+export function checkIndex({ files, state, patterns, outOfScope, cfg }) {
+  const T = texts(cfg);
+  const subject = outsideBriefFiles(files, outOfScope);
+  if (!subject.length) return [];
+  if (state.activity !== "BUILD") return [T.activity(state.activity, subject.length)];
+  return subject.filter((f) => !covered(f, patterns)).map((f) => T.outsideScope(f, state.active_brief));
 }
 
-/** Motifs du bloc cadrage de `fiche` dans la révision `rev` ; aucun si la fiche n'y existe pas. */
-function motifsA(racine, rev, fiche) {
-  const texte = fiche ? git(racine, ["show", `${rev}:${fiche}`]) : null;
-  return texte === null ? [] : lireBloc(texte).motifs;
+/** Patterns of the scope block of `brief` in revision `rev`; none if the brief does not exist there. */
+function patternsAt(root, rev, brief) {
+  const text = brief ? git(root, ["show", `${rev}:${brief}`]) : null;
+  return text === null ? [] : readBlock(text).patterns;
 }
 
-function reference(racine, env) {
-  const candidats = env.DRWIL_BASE ? [env.DRWIL_BASE] : [];
-  const origine = git(racine, ["symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"]);
-  if (origine) candidats.push(origine.trim());
-  candidats.push("origin/master", "origin/main", "master", "main");
-  for (const ref of candidats) {
-    if (git(racine, ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`]) === null) continue;
-    const base = git(racine, ["merge-base", "HEAD", ref]);
+function reference(root, env) {
+  const candidates = env.DRWIL_BASE ? [env.DRWIL_BASE] : [];
+  const origin = git(root, ["symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"]);
+  if (origin) candidates.push(origin.trim());
+  candidates.push("origin/master", "origin/main", "master", "main");
+  for (const ref of candidates) {
+    if (git(root, ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`]) === null) continue;
+    const base = git(root, ["merge-base", "HEAD", ref]);
     if (base) return base.trim();
   }
   return null;
 }
 
-function verifierBranche(racine, base, { outOfScope, cfg }) {
-  const T = textes(cfg);
-  const problemes = [];
-  // Aucun repli `?? ""` sur ces appels git : ils portent sur des commits existants (base issue de
-  // merge-base) ; un échec doit casser le contrôle, pas le faire passer sans rien juger (QUA-013).
-  const commits = git(racine, ["rev-list", "--no-merges", "--reverse", `${base}..HEAD`])
+function checkBranch(root, base, { outOfScope, cfg }) {
+  const T = texts(cfg);
+  const problems = [];
+  // No `?? ""` fallback on these git calls: they work on existing commits (base from merge-base);
+  // a failure must break the check, not let it pass without judging anything (QUA-013).
+  const commits = git(root, ["rev-list", "--no-merges", "--reverse", `${base}..HEAD`])
     .split("\n")
     .filter(Boolean);
   for (const c of commits) {
-    const court = c.slice(0, 7);
-    // Règles du parent : sans barrière dans le parent, le commit n'est pas jugé.
-    if (git(racine, ["cat-file", "-e", `${c}^:${MARQUEUR}`]) === null) continue;
-    const fichiers = git(racine, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]).split("\n").filter(Boolean);
-    const soumis = horsFiches(fichiers, outOfScope);
-    if (!soumis.length) continue;
-    const valeurs = git(racine, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c])
+    const short = c.slice(0, 7);
+    // The parent's rules: without a gate in the parent, the commit is not judged.
+    if (git(root, ["cat-file", "-e", `${c}^:${MARKER}`]) === null) continue;
+    const files = git(root, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]).split("\n").filter(Boolean);
+    const subject = outsideBriefFiles(files, outOfScope);
+    if (!subject.length) continue;
+    const values = git(root, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c])
       .split("\n")
       .map((v) => v.trim())
       .filter(Boolean);
-    const fiche = valeurs.at(-1);
-    if (!fiche) {
-      problemes.push(T.sansTrailer(court, soumis.length));
+    const brief = values.at(-1);
+    if (!brief) {
+      problems.push(T.noTrailer(short, subject.length));
       continue;
     }
-    const motifs = motifsA(racine, `${c}^`, fiche);
-    for (const f of soumis) if (!couvert(f, motifs)) problemes.push(T.horsCadrageCommit(court, f, fiche));
+    const patterns = patternsAt(root, `${c}^`, brief);
+    for (const f of subject) if (!covered(f, patterns)) problems.push(T.outsideScopeCommit(short, f, brief));
   }
-  return problemes;
+  return problems;
 }
 
 /**
- * Contrôle complet pour le moteur : `{ statut, problemes, message?, detail? }`.
- * `indexes` (fichiers indexés) n'est fourni qu'au pre-commit ; sinon la branche est rejouée.
+ * Full check for the engine: `{ status, problems, message?, detail? }`.
+ * `staged` (staged files) is only given at pre-commit; otherwise the branch is replayed.
  */
-export function controlerPerimetre(racine, { cfg = {}, indexes = null, env = process.env } = {}) {
-  const niveau = NIVEAUX.has(cfg.scopeGate) ? cfg.scopeGate : "warning";
-  if (niveau === "off") return { statut: "non-applicable", problemes: [], detail: "scopeGate: off" };
-  const outOfScope = Array.isArray(cfg.outOfScope) ? cfg.outOfScope : HORS_PERIMETRE;
-  let problemes;
-  if (indexes) {
-    const { etat } = lireEtat(racine);
-    problemes = verifierIndex({ fichiers: indexes, etat, motifs: motifsA(racine, "HEAD", etat.active_brief), outOfScope, cfg });
+export function checkScope(root, { cfg = {}, staged = null, env = process.env } = {}) {
+  const level = LEVELS.has(cfg.scopeGate) ? cfg.scopeGate : "warning";
+  if (level === "off") return { status: "non-applicable", problems: [], detail: "scopeGate: off" };
+  const outOfScope = Array.isArray(cfg.outOfScope) ? cfg.outOfScope : OUT_OF_SCOPE;
+  let problems;
+  if (staged) {
+    const { state } = readState(root);
+    problems = checkIndex({ files: staged, state, patterns: patternsAt(root, "HEAD", state.active_brief), outOfScope, cfg });
   } else {
-    const base = reference(racine, env);
-    if (!base) return { statut: "non-execute", problemes: [], detail: textes(cfg).sansReference };
-    problemes = verifierBranche(racine, base, { outOfScope, cfg });
+    const base = reference(root, env);
+    if (!base) return { status: "non-execute", problems: [], detail: texts(cfg).noReference };
+    problems = checkBranch(root, base, { outOfScope, cfg });
   }
-  if (problemes.length && niveau === "blocking") return { statut: "echec", problemes, message: textes(cfg).echec(problemes.length) };
-  return { statut: "ok", problemes };
+  if (problems.length && level === "blocking") return { status: "echec", problems, message: texts(cfg).failed(problems.length) };
+  return { status: "ok", problems };
 }
 
-/** Ajoute `Drwil-Brief: <fiche active>` au message (hook prepare-commit-msg) ; rien sans attente ni gouvernance. */
-export function ajouterTrailer(racine, fichierMessage) {
-  if (gouvernanceDesactivee(racine)) return;
-  const { etat } = lireEtat(racine);
-  if (!etat.active_brief) return;
-  git(racine, [
-    "interpret-trailers",
-    "--in-place",
-    "--if-exists",
-    "replace",
-    "--trailer",
-    `${TRAILER}: ${etat.active_brief}`,
-    fichierMessage,
-  ]);
+/** Adds `Drwil-Brief: <active brief>` to the message (prepare-commit-msg hook); nothing without a brief or governance. */
+export function addTrailer(root, messageFile) {
+  if (governanceDisabled(root)) return;
+  const { state } = readState(root);
+  if (!state.active_brief) return;
+  git(root, ["interpret-trailers", "--in-place", "--if-exists", "replace", "--trailer", `${TRAILER}: ${state.active_brief}`, messageFile]);
 }
 
-// `node .githooks/scope-gate.mjs --trailer <fichier>` (prepare-commit-msg). Ne bloque jamais le commit :
-// ajouterTrailer ne lève pas, un échec de git laisse le message tel quel.
+// `node .githooks/scope-gate.mjs --trailer <file>` (prepare-commit-msg). Never blocks the commit:
+// addTrailer does not throw, a git failure leaves the message as it is.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const i = process.argv.indexOf("--trailer");
-  if (i >= 0 && process.argv[i + 1]) ajouterTrailer(process.cwd(), process.argv[i + 1]);
+  if (i >= 0 && process.argv[i + 1]) addTrailer(process.cwd(), process.argv[i + 1]);
 }

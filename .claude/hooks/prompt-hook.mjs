@@ -1,82 +1,93 @@
 #!/usr/bin/env node
-// Lancer un chantier depuis le chat (`/drwil-lancer`, docs/ia-first.md, « Lancer et clore ») :
-// la décision humaine est la réponse à un sondage, lue par l'outil, jamais par le modèle.
-// - PreToolUse (sondage) : refuse un sondage de lancement qui arrive avec une réponse déjà
-//   remplie ou une valeur par défaut — le modèle ne répond pas à la place de l'humain et ne
-//   présélectionne rien (sa recommandation passe par le libellé « (Recommandé) »).
-// - PostToolUse (sondage) : lit la réponse de l'humain et lance la fiche choisie
-//   (`.githooks/state.mjs`, seule logique, valable pour tout outil).
-// Les mêmes hooks servent Claude Code et Copilot CLI, qui lit ce fichier de réglages ; seuls
-// les formats du sondage diffèrent. Un sondage qui n'est pas celui de drwil passe sans rien.
+// Starting a workstream from the chat (`/drwil-lancer`, docs/ia-first.md, "Starting and closing"):
+// the human decision is the answer to a poll, read by the tool, never by the model.
+// - PreToolUse (poll): refuses a start poll that arrives with an answer already filled in or a
+//   default value — the model does not answer in the human's place and preselects nothing (its
+//   recommendation goes through the "(Recommended)" label).
+// - PostToolUse (poll): reads the human's answer and starts the chosen brief
+//   (`.githooks/state.mjs`, the only logic, valid for any tool).
+// The same hooks serve Claude Code and Copilot CLI, which reads this settings file; only the poll
+// formats differ. A poll that is not drwil's passes through untouched.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const MARQUE = "drwil-lancer";
-// Seconde question facultative du même sondage (Claude Code) : autoriser la fusion automatique.
-const MARQUE_FUSION = "drwil-fusion";
-const FUSION_OUI_RE = /^(fusion automatique|automatic merge)\b/i;
-// L'outil invoque le hook avec le dossier du projet en cwd.
-const RACINE = process.cwd();
+const MARK = "drwil-lancer";
+// Optional second question of the same poll (Claude Code): authorise the automatic merge.
+const MERGE_MARK = "drwil-fusion";
+const MERGE_YES_RE = /^(fusion automatique|automatic merge)\b/i;
+// The tool runs the hook with the project folder as cwd.
+const ROOT = process.cwd();
 
-/** Le sondage de lancement, sous l'une des deux formes connues ; null sinon. */
-export function sondageLancement(entree) {
-  const e = entree?.tool_input ?? {};
-  // Claude Code : questions[{ question, header, options }], réponses dans `answers`.
-  const q = Array.isArray(e.questions) ? e.questions.find((x) => x?.header === MARQUE) : null;
-  const qFusion = q ? e.questions.find((x) => x?.header === MARQUE_FUSION) : null;
+const TEXTS = {
+  fr: "drwil : sondage de lancement refusé — il ne doit contenir ni réponse ni valeur par défaut ; c'est l'humain qui choisit.",
+  en: "drwil: start poll refused — it must contain neither an answer nor a default value; the human chooses.",
+};
+
+/** The start poll, in one of the two known forms; null otherwise. */
+export function startPoll(input) {
+  const e = input?.tool_input ?? {};
+  // Claude Code: questions[{ question, header, options }], answers in `answers`.
+  const q = Array.isArray(e.questions) ? e.questions.find((x) => x?.header === MARK) : null;
+  const qMerge = q ? e.questions.find((x) => x?.header === MERGE_MARK) : null;
   if (q)
     return {
-      forme: "claude",
+      form: "claude",
       question: q.question,
-      questionFusion: qFusion?.question ?? null,
-      prerempli: Boolean(e.answers && Object.keys(e.answers).length),
+      mergeQuestion: qMerge?.question ?? null,
+      prefilled: Boolean(e.answers && Object.keys(e.answers).length),
     };
-  // Copilot CLI : message + requestedSchema (options en `enum`), réponse en texte libre.
-  if (typeof e.message === "string" && e.message.startsWith(MARQUE)) {
-    const proprietes = Object.values(e.requestedSchema?.properties ?? {});
-    return { forme: "copilot", prerempli: proprietes.some((p) => p && "default" in p) };
+  // Copilot CLI: message + requestedSchema (options as `enum`), free-text answer.
+  if (typeof e.message === "string" && e.message.startsWith(MARK)) {
+    const properties = Object.values(e.requestedSchema?.properties ?? {});
+    return { form: "copilot", prefilled: properties.some((p) => p && "default" in p) };
   }
   return null;
 }
 
-/** La réponse de l'humain, lue après le sondage ; null si absente. */
-export function reponseHumaine(entree, sondage) {
-  if (sondage.forme === "claude") return entree?.tool_response?.answers?.[sondage.question] ?? null;
-  const texte = entree?.tool_result?.text_result_for_llm;
-  const m = typeof texte === "string" ? /User responded:\s*(.+)\s*$/s.exec(texte) : null;
+/** The human's answer, read after the poll; null if missing. */
+export function humanAnswer(input, poll) {
+  if (poll.form === "claude") return input?.tool_response?.answers?.[poll.question] ?? null;
+  const text = input?.tool_result?.text_result_for_llm;
+  const m = typeof text === "string" ? /User responded:\s*(.+)\s*$/s.exec(text) : null;
   return m ? m[1].trim() : null;
 }
 
-/** Fusion automatique autorisée par la réponse humaine à la seconde question (Claude Code seul). */
-export function fusionAutorisee(entree, sondage) {
-  if (sondage.forme !== "claude" || !sondage.questionFusion) return false;
-  return FUSION_OUI_RE.test(String(entree?.tool_response?.answers?.[sondage.questionFusion] ?? ""));
+/** Automatic merge authorised by the human answer to the second question (Claude Code only). */
+export function mergeAuthorised(input, poll) {
+  if (poll.form !== "claude" || !poll.mergeQuestion) return false;
+  return MERGE_YES_RE.test(String(input?.tool_response?.answers?.[poll.mergeQuestion] ?? ""));
 }
 
-async function principal() {
-  let entree;
+function language() {
   try {
-    entree = JSON.parse(readFileSync(0, "utf8"));
+    return JSON.parse(readFileSync(join(ROOT, ".drwil", "ia-first.json"), "utf8")).lang === "en" ? "en" : "fr";
+  } catch {
+    return "fr";
+  }
+}
+
+async function main() {
+  let input;
+  try {
+    input = JSON.parse(readFileSync(0, "utf8"));
   } catch {
     return 0;
   }
-  const sondage = sondageLancement(entree);
-  if (!sondage) return 0;
-  const evenement = entree.hook_event_name;
-  if (evenement === "PreToolUse") {
-    if (!sondage.prerempli) return 0;
-    // Code 2 : l'outil bloque l'appel et rend ce message au modèle.
-    console.error(
-      "drwil : sondage de lancement refusé — il ne doit contenir ni réponse ni valeur par défaut ; c'est l'humain qui choisit.",
-    );
+  const poll = startPoll(input);
+  if (!poll) return 0;
+  const event = input.hook_event_name;
+  if (event === "PreToolUse") {
+    if (!poll.prefilled) return 0;
+    // Exit code 2: the tool blocks the call and gives this message back to the model.
+    console.error(TEXTS[language()]);
     return 2;
   }
-  if (evenement !== "PostToolUse") return 0;
-  const choix = reponseHumaine(entree, sondage);
-  if (!choix) return 0;
-  const { lancer } = await import(pathToFileURL(join(RACINE, ".githooks", "state.mjs")).href);
-  const r = lancer(RACINE, choix, { humain: true, fusion: fusionAutorisee(entree, sondage) });
+  if (event !== "PostToolUse") return 0;
+  const choice = humanAnswer(input, poll);
+  if (!choice) return 0;
+  const { start } = await import(pathToFileURL(join(ROOT, ".githooks", "state.mjs")).href);
+  const r = start(ROOT, choice, { human: true, autoMerge: mergeAuthorised(input, poll) });
   console.log(
     JSON.stringify({
       hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `[drwil] ${r.code === 0 ? "✓" : "✗"} ${r.message}` },
@@ -87,9 +98,9 @@ async function principal() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    process.exitCode = await principal();
+    process.exitCode = await main();
   } catch {
-    // Une erreur ne bloque jamais l'outil : l'état reste inchangé, la barrière Git demeure.
+    // An error never blocks the tool: the state stays unchanged, the Git gate remains.
     process.exitCode = 0;
   }
 }

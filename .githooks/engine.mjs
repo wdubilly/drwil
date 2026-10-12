@@ -1,186 +1,186 @@
-// Moteur de contrôles unique :
-// .githooks/run-checks.mjs (adaptateur git) et `drwil verify` l'utilisent tous les deux,
-// aucun ne réimplémente un contrôle. Sans dépendance : les hooks restent autonomes.
+// Single check engine:
+// .githooks/run-checks.mjs (git adapter) and `drwil verify` both use it,
+// neither reimplements a check. Dependency-free: the hooks stay self-contained.
 //
-// Chaque contrôle a un identifiant stable (cité par le champ **Contrôle** de
-// docs/contracts.md) et rend un résultat parmi :
-// - "ok" / "echec" ;
-// - "non-execute" : il aurait dû tourner mais n'a pas pu (outil absent, reporté
-//   au commit) — jamais un succès (QUA-013) ;
-// - "non-applicable" : exclu par conception dans ce contexte (ex. QUA-017 en CI).
+// Each check has a stable identifier (cited by the **Check** field of
+// docs/contracts.md) and returns one of these results (stable values: they leave the hooks
+// through `drwil verify` and its evidence):
+// - "ok" / "echec" (failed);
+// - "non-execute" (not run): it should have run but could not (missing tool, deferred
+//   at commit time) — never a success (QUA-013);
+// - "non-applicable": excluded by design in this context (e.g. QUA-017 in CI).
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { globEnRegex } from "./glob.mjs";
-import { controlerPerimetre } from "./scope-gate.mjs";
+import { globToRegex } from "./glob.mjs";
+import { checkScope } from "./scope-gate.mjs";
 
-const TEXTES = {
+const TEXTS = {
   fr: {
     secrets: "secrets (gitleaks)",
-    gitleaksAbsent: "gitleaks absent",
-    pasDeGit: "pas de dépôt git",
-    modeMinimal: "mode minimal",
+    gitleaksMissing: "gitleaks absent",
+    noGit: "pas de dépôt git",
+    minimalMode: "mode minimal",
     docs: "chemins et contrats cités dans la doc",
-    perimetre: "périmètre de l'attente",
-    branche: "branche principale (QUA-017)",
-    brancheCi: "jamais en CI",
-    brancheTags: "push de tags uniquement",
-    brancheSansBranche: "push de tags ou de suppressions de branches uniquement",
-    brancheProtegee: (b) =>
+    scope: "périmètre de l'attente",
+    branch: "branche principale (QUA-017)",
+    branchCi: "jamais en CI",
+    branchTags: "push de tags uniquement",
+    branchNoBranch: "push de tags ou de suppressions de branches uniquement",
+    branchProtected: (b) =>
       `travail direct sur la branche principale (${b}) : passer par une branche et une pull/merge request (voir docs/recipes/working-with-branches.md)`,
-    testsControles: "tests des contrôles eux-mêmes",
-    aucunTest: "tests propres au dépôt drwil, non livrés",
-    couvertureCi: "couverture CI de chaque contrôle (QUA-013)",
-    pasDeCi: "aucune CI configurée (ci: none) : pas de filet pour les contrôles dégradables",
-    reporte: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
+    selfTests: "tests des contrôles eux-mêmes",
+    noTests: "tests propres au dépôt drwil, non livrés",
+    ciCoverage: "couverture CI de chaque contrôle (QUA-013)",
+    noCi: "aucune CI configurée (ci: none) : pas de filet pour les contrôles dégradables",
+    deferred: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
   },
   en: {
     secrets: "secrets (gitleaks)",
-    gitleaksAbsent: "gitleaks not installed",
-    pasDeGit: "not a git repository",
-    modeMinimal: "minimal mode",
+    gitleaksMissing: "gitleaks not installed",
+    noGit: "not a git repository",
+    minimalMode: "minimal mode",
     docs: "paths and contracts cited in docs",
-    perimetre: "expectation scope",
-    branche: "main branch (QUA-017)",
-    brancheCi: "never in CI",
-    brancheTags: "tags-only push",
-    brancheSansBranche: "push of tags or branch deletions only",
-    brancheProtegee: (b) =>
+    scope: "brief scope",
+    branch: "main branch (QUA-017)",
+    branchCi: "never in CI",
+    branchTags: "tags-only push",
+    branchNoBranch: "push of tags or branch deletions only",
+    branchProtected: (b) =>
       `direct work on the main branch (${b}): go through a branch and a pull/merge request (see docs/recipes/working-with-branches.md)`,
-    testsControles: "tests of the checks themselves",
-    aucunTest: "tests owned by the drwil repository, not shipped",
-    couvertureCi: "CI coverage of each check (QUA-013)",
-    pasDeCi: "no CI configured (ci: none): no net for degradable checks",
-    reporte: "no staged file under its paths: replayed on push and in CI",
+    selfTests: "tests of the checks themselves",
+    noTests: "tests owned by the drwil repository, not shipped",
+    ciCoverage: "CI coverage of each check (QUA-013)",
+    noCi: "no CI configured (ci: none): no net for degradable checks",
+    deferred: "no staged file under its paths: replayed on push and in CI",
   },
 };
 
 /**
- * Racine du projet pour run-checks.mjs (`urlScript` : son import.meta.url) : le dossier parent de
- * `.githooks/`, quel que soit le dossier courant. `DRWIL_RACINE` la remplace, pour ses tests
- * seulement : sans elle, run-checks ne s'éprouverait que sur le dépôt drwil lui-même.
+ * Project root for run-checks.mjs (`scriptUrl`: its import.meta.url): the parent folder of
+ * `.githooks/`, whatever the current folder. `DRWIL_ROOT` replaces it, for its tests only:
+ * without it, run-checks would only be tried on the drwil repository itself.
  */
-export function racineDuProjet(urlScript, env = process.env) {
-  return env.DRWIL_RACINE || join(dirname(fileURLToPath(urlScript)), "..");
+export function projectRoot(scriptUrl, env = process.env) {
+  return env.DRWIL_ROOT || join(dirname(fileURLToPath(scriptUrl)), "..");
 }
 
-export function textes(lang) {
-  return TEXTES[lang === "en" ? "en" : "fr"];
+export function texts(lang) {
+  return TEXTS[lang === "en" ? "en" : "fr"];
 }
 
-function trouverGitleaks() {
-  for (const candidat of ["gitleaks", join(homedir(), ".local", "bin", "gitleaks")]) {
-    if (!spawnSync(candidat, ["version"], { stdio: "ignore" }).error) return candidat;
+function findGitleaks() {
+  for (const candidate of ["gitleaks", join(homedir(), ".local", "bin", "gitleaks")]) {
+    if (!spawnSync(candidate, ["version"], { stdio: "ignore" }).error) return candidate;
   }
   return null;
 }
 
 /**
- * Contrôles du projet, dans l'ordre d'exécution des hooks : [{ id, nom, executer }].
- * `executer({ stdio, avantLancement })` rend { statut, detail?, message?, sortie? } (`message` :
- * explication d'un échec à afficher à la place du nom) ; `avantLancement`
- * est appelé juste avant de lancer réellement la commande (pas pour un contrôle sauté).
- * `indexes` (hook pre-commit seulement) : fichiers indexés, pour reporter un contrôle du
- * projet hors de ses `paths` ; null partout ailleurs (rien n'est reporté).
- * `complet` : analyse le dépôt entier plutôt que les seuls fichiers indexés (CI, `drwil verify`).
+ * The project's checks, in the hooks' run order: [{ id, name, run }].
+ * `run({ stdio, beforeRun })` returns { status, detail?, message?, output? } (`message`:
+ * explanation of a failure to show instead of the name); `beforeRun` is called just before
+ * actually launching the command (not for a skipped check).
+ * `staged` (pre-commit hook only): staged files, to defer a project check outside its `paths`;
+ * null everywhere else (nothing is deferred).
+ * `whole`: analyses the whole repository rather than the staged files only (CI, `drwil verify`).
  */
-export function controles(root, { cfg = {}, env = process.env, indexes = null, complet = Boolean(env.CI) } = {}) {
-  const T = textes(cfg.lang);
+export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI) } = {}) {
+  const T = texts(cfg.lang);
   const full = (cfg.mode ?? "full") === "full";
-  const lancer = (cmd, args, { stdio = "inherit", avantLancement, ...opts } = {}, nom) => {
-    avantLancement?.(nom);
-    // NODE_TEST_CONTEXT se propage aux enfants : si le moteur tourne lui-même sous `node --test`
-    // (le kit qui teste ses hooks, un harnais qui appelle verify…), un `node --test` lancé par un
-    // contrôle serait silencieusement sauté (« called recursively ») et rendrait 0 : un faux PASS.
-    const envControle = { ...(opts.env ?? env), NODE_TEST_CONTEXT: undefined };
-    const r = spawnSync(cmd, args, { cwd: root, stdio, encoding: "utf8", ...opts, env: envControle });
-    const sortie = stdio === "pipe" ? `${r.stdout ?? ""}${r.stderr ?? ""}` : undefined;
-    // Une commande qui ne peut même pas se lancer est un échec, comme avant l'extraction du moteur.
-    if (r.error) return { statut: "echec", detail: r.error.message, sortie };
-    return { statut: r.status === 0 ? "ok" : "echec", sortie };
+  const launch = (cmd, args, { stdio = "inherit", beforeRun, ...opts } = {}, name) => {
+    beforeRun?.(name);
+    // NODE_TEST_CONTEXT propagates to children: if the engine itself runs under `node --test`
+    // (the kit testing its hooks, a harness calling verify…), a `node --test` launched by a check
+    // would be silently skipped ("called recursively") and return 0: a false PASS.
+    const checkEnv = { ...(opts.env ?? env), NODE_TEST_CONTEXT: undefined };
+    const r = spawnSync(cmd, args, { cwd: root, stdio, encoding: "utf8", ...opts, env: checkEnv });
+    const output = stdio === "pipe" ? `${r.stdout ?? ""}${r.stderr ?? ""}` : undefined;
+    // A command that cannot even start is a failure, as before the engine was extracted.
+    if (r.error) return { status: "echec", detail: r.error.message, output };
+    return { status: r.status === 0 ? "ok" : "echec", output };
   };
-  const liste = [];
-  const ajouter = (id, nom, executer) => liste.push({ id, nom, executer: (o = {}) => executer(o, nom) });
+  const list = [];
+  const add = (id, name, run) => list.push({ id, name, run: (o = {}) => run(o, name) });
 
-  ajouter("secrets-fichiers", T.secrets, (o, nom) => {
-    if (!full) return { statut: "non-applicable", detail: T.modeMinimal };
-    const gitleaks = trouverGitleaks();
-    if (!gitleaks) return { statut: "non-execute", detail: T.gitleaksAbsent };
+  add("secrets-fichiers", T.secrets, (o, name) => {
+    if (!full) return { status: "non-applicable", detail: T.minimalMode };
+    const gitleaks = findGitleaks();
+    if (!gitleaks) return { status: "non-execute", detail: T.gitleaksMissing };
     if (spawnSync("git", ["rev-parse", "--git-dir"], { cwd: root, stdio: "ignore" }).status !== 0)
-      return { statut: "non-execute", detail: T.pasDeGit };
-    // En CI (ou pour `drwil verify`) il n'y a rien d'indexé à juger : on analyse tout l'historique,
-    // sinon une preuve de « pas de secret dans le dépôt » ne regarderait rien.
-    const args = complet ? ["git", "--no-banner", "--redact", "."] : ["git", "--pre-commit", "--staged", "--no-banner", "--redact", "."];
-    return lancer(gitleaks, args, o, nom);
+      return { status: "non-execute", detail: T.noGit };
+    // In CI (or for `drwil verify`) nothing is staged to judge: the whole history is analysed,
+    // otherwise a proof of "no secret in the repository" would look at nothing.
+    const args = whole ? ["git", "--no-banner", "--redact", "."] : ["git", "--pre-commit", "--staged", "--no-banner", "--redact", "."];
+    return launch(gitleaks, args, o, name);
   });
 
-  ajouter("docs-references", T.docs, (o, nom) => lancer(process.execPath, [".githooks/check-docs.mjs"], o, nom));
+  add("docs-references", T.docs, (o, name) => launch(process.execPath, [".githooks/check-docs.mjs"], o, name));
 
-  // Barrière de périmètre de l'attente (.githooks/scope-gate.mjs) : au commit, l'état local ;
-  // ailleurs (push, CI, verify), rejeu de chaque commit de la branche via son trailer.
-  ajouter("perimetre-attente", T.perimetre, (o, nom) => {
-    o.avantLancement?.(nom);
-    const r = controlerPerimetre(root, { cfg, indexes, env });
-    const sortie = r.problemes.map((p) => `  ${r.statut === "echec" ? "✗" : "⚠"} ${p}`).join("\n");
-    if (sortie && o.stdio !== "pipe") console.log(sortie);
-    return { statut: r.statut, message: r.message, detail: r.detail, sortie };
+  // Brief scope gate (.githooks/scope-gate.mjs): at commit time, the local state;
+  // elsewhere (push, CI, verify), each commit of the branch is replayed through its trailer.
+  add("perimetre-attente", T.scope, (o, name) => {
+    o.beforeRun?.(name);
+    const r = checkScope(root, { cfg, staged, env });
+    const output = r.problems.map((p) => `  ${r.status === "echec" ? "✗" : "⚠"} ${p}`).join("\n");
+    if (output && o.stdio !== "pipe") console.log(output);
+    return { status: r.status, message: r.message, detail: r.detail, output };
   });
 
-  // QUA-017 : jamais de travail direct sur la branche principale, y compris le tout premier commit
-  // (plus d'exception de bootstrap : `init()` crée systématiquement une branche de travail avant tout
-  // commit). `symbolic-ref` (contrairement à
-  // `rev-parse --abbrev-ref HEAD`) fonctionne même avant le premier commit (HEAD non encore créé).
-  // Jamais en CI (env.CI) : la CI tourne aussi sur master après un merge légitime,
-  // qu'il ne faut pas bloquer rétroactivement — seuls les hooks locaux (pre-commit/pre-push) l'appliquent.
-  // Jamais non plus sur un push qui ne pousse que des tags (DRWIL_PUSH_TAGS_ONLY, positionné par
-  // .githooks/pre-push d'après l'entrée standard du hook) : un tag ne modifie jamais une branche ;
-  // ni une suppression de branche distante (DRWIL_PUSH_SANS_BRANCHE).
-  ajouter("branche-principale", T.branche, () => {
-    if (env.CI) return { statut: "non-applicable", detail: T.brancheCi };
-    if (env.DRWIL_PUSH_TAGS_ONLY === "1") return { statut: "non-applicable", detail: T.brancheTags };
-    if (env.DRWIL_PUSH_SANS_BRANCHE === "1") return { statut: "non-applicable", detail: T.brancheSansBranche };
-    const branche = spawnSync("git", ["symbolic-ref", "--short", "HEAD"], { cwd: root, encoding: "utf8" });
-    const nomBranche = branche.status === 0 ? branche.stdout.trim() : null;
-    if (nomBranche && ["master", "main"].includes(nomBranche)) return { statut: "echec", message: T.brancheProtegee(nomBranche) };
-    return { statut: "ok" };
+  // QUA-017: never work directly on the main branch, including the very first commit (no more
+  // bootstrap exception: `init()` always creates a working branch before any commit).
+  // `symbolic-ref` (unlike `rev-parse --abbrev-ref HEAD`) works even before the first commit
+  // (HEAD not created yet). Never in CI (env.CI): CI also runs on master after a legitimate merge,
+  // which must not be blocked retroactively — only the local hooks (pre-commit/pre-push) apply it.
+  // Never either on a push of tags only (DRWIL_PUSH_TAGS_ONLY, set by .githooks/pre-push from the
+  // hook's standard input): a tag never changes a branch; nor on a remote branch deletion
+  // (DRWIL_PUSH_NO_BRANCH).
+  add("branche-principale", T.branch, () => {
+    if (env.CI) return { status: "non-applicable", detail: T.branchCi };
+    if (env.DRWIL_PUSH_TAGS_ONLY === "1") return { status: "non-applicable", detail: T.branchTags };
+    if (env.DRWIL_PUSH_NO_BRANCH === "1") return { status: "non-applicable", detail: T.branchNoBranch };
+    const branch = spawnSync("git", ["symbolic-ref", "--short", "HEAD"], { cwd: root, encoding: "utf8" });
+    const branchName = branch.status === 0 ? branch.stdout.trim() : null;
+    if (branchName && ["master", "main"].includes(branchName)) return { status: "echec", message: T.branchProtected(branchName) };
+    return { status: "ok" };
   });
 
-  ajouter("controles-autotest", T.testsControles, (o, nom) => {
-    if (!full) return { statut: "non-applicable", detail: T.modeMinimal };
-    const dossier = join(root, ".githooks");
-    const tests = existsSync(dossier) ? readdirSync(dossier).filter((f) => f.endsWith(".test.mjs")) : [];
-    // Ces tests éprouvent le code de drwil : ils restent dans son dépôt et ne ralentissent pas le
-    // commit d'un projet équipé, qui ne les reçoit pas.
-    if (!tests.length) return { statut: "non-applicable", detail: T.aucunTest };
-    return lancer(process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))], o, nom);
+  add("controles-autotest", T.selfTests, (o, name) => {
+    if (!full) return { status: "non-applicable", detail: T.minimalMode };
+    const dir = join(root, ".githooks");
+    const tests = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".test.mjs")) : [];
+    // These tests try drwil's code: they stay in its repository and do not slow down the commits
+    // of an equipped project, which does not receive them.
+    if (!tests.length) return { status: "non-applicable", detail: T.noTests };
+    return launch(process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))], o, name);
   });
 
-  ajouter("couverture-ci", T.couvertureCi, (o, nom) => {
-    if (!full) return { statut: "non-applicable", detail: T.modeMinimal };
+  add("couverture-ci", T.ciCoverage, (o, name) => {
+    if (!full) return { status: "non-applicable", detail: T.minimalMode };
     const ciFiles = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
-    if (!ciFiles.length) return { statut: "non-execute", detail: T.pasDeCi };
-    return lancer(process.execPath, [".githooks/check-control-coverage.mjs"], o, nom);
+    if (!ciFiles.length) return { status: "non-execute", detail: T.noCi };
+    return launch(process.execPath, [".githooks/check-control-coverage.mjs"], o, name);
   });
 
-  // Les contrôles propres à la stack (lint, typecheck, tests) sont déclarés par le projet, pas par le kit.
-  // Au pre-commit seulement (`indexes` fourni), un contrôle qui déclare `paths` est reporté si aucun
-  // fichier indexé n'y correspond : un commit de doc ne relance pas toute la suite de tests. Il reste
-  // « non exécuté » (QUA-013) et le pre-push comme la CI le rejouent toujours.
+  // Stack checks (lint, typecheck, tests) are declared by the project, not by the kit.
+  // At pre-commit only (`staged` given), a check that declares `paths` is deferred if no staged
+  // file matches them: a docs commit does not rerun the whole test suite. It stays "not run"
+  // (QUA-013) and the pre-push as well as CI always replay it.
   for (const c of Array.isArray(cfg.checks) ? cfg.checks : []) {
-    const nom = c.name ?? c.run;
-    liste.push({
-      id: c.id ?? `projet:${nom}`,
-      nom,
-      executer: (o = {}) => {
-        if (indexes && Array.isArray(c.paths) && c.paths.length) {
-          const motifs = c.paths.map(globEnRegex);
-          if (!indexes.some((f) => motifs.some((m) => m.test(f)))) return { statut: "non-execute", detail: T.reporte };
+    const name = c.name ?? c.run;
+    list.push({
+      id: c.id ?? `projet:${name}`,
+      name,
+      run: (o = {}) => {
+        if (staged && Array.isArray(c.paths) && c.paths.length) {
+          const patterns = c.paths.map(globToRegex);
+          if (!staged.some((f) => patterns.some((p) => p.test(f)))) return { status: "non-execute", detail: T.deferred };
         }
-        return lancer(c.run, [], { ...o, shell: true, cwd: c.cwd ? join(root, c.cwd) : root }, nom);
+        return launch(c.run, [], { ...o, shell: true, cwd: c.cwd ? join(root, c.cwd) : root }, name);
       },
     });
   }
-  return liste;
+  return list;
 }

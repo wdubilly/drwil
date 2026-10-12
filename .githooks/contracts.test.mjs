@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CONTROLES_SOCLE, controlesConnus, lireContrats, validerContrats } from "./contracts.mjs";
+import { BASE_CHECKS, knownChecks, readContracts, validateContracts } from "./contracts.mjs";
 
 const SECTIONS = `# Contrats
 
@@ -26,37 +26,37 @@ const SECTIONS = `# Contrats
 `;
 
 test("forme sections : Contrôle, Manuel, contrats sans champ", () => {
-  const k = lireContrats(SECTIONS);
+  const k = readContracts(SECTIONS);
   assert.deepEqual(
     k.map((c) => c.id),
     ["SEC-007", "QUA-015", "SEC-001", "QUA-099"],
   );
-  const { texte, ...champs } = k[0];
+  const { text: texte, ...champs } = k[0];
   assert.deepEqual(champs, {
     id: "SEC-007",
-    titre: "Pas de secret",
-    ligne: 3,
-    forme: "section",
-    regle: "aucun secret.",
-    controles: ["secrets-fichiers"],
-    manuel: null,
-    severite: "bloquant",
-    severiteBrute: null,
+    title: "Pas de secret",
+    line: 3,
+    form: "section",
+    rule: "aucun secret.",
+    checks: ["secrets-fichiers"],
+    manual: null,
+    severity: "bloquant",
+    rawSeverity: null,
   });
   assert.equal(
     texte,
     "## SEC-007 — Pas de secret\n**Règle** : aucun secret.\n**Contrôle** : `secrets-fichiers`",
     "texte brut de la section, sans la suivante",
   );
-  assert.deepEqual(k[1].controles, ["docs-references", "couverture-ci"]);
-  assert.equal(k[1].manuel, "justesse du contenu des fiches");
-  assert.equal(k[2].controles, null);
-  assert.equal(k[3].controles, null);
-  assert.equal(k[3].manuel, null);
+  assert.deepEqual(k[1].checks, ["docs-references", "couverture-ci"]);
+  assert.equal(k[1].manual, "justesse du contenu des fiches");
+  assert.equal(k[2].checks, null);
+  assert.equal(k[3].checks, null);
+  assert.equal(k[3].manual, null);
 });
 
 test("forme sections : « **Contrôle:** » et valeur à la ligne suivante", () => {
-  const k = lireContrats(`## SEC-007 — Pas de secret
+  const k = readContracts(`## SEC-007 — Pas de secret
 
 **Règle:**
 Aucun secret.
@@ -66,12 +66,12 @@ secrets-fichiers
 
 **Manuel:** relecture
 `);
-  assert.deepEqual(k[0].controles, ["secrets-fichiers"]);
-  assert.equal(k[0].manuel, "relecture");
+  assert.deepEqual(k[0].checks, ["secrets-fichiers"]);
+  assert.equal(k[0].manual, "relecture");
 });
 
 test("forme tableau historique, avec ou sans colonnes Contrôle/Manuel", () => {
-  const k = lireContrats(`| ID | Règle | Preuve |
+  const k = readContracts(`| ID | Règle | Preuve |
 |---|---|---|
 | SEC-006 | Pas de faille | audit |
 
@@ -81,17 +81,17 @@ test("forme tableau historique, avec ou sans colonnes Contrôle/Manuel", () => {
 | QUA-018 | Périmètre | — | appréciation humaine |
 `);
   assert.deepEqual(
-    k.map((c) => [c.id, c.forme, c.controles, c.manuel]),
+    k.map((c) => [c.id, c.form, c.checks, c.manual]),
     [
-      ["SEC-006", "tableau", null, null],
-      ["QUA-004", "tableau", ["couverture-tests"], null],
-      ["QUA-018", "tableau", null, "appréciation humaine"],
+      ["SEC-006", "table", null, null],
+      ["QUA-004", "table", ["couverture-tests"], null],
+      ["QUA-018", "table", null, "appréciation humaine"],
     ],
   );
 });
 
 test("validation : contrôle inconnu, aucune preuve, doublon, Contrôle vide ; tableau historique toléré", () => {
-  const k = lireContrats(`${SECTIONS}
+  const k = readContracts(`${SECTIONS}
 ## SEC-007 — Doublon
 **Règle** : x.
 **Contrôle** : \`inexistant\`
@@ -107,33 +107,33 @@ test("validation : contrôle inconnu, aucune preuve, doublon, Contrôle vide ; t
 |---|---|
 | SEC-006 | historique |
 `);
-  const messages = validerContrats(k, CONTROLES_SOCLE).map((e) => e.message);
+  const messages = validateContracts(k, BASE_CHECKS).map((e) => e.message);
   assert.deepEqual(messages, [
     "QUA-099 : aucune preuve déclarée (champ Contrôle ou Manuel)",
     "contrat SEC-007 défini plusieurs fois",
-    `SEC-007 : contrôle inconnu « inexistant » (connus : ${CONTROLES_SOCLE.join(", ")})`,
+    `SEC-007 : contrôle inconnu « inexistant » (connus : ${BASE_CHECKS.join(", ")})`,
     "QUA-100 : champ Contrôle vide",
     "QUA-101 : exigence absente (champ Règle)",
   ]);
 });
 
 test("contrôles connus : socle + id des contrôles du projet", () => {
-  assert.deepEqual(controlesConnus({ checks: [{ id: "couverture-tests", run: "x" }, { run: "sans id" }] }), [
-    ...CONTROLES_SOCLE,
+  assert.deepEqual(knownChecks({ checks: [{ id: "couverture-tests", run: "x" }, { run: "sans id" }] }), [
+    ...BASE_CHECKS,
     "couverture-tests",
   ]);
-  assert.deepEqual(controlesConnus(undefined), CONTROLES_SOCLE);
+  assert.deepEqual(knownChecks(undefined), BASE_CHECKS);
 });
 
 test("les identifiants de SOCLE de check-control-coverage.mjs sont des contrôles connus", () => {
   const source = readFileSync(new URL("./check-control-coverage.mjs", import.meta.url), "utf8");
   const ids = [...source.matchAll(/^\s*\{?\s*id: "([^"]+)"/gm)].map((m) => m[1]);
   assert.ok(ids.length >= 3, "SOCLE introuvable");
-  for (const id of ids) assert.ok(CONTROLES_SOCLE.includes(id), id);
+  for (const id of ids) assert.ok(BASE_CHECKS.includes(id), id);
 });
 
 test("sévérité : bloquant par défaut, synonymes anglais, valeur inconnue refusée", () => {
-  const k = lireContrats(`## QUA-001 — a
+  const k = readContracts(`## QUA-001 — a
 **Règle** : x.
 **Contrôle** : \`docs-references\`
 **Sévérité** : avertissement
@@ -149,17 +149,17 @@ test("sévérité : bloquant par défaut, synonymes anglais, valeur inconnue ref
 **Sévérité** : énorme
 `);
   assert.deepEqual(
-    k.map((c) => c.severite),
+    k.map((c) => c.severity),
     ["avertissement", "indicatif", null],
   );
   assert.deepEqual(
-    validerContrats(k, CONTROLES_SOCLE).map((e) => e.type),
-    ["severite"],
+    validateContracts(k, BASE_CHECKS).map((e) => e.type),
+    ["severity"],
   );
 });
 
 test("messages en anglais ; titre sans tiret, tableau sans règle", () => {
-  const contrats = lireContrats(
+  const contrats = readContracts(
     [
       "## QUA-001",
       "**Rule**: r",
@@ -178,15 +178,15 @@ test("messages en anglais ; titre sans tiret, tableau sans règle", () => {
       "| QUA-005 |",
     ].join("\n"),
   );
-  assert.equal(contrats[0].titre, "");
+  assert.equal(contrats[0].title, "");
   assert.deepEqual(
-    contrats.slice(3).map((k) => [k.id, k.titre, k.regle]),
+    contrats.slice(3).map((k) => [k.id, k.title, k.rule]),
     [
       ["QUA-004", "", null],
       ["QUA-005", "", null],
     ],
   );
-  const messages = validerContrats(contrats, ["docs-references"], "en").map((e) => e.message);
+  const messages = validateContracts(contrats, ["docs-references"], "en").map((e) => e.message);
   assert.deepEqual(messages, [
     "QUA-001: empty Check field",
     'QUA-001: unknown severity "bizarre" (blocking, warning or advisory)',

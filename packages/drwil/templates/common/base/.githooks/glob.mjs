@@ -1,24 +1,24 @@
-// Correspondance de motifs partagée par run-checks.mjs (report au pre-commit)
-// et check-control-coverage.mjs (couverture CI) : les deux lisent les mêmes
-// `paths` de .drwil/ia-first.json, ils doivent les interpréter pareil.
+// Pattern matching shared by run-checks.mjs (deferral at pre-commit) and
+// check-control-coverage.mjs (CI coverage): both read the same `paths` of
+// .drwil/ia-first.json, so they must interpret them the same way.
 
-/** Façon fnmatch de GitLab/GitHub : `**` traverse les `/`, `*` non. */
-export function globEnRegex(glob) {
-  let sortie = "";
+/** fnmatch the GitLab/GitHub way: `**` crosses `/`, `*` does not. */
+export function globToRegex(glob) {
+  let out = "";
   for (let i = 0; i < glob.length; ) {
     if (glob.startsWith("**/", i)) {
-      sortie += "(?:.*/)?";
+      out += "(?:.*/)?";
       i += 3;
     } else if (glob.startsWith("**", i)) {
-      sortie += ".*";
+      out += ".*";
       i += 2;
     } else if (glob[i] === "*") {
-      sortie += "[^/]*";
+      out += "[^/]*";
       i += 1;
     } else {
-      sortie += glob[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      out += glob[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       i += 1;
     }
   }
-  return new RegExp(`^${sortie}$`);
+  return new RegExp(`^${out}$`);
 }

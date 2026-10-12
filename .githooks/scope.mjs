@@ -1,8 +1,8 @@
-// Grammaire du bloc `scope` des fiches de chantier (docs/projects/*.md).
+// Grammar of the `scope` block of workstream briefs (docs/projects/*.md).
 //
-// Seule source de la grammaire : le contrôle au commit (check-docs.mjs) et le
-// rappel à l'agent (.claude/hooks/scope-reminder.mjs) l'importent tous deux.
-// Une fiche de docs/projects/ peut porter, dans un commentaire HTML :
+// Single source of the grammar: the commit-time check (check-docs.mjs) and the
+// reminder to the agent (.claude/hooks/scope-reminder.mjs) both import it.
+// A brief in docs/projects/ may carry, in an HTML comment:
 //
 //     <!-- scope
 //     files:
@@ -10,111 +10,111 @@
 //       - frontend/src/components/Script*
 //     -->
 //
-// Un fichier de code est couvert s'il correspond à un motif (façon fnmatch)
-// d'une fiche, livrée ou non. Rien ici ne lève d'exception sur une fiche
-// illisible : le mécanisme aide, il ne doit jamais casser.
+// A code file is covered if it matches a pattern (fnmatch style) of a brief,
+// delivered or not. Nothing here throws on an unreadable brief: the mechanism
+// helps, it must never break.
 
-const BLOC_RE = /<!--[ \t]*scope[ \t]*\r?\n([\s\S]*?)-->/;
-const ENTREE_RE = /^-[ \t]+(\S+)$/;
-const JOKERS = new Set(["*", "?", "["]);
+const BLOCK_RE = /<!--[ \t]*scope[ \t]*\r?\n([\s\S]*?)-->/;
+const ENTRY_RE = /^-[ \t]+(\S+)$/;
+const WILDCARDS = new Set(["*", "?", "["]);
 
-/** Chemin relatif à la racine, séparateurs `/`, sans `./` de tête. */
-export function normaliser(chemin) {
-  let c = String(chemin).replace(/\\/g, "/").trim();
-  while (c.startsWith("./")) c = c.slice(2);
-  return c;
+/** Path relative to the root, `/` separators, no leading `./`. */
+export function normalize(path) {
+  let p = String(path).replace(/\\/g, "/").trim();
+  while (p.startsWith("./")) p = p.slice(2);
+  return p;
 }
 
 /**
- * Le périmètre du rappel : le code du projet et sa configuration ; jamais
- * docs/ ni un .md, pour que l'agent puisse toujours écrire sa fiche.
- * Lu depuis la config du projet (.drwil/ia-first.json) : couches, dossiers de
- * code génériques, fichiers et motifs supplémentaires, fichiers de CI.
+ * The reminder's scope: the project's code and its configuration; never
+ * docs/ nor a .md, so that the agent can always write its brief.
+ * Read from the project config (.drwil/ia-first.json): layers, generic code
+ * folders, extra files and patterns, CI files.
  */
-export function estDuCode(chemin, cfg = {}) {
-  const c = normaliser(chemin);
-  if (!c || c.startsWith("docs/") || /\.md$/i.test(c)) return false;
-  const prefixes = [...(cfg.layers ?? []), ...(cfg.layerPrefixes ?? []), ...(cfg.codePrefixes ?? [])].map((p) => `${p}/`);
-  if (prefixes.some((p) => c.startsWith(p))) return true;
-  if ((cfg.extraCodeFiles ?? []).includes(c)) return true;
-  if ((cfg.ciFiles ?? []).includes(c)) return true;
-  return (cfg.extraCodeGlobs ?? []).some((m) => fnmatch(c, m));
+export function isCode(path, cfg = {}) {
+  const p = normalize(path);
+  if (!p || p.startsWith("docs/") || /\.md$/i.test(p)) return false;
+  const prefixes = [...(cfg.layers ?? []), ...(cfg.layerPrefixes ?? []), ...(cfg.codePrefixes ?? [])].map((x) => `${x}/`);
+  if (prefixes.some((x) => p.startsWith(x))) return true;
+  if ((cfg.extraCodeFiles ?? []).includes(p)) return true;
+  if ((cfg.ciFiles ?? []).includes(p)) return true;
+  return (cfg.extraCodeGlobs ?? []).some((g) => fnmatch(p, g));
 }
 
-/** Façon fnmatch : `*` et `?` traversent les `/`, le reste est littéral. */
-export function fnmatch(chemin, motif) {
-  const re = motif
+/** fnmatch style: `*` and `?` cross `/`, the rest is literal. */
+export function fnmatch(path, pattern) {
+  const re = pattern
     .replace(/[.+^${}()|[\]\\]/g, "\\$&")
     .replace(/\*/g, ".*")
     .replace(/\?/g, ".");
-  return new RegExp(`^${re}$`).test(chemin);
+  return new RegExp(`^${re}$`).test(path);
 }
 
-/** Un motif doit nommer au moins deux dossiers avant son premier joker
- * (`backend/app/x*` oui, `backend/*` ou `**` non) : sinon il couvre tout un
- * arbre et le rappel ne dit plus rien. */
-export function tropLarge(motif) {
-  if (motif.includes("**")) return true;
-  const premier = [...motif].findIndex((c) => JOKERS.has(c));
-  if (premier === -1) return false;
-  return (motif.slice(0, premier).match(/\//g) ?? []).length < 2;
+/** A pattern must name at least two folders before its first wildcard
+ * (`backend/app/x*` yes, `backend/*` or `**` no): otherwise it covers a whole
+ * tree and the reminder says nothing any more. */
+export function tooBroad(pattern) {
+  if (pattern.includes("**")) return true;
+  const first = [...pattern].findIndex((c) => WILDCARDS.has(c));
+  if (first === -1) return false;
+  return (pattern.slice(0, first).match(/\//g) ?? []).length < 2;
 }
 
 /**
- * Motifs valides et problèmes du bloc `cadrage` d'une fiche. Pas de bloc :
- * `{ motifs: [], problemes: [] }`. Un motif trop large est signalé et retiré
- * des motifs valides.
+ * Valid patterns and problems of a brief's `scope` block. No block:
+ * `{ patterns: [], problems: [] }`. A too broad pattern is reported and removed
+ * from the valid patterns.
  */
-export function lireBloc(texte) {
-  const m = BLOC_RE.exec(texte);
-  if (!m) return { motifs: [], problemes: [] };
-  const motifs = [];
-  const problemes = [];
-  let entete = false;
-  for (const brute of m[1].split(/\r?\n/)) {
-    const ligne = brute.trim();
-    if (!ligne) continue;
-    if (!entete) {
-      if (ligne === "files:") entete = true;
-      else problemes.push({ kind: "entete", ligne });
+export function readBlock(text) {
+  const m = BLOCK_RE.exec(text);
+  if (!m) return { patterns: [], problems: [] };
+  const patterns = [];
+  const problems = [];
+  let header = false;
+  for (const raw of m[1].split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (!header) {
+      if (line === "files:") header = true;
+      else problems.push({ kind: "header", line });
       continue;
     }
-    const entree = ENTREE_RE.exec(ligne);
-    if (entree) motifs.push(normaliser(entree[1]));
-    else problemes.push({ kind: "ligne", ligne });
+    const entry = ENTRY_RE.exec(line);
+    if (entry) patterns.push(normalize(entry[1]));
+    else problems.push({ kind: "line", line });
   }
-  if (!entete && problemes.length === 0) problemes.push({ kind: "entete", ligne: "" });
-  const valides = [];
-  for (const motif of motifs) {
-    if (tropLarge(motif)) problemes.push({ kind: "large", motif });
-    else valides.push(motif);
+  if (!header && problems.length === 0) problems.push({ kind: "header", line: "" });
+  const valid = [];
+  for (const pattern of patterns) {
+    if (tooBroad(pattern)) problems.push({ kind: "broad", pattern });
+    else valid.push(pattern);
   }
-  return { motifs: valides, problemes };
+  return { patterns: valid, problems };
 }
 
-/** `{ fiche (chemin relatif) : motifs }` pour les fiches dont le bloc se lit sans erreur de forme. */
-export function motifsDuDepot(fichesTexte) {
-  const resultat = new Map();
-  for (const [rel, texte] of fichesTexte) {
-    const { motifs } = lireBloc(texte);
-    if (motifs.length) resultat.set(rel, motifs);
+/** `{ brief (relative path): patterns }` for the briefs whose block reads without a form error. */
+export function patternsByBrief(briefTexts) {
+  const result = new Map();
+  for (const [rel, text] of briefTexts) {
+    const { patterns } = readBlock(text);
+    if (patterns.length) result.set(rel, patterns);
   }
-  return resultat;
+  return result;
 }
 
-export function fichesCouvrant(chemin, motifsParFiche) {
-  const c = normaliser(chemin);
-  const fiches = [];
-  for (const [fiche, motifs] of motifsParFiche) if (motifs.some((m) => fnmatch(c, m))) fiches.push(fiche);
-  return fiches;
+export function briefsCovering(path, byBrief) {
+  const p = normalize(path);
+  const briefs = [];
+  for (const [brief, patterns] of byBrief) if (patterns.some((g) => fnmatch(p, g))) briefs.push(brief);
+  return briefs;
 }
 
-/** Fichiers de code de `chemins` qu'aucune fiche ne couvre, triés. */
-export function horsFiche(chemins, motifsParFiche, cfg) {
+/** Code files of `paths` that no brief covers, sorted. */
+export function outsideBriefs(paths, byBrief, cfg) {
   const set = new Set();
-  for (const c of chemins) {
-    const n = normaliser(c);
-    if (estDuCode(n, cfg) && fichesCouvrant(n, motifsParFiche).length === 0) set.add(n);
+  for (const path of paths) {
+    const p = normalize(path);
+    if (isCode(p, cfg) && briefsCovering(p, byBrief).length === 0) set.add(p);
   }
   return [...set].sort();
 }

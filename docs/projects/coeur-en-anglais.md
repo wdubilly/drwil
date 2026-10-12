@@ -143,6 +143,11 @@ commun livré, et migre les projets équipés en une fois par `init` /
   touche que la fiche ajoute d'abord ce bloc à côté de l'ancien, le commit
   de bascule retire l'ancien. Rien n'est désactivé (QUA-019, pas de
   contournement).
+- **2026-10-12 — Valeurs visibles hors des hooks, gardées pour C**
+  (demandeur) : statuts du moteur (`echec`, `non-execute`), identifiants de
+  contrôles (`perimetre-attente`…) et sévérités (`bloquant`…) restent tels
+  quels au lot 3, interface stable sans changement de comportement ; le
+  chantier C les traite avec la sortie de la CLI.
 
 ## Contrats concernés
 
@@ -213,7 +218,7 @@ Aucun.
 - **Branchée** (lot 2) : `init` et `apply` migrent d'abord ; `apply --dry-run`
   affiche la migration sans rien écrire ; `npm run installer-depot` migre ce
   dépôt avant de l'installer. Les hooks ne lisent plus que les noms anglais,
-  y compris les dossiers (docs/projets/ n'est plus toléré).
+  y compris les dossiers (docs/projects/ n'est plus toléré).
 - **Bascule de ce dépôt** (lot 2) : la migration a aussi réécrit les chemins
   cités par les fiches, intentions et journal ; ceux des tests du dépôt
   (`.githooks/*.test.mjs`, hors table) l'ont été à la main. Le module
@@ -222,8 +227,11 @@ Aucun.
 
 ## 8. Reprise
 
-- **Dernier état** (2026-10-12) : lots 1 et 2 faits ; `run-checks` vert,
-  projet type à l'ancien format migré par `apply` et vert (test du paquet).
+- **Dernier état** (2026-10-12) : lots 1 et 2 faits ; lot 3 en cours : hooks
+  git et hooks Claude Code en anglais (identifiants, commentaires, messages
+  en dictionnaire fr/en, textes français inchangés) ; la CLI garde son
+  modèle français derrière un pont (`packages/drwil/src/verify.ts`).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 3, code commun en anglais ; puis lot 4
+- **Prochaine étape** : [IA] fin du lot 3 : modules optionnels, CI,
+  `gitignore`, `.gitleaks.toml`, `.env.example`, réglages Claude ; puis lot 4
   (version mineure et note de version comprises).

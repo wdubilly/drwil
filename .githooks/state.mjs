@@ -1,34 +1,34 @@
 #!/usr/bin/env node
-// État de gouvernance runtime : .drwil/state.json (docs/ia-first.md, « État de gouvernance »).
+// Runtime governance state: .drwil/state.json (docs/ia-first.md, "Governance state").
 //
-// Seul lecteur et seul écrivain de l'état : le contexte réinjecté à l'agent
-// (`node .githooks/state.mjs`, hook SessionStart de Claude), les transitions
-// (`node .githooks/state.mjs move <ACTIVITE>`, `drwil etat`) et, plus tard, le
-// pre-commit l'importent. Aucun outil d'agent n'est requis.
-// L'état est local (gitignoré) et ne contient que des références : le périmètre
-// autorisé vit dans le bloc `cadrage` de la fiche active, versionnée.
-// Fichier absent = SCOPING neutre ; aucun état actif n'est jamais déduit.
-// Un état invalide est ramené au neutre ET signalé : jamais masqué, jamais permissif.
-// Clore (VERIFY → CLOSING) exige l'évidence de `drwil verify --evidence` : ce
-// fichier la lit, il n'exécute aucun contrôle (un seul moteur, .githooks/engine.mjs).
+// Only reader and only writer of the state: the context reinjected to the agent
+// (`node .githooks/state.mjs`, Claude's SessionStart hook), the transitions
+// (`node .githooks/state.mjs move <ACTIVITY>`, `drwil etat`) and the pre-commit
+// import it. No agent tool is required.
+// The state is local (gitignored) and only holds references: the allowed scope
+// lives in the `scope` block of the active brief, which is versioned.
+// Missing file = neutral SCOPING; no active state is ever inferred.
+// An invalid state is brought back to neutral AND reported: never hidden, never permissive.
+// Closing (VERIFY → CLOSING) requires the evidence of `drwil verify --evidence`: this
+// file reads it, it runs no check (a single engine, .githooks/engine.mjs).
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
-import { config, DOSSIERS_FICHES, fichesCadrees, MODELE_RE, statutFiche } from "./briefs.mjs";
-import { contexte, rappelCourt } from "./state-texts.mjs";
+import { BRIEF_DIRS, briefStatus, config, MODEL_RE, scopedBriefs } from "./briefs.mjs";
+import { context, fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
 
-// Interface inchangée pour les autres hooks, la CLI et les outils : tout ce qu'exportait ce fichier
-// avant son découpage reste importable d'ici.
-export { fichesCadrees, statutFiche } from "./briefs.mjs";
-export { contexte, gouvernanceDesactivee, rappelCourt } from "./state-texts.mjs";
+// Unchanged interface for the other hooks, the CLI and the tools: everything this file exported
+// before it was split stays importable from here.
+export { briefStatus, scopedBriefs } from "./briefs.mjs";
+export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 
-export const ACTIVITES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
+export const ACTIVITIES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
 
-// Une activité à la fois ; retour à BUILD après EVIDENCE ou VERIFY en échec ;
-// abandon vers SCOPING depuis toute activité.
-const SUIVANTES = {
+// One activity at a time; back to BUILD after EVIDENCE or a failed VERIFY;
+// abandon to SCOPING from any activity.
+const NEXT = {
   SCOPING: ["EXPECTATION"],
   EXPECTATION: ["REQUEST"],
   REQUEST: ["BUILD"],
@@ -38,354 +38,322 @@ const SUIVANTES = {
   CLOSING: ["SCOPING"],
 };
 
-export const ETAT_NEUTRE = Object.freeze({ version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null });
+export const NEUTRAL_STATE = Object.freeze({ version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null });
 
-// auto_merge : absent de l'état neutre, posé seulement par un lancement humain (`start`).
-const CHAMPS = new Set([...Object.keys(ETAT_NEUTRE), "auto_merge"]);
+// auto_merge: absent from the neutral state, set only by a human start (`start`).
+const FIELDS = new Set([...Object.keys(NEUTRAL_STATE), "auto_merge"]);
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+const texts = (root) => STATE_MESSAGES[config(root).lang === "en" ? "en" : "fr"];
 
-export function transitionAutorisee(de, vers) {
-  if (!ACTIVITES.includes(de) || !ACTIVITES.includes(vers) || de === vers) return false;
-  return vers === "SCOPING" || SUIVANTES[de].includes(vers);
+export function transitionAllowed(from, to) {
+  if (!ACTIVITIES.includes(from) || !ACTIVITIES.includes(to) || from === to) return false;
+  return to === "SCOPING" || NEXT[from].includes(to);
 }
 
-/** Problèmes de l'état (messages en français, liste vide si valide). */
-export function validerEtat(etat, racine) {
-  if (typeof etat !== "object" || etat === null || Array.isArray(etat)) return ["state.json doit contenir un objet JSON"];
-  const problemes = [];
-  for (const cle of Object.keys(etat))
-    if (!CHAMPS.has(cle)) problemes.push(`champ inconnu « ${cle} » (l'état ne contient que des références)`);
-  if (etat.version !== 1) problemes.push("version : 1 attendu");
-  if (!ACTIVITES.includes(etat.activity)) {
-    problemes.push(`activité inconnue « ${etat.activity} » (attendu : ${ACTIVITES.join(", ")})`);
-  } else if (etat.activity === "SCOPING") {
-    if (etat.active_brief !== null || etat.active_request !== null) problemes.push("en SCOPING, aucune attente ni demande active");
-  } else if (etat.active_brief === null || etat.active_brief === undefined) {
-    problemes.push(`${etat.activity} : attente active requise`);
+/** Problems of the state (in the project's language, empty list if valid). */
+export function validateState(state, root) {
+  const T = texts(root);
+  if (typeof state !== "object" || state === null || Array.isArray(state)) return [T.notObject];
+  const problems = [];
+  for (const key of Object.keys(state)) if (!FIELDS.has(key)) problems.push(fill(T.unknownField, key));
+  if (state.version !== 1) problems.push(T.version);
+  if (!ACTIVITIES.includes(state.activity)) {
+    problems.push(fill(T.unknownActivity, state.activity, ACTIVITIES.join(", ")));
+  } else if (state.activity === "SCOPING") {
+    if (state.active_brief !== null || state.active_request !== null) problems.push(T.scopingEmpty);
+  } else if (state.active_brief === null || state.active_brief === undefined) {
+    problems.push(fill(T.briefRequired, state.activity));
   }
-  if (etat.active_brief !== null && etat.active_brief !== undefined)
-    problemes.push(...validerAttente(etat.active_brief, racine, etat.activity));
-  if (etat.active_request !== null && typeof etat.active_request !== "string") problemes.push("active_request : chaîne ou null attendu");
-  if (etat.auto_merge !== undefined && typeof etat.auto_merge !== "boolean") problemes.push("auto_merge : booléen attendu");
-  else if (etat.auto_merge === true && etat.activity === "SCOPING")
-    problemes.push("auto_merge : jamais en SCOPING (aucun chantier en cours)");
-  if (etat.since !== null && !(typeof etat.since === "string" && ISO_RE.test(etat.since) && !Number.isNaN(Date.parse(etat.since)))) {
-    problemes.push("since : horodatage ISO 8601 ou null attendu");
+  if (state.active_brief !== null && state.active_brief !== undefined)
+    problems.push(...validateBrief(state.active_brief, root, state.activity, T));
+  if (state.active_request !== null && typeof state.active_request !== "string") problems.push(T.request);
+  if (state.auto_merge !== undefined && typeof state.auto_merge !== "boolean") problems.push(T.autoMergeType);
+  else if (state.auto_merge === true && state.activity === "SCOPING") problems.push(T.autoMergeScoping);
+  if (state.since !== null && !(typeof state.since === "string" && ISO_RE.test(state.since) && !Number.isNaN(Date.parse(state.since)))) {
+    problems.push(T.since);
   }
-  return problemes;
+  return problems;
 }
 
-function validerAttente(attente, racine, activite) {
-  if (typeof attente !== "string") return ["active_brief : chemin de fiche ou null attendu"];
-  const chemin = posix.normalize(attente.replace(/\\/g, "/"));
-  const dossier = DOSSIERS_FICHES.find((d) => chemin.startsWith(d));
-  if (!dossier || !chemin.endsWith(".md")) return [`active_brief : fiche .md de ${DOSSIERS_FICHES.join(" ou ")} attendue (« ${attente} »)`];
-  if (MODELE_RE.test(posix.basename(chemin))) return [`active_brief : « ${attente} » est un modèle, pas une fiche de chantier`];
-  // En CLOSING, la recette « Clôturer » supprime la fiche : son absence est l'issue normale, et
-  // la refuser rendrait l'état invalide au moment même de revenir en SCOPING.
-  if (!existsSync(join(racine, chemin)) && activite !== "CLOSING") return [`active_brief : fiche « ${attente} » introuvable`];
+function validateBrief(brief, root, activity, T) {
+  if (typeof brief !== "string") return [T.briefType];
+  const path = posix.normalize(brief.replace(/\\/g, "/"));
+  const dir = BRIEF_DIRS.find((d) => path.startsWith(d));
+  if (!dir || !path.endsWith(".md")) return [fill(T.briefPlace, brief, BRIEF_DIRS.join(T.or))];
+  if (MODEL_RE.test(posix.basename(path))) return [fill(T.briefModel, brief)];
+  // In CLOSING, the "Closing" recipe deletes the brief: its absence is the normal outcome, and
+  // refusing it would make the state invalid at the very moment of going back to SCOPING.
+  if (!existsSync(join(root, path)) && activity !== "CLOSING") return [fill(T.briefMissing, brief)];
   return [];
 }
 
-/** `{ etat, source: "absent" | "fichier", problemes }` ; un état invalide est remplacé par le neutre. */
-export function lireEtat(racine) {
-  const fichier = join(racine, ".drwil", "state.json");
-  if (!existsSync(fichier)) return { etat: { ...ETAT_NEUTRE }, source: "absent", problemes: [] };
-  let etat;
+/** `{ state, source: "missing" | "file", problems }`; an invalid state is replaced by the neutral one. */
+export function readState(root) {
+  const file = join(root, ".drwil", "state.json");
+  if (!existsSync(file)) return { state: { ...NEUTRAL_STATE }, source: "missing", problems: [] };
+  let state;
   try {
-    etat = JSON.parse(readFileSync(fichier, "utf8"));
+    state = JSON.parse(readFileSync(file, "utf8"));
   } catch {
-    return { etat: { ...ETAT_NEUTRE }, source: "fichier", problemes: ["state.json illisible (JSON invalide)"] };
+    return { state: { ...NEUTRAL_STATE }, source: "file", problems: [texts(root).unreadable] };
   }
-  const problemes = validerEtat(etat, racine);
-  return problemes.length ? { etat: { ...ETAT_NEUTRE }, source: "fichier", problemes } : { etat, source: "fichier", problemes };
+  const problems = validateState(state, root);
+  return problems.length ? { state: { ...NEUTRAL_STATE }, source: "file", problems } : { state, source: "file", problems };
 }
 
-// Transitions qui ouvrent des droits : réservées à un humain en mode « humain » (défaut).
-// Les autres resserrent les droits ou reviennent en arrière. Clore n'en fait plus partie
-// (docs/ia-first.md, « Lancer et clore ») : clore retire des droits, exige l'évidence de
-// verify, et l'acceptation reste la fusion de la PR, humaine.
-const HUMAINES = new Set(["SCOPING>EXPECTATION", "REQUEST>BUILD"]);
+// Transitions that open rights: reserved to a human in "human" mode (default).
+// The others narrow rights or go back. Closing is no longer one of them
+// (docs/ia-first.md, "Starting and closing"): closing removes rights, requires verify
+// evidence, and acceptance stays the merge of the PR, a human one.
+const HUMAN = new Set(["SCOPING>EXPECTATION", "REQUEST>BUILD"]);
 
-export function exigeHumain(de, vers, mode) {
-  return mode !== "agent" && HUMAINES.has(`${de}>${vers}`);
+export function requiresHuman(from, to, mode) {
+  return mode !== "agent" && HUMAN.has(`${from}>${to}`);
 }
-
-const RELANCER = "relancer `npx drwil verify --evidence`";
 
 /**
- * Dernière évidence de verify (.drwil/evidence/verify-*.json, hors git) : `{ ok: true }`
- * si elle autorise la clôture, sinon `{ ok: false, raison }`. Verdict pass ou attested,
- * sur le commit HEAD, arbre propre au moment de verify et maintenant : sinon, ce qui
- * est clos ne serait pas ce qui a été vérifié.
+ * Latest verify evidence (.drwil/evidence/verify-*.json, outside git): `{ ok: true }`
+ * if it allows closing, otherwise `{ ok: false, reason }`. Verdict pass or attested,
+ * on the HEAD commit, clean worktree at verify time and now: otherwise, what is
+ * closed would not be what was verified.
  */
-export function preuveVerify(racine) {
-  const dossier = join(racine, ".drwil", "evidence");
-  // Horodatage ISO dans le nom : l'ordre alphabétique est l'ordre chronologique.
-  const noms = existsSync(dossier)
-    ? readdirSync(dossier)
+export function verifyEvidence(root) {
+  const T = texts(root);
+  const dir = join(root, ".drwil", "evidence");
+  // ISO timestamp in the name: alphabetical order is chronological order.
+  const names = existsSync(dir)
+    ? readdirSync(dir)
         .filter((n) => /^verify-.+\.json$/.test(n))
         .sort()
     : [];
-  if (!noms.length) return { ok: false, raison: `aucune évidence de verify : lancer \`npx drwil verify --evidence\`` };
-  const nom = noms.at(-1);
+  if (!names.length) return { ok: false, reason: T.noEvidence };
+  const name = names.at(-1);
   let ev;
   try {
-    ev = JSON.parse(readFileSync(join(dossier, nom), "utf8"));
+    ev = JSON.parse(readFileSync(join(dir, name), "utf8"));
   } catch {
-    return { ok: false, raison: `évidence ${nom} illisible : ${RELANCER}` };
+    return { ok: false, reason: fill(T.evidenceUnreadable, name) };
   }
   const git = (...args) => {
-    const r = spawnSync("git", args, { cwd: racine, encoding: "utf8" });
+    const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
     return r.status === 0 ? r.stdout.trim() : null;
   };
   const head = git("rev-parse", "HEAD");
-  if (!head) return { ok: false, raison: "commit HEAD introuvable : la clôture se juge sur un travail commité" };
-  if (ev.commit !== head) return { ok: false, raison: `évidence ${nom} produite sur un autre commit que HEAD : ${RELANCER}` };
-  if (ev.dirtyWorktree !== false || git("status", "--porcelain") !== "") {
-    return { ok: false, raison: `arbre modifié (au moment de verify ou depuis) : commiter puis ${RELANCER}` };
-  }
+  if (!head) return { ok: false, reason: T.noHead };
+  if (ev.commit !== head) return { ok: false, reason: fill(T.otherCommit, name) };
+  if (ev.dirtyWorktree !== false || git("status", "--porcelain") !== "") return { ok: false, reason: T.dirty };
   if (ev.status === "pass" || ev.status === "attested") return { ok: true };
-  if (ev.status === "manual") {
-    return { ok: false, raison: "verdict MANUAL : un humain atteste (`npx drwil attest <ID>`), puis " + RELANCER };
-  }
-  if (ev.status === "fail" || ev.status === "error") {
-    return {
-      ok: false,
-      raison: `verdict ${ev.status.toUpperCase()} : revenir en BUILD (\`node .githooks/state.mjs move BUILD\`) pour corriger`,
-    };
-  }
-  return { ok: false, raison: `évidence ${nom} sans verdict reconnu : ${RELANCER}` };
+  if (ev.status === "manual") return { ok: false, reason: T.manual };
+  if (ev.status === "fail" || ev.status === "error") return { ok: false, reason: fill(T.failed, ev.status.toUpperCase()) };
+  return { ok: false, reason: fill(T.noVerdict, name) };
 }
 
-const LANCABLE_DEPUIS = new Set(["SCOPING", "EXPECTATION", "REQUEST"]);
+const STARTABLE_FROM = new Set(["SCOPING", "EXPECTATION", "REQUEST"]);
 
 /**
- * Lance un chantier en un geste : depuis SCOPING, EXPECTATION ou REQUEST, passe directement en
- * BUILD sur une fiche cadrée. En mode « humain » (défaut), `humain` doit être vrai : il
- * l'est seulement pour une réponse humaine à un sondage lue par le hook de l'outil, ou pour un
- * choix fait dans un terminal interactif. `{ code: 0 | 1, message }`.
+ * Starts a workstream in one gesture: from SCOPING, EXPECTATION or REQUEST, moves straight to
+ * BUILD on a scoped brief. In "human" mode (default), `human` must be true: it is only for a
+ * human answer to a poll read by the tool's hook, or for a choice made in an interactive
+ * terminal. `{ code: 0 | 1, message }`.
  */
-export function lancer(racine, fiche, { humain = false, demande, fusion = false, maintenant = new Date().toISOString() } = {}) {
-  const lu = lireEtat(racine);
-  const de = lu.etat.activity;
-  if (!LANCABLE_DEPUIS.has(de))
-    return { code: 1, message: `lancement refusé : activité ${de} (lancer se fait depuis SCOPING, EXPECTATION ou REQUEST)` };
-  if (config(racine).transitions !== "agent" && !humain) {
-    return { code: 1, message: "lancement refusé : c'est une décision humaine (sondage `/drwil-lancer`, ou terminal interactif)" };
-  }
-  const chemin = posix.normalize(
-    String(fiche ?? "")
+export function start(root, brief, { human = false, request, autoMerge = false, now = new Date().toISOString() } = {}) {
+  const T = texts(root);
+  const read = readState(root);
+  const from = read.state.activity;
+  if (!STARTABLE_FROM.has(from)) return { code: 1, message: fill(T.startFrom, from) };
+  if (config(root).transitions !== "agent" && !human) return { code: 1, message: T.startHuman };
+  const path = posix.normalize(
+    String(brief ?? "")
       .trim()
       .replace(/\\/g, "/"),
   );
-  if (!fichesCadrees(racine).some((f) => f.chemin === chemin)) {
-    return { code: 1, message: `lancement refusé : « ${fiche} » n'est pas une fiche cadrée (bloc cadrage commité, fiche non terminée)` };
-  }
-  const etat = { version: 1, activity: "BUILD", active_brief: chemin, active_request: demande ?? null, since: maintenant };
-  // Autoriser la fusion est une décision d'acceptation : humaine seulement, même en mode agent.
-  if (fusion === true && humain) etat.auto_merge = true;
-  const problemes = validerEtat(etat, racine);
-  if (problemes.length) return { code: 1, message: `lancement refusé : ${problemes.join(" ; ")}` };
-  mkdirSync(join(racine, ".drwil"), { recursive: true });
-  writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(etat, null, 2) + "\n");
-  return { code: 0, message: `${de} → BUILD (lancé : ${chemin})${etat.auto_merge ? " — fusion automatique autorisée" : ""}` };
+  if (!scopedBriefs(root).some((b) => b.path === path)) return { code: 1, message: fill(T.startNotScoped, brief) };
+  const state = { version: 1, activity: "BUILD", active_brief: path, active_request: request ?? null, since: now };
+  // Authorising the merge is an acceptance decision: human only, even in agent mode.
+  if (autoMerge === true && human) state.auto_merge = true;
+  const problems = validateState(state, root);
+  if (problems.length) return { code: 1, message: fill(T.startInvalid, problems.join(" ; ")) };
+  mkdirSync(join(root, ".drwil"), { recursive: true });
+  writeFileSync(join(root, ".drwil", "state.json"), JSON.stringify(state, null, 2) + "\n");
+  return { code: 0, message: fill(T.started, from, path, state.auto_merge ? T.mergeAuthorised : "") };
 }
 
-/** Nouvel état après la transition `vers`, ou `{ erreur }` ; n'écrit rien. */
-export function preparerTransition(lu, vers, { fiche, demande, maintenant }, racine) {
-  const de = lu.etat.activity;
-  if (!transitionAutorisee(de, vers)) {
-    const permises = ACTIVITES.filter((a) => transitionAutorisee(de, a)).join(", ");
-    return { erreur: `transition ${de} → ${vers} interdite (depuis ${de} : ${permises})` };
+/** New state after the transition to `to`, or `{ error }`; writes nothing. */
+export function prepareTransition(read, to, { brief, request, now }, root) {
+  const T = texts(root);
+  const from = read.state.activity;
+  if (!transitionAllowed(from, to)) {
+    const allowed = ACTIVITIES.filter((a) => transitionAllowed(from, a)).join(", ");
+    return { error: fill(T.forbidden, from, to, allowed) };
   }
-  if (fiche !== undefined && vers !== "EXPECTATION") return { erreur: "--fiche ne sert qu'à ouvrir une attente (SCOPING → EXPECTATION)" };
-  let etat;
-  if (vers === "SCOPING") {
-    etat = { ...ETAT_NEUTRE, since: maintenant };
-  } else if (vers === "EXPECTATION") {
-    if (!fiche) return { erreur: "ouvrir une attente exige --fiche <docs/projects/….md>" };
-    etat = {
+  if (brief !== undefined && to !== "EXPECTATION") return { error: T.briefOption };
+  let state;
+  if (to === "SCOPING") {
+    state = { ...NEUTRAL_STATE, since: now };
+  } else if (to === "EXPECTATION") {
+    if (!brief) return { error: T.briefNeeded };
+    state = {
       version: 1,
       activity: "EXPECTATION",
-      active_brief: posix.normalize(fiche.replace(/\\/g, "/")),
-      active_request: demande ?? null,
-      since: maintenant,
+      active_brief: posix.normalize(brief.replace(/\\/g, "/")),
+      active_request: request ?? null,
+      since: now,
     };
   } else {
-    etat = { ...lu.etat, activity: vers, active_request: demande ?? lu.etat.active_request, since: maintenant };
+    state = { ...read.state, activity: to, active_request: request ?? read.state.active_request, since: now };
   }
-  const problemes = validerEtat(etat, racine);
-  return problemes.length ? { erreur: problemes.join(" ; ") } : { etat };
+  const problems = validateState(state, root);
+  return problems.length ? { error: problems.join(" ; ") } : { state };
 }
 
 /**
- * Applique une transition et écrit l'état. `{ code: 0 | 1, message }`.
- * `confirmer(question)` n'est appelé que si un humain est requis, et seulement devant
- * un terminal interactif : sans terminal, une transition humaine est refusée.
+ * Applies a transition and writes the state. `{ code: 0 | 1, message }`.
+ * `confirm(question)` is only called if a human is required, and only in front of
+ * an interactive terminal: without a terminal, a human transition is refused.
  */
-export async function passer(racine, { vers, fiche, demande }, { tty = false, confirmer, maintenant = new Date().toISOString() } = {}) {
-  const lu = lireEtat(racine);
-  const reprise = lu.problemes.length ? `état précédent invalide, repris depuis le neutre (${lu.problemes.join(" ; ")}) ; ` : "";
-  const prep = preparerTransition(lu, vers, { fiche, demande, maintenant }, racine);
-  if (prep.erreur) return { code: 1, message: reprise + prep.erreur };
-  const de = lu.etat.activity;
-  // Avant la confirmation humaine : inutile de demander une décision que la preuve refuse.
-  // Vaut aussi en mode agent : le réglage « transitions » dit qui décide, pas sur quoi.
-  if (vers === "CLOSING") {
-    const preuve = preuveVerify(racine);
-    if (!preuve.ok) return { code: 1, message: `${reprise}clôture refusée : ${preuve.raison}` };
+export async function move(root, { to, brief, request }, { tty = false, confirm, now = new Date().toISOString() } = {}) {
+  const T = texts(root);
+  const read = readState(root);
+  const resumed = read.problems.length ? fill(T.resumed, read.problems.join(" ; ")) : "";
+  const prep = prepareTransition(read, to, { brief, request, now }, root);
+  if (prep.error) return { code: 1, message: resumed + prep.error };
+  const from = read.state.activity;
+  // Before the human confirmation: no point asking for a decision that the evidence refuses.
+  // Also in agent mode: the "transitions" setting says who decides, not on what.
+  if (to === "CLOSING") {
+    const evidence = verifyEvidence(root);
+    if (!evidence.ok) return { code: 1, message: resumed + fill(T.closingRefused, evidence.reason) };
   }
-  const ficheActive = lu.etat.active_brief && join(racine, lu.etat.active_brief);
+  const activeBrief = read.state.active_brief && join(root, read.state.active_brief);
   if (
-    de === "CLOSING" &&
-    vers === "SCOPING" &&
-    ficheActive &&
-    existsSync(ficheActive) &&
-    statutFiche(readFileSync(ficheActive, "utf8")) === "terminee"
+    from === "CLOSING" &&
+    to === "SCOPING" &&
+    activeBrief &&
+    existsSync(activeBrief) &&
+    briefStatus(readFileSync(activeBrief, "utf8")) === "done"
   ) {
-    return {
-      code: 1,
-      message: `${reprise}retour en SCOPING refusé : ${lu.etat.active_brief} se dit terminée mais est encore là — la condenser dans docs/projects/journal.md, la supprimer et retirer sa ligne de l'index (recette « Clôturer »)`,
-    };
+    return { code: 1, message: resumed + fill(T.stillThere, read.state.active_brief) };
   }
-  if (exigeHumain(de, vers, config(racine).transitions)) {
-    if (!tty || typeof confirmer !== "function") {
-      return {
-        code: 1,
-        message: `${reprise}${de} → ${vers} est une décision humaine : terminal interactif requis (réglage « transitions » : human)`,
-      };
-    }
-    if (!(await confirmer(`Pour passer de ${de} à ${vers}, retapez l'activité visée (${vers}) : `))) {
-      return { code: 1, message: "confirmation refusée : état inchangé" };
-    }
+  if (requiresHuman(from, to, config(root).transitions)) {
+    if (!tty || typeof confirm !== "function") return { code: 1, message: resumed + fill(T.humanDecision, from, to) };
+    if (!(await confirm(fill(T.confirm, from, to)))) return { code: 1, message: T.confirmRefused };
   }
-  mkdirSync(join(racine, ".drwil"), { recursive: true });
-  writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(prep.etat, null, 2) + "\n");
-  return { code: 0, message: `${reprise}${de} → ${vers}` };
+  mkdirSync(join(root, ".drwil"), { recursive: true });
+  writeFileSync(join(root, ".drwil", "state.json"), JSON.stringify(prep.state, null, 2) + "\n");
+  return { code: 0, message: `${resumed}${from} → ${to}` };
 }
 
-const FICHIER_RAPPEL = [".drwil", "reminder.json"];
+const REMINDER_FILE = [".drwil", "reminder.json"];
 
 /**
- * Le rappel seulement s'il a changé depuis le dernier injecté (empreinte dans .drwil/reminder.json,
- * local comme l'état) ; null sinon. Empreinte absente ou illisible : le rappel est injecté.
+ * The reminder only if it changed since the last one injected (fingerprint in .drwil/reminder.json,
+ * local like the state); null otherwise. Missing or unreadable fingerprint: the reminder is injected.
  */
-export function rappelSiChange(racine) {
-  const texte = rappelCourt(lireEtat(racine), racine);
-  if (texte === null) return null;
-  const empreinte = createHash("sha256").update(texte).digest("hex");
-  const fichier = join(racine, ...FICHIER_RAPPEL);
+export function reminderIfChanged(root) {
+  const text = shortReminder(readState(root), root);
+  if (text === null) return null;
+  const fingerprint = createHash("sha256").update(text).digest("hex");
+  const file = join(root, ...REMINDER_FILE);
   try {
-    if (JSON.parse(readFileSync(fichier, "utf8")).empreinte === empreinte) return null;
+    if (JSON.parse(readFileSync(file, "utf8")).fingerprint === fingerprint) return null;
   } catch {}
   try {
-    mkdirSync(join(racine, ".drwil"), { recursive: true });
-    writeFileSync(fichier, JSON.stringify({ empreinte }) + "\n");
+    mkdirSync(join(root, ".drwil"), { recursive: true });
+    writeFileSync(file, JSON.stringify({ fingerprint }) + "\n");
   } catch {}
-  return texte;
+  return text;
 }
 
-/** Valeur de l'option `--nom valeur` dans `args`, ou undefined. */
-function option(args, nom) {
-  const i = args.indexOf(nom);
+/** Value of the `--name value` option in `args`, or undefined. */
+function option(args, name) {
+  const i = args.indexOf(name);
   return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
 }
 
-/** Point d'entrée commun à `node .githooks/state.mjs` et à `drwil etat`. Rend le code de sortie. */
-export async function principal(args, racine) {
+/** Entry point shared by `node .githooks/state.mjs` and `drwil etat`. Returns the exit code. */
+export async function main(args, root) {
   if (args[0] === "briefs") {
-    const fiches = fichesCadrees(racine);
-    if (args.includes("--json")) console.log(JSON.stringify(fiches, null, 2));
-    else
-      console.log(
-        fiches.length
-          ? fiches.map((f, i) => `${i + 1}. ${f.chemin} — ${f.titre}`).join("\n")
-          : "(aucune fiche cadrée : bloc cadrage commité et fiche non terminée)",
-      );
+    const briefs = scopedBriefs(root);
+    if (args.includes("--json")) console.log(JSON.stringify(briefs, null, 2));
+    else console.log(briefs.length ? briefs.map((b, i) => `${i + 1}. ${b.path} — ${b.title}`).join("\n") : texts(root).noBriefs);
     return 0;
   }
   if (args[0] === "start") {
-    const fiches = fichesCadrees(racine);
+    const T = texts(root);
+    const briefs = scopedBriefs(root);
     const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
-    let choix = args[1];
-    let humain = false;
-    let fusion = false;
+    let choice = args[1];
+    let human = false;
+    let autoMerge = false;
     if (tty) {
-      // Un terminal interactif : l'humain choisit lui-même (jamais de choix présélectionné).
+      // An interactive terminal: the human chooses themselves (never a preselected choice).
       const { createInterface } = await import("node:readline/promises");
       const rl = createInterface({ input: process.stdin, output: process.stdout });
       try {
-        if (!choix) {
+        if (!choice) {
           console.log(
-            fiches
-              .map(
-                (f, i) =>
-                  `${i + 1}. ${f.chemin} — ${f.titre} [${f.priorite}${f.prete ? "" : ` · non prête : ${f.decisions} décision(s) à trancher`}]`,
-              )
+            briefs
+              .map((b, i) => `${i + 1}. ${b.path} — ${b.title} [${b.priority}${b.ready ? "" : fill(T.notReady, b.decisions)}]`)
               .join("\n"),
           );
-          const n = Number((await rl.question("Numéro de la fiche à lancer : ")).trim());
-          choix = fiches[n - 1]?.chemin;
+          const n = Number((await rl.question(T.pick)).trim());
+          choice = briefs[n - 1]?.path;
         }
-        humain = choix !== undefined && (await rl.question(`Lancer ${choix} ? Retapez LANCER : `)).trim() === "LANCER";
-        if (humain)
-          fusion = (await rl.question("Fusion automatique à la fin du chantier ? Retapez FUSION, sinon Entrée : ")).trim() === "FUSION";
+        human = choice !== undefined && (await rl.question(fill(T.confirmStart, choice))).trim() === "LANCER";
+        if (human) autoMerge = (await rl.question(T.askMerge)).trim() === "FUSION";
       } finally {
         rl.close();
       }
-      if (!humain) {
-        console.error("✗ lancement non confirmé : état inchangé");
+      if (!human) {
+        console.error(T.notConfirmed);
         return 1;
       }
     }
-    const r = lancer(racine, choix, { humain, fusion, demande: option(args, "--demande") });
-    if (r.code === 0) console.log(`✓ ${r.message}\n\n${contexte(lireEtat(racine), racine)}`);
+    const r = start(root, choice, { human, autoMerge, request: option(args, "--demande") });
+    if (r.code === 0) console.log(`✓ ${r.message}\n\n${context(readState(root), root)}`);
     else console.error(`✗ ${r.message}`);
     return r.code;
   }
   if (args[0] === "reminder") {
-    // Hook de saisie (Claude Code : UserPromptSubmit) : n'écrit que si l'état a changé, ne casse jamais une saisie.
+    // Prompt hook (Claude Code: UserPromptSubmit): writes only if the state changed, never breaks a prompt.
     try {
-      const texte = rappelSiChange(racine);
-      if (texte) console.log(texte);
+      const text = reminderIfChanged(root);
+      if (text) console.log(text);
     } catch {}
     return 0;
   }
   if (args[0] !== "move") {
-    // Lecture : ne casse jamais le démarrage de session d'un agent.
+    // Reading: never breaks an agent's session start.
     try {
-      const lu = lireEtat(racine);
-      console.log(args.includes("--json") ? JSON.stringify(lu, null, 2) : contexte(lu, racine));
+      const read = readState(root);
+      console.log(args.includes("--json") ? JSON.stringify(read, null, 2) : context(read, root));
     } catch (e) {
-      console.log(`[drwil] état de gouvernance illisible : ${e.message}`);
+      console.log(fill(texts(root).unreadableState, e.message));
     }
     return 0;
   }
-  const vers = args[1];
-  if (!vers || vers.startsWith("--")) {
-    console.error(
-      `usage : node .githooks/state.mjs move <${ACTIVITES.join("|")}> [--fiche <docs/projects/….md>] [--demande <texte>] | start [<fiche>] | briefs [--json] | reminder`,
-    );
+  const to = args[1];
+  if (!to || to.startsWith("--")) {
+    console.error(fill(texts(root).usage, ACTIVITIES.join("|")));
     return 2;
   }
   const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
-  const confirmer = async (question) => {
+  const confirm = async (question) => {
     const { createInterface } = await import("node:readline/promises");
     const rl = createInterface({ input: process.stdin, output: process.stdout });
     try {
-      return (await rl.question(question)).trim() === vers;
+      return (await rl.question(question)).trim() === to;
     } finally {
       rl.close();
     }
   };
-  const r = await passer(racine, { vers, fiche: option(args, "--fiche"), demande: option(args, "--demande") }, { tty, confirmer });
-  if (r.code === 0) console.log(`✓ ${r.message}\n\n${contexte(lireEtat(racine), racine)}`);
+  const r = await move(root, { to, brief: option(args, "--fiche"), request: option(args, "--demande") }, { tty, confirm });
+  if (r.code === 0) console.log(`✓ ${r.message}\n\n${context(readState(root), root)}`);
   else console.error(`✗ ${r.message}`);
   return r.code;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  // Racine = dossier courant, comme les autres hooks : aucune variable propre à un outil.
-  process.exitCode = await principal(process.argv.slice(2), process.cwd());
+  // Root = current folder, like the other hooks: no tool-specific variable.
+  process.exitCode = await main(process.argv.slice(2), process.cwd());
 }

@@ -10,7 +10,7 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
 
 1. List the scoped briefs: `node .githooks/state.mjs briefs --json` (`scope` block committed,
    brief neither finished nor a reference). None: say so and stop. The list is **already
-   ordered**: ready briefs first (`prete`: no open `[decision]`), then by index `priorite`;
+   ordered**: ready briefs first (`ready`: no open `[decision]`), then by index `priority`;
    `decisions` counts those still to decide.
 2. Read the "Proposed order" sections of the intentions (`docs/intentions/`): they may put one
    brief before another of the same rank. Also note the index's P1 intentions that have no framed

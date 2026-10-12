@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ajouterTrailer, controlerPerimetre, horsFiches, verifierIndex } from "./scope-gate.mjs";
+import { addTrailer, checkScope, outsideBriefFiles, checkIndex } from "./scope-gate.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -76,7 +76,7 @@ const ecrireEtat = (racine, activite) => ecrire(racine, ".drwil/state.json", JSO
 
 test("hors fiches : seules les fiches et les attestations échappent au périmètre", () => {
   assert.deepEqual(
-    horsFiches([
+    outsideBriefFiles([
       "docs/projects/x.md",
       "docs/intentions/y.md",
       "docs/projects/z.md",
@@ -87,20 +87,20 @@ test("hors fiches : seules les fiches et les attestations échappent au périmè
     ["README.md", "src/a.js"],
   );
   // Seules les attestations : le reste de .drwil/ (réglages, évidences locales) reste soumis.
-  assert.deepEqual(horsFiches([".drwil/ia-first.json", ".drwil/evidence/verify-x.json"]), [
+  assert.deepEqual(outsideBriefFiles([".drwil/ia-first.json", ".drwil/evidence/verify-x.json"]), [
     ".drwil/ia-first.json",
     ".drwil/evidence/verify-x.json",
   ]);
-  assert.deepEqual(horsFiches(["docs/autre.md"], ["docs/*"]), [], "liste réglable");
+  assert.deepEqual(outsideBriefFiles(["docs/autre.md"], ["docs/*"]), [], "liste réglable");
 });
 
 test("index : fiches toujours acceptées, le reste seulement en BUILD et dans le cadrage", () => {
   const motifs = ["src/a.js"];
-  assert.deepEqual(verifierIndex({ fichiers: [FICHE], etat: etat("SCOPING"), motifs: [] }), []);
-  assert.match(verifierIndex({ fichiers: ["src/a.js"], etat: etat("SCOPING"), motifs })[0], /SCOPING/);
-  assert.match(verifierIndex({ fichiers: ["src/a.js"], etat: etat("EVIDENCE"), motifs })[0], /BUILD/);
-  assert.deepEqual(verifierIndex({ fichiers: ["src/a.js", FICHE], etat: etat("BUILD"), motifs }), []);
-  const hors = verifierIndex({ fichiers: ["src/a.js", "src/b.js", "README.md"], etat: etat("BUILD"), motifs });
+  assert.deepEqual(checkIndex({ files: [FICHE], state: etat("SCOPING"), patterns: [] }), []);
+  assert.match(checkIndex({ files: ["src/a.js"], state: etat("SCOPING"), patterns: motifs })[0], /SCOPING/);
+  assert.match(checkIndex({ files: ["src/a.js"], state: etat("EVIDENCE"), patterns: motifs })[0], /BUILD/);
+  assert.deepEqual(checkIndex({ files: ["src/a.js", FICHE], state: etat("BUILD"), patterns: motifs }), []);
+  const hors = checkIndex({ files: ["src/a.js", "src/b.js", "README.md"], state: etat("BUILD"), patterns: motifs });
   assert.equal(hors.length, 2);
   assert.match(hors.join("\n"), /src\/b\.js/);
   assert.match(hors.join("\n"), /README\.md/);
@@ -111,40 +111,40 @@ test("pre-commit : le cadrage est lu dans HEAD, pas dans l'index (élargir = com
   ecrireEtat(racine, "BUILD");
   ecrire(racine, "src/a.js", "a\n");
   git(racine, "add", "src/a.js");
-  assert.deepEqual(controlerPerimetre(racine, { cfg: { scopeGate: "blocking" }, indexes: ["src/a.js"] }).problemes, []);
+  assert.deepEqual(checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/a.js"] }).problems, []);
   // Élargir le cadrage et l'utiliser dans le même commit : refusé.
   ecrire(racine, FICHE, fiche(["src/a.js", "src/b.js"]));
   ecrire(racine, "src/b.js", "b\n");
-  const r = controlerPerimetre(racine, { cfg: { scopeGate: "blocking" }, indexes: [FICHE, "src/b.js"] });
-  assert.equal(r.statut, "echec");
-  assert.match(r.problemes.join("\n"), /src\/b\.js/);
+  const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: [FICHE, "src/b.js"] });
+  assert.equal(r.status, "echec");
+  assert.match(r.problems.join("\n"), /src\/b\.js/);
 });
 
 test("pre-commit sans état : SCOPING neutre, un fichier hors fiches est refusé", () => {
   const racine = depot();
-  const r = controlerPerimetre(racine, { cfg: { scopeGate: "blocking" }, indexes: ["src/a.js"] });
-  assert.equal(r.statut, "echec");
-  assert.match(r.problemes[0], /SCOPING/);
+  const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/a.js"] });
+  assert.equal(r.status, "echec");
+  assert.match(r.problems[0], /SCOPING/);
 });
 
 test("sévérité : off ne contrôle rien, avertissement signale sans bloquer", () => {
   const racine = depot();
-  assert.equal(controlerPerimetre(racine, { cfg: { scopeGate: "off" }, indexes: ["src/a.js"] }).statut, "non-applicable");
-  const avert = controlerPerimetre(racine, { cfg: { scopeGate: "warning" }, indexes: ["src/a.js"] });
-  assert.equal(avert.statut, "ok");
-  assert.equal(avert.problemes.length, 1);
-  assert.equal(controlerPerimetre(racine, { cfg: {}, indexes: ["src/a.js"] }).statut, "ok", "réglage absent : avertissement");
+  assert.equal(checkScope(racine, { cfg: { scopeGate: "off" }, staged: ["src/a.js"] }).status, "non-applicable");
+  const avert = checkScope(racine, { cfg: { scopeGate: "warning" }, staged: ["src/a.js"] });
+  assert.equal(avert.status, "ok");
+  assert.equal(avert.problems.length, 1);
+  assert.equal(checkScope(racine, { cfg: {}, staged: ["src/a.js"] }).status, "ok", "réglage absent : avertissement");
 });
 
 test("trailer : ajouté depuis l'état actif, rien en SCOPING", () => {
   const racine = depot();
   const message = join(racine, "MSG");
   writeFileSync(message, "Un commit\n");
-  ajouterTrailer(racine, message);
+  addTrailer(racine, message);
   assert.doesNotMatch(readFileSync(message, "utf8"), /Drwil-Brief/);
   ecrireEtat(racine, "BUILD");
-  ajouterTrailer(racine, message);
-  ajouterTrailer(racine, message);
+  addTrailer(racine, message);
+  addTrailer(racine, message);
   const texte = readFileSync(message, "utf8");
   assert.match(texte, /^Drwil-Brief: docs\/projects\/exemple\.md$/m);
   assert.equal(texte.match(/Drwil-Brief/g).length, 1, "jamais en double");
@@ -156,7 +156,7 @@ test("trailer : jamais ajouté quand la gouvernance est désactivée (scopeGate:
   ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ scopeGate: "off" }));
   const message = join(racine, "MSG");
   writeFileSync(message, "Un commit\n");
-  ajouterTrailer(racine, message);
+  addTrailer(racine, message);
   assert.doesNotMatch(readFileSync(message, "utf8"), /Drwil-Brief/);
 });
 
@@ -176,10 +176,10 @@ test("branche (CI, pre-push, verify) : chaque commit rejoué contre le cadrage d
   git(racine, "add", ".");
   git(racine, "commit", "-q", "-m", "fiche seule, sans trailer");
 
-  const r = controlerPerimetre(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } });
-  assert.equal(r.statut, "echec");
-  const texte = r.problemes.join("\n");
-  assert.equal(r.problemes.length, 2, texte);
+  const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } });
+  assert.equal(r.status, "echec");
+  const texte = r.problems.join("\n");
+  assert.equal(r.problems.length, 2, texte);
   assert.match(texte, /src\/b\.js/);
   assert.match(texte, /sans trailer Drwil-Brief/);
   assert.doesNotMatch(texte, /src\/a\.js/);
@@ -198,23 +198,23 @@ test("branche : un commit dont le parent n'a pas encore la barrière n'est pas c
   ecrire(racine, ".githooks/scope-gate.mjs", "// la barrière arrive avec ce commit\n");
   git(racine, "add", ".");
   git(racine, "commit", "-q", "-m", "introduit la barrière");
-  assert.deepEqual(controlerPerimetre(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } }).problemes, []);
+  assert.deepEqual(checkScope(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } }).problems, []);
 });
 
 test("branche sans référence : non exécuté, jamais un succès (QUA-013)", () => {
   const racine = depot();
   git(racine, "branch", "-m", "travail");
-  assert.equal(controlerPerimetre(racine, { cfg: { scopeGate: "blocking" }, env: {} }).statut, "non-execute");
+  assert.equal(checkScope(racine, { cfg: { scopeGate: "blocking" }, env: {} }).status, "non-execute");
 });
 
 test("messages en anglais : activité, hors cadrage, commits sans trailer ou hors cadrage, échec", () => {
   const cfg = { lang: "en" };
   assert.match(
-    verifierIndex({ fichiers: ["src/a.js"], etat: etat("SCOPING"), motifs: [], cfg })[0],
-    /^1 file\(s\) outside sheets committed in SCOPING/,
+    checkIndex({ files: ["src/a.js"], state: etat("SCOPING"), patterns: [], cfg })[0],
+    /^1 file\(s\) outside briefs committed in SCOPING/,
   );
   assert.match(
-    verifierIndex({ fichiers: ["src/b.js"], etat: etat("BUILD"), motifs: ["src/a.js"], cfg })[0],
+    checkIndex({ files: ["src/b.js"], state: etat("BUILD"), patterns: ["src/a.js"], cfg })[0],
     /^src\/b\.js: outside the scope of docs\/projects\/exemple\.md/,
   );
   const racine = depot(["src/a.js"]);
@@ -225,16 +225,16 @@ test("messages en anglais : activité, hors cadrage, commits sans trailer ou hor
   ecrire(racine, "README.md", "r\n");
   git(racine, "add", ".");
   git(racine, "commit", "-q", "-m", "sans trailer");
-  const r = controlerPerimetre(racine, { cfg: { ...cfg, scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } });
-  assert.equal(r.message, "expectation scope: 2 problem(s) (blocking barrier)");
-  assert.match(r.problemes[0], /: src\/a\.js outside the scope of docs\/projects\/absente\.md \(in the parent\)$/);
-  assert.match(r.problemes[1], /: 1 file\(s\) outside sheets without a Drwil-Brief trailer$/);
+  const r = checkScope(racine, { cfg: { ...cfg, scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } });
+  assert.equal(r.message, "brief scope: 2 problem(s) (blocking gate)");
+  assert.match(r.problems[0], /: src\/a\.js outside the scope of docs\/projects\/absente\.md \(in the parent\)$/);
+  assert.match(r.problems[1], /: 1 file\(s\) outside briefs without a Drwil-Brief trailer$/);
 });
 
 test("liste hors périmètre réglable par la configuration", () => {
   const racine = depot();
-  const r = controlerPerimetre(racine, { cfg: { scopeGate: "blocking", outOfScope: ["src/*"] }, indexes: ["src/a.js"] });
-  assert.deepEqual(r, { statut: "ok", problemes: [] });
+  const r = checkScope(racine, { cfg: { scopeGate: "blocking", outOfScope: ["src/*"] }, staged: ["src/a.js"] });
+  assert.deepEqual(r, { status: "ok", problems: [] });
 });
 
 test("ligne de commande (prepare-commit-msg) : --trailer ajoute le trailer, sans fichier rien", () => {
@@ -258,7 +258,7 @@ test("branche d'un clone : la référence est origin/HEAD", () => {
   ecrire(racine, "src/b.js", "b\n");
   git(racine, "add", ".");
   git(racine, "commit", "-q", "-m", "hors cadrage\n\nDrwil-Brief: docs/projects/exemple.md");
-  const r = controlerPerimetre(racine, { cfg: { scopeGate: "blocking" }, env: {} });
-  assert.equal(r.problemes.length, 1);
-  assert.match(r.problemes[0], /src\/b\.js/);
+  const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, env: {} });
+  assert.equal(r.problems.length, 1);
+  assert.match(r.problems[0], /src\/b\.js/);
 });

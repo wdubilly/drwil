@@ -1,11 +1,10 @@
 #!/bin/sh
-# Conduite (AGENTS.md) : refuse tout commit dont le message porte une ligne
-# « Co-Authored-By » (certains outils IA l'ajoutent par défaut). Fourni mais
-# DÉSACTIVÉ par défaut (au projet de choisir) : ce fichier n'est
-# pas rendu exécutable par `init`/`apply` — l'activer avec :
+# Conduct (AGENTS.md): refuses any commit whose message carries a "Co-Authored-By"
+# line (some AI tools add it by default). Shipped but DISABLED by default (the
+# project chooses): this file is not made executable by `init`/`apply` — enable it with:
 #   chmod +x .githooks/commit-msg
-# Contournable par --no-verify, comme tout hook local.
+# Can be bypassed with --no-verify, like any local hook.
 if grep -qiE '^[[:space:]]*co-authored-by[[:space:]]*:' "$1"; then
-  echo "[commit-msg] refusé : retirer la ligne « Co-Authored-By » du message (AGENTS.md, Conduite)." >&2
+  echo "[commit-msg] refusé : retirer la ligne « Co-Authored-By » du message / refused: remove the \"Co-Authored-By\" line from the message (AGENTS.md)." >&2
   exit 1
 fi

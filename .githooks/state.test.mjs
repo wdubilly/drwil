@@ -7,22 +7,22 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { PassThrough } from "node:stream";
 import {
-  ACTIVITES,
-  ETAT_NEUTRE,
-  contexte,
-  principal,
-  exigeHumain,
-  lireEtat,
-  passer,
-  preparerTransition,
-  preuveVerify,
-  fichesCadrees,
-  lancer,
-  rappelCourt,
-  rappelSiChange,
-  statutFiche,
-  transitionAutorisee,
-  validerEtat,
+  ACTIVITIES,
+  NEUTRAL_STATE,
+  context,
+  main,
+  requiresHuman,
+  readState,
+  move,
+  prepareTransition,
+  verifyEvidence,
+  scopedBriefs,
+  start,
+  shortReminder,
+  reminderIfChanged,
+  briefStatus,
+  transitionAllowed,
+  validateState,
 } from "./state.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
@@ -57,7 +57,7 @@ afterEach((t) => {
 
 const FICHE = "docs/projects/exemple.md";
 
-function depot({ etat, fiche = true, lang, config } = {}) {
+function depot({ state: etat, fiche = true, lang, config } = {}) {
   const racine = tmp("drwil-etat-");
   mkdirSync(join(racine, ".drwil"));
   mkdirSync(join(racine, "docs", "projects"), { recursive: true });
@@ -93,107 +93,107 @@ const actif = (activite, extra = {}) => ({
 });
 
 test("sans state.json : SCOPING neutre, jamais d'état actif implicite", () => {
-  const lu = lireEtat(depot());
-  assert.equal(lu.source, "absent");
-  assert.deepEqual(lu.etat, ETAT_NEUTRE);
-  assert.deepEqual(lu.problemes, []);
+  const lu = readState(depot());
+  assert.equal(lu.source, "missing");
+  assert.deepEqual(lu.state, NEUTRAL_STATE);
+  assert.deepEqual(lu.problems, []);
 });
 
 test("état actif valide : activité et attente lues depuis le disque", () => {
-  const lu = lireEtat(depot({ etat: actif("BUILD") }));
-  assert.equal(lu.source, "fichier");
-  assert.deepEqual(lu.problemes, []);
-  assert.equal(lu.etat.activity, "BUILD");
-  assert.equal(lu.etat.active_brief, FICHE);
+  const lu = readState(depot({ state: actif("BUILD") }));
+  assert.equal(lu.source, "file");
+  assert.deepEqual(lu.problems, []);
+  assert.equal(lu.state.activity, "BUILD");
+  assert.equal(lu.state.active_brief, FICHE);
 });
 
 test("JSON illisible : état invalide, ramené au neutre, problème signalé", () => {
-  const lu = lireEtat(depot({ etat: "{ pas du json" }));
-  assert.equal(lu.source, "fichier");
-  assert.deepEqual(lu.etat, ETAT_NEUTRE);
-  assert.match(lu.problemes[0], /illisible/);
+  const lu = readState(depot({ state: "{ pas du json" }));
+  assert.equal(lu.source, "file");
+  assert.deepEqual(lu.state, NEUTRAL_STATE);
+  assert.match(lu.problems[0], /illisible/);
 });
 
 test("validation : activité inconnue, champ inconnu, version absente", () => {
   const racine = depot();
-  assert.match(validerEtat({ ...actif("CODAGE") }, racine)[0], /activité inconnue/);
+  assert.match(validateState({ ...actif("CODAGE") }, racine)[0], /activité inconnue/);
   // Le périmètre vit dans la fiche versionnée, jamais dans l'état local.
-  assert.match(validerEtat({ ...actif("BUILD"), perimetre_actif: ["src/"] }, racine)[0], /champ inconnu « perimetre_actif »/);
+  assert.match(validateState({ ...actif("BUILD"), perimetre_actif: ["src/"] }, racine)[0], /champ inconnu « perimetre_actif »/);
   const { version, ...sansVersion } = actif("BUILD");
-  assert.match(validerEtat(sansVersion, racine)[0], /version/);
-  assert.match(validerEtat([], racine)[0], /objet/);
+  assert.match(validateState(sansVersion, racine)[0], /version/);
+  assert.match(validateState([], racine)[0], /objet/);
 });
 
 test("validation : SCOPING sans attente ni demande, les autres activités exigent une attente", () => {
   const racine = depot();
-  assert.deepEqual(validerEtat(ETAT_NEUTRE, racine), []);
-  assert.match(validerEtat(actif("SCOPING"), racine)[0], /SCOPING.*aucune attente/);
-  assert.match(validerEtat({ ...actif("BUILD"), active_brief: null }, racine)[0], /attente active requise/);
+  assert.deepEqual(validateState(NEUTRAL_STATE, racine), []);
+  assert.match(validateState(actif("SCOPING"), racine)[0], /SCOPING.*aucune attente/);
+  assert.match(validateState({ ...actif("BUILD"), active_brief: null }, racine)[0], /attente active requise/);
 });
 
 test("validation : l'attente active est une fiche existante de docs/projects/, hors modèle", () => {
   const racine = depot();
-  assert.match(validerEtat(actif("BUILD", { active_brief: "docs/projects/absente.md" }), racine)[0], /introuvable/);
-  assert.match(validerEtat(actif("BUILD", { active_brief: "src/auth/login.ts" }), racine)[0], /docs\/projects\//);
-  assert.match(validerEtat(actif("BUILD", { active_brief: "docs/projects/../../etc/passwd.md" }), racine)[0], /docs\/projects\//);
-  assert.match(validerEtat(actif("BUILD", { active_brief: "docs/projects/model-brief.md" }), racine)[0], /modèle/);
+  assert.match(validateState(actif("BUILD", { active_brief: "docs/projects/absente.md" }), racine)[0], /introuvable/);
+  assert.match(validateState(actif("BUILD", { active_brief: "src/auth/login.ts" }), racine)[0], /docs\/projects\//);
+  assert.match(validateState(actif("BUILD", { active_brief: "docs/projects/../../etc/passwd.md" }), racine)[0], /docs\/projects\//);
+  assert.match(validateState(actif("BUILD", { active_brief: "docs/projects/model-brief.md" }), racine)[0], /modèle/);
 });
 
 test("validation : active_request et depuis bien typés", () => {
   const racine = depot();
-  assert.match(validerEtat(actif("REQUEST", { active_request: 42 }), racine)[0], /active_request/);
-  assert.match(validerEtat(actif("REQUEST", { since: "hier" }), racine)[0], /since/);
-  assert.deepEqual(validerEtat(actif("REQUEST", { active_request: "Lot 1" }), racine), []);
+  assert.match(validateState(actif("REQUEST", { active_request: 42 }), racine)[0], /active_request/);
+  assert.match(validateState(actif("REQUEST", { since: "hier" }), racine)[0], /since/);
+  assert.deepEqual(validateState(actif("REQUEST", { active_request: "Lot 1" }), racine), []);
 });
 
 test("clôture : fiche déjà supprimée tolérée en CLOSING seulement, les autres règles de l'attente restent", () => {
   const racine = depot({ fiche: false });
-  assert.deepEqual(validerEtat(actif("CLOSING"), racine), []);
+  assert.deepEqual(validateState(actif("CLOSING"), racine), []);
   for (const activite of ["EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY"]) {
-    assert.match(validerEtat(actif(activite), racine)[0], /introuvable/, activite);
+    assert.match(validateState(actif(activite), racine)[0], /introuvable/, activite);
   }
-  assert.match(validerEtat(actif("CLOSING", { active_brief: "src/auth/login.ts" }), racine)[0], /docs\/projects\//);
-  assert.match(validerEtat(actif("CLOSING", { active_brief: "docs/projects/model-brief.md" }), racine)[0], /modèle/);
+  assert.match(validateState(actif("CLOSING", { active_brief: "src/auth/login.ts" }), racine)[0], /docs\/projects\//);
+  assert.match(validateState(actif("CLOSING", { active_brief: "docs/projects/model-brief.md" }), racine)[0], /modèle/);
 });
 
 test("clôture : fiche supprimée selon la recette, retour en SCOPING accepté ; contexte et rappel le disent", async () => {
-  const racine = depot({ etat: actif("CLOSING"), fiche: false });
-  const lu = lireEtat(racine);
-  assert.deepEqual(lu.problemes, []);
-  const ctx = contexte(lu, racine);
+  const racine = depot({ state: actif("CLOSING"), fiche: false });
+  const lu = readState(racine);
+  assert.deepEqual(lu.problems, []);
+  const ctx = context(lu, racine);
   assert.match(ctx, /fiche supprimée/);
   assert.doesNotMatch(ctx, /Périmètre autorisé|invalide/);
-  assert.match(rappelCourt(lu, racine), /fiche supprimée/);
-  assert.doesNotMatch(rappelCourt(lu, racine), /invalide|périmètre/);
-  const r = await passer(racine, { vers: "SCOPING" }, { tty: false, maintenant: MAINTENANT });
+  assert.match(shortReminder(lu, racine), /fiche supprimée/);
+  assert.doesNotMatch(shortReminder(lu, racine), /invalide|périmètre/);
+  const r = await move(racine, { to: "SCOPING" }, { tty: false, now: MAINTENANT });
   assert.equal(r.code, 0, r.message);
   assert.doesNotMatch(r.message, /invalide/);
-  assert.equal(lireEtat(racine).etat.activity, "SCOPING");
+  assert.equal(readState(racine).state.activity, "SCOPING");
 });
 
 test("transitions : une activité à la fois, retours vers BUILD, abandon vers SCOPING", () => {
-  assert.equal(transitionAutorisee("SCOPING", "EXPECTATION"), true);
-  assert.equal(transitionAutorisee("SCOPING", "BUILD"), false, "pas de saut en avant");
-  assert.equal(transitionAutorisee("VERIFY", "BUILD"), true, "retour après échec");
-  assert.equal(transitionAutorisee("EVIDENCE", "BUILD"), true);
-  assert.equal(transitionAutorisee("VERIFY", "CLOSING"), true);
-  assert.equal(transitionAutorisee("CLOSING", "SCOPING"), true);
-  for (const a of ACTIVITES) if (a !== "SCOPING") assert.equal(transitionAutorisee(a, "SCOPING"), true, `abandon depuis ${a}`);
-  assert.equal(transitionAutorisee("BUILD", "BUILD"), false);
-  assert.equal(transitionAutorisee("INCONNUE", "SCOPING"), false);
+  assert.equal(transitionAllowed("SCOPING", "EXPECTATION"), true);
+  assert.equal(transitionAllowed("SCOPING", "BUILD"), false, "pas de saut en avant");
+  assert.equal(transitionAllowed("VERIFY", "BUILD"), true, "retour après échec");
+  assert.equal(transitionAllowed("EVIDENCE", "BUILD"), true);
+  assert.equal(transitionAllowed("VERIFY", "CLOSING"), true);
+  assert.equal(transitionAllowed("CLOSING", "SCOPING"), true);
+  for (const a of ACTIVITIES) if (a !== "SCOPING") assert.equal(transitionAllowed(a, "SCOPING"), true, `abandon depuis ${a}`);
+  assert.equal(transitionAllowed("BUILD", "BUILD"), false);
+  assert.equal(transitionAllowed("INCONNUE", "SCOPING"), false);
 });
 
 test("contexte : SCOPING interdit la réalisation", () => {
   const racine = depot();
-  const texte = contexte(lireEtat(racine), racine);
+  const texte = context(readState(racine), racine);
   assert.match(texte, /Activité : SCOPING/);
   assert.match(texte, /aucune attente active/);
   assert.match(texte, /aucun fichier de code/);
 });
 
 test("contexte : BUILD rappelle la fiche, son titre et son périmètre", () => {
-  const racine = depot({ etat: actif("BUILD") });
-  const texte = contexte(lireEtat(racine), racine);
+  const racine = depot({ state: actif("BUILD") });
+  const texte = context(readState(racine), racine);
   assert.match(texte, /Activité : BUILD/);
   assert.match(texte, /docs\/projects\/exemple\.md — Projet : Exemple/);
   assert.match(texte, /- src\/auth\/login\.ts/);
@@ -201,124 +201,120 @@ test("contexte : BUILD rappelle la fiche, son titre et son périmètre", () => {
 });
 
 test("contexte : un état invalide est signalé, pas masqué", () => {
-  const racine = depot({ etat: actif("CODAGE") });
-  const texte = contexte(lireEtat(racine), racine);
+  const racine = depot({ state: actif("CODAGE") });
+  const texte = context(readState(racine), racine);
   assert.match(texte, /état invalide/i);
   assert.match(texte, /activité inconnue/);
 });
 
 test("contexte en anglais selon .drwil/ia-first.json", () => {
   const racine = depot({ lang: "en" });
-  assert.match(contexte(lireEtat(racine), racine), /Activity: SCOPING/);
+  assert.match(context(readState(racine), racine), /Activity: SCOPING/);
 });
 
 const MAINTENANT = "2026-10-09T12:00:00Z";
-const neutre = () => ({ etat: { ...ETAT_NEUTRE }, source: "absent", problemes: [] });
+const neutre = () => ({ state: { ...NEUTRAL_STATE }, source: "missing", problems: [] });
 
 test("préparer : ouvrir une attente exige une fiche existante", () => {
   const racine = depot();
-  assert.deepEqual(preparerTransition(neutre(), "EXPECTATION", { fiche: FICHE, maintenant: MAINTENANT }, racine).etat, {
+  assert.deepEqual(prepareTransition(neutre(), "EXPECTATION", { brief: FICHE, now: MAINTENANT }, racine).state, {
     version: 1,
     activity: "EXPECTATION",
     active_brief: FICHE,
     active_request: null,
     since: MAINTENANT,
   });
-  assert.match(preparerTransition(neutre(), "EXPECTATION", { maintenant: MAINTENANT }, racine).erreur, /--fiche/);
+  assert.match(prepareTransition(neutre(), "EXPECTATION", { now: MAINTENANT }, racine).error, /--fiche/);
   assert.match(
-    preparerTransition(neutre(), "EXPECTATION", { fiche: "docs/projects/absente.md", maintenant: MAINTENANT }, racine).erreur,
+    prepareTransition(neutre(), "EXPECTATION", { brief: "docs/projects/absente.md", now: MAINTENANT }, racine).error,
     /introuvable/,
   );
 });
 
 test("préparer : transition interdite refusée, --fiche réservé à l'ouverture, abandon vers le neutre", () => {
   const racine = depot();
-  assert.match(preparerTransition(neutre(), "BUILD", { maintenant: MAINTENANT }, racine).erreur, /SCOPING → BUILD.*interdite/);
-  const enCours = { etat: actif("BUILD"), source: "fichier", problemes: [] };
-  assert.match(preparerTransition(enCours, "EVIDENCE", { fiche: FICHE, maintenant: MAINTENANT }, racine).erreur, /--fiche/);
-  const suite = preparerTransition(enCours, "EVIDENCE", { demande: "Lot 2", maintenant: MAINTENANT }, racine).etat;
+  assert.match(prepareTransition(neutre(), "BUILD", { now: MAINTENANT }, racine).error, /SCOPING → BUILD.*interdite/);
+  const enCours = { state: actif("BUILD"), source: "file", problems: [] };
+  assert.match(prepareTransition(enCours, "EVIDENCE", { brief: FICHE, now: MAINTENANT }, racine).error, /--fiche/);
+  const suite = prepareTransition(enCours, "EVIDENCE", { request: "Lot 2", now: MAINTENANT }, racine).state;
   assert.equal(suite.active_brief, FICHE, "l'attente suit");
   assert.equal(suite.active_request, "Lot 2");
-  assert.deepEqual(preparerTransition(enCours, "SCOPING", { maintenant: MAINTENANT }, racine).etat, { ...ETAT_NEUTRE, since: MAINTENANT });
+  assert.deepEqual(prepareTransition(enCours, "SCOPING", { now: MAINTENANT }, racine).state, { ...NEUTRAL_STATE, since: MAINTENANT });
 });
 
 test("humain requis (mode humain) : ouvrir et lancer la réalisation, pas clore ; rien en mode agent", () => {
-  assert.equal(exigeHumain("SCOPING", "EXPECTATION", "human"), true);
-  assert.equal(exigeHumain("REQUEST", "BUILD", "human"), true);
-  assert.equal(exigeHumain("VERIFY", "CLOSING", "human"), false, "clore retire des droits : libre sur évidence valide");
-  assert.equal(exigeHumain("BUILD", "EVIDENCE", "human"), false);
-  assert.equal(exigeHumain("VERIFY", "BUILD", "human"), false, "retour sur la même attente");
-  assert.equal(exigeHumain("BUILD", "SCOPING", "human"), false, "l'abandon resserre les droits");
+  assert.equal(requiresHuman("SCOPING", "EXPECTATION", "human"), true);
+  assert.equal(requiresHuman("REQUEST", "BUILD", "human"), true);
+  assert.equal(requiresHuman("VERIFY", "CLOSING", "human"), false, "clore retire des droits : libre sur évidence valide");
+  assert.equal(requiresHuman("BUILD", "EVIDENCE", "human"), false);
+  assert.equal(requiresHuman("VERIFY", "BUILD", "human"), false, "retour sur la même attente");
+  assert.equal(requiresHuman("BUILD", "SCOPING", "human"), false, "l'abandon resserre les droits");
   for (const [de, vers] of [
     ["SCOPING", "EXPECTATION"],
     ["REQUEST", "BUILD"],
     ["VERIFY", "CLOSING"],
   ])
-    assert.equal(exigeHumain(de, vers, "agent"), false);
+    assert.equal(requiresHuman(de, vers, "agent"), false);
 });
 
 test("passer (mode humain par défaut) : refus sans terminal interactif, état inchangé", async () => {
   const racine = depot();
-  const r = await passer(racine, { vers: "EXPECTATION", fiche: FICHE }, { tty: false, maintenant: MAINTENANT });
+  const r = await move(racine, { to: "EXPECTATION", brief: FICHE }, { tty: false, now: MAINTENANT });
   assert.equal(r.code, 1);
   assert.match(r.message, /terminal interactif/);
-  assert.equal(lireEtat(racine).source, "absent");
+  assert.equal(readState(racine).source, "missing");
 });
 
 test("passer : avec un humain qui confirme, l'état est écrit ; sans confirmation, rien", async () => {
   const racine = depot();
-  const refus = await passer(
-    racine,
-    { vers: "EXPECTATION", fiche: FICHE },
-    { tty: true, confirmer: async () => false, maintenant: MAINTENANT },
-  );
+  const refus = await move(racine, { to: "EXPECTATION", brief: FICHE }, { tty: true, confirm: async () => false, now: MAINTENANT });
   assert.equal(refus.code, 1);
-  assert.equal(lireEtat(racine).source, "absent");
+  assert.equal(readState(racine).source, "missing");
   let question = "";
-  const ok = await passer(
+  const ok = await move(
     racine,
-    { vers: "EXPECTATION", fiche: FICHE },
+    { to: "EXPECTATION", brief: FICHE },
     {
       tty: true,
-      confirmer: async (q) => {
+      confirm: async (q) => {
         question = q;
         return true;
       },
-      maintenant: MAINTENANT,
+      now: MAINTENANT,
     },
   );
   assert.equal(ok.code, 0, ok.message);
   assert.match(question, /EXPECTATION/);
-  assert.equal(lireEtat(racine).etat.activity, "EXPECTATION");
+  assert.equal(readState(racine).state.activity, "EXPECTATION");
   // Transition libre ensuite : pas de terminal requis.
-  assert.equal((await passer(racine, { vers: "REQUEST", demande: "Lot 2" }, { tty: false, maintenant: MAINTENANT })).code, 0);
-  assert.equal(lireEtat(racine).etat.active_request, "Lot 2");
+  assert.equal((await move(racine, { to: "REQUEST", request: "Lot 2" }, { tty: false, now: MAINTENANT })).code, 0);
+  assert.equal(readState(racine).state.active_request, "Lot 2");
 });
 
 test("passer (mode agent) : toute transition permise est libre ; une interdite reste refusée", async () => {
   const racine = depot({ config: { transitions: "agent" } });
-  assert.equal((await passer(racine, { vers: "EXPECTATION", fiche: FICHE }, { tty: false, maintenant: MAINTENANT })).code, 0);
-  const saut = await passer(racine, { vers: "VERIFY" }, { tty: false, maintenant: MAINTENANT });
+  assert.equal((await move(racine, { to: "EXPECTATION", brief: FICHE }, { tty: false, now: MAINTENANT })).code, 0);
+  const saut = await move(racine, { to: "VERIFY" }, { tty: false, now: MAINTENANT });
   assert.equal(saut.code, 1);
   assert.match(saut.message, /interdite/);
 });
 
 test("passer : depuis un état invalide, on repart du neutre (signalé)", async () => {
-  const racine = depot({ etat: "{ cassé", config: { transitions: "agent" } });
-  const r = await passer(racine, { vers: "EXPECTATION", fiche: FICHE }, { tty: false, maintenant: MAINTENANT });
+  const racine = depot({ state: "{ cassé", config: { transitions: "agent" } });
+  const r = await move(racine, { to: "EXPECTATION", brief: FICHE }, { tty: false, now: MAINTENANT });
   assert.equal(r.code, 0, r.message);
   assert.match(r.message, /invalide/);
-  assert.equal(lireEtat(racine).etat.activity, "EXPECTATION");
+  assert.equal(readState(racine).state.activity, "EXPECTATION");
 });
 
 test("contexte : indique la commande de transition", () => {
   const racine = depot();
-  assert.match(contexte(lireEtat(racine), racine), /node \.githooks\/state\.mjs move/);
+  assert.match(context(readState(racine), racine), /node \.githooks\/state\.mjs move/);
 });
 
 // Dépôt git commité, prêt à clore : l'évidence est jugée contre HEAD.
 function depotEnVerify(config) {
-  const racine = depot({ etat: actif("VERIFY"), config });
+  const racine = depot({ state: actif("VERIFY"), config });
   writeFileSync(join(racine, ".gitignore"), ".drwil/state.json\n.drwil/evidence/\n");
   const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
   git("init", "-q");
@@ -338,21 +334,21 @@ function depotEnVerify(config) {
 test("clôture : sans évidence de verify, refusée avant toute question à l'humain", async () => {
   const { racine } = depotEnVerify();
   let demande = false;
-  const r = await passer(racine, { vers: "CLOSING" }, { tty: true, confirmer: async () => (demande = true), maintenant: MAINTENANT });
+  const r = await move(racine, { to: "CLOSING" }, { tty: true, confirm: async () => (demande = true), now: MAINTENANT });
   assert.equal(r.code, 1);
   assert.match(r.message, /aucune évidence.*drwil verify --evidence/);
   assert.equal(demande, false);
-  assert.equal(lireEtat(racine).etat.activity, "VERIFY");
+  assert.equal(readState(racine).state.activity, "VERIFY");
 });
 
 test("clôture : PASS ou ATTESTED sur HEAD, arbre propre, autorise sans geste humain", async () => {
   for (const status of ["pass", "attested"]) {
     const { racine, evidence } = depotEnVerify();
     evidence("verify-2026-10-09T10-00-00-000Z.json", { status });
-    assert.deepEqual(preuveVerify(racine), { ok: true });
-    const r = await passer(racine, { vers: "CLOSING" }, { tty: false, maintenant: MAINTENANT });
+    assert.deepEqual(verifyEvidence(racine), { ok: true });
+    const r = await move(racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
     assert.equal(r.code, 0, r.message);
-    assert.equal(lireEtat(racine).etat.activity, "CLOSING");
+    assert.equal(readState(racine).state.activity, "CLOSING");
   }
 });
 
@@ -361,9 +357,9 @@ test("clôture : FAIL et ERROR renvoient en BUILD, MANUAL à l'attestation humai
   for (const [status, motif] of Object.entries(attendus)) {
     const { racine, evidence } = depotEnVerify();
     evidence("verify-2026-10-09T10-00-00-000Z.json", { status });
-    const p = preuveVerify(racine);
+    const p = verifyEvidence(racine);
     assert.equal(p.ok, false);
-    assert.match(p.raison, motif);
+    assert.match(p.reason, motif);
   }
 });
 
@@ -371,41 +367,41 @@ test("clôture : seule la dernière évidence compte", () => {
   const { racine, evidence } = depotEnVerify();
   evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass" });
   evidence("verify-2026-10-09T11-00-00-000Z.json", { status: "fail" });
-  assert.match(preuveVerify(racine).raison, /FAIL/);
+  assert.match(verifyEvidence(racine).reason, /FAIL/);
 });
 
 test("clôture : évidence d'un autre commit, d'un arbre modifié ou illisible, refusée", () => {
   const autre = depotEnVerify();
   autre.evidence("verify-a.json", { status: "pass", commit: "0".repeat(40) });
-  assert.match(preuveVerify(autre.racine).raison, /autre commit/);
+  assert.match(verifyEvidence(autre.racine).reason, /autre commit/);
 
   const sale = depotEnVerify();
   sale.evidence("verify-a.json", { status: "pass", dirtyWorktree: true });
-  assert.match(preuveVerify(sale.racine).raison, /arbre modifié/);
+  assert.match(verifyEvidence(sale.racine).reason, /arbre modifié/);
 
   // Modifié après verify : ce qui serait clos n'est pas ce qui a été vérifié.
   const apres = depotEnVerify();
   apres.evidence("verify-a.json", { status: "pass" });
   writeFileSync(join(apres.racine, FICHE), readFileSync(join(apres.racine, FICHE), "utf8") + "\nmodifié\n");
-  assert.match(preuveVerify(apres.racine).raison, /arbre modifié/);
+  assert.match(verifyEvidence(apres.racine).reason, /arbre modifié/);
 
   const casse = depotEnVerify();
   casse.evidence("verify-a.json", "{ cassé");
-  assert.match(preuveVerify(casse.racine).raison, /illisible/);
+  assert.match(verifyEvidence(casse.racine).reason, /illisible/);
 });
 
 test("clôture : la preuve est exigée aussi en mode agent", async () => {
   const { racine } = depotEnVerify({ transitions: "agent" });
-  const r = await passer(racine, { vers: "CLOSING" }, { tty: false, maintenant: MAINTENANT });
+  const r = await move(racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
   assert.equal(r.code, 1);
   assert.match(r.message, /clôture refusée/);
 });
 
 test("clôture : hors dépôt git, refusée", () => {
-  const racine = depot({ etat: actif("VERIFY") });
+  const racine = depot({ state: actif("VERIFY") });
   mkdirSync(join(racine, ".drwil", "evidence"));
   writeFileSync(join(racine, ".drwil", "evidence", "verify-a.json"), JSON.stringify({ status: "pass", commit: "x", dirtyWorktree: false }));
-  assert.match(preuveVerify(racine).raison, /HEAD introuvable/);
+  assert.match(verifyEvidence(racine).reason, /HEAD introuvable/);
 });
 
 test("scopeGate: off : contexte réduit à « gouvernance désactivée », même avec un état actif", () => {
@@ -413,8 +409,8 @@ test("scopeGate: off : contexte réduit à « gouvernance désactivée », même
     ["fr", /Gouvernance désactivée/],
     ["en", /Governance disabled/],
   ]) {
-    const racine = depot({ etat: actif("BUILD"), config: { scopeGate: "off", lang } });
-    const texte = contexte(lireEtat(racine), racine);
+    const racine = depot({ state: actif("BUILD"), config: { scopeGate: "off", lang } });
+    const texte = context(readState(racine), racine);
     assert.match(texte, motif);
     assert.doesNotMatch(texte, /BUILD|cadrage/);
   }
@@ -422,36 +418,36 @@ test("scopeGate: off : contexte réduit à « gouvernance désactivée », même
 
 test("messages : commandes drwil complètes (npx), jamais « drwil » seul", () => {
   const { racine } = depotEnVerify();
-  assert.match(preuveVerify(racine).raison, /`npx drwil verify --evidence`/);
-  assert.match(contexte(lireEtat(racine), racine), /`npx drwil verify --evidence`/);
+  assert.match(verifyEvidence(racine).reason, /`npx drwil verify --evidence`/);
+  assert.match(context(readState(racine), racine), /`npx drwil verify --evidence`/);
 });
 
 test("rappel court : activité, fiche et taille du périmètre en deux lignes ; état invalide signalé", () => {
-  const racine = depot({ etat: actif("BUILD") });
-  const texte = rappelCourt(lireEtat(racine), racine);
+  const racine = depot({ state: actif("BUILD") });
+  const texte = shortReminder(readState(racine), racine);
   assert.equal(texte.split("\n").length, 2);
   assert.match(texte, /BUILD · docs\/projects\/exemple\.md · périmètre : 2 fichier/);
   assert.match(texte, /Règle : réaliser l'attente/);
   const neutre = depot();
-  assert.match(rappelCourt(lireEtat(neutre), neutre), /SCOPING · aucune attente active/);
-  const casse = depot({ etat: "{ cassé" });
-  assert.match(rappelCourt(lireEtat(casse), casse), /état invalide/);
+  assert.match(shortReminder(readState(neutre), neutre), /SCOPING · aucune attente active/);
+  const casse = depot({ state: "{ cassé" });
+  assert.match(shortReminder(readState(casse), casse), /état invalide/);
 });
 
 test("rappel court : rien quand la gouvernance est désactivée (scopeGate: off)", () => {
-  const racine = depot({ etat: actif("BUILD"), config: { scopeGate: "off" } });
-  assert.equal(rappelCourt(lireEtat(racine), racine), null);
-  assert.equal(rappelSiChange(racine), null);
+  const racine = depot({ state: actif("BUILD"), config: { scopeGate: "off" } });
+  assert.equal(shortReminder(readState(racine), racine), null);
+  assert.equal(reminderIfChanged(racine), null);
 });
 
 test("rappel seulement si l'état a changé ; empreinte illisible : rappel injecté", async () => {
   const racine = depot({ config: { transitions: "agent" } });
-  assert.match(rappelSiChange(racine), /SCOPING/);
-  assert.equal(rappelSiChange(racine), null, "inchangé : rien");
-  assert.equal((await passer(racine, { vers: "EXPECTATION", fiche: FICHE }, { tty: false, maintenant: MAINTENANT })).code, 0);
-  assert.match(rappelSiChange(racine), /EXPECTATION/, "changé : rappel");
+  assert.match(reminderIfChanged(racine), /SCOPING/);
+  assert.equal(reminderIfChanged(racine), null, "inchangé : rien");
+  assert.equal((await move(racine, { to: "EXPECTATION", brief: FICHE }, { tty: false, now: MAINTENANT })).code, 0);
+  assert.match(reminderIfChanged(racine), /EXPECTATION/, "changé : rappel");
   writeFileSync(join(racine, ".drwil", "reminder.json"), "{ cassé");
-  assert.match(rappelSiChange(racine), /EXPECTATION/, "jamais masqué");
+  assert.match(reminderIfChanged(racine), /EXPECTATION/, "jamais masqué");
 });
 
 // Dépôt git dont la fiche exemple (bloc cadrage) est commitée : une fiche cadrée.
@@ -476,30 +472,30 @@ function depotCadre(config) {
 }
 
 test("fiche terminée : seul le marqueur explicite compte ; référence reconnue", () => {
-  assert.equal(statutFiche("# F\n\n**Statut** : terminé le 2026-10-10.\n"), "terminee");
-  assert.equal(statutFiche("# F\n\n**Status**: done on 2026-10-10.\n"), "terminee");
-  assert.equal(statutFiche("# F\n\n**Statut** : référence — mécanique du kit.\n"), "reference");
-  assert.equal(statutFiche("# F\n\n**Status**: reference — kit mechanics.\n"), "reference");
+  assert.equal(briefStatus("# F\n\n**Statut** : terminé le 2026-10-10.\n"), "done");
+  assert.equal(briefStatus("# F\n\n**Status**: done on 2026-10-10.\n"), "done");
+  assert.equal(briefStatus("# F\n\n**Statut** : référence — mécanique du kit.\n"), "reference");
+  assert.equal(briefStatus("# F\n\n**Status**: reference — kit mechanics.\n"), "reference");
   for (const statut of [
     "cadré le 2026-10-06 — lots 1 à 4 livrés, essai réel fait.",
     "fait (lot 1) le 2026-10-05.",
     "terminé, sans date.",
   ]) {
-    assert.equal(statutFiche(`# F\n\n**Statut** : ${statut}\n`), "ouverte", statut);
+    assert.equal(briefStatus(`# F\n\n**Statut** : ${statut}\n`), "open", statut);
   }
-  assert.equal(statutFiche("# F\n\nSans statut.\n"), "ouverte");
+  assert.equal(briefStatus("# F\n\nSans statut.\n"), "open");
 });
 
 test("clôture : retour en SCOPING refusé si la fiche terminée est encore là", async () => {
-  const racine = depot({ etat: actif("CLOSING"), fiche: false });
+  const racine = depot({ state: actif("CLOSING"), fiche: false });
   writeFileSync(join(racine, FICHE), "# Projet : Exemple\n\n**Statut** : terminé le 2026-10-10.\n");
-  const refus = await passer(racine, { vers: "SCOPING" }, { tty: false, maintenant: MAINTENANT });
+  const refus = await move(racine, { to: "SCOPING" }, { tty: false, now: MAINTENANT });
   assert.equal(refus.code, 1);
   assert.match(refus.message, /terminée.*journal/);
-  assert.equal(lireEtat(racine).etat.activity, "CLOSING");
+  assert.equal(readState(racine).state.activity, "CLOSING");
   // Lots encore ouverts : la fiche reste, le retour passe.
   writeFileSync(join(racine, FICHE), "# Projet : Exemple\n\n**Statut** : cadré — lot 1 fait, lot 2 ouvert.\n");
-  assert.equal((await passer(racine, { vers: "SCOPING" }, { tty: false, maintenant: MAINTENANT })).code, 0);
+  assert.equal((await move(racine, { to: "SCOPING" }, { tty: false, now: MAINTENANT })).code, 0);
 });
 
 test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans tag) ; décisions ouvertes comptées", () => {
@@ -533,9 +529,9 @@ test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans ta
   );
   git("add", "-A");
   git("commit", "-qm", "fiches");
-  const fiches = fichesCadrees(racine);
+  const fiches = scopedBriefs(racine);
   assert.deepEqual(
-    fiches.map((f) => [f.chemin, f.priorite, f.decisions, f.prete]),
+    fiches.map((f) => [f.path, f.priority, f.decisions, f.ready]),
     [
       ["docs/projects/sans-tag.md", "P2", 0, true],
       [FICHE, "P3", 0, true],
@@ -547,88 +543,88 @@ test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans ta
 
 test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CLOSING, effacée en SCOPING", () => {
   const { racine } = depotCadre({ transitions: "agent" });
-  assert.equal(lancer(racine, FICHE, { fusion: true }).code, 0);
-  assert.equal(lireEtat(racine).etat.auto_merge, undefined, "un lancement par l'agent n'autorise jamais la fusion");
-  assert.doesNotMatch(contexte(lireEtat(racine), racine), /fusion automatique/i);
+  assert.equal(start(racine, FICHE, { autoMerge: true }).code, 0);
+  assert.equal(readState(racine).state.auto_merge, undefined, "un lancement par l'agent n'autorise jamais la fusion");
+  assert.doesNotMatch(context(readState(racine), racine), /fusion automatique/i);
   rmSync(join(racine, ".drwil", "state.json"));
-  assert.equal(lancer(racine, FICHE, { humain: true, fusion: true }).code, 0);
-  let lu = lireEtat(racine);
-  assert.deepEqual(lu.problemes, []);
-  assert.equal(lu.etat.auto_merge, true);
-  assert.match(contexte(lu, racine), /fusion automatique autorisée/i);
+  assert.equal(start(racine, FICHE, { human: true, autoMerge: true }).code, 0);
+  let lu = readState(racine);
+  assert.deepEqual(lu.problems, []);
+  assert.equal(lu.state.auto_merge, true);
+  assert.match(context(lu, racine), /fusion automatique autorisée/i);
   // Ordre sûr (PR #29 : fusion refusée, retour en SCOPING quand même, autorisation perdue) : la PR
   // calculée et à jour, la fusion programmée puis vérifiée, et seulement ensuite le retour en SCOPING.
   assert.match(
-    contexte(lu, racine),
+    context(lu, racine),
     /mergeStateStatus.*BEHIND.*gh pr merge --auto --merge.*autoMergeRequest.*seulement ensuite revenir en SCOPING.*rester en CLOSING/s,
   );
   writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ transitions: "agent", lang: "en" }));
   assert.match(
-    contexte(lu, racine),
+    context(lu, racine),
     /mergeStateStatus.*BEHIND.*gh pr merge --auto --merge.*autoMergeRequest.*only then go back to SCOPING.*stay in CLOSING/s,
   );
   for (const vers of ["EVIDENCE", "VERIFY"]) {
-    const r = preparerTransition(lu, vers, { maintenant: MAINTENANT }, racine);
-    assert.equal(r.etat.auto_merge, true, vers);
-    lu = { ...lu, etat: r.etat };
+    const r = prepareTransition(lu, vers, { now: MAINTENANT }, racine);
+    assert.equal(r.state.auto_merge, true, vers);
+    lu = { ...lu, state: r.state };
   }
   assert.equal(
-    preparerTransition({ ...lu, etat: { ...lu.etat, activity: "CLOSING" } }, "SCOPING", { maintenant: MAINTENANT }, racine).etat.auto_merge,
+    prepareTransition({ ...lu, state: { ...lu.state, activity: "CLOSING" } }, "SCOPING", { now: MAINTENANT }, racine).state.auto_merge,
     undefined,
   );
 });
 
 test("validation : auto_merge booléenne, jamais vraie en SCOPING", () => {
   const racine = depot();
-  assert.match(validerEtat(actif("BUILD", { auto_merge: "oui" }), racine)[0], /auto_merge/);
-  assert.match(validerEtat({ ...ETAT_NEUTRE, auto_merge: true }, racine)[0], /auto_merge/);
-  assert.deepEqual(validerEtat(actif("CLOSING", { auto_merge: true }), racine), []);
+  assert.match(validateState(actif("BUILD", { auto_merge: "oui" }), racine)[0], /auto_merge/);
+  assert.match(validateState({ ...NEUTRAL_STATE, auto_merge: true }, racine)[0], /auto_merge/);
+  assert.deepEqual(validateState(actif("CLOSING", { auto_merge: true }), racine), []);
 });
 
 test("fiches cadrées : sans dossier de fiches, aucune", () => {
-  assert.deepEqual(fichesCadrees(tmp("drwil-etat-vide-")), []);
+  assert.deepEqual(scopedBriefs(tmp("drwil-etat-vide-")), []);
 });
 
 test("fiches cadrées : bloc cadrage commité, non terminée, hors modèles", () => {
   const { racine } = depotCadre();
   assert.deepEqual(
-    fichesCadrees(racine).map((f) => f.chemin),
+    scopedBriefs(racine).map((f) => f.path),
     [FICHE],
   );
-  assert.equal(fichesCadrees(racine)[0].titre, "Projet : Exemple");
+  assert.equal(scopedBriefs(racine)[0].title, "Projet : Exemple");
   // Un cadrage seulement dans l'arbre de travail ne compte pas : c'est le cadrage commité qui est validé.
   writeFileSync(join(racine, "docs", "projects", "sans-cadrage.md"), "# Sans cadrage\n\n<!-- scope\nfiles:\n  - src/z.ts\n-->\n");
   assert.deepEqual(
-    fichesCadrees(racine).map((f) => f.chemin),
+    scopedBriefs(racine).map((f) => f.path),
     [FICHE],
   );
 });
 
 test("lancer : un geste humain passe directement en BUILD ; refusé à l'agent en mode humain", () => {
   const { racine } = depotCadre();
-  const agent = lancer(racine, FICHE, { maintenant: MAINTENANT });
+  const agent = start(racine, FICHE, { now: MAINTENANT });
   assert.equal(agent.code, 1);
   assert.match(agent.message, /décision humaine/);
-  assert.equal(lireEtat(racine).source, "absent");
-  const ok = lancer(racine, FICHE, { humain: true, maintenant: MAINTENANT });
+  assert.equal(readState(racine).source, "missing");
+  const ok = start(racine, FICHE, { human: true, now: MAINTENANT });
   assert.equal(ok.code, 0, ok.message);
-  assert.deepEqual(lireEtat(racine).etat, {
+  assert.deepEqual(readState(racine).state, {
     version: 1,
     activity: "BUILD",
     active_brief: FICHE,
     active_request: null,
     since: MAINTENANT,
   });
-  assert.match(lancer(racine, FICHE, { humain: true }).message, /activité BUILD/, "pas de relance en pleine réalisation");
+  assert.match(start(racine, FICHE, { human: true }).message, /activité BUILD/, "pas de relance en pleine réalisation");
 });
 
 test("lancer : fiche non cadrée, terminée ou modèle refusée ; mode agent libre", () => {
   const { racine } = depotCadre();
   for (const f of ["docs/projects/sans-cadrage.md", "docs/projects/finie.md", "docs/projects/model-brief.md", "docs/projects/absente.md"]) {
-    assert.match(lancer(racine, f, { humain: true }).message, /n'est pas une fiche cadrée/, f);
+    assert.match(start(racine, f, { human: true }).message, /n'est pas une fiche cadrée/, f);
   }
   const agent = depotCadre({ transitions: "agent" }).racine;
-  assert.equal(lancer(agent, FICHE).code, 0);
+  assert.equal(start(agent, FICHE).code, 0);
 });
 
 // L'enfant relance ces mêmes fichiers : sans garde, il se relancerait sans fin.
@@ -704,29 +700,29 @@ async function avecTerminal(reponses, fn) {
 
 test("principal fiches : liste lisible, JSON, ou aucune fiche", async () => {
   const { racine } = depotCadre();
-  let r = await capturer(() => principal(["briefs"], racine));
+  let r = await capturer(() => main(["briefs"], racine));
   assert.equal(r.code, 0);
   assert.equal(r.sortie, `1. ${FICHE} — Projet : Exemple`);
-  r = await capturer(() => principal(["briefs", "--json"], racine));
-  assert.equal(JSON.parse(r.sortie)[0].chemin, FICHE);
-  r = await capturer(() => principal(["briefs"], depot()));
+  r = await capturer(() => main(["briefs", "--json"], racine));
+  assert.equal(JSON.parse(r.sortie)[0].path, FICHE);
+  r = await capturer(() => main(["briefs"], depot()));
   assert.match(r.sortie, /^\(aucune fiche cadrée/);
 });
 
 test("principal lancer sans terminal : refusé en mode humain, lancé en mode agent (avec --demande)", async () => {
   const humain = depotCadre().racine;
-  let r = await capturer(() => principal(["start", FICHE], humain));
+  let r = await capturer(() => main(["start", FICHE], humain));
   assert.equal(r.code, 1);
   assert.match(r.erreurs, /^✗ lancement refusé : c'est une décision humaine/);
   const agent = depotCadre({ transitions: "agent" }).racine;
-  r = await capturer(() => principal(["start", FICHE, "--demande", "faire X"], agent));
+  r = await capturer(() => main(["start", FICHE, "--demande", "faire X"], agent));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(r.sortie, /^✓ SCOPING → BUILD \(lancé : docs\/projects\/exemple\.md\)\n\n\[drwil\] État de gouvernance/);
-  assert.equal(lireEtat(agent).etat.active_request, "faire X");
+  assert.equal(readState(agent).state.active_request, "faire X");
   // --demande sans valeur : ignoré.
   const autre = depotCadre({ transitions: "agent" }).racine;
-  await capturer(() => principal(["start", FICHE, "--demande"], autre));
-  assert.equal(lireEtat(autre).etat.active_request, null);
+  await capturer(() => main(["start", FICHE, "--demande"], autre));
+  assert.equal(readState(autre).state.active_request, null);
 });
 
 test("principal lancer au terminal : l'humain choisit, confirme et décide de la fusion", async () => {
@@ -737,72 +733,72 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   );
   git("add", "-A");
   git("commit", "-qm", "bloquee");
-  const r = await avecTerminal(["1", "LANCER", "FUSION"], () => capturer(() => principal(["start"], racine)));
+  const r = await avecTerminal(["1", "LANCER", "FUSION"], () => capturer(() => main(["start"], racine)));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(
     r.sortie,
     /^1\. docs\/projects\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projects\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher\]/,
   );
   assert.deepEqual(r.invites.length, 3);
-  assert.equal(lireEtat(racine).etat.auto_merge, true);
+  assert.equal(readState(racine).state.auto_merge, true);
 });
 
 test("principal lancer au terminal : sans confirmation exacte ou numéro inconnu, rien ne change", async () => {
   const { racine } = depotCadre();
-  let r = await avecTerminal(["oui"], () => capturer(() => principal(["start", FICHE], racine)));
+  let r = await avecTerminal(["oui"], () => capturer(() => main(["start", FICHE], racine)));
   assert.equal(r.code, 1);
   assert.equal(r.erreurs, "✗ lancement non confirmé : état inchangé");
-  r = await avecTerminal(["9"], () => capturer(() => principal(["start"], racine)));
+  r = await avecTerminal(["9"], () => capturer(() => main(["start"], racine)));
   assert.equal(r.code, 1);
   assert.equal(r.invites.length, 1);
-  r = await avecTerminal(["LANCER", ""], () => capturer(() => principal(["start", FICHE], racine)));
+  r = await avecTerminal(["LANCER", ""], () => capturer(() => main(["start", FICHE], racine)));
   assert.equal(r.code, 0, r.erreurs);
-  assert.equal(lireEtat(racine).etat.auto_merge, undefined);
+  assert.equal(readState(racine).state.auto_merge, undefined);
 });
 
 test("principal rappel : affiché seulement quand l'état change", async () => {
   const racine = depot();
-  assert.match((await capturer(() => principal(["reminder"], racine))).sortie, /^\[drwil\] Rappel/);
-  assert.equal((await capturer(() => principal(["reminder"], racine))).sortie, "");
+  assert.match((await capturer(() => main(["reminder"], racine))).sortie, /^\[drwil\] Rappel/);
+  assert.equal((await capturer(() => main(["reminder"], racine))).sortie, "");
 });
 
 test("principal rappel et lecture : une racine inutilisable ne casse jamais la session", async () => {
-  assert.deepEqual(await capturer(() => principal(["reminder"], null)), { code: 0, sortie: "", erreurs: "" });
-  const r = await capturer(() => principal([], null));
+  assert.deepEqual(await capturer(() => main(["reminder"], null)), { code: 0, sortie: "", erreurs: "" });
+  const r = await capturer(() => main([], null));
   assert.equal(r.code, 0);
   assert.match(r.sortie, /^\[drwil\] état de gouvernance illisible : /);
 });
 
 test("rappel court en anglais, fiche active", () => {
-  const racine = depot({ etat: actif("BUILD"), lang: "en" });
-  assert.match(rappelCourt(lireEtat(racine), racine), /^\[drwil\] Reminder: BUILD · docs\/projects\/exemple\.md · scope: 2 file\(s\)/);
+  const racine = depot({ state: actif("BUILD"), lang: "en" });
+  assert.match(shortReminder(readState(racine), racine), /^\[drwil\] Reminder: BUILD · docs\/projects\/exemple\.md · scope: 2 file\(s\)/);
   const neutre = depot({ lang: "en" });
-  assert.match(rappelCourt(lireEtat(neutre), neutre), /^\[drwil\] Reminder: SCOPING · no active expectation \(read again/);
+  assert.match(shortReminder(readState(neutre), neutre), /^\[drwil\] Reminder: SCOPING · no active brief \(read again/);
 });
 
 test("principal lecture : contexte ou JSON", async () => {
-  const racine = depot({ etat: actif("BUILD") });
-  assert.match((await capturer(() => principal([], racine))).sortie, /^\[drwil\] État de gouvernance/);
-  assert.equal(JSON.parse((await capturer(() => principal(["--json"], racine))).sortie).etat.activity, "BUILD");
+  const racine = depot({ state: actif("BUILD") });
+  assert.match((await capturer(() => main([], racine))).sortie, /^\[drwil\] État de gouvernance/);
+  assert.equal(JSON.parse((await capturer(() => main(["--json"], racine))).sortie).state.activity, "BUILD");
 });
 
 test("principal passer : usage sans activité, transition écrite ou refusée, confirmation au terminal", async () => {
   const racine = depot({ config: { transitions: "agent" } });
   for (const args of [["move"], ["move", "--fiche"]]) {
-    const r = await capturer(() => principal(args, racine));
+    const r = await capturer(() => main(args, racine));
     assert.equal(r.code, 2);
     assert.match(r.erreurs, /^usage : node \.githooks\/state\.mjs move </);
   }
-  let r = await capturer(() => principal(["move", "EXPECTATION", "--fiche", FICHE, "--demande", "d"], racine));
+  let r = await capturer(() => main(["move", "EXPECTATION", "--fiche", FICHE, "--demande", "d"], racine));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(r.sortie, /^✓ /);
-  r = await capturer(() => principal(["move", "CLOSING"], racine));
+  r = await capturer(() => main(["move", "CLOSING"], racine));
   assert.equal(r.code, 1);
   assert.match(r.erreurs, /^✗ /);
   const humain = depot();
-  r = await avecTerminal(["EXPECTATION"], () => capturer(() => principal(["move", "EXPECTATION", "--fiche", FICHE], humain)));
+  r = await avecTerminal(["EXPECTATION"], () => capturer(() => main(["move", "EXPECTATION", "--fiche", FICHE], humain)));
   assert.equal(r.code, 0, r.erreurs);
-  assert.equal(lireEtat(humain).etat.activity, "EXPECTATION");
+  assert.equal(readState(humain).state.activity, "EXPECTATION");
 });
 
 test("ligne de commande : node state.mjs lit l'état du dossier courant", () => {
@@ -813,29 +809,29 @@ test("ligne de commande : node state.mjs lit l'état du dossier courant", () => 
 });
 
 test("cas limites : attente non textuelle, verdict inconnu, configuration « null »", () => {
-  assert.deepEqual(validerEtat(actif("BUILD", { active_brief: 5 }), depot()), ["active_brief : chemin de fiche ou null attendu"]);
+  assert.deepEqual(validateState(actif("BUILD", { active_brief: 5 }), depot()), ["active_brief : chemin de fiche ou null attendu"]);
   const { racine, evidence } = depotEnVerify();
   evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "bizarre" });
-  assert.match(preuveVerify(racine).raison, /sans verdict reconnu/);
+  assert.match(verifyEvidence(racine).reason, /sans verdict reconnu/);
   const nulle = depot();
   writeFileSync(join(nulle, ".drwil", "ia-first.json"), "null");
-  assert.match(contexte(lireEtat(nulle), nulle), /Activité : SCOPING/);
+  assert.match(context(readState(nulle), nulle), /Activité : SCOPING/);
 });
 
 test("fiche active sans titre, ou illisible (un dossier) : contexte et rappel tiennent", () => {
-  const sansTitre = depot({ etat: actif("BUILD"), fiche: false });
+  const sansTitre = depot({ state: actif("BUILD"), fiche: false });
   writeFileSync(join(sansTitre, FICHE), "**Statut** : cadré le 2026-10-09.\n");
-  assert.match(contexte(lireEtat(sansTitre), sansTitre), /Attente active : docs\/projects\/exemple\.md\n/);
-  const dossier = depot({ etat: actif("BUILD"), fiche: false });
+  assert.match(context(readState(sansTitre), sansTitre), /Attente active : docs\/projects\/exemple\.md\n/);
+  const dossier = depot({ state: actif("BUILD"), fiche: false });
   mkdirSync(join(dossier, FICHE));
-  assert.match(contexte(lireEtat(dossier), dossier), /\(aucun bloc cadrage/);
-  assert.match(rappelCourt(lireEtat(dossier), dossier), /périmètre : 0 fichier/);
+  assert.match(context(readState(dossier), dossier), /\(aucun bloc scope/);
+  assert.match(shortReminder(readState(dossier), dossier), /périmètre : 0 fichier/);
 });
 
 test("rappel : empreinte impossible à écrire, le rappel est quand même rendu", () => {
   const racine = depot();
   mkdirSync(join(racine, ".drwil", "reminder.json"));
-  assert.match(rappelSiChange(racine), /^\[drwil\] Rappel/);
+  assert.match(reminderIfChanged(racine), /^\[drwil\] Rappel/);
 });
 
 test("fiches cadrées : index réglé, fiche sans titre ; lancer sans fiche ou avec une demande invalide", () => {
@@ -848,8 +844,8 @@ test("fiches cadrées : index réglé, fiche sans titre ; lancer sans fiche ou a
   );
   git("add", "-A");
   git("commit", "-qm", "index");
-  const sansTitre = fichesCadrees(racine).find((f) => f.chemin === "docs/projects/sans-titre.md");
-  assert.deepEqual([sansTitre.titre, sansTitre.priorite], ["docs/projects/sans-titre.md", "P0"]);
-  assert.match(lancer(racine, undefined).message, /« undefined » n'est pas une fiche cadrée/);
-  assert.match(lancer(racine, FICHE, { demande: 5 }).message, /^lancement refusé : active_request : chaîne ou null attendu/);
+  const sansTitre = scopedBriefs(racine).find((f) => f.path === "docs/projects/sans-titre.md");
+  assert.deepEqual([sansTitre.title, sansTitre.priority], ["docs/projects/sans-titre.md", "P0"]);
+  assert.match(start(racine, undefined).message, /« undefined » n'est pas une fiche cadrée/);
+  assert.match(start(racine, FICHE, { request: 5 }).message, /^lancement refusé : active_request : chaîne ou null attendu/);
 });

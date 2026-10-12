@@ -256,8 +256,8 @@ program
       console.error(`✗ ${module} introuvable : lancer « drwil apply » pour installer le lecteur d'état`);
       process.exit(2);
     }
-    const { principal } = await import(pathToFileURL(module).href);
-    process.exit(await principal(args, process.cwd()));
+    const { main } = await import(pathToFileURL(module).href);
+    process.exit(await main(args, process.cwd()));
   });
 
 program.parse();

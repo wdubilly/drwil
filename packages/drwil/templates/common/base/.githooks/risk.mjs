@@ -1,59 +1,61 @@
-// Niveaux de risque d'une fiche de chantier : la cérémonie suit le risque, la
-// traçabilité (QUA-016) ne change pas.
-// - LOW : rattaché à docs/projects/routine-maintenance.md, pas de fiche dédiée ;
-// - MEDIUM : fiche avec cadrage ;
-// - HIGH : fiche, section Décisions, contrats concernés cités, preuves.
-// Le niveau est explicite (`**Risque** : HIGH`) et forçable vers le haut seulement : un
-// cadrage qui touche la mécanique de gouvernance impose HIGH au minimum.
-import { fnmatch, lireBloc } from "./scope.mjs";
+// Risk levels of a workstream brief: ceremony follows risk, traceability
+// (QUA-016) does not change.
+// - LOW: attached to docs/projects/routine-maintenance.md, no dedicated brief;
+// - MEDIUM: brief with a scope block;
+// - HIGH: brief, Decisions section, related contracts cited, evidence.
+// The level is explicit (`**Risk**: HIGH`) and can only be raised: a scope
+// that touches the governance mechanics imposes HIGH at least.
+import { fnmatch, readBlock } from "./scope.mjs";
 
-export const NIVEAUX = ["LOW", "MEDIUM", "HIGH"];
+export const LEVELS = ["LOW", "MEDIUM", "HIGH"];
 
-/** Chemins dont la modification impose HIGH (réglable : .drwil/ia-first.json → risk.sensitivePaths). */
-export const CHEMINS_SENSIBLES = [".githooks/*", ".github/workflows/*", ".gitlab-ci.yml", ".drwil/*"];
+/** Paths whose change imposes HIGH (configurable: .drwil/ia-first.json → risk.sensitivePaths). */
+export const SENSITIVE_PATHS = [".githooks/*", ".github/workflows/*", ".gitlab-ci.yml", ".drwil/*"];
 
-/** Niveau minimum imposé par le cadrage d'une fiche : HIGH si un motif touche un chemin sensible. */
-export function niveauMinimum(motifs, sensibles = CHEMINS_SENSIBLES) {
-  const touche = motifs.some((m) => sensibles.some((s) => fnmatch(m, s) || fnmatch(s, m) || m.startsWith(s.replace(/\*$/, ""))));
-  return touche ? "HIGH" : "LOW";
+/** Minimum level imposed by a brief's scope: HIGH if a pattern touches a sensitive path. */
+export function minimumLevel(patterns, sensitive = SENSITIVE_PATHS) {
+  const touches = patterns.some((p) => sensitive.some((s) => fnmatch(p, s) || fnmatch(s, p) || p.startsWith(s.replace(/\*$/, ""))));
+  return touches ? "HIGH" : "LOW";
 }
 
+const TEXTS = {
+  fr: {
+    unknown: (v) => `niveau de risque « ${v} » inconnu (LOW, MEDIUM ou HIGH)`,
+    tooLow: (v, min) =>
+      `risque ${v} déclaré, mais le cadrage touche la mécanique de gouvernance : ${min} au minimum (forçable vers le haut seulement)`,
+    missing: (min) => `pas de champ « Risque » alors que le cadrage impose ${min} (DRWIL-012)`,
+    decisions: () => `risque HIGH sans section « Décisions »`,
+    contracts: () => `risque HIGH sans contrat concerné cité (ID du registre)`,
+  },
+  en: {
+    unknown: (v) => `unknown risk level "${v}" (LOW, MEDIUM or HIGH)`,
+    tooLow: (v, min) => `risk ${v} declared, but the scope touches governance mechanics: ${min} at least (can only be raised)`,
+    missing: (min) => `no "Risk" field although the scope requires ${min} (DRWIL-012)`,
+    decisions: () => `HIGH risk without a "Decisions" section`,
+    contracts: () => `HIGH risk without any related contract cited (registry ID)`,
+  },
+};
+
 /**
- * Vérifie le niveau de risque d'une fiche. Rend { erreurs, avertissements } (messages sans préfixe).
- * Sans champ Risque : jamais d'erreur (compatibilité), un avertissement si HIGH est imposé.
+ * Checks a brief's risk level. Returns { errors, warnings } (messages without prefix).
+ * Without a Risk field: never an error (compatibility), a warning if HIGH is imposed.
  */
-export function verifierRisque(texte, { sensibles = CHEMINS_SENSIBLES, idMotif = "(?:SEC|QUA)-\\d{3}", lang = "fr" } = {}) {
-  const T = {
-    fr: {
-      invalide: (v) => `niveau de risque « ${v} » inconnu (LOW, MEDIUM ou HIGH)`,
-      tropBas: (v, min) =>
-        `risque ${v} déclaré, mais le cadrage touche la mécanique de gouvernance : ${min} au minimum (forçable vers le haut seulement)`,
-      absent: (min) => `pas de champ « Risque » alors que le cadrage impose ${min} (DRWIL-012)`,
-      decisions: () => `risque HIGH sans section « Décisions »`,
-      contrats: () => `risque HIGH sans contrat concerné cité (ID du registre)`,
-    },
-    en: {
-      invalide: (v) => `unknown risk level "${v}" (LOW, MEDIUM or HIGH)`,
-      tropBas: (v, min) => `risk ${v} declared, but the scope touches governance mechanics: ${min} at least (can only be raised)`,
-      absent: (min) => `no "Risk" field although the scope requires ${min} (DRWIL-012)`,
-      decisions: () => `HIGH risk without a "Decisions" section`,
-      contrats: () => `HIGH risk without any related contract cited (registry ID)`,
-    },
-  }[lang === "en" ? "en" : "fr"];
-  const erreurs = [];
-  const avertissements = [];
-  const min = niveauMinimum(lireBloc(texte).motifs, sensibles);
-  const m = /^\*\*(?:Risque|Risk)\*\*\s*:\s*`?([^\s`]+)`?/m.exec(texte);
+export function checkRisk(text, { sensitive = SENSITIVE_PATHS, idPattern = "(?:SEC|QUA)-\\d{3}", lang = "fr" } = {}) {
+  const T = TEXTS[lang === "en" ? "en" : "fr"];
+  const errors = [];
+  const warnings = [];
+  const min = minimumLevel(readBlock(text).patterns, sensitive);
+  const m = /^\*\*(?:Risque|Risk)\*\*\s*:\s*`?([^\s`]+)`?/m.exec(text);
   if (!m) {
-    if (min === "HIGH") avertissements.push(T.absent(min));
-    return { erreurs, avertissements };
+    if (min === "HIGH") warnings.push(T.missing(min));
+    return { errors, warnings };
   }
-  const niveau = m[1].toUpperCase();
-  if (!NIVEAUX.includes(niveau)) return { erreurs: [T.invalide(m[1])], avertissements };
-  if (NIVEAUX.indexOf(niveau) < NIVEAUX.indexOf(min)) erreurs.push(T.tropBas(niveau, min));
-  if (niveau === "HIGH") {
-    if (!/^##\s*(\d+\.\s*)?(Décisions|Decisions)\b/m.test(texte)) erreurs.push(T.decisions());
-    if (!new RegExp(idMotif).test(texte)) erreurs.push(T.contrats());
+  const level = m[1].toUpperCase();
+  if (!LEVELS.includes(level)) return { errors: [T.unknown(m[1])], warnings };
+  if (LEVELS.indexOf(level) < LEVELS.indexOf(min)) errors.push(T.tooLow(level, min));
+  if (level === "HIGH") {
+    if (!/^##\s*(\d+\.\s*)?(Décisions|Decisions)\b/m.test(text)) errors.push(T.decisions());
+    if (!new RegExp(idPattern).test(text)) errors.push(T.contracts());
   }
-  return { erreurs, avertissements };
+  return { errors, warnings };
 }

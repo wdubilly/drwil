@@ -155,9 +155,54 @@ export async function chargerProjet(root: string): Promise<Projet | string> {
   }
   const registre: string = cfg.dirs?.contracts ?? "docs/contracts.md";
   if (!existsSync(join(root, registre))) return `registre des contrats absent (${registre})`;
-  const moteur = await import(pathToFileURL(moteurPath).href);
-  const lecteur = await import(pathToFileURL(lecteurPath).href);
-  return { cfg, registre, moteur, lecteur };
+  const engine = await import(pathToFileURL(moteurPath).href);
+  const contracts = await import(pathToFileURL(lecteurPath).href);
+  return { cfg, registre, ...pont(engine, contracts) };
+}
+
+/**
+ * Les hooks parlent anglais (docs/projects/coeur-en-anglais.md, lot 3) ; la CLI garde son modèle
+ * jusqu'au chantier C. Ce pont traduit à la frontière, sans rien changer de ce que verify affiche
+ * ni de l'évidence qu'il écrit.
+ */
+function pont(engine: any, contracts: any): { moteur: any; lecteur: any } {
+  const versCli = (k: any) => ({
+    id: k.id,
+    titre: k.title,
+    ligne: k.line,
+    forme: k.form === "table" ? "tableau" : k.form,
+    regle: k.rule,
+    controles: k.checks,
+    manuel: k.manual,
+    severite: k.severity,
+    severiteBrute: k.rawSeverity,
+    texte: k.text,
+    brut: k,
+  });
+  const lecteur = {
+    lireContrats: (texte: string) => contracts.readContracts(texte).map(versCli),
+    validerContrats: (ks: any[], ids: string[], lang?: string) =>
+      contracts
+        .validateContracts(
+          ks.map((k) => k.brut),
+          ids,
+          lang,
+        )
+        .map((e: any) => ({ id: e.id, ligne: e.line, type: e.type === "duplicate" ? "doublon" : e.type, message: e.message })),
+    controlesConnus: (cfg: Record<string, any>) => contracts.knownChecks(cfg),
+  };
+  const moteur = {
+    controles: (root: string, o: { cfg: Record<string, any>; complet?: boolean }) =>
+      engine.checks(root, { cfg: o.cfg, whole: o.complet }).map((c: any) => ({
+        id: c.id,
+        nom: c.name,
+        executer: (opts: { stdio?: string } = {}) => {
+          const r = c.run(opts);
+          return { statut: r.status, detail: r.detail, message: r.message, sortie: r.output };
+        },
+      })),
+  };
+  return { moteur, lecteur };
 }
 
 export async function verify(opts: VerifyOptions): Promise<Verdict> {

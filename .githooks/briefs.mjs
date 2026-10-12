@@ -1,106 +1,104 @@
-// Lecture du dépôt pour l'état de gouvernance (découpé de state.mjs, qui le réexporte) : réglages,
-// statut et liste des fiches cadrées, priorités de l'index commité.
+// Repository reading for the governance state (split from state.mjs, which re-exports it): settings,
+// status and list of scoped briefs, priorities from the committed index.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { lireBloc } from "./scope.mjs";
+import { readBlock } from "./scope.mjs";
 
-export const DOSSIERS_FICHES = ["docs/projects/"];
-export const MODELE_RE = /^modele-|^model-/;
+export const BRIEF_DIRS = ["docs/projects/"];
+export const MODEL_RE = /^modele-|^model-/;
 
-/** Réglages du projet (.drwil/ia-first.json) ; illisibles ou absents : aucun. */
-export function config(racine) {
+/** Project settings (.drwil/ia-first.json); unreadable or missing: none. */
+export function config(root) {
   try {
-    return JSON.parse(readFileSync(join(racine, ".drwil", "ia-first.json"), "utf8")) ?? {};
+    return JSON.parse(readFileSync(join(root, ".drwil", "ia-first.json"), "utf8")) ?? {};
   } catch {
     return {};
   }
 }
 
-const STATUT_LIGNE_RE = /^\*\*(?:Statut|Status)\*\*\s*:\s*(.*)$/;
+const STATUS_LINE_RE = /^\*\*(?:Statut|Status)\*\*\s*:\s*(.*)$/;
 
 /**
- * « terminee », « reference » ou « ouverte » — seule définition, partagée avec check-docs.mjs.
- * Seul un marqueur explicite en tête du statut compte : un mot cherché n'importe où (« essai réel
- * fait », « fait (lot 1) » d'une fiche à plusieurs lots) donnait de faux « terminée ».
+ * "done", "reference" or "open" — single definition, shared with check-docs.mjs.
+ * Only an explicit marker at the start of the status counts: a word searched anywhere ("essai réel
+ * fait", "fait (lot 1)" of a brief with several increments) gave false "done".
  */
-export function statutFiche(texte) {
-  const statut =
-    texte
+export function briefStatus(text) {
+  const status =
+    text
       .split(/\r?\n/)
       .slice(0, 15)
-      .map((l) => STATUT_LIGNE_RE.exec(l))
+      .map((l) => STATUS_LINE_RE.exec(l))
       .find(Boolean)?.[1] ?? "";
-  if (/^(?:terminé\s+le|done\s+on)\s+\d{4}-\d{2}-\d{2}\b/i.test(statut)) return "terminee";
-  if (/^(?:référence|reference)\b/i.test(statut)) return "reference";
-  return "ouverte";
+  if (/^(?:terminé\s+le|done\s+on)\s+\d{4}-\d{2}-\d{2}\b/i.test(status)) return "done";
+  if (/^(?:référence|reference)\b/i.test(status)) return "reference";
+  return "open";
 }
 
-const INDEX_DEFAUT = ["docs/projects/pending.md"];
-const PRIORITE_DEFAUT = 2;
+const DEFAULT_INDEX = ["docs/projects/pending.md"];
+const DEFAULT_PRIORITY = 2;
 
-/** Priorité de chaque fiche citée par un sujet ouvert de l'index commité ([P0] à [P3], [P2] sans tag). */
-function prioritesIndex(racine) {
-  const priorites = new Map();
-  for (const chemin of [config(racine).dirs?.index, ...INDEX_DEFAUT].filter(Boolean)) {
-    const r = spawnSync("git", ["show", `HEAD:${chemin}`], { cwd: racine, encoding: "utf8" });
+/** Priority of each brief cited by an open item of the committed index ([P0] to [P3], [P2] without a tag). */
+function indexPriorities(root) {
+  const priorities = new Map();
+  for (const path of [config(root).dirs?.index, ...DEFAULT_INDEX].filter(Boolean)) {
+    const r = spawnSync("git", ["show", `HEAD:${path}`], { cwd: root, encoding: "utf8" });
     if (r.status !== 0) continue;
-    // Un sujet : sa ligne « - [ ] » et ses lignes de suite ; un point coché d'une fiche à plusieurs
-    // lots ne dit rien de la priorité du travail restant.
-    for (const sujet of r.stdout.split(/\r?\n(?=\s*- \[)/)) {
-      if (!/^\s*- \[ \]/.test(sujet)) continue;
-      const p = /\[P([0-3])\]/.exec(sujet)?.[1];
-      for (const m of sujet.matchAll(/`(docs\/projects\/[^`]+\.md)`/g)) {
-        if (!priorites.has(m[1])) priorites.set(m[1], p === undefined ? PRIORITE_DEFAUT : Number(p));
+    // An item: its "- [ ]" line and its continuation lines; a checked item of a brief with several
+    // increments says nothing about the priority of the remaining work.
+    for (const item of r.stdout.split(/\r?\n(?=\s*- \[)/)) {
+      if (!/^\s*- \[ \]/.test(item)) continue;
+      const p = /\[P([0-3])\]/.exec(item)?.[1];
+      for (const m of item.matchAll(/`(docs\/projects\/[^`]+\.md)`/g)) {
+        if (!priorities.has(m[1])) priorities.set(m[1], p === undefined ? DEFAULT_PRIORITY : Number(p));
       }
     }
     break;
   }
-  return priorites;
+  return priorities;
 }
 
-/** `[décision]` encore ouvertes dans la section « Points à trancher » (« Points to decide »). */
-function decisionsOuvertes(texte) {
-  let dans = false;
+/** `[decision]` items still open in the "Points to decide" section ("Points à trancher"). */
+function openDecisions(text) {
+  let inside = false;
   let n = 0;
-  for (const ligne of texte.split(/\r?\n/)) {
-    if (/^##\s/.test(ligne)) dans = /^##\s*(\d+\.\s*)?(Points à trancher|Points to decide)\b/i.test(ligne);
-    else if (dans && /^\s*-\s*\[(décision|decision)\]/i.test(ligne)) n++;
+  for (const line of text.split(/\r?\n/)) {
+    if (/^##\s/.test(line)) inside = /^##\s*(\d+\.\s*)?(Points à trancher|Points to decide)\b/i.test(line);
+    else if (inside && /^\s*-\s*\[(décision|decision)\]/i.test(line)) n++;
   }
   return n;
 }
 
 /**
- * Fiches qu'on peut lancer : fiches de docs/projects/, hors modèles, non
- * terminées, dont le bloc `cadrage` existe dans HEAD — le cadrage validé est le cadrage commité,
- * comme pour la barrière. `[{ chemin, titre, priorite, decisions, prete }]` : prêtes d'abord (aucune
- * décision ouverte), puis par priorité de l'index, puis par chemin.
+ * Briefs that can be started: briefs of docs/projects/, models excluded, not
+ * finished, whose `scope` block exists in HEAD — the validated scope is the committed one,
+ * as for the scope gate. `[{ path, title, priority, decisions, ready }]`: ready ones first (no
+ * open decision), then by index priority, then by path.
  */
-export function fichesCadrees(racine) {
-  const priorites = prioritesIndex(racine);
-  const fiches = [];
-  for (const dossier of DOSSIERS_FICHES) {
-    const abs = join(racine, dossier);
+export function scopedBriefs(root) {
+  const priorities = indexPriorities(root);
+  const briefs = [];
+  for (const dir of BRIEF_DIRS) {
+    const abs = join(root, dir);
     if (!existsSync(abs)) continue;
-    for (const nom of readdirSync(abs).sort()) {
-      const chemin = dossier + nom;
-      if (!nom.endsWith(".md") || MODELE_RE.test(nom)) continue;
-      const r = spawnSync("git", ["show", `HEAD:${chemin}`], { cwd: racine, encoding: "utf8" });
-      if (r.status !== 0 || !lireBloc(r.stdout).motifs.length) continue;
-      // Une fiche de référence (mécanique du kit) garde son cadrage sans être un chantier à lancer.
-      if (statutFiche(r.stdout) !== "ouverte") continue;
-      const decisions = decisionsOuvertes(r.stdout);
-      const priorite = priorites.get(chemin) ?? PRIORITE_DEFAUT;
-      fiches.push({
-        chemin,
-        titre: /^#\s+(.+)$/m.exec(r.stdout)?.[1]?.trim() ?? chemin,
-        priorite: `P${priorite}`,
+    for (const name of readdirSync(abs).sort()) {
+      const path = dir + name;
+      if (!name.endsWith(".md") || MODEL_RE.test(name)) continue;
+      const r = spawnSync("git", ["show", `HEAD:${path}`], { cwd: root, encoding: "utf8" });
+      if (r.status !== 0 || !readBlock(r.stdout).patterns.length) continue;
+      // A reference brief (kit mechanics) keeps its scope without being a workstream to start.
+      if (briefStatus(r.stdout) !== "open") continue;
+      const decisions = openDecisions(r.stdout);
+      const priority = priorities.get(path) ?? DEFAULT_PRIORITY;
+      briefs.push({
+        path,
+        title: /^#\s+(.+)$/m.exec(r.stdout)?.[1]?.trim() ?? path,
+        priority: `P${priority}`,
         decisions,
-        prete: decisions === 0,
+        ready: decisions === 0,
       });
     }
   }
-  return fiches.sort(
-    (a, b) => Number(b.prete) - Number(a.prete) || a.priorite.localeCompare(b.priorite) || a.chemin.localeCompare(b.chemin),
-  );
+  return briefs.sort((a, b) => Number(b.ready) - Number(a.ready) || a.priority.localeCompare(b.priority) || a.path.localeCompare(b.path));
 }

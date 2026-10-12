@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { niveauMinimum, verifierRisque } from "./risk.mjs";
+import { minimumLevel, checkRisk } from "./risk.mjs";
 
 const fiche = (risque, cadrage, extra = "") => `# Projet : x
 
@@ -15,35 +15,35 @@ ${extra}
 `;
 
 test("niveau minimum : la mécanique de gouvernance impose HIGH", () => {
-  assert.equal(niveauMinimum(["src/app.ts"]), "LOW");
-  assert.equal(niveauMinimum([".githooks/run-checks.mjs"]), "HIGH");
-  assert.equal(niveauMinimum([".github/workflows/ia-first.yml"]), "HIGH");
+  assert.equal(minimumLevel(["src/app.ts"]), "LOW");
+  assert.equal(minimumLevel([".githooks/run-checks.mjs"]), "HIGH");
+  assert.equal(minimumLevel([".github/workflows/ia-first.yml"]), "HIGH");
 });
 
 test("sans champ Risque : jamais d'erreur, avertissement si HIGH est imposé", () => {
-  assert.deepEqual(verifierRisque(fiche(null, ["src/app.ts"])), { erreurs: [], avertissements: [] });
-  const r = verifierRisque(fiche(null, [".githooks/engine.mjs"]));
-  assert.equal(r.erreurs.length, 0);
-  assert.match(r.avertissements[0], /impose HIGH/);
+  assert.deepEqual(checkRisk(fiche(null, ["src/app.ts"])), { errors: [], warnings: [] });
+  const r = checkRisk(fiche(null, [".githooks/engine.mjs"]));
+  assert.equal(r.errors.length, 0);
+  assert.match(r.warnings[0], /impose HIGH/);
 });
 
 test("forçable vers le haut seulement ; niveau inconnu refusé", () => {
-  assert.match(verifierRisque(fiche("LOW", [".githooks/engine.mjs"])).erreurs[0], /HIGH au minimum/);
-  assert.deepEqual(verifierRisque(fiche("MEDIUM", ["src/app.ts"])).erreurs, []);
-  assert.match(verifierRisque(fiche("ÉNORME", ["src/app.ts"])).erreurs[0], /inconnu/);
+  assert.match(checkRisk(fiche("LOW", [".githooks/engine.mjs"])).errors[0], /HIGH au minimum/);
+  assert.deepEqual(checkRisk(fiche("MEDIUM", ["src/app.ts"])).errors, []);
+  assert.match(checkRisk(fiche("ÉNORME", ["src/app.ts"])).errors[0], /inconnu/);
 });
 
 test("HIGH exige une section Décisions et un contrat cité", () => {
-  const r = verifierRisque(fiche("HIGH", ["src/app.ts"]));
-  assert.deepEqual(r.erreurs, ["risque HIGH sans section « Décisions »", "risque HIGH sans contrat concerné cité (ID du registre)"]);
-  assert.deepEqual(verifierRisque(fiche("HIGH", [".githooks/engine.mjs"], "## 4. Décisions\n\n- touche QUA-013.\n")).erreurs, []);
+  const r = checkRisk(fiche("HIGH", ["src/app.ts"]));
+  assert.deepEqual(r.errors, ["risque HIGH sans section « Décisions »", "risque HIGH sans contrat concerné cité (ID du registre)"]);
+  assert.deepEqual(checkRisk(fiche("HIGH", [".githooks/engine.mjs"], "## 4. Décisions\n\n- touche QUA-013.\n")).errors, []);
 });
 
 test("messages en anglais : niveau inconnu, niveau trop bas", () => {
   const cadre = "<!-- scope\nfiles:\n  - .githooks/a.mjs\n-->\n";
-  assert.deepEqual(verifierRisque(`**Risk**: HUGE\n${cadre}`, { lang: "en" }).erreurs, ['unknown risk level "HUGE" (LOW, MEDIUM or HIGH)']);
+  assert.deepEqual(checkRisk(`**Risk**: HUGE\n${cadre}`, { lang: "en" }).errors, ['unknown risk level "HUGE" (LOW, MEDIUM or HIGH)']);
   assert.match(
-    verifierRisque(`**Risk**: LOW\n${cadre}`, { lang: "en" }).erreurs[0],
+    checkRisk(`**Risk**: LOW\n${cadre}`, { lang: "en" }).errors[0],
     /^risk LOW declared, but the scope touches governance mechanics: HIGH at least/,
   );
 });

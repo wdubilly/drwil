@@ -42,9 +42,9 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] 
     if (indexer.length) git(racine, "add", ...indexer);
   }
   const base = { ...process.env, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "" };
-  // DRWIL_RACINE : sans elle, run-checks jugerait le dépôt drwil (parent de son .githooks/).
+  // DRWIL_ROOT : sans elle, run-checks jugerait le dépôt drwil (parent de son .githooks/).
   // Dossier courant ailleurs : seule la racine compte, comme pour un hook lancé depuis une couche.
-  return spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_RACINE: racine, ...env } });
+  return spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_ROOT: racine, ...env } });
 }
 
 test("racine du projet, pas le dossier courant : contrôles annoncés, non exécutés signalés, bilan OK", () => {
@@ -67,7 +67,7 @@ test("en anglais : échecs listés (message du contrôle ou son nom), aucun cont
     /^\[ia-first\] ⚠ not run: project checks \(lint, tests…\) \(none declared in \.drwil\/ia-first\.json → checks\)$/m,
   );
   assert.match(r.stdout, /^\[ia-first\] ✗ failed: paths and contracts cited in docs$/m);
-  assert.match(r.stdout, /^\[ia-first\] ✗ failed: expectation scope: 1 problem\(s\) \(blocking barrier\)$/m);
+  assert.match(r.stdout, /^\[ia-first\] ✗ failed: brief scope: 1 problem\(s\) \(blocking gate\)$/m);
   assert.doesNotMatch(r.stdout, /checks run: OK/);
 });
 

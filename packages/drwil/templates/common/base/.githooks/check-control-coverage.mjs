@@ -1,23 +1,22 @@
 #!/usr/bin/env node
-// QUA-013 (contrôle non exécuté n'est pas passé) : un
-// contrôle « dégradable » (gitleaks absent…) qui ne tourne pas localement ne
-// doit avoir aucun angle mort — un job CI doit se déclencher sur les mêmes
-// chemins. Vérifier que le job existe ne suffit pas : un job peut exister et
-// ne jamais se déclencher si ses `paths`/`rules: changes` ne couvrent pas ces
-// chemins. On vérifie donc le déclenchement, pas le nom.
+// QUA-013 (a check that did not run did not pass): a "degradable" check (gitleaks
+// missing…) that does not run locally must leave no blind spot — a CI job must
+// trigger on the same paths. Checking that the job exists is not enough: a job can
+// exist and never trigger if its `paths`/`rules: changes` do not cover those paths.
+// So the trigger is checked, not the name.
 //
-// Contrôles du socle, en dur (chaque nouveau contrôle de run-checks.mjs doit
-// être ajouté ici) ; les contrôles du projet (.drwil/ia-first.json → checks)
-// peuvent se couvrir eux aussi en ajoutant paths + ciJob (et degradable si
-// besoin) — sinon ils ne sont pas vérifiés, par compatibilité.
+// Base checks, hard-coded (each new check of run-checks.mjs must be added here);
+// the project's checks (.drwil/ia-first.json → checks) can be covered too by adding
+// paths + ciJob (and degradable if needed) — otherwise they are not verified, for
+// compatibility.
 import { existsSync, readFileSync } from "node:fs";
-import { globEnRegex } from "./glob.mjs";
+import { globToRegex } from "./glob.mjs";
 
-const SOCLE = [
+const BASE = [
   {
     id: "secrets-fichiers",
     degradable: true,
-    degradation: "gitleaks absent du poste : le hook ne contrôle pas les secrets",
+    degradation: "gitleaks missing on the machine: the hook does not check secrets",
     paths: ["**"],
     ciJob: "checks",
   },
@@ -27,7 +26,7 @@ const SOCLE = [
     paths: ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "README.md", "INSTALL.md", "docs/**", ".claude/**", ".githooks/**"],
     ciJob: "checks",
   },
-  // Rejoué en CI sur chaque commit de la branche (trailer Drwil-Brief) : jamais dégradé.
+  // Replayed in CI on each commit of the branch (Drwil-Brief trailer): never degraded.
   { id: "perimetre-attente", degradable: false, paths: ["**"], ciJob: "checks" },
   { id: "controles-autotest", degradable: false, paths: [".githooks/**"], ciJob: "checks" },
 ];
@@ -39,29 +38,30 @@ try {
 const lang = cfg.lang === "en" ? "en" : "fr";
 const T = {
   fr: {
-    titre: "Contrôles (QUA-013) : couverture CI absente ou inopérante :",
-    jobAbsent: (id, job, f) => `${id} : job CI « ${job} » absent de ${f}`,
-    pasDeChemin: (id) => `${id} : aucun chemin déclaré (que doit protéger ce contrôle ?)`,
-    neDeclenchePas: (id, job, glob, f, declenche) =>
-      `${id} : le job CI « ${job} » (${f}) ne se déclenche pas sur \`${glob}\` (changes : ${declenche})`,
-    jamaisRattrape: " ; dégradable : rien ne le rattrape localement",
+    title: "Contrôles (QUA-013) : couverture CI absente ou inopérante :",
+    missingJob: (id, job, f) => `${id} : job CI « ${job} » absent de ${f}`,
+    noPath: (id) => `${id} : aucun chemin déclaré (que doit protéger ce contrôle ?)`,
+    notTriggered: (id, job, glob, f, triggers) =>
+      `${id} : le job CI « ${job} » (${f}) ne se déclenche pas sur \`${glob}\` (changes : ${triggers})`,
+    neverCaught: " ; dégradable : rien ne le rattrape localement",
+    none: "aucun",
   },
   en: {
-    titre: "Checks (QUA-013): missing or inoperative CI coverage:",
-    jobAbsent: (id, job, f) => `${id}: CI job "${job}" missing from ${f}`,
-    pasDeChemin: (id) => `${id}: no path declared (what should this check protect?)`,
-    neDeclenchePas: (id, job, glob, f, declenche) =>
-      `${id}: CI job "${job}" (${f}) does not trigger on \`${glob}\` (changes: ${declenche})`,
-    jamaisRattrape: "; degradable: nothing catches it locally",
+    title: "Checks (QUA-013): missing or inoperative CI coverage:",
+    missingJob: (id, job, f) => `${id}: CI job "${job}" missing from ${f}`,
+    noPath: (id) => `${id}: no path declared (what should this check protect?)`,
+    notTriggered: (id, job, glob, f, triggers) => `${id}: CI job "${job}" (${f}) does not trigger on \`${glob}\` (changes: ${triggers})`,
+    neverCaught: "; degradable: nothing catches it locally",
+    none: "none",
   },
 }[lang];
 
-/** Un chemin concret sous un glob, pour savoir si une règle le déclencherait. */
-function echantillon(glob) {
+/** A concrete path under a glob, to know whether a rule would trigger on it. */
+function sample(glob) {
   return glob.replace(/\*\*/g, "a/b").replace(/\*/g, "a");
 }
 
-const NON_JOBS = new Set([
+const NOT_JOBS = new Set([
   "stages",
   "variables",
   "default",
@@ -75,137 +75,136 @@ const NON_JOBS = new Set([
   "types",
 ]);
 
-/** Nom de job GitLab -> { toujours, changes } (rules: changes:). */
-function jobsGitlab(texte) {
+/** GitLab job name -> { always, changes } (rules: changes:). */
+function gitlabJobs(text) {
   const jobs = {};
-  let nom = null;
-  let bloc = [];
-  const vider = () => {
-    if (nom) jobs[nom] = analyser(bloc);
-    nom = null;
-    bloc = [];
+  let name = null;
+  let block = [];
+  const flush = () => {
+    if (name) jobs[name] = parse(block);
+    name = null;
+    block = [];
   };
-  const analyser = (lignes) => {
+  const parse = (lines) => {
     const changes = [];
-    let dans = false;
-    for (const ligne of lignes) {
-      if (/^\s*(?:-\s+)?changes:\s*$/.test(ligne)) {
-        dans = true;
+    let inside = false;
+    for (const line of lines) {
+      if (/^\s*(?:-\s+)?changes:\s*$/.test(line)) {
+        inside = true;
         continue;
       }
-      const item = /^\s*-\s+(\S.*?)\s*$/.exec(ligne);
-      if (dans && item) {
+      const item = /^\s*-\s+(\S.*?)\s*$/.exec(line);
+      if (inside && item) {
         changes.push(item[1].replace(/^["']|["']$/g, ""));
         continue;
       }
-      if (dans && !item) dans = false;
+      if (inside && !item) inside = false;
     }
-    return { toujours: !lignes.some((l) => /^\s+(?:-\s+)?rules:\s*$/.test(l)), changes };
+    return { always: !lines.some((l) => /^\s+(?:-\s+)?rules:\s*$/.test(l)), changes };
   };
-  for (const ligne of texte.split("\n")) {
-    const entete = /^([A-Za-z0-9_.-]+):\s*$/.exec(ligne);
-    if (entete && !NON_JOBS.has(entete[1])) {
-      vider();
-      nom = entete[1];
-      bloc = [];
+  for (const line of text.split("\n")) {
+    const header = /^([A-Za-z0-9_.-]+):\s*$/.exec(line);
+    if (header && !NOT_JOBS.has(header[1])) {
+      flush();
+      name = header[1];
+      block = [];
       continue;
     }
-    if (nom && ligne.trim() && !/^[ \t]/.test(ligne)) {
-      vider();
+    if (name && line.trim() && !/^[ \t]/.test(line)) {
+      flush();
       continue;
     }
-    if (nom) bloc.push(ligne);
+    if (name) block.push(line);
   }
-  vider();
+  flush();
   return jobs;
 }
 
 /**
- * Nom de job GitHub Actions -> { toujours, changes }. GitHub Actions ne
- * filtre pas un job par chemin nativement (contrairement à GitLab
- * `rules: changes`) : seul `on: push/pull_request: paths:`, au niveau du
- * workflow, existe — il s'applique alors à tous les jobs du fichier. Sans ce
- * filtre (notre modèle par défaut), le workflow tourne à chaque push, donc
- * chaque job aussi : couverture totale, triviale mais réelle.
+ * GitHub Actions job name -> { always, changes }. GitHub Actions does not filter a job by
+ * path natively (unlike GitLab `rules: changes`): only `on: push/pull_request: paths:`, at
+ * workflow level, exists — it then applies to all the jobs of the file. Without that filter
+ * (our default template), the workflow runs on every push, so does every job: full coverage,
+ * trivial but real.
  */
-function jobsGithub(texte) {
-  const lignes = texte.split("\n");
-  const chemins = [];
-  let dansOn = false;
-  let dansPaths = false;
-  for (const ligne of lignes) {
-    if (/^on:\s*$/.test(ligne)) {
-      dansOn = true;
+function githubJobs(text) {
+  const lines = text.split("\n");
+  const paths = [];
+  let inOn = false;
+  let inPaths = false;
+  for (const line of lines) {
+    if (/^on:\s*$/.test(line)) {
+      inOn = true;
       continue;
     }
-    if (dansOn && /^\S/.test(ligne)) dansOn = false;
-    if (dansOn && /^\s+paths:\s*$/.test(ligne)) {
-      dansPaths = true;
+    if (inOn && /^\S/.test(line)) inOn = false;
+    if (inOn && /^\s+paths:\s*$/.test(line)) {
+      inPaths = true;
       continue;
     }
-    const item = /^\s*-\s+(\S.*?)\s*$/.exec(ligne);
-    if (dansPaths && item) {
-      chemins.push(item[1].replace(/^["']|["']$/g, ""));
+    const item = /^\s*-\s+(\S.*?)\s*$/.exec(line);
+    if (inPaths && item) {
+      paths.push(item[1].replace(/^["']|["']$/g, ""));
       continue;
     }
-    if (dansPaths && !item) dansPaths = false;
+    if (inPaths && !item) inPaths = false;
   }
-  const noms = [];
-  let dansJobs = false;
-  for (const ligne of lignes) {
-    if (/^jobs:\s*$/.test(ligne)) {
-      dansJobs = true;
+  const names = [];
+  let inJobs = false;
+  for (const line of lines) {
+    if (/^jobs:\s*$/.test(line)) {
+      inJobs = true;
       continue;
     }
-    if (dansJobs) {
-      if (/^\S/.test(ligne)) {
-        dansJobs = false;
+    if (inJobs) {
+      if (/^\S/.test(line)) {
+        inJobs = false;
         continue;
       }
-      const m = /^ {2}([A-Za-z0-9_.-]+):\s*$/.exec(ligne);
-      if (m) noms.push(m[1]);
+      const m = /^ {2}([A-Za-z0-9_.-]+):\s*$/.exec(line);
+      if (m) names.push(m[1]);
     }
   }
-  const job = { toujours: chemins.length === 0, changes: chemins };
-  return Object.fromEntries(noms.map((n) => [n, job]));
+  const job = { always: paths.length === 0, changes: paths };
+  return Object.fromEntries(names.map((n) => [n, job]));
 }
 
-function jobsCi(fichier) {
-  if (!existsSync(fichier)) return null;
-  const texte = readFileSync(fichier, "utf8");
-  return fichier.endsWith(".gitlab-ci.yml") ? jobsGitlab(texte) : jobsGithub(texte);
+function ciJobs(file) {
+  if (!existsSync(file)) return null;
+  const text = readFileSync(file, "utf8");
+  return file.endsWith(".gitlab-ci.yml") ? gitlabJobs(text) : githubJobs(text);
 }
 
-function couvre(job, chemin) {
-  return job.toujours || job.changes.some((g) => globEnRegex(g).test(chemin));
+function covers(job, path) {
+  return job.always || job.changes.some((g) => globToRegex(g).test(path));
 }
 
 const ciFiles = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
-const controles = [...SOCLE, ...(Array.isArray(cfg.checks) ? cfg.checks : []).filter((c) => c.ciJob)];
-const erreurs = [];
+const checks = [...BASE, ...(Array.isArray(cfg.checks) ? cfg.checks : []).filter((c) => c.ciJob)];
+const errors = [];
 
-for (const fichier of ciFiles) {
-  const jobs = jobsCi(fichier);
+for (const file of ciFiles) {
+  const jobs = ciJobs(file);
   if (!jobs) continue;
-  for (const c of controles) {
+  for (const c of checks) {
     if (!jobs[c.ciJob]) {
-      erreurs.push(T.jobAbsent(c.id, c.ciJob, fichier));
+      errors.push(T.missingJob(c.id, c.ciJob, file));
       continue;
     }
     if (!c.paths?.length) {
-      erreurs.push(T.pasDeChemin(c.id));
+      errors.push(T.noPath(c.id));
       continue;
     }
     for (const glob of c.paths) {
-      if (!couvre(jobs[c.ciJob], echantillon(glob))) {
-        const declenche = jobs[c.ciJob].changes.join(", ") || (lang === "en" ? "none" : "aucun");
-        erreurs.push(T.neDeclenchePas(c.id, c.ciJob, glob, fichier, declenche) + (c.degradable ? T.jamaisRattrape : ""));
+      if (!covers(jobs[c.ciJob], sample(glob))) {
+        const triggers = jobs[c.ciJob].changes.join(", ") || T.none;
+        errors.push(T.notTriggered(c.id, c.ciJob, glob, file, triggers) + (c.degradable ? T.neverCaught : ""));
       }
     }
   }
 }
 
-if (erreurs.length) {
-  console.log(`${T.titre}\n  ${erreurs.join("\n  ")}`);
+if (errors.length) {
+  console.log(`${T.title}\n  ${errors.join("\n  ")}`);
   process.exit(1);
 }

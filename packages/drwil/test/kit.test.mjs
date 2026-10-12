@@ -91,7 +91,7 @@ const capture = async (fn) => {
 // drwil lance cette suite, ses contrôles ne doivent pas hériter du report au commit.
 const envTest = { ...process.env, CI: "" };
 delete envTest.DRWIL_PUSH_TAGS_ONLY;
-delete envTest.DRWIL_PUSH_SANS_BRANCHE;
+delete envTest.DRWIL_PUSH_NO_BRANCH;
 delete envTest.DRWIL_HOOK;
 const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
 const git = (dir, ...args) =>

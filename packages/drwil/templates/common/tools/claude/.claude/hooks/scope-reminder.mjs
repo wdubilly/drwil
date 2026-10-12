@@ -1,135 +1,144 @@
 #!/usr/bin/env node
-// Cadrage côté agent pour Claude Code (Edit, Write, MultiEdit ; docs/ia-first.md
-// section 7, docs/projects/kit-mechanics.md), selon .drwil/ia-first.json -> scopeReminder :
-// - "blocking" (défaut) : hook PreToolUse, REFUSE l'écriture d'un fichier de code
-//   qu'aucune fiche de docs/projects/ ne couvre, avant qu'elle ait lieu : l'agent doit
-//   d'abord rattacher le fichier à son chantier (ou à docs/projects/routine-maintenance.md).
-//   Une règle qui ne tient que par la mémoire de l'agent n'est pas une garantie ;
-//   le commit refuse de toute façon.
-// - "warning" : hook PostToolUse, simple rappel après l'écriture.
-// - "off" : rien.
-// Toute entrée inattendue, voire une exception, donne « rien » (le hook git reste la
-// barrière). La grammaire vient de .githooks/scope.mjs, la même que le contrôle au commit.
+// Agent-side scope for Claude Code (Edit, Write, MultiEdit; docs/ia-first.md section 7,
+// docs/projects/kit-mechanics.md), according to .drwil/ia-first.json -> scopeReminder:
+// - "blocking" (default): PreToolUse hook, REFUSES writing a code file that no brief of
+//   docs/projects/ covers, before it happens: the agent must first attach the file to its
+//   workstream (or to docs/projects/routine-maintenance.md).
+//   A rule that only holds through the agent's memory is not a guarantee; the commit refuses
+//   anyway.
+// - "warning": PostToolUse hook, a simple reminder after the write.
+// - "off": nothing.
+// Any unexpected input, or even an exception, gives "nothing" (the git hook stays the gate).
+// The grammar comes from .githooks/scope.mjs, the same as the commit-time check.
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-// Claude Code invoque le hook avec le dossier du projet en cwd.
-const RACINE = process.cwd();
-const OUTILS = new Set(["Edit", "Write", "MultiEdit"]);
-const MODELE_RE = /^modele-|^model-/;
+// Claude Code runs the hook with the project folder as cwd.
+const ROOT = process.cwd();
+const TOOLS = new Set(["Edit", "Write", "MultiEdit"]);
+const MODEL_RE = /^modele-|^model-/;
 
-function loadConfig(racine) {
+const TEXTS = {
+  fr: {
+    refused: (rel) =>
+      `Écriture refusée (QUA-016, scopeReminder : blocking) : aucune fiche de docs/projects/ ne couvre ${rel}. ` +
+      "Rattacher d'abord ce chemin, ou un motif qui le couvre, au bloc « scope » de la fiche du chantier " +
+      "en cours (ou à docs/projects/routine-maintenance.md pour une petite tâche), puis réessayer.",
+    reminder: (rel) =>
+      `Rappel de cadrage : aucune fiche de docs/projects/ ne couvre ${rel}. Ajouter ce chemin, ou un ` +
+      "motif qui le couvre, au bloc « scope » de la fiche du chantier en cours (ou à " +
+      "docs/projects/routine-maintenance.md pour une petite tâche). " +
+      'Rien n\'est bloqué ici, ni au commit (réglage "scopeReminder" de .drwil/ia-first.json : warning).',
+  },
+  en: {
+    refused: (rel) =>
+      `Write refused (QUA-016, scopeReminder: blocking): no brief of docs/projects/ covers ${rel}. ` +
+      'First attach this path, or a pattern that covers it, to the "scope" block of the current ' +
+      "workstream's brief (or to docs/projects/routine-maintenance.md for a small task), then try again.",
+    reminder: (rel) =>
+      `Scope reminder: no brief of docs/projects/ covers ${rel}. Add this path, or a pattern that ` +
+      'covers it, to the "scope" block of the current workstream\'s brief (or to ' +
+      "docs/projects/routine-maintenance.md for a small task). " +
+      'Nothing is blocked here, nor at commit time ("scopeReminder" setting of .drwil/ia-first.json: warning).',
+  },
+};
+
+function loadConfig(root) {
   try {
-    return JSON.parse(readFileSync(join(racine, ".drwil", "ia-first.json"), "utf8"));
+    return JSON.parse(readFileSync(join(root, ".drwil", "ia-first.json"), "utf8"));
   } catch {
     return {};
   }
 }
 
-function mdRecursif(dir) {
+function mdRecursive(dir) {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const p = join(dir, e.name);
-    return e.isDirectory() ? mdRecursif(p) : e.name.endsWith(".md") ? [p] : [];
+    return e.isDirectory() ? mdRecursive(p) : e.name.endsWith(".md") ? [p] : [];
   });
 }
 
-/** Résout les liens symboliques jusqu'au premier ancêtre existant (le fichier visé par
- * un Write n'existe pas encore), pour comparer deux chemins sur la même base réelle :
- * macOS résout /tmp et /var vers /private/... au premier `cd`, ce que `resolve()` seul
- * ne voit pas. */
-function realpathAncetre(chemin) {
-  let c = resolve(chemin);
-  const reste = [];
-  while (!existsSync(c)) {
-    reste.unshift(basename(c));
-    const parent = dirname(c);
-    if (parent === c) return resolve(chemin);
-    c = parent;
+/** Resolves symlinks up to the first existing ancestor (the file targeted by a Write does not
+ * exist yet), to compare two paths on the same real base: macOS resolves /tmp and /var to
+ * /private/... on the first `cd`, which `resolve()` alone does not see. */
+function realpathAncestor(path) {
+  let p = resolve(path);
+  const rest = [];
+  while (!existsSync(p)) {
+    rest.unshift(basename(p));
+    const parent = dirname(p);
+    if (parent === p) return resolve(path);
+    p = parent;
   }
-  return reste.length ? join(realpathSync(c), ...reste) : realpathSync(c);
+  return rest.length ? join(realpathSync(p), ...rest) : realpathSync(p);
 }
 
-function cheminRelatif(chemin, racine) {
+function relativePath(path, root) {
   try {
-    const r = relative(realpathAncetre(racine), realpathAncetre(chemin));
+    const r = relative(realpathAncestor(root), realpathAncestor(path));
     return r.startsWith("..") ? null : r.replace(/\\/g, "/");
   } catch {
     return null;
   }
 }
 
-async function rappel(entree, racine = RACINE) {
-  let evenement;
+async function remind(input, root = ROOT) {
+  let event;
   try {
-    evenement = JSON.parse(entree);
+    event = JSON.parse(input);
   } catch {
     return "";
   }
-  if (typeof evenement !== "object" || evenement === null || !OUTILS.has(evenement.tool_name)) return "";
-  const chemin = evenement.tool_input?.file_path;
-  if (typeof chemin !== "string" || !chemin) return "";
-  const relatif = cheminRelatif(chemin, racine);
-  if (!relatif) return "";
+  if (typeof event !== "object" || event === null || !TOOLS.has(event.tool_name)) return "";
+  const path = event.tool_input?.file_path;
+  if (typeof path !== "string" || !path) return "";
+  const rel = relativePath(path, root);
+  if (!rel) return "";
 
-  const cadrage = await import(pathToFileURL(join(racine, ".githooks", "scope.mjs")).href);
-  const cfg = loadConfig(racine);
+  const scope = await import(pathToFileURL(join(root, ".githooks", "scope.mjs")).href);
+  const cfg = loadConfig(root);
   if (cfg.scopeReminder === "off") return "";
-  if (!cadrage.estDuCode(relatif, cfg)) return "";
+  if (!scope.isCode(rel, cfg)) return "";
 
-  const projetsDir = join(racine, cfg.dirs?.projects ?? "docs/projects");
-  const fiches = mdRecursif(projetsDir).filter((p) => !MODELE_RE.test(relative(projetsDir, p)));
-  const fichesTexte = fiches.map((f) => [relative(racine, f), readFileSync(f, "utf8")]);
-  const motifsParFiche = cadrage.motifsDuDepot(fichesTexte);
-  if (cadrage.fichesCouvrant(relatif, motifsParFiche).length) return "";
+  const projectsDir = join(root, cfg.dirs?.projects ?? "docs/projects");
+  const briefs = mdRecursive(projectsDir).filter((p) => !MODEL_RE.test(relative(projectsDir, p)));
+  const briefTexts = briefs.map((f) => [relative(root, f), readFileSync(f, "utf8")]);
+  const byBrief = scope.patternsByBrief(briefTexts);
+  if (scope.briefsCovering(rel, byBrief).length) return "";
 
-  const bloquant = (cfg.scopeReminder ?? "blocking") === "blocking";
-  // Sans nom d'événement (appel direct, ancienne configuration) : comportement PostToolUse.
-  const avant = evenement.hook_event_name === "PreToolUse";
-  if (avant && bloquant) {
+  const T = TEXTS[cfg.lang === "en" ? "en" : "fr"];
+  const blocking = (cfg.scopeReminder ?? "blocking") === "blocking";
+  // Without an event name (direct call, older configuration): PostToolUse behaviour.
+  const before = event.hook_event_name === "PreToolUse";
+  if (before && blocking) {
     return JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: "PreToolUse",
-        permissionDecision: "deny",
-        permissionDecisionReason:
-          `Écriture refusée (QUA-016, scopeReminder : blocking) : aucune fiche de docs/projects/ ne couvre ${relatif}. ` +
-          "Rattacher d'abord ce chemin, ou un motif qui le couvre, au bloc « scope » de la fiche du chantier " +
-          "en cours (ou à docs/projects/routine-maintenance.md pour une petite tâche), puis réessayer.",
-      },
+      hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: T.refused(rel) },
     });
   }
-  if (avant || bloquant) return "";
-  const suite = 'Rien n\'est bloqué ici, ni au commit (réglage "scopeReminder" de .drwil/ia-first.json : warning).';
-  return JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: "PostToolUse",
-      additionalContext:
-        `Rappel de cadrage : aucune fiche de docs/projects/ ne couvre ${relatif}. Ajouter ce chemin, ou un ` +
-        "motif qui le couvre, au bloc « scope » de la fiche du chantier en cours (ou à " +
-        `docs/projects/routine-maintenance.md pour une petite tâche). ${suite}`,
-    },
-  });
+  if (before || blocking) return "";
+  return JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: T.reminder(rel) } });
 }
 
-/** Point d'entrée du hook : jamais d'erreur, au pire aucun rappel. */
-async function main(entree) {
+/** Entry point of the hook: never an error, at worst no reminder. */
+async function main(input) {
   try {
-    return await rappel(entree);
+    return await remind(input);
   } catch {
     return "";
   }
 }
 
-export { rappel, main };
+export { remind, main };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  let entree = "";
+  let input = "";
   process.stdin.on("data", (d) => {
-    entree += d;
+    input += d;
   });
   process.stdin.on("end", async () => {
-    const sortie = await main(entree);
-    if (sortie) console.log(sortie);
+    const out = await main(input);
+    if (out) console.log(out);
   });
 }

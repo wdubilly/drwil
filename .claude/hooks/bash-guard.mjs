@@ -1,65 +1,92 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-// Garde-fou des commandes shell de Claude Code (hook PreToolUse, matcher Bash).
+// Guard of Claude Code's shell commands (PreToolUse hook, Bash matcher).
 //
-// Filet propre à l'outil, en plus des contrôles git (docs/ia-first.md, section 4) :
-// le hook voit la commande brute, que les règles de permission ne voient que
-// découpée. Il ne bloque rien : sur une commande à risque, il fait demander
-// l'accord de la personne (« ask ») avec la raison, puis elle décide.
+// A net specific to the tool, on top of the git checks (docs/ia-first.md, section 4): the hook
+// sees the raw command, which permission rules only see split. It blocks nothing: on a risky
+// command, it makes Claude ask the person for approval ("ask") with the reason, then they decide.
 //
-// Volontairement étroit, pour ne pas lasser : des noms de fichiers de secrets
-// (SEC-007), pas des mots (`process.env` passe), et le pipe vers un shell.
+// Deliberately narrow, so as not to wear people out: secret file names (SEC-007), not words
+// (`process.env` passes), and piping into a shell.
 
-// Bord gauche : ni lettre, ni `$`, ni `\` (une regex `\.env` n'est pas un fichier).
-const AVANT = "(?<![\\w$\\\\])";
-const RISQUES = [
-  // .env et .env.<suffixe>, mais pas .env.example ni .env.template (versionnés).
-  [
-    new RegExp(`${AVANT}\\.env(?:\\.(?!example\\b|template\\b)[\\w-]+)?(?![\\w.-])`),
-    "fichier .env (secrets) : utiliser .env.example, versionné et sans secret",
-  ],
-  // Clé SSH privée, nom complet (id_rsa_x compris), pas la clé publique.
-  [/\bid_(?:rsa|ed25519|ecdsa|dsa)[\w-]*(?![\w-]|\.pub)/, "clé SSH privée"],
-  [/[\w-]\.(?:pem|p12|pfx|jks)(?![\w.])/, "fichier de clé ou de certificat"],
-  [new RegExp(`${AVANT}\\.(?:netrc|pgpass)(?![\\w.])`), "fichier d'identifiants"],
-  [/\|\s*(?:sudo\s+)?(?:ba|z|da)?sh(?:\s|$)/, "pipe vers un shell (| sh, | bash)"],
+// Left edge: no letter, no `$`, no `\` (a `\.env` regex is not a file).
+const BEFORE = "(?<![\\w$\\\\])";
+const RISKS = [
+  // .env and .env.<suffix>, but not .env.example nor .env.template (versioned).
+  [new RegExp(`${BEFORE}\\.env(?:\\.(?!example\\b|template\\b)[\\w-]+)?(?![\\w.-])`), "env"],
+  // Private SSH key, full name (id_rsa_x included), not the public key.
+  [/\bid_(?:rsa|ed25519|ecdsa|dsa)[\w-]*(?![\w-]|\.pub)/, "ssh"],
+  [/[\w-]\.(?:pem|p12|pfx|jks)(?![\w.])/, "key"],
+  [new RegExp(`${BEFORE}\\.(?:netrc|pgpass)(?![\\w.])`), "credentials"],
+  [/\|\s*(?:sudo\s+)?(?:ba|z|da)?sh(?:\s|$)/, "pipe"],
 ];
 
-function raison(commande) {
-  const motifs = RISQUES.filter(([motif]) => motif.test(commande)).map(([, texte]) => texte);
-  return motifs.length ? motifs.join(" ; ") : null;
+const TEXTS = {
+  fr: {
+    env: "fichier .env (secrets) : utiliser .env.example, versionné et sans secret",
+    ssh: "clé SSH privée",
+    key: "fichier de clé ou de certificat",
+    credentials: "fichier d'identifiants",
+    pipe: "pipe vers un shell (| sh, | bash)",
+    reason: (r) => `garde-fou : accord demandé — ${r}`,
+  },
+  en: {
+    env: ".env file (secrets): use .env.example, versioned and secret-free",
+    ssh: "private SSH key",
+    key: "key or certificate file",
+    credentials: "credentials file",
+    pipe: "pipe into a shell (| sh, | bash)",
+    reason: (r) => `guard: approval requested — ${r}`,
+  },
+};
+
+// The project's language; Claude Code runs the hook with the project folder as cwd.
+function texts() {
+  try {
+    return TEXTS[JSON.parse(readFileSync(join(".drwil", "ia-first.json"), "utf8")).lang === "en" ? "en" : "fr"];
+  } catch {
+    return TEXTS.fr;
+  }
 }
 
-/** Réponse JSON du hook, ou chaîne vide pour laisser les permissions décider. */
-function main(entree) {
-  let evenement;
+function reason(command, T = texts()) {
+  const found = RISKS.filter(([pattern]) => pattern.test(command)).map(([, key]) => T[key]);
+  return found.length ? found.join(" ; ") : null;
+}
+
+/** JSON answer of the hook, or an empty string to let permissions decide. */
+function main(input) {
+  let event;
   try {
-    evenement = JSON.parse(entree);
+    event = JSON.parse(input);
   } catch {
     return "";
   }
-  if (typeof evenement !== "object" || evenement === null || evenement.tool_name !== "Bash") return "";
-  const motif = raison(String(evenement.tool_input?.command ?? ""));
-  if (motif === null) return "";
+  if (typeof event !== "object" || event === null || event.tool_name !== "Bash") return "";
+  const T = texts();
+  const found = reason(String(event.tool_input?.command ?? ""), T);
+  if (found === null) return "";
   return JSON.stringify({
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       permissionDecision: "ask",
-      permissionDecisionReason: `garde-fou : accord demandé — ${motif}`,
+      permissionDecisionReason: T.reason(found),
     },
   });
 }
 
-export { raison, main };
+export { reason, main };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  let entree = "";
+  let input = "";
   process.stdin.on("data", (d) => {
-    entree += d;
+    input += d;
   });
   process.stdin.on("end", () => {
-    const sortie = main(entree);
-    if (sortie) console.log(sortie);
+    const out = main(input);
+    if (out) console.log(out);
   });
 }
