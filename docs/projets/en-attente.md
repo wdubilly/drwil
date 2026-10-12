@@ -85,7 +85,7 @@ session (`node outils/consommation.mjs`, journal du 2026-10-11).
 ## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 
 Ordre décidé le 2026-10-12 (demandeur) : duplication, puis refactor, puis
-anglais (avec `DRWIL-012`), puis fluidité et voie légère, puis vue de
+anglais (chantiers B, A, C, `DRWIL-012` avec C), puis fluidité et voie légère, puis vue de
 relecture. Inséré en tête le 2026-10-12 (demandeur) : le correctif
 d'`init` et `apply`, avant le refactor qui touche le même code.
 
@@ -95,12 +95,17 @@ réglages d'un projet déjà installé (v1:INI-005, v1:INI-010) ; index.ts,
 etat.mjs et verify.ts découpés, plafond de 400 lignes adopté (QUA-001) —
 journal du 2026-10-12.
 
-- [ ] [décision] [P1] Livrable en anglais seulement, renommé une seule
-  fois, dans le gabarit ; la langue du projet devient un
-  réglage (`lang`) — `docs/intentions/livrable-full-english.md`.
-- [ ] [IA] [P1] Retirer l'identifiant interne `DRWIL-012` des deux messages
-  livrés qui l'affichent (change une sortie), avec la ligne précédente —
-  voir `docs/projets/journal.md` (2026-10-11).
+- [ ] [IA] [P1] Livrable en anglais, chantier B : un seul gabarit, en
+  anglais ; `lang` devient la langue du projet ; ce dépôt s'installe en
+  anglais — `docs/projets/gabarit-unique-anglais.md`.
+- [ ] [IA] [P1] Livrable en anglais, chantier A : hooks, état, config,
+  bloc et trailer renommés selon le glossaire, migration des projets
+  équipés par `init` / `apply` — à cadrer après B,
+  `docs/intentions/livrable-full-english.md`.
+- [ ] [IA] [P1] Livrable en anglais, chantier C : messages et
+  sous-commandes de la CLI, commande unique `init` / `apply`, retrait de
+  l'identifiant interne `DRWIL-012` des deux messages livrés qui
+  l'affichent (journal du 2026-10-11) — à cadrer après A.
 - [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
