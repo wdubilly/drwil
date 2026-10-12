@@ -123,21 +123,19 @@ Instead of relying entirely on an agent's own statement of completion, DRWIL mak
 
 ## What you gain
 
-What DRWIL guarantees, each point checkable by a command and not a promise:
+AI coding assistants are fast. What they lack is a boundary and a proof.
+DRWIL adds both, and the people in charge stay in charge.
 
-* **The agent stays inside the frame.** Code is committed inside the scope
-  of an approved work item; a commit outside it is shown, or refused
-  depending on the setting.
-* **"Done" means proven.** `drwil verify` re-runs the checks behind each
-  contract; a check that did not run is never counted as passing.
-* **Humans keep the decisions that matter.** Starting a workstream,
-  accepting the work and attesting a manual contract are human gestures an
-  agent cannot perform for you.
-* **Any tool, any session.** One `AGENTS.md`, one contract registry, one
-  state on disk: another agent or a human resumes without re-reading the
-  conversation.
+| You get | Because | Check it yourself |
+|---|---|---|
+| An agent that stays inside the lines | every commit must fall within the scope of an approved work item | `drwil state`, scope gate at each commit and in CI |
+| "Done" that means done | every contract is backed by a check that actually ran; a check that did not run never counts as a pass | `drwil verify` |
+| Decisions that stay human | starting a workstream, accepting the work and attesting a manual contract are gestures an agent cannot perform | `drwil attest`, `/drwil-start` |
+| Work that survives the session | one `AGENTS.md`, one contract registry, one state on disk: another agent, or a human, resumes without re-reading the chat | `drwil state` |
+| One setup for every tool | Claude Code, Copilot, Cursor, Codex and Gemini read the same rules | `drwil init` |
+| Adoption without a big bang | works on a new or an existing project, previews with `--dry-run`, never overwrites your files | `drwil init --dry-run` |
 
-DRWIL does not claim a productivity gain: none is measured yet.
+Nothing to take on faith: each line is a command you can run.
 
 ---
 

@@ -353,7 +353,7 @@ allowed scope stays the brief's `scope` block, which is versioned.
   explicitly.
 - **Transitions**: one activity at a time, back to `BUILD` after
   `EVIDENCE` or a failed `VERIFY`, abandon to `SCOPING` from any activity.
-  Command: `node .githooks/state.mjs move <ACTIVITE> [--brief <brief>]
+  Command: `node .githooks/state.mjs move <ACTIVITY> [--brief <brief>]
   [--request <text>]` (or `drwil state move …`, a mere facade); `--brief`
   opens an expectation from `SCOPING`.
 - **Who decides** (`transitions` setting in `.drwil/ia-first.json`): `human`
@@ -390,7 +390,7 @@ authorised at start (below).
   `HEAD`, brief not finished, templates excluded; list: `node
   .githooks/state.mjs briefs`). It applies to that committed scoping.
   - **In the chat** (`/drwil-start`, if present): the agent opens a poll of
-    the scoped briefs, in the order of `fiches --json` (ready briefs first,
+    the scoped briefs, in the order of `briefs --json` (ready briefs first,
     no open `[decision]`, then by index priority; the intentions' proposed
     order breaks ties), and recommends the first ready brief (in the
     description, never by preselection); it is the **human's answer**, read by a tool hook
@@ -411,7 +411,7 @@ authorised at start (below).
   `transitions: agent`). In CLOSING, after verify PASS and pushing the
   closing commit, the agent schedules `gh pr merge --auto --merge`: the
   host only merges once the required checks pass ("Allow auto-merge"
-  repository setting required). In the terminal, `lancer` asks the same
+  repository setting required). In the terminal, `start` asks the same
   question (type `MERGE`).
 - **Limit**: an agent with a shell could call these functions itself or
   rewrite the local state; Claude Code's `deny` rules block calling the hook

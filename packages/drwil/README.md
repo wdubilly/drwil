@@ -38,21 +38,19 @@ that "the rule is respected" is always a provable fact, never a claim.
 
 ## What you gain
 
-What drwil guarantees, each point checkable by a command and not a promise:
+AI coding assistants are fast. What they lack is a boundary and a proof.
+drwil adds both, and the people in charge stay in charge.
 
-- **The agent stays inside the frame.** Code can only be committed
-  inside the scope of an approved work item; an out-of-scope commit is
-  shown (or refused, depending on the setting).
-- **"Done" means proven.** `drwil verify` re-runs the checks behind every
-  contract; an unexecuted check is never counted as passing.
-- **Humans keep the decisions that matter.** Starting a workstream,
-  accepting the work and attesting a manual contract are human gestures an
-  agent cannot perform for you.
-- **Any tool, any session.** One `AGENTS.md`, one registry of rules, one
-  state on disk: a different agent or a human resumes without re-reading
-  the conversation.
+| You get | Because | Check it yourself |
+|---|---|---|
+| An agent that stays inside the lines | every commit must fall within the scope of an approved work item | `drwil state`, scope gate at each commit and in CI |
+| "Done" that means done | every contract is backed by a check that actually ran; a check that did not run never counts as a pass | `drwil verify` |
+| Decisions that stay human | starting a workstream, accepting the work and attesting a manual contract are gestures an agent cannot perform | `drwil attest`, `/drwil-start` |
+| Work that survives the session | one `AGENTS.md`, one contract registry, one state on disk: another agent, or a human, resumes without re-reading the chat | `drwil state` |
+| One setup for every tool | Claude Code, Copilot, Cursor, Codex and Gemini read the same rules | `drwil init` |
+| Adoption without a big bang | works on a new or an existing project, previews with `--dry-run`, never overwrites your files | `drwil init --dry-run` |
 
-drwil does not claim a productivity gain: none is measured yet.
+Nothing to take on faith: each line is a command you can run.
 
 ## Who it's for
 
@@ -512,6 +510,34 @@ Concrètement, le kit ajoute à un projet :
   avec sa preuve ;
 - des **contrôles Git** (hooks) qui bloquent un commit qui viole une
   règle — en local et en CI.
+
+## Ce que vous gagnez
+
+Les assistants IA sont rapides. Ce qui leur manque, c'est une limite et une
+preuve. drwil apporte les deux, et les décisions restent aux humains.
+
+| Vous obtenez | Parce que | À vérifier vous-même |
+|---|---|---|
+| Une IA qui reste dans le cadre | chaque commit doit entrer dans le périmètre d'une fiche approuvée | `drwil state`, barrière de périmètre au commit et en CI |
+| Un « terminé » qui veut dire terminé | chaque contrat s'appuie sur un contrôle réellement exécuté ; un contrôle non exécuté n'est jamais compté comme réussi | `drwil verify` |
+| Des décisions qui restent humaines | lancer un chantier, accepter le travail et attester un contrat manuel sont des gestes qu'une IA ne peut pas faire | `drwil attest`, `/drwil-start` |
+| Un travail qui survit à la session | un `AGENTS.md`, un registre, un état sur disque : une autre IA, ou un humain, reprend sans relire la conversation | `drwil state` |
+| Un seul réglage pour tous les outils | Claude Code, Copilot, Cursor, Codex et Gemini lisent les mêmes règles | `drwil init` |
+| Une adoption sans big bang | projet neuf ou existant, aperçu avec `--dry-run`, jamais d'écrasement de vos fichiers | `drwil init --dry-run` |
+
+Rien à croire sur parole : chaque ligne est une commande que vous pouvez lancer.
+
+## Le cycle d'un chantier
+
+Un travail traverse des activités, tenues dans un état local
+(`.drwil/state.json` (si présent), jamais édité à la main) :
+**SCOPING** (cadrer, rien n'est construit) → **start** (décision humaine :
+`/drwil-start` ou `drwil state start`, avec la fusion éventuellement
+autorisée d'avance) → **BUILD** (l'IA code, dans le périmètre de la fiche) →
+**EVIDENCE / VERIFY** (`drwil verify --evidence` ; clôture seulement sur
+`PASS` ou `ATTESTED`) → **CLOSING** (journal, fiche supprimée, pull request)
+→ retour en **SCOPING**. La fusion reste un geste humain, sauf si elle a été
+autorisée au lancement. `drwil state` montre où l'on en est.
 
 ## Installer
 
