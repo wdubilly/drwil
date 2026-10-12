@@ -1,6 +1,6 @@
 # Intention : Packager drwil sur npm
 
-**Statut** (2026-10-04) : en attente — questions à trancher non encore tranchées par le demandeur (voir `docs/projets/suites-kit-portable.md`, point 7). Audit du paquet fait le 2026-10-04 (voir « Constat vérifié » ci-dessous) : le paquet ne fonctionne pas en l'état, bloquant confirmé en conditions réelles.
+**Statut** (2026-10-04) : en attente — questions à trancher non encore tranchées par le demandeur (voir `docs/projects/suites-kit-portable.md`, point 7). Audit du paquet fait le 2026-10-04 (voir « Constat vérifié » ci-dessous) : le paquet ne fonctionne pas en l'état, bloquant confirmé en conditions réelles.
 
 ## Besoin
 Rendre drwil facilement distribuable pour un usage en équipe et/ou hors environnement local, afin de pouvoir l'initialiser avec `npx drwil init` sans dépendre d'un chemin absolu.
@@ -14,7 +14,7 @@ Rendre drwil facilement distribuable pour un usage en équipe et/ou hors environ
 ## Questions à trancher
 1. Scope de publication : privé (npm private org) ou public ?
 2. ~~Nom du package~~ : tranché — `drwil`, voir
-   `docs/projets/journal.md` (2026-10-10, fiches condensées).
+   `docs/projects/journal.md` (2026-10-10, fiches condensées).
 3. Version initiale : 0.1.0 ou 1.0.0 ?
 4. Inclure `dist/` et `templates/` dans le paquet (files field) ?
 5. Automatiser build avant publish (prepublishOnly) ?

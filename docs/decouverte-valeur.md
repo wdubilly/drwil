@@ -25,8 +25,8 @@ fiche non rattachée.
 |---|---|---|---|---|---|
 | OPT-1 | Corriger `.drwil/ia-first.json` pour que le rappel de cadrage (QUA-016) couvre le vrai code du kit | Vérifié en direct (`git add` + `node .githooks/cadrage.mjs` sur `packages/drwil/src/stack.ts`) : **aucun avertissement**, alors que c'est le cœur du générateur. Les couches déclarées (`core`, `adapters`, `plugin-opencode`, `mcp-server`, `kit-ia-first`) n'existent pas sur le disque (héritées de l'extraction run-box-v2) ; `layerPrefixes` (`app`, `tests`, `src`, `scripts`) ne matche pas `packages/drwil/src/`. Le filet de sécurité phare du kit (QUA-016) est aveugle sur son propre code. | Mécanisme déjà fonctionnel (`.githooks/cadrage.mjs`, `.githooks/check-docs.mjs`) : il suffit qu'un préfixe déclaré matche le vrai chemin. | 🟢 Faible | Remplacer les couches obsolètes par `packages/drwil/src`/`packages/drwil/test` dans `layers`/`layerPrefixes`/`codePrefixes` (à trancher : couche ou préfixe de code), vérifier que `node .githooks/cadrage.mjs` avertit désormais sur un changement de `packages/drwil/src/`. |
 | OPT-2 | Publier `drwil` sur npm | Rend le kit installable par une équipe via `npx drwil init`. Le blocage technique constaté le 2026-10-04 (`docs/intentions/packager-kit-ia-first.md`, « le paquet ne fonctionne pas en l'état ») est déjà levé : vérifié ce jour, `files` déclare bien `dist`/`bin`/`templates` dans `packages/drwil/package.json`, et `npm pack --dry-run` produit un tarball de 150 fichiers avec les gabarits Copilot inclus. | Build, CLI et templates fonctionnels et déjà empaquetables (vérifié). Reste la décision produit, pas la technique. | 🟢 Faible | Mettre à jour le constat de `docs/intentions/packager-kit-ia-first.md` (blocage levé), puis trancher les questions encore ouvertes (scope public/privé, version initiale, registry) pour publier une première version. |
-| OPT-3 | Adopter formellement `catalogue:QUA-005` (typage strict) dans `docs/contrats.md` | La pratique est déjà en place (`tsconfig.base.json` : `strict: true`, zéro usage de `any` dans `packages/drwil/src/*.ts` — vérifié) mais n'est pas déclarée comme contrat : rien n'empêche une régression future de passer inaperçue. | Contrat du catalogue déjà rédigé (`docs/catalogue-contrats.md`, ligne `catalogue:QUA-005`), contrôle déjà existant (mode strict du compilateur). | 🟢 Faible | Recopier la ligne dans `docs/contrats.md` (sans le préfixe `catalogue:`), la retirer du catalogue, vérifier `node .githooks/run-checks.mjs`. |
-| OPT-4 | ~~Trancher le lot 2 d'« apply() rafraîchit la mécanique »~~ (clôturé le 2026-10-05, PR #21, voir docs/projets/journal.md) | — | — | — | Traité, gardé pour mémoire du scan du 2026-10-05. |
+| OPT-3 | Adopter formellement `catalogue:QUA-005` (typage strict) dans `docs/contracts.md` | La pratique est déjà en place (`tsconfig.base.json` : `strict: true`, zéro usage de `any` dans `packages/drwil/src/*.ts` — vérifié) mais n'est pas déclarée comme contrat : rien n'empêche une régression future de passer inaperçue. | Contrat du catalogue déjà rédigé (`docs/contracts-catalog.md`, ligne `catalogue:QUA-005`), contrôle déjà existant (mode strict du compilateur). | 🟢 Faible | Recopier la ligne dans `docs/contracts.md` (sans le préfixe `catalogue:`), la retirer du catalogue, vérifier `node .githooks/run-checks.mjs`. |
+| OPT-4 | ~~Trancher le lot 2 d'« apply() rafraîchit la mécanique »~~ (clôturé le 2026-10-05, PR #21, voir docs/projects/journal.md) | — | — | — | Traité, gardé pour mémoire du scan du 2026-10-05. |
 
 ## Analyse détaillée des meilleures pistes
 
@@ -69,7 +69,7 @@ fiche non rattachée.
   (`strict: true`, 0 `any`) n'est protégée par aucun contrat documenté :
   un futur assouplissement de `tsconfig` passerait sans alerte.
 - **Briques existantes réutilisables** : ligne prête dans
-  `docs/catalogue-contrats.md` (`catalogue:QUA-005`) ; contrôle déjà en
+  `docs/contracts-catalog.md` (`catalogue:QUA-005`) ; contrôle déjà en
   place (`tsc --build` dans les `checks` de `.drwil/ia-first.json`).
 - **Ce qu'il reste à faire** : déplacer la ligne du catalogue vers le
   registre, aucun changement de code.
@@ -78,10 +78,10 @@ fiche non rattachée.
 
 ### OPT-4 — Résoudre la dérive de prose détectée par `apply()`
 - **Problème résolu** : la détection de dérive (AGENTS.md, docs/ia-first.md,
-  docs/contrats.md restés sur une version pré-kit) tourne déjà mais
+  docs/contracts.md restés sur une version pré-kit) tourne déjà mais
   n'aboutit à rien d'actionnable pour qui l'exécute.
 - **Briques existantes réutilisables** : lot 1 déjà codé et testé
-  (chantier clôturé depuis le 2026-10-05, voir docs/projets/journal.md).
+  (chantier clôturé depuis le 2026-10-05, voir docs/projects/journal.md).
 - **Ce qu'il reste à faire** : une décision de conception (comment
   présenter/résoudre la dérive) avant tout code du lot 2.
 - **Impact si implémenté** : `apply()` devient réellement utile pour garder

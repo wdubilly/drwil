@@ -3,7 +3,7 @@
 Point d'entrée unique pour toute IA (et tout humain) qui travaille sur ce
 dépôt. `CLAUDE.md` et `GEMINI.md` ne font qu'importer ce fichier. Les détails vivent dans
 `docs/` ; les skills de `.claude/skills/` ne sont que des raccourcis vers
-`docs/recettes/` (le fond doit rester lisible par n'importe quel outil).
+`docs/recipes/` (le fond doit rester lisible par n'importe quel outil).
 
 ## Le projet en 5 lignes
 
@@ -52,32 +52,32 @@ Carte complète : `docs/architecture.md`.
 
 ## Contrats
 
-`docs/contrats.md` est la **source unique** des invariants. Citer l'ID. Avant une modification importante, identifier les contrats et la recette applicables.
+`docs/contracts.md` est la **source unique** des invariants. Citer l'ID. Avant une modification importante, identifier les contrats et la recette applicables.
 
 ## Charger le contexte progressivement
 
 1. Ce fichier (toujours).
 2. Le fichier de la couche touchée (si existant) : lire le `AGENTS.md` du dossier concerné.
 3. La recette ou le document indiqué ci-dessous.
-4. `docs/contrats.md` pour le détail d'un ID, ou quand un contrôle échoue.
+4. `docs/contracts.md` pour le détail d'un ID, ou quand un contrôle échoue.
 5. Rien d'autre sans raison.
 
 | Si tu touches à… | Lis d'abord | Recette |
 |---|---|---|
-| une route API | `backend/AGENTS.md` (si présent) | `docs/recettes/ajouter-une-route-api.md` |
-| un écran | `frontend/AGENTS.md` (si présent) | `docs/recettes/ajouter-un-ecran-front.md` |
-| refactor important | — | `docs/recettes/refactorer-sans-casser.md` |
-| un défaut à corriger | `docs/contrats.md` | `docs/recettes/corriger-un-defaut.md` |
-| déploiement | `docs/deploiement.md` (si présent) | `docs/recettes/deployer-en-prod.md` |
+| une route API | `backend/AGENTS.md` (si présent) | `docs/recipes/add-an-api-route.md` |
+| un écran | `frontend/AGENTS.md` (si présent) | `docs/recipes/add-a-frontend-screen.md` |
+| refactor important | — | `docs/recipes/refactor-without-breaking.md` |
+| un défaut à corriger | `docs/contracts.md` | `docs/recipes/corriger-un-defaut.md` |
+| déploiement | `docs/deployment.md` (si présent) | `docs/recipes/deploy-to-production.md` |
 
 | Si on te demande… | Lis d'abord | Recette |
 |---|---|---|
-| où en est le projet | `docs/projets/en-attente.md` | `docs/recettes/visualiser-avancement.md` |
-| un audit de risques/dette technique | `.drwil/ia-first.json` | `docs/recettes/auditer-risques-et-dette.md` |
-| le coût (tokens) d'un chantier | `.drwil/usage.jsonl` (si présent) | `docs/recettes/suivre-consommation-par-lot.md` |
-| une opportunité produit à explorer | `docs/decouverte-valeur.md` (si présent) | `docs/recettes/decouvrir-valeur-produit.md` |
-| travailler avec une branche/MR | — | `docs/recettes/travailler-en-branche.md` |
-| créer une release (tag + note GitHub) | `.githooks/creer-release.mjs` (si activé — module optionnel) | `docs/recettes/creer-une-release.md` |
+| où en est le projet | `docs/projects/pending.md` | `docs/recipes/view-progress.md` |
+| un audit de risques/dette technique | `.drwil/ia-first.json` | `docs/recipes/audit-risks-and-debt.md` |
+| le coût (tokens) d'un chantier | `.drwil/usage.jsonl` (si présent) | `docs/recipes/track-consumption-per-increment.md` |
+| une opportunité produit à explorer | `docs/decouverte-valeur.md` (si présent) | `docs/recipes/discover-product-value.md` |
+| travailler avec une branche/MR | — | `docs/recipes/working-with-branches.md` |
+| créer une release (tag + note GitHub) | `.githooks/creer-release.mjs` (si activé — module optionnel) | `docs/recipes/create-a-release.md` |
 
 ## Commandes
 

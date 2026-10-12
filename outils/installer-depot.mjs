@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Le dépôt s'installe depuis son gabarit (docs/projets/depot-installe-par-gabarit.md) : le gabarit
+// Le dépôt s'installe depuis son gabarit (docs/projects/depot-installe-par-gabarit.md) : le gabarit
 // (packages/drwil/templates/) est la seule source, les copies du dépôt en sont l'installation.
 // `drwil apply` n'écrase jamais rien et `drwil init` réécrit .drwil/ia-first.json en remettant des
 // réglages à leurs défauts : aucun des deux ne convient tel quel. On installe donc avec la vraie CLI
 // (`init --force`) dans une copie temporaire des fichiers suivis, puis on ne recopie dans le dépôt que
-// les fichiers du gabarit dont l'unité y est installée, hors écarts déclarés (outils/miroirs.json) et
-// hors .drwil/. Les modules optionnels, que la CLI n'installe pas, sont recopiés tels quels.
+// les fichiers du gabarit dont l'unité y est installée, hors écarts déclarés (outils/miroirs.json),
+// hors fichiers déclarés propres au gabarit et hors .drwil/. Les modules optionnels, que la CLI
+// n'installe pas, sont recopiés tels quels.
 // Hors de portée : un fichier retiré du gabarit reste dans le dépôt (miroirs-gabarit le signale).
 // Usage : node outils/installer-depot.mjs [--dry-run] [racine]
 import { spawnSync } from "node:child_process";
@@ -47,13 +48,15 @@ export function argumentsInit(config, unites) {
  * unité installée, hors écart déclaré, dont le contenu installé (`installe`, dossier rendu par la CLI)
  * diffère du dépôt. Un module optionnel est pris dans le gabarit même.
  */
-export function planifier(racine, installe, { lang = "fr", ecarts = {} } = {}) {
-  const carte = homologues(racine, lang);
+export function planifier(racine, installe, { ecarts = {}, propresAuGabarit = {} } = {}) {
+  const carte = homologues(racine);
   const unites = unitesInstallees(racine, carte);
   const plan = [];
   const problemes = [];
   for (const [chemin, { source, unite }] of [...carte].sort(([a], [b]) => a.localeCompare(b))) {
-    if (!unites.has(unite) || Object.hasOwn(ecarts, chemin) || chemin.startsWith(".drwil/")) continue;
+    // Un fichier déclaré propre au gabarit n'appartient pas au dépôt : jamais créé ici.
+    if (!unites.has(unite) || Object.hasOwn(ecarts, chemin) || Object.hasOwn(propresAuGabarit, chemin) || chemin.startsWith(".drwil/"))
+      continue;
     const depuis = unite.startsWith("optional/") ? join(racine, source) : join(installe, chemin);
     if (!existsSync(depuis)) {
       problemes.push(`${chemin} : attendu de l'installation (${source}) mais non produit par drwil init`);
@@ -107,14 +110,16 @@ export function principal(racine, { simulation = false, installer = installerAve
     console.error(`installer-depot : config illisible (${e.message})`);
     return 1;
   }
-  const lang = config.lang === "en" ? "en" : "fr";
-  const { dossier, erreur } = installer(racine, argumentsInit(config, unitesInstallees(racine, homologues(racine, lang))));
+  const { dossier, erreur } = installer(racine, argumentsInit(config, unitesInstallees(racine, homologues(racine))));
   if (erreur) {
     console.error(`installer-depot : ${erreur}`);
     return 1;
   }
   try {
-    const { plan, problemes } = planifier(racine, dossier, { lang, ecarts: miroirs.ecarts ?? {} });
+    const { plan, problemes } = planifier(racine, dossier, {
+      ecarts: miroirs.ecarts ?? {},
+      propresAuGabarit: miroirs.propresAuGabarit ?? {},
+    });
     for (const p of problemes) console.error(`  ✗ ${p}`);
     if (problemes.length) return 1;
     if (!simulation) appliquer(racine, plan);

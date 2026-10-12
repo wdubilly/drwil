@@ -9,7 +9,7 @@ gouvernance des projets qui adoptent drwil).
 ## Besoin
 
 Le 2026-10-10, ce dépôt a été protégé côté forge (chantier
-`docs/projets/proteger-master.md`) : ruleset sur `master` sans
+`docs/projects/proteger-master.md`) : ruleset sur `master` sans
 contournement, CODEOWNERS, ruleset versionné et vérifié en CI, et, à
 venir, un compte machine pour l'agent. Le demandeur a relevé que ce n'est
 **pas reproductible** par le paquet : tout a été fait à la main, pour ce
@@ -57,7 +57,7 @@ reproduit, et guide l'humain pour ce qui ne se reproduit pas.
 
 - `docs/intentions/fabrique-autonome.md` : brique 1, autorité de vérité
   hors de l'agent.
-- `docs/projets/proteger-master.md` : la même chose, faite à la main pour
+- `docs/projects/proteger-master.md` : la même chose, faite à la main pour
   ce dépôt.
 
 ## Contraintes

@@ -9,8 +9,8 @@
 |---|---|---|---|---|---|
 | RSK-1 | ~~Aucun contrôle projet déclaré (lint/tests/typecheck)~~ **corrigé le 2026-10-04** | Sécurité/Qualité | ✅ | `.drwil/ia-first.json`, `.githooks/run-checks.mjs` | `checks` déclare `npm test` (build + 36 tests) de `packages/drwil` |
 | RSK-2 | ~~Pas de CI configurée pour couvrir les contrôles (QUA-013 non exécuté)~~ **corrigé le 2026-10-04** | Tests | ✅ | `.drwil/ia-first.json` (`ciFiles`), `.githooks/run-checks.mjs` | `ciFiles` pointait sur un fichier GitLab CI inexistant alors que `.github/workflows/ia-first.yml` tourne déjà — corrigé pour pointer dessus |
-| RSK-3 | Compatibilité Windows/macOS jamais testée | Stabilité | 🟠 | `docs/projets/suites-kit-portable.md` (point 1), `packages/drwil/src/index.ts` | Tester `init`/`apply` sur les trois OS, idéalement en matrice CI |
-| RSK-4 | `apply`/`init` ne nettoient jamais les fichiers obsolètes d'une version antérieure du kit | Code mort | 🟠 | `docs/projets/suites-kit-portable.md` (point 3), `packages/drwil/src/index.ts` | Définir une liste de fichiers retirés par version, ne supprimer que les fichiers identiques à un ancien modèle |
+| RSK-3 | Compatibilité Windows/macOS jamais testée | Stabilité | 🟠 | `docs/projects/suites-kit-portable.md` (point 1), `packages/drwil/src/index.ts` | Tester `init`/`apply` sur les trois OS, idéalement en matrice CI |
+| RSK-4 | `apply`/`init` ne nettoient jamais les fichiers obsolètes d'une version antérieure du kit | Code mort | 🟠 | `docs/projects/suites-kit-portable.md` (point 3), `packages/drwil/src/index.ts` | Définir une liste de fichiers retirés par version, ne supprimer que les fichiers identiques à un ancien modèle |
 | RSK-5 | Les contrôles `.githooks/check-docs.mjs` et `.githooks/run-checks.mjs` installés sur drwil n'ont pas de test propre côté dépôt (seul `.githooks/cadrage.test.mjs` existe) | Tests | 🟡 | `.githooks/cadrage.test.mjs`, `.githooks/check-docs.mjs`, `.githooks/run-checks.mjs` | Ajouter des cas de non-régression ciblés (secrets absents, `checks` vide, CI absente) |
 
 ## Détail des risques majeurs
@@ -18,7 +18,7 @@
 ### RSK-1 — Contrôles projet non déclarés (corrigé le 2026-10-04)
 - **Attendu** : `.drwil/ia-first.json` prévoit une clé `checks` pour les
   contrôles réels de la pile (lint, typecheck, tests, build — voir
-  `docs/recettes/adopter-le-kit.md`, étape 3).
+  `docs/recipes/adopt-the-kit.md`, étape 3).
 - **Constaté** : `.drwil/ia-first.json` ne contenait aucune clé
   `checks`. `.githooks/run-checks.mjs` le signalait lui-même à chaque
   exécution (« non exécuté : contrôles du projet... aucun déclaré »).
@@ -32,7 +32,7 @@
   exécuté), `.githooks/check-control-coverage.mjs` toujours vert.
 
 ### RSK-2 — Pas de CI pour couvrir les contrôles (corrigé le 2026-10-04)
-- **Attendu** : `docs/contrats.md` (QUA-013) exige qu'au moins une CI
+- **Attendu** : `docs/contracts.md` (QUA-013) exige qu'au moins une CI
   exécute les mêmes contrôles qu'en local.
 - **Constaté** : `.drwil/ia-first.json` → `ciFiles: [".gitlab-ci.yml"]`,
   un fichier inexistant (reliquat du portage depuis run-box-v2, qui
@@ -49,7 +49,7 @@
   vérifie désormais réellement les jobs du workflow GitHub (0 erreur).
 
 ### RSK-3 — Compatibilité multi-plateforme non démontrée
-- **Attendu** : `docs/projets/suites-kit-portable.md`, point 1, liste
+- **Attendu** : `docs/projects/suites-kit-portable.md`, point 1, liste
   explicitement Windows/macOS comme non vérifiés.
 - **Codé réellement** : `packages/drwil/src/index.ts` écrit des
   hooks Git (`.githooks/`) et des permissions d'exécution sans test hors
@@ -60,7 +60,7 @@
   Windows et macOS avant la prochaine publication.
 
 ### RSK-4 — Pas de nettoyage des fichiers obsolètes
-- **Attendu** : `docs/projets/suites-kit-portable.md`, point 3, pose la
+- **Attendu** : `docs/projects/suites-kit-portable.md`, point 3, pose la
   question de la migration d'une ancienne version du kit comme non
   traitée.
 - **Codé réellement** : `packages/drwil/src/index.ts` (`scaffold`)
@@ -76,7 +76,7 @@
 
 ### RSK-5 — Contrôles du socle sans test dédié côté drwil
 - **Attendu** : chaque contrôle livré devrait pouvoir être vérifié
-  indépendamment (cohérent avec l'esprit de `docs/recettes/refactorer-sans-casser.md`).
+  indépendamment (cohérent avec l'esprit de `docs/recipes/refactor-without-breaking.md`).
 - **Codé réellement** : seul `.githooks/cadrage.test.mjs` existe à la
   racine de drwil. `.githooks/check-docs.mjs` et `.githooks/run-checks.mjs`
   sont bien testés côté kit (`packages/drwil/test/kit.test.mjs`,

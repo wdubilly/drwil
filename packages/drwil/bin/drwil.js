@@ -28,7 +28,7 @@ const program = new Command();
 program
   .name("drwil")
   .description("Scaffold IA-first governance for a project (any OS, any AI tool, fr/en)")
-  // Lue dans package.json, source unique de la version (docs/projets/journal.md, 2026-10-06 « Un seul numéro de version »).
+  // Lue dans package.json, source unique de la version (docs/projects/journal.md, 2026-10-06 « Un seul numéro de version »).
   .version(JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version);
 
 const DEFAUT = (v) => `(default: value of an installed project, else ${v})`;
@@ -40,7 +40,10 @@ function addOptions(cmd, layersHelp) {
       .option("-s, --short <short>", "Short name")
       // Aucun défaut ici : une option absente doit se distinguer d'un choix explicite, pour reprendre
       // la config d'un projet déjà installé ; les défauts vivent dans resolve() (src/index.ts).
-      .option("-l, --lang <lang>", `Templates language (fr|en) ${DEFAUT("fr")}`)
+      .option(
+        "-l, --lang <lang>",
+        `Project language (fr|en): the agent replies and writes briefs and commits in it; the kit itself is in English ${DEFAUT("en")}`,
+      )
       .option("--layers <layers>", layersHelp)
       .option("-d, --description <text>", "What the application does (fills AGENTS.md and docs/architecture.md)")
       .option("--tools <tools>", `AI tools to configure, CSV (${TOOLS.join(",")}) ${DEFAUT("all")}`)

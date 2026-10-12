@@ -399,7 +399,7 @@ This is intentional.
 Contracts live in:
 
 ```text
-docs/contrats.md
+docs/contracts.md
 ```
 
 They are human-readable and structured enough for DRWIL to discover and verify.
@@ -607,8 +607,7 @@ listed as modified: DRWIL never deletes your governance history for you.
 When Claude Code is among the configured tools (`--tools claude`, the
 default), DRWIL installs slash commands as Claude Code skills. They are thin
 entry points to the project's recipes (in `docs/`), which any other agent
-can read directly. Names below are for an English install; a French install
-(`--lang fr`) uses the French names shown in parentheses.
+can read directly. The names are the same whatever the project language.
 
 ### Governance
 
@@ -616,11 +615,11 @@ can read directly. Names below are for an English install; a French install
 | --- | --- |
 | `/drwil` | Menu of DRWIL capabilities and their commands |
 | `/drwil verify` | Is my work verified? Runs `drwil verify --agent` and follows the agent / human workflow |
-| `/drwil-adopt` (`/drwil-adopter`) | Make the kit live on an existing project after `apply` |
+| `/drwil-adopt` | Make the kit live on an existing project after `apply` |
 | `/drwil-audit` | Audit risks and technical debt |
-| `/drwil-value` (`/drwil-valeur`) | Discover the next high-value product features |
-| `/drwil-usage` (`/drwil-conso`) | Record tokens, model and setup time for a finished lot |
-| `/drwil-progress` (`/drwil-avancement`) | Generate a static HTML progress dashboard |
+| `/drwil-value` | Discover the next high-value product features |
+| `/drwil-usage` | Record tokens, model and setup time for a finished lot |
+| `/drwil-progress` | Generate a static HTML progress dashboard |
 | `/drwil-release` | Tag and publish a GitHub release (optional module) |
 
 There is deliberately **no** `/drwil attest`: attestation is a human action,
@@ -630,14 +629,14 @@ run by the human in their own terminal (`drwil attest <CONTRACT_ID>`).
 
 | Command | What it does |
 | --- | --- |
-| `/add-an-api-route` (`/ajouter-une-route-api`) | Add or change a backend API route with permissions and tests |
-| `/add-a-frontend-screen` (`/ajouter-un-ecran-front`) | Add a front-end screen consistent with the existing ones |
-| `/refactor-without-breaking` (`/refactorer-sans-casser`) | Restructure code without changing its behavior |
-| `/modify-permissions` (`/modifier-les-droits`) | Change roles or permissions, server and front aligned |
-| `/manage-access` (`/gerer-les-acces`) | Manage access through an external identity provider |
-| `/run-locally` (`/lancer-en-local`) | Run the project locally for development |
-| `/deploy-to-production` (`/deployer-en-prod`) | Deploy to production, only on explicit request |
-| `/backup-and-restore` (`/sauvegarder-et-restaurer`) | Back up or restore production data safely |
+| `/add-an-api-route` | Add or change a backend API route with permissions and tests |
+| `/add-a-frontend-screen` | Add a front-end screen consistent with the existing ones |
+| `/refactor-without-breaking` | Restructure code without changing its behavior |
+| `/modify-permissions` | Change roles or permissions, server and front aligned |
+| `/manage-access` | Manage access through an external identity provider |
+| `/run-locally` | Run the project locally for development |
+| `/deploy-to-production` | Deploy to production, only on explicit request |
+| `/backup-and-restore` | Back up or restore production data safely |
 
 ---
 

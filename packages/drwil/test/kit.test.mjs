@@ -102,9 +102,9 @@ const config = (dir) => JSON.parse(read(dir, ".drwil/ia-first.json"));
 // (déjà fait sur Linux/macOS par le test "lot 4 : commit-msg livré désactivé") n'a pas de sens.
 const executable = (dir, f) => process.platform === "win32" || Boolean(statSync(join(dir, f)).mode & 0o100);
 
-test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", async () => {
+test("init d'un projet en français : tous les outils, git et hooks, contrôles verts", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, name: "demo", description: "Démo $& littéral" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", description: "Démo $& littéral" }));
   for (const f of [
     "AGENTS.md",
     "CLAUDE.md",
@@ -112,11 +112,11 @@ test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", a
     ".claude/settings.json",
     ".cursor/rules/ia-first.mdc",
     ".github/copilot-instructions.md",
-    ".github/instructions/ajouter-une-route-api.instructions.md",
-    ".github/instructions/ajouter-un-ecran-front.instructions.md",
+    ".github/instructions/add-an-api-route.instructions.md",
+    ".github/instructions/add-a-frontend-screen.instructions.md",
     "backend/AGENTS.md",
     "frontend/CLAUDE.md",
-    "docs/contrats.md",
+    "docs/contracts.md",
     "docs/architecture.md",
   ]) {
     assert.ok(existsSync(join(dir, f)), f);
@@ -128,7 +128,7 @@ test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", a
   assert.ok(executable(dir, ".githooks/pre-commit"), "pre-commit exécutable");
   assert.equal(git(dir, "config", "core.hooksPath").stdout.trim(), ".githooks");
   assert.match(read(dir, "AGENTS.md"), /demo — Démo \$& littéral/);
-  assert.match(read(dir, "docs/architecture.md"), /Non décidée/);
+  assert.match(read(dir, "docs/architecture.md"), /Not decided/);
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /non exécuté : contrôles du projet/);
@@ -136,7 +136,7 @@ test("init par défaut : fr, tous les outils, git et hooks, contrôles verts", a
 
 test("init sans stack détectée : signale explicitement les couches par défaut", async () => {
   const dir = tmp();
-  const lines = await capture(() => init({ targetDir: dir, name: "demo", git: false }));
+  const lines = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   assert.ok(
     lines.some((l) => l.includes("Couches par défaut écrites : backend, frontend")),
     lines.join("\n"),
@@ -149,28 +149,28 @@ test("init sans stack détectée : signale explicitement les couches par défaut
 
 test("init avec --layers explicite : pas de message de défaut", async () => {
   const dir = tmp();
-  const lines = await capture(() => init({ targetDir: dir, name: "demo", git: false, layers: "admin" }));
+  const lines = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, layers: "admin" }));
   assert.ok(!lines.some((l) => l.includes("Couches par défaut")), lines.join("\n"));
 });
 
 test("un second init ne réécrase que .githooks/, --force réécrit tout", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, name: "demo" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
   writeFileSync(join(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n");
   appendFileSync(join(dir, ".githooks", "run-checks.mjs"), "\n// marque pour vérifier l'écrasement\n");
 
-  await quiet(() => init({ targetDir: dir, name: "demo" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
   assert.equal(read(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n", "docs du projet préservées sans --force");
   assert.ok(!read(dir, ".githooks/run-checks.mjs").includes("marque pour vérifier"), ".githooks/ réécrit par défaut");
 
   writeFileSync(join(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n");
-  await quiet(() => init({ targetDir: dir, name: "demo", force: true }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", force: true }));
   assert.notEqual(read(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n", "--force réécrit aussi les docs");
 });
 
 test("le hook refuse un commit dont la doc cite un chemin inexistant", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   assert.equal(git(dir, "add", "-A").status, 0);
   assert.equal(git(dir, "commit", "-qm", "init").status, 0, "premier commit accepté");
   appendFileSync(join(dir, "docs/ia-first.md"), "\nVoir `docs/inexistant.md` et SEC-999.\n");
@@ -184,7 +184,7 @@ test("le hook refuse un commit dont la doc cite un chemin inexistant", async () 
 
 test("chemin cité : un fichier ignoré par Git ne vaut pas preuve (local = CI) ; « (si présent) » aussi sur la ligne suivante", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   // Cas du 2026-10-09 : l'état local existe sur le poste, ignoré par Git, donc absent en CI.
   writeFileSync(join(dir, ".drwil/state.json"), "{}\n");
   const docsCheck = () => spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
@@ -207,7 +207,7 @@ test("chemin cité : un fichier ignoré par Git ne vaut pas preuve (local = CI) 
 
 test("livrable léger : un projet équipé ne reçoit ni ne lance les tests des hooks (code de drwil)", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   const tests = readdirSync(join(dir, ".githooks")).filter((f) => f.endsWith(".test.mjs"));
   assert.deepEqual(tests, [], "les tests des hooks restent dans le dépôt drwil");
   const r = checks(dir);
@@ -218,7 +218,7 @@ test("livrable léger : un projet équipé ne reçoit ni ne lance les tests des 
 
 test("budget de temps : les contrôles au commit d'un projet équipé restent rapides", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   const debut = performance.now();
   const r = checks(dir);
   const ms = Math.round(performance.now() - debut);
@@ -232,7 +232,7 @@ test("budget de temps : les contrôles au commit d'un projet équipé restent ra
 
 test("mise à jour sans casse : une exigence ajoutée après l'installation avertit un projet existant, bloque une installation neuve", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   assert.equal(config(dir).nouvellesExigences, "bloquant", "installation neuve : sévère d'emblée");
   // Projet installé avant ce réglage (v0.3.0) : la clé n'existe pas.
   const ancienne = { ...config(dir) };
@@ -245,26 +245,26 @@ test("mise à jour sans casse : une exigence ajoutée après l'installation aver
   assert.equal(r.status, 0, "projet existant : le commit qui passait passe encore\n" + r.stdout + r.stderr);
   assert.match(r.stdout + r.stderr, /\.drwil\/state\.json/, "mais l'écart est signalé");
   // La mise à jour pose « avertissement » pour ce projet, sans jamais durcir.
-  await quiet(() => apply({ targetDir: dir }));
+  await quiet(() => apply({ lang: "fr", targetDir: dir }));
   assert.equal(config(dir).nouvellesExigences, "avertissement");
   assert.equal(docsCheck().status, 0);
   // Le projet choisit de durcir : la même citation devient bloquante, et une mise à jour garde ce choix.
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), nouvellesExigences: "bloquant" }, null, 2));
   assert.equal(docsCheck().status, 1);
-  await quiet(() => apply({ targetDir: dir }));
+  await quiet(() => apply({ lang: "fr", targetDir: dir }));
   assert.equal(config(dir).nouvellesExigences, "bloquant");
 });
 
 test("les contrôles déclarés par le projet tournent et survivent à une réinstallation", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const cfg = config(dir);
   cfg.checks = [{ name: "tests unitaires", run: 'node -e "process.exit(3)"' }];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
   const r = checks(dir);
   assert.equal(r.status, 1);
   assert.match(r.stdout, /échec : tests unitaires/);
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   assert.equal(config(dir).checks[0].name, "tests unitaires");
 });
 
@@ -297,14 +297,14 @@ test("installation anglaise : le cadrage (QUA-016) ne bloque pas le premier comm
 
 test("init avec CI GitLab", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, ci: "gitlab", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "gitlab", git: false }));
   assert.match(read(dir, ".gitlab-ci.yml"), /node \.githooks\/run-checks\.mjs/);
   assert.deepEqual(config(dir).ciFiles, [".gitlab-ci.yml"]);
 });
 
 test("QUA-015 : marqueur de chantier, statut daté, section Reprise, chemin « à créer »", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
 
   // chemin « à créer » : accepté, pas une erreur.
   appendFileSync(join(dir, "docs/ia-first.md"), "\nÀ écrire : `docs/futur.md` (à créer).\n");
@@ -312,37 +312,37 @@ test("QUA-015 : marqueur de chantier, statut daté, section Reprise, chemin « �
   assert.equal(r.status, 0, r.stdout + r.stderr);
 
   // case ouverte sans marqueur [IA]/[humain]/[décision].
-  appendFileSync(join(dir, "docs/projets/en-attente.md"), "\n## Test\n- [ ] sujet sans marqueur\n");
+  appendFileSync(join(dir, "docs/projects/pending.md"), "\n## Test\n- [ ] sujet sans marqueur\n");
   r = checks(dir);
   assert.notEqual(r.status, 0);
-  assert.match(r.stdout, /en-attente\.md.*marqueur/);
+  assert.match(r.stdout, /pending\.md.*marqueur/);
   // corrigé avant la suite, pour isoler chaque contrôle.
   writeFileSync(
-    join(dir, "docs/projets/en-attente.md"),
-    read(dir, "docs/projets/en-attente.md").replace("- [ ] sujet sans marqueur", "- [ ] [IA] sujet avec marqueur"),
+    join(dir, "docs/projects/pending.md"),
+    read(dir, "docs/projects/pending.md").replace("- [ ] sujet sans marqueur", "- [ ] [IA] sujet avec marqueur"),
   );
 
   // fiche de projet sans Statut daté ni section Reprise.
-  writeFileSync(join(dir, "docs/projets/mon-chantier.md"), "# Mon chantier\n\nTexte.\n");
+  writeFileSync(join(dir, "docs/projects/mon-chantier.md"), "# Mon chantier\n\nTexte.\n");
   r = checks(dir);
   assert.match(r.stdout, /mon-chantier\.md.*Statut/);
   assert.match(r.stdout, /mon-chantier\.md.*Reprise/);
   writeFileSync(
-    join(dir, "docs/projets/mon-chantier.md"),
+    join(dir, "docs/projects/mon-chantier.md"),
     "# Mon chantier\n\n**Statut** : 2026-10-04, fait.\n\n## Reprise\n\nRien à reprendre.\n",
   );
   r = checks(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
 
   // modèle et fiche permanente exemptés du contrôle.
-  writeFileSync(join(dir, "docs/projets/modele-exemple.md"), "# Modèle\n\nSans statut ni Reprise.\n");
+  writeFileSync(join(dir, "docs/projects/modele-exemple.md"), "# Modèle\n\nSans statut ni Reprise.\n");
   r = checks(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
 
   // fiche suivant à la lettre le modèle fourni : sections numérotées (« ## 7. Reprise »)
   // et Statut avec date entre parenthèses — doit passer, pas seulement la forme minimale ci-dessus.
   writeFileSync(
-    join(dir, "docs/projets/chantier-modele.md"),
+    join(dir, "docs/projects/chantier-modele.md"),
     "# Projet : chantier\n\n**Statut** (2026-10-04) : cadré le 2026-10-04 — lot 1 en cours.\n\n## 6. Lots\n\nTexte.\n\n## 7. Reprise\n\n- **Dernier état** (2026-10-04) : rien à signaler.\n",
   );
   r = checks(dir);
@@ -351,40 +351,40 @@ test("QUA-015 : marqueur de chantier, statut daté, section Reprise, chemin « �
 
 test("QUA-015 (extension) : fiche terminée encore présente refusée ; case cochée vs fiche ouverte signalée", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
 
   // « fait » dans le statut ne vaut pas terminée : seul le marqueur explicite compte.
   writeFileSync(
-    join(dir, "docs/projets/mon-chantier.md"),
+    join(dir, "docs/projects/mon-chantier.md"),
     "# Mon chantier\n\n**Statut** (2026-10-04) : cadré — essai réel fait, lot 2 ouvert.\n\n## Reprise\n\nRien à reprendre.\n",
   );
-  appendFileSync(join(dir, "docs/projets/en-attente.md"), "\n## Test\n- [ ] [IA] sujet en cours `docs/projets/mon-chantier.md`.\n");
+  appendFileSync(join(dir, "docs/projects/pending.md"), "\n## Test\n- [ ] [IA] sujet en cours `docs/projects/mon-chantier.md`.\n");
   let direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(direct.status, 0, direct.stdout + direct.stderr);
   assert.doesNotMatch(direct.stdout, /mon-chantier\.md/);
 
   // fiche marquée terminée mais encore là : erreur bloquante (la condenser dans le journal, la supprimer).
   writeFileSync(
-    join(dir, "docs/projets/mon-chantier.md"),
+    join(dir, "docs/projects/mon-chantier.md"),
     "# Mon chantier\n\n**Statut** : terminé le 2026-10-10.\n\n## Reprise\n\nRien à reprendre.\n",
   );
   direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(direct.status, 1, direct.stdout + direct.stderr);
   assert.match(direct.stdout + direct.stderr, /mon-chantier\.md.*terminée.*journal/);
-  rmSync(join(dir, "docs/projets/mon-chantier.md"));
+  rmSync(join(dir, "docs/projects/mon-chantier.md"));
   writeFileSync(
-    join(dir, "docs/projets/en-attente.md"),
-    read(dir, "docs/projets/en-attente.md").replace("- [ ] [IA] sujet en cours `docs/projets/mon-chantier.md`.\n", ""),
+    join(dir, "docs/projects/pending.md"),
+    read(dir, "docs/projects/pending.md").replace("- [ ] [IA] sujet en cours `docs/projects/mon-chantier.md`.\n", ""),
   );
   direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(direct.status, 0, direct.stdout + direct.stderr);
 
   // cas inverse : case cochée mais fiche pas terminée.
   writeFileSync(
-    join(dir, "docs/projets/autre-chantier.md"),
+    join(dir, "docs/projects/autre-chantier.md"),
     "# Autre chantier\n\n**Statut** (2026-10-04) : cadré, lot 1 en cours.\n\n## Reprise\n\nRien.\n",
   );
-  appendFileSync(join(dir, "docs/projets/en-attente.md"), "- [x] [IA] sujet pas fini `docs/projets/autre-chantier.md`.\n");
+  appendFileSync(join(dir, "docs/projects/pending.md"), "- [x] [IA] sujet pas fini `docs/projects/autre-chantier.md`.\n");
   direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(direct.status, 0);
   assert.match(direct.stdout, /autre-chantier\.md.*QUA-015|QUA-015.*autre-chantier\.md/);
@@ -411,7 +411,7 @@ test("QUA-015 : l'index anglais (pending.md) vérifie aussi le marqueur de chant
 
 test("une alternative écrite avec une barre oblique n'est pas prise pour un chemin", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   appendFileSync(join(dir, "docs/ia-first.md"), "\nChoisir entre `minimal/complet` ou `init/apply` selon le cas.\n");
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
@@ -419,8 +419,8 @@ test("une alternative écrite avec une barre oblique n'est pas prise pour un che
 
 test("doublon d'ID dans le registre des contrats", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
-  appendFileSync(join(dir, "docs/contrats.md"), "\n| QUA-011 | doublon | — | — |\n");
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  appendFileSync(join(dir, "docs/contracts.md"), "\n| QUA-011 | doublon | — | — |\n");
   const r = checks(dir);
   assert.notEqual(r.status, 0);
   assert.match(r.stdout, /QUA-011.*plusieurs fois/);
@@ -428,11 +428,11 @@ test("doublon d'ID dans le registre des contrats", async () => {
 
 test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc cadrage", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "bloquant" }));
   assert.equal(git(dir, "add", "-A").status, 0);
   const rInit = git(dir, "commit", "-qm", "init");
-  assert.equal(rInit.status, 0, `premier commit accepté (mecanique-ia-first.md couvre .githooks/) :\n${rInit.stdout}${rInit.stderr}`);
+  assert.equal(rInit.status, 0, `premier commit accepté (kit-mechanics.md couvre .githooks/) :\n${rInit.stdout}${rInit.stderr}`);
   // QUA-017 ne tolère que le tout premier commit sur master : les commits suivants de
   // ce test (sans rapport avec le workflow branche/MR testé ailleurs) se font sur une branche.
   assert.equal(git(dir, "checkout", "-qb", "chantier/essai-cadrage").status, 0);
@@ -447,8 +447,8 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
 
   // rattaché à la fiche « entretien courant », le commit passe.
   writeFileSync(
-    join(dir, "docs/projets/entretien-courant.md"),
-    read(dir, "docs/projets/entretien-courant.md").replace("fichiers:\n-->", "fichiers:\n  - scripts/tache.mjs\n-->"),
+    join(dir, "docs/projects/routine-maintenance.md"),
+    read(dir, "docs/projects/routine-maintenance.md").replace("fichiers:\n-->", "fichiers:\n  - scripts/tache.mjs\n-->"),
   );
   git(dir, "add", "-A");
   r = git(dir, "commit", "-qm", "tache rattachée");
@@ -456,8 +456,8 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
 
   // un motif de cadrage trop large reste refusé.
   writeFileSync(
-    join(dir, "docs/projets/entretien-courant.md"),
-    read(dir, "docs/projets/entretien-courant.md").replace("  - scripts/tache.mjs", "  - scripts/*"),
+    join(dir, "docs/projects/routine-maintenance.md"),
+    read(dir, "docs/projects/routine-maintenance.md").replace("  - scripts/tache.mjs", "  - scripts/*"),
   );
   git(dir, "add", "-A");
   r = git(dir, "commit", "-qm", "motif trop large");
@@ -467,8 +467,8 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
 
 test("QUA-016 : réglage par défaut (bloquant) : premier commit accepté, code orphelin refusé ; avertissement toujours possible", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
-  assert.equal(config(dir).cadrage, "bloquant", "réglage par défaut écrit à l'installation (docs/projets/journal.md, garde-fous)");
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
+  assert.equal(config(dir).cadrage, "bloquant", "réglage par défaut écrit à l'installation (docs/projects/journal.md, garde-fous)");
   git(dir, "add", "-A");
   assert.equal(git(dir, "commit", "-qm", "init").status, 0, "les fichiers du kit sont couverts : le premier commit passe");
   // QUA-017 : commit suivant hors du périmètre testé ici, donc sur une branche.
@@ -489,7 +489,7 @@ test("QUA-016 : réglage par défaut (bloquant) : premier commit accepté, code 
 
 test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "off" }));
 
   mkdirSync(join(dir, "scripts"));
@@ -508,7 +508,7 @@ test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async 
 
 test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse avant écriture (bloquant) ou rappelle (avertissement)", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
 
   const gardeFou = spawnSync(process.execPath, [".claude/hooks/garde-fou-bash.mjs"], {
     cwd: dir,
@@ -531,7 +531,7 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
       encoding: "utf8",
       input: JSON.stringify({ hook_event_name: evenement, tool_name: "Write", tool_input: { file_path: join(dir, chemin) } }),
     });
-  // Défaut « bloquant » : refus AVANT l'écriture d'un fichier de code hors fiche (docs/projets/journal.md, garde-fous).
+  // Défaut « bloquant » : refus AVANT l'écriture d'un fichier de code hors fiche (docs/projects/journal.md, garde-fous).
   const refus = hook("PreToolUse", "scripts/nouveau.mjs");
   assert.match(refus.stdout, /"permissionDecision":"deny"/);
   assert.match(refus.stdout, /Écriture refusée \(QUA-016, cadrage bloquant\).*scripts\/nouveau\.mjs/);
@@ -550,7 +550,7 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
 
 test("état de gouvernance : lecteur livré, state.json ignoré par Git, contexte réinjecté au démarrage de Claude", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
 
   assert.match(read(dir, ".gitignore"), /^\.drwil\/state\.json$/m);
   assert.match(read(dir, ".claude/settings.json"), /"SessionStart"[\s\S]*\.githooks\/etat\.mjs/);
@@ -567,7 +567,7 @@ test("état de gouvernance : lecteur livré, state.json ignoré par Git, context
 
 test("rappel court : hook de saisie Claude livré, empreinte ignorée par Git, rien quand l'état n'a pas changé", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
 
   assert.match(read(dir, ".gitignore"), /^\.drwil\/rappel\.json$/m);
   const reglages = JSON.parse(read(dir, ".claude/settings.json"));
@@ -581,8 +581,8 @@ test("rappel court : hook de saisie Claude livré, empreinte ignorée par Git, r
 
 test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
-  const fiche = "docs/projets/essai.md";
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const fiche = "docs/projects/essai.md";
   writeFileSync(
     join(dir, fiche),
     "# Projet : Essai\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/essai.ts\n-->\n",
@@ -599,7 +599,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     );
   }
   assert.ok(reglages.permissions.deny.includes("Bash(*saisie-drwil*)"), "l'agent ne peut pas appeler le hook lui-même par le shell");
-  assert.ok(existsSync(join(dir, ".claude/skills/lancer-un-chantier/SKILL.md")));
+  assert.ok(existsSync(join(dir, ".claude/skills/start-a-workstream/SKILL.md")));
 
   const hook = (entree) =>
     spawnSync(process.execPath, [".claude/hooks/saisie-drwil.mjs"], { cwd: dir, encoding: "utf8", input: JSON.stringify(entree) });
@@ -611,7 +611,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
         header: "drwil-lancer",
         options: [
           { label: fiche, description: "Essai" },
-          { label: "docs/projets/autre.md", description: "Autre" },
+          { label: "docs/projects/autre.md", description: "Autre" },
         ],
         multiSelect: false,
       },
@@ -619,7 +619,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
   };
   const copilot = {
     message: "drwil-lancer : quelle fiche lancer ?",
-    requestedSchema: { properties: { choix: { type: "string", enum: [fiche, "docs/projets/autre.md"] } } },
+    requestedSchema: { properties: { choix: { type: "string", enum: [fiche, "docs/projects/autre.md"] } } },
   };
 
   // Le modèle ne répond pas à la place de l'humain et ne présélectionne rien : refusé avant l'affichage.
@@ -659,7 +659,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     tool_response: { ...claude, answers: { "Quelle fiche lancer ?": fiche } },
   });
   assert.equal(r.status, 0);
-  assert.match(r.stdout, /REALISATION \(lancé : docs\/projets\/essai\.md\)/);
+  assert.match(r.stdout, /REALISATION \(lancé : docs\/projects\/essai\.md\)/);
   assert.equal(etat().activite, "REALISATION");
   assert.equal(etat().attente_active, fiche);
   assert.equal(etat().fusion_autorisee, undefined, "sans seconde question, la fusion reste manuelle");
@@ -707,7 +707,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     hook_event_name: "PostToolUse",
     tool_name: "AskUserQuestion",
     tool_input: copilot,
-    tool_result: { result_type: "success", text_result_for_llm: "User responded: docs/projets/autre.md" },
+    tool_result: { result_type: "success", text_result_for_llm: "User responded: docs/projects/autre.md" },
   });
   assert.match(refus.stdout, /n'est pas une fiche cadrée/);
   assert.equal(etat(), null);
@@ -722,8 +722,8 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
 
 test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, tools: "claude", git: false }));
-  const fiche = "docs/projets/mecanique-ia-first.md";
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const fiche = "docs/projects/kit-mechanics.md";
   const drwilEtat = (...args) =>
     spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "etat", ...args], {
       cwd: dir,
@@ -747,7 +747,7 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
   assert.equal(config(dir).barriere, "avertissement");
   if (process.platform !== "win32")
     assert.ok(statSync(join(dir, ".githooks/prepare-commit-msg")).mode & 0o111, "prepare-commit-msg exécutable");
-  assert.match(read(dir, "docs/projets/mecanique-ia-first.md"), /\.githooks\/perimetre\.mjs/);
+  assert.match(read(dir, "docs/projects/kit-mechanics.md"), /\.githooks\/perimetre\.mjs/);
 
   const deny = JSON.parse(read(dir, ".claude/settings.json")).permissions.deny;
   for (const regle of ["Edit(**/.drwil/state.json)", "Write(**/.drwil/state.json)", "Bash(git commit -n*)"])
@@ -772,7 +772,7 @@ test("apply sur un projet existant : stack et couches découvertes, rien d'écra
   writeFileSync(join(dir, "api/pyproject.toml"), '[project]\ndependencies = ["fastapi"]\n');
   writeFileSync(join(dir, "web/package.json"), JSON.stringify({ dependencies: { react: "18" }, devDependencies: { vite: "5" } }));
   writeFileSync(join(dir, "README.md"), "# existant\n");
-  await quiet(() => apply({ targetDir: dir }));
+  await quiet(() => apply({ lang: "fr", targetDir: dir }));
   assert.equal(read(dir, "README.md"), "# existant\n");
   assert.ok(!existsSync(join(dir, ".git")));
   assert.ok(!existsSync(join(dir, "backend")), "pas de couche inventée");
@@ -783,42 +783,42 @@ test("apply sur un projet existant : stack et couches découvertes, rien d'écra
     { path: "web", technos: ["Node.js (React, Vite)"] },
   ]);
   assert.match(read(dir, "docs/architecture.md"), /`web\/` : Node\.js \(React, Vite\)/);
-  assert.match(read(dir, "api/AGENTS.md"), /couche api/);
+  assert.match(read(dir, "api/AGENTS.md"), /api layer context/);
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout);
 });
 
 test("apply() signale (sans réécrire) un fichier déjà présent qui a dérivé du template", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false, layers: "backend,frontend" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
 
   // fichier identique au template (mêmes couches entre init et apply) : pas signalé.
-  let lignes = await capture(() => apply({ targetDir: dir, git: false, layers: "backend,frontend" }));
+  let lignes = await capture(() => apply({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
   assert.ok(!lignes.some((l) => l.includes("dérivés")), lignes.join("\n"));
 
   // une recette dérive (contenu raccourci, une section en moins) : signalée, jamais réécrite.
-  const avant = read(dir, "docs/recettes/refactorer-sans-casser.md");
-  writeFileSync(join(dir, "docs/recettes/refactorer-sans-casser.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n");
-  lignes = await capture(() => apply({ targetDir: dir, git: false, layers: "backend,frontend" }));
+  const avant = read(dir, "docs/recipes/refactor-without-breaking.md");
+  writeFileSync(join(dir, "docs/recipes/refactor-without-breaking.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n");
+  lignes = await capture(() => apply({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
   assert.ok(
     lignes.some((l) => l.includes("dérivés")),
     lignes.join("\n"),
   );
   assert.ok(
-    lignes.some((l) => l.includes("docs/recettes/refactorer-sans-casser.md")),
+    lignes.some((l) => l.includes("docs/recipes/refactor-without-breaking.md")),
     lignes.join("\n"),
   );
   assert.equal(
-    read(dir, "docs/recettes/refactorer-sans-casser.md"),
+    read(dir, "docs/recipes/refactor-without-breaking.md"),
     "# Refactorer\n\nTexte raccourci, une seule section.\n",
     "jamais réécrit automatiquement",
   );
-  assert.notEqual(read(dir, "docs/recettes/refactorer-sans-casser.md"), avant);
+  assert.notEqual(read(dir, "docs/recipes/refactor-without-breaking.md"), avant);
 });
 
 test("init écrit un manifeste des fichiers installés (chemin + sha256), fusionné sans perte entre deux apply()", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const manifeste = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
   assert.ok(Object.keys(manifeste).length > 10, "plusieurs fichiers enregistrés");
   assert.ok("AGENTS.md" in manifeste, "AGENTS.md présent");
@@ -826,13 +826,13 @@ test("init écrit un manifeste des fichiers installés (chemin + sha256), fusion
 
   // apply() une 2ᵉ fois sans rien changer : le manifeste existant est conservé à l'identique (fusion, pas d'écrasement).
   const avant = read(dir, ".drwil/fichiers-installes.json");
-  await quiet(() => apply({ targetDir: dir, git: false, layers: "backend,frontend" }));
+  await quiet(() => apply({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
   assert.equal(read(dir, ".drwil/fichiers-installes.json"), avant);
 });
 
 test("lot 2 (désinstallation) : dry-run par défaut, --yes supprime, fichier modifié conservé, docs/projets jamais touché", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   assert.ok(existsSync(join(dir, ".githooks/check-docs.mjs")));
 
   // dry-run (défaut) : rien n'est supprimé, juste rapporté.
@@ -852,10 +852,10 @@ test("lot 2 (désinstallation) : dry-run par défaut, --yes supprime, fichier mo
   assert.ok(existsSync(join(dir, "AGENTS.md")), "fichier modifié jamais supprimé");
   assert.equal(read(dir, "AGENTS.md"), empreinteModifiee);
 
-  // docs/projets/, docs/intentions/, docs/recettes/ jamais touchés, même présents au manifeste.
+  // docs/projects/, docs/intentions/, docs/recipes/ jamais touchés, même présents au manifeste.
   const manifeste = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
-  assert.ok(Object.keys(manifeste).some((p) => p.startsWith("docs/projets/")));
-  assert.ok(existsSync(join(dir, "docs/projets/en-attente.md")), "docs/projets/ jamais supprimé par uninstall");
+  assert.ok(Object.keys(manifeste).some((p) => p.startsWith("docs/projects/")));
+  assert.ok(existsSync(join(dir, "docs/projects/pending.md")), "docs/projects/ jamais supprimé par uninstall");
 
   // le manifeste ne garde plus les entrées des fichiers réellement supprimés.
   const manifesteApres = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
@@ -864,7 +864,7 @@ test("lot 2 (désinstallation) : dry-run par défaut, --yes supprime, fichier mo
 
 test("lot 6 (gouvernance) : uninstall liste l'état local, ne le supprime qu'avec --yes", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const etat = join(dir, ".drwil", "state.json");
   writeFileSync(etat, JSON.stringify({ version: 1, activite: "CADRAGE", attente_active: null, demande_active: null, depuis: null }));
   assert.ok((await uninstall({ targetDir: dir })).removed.includes(".drwil/state.json"));
@@ -876,7 +876,7 @@ test("lot 6 (gouvernance) : uninstall liste l'état local, ne le supprime qu'ave
 
 test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .bak créé, --forcer fonctionnel", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
 
   const cible = ".githooks/check-docs.mjs";
   const original = read(dir, cible);
@@ -931,7 +931,7 @@ test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .
 
 test("lot 2 (résolution de dérive) : jamais appliquée automatiquement par init()/apply(), ne crée aucun fichier absent", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
 
   // rien n'a dérivé juste après init() : aucune résolution nécessaire.
   let rapport = await quiet(() => resoudreDerive({ targetDir: dir, forcer: true }));
@@ -948,7 +948,7 @@ test("lot 2 (résolution de dérive) : jamais appliquée automatiquement par ini
 
 test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne version du kit, jamais modifié, est supprimé par init()/apply()", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
 
   // simule un fichier d'une ancienne version du kit, plus présent dans le template actuel,
   // mais déjà enregistré dans le manifeste (comme s'il avait été écrit par une version antérieure).
@@ -967,7 +967,7 @@ test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne versio
   writeFileSync(join(dir, ".drwil/fichiers-installes.json"), JSON.stringify(manifeste, null, 2) + "\n");
   writeFileSync(join(dir, obsoleteModifie), contenuInitial + "# modifié par le projet\n");
 
-  const lignes = await capture(() => init({ targetDir: dir, git: false }));
+  const lignes = await capture(() => init({ lang: "fr", targetDir: dir, git: false }));
   assert.ok(!existsSync(join(dir, obsolete)), "fichier obsolète non modifié supprimé");
   assert.ok(existsSync(join(dir, obsoleteModifie)), "fichier obsolète mais modifié conservé");
   assert.ok(
@@ -982,7 +982,7 @@ test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne versio
 
 test("un contrat préfixé par un autre dépôt n'est pas cherché dans le registre local", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   appendFileSync(join(dir, "docs/ia-first.md"), "\nVoir run-box-v2:SEC-777, mais SEC-888 doit exister.\n");
   const r = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 1);
@@ -992,20 +992,20 @@ test("un contrat préfixé par un autre dépôt n'est pas cherché dans le regis
 
 test("une couche imbriquée renvoie au bon AGENTS.md racine", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, layers: "packages/api", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, layers: "packages/api", git: false }));
   assert.match(read(dir, "packages/api/AGENTS.md"), /`\.\.\/\.\.\/AGENTS\.md`/);
   assert.equal(checks(dir).status, 0);
 });
 
 test("une valeur d'option inconnue est refusée", async () => {
   await assert.rejects(() => init({ targetDir: tmp(), lang: "de" }), /--lang/);
-  await assert.rejects(() => init({ targetDir: tmp(), tools: "claude,vim" }), /--tools/);
-  await assert.rejects(() => init({ targetDir: tmp(), ci: "jenkins" }), /--ci/);
+  await assert.rejects(() => init({ lang: "fr", targetDir: tmp(), tools: "claude,vim" }), /--tools/);
+  await assert.rejects(() => init({ lang: "fr", targetDir: tmp(), ci: "jenkins" }), /--ci/);
 });
 
 test("QUA-017 : pas de travail direct sur la branche principale, même pour le tout premier commit", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   // init() bascule déjà sur une branche de travail avant tout commit (plus jamais sur master/main).
   const branche = git(dir, "symbolic-ref", "--short", "HEAD");
   assert.equal(branche.stdout.trim(), "chantier/installation-kit", "init() laisse l'utilisateur sur une branche de travail, jamais master");
@@ -1028,7 +1028,7 @@ test("QUA-017 : pas de travail direct sur la branche principale, même pour le t
   // master n'existe même pas encore dans `dir` (jamais créé localement) : on simule le cas où
   // il apparaît malgré tout (ex. remote déjà pourvu d'un master), pour vérifier qu'y commiter reste refusé.
   git(dir, "checkout", "-qb", "master");
-  writeFileSync(join(dir, "docs/projets/entretien-courant.md"), read(dir, "docs/projets/entretien-courant.md") + "\n");
+  writeFileSync(join(dir, "docs/projects/routine-maintenance.md"), read(dir, "docs/projects/routine-maintenance.md") + "\n");
   git(dir, "add", "-A");
   const second = git(dir, "commit", "-qm", "commit direct sur master");
   assert.notEqual(second.status, 0, "un commit direct sur master est refusé (QUA-017)");
@@ -1040,7 +1040,7 @@ test("QUA-017 : pas de travail direct sur la branche principale, même pour le t
 
   // sur une branche, un nouveau commit passe.
   git(dir, "checkout", "-qb", "chantier/essai");
-  writeFileSync(join(dir, "docs/projets/entretien-courant.md"), read(dir, "docs/projets/entretien-courant.md") + "\n");
+  writeFileSync(join(dir, "docs/projects/routine-maintenance.md"), read(dir, "docs/projects/routine-maintenance.md") + "\n");
   git(dir, "add", "-A");
   const surBranche = git(dir, "commit", "-qm", "commit sur une branche");
   assert.equal(
@@ -1052,7 +1052,7 @@ test("QUA-017 : pas de travail direct sur la branche principale, même pour le t
 
 test("QUA-017 : un push ne contenant que des tags ou des suppressions de branches n'est jamais bloqué, un push de la branche principale continue de l'être", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   git(dir, "add", "-A");
   const premier = git(dir, "commit", "-qm", "premier commit");
   assert.equal(premier.status, 0, premier.stdout + premier.stderr);
@@ -1100,12 +1100,12 @@ test("QUA-017 : un push ne contenant que des tags ou des suppressions de branche
 test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et commit-msg livrés", async () => {
   for (const ci of ["github", "gitlab"]) {
     const dir = tmp();
-    await quiet(() => init({ targetDir: dir, ci, git: false }));
+    await quiet(() => init({ lang: "fr", targetDir: dir, ci, git: false }));
     const r = spawnSync(process.execPath, [".githooks/check-control-coverage.mjs"], { cwd: dir, encoding: "utf8" });
     assert.equal(r.status, 0, `${ci} : ${r.stdout}${r.stderr}`);
   }
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, ci: "github" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github" }));
   assert.ok(executable(dir, ".githooks/pre-push"), "pre-push exécutable");
   assert.ok(!(statSync(join(dir, ".githooks/commit-msg")).mode & 0o100), "commit-msg livré désactivé");
   const r = checks(dir);
@@ -1117,7 +1117,7 @@ test("alerte CI cassée sur la branche principale : job dédié livré, GitHub e
   // GitHub : se déclenche seulement sur push vers la branche par défaut,
   // seulement si checks (ou kit-tests) échoue, sans recréer de doublon.
   const dirGh = tmp();
-  await quiet(() => init({ targetDir: dirGh, ci: "github", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dirGh, ci: "github", git: false }));
   const gh = read(dirGh, ".github/workflows/ia-first.yml");
   assert.match(gh, /alerter-si-ci-cassee:/);
   assert.match(gh, /needs:\s*checks/);
@@ -1130,7 +1130,7 @@ test("alerte CI cassée sur la branche principale : job dédié livré, GitHub e
   // GitLab : stage dédiée après `test`, déclenchée seulement sur la branche
   // par défaut et seulement en cas d'échec d'un job de la stage `test`.
   const dirGl = tmp();
-  await quiet(() => init({ targetDir: dirGl, ci: "gitlab", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dirGl, ci: "gitlab", git: false }));
   const gl = read(dirGl, ".gitlab-ci.yml");
   assert.match(gl, /alerter-si-ci-cassee:/);
   assert.match(gl, /stage: alerte/);
@@ -1145,12 +1145,12 @@ test("alerte CI cassée sur la branche principale : job dédié livré, GitHub e
   }
 });
 
-test("gabarits de pull/merge request : livrés selon le ci et la langue choisis", async () => {
+test("gabarits de pull/merge request : livrés selon le ci, un seul gabarit en anglais quelle que soit la langue", async () => {
   const cas = [
-    { lang: "fr", ci: "github", chemin: ".github/pull_request_template.md", motif: /Fiche concernée/ },
-    { lang: "fr", ci: "gitlab", chemin: ".gitlab/merge_request_templates/Default.md", motif: /Fiche concernée/ },
-    { lang: "en", ci: "github", chemin: ".github/pull_request_template.md", motif: /Related card/ },
-    { lang: "en", ci: "gitlab", chemin: ".gitlab/merge_request_templates/Default.md", motif: /Related card/ },
+    { lang: "fr", ci: "github", chemin: ".github/pull_request_template.md", motif: /Related brief/ },
+    { lang: "fr", ci: "gitlab", chemin: ".gitlab/merge_request_templates/Default.md", motif: /Related brief/ },
+    { lang: "en", ci: "github", chemin: ".github/pull_request_template.md", motif: /Related brief/ },
+    { lang: "en", ci: "gitlab", chemin: ".gitlab/merge_request_templates/Default.md", motif: /Related brief/ },
   ];
   for (const { lang, ci, chemin, motif } of cas) {
     const dir = tmp();
@@ -1160,14 +1160,14 @@ test("gabarits de pull/merge request : livrés selon le ci et la langue choisis"
   }
   // ci: none n'installe aucun gabarit (rien à proposer sans plateforme de MR).
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, ci: "none", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "none", git: false }));
   assert.ok(!existsSync(join(dir, ".github/pull_request_template.md")));
   assert.ok(!existsSync(join(dir, ".gitlab/merge_request_templates/Default.md")));
 });
 
 test("QUA-013 : un job CI qui ne se déclenche plus sur les bons chemins est détecté", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, ci: "gitlab", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "gitlab", git: false }));
   writeFileSync(
     join(dir, ".gitlab-ci.yml"),
     "checks:\n  image: node:20\n  rules:\n    - changes:\n        - frontend/**\n  script:\n    - node .githooks/run-checks.mjs\n",
@@ -1179,7 +1179,7 @@ test("QUA-013 : un job CI qui ne se déclenche plus sur les bons chemins est dé
 
 test("ci: none : pas de CI, la couverture QUA-013 est signalée non exécutée (pas d'échec silencieux)", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, ci: "none" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "none" }));
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout);
   assert.match(r.stdout, /non exécuté : couverture CI de chaque contrôle.*aucune CI configurée/s);
@@ -1187,7 +1187,7 @@ test("ci: none : pas de CI, la couverture QUA-013 est signalée non exécutée (
 
 test("pre-commit : un contrôle du projet hors de ses chemins est reporté (visible), rejoué au push et en direct", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   const cfg = config(dir);
   cfg.checks = [{ name: "suite lourde", run: 'node -e "process.exit(1)"', chemins: ["src/**"] }];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
@@ -1212,7 +1212,7 @@ test("pre-commit : un contrôle du projet hors de ses chemins est reporté (visi
 
 test("lot 5 : check-file-size et check-code-rules livrés mais opt-in (pas lancés par défaut)", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   for (const f of ["check-file-size.mjs", "check-file-size.legacy.json", "check-code-rules.mjs"]) {
     assert.ok(existsSync(join(dir, ".githooks", f)), f);
   }
@@ -1221,7 +1221,7 @@ test("lot 5 : check-file-size et check-code-rules livrés mais opt-in (pas lanc�
 
 test("check-file-size.mjs détecte un fichier trop gros une fois déclaré par le projet", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const cfg = config(dir);
   cfg.checks = [{ name: "taille des fichiers", run: "node .githooks/check-file-size.mjs src 10 ts" }];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
@@ -1234,7 +1234,7 @@ test("check-file-size.mjs détecte un fichier trop gros une fois déclaré par l
 
 test("check-file-size.mjs : un plafond hérité laisse passer un fichier déjà gros mais pas plus gros", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   writeFileSync(join(dir, ".githooks/check-file-size.legacy.json"), JSON.stringify({ "src/legacy.ts": 25 }));
   mkdirSync(join(dir, "src"), { recursive: true });
   writeFileSync(join(dir, "src/legacy.ts"), "x\n".repeat(20));
@@ -1248,14 +1248,14 @@ test("check-file-size.mjs : un plafond hérité laisse passer un fichier déjà 
 
 test("check-code-rules.mjs : vide par défaut, toujours vert", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const r = spawnSync(process.execPath, [".githooks/check-code-rules.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
 test("lot 5 : le module qualité front optionnel n'est pas installé par init/apply", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   for (const f of ["check-colors.mjs", "check-contrast.mjs"]) {
     assert.ok(!existsSync(join(dir, ".githooks", f)), f);
   }
@@ -1263,33 +1263,33 @@ test("lot 5 : le module qualité front optionnel n'est pas installé par init/ap
 
 test("lot 6 : catalogue de contrats et recette d'adoption livrés, skill Claude présent", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
-  for (const f of ["docs/catalogue-contrats.md", "docs/recettes/adopter-le-kit.md", ".claude/skills/adopter-le-kit/SKILL.md"]) {
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  for (const f of ["docs/contracts-catalog.md", "docs/recipes/adopt-the-kit.md", ".claude/skills/adopt-the-kit/SKILL.md"]) {
     assert.ok(existsSync(join(dir, f)), f);
   }
-  assert.match(read(dir, "AGENTS.md"), /adopter-le-kit\.md/);
+  assert.match(read(dir, "AGENTS.md"), /adopt-the-kit\.md/);
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
 test("lot 6 : le skill adopter-le-kit n'est pas livré sans Claude Code", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, tools: "codex", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "codex", git: false }));
   assert.ok(!existsSync(join(dir, ".claude")));
-  assert.ok(existsSync(join(dir, "docs/catalogue-contrats.md")));
+  assert.ok(existsSync(join(dir, "docs/contracts-catalog.md")));
 });
 
 test("commande /drwil : skill générique et alias par capacité livrés avec Claude Code", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   assert.ok(existsSync(join(dir, ".claude/skills/drwil/SKILL.md")));
   assert.match(read(dir, ".claude/skills/drwil/SKILL.md"), /disable-model-invocation: true/);
   const alias = {
-    "adopter-le-kit": "drwil-adopter",
-    "auditer-risques-et-dette": "drwil-audit",
-    "decouvrir-valeur-produit": "drwil-valeur",
-    "suivre-consommation-par-lot": "drwil-conso",
-    "visualiser-avancement": "drwil-avancement",
+    "adopt-the-kit": "drwil-adopt",
+    "audit-risks-and-debt": "drwil-audit",
+    "discover-product-value": "drwil-value",
+    "track-consumption-per-increment": "drwil-usage",
+    "view-progress": "drwil-progress",
   };
   for (const [skill, name] of Object.entries(alias)) {
     assert.match(read(dir, `.claude/skills/${skill}/SKILL.md`), new RegExp(`^name: ${name}$`, "m"), skill);
@@ -1300,7 +1300,7 @@ test("commande /drwil : skill générique et alias par capacité livrés avec Cl
 
 test("commande /drwil : pas livrée sans Claude Code", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, tools: "codex", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "codex", git: false }));
   assert.ok(!existsSync(join(dir, ".claude")));
 });
 
@@ -1308,8 +1308,9 @@ test("skills Copilot CLI (applyTo) : parité fonctionnelle sur les 2 recettes qu
   for (const lang of ["fr", "en"]) {
     const dir = tmp();
     await quiet(() => init({ targetDir: dir, lang, git: false }));
-    const api = lang === "fr" ? "ajouter-une-route-api" : "add-an-api-route";
-    const ecran = lang === "fr" ? "ajouter-un-ecran-front" : "add-a-frontend-screen";
+    // Un seul gabarit, en anglais : mêmes fichiers quelle que soit la langue du projet.
+    const api = "add-an-api-route";
+    const ecran = "add-a-frontend-screen";
     const apiContent = read(dir, `.github/instructions/${api}.instructions.md`);
     assert.match(apiContent, /applyTo:\s*"backend\/\*\*"/);
     const ecranContent = read(dir, `.github/instructions/${ecran}.instructions.md`);
@@ -1317,7 +1318,7 @@ test("skills Copilot CLI (applyTo) : parité fonctionnelle sur les 2 recettes qu
   }
   // Pas livré si Copilot n'est pas sélectionné.
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, tools: "codex", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "codex", git: false }));
   assert.ok(!existsSync(join(dir, ".github", "instructions")));
 });
 
@@ -1332,7 +1333,7 @@ test("lot 7 : installation anglaise complète, contenu des lots 1 à 6 traduit, 
     "docs/style-guide.md",
     "docs/deployment.md",
     "docs/projects/routine-maintenance.md",
-    "docs/projects/model-project-sheet.md",
+    "docs/projects/model-brief.md",
     "docs/recipes/manage-access.md",
     "docs/recipes/run-locally.md",
     "docs/recipes/modify-permissions.md",
@@ -1352,7 +1353,7 @@ test("lot 7 : installation anglaise complète, contenu des lots 1 à 6 traduit, 
 test("lot 7 : même nombre de fichiers livrés en français et en anglais", async () => {
   const fr = tmp();
   const en = tmp();
-  await quiet(() => init({ targetDir: fr, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: fr, git: false }));
   await quiet(() => init({ targetDir: en, lang: "en", git: false }));
   const compter = (base) => spawnSync("find", [base, "-type", "f"], { encoding: "utf8" }).stdout.trim().split("\n").length;
   assert.equal(compter(en), compter(fr));
@@ -1360,12 +1361,12 @@ test("lot 7 : même nombre de fichiers livrés en français et en anglais", asyn
 
 test("module optionnel tableau de bord : génère un HTML lisant chantiers et contrats tels quels", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
   writeFileSync(
-    join(dir, "docs/projets/un-chantier.md"),
+    join(dir, "docs/projects/un-chantier.md"),
     "# Projet : un chantier\n\n**Statut** : cadré le 2026-10-04 — lot 1 en cours.\n\n" +
       "## 6. Lots\n\n- **Lot 1 — titre** [IA] : contenu. Critère de sortie : tests verts.\n\n" +
       "## Reprise\n\n- **Dernier état** (2026-10-04) : ...\n",
@@ -1378,12 +1379,12 @@ test("module optionnel tableau de bord : génère un HTML lisant chantiers et co
   assert.match(html, /cadré le 2026-10-04 — lot 1 en cours\./);
   assert.match(html, /Lot 1 — titre/);
   assert.match(html, /SEC-006/);
-  assert.match(html, /catalogue:SEC-001/);
+  assert.match(html, /catalog:SEC-001/);
 });
 
 test("module optionnel tableau de bord : agrège .drwil/usage.jsonl par chantier, sans régression si absent", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
@@ -1414,7 +1415,7 @@ test("module optionnel tableau de bord : agrège .drwil/usage.jsonl par chantier
 
 test("module optionnel tableau de bord : affiche les derniers audits, sans régression si absents", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
@@ -1444,7 +1445,7 @@ test("module optionnel tableau de bord : affiche les derniers audits, sans régr
 
 test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-checks.mjs", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, name: "demo", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
@@ -1515,7 +1516,7 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
     // Le script lui-même n'est jamais copié automatiquement.
     assert.ok(!existsSync(join(dir, ".githooks/creer-release.mjs")), "le module optionnel ne doit pas être copié par défaut");
     // La recette (toujours livrée) documente l'activation du module.
-    const recette = lang === "fr" ? "docs/recettes/creer-une-release.md" : "docs/recipes/create-a-release.md";
+    const recette = lang === "fr" ? "docs/recipes/create-a-release.md" : "docs/recipes/create-a-release.md";
     assert.match(read(dir, recette), /optionnel|optional/i);
     // Le skill générique drwil mentionne la capacité release.
     const menu = read(dir, ".claude/skills/drwil/SKILL.md");
@@ -1524,7 +1525,7 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
 
   // Script utilisable en pratique : --dry-run, sans toucher au réseau ni créer de tag.
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: true }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/creer-release.mjs"), readFileSync(src, "utf8"));
@@ -1539,7 +1540,7 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
 test("créer une release : repère les paquets npm publiables (package.json suivi, non private) pour le tarball de release", async () => {
   const { paquetsPublics } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: true }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   // racine privée (monorepo), un paquet publiable dans packages/truc, un paquet explicitement privé ailleurs.
   writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "racine", private: true }));
   mkdirSync(join(dir, "packages/truc"), { recursive: true });
@@ -1561,7 +1562,7 @@ test("créer une release : repère les paquets npm publiables (package.json suiv
 
 test("créer une release : --dry-run liste le paquet npm à empaqueter quand il y en a un", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: true }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/creer-release.mjs"), readFileSync(src, "utf8"));
@@ -1578,14 +1579,14 @@ test("créer une release : --dry-run liste le paquet npm à empaqueter quand il 
 // (pas de gitleaks, absent de certains postes) : seul le verdict est testé, pas les outils.
 async function projetVerify(contrats, reglages = {}) {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
   const cfg = { ...config(dir), ...reglages };
   cfg.checks = [
     { id: "ok", name: "toujours vert", run: 'node -e "process.exit(0)"' },
     { id: "ko", name: "toujours rouge", run: "node -e \"console.log('cause du rouge'); process.exit(1)\"" },
   ];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
-  writeFileSync(join(dir, "docs/contrats.md"), `# Contrats\n\n${contrats}\n`);
+  writeFileSync(join(dir, "docs/contracts.md"), `# Contrats\n\n${contrats}\n`);
   return dir;
 }
 const contrat = (id, champs) => `## ${id} — titre ${id}\n**Règle** : exigence ${id}.\n${champs}\n`;
@@ -1680,7 +1681,7 @@ test("verify : ERROR (exit 2) sans moteur installé ou sans registre, hooks ind�
     read(dir, ".githooks/run-checks.mjs") + read(dir, ".githooks/moteur.mjs"),
     /from "drwil"|packages\/drwil|dist\/index/,
   );
-  writeFileSync(join(dir, "docs/contrats.md"), "# Contrats\n");
+  writeFileSync(join(dir, "docs/contracts.md"), "# Contrats\n");
   let v = await verify({ targetDir: dir });
   assert.equal(v.code, 2);
   assert.match(v.erreurs.join(), /aucun contrat/);
@@ -1749,14 +1750,14 @@ test("verify : priorité déterministe du verdict global FAIL > ERROR > MANUAL >
 
 test("DRWIL-002 : check-docs refuse un contrat mal formé dès le commit (contrôle inconnu, Règle absente)", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
-  const base = read(dir, "docs/contrats.md");
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const base = read(dir, "docs/contracts.md");
   assert.equal(
     spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" }).status,
     0,
     "le registre livré est valide",
   );
-  writeFileSync(join(dir, "docs/contrats.md"), `${base}\n## QUA-020 — mal formé\n**Contrôle** : \`inexistant\`\n`);
+  writeFileSync(join(dir, "docs/contracts.md"), `${base}\n## QUA-020 — mal formé\n**Contrôle** : \`inexistant\`\n`);
   const r = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.notEqual(r.status, 0);
   assert.match(r.stdout + r.stderr, /QUA-020 : contrôle inconnu « inexistant »/);
@@ -1801,7 +1802,7 @@ test("DRWIL-004 : verify --json, format stable, rien d'autre sur stdout, mêmes 
 
 test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; contracts liste le registre", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, ci: "github" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github" }));
   let d = await doctor({ targetDir: dir });
   assert.equal(d.code, 0, JSON.stringify(d.points));
   assert.ok(d.points.find((p) => p.id === "hooks").etat === "ok");
@@ -1826,7 +1827,7 @@ test("DRWIL-011 : apply audite et prévisualise sans rien écrire ; l'aperçu co
   writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "x", scripts: { test: "node --test", lint: "eslint ." } }));
   writeFileSync(join(dir, ".eslintrc.json"), "{}");
   writeFileSync(join(dir, "CLAUDE.md"), "mes consignes à moi\n");
-  const a = await auditerApply({ targetDir: dir, git: false });
+  const a = await auditerApply({ lang: "fr", targetDir: dir, git: false });
   assert.ok(a.protections.includes("eslint") && a.protections.includes("script npm « test »"), a.protections.join());
   assert.ok(a.outilsPresents.includes("CLAUDE.md"));
   assert.ok(a.crees.includes("AGENTS.md") && a.crees.includes(".githooks/moteur.mjs") && a.crees.includes(".drwil/ia-first.json"));
@@ -1840,19 +1841,19 @@ test("DRWIL-011 : apply audite et prévisualise sans rien écrire ; l'aperçu co
   });
   assert.equal(dry.status, 0, dry.stderr);
   assert.ok(!existsSync(join(dir, "AGENTS.md")), "--dry-run n'écrit rien");
-  await quiet(() => apply({ targetDir: dir, git: false }));
+  await quiet(() => apply({ lang: "fr", targetDir: dir, git: false }));
   for (const f of a.crees) assert.ok(existsSync(join(dir, f)), `annoncé et créé : ${f}`);
   assert.equal(read(dir, "CLAUDE.md"), "mes consignes à moi\n", "fichier existant jamais écrasé");
 });
 
 test("DRWIL-012 : installation neuve sans bruit ; un risque déclaré trop bas est refusé au commit", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const propre = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(propre.status, 0, propre.stdout);
   assert.doesNotMatch(propre.stdout, /niveau de risque/, "aucun avertissement de risque à l'installation");
   writeFileSync(
-    join(dir, "docs/projets/toucher-hooks.md"),
+    join(dir, "docs/projects/toucher-hooks.md"),
     "# Projet : x\n\n**Statut** : cadré le 2026-10-06.\n**Risque** : LOW\n\n<!-- cadrage\nfichiers:\n  - .githooks/moteur.mjs\n-->\n\n## 7. Reprise\n\n- rien\n",
   );
   const r = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
@@ -2009,8 +2010,8 @@ test("attest : obsolète si le contrat ou sa preuve change ; plusieurs attestati
   assert.equal((await attester({ targetDir: dir, id: "QUA-001", confirmer: oui, maintenant: new Date("2026-10-06T08:00:00Z") })).code, 0);
   assert.equal((await attester({ targetDir: dir, id: "QUA-001", confirmer: oui })).code, 1, "déjà attesté : pas de doublon");
   writeFileSync(
-    join(dir, "docs/contrats.md"),
-    read(dir, "docs/contrats.md").replace("relecture des fiches", "relecture des fiches et des recettes"),
+    join(dir, "docs/contracts.md"),
+    read(dir, "docs/contracts.md").replace("relecture des fiches", "relecture des fiches et des recettes"),
   );
   let v = await verify({ targetDir: dir });
   assert.equal(v.contrats[0].statut, "MANUAL", "contrat modifié : attestation obsolète, jamais une validation");
@@ -2097,7 +2098,7 @@ test("attest : aucune donnée sensible dans l'attestation (note caviardée, pas 
   assert.ok(JSON.parse(brut).note.length <= 500);
 });
 
-// Intégration agent (docs/projets/journal.md, 2026-10-10) : `verify --agent` présente le verdict
+// Intégration agent (docs/projects/journal.md, 2026-10-10) : `verify --agent` présente le verdict
 // sans recalculer de règle ; `attest` reste humain. Décision (a) : une attestation écrite à la main
 // n'est pas détectée comme fausse, la frontière est la revue du changement (dossier versionné).
 test("verify --agent : PASS sans action, FAIL à corriger, ERROR à résoudre, seul MANUAL demande une attestation humaine", async () => {
@@ -2145,9 +2146,9 @@ test("/drwil verify (Claude) : adaptateur de la CLI, jamais d'attestation par l'
       /attest/,
       "aucun argument attest",
     );
-    assert.match(skill, lang === "fr" ? /Ne jamais exécuter `drwil attest`/ : /Never run `drwil attest`/);
+    assert.match(skill, /Never run `drwil attest`/);
     assert.match(read(dir, "AGENTS.md"), /drwil verify --agent/);
-    assert.match(read(dir, "AGENTS.md"), lang === "fr" ? /un agent ne l'exécute jamais/ : /an agent never runs it/);
+    assert.match(read(dir, "AGENTS.md"), /an agent never runs it/);
   }
 });
 
@@ -2226,12 +2227,12 @@ test("paquet npm : aucun fichier du gabarit n'est retiré par npm, le .gitignore
   const fichiers = JSON.parse(pack.stdout)[0].files.map((f) => f.path);
   assert.ok(fichiers.includes("templates/common/base/gitignore"), "le .gitignore du gabarit est bien dans le paquet");
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   assert.ok(existsSync(join(dir, ".gitignore")) && !existsSync(join(dir, "gitignore")), "installé sous son vrai nom");
   assert.match(read(dir, ".gitignore"), /!\.drwil\/evidence\/attestations\//);
 });
 
-// Un seul numéro de version (docs/projets/journal.md, 2026-10-06).
+// Un seul numéro de version (docs/projects/journal.md, 2026-10-06).
 test("version unique : la release suit package.json et refuse un numéro déjà publié ou en recul ; --version lit package.json", async () => {
   const { deciderVersion } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
   const v = (version) => [{ dossier: "packages/drwil", version }];
@@ -2267,7 +2268,7 @@ test("version unique : la release suit package.json et refuse un numéro déjà 
   assert.equal(deciderVersion({ dernier: "v1.2.3", bump: null, versions: v("9.9.9") }), null, "aucun commit : rien à publier");
 
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: true }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   writeFileSync(
     join(dir, ".githooks/creer-release.mjs"),
@@ -2291,7 +2292,7 @@ test("version unique : la release suit package.json et refuse un numéro déjà 
 });
 
 // Projet déjà installé avec des réglages choisis, différents de chaque défaut : relancer
-// l'installation ne doit en effacer aucun (docs/projets/init-preserve-config.md).
+// l'installation ne doit en effacer aucun (docs/projects/init-preserve-config.md).
 const fichiersDe = (dir, sous = "") =>
   readdirSync(join(dir, sous), { withFileTypes: true })
     .flatMap((e) => (e.isDirectory() ? fichiersDe(dir, join(sous, e.name)) : [join(sous, e.name).replace(/\\/g, "/")]))
@@ -2353,7 +2354,7 @@ test("init sur un projet installé : une option passée remplace sa valeur, les 
   assert.deepEqual(config(dir), { ...cfg, ci: "none", ciFiles: [], mode: "full" });
 });
 
-// Caractérisation avant découpage d'index.ts (docs/projets/refactor-index-etat.md, lot 1) :
+// Caractérisation avant découpage d'index.ts (docs/projects/refactor-index-etat.md, lot 1) :
 // comportements actuels sans test, figés tels quels.
 test("caractérisation : resoudreDerive sur un dossier sans installation refuse, avec la commande à lancer", async () => {
   await assert.rejects(
@@ -2364,7 +2365,7 @@ test("caractérisation : resoudreDerive sur un dossier sans installation refuse,
 
 test("caractérisation : dérive du fichier de CI, diff ligne à ligne (ajouts, retraits, fins de fichier)", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, ci: "github", git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github", git: false }));
   const ci = ".github/workflows/ia-first.yml";
   const original = read(dir, ci);
   const lignes = original.split("\n");
@@ -2390,7 +2391,7 @@ test("caractérisation : dérive du fichier de CI, diff ligne à ligne (ajouts, 
 
 test("caractérisation : sans confirmateur ni terminal, la dérive est montrée et jamais écrasée", async () => {
   const dir = tmp();
-  await quiet(() => init({ targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const cible = ".githooks/check-docs.mjs";
   writeFileSync(join(dir, cible), "// personnalisé\n");
   let rapport;
@@ -2416,4 +2417,25 @@ test("caractérisation : git introuvable, l'installation se fait et le dit, sans
   assert.match(r.stdout + r.stderr, /git introuvable : dépôt et hooks non configurés/);
   assert.ok(existsSync(join(dir, "AGENTS.md")));
   assert.ok(!existsSync(join(dir, ".git")));
+});
+
+test("QUA-015 : une fiche écrite d'après le modèle livré a la section de passation que le contrôle attend", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, lang: "en", git: false }));
+  writeFileSync(join(dir, "docs/projects/une-fiche.md"), read(dir, "docs/projects/model-brief.md").replaceAll("YYYY-MM-DD", "2026-10-12"));
+  const r = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
+  assert.doesNotMatch(r.stdout + r.stderr, /Hand-off/);
+});
+
+test("langue du projet : anglais par défaut ; --lang fr garde le gabarit anglais et demande à l'agent d'écrire en français", async () => {
+  const defaut = tmp();
+  await quiet(() => init({ targetDir: defaut, git: false }));
+  assert.equal(config(defaut).lang, "en");
+  assert.match(read(defaut, "AGENTS.md"), /\*\*Project language: English\*\*/);
+  const fr = tmp();
+  await quiet(() => init({ targetDir: fr, lang: "fr", git: false }));
+  assert.equal(config(fr).lang, "fr");
+  assert.match(read(fr, "AGENTS.md"), /\*\*Project language: French\*\*/);
+  assert.match(read(fr, "AGENTS.md"), /\*\*Commits\*\*: in French/);
+  assert.ok(existsSync(join(fr, "docs/recipes/add-an-api-route.md")) && !existsSync(join(fr, "docs/recettes")));
 });

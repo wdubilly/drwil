@@ -1,33 +1,32 @@
-# Qualité front (optionnel)
+# Frontend quality (optional)
 
-Module **non installé par défaut** : `scaffold()` ne copie pas ce dossier.
-À copier manuellement dans le projet qui en a besoin (front avec une charte
-de couleurs à faire respecter), en attendant la recette d'adoption dédiée.
+Module **not installed by default**: `scaffold()` does not copy this
+folder. Copy it by hand into the project that needs it (a frontend with a
+colour style guide to enforce), until a dedicated adoption recipe exists.
 
-## Contenu
+## Contents
 
-- `check-colors.mjs` : aucune couleur en dur (hex, `rgb()`, `hsl()`) ni
-  palette Tailwind hors charte dans le code source du front, hors le
-  dossier de thème.
-- `check-contrast.mjs` : contraste texte/fond RGAA 4.1 / WCAG AA (4,5:1,
-  3:1 pour le gros texte) de chaque combinaison de classes réellement
-  écrite, en clair et en sombre, à partir d'un module de palette du projet.
+- `check-colors.mjs`: no hard-coded colour (hex, `rgb()`, `hsl()`) and no
+  Tailwind palette outside the style guide in the frontend source, outside
+  the theme folder.
+- `check-contrast.mjs`: RGAA 4.1 / WCAG AA text/background contrast
+  (4.5:1, 3:1 for large text) of every class combination actually written,
+  in light and dark, from a palette module of the project.
 
 ## Activation
 
-1. Copier les deux fichiers dans `.githooks/` du projet.
-2. Déclarer un module de palette (export de scales façon config Tailwind,
-   ex. `{ slate: { 50: "#...", 900: "#..." } }`).
-3. Ajouter les deux contrôles à `.drwil/ia-first.json -> checks`, par
-   exemple :
+1. Copy both files into the project's `.githooks/`.
+2. Declare a palette module (scales exported like a Tailwind config, e.g.
+   `{ slate: { 50: "#...", 900: "#..." } }`).
+3. Add both checks to `.drwil/ia-first.json -> checks`, for example:
 
 ```json
-{ "name": "couleurs hors charte", "run": "node .githooks/check-colors.mjs frontend src/theme" },
-{ "name": "contrastes", "run": "node .githooks/check-contrast.mjs frontend src/theme/palettes.js src/theme" }
+{ "name": "colours outside the style guide", "run": "node .githooks/check-colors.mjs frontend src/theme" },
+{ "name": "contrasts", "run": "node .githooks/check-contrast.mjs frontend src/theme/palettes.js src/theme" }
 ```
 
-Arguments de `check-contrast.mjs` : racine, chemin du module de palette
-(relatif à la racine), dossier de thème (relatif à la racine, exclu du
-balayage), et en option un JSON de jetons clair/sombre si la palette du
-projet ne nomme pas ses nuances `slate-900`, `slate-50`, etc. (voir le
-commentaire en tête du fichier).
+Arguments of `check-contrast.mjs`: root, path of the palette module
+(relative to the root), theme folder (relative to the root, excluded from
+the scan), and optionally a JSON of light/dark tokens if the project's
+palette does not name its shades `slate-900`, `slate-50`, etc. (see the
+comment at the top of the file).

@@ -72,7 +72,7 @@ convention de langue des commits proposée aux projets.
 - **Ce dépôt** (question 4) : ses fiches, intentions, journal et échanges
   restent en français ; son code suit le livrable.
 - **Ordre** (question 5) : la publication passe en dernier (vague 7 de
-  `docs/projets/en-attente.md`) ; l'anglais se fait **avec la suppression
+  `docs/projects/pending.md`) ; l'anglais se fait **avec la suppression
   de la duplication dépôt / gabarit** (vague 4), pour ne renommer qu'une
   fois. Précisé le 2026-10-12 : le dépôt s'installe depuis le gabarit
   (fait, `npm run installer-depot`, journal du 2026-10-12), puis refactor, puis
@@ -96,7 +96,7 @@ convention de langue des commits proposée aux projets.
   une PR chacun, dépôt vert à chaque étape, dans cet ordre :
   - **B — gabarit unique en anglais** : `templates/fr/` supprimé, prose
     anglaise alignée sur le glossaire, `lang` devient la langue du projet,
-    le dépôt s'installe en anglais — `docs/projets/gabarit-unique-anglais.md` ;
+    le dépôt s'installe en anglais — fait, journal du 2026-10-12 ;
   - **A — cœur** : hooks, état, config, blocs et trailer renommés
     ensemble, migration des projets équipés par `init` / `apply` ;
   - **C — CLI** : messages, sous-commandes, commande unique `init` /

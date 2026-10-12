@@ -34,10 +34,9 @@ function depot(fichiers, { git = false } = {}) {
 const base = {
   [`${G}/common/base/.githooks/a.mjs`]: "a\n",
   [`${G}/common/base/gitignore`]: "node_modules/\n",
-  [`${G}/fr/base/docs/recettes/r.md`]: "# R\n",
-  [`${G}/en/base/docs/recipes/r.md`]: "# R (en)\n",
+  [`${G}/common/base/docs/recettes/r.md`]: "# R\n",
   [`${G}/common/tools/claude/.claude/settings.json`]: "{}\n",
-  [`${G}/fr/tools/cursor/.cursor/rules/x.mdc`]: "x\n",
+  [`${G}/common/tools/cursor/.cursor/rules/x.mdc`]: "x\n",
   [`${G}/common/ci/github/.github/workflows/ia-first.yml`]: "ci\n",
   [`${G}/common/optional/module/outil.mjs`]: "outil\n",
   [`${G}/common/optional/module/README.md`]: "pas installé\n",
@@ -54,17 +53,15 @@ test("homologues : chemins installés, dossier d'outil ou de CI retiré, gitigno
   const h = (f) => carte.get(f);
   assert.deepEqual(h(".githooks/a.mjs"), { source: `${G}/common/base/.githooks/a.mjs`, unite: "base" });
   assert.deepEqual(h(".gitignore"), { source: `${G}/common/base/gitignore`, unite: "base" });
-  assert.deepEqual(h("docs/recettes/r.md"), { source: `${G}/fr/base/docs/recettes/r.md`, unite: "base" });
+  assert.deepEqual(h("docs/recettes/r.md"), { source: `${G}/common/base/docs/recettes/r.md`, unite: "base" });
   assert.deepEqual(h(".claude/settings.json"), { source: `${G}/common/tools/claude/.claude/settings.json`, unite: "tools/claude" });
-  assert.deepEqual(h(".cursor/rules/x.mdc"), { source: `${G}/fr/tools/cursor/.cursor/rules/x.mdc`, unite: "tools/cursor" });
+  assert.deepEqual(h(".cursor/rules/x.mdc"), { source: `${G}/common/tools/cursor/.cursor/rules/x.mdc`, unite: "tools/cursor" });
   assert.deepEqual(h(".github/workflows/ia-first.yml"), {
     source: `${G}/common/ci/github/.github/workflows/ia-first.yml`,
     unite: "ci/github",
   });
   assert.deepEqual(h(".githooks/outil.mjs"), { source: `${G}/common/optional/module/outil.mjs`, unite: "optional/module" });
   assert.equal(carte.has("README.md"), false);
-  assert.equal(carte.has("docs/recipes/r.md"), false, "seule la langue du projet");
-  assert.equal(homologues(depot(base), "en").get("docs/recipes/r.md").source, `${G}/en/base/docs/recipes/r.md`);
   assert.equal(homologues(depot({})).size, 0, "sans gabarit, rien à comparer");
 });
 
@@ -88,7 +85,7 @@ test("verifier : un écart non déclaré échoue, un écart déclaré avec sa ra
   assert.equal(nonDeclare.problemes.length, 1);
   assert.match(
     nonDeclare.problemes[0],
-    /^docs\/recettes\/r\.md : diffère de packages\/drwil\/templates\/fr\/base\/docs\/recettes\/r\.md \(modifier le gabarit puis lancer npm run installer-depot/,
+    /^docs\/recettes\/r\.md : diffère de packages\/drwil\/templates\/common\/base\/docs\/recettes\/r\.md \(modifier le gabarit puis lancer npm run installer-depot/,
   );
   assert.deepEqual(verifier(racine, { ecarts: { "docs/recettes/r.md": "propre au dépôt" } }).problemes, []);
 });
@@ -104,7 +101,7 @@ test("verifier : la liste des écarts reste honnête (résolu, sans fichier, san
   ]);
 });
 
-test("principal : langue du projet, bilan affiché, liste illisible refusée", () => {
+test("principal : bilan affiché, copie qui diffère refusée, liste illisible refusée", () => {
   const journal = { log: [], error: [] };
   const { log, error } = console;
   console.log = (m) => journal.log.push(m);
@@ -115,18 +112,15 @@ test("principal : langue du projet, bilan affiché, liste illisible refusée", (
       { git: true },
     );
     assert.equal(principal(ok), 0);
-    const en = depot(
-      { ...base, ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "outils/miroirs.json": "{}", "docs/recipes/r.md": "autre\n" },
-      { git: true },
-    );
-    assert.equal(principal(en), 1);
+    const differe = depot({ ...base, "outils/miroirs.json": "{}", "docs/recettes/r.md": "autre\n" }, { git: true });
+    assert.equal(principal(differe), 1);
     assert.equal(principal(depot(base)), 1);
     assert.equal(principal(depot({ ...base, "outils/miroirs.json": "{}" })), 1, "hors dépôt git : non exécuté, jamais vert");
   } finally {
     Object.assign(console, { log, error });
   }
   assert.equal(journal.log[0], "miroirs : 6 fichier(s) comparé(s) au gabarit, 0 écart(s) déclaré(s), 0 problème(s)");
-  assert.match(journal.error[0], /docs\/recipes\/r\.md : diffère/);
+  assert.match(journal.error[0], /docs\/recettes\/r\.md : diffère/);
   assert.ok(journal.error.some((m) => /^miroirs : outils\/miroirs\.json illisible/.test(m)));
   assert.match(journal.error.at(-1), /^miroirs : fichiers suivis illisibles \(git ls-files\) — contrôle non exécuté$/);
 });
@@ -139,7 +133,7 @@ test("ligne de commande : racine en argument, code de sortie", () => {
   const r = spawnSync(process.execPath, [SCRIPT, racine], { encoding: "utf8" });
   assert.equal(r.status, 1);
   assert.match(r.stderr, /✗ \.githooks\/a\.mjs : diffère/);
-  // Sans argument : le dossier courant ; langue absente de la configuration : français.
+  // Sans argument : le dossier courant.
   const ok = depot(
     { ...base, ".drwil/ia-first.json": "{}", "outils/miroirs.json": '{"ecarts":{},"propresAuDepot":{"outils/":"contrôle"}}' },
     { git: true },
@@ -168,7 +162,7 @@ test("un seul côté : fichier du dépôt sans homologue dans un dossier miroir,
   assert.deepEqual(
     problemes,
     [
-      "docs/recettes/r.md : présent dans le gabarit (packages/drwil/templates/fr/base/docs/recettes/r.md) mais absent du dépôt (npm run installer-depot, ou le déclarer propre au gabarit dans outils/miroirs.json)",
+      "docs/recettes/r.md : présent dans le gabarit (packages/drwil/templates/common/base/docs/recettes/r.md) mais absent du dépôt (npm run installer-depot, ou le déclarer propre au gabarit dans outils/miroirs.json)",
       ".githooks/nouveau.mjs : présent dans le dépôt seulement (le livrer dans le gabarit, ou le déclarer propre au dépôt dans outils/miroirs.json)",
     ],
     "docs/recettes/r.md était suivi : il n'est pas signalé comme propre au dépôt, seulement comme manquant ; src/ n'est pas un dossier miroir ; Cursor non installé n'est pas exigé",
@@ -229,9 +223,9 @@ test("CI : jobs du gabarit présents, jobs propres déclarés, fuite d'un job pr
 
 test("frontière du livrable : historique interne de drwil refusé dans tout le gabarit, fiches du gabarit permises", () => {
   const racine = depot({
-    [`${G}/fr/base/docs/projets/modele.md`]: "# Modèle\n",
-    [`${G}/fr/base/docs/recettes/ok.md`]: "Voir `docs/projets/modele.md`. Exemple daté (2026-10-04). DRWIL et décision sans date.\n",
-    [`${G}/en/base/docs/recipes/x.md`]: "See PR #26.\nDecision of the requester, 2026-10-03.\n",
+    [`${G}/common/base/docs/projects/modele.md`]: "# Modèle\n",
+    [`${G}/common/base/docs/recipes/ok.md`]: "Voir `docs/projects/modele.md`. Exemple daté (2026-10-04). DRWIL et décision sans date.\n",
+    [`${G}/common/base/docs/recipes/x.md`]: "See PR #26.\nDecision of the requester, 2026-10-03.\n",
     [`${G}/common/base/.githooks/y.mjs`]: "// ADR-003, Lot 4 a ajouté, port de run-box-v2\n// voir docs/projets/proteger-master.md\n",
   });
   assert.deepEqual(
@@ -241,8 +235,8 @@ test("frontière du livrable : historique interne de drwil refusé dans tout le 
       `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « Lot 4 a ajouté » (QUA-018)`,
       `${G}/common/base/.githooks/y.mjs:1 : historique interne de drwil dans le livrable « run-box » (QUA-018)`,
       `${G}/common/base/.githooks/y.mjs:2 : fiche propre au dépôt citée dans le livrable « proteger-master.md » (QUA-018)`,
-      `${G}/en/base/docs/recipes/x.md:1 : historique interne de drwil dans le livrable « PR #26 » (QUA-018)`,
-      `${G}/en/base/docs/recipes/x.md:2 : historique interne de drwil dans le livrable « Decision of the requester, 2026-10-03 » (QUA-018)`,
+      `${G}/common/base/docs/recipes/x.md:1 : historique interne de drwil dans le livrable « PR #26 » (QUA-018)`,
+      `${G}/common/base/docs/recipes/x.md:2 : historique interne de drwil dans le livrable « Decision of the requester, 2026-10-03 » (QUA-018)`,
     ],
   );
 });

@@ -29,9 +29,9 @@ const G = "packages/drwil/templates";
 const depot = {
   [`${G}/common/base/.githooks/a.mjs`]: "a v2\n",
   [`${G}/common/base/.githooks/nouveau.mjs`]: "nouveau\n",
-  [`${G}/fr/base/AGENTS.md`]: "# {{projectName}}\n\nModèle.\n",
+  [`${G}/common/base/AGENTS.md`]: "# {{projectName}}\n\nModèle.\n",
   [`${G}/common/tools/claude/.claude/settings.json`]: "{}\n",
-  [`${G}/fr/tools/cursor/.cursor/rules/x.mdc`]: "x\n",
+  [`${G}/common/tools/cursor/.cursor/rules/x.mdc`]: "x\n",
   [`${G}/common/optional/module/outil.mjs`]: "outil v2\n",
   [`${G}/common/optional/autre/autre.mjs`]: "autre\n",
   ".githooks/a.mjs": "a v1\n",
@@ -80,6 +80,15 @@ test("planifier : rafraîchit et crée les fichiers du gabarit, jamais un écart
     ["remplace .githooks/a.mjs", "cree .githooks/nouveau.mjs", "remplace .githooks/outil.mjs"],
   );
   assert.equal(plan.find((p) => p.chemin === ".githooks/outil.mjs").depuis, join(racine, `${G}/common/optional/module/outil.mjs`));
+});
+
+test("planifier : un fichier déclaré propre au gabarit n'est jamais créé dans le dépôt", () => {
+  const { plan } = planifier(dossier(depot), dossier(installe), {
+    ecarts: { "AGENTS.md": "x" },
+    propresAuGabarit: { ".githooks/nouveau.mjs": "x" },
+  });
+  assert.ok(!plan.some((p) => p.chemin === ".githooks/nouveau.mjs"));
+  assert.ok(plan.some((p) => p.chemin === ".githooks/a.mjs"));
 });
 
 test("planifier : un fichier attendu que l'installation n'a pas produit est un problème, jamais un oubli silencieux", () => {

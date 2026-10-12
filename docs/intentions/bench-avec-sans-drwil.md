@@ -1,6 +1,6 @@
 # Intention : mesurer l'apport de drwil — même consigne, avec et sans drwil
 
-**Statut** (2026-10-12) : un mini-banc est cadré (`docs/projets/mini-banc.md`,
+**Statut** (2026-10-12) : un mini-banc est cadré (`docs/projects/mini-banc.md`,
 en tête de la vague 6, avant le pilote de la fabrique) ; le banc complet
 se décidera sur ses chiffres.
 
@@ -26,7 +26,7 @@ trop) et à convaincre (chiffres pour la publication, Community Ready).
 ## Existant
 
 - `.drwil/usage.jsonl` (si présent) et la recette
-  `docs/recettes/suivre-consommation-par-lot.md` : tokens, modèle et durée
+  `docs/recipes/track-consumption-per-increment.md` : tokens, modèle et durée
   par lot, déjà agrégés par le tableau de bord.
 - `drwil verify` : verdict mécanique (PASS / FAIL / MANUAL / ERROR) sur les
   contrats, réutilisable comme mesure de qualité côté « avec drwil ».

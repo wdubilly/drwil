@@ -33,36 +33,22 @@ export const KIT_MECHANICS = ".githooks/";
 
 export const CI_FILES: Record<Ci, string[]> = { none: [], github: [".github/workflows/ia-first.yml"], gitlab: [".gitlab-ci.yml"] };
 
+// Textes rendus dans le gabarit, en anglais comme lui : `lang` dit la langue du projet, pas celle du kit.
 export const TEXT = {
-  fr: {
-    description: "(à décrire : ce que fait l'application, pour qui)",
-    layer: (l: string) => `- \`${l}/\` — voir \`${l}/AGENTS.md\``,
-    noLayer: "Aucune couche séparée : le code vit à la racine du dépôt.",
-    stackNote: "Détectée à l'installation d'après les fichiers de projet : à confirmer par l'utilisateur.",
-    stackUndecided: "Non décidée. L'utilisateur la choisit ; une IA la propose et attend sa validation avant d'écrire du code applicatif.",
-    ciLine: (f: string) => ` et en CI (\`${f}\`)`,
-    dirs: {
-      projects: "docs/projets",
-      intentions: "docs/intentions",
-      recettes: "docs/recettes",
-      contracts: "docs/contrats.md",
-      index: "docs/projets/en-attente.md",
-    },
-  },
-  en: {
-    description: "(to describe: what the application does, for whom)",
-    layer: (l: string) => `- \`${l}/\` — see \`${l}/AGENTS.md\``,
-    noLayer: "No separate layer: the code lives at the repository root.",
-    stackNote: "Detected at install time from project files: to be confirmed by the user.",
-    stackUndecided: "Not decided. The user chooses it; an AI proposes one and waits for approval before writing application code.",
-    ciLine: (f: string) => ` and in CI (\`${f}\`)`,
-    dirs: {
-      projects: "docs/projects",
-      intentions: "docs/intentions",
-      recettes: "docs/recipes",
-      contracts: "docs/contracts.md",
-      index: "docs/projects/pending.md",
-    },
+  // Langue du projet, telle que la consigne de AGENTS.md la nomme à l'agent.
+  langues: { fr: "French", en: "English" } as Record<string, string>,
+  description: "(to describe: what the application does, for whom)",
+  layer: (l: string) => `- \`${l}/\` — see \`${l}/AGENTS.md\``,
+  noLayer: "No separate layer: the code lives at the repository root.",
+  stackNote: "Detected at install time from project files: to be confirmed by the user.",
+  stackUndecided: "Not decided. The user chooses it; an AI proposes one and waits for approval before writing application code.",
+  ciLine: (f: string) => ` and in CI (\`${f}\`)`,
+  dirs: {
+    projects: "docs/projects",
+    intentions: "docs/intentions",
+    recettes: "docs/recipes",
+    contracts: "docs/contracts.md",
+    index: "docs/projects/pending.md",
   },
 };
 
@@ -117,7 +103,7 @@ export function resolve(opts: InitOptions, defaultLayers: (stack: StackEntry[]) 
   const layers = opts.layers ?? csv(previous.layers);
   return {
     opts: merged,
-    lang: pick(opts.lang ?? texte(previous.lang) ?? "fr", LANGS, "lang"),
+    lang: pick(opts.lang ?? texte(previous.lang) ?? "en", LANGS, "lang"),
     tools: splitCsv(opts.tools ?? csv(previous.tools) ?? TOOLS.join(",")).map((t) => pick(t, TOOLS, "tools")),
     ci: pick(opts.ci ?? ciDeConfig(previous) ?? "none", CIS, "ci"),
     mode: pick(opts.mode ?? texte(previous.mode) ?? "full", ["minimal", "full"] as const, "mode"),
@@ -146,7 +132,7 @@ export function resolveFromConfig(targetDir: string): Resolved {
   };
   return {
     opts,
-    lang: pick((config.lang as string) ?? "fr", LANGS, "lang"),
+    lang: pick((config.lang as string) ?? "en", LANGS, "lang"),
     layers: Array.isArray(config.layers) ? (config.layers as string[]) : [],
     tools: Array.isArray(config.tools) ? (config.tools as string[]).map((t) => pick(t, TOOLS, "tools")) : [],
     ci: pick((config.ci as string) ?? "none", CIS, "ci"),
@@ -178,7 +164,8 @@ export async function writeConfig(r: Resolved): Promise<void> {
     contractPrefixes: splitCsv(r.opts.contractPrefixes ?? "SEC,QUA"),
     tools: r.tools,
     ci: r.ci,
-    dirs: previous?.dirs && previous.lang === r.lang ? previous.dirs : TEXT[r.lang].dirs,
+    // Les dossiers d'un projet installé ne bougent pas avec sa langue : leurs fiches y vivent.
+    dirs: previous?.dirs ?? TEXT.dirs,
     stack: r.stack,
     // Les contrôles du projet sont saisis par l'utilisateur ou l'IA : une réinstallation ne doit pas les effacer.
     checks: Array.isArray(previous?.checks) ? previous.checks : [],
