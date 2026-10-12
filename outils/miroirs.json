@@ -20,9 +20,9 @@
   },
   "propresAuDepot": {
     ".githooks/*.test.mjs": "Tests des hooks : éprouvent drwil ici, non livrés (principe « livrable léger, dépôt éprouvé », 2026-10-11).",
-    ".github/CODEOWNERS": "Forge de ce dépôt (docs/projets/proteger-master.md) ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
-    ".github/ruleset-master.json": "Forge de ce dépôt (docs/projets/proteger-master.md) ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
-    ".github/scripts/verifier-ruleset.mjs": "Forge de ce dépôt (docs/projets/proteger-master.md) ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
+    ".github/CODEOWNERS": "Forge de ce dépôt (docs/projects/proteger-master.md) ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
+    ".github/ruleset-master.json": "Forge de ce dépôt (docs/projects/proteger-master.md) ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
+    ".github/scripts/verifier-ruleset.mjs": "Forge de ce dépôt (docs/projects/proteger-master.md) ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
     "docs/audit-risques.md": "Rapport généré pour ce dépôt par le skill d'audit (docs/recipes/audit-risks-and-debt.md).",
     "docs/benchmark-protocole.md": "Protocole de mesure de drwil lui-même (bench avec et sans drwil).",
     "docs/decouverte-valeur.md": "Rapport généré pour ce dépôt par le skill de découverte de valeur.",
@@ -34,7 +34,7 @@
   "ci": {
     "fichier": ".github/workflows/ia-first.yml",
     "jobsPropresAuDepot": {
-      "kit-tests": "Portabilité du paquet testée sur Linux, Windows et macOS (docs/projets/suites-kit-portable.md, point 1)."
+      "kit-tests": "Portabilité du paquet testée sur Linux, Windows et macOS (docs/projects/suites-kit-portable.md, point 1)."
     }
   }
 }
