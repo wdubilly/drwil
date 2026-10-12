@@ -98,6 +98,101 @@ fichiers:
   - docs/recipes/*
 -->
 
+<!-- scope
+files:
+  - packages/drwil/templates/*
+  - packages/drwil/src/*.ts
+  - packages/drwil/bin/drwil.js
+  - packages/drwil/test/*.test.mjs
+  - packages/drwil/test/fixtures/*
+  - packages/drwil/README.md
+  - packages/drwil/package.json
+  - packages/drwil/CHANGELOG.md
+  - .githooks/cadrage.mjs
+  - .githooks/cadrage.test.mjs
+  - .githooks/check-code-rules.mjs
+  - .githooks/check-code-rules.test.mjs
+  - .githooks/check-control-coverage.mjs
+  - .githooks/check-control-coverage.test.mjs
+  - .githooks/check-docs.mjs
+  - .githooks/check-docs.test.mjs
+  - .githooks/check-file-size.mjs
+  - .githooks/check-file-size.test.mjs
+  - .githooks/check-file-size.legacy.json
+  - .githooks/commit-msg
+  - .githooks/contrats.mjs
+  - .githooks/contrats.test.mjs
+  - .githooks/creer-release.mjs
+  - .githooks/creer-release.test.mjs
+  - .githooks/etat-textes.mjs
+  - .githooks/etat.mjs
+  - .githooks/etat.test.mjs
+  - .githooks/fiches.mjs
+  - .githooks/glob.mjs
+  - .githooks/glob.test.mjs
+  - .githooks/moteur.mjs
+  - .githooks/moteur.test.mjs
+  - .githooks/perimetre.mjs
+  - .githooks/perimetre.test.mjs
+  - .githooks/pre-commit
+  - .githooks/pre-push
+  - .githooks/prepare-commit-msg
+  - .githooks/risque.mjs
+  - .githooks/risque.test.mjs
+  - .githooks/run-checks.mjs
+  - .githooks/run-checks.test.mjs
+  - .githooks/tableau-de-bord.mjs
+  - .githooks/tableau-de-bord.test.mjs
+  - .githooks/state.mjs
+  - .githooks/state.test.mjs
+  - .githooks/state-texts.mjs
+  - .githooks/scope-gate.mjs
+  - .githooks/scope-gate.test.mjs
+  - .githooks/scope.mjs
+  - .githooks/scope.test.mjs
+  - .githooks/briefs.mjs
+  - .githooks/contracts.mjs
+  - .githooks/contracts.test.mjs
+  - .githooks/engine.mjs
+  - .githooks/engine.test.mjs
+  - .githooks/risk.mjs
+  - .githooks/risk.test.mjs
+  - .githooks/dashboard.mjs
+  - .githooks/dashboard.test.mjs
+  - .githooks/create-release.mjs
+  - .githooks/create-release.test.mjs
+  - .claude/hooks/*
+  - .claude/skills/*
+  - .claude/settings.json
+  - outils/verifier-miroirs.mjs
+  - outils/verifier-miroirs.test.mjs
+  - outils/miroirs.json
+  - outils/installer-depot.mjs
+  - outils/installer-depot.test.mjs
+  - outils/tester-tarball.mjs
+  - outils/tester-tarball.test.mjs
+  - outils/consommation.mjs
+  - outils/consommation.test.mjs
+  - outils/verifier-tests-contrats.mjs
+  - outils/verifier-tests-contrats.test.mjs
+  - .github/workflows/ia-first.yml
+  - .github/pull_request_template.md
+  - .drwil/ia-first.json
+  - .drwil/usage.jsonl
+  - .gitignore
+  - .gitleaks.toml
+  - .env.example
+  - package.json
+  - AGENTS.md
+  - INSTALL.md
+  - README.md
+  - docs/architecture.md
+  - docs/ia-first.md
+  - docs/contracts.md
+  - docs/contracts-catalog.md
+  - docs/recipes/*
+-->
+
 ## 1. Besoin
 
 Deuxième des trois chantiers du livrable en anglais
@@ -154,6 +249,11 @@ commun livré, et migre les projets équipés en une fois par `init` /
   suit le livrable, décision du 2026-10-11).
 - **2026-10-12 — Une seule PR, lot 3 compris** (demandeur) : le code
   commun se traduit dans A, qui renomme déjà les mêmes fichiers.
+- **2026-10-12 — Bascule en deux commits** (demandeur) : la nouvelle
+  barrière lit le bloc `scope` de la fiche dans HEAD ; un commit qui ne
+  touche que la fiche ajoute d'abord ce bloc à côté de l'ancien, le commit
+  de bascule retire l'ancien. Rien n'est désactivé (QUA-019, pas de
+  contournement).
 
 ## Contrats concernés
 
