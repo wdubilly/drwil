@@ -98,7 +98,7 @@ export async function init(opts: InitOptions): Promise<void> {
   const manifest: Record<string, string> = {};
   const attendus: string[] = [];
   const ancien = readManifest(opts.targetDir);
-  await scaffold(r, shouldOverwrite, derives, manifest, attendus);
+  await scaffold(r, { shouldOverwrite, derives, manifest, attendus });
   const obsoletes = await nettoyerObsoletes(opts.targetDir, ancien, attendus);
   await writeManifest(opts.targetDir, manifest, obsoletes);
   await writeConfig(r);
@@ -115,7 +115,7 @@ export async function apply(opts: InitOptions): Promise<void> {
   const manifest: Record<string, string> = {};
   const attendus: string[] = [];
   const ancien = readManifest(opts.targetDir);
-  await scaffold(r, () => false, derives, manifest, attendus);
+  await scaffold(r, { shouldOverwrite: () => false, derives, manifest, attendus });
   const obsoletes = await nettoyerObsoletes(opts.targetDir, ancien, attendus);
   await writeManifest(opts.targetDir, manifest, obsoletes);
   const existante = readConfig(opts.targetDir);

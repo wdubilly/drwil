@@ -96,22 +96,19 @@ export function relPosix(from: string, to: string): string {
   return relative(from, to).replace(/\\/g, "/");
 }
 
-// Aperçu d'`apply` (DRWIL-011) : le même parcours que l'installation réelle, mais writeOut relève
-// chaque fichier au lieu de l'écrire. L'aperçu ne peut donc pas diverger de ce qu'apply ferait.
-let simulation: { crees: string[]; conserves: string[]; remplaces: string[] } | null = null;
-export function definirSimulation(s: typeof simulation): void {
-  simulation = s;
+/** Ce que fait le parcours du gabarit de chaque fichier, et ce qu'il en relève. */
+export interface Ecriture {
+  shouldOverwrite: Overwrite;
+  derives?: string[];
+  manifest?: Record<string, string>;
+  attendus?: string[];
+  // Aperçu d'`apply` (DRWIL-011) : le même parcours que l'installation réelle, mais writeOut relève
+  // chaque fichier au lieu de l'écrire. L'aperçu ne peut donc pas diverger de ce qu'apply ferait.
+  simulation?: { crees: string[]; conserves: string[]; remplaces: string[] };
 }
 
-async function writeOut(
-  target: string,
-  content: string,
-  targetDir: string,
-  shouldOverwrite: Overwrite,
-  derives?: string[],
-  manifest?: Record<string, string>,
-  attendus?: string[],
-): Promise<void> {
+async function writeOut(target: string, content: string, targetDir: string, e: Ecriture): Promise<void> {
+  const { shouldOverwrite, derives, manifest, attendus, simulation } = e;
   const rel = relPosix(targetDir, target);
   if (attendus) attendus.push(rel);
   if (existsSync(target) && !shouldOverwrite(rel)) {
@@ -139,51 +136,37 @@ async function writeOut(
 const NOMS_LIVRES: Record<string, string> = { gitignore: ".gitignore" };
 
 /** Copie un dossier de modèles à la racine de la cible, en rendant les variables. */
-async function copyTree(
-  srcDir: string,
-  r: Resolved,
-  shouldOverwrite: Overwrite,
-  derives?: string[],
-  manifest?: Record<string, string>,
-  attendus?: string[],
-): Promise<void> {
+async function copyTree(srcDir: string, r: Resolved, e: Ecriture): Promise<void> {
   for (const file of await walk(srcDir)) {
     const rel = relative(srcDir, file);
     const nom = NOMS_LIVRES[basename(rel)];
     const target = join(r.opts.targetDir, nom ? join(dirname(rel), nom) : rel);
-    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, shouldOverwrite, derives, manifest, attendus);
+    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, e);
   }
 }
 
-export async function scaffold(
-  r: Resolved,
-  shouldOverwrite: Overwrite,
-  derives?: string[],
-  manifest?: Record<string, string>,
-  attendus?: string[],
-): Promise<void> {
+export async function scaffold(r: Resolved, e: Ecriture): Promise<void> {
   const langDir = join(templatesDir, r.lang);
-  await copyTree(join(templatesDir, "common", "base"), r, shouldOverwrite, derives, manifest, attendus);
-  await copyTree(join(langDir, "base"), r, shouldOverwrite, derives, manifest, attendus);
+  await copyTree(join(templatesDir, "common", "base"), r, e);
+  await copyTree(join(langDir, "base"), r, e);
   for (const tool of r.tools) {
-    await copyTree(join(templatesDir, "common", "tools", tool), r, shouldOverwrite, derives, manifest, attendus);
-    await copyTree(join(langDir, "tools", tool), r, shouldOverwrite, derives, manifest, attendus);
+    await copyTree(join(templatesDir, "common", "tools", tool), r, e);
+    await copyTree(join(langDir, "tools", tool), r, e);
   }
-  await copyTree(join(templatesDir, "common", "ci", r.ci), r, shouldOverwrite, derives, manifest, attendus);
-  await copyTree(join(langDir, "ci", r.ci), r, shouldOverwrite, derives, manifest, attendus);
+  await copyTree(join(templatesDir, "common", "ci", r.ci), r, e);
+  await copyTree(join(langDir, "ci", r.ci), r, e);
 
   for (const layer of r.layers) {
     const specific = join(langDir, "layers", `${layer}.md`);
     const source = LAYER_TEMPLATES.includes(layer) && existsSync(specific) ? specific : join(langDir, "layers", "generic.md");
     const up = "../".repeat(layer.split("/").filter(Boolean).length);
     const content = render(await readFile(source, "utf8"), r, { layer }).replace("`../AGENTS.md`", `\`${up}AGENTS.md\``);
-    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, shouldOverwrite, derives, manifest, attendus);
+    await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, e);
   }
 
   // Un seul contenu de consignes (AGENTS.md) ; les outils qui ne le lisent pas nativement reçoivent un import.
   const pointers = [r.tools.includes("claude") && "CLAUDE.md", r.tools.includes("gemini") && "GEMINI.md"].filter(Boolean) as string[];
   for (const dir of [".", ...r.layers]) {
-    for (const p of pointers)
-      await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, shouldOverwrite, derives, manifest, attendus);
+    for (const p of pointers) await writeOut(join(r.opts.targetDir, dir, p), "@AGENTS.md\n", r.opts.targetDir, e);
   }
 }

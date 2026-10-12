@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import type { StackEntry } from "./stack.js";
 import { readConfig, resolve, type InitOptions } from "./config.js";
-import { definirSimulation, scaffold } from "./rendu.js";
+import { scaffold } from "./rendu.js";
 
 /** Applique le kit à un projet existant sans écraser aucun fichier. */
 export interface AuditApply {
@@ -55,15 +55,10 @@ export async function auditerApply(opts: InitOptions): Promise<AuditApply> {
   const protections = protectionsExistantes(opts.targetDir);
   const derives: string[] = [];
   const simulation = { crees: [] as string[], conserves: [] as string[], remplaces: [] as string[] };
-  definirSimulation(simulation);
-  try {
-    await scaffold(r, () => false, derives);
-    const crees = [...simulation.crees];
-    if (!readConfig(opts.targetDir)) crees.push(".drwil/ia-first.json");
-    return { stack: r.stack, outilsPresents, protections, crees, conserves: simulation.conserves, derives };
-  } finally {
-    definirSimulation(null);
-  }
+  await scaffold(r, { shouldOverwrite: () => false, derives, simulation });
+  const crees = [...simulation.crees];
+  if (!readConfig(opts.targetDir)) crees.push(".drwil/ia-first.json");
+  return { stack: r.stack, outilsPresents, protections, crees, conserves: simulation.conserves, derives };
 }
 
 export function formaterAudit(a: AuditApply): string {
