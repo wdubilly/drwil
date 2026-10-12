@@ -121,6 +121,26 @@ Instead of relying entirely on an agent's own statement of completion, DRWIL mak
 
 ---
 
+## What you gain
+
+What DRWIL guarantees, each point checkable by a command and not a promise:
+
+* **The agent stays inside the frame.** Code is committed inside the scope
+  of an approved work item; a commit outside it is shown, or refused
+  depending on the setting.
+* **"Done" means proven.** `drwil verify` re-runs the checks behind each
+  contract; a check that did not run is never counted as passing.
+* **Humans keep the decisions that matter.** Starting a workstream,
+  accepting the work and attesting a manual contract are human gestures an
+  agent cannot perform for you.
+* **Any tool, any session.** One `AGENTS.md`, one contract registry, one
+  state on disk: another agent or a human resumes without re-reading the
+  conversation.
+
+DRWIL does not claim a productivity gain: none is measured yet.
+
+---
+
 ## The core model
 
 DRWIL follows a simple model:
@@ -314,13 +334,11 @@ The human remains responsible for explicit attestation when the machine cannot r
 A project can declare a contract:
 
 ```md
-## SEC-007 — Pas de secret dans le dépôt
+## SEC-007 — No secret in the repo
 
-**Règle:**
-Aucun secret ne doit être commité dans le dépôt.
+**Rule** : No secret in the repo (`.env`, keys, passwords, client configs).
 
-**Contrôle:**
-secrets
+**Check** : `secrets`
 ```
 
 The contract states the obligation.
@@ -413,13 +431,11 @@ A contract contains at least:
 For example:
 
 ```md
-## QUA-011 — Documentation cohérente
+## QUA-011 — Docs never wrong
 
-**Règle:**
-Les références documentaires doivent pointer vers des éléments existants.
+**Rule** : Documentation references must point to existing elements.
 
-**Contrôle:**
-docs-references
+**Check** : `docs-references`
 ```
 
 The contract describes the obligation.
@@ -505,10 +521,10 @@ to the repository).
 
 ### 1. Download the release tarball
 
-From your project folder:
+From your project folder (without a tag, `gh` downloads the latest release):
 
 ```bash
-gh release download v0.2.0 --repo wdubilly/drwil --pattern 'drwil-*.tgz'
+gh release download --repo wdubilly/drwil --pattern 'drwil-*.tgz'
 ```
 
 ### 2. Install it as a dev dependency
@@ -697,7 +713,61 @@ drwil init --dry-run
 
 Audits what would be installed or changed, writing nothing.
 
+### Contracts
+
+```bash
+drwil contracts [--json]
+```
+
+Lists and validates the contract registry without running any check.
+
+### Update and uninstall
+
+```bash
+drwil resolve-drift   # take over kit files modified by hand, with a diff and a .bak
+drwil uninstall       # dry run; add --yes to remove only what the kit installed
+```
+
+### Governance state
+
+```bash
+drwil state           # see "The workstream cycle"
+```
+
 DRWIL avoids silent destructive operations.
+
+---
+
+## The workstream cycle
+
+A piece of work moves through activities, kept in a local state
+(`.drwil/state.json` (if present), never edited by hand):
+
+```text
+SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶ CLOSING ──▶ SCOPING
+ (frame)    human   (code)    (proofs)     (verdict)   (journal,
+                                                        PR)
+```
+
+1. **SCOPING**: the request is framed as a work item in `docs/projects/`
+   with a `scope` block listing the files the work may touch.
+2. **Start (human)**: the human picks a framed work item (`/drwil-start`
+   or `drwil state start`) and may authorise the merge in advance. The
+   agent cannot start work by itself.
+3. **BUILD**: the agent implements inside the scope; each commit carries a
+   `Drwil-Brief` trailer.
+4. **EVIDENCE / VERIFY**: `drwil verify --evidence` writes the proof;
+   closing requires `PASS` or `ATTESTED` on the current commit, a `MANUAL`
+   contract waiting for the human's `drwil attest`.
+5. **CLOSING**: the work item is condensed into the journal and deleted,
+   the pull request is opened, then back to SCOPING. The merge stays a
+   human gesture unless authorised at start.
+
+```bash
+drwil state              # current activity, work item, scope
+drwil state briefs       # framed work items, ready ones first
+drwil state move <ACTIVITY>
+```
 
 ---
 

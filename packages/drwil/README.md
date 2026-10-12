@@ -20,10 +20,12 @@ that "the rule is respected" is always a provable fact, never a claim.
 
 ## Table of contents
 
+- [What you gain](#what-you-gain)
 - [Who it's for](#whos-its-for)
 - [What problem it solves](#what-problem-it-solves)
 - [What gets installed](#what-gets-installed)
 - [How the governance loop works](#how-the-governance-loop-works)
+- [The workstream cycle](#the-workstream-cycle)
 - [How this compares to Spec-Driven Development](#how-this-compares-to-spec-driven-development)
 - [Installing](#installing)
 - [CLI reference](#cli-reference)
@@ -33,6 +35,24 @@ that "the rule is respected" is always a provable fact, never a claim.
 - [Internationalization](#internationalization)
 - [Compatibility](#compatibility)
 - [Learn more](#learn-more)
+
+## What you gain
+
+What drwil guarantees, each point checkable by a command and not a promise:
+
+- **The agent stays inside the frame.** Code can only be committed
+  inside the scope of an approved work item; an out-of-scope commit is
+  shown (or refused, depending on the setting).
+- **"Done" means proven.** `drwil verify` re-runs the checks behind every
+  contract; an unexecuted check is never counted as passing.
+- **Humans keep the decisions that matter.** Starting a workstream,
+  accepting the work and attesting a manual contract are human gestures an
+  agent cannot perform for you.
+- **Any tool, any session.** One `AGENTS.md`, one registry of rules, one
+  state on disk: a different agent or a human resumes without re-reading
+  the conversation.
+
+drwil does not claim a productivity gain: none is measured yet.
 
 ## Who it's for
 
@@ -127,6 +147,46 @@ drifted from the shipped template (see `resolve-drift` below).
 5. **Claims require proof.** Before an assistant writes "fixed" or
    "passing", the convention requires re-running the relevant check and
    reading its actual output — not assuming the earlier fix still holds.
+
+## The workstream cycle
+
+A piece of work moves through activities, kept in a local state
+(`.drwil/state.json` (if present), never edited by hand):
+
+```text
+SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶ CLOSING ──▶ SCOPING
+ (frame)    human   (code)    (proofs)     (verdict)   (journal,
+                                                        PR)
+```
+
+1. **SCOPING** — the request is framed as a work item
+   (`docs/projects/<name>.md`) with its `scope` block: the files the work
+   may touch. Nothing is built.
+2. **Start (human).** The human picks a framed work item (`/drwil-start`
+   in Claude Code or Copilot CLI, or `drwil state start` in a terminal)
+   and decides at once whether the merge is authorised in advance. The
+   agent cannot start work by itself.
+3. **BUILD** — the agent implements, only inside the scope. Each commit
+   carries a `Drwil-Brief` trailer; widening the scope takes its own
+   commit, touching only the work item.
+4. **EVIDENCE / VERIFY** — `drwil verify --evidence` writes the proof.
+   Closing requires a `PASS` or `ATTESTED` verdict on the current commit; a
+   `MANUAL` contract waits for the human's `drwil attest`.
+5. **CLOSING** — the work item is condensed into the journal and deleted,
+   the pull request is opened, then back to **SCOPING**. The merge is a
+   human gesture, unless it was authorised at start: the agent then
+   schedules `gh pr merge --auto --merge`, and the host merges once the
+   required checks pass.
+
+```bash
+npx drwil state                  # current activity, active work item, scope
+npx drwil state briefs           # framed work items, ready ones first
+npx drwil state move <ACTIVITY>  # change activity (one step at a time)
+```
+
+The agent reads the state first at every task, and a short reminder is
+injected whenever it changes. Full rules, transitions and limits:
+`docs/ia-first.md` once installed.
 
 ## Five-minute example: RULE → PROOF → VERIFY
 
