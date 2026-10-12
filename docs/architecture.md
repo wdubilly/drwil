@@ -24,7 +24,7 @@ Copies, dans ce dépôt, des hooks livrés : installées depuis le gabarit par `
 
 - `.githooks/moteur.mjs` : moteur unique des contrôles, partagé par les hooks et `drwil verify` ; `.githooks/run-checks.mjs` l'exécute au commit (`pre-commit`), au push (`pre-push`) et en CI.
 - Contrôles du socle : `.githooks/check-docs.mjs` (doc et contrats cités), `.githooks/perimetre.mjs` (barrière de périmètre de la fiche active), `.githooks/check-control-coverage.mjs` (couverture CI de chaque contrôle).
-- Gouvernance : `.githooks/etat.mjs` (état, transitions, lancement), `.githooks/cadrage.mjs` (bloc cadrage des fiches), `.githooks/contrats.mjs` (lecture du registre), `.githooks/risque.mjs` (niveau de risque).
+- Gouvernance : `.githooks/etat.mjs` (état, transitions, lancement ; lit les fiches par `.githooks/fiches.mjs`, met en forme par `.githooks/etat-textes.mjs`), `.githooks/cadrage.mjs` (bloc cadrage des fiches), `.githooks/contrats.mjs` (lecture du registre), `.githooks/risque.mjs` (niveau de risque).
 - Tests des hooks : `.githooks/*.test.mjs`, propres au dépôt, couverture 100 % exigée (QUA-004).
 
 ## Propre au dépôt (jamais livré)
