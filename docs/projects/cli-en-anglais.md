@@ -17,6 +17,7 @@ files:
   - .githooks/check-control-coverage.test.mjs
   - .githooks/check-docs.mjs
   - .githooks/check-docs.test.mjs
+  - .githooks/commit-msg
   - .githooks/contracts.mjs
   - .githooks/contracts.test.mjs
   - .githooks/engine.mjs
