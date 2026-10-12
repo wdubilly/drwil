@@ -100,10 +100,10 @@ réglages d'un projet déjà installé (v1:INI-005, v1:INI-010) — journal du
 - [ ] [IA] [P1] Retirer l'identifiant interne `DRWIL-012` des deux messages
   livrés qui l'affichent (change une sortie), avec la ligne précédente —
   voir `docs/projets/journal.md` (2026-10-11).
-- [ ] [décision] [P1] Refactoriser `packages/drwil/src/index.ts`
-  (810 lignes le 2026-10-12) et `.githooks/etat.mjs` (607 lignes) selon la recette ;
-  adopter le garde-fou de taille livré (`catalogue:QUA-001`) —
-  `docs/recettes/refactorer-sans-casser.md`.
+- [ ] [IA] [P1] Découper `packages/drwil/src/index.ts` (838 lignes),
+  `.githooks/etat.mjs` (607) et `packages/drwil/src/verify.ts` (450) ;
+  adopter le plafond de 400 lignes (`catalogue:QUA-001`) —
+  `docs/projets/refactor-index-etat.md`.
 - [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
