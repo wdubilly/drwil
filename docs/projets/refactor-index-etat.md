@@ -21,11 +21,13 @@ fichiers:
   - docs/catalogue-contrats.md
   - packages/drwil/templates/fr/base/docs/projets/mecanique-ia-first.md
   - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
+  - outils/miroirs.json
 -->
 
 (élargi le 2026-10-12 aux deux fiches de référence du gabarit : leur bloc
 cadrage couvre les hooks livrés dans les projets équipés, les nouveaux
-fichiers d'`.githooks/etat.mjs` doivent y figurer.)
+fichiers d'`.githooks/etat.mjs` doivent y figurer. ; puis à `outils/miroirs.json`, dont la raison de l'écart
+du catalogue cite les contrats adoptés.)
 
 ## 1. Besoin
 
