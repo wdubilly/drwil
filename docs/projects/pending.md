@@ -97,9 +97,9 @@ livrable en anglais, chantier B : un seul gabarit, en anglais, `lang`
 devient la langue du projet, ce dépôt s'installe en anglais — journal du
 2026-10-12.
 - [ ] [IA] [P1] Livrable en anglais, chantier A : hooks, état, config,
-  bloc et trailer renommés selon le glossaire, migration des projets
-  équipés par `init` / `apply` — à cadrer après B,
-  `docs/intentions/livrable-full-english.md`.
+  bloc et trailer renommés selon le glossaire, code commun en anglais,
+  migration des projets équipés par `init` / `apply` —
+  `docs/projects/coeur-en-anglais.md`.
 - [ ] [IA] [P1] Livrable en anglais, chantier C : messages et
   sous-commandes de la CLI, commande unique `init` / `apply`, retrait de
   l'identifiant interne `DRWIL-012` des deux messages livrés qui
