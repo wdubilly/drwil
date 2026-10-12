@@ -16,6 +16,8 @@ fichiers:
   - .githooks/cadrage.mjs
   - .githooks/cadrage.test.mjs
   - .githooks/etat.mjs
+  - .githooks/fiches.mjs
+  - .githooks/etat-textes.mjs
   - .githooks/etat.test.mjs
   - .githooks/perimetre.mjs
   - .githooks/perimetre.test.mjs

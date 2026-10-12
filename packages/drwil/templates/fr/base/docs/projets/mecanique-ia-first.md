@@ -12,6 +12,8 @@ fichiers:
   - .githooks/contrats.mjs
   - .githooks/risque.mjs
   - .githooks/etat.mjs
+  - .githooks/fiches.mjs
+  - .githooks/etat-textes.mjs
   - .githooks/perimetre.mjs
   - .githooks/prepare-commit-msg
   - .githooks/cadrage.mjs

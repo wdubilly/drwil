@@ -107,3 +107,11 @@ de sortie.
 **Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`).
 **Contrôle** : `couverture-tests`, `couverture-hooks`
 **Raison** : Sans seuil vérifié, la couverture peut régresser silencieusement à chaque ajout de code.
+
+## QUA-001 — Fichier de code plafonné
+**Règle** : Un fichier de code ne dépasse pas 400 lignes, tests exclus ; un fichier déjà au-dessus à l'adoption serait plafonné à sa taille actuelle et ne pourrait que maigrir (`.githooks/check-file-size.legacy.json`, vide à l'adoption le 2026-10-12, après découpage — voir `docs/projets/journal.md`).
+**Périmètre** : `packages/drwil/src/` (fichiers ts), `packages/drwil/bin/` (fichiers js), `.githooks/` et `outils/` (fichiers mjs).
+**Source de vérité** : `.drwil/ia-first.json` → `checks` (contrôle `taille-fichiers`), `.githooks/check-file-size.mjs`.
+**Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`).
+**Contrôle** : `taille-fichiers`
+**Raison** : Un fichier géant mêle plusieurs sujets ; chaque changement y coûte plus cher à écrire et à relire.

@@ -2352,3 +2352,68 @@ test("init sur un projet installé : une option passée remplace sa valeur, les 
   await quiet(() => init({ targetDir: dir, ci: "none", mode: "full", git: false }));
   assert.deepEqual(config(dir), { ...cfg, ci: "none", ciFiles: [], mode: "full" });
 });
+
+// Caractérisation avant découpage d'index.ts (docs/projets/refactor-index-etat.md, lot 1) :
+// comportements actuels sans test, figés tels quels.
+test("caractérisation : resoudreDerive sur un dossier sans installation refuse, avec la commande à lancer", async () => {
+  await assert.rejects(
+    resoudreDerive({ targetDir: tmp() }, () => true),
+    /projet non initialisé .*lancer « drwil init » d'abord/,
+  );
+});
+
+test("caractérisation : dérive du fichier de CI, diff ligne à ligne (ajouts, retraits, fins de fichier)", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, ci: "github", git: false }));
+  const ci = ".github/workflows/ia-first.yml";
+  const original = read(dir, ci);
+  const lignes = original.split("\n");
+  // Première ligne remplacée, une ligne insérée au milieu, la fin tronquée puis rallongée.
+  const modifie = ["# modifié", ...lignes.slice(1, 3), "# inséré", ...lignes.slice(3, -3), "# fin 1", "# fin 2", "# fin 3", "# fin 4"].join(
+    "\n",
+  );
+  writeFileSync(join(dir, ci), modifie);
+  let diff = "";
+  const rapport = await quiet(() =>
+    resoudreDerive({ targetDir: dir }, (rel, d) => {
+      if (rel === ci) diff = d;
+      return false;
+    }),
+  );
+  assert.ok(rapport.ignores.includes(ci));
+  assert.match(diff, /^- /m);
+  assert.match(diff, /^- # modifié$/m);
+  assert.match(diff, /^- # inséré$/m);
+  assert.match(diff, /^- # fin 4$/m);
+  assert.match(diff, new RegExp(`^\\+ ${lignes[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"));
+});
+
+test("caractérisation : sans confirmateur ni terminal, la dérive est montrée et jamais écrasée", async () => {
+  const dir = tmp();
+  await quiet(() => init({ targetDir: dir, git: false }));
+  const cible = ".githooks/check-docs.mjs";
+  writeFileSync(join(dir, cible), "// personnalisé\n");
+  let rapport;
+  const lignes = await capture(async () => {
+    rapport = await resoudreDerive({ targetDir: dir });
+  });
+  assert.ok(rapport.ignores.includes(cible));
+  assert.ok(
+    lignes.some((l) => l.includes("--- .githooks/check-docs.mjs ---")),
+    lignes.join("\n"),
+  );
+  assert.equal(read(dir, cible), "// personnalisé\n");
+});
+
+test("caractérisation : git introuvable, l'installation se fait et le dit, sans dépôt ni hooks", () => {
+  const dir = tmp();
+  const r = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "init"], {
+    cwd: dir,
+    encoding: "utf8",
+    env: { ...envTest, PATH: "" },
+  });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /git introuvable : dépôt et hooks non configurés/);
+  assert.ok(existsSync(join(dir, "AGENTS.md")));
+  assert.ok(!existsSync(join(dir, ".git")));
+});

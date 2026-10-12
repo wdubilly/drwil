@@ -14,7 +14,7 @@ Node.js 22 et plus récent (`engines` du paquet ; CI sur Node 22 et 24), TypeScr
 
 ## Le livrable : `packages/drwil`
 
-- **CLI** (`packages/drwil/bin/drwil.js`, code dans `packages/drwil/src/`) : `init` et `apply` installent le gabarit (`apply` n'écrase rien et prévisualise d'abord), `uninstall` et `resoudre-derive` le retirent ou résolvent une dérive ; `verify` juge les contrats (`packages/drwil/src/verify.ts`, présentation pour un agent dans `packages/drwil/src/agent.ts`), `attest` enregistre une preuve humaine (`packages/drwil/src/attest.ts`), `doctor` et `contracts` diagnostiquent (`packages/drwil/src/doctor.ts`), `etat` lit et fait évoluer l'état de gouvernance. `packages/drwil/src/index.ts` porte l'installation, `packages/drwil/src/stack.ts` la détection de la pile.
+- **CLI** (`packages/drwil/bin/drwil.js`, code dans `packages/drwil/src/`) : `init` et `apply` installent le gabarit (`apply` n'écrase rien et prévisualise d'abord), `uninstall` et `resoudre-derive` le retirent ou résolvent une dérive ; `verify` juge les contrats (`packages/drwil/src/verify.ts`, verdict mis en forme par `packages/drwil/src/verdict.ts`, présentation pour un agent dans `packages/drwil/src/agent.ts`), `attest` enregistre une preuve humaine (`packages/drwil/src/attest.ts`), `doctor` et `contracts` diagnostiquent (`packages/drwil/src/doctor.ts`), `etat` lit et fait évoluer l'état de gouvernance. L'installation : `packages/drwil/src/index.ts` (`init`, `apply`, git), `packages/drwil/src/config.ts` (options et config du projet), `packages/drwil/src/rendu.ts` (rendu et écriture du gabarit), `packages/drwil/src/manifeste.ts` (fichiers installés, désinstallation), `packages/drwil/src/derive.ts` (résolution de dérive), `packages/drwil/src/apercu.ts` (aperçu d'`apply`) ; `packages/drwil/src/stack.ts` détecte la pile.
 - **Gabarit** (`packages/drwil/templates/`) : `common/` (hooks, réglages et hooks de Claude Code, CI GitHub ou GitLab, modules optionnels) et une arborescence par langue, `fr/` et `en/` (documents, recettes, skills, consignes par couche). Les variables `{{…}}` sont rendues à l'installation.
 - **Tests** : `packages/drwil/test/kit.test.mjs` installe le gabarit dans des projets temporaires et l'éprouve ; couverture suivie par QUA-004.
 
@@ -24,7 +24,7 @@ Copies, dans ce dépôt, des hooks livrés : installées depuis le gabarit par `
 
 - `.githooks/moteur.mjs` : moteur unique des contrôles, partagé par les hooks et `drwil verify` ; `.githooks/run-checks.mjs` l'exécute au commit (`pre-commit`), au push (`pre-push`) et en CI.
 - Contrôles du socle : `.githooks/check-docs.mjs` (doc et contrats cités), `.githooks/perimetre.mjs` (barrière de périmètre de la fiche active), `.githooks/check-control-coverage.mjs` (couverture CI de chaque contrôle).
-- Gouvernance : `.githooks/etat.mjs` (état, transitions, lancement), `.githooks/cadrage.mjs` (bloc cadrage des fiches), `.githooks/contrats.mjs` (lecture du registre), `.githooks/risque.mjs` (niveau de risque).
+- Gouvernance : `.githooks/etat.mjs` (état, transitions, lancement ; lit les fiches par `.githooks/fiches.mjs`, met en forme par `.githooks/etat-textes.mjs`), `.githooks/cadrage.mjs` (bloc cadrage des fiches), `.githooks/contrats.mjs` (lecture du registre), `.githooks/risque.mjs` (niveau de risque).
 - Tests des hooks : `.githooks/*.test.mjs`, propres au dépôt, couverture 100 % exigée (QUA-004).
 
 ## Propre au dépôt (jamais livré)

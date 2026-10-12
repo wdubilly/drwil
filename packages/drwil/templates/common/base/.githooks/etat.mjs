@@ -16,7 +16,13 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
-import { lireBloc } from "./cadrage.mjs";
+import { config, DOSSIERS_FICHES, fichesCadrees, MODELE_RE, statutFiche } from "./fiches.mjs";
+import { contexte, rappelCourt } from "./etat-textes.mjs";
+
+// Interface inchangée pour les autres hooks, la CLI et les outils : tout ce qu'exportait ce fichier
+// avant son découpage reste importable d'ici.
+export { fichesCadrees, statutFiche } from "./fiches.mjs";
+export { contexte, gouvernanceDesactivee, rappelCourt } from "./etat-textes.mjs";
 
 export const ACTIVITES = ["CADRAGE", "ATTENTE", "DEMANDE", "REALISATION", "PREUVES", "VERIFY", "CLOTURE"];
 
@@ -36,8 +42,6 @@ export const ETAT_NEUTRE = Object.freeze({ version: 1, activite: "CADRAGE", atte
 
 // fusion_autorisee : absent de l'état neutre, posé seulement par un lancement humain (`lancer`).
 const CHAMPS = new Set([...Object.keys(ETAT_NEUTRE), "fusion_autorisee"]);
-const DOSSIERS_FICHES = ["docs/projets/", "docs/projects/"];
-const MODELE_RE = /^modele-|^model-/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
 export function transitionAutorisee(de, vers) {
@@ -156,94 +160,7 @@ export function preuveVerify(racine) {
   return { ok: false, raison: `évidence ${nom} sans verdict reconnu : ${RELANCER}` };
 }
 
-const STATUT_LIGNE_RE = /^\*\*(?:Statut|Status)\*\*\s*:\s*(.*)$/;
-
-/**
- * « terminee », « reference » ou « ouverte » — seule définition, partagée avec check-docs.mjs.
- * Seul un marqueur explicite en tête du statut compte : un mot cherché n'importe où (« essai réel
- * fait », « fait (lot 1) » d'une fiche à plusieurs lots) donnait de faux « terminée ».
- */
-export function statutFiche(texte) {
-  const statut =
-    texte
-      .split(/\r?\n/)
-      .slice(0, 15)
-      .map((l) => STATUT_LIGNE_RE.exec(l))
-      .find(Boolean)?.[1] ?? "";
-  if (/^(?:terminé\s+le|done\s+on)\s+\d{4}-\d{2}-\d{2}\b/i.test(statut)) return "terminee";
-  if (/^(?:référence|reference)\b/i.test(statut)) return "reference";
-  return "ouverte";
-}
 const LANCABLE_DEPUIS = new Set(["CADRAGE", "ATTENTE", "DEMANDE"]);
-
-const INDEX_DEFAUT = ["docs/projets/en-attente.md", "docs/projects/pending.md"];
-const PRIORITE_DEFAUT = 2;
-
-/** Priorité de chaque fiche citée par un sujet ouvert de l'index commité ([P0] à [P3], [P2] sans tag). */
-function prioritesIndex(racine) {
-  const priorites = new Map();
-  for (const chemin of [config(racine).dirs?.index, ...INDEX_DEFAUT].filter(Boolean)) {
-    const r = spawnSync("git", ["show", `HEAD:${chemin}`], { cwd: racine, encoding: "utf8" });
-    if (r.status !== 0) continue;
-    // Un sujet : sa ligne « - [ ] » et ses lignes de suite ; un point coché d'une fiche à plusieurs
-    // lots ne dit rien de la priorité du travail restant.
-    for (const sujet of r.stdout.split(/\r?\n(?=\s*- \[)/)) {
-      if (!/^\s*- \[ \]/.test(sujet)) continue;
-      const p = /\[P([0-3])\]/.exec(sujet)?.[1];
-      for (const m of sujet.matchAll(/`((?:docs\/projets|docs\/projects)\/[^`]+\.md)`/g)) {
-        if (!priorites.has(m[1])) priorites.set(m[1], p === undefined ? PRIORITE_DEFAUT : Number(p));
-      }
-    }
-    break;
-  }
-  return priorites;
-}
-
-/** `[décision]` encore ouvertes dans la section « Points à trancher » (« Points to decide »). */
-function decisionsOuvertes(texte) {
-  let dans = false;
-  let n = 0;
-  for (const ligne of texte.split(/\r?\n/)) {
-    if (/^##\s/.test(ligne)) dans = /^##\s*(\d+\.\s*)?(Points à trancher|Points to decide)\b/i.test(ligne);
-    else if (dans && /^\s*-\s*\[(décision|decision)\]/i.test(ligne)) n++;
-  }
-  return n;
-}
-
-/**
- * Fiches qu'on peut lancer : fiches de docs/projets/ (ou docs/projects/), hors modèles, non
- * terminées, dont le bloc `cadrage` existe dans HEAD — le cadrage validé est le cadrage commité,
- * comme pour la barrière. `[{ chemin, titre, priorite, decisions, prete }]` : prêtes d'abord (aucune
- * décision ouverte), puis par priorité de l'index, puis par chemin.
- */
-export function fichesCadrees(racine) {
-  const priorites = prioritesIndex(racine);
-  const fiches = [];
-  for (const dossier of DOSSIERS_FICHES) {
-    const abs = join(racine, dossier);
-    if (!existsSync(abs)) continue;
-    for (const nom of readdirSync(abs).sort()) {
-      const chemin = dossier + nom;
-      if (!nom.endsWith(".md") || MODELE_RE.test(nom)) continue;
-      const r = spawnSync("git", ["show", `HEAD:${chemin}`], { cwd: racine, encoding: "utf8" });
-      if (r.status !== 0 || !lireBloc(r.stdout).motifs.length) continue;
-      // Une fiche de référence (mécanique du kit) garde son cadrage sans être un chantier à lancer.
-      if (statutFiche(r.stdout) !== "ouverte") continue;
-      const decisions = decisionsOuvertes(r.stdout);
-      const priorite = priorites.get(chemin) ?? PRIORITE_DEFAUT;
-      fiches.push({
-        chemin,
-        titre: /^#\s+(.+)$/m.exec(r.stdout)?.[1]?.trim() ?? chemin,
-        priorite: `P${priorite}`,
-        decisions,
-        prete: decisions === 0,
-      });
-    }
-  }
-  return fiches.sort(
-    (a, b) => Number(b.prete) - Number(a.prete) || a.priorite.localeCompare(b.priorite) || a.chemin.localeCompare(b.chemin),
-  );
-}
 
 /**
  * Lance un chantier en un geste : depuis CADRAGE, ATTENTE ou DEMANDE, passe directement en
@@ -348,137 +265,6 @@ export async function passer(racine, { vers, fiche, demande }, { tty = false, co
   mkdirSync(join(racine, ".drwil"), { recursive: true });
   writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(prep.etat, null, 2) + "\n");
   return { code: 0, message: `${reprise}${de} → ${vers}` };
-}
-
-const TEXTES = {
-  fr: {
-    entete: "[drwil] État de gouvernance, lu sur disque (.drwil/state.json) — ne pas le déduire de la conversation.",
-    absent: "(.drwil/state.json absent : état neutre)",
-    desactivee:
-      "[drwil] Gouvernance désactivée (réglage « barriere » : off dans .drwil/ia-first.json) : aucune activité ni périmètre à suivre.",
-    invalide: "⚠ État invalide, traité comme CADRAGE neutre :",
-    activite: (a) => `Activité : ${a}`,
-    attente: (a) => `Attente active : ${a ?? "aucune attente active"}`,
-    demande: (d) => `Demande active : ${d ?? "aucune"}`,
-    fusion:
-      "Fusion automatique autorisée au lancement : en CLOTURE, après verify PASS et le push de la clôture, dans cet ordre : attendre que GitHub ait calculé la PR (`gh pr view --json mergeStateStatus`) et, si elle est en retard sur la branche principale (BEHIND), la mettre à jour ; programmer `gh pr merge --auto --merge` ; vérifier que la fusion est bien programmée (`gh pr view --json autoMergeRequest`) ; seulement ensuite revenir en CADRAGE, qui efface l'autorisation. En cas d'échec : rester en CLOTURE et le signaler.",
-    perimetre: "Périmètre autorisé (bloc cadrage de la fiche) :",
-    sansPerimetre: "  (aucun bloc cadrage : aucun fichier de code autorisé)",
-    ficheSupprimee: "fiche supprimée (clôture)",
-    regle: (r) => `Règle : ${r}`,
-    rappel: (a, f, n) =>
-      `[drwil] Rappel : ${a}${f ? ` · ${f}` : " · aucune attente active"}${n === null ? "" : ` · périmètre : ${n} fichier(s) ou motif(s)`} (relire avec \`node .githooks/etat.mjs\`).`,
-    rappelInvalide: "[drwil] Rappel : état invalide, traité comme CADRAGE neutre (détail : `node .githooks/etat.mjs`).",
-    pied: "Ne jamais écrire .drwil/state.json à la main. Lancer un chantier : `/drwil-lancer` (sondage) ou `node .githooks/etat.mjs lancer` dans un terminal — décision humaine, sauf réglage « transitions » : agent. Changer d'activité : `node .githooks/etat.mjs passer <ACTIVITE>` ; clore est libre sur évidence de verify valide.",
-    regles: {
-      CADRAGE: "lire, analyser, cadrer ; ne modifier aucun fichier de code.",
-      ATTENTE: "formaliser l'attente dans sa fiche ; ne modifier aucun fichier de code.",
-      DEMANDE: "expliciter la demande de réalisation ; ne modifier encore aucun fichier de code.",
-      REALISATION: "réaliser l'attente, en ne modifiant que les fichiers du périmètre (bloc cadrage de la fiche active).",
-      PREUVES: "produire les preuves et lancer les contrôles ; un correctif demande de revenir en REALISATION.",
-      VERIFY:
-        "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en REALISATION ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
-      CLOTURE:
-        "fiche entièrement terminée : la condenser dans le journal puis la supprimer ; sinon mettre à jour statut et reprise ; puis revenir en CADRAGE.",
-    },
-  },
-  en: {
-    entete: "[drwil] Governance state, read from disk (.drwil/state.json) — do not infer it from the conversation.",
-    absent: "(.drwil/state.json missing: neutral state)",
-    desactivee: '[drwil] Governance disabled ("barriere" setting: off in .drwil/ia-first.json): no activity or scope to follow.',
-    invalide: "⚠ Invalid state, treated as neutral CADRAGE:",
-    activite: (a) => `Activity: ${a}`,
-    attente: (a) => `Active expectation: ${a ?? "none"}`,
-    demande: (d) => `Active request: ${d ?? "none"}`,
-    fusion:
-      "Automatic merge authorised at start: in CLOTURE, after verify PASS and pushing the closing commit, in this order: wait until GitHub has computed the PR (`gh pr view --json mergeStateStatus`) and, if it is behind the main branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is actually scheduled (`gh pr view --json autoMergeRequest`); only then go back to CADRAGE, which clears the authorisation. On failure: stay in CLOTURE and report it.",
-    perimetre: "Allowed scope (cadrage block of the fiche):",
-    sansPerimetre: "  (no cadrage block: no code file allowed)",
-    ficheSupprimee: "fiche deleted (closing)",
-    regle: (r) => `Rule: ${r}`,
-    rappel: (a, f, n) =>
-      `[drwil] Reminder: ${a}${f ? ` · ${f}` : " · no active expectation"}${n === null ? "" : ` · scope: ${n} file(s) or pattern(s)`} (read again with \`node .githooks/etat.mjs\`).`,
-    rappelInvalide: "[drwil] Reminder: invalid state, treated as neutral CADRAGE (details: `node .githooks/etat.mjs`).",
-    pied: 'Never write .drwil/state.json by hand. Start a chantier: `/drwil-lancer` (poll) or `node .githooks/etat.mjs lancer` in a terminal — a human decision, unless the "transitions" setting is agent. Change activity: `node .githooks/etat.mjs passer <ACTIVITE>`; closing is free on valid verify evidence.',
-    regles: {
-      CADRAGE: "read, analyse, frame; do not modify any code file.",
-      ATTENTE: "write down the expectation in its fiche; do not modify any code file.",
-      DEMANDE: "make the implementation request explicit; do not modify any code file yet.",
-      REALISATION: "implement the expectation, modifying only the files in the scope (cadrage block of the active fiche).",
-      PREUVES: "produce evidence and run the checks; a fix means going back to REALISATION.",
-      VERIFY:
-        "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to REALISATION; MANUAL: human attestation (`npx drwil attest`), then run it again.",
-      CLOTURE:
-        "fiche fully finished: condense it into the journal, then delete it; otherwise update status and hand-off; then go back to CADRAGE.",
-    },
-  },
-};
-
-function config(racine) {
-  try {
-    return JSON.parse(readFileSync(join(racine, ".drwil", "ia-first.json"), "utf8")) ?? {};
-  } catch {
-    return {};
-  }
-}
-
-const langue = (racine) => (config(racine).lang === "en" ? "en" : "fr");
-
-/** `barriere: off` coupe toute la gouvernance (barrière, trailer, contexte) : retrait sans rien supprimer. */
-export const gouvernanceDesactivee = (racine) => config(racine).barriere === "off";
-
-/** Contexte lisible à réinjecter à l'agent, construit uniquement depuis le disque. */
-export function contexte(lu, racine) {
-  const T = TEXTES[langue(racine)];
-  if (gouvernanceDesactivee(racine)) return T.desactivee;
-  const { etat, source, problemes } = lu;
-  const lignes = [T.entete];
-  if (source === "absent") lignes.push(T.absent);
-  if (problemes.length) lignes.push(T.invalide, ...problemes.map((p) => `  - ${p}`));
-  lignes.push(T.activite(etat.activite));
-  let attente = etat.attente_active;
-  let motifs = null;
-  if (attente && !existsSync(join(racine, attente))) {
-    attente = `${attente} — ${T.ficheSupprimee}`;
-  } else if (attente) {
-    try {
-      const texte = readFileSync(join(racine, attente), "utf8");
-      const titre = /^#\s+(.+)$/m.exec(texte)?.[1]?.trim();
-      if (titre) attente = `${attente} — ${titre}`;
-      motifs = lireBloc(texte).motifs;
-    } catch {
-      motifs = [];
-    }
-  }
-  lignes.push(T.attente(attente), T.demande(etat.demande_active));
-  if (etat.fusion_autorisee === true) lignes.push(T.fusion);
-  if (motifs) lignes.push(T.perimetre, ...(motifs.length ? motifs.map((m) => `  - ${m}`) : [T.sansPerimetre]));
-  lignes.push(T.regle(T.regles[etat.activite]), T.pied);
-  return lignes.join("\n");
-}
-
-/** Rappel court (deux lignes) de l'état, pour l'injecter à chaque message ; null si la gouvernance est désactivée. */
-export function rappelCourt(lu, racine) {
-  const T = TEXTES[langue(racine)];
-  if (gouvernanceDesactivee(racine)) return null;
-  const { etat, problemes } = lu;
-  const tete = problemes.length
-    ? T.rappelInvalide
-    : (() => {
-        let n = null;
-        if (etat.attente_active && !existsSync(join(racine, etat.attente_active))) {
-          return T.rappel(etat.activite, `${etat.attente_active} (${T.ficheSupprimee})`, null);
-        }
-        if (etat.attente_active) {
-          try {
-            n = lireBloc(readFileSync(join(racine, etat.attente_active), "utf8")).motifs.length;
-          } catch {
-            n = 0;
-          }
-        }
-        return T.rappel(etat.activite, etat.attente_active, n);
-      })();
-  return `${tete}\n${T.regle(T.regles[etat.activite])}`;
 }
 
 const FICHIER_RAPPEL = [".drwil", "rappel.json"];
