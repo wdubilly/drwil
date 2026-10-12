@@ -1,6 +1,6 @@
 # Pending work — index
 
-One line per topic. Detail and **status** live in the linked sheet, the only
+One line per topic. Detail and **status** live in the linked brief, the only
 source: this index copies no state. A topic without a link fits in two
 lines here. Unscoped ideas: `docs/intentions/README.md`. Writing rules:
 `docs/ia-first.md`, section 7.
@@ -16,11 +16,11 @@ Optional priority, not checked by check-docs.mjs (plain convention): `[P0]`
 most urgent, `[P1]` high, `[P2]` normal, `[P3]` least urgent. Without a tag,
 a topic is considered `[P2]`.
 
-A project whose card is **entirely** finished (not just one point among
+A project whose brief is **entirely** finished (not just one point among
 others) is condensed into `docs/projects/journal.md` then removed from
 this index, not checked: see
 `docs/recipes/working-with-branches.md`, "Closing" section. Remaining
-checked lines are already-done points of a card that stays open
+checked lines are already-done points of a brief that stays open
 otherwise.
 
 ## Projects
@@ -28,7 +28,7 @@ otherwise.
 *(empty on install — one section per theme, one item per topic)*
 
 <!-- Example:
-- [ ] [AI] short title of the topic, link to a sheet if more than two lines
+- [ ] [AI] short title of the topic, link to a brief if more than two lines
   are needed, otherwise the topic fits here.
 - [x] topic delivered (YYYY-MM-DD).
 -->

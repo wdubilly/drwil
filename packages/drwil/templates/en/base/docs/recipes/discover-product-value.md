@@ -1,7 +1,7 @@
 # Recipe: discover product value
 
 Goal: identify the business-value features most worth building next,
-building on what already exists (code, cadrage) rather than starting from
+building on what already exists (code, scoping) rather than starting from
 a blank page.
 
 Like the risk audit (`docs/recipes/audit-risks-and-debt.md`), this
@@ -11,10 +11,10 @@ the AI.
 ## Inputs to read (generic, no hardcoded path)
 
 Locate inputs via `.drwil/ia-first.json` rather than fixed names (an
-assumed docs/01-intentions.md or docs/02-cadrage.md, or a src/ folder, may
+assumed docs/01-intentions.md or docs/02-scoping.md, or a src/ folder, may
 not exist in this project):
 
-1. **Vision and cadrage**: fiches under `dirs.intentions`
+1. **Vision and scoping**: briefs under `dirs.intentions`
    (`docs/intentions/` by default, the need/promise of each topic) and
    `dirs.projects` (`docs/projects/` by default, decisions and
    constraints already settled per project).
@@ -34,7 +34,7 @@ For each opportunity identified, evaluate:
 - **Technical proximity / effort**: does it build on existing code?
   (data already in the DB but not displayed = low effort).
 - **Product alignment**: consistent with the vision already cadré in
-  `docs/intentions/` fiches?
+  `docs/intentions/` briefs?
 
 ## Output
 
@@ -50,7 +50,7 @@ root, following this template:
 ## Consumption overview
 
 (if .drwil/usage.jsonl exists: cumulative tokens and minutes, models used
-since the last scan — see `docs/recipes/track-consumption-per-lot.md`.
+since the last scan — see `docs/recipes/track-consumption-per-increment.md`.
 Otherwise, omit this section rather than inventing a figure.)
 
 ## Priority opportunities (value / effort matrix)
@@ -74,9 +74,9 @@ Pick an ID and reply: "Approve OPT-X to turn it into an intention."
 
 ## Guardrails
 
-- Every OPT-N line must cite real code and/or a real fiche — never an
+- Every OPT-N line must cite real code and/or a real brief — never an
   unsupported claim.
-- "Approve OPT-X" leads to an intention fiche (under `dirs.intentions`) to
-  be cadré, never to code written directly without a fiche — consistent
+- "Approve OPT-X" leads to an intention brief (under `dirs.intentions`) to
+  be cadré, never to code written directly without a brief — consistent
   with QUA-016.
 - Run by hand only, never in CI or at commit time.

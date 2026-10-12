@@ -1,38 +1,38 @@
-# Recipe: track consumption per lot/project
+# Recipe: track consumption per increment/project
 
-Goal: know, lot by lot, how many tokens were used, which model was
+Goal: know, increment by increment, how many tokens were used, which model was
 employed, and how long the setup took — never for billing or blocking a
 commit, just to inform project tracking.
 
 ## Format: `.drwil/usage.jsonl` (to create)
 
-Append-only file at the project root, one JSON line per lot closure:
+Append-only file at the project root, one JSON line per increment closure:
 
 ```json
 { "chantier": "add-csv-export", "lot": "Lot 2", "tokens": 42000, "modele": "claude-sonnet-5", "duree_min": 95, "date": "2026-10-04" }
 ```
 
 - `chantier`: file name (without extension) of the `docs/projects/<project>.md`
-  fiche concerned.
-- `lot`: the lot's title as written in its fiche (`## Lots`).
-- `tokens`: order of magnitude of tokens consumed for this lot (integer).
+  brief concerned.
+- `lot`: the increment's title as written in its brief (`## Lots`).
+- `tokens`: order of magnitude of tokens consumed for this increment (integer).
 - `modele`: identifier of the model used (e.g. `claude-sonnet-5`). If
-  several models were used on the same lot, either one line per model or
+  several models were used on the same increment, either one line per model or
   `"mixte"`.
-- `duree_min`: setup time for the lot, in minutes.
-- `date`: lot closure date (`YYYY-MM-DD`).
+- `duree_min`: setup time for the increment, in minutes.
+- `date`: increment closure date (`YYYY-MM-DD`).
 
-The file is never recomputed: each line is written once, at lot closure,
+The file is never recomputed: each line is written once, at increment closure,
 never rewritten afterwards.
 
 ## Who fills the file?
 
 No standalone script: session data (tokens, model, duration) is only
 accessible to the running AI agent, not to an external process. So it's
-the AI that, when closing a lot, appends the line:
+the AI that, when closing an increment, appends the line:
 
 - **With Copilot CLI**: query `session_store_sql` (`session_usage` table
-  for model and tokens; `turns`/`events` for the lot's start/end
+  for model and tokens; `turns`/`events` for the increment's start/end
   timestamps, hence `duree_min`), then append the JSON line to
   `.drwil/usage.jsonl` (to create).
 - **With another AI tool**, or without a queryable history: estimate by

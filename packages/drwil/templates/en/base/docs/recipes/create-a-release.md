@@ -1,6 +1,6 @@
 # Recipe: create a release (tag + GitHub note)
 
-Goal: mark a merged chantier with a Git tag (`vX.Y.Z`) and a release
+Goal: mark a merged workstream with a Git tag (`vX.Y.Z`) and a release
 note, without publishing to npm and without committing any file
 (compatible with a "no direct commit on the main branch" contract, if
 adopted).

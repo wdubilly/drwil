@@ -1,47 +1,45 @@
-# Créer une release (optionnel)
+# Create a release (optional)
 
-Module **non installé par défaut** : `scaffold()` ne copie pas ce dossier.
-Pose un **tag Git annoté** (`vX.Y.Z`) et une **note de release GitHub**
-(`gh release create --generate-notes`) sur le commit courant — jamais de
-fichier suivi modifié (pas de `CHANGELOG.md` committé, pas de bump de
-`package.json`) : compatible avec QUA-017 (pas de commit direct sur la
-branche principale) sans PR supplémentaire.
+Module **not installed by default**: `scaffold()` does not copy this
+folder. Posts an **annotated Git tag** (`vX.Y.Z`) and a **GitHub release
+note** (`gh release create --generate-notes`) on the current commit — never
+a modified tracked file (no committed `CHANGELOG.md`, no `package.json`
+bump): compatible with QUA-017 (no direct commit on the main branch)
+without an extra PR.
 
-## Contenu
+## Contents
 
-- `creer-release.mjs` : calcule la version suivante depuis le dernier tag
-  et les commits non-merge depuis ce tag (Conventional Commits,
-  best-effort — aucun format de message n'est imposé, défaut sûr : bump
-  *patch* si aucun type `feat`/rupture reconnu), puis pose le tag + la
-  release. Mode `--dry-run` : affiche la version calculée sans rien créer.
+- `creer-release.mjs`: computes the next version from the latest tag and
+  the non-merge commits since that tag (Conventional Commits, best effort
+  — no message format is imposed, safe default: *patch* bump if no `feat`
+  or breaking type is recognised), then posts the tag and the release.
+  `--dry-run` mode: prints the computed version without creating anything.
 
-## Tarball npm attaché à la release (téléchargeable)
+## npm tarball attached to the release (downloadable)
 
-Si le dépôt contient un ou plusieurs paquets npm publiables (un
-`package.json`, si présent, suivi par Git, avec un `name`, sans
-`"private": true` — un monorepo avec `workspaces` et une racine privée
-n'en pose aucun problème : seuls les paquets non privés sont repérés),
-le script construit un tarball (`npm pack`) pour chacun et l'attache
-comme asset à la release GitHub. Quiconque visite la page de la release
-peut alors télécharger le `.tgz` directement, sans avoir besoin de
-cloner le dépôt ni de publier sur le registre npm. `--dry-run` liste
-les paquets qui seraient empaquetés sans construire ni attacher quoi
-que ce soit.
+If the repository holds one or more publishable npm packages (a
+`package.json`, if present, tracked by Git, with a `name`, without
+`"private": true` — a monorepo with `workspaces` and a private root is no
+problem: only non-private packages are picked up), the script builds a
+tarball (`npm pack`) for each and attaches it as an asset of the GitHub
+release. Anyone visiting the release page can then download the `.tgz`
+directly, without cloning the repository or publishing to the npm
+registry. `--dry-run` lists the packages that would be packed without
+building or attaching anything.
 
-## Activation manuelle (sur demande explicite, comme un commit ou un push)
+## Manual activation (on explicit request, like a commit or a push)
 
-Comme pour tout commit ou push, ce script ne doit jamais tourner tout
-seul : il se lance seulement quand l'utilisateur le demande
-explicitement (par ex. « fais une release », « tague une version »), pas
-automatiquement à chaque merge.
+Like any commit or push, this script must never run on its own: it is
+started only when the user explicitly asks (e.g. "make a release", "tag a
+version"), not automatically at each merge.
 
-1. Copier `creer-release.mjs` dans `.githooks/` du projet.
-2. Aperçu sans rien créer : `node .githooks/creer-release.mjs --dry-run`.
-3. Créer réellement le tag + la release : `node .githooks/creer-release.mjs`
-   (nécessite `git push` vers `origin` et `gh` authentifié pour la note de
-   release — le tag est créé même si `gh` échoue).
+1. Copy `creer-release.mjs` into the project's `.githooks/`.
+2. Preview without creating anything: `node .githooks/creer-release.mjs --dry-run`.
+3. Actually create the tag and the release: `node .githooks/creer-release.mjs`
+   (needs `git push` to `origin` and an authenticated `gh` for the release
+   note — the tag is created even if `gh` fails).
 
-Limite assumée : pensé pour GitHub (`gh release create`). Sur GitLab, le
-tag Git est posé de la même façon (`git tag` + `git push`), mais la note
-de release doit être créée via l'API Releases de GitLab (non couvert ici
-— à adapter, best-effort comme pour `alerter-si-ci-cassee`).
+Accepted limit: designed for GitHub (`gh release create`). On GitLab, the
+Git tag is posted the same way (`git tag` + `git push`), but the release
+note has to be created through GitLab's Releases API (not covered here —
+to adapt, best effort as for `alerter-si-ci-cassee`).

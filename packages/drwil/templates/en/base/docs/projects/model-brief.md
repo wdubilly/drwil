@@ -1,15 +1,15 @@
 # Project: short title
 
-**Status**: scoped on YYYY-MM-DD — lot 1 in progress.
+**Status**: scoped on YYYY-MM-DD — increment 1 in progress.
 **Risk**: MEDIUM
 
-(status: "scoped on …", "lot 1 in progress"…; a card that is not a
+(status: "scoped on …", "increment 1 in progress"…; a brief that is not a
 project (kit mechanics): "reference — …", never offered for launch;
-"done on YYYY-MM-DD" only when condensing it: a card carrying it cannot
+"done on YYYY-MM-DD" only when condensing it: a brief carrying it cannot
 stay — `docs/projects/journal.md`, then deletion.)
 
-(risk level, `docs/ia-first.md` section 7: LOW has no sheet — attach to
-`docs/projects/routine-maintenance.md`; MEDIUM: sheet + scope; HIGH: also a
+(risk level, `docs/ia-first.md` section 7: LOW has no brief — attach to
+`docs/projects/routine-maintenance.md`; MEDIUM: brief + scope; HIGH: also a
 Decisions section and the related contracts cited. A scope touching
 `.githooks/`, CI or `.drwil/` requires HIGH; it can only be raised.)
 
@@ -48,8 +48,8 @@ its own)
 
 ## 6. Lots
 
-- **Lot 1 — title** [AI|human]: content. Exit criterion: what proves the
-  lot is done (green tests, a passing check...).
+- **Increment 1 — title** [AI|human]: content. Exit criterion: what proves the
+  increment is done (green tests, a passing check...).
 
 ## 7. Resuming work
 

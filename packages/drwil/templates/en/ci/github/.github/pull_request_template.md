@@ -1,8 +1,8 @@
 <!-- Pull request template — see docs/recipes/working-with-branches.md -->
 
-## Related card
+## Related brief
 
-`docs/projects/<card-name>.md`
+`docs/projects/<brief-name>.md`
 
 ## What this solves
 
@@ -11,5 +11,5 @@
 ## Checks
 
 - [ ] `.githooks/run-checks.mjs` (or `node .githooks/run-checks.mjs`) green
-- [ ] Card up to date (Status, Resuming work) — Status only becomes "done" after
+- [ ] Brief up to date (Status, Resuming work) — Status only becomes "done" after
       this pull request is merged

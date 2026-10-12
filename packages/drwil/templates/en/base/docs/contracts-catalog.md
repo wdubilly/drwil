@@ -28,7 +28,7 @@ model of the lines below.
 | catalog:QUA-006 | A pure-logic module (no side effect) has its test file right next to it. | project source code | lint rule or dedicated script depending on the stack |
 | catalog:QUA-007 | Lint tolerates no warning. | project source code | the stack's lint in strict mode (zero warning tolerated) |
 | catalog:QUA-008 | A type suppression (`as any`, `# type: ignore`, `@ts-ignore`…) is accompanied by a comment justifying the reason, not just the suppression itself. | project source code | lint script requiring an adjacent comment for every known suppression form in the stack |
-| catalog:QUA-009 | A disabled test (`skip`, `xit`, `@Disabled`…) explicitly cites the ID of an open sheet in `docs/projects/` justifying the disabling (QUA-019 applied to tests). | project source code, `docs/projects/` | script listing disabled tests with no adjacent sheet citation |
+| catalog:QUA-009 | A disabled test (`skip`, `xit`, `@Disabled`…) explicitly cites the ID of an open brief in `docs/projects/` justifying the disabling (QUA-019 applied to tests). | project source code, `docs/projects/` | script listing disabled tests with no adjacent brief citation |
 | catalog:QUA-014 | Text/background contrast per RGAA 4.1 / WCAG AA (4.5:1, 3:1 for large text), light and dark. | front-end screens | `.githooks/check-colors.mjs` (to create), `.githooks/check-contrast.mjs` (to create) — copied from `templates/common/optional/front-quality/` in the kit package, see its README |
 | catalog:QUA-020 | The project's critical paths are covered by an automated end-to-end test, replayed in CI. | the project's critical paths | e2e test (e.g. Playwright, Cypress) per path, dedicated CI job |
 

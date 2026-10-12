@@ -70,16 +70,16 @@ run and shown without changing its exit code.
 **Check** : `couverture-ci`
 
 ## QUA-015 — Projects resumable cold
-**Rule** : Projects resumable cold: every open item in the project index carries an `[AI]`, `[human]` or `[decision]` marker; every sheet in `docs/projects/` and `docs/intentions/` (excluding the index and README) has a dated "Status" line at the top (YYYY-MM-DD); every intent sheet has "Need", "Current state" and "Open questions" sections; every project sheet has a "Resuming work" section (handoff). Extension: an index item that cites a sheet whose "Status" contains `done`/`closed`/`terminé` must be checked, and vice versa (non-blocking warning).
+**Rule** : Projects resumable cold: every open item in the project index carries an `[AI]`, `[human]` or `[decision]` marker; every brief in `docs/projects/` and `docs/intentions/` (excluding the index and README) has a dated "Status" line at the top (YYYY-MM-DD); every intent brief has "Need", "Current state" and "Open questions" sections; every brief has a "Resuming work" section (handoff). Extension: an index item that cites a brief whose "Status" contains `done`/`closed`/`terminé` must be checked, and vice versa (non-blocking warning).
 **Scope** : `docs/projects/`, `docs/intentions/`
 **Source of truth** : `docs/ia-first.md` (section 7)
 **Proof** : `.githooks/check-docs.mjs` (hook + CI); accuracy of status and content: **human**
 **Reason** : an agent picks up a project cold: without status or marker, it redoes the work, attempts a human gesture or decides in the requester's place
 **Check** : `docs-references`
-**Manual** : accuracy of the sheets' status and content.
+**Manual** : accuracy of the briefs' status and content.
 
 ## QUA-016 — Scoping reminder
-**Rule** : Scoping reminder: every indexed code file is covered by the `cadrage` block of a sheet in `docs/projects/`; a malformed block (no `fichiers:` line, too broad a pattern) is rejected. `docs/` and any markdown file are never code. Severity configurable per project (`.drwil/ia-first.json` -> `cadrage`: `bloquant` by default, refused at commit and, with Claude Code, before the write; `avertissement` to only report; `off` to disable). Outside the `bloquant` setting, this contract is not proven: add a Manual field to it.
+**Rule** : Scoping reminder: every indexed code file is covered by the `cadrage` block of a brief in `docs/projects/`; a malformed block (no `fichiers:` line, too broad a pattern) is rejected. `docs/` and any markdown file are never code. Severity configurable per project (`.drwil/ia-first.json` -> `cadrage`: `bloquant` by default, refused at commit and, with Claude Code, before the write; `avertissement` to only report; `off` to disable). Outside the `bloquant` setting, this contract is not proven: add a Manual field to it.
 **Scope** : the whole repo (indexed files), excluding `docs/` and markdown
 **Source of truth** : `.githooks/cadrage.mjs`, `docs/ia-first.md` (section 7)
 **Proof** : `.githooks/check-docs.mjs` (hook + CI, severity per setting); agent side: `.claude/hooks/rappel-cadrage.mjs` (if present: refusal before the write when `bloquant`, reminder when `avertissement`, silent when `off`)
@@ -91,11 +91,11 @@ run and shown without changing its exit code.
 **Scope** : any git repository, including before its very first commit, local only (`pre-commit`/`pre-push`)
 **Source of truth** : `docs/recipes/working-with-branches.md`
 **Proof** : `.githooks/run-checks.mjs` (hook only, never in CI: a legitimate merge onto the main branch must not be blocked retroactively)
-**Reason** : a direct commit or push to the main branch bypasses review and breaks the card-branch link
+**Reason** : a direct commit or push to the main branch bypasses review and breaks the brief-branch link
 **Check** : `branche-principale`
 
 ## QUA-019 — No bypassing a check
-**Rule** : A blocking check (test, hook, CI) is never disabled, skipped (`--no-verify`, skip, exception flag) or bypassed to make a task progress. If it seems miscalibrated, flag it and fix the check itself (or open a decision sheet), never disable it silently.
+**Rule** : A blocking check (test, hook, CI) is never disabled, skipped (`--no-verify`, skip, exception flag) or bypassed to make a task progress. If it seems miscalibrated, flag it and fix the check itself (or open a decision brief), never disable it silently.
 **Scope** : any check in `.githooks/`, any CI, any test
 **Source of truth** : this contract (recalled in `AGENTS.md`)
 **Proof** : **human** — a bypass rarely leaves a machine-checkable trace (see `catalog:QUA-009` for the tooled case of a disabled test)

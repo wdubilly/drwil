@@ -34,23 +34,23 @@ fichiers:
 ## 1. Need
 
 The commit check (`.githooks/check-docs.mjs`) reports any indexed code file
-not covered by a `docs/projects/` fiche (scoping reminder, severity set in
+not covered by a `docs/projects/` brief (scoping reminder, severity set in
 `.drwil/ia-first.json` -> `cadrage`: `bloquant` by default, `avertissement`
-optional). Without this fiche, the files the kit itself writes would be
+optional). Without this brief, the files the kit itself writes would be
 reported from the project's very first commit (blocking if `bloquant` is
 chosen).
 
 ## 2. Out of scope
 
 The project's own application code: each piece of work carries its own
-`cadrage` block in its fiche. A small task that does not deserve its own
-fiche attaches to the project's running-chores fiche, once the project adds
-one (English fiche templates are not shipped yet — see the kit's own
+`cadrage` block in its brief. A small task that does not deserve its own
+brief attaches to the project's running-chores brief, once the project adds
+one (English brief templates are not shipped yet — see the kit's own
 hand-off doc).
 
 ## Hand-off
 
-- **Last state**: fiche shipped at install time, nothing to hand off. If the
+- **Last state**: brief shipped at install time, nothing to hand off. If the
   kit adds a new mechanics file (`.githooks/` or an AI tool setting), add it
   here. The kit also ships `.githooks/check-control-coverage.mjs` (QUA-013),
   `.githooks/pre-push` and `.githooks/commit-msg` (shipped disabled) (their

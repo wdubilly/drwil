@@ -1149,8 +1149,8 @@ test("gabarits de pull/merge request : livrés selon le ci et la langue choisis"
   const cas = [
     { lang: "fr", ci: "github", chemin: ".github/pull_request_template.md", motif: /Fiche concernée/ },
     { lang: "fr", ci: "gitlab", chemin: ".gitlab/merge_request_templates/Default.md", motif: /Fiche concernée/ },
-    { lang: "en", ci: "github", chemin: ".github/pull_request_template.md", motif: /Related card/ },
-    { lang: "en", ci: "gitlab", chemin: ".gitlab/merge_request_templates/Default.md", motif: /Related card/ },
+    { lang: "en", ci: "github", chemin: ".github/pull_request_template.md", motif: /Related brief/ },
+    { lang: "en", ci: "gitlab", chemin: ".gitlab/merge_request_templates/Default.md", motif: /Related brief/ },
   ];
   for (const { lang, ci, chemin, motif } of cas) {
     const dir = tmp();
@@ -1332,7 +1332,7 @@ test("lot 7 : installation anglaise complète, contenu des lots 1 à 6 traduit, 
     "docs/style-guide.md",
     "docs/deployment.md",
     "docs/projects/routine-maintenance.md",
-    "docs/projects/model-project-sheet.md",
+    "docs/projects/model-brief.md",
     "docs/recipes/manage-access.md",
     "docs/recipes/run-locally.md",
     "docs/recipes/modify-permissions.md",

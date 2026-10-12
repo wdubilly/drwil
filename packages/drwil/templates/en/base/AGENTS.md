@@ -45,22 +45,22 @@ Full map and stack: `docs/architecture.md`.
   may have changed, never infer it from the conversation (a tool that
   allows it injects a short reminder when the state changes). Never
   write `.drwil/state.json` (if present) by hand: change activity with
-  `node .githooks/etat.mjs passer <ACTIVITE>`; starting a chantier
+  `node .githooks/etat.mjs passer <ACTIVITE>`; starting a workstream
   remains a human decision (`/drwil-lancer`: a poll whose answer the human
   chooses; or `node .githooks/etat.mjs lancer` in a terminal; `transitions`
   setting in `.drwil/ia-first.json`); closing is free once the `drwil
-  verify` evidence is valid. A commit outside the active sheet's
-  cadrage is refused: widen the cadrage in a separate commit touching only
-  the sheet.
+  verify` evidence is valid. A commit outside the active brief's
+  scoping is refused: widen the scoping in a separate commit touching only
+  the brief.
 - **Cause before fix**: facing a bug or a red test, reproduce then
   establish the root cause before changing code; no trial fix, no bypassing
   a check (test, hook, CI) to make it pass (QUA-019): if it seems
   miscalibrated, say so and fix the check itself, never disable it
   silently.
-- **Leave it cleaner in passing**: a doc or project sheet read during a
+- **Leave it cleaner in passing**: a doc or brief read during a
   task and found wrong (stale status, "in progress" already done, a path
   that no longer exists) is corrected in a separate commit and reported in
-  the summary; a task that advances a project updates its sheet's dated
+  the summary; a task that advances a project updates its brief's dated
   "Status" line in the same commit. An old dated status is verified before
   being trusted.
 - **Review remark**: verify it in the code before applying it; if it's
@@ -71,7 +71,7 @@ Full map and stack: `docs/architecture.md`.
   what a check actually verifies; the rest is labeled "human" or "not
   verified".
 - **Handoff**: before handing back, update the "Resuming work" section of
-  the touched project's sheet (dated last state, uncommitted work, next
+  the touched project's brief (dated last state, uncommitted work, next
   step with its marker): that's what another agent, tool or person reads
   to pick it back up cold. Project lifecycle: `docs/ia-first.md`,
   section 7.
@@ -119,7 +119,7 @@ project completes the list of contracts to know regardless of the task.
 |---|---|---|
 | the project's status | `{{indexFile}}` | `docs/recipes/view-progress.md` |
 | a risk/tech-debt audit | `.drwil/ia-first.json` | `docs/recipes/audit-risks-and-debt.md` |
-| the cost (tokens) of a project | `.drwil/usage.jsonl` (if present) | `docs/recipes/track-consumption-per-lot.md` |
+| the cost (tokens) of a project | `.drwil/usage.jsonl` (if present) | `docs/recipes/track-consumption-per-increment.md` |
 | a product opportunity to explore | `docs/value-discovery.md` (if present) | `docs/recipes/discover-product-value.md` |
 | working with a branch/MR | — | `docs/recipes/working-with-branches.md` |
 

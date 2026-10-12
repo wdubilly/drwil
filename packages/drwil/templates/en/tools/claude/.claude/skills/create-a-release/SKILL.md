@@ -1,6 +1,6 @@
 ---
 name: drwil-release
-description: Post a Git tag and a GitHub release note on the latest merged chantier (optional module, never modifies a tracked file). Use once the module is activated on the project, to preview (--dry-run) then create the release.
+description: Post a Git tag and a GitHub release note on the latest merged workstream (optional module, never modifies a tracked file). Use once the module is activated on the project, to preview (--dry-run) then create the release.
 ---
 
 Recipe: `docs/recipes/create-a-release.md`. Optional module, not

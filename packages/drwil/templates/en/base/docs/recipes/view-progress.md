@@ -14,8 +14,8 @@ Steps:
 3. Open the generated file in a browser. Add its path to `.gitignore`
    (a derived artifact, not a source).
 
-What it shows: the pending-work index checkboxes, then for each fiche in
-`docs/projects/` its raw "Status" line and lots as written; installed
+What it shows: the pending-work index checkboxes, then for each brief in
+`docs/projects/` its raw "Status" line and increments as written; installed
 contracts (`docs/contracts.md`) and the not-yet-installed ones from the
-catalogue (`docs/contracts-catalog.md`). Nothing is reinterpreted: a fiche
+catalogue (`docs/contracts-catalog.md`). Nothing is reinterpreted: a brief
 without a "Status" line is flagged as such instead of a guessed one.

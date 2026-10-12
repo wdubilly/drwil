@@ -1,6 +1,6 @@
 # Projet : un seul gabarit, en anglais (chantier B du livrable en anglais)
 
-**Statut** : en cours — lot 1 fait le 2026-10-12.
+**Statut** : en cours — lots 1 et 2 faits le 2026-10-12.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -141,7 +141,7 @@ Aucun.
 
 - **Correspondance** : un pour un, 58 fichiers de chaque côté (ex.
   recettes/travailler-en-branche → recipes/working-with-branches, skill
-  lancer-un-chantier → start-a-chantier).
+  lancer-un-chantier → start-a-workstream).
 - **Historique** : aucun commit n'a touché un fichier français sans son
   équivalent anglais.
 - **Contenu** : 6 fichiers anglais étaient des squelettes de 3 à 7 lignes
@@ -151,8 +151,25 @@ Aucun.
   Traduits selon le glossaire. Les 52 autres ont la même structure (titres,
   puces, blocs de code, variables).
 
-## 8. Reprise
+## 8. Prose au glossaire (lot 2, 2026-10-12)
 
-- **Dernier état** (2026-10-12) : lot 1 fait (inventaire ci-dessus).
+- Par script, hors code (blocs, `code` en ligne, commentaires HTML, noms
+  de skills) : fiche, sheet et card → brief ; chantier → workstream ; lot
+  → increment ; cadrage (prose) → scoping ; attente → expectation.
+  Fichiers renommés : modèle de fiche (model-brief.md), recette et skill
+  de consommation (…-per-increment), skill de lancement
+  (start-a-workstream). README des trois modules optionnels traduits.
+- **Restent pour le chantier A** (lus par les hooks ou code) : bloc
+  `cadrage` et mot-clé `fichiers:`, clé `cadrage` et ses valeurs, section
+  « Lots » des fiches (lue par le tableau de bord, qui reconnaît « Lots »
+  ou « Batches »), activités, trailer, champs de `.drwil/usage.jsonl`
+  (`chantier`, `lot`, `modele`…), préfixe de branche `chantier/`,
+  commentaires français des hooks, de la CI, de `gitignore`,
+  `.gitleaks.toml` et `.env.example` (gabarit `common/`). Noms de commandes
+  des skills (`/drwil-lancer`…) : chantier C.
+
+## 9. Reprise
+
+- **Dernier état** (2026-10-12) : lots 1 et 2 faits.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 2, prose au glossaire.
+- **Prochaine étape** : lot 3, gabarit unique.

@@ -1,10 +1,10 @@
 ---
 name: drwil-usage
-description: Record in .drwil/usage.jsonl the tokens consumed, the model used, and the setup time for a lot that just finished. Use when closing a lot, to feed the dashboard and the analysis reports.
+description: Record in .drwil/usage.jsonl the tokens consumed, the model used, and the setup time for an increment that just finished. Use when closing an increment, to feed the dashboard and the analysis reports.
 ---
 
-Recipe: `docs/recipes/track-consumption-per-lot.md`. Format
-`.drwil/usage.jsonl` (to create) (append-only, one JSON line per lot: `chantier`,
+Recipe: `docs/recipes/track-consumption-per-increment.md`. Format
+`.drwil/usage.jsonl` (to create) (append-only, one JSON line per increment: `chantier`,
 `lot`, `tokens`, `modele`, `duree_min`, `date`). With Copilot CLI, query
 `session_store_sql` (model/tokens in `session_usage`, timestamps in
 `turns`/`events`) to fill the line; otherwise estimate by hand. Later read

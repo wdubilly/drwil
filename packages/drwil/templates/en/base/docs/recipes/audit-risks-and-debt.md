@@ -1,7 +1,7 @@
 # Recipe: audit risks, technical debt and spec drift
 
 Goal: detect what threatens the project's stability, security or
-maintainability — drift between cadrage and the actual code, dead code,
+maintainability — drift between scoping and the actual code, dead code,
 security blind spots, test gaps — without guessing: every risk raised must
 point to a real file.
 
@@ -12,12 +12,12 @@ method for the AI.
 ## Inputs to read (generic, no hardcoded path)
 
 Locate inputs via `.drwil/ia-first.json` rather than fixed names (an
-assumed docs/02-cadrage.md or src/ folder may not exist in this project):
+assumed docs/02-scoping.md or src/ folder may not exist in this project):
 
-1. **Cadrage and specs**: every fiche under `dirs.projects`
+1. **Scoping and specs**: every brief under `dirs.projects`
    (`docs/projects/` by default), excluding the model
-   (`model-*`/`modele-*`). Each fiche carries its Need, Decisions and Lots
-   — the real cadrage to compare against the code.
+   (`model-*`/`modele-*`). Each brief carries its Need, Decisions and Increments
+   — the actual scoping to compare against the code.
 2. **Invariants**: `dirs.contracts` (`docs/contracts.md` by default) — the
    rules the code must respect, and `docs/contracts-catalog.md` for what's
    proposed but not yet adopted.
@@ -31,16 +31,16 @@ assumed docs/02-cadrage.md or src/ folder may not exist in this project):
 ## Method
 
 Actively look for:
-1. **Spec drift**: a fiche under `docs/projects/` describes a business
+1. **Spec drift**: a brief under `docs/projects/` describes a business
    rule or edge case the code doesn't respect (or handles differently
-   without the fiche being updated).
-2. **Dead / orphan code**: files or dependencies referenced by no cadrage
-   fiche, nor imported anywhere (`cadrage` already warns at commit time
-   about code outside any fiche — QUA-016 — but doesn't catch dead code
-   inside a covered fiche).
+   without the brief being updated).
+2. **Dead / orphan code**: files or dependencies referenced by no scoping
+   brief, nor imported anywhere (`cadrage` already warns at commit time
+   about code outside any brief — QUA-016 — but doesn't catch dead code
+   inside a covered brief).
 3. **Security/stability blind spots**: missing input validation, secrets
    in plain text, API/DB calls without error handling.
-4. **Test gaps**: a critical or complex routine named in a cadrage fiche
+4. **Test gaps**: a critical or complex routine named in a scoping brief
    with no associated test.
 
 ## Output
@@ -57,7 +57,7 @@ following this template:
 ## Consumption overview
 
 (if .drwil/usage.jsonl exists: cumulative tokens and minutes, models used
-since the last scan — see `docs/recipes/track-consumption-per-lot.md`.
+since the last scan — see `docs/recipes/track-consumption-per-increment.md`.
 Otherwise, omit this section rather than inventing a figure.)
 
 ## Summary
@@ -81,10 +81,10 @@ Pick an ID and reply: "Fix RSK-X".
 
 ## Guardrails
 
-- Every RSK-N line must cite a real fiche under docs/projects/ and/or a
+- Every RSK-N line must cite a real brief under docs/projects/ and/or a
   real code file — never an unsupported claim.
-- "Fix RSK-X" must not trigger code without a fiche: if the fix touches
-  code not already covered by a cadrage fiche, create one first (under
+- "Fix RSK-X" must not trigger code without a brief: if the fix touches
+  code not already covered by a scoping brief, create one first (under
   `dirs.projects` or `dirs.intentions`) before fixing — consistent with
   QUA-016.
 - Run by hand only, never in CI or at commit time (like the dashboard).

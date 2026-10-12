@@ -228,55 +228,55 @@ What the architecture does not do, and does not claim to do:
 ## 7. Projects, resumable cold
 
 An agent picks a project back up without the conversation history that
-created it: everything it needs must be in the sheet.
+created it: everything it needs must be in the brief.
 
 **Risk levels** (ceremony follows risk; traceability never changes:
 QUA-016 applies to everything):
 
-- **LOW**: small task without a dedicated sheet, attached to
+- **LOW**: small task without a dedicated brief, attached to
   `docs/projects/routine-maintenance.md`.
-- **MEDIUM**: project sheet with a scope (`**Risk**: MEDIUM`).
-- **HIGH**: sheet, "Decisions" section, related contracts cited, proofs
+- **MEDIUM**: brief with a scope (`**Risk**: MEDIUM`).
+- **HIGH**: brief, "Decisions" section, related contracts cited, proofs
   (`drwil verify`). A scope touching governance mechanics (`.githooks/`, CI,
   `.drwil/`) requires HIGH; configurable via `.drwil/ia-first.json` →
   `risque.cheminsSensibles`.
 
-The level is declared in the sheet and can only be raised: a level below
+The level is declared in the brief and can only be raised: a level below
 the detected minimum, or a HIGH without Decisions or contract, is rejected
-at commit (`.githooks/check-docs.mjs`); a sheet without a "Risk" field whose
+at commit (`.githooks/check-docs.mjs`); a brief without a "Risk" field whose
 scope requires HIGH gets a warning.
 
-- **A short index, sheets**: the project index has one line per topic and
-  points to the sheet as soon as there's more than two lines to say. An
-  agent reads only the sheet of the topic it handles.
-- **Status lives in the sheet**, a "Status" line at the top of a project or
+- **A short index, briefs**: the project index has one line per topic and
+  points to the brief as soon as there's more than two lines to say. An
+  agent reads only the brief of the topic it handles.
+- **Status lives in the brief**, a "Status" line at the top of a project or
   an intent, never copied into the index: a copy ends up wrong.
 - **Existing state is surveyed in the code, dated**, and what isn't
   checked is labeled "not verified".
-- **A project splits into short lots**, each with its exit criterion
+- **A project splits into short increments**, each with its exit criterion
   written in advance, its contracts and its dated decisions.
 - **Every open item says who can act**: `[AI]`, `[human]` or `[decision]`.
   An agent does not attempt a human gesture (server, vault, approval) and
   does not decide a decision: it raises it.
 - **Leave it cleaner in passing** (`AGENTS.md`, Conduct): what an agent
   reads and finds wrong during a task, it fixes separately and reports;
-  what it advances, it dates in the sheet.
+  what it advances, it dates in the brief.
 
 ### Project lifecycle
 
 | Stage | Where | Who moves it forward |
 |---|---|---|
-| idea expressed | intent sheet: Need, Surveyed existing state, Questions to decide | the agent writes it; the requester decides the questions |
+| idea expressed | intent brief: Need, Surveyed existing state, Questions to decide | the agent writes it; the requester decides the questions |
 | scoped, short | an `[AI]` or `[human]` line in the project index | the agent, once the questions are decided |
-| scoped, long | project sheet: dated status, lots and exit criteria, Resuming work | the agent; the requester approves the scoping |
-| in progress | the same sheet, Resuming work updated at the end of every task | the agent working on it (handoff) |
+| scoped, long | brief: dated status, increments and exit criteria, Resuming work | the agent; the requester approves the scoping |
+| in progress | the same brief, Resuming work updated at the end of every task | the agent working on it (handoff) |
 | delivered | line removed from the index; status "delivered on …"; final Resuming work | the agent, with proof (QUA-013) |
-| abandoned | sheet or line removed, reason in the commit message | the requester decides, the agent applies it |
+| abandoned | brief or line removed, reason in the commit message | the requester decides, the agent applies it |
 
 A `[decision]` only moves forward once decided by the requester; a
 `[human]` gesture is never done by the agent, who raises it.
 
-**Handoff**: the "Resuming work" section of every project sheet (dated last
+**Handoff**: the "Resuming work" section of every brief (dated last
 state, uncommitted work, next step with its marker) acts as a handoff file:
 another agent, another tool or a person picks it back up cold from it,
 without any tool-specific memory.
@@ -285,12 +285,12 @@ Checked by QUA-015 for what a machine can verify (markers, **dated** status
 line, intent sections, projects' "Resuming work" section): a machine can't
 tell if a status is true, but a dated status shows its age. Content
 accuracy stays human. Exceptions to the check: `docs/projects/template-*.md`
-files (templates to copy, not sheets) and `docs/projects/routine-maintenance.md`
-(permanent sheet, not a lotted project).
+files (templates to copy, not briefs) and `docs/projects/routine-maintenance.md`
+(permanent brief, not a project split into increments).
 
 ### Scoping reminder
 
-A code file must not stay detached from every project. A sheet in
+A code file must not stay detached from every project. A brief in
 `docs/projects/` carries, in an HTML comment invisible when rendered, a
 `cadrage` block (one path or pattern per line under `fichiers:`): it covers
 the files this project touches.
@@ -305,7 +305,7 @@ the files this project touches.
   markdown file are never code.
 - **Agent side** (Claude Code, hook
   `.claude/hooks/rappel-cadrage.mjs`, if present), following the same setting: in `bloquant`, writing a code file
-  outside any sheet is refused before it happens (PreToolUse hook); in
+  outside any brief is refused before it happens (PreToolUse hook); in
   `avertissement`, a reminder is slipped after the write (PostToolUse hook),
   nothing is blocked; in `off`, nothing.
 - **Small task**: attaches to `docs/projects/routine-maintenance.md`,
@@ -325,8 +325,8 @@ the reminder: a single source.
 The current activity (`CADRAGE`, `ATTENTE`, `DEMANDE`, `REALISATION`,
 `PREUVES`, `VERIFY`, `CLOTURE`) and the active expectation live in
 `.drwil/state.json` (if present): a **local** state, ignored by Git, holding references
-only (activity, path of the active sheet, active request, timestamp). The
-allowed scope stays the sheet's `cadrage` block, which is versioned.
+only (activity, path of the active brief, active request, timestamp). The
+allowed scope stays the brief's `cadrage` block, which is versioned.
 
 - **Deterministic reading** (`.githooks/etat.mjs`, the only reader):
   `node .githooks/etat.mjs` prints the active context, `--json` the raw
@@ -339,7 +339,7 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
   re-inject the context automatically — Claude Code does (SessionStart hook,
   if present); it is only an accelerator.
 - **Short reminder, only when the state changes**: `node .githooks/etat.mjs
-  rappel` prints two lines (activity, sheet, scope size, rule) if they
+  rappel` prints two lines (activity, brief, scope size, rule) if they
   differ from the last reminder injected, nothing otherwise; the last
   reminder's fingerprint lives in `.drwil/rappel.json` (if present), local
   and git-ignored like the state. Claude Code calls it on every message
@@ -349,15 +349,15 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
   modifying any file. It is a behavioural barrier: the guarantee stays in
   Git.
 - **Hand-off to someone else**: a clone's state does not travel; resume from
-  the versioned sheet ("Hand-off" section) and re-activate the expectation
+  the versioned brief ("Hand-off" section) and re-activate the expectation
   explicitly.
 - **Transitions**: one activity at a time, back to `REALISATION` after
   `PREUVES` or a failed `VERIFY`, abandon to `CADRAGE` from any activity.
-  Command: `node .githooks/etat.mjs passer <ACTIVITE> [--fiche <sheet>]
-  [--demande <text>]` (or `drwil etat passer …`, a mere facade); `--fiche`
+  Command: `node .githooks/etat.mjs passer <ACTIVITE> [--brief <brief>]
+  [--demande <text>]` (or `drwil etat passer …`, a mere facade); `--brief`
   opens an expectation from `CADRAGE`.
 - **Who decides** (`transitions` setting in `.drwil/ia-first.json`): `humain`
-  (default) — opening rights is a human decision: starting a chantier (see
+  (default) — opening rights is a human decision: starting a workstream (see
   "Starting and closing" below), or, step by step, opening an expectation
   and moving from `DEMANDE` to `REALISATION` in an interactive terminal by
   typing the target activity; the other transitions, which narrow rights or
@@ -370,7 +370,7 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
   evidence without running anything: verify stays the only judge, over all
   blocking contracts. `FAIL` or `ERROR`: go back to `REALISATION` to fix.
   `MANUAL`: a human attests (`drwil attest <ID>`), then verify runs again. A
-  fiche's acceptance criteria are not a parallel system: a checkable
+  brief's acceptance criteria are not a parallel system: a checkable
   criterion becomes a contract with a `Check`, a human one a `MANUAL`
   contract.
 - **Tool-side blocks** (Claude Code, `deny` rules in
@@ -382,17 +382,17 @@ allowed scope stays the sheet's `cadrage` block, which is versioned.
 
 ### Starting and closing
 
-Two human gestures per chantier: **start** and **merge the PR** — only one if the merge is
+Two human gestures per workstream: **start** and **merge the PR** — only one if the merge is
 authorised at start (below).
 
 - **Start**: from `CADRAGE`, `ATTENTE` or `DEMANDE`, a single decision moves
-  to `REALISATION` on a **framed sheet** (`cadrage` block committed in
-  `HEAD`, sheet not finished, templates excluded; list: `node
-  .githooks/etat.mjs fiches`). It applies to that committed cadrage.
+  to `REALISATION` on a **scoped brief** (`cadrage` block committed in
+  `HEAD`, brief not finished, templates excluded; list: `node
+  .githooks/etat.mjs briefs`). It applies to that committed scoping.
   - **In the chat** (`/drwil-lancer`, if present): the agent opens a poll of
-    the framed sheets, in the order of `fiches --json` (ready sheets first,
+    the scoped briefs, in the order of `fiches --json` (ready briefs first,
     no open `[decision]`, then by index priority; the intentions' proposed
-    order breaks ties), and recommends the first ready sheet (in the
+    order breaks ties), and recommends the first ready brief (in the
     description, never by preselection); it is the **human's answer**, read by a tool hook
     (`.claude/hooks/saisie-drwil.mjs` (if present)), that starts — never the
     model. The hook refuses a start poll that arrives with an answer already
@@ -400,14 +400,14 @@ authorised at start (below).
     answer pre-filled by the model is ignored by the tool) and in Copilot
     CLI, which fires the same hooks on its own poll.
   - **In a terminal** (any tool): `node .githooks/etat.mjs lancer` lists the
-    framed sheets, asks for a number, then for typing `LANCER`.
+    scoped briefs, asks for a number, then for typing `LANCER`.
 - **Close**: free as soon as the `drwil verify` evidence is valid (see
   above); closing removes rights, and accepting the work remains the human
   PR merge.
 - **Merge authorised at start** (Claude Code): a second question of the
   poll (`drwil-fusion`) lets the human accept in advance; their answer,
   read by the hook, is kept in the local state (`fusion_autorisee`) until
-  going back to CADRAGE, never set by the agent (even with
+  going back to Scoping, never set by the agent (even with
   `transitions: agent`). In CLOTURE, after verify PASS and pushing the
   closing commit, the agent schedules `gh pr merge --auto --merge`: the
   host only merges once the required checks pass ("Allow auto-merge"
@@ -425,20 +425,20 @@ commit, push, in CI and in `drwil verify`. Severity: `barriere` setting in
 `.drwil/ia-first.json` — `avertissement` (written by `drwil init`: gaps are
 shown, nothing is blocked), `bloquant`, `off`.
 
-- **Sheets always pass**: `docs/projects/` and `docs/intentions/`, as do
+- **Briefs always pass**: `docs/projects/` and `docs/intentions/`, as do
   human attestations, written by `drwil attest`:
   `.drwil/evidence/attestations/` (if present) — configurable list: `horsPerimetre`. Any other file,
   code or doc, is subject to the scope.
-- **At commit**: outside sheets, a commit is accepted only in
-  `REALISATION`, for files covered by the active sheet's `cadrage` block
+- **At commit**: outside briefs, a commit is accepted only in
+  `REALISATION`, for files covered by the active brief's `cadrage` block
   **as it is in `HEAD`**. Widening one's scope thus takes a separate commit
-  touching only the sheet; the code comes in the next commit.
-- **Trailer**: the `prepare-commit-msg` hook adds `Drwil-Attente: <active
-  sheet>` to the message. Git never skips this hook.
+  touching only the brief; the code comes in the next commit.
+- **Trailer**: the `prepare-commit-msg` hook adds `Drwil-Expectation: <active
+  brief>` to the message. Git never skips this hook.
 - **On push, in CI and in `drwil verify`**: each commit of the branch
-  (since the main branch, or `DRWIL_BASE`) is replayed against the cadrage
-  of its trailer's sheet, read in its parent commit. A commit outside
-  sheets without a trailer is refused. A commit is judged by its parent's
+  (since the main branch, or `DRWIL_BASE`) is replayed against the scoping
+  of its trailer's brief, read in its parent commit. A commit outside
+  briefs without a trailer is refused. A commit is judged by its parent's
   rules: if the barrier did not exist there yet, it is not checked. The
   activity only exists locally, so CI only checks the scope.
 - **Removal**: see below.
@@ -458,7 +458,7 @@ setting, then removed with the rest of the mechanics.
   removed (hooks, `.githooks/etat.mjs`, rules of
   `.claude/settings.json` (if present)); the local state
   `.drwil/state.json` (if present) is listed with
-  them and deleted only with `--yes`. Sheets, contracts and versioned
+  them and deleted only with `--yes`. Briefs, contracts and versioned
   attestations stay: they are the project's history.
 - **Limit**: Claude Code's `deny` rule on `.drwil/state.json` (if present)
   also refuses any shell command that mentions that path, even a read;
