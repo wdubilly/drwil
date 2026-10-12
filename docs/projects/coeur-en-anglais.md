@@ -202,8 +202,29 @@ Aucun.
   documenté `workstream/` ; note de version. Critère de sortie :
   `miroirs-gabarit` sans tolérance d'anciens noms, CI verte.
 
-## 7. Reprise
+## 7. Migration (lot 1, 2026-10-12)
 
-- **Dernier état** (2026-10-12) : cadré.
+- **Table des noms** : `packages/drwil/src/migration-table.ts`, seule source
+  des anciens noms et de leurs noms anglais. Au-delà du glossaire : champs
+  `activite` → `activity` et `depuis` → `since` ; `horsPerimetre` →
+  `outOfScope`, `risque.cheminsSensibles` → `risk.sensitivePaths`,
+  `dirs.recettes` → `dirs.recipes` ; dans `.drwil/`, fichiers-installes.json
+  → installed-files.json et rappel.json → reminder.json ; champs de
+  consommation `duree_min` → `duration_min`.
+- **Règles** (`packages/drwil/src/migration.ts`) : le contenu du projet
+  (fiches, index, contrats) est déplacé, jamais supprimé ; une cible déjà
+  modifiée n'est pas écrasée (conflit signalé). Un fichier de l'ancien
+  gabarit français (recettes, skills, documents de départ, hooks) est
+  supprimé s'il n'a pas changé depuis l'installation, gardé et signalé
+  sinon. Références réécrites dans les fichiers texte (docs, réglages,
+  `.gitignore`, hooks gardés), jamais dans le code du projet. La mécanique
+  inchangée (`.githooks/`, `.claude/hooks/`, `.claude/settings.json`) est
+  retirée pour être réécrite à neuf par l'installation.
+- **Pas encore branchée** sur `init` / `apply` : elle l'est au lot 2, avec
+  les hooks qui lisent les nouveaux noms, pour que chaque commit reste vert.
+
+## 8. Reprise
+
+- **Dernier état** (2026-10-12) : lot 1 fait (module et 4 tests).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-lancer`).
+- **Prochaine étape** : [IA] lot 2, bascule atomique.

@@ -25,6 +25,7 @@ export { LANGS, TOOLS, CIS, type InitOptions } from "./config.js";
 export { uninstall, type UninstallOptions, type UninstallReport } from "./manifeste.js";
 export { resoudreDerive, type ResoudreDeriveOptions, type ResoudreDeriveReport } from "./derive.js";
 export { auditerApply, formaterAudit, type AuditApply } from "./apercu.js";
+export { migrer, type PlanMigration } from "./migration.js";
 import { KIT_MECHANICS, readConfig, resolve, writeConfig, type InitOptions, type Resolved } from "./config.js";
 import { scaffold, type Overwrite } from "./rendu.js";
 import { nettoyerObsoletes, readManifest, writeManifest } from "./manifeste.js";
