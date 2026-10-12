@@ -102,7 +102,7 @@ version released after the project was installed (today: a cited path that
 only exists as a file ignored by Git) follows the `newRequirements`
 setting of `.drwil/ia-first.json`: `blocking` for a fresh install,
 `warning` for a project that was already set up without it — an
-upgrade never breaks a commit that used to pass; `drwil apply` never
+upgrade never breaks a commit that used to pass; `drwil init` never
 hardens this setting, the project switches it to `blocking` when it wants.
 
 To keep commits fast, a project check that declares `paths` (patterns,
@@ -354,7 +354,7 @@ allowed scope stays the brief's `scope` block, which is versioned.
 - **Transitions**: one activity at a time, back to `BUILD` after
   `EVIDENCE` or a failed `VERIFY`, abandon to `SCOPING` from any activity.
   Command: `node .githooks/state.mjs move <ACTIVITE> [--brief <brief>]
-  [--demande <text>]` (or `drwil etat passer …`, a mere facade); `--brief`
+  [--request <text>]` (or `drwil state move …`, a mere facade); `--brief`
   opens an expectation from `SCOPING`.
 - **Who decides** (`transitions` setting in `.drwil/ia-first.json`): `human`
   (default) — opening rights is a human decision: starting a workstream (see
@@ -389,7 +389,7 @@ authorised at start (below).
   to `BUILD` on a **scoped brief** (`scope` block committed in
   `HEAD`, brief not finished, templates excluded; list: `node
   .githooks/state.mjs briefs`). It applies to that committed scoping.
-  - **In the chat** (`/drwil-lancer`, if present): the agent opens a poll of
+  - **In the chat** (`/drwil-start`, if present): the agent opens a poll of
     the scoped briefs, in the order of `fiches --json` (ready briefs first,
     no open `[decision]`, then by index priority; the intentions' proposed
     order breaks ties), and recommends the first ready brief (in the
@@ -400,19 +400,19 @@ authorised at start (below).
     answer pre-filled by the model is ignored by the tool) and in Copilot
     CLI, which fires the same hooks on its own poll.
   - **In a terminal** (any tool): `node .githooks/state.mjs start` lists the
-    scoped briefs, asks for a number, then for typing `LANCER`.
+    scoped briefs, asks for a number, then for typing `START`.
 - **Close**: free as soon as the `drwil verify` evidence is valid (see
   above); closing removes rights, and accepting the work remains the human
   PR merge.
 - **Merge authorised at start** (Claude Code): a second question of the
-  poll (`drwil-fusion`) lets the human accept in advance; their answer,
+  poll (`drwil-merge`) lets the human accept in advance; their answer,
   read by the hook, is kept in the local state (`auto_merge`) until
   going back to Scoping, never set by the agent (even with
   `transitions: agent`). In CLOSING, after verify PASS and pushing the
   closing commit, the agent schedules `gh pr merge --auto --merge`: the
   host only merges once the required checks pass ("Allow auto-merge"
   repository setting required). In the terminal, `lancer` asks the same
-  question (type `FUSION`).
+  question (type `MERGE`).
 - **Limit**: an agent with a shell could call these functions itself or
   rewrite the local state; Claude Code's `deny` rules block calling the hook
   directly, and cheating stays visible and refused off the machine (commit
@@ -420,7 +420,7 @@ authorised at start (below).
 
 ### Scope barrier
 
-The engine's `perimetre-attente` check (`.githooks/scope-gate.mjs`), run at
+The engine's `scope-gate` check (`.githooks/scope-gate.mjs`), run at
 commit, push, in CI and in `drwil verify`. Severity: `scopeGate` setting in
 `.drwil/ia-first.json` — `warning` (written by `drwil init`: gaps are
 shown, nothing is blocked), `blocking`, `off`.

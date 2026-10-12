@@ -23,14 +23,14 @@ const TEXTS = {
     unknown: (v) => `niveau de risque « ${v} » inconnu (LOW, MEDIUM ou HIGH)`,
     tooLow: (v, min) =>
       `risque ${v} déclaré, mais le cadrage touche la mécanique de gouvernance : ${min} au minimum (forçable vers le haut seulement)`,
-    missing: (min) => `pas de champ « Risque » alors que le cadrage impose ${min} (DRWIL-012)`,
+    missing: (min) => `pas de champ « Risque » alors que le cadrage impose ${min}`,
     decisions: () => `risque HIGH sans section « Décisions »`,
     contracts: () => `risque HIGH sans contrat concerné cité (ID du registre)`,
   },
   en: {
     unknown: (v) => `unknown risk level "${v}" (LOW, MEDIUM or HIGH)`,
     tooLow: (v, min) => `risk ${v} declared, but the scope touches governance mechanics: ${min} at least (can only be raised)`,
-    missing: (min) => `no "Risk" field although the scope requires ${min} (DRWIL-012)`,
+    missing: (min) => `no "Risk" field although the scope requires ${min}`,
     decisions: () => `HIGH risk without a "Decisions" section`,
     contracts: () => `HIGH risk without any related contract cited (registry ID)`,
   },

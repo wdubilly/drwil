@@ -10,14 +10,7 @@
 // A check's command never lives here.
 
 /** Identifiers of the steps of .githooks/run-checks.mjs. The first four are also those of BASE in check-control-coverage.mjs. */
-export const BASE_CHECKS = [
-  "secrets-fichiers",
-  "docs-references",
-  "perimetre-attente",
-  "controles-autotest",
-  "couverture-ci",
-  "branche-principale",
-];
+export const BASE_CHECKS = ["secrets", "docs-references", "scope-gate", "checks-self-test", "ci-coverage", "main-branch"];
 
 const ID_RE = /^[A-Z][A-Z0-9]*-\d+$/;
 const CHECK_FIELD = /^(contrôle|controle|check)$/i;
@@ -26,15 +19,15 @@ const RULE_FIELD = /^(règle|regle|rule)$/i;
 const SEVERITY_FIELD = /^(sévérité|severite|severity)$/i;
 
 // Only blocking contracts decide the gate of `drwil verify`; the others are run and shown
-// without changing the exit code. Default: blocking (P0 behaviour). The internal values are stable:
-// `drwil verify` shows them.
+// without changing the exit code. Default: blocking (P0 behaviour). A registry is written in its
+// project's language: both words are read.
 export const SEVERITIES = {
-  bloquant: "bloquant",
-  blocking: "bloquant",
-  avertissement: "avertissement",
-  warning: "avertissement",
-  indicatif: "indicatif",
-  advisory: "indicatif",
+  bloquant: "blocking",
+  blocking: "blocking",
+  avertissement: "warning",
+  warning: "warning",
+  indicatif: "advisory",
+  advisory: "advisory",
 };
 
 /** Identifiers cited in a Check field: those between backticks, otherwise the comma-separated list. */
@@ -76,7 +69,7 @@ export function readContracts(text) {
         rule: null,
         checks: null,
         manual: null,
-        severity: "bloquant",
+        severity: "blocking",
         rawSeverity: null,
         text: line,
       };
@@ -131,7 +124,7 @@ export function readContracts(text) {
       rule: iRule >= 0 ? c[iRule] || null : null,
       checks: iCheck >= 0 && c[iCheck] && c[iCheck] !== "—" ? identifiers(c[iCheck]) : null,
       manual: iManual >= 0 && c[iManual] && c[iManual] !== "—" ? c[iManual] : null,
-      severity: "bloquant",
+      severity: "blocking",
       rawSeverity: null,
       text: line,
     });

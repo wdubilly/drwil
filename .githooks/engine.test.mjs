@@ -67,23 +67,23 @@ test("textes : anglais sur demande, français sinon", () => {
 test("mode minimal : seuls les contrôles du socle hors mode sont applicables", () => {
   const racine = depot();
   const cfg = { mode: "minimal", ciFiles: ["ci.yml"] };
-  for (const id of ["secrets-fichiers", "controles-autotest", "couverture-ci"]) {
-    assert.deepEqual(executer(racine, id, { cfg }), { status: "non-applicable", detail: "mode minimal" });
+  for (const id of ["secrets", "checks-self-test", "ci-coverage"]) {
+    assert.deepEqual(executer(racine, id, { cfg }), { status: "not-applicable", detail: "mode minimal" });
   }
 });
 
 test("secrets : gitleaks absent du PATH comme de ~/.local/bin → non exécuté", () => {
   const racine = depot();
   const vide = tmp();
-  const r = avecEnv({ PATH: vide, HOME: vide }, () => executer(racine, "secrets-fichiers", { cfg: { lang: "en" } }));
-  assert.deepEqual(r, { status: "non-execute", detail: "gitleaks not installed" });
+  const r = avecEnv({ PATH: vide, HOME: vide }, () => executer(racine, "secrets", { cfg: { lang: "en" } }));
+  assert.deepEqual(r, { status: "not-run", detail: "gitleaks not installed" });
 });
 
 test("secrets : gitleaks trouvé hors dépôt git → non exécuté", posix, () => {
   const outils = tmp();
   fauxGitleaks(outils);
-  const r = avecEnv({ PATH: [outils, dossierGit].join(delimiter) }, () => executer(tmp(), "secrets-fichiers"));
-  assert.deepEqual(r, { status: "non-execute", detail: "pas de dépôt git" });
+  const r = avecEnv({ PATH: [outils, dossierGit].join(delimiter) }, () => executer(tmp(), "secrets"));
+  assert.deepEqual(r, { status: "not-run", detail: "pas de dépôt git" });
 });
 
 test("secrets : indexés seulement au commit, tout l'historique en CI ; ~/.local/bin aussi cherché", posix, () => {
@@ -93,8 +93,8 @@ test("secrets : indexés seulement au commit, tout l'historique en CI ; ~/.local
   mkdirSync(outils, { recursive: true });
   fauxGitleaks(outils);
   avecEnv({ PATH: dossierGit, HOME: maison }, () => {
-    assert.equal(executer(racine, "secrets-fichiers", { env: {} }).status, "ok");
-    assert.equal(executer(racine, "secrets-fichiers", { env: { CI: "true" } }).status, "ok");
+    assert.equal(executer(racine, "secrets", { env: {} }).status, "ok");
+    assert.equal(executer(racine, "secrets", { env: { CI: "true" } }).status, "ok");
   });
   const appels = spawnSync("cat", [join(outils, "appels")], { encoding: "utf8" })
     .stdout.trim()
@@ -109,17 +109,17 @@ test("lancer : commande impossible à lancer = échec ; sortie capturée seuleme
   // Dossier de travail absent : le processus ne démarre même pas (r.error).
   const cfg = { checks: [{ id: "x", run: "node -e 0", cwd: "absent" }] };
   const r = parId(checks(racine, { cfg })).x.run({ stdio: "pipe" });
-  assert.equal(r.status, "echec");
+  assert.equal(r.status, "fail");
   assert.ok(r.detail);
   // Sans options : stdio hérité, rien de capturé.
-  const ok = parId(checks(racine, { cfg: { checks: [{ run: "node -e 0" }] } }))["projet:node -e 0"].run();
+  const ok = parId(checks(racine, { cfg: { checks: [{ run: "node -e 0" }] } }))["project:node -e 0"].run();
   assert.deepEqual(ok, { status: "ok", output: undefined });
 });
 
 test("docs-references : lance check-docs du projet ; son échec remonte", () => {
   const racine = depot();
   ecrire(racine, ".githooks/check-docs.mjs", "process.exit(3)\n");
-  assert.equal(executer(racine, "docs-references").status, "echec");
+  assert.equal(executer(racine, "docs-references").status, "fail");
   ecrire(racine, ".githooks/check-docs.mjs", "console.log('vu')\n");
   const annonces = [];
   assert.deepEqual(executer(racine, "docs-references", {}, { stdio: "pipe", beforeRun: (n) => annonces.push(n) }), {
@@ -135,18 +135,18 @@ test("périmètre : bloquant = échec marqué ✗, avertissement = ok marqué �
   const annonces = [];
   const bloque = executer(
     racine,
-    "perimetre-attente",
+    "scope-gate",
     { cfg: { scopeGate: "blocking" }, staged: indexes },
     { stdio: "pipe", beforeRun: (n) => annonces.push(n) },
   );
-  assert.equal(bloque.status, "echec");
+  assert.equal(bloque.status, "fail");
   assert.match(bloque.output, /^ {2}✗ /);
   assert.deepEqual(annonces, ["périmètre de l'attente"]);
   const journal = [];
   const log = console.log;
   console.log = (m) => journal.push(m);
   try {
-    const averti = executer(racine, "perimetre-attente", { staged: indexes }, {});
+    const averti = executer(racine, "scope-gate", { staged: indexes }, {});
     assert.equal(averti.status, "ok");
     assert.match(averti.output, /^ {2}⚠ /);
   } finally {
@@ -154,38 +154,38 @@ test("périmètre : bloquant = échec marqué ✗, avertissement = ok marqué �
   }
   assert.equal(journal.length, 1);
   // Sans problème : rien d'affiché.
-  assert.equal(executer(racine, "perimetre-attente", { staged: ["docs/projects/a.md"] }, {}).output, "");
+  assert.equal(executer(racine, "scope-gate", { staged: ["docs/projects/a.md"] }, {}).output, "");
 });
 
 test("branche principale : refusée hors CI, tolérée pour un push sans branche, hors dépôt git", () => {
-  assert.equal(executer(depot("master"), "branche-principale", { env: {} }).status, "echec");
+  assert.equal(executer(depot("master"), "main-branch", { env: {} }).status, "fail");
   assert.match(
-    executer(depot("main"), "branche-principale", { env: {}, cfg: { lang: "en" } }).message,
+    executer(depot("main"), "main-branch", { env: {}, cfg: { lang: "en" } }).message,
     /^direct work on the main branch \(main\)/,
   );
-  assert.deepEqual(executer(depot("travail"), "branche-principale", { env: {} }), { status: "ok" });
-  assert.deepEqual(executer(tmp(), "branche-principale", { env: {} }), { status: "ok" });
+  assert.deepEqual(executer(depot("travail"), "main-branch", { env: {} }), { status: "ok" });
+  assert.deepEqual(executer(tmp(), "main-branch", { env: {} }), { status: "ok" });
   const maitre = depot("master");
-  assert.equal(executer(maitre, "branche-principale", { env: { CI: "1" } }).status, "non-applicable");
-  assert.equal(executer(maitre, "branche-principale", { env: { DRWIL_PUSH_TAGS_ONLY: "1" } }).detail, "push de tags uniquement");
-  assert.equal(executer(maitre, "branche-principale", { env: { DRWIL_PUSH_NO_BRANCH: "1" } }).status, "non-applicable");
+  assert.equal(executer(maitre, "main-branch", { env: { CI: "1" } }).status, "not-applicable");
+  assert.equal(executer(maitre, "main-branch", { env: { DRWIL_PUSH_TAGS_ONLY: "1" } }).detail, "push de tags uniquement");
+  assert.equal(executer(maitre, "main-branch", { env: { DRWIL_PUSH_NO_BRANCH: "1" } }).status, "not-applicable");
 });
 
 test("autotest : sans dossier ou sans test non applicable ; sinon les tests du dépôt tournent (même sous node --test)", () => {
   const racine = depot();
-  assert.equal(executer(racine, "controles-autotest").detail, "tests propres au dépôt drwil, non livrés");
+  assert.equal(executer(racine, "checks-self-test").detail, "tests propres au dépôt drwil, non livrés");
   ecrire(racine, ".githooks/a.mjs", "");
-  assert.equal(executer(racine, "controles-autotest").status, "non-applicable");
+  assert.equal(executer(racine, "checks-self-test").status, "not-applicable");
   ecrire(racine, ".githooks/a.test.mjs", "import { test } from 'node:test';\ntest('échoue', () => { throw new Error('x'); });\n");
-  assert.equal(executer(racine, "controles-autotest").status, "echec");
+  assert.equal(executer(racine, "checks-self-test").status, "fail");
 });
 
 test("couverture CI : sans CI non exécuté, sinon check-control-coverage du projet", () => {
   const racine = depot();
-  assert.equal(executer(racine, "couverture-ci").status, "non-execute");
-  assert.equal(executer(racine, "couverture-ci", { cfg: { ciFiles: "pas une liste" } }).status, "non-execute");
+  assert.equal(executer(racine, "ci-coverage").status, "not-run");
+  assert.equal(executer(racine, "ci-coverage", { cfg: { ciFiles: "pas une liste" } }).status, "not-run");
   ecrire(racine, ".githooks/check-control-coverage.mjs", "");
-  assert.equal(executer(racine, "couverture-ci", { cfg: { ciFiles: ["ci.yml"] } }).status, "ok");
+  assert.equal(executer(racine, "ci-coverage", { cfg: { ciFiles: ["ci.yml"] } }).status, "ok");
 });
 
 test("contrôles du projet : identifiant, name: nom, report au commit hors chemins, cwd", () => {
@@ -208,10 +208,10 @@ test("contrôles du projet : identifiant, name: nom, report au commit hors chemi
   assert.equal(sans.nomme.run({ stdio: "pipe" }).status, "ok");
   const reporte = parId(checks(racine, { cfg, staged: ["docs/a.md"] }));
   assert.deepEqual(reporte.nomme.run(), {
-    status: "non-execute",
+    status: "not-run",
     detail: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
   });
-  assert.equal(reporte["projet:node -e 0"].run({ stdio: "pipe" }).status, "ok");
+  assert.equal(reporte["project:node -e 0"].run({ stdio: "pipe" }).status, "ok");
   const touche = parId(checks(racine, { cfg, staged: ["src/x/y.js"] }));
   assert.equal(touche.nomme.run({ stdio: "pipe" }).status, "ok");
   // checks absent ou mal formé : seuls les contrôles du socle.

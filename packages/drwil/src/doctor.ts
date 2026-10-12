@@ -1,28 +1,30 @@
-// `drwil doctor` (DRWIL-010) et `drwil contracts` (DRWIL-021) : diagnostic rapide d'une
-// installation, sans exécuter aucun contrôle (c'est le rôle de `drwil verify`).
+// `drwil doctor` (DRWIL-010) and `drwil contracts` (DRWIL-021): quick diagnosis of an installation,
+// without running any check (that is the role of `drwil verify`).
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { chargerProjet } from "./verify.js";
+import { fill, projectLang, type MessageLang } from "./i18n.js";
+import { loadProject } from "./verify.js";
 
-export type EtatPoint = "ok" | "avertissement" | "probleme";
+export type PointState = "ok" | "warning" | "problem";
 
-export interface PointDiagnostic {
+export interface DiagnosisPoint {
   id: string;
-  libelle: string;
-  etat: EtatPoint;
+  label: string;
+  state: PointState;
   detail: string;
 }
 
-export interface Diagnostic {
-  /** 0 : sain (avertissements tolérés) ; 1 : au moins un problème ; 2 : pas un projet drwil exploitable. */
+export interface Diagnosis {
+  lang: MessageLang;
+  /** 0: healthy (warnings tolerated); 1: at least one problem; 2: not a usable drwil project. */
   code: 0 | 1 | 2;
-  points: PointDiagnostic[];
-  erreur?: string;
+  points: DiagnosisPoint[];
+  error?: string;
 }
 
-// Fichier d'entrée propre à chaque outil IA (AGENTS.md vaut pour tous).
-const FICHIERS_OUTILS: Record<string, string> = {
+// Entry file of each AI tool (AGENTS.md is for all of them).
+const TOOL_FILES: Record<string, string> = {
   claude: "CLAUDE.md",
   codex: "AGENTS.md",
   cursor: ".cursor/rules/ia-first.mdc",
@@ -30,138 +32,167 @@ const FICHIERS_OUTILS: Record<string, string> = {
   copilot: ".github/copilot-instructions.md",
 };
 
-function outilPresent(cmd: string, args: string[]): boolean {
+const TEXTS = {
+  fr: {
+    installation: "Installation",
+    manifest: "Manifeste",
+    noManifest: "absent : relancer `drwil init` (uninstall et dérive en dépendent)",
+    present: "présent",
+    noAgents: "absent : point d'entrée unique des agents",
+    integrations: "Intégrations IA",
+    missing: " (manquant : {0})",
+    contracts: "Contrats",
+    contractErrors: "{0} erreur(s) : {1}",
+    validContracts: "{0} contrat(s) valide(s) ({1})",
+    proofs: "Preuves automatisées",
+    noCheck: " (sans Contrôle, toujours MANUAL : {0})",
+    hooks: "Hooks git",
+    hooksOff: "inactifs : lancer `git config core.hooksPath .githooks`",
+    noCi: "aucune CI configurée : pas de filet pour les contrôles dégradables (QUA-013)",
+    ciMissing: "fichier absent : {0}",
+    tools: "Outils requis",
+    gitState: "node {0}, git {1}{2}",
+    absent: "absent",
+    gitleaks: ", gitleaks {0}",
+    gitleaksMissing: "absent (secrets non contrôlés localement)",
+    healthy: "Installation saine.",
+    problems: "Problème(s) à corriger ci-dessus.",
+  },
+  en: {
+    installation: "Installation",
+    manifest: "Manifest",
+    noManifest: "missing: run `drwil init` again (uninstall and drift depend on it)",
+    present: "present",
+    noAgents: "missing: the agents' single entry point",
+    integrations: "AI integrations",
+    missing: " (missing: {0})",
+    contracts: "Contracts",
+    contractErrors: "{0} error(s): {1}",
+    validContracts: "{0} valid contract(s) ({1})",
+    proofs: "Automated proofs",
+    noCheck: " (without Check, always MANUAL: {0})",
+    hooks: "Git hooks",
+    hooksOff: "inactive: run `git config core.hooksPath .githooks`",
+    noCi: "no CI configured: no net for degradable checks (QUA-013)",
+    ciMissing: "missing file: {0}",
+    tools: "Required tools",
+    gitState: "node {0}, git {1}{2}",
+    absent: "missing",
+    gitleaks: ", gitleaks {0}",
+    gitleaksMissing: "missing (secrets not checked locally)",
+    healthy: "Healthy installation.",
+    problems: "Problem(s) to fix above.",
+  },
+};
+
+function toolPresent(cmd: string, args: string[]): boolean {
   return !spawnSync(cmd, args, { stdio: "ignore" }).error;
 }
 
-export async function doctor(opts: { targetDir: string }): Promise<Diagnostic> {
+export async function doctor(opts: { targetDir: string }): Promise<Diagnosis> {
   const root = opts.targetDir;
-  const projet = await chargerProjet(root);
-  if (typeof projet === "string") return { code: 2, points: [], erreur: projet };
-  const { cfg, registre, lecteur } = projet;
-  const points: PointDiagnostic[] = [];
-  const point = (id: string, libelle: string, etat: EtatPoint, detail: string) => points.push({ id, libelle, etat, detail });
+  const project = await loadProject(root);
+  if (typeof project === "string") return { lang: projectLang(root), code: 2, points: [], error: project };
+  const { lang, cfg, registry, contracts: reader } = project;
+  const T = TEXTS[lang];
+  const points: DiagnosisPoint[] = [];
+  const point = (id: string, label: string, state: PointState, detail: string) => points.push({ id, label, state, detail });
 
-  point("installation", "Installation", "ok", ".drwil/ia-first.json");
-  const manifeste = existsSync(join(root, ".drwil", "fichiers-installes.json"));
-  point(
-    "manifeste",
-    "Manifeste",
-    manifeste ? "ok" : "avertissement",
-    manifeste ? ".drwil/fichiers-installes.json" : "absent : relancer `drwil apply` (uninstall et dérive en dépendent)",
-  );
+  point("installation", T.installation, "ok", ".drwil/ia-first.json");
+  const manifest = existsSync(join(root, ".drwil", "installed-files.json"));
+  point("manifest", T.manifest, manifest ? "ok" : "warning", manifest ? ".drwil/installed-files.json" : T.noManifest);
   const agents = existsSync(join(root, "AGENTS.md"));
-  point("agents", "AGENTS.md", agents ? "ok" : "probleme", agents ? "présent" : "absent : point d'entrée unique des agents");
+  point("agents", "AGENTS.md", agents ? "ok" : "problem", agents ? T.present : T.noAgents);
 
-  const outils: string[] = Array.isArray(cfg.tools) ? cfg.tools : [];
-  const manquants = outils.filter((t) => FICHIERS_OUTILS[t] && !existsSync(join(root, FICHIERS_OUTILS[t])));
+  const tools: string[] = Array.isArray(cfg.tools) ? cfg.tools : [];
+  const missing = tools.filter((t) => TOOL_FILES[t] && !existsSync(join(root, TOOL_FILES[t])));
   point(
     "integrations",
-    "Intégrations IA",
-    manquants.length ? "probleme" : "ok",
-    `${outils.length - manquants.length}/${outils.length}${manquants.length ? ` (manquant : ${manquants.map((t) => FICHIERS_OUTILS[t]).join(", ")})` : ""}`,
+    T.integrations,
+    missing.length ? "problem" : "ok",
+    `${tools.length - missing.length}/${tools.length}${missing.length ? fill(T.missing, missing.map((t) => TOOL_FILES[t]).join(", ")) : ""}`,
   );
 
-  const contrats: any[] = lecteur.lireContrats(readFileSync(join(root, registre), "utf8"));
-  const erreurs: { message: string }[] = lecteur.validerContrats(contrats, lecteur.controlesConnus(cfg), cfg.lang);
+  const contracts: any[] = reader.readContracts(readFileSync(join(root, registry), "utf8"));
+  const errors: { message: string }[] = reader.validateContracts(contracts, reader.knownChecks(cfg), lang);
   point(
-    "contrats",
-    "Contrats",
-    erreurs.length || !contrats.length ? "probleme" : "ok",
-    erreurs.length
-      ? `${erreurs.length} erreur(s) : ${erreurs.map((e) => e.message).join(" ; ")}`
-      : `${contrats.length} contrat(s) valide(s) (${registre})`,
+    "contracts",
+    T.contracts,
+    errors.length || !contracts.length ? "problem" : "ok",
+    errors.length
+      ? fill(T.contractErrors, errors.length, errors.map((e) => e.message).join(" ; "))
+      : fill(T.validContracts, contracts.length, registry),
   );
-  const prouvables = contrats.filter((k) => k.controles?.length).length;
-  const sansControle = contrats.filter((k) => !k.controles?.length).map((k) => k.id);
+  const provable = contracts.filter((k) => k.checks?.length).length;
+  const noCheck = contracts.filter((k) => !k.checks?.length).map((k) => k.id);
   point(
-    "preuves",
-    "Preuves automatisées",
-    sansControle.length ? "avertissement" : "ok",
-    `${prouvables}/${contrats.length}${sansControle.length ? ` (sans Contrôle, toujours MANUAL : ${sansControle.join(", ")})` : ""}`,
+    "proofs",
+    T.proofs,
+    noCheck.length ? "warning" : "ok",
+    `${provable}/${contracts.length}${noCheck.length ? fill(T.noCheck, noCheck.join(", ")) : ""}`,
   );
 
   const hooksPath = spawnSync("git", ["config", "core.hooksPath"], { cwd: root, encoding: "utf8" });
-  const hooksActifs = hooksPath.status === 0 && hooksPath.stdout.trim() === ".githooks";
-  point(
-    "hooks",
-    "Hooks git",
-    hooksActifs ? "ok" : "probleme",
-    hooksActifs ? "core.hooksPath = .githooks" : "inactifs : lancer `git config core.hooksPath .githooks`",
-  );
+  const hooksOn = hooksPath.status === 0 && hooksPath.stdout.trim() === ".githooks";
+  point("hooks", T.hooks, hooksOn ? "ok" : "problem", hooksOn ? "core.hooksPath = .githooks" : T.hooksOff);
 
   const ciFiles: string[] = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
-  const ciAbsents = ciFiles.filter((f) => !existsSync(join(root, f)));
+  const ciMissing = ciFiles.filter((f) => !existsSync(join(root, f)));
   point(
     "ci",
     "CI",
-    !ciFiles.length ? "avertissement" : ciAbsents.length ? "probleme" : "ok",
-    !ciFiles.length
-      ? "aucune CI configurée : pas de filet pour les contrôles dégradables (QUA-013)"
-      : ciAbsents.length
-        ? `fichier absent : ${ciAbsents.join(", ")}`
-        : ciFiles.join(", "),
+    !ciFiles.length ? "warning" : ciMissing.length ? "problem" : "ok",
+    !ciFiles.length ? T.noCi : ciMissing.length ? fill(T.ciMissing, ciMissing.join(", ")) : ciFiles.join(", "),
   );
 
-  const git = outilPresent("git", ["--version"]);
+  const git = toolPresent("git", ["--version"]);
   const gitleaks =
-    outilPresent("gitleaks", ["version"]) || outilPresent(join(process.env.HOME ?? "", ".local", "bin", "gitleaks"), ["version"]);
+    toolPresent("gitleaks", ["version"]) || toolPresent(join(process.env.HOME ?? "", ".local", "bin", "gitleaks"), ["version"]);
   const full = (cfg.mode ?? "full") === "full";
   point(
-    "outils",
-    "Outils requis",
-    !git ? "probleme" : full && !gitleaks ? "avertissement" : "ok",
-    `node ${process.version}, git ${git ? "présent" : "absent"}${full ? `, gitleaks ${gitleaks ? "présent" : "absent (secrets non contrôlés localement)"}` : ""}`,
+    "tools",
+    T.tools,
+    !git ? "problem" : full && !gitleaks ? "warning" : "ok",
+    fill(T.gitState, process.version, git ? T.present : T.absent, full ? fill(T.gitleaks, gitleaks ? T.present : T.gitleaksMissing) : ""),
   );
 
-  return { code: points.some((p) => p.etat === "probleme") ? 1 : 0, points };
+  return { lang, code: points.some((p) => p.state === "problem") ? 1 : 0, points };
 }
 
-const SYMBOLES: Record<EtatPoint, string> = { ok: "✓", avertissement: "⚠", probleme: "✗" };
+const SYMBOLS: Record<PointState, string> = { ok: "✓", warning: "⚠", problem: "✗" };
 
-export function formaterDiagnostic(d: Diagnostic): string {
-  if (d.erreur) return `drwil doctor\n\n✗ ${d.erreur}`;
-  const lignes = ["drwil doctor", ""];
-  for (const p of d.points) lignes.push(`${SYMBOLES[p.etat]} ${p.libelle.padEnd(22)} ${p.detail}`);
-  lignes.push("", d.code === 0 ? "Installation saine." : "Problème(s) à corriger ci-dessus.");
-  return lignes.join("\n");
+export function formatDiagnosis(d: Diagnosis): string {
+  if (d.error) return `drwil doctor\n\n✗ ${d.error}`;
+  const T = TEXTS[d.lang];
+  const lines = ["drwil doctor", ""];
+  for (const p of d.points) lines.push(`${SYMBOLS[p.state]} ${p.label.padEnd(22)} ${p.detail}`);
+  lines.push("", d.code === 0 ? T.healthy : T.problems);
+  return lines.join("\n");
 }
 
-/** Format machine stable de `drwil doctor --json`, version 1. */
-export function diagnosticJson(d: Diagnostic) {
+/** Stable machine format of `drwil doctor --json`, version 1. */
+export function diagnosisJson(d: Diagnosis) {
   return {
     version: 1,
     status: d.code === 0 ? "healthy" : d.code === 1 ? "problems" : "error",
     exitCode: d.code,
-    ...(d.erreur ? { error: d.erreur } : {}),
-    checks: d.points.map((p) => ({
-      id: p.id,
-      label: p.libelle,
-      state: { ok: "ok", avertissement: "warning", probleme: "problem" }[p.etat],
-      detail: p.detail,
-    })),
+    ...(d.error ? { error: d.error } : {}),
+    checks: d.points.map((p) => ({ id: p.id, label: p.label, state: p.state, detail: p.detail })),
   };
 }
 
-/** `drwil contracts` : registre lu et validé, sans exécution. Code 0 si valide, 2 sinon. */
-export async function listerContrats(opts: { targetDir: string }) {
-  const projet = await chargerProjet(opts.targetDir);
-  if (typeof projet === "string") return { version: 1, exitCode: 2 as const, error: projet, contracts: [], errors: [] as string[] };
-  const { cfg, registre, lecteur } = projet;
-  const contrats: any[] = lecteur.lireContrats(readFileSync(join(opts.targetDir, registre), "utf8"));
-  const erreurs: { message: string }[] = lecteur.validerContrats(contrats, lecteur.controlesConnus(cfg), cfg.lang);
+/** `drwil contracts`: registry read and validated, without running anything. Code 0 if valid, 2 otherwise. */
+export async function listContracts(opts: { targetDir: string }) {
+  const project = await loadProject(opts.targetDir);
+  if (typeof project === "string") return { version: 1, exitCode: 2 as const, error: project, contracts: [], errors: [] as string[] };
+  const { lang, cfg, registry, contracts: reader } = project;
+  const contracts: any[] = reader.readContracts(readFileSync(join(opts.targetDir, registry), "utf8"));
+  const errors: { message: string }[] = reader.validateContracts(contracts, reader.knownChecks(cfg), lang);
   return {
     version: 1,
-    exitCode: (erreurs.length ? 2 : 0) as 0 | 2,
-    registry: registre,
-    contracts: contrats.map((k) => ({
-      id: k.id,
-      title: k.titre,
-      form: k.forme === "section" ? "section" : "table",
-      rule: k.regle,
-      checks: k.controles ?? [],
-      manual: k.manuel,
-    })),
-    errors: erreurs.map((e) => e.message),
+    exitCode: (errors.length ? 2 : 0) as 0 | 2,
+    registry,
+    contracts: contracts.map((k) => ({ id: k.id, title: k.title, form: k.form, rule: k.rule, checks: k.checks ?? [], manual: k.manual })),
+    errors: errors.map((e) => e.message),
   };
 }

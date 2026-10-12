@@ -1,12 +1,12 @@
 # Recipe: adopt the kit on an existing project
 
-Goal: after `apply` (stack and layers detected, mechanics installed,
+Goal: after `init` (stack and layers detected, mechanics installed,
 nothing overwritten), make the kit live on a project that already has
 code. Every choice below is a **`[decision]`**: propose, never decide in
 the requester's place (`AGENTS.md`, Conduct section).
 
 1. **Re-read the detected stack** (`.drwil/ia-first.json`): layers, tools,
-   CI. Correct it if `apply` got it wrong.
+   CI. Correct it if `init` got it wrong.
 2. **Fill in the layer `AGENTS.md` files** (one per `layers` entry):
    Context, Test pitfalls, Layer contracts, Style and recipes, Verify —
    from the existing code, not generalities.

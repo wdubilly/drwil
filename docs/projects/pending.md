@@ -97,12 +97,6 @@ livrable en anglais, chantiers B et A : un seul gabarit, en anglais,
 `lang` devient la langue du projet ; cœur (hooks, état, config, bloc,
 trailer, code commun) en anglais, migration des projets équipés par
 `init` / `apply`, version 0.4.0 — journal du 2026-10-12.
-- [ ] [IA] [P1] Livrable en anglais, chantier C : messages et
-  sous-commandes de la CLI, commande unique `init` / `apply`, retrait de
-  l'identifiant interne `DRWIL-012` des deux messages livrés qui
-  l'affichent (journal du 2026-10-11) ; valeurs laissées par A
-  (identifiants de contrôles, statuts du moteur, sévérités, options
-  `--fiche` / `--demande`) — `docs/projects/cli-en-anglais.md`.
 - [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Le dépôt s'installe depuis son gabarit (docs/projects/depot-installe-par-gabarit.md) : le gabarit
 // (packages/drwil/templates/) est la seule source, les copies du dépôt en sont l'installation.
-// `drwil apply` n'écrase jamais rien et `drwil init` réécrit .drwil/ia-first.json en remettant des
-// réglages à leurs défauts : aucun des deux ne convient tel quel. On installe donc avec la vraie CLI
+// `drwil init` lancé sur le dépôt lui-même n'y rafraîchirait que la mécanique inchangée et ne
+// recopierait aucun document déjà présent : il ne convient pas tel quel. On installe donc avec la vraie CLI
 // (`init --force`) dans une copie temporaire des fichiers suivis, puis on ne recopie dans le dépôt que
 // les fichiers du gabarit dont l'unité y est installée, hors écarts déclarés (outils/miroirs.json),
 // hors fichiers déclarés propres au gabarit et hors .drwil/. Les modules optionnels, que la CLI
@@ -102,16 +102,16 @@ export function installerAvecCli(racine, args) {
 }
 
 /**
- * Migration de l'ancien format par la CLI construite (`migrer`, idempotente ; rien d'écrit en
+ * Migration de l'ancien format par la CLI construite (`migrate`, idempotente ; rien d'écrit en
  * simulation). Rend { lignes } (résumé, vide si rien à migrer) ou { erreur }.
  */
 export function migrerAvecCli(racine, simulation) {
   const build = spawnSync("npm", ["run", "build", "--silent"], { cwd: racine, encoding: "utf8", shell: process.platform === "win32" });
   if (build.status !== 0) return { erreur: `construction de la CLI en échec (npm run build)\n${build.stdout}${build.stderr}` };
   const dist = pathToFileURL(join(racine, "packages", "drwil", "dist", "index.js")).href;
-  const code = `const { migrer, formaterMigration } = await import(${JSON.stringify(dist)});
+  const code = `const { migrate, formatMigration, projectLang } = await import(${JSON.stringify(dist)});
 const simulation = process.argv[2] === "1";
-console.log(formaterMigration(await migrer(process.argv[1], { simulation }), simulation).join("\\n"));`;
+console.log(formatMigration(await migrate(process.argv[1], { dryRun: simulation }), simulation, projectLang(process.argv[1])).join("\\n"));`;
   const r = spawnSync(process.execPath, ["--input-type=module", "-e", code, racine, simulation ? "1" : "0"], { encoding: "utf8" });
   if (r.status !== 0) return { erreur: `migration en échec\n${r.stdout}${r.stderr}` };
   return { lignes: r.stdout.split("\n").filter(Boolean) };

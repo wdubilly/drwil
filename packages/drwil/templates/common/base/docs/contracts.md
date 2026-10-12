@@ -48,7 +48,7 @@ run and shown without changing its exit code.
 **Source of truth** : —
 **Proof** : gitleaks: indexed files (hook, if installed) + full history (CI job, if configured)
 **Reason** : an irreversible leak once pushed
-**Check** : `secrets-fichiers`
+**Check** : `secrets`
 
 
 ## Quality (QUA)
@@ -67,7 +67,7 @@ run and shown without changing its exit code.
 **Source of truth** : `.githooks/run-checks.mjs`, `.githooks/check-control-coverage.mjs` and its run history
 **Proof** : **machine**: every check ends up "failed", "OK" or "not run", never hidden; CI coverage is replayed (hook + CI, if there is a CI)
 **Reason** : a check that can silently not run is, eventually, a check that proves nothing
-**Check** : `couverture-ci`
+**Check** : `ci-coverage`
 
 ## QUA-015 — Projects resumable cold
 **Rule** : Projects resumable cold: every open item in the project index carries an `[AI]`, `[human]` or `[decision]` marker; every brief in `docs/projects/` and `docs/intentions/` (excluding the index and README) has a dated "Status" line at the top (YYYY-MM-DD); every intent brief has "Need", "Current state" and "Open questions" sections; every brief has a "Hand-off" section (handoff). Extension: an index item that cites a brief whose "Status" contains `done`/`closed`/`terminé` must be checked, and vice versa (non-blocking warning).
@@ -92,7 +92,7 @@ run and shown without changing its exit code.
 **Source of truth** : `docs/recipes/working-with-branches.md`
 **Proof** : `.githooks/run-checks.mjs` (hook only, never in CI: a legitimate merge onto the main branch must not be blocked retroactively)
 **Reason** : a direct commit or push to the main branch bypasses review and breaks the brief-branch link
-**Check** : `branche-principale`
+**Check** : `main-branch`
 
 ## QUA-019 — No bypassing a check
 **Rule** : A blocking check (test, hook, CI) is never disabled, skipped (`--no-verify`, skip, exception flag) or bypassed to make a task progress. If it seems miscalibrated, flag it and fix the check itself (or open a decision brief), never disable it silently.

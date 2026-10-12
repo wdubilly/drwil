@@ -14,7 +14,7 @@ import { globToRegex } from "./glob.mjs";
 
 const BASE = [
   {
-    id: "secrets-fichiers",
+    id: "secrets",
     degradable: true,
     degradation: "gitleaks missing on the machine: the hook does not check secrets",
     paths: ["**"],
@@ -27,8 +27,8 @@ const BASE = [
     ciJob: "checks",
   },
   // Replayed in CI on each commit of the branch (Drwil-Brief trailer): never degraded.
-  { id: "perimetre-attente", degradable: false, paths: ["**"], ciJob: "checks" },
-  { id: "controles-autotest", degradable: false, paths: [".githooks/**"], ciJob: "checks" },
+  { id: "scope-gate", degradable: false, paths: ["**"], ciJob: "checks" },
+  { id: "checks-self-test", degradable: false, paths: [".githooks/**"], ciJob: "checks" },
 ];
 
 let cfg = {};

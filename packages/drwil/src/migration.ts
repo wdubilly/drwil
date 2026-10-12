@@ -1,44 +1,48 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
-import { purgerDossiersVides, sha256 } from "./manifeste.js";
+import { fill, type MessageLang } from "./i18n.js";
+import { pruneEmptyDirs, sha256 } from "./manifest.js";
 import {
-  ACTIVITES,
-  ANCIENS_DU_KIT,
-  BLOC,
-  CHAMPS_ETAT,
-  CHAMPS_USAGE,
-  CLES_CONFIG,
-  CLES_CONFIG_IMBRIQUEES,
-  DEPLACES,
-  DOSSIER_FICHES,
+  ACTIVITIES,
+  BLOCK,
+  BRIEF_DIR,
+  CHECK_IDS,
+  CONFIG_KEYS,
+  CONFIG_VALUES,
   HOOKS,
-  MECANIQUE,
-  SOUS_COMMANDES,
-  VALEURS_CONFIG,
+  MECHANICS,
+  MOVED,
+  NESTED_CONFIG_KEYS,
+  OLD_KIT_FILES,
+  PROJECT_CHECK_PREFIX,
+  REGISTRIES,
+  STATE_FIELDS,
+  SUBCOMMANDS,
+  USAGE_FIELDS,
 } from "./migration-table.js";
 
-/** Ce que la migration fait (ou ferait, en simulation) d'un projet équipé à l'ancien format. */
-export interface PlanMigration {
-  /** Contenu du projet déplacé vers son nom anglais. */
-  deplaces: { de: string; vers: string }[];
-  /** Fichiers du kit inchangés depuis l'installation : supprimés, l'installation les réécrit. */
-  supprimes: string[];
-  /** Anciens fichiers du kit modifiés depuis l'installation : gardés, à reprendre à la main. */
-  gardes: string[];
-  /** Déplacements impossibles : la cible existe déjà et a été modifiée. Rien n'est touché. */
-  conflits: { de: string; vers: string }[];
-  /** Fichiers dont le contenu change (références, bloc, config, état, journal de consommation). */
-  reecrits: string[];
+/** What the migration does (or would do, in a dry run) to a project equipped with the old format. */
+export interface MigrationPlan {
+  /** Project content moved to its English name. */
+  moved: { from: string; to: string }[];
+  /** Kit files unchanged since installation: removed, the installation writes them again. */
+  removed: string[];
+  /** Old kit files modified since installation: kept, to take over by hand. */
+  kept: string[];
+  /** Impossible moves: the target already exists and was modified. Nothing is touched. */
+  conflicts: { from: string; to: string }[];
+  /** Files whose content changes (references, block, config, state, usage log). */
+  rewritten: string[];
 }
 
-const IGNORES = new Set([".git", "node_modules", "dist", "build", "coverage", ".venv", "venv", "vendor", "target"]);
-const EXTENSIONS_TEXTE = [".md", ".mdc", ".json", ".yml", ".yaml", ".toml"];
-// Scripts de la mécanique (hooks .mjs, hooks git sans extension) : un autre fichier sous
-// `.githooks/` (cache Python, binaire) n'est jamais lu comme du texte.
+const IGNORED = new Set([".git", "node_modules", "dist", "build", "coverage", ".venv", "venv", "vendor", "target"]);
+const TEXT_EXTENSIONS = [".md", ".mdc", ".json", ".yml", ".yaml", ".toml"];
+// Mechanics scripts (.mjs hooks, git hooks without extension): any other file under `.githooks/`
+// (Python cache, binary) is never read as text.
 const SCRIPT_RE = /(\.m?js|\.cjs|\.sh|\/[^./]+)$/;
-// Lus et réécrits à part, champ par champ : jamais par simple remplacement de texte.
-const A_PART = new Set([
+// Read and rewritten apart, field by field: never by a plain text replacement.
+const APART = new Set([
   ".drwil/ia-first.json",
   ".drwil/state.json",
   ".drwil/usage.jsonl",
@@ -46,126 +50,121 @@ const A_PART = new Set([
   ".drwil/installed-files.json",
 ]);
 
-function fichiers(racine: string, rel = ""): string[] {
-  const dossier = join(racine, rel);
-  if (!existsSync(dossier)) return [];
-  const sortie: string[] = [];
-  for (const e of readdirSync(dossier, { withFileTypes: true })) {
-    const chemin = rel ? `${rel}/${e.name}` : e.name;
+function files(root: string, rel = ""): string[] {
+  const dir = join(root, rel);
+  if (!existsSync(dir)) return [];
+  const out: string[] = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const path = rel ? `${rel}/${e.name}` : e.name;
     if (e.isDirectory()) {
-      if (!IGNORES.has(e.name) && chemin !== ".drwil/evidence") sortie.push(...fichiers(racine, chemin));
-    } else if (e.isFile()) sortie.push(chemin);
+      if (!IGNORED.has(e.name) && path !== ".drwil/evidence") out.push(...files(root, path));
+    } else if (e.isFile()) out.push(path);
   }
-  return sortie;
+  return out;
 }
 
-const lire = (racine: string, rel: string) => readFileSync(join(racine, rel), "utf8");
+const read = (root: string, rel: string) => readFileSync(join(root, rel), "utf8");
 
-function lireJson(racine: string, rel: string): Record<string, unknown> | null {
+function readJson(root: string, rel: string): Record<string, unknown> | null {
   try {
-    return JSON.parse(lire(racine, rel));
+    return JSON.parse(read(root, rel));
   } catch {
     return null;
   }
 }
 
-/** Paires ancien → nouveau des références, la plus longue d'abord : `docs/projets/en-attente.md`
- * doit l'emporter sur `docs/projets/`. */
-function paires(): [string, string][] {
+/** Old → new pairs of the references, longest first: `docs/projets/en-attente.md` must win over
+ * `docs/projets/`. */
+function pairs(): [string, string][] {
   const p: Record<string, string> = {
-    ...DEPLACES,
-    ...ANCIENS_DU_KIT,
-    [DOSSIER_FICHES[0]]: DOSSIER_FICHES[1],
-    // Valeurs de `dirs` dans la config, sans barre finale.
+    ...MOVED,
+    ...OLD_KIT_FILES,
+    [BRIEF_DIR[0]]: BRIEF_DIR[1],
+    // Values of `dirs` in the config, without a trailing slash.
     "docs/projets": "docs/projects",
     "docs/recettes": "docs/recipes",
-    // Motif de .gitleaks.toml, point échappé.
+    // Pattern of .gitleaks.toml, escaped dot.
     "fichiers-installes\\.json": "installed-files\\.json",
   };
-  for (const [ancien, nouveau] of Object.entries(ANCIENS_DU_KIT)) {
-    if (ancien.startsWith(".claude/skills/")) p[`${dirname(ancien)}/`] = `${dirname(nouveau)}/`;
+  for (const [old, now] of Object.entries(OLD_KIT_FILES)) {
+    if (old.startsWith(".claude/skills/")) p[`${dirname(old)}/`] = `${dirname(now)}/`;
   }
-  for (const [ancien, nouveau] of Object.entries(HOOKS)) {
-    // Imports entre hooks (`./etat.mjs`) et appels depuis un script (`$(dirname "$0")/perimetre.mjs`).
-    p[`/${basename(ancien)}`] = `/${basename(nouveau)}`;
+  for (const [old, now] of Object.entries(HOOKS)) {
+    // Imports between hooks (`./etat.mjs`) and calls from a script (`$(dirname "$0")/perimetre.mjs`).
+    p[`/${basename(old)}`] = `/${basename(now)}`;
   }
   return Object.entries(p).sort((a, b) => b[0].length - a[0].length);
 }
 
-function remplaceur(): (texte: string) => string {
-  const liste = paires();
-  const table = new Map(liste);
-  const echappe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const re = new RegExp(liste.map(([a]) => echappe(a)).join("|"), "g");
-  const sousCommande = new RegExp(`(state\\.mjs(?:\\\\")?) (${Object.keys(SOUS_COMMANDES).join("|")})\\b`, "g");
-  // Une seule passe par table : un nom déjà remplacé ne l'est jamais une seconde fois. Les
-  // sous-commandes suivent le nom du script, déjà anglais (y compris échappé dans un JSON : `\"`).
-  return (texte) =>
-    texte
-      .replace(re, (m) => table.get(m) ?? m)
-      .replace(sousCommande, (_m, script: string, sc: string) => `${script} ${SOUS_COMMANDES[sc]}`);
+function replacer(): (text: string) => string {
+  const list = pairs();
+  const table = new Map(list);
+  const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(list.map(([a]) => escapeRe(a)).join("|"), "g");
+  const subcommand = new RegExp(`(state\\.mjs(?:\\\\")?) (${Object.keys(SUBCOMMANDS).join("|")})\\b`, "g");
+  // A single pass per table: a name already replaced is never replaced a second time. The subcommands
+  // follow the script name, already in English (including escaped in a JSON: `\"`).
+  return (text) =>
+    text.replace(re, (m) => table.get(m) ?? m).replace(subcommand, (_m, script: string, sc: string) => `${script} ${SUBCOMMANDS[sc]}`);
 }
 
-/** Bloc de périmètre et section des lots d'une fiche ou d'une intention. */
-function migrerFiche(texte: string, estFiche: boolean): string {
-  // Le bloc ouvre une ligne : un `<!-- cadrage` cité dans la prose n'est pas un bloc.
-  let t = texte.replace(/^<!--\s*cadrage[ \t]*\r?\n([\s\S]*?)-->/gm, (_m, corps: string) => {
-    return `${BLOC.nouveau}\n${corps.replace(new RegExp(`^(\\s*)${BLOC.cleAncienne}`, "m"), `$1${BLOC.cleNouvelle}`)}-->`;
+/** Scope block and increments section of a brief or an intent. */
+function migrateBrief(text: string, isBrief: boolean): string {
+  // The block opens a line: a `<!-- cadrage` cited in the prose is not a block.
+  let t = text.replace(/^<!--\s*cadrage[ \t]*\r?\n([\s\S]*?)-->/gm, (_m, body: string) => {
+    return `${BLOCK.new}\n${body.replace(new RegExp(`^(\\s*)${BLOCK.oldKey}`, "m"), `$1${BLOCK.newKey}`)}-->`;
   });
-  if (estFiche) t = t.replace(/^(#{1,4}\s*\d*\.?\s*)Lots\b/gm, "$1Increments");
+  if (isBrief) t = t.replace(/^(#{1,4}\s*\d*\.?\s*)Lots\b/gm, "$1Increments");
   return t;
 }
 
-function valeur(v: unknown, remplacer: (t: string) => string): unknown {
-  if (typeof v === "string") return VALEURS_CONFIG[v] ?? remplacer(v);
-  if (Array.isArray(v)) return v.map((x) => valeur(x, remplacer));
+function value(v: unknown, replace: (t: string) => string): unknown {
+  if (typeof v === "string") return CONFIG_VALUES[v] ?? replace(v);
+  if (Array.isArray(v)) return v.map((x) => value(x, replace));
   return v;
 }
 
-function renommerCles(objet: Record<string, unknown>, cles: Record<string, string>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(objet).map(([k, v]) => [cles[k] ?? k, v]));
+function renameKeys(object: Record<string, unknown>, keys: Record<string, string>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(object).map(([k, v]) => [keys[k] ?? k, v]));
 }
 
-function migrerConfig(config: Record<string, unknown>, remplacer: (t: string) => string): Record<string, unknown> {
-  const sortie = renommerCles(config, CLES_CONFIG);
-  for (const [cle, sousCles] of Object.entries(CLES_CONFIG_IMBRIQUEES)) {
-    const v = sortie[cle];
-    if (Array.isArray(v))
-      sortie[cle] = v.map((x) => (x && typeof x === "object" ? renommerCles(x as Record<string, unknown>, sousCles) : x));
-    else if (v && typeof v === "object") sortie[cle] = renommerCles(v as Record<string, unknown>, sousCles);
+function migrateConfig(config: Record<string, unknown>, replace: (t: string) => string): Record<string, unknown> {
+  const out = renameKeys(config, CONFIG_KEYS);
+  for (const [key, subKeys] of Object.entries(NESTED_CONFIG_KEYS)) {
+    const v = out[key];
+    if (Array.isArray(v)) out[key] = v.map((x) => (x && typeof x === "object" ? renameKeys(x as Record<string, unknown>, subKeys) : x));
+    else if (v && typeof v === "object") out[key] = renameKeys(v as Record<string, unknown>, subKeys);
   }
-  for (const cle of ["scopeGate", "scopeReminder", "newRequirements", "transitions"]) sortie[cle] = valeur(sortie[cle], remplacer);
-  for (const cle of ["dirs", "risk"]) {
-    const v = sortie[cle];
-    if (v && typeof v === "object") sortie[cle] = Object.fromEntries(Object.entries(v).map(([k, x]) => [k, valeur(x, remplacer)]));
+  for (const key of ["scopeGate", "scopeReminder", "newRequirements", "transitions"]) out[key] = value(out[key], replace);
+  for (const key of ["dirs", "risk"]) {
+    const v = out[key];
+    if (v && typeof v === "object") out[key] = Object.fromEntries(Object.entries(v).map(([k, x]) => [k, value(x, replace)]));
   }
-  if (Array.isArray(sortie.outOfScope)) sortie.outOfScope = valeur(sortie.outOfScope, remplacer);
-  if (Array.isArray(sortie.checks)) {
-    sortie.checks = sortie.checks.map((c) =>
-      c && typeof c === "object" && "paths" in c ? { ...c, paths: valeur(c.paths, remplacer) } : c,
-    );
+  if (Array.isArray(out.outOfScope)) out.outOfScope = value(out.outOfScope, replace);
+  if (Array.isArray(out.checks)) {
+    out.checks = out.checks.map((c) => (c && typeof c === "object" && "paths" in c ? { ...c, paths: value(c.paths, replace) } : c));
   }
-  for (const cle of Object.keys(sortie)) if (sortie[cle] === undefined) delete sortie[cle];
-  return sortie;
+  for (const key of Object.keys(out)) if (out[key] === undefined) delete out[key];
+  return out;
 }
 
-function migrerEtat(etat: Record<string, unknown>, remplacer: (t: string) => string): Record<string, unknown> {
-  const sortie = renommerCles(etat, CHAMPS_ETAT);
-  if (typeof sortie.activity === "string") sortie.activity = ACTIVITES[sortie.activity] ?? sortie.activity;
-  if (typeof sortie.active_brief === "string") sortie.active_brief = remplacer(sortie.active_brief);
-  return sortie;
+function migrateState(state: Record<string, unknown>, replace: (t: string) => string): Record<string, unknown> {
+  const out = renameKeys(state, STATE_FIELDS);
+  if (typeof out.activity === "string") out.activity = ACTIVITIES[out.activity] ?? out.activity;
+  if (typeof out.active_brief === "string") out.active_brief = replace(out.active_brief);
+  return out;
 }
 
-function migrerUsage(texte: string): string {
-  return texte
+function migrateUsage(text: string): string {
+  return text
     .split("\n")
-    .map((ligne) => {
+    .map((line) => {
       try {
-        const e = JSON.parse(ligne);
-        const aRenommer = e && typeof e === "object" && !Array.isArray(e) && Object.keys(e).some((k) => k in CHAMPS_USAGE);
-        return aRenommer ? JSON.stringify(renommerCles(e, CHAMPS_USAGE)) : ligne;
+        const e = JSON.parse(line);
+        const toRename = e && typeof e === "object" && !Array.isArray(e) && Object.keys(e).some((k) => k in USAGE_FIELDS);
+        return toRename ? JSON.stringify(renameKeys(e, USAGE_FIELDS)) : line;
       } catch {
-        return ligne; // ligne vide ou illisible : gardée telle quelle, jamais perdue.
+        return line; // empty or unreadable line: kept as it is, never lost.
       }
     })
     .join("\n");
@@ -173,165 +172,208 @@ function migrerUsage(texte: string): string {
 
 const json = (v: unknown) => JSON.stringify(v, null, 2) + "\n";
 
-/** Réécrit un JSON seulement si son contenu change : sa mise en forme seule ne compte pas. */
-function reecrireJson(
-  racine: string,
+/** Rewrites a JSON only if its content changes: its formatting alone does not count. */
+function rewriteJson(
+  root: string,
   rel: string,
-  migrerObjet: (o: Record<string, unknown>) => Record<string, unknown>,
-  plan: PlanMigration,
-  ecritures: Map<string, string>,
+  migrateObject: (o: Record<string, unknown>) => Record<string, unknown>,
+  plan: MigrationPlan,
+  writes: Map<string, string>,
 ): void {
-  const objet = lireJson(racine, rel);
-  if (!objet) return;
-  const migre = migrerObjet(objet);
-  if (JSON.stringify(migre) === JSON.stringify(objet)) return;
-  ecritures.set(rel, json(migre));
-  plan.reecrits.push(rel);
+  const object = readJson(root, rel);
+  if (!object) return;
+  const migrated = migrateObject(object);
+  if (JSON.stringify(migrated) === JSON.stringify(object)) return;
+  writes.set(rel, json(migrated));
+  plan.rewritten.push(rel);
 }
 
 /**
- * Le projet porte-t-il un signe de l'ancien format ? Sans aucun, la migration ne fait rien : un projet
- * déjà migré (ou neuf) peut citer d'anciens noms dans sa prose (historique, note de version) sans
- * qu'ils soient réécrits à chaque `init` / `apply`.
+ * Does the project carry a sign of the old format? Without any, the migration does nothing: an
+ * already migrated (or new) project may cite old names in its prose (history, release notes) without
+ * them being rewritten at every `init`.
  */
-function ancienFormat(racine: string, tous: string[]): boolean {
-  if (tous.some((f) => f.startsWith(DOSSIER_FICHES[0]) || DEPLACES[f] || ANCIENS_DU_KIT[f])) return true;
-  const config = lireJson(racine, ".drwil/ia-first.json") ?? {};
-  if (Object.keys(config).some((k) => k in CLES_CONFIG)) return true;
-  for (const [cle, sousCles] of Object.entries(CLES_CONFIG_IMBRIQUEES)) {
-    const v = config[cle];
-    const objets = Array.isArray(v) ? v : [v];
-    if (objets.some((o) => o && typeof o === "object" && Object.keys(o).some((k) => k in sousCles))) return true;
+function oldFormat(root: string, all: string[]): boolean {
+  if (all.some((f) => f.startsWith(BRIEF_DIR[0]) || MOVED[f] || OLD_KIT_FILES[f])) return true;
+  const config = readJson(root, ".drwil/ia-first.json") ?? {};
+  if (Object.keys(config).some((k) => k in CONFIG_KEYS)) return true;
+  for (const [key, subKeys] of Object.entries(NESTED_CONFIG_KEYS)) {
+    const v = config[key];
+    const objects = Array.isArray(v) ? v : [v];
+    if (objects.some((o) => o && typeof o === "object" && Object.keys(o).some((k) => k in subKeys))) return true;
   }
-  const etat = lireJson(racine, ".drwil/state.json") ?? {};
-  if (Object.keys(etat).some((k) => k in CHAMPS_ETAT && CHAMPS_ETAT[k] !== k)) return true;
-  if (
-    existsSync(join(racine, ".drwil/usage.jsonl")) &&
-    migrerUsage(lire(racine, ".drwil/usage.jsonl")) !== lire(racine, ".drwil/usage.jsonl")
-  )
+  const state = readJson(root, ".drwil/state.json") ?? {};
+  if (Object.keys(state).some((k) => k in STATE_FIELDS && STATE_FIELDS[k] !== k)) return true;
+  if (existsSync(join(root, ".drwil/usage.jsonl")) && migrateUsage(read(root, ".drwil/usage.jsonl")) !== read(root, ".drwil/usage.jsonl"))
     return true;
-  return tous.some(
+  return all.some(
     (f) =>
-      (f.startsWith(DOSSIER_FICHES[1]) || f.startsWith("docs/intentions/")) &&
+      (f.startsWith(BRIEF_DIR[1]) || f.startsWith("docs/intentions/")) &&
       f.endsWith(".md") &&
-      /^<!--\s*cadrage[ \t]*\r?$/m.test(lire(racine, f)),
+      /^<!--\s*cadrage[ \t]*\r?$/m.test(read(root, f)),
   );
 }
 
 /**
- * Migre en une fois un projet équipé par une version française du kit (sans alias, décision du
- * 2026-10-12) ; idempotente : sur un projet déjà migré, rien à faire. Le contenu du projet
- * (fiches, contrats, journal) n'est jamais supprimé ; un fichier du kit modifié à la main non plus.
+ * Migrates in one go a project equipped by a French version of the kit (no aliases); idempotent: on
+ * an already migrated project, nothing to do. The project's content (briefs, contracts, journal) is
+ * never deleted; neither is a kit file modified by hand.
  */
-export async function migrer(racine: string, { simulation = false } = {}): Promise<PlanMigration> {
-  const plan: PlanMigration = { deplaces: [], supprimes: [], gardes: [], conflits: [], reecrits: [] };
-  const cheminManifeste = [".drwil/installed-files.json", ".drwil/fichiers-installes.json"].find((f) => existsSync(join(racine, f)));
-  const manifeste = (cheminManifeste && (lireJson(racine, cheminManifeste) as Record<string, string>)) || {};
-  const inchange = (rel: string) => existsSync(join(racine, rel)) && manifeste[rel] === sha256(lire(racine, rel));
-  const remplacer = remplaceur();
+export async function migrate(root: string, { dryRun = false } = {}): Promise<MigrationPlan> {
+  const plan: MigrationPlan = { moved: [], removed: [], kept: [], conflicts: [], rewritten: [] };
+  const manifestPath = [".drwil/installed-files.json", ".drwil/fichiers-installes.json"].find((f) => existsSync(join(root, f)));
+  const manifest = (manifestPath && (readJson(root, manifestPath) as Record<string, string>)) || {};
+  const unchanged = (rel: string) => existsSync(join(root, rel)) && manifest[rel] === sha256(read(root, rel));
+  const replace = replacer();
 
-  const tous = fichiers(racine);
-  if (!ancienFormat(racine, tous)) return plan;
-  const versDe = (rel: string) => DEPLACES[rel] ?? rel.replace(DOSSIER_FICHES[0], DOSSIER_FICHES[1]);
-  const aDeplacer = tous.filter((f) => f.startsWith(DOSSIER_FICHES[0]) || DEPLACES[f]);
-  const retraits = new Set<string>();
-  const ecritures = new Map<string, string>();
-  for (const de of aDeplacer) {
-    const vers = versDe(de);
-    if (existsSync(join(racine, vers)) && !inchange(vers) && lire(racine, vers) !== lire(racine, de)) {
-      plan.conflits.push({ de, vers });
+  const all = files(root);
+  const old = oldFormat(root, all);
+  const target = (rel: string) => MOVED[rel] ?? rel.replace(BRIEF_DIR[0], BRIEF_DIR[1]);
+  const toMove = old ? all.filter((f) => f.startsWith(BRIEF_DIR[0]) || MOVED[f]) : [];
+  const removals = new Set<string>();
+  const writes = new Map<string, string>();
+  for (const from of toMove) {
+    const to = target(from);
+    if (existsSync(join(root, to)) && !unchanged(to) && read(root, to) !== read(root, from)) {
+      plan.conflicts.push({ from, to });
       continue;
     }
-    plan.deplaces.push({ de, vers });
-    retraits.add(de);
-    ecritures.set(vers, lire(racine, de));
+    plan.moved.push({ from, to });
+    removals.add(from);
+    writes.set(to, read(root, from));
   }
-  for (const ancien of Object.keys(ANCIENS_DU_KIT)) {
-    if (!existsSync(join(racine, ancien))) continue;
-    if (inchange(ancien)) {
-      plan.supprimes.push(ancien);
-      retraits.add(ancien);
-    } else plan.gardes.push(ancien);
+  for (const file of old ? Object.keys(OLD_KIT_FILES) : []) {
+    if (!existsSync(join(root, file))) continue;
+    if (unchanged(file)) {
+      plan.removed.push(file);
+      removals.add(file);
+    } else plan.kept.push(file);
   }
 
-  // Contenu final de chaque fichier texte, à son emplacement final.
-  const restants = tous.filter((f) => !retraits.has(f) || ecritures.has(versDe(f)));
-  for (const f of restants) {
-    const ici = retraits.has(f) ? versDe(f) : f;
-    if (A_PART.has(ici) || A_PART.has(f)) continue;
-    const texte = ecritures.get(ici) ?? lire(racine, f);
-    const estTexte =
-      EXTENSIONS_TEXTE.some((e) => f.endsWith(e)) ||
+  // Final content of each text file, at its final place.
+  const remaining = old ? all.filter((f) => !removals.has(f) || writes.has(target(f))) : [];
+  for (const f of remaining) {
+    const here = removals.has(f) ? target(f) : f;
+    if (APART.has(here) || APART.has(f)) continue;
+    const text = writes.get(here) ?? read(root, f);
+    const isText =
+      TEXT_EXTENSIONS.some((e) => f.endsWith(e)) ||
       basename(f) === ".gitignore" ||
-      (MECANIQUE.some((m) => f.startsWith(m)) && SCRIPT_RE.test(f));
-    if (!estTexte) continue;
-    let nouveau = remplacer(texte);
-    if (ici.startsWith(DOSSIER_FICHES[1]) || ici.startsWith("docs/intentions/"))
-      nouveau = migrerFiche(nouveau, ici.startsWith(DOSSIER_FICHES[1]));
-    if (nouveau !== texte) {
-      ecritures.set(ici, nouveau);
-      plan.reecrits.push(ici);
+      (MECHANICS.some((m) => f.startsWith(m)) && SCRIPT_RE.test(f));
+    if (!isText) continue;
+    let migrated = replace(text);
+    if (here.startsWith(BRIEF_DIR[1]) || here.startsWith("docs/intentions/"))
+      migrated = migrateBrief(migrated, here.startsWith(BRIEF_DIR[1]));
+    if (migrated !== text) {
+      writes.set(here, migrated);
+      plan.rewritten.push(here);
     }
   }
 
-  reecrireJson(racine, ".drwil/ia-first.json", (o) => migrerConfig(o, remplacer), plan, ecritures);
-  reecrireJson(racine, ".drwil/state.json", (o) => migrerEtat(o, remplacer), plan, ecritures);
-  if (existsSync(join(racine, ".drwil/usage.jsonl"))) {
-    const avant = lire(racine, ".drwil/usage.jsonl");
-    const apres = migrerUsage(avant);
-    if (apres !== avant) {
-      ecritures.set(".drwil/usage.jsonl", apres);
-      plan.reecrits.push(".drwil/usage.jsonl");
+  if (old) {
+    rewriteJson(root, ".drwil/ia-first.json", (o) => migrateConfig(o, replace), plan, writes);
+    rewriteJson(root, ".drwil/state.json", (o) => migrateState(o, replace), plan, writes);
+  }
+  if (old && existsSync(join(root, ".drwil/usage.jsonl"))) {
+    const before = read(root, ".drwil/usage.jsonl");
+    const after = migrateUsage(before);
+    if (after !== before) {
+      writes.set(".drwil/usage.jsonl", after);
+      plan.rewritten.push(".drwil/usage.jsonl");
     }
   }
 
-  // Un conflit ou un fichier gardé reste signalé à chaque passage, sans relancer la migration.
-  const aMigrer = plan.deplaces.length + plan.supprimes.length + plan.reecrits.length > 0;
-  if (aMigrer) {
-    // La mécanique inchangée appelle les hooks sous leurs anciens noms : retirée pour être réécrite à neuf.
-    for (const rel of Object.keys(manifeste)) {
-      if (retraits.has(rel) || !MECANIQUE.some((m) => rel.startsWith(m)) || !inchange(rel)) continue;
-      plan.supprimes.push(rel);
-      retraits.add(rel);
-      if (ecritures.delete(rel)) plan.reecrits = plan.reecrits.filter((r) => r !== rel);
+  migrateRegistries(root, plan, writes);
+
+  // A conflict or a kept file stays reported at each run, without running the migration again.
+  const toMigrate = old && plan.moved.length + plan.removed.length + plan.rewritten.length > 0;
+  if (toMigrate) {
+    // Unchanged mechanics call the hooks under their old names: removed to be written anew.
+    for (const rel of Object.keys(manifest)) {
+      if (removals.has(rel) || !MECHANICS.some((m) => rel.startsWith(m)) || !unchanged(rel)) continue;
+      plan.removed.push(rel);
+      removals.add(rel);
+      if (writes.delete(rel)) plan.rewritten = plan.rewritten.filter((r) => r !== rel);
     }
   }
-  if (cheminManifeste && aMigrer) {
-    const nouveau: Record<string, string> = {};
-    for (const [rel, h] of Object.entries(manifeste)) if (!retraits.has(rel)) nouveau[rel] = h;
-    // Un fichier déplacé garde l'empreinte de son installation, même s'il remplace une cible du kit.
-    for (const { de } of plan.deplaces) if (manifeste[de]) nouveau[versDe(de)] = manifeste[de];
-    for (const rel of plan.supprimes) delete nouveau[rel];
-    ecritures.set(".drwil/installed-files.json", json(nouveau));
-    if (cheminManifeste !== ".drwil/installed-files.json") retraits.add(cheminManifeste);
+  if (manifestPath && toMigrate) {
+    const updated: Record<string, string> = {};
+    for (const [rel, h] of Object.entries(manifest)) if (!removals.has(rel)) updated[rel] = h;
+    // A moved file keeps the fingerprint of its installation, even if it replaces a kit target.
+    for (const { from } of plan.moved) if (manifest[from]) updated[target(from)] = manifest[from];
+    for (const rel of plan.removed) delete updated[rel];
+    writes.set(".drwil/installed-files.json", json(updated));
+    if (manifestPath !== ".drwil/installed-files.json") removals.add(manifestPath);
   }
 
-  if (simulation) return plan;
-  for (const [rel, contenu] of ecritures) {
-    await mkdir(dirname(join(racine, rel)), { recursive: true });
-    await writeFile(join(racine, rel), contenu);
+  if (dryRun) return plan;
+  for (const [rel, content] of writes) {
+    await mkdir(dirname(join(root, rel)), { recursive: true });
+    await writeFile(join(root, rel), content);
   }
-  const aRetirer = [...retraits].filter((r) => !ecritures.has(r));
-  for (const rel of aRetirer) await rm(join(racine, rel), { force: true });
-  await purgerDossiersVides(racine, aRetirer);
+  const toRemove = [...removals].filter((r) => !writes.has(r));
+  for (const rel of toRemove) await rm(join(root, rel), { force: true });
+  await pruneEmptyDirs(root, toRemove);
   return plan;
 }
 
-/** Résumé d'une migration de l'ancien format (vide si rien à migrer), partagé avec l'aperçu d'`apply`. */
-export function formaterMigration(p: PlanMigration, simulation = false): string[] {
+/**
+ * Check identifiers of 0.5.0, in the contract registries only (a separate step: it neither needs nor
+ * triggers the migration of the old format, which rewrites references in all the prose). Works on
+ * the final content of a registry the step above may have moved.
+ */
+function migrateRegistries(root: string, plan: MigrationPlan, writes: Map<string, string>): void {
+  const configured = readJson(root, ".drwil/ia-first.json")?.dirs as Record<string, unknown> | undefined;
+  const paths = new Set([...(typeof configured?.contracts === "string" ? [configured.contracts] : []), ...REGISTRIES]);
+  const ids = new RegExp(`(?<![\\w-])(${Object.keys(CHECK_IDS).join("|")})(?![\\w-])`, "g");
+  const prefix = new RegExp(`(?<![\\w-])${PROJECT_CHECK_PREFIX[0]}`, "g");
+  for (const rel of paths) {
+    const before = writes.get(rel) ?? (existsSync(join(root, rel)) ? read(root, rel) : null);
+    if (before === null) continue;
+    const after = before.replace(ids, (m) => CHECK_IDS[m]).replace(prefix, PROJECT_CHECK_PREFIX[1]);
+    if (after === before) continue;
+    writes.set(rel, after);
+    if (!plan.rewritten.includes(rel)) plan.rewritten.push(rel);
+  }
+}
+
+const TEXTS = {
+  fr: {
+    moved: ["Serait déplacé vers son nom anglais", "Déplacé vers son nom anglais"],
+    removed: ["Ancien fichier du kit, inchangé, serait retiré", "Ancien fichier du kit, inchangé, retiré"],
+    rewritten: ["Serait réécrit aux noms anglais", "Réécrit aux noms anglais"],
+    kept: "⚠ Ancien fichier du kit modifié à la main, gardé : à reprendre",
+    conflicts: "⚠ Déplacement impossible, la cible existe et a été modifiée : rien touché",
+    title: ["Migration de l'ancien format (simulation, rien d'écrit) :", "Migration de l'ancien format :"],
+    count: "{0} ({1}) :",
+  },
+  en: {
+    moved: ["Would be moved to its English name", "Moved to its English name"],
+    removed: ["Old kit file, unchanged, would be removed", "Old kit file, unchanged, removed"],
+    rewritten: ["Would be rewritten with the English names", "Rewritten with the English names"],
+    kept: "⚠ Old kit file modified by hand, kept: to take over",
+    conflicts: "⚠ Impossible move, the target exists and was modified: nothing touched",
+    title: ["Migration of the old format (dry run, nothing written):", "Migration of the old format:"],
+    count: "{0} ({1}):",
+  },
+};
+
+/** Summary of a migration of the old format (empty if nothing to migrate), shared with the preview of `init`. */
+export function formatMigration(p: MigrationPlan, dryRun = false, lang: MessageLang = "en"): string[] {
+  const T = TEXTS[lang];
+  const pick = (pair: string[]) => pair[dryRun ? 0 : 1];
   const l: string[] = [];
-  const titre = (t: string, n: number) => l.push(`${t} (${n}) :`);
-  if (p.deplaces.length) titre(simulation ? "Serait déplacé vers son nom anglais" : "Déplacé vers son nom anglais", p.deplaces.length);
-  for (const d of p.deplaces) l.push(`  ${d.de} → ${d.vers}`);
-  if (p.supprimes.length)
-    titre(simulation ? "Ancien fichier du kit, inchangé, serait retiré" : "Ancien fichier du kit, inchangé, retiré", p.supprimes.length);
-  for (const s of p.supprimes) l.push(`  - ${s}`);
-  if (p.reecrits.length) titre(simulation ? "Serait réécrit aux noms anglais" : "Réécrit aux noms anglais", p.reecrits.length);
-  for (const r of p.reecrits) l.push(`  ~ ${r}`);
-  if (p.gardes.length) titre("⚠ Ancien fichier du kit modifié à la main, gardé : à reprendre", p.gardes.length);
-  for (const g of p.gardes) l.push(`  ! ${g}`);
-  if (p.conflits.length) titre("⚠ Déplacement impossible, la cible existe et a été modifiée : rien touché", p.conflits.length);
-  for (const c of p.conflits) l.push(`  ! ${c.de} → ${c.vers}`);
-  if (l.length) l.unshift(simulation ? "Migration de l'ancien format (simulation, rien d'écrit) :" : "Migration de l'ancien format :");
+  const title = (t: string, n: number) => l.push(fill(T.count, t, n));
+  if (p.moved.length) title(pick(T.moved), p.moved.length);
+  for (const m of p.moved) l.push(`  ${m.from} → ${m.to}`);
+  if (p.removed.length) title(pick(T.removed), p.removed.length);
+  for (const r of p.removed) l.push(`  - ${r}`);
+  if (p.rewritten.length) title(pick(T.rewritten), p.rewritten.length);
+  for (const r of p.rewritten) l.push(`  ~ ${r}`);
+  if (p.kept.length) title(T.kept, p.kept.length);
+  for (const k of p.kept) l.push(`  ! ${k}`);
+  if (p.conflicts.length) title(T.conflicts, p.conflicts.length);
+  for (const c of p.conflicts) l.push(`  ! ${c.from} → ${c.to}`);
+  if (l.length) l.unshift(pick(T.title));
   return l;
 }

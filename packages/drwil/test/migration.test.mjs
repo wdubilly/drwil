@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
-import { migrer } from "../dist/index.js";
+import { migrate } from "../dist/index.js";
 
 const dossiers = [];
 after(() => {
@@ -124,17 +124,17 @@ function projetFrancais() {
 test("simulation : le plan complet, rien d'écrit", async () => {
   const r = projetFrancais();
   const avant = arbre(r);
-  const plan = await migrer(r, { simulation: true });
+  const plan = await migrate(r, { dryRun: true });
   assert.deepEqual(arbre(r), avant);
-  assert.ok(plan.deplaces.some((d) => d.de === "docs/projets/en-attente.md" && d.vers === "docs/projects/pending.md"));
-  assert.deepEqual(plan.conflits, [{ de: "docs/projets/autre.md", vers: "docs/projects/autre.md" }]);
-  assert.ok(plan.supprimes.includes("docs/recettes/travailler-en-branche.md"));
-  assert.deepEqual(plan.gardes.sort(), ["docs/recettes/lancer-en-local.md"]);
+  assert.ok(plan.moved.some((d) => d.from === "docs/projets/en-attente.md" && d.to === "docs/projects/pending.md"));
+  assert.deepEqual(plan.conflicts, [{ from: "docs/projets/autre.md", to: "docs/projects/autre.md" }]);
+  assert.ok(plan.removed.includes("docs/recettes/travailler-en-branche.md"));
+  assert.deepEqual(plan.kept.sort(), ["docs/recettes/lancer-en-local.md"]);
 });
 
 test("migration : contenu déplacé, anciens fichiers du kit retirés, références, bloc, config, état et journal en anglais", async () => {
   const r = projetFrancais();
-  await migrer(r);
+  await migrate(r);
 
   // Contenu du projet déplacé, jamais perdu ; une cible modifiée n'est pas écrasée.
   assert.equal(lire(r, "docs/projects/pending.md"), "# En attente\n\n- [ ] [P1] Ma fiche — `docs/projects/ma-fiche.md`.\n");
@@ -202,27 +202,27 @@ test("migration : contenu déplacé, anciens fichiers du kit retirés, référen
   assert.ok(".githooks/check-docs.mjs" in manifeste);
 });
 
-test("idempotente : un projet déjà migré n'a plus rien à migrer", async () => {
+test("idempotente : un projet déjà migré n'a plus rien à migrate", async () => {
   const r = projetFrancais();
-  await migrer(r);
+  await migrate(r);
   const avant = arbre(r);
-  const plan = await migrer(r);
+  const plan = await migrate(r);
   // Seuls restent signalés ce que la migration ne tranche jamais seule.
-  assert.deepEqual(plan.deplaces, []);
-  assert.deepEqual(plan.conflits, [{ de: "docs/projets/autre.md", vers: "docs/projects/autre.md" }]);
-  assert.deepEqual(plan.gardes, ["docs/recettes/lancer-en-local.md"]);
-  assert.deepEqual(plan.supprimes, []);
-  assert.deepEqual(plan.reecrits, []);
+  assert.deepEqual(plan.moved, []);
+  assert.deepEqual(plan.conflicts, [{ from: "docs/projets/autre.md", to: "docs/projects/autre.md" }]);
+  assert.deepEqual(plan.kept, ["docs/recettes/lancer-en-local.md"]);
+  assert.deepEqual(plan.removed, []);
+  assert.deepEqual(plan.rewritten, []);
   assert.deepEqual(arbre(r), avant);
 });
 
-test("projet sans ancien format : rien à migrer, rien d'écrit", async () => {
+test("projet sans ancien format : rien à migrate, rien d'écrit", async () => {
   const r = mkdtempSync(join(tmpdir(), "drwil-migration-"));
   dossiers.push(r);
   ecrire(r, ".drwil/ia-first.json", JSON.stringify({ lang: "en", scopeGate: "blocking", dirs: { projects: "docs/projects" } }));
   ecrire(r, "docs/projects/pending.md", "# Pending\n");
   const avant = arbre(r);
-  assert.deepEqual(await migrer(r), { deplaces: [], supprimes: [], gardes: [], conflits: [], reecrits: [] });
+  assert.deepEqual(await migrate(r), { moved: [], removed: [], kept: [], conflicts: [], rewritten: [] });
   assert.deepEqual(arbre(r), avant);
 });
 
@@ -238,9 +238,9 @@ test("mécanique : seuls les scripts sont réécrits, un binaire sous .githooks/
     ".drwil/state.json",
     JSON.stringify({ version: 1, activite: "CADRAGE", attente_active: null, demande_active: null, depuis: null }),
   );
-  const plan = await migrer(r);
+  const plan = await migrate(r);
   assert.ok(readFileSync(join(r, ".githooks/__pycache__/check-docs.pyc")).equals(binaire));
-  assert.ok(!plan.reecrits.includes(".githooks/__pycache__/check-docs.pyc"));
+  assert.ok(!plan.rewritten.includes(".githooks/__pycache__/check-docs.pyc"));
   assert.match(lire(r, ".githooks/pre-push"), /\/scope-gate\.mjs/);
   assert.match(lire(r, ".githooks/check-docs.test.mjs"), /\.\/state\.mjs/);
 });
@@ -258,7 +258,24 @@ test("projet au nouveau format : les anciens noms cités dans sa prose ne sont j
     ".drwil/state.json",
     JSON.stringify({ version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null }),
   );
-  const plan = await migrer(r);
-  assert.deepEqual(plan, { deplaces: [], supprimes: [], gardes: [], conflits: [], reecrits: [] });
+  const plan = await migrate(r);
+  assert.deepEqual(plan, { moved: [], removed: [], kept: [], conflicts: [], rewritten: [] });
   assert.equal(lire(r, "CHANGELOG.md"), note);
+});
+
+test("registres : anciens identifiants de contrôles réécrits, rien d'autre ; rejouer ne change rien", async () => {
+  const r = mkdtempSync(join(tmpdir(), "drwil-migration-"));
+  dossiers.push(r);
+  const registre = "## QUA-001 — x\n\n**Règle** : r\n**Contrôle** : `perimetre-attente`, `projet:npm test`, `branche-principale`\n";
+  const note = "Ancien identifiant cité dans la prose : `perimetre-attente`.\n";
+  ecrire(r, "docs/contracts.md", registre);
+  ecrire(r, "docs/registre.md", registre);
+  ecrire(r, "CHANGELOG.md", note);
+  ecrire(r, ".drwil/ia-first.json", JSON.stringify({ scopeGate: "blocking", dirs: { contracts: "docs/registre.md" } }));
+  const plan = await migrate(r);
+  assert.deepEqual(plan.rewritten.sort(), ["docs/contracts.md", "docs/registre.md"]);
+  for (const f of ["docs/contracts.md", "docs/registre.md"])
+    assert.equal(lire(r, f), "## QUA-001 — x\n\n**Règle** : r\n**Contrôle** : `scope-gate`, `project:npm test`, `main-branch`\n");
+  assert.equal(lire(r, "CHANGELOG.md"), note, "la prose hors registres n'est jamais touchée");
+  assert.deepEqual(await migrate(r), { moved: [], removed: [], kept: [], conflicts: [], rewritten: [] });
 });

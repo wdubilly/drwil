@@ -838,3 +838,21 @@ l'index ; texte intégral dans l'historique git
   directive `contraste-fond:` du module front-quality.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/coeur-en-anglais`).
+
+## 2026-10-12 — La CLI en anglais (chantier C du livrable en anglais)
+
+- **Décisions clés** : code et messages de la CLI en anglais (dictionnaire
+  fr/en selon `lang` du projet, anglais hors projet) ; commande unique
+  `drwil init` (installe, met à jour et signale la dérive ; `apply`
+  retiré sans alias) ; `etat` → `state`, `resoudre-derive` →
+  `resolve-drift` (`--force`) ; valeurs laissées par A toutes en anglais
+  (identifiants de contrôles, statuts du moteur, sévérités, options
+  `--brief` / `--request`, mots tapés `START` / `MERGE`, skill
+  `/drwil-start`), registres de contrats migrés ; `DRWIL-012` retiré des
+  messages livrés ; version 0.5.0 et note de version. Une PR, quatre lots.
+- **Trouvé en route** : `doctor` cherchait le manifeste sous son ancien
+  nom (corrigé) ; l'ancien `init` écrasait la mécanique modifiée à la main
+  (désormais signalée comme dérive).
+- **Clôturé par** : la PR de ce chantier (branche
+  `workstream/cli-en-anglais`) ; QUA-013 (contrôle non exécuté jamais
+  vert) ré-attesté par l'humain.

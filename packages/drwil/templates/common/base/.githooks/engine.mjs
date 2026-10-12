@@ -5,10 +5,10 @@
 // Each check has a stable identifier (cited by the **Check** field of
 // docs/contracts.md) and returns one of these results (stable values: they leave the hooks
 // through `drwil verify` and its evidence):
-// - "ok" / "echec" (failed);
-// - "non-execute" (not run): it should have run but could not (missing tool, deferred
+// - "ok" / "fail";
+// - "not-run": it should have run but could not (missing tool, deferred
 //   at commit time) — never a success (QUA-013);
-// - "non-applicable": excluded by design in this context (e.g. QUA-017 in CI).
+// - "not-applicable": excluded by design in this context (e.g. QUA-017 in CI).
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
@@ -99,18 +99,18 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     const r = spawnSync(cmd, args, { cwd: root, stdio, encoding: "utf8", ...opts, env: checkEnv });
     const output = stdio === "pipe" ? `${r.stdout ?? ""}${r.stderr ?? ""}` : undefined;
     // A command that cannot even start is a failure, as before the engine was extracted.
-    if (r.error) return { status: "echec", detail: r.error.message, output };
-    return { status: r.status === 0 ? "ok" : "echec", output };
+    if (r.error) return { status: "fail", detail: r.error.message, output };
+    return { status: r.status === 0 ? "ok" : "fail", output };
   };
   const list = [];
   const add = (id, name, run) => list.push({ id, name, run: (o = {}) => run(o, name) });
 
-  add("secrets-fichiers", T.secrets, (o, name) => {
-    if (!full) return { status: "non-applicable", detail: T.minimalMode };
+  add("secrets", T.secrets, (o, name) => {
+    if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const gitleaks = findGitleaks();
-    if (!gitleaks) return { status: "non-execute", detail: T.gitleaksMissing };
+    if (!gitleaks) return { status: "not-run", detail: T.gitleaksMissing };
     if (spawnSync("git", ["rev-parse", "--git-dir"], { cwd: root, stdio: "ignore" }).status !== 0)
-      return { status: "non-execute", detail: T.noGit };
+      return { status: "not-run", detail: T.noGit };
     // In CI (or for `drwil verify`) nothing is staged to judge: the whole history is analysed,
     // otherwise a proof of "no secret in the repository" would look at nothing.
     const args = whole ? ["git", "--no-banner", "--redact", "."] : ["git", "--pre-commit", "--staged", "--no-banner", "--redact", "."];
@@ -121,10 +121,10 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
 
   // Brief scope gate (.githooks/scope-gate.mjs): at commit time, the local state;
   // elsewhere (push, CI, verify), each commit of the branch is replayed through its trailer.
-  add("perimetre-attente", T.scope, (o, name) => {
+  add("scope-gate", T.scope, (o, name) => {
     o.beforeRun?.(name);
     const r = checkScope(root, { cfg, staged, env });
-    const output = r.problems.map((p) => `  ${r.status === "echec" ? "✗" : "⚠"} ${p}`).join("\n");
+    const output = r.problems.map((p) => `  ${r.status === "fail" ? "✗" : "⚠"} ${p}`).join("\n");
     if (output && o.stdio !== "pipe") console.log(output);
     return { status: r.status, message: r.message, detail: r.detail, output };
   });
@@ -137,30 +137,30 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   // Never either on a push of tags only (DRWIL_PUSH_TAGS_ONLY, set by .githooks/pre-push from the
   // hook's standard input): a tag never changes a branch; nor on a remote branch deletion
   // (DRWIL_PUSH_NO_BRANCH).
-  add("branche-principale", T.branch, () => {
-    if (env.CI) return { status: "non-applicable", detail: T.branchCi };
-    if (env.DRWIL_PUSH_TAGS_ONLY === "1") return { status: "non-applicable", detail: T.branchTags };
-    if (env.DRWIL_PUSH_NO_BRANCH === "1") return { status: "non-applicable", detail: T.branchNoBranch };
+  add("main-branch", T.branch, () => {
+    if (env.CI) return { status: "not-applicable", detail: T.branchCi };
+    if (env.DRWIL_PUSH_TAGS_ONLY === "1") return { status: "not-applicable", detail: T.branchTags };
+    if (env.DRWIL_PUSH_NO_BRANCH === "1") return { status: "not-applicable", detail: T.branchNoBranch };
     const branch = spawnSync("git", ["symbolic-ref", "--short", "HEAD"], { cwd: root, encoding: "utf8" });
     const branchName = branch.status === 0 ? branch.stdout.trim() : null;
-    if (branchName && ["master", "main"].includes(branchName)) return { status: "echec", message: T.branchProtected(branchName) };
+    if (branchName && ["master", "main"].includes(branchName)) return { status: "fail", message: T.branchProtected(branchName) };
     return { status: "ok" };
   });
 
-  add("controles-autotest", T.selfTests, (o, name) => {
-    if (!full) return { status: "non-applicable", detail: T.minimalMode };
+  add("checks-self-test", T.selfTests, (o, name) => {
+    if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const dir = join(root, ".githooks");
     const tests = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".test.mjs")) : [];
     // These tests try drwil's code: they stay in its repository and do not slow down the commits
     // of an equipped project, which does not receive them.
-    if (!tests.length) return { status: "non-applicable", detail: T.noTests };
+    if (!tests.length) return { status: "not-applicable", detail: T.noTests };
     return launch(process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))], o, name);
   });
 
-  add("couverture-ci", T.ciCoverage, (o, name) => {
-    if (!full) return { status: "non-applicable", detail: T.minimalMode };
+  add("ci-coverage", T.ciCoverage, (o, name) => {
+    if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const ciFiles = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
-    if (!ciFiles.length) return { status: "non-execute", detail: T.noCi };
+    if (!ciFiles.length) return { status: "not-run", detail: T.noCi };
     return launch(process.execPath, [".githooks/check-control-coverage.mjs"], o, name);
   });
 
@@ -171,12 +171,12 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   for (const c of Array.isArray(cfg.checks) ? cfg.checks : []) {
     const name = c.name ?? c.run;
     list.push({
-      id: c.id ?? `projet:${name}`,
+      id: c.id ?? `project:${name}`,
       name,
       run: (o = {}) => {
         if (staged && Array.isArray(c.paths) && c.paths.length) {
           const patterns = c.paths.map(globToRegex);
-          if (!staged.some((f) => patterns.some((p) => p.test(f)))) return { status: "non-execute", detail: T.deferred };
+          if (!staged.some((f) => patterns.some((p) => p.test(f)))) return { status: "not-run", detail: T.deferred };
         }
         return launch(c.run, [], { ...o, shell: true, cwd: c.cwd ? join(root, c.cwd) : root }, name);
       },

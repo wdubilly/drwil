@@ -1,7 +1,7 @@
 #!/bin/sh
 # Conduct (AGENTS.md): refuses any commit whose message carries a "Co-Authored-By"
 # line (some AI tools add it by default). Shipped but DISABLED by default (the
-# project chooses): this file is not made executable by `init`/`apply` — enable it with:
+# project chooses): this file is not made executable by `init` — enable it with:
 #   chmod +x .githooks/commit-msg
 # Can be bypassed with --no-verify, like any local hook.
 if grep -qiE '^[[:space:]]*co-authored-by[[:space:]]*:' "$1"; then

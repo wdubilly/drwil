@@ -27,8 +27,8 @@ files:
   - .githooks/dashboard.mjs
   - .githooks/check-colors.mjs
   - .githooks/check-contrast.mjs
-{{cadrageCi}}
-{{cadrageClaude}}
+{{scopeCi}}
+{{scopeClaude}}
 -->
 
 ## 1. Need

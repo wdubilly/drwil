@@ -76,7 +76,7 @@ as a second person would.
 
 ## What gets installed
 
-Running `init` (new project) or `apply` (existing project) adds:
+Running `init` (new project or existing one) adds:
 
 - **`AGENTS.md`** — the single entry point every AI assistant reads
   first: project description, non-negotiable conduct rules (scope,
@@ -102,12 +102,12 @@ Running `init` (new project) or `apply` (existing project) adds:
   closed ones — so any session (human or AI) can resume work without
   having to reconstruct context from chat history.
 - **An installed-files manifest** — a record of exactly which files the
-  kit installed and their fingerprint, used by `apply`/`uninstall` to
+  kit installed and their fingerprint, used by `init`/`uninstall` to
   never silently overwrite or delete something you wrote yourself.
 
 Nothing above is ever force-installed over your own files on a repeat
-`apply`: existing files are left untouched and flagged if they have
-drifted from the shipped template (see `resoudre-derive` below).
+`init`: existing files are left untouched and flagged if they have
+drifted from the shipped template (see `resolve-drift` below).
 
 ## How the governance loop works
 
@@ -191,46 +191,45 @@ code".
 
 ## Installing
 
-Both commands run **in the current directory** (`cd` into the project
-first); neither one creates a new folder.
+`init` runs **in the current directory** (`cd` into the project first); it
+never creates a new folder.
 
-### `init` — brand-new project, or empty folder
+### `init` — new project, existing project, or update
 
 ```bash
-mkdir MyProject && cd MyProject
+mkdir MyProject && cd MyProject      # or cd MyExistingProject
 npx drwil init --name "MyProject" --lang en
 ```
 
-Scaffolds the kit's full structure in the current folder (`AGENTS.md`,
-`docs/contracts.md`, Git hooks enabled). Re-running `init` only refreshes
-`.githooks/` by default (docs you've already written are left alone);
-`--force` overwrites everything, including project docs added since —
-reserve it for a deliberate reset. Either way, the project's settings
-(`.drwil/ia-first.json`: language, tools, layers, CI, code prefixes…) are
-kept: an option you don't pass takes the installed value. To start the
-settings over, delete that file first.
+A single command for every case:
 
-### `apply` — project that already exists
+- **New project** (empty folder, no stack detected): scaffolds the kit's
+  full structure (`AGENTS.md`, `docs/contracts.md`, default layers
+  `backend,frontend`), creates the Git repository on a working branch and
+  enables the hooks.
+- **Existing project** (code, Git history, dependencies): detects the
+  stack (subfolders become the layers) and installs the kit on top
+  **without ever overwriting a project file**; no new Git repository, the
+  hooks are enabled if there is one.
+- **Update** (project already equipped): creates what is missing,
+  refreshes the kit mechanics (`.githooks/`) that did not change since
+  their installation, and reports — never overwrites — a file modified by
+  hand (see `resolve-drift` below). A project equipped by an older,
+  French-named version is migrated first (see `CHANGELOG.md`).
 
-```bash
-cd MyExistingProject
-npx drwil apply --lang en
-```
+The project's settings (`.drwil/ia-first.json`: language, tools, layers,
+CI, code prefixes…) are kept: an option you don't pass takes the installed
+value. To start the settings over, delete that file first. `--force`
+overwrites everything, including project docs added since — reserve it
+for a deliberate reset.
 
-For a repository that already has code, Git history, and dependencies in
-place. `apply` detects the stack present (backend/frontend subfolders,
-AI tools already configured) and installs the kit on top **without ever
-overwriting anything**: an existing file is left as-is, and flagged if it
-has drifted from the template since a previous install. This is the
-command to use to adopt drwil on an ongoing project.
-
-Before writing anything, `apply` audits the repository and prints a
-preview: detected stack, AI tool files already present, safeguards already
-in place (npm `test`/`lint` scripts, eslint, husky, pre-commit, gitleaks,
-CI, git hooks), the exact list of files it will add, and the existing
-files it will leave untouched. `npx drwil apply --dry-run` stops after the
-preview and writes nothing; the preview runs through the same code path as
-the real install, so it cannot drift from what `apply` actually does.
+`npx drwil init --dry-run` audits the repository and prints a preview
+without writing anything: detected stack, AI tool files already present,
+safeguards already in place (npm `test`/`lint` scripts, eslint, husky,
+pre-commit, gitleaks, CI, git hooks), the exact list of files it would add
+or refresh, and the existing files it would leave untouched. The preview
+runs through the same code path as the real install, so it cannot drift
+from what `init` actually does.
 
 ### `verify` — validate the work against the project's contracts
 
@@ -309,18 +308,18 @@ Lists each contract with its checks and manual part, without running
 anything. Exit 0: valid registry; 2: invalid (unknown check, missing rule
 or proof, duplicate).
 
-### `resoudre-derive` — resolve mechanics drift
+### `resolve-drift` — resolve mechanics drift
 
 ```bash
-npx drwil resoudre-derive
+npx drwil resolve-drift
 ```
 
-When `init`/`apply` detect that a mechanics file (`.githooks/`,
+When `init` detects that a mechanics file (`.githooks/`,
 `.claude/settings.json`, CI workflow file) has drifted from the version
 shipped by the kit, this command walks through each drifted file, shows a
 unified diff, and asks for confirmation before overwriting — always
 creating a `.bak` backup first, and never creating a file that doesn't
-exist yet. `--forcer` skips the confirmation for scripted/non-interactive
+exist yet. `--force` skips the confirmation for scripted/non-interactive
 use.
 
 ### `uninstall` — remove the kit's mechanics
@@ -353,7 +352,7 @@ npx drwil init --name "MyProject"
 
 ## CLI reference
 
-Common options (both `init` and `apply`). On a project already installed,
+Options of `init`. On a project already installed,
 an option you don't pass takes the value from `.drwil/ia-first.json`; the
 defaults below apply to a new install only.
 
@@ -362,22 +361,22 @@ defaults below apply to a new install only.
 | `-n, --name <name>` | Project name | current folder name |
 | `-s, --short <short>` | Short name | — |
 | `-l, --lang <lang>` | Project language: `fr` or `en` (the kit itself is in English) | `en` |
-| `--layers <layers>` | Comma-separated layers | detected (`apply`) / `backend,frontend` (`init`) |
+| `--layers <layers>` | Comma-separated layers | subfolders where a stack is detected, else `backend,frontend` |
 | `-d, --description <text>` | What the application does — fills `AGENTS.md` and `docs/architecture.md` | — |
 | `--tools <tools>` | AI tools to configure, CSV: `claude,codex,cursor,gemini,copilot` | all five |
 | `--ci <ci>` | CI workflow to generate: `none`, `github`, `gitlab` | `none` |
 | `--contract-prefixes <csv>` | Contract ID prefixes to use | `SEC,QUA` |
 | `--mode <mode>` | `minimal` or `full` | `full` |
 | `--no-git` | Skip `git init` and hook activation | — |
-| `--force` | (`init` only) Overwrite every file, not just `.githooks/` | — |
+| `--dry-run` | Preview what would be written; write nothing | — |
+| `--force` | Overwrite every file, even modified ones | — |
 
-Run `npx drwil init --help` or `npx drwil apply --help` for the live,
-authoritative list.
+Run `npx drwil init --help` for the live, authoritative list.
 
 ## Supported stacks, AI tools and CI providers
 
 - **Layers**: `backend`, `frontend`, or `generic` (single-folder project)
-  — auto-detected by `apply`, explicit via `--layers` for `init`.
+  — auto-detected by `init`, explicit via `--layers`.
 - **AI tools**: Claude Code, GitHub Copilot, Cursor, Codex, Gemini — pick
   any combination via `--tools`; each gets its own pointer file importing
   the shared `AGENTS.md`.
@@ -456,47 +455,32 @@ Concrètement, le kit ajoute à un projet :
 
 ## Installer
 
-Les deux commandes s'exécutent **dans le dossier courant** (`cd` dans le
-projet avant de lancer la commande) ; aucune ne crée de nouveau dossier.
-Le choix entre les deux dépend de l'état du projet.
-
-### `init` — projet tout neuf, ou dossier vide
+`init` s'exécute **dans le dossier courant** (`cd` dans le projet avant
+de lancer la commande) ; il ne crée jamais de nouveau dossier.
 
 ```bash
-mkdir MonProjet && cd MonProjet
-npx drwil init --name "MonProjet"
+mkdir MonProjet && cd MonProjet      # ou cd MonProjetExistant
+npx drwil init --name "MonProjet" --lang fr
 ```
 
-Scaffolde la structure complète du kit dans le dossier courant
-(`AGENTS.md`, `docs/contracts.md`, hooks Git activés). Un deuxième
-`init` ne rafraîchit que `.githooks/` par défaut (les docs déjà
-écrites ne sont pas touchées) ; `--force` écrase tout, y compris les
-docs de projet ajoutées depuis — à réserver à un rattrapage volontaire.
-Dans tous les cas, les réglages du projet (`.drwil/ia-first.json` :
-langue, outils, couches, CI, préfixes de code…) sont gardés : une option
-non passée reprend la valeur installée. Pour repartir de zéro sur les
-réglages, supprimer d'abord ce fichier.
+Une seule commande pour tous les cas : sur un projet neuf, elle installe
+la structure complète du kit, crée le dépôt Git sur une branche de
+travail et active les hooks ; sur un projet existant, elle détecte la
+stack (les sous-dossiers deviennent les couches) et installe le kit
+par-dessus **sans jamais écraser un fichier du projet** ; sur un projet
+déjà équipé, elle crée ce qui manque, rafraîchit la mécanique du kit
+restée inchangée depuis son installation et signale, sans l'écraser, un
+fichier modifié à la main. Un projet équipé par une ancienne version aux
+noms français est d'abord migré (voir `CHANGELOG.md`). Les réglages du
+projet (`.drwil/ia-first.json`) sont gardés : une option non passée
+reprend la valeur installée. `--dry-run` montre ce qui serait fait sans
+rien écrire ; `--force` écrase tout, à réserver à un rattrapage
+volontaire.
 
-### `apply` — projet déjà existant
-
-```bash
-cd MonProjetExistant
-npx drwil apply
-```
-
-Pour un dépôt qui a déjà du code, un historique Git et des dépendances
-en place. `apply` détecte la stack présente (sous-dossiers
-backend/frontend, outils IA déjà configurés) et installe le kit
-par-dessus **sans jamais rien écraser** : un fichier déjà présent est
-laissé tel quel, et signalé s'il a dérivé du gabarit depuis une
-installation précédente. C'est la commande à utiliser pour adopter
-drwil sur un projet en cours.
-
-Options principales (communes aux deux commandes) : `--lang fr|en` (langue
-du projet, anglais par défaut ; le kit lui-même est en anglais),
-`--layers backend,frontend` (détecté sinon), `--tools
-claude,copilot,cursor,codex,gemini`, `--ci github|gitlab|none`. Voir
-`npx drwil init --help` ou `npx drwil apply --help`.
+Options principales : `--lang fr|en` (langue du projet, anglais par
+défaut ; le kit lui-même est en anglais), `--layers backend,frontend`
+(détecté sinon), `--tools claude,copilot,cursor,codex,gemini`,
+`--ci github|gitlab|none`. Voir `npx drwil init --help`.
 
 ## Ce que ça résout, et comment
 

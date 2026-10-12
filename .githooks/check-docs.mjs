@@ -33,7 +33,7 @@ const T = {
     briefDone: (brief) =>
       `${brief} : fiche terminée encore présente — la condenser dans docs/projects/journal.md, la supprimer et retirer sa ligne de l'index (QUA-015)`,
     consistencyWarnings: (n) => `check-docs : ${n} avertissement(s) de cohérence case/statut (QUA-015, non bloquant)`,
-    riskWarnings: (n) => `check-docs : ${n} avertissement(s) de niveau de risque (DRWIL-012, non bloquant)`,
+    riskWarnings: (n) => `check-docs : ${n} avertissement(s) de niveau de risque (non bloquant)`,
     ignoredByGit: "fichier ignoré par Git : absent en CI (ajouter « (si présent) »)",
     newWarnings: (n) =>
       `check-docs : ${n} avertissement(s) d'exigence récente (réglage « newRequirements » : warning ; « blocking » pour l'imposer)`,
@@ -57,7 +57,7 @@ const T = {
     briefDone: (brief) =>
       `${brief}: finished card still present — condense it into docs/projects/journal.md, delete it and remove its index line (QUA-015)`,
     consistencyWarnings: (n) => `check-docs: ${n} checkbox/status consistency warning(s) (QUA-015, non-blocking)`,
-    riskWarnings: (n) => `check-docs: ${n} risk level warning(s) (DRWIL-012, non-blocking)`,
+    riskWarnings: (n) => `check-docs: ${n} risk level warning(s) (non-blocking)`,
     ignoredByGit: 'file ignored by Git: missing in CI (add "(if present)")',
     newWarnings: (n) => `check-docs: ${n} recent-requirement warning(s) (setting "newRequirements": warning; "blocking" to enforce it)`,
   },

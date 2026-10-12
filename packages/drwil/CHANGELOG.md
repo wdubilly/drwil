@@ -1,5 +1,52 @@
 # Changelog
 
+## 0.5.0
+
+**Breaking change: the CLI is in English, with a single install command.**
+
+### A single `drwil init`
+
+- `drwil apply` is removed, without an alias: `drwil init` installs a new
+  project, equips an existing one, and updates an equipped one.
+  - New project (no config, no detected stack): default layers
+    `backend,frontend`, Git repository created on a working branch.
+  - Existing project: layers from the detected stack, never a `git init`.
+  - Update: what is missing is created; the kit mechanics (`.githooks/`)
+    are refreshed only if unchanged since their installation — a file
+    modified by hand is reported as drift, never overwritten (`init` used to
+    overwrite it). `--force` still rewrites everything.
+- `drwil init --dry-run` previews what would be written (the former
+  `apply --dry-run`), through the same code path as the install.
+
+### Renamed
+
+| Before | After |
+|---|---|
+| `drwil apply` | `drwil init` |
+| `drwil etat` | `drwil state` |
+| `drwil resoudre-derive --forcer` | `drwil resolve-drift --force` |
+| Check identifiers `secrets-fichiers`, `perimetre-attente`, `controles-autotest`, `couverture-ci`, `branche-principale`, `projet:<name>` | `secrets`, `scope-gate`, `checks-self-test`, `ci-coverage`, `main-branch`, `project:<name>` |
+| Engine statuses `echec`, `non-execute`, `non-applicable` (in `drwil verify --json` and evidence) | `fail`, `not-run`, `not-applicable` |
+| Redaction marker `[CAVIARDÉ]` | `[REDACTED]` |
+| `node .githooks/state.mjs` options `--fiche`, `--demande` | `--brief`, `--request` |
+| Typed confirmations `LANCER`, `FUSION` | `START`, `MERGE` |
+| Skill `/drwil-lancer`, poll headers `drwil-lancer` / `drwil-fusion` | `/drwil-start`, `drwil-start` / `drwil-merge` |
+
+`drwil init` migrates the check identifiers cited by the project's contract
+registry (`dirs.contracts`, `docs/contracts.md`, `docs/contracts-catalog.md`)
+and touches nothing else for this step. A contract whose text cites a check
+identifier gets a new fingerprint: its attestations become obsolete and
+must be renewed (`drwil attest`, a human action). Severities keep being read
+in either language (`bloquant` or `blocking`…); internally and in the JSON
+outputs they are `blocking`, `warning`, `advisory`.
+
+### Messages
+
+The CLI's messages follow the project's language (`lang` of
+`.drwil/ia-first.json`, or `--lang` for a preview), English outside a
+project. Two shipped messages no longer show an identifier internal to
+drwil's own repository.
+
 ## 0.4.0
 
 **Breaking change: the governance core is now in English.** The hooks only

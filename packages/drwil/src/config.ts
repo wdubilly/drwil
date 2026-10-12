@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { detectStack, type StackEntry } from "./stack.js";
 
 export const LANGS = ["fr", "en"] as const;
@@ -15,28 +16,28 @@ export interface InitOptions {
   name?: string;
   short?: string;
   lang?: string;
-  /** CSV. Défaut : backend,frontend pour init, couches détectées pour apply. */
+  /** CSV. Default: the subfolders where a stack is detected, else backend,frontend. */
   layers?: string;
   contractPrefixes?: string;
   mode?: string;
   description?: string;
   git?: boolean;
-  /** CSV parmi TOOLS. Défaut : tous. */
+  /** CSV among TOOLS. Default: all. */
   tools?: string;
   ci?: string;
-  /** `init` seul : réécrit tout (sinon seul .githooks/, mécanique du kit, est réécrit). */
+  /** `init` only: rewrites everything (otherwise only .githooks/, the kit mechanics, is rewritten). */
   force?: boolean;
 }
 
-/** Dossier dont `init` rafraîchit le contenu par défaut : la mécanique du kit, pas les docs du projet. */
+/** Folder whose content `init` refreshes by default: the kit mechanics, not the project's docs. */
 export const KIT_MECHANICS = ".githooks/";
 
 export const CI_FILES: Record<Ci, string[]> = { none: [], github: [".github/workflows/ia-first.yml"], gitlab: [".gitlab-ci.yml"] };
 
-// Textes rendus dans le gabarit, en anglais comme lui : `lang` dit la langue du projet, pas celle du kit.
+// Texts rendered into the template, in English like it: `lang` is the project's language, not the kit's.
 export const TEXT = {
-  // Langue du projet, telle que la consigne de AGENTS.md la nomme à l'agent.
-  langues: { fr: "French", en: "English" } as Record<string, string>,
+  // The project's language, as the AGENTS.md instruction names it to the agent.
+  languages: { fr: "French", en: "English" } as Record<string, string>,
   description: "(to describe: what the application does, for whom)",
   layer: (l: string) => `- \`${l}/\` — see \`${l}/AGENTS.md\``,
   noLayer: "No separate layer: the code lives at the repository root.",
@@ -69,44 +70,56 @@ export function splitCsv(s?: string) {
     .filter(Boolean);
 }
 
-export function pick<T extends string>(value: string, allowed: readonly T[], option: string): T {
+const TEXTS = {
+  fr: {
+    unknownValue: "--{0} : valeur « {1} » inconnue (attendu : {2})",
+    notInitialised: "projet non initialisé ({0} introuvable) : lancer « drwil init » d'abord",
+  },
+  en: {
+    unknownValue: '--{0}: unknown value "{1}" (expected: {2})',
+    notInitialised: 'project not initialised ({0} not found): run "drwil init" first',
+  },
+};
+
+export function pick<T extends string>(value: string, allowed: readonly T[], option: string, lang: MessageLang = "en"): T {
   if (!(allowed as readonly string[]).includes(value)) {
-    throw new Error(`--${option} : valeur « ${value} » inconnue (attendu : ${allowed.join(", ")})`);
+    throw new Error(fill(TEXTS[lang].unknownValue, option, value, allowed.join(", ")));
   }
   return value as T;
 }
 
 const csv = (v: unknown) => (Array.isArray(v) ? v.join(",") : undefined);
-const texte = (v: unknown) => (typeof v === "string" ? v : undefined);
+const text = (v: unknown) => (typeof v === "string" ? v : undefined);
 
-/** CI d'une config existante : sa clé `ci`, sinon déduite de `ciFiles` (configs antérieures à la clé). */
-function ciDeConfig(config: Record<string, unknown>): string | undefined {
+/** CI of an existing config: its `ci` key, otherwise deduced from `ciFiles` (configs older than the key). */
+function ciFromConfig(config: Record<string, unknown>): string | undefined {
   if (typeof config.ci === "string") return config.ci;
-  const premier = Array.isArray(config.ciFiles) ? config.ciFiles[0] : undefined;
-  return premier === undefined ? undefined : CIS.find((c) => CI_FILES[c][0] === premier);
+  const first = Array.isArray(config.ciFiles) ? config.ciFiles[0] : undefined;
+  return first === undefined ? undefined : CIS.find((c) => CI_FILES[c][0] === first);
 }
 
 /**
- * Sur un projet déjà installé, une option absente prend la valeur de sa config : relancer
- * l'installation pour mettre le kit à jour ne remet jamais un réglage choisi à son défaut
- * (docs/projets/init-preserve-config.md). Une option passée l'emporte toujours.
+ * On an already installed project, a missing option takes the value of its config: running the
+ * install again to update the kit never resets a chosen setting to its default. A given option
+ * always wins.
  */
 export function resolve(opts: InitOptions, defaultLayers: (stack: StackEntry[]) => string[]): Resolved {
   const stack = detectStack(opts.targetDir);
   const previous = readConfig(opts.targetDir) ?? {};
+  const lang = projectLang(opts.targetDir);
   const merged: InitOptions = {
     ...opts,
-    name: opts.name ?? texte(previous.projectName),
-    short: opts.short ?? texte(previous.projectShort),
+    name: opts.name ?? text(previous.projectName),
+    short: opts.short ?? text(previous.projectShort),
     contractPrefixes: opts.contractPrefixes ?? csv(previous.contractPrefixes),
   };
   const layers = opts.layers ?? csv(previous.layers);
   return {
     opts: merged,
-    lang: pick(opts.lang ?? texte(previous.lang) ?? "en", LANGS, "lang"),
-    tools: splitCsv(opts.tools ?? csv(previous.tools) ?? TOOLS.join(",")).map((t) => pick(t, TOOLS, "tools")),
-    ci: pick(opts.ci ?? ciDeConfig(previous) ?? "none", CIS, "ci"),
-    mode: pick(opts.mode ?? texte(previous.mode) ?? "full", ["minimal", "full"] as const, "mode"),
+    lang: pick(opts.lang ?? text(previous.lang) ?? "en", LANGS, "lang", lang),
+    tools: splitCsv(opts.tools ?? csv(previous.tools) ?? TOOLS.join(",")).map((t) => pick(t, TOOLS, "tools", lang)),
+    ci: pick(opts.ci ?? ciFromConfig(previous) ?? "none", CIS, "ci", lang),
+    mode: pick(opts.mode ?? text(previous.mode) ?? "full", ["minimal", "full"] as const, "mode", lang),
     layers: layers !== undefined ? splitCsv(layers) : defaultLayers(stack),
     stack,
   };
@@ -116,14 +129,11 @@ export function projectName(r: Resolved): string {
   return r.opts.name ?? basename(r.opts.targetDir);
 }
 
-// Reconstruit un `Resolved` minimal à partir de la config déjà écrite par init()/apply(), pour
-// relire ses décisions (lang, tools, ci, stack...) sans ré-exécuter la détection de pile — lot 2,
-// docs/projets/apply-rafraichit-mecanique.md.
+// Rebuilds a minimal `Resolved` from the config already written by init(), to read its
+// decisions again (lang, tools, ci, stack...) without running the stack detection again.
 export function resolveFromConfig(targetDir: string): Resolved {
   const config = readConfig(targetDir);
-  if (!config) {
-    throw new Error(`projet non initialisé (${join(targetDir, ".drwil", "ia-first.json")} introuvable) : lancer « drwil init » d'abord`);
-  }
+  if (!config) throw new Error(fill(TEXTS.en.notInitialised, join(targetDir, ".drwil", "ia-first.json")));
   const opts: InitOptions = {
     targetDir,
     name: config.projectName as string | undefined,
@@ -151,11 +161,11 @@ export function readConfig(targetDir: string): Record<string, unknown> | null {
 
 export async function writeConfig(r: Resolved): Promise<void> {
   const previous = readConfig(r.opts.targetDir);
-  // Réglages saisis par le projet : repris tels quels ; ceux qui découlent d'une option (dossiers de
-  // la langue, fichiers de la CI) ne sont recalculés que si l'option a changé.
-  const garde = (cle: string, defaut: string[]) => (Array.isArray(previous?.[cle]) ? (previous[cle] as string[]) : defaut);
+  // Settings entered by the project: kept as they are; those derived from an option (CI files) are
+  // only recomputed if the option changed.
+  const keep = (key: string, fallback: string[]) => (Array.isArray(previous?.[key]) ? (previous[key] as string[]) : fallback);
   const config = {
-    // Clés propres au projet, inconnues du kit : jamais perdues.
+    // Project-specific keys, unknown to the kit: never lost.
     ...previous,
     projectName: projectName(r),
     projectShort: r.opts.short ?? projectName(r),
@@ -164,31 +174,30 @@ export async function writeConfig(r: Resolved): Promise<void> {
     contractPrefixes: splitCsv(r.opts.contractPrefixes ?? "SEC,QUA"),
     tools: r.tools,
     ci: r.ci,
-    // Les dossiers d'un projet installé ne bougent pas avec sa langue : leurs fiches y vivent.
+    // An installed project's folders do not move with its language: its briefs live there.
     dirs: previous?.dirs ?? TEXT.dirs,
     stack: r.stack,
-    // Les contrôles du projet sont saisis par l'utilisateur ou l'IA : une réinstallation ne doit pas les effacer.
+    // The project's checks are entered by the user or the AI: a reinstall must not erase them.
     checks: Array.isArray(previous?.checks) ? previous.checks : [],
-    // Sévérité du rappel de cadrage (QUA-016 seul) : "blocking" | "warning" | "off".
-    // Défaut "blocking" (docs/projets/garde-fous-depot.md) ; une valeur déjà choisie par le projet
-    // n'est jamais écrasée par une réinstallation.
+    // Severity of the scope reminder (QUA-016 only): "blocking" | "warning" | "off". Default
+    // "blocking"; a value already chosen by the project is never overwritten by a reinstall.
     scopeReminder: typeof previous?.scopeReminder === "string" ? previous.scopeReminder : "blocking",
-    // Transitions de l'état de gouvernance (.githooks/state.mjs) : "human" (ouvrir, lancer la
-    // réalisation et clore exigent un terminal interactif) | "agent". Jamais écrasé.
+    // Transitions of the governance state (.githooks/state.mjs): "human" (opening and starting
+    // require an interactive terminal) | "agent". Never overwritten.
     transitions: typeof previous?.transitions === "string" ? previous.transitions : "human",
-    // Barrière de périmètre de l'attente (.githooks/scope-gate.mjs) : "off" | "warning" |
-    // "blocking". "warning" à l'installation : le projet voit les écarts avant de durcir.
+    // Scope gate of the active brief (.githooks/scope-gate.mjs): "off" | "warning" | "blocking".
+    // "warning" at install time: the project sees the gaps before hardening.
     scopeGate: typeof previous?.scopeGate === "string" ? previous.scopeGate : "warning",
-    // Exigences ajoutées par une version du kit postérieure à l'installation (aujourd'hui : chemin
-    // cité qui n'existe que comme fichier ignoré par Git) : "blocking" pour une installation neuve,
-    // "warning" pour un projet déjà équipé qui n'a pas encore ce réglage — une mise à jour ne
-    // casse jamais un commit qui passait. Jamais écrasé ensuite.
+    // Requirements added by a kit version later than the install (today: a cited path that only
+    // exists as a file ignored by Git): "blocking" for a fresh install, "warning" for an already
+    // equipped project that does not have this setting yet — an update never breaks a commit
+    // that used to pass. Never overwritten afterwards.
     newRequirements: typeof previous?.newRequirements === "string" ? previous.newRequirements : previous ? "warning" : "blocking",
-    layerPrefixes: garde("layerPrefixes", ["app", "tests", "src", "scripts"]),
-    codePrefixes: garde("codePrefixes", ["scripts", ".githooks", "e2e"]),
-    extraCodeFiles: garde("extraCodeFiles", []),
-    extraCodeGlobs: garde("extraCodeGlobs", ["docker-compose*.yml"]),
-    ciFiles: previous && ciDeConfig(previous) === r.ci ? garde("ciFiles", CI_FILES[r.ci]) : CI_FILES[r.ci],
+    layerPrefixes: keep("layerPrefixes", ["app", "tests", "src", "scripts"]),
+    codePrefixes: keep("codePrefixes", ["scripts", ".githooks", "e2e"]),
+    extraCodeFiles: keep("extraCodeFiles", []),
+    extraCodeGlobs: keep("extraCodeGlobs", ["docker-compose*.yml"]),
+    ciFiles: previous && ciFromConfig(previous) === r.ci ? keep("ciFiles", CI_FILES[r.ci]) : CI_FILES[r.ci],
     mode: r.mode,
   };
   await mkdir(join(r.opts.targetDir, ".drwil"), { recursive: true });

@@ -26,7 +26,7 @@ de sortie.
 **Périmètre** : Tout contrôle listé dans les vérifs.
 **Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution.
 **Preuve** : Sortie lue du contrôle concerné.
-**Contrôle** : `couverture-ci`
+**Contrôle** : `ci-coverage`
 **Manuel** : lecture de la sortie du contrôle concerné.
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
@@ -44,7 +44,7 @@ de sortie.
 **Périmètre** : Tout le dépôt et son historique.
 **Source de vérité** : gitleaks (fichiers indexés + historique, si configuré).
 **Preuve** : Hook + CI.
-**Contrôle** : `secrets-fichiers`
+**Contrôle** : `secrets`
 **Raison** : Fuite irréversible une fois poussée.
 
 ## QUA-011 — Doc jamais fausse
@@ -79,7 +79,7 @@ de sortie.
 **Périmètre** : Tout dépôt git, y compris avant le tout premier commit, en local uniquement (hooks `pre-commit`/`pre-push`).
 **Source de vérité** : `docs/recipes/working-with-branches.md`.
 **Preuve** : `.githooks/run-checks.mjs` (hook uniquement, jamais en CI).
-**Contrôle** : `branche-principale`
+**Contrôle** : `main-branch`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un commit ou un push direct sur la branche principale contourne la revue (pull/merge request) et casse le lien fiche ↔ branche décrit par la recette.
 

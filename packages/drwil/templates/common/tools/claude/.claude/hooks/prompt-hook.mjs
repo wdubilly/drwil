@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Starting a workstream from the chat (`/drwil-lancer`, docs/ia-first.md, "Starting and closing"):
+// Starting a workstream from the chat (`/drwil-start`, docs/ia-first.md, "Starting and closing"):
 // the human decision is the answer to a poll, read by the tool, never by the model.
 // - PreToolUse (poll): refuses a start poll that arrives with an answer already filled in or a
 //   default value — the model does not answer in the human's place and preselects nothing (its
@@ -12,9 +12,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const MARK = "drwil-lancer";
+const MARK = "drwil-start";
 // Optional second question of the same poll (Claude Code): authorise the automatic merge.
-const MERGE_MARK = "drwil-fusion";
+const MERGE_MARK = "drwil-merge";
 const MERGE_YES_RE = /^(fusion automatique|automatic merge)\b/i;
 // The tool runs the hook with the project folder as cwd.
 const ROOT = process.cwd();

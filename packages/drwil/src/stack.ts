@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export interface StackEntry {
-  /** Dossier relatif à la racine (« . » pour la racine). */
+  /** Folder relative to the root ("." for the root). */
   path: string;
   technos: string[];
 }
@@ -80,7 +80,7 @@ function detectDir(dir: string): string[] {
   return technos;
 }
 
-/** Repère les technos à la racine et dans les sous-dossiers directs, d'après leurs fichiers de projet. */
+/** Finds the technologies at the root and in the direct subfolders, from their project files. */
 export function detectStack(root: string): StackEntry[] {
   const result: StackEntry[] = [];
   const rootTechnos = detectDir(root);

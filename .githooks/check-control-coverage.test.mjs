@@ -13,7 +13,7 @@ afterEach(() => {
   dossiers = [];
 });
 function projet(cfg, fichiers = {}) {
-  const dir = mkdtempSync(join(tmpdir(), "drwil-couverture-ci-"));
+  const dir = mkdtempSync(join(tmpdir(), "drwil-ci-coverage-"));
   dossiers.push(dir);
   const tout = cfg === null ? fichiers : { ".drwil/ia-first.json": typeof cfg === "string" ? cfg : JSON.stringify(cfg), ...fichiers };
   for (const [chemin, contenu] of Object.entries(tout)) {
@@ -61,7 +61,7 @@ test("GitHub : job absent, aucun chemin, filtre paths qui ne couvre pas (dégrad
   assert.match(r.stdout, /vide : aucun chemin déclaré/);
   assert.match(
     r.stdout,
-    /secrets-fichiers : le job CI « checks » .* ne se déclenche pas sur `\*\*` \(changes : src\/\*\*, docs\/\*\*\) ; dégradable/,
+    /secrets : le job CI « checks » .* ne se déclenche pas sur `\*\*` \(changes : src\/\*\*, docs\/\*\*\) ; dégradable/,
   );
   assert.doesNotMatch(r.stdout, /src : le job/);
 });
@@ -96,10 +96,7 @@ test("GitLab : rules: changes par job, en anglais", () => {
   );
   assert.equal(r.status, 1);
   assert.match(r.stdout, /Checks \(QUA-013\)/);
-  assert.match(
-    r.stdout,
-    /secrets-fichiers: CI job "checks" \(\.gitlab-ci\.yml\) does not trigger on `\*\*` \(changes: src\/\*\*\); degradable/,
-  );
+  assert.match(r.stdout, /secrets: CI job "checks" \(\.gitlab-ci\.yml\) does not trigger on `\*\*` \(changes: src\/\*\*\); degradable/);
   assert.match(r.stdout, /vide: no path declared/);
   assert.match(r.stdout, /fantome: CI job "inexistant" missing from \.gitlab-ci\.yml/);
   assert.doesNotMatch(r.stdout, /src: CI job|large: CI job/);
