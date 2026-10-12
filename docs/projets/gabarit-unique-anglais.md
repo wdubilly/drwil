@@ -40,7 +40,16 @@ fichiers:
   - docs/securite.md
   - docs/charte-graphique.md
   - docs/fonctionnalites.md
+  - docs/contracts.md
+  - docs/contracts-catalog.md
+  - docs/deployment.md
+  - docs/features.md
+  - docs/security.md
+  - docs/style-guide.md
 -->
+
+(élargi le 2026-10-12 aux noms anglais des documents du dépôt, renommés
+sur décision du demandeur.)
 
 ## 1. Besoin
 
