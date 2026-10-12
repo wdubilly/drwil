@@ -102,7 +102,7 @@ version released after the project was installed (today: a cited path that
 only exists as a file ignored by Git) follows the `newRequirements`
 setting of `.drwil/ia-first.json`: `blocking` for a fresh install,
 `warning` for a project that was already set up without it — an
-upgrade never breaks a commit that used to pass; `drwil apply` never
+upgrade never breaks a commit that used to pass; `drwil init` never
 hardens this setting, the project switches it to `blocking` when it wants.
 
 To keep commits fast, a project check that declares `paths` (patterns,
@@ -354,7 +354,7 @@ allowed scope stays the brief's `scope` block, which is versioned.
 - **Transitions**: one activity at a time, back to `BUILD` after
   `EVIDENCE` or a failed `VERIFY`, abandon to `SCOPING` from any activity.
   Command: `node .githooks/state.mjs move <ACTIVITE> [--brief <brief>]
-  [--request <text>]` (or `drwil etat passer …`, a mere facade); `--brief`
+  [--request <text>]` (or `drwil state move …`, a mere facade); `--brief`
   opens an expectation from `SCOPING`.
 - **Who decides** (`transitions` setting in `.drwil/ia-first.json`): `human`
   (default) — opening rights is a human decision: starting a workstream (see

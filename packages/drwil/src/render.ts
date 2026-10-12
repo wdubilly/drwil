@@ -103,8 +103,8 @@ export interface WriteOptions {
   drifted?: string[];
   manifest?: Record<string, string>;
   expected?: string[];
-  // Preview of `apply` (DRWIL-011): the same walk as the real install, but writeOut records each file
-  // instead of writing it. The preview therefore cannot diverge from what apply would do.
+  // Preview of `init` (DRWIL-011): the same walk as the real install, but writeOut records each file
+  // instead of writing it. The preview therefore cannot diverge from what init would do.
   simulation?: { created: string[]; kept: string[]; replaced: string[] };
 }
 

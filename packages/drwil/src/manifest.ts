@@ -18,7 +18,7 @@ export function readManifest(targetDir: string): Record<string, string> {
   }
 }
 
-// Merged (never fully rewritten): a partial install (targeted apply) must not lose the entries of a
+// Merged (never fully rewritten): a partial install must not lose the entries of a
 // previous install. `obsolete`: paths removed by removeObsolete() in this same run, taken out of the
 // merged manifest (otherwise the merge would bring them back).
 export async function writeManifest(targetDir: string, manifest: Record<string, string>, obsolete: string[] = []): Promise<void> {

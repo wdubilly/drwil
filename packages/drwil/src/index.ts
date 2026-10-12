@@ -1,4 +1,3 @@
-import { writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -24,13 +23,14 @@ export { doctor, formatDiagnosis, diagnosisJson, listContracts, type Diagnosis }
 export { LANGS, TOOLS, CIS, type InitOptions } from "./config.js";
 export { uninstall, type UninstallOptions, type UninstallReport } from "./manifest.js";
 export { resolveDrift, type ResolveDriftOptions, type ResolveDriftReport } from "./drift.js";
-export { auditApply, formatAudit, type ApplyAudit } from "./preview.js";
+export { previewInit, formatPreview, type InitPreview } from "./preview.js";
 export { migrate, formatMigration, type MigrationPlan } from "./migration.js";
 export { fill, projectLang, type MessageLang } from "./i18n.js";
-import { KIT_MECHANICS, readConfig, resolve, writeConfig, type InitOptions, type Resolved } from "./config.js";
+import { writeConfig, type InitOptions, type Resolved } from "./config.js";
+import { installChoices } from "./install.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
-import { scaffold, type Overwrite } from "./render.js";
-import { readManifest, removeObsolete, writeManifest } from "./manifest.js";
+import { scaffold } from "./render.js";
+import { removeObsolete, writeManifest } from "./manifest.js";
 import { formatMigration, migrate } from "./migration.js";
 
 // Branch created by `init()` before the very first commit: nobody ever needs to push to
@@ -119,19 +119,18 @@ async function migrateFirst(targetDir: string): Promise<void> {
 }
 
 /**
- * Installs the kit. By default only rewrites `.githooks/` (kit mechanics); the rest (AGENTS.md,
- * docs/contracts.md, docs/projects/pending.md…) is only written if missing, so as not to erase the
- * contracts and workstreams added by the project. `--force` rewrites everything, as on a new repository.
+ * Installs or updates the kit: a single command for a new project and for an existing one
+ * (`installChoices`). Project files (AGENTS.md, docs/contracts.md, docs/projects/pending.md…) are
+ * only written if missing, so as not to erase the contracts and workstreams added by the project;
+ * the kit mechanics are refreshed unless modified by hand. `--force` rewrites everything.
  */
 export async function init(opts: InitOptions): Promise<void> {
   // First of all: a project in the old format moves to the English names, the only ones the install reads.
   await migrateFirst(opts.targetDir);
-  const r = resolve(opts, () => ["backend", "frontend"]);
-  const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => rel.startsWith(KIT_MECHANICS);
+  const { r, existing, previous, shouldOverwrite } = installChoices(opts);
   const drifted: string[] = [];
   const manifest: Record<string, string> = {};
   const expected: string[] = [];
-  const previous = readManifest(opts.targetDir);
   await scaffold(r, { shouldOverwrite, drifted, manifest, expected });
   const obsolete = await removeObsolete(opts.targetDir, previous, expected);
   await writeManifest(opts.targetDir, manifest, obsolete);
@@ -139,33 +138,6 @@ export async function init(opts: InitOptions): Promise<void> {
   reportStack(r);
   reportDrifted(drifted, r.lang);
   reportObsolete(obsolete, r.lang);
-  if (opts.git !== false) setupGit(opts.targetDir, true, r.lang);
-}
-
-export async function apply(opts: InitOptions): Promise<void> {
-  await migrateFirst(opts.targetDir);
-  // On an existing project, the layers are the subfolders where a stack was found.
-  const r = resolve(opts, (stack) => stack.map((s) => s.path).filter((p) => p !== "."));
-  const drifted: string[] = [];
-  const manifest: Record<string, string> = {};
-  const expected: string[] = [];
-  const previous = readManifest(opts.targetDir);
-  await scaffold(r, { shouldOverwrite: () => false, drifted, manifest, expected });
-  const obsolete = await removeObsolete(opts.targetDir, previous, expected);
-  await writeManifest(opts.targetDir, manifest, obsolete);
-  const existing = readConfig(opts.targetDir);
-  if (!existing) await writeConfig(r);
-  else if (existing.newRequirements === undefined) {
-    // Only addition to an existing config: make the recent-requirements setting visible, at
-    // "warning" (an update never hardens); the rest is not touched.
-    await writeFile(
-      join(opts.targetDir, ".drwil", "ia-first.json"),
-      JSON.stringify({ ...existing, newRequirements: "warning" }, null, 2) + "\n",
-    );
-  }
-  reportStack(r);
-  reportDrifted(drifted, r.lang);
-  reportObsolete(obsolete, r.lang);
-  // No repository is initialised on an existing project: only the hooks are enabled if there is one.
-  if (opts.git !== false) setupGit(opts.targetDir, false, r.lang);
+  // An existing project gets no new repository: only the hooks are enabled if there is one.
+  if (opts.git !== false) setupGit(opts.targetDir, !existing, r.lang);
 }

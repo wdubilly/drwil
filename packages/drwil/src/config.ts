@@ -16,7 +16,7 @@ export interface InitOptions {
   name?: string;
   short?: string;
   lang?: string;
-  /** CSV. Default: backend,frontend for init, detected layers for apply. */
+  /** CSV. Default: the subfolders where a stack is detected, else backend,frontend. */
   layers?: string;
   contractPrefixes?: string;
   mode?: string;
@@ -129,7 +129,7 @@ export function projectName(r: Resolved): string {
   return r.opts.name ?? basename(r.opts.targetDir);
 }
 
-// Rebuilds a minimal `Resolved` from the config already written by init()/apply(), to read its
+// Rebuilds a minimal `Resolved` from the config already written by init(), to read its
 // decisions again (lang, tools, ci, stack...) without running the stack detection again.
 export function resolveFromConfig(targetDir: string): Resolved {
   const config = readConfig(targetDir);

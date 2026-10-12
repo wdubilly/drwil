@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Le dépôt s'installe depuis son gabarit (docs/projects/depot-installe-par-gabarit.md) : le gabarit
 // (packages/drwil/templates/) est la seule source, les copies du dépôt en sont l'installation.
-// `drwil apply` n'écrase jamais rien et `drwil init` réécrit .drwil/ia-first.json en remettant des
-// réglages à leurs défauts : aucun des deux ne convient tel quel. On installe donc avec la vraie CLI
+// `drwil init` lancé sur le dépôt lui-même n'y rafraîchirait que la mécanique inchangée et ne
+// recopierait aucun document déjà présent : il ne convient pas tel quel. On installe donc avec la vraie CLI
 // (`init --force`) dans une copie temporaire des fichiers suivis, puis on ne recopie dans le dépôt que
 // les fichiers du gabarit dont l'unité y est installée, hors écarts déclarés (outils/miroirs.json),
 // hors fichiers déclarés propres au gabarit et hors .drwil/. Les modules optionnels, que la CLI

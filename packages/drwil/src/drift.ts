@@ -83,8 +83,8 @@ export interface ResolveDriftReport {
 }
 
 /** Resolves the drift of the mechanics files (`.githooks/`, `.claude/settings.json`, CI file)
- * reported by `apply()`/`init()`: shows a diff, asks for confirmation (unless forced), backs the old
- * file up as `.bak` before overwriting. Never called automatically by `init()`/`apply()`. */
+ * reported by `init()`: shows a diff, asks for confirmation (unless forced), backs the old
+ * file up as `.bak` before overwriting. Never called automatically by `init()`. */
 export async function resolveDrift(
   opts: ResolveDriftOptions,
   confirm: (rel: string, diff: string) => boolean | Promise<boolean> = defaultConfirm,

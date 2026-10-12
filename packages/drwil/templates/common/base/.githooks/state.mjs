@@ -3,7 +3,7 @@
 //
 // Only reader and only writer of the state: the context reinjected to the agent
 // (`node .githooks/state.mjs`, Claude's SessionStart hook), the transitions
-// (`node .githooks/state.mjs move <ACTIVITY>`, `drwil etat`) and the pre-commit
+// (`node .githooks/state.mjs move <ACTIVITY>`, `drwil state`) and the pre-commit
 // import it. No agent tool is required.
 // The state is local (gitignored) and only holds references: the allowed scope
 // lives in the `scope` block of the active brief, which is versioned.
@@ -270,7 +270,7 @@ function option(args, name) {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
 }
 
-/** Entry point shared by `node .githooks/state.mjs` and `drwil etat`. Returns the exit code. */
+/** Entry point shared by `node .githooks/state.mjs` and `drwil state`. Returns the exit code. */
 export async function main(args, root) {
   if (args[0] === "briefs") {
     const briefs = scopedBriefs(root);

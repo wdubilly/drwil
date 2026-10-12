@@ -12,7 +12,8 @@
   "files": [
     "dist",
     "bin",
-    "templates"
+    "templates",
+    "CHANGELOG.md"
   ],
   "exports": {
     ".": {

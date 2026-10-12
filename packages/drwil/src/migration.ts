@@ -191,7 +191,7 @@ function rewriteJson(
 /**
  * Does the project carry a sign of the old format? Without any, the migration does nothing: an
  * already migrated (or new) project may cite old names in its prose (history, release notes) without
- * them being rewritten at every `init` / `apply`.
+ * them being rewritten at every `init`.
  */
 function oldFormat(root: string, all: string[]): boolean {
   if (all.some((f) => f.startsWith(BRIEF_DIR[0]) || MOVED[f] || OLD_KIT_FILES[f])) return true;
@@ -358,7 +358,7 @@ const TEXTS = {
   },
 };
 
-/** Summary of a migration of the old format (empty if nothing to migrate), shared with the preview of `apply`. */
+/** Summary of a migration of the old format (empty if nothing to migrate), shared with the preview of `init`. */
 export function formatMigration(p: MigrationPlan, dryRun = false, lang: MessageLang = "en"): string[] {
   const T = TEXTS[lang];
   const pick = (pair: string[]) => pair[dryRun ? 0 : 1];

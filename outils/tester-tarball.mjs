@@ -19,6 +19,7 @@ export const ATTENDUS = [
   /^bin\/drwil\.js$/,
   /^dist\/[^/]+\.(js|d\.ts)(\.map)?$/,
   /^templates\/common\/.+$/,
+  /^CHANGELOG\.md$/,
 ];
 
 /** Écarts entre les fichiers du tarball et la liste attendue. */

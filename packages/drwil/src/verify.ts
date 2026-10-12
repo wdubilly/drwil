@@ -126,7 +126,7 @@ function worst(statuses: Status[]): Status {
 
 const TEXTS = {
   fr: {
-    noEngine: "moteur de contrôles absent (.githooks/engine.mjs, .githooks/contracts.mjs) : relancer `drwil apply`",
+    noEngine: "moteur de contrôles absent (.githooks/engine.mjs, .githooks/contracts.mjs) : relancer `drwil init`",
     noConfig: "configuration illisible ou absente (.drwil/ia-first.json)",
     noRegistry: "registre des contrats absent ({0})",
     noContract: "aucun contrat trouvé dans {0}",
@@ -141,7 +141,7 @@ const TEXTS = {
     obsolete: "attestation du {0} obsolète : le contrat ou sa preuve a changé depuis, à attester de nouveau",
   },
   en: {
-    noEngine: "check engine missing (.githooks/engine.mjs, .githooks/contracts.mjs): run `drwil apply` again",
+    noEngine: "check engine missing (.githooks/engine.mjs, .githooks/contracts.mjs): run `drwil init` again",
     noConfig: "configuration unreadable or missing (.drwil/ia-first.json)",
     noRegistry: "contract registry missing ({0})",
     noContract: "no contract found in {0}",

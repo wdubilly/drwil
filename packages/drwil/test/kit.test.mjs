@@ -20,15 +20,14 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
   init,
-  apply,
   uninstall,
   resolveDrift,
   verify,
   formatVerdict,
   verdictJson,
   doctor,
-  auditApply,
-  formatAudit,
+  previewInit,
+  formatPreview,
   attest,
 } from "../dist/index.js";
 
@@ -153,19 +152,30 @@ test("init avec --layers explicite : pas de message de défaut", async () => {
   assert.ok(!lines.some((l) => l.includes("Couches par défaut")), lines.join("\n"));
 });
 
-test("un second init ne réécrase que .githooks/, --force réécrit tout", async () => {
+test("un second init rafraîchit la mécanique inchangée, signale celle modifiée à la main ; --force réécrit tout", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
   writeFileSync(join(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n");
   appendFileSync(join(dir, ".githooks", "run-checks.mjs"), "\n// marque pour vérifier l'écrasement\n");
+  // Une ancienne version du kit, jamais modifiée depuis : son empreinte est celle du manifeste.
+  const ancienne = "// version précédente du kit\n";
+  writeFileSync(join(dir, ".githooks", "glob.mjs"), ancienne);
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  manifeste[".githooks/glob.mjs"] = createHash("sha256").update(ancienne).digest("hex");
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2));
 
-  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+  const lignes = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
   assert.equal(read(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n", "docs du projet préservées sans --force");
-  assert.ok(!read(dir, ".githooks/run-checks.mjs").includes("marque pour vérifier"), ".githooks/ réécrit par défaut");
+  assert.ok(read(dir, ".githooks/run-checks.mjs").includes("marque pour vérifier"), "mécanique modifiée à la main : jamais écrasée");
+  assert.ok(
+    lignes.some((l) => l.includes(".githooks/run-checks.mjs")),
+    "mais signalée comme dérive",
+  );
+  assert.notEqual(read(dir, ".githooks/glob.mjs"), ancienne, "mécanique inchangée depuis l'installation : rafraîchie");
 
-  writeFileSync(join(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n");
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", force: true }));
   assert.notEqual(read(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n", "--force réécrit aussi les docs");
+  assert.ok(!read(dir, ".githooks/run-checks.mjs").includes("marque pour vérifier"), "--force réécrit aussi la mécanique modifiée");
 });
 
 test("le hook refuse un commit dont la doc cite un chemin inexistant", async () => {
@@ -245,13 +255,13 @@ test("mise à jour sans casse : une exigence ajoutée après l'installation aver
   assert.equal(r.status, 0, "projet existant : le commit qui passait passe encore\n" + r.stdout + r.stderr);
   assert.match(r.stdout + r.stderr, /\.drwil\/state\.json/, "mais l'écart est signalé");
   // La mise à jour pose « avertissement » pour ce projet, sans jamais durcir.
-  await quiet(() => apply({ lang: "fr", targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   assert.equal(config(dir).newRequirements, "warning");
   assert.equal(docsCheck().status, 0);
   // Le projet choisit de durcir : la même citation devient bloquante, et une mise à jour garde ce choix.
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), newRequirements: "blocking" }, null, 2));
   assert.equal(docsCheck().status, 1);
-  await quiet(() => apply({ lang: "fr", targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   assert.equal(config(dir).newRequirements, "blocking");
 });
 
@@ -722,7 +732,7 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
   const fiche = "docs/projects/kit-mechanics.md";
   const drwilEtat = (...args) =>
-    spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "etat", ...args], {
+    spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "state", ...args], {
       cwd: dir,
       encoding: "utf8",
       env: envTest,
@@ -769,7 +779,7 @@ test("apply sur un projet existant : stack et couches découvertes, rien d'écra
   writeFileSync(join(dir, "api/pyproject.toml"), '[project]\ndependencies = ["fastapi"]\n');
   writeFileSync(join(dir, "web/package.json"), JSON.stringify({ dependencies: { react: "18" }, devDependencies: { vite: "5" } }));
   writeFileSync(join(dir, "README.md"), "# existant\n");
-  await quiet(() => apply({ lang: "fr", targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   assert.equal(read(dir, "README.md"), "# existant\n");
   assert.ok(!existsSync(join(dir, ".git")));
   assert.ok(!existsSync(join(dir, "backend")), "pas de couche inventée");
@@ -785,18 +795,18 @@ test("apply sur un projet existant : stack et couches découvertes, rien d'écra
   assert.equal(r.status, 0, r.stdout);
 });
 
-test("apply() signale (sans réécrire) un fichier déjà présent qui a dérivé du template", async () => {
+test("init() signale (sans réécrire) un fichier déjà présent qui a dérivé du template", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
 
   // fichier identique au template (mêmes couches entre init et apply) : pas signalé.
-  let lignes = await capture(() => apply({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
+  let lignes = await capture(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
   assert.ok(!lignes.some((l) => l.includes("dérivés")), lignes.join("\n"));
 
   // une recette dérive (contenu raccourci, une section en moins) : signalée, jamais réécrite.
   const avant = read(dir, "docs/recipes/refactor-without-breaking.md");
   writeFileSync(join(dir, "docs/recipes/refactor-without-breaking.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n");
-  lignes = await capture(() => apply({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
+  lignes = await capture(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
   assert.ok(
     lignes.some((l) => l.includes("dérivés")),
     lignes.join("\n"),
@@ -813,7 +823,7 @@ test("apply() signale (sans réécrire) un fichier déjà présent qui a dériv�
   assert.notEqual(read(dir, "docs/recipes/refactor-without-breaking.md"), avant);
 });
 
-test("init écrit un manifeste des fichiers installés (chemin + sha256), fusionné sans perte entre deux apply()", async () => {
+test("init écrit un manifeste des fichiers installés (chemin + sha256), fusionné sans perte entre deux init()", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
@@ -821,9 +831,9 @@ test("init écrit un manifeste des fichiers installés (chemin + sha256), fusion
   assert.ok("AGENTS.md" in manifeste, "AGENTS.md présent");
   assert.equal(manifeste["AGENTS.md"], createHash("sha256").update(read(dir, "AGENTS.md")).digest("hex"));
 
-  // apply() une 2ᵉ fois sans rien changer : le manifeste existant est conservé à l'identique (fusion, pas d'écrasement).
+  // init() une 2ᵉ fois sans rien changer : le manifeste existant est conservé à l'identique (fusion, pas d'écrasement).
   const avant = read(dir, ".drwil/installed-files.json");
-  await quiet(() => apply({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
   assert.equal(read(dir, ".drwil/installed-files.json"), avant);
 });
 
@@ -926,7 +936,7 @@ test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .
   assert.equal(read(dir, cible), original);
 });
 
-test("lot 2 (résolution de dérive) : jamais appliquée automatiquement par init()/apply(), ne crée aucun fichier absent", async () => {
+test("lot 2 (résolution de dérive) : jamais appliquée automatiquement par init()/init(), ne crée aucun fichier absent", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
 
@@ -943,7 +953,7 @@ test("lot 2 (résolution de dérive) : jamais appliquée automatiquement par ini
   assert.ok(!existsSync(absent), "jamais recréé par resolveDrift");
 });
 
-test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne version du kit, jamais modifié, est supprimé par init()/apply()", async () => {
+test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne version du kit, jamais modifié, est supprimé par init()/init()", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
 
@@ -1842,21 +1852,21 @@ test("DRWIL-011 : apply audite et prévisualise sans rien écrire ; l'aperçu co
   writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "x", scripts: { test: "node --test", lint: "eslint ." } }));
   writeFileSync(join(dir, ".eslintrc.json"), "{}");
   writeFileSync(join(dir, "CLAUDE.md"), "mes consignes à moi\n");
-  const a = await auditApply({ lang: "fr", targetDir: dir, git: false });
+  const a = await previewInit({ lang: "fr", targetDir: dir, git: false });
   assert.ok(a.protections.includes("eslint") && a.protections.includes("script npm « test »"), a.protections.join());
   assert.ok(a.aiTools.includes("CLAUDE.md"));
   assert.ok(a.created.includes("AGENTS.md") && a.created.includes(".githooks/engine.mjs") && a.created.includes(".drwil/ia-first.json"));
   assert.ok(a.kept.includes("CLAUDE.md") && !a.created.includes("CLAUDE.md"));
   assert.ok(!existsSync(join(dir, "AGENTS.md")) && !existsSync(join(dir, ".drwil")), "l'aperçu n'écrit rien");
-  assert.match(formatAudit(a), /Rien ne sera écrasé/);
-  const dry = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "apply", "--dry-run", "--no-git"], {
+  assert.match(formatPreview(a), /Rien d.autre ne sera écrasé/);
+  const dry = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "init", "--dry-run", "--no-git"], {
     cwd: dir,
     encoding: "utf8",
     env: envTest,
   });
   assert.equal(dry.status, 0, dry.stderr);
   assert.ok(!existsSync(join(dir, "AGENTS.md")), "--dry-run n'écrit rien");
-  await quiet(() => apply({ lang: "fr", targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   for (const f of a.created) assert.ok(existsSync(join(dir, f)), `annoncé et créé : ${f}`);
   assert.equal(read(dir, "CLAUDE.md"), "mes consignes à moi\n", "fichier existant jamais écrasé");
 });
@@ -2348,14 +2358,14 @@ test("QUA-016 : init relancé sans option, puis avec --force, garde les réglage
 
 test("QUA-016 : apply relancé sans option garde les réglages et n'ajoute aucun fichier", async () => {
   const { dir, cfg, fichiers } = await projetRegle();
-  await quiet(() => apply({ targetDir: dir, git: false }));
+  await quiet(() => init({ targetDir: dir, git: false }));
   assert.deepEqual(config(dir), cfg);
   assert.deepEqual(fichiersDe(dir), fichiers);
 });
 
 test("QUA-016 : la CLI, init et apply sans option, garde les réglages d'un projet installé", async () => {
   const { dir, cfg, fichiers } = await projetRegle();
-  for (const commande of ["init", "apply"]) {
+  for (const commande of ["init"]) {
     const r = cli(dir, commande, "--no-git");
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.deepEqual(config(dir), cfg, commande);
@@ -2502,12 +2512,12 @@ test("projet à l'ancien format : apply --dry-run annonce la migration sans rien
   versAncienFormat(dir);
   const avant = read(dir, ".drwil/ia-first.json");
 
-  const apercu = formatAudit(await auditApply({ lang: "fr", targetDir: dir }));
+  const apercu = formatPreview(await previewInit({ lang: "fr", targetDir: dir }));
   assert.match(apercu, /Migration de l'ancien format \(simulation, rien d'écrit\)/);
   assert.match(apercu, /docs\/projets\/ma-fiche\.md → docs\/projects\/ma-fiche\.md/);
   assert.equal(read(dir, ".drwil/ia-first.json"), avant, "l'aperçu n'écrit rien");
 
-  await quiet(() => apply({ lang: "fr", targetDir: dir }));
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
   const cfg = config(dir);
   assert.deepEqual(
     [cfg.scopeGate, cfg.scopeReminder, cfg.newRequirements, cfg.transitions, cfg.dirs.recipes, cfg.dirs.contracts],
@@ -2539,7 +2549,7 @@ test("projet à l'ancien format : apply --dry-run annonce la migration sans rien
   assert.equal(r.status, 0, r.stdout + r.stderr);
 
   const migre = read(dir, ".drwil/ia-first.json");
-  const lignes = await capture(() => apply({ lang: "fr", targetDir: dir }));
+  const lignes = await capture(() => init({ lang: "fr", targetDir: dir }));
   assert.ok(!lignes.some((l) => /Migration de l'ancien format/.test(l)), "rejouer apply ne migre plus rien");
   assert.equal(read(dir, ".drwil/ia-first.json"), migre);
 });

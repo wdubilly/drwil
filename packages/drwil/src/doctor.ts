@@ -36,7 +36,7 @@ const TEXTS = {
   fr: {
     installation: "Installation",
     manifest: "Manifeste",
-    noManifest: "absent : relancer `drwil apply` (uninstall et dérive en dépendent)",
+    noManifest: "absent : relancer `drwil init` (uninstall et dérive en dépendent)",
     present: "présent",
     noAgents: "absent : point d'entrée unique des agents",
     integrations: "Intégrations IA",
@@ -61,7 +61,7 @@ const TEXTS = {
   en: {
     installation: "Installation",
     manifest: "Manifest",
-    noManifest: "missing: run `drwil apply` again (uninstall and drift depend on it)",
+    noManifest: "missing: run `drwil init` again (uninstall and drift depend on it)",
     present: "present",
     noAgents: "missing: the agents' single entry point",
     integrations: "AI integrations",

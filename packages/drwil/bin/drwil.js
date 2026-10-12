@@ -5,7 +5,6 @@ import { pathToFileURL } from "node:url";
 import { Command } from "commander";
 import {
   init,
-  apply,
   uninstall,
   resolveDrift,
   verify,
@@ -14,8 +13,8 @@ import {
   writeEvidence,
   attest,
   formatForAgent,
-  auditApply,
-  formatAudit,
+  previewInit,
+  formatPreview,
   doctor,
   formatDiagnosis,
   diagnosisJson,
@@ -30,37 +29,35 @@ import {
 const TEXTS = {
   fr: {
     initDone: "Gouvernance IA-first installée dans",
-    applyDone: "Gouvernance IA-first appliquée à",
     nothingToRemove: "Rien à supprimer.",
     removed: "Fichiers supprimés :",
     wouldRemove: "Fichiers qui seraient supprimés (--yes pour confirmer) :",
     modified: "Modifiés depuis l'installation, non supprimés :",
     noDrift: "Rien à résoudre : aucune dérive sur la mécanique du kit.",
     resolved: "Fichiers résolus (ancien sauvegardé en .bak) :",
-    ignored: "Dérive laissée en l'état (confirmation refusée ou terminal non interactif sans --forcer) :",
+    ignored: "Dérive laissée en l'état (confirmation refusée ou terminal non interactif sans --force) :",
     evidence: "évidence : {0}",
     manual: "  [manuel]",
     noTerminal: "attestation refusée : un terminal interactif est requis (un agent ou un script ne peut pas attester {0})",
     retype: "Pour attester, retapez l'identifiant du contrat ({0}) : ",
     attested: "{0} : {1} (à commiter avec le travail attesté)",
-    noState: "{0} introuvable : lancer « drwil apply » pour installer le lecteur d'état",
+    noState: "{0} introuvable : lancer « drwil init » pour installer le lecteur d'état",
   },
   en: {
     initDone: "IA-first scaffolding applied to",
-    applyDone: "IA-first applied to",
     nothingToRemove: "Nothing to remove.",
     removed: "Files removed:",
     wouldRemove: "Files that would be removed (--yes to confirm):",
     modified: "Modified since installation, not removed:",
     noDrift: "Nothing to resolve: no drift on the kit mechanics.",
     resolved: "Files resolved (old one backed up as .bak):",
-    ignored: "Drift left as it is (confirmation refused, or non-interactive terminal without --forcer):",
+    ignored: "Drift left as it is (confirmation refused, or non-interactive terminal without --force):",
     evidence: "evidence: {0}",
     manual: "  [manual]",
     noTerminal: "attestation refused: an interactive terminal is required (an agent or a script cannot attest {0})",
     retype: "To attest, type the contract's identifier again ({0}): ",
     attested: "{0}: {1} (to commit with the attested work)",
-    noState: '{0} not found: run "drwil apply" to install the state reader',
+    noState: '{0} not found: run "drwil init" to install the state reader',
   },
 };
 const texts = () => TEXTS[projectLang(process.cwd())];
@@ -108,32 +105,27 @@ async function run(fn, opts, message) {
 addOptions(
   program
     .command("init")
-    .description("Initialize IA-first in current directory (refreshes .githooks/; use --force to overwrite everything)"),
-  `Layers CSV ${DEFAULT("backend,frontend")}`,
+    .description(
+      "Install IA-first in the current directory, or update an installed project: creates what is missing, refreshes the kit mechanics unless modified by hand, never overwrites project files",
+    ),
+  `Layers CSV ${DEFAULT("subfolders where a stack is detected, else backend,frontend")}`,
 )
+  .option("--dry-run", "Only audit the repository and preview what would be written; write nothing")
   .option(
     "--force",
-    "Overwrite every file, not just .githooks/ (erases project docs added since last install; keeps the settings of .drwil/ia-first.json)",
+    "Overwrite every file, even modified ones (erases project docs added since the last install; keeps the settings of .drwil/ia-first.json)",
   )
-  .action((opts) => run(init, opts, "initDone"));
-
-addOptions(
-  program
-    .command("apply")
-    .description("Apply IA-first to existing project (never overwrites files); audits the repo and previews what will be added first"),
-  `Layers CSV ${DEFAULT("subfolders where a stack is detected")}`,
-)
-  .option("--dry-run", "Only audit the repository and preview what would be added; write nothing")
   .action(async (opts) => {
-    try {
-      console.log(formatAudit(await auditApply({ targetDir: process.cwd(), ...opts })));
-    } catch (e) {
-      console.error(`✗ ${e.message}`);
-      process.exit(1);
+    if (opts.dryRun) {
+      try {
+        console.log(formatPreview(await previewInit({ targetDir: process.cwd(), ...opts })));
+      } catch (e) {
+        console.error(`✗ ${e.message}`);
+        process.exit(1);
+      }
+      return;
     }
-    if (opts.dryRun) return;
-    console.log("");
-    await run(apply, opts, "applyDone");
+    await run(init, opts, "initDone");
   });
 
 program
@@ -162,15 +154,15 @@ program
   });
 
 program
-  .command("resoudre-derive")
+  .command("resolve-drift")
   .description(
-    "Resolve mechanics drift signaled by init()/apply() (.githooks/, .claude/settings.json, CI file): diff + confirmation, .bak backup before overwrite",
+    "Resolve the mechanics drift reported by init (.githooks/, .claude/settings.json, CI file): diff + confirmation, .bak backup before overwrite",
   )
-  .option("--forcer", "Non-interactive: overwrite every drifted mechanics file without asking (scripted use)")
+  .option("--force", "Non-interactive: overwrite every drifted mechanics file without asking (scripted use)")
   .action(async (opts) => {
     try {
       const T = texts();
-      const { resolved, ignored } = await resolveDrift({ targetDir: process.cwd(), force: opts.forcer });
+      const { resolved, ignored } = await resolveDrift({ targetDir: process.cwd(), force: opts.force });
       if (!resolved.length && !ignored.length) console.log(T.noDrift);
       if (resolved.length) {
         console.log(T.resolved);
@@ -286,9 +278,9 @@ program
   });
 
 program
-  .command("etat")
+  .command("state")
   .description(
-    "Show the governance state, or act on it: drwil etat move <ACTIVITY> [--brief <brief>] [--request <text>] | start [<brief>] | briefs [--json] | reminder",
+    "Show the governance state, or act on it: drwil state move <ACTIVITY> [--brief <brief>] [--request <text>] | start [<brief>] | briefs [--json] | reminder",
   )
   .argument("[args...]")
   .allowUnknownOption()

@@ -523,19 +523,24 @@ npm install -D ./drwil-*.tgz
 ### 3. Set up DRWIL in the project
 
 ```bash
-npx drwil apply --dry-run   # preview: what would be added, nothing is written
-npx drwil apply             # install, never overwriting an existing file
+npx drwil init --dry-run    # preview: what would be written, nothing is written
+npx drwil init              # install, never overwriting a project file
 ```
 
-For an empty folder, use `npx drwil init` instead.
+The same command works for an empty folder, an existing project, and an
+update.
 
-**Upgrading a project that already had DRWIL:** `apply` never overwrites, so
-older hooks stay in place and are reported as drifted. Update the mechanics
-with a diff and a confirmation per file (a `.bak` backup is kept):
+**Upgrading a project that already had DRWIL:** `init` refreshes the kit
+mechanics that did not change since their installation; a hook modified by
+hand stays in place and is reported as drifted. Update it with a diff and a
+confirmation per file (a `.bak` backup is kept):
 
 ```bash
-npx drwil resoudre-derive
+npx drwil resolve-drift
 ```
+
+A project equipped by an older, French-named version is migrated first (see
+`packages/drwil/CHANGELOG.md`).
 
 Contracts still in the legacy table format remain readable, but stay `MANUAL`
 until they declare a control.
@@ -558,7 +563,7 @@ npx drwil verify
 
 ### Good to know
 
-* `apply` enables the git hooks when it finds a git repository: direct commits
+* `init` enables the git hooks when it finds a git repository: direct commits
   to `main`/`master` are then refused (QUA-017) — work on a branch.
 * Without gitleaks installed, the secrets contract (SEC-007) is `ERROR` in
   `verify` (tool unavailable).
@@ -576,7 +581,7 @@ npx drwil uninstall         # dry-run: lists what would be removed
 npx drwil uninstall --yes   # actually removes those files
 ```
 
-`uninstall` relies on the installed-files manifest that `init` and `apply` keep in the
+`uninstall` relies on the installed-files manifest that `init` keeps in the
 `.drwil/` folder:
 
 * it removes the files DRWIL installed **that are unchanged since installation**;
@@ -615,7 +620,7 @@ can read directly. The names are the same whatever the project language.
 | --- | --- |
 | `/drwil` | Menu of DRWIL capabilities and their commands |
 | `/drwil verify` | Is my work verified? Runs `drwil verify --agent` and follows the agent / human workflow |
-| `/drwil-adopt` | Make the kit live on an existing project after `apply` |
+| `/drwil-adopt` | Make the kit live on an existing project after `init` |
 | `/drwil-audit` | Audit risks and technical debt |
 | `/drwil-value` | Discover the next high-value product features |
 | `/drwil-usage` | Record tokens, model and setup time for a finished lot |
@@ -684,13 +689,13 @@ drwil doctor
 
 Checks whether the DRWIL installation and project setup are coherent.
 
-### Apply
+### Preview an install or update
 
 ```bash
-drwil apply
+drwil init --dry-run
 ```
 
-Audits what would be installed or changed before applying the project setup.
+Audits what would be installed or changed, writing nothing.
 
 DRWIL avoids silent destructive operations.
 

@@ -2,26 +2,29 @@ import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import type { StackEntry } from "./stack.js";
-import { readConfig, resolve, type InitOptions } from "./config.js";
+import { readConfig, type InitOptions } from "./config.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
+import { installChoices } from "./install.js";
 import { scaffold } from "./render.js";
 import { formatMigration, migrate, type MigrationPlan } from "./migration.js";
 
-/** Preview of `apply` on an existing project, which never overwrites any file. */
-export interface ApplyAudit {
+/** Preview of `drwil init --dry-run`: what the installation would do, writing nothing. */
+export interface InitPreview {
   lang: MessageLang;
   stack: StackEntry[];
   /** Entry files of AI tools already present before installation. */
   aiTools: string[];
   /** Protections already in place (tests, lint, hooks, secrets, CI), detected without running anything. */
   protections: string[];
-  /** Files `apply` would create. */
+  /** Files `init` would create. */
   created: string[];
+  /** Kit mechanics `init` would refresh (unchanged since their installation). */
+  replaced: string[];
   /** Files already present, left as they are (never overwritten). */
   kept: string[];
   /** Among the kept ones, those that drifted from the kit's template (to compare by hand). */
   drifted: string[];
-  /** Migration of the old format `apply` would run first (dry run, nothing written). */
+  /** Migration of the old format `init` would run first (dry run, nothing written). */
   migration: MigrationPlan;
 }
 
@@ -40,9 +43,10 @@ const TEXTS = {
     protections: "Protections existantes :",
     noProtection: "  aucune détectée",
     added: "Serait ajouté ({0} fichier(s)) :",
+    replaced: "Mécanique du kit rafraîchie ({0} fichier(s)) :",
     kept: "Déjà présents, laissés tels quels ({0}) :",
     drifted: " (diffère du modèle du kit)",
-    nothingOverwritten: "Rien ne sera écrasé.",
+    nothingOverwritten: "Rien d'autre ne sera écrasé : un fichier modifié à la main est signalé, jamais réécrit.",
   },
   en: {
     npmScript: 'npm script "{0}"',
@@ -58,9 +62,10 @@ const TEXTS = {
     protections: "Existing protections:",
     noProtection: "  none detected",
     added: "Would be added ({0} file(s)):",
+    replaced: "Kit mechanics refreshed ({0} file(s)):",
     kept: "Already present, left as they are ({0}):",
     drifted: " (differs from the kit's template)",
-    nothingOverwritten: "Nothing will be overwritten.",
+    nothingOverwritten: "Nothing else will be overwritten: a file modified by hand is reported, never rewritten.",
   },
 };
 
@@ -91,25 +96,25 @@ function existingProtections(dir: string, lang: MessageLang): string[] {
   return p;
 }
 
-/** Preview of `apply` (DRWIL-011): audit of the repository and exact list of what would be created, writing nothing. */
-export async function auditApply(opts: InitOptions): Promise<ApplyAudit> {
+/** Preview of `init` (DRWIL-011): audit of the repository and exact list of what would be written, writing nothing. */
+export async function previewInit(opts: InitOptions): Promise<InitPreview> {
   // The language asked for (`--lang`) wins: on a project not installed yet, there is no config to read.
   const lang: MessageLang = opts.lang === "fr" || opts.lang === "en" ? opts.lang : projectLang(opts.targetDir);
   const migration = await migrate(opts.targetDir, { dryRun: true });
-  const r = resolve(opts, (stack) => stack.map((s) => s.path).filter((p) => p !== "."));
+  const { r, shouldOverwrite } = installChoices(opts);
   const aiTools = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", ".cursor", ".github/copilot-instructions.md"].filter((f) =>
     existsSync(join(opts.targetDir, f)),
   );
   const protections = existingProtections(opts.targetDir, lang);
   const drifted: string[] = [];
   const simulation = { created: [] as string[], kept: [] as string[], replaced: [] as string[] };
-  await scaffold(r, { shouldOverwrite: () => false, drifted, simulation });
+  await scaffold(r, { shouldOverwrite, drifted, simulation });
   const created = [...simulation.created];
   if (!readConfig(opts.targetDir)) created.push(".drwil/ia-first.json");
-  return { lang, stack: r.stack, aiTools, protections, created, kept: simulation.kept, drifted, migration };
+  return { lang, stack: r.stack, aiTools, protections, created, replaced: simulation.replaced, kept: simulation.kept, drifted, migration };
 }
 
-export function formatAudit(a: ApplyAudit): string {
+export function formatPreview(a: InitPreview): string {
   const T = TEXTS[a.lang];
   const l = [T.analysing, ""];
   const migration = formatMigration(a.migration, true, a.lang);
@@ -119,6 +124,7 @@ export function formatAudit(a: ApplyAudit): string {
   l.push(fill(T.aiTools, a.aiTools.length ? a.aiTools.join(", ") : T.none));
   l.push("", T.protections, ...(a.protections.length ? a.protections.map((p) => `  ✓ ${p}`) : [T.noProtection]));
   l.push("", fill(T.added, a.created.length), ...a.created.map((f) => `  + ${f}`));
+  if (a.replaced.length) l.push("", fill(T.replaced, a.replaced.length), ...a.replaced.map((f) => `  ~ ${f}`));
   if (a.kept.length) l.push("", fill(T.kept, a.kept.length), ...a.kept.map((f) => `  = ${f}${a.drifted.includes(f) ? T.drifted : ""}`));
   l.push("", T.nothingOverwritten);
   return l.join("\n");
