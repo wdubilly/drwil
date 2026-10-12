@@ -35,6 +35,6 @@ Copies, dans ce dépôt, des hooks livrés : installées depuis le gabarit par `
 ## Gouvernance de ce dépôt
 
 - Consignes des agents : `AGENTS.md` ; réglages et hooks de Claude Code : `.claude/settings.json`, `.claude/hooks/`, skills dans `.claude/skills/`.
-- Invariants : `docs/contrats.md` ; catalogue : `docs/catalogue-contrats.md` ; principes : `docs/ia-first.md`.
-- Chantiers : index et ordre de réalisation `docs/projets/en-attente.md`, fiches dans `docs/projets/`, intentions dans `docs/intentions/`, chantiers clos dans `docs/projets/journal.md` ; recettes dans `docs/recettes/`.
+- Invariants : `docs/contracts.md` ; catalogue : `docs/contracts-catalog.md` ; principes : `docs/ia-first.md`.
+- Chantiers : index et ordre de réalisation `docs/projects/pending.md`, fiches dans `docs/projects/`, intentions dans `docs/intentions/`, chantiers clos dans `docs/projects/journal.md` ; recettes dans `docs/recipes/`.
 - Configuration : `.drwil/ia-first.json` (contrôles déclarés, réglages) ; état local `.drwil/state.json` (si présent), jamais versionné ; preuves `.drwil/evidence/` (si présent), dont les attestations humaines versionnées.

@@ -1,48 +1,45 @@
 ---
 name: drwil
-description: Point d'entrée pour découvrir les capacités de pilotage du kit drwil. Sans argument, affiche le menu des capacités et leur commande dédiée. Avec un argument (verify, adopter, audit, valeur, conso, avancement, release), renvoie directement à la capacité correspondante.
-argument-hint: "[verify|adopter|audit|valeur|conso|avancement|release]"
-arguments: capacite
+description: Entry point to discover the kit's governance capabilities. Without an argument, shows a menu of capabilities and their dedicated command. With an argument (verify, adopt, audit, value, usage, progress, release), goes straight to the matching capability.
+argument-hint: "[verify|adopt|audit|value|usage|progress|release]"
+arguments: capability
 disable-model-invocation: true
 ---
 
-Capacité demandée : `$capacite`.
+Requested capability: `$capability`.
 
-Si `$capacite` est vide, afficher ce menu et s'arrêter là (ne rien lancer
-d'autre) :
+If `$capability` is empty, show this menu and stop there (don't run
+anything else):
 
-| Commande | Capacité | Recette |
+| Command | Capability | Recipe |
 | --- | --- | --- |
-| `/drwil verify` | Le travail est-il vérifié ? (workflow agent / humain ci-dessous) | `docs/ia-first.md`, section 5 |
-| `/drwil-adopter` | Adopter le kit sur un projet existant | `docs/recettes/adopter-le-kit.md` |
-| `/drwil-audit` | Auditer risques et dette | `docs/recettes/auditer-risques-et-dette.md` |
-| `/drwil-valeur` | Découvrir la valeur produit | `docs/recettes/decouvrir-valeur-produit.md` |
-| `/drwil-conso` | Suivre la consommation par lot | `docs/recettes/suivre-consommation-par-lot.md` |
-| `/drwil-avancement` | Visualiser l'avancement | `docs/recettes/visualiser-avancement.md` |
-| `/drwil-release` | Créer une release (tag + note GitHub), module optionnel | `docs/recettes/creer-une-release.md` |
-| `/drwil-lancer` | Lancer un chantier : sondage des fiches cadrées, la réponse humaine passe en REALISATION | `docs/ia-first.md` (« Lancer et clore ») |
+| `/drwil verify` | Is my work verified? (agent/human workflow below) | `docs/ia-first.md`, section 5 |
+| `/drwil-adopt` | Adopt the kit on an existing project | `docs/recipes/adopt-the-kit.md` |
+| `/drwil-audit` | Audit risks and debt | `docs/recipes/audit-risks-and-debt.md` |
+| `/drwil-value` | Discover product value | `docs/recipes/discover-product-value.md` |
+| `/drwil-usage` | Track consumption per increment | `docs/recipes/track-consumption-per-increment.md` |
+| `/drwil-progress` | View progress | `docs/recipes/view-progress.md` |
+| `/drwil-release` | Create a release (tag + GitHub note), optional module | `docs/recipes/create-a-release.md` |
+| `/drwil-lancer` | Start a workstream: poll of the scoped briefs, the human answer moves to REALISATION | `docs/ia-first.md` ("Starting and closing") |
 
-Si `$capacite` vaut `verify` : lancer `npx drwil verify --agent` à la racine
-du projet (la CLI `drwil` du projet est la source de vérité ; ne jamais
-déduire un verdict soi-même) et suivre sa ligne « Next step » :
+If `$capability` is `verify`: run `npx drwil verify --agent` at the project
+root (the project's own `drwil` CLI is the source of truth; never derive a
+verdict yourself) and follow its "Next step" line:
 
-- `GOVERNANCE: PASS` : le travail est vérifié ; continuer ou terminer.
-- `GOVERNANCE: FAIL` : corriger les contrats en échec, puis relancer
-  `/drwil verify`.
-- `GOVERNANCE: VERIFY ERROR` : signaler le problème de vérification ; ne
-  jamais prétendre que le travail est vérifié.
-- `GOVERNANCE: MANUAL REVIEW REQUIRED` : cesser toute prétention de
-  validation ; transmettre à l'humain « Human attestation required. », les
-  contrats listés et la commande `drwil attest <CONTRACT_ID>`, comme une
-  action à faire **par lui**.
+- `GOVERNANCE: PASS`: the work is verified; continue or finish.
+- `GOVERNANCE: FAIL`: fix the failing contracts, then run `/drwil verify`
+  again.
+- `GOVERNANCE: VERIFY ERROR`: report the verification problem; never claim
+  the work is verified.
+- `GOVERNANCE: MANUAL REVIEW REQUIRED`: stop claiming validation; relay
+  "Human attestation required.", the listed contracts and the command
+  `drwil attest <CONTRACT_ID>` to the human, as an action **for them**.
 
-Ne jamais exécuter `drwil attest`, ne jamais écrire ni modifier quoi que ce
-soit dans le dossier des attestations (.drwil/evidence/attestations), ne
-jamais présenter une attestation humaine comme faite par l'agent : un agent
-ne s'atteste jamais lui-même.
+Never run `drwil attest`, never write or edit anything in the attestations
+folder (.drwil/evidence/attestations), never present a human attestation as
+done by the agent: an agent never attests its own work.
 
-Si `$capacite` correspond à l'une des valeurs `adopter`, `audit`,
-`valeur`, `conso`, `avancement`, `release`, appliquer directement la recette
-associée dans le tableau ci-dessus (ne pas la réécrire ici, la lire et
-la suivre). Sinon, signaler que la capacité n'est pas reconnue et
-réafficher le menu.
+If `$capability` matches one of `adopt`, `audit`, `value`, `usage`,
+`progress`, `release`, apply the matching recipe from the table above directly
+(don't rewrite it here, read it and follow it). Otherwise, say the
+capability isn't recognized and show the menu again.

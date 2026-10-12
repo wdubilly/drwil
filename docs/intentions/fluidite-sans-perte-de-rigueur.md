@@ -3,7 +3,7 @@
 **Statut** (2026-10-12) : en partie réalisée — leviers 1 (lancer en un
 geste, clôture sur évidence de verify), 2 (décision lue par un hook, via
 `/drwil-lancer`) et 7 (rappel de l'état) faits le 2026-10-10, voir
-`docs/projets/journal.md` ; restent les questions 3 et 4, et l'affichage
+`docs/projects/journal.md` ; restent les questions 3 et 4, et l'affichage
 de qui décide chaque transition.
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (touche aux transitions
@@ -25,7 +25,7 @@ hors du poste) en sollicitant l'humain **moins souvent et au bon moment**.
 
 ## Existant
 
-- Gouvernance livrée le 2026-10-09 (`docs/projets/journal.md`, entrée
+- Gouvernance livrée le 2026-10-09 (`docs/projects/journal.md`, entrée
   « Gouvernance : machine d'état et double barrière ») : transitions par
   `node .githooks/etat.mjs passer …`, humaines par défaut pour ouvrir une
   attente, lancer la réalisation et clore (terminal interactif).
@@ -50,8 +50,8 @@ hors du poste) en sollicitant l'humain **moins souvent et au bon moment**.
    affichée, confirmation unique) ; questions groupées au démarrage d'un
    lot, choix recommandés appliqués par défaut sauf objection.
 4. **Supprimer les sources de reprises** : citations de fichiers ignorés
-   (fait le 2026-10-10, `docs/projets/journal.md`) et
-   `docs/projets/entretien-sous-barriere-bloquante.md`.
+   (fait le 2026-10-10, `docs/projects/journal.md`) et
+   `docs/projects/entretien-sous-barriere-bloquante.md`.
 5. **Relire vite** : voir `docs/intentions/vue-de-relecture.md`.
 6. **Mesurer** : le bench (`docs/intentions/bench-avec-sans-drwil.md`)
    compte les sollicitations humaines par tâche, pour vérifier que la
@@ -60,7 +60,7 @@ hors du poste) en sollicitant l'humain **moins souvent et au bon moment**.
    un rappel court de l'état lu sur disque (activité, fiche, périmètre),
    pour que l'agent ne dérive pas au fil d'une longue session ; moins de
    tentatives interdites, donc moins de refus et de reprises. Fait : voir
-   `docs/projets/journal.md` (2026-10-10, rappel court de l'état).
+   `docs/projects/journal.md` (2026-10-10, rappel court de l'état).
 
 ## Contraintes
 

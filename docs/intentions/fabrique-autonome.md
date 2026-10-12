@@ -18,7 +18,7 @@ fiches (DRWIL-012, niveaux de risque).
 
 ## Existant (vérifié le 2026-10-10)
 
-- **Contrats** : 11 dans `docs/contrats.md`. Cinq ont un contrôle
+- **Contrats** : 11 dans `docs/contracts.md`. Cinq ont un contrôle
   automatique : SEC-007 (secrets), QUA-011 (doc jamais fausse), QUA-016
   (rappel de cadrage), QUA-004 (seuil de couverture), QUA-017 (branche
   principale). Les six autres sont **ATTESTED** : validés par une
@@ -26,10 +26,10 @@ fiches (DRWIL-012, niveaux de risque).
   attestation n'est pas une preuve qu'une fabrique peut consommer.
 - **Forge** : dépôt public, mais `master` non protégé, aucun ruleset,
   aucun CODEOWNERS ; l'agent agit avec le jeton du mainteneur — chantier
-  `docs/projets/proteger-master.md`.
+  `docs/projects/proteger-master.md`.
 - **Outillage fragile**, constaté le même jour :
   - depuis un worktree, les tests des contrôles écrivaient dans le vrai
-    dépôt — corrigé le 2026-10-10 (`docs/projets/journal.md`, PR #16) ;
+    dépôt — corrigé le 2026-10-10 (`docs/projects/journal.md`, PR #16) ;
     un orchestrateur d'agents parallèles passe justement par des worktrees
     ou des conteneurs ;
   - contrôle local divergent de la CI sur les fichiers ignorés par Git —
@@ -39,10 +39,10 @@ fiches (DRWIL-012, niveaux de risque).
     règles d'interdiction de l'outil qui refusent un message de commit
     citant le fichier d'état ou une commande contenant « -n ».
 - **Consommation** : `.drwil/usage.jsonl` (si présent) est rempli à la main
-  par une recette (`docs/recettes/suivre-consommation-par-lot.md`) ; aucun
+  par une recette (`docs/recipes/track-consumption-per-increment.md`) ; aucun
   coupe-circuit automatique n'est possible sans mesure automatique.
 - **Lancer** : le réglage `transitions: agent` existe déjà
-  (`docs/projets/journal.md`, 2026-10-10, fiches condensées).
+  (`docs/projects/journal.md`, 2026-10-10, fiches condensées).
 
 ## Briques
 
@@ -75,7 +75,7 @@ fiches (DRWIL-012, niveaux de risque).
 
 ## Ordre proposé
 
-0. **Protéger la forge** : `docs/projets/proteger-master.md` (sans code).
+0. **Protéger la forge** : `docs/projects/proteger-master.md` (sans code).
 1. **Fiabiliser l'outillage** : tests isolés des `GIT_*` (fait, PR #16),
    citations de fichiers ignorés (fait, PR #26), faux positifs.
 2. **Muscler les preuves** : mutation testing, CI indépendante.
@@ -86,8 +86,8 @@ fiches (DRWIL-012, niveaux de risque).
 
 Précisé le 2026-10-11 (demandeur) : **mesurer avant de construire**. La
 mesure de la consommation est faite (`outils/consommation.mjs`, vague 3
-de `docs/projets/en-attente.md`) ; le mini-banc avec / sans drwil
-(`docs/projets/mini-banc.md`) passe en tête de la vague 6, juste avant le
+de `docs/projects/pending.md`) ; le mini-banc avec / sans drwil
+(`docs/projects/mini-banc.md`) passe en tête de la vague 6, juste avant le
 pilote (déplacé le 2026-10-12) : il mesure le drwil restructuré qui fera
 tourner la fabrique. Les étapes 2 à 5 se décident sur ces chiffres. La fabrique passe **avant
 la publication** (vague 6, pilote dans ce dépôt ; publication en vague 7),
@@ -106,7 +106,7 @@ le code produit — une fabrique sobre raccourcit d'abord les sessions.
 ## Contraintes
 
 - La fusion est aujourd'hui la décision d'acceptation humaine (section
-  « Lancer et clore » de `packages/drwil/templates/fr/base/docs/ia-first.md`) :
+  « Lancer et clore » de `packages/drwil/templates/common/base/docs/ia-first.md`) :
   l'auto-fusion est un **changement de doctrine**, à décider explicitement.
 - Une fabrique automatise aussi ses défauts : aucune brique d'autonomie
   avant l'étape 1.

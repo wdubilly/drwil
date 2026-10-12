@@ -39,7 +39,7 @@ Chaque tâche est répétée **3 fois** par condition (variabilité des agents).
 
 | Mesure | Source | Définition |
 |---|---|---|
-| Tokens | journal de consommation (`docs/recettes/suivre-consommation-par-lot.md`) ou compteur de l'outil | total entrée + sortie de la session |
+| Tokens | journal de consommation (`docs/recipes/track-consumption-per-increment.md`) ou compteur de l'outil | total entrée + sortie de la session |
 | Itérations | journal de session | nombre d'allers-retours avant « terminé » |
 | Temps | horloge | de l'énoncé à « terminé » |
 | Corrections humaines | observateur | interventions nécessaires pour aboutir |

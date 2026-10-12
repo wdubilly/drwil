@@ -1,15 +1,15 @@
-<!-- Gabarit de pull request — voir docs/recettes/travailler-en-branche.md -->
+<!-- Pull request template — see docs/recipes/working-with-branches.md -->
 
-## Fiche concernée
+## Related brief
 
-`docs/projets/<nom-de-la-fiche>.md`
+`docs/projects/<brief-name>.md`
 
-## Ce que ça résout
+## What this solves
 
-<!-- Résumer le besoin et la solution en quelques lignes. -->
+<!-- Summarize the need and the solution in a few lines. -->
 
-## Contrôles
+## Checks
 
-- [ ] `.githooks/run-checks.mjs` (ou `node .githooks/run-checks.mjs`) vert
-- [ ] Fiche à jour (Statut, Reprise) — le Statut ne passe "fait" qu'après
-      la fusion de cette pull request
+- [ ] `.githooks/run-checks.mjs` (or `node .githooks/run-checks.mjs`) green
+- [ ] Brief up to date (Status, Resuming work) — Status only becomes "done" after
+      this pull request is merged

@@ -34,7 +34,7 @@ function stackAllow(stack: StackEntry[]): string {
 }
 
 export function render(content: string, r: Resolved, extra: Record<string, string> = {}): string {
-  const t = TEXT[r.lang];
+  const t = TEXT;
   const stack = r.stack.length
     ? `${r.stack.map((s) => `- \`${s.path === "." ? "./" : s.path + "/"}\` : ${s.technos.join(", ")}`).join("\n")}\n\n${t.stackNote}`
     : t.stackUndecided;
@@ -146,19 +146,16 @@ async function copyTree(srcDir: string, r: Resolved, e: Ecriture): Promise<void>
 }
 
 export async function scaffold(r: Resolved, e: Ecriture): Promise<void> {
-  const langDir = join(templatesDir, r.lang);
-  await copyTree(join(templatesDir, "common", "base"), r, e);
-  await copyTree(join(langDir, "base"), r, e);
-  for (const tool of r.tools) {
-    await copyTree(join(templatesDir, "common", "tools", tool), r, e);
-    await copyTree(join(langDir, "tools", tool), r, e);
-  }
-  await copyTree(join(templatesDir, "common", "ci", r.ci), r, e);
-  await copyTree(join(langDir, "ci", r.ci), r, e);
+  // Un seul gabarit, en anglais (docs/intentions/livrable-full-english.md) : la langue du projet ne
+  // choisit plus de fichiers.
+  const gabarit = join(templatesDir, "common");
+  await copyTree(join(gabarit, "base"), r, e);
+  for (const tool of r.tools) await copyTree(join(gabarit, "tools", tool), r, e);
+  await copyTree(join(gabarit, "ci", r.ci), r, e);
 
   for (const layer of r.layers) {
-    const specific = join(langDir, "layers", `${layer}.md`);
-    const source = LAYER_TEMPLATES.includes(layer) && existsSync(specific) ? specific : join(langDir, "layers", "generic.md");
+    const specific = join(gabarit, "layers", `${layer}.md`);
+    const source = LAYER_TEMPLATES.includes(layer) && existsSync(specific) ? specific : join(gabarit, "layers", "generic.md");
     const up = "../".repeat(layer.split("/").filter(Boolean).length);
     const content = render(await readFile(source, "utf8"), r, { layer }).replace("`../AGENTS.md`", `\`${up}AGENTS.md\``);
     await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, e);

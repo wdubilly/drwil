@@ -6,7 +6,7 @@
 ## Besoin
 Un ticket déjà écrit ailleurs (Jira, ou un autre outil de suivi) décrit
 souvent un besoin de façon proche d'une fiche `docs/intentions/` ou
-`docs/projets/` (titre, description, parfois critères d'acceptation).
+`docs/projects/` (titre, description, parfois critères d'acceptation).
 Le retaper à la main dans le format du kit est une perte de temps et un
 risque de perdre un détail en cours de route. Objectif : pouvoir importer
 un ticket existant et en dériver automatiquement (ou semi-automatiquement)
@@ -15,7 +15,7 @@ réécrire à la main.
 
 ## Existant
 - Fiches d'intention (`docs/intentions/`) et de cadrage
-  (`docs/projets/`) au format Markdown avec sections fixes, vérifiées
+  (`docs/projects/`) au format Markdown avec sections fixes, vérifiées
   par `.githooks/check-docs.mjs` (sections obligatoires, Statut daté,
   marqueurs `[IA]`/`[humain]`/`[décision]` sur chaque case ouverte).
 - Aucun mécanisme d'import depuis un outil externe aujourd'hui : toute

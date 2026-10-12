@@ -16,7 +16,7 @@ une décision.
 Notation : les identifiants du catalogue proposé (« Catalogue des contrats
 de gouvernance logicielle », version 1.0, soumis le 2026-10-11) sont
 préfixés `v1:` (ex. v1:SEC-002). Sans ce préfixe, un identifiant désigne
-un contrat du registre actuel, `docs/contrats.md`. Les deux espaces se
+un contrat du registre actuel, `docs/contracts.md`. Les deux espaces se
 chevauchent (v1:SEC-001 n'est pas SEC-001) : le préfixe évite toute
 confusion, y compris pour le contrôle des références (QUA-011, doc jamais
 fausse).
@@ -69,8 +69,8 @@ applicabilité, mécanisme de vérification) avant de devenir exécutable.
 
 ### Registre actuel
 
-`docs/contrats.md`, forme sections (ADR-001 de
-`docs/projets/drwil-v0-2-gouvernance-executable.md` : ce fichier est
+`docs/contracts.md`, forme sections (ADR-001 de
+`docs/projects/drwil-v0-2-gouvernance-executable.md` : ce fichier est
 aujourd'hui la source canonique) : 11 contrats — SEC-001, SEC-006,
 SEC-007, QUA-004, QUA-011, QUA-013, QUA-015, QUA-016, QUA-017, QUA-018,
 QUA-019. Champs lus par `.githooks/contrats.mjs` : Règle, Contrôle,
@@ -86,14 +86,14 @@ Manuel, Sévérité.
 - **Sévérités** : bloquant, avertissement, indicatif (DRWIL-020,
   `SEVERITES` dans `.githooks/contrats.mjs`) ; seuls les contrats
   bloquants décident du verdict de `verify`.
-- **Catalogue existant** : `docs/catalogue-contrats.md`, 15 contrats
+- **Catalogue existant** : `docs/contracts-catalog.md`, 15 contrats
   préfixés `catalogue:` (non installés, adoptés un par un).
 
 ### QUA-018 (vérifié pour établir sa correspondance)
 
 Introduit le 2026-10-05 par le commit `1b5e9a9` (« docs: contrat
 QUA-018, distinguer drwil-le-dépôt de drwil-le-livrable »), dans
-`docs/contrats.md`. Règle : ce dépôt a deux casquettes, le dépôt et le
+`docs/contracts.md`. Règle : ce dépôt a deux casquettes, le dépôt et le
 livrable ; si une demande ne précise pas laquelle est visée, l'IA le
 demande avant d'agir. Preuve humaine (Manuel : appréciation
 contextuelle). Raison : un changement fuyait du dépôt vers le gabarit
@@ -330,8 +330,8 @@ et doit le déclarer (v1:X-010).
    - C. A et B : A comme filet local, B comme seule autorité.
      Conséquence : coût de B, plus un retour rapide en local.
 4. **Le registre client face au JSON.** Aujourd'hui un projet adopte un
-   contrat en recopiant une ligne dans `docs/contrats.md`
-   (`docs/recettes/adopter-le-kit.md`). JSON canonique : le client
+   contrat en recopiant une ligne dans `docs/contracts.md`
+   (`docs/recipes/adopt-the-kit.md`). JSON canonique : le client
    édite-t-il le JSON (commande `drwil` d'adoption) ou garde-t-il un
    Markdown local, régénéré ? Conséquence directe sur l'expérience
    d'adoption et sur le principe « une information, une seule source ».
@@ -369,7 +369,7 @@ et doit le déclarer (v1:X-010).
 
 Le catalogue n'est pas un chantier unique : il se réalise au fil de la
 feuille de route, dont l'ordre vit dans une seule source, l'index
-`docs/projets/en-attente.md` (section « Ordre de réalisation », décidée le
+`docs/projects/pending.md` (section « Ordre de réalisation », décidée le
 2026-10-11). Chaque chantier y cite les contrats `v1:` qu'il rend réels ;
 le **format** du catalogue (JSON, schéma, statuts) et les **profils**
 sont en vague 5 (renumérotée le 2026-10-11), avant
@@ -389,23 +389,23 @@ Aucune implémentation ne commence avant que **tous** soient remplis :
   contrat.
 - [ ] [décision] Périmètre du premier lot fixé (domaines et contrats du
   catalogue client v1) avec un critère de sortie mesurable.
-- [ ] [IA] Fiche `docs/projets/` créée, avec bloc `cadrage` (fichiers
+- [ ] [IA] Fiche `docs/projects/` créée, avec bloc `cadrage` (fichiers
   listés), niveau de risque HIGH, section Décisions et contrats
   concernés.
 - [ ] [humain] Fiche lancée par le demandeur (`/drwil-lancer`).
 
 ## Liens
 
-- `docs/contrats.md` : registre actuel (11 contrats), source canonique
+- `docs/contracts.md` : registre actuel (11 contrats), source canonique
   à ce jour.
-- `docs/catalogue-contrats.md` : catalogue existant (15 contrats
+- `docs/contracts-catalog.md` : catalogue existant (15 contrats
   `catalogue:`).
 - `docs/intentions/forge-dans-le-livrable.md` : forge (v1:GIT-003,
   v1:HOOK-014) dans le livrable.
 - `docs/intentions/non-regression-continue.md` : v1:TST-004.
 - `docs/intentions/packager-kit-ia-first.md` : publication npm
   (question 3).
-- `docs/projets/journal.md` : couverture des hooks (2026-10-11).
+- `docs/projects/journal.md` : couverture des hooks (2026-10-11).
 
 ## Annexe — catalogue v1.0 tel que soumis (2026-10-11)
 

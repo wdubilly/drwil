@@ -68,7 +68,7 @@ as a second person would.
 | A secret (API key, password, `.env` content) lands in a commit | Secret scanning (gitleaks) on every commit and in CI, covering tracked files and history | SEC-007 |
 | A dependency has a known vulnerability and nobody notices | Dependency audit wired into the project's standard checks | SEC-006 |
 | A CI check gets silently removed or stops covering the right paths | A hook verifies every expected check actually runs in CI — an unexecuted check is never counted as passing | QUA-013 |
-| Picking up a piece of work cold (another agent, or weeks later) means re-reading everything to understand its state | Every work item under `docs/projets/` carries a dated status and a "resume" section; every entry in the backlog index states who must decide (`[AI]` / `[human]` / `[decision]`) | QUA-015 |
+| Picking up a piece of work cold (another agent, or weeks later) means re-reading everything to understand its state | Every work item under `docs/projects/` carries a dated status and a "resume" section; every entry in the backlog index states who must decide (`[AI]` / `[human]` / `[decision]`) | QUA-015 |
 | Code gets added with no link to any documented piece of work | Every tracked code file must be covered by the scoping block of a work item | QUA-016 |
 | A direct commit or push to the main branch bypasses review | Blocked after the very first commit: all work goes through a branch and a pull/merge request | QUA-017 |
 | A blocking check (test, hook, CI) gets disabled or skipped "just this once" to move forward | Silently bypassing a check is forbidden; a miscalibrated check gets fixed, not switched off | QUA-019 |
@@ -86,18 +86,18 @@ Running `init` (new project) or `apply` (existing project) adds:
   `.cursor/rules/`, `.codex/`, `.gemini/`, depending on the tools you
   selected — each one simply imports `AGENTS.md` so the same rule never
   needs to be written twice.
-- **`docs/contrats.md`** — the registry of rules that actually matter,
+- **`docs/contracts.md`** — the registry of rules that actually matter,
   each one with an ID (`SEC-xxx`, `QUA-xxx`), a one-line description and
   a pointer to the check that proves it.
 - **`.githooks/`** — Git hooks (`pre-commit` and friends) that run the
   project's checks (`run-checks.mjs`) before every commit,
   and the equivalent CI workflow (GitHub Actions or GitLab CI, your
   choice) so the same checks run server-side too.
-- **`docs/recettes/`** — reusable step-by-step procedures (add an API
+- **`docs/recipes/`** — reusable step-by-step procedures (add an API
   route, add a screen, refactor safely, deploy, audit risk, release…)
   that both humans and AI assistants are expected to follow instead of
   improvising each time.
-- **`docs/projets/`** — the work-item system: one dated, decision-driven
+- **`docs/projects/`** — the work-item system: one dated, decision-driven
   sheet per piece of work, an index of pending items, and a journal of
   closed ones — so any session (human or AI) can resume work without
   having to reconstruct context from chat history.
@@ -112,11 +112,11 @@ drifted from the shipped template (see `resoudre-derive` below).
 ## How the governance loop works
 
 1. **A request comes in.** If it's ambiguous or has multiple reasonable
-   solutions, it becomes a scoping sheet in `docs/projets/` *before* any
+   solutions, it becomes a scoping sheet in `docs/projects/` *before* any
    code is written — open questions go to the human, not decided
    silently by the assistant.
 2. **Code gets written**, following the project's own `AGENTS.md` and the
-   relevant recipe (`docs/recettes/`).
+   relevant recipe (`docs/recipes/`).
 3. **A commit is attempted.** `.githooks/pre-commit` runs the project's
    checks: documentation consistency, secret scanning, test suite,
    contract coverage, scoping coverage. The commit is rejected if any
@@ -202,7 +202,7 @@ npx drwil init --name "MyProject" --lang en
 ```
 
 Scaffolds the kit's full structure in the current folder (`AGENTS.md`,
-`docs/contrats.md`, Git hooks enabled). Re-running `init` only refreshes
+`docs/contracts.md`, Git hooks enabled). Re-running `init` only refreshes
 `.githooks/` by default (docs you've already written are left alone);
 `--force` overwrites everything, including project docs added since —
 reserve it for a deliberate reset. Either way, the project's settings
@@ -238,7 +238,7 @@ the real install, so it cannot drift from what `apply` actually does.
 npx drwil verify
 ```
 
-Reads every contract in `docs/contrats.md` (or `docs/contracts.md`), runs
+Reads every contract in `docs/contracts.md` (or `docs/contracts.md`), runs
 the check each one names (`**Contrôle**`/`**Check**`) through the same
 engine as the git hooks (`.githooks/moteur.mjs`), and prints a verdict:
 `PASS` (exit 0), `FAIL` or `MANUAL REVIEW REQUIRED` (exit 1), `VERIFY
@@ -331,8 +331,8 @@ npx drwil uninstall --yes    # actually removes the files
 ```
 
 Driven by the installed-files manifest, so it only removes what the kit
-itself installed. Never touches `docs/projets/`, `docs/intentions/`, or
-`docs/recettes/` — your project's decisions and history are never
+itself installed. Never touches `docs/projects/`, `docs/intentions/`, or
+`docs/recipes/` — your project's decisions and history are never
 deleted automatically. The local governance state,
 `.drwil/state.json` (if present, git-ignored), is listed too, and deleted only with `--yes`. To only switch
 governance off, without removing anything: `"barriere": "off"` in
@@ -388,7 +388,7 @@ authoritative list.
 ## The contracts registry
 
 Every rule enforced by the kit's own hooks ships pre-registered in
-`docs/contrats.md`, each with a stable ID so it can be cited anywhere in
+`docs/contracts.md`, each with a stable ID so it can be cited anywhere in
 the project (commits, PR descriptions, other docs):
 
 | ID | What it guarantees |
@@ -404,7 +404,7 @@ the project (commits, PR descriptions, other docs):
 | QUA-017 | No direct commit/push to the main branch — branch + PR always required |
 | QUA-019 | A blocking check is never disabled or bypassed to make progress |
 
-A separate **catalog** (`docs/catalogue-contrats.md`) lists optional
+A separate **catalog** (`docs/contracts-catalog.md`) lists optional
 contracts a project can choose to adopt beyond this baseline.
 
 ## Optional modules (never installed by default)
@@ -413,7 +413,7 @@ contracts a project can choose to adopt beyond this baseline.
 |---|---|---|
 | `tableau-de-bord` (dashboard) | Static HTML page aggregating work items, contracts and audit history | Copy the script in, see its own README |
 | `front-quality` | Contrast/color-accessibility checks (RGAA/WCAG) for a front-end | Same as above |
-| `creer-une-release` | Git tag + GitHub release note, best-effort semver bump from Conventional Commits | Always manual, on explicit request — see `docs/recettes/creer-une-release.md` |
+| `creer-une-release` | Git tag + GitHub release note, best-effort semver bump from Conventional Commits | Always manual, on explicit request — see `docs/recipes/create-a-release.md` |
 
 ## Internationalization
 
@@ -448,7 +448,7 @@ ou une IA (Claude, Copilot, Cursor, Codex, Gemini) qui écrive le code.
 
 Concrètement, le kit ajoute à un projet :
 - un **point d'entrée unique** que toute IA lit en premier (`AGENTS.md`) ;
-- un **registre des règles qui comptent** (`docs/contrats.md`), chacune
+- un **registre des règles qui comptent** (`docs/contracts.md`), chacune
   avec sa preuve ;
 - des **contrôles Git** (hooks) qui bloquent un commit qui viole une
   règle — en local et en CI.
@@ -467,7 +467,7 @@ npx drwil init --name "MonProjet"
 ```
 
 Scaffolde la structure complète du kit dans le dossier courant
-(`AGENTS.md`, `docs/contrats.md`, hooks Git activés). Un deuxième
+(`AGENTS.md`, `docs/contracts.md`, hooks Git activés). Un deuxième
 `init` ne rafraîchit que `.githooks/` par défaut (les docs déjà
 écrites ne sont pas touchées) ; `--force` écrase tout, y compris les
 docs de projet ajoutées depuis — à réserver à un rattrapage volontaire.

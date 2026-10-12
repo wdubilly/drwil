@@ -11,7 +11,10 @@ import { join, relative } from "node:path";
 const root = process.cwd();
 const cfg = loadConfig();
 const lang = cfg.lang === "en" ? "en" : "fr";
-const CATALOGUE = { fr: "docs/catalogue-contrats.md", en: "docs/contracts-catalog.md" }[lang];
+// Le gabarit est en anglais quelle que soit la langue du projet : le catalogue installé a son nom
+// anglais ; un projet installé avant garde le nom français.
+const CATALOGUE =
+  ["docs/contracts-catalog.md", "docs/catalogue-contrats.md"].find((f) => existsSync(join(root, f))) ?? "docs/contracts-catalog.md";
 const T = {
   fr: {
     titre: (p) => `Tableau de bord — ${p}`,

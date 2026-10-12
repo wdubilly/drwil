@@ -18,17 +18,7 @@ const dossier = () => {
   return d;
 };
 
-const LIVRES = [
-  "LICENSE",
-  "README.md",
-  "package.json",
-  "bin/drwil.js",
-  "dist/index.js",
-  "dist/index.d.ts.map",
-  "templates/common/a",
-  "templates/fr/AGENTS.md",
-  "templates/en/AGENTS.md",
-];
+const LIVRES = ["LICENSE", "README.md", "package.json", "bin/drwil.js", "dist/index.js", "dist/index.d.ts.map", "templates/common/a"];
 const VERDICT = {
   version: 1,
   status: "manual",
@@ -98,7 +88,7 @@ test("derouler : pack, contenu, installation, --version, init (CI GitHub) puis v
   const r = derouler({ paquet: "p", temp: dossier(), lancer });
   assert.deepEqual(r, {
     statut: "ok",
-    message: "tarball drwil-0.3.0.tgz : 9 fichier(s) attendus, installé, --version, init et verify OK",
+    message: "tarball drwil-0.3.0.tgz : 7 fichier(s) attendus, installé, --version, init et verify OK",
   });
   assert.deepEqual(appels, ["pack", "install", "version", "init", "verify"]);
 });

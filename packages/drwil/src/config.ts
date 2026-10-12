@@ -33,36 +33,20 @@ export const KIT_MECHANICS = ".githooks/";
 
 export const CI_FILES: Record<Ci, string[]> = { none: [], github: [".github/workflows/ia-first.yml"], gitlab: [".gitlab-ci.yml"] };
 
+// Textes rendus dans le gabarit, en anglais comme lui : `lang` dit la langue du projet, pas celle du kit.
 export const TEXT = {
-  fr: {
-    description: "(à décrire : ce que fait l'application, pour qui)",
-    layer: (l: string) => `- \`${l}/\` — voir \`${l}/AGENTS.md\``,
-    noLayer: "Aucune couche séparée : le code vit à la racine du dépôt.",
-    stackNote: "Détectée à l'installation d'après les fichiers de projet : à confirmer par l'utilisateur.",
-    stackUndecided: "Non décidée. L'utilisateur la choisit ; une IA la propose et attend sa validation avant d'écrire du code applicatif.",
-    ciLine: (f: string) => ` et en CI (\`${f}\`)`,
-    dirs: {
-      projects: "docs/projets",
-      intentions: "docs/intentions",
-      recettes: "docs/recettes",
-      contracts: "docs/contrats.md",
-      index: "docs/projets/en-attente.md",
-    },
-  },
-  en: {
-    description: "(to describe: what the application does, for whom)",
-    layer: (l: string) => `- \`${l}/\` — see \`${l}/AGENTS.md\``,
-    noLayer: "No separate layer: the code lives at the repository root.",
-    stackNote: "Detected at install time from project files: to be confirmed by the user.",
-    stackUndecided: "Not decided. The user chooses it; an AI proposes one and waits for approval before writing application code.",
-    ciLine: (f: string) => ` and in CI (\`${f}\`)`,
-    dirs: {
-      projects: "docs/projects",
-      intentions: "docs/intentions",
-      recettes: "docs/recipes",
-      contracts: "docs/contracts.md",
-      index: "docs/projects/pending.md",
-    },
+  description: "(to describe: what the application does, for whom)",
+  layer: (l: string) => `- \`${l}/\` — see \`${l}/AGENTS.md\``,
+  noLayer: "No separate layer: the code lives at the repository root.",
+  stackNote: "Detected at install time from project files: to be confirmed by the user.",
+  stackUndecided: "Not decided. The user chooses it; an AI proposes one and waits for approval before writing application code.",
+  ciLine: (f: string) => ` and in CI (\`${f}\`)`,
+  dirs: {
+    projects: "docs/projects",
+    intentions: "docs/intentions",
+    recettes: "docs/recipes",
+    contracts: "docs/contracts.md",
+    index: "docs/projects/pending.md",
   },
 };
 
@@ -178,7 +162,8 @@ export async function writeConfig(r: Resolved): Promise<void> {
     contractPrefixes: splitCsv(r.opts.contractPrefixes ?? "SEC,QUA"),
     tools: r.tools,
     ci: r.ci,
-    dirs: previous?.dirs && previous.lang === r.lang ? previous.dirs : TEXT[r.lang].dirs,
+    // Les dossiers d'un projet installé ne bougent pas avec sa langue : leurs fiches y vivent.
+    dirs: previous?.dirs ?? TEXT.dirs,
     stack: r.stack,
     // Les contrôles du projet sont saisis par l'utilisateur ou l'IA : une réinstallation ne doit pas les effacer.
     checks: Array.isArray(previous?.checks) ? previous.checks : [],

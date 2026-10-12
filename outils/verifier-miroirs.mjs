@@ -8,11 +8,11 @@
 //    dans les dossiers miroirs, ou fichier d'une partie du gabarit installée ici absent du dépôt ;
 // 3. la CI du dépôt contient tous les jobs de celle du gabarit, ses jobs en plus sont déclarés, et
 //    aucun job déclaré propre au dépôt n'apparaît dans le gabarit (la fuite qui a motivé QUA-018) ;
-// 4. le contenu livré (tout packages/drwil/templates/, toutes langues) ne cite pas l'historique
+// 4. le contenu livré (tout packages/drwil/templates/) ne cite pas l'historique
 //    interne de drwil : numéro de PR, décision datée du demandeur, ADR, lot interne, projet
 //    d'origine, fiche qui n'existe que dans ce dépôt.
 // Hors de portée (à dire, pas à taire) : le contenu d'un écart déclaré, le texte des variables d'un
-// gabarit, le gabarit d'une autre langue que celle du dépôt, et la part humaine de QUA-018.
+// gabarit, et la part humaine de QUA-018.
 // Usage : node outils/verifier-miroirs.mjs [racine]
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
@@ -25,11 +25,8 @@ const GABARIT = join("packages", "drwil", "templates");
 // par CI se retire du chemin installé. Le dernier homologue trouvé l'emporte, comme à l'installation.
 const SOURCES = [
   ["common/base", 0],
-  ["{lang}/base", 0],
   ["common/tools", 1],
-  ["{lang}/tools", 1],
   ["common/ci", 1],
-  ["{lang}/ci", 1],
 ];
 // npm retire tout `.gitignore` d'un paquet : le gabarit le livre sous un autre nom (NOMS_LIVRES de index.ts).
 const NOMS_LIVRES = { gitignore: ".gitignore" };
@@ -51,11 +48,11 @@ function fichiers(dossier) {
  * { chemin dans le dépôt : { source, unite } } pour chaque fichier installable du gabarit. L'unité
  * (base, outil, CI ou module optionnel) s'installe en bloc : elle dit si un fichier absent manque.
  */
-export function homologues(racine, lang = "fr") {
+export function homologues(racine) {
   const gabarit = join(racine, GABARIT);
   const carte = new Map();
   for (const [source, profondeur] of SOURCES) {
-    const dossier = join(gabarit, source.replace("{lang}", lang));
+    const dossier = join(gabarit, source);
     for (const f of fichiers(dossier)) {
       const parties = posix(relative(dossier, f)).split("/");
       const unite = profondeur ? `${source.split("/")[1]}/${parties[0]}` : "base";
@@ -95,7 +92,7 @@ export function correspond(installe, gabarit) {
   return new RegExp(`^${motif}$`).test(a);
 }
 
-/** Une entrée déclarée : chemin exact, dossier (« docs/projets/ ») ou motif (« * » dans un segment). */
+/** Une entrée déclarée : chemin exact, dossier (« docs/projects/ ») ou motif (« * » dans un segment). */
 function couvrePar(entree) {
   if (entree.endsWith("/")) return (f) => f.startsWith(entree);
   const re = new RegExp(`^${entree.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*")}$`);
@@ -123,9 +120,9 @@ const raisonVide = (raison) => typeof raison !== "string" || !raison.trim();
  * Vérifie les miroirs. `suivis` : fichiers suivis par Git (chemins `/`), pour repérer ceux qui
  * n'existent que dans le dépôt. Rend { compares, problemes }.
  */
-export function verifier(racine, { lang = "fr", ecarts = {}, propresAuDepot = {}, propresAuGabarit = {}, ci = null, suivis = [] } = {}) {
+export function verifier(racine, { ecarts = {}, propresAuDepot = {}, propresAuGabarit = {}, ci = null, suivis = [] } = {}) {
   const problemes = [];
-  const carte = homologues(racine, lang);
+  const carte = homologues(racine);
   const present = (f) => existsSync(join(racine, f));
   const installees = unitesInstallees(racine, carte);
   let compares = 0;
@@ -220,12 +217,19 @@ const HISTORIQUE_INTERNE = [
   /\bLot \d+ (?:a ajouté|added)/,
   /run-box/,
 ];
-const FICHES_DU_GABARIT = ["fr/base/docs/projets", "en/base/docs/projects"];
+const FICHES_DU_GABARIT = ["common/base/docs/projects"];
+// Noms des fiches de l'ancien gabarit français : les hooks les lisent encore pour les projets installés
+// avant le gabarit unique en anglais. À retirer avec la migration des projets équipés (chantier A de
+// docs/intentions/livrable-full-english.md).
+const FICHES_DE_L_ANCIEN_GABARIT = ["en-attente.md", "entretien-courant.md", "mecanique-ia-first.md", "modele-fiche-projet.md"];
 
 /** Lignes du gabarit qui citent l'historique interne de drwil, ou une fiche absente du gabarit. */
 export function fuitesInternes(racine) {
   const gabarit = join(racine, GABARIT);
-  const fiches = new Set(FICHES_DU_GABARIT.flatMap((d) => fichiers(join(gabarit, d)).map((f) => f.split(sep).at(-1))));
+  const fiches = new Set([
+    ...FICHES_DU_GABARIT.flatMap((d) => fichiers(join(gabarit, d)).map((f) => f.split(sep).at(-1))),
+    ...FICHES_DE_L_ANCIEN_GABARIT,
+  ]);
   const problemes = [];
   for (const f of fichiers(gabarit).sort()) {
     normaliser(readFileSync(f, "utf8"))
@@ -244,12 +248,8 @@ export function fuitesInternes(racine) {
   return problemes;
 }
 
-/** Lit la langue, la liste des écarts et les fichiers suivis, vérifie, affiche ; rend le code de sortie. */
+/** Lit la liste des écarts et les fichiers suivis, vérifie, affiche ; rend le code de sortie. */
 export function principal(racine) {
-  let lang = "fr";
-  try {
-    lang = JSON.parse(readFileSync(join(racine, ".drwil", "ia-first.json"), "utf8")).lang === "en" ? "en" : "fr";
-  } catch {}
   let liste;
   try {
     liste = JSON.parse(readFileSync(join(racine, "outils", "miroirs.json"), "utf8"));
@@ -264,7 +264,6 @@ export function principal(racine) {
     return 1;
   }
   const { compares, problemes } = verifier(racine, {
-    lang,
     ecarts: liste.ecarts ?? {},
     propresAuDepot: liste.propresAuDepot ?? {},
     propresAuGabarit: liste.propresAuGabarit ?? {},

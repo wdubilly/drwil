@@ -180,11 +180,11 @@ Relevé le 2026-10-06 :
   commandes slash, désinstallation, section « Contributing » courte),
   `LICENSE` (MIT).
 - Présent mais pensé pour le processus interne : `.github/pull_request_template.md`
-  (en français, demande la fiche `docs/projets/` concernée et les
+  (en français, demande la fiche `docs/projects/` concernée et les
   contrôles lancés).
 - Absents : CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, le
   dossier .github/ISSUE_TEMPLATE/.
-- Contrats : le registre (`docs/contrats.md`) ne déclare que les préfixes
+- Contrats : le registre (`docs/contracts.md`) ne déclare que les préfixes
   `SEC` et `QUA` (`.drwil/ia-first.json` → `contractPrefixes`) ; les
   contrôles COM-001 à 005 ci-dessus n'existent pas encore.
 - Commandes de test du dépôt : `bash .githooks/run-checks.sh` (tout
@@ -202,7 +202,7 @@ Relevé le 2026-10-06 :
 2. **Gabarit de PR** : adapter le gabarit existant (français, fiche
    obligatoire) pour un contributeur externe, ou en garder un seul pour
    tous ? Une contribution externe doit-elle elle aussi passer par une
-   fiche `docs/projets/` ?
+   fiche `docs/projects/` ?
 3. **Canal de signalement de vulnérabilité** : signalement privé GitHub
    (*private vulnerability reporting*) ou adresse e-mail dédiée ?
 4. **Code of conduct** : reprendre un texte reconnu (ex. Contributor

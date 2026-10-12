@@ -1,3 +1,3 @@
 # Skills
 
-Raccourcis Claude Code vers `docs/recettes/` : un dossier `<nom>/SKILL.md` par skill, qui renvoie à la recette sans la recopier.
+Claude Code shortcuts to `docs/recipes/`: one `<name>/SKILL.md` folder per skill, pointing to the recipe without copying it.

@@ -1,6 +1,6 @@
 # Projet : un seul gabarit, en anglais (chantier B du livrable en anglais)
 
-**Statut** : en cours — lots 1 et 2 faits le 2026-10-12.
+**Statut** : en cours — lots 1, 2, 3 et 5 faits le 2026-10-12.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -139,7 +139,7 @@ Aucun.
   française ; test dédié.
 - **Lot 5 — Ce dépôt en anglais** [IA] : `npm run installer-depot` installe
   recettes, skills et `docs/ia-first.md` anglais ; recettes françaises
-  retirées, chemins `docs/recettes/` réécrits partout (documents, fiches,
+  retirées, chemins docs/recettes/ réécrits partout (documents, fiches,
   journal, outils) ; documents de projet du gabarit (contrats, catalogue,
   architecture, fiches de référence…) déclarés propres au gabarit, le
   dépôt gardant les siens en français ; `outils/miroirs.json` à jour.
@@ -177,8 +177,43 @@ Aucun.
   `.gitleaks.toml` et `.env.example` (gabarit `common/`). Noms de commandes
   des skills (`/drwil-lancer`…) : chantier C.
 
-## 9. Reprise
+## 9. Gabarit unique et dépôt en anglais (lots 3 et 5, 2026-10-12)
 
-- **Dernier état** (2026-10-12) : lots 1 et 2 faits.
+Menés ensemble : dès que le gabarit n'a plus que l'anglais, le contrôle
+des miroirs refuse les docs françaises du dépôt, donc aucun des deux ne
+passe seul.
+
+- **Gabarit** : `templates/en/` versé dans `templates/common/`,
+  `templates/fr/` supprimé ; la CLI copie `common/` quelle que soit la
+  langue ; une installation neuve prend les dossiers anglais, un projet
+  installé garde les siens. Outils du dépôt et tests adaptés (chemins
+  remplacés par la table du lot 1, textes attendus traduits).
+- **Décision du 2026-10-12** (demandeur) : la doc anglaise installée cite
+  les dossiers anglais standard, donc **le dépôt renomme ses dossiers de
+  projet** (docs/projets/ → `docs/projects/`, contrats → `docs/contracts.md`,
+  catalogue → `docs/contracts-catalog.md`, index → `docs/projects/pending.md`),
+  leur contenu restant en français ; ils sont déclarés en écart. Cette
+  fiche reste à son chemin d'origine jusqu'à sa clôture (l'état de
+  gouvernance la référence).
+- **Dépôt installé en anglais** : recettes, skills, `docs/ia-first.md` et
+  les quatre documents de départ restés vierges (sécurité, déploiement,
+  fonctionnalités, charte) ; recette propre au dépôt
+  `docs/recipes/corriger-un-defaut.md`, en français ; les deux recettes
+  adaptées au dépôt gardent leurs phrases propres, en anglais.
+- **Trouvé en route** : le tableau de bord choisissait le catalogue par
+  langue (corrigé : le fichier présent) ; l'installeur créait les
+  fichiers déclarés propres au gabarit (corrigé, avec test) ; les noms
+  de l'ancien gabarit français cités par les hooks sont acceptés par le
+  contrôle des miroirs jusqu'au chantier A (liste précise).
+- **Changement visible** : les commandes des skills prennent leur nom
+  anglais (`/drwil-adopt`, `/drwil-value`, `/drwil-progress`,
+  `/drwil-usage`) ; `/drwil-lancer` ne change pas (chantier C).
+- **Reste** : une arborescence vide `packages/drwil/templates/en/`, non
+  suivie par git et non livrée, à supprimer à la main (suppression
+  bloquée par une vérification de sécurité de l'outil).
+
+## 10. Reprise
+
+- **Dernier état** (2026-10-12) : lots 1, 2, 3 et 5 faits.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 3, gabarit unique.
+- **Prochaine étape** : lot 4, langue du projet.

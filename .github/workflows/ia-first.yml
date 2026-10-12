@@ -12,7 +12,7 @@ jobs:
           node-version: 24
       - run: npm ci
       # Sans gitleaks, SEC-007 (pas de secret) serait « non exécuté » ici, et verify en ERROR dans le
-      # projet d'essai du contrôle tarball (docs/projets/gitleaks-en-ci.md). Version épinglée, archive
+      # projet d'essai du contrôle tarball (docs/projects/gitleaks-en-ci.md). Version épinglée, archive
       # vérifiée par sa somme publiée ; installé là où le moteur le cherche (~/.local/bin).
       - name: Installer gitleaks 8.21.2
         run: |
@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 22
       - run: node --version && npm test --workspace packages/drwil
-      # Non-régression (docs/projets/non-regression-continue.md) : sur une PR en échec, les mêmes
+      # Non-régression (docs/projects/non-regression-continue.md) : sur une PR en échec, les mêmes
       # contrôles sont rejoués sur la base de la PR pour dire si l'échec était déjà là. Le verdict ne
       # change pas — le job reste en échec : un échec préexistant se corrige aussi, il ne s'excuse pas.
       - name: Échec introduit par la PR ou déjà présent sur sa base ?
@@ -50,7 +50,7 @@ jobs:
             echo "::warning::Échec déjà présent sur la base de la PR ($BASE) : pas introduit par cette PR, à corriger quand même."
             grep -F "✗" ../base-checks.log || true
           fi
-  # Portabilité du kit (point 1 de docs/projets/suites-kit-portable.md) :
+  # Portabilité du kit (point 1 de docs/projects/suites-kit-portable.md) :
   # npm test de packages/drwil (pas la suite complète run-checks.mjs, qui
   # dépend de gitleaks) doit rester vert sur les trois OS.
   kit-tests:

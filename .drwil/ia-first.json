@@ -8,11 +8,11 @@
     "QUA"
   ],
   "dirs": {
-    "projects": "docs/projets",
+    "projects": "docs/projects",
     "intentions": "docs/intentions",
-    "recettes": "docs/recettes",
-    "contracts": "docs/contrats.md",
-    "index": "docs/projets/en-attente.md"
+    "recettes": "docs/recipes",
+    "contracts": "docs/contracts.md",
+    "index": "docs/projects/pending.md"
   },
   "layerPrefixes": [
     "app",
@@ -81,7 +81,7 @@
       "name": "tests rattachés aux contrats, cohérence dans les deux sens (non-régression)",
       "run": "node outils/verifier-tests-contrats.mjs",
       "ciJob": "checks",
-      "chemins": ["docs/contrats.md", "**/*.test.mjs", "packages/drwil/test/**", "outils/verifier-tests-contrats.mjs", ".drwil/ia-first.json"],
+      "chemins": ["docs/contracts.md", "**/*.test.mjs", "packages/drwil/test/**", "outils/verifier-tests-contrats.mjs", ".drwil/ia-first.json"],
       "degradable": false
     },
     {

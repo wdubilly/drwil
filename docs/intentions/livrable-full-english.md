@@ -72,7 +72,7 @@ convention de langue des commits proposée aux projets.
 - **Ce dépôt** (question 4) : ses fiches, intentions, journal et échanges
   restent en français ; son code suit le livrable.
 - **Ordre** (question 5) : la publication passe en dernier (vague 7 de
-  `docs/projets/en-attente.md`) ; l'anglais se fait **avec la suppression
+  `docs/projects/pending.md`) ; l'anglais se fait **avec la suppression
   de la duplication dépôt / gabarit** (vague 4), pour ne renommer qu'une
   fois. Précisé le 2026-10-12 : le dépôt s'installe depuis le gabarit
   (fait, `npm run installer-depot`, journal du 2026-10-12), puis refactor, puis
