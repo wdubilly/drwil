@@ -190,6 +190,8 @@ files:
   - docs/ia-first.md
   - docs/contracts.md
   - docs/contracts-catalog.md
+  - docs/audit-risques.md
+  - docs/decouverte-valeur.md
   - docs/recipes/*
 -->
 
