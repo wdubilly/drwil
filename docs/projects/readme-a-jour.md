@@ -1,12 +1,13 @@
 # Projet : des README à jour du cycle de gouvernance
 
-**Statut** : cadré le 2026-10-10 — décisions prises, lot 1 à lancer.
+**Statut** : recadré le 2026-10-12 — décisions prises, lot 1 à lancer.
 **Risque** : MEDIUM
 
 <!-- scope
 files:
   - README.md
   - packages/drwil/README.md
+  - packages/drwil/CHANGELOG.md
 -->
 
 (cadrage : le README de la racine (vitrine GitHub) et celui du paquet
@@ -58,6 +59,23 @@ toujours exacts.
   autorisée —, la protection de la forge), avec renvois vers la doc du
   gabarit ; pas de réécriture d'ensemble. [décision utilisateur]
 
+- **2026-10-12 — Recadrage** (demandeur) : les deux README, pas seulement
+  le paquet ; l'accent est mis sur le README de l'outil : le gain (ce que
+  l'outil apporte, pour qui, face à quel problème), puis installation,
+  concept, commandes et cycle ; plus qu'une simple section sur le cycle.
+  Le gain n'affirme que ce qui est prouvé (QUA-011, doc jamais fausse) :
+  tant que le mini-banc avec / sans drwil n'a pas produit de chiffres,
+  aucun chiffre de productivité, seulement les garanties vérifiables
+  (périmètre tenu, preuves, attestation humaine) ; la
+  prochaine release (0.5.1 ou 0.6.0, à fixer à la release) l'embarque,
+  note de version comprise. Le report « après la vague 7 » du 2026-10-11
+  est levé : le cycle de base (activités, sondage, fusion autorisée) est
+  stable ; la forge et la fabrique seront ajoutées quand elles existeront.
+  Vocabulaire à jour : activités SCOPING → BUILD → EVIDENCE → VERIFY →
+  CLOSING, `drwil init` (plus d'`apply`), `/drwil-start`. Les restes de
+  français de `README.md` (titres SEC-007, QUA-011) sont traduits.
+  [décision utilisateur]
+
 ## Contrats concernés
 
 - **QUA-011** — Doc jamais fausse : un README qui omet le cycle réel
@@ -70,12 +88,13 @@ toujours exacts.
 ## 6. Increments
 
 - **Lot 1 — inventaire et réécriture** [IA] : liste des écarts entre les
-  README et le code ; section sur le cycle de gouvernance selon les
-  décisions. Critère de sortie : chaque mécanisme cité au besoin apparaît
+  README et le code ; gain, installation, concept, commandes et
+  cycle de gouvernance à jour dans les deux README ; français résiduel traduit ;
+  note de version si le paquet change. Critère de sortie : chaque mécanisme cité au besoin apparaît
   dans le ou les README, avec renvoi vers la doc ; check-docs vert.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : fiche cadrée, rien de réalisé.
+- **Dernier état** (2026-10-12) : fiche recadrée, rien de réalisé.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] `/drwil-lancer`.
+- **Prochaine étape** : [humain] `/drwil-start`.

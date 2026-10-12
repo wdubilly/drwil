@@ -57,8 +57,8 @@ d'abord, d'où les seuils de couverture (vague 2) avant le refactoring de
 
 Faite dans l'ordre : la règle `git -c` recalibrée, SEC-006 outillé, la
 carte du dépôt, la consigne de fusion automatique, lint, formatage et
-versions de Node (voir `docs/projects/journal.md`). Le README est reporté
-après la vague 6.
+versions de Node (voir `docs/projects/journal.md`). Le README a été
+repris le 2026-10-12.
 
 ## Vague 2 — rendre les décisions humaines prouvables, relever les preuves
 
@@ -146,17 +146,13 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 - [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.
+- [ ] [IA] [P1] README de l'outil à jour, racine et paquet (gain,
+  installation, concept, commandes, cycle de gouvernance), embarqué par la prochaine
+  release — décidé le 2026-10-12, report levé (v1:DOC-001, v1:DOC-003) —
+  `docs/projects/readme-a-jour.md`.
 - [ ] [IA] [P2] Prochaine release : signaler dans la note de version que
   `paths` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
   qui tourne au commit — voir `docs/projects/journal.md` (2026-10-05).
-
-## Après la vague 7
-
-Décidé le 2026-10-11 : le README décrit le cycle de gouvernance, que les
-vagues 4 à 7 modifient ; l'écrire avant serait le réécrire.
-
-- [ ] [IA] [P3] README à jour du cycle de gouvernance (lancement,
-  fusion autorisée, forge) (v1:DOC-001, v1:DOC-003) — `docs/projects/readme-a-jour.md`.
 
 ## Ensuite
 
