@@ -20,6 +20,75 @@
 
 ---
 
+## In one minute
+
+An AI agent says *"Done."* DRWIL asks: **can you prove it?**
+
+DRWIL is a governance layer for AI-produced work. The human decides what
+must be true, the agent builds, and DRWIL checks the proof: a deterministic
+verdict (`PASS`, `FAIL`, `ERROR` or `MANUAL`) that does not depend on the
+model's own word.
+
+```text
+$ npx drwil verify
+  ✓ PASS   SEC-007  No secret in the repo
+  ✓ PASS   QUA-017  No direct work on the main branch
+  ✗ FAIL   QUA-004  Tests pass
+             unit-tests: failed
+  ? MANUAL QUA-019  No bypassing a check
+             human required: a bypass rarely leaves a machine-checkable trace.
+9 contracts: 5 PASS, 0 ATTESTED, 1 FAIL, 3 MANUAL, 0 ERROR
+GOVERNANCE: FAIL                                            (exit 1)
+```
+
+*Condensed output on a sample project. The work is not verified until the rule holds again;
+a part that only a human can judge stays `MANUAL` until they attest it.*
+
+### Who it is for
+
+* **Teams and tech leads** who let AI assistants (Claude Code, Copilot,
+  Cursor, Codex, Gemini) write code in a shared repository, and need to
+  know what was done, within which limits, with which proof.
+* **Solo developers** on projects that last weeks or months, who forget
+  their own decisions as surely as a colleague would.
+* **Organisations with quality or security requirements**, who want a
+  traceable line from a decision to its proof.
+
+Not for you if you are looking for a code generator, a linter or a tool
+that turns a specification into code: DRWIL governs the work, it does not
+produce it.
+
+### Get started
+
+```bash
+gh release download --repo wdubilly/drwil --pattern 'drwil-*.tgz'
+npm install -D ./drwil-*.tgz
+npx drwil init       # new, existing or already equipped project
+npx drwil verify
+```
+
+Details, prerequisites and upgrades: [Installation](#installation).
+
+---
+
+## What you gain
+
+AI coding assistants are fast. What they lack is a boundary and a proof.
+DRWIL adds both, and the people in charge stay in charge.
+
+| You get | Because | Check it yourself |
+|---|---|---|
+| An agent that stays inside the lines | every commit must fall within the scope of an approved work item | `drwil state`, scope gate at each commit and in CI |
+| "Done" that means done | every contract is backed by a check that actually ran; a check that did not run never counts as a pass | `drwil verify` |
+| Decisions that stay human | starting a workstream, accepting the work and attesting a manual contract are gestures an agent cannot perform | `drwil attest`, `/drwil-start` |
+| Work that survives the session | one `AGENTS.md`, one contract registry, one state on disk: another agent, or a human, resumes without re-reading the chat | `drwil state` |
+| One setup for every tool | Claude Code, Copilot, Cursor, Codex and Gemini read the same rules | `drwil init` |
+| Adoption without a big bang | works on a new or an existing project, previews with `--dry-run`, does not overwrite your files unless you force it | `drwil init --dry-run` |
+
+Nothing to take on faith: each line is a command you can run.
+
+---
+
 ## What is DRWIL?
 
 DRWIL is a lightweight **governance and verification layer for AI agents**.
@@ -122,24 +191,6 @@ DRWIL asks:
 ```
 
 Instead of relying entirely on an agent's own statement of completion, DRWIL makes important requirements explicit and gives them a verification mechanism.
-
----
-
-## What you gain
-
-AI coding assistants are fast. What they lack is a boundary and a proof.
-DRWIL adds both, and the people in charge stay in charge.
-
-| You get | Because | Check it yourself |
-|---|---|---|
-| An agent that stays inside the lines | every commit must fall within the scope of an approved work item | `drwil state`, scope gate at each commit and in CI |
-| "Done" that means done | every contract is backed by a check that actually ran; a check that did not run never counts as a pass | `drwil verify` |
-| Decisions that stay human | starting a workstream, accepting the work and attesting a manual contract are gestures an agent cannot perform | `drwil attest`, `/drwil-start` |
-| Work that survives the session | one `AGENTS.md`, one contract registry, one state on disk: another agent, or a human, resumes without re-reading the chat | `drwil state` |
-| One setup for every tool | Claude Code, Copilot, Cursor, Codex and Gemini read the same rules | `drwil init` |
-| Adoption without a big bang | works on a new or an existing project, previews with `--dry-run`, never overwrites your files | `drwil init --dry-run` |
-
-Nothing to take on faith: each line is a command you can run.
 
 ---
 
