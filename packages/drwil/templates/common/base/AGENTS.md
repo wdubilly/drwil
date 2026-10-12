@@ -16,7 +16,7 @@ Full map and stack: `docs/architecture.md`.
   justification and an explicit request. A documentation, architecture or
   preparatory task changes no functional behavior; no task adds an
   integration or a real network flow it wasn't asked for.
-- **Commits**: in English; commit or push only when asked. A bug found
+- **Commits**: in {{projectLanguage}}; commit or push only when asked. A bug found
   during a refactor = separate commit, reported.
 - **Personal data**: an AI never shows identifying production data (e.g. an
   employee's ID, name, email — to be specified by the project) in its
@@ -139,7 +139,10 @@ their own instructions". Remove otherwise.)*
 
 ## Conventions
 
-- Code, comments, commit messages and UI in English.
+- **Project language: {{projectLanguage}}** (`lang` in `.drwil/ia-first.json`).
+  Reply, and write briefs, intents, journal entries and commit messages, in
+  that language, even though the kit's own files are in English. Code,
+  comments and UI follow the project's conventions.
 - Comments: only the non-obvious **why** (constraint, domain quirk, known
   pitfall) — not the what, no history, no person's name. The request and
   its date belong in the **commit message** (`git log`/`git blame` find

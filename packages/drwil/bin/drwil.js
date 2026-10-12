@@ -40,7 +40,10 @@ function addOptions(cmd, layersHelp) {
       .option("-s, --short <short>", "Short name")
       // Aucun défaut ici : une option absente doit se distinguer d'un choix explicite, pour reprendre
       // la config d'un projet déjà installé ; les défauts vivent dans resolve() (src/index.ts).
-      .option("-l, --lang <lang>", `Templates language (fr|en) ${DEFAUT("fr")}`)
+      .option(
+        "-l, --lang <lang>",
+        `Project language (fr|en): the agent replies and writes briefs and commits in it; the kit itself is in English ${DEFAUT("en")}`,
+      )
       .option("--layers <layers>", layersHelp)
       .option("-d, --description <text>", "What the application does (fills AGENTS.md and docs/architecture.md)")
       .option("--tools <tools>", `AI tools to configure, CSV (${TOOLS.join(",")}) ${DEFAUT("all")}`)

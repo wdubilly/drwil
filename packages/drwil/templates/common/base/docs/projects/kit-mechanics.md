@@ -44,9 +44,8 @@ chosen).
 
 The project's own application code: each piece of work carries its own
 `cadrage` block in its brief. A small task that does not deserve its own
-brief attaches to the project's running-chores brief, once the project adds
-one (English brief templates are not shipped yet — see the kit's own
-hand-off doc).
+brief attaches to the project's running-chores brief
+(`docs/projects/routine-maintenance.md`).
 
 ## Hand-off
 

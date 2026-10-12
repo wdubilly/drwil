@@ -1,6 +1,6 @@
 # Projet : un seul gabarit, en anglais (chantier B du livrable en anglais)
 
-**Statut** : en cours — lots 1, 2, 3 et 5 faits le 2026-10-12.
+**Statut** : en cours — tous les lots faits le 2026-10-12, clôture à venir.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -212,8 +212,23 @@ passe seul.
   suivie par git et non livrée, à supprimer à la main (suppression
   bloquée par une vérification de sécurité de l'outil).
 
-## 10. Reprise
+## 10. Langue du projet (lot 4, 2026-10-12)
 
-- **Dernier état** (2026-10-12) : lots 1, 2, 3 et 5 faits.
+- `--lang` et `lang` disent la langue du projet, **anglais par défaut**
+  (décision du demandeur, 2026-10-12) ; le `AGENTS.md` livré nomme cette
+  langue et demande à l'agent d'y répondre et d'y écrire fiches,
+  intentions, journal et commits ; les messages des hooks la suivent
+  (dictionnaire fr/en). Test dédié ; les tests qui vérifient les
+  messages français installent désormais avec `lang: "fr"`.
+- **Trouvé en route** (commit séparé, test vu échouer avant) : le modèle
+  de fiche anglais intitulait sa passation « Resuming work », que
+  QUA-015 refuse ; tout le gabarit dit maintenant « Hand-off ».
+- **Limite, pour le chantier A** : le contrôle des intentions attend les
+  intitulés de la langue du projet (« Besoin »… en français) alors que le
+  modèle livré est en anglais ; à accepter dans les deux langues.
+
+## 11. Reprise
+
+- **Dernier état** (2026-10-12) : tous les lots faits.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 4, langue du projet.
+- **Prochaine étape** : preuves, verify, clôture.

@@ -361,7 +361,7 @@ defaults below apply to a new install only.
 |---|---|---|
 | `-n, --name <name>` | Project name | current folder name |
 | `-s, --short <short>` | Short name | — |
-| `-l, --lang <lang>` | Template language: `fr` or `en` | `fr` |
+| `-l, --lang <lang>` | Project language: `fr` or `en` (the kit itself is in English) | `en` |
 | `--layers <layers>` | Comma-separated layers | detected (`apply`) / `backend,frontend` (`init`) |
 | `-d, --description <text>` | What the application does — fills `AGENTS.md` and `docs/architecture.md` | — |
 | `--tools <tools>` | AI tools to configure, CSV: `claude,codex,cursor,gemini,copilot` | all five |
@@ -417,10 +417,11 @@ contracts a project can choose to adopt beyond this baseline.
 
 ## Internationalization
 
-Every template ships in **French and English** with equivalent content in
-both languages (checked by an automated test comparing file counts and
-structure) — pick with `--lang fr|en` at install time. This README itself
-follows the same convention: English first, French below.
+The kit ships **one template, in English**: docs, recipes, skills, hooks.
+`--lang fr|en` sets the **project language** (English by default): the
+installed `AGENTS.md` asks the agent to reply and to write briefs, intents,
+journal entries and commit messages in it, and hook messages follow it.
+This README is in English first, French below.
 
 ## Compatibility
 
@@ -491,7 +492,8 @@ laissé tel quel, et signalé s'il a dérivé du gabarit depuis une
 installation précédente. C'est la commande à utiliser pour adopter
 drwil sur un projet en cours.
 
-Options principales (communes aux deux commandes) : `--lang fr|en`,
+Options principales (communes aux deux commandes) : `--lang fr|en` (langue
+du projet, anglais par défaut ; le kit lui-même est en anglais),
 `--layers backend,frontend` (détecté sinon), `--tools
 claude,copilot,cursor,codex,gemini`, `--ci github|gitlab|none`. Voir
 `npx drwil init --help` ou `npx drwil apply --help`.

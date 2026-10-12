@@ -35,6 +35,8 @@ export const CI_FILES: Record<Ci, string[]> = { none: [], github: [".github/work
 
 // Textes rendus dans le gabarit, en anglais comme lui : `lang` dit la langue du projet, pas celle du kit.
 export const TEXT = {
+  // Langue du projet, telle que la consigne de AGENTS.md la nomme à l'agent.
+  langues: { fr: "French", en: "English" } as Record<string, string>,
   description: "(to describe: what the application does, for whom)",
   layer: (l: string) => `- \`${l}/\` — see \`${l}/AGENTS.md\``,
   noLayer: "No separate layer: the code lives at the repository root.",
@@ -101,7 +103,7 @@ export function resolve(opts: InitOptions, defaultLayers: (stack: StackEntry[]) 
   const layers = opts.layers ?? csv(previous.layers);
   return {
     opts: merged,
-    lang: pick(opts.lang ?? texte(previous.lang) ?? "fr", LANGS, "lang"),
+    lang: pick(opts.lang ?? texte(previous.lang) ?? "en", LANGS, "lang"),
     tools: splitCsv(opts.tools ?? csv(previous.tools) ?? TOOLS.join(",")).map((t) => pick(t, TOOLS, "tools")),
     ci: pick(opts.ci ?? ciDeConfig(previous) ?? "none", CIS, "ci"),
     mode: pick(opts.mode ?? texte(previous.mode) ?? "full", ["minimal", "full"] as const, "mode"),
@@ -130,7 +132,7 @@ export function resolveFromConfig(targetDir: string): Resolved {
   };
   return {
     opts,
-    lang: pick((config.lang as string) ?? "fr", LANGS, "lang"),
+    lang: pick((config.lang as string) ?? "en", LANGS, "lang"),
     layers: Array.isArray(config.layers) ? (config.layers as string[]) : [],
     tools: Array.isArray(config.tools) ? (config.tools as string[]).map((t) => pick(t, TOOLS, "tools")) : [],
     ci: pick((config.ci as string) ?? "none", CIS, "ci"),

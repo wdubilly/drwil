@@ -43,6 +43,7 @@ export function render(content: string, r: Resolved, extra: Record<string, strin
     projectName: projectName(r),
     projectShort: r.opts.short ?? projectName(r),
     lang: r.lang,
+    projectLanguage: t.langues[r.lang],
     layersCsv: r.layers.join(","),
     layersList: r.layers.length ? r.layers.map(t.layer).join("\n") : t.noLayer,
     contractPrefixesCsv: splitCsv(r.opts.contractPrefixes ?? "SEC,QUA").join(","),
