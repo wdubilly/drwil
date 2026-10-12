@@ -101,7 +101,8 @@ convention de langue des commits proposée aux projets.
     ensemble, migration des projets équipés par `init` / `apply` — fait,
     journal du 2026-10-12 ;
   - **C — CLI** : messages, sous-commandes, commande unique `init` /
-    `apply`, retrait de `DRWIL-012`.
+    `apply`, retrait de `DRWIL-012`, valeurs laissées par A —
+    `docs/projects/cli-en-anglais.md`.
   B passe avant A (décidé le 2026-10-12) : renommer les hooks d'abord
   obligerait à corriger les docs françaises du gabarit, supprimées juste
   après.

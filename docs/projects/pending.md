@@ -102,7 +102,7 @@ trailer, code commun) en anglais, migration des projets équipés par
   l'identifiant interne `DRWIL-012` des deux messages livrés qui
   l'affichent (journal du 2026-10-11) ; valeurs laissées par A
   (identifiants de contrôles, statuts du moteur, sévérités, options
-  `--fiche` / `--demande`) — à cadrer.
+  `--fiche` / `--demande`) — `docs/projects/cli-en-anglais.md`.
 - [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
