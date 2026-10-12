@@ -7,11 +7,11 @@ const SECTIONS = `# Contrats
 
 ## SEC-007 — Pas de secret
 **Règle** : aucun secret.
-**Contrôle** : \`secrets-fichiers\`
+**Contrôle** : \`secrets\`
 
 ## QUA-015 — Chantiers exploitables
 **Règle** : fiches reprenables.
-**Contrôle** : \`docs-references\`, \`couverture-ci\`
+**Contrôle** : \`docs-references\`, \`ci-coverage\`
 **Manuel** : justesse du contenu des fiches
 
 ## SEC-001 — Portée des droits
@@ -38,17 +38,17 @@ test("forme sections : Contrôle, Manuel, contrats sans champ", () => {
     line: 3,
     form: "section",
     rule: "aucun secret.",
-    checks: ["secrets-fichiers"],
+    checks: ["secrets"],
     manual: null,
-    severity: "bloquant",
+    severity: "blocking",
     rawSeverity: null,
   });
   assert.equal(
     texte,
-    "## SEC-007 — Pas de secret\n**Règle** : aucun secret.\n**Contrôle** : `secrets-fichiers`",
+    "## SEC-007 — Pas de secret\n**Règle** : aucun secret.\n**Contrôle** : `secrets`",
     "texte brut de la section, sans la suivante",
   );
-  assert.deepEqual(k[1].checks, ["docs-references", "couverture-ci"]);
+  assert.deepEqual(k[1].checks, ["docs-references", "ci-coverage"]);
   assert.equal(k[1].manual, "justesse du contenu des fiches");
   assert.equal(k[2].checks, null);
   assert.equal(k[3].checks, null);
@@ -62,11 +62,11 @@ test("forme sections : « **Contrôle:** » et valeur à la ligne suivante", () 
 Aucun secret.
 
 **Contrôle:**
-secrets-fichiers
+secrets
 
 **Manuel:** relecture
 `);
-  assert.deepEqual(k[0].checks, ["secrets-fichiers"]);
+  assert.deepEqual(k[0].checks, ["secrets"]);
   assert.equal(k[0].manual, "relecture");
 });
 
@@ -150,7 +150,7 @@ test("sévérité : bloquant par défaut, synonymes anglais, valeur inconnue ref
 `);
   assert.deepEqual(
     k.map((c) => c.severity),
-    ["avertissement", "indicatif", null],
+    ["warning", "advisory", null],
   );
   assert.deepEqual(
     validateContracts(k, BASE_CHECKS).map((e) => e.type),

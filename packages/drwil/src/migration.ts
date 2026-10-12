@@ -7,6 +7,7 @@ import {
   ACTIVITIES,
   BLOCK,
   BRIEF_DIR,
+  CHECK_IDS,
   CONFIG_KEYS,
   CONFIG_VALUES,
   HOOKS,
@@ -14,6 +15,8 @@ import {
   MOVED,
   NESTED_CONFIG_KEYS,
   OLD_KIT_FILES,
+  PROJECT_CHECK_PREFIX,
+  REGISTRIES,
   STATE_FIELDS,
   SUBCOMMANDS,
   USAGE_FIELDS,
@@ -224,9 +227,9 @@ export async function migrate(root: string, { dryRun = false } = {}): Promise<Mi
   const replace = replacer();
 
   const all = files(root);
-  if (!oldFormat(root, all)) return plan;
+  const old = oldFormat(root, all);
   const target = (rel: string) => MOVED[rel] ?? rel.replace(BRIEF_DIR[0], BRIEF_DIR[1]);
-  const toMove = all.filter((f) => f.startsWith(BRIEF_DIR[0]) || MOVED[f]);
+  const toMove = old ? all.filter((f) => f.startsWith(BRIEF_DIR[0]) || MOVED[f]) : [];
   const removals = new Set<string>();
   const writes = new Map<string, string>();
   for (const from of toMove) {
@@ -239,16 +242,16 @@ export async function migrate(root: string, { dryRun = false } = {}): Promise<Mi
     removals.add(from);
     writes.set(to, read(root, from));
   }
-  for (const old of Object.keys(OLD_KIT_FILES)) {
-    if (!existsSync(join(root, old))) continue;
-    if (unchanged(old)) {
-      plan.removed.push(old);
-      removals.add(old);
-    } else plan.kept.push(old);
+  for (const file of old ? Object.keys(OLD_KIT_FILES) : []) {
+    if (!existsSync(join(root, file))) continue;
+    if (unchanged(file)) {
+      plan.removed.push(file);
+      removals.add(file);
+    } else plan.kept.push(file);
   }
 
   // Final content of each text file, at its final place.
-  const remaining = all.filter((f) => !removals.has(f) || writes.has(target(f)));
+  const remaining = old ? all.filter((f) => !removals.has(f) || writes.has(target(f))) : [];
   for (const f of remaining) {
     const here = removals.has(f) ? target(f) : f;
     if (APART.has(here) || APART.has(f)) continue;
@@ -267,9 +270,11 @@ export async function migrate(root: string, { dryRun = false } = {}): Promise<Mi
     }
   }
 
-  rewriteJson(root, ".drwil/ia-first.json", (o) => migrateConfig(o, replace), plan, writes);
-  rewriteJson(root, ".drwil/state.json", (o) => migrateState(o, replace), plan, writes);
-  if (existsSync(join(root, ".drwil/usage.jsonl"))) {
+  if (old) {
+    rewriteJson(root, ".drwil/ia-first.json", (o) => migrateConfig(o, replace), plan, writes);
+    rewriteJson(root, ".drwil/state.json", (o) => migrateState(o, replace), plan, writes);
+  }
+  if (old && existsSync(join(root, ".drwil/usage.jsonl"))) {
     const before = read(root, ".drwil/usage.jsonl");
     const after = migrateUsage(before);
     if (after !== before) {
@@ -278,8 +283,10 @@ export async function migrate(root: string, { dryRun = false } = {}): Promise<Mi
     }
   }
 
+  migrateRegistries(root, plan, writes);
+
   // A conflict or a kept file stays reported at each run, without running the migration again.
-  const toMigrate = plan.moved.length + plan.removed.length + plan.rewritten.length > 0;
+  const toMigrate = old && plan.moved.length + plan.removed.length + plan.rewritten.length > 0;
   if (toMigrate) {
     // Unchanged mechanics call the hooks under their old names: removed to be written anew.
     for (const rel of Object.keys(manifest)) {
@@ -308,6 +315,26 @@ export async function migrate(root: string, { dryRun = false } = {}): Promise<Mi
   for (const rel of toRemove) await rm(join(root, rel), { force: true });
   await pruneEmptyDirs(root, toRemove);
   return plan;
+}
+
+/**
+ * Check identifiers of 0.5.0, in the contract registries only (a separate step: it neither needs nor
+ * triggers the migration of the old format, which rewrites references in all the prose). Works on
+ * the final content of a registry the step above may have moved.
+ */
+function migrateRegistries(root: string, plan: MigrationPlan, writes: Map<string, string>): void {
+  const configured = readJson(root, ".drwil/ia-first.json")?.dirs as Record<string, unknown> | undefined;
+  const paths = new Set([...(typeof configured?.contracts === "string" ? [configured.contracts] : []), ...REGISTRIES]);
+  const ids = new RegExp(`(?<![\\w-])(${Object.keys(CHECK_IDS).join("|")})(?![\\w-])`, "g");
+  const prefix = new RegExp(`(?<![\\w-])${PROJECT_CHECK_PREFIX[0]}`, "g");
+  for (const rel of paths) {
+    const before = writes.get(rel) ?? (existsSync(join(root, rel)) ? read(root, rel) : null);
+    if (before === null) continue;
+    const after = before.replace(ids, (m) => CHECK_IDS[m]).replace(prefix, PROJECT_CHECK_PREFIX[1]);
+    if (after === before) continue;
+    writes.set(rel, after);
+    if (!plan.rewritten.includes(rel)) plan.rewritten.push(rel);
+  }
 }
 
 const TEXTS = {

@@ -1,9 +1,9 @@
 ---
-name: drwil-lancer
+name: drwil-start
 description: Start a workstream with one human gesture — open a poll of the scoped briefs; the human's answer, read by the tool, moves governance to BUILD. Use when the human wants to start implementing a brief.
 ---
 
-# Start a workstream (`/drwil-lancer`)
+# Start a workstream (`/drwil-start`)
 
 Starting is the human's decision: it is **their answer to the poll**, read by a tool hook
 (`.claude/hooks/prompt-hook.mjs`), that makes the transition — never the agent.
@@ -17,14 +17,14 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    brief yet.
 3. Open **one** poll (Claude Code: `AskUserQuestion`; Copilot CLI: `ask_user`), in that order,
    preceded by a short message citing the P1 intentions "to frame" (never offered for start):
-   - Claude Code: `header` exactly `drwil-lancer`; one option per brief, **label = exact path**
+   - Claude Code: `header` exactly `drwil-start`; one option per brief, **label = exact path**
      (e.g. `docs/projects/<brief>.md`), description = title. At most 4 options, the first of the
      list; a brief that is not ready keeps its place at the end, its description says "not
      ready: N decision(s) to make first"; the human can type another path under "Other".
-   - Claude Code, **second question** of the same poll: `header` exactly `drwil-fusion`,
+   - Claude Code, **second question** of the same poll: `header` exactly `drwil-merge`,
      options "Automatic merge" (the agent will schedule the merge in CLOSING) and "Manual
      merge", with no recommendation: it is the acceptance decision, taken at start.
-   - Copilot CLI: `message` starting with `drwil-lancer :`, choices = exact paths (no second
+   - Copilot CLI: `message` starting with `drwil-start :`, choices = exact paths (no second
      question: manual merge).
    - **Recommend**: the first ready brief, first, with "(Recommended)" and the reason in
      its **description** — never in the label.

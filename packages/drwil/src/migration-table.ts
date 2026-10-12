@@ -117,3 +117,17 @@ export const USAGE_FIELDS: Record<string, string> = {
 
 /** Scope block of the briefs. */
 export const BLOCK = { old: "<!-- cadrage", new: "<!-- scope", oldKey: "fichiers:", newKey: "files:" };
+
+/** Check identifiers cited by the **Check** field of contract registries (0.5.0). A project check
+ * without an `id` was cited as `projet:<name>`, now `project:<name>`. */
+export const CHECK_IDS: Record<string, string> = {
+  "secrets-fichiers": "secrets",
+  "perimetre-attente": "scope-gate",
+  "controles-autotest": "checks-self-test",
+  "couverture-ci": "ci-coverage",
+  "branche-principale": "main-branch",
+};
+export const PROJECT_CHECK_PREFIX: [string, string] = ["projet:", "project:"];
+
+/** Contract registries rewritten by the check identifiers migration (besides `dirs.contracts`). */
+export const REGISTRIES = ["docs/contracts.md", "docs/contracts-catalog.md"];

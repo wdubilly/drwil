@@ -288,7 +288,7 @@ program
 program
   .command("etat")
   .description(
-    "Show the governance state, or act on it: drwil etat move <ACTIVITY> [--fiche <brief>] [--demande <text>] | start [<brief>] | briefs [--json] | reminder",
+    "Show the governance state, or act on it: drwil etat move <ACTIVITY> [--brief <brief>] [--request <text>] | start [<brief>] | briefs [--json] | reminder",
   )
   .argument("[args...]")
   .allowUnknownOption()

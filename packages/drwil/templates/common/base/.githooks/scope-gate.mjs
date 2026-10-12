@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Scope gate (docs/ia-first.md, "Scope gate"), the engine's "perimetre-attente" check
+// Scope gate (docs/ia-first.md, "Scope gate"), the engine's "scope-gate" check
 // (.githooks/engine.mjs): commit, push, CI, `drwil verify`.
 //
 // - Briefs (docs/projects/, docs/intentions/…) can always be committed.
@@ -123,7 +123,7 @@ function checkBranch(root, base, { outOfScope, cfg }) {
  */
 export function checkScope(root, { cfg = {}, staged = null, env = process.env } = {}) {
   const level = LEVELS.has(cfg.scopeGate) ? cfg.scopeGate : "warning";
-  if (level === "off") return { status: "non-applicable", problems: [], detail: "scopeGate: off" };
+  if (level === "off") return { status: "not-applicable", problems: [], detail: "scopeGate: off" };
   const outOfScope = Array.isArray(cfg.outOfScope) ? cfg.outOfScope : OUT_OF_SCOPE;
   let problems;
   if (staged) {
@@ -131,10 +131,10 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
     problems = checkIndex({ files: staged, state, patterns: patternsAt(root, "HEAD", state.active_brief), outOfScope, cfg });
   } else {
     const base = reference(root, env);
-    if (!base) return { status: "non-execute", problems: [], detail: texts(cfg).noReference };
+    if (!base) return { status: "not-run", problems: [], detail: texts(cfg).noReference };
     problems = checkBranch(root, base, { outOfScope, cfg });
   }
-  if (problems.length && level === "blocking") return { status: "echec", problems, message: texts(cfg).failed(problems.length) };
+  if (problems.length && level === "blocking") return { status: "fail", problems, message: texts(cfg).failed(problems.length) };
   return { status: "ok", problems };
 }
 

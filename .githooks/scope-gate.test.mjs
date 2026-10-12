@@ -116,20 +116,20 @@ test("pre-commit : le cadrage est lu dans HEAD, pas dans l'index (élargir = com
   ecrire(racine, FICHE, fiche(["src/a.js", "src/b.js"]));
   ecrire(racine, "src/b.js", "b\n");
   const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: [FICHE, "src/b.js"] });
-  assert.equal(r.status, "echec");
+  assert.equal(r.status, "fail");
   assert.match(r.problems.join("\n"), /src\/b\.js/);
 });
 
 test("pre-commit sans état : SCOPING neutre, un fichier hors fiches est refusé", () => {
   const racine = depot();
   const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/a.js"] });
-  assert.equal(r.status, "echec");
+  assert.equal(r.status, "fail");
   assert.match(r.problems[0], /SCOPING/);
 });
 
 test("sévérité : off ne contrôle rien, avertissement signale sans bloquer", () => {
   const racine = depot();
-  assert.equal(checkScope(racine, { cfg: { scopeGate: "off" }, staged: ["src/a.js"] }).status, "non-applicable");
+  assert.equal(checkScope(racine, { cfg: { scopeGate: "off" }, staged: ["src/a.js"] }).status, "not-applicable");
   const avert = checkScope(racine, { cfg: { scopeGate: "warning" }, staged: ["src/a.js"] });
   assert.equal(avert.status, "ok");
   assert.equal(avert.problems.length, 1);
@@ -177,7 +177,7 @@ test("branche (CI, pre-push, verify) : chaque commit rejoué contre le cadrage d
   git(racine, "commit", "-q", "-m", "fiche seule, sans trailer");
 
   const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } });
-  assert.equal(r.status, "echec");
+  assert.equal(r.status, "fail");
   const texte = r.problems.join("\n");
   assert.equal(r.problems.length, 2, texte);
   assert.match(texte, /src\/b\.js/);
@@ -204,7 +204,7 @@ test("branche : un commit dont le parent n'a pas encore la barrière n'est pas c
 test("branche sans référence : non exécuté, jamais un succès (QUA-013)", () => {
   const racine = depot();
   git(racine, "branch", "-m", "travail");
-  assert.equal(checkScope(racine, { cfg: { scopeGate: "blocking" }, env: {} }).status, "non-execute");
+  assert.equal(checkScope(racine, { cfg: { scopeGate: "blocking" }, env: {} }).status, "not-run");
 });
 
 test("messages en anglais : activité, hors cadrage, commits sans trailer ou hors cadrage, échec", () => {

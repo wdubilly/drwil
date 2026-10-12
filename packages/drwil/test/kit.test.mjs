@@ -605,7 +605,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     questions: [
       {
         question: "Quelle fiche lancer ?",
-        header: "drwil-lancer",
+        header: "drwil-start",
         options: [
           { label: fiche, description: "Essai" },
           { label: "docs/projects/autre.md", description: "Autre" },
@@ -615,7 +615,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     ],
   };
   const copilot = {
-    message: "drwil-lancer : quelle fiche lancer ?",
+    message: "drwil-start : quelle fiche lancer ?",
     requestedSchema: { properties: { choix: { type: "string", enum: [fiche, "docs/projects/autre.md"] } } },
   };
 
@@ -661,11 +661,11 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
   assert.equal(etat().active_brief, fiche);
   assert.equal(etat().auto_merge, undefined, "sans seconde question, la fusion reste manuelle");
 
-  // Seconde question (en-tête drwil-fusion) : seule la réponse humaine autorise la fusion automatique.
+  // Seconde question (en-tête drwil-merge) : seule la réponse humaine autorise la fusion automatique.
   rmSync(join(dir, ".drwil/state.json"));
   const fusion = {
     question: "Fusion à la fin du chantier ?",
-    header: "drwil-fusion",
+    header: "drwil-merge",
     options: [
       { label: "Fusion automatique", description: "…" },
       { label: "Fusion manuelle", description: "…" },
@@ -730,13 +730,13 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
 
   assert.equal(config(dir).transitions, "human");
   // Sans terminal interactif, ouvrir une attente est refusé en mode humain.
-  const refus = drwilEtat("move", "EXPECTATION", "--fiche", fiche);
+  const refus = drwilEtat("move", "EXPECTATION", "--brief", fiche);
   assert.equal(refus.status, 1);
   assert.match(refus.stderr, /terminal interactif/);
   assert.ok(!existsSync(join(dir, ".drwil/state.json")), "état inchangé");
-  // En mode agent, la façade transmet --fiche au module du projet.
+  // En mode agent, la façade transmet --brief au module du projet.
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), transitions: "agent" }));
-  const ok = drwilEtat("move", "EXPECTATION", "--fiche", fiche);
+  const ok = drwilEtat("move", "EXPECTATION", "--brief", fiche);
   assert.equal(ok.status, 0, ok.stderr);
   assert.match(drwilEtat().stdout, /Activité : EXPECTATION/);
 
@@ -1175,7 +1175,7 @@ test("QUA-013 : un job CI qui ne se déclenche plus sur les bons chemins est dé
   );
   const r = spawnSync(process.execPath, [".githooks/check-control-coverage.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 1);
-  assert.match(r.stdout, /secrets-fichiers/);
+  assert.match(r.stdout, /secrets/);
 });
 
 test("ci: none : pas de CI, la couverture QUA-013 est signalée non exécutée (pas d'échec silencieux)", async () => {
@@ -1731,25 +1731,25 @@ test("verify : exit 1 réel via la CLI pour FAIL et pour MANUAL, libellés disti
 });
 
 test("verify : outil indisponible (contrôle non exécuté) → ERROR, jamais PASS", async () => {
-  // Sans CI configurée, `couverture-ci` ne peut pas tourner : la preuve n'est pas établie.
-  const v = await verify({ targetDir: await projetVerify(contrat("QUA-013", "**Contrôle** : `couverture-ci`")) });
+  // Sans CI configurée, `ci-coverage` ne peut pas tourner : la preuve n'est pas établie.
+  const v = await verify({ targetDir: await projetVerify(contrat("QUA-013", "**Contrôle** : `ci-coverage`")) });
   assert.equal(v.status, "ERROR");
   assert.equal(v.code, 2);
-  assert.match(v.contracts[0].reasons.join(), /couverture-ci : non exécuté/);
+  assert.match(v.contracts[0].reasons.join(), /ci-coverage : non exécuté/);
 });
 
 test("verify : contrôle non applicable dans ce contexte → MANUAL, jamais PASS", async () => {
   // En mode minimal, la recherche de secrets est exclue par conception : rien n'est prouvé.
-  const v = await verify({ targetDir: await projetVerify(contrat("SEC-007", "**Contrôle** : `secrets-fichiers`"), { mode: "minimal" }) });
+  const v = await verify({ targetDir: await projetVerify(contrat("SEC-007", "**Contrôle** : `secrets`"), { mode: "minimal" }) });
   assert.equal(v.status, "MANUAL");
   assert.equal(v.code, 1);
-  assert.match(v.contracts[0].reasons.join(), /secrets-fichiers : non applicable ici/);
+  assert.match(v.contracts[0].reasons.join(), /secrets : non applicable ici/);
 });
 
 test("verify : priorité déterministe du verdict global FAIL > ERROR > MANUAL > PASS", async () => {
   const ok = contrat("QUA-001", "**Contrôle** : `ok`");
   const manuel = contrat("QUA-002", "**Manuel** : relecture");
-  const erreur = contrat("QUA-003", "**Contrôle** : `couverture-ci`");
+  const erreur = contrat("QUA-003", "**Contrôle** : `ci-coverage`");
   const echec = contrat("QUA-004", "**Contrôle** : `ko`");
   const cas = [
     [ok, "PASS", 0],
@@ -1805,7 +1805,7 @@ test("DRWIL-004 : verify --json, format stable, rien d'autre sur stdout, mêmes 
       ["QUA-003", "fail"],
     ],
   );
-  assert.equal(j.results[2].checks[0].status, "echec");
+  assert.equal(j.results[2].checks[0].status, "fail");
   assert.doesNotMatch(r.stdout, /cause du rouge/, "la sortie brute des contrôles n'est pas exposée");
   const manuel = cli(await projetVerify(contrat("QUA-001", "**Manuel** : relecture")), "verify", "--json");
   assert.equal(manuel.status, 1);
@@ -1834,7 +1834,7 @@ test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; con
   assert.equal(cli(tmp(), "doctor").status, 2);
   const c = cli(dir, "contracts", "--json");
   assert.equal(c.status, 0, c.stdout);
-  assert.ok(JSON.parse(c.stdout).contracts.some((k) => k.id === "SEC-007" && k.checks.includes("secrets-fichiers")));
+  assert.ok(JSON.parse(c.stdout).contracts.some((k) => k.id === "SEC-007" && k.checks.includes("secrets")));
 });
 
 test("DRWIL-011 : apply audite et prévisualise sans rien écrire ; l'aperçu correspond exactement à l'installation", async () => {
@@ -1899,7 +1899,7 @@ test("DRWIL-013 : verify --evidence enregistre verdict, horodatage, commit et r�
   assert.match(e.verifiedAt, /^\d{4}-\d{2}-\d{2}T/);
   assert.match(e.commit, /^[0-9a-f]{40}$/);
   assert.equal(e.evidence.find((k) => k.id === "QUA-001").checks[0].summary, "ok");
-  assert.match(e.evidence.find((k) => k.id === "QUA-002").checks[0].summary, /\[CAVIARDÉ\]/);
+  assert.match(e.evidence.find((k) => k.id === "QUA-002").checks[0].summary, /\[REDACTED\]/);
   assert.doesNotMatch(brut, /hunter2|ghp_abcdef/, "aucun secret dans l'évidence (SEC-007)");
   assert.match(read(dir, ".gitignore"), /\.drwil\/evidence\//);
 });
@@ -1918,9 +1918,9 @@ test("DRWIL-020 : seuls les contrats bloquants décident du verdict ; avertissem
   assert.deepEqual(
     v.contracts.map((k) => [k.status, k.severity]),
     [
-      ["PASS", "bloquant"],
-      ["FAIL", "avertissement"],
-      ["MANUAL", "indicatif"],
+      ["PASS", "blocking"],
+      ["FAIL", "warning"],
+      ["MANUAL", "advisory"],
     ],
   );
   assert.match(formatVerdict(v), /1 avertissement\(s\) non satisfait\(s\), 1 indicatif\(s\) non satisfait\(s\)/);
@@ -2092,7 +2092,7 @@ test("attest : aucun contournement (CLI sans terminal, attestation forgée, éch
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
   v = await verify({ targetDir: dir });
   assert.equal(v.contracts[0].status, "FAIL", "une attestation ne masque jamais un contrôle en échec");
-  const minimal = await projetVerify(contrat("SEC-007", "**Contrôle** : `secrets-fichiers`\n**Manuel** : relecture"), { mode: "minimal" });
+  const minimal = await projetVerify(contrat("SEC-007", "**Contrôle** : `secrets`\n**Manuel** : relecture"), { mode: "minimal" });
   const r = await attest({ targetDir: minimal, id: "SEC-007", confirm: oui });
   assert.equal(r.code, 1, "un contrôle non applicable ne se remplace pas par une attestation");
 });
@@ -2109,7 +2109,7 @@ test("attest : aucune donnée sensible dans l'attestation (note caviardée, pas 
   assert.equal(r.code, 0);
   const brut = read(dir, r.file);
   assert.doesNotMatch(brut, /hunter2|ghp_abcdef|testeuse@exemple/);
-  assert.match(JSON.parse(brut).note, /\[CAVIARDÉ\]/);
+  assert.match(JSON.parse(brut).note, /\[REDACTED\]/);
   assert.ok(JSON.parse(brut).note.length <= 500);
 });
 

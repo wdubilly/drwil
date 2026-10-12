@@ -11,7 +11,7 @@ const LABELS: Record<Status, string> = {
   ERROR: "GOVERNANCE: VERIFY ERROR",
 };
 const SYMBOLS: Record<Status, string> = { PASS: "✓", ATTESTED: "◆", FAIL: "✗", MANUAL: "?", ERROR: "!" };
-const SEVERITY_EN: Record<Severity, string> = { bloquant: "blocking", avertissement: "warning", indicatif: "advisory" };
+const SEVERITY_FR: Record<Severity, string> = { blocking: "bloquant", warning: "avertissement", advisory: "indicatif" };
 
 const TEXTS = {
   fr: {
@@ -22,7 +22,7 @@ const TEXTS = {
     attestable: "Attestables par un humain (`drwil attest <ID>`) : {0}",
     severities:
       "dont {0} bloquant(s) ({1} satisfait(s)), {2} avertissement(s) non satisfait(s), {3} indicatif(s) non satisfait(s) — seuls les bloquants décident du verdict",
-    severity: (s: Severity) => s,
+    severity: (s: Severity) => SEVERITY_FR[s],
   },
   en: {
     contracts: "Contracts",
@@ -32,7 +32,7 @@ const TEXTS = {
     attestable: "Attestable by a human (`drwil attest <ID>`): {0}",
     severities:
       "including {0} blocking ({1} satisfied), {2} warning(s) not satisfied, {3} advisory not satisfied — only blocking contracts decide the verdict",
-    severity: (s: Severity) => SEVERITY_EN[s],
+    severity: (s: Severity) => s,
   },
 };
 
@@ -44,7 +44,7 @@ export function formatVerdict(v: Verdict): string {
     lines.push(T.contracts);
     for (const k of v.contracts) {
       lines.push(
-        `  ${SYMBOLS[k.status]} ${k.status.padEnd(6)} ${k.id.padEnd(8)} ${k.title}${k.severity === "bloquant" ? "" : ` [${T.severity(k.severity)}]`}`,
+        `  ${SYMBOLS[k.status]} ${k.status.padEnd(6)} ${k.id.padEnd(8)} ${k.title}${k.severity === "blocking" ? "" : ` [${T.severity(k.severity)}]`}`,
       );
       for (const r of k.reasons) lines.push(`             ${r}`);
     }
@@ -55,11 +55,11 @@ export function formatVerdict(v: Verdict): string {
   const count = (s: Status) => v.contracts.filter((k) => k.status === s).length;
   if (v.contracts.length)
     lines.push(fill(T.counts, v.contracts.length, count("PASS"), count("ATTESTED"), count("FAIL"), count("MANUAL"), count("ERROR")));
-  const attested = v.contracts.filter((k) => k.status === "ATTESTED" && k.severity === "bloquant").length;
+  const attested = v.contracts.filter((k) => k.status === "ATTESTED" && k.severity === "blocking").length;
   if (v.status === "PASS" && attested) lines.push(fill(T.attested, attested));
   const toAttest = v.contracts.filter((k) => k.attestable).map((k) => k.id);
   if (toAttest.length) lines.push(fill(T.attestable, toAttest.join(", ")));
-  const blocking = v.contracts.filter((k) => k.severity === "bloquant");
+  const blocking = v.contracts.filter((k) => k.severity === "blocking");
   const notSatisfied = (s: Severity) =>
     v.contracts.filter((k) => k.severity === s && k.status !== "PASS" && k.status !== "ATTESTED").length;
   if (blocking.length !== v.contracts.length)
@@ -68,8 +68,8 @@ export function formatVerdict(v: Verdict): string {
         T.severities,
         blocking.length,
         blocking.filter((k) => k.status === "PASS" || k.status === "ATTESTED").length,
-        notSatisfied("avertissement"),
-        notSatisfied("indicatif"),
+        notSatisfied("warning"),
+        notSatisfied("advisory"),
       ),
     );
   lines.push("", LABELS[v.status]);
@@ -96,10 +96,10 @@ export function verdictJson(v: Verdict) {
       attested: count("ATTESTED"),
     },
     bySeverity: Object.fromEntries(
-      (Object.entries(SEVERITY_EN) as [Severity, string][]).map(([internal, en]) => {
-        const ks = v.contracts.filter((k) => k.severity === internal);
+      (["blocking", "warning", "advisory"] as Severity[]).map((severity) => {
+        const ks = v.contracts.filter((k) => k.severity === severity);
         return [
-          en,
+          severity,
           {
             total: ks.length,
             passed: ks.filter((k) => k.status === "PASS").length,
@@ -112,7 +112,7 @@ export function verdictJson(v: Verdict) {
       id: k.id,
       title: k.title,
       status: k.status.toLowerCase(),
-      severity: SEVERITY_EN[k.severity],
+      severity: k.severity,
       checks: k.checks.map(({ id, status, detail, message }) => ({
         id,
         status,

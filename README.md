@@ -320,7 +320,7 @@ A project can declare a contract:
 Aucun secret ne doit être commité dans le dépôt.
 
 **Contrôle:**
-secrets-fichiers
+secrets
 ```
 
 The contract states the obligation.

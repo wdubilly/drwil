@@ -46,11 +46,11 @@ function stagedFiles() {
 const failures = [];
 const notRun = [];
 const announce = (name) => console.log(`[ia-first] ${name}…`);
-// "non-applicable" (excluded by design: minimal mode, QUA-017 in CI…) is not shown, as before.
+// "not-applicable" (excluded by design: minimal mode, QUA-017 in CI…) is not shown, as before.
 for (const c of checks(root, { cfg, staged: stagedFiles() })) {
   const r = c.run({ beforeRun: announce });
-  if (r.status === "echec") failures.push(r.message ?? c.name);
-  else if (r.status === "non-execute") notRun.push(`${c.name} (${r.detail})`);
+  if (r.status === "fail") failures.push(r.message ?? c.name);
+  else if (r.status === "not-run") notRun.push(`${c.name} (${r.detail})`);
 }
 if (!Array.isArray(cfg.checks) || !cfg.checks.length) notRun.push(`${T.project} (${T.noCheck})`);
 

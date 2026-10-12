@@ -32,7 +32,7 @@ Carte complète : `docs/architecture.md`.
   fichier si l'activité a pu changer, jamais le déduire de la conversation
   (un outil qui le permet injecte un rappel court quand l'état change). Ne jamais écrire `.drwil/state.json` (si présent) à la main :
   changer d'activité passe par `node .githooks/state.mjs move <ACTIVITE>` ;
-  lancer un chantier reste une décision humaine (`/drwil-lancer` : sondage
+  lancer un chantier reste une décision humaine (`/drwil-start` : sondage
   dont l'humain choisit la réponse ; ou `node .githooks/state.mjs start`
   dans un terminal ; réglage `transitions` de `.drwil/ia-first.json`) ;
   clore est libre une fois l'évidence de `drwil verify` valide.

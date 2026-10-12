@@ -262,3 +262,20 @@ test("projet au nouveau format : les anciens noms cités dans sa prose ne sont j
   assert.deepEqual(plan, { moved: [], removed: [], kept: [], conflicts: [], rewritten: [] });
   assert.equal(lire(r, "CHANGELOG.md"), note);
 });
+
+test("registres : anciens identifiants de contrôles réécrits, rien d'autre ; rejouer ne change rien", async () => {
+  const r = mkdtempSync(join(tmpdir(), "drwil-migration-"));
+  dossiers.push(r);
+  const registre = "## QUA-001 — x\n\n**Règle** : r\n**Contrôle** : `perimetre-attente`, `projet:npm test`, `branche-principale`\n";
+  const note = "Ancien identifiant cité dans la prose : `perimetre-attente`.\n";
+  ecrire(r, "docs/contracts.md", registre);
+  ecrire(r, "docs/registre.md", registre);
+  ecrire(r, "CHANGELOG.md", note);
+  ecrire(r, ".drwil/ia-first.json", JSON.stringify({ scopeGate: "blocking", dirs: { contracts: "docs/registre.md" } }));
+  const plan = await migrate(r);
+  assert.deepEqual(plan.rewritten.sort(), ["docs/contracts.md", "docs/registre.md"]);
+  for (const f of ["docs/contracts.md", "docs/registre.md"])
+    assert.equal(lire(r, f), "## QUA-001 — x\n\n**Règle** : r\n**Contrôle** : `scope-gate`, `project:npm test`, `main-branch`\n");
+  assert.equal(lire(r, "CHANGELOG.md"), note, "la prose hors registres n'est jamais touchée");
+  assert.deepEqual(await migrate(r), { moved: [], removed: [], kept: [], conflicts: [], rewritten: [] });
+});

@@ -46,7 +46,7 @@ Full map and stack: `docs/architecture.md`.
   allows it injects a short reminder when the state changes). Never
   write `.drwil/state.json` (if present) by hand: change activity with
   `node .githooks/state.mjs move <ACTIVITE>`; starting a workstream
-  remains a human decision (`/drwil-lancer`: a poll whose answer the human
+  remains a human decision (`/drwil-start`: a poll whose answer the human
   chooses; or `node .githooks/state.mjs start` in a terminal; `transitions`
   setting in `.drwil/ia-first.json`); closing is free once the `drwil
   verify` evidence is valid. A commit outside the active brief's

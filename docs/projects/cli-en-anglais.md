@@ -1,6 +1,6 @@
 # Projet : la CLI en anglais (chantier C du livrable en anglais)
 
-**Statut** : en cours (2026-10-12) — lot 1 fait, lot 2 à faire.
+**Statut** : en cours (2026-10-12) — lots 1 et 2 faits, lot 3 à faire.
 **Risque** : HIGH
 
 <!-- scope
@@ -169,5 +169,15 @@ Aucun.
   inchangée (clés hachées gardées). Trouvé en route : `doctor` cherchait le
   manifeste sous son ancien nom et avertissait à tort (corrigé) ; la carte
   `docs/architecture.md` décrivait encore un gabarit par langue (corrigé).
+- **Lot 2** (2026-10-12) : identifiants de contrôles (`secrets`,
+  `scope-gate`, `checks-self-test`, `ci-coverage`, `main-branch`, préfixe
+  `project:`), statuts du moteur (`fail`, `not-run`, `not-applicable`),
+  sévérités internes (`blocking`, `warning`, `advisory` ; le registre lit
+  toujours les deux langues), marqueur `[REDACTED]`, options `--brief` /
+  `--request`, mots tapés `START` / `MERGE`, sondage et skill `/drwil-start`.
+  Migration des registres : étape à part, qui ne réécrit que le registre et
+  le catalogue. Registre de ce dépôt migré ; QUA-013 (contrôle non exécuté
+  jamais vert) est à ré-attester (son texte cite les identifiants).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 2, valeurs laissées par A et migration.
+- **Prochaine étape** : [IA] lot 3, commandes ; [humain] ré-attester QUA-013
+  avant la clôture.

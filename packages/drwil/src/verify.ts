@@ -22,14 +22,14 @@ export type Status = "PASS" | "ATTESTED" | "FAIL" | "MANUAL" | "ERROR";
 
 export interface CheckResult {
   id: string;
-  /** Raw result of the engine: ok | echec | non-execute | non-applicable | unknown. */
+  /** Raw result of the engine: ok | fail | not-run | not-applicable | unknown. */
   status: string;
   detail?: string;
   message?: string;
   output?: string;
 }
 
-export type Severity = "bloquant" | "avertissement" | "indicatif";
+export type Severity = "blocking" | "warning" | "advisory";
 
 export interface ContractResult {
   id: string;
@@ -232,7 +232,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     const checks = ((k.checks ?? []) as string[]).filter((id) => available.has(id)).map(run);
     for (const r of checks) {
       if (r.status === "ok") reasons.push(fill(T.ok, r.id));
-      else if (r.status === "echec") {
+      else if (r.status === "fail") {
         statuses.push("FAIL");
         reasons.push(fill(T.failed, r.id, r.message ? ` — ${r.message}` : ""));
         // The last lines of the output say why, without drowning the verdict.
@@ -242,10 +242,10 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
           .filter(Boolean)
           .slice(-3);
         for (const l of tail) reasons.push(`  │ ${l}`);
-      } else if (r.status === "non-execute") {
+      } else if (r.status === "not-run") {
         statuses.push("ERROR");
         reasons.push(fill(T.notRun, r.id, r.detail));
-      } else if (r.status === "non-applicable") {
+      } else if (r.status === "not-applicable") {
         statuses.push("MANUAL");
         reasons.push(fill(T.notApplicable, r.id, r.detail));
       }
@@ -290,7 +290,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
       attestation,
       attestable: attestable && !attestation,
       fingerprint: current,
-      severity: (k.severity ?? "bloquant") as Severity,
+      severity: (k.severity ?? "blocking") as Severity,
       checks,
       manual: k.manual,
       reasons,
@@ -302,7 +302,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const unattached = [...available.keys()].filter((id) => !cited.has(id));
   // Gate: blocking contracts only; a malformed registry stays an ERROR whatever the severity of the
   // contract concerned (the configuration itself is not reliable).
-  const deciding = results.filter((r) => r.severity === "bloquant").map((r) => r.status);
+  const deciding = results.filter((r) => r.severity === "blocking").map((r) => r.status);
   const configKo = results.some((r) => r.invalidConfig) || errors.length > 0;
   const status = worst([...deciding, ...(configKo ? (["ERROR"] as Status[]) : [])]);
   for (const r of results) delete r.invalidConfig;
@@ -325,7 +325,7 @@ const SECRET_PATTERNS: RegExp[] = [
 export function redact(text: string): string {
   let t = text;
   for (const re of SECRET_PATTERNS)
-    t = t.replace(re, (m, prefix) => (typeof prefix === "string" && m.startsWith(prefix) ? `${prefix}[CAVIARDÉ]` : "[CAVIARDÉ]"));
+    t = t.replace(re, (m, prefix) => (typeof prefix === "string" && m.startsWith(prefix) ? `${prefix}[REDACTED]` : "[REDACTED]"));
   return t;
 }
 

@@ -224,18 +224,18 @@ test("préparer : ouvrir une attente exige une fiche existante", () => {
     active_request: null,
     since: MAINTENANT,
   });
-  assert.match(prepareTransition(neutre(), "EXPECTATION", { now: MAINTENANT }, racine).error, /--fiche/);
+  assert.match(prepareTransition(neutre(), "EXPECTATION", { now: MAINTENANT }, racine).error, /--brief/);
   assert.match(
     prepareTransition(neutre(), "EXPECTATION", { brief: "docs/projects/absente.md", now: MAINTENANT }, racine).error,
     /introuvable/,
   );
 });
 
-test("préparer : transition interdite refusée, --fiche réservé à l'ouverture, abandon vers le neutre", () => {
+test("préparer : transition interdite refusée, --brief réservé à l'ouverture, abandon vers le neutre", () => {
   const racine = depot();
   assert.match(prepareTransition(neutre(), "BUILD", { now: MAINTENANT }, racine).error, /SCOPING → BUILD.*interdite/);
   const enCours = { state: actif("BUILD"), source: "file", problems: [] };
-  assert.match(prepareTransition(enCours, "EVIDENCE", { brief: FICHE, now: MAINTENANT }, racine).error, /--fiche/);
+  assert.match(prepareTransition(enCours, "EVIDENCE", { brief: FICHE, now: MAINTENANT }, racine).error, /--brief/);
   const suite = prepareTransition(enCours, "EVIDENCE", { request: "Lot 2", now: MAINTENANT }, racine).state;
   assert.equal(suite.active_brief, FICHE, "l'attente suit");
   assert.equal(suite.active_request, "Lot 2");
@@ -709,19 +709,19 @@ test("principal fiches : liste lisible, JSON, ou aucune fiche", async () => {
   assert.match(r.sortie, /^\(aucune fiche cadrée/);
 });
 
-test("principal lancer sans terminal : refusé en mode humain, lancé en mode agent (avec --demande)", async () => {
+test("principal lancer sans terminal : refusé en mode humain, lancé en mode agent (avec --request)", async () => {
   const humain = depotCadre().racine;
   let r = await capturer(() => main(["start", FICHE], humain));
   assert.equal(r.code, 1);
   assert.match(r.erreurs, /^✗ lancement refusé : c'est une décision humaine/);
   const agent = depotCadre({ transitions: "agent" }).racine;
-  r = await capturer(() => main(["start", FICHE, "--demande", "faire X"], agent));
+  r = await capturer(() => main(["start", FICHE, "--request", "faire X"], agent));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(r.sortie, /^✓ SCOPING → BUILD \(lancé : docs\/projects\/exemple\.md\)\n\n\[drwil\] État de gouvernance/);
   assert.equal(readState(agent).state.active_request, "faire X");
-  // --demande sans valeur : ignoré.
+  // --request sans valeur : ignoré.
   const autre = depotCadre({ transitions: "agent" }).racine;
-  await capturer(() => main(["start", FICHE, "--demande"], autre));
+  await capturer(() => main(["start", FICHE, "--request"], autre));
   assert.equal(readState(autre).state.active_request, null);
 });
 
@@ -733,7 +733,7 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   );
   git("add", "-A");
   git("commit", "-qm", "bloquee");
-  const r = await avecTerminal(["1", "LANCER", "FUSION"], () => capturer(() => main(["start"], racine)));
+  const r = await avecTerminal(["1", "START", "MERGE"], () => capturer(() => main(["start"], racine)));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(
     r.sortie,
@@ -751,7 +751,7 @@ test("principal lancer au terminal : sans confirmation exacte ou numéro inconnu
   r = await avecTerminal(["9"], () => capturer(() => main(["start"], racine)));
   assert.equal(r.code, 1);
   assert.equal(r.invites.length, 1);
-  r = await avecTerminal(["LANCER", ""], () => capturer(() => main(["start", FICHE], racine)));
+  r = await avecTerminal(["START", ""], () => capturer(() => main(["start", FICHE], racine)));
   assert.equal(r.code, 0, r.erreurs);
   assert.equal(readState(racine).state.auto_merge, undefined);
 });
@@ -784,19 +784,19 @@ test("principal lecture : contexte ou JSON", async () => {
 
 test("principal passer : usage sans activité, transition écrite ou refusée, confirmation au terminal", async () => {
   const racine = depot({ config: { transitions: "agent" } });
-  for (const args of [["move"], ["move", "--fiche"]]) {
+  for (const args of [["move"], ["move", "--brief"]]) {
     const r = await capturer(() => main(args, racine));
     assert.equal(r.code, 2);
     assert.match(r.erreurs, /^usage : node \.githooks\/state\.mjs move </);
   }
-  let r = await capturer(() => main(["move", "EXPECTATION", "--fiche", FICHE, "--demande", "d"], racine));
+  let r = await capturer(() => main(["move", "EXPECTATION", "--brief", FICHE, "--request", "d"], racine));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(r.sortie, /^✓ /);
   r = await capturer(() => main(["move", "CLOSING"], racine));
   assert.equal(r.code, 1);
   assert.match(r.erreurs, /^✗ /);
   const humain = depot();
-  r = await avecTerminal(["EXPECTATION"], () => capturer(() => main(["move", "EXPECTATION", "--fiche", FICHE], humain)));
+  r = await avecTerminal(["EXPECTATION"], () => capturer(() => main(["move", "EXPECTATION", "--brief", FICHE], humain)));
   assert.equal(r.code, 0, r.erreurs);
   assert.equal(readState(humain).state.activity, "EXPECTATION");
 });
