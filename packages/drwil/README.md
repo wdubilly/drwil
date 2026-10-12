@@ -2,6 +2,10 @@
 
 **IA-first governance, scaffolded in one command and enforced on every commit.**
 
+drwil stands for **D**eterministic **R**ules for **W**orkflows, **I**ntent &
+**L**ineage: rules a machine checks, a workflow with human gates, and a
+traceable line from the intent to the work and its proof.
+
 drwil is a CLI and template kit that installs a verified, machine-checked
 governance layer into any software project — new or existing, any stack,
 any OS. It exists for one reason: when an AI coding assistant (or a human)

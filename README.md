@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  DRWIL = <strong>D</strong>eterministic <strong>R</strong>ules for <strong>W</strong>orkflows, <strong>I</strong>ntent &amp; <strong>L</strong>ineage
+</p>
+
+<p align="center">
   <a href="https://github.com/wdubilly/drwil">GitHub</a>
   ·
   <a href="https://github.com/wdubilly/drwil/issues">Issues</a>
