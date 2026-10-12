@@ -146,10 +146,6 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 - [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.
-- [ ] [IA] [P1] README de l'outil à jour, racine et paquet (gain,
-  installation, concept, commandes, cycle de gouvernance), embarqué par la prochaine
-  release — décidé le 2026-10-12, report levé (v1:DOC-001, v1:DOC-003) —
-  `docs/projects/readme-a-jour.md`.
 - [ ] [IA] [P2] Prochaine release : signaler dans la note de version que
   `paths` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
   qui tourne au commit — voir `docs/projects/journal.md` (2026-10-05).
