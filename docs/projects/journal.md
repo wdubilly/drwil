@@ -798,3 +798,43 @@ l'index ; texte intégral dans l'historique git
   l'ancien gabarit français tolérés par le contrôle des miroirs.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/gabarit-unique-anglais`).
+
+## 2026-10-12 — Le cœur en anglais (chantier A du livrable en anglais)
+
+- **Besoin** : le gabarit était en anglais, mais tout ce que lisent les
+  hooks restait en français (activités, état, config, bloc `cadrage`,
+  trailer, noms des hooks, sous-commandes) ; le code commun aussi.
+- **Décisions clés** : migration en une fois, sans alias, par `init` /
+  `apply` ; valeurs de config en anglais ; tests et `outils/` du dépôt ne
+  suivent que les renommages ; une seule PR, lot 3 compris ; bascule en
+  deux commits (bloc `scope` ajouté à côté de l'ancien, puis bascule) pour
+  passer la barrière sans contournement ; statuts du moteur, identifiants
+  de contrôles et sévérités gardés pour C, car visibles hors des hooks.
+  [décisions utilisateur]
+- **Résultat** : version 0.4.0 (`packages/drwil/CHANGELOG.md`). Module de
+  migration (`packages/drwil/src/migration-table.ts`, seule source des
+  anciens noms) branché sur `init`, `apply` et `apply --dry-run`,
+  idempotent, jamais appliqué à un projet sans signe de l'ancien format ;
+  hooks, hooks Claude Code, modules, activités (`SCOPING`…`CLOSING`), état,
+  config, bloc `scope`, trailer `Drwil-Brief` et sous-commandes `move` /
+  `start` / `briefs` / `reminder` en anglais ; code commun en anglais,
+  messages en dictionnaire fr/en ; la CLI garde son modèle derrière un
+  pont dans `packages/drwil/src/verify.ts` ; préfixe de branche `workstream/` ; intitulés
+  d'intention acceptés dans les deux langues. Ce dépôt migré par
+  `npm run installer-depot`, qui migre avant d'installer.
+- **Trouvé en route** : la migration réécrivait un binaire sous
+  `.githooks/` (cache Python) et, faute de détection de l'ancien format,
+  les anciens noms cités dans la prose à chaque `init` / `apply` ; des
+  commentaires de hooks citant d'anciens chemins la relançaient sur un
+  projet neuf — tout corrigé, avec tests. Une règle de refus des réglages
+  Claude Code (`Bash(*saisie-drwil*)`) empêchait l'agent de supprimer
+  l'ancien hook : suppression faite par le demandeur.
+- **Laissé au chantier C** : identifiants de contrôles (`perimetre-attente`…),
+  statuts du moteur (`echec`, `non-execute`) et sévérités (`bloquant`…)
+  visibles par `drwil verify` ; modèle interne et messages de la CLI
+  (`drwil etat`…) ; options `--fiche` / `--demande`, mots tapés `LANCER` /
+  `FUSION`, skill `/drwil-lancer`. Hors chantier : tolérances de noms
+  français des modèles (modele-*, entretien-courant.md) dans les hooks,
+  directive `contraste-fond:` du module front-quality.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/coeur-en-anglais`).

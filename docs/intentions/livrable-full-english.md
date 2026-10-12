@@ -98,8 +98,8 @@ convention de langue des commits proposée aux projets.
     anglaise alignée sur le glossaire, `lang` devient la langue du projet,
     le dépôt s'installe en anglais — fait, journal du 2026-10-12 ;
   - **A — cœur** : hooks, état, config, blocs et trailer renommés
-    ensemble, migration des projets équipés par `init` / `apply` —
-    `docs/projects/coeur-en-anglais.md` ;
+    ensemble, migration des projets équipés par `init` / `apply` — fait,
+    journal du 2026-10-12 ;
   - **C — CLI** : messages, sous-commandes, commande unique `init` /
     `apply`, retrait de `DRWIL-012`.
   B passe avant A (décidé le 2026-10-12) : renommer les hooks d'abord
