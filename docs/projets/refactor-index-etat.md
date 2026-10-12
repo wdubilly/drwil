@@ -19,7 +19,13 @@ fichiers:
   - docs/architecture.md
   - docs/contrats.md
   - docs/catalogue-contrats.md
+  - packages/drwil/templates/fr/base/docs/projets/mecanique-ia-first.md
+  - packages/drwil/templates/en/base/docs/projects/kit-mechanics.md
 -->
+
+(élargi le 2026-10-12 aux deux fiches de référence du gabarit : leur bloc
+cadrage couvre les hooks livrés dans les projets équipés, les nouveaux
+fichiers d'`.githooks/etat.mjs` doivent y figurer.)
 
 ## 1. Besoin
 
