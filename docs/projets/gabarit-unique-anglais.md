@@ -1,6 +1,6 @@
 # Projet : un seul gabarit, en anglais (chantier B du livrable en anglais)
 
-**Statut** : cadré le 2026-10-12 — décisions prises, lot 1 à lancer.
+**Statut** : en cours — lot 1 fait le 2026-10-12.
 **Risque** : HIGH
 
 <!-- cadrage
@@ -137,8 +137,22 @@ Aucun.
   Critère de sortie : `node .githooks/run-checks.mjs` vert, `drwil verify`
   PASS, `miroirs-gabarit` sans nouvel écart de langue.
 
-## 7. Reprise
+## 7. Inventaire (lot 1, 2026-10-12)
 
-- **Dernier état** (2026-10-12) : fiche cadrée, rien de réalisé.
+- **Correspondance** : un pour un, 58 fichiers de chaque côté (ex.
+  recettes/travailler-en-branche → recipes/working-with-branches, skill
+  lancer-un-chantier → start-a-chantier).
+- **Historique** : aucun commit n'a touché un fichier français sans son
+  équivalent anglais.
+- **Contenu** : 6 fichiers anglais étaient des squelettes de 3 à 7 lignes
+  face à une version française complète — README des intentions (sans le
+  modèle de fiche que vérifie QUA-015), les trois fiches de couche,
+  recettes « déployer en production » et « refactorer sans casser ».
+  Traduits selon le glossaire. Les 52 autres ont la même structure (titres,
+  puces, blocs de code, variables).
+
+## 8. Reprise
+
+- **Dernier état** (2026-10-12) : lot 1 fait (inventaire ci-dessus).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancement par `/drwil-lancer`.
+- **Prochaine étape** : lot 2, prose au glossaire.
