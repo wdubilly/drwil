@@ -98,7 +98,8 @@ convention de langue des commits proposée aux projets.
     anglaise alignée sur le glossaire, `lang` devient la langue du projet,
     le dépôt s'installe en anglais — fait, journal du 2026-10-12 ;
   - **A — cœur** : hooks, état, config, blocs et trailer renommés
-    ensemble, migration des projets équipés par `init` / `apply` ;
+    ensemble, migration des projets équipés par `init` / `apply` —
+    `docs/projects/coeur-en-anglais.md` ;
   - **C — CLI** : messages, sous-commandes, commande unique `init` /
     `apply`, retrait de `DRWIL-012`.
   B passe avant A (décidé le 2026-10-12) : renommer les hooks d'abord
@@ -118,7 +119,7 @@ convention de langue des commits proposée aux projets.
 | intention | intent |
 | recette | recipe |
 | contrat, catalogue | contract, catalog |
-| index en-attente.md | backlog.md |
+| index en-attente.md | pending.md (décidé le 2026-10-12, nom livré par B) |
 | journal | journal |
 | activités | CADRAGE → SCOPING, ATTENTE → EXPECTATION, DEMANDE → REQUEST, REALISATION → BUILD, PREUVES → EVIDENCE, VERIFY, CLOTURE → CLOSING |
 | état | `attente_active` → `active_brief`, `demande_active` → `active_request`, `fusion_autorisee` → `auto_merge` ; trailer `Drwil-Attente` → `Drwil-Brief` |
