@@ -96,7 +96,7 @@ convention de langue des commits proposée aux projets.
   une PR chacun, dépôt vert à chaque étape, dans cet ordre :
   - **B — gabarit unique en anglais** : `templates/fr/` supprimé, prose
     anglaise alignée sur le glossaire, `lang` devient la langue du projet,
-    le dépôt s'installe en anglais — `docs/projets/gabarit-unique-anglais.md` ;
+    le dépôt s'installe en anglais — fait, journal du 2026-10-12 ;
   - **A — cœur** : hooks, état, config, blocs et trailer renommés
     ensemble, migration des projets équipés par `init` / `apply` ;
   - **C — CLI** : messages, sous-commandes, commande unique `init` /

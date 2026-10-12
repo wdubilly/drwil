@@ -92,12 +92,10 @@ d'`init` et `apply`, avant le refactor qui touche le même code.
 Fait : duplication dépôt / gabarit supprimée, le dépôt s'installe depuis
 son gabarit (`npm run installer-depot`) ; `init` et `apply` gardent les
 réglages d'un projet déjà installé (v1:INI-005, v1:INI-010) ; index.ts,
-etat.mjs et verify.ts découpés, plafond de 400 lignes adopté (QUA-001) —
-journal du 2026-10-12.
-
-- [ ] [IA] [P1] Livrable en anglais, chantier B : un seul gabarit, en
-  anglais ; `lang` devient la langue du projet ; ce dépôt s'installe en
-  anglais — `docs/projets/gabarit-unique-anglais.md`.
+etat.mjs et verify.ts découpés, plafond de 400 lignes adopté (QUA-001) ;
+livrable en anglais, chantier B : un seul gabarit, en anglais, `lang`
+devient la langue du projet, ce dépôt s'installe en anglais — journal du
+2026-10-12.
 - [ ] [IA] [P1] Livrable en anglais, chantier A : hooks, état, config,
   bloc et trailer renommés selon le glossaire, migration des projets
   équipés par `init` / `apply` — à cadrer après B,

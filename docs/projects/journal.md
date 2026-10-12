@@ -765,3 +765,36 @@ l'index ; texte intégral dans l'historique git
   séparé.
 - **Clôturé par** : la PR de ce chantier (branche
   `chantier/refactor-index-etat`).
+
+## 2026-10-12 — Un seul gabarit, en anglais (chantier B du livrable en anglais)
+
+- **Besoin** : le gabarit existait en double (`fr/` et `en/`, 58 fichiers
+  chacun), chaque changement s'y faisait deux fois, et l'anglais employait
+  encore des termes français.
+- **Décisions clés** : le français quitte le livrable ; glossaire de
+  l'intention (fiche → brief, chantier → workstream, lot → increment,
+  cadrage → scoping dans la prose) ; B avant A ; `lang` devient la langue
+  du projet, anglais par défaut ; ce dépôt s'installe en anglais et renomme
+  ses dossiers de projet (`docs/projects/`, `docs/contracts.md`,
+  `docs/contracts-catalog.md`, `docs/projects/pending.md`), leur contenu
+  restant en français. [décisions utilisateur]
+- **Résultat** : six squelettes anglais complétés depuis le français ;
+  prose alignée sur le glossaire ; `templates/fr/` supprimé, l'anglais
+  versé dans `templates/common/`, la CLI ne choisit plus de gabarit par
+  langue ; le `AGENTS.md` livré demande à l'agent de répondre et d'écrire
+  dans la langue du projet. Recettes, skills et `docs/ia-first.md` du
+  dépôt installés en anglais ; les commandes des skills prennent leur nom
+  anglais (`/drwil-adopt`, `/drwil-value`, `/drwil-progress`,
+  `/drwil-usage`), `/drwil-lancer` inchangé (chantier C).
+- **Trouvé en route** : le tableau de bord choisissait le catalogue par
+  langue (corrigé : le fichier présent) ; l'installeur créait les fichiers
+  déclarés propres au gabarit (corrigé, avec test) ; le modèle de fiche
+  anglais intitulait sa passation « Resuming work », que QUA-015 (fiches
+  et passation) refuse : tout le gabarit dit « Hand-off ».
+- **Laissé au chantier A** : bloc `cadrage`, activités, trailer, clés de
+  config et champs de `.drwil/usage.jsonl` ; section « Lots » des fiches ;
+  commentaires français du code commun (hooks, CI, `gitignore`…) ; contrôle
+  des intentions à accepter dans les deux langues ; liste des noms de
+  l'ancien gabarit français tolérés par le contrôle des miroirs.
+- **Clôturé par** : la PR de ce chantier (branche
+  `chantier/gabarit-unique-anglais`).
