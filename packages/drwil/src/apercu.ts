@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type { StackEntry } from "./stack.js";
 import { readConfig, resolve, type InitOptions } from "./config.js";
 import { scaffold } from "./rendu.js";
+import { formaterMigration, migrer, type PlanMigration } from "./migration.js";
 
 /** Applique le kit à un projet existant sans écraser aucun fichier. */
 export interface AuditApply {
@@ -18,6 +19,8 @@ export interface AuditApply {
   conserves: string[];
   /** Parmi les conservés, ceux qui ont dérivé du modèle du kit (à comparer à la main). */
   derives: string[];
+  /** Migration de l'ancien format qu'`apply` ferait d'abord (simulation, rien d'écrit). */
+  migration: PlanMigration;
 }
 
 function protectionsExistantes(dir: string): string[] {
@@ -48,6 +51,7 @@ function protectionsExistantes(dir: string): string[] {
 
 /** Aperçu d'`apply` (DRWIL-011) : audit du dépôt et liste exacte de ce qui serait créé, sans rien écrire. */
 export async function auditerApply(opts: InitOptions): Promise<AuditApply> {
+  const migration = await migrer(opts.targetDir, { simulation: true });
   const r = resolve(opts, (stack) => stack.map((s) => s.path).filter((p) => p !== "."));
   const outilsPresents = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", ".cursor", ".github/copilot-instructions.md"].filter((f) =>
     existsSync(join(opts.targetDir, f)),
@@ -58,11 +62,13 @@ export async function auditerApply(opts: InitOptions): Promise<AuditApply> {
   await scaffold(r, { shouldOverwrite: () => false, derives, simulation });
   const crees = [...simulation.crees];
   if (!readConfig(opts.targetDir)) crees.push(".drwil/ia-first.json");
-  return { stack: r.stack, outilsPresents, protections, crees, conserves: simulation.conserves, derives };
+  return { stack: r.stack, outilsPresents, protections, crees, conserves: simulation.conserves, derives, migration };
 }
 
 export function formaterAudit(a: AuditApply): string {
   const l = ["Analyse du dépôt…", ""];
+  const migration = formaterMigration(a.migration, true);
+  if (migration.length) l.push(...migration, "");
   l.push("Détecté :");
   l.push(a.stack.length ? `  stack : ${a.stack.map((s) => `${s.path} → ${s.technos.join(", ")}`).join(" ; ")}` : "  stack : non détectée");
   l.push(`  outils IA déjà présents : ${a.outilsPresents.length ? a.outilsPresents.join(", ") : "aucun"}`);

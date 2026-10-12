@@ -1,33 +1,44 @@
 #!/usr/bin/env node
-// Point d'extension des règles d'hygiène du code, vérifiées par machine
-// (hook pré-commit et CI). Vide par défaut : ce contrôle est toujours vert
-// tant que le projet n'y ajoute rien. Un projet qui l'adopte l'ajoute à
-// .drwil/ia-first.json -> checks :
-//   { "name": "règles d'hygiène", "run": "node .githooks/check-code-rules.mjs" }
+// Extension point for machine-checked code hygiene rules (pre-commit hook and
+// CI). Empty by default: this check stays green as long as the project adds
+// nothing. A project that adopts it adds it to .drwil/ia-first.json -> checks:
+//   { "name": "code hygiene rules", "run": "node .githooks/check-code-rules.mjs" }
 //
-// Chaque règle est une fonction (racine) => string[] d'erreurs. Exemples
-// (désactivés, à adapter ou retirer) :
-//   - aucun import d'un nom privé (`_nom`) d'un autre module du même paquet ;
-//   - un module de logique pure a son fichier de test à côté ;
-//   - un export CSV passe par un point unique (échappement anti-injection) ;
-//   - un sous-système isolé n'importe jamais un paquet d'un autre.
-import { existsSync, realpathSync } from "node:fs";
+// Each rule is a function (root) => string[] of errors. Examples (disabled, to
+// adapt or remove):
+//   - no import of a private name (`_name`) from another module of the same package;
+//   - a pure-logic module has its test file next to it;
+//   - a CSV export goes through a single point (anti-injection escaping);
+//   - an isolated subsystem never imports a package from another one.
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const regles = [
-  // (racine) => { const erreurs = []; /* ... */ return erreurs; },
+const rules = [
+  // (root) => { const errors = []; /* ... */ return errors; },
 ];
 
-/** Applique `liste` (par défaut les règles ci-dessus) à `racine` ; affiche les erreurs, rend le code de sortie. */
-export function controler(racine, liste = regles) {
-  const erreurs = existsSync(racine) ? liste.flatMap((regle) => regle(racine)) : [];
-  if (!erreurs.length) return 0;
-  console.error("Règles d'hygiène du code :\n  " + erreurs.join("\n  "));
+const TEXTS = { fr: "Règles d'hygiène du code :", en: "Code hygiene rules:" };
+
+/** The project's language, read from the current folder (the project root, where hooks run). */
+export function language() {
+  try {
+    return JSON.parse(readFileSync(join(".drwil", "ia-first.json"), "utf8")).lang === "en" ? "en" : "fr";
+  } catch {
+    return "fr";
+  }
+}
+
+/** Applies `list` (the rules above by default) to `root`; prints the errors, returns the exit code. */
+export function check(root, list = rules, lang = "fr") {
+  const errors = existsSync(root) ? list.flatMap((rule) => rule(root)) : [];
+  if (!errors.length) return 0;
+  console.error(`${TEXTS[lang]}\n  ${errors.join("\n  ")}`);
   return 1;
 }
 
-// Lancé en ligne de commande (pas importé par un test) : chemins réels comparés, sinon un
-// .githooks/ en lien symbolique ferait passer le contrôle sans rien vérifier.
+// Run from the command line (not imported by a test): real paths compared, otherwise a
+// symlinked .githooks/ would make the check pass without verifying anything.
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  process.exitCode = controler(process.argv[2] ?? ".");
+  process.exitCode = check(process.argv[2] ?? ".", rules, language());
 }

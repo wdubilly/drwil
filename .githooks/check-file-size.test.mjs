@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { lireHerites, verifier } from "./check-file-size.mjs";
+import { readLegacy, check } from "./check-file-size.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./check-file-size.mjs", import.meta.url));
 let dossiers = [];
@@ -55,7 +55,7 @@ test("check-file-size : un plafond hérité tolère sa taille actuelle, pas dava
   const avant = process.cwd();
   try {
     process.chdir(dir);
-    const erreurs = verifier({ root: "src", maxLines: 400, extensions: ["js"], legacy: { "src/vieux.js": 500, "src/gros.js": 550 } });
+    const erreurs = check({ root: "src", maxLines: 400, extensions: ["js"], legacy: { "src/vieux.js": 500, "src/gros.js": 550 } });
     assert.deepEqual(erreurs, ["src/gros.js : 600 lignes, plafond hérité 550 (ne doit plus grossir, extraire plutôt)"]);
   } finally {
     process.chdir(avant);
@@ -64,9 +64,9 @@ test("check-file-size : un plafond hérité tolère sa taille actuelle, pas dava
 
 test("check-file-size : plafonds hérités lus, absents ou illisibles = aucun", () => {
   const dir = racine({ "ok.json": JSON.stringify({ "a.js": 3 }), "ko.json": "{ illisible" });
-  assert.deepEqual(lireHerites(join(dir, "ok.json")), { "a.js": 3 });
-  assert.deepEqual(lireHerites(join(dir, "ko.json")), {});
-  assert.deepEqual(lireHerites(join(dir, "absent.json")), {});
+  assert.deepEqual(readLegacy(join(dir, "ok.json")), { "a.js": 3 });
+  assert.deepEqual(readLegacy(join(dir, "ko.json")), {});
+  assert.deepEqual(readLegacy(join(dir, "absent.json")), {});
 });
 
 test("check-file-size : lancé via un lien symbolique, le contrôle tourne quand même", {
@@ -77,4 +77,18 @@ test("check-file-size : lancé via un lien symbolique, le contrôle tourne quand
   const r = spawnSync(process.execPath, [join(dir, "hooks", "check-file-size.mjs"), "src"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 1);
   assert.match(r.stderr, /src\/gros\.js : 401 lignes/);
+});
+
+test("check-file-size : messages en anglais selon .drwil/ia-first.json", () => {
+  const dir = racine({ ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "src/a.py": lignes(11), "src/vieux.js": lignes(9) });
+  assert.match(lancer(dir, "src", "10", "py").stderr, /^Files too big:\n {2}src\/a\.py: 11 lines, maximum 10 \(split it\)/);
+  const avant = process.cwd();
+  try {
+    process.chdir(dir);
+    assert.deepEqual(check({ root: "src", maxLines: 5, extensions: ["js"], legacy: { "src/vieux.js": 8 }, lang: "en" }), [
+      "src/vieux.js: 9 lines, legacy cap 8 (must not grow any more, extract instead)",
+    ]);
+  } finally {
+    process.chdir(avant);
+  }
 });

@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Voir perimetre.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
+// Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
 const SCRIPT = fileURLToPath(new URL("./check-docs.mjs", import.meta.url));
@@ -56,7 +56,7 @@ function projetFautif(cfg) {
       "Relatif au fichier : `app/AGENTS.md`.",
     ].join("\n"),
     "app/AGENTS.md": "Relatif au fichier : `AGENTS.md`.\n",
-    "docs/contrats.md": [
+    "docs/contracts.md": [
       "## QUA-001 — un",
       "**Règle** : r",
       "**Manuel** : m",
@@ -70,42 +70,42 @@ function projetFautif(cfg) {
       "|---|---|",
       "| QUA-003 | r |",
     ].join("\n"),
-    "docs/projets/en-attente.md": [
+    "docs/projects/pending.md": [
       "# Index",
       "",
       "- [ ] sans marqueur",
-      "- [ ] [IA] déjà finie : `docs/projets/finie.md`",
+      "- [ ] [IA] déjà finie : `docs/projects/finie.md`",
       "- [x] [IA] cochée mais ouverte :",
-      "  `docs/projets/ouverte.md`",
-      "- [x] [IA] sans statut : `docs/projets/sans-statut.md`",
-      "- [x] [IA] cochée et finie : `docs/projets/finie.md`",
-      "- [ ] [IA] ouverte et ouverte : `docs/projets/cadrage.md`",
-      "- [x] [IA] inexistante : `docs/projets/inexistante.md`",
+      "  `docs/projects/ouverte.md`",
+      "- [x] [IA] sans statut : `docs/projects/sans-statut.md`",
+      "- [x] [IA] cochée et finie : `docs/projects/finie.md`",
+      "- [ ] [IA] ouverte et ouverte : `docs/projects/cadrage.md`",
+      "- [x] [IA] inexistante : `docs/projects/inexistante.md`",
       "texte libre",
       "  indenté après une ligne libre",
     ].join("\n"),
-    "docs/projets/finie.md": `# Finie\n\n**Statut** : terminé le 2026-01-01.\n${reprise}`,
-    "docs/projets/ouverte.md": "# Ouverte\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- cadrage\npas une en-tête\n-->\n",
-    "docs/projets/vide.md": `# Vide\n\n**Statut** (2026-01-01) : cadré.\n\n<!-- cadrage\n-->\n${reprise}`,
-    "docs/projets/cadrage.md": [
+    "docs/projects/finie.md": `# Finie\n\n**Statut** : terminé le 2026-01-01.\n${reprise}`,
+    "docs/projects/ouverte.md": "# Ouverte\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- scope\npas une en-tête\n-->\n",
+    "docs/projects/vide.md": `# Vide\n\n**Statut** (2026-01-01) : cadré.\n\n<!-- scope\n-->\n${reprise}`,
+    "docs/projects/cadrage.md": [
       "# Cadrage",
       "",
       "**Statut** :",
       "cadré le 2026-01-01.",
       "**Risque** : HIGH",
       "",
-      "<!-- cadrage",
-      "fichiers:",
+      "<!-- scope",
+      "files:",
       "pas une entrée",
       "  - src/**",
       "  - src/ok/a/b.js",
       "-->",
       reprise,
     ].join("\n"),
-    "docs/projets/sensible.md": `# Sensible\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- cadrage\nfichiers:\n  - src/sensible/x.js\n  - .drwil/x.json\n-->\n${reprise}`,
-    "docs/projets/sans-statut.md": `# Sans statut\n${reprise}`,
-    "docs/projets/modele-fiche.md": "# Modèle, exempté\n\n<!-- cadrage\nfichiers:\n  - src/**\n-->\n",
-    "docs/projets/mecanique-ia-first.md": `# Mécanique\n\n**Statut** : référence (2026-01-01).\n\n<!-- cadrage\nfichiers:\n  - .githooks/a.mjs\n-->\n${reprise}`,
+    "docs/projects/sensible.md": `# Sensible\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- scope\nfiles:\n  - src/sensible/x.js\n  - .drwil/x.json\n-->\n${reprise}`,
+    "docs/projects/sans-statut.md": `# Sans statut\n${reprise}`,
+    "docs/projects/modele-fiche.md": "# Modèle, exempté\n\n<!-- scope\nfiles:\n  - src/**\n-->\n",
+    "docs/projects/kit-mechanics.md": `# Mécanique\n\n**Statut** : référence (2026-01-01).\n\n<!-- scope\nfiles:\n  - .githooks/a.mjs\n-->\n${reprise}`,
     "docs/intentions/README.md": "# Exempté\n",
     "docs/intentions/i.md": "# Intention\n\n**Statut** : 2026-01-01\n",
     ".claude/skills/s/SKILL.md": "Voir `docs/absent-skill.md`.\n",
@@ -122,36 +122,36 @@ test("projet fautif en français : chaque règle bloque, cadrage et ignorés blo
       layerPrefixes: ["lib"],
       codePrefixes: ["src"],
       contractPrefixes: ["QUA"],
-      cadrage: "bloquant",
-      nouvellesExigences: "bloquant",
-      risque: { cheminsSensibles: ["src/sensible/*"] },
+      scopeReminder: "blocking",
+      newRequirements: "blocking",
+      risk: { sensitivePaths: ["src/sensible/*"] },
     }),
   );
   assert.equal(r.status, 1, r.stdout);
   const attendus = [
     "AGENTS.md:1 : chemin cité introuvable `docs/absent.md`",
     "AGENTS.md:1 : chemin cité introuvable `lib/x`",
-    "AGENTS.md:1 : contrat QUA-999 absent de docs/contrats.md",
+    "AGENTS.md:1 : contrat QUA-999 absent de docs/contracts.md",
     "AGENTS.md:2 : chemin cité introuvable `ignore.txt` — fichier ignoré par Git",
     "AGENTS.md:5 : chemin cité introuvable `docs/futur2.md`",
     ".claude/skills/s/SKILL.md:1 : chemin cité introuvable `docs/absent-skill.md`",
-    "docs/contrats.md : contrat QUA-001 défini plusieurs fois",
-    "docs/contrats.md:7 : QUA-002 : exigence absente (champ Règle)",
-    "docs/projets/en-attente.md:3 : case ouverte sans marqueur",
-    "docs/projets/finie.md : fiche terminée encore présente",
-    "docs/projets/ouverte.md : section « Reprise » absente",
-    "docs/projets/sans-statut.md : pas de ligne « Statut » datée",
+    "docs/contracts.md : contrat QUA-001 défini plusieurs fois",
+    "docs/contracts.md:7 : QUA-002 : exigence absente (champ Règle)",
+    "docs/projects/pending.md:3 : case ouverte sans marqueur",
+    "docs/projects/finie.md : fiche terminée encore présente",
+    "docs/projects/ouverte.md : section « Reprise » absente",
+    "docs/projects/sans-statut.md : pas de ligne « Statut » datée",
     "docs/intentions/i.md : section « Besoin » absente",
     "docs/intentions/i.md : section « Questions à trancher » absente",
-    "docs/projets/cadrage.md : risque HIGH sans section « Décisions »",
-    "docs/projets/ouverte.md : bloc cadrage sans ligne « fichiers: »",
-    "docs/projets/vide.md : bloc cadrage sans ligne « fichiers: »",
-    "docs/projets/cadrage.md : ligne de cadrage non comprise « pas une entrée »",
-    "docs/projets/cadrage.md : motif de cadrage trop large « src/** »",
+    "docs/projects/cadrage.md : risque HIGH sans section « Décisions »",
+    "docs/projects/ouverte.md : bloc scope sans ligne « files: »",
+    "docs/projects/vide.md : bloc scope sans ligne « files: »",
+    "docs/projects/cadrage.md : ligne de cadrage non comprise « pas une entrée »",
+    "docs/projects/cadrage.md : motif de cadrage trop large « src/** »",
     "`src/hors.js` : fichier de code hors de toute fiche",
-    "case ouverte mais la fiche docs/projets/finie.md se dit déjà terminée",
-    "en-attente.md:5 : case cochée mais la fiche docs/projets/ouverte.md ne se dit pas terminée",
-    "docs/projets/sensible.md : pas de champ « Risque » alors que le cadrage impose HIGH",
+    "case ouverte mais la fiche docs/projects/finie.md se dit déjà terminée",
+    "pending.md:5 : case cochée mais la fiche docs/projects/ouverte.md ne se dit pas terminée",
+    "docs/projects/sensible.md : pas de champ « Risque » alors que le cadrage impose HIGH",
     "avertissement(s) de cohérence case/statut",
     "avertissement(s) de niveau de risque",
   ];
@@ -187,25 +187,25 @@ test("projet fautif en anglais : cadrage et fichiers ignorés en avertissement",
   assert.equal(r.status, 1, r.stdout);
   const attendus = [
     "AGENTS.md:1 : cited path not found `docs/absent.md`",
-    "AGENTS.md:1 : contract QUA-999 missing from docs/contrats.md",
-    "docs/contrats.md: contract QUA-001 defined more than once",
+    "AGENTS.md:1 : contract QUA-999 missing from docs/contracts.md",
+    "docs/contracts.md: contract QUA-001 defined more than once",
     "QUA-002: missing requirement (Rule field)",
     "open item without an [AI], [human] or [decision] marker",
-    "docs/projets/finie.md: finished card still present",
-    "docs/projets/ouverte.md: missing « Hand-off » section",
-    "docs/projets/sans-statut.md: no dated « Status » line",
+    "docs/projects/finie.md: finished card still present",
+    "docs/projects/ouverte.md: missing « Hand-off » section",
+    "docs/projects/sans-statut.md: no dated « Status » line",
     "docs/intentions/i.md: missing « Open questions » section",
     "check-docs:",
     "error(s)",
-    "⚠ docs/projets/ouverte.md: cadrage block without a « fichiers: » line",
-    "⚠ docs/projets/cadrage.md: cadrage line not understood « pas une entrée »",
-    "⚠ docs/projets/cadrage.md: cadrage pattern too broad « src/** »",
-    "⚠ `src/hors.js`: code file outside any docs/projets/ fiche",
-    "cadrage warning(s) (QUA-016",
-    "item unchecked but docs/projets/finie.md already says it is done",
-    "item checked but docs/projets/ouverte.md does not say it is done",
+    "⚠ docs/projects/ouverte.md: scope block without a « files: » line",
+    "⚠ docs/projects/cadrage.md: scope line not understood « pas une entrée »",
+    "⚠ docs/projects/cadrage.md: scope pattern too broad « src/** »",
+    "⚠ `src/hors.js`: code file outside any docs/projects/ brief",
+    "scope warning(s) (QUA-016",
+    "item unchecked but docs/projects/finie.md already says it is done",
+    "item checked but docs/projects/ouverte.md does not say it is done",
     "checkbox/status consistency warning(s)",
-    'docs/projets/sensible.md : no "Risk" field although the scope requires HIGH',
+    'docs/projects/sensible.md : no "Risk" field although the scope requires HIGH',
     "risk level warning(s)",
     "⚠ AGENTS.md:2 : cited path not found `ignore.txt` — file ignored by Git",
     "recent-requirement warning(s)",
@@ -228,7 +228,7 @@ test("aucune citation trouvée, dossiers réglés, cadrage désactivé : vert", 
     }),
     "AGENTS.md": "Voir `docs/futur.md` (à créer). Contrat SEC-001.\n",
     "regles.md": "| SEC-001 | r |\n",
-    "suivi/a.md": `# A\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- cadrage\nfichiers:\n  - src/a.js\n-->\n${reprise}`,
+    "suivi/a.md": `# A\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- scope\nfiles:\n  - src/a.js\n-->\n${reprise}`,
     "src/a.js": "",
   });
   assert.equal(r.status, 0, r.stdout);
@@ -256,7 +256,16 @@ test("en français, cadrage et fichiers ignorés en avertissement : signalés sa
 });
 
 test("cadrage désactivé : aucun rappel, même pour du code hors fiche", () => {
-  const r = verifier({ ".drwil/ia-first.json": JSON.stringify({ cadrage: "off", codePrefixes: ["src"] }), "src/hors.js": "" });
+  const r = verifier({ ".drwil/ia-first.json": JSON.stringify({ scopeReminder: "off", codePrefixes: ["src"] }), "src/hors.js": "" });
   assert.equal(r.status, 0, r.stdout);
   assert.doesNotMatch(r.stdout, /⚠/);
+});
+
+test("intention : intitulés acceptés dans les deux langues, l'absent nommé dans la langue du projet", () => {
+  const r = verifier({
+    "docs/intentions/mixte.md": "# Intention\n\n**Statut** : 2026-01-01\n\n## Need\n\n## Existant\n",
+  });
+  assert.equal(r.status, 1, r.stdout);
+  assert.doesNotMatch(r.stdout, /« (Besoin|Need|Existant|Current state) »/);
+  assert.match(r.stdout, /docs\/intentions\/mixte\.md : section « Questions à trancher » absente/);
 });

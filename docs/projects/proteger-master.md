@@ -3,8 +3,8 @@
 **Statut** : cadré le 2026-10-10 — lots 1, 2 et 4 faits ; lot 3 [humain] (compte machine) à faire.
 **Risque** : HIGH
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
   - .github/CODEOWNERS
   - .github/ruleset-master.json
   - .github/scripts/verifier-ruleset.mjs
@@ -92,7 +92,7 @@ Constat du 2026-10-10 :
 
 - ~~Les trois points~~ — tranchés le 2026-10-10 (voir « Décisions »).
 
-## 6. Lots
+## 6. Increments
 
 - **Lot 1 — ruleset sur master** [humain] : **fait le 2026-10-10**
   (ruleset « master protégé », sans contournement). Réglages appliqués : Critère de sortie : un push direct sur `master` est refusé

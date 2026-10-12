@@ -22,9 +22,9 @@ Node.js 22 et plus récent (`engines` du paquet ; CI sur Node 22 et 24), TypeScr
 
 Copies, dans ce dépôt, des hooks livrés : installées depuis le gabarit par `npm run installer-depot` (`outils/installer-depot.mjs`), jamais éditées ici ; identiques, vérifié par le contrôle `miroirs-gabarit`. Les tests des hooks, eux, s'écrivent ici :
 
-- `.githooks/moteur.mjs` : moteur unique des contrôles, partagé par les hooks et `drwil verify` ; `.githooks/run-checks.mjs` l'exécute au commit (`pre-commit`), au push (`pre-push`) et en CI.
-- Contrôles du socle : `.githooks/check-docs.mjs` (doc et contrats cités), `.githooks/perimetre.mjs` (barrière de périmètre de la fiche active), `.githooks/check-control-coverage.mjs` (couverture CI de chaque contrôle).
-- Gouvernance : `.githooks/etat.mjs` (état, transitions, lancement ; lit les fiches par `.githooks/fiches.mjs`, met en forme par `.githooks/etat-textes.mjs`), `.githooks/cadrage.mjs` (bloc cadrage des fiches), `.githooks/contrats.mjs` (lecture du registre), `.githooks/risque.mjs` (niveau de risque).
+- `.githooks/engine.mjs` : moteur unique des contrôles, partagé par les hooks et `drwil verify` ; `.githooks/run-checks.mjs` l'exécute au commit (`pre-commit`), au push (`pre-push`) et en CI.
+- Contrôles du socle : `.githooks/check-docs.mjs` (doc et contrats cités), `.githooks/scope-gate.mjs` (barrière de périmètre de la fiche active), `.githooks/check-control-coverage.mjs` (couverture CI de chaque contrôle).
+- Gouvernance : `.githooks/state.mjs` (état, transitions, lancement ; lit les fiches par `.githooks/briefs.mjs`, met en forme par `.githooks/state-texts.mjs`), `.githooks/scope.mjs` (bloc cadrage des fiches), `.githooks/contracts.mjs` (lecture du registre), `.githooks/risk.mjs` (niveau de risque).
 - Tests des hooks : `.githooks/*.test.mjs`, propres au dépôt, couverture 100 % exigée (QUA-004).
 
 ## Propre au dépôt (jamais livré)

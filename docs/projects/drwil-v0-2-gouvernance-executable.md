@@ -4,20 +4,20 @@
 
 **Statut** : cadré le 2026-10-05 — tous les lots [IA] livrés sur la branche (DRWIL-001 à 005, 010 à 013, 020, 021, 031 ; protocole de DRWIL-022), en attente de fusion ; restent DRWIL-022 (mesures, humain) et DRWIL-030 (décision).
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
   - packages/drwil/bin/drwil.js
   - packages/drwil/src/index.ts
   - .githooks/run-checks.mjs
-  - .githooks/contrats.mjs
-  - packages/drwil/templates/common/base/.githooks/contrats.mjs
-  - .githooks/moteur.mjs
-  - packages/drwil/templates/common/base/.githooks/moteur.mjs
+  - .githooks/contracts.mjs
+  - packages/drwil/templates/common/base/.githooks/contracts.mjs
+  - .githooks/engine.mjs
+  - packages/drwil/templates/common/base/.githooks/engine.mjs
   - packages/drwil/src/verify.ts
   - packages/drwil/src/doctor.ts
   - packages/drwil/src/attest.ts
-  - .githooks/risque.mjs
-  - packages/drwil/templates/common/base/.githooks/risque.mjs
+  - .githooks/risk.mjs
+  - packages/drwil/templates/common/base/.githooks/risk.mjs
   - packages/drwil/bin/drwil.js
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
@@ -155,7 +155,7 @@ V0.2. Aucun fichier de contrat secondaire (ADR-001).
   (`docs/recipes/track-consumption-per-increment.md`) pour les tokens ? (pas
   bloquant avant P2)
 
-## 6. Lots
+## 6. Increments
 
 Ordre recommandé : 001 → 002 → 003 → 004 → 005 → 010 → 011 → 012 → 013 →
 020/021 → 022 → 030. Critère de sortie de chaque lot : ses critères
@@ -172,7 +172,7 @@ gabarit, sauf mention contraire (QUA-018).
   P0 : tout contrat est bloquant (DRWIL-020 ajoutera `warning` et
   `advisory`). Validation, erreurs explicites. Le lot reste petit : des
   champs, pas un mini-langage en Markdown. Contenu : module de lecture et
-  de validation sans dépendance (`.githooks/contrats.mjs`), ses tests,
+  de validation sans dépendance (`.githooks/contracts.mjs`), ses tests,
   champs posés sur les contrats du dépôt, `id` des contrôles du projet
   (`.drwil/ia-first.json` → `checks`). Le branchement dans
   `.githooks/check-docs.mjs` et le passage du gabarit aux sections relèvent
@@ -189,7 +189,7 @@ gabarit, sauf mention contraire (QUA-018).
   primitive ; l'enforcement dans le workflow agent viendra ensuite. Chaîne intention (**Raison**) → exigence
   (**Règle**) → contrôle → preuve → verdict. Indépendant de tout agent
   (aucune intégration spécifique dans ce lot). Moteur unique (ADR-003) :
-  `.githooks/moteur.mjs`, utilisé par `.githooks/run-checks.mjs` (adaptateur
+  `.githooks/engine.mjs`, utilisé par `.githooks/run-checks.mjs` (adaptateur
   git) et par `verify`, qui charge la copie installée dans le projet ; les
   hooks ne dépendent jamais de drwil. Statuts : PASS, FAIL, ERROR (contrôle
   inconnu, exigence ou preuve absente, outil indisponible), `MANUAL`
@@ -261,10 +261,10 @@ réalisé.
 ## 7. Reprise
 
 - **Dernier état** (2026-10-05) : DRWIL-001 et DRWIL-003 livrés sur la
-  branche. DRWIL-001 : `.githooks/contrats.mjs` (lecture sections +
+  branche. DRWIL-001 : `.githooks/contracts.mjs` (lecture sections +
   tableau ; validation : doublon, contrôle inconnu, Contrôle vide, Règle ou
   preuve absente), champs posés sur les 11 contrats du dépôt. DRWIL-003 :
-  moteur extrait dans `.githooks/moteur.mjs` (run-checks.mjs devient
+  moteur extrait dans `.githooks/engine.mjs` (run-checks.mjs devient
   l'adaptateur git, sortie inchangée), `drwil verify` (`packages/drwil/src/verify.ts`,
   commande CLI), tests PASS/FAIL/MANUAL/ERROR (dont outil indisponible →
   ERROR, non applicable → MANUAL, exit 1 via la CLI, priorité), doc (`docs/ia-first.md` du
@@ -290,7 +290,7 @@ réalisé.
   à l'aperçu. L'aperçu passe par le même chemin que l'installation (mode
   simulation de `writeOut`) : il ne peut pas diverger. `apply` reste non
   interactif (pas de confirmation demandée, pour les scripts et la CI).
-  DRWIL-012 (2026-10-06, en autonomie) : `.githooks/risque.mjs`, branché
+  DRWIL-012 (2026-10-06, en autonomie) : `.githooks/risk.mjs`, branché
   dans `.githooks/check-docs.mjs`. Champ `**Risque** : LOW|MEDIUM|HIGH` dans la
   fiche ; un cadrage qui touche `.githooks/`, la CI ou `.drwil/` impose HIGH
   (forçable vers le haut seulement) ; HIGH exige Décisions + contrat cité ;

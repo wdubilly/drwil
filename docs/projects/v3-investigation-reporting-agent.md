@@ -66,7 +66,7 @@ Cette expérimentation ne doit pas entraîner prématurément :
 - [décision] Où vit l'expérimentation (dépôt d'exemple séparé, dossier
   d'expérimentation) pour ne rien coupler au cœur.
 
-## 6. Lots
+## 6. Increments
 
 - **Lot 1 — Cas pilote** [décision] : choisir un cas d'investigation réel et
   écrire ses exigences comme des contrats (Règle, Contrôle, Manuel).

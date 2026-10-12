@@ -2,34 +2,34 @@
 
 **Statut** : référence — mécanique livrée à l'installation du kit, le 2026-10-04.
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
   - .githooks/run-checks.mjs
   - .githooks/check-docs.mjs
   - .githooks/check-control-coverage.mjs
   - .githooks/glob.mjs
-  - .githooks/moteur.mjs
-  - .githooks/contrats.mjs
-  - .githooks/contrats.test.mjs
-  - .githooks/risque.mjs
-  - .githooks/risque.test.mjs
-  - .githooks/cadrage.mjs
-  - .githooks/cadrage.test.mjs
-  - .githooks/etat.mjs
-  - .githooks/fiches.mjs
-  - .githooks/etat-textes.mjs
-  - .githooks/etat.test.mjs
-  - .githooks/perimetre.mjs
-  - .githooks/perimetre.test.mjs
+  - .githooks/engine.mjs
+  - .githooks/contracts.mjs
+  - .githooks/contracts.test.mjs
+  - .githooks/risk.mjs
+  - .githooks/risk.test.mjs
+  - .githooks/scope.mjs
+  - .githooks/scope.test.mjs
+  - .githooks/state.mjs
+  - .githooks/briefs.mjs
+  - .githooks/state-texts.mjs
+  - .githooks/state.test.mjs
+  - .githooks/scope-gate.mjs
+  - .githooks/scope-gate.test.mjs
   - .githooks/check-code-rules.test.mjs
   - .githooks/check-control-coverage.test.mjs
   - .githooks/check-docs.test.mjs
   - .githooks/check-file-size.test.mjs
-  - .githooks/creer-release.test.mjs
+  - .githooks/create-release.test.mjs
   - .githooks/glob.test.mjs
-  - .githooks/moteur.test.mjs
+  - .githooks/engine.test.mjs
   - .githooks/run-checks.test.mjs
-  - .githooks/tableau-de-bord.test.mjs
+  - .githooks/dashboard.test.mjs
   - .githooks/prepare-commit-msg
   - .githooks/pre-commit
   - .githooks/pre-push
@@ -39,8 +39,8 @@ fichiers:
   - .githooks/check-code-rules.mjs
   - .githooks/check-colors.mjs
   - .githooks/check-contrast.mjs
-  - .githooks/tableau-de-bord.mjs
-  - .githooks/creer-release.mjs
+  - .githooks/dashboard.mjs
+  - .githooks/create-release.mjs
   - .github/workflows/ia-first.yml
   - .claude/settings.json
 -->
@@ -66,7 +66,7 @@ Le code applicatif du projet : chaque chantier porte son propre bloc
   kit ajoute un nouveau fichier de mécanique (`.githooks/` ou un réglage
   d'outil IA), l'ajouter ici. Lot 4 a ajouté `.githooks/check-control-coverage.mjs`
   (QUA-013), `.githooks/pre-push`, `.githooks/commit-msg` (livré désactivé)
-  et `.githooks/cadrage.test.mjs`. Lot 5 a ajouté `.githooks/check-file-size.mjs`
+  et `.githooks/scope.test.mjs`. Lot 5 a ajouté `.githooks/check-file-size.mjs`
   et son fichier de plafonds hérités `.githooks/check-file-size.legacy.json`,
   ainsi que le point d'extension vide `.githooks/check-code-rules.mjs` — les
   trois livrés mais **opt-in** (pas lancés tant que le projet ne les déclare

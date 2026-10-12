@@ -8,7 +8,7 @@ moteur (socle de `.githooks/run-checks.mjs`, ou `id` d'un contrôle de
 `.drwil/ia-first.json` → `checks`) ; la commande n'est jamais recopiée ici.
 `**Manuel**` décrit la partie de la preuve qui reste humaine. Au moins l'un
 des deux ; un contrôle inconnu est une erreur de configuration.
-`**Sévérité**` (facultatif) : `bloquant` (défaut), `avertissement` ou
+`**Sévérité**` (facultatif) : `blocking` (défaut), `warning` ou
 `indicatif`. Seuls les contrats bloquants décident du verdict de
 `drwil verify` ; les autres sont exécutés et affichés sans changer son code
 de sortie.
@@ -24,7 +24,7 @@ de sortie.
 ## QUA-013 — Contrôle non exécuté n'est pas passé
 **Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé.
 **Périmètre** : Tout contrôle listé dans les vérifs.
-**Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/moteur.mjs`) et son historique d'exécution.
+**Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution.
 **Preuve** : Sortie lue du contrôle concerné.
 **Contrôle** : `couverture-ci`
 **Manuel** : lecture de la sortie du contrôle concerné.
@@ -66,10 +66,10 @@ de sortie.
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
 
 ## QUA-016 — Rappel de cadrage
-**Règle** : Tout fichier de code indexé est couvert par le bloc `cadrage` d'une fiche de `docs/projects/` ; un bloc mal formé (sans `fichiers:`, motif trop large) est refusé. Sévérité réglable par projet (`.drwil/ia-first.json` -> `cadrage` : `bloquant` par défaut et sur ce dépôt, `avertissement`, ou `off`). Hors réglage `bloquant`, ce contrat n'est pas prouvé : lui ajouter un champ Manuel.
+**Règle** : Tout fichier de code indexé est couvert par le bloc `scope` d'une fiche de `docs/projects/` ; un bloc mal formé (sans `files:`, motif trop large) est refusé. Sévérité réglable par projet (`.drwil/ia-first.json` -> `cadrage` : `blocking` par défaut et sur ce dépôt, `warning`, ou `off`). Hors réglage `blocking`, ce contrat n'est pas prouvé : lui ajouter un champ Manuel.
 **Périmètre** : Tout le dépôt (fichiers indexés), hors `docs/` et le markdown.
-**Source de vérité** : `.githooks/cadrage.mjs`, `docs/ia-first.md` (section 7).
-**Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/rappel-cadrage.mjs`.
+**Source de vérité** : `.githooks/scope.mjs`, `docs/ia-first.md` (section 7).
+**Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/scope-reminder.mjs`.
 **Contrôle** : `docs-references`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.

@@ -66,6 +66,7 @@ test("lireJournal : seuls les champs de consommation, réponses d'agent seulemen
 
 test("groupe : chantier, branche principale, autre branche, sans branche", () => {
   assert.equal(groupe("chantier/mesurer-consommation"), "mesurer-consommation");
+  assert.equal(groupe("workstream/coeur-en-anglais"), "coeur-en-anglais");
   assert.equal(groupe("master"), "(branche principale : cadrages)");
   assert.equal(groupe("main"), "(branche principale : cadrages)");
   assert.equal(groupe("essai/x"), "(branche essai/x)");

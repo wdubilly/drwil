@@ -11,8 +11,8 @@ petite tâche, ajouter son chemin au bloc `cadrage` ci-dessous ; un motif trop
 large (`**`, `scripts/*`) est refusé, il faut nommer le fichier ou un motif
 précis.
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
 -->
 
 ## Journal

@@ -240,7 +240,7 @@ npx drwil verify
 
 Reads every contract in `docs/contracts.md` (or `docs/contracts.md`), runs
 the check each one names (`**Contrôle**`/`**Check**`) through the same
-engine as the git hooks (`.githooks/moteur.mjs`), and prints a verdict:
+engine as the git hooks (`.githooks/engine.mjs`), and prints a verdict:
 `PASS` (exit 0), `FAIL` or `MANUAL REVIEW REQUIRED` (exit 1), `VERIFY
 ERROR` (exit 2). A contract with a human part is `MANUAL`, never `PASS`;
 an unknown check is an `ERROR`. See `docs/ia-first.md`, section 5, in an
@@ -335,7 +335,7 @@ itself installed. Never touches `docs/projects/`, `docs/intentions/`, or
 `docs/recipes/` — your project's decisions and history are never
 deleted automatically. The local governance state,
 `.drwil/state.json` (if present, git-ignored), is listed too, and deleted only with `--yes`. To only switch
-governance off, without removing anything: `"barriere": "off"` in
+governance off, without removing anything: `"scopeGate": "off"` in
 `.drwil/ia-first.json`.
 
 ### Try it without publishing to npm
@@ -411,9 +411,9 @@ contracts a project can choose to adopt beyond this baseline.
 
 | Module | What it does | How to enable |
 |---|---|---|
-| `tableau-de-bord` (dashboard) | Static HTML page aggregating work items, contracts and audit history | Copy the script in, see its own README |
+| `dashboard` | Static HTML page aggregating work items, contracts and audit history | Copy the script in, see its own README |
 | `front-quality` | Contrast/color-accessibility checks (RGAA/WCAG) for a front-end | Same as above |
-| `creer-une-release` | Git tag + GitHub release note, best-effort semver bump from Conventional Commits | Always manual, on explicit request — see `docs/recipes/create-a-release.md` |
+| `create-release` | Git tag + GitHub release note, best-effort semver bump from Conventional Commits | Always manual, on explicit request — see `docs/recipes/create-a-release.md` |
 
 ## Internationalization
 
@@ -533,7 +533,7 @@ claude,copilot,cursor,codex,gemini`, `--ci github|gitlab|none`. Voir
 
 ## Modules optionnels (jamais installés par défaut)
 
-- **tableau-de-bord** : page HTML qui agrège chantiers, contrats et
+- **dashboard** : page HTML qui agrège chantiers, contrats et
   audits.
 - **front-quality** : contrôle de contraste/couleurs (RGAA/WCAG) pour un
   front.

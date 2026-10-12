@@ -15,13 +15,13 @@ plus une section Décisions et les contrats concernés cités. Un cadrage qui
 touche `.githooks/`, la CI ou `.drwil/` impose HIGH ; on peut toujours
 monter, jamais descendre.)
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
   - backend/app/routers/exemple.py
   - frontend/src/components/Exemple*
 -->
 
-(bloc `cadrage` : un chemin ou un motif par ligne, sous `fichiers:` ; couvre
+(bloc `scope` : un chemin ou un motif par ligne, sous `files:` ; couvre
 les fichiers de code que ce chantier touche, pour le rappel de cadrage —
 `docs/ia-first.md`, section 7. Un motif trop large, `**` ou `scripts/*`, est
 refusé : nommer le fichier ou un motif d'au moins deux dossiers.)
@@ -46,7 +46,7 @@ refusé : nommer le fichier ou un motif d'au moins deux dossiers.)
 
 - [décision] ...
 
-## 6. Lots
+## 6. Increments
 
 - **Lot 1 — titre** [IA|humain] : contenu. Critère de sortie : ce qui prouve
   que le lot est fini (tests verts, contrôle qui passe...).

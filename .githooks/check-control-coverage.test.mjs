@@ -34,7 +34,7 @@ test("sans configuration, sans CI ou fichier CI absent : rien à vérifier", () 
 
 test("GitHub sans filtre de chemins : chaque job couvre tout", () => {
   const r = projet(
-    { ciFiles: [".github/workflows/ci.yml"], checks: [{ id: "tests", chemins: ["src/**"], ciJob: "checks" }, { id: "sans-job" }] },
+    { ciFiles: [".github/workflows/ci.yml"], checks: [{ id: "tests", paths: ["src/**"], ciJob: "checks" }, { id: "sans-job" }] },
     { ".github/workflows/ci.yml": GITHUB },
   );
   assert.equal(r.status, 0, r.stdout);
@@ -48,9 +48,9 @@ test("GitHub : job absent, aucun chemin, filtre paths qui ne couvre pas (dégrad
       lang: "fr",
       ciFiles: [".github/workflows/ci.yml"],
       checks: [
-        { id: "fantome", chemins: ["a"], ciJob: "inexistant" },
-        { id: "vide", chemins: [], ciJob: "checks" },
-        { id: "src", chemins: ["src/*.js"], ciJob: "checks" },
+        { id: "fantome", paths: ["a"], ciJob: "inexistant" },
+        { id: "vide", paths: [], ciJob: "checks" },
+        { id: "src", paths: ["src/*.js"], ciJob: "checks" },
       ],
     },
     { ".github/workflows/ci.yml": workflow },
@@ -86,10 +86,10 @@ test("GitLab : rules: changes par job, en anglais", () => {
       lang: "en",
       ciFiles: [".gitlab-ci.yml"],
       checks: [
-        { id: "src", chemins: ["src/**"], ciJob: "checks" },
-        { id: "large", chemins: ["**"], ciJob: "toujours" },
+        { id: "src", paths: ["src/**"], ciJob: "checks" },
+        { id: "large", paths: ["**"], ciJob: "toujours" },
         { id: "vide", ciJob: "toujours" },
-        { id: "fantome", chemins: ["a"], ciJob: "inexistant" },
+        { id: "fantome", paths: ["a"], ciJob: "inexistant" },
       ],
     },
     { ".gitlab-ci.yml": gitlab },

@@ -6,14 +6,14 @@ request, instead of direct commits on the main branch.
 
 ## Opening a branch
 
-- Name the branch `chantier/<brief-slug>`, where `<brief-slug>` is the file
+- Name the branch `workstream/<brief-slug>`, where `<brief-slug>` is the file
   name (without extension) of the relevant `docs/projects/` brief. Example:
   a brief named my-project.md is worked on a branch named
   workstream/my-project.
 - The brief already exists (scoping done) before opening the branch — no
   coding without a brief, branch or not.
 - `init()` already creates a first working branch
-  (`chantier/installation-kit`) right after `git init`, before any commit:
+  (`workstream/kit-installation`) right after `git init`, before any commit:
   on a brand-new repository, nobody needs to create a branch by hand for
   the very first commit. Renaming this branch (or creating another one
   named after the current brief) is up to the project.
@@ -67,9 +67,9 @@ request, instead of direct commits on the main branch.
   closing source, the index only lists remaining work). Nothing is
   lost — the full history stays in git
   (`git log --follow -- docs/projects/<brief>.md`).
-- Active governance: the brief can be deleted during CLOTURE (the state
+- Active governance: the brief can be deleted during CLOSING (the state
   tolerates its absence in that activity only), then go back to Scoping
-  (`node .githooks/etat.mjs passer CADRAGE`).
+  (`node .githooks/state.mjs move SCOPING`).
 - If the brief still has open points elsewhere (multi-increment project), don't
   condense anything: check the matching box in the index as before, the
   brief stays active until it's fully finished.
@@ -84,7 +84,7 @@ request, instead of direct commits on the main branch.
   time, not when CI replays an already-made push (a merge landing on the
   main branch is legitimate).
 - If the main branch CI breaks anyway (merge landed too fast,
-  flakiness...): a dedicated CI job (`alerter-si-ci-cassee`, GitHub and
+  flakiness...): a dedicated CI job (`alert-if-ci-broken`, GitHub and
   GitLab) automatically opens an issue linking to the failed run — only
   on the main branch, only when the checks failed, without creating a
   duplicate if an equivalent issue is already open. This job alerts, it
@@ -93,7 +93,7 @@ request, instead of direct commits on the main branch.
 ## What the kit does not do
 
 - No automatic check verifies the branch **name**
-  (`chantier/<brief-slug>` stays a documented convention, not enforced)
+  (`workstream/<brief-slug>` stays a documented convention, not enforced)
   or requires a pull/merge request to exist before a commit on a
   non-main branch.
 - The kit does not open or merge pull/merge requests on the human's

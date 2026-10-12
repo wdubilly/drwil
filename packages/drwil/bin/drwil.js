@@ -98,7 +98,7 @@ addOptions(
 program
   .command("uninstall")
   .description(
-    "Remove kit mechanics files, driven by the installed-files manifest (dry-run by default, never touches docs/projets, docs/intentions, docs/recettes)",
+    "Remove kit mechanics files, driven by the installed-files manifest (dry-run by default, never touches docs/projects, docs/intentions, docs/recipes)",
   )
   .option("--yes", "Actually delete files (default: dry-run, only prints what would be removed)")
   .action(async (opts) => {
@@ -244,20 +244,20 @@ program
 program
   .command("etat")
   .description(
-    "Show the governance state, or act on it: drwil etat passer <ACTIVITY> [--fiche <sheet>] [--demande <text>] | lancer [<sheet>] | fiches [--json] | rappel",
+    "Show the governance state, or act on it: drwil etat move <ACTIVITY> [--fiche <brief>] [--demande <text>] | start [<brief>] | briefs [--json] | reminder",
   )
   .argument("[args...]")
   .allowUnknownOption()
   .action(async (args) => {
-    // Façade : la logique et le garde-fou humain vivent dans .githooks/etat.mjs du projet,
+    // Façade : la logique et le garde-fou humain vivent dans .githooks/state.mjs du projet,
     // utilisable sans drwil installé ; une seule source.
-    const module = join(process.cwd(), ".githooks", "etat.mjs");
+    const module = join(process.cwd(), ".githooks", "state.mjs");
     if (!existsSync(module)) {
       console.error(`✗ ${module} introuvable : lancer « drwil apply » pour installer le lecteur d'état`);
       process.exit(2);
     }
-    const { principal } = await import(pathToFileURL(module).href);
-    process.exit(await principal(args, process.cwd()));
+    const { main } = await import(pathToFileURL(module).href);
+    process.exit(await main(args, process.cwd()));
   });
 
 program.parse();

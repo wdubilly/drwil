@@ -41,7 +41,7 @@ nombre de preuves stockées.
   du hook, fiche absente en CLOTURE) — par discipline, sans règle.
 - **Preuve passée ≠ preuve actuelle, déjà codé** : l'évidence de `verify`
   ne vaut que sur le commit `HEAD` et un arbre propre (`preuveVerify` dans
-  `.githooks/etat.mjs`) ; une attestation devient obsolète si son contrat
+  `.githooks/state.mjs`) ; une attestation devient obsolète si son contrat
   ou sa preuve change.
 - **Contrôle non exécuté ≠ passé** : QUA-013.
 - **Lien test ↔ contrat à l'état d'ébauche** : des noms de tests portent

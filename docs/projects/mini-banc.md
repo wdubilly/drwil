@@ -3,8 +3,8 @@
 **Statut** : cadré le 2026-10-11 — décisions prises, lot 1 à lancer.
 **Risque** : HIGH
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
   - outils/banc.mjs
   - outils/banc.test.mjs
   - bench/reference/package.json
@@ -100,7 +100,7 @@ conditions, soit 12 passages.
 
 (aucun : tranchés le 2026-10-11, voir « Décisions »)
 
-## 6. Lots
+## 6. Increments
 
 - **Lot 1 — banc rejouable** [IA] : projet de référence et tâches
   (`bench/`), `outils/banc.mjs` (à créer) : copie jetable, `drwil init`

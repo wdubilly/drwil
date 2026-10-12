@@ -11,7 +11,7 @@
 | RSK-2 | ~~Pas de CI configurée pour couvrir les contrôles (QUA-013 non exécuté)~~ **corrigé le 2026-10-04** | Tests | ✅ | `.drwil/ia-first.json` (`ciFiles`), `.githooks/run-checks.mjs` | `ciFiles` pointait sur un fichier GitLab CI inexistant alors que `.github/workflows/ia-first.yml` tourne déjà — corrigé pour pointer dessus |
 | RSK-3 | Compatibilité Windows/macOS jamais testée | Stabilité | 🟠 | `docs/projects/suites-kit-portable.md` (point 1), `packages/drwil/src/index.ts` | Tester `init`/`apply` sur les trois OS, idéalement en matrice CI |
 | RSK-4 | `apply`/`init` ne nettoient jamais les fichiers obsolètes d'une version antérieure du kit | Code mort | 🟠 | `docs/projects/suites-kit-portable.md` (point 3), `packages/drwil/src/index.ts` | Définir une liste de fichiers retirés par version, ne supprimer que les fichiers identiques à un ancien modèle |
-| RSK-5 | Les contrôles `.githooks/check-docs.mjs` et `.githooks/run-checks.mjs` installés sur drwil n'ont pas de test propre côté dépôt (seul `.githooks/cadrage.test.mjs` existe) | Tests | 🟡 | `.githooks/cadrage.test.mjs`, `.githooks/check-docs.mjs`, `.githooks/run-checks.mjs` | Ajouter des cas de non-régression ciblés (secrets absents, `checks` vide, CI absente) |
+| RSK-5 | Les contrôles `.githooks/check-docs.mjs` et `.githooks/run-checks.mjs` installés sur drwil n'ont pas de test propre côté dépôt (seul `.githooks/scope.test.mjs` existe) | Tests | 🟡 | `.githooks/scope.test.mjs`, `.githooks/check-docs.mjs`, `.githooks/run-checks.mjs` | Ajouter des cas de non-régression ciblés (secrets absents, `checks` vide, CI absente) |
 
 ## Détail des risques majeurs
 
@@ -77,7 +77,7 @@
 ### RSK-5 — Contrôles du socle sans test dédié côté drwil
 - **Attendu** : chaque contrôle livré devrait pouvoir être vérifié
   indépendamment (cohérent avec l'esprit de `docs/recipes/refactor-without-breaking.md`).
-- **Codé réellement** : seul `.githooks/cadrage.test.mjs` existe à la
+- **Codé réellement** : seul `.githooks/scope.test.mjs` existe à la
   racine de drwil. `.githooks/check-docs.mjs` et `.githooks/run-checks.mjs`
   sont bien testés côté kit (`packages/drwil/test/kit.test.mjs`,
   31 tests verts), mais pas sur leur copie réellement installée à la

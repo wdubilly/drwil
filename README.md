@@ -586,8 +586,8 @@ npx drwil uninstall --yes   # actually removes those files
 * it never touches the project's chantier, intention and recipe folders.
 
 To only switch governance off (reversible, nothing deleted), set
-`"barriere": "off"` in `.drwil/ia-first.json`: no scope barrier, no
-`Drwil-Attente` trailer, no activity context for the agent.
+`"scopeGate": "off"` in `.drwil/ia-first.json`: no scope barrier, no
+`Drwil-Brief` trailer, no activity context for the agent.
 
 It does not remove everything, on purpose. To finish cleaning up:
 

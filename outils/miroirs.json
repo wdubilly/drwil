@@ -27,7 +27,7 @@
     "docs/benchmark-protocole.md": "Protocole de mesure de drwil lui-même (bench avec et sans drwil).",
     "docs/decouverte-valeur.md": "Rapport généré pour ce dépôt par le skill de découverte de valeur.",
     "docs/intentions/": "Intentions de drwil : contenu du projet, pas du gabarit.",
-    "docs/proje*/*": "Fiches des chantiers de drwil : contenu du projet, pas du gabarit. docs/projets/ ne garde que la fiche du chantier en cours (gabarit unique en anglais) jusqu'à sa clôture ; ensuite, l'entrée peut redevenir docs/projects/.",
+    "docs/projects/*": "Fiches des chantiers de drwil : contenu du projet, pas du gabarit.",
     "docs/recipes/corriger-un-defaut.md": "Recette éprouvée d'abord dans ce dépôt (décision du 2026-10-11), livrée ensuite ; en français comme les documents du dépôt."
   },
   "propresAuGabarit": {},

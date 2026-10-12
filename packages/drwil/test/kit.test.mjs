@@ -91,7 +91,7 @@ const capture = async (fn) => {
 // drwil lance cette suite, ses contrôles ne doivent pas hériter du report au commit.
 const envTest = { ...process.env, CI: "" };
 delete envTest.DRWIL_PUSH_TAGS_ONLY;
-delete envTest.DRWIL_PUSH_SANS_BRANCHE;
+delete envTest.DRWIL_PUSH_NO_BRANCH;
 delete envTest.DRWIL_HOOK;
 const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
 const git = (dir, ...args) =>
@@ -233,10 +233,10 @@ test("budget de temps : les contrôles au commit d'un projet équipé restent ra
 test("mise à jour sans casse : une exigence ajoutée après l'installation avertit un projet existant, bloque une installation neuve", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
-  assert.equal(config(dir).nouvellesExigences, "bloquant", "installation neuve : sévère d'emblée");
+  assert.equal(config(dir).newRequirements, "blocking", "installation neuve : sévère d'emblée");
   // Projet installé avant ce réglage (v0.3.0) : la clé n'existe pas.
   const ancienne = { ...config(dir) };
-  delete ancienne.nouvellesExigences;
+  delete ancienne.newRequirements;
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(ancienne, null, 2));
   writeFileSync(join(dir, ".drwil/state.json"), "{}\n");
   appendFileSync(join(dir, "docs/ia-first.md"), "\nÉtat local : `.drwil/state.json`.\n");
@@ -246,13 +246,13 @@ test("mise à jour sans casse : une exigence ajoutée après l'installation aver
   assert.match(r.stdout + r.stderr, /\.drwil\/state\.json/, "mais l'écart est signalé");
   // La mise à jour pose « avertissement » pour ce projet, sans jamais durcir.
   await quiet(() => apply({ lang: "fr", targetDir: dir }));
-  assert.equal(config(dir).nouvellesExigences, "avertissement");
+  assert.equal(config(dir).newRequirements, "warning");
   assert.equal(docsCheck().status, 0);
   // Le projet choisit de durcir : la même citation devient bloquante, et une mise à jour garde ce choix.
-  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), nouvellesExigences: "bloquant" }, null, 2));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), newRequirements: "blocking" }, null, 2));
   assert.equal(docsCheck().status, 1);
   await quiet(() => apply({ lang: "fr", targetDir: dir }));
-  assert.equal(config(dir).nouvellesExigences, "bloquant");
+  assert.equal(config(dir).newRequirements, "blocking");
 });
 
 test("les contrôles déclarés par le projet tournent et survivent à une réinstallation", async () => {
@@ -429,7 +429,7 @@ test("doublon d'ID dans le registre des contrats", async () => {
 test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc cadrage", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
-  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "bloquant" }));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeReminder: "blocking" }));
   assert.equal(git(dir, "add", "-A").status, 0);
   const rInit = git(dir, "commit", "-qm", "init");
   assert.equal(rInit.status, 0, `premier commit accepté (kit-mechanics.md couvre .githooks/) :\n${rInit.stdout}${rInit.stderr}`);
@@ -448,7 +448,7 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
   // rattaché à la fiche « entretien courant », le commit passe.
   writeFileSync(
     join(dir, "docs/projects/routine-maintenance.md"),
-    read(dir, "docs/projects/routine-maintenance.md").replace("fichiers:\n-->", "fichiers:\n  - scripts/tache.mjs\n-->"),
+    read(dir, "docs/projects/routine-maintenance.md").replace("files:\n-->", "files:\n  - scripts/tache.mjs\n-->"),
   );
   git(dir, "add", "-A");
   r = git(dir, "commit", "-qm", "tache rattachée");
@@ -468,7 +468,7 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
 test("QUA-016 : réglage par défaut (bloquant) : premier commit accepté, code orphelin refusé ; avertissement toujours possible", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
-  assert.equal(config(dir).cadrage, "bloquant", "réglage par défaut écrit à l'installation (docs/projects/journal.md, garde-fous)");
+  assert.equal(config(dir).scopeReminder, "blocking", "réglage par défaut écrit à l'installation (docs/projects/journal.md, garde-fous)");
   git(dir, "add", "-A");
   assert.equal(git(dir, "commit", "-qm", "init").status, 0, "les fichiers du kit sont couverts : le premier commit passe");
   // QUA-017 : commit suivant hors du périmètre testé ici, donc sur une branche.
@@ -481,7 +481,7 @@ test("QUA-016 : réglage par défaut (bloquant) : premier commit accepté, code 
   assert.notEqual(r.status, 0, "bloquant par défaut : code hors fiche refusé");
   assert.match(r.stdout + r.stderr, /scripts\/tache\.mjs.*hors de toute fiche/);
 
-  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "avertissement" }));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeReminder: "warning" }));
   const direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.match(direct.stdout, /scripts\/tache\.mjs.*hors de toute fiche/, "en avertissement : affiché quand même");
   assert.equal(direct.status, 0, "en avertissement : le contrôle reste vert");
@@ -490,7 +490,7 @@ test("QUA-016 : réglage par défaut (bloquant) : premier commit accepté, code 
 test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
-  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "off" }));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeReminder: "off" }));
 
   mkdirSync(join(dir, "scripts"));
   writeFileSync(join(dir, "scripts/tache.mjs"), "console.log('tache');\n");
@@ -498,7 +498,7 @@ test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async 
   assert.doesNotMatch(direct.stdout, /hors de toute fiche/);
   assert.equal(direct.status, 0);
 
-  const rappel = spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
+  const rappel = spawnSync(process.execPath, [".claude/hooks/scope-reminder.mjs"], {
     cwd: dir,
     encoding: "utf8",
     input: JSON.stringify({ tool_name: "Write", tool_input: { file_path: join(dir, "scripts/tache.mjs") } }),
@@ -510,7 +510,7 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
 
-  const gardeFou = spawnSync(process.execPath, [".claude/hooks/garde-fou-bash.mjs"], {
+  const gardeFou = spawnSync(process.execPath, [".claude/hooks/bash-guard.mjs"], {
     cwd: dir,
     encoding: "utf8",
     input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat .env" } }),
@@ -518,7 +518,7 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
   assert.match(gardeFou.stdout, /"permissionDecision":"ask"/);
   assert.match(gardeFou.stdout, /fichier \.env/);
 
-  const inoffensif = spawnSync(process.execPath, [".claude/hooks/garde-fou-bash.mjs"], {
+  const inoffensif = spawnSync(process.execPath, [".claude/hooks/bash-guard.mjs"], {
     cwd: dir,
     encoding: "utf8",
     input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat .env.example" } }),
@@ -526,7 +526,7 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
   assert.equal(inoffensif.stdout.trim(), "");
 
   const hook = (evenement, chemin) =>
-    spawnSync(process.execPath, [".claude/hooks/rappel-cadrage.mjs"], {
+    spawnSync(process.execPath, [".claude/hooks/scope-reminder.mjs"], {
       cwd: dir,
       encoding: "utf8",
       input: JSON.stringify({ hook_event_name: evenement, tool_name: "Write", tool_input: { file_path: join(dir, chemin) } }),
@@ -534,18 +534,18 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
   // Défaut « bloquant » : refus AVANT l'écriture d'un fichier de code hors fiche (docs/projects/journal.md, garde-fous).
   const refus = hook("PreToolUse", "scripts/nouveau.mjs");
   assert.match(refus.stdout, /"permissionDecision":"deny"/);
-  assert.match(refus.stdout, /Écriture refusée \(QUA-016, cadrage bloquant\).*scripts\/nouveau\.mjs/);
+  assert.match(refus.stdout, /Écriture refusée \(QUA-016, scopeReminder : blocking\).*scripts\/nouveau\.mjs/);
   assert.equal(hook("PreToolUse", "docs/notes.md").stdout.trim(), "", "la doc n'est jamais du code : jamais refusée");
   assert.equal(hook("PostToolUse", "scripts/nouveau.mjs").stdout.trim(), "", "en bloquant, pas de rappel en double après coup");
   // En « avertissement » : jamais de refus, un rappel après l'écriture.
-  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), cadrage: "avertissement" }));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeReminder: "warning" }));
   assert.equal(hook("PreToolUse", "scripts/nouveau.mjs").stdout.trim(), "");
   const rappel = hook("PostToolUse", "scripts/nouveau.mjs");
   assert.match(rappel.stdout, /Rappel de cadrage/);
   assert.match(rappel.stdout, /scripts\/nouveau\.mjs/);
   // Le gabarit branche le hook avant l'écriture.
   const reglages = read(dir, ".claude/settings.json");
-  assert.match(reglages, /"PreToolUse"[\s\S]*"Edit\|Write\|MultiEdit"[\s\S]*rappel-cadrage\.mjs[\s\S]*"PostToolUse"/);
+  assert.match(reglages, /"PreToolUse"[\s\S]*"Edit\|Write\|MultiEdit"[\s\S]*scope-reminder\.mjs[\s\S]*"PostToolUse"/);
 });
 
 test("état de gouvernance : lecteur livré, state.json ignoré par Git, contexte réinjecté au démarrage de Claude", async () => {
@@ -553,14 +553,14 @@ test("état de gouvernance : lecteur livré, state.json ignoré par Git, context
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
 
   assert.match(read(dir, ".gitignore"), /^\.drwil\/state\.json$/m);
-  assert.match(read(dir, ".claude/settings.json"), /"SessionStart"[\s\S]*\.githooks\/etat\.mjs/);
-  // Sans state.json : CADRAGE neutre, jamais d'état actif déduit.
-  const neutre = spawnSync(process.execPath, [".githooks/etat.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.match(read(dir, ".claude/settings.json"), /"SessionStart"[\s\S]*\.githooks\/state\.mjs/);
+  // Sans state.json : SCOPING neutre, jamais d'état actif déduit.
+  const neutre = spawnSync(process.execPath, [".githooks/state.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(neutre.status, 0);
-  assert.match(neutre.stdout, /Activité : CADRAGE/);
+  assert.match(neutre.stdout, /Activité : SCOPING/);
   // Un état invalide est signalé, sans faire échouer le démarrage de session.
   writeFileSync(join(dir, ".drwil/state.json"), "{ cassé");
-  const invalide = spawnSync(process.execPath, [".githooks/etat.mjs"], { cwd: dir, encoding: "utf8" });
+  const invalide = spawnSync(process.execPath, [".githooks/state.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(invalide.status, 0);
   assert.match(invalide.stdout, /État invalide/);
 });
@@ -569,13 +569,13 @@ test("rappel court : hook de saisie Claude livré, empreinte ignorée par Git, r
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
 
-  assert.match(read(dir, ".gitignore"), /^\.drwil\/rappel\.json$/m);
+  assert.match(read(dir, ".gitignore"), /^\.drwil\/reminder\.json$/m);
   const reglages = JSON.parse(read(dir, ".claude/settings.json"));
-  assert.match(JSON.stringify(reglages.hooks.UserPromptSubmit), /\.githooks\/etat\.mjs\\" rappel/);
-  const rappel = () => spawnSync(process.execPath, [".githooks/etat.mjs", "rappel"], { cwd: dir, encoding: "utf8" });
+  assert.match(JSON.stringify(reglages.hooks.UserPromptSubmit), /\.githooks\/state\.mjs\\" reminder/);
+  const rappel = () => spawnSync(process.execPath, [".githooks/state.mjs", "reminder"], { cwd: dir, encoding: "utf8" });
   const premier = rappel();
   assert.equal(premier.status, 0);
-  assert.match(premier.stdout, /\[drwil\] Rappel : CADRAGE/);
+  assert.match(premier.stdout, /\[drwil\] Rappel : SCOPING/);
   assert.equal(rappel().stdout, "", "état inchangé : rien n'est injecté");
 });
 
@@ -583,10 +583,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
   const fiche = "docs/projects/essai.md";
-  writeFileSync(
-    join(dir, fiche),
-    "# Projet : Essai\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- cadrage\nfichiers:\n  - src/essai.ts\n-->\n",
-  );
+  writeFileSync(join(dir, fiche), "# Projet : Essai\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- scope\nfiles:\n  - src/essai.ts\n-->\n");
   git(dir, "init", "-q");
   git(dir, "add", "-A");
   git(dir, "commit", "-qm", "init");
@@ -594,15 +591,15 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
   const reglages = JSON.parse(read(dir, ".claude/settings.json"));
   for (const evenement of ["PreToolUse", "PostToolUse"]) {
     assert.ok(
-      reglages.hooks[evenement].some((h) => h.matcher === "AskUserQuestion" && /saisie-drwil\.mjs/.test(JSON.stringify(h.hooks))),
+      reglages.hooks[evenement].some((h) => h.matcher === "AskUserQuestion" && /prompt-hook\.mjs/.test(JSON.stringify(h.hooks))),
       evenement,
     );
   }
-  assert.ok(reglages.permissions.deny.includes("Bash(*saisie-drwil*)"), "l'agent ne peut pas appeler le hook lui-même par le shell");
+  assert.ok(reglages.permissions.deny.includes("Bash(*prompt-hook*)"), "l'agent ne peut pas appeler le hook lui-même par le shell");
   assert.ok(existsSync(join(dir, ".claude/skills/start-a-workstream/SKILL.md")));
 
   const hook = (entree) =>
-    spawnSync(process.execPath, [".claude/hooks/saisie-drwil.mjs"], { cwd: dir, encoding: "utf8", input: JSON.stringify(entree) });
+    spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], { cwd: dir, encoding: "utf8", input: JSON.stringify(entree) });
   const etat = () => (existsSync(join(dir, ".drwil/state.json")) ? JSON.parse(read(dir, ".drwil/state.json")) : null);
   const claude = {
     questions: [
@@ -659,10 +656,10 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     tool_response: { ...claude, answers: { "Quelle fiche lancer ?": fiche } },
   });
   assert.equal(r.status, 0);
-  assert.match(r.stdout, /REALISATION \(lancé : docs\/projects\/essai\.md\)/);
-  assert.equal(etat().activite, "REALISATION");
-  assert.equal(etat().attente_active, fiche);
-  assert.equal(etat().fusion_autorisee, undefined, "sans seconde question, la fusion reste manuelle");
+  assert.match(r.stdout, /BUILD \(lancé : docs\/projects\/essai\.md\)/);
+  assert.equal(etat().activity, "BUILD");
+  assert.equal(etat().active_brief, fiche);
+  assert.equal(etat().auto_merge, undefined, "sans seconde question, la fusion reste manuelle");
 
   // Seconde question (en-tête drwil-fusion) : seule la réponse humaine autorise la fusion automatique.
   rmSync(join(dir, ".drwil/state.json"));
@@ -690,7 +687,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     tool_input: claudeFusion,
     tool_response: { ...claudeFusion, answers: { "Quelle fiche lancer ?": fiche, "Fusion à la fin du chantier ?": "Fusion manuelle" } },
   });
-  assert.equal(etat().fusion_autorisee, undefined);
+  assert.equal(etat().auto_merge, undefined);
   rmSync(join(dir, ".drwil/state.json"));
   const rf = hook({
     hook_event_name: "PostToolUse",
@@ -699,7 +696,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     tool_response: { ...claudeFusion, answers: { "Quelle fiche lancer ?": fiche, "Fusion à la fin du chantier ?": "Fusion automatique" } },
   });
   assert.match(rf.stdout, /fusion automatique autorisée/i);
-  assert.equal(etat().fusion_autorisee, true);
+  assert.equal(etat().auto_merge, true);
 
   // Copilot CLI : même hook, réponse en texte libre ; une fiche non cadrée est refusée.
   rmSync(join(dir, ".drwil/state.json"));
@@ -717,7 +714,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     tool_input: copilot,
     tool_result: { result_type: "success", text_result_for_llm: `User responded: ${fiche}` },
   });
-  assert.equal(etat().activite, "REALISATION");
+  assert.equal(etat().activity, "BUILD");
 });
 
 test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {
@@ -731,23 +728,23 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
       env: envTest,
     });
 
-  assert.equal(config(dir).transitions, "humain");
+  assert.equal(config(dir).transitions, "human");
   // Sans terminal interactif, ouvrir une attente est refusé en mode humain.
-  const refus = drwilEtat("passer", "ATTENTE", "--fiche", fiche);
+  const refus = drwilEtat("move", "EXPECTATION", "--fiche", fiche);
   assert.equal(refus.status, 1);
   assert.match(refus.stderr, /terminal interactif/);
   assert.ok(!existsSync(join(dir, ".drwil/state.json")), "état inchangé");
   // En mode agent, la façade transmet --fiche au module du projet.
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), transitions: "agent" }));
-  const ok = drwilEtat("passer", "ATTENTE", "--fiche", fiche);
+  const ok = drwilEtat("move", "EXPECTATION", "--fiche", fiche);
   assert.equal(ok.status, 0, ok.stderr);
-  assert.match(drwilEtat().stdout, /Activité : ATTENTE/);
+  assert.match(drwilEtat().stdout, /Activité : EXPECTATION/);
 
   // Barrière de périmètre : livrée en avertissement, hook du trailer exécutable, couverte par la fiche mécanique.
-  assert.equal(config(dir).barriere, "avertissement");
+  assert.equal(config(dir).scopeGate, "warning");
   if (process.platform !== "win32")
     assert.ok(statSync(join(dir, ".githooks/prepare-commit-msg")).mode & 0o111, "prepare-commit-msg exécutable");
-  assert.match(read(dir, "docs/projects/kit-mechanics.md"), /\.githooks\/perimetre\.mjs/);
+  assert.match(read(dir, "docs/projects/kit-mechanics.md"), /\.githooks\/scope-gate\.mjs/);
 
   const deny = JSON.parse(read(dir, ".claude/settings.json")).permissions.deny;
   for (const regle of ["Edit(**/.drwil/state.json)", "Write(**/.drwil/state.json)", "Bash(git commit -n*)"])
@@ -819,15 +816,15 @@ test("apply() signale (sans réécrire) un fichier déjà présent qui a dériv�
 test("init écrit un manifeste des fichiers installés (chemin + sha256), fusionné sans perte entre deux apply()", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
-  const manifeste = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
   assert.ok(Object.keys(manifeste).length > 10, "plusieurs fichiers enregistrés");
   assert.ok("AGENTS.md" in manifeste, "AGENTS.md présent");
   assert.equal(manifeste["AGENTS.md"], createHash("sha256").update(read(dir, "AGENTS.md")).digest("hex"));
 
   // apply() une 2ᵉ fois sans rien changer : le manifeste existant est conservé à l'identique (fusion, pas d'écrasement).
-  const avant = read(dir, ".drwil/fichiers-installes.json");
+  const avant = read(dir, ".drwil/installed-files.json");
   await quiet(() => apply({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
-  assert.equal(read(dir, ".drwil/fichiers-installes.json"), avant);
+  assert.equal(read(dir, ".drwil/installed-files.json"), avant);
 });
 
 test("lot 2 (désinstallation) : dry-run par défaut, --yes supprime, fichier modifié conservé, docs/projets jamais touché", async () => {
@@ -853,12 +850,12 @@ test("lot 2 (désinstallation) : dry-run par défaut, --yes supprime, fichier mo
   assert.equal(read(dir, "AGENTS.md"), empreinteModifiee);
 
   // docs/projects/, docs/intentions/, docs/recipes/ jamais touchés, même présents au manifeste.
-  const manifeste = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
   assert.ok(Object.keys(manifeste).some((p) => p.startsWith("docs/projects/")));
   assert.ok(existsSync(join(dir, "docs/projects/pending.md")), "docs/projects/ jamais supprimé par uninstall");
 
   // le manifeste ne garde plus les entrées des fichiers réellement supprimés.
-  const manifesteApres = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  const manifesteApres = JSON.parse(read(dir, ".drwil/installed-files.json"));
   assert.ok(!(".githooks/check-docs.mjs" in manifesteApres));
 });
 
@@ -866,7 +863,7 @@ test("lot 6 (gouvernance) : uninstall liste l'état local, ne le supprime qu'ave
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const etat = join(dir, ".drwil", "state.json");
-  writeFileSync(etat, JSON.stringify({ version: 1, activite: "CADRAGE", attente_active: null, demande_active: null, depuis: null }));
+  writeFileSync(etat, JSON.stringify({ version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null }));
   assert.ok((await uninstall({ targetDir: dir })).removed.includes(".drwil/state.json"));
   assert.ok(existsSync(etat), "dry-run ne supprime pas l'état");
   assert.ok((await uninstall({ targetDir: dir, dryRun: false })).removed.includes(".drwil/state.json"));
@@ -955,16 +952,16 @@ test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne versio
   const obsolete = ".githooks/ancien-script.py";
   const contenuObsolete = "# ancien script Python, retiré du kit depuis\n";
   writeFileSync(join(dir, obsolete), contenuObsolete);
-  const manifeste = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
   manifeste[obsolete] = createHash("sha256").update(contenuObsolete).digest("hex");
-  writeFileSync(join(dir, ".drwil/fichiers-installes.json"), JSON.stringify(manifeste, null, 2) + "\n");
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2) + "\n");
 
   // un fichier obsolète mais modifié depuis par le projet : jamais supprimé.
   const obsoleteModifie = ".githooks/autre-ancien.sh";
   const contenuInitial = "#!/bin/sh\n# ancien hook\n";
   writeFileSync(join(dir, obsoleteModifie), contenuInitial);
   manifeste[obsoleteModifie] = createHash("sha256").update(contenuInitial).digest("hex");
-  writeFileSync(join(dir, ".drwil/fichiers-installes.json"), JSON.stringify(manifeste, null, 2) + "\n");
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2) + "\n");
   writeFileSync(join(dir, obsoleteModifie), contenuInitial + "# modifié par le projet\n");
 
   const lignes = await capture(() => init({ lang: "fr", targetDir: dir, git: false }));
@@ -975,7 +972,7 @@ test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne versio
     lignes.join("\n"),
   );
 
-  const manifesteApres = JSON.parse(read(dir, ".drwil/fichiers-installes.json"));
+  const manifesteApres = JSON.parse(read(dir, ".drwil/installed-files.json"));
   assert.ok(!(obsolete in manifesteApres), "entrée retirée du manifeste");
   assert.ok(obsoleteModifie in manifesteApres, "entrée du fichier modifié conservée");
 });
@@ -1008,7 +1005,11 @@ test("QUA-017 : pas de travail direct sur la branche principale, même pour le t
   await quiet(() => init({ lang: "fr", targetDir: dir }));
   // init() bascule déjà sur une branche de travail avant tout commit (plus jamais sur master/main).
   const branche = git(dir, "symbolic-ref", "--short", "HEAD");
-  assert.equal(branche.stdout.trim(), "chantier/installation-kit", "init() laisse l'utilisateur sur une branche de travail, jamais master");
+  assert.equal(
+    branche.stdout.trim(),
+    "workstream/kit-installation",
+    "init() laisse l'utilisateur sur une branche de travail, jamais master",
+  );
 
   git(dir, "add", "-A");
   const premier = git(dir, "commit", "-qm", "premier commit");
@@ -1057,7 +1058,7 @@ test("QUA-017 : un push ne contenant que des tags ou des suppressions de branche
   const premier = git(dir, "commit", "-qm", "premier commit");
   assert.equal(premier.status, 0, premier.stdout + premier.stderr);
 
-  // scénario réel de `creer-release.mjs` : un tag posé puis poussé depuis master, après un merge légitime.
+  // scénario réel de `create-release.mjs` : un tag posé puis poussé depuis master, après un merge légitime.
   git(dir, "checkout", "-qb", "master");
   git(dir, "tag", "v1.0.0");
   git(dir, "tag", "v1.0.1");
@@ -1119,24 +1120,24 @@ test("alerte CI cassée sur la branche principale : job dédié livré, GitHub e
   const dirGh = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dirGh, ci: "github", git: false }));
   const gh = read(dirGh, ".github/workflows/ia-first.yml");
-  assert.match(gh, /alerter-si-ci-cassee:/);
+  assert.match(gh, /alert-if-ci-broken:/);
   assert.match(gh, /needs:\s*checks/);
   assert.match(gh, /github\.event_name == 'push'/);
   assert.match(gh, /github\.event\.repository\.default_branch/);
   assert.match(gh, /needs\.checks\.result == 'failure'/);
   assert.match(gh, /gh issue create/);
-  assert.match(gh, /pas de doublon/);
+  assert.match(gh, /no duplicate/);
 
   // GitLab : stage dédiée après `test`, déclenchée seulement sur la branche
   // par défaut et seulement en cas d'échec d'un job de la stage `test`.
   const dirGl = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dirGl, ci: "gitlab", git: false }));
   const gl = read(dirGl, ".gitlab-ci.yml");
-  assert.match(gl, /alerter-si-ci-cassee:/);
-  assert.match(gl, /stage: alerte/);
+  assert.match(gl, /alert-if-ci-broken:/);
+  assert.match(gl, /stage: alert$/m);
   assert.match(gl, /CI_COMMIT_BRANCH == \$CI_DEFAULT_BRANCH/);
   assert.match(gl, /when: on_failure/);
-  assert.match(gl, /pas de doublon/);
+  assert.match(gl, /no duplicate/);
 
   // Les deux restent couverts par QUA-013 (le nouveau job n'y casse rien).
   for (const dir of [dirGh, dirGl]) {
@@ -1189,7 +1190,7 @@ test("pre-commit : un contrôle du projet hors de ses chemins est reporté (visi
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
   const cfg = config(dir);
-  cfg.checks = [{ name: "suite lourde", run: 'node -e "process.exit(1)"', chemins: ["src/**"] }];
+  cfg.checks = [{ name: "suite lourde", run: 'node -e "process.exit(1)"', paths: ["src/**"] }];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
   git(dir, "add", "-A");
   const horsChemins = git(dir, "commit", "-qm", "rien sous src/");
@@ -1363,17 +1364,17 @@ test("module optionnel tableau de bord : génère un HTML lisant chantiers et co
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
+  const src = fileURLToPath(new URL("../templates/common/optional/dashboard/dashboard.mjs", import.meta.url));
+  writeFileSync(join(dir, ".githooks/dashboard.mjs"), readFileSync(src, "utf8"));
   writeFileSync(
     join(dir, "docs/projects/un-chantier.md"),
     "# Projet : un chantier\n\n**Statut** : cadré le 2026-10-04 — lot 1 en cours.\n\n" +
       "## 6. Lots\n\n- **Lot 1 — titre** [IA] : contenu. Critère de sortie : tests verts.\n\n" +
       "## Reprise\n\n- **Dernier état** (2026-10-04) : ...\n",
   );
-  const r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  const r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  const html = read(dir, "docs/tableau-de-bord.html");
+  const html = read(dir, "docs/dashboard.html");
   assert.match(html, /<html lang="fr">/);
   assert.match(html, /un chantier/);
   assert.match(html, /cadré le 2026-10-04 — lot 1 en cours\./);
@@ -1386,27 +1387,41 @@ test("module optionnel tableau de bord : agrège .drwil/usage.jsonl par chantier
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
+  const src = fileURLToPath(new URL("../templates/common/optional/dashboard/dashboard.mjs", import.meta.url));
+  writeFileSync(join(dir, ".githooks/dashboard.mjs"), readFileSync(src, "utf8"));
 
   // Sans fichier usage.jsonl : pas de régression, message d'absence explicite.
-  let r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  let r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(read(dir, "docs/tableau-de-bord.html"), /usage\.jsonl absent/);
+  assert.match(read(dir, "docs/dashboard.html"), /usage\.jsonl absent/);
 
   // Avec usage.jsonl : agrégation tokens/durée/modèles par chantier, lignes malformées ignorées.
   mkdirSync(join(dir, ".drwil"), { recursive: true });
   writeFileSync(
     join(dir, ".drwil/usage.jsonl"),
     [
-      JSON.stringify({ chantier: "un-chantier", lot: "Lot 1", tokens: 1000, modele: "claude-sonnet-5", duree_min: 30, date: "2026-10-04" }),
-      JSON.stringify({ chantier: "un-chantier", lot: "Lot 2", tokens: 2000, modele: "gpt-5.4", duree_min: 45, date: "2026-10-04" }),
+      JSON.stringify({
+        workstream: "un-chantier",
+        increment: "Lot 1",
+        tokens: 1000,
+        model: "claude-sonnet-5",
+        duration_min: 30,
+        date: "2026-10-04",
+      }),
+      JSON.stringify({
+        workstream: "un-chantier",
+        increment: "Lot 2",
+        tokens: 2000,
+        model: "gpt-5.4",
+        duration_min: 45,
+        date: "2026-10-04",
+      }),
       "pas du JSON valide",
     ].join("\n") + "\n",
   );
-  r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  const html = read(dir, "docs/tableau-de-bord.html");
+  const html = read(dir, "docs/dashboard.html");
   assert.match(html, /un-chantier/);
   assert.match(html, />3000</); // tokens cumulés
   assert.match(html, />75</); // minutes cumulées
@@ -1417,13 +1432,13 @@ test("module optionnel tableau de bord : affiche les derniers audits, sans régr
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
+  const src = fileURLToPath(new URL("../templates/common/optional/dashboard/dashboard.mjs", import.meta.url));
+  writeFileSync(join(dir, ".githooks/dashboard.mjs"), readFileSync(src, "utf8"));
 
   // Sans rapport d'audit : pas de régression, message d'absence explicite.
-  let r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  let r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(read(dir, "docs/tableau-de-bord.html"), /audit-risques\.md absent/);
+  assert.match(read(dir, "docs/dashboard.html"), /audit-risques\.md absent/);
 
   // Avec les deux rapports : titre et méta-bloc (citation en tête) repris tels quels.
   writeFileSync(
@@ -1434,9 +1449,9 @@ test("module optionnel tableau de bord : affiche les derniers audits, sans régr
     join(dir, "docs/decouverte-valeur.md"),
     "# Découverte de valeur et opportunités produit\n\n> Dernier scan : 2026-10-04\n> État du projet : exemple.\n\n## Opportunités\n",
   );
-  r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  const html = read(dir, "docs/tableau-de-bord.html");
+  const html = read(dir, "docs/dashboard.html");
   assert.match(html, /Audit de risques et dette technique/);
   assert.match(html, /Niveau de santé global : 🟠 Fragile/);
   assert.match(html, /Découverte de valeur et opportunités produit/);
@@ -1447,17 +1462,17 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/tableau-de-bord/tableau-de-bord.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/tableau-de-bord.mjs"), readFileSync(src, "utf8"));
+  const src = fileURLToPath(new URL("../templates/common/optional/dashboard/dashboard.mjs", import.meta.url));
+  writeFileSync(join(dir, ".githooks/dashboard.mjs"), readFileSync(src, "utf8"));
 
   // rapport récent : pas d'avertissement.
   writeFileSync(
     join(dir, "docs/audit-risques.md"),
     "# Audit de risques et dette technique\n\n> Dernier scan : 2026-10-04\n\n## Synthèse\n",
   );
-  let r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  let r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.doesNotMatch(read(dir, "docs/tableau-de-bord.html"), /à relancer/);
+  assert.doesNotMatch(read(dir, "docs/dashboard.html"), /à relancer/);
   let checkR = checks(dir);
   assert.doesNotMatch(checkR.stdout, /audit périmé/);
 
@@ -1467,9 +1482,9 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
     join(dir, "docs/audit-risques.md"),
     "# Audit de risques et dette technique\n\n> Dernier scan : 2020-01-01\n\n## Synthèse\n",
   );
-  r = spawnSync(process.execPath, [".githooks/tableau-de-bord.mjs", "docs/tableau-de-bord.html"], { cwd: dir, encoding: "utf8" });
+  r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(read(dir, "docs/tableau-de-bord.html"), /à relancer/);
+  assert.match(read(dir, "docs/dashboard.html"), /à relancer/);
   checkR = checks(dir);
   assert.equal(checkR.status, 0, "jamais bloquant : " + checkR.stdout + checkR.stderr);
   assert.match(checkR.stdout, /audit périmé.*docs\/audit-risques\.md/);
@@ -1478,35 +1493,35 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
 test("créer une release : détection du bump semver (Conventional Commits, best-effort)", async () => {
   // import() dynamique : passer l'URL file:// telle quelle (pas de conversion
   // en chemin OS) — un chemin Windows brut (d:\...) fait planter le loader ESM.
-  const { detecterBump, versionSuivante } = await import(
-    new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url)
+  const { detectBump, nextVersion } = await import(
+    new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url)
   );
 
-  assert.equal(detecterBump([]), null, "aucun commit : rien à publier");
+  assert.equal(detectBump([]), null, "aucun commit : rien à publier");
   assert.equal(
-    detecterBump([{ sujet: "Manifeste des fichiers installés", corps: "" }]),
+    detectBump([{ subject: "Manifeste des fichiers installés", body: "" }]),
     "patch",
     "aucun préfixe reconnu : patch par défaut",
   );
-  assert.equal(detecterBump([{ sujet: "fix: corrige X", corps: "" }]), "patch");
+  assert.equal(detectBump([{ subject: "fix: corrige X", body: "" }]), "patch");
   assert.equal(
-    detecterBump([
-      { sujet: "feat: ajoute Y", corps: "" },
-      { sujet: "fix: corrige X", corps: "" },
+    detectBump([
+      { subject: "feat: ajoute Y", body: "" },
+      { subject: "fix: corrige X", body: "" },
     ]),
     "minor",
     "un feat l'emporte sur un simple fix",
   );
-  assert.equal(detecterBump([{ sujet: "feat!: casse la compat", corps: "" }]), "major", "rupture annoncée (!) prioritaire");
+  assert.equal(detectBump([{ subject: "feat!: casse la compat", body: "" }]), "major", "rupture annoncée (!) prioritaire");
   assert.equal(
-    detecterBump([{ sujet: "feat: ajoute Y", corps: "BREAKING CHANGE: change le format" }]),
+    detectBump([{ subject: "feat: ajoute Y", body: "BREAKING CHANGE: change le format" }]),
     "major",
     "rupture annoncée dans le corps aussi détectée",
   );
 
-  assert.equal(versionSuivante("v1.2.3", "patch"), "v1.2.4");
-  assert.equal(versionSuivante("v1.2.3", "minor"), "v1.3.0");
-  assert.equal(versionSuivante("v1.2.3", "major"), "v2.0.0");
+  assert.equal(nextVersion("v1.2.3", "patch"), "v1.2.4");
+  assert.equal(nextVersion("v1.2.3", "minor"), "v1.3.0");
+  assert.equal(nextVersion("v1.2.3", "major"), "v2.0.0");
 });
 
 test("créer une release : module optionnel (pas copié par défaut), recette/skill livrés en FR et EN, --dry-run sans réseau", async () => {
@@ -1514,7 +1529,7 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
     const dir = tmp();
     await quiet(() => init({ targetDir: dir, lang, git: false }));
     // Le script lui-même n'est jamais copié automatiquement.
-    assert.ok(!existsSync(join(dir, ".githooks/creer-release.mjs")), "le module optionnel ne doit pas être copié par défaut");
+    assert.ok(!existsSync(join(dir, ".githooks/create-release.mjs")), "le module optionnel ne doit pas être copié par défaut");
     // La recette (toujours livrée) documente l'activation du module.
     const recette = lang === "fr" ? "docs/recipes/create-a-release.md" : "docs/recipes/create-a-release.md";
     assert.match(read(dir, recette), /optionnel|optional/i);
@@ -1527,18 +1542,18 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/creer-release.mjs"), readFileSync(src, "utf8"));
+  const src = fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
+  writeFileSync(join(dir, ".githooks/create-release.mjs"), readFileSync(src, "utf8"));
   git(dir, "add", "-A");
   git(dir, "commit", "-m", "feat: premier chantier");
-  const r = spawnSync(process.execPath, [".githooks/creer-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
+  const r = spawnSync(process.execPath, [".githooks/create-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /v0\.1\.0/);
   assert.match(r.stdout, /dry-run/);
 });
 
 test("créer une release : repère les paquets npm publiables (package.json suivi, non private) pour le tarball de release", async () => {
-  const { paquetsPublics } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
+  const { publicPackages } = await import(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   // racine privée (monorepo), un paquet publiable dans packages/truc, un paquet explicitement privé ailleurs.
@@ -1553,7 +1568,7 @@ test("créer une release : repère les paquets npm publiables (package.json suiv
   const cwdAvant = process.cwd();
   process.chdir(dir);
   try {
-    const paquets = paquetsPublics();
+    const paquets = publicPackages();
     assert.deepEqual(paquets.sort(), ["packages/truc"], "seul le paquet non private avec un name est retenu");
   } finally {
     process.chdir(cwdAvant);
@@ -1564,13 +1579,13 @@ test("créer une release : --dry-run liste le paquet npm à empaqueter quand il 
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/creer-release.mjs"), readFileSync(src, "utf8"));
+  const src = fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
+  writeFileSync(join(dir, ".githooks/create-release.mjs"), readFileSync(src, "utf8"));
   mkdirSync(join(dir, "packages/truc"), { recursive: true });
   writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc", version: "1.0.0" }));
   git(dir, "add", "-A");
   git(dir, "commit", "-m", "feat: ajoute un paquet publiable");
-  const r = spawnSync(process.execPath, [".githooks/creer-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
+  const r = spawnSync(process.execPath, [".githooks/create-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /tarball.*packages\/truc/);
 });
@@ -1678,7 +1693,7 @@ test("verify : ERROR (exit 2) sans moteur installé ou sans registre, hooks ind�
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`"));
   // Les hooks n'importent que .githooks/ : ils tournent sans drwil.
   assert.doesNotMatch(
-    read(dir, ".githooks/run-checks.mjs") + read(dir, ".githooks/moteur.mjs"),
+    read(dir, ".githooks/run-checks.mjs") + read(dir, ".githooks/engine.mjs"),
     /from "drwil"|packages\/drwil|dist\/index/,
   );
   writeFileSync(join(dir, "docs/contracts.md"), "# Contrats\n");
@@ -1830,7 +1845,7 @@ test("DRWIL-011 : apply audite et prévisualise sans rien écrire ; l'aperçu co
   const a = await auditerApply({ lang: "fr", targetDir: dir, git: false });
   assert.ok(a.protections.includes("eslint") && a.protections.includes("script npm « test »"), a.protections.join());
   assert.ok(a.outilsPresents.includes("CLAUDE.md"));
-  assert.ok(a.crees.includes("AGENTS.md") && a.crees.includes(".githooks/moteur.mjs") && a.crees.includes(".drwil/ia-first.json"));
+  assert.ok(a.crees.includes("AGENTS.md") && a.crees.includes(".githooks/engine.mjs") && a.crees.includes(".drwil/ia-first.json"));
   assert.ok(a.conserves.includes("CLAUDE.md") && !a.crees.includes("CLAUDE.md"));
   assert.ok(!existsSync(join(dir, "AGENTS.md")) && !existsSync(join(dir, ".drwil")), "l'aperçu n'écrit rien");
   assert.match(formaterAudit(a), /Rien ne sera écrasé/);
@@ -1854,7 +1869,7 @@ test("DRWIL-012 : installation neuve sans bruit ; un risque déclaré trop bas e
   assert.doesNotMatch(propre.stdout, /niveau de risque/, "aucun avertissement de risque à l'installation");
   writeFileSync(
     join(dir, "docs/projects/toucher-hooks.md"),
-    "# Projet : x\n\n**Statut** : cadré le 2026-10-06.\n**Risque** : LOW\n\n<!-- cadrage\nfichiers:\n  - .githooks/moteur.mjs\n-->\n\n## 7. Reprise\n\n- rien\n",
+    "# Projet : x\n\n**Statut** : cadré le 2026-10-06.\n**Risque** : LOW\n\n<!-- scope\nfiles:\n  - .githooks/engine.mjs\n-->\n\n## 7. Reprise\n\n- rien\n",
   );
   const r = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.notEqual(r.status, 0);
@@ -1909,7 +1924,7 @@ test("DRWIL-020 : seuls les contrats bloquants décident du verdict ; avertissem
     ],
   );
   assert.match(formaterVerdict(v), /1 avertissement\(s\) non satisfait\(s\), 1 indicatif\(s\) non satisfait\(s\)/);
-  const j = JSON.parse(cli(await projetVerify(avert("QUA-002", "ko", "warning")), "verify", "--json").stdout);
+  const j = JSON.parse(cli(await projetVerify(avert("QUA-002", "ko", "avertissement")), "verify", "--json").stdout);
   assert.deepEqual(j.bySeverity.warning, { total: 1, passed: 0, notPassed: 1 });
   v = await verify({ targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `ko`") + avert("QUA-002", "ok", "avertissement")) });
   assert.equal(v.statut, "FAIL", "un bloquant en échec reste FAIL");
@@ -2234,45 +2249,45 @@ test("paquet npm : aucun fichier du gabarit n'est retiré par npm, le .gitignore
 
 // Un seul numéro de version (docs/projects/journal.md, 2026-10-06).
 test("version unique : la release suit package.json et refuse un numéro déjà publié ou en recul ; --version lit package.json", async () => {
-  const { deciderVersion } = await import(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url));
-  const v = (version) => [{ dossier: "packages/drwil", version }];
-  assert.deepEqual(deciderVersion({ dernier: "v0.2.0", bump: "patch", versions: v("0.3.0"), tagsExistants: ["v0.2.0"] }), {
-    prochain: "v0.3.0",
+  const { decideVersion } = await import(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
+  const v = (version) => [{ dir: "packages/drwil", version }];
+  assert.deepEqual(decideVersion({ latest: "v0.2.0", bump: "patch", versions: v("0.3.0"), existingTags: ["v0.2.0"] }), {
+    next: "v0.3.0",
     source: "package.json (packages/drwil)",
   });
   assert.match(
-    deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.1"), tagsExistants: ["v0.2.1"] }).erreur,
+    decideVersion({ latest: "v0.2.1", bump: "patch", versions: v("0.2.1"), existingTags: ["v0.2.1"] }).error,
     /v0\.2\.1 existe déjà/,
   );
   assert.match(
-    deciderVersion({ dernier: "v0.2.1", bump: "patch", versions: v("0.2.0"), tagsExistants: [] }).erreur,
+    decideVersion({ latest: "v0.2.1", bump: "patch", versions: v("0.2.0"), existingTags: [] }).error,
     /n'est pas supérieure au dernier tag/,
   );
   assert.match(
-    deciderVersion({
-      dernier: null,
+    decideVersion({
+      latest: null,
       bump: "patch",
       versions: [
-        { dossier: "a", version: "1.0.0" },
-        { dossier: "b", version: "1.1.0" },
+        { dir: "a", version: "1.0.0" },
+        { dir: "b", version: "1.1.0" },
       ],
-    }).erreur,
+    }).error,
     /en désaccord/,
   );
-  assert.match(deciderVersion({ dernier: null, bump: "patch", versions: v(undefined) }).erreur, /non semver/);
+  assert.match(decideVersion({ latest: null, bump: "patch", versions: v(undefined) }).error, /non semver/);
   assert.deepEqual(
-    deciderVersion({ dernier: "v1.2.3", bump: "minor", versions: [] }),
-    { prochain: "v1.3.0", source: "commits" },
+    decideVersion({ latest: "v1.2.3", bump: "minor", versions: [] }),
+    { next: "v1.3.0", source: "commits" },
     "sans paquet npm : calcul d'après les commits, inchangé",
   );
-  assert.equal(deciderVersion({ dernier: "v1.2.3", bump: null, versions: v("9.9.9") }), null, "aucun commit : rien à publier");
+  assert.equal(decideVersion({ latest: "v1.2.3", bump: null, versions: v("9.9.9") }), null, "aucun commit : rien à publier");
 
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   writeFileSync(
-    join(dir, ".githooks/creer-release.mjs"),
-    readFileSync(fileURLToPath(new URL("../templates/common/optional/creer-une-release/creer-release.mjs", import.meta.url)), "utf8"),
+    join(dir, ".githooks/create-release.mjs"),
+    readFileSync(fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url)), "utf8"),
   );
   mkdirSync(join(dir, "packages/truc"), { recursive: true });
   writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc", version: "1.0.0" }));
@@ -2282,7 +2297,7 @@ test("version unique : la release suit package.json et refuse un numéro déjà 
   writeFileSync(join(dir, "packages/truc/a.txt"), "x");
   git(dir, "add", "-A");
   git(dir, "commit", "-qm", "change sans changer la version");
-  const r = spawnSync(process.execPath, [".githooks/creer-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
+  const r = spawnSync(process.execPath, [".githooks/create-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 1, "version non changée : release refusée, même en --dry-run");
   assert.match(r.stderr, /v1\.0\.0 existe déjà/);
 
@@ -2438,4 +2453,93 @@ test("langue du projet : anglais par défaut ; --lang fr garde le gabarit anglai
   assert.match(read(fr, "AGENTS.md"), /\*\*Project language: French\*\*/);
   assert.match(read(fr, "AGENTS.md"), /\*\*Commits\*\*: in French/);
   assert.ok(existsSync(join(fr, "docs/recipes/add-an-api-route.md")) && !existsSync(join(fr, "docs/recettes")));
+});
+
+/** Ramène un projet fraîchement installé à l'ancien format français (avant docs/projects/coeur-en-anglais.md). */
+function versAncienFormat(dir) {
+  const deplacer = (de, vers) => {
+    mkdirSync(join(dir, vers, ".."), { recursive: true });
+    cpSync(join(dir, de), join(dir, vers), { recursive: true });
+    rmSync(join(dir, de), { recursive: true });
+  };
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  const hooks = { "state.mjs": "etat.mjs", "scope-gate.mjs": "perimetre.mjs", "scope.mjs": "cadrage.mjs", "engine.mjs": "moteur.mjs" };
+  for (const [nouveau, ancien] of Object.entries(hooks)) {
+    deplacer(`.githooks/${nouveau}`, `.githooks/${ancien}`);
+    manifeste[`.githooks/${ancien}`] = manifeste[`.githooks/${nouveau}`];
+    delete manifeste[`.githooks/${nouveau}`];
+  }
+  rmSync(join(dir, ".drwil/installed-files.json"));
+  writeFileSync(join(dir, ".drwil/fichiers-installes.json"), JSON.stringify(manifeste, null, 2));
+  deplacer("docs/projects", "docs/projets");
+  deplacer("docs/projets/pending.md", "docs/projets/en-attente.md");
+  deplacer("docs/contracts.md", "docs/contrats.md");
+  writeFileSync(
+    join(dir, "docs/projets/ma-fiche.md"),
+    "# Projet : ma fiche\n\n**Statut** : cadré le 2026-10-12.\n\n<!-- cadrage\nfichiers:\n  - src/app.js\n-->\n\n## 6. Lots\n\n- **Lot 1** [IA] : faire.\n\n## 7. Reprise\n\n- rien\n",
+  );
+  const { scopeGate, scopeReminder, newRequirements, ...reste } = config(dir);
+  writeFileSync(
+    join(dir, ".drwil/ia-first.json"),
+    JSON.stringify({
+      ...reste,
+      barriere: "bloquant",
+      cadrage: "bloquant",
+      nouvellesExigences: "bloquant",
+      transitions: "humain",
+      dirs: { projects: "docs/projets", index: "docs/projets/en-attente.md", recettes: "docs/recipes", contracts: "docs/contrats.md" },
+    }),
+  );
+  writeFileSync(
+    join(dir, ".drwil/state.json"),
+    JSON.stringify({ version: 1, activite: "REALISATION", attente_active: "docs/projets/ma-fiche.md", demande_active: null, depuis: null }),
+  );
+}
+
+test("projet à l'ancien format : apply --dry-run annonce la migration sans rien écrire ; apply migre, les contrôles passent, rejouer ne change rien", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
+  versAncienFormat(dir);
+  const avant = read(dir, ".drwil/ia-first.json");
+
+  const apercu = formaterAudit(await auditerApply({ lang: "fr", targetDir: dir }));
+  assert.match(apercu, /Migration de l'ancien format \(simulation, rien d'écrit\)/);
+  assert.match(apercu, /docs\/projets\/ma-fiche\.md → docs\/projects\/ma-fiche\.md/);
+  assert.equal(read(dir, ".drwil/ia-first.json"), avant, "l'aperçu n'écrit rien");
+
+  await quiet(() => apply({ lang: "fr", targetDir: dir }));
+  const cfg = config(dir);
+  assert.deepEqual(
+    [cfg.scopeGate, cfg.scopeReminder, cfg.newRequirements, cfg.transitions, cfg.dirs.recipes, cfg.dirs.contracts],
+    ["blocking", "blocking", "blocking", "human", "docs/recipes", "docs/contracts.md"],
+  );
+  for (const ancien of ["barriere", "cadrage", "nouvellesExigences"]) assert.ok(!(ancien in cfg), ancien);
+  assert.deepEqual(JSON.parse(read(dir, ".drwil/state.json")), {
+    version: 1,
+    activity: "BUILD",
+    active_brief: "docs/projects/ma-fiche.md",
+    active_request: null,
+    since: null,
+  });
+  for (const f of [
+    ".githooks/state.mjs",
+    ".githooks/scope-gate.mjs",
+    ".githooks/scope.mjs",
+    ".githooks/engine.mjs",
+    "docs/projects/pending.md",
+  ])
+    assert.ok(existsSync(join(dir, f)), f);
+  for (const f of [".githooks/etat.mjs", ".githooks/perimetre.mjs", "docs/projets", ".drwil/fichiers-installes.json"])
+    assert.ok(!existsSync(join(dir, f)), f);
+  assert.match(read(dir, "docs/projects/ma-fiche.md"), /^<!-- scope\nfiles:\n {2}- src\/app\.js\n-->$/m);
+  assert.match(read(dir, "docs/projects/ma-fiche.md"), /^## 6\. Increments$/m);
+  assert.match(spawnSync(process.execPath, [".githooks/state.mjs"], { cwd: dir, encoding: "utf8" }).stdout, /BUILD/);
+
+  const r = checks(dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+
+  const migre = read(dir, ".drwil/ia-first.json");
+  const lignes = await capture(() => apply({ lang: "fr", targetDir: dir }));
+  assert.ok(!lignes.some((l) => /Migration de l'ancien format/.test(l)), "rejouer apply ne migre plus rien");
+  assert.equal(read(dir, ".drwil/ia-first.json"), migre);
 });

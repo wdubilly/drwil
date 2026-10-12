@@ -2,8 +2,8 @@
 
 **Statut** : cadré le 2026-10-05 — lots 1, 2 et 3a faits (seuils au réel, cliquet, le 2026-10-11) ; lot 3b (100 %) à la demande.
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
   - .drwil/ia-first.json
   - docs/contracts.md
   - docs/contracts-catalog.md
@@ -63,7 +63,7 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
 
 (aucun restant — tranchés par défaut le 2026-10-05, voir section 4)
 
-## 6. Lots
+## 6. Increments
 
 - **Lot 1 — Câbler c8 et mesurer** [IA] — fait le 2026-10-05 : `c8` ajouté
   en dépendance dev de `packages/drwil`, script `npm run test:coverage`
@@ -95,7 +95,7 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
     (branche `catch` si `readdir` échoue) et `setupGit` (branche "git
     introuvable"). [IA] : faisable, demande de simuler l'absence de git/un
     échec `readdir`, résultat pas garanti sans un peu de bricolage.
-  - `packages/drwil/templates/common/optional/creer-une-release/creer-release.mjs:97-145`
+  - `packages/drwil/templates/common/optional/create-release/create-release.mjs:97-145`
     — le vrai chemin d'exécution (`git tag`, `git push`, `gh release
     create`, hors `--dry-run`). [décision] : le tester à 100 % sans
     `--dry-run` exécuterait réellement un tag/push/release — inacceptable

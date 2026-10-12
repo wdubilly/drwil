@@ -1,13 +1,13 @@
-// Module optionnel « qualité front » (désactivé par défaut, voir
-// docs/recettes/ajouter-un-ecran-front.md) : aucune couleur en dur
-// (hexadécimale, rgb(), hsl()) ni palette Tailwind hors charte dans le
-// dossier source du front, hors son dossier de thème — on passe par les
-// classes de la palette du projet ou ses variables CSS.
+// Optional "front quality" module (disabled by default, see
+// docs/recipes/add-a-frontend-screen.md): no hard-coded colour (hexadecimal,
+// rgb(), hsl()) nor Tailwind palette outside the style guide in the front's
+// source folder, except its theme folder — go through the classes of the
+// project's palette or its CSS variables.
 //
-// Générique : racine et dossier de thème en arguments. Palette Tailwind par
-// défaut citée ci-dessous (à adapter si le projet a renommé ses familles) :
-// sky, rose, emerald, amber, red, orange, yellow, lime, green, teal, cyan,
-// blue, indigo, violet, purple, fuchsia, pink, gray, zinc, neutral, stone.
+// Generic: root and theme folder as arguments. Default Tailwind palette cited
+// below (to adapt if the project renamed its families): sky, rose, emerald,
+// amber, red, orange, yellow, lime, green, teal, cyan, blue, indigo, violet,
+// purple, fuchsia, pink, gray, zinc, neutral, stone.
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
@@ -30,20 +30,35 @@ function* sources(dir) {
   }
 }
 
-const erreurs = [];
+const TEXTS = {
+  fr: {
+    hardCoded: "couleur en dur",
+    palette: "palette hors charte",
+    title: "Couleurs hors charte (utiliser les classes de la palette du projet ou des variables CSS, voir docs/style-guide.md) :",
+  },
+  en: {
+    hardCoded: "hard-coded colour",
+    palette: "palette outside the style guide",
+    title: "Colours outside the style guide (use the classes of the project's palette or CSS variables, see docs/style-guide.md):",
+  },
+};
+let lang = "fr";
+try {
+  if (JSON.parse(readFileSync(join(".drwil", "ia-first.json"), "utf8")).lang === "en") lang = "en";
+} catch {}
+const T = TEXTS[lang];
+
+const errors = [];
 for (const path of sources(srcDir)) {
   readFileSync(path, "utf8")
     .split("\n")
-    .forEach((ligne, i) => {
-      for (const m of ligne.matchAll(COLOR)) erreurs.push(`${relative(root, path)}:${i + 1} : couleur en dur « ${m[0]} »`);
-      for (const m of ligne.matchAll(PALETTE)) erreurs.push(`${relative(root, path)}:${i + 1} : palette hors charte « ${m[0]} »`);
+    .forEach((line, i) => {
+      for (const m of line.matchAll(COLOR)) errors.push(`${relative(root, path)}:${i + 1} : ${T.hardCoded} « ${m[0]} »`);
+      for (const m of line.matchAll(PALETTE)) errors.push(`${relative(root, path)}:${i + 1} : ${T.palette} « ${m[0]} »`);
     });
 }
 
-if (erreurs.length) {
-  console.error(
-    `Couleurs hors charte (utiliser les classes de la palette du projet ou des variables CSS, voir docs/charte-graphique.md) :\n  ` +
-      erreurs.join("\n  "),
-  );
+if (errors.length) {
+  console.error(`${T.title}\n  ${errors.join("\n  ")}`);
   process.exit(1);
 }

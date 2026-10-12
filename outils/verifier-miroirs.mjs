@@ -218,18 +218,11 @@ const HISTORIQUE_INTERNE = [
   /run-box/,
 ];
 const FICHES_DU_GABARIT = ["common/base/docs/projects"];
-// Noms des fiches de l'ancien gabarit français : les hooks les lisent encore pour les projets installés
-// avant le gabarit unique en anglais. À retirer avec la migration des projets équipés (chantier A de
-// docs/intentions/livrable-full-english.md).
-const FICHES_DE_L_ANCIEN_GABARIT = ["en-attente.md", "entretien-courant.md", "mecanique-ia-first.md", "modele-fiche-projet.md"];
 
 /** Lignes du gabarit qui citent l'historique interne de drwil, ou une fiche absente du gabarit. */
 export function fuitesInternes(racine) {
   const gabarit = join(racine, GABARIT);
-  const fiches = new Set([
-    ...FICHES_DU_GABARIT.flatMap((d) => fichiers(join(gabarit, d)).map((f) => f.split(sep).at(-1))),
-    ...FICHES_DE_L_ANCIEN_GABARIT,
-  ]);
+  const fiches = new Set(FICHES_DU_GABARIT.flatMap((d) => fichiers(join(gabarit, d)).map((f) => f.split(sep).at(-1))));
   const problemes = [];
   for (const f of fichiers(gabarit).sort()) {
     normaliser(readFileSync(f, "utf8"))

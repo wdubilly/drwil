@@ -13,13 +13,13 @@ stay — `docs/projects/journal.md`, then deletion.)
 Decisions section and the related contracts cited. A scope touching
 `.githooks/`, CI or `.drwil/` requires HIGH; it can only be raised.)
 
-<!-- cadrage
-fichiers:
+<!-- scope
+files:
   - backend/app/routers/example.py
   - frontend/src/components/Example*
 -->
 
-(`cadrage` block: one path or pattern per line, under `fichiers:`; covers
+(`scope` block: one path or pattern per line, under `files:`; covers
 the code files this project touches, for the scoping reminder —
 `docs/ia-first.md`, section 7. A pattern that's too broad, `**` or
 `scripts/*`, is refused: name the file or use a pattern spanning at least
@@ -46,7 +46,7 @@ its own)
 
 - [decision] ...
 
-## 6. Lots
+## 6. Increments
 
 - **Increment 1 — title** [AI|human]: content. Exit criterion: what proves the
   increment is done (green tests, a passing check...).

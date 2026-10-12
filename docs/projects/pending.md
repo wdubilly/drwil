@@ -93,17 +93,16 @@ Fait : duplication dépôt / gabarit supprimée, le dépôt s'installe depuis
 son gabarit (`npm run installer-depot`) ; `init` et `apply` gardent les
 réglages d'un projet déjà installé (v1:INI-005, v1:INI-010) ; index.ts,
 etat.mjs et verify.ts découpés, plafond de 400 lignes adopté (QUA-001) ;
-livrable en anglais, chantier B : un seul gabarit, en anglais, `lang`
-devient la langue du projet, ce dépôt s'installe en anglais — journal du
-2026-10-12.
-- [ ] [IA] [P1] Livrable en anglais, chantier A : hooks, état, config,
-  bloc et trailer renommés selon le glossaire, code commun en anglais,
-  migration des projets équipés par `init` / `apply` —
-  `docs/projects/coeur-en-anglais.md`.
+livrable en anglais, chantiers B et A : un seul gabarit, en anglais,
+`lang` devient la langue du projet ; cœur (hooks, état, config, bloc,
+trailer, code commun) en anglais, migration des projets équipés par
+`init` / `apply`, version 0.4.0 — journal du 2026-10-12.
 - [ ] [IA] [P1] Livrable en anglais, chantier C : messages et
   sous-commandes de la CLI, commande unique `init` / `apply`, retrait de
   l'identifiant interne `DRWIL-012` des deux messages livrés qui
-  l'affichent (journal du 2026-10-11) — à cadrer après A.
+  l'affichent (journal du 2026-10-11) ; valeurs laissées par A
+  (identifiants de contrôles, statuts du moteur, sévérités, options
+  `--fiche` / `--demande`) — à cadrer.
 - [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
@@ -154,7 +153,7 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.
 - [ ] [IA] [P2] Prochaine release : signaler dans la note de version que
-  `chemins` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
+  `paths` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
   qui tourne au commit — voir `docs/projects/journal.md` (2026-10-05).
 
 ## Après la vague 7

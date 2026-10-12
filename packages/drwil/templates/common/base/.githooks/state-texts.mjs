@@ -1,0 +1,238 @@
+// Texts of the governance state and their layout for the agent (split from state.mjs, which
+// re-exports them): full context and short reminder, built from the state already read and the disk.
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { readBlock } from "./scope.mjs";
+import { config } from "./briefs.mjs";
+
+const TEXTS = {
+  fr: {
+    header: "[drwil] État de gouvernance, lu sur disque (.drwil/state.json) — ne pas le déduire de la conversation.",
+    missing: "(.drwil/state.json absent : état neutre)",
+    disabled:
+      "[drwil] Gouvernance désactivée (réglage « scopeGate » : off dans .drwil/ia-first.json) : aucune activité ni périmètre à suivre.",
+    invalid: "⚠ État invalide, traité comme SCOPING neutre :",
+    activity: (a) => `Activité : ${a}`,
+    brief: (b) => `Attente active : ${b ?? "aucune attente active"}`,
+    request: (r) => `Demande active : ${r ?? "aucune"}`,
+    autoMerge:
+      "Fusion automatique autorisée au lancement : en CLOSING, après verify PASS et le push de la clôture, dans cet ordre : attendre que GitHub ait calculé la PR (`gh pr view --json mergeStateStatus`) et, si elle est en retard sur la branche principale (BEHIND), la mettre à jour ; programmer `gh pr merge --auto --merge` ; vérifier que la fusion est bien programmée (`gh pr view --json autoMergeRequest`) ; seulement ensuite revenir en SCOPING, qui efface l'autorisation. En cas d'échec : rester en CLOSING et le signaler.",
+    scope: "Périmètre autorisé (bloc scope de la fiche) :",
+    noScope: "  (aucun bloc scope : aucun fichier de code autorisé)",
+    briefDeleted: "fiche supprimée (clôture)",
+    rule: (r) => `Règle : ${r}`,
+    reminder: (a, b, n) =>
+      `[drwil] Rappel : ${a}${b ? ` · ${b}` : " · aucune attente active"}${n === null ? "" : ` · périmètre : ${n} fichier(s) ou motif(s)`} (relire avec \`node .githooks/state.mjs\`).`,
+    invalidReminder: "[drwil] Rappel : état invalide, traité comme SCOPING neutre (détail : `node .githooks/state.mjs`).",
+    footer:
+      "Ne jamais écrire .drwil/state.json à la main. Lancer un chantier : `/drwil-lancer` (sondage) ou `node .githooks/state.mjs start` dans un terminal — décision humaine, sauf réglage « transitions » : agent. Changer d'activité : `node .githooks/state.mjs move <ACTIVITE>` ; clore est libre sur évidence de verify valide.",
+    rules: {
+      SCOPING: "lire, analyser, cadrer ; ne modifier aucun fichier de code.",
+      EXPECTATION: "formaliser l'attente dans sa fiche ; ne modifier aucun fichier de code.",
+      REQUEST: "expliciter la demande de réalisation ; ne modifier encore aucun fichier de code.",
+      BUILD: "réaliser l'attente, en ne modifiant que les fichiers du périmètre (bloc scope de la fiche active).",
+      EVIDENCE: "produire les preuves et lancer les contrôles ; un correctif demande de revenir en BUILD.",
+      VERIFY:
+        "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en BUILD ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
+      CLOSING:
+        "fiche entièrement terminée : la condenser dans le journal puis la supprimer ; sinon mettre à jour statut et reprise ; puis revenir en SCOPING.",
+    },
+  },
+  en: {
+    header: "[drwil] Governance state, read from disk (.drwil/state.json) — do not infer it from the conversation.",
+    missing: "(.drwil/state.json missing: neutral state)",
+    disabled: '[drwil] Governance disabled ("scopeGate" setting: off in .drwil/ia-first.json): no activity or scope to follow.',
+    invalid: "⚠ Invalid state, treated as neutral SCOPING:",
+    activity: (a) => `Activity: ${a}`,
+    brief: (b) => `Active brief: ${b ?? "none"}`,
+    request: (r) => `Active request: ${r ?? "none"}`,
+    autoMerge:
+      "Automatic merge authorised at start: in CLOSING, after verify PASS and pushing the closing commit, in this order: wait until GitHub has computed the PR (`gh pr view --json mergeStateStatus`) and, if it is behind the main branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is actually scheduled (`gh pr view --json autoMergeRequest`); only then go back to SCOPING, which clears the authorisation. On failure: stay in CLOSING and report it.",
+    scope: "Allowed scope (scope block of the brief):",
+    noScope: "  (no scope block: no code file allowed)",
+    briefDeleted: "brief deleted (closing)",
+    rule: (r) => `Rule: ${r}`,
+    reminder: (a, b, n) =>
+      `[drwil] Reminder: ${a}${b ? ` · ${b}` : " · no active brief"}${n === null ? "" : ` · scope: ${n} file(s) or pattern(s)`} (read again with \`node .githooks/state.mjs\`).`,
+    invalidReminder: "[drwil] Reminder: invalid state, treated as neutral SCOPING (details: `node .githooks/state.mjs`).",
+    footer:
+      'Never write .drwil/state.json by hand. Start a workstream: `/drwil-lancer` (poll) or `node .githooks/state.mjs start` in a terminal — a human decision, unless the "transitions" setting is agent. Change activity: `node .githooks/state.mjs move <ACTIVITY>`; closing is free on valid verify evidence.',
+    rules: {
+      SCOPING: "read, analyse, frame; do not modify any code file.",
+      EXPECTATION: "write down the expectation in its brief; do not modify any code file.",
+      REQUEST: "make the implementation request explicit; do not modify any code file yet.",
+      BUILD: "implement the expectation, modifying only the files in the scope (scope block of the active brief).",
+      EVIDENCE: "produce evidence and run the checks; a fix means going back to BUILD.",
+      VERIFY:
+        "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to BUILD; MANUAL: human attestation (`npx drwil attest`), then run it again.",
+      CLOSING:
+        "brief fully finished: condense it into the journal, then delete it; otherwise update status and hand-off; then go back to SCOPING.",
+    },
+  },
+};
+
+/** Fills the `{0}`, `{1}`… holes of a message. */
+export const fill = (message, ...values) => message.replace(/\{(\d)\}/g, (_, i) => values[i]);
+
+const RERUN = { fr: "relancer `npx drwil verify --evidence`", en: "run `npx drwil verify --evidence` again" };
+
+/** Messages of the transitions and of the state's validation (state.mjs), in the project's language. */
+export const STATE_MESSAGES = {
+  fr: {
+    or: " ou ",
+    notObject: "state.json doit contenir un objet JSON",
+    unknownField: `champ inconnu « {0} » (l'état ne contient que des références)`,
+    version: "version : 1 attendu",
+    unknownActivity: `activité inconnue « {0} » (attendu : {1})`,
+    scopingEmpty: "en SCOPING, aucune attente ni demande active",
+    briefRequired: `{0} : attente active requise`,
+    request: "active_request : chaîne ou null attendu",
+    autoMergeType: "auto_merge : booléen attendu",
+    autoMergeScoping: "auto_merge : jamais en SCOPING (aucun chantier en cours)",
+    since: "since : horodatage ISO 8601 ou null attendu",
+    briefType: "active_brief : chemin de fiche ou null attendu",
+    briefPlace: `active_brief : fiche .md de {1} attendue (« {0} »)`,
+    briefModel: `active_brief : « {0} » est un modèle, pas une fiche de chantier`,
+    briefMissing: `active_brief : fiche « {0} » introuvable`,
+    unreadable: "state.json illisible (JSON invalide)",
+    noEvidence: "aucune évidence de verify : lancer `npx drwil verify --evidence`",
+    evidenceUnreadable: `évidence {0} illisible : ${RERUN.fr}`,
+    noHead: "commit HEAD introuvable : la clôture se juge sur un travail commité",
+    otherCommit: `évidence {0} produite sur un autre commit que HEAD : ${RERUN.fr}`,
+    dirty: `arbre modifié (au moment de verify ou depuis) : commiter puis ${RERUN.fr}`,
+    manual: `verdict MANUAL : un humain atteste (\`npx drwil attest <ID>\`), puis ${RERUN.fr}`,
+    failed: `verdict {0} : revenir en BUILD (\`node .githooks/state.mjs move BUILD\`) pour corriger`,
+    noVerdict: `évidence {0} sans verdict reconnu : ${RERUN.fr}`,
+    startFrom: `lancement refusé : activité {0} (lancer se fait depuis SCOPING, EXPECTATION ou REQUEST)`,
+    startHuman: "lancement refusé : c'est une décision humaine (sondage `/drwil-lancer`, ou terminal interactif)",
+    startNotScoped: `lancement refusé : « {0} » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)`,
+    startInvalid: `lancement refusé : {0}`,
+    started: `{0} → BUILD (lancé : {1}){2}`,
+    mergeAuthorised: " — fusion automatique autorisée",
+    forbidden: `transition {0} → {1} interdite (depuis {0} : {2})`,
+    briefOption: "--fiche ne sert qu'à ouvrir une attente (SCOPING → EXPECTATION)",
+    briefNeeded: "ouvrir une attente exige --fiche <docs/projects/….md>",
+    resumed: `état précédent invalide, repris depuis le neutre ({0}) ; `,
+    closingRefused: `clôture refusée : {0}`,
+    stillThere: `retour en SCOPING refusé : {0} se dit terminée mais est encore là — la condenser dans docs/projects/journal.md, la supprimer et retirer sa ligne de l'index (recette « Clôturer »)`,
+    humanDecision: `{0} → {1} est une décision humaine : terminal interactif requis (réglage « transitions » : human)`,
+    confirm: `Pour passer de {0} à {1}, retapez l'activité visée ({1}) : `,
+    confirmRefused: "confirmation refusée : état inchangé",
+    noBriefs: "(aucune fiche cadrée : bloc scope commité et fiche non terminée)",
+    notReady: ` · non prête : {0} décision(s) à trancher`,
+    pick: "Numéro de la fiche à lancer : ",
+    confirmStart: `Lancer {0} ? Retapez LANCER : `,
+    askMerge: "Fusion automatique à la fin du chantier ? Retapez FUSION, sinon Entrée : ",
+    notConfirmed: "✗ lancement non confirmé : état inchangé",
+    unreadableState: `[drwil] état de gouvernance illisible : {0}`,
+    usage: `usage : node .githooks/state.mjs move <{0}> [--fiche <docs/projects/….md>] [--demande <texte>] | start [<fiche>] | briefs [--json] | reminder`,
+  },
+  en: {
+    or: " or ",
+    notObject: "state.json must hold a JSON object",
+    unknownField: `unknown field "{0}" (the state only holds references)`,
+    version: "version: 1 expected",
+    unknownActivity: `unknown activity "{0}" (expected: {1})`,
+    scopingEmpty: "in SCOPING, no active brief nor request",
+    briefRequired: `{0}: active brief required`,
+    request: "active_request: string or null expected",
+    autoMergeType: "auto_merge: boolean expected",
+    autoMergeScoping: "auto_merge: never in SCOPING (no workstream in progress)",
+    since: "since: ISO 8601 timestamp or null expected",
+    briefType: "active_brief: brief path or null expected",
+    briefPlace: `active_brief: .md brief of {1} expected ("{0}")`,
+    briefModel: `active_brief: "{0}" is a model, not a workstream brief`,
+    briefMissing: `active_brief: brief "{0}" not found`,
+    unreadable: "state.json unreadable (invalid JSON)",
+    noEvidence: "no verify evidence: run `npx drwil verify --evidence`",
+    evidenceUnreadable: `evidence {0} unreadable: ${RERUN.en}`,
+    noHead: "HEAD commit not found: closing is judged on committed work",
+    otherCommit: `evidence {0} produced on another commit than HEAD: ${RERUN.en}`,
+    dirty: `worktree modified (at verify time or since): commit, then ${RERUN.en}`,
+    manual: `MANUAL verdict: a human attests (\`npx drwil attest <ID>\`), then ${RERUN.en}`,
+    failed: `{0} verdict: go back to BUILD (\`node .githooks/state.mjs move BUILD\`) to fix`,
+    noVerdict: `evidence {0} without a known verdict: ${RERUN.en}`,
+    startFrom: `start refused: activity {0} (start from SCOPING, EXPECTATION or REQUEST)`,
+    startHuman: "start refused: it is a human decision (`/drwil-lancer` poll, or interactive terminal)",
+    startNotScoped: `start refused: "{0}" is not a scoped brief (scope block committed, brief not finished)`,
+    startInvalid: `start refused: {0}`,
+    started: `{0} → BUILD (started: {1}){2}`,
+    mergeAuthorised: " — automatic merge authorised",
+    forbidden: `transition {0} → {1} forbidden (from {0}: {2})`,
+    briefOption: "--fiche only opens an expectation (SCOPING → EXPECTATION)",
+    briefNeeded: "opening an expectation requires --fiche <docs/projects/….md>",
+    resumed: `previous state invalid, resumed from neutral ({0}); `,
+    closingRefused: `closing refused: {0}`,
+    stillThere: `back to SCOPING refused: {0} says it is done but is still there — condense it into docs/projects/journal.md, delete it and remove its index line ("Closing" recipe)`,
+    humanDecision: `{0} → {1} is a human decision: interactive terminal required ("transitions" setting: human)`,
+    confirm: `To move from {0} to {1}, type the target activity again ({1}): `,
+    confirmRefused: "confirmation refused: state unchanged",
+    noBriefs: "(no scoped brief: scope block committed and brief not finished)",
+    notReady: ` · not ready: {0} decision(s) to make`,
+    pick: "Number of the brief to start: ",
+    confirmStart: `Start {0}? Type LANCER: `,
+    askMerge: "Automatic merge at the end of the workstream? Type FUSION, otherwise Enter: ",
+    notConfirmed: "✗ start not confirmed: state unchanged",
+    unreadableState: `[drwil] governance state unreadable: {0}`,
+    usage: `usage: node .githooks/state.mjs move <{0}> [--fiche <docs/projects/….md>] [--demande <text>] | start [<brief>] | briefs [--json] | reminder`,
+  },
+};
+
+const language = (root) => (config(root).lang === "en" ? "en" : "fr");
+
+/** `scopeGate: off` switches off all governance (gate, trailer, context): withdrawal without deleting anything. */
+export const governanceDisabled = (root) => config(root).scopeGate === "off";
+
+/** Readable context to reinject to the agent, built from the disk only. */
+export function context(read, root) {
+  const T = TEXTS[language(root)];
+  if (governanceDisabled(root)) return T.disabled;
+  const { state, source, problems } = read;
+  const lines = [T.header];
+  if (source === "missing") lines.push(T.missing);
+  if (problems.length) lines.push(T.invalid, ...problems.map((p) => `  - ${p}`));
+  lines.push(T.activity(state.activity));
+  let brief = state.active_brief;
+  let patterns = null;
+  if (brief && !existsSync(join(root, brief))) {
+    brief = `${brief} — ${T.briefDeleted}`;
+  } else if (brief) {
+    try {
+      const text = readFileSync(join(root, brief), "utf8");
+      const title = /^#\s+(.+)$/m.exec(text)?.[1]?.trim();
+      if (title) brief = `${brief} — ${title}`;
+      patterns = readBlock(text).patterns;
+    } catch {
+      patterns = [];
+    }
+  }
+  lines.push(T.brief(brief), T.request(state.active_request));
+  if (state.auto_merge === true) lines.push(T.autoMerge);
+  if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
+  lines.push(T.rule(T.rules[state.activity]), T.footer);
+  return lines.join("\n");
+}
+
+/** Short reminder (two lines) of the state, to inject with each message; null if governance is disabled. */
+export function shortReminder(read, root) {
+  const T = TEXTS[language(root)];
+  if (governanceDisabled(root)) return null;
+  const { state, problems } = read;
+  const head = problems.length
+    ? T.invalidReminder
+    : (() => {
+        let n = null;
+        if (state.active_brief && !existsSync(join(root, state.active_brief))) {
+          return T.reminder(state.activity, `${state.active_brief} (${T.briefDeleted})`, null);
+        }
+        if (state.active_brief) {
+          try {
+            n = readBlock(readFileSync(join(root, state.active_brief), "utf8")).patterns.length;
+          } catch {
+            n = 0;
+          }
+        }
+        return T.reminder(state.activity, state.active_brief, n);
+      })();
+  return `${head}\n${T.rule(T.rules[state.activity])}`;
+}

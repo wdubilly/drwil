@@ -1,25 +1,26 @@
-// Module optionnel « qualité front » (désactivé par défaut, voir
-// docs/recettes/ajouter-un-ecran-front.md) : contraste texte / fond de
-// chaque combinaison de classes réellement écrite dans le dossier source du
-// front, en clair et en sombre. Seuil RGAA 4.1 (critère 3.2, = WCAG AA) :
-// 4,5:1, ou 3:1 pour le gros texte.
+// Optional "front quality" module (disabled by default, see
+// docs/recipes/add-a-frontend-screen.md): text / background contrast of every
+// combination of classes actually written in the front's source folder, in
+// light and dark mode. RGAA 4.1 threshold (criterion 3.2, = WCAG AA): 4.5:1,
+// or 3:1 for large text.
 //
-// Méthode (volontairement simple, sans navigateur) : chaque chaîne de
-// classes est évaluée seule, et chaque branche d'un gabarit `${…}` avec la
-// partie fixe. Sans fond dans la chaîne, le texte est jugé sur les fonds de
-// page (configurables) ; une chaîne sans couleur de texte n'est pas jugée
-// (pastilles, cadres, fonds : leur texte, s'il y en a, porte sa propre
-// classe). Les états (hover:, disabled:…) ne sont pas évalués : un élément
-// désactivé est exempté par le RGAA.
+// Method (deliberately simple, without a browser): each class string is
+// evaluated alone, and each branch of a `${…}` template with the fixed part.
+// Without a background in the string, the text is judged on the page
+// backgrounds (configurable); a string without a text colour is not judged
+// (badges, frames, backgrounds: their text, if any, carries its own class).
+// States (hover:, disabled:…) are not evaluated: a disabled element is exempt
+// under the RGAA.
 //
-// Zone à fond fixe (ex. bandeau toujours rouge foncé) : le commentaire
-// `contraste-fond: <couleur>` (ex. `danger-950`) juge les textes sans fond
-// des lignes suivantes sur cette couleur, en clair comme en sombre, jusqu'à
-// `contraste-fond: page`.
+// Fixed-background area (e.g. a banner that is always dark red): the comment
+// `contraste-fond: <colour>` (e.g. `danger-950`) judges the background-less
+// texts of the following lines on that colour, in light as in dark mode, until
+// `contraste-fond: page`. The directive keeps its name: it lives in the
+// project's code.
 //
-// Générique : racine, module de palette et dossier de thème en arguments.
-// Le module de palette exporte des scales façon config Tailwind
-// (ex. { slate: { 50: "#...", 900: "#..." }, danger: { DEFAULT: "#..." } }).
+// Generic: root, palette module and theme folder as arguments. The palette
+// module exports scales the Tailwind config way
+// (e.g. { slate: { 50: "#...", 900: "#..." }, danger: { DEFAULT: "#..." } }).
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -28,11 +29,21 @@ const root = process.argv[2] ?? ".";
 const paletteModule = process.argv[3] ?? "src/theme/palettes.js";
 const themeDir = join(root, process.argv[4] ?? "src/theme");
 const srcDir = join(root, "src");
-// Jetons clair/sombre par défaut (charte Cobalt) : à passer en argv[5] (JSON)
-// si la palette du projet nomme ses nuances autrement.
-const jetons = process.argv[5]
+// Default light/dark tokens (Cobalt style guide): pass them as argv[5] (JSON)
+// if the project's palette names its shades otherwise.
+const tokens = process.argv[5]
   ? JSON.parse(process.argv[5])
   : { light: { text: "slate-900", pages: ["white", "slate-50"] }, dark: { text: "slate-100", pages: ["slate-950", "slate-900"] } };
+
+const TEXTS = {
+  fr: { light: "clair", dark: "sombre", title: (n) => `Contrastes insuffisants (RGAA 3.2, voir docs/style-guide.md) — ${n} :` },
+  en: { light: "light", dark: "dark", title: (n) => `Insufficient contrasts (RGAA 3.2, see docs/style-guide.md) — ${n}:` },
+};
+let lang = "fr";
+try {
+  if (JSON.parse(readFileSync(join(".drwil", "ia-first.json"), "utf8")).lang === "en") lang = "en";
+} catch {}
+const T = TEXTS[lang];
 
 const palettes = await import(pathToFileURL(join(root, paletteModule)).href);
 
@@ -49,8 +60,8 @@ for (const [name, scale] of Object.entries(palettes)) {
   }
 }
 
-const LIGHT = { text: COLORS[jetons.light.text], pages: jetons.light.pages.map((p) => COLORS[p]) };
-const DARK = { text: COLORS[jetons.dark.text], pages: jetons.dark.pages.map((p) => COLORS[p]) };
+const LIGHT = { text: COLORS[tokens.light.text], pages: tokens.light.pages.map((p) => COLORS[p]) };
+const DARK = { text: COLORS[tokens.dark.text], pages: tokens.dark.pages.map((p) => COLORS[p]) };
 
 function rgb(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -82,7 +93,7 @@ function contrast(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-// Couleur d'une classe (`text-danger-700`, `bg-danger-950/40`) : [hex, alpha].
+// Colour of a class (`text-danger-700`, `bg-danger-950/40`): [hex, alpha].
 function color(cls, prefix) {
   const m = cls.match(new RegExp(`^${prefix}-([a-z]+(?:-\\d+)*)(?:/(\\d+))?$`));
   if (!m || !COLORS[m[1]]) return null;
@@ -113,8 +124,8 @@ function check(classes, zone) {
   if (!lightText && !darkText) return problems;
   const min = isLarge(tokens) ? 3 : 4.5;
   for (const [mode, theme, text, bg] of [
-    ["clair", LIGHT, lightText, lightBg],
-    ["sombre", DARK, darkText, darkBg],
+    [T.light, LIGHT, lightText, lightBg],
+    [T.dark, DARK, darkText, darkBg],
   ]) {
     const pages = zone ? [zone] : theme.pages;
     for (const page of bg ? [pages[0]] : pages) {
@@ -127,9 +138,9 @@ function check(classes, zone) {
   return [...new Set(problems)];
 }
 
-// Chaînes de classes d'un fichier, avec leur fond de zone : littéraux "…"
-// et gabarits `…${…}…` (partie fixe + chaque branche littérale ; la partie
-// fixe seule quand il n'y a pas de branche littérale).
+// Class strings of a file, with their area background: "…" literals and
+// `…${…}…` templates (fixed part + each literal branch; the fixed part alone
+// when there is no literal branch).
 function classStrings(source) {
   const zones = [];
   let zone = null;
@@ -163,7 +174,7 @@ function* sources(dir) {
   }
 }
 
-const erreurs = [];
+const errors = [];
 for (const path of sources(srcDir)) {
   const seen = new Set();
   for (const [s, zone] of classStrings(readFileSync(path, "utf8"))) {
@@ -171,10 +182,10 @@ for (const path of sources(srcDir)) {
     if (seen.has(`${key}|${zone}`)) continue;
     seen.add(`${key}|${zone}`);
     const problems = check(key, zone);
-    if (problems.length) erreurs.push(`${relative(root, path)} : « ${key} » — ${problems.join(", ")}`);
+    if (problems.length) errors.push(`${relative(root, path)} : « ${key} » — ${problems.join(", ")}`);
   }
 }
-if (erreurs.length) {
-  console.error(`Contrastes insuffisants (RGAA 3.2, voir docs/charte-graphique.md) — ${erreurs.length} :\n  ` + erreurs.join("\n  "));
+if (errors.length) {
+  console.error(`${T.title(errors.length)}\n  ${errors.join("\n  ")}`);
   process.exit(1);
 }

@@ -6,8 +6,8 @@
 // signifie que drwil ne peut pas établir le verdict.
 //
 // Aucun contrôle n'est implémenté ici : verify charge le moteur installé dans
-// le projet (.githooks/moteur.mjs), le même que les hooks git (ADR-003), et le
-// lecteur de contrats (.githooks/contrats.mjs). Les hooks n'ont donc jamais
+// le projet (.githooks/engine.mjs), le même que les hooks git (ADR-003), et le
+// lecteur de contrats (.githooks/contracts.mjs). Les hooks n'ont donc jamais
 // besoin de drwil, et il n'existe qu'une implémentation de chaque contrôle.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -142,10 +142,10 @@ export interface Projet {
  * Rend un message d'erreur si le projet n'est pas exploitable.
  */
 export async function chargerProjet(root: string): Promise<Projet | string> {
-  const moteurPath = join(root, ".githooks", "moteur.mjs");
-  const lecteurPath = join(root, ".githooks", "contrats.mjs");
+  const moteurPath = join(root, ".githooks", "engine.mjs");
+  const lecteurPath = join(root, ".githooks", "contracts.mjs");
   if (!existsSync(moteurPath) || !existsSync(lecteurPath)) {
-    return "moteur de contrôles absent (.githooks/moteur.mjs, .githooks/contrats.mjs) : relancer `drwil apply`";
+    return "moteur de contrôles absent (.githooks/engine.mjs, .githooks/contracts.mjs) : relancer `drwil apply`";
   }
   let cfg: Record<string, any>;
   try {
@@ -153,11 +153,56 @@ export async function chargerProjet(root: string): Promise<Projet | string> {
   } catch {
     return "configuration illisible ou absente (.drwil/ia-first.json)";
   }
-  const registre: string = cfg.dirs?.contracts ?? (cfg.lang === "en" ? "docs/contracts.md" : "docs/contrats.md");
+  const registre: string = cfg.dirs?.contracts ?? "docs/contracts.md";
   if (!existsSync(join(root, registre))) return `registre des contrats absent (${registre})`;
-  const moteur = await import(pathToFileURL(moteurPath).href);
-  const lecteur = await import(pathToFileURL(lecteurPath).href);
-  return { cfg, registre, moteur, lecteur };
+  const engine = await import(pathToFileURL(moteurPath).href);
+  const contracts = await import(pathToFileURL(lecteurPath).href);
+  return { cfg, registre, ...pont(engine, contracts) };
+}
+
+/**
+ * Les hooks parlent anglais (docs/projects/coeur-en-anglais.md, lot 3) ; la CLI garde son modèle
+ * jusqu'au chantier C. Ce pont traduit à la frontière, sans rien changer de ce que verify affiche
+ * ni de l'évidence qu'il écrit.
+ */
+function pont(engine: any, contracts: any): { moteur: any; lecteur: any } {
+  const versCli = (k: any) => ({
+    id: k.id,
+    titre: k.title,
+    ligne: k.line,
+    forme: k.form === "table" ? "tableau" : k.form,
+    regle: k.rule,
+    controles: k.checks,
+    manuel: k.manual,
+    severite: k.severity,
+    severiteBrute: k.rawSeverity,
+    texte: k.text,
+    brut: k,
+  });
+  const lecteur = {
+    lireContrats: (texte: string) => contracts.readContracts(texte).map(versCli),
+    validerContrats: (ks: any[], ids: string[], lang?: string) =>
+      contracts
+        .validateContracts(
+          ks.map((k) => k.brut),
+          ids,
+          lang,
+        )
+        .map((e: any) => ({ id: e.id, ligne: e.line, type: e.type === "duplicate" ? "doublon" : e.type, message: e.message })),
+    controlesConnus: (cfg: Record<string, any>) => contracts.knownChecks(cfg),
+  };
+  const moteur = {
+    controles: (root: string, o: { cfg: Record<string, any>; complet?: boolean }) =>
+      engine.checks(root, { cfg: o.cfg, whole: o.complet }).map((c: any) => ({
+        id: c.id,
+        nom: c.name,
+        executer: (opts: { stdio?: string } = {}) => {
+          const r = c.run(opts);
+          return { statut: r.status, detail: r.detail, message: r.message, sortie: r.output };
+        },
+      })),
+  };
+  return { moteur, lecteur };
 }
 
 export async function verify(opts: VerifyOptions): Promise<Verdict> {
