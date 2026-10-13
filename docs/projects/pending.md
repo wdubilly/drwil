@@ -62,8 +62,8 @@ possible et à publier par une release dès sa clôture, parce qu'il casse
 aujourd'hui l'adoption de drwil sur tout projet déjà outillé. Ordre de
 réalisation :
 
-1. `init` sur un projet existant, puis release
-   (`docs/projects/init-projet-existant.md`).
+1. Fait le 2026-10-13 : `init` sur un projet existant, puis release 0.5.1
+   (journal du 2026-10-13).
 2. Protéger master (geste humain ; prérequis de la relecture humaine et de
    la fabrique).
 3. Catalogue, fiche 1 : format.
@@ -126,11 +126,6 @@ livrable en anglais, chantiers B et A : un seul gabarit, en anglais,
 `lang` devient la langue du projet ; cœur (hooks, état, config, bloc,
 trailer, code commun) en anglais, migration des projets équipés par
 `init` / `apply`, version 0.4.0 — journal du 2026-10-12.
-- [ ] [IA] [P0] `init` sur un projet existant (lots 1 et 2 faits, reste la release 0.5.1) : ne plus garder en
-  silence un `.gitignore`, un `CLAUDE.md`, un `.claude/settings.json`, une
-  CI ou un `core.hooksPath` auxquels manque ce dont drwil a besoin
-  (v1:INI-001, v1:INI-005, v1:INI-010) —
-  `docs/projects/init-projet-existant.md`.
 - [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —

@@ -876,3 +876,22 @@ l'index ; texte intégral dans l'historique git
   rattacher à la prochaine release.
 - **Clôturé par** : la PR de ce chantier (branche
   `workstream/readme-a-jour`).
+
+## 2026-10-13 — `init` sur un projet existant, release 0.5.1
+
+- **Décisions clés** : un fichier que le projet possède déjà n'est jamais
+  écrasé, mais `init` y ajoute ce dont drwil a besoin et le dit
+  (`--dry-run` le montre d'abord) : bloc délimité `>>> drwil` / `<<< drwil`
+  (`.gitignore`, `CLAUDE.md`, `GEMINI.md`, instructions Copilot et Cursor),
+  fusion JSON (`.claude/settings.json`) et TOML (`.gitleaks.toml`),
+  consignes drwil d'`AGENTS.md` dans `.drwil/AGENTS.md` (si présent). La CI déjà en
+  place est détectée et non réécrite ; un `core.hooksPath` existant
+  (husky, lefthook) est conservé, `init` dit comment appeler les hooks.
+  `doctor` vérifie ces ajouts, `uninstall` les retire. Version 0.5.1
+  décidée par le demandeur ; le report « Unreleased » du CHANGELOG (README)
+  y est rattaché.
+- **Limites connues** : un tableau `paths` d'une ligne de `.gitleaks.toml`
+  revient sur deux lignes après `uninstall` ; les permissions fusionnées
+  dans `.claude/settings.json` restent après `uninstall`.
+- **Clôturé par** : la PR de ce chantier (branche
+  `workstream/release-0-5-1`) ; tag `v0.5.1` et release après fusion.
