@@ -1,6 +1,6 @@
 # Projet : `init` sur un projet existant, ne rien laisser de côté en silence
 
-**Statut** : cadré le 2026-10-13 — lots 1 et 2 réalisés, release à faire à la clôture.
+**Statut** : cadré le 2026-10-13 — lots 1 et 2 faits le 2026-10-13 (PR de `workstream/init-projet-existant`) ; reste le lot 3, la release.
 **Risque** : HIGH
 
 (HIGH : le chantier change ce que `init` écrit dans les fichiers d'un projet
@@ -155,5 +155,6 @@ l'installation.
   `uninstall` ; les permissions fusionnées dans .claude/settings.json
   restent après `uninstall` (seuls les hooks du kit sont retirés).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] preuve (`drwil verify`), clôture, fusion
-  automatique ; puis [humain] la release (lot 3).
+- **Prochaine étape** : [humain] la release (lot 3), une fois la PR
+  fusionnée (`docs/recipes/create-a-release.md`), puis condenser la fiche
+  dans le journal.
