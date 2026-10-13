@@ -1,6 +1,6 @@
 # Projet : `init` sur un projet existant, ne rien laisser de côté en silence
 
-**Statut** : cadré le 2026-10-13 — décisions prises, lot 1 prêt à lancer.
+**Statut** : cadré le 2026-10-13 — lots 1 et 2 réalisés, release à faire à la clôture.
 **Risque** : HIGH
 
 (HIGH : le chantier change ce que `init` écrit dans les fichiers d'un projet
@@ -28,6 +28,7 @@ files:
   - packages/drwil/templates/common/tools/copilot/.github/copilot-instructions.md
   - packages/drwil/templates/common/tools/cursor/.cursor/rules/ia-first.mdc
   - outils/miroirs.json
+  - docs/ia-first.md
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/README.md
   - packages/drwil/CHANGELOG.md
@@ -143,6 +144,16 @@ l'installation.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-13) : inventaire fait, décisions prises, rien de codé.
+- **Dernier état** (2026-10-13) : lots 1 et 2 réalisés ensemble (le
+  correctif annoncé par le lot 1 est l'ajout du lot 2) : modules
+  `packages/drwil/src/essentials.ts` (détection) et
+  `packages/drwil/src/complete.ts` (ajouts sans écraser, retrait par
+  `uninstall`) ; tests dans `packages/drwil/test/kit.test.mjs`
+  (« projet existant : … », « ajouts sans écraser … », « mécanique
+  Claude … »). Limite connue : un tableau `paths` d'une ligne dans
+  .gitleaks.toml revient équivalent mais sur deux lignes après
+  `uninstall` ; les permissions fusionnées dans .claude/settings.json
+  restent après `uninstall` (seuls les hooks du kit sont retirés).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : [IA] preuve (`drwil verify`), clôture, fusion
+  automatique ; puis [humain] la release (lot 3).
