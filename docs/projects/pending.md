@@ -56,22 +56,28 @@ d'abord, d'où les seuils de couverture (vague 2) avant le refactoring de
 Revu par le demandeur le 2026-10-13 : le **catalogue** (vague 5) passe
 avant le reste de la vague 4, parce que ses décisions sont fraîches, que son
 format casse une compatibilité et qu'il ne touche pas le même code que la
-relecture et la fluidité. Ordre de réalisation :
+relecture et la fluidité. Revu de nouveau le 2026-10-13 par le demandeur :
+`init` sur un projet existant passe en tête, en `[P0]`, à lancer dès que
+possible et à publier par une release dès sa clôture, parce qu'il casse
+aujourd'hui l'adoption de drwil sur tout projet déjà outillé. Ordre de
+réalisation :
 
-1. Protéger master (geste humain ; prérequis de la relecture humaine et de
+1. `init` sur un projet existant, puis release
+   (`docs/projects/init-projet-existant.md`).
+2. Protéger master (geste humain ; prérequis de la relecture humaine et de
    la fabrique).
-2. Catalogue, fiche 1 : format.
-3. Catalogue, fiche 2 : profils.
-4. Catalogue, fiche 3 : adoption ciblée.
-5. Relecture avant fusion et vue de relecture, cadrées ensemble (même
+3. Catalogue, fiche 1 : format.
+4. Catalogue, fiche 2 : profils.
+5. Catalogue, fiche 3 : adoption ciblée.
+6. Relecture avant fusion et vue de relecture, cadrées ensemble (même
    sondage, même état, appuyées sur master protégé).
-6. Fluidité sans perte de rigueur (touche aussi les transitions et le
-   sondage : après le 5 pour ne pas le refaire).
-7. Petite correction sous barrière bloquante.
-8. Consommation écrite à la clôture (attend des chiffres fiables, que les
-   chantiers 2 à 4 fourniront).
-9. Vague 6, la fabrique.
-10. Vague 7, le produit.
+7. Fluidité sans perte de rigueur (touche aussi les transitions et le
+   sondage : après le 6 pour ne pas le refaire).
+8. Petite correction sous barrière bloquante.
+9. Consommation écrite à la clôture (attend des chiffres fiables, que les
+   chantiers 3 à 5 fourniront).
+10. Vague 6, la fabrique.
+11. Vague 7, le produit.
 
 Les trois fiches du catalogue passent en `[P1]` pour que `/drwil-start`
 les propose dans cet ordre.
@@ -120,6 +126,11 @@ livrable en anglais, chantiers B et A : un seul gabarit, en anglais,
 `lang` devient la langue du projet ; cœur (hooks, état, config, bloc,
 trailer, code commun) en anglais, migration des projets équipés par
 `init` / `apply`, version 0.4.0 — journal du 2026-10-12.
+- [ ] [décision] [P0] `init` sur un projet existant : ne plus garder en
+  silence un `.gitignore`, un `CLAUDE.md`, un `.claude/settings.json`, une
+  CI ou un `core.hooksPath` auxquels manque ce dont drwil a besoin
+  (v1:INI-001, v1:INI-005, v1:INI-010) —
+  `docs/projects/init-projet-existant.md`.
 - [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
