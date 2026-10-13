@@ -104,6 +104,13 @@ trailer, code commun) en anglais, migration des projets équipés par
 - [ ] [décision] [P1] Vue de relecture : montrer à l'humain ce qui demande
   son jugement dans une PR (décisions, cadrage, règles, preuves,
   exceptions) — `docs/intentions/vue-de-relecture.md`.
+- [ ] [décision] [P1] Relecture avant fusion, choisie au lancement : une
+  question de plus dans le sondage (`drwil-review` : aucune, relecture par
+  un agent, relecture humaine), indépendante de la fusion automatique ou
+  manuelle ; combinaison fusion automatique + relecture humaine refusée ;
+  touche le sondage, l'état local, la recette de clôture et le gabarit — à
+  cadrer avec la vue de relecture (`docs/intentions/vue-de-relecture.md`)
+  et la protection de master.
 - [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
   légère décidée, modalités à définir — `docs/projects/entretien-sous-barriere-bloquante.md`.
 
