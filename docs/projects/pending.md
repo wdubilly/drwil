@@ -53,6 +53,29 @@ cite les contrats candidats `v1:` qu'elle rend réels
 d'abord, d'où les seuils de couverture (vague 2) avant le refactoring de
 `packages/drwil/src/index.ts` (vague 4).
 
+Revu par le demandeur le 2026-10-13 : le **catalogue** (vague 5) passe
+avant le reste de la vague 4, parce que ses décisions sont fraîches, que son
+format casse une compatibilité et qu'il ne touche pas le même code que la
+relecture et la fluidité. Ordre de réalisation :
+
+1. Protéger master (geste humain ; prérequis de la relecture humaine et de
+   la fabrique).
+2. Catalogue, fiche 1 : format.
+3. Catalogue, fiche 2 : profils.
+4. Catalogue, fiche 3 : adoption ciblée.
+5. Relecture avant fusion et vue de relecture, cadrées ensemble (même
+   sondage, même état, appuyées sur master protégé).
+6. Fluidité sans perte de rigueur (touche aussi les transitions et le
+   sondage : après le 5 pour ne pas le refaire).
+7. Petite correction sous barrière bloquante.
+8. Consommation écrite à la clôture (attend des chiffres fiables, que les
+   chantiers 2 à 4 fourniront).
+9. Vague 6, la fabrique.
+10. Vague 7, le produit.
+
+Les trois fiches du catalogue passent en `[P1]` pour que `/drwil-start`
+les propose dans cet ordre.
+
 ## Vague 1 — hygiène et preuves : terminée le 2026-10-11
 
 Faite dans l'ordre : la règle `git -c` recalibrée, SEC-006 outillé, la
@@ -121,14 +144,14 @@ reportée à la vague 7) ; reste à valider l'intention et à écrire le
 critère de sortie de chaque fiche —
 `docs/intentions/catalogue-cycle-de-vie.md`.
 
-- [ ] [décision] [P2] Format du catalogue : JSON canonique, schéma
+- [ ] [décision] [P1] Format du catalogue : JSON canonique, schéma
   versionné, statuts (+ NOT_APPLICABLE), sévérités BLOQUANT / MAJEUR /
   MINEUR avec échéance, mode de contrôle, Markdown généré, une quinzaine
   de contrats déjà tenus (v1:CTR-003, v1:CTR-010, v1:CTR-012) — fiche 1.
-- [ ] [décision] [P2] Profils par risque du produit (LÉGER, STANDARD,
+- [ ] [décision] [P1] Profils par risque du produit (LÉGER, STANDARD,
   RENFORCÉ, CRITIQUE ; DOGFOODING cumulable) : contrats applicables et
   sévérité choisis par profil (v1:CTR-014, v1:HOOK-006) — fiche 2.
-- [ ] [décision] [P2] Adoption ciblée : détection et questions à `init`,
+- [ ] [décision] [P1] Adoption ciblée : détection et questions à `init`,
   liste classée, `drwil contracts add <ID>` — fiche 3.
 
 ## Vague 6 — la fabrique, en pilote dans ce dépôt
