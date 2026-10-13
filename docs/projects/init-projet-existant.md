@@ -1,6 +1,6 @@
 # Projet : `init` sur un projet existant, ne rien laisser de côté en silence
 
-**Statut** : cadré le 2026-10-13 — points à trancher avant le lot 1.
+**Statut** : cadré le 2026-10-13 — décisions prises, lot 1 prêt à lancer.
 **Risque** : HIGH
 
 (HIGH : le chantier change ce que `init` écrit dans les fichiers d'un projet
@@ -16,6 +16,15 @@ files:
   - packages/drwil/src/doctor.ts
   - packages/drwil/src/config.ts
   - packages/drwil/src/stack.ts
+  - packages/drwil/src/manifest.ts
+  - packages/drwil/src/i18n.ts
+  - packages/drwil/src/migration-table.ts
+  - packages/drwil/templates/common/base/*.md
+  - packages/drwil/templates/common/base/gitignore
+  - packages/drwil/templates/common/tools/claude/.claude/settings.json
+  - packages/drwil/templates/common/tools/copilot/.github/copilot-instructions.md
+  - packages/drwil/templates/common/tools/cursor/.cursor/rules/ia-first.mdc
+  - outils/miroirs.json
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/README.md
   - packages/drwil/CHANGELOG.md
@@ -79,39 +88,41 @@ l'installation.
 - 2026-10-13 (demandeur) : priorité `[P0]`, en tête de l'ordre de
   réalisation, à lancer dès que possible ; une release est publiée dès la
   clôture du chantier (`docs/recipes/create-a-release.md`).
+- 2026-10-13 (demandeur), sur proposition de l'agent :
+  1. Fichiers à lignes (.gitignore, CLAUDE.md, GEMINI.md) : `init` ajoute
+     seulement les lignes manquantes dans un bloc délimité « # drwil »,
+     idempotent, montré par `--dry-run`, retiré par `uninstall`.
+  2. Fichiers structurés (.claude/settings.json, .gitleaks.toml) : fusion
+     des hooks, permissions et liste blanche drwil manquants, sans modifier
+     ni retirer une clé du projet ; montrée par `--dry-run`.
+  3. Fichiers en prose (AGENTS.md, copilot-instructions.md, règle Cursor) :
+     les consignes drwil vont dans un fichier dédié du kit ; `init` ajoute
+     au fichier du projet une seule ligne d'import ou de renvoi, le texte
+     du projet reste intact.
+  4. CI : `init` détecte une CI existante et règle `ci` en conséquence,
+     ne réécrit pas le fichier, et affiche le job `checks` à ajouter ;
+     `check-control-coverage` le réclame ensuite.
+  5. core.hooksPath déjà réglé ailleurs : `init` ne le remplace pas, dit
+     que les hooks drwil sont inactifs et comment les chaîner.
+  6. Mise à jour : les scripts .claude/hooks/*.mjs inchangés depuis
+     l'installation sont rafraîchis comme `.githooks/` ;
+     .claude/settings.json n'est jamais écrasé, il passe par la fusion du
+     point 2.
+  7. `doctor` vérifie le contenu indispensable (bloc .gitignore, import de
+     `AGENTS.md`, hooks Claude, job CI, core.hooksPath) : chaque manque est
+     un problème, avec la commande ou le bloc qui le corrige.
 
 ## 5. Points à trancher
 
-- [décision] Fichiers à lignes (`.gitignore`, `CLAUDE.md`, `GEMINI.md`) :
-  `init` **ajoute** les lignes manquantes dans un bloc délimité (« # drwil »)
-  — proposition — ou se contente de les signaler ?
-- [décision] Fichiers structurés (`.claude/settings.json`,
-  `.gitleaks.toml`) : fusion des hooks et permissions drwil dans le JSON
-  existant — proposition, sans toucher aux clés du projet — ou signalement
-  avec le bloc à coller ?
-- [décision] Fichiers en prose (`AGENTS.md`, copilot-instructions.md,
-  règle Cursor) : écrire les consignes drwil dans un fichier à part que le
-  fichier du projet importe (une ligne ajoutée), ou signaler seulement et
-  laisser `/drwil-adopt` faire la fusion ?
-- [décision] CI : `init` détecte une CI existante (.gitlab-ci.yml,
-  `.github/workflows/`) et règle `ci` en conséquence — proposition — puis
-  signale le job `checks` manquant avec le bloc à coller ?
-- [décision] `core.hooksPath` déjà réglé : refuser de le remplacer et
-  expliquer, ou le remplacer en le disant clairement ?
-- [décision] `.claude/hooks/` et `.claude/settings.json` deviennent-ils des
-  mécaniques rafraîchies par `init` comme `.githooks/` (alignement sur
-  `MECHANICS` de la migration) ?
-- [décision] `doctor` vérifie-t-il le contenu indispensable (lignes
-  `.gitignore`, `@AGENTS.md`, hooks Claude, job CI) et pas seulement la
-  présence des fichiers ?
+(aucun : tous tranchés le 2026-10-13, section 4)
 
 ## 6. Increments
 
-(à découper une fois les points tranchés ; pressenti :)
 
 - **Lot 1 — dire ce qui manque** [IA] : `init`, `--dry-run` et `doctor`
   listent, pour chaque fichier gardé, les éléments indispensables absents et
-  le bloc à coller ; CI existante détectée. Critère de sortie : tests de
+  le bloc à coller ; CI existante détectée ; core.hooksPath étranger
+  respecté (décisions 4, 5 et 7). Critère de sortie : tests de
   `packages/drwil/test/kit.test.mjs` sur un projet factice avec `.gitignore`, `CLAUDE.md`,
   `.claude/settings.json`, .gitlab-ci.yml et `core.hooksPath` préexistants.
   Documentation dans le même lot (QUA-011, doc jamais fausse) : `README.md`
@@ -119,8 +130,9 @@ l'installation.
   (README publié, l'explication de `init` sur un projet existant)
   disent ce qui est gardé, ce qui est ajouté ou signalé, et le bloc à
   coller ; `packages/drwil/CHANGELOG.md`.
-- **Lot 2 — ajouter sans écraser** [IA] : ajouts délimités et idempotents
-  selon les décisions. Critère de sortie : deux `init` successifs donnent un
+- **Lot 2 — ajouter sans écraser** [IA] : bloc délimité, fusion JSON/TOML,
+  fichier de consignes dédié avec import, rafraîchissement de
+  .claude/hooks/ (décisions 1, 2, 3 et 6). Critère de sortie : deux `init` successifs donnent un
   diff vide ; `uninstall` retire les blocs ajoutés.
 - **Lot 3 — release** [humain] : tag et note de version une fois le
   chantier clos (`docs/recipes/create-a-release.md`). Critère de sortie :
@@ -128,6 +140,6 @@ l'installation.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-13) : inventaire fait (section 1), rien de codé.
-- **Travail non commité** : cette fiche et sa ligne d'index.
-- **Prochaine étape** : [décision] trancher la section 5.
+- **Dernier état** (2026-10-13) : inventaire fait, décisions prises, rien de codé.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
