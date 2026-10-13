@@ -856,3 +856,23 @@ l'index ; texte intégral dans l'historique git
 - **Clôturé par** : la PR de ce chantier (branche
   `workstream/cli-en-anglais`) ; QUA-013 (contrôle non exécuté jamais
   vert) ré-attesté par l'humain.
+
+## 2026-10-12 — README à jour (racine et paquet)
+
+- **Décisions clés** : les deux README visent l'outil, pas seulement le
+  cycle : accroche, public visé (et pour qui ce n'est pas fait),
+  démonstration d'une sortie `drwil verify`, installation, puis le gain
+  (tableau « vous obtenez / parce que / à vérifier vous-même »), le cycle
+  d'un chantier (SCOPING → BUILD → EVIDENCE → VERIFY → CLOSING) et les
+  commandes `state`, `contracts`, `resolve-drift`, `uninstall`. Aucun chiffre
+  de productivité tant que le mini-banc n'en a pas produit. Acronyme
+  développé : Deterministic Rules for Workflows, Intent & Lineage
+  (décision du demandeur). Le report « après la vague 7 » du 2026-10-11 est
+  levé.
+- **Trouvé en route** : `docs/ia-first.md` (gabarit et copie) citait encore
+  `lancer`, `fiches --json` et `<ACTIVITE>` ; README racine : contrats en
+  français et version figée `v0.2.0` dans la commande d'installation —
+  corrigés. Note « Unreleased » dans `packages/drwil/CHANGELOG.md`, à
+  rattacher à la prochaine release.
+- **Clôturé par** : la PR de ce chantier (branche
+  `workstream/readme-a-jour`).
