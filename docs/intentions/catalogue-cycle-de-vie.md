@@ -4,7 +4,8 @@
 tranchées, question 3 reportée à la vague 7, table de correspondance
 validée ligne par ligne, découpage en trois fiches décidé (voir
 « Décisions prises (demandeur, 2026-10-13) »). Restent : validation
-explicite de l'intention et critère de sortie mesurable de chaque fiche.
+explicite de l'intention, critère de sortie mesurable de chaque fiche et
+points ouverts 10 à 14 (côté utilisateur).
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (change la source de
 vérité des contrats, le moteur de vérification et le livrable).
@@ -424,6 +425,49 @@ ci-dessous restent comme trace des choix proposés.
    questions posées par `drwil`, ou détecté puis confirmé), et le lien
    avec les niveaux de risque des fiches (DRWIL-012), qui notent un
    chantier et non le produit.
+
+### Points ouverts côté utilisateur (ajoutés le 2026-10-13)
+
+Relevés en déroulant le parcours du client (le livrable) une fois les
+trois fiches réalisées ; chacun est tranché avant la fiche indiquée.
+
+10. **Migration des projets déjà équipés** (fiche 1, format) : leur
+    registre est en Markdown, avec les sévérités bloquant,
+    avertissement et indicatif. Conversion automatique (par exemple
+    `drwil init` qui migre) ou manuelle guidée ? Le changement est
+    incompatible : version majeure et note de rupture.
+11. **Échéance d'un contrat MAJEUR** (fiche 1, format) : qui la fixe
+    (l'utilisateur à l'adoption, ou un délai par défaut selon le
+    profil) ? Une fois dépassée : blocage immédiat, ou blocage levable
+    par une exception tracée ?
+12. **Projet non interactif** (fiche 3, adoption) : en CI ou pour un
+    agent sans terminal, `init` sans questions (par exemple
+    `--profile standard`) ; quels contrats sont adoptés sans
+    confirmation humaine, s'il y en a ?
+13. **Attestation sans preuves listées** (à réévaluer après la
+    fiche 1) : le mode de contrôle est seul obligatoire (décidé le
+    2026-10-13) ; un contrat HUMAIN s'atteste donc sans dire ce qui
+    doit avoir été vérifié. Décision réversible si l'usage montre des
+    attestations trop rapides.
+14. **Un contrôle par contrat, et sa doc** (fiche 1, format). Fait
+    vérifié le 2026-10-13 : un contrat du registre cite l'identifiant
+    d'un contrôle (champ `Contrôle`, contrôle du socle ou déclaré dans
+    `.drwil/ia-first.json`) ; le catalogue actuel ne décrit le contrôle
+    qu'en texte libre ; aucune recette n'existe par contrôle.
+    Proposition : un contrat, un contrôle, une seule source — pas de
+    fichier de recette par contrôle (205 fichiers à côté du JSON
+    dériveraient). L'entrée JSON porte sa doc : `verification.mode`,
+    `verification.command` (identifiant du contrôle livré, ou commande
+    par pile), `acceptanceCriteria` (ce qui est vérifié),
+    `remediation` (que faire en cas d'échec), `references` (une recette
+    seulement si la mise en place demande plusieurs étapes). Le
+    Markdown généré en fait une section par contrat ; `drwil verify`
+    affiche la remédiation et ce lien en cas d'échec. Origine du
+    contrôle : livré dans le paquet, module optionnel copié à
+    l'adoption, ou commande de la pile détectée ; sans aucune des
+    trois, le contrat est HUMAIN ou « à outiller », jamais réussi.
+    Limite : au premier lot, seule une quinzaine de contrats (déjà
+    tenus) a un contrôle livré.
 
 ## Ordre proposé
 
