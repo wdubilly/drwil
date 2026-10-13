@@ -1,8 +1,10 @@
 # Intention : un catalogue de contrats couvrant le cycle de vie logiciel
 
-**Statut** (2026-10-11) : à cadrer — intention posée par le demandeur ;
-décisions de principe prises, questions 1 à 5 et 7 à trancher en fin de
-fiche.
+**Statut** (2026-10-13) : à cadrer — questions 1, 2, 4, 5, 7 et 9
+tranchées, question 3 reportée à la vague 7, table de correspondance
+validée ligne par ligne, découpage en trois fiches décidé (voir
+« Décisions prises (demandeur, 2026-10-13) »). Restent : validation
+explicite de l'intention et critère de sortie mesurable de chaque fiche.
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (change la source de
 vérité des contrats, le moteur de vérification et le livrable).
@@ -65,6 +67,60 @@ applicabilité, mécanisme de vérification) avant de devenir exécutable.
   d'un chantier reste donc un geste humain tant que ce réglage n'est pas
   changé (changement qui serait lui-même un chantier).
 
+## Décisions prises (demandeur, 2026-10-13)
+
+Questionnaire en conversation ; chaque réponse est celle du demandeur,
+y compris quand elle s'écarte de la recommandation de l'agent (signalé).
+
+- **Q1, statuts** : les cinq statuts actuels (PASS, FAIL, ERROR,
+  MANUAL, ATTESTED) sont gardés, plus **NOT_APPLICABLE** (contrat hors
+  profil ou hors pile détectée). Ajout seul : `verify --json` reste
+  compatible (DRWIL-004, format stable). NOT_VERIFIED n'existe que dans
+  les rapports.
+- **Q2, sévérité** : **BLOQUANT, MAJEUR, MINEUR**, plus un champ
+  d'applicabilité distinct ; CONDITIONNEL disparaît (s'écarte de la
+  recommandation, qui gardait les trois sévérités de DRWIL-020).
+  Conséquence acceptée : MAJEUR porte une échéance, et son avertissement
+  devient bloquant à la date — mécanisme nouveau, à concevoir et tester,
+  et migration des sévérités actuelles (bloquant, avertissement,
+  indicatif) à prévoir.
+- **Q3, porte avant `npm publish`** : reportée à la vague 7, tranchée
+  avec la fiche de publication (`docs/intentions/packager-kit-ia-first.md`).
+- **Q4, registre client** : le projet a son propre registre **JSON** ;
+  `drwil contracts add <ID>` y adopte un contrat du catalogue ;
+  `docs/contracts.md` du projet devient une vue générée.
+- **Q5, collisions d'ID** : les contrats du catalogue gardent le préfixe
+  **`catalogue:`**, y compris une fois adoptés ; les contrats locaux
+  restent sans préfixe. Aucune renumérotation.
+- **Q7, doublons** : les **six identiques seuls** sont fusionnés (un ID
+  gardé, l'autre devient un alias) ; inclusions et paires proches
+  restent distinctes (s'écarte de la recommandation, qui fusionnait
+  aussi les inclusions). Catalogue : 205 contrats.
+- **Q9, profils par risque du produit** : **quatre niveaux** — LÉGER,
+  STANDARD, RENFORCÉ, CRITIQUE (réglementé, certification) ;
+  DOGFOODING se cumule avec un niveau (s'écarte de la recommandation,
+  qui en proposait trois). Choix du profil : `init` détecte la pile et
+  pose 5 à 8 questions (données personnelles, exposition publique,
+  production…), propose un profil et une liste classée (recommandé,
+  optionnel, non applicable) ; l'humain confirme chaque adoption.
+  Profil du produit et risque d'une fiche (DRWIL-012) restent
+  **indépendants** au premier lot.
+- **Mode de contrôle** : chaque contrat déclare obligatoirement son
+  mode — AUTO, PARTIEL (part humaine nommée) ou HUMAIN — sans question
+  ni liste de preuves imposées (s'écarte de la recommandation, qui les
+  exigeait pour PARTIEL et HUMAIN).
+- **Table de correspondance** : validée ligne par ligne (section
+  « Correspondance du registre actuel »). QUA-015, QUA-017 et QUA-019
+  sont **versés au catalogue** comme nouveaux contrats ; SEC-007 est
+  rattaché à v1:GIT-006 (le plus large), non à v1:SEC-002.
+- **Découpage, format d'abord** : trois fiches, chacune avec un critère
+  de sortie mesurable :
+  1. format — schéma JSON versionné, statuts, sévérités avec échéance,
+     mode de contrôle, Markdown généré, une quinzaine de contrats déjà
+     tenus ;
+  2. profils — les quatre niveaux, DOGFOODING, applicabilité ;
+  3. adoption — détection et questions à `init`, `drwil contracts add`.
+
 ## Existant (faits vérifiés le 2026-10-11)
 
 ### Registre actuel
@@ -123,23 +179,23 @@ contextuelle). Raison : un changement fuyait du dépôt vers le gabarit
   `npm publish` (seul `prepack` lance le build) ; la publication npm
   elle-même reste à décider (`docs/intentions/packager-kit-ia-first.md`).
 
-## Correspondance du registre actuel (proposition, établie sur le contenu)
+## Correspondance du registre actuel (validée ligne par ligne le 2026-10-13, établie sur le contenu)
 
 | Registre | Sens réel | Correspondance v1 | Nature |
 |---|---|---|---|
 | SEC-001 | Droits d'accès décidés par le backend | v1:SEC-004 (moindre privilège) | proche, non équivalent ; **collision d'ID** avec v1:SEC-001 (modèle de menace) |
 | SEC-006 | Aucune dépendance vulnérable connue | v1:SEC-008 | équivalent sur l'objet ; non outillé ici (MANUAL) |
-| SEC-007 | Pas de secret dans le dépôt | v1:SEC-002 | équivalent ; v1:GIT-006 est plus large |
+| SEC-007 | Pas de secret dans le dépôt | v1:GIT-006 | rattaché au plus large (décidé le 2026-10-13) ; v1:SEC-002 couvre les seuls secrets |
 | QUA-004 | Seuil de couverture par périmètre | v1:TST-005 | équivalent |
 | QUA-011 | Chemins et ID cités existent | v1:DOC-010 | proche : QUA-011 vérifie les références, v1:DOC-010 vise des exemples testés |
 | QUA-013 | Contrôle non exécuté ≠ passé | v1:CTR-006 | équivalent ; v1:HOOK-012 et v1:X-001 proches |
-| QUA-015 | Chantiers exploitables à froid | aucune | règle locale (méthode drwil) |
+| QUA-015 | Chantiers exploitables à froid | aucune | **versé au catalogue** comme nouveau contrat (décidé le 2026-10-13) |
 | QUA-016 | Code couvert par le cadrage d'une fiche | v1:GOV-006, v1:GIT-008 | proche : traçabilité changement → demande, sur le seul code |
-| QUA-017 | Pas de travail direct sur la branche principale | aucune | proche de v1:GIT-003 sans l'égaler (local vs forge) |
+| QUA-017 | Pas de travail direct sur la branche principale | aucune | **versé au catalogue** comme nouveau contrat (décidé le 2026-10-13), pendant local de v1:GIT-003 (forge) |
 | QUA-018 | Demander la casquette visée (dépôt / livrable) | aucune | **règle locale du profil DOGFOODING** (décidé le 2026-10-11) ; v1:GOV-001 documente un périmètre, QUA-018 impose une question avant d'agir |
-| QUA-019 | Pas de contournement d'un contrôle | aucune | proche de v1:HOOK-009 et v1:X-007, sans les égaler |
+| QUA-019 | Pas de contournement d'un contrôle | aucune | **versé au catalogue** comme nouveau contrat (décidé le 2026-10-13) ; proche de v1:HOOK-009 et v1:X-007, sans les égaler |
 
-## Doublons du catalogue proposé (proposition)
+## Doublons du catalogue proposé (six identiques fusionnés, décidé le 2026-10-13)
 
 Trois natures, à arbitrer paire par paire.
 
@@ -294,6 +350,10 @@ et doit le déclarer (v1:X-010).
 
 ## Questions à trancher
 
+Tranchées le 2026-10-13, sauf la question 3, reportée à la vague 7 :
+réponses dans « Décisions prises (demandeur, 2026-10-13) ». Les options
+ci-dessous restent comme trace des choix proposés.
+
 1. **Statuts : NOT_VERIFIED face à MANUAL et ATTESTED.**
    - A. Garder les statuts de drwil ; NOT_VERIFIED du catalogue devient
      MANUAL (en attente d'un humain) ou ERROR (contrôle impossible).
@@ -383,12 +443,14 @@ Aucune implémentation ne commence avant que **tous** soient remplis :
 
 - [ ] [décision] Intention relue et validée explicitement par le
   demandeur (décision datée ajoutée à « Décisions prises »).
-- [ ] [décision] Questions 1 à 5 et 7 tranchées, chacune consignée et
-  datée (6 et 8 le sont).
-- [ ] [décision] Table de correspondance du registre validée contrat par
-  contrat.
+- [x] [décision] Questions 1 à 5 et 7 tranchées, chacune consignée et
+  datée (6 et 8 le sont ; 3 reportée à la vague 7 le 2026-10-13).
+- [x] [décision] Table de correspondance du registre validée contrat par
+  contrat (2026-10-13).
 - [ ] [décision] Périmètre du premier lot fixé (domaines et contrats du
-  catalogue client v1) avec un critère de sortie mesurable.
+  catalogue client v1) avec un critère de sortie mesurable — découpage
+  en trois fiches décidé le 2026-10-13, critère mesurable de la fiche 1
+  (format) à écrire.
 - [ ] [IA] Fiche `docs/projects/` créée, avec bloc `cadrage` (fichiers
   listés), niveau de risque HIGH, section Décisions et contrats
   concernés.

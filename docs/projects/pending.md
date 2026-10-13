@@ -116,15 +116,20 @@ trailer, code commun) en anglais, migration des projets équipés par
 
 ## Vague 5 — catalogue et profils (ce qui casse une compatibilité)
 
-- [ ] [décision] [P2] Trancher les questions du catalogue (statuts,
-  sévérité et applicabilité, porte avant publication, registre client,
-  collisions d'ID, doublons), puis format : JSON canonique, schéma
-  versionné, Markdown généré (v1:CTR-003, v1:CTR-010, v1:CTR-012) —
-  `docs/intentions/catalogue-cycle-de-vie.md`.
-- [ ] [décision] [P2] Profils par risque du produit (LÉGER, standard,
-  renforcé ; DOGFOODING à part) : contrats applicables et sévérité
-  choisis par profil (v1:CTR-014, v1:HOOK-006) — question 9 de
-  `docs/intentions/catalogue-cycle-de-vie.md`.
+Questions du catalogue tranchées le 2026-10-13 (porte avant publication
+reportée à la vague 7) ; reste à valider l'intention et à écrire le
+critère de sortie de chaque fiche —
+`docs/intentions/catalogue-cycle-de-vie.md`.
+
+- [ ] [décision] [P2] Format du catalogue : JSON canonique, schéma
+  versionné, statuts (+ NOT_APPLICABLE), sévérités BLOQUANT / MAJEUR /
+  MINEUR avec échéance, mode de contrôle, Markdown généré, une quinzaine
+  de contrats déjà tenus (v1:CTR-003, v1:CTR-010, v1:CTR-012) — fiche 1.
+- [ ] [décision] [P2] Profils par risque du produit (LÉGER, STANDARD,
+  RENFORCÉ, CRITIQUE ; DOGFOODING cumulable) : contrats applicables et
+  sévérité choisis par profil (v1:CTR-014, v1:HOOK-006) — fiche 2.
+- [ ] [décision] [P2] Adoption ciblée : détection et questions à `init`,
+  liste classée, `drwil contracts add <ID>` — fiche 3.
 
 ## Vague 6 — la fabrique, en pilote dans ce dépôt
 
@@ -144,7 +149,8 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 ## Vague 7 — le produit, quand tout est opérationnel
 
 - [ ] [décision] [P2] Publication npm du kit, avec une porte avant
-  `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) —
+  `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
+  question 3 du catalogue, reportée ici le 2026-10-13 —
   `docs/intentions/packager-kit-ia-first.md`.
 - [ ] [humain] [P2] drwil V0.2 — gouvernance exécutable : lots [IA]
   fusionnés (PR #34 du dépôt archivé) ; restent le benchmark (DRWIL-022,
