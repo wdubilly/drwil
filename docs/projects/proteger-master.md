@@ -1,6 +1,6 @@
 # Projet : protéger master — checks obligatoires, CODEOWNERS, identité de l'agent
 
-**Statut** : cadré le 2026-10-10 — lots 1 à 4 faits le 2026-10-13 (compte machine `wilydub`, ruleset à 1 approbation avec revue des code owners).
+**Statut** : cadré le 2026-10-10 — lots 1 à 4 faits le 2026-10-13 (compte machine `wilydub`, ruleset avec revue des code owners sur les zones sensibles).
 **Risque** : HIGH
 
 <!-- scope
@@ -133,7 +133,9 @@ Constat du 2026-10-10 :
 - **Dernier état** (2026-10-13) : lots 1 à 4 faits. Lot 3 : compte machine
   `wilydub` (écriture, sans admin, jeton classique `repo`+`workflow`+`read:org`
   car un jeton fin ne couvre pas un dépôt d'un autre propriétaire) ; ruleset
-  à 1 approbation et revue des code owners, versionné par cette PR.
+  à 0 approbation globale mais revue des code owners exigée (décision du
+  2026-10-13 : le mainteneur n'approuve que les zones sensibles, pour ne pas
+  freiner la fabrique), versionné par cette PR.
 - **Lot 1/2/4** (2026-10-10) :
   - Lot 2 : `.github/CODEOWNERS`, lu par GitHub sans erreur ; bloquant
     depuis le 2026-10-13 (revue des code owners exigée).
