@@ -32,6 +32,8 @@ import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { scaffold } from "./render.js";
 import { removeObsolete, writeManifest } from "./manifest.js";
 import { formatMigration, migrate } from "./migration.js";
+import { complete, type Addition } from "./complete.js";
+import { formatGaps, hooksPath } from "./essentials.js";
 
 // Branch created by `init()` before the very first commit: nobody ever needs to push to
 // master/main again, not even for the bootstrap.
@@ -43,6 +45,8 @@ const TEXTS = {
     noRepo: "⚠ pas de dépôt git : hooks non activés (lancer `git config core.hooksPath .githooks` après `git init`).",
     repoCreated: "Dépôt git initialisé, branche « {0} » créée (jamais de commit direct sur master/main).",
     hooksEnabled: "Hooks activés (core.hooksPath = .githooks).",
+    hooksKept: "core.hooksPath déjà réglé ({0}) : gardé tel quel, les hooks drwil n'y tournent que s'ils y sont appelés (voir ci-dessous).",
+    added: "Ajouté aux fichiers du projet, sans rien y écraser (bloc « drwil », retiré par `drwil uninstall`) :",
     stack: "Stack détectée : {0}",
     noStack: "Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).",
     defaultLayers: "Couches par défaut écrites : {0} — modifiable avec --layers.",
@@ -54,6 +58,8 @@ const TEXTS = {
     noRepo: "⚠ no git repository: hooks not enabled (run `git config core.hooksPath .githooks` after `git init`).",
     repoCreated: 'Git repository initialised, branch "{0}" created (never a direct commit on master/main).',
     hooksEnabled: "Hooks enabled (core.hooksPath = .githooks).",
+    hooksKept: "core.hooksPath already set ({0}): kept as it is, drwil hooks only run if called from there (see below).",
+    added: 'Added to the project\'s files, nothing overwritten ("drwil" block, removed by `drwil uninstall`):',
     stack: "Detected stack: {0}",
     noStack: "Stack not detected: for the user to decide (see docs/architecture.md).",
     defaultLayers: "Default layers written: {0} — can be changed with --layers.",
@@ -81,6 +87,13 @@ function setupGit(targetDir: string, allowInit: boolean, lang: MessageLang): voi
     git("checkout", "-b", INSTALL_BRANCH);
     console.log(fill(T.repoCreated, INSTALL_BRANCH));
   }
+  // A hook manager of the project (husky, lefthook…) is never switched off: findGaps() reports the
+  // drwil hooks to call from it.
+  const current = hooksPath(targetDir);
+  if (current && current !== ".githooks") {
+    console.log(fill(T.hooksKept, current));
+    return;
+  }
   git("config", "core.hooksPath", ".githooks");
   // commit-msg is deliberately shipped non-executable: without this setting, git repeats the same
   // warning at every commit, permanent noise.
@@ -105,6 +118,15 @@ function reportDrifted(drifted: string[], lang: MessageLang): void {
   if (!drifted.length) return;
   console.log(TEXTS[lang].drifted);
   for (const d of drifted) console.log(`  - ${d}`);
+}
+
+function reportAdded(added: Addition[], lang: MessageLang): void {
+  if (!added.length) return;
+  console.log(TEXTS[lang].added);
+  for (const a of added) {
+    console.log(`  + ${a.file}`);
+    for (const item of a.items) console.log(`      ${item}`);
+  }
 }
 
 function reportObsolete(obsolete: string[], lang: MessageLang): void {
@@ -132,12 +154,17 @@ export async function init(opts: InitOptions): Promise<void> {
   const manifest: Record<string, string> = {};
   const expected: string[] = [];
   await scaffold(r, { shouldOverwrite, drifted, manifest, expected });
+  const { added } = await complete(r, { manifest });
   const obsolete = await removeObsolete(opts.targetDir, previous, expected);
   await writeManifest(opts.targetDir, manifest, obsolete);
   await writeConfig(r);
   reportStack(r);
   reportDrifted(drifted, r.lang);
   reportObsolete(obsolete, r.lang);
+  reportAdded(added, r.lang);
   // An existing project gets no new repository: only the hooks are enabled if there is one.
   if (opts.git !== false) setupGit(opts.targetDir, !existing, r.lang);
+  // Last, once git is set up: what drwil still needs and leaves to the human, never silently.
+  const left = formatGaps((await complete(r, { dryRun: true })).gaps, r.lang);
+  if (left.length) console.log(left.join("\n"));
 }

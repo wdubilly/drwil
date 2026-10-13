@@ -5,6 +5,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { loadProject } from "./verify.js";
+import { resolveFromConfig } from "./config.js";
+import { AUTO_KINDS, describeGap, findGaps, hooksPath, scriptsDir, unchainedHooks } from "./essentials.js";
 
 export type PointState = "ok" | "warning" | "problem";
 
@@ -48,6 +50,10 @@ const TEXTS = {
     noCheck: " (sans Contrôle, toujours MANUAL : {0})",
     hooks: "Hooks git",
     hooksOff: "inactifs : lancer `git config core.hooksPath .githooks`",
+    hooksChained: "core.hooksPath = {0}, hooks drwil appelés depuis là",
+    hooksForeign:
+      "core.hooksPath = {0} : hooks drwil jamais appelés ({1}) — les appeler depuis {2}, ou `git config core.hooksPath .githooks`",
+    fixWith: "{0} — correctif : {1}",
     noCi: "aucune CI configurée : pas de filet pour les contrôles dégradables (QUA-013)",
     ciMissing: "fichier absent : {0}",
     tools: "Outils requis",
@@ -73,6 +79,9 @@ const TEXTS = {
     noCheck: " (without Check, always MANUAL: {0})",
     hooks: "Git hooks",
     hooksOff: "inactive: run `git config core.hooksPath .githooks`",
+    hooksChained: "core.hooksPath = {0}, drwil hooks called from there",
+    hooksForeign: "core.hooksPath = {0}: drwil hooks never called ({1}) — call them from {2}, or `git config core.hooksPath .githooks`",
+    fixWith: "{0} — fix: {1}",
     noCi: "no CI configured: no net for degradable checks (QUA-013)",
     ciMissing: "missing file: {0}",
     tools: "Required tools",
@@ -132,9 +141,20 @@ export async function doctor(opts: { targetDir: string }): Promise<Diagnosis> {
     `${provable}/${contracts.length}${noCheck.length ? fill(T.noCheck, noCheck.join(", ")) : ""}`,
   );
 
-  const hooksPath = spawnSync("git", ["config", "core.hooksPath"], { cwd: root, encoding: "utf8" });
-  const hooksOn = hooksPath.status === 0 && hooksPath.stdout.trim() === ".githooks";
-  point("hooks", T.hooks, hooksOn ? "ok" : "problem", hooksOn ? "core.hooksPath = .githooks" : T.hooksOff);
+  // A hook manager of the project (husky…) is fine as long as it calls the drwil hooks.
+  const path = hooksPath(root);
+  const unchained = path && path !== ".githooks" ? unchainedHooks(root, path) : [];
+  if (path === ".githooks") point("hooks", T.hooks, "ok", "core.hooksPath = .githooks");
+  else if (!path) point("hooks", T.hooks, "problem", T.hooksOff);
+  else if (unchained.length) point("hooks", T.hooks, "problem", fill(T.hooksForeign, path, unchained.join(", "), scriptsDir(path)));
+  else point("hooks", T.hooks, "ok", fill(T.hooksChained, path));
+
+  // What drwil needs inside the project's own files (the hooks have their point above).
+  for (const g of findGaps(resolveFromConfig(root)).filter((x) => x.kind !== "hooksPath")) {
+    const what = g.missing.length ? `${describeGap(g, lang)} (${g.missing.join(", ")})` : describeGap(g, lang);
+    const fix = AUTO_KINDS.has(g.kind) ? "npx drwil init" : g.fix.join(" ⏎ ");
+    point(`essentials:${g.file}`, g.file, "problem", fix ? fill(T.fixWith, what, fix) : what);
+  }
 
   const ciFiles: string[] = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
   const ciMissing = ciFiles.filter((f) => !existsSync(join(root, f)));

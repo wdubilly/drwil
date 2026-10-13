@@ -165,7 +165,12 @@ test("un second init rafraîchit la mécanique inchangée, signale celle modifi�
   writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2));
 
   const lignes = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
-  assert.equal(read(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n", "docs du projet préservées sans --force");
+  assert.ok(read(dir, "AGENTS.md").startsWith("contenu du projet, ajouté après coup\n"), "docs du projet préservées sans --force");
+  assert.match(
+    read(dir, "AGENTS.md"),
+    /<!-- >>> drwil -->\nRead and apply `\.drwil\/AGENTS\.md` too/,
+    "consignes drwil mises à part, renvoi ajouté",
+  );
   assert.ok(read(dir, ".githooks/run-checks.mjs").includes("marque pour vérifier"), "mécanique modifiée à la main : jamais écrasée");
   assert.ok(
     lignes.some((l) => l.includes(".githooks/run-checks.mjs")),
@@ -174,7 +179,7 @@ test("un second init rafraîchit la mécanique inchangée, signale celle modifi�
   assert.notEqual(read(dir, ".githooks/glob.mjs"), ancienne, "mécanique inchangée depuis l'installation : rafraîchie");
 
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", force: true }));
-  assert.notEqual(read(dir, "AGENTS.md"), "contenu du projet, ajouté après coup\n", "--force réécrit aussi les docs");
+  assert.ok(!read(dir, "AGENTS.md").startsWith("contenu du projet"), "--force réécrit aussi les docs");
   assert.ok(!read(dir, ".githooks/run-checks.mjs").includes("marque pour vérifier"), "--force réécrit aussi la mécanique modifiée");
 });
 
@@ -793,6 +798,154 @@ test("apply sur un projet existant : stack et couches découvertes, rien d'écra
   assert.match(read(dir, "api/AGENTS.md"), /api layer context/);
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout);
+});
+
+// Projet déjà outillé : chaque fichier que drwil garde tel quel manque de ce dont drwil a besoin.
+function projetOutille() {
+  const dir = tmp();
+  git(dir, "init", "-q", "-b", "main");
+  const fichiers = {
+    ".gitignore": "/node_modules\r\n/build\r\n",
+    "AGENTS.md": "# Mon projet\nRègles maison.\n",
+    "CLAUDE.md": "mes consignes à moi\n",
+    ".claude/settings.json": JSON.stringify({ permissions: { allow: ["Bash(npm test)"] }, model: "opus" }, null, 2) + "\n",
+    ".gitlab-ci.yml": "test:\n  script: npm test\n",
+    ".gitleaks.toml": "[allowlist]\npaths = ['''fixtures/''']\n",
+    ".github/copilot-instructions.md": "Conventions maison.\n",
+    ".husky/pre-commit": "npm test\n",
+    "package.json": JSON.stringify({ dependencies: { react: "18" } }),
+  };
+  for (const [f, contenu] of Object.entries(fichiers)) {
+    mkdirSync(join(dir, f, ".."), { recursive: true });
+    writeFileSync(join(dir, f), contenu);
+  }
+  git(dir, "config", "core.hooksPath", ".husky/_");
+  return { dir, fichiers };
+}
+
+const instantane = (dir) => {
+  const liste = git(dir, "ls-files", "-co", "--exclude-standard").stdout.trim().split("\n");
+  return Object.fromEntries(liste.map((f) => [f, read(dir, f)]));
+};
+
+test("projet existant : init complète sans écraser, l'aperçu l'annonce, un second init ne change rien", async () => {
+  const { dir, fichiers } = projetOutille();
+  const a = await previewInit({ lang: "fr", targetDir: dir });
+  assert.deepEqual(a.added.map((x) => x.file).sort(), [
+    ".claude/settings.json",
+    ".drwil/AGENTS.md",
+    ".github/copilot-instructions.md",
+    ".gitignore",
+    ".gitleaks.toml",
+    "AGENTS.md",
+    "CLAUDE.md",
+  ]);
+  assert.deepEqual(a.gaps.map((g) => g.kind).sort(), ["ci", "hooksPath"], "CI et hooks : laissés à l'humain");
+  assert.equal(read(dir, "AGENTS.md"), fichiers["AGENTS.md"], "l'aperçu n'écrit rien");
+
+  const lignes = await capture(() => init({ lang: "fr", targetDir: dir }));
+  const sortie = lignes.join("\n");
+  // settings.json est fusionné, .gitleaks.toml complété dans sa table : vérifiés à part.
+  for (const [f, contenu] of Object.entries(fichiers))
+    if (![".claude/settings.json", ".gitleaks.toml"].includes(f))
+      assert.ok(read(dir, f).startsWith(contenu.replace(/\s*$/, "")), `contenu du projet gardé : ${f}`);
+  assert.match(read(dir, ".gitignore"), /\/build\r\n\r\n# >>> drwil\r\n\.env\r\n/, "bloc ajouté, fins de ligne du projet respectées");
+  for (const l of [".drwil/state.json", ".drwil/reminder.json", ".claude/settings.local.json"])
+    assert.ok(read(dir, ".gitignore").includes(l), l);
+  assert.match(read(dir, "CLAUDE.md"), /@AGENTS\.md\n@\.drwil\/AGENTS\.md\n<!-- <<< drwil -->/);
+  assert.match(read(dir, ".drwil/AGENTS.md"), /node \.githooks\/state\.mjs/, "consignes drwil mises à part");
+  assert.match(read(dir, ".github/copilot-instructions.md"), /Read and apply `AGENTS\.md`/);
+  assert.match(read(dir, ".gitleaks.toml"), /paths = \[\n {2}'''.*installed-files.*''', # drwil\n {2}'''fixtures\/''']/);
+  const reglages = JSON.parse(read(dir, ".claude/settings.json"));
+  assert.equal(reglages.model, "opus", "clé du projet gardée");
+  assert.equal(reglages.permissions.allow[0], "Bash(npm test)", "permission du projet gardée, en tête");
+  assert.ok(reglages.permissions.deny.includes("Bash(git *--no-verify*)"));
+  assert.ok(reglages.hooks.SessionStart[0].hooks[0].command.includes(".githooks/state.mjs"));
+  assert.equal(config(dir).ci, "gitlab", "CI existante détectée");
+  assert.equal(read(dir, ".gitlab-ci.yml"), fichiers[".gitlab-ci.yml"], "fichier CI jamais réécrit");
+  assert.equal(git(dir, "config", "core.hooksPath").stdout.trim(), ".husky/_", "gestionnaire de hooks du projet gardé");
+  assert.match(sortie, /\.gitlab-ci\.yml: .*job `checks` absent[\s\S]*- node \.githooks\/run-checks\.mjs/);
+  assert.match(sortie, /\.husky\/pre-commit: \.githooks\/pre-commit "\$@" \|\| exit \$\?/);
+
+  const avant = instantane(dir);
+  const encore = await capture(() => init({ lang: "fr", targetDir: dir }));
+  assert.ok(!encore.some((l) => l.includes("Ajouté aux fichiers du projet")), encore.join("\n"));
+  assert.deepEqual(instantane(dir), avant, "un second init ne change rien");
+});
+
+test("projet existant : doctor signale ce qui manque avec le correctif ; hooks chaînés acceptés", async () => {
+  const { dir } = projetOutille();
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
+  let d = await doctor({ targetDir: dir });
+  assert.equal(d.code, 1);
+  assert.match(
+    d.points.find((p) => p.id === "hooks").detail,
+    /jamais appelés \(pre-commit, pre-push, prepare-commit-msg\) — les appeler depuis \.husky,/,
+  );
+  assert.match(d.points.find((p) => p.id === "essentials:.gitlab-ci.yml").detail, /correctif : checks:/);
+  for (const h of ["pre-commit", "pre-push", "prepare-commit-msg"])
+    appendFileSync(join(dir, ".husky", h), `.githooks/${h} "$@" || exit $?\n`);
+  writeFileSync(join(dir, ".gitignore"), "/node_modules\n");
+  d = await doctor({ targetDir: dir });
+  assert.equal(d.points.find((p) => p.id === "hooks").state, "ok", "hooks drwil appelés depuis husky");
+  assert.match(d.points.find((p) => p.id === "essentials:.gitignore").detail, /\.drwil\/state\.json.*correctif : npx drwil init/);
+});
+
+test("projet existant : uninstall retire ce que drwil a ajouté, rien d'autre", async () => {
+  const { dir, fichiers } = projetOutille();
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
+  const apercu = await uninstall({ targetDir: dir });
+  assert.ok(apercu.cleaned.includes("AGENTS.md") && read(dir, "AGENTS.md").includes(">>> drwil"), "dry-run : listé, rien retiré");
+  const r = await uninstall({ targetDir: dir, dryRun: false });
+  assert.deepEqual(r.cleaned.sort(), [
+    ".claude/settings.json",
+    ".github/copilot-instructions.md",
+    ".gitignore",
+    ".gitleaks.toml",
+    "AGENTS.md",
+    "CLAUDE.md",
+  ]);
+  for (const f of [".gitignore", "AGENTS.md", "CLAUDE.md", ".github/copilot-instructions.md"])
+    assert.equal(read(dir, f), fichiers[f], `rendu à l'identique : ${f}`);
+  // Un tableau sur une ligne a été ouvert pour y mettre la ligne drwil : il revient équivalent, sur deux lignes.
+  assert.equal(read(dir, ".gitleaks.toml").replace(/\s+/g, ""), fichiers[".gitleaks.toml"].replace(/\s+/g, ""));
+  assert.ok(!existsSync(join(dir, ".drwil/AGENTS.md")));
+  const reglages = JSON.parse(read(dir, ".claude/settings.json"));
+  assert.equal(reglages.hooks, undefined, "hooks du kit retirés : leurs scripts n'existent plus");
+  assert.equal(reglages.model, "opus");
+});
+
+test("ajouts sans écraser : liste blanche gitleaks sous ses deux formes, bloc complété en place", async () => {
+  const { mergeGitleaks, addToBlock, stripAdditions } = await import("../dist/complete.js");
+  const nouveau = mergeGitleaks("[[allowlists]]\npaths = ['''a''']\n");
+  assert.match(nouveau, /# >>> drwil\n\[\[allowlists\]\]\npaths = \[/, "forme récente : une table de plus, pas [allowlist]");
+  assert.equal(stripAdditions(nouveau), "[[allowlists]]\npaths = ['''a''']\n");
+  const sansChemins = mergeGitleaks("[allowlist]\ndescription = 'x'\n");
+  assert.match(sansChemins, /\[allowlist\]\npaths = \['''.*installed-files.*'''\] # drwil\ndescription/);
+  assert.equal(stripAdditions(sansChemins), "[allowlist]\ndescription = 'x'\n");
+  const multi = mergeGitleaks("[allowlist]\npaths = [\n  '''a''',\n]\n");
+  assert.match(multi, /paths = \[\n {2}'''.*installed-files.*''', # drwil\n {2}'''a''',\n\]/);
+  const bloc = addToBlock("x\n\n# >>> drwil\n.env\n# <<< drwil\n", [".drwil/state.json"], { begin: "# >>> drwil", end: "# <<< drwil" });
+  assert.equal(bloc, "x\n\n# >>> drwil\n.env\n.drwil/state.json\n# <<< drwil\n", "ligne ajoutée dans le bloc existant");
+  assert.equal(stripAdditions("rien de drwil\n"), null);
+});
+
+test("mécanique Claude : .claude/hooks/ rafraîchi comme .githooks/, une modification à la main signalée", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const ancienne = "// version précédente du kit\n";
+  writeFileSync(join(dir, ".claude/hooks/bash-guard.mjs"), ancienne);
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  manifeste[".claude/hooks/bash-guard.mjs"] = createHash("sha256").update(ancienne).digest("hex");
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2));
+  appendFileSync(join(dir, ".claude/hooks/scope-reminder.mjs"), "\n// modifié à la main\n");
+  const lignes = await capture(() => init({ lang: "fr", targetDir: dir, git: false }));
+  assert.notEqual(read(dir, ".claude/hooks/bash-guard.mjs"), ancienne, "inchangé depuis l'installation : rafraîchi");
+  assert.ok(read(dir, ".claude/hooks/scope-reminder.mjs").includes("modifié à la main"), "modifié à la main : gardé");
+  assert.ok(
+    lignes.some((l) => l.includes(".claude/hooks/scope-reminder.mjs")),
+    "et signalé comme dérive",
+  );
 });
 
 test("init() signale (sans réécrire) un fichier déjà présent qui a dérivé du template", async () => {
@@ -1868,7 +2021,12 @@ test("DRWIL-011 : apply audite et prévisualise sans rien écrire ; l'aperçu co
   assert.ok(!existsSync(join(dir, "AGENTS.md")), "--dry-run n'écrit rien");
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   for (const f of a.created) assert.ok(existsSync(join(dir, f)), `annoncé et créé : ${f}`);
-  assert.equal(read(dir, "CLAUDE.md"), "mes consignes à moi\n", "fichier existant jamais écrasé");
+  assert.ok(read(dir, "CLAUDE.md").startsWith("mes consignes à moi\n"), "fichier existant jamais écrasé");
+  assert.ok(
+    a.added.some((x) => x.file === "CLAUDE.md" && x.items.includes("@AGENTS.md")),
+    "l'aperçu annonce l'import ajouté",
+  );
+  assert.match(read(dir, "CLAUDE.md"), /<!-- >>> drwil -->\n@AGENTS\.md\n<!-- <<< drwil -->/);
 });
 
 test("DRWIL-012 : installation neuve sans bruit ; un risque déclaré trop bas est refusé au commit", async () => {

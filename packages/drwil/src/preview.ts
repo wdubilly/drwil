@@ -7,6 +7,8 @@ import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { installChoices } from "./install.js";
 import { scaffold } from "./render.js";
 import { formatMigration, migrate, type MigrationPlan } from "./migration.js";
+import { complete, type Addition } from "./complete.js";
+import { formatGaps, type Gap } from "./essentials.js";
 
 /** Preview of `drwil init --dry-run`: what the installation would do, writing nothing. */
 export interface InitPreview {
@@ -24,6 +26,10 @@ export interface InitPreview {
   kept: string[];
   /** Among the kept ones, those that drifted from the kit's template (to compare by hand). */
   drifted: string[];
+  /** What `init` would add to files kept as they are (delimited block, merged entries). */
+  added: Addition[];
+  /** What drwil would still need and leaves to the human (CI job, core.hooksPath…). */
+  gaps: Gap[];
   /** Migration of the old format `init` would run first (dry run, nothing written). */
   migration: MigrationPlan;
 }
@@ -46,6 +52,7 @@ const TEXTS = {
     replaced: "Mécanique du kit rafraîchie ({0} fichier(s)) :",
     kept: "Déjà présents, laissés tels quels ({0}) :",
     drifted: " (diffère du modèle du kit)",
+    completed: "Serait ajouté à des fichiers existants, sans rien y écraser ({0}) :",
     nothingOverwritten: "Rien d'autre ne sera écrasé : un fichier modifié à la main est signalé, jamais réécrit.",
   },
   en: {
@@ -65,6 +72,7 @@ const TEXTS = {
     replaced: "Kit mechanics refreshed ({0} file(s)):",
     kept: "Already present, left as they are ({0}):",
     drifted: " (differs from the kit's template)",
+    completed: "Would be added to existing files, nothing overwritten ({0}):",
     nothingOverwritten: "Nothing else will be overwritten: a file modified by hand is reported, never rewritten.",
   },
 };
@@ -111,7 +119,20 @@ export async function previewInit(opts: InitOptions): Promise<InitPreview> {
   await scaffold(r, { shouldOverwrite, drifted, simulation });
   const created = [...simulation.created];
   if (!readConfig(opts.targetDir)) created.push(".drwil/ia-first.json");
-  return { lang, stack: r.stack, aiTools, protections, created, replaced: simulation.replaced, kept: simulation.kept, drifted, migration };
+  const { added, gaps } = await complete(r, { dryRun: true });
+  return {
+    lang,
+    stack: r.stack,
+    aiTools,
+    protections,
+    created,
+    replaced: simulation.replaced,
+    kept: simulation.kept,
+    drifted,
+    added,
+    gaps,
+    migration,
+  };
 }
 
 export function formatPreview(a: InitPreview): string {
@@ -126,6 +147,10 @@ export function formatPreview(a: InitPreview): string {
   l.push("", fill(T.added, a.created.length), ...a.created.map((f) => `  + ${f}`));
   if (a.replaced.length) l.push("", fill(T.replaced, a.replaced.length), ...a.replaced.map((f) => `  ~ ${f}`));
   if (a.kept.length) l.push("", fill(T.kept, a.kept.length), ...a.kept.map((f) => `  = ${f}${a.drifted.includes(f) ? T.drifted : ""}`));
+  if (a.added.length)
+    l.push("", fill(T.completed, a.added.length), ...a.added.flatMap((x) => [`  + ${x.file}`, ...x.items.map((i) => `      ${i}`)]));
+  const gaps = formatGaps(a.gaps, a.lang);
+  if (gaps.length) l.push("", ...gaps);
   l.push("", T.nothingOverwritten);
   return l.join("\n");
 }

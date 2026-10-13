@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+### `init` on an existing project: nothing left aside silently
+
+- A file the project already has is still never overwritten, but `init`
+  now adds what drwil needs in it, and says so (`--dry-run` shows it
+  first):
+  - `.gitignore`, `CLAUDE.md`, `GEMINI.md`, Copilot and Cursor
+    instructions: the missing lines, in a block delimited by `>>> drwil` /
+    `<<< drwil`. The template's `.gitignore` carries the same block, the
+    single source of these lines.
+  - `AGENTS.md`: the project's text stays; the drwil instructions are
+    written to `.drwil/AGENTS.md`, pointed to by one added line (and
+    imported by `CLAUDE.md` / `GEMINI.md`).
+  - `.claude/settings.json`: the kit's hooks and permissions are merged,
+    the project's keys and rules kept.
+  - `.gitleaks.toml`: the kit manifest is added to the allowlist (both
+    `[allowlist]` and `[[allowlists]]` forms).
+- The CI already in use (`.github/workflows/`, `.gitlab-ci.yml`) is
+  detected when `--ci` is not given (it was `none`). An existing CI file is
+  not rewritten: `init` prints the `checks` job to add.
+- A `core.hooksPath` already set (husky, lefthook…) is no longer replaced
+  by `.githooks`: `init` says how to call the drwil hooks from it.
+- `.claude/hooks/` is a kit mechanic like `.githooks/`: refreshed when
+  unchanged since its installation, reported as drift otherwise.
+- `doctor` checks what drwil needs inside the project's files, and accepts
+  drwil hooks called from a hook manager; each gap comes with its fix.
+- `uninstall` removes what `init` added to the project's files (the `drwil`
+  blocks, the kit's hooks in `.claude/settings.json`); merged permissions
+  stay.
+
 - Documentation: the READMEs (package and repository) now describe the
   gain, the workstream cycle (`SCOPING` → `BUILD` → `EVIDENCE` → `VERIFY` →
   `CLOSING`), the `state` command and the update / uninstall commands; the
