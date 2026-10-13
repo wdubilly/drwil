@@ -19,6 +19,8 @@ files:
   - packages/drwil/src/manifest.ts
   - packages/drwil/src/i18n.ts
   - packages/drwil/src/migration-table.ts
+  - packages/drwil/src/essentials.ts
+  - packages/drwil/src/complete.ts
   - packages/drwil/templates/common/base/*.md
   - packages/drwil/templates/common/base/gitignore
   - packages/drwil/templates/common/tools/claude/.claude/settings.json
