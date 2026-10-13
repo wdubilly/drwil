@@ -633,7 +633,16 @@ npx drwil verify
 ### Good to know
 
 * `init` enables the git hooks when it finds a git repository: direct commits
-  to `main`/`master` are then refused (QUA-017) — work on a branch.
+  to `main`/`master` are then refused (QUA-017) — work on a branch. A
+  `core.hooksPath` already set by a hook manager (husky, lefthook…) is kept:
+  `init` tells you how to call the drwil hooks from it.
+* On an existing project, `init` never overwrites your files. When one of
+  them lacks what DRWIL needs (`.gitignore` entries, `@AGENTS.md` import,
+  Claude hooks…), it adds only that, in a delimited `drwil` block; your own
+  `AGENTS.md` stays and points to the drwil instructions written aside
+  (.drwil/AGENTS.md). `--dry-run` shows it first, `doctor` checks it later.
+* The CI already in use is detected; in an existing CI file, `init` does not
+  write: it prints the `checks` job to add.
 * Without gitleaks installed, the secrets contract (SEC-007) is `ERROR` in
   `verify` (tool unavailable).
 * Without a CI configured, the CI-coverage contract (QUA-013) is `ERROR`
@@ -655,6 +664,8 @@ npx drwil uninstall --yes   # actually removes those files
 
 * it removes the files DRWIL installed **that are unchanged since installation**;
 * it lists the files you modified and leaves them in place;
+* it removes what `init` added to your own files (the `drwil` blocks, the
+  kit's hooks in `.claude/settings.json`), and nothing else;
 * it lists the local governance state, `.drwil/state.json` (if present,
   git-ignored), and deletes it only with `--yes`;
 * it never touches the project's chantier, intention and recipe folders.
@@ -666,7 +677,7 @@ To only switch governance off (reversible, nothing deleted), set
 It does not remove everything, on purpose. To finish cleaning up:
 
 ```bash
-git config --unset core.hooksPath   # stop running the DRWIL git hooks
+git config --unset core.hooksPath   # if set to .githooks: stop running the DRWIL git hooks
 npm uninstall -D drwil              # if installed as a dev dependency
 ```
 

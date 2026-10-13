@@ -1,6 +1,6 @@
 # "IA first" architecture — description
 
-State as of 2026-10-12. This document explains **how this repo is built to be
+State as of 2026-10-13. This document explains **how this repo is built to be
 modified by agents**: where the rules live, who checks them, and what is
 not checked. It describes neither the product nor the detail of invariants
 (single source: `docs/contracts.md`); the product, if described, lives in
@@ -456,7 +456,9 @@ setting, then removed with the rest of the mechanics.
 - **Remove**: `npx drwil uninstall` (dry run: lists what would be removed),
   then `npx drwil uninstall --yes`. Mechanics files left untouched are
   removed (hooks, `.githooks/state.mjs`, rules of
-  `.claude/settings.json` (if present)); the local state
+  `.claude/settings.json` (if present)); what `init` added to the
+  project's own files (the `drwil` blocks, the kit's Claude hooks) is
+  removed too; the local state
   `.drwil/state.json` (if present) is listed with
   them and deleted only with `--yes`. Briefs, contracts and versioned
   attestations stay: they are the project's history.

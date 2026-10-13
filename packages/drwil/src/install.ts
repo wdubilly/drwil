@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { KIT_MECHANICS, readConfig, resolve, type InitOptions, type Resolved } from "./config.js";
+import { isMechanics, readConfig, resolve, type InitOptions, type Resolved } from "./config.js";
 import { readManifest, sha256 } from "./manifest.js";
 import type { Overwrite } from "./render.js";
 import { detectStack } from "./stack.js";
@@ -29,6 +29,6 @@ export function installChoices(opts: InitOptions): InstallChoices {
     const abs = join(opts.targetDir, rel);
     return !(rel in previous) || !existsSync(abs) || previous[rel] === sha256(readFileSync(abs, "utf8"));
   };
-  const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => rel.startsWith(KIT_MECHANICS) && unchanged(rel);
+  const shouldOverwrite: Overwrite = opts.force ? () => true : (rel) => isMechanics(rel) && unchanged(rel);
   return { r, existing, previous, shouldOverwrite };
 }

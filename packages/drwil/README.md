@@ -51,7 +51,7 @@ drwil adds both, and the people in charge stay in charge.
 | Decisions that stay human | starting a workstream, accepting the work and attesting a manual contract are gestures an agent cannot perform | `drwil attest`, `/drwil-start` |
 | Work that survives the session | one `AGENTS.md`, one contract registry, one state on disk: another agent, or a human, resumes without re-reading the chat | `drwil state` |
 | One setup for every tool | Claude Code, Copilot, Cursor, Codex and Gemini read the same rules | `drwil init` |
-| Adoption without a big bang | works on a new or an existing project, previews with `--dry-run`, never overwrites your files | `drwil init --dry-run` |
+| Adoption without a big bang | works on a new or an existing project, previews with `--dry-run`, never overwrites your files: what drwil needs goes into a delimited block | `drwil init --dry-run` |
 
 Nothing to take on faith: each line is a command you can run.
 
@@ -144,9 +144,11 @@ Running `init` (new project or existing one) adds:
   kit installed and their fingerprint, used by `init`/`uninstall` to
   never silently overwrite or delete something you wrote yourself.
 
-Nothing above is ever force-installed over your own files on a repeat
-`init`: existing files are left untouched and flagged if they have
-drifted from the shipped template (see `resolve-drift` below).
+Nothing above is ever force-installed over your own files: an existing
+file is never overwritten, and flagged if it has drifted from the shipped
+template (see `resolve-drift` below). When one of them lacks something
+drwil needs, `init` adds only that, without touching the rest (see
+"Existing project" below).
 
 ## How the governance loop works
 
@@ -287,11 +289,27 @@ A single command for every case:
   `backend,frontend`), creates the Git repository on a working branch and
   enables the hooks.
 - **Existing project** (code, Git history, dependencies): detects the
-  stack (subfolders become the layers) and installs the kit on top
-  **without ever overwriting a project file**; no new Git repository, the
-  hooks are enabled if there is one.
+  stack (subfolders become the layers) and the CI already in use
+  (`.github/workflows/`, `.gitlab-ci.yml`), and installs the kit on top
+  **without ever overwriting a project file**; no new Git repository.
+  When a file you already have lacks what drwil needs, `init` adds only
+  that, and says so (`--dry-run` shows it first):
+  - `.gitignore`, `CLAUDE.md`, `GEMINI.md`, Copilot and Cursor
+    instructions: the missing lines, in a block delimited by `>>> drwil`
+    and `<<< drwil`;
+  - `AGENTS.md`: your text stays; the drwil instructions go to
+    `.drwil/AGENTS.md`, and one line pointing to it is added;
+  - `.claude/settings.json`: the kit's hooks and permissions are merged
+    in, your keys and rules are kept;
+  - `.gitleaks.toml`: the kit manifest is added to the allowlist.
+
+  Two things stay yours, reported with the fix to paste: the `checks` job
+  in an existing CI file, and a `core.hooksPath` already set by a hook
+  manager (husky, lefthook…) — it is never switched off: call the drwil
+  hooks from yours (`.githooks/pre-commit "$@" || exit $?`), or set
+  `git config core.hooksPath .githooks`.
 - **Update** (project already equipped): creates what is missing,
-  refreshes the kit mechanics (`.githooks/`) that did not change since
+  refreshes the kit mechanics (`.githooks/`, `.claude/hooks/`) that did not change since
   their installation, and reports — never overwrites — a file modified by
   hand (see `resolve-drift` below). A project equipped by an older,
   French-named version is migrated first (see `CHANGELOG.md`).
@@ -374,7 +392,10 @@ npx drwil doctor --json   # machine-readable (version 1)
 Checks the installation without running any check: configuration,
 installed-files manifest, `AGENTS.md`, AI tool entry files, contract
 registry validity, contracts with an automated proof, git hooks
-(`core.hooksPath`), CI file, required tools (git, gitleaks). Exit 0:
+(`core.hooksPath`, or the drwil hooks called from your hook manager), CI
+file, required tools (git, gitleaks), and what drwil needs inside your own
+files (`.gitignore` entries, `@AGENTS.md` import, Claude hooks, CI job),
+each with its fix. Exit 0:
 healthy (warnings allowed); 1: problems; 2: not a drwil project.
 
 ### `contracts` — list and validate the contract registry
@@ -412,7 +433,10 @@ Driven by the installed-files manifest, so it only removes what the kit
 itself installed. Never touches `docs/projects/`, `docs/intentions/`, or
 `docs/recipes/` — your project's decisions and history are never
 deleted automatically. The local governance state,
-`.drwil/state.json` (if present, git-ignored), is listed too, and deleted only with `--yes`. To only switch
+`.drwil/state.json` (if present, git-ignored), is listed too, and deleted only with `--yes`. What `init`
+added to your own files is removed the same way: the `drwil` blocks, and
+the kit's hooks in `.claude/settings.json` (their scripts are gone); the
+merged permissions stay. To only switch
 governance off, without removing anything: `"scopeGate": "off"` in
 `.drwil/ia-first.json`.
 
@@ -443,7 +467,7 @@ defaults below apply to a new install only.
 | `--layers <layers>` | Comma-separated layers | subfolders where a stack is detected, else `backend,frontend` |
 | `-d, --description <text>` | What the application does — fills `AGENTS.md` and `docs/architecture.md` | — |
 | `--tools <tools>` | AI tools to configure, CSV: `claude,codex,cursor,gemini,copilot` | all five |
-| `--ci <ci>` | CI workflow to generate: `none`, `github`, `gitlab` | `none` |
+| `--ci <ci>` | CI workflow to generate: `none`, `github`, `gitlab` | the CI already in use (`.github/workflows/`, `.gitlab-ci.yml`), else `none` |
 | `--contract-prefixes <csv>` | Contract ID prefixes to use | `SEC,QUA` |
 | `--mode <mode>` | `minimal` or `full` | `full` |
 | `--no-git` | Skip `git init` and hook activation | — |

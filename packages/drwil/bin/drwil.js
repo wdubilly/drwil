@@ -33,6 +33,8 @@ const TEXTS = {
     removed: "Fichiers supprimés :",
     wouldRemove: "Fichiers qui seraient supprimés (--yes pour confirmer) :",
     modified: "Modifiés depuis l'installation, non supprimés :",
+    cleaned: "Ajouts drwil retirés de ces fichiers du projet :",
+    wouldClean: "Ajouts drwil qui seraient retirés de ces fichiers du projet :",
     noDrift: "Rien à résoudre : aucune dérive sur la mécanique du kit.",
     resolved: "Fichiers résolus (ancien sauvegardé en .bak) :",
     ignored: "Dérive laissée en l'état (confirmation refusée ou terminal non interactif sans --force) :",
@@ -49,6 +51,8 @@ const TEXTS = {
     removed: "Files removed:",
     wouldRemove: "Files that would be removed (--yes to confirm):",
     modified: "Modified since installation, not removed:",
+    cleaned: "drwil additions removed from these project files:",
+    wouldClean: "drwil additions that would be removed from these project files:",
     noDrift: "Nothing to resolve: no drift on the kit mechanics.",
     resolved: "Files resolved (old one backed up as .bak):",
     ignored: "Drift left as it is (confirmation refused, or non-interactive terminal without --force):",
@@ -137,11 +141,15 @@ program
   .action(async (opts) => {
     try {
       const T = texts();
-      const { removed, modified } = await uninstall({ targetDir: process.cwd(), dryRun: !opts.yes });
-      if (!removed.length) console.log(T.nothingToRemove);
-      else {
+      const { removed, modified, cleaned } = await uninstall({ targetDir: process.cwd(), dryRun: !opts.yes });
+      if (!removed.length && !cleaned.length) console.log(T.nothingToRemove);
+      else if (removed.length) {
         console.log(opts.yes ? T.removed : T.wouldRemove);
         for (const r of removed) console.log(`  - ${r}`);
+      }
+      if (cleaned.length) {
+        console.log(opts.yes ? T.cleaned : T.wouldClean);
+        for (const r of cleaned) console.log(`  - ${r}`);
       }
       if (modified.length) {
         console.log(T.modified);

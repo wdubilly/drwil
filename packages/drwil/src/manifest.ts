@@ -2,7 +2,8 @@ import { mkdir, readFile, writeFile, readdir, rm } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
-import { KIT_MECHANICS } from "./config.js";
+import { isMechanics, readConfig } from "./config.js";
+import { stripAdditions, withoutKitHooks } from "./complete.js";
 
 export function sha256(content: string): string {
   return createHash("sha256").update(content).digest("hex");
@@ -44,7 +45,7 @@ export async function removeObsolete(targetDir: string, previous: Record<string,
   const expectedSet = new Set(expected);
   const removed: string[] = [];
   for (const [rel, hash] of Object.entries(previous)) {
-    if (!rel.startsWith(KIT_MECHANICS) || expectedSet.has(rel) || isProtected(rel)) continue;
+    if (!isMechanics(rel) || expectedSet.has(rel) || isProtected(rel)) continue;
     const abs = join(targetDir, rel);
     if (!existsSync(abs)) continue;
     const current = sha256(await readFile(abs, "utf8"));
@@ -87,6 +88,23 @@ export interface UninstallReport {
   removed: string[];
   /** Files whose fingerprint differs from the manifest (modified since installation): never removed. */
   modified: string[];
+  /** Project files drwil completed (its delimited block, its marked lines): only that is removed. */
+  cleaned: string[];
+}
+
+// Project files `init` may complete (complete.ts), the layers' CLAUDE.md and GEMINI.md included.
+function completable(targetDir: string): string[] {
+  const layers = readConfig(targetDir)?.layers;
+  const pointers = (dir: string) => [`${dir}CLAUDE.md`, `${dir}GEMINI.md`];
+  return [
+    ".gitignore",
+    "AGENTS.md",
+    ...pointers(""),
+    ...(Array.isArray(layers) ? layers.flatMap((l: string) => pointers(`${l}/`)) : []),
+    ".github/copilot-instructions.md",
+    ".cursor/rules/ia-first.mdc",
+    ".gitleaks.toml",
+  ];
 }
 
 /** Uninstalls the kit mechanics from the manifest of installed files. Never touches the briefs,
@@ -110,7 +128,21 @@ export async function uninstall(opts: UninstallOptions): Promise<UninstallReport
   // Local governance state (gitignored, outside the manifest): read by no other tool once the
   // mechanics are removed; listed like the rest, so never removed silently.
   if (existsSync(join(opts.targetDir, ".drwil", "state.json"))) removed.push(".drwil/state.json");
+  const cleaned: { rel: string; content: string }[] = [];
+  for (const rel of completable(opts.targetDir)) {
+    if (removed.includes(rel) || !existsSync(join(opts.targetDir, rel))) continue;
+    const content = stripAdditions(await readFile(join(opts.targetDir, rel), "utf8"));
+    if (content !== null) cleaned.push({ rel, content });
+  }
+  const settings = ".claude/settings.json";
+  if (!removed.includes(settings) && existsSync(join(opts.targetDir, settings))) {
+    try {
+      const content = withoutKitHooks(await readFile(join(opts.targetDir, settings), "utf8"));
+      if (content !== null) cleaned.push({ rel: settings, content });
+    } catch {} // unreadable JSON: left as it is, it is the project's file.
+  }
   if (!dryRun) {
+    for (const c of cleaned) await writeFile(join(opts.targetDir, c.rel), c.content);
     for (const rel of removed) await rm(join(opts.targetDir, rel));
     const remaining = { ...manifest };
     for (const rel of removed) delete remaining[rel];
@@ -118,5 +150,5 @@ export async function uninstall(opts: UninstallOptions): Promise<UninstallReport
     await writeFile(join(opts.targetDir, ...MANIFEST_PATH), JSON.stringify(remaining, null, 2) + "\n");
     await pruneEmptyDirs(opts.targetDir, removed);
   }
-  return { removed, modified };
+  return { removed, modified, cleaned: cleaned.map((c) => c.rel) };
 }

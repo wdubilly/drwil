@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { detectStack, type StackEntry } from "./stack.js";
@@ -25,12 +25,16 @@ export interface InitOptions {
   /** CSV among TOOLS. Default: all. */
   tools?: string;
   ci?: string;
-  /** `init` only: rewrites everything (otherwise only .githooks/, the kit mechanics, is rewritten). */
+  /** `init` only: rewrites everything (otherwise only the kit mechanics, KIT_MECHANICS, are rewritten). */
   force?: boolean;
 }
 
-/** Folder whose content `init` refreshes by default: the kit mechanics, not the project's docs. */
-export const KIT_MECHANICS = ".githooks/";
+/** Folders whose content `init` refreshes by default: the kit mechanics, not the project's docs. */
+export const KIT_MECHANICS = [".githooks/", ".claude/hooks/"];
+
+export function isMechanics(rel: string): boolean {
+  return KIT_MECHANICS.some((m) => rel.startsWith(m));
+}
 
 export const CI_FILES: Record<Ci, string[]> = { none: [], github: [".github/workflows/ia-first.yml"], gitlab: [".gitlab-ci.yml"] };
 
@@ -98,6 +102,14 @@ function ciFromConfig(config: Record<string, unknown>): string | undefined {
   return first === undefined ? undefined : CIS.find((c) => CI_FILES[c][0] === first);
 }
 
+/** CI already used by the project: an install never ignores it (QUA-013 would report "no CI"). */
+export function detectCi(targetDir: string): Ci | undefined {
+  try {
+    if (readdirSync(join(targetDir, ".github", "workflows")).some((f) => /\.ya?ml$/.test(f))) return "github";
+  } catch {}
+  return existsSync(join(targetDir, ".gitlab-ci.yml")) ? "gitlab" : undefined;
+}
+
 /**
  * On an already installed project, a missing option takes the value of its config: running the
  * install again to update the kit never resets a chosen setting to its default. A given option
@@ -118,7 +130,7 @@ export function resolve(opts: InitOptions, defaultLayers: (stack: StackEntry[]) 
     opts: merged,
     lang: pick(opts.lang ?? text(previous.lang) ?? "en", LANGS, "lang", lang),
     tools: splitCsv(opts.tools ?? csv(previous.tools) ?? TOOLS.join(",")).map((t) => pick(t, TOOLS, "tools", lang)),
-    ci: pick(opts.ci ?? ciFromConfig(previous) ?? "none", CIS, "ci", lang),
+    ci: pick(opts.ci ?? ciFromConfig(previous) ?? detectCi(opts.targetDir) ?? "none", CIS, "ci", lang),
     mode: pick(opts.mode ?? text(previous.mode) ?? "full", ["minimal", "full"] as const, "mode", lang),
     layers: layers !== undefined ? splitCsv(layers) : defaultLayers(stack),
     stack,
