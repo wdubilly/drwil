@@ -2,28 +2,67 @@
 
 **IA-first governance, scaffolded in one command and enforced on every commit.**
 
-drwil is a CLI and template kit that installs a verified, machine-checked
-governance layer into any software project — new or existing, any stack,
-any OS. It exists for one reason: when an AI coding assistant (or a human)
-writes code without a shared frame of reference, things quietly go wrong —
-context gets lost between sessions, a security rule gets skipped, "fixed"
-gets announced without proof, a secret leaks into a commit, a CI check
-silently stops running. drwil writes the rules that matter exactly once,
-in files every AI tool reads first, and backs them with Git hooks and CI
-checks that block a commit or a pull request when a rule is broken —
-whether the code was written by you or by Claude, GitHub Copilot, Cursor,
-Codex, or Gemini.
+drwil stands for **D**eterministic **R**ules for **W**orkflows, **I**ntent &
+**L**ineage: rules a machine checks, a workflow with human gates, and a
+traceable line from the intent to the work and its proof.
 
-This is not a linter and not a style guide. It is a governance contract
-between the rules you decide on and the mechanics that enforce them, so
-that "the rule is respected" is always a provable fact, never a claim.
+When an AI assistant (or a human) writes code without a frame, things
+quietly go wrong: context lost between sessions, a rule skipped, "fixed"
+announced without proof, a secret in a commit, a CI check that silently
+stopped running. drwil writes the rules once, in the files every AI tool
+reads first, and enforces them with Git hooks, CI and a verdict
+(`drwil verify`) — for code written by you or by Claude, Copilot, Cursor,
+Codex or Gemini. Any stack, any OS, new or existing project.
+
+This is not a linter and not a style guide: it is a contract between the
+rules you decide and the mechanics that prove them, so that "the rule is
+respected" is a provable fact, never a claim.
+
+```text
+$ npx drwil verify
+  ✓ PASS   SEC-007  No secret in the repo
+  ✓ PASS   QUA-017  No direct work on the main branch
+  ✗ FAIL   QUA-020  Unit tests pass
+             unit-tests: failed
+  ? MANUAL QUA-019  No bypassing a check
+             human required: a bypass rarely leaves a machine-checkable trace.
+9 contracts: 5 PASS, 0 ATTESTED, 1 FAIL, 3 MANUAL, 0 ERROR
+GOVERNANCE: FAIL                                            (exit 1)
+```
+
+*Excerpt of a real run. The work is not verified until the rule holds again;
+a part that only a human can judge stays `MANUAL` until they attest it.*
+
+```bash
+npm install -D ./drwil-<version>.tgz   # tarball attached to the GitHub release
+npx drwil init                         # new, existing or already equipped project
+npx drwil verify
+```
+
+## What you gain
+
+AI coding assistants are fast. What they lack is a boundary and a proof.
+drwil adds both, and the people in charge stay in charge.
+
+| You get | Because | Check it yourself |
+|---|---|---|
+| An agent that stays inside the lines | every commit must fall within the scope of an approved work item | `drwil state`, scope gate at each commit and in CI |
+| "Done" that means done | every contract is backed by a check that actually ran; a check that did not run never counts as a pass | `drwil verify` |
+| Decisions that stay human | starting a workstream, accepting the work and attesting a manual contract are gestures an agent cannot perform | `drwil attest`, `/drwil-start` |
+| Work that survives the session | one `AGENTS.md`, one contract registry, one state on disk: another agent, or a human, resumes without re-reading the chat | `drwil state` |
+| One setup for every tool | Claude Code, Copilot, Cursor, Codex and Gemini read the same rules | `drwil init` |
+| Adoption without a big bang | works on a new or an existing project, previews with `--dry-run`, never overwrites your files | `drwil init --dry-run` |
+
+Nothing to take on faith: each line is a command you can run.
 
 ## Table of contents
 
+- [What you gain](#what-you-gain)
 - [Who it's for](#whos-its-for)
 - [What problem it solves](#what-problem-it-solves)
 - [What gets installed](#what-gets-installed)
 - [How the governance loop works](#how-the-governance-loop-works)
+- [The workstream cycle](#the-workstream-cycle)
 - [How this compares to Spec-Driven Development](#how-this-compares-to-spec-driven-development)
 - [Installing](#installing)
 - [CLI reference](#cli-reference)
@@ -127,6 +166,46 @@ drifted from the shipped template (see `resolve-drift` below).
 5. **Claims require proof.** Before an assistant writes "fixed" or
    "passing", the convention requires re-running the relevant check and
    reading its actual output — not assuming the earlier fix still holds.
+
+## The workstream cycle
+
+A piece of work moves through activities, kept in a local state
+(`.drwil/state.json` (if present), never edited by hand):
+
+```text
+SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶ CLOSING ──▶ SCOPING
+ (frame)    human   (code)    (proofs)     (verdict)   (journal,
+                                                        PR)
+```
+
+1. **SCOPING** — the request is framed as a work item
+   (`docs/projects/<name>.md`) with its `scope` block: the files the work
+   may touch. Nothing is built.
+2. **Start (human).** The human picks a framed work item (`/drwil-start`
+   in Claude Code or Copilot CLI, or `drwil state start` in a terminal)
+   and decides at once whether the merge is authorised in advance. The
+   agent cannot start work by itself.
+3. **BUILD** — the agent implements, only inside the scope. Each commit
+   carries a `Drwil-Brief` trailer; widening the scope takes its own
+   commit, touching only the work item.
+4. **EVIDENCE / VERIFY** — `drwil verify --evidence` writes the proof.
+   Closing requires a `PASS` or `ATTESTED` verdict on the current commit; a
+   `MANUAL` contract waits for the human's `drwil attest`.
+5. **CLOSING** — the work item is condensed into the journal and deleted,
+   the pull request is opened, then back to **SCOPING**. The merge is a
+   human gesture, unless it was authorised at start: the agent then
+   schedules `gh pr merge --auto --merge`, and the host merges once the
+   required checks pass.
+
+```bash
+npx drwil state                  # current activity, active work item, scope
+npx drwil state briefs           # framed work items, ready ones first
+npx drwil state move <ACTIVITY>  # change activity (one step at a time)
+```
+
+The agent reads the state first at every task, and a short reminder is
+injected whenever it changes. Full rules, transitions and limits:
+`docs/ia-first.md` once installed.
 
 ## Five-minute example: RULE → PROOF → VERIFY
 
@@ -452,6 +531,34 @@ Concrètement, le kit ajoute à un projet :
   avec sa preuve ;
 - des **contrôles Git** (hooks) qui bloquent un commit qui viole une
   règle — en local et en CI.
+
+## Ce que vous gagnez
+
+Les assistants IA sont rapides. Ce qui leur manque, c'est une limite et une
+preuve. drwil apporte les deux, et les décisions restent aux humains.
+
+| Vous obtenez | Parce que | À vérifier vous-même |
+|---|---|---|
+| Une IA qui reste dans le cadre | chaque commit doit entrer dans le périmètre d'une fiche approuvée | `drwil state`, barrière de périmètre au commit et en CI |
+| Un « terminé » qui veut dire terminé | chaque contrat s'appuie sur un contrôle réellement exécuté ; un contrôle non exécuté n'est jamais compté comme réussi | `drwil verify` |
+| Des décisions qui restent humaines | lancer un chantier, accepter le travail et attester un contrat manuel sont des gestes qu'une IA ne peut pas faire | `drwil attest`, `/drwil-start` |
+| Un travail qui survit à la session | un `AGENTS.md`, un registre, un état sur disque : une autre IA, ou un humain, reprend sans relire la conversation | `drwil state` |
+| Un seul réglage pour tous les outils | Claude Code, Copilot, Cursor, Codex et Gemini lisent les mêmes règles | `drwil init` |
+| Une adoption sans big bang | projet neuf ou existant, aperçu avec `--dry-run`, jamais d'écrasement de vos fichiers | `drwil init --dry-run` |
+
+Rien à croire sur parole : chaque ligne est une commande que vous pouvez lancer.
+
+## Le cycle d'un chantier
+
+Un travail traverse des activités, tenues dans un état local
+(`.drwil/state.json` (si présent), jamais édité à la main) :
+**SCOPING** (cadrer, rien n'est construit) → **start** (décision humaine :
+`/drwil-start` ou `drwil state start`, avec la fusion éventuellement
+autorisée d'avance) → **BUILD** (l'IA code, dans le périmètre de la fiche) →
+**EVIDENCE / VERIFY** (`drwil verify --evidence` ; clôture seulement sur
+`PASS` ou `ATTESTED`) → **CLOSING** (journal, fiche supprimée, pull request)
+→ retour en **SCOPING**. La fusion reste un geste humain, sauf si elle a été
+autorisée au lancement. `drwil state` montre où l'on en est.
 
 ## Installer
 

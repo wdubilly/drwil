@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Documentation: the READMEs (package and repository) now describe the
+  gain, the workstream cycle (`SCOPING` → `BUILD` → `EVIDENCE` → `VERIFY` →
+  `CLOSING`), the `state` command and the update / uninstall commands; the
+  contract examples of the repository README are in English.
+
 ## 0.5.0
 
 **Breaking change: the CLI is in English, with a single install command.**

@@ -9,10 +9,83 @@
 </p>
 
 <p align="center">
+  DRWIL = <strong>D</strong>eterministic <strong>R</strong>ules for <strong>W</strong>orkflows, <strong>I</strong>ntent &amp; <strong>L</strong>ineage
+</p>
+
+<p align="center">
   <a href="https://github.com/wdubilly/drwil">GitHub</a>
   ·
   <a href="https://github.com/wdubilly/drwil/issues">Issues</a>
 </p>
+
+---
+
+## In one minute
+
+An AI agent says *"Done."* DRWIL asks: **can you prove it?**
+
+DRWIL is a governance layer for AI-produced work. The human decides what
+must be true, the agent builds, and DRWIL checks the proof: a deterministic
+verdict (`PASS`, `FAIL`, `ERROR` or `MANUAL`) that does not depend on the
+model's own word.
+
+```text
+$ npx drwil verify
+  ✓ PASS   SEC-007  No secret in the repo
+  ✓ PASS   QUA-017  No direct work on the main branch
+  ✗ FAIL   QUA-004  Tests pass
+             unit-tests: failed
+  ? MANUAL QUA-019  No bypassing a check
+             human required: a bypass rarely leaves a machine-checkable trace.
+9 contracts: 5 PASS, 0 ATTESTED, 1 FAIL, 3 MANUAL, 0 ERROR
+GOVERNANCE: FAIL                                            (exit 1)
+```
+
+*Condensed output on a sample project. The work is not verified until the rule holds again;
+a part that only a human can judge stays `MANUAL` until they attest it.*
+
+### Who it is for
+
+* **Teams and tech leads** who let AI assistants (Claude Code, Copilot,
+  Cursor, Codex, Gemini) write code in a shared repository, and need to
+  know what was done, within which limits, with which proof.
+* **Solo developers** on projects that last weeks or months, who forget
+  their own decisions as surely as a colleague would.
+* **Organisations with quality or security requirements**, who want a
+  traceable line from a decision to its proof.
+
+Not for you if you are looking for a code generator, a linter or a tool
+that turns a specification into code: DRWIL governs the work, it does not
+produce it.
+
+### Get started
+
+```bash
+gh release download --repo wdubilly/drwil --pattern 'drwil-*.tgz'
+npm install -D ./drwil-*.tgz
+npx drwil init       # new, existing or already equipped project
+npx drwil verify
+```
+
+Details, prerequisites and upgrades: [Installation](#installation).
+
+---
+
+## What you gain
+
+AI coding assistants are fast. What they lack is a boundary and a proof.
+DRWIL adds both, and the people in charge stay in charge.
+
+| You get | Because | Check it yourself |
+|---|---|---|
+| An agent that stays inside the lines | every commit must fall within the scope of an approved work item | `drwil state`, scope gate at each commit and in CI |
+| "Done" that means done | every contract is backed by a check that actually ran; a check that did not run never counts as a pass | `drwil verify` |
+| Decisions that stay human | starting a workstream, accepting the work and attesting a manual contract are gestures an agent cannot perform | `drwil attest`, `/drwil-start` |
+| Work that survives the session | one `AGENTS.md`, one contract registry, one state on disk: another agent, or a human, resumes without re-reading the chat | `drwil state` |
+| One setup for every tool | Claude Code, Copilot, Cursor, Codex and Gemini read the same rules | `drwil init` |
+| Adoption without a big bang | works on a new or an existing project, previews with `--dry-run`, does not overwrite your files unless you force it | `drwil init --dry-run` |
+
+Nothing to take on faith: each line is a command you can run.
 
 ---
 
@@ -314,13 +387,11 @@ The human remains responsible for explicit attestation when the machine cannot r
 A project can declare a contract:
 
 ```md
-## SEC-007 — Pas de secret dans le dépôt
+## SEC-007 — No secret in the repo
 
-**Règle:**
-Aucun secret ne doit être commité dans le dépôt.
+**Rule** : No secret in the repo (`.env`, keys, passwords, client configs).
 
-**Contrôle:**
-secrets
+**Check** : `secrets`
 ```
 
 The contract states the obligation.
@@ -413,13 +484,11 @@ A contract contains at least:
 For example:
 
 ```md
-## QUA-011 — Documentation cohérente
+## QUA-011 — Docs never wrong
 
-**Règle:**
-Les références documentaires doivent pointer vers des éléments existants.
+**Rule** : Documentation references must point to existing elements.
 
-**Contrôle:**
-docs-references
+**Check** : `docs-references`
 ```
 
 The contract describes the obligation.
@@ -505,10 +574,10 @@ to the repository).
 
 ### 1. Download the release tarball
 
-From your project folder:
+From your project folder (without a tag, `gh` downloads the latest release):
 
 ```bash
-gh release download v0.2.0 --repo wdubilly/drwil --pattern 'drwil-*.tgz'
+gh release download --repo wdubilly/drwil --pattern 'drwil-*.tgz'
 ```
 
 ### 2. Install it as a dev dependency
@@ -697,7 +766,61 @@ drwil init --dry-run
 
 Audits what would be installed or changed, writing nothing.
 
+### Contracts
+
+```bash
+drwil contracts [--json]
+```
+
+Lists and validates the contract registry without running any check.
+
+### Update and uninstall
+
+```bash
+drwil resolve-drift   # take over kit files modified by hand, with a diff and a .bak
+drwil uninstall       # dry run; add --yes to remove only what the kit installed
+```
+
+### Governance state
+
+```bash
+drwil state           # see "The workstream cycle"
+```
+
 DRWIL avoids silent destructive operations.
+
+---
+
+## The workstream cycle
+
+A piece of work moves through activities, kept in a local state
+(`.drwil/state.json` (if present), never edited by hand):
+
+```text
+SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶ CLOSING ──▶ SCOPING
+ (frame)    human   (code)    (proofs)     (verdict)   (journal,
+                                                        PR)
+```
+
+1. **SCOPING**: the request is framed as a work item in `docs/projects/`
+   with a `scope` block listing the files the work may touch.
+2. **Start (human)**: the human picks a framed work item (`/drwil-start`
+   or `drwil state start`) and may authorise the merge in advance. The
+   agent cannot start work by itself.
+3. **BUILD**: the agent implements inside the scope; each commit carries a
+   `Drwil-Brief` trailer.
+4. **EVIDENCE / VERIFY**: `drwil verify --evidence` writes the proof;
+   closing requires `PASS` or `ATTESTED` on the current commit, a `MANUAL`
+   contract waiting for the human's `drwil attest`.
+5. **CLOSING**: the work item is condensed into the journal and deleted,
+   the pull request is opened, then back to SCOPING. The merge stays a
+   human gesture unless authorised at start.
+
+```bash
+drwil state              # current activity, work item, scope
+drwil state briefs       # framed work items, ready ones first
+drwil state move <ACTIVITY>
+```
 
 ---
 
