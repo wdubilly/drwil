@@ -126,7 +126,7 @@ livrable en anglais, chantiers B et A : un seul gabarit, en anglais,
 `lang` devient la langue du projet ; cœur (hooks, état, config, bloc,
 trailer, code commun) en anglais, migration des projets équipés par
 `init` / `apply`, version 0.4.0 — journal du 2026-10-12.
-- [ ] [décision] [P0] `init` sur un projet existant : ne plus garder en
+- [ ] [IA] [P0] `init` sur un projet existant : ne plus garder en
   silence un `.gitignore`, un `CLAUDE.md`, un `.claude/settings.json`, une
   CI ou un `core.hooksPath` auxquels manque ce dont drwil a besoin
   (v1:INI-001, v1:INI-005, v1:INI-010) —
