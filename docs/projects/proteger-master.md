@@ -1,6 +1,6 @@
 # Projet : protéger master — checks obligatoires, CODEOWNERS, identité de l'agent
 
-**Statut** : cadré le 2026-10-10 — lots 1, 2 et 4 faits ; lot 3 [humain] (compte machine) à faire.
+**Statut** : cadré le 2026-10-10 — lots 1 à 4 faits le 2026-10-13 (compte machine `wilydub`, ruleset avec revue des code owners sur les zones sensibles).
 **Risque** : HIGH
 
 <!-- scope
@@ -130,15 +130,20 @@ Constat du 2026-10-10 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-10) : lots 1, 2 et 4 faits.
-  - Lot 2 : `.github/CODEOWNERS`, lu par GitHub sans erreur ; sans effet
-    bloquant tant que la revue des code owners n'est pas exigée.
+- **Dernier état** (2026-10-13) : lots 1 à 4 faits. Lot 3 : compte machine
+  `wilydub` (écriture, sans admin, jeton classique `repo`+`workflow`+`read:org`
+  car un jeton fin ne couvre pas un dépôt d'un autre propriétaire) ; ruleset
+  à 0 approbation globale mais revue des code owners exigée (décision du
+  2026-10-13 : le mainteneur n'approuve que les zones sensibles, pour ne pas
+  freiner la fabrique), versionné par cette PR.
+- **Lot 1/2/4** (2026-10-10) :
+  - Lot 2 : `.github/CODEOWNERS`, lu par GitHub sans erreur ; bloquant
+    depuis le 2026-10-13 (revue des code owners exigée).
   - Lot 4 : `.github/ruleset-master.json` (ruleset tel que GitHub le
     renvoie) ; `.github/scripts/verifier-ruleset.mjs` compare à l'API
     (0 si conforme, 1 si un paramètre diverge, vérifié en local) ; étape du
     job `checks` : le jeton de CI lit bien les rulesets (CI de la PR #29
     verte, « conforme »).
-- **Prochaine étape** : [humain] lot 3 — créer le compte machine de
-  l'agent, l'inviter en écriture sans admin, lui donner un jeton,
-  configurer le `gh` de l'agent ; puis ruleset à 1 approbation et revue
-  des code owners, via `--ecrire` et une PR.
+- **Prochaine étape** : fusion de cette PR (ouverte par `wilydub`,
+  approuvée par le mainteneur), puis clôture de la fiche et retrait de la
+  ligne de `docs/projects/pending.md`.
