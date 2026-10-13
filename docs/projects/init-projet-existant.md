@@ -29,6 +29,9 @@ files:
   - packages/drwil/templates/common/tools/cursor/.cursor/rules/ia-first.mdc
   - outils/miroirs.json
   - docs/ia-first.md
+  - package.json
+  - package-lock.json
+  - packages/drwil/package.json
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/README.md
   - packages/drwil/CHANGELOG.md
@@ -92,6 +95,8 @@ l'installation.
 - 2026-10-13 (demandeur) : priorité `[P0]`, en tête de l'ordre de
   réalisation, à lancer dès que possible ; une release est publiée dès la
   clôture du chantier (`docs/recipes/create-a-release.md`).
+- 2026-10-13 (demandeur), après fusion des lots 1 et 2 : version 0.5.1 ;
+  l'agent fait la PR de version puis crée le tag et la release.
 - 2026-10-13 (demandeur), sur proposition de l'agent :
   1. Fichiers à lignes (.gitignore, CLAUDE.md, GEMINI.md) : `init` ajoute
      seulement les lignes manquantes dans un bloc délimité « # drwil »,
@@ -138,8 +143,8 @@ l'installation.
   fichier de consignes dédié avec import, rafraîchissement de
   .claude/hooks/ (décisions 1, 2, 3 et 6). Critère de sortie : deux `init` successifs donnent un
   diff vide ; `uninstall` retire les blocs ajoutés.
-- **Lot 3 — release** [humain] : tag et note de version une fois le
-  chantier clos (`docs/recipes/create-a-release.md`). Critère de sortie :
+- **Lot 3 — release** [IA] : version 0.5.1 (paquets et CHANGELOG) dans une
+  PR, puis tag et note de version une fois fusionnée (`docs/recipes/create-a-release.md`). Critère de sortie :
   release publiée, archive `drwil-*.tgz` jointe.
 
 ## 7. Reprise
@@ -155,6 +160,6 @@ l'installation.
   `uninstall` ; les permissions fusionnées dans .claude/settings.json
   restent après `uninstall` (seuls les hooks du kit sont retirés).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] la release (lot 3), une fois la PR
-  fusionnée (`docs/recipes/create-a-release.md`), puis condenser la fiche
-  dans le journal.
+- **Prochaine étape** : [humain] relancer le chantier (`/drwil-start`)
+  pour le lot 3 ; l'agent fait la PR de version 0.5.1, la release, puis
+  condense la fiche dans le journal.
