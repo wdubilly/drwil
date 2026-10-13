@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.1
 
 ### `init` on an existing project: nothing left aside silently
 
