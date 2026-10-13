@@ -21,6 +21,7 @@ files:
   - packages/drwil/src/migration-table.ts
   - packages/drwil/src/essentials.ts
   - packages/drwil/src/complete.ts
+  - packages/drwil/bin/drwil.js
   - packages/drwil/templates/common/base/*.md
   - packages/drwil/templates/common/base/gitignore
   - packages/drwil/templates/common/tools/claude/.claude/settings.json
