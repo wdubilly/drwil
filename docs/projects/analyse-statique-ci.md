@@ -1,6 +1,6 @@
 # Projet : analyse statique du code en CI (CodeQL)
 
-**Statut** : cadré le 2026-10-14 — à lancer.
+**Statut** : cadré le 2026-10-14 — lot 1 écrit (à valider en CI), lot 2 à faire.
 **Risque** : HIGH
 
 <!-- scope
@@ -9,6 +9,7 @@ files:
   - .github/ruleset-master.json
   - docs/contracts.md
   - docs/architecture.md
+  - outils/miroirs.json
 -->
 
 ## 1. Besoin
@@ -36,6 +37,9 @@ traversées de chemin et regex vulnérables sur tout le code, sur chaque PR.
 ## 4. Décisions
 
 (aucune pour l'instant)
+
+- **2026-10-14** : cadrage élargi à `outils/miroirs.json` : le contrôle des
+  miroirs exige de déclarer le workflow CodeQL comme propre au dépôt.
 
 ## 5. Points à trancher
 
