@@ -1,6 +1,6 @@
 # Projet : sécuriser le moteur (désinstallation, contrôles non exécutés, barrière de périmètre)
 
-**Statut** : cadré le 2026-10-14 — lots 1 et 2 faits, lots 3 et 4 à faire.
+**Statut** : cadré le 2026-10-14 — lots 1 et 2 faits, lots 3a, 3b et 4 à faire.
 **Risque** : HIGH
 
 <!-- scope
@@ -14,6 +14,13 @@ files:
   - .githooks/scope-gate.test.mjs
   - packages/drwil/templates/common/base/docs/ia-first.md
   - docs/ia-first.md
+  - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - .githooks/run-checks.mjs
+  - .githooks/run-checks.test.mjs
+  - packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml
+  - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
+  - .github/workflows/ia-first.yml
+  - outils/miroirs.json
 -->
 
 (cadrage provisoire : à confirmer au démarrage de chaque lot.)
@@ -56,6 +63,14 @@ fichier hors du dépôt, y compris quand l'empreinte concorde.
   code de sortie non nul (choix de l'agent, à confirmer par le demandeur) ;
   `removeObsolete` ignore en plus tout chemin dangereux.
 
+- **2026-10-14 — Contrôle non exécuté** : au push et en CI, `run-checks`
+  échoue dès qu'un contrôle n'a pas tourné, sauf l'audit périmé (simple
+  rappel) ; au commit, le report des contrôles hors chemins reste voulu
+  (QUA-013). Tranché par le demandeur, qui a retenu l'option la plus sûre.
+  Conséquence relevée : les CI livrées (GitHub, GitLab) n'installent pas
+  gitleaks, leur contrôle de secrets serait « non exécuté » : elles
+  l'installent désormais (lot 3b).
+
 ## 5. Points à trancher
 
 (aucun)
@@ -70,11 +85,16 @@ fichier hors du dépôt, y compris quand l'empreinte concorde.
   empreintes concordantes, `--yes`, chemins absolus, liens symboliques
   sortants. Critère de sortie : chaque cas échoue de façon explicite, test
   rattaché à un contrat.
-- **Lot 3 — contrôles non exécutés** [IA] : `verify` donne déjà `ERROR`
-  (`packages/drwil/src/verify.ts`) ; prouver par test que la même règle tient
-  au commit, au push et en CI, sinon la corriger. Critère de sortie : un
-  contrôle bloquant non exécuté ne produit jamais un succès, à aucun point
-  d'entrée.
+- **Lot 3a — contrôles non exécutés** [IA] : `verify` donne déjà `ERROR`
+  (`packages/drwil/src/verify.ts`) ; `run-checks` termine en succès avec un
+  simple avertissement (relevé le 2026-10-14). Le faire échouer au push et en
+  CI, message indiquant comment installer l'outil manquant. Critère de
+  sortie : un contrôle non exécuté ne produit jamais un succès au push ni en
+  CI, tests rouges sans le correctif.
+- **Lot 3b — CI livrées** [IA] : installer gitleaks (version épinglée,
+  empreinte vérifiée) dans les CI GitHub et GitLab du gabarit, comme le fait
+  déjà la CI de ce dépôt. Critère de sortie : le contrôle de secrets tourne
+  en CI dans un projet équipé.
 - **Lot 4 — scope-gate** [IA] : documenter `off`, `warning` et `blocking` ;
   tester l'absence de branche de référence, de trailer `Drwil-Brief`, de
   scope et les erreurs Git, chacune avec un résultat explicite. Critère de
