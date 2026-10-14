@@ -928,3 +928,12 @@ l'index ; texte intégral dans l'historique git
   (à signaler dans la note de la prochaine release, avec la validation des
   chemins) ; aucun contrat ne porte encore sur la portée des suppressions.
 - **Clôturé par** : commits `1333704` (lots 1 et 2) et `1b8d6f2` (lots 3 et 4).
+
+## 2026-10-14 — Gitleaks dans les tests du kit en CI
+
+- **Décisions clés** : installer gitleaks 8.21.2 (archive vérifiée par
+  sha256) dans le job `kit-tests` sur Linux, macOS et Windows, plutôt que
+  simuler l'outil ; nom du job fixé à `kit-tests (<os>)` car le ruleset de
+  master l'exige par son nom (l'ajout de variables de matrice le changeait).
+- **Limites connues** : aucune.
+- **Clôturé par** : PR 79, commit « CI : gitleaks épinglé et vérifié dans kit-tests ».
