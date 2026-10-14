@@ -28,7 +28,7 @@ de sortie.
 **Preuve** : Sortie lue du contrôle concerné.
 **Contrôle** : `ci-coverage`
 **Manuel** : lecture de la sortie du contrôle concerné.
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
 
 ## SEC-006 — Pas de dépendance vulnérable connue

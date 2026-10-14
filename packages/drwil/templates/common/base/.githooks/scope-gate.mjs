@@ -131,7 +131,7 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
     problems = checkIndex({ files: staged, state, patterns: patternsAt(root, "HEAD", state.active_brief), outOfScope, cfg });
   } else {
     const base = reference(root, env);
-    if (!base) return { status: "not-run", problems: [], detail: texts(cfg).noReference };
+    if (!base) return { status: "not-run", problems: [], detail: texts(cfg).noReference, configured: true };
     problems = checkBranch(root, base, { outOfScope, cfg });
   }
   if (problems.length && level === "blocking") return { status: "fail", problems, message: texts(cfg).failed(problems.length) };

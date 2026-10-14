@@ -110,7 +110,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     const gitleaks = findGitleaks();
     if (!gitleaks) return { status: "not-run", detail: T.gitleaksMissing };
     if (spawnSync("git", ["rev-parse", "--git-dir"], { cwd: root, stdio: "ignore" }).status !== 0)
-      return { status: "not-run", detail: T.noGit };
+      return { status: "not-run", detail: T.noGit, configured: true };
     // In CI (or for `drwil verify`) nothing is staged to judge: the whole history is analysed,
     // otherwise a proof of "no secret in the repository" would look at nothing.
     const args = whole ? ["git", "--no-banner", "--redact", "."] : ["git", "--pre-commit", "--staged", "--no-banner", "--redact", "."];
@@ -126,7 +126,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     const r = checkScope(root, { cfg, staged, env });
     const output = r.problems.map((p) => `  ${r.status === "fail" ? "✗" : "⚠"} ${p}`).join("\n");
     if (output && o.stdio !== "pipe") console.log(output);
-    return { status: r.status, message: r.message, detail: r.detail, output };
+    return { status: r.status, message: r.message, detail: r.detail, configured: r.configured, output };
   });
 
   // QUA-017: never work directly on the main branch, including the very first commit (no more
@@ -160,7 +160,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   add("ci-coverage", T.ciCoverage, (o, name) => {
     if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const ciFiles = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
-    if (!ciFiles.length) return { status: "not-run", detail: T.noCi };
+    if (!ciFiles.length) return { status: "not-run", detail: T.noCi, configured: true };
     return launch(process.execPath, [".githooks/check-control-coverage.mjs"], o, name);
   });
 

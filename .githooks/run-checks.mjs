@@ -43,16 +43,26 @@ function stagedFiles() {
   return r.status === 0 ? r.stdout.split("\0").filter(Boolean) : null;
 }
 
+// Only the commit may leave a check unrun (a check deferred outside its `paths` is replayed on push
+// and in CI): everywhere else a check that did not run fails, never a green light (QUA-013).
+const atCommit = process.env.DRWIL_HOOK === "pre-commit";
 const failures = [];
 const notRun = [];
+// An unconfigured project (no CI, no declared check) stays a visible warning: only a check that
+// should have run and could not (missing tool, deferred) blocks.
+// In CI nothing is "unconfigured": the pipeline must be complete.
+const unrun = (what, configured = false) =>
+  (atCommit || (configured && !process.env.CI) ? notRun : failures).push(
+    atCommit || (configured && !process.env.CI) ? what : `${T.notRun} ${what}`,
+  );
 const announce = (name) => console.log(`[ia-first] ${name}…`);
 // "not-applicable" (excluded by design: minimal mode, QUA-017 in CI…) is not shown, as before.
 for (const c of checks(root, { cfg, staged: stagedFiles() })) {
   const r = c.run({ beforeRun: announce });
   if (r.status === "fail") failures.push(r.message ?? c.name);
-  else if (r.status === "not-run") notRun.push(`${c.name} (${r.detail})`);
+  else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
 }
-if (!Array.isArray(cfg.checks) || !cfg.checks.length) notRun.push(`${T.project} (${T.noCheck})`);
+if (!Array.isArray(cfg.checks) || !cfg.checks.length) unrun(`${T.project} (${T.noCheck})`, true);
 
 // Non-blocking reminder (comfort, not a contract): an audit (opportunity, risks/debt) whose
 // "Dernier scan"/"Last scan" is more than 30 days old would benefit from a re-run.

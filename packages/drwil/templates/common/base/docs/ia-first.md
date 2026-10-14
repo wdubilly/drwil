@@ -117,7 +117,9 @@ only them reruns it only on push.
 One detail makes this check actually run rather than get bypassed: **a
 check that did not run is visible** (QUA-013) — a check that cannot run on
 a workstation (missing tool) ends up "not run", never hidden as a silent
-success. A **degradable** check (e.g. secrets, without gitleaks) must also
+success. At commit time it stays a warning; on push and in CI
+(`.githooks/run-checks.mjs`) a check that did not run **fails** — only the
+stale-audit reminder stays a warning. A **degradable** check (e.g. secrets, without gitleaks) must also
 have a CI job triggered on the same paths:
 `.githooks/check-control-coverage.mjs` verifies this by re-reading the CI
 file, not merely noting the job exists (a job that exists but never
@@ -424,6 +426,15 @@ The engine's `scope-gate` check (`.githooks/scope-gate.mjs`), run at
 commit, push, in CI and in `drwil verify`. Severity: `scopeGate` setting in
 `.drwil/ia-first.json` — `warning` (written by `drwil init`: gaps are
 shown, nothing is blocked), `blocking`, `off`.
+
+| `scopeGate` | Gaps in scope | Missing reference branch (push, CI) |
+|---|---|---|
+| `blocking` | ✗ the commit, push or CI run is refused | not run: refused at push and in CI (QUA-013) |
+| `warning` (default) | ⚠ shown, nothing blocked | not run: same |
+| `off` | not checked, no trailer | not applicable |
+
+"No reference branch" (`origin/HEAD`, `master`, `main` or `DRWIL_BASE`) is
+never a pass: it is a warning at commit and a failure at push and in CI.
 
 - **Briefs always pass**: `docs/projects/` and `docs/intentions/`, as do
   human attestations, written by `drwil attest`:

@@ -207,6 +207,39 @@ test("branche sans référence : non exécuté, jamais un succès (QUA-013)", ()
   assert.equal(checkScope(racine, { cfg: { scopeGate: "blocking" }, env: {} }).status, "not-run");
 });
 
+test("branche : trailer vers une fiche sans bloc scope ou inexistante, chaque fichier est signalé", () => {
+  const racine = depot(["src/a.js"]);
+  ecrire(racine, "docs/projects/sans-scope.md", "# Projet : sans scope\n");
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "fiche sans scope");
+  git(racine, "checkout", "-q", "-b", "chantier");
+  ecrire(racine, "src/a.js", "a\n");
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "sans scope\n\nDrwil-Brief: docs/projects/sans-scope.md");
+  ecrire(racine, "src/b.js", "b\n");
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "fiche inexistante\n\nDrwil-Brief: docs/projects/fantome.md");
+  const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } });
+  assert.equal(r.status, "fail");
+  const texte = r.problems.join("\n");
+  assert.match(texte, /src\/a\.js outside the scope of docs\/projects\/sans-scope\.md|src\/a\.js.*sans-scope\.md/);
+  assert.match(texte, /src\/b\.js.*fantome\.md/);
+});
+
+test("hors dépôt git : non exécuté, avec un détail explicite, jamais un succès", () => {
+  const r = checkScope(tmp("drwil-perimetre-"), { cfg: { scopeGate: "blocking" }, env: {} });
+  assert.equal(r.status, "not-run");
+  assert.match(r.detail, /aucune branche de référence/);
+  assert.equal(r.configured, true);
+});
+
+test("référence DRWIL_BASE inconnue : repli sur master ou main, sinon non exécuté", () => {
+  const racine = depot();
+  assert.equal(checkScope(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "inconnue" } }).status, "ok");
+  git(racine, "branch", "-m", "travail");
+  assert.equal(checkScope(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "inconnue" } }).status, "not-run");
+});
+
 test("messages en anglais : activité, hors cadrage, commits sans trailer ou hors cadrage, échec", () => {
   const cfg = { lang: "en" };
   assert.match(
