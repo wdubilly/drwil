@@ -100,6 +100,8 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
   2026-10-14 (voir `docs/projects/journal.md`).
 - [x] [IA] [P0] Gitleaks dans les tests du kit en CI — fait le 2026-10-14
   (voir `docs/projects/journal.md`).
+- [ ] [IA] [P1] Analyse statique du code en CI (CodeQL) —
+  `docs/projects/analyse-statique-ci.md`.
 - [ ] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements —
   `docs/projects/preuves-de-bout-en-bout.md`.
