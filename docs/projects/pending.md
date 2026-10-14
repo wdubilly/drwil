@@ -64,8 +64,7 @@ réalisation :
 
 1. Fait le 2026-10-13 : `init` sur un projet existant, puis release 0.5.1
    (journal du 2026-10-13).
-2. Protéger master (geste humain ; prérequis de la relecture humaine et de
-   la fabrique).
+2. Fait le 2026-10-13 : protéger master (journal du 2026-10-13).
 3. Catalogue, fiche 1 : format.
 4. Catalogue, fiche 2 : profils.
 5. Catalogue, fiche 3 : adoption ciblée.
@@ -96,11 +95,8 @@ tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
 de `docs/projects/adopter-seuil-couverture.md`) ; non-régression continue ;
 CLI testée depuis le tarball ; gitleaks en CI (journal, 2026-10-11).
 
-Reporté par le demandeur le 2026-10-11 : la protection de master.
-
-- [ ] [humain] [P1] Protéger master : approbation humaine exigée sur les
-  PR (aujourd'hui 0) et compte machine de l'agent (lot 3) (v1:GIT-004,
-  v1:COD-010, v1:HOOK-014) — `docs/projects/proteger-master.md`.
+Fait le 2026-10-13 : la protection de master (compte machine de
+l'agent, revue des code owners ; journal du 2026-10-13).
 
 ## Vague 3 — mesurer avant de construire
 

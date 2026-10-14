@@ -895,3 +895,17 @@ l'index ; texte intégral dans l'historique git
   dans `.claude/settings.json` restent après `uninstall`.
 - **Clôturé par** : la PR de ce chantier (branche
   `workstream/release-0-5-1`) ; tag `v0.5.1` et release après fusion.
+
+## 2026-10-13 — Protéger master : checks obligatoires, CODEOWNERS, identité de l'agent
+
+- **Décisions clés** : ruleset « master protégé » sans contournement,
+  versionné dans `.github/ruleset-master.json` et vérifié en CI ;
+  CODEOWNERS sur les zones de gouvernance. L'agent a son propre compte
+  (`wilydub`, écriture sans admin, jeton classique car un jeton fin ne
+  couvre pas un dépôt d'un autre propriétaire). Décidé le 2026-10-13 par le
+  demandeur : 0 approbation globale mais revue des code owners exigée, donc
+  l'humain n'approuve que les modifications de la gouvernance, pour ne pas
+  freiner la fabrique.
+- **Limites connues** : le jeton de l'agent est classique (portée `repo`) ;
+  à renouveler tous les 90 jours.
+- **Clôturé par** : PR #78 (lot 3), après les PR #11 à #29 (lots 1, 2 et 4).

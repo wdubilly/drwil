@@ -26,7 +26,7 @@ fiches (DRWIL-012, niveaux de risque).
   attestation n'est pas une preuve qu'une fabrique peut consommer.
 - **Forge** : dépôt public, mais `master` non protégé, aucun ruleset,
   aucun CODEOWNERS ; l'agent agit avec le jeton du mainteneur — chantier
-  `docs/projects/proteger-master.md`.
+  journal du 2026-10-13, « Protéger master ».
 - **Outillage fragile**, constaté le même jour :
   - depuis un worktree, les tests des contrôles écrivaient dans le vrai
     dépôt — corrigé le 2026-10-10 (`docs/projects/journal.md`, PR #16) ;
@@ -75,7 +75,7 @@ fiches (DRWIL-012, niveaux de risque).
 
 ## Ordre proposé
 
-0. **Protéger la forge** : `docs/projects/proteger-master.md` (sans code).
+0. **Protéger la forge** : journal du 2026-10-13, « Protéger master » (sans code).
 1. **Fiabiliser l'outillage** : tests isolés des `GIT_*` (fait, PR #16),
    citations de fichiers ignorés (fait, PR #26), faux positifs.
 2. **Muscler les preuves** : mutation testing, CI indépendante.
