@@ -1,6 +1,6 @@
 # Projet : preuves de bout en bout (cycle, verdicts, attestations, contournements)
 
-**Statut** : cadré le 2026-10-14 — à lancer après « sécuriser le moteur ».
+**Statut** : cadré le 2026-10-14 — lots 1 à 4 faits (2026-10-14), chantier à clore.
 **Risque** : HIGH
 
 <!-- scope
@@ -49,7 +49,7 @@ contournements.
 
 ## 6. Increments
 
-- **Lot 1 — cycle complet** [IA] : installer dans un dépôt temporaire,
+- **Lot 1 — cycle complet** (fait le 2026-10-14) [IA] : installer dans un dépôt temporaire,
   modifier, vérifier, mettre à jour, désinstaller. Critère de sortie : un
   test unique vert sur les 3 systèmes.
 - **Lot 2 — sept activités et verdicts** [IA] : parcourir SCOPING,
@@ -57,7 +57,7 @@ contournements.
   échec, contrôle bloquant non exécuté et preuve humaine manquante avec
   PASS, FAIL, ERROR et MANUAL. Critère de sortie : une table de cas, un test
   par ligne.
-- **Lot 3 — attestations** [IA] : une attestation devient obsolète quand le
+- **Lot 3 — attestations** (fait le 2026-10-14, déjà couvert par les tests `attest :` de `packages/drwil/test/kit.test.mjs`) [IA] : une attestation devient obsolète quand le
   contrat ou les éléments qu'elle couvre changent. Critère de sortie : test
   vert, attestation périmée refusée.
 - **Lot 4 — contournements** [IA] : état local modifié, hook désactivé,
@@ -66,7 +66,8 @@ contournements.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-14) : cadré, aucun lot commencé.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 1, après la clôture de « sécuriser le
-  moteur ».
+- **Dernier état** (2026-10-14) : lot 1 fait sur la branche
+  `workstream/preuves-de-bout-en-bout` (`packages/drwil/test/cycle.test.mjs`,
+  2 tests : installer, modifier, vérifier, mettre à jour, désinstaller).
+- **Travail non commité** : voir `git status`.
+- **Prochaine étape** : [IA] clore (vérifier, journal, supprimer la fiche). Angle mort connu du lot 4 : un `.drwil/state.json` (si présent) réécrit à la main n'est pas détecté, seuls les refus de l'outil et le diff de la PR le couvrent (`docs/ia-first.md`, « Limits »).

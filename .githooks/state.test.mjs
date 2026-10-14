@@ -183,6 +183,47 @@ test("transitions : une activité à la fois, retours vers BUILD, abandon vers S
   assert.equal(transitionAllowed("INCONNUE", "SCOPING"), false);
 });
 
+test("sept activités : matrice complète des transitions, une table de cas", () => {
+  const permises = {
+    SCOPING: ["EXPECTATION"],
+    EXPECTATION: ["REQUEST", "SCOPING"],
+    REQUEST: ["BUILD", "SCOPING"],
+    BUILD: ["EVIDENCE", "SCOPING"],
+    EVIDENCE: ["VERIFY", "BUILD", "SCOPING"],
+    VERIFY: ["CLOSING", "BUILD", "SCOPING"],
+    CLOSING: ["SCOPING"],
+  };
+  assert.deepEqual([...ACTIVITIES], Object.keys(permises));
+  for (const de of ACTIVITIES)
+    for (const vers of ACTIVITIES) assert.equal(transitionAllowed(de, vers), permises[de].includes(vers), `${de} → ${vers}`);
+});
+
+test("sept activités : parcours réel par move, un saut refusé laisse l'état inchangé", async () => {
+  const racine = depot({ config: { transitions: "agent" } });
+  const activite = () => readState(racine).state.activity;
+  const etapes = [
+    ["EXPECTATION", { brief: FICHE }],
+    ["REQUEST", {}],
+    ["BUILD", {}],
+    ["EVIDENCE", {}],
+    ["VERIFY", {}],
+  ];
+  for (const [vers, opts] of etapes) {
+    const r = await move(racine, { to: vers, ...opts }, { tty: false, now: MAINTENANT });
+    assert.equal(r.code, 0, `${vers} : ${r.message}`);
+    assert.equal(activite(), vers);
+  }
+  let r = await move(racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
+  assert.equal(r.code, 1, "CLOSING refusé sans évidence de verify");
+  assert.equal(activite(), "VERIFY");
+  r = await move(racine, { to: "EXPECTATION" }, { tty: false, now: MAINTENANT });
+  assert.equal(r.code, 1);
+  assert.equal(activite(), "VERIFY");
+  r = await move(racine, { to: "BUILD" }, { tty: false, now: MAINTENANT });
+  assert.equal(r.code, 0, "retour en BUILD après un échec");
+  assert.equal(activite(), "BUILD");
+});
+
 test("contexte : SCOPING interdit la réalisation", () => {
   const racine = depot();
   const texte = context(readState(racine), racine);
