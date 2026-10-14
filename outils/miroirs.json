@@ -19,6 +19,7 @@
     "docs/recipes/working-with-branches.md": "Deux phrases propres au dépôt : ses checks sont aussi imposés côté forge (ruleset de master), et un fichier livré s'y modifie dans le gabarit puis s'installe (npm run installer-depot)."
   },
   "propresAuDepot": {
+    ".github/workflows/codeql.yml": "Analyse statique propre au dépôt drwil (docs/projects/analyse-statique-ci.md) ; le livrable n'en reçoit pas.",
     ".githooks/*.test.mjs": "Tests des hooks : éprouvent drwil ici, non livrés (principe « livrable léger, dépôt éprouvé », 2026-10-11).",
     ".github/CODEOWNERS": "Forge de ce dépôt (journal du 2026-10-13, « Protéger master ») ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
     ".github/ruleset-master.json": "Forge de ce dépôt (journal du 2026-10-13, « Protéger master ») ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
