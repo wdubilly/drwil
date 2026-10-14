@@ -1,8 +1,9 @@
 import { mkdir, readFile, writeFile, readdir, rm } from "node:fs/promises";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
+import { dirname, isAbsolute, join, resolve, sep, win32 } from "node:path";
 import { createHash } from "node:crypto";
 import { isMechanics, readConfig } from "./config.js";
+import { fill, projectLang } from "./i18n.js";
 import { stripAdditions, withoutKitHooks } from "./complete.js";
 
 export function sha256(content: string): string {
@@ -13,10 +14,42 @@ const MANIFEST_PATH = [".drwil", "installed-files.json"];
 
 export function readManifest(targetDir: string): Record<string, string> {
   try {
-    return JSON.parse(readFileSync(join(targetDir, ...MANIFEST_PATH), "utf8"));
+    const manifest = JSON.parse(readFileSync(join(targetDir, ...MANIFEST_PATH), "utf8"));
+    return manifest !== null && typeof manifest === "object" && !Array.isArray(manifest) ? manifest : {};
   } catch {
     return {};
   }
+}
+
+const UNSAFE_PATH = {
+  fr: "Chemin refusé dans .drwil/installed-files.json (hors du dépôt, absolu ou lien symbolique) : {0}. Rien n'a été modifié.",
+  en: "Path refused in .drwil/installed-files.json (outside the repository, absolute or symbolic link): {0}. Nothing was changed.",
+};
+
+// The manifest is a file of the project: a forged one (with a matching fingerprint) must never make
+// `init` or `uninstall` delete anything outside the repository.
+export function isSafeManifestPath(targetDir: string, rel: string): boolean {
+  if (typeof rel !== "string" || !rel || rel.includes("\0")) return false;
+  if (isAbsolute(rel) || win32.isAbsolute(rel) || /^[a-zA-Z]:/.test(rel)) return false;
+  if (rel.split(/[\\/]/).includes("..")) return false;
+  const root = resolve(targetDir);
+  const abs = resolve(root, rel);
+  if (!abs.startsWith(root + sep)) return false;
+  try {
+    if (lstatSync(abs).isSymbolicLink()) return false;
+  } catch {} // absent: nothing to remove.
+  // A symbolic link on a parent folder can lead out of the repository: the real path decides.
+  let ancestor = dirname(abs);
+  while (!existsSync(ancestor)) ancestor = dirname(ancestor);
+  const realRoot = realpathSync(root);
+  const realAncestor = realpathSync(ancestor);
+  return realAncestor === realRoot || realAncestor.startsWith(realRoot + sep);
+}
+
+/** Refuses the whole manifest, before any change, if one of its paths is unsafe. */
+export function assertSafeManifest(targetDir: string): void {
+  const unsafe = Object.keys(readManifest(targetDir)).filter((rel) => !isSafeManifestPath(targetDir, rel));
+  if (unsafe.length) throw new Error(fill(UNSAFE_PATH[projectLang(targetDir)], unsafe.join(", ")));
 }
 
 // Merged (never fully rewritten): a partial install must not lose the entries of a
@@ -45,7 +78,7 @@ export async function removeObsolete(targetDir: string, previous: Record<string,
   const expectedSet = new Set(expected);
   const removed: string[] = [];
   for (const [rel, hash] of Object.entries(previous)) {
-    if (!isMechanics(rel) || expectedSet.has(rel) || isProtected(rel)) continue;
+    if (!isMechanics(rel) || expectedSet.has(rel) || isProtected(rel) || !isSafeManifestPath(targetDir, rel)) continue;
     const abs = join(targetDir, rel);
     if (!existsSync(abs)) continue;
     const current = sha256(await readFile(abs, "utf8"));
@@ -110,6 +143,7 @@ function completable(targetDir: string): string[] {
 /** Uninstalls the kit mechanics from the manifest of installed files. Never touches the briefs,
  * intents and recipes folders, nor a file modified since installation (different fingerprint). */
 export async function uninstall(opts: UninstallOptions): Promise<UninstallReport> {
+  assertSafeManifest(opts.targetDir);
   const manifest = readManifest(opts.targetDir);
   const dryRun = opts.dryRun ?? true;
   const removed: string[] = [];

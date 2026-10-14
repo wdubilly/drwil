@@ -30,7 +30,7 @@ import { writeConfig, type InitOptions, type Resolved } from "./config.js";
 import { installChoices } from "./install.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { scaffold } from "./render.js";
-import { removeObsolete, writeManifest } from "./manifest.js";
+import { assertSafeManifest, removeObsolete, writeManifest } from "./manifest.js";
 import { formatMigration, migrate } from "./migration.js";
 import { complete, type Addition } from "./complete.js";
 import { formatGaps, hooksPath } from "./essentials.js";
@@ -149,6 +149,7 @@ async function migrateFirst(targetDir: string): Promise<void> {
 export async function init(opts: InitOptions): Promise<void> {
   // First of all: a project in the old format moves to the English names, the only ones the install reads.
   await migrateFirst(opts.targetDir);
+  assertSafeManifest(opts.targetDir);
   const { r, existing, previous, shouldOverwrite } = installChoices(opts);
   const drifted: string[] = [];
   const manifest: Record<string, string> = {};
