@@ -54,6 +54,8 @@ jobs:
   # npm test de packages/drwil (pas la suite complète run-checks.mjs, qui
   # dépend de gitleaks) doit rester vert sur les trois OS.
   kit-tests:
+    # Nom fixé : le ruleset de master exige « kit-tests (<os>) », or `include` ajouterait gitleaks et sha256 au nom.
+    name: kit-tests (${{ matrix.os }})
     strategy:
       matrix:
         include:
