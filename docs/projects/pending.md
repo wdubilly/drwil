@@ -102,9 +102,9 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
   (voir `docs/projects/journal.md`).
 - [x] [IA] [P1] Analyse statique du code en CI (CodeQL) — fait le
   2026-10-14 (voir `docs/projects/journal.md`).
-- [ ] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
-  verdicts, attestations, contournements —
-  `docs/projects/preuves-de-bout-en-bout.md`.
+- [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
+  verdicts, attestations, contournements — fait le 2026-10-15
+  (voir `docs/projects/journal.md`).
 - [ ] [IA] [P1] Fiabiliser le package : `.drwil/install.json` (si présent), tests de
   mise à jour — `docs/projects/fiabiliser-le-package.md`.
 

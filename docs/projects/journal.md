@@ -949,3 +949,20 @@ l'index ; texte intégral dans l'historique git
   n'empêche pas la fusion ; l'analyse ne couvre pas les gabarits Markdown.
   Premier passage : 0 alerte ouverte.
 - **Clôturé par** : PR 80.
+
+## 2026-10-15 — Preuves de bout en bout
+
+- **Décisions clés** : prouver par des tests, dans des dépôts temporaires,
+  ce qui n'était vérifié que pièce par pièce. Livré : cycle complet (init,
+  modification, verify, mise à jour, désinstallation) dans
+  `packages/drwil/test/cycle.test.mjs` ; matrice 7×7 des transitions et
+  parcours réel des sept activités dans `.githooks/state.test.mjs` ;
+  contournements (`--no-verify`, hooks désactivés, état local falsifié)
+  repris par `run-checks` et par le rejeu du cadrage de la branche. Verdicts
+  PASS, FAIL, MANUAL, ERROR et attestations obsolètes : déjà couverts par
+  `packages/drwil/test/kit.test.mjs`, rien dupliqué.
+- **Limites connues** : un `.drwil/state.json` (si présent) réécrit à la main n'est pas
+  détecté en lui-même (fichier ignoré par Git) ; seuls le refus de l'outil
+  et le rejeu du cadrage en CI le bornent. Aucun code livrable modifié :
+  seuls des tests ont été ajoutés.
+- **Clôturé par** : PR à venir.
