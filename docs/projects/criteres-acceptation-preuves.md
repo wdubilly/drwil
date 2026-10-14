@@ -1,6 +1,6 @@
 # Projet : critères d'acceptation prouvés avant la clôture
 
-**Statut** : cadré le 2026-10-15 — à lancer, aucun lot commencé.
+**Statut** : cadré le 2026-10-15 — décisions tranchées le 2026-10-15, à lancer, aucun lot commencé.
 **Risque** : HIGH
 
 <!-- scope
@@ -54,22 +54,20 @@ avoir une preuve : si l'agent n'a créé aucun contrat pour sa demande,
 
 ## 4. Décisions
 
-(aucune encore.)
+Tranchées par le demandeur le 2026-10-15 :
+
+- Forme : section « Critères d'acceptation » dans la fiche, une ligne par
+  critère, liée à un ID de contrat ou de contrôle, ou marquée `[humain]`.
+- Moment : dans `verify --evidence`, l'évidence porte le résultat par
+  critère.
+- Fiche sans critères structurés : avertir d'abord, bloquer ensuite pour les
+  fiches créées après la mise en service (`newRequirements`).
+- Tableau « critère → preuve → verdict » : produit par `verify` dans
+  l'évidence et repris dans le corps de la PR.
 
 ## 5. Points à trancher
 
-- [décision] Forme des critères dans la fiche : une section « Critères
-  d'acceptation » avec une ligne par critère, chacun lié à un ID de contrat
-  ou de contrôle, ou marqué `[humain]` ? (proposition.)
-- [décision] Quand le contrôle s'applique : à l'entrée de VERIFY, de CLOSING,
-  ou dans `verify --evidence` ? (proposition : `verify --evidence`, pour que
-  l'évidence porte le résultat par critère.)
-- [décision] Fiche sans critères structurés : bloquer, avertir, ou bloquer
-  seulement pour les fiches créées après la date de mise en service
-  (`newRequirements`) ? (proposition : avertir puis bloquer, comme pour les
-  exigences ajoutées après coup.)
-- [décision] Le tableau « critère → preuve → verdict » : produit par `verify`
-  dans l'évidence et rappelé dans le corps de la PR ?
+(aucun.)
 
 ## 6. Increments
 
@@ -93,5 +91,4 @@ avoir une preuve : si l'agent n'a créé aucun contrat pour sa demande,
 
 - **Dernier état** (2026-10-15) : fiche cadrée, aucun code écrit.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher les points de la section 5,
-  puis lancer le chantier.
+- **Prochaine étape** : [IA] lot 1 (modèle), au lancement du chantier.
