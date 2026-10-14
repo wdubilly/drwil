@@ -13,6 +13,7 @@ import {
   appendFileSync,
   cpSync,
   rmSync,
+  symlinkSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -2710,4 +2711,66 @@ test("projet à l'ancien format : apply --dry-run annonce la migration sans rien
   const lignes = await capture(() => init({ lang: "fr", targetDir: dir }));
   assert.ok(!lignes.some((l) => /Migration de l'ancien format/.test(l)), "rejouer apply ne migre plus rien");
   assert.equal(read(dir, ".drwil/ia-first.json"), migre);
+});
+
+// Un manifeste forgé (empreinte concordante) ne doit jamais faire supprimer un fichier hors du dépôt.
+const empreinte = (contenu) => createHash("sha256").update(contenu).digest("hex");
+async function projetAvecManifesteForge(chemins) {
+  const dossier = tmp();
+  const dir = join(dossier, "projet");
+  mkdirSync(dir);
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const dehors = join(dossier, "hors-depot.txt");
+  writeFileSync(dehors, "à ne jamais supprimer\n");
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  for (const chemin of chemins(dossier)) manifeste[chemin] = empreinte("à ne jamais supprimer\n");
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2) + "\n");
+  return { dir, dehors, avant: read(dir, ".drwil/installed-files.json") };
+}
+
+test("désinstallation : chemin relatif sortant (../) ou absolu du manifeste refusé, rien n'est supprimé, même avec --yes", async () => {
+  for (const chemin of [() => "../hors-depot.txt", (dossier) => join(dossier, "hors-depot.txt"), () => "docs/../../hors-depot.txt"]) {
+    const { dir, dehors, avant } = await projetAvecManifesteForge((dossier) => [chemin(dossier)]);
+    await assert.rejects(() => uninstall({ targetDir: dir }), /Chemin refusé/);
+    await assert.rejects(() => uninstall({ targetDir: dir, dryRun: false }), /Chemin refusé/);
+    assert.ok(existsSync(dehors), "fichier hors du dépôt conservé");
+    assert.ok(existsSync(join(dir, ".githooks/engine.mjs")), "rien d'installé n'a été retiré : refus avant toute action");
+    assert.equal(read(dir, ".drwil/installed-files.json"), avant, "manifeste inchangé");
+  }
+});
+
+test("désinstallation : lien symbolique (fichier ou dossier parent) sortant du dépôt refusé", {
+  skip: process.platform === "win32",
+}, async () => {
+  const { dir, dehors } = await projetAvecManifesteForge(() => []);
+  const dossierHors = join(dir, "..", "dossier-hors");
+  mkdirSync(dossierHors);
+  writeFileSync(join(dossierHors, "cible.txt"), "à ne jamais supprimer\n");
+  symlinkSync(dehors, join(dir, ".githooks/lien-fichier.mjs"));
+  symlinkSync(dossierHors, join(dir, ".githooks/lien-dossier"));
+  for (const chemin of [".githooks/lien-fichier.mjs", ".githooks/lien-dossier/cible.txt"]) {
+    const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+    manifeste[chemin] = empreinte("à ne jamais supprimer\n");
+    writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste));
+    await assert.rejects(() => uninstall({ targetDir: dir, dryRun: false }), /Chemin refusé/, chemin);
+    delete manifeste[chemin];
+    writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste));
+  }
+  assert.ok(existsSync(dehors) && existsSync(join(dossierHors, "cible.txt")));
+});
+
+test("init : un manifeste forgé est refusé avant toute écriture, removeObsolete ne supprime rien hors du dépôt", async () => {
+  const { dir, dehors } = await projetAvecManifesteForge(() => ["../hors-depot.txt", ".githooks/../../hors-depot.txt"]);
+  const marqueur = join(dir, ".githooks/engine.mjs");
+  writeFileSync(marqueur, "// modifié par le projet\n");
+  await assert.rejects(() => quiet(() => init({ lang: "fr", targetDir: dir, git: false })), /Chemin refusé/);
+  assert.ok(existsSync(dehors), "fichier hors du dépôt conservé");
+  assert.equal(readFileSync(marqueur, "utf8"), "// modifié par le projet\n", "init a refusé avant d'écrire");
+});
+
+test("désinstallation : un manifeste sain (chemins relatifs du dépôt) fonctionne toujours", async () => {
+  const { dir } = await projetAvecManifesteForge(() => []);
+  const r = await uninstall({ targetDir: dir, dryRun: false });
+  assert.ok(r.removed.includes(".githooks/engine.mjs"));
+  assert.ok(!existsSync(join(dir, ".githooks/engine.mjs")));
 });

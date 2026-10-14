@@ -83,7 +83,7 @@ test("secrets : gitleaks trouvé hors dépôt git → non exécuté", posix, () 
   const outils = tmp();
   fauxGitleaks(outils);
   const r = avecEnv({ PATH: [outils, dossierGit].join(delimiter) }, () => executer(tmp(), "secrets"));
-  assert.deepEqual(r, { status: "not-run", detail: "pas de dépôt git" });
+  assert.deepEqual(r, { status: "not-run", detail: "pas de dépôt git", configured: true });
 });
 
 test("secrets : indexés seulement au commit, tout l'historique en CI ; ~/.local/bin aussi cherché", posix, () => {

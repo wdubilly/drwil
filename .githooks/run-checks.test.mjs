@@ -48,7 +48,10 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] 
 }
 
 test("racine du projet, pas le dossier courant : contrôles annoncés, non exécutés signalés, bilan OK", () => {
-  const r = lancer({ ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "projet", run: "node -e 0" }] }) });
+  const r = lancer(
+    { ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "projet", run: "node -e 0" }] }) },
+    { env: { DRWIL_HOOK: "pre-commit" } },
+  );
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /^\[ia-first\] chemins et contrats cités dans la doc…$/m);
   assert.match(r.stdout, /^\[ia-first\] projet…$/m);
@@ -90,7 +93,36 @@ test("audits : périmé signalé (français), récent, sans date ou sans ligne d
     "docs/value-discovery.md": "# Value\n\n> Last scan: never\n",
   });
   assert.doesNotMatch(r.stdout, /stale audit/);
-  r = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "docs/value-discovery.md": "> Last scan: 2020-01-01\n" });
+  r = lancer(
+    { ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "docs/value-discovery.md": "> Last scan: 2020-01-01\n" },
+    { env: { DRWIL_HOOK: "pre-commit" } },
+  );
   assert.match(r.stdout, /⚠ not run: stale audit \(docs\/value-discovery\.md, \d+ days old\): time to re-run/);
   assert.match(r.stdout, /checks run: OK/);
+});
+
+test("QUA-013 : hors commit (push, CI), un contrôle non exécuté fait échouer ; au commit, simple avertissement", () => {
+  const sansCi = { ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "projet", run: "node -e 0" }] }) };
+  let r = lancer(sansCi, { env: { CI: "true" } });
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout, /^\[ia-first\] ✗ échec : non exécuté : couverture CI de chaque contrôle \(QUA-013\) \(aucune CI configurée/m);
+  assert.doesNotMatch(r.stdout, /contrôles exécutés : OK/);
+  r = lancer(sansCi, { env: { DRWIL_HOOK: "pre-commit" } });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /⚠ non exécuté : couverture CI/);
+});
+
+test("QUA-013 : hors CI, un projet non configuré (pas de CI) reste un avertissement visible", () => {
+  const r = lancer({ ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "projet", run: "node -e 0" }] }) });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /⚠ non exécuté : couverture CI/);
+});
+
+test("QUA-013 : hors commit, aucun contrôle du projet déclaré fait échouer, en anglais aussi ; l'audit périmé reste un avertissement", () => {
+  let r = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en", checks: [] }) }, { env: { CI: "true" } });
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout, /^\[ia-first\] ✗ failed: not run: project checks \(lint, tests…\) \(none declared/m);
+  r = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "docs/value-discovery.md": "> Last scan: 2020-01-01\n" });
+  assert.match(r.stdout, /⚠ not run: stale audit/);
+  assert.doesNotMatch(r.stdout, /✗ failed: not run: stale audit/);
 });

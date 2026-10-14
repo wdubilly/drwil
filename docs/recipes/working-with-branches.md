@@ -43,7 +43,7 @@ request, instead of direct commits on the main branch.
   are green (`gh pr checks <n> --watch` on GitHub). Since 2026-10-10,
   this repository also enforces them on the forge side (ruleset on
   `master`: required checks, branch up to date, no bypass —
-  `docs/projects/proteger-master.md`).
+  journal du 2026-10-13, « Protéger master »).
 
 ## Closing
 

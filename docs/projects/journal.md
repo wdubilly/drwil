@@ -895,3 +895,45 @@ l'index ; texte intégral dans l'historique git
   dans `.claude/settings.json` restent après `uninstall`.
 - **Clôturé par** : la PR de ce chantier (branche
   `workstream/release-0-5-1`) ; tag `v0.5.1` et release après fusion.
+
+## 2026-10-13 — Protéger master : checks obligatoires, CODEOWNERS, identité de l'agent
+
+- **Décisions clés** : ruleset « master protégé » sans contournement,
+  versionné dans `.github/ruleset-master.json` et vérifié en CI ;
+  CODEOWNERS sur les zones de gouvernance. L'agent a son propre compte
+  (`wilydub`, écriture sans admin, jeton classique car un jeton fin ne
+  couvre pas un dépôt d'un autre propriétaire). Décidé le 2026-10-13 par le
+  demandeur : 0 approbation globale mais revue des code owners exigée, donc
+  l'humain n'approuve que les modifications de la gouvernance, pour ne pas
+  freiner la fabrique.
+- **Limites connues** : le jeton de l'agent est classique (portée `repo`) ;
+  à renouveler tous les 90 jours.
+- **Clôturé par** : PR #78 (lot 3), après les PR #11 à #29 (lots 1, 2 et 4).
+
+## 2026-10-14 — Sécuriser le moteur (désinstallation, contrôles non exécutés, barrière de périmètre)
+
+- **Décisions clés** : un chemin dangereux dans le manifeste (absolu, `..`,
+  lien symbolique sortant) arrête `init` et `uninstall` avant toute écriture,
+  et `removeObsolete` l'ignore ; hors commit, un contrôle qui devait tourner
+  et n'a pas pu fait échouer `run-checks` (QUA-013) ; les états non
+  configurés (pas de CI, aucun contrôle déclaré, pas de dépôt git, pas de
+  branche de référence) restent un avertissement visible hors CI et
+  échouent en CI. Décidé le 2026-10-14 par le demandeur.
+- **Livré** : CI GitHub et GitLab du gabarit avec gitleaks 8.21.2 épinglé
+  (empreinte vérifiée) ; tableau des modes `off`, `warning`, `blocking` du
+  scope-gate dans `docs/ia-first.md` ; tests négatifs (manifeste malveillant,
+  `--yes`, liens symboliques) et tests du scope-gate.
+- **Limites connues** : pas d'installation automatique de gitleaks sur le
+  poste local (seulement en CI) ; le comportement du gabarit livré change
+  (à signaler dans la note de la prochaine release, avec la validation des
+  chemins) ; aucun contrat ne porte encore sur la portée des suppressions.
+- **Clôturé par** : commits `1333704` (lots 1 et 2) et `1b8d6f2` (lots 3 et 4).
+
+## 2026-10-14 — Gitleaks dans les tests du kit en CI
+
+- **Décisions clés** : installer gitleaks 8.21.2 (archive vérifiée par
+  sha256) dans le job `kit-tests` sur Linux, macOS et Windows, plutôt que
+  simuler l'outil ; nom du job fixé à `kit-tests (<os>)` car le ruleset de
+  master l'exige par son nom (l'ajout de variables de matrice le changeait).
+- **Limites connues** : aucune.
+- **Clôturé par** : PR 79, commit « CI : gitleaks épinglé et vérifié dans kit-tests ».

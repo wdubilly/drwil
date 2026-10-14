@@ -64,20 +64,22 @@ réalisation :
 
 1. Fait le 2026-10-13 : `init` sur un projet existant, puis release 0.5.1
    (journal du 2026-10-13).
-2. Protéger master (geste humain ; prérequis de la relecture humaine et de
-   la fabrique).
-3. Catalogue, fiche 1 : format.
-4. Catalogue, fiche 2 : profils.
-5. Catalogue, fiche 3 : adoption ciblée.
-6. Relecture avant fusion et vue de relecture, cadrées ensemble (même
+2. Fait le 2026-10-13 : protéger master (journal du 2026-10-13).
+3. Sécuriser le moteur (feuille de route du 2026-10-14, phase 1, `[P0]`),
+   décidé en tête par le demandeur le 2026-10-14, avant le catalogue.
+4. Preuves de bout en bout (phase 2), puis fiabiliser le package (phase 3).
+5. Catalogue, fiche 1 : format.
+6. Catalogue, fiche 2 : profils.
+7. Catalogue, fiche 3 : adoption ciblée.
+8. Relecture avant fusion et vue de relecture, cadrées ensemble (même
    sondage, même état, appuyées sur master protégé).
-7. Fluidité sans perte de rigueur (touche aussi les transitions et le
-   sondage : après le 6 pour ne pas le refaire).
-8. Petite correction sous barrière bloquante.
-9. Consommation écrite à la clôture (attend des chiffres fiables, que les
-   chantiers 3 à 5 fourniront).
-10. Vague 6, la fabrique.
-11. Vague 7, le produit.
+9. Fluidité sans perte de rigueur (touche aussi les transitions et le
+   sondage : après le 8 pour ne pas le refaire).
+10. Petite correction sous barrière bloquante.
+11. Consommation écrite à la clôture (attend des chiffres fiables, que les
+    chantiers 5 à 7 fourniront).
+12. Vague 6, la fabrique.
+13. Vague 7, le produit, dont la validation commerciale.
 
 Les trois fiches du catalogue passent en `[P1]` pour que `/drwil-start`
 les propose dans cet ordre.
@@ -91,16 +93,26 @@ repris le 2026-10-12.
 
 ## Vague 2 — rendre les décisions humaines prouvables, relever les preuves
 
+Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
+
+- [x] [IA] [P0] Sécuriser le moteur : chemins de désinstallation, tests
+  négatifs, contrôles non exécutés, barrière de périmètre — fait le
+  2026-10-14 (voir `docs/projects/journal.md`).
+- [x] [IA] [P0] Gitleaks dans les tests du kit en CI — fait le 2026-10-14
+  (voir `docs/projects/journal.md`).
+- [ ] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
+  verdicts, attestations, contournements —
+  `docs/projects/preuves-de-bout-en-bout.md`.
+- [ ] [IA] [P1] Fiabiliser le package : `.drwil/install.json` (si présent), tests de
+  mise à jour — `docs/projects/fiabiliser-le-package.md`.
+
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
 de `docs/projects/adopter-seuil-couverture.md`) ; non-régression continue ;
 CLI testée depuis le tarball ; gitleaks en CI (journal, 2026-10-11).
 
-Reporté par le demandeur le 2026-10-11 : la protection de master.
-
-- [ ] [humain] [P1] Protéger master : approbation humaine exigée sur les
-  PR (aujourd'hui 0) et compte machine de l'agent (lot 3) (v1:GIT-004,
-  v1:COD-010, v1:HOOK-014) — `docs/projects/proteger-master.md`.
+Fait le 2026-10-13 : la protection de master (compte machine de
+l'agent, revue des code owners ; journal du 2026-10-13).
 
 ## Vague 3 — mesurer avant de construire
 
@@ -188,6 +200,8 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 - [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.
+- [ ] [décision] [P2] Validation commerciale : des équipes veulent-elles
+  utiliser et payer DRWIL ? — `docs/intentions/validation-commerciale.md`.
 - [ ] [IA] [P2] Prochaine release : signaler dans la note de version que
   `paths` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
   qui tourne au commit — voir `docs/projects/journal.md` (2026-10-05).

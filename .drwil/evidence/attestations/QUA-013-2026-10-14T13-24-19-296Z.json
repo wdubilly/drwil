@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "contract": "QUA-013",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-14T13:24:19.296Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "bab231834a048f34f627594f35cd40abd76f03e38cd4c7e14d18e405aa4f4def",
+  "commit": "7f360a7192ca6257754d833521e9818cce33701b",
+  "automated": [
+    {
+      "id": "ci-coverage",
+      "status": "ok"
+    }
+  ]
+}
