@@ -22,4 +22,4 @@ files:
 | Date | Tâche | Statut |
 |---|---|---|
 | 2026-10-06 | Le `.gitignore` du gabarit était absent du paquet npm (npm retire tout `.gitignore`) : livré sous le nom `gitignore`, renommé à l'installation (`packages/drwil/src/index.ts`) ; test via `npm pack --dry-run`. | fait |
-| 2026-10-14 | Renvois vers la fiche « Protéger master » supprimée, remplacés par le journal du 2026-10-13 (`docs/recipes/working-with-branches.md`, `outils/miroirs.json`). | en cours |
+| 2026-10-14 | Renvois vers la fiche « Protéger master » supprimée, remplacés par le journal du 2026-10-13 (`docs/recipes/working-with-branches.md`, `outils/miroirs.json`). | fait |
