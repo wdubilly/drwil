@@ -1,6 +1,6 @@
 # Projet : gitleaks dans les tests du kit en CI (suite de « sécuriser le moteur »)
 
-**Statut** : cadré le 2026-10-14 — à faire avant de fusionner la PR 79.
+**Statut** : cadré le 2026-10-14 — lot 1 fait (à valider en CI sur la PR 79).
 **Risque** : HIGH
 
 <!-- scope
