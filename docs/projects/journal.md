@@ -909,3 +909,22 @@ l'index ; texte intégral dans l'historique git
 - **Limites connues** : le jeton de l'agent est classique (portée `repo`) ;
   à renouveler tous les 90 jours.
 - **Clôturé par** : PR #78 (lot 3), après les PR #11 à #29 (lots 1, 2 et 4).
+
+## 2026-10-14 — Sécuriser le moteur (désinstallation, contrôles non exécutés, barrière de périmètre)
+
+- **Décisions clés** : un chemin dangereux dans le manifeste (absolu, `..`,
+  lien symbolique sortant) arrête `init` et `uninstall` avant toute écriture,
+  et `removeObsolete` l'ignore ; hors commit, un contrôle qui devait tourner
+  et n'a pas pu fait échouer `run-checks` (QUA-013) ; les états non
+  configurés (pas de CI, aucun contrôle déclaré, pas de dépôt git, pas de
+  branche de référence) restent un avertissement visible hors CI et
+  échouent en CI. Décidé le 2026-10-14 par le demandeur.
+- **Livré** : CI GitHub et GitLab du gabarit avec gitleaks 8.21.2 épinglé
+  (empreinte vérifiée) ; tableau des modes `off`, `warning`, `blocking` du
+  scope-gate dans `docs/ia-first.md` ; tests négatifs (manifeste malveillant,
+  `--yes`, liens symboliques) et tests du scope-gate.
+- **Limites connues** : pas d'installation automatique de gitleaks sur le
+  poste local (seulement en CI) ; le comportement du gabarit livré change
+  (à signaler dans la note de la prochaine release, avec la validation des
+  chemins) ; aucun contrat ne porte encore sur la portée des suppressions.
+- **Clôturé par** : commits `1333704` (lots 1 et 2) et `1b8d6f2` (lots 3 et 4).

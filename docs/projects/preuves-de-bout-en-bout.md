@@ -30,7 +30,7 @@ contournements.
 
 - Le blocage des merges par la forge : déjà fait et vérifié en CI (journal du
   2026-10-13, « Protéger master »).
-- La sécurité du manifeste (`docs/projects/securiser-le-moteur.md`).
+- La sécurité du manifeste (chantier clos le 2026-10-14, voir `docs/projects/journal.md`).
 
 ## 3. Contraintes
 

@@ -95,9 +95,9 @@ repris le 2026-10-12.
 
 Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 
-- [ ] [IA] [P0] Sécuriser le moteur : chemins de désinstallation, tests
-  négatifs, contrôles non exécutés, barrière de périmètre —
-  `docs/projects/securiser-le-moteur.md`.
+- [x] [IA] [P0] Sécuriser le moteur : chemins de désinstallation, tests
+  négatifs, contrôles non exécutés, barrière de périmètre — fait le
+  2026-10-14 (voir `docs/projects/journal.md`).
 - [ ] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements —
   `docs/projects/preuves-de-bout-en-bout.md`.
