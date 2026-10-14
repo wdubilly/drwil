@@ -937,3 +937,15 @@ l'index ; texte intégral dans l'historique git
   master l'exige par son nom (l'ajout de variables de matrice le changeait).
 - **Limites connues** : aucune.
 - **Clôturé par** : PR 79, commit « CI : gitleaks épinglé et vérifié dans kit-tests ».
+
+## 2026-10-14 — Analyse statique du code en CI (CodeQL)
+
+- **Décisions clés** : CodeQL (JavaScript et TypeScript) sur chaque PR, sur
+  master et chaque semaine, dépôt public donc gratuit. Décidé le 2026-10-14
+  par le demandeur : le contrôle à chaque push suffit, il ne bloque pas la
+  fusion (pas d'ajout au ruleset de master) et ne crée pas de contrat de
+  registre.
+- **Limites connues** : une alerte est visible (PR, onglet Security) mais
+  n'empêche pas la fusion ; l'analyse ne couvre pas les gabarits Markdown.
+  Premier passage : 0 alerte ouverte.
+- **Clôturé par** : PR 80.
