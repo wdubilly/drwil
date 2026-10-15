@@ -14,6 +14,8 @@ files:
   - .githooks/briefs.mjs
   - .githooks/state.mjs
   - .githooks/state.test.mjs
+  - .githooks/check-docs.mjs
+  - packages/drwil/test/kit.test.mjs
 -->
 
 (cadrage provisoire : à confirmer au démarrage de chaque lot ; les copies
