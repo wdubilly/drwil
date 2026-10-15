@@ -105,8 +105,8 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
-- [ ] [décision] [P1] Cohérence des ID de contrat entre registre et
-  catalogue (SEC-001 à trancher d'abord) — `docs/projects/coherence-id-contrats.md`.
+- [ ] [IA] [P1] Cohérence des ID de contrat entre registre et
+  catalogue — `docs/projects/coherence-id-contrats.md`.
 - [ ] [IA] [P1] Fiabiliser le package : `.drwil/install.json` (si présent), tests de
   mise à jour — `docs/projects/fiabiliser-le-package.md`.
 
@@ -216,7 +216,7 @@ Limites relevées en cours de chantier, consignées en intention le
 2026-10-15 (chantier « capitaliser les non-régressions ») ; les recadrer est
 une décision du demandeur.
 
-- [ ] [décision] Consigner les retours d'expérience en intentions à la
+- [ ] [IA] Consigner les retours d'expérience en intentions à la
   clôture (règle, livrable et dépôt) —
   `docs/projects/consigner-retours-experience.md`.
 - [ ] [décision] Cadrage complet du premier coup (copies du gabarit,
