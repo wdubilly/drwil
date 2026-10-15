@@ -11,10 +11,13 @@ files:
   - packages/drwil/src/verify.ts
   - packages/drwil/test/kit.test.mjs
   - .githooks/state.test.mjs
+  - docs/projects/model-brief.md
 -->
 
 (cadrage provisoire : à confirmer au démarrage de chaque lot ; les copies
-du dépôt se régénèrent par `npm run installer-depot`, QUA-018.)
+du dépôt se régénèrent par `npm run installer-depot`, QUA-018. Exception :
+`docs/projects/model-brief.md`, modèle français du dépôt, écart déclaré dans
+`outils/miroirs.json`, se tient à la main.)
 
 ## 1. Besoin
 
