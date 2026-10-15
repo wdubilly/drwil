@@ -15,6 +15,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/check-docs.mjs
   - packages/drwil/templates/common/base/docs/contracts.md
   - packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md
+  - packages/drwil/templates/common/base/docs/projects/model-brief.md
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/cycle.test.mjs
   - .githooks/briefs.mjs
