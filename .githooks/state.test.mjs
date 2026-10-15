@@ -22,6 +22,7 @@ import {
   shortReminder,
   reminderIfChanged,
   briefStatus,
+  briefMaturity,
   transitionAllowed,
   validateState,
 } from "./state.mjs";
@@ -587,6 +588,20 @@ test("critères d'acceptation : liste structurée (lien, humain), ignore les aut
     { text: "Totals match", link: "QUA-001", human: false },
   ]);
   assert.deepEqual(acceptanceCriteria("# Sans section\n\n- rien\n"), []);
+});
+
+test("maturité : champ explicite lu dans l'en-tête (FR et EN), absent ou inconnu = non renseignée", () => {
+  const f = (ligne) => `# F\n\n**Statut** : cadré.\n${ligne}\n`;
+  assert.equal(briefMaturity(f("**Maturité** : prêt")), "ready");
+  assert.equal(briefMaturity(f("**Maturité** : à affiner — points ouverts")), "refine");
+  assert.equal(briefMaturity(f("**Maturité** : en cours")), "in-progress");
+  assert.equal(briefMaturity(f("**Maturity**: ready")), "ready");
+  assert.equal(briefMaturity(f("**Maturity**: to refine")), "refine");
+  assert.equal(briefMaturity(f("**Maturity**: in progress")), "in-progress");
+  assert.equal(briefMaturity(f("**Maturité** : PRÊT")), "ready");
+  assert.equal(briefMaturity(f("**Maturité** : bientôt")), "unset");
+  assert.equal(briefMaturity("# F\n\n**Statut** : cadré.\n"), "unset");
+  assert.equal(briefMaturity(`# F\n${"\n".repeat(20)}**Maturité** : prêt\n`), "unset");
 });
 
 test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans tag) ; décisions ouvertes comptées", () => {

@@ -36,6 +36,25 @@ export function briefStatus(text) {
   return "open";
 }
 
+const MATURITY_LINE_RE = /^\*\*(?:Maturité|Maturity)\*\*\s*:\s*(.*)$/;
+
+/**
+ * Explicit maturity of a brief: "ready", "refine", "in-progress", or "unset" (field absent or
+ * unknown: existing briefs and installed projects keep working). Same header window as the status.
+ */
+export function briefMaturity(text) {
+  const value =
+    text
+      .split(/\r?\n/)
+      .slice(0, 15)
+      .map((l) => MATURITY_LINE_RE.exec(l))
+      .find(Boolean)?.[1] ?? "";
+  if (/^(?:prêt|ready)\b/i.test(value)) return "ready";
+  if (/^(?:à affiner|to refine)\b/i.test(value)) return "refine";
+  if (/^(?:en cours|in progress)\b/i.test(value)) return "in-progress";
+  return "unset";
+}
+
 const DEFAULT_INDEX = ["docs/projects/pending.md"];
 const DEFAULT_PRIORITY = 2;
 
@@ -125,6 +144,7 @@ export function scopedBriefs(root) {
         priority: `P${priority}`,
         decisions,
         ready: decisions === 0,
+        maturity: briefMaturity(r.stdout),
       });
     }
   }

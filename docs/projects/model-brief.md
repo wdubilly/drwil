@@ -2,6 +2,12 @@
 
 **Statut** : cadré le AAAA-MM-JJ — lot 1 en cours.
 **Risque** : MEDIUM
+**Maturité** : à affiner | prêt | en cours
+
+(maturité : « prêt » = entièrement tranchée, peut être lancée ; « à
+affiner » = points encore ouverts ; « en cours » = en construction.
+Facultative : une fiche sans ce champ est « non renseignée », proposée sans
+avertissement de maturité.)
 
 (statut : « cadré le … », « lot 1 en cours »… ; une fiche qui n'est pas un
 chantier (mécanique du kit) : « référence — … », jamais proposée au

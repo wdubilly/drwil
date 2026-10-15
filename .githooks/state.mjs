@@ -21,7 +21,7 @@ import { context, fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs"
 
 // Unchanged interface for the other hooks, the CLI and the tools: everything this file exported
 // before it was split stays importable from here.
-export { acceptanceCriteria, briefStatus, scopedBriefs } from "./briefs.mjs";
+export { acceptanceCriteria, briefMaturity, briefStatus, scopedBriefs } from "./briefs.mjs";
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 
 export const ACTIVITIES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];

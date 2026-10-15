@@ -2,6 +2,11 @@
 
 **Status**: scoped on YYYY-MM-DD — increment 1 in progress.
 **Risk**: MEDIUM
+**Maturity**: to refine | ready | in progress
+
+(maturity: "ready" = fully decided, can be started; "to refine" = points
+still open; "in progress" = being built. Optional: a brief without it
+is "unset", offered without a maturity warning.)
 
 (status: "scoped on …", "increment 1 in progress"…; a brief that is not a
 project (kit mechanics): "reference — …", never offered for launch;
