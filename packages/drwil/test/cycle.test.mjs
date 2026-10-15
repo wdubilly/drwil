@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { init, uninstall, verify } from "../dist/index.js";
 
@@ -153,6 +154,57 @@ test("contournements : un état local falsifié n'empêche pas le rejeu du cadra
     });
     assert.notEqual(r.status, 0, "le rejeu par commit refuse le fichier hors du cadrage, malgré l'état falsifié");
     assert.match(r.stdout + r.stderr, /src\/hors-cadrage\.js/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("critères d'acceptation : la clôture est refusée tant qu'un critère n'est pas prouvé, puis acceptée une fois lié à un contrat", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8", env });
+  const cli = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
+  const verifier = () => spawnSync(process.execPath, [cli, "verify", "--evidence"], { cwd: dir, encoding: "utf8", env });
+  const cloturer = () => spawnSync(process.execPath, [".githooks/state.mjs", "move", "CLOSING"], { cwd: dir, encoding: "utf8", env });
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: true }));
+    git("config", "user.email", "test@exemple.invalid");
+    git("config", "user.name", "Test");
+    git("config", "commit.gpgsign", "false");
+    git("branch", "-M", "main");
+
+    const cfg = JSON.parse(lire(dir, ".drwil/ia-first.json"));
+    cfg.checks = [{ id: "ok", name: "toujours vert", run: 'node -e "process.exit(0)"' }];
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+    writeFileSync(join(dir, "docs/contracts.md"), "# Contrats\n\n## QUA-001 — titre\n**Règle** : exigence.\n**Contrôle** : `ok`\n");
+
+    const fiche = "docs/projects/essai.md";
+    const ecrireFiche = (critere) =>
+      writeFileSync(
+        join(dir, fiche),
+        `# Projet : essai\n\n**Statut** : cadré le 2026-10-15.\n\n<!-- scope\nfiles:\n  - src/a.js\n-->\n\n## Critères d'acceptation\n\n- ${critere}\n`,
+      );
+    ecrireFiche("Un export vide est refusé");
+    writeFileSync(
+      join(dir, ".drwil/state.json"),
+      JSON.stringify({ version: 1, activity: "VERIFY", active_brief: fiche, active_request: null, since: null }),
+    );
+    git("add", "-A");
+    git("commit", "--no-verify", "-m", "installation et fiche");
+
+    let r = verifier();
+    assert.equal(r.status, 0, "le verdict global des contrats est PASS : seul le critère manque de preuve");
+    r = cloturer();
+    assert.notEqual(r.status, 0, "clôture refusée : le critère n'a pas de preuve");
+    assert.match(r.stdout + r.stderr, /Un export vide est refusé.*no-proof/);
+    assert.equal(JSON.parse(lire(dir, ".drwil/state.json")).activity, "VERIFY", "l'état n'a pas bougé");
+
+    ecrireFiche("Un export vide est refusé — `QUA-001`");
+    git("add", "-A");
+    git("commit", "--no-verify", "-m", "critère lié à son contrat");
+    assert.equal(verifier().status, 0);
+    r = cloturer();
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.equal(JSON.parse(lire(dir, ".drwil/state.json")).activity, "CLOSING");
   } finally {
     rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
