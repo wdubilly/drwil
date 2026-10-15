@@ -56,6 +56,7 @@ export function briefMaturity(text) {
 }
 
 const DEFAULT_INDEX = ["docs/projects/pending.md"];
+const MATURITY_RANK = { ready: 0, "in-progress": 1, unset: 1, refine: 2 };
 const DEFAULT_PRIORITY = 2;
 
 /** Priority of each brief cited by an open item of the committed index ([P0] to [P3], [P2] without a tag). */
@@ -125,8 +126,9 @@ export function acceptanceCriteria(text) {
 /**
  * Briefs that can be started: briefs of docs/projects/, models excluded, not
  * finished, whose `scope` block exists in HEAD — the validated scope is the committed one,
- * as for the scope gate. `[{ path, title, priority, decisions, ready }]`: ready ones first (no
- * open decision), then by index priority, then by path.
+ * as for the scope gate. `[{ path, title, priority, decisions, ready, maturity }]`: ready ones first (no
+ * open decision), then by maturity ("ready", then "in-progress" and "unset", "refine" last), then by
+ * index priority, then by path. A "refine" brief is listed, never hidden.
  */
 export function scopedBriefs(root) {
   const priorities = indexPriorities(root);
@@ -153,5 +155,11 @@ export function scopedBriefs(root) {
       });
     }
   }
-  return briefs.sort((a, b) => Number(b.ready) - Number(a.ready) || a.priority.localeCompare(b.priority) || a.path.localeCompare(b.path));
+  return briefs.sort(
+    (a, b) =>
+      Number(b.ready) - Number(a.ready) ||
+      MATURITY_RANK[a.maturity] - MATURITY_RANK[b.maturity] ||
+      a.priority.localeCompare(b.priority) ||
+      a.path.localeCompare(b.path),
+  );
 }

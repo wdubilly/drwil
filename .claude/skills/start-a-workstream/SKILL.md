@@ -10,7 +10,8 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
 
 1. List the scoped briefs: `node .githooks/state.mjs briefs --json` (`scope` block committed,
    brief neither finished nor a reference). None: say so and stop. The list is **already
-   ordered**: ready briefs first (`ready`: no open `[decision]`), then by index `priority`;
+   ordered**: ready briefs first (`ready`: no open `[decision]`), then by `maturity` (`ready`,
+   then `in-progress` and `unset`, then `refine`), then by index `priority`;
    `decisions` counts those still to decide.
 2. Read the "Proposed order" sections of the intentions (`docs/intentions/`): they may put one
    brief before another of the same rank. Also note the index's P1 intentions that have no framed
@@ -20,7 +21,9 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    - Claude Code: `header` exactly `drwil-start`; one option per brief, **label = exact path**
      (e.g. `docs/projects/<brief>.md`), description = title. At most 4 options, the first of the
      list; a brief that is not ready keeps its place at the end, its description says "not
-     ready: N decision(s) to make first"; the human can type another path under "Other".
+     ready: N decision(s) to make first"; a brief with `maturity` `refine` is never hidden, its
+     description starts with "to refine: review before starting it"; the human can type another
+     path under "Other".
    - Claude Code, **second question** of the same poll: `header` exactly `drwil-merge`,
      options "Automatic merge" (the agent will schedule the merge in CLOSING) and "Manual
      merge", with no recommendation: it is the acceptance decision, taken at start.

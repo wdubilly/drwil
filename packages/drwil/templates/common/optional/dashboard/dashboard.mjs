@@ -20,6 +20,7 @@ const T = {
     contracts: "Contrats",
     noStatus: "(pas de ligne Statut)",
     status: "Statut : {0}",
+    maturity: "Maturité : {0}",
     missing: "(absent)",
     noCheckbox: "(aucune case trouvée)",
     noBrief: "(aucune fiche)",
@@ -44,6 +45,7 @@ const T = {
     contracts: "Contracts",
     noStatus: "(no Status line)",
     status: "Status: {0}",
+    maturity: "Maturity: {0}",
     missing: "(missing)",
     noCheckbox: "(no checkbox found)",
     noBrief: "(no brief)",
@@ -64,6 +66,10 @@ const MODEL_RE = /^modele-|^model-/;
 // Tolerant extraction: check-docs.mjs only requires the line to be there (see its own STATUS_RE);
 // here the text is captured, even if a parenthesis (date, etc.) separates "Status" from the colon.
 const STATUS_LINE_RE = /^\*{0,2}(Statut|Status)\*{0,2}[^:]*:\s*(.*)$/i;
+// Explicit maturity field ("**Maturité** : prêt"); shown as written, only used to sort the briefs
+// (ready first, to refine last — same ranking as scopedBriefs in .githooks/briefs.mjs).
+const MATURITY_LINE_RE = /^\*{0,2}(?:Maturité|Maturity)\*{0,2}\s*:\s*(.*)$/i;
+const maturityRank = (value) => (/^(?:prêt|ready)\b/i.test(value) ? 0 : /^(?:à affiner|to refine)\b/i.test(value) ? 2 : 1);
 // Flexible section title: the model says "## 6. Increments", a real brief may say "## 4. Lots proposés".
 const INCREMENTS_RE = /^#{1,4}\s*\d*\.?\s*(Increments|Lots|Batches)\b/i;
 const INCREMENT_LINE_RE = /^-\s+\*\*(.+?)\*\*\s*\[([^\]]+)\]\s*:?\s*(.*)$/;
@@ -92,7 +98,10 @@ function readBriefs() {
     .filter((e) => e.isFile() && e.name.endsWith(".md") && !MODEL_RE.test(e.name))
     .map((e) => join(projectsDir, e.name));
   const index = existsSync(indexPath) ? readFileSync(indexPath, "utf8") : null;
-  const briefs = files.filter((f) => f !== indexPath).map((f) => parseBrief(f, readFileSync(f, "utf8")));
+  const briefs = files
+    .filter((f) => f !== indexPath)
+    .map((f) => parseBrief(f, readFileSync(f, "utf8")))
+    .sort((a, b) => maturityRank(a.maturity ?? "") - maturityRank(b.maturity ?? "") || a.path.localeCompare(b.path));
   return { index, briefs };
 }
 
@@ -101,6 +110,8 @@ function parseBrief(path, text) {
   const title = (lines.find((l) => l.startsWith("# ")) ?? "# ?").replace(/^#\s*/, "");
   const statusLine = lines.slice(0, 15).find((l) => STATUS_LINE_RE.test(l));
   const status = statusLine ? statusLine.match(STATUS_LINE_RE)[2].trim() : null;
+  const maturityLine = lines.slice(0, 15).find((l) => MATURITY_LINE_RE.test(l));
+  const maturity = maturityLine ? maturityLine.match(MATURITY_LINE_RE)[1].trim() : null;
   const start = lines.findIndex((l) => INCREMENTS_RE.test(l));
   const increments = [];
   if (start !== -1) {
@@ -109,7 +120,7 @@ function parseBrief(path, text) {
       if (m) increments.push({ title: m[1], marker: m[2].match(MARKER_RE)?.[1] ?? m[2], text: m[3] });
     }
   }
-  return { path: relative(root, path), title, status, increments };
+  return { path: relative(root, path), title, status, maturity, increments };
 }
 
 function tableRow(line) {
@@ -310,7 +321,7 @@ ${
     .map(
       (b) => `<div class="brief">
   <h3>${escapeHtml(b.title)} <small>(<code>${escapeHtml(b.path)}</code>)</small></h3>
-  <p class="status">${b.status ? escapeHtml(fill(T.status, b.status)) : escapeHtml(T.noStatus)}</p>
+  <p class="status">${b.status ? escapeHtml(fill(T.status, b.status)) : escapeHtml(T.noStatus)}</p>${b.maturity ? `\n  <p class="status">${escapeHtml(fill(T.maturity, b.maturity))}</p>` : ""}
   ${renderIncrements(b.increments)}
 </div>`,
     )

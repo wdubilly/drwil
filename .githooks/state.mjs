@@ -298,7 +298,10 @@ export async function main(args, root) {
         if (!choice) {
           console.log(
             briefs
-              .map((b, i) => `${i + 1}. ${b.path} — ${b.title} [${b.priority}${b.ready ? "" : fill(T.notReady, b.decisions)}]`)
+              .map(
+                (b, i) =>
+                  `${i + 1}. ${b.path} — ${b.title} [${b.priority}${b.ready ? "" : fill(T.notReady, b.decisions)}${b.maturity === "refine" ? T.refine : ""}]`,
+              )
               .join("\n"),
           );
           const n = Number((await rl.question(T.pick)).trim());

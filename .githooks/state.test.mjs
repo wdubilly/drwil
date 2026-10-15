@@ -647,6 +647,26 @@ test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans ta
   );
 });
 
+test("fiches cadrées : à maturité égale la priorité décide ; « à affiner » classée en dernier mais jamais masquée", () => {
+  const { racine, git } = depotCadre();
+  const fiche = (nom, maturite) =>
+    `# ${nom}\n\n**Statut** : cadré le 2026-10-10.\n${maturite}\n\n<!-- scope\nfiles:\n  - src/${nom}.ts\n-->\n\n## 5. Points à trancher\n\n(aucun.)\n`;
+  writeFileSync(join(racine, "docs", "projects", "aa-affiner.md"), fiche("aa-affiner", "**Maturité** : à affiner"));
+  writeFileSync(join(racine, "docs", "projects", "zz-pret.md"), fiche("zz-pret", "**Maturité** : prêt"));
+  writeFileSync(join(racine, "docs", "projects", "mm-cours.md"), fiche("mm-cours", "**Maturité** : en cours"));
+  git("add", "-A");
+  git("commit", "-qm", "maturité");
+  assert.deepEqual(
+    scopedBriefs(racine).map((f) => [f.path, f.maturity]),
+    [
+      ["docs/projects/zz-pret.md", "ready"],
+      [FICHE, "unset"],
+      ["docs/projects/mm-cours.md", "in-progress"],
+      ["docs/projects/aa-affiner.md", "refine"],
+    ],
+  );
+});
+
 test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CLOSING, effacée en SCOPING", () => {
   const { racine } = depotCadre({ transitions: "agent" });
   assert.equal(start(racine, FICHE, { autoMerge: true }).code, 0);
@@ -835,7 +855,7 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   const { racine, git } = depotCadre();
   writeFileSync(
     join(racine, "docs", "projects", "bloquee.md"),
-    "# Bloquée\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- scope\nfiles:\n  - src/b.ts\n-->\n\n## Points à trancher\n\n- [décision] A ou B ?\n",
+    "# Bloquée\n\n**Statut** : cadré le 2026-10-10.\n**Maturité** : à affiner\n\n<!-- scope\nfiles:\n  - src/b.ts\n-->\n\n## Points à trancher\n\n- [décision] A ou B ?\n",
   );
   git("add", "-A");
   git("commit", "-qm", "bloquee");
@@ -843,7 +863,7 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   assert.equal(r.code, 0, r.erreurs);
   assert.match(
     r.sortie,
-    /^1\. docs\/projects\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projects\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher\]/,
+    /^1\. docs\/projects\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projects\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher · à affiner : à revoir avant de la lancer\]/,
   );
   assert.deepEqual(r.invites.length, 3);
   assert.equal(readState(racine).state.auto_merge, true);
