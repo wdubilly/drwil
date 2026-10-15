@@ -79,7 +79,7 @@ function indexPriorities(root) {
 }
 
 /** `[decision]` items still open in the "Points to decide" section ("Points à trancher"). */
-function openDecisions(text) {
+export function openDecisions(text) {
   let inside = false;
   let n = 0;
   for (const line of text.split(/\r?\n/)) {
@@ -87,6 +87,11 @@ function openDecisions(text) {
     else if (inside && /^\s*-\s*\[(décision|decision)\]/i.test(line)) n++;
   }
   return n;
+}
+
+/** A brief lists its increments as "- **Lot …" or "- **Increment …" bullets. */
+export function hasIncrements(text) {
+  return /^\s*-\s*\*\*(Lot|Increment|Incrément)\b/im.test(text);
 }
 
 /**

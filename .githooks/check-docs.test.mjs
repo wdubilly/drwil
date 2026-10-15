@@ -220,6 +220,28 @@ test("hors dépôt git, sans configuration ni registre : rien d'ignoré, pas de 
   assert.match(r.stdout, /check-docs : 2 fichiers scannés, 0 erreur\(s\)\n$/);
 });
 
+test("fiche « prête » : point [décision] restant ou aucun lot refusés, dans les deux langues ; non prête ou sans champ : passe", () => {
+  const fiche = (champ, points, lots) =>
+    `# Chantier\n\n**Statut** : cadré le 2026-10-15.\n${champ}\n\n## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n${lots}\n${reprise}`;
+  const lot = "- **Lot 1** [IA] : à faire.";
+  const cas = (lang, champ, points, lots) =>
+    verifier({
+      ".drwil/ia-first.json": JSON.stringify({ lang }),
+      "docs/projects/c.md": fiche(champ, points, lots),
+    });
+  const fr = cas("fr", "**Maturité** : prêt", "- [décision] ouvert", "(aucun.)");
+  assert.equal(fr.status, 1, fr.stdout);
+  assert.match(fr.stdout, /c\.md : fiche « prête » mais un point \[décision\]/);
+  assert.match(fr.stdout, /c\.md : fiche « prête » mais sans aucun lot/);
+  const en = cas("en", "**Maturity**: ready", "- [decision] open", "(none.)");
+  assert.equal(en.status, 1, en.stdout);
+  assert.match(en.stdout, /c\.md: brief marked "ready" but a \[decision\] point is still open/);
+  assert.match(en.stdout, /c\.md: brief marked "ready" but has no increment/);
+  assert.equal(cas("fr", "**Maturité** : prêt", "(aucun.)", lot).status, 0);
+  assert.equal(cas("fr", "**Maturité** : à affiner", "- [décision] ouvert", "(aucun.)").status, 0);
+  assert.equal(cas("fr", "", "- [décision] ouvert", "(aucun.)").status, 0);
+});
+
 test("aucune citation trouvée, dossiers réglés, cadrage désactivé : vert", () => {
   const r = verifier({
     ".drwil/ia-first.json": JSON.stringify({
