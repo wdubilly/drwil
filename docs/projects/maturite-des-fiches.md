@@ -15,6 +15,7 @@ files:
   - .githooks/state.mjs
   - .githooks/state.test.mjs
   - .githooks/check-docs.mjs
+  - .githooks/check-docs.test.mjs
   - packages/drwil/test/kit.test.mjs
 -->
 
