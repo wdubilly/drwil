@@ -1033,3 +1033,23 @@ l'index ; texte intégral dans l'historique git
   contrôle (sans contrat) reste accepté ; le catalogue et ce dépôt
   définissent chacun un QUA-019 différent.
 - **Clôturé par** : PR à venir.
+
+## 2026-10-15 — Fiabiliser le package npm (version d'installation, mises à jour)
+
+- **Décisions clés** : `init` enregistre la version du moteur dans
+  `.drwil/install.json` (si présent) — `format`, `version`, `firstVersion` conservée
+  aux mises à jour, sans horodatage pour ne changer qu'avec la version —
+  sans toucher au manifeste ; `uninstall` le retire (QUA-025). `doctor`
+  gagne un point « version » comparé à la CLI, en avertissement seulement
+  (QUA-026). Une mise à jour depuis une version antérieure, simulée hors
+  réseau, préserve le travail du client, rafraîchit la mécanique
+  inchangée, retire les obsolètes jamais modifiés et suit la version
+  (QUA-027). La CLI n'a pas de commande `apply` : `init` installe et met à
+  jour. Minification écartée (2026-10-14).
+- **Limites connues** : sur ce dépôt, installé par `installer-depot` et non
+  par `init`, `doctor` avertit d'un manifeste et d'une version absents, avec
+  un conseil qui ne s'y applique pas —
+  `docs/intentions/doctor-sur-le-depot-drwil.md`. Le cadrage oubliait
+  `docs/contracts.md` (un élargissement), déjà couvert par
+  `docs/intentions/cadrage-copies-et-elargissement.md`.
+- **Clôturé par** : PR à venir.
