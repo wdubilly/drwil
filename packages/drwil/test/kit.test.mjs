@@ -2214,6 +2214,57 @@ test("DRWIL-004 : verify --json, format stable, rien d'autre sur stdout, mêmes 
   assert.equal(JSON.parse(erreur.stdout).status, "error");
 });
 
+test("QUA-025 : init enregistre la version du moteur dans .drwil/install.json sans toucher au manifeste ; uninstall le retire", async () => {
+  const dir = tmp();
+  const version = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+  const installation = () => JSON.parse(readFileSync(join(dir, ".drwil/install.json"), "utf8"));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
+  assert.deepEqual(installation(), { format: 1, version, firstVersion: version });
+  const manifeste = readFileSync(join(dir, ".drwil/installed-files.json"), "utf8");
+  assert.equal(".drwil/install.json" in JSON.parse(manifeste), false, "le manifeste ne liste pas l'enregistrement de version");
+
+  // Mise à jour depuis une version antérieure : la version suit, la première installation reste.
+  writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version: "0.4.0", firstVersion: "0.3.0" }));
+  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+  assert.deepEqual(installation(), { format: 1, version, firstVersion: "0.3.0" });
+  assert.equal(readFileSync(join(dir, ".drwil/installed-files.json"), "utf8"), manifeste, "manifeste inchangé");
+
+  // Enregistrement illisible : réécrit, la version courante devient la première connue.
+  writeFileSync(join(dir, ".drwil/install.json"), "{ cassé");
+  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+  assert.deepEqual(installation(), { format: 1, version, firstVersion: version });
+
+  assert.ok((await uninstall({ targetDir: dir })).removed.includes(".drwil/install.json"), "listé en simulation");
+  assert.ok(existsSync(join(dir, ".drwil/install.json")), "rien retiré en simulation");
+  await uninstall({ targetDir: dir, dryRun: false });
+  assert.equal(existsSync(join(dir, ".drwil/install.json")), false);
+});
+
+test("QUA-026 : doctor affiche la version installée et signale un écart avec la CLI", async () => {
+  const dir = tmp();
+  const version = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
+  const point = async () => (await doctor({ targetDir: dir })).points.find((p) => p.id === "version");
+  let p = await point();
+  assert.equal(p.state, "ok");
+  assert.equal(p.detail, `${version} (première installation : ${version})`);
+  const ecrire = (v) => writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version: v, firstVersion: v }));
+  ecrire("0.0.1");
+  p = await point();
+  assert.equal(p.state, "warning");
+  assert.match(p.detail, new RegExp(`0\\.0\\.1 installée, CLI ${version.replace(/\./g, "\\.")} plus récente : .*npx drwil init`));
+  ecrire("99.0.0-beta.1");
+  assert.match((await point()).detail, /99\.0\.0-beta\.1 installée, CLI .* plus ancienne/);
+  ecrire(`${version}-rc.1`);
+  assert.equal((await point()).state, "ok", "un suffixe de pré-version est ignoré");
+  rmSync(join(dir, ".drwil/install.json"));
+  p = await point();
+  assert.equal(p.state, "warning");
+  assert.match(p.detail, /inconnue \(installation antérieure/);
+  // Un écart de version avertit, ne fait jamais échouer doctor à lui seul.
+  assert.notEqual(p.state, "problem");
+});
+
 test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; contracts liste le registre", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github" }));

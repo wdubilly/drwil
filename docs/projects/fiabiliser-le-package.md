@@ -34,9 +34,9 @@ contrat absent du registre.
 
 - `init` (installation ou mise à jour) enregistre la version du moteur dans
   `.drwil/install.json` (si présent) sans changer le manifeste ; `uninstall`
-  le retire — contrat à créer (lot 1)
+  le retire — `QUA-025`
 - `doctor` affiche la version installée et signale un écart avec la CLI —
-  contrat à créer (lot 1)
+  `QUA-026`
 - Passer d'une version à la suivante préserve les fichiers modifiés par le
   client et retire les fichiers obsolètes non modifiés — contrat à créer
   (lot 2)
@@ -86,7 +86,8 @@ contrat absent du registre.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-15) : lancé, décisions du démarrage inscrites,
-  aucun lot commencé.
+- **Dernier état** (2026-10-15) : lancé, décisions du démarrage inscrites.
+  Lot 1 fait : `.drwil/install.json` (si présent) écrit par `init`, retiré par
+  `uninstall`, lu par `doctor` ; contrats QUA-025 et QUA-026.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 1.
+- **Prochaine étape** : [IA] lot 2 (test de mise à jour).
