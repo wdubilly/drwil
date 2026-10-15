@@ -71,6 +71,34 @@ function openDecisions(text) {
 }
 
 /**
+ * Acceptance criteria of a brief: one bullet per criterion in the "Critères d'acceptation" section.
+ * `[{ text, link, human }]`: `link` is the backticked contract or check ID of the line (null when
+ * absent: a criterion without proof, for the evaluation to refuse), `human` is set by `[humain]`.
+ */
+export function acceptanceCriteria(text) {
+  const criteria = [];
+  let inside = false;
+  for (const line of text.split(/\r?\n/)) {
+    if (/^##\s/.test(line)) {
+      inside = /^##\s*(\d+\.\s*)?(Critères d'acceptation|Acceptance criteria)\b/i.test(line);
+      continue;
+    }
+    const item = inside ? /^\s*-\s+(.+)$/.exec(line) : null;
+    if (!item) continue;
+    const human = /\[(humain|human)\]/i.test(item[1]);
+    const link = /`([A-Za-z][\w.:-]*)`/.exec(item[1])?.[1] ?? null;
+    const label = item[1]
+      .replace(/\[(humain|human)\]/gi, "")
+      .replace(/`[^`]*`/g, "")
+      .replace(/\s*[—–:-]\s*$/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (label) criteria.push({ text: label, link, human });
+  }
+  return criteria;
+}
+
+/**
  * Briefs that can be started: briefs of docs/projects/, models excluded, not
  * finished, whose `scope` block exists in HEAD — the validated scope is the committed one,
  * as for the scope gate. `[{ path, title, priority, decisions, ready }]`: ready ones first (no

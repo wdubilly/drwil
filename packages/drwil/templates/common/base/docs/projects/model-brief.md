@@ -29,6 +29,19 @@ two folders.)
 
 (what the project must produce, for whom, and why now)
 
+## Acceptance criteria
+
+(one line per acceptance criterion of the request, linked to its proof: the
+contract or check ID in backticks, e.g. `- An empty export is refused —
+`CTR-012``, or the `[human]` marker for a human judgment, which points to a
+`Manual` contract attested by `drwil attest`. The proof is durable, a
+contract with a replayable `Check` run at every project: it becomes the
+business non-regression. One business-level criterion, not one per technical
+detail. The tool evaluates, never the agent.)
+
+- Verifiable criterion — `CONTRACT-ID`
+- Human-judgment criterion [human] — `MANUAL-CONTRACT-ID`
+
 ## 2. Out of scope
 
 (what this project does not cover, to prevent an agent from extending it on

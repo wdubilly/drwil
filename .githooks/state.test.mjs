@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 import { PassThrough } from "node:stream";
 import {
   ACTIVITIES,
+  acceptanceCriteria,
   NEUTRAL_STATE,
   context,
   main,
@@ -537,6 +538,35 @@ test("clôture : retour en SCOPING refusé si la fiche terminée est encore là"
   // Lots encore ouverts : la fiche reste, le retour passe.
   writeFileSync(join(racine, FICHE), "# Projet : Exemple\n\n**Statut** : cadré — lot 1 fait, lot 2 ouvert.\n");
   assert.equal((await move(racine, { to: "SCOPING" }, { tty: false, now: MAINTENANT })).code, 0);
+});
+
+test("critères d'acceptation : liste structurée (lien, humain), ignore les autres sections, fiche en anglais", () => {
+  const fr = [
+    "# Projet",
+    "",
+    "## Critères d'acceptation",
+    "",
+    "(consigne, pas un critère)",
+    "",
+    "- Un export vide est refusé — `CTR-012`",
+    "- Le libellé est clair [humain] — `MAN-003`",
+    "- Un critère sans preuve",
+    "",
+    "## 2. Hors périmètre",
+    "",
+    "- Pas un critère `CTR-999`",
+  ].join("\n");
+  assert.deepEqual(acceptanceCriteria(fr), [
+    { text: "Un export vide est refusé", link: "CTR-012", human: false },
+    { text: "Le libellé est clair", link: "MAN-003", human: true },
+    { text: "Un critère sans preuve", link: null, human: false },
+  ]);
+  const en = "## Acceptance criteria\n\n- Export is checked [human]\n- Totals match — `QUA-001`\n\n## 2. Out of scope\n";
+  assert.deepEqual(acceptanceCriteria(en), [
+    { text: "Export is checked", link: null, human: true },
+    { text: "Totals match", link: "QUA-001", human: false },
+  ]);
+  assert.deepEqual(acceptanceCriteria("# Sans section\n\n- rien\n"), []);
 });
 
 test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans tag) ; décisions ouvertes comptées", () => {
