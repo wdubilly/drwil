@@ -10,6 +10,9 @@ files:
   - packages/drwil/templates/common/base/.githooks/state.mjs
   - packages/drwil/templates/common/base/.githooks/check-docs.mjs
   - packages/drwil/templates/common/base/docs/projects/model-brief.md
+  - docs/projects/model-brief.md
+  - .githooks/briefs.mjs
+  - .githooks/state.mjs
   - .githooks/state.test.mjs
 -->
 
