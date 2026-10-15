@@ -1,8 +1,8 @@
 # Projet : cohérence des ID de contrat entre registre et catalogue
 
-**Statut** : cadré le 2026-10-15 — à lancer après la décision sur SEC-001.
+**Statut** : cadré le 2026-10-15 — décisions tranchées, à lancer.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 
 <!-- scope
 files:
@@ -66,15 +66,15 @@ Tranchées par le demandeur le 2026-10-15 (sondage) :
 - Règles : un ID n'est jamais à la fois dans le registre et dans le
   catalogue ; un ID est défini une seule fois dans le catalogue.
 - Périmètre : livrable et dépôt, dans `check-docs` du gabarit.
+- SEC-001 (2026-10-15, sondage) : renuméroter la ligne du catalogue du
+  dépôt, qui devient `catalogue:SEC-013` (premier ID libre au-delà de tous
+  ceux du registre et des catalogues) ; les deux règles restent, chacune
+  avec son ID ; le registre ne change pas. Le catalogue du gabarit n'est
+  pas touché (son registre n'a pas de SEC-001).
 
 ## 5. Points à trancher
 
-- [décision] SEC-001 : le registre du dépôt (« les droits d'accès sont
-  décidés par le backend ») et `catalogue:SEC-001` (« toute route déclare
-  la permission qu'elle exige ; refus par défaut ») portent deux règles
-  différentes. Retirer la ligne du catalogue, la renuméroter, ou fusionner
-  les deux règles ? À trancher avant d'activer le contrôle, qui la
-  refuserait.
+(aucun.)
 
 ## 6. Increments
 
@@ -83,7 +83,8 @@ Tranchées par le demandeur le 2026-10-15 (sondage) :
   registre/catalogue ; `check-docs` les rapporte (bloquant ou avertissement
   selon `newRequirements`). Critère de sortie : un test par cas, en
   français et en anglais.
-- **Lot 2 — SEC-001 et contrat** [IA] : appliquer la décision sur SEC-001 ;
+- **Lot 2 — SEC-001 et contrat** [IA] : renuméroter `catalogue:SEC-001`
+  en `catalogue:SEC-013` dans `docs/contracts-catalog.md` ;
   créer le contrat de cette règle dans `docs/contracts.md` (Contrôle
   `docs-references`, Origine, Tests) et poser son ID dans les critères.
   Critère de sortie : `check-docs` vert sur ce dépôt, `drwil verify`
@@ -91,8 +92,7 @@ Tranchées par le demandeur le 2026-10-15 (sondage) :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-15) : fiche cadrée, un point `[décision]`
-  ouvert (SEC-001) ; aucun code écrit.
+- **Dernier état** (2026-10-15) : fiche cadrée, décisions tranchées ; aucun
+  code écrit.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher SEC-001, puis [humain] lancer
-  le chantier (`/drwil-start`).
+- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
