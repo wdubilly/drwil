@@ -220,14 +220,15 @@ test("hors dépôt git, sans configuration ni registre : rien d'ignoré, pas de 
   assert.match(r.stdout, /check-docs : 2 fichiers scannés, 0 erreur\(s\)\n$/);
 });
 
-test("fiche « prête » : point [décision] restant ou aucun lot refusés, dans les deux langues ; non prête ou sans champ : passe", () => {
-  const fiche = (champ, points, lots) =>
-    `# Chantier\n\n**Statut** : cadré le 2026-10-15.\n${champ}\n\n## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n${lots}\n${reprise}`;
+test("fiche « prête » : point [décision] restant, aucun lot ou aucun critère refusés, dans les deux langues ; non prête ou sans champ : passe", () => {
+  const critere = "## Critères d'acceptation\n\n- Un export vide est refusé [humain]\n\n";
+  const fiche = (champ, points, lots, criteres) =>
+    `# Chantier\n\n**Statut** : cadré le 2026-10-15.\n${champ}\n\n${criteres}## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n${lots}\n${reprise}`;
   const lot = "- **Lot 1** [IA] : à faire.";
-  const cas = (lang, champ, points, lots) =>
+  const cas = (lang, champ, points, lots, criteres = critere) =>
     verifier({
       ".drwil/ia-first.json": JSON.stringify({ lang }),
-      "docs/projects/c.md": fiche(champ, points, lots),
+      "docs/projects/c.md": fiche(champ, points, lots, criteres),
     });
   const fr = cas("fr", "**Maturité** : prêt", "- [décision] ouvert", "(aucun.)");
   assert.equal(fr.status, 1, fr.stdout);
@@ -237,7 +238,14 @@ test("fiche « prête » : point [décision] restant ou aucun lot refusés, dans
   assert.equal(en.status, 1, en.stdout);
   assert.match(en.stdout, /c\.md: brief marked "ready" but a \[decision\] point is still open/);
   assert.match(en.stdout, /c\.md: brief marked "ready" but has no increment/);
+  const sansCritere = cas("fr", "**Maturité** : prêt", "(aucun.)", lot, "");
+  assert.equal(sansCritere.status, 1, sansCritere.stdout);
+  assert.match(sansCritere.stdout, /c\.md : fiche « prête » mais sans critère d'acceptation/);
+  const withoutCriteria = cas("en", "**Maturity**: ready", "(none.)", lot, "");
+  assert.equal(withoutCriteria.status, 1, withoutCriteria.stdout);
+  assert.match(withoutCriteria.stdout, /c\.md: brief marked "ready" but has no acceptance criterion/);
   assert.equal(cas("fr", "**Maturité** : prêt", "(aucun.)", lot).status, 0);
+  assert.equal(cas("fr", "", "(aucun.)", lot, "").status, 0);
   assert.equal(cas("fr", "**Maturité** : à affiner", "- [décision] ouvert", "(aucun.)").status, 0);
   assert.equal(cas("fr", "", "- [décision] ouvert", "(aucun.)").status, 0);
 });

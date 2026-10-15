@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import * as scope from "./scope.mjs";
 import { knownChecks, readContracts, validateContracts } from "./contracts.mjs";
 import { checkRisk } from "./risk.mjs";
-import { briefMaturity, briefStatus, hasIncrements, openDecisions } from "./state.mjs";
+import { briefMaturity, briefStatus, readyGaps } from "./state.mjs";
 
 const root = process.cwd();
 const cfg = loadConfig();
@@ -35,6 +35,7 @@ const T = {
     consistencyWarnings: (n) => `check-docs : ${n} avertissement(s) de cohérence case/statut (QUA-015, non bloquant)`,
     readyUndecided: (f) => `${f} : fiche « prête » mais un point [décision] reste à trancher (section « Points à trancher »)`,
     readyNoIncrement: (f) => `${f} : fiche « prête » mais sans aucun lot (« - **Lot … »)`,
+    readyNoCriteria: (f) => `${f} : fiche « prête » mais sans critère d'acceptation (section « Critères d'acceptation »)`,
     riskWarnings: (n) => `check-docs : ${n} avertissement(s) de niveau de risque (non bloquant)`,
     ignoredByGit: "fichier ignoré par Git : absent en CI (ajouter « (si présent) »)",
     newWarnings: (n) =>
@@ -61,6 +62,7 @@ const T = {
     consistencyWarnings: (n) => `check-docs: ${n} checkbox/status consistency warning(s) (QUA-015, non-blocking)`,
     readyUndecided: (f) => `${f}: brief marked "ready" but a [decision] point is still open (« Points to decide » section)`,
     readyNoIncrement: (f) => `${f}: brief marked "ready" but has no increment ("- **Increment …")`,
+    readyNoCriteria: (f) => `${f}: brief marked "ready" but has no acceptance criterion (« Acceptance criteria » section)`,
     riskWarnings: (n) => `check-docs: ${n} risk level warning(s) (non-blocking)`,
     ignoredByGit: 'file ignored by Git: missing in CI (add "(if present)")',
     newWarnings: (n) => `check-docs: ${n} recent-requirement warning(s) (setting "newRequirements": warning; "blocking" to enforce it)`,
@@ -386,10 +388,7 @@ function checkBrief(brief, errors, isProject) {
   if (start === -1 || !DATE_RE.test(lines.slice(start, start + 4).join(" "))) errors.push(T.status(rel));
   if (isProject) {
     if (briefStatus(text) === "done") errors.push(T.briefDone(rel));
-    if (briefMaturity(text) === "ready") {
-      if (openDecisions(text) > 0) errors.push(T.readyUndecided(rel));
-      if (!hasIncrements(text)) errors.push(T.readyNoIncrement(rel));
-    }
+    if (briefMaturity(text) === "ready") for (const gap of readyGaps(text)) errors.push(T[gap](rel));
     // the model numbers its sections ("## 7. Hand-off"): detection must tolerate that prefix.
     if (!lines.some((l) => /^##\s*(\d+\.\s*)?(Reprise|Hand-off)\b/.test(l))) errors.push(T.handOff(rel));
   } else {

@@ -356,8 +356,9 @@ test("contexte : indique la commande de transition", () => {
 });
 
 // Dépôt git commité, prêt à clore : l'évidence est jugée contre HEAD.
-function depotEnVerify(config) {
+function depotEnVerify(config, ajoutFiche = "") {
   const racine = depot({ state: actif("VERIFY"), config });
+  if (ajoutFiche) writeFileSync(join(racine, FICHE), readFileSync(join(racine, FICHE), "utf8") + ajoutFiche);
   writeFileSync(join(racine, ".gitignore"), ".drwil/state.json\n.drwil/evidence/\n");
   const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
   git("init", "-q");
@@ -393,6 +394,21 @@ test("clôture : PASS ou ATTESTED sur HEAD, arbre propre, autorise sans geste hu
     assert.equal(r.code, 0, r.message);
     assert.equal(readState(racine).state.activity, "CLOSING");
   }
+});
+
+test("clôture : une fiche sans critères d'acceptation est avertie, la clôture passe ; avec critères, aucun avertissement", async () => {
+  const sans = depotEnVerify();
+  sans.evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass" });
+  const averti = await move(sans.racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
+  assert.equal(averti.code, 0, averti.message);
+  assert.match(averti.message, /avertissement.*exemple\.md.*aucun critère d'acceptation/);
+  assert.equal(readState(sans.racine).state.activity, "CLOSING");
+
+  const avec = depotEnVerify(undefined, "\n## Critères d'acceptation\n\n- Un export vide est refusé — `CTR-012`\n");
+  avec.evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass", criteria: [] });
+  const r = await move(avec.racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
+  assert.equal(r.code, 0, r.message);
+  assert.doesNotMatch(r.message, /critère/);
 });
 
 test("clôture : FAIL et ERROR renvoient en BUILD, MANUAL à l'attestation humaine", () => {

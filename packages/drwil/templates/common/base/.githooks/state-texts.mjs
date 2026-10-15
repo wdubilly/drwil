@@ -104,6 +104,8 @@ export const STATE_MESSAGES = {
     failed: `verdict {0} : revenir en BUILD (\`node .githooks/state.mjs move BUILD\`) pour corriger`,
     criteria: `critère(s) d'acceptation non prouvé(s) : {0} — lier chacun à un contrat avec contrôle (ou un contrat Manuel attesté), puis ${RERUN.fr}`,
     noVerdict: `évidence {0} sans verdict reconnu : ${RERUN.fr}`,
+    noCriteria:
+      "avertissement : la fiche « {0} » n'a aucun critère d'acceptation — ce chantier ne laisse aucun test de non-régression aux suivants (section « Critères d'acceptation » du modèle de fiche)",
     startFrom: `lancement refusé : activité {0} (lancer se fait depuis SCOPING, EXPECTATION ou REQUEST)`,
     startHuman: "lancement refusé : c'est une décision humaine (sondage `/drwil-start`, ou terminal interactif)",
     startNotScoped: `lancement refusé : « {0} » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)`,
@@ -155,6 +157,8 @@ export const STATE_MESSAGES = {
     failed: `{0} verdict: go back to BUILD (\`node .githooks/state.mjs move BUILD\`) to fix`,
     criteria: `unproven acceptance criteria: {0} — link each to a contract with a check (or an attested Manual contract), then ${RERUN.en}`,
     noVerdict: `evidence {0} without a known verdict: ${RERUN.en}`,
+    noCriteria:
+      'warning: brief "{0}" has no acceptance criterion — this workstream leaves no non-regression test for the next ones ("Acceptance criteria" section of the brief model)',
     startFrom: `start refused: activity {0} (start from SCOPING, EXPECTATION or REQUEST)`,
     startHuman: "start refused: it is a human decision (`/drwil-start` poll, or interactive terminal)",
     startNotScoped: `start refused: "{0}" is not a scoped brief (scope block committed, brief not finished)`,

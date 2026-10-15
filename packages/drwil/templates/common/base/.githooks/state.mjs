@@ -16,12 +16,12 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
-import { BRIEF_DIRS, briefStatus, config, MODEL_RE, scopedBriefs } from "./briefs.mjs";
+import { acceptanceCriteria, BRIEF_DIRS, briefStatus, config, MODEL_RE, scopedBriefs } from "./briefs.mjs";
 import { context, fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
 
 // Unchanged interface for the other hooks, the CLI and the tools: everything this file exported
 // before it was split stays importable from here.
-export { acceptanceCriteria, briefMaturity, briefStatus, hasIncrements, openDecisions, scopedBriefs } from "./briefs.mjs";
+export { acceptanceCriteria, briefMaturity, briefStatus, hasIncrements, openDecisions, readyGaps, scopedBriefs } from "./briefs.mjs";
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 
 export const ACTIVITIES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
@@ -225,11 +225,15 @@ export async function move(root, { to, brief, request }, { tty = false, confirm,
   const from = read.state.activity;
   // Before the human confirmation: no point asking for a decision that the evidence refuses.
   // Also in agent mode: the "transitions" setting says who decides, not on what.
+  const activeBrief = read.state.active_brief && join(root, read.state.active_brief);
+  let warning = "";
   if (to === "CLOSING") {
     const evidence = verifyEvidence(root);
     if (!evidence.ok) return { code: 1, message: resumed + fill(T.closingRefused, evidence.reason) };
+    // Warning only: a brief not marked "ready" may close without criteria (check-docs blocks a ready one).
+    if (activeBrief && existsSync(activeBrief) && !acceptanceCriteria(readFileSync(activeBrief, "utf8")).length)
+      warning = "\n" + fill(T.noCriteria, read.state.active_brief);
   }
-  const activeBrief = read.state.active_brief && join(root, read.state.active_brief);
   if (
     from === "CLOSING" &&
     to === "SCOPING" &&
@@ -245,7 +249,7 @@ export async function move(root, { to, brief, request }, { tty = false, confirm,
   }
   mkdirSync(join(root, ".drwil"), { recursive: true });
   writeFileSync(join(root, ".drwil", "state.json"), JSON.stringify(prep.state, null, 2) + "\n");
-  return { code: 0, message: `${resumed}${from} → ${to}` };
+  return { code: 0, message: `${resumed}${from} → ${to}${warning}` };
 }
 
 const REMINDER_FILE = [".drwil", "reminder.json"];

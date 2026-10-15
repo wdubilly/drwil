@@ -407,11 +407,12 @@ test("QUA-015 (extension) : fiche terminée encore présente refusée ; case coc
   assert.match(direct.stdout, /autre-chantier\.md.*QUA-015|QUA-015.*autre-chantier\.md/);
 });
 
-test("maturité : une fiche « prête » avec un point [décision] restant ou sans lot est refusée ; « à affiner » et sans champ passent", async () => {
+test("maturité : une fiche « prête » avec un point [décision] restant, sans lot ou sans critère est refusée ; « à affiner » et sans champ passent", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
-  const fiche = (maturite, points, lots) =>
-    `# Chantier\n\n**Statut** (2026-10-04) : cadré.\n${maturite}\n\n## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n${lots}\n\n## Reprise\n\nRien.\n`;
+  const critere = "## Critères d'acceptation\n\n- Un export vide est refusé [humain]\n\n";
+  const fiche = (maturite, points, lots, criteres = critere) =>
+    `# Chantier\n\n**Statut** (2026-10-04) : cadré.\n${maturite}\n\n${criteres}## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n${lots}\n\n## Reprise\n\nRien.\n`;
   const lancer = () => spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   const ecrire = (texte) => writeFileSync(join(dir, "docs/projects/mon-chantier.md"), texte);
   const lot = "- **Lot 1 — modèle** [IA] : à faire.";
@@ -429,6 +430,13 @@ test("maturité : une fiche « prête » avec un point [décision] restant ou sa
   r = lancer();
   assert.equal(r.status, 1, r.stdout + r.stderr);
   assert.match(r.stdout + r.stderr, /mon-chantier\.md.*prête.*lot/);
+
+  ecrire(fiche("**Maturité** : prêt", "(aucun.)", lot, ""));
+  r = lancer();
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /mon-chantier\.md.*prête.*critère d'acceptation/);
+  ecrire(fiche("", "(aucun.)", lot, ""));
+  assert.equal(lancer().status, 0);
 
   ecrire(fiche("**Maturité** : à affiner", "- [décision] reste à trancher.", "(aucun.)"));
   assert.equal(lancer().status, 0);

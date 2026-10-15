@@ -124,6 +124,18 @@ export function acceptanceCriteria(text) {
 }
 
 /**
+ * What a brief marked "ready" still lacks, as check-docs message keys: an open [decision], no
+ * increment, or no acceptance criterion (nothing would be left to replay as non-regression).
+ */
+export function readyGaps(text) {
+  const gaps = [];
+  if (openDecisions(text) > 0) gaps.push("readyUndecided");
+  if (!hasIncrements(text)) gaps.push("readyNoIncrement");
+  if (!acceptanceCriteria(text).length) gaps.push("readyNoCriteria");
+  return gaps;
+}
+
+/**
  * Briefs that can be started: briefs of docs/projects/, models excluded, not
  * finished, whose `scope` block exists in HEAD — the validated scope is the committed one,
  * as for the scope gate. `[{ path, title, priority, decisions, ready, maturity }]`: ready ones first (no
