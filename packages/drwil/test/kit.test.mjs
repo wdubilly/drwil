@@ -2290,7 +2290,8 @@ test("QUA-026 : doctor affiche la version installée et signale un écart avec l
   ecrire("0.0.1");
   p = await point();
   assert.equal(p.state, "warning");
-  assert.match(p.detail, new RegExp(`0\\.0\\.1 installée, CLI ${version.replace(/\./g, "\\.")} plus récente : .*npx drwil init`));
+  assert.ok(p.detail.startsWith(`0.0.1 installée, CLI ${version} plus récente : `), p.detail);
+  assert.match(p.detail, /npx drwil init/);
   ecrire("99.0.0-beta.1");
   assert.match((await point()).detail, /99\.0\.0-beta\.1 installée, CLI .* plus ancienne/);
   ecrire(`${version}-rc.1`);
