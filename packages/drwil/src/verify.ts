@@ -11,12 +11,12 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { activeCriteria, evaluateCriteria, type CriterionResult } from "./criteria.js";
+import { activeCriteria, criteriaTable, evaluateCriteria, type CriterionResult } from "./criteria.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { verdictJson } from "./verdict.js";
 
 export { formatVerdict, verdictJson } from "./verdict.js";
-export { evaluateCriteria, type CriterionResult, type CriterionStatus } from "./criteria.js";
+export { criteriaTable, evaluateCriteria, type CriterionResult, type CriterionStatus } from "./criteria.js";
 
 /** ATTESTED (DRWIL-013): the automated part is proven and the human part has a valid attestation.
  *  Distinct from PASS (fully automated proof), but it satisfies the contract. */
@@ -379,5 +379,8 @@ export function writeEvidence(root: string, v: Verdict, now = new Date()): strin
   mkdirSync(dir, { recursive: true });
   const name = `verify-${now.toISOString().replace(/[:.]/g, "-")}.json`;
   writeFileSync(join(dir, name), JSON.stringify(evidence, null, 2) + "\n");
+  // Next to the evidence, the table to paste in the pull request (`gh pr create --body-file`); not named
+  // verify-*.json, so verifyEvidence never mistakes it for the evidence.
+  if (v.criteria) writeFileSync(join(dir, name.replace(/^verify-(.+)\.json$/, "criteria-$1.md")), criteriaTable(v.criteria, v.lang));
   return `.drwil/evidence/${name}`;
 }

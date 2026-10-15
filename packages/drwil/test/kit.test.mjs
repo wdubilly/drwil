@@ -31,7 +31,7 @@ import {
   formatPreview,
   attest,
 } from "../dist/index.js";
-import { evaluateCriteria, writeEvidence } from "../dist/verify.js";
+import { criteriaTable, evaluateCriteria, writeEvidence } from "../dist/verify.js";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les projets de test (et leurs hooks) sur le dépôt qui lance la suite.
@@ -1961,6 +1961,38 @@ test("critères d'acceptation : un contrat sans contrôle ni Manuel n'est pas un
   assert.equal(juge({ link: "C", human: false }), "not-durable");
   assert.equal(juge({ link: "x", human: false }), "pass");
   assert.equal(juge({ link: "x", human: true }), "unknown-proof");
+});
+
+test("critères d'acceptation : tableau « critère → preuve → verdict » rendu pour la PR, écrit à côté de l'évidence", async () => {
+  const c = (text, link, human, status, proof) => ({ text, link, human, status, proof });
+  const criteres = [
+    c("Un export vide est refusé", "QUA-001", false, "pass", "pass"),
+    c("Total | exact", null, false, "no-proof", null),
+    c("Le libellé est clair", "QUA-003", true, "not-pass", "manual"),
+  ];
+  assert.equal(
+    criteriaTable(criteres, "fr"),
+    [
+      "| Critère | Preuve | Verdict |",
+      "|---|---|---|",
+      "| Un export vide est refusé | `QUA-001` (pass) | ✅ prouvé |",
+      "| Total \\| exact | — | ❌ sans preuve |",
+      "| Le libellé est clair [human] | `QUA-003` (manual) | ❌ preuve non passante |",
+      "",
+    ].join("\n"),
+  );
+  assert.match(criteriaTable(criteres, "en"), /^\| Criterion \| Proof \| Verdict \|\n/);
+  assert.match(criteriaTable([], "fr"), /aucun critère d'acceptation/);
+
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`"));
+  writeFileSync(join(dir, "docs/projects/essai.md"), "# Essai\n\n## Critères d'acceptation\n\n- Prouvé — `QUA-001`\n");
+  writeFileSync(
+    join(dir, ".drwil/state.json"),
+    JSON.stringify({ version: 1, activity: "EVIDENCE", active_brief: "docs/projects/essai.md", active_request: null, since: null }),
+  );
+  const chemin = writeEvidence(dir, await verify({ targetDir: dir }));
+  const table = readFileSync(join(dir, chemin.replace(/verify-(.+)\.json$/, "criteria-$1.md")), "utf8");
+  assert.match(table, /\| Prouvé \| `QUA-001` \(pass\) \| ✅ (prouvé|proven) \|/);
 });
 
 test("verify : contrôle non applicable dans ce contexte → MANUAL, jamais PASS", async () => {

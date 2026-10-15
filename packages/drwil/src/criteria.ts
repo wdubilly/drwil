@@ -3,6 +3,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import type { MessageLang } from "./i18n.js";
 import type { ContractResult } from "./verify.js";
 
 /**
@@ -40,6 +41,43 @@ export function evaluateCriteria(criteria: Criterion[], contracts: ContractResul
     if (!check || c.human) return result("unknown-proof");
     return result(check.status === "ok" ? "pass" : "not-pass", check.status);
   });
+}
+
+const TABLE = {
+  fr: {
+    head: ["Critère", "Preuve", "Verdict"],
+    status: {
+      pass: "✅ prouvé",
+      "no-proof": "❌ sans preuve",
+      "unknown-proof": "❌ preuve inconnue du registre",
+      "not-durable": "❌ preuve non durable",
+      "not-pass": "❌ preuve non passante",
+    },
+    none: "aucun critère d'acceptation",
+  },
+  en: {
+    head: ["Criterion", "Proof", "Verdict"],
+    status: {
+      pass: "✅ proven",
+      "no-proof": "❌ no proof",
+      "unknown-proof": "❌ proof unknown to the registry",
+      "not-durable": "❌ proof not durable",
+      "not-pass": "❌ proof not passing",
+    },
+    none: "no acceptance criteria",
+  },
+} satisfies Record<MessageLang, unknown>;
+
+/** Review table "criterion → proof → verdict" for the pull request body; built from the evaluation, never typed by the agent. */
+export function criteriaTable(criteria: CriterionResult[], lang: MessageLang): string {
+  const T = TABLE[lang];
+  if (!criteria.length) return `_${T.none}_\n`;
+  const cell = (s: string) => s.replace(/\|/g, "\\|");
+  const rows = criteria.map((c) => {
+    const proof = c.link ? `\`${c.link}\`${c.proof ? ` (${c.proof})` : ""}` : "—";
+    return `| ${cell(c.text)}${c.human ? " [human]" : ""} | ${proof} | ${T.status[c.status]} |`;
+  });
+  return [`| ${T.head.join(" | ")} |`, "|---|---|---|", ...rows].join("\n") + "\n";
 }
 
 /** Criteria of the active brief (.drwil/state.json), read by the project's own briefs.mjs; null when there is none to read. */
