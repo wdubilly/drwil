@@ -16,6 +16,10 @@ files:
   - packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/cycle.test.mjs
+  - .githooks/briefs.mjs
+  - .githooks/state.mjs
+  - .githooks/state-texts.mjs
+  - .githooks/check-docs.mjs
   - .githooks/state.test.mjs
   - .githooks/check-docs.test.mjs
   - docs/contracts.md
