@@ -210,6 +210,25 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
   `paths` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
   qui tourne au commit — voir `docs/projects/journal.md` (2026-10-05).
 
+## Retours d'expérience (intentions à recadrer)
+
+Limites relevées en cours de chantier, consignées en intention le
+2026-10-15 (chantier « capitaliser les non-régressions ») ; les recadrer est
+une décision du demandeur.
+
+- [ ] [décision] Consigner les retours d'expérience en intentions à la
+  clôture (règle, livrable et dépôt) —
+  `docs/projects/consigner-retours-experience.md`.
+- [ ] [décision] Cadrage complet du premier coup (copies du gabarit,
+  tests), élargissement sans friction —
+  `docs/intentions/cadrage-copies-et-elargissement.md`.
+- [ ] [décision] L'installation du dépôt ne réécrit plus la date de
+  `docs/ia-first.md` — `docs/intentions/date-ia-first-installateur.md`.
+- [ ] [décision] Preuve des critères visible dès verify ; critère lié à un
+  contrôle sans contrat — `docs/intentions/preuve-des-criteres-visible.md`.
+- [ ] [décision] Une seule forme pour les ID du catalogue —
+  `docs/intentions/prefixe-catalogue.md`.
+
 ## Ensuite
 
 - [ ] [décision] [P3] Couverture du paquet à 100 % (lot 3b, à la demande) :
