@@ -1,6 +1,6 @@
 # Projet : échapper l'antislash dans le tableau des critères
 
-**Statut** : cadré le 2026-10-15 — lot 1 à faire.
+**Statut** : fait le 2026-10-15 — lot 1 livré.
 **Risque** : MEDIUM
 **Maturité** : prêt
 

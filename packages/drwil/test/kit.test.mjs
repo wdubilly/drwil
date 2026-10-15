@@ -2012,7 +2012,10 @@ test("critères d'acceptation : tableau « critère → preuve → verdict » re
   );
   assert.match(criteriaTable(criteres, "en"), /^\| Criterion \| Proof \| Verdict \|\n/);
   assert.match(criteriaTable([], "fr"), /aucun critère d'acceptation/);
-
+  assert.equal(
+    criteriaTable([c("a\\|b", "X|Y\\Z", false, "pass", "p|q")], "en"),
+    ["| Criterion | Proof | Verdict |", "|---|---|---|", "| a\\\\\\|b | `X\\|Y\\\\Z` (p\\|q) | ✅ proven |", ""].join("\n"),
+  );
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`"));
   writeFileSync(join(dir, "docs/projects/essai.md"), "# Essai\n\n## Critères d'acceptation\n\n- Prouvé — `QUA-001`\n");
   writeFileSync(

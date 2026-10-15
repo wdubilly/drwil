@@ -72,9 +72,9 @@ const TABLE = {
 export function criteriaTable(criteria: CriterionResult[], lang: MessageLang): string {
   const T = TABLE[lang];
   if (!criteria.length) return `_${T.none}_\n`;
-  const cell = (s: string) => s.replace(/\|/g, "\\|");
+  const cell = (s: string) => s.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
   const rows = criteria.map((c) => {
-    const proof = c.link ? `\`${c.link}\`${c.proof ? ` (${c.proof})` : ""}` : "—";
+    const proof = c.link ? `\`${cell(c.link)}\`${c.proof ? ` (${cell(c.proof)})` : ""}` : "—";
     return `| ${cell(c.text)}${c.human ? " [human]" : ""} | ${proof} | ${T.status[c.status]} |`;
   });
   return [`| ${T.head.join(" | ")} |`, "|---|---|---|", ...rows].join("\n") + "\n";
