@@ -73,6 +73,13 @@ Tranchées par le demandeur le 2026-10-15 :
   suivants. Un critère `[humain]` renvoie à un contrat `Manuel` attesté. Les
   critères restent de niveau métier (pas un par détail technique) pour ne
   pas gonfler le registre.
+- Deux filets de non-régression distincts (QUA-018, dépôt vs livrable) :
+  les critères et contrats du **projet utilisateur** vivent dans son propre
+  registre et sa propre suite de tests, que drwil évalue sans les posséder ;
+  les tests de **drwil** (`packages/drwil/test/`, `.githooks/*.test.mjs`)
+  protègent le paquet et ne dépendent jamais des tests d'un projet. Le
+  gabarit livre le mécanisme (section de fiche, évaluation par `verify`),
+  jamais des critères ni des tests métier prêts à l'emploi.
 
 ## 5. Points à trancher
 
