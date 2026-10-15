@@ -1,6 +1,6 @@
 # Projet : critères d'acceptation prouvés avant la clôture
 
-**Statut** : cadré le 2026-10-15 — décisions tranchées le 2026-10-15, à lancer, aucun lot commencé.
+**Statut** : fait le 2026-10-15 — lots 1 à 4 livrés (voir `docs/projects/journal.md`).
 **Risque** : HIGH
 
 <!-- scope
@@ -116,6 +116,6 @@ Tranchées par le demandeur le 2026-10-15 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-15) : fiche cadrée, aucun code écrit.
+- **Dernier état** (2026-10-15) : lots 1 à 4 livrés et commités.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 1 (modèle), au lancement du chantier.
+- **Prochaine étape** : clôture (journal, suppression de la fiche, ligne d'index).
