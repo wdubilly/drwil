@@ -17,6 +17,7 @@ files:
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/cycle.test.mjs
   - .githooks/state.test.mjs
+  - .githooks/check-docs.test.mjs
   - docs/contracts.md
 -->
 
