@@ -996,3 +996,12 @@ l'index ; texte intégral dans l'historique git
   de `scopedBriefs` (module optionnel autonome, sans import) ; les fiches
   existantes n'ont pas encore le champ.
 - **Clôturé par** : PR à venir.
+
+## 2026-10-15 — Échapper l'antislash dans le tableau des critères
+
+- **Décisions clés** : alerte CodeQL (échappement incomplet, sévérité haute)
+  sur la PR #82. `cell` échappe désormais `\` avant `|` et s'applique à
+  toutes les colonnes : critère, lien et nature de la preuve. Un test
+  couvre `\` et `|` dans le critère et dans la preuve.
+- **Limites connues** : aucune.
+- **Clôturé par** : PR à venir.
