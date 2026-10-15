@@ -108,6 +108,8 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [ ] [IA] [P2] Maturité des fiches (prêt / à affiner) : champ
   explicite, usage par le sondage et le tableau de bord —
   `docs/projects/maturite-des-fiches.md`.
+- [ ] [IA] [P1] Capitaliser les tests de non-régression à chaque
+  chantier (fiche sans critères, régression ou évolution, dépôt neuf) — `docs/projects/capitaliser-non-regression.md`.
 - [ ] [IA] [P1] Fiabiliser le package : `.drwil/install.json` (si présent), tests de
   mise à jour — `docs/projects/fiabiliser-le-package.md`.
 
