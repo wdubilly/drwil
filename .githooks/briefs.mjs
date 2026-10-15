@@ -36,7 +36,27 @@ export function briefStatus(text) {
   return "open";
 }
 
+const MATURITY_LINE_RE = /^\*\*(?:Maturité|Maturity)\*\*\s*:\s*(.*)$/;
+
+/**
+ * Explicit maturity of a brief: "ready", "refine", "in-progress", or "unset" (field absent or
+ * unknown: existing briefs and installed projects keep working). Same header window as the status.
+ */
+export function briefMaturity(text) {
+  const value =
+    text
+      .split(/\r?\n/)
+      .slice(0, 15)
+      .map((l) => MATURITY_LINE_RE.exec(l))
+      .find(Boolean)?.[1] ?? "";
+  if (/^(?:prêt|ready)\b/i.test(value)) return "ready";
+  if (/^(?:à affiner|to refine)\b/i.test(value)) return "refine";
+  if (/^(?:en cours|in progress)\b/i.test(value)) return "in-progress";
+  return "unset";
+}
+
 const DEFAULT_INDEX = ["docs/projects/pending.md"];
+const MATURITY_RANK = { ready: 0, "in-progress": 1, unset: 1, refine: 2 };
 const DEFAULT_PRIORITY = 2;
 
 /** Priority of each brief cited by an open item of the committed index ([P0] to [P3], [P2] without a tag). */
@@ -60,7 +80,7 @@ function indexPriorities(root) {
 }
 
 /** `[decision]` items still open in the "Points to decide" section ("Points à trancher"). */
-function openDecisions(text) {
+export function openDecisions(text) {
   let inside = false;
   let n = 0;
   for (const line of text.split(/\r?\n/)) {
@@ -70,11 +90,45 @@ function openDecisions(text) {
   return n;
 }
 
+/** A brief lists its increments as "- **Lot …" or "- **Increment …" bullets. */
+export function hasIncrements(text) {
+  return /^\s*-\s*\*\*(Lot|Increment|Incrément)\b/im.test(text);
+}
+
+/**
+ * Acceptance criteria of a brief: one bullet per criterion in the "Critères d'acceptation" section.
+ * `[{ text, link, human }]`: `link` is the backticked contract or check ID of the line (null when
+ * absent: a criterion without proof, for the evaluation to refuse), `human` is set by `[humain]`.
+ */
+export function acceptanceCriteria(text) {
+  const criteria = [];
+  let inside = false;
+  for (const line of text.split(/\r?\n/)) {
+    if (/^##\s/.test(line)) {
+      inside = /^##\s*(\d+\.\s*)?(Critères d'acceptation|Acceptance criteria)\b/i.test(line);
+      continue;
+    }
+    const item = inside ? /^\s*-\s+(.+)$/.exec(line) : null;
+    if (!item) continue;
+    const human = /\[(humain|human)\]/i.test(item[1]);
+    const link = /`([A-Za-z][\w.:-]*)`/.exec(item[1])?.[1] ?? null;
+    const label = item[1]
+      .replace(/\[(humain|human)\]/gi, "")
+      .replace(/`[^`]*`/g, "")
+      .replace(/\s*[—–:-]\s*$/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (label) criteria.push({ text: label, link, human });
+  }
+  return criteria;
+}
+
 /**
  * Briefs that can be started: briefs of docs/projects/, models excluded, not
  * finished, whose `scope` block exists in HEAD — the validated scope is the committed one,
- * as for the scope gate. `[{ path, title, priority, decisions, ready }]`: ready ones first (no
- * open decision), then by index priority, then by path.
+ * as for the scope gate. `[{ path, title, priority, decisions, ready, maturity }]`: ready ones first (no
+ * open decision), then by maturity ("ready", then "in-progress" and "unset", "refine" last), then by
+ * index priority, then by path. A "refine" brief is listed, never hidden.
  */
 export function scopedBriefs(root) {
   const priorities = indexPriorities(root);
@@ -97,8 +151,15 @@ export function scopedBriefs(root) {
         priority: `P${priority}`,
         decisions,
         ready: decisions === 0,
+        maturity: briefMaturity(r.stdout),
       });
     }
   }
-  return briefs.sort((a, b) => Number(b.ready) - Number(a.ready) || a.priority.localeCompare(b.priority) || a.path.localeCompare(b.path));
+  return briefs.sort(
+    (a, b) =>
+      Number(b.ready) - Number(a.ready) ||
+      MATURITY_RANK[a.maturity] - MATURITY_RANK[b.maturity] ||
+      a.priority.localeCompare(b.priority) ||
+      a.path.localeCompare(b.path),
+  );
 }

@@ -2,6 +2,12 @@
 
 **Statut** : cadré le AAAA-MM-JJ — lot 1 en cours.
 **Risque** : MEDIUM
+**Maturité** : à affiner | prêt | en cours
+
+(maturité : « prêt » = entièrement tranchée, peut être lancée ; « à
+affiner » = points encore ouverts ; « en cours » = en construction.
+Facultative : une fiche sans ce champ est « non renseignée », proposée sans
+avertissement de maturité.)
 
 (statut : « cadré le … », « lot 1 en cours »… ; une fiche qui n'est pas un
 chantier (mécanique du kit) : « référence — … », jamais proposée au
@@ -29,6 +35,19 @@ refusé : nommer le fichier ou un motif d'au moins deux dossiers.)
 ## 1. Besoin
 
 (ce que le projet doit produire, pour qui, et pourquoi maintenant)
+
+## Critères d'acceptation
+
+(une ligne par critère de la demande, liée à sa preuve : l'ID du contrat ou
+du contrôle entre accents graves, par exemple `- Un export vide est refusé —
+`CTR-012``, ou le marqueur `[humain]` pour un jugement humain, qui renvoie à
+un contrat `Manuel` attesté par `drwil attest`. La preuve est durable, un
+contrat avec `Contrôle` rejoué à chaque chantier : elle devient la
+non-régression métier. Un critère de niveau métier, pas un par détail
+technique. C'est l'outil qui évalue, jamais l'agent.)
+
+- Critère vérifiable — `ID-DU-CONTRAT`
+- Critère de jugement humain [humain] — `ID-DU-CONTRAT-MANUEL`
 
 ## 2. Hors périmètre
 

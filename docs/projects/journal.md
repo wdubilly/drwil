@@ -966,3 +966,42 @@ l'index ; texte intégral dans l'historique git
   et le rejeu du cadrage en CI le bornent. Aucun code livrable modifié :
   seuls des tests ont été ajoutés.
 - **Clôturé par** : PR à venir.
+
+## 2026-10-15 — Critères d'acceptation prouvés avant la clôture
+
+- **Décisions clés** : chaque fiche liste ses critères d'acceptation (section
+  dédiée, un lien vers un contrat ou `[humain]`). `drwil verify` les évalue
+  (pass, no-proof, unknown-proof, not-durable, not-pass), les inscrit dans
+  l'évidence et dans un tableau `criteria-*.md` pour la relecture ; la
+  clôture est refusée tant qu'un critère n'est pas `pass`. Un critère lié à
+  un contrat à contrôle rejouable devient un test de non-régression métier.
+  Deux filets distincts : ceux de l'utilisateur et ceux de drwil.
+- **Limites connues** : aucune règle « avertir puis bloquer » pour une
+  fiche sans critères ; la CLI n'affiche pas le chemin du tableau et la PR
+  ne le reçoit pas automatiquement.
+- **Clôturé par** : PR à venir.
+
+## 2026-10-15 — Maturité des fiches (prêt / à affiner)
+
+- **Décisions clés** : champ explicite `**Maturité**` (`à affiner | prêt | en
+  cours`, `to refine | ready | in progress` en anglais) sous le statut,
+  lu par `briefMaturity` ; une fiche sans le champ est « non renseignée » et
+  n'est jamais bloquée. `check-docs` refuse une fiche déclarée « prête »
+  qui garde un point `[décision]` ouvert ou n'a aucun lot. Le sondage de
+  lancement et la liste du terminal classent par maturité (prêtes d'abord,
+  « à affiner » en dernier) et signalent les fiches à affiner sans les
+  masquer ; le tableau de bord les trie de même et affiche le champ tel
+  qu'écrit.
+- **Limites connues** : le tableau de bord recopie la règle de classement
+  de `scopedBriefs` (module optionnel autonome, sans import) ; les fiches
+  existantes n'ont pas encore le champ.
+- **Clôturé par** : PR à venir.
+
+## 2026-10-15 — Échapper l'antislash dans le tableau des critères
+
+- **Décisions clés** : alerte CodeQL (échappement incomplet, sévérité haute)
+  sur la PR #82. `cell` échappe désormais `\` avant `|` et s'applique à
+  toutes les colonnes : critère, lien et nature de la preuve. Un test
+  couvre `\` et `|` dans le critère et dans la preuve.
+- **Limites connues** : aucune.
+- **Clôturé par** : PR à venir.

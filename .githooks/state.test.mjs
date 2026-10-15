@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 import { PassThrough } from "node:stream";
 import {
   ACTIVITIES,
+  acceptanceCriteria,
   NEUTRAL_STATE,
   context,
   main,
@@ -21,6 +22,7 @@ import {
   shortReminder,
   reminderIfChanged,
   briefStatus,
+  briefMaturity,
   transitionAllowed,
   validateState,
 } from "./state.mjs";
@@ -404,6 +406,26 @@ test("clôture : FAIL et ERROR renvoient en BUILD, MANUAL à l'attestation humai
   }
 });
 
+test("clôture : un critère d'acceptation non prouvé est refusé, nommé ; tous prouvés, ou sans critères, acceptés", () => {
+  const nom = "verify-2026-10-09T10-00-00-000Z.json";
+  const critere = (text, status) => ({ text, link: "CTR-012", human: false, status, proof: null });
+  const refuse = (criteria) => {
+    const { racine, evidence } = depotEnVerify();
+    evidence(nom, { status: "pass", criteria });
+    return verifyEvidence(racine);
+  };
+  const sansPreuve = refuse([critere("Un export vide est refusé", "pass"), critere("Le total est exact", "no-proof")]);
+  assert.equal(sansPreuve.ok, false);
+  assert.match(sansPreuve.reason, /« Le total est exact » \(no-proof\)/);
+  assert.doesNotMatch(sansPreuve.reason, /export vide/);
+  for (const status of ["unknown-proof", "not-durable", "not-pass"]) assert.equal(refuse([critere("C", status)]).ok, false, status);
+  assert.deepEqual(refuse([critere("Un export vide est refusé", "pass")]), { ok: true });
+  assert.deepEqual(refuse([]), { ok: true });
+  const { racine, evidence } = depotEnVerify();
+  evidence(nom, { status: "attested" });
+  assert.deepEqual(verifyEvidence(racine), { ok: true });
+});
+
 test("clôture : seule la dernière évidence compte", () => {
   const { racine, evidence } = depotEnVerify();
   evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass" });
@@ -539,6 +561,49 @@ test("clôture : retour en SCOPING refusé si la fiche terminée est encore là"
   assert.equal((await move(racine, { to: "SCOPING" }, { tty: false, now: MAINTENANT })).code, 0);
 });
 
+test("critères d'acceptation : liste structurée (lien, humain), ignore les autres sections, fiche en anglais", () => {
+  const fr = [
+    "# Projet",
+    "",
+    "## Critères d'acceptation",
+    "",
+    "(consigne, pas un critère)",
+    "",
+    "- Un export vide est refusé — `CTR-012`",
+    "- Le libellé est clair [humain] — `MAN-003`",
+    "- Un critère sans preuve",
+    "",
+    "## 2. Hors périmètre",
+    "",
+    "- Pas un critère `CTR-999`",
+  ].join("\n");
+  assert.deepEqual(acceptanceCriteria(fr), [
+    { text: "Un export vide est refusé", link: "CTR-012", human: false },
+    { text: "Le libellé est clair", link: "MAN-003", human: true },
+    { text: "Un critère sans preuve", link: null, human: false },
+  ]);
+  const en = "## Acceptance criteria\n\n- Export is checked [human]\n- Totals match — `QUA-001`\n\n## 2. Out of scope\n";
+  assert.deepEqual(acceptanceCriteria(en), [
+    { text: "Export is checked", link: null, human: true },
+    { text: "Totals match", link: "QUA-001", human: false },
+  ]);
+  assert.deepEqual(acceptanceCriteria("# Sans section\n\n- rien\n"), []);
+});
+
+test("maturité : champ explicite lu dans l'en-tête (FR et EN), absent ou inconnu = non renseignée", () => {
+  const f = (ligne) => `# F\n\n**Statut** : cadré.\n${ligne}\n`;
+  assert.equal(briefMaturity(f("**Maturité** : prêt")), "ready");
+  assert.equal(briefMaturity(f("**Maturité** : à affiner — points ouverts")), "refine");
+  assert.equal(briefMaturity(f("**Maturité** : en cours")), "in-progress");
+  assert.equal(briefMaturity(f("**Maturity**: ready")), "ready");
+  assert.equal(briefMaturity(f("**Maturity**: to refine")), "refine");
+  assert.equal(briefMaturity(f("**Maturity**: in progress")), "in-progress");
+  assert.equal(briefMaturity(f("**Maturité** : PRÊT")), "ready");
+  assert.equal(briefMaturity(f("**Maturité** : bientôt")), "unset");
+  assert.equal(briefMaturity("# F\n\n**Statut** : cadré.\n"), "unset");
+  assert.equal(briefMaturity(`# F\n${"\n".repeat(20)}**Maturité** : prêt\n`), "unset");
+});
+
 test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans tag) ; décisions ouvertes comptées", () => {
   const { racine, git } = depotCadre();
   const fiche = (titre, points) =>
@@ -578,6 +643,26 @@ test("fiches cadrées : prêtes d'abord, puis priorité de l'index ([P2] sans ta
       [FICHE, "P3", 0, true],
       ["docs/projects/anglaise.md", "P1", 2, false],
       ["docs/projects/bloquee.md", "P1", 1, false],
+    ],
+  );
+});
+
+test("fiches cadrées : à maturité égale la priorité décide ; « à affiner » classée en dernier mais jamais masquée", () => {
+  const { racine, git } = depotCadre();
+  const fiche = (nom, maturite) =>
+    `# ${nom}\n\n**Statut** : cadré le 2026-10-10.\n${maturite}\n\n<!-- scope\nfiles:\n  - src/${nom}.ts\n-->\n\n## 5. Points à trancher\n\n(aucun.)\n`;
+  writeFileSync(join(racine, "docs", "projects", "aa-affiner.md"), fiche("aa-affiner", "**Maturité** : à affiner"));
+  writeFileSync(join(racine, "docs", "projects", "zz-pret.md"), fiche("zz-pret", "**Maturité** : prêt"));
+  writeFileSync(join(racine, "docs", "projects", "mm-cours.md"), fiche("mm-cours", "**Maturité** : en cours"));
+  git("add", "-A");
+  git("commit", "-qm", "maturité");
+  assert.deepEqual(
+    scopedBriefs(racine).map((f) => [f.path, f.maturity]),
+    [
+      ["docs/projects/zz-pret.md", "ready"],
+      [FICHE, "unset"],
+      ["docs/projects/mm-cours.md", "in-progress"],
+      ["docs/projects/aa-affiner.md", "refine"],
     ],
   );
 });
@@ -770,7 +855,7 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   const { racine, git } = depotCadre();
   writeFileSync(
     join(racine, "docs", "projects", "bloquee.md"),
-    "# Bloquée\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- scope\nfiles:\n  - src/b.ts\n-->\n\n## Points à trancher\n\n- [décision] A ou B ?\n",
+    "# Bloquée\n\n**Statut** : cadré le 2026-10-10.\n**Maturité** : à affiner\n\n<!-- scope\nfiles:\n  - src/b.ts\n-->\n\n## Points à trancher\n\n- [décision] A ou B ?\n",
   );
   git("add", "-A");
   git("commit", "-qm", "bloquee");
@@ -778,7 +863,7 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   assert.equal(r.code, 0, r.erreurs);
   assert.match(
     r.sortie,
-    /^1\. docs\/projects\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projects\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher\]/,
+    /^1\. docs\/projects\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projects\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher · à affiner : à revoir avant de la lancer\]/,
   );
   assert.deepEqual(r.invites.length, 3);
   assert.equal(readState(racine).state.auto_merge, true);

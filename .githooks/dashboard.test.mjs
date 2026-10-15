@@ -130,6 +130,26 @@ test("sans dossier de fiches : aucune fiche, en français", () => {
   assert.match(generer({}), /\(aucune fiche\)/);
 });
 
+test("maturité : fiches triées prêtes d'abord, « à affiner » en dernier, champ affiché tel qu'écrit (FR et EN)", () => {
+  const html = generer({
+    "docs/projects/aa.md": "# Fiche AA\n\n**Statut** : cadré.\n**Maturité** : à affiner — 2 points\n",
+    "docs/projects/bb.md": "# Fiche BB\n\n**Statut** : cadré.\n**Maturité** : prêt\n",
+    "docs/projects/cc.md": "# Fiche CC\n\n**Statut** : cadré.\n",
+  });
+  const ordre = ["Fiche BB", "Fiche CC", "Fiche AA"].map((t) => html.indexOf(t));
+  assert.ok(ordre.every((n) => n > 0) && ordre[0] < ordre[1] && ordre[1] < ordre[2], ordre.join());
+  assert.match(html, /Maturité : prêt/);
+  assert.match(html, /Maturité : à affiner — 2 points/);
+  assert.equal(html.split("Maturité :").length - 1, 2, "pas de ligne Maturité pour une fiche sans le champ");
+  const en = generer({
+    ".drwil/ia-first.json": JSON.stringify({ lang: "en" }),
+    "docs/projects/a.md": "# A\n\n**Status**: open\n**Maturity**: to refine\n",
+    "docs/projects/b.md": "# B\n\n**Status**: open\n**Maturity**: ready\n",
+  });
+  assert.match(en, /Maturity: to refine/);
+  assert.ok(en.indexOf("# B") < 0 && en.indexOf(">B <") < en.indexOf(">A <"));
+});
+
 test("en anglais : statut d'une fiche, audit périmé, audit pas encore généré", () => {
   const html = generer({
     ".drwil/ia-first.json": JSON.stringify({ lang: "en" }),

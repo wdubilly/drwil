@@ -31,6 +31,7 @@ import {
   formatPreview,
   attest,
 } from "../dist/index.js";
+import { criteriaTable, evaluateCriteria, writeEvidence } from "../dist/verify.js";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les projets de test (et leurs hooks) sur le dépôt qui lance la suite.
@@ -404,6 +405,35 @@ test("QUA-015 (extension) : fiche terminée encore présente refusée ; case coc
   direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.equal(direct.status, 0);
   assert.match(direct.stdout, /autre-chantier\.md.*QUA-015|QUA-015.*autre-chantier\.md/);
+});
+
+test("maturité : une fiche « prête » avec un point [décision] restant ou sans lot est refusée ; « à affiner » et sans champ passent", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const fiche = (maturite, points, lots) =>
+    `# Chantier\n\n**Statut** (2026-10-04) : cadré.\n${maturite}\n\n## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n${lots}\n\n## Reprise\n\nRien.\n`;
+  const lancer = () => spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
+  const ecrire = (texte) => writeFileSync(join(dir, "docs/projects/mon-chantier.md"), texte);
+  const lot = "- **Lot 1 — modèle** [IA] : à faire.";
+
+  ecrire(fiche("**Maturité** : prêt", "(aucun.)", lot));
+  let r = lancer();
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+
+  ecrire(fiche("**Maturité** : prêt", "- [décision] reste à trancher.", lot));
+  r = lancer();
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /mon-chantier\.md.*prête.*décision/);
+
+  ecrire(fiche("**Maturité** : prêt", "(aucun.)", "(aucun.)"));
+  r = lancer();
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /mon-chantier\.md.*prête.*lot/);
+
+  ecrire(fiche("**Maturité** : à affiner", "- [décision] reste à trancher.", "(aucun.)"));
+  assert.equal(lancer().status, 0);
+  ecrire(fiche("", "- [décision] reste à trancher.", "(aucun.)"));
+  assert.equal(lancer().status, 0);
 });
 
 test("QUA-015 : l'index anglais (pending.md) vérifie aussi le marqueur de chantier", async () => {
@@ -1900,6 +1930,101 @@ test("verify : outil indisponible (contrôle non exécuté) → ERROR, jamais PA
   assert.equal(v.status, "ERROR");
   assert.equal(v.code, 2);
   assert.match(v.contracts[0].reasons.join(), /ci-coverage : non exécuté/);
+});
+
+test("verify : critères d'acceptation de la fiche active jugés contre le registre, écrits dans l'évidence", async () => {
+  const dir = await projetVerify(
+    contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `ko`") + contrat("QUA-003", "**Manuel** : appréciation"),
+  );
+  assert.equal((await verify({ targetDir: dir })).criteria, undefined, "sans fiche active : rien à juger");
+  writeFileSync(
+    join(dir, "docs/projects/essai.md"),
+    [
+      "# Essai",
+      "",
+      "## Critères d'acceptation",
+      "",
+      "- Prouvé par un contrat — `QUA-001`",
+      "- Sans lien",
+      "- Lien inconnu — `QUA-999`",
+      "- Contrat rouge — `QUA-002`",
+      "- Contrat manuel pour un critère automatique — `QUA-003`",
+      "- Jugement humain non attesté [humain] — `QUA-003`",
+      "- Prouvé par un contrôle — `ok`",
+      "",
+    ].join("\n"),
+  );
+  writeFileSync(
+    join(dir, ".drwil/state.json"),
+    JSON.stringify({ version: 1, activity: "EVIDENCE", active_brief: "docs/projects/essai.md", active_request: null, since: null }),
+  );
+  const v = await verify({ targetDir: dir });
+  assert.deepEqual(
+    v.criteria.map((c) => [c.text, c.status]),
+    [
+      ["Prouvé par un contrat", "pass"],
+      ["Sans lien", "no-proof"],
+      ["Lien inconnu", "unknown-proof"],
+      ["Contrat rouge", "not-pass"],
+      ["Contrat manuel pour un critère automatique", "not-durable"],
+      ["Jugement humain non attesté", "not-pass"],
+      ["Prouvé par un contrôle", "pass"],
+    ],
+  );
+  const ecrit = JSON.parse(readFileSync(join(dir, writeEvidence(dir, v)), "utf8"));
+  assert.deepEqual(ecrit.criteria, v.criteria);
+  assert.deepEqual((await verify({ targetDir: dir, only: ["QUA-001"] })).criteria, undefined, "attest ne juge pas les critères");
+});
+
+test("critères d'acceptation : un contrat sans contrôle ni Manuel n'est pas une preuve durable ; un critère humain exige un contrat manuel", () => {
+  const contrats = [
+    { id: "A", status: "PASS", manual: null, checks: [{ id: "x", status: "ok" }] },
+    { id: "B", status: "MANUAL", manual: null, checks: [] },
+    { id: "C", status: "ATTESTED", manual: "relecture", checks: [] },
+  ];
+  const juge = (c) => evaluateCriteria([{ text: "t", ...c }], contrats)[0].status;
+  assert.equal(juge({ link: "A", human: false }), "pass");
+  assert.equal(juge({ link: "A", human: true }), "not-durable");
+  assert.equal(juge({ link: "B", human: false }), "not-durable");
+  assert.equal(juge({ link: "C", human: true }), "pass");
+  assert.equal(juge({ link: "C", human: false }), "not-durable");
+  assert.equal(juge({ link: "x", human: false }), "pass");
+  assert.equal(juge({ link: "x", human: true }), "unknown-proof");
+});
+
+test("critères d'acceptation : tableau « critère → preuve → verdict » rendu pour la PR, écrit à côté de l'évidence", async () => {
+  const c = (text, link, human, status, proof) => ({ text, link, human, status, proof });
+  const criteres = [
+    c("Un export vide est refusé", "QUA-001", false, "pass", "pass"),
+    c("Total | exact", null, false, "no-proof", null),
+    c("Le libellé est clair", "QUA-003", true, "not-pass", "manual"),
+  ];
+  assert.equal(
+    criteriaTable(criteres, "fr"),
+    [
+      "| Critère | Preuve | Verdict |",
+      "|---|---|---|",
+      "| Un export vide est refusé | `QUA-001` (pass) | ✅ prouvé |",
+      "| Total \\| exact | — | ❌ sans preuve |",
+      "| Le libellé est clair [human] | `QUA-003` (manual) | ❌ preuve non passante |",
+      "",
+    ].join("\n"),
+  );
+  assert.match(criteriaTable(criteres, "en"), /^\| Criterion \| Proof \| Verdict \|\n/);
+  assert.match(criteriaTable([], "fr"), /aucun critère d'acceptation/);
+  assert.equal(
+    criteriaTable([c("a\\|b", "X|Y\\Z", false, "pass", "p|q")], "en"),
+    ["| Criterion | Proof | Verdict |", "|---|---|---|", "| a\\\\\\|b | `X\\|Y\\\\Z` (p\\|q) | ✅ proven |", ""].join("\n"),
+  );
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`"));
+  writeFileSync(join(dir, "docs/projects/essai.md"), "# Essai\n\n## Critères d'acceptation\n\n- Prouvé — `QUA-001`\n");
+  writeFileSync(
+    join(dir, ".drwil/state.json"),
+    JSON.stringify({ version: 1, activity: "EVIDENCE", active_brief: "docs/projects/essai.md", active_request: null, since: null }),
+  );
+  const chemin = writeEvidence(dir, await verify({ targetDir: dir }));
+  const table = readFileSync(join(dir, chemin.replace(/verify-(.+)\.json$/, "criteria-$1.md")), "utf8");
+  assert.match(table, /\| Prouvé \| `QUA-001` \(pass\) \| ✅ (prouvé|proven) \|/);
 });
 
 test("verify : contrôle non applicable dans ce contexte → MANUAL, jamais PASS", async () => {

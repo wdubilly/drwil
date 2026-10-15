@@ -2,6 +2,11 @@
 
 **Status**: scoped on YYYY-MM-DD — increment 1 in progress.
 **Risk**: MEDIUM
+**Maturity**: to refine | ready | in progress
+
+(maturity: "ready" = fully decided, can be started; "to refine" = points
+still open; "in progress" = being built. Optional: a brief without it
+is "unset", offered without a maturity warning.)
 
 (status: "scoped on …", "increment 1 in progress"…; a brief that is not a
 project (kit mechanics): "reference — …", never offered for launch;
@@ -28,6 +33,19 @@ two folders.)
 ## 1. Need
 
 (what the project must produce, for whom, and why now)
+
+## Acceptance criteria
+
+(one line per acceptance criterion of the request, linked to its proof: the
+contract or check ID in backticks, e.g. `- An empty export is refused —
+`CTR-012``, or the `[human]` marker for a human judgment, which points to a
+`Manual` contract attested by `drwil attest`. The proof is durable, a
+contract with a replayable `Check` run at every project: it becomes the
+business non-regression. One business-level criterion, not one per technical
+detail. The tool evaluates, never the agent.)
+
+- Verifiable criterion — `CONTRACT-ID`
+- Human-judgment criterion [human] — `MANUAL-CONTRACT-ID`
 
 ## 2. Out of scope
 

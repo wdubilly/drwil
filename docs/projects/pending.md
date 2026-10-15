@@ -105,6 +105,8 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
+- [ ] [IA] [P1] Capitaliser les tests de non-régression à chaque
+  chantier (fiche sans critères, régression ou évolution, dépôt neuf) — `docs/projects/capitaliser-non-regression.md`.
 - [ ] [IA] [P1] Fiabiliser le package : `.drwil/install.json` (si présent), tests de
   mise à jour — `docs/projects/fiabiliser-le-package.md`.
 

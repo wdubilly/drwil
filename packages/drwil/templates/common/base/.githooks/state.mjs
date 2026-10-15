@@ -21,7 +21,7 @@ import { context, fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs"
 
 // Unchanged interface for the other hooks, the CLI and the tools: everything this file exported
 // before it was split stays importable from here.
-export { briefStatus, scopedBriefs } from "./briefs.mjs";
+export { acceptanceCriteria, briefMaturity, briefStatus, hasIncrements, openDecisions, scopedBriefs } from "./briefs.mjs";
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 
 export const ACTIVITIES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
@@ -142,7 +142,12 @@ export function verifyEvidence(root) {
   if (!head) return { ok: false, reason: T.noHead };
   if (ev.commit !== head) return { ok: false, reason: fill(T.otherCommit, name) };
   if (ev.dirtyWorktree !== false || git("status", "--porcelain") !== "") return { ok: false, reason: T.dirty };
-  if (ev.status === "pass" || ev.status === "attested") return { ok: true };
+  if (ev.status === "pass" || ev.status === "attested") {
+    // Evidence without `criteria` (no active brief, or written by an older verify): nothing to judge.
+    const unproven = (Array.isArray(ev.criteria) ? ev.criteria : []).filter((c) => c.status !== "pass");
+    if (unproven.length) return { ok: false, reason: fill(T.criteria, unproven.map((c) => `« ${c.text} » (${c.status})`).join(", ")) };
+    return { ok: true };
+  }
   if (ev.status === "manual") return { ok: false, reason: T.manual };
   if (ev.status === "fail" || ev.status === "error") return { ok: false, reason: fill(T.failed, ev.status.toUpperCase()) };
   return { ok: false, reason: fill(T.noVerdict, name) };
@@ -293,7 +298,10 @@ export async function main(args, root) {
         if (!choice) {
           console.log(
             briefs
-              .map((b, i) => `${i + 1}. ${b.path} — ${b.title} [${b.priority}${b.ready ? "" : fill(T.notReady, b.decisions)}]`)
+              .map(
+                (b, i) =>
+                  `${i + 1}. ${b.path} — ${b.title} [${b.priority}${b.ready ? "" : fill(T.notReady, b.decisions)}${b.maturity === "refine" ? T.refine : ""}]`,
+              )
               .join("\n"),
           );
           const n = Number((await rl.question(T.pick)).trim());
