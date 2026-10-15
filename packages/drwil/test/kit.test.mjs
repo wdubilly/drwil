@@ -2240,6 +2240,44 @@ test("QUA-025 : init enregistre la version du moteur dans .drwil/install.json sa
   assert.equal(existsSync(join(dir, ".drwil/install.json")), false);
 });
 
+test("QUA-027 : mise à jour d'une version antérieure : fichiers du client préservés, obsolètes non modifiés retirés, version suivie", async () => {
+  const dir = tmp();
+  const version = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+  const empreinte = (texte) => createHash("sha256").update(texte).digest("hex");
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
+
+  // L'installation vieillie : ce qu'aurait laissé une version antérieure, puis le travail du client.
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version: "0.4.0", firstVersion: "0.4.0" }));
+  const ancienne = "// mécanique de la version 0.4.0\n";
+  writeFileSync(join(dir, ".githooks/glob.mjs"), ancienne);
+  manifeste[".githooks/glob.mjs"] = empreinte(ancienne);
+  for (const f of ["ancien-controle.mjs", "ancien-adapte.mjs"]) {
+    writeFileSync(join(dir, ".githooks", f), `// ${f}, retiré du gabarit depuis\n`);
+    manifeste[`.githooks/${f}`] = empreinte(`// ${f}, retiré du gabarit depuis\n`);
+  }
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2));
+  appendFileSync(join(dir, ".githooks/ancien-adapte.mjs"), "// adapté par le client\n");
+  appendFileSync(join(dir, ".githooks/run-checks.mjs"), "\n// réglage du client\n");
+  appendFileSync(join(dir, "docs/contracts.md"), "\n## APP-002 — Contrat du client\n**Règle** : r.\n**Manuel** : m.\n");
+
+  const lignes = await capture(() => init({ targetDir: dir, git: false, ci: "none" }));
+
+  assert.deepEqual(JSON.parse(read(dir, ".drwil/install.json")), { format: 1, version, firstVersion: "0.4.0" });
+  assert.notEqual(read(dir, ".githooks/glob.mjs"), ancienne, "mécanique jamais modifiée : rafraîchie");
+  assert.equal(existsSync(join(dir, ".githooks/ancien-controle.mjs")), false, "obsolète jamais modifié : retiré");
+  assert.ok(existsSync(join(dir, ".githooks/ancien-adapte.mjs")), "obsolète modifié par le client : gardé");
+  assert.match(read(dir, ".githooks/run-checks.mjs"), /réglage du client/, "mécanique modifiée : jamais écrasée");
+  assert.ok(
+    lignes.some((l) => l.includes(".githooks/run-checks.mjs")),
+    "mais signalée comme dérive",
+  );
+  assert.match(read(dir, "docs/contracts.md"), /APP-002 — Contrat du client/, "fichier du projet préservé");
+  const apres = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  assert.equal(".githooks/ancien-controle.mjs" in apres, false, "le manifeste oublie l'obsolète retiré");
+  assert.equal(apres[".githooks/glob.mjs"], empreinte(read(dir, ".githooks/glob.mjs")), "et suit la mécanique rafraîchie");
+});
+
 test("QUA-026 : doctor affiche la version installée et signale un écart avec la CLI", async () => {
   const dir = tmp();
   const version = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;

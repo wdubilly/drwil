@@ -165,6 +165,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : fiabiliser le package npm — « doctor affiche la version installée et signale un écart avec la CLI »
 **Raison** : Un écart de version silencieux fait tourner des hooks d'une version avec une CLI d'une autre.
 
+## QUA-027 — Mise à jour sûre d'une version à la suivante
+**Règle** : `drwil init` sur un projet équipé par une version antérieure préserve les fichiers du projet et la mécanique modifiée par le client (signalée comme dérive), rafraîchit la mécanique jamais modifiée, retire les fichiers obsolètes jamais modifiés (en gardant ceux modifiés), tient le manifeste à jour et enregistre la nouvelle version.
+**Périmètre** : `drwil init` sur un projet déjà équipé.
+**Source de vérité** : `packages/drwil/src/index.ts` (`init`), `packages/drwil/src/manifest.ts` (`removeObsolete`, `writeManifest`, `writeInstall`).
+**Preuve** : Test de mise à jour sur un dépôt temporaire, version antérieure simulée hors réseau.
+**Contrôle** : `couverture-tests`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : fiabiliser le package npm — « Passer d'une version à la suivante préserve les fichiers modifiés par le client et retire les fichiers obsolètes non modifiés »
+**Raison** : Une mise à jour qui écrase le travail du client ou laisse des restes fait renoncer aux mises à jour.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

@@ -38,8 +38,7 @@ contrat absent du registre.
 - `doctor` affiche la version installée et signale un écart avec la CLI —
   `QUA-026`
 - Passer d'une version à la suivante préserve les fichiers modifiés par le
-  client et retire les fichiers obsolètes non modifiés — contrat à créer
-  (lot 2)
+  client et retire les fichiers obsolètes non modifiés — `QUA-027`
 
 ## 2. Hors périmètre
 
@@ -88,6 +87,8 @@ contrat absent du registre.
 
 - **Dernier état** (2026-10-15) : lancé, décisions du démarrage inscrites.
   Lot 1 fait : `.drwil/install.json` (si présent) écrit par `init`, retiré par
-  `uninstall`, lu par `doctor` ; contrats QUA-025 et QUA-026.
+  `uninstall`, lu par `doctor` ; contrats QUA-025 et QUA-026. Lot 2 fait :
+  scénario de mise à jour depuis une version antérieure simulée ; contrat
+  QUA-027.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 2 (test de mise à jour).
+- **Prochaine étape** : [IA] `drwil verify`, puis clôture.
