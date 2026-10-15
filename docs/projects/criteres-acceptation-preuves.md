@@ -13,6 +13,8 @@ files:
   - .githooks/state.test.mjs
   - .githooks/briefs.mjs
   - .githooks/state.mjs
+  - packages/drwil/templates/common/base/.githooks/state-texts.mjs
+  - .githooks/state-texts.mjs
   - docs/projects/model-brief.md
 -->
 
