@@ -1,6 +1,7 @@
 # Projet : maturité des fiches (prêt / à affiner)
 
-**Statut** : ouvert le 2026-10-15 — idée posée, modalités à trancher.
+**Statut** : cadré le 2026-10-15 — décisions tranchées le 2026-10-15, à lancer,
+aucun lot commencé.
 **Risque** : HIGH
 
 <!-- scope
@@ -49,35 +50,41 @@ bord ne peuvent pas proposer ou trier les seules fiches prêtes.
 
 ## 4. Décisions
 
-(aucune tranchée.)
+Tranchées par le demandeur le 2026-10-15 :
+
+- Forme : champ explicite `**Maturité** : à affiner | prêt | en cours`,
+  sous la ligne `**Statut**`.
+- Sondage `/drwil-start` : les fiches « à affiner » sont proposées avec un
+  avertissement, non masquées.
+- Tableau de bord (`drwil-progress`) : trié par maturité.
+- Fiche « prête » dont la section 5 n'est pas entièrement tranchée (point
+  `[décision]` restant) ou sans lot : `check-docs` bloque (révisé le
+  2026-10-15, remplace l'avertissement non bloquant). Sans risque pour les
+  fiches existantes : la règle ne vise que les fiches qui se déclarent
+  « prêt ».
+- Fiche sans champ `**Maturité**` (fiches existantes, projets déjà
+  installés) : « non renseignée », proposée sans avertissement de maturité
+  et classée après les fiches « prêt ».
 
 ## 5. Points à trancher
 
-- [décision] Champ explicite (`**Maturité** : à affiner | prêt | en cours`)
-  ou maturité déduite (section 5 vide et lots [IA] non commencés) ? Le
-  champ est plus lisible, la déduction évite une seconde source de vérité
-  qui peut diverger.
-- [décision] Que fait le sondage `/drwil-start` des fiches « à affiner » :
-  masquées, ou proposées avec un avertissement ?
-- [décision] Le tableau de bord (`drwil-progress`) trie-t-il ou filtre-t-il
-  par maturité ?
-- [décision] Une fiche « prête » dont la section 5 contient un point
-  `[décision]` est-elle refusée par `check-docs` ?
+(aucun.)
 
 ## 6. Increments
 
-- **Lot 1 — modèle et lecture** [IA] : selon la décision, champ ou règle de
-  déduction dans `packages/drwil/templates/common/base/docs/projects/model-brief.md` et
+- **Lot 1 — modèle et lecture** [IA] : champ `**Maturité**` dans
+  `packages/drwil/templates/common/base/docs/projects/model-brief.md` et
   lecture par `packages/drwil/templates/common/base/.githooks/briefs.mjs`. Critère de
   sortie : un test rend la maturité de fiches de chaque cas.
-- **Lot 2 — cohérence** [IA] : `packages/drwil/templates/common/base/.githooks/check-docs.mjs` signale une fiche « prête »
-  incohérente (point à trancher restant, aucun lot). Critère de sortie :
-  test sur chaque incohérence.
-- **Lot 3 — usage** [IA] : le sondage de lancement et le tableau de bord
-  utilisent la maturité. Critère de sortie : un test sur le sondage.
+- **Lot 2 — cohérence** [IA] : `packages/drwil/templates/common/base/.githooks/check-docs.mjs` refuse (bloquant) une
+  fiche « prête » incohérente (point `[décision]` restant, aucun lot).
+  Critère de sortie : test sur chaque incohérence, refus constaté.
+- **Lot 3 — usage** [IA] : le sondage de lancement propose les fiches « à
+  affiner » avec un avertissement, et le tableau de bord trie par maturité.
+  Critère de sortie : un test sur le sondage et un sur le tri.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-15) : idée posée, aucun code écrit.
-- **Travail non commité** : cette fiche et sa ligne d'index.
-- **Prochaine étape** : [décision] trancher le point 5, puis cadrer.
+- **Dernier état** (2026-10-15) : fiche cadrée, aucun code écrit.
+- **Travail non commité** : décisions et lots de cette fiche.
+- **Prochaine étape** : [IA] lot 1, au lancement du chantier.

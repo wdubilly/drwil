@@ -108,8 +108,8 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [ ] [IA] [P1] Critères d'acceptation prouvés avant la clôture (preuves
   liées à la fiche, évaluées par l'outil) —
   `docs/projects/criteres-acceptation-preuves.md`.
-- [ ] [décision] [P2] Maturité des fiches (prêt / à affiner) : champ ou
-  déduction, usage par le sondage et le tableau de bord —
+- [ ] [IA] [P2] Maturité des fiches (prêt / à affiner) : champ
+  explicite, usage par le sondage et le tableau de bord —
   `docs/projects/maturite-des-fiches.md`.
 - [ ] [IA] [P1] Fiabiliser le package : `.drwil/install.json` (si présent), tests de
   mise à jour — `docs/projects/fiabiliser-le-package.md`.
