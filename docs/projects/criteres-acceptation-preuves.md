@@ -36,7 +36,9 @@ avoir une preuve : si l'agent n'a créé aucun contrat pour sa demande,
 - Un dossier de preuves rédigé par l'agent à côté de `verify` : refusé, un
   agent ne se note pas lui-même et cela crée une seconde source de vérité.
 - Le versionnement de l'évidence pour comparer deux chantiers (idée de
-  non-régression entre verdicts) : piste à cadrer à part.
+  non-régression entre verdicts) : piste à cadrer à part. Ne pas confondre
+  avec la non-régression métier par les contrats, qui est dans le périmètre
+  (point 4).
 - Rendre les critères rétroactifs sur les fiches déjà existantes.
 
 ## 3. Contraintes
@@ -64,6 +66,13 @@ Tranchées par le demandeur le 2026-10-15 :
   fiches créées après la mise en service (`newRequirements`).
 - Tableau « critère → preuve → verdict » : produit par `verify` dans
   l'évidence et repris dans le corps de la PR.
+- Non-régression métier : la preuve d'un critère vérifiable est durable,
+  c'est un contrat du registre avec `Contrôle` rejouable (le plus souvent un
+  test), jamais une vérification ponctuelle de l'agent. Ce test reste dans
+  la suite après la clôture et protège la règle métier aux chantiers
+  suivants. Un critère `[humain]` renvoie à un contrat `Manuel` attesté. Les
+  critères restent de niveau métier (pas un par détail technique) pour ne
+  pas gonfler le registre.
 
 ## 5. Points à trancher
 
@@ -77,9 +86,11 @@ Tranchées par le demandeur le 2026-10-15 :
   critères et en rend la liste structurée.
 - **Lot 2 — évaluation** [IA] : `verify --evidence` évalue chaque critère
   (contrôle ou contrat lié, ou humain à attester) et l'écrit dans
-  l'évidence ; `verifyEvidence` refuse un critère sans preuve ou non PASS.
+  l'évidence ; `verifyEvidence` refuse un critère sans preuve ou non PASS,
+  ou lié à un contrôle non durable (absent du registre ou de la suite).
   Critère de sortie : tests verts — critère sans preuve refusé, critère
-  humain non attesté refusé, critère prouvé accepté.
+  lié à un contrôle absent du registre refusé, critère humain non attesté
+  refusé, critère prouvé accepté.
 - **Lot 3 — vue de relecture** [IA] : tableau « critère → preuve → verdict »
   pour la PR. Critère de sortie : un test sur le rendu.
 - **Lot 4 — preuve de bout en bout** [IA] : un test dans
