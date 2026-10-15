@@ -2,6 +2,7 @@
 
 **Statut** : cadré le 2026-10-15 — décisions tranchées le 2026-10-15, à lancer (la maturité des fiches est livrée).
 **Risque** : HIGH
+**Maturité** : prêt
 
 <!-- scope
 files:
@@ -30,6 +31,25 @@ facultative : une fiche sans critères passe, rien n'impose que le contrôle
 lié soit réellement laissé au registre, et un dépôt neuf démarre sans filet
 métier. Le demandeur veut que chaque chantier laisse un test de
 non-régression durable, rejoué par `drwil verify` aux chantiers suivants.
+
+## Critères d'acceptation
+
+Validés par le demandeur le 2026-10-15 (sondage). Chaque critère est lié à
+un contrat à créer dans `docs/contracts.md` par ce chantier : `check-docs`
+refuse de citer un contrat absent du registre, donc l'ID est posé ici au
+lot 5, dans le même commit que le contrat (décision du 2026-10-15).
+
+- Une fiche « prête » sans critères d'acceptation est refusée par
+  `check-docs` ; une fiche sans critères qui n'est pas « prête » reçoit un
+  avertissement à la clôture — contrat à créer (lot 5)
+- Un critère dont le contrat n'existe pas ou n'a pas de contrôle rejouable
+  est refusé à la clôture ; un critère nouveau crée ou modifie son contrat
+  dans la branche — contrat à créer (lot 5)
+- Un contrat modifié sans déclaration dans « Contrats modifiés » est
+  refusé ; quand un contrôle échoue, `verify` affiche le chantier d'origine
+  qu'il protège — contrat à créer (lot 5)
+- Un `init` neuf fournit un contrat métier d'exemple avec un contrôle à
+  compléter — contrat à créer (lot 5)
 
 ## 2. Hors périmètre
 
@@ -97,11 +117,16 @@ Tranchées par le demandeur le 2026-10-15 :
   `adopt-the-kit`. Critère de sortie : un test sur un `init` neuf, qui
   montre le contrat et son contrôle à compléter.
 - **Lot 5 — drwil sur lui-même** [IA] : les critères de ce chantier sont
-  liés à des contrats de `docs/contracts.md` avec contrôle rejouable. Critère
+  liés à des contrats de `docs/contracts.md` avec contrôle rejouable ; les
+  quatre contrats sont créés et leurs ID posés dans la section « Critères
+  d'acceptation » dans le même commit. Critère
   de sortie : `drwil verify` du dépôt les évalue en `pass`.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-15) : fiche cadrée et tranchée, aucun code écrit.
-- **Travail non commité** : cette fiche et sa ligne d'index.
-- **Prochaine étape** : lot 1, au lancement du chantier.
+- **Dernier état** (2026-10-15) : fiche cadrée, tranchée, critères
+  d'acceptation validés ; branche `workstream/capitaliser-non-regression`
+  créée depuis master ; aucun code écrit.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`), puis
+  [IA] lot 1.
