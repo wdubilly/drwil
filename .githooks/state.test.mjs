@@ -628,6 +628,20 @@ test("critères d'acceptation : liste structurée (lien, humain), ignore les aut
     { text: "Totals match", link: "QUA-001", human: false },
   ]);
   assert.deepEqual(acceptanceCriteria("# Sans section\n\n- rien\n"), []);
+  // Critère sur plusieurs lignes : la preuve est en fin de puce ; du code cité avant n'en est pas une.
+  const plusieursLignes = [
+    "## Critères d'acceptation",
+    "- Un `init` neuf fournit un contrat",
+    "  d'exemple — `QUA-024`",
+    "- Second critère",
+    "",
+    "  paragraphe après une ligne vide, pas une suite",
+    "Texte collé, pas une suite non plus `QUA-999`",
+  ].join("\n");
+  assert.deepEqual(acceptanceCriteria(plusieursLignes), [
+    { text: "Un init neuf fournit un contrat d'exemple", link: "QUA-024", human: false },
+    { text: "Second critère", link: null, human: false },
+  ]);
 });
 
 test("maturité : champ explicite lu dans l'en-tête (FR et EN), absent ou inconnu = non renseignée", () => {
