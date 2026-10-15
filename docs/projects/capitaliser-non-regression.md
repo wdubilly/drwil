@@ -25,6 +25,7 @@ files:
   - .githooks/state.test.mjs
   - .githooks/check-docs.test.mjs
   - docs/contracts.md
+  - docs/recipes/adopt-the-kit.md
 -->
 
 (cadrage provisoire : à confirmer au démarrage de chaque lot ; les copies
