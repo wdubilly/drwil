@@ -5,7 +5,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { execFileSync } from "node:child_process";
 import * as scope from "./scope.mjs";
-import { knownChecks, readContracts, validateContracts } from "./contracts.mjs";
+import { definedIds, idConflicts, knownChecks, readContracts, validateContracts } from "./contracts.mjs";
 import { checkRisk } from "./risk.mjs";
 import { briefMaturity, briefStatus, readyGaps } from "./state.mjs";
 
@@ -184,16 +184,12 @@ const prefixes = cfg.contractPrefixes ?? ["SEC", "QUA"];
 // "other-repo:QUA-011" cites another repository's contract: it is not looked up in this registry.
 const idPattern = `(?<![\\w:-])(?:${prefixes.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})-\\d{3}\\b`;
 const contractsPath = join(root, cfg.dirs?.contracts ?? "docs/contracts.md");
-const defined = new Set();
+let defined = new Set();
 const errors = [];
 if (existsSync(contractsPath)) {
-  // An ID is defined either as a heading (## ID — ...), or as the first cell of a table row (| ID | ...).
-  const counts = new Map();
-  for (const m of readFileSync(contractsPath, "utf8").matchAll(new RegExp(`^(?:##\\s+|\\|\\s*)(${idPattern})`, "gm"))) {
-    defined.add(m[1]);
-    counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
-  }
-  for (const [id, n] of counts) if (n > 1) errors.push(T.duplicate(id, relative(root, contractsPath)));
+  const registry = definedIds(readFileSync(contractsPath, "utf8"), idPattern);
+  defined = registry.defined;
+  for (const id of registry.duplicates) errors.push(T.duplicate(id, relative(root, contractsPath)));
   // A malformed contract (unknown check, missing Rule or proof) is refused from the commit on,
   // with the same reader as `drwil verify`; duplicates are already reported above.
   for (const e of validateContracts(readContracts(readFileSync(contractsPath, "utf8")), knownChecks(cfg), lang)) {
@@ -230,6 +226,9 @@ const ignored = ignoredByGit(citations.flatMap((c) => c.found));
 // installs); otherwise reported without breaking a commit that used to pass.
 const newBlocking = cfg.newRequirements === "blocking";
 const newWarnings = [];
+const catalogPath = join(root, cfg.dirs?.catalog ?? "docs/contracts-catalog.md");
+for (const p of existsSync(catalogPath) ? idConflicts(readFileSync(catalogPath, "utf8"), defined, relative(root, contractsPath), lang) : [])
+  (newBlocking ? errors : newWarnings).push(`${relative(root, catalogPath)} : ${p}`);
 for (const c of citations) {
   if (!c.found.length) errors.push(`${c.place} : ${T.path(c.cited)}`);
   else if (!c.found.some((p) => !ignored.has(relPosix(p))))

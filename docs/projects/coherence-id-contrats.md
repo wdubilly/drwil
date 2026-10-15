@@ -1,8 +1,8 @@
 # Projet : cohérence des ID de contrat entre registre et catalogue
 
-**Statut** : cadré le 2026-10-15 — décisions tranchées, à lancer.
+**Statut** : cadré le 2026-10-15 — lancé le 2026-10-15.
 **Risque** : HIGH
-**Maturité** : prêt
+**Maturité** : en cours
 
 <!-- scope
 files:
@@ -38,7 +38,7 @@ différentes. `check-docs` ne vérifie l'unicité qu'à l'intérieur du registre
 contrat, `check-docs` refusant de citer un contrat absent du registre.)
 
 - Un ID défini à la fois dans le registre et dans le catalogue, ou deux
-  fois dans le catalogue, est signalé par `check-docs` — contrat à créer
+  fois dans le catalogue, est signalé par `check-docs` — `QUA-028`
 
 ## 2. Hors périmètre
 
@@ -92,7 +92,10 @@ Tranchées par le demandeur le 2026-10-15 (sondage) :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-15) : fiche cadrée, décisions tranchées ; aucun
-  code écrit.
+- **Dernier état** (2026-10-15) : lots 1 et 2 faits, commités ensemble (ce
+  dépôt imposant les exigences récentes, le contrôle seul aurait refusé le
+  doublon SEC-001) : `definedIds` et `idConflicts` dans
+  `.githooks/contracts.mjs`, rapportés par `check-docs` ; la ligne du
+  catalogue du dépôt devient `catalogue:SEC-013` ; contrat QUA-028.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : [IA] `drwil verify`, puis clôture.

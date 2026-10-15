@@ -146,6 +146,9 @@ const TEXTS = {
     noRule: (id) => `${id} : exigence absente (champ Règle)`,
     severity: (id, v) => `${id} : sévérité « ${v} » inconnue (bloquant, avertissement ou indicatif)`,
     emptyCheck: (id) => `${id} : champ Contrôle vide`,
+    catalogDuplicate: (id) => `ID ${id} défini plusieurs fois dans le catalogue`,
+    both: (id, registry) =>
+      `ID ${id} défini à la fois dans le catalogue et dans ${registry} : un contrat adopté quitte le catalogue ; sinon, renuméroter la ligne du catalogue`,
   },
   en: {
     duplicate: (id) => `contract ${id} defined more than once`,
@@ -154,6 +157,9 @@ const TEXTS = {
     noRule: (id) => `${id}: missing requirement (Rule field)`,
     severity: (id, v) => `${id}: unknown severity "${v}" (blocking, warning or advisory)`,
     emptyCheck: (id) => `${id}: empty Check field`,
+    catalogDuplicate: (id) => `ID ${id} defined more than once in the catalog`,
+    both: (id, registry) =>
+      `ID ${id} defined both in the catalog and in ${registry}: an adopted contract leaves the catalog; otherwise, renumber the catalog line`,
   },
 };
 
@@ -181,6 +187,31 @@ export function validateContracts(contracts, knownIds, lang = "fr") {
     if (k.form === "section" && k.checks === null && k.manual === null) error(k, "no-proof", T.noProof(k.id));
   }
   return errors;
+}
+
+/** IDs a registry defines (heading `## ID` or first cell `| ID |`) matching `idPattern`, and those defined more than once. */
+export function definedIds(text, idPattern) {
+  const counts = new Map();
+  for (const m of text.matchAll(new RegExp(`^(?:##\\s+|\\|\\s*)(${idPattern})`, "gm"))) counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
+  return { defined: new Set(counts.keys()), duplicates: [...counts].filter(([, n]) => n > 1).map(([id]) => id) };
+}
+
+/**
+ * ID conflicts between the registry and the catalog: an ID defined twice in the catalog, or both in
+ * the catalog and in the registry (a contract adopted from the catalog keeps its ID and leaves it).
+ * Catalog IDs are the first cell of a table row, `catalogue:ID` (French) or `catalog:ID`.
+ */
+export function idConflicts(catalogText, registryIds, registry, lang = "fr") {
+  const T = TEXTS[lang === "en" ? "en" : "fr"];
+  const ids = [...catalogText.matchAll(/^\|\s*catal(?:ogue|og):([A-Z][A-Z0-9]*-\d+)\b/gm)].map((m) => m[1]);
+  const seen = new Set();
+  const problems = [];
+  for (const id of ids) {
+    if (seen.has(id)) problems.push(T.catalogDuplicate(id));
+    seen.add(id);
+  }
+  for (const id of seen) if (registryIds.has(id)) problems.push(T.both(id, registry));
+  return problems;
 }
 
 /** Identifiers known to the engine: base + `id` of the checks declared by the project (.drwil/ia-first.json → checks). */
