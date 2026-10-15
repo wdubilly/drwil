@@ -30,8 +30,8 @@ bord ne peuvent pas proposer ou trier les seules fiches prêtes.
 
 ## 2. Hors périmètre
 
-- Les critères d'acceptation (fiche
-  `docs/projects/criteres-acceptation-preuves.md`).
+- Les critères d'acceptation (chantier clôturé, voir
+  `docs/projects/journal.md`).
 - Changer la priorité `[P0]` à `[P3]` de l'index (autre axe : l'urgence, pas
   la maturité).
 - Rendre le champ rétroactif en bloquant les fiches existantes.

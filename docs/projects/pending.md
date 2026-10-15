@@ -105,9 +105,6 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
-- [ ] [IA] [P1] Critères d'acceptation prouvés avant la clôture (preuves
-  liées à la fiche, évaluées par l'outil) —
-  `docs/projects/criteres-acceptation-preuves.md`.
 - [ ] [IA] [P2] Maturité des fiches (prêt / à affiner) : champ
   explicite, usage par le sondage et le tableau de bord —
   `docs/projects/maturite-des-fiches.md`.

@@ -966,3 +966,17 @@ l'index ; texte intégral dans l'historique git
   et le rejeu du cadrage en CI le bornent. Aucun code livrable modifié :
   seuls des tests ont été ajoutés.
 - **Clôturé par** : PR à venir.
+
+## 2026-10-15 — Critères d'acceptation prouvés avant la clôture
+
+- **Décisions clés** : chaque fiche liste ses critères d'acceptation (section
+  dédiée, un lien vers un contrat ou `[humain]`). `drwil verify` les évalue
+  (pass, no-proof, unknown-proof, not-durable, not-pass), les inscrit dans
+  l'évidence et dans un tableau `criteria-*.md` pour la relecture ; la
+  clôture est refusée tant qu'un critère n'est pas `pass`. Un critère lié à
+  un contrat à contrôle rejouable devient un test de non-régression métier.
+  Deux filets distincts : ceux de l'utilisateur et ceux de drwil.
+- **Limites connues** : aucune règle « avertir puis bloquer » pour une
+  fiche sans critères ; la CLI n'affiche pas le chemin du tableau et la PR
+  ne le reçoit pas automatiquement.
+- **Clôturé par** : PR à venir.
