@@ -407,7 +407,7 @@ test("QUA-015 (extension) : fiche terminée encore présente refusée ; case coc
   assert.match(direct.stdout, /autre-chantier\.md.*QUA-015|QUA-015.*autre-chantier\.md/);
 });
 
-test("maturité : une fiche « prête » avec un point [décision] restant, sans lot ou sans critère est refusée ; « à affiner » et sans champ passent", async () => {
+test("QUA-021 : maturité : une fiche « prête » avec un point [décision] restant, sans lot ou sans critère est refusée ; « à affiner » et sans champ passent", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const critere = "## Critères d'acceptation\n\n- Un export vide est refusé [humain]\n\n";
@@ -1984,7 +1984,7 @@ test("verify : critères d'acceptation de la fiche active jugés contre le regis
   assert.deepEqual((await verify({ targetDir: dir, only: ["QUA-001"] })).criteria, undefined, "attest ne juge pas les critères");
 });
 
-test("critères d'acceptation : contrat créé, réutilisé ou modifié dans la branche, jugé contre la base ; sans contrat, refusé", async () => {
+test("QUA-022 : critères d'acceptation : contrat créé, réutilisé ou modifié dans la branche, jugé contre la base ; sans contrat, refusé", async () => {
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `ok`"));
   const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, encoding: "utf8" });
   const fiche = "docs/projects/essai.md";
@@ -2030,7 +2030,7 @@ test("critères d'acceptation : contrat créé, réutilisé ou modifié dans la 
   assert.match(criteriaTable(v.criteria, "en"), /`QUA-001` \(pass, reused\)/);
 });
 
-test("régression ou évolution : contrat modifié sans déclaration refusé, déclaré accepté ; l'origine d'un contrat en échec affichée", async () => {
+test("QUA-023 : régression ou évolution : contrat modifié sans déclaration refusé, déclaré accepté ; l'origine d'un contrat en échec affichée", async () => {
   const origine = "**Origine** : export propre — « Un export vide est refusé »";
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", `**Contrôle** : \`ko\`\n${origine}`));
   const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, encoding: "utf8" });
@@ -2074,7 +2074,7 @@ test("régression ou évolution : contrat modifié sans déclaration refusé, d�
   assert.equal((await verify({ targetDir: dir, only: ["QUA-001"] })).undeclared, undefined, "attest ne juge pas la fiche");
 });
 
-test("dépôt neuf : init fournit un contrat métier d'exemple, contrôle à compléter, et le guide pour écrire le premier", async () => {
+test("QUA-024 : dépôt neuf : init fournit un contrat métier d'exemple, contrôle à compléter, et le guide pour écrire le premier", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
   const registre = readFileSync(join(dir, "docs/contracts.md"), "utf8");

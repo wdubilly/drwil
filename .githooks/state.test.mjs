@@ -397,7 +397,7 @@ test("clôture : PASS ou ATTESTED sur HEAD, arbre propre, autorise sans geste hu
   }
 });
 
-test("clôture : une fiche sans critères d'acceptation est avertie, la clôture passe ; avec critères, aucun avertissement", async () => {
+test("QUA-021 : clôture : une fiche sans critères d'acceptation est avertie, la clôture passe ; avec critères, aucun avertissement", async () => {
   const sans = depotEnVerify();
   sans.evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass" });
   const averti = await move(sans.racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
@@ -583,7 +583,7 @@ test("clôture : retour en SCOPING refusé si la fiche terminée est encore là"
   assert.equal((await move(racine, { to: "SCOPING" }, { tty: false, now: MAINTENANT })).code, 0);
 });
 
-test("contrats modifiés : ID en tête de chaque puce de la section, autres sections ignorées, fiche en anglais", () => {
+test("QUA-023 : contrats modifiés : ID en tête de chaque puce de la section, autres sections ignorées, fiche en anglais", () => {
   const fiche = [
     "## Critères d'acceptation",
     "- Un export vide est refusé — `QUA-009`",

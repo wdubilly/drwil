@@ -43,21 +43,22 @@ non-régression durable, rejoué par `drwil verify` aux chantiers suivants.
 ## Critères d'acceptation
 
 Validés par le demandeur le 2026-10-15 (sondage). Chaque critère est lié à
-un contrat à créer dans `docs/contracts.md` par ce chantier : `check-docs`
-refuse de citer un contrat absent du registre, donc l'ID est posé ici au
-lot 5, dans le même commit que le contrat (décision du 2026-10-15).
+un contrat créé dans `docs/contracts.md` par ce chantier (lot 5). Les ID
+commencent à QUA-021 : le premier candidat est déjà pris par
+`catalogue:QUA-020` (tests e2e), et un contrat adopté du catalogue garde
+son ID (décision du 2026-10-15, sondage).
 
 - Une fiche « prête » sans critères d'acceptation est refusée par
   `check-docs` ; une fiche sans critères qui n'est pas « prête » reçoit un
-  avertissement à la clôture — contrat à créer (lot 5)
+  avertissement à la clôture — `QUA-021`
 - Un critère dont le contrat n'existe pas ou n'a pas de contrôle rejouable
   est refusé à la clôture ; un critère nouveau crée ou modifie son contrat
-  dans la branche — contrat à créer (lot 5)
+  dans la branche — `QUA-022`
 - Un contrat modifié sans déclaration dans « Contrats modifiés » est
   refusé ; quand un contrôle échoue, `verify` affiche le chantier d'origine
-  qu'il protège — contrat à créer (lot 5)
+  qu'il protège — `QUA-023`
 - Un `init` neuf fournit un contrat métier d'exemple avec un contrôle à
-  compléter — contrat à créer (lot 5)
+  compléter — `QUA-024`
 
 ## 2. Hors périmètre
 
@@ -152,5 +153,6 @@ Tranchées par le demandeur le 2026-10-15 :
   (champ Manuel, donc MANUAL tant qu'il n'est pas remplacé) ; le guide
   d'adoption gagne l'étape 5 « écrire le premier contrat métier ».
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 5 (drwil sur lui-même : créer les quatre
-  contrats et poser leurs ID dans les critères).
+  Lot 5 fait : QUA-021 à QUA-024 créés dans `docs/contracts.md` (Origine,
+  Contrôle, Tests préfixés par leur ID), liés aux critères.
+- **Prochaine étape** : [IA] `drwil verify` du dépôt, puis clôture.

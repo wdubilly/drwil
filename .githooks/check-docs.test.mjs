@@ -220,7 +220,7 @@ test("hors dépôt git, sans configuration ni registre : rien d'ignoré, pas de 
   assert.match(r.stdout, /check-docs : 2 fichiers scannés, 0 erreur\(s\)\n$/);
 });
 
-test("fiche « prête » : point [décision] restant, aucun lot ou aucun critère refusés, dans les deux langues ; non prête ou sans champ : passe", () => {
+test("QUA-021 : fiche « prête » : point [décision] restant, aucun lot ou aucun critère refusés, dans les deux langues ; non prête ou sans champ : passe", () => {
   const critere = "## Critères d'acceptation\n\n- Un export vide est refusé [humain]\n\n";
   const fiche = (champ, points, lots, criteres) =>
     `# Chantier\n\n**Statut** : cadré le 2026-10-15.\n${champ}\n\n${criteres}## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n${lots}\n${reprise}`;

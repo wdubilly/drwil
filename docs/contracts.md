@@ -105,6 +105,46 @@ régression sauf si la fiche active déclare le changement (section
 **Manuel** : un contournement laisse rarement une trace automatisable.
 **Raison** : Contourner un contrôle masque silencieusement une régression ou un vrai problème ; c'est l'opposé de QUA-013 (un contrôle qui ne tourne pas ne prouve rien).
 
+## QUA-021 — Fiche prête avec critères d'acceptation
+**Règle** : Une fiche de chantier déclarée « prête » (`**Maturité**`) a au moins un critère d'acceptation ; une fiche sans critères qui n'est pas « prête » peut être close, avec un avertissement : elle ne laisse aucun test de non-régression aux chantiers suivants.
+**Périmètre** : Les fiches de `docs/projects/`.
+**Source de vérité** : `.githooks/briefs.mjs` (`readyGaps`), `.githooks/check-docs.mjs`, `.githooks/state.mjs` (clôture).
+**Preuve** : `check-docs` (hook + CI) refuse la fiche « prête » ; la clôture avertit.
+**Contrôle** : `couverture-hooks`, `couverture-tests`
+**Tests** : `.githooks/check-docs.test.mjs`, `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : capitaliser les non-régressions — « Une fiche « prête » sans critères d'acceptation est refusée par check-docs ; une fiche sans critères qui n'est pas « prête » reçoit un avertissement à la clôture »
+**Raison** : Un chantier sans critère prouvé ne laisse rien à rejouer : la non-régression métier commence par la fiche.
+
+## QUA-022 — Preuve d'un critère laissée au registre
+**Règle** : Un critère d'acceptation est prouvé par un contrat du registre avec un contrôle rejouable (ou un contrat Manuel attesté pour un jugement humain) ; un critère sans contrat est refusé à la clôture. `drwil verify` classe chaque contrat lié contre la base de la branche : créé, réutilisé tel quel (accepté) ou modifié.
+**Périmètre** : Les critères d'acceptation de la fiche active.
+**Source de vérité** : `packages/drwil/src/criteria.ts` (`evaluateCriteria`, `contractChanges`).
+**Preuve** : `drwil verify` et son évidence, lue par la clôture.
+**Contrôle** : `couverture-tests`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : capitaliser les non-régressions — « Un critère dont le contrat n'existe pas ou n'a pas de contrôle rejouable est refusé à la clôture ; un critère nouveau crée ou modifie son contrat dans la branche »
+**Raison** : La preuve d'un critère doit survivre au chantier, pour être rejouée par les suivants.
+
+## QUA-023 — Régression ou évolution d'un contrat
+**Règle** : Un contrat modifié dans la branche sans déclaration dans la section « Contrats modifiés » de la fiche active est une régression : `drwil verify` le liste et la clôture est refusée ; déclaré (validé par le demandeur au cadrage), il est accepté. Un contrat en échec qui porte `**Origine**` affiche le critère qu'il protège.
+**Périmètre** : Le registre `docs/contracts.md`, comparé à la base de la branche.
+**Source de vérité** : `packages/drwil/src/criteria.ts` (`judgeBrief`, `showOrigins`), `.githooks/briefs.mjs` (`declaredContracts`), `.githooks/state.mjs` (clôture).
+**Preuve** : `drwil verify` et son évidence, lue par la clôture.
+**Contrôle** : `couverture-tests`, `couverture-hooks`
+**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/state.test.mjs`
+**Origine** : capitaliser les non-régressions — « Un contrat modifié sans déclaration dans « Contrats modifiés » est refusé ; quand un contrôle échoue, verify affiche le chantier d'origine qu'il protège »
+**Raison** : Assouplir un contrat en silence efface la non-régression qu'il portait ; le changer reste possible, mais décidé.
+
+## QUA-024 — Premier contrat métier d'un dépôt neuf
+**Règle** : `init` livre dans le registre un contrat métier d'exemple, `APP-001`, dont le contrôle est à compléter (champ Manuel : jamais prouvé tant qu'il n'est pas remplacé) ; le guide d'adoption explique comment écrire le premier.
+**Périmètre** : Le gabarit livré (`packages/drwil/templates/common/base/docs/contracts.md`, `docs/recipes/adopt-the-kit.md`).
+**Source de vérité** : Ces deux fichiers du gabarit.
+**Preuve** : Test sur un `init` neuf.
+**Contrôle** : `couverture-tests`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : capitaliser les non-régressions — « Un init neuf fournit un contrat métier d'exemple avec un contrôle à compléter »
+**Raison** : Un dépôt neuf démarre sans filet métier : l'exemple montre où et comment poser le premier.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).
