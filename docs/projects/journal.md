@@ -1005,3 +1005,31 @@ l'index ; texte intégral dans l'historique git
   couvre `\` et `|` dans le critère et dans la preuve.
 - **Limites connues** : aucune.
 - **Clôturé par** : PR à venir.
+
+## 2026-10-15 — Capitaliser les tests de non-régression à chaque chantier
+
+- **Décisions clés** : `check-docs` refuse une fiche « prête » sans
+  critère d'acceptation ; une fiche sans critères qui n'est pas « prête »
+  se clôt avec un avertissement (QUA-021). `verify` classe chaque contrat
+  lié par un critère contre la base de la branche : créé, réutilisé tel
+  quel (accepté) ou modifié (QUA-022). Un contrat modifié sans déclaration
+  dans la section « Contrats modifiés » de la fiche active est une
+  régression : `verify` le liste et la clôture est refusée ; un contrat en
+  échec qui porte `**Origine**` affiche le critère qu'il protège
+  (QUA-023). Le registre du gabarit livre `APP-001`, contrat métier
+  d'exemple à compléter, et le guide d'adoption explique comment écrire le
+  premier (QUA-024). Les quatre contrats sont ceux du registre de ce dépôt
+  (ID à partir de QUA-021, `catalogue:QUA-020` étant pris), et les
+  critères du chantier ont été évalués prouvés par `drwil verify`.
+- **Correctif en passant** : `acceptanceCriteria` ne lisait que la
+  première ligne d'une puce et prenait le premier identifiant entre
+  accents graves : un critère passé à la ligne perdait sa preuve. La puce
+  est lue entière, la preuve est le dernier identifiant.
+- **Limites connues** : le cadrage initial ne listait pas les copies du
+  dépôt des fichiers du gabarit (cinq élargissements en cours de route) ;
+  un élargissement pendant un lot oblige à mettre le lot de côté, le hook
+  de commit testant l'arbre entier ; `npm run installer-depot` réécrit la
+  date d'état de `docs/ia-first.md` ; un critère lié directement à un
+  contrôle (sans contrat) reste accepté ; le catalogue et ce dépôt
+  définissent chacun un QUA-019 différent.
+- **Clôturé par** : PR à venir.
