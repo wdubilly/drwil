@@ -1,7 +1,6 @@
 # Projet : maturité des fiches (prêt / à affiner)
 
-**Statut** : cadré le 2026-10-15 — décisions tranchées le 2026-10-15, à lancer,
-aucun lot commencé.
+**Statut** : fait le 2026-10-15 — lots 1 à 3 livrés (voir `docs/projects/journal.md`).
 **Risque** : HIGH
 
 <!-- scope
@@ -98,6 +97,6 @@ Tranchées par le demandeur le 2026-10-15 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-15) : fiche cadrée, aucun code écrit.
-- **Travail non commité** : décisions et lots de cette fiche.
-- **Prochaine étape** : [IA] lot 1, au lancement du chantier.
+- **Dernier état** (2026-10-15) : lots 1 à 3 livrés et commités.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : clôture (journal, suppression de la fiche, ligne d'index).
