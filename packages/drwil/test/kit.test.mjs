@@ -2074,6 +2074,18 @@ test("régression ou évolution : contrat modifié sans déclaration refusé, d�
   assert.equal((await verify({ targetDir: dir, only: ["QUA-001"] })).undeclared, undefined, "attest ne juge pas la fiche");
 });
 
+test("dépôt neuf : init fournit un contrat métier d'exemple, contrôle à compléter, et le guide pour écrire le premier", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
+  const registre = readFileSync(join(dir, "docs/contracts.md"), "utf8");
+  assert.match(registre, /^## APP-001 — Example business contract/m);
+  assert.match(registre, /\*\*Manual\*\* : check to complete .*cite it here as \*\*Check\*\*/);
+  assert.match(readFileSync(join(dir, "docs/recipes/adopt-the-kit.md"), "utf8"), /first business contract.*\n.*APP-001/);
+  const exemple = (await verify({ targetDir: dir })).contracts.find((k) => k.id === "APP-001");
+  assert.equal(exemple.status, "MANUAL", "à compléter : jamais prouvé tant que son contrôle manque");
+  assert.match(exemple.reasons.join("\n"), /check to complete/);
+});
+
 test("critères d'acceptation : un contrat sans contrôle ni Manuel n'est pas une preuve durable ; un critère humain exige un contrat manuel", () => {
   const contrats = [
     { id: "A", status: "PASS", manual: null, checks: [{ id: "x", status: "ok" }] },
@@ -2208,7 +2220,7 @@ test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; con
   let d = await doctor({ targetDir: dir });
   assert.equal(d.code, 0, JSON.stringify(d.points));
   assert.ok(d.points.find((p) => p.id === "hooks").state === "ok");
-  assert.match(d.points.find((p) => p.id === "contracts").detail, /8 contrat\(s\) valide\(s\)/);
+  assert.match(d.points.find((p) => p.id === "contracts").detail, /9 contrat\(s\) valide\(s\)/);
   git(dir, "config", "core.hooksPath", "ailleurs");
   spawnSync(process.execPath, ["-e", "require('fs').unlinkSync('CLAUDE.md')"], { cwd: dir });
   d = await doctor({ targetDir: dir });

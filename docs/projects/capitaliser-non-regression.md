@@ -147,6 +147,10 @@ Tranchées par le demandeur le 2026-10-15 :
   contrat modifié que la fiche active ne déclare pas (section « Contrats
   modifiés », lue par `declaredContracts`) est listé par `verify` et
   refuse la clôture ; un contrat en échec qui porte `**Origine**` affiche le
-  critère qu'il protège.
+  critère qu'il protège. Lot 4 fait : le registre du gabarit livre
+  `APP-001`, contrat métier d'exemple dont le contrôle est à compléter
+  (champ Manuel, donc MANUAL tant qu'il n'est pas remplacé) ; le guide
+  d'adoption gagne l'étape 5 « écrire le premier contrat métier ».
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 4 (dépôt neuf).
+- **Prochaine étape** : [IA] lot 5 (drwil sur lui-même : créer les quatre
+  contrats et poser leurs ID dans les critères).
