@@ -16,6 +16,13 @@ files:
   - .githooks/state.test.mjs
   - .githooks/check-docs.mjs
   - .githooks/check-docs.test.mjs
+  - packages/drwil/templates/common/base/.githooks/state-texts.mjs
+  - .githooks/state-texts.mjs
+  - packages/drwil/templates/common/optional/dashboard/dashboard.mjs
+  - .githooks/dashboard.mjs
+  - .githooks/dashboard.test.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
+  - .claude/skills/start-a-workstream/SKILL.md
   - packages/drwil/test/kit.test.mjs
 -->
 
