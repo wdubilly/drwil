@@ -9,6 +9,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/state.mjs
   - packages/drwil/templates/common/base/docs/projects/model-brief.md
   - packages/drwil/src/verify.ts
+  - packages/drwil/src/criteria.ts
   - packages/drwil/test/kit.test.mjs
   - .githooks/state.test.mjs
   - .githooks/briefs.mjs
