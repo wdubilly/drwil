@@ -7,6 +7,7 @@ import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { loadProject } from "./verify.js";
 import { resolveFromConfig } from "./config.js";
 import { AUTO_KINDS, describeGap, findGaps, hooksPath, scriptsDir, unchainedHooks } from "./essentials.js";
+import { compareVersions, engineVersion, readInstall } from "./manifest.js";
 
 export type PointState = "ok" | "warning" | "problem";
 
@@ -40,6 +41,11 @@ const TEXTS = {
     manifest: "Manifeste",
     noManifest: "absent : relancer `drwil init` (uninstall et dérive en dépendent)",
     present: "présent",
+    version: "Version du moteur",
+    noInstall: "inconnue (installation antérieure à .drwil/install.json) : relancer `npx drwil init`",
+    sameVersion: "{0} (première installation : {1})",
+    olderInstall: "{0} installée, CLI {1} plus récente : mettre à jour par `npx drwil init`",
+    newerInstall: "{0} installée, CLI {1} plus ancienne : utiliser une CLI au moins en {0}",
     noAgents: "absent : point d'entrée unique des agents",
     integrations: "Intégrations IA",
     missing: " (manquant : {0})",
@@ -69,6 +75,11 @@ const TEXTS = {
     manifest: "Manifest",
     noManifest: "missing: run `drwil init` again (uninstall and drift depend on it)",
     present: "present",
+    version: "Engine version",
+    noInstall: "unknown (installed before .drwil/install.json): run `npx drwil init` again",
+    sameVersion: "{0} (first installed: {1})",
+    olderInstall: "{0} installed, CLI {1} is newer: update with `npx drwil init`",
+    newerInstall: "{0} installed, CLI {1} is older: use a CLI at least at {0}",
     noAgents: "missing: the agents' single entry point",
     integrations: "AI integrations",
     missing: " (missing: {0})",
@@ -110,6 +121,19 @@ export async function doctor(opts: { targetDir: string }): Promise<Diagnosis> {
   point("installation", T.installation, "ok", ".drwil/ia-first.json");
   const manifest = existsSync(join(root, ".drwil", "installed-files.json"));
   point("manifest", T.manifest, manifest ? "ok" : "warning", manifest ? ".drwil/installed-files.json" : T.noManifest);
+  const install = readInstall(root);
+  const cli = engineVersion();
+  const gap = install ? compareVersions(install.version, cli) : null;
+  point(
+    "version",
+    T.version,
+    gap === 0 ? "ok" : "warning",
+    !install
+      ? T.noInstall
+      : gap === 0
+        ? fill(T.sameVersion, install.version, install.firstVersion)
+        : fill((gap ?? 0) < 0 ? T.olderInstall : T.newerInstall, install.version, cli),
+  );
   const agents = existsSync(join(root, "AGENTS.md"));
   point("agents", "AGENTS.md", agents ? "ok" : "problem", agents ? T.present : T.noAgents);
 

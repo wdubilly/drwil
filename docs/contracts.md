@@ -145,6 +145,36 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : capitaliser les non-régressions — « Un init neuf fournit un contrat métier d'exemple avec un contrôle à compléter »
 **Raison** : Un dépôt neuf démarre sans filet métier : l'exemple montre où et comment poser le premier.
 
+## QUA-025 — Version du moteur installé enregistrée
+**Règle** : `init` (installation ou mise à jour) enregistre la version du moteur dans `.drwil/install.json` (si présent ; `format`, `version`, `firstVersion` conservée aux mises à jour ; aucun horodatage, réécrit seulement si la version change), sans modifier le manifeste `.drwil/installed-files.json` (si présent) ; `uninstall` le retire.
+**Périmètre** : Tout projet équipé par `drwil init`.
+**Source de vérité** : `packages/drwil/src/manifest.ts` (`writeInstall`, `readInstall`, `uninstall`), `packages/drwil/src/index.ts` (`init`).
+**Preuve** : Test sur un dépôt temporaire.
+**Contrôle** : `couverture-tests`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : fiabiliser le package npm — « init (installation ou mise à jour) enregistre la version du moteur dans .drwil/install.json sans changer le manifeste ; uninstall le retire »
+**Raison** : Savoir quelle version du moteur tourne dans un projet, pour le diagnostiquer et le mettre à jour.
+
+## QUA-026 — doctor signale la version installée
+**Règle** : `drwil doctor` affiche la version du moteur installé ; avertissement, jamais problème, si la CLI est plus récente (mettre à jour par `npx drwil init`), plus ancienne, ou si l'enregistrement manque.
+**Périmètre** : `drwil doctor`.
+**Source de vérité** : `packages/drwil/src/doctor.ts` (point « version »).
+**Preuve** : Test sur un dépôt temporaire.
+**Contrôle** : `couverture-tests`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : fiabiliser le package npm — « doctor affiche la version installée et signale un écart avec la CLI »
+**Raison** : Un écart de version silencieux fait tourner des hooks d'une version avec une CLI d'une autre.
+
+## QUA-027 — Mise à jour sûre d'une version à la suivante
+**Règle** : `drwil init` sur un projet équipé par une version antérieure préserve les fichiers du projet et la mécanique modifiée par le client (signalée comme dérive), rafraîchit la mécanique jamais modifiée, retire les fichiers obsolètes jamais modifiés (en gardant ceux modifiés), tient le manifeste à jour et enregistre la nouvelle version.
+**Périmètre** : `drwil init` sur un projet déjà équipé.
+**Source de vérité** : `packages/drwil/src/index.ts` (`init`), `packages/drwil/src/manifest.ts` (`removeObsolete`, `writeManifest`, `writeInstall`).
+**Preuve** : Test de mise à jour sur un dépôt temporaire, version antérieure simulée hors réseau.
+**Contrôle** : `couverture-tests`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : fiabiliser le package npm — « Passer d'une version à la suivante préserve les fichiers modifiés par le client et retire les fichiers obsolètes non modifiés »
+**Raison** : Une mise à jour qui écrase le travail du client ou laisse des restes fait renoncer aux mises à jour.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

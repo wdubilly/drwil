@@ -30,7 +30,7 @@ import { writeConfig, type InitOptions, type Resolved } from "./config.js";
 import { installChoices } from "./install.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { scaffold } from "./render.js";
-import { assertSafeManifest, removeObsolete, writeManifest } from "./manifest.js";
+import { assertSafeManifest, engineVersion, removeObsolete, writeInstall, writeManifest } from "./manifest.js";
 import { formatMigration, migrate } from "./migration.js";
 import { complete, type Addition } from "./complete.js";
 import { formatGaps, hooksPath } from "./essentials.js";
@@ -158,6 +158,7 @@ export async function init(opts: InitOptions): Promise<void> {
   const { added } = await complete(r, { manifest });
   const obsolete = await removeObsolete(opts.targetDir, previous, expected);
   await writeManifest(opts.targetDir, manifest, obsolete);
+  await writeInstall(opts.targetDir, engineVersion());
   await writeConfig(r);
   reportStack(r);
   reportDrifted(drifted, r.lang);

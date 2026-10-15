@@ -107,8 +107,6 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
   (voir `docs/projects/journal.md`).
 - [ ] [IA] [P1] Cohérence des ID de contrat entre registre et
   catalogue — `docs/projects/coherence-id-contrats.md`.
-- [ ] [IA] [P1] Fiabiliser le package : `.drwil/install.json` (si présent), tests de
-  mise à jour — `docs/projects/fiabiliser-le-package.md`.
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
@@ -228,6 +226,9 @@ une décision du demandeur.
   contrôle sans contrat — `docs/intentions/preuve-des-criteres-visible.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
   `docs/intentions/prefixe-catalogue.md`.
+- [ ] [décision] Un `doctor` juste sur le dépôt drwil lui-même (manifeste
+  et version, installé par `installer-depot`) —
+  `docs/intentions/doctor-sur-le-depot-drwil.md`.
 
 ## Ensuite
 

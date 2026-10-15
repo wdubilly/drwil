@@ -2214,6 +2214,96 @@ test("DRWIL-004 : verify --json, format stable, rien d'autre sur stdout, mêmes 
   assert.equal(JSON.parse(erreur.stdout).status, "error");
 });
 
+test("QUA-025 : init enregistre la version du moteur dans .drwil/install.json sans toucher au manifeste ; uninstall le retire", async () => {
+  const dir = tmp();
+  const version = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+  const installation = () => JSON.parse(readFileSync(join(dir, ".drwil/install.json"), "utf8"));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
+  assert.deepEqual(installation(), { format: 1, version, firstVersion: version });
+  const manifeste = readFileSync(join(dir, ".drwil/installed-files.json"), "utf8");
+  assert.equal(".drwil/install.json" in JSON.parse(manifeste), false, "le manifeste ne liste pas l'enregistrement de version");
+
+  // Mise à jour depuis une version antérieure : la version suit, la première installation reste.
+  writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version: "0.4.0", firstVersion: "0.3.0" }));
+  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+  assert.deepEqual(installation(), { format: 1, version, firstVersion: "0.3.0" });
+  assert.equal(readFileSync(join(dir, ".drwil/installed-files.json"), "utf8"), manifeste, "manifeste inchangé");
+
+  // Enregistrement illisible : réécrit, la version courante devient la première connue.
+  writeFileSync(join(dir, ".drwil/install.json"), "{ cassé");
+  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+  assert.deepEqual(installation(), { format: 1, version, firstVersion: version });
+
+  assert.ok((await uninstall({ targetDir: dir })).removed.includes(".drwil/install.json"), "listé en simulation");
+  assert.ok(existsSync(join(dir, ".drwil/install.json")), "rien retiré en simulation");
+  await uninstall({ targetDir: dir, dryRun: false });
+  assert.equal(existsSync(join(dir, ".drwil/install.json")), false);
+});
+
+test("QUA-027 : mise à jour d'une version antérieure : fichiers du client préservés, obsolètes non modifiés retirés, version suivie", async () => {
+  const dir = tmp();
+  const version = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+  const empreinte = (texte) => createHash("sha256").update(texte).digest("hex");
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
+
+  // L'installation vieillie : ce qu'aurait laissé une version antérieure, puis le travail du client.
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version: "0.4.0", firstVersion: "0.4.0" }));
+  const ancienne = "// mécanique de la version 0.4.0\n";
+  writeFileSync(join(dir, ".githooks/glob.mjs"), ancienne);
+  manifeste[".githooks/glob.mjs"] = empreinte(ancienne);
+  for (const f of ["ancien-controle.mjs", "ancien-adapte.mjs"]) {
+    writeFileSync(join(dir, ".githooks", f), `// ${f}, retiré du gabarit depuis\n`);
+    manifeste[`.githooks/${f}`] = empreinte(`// ${f}, retiré du gabarit depuis\n`);
+  }
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2));
+  appendFileSync(join(dir, ".githooks/ancien-adapte.mjs"), "// adapté par le client\n");
+  appendFileSync(join(dir, ".githooks/run-checks.mjs"), "\n// réglage du client\n");
+  appendFileSync(join(dir, "docs/contracts.md"), "\n## APP-002 — Contrat du client\n**Règle** : r.\n**Manuel** : m.\n");
+
+  const lignes = await capture(() => init({ targetDir: dir, git: false, ci: "none" }));
+
+  assert.deepEqual(JSON.parse(read(dir, ".drwil/install.json")), { format: 1, version, firstVersion: "0.4.0" });
+  assert.notEqual(read(dir, ".githooks/glob.mjs"), ancienne, "mécanique jamais modifiée : rafraîchie");
+  assert.equal(existsSync(join(dir, ".githooks/ancien-controle.mjs")), false, "obsolète jamais modifié : retiré");
+  assert.ok(existsSync(join(dir, ".githooks/ancien-adapte.mjs")), "obsolète modifié par le client : gardé");
+  assert.match(read(dir, ".githooks/run-checks.mjs"), /réglage du client/, "mécanique modifiée : jamais écrasée");
+  assert.ok(
+    lignes.some((l) => l.includes(".githooks/run-checks.mjs")),
+    "mais signalée comme dérive",
+  );
+  assert.match(read(dir, "docs/contracts.md"), /APP-002 — Contrat du client/, "fichier du projet préservé");
+  const apres = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  assert.equal(".githooks/ancien-controle.mjs" in apres, false, "le manifeste oublie l'obsolète retiré");
+  assert.equal(apres[".githooks/glob.mjs"], empreinte(read(dir, ".githooks/glob.mjs")), "et suit la mécanique rafraîchie");
+});
+
+test("QUA-026 : doctor affiche la version installée et signale un écart avec la CLI", async () => {
+  const dir = tmp();
+  const version = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
+  const point = async () => (await doctor({ targetDir: dir })).points.find((p) => p.id === "version");
+  let p = await point();
+  assert.equal(p.state, "ok");
+  assert.equal(p.detail, `${version} (première installation : ${version})`);
+  const ecrire = (v) => writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version: v, firstVersion: v }));
+  ecrire("0.0.1");
+  p = await point();
+  assert.equal(p.state, "warning");
+  assert.ok(p.detail.startsWith(`0.0.1 installée, CLI ${version} plus récente : `), p.detail);
+  assert.match(p.detail, /npx drwil init/);
+  ecrire("99.0.0-beta.1");
+  assert.match((await point()).detail, /99\.0\.0-beta\.1 installée, CLI .* plus ancienne/);
+  ecrire(`${version}-rc.1`);
+  assert.equal((await point()).state, "ok", "un suffixe de pré-version est ignoré");
+  rmSync(join(dir, ".drwil/install.json"));
+  p = await point();
+  assert.equal(p.state, "warning");
+  assert.match(p.detail, /inconnue \(installation antérieure/);
+  // Un écart de version avertit, ne fait jamais échouer doctor à lui seul.
+  assert.notEqual(p.state, "problem");
+});
+
 test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; contracts liste le registre", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github" }));
