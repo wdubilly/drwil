@@ -1,6 +1,6 @@
 # Projet : capitaliser les tests de non-régression à chaque chantier
 
-**Statut** : cadré le 2026-10-15 — décisions tranchées le 2026-10-15, à lancer après « maturité des fiches ».
+**Statut** : cadré le 2026-10-15 — décisions tranchées le 2026-10-15, à lancer (la maturité des fiches est livrée).
 **Risque** : HIGH
 
 <!-- scope
@@ -36,15 +36,17 @@ non-régression durable, rejoué par `drwil verify` aux chantiers suivants.
 - Juger si le contrôle lié teste vraiment le critère (relecture humaine).
 - Les tests de régression propres à l'utilisateur : il écrit les siens, drwil
   garde les siens (deux filets distincts, journal du 2026-10-15).
-- Le champ `**Maturité**` lui-même (chantier `docs/projects/maturite-des-fiches.md`).
+- Le champ `**Maturité**` lui-même (chantier clôturé, voir
+  `docs/projects/journal.md`).
 
 ## 3. Contraintes
 
 - Gabarit d'abord, puis copie du dépôt (QUA-018) ; un projet déjà installé
   ne doit pas casser : les nouvelles règles ne visent que les fiches qui
   se déclarent « prêt » ou les critères de la branche en cours.
-- Dépend du chantier « maturité des fiches » pour la notion de fiche
-  « prête » : le blocage de la section 4 s'appuie sur son lot 2.
+- S'appuie sur le chantier « maturité des fiches » (livré, journal du
+  2026-10-15) pour la notion de fiche « prête » : champ `**Maturité**` et
+  blocage de `check-docs`.
 - Contrats à citer : QUA-015 (chantiers exploitables à froid), QUA-016
   (rappel de cadrage).
 
@@ -102,4 +104,4 @@ Tranchées par le demandeur le 2026-10-15 :
 
 - **Dernier état** (2026-10-15) : fiche cadrée et tranchée, aucun code écrit.
 - **Travail non commité** : cette fiche et sa ligne d'index.
-- **Prochaine étape** : lot 1, après le chantier « maturité des fiches ».
+- **Prochaine étape** : lot 1, au lancement du chantier.

@@ -980,3 +980,19 @@ l'index ; texte intégral dans l'historique git
   fiche sans critères ; la CLI n'affiche pas le chemin du tableau et la PR
   ne le reçoit pas automatiquement.
 - **Clôturé par** : PR à venir.
+
+## 2026-10-15 — Maturité des fiches (prêt / à affiner)
+
+- **Décisions clés** : champ explicite `**Maturité**` (`à affiner | prêt | en
+  cours`, `to refine | ready | in progress` en anglais) sous le statut,
+  lu par `briefMaturity` ; une fiche sans le champ est « non renseignée » et
+  n'est jamais bloquée. `check-docs` refuse une fiche déclarée « prête »
+  qui garde un point `[décision]` ouvert ou n'a aucun lot. Le sondage de
+  lancement et la liste du terminal classent par maturité (prêtes d'abord,
+  « à affiner » en dernier) et signalent les fiches à affiner sans les
+  masquer ; le tableau de bord les trie de même et affiche le champ tel
+  qu'écrit.
+- **Limites connues** : le tableau de bord recopie la règle de classement
+  de `scopedBriefs` (module optionnel autonome, sans import) ; les fiches
+  existantes n'ont pas encore le champ.
+- **Clôturé par** : PR à venir.
