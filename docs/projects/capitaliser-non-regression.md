@@ -129,9 +129,13 @@ Tranchées par le demandeur le 2026-10-15 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-15) : fiche cadrée, tranchée, critères
-  d'acceptation validés ; branche `workstream/capitaliser-non-regression`
-  créée depuis master ; aucun code écrit.
+- **Dernier état** (2026-10-15) : chantier lancé (fusion automatique
+  autorisée). Lot 1 fait : `check-docs` refuse une fiche « prête » sans
+  critère, la clôture avertit une fiche sans critères. Lot 2 fait : chaque
+  contrat lié est classé créé, réutilisé ou modifié contre la base de la
+  branche (`contractChanges`, `packages/drwil/src/criteria.ts`) et affiché
+  dans le tableau des critères ; un critère sans contrat reste refusé. Un
+  contrat réutilisé est accepté (décision du 2026-10-15) ; le refus d'un
+  contrat modifié sans déclaration est l'objet du lot 3.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`), puis
-  [IA] lot 1.
+- **Prochaine étape** : [IA] lot 3 (régression ou évolution).

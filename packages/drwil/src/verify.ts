@@ -11,12 +11,19 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { activeCriteria, criteriaTable, evaluateCriteria, type CriterionResult } from "./criteria.js";
+import { activeCriteria, contractChanges, criteriaTable, evaluateCriteria, type CriterionResult } from "./criteria.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { verdictJson } from "./verdict.js";
 
 export { formatVerdict, verdictJson } from "./verdict.js";
-export { criteriaTable, evaluateCriteria, type CriterionResult, type CriterionStatus } from "./criteria.js";
+export {
+  type ContractChange,
+  contractChanges,
+  criteriaTable,
+  evaluateCriteria,
+  type CriterionResult,
+  type CriterionStatus,
+} from "./criteria.js";
 
 /** ATTESTED (DRWIL-013): the automated part is proven and the human part has a valid attestation.
  *  Distinct from PASS (fully automated proof), but it satisfies the contract. */
@@ -312,7 +319,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   for (const r of results) delete r.invalidConfig;
   const found = only ? null : await activeCriteria(root);
   const verdict: Verdict = { lang, status, code: CODES[status], contracts: results, errors, unattached };
-  if (found) verdict.criteria = evaluateCriteria(found, results);
+  if (found) verdict.criteria = evaluateCriteria(found, results, contractChanges(root, registry, all, reader.readContracts));
   return verdict;
 }
 

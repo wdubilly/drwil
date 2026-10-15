@@ -1984,6 +1984,52 @@ test("verify : critères d'acceptation de la fiche active jugés contre le regis
   assert.deepEqual((await verify({ targetDir: dir, only: ["QUA-001"] })).criteria, undefined, "attest ne juge pas les critères");
 });
 
+test("critères d'acceptation : contrat créé, réutilisé ou modifié dans la branche, jugé contre la base ; sans contrat, refusé", async () => {
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `ok`"));
+  const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, encoding: "utf8" });
+  const fiche = "docs/projects/essai.md";
+  const etat = { version: 1, activity: "EVIDENCE", active_brief: fiche, active_request: null, since: null };
+  writeFileSync(join(dir, ".drwil/state.json"), JSON.stringify(etat));
+  writeFileSync(join(dir, fiche), "# Essai\n\n## Critères d'acceptation\n\n- Réutilisé — `QUA-001`\n");
+  assert.equal((await verify({ targetDir: dir })).criteria[0].change, null, "hors git : rien à comparer");
+  git("init", "-q", "-b", "master");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  git("checkout", "-qb", "chantier");
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    `# Contrats\n\n${contrat("QUA-001", "**Contrôle** : `ok`")}${contrat("QUA-002", "**Contrôle** : `ok`\nPrécisé.")}${contrat("QUA-003", "**Contrôle** : `ok`")}\n`,
+  );
+  writeFileSync(
+    join(dir, fiche),
+    [
+      "# Essai",
+      "",
+      "## Critères d'acceptation",
+      "",
+      "- Réutilisé — `QUA-001`",
+      "- Modifié — `QUA-002`",
+      "- Créé — `QUA-003`",
+      "- Sans contrat — `QUA-404`",
+      "- Par un contrôle — `ok`",
+      "",
+    ].join("\n"),
+  );
+  const v = await verify({ targetDir: dir });
+  assert.deepEqual(
+    v.criteria.map((c) => [c.text, c.status, c.change]),
+    [
+      ["Réutilisé", "pass", "reused"],
+      ["Modifié", "pass", "modified"],
+      ["Créé", "pass", "created"],
+      ["Sans contrat", "unknown-proof", null],
+      ["Par un contrôle", "pass", null],
+    ],
+  );
+  assert.match(criteriaTable(v.criteria, "fr"), /\| Créé \| `QUA-003` \(pass, créé\) \| ✅ prouvé \|/);
+  assert.match(criteriaTable(v.criteria, "en"), /`QUA-001` \(pass, reused\)/);
+});
+
 test("critères d'acceptation : un contrat sans contrôle ni Manuel n'est pas une preuve durable ; un critère humain exige un contrat manuel", () => {
   const contrats = [
     { id: "A", status: "PASS", manual: null, checks: [{ id: "x", status: "ok" }] },
