@@ -21,7 +21,16 @@ import { context, fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs"
 
 // Unchanged interface for the other hooks, the CLI and the tools: everything this file exported
 // before it was split stays importable from here.
-export { acceptanceCriteria, briefMaturity, briefStatus, hasIncrements, openDecisions, readyGaps, scopedBriefs } from "./briefs.mjs";
+export {
+  acceptanceCriteria,
+  briefMaturity,
+  briefStatus,
+  declaredContracts,
+  hasIncrements,
+  openDecisions,
+  readyGaps,
+  scopedBriefs,
+} from "./briefs.mjs";
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 
 export const ACTIVITIES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
@@ -146,6 +155,7 @@ export function verifyEvidence(root) {
     // Evidence without `criteria` (no active brief, or written by an older verify): nothing to judge.
     const unproven = (Array.isArray(ev.criteria) ? ev.criteria : []).filter((c) => c.status !== "pass");
     if (unproven.length) return { ok: false, reason: fill(T.criteria, unproven.map((c) => `« ${c.text} » (${c.status})`).join(", ")) };
+    if (Array.isArray(ev.undeclared) && ev.undeclared.length) return { ok: false, reason: fill(T.undeclared, ev.undeclared.join(", ")) };
     return { ok: true };
   }
   if (ev.status === "manual") return { ok: false, reason: T.manual };

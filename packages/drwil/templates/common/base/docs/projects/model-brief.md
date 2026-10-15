@@ -47,6 +47,16 @@ detail. The tool evaluates, never the agent.)
 - Verifiable criterion — `CONTRACT-ID`
 - Human-judgment criterion [human] — `MANUAL-CONTRACT-ID`
 
+## Modified contracts
+
+(only when this project changes an existing contract on purpose: one bullet
+per contract, its ID in backticks first, then the former criterion and the
+reason, approved by the requester at scoping, never by the agent along the
+way. A contract modified in the branch without a line here is a regression:
+`drwil verify` reports it and closing is refused.)
+
+- `CONTRACT-ID` — former criterion: « ... » — reason: ... (approved on YYYY-MM-DD)
+
 ## 2. Out of scope
 
 (what this project does not cover, to prevent an agent from extending it on

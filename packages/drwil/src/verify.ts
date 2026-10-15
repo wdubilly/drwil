@@ -11,19 +11,12 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { activeCriteria, contractChanges, criteriaTable, evaluateCriteria, type CriterionResult } from "./criteria.js";
+import { activeBrief, contractChanges, criteriaTable, type CriterionResult, judgeBrief, showOrigins } from "./criteria.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { verdictJson } from "./verdict.js";
 
 export { formatVerdict, verdictJson } from "./verdict.js";
-export {
-  type ContractChange,
-  contractChanges,
-  criteriaTable,
-  evaluateCriteria,
-  type CriterionResult,
-  type CriterionStatus,
-} from "./criteria.js";
+export { criteriaTable, evaluateCriteria, type CriterionResult, type CriterionStatus } from "./criteria.js";
 
 /** ATTESTED (DRWIL-013): the automated part is proven and the human part has a valid attestation.
  *  Distinct from PASS (fully automated proof), but it satisfies the contract. */
@@ -70,6 +63,8 @@ export interface Verdict {
   unattached: string[];
   /** Acceptance criteria of the active brief, each judged against its proof; absent without an active brief. */
   criteria?: CriterionResult[];
+  /** Contracts modified in the branch that the active brief does not declare; absent without an active brief. */
+  undeclared?: string[];
 }
 
 export interface VerifyOptions {
@@ -317,9 +312,10 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const configKo = results.some((r) => r.invalidConfig) || errors.length > 0;
   const status = worst([...deciding, ...(configKo ? (["ERROR"] as Status[]) : [])]);
   for (const r of results) delete r.invalidConfig;
-  const found = only ? null : await activeCriteria(root);
+  showOrigins(results, all, lang);
+  const brief = only ? null : await activeBrief(root);
   const verdict: Verdict = { lang, status, code: CODES[status], contracts: results, errors, unattached };
-  if (found) verdict.criteria = evaluateCriteria(found, results, contractChanges(root, registry, all, reader.readContracts));
+  if (brief) Object.assign(verdict, judgeBrief(brief, results, contractChanges(root, registry, all, reader.readContracts)));
   return verdict;
 }
 
@@ -381,6 +377,7 @@ export function writeEvidence(root: string, v: Verdict, now = new Date()): strin
       manual: k.manual,
     })),
     ...(v.criteria ? { criteria: v.criteria } : {}),
+    ...(v.undeclared ? { undeclared: v.undeclared } : {}),
   };
   const dir = join(root, ".drwil", "evidence");
   mkdirSync(dir, { recursive: true });

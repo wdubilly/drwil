@@ -2030,6 +2030,50 @@ test("critères d'acceptation : contrat créé, réutilisé ou modifié dans la 
   assert.match(criteriaTable(v.criteria, "en"), /`QUA-001` \(pass, reused\)/);
 });
 
+test("régression ou évolution : contrat modifié sans déclaration refusé, déclaré accepté ; l'origine d'un contrat en échec affichée", async () => {
+  const origine = "**Origine** : export propre — « Un export vide est refusé »";
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", `**Contrôle** : \`ko\`\n${origine}`));
+  const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, encoding: "utf8" });
+  const fiche = "docs/projects/essai.md";
+  writeFileSync(
+    join(dir, ".drwil/state.json"),
+    JSON.stringify({ version: 1, activity: "EVIDENCE", active_brief: fiche, active_request: null, since: null }),
+  );
+  writeFileSync(join(dir, fiche), "# Essai\n\n## Critères d'acceptation\n\n- Réutilisé — `QUA-001`\n");
+  git("init", "-q", "-b", "master");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  git("checkout", "-qb", "chantier");
+
+  let v = await verify({ targetDir: dir });
+  assert.deepEqual(v.undeclared, []);
+  const echec = v.contracts.find((k) => k.id === "QUA-002");
+  assert.equal(echec.status, "FAIL");
+  assert.match(echec.reasons.join("\n"), /protège export propre — « Un export vide est refusé » — régression/);
+  assert.doesNotMatch(v.contracts.find((k) => k.id === "QUA-001").reasons.join("\n"), /protège/);
+
+  // Régression : le contrat change sans que la fiche le déclare.
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    `# Contrats\n\n${contrat("QUA-001", "**Contrôle** : `ok`\nAssoupli.")}${contrat("QUA-002", `**Contrôle** : \`ko\`\n${origine}`)}\n`,
+  );
+  v = await verify({ targetDir: dir });
+  assert.deepEqual(v.undeclared, ["QUA-001"]);
+  assert.match(formatVerdict(v), /Contrats modifiés sans déclaration.*clôture refusée : QUA-001/);
+  const ecrit = JSON.parse(readFileSync(join(dir, writeEvidence(dir, v)), "utf8"));
+  assert.deepEqual(ecrit.undeclared, ["QUA-001"]);
+
+  // Évolution : déclarée dans la fiche, validée au cadrage.
+  writeFileSync(
+    join(dir, fiche),
+    "# Essai\n\n## Critères d'acceptation\n\n- Réutilisé — `QUA-001`\n\n## Contrats modifiés\n\n- `QUA-001` — ancien critère : « strict » — raison : assoupli (validé le 2026-10-15)\n",
+  );
+  v = await verify({ targetDir: dir });
+  assert.deepEqual(v.undeclared, []);
+  assert.doesNotMatch(formatVerdict(v), /sans déclaration/);
+  assert.equal((await verify({ targetDir: dir, only: ["QUA-001"] })).undeclared, undefined, "attest ne juge pas la fiche");
+});
+
 test("critères d'acceptation : un contrat sans contrôle ni Manuel n'est pas une preuve durable ; un critère humain exige un contrat manuel", () => {
   const contrats = [
     { id: "A", status: "PASS", manual: null, checks: [{ id: "x", status: "ok" }] },

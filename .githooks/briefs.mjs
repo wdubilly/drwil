@@ -124,6 +124,23 @@ export function acceptanceCriteria(text) {
 }
 
 /**
+ * Contracts the brief declares as changed on purpose (« Contrats modifiés » section): the ID in backticks
+ * at the head of each bullet. A contract modified in the branch without this declaration is refused.
+ */
+export function declaredContracts(text) {
+  const ids = [];
+  let inside = false;
+  for (const line of text.split(/\r?\n/)) {
+    if (/^##\s/.test(line)) inside = /^##\s*(\d+\.\s*)?(Contrats modifiés|Modified contracts)\b/i.test(line);
+    else if (inside) {
+      const id = /^\s*-\s+`([A-Za-z][\w.:-]*)`/.exec(line)?.[1];
+      if (id) ids.push(id);
+    }
+  }
+  return ids;
+}
+
+/**
  * What a brief marked "ready" still lacks, as check-docs message keys: an open [decision], no
  * increment, or no acceptance criterion (nothing would be left to replay as non-regression).
  */

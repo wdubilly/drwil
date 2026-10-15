@@ -12,6 +12,11 @@ des deux ; un contrôle inconnu est une erreur de configuration.
 `indicatif`. Seuls les contrats bloquants décident du verdict de
 `drwil verify` ; les autres sont exécutés et affichés sans changer son code
 de sortie.
+`**Origine**` (facultatif) : le chantier et le critère d'acceptation dont le
+contrat est issu (`**Origine** : <chantier> — « <critère> »`). Quand son
+contrôle échoue, `drwil verify` l'affiche : l'échec casse ce critère,
+régression sauf si la fiche active déclare le changement (section
+« Contrats modifiés »).
 
 ## SEC-001 — Portée des droits
 **Règle** : Les droits d'accès sont décidés par le backend.

@@ -134,15 +134,52 @@ export function criteriaTable(criteria: CriterionResult[], lang: MessageLang): s
   return [`| ${T.head.join(" | ")} |`, "|---|---|---|", ...rows].join("\n") + "\n";
 }
 
-/** Criteria of the active brief (.drwil/state.json), read by the project's own briefs.mjs; null when there is none to read. */
-export async function activeCriteria(root: string): Promise<Criterion[] | null> {
+/** The active brief as verify judges it: its criteria and the contracts it declares as changed on purpose. */
+export interface ActiveBrief {
+  criteria: Criterion[];
+  declared: string[];
+}
+
+/** Active brief (.drwil/state.json), read by the project's own briefs.mjs; null when there is none to read. */
+export async function activeBrief(root: string): Promise<ActiveBrief | null> {
   try {
     const brief = JSON.parse(readFileSync(join(root, ".drwil", "state.json"), "utf8"))?.active_brief;
     if (typeof brief !== "string") return null;
     const mod = await import(pathToFileURL(join(root, ".githooks", "briefs.mjs")).href);
     if (typeof mod.acceptanceCriteria !== "function") return null;
-    return mod.acceptanceCriteria(readFileSync(join(root, brief), "utf8"));
+    const text = readFileSync(join(root, brief), "utf8");
+    // A briefs.mjs older than the declarations declares nothing.
+    return {
+      criteria: mod.acceptanceCriteria(text),
+      declared: typeof mod.declaredContracts === "function" ? mod.declaredContracts(text) : [],
+    };
   } catch {
     return null;
+  }
+}
+
+/** Criteria judged, and the contracts the branch modified without the brief declaring them (a regression until declared). */
+export function judgeBrief(
+  brief: ActiveBrief,
+  contracts: ContractResult[],
+  changes: Map<string, ContractChange> | null,
+): { criteria: CriterionResult[]; undeclared: string[] } {
+  const undeclared = [...(changes ?? [])].filter(([id, c]) => c === "modified" && !brief.declared.includes(id)).map(([id]) => id);
+  return { criteria: evaluateCriteria(brief.criteria, contracts, changes), undeclared };
+}
+
+const ORIGIN = {
+  fr: "protège {0} — régression si ce changement n'est pas déclaré dans la fiche active",
+  en: "protects {0} — a regression unless this change is declared in the active brief",
+} satisfies Record<MessageLang, string>;
+
+/**
+ * A failing contract born from an acceptance criterion says which one (« **Origine** : <workstream> —
+ * « <criterion> » »): the reader sees what the failure breaks, not only which check failed.
+ */
+export function showOrigins(results: ContractResult[], contracts: { id: string; text?: string }[], lang: MessageLang): void {
+  for (const r of results) {
+    const origin = /^\*\*(?:Origine|Origin)\s*:?\*\*\s*:?\s*(.+)$/m.exec(contracts.find((k) => k.id === r.id)?.text ?? "")?.[1];
+    if (origin && r.status === "FAIL") r.reasons.push(ORIGIN[lang].replace("{0}", origin.trim()));
   }
 }

@@ -23,6 +23,7 @@ const TEXTS = {
     severities:
       "dont {0} bloquant(s) ({1} satisfait(s)), {2} avertissement(s) non satisfait(s), {3} indicatif(s) non satisfait(s) — seuls les bloquants décident du verdict",
     severity: (s: Severity) => SEVERITY_FR[s],
+    undeclared: "Contrats modifiés sans déclaration dans la fiche active (section « Contrats modifiés ») — clôture refusée : {0}",
   },
   en: {
     contracts: "Contracts",
@@ -33,6 +34,7 @@ const TEXTS = {
     severities:
       "including {0} blocking ({1} satisfied), {2} warning(s) not satisfied, {3} advisory not satisfied — only blocking contracts decide the verdict",
     severity: (s: Severity) => s,
+    undeclared: "Contracts modified without declaration in the active brief (« Modified contracts » section) — closing refused: {0}",
   },
 };
 
@@ -52,6 +54,7 @@ export function formatVerdict(v: Verdict): string {
   }
   for (const e of v.errors) lines.push(`! ${e}`);
   if (v.unattached.length) lines.push(fill(T.unattached, v.unattached.join(", ")));
+  if (v.undeclared?.length) lines.push(fill(T.undeclared, v.undeclared.join(", ")));
   const count = (s: Status) => v.contracts.filter((k) => k.status === s).length;
   if (v.contracts.length)
     lines.push(fill(T.counts, v.contracts.length, count("PASS"), count("ATTESTED"), count("FAIL"), count("MANUAL"), count("ERROR")));

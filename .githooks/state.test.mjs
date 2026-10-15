@@ -9,6 +9,7 @@ import { PassThrough } from "node:stream";
 import {
   ACTIVITIES,
   acceptanceCriteria,
+  declaredContracts,
   NEUTRAL_STATE,
   context,
   main,
@@ -436,6 +437,11 @@ test("clôture : un critère d'acceptation non prouvé est refusé, nommé ; tou
   assert.doesNotMatch(sansPreuve.reason, /export vide/);
   for (const status of ["unknown-proof", "not-durable", "not-pass"]) assert.equal(refuse([critere("C", status)]).ok, false, status);
   assert.deepEqual(refuse([critere("Un export vide est refusé", "pass")]), { ok: true });
+  const { racine: r2, evidence: e2 } = depotEnVerify();
+  e2(nom, { status: "pass", criteria: [], undeclared: ["QUA-001"] });
+  assert.match(verifyEvidence(r2).reason, /modifié\(s\) sans déclaration : QUA-001.*Contrats modifiés/);
+  e2(nom, { status: "pass", criteria: [], undeclared: [] });
+  assert.deepEqual(verifyEvidence(r2), { ok: true });
   assert.deepEqual(refuse([]), { ok: true });
   const { racine, evidence } = depotEnVerify();
   evidence(nom, { status: "attested" });
@@ -575,6 +581,24 @@ test("clôture : retour en SCOPING refusé si la fiche terminée est encore là"
   // Lots encore ouverts : la fiche reste, le retour passe.
   writeFileSync(join(racine, FICHE), "# Projet : Exemple\n\n**Statut** : cadré — lot 1 fait, lot 2 ouvert.\n");
   assert.equal((await move(racine, { to: "SCOPING" }, { tty: false, now: MAINTENANT })).code, 0);
+});
+
+test("contrats modifiés : ID en tête de chaque puce de la section, autres sections ignorées, fiche en anglais", () => {
+  const fiche = [
+    "## Critères d'acceptation",
+    "- Un export vide est refusé — `QUA-009`",
+    "## 4. Contrats modifiés",
+    "",
+    "- `QUA-012` — ancien critère : « strict » — raison : assoupli",
+    "  suite de la raison, `QUA-099` cité sans être déclaré",
+    "- sans ID en tête — `QUA-098`",
+    "- `QUA-013` — raison : précisé",
+    "## Reprise",
+    "- `QUA-014` hors section",
+  ].join("\n");
+  assert.deepEqual(declaredContracts(fiche), ["QUA-012", "QUA-013"]);
+  assert.deepEqual(declaredContracts("## Modified contracts\n\n- `SEC-001` — reason: widened\n"), ["SEC-001"]);
+  assert.deepEqual(declaredContracts("# Sans section\n- `QUA-001`\n"), []);
 });
 
 test("critères d'acceptation : liste structurée (lien, humain), ignore les autres sections, fiche en anglais", () => {

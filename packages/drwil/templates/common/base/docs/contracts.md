@@ -31,6 +31,11 @@ proven (`MANUAL`).
 `**Severity**` (optional): `blocking` (default), `warning` or `advisory`.
 Only blocking contracts decide the `drwil verify` verdict; the others are
 run and shown without changing its exit code.
+`**Origin**` (optional): the workstream and the acceptance criterion the
+contract was born from (`**Origin**: <workstream> — « <criterion> »`). When
+its check fails, `drwil verify` shows it: the failure breaks that criterion,
+a regression unless the active brief declares the change (« Modified
+contracts » section).
 
 ## Security (SEC)
 
