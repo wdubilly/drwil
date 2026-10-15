@@ -407,11 +407,12 @@ test("QUA-015 (extension) : fiche terminée encore présente refusée ; case coc
   assert.match(direct.stdout, /autre-chantier\.md.*QUA-015|QUA-015.*autre-chantier\.md/);
 });
 
-test("maturité : une fiche « prête » avec un point [décision] restant ou sans lot est refusée ; « à affiner » et sans champ passent", async () => {
+test("QUA-021 : maturité : une fiche « prête » avec un point [décision] restant, sans lot ou sans critère est refusée ; « à affiner » et sans champ passent", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
-  const fiche = (maturite, points, lots) =>
-    `# Chantier\n\n**Statut** (2026-10-04) : cadré.\n${maturite}\n\n## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n${lots}\n\n## Reprise\n\nRien.\n`;
+  const critere = "## Critères d'acceptation\n\n- Un export vide est refusé [humain]\n\n";
+  const fiche = (maturite, points, lots, criteres = critere) =>
+    `# Chantier\n\n**Statut** (2026-10-04) : cadré.\n${maturite}\n\n${criteres}## 5. Points à trancher\n\n${points}\n\n## 6. Lots\n\n${lots}\n\n## Reprise\n\nRien.\n`;
   const lancer = () => spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   const ecrire = (texte) => writeFileSync(join(dir, "docs/projects/mon-chantier.md"), texte);
   const lot = "- **Lot 1 — modèle** [IA] : à faire.";
@@ -429,6 +430,13 @@ test("maturité : une fiche « prête » avec un point [décision] restant ou sa
   r = lancer();
   assert.equal(r.status, 1, r.stdout + r.stderr);
   assert.match(r.stdout + r.stderr, /mon-chantier\.md.*prête.*lot/);
+
+  ecrire(fiche("**Maturité** : prêt", "(aucun.)", lot, ""));
+  r = lancer();
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /mon-chantier\.md.*prête.*critère d'acceptation/);
+  ecrire(fiche("", "(aucun.)", lot, ""));
+  assert.equal(lancer().status, 0);
 
   ecrire(fiche("**Maturité** : à affiner", "- [décision] reste à trancher.", "(aucun.)"));
   assert.equal(lancer().status, 0);
@@ -1976,6 +1984,108 @@ test("verify : critères d'acceptation de la fiche active jugés contre le regis
   assert.deepEqual((await verify({ targetDir: dir, only: ["QUA-001"] })).criteria, undefined, "attest ne juge pas les critères");
 });
 
+test("QUA-022 : critères d'acceptation : contrat créé, réutilisé ou modifié dans la branche, jugé contre la base ; sans contrat, refusé", async () => {
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `ok`"));
+  const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, encoding: "utf8" });
+  const fiche = "docs/projects/essai.md";
+  const etat = { version: 1, activity: "EVIDENCE", active_brief: fiche, active_request: null, since: null };
+  writeFileSync(join(dir, ".drwil/state.json"), JSON.stringify(etat));
+  writeFileSync(join(dir, fiche), "# Essai\n\n## Critères d'acceptation\n\n- Réutilisé — `QUA-001`\n");
+  assert.equal((await verify({ targetDir: dir })).criteria[0].change, null, "hors git : rien à comparer");
+  git("init", "-q", "-b", "master");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  git("checkout", "-qb", "chantier");
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    `# Contrats\n\n${contrat("QUA-001", "**Contrôle** : `ok`")}${contrat("QUA-002", "**Contrôle** : `ok`\nPrécisé.")}${contrat("QUA-003", "**Contrôle** : `ok`")}\n`,
+  );
+  writeFileSync(
+    join(dir, fiche),
+    [
+      "# Essai",
+      "",
+      "## Critères d'acceptation",
+      "",
+      "- Réutilisé — `QUA-001`",
+      "- Modifié — `QUA-002`",
+      "- Créé — `QUA-003`",
+      "- Sans contrat — `QUA-404`",
+      "- Par un contrôle — `ok`",
+      "",
+    ].join("\n"),
+  );
+  const v = await verify({ targetDir: dir });
+  assert.deepEqual(
+    v.criteria.map((c) => [c.text, c.status, c.change]),
+    [
+      ["Réutilisé", "pass", "reused"],
+      ["Modifié", "pass", "modified"],
+      ["Créé", "pass", "created"],
+      ["Sans contrat", "unknown-proof", null],
+      ["Par un contrôle", "pass", null],
+    ],
+  );
+  assert.match(criteriaTable(v.criteria, "fr"), /\| Créé \| `QUA-003` \(pass, créé\) \| ✅ prouvé \|/);
+  assert.match(criteriaTable(v.criteria, "en"), /`QUA-001` \(pass, reused\)/);
+});
+
+test("QUA-023 : régression ou évolution : contrat modifié sans déclaration refusé, déclaré accepté ; l'origine d'un contrat en échec affichée", async () => {
+  const origine = "**Origine** : export propre — « Un export vide est refusé »";
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", `**Contrôle** : \`ko\`\n${origine}`));
+  const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, encoding: "utf8" });
+  const fiche = "docs/projects/essai.md";
+  writeFileSync(
+    join(dir, ".drwil/state.json"),
+    JSON.stringify({ version: 1, activity: "EVIDENCE", active_brief: fiche, active_request: null, since: null }),
+  );
+  writeFileSync(join(dir, fiche), "# Essai\n\n## Critères d'acceptation\n\n- Réutilisé — `QUA-001`\n");
+  git("init", "-q", "-b", "master");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  git("checkout", "-qb", "chantier");
+
+  let v = await verify({ targetDir: dir });
+  assert.deepEqual(v.undeclared, []);
+  const echec = v.contracts.find((k) => k.id === "QUA-002");
+  assert.equal(echec.status, "FAIL");
+  assert.match(echec.reasons.join("\n"), /protège export propre — « Un export vide est refusé » — régression/);
+  assert.doesNotMatch(v.contracts.find((k) => k.id === "QUA-001").reasons.join("\n"), /protège/);
+
+  // Régression : le contrat change sans que la fiche le déclare.
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    `# Contrats\n\n${contrat("QUA-001", "**Contrôle** : `ok`\nAssoupli.")}${contrat("QUA-002", `**Contrôle** : \`ko\`\n${origine}`)}\n`,
+  );
+  v = await verify({ targetDir: dir });
+  assert.deepEqual(v.undeclared, ["QUA-001"]);
+  assert.match(formatVerdict(v), /Contrats modifiés sans déclaration.*clôture refusée : QUA-001/);
+  const ecrit = JSON.parse(readFileSync(join(dir, writeEvidence(dir, v)), "utf8"));
+  assert.deepEqual(ecrit.undeclared, ["QUA-001"]);
+
+  // Évolution : déclarée dans la fiche, validée au cadrage.
+  writeFileSync(
+    join(dir, fiche),
+    "# Essai\n\n## Critères d'acceptation\n\n- Réutilisé — `QUA-001`\n\n## Contrats modifiés\n\n- `QUA-001` — ancien critère : « strict » — raison : assoupli (validé le 2026-10-15)\n",
+  );
+  v = await verify({ targetDir: dir });
+  assert.deepEqual(v.undeclared, []);
+  assert.doesNotMatch(formatVerdict(v), /sans déclaration/);
+  assert.equal((await verify({ targetDir: dir, only: ["QUA-001"] })).undeclared, undefined, "attest ne juge pas la fiche");
+});
+
+test("QUA-024 : dépôt neuf : init fournit un contrat métier d'exemple, contrôle à compléter, et le guide pour écrire le premier", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, ci: "none" }));
+  const registre = readFileSync(join(dir, "docs/contracts.md"), "utf8");
+  assert.match(registre, /^## APP-001 — Example business contract/m);
+  assert.match(registre, /\*\*Manual\*\* : check to complete .*cite it here as \*\*Check\*\*/);
+  assert.match(readFileSync(join(dir, "docs/recipes/adopt-the-kit.md"), "utf8"), /first business contract.*\n.*APP-001/);
+  const exemple = (await verify({ targetDir: dir })).contracts.find((k) => k.id === "APP-001");
+  assert.equal(exemple.status, "MANUAL", "à compléter : jamais prouvé tant que son contrôle manque");
+  assert.match(exemple.reasons.join("\n"), /check to complete/);
+});
+
 test("critères d'acceptation : un contrat sans contrôle ni Manuel n'est pas une preuve durable ; un critère humain exige un contrat manuel", () => {
   const contrats = [
     { id: "A", status: "PASS", manual: null, checks: [{ id: "x", status: "ok" }] },
@@ -2110,7 +2220,7 @@ test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; con
   let d = await doctor({ targetDir: dir });
   assert.equal(d.code, 0, JSON.stringify(d.points));
   assert.ok(d.points.find((p) => p.id === "hooks").state === "ok");
-  assert.match(d.points.find((p) => p.id === "contracts").detail, /8 contrat\(s\) valide\(s\)/);
+  assert.match(d.points.find((p) => p.id === "contracts").detail, /9 contrat\(s\) valide\(s\)/);
   git(dir, "config", "core.hooksPath", "ailleurs");
   spawnSync(process.execPath, ["-e", "require('fs').unlinkSync('CLAUDE.md')"], { cwd: dir });
   d = await doctor({ targetDir: dir });

@@ -9,6 +9,7 @@ import { PassThrough } from "node:stream";
 import {
   ACTIVITIES,
   acceptanceCriteria,
+  declaredContracts,
   NEUTRAL_STATE,
   context,
   main,
@@ -356,8 +357,9 @@ test("contexte : indique la commande de transition", () => {
 });
 
 // Dépôt git commité, prêt à clore : l'évidence est jugée contre HEAD.
-function depotEnVerify(config) {
+function depotEnVerify(config, ajoutFiche = "") {
   const racine = depot({ state: actif("VERIFY"), config });
+  if (ajoutFiche) writeFileSync(join(racine, FICHE), readFileSync(join(racine, FICHE), "utf8") + ajoutFiche);
   writeFileSync(join(racine, ".gitignore"), ".drwil/state.json\n.drwil/evidence/\n");
   const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
   git("init", "-q");
@@ -395,6 +397,21 @@ test("clôture : PASS ou ATTESTED sur HEAD, arbre propre, autorise sans geste hu
   }
 });
 
+test("QUA-021 : clôture : une fiche sans critères d'acceptation est avertie, la clôture passe ; avec critères, aucun avertissement", async () => {
+  const sans = depotEnVerify();
+  sans.evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass" });
+  const averti = await move(sans.racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
+  assert.equal(averti.code, 0, averti.message);
+  assert.match(averti.message, /avertissement.*exemple\.md.*aucun critère d'acceptation/);
+  assert.equal(readState(sans.racine).state.activity, "CLOSING");
+
+  const avec = depotEnVerify(undefined, "\n## Critères d'acceptation\n\n- Un export vide est refusé — `CTR-012`\n");
+  avec.evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass", criteria: [] });
+  const r = await move(avec.racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
+  assert.equal(r.code, 0, r.message);
+  assert.doesNotMatch(r.message, /critère/);
+});
+
 test("clôture : FAIL et ERROR renvoient en BUILD, MANUAL à l'attestation humaine", () => {
   const attendus = { fail: /FAIL.*move BUILD/, error: /ERROR.*move BUILD/, manual: /MANUAL.*drwil attest/ };
   for (const [status, motif] of Object.entries(attendus)) {
@@ -420,6 +437,11 @@ test("clôture : un critère d'acceptation non prouvé est refusé, nommé ; tou
   assert.doesNotMatch(sansPreuve.reason, /export vide/);
   for (const status of ["unknown-proof", "not-durable", "not-pass"]) assert.equal(refuse([critere("C", status)]).ok, false, status);
   assert.deepEqual(refuse([critere("Un export vide est refusé", "pass")]), { ok: true });
+  const { racine: r2, evidence: e2 } = depotEnVerify();
+  e2(nom, { status: "pass", criteria: [], undeclared: ["QUA-001"] });
+  assert.match(verifyEvidence(r2).reason, /modifié\(s\) sans déclaration : QUA-001.*Contrats modifiés/);
+  e2(nom, { status: "pass", criteria: [], undeclared: [] });
+  assert.deepEqual(verifyEvidence(r2), { ok: true });
   assert.deepEqual(refuse([]), { ok: true });
   const { racine, evidence } = depotEnVerify();
   evidence(nom, { status: "attested" });
@@ -561,6 +583,24 @@ test("clôture : retour en SCOPING refusé si la fiche terminée est encore là"
   assert.equal((await move(racine, { to: "SCOPING" }, { tty: false, now: MAINTENANT })).code, 0);
 });
 
+test("QUA-023 : contrats modifiés : ID en tête de chaque puce de la section, autres sections ignorées, fiche en anglais", () => {
+  const fiche = [
+    "## Critères d'acceptation",
+    "- Un export vide est refusé — `QUA-009`",
+    "## 4. Contrats modifiés",
+    "",
+    "- `QUA-012` — ancien critère : « strict » — raison : assoupli",
+    "  suite de la raison, `QUA-099` cité sans être déclaré",
+    "- sans ID en tête — `QUA-098`",
+    "- `QUA-013` — raison : précisé",
+    "## Reprise",
+    "- `QUA-014` hors section",
+  ].join("\n");
+  assert.deepEqual(declaredContracts(fiche), ["QUA-012", "QUA-013"]);
+  assert.deepEqual(declaredContracts("## Modified contracts\n\n- `SEC-001` — reason: widened\n"), ["SEC-001"]);
+  assert.deepEqual(declaredContracts("# Sans section\n- `QUA-001`\n"), []);
+});
+
 test("critères d'acceptation : liste structurée (lien, humain), ignore les autres sections, fiche en anglais", () => {
   const fr = [
     "# Projet",
@@ -588,6 +628,20 @@ test("critères d'acceptation : liste structurée (lien, humain), ignore les aut
     { text: "Totals match", link: "QUA-001", human: false },
   ]);
   assert.deepEqual(acceptanceCriteria("# Sans section\n\n- rien\n"), []);
+  // Critère sur plusieurs lignes : la preuve est en fin de puce ; du code cité avant n'en est pas une.
+  const plusieursLignes = [
+    "## Critères d'acceptation",
+    "- Un `init` neuf fournit un contrat",
+    "  d'exemple — `QUA-024`",
+    "- Second critère",
+    "",
+    "  paragraphe après une ligne vide, pas une suite",
+    "Texte collé, pas une suite non plus `QUA-999`",
+  ].join("\n");
+  assert.deepEqual(acceptanceCriteria(plusieursLignes), [
+    { text: "Un init neuf fournit un contrat d'exemple", link: "QUA-024", human: false },
+    { text: "Second critère", link: null, human: false },
+  ]);
 });
 
 test("maturité : champ explicite lu dans l'en-tête (FR et EN), absent ou inconnu = non renseignée", () => {

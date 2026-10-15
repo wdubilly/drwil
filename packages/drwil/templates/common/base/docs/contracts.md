@@ -31,6 +31,11 @@ proven (`MANUAL`).
 `**Severity**` (optional): `blocking` (default), `warning` or `advisory`.
 Only blocking contracts decide the `drwil verify` verdict; the others are
 run and shown without changing its exit code.
+`**Origin**` (optional): the workstream and the acceptance criterion the
+contract was born from (`**Origin**: <workstream> — « <criterion> »`). When
+its check fails, `drwil verify` shows it: the failure breaks that criterion,
+a regression unless the active brief declares the change (« Modified
+contracts » section).
 
 ## Security (SEC)
 
@@ -101,6 +106,17 @@ run and shown without changing its exit code.
 **Proof** : **human** — a bypass rarely leaves a machine-checkable trace (see `catalog:QUA-009` for the tooled case of a disabled test)
 **Reason** : bypassing a check silently hides a regression, the opposite of QUA-013
 **Manual** : a bypass rarely leaves a machine-checkable trace.
+
+
+## Business (APP)
+
+## APP-001 — Example business contract, to replace with your first one
+**Rule** : (example) An order with no line is refused. Replace it with the most critical business rule of your project.
+**Scope** : the code that applies this rule
+**Source of truth** : the module that implements it
+**Proof** : a test of this rule, declared as a check (`.drwil/ia-first.json` → `checks`, with an `id`), replayed by `drwil verify` at every workstream
+**Reason** : an acceptance criterion proven by a contract becomes the business non-regression: the next workstreams cannot break it without seeing it
+**Manual** : check to complete — write the test, declare it in `checks` with an `id`, cite it here as **Check**, then remove this field (`docs/recipes/adopt-the-kit.md`, step 5).
 
 
 ## Out of registry (these are not contracts)

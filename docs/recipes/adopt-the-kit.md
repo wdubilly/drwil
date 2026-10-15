@@ -30,7 +30,17 @@ the requester's place (`AGENTS.md`, Conduct section).
      on critical paths as proof of real behavioral coverage.
    - The catalog's other lines have no ready-made script: propose the
      detected stack's usual tool (lint, typecheck, coverage…).
-5. **Verify**: `node .githooks/run-checks.mjs` green, then one commit per
+5. **Write the first business contract**: `docs/contracts.md` ships
+   `APP-001`, an example to replace. With the requester (`[decision]`), pick
+   the project's most critical business rule, write the test that proves
+   it, declare it in `checks` with an `id`, cite it as `**Check**` and
+   remove the `**Manual**` field: `drwil verify` then replays it at every
+   workstream. From then on, each workstream links its acceptance criteria
+   to such contracts (`docs/projects/model-brief.md`, « Acceptance
+   criteria »): created by the workstream, or reused as they are; a
+   contract changed on purpose is declared in the brief (« Modified
+   contracts »), otherwise closing is refused.
+6. **Verify**: `node .githooks/run-checks.mjs` green, then one commit per
    subject (layer filled in, check declared, contract adopted) — never a
    catch-all commit.
 

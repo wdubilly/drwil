@@ -49,6 +49,16 @@ technique. C'est l'outil qui évalue, jamais l'agent.)
 - Critère vérifiable — `ID-DU-CONTRAT`
 - Critère de jugement humain [humain] — `ID-DU-CONTRAT-MANUEL`
 
+## Contrats modifiés
+
+(seulement si ce chantier change exprès un contrat existant : une puce par
+contrat, son ID entre accents graves en tête, puis l'ancien critère et la
+raison, validés par le demandeur au cadrage, jamais par l'agent en cours de
+route. Un contrat modifié dans la branche sans ligne ici est une
+régression : `drwil verify` le signale et la clôture est refusée.)
+
+- `ID-DU-CONTRAT` — ancien critère : « ... » — raison : ... (validé le AAAA-MM-JJ)
+
 ## 2. Hors périmètre
 
 (ce que ce projet ne traite pas, pour éviter qu'un agent l'étende de lui-même)
