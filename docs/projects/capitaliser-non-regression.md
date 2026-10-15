@@ -8,6 +8,7 @@
 files:
   - packages/drwil/src/criteria.ts
   - packages/drwil/src/verify.ts
+  - packages/drwil/src/verdict.ts
   - packages/drwil/templates/common/base/.githooks/briefs.mjs
   - packages/drwil/templates/common/base/.githooks/state.mjs
   - packages/drwil/templates/common/base/.githooks/state-texts.mjs
@@ -99,6 +100,11 @@ Tranchées par le demandeur le 2026-10-15 :
 - Réutiliser un contrat existant sans le modifier est accepté ; le
   modifier sans le déclarer est refusé (remplace la règle « créé ou
   modifié » pour le cas du contrat réutilisé).
+- Formats (2026-10-15, sondage) : l'origine d'un contrat est un champ
+  facultatif `**Origine** : <chantier> — « <critère> »` du registre (le
+  chantier nommé par son titre : la fiche disparaît à la clôture) ; une
+  déclaration de la section « Contrats modifiés » est une puce par contrat,
+  l'ID entre accents graves en tête, puis l'ancien critère et la raison.
 
 ## 5. Points à trancher
 
@@ -135,7 +141,10 @@ Tranchées par le demandeur le 2026-10-15 :
   contrat lié est classé créé, réutilisé ou modifié contre la base de la
   branche (`contractChanges`, `packages/drwil/src/criteria.ts`) et affiché
   dans le tableau des critères ; un critère sans contrat reste refusé. Un
-  contrat réutilisé est accepté (décision du 2026-10-15) ; le refus d'un
-  contrat modifié sans déclaration est l'objet du lot 3.
+  contrat réutilisé est accepté (décision du 2026-10-15). Lot 3 fait : un
+  contrat modifié que la fiche active ne déclare pas (section « Contrats
+  modifiés », lue par `declaredContracts`) est listé par `verify` et
+  refuse la clôture ; un contrat en échec qui porte `**Origine**` affiche le
+  critère qu'il protège.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 3 (régression ou évolution).
+- **Prochaine étape** : [IA] lot 4 (dépôt neuf).
