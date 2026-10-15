@@ -31,6 +31,7 @@ import {
   formatPreview,
   attest,
 } from "../dist/index.js";
+import { evaluateCriteria, writeEvidence } from "../dist/verify.js";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les projets de test (et leurs hooks) sur le dépôt qui lance la suite.
@@ -1900,6 +1901,66 @@ test("verify : outil indisponible (contrôle non exécuté) → ERROR, jamais PA
   assert.equal(v.status, "ERROR");
   assert.equal(v.code, 2);
   assert.match(v.contracts[0].reasons.join(), /ci-coverage : non exécuté/);
+});
+
+test("verify : critères d'acceptation de la fiche active jugés contre le registre, écrits dans l'évidence", async () => {
+  const dir = await projetVerify(
+    contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `ko`") + contrat("QUA-003", "**Manuel** : appréciation"),
+  );
+  assert.equal((await verify({ targetDir: dir })).criteria, undefined, "sans fiche active : rien à juger");
+  writeFileSync(
+    join(dir, "docs/projects/essai.md"),
+    [
+      "# Essai",
+      "",
+      "## Critères d'acceptation",
+      "",
+      "- Prouvé par un contrat — `QUA-001`",
+      "- Sans lien",
+      "- Lien inconnu — `QUA-999`",
+      "- Contrat rouge — `QUA-002`",
+      "- Contrat manuel pour un critère automatique — `QUA-003`",
+      "- Jugement humain non attesté [humain] — `QUA-003`",
+      "- Prouvé par un contrôle — `ok`",
+      "",
+    ].join("\n"),
+  );
+  writeFileSync(
+    join(dir, ".drwil/state.json"),
+    JSON.stringify({ version: 1, activity: "EVIDENCE", active_brief: "docs/projects/essai.md", active_request: null, since: null }),
+  );
+  const v = await verify({ targetDir: dir });
+  assert.deepEqual(
+    v.criteria.map((c) => [c.text, c.status]),
+    [
+      ["Prouvé par un contrat", "pass"],
+      ["Sans lien", "no-proof"],
+      ["Lien inconnu", "unknown-proof"],
+      ["Contrat rouge", "not-pass"],
+      ["Contrat manuel pour un critère automatique", "not-durable"],
+      ["Jugement humain non attesté", "not-pass"],
+      ["Prouvé par un contrôle", "pass"],
+    ],
+  );
+  const ecrit = JSON.parse(readFileSync(join(dir, writeEvidence(dir, v)), "utf8"));
+  assert.deepEqual(ecrit.criteria, v.criteria);
+  assert.deepEqual((await verify({ targetDir: dir, only: ["QUA-001"] })).criteria, undefined, "attest ne juge pas les critères");
+});
+
+test("critères d'acceptation : un contrat sans contrôle ni Manuel n'est pas une preuve durable ; un critère humain exige un contrat manuel", () => {
+  const contrats = [
+    { id: "A", status: "PASS", manual: null, checks: [{ id: "x", status: "ok" }] },
+    { id: "B", status: "MANUAL", manual: null, checks: [] },
+    { id: "C", status: "ATTESTED", manual: "relecture", checks: [] },
+  ];
+  const juge = (c) => evaluateCriteria([{ text: "t", ...c }], contrats)[0].status;
+  assert.equal(juge({ link: "A", human: false }), "pass");
+  assert.equal(juge({ link: "A", human: true }), "not-durable");
+  assert.equal(juge({ link: "B", human: false }), "not-durable");
+  assert.equal(juge({ link: "C", human: true }), "pass");
+  assert.equal(juge({ link: "C", human: false }), "not-durable");
+  assert.equal(juge({ link: "x", human: false }), "pass");
+  assert.equal(juge({ link: "x", human: true }), "unknown-proof");
 });
 
 test("verify : contrôle non applicable dans ce contexte → MANUAL, jamais PASS", async () => {

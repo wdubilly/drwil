@@ -405,6 +405,26 @@ test("clôture : FAIL et ERROR renvoient en BUILD, MANUAL à l'attestation humai
   }
 });
 
+test("clôture : un critère d'acceptation non prouvé est refusé, nommé ; tous prouvés, ou sans critères, acceptés", () => {
+  const nom = "verify-2026-10-09T10-00-00-000Z.json";
+  const critere = (text, status) => ({ text, link: "CTR-012", human: false, status, proof: null });
+  const refuse = (criteria) => {
+    const { racine, evidence } = depotEnVerify();
+    evidence(nom, { status: "pass", criteria });
+    return verifyEvidence(racine);
+  };
+  const sansPreuve = refuse([critere("Un export vide est refusé", "pass"), critere("Le total est exact", "no-proof")]);
+  assert.equal(sansPreuve.ok, false);
+  assert.match(sansPreuve.reason, /« Le total est exact » \(no-proof\)/);
+  assert.doesNotMatch(sansPreuve.reason, /export vide/);
+  for (const status of ["unknown-proof", "not-durable", "not-pass"]) assert.equal(refuse([critere("C", status)]).ok, false, status);
+  assert.deepEqual(refuse([critere("Un export vide est refusé", "pass")]), { ok: true });
+  assert.deepEqual(refuse([]), { ok: true });
+  const { racine, evidence } = depotEnVerify();
+  evidence(nom, { status: "attested" });
+  assert.deepEqual(verifyEvidence(racine), { ok: true });
+});
+
 test("clôture : seule la dernière évidence compte", () => {
   const { racine, evidence } = depotEnVerify();
   evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass" });
