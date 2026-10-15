@@ -11,6 +11,7 @@ files:
   - packages/drwil/src/doctor.ts
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/package.json
+  - docs/contracts.md
 -->
 
 (cadrage confirmé au démarrage, le 2026-10-15 : la CLI n'a pas de commande
