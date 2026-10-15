@@ -15,7 +15,7 @@ modèle des lignes ci-dessous.
 
 | ID | Règle | Périmètre | Contrôle type (à adapter à la pile) |
 |---|---|---|---|
-| catalogue:SEC-001 | Toute route déclare la permission qu'elle exige ; refus par défaut si rien n'est déclaré. | routes de l'API | script qui liste les routes sans déclaration de permission |
+| catalogue:SEC-013 | Toute route déclare la permission qu'elle exige ; refus par défaut si rien n'est déclaré. | routes de l'API | script qui liste les routes sans déclaration de permission |
 | catalogue:SEC-002 | Le front masque une action interdite, le backend la revalide toujours : aucune décision d'autorisation ne repose sur le seul front. | backend | test d'intégration : appel direct sans passer par le front, sur un rôle sans le droit |
 | catalogue:SEC-009 | Toute donnée entrante (requête, fichier importé, webhook) est validée/nettoyée à la frontière, jamais utilisée telle quelle. | points d'entrée de l'API | schéma de validation systématique (ex. zod, pydantic) sur chaque route |
 | catalogue:SEC-011 | Donnée personnelle : minimisée, accès restreint, jamais en clair dans un log ou une sortie d'IA. | tout le dépôt | revue humaine + grep des champs connus dans les logs (preuve partielle, à documenter comme telle) |

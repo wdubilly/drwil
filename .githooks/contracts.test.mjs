@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { BASE_CHECKS, knownChecks, readContracts, validateContracts } from "./contracts.mjs";
+import { BASE_CHECKS, definedIds, idConflicts, knownChecks, readContracts, validateContracts } from "./contracts.mjs";
 
 const SECTIONS = `# Contrats
 
@@ -193,4 +193,30 @@ test("messages en anglais ; titre sans tiret, tableau sans règle", () => {
     "QUA-002: no declared proof (Check or Manual field)",
     'QUA-003: unknown check "fantome" (known: docs-references)',
   ]);
+});
+
+test("QUA-028 : ID du registre, doublon du catalogue et ID à la fois au catalogue et au registre, dans les deux langues", () => {
+  const registre =
+    "## SEC-001 — Portée\n**Règle** : r.\n\n| QUA-002 | ancien tableau |\n## QUA-002 — doublon\n## APP-001 — hors préfixes\n";
+  const { defined, duplicates } = definedIds(registre, "(?:SEC|QUA)-\\d{3}");
+  assert.deepEqual([...defined], ["SEC-001", "QUA-002"]);
+  assert.deepEqual(duplicates, ["QUA-002"]);
+  const catalogue = [
+    "| ID | Règle |",
+    "|---|---|",
+    "| catalogue:SEC-001 | toute route déclare sa permission |",
+    "| catalog:QUA-020 | e2e |",
+    "| catalogue:QUA-020 | e2e, en double |",
+    "| catalogue:QUA-009 | cite QUA-019 sans le définir |",
+    "Texte : catalogue:QUA-030 hors tableau.",
+  ].join("\n");
+  assert.deepEqual(idConflicts(catalogue, defined, "docs/contracts.md"), [
+    "ID QUA-020 défini plusieurs fois dans le catalogue",
+    "ID SEC-001 défini à la fois dans le catalogue et dans docs/contracts.md : un contrat adopté quitte le catalogue ; sinon, renuméroter la ligne du catalogue",
+  ]);
+  assert.match(
+    idConflicts(catalogue, defined, "docs/contracts.md", "en").join("\n"),
+    /QUA-020 defined more than once in the catalog\nID SEC-001 defined both/,
+  );
+  assert.deepEqual(idConflicts("| catalogue:QUA-009 | r |\n", new Set(["QUA-019"]), "docs/contracts.md"), []);
 });

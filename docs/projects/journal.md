@@ -1053,3 +1053,17 @@ l'index ; texte intégral dans l'historique git
   `docs/contracts.md` (un élargissement), déjà couvert par
   `docs/intentions/cadrage-copies-et-elargissement.md`.
 - **Clôturé par** : PR à venir.
+
+## 2026-10-15 — Cohérence des ID de contrat entre registre et catalogue
+
+- **Décisions clés** : `check-docs` signale un ID défini à la fois dans le
+  registre et dans le catalogue (un contrat adopté du catalogue garde son
+  ID et le quitte), ou deux fois dans le catalogue ; il lit les deux
+  formes `catalogue:` et `catalog:` ; bloquant si `newRequirements` l'impose,
+  avertissement sinon (QUA-028). Le doublon SEC-001 de ce dépôt (deux
+  règles différentes) est levé en renumérotant la ligne du catalogue en
+  `catalogue:SEC-013` ; le registre ne change pas. Lecture et comparaison
+  dans `.githooks/contracts.mjs`, `check-docs` étant au plafond de QUA-001.
+- **Limites connues** : aucune nouvelle ; la double forme du préfixe reste
+  en question dans `docs/intentions/prefixe-catalogue.md`.
+- **Clôturé par** : PR à venir.

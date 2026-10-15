@@ -250,6 +250,28 @@ test("QUA-021 : fiche « prête » : point [décision] restant, aucun lot ou auc
   assert.equal(cas("fr", "", "- [décision] ouvert", "(aucun.)").status, 0);
 });
 
+test("QUA-028 : un ID à la fois au registre et au catalogue, ou deux fois au catalogue : bloquant si newRequirements l'impose, avertissement sinon", () => {
+  const fichiers = (cfg) => ({
+    ".drwil/ia-first.json": JSON.stringify(cfg),
+    "docs/contracts.md": "# Contrats\n\n## SEC-001 — Portée\n**Règle** : r.\n**Manuel** : m.\n",
+    "docs/contracts-catalog.md":
+      "| ID | Règle |\n|---|---|\n| catalogue:SEC-001 | autre règle |\n| catalogue:QUA-002 | a |\n| catalogue:QUA-002 | b |\n",
+  });
+  const bloquant = verifier(fichiers({ newRequirements: "blocking" }));
+  assert.equal(bloquant.status, 1, bloquant.stdout);
+  assert.match(bloquant.stdout, /docs\/contracts-catalog\.md : ID QUA-002 défini plusieurs fois dans le catalogue/);
+  assert.match(bloquant.stdout, /docs\/contracts-catalog\.md : ID SEC-001 défini à la fois dans le catalogue et dans docs\/contracts\.md/);
+  const averti = verifier(fichiers({ lang: "en" }));
+  assert.equal(averti.status, 0, averti.stdout);
+  assert.match(averti.stdout, /⚠ docs\/contracts-catalog\.md : ID SEC-001 defined both in the catalog and in docs\/contracts\.md/);
+  const ailleurs = verifier({
+    ".drwil/ia-first.json": JSON.stringify({ newRequirements: "blocking", dirs: { contracts: "regles.md", catalog: "catalogue.md" } }),
+    "regles.md": "## QUA-001 — r\n**Règle** : r.\n**Manuel** : m.\n",
+    "catalogue.md": "| catalog:QUA-001 | r |\n",
+  });
+  assert.match(ailleurs.stdout, /catalogue\.md : ID QUA-001 défini à la fois dans le catalogue et dans regles\.md/);
+});
+
 test("aucune citation trouvée, dossiers réglés, cadrage désactivé : vert", () => {
   const r = verifier({
     ".drwil/ia-first.json": JSON.stringify({
