@@ -11,6 +11,8 @@ files:
   - packages/drwil/src/verify.ts
   - packages/drwil/test/kit.test.mjs
   - .githooks/state.test.mjs
+  - .githooks/briefs.mjs
+  - .githooks/state.mjs
   - docs/projects/model-brief.md
 -->
 
