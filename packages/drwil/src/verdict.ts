@@ -1,6 +1,7 @@
 // Presentation of the `drwil verify` verdict (split from verify.ts, which re-exports it): human
 // output and stable machine format.
 import { fill } from "./i18n.js";
+import { rulesLine } from "./rules.js";
 import type { Severity, Status, Verdict } from "./verify.js";
 
 const LABELS: Record<Status, string> = {
@@ -75,6 +76,8 @@ export function formatVerdict(v: Verdict): string {
         notSatisfied("advisory"),
       ),
     );
+  const rules = rulesLine(v.rules ?? [], v.lang);
+  if (rules) lines.push(rules);
   lines.push("", LABELS[v.status]);
   return lines.join("\n");
 }
@@ -136,5 +139,6 @@ export function verdictJson(v: Verdict) {
     })),
     errors: v.errors,
     unlinkedChecks: v.unattached,
+    businessRules: v.rules ?? [],
   };
 }

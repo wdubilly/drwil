@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { activeBrief, contractChanges, criteriaTable, type CriterionResult, judgeBrief, showOrigins } from "./criteria.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
+import { type BusinessRule, businessRules } from "./rules.js";
 import { verdictJson } from "./verdict.js";
 
 export { formatVerdict, verdictJson } from "./verdict.js";
@@ -65,6 +66,7 @@ export interface Verdict {
   criteria?: CriterionResult[];
   /** Contracts modified in the branch that the active brief does not declare; absent without an active brief. */
   undeclared?: string[];
+  rules?: BusinessRule[];
 }
 
 export interface VerifyOptions {
@@ -321,6 +323,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   showOrigins(results, all, lang);
   const brief = only ? null : await activeBrief(root);
   const verdict: Verdict = { lang, status, code: CODES[status], contracts: results, errors, unattached };
+  verdict.rules = businessRules(results, all, cfg);
   if (brief) Object.assign(verdict, judgeBrief(brief, results, contractChanges(root, registry, all, reader.readContracts)));
   return verdict;
 }

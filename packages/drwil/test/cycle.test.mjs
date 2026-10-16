@@ -7,7 +7,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { init, uninstall, verify } from "../dist/index.js";
+import { rulesLine } from "../dist/rules.js";
+import { formatForAgent, formatVerdict, init, uninstall, verdictJson, verify } from "../dist/index.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -243,6 +244,71 @@ test("QUA-030 : un contrôle partagé qui échoue est signalé non attribuable ;
     mkdirSync(join(dir, "test"));
     writeFileSync(join(dir, "test/promo.test.js"), 'test("APP-002 : code expiré refusé", () => {});\n');
     assert.equal(contrat(await verify({ targetDir: dir }), "QUA-029").status, "PASS", "test présent, porteur de l'ID");
+  } finally {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-031 : verify termine par le bilan des règles métier ; le détail est dans le JSON ; préfixe métier réglable", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
+    const cfg = JSON.parse(lire(dir, ".drwil/ia-first.json"));
+    cfg.checks = [
+      { id: "app-002", run: "node -e 0" },
+      { id: "app-003", run: 'node -e "process.exit(1)"' },
+      { id: "met-001", run: "node -e 0" },
+    ];
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg, null, 2));
+    mkdirSync(join(dir, "test"));
+    writeFileSync(join(dir, "test/promo.test.js"), 'test("APP-002 : code expiré refusé", () => {});\n');
+    const regles = [
+      "## APP-002 — Code promo expiré refusé\n**Règle** : refusé.\n**Contrôle** : `app-002`\n**Tests** : `test/promo.test.js`\n**Origine** : codes promo — « Un code expiré est refusé »",
+      "## APP-003 — Panier plafonné\n**Règle** : plafonné.\n**Contrôle** : `app-003`\n**Origine** : refonte du panier — « Le panier est plafonné »",
+      "## MET-001 — Remise fidélité\n**Règle** : appliquée.\n**Contrôle** : `met-001`",
+    ];
+    writeFileSync(join(dir, "docs/contracts.md"), `${lire(dir, "docs/contracts.md")}\n${regles.join("\n\n")}\n`);
+
+    const v = await verify({ targetDir: dir });
+    assert.deepEqual(
+      v.rules.map((r) => [r.id, r.state]),
+      [
+        ["APP-001", "to-complete"],
+        ["APP-002", "tested"],
+        ["APP-003", "broken"],
+      ],
+      "APP par défaut ; MET-001, sans origine, n'est pas une règle métier",
+    );
+    const ligne =
+      "Règles métier : 1 prouvée(s) par un test, 1 à compléter (APP-001), 1 cassée(s) (APP-003, chantier « refonte du panier »)";
+    assert.ok(formatVerdict(v).split("\n").includes(ligne), "sortie humaine");
+    const json = verdictJson(v);
+    assert.deepEqual(json.businessRules[1], {
+      id: "APP-002",
+      title: "Code promo expiré refusé",
+      state: "tested",
+      tests: ["test/promo.test.js"],
+      origin: "codes promo — « Un code expiré est refusé »",
+    });
+    assert.match(
+      formatForAgent(json),
+      /^Business rules: 1 proven by a test, 1 to complete \(APP-001\), 1 broken \(APP-003, workstream « refonte du panier »\)$/m,
+    );
+
+    cfg.businessPrefixes = ["MET"];
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg, null, 2));
+    const reglee = await verify({ targetDir: dir });
+    assert.deepEqual(
+      reglee.rules.map((r) => [r.id, r.state]),
+      [
+        ["APP-002", "tested"],
+        ["APP-003", "broken"],
+        ["MET-001", "untested"],
+      ],
+      "préfixe réglé : MET-001 compte, APP-001 (sans origine) non ; une origine compte toujours",
+    );
+    assert.match(formatVerdict(reglee), /1 prouvée\(s\) sans test cité \(MET-001\)/);
+    assert.equal(rulesLine([], "fr"), null, "aucune règle métier : aucune ligne de bilan");
   } finally {
     rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }

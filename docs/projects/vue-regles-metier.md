@@ -37,13 +37,12 @@ le contrat, `check-docs` refusant de citer un contrat absent du registre.)
 - `drwil verify` (sortie humaine et sortie agent) se termine par un bilan
   d'une ligne des règles métier : prouvées par un test, prouvées sans test
   cité, à compléter, cassées (chacune avec son chantier d'origine) —
-  contrat à créer
+  `QUA-031`
 - Le détail règle par règle (statut, preuve, tests cités, origine) est
-  dans le format JSON de verify et dans son évidence — contrat à créer (le
-  même que le critère précédent)
+  dans le format JSON de verify et dans son évidence — `QUA-031`
 - Une règle métier est un contrat au préfixe métier (`APP` par défaut,
   réglable : `businessPrefixes` de `.drwil/ia-first.json`) ou un contrat
-  qui porte un champ Origine — contrat à créer (le même)
+  qui porte un champ Origine — `QUA-031`
 
 ## 2. Hors périmètre
 
