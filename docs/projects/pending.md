@@ -232,10 +232,12 @@ une décision du demandeur.
 
 ## Ensuite
 
-- [ ] [décision] [P3] Couverture du paquet à 100 % (lot 3b, à la demande) :
-  trancher le script de release (mocker ou exclure) et mesurer aussi les
-  fichiers jamais importés (`--all`) —
+- [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
+  Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
+- [ ] [décision] [P3] Couverture du paquet relevée à 100 % (release
+  testée par mock, tranché le 2026-10-16) —
+  `docs/intentions/couverture-paquet-100.md`.
 - [ ] [décision] [P3] Banc complet avec / sans drwil (5 tâches), décidé
   sur les chiffres du mini-banc — `docs/intentions/bench-avec-sans-drwil.md`.
 - [ ] [décision] [P3] Community Ready : fichiers et parcours pour qu'un
