@@ -34,7 +34,7 @@ propre au dépôt est remplacé par la copie installée.)
 
 Demandé le 2026-10-16, pour le pilote de la 0.6.0 sur 2 ou 3 projets :
 savoir ce que coûte un chantier chez eux. La mesure existe, mais seulement
-dans ce dépôt (`outils/consommation.mjs`, journal du 2026-10-11) : elle lit
+dans ce dépôt (l’outil `consommation` du dépôt, journal du 2026-10-11) : elle lit
 les journaux de session de Claude Code, attribue chaque réponse à la
 branche du moment (`workstream/<fiche>`, `cadrage/<fiche>`), et donne
 tokens (entrée, sortie, cache lu, cache écrit), total pondéré, temps actif
@@ -83,7 +83,7 @@ pilote est le moment où ces chiffres servent.
 - Les journaux contiennent toute la conversation : n'en extraire que
   `usage`, modèle, horodatage, branche (SEC-007 : rien d'autre n'est
   affiché ni écrit).
-- Ce dépôt : `outils/consommation.mjs` et son test sont retirés au profit
+- Ce dépôt : l’outil `consommation` et son test sont retirés au profit
   de la copie installée et de `.githooks/consumption.test.mjs` (à créer) ; la carte
   suit (QUA-040).
 - Contrats à citer : QUA-040 (carte), QUA-018 (dépôt vs livrable), QUA-001
