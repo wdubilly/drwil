@@ -205,6 +205,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : lien contrat ↔ test, échec attribué à la bonne règle — « Quand un contrôle cité par plusieurs contrats échoue, verify le dit au lieu de l'imputer sans réserve à chacun »
 **Raison** : Dans un vrai projet, tout passe souvent par un seul `npm test` : verify bloquait bien, mais pouvait désigner APP-001 quand APP-002 était cassé.
 
+## QUA-031 — verify montre où en sont les règles métier
+**Règle** : `drwil verify` se termine, en sortie humaine et en sortie agent, par un bilan d'une ligne des règles métier : prouvées par un test, prouvées sans test cité, à compléter (part humaine), cassées (chacune avec son chantier d'origine). Le détail règle par règle (état, tests cités, origine) est dans le JSON de verify et dans son évidence. Une règle métier est un contrat au préfixe métier (`APP` par défaut, réglable : `businessPrefixes` de `.drwil/ia-first.json`) ou un contrat qui porte un champ Origine. Sans règle métier, pas de ligne.
+**Périmètre** : `packages/drwil/src/rules.ts`, la sortie de `drwil verify` (humaine, agent, JSON, évidence).
+**Source de vérité** : `packages/drwil/src/rules.ts`.
+**Preuve** : tests du paquet (`couverture-tests`).
+**Contrôle** : `couverture-tests`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Origine** : vue des règles métier dans drwil verify — « `drwil verify` se termine par un bilan d'une ligne des règles métier »
+**Raison** : La non-régression métier grandit chantier après chantier ; sans vue, on ne sait ni ce qui est prouvé, ni ce qui reste à compléter, ni quel chantier une règle cassée protège.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

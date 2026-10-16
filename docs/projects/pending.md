@@ -105,9 +105,6 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
-- [ ] [IA] [P1] Vue des règles métier dans `drwil verify` : prouvées par
-  test, à compléter, cassées avec leur chantier d'origine —
-  `docs/projects/vue-regles-metier.md`.
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
@@ -231,8 +228,8 @@ une décision du demandeur.
   et version, installé par `installer-depot`) —
   `docs/intentions/doctor-sur-le-depot-drwil.md`.
 - [ ] [décision] Non-régression métier alimentée chantier après chantier :
-  lien contrat ↔ tests contrôlé chez l'utilisateur, échec attribué au bon
-  contrat, vue des règles métier — `docs/intentions/non-regression-metier.md`.
+  restent la vue d'avancement HTML et la recette « demander une bonne
+  pratique hors adoption » — `docs/intentions/non-regression-metier.md`.
 - [ ] [décision] Un contrôle par règle dans le dépôt drwil : un test cassé
   désigne son contrat, pas treize —
   `docs/intentions/un-controle-par-regle-dans-le-depot.md`.

@@ -63,8 +63,9 @@ Tranchées par le demandeur le 2026-10-16 (sondage) :
 - Point 3 : la vue des règles métier dans `drwil verify` d'abord ; la vue
   d'avancement plus tard. Précisé le 2026-10-16 : préfixe métier (`APP`
   par défaut, réglable) plus tout contrat qui porte un champ Origine ; un
-  bilan d'une ligne, le détail dans le JSON — cadré dans
-  `docs/projects/vue-regles-metier.md`, en `[P1]`.
+  bilan d'une ligne, le détail dans le JSON — réalisé le 2026-10-16
+  (`docs/projects/journal.md`, « Vue des règles métier », QUA-031) ; la vue
+  d'avancement HTML reste à faire.
 
 ## Questions à trancher
 
