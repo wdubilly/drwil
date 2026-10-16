@@ -1222,3 +1222,21 @@ l'index ; texte intégral dans l'historique git
   (`packages/drwil/src/criteria.ts`, `originOf`, et
   `packages/drwil/src/rules.ts`, hors cadrage de ce chantier).
 - **Clôturé par** : PR #102.
+
+## 2026-10-16 — Fiche close sans critères : entretien sous barrière
+
+Relevé en écrivant les critères d'acceptation des fiches ouvertes
+(QUA-021, critères obligatoires) : la fiche était dépassée.
+
+- **Petite correction sous barrière bloquante** (2026-10-09) : trois
+  transitions humaines pour une correction mineure. Réglé par le
+  lancement en un geste et la clôture sur évidence de verify (« Fluidité,
+  levier 1 », 2026-10-10) : le 2026-10-16, le correctif ReDoS du caviardage
+  a été lancé en un seul sondage sur l'entretien courant.
+- **Aussi dépassée, pas encore close** : la fiche V0.2
+  (`docs/projects/drwil-v0-2-gouvernance-executable.md`), dont les restes
+  sont portés par `docs/projects/mini-banc.md` et
+  `docs/intentions/packager-kit-ia-first.md` ; le registre la cite, et sa
+  clôture touche donc `docs/contracts.md`, ce qu'un commit de cadrage ne
+  peut pas faire (barrière de périmètre).
+- **Texte intégral** : `git log --follow -- docs/projects/<fiche>.md`.

@@ -24,8 +24,10 @@ un contrat modifié non déclaré.
 
 ## Questions à trancher
 
-- [décision] Un critère non prouvé doit-il changer le verdict de verify,
-  ou seulement être affiché à côté ?
+- ~~[décision] Un critère non prouvé doit-il changer le verdict de verify,
+  ou seulement être affiché à côté ?~~ Tranchée le 2026-10-16 (demandeur) :
+  il fait tomber le verdict (`FAIL`, ou `MANUAL` pour un critère humain non
+  attesté) — cadré dans `docs/projects/verdict-et-criteres.md`.
 - ~~[décision] Un critère lié à un contrôle sans contrat reste-t-il
   permis ?~~ Tranchée le 2026-10-16 (demandeur) : non, toujours un contrat
   — réalisé le 2026-10-16 (`docs/projects/journal.md`, « Critères
