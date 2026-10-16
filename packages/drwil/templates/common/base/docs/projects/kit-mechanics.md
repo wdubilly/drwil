@@ -11,6 +11,7 @@ files:
   - .githooks/glob.mjs
   - .githooks/engine.mjs
   - .githooks/contracts.mjs
+  - .githooks/glossary.mjs
   - .githooks/risk.mjs
   - .githooks/state.mjs
   - .githooks/state-cli.mjs

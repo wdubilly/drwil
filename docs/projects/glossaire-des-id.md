@@ -47,24 +47,24 @@ son contexte, **quel que soit l'agent** (drwil est agnostique de l'outil).
 
 ## Critères d'acceptation
 
-(contrat à créer par ce chantier, avec son champ Origine.)
+(contrat créé par ce chantier, avec son champ Origine : QUA-039.)
 
 - Une seule source, glossary.mjs (nouveau, dans `.githooks/`), repère dans un texte les
   identifiants de contrat du registre, les lignes du catalogue et les lots
   et points numérotés de la fiche active, et rend leurs libellés ; une
   commande (`node .githooks/glossary.mjs "<texte>"`) les donne à tout
-  agent — contrat à créer
+  agent — `QUA-039`
 - Les sorties de drwil qui citent un identifiant de contrat le font suivre
   de son libellé (`drwil verify` en sortie humaine et agent,
   `.githooks/run-checks.mjs`, `.githooks/check-contract-tests.mjs`) : tout agent lit le
-  libellé sans rien faire — contrat à créer (le même)
+  libellé sans rien faire — `QUA-039`
 - `AGENTS.md` et les instructions livrées à Copilot et à Cursor disent de
   citer chaque identifiant avec son libellé et donnent la commande —
   contrat à créer (le même)
 - Avec Claude Code, après chaque outil dont la sortie cite des
   identifiants connus, un hook injecte leur libellé et le rappel de la
   règle ; rien si la sortie n'en cite aucun ; jamais bloquant, jamais de
-  session cassée — contrat à créer (le même)
+  session cassée — `QUA-039`
 
 ## 2. Hors périmètre
 
@@ -130,6 +130,9 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-16) : fiche cadrée ; aucun code écrit.
+- **Dernier état** (2026-10-16) : réalisé. Écart au lot 4 : le hook ne
+  suit pas « tout outil » mais ceux qui font entrer du texte (shell,
+  lectures, recherches) ; après une édition, il renvoyait à l'agent les
+  libellés de ce qu'il venait d'écrire.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).

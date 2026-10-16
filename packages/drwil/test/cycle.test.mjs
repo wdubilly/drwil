@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { rulesLine } from "../dist/rules.js";
+import { labelIds } from "../dist/verdict.js";
 import { attest, fingerprint, formatForAgent, formatVerdict, init, uninstall, verdictJson, verify } from "../dist/index.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -439,6 +440,31 @@ test("QUA-034 : un critère non prouvé fait tomber le verdict (FAIL), un critè
     );
     criteres("Prouvé — `QUA-001`", "Relu [humain] — `QUA-002`");
     assert.equal(await statut(), "MANUAL", "seul manque un jugement humain à attester : MANUAL");
+  } finally {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-039 : les sorties de verify font suivre un ID de son titre, une fois, jamais deux ; humaine et agent", async () => {
+  const titres = [
+    { id: "APP-001", title: "Commande vide refusée" },
+    { id: "APP-002", title: "Code promo expiré refusé" },
+  ];
+  assert.equal(
+    labelIds("partagé par APP-001, APP-002 ; APP-001 encore", titres),
+    "partagé par APP-001 (Commande vide refusée), APP-002 (Code promo expiré refusé) ; APP-001 encore",
+  );
+  assert.equal(labelIds("✓ PASS APP-001 Commande vide refusée", titres), "✓ PASS APP-001 Commande vide refusée", "déjà suivi de son titre");
+  assert.equal(labelIds("APP-0011 et APP-9", titres), "APP-0011 et APP-9", "ni un ID plus long, ni un inconnu");
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
+    const v = await verify({ targetDir: dir });
+    // Le libellé est donné une fois, à la première mention ; il n'est jamais répété en double.
+    for (const sortie of [formatForAgent(verdictJson(v)), formatVerdict(v)]) {
+      assert.match(sortie, /APP-001[^\n]*Example business contract/);
+      assert.equal(sortie.split("(Example business contract").length - 1, 0, "pas d'annotation après un titre déjà donné");
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }

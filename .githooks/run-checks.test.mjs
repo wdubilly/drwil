@@ -142,6 +142,17 @@ test("QUA-036 : au commit, une fiche supprimée sans que son intention soit touc
   }
 });
 
+test("QUA-039 : un ID cité dans un message est suivi de son titre, lu dans le registre", () => {
+  const r = lancer(
+    {
+      "docs/contracts.md": "## QUA-004 — Seuil de couverture de test\n**Règle** : r.\n",
+      ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "couverture (QUA-004)", run: "node -e 0", paths: ["src/**"] }] }),
+    },
+    { env: { DRWIL_HOOK: "pre-commit" }, indexer: ["docs/contracts.md"] },
+  );
+  assert.match(r.stdout, /non exécuté : couverture \(QUA-004 — Seuil de couverture de test\)/);
+});
+
 test("QUA-013 : hors commit (push, CI), un contrôle non exécuté fait échouer ; au commit, simple avertissement", () => {
   const sansCi = { ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "projet", run: "node -e 0" }] }) };
   let r = lancer(sansCi, { env: { CI: "true" } });

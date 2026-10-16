@@ -72,14 +72,14 @@ test("QUA-029 : bloquant si newRequirements l'impose, avertissement sinon ; un d
   assert.deepEqual(lancer(bloquant), {
     code: 1,
     lignes: [
-      "  ✗ APP-002 : test cité introuvable `test/absent.test.js`",
+      "  ✗ APP-002 (Code promo expiré refusé) : test cité introuvable `test/absent.test.js`",
       "contract-tests : 3 lien(s) contrat ↔ test vérifié(s), 1 problème(s)",
     ],
   });
   const ancien = projet({ ...fichiers, ".drwil/ia-first.json": '{"lang":"en"}' });
   const r = lancer(ancien);
   assert.equal(r.code, 0);
-  assert.equal(r.lignes[0], "  ⚠ APP-002: cited test not found `test/absent.test.js`");
+  assert.equal(r.lignes[0], "  ⚠ APP-002 (Code promo expiré refusé): cited test not found `test/absent.test.js`");
   assert.match(r.lignes[2], /recent requirement, not blocking/);
 });
 

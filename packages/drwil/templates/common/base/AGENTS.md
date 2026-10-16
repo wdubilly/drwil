@@ -77,6 +77,11 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
   the agent runs them one after the other without a new poll — start the
   next one only after the previous PR is merged, and stop at the first one
   that needs a human (attestation, unfixed FAIL, red CI, decision).
+- **Readable references**: an identifier cited to a human — contract ID
+  (`QUA-015`), catalog line (`catalog:QUA-004`), lot or point of a brief —
+  is always followed by what it designates: « QUA-015 (projects resumable
+  cold) ». Its label: `node .githooks/glossary.mjs "<text>"` (read from
+  the registry, the catalog and the active brief).
 - **End-of-task report**: files created or changed, checks run and their
   exact results, remaining limits and ambiguities. Present as proven only
   what a check actually verifies; the rest is labeled "human" or "not

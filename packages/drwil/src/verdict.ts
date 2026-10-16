@@ -41,6 +41,24 @@ const TEXTS = {
   },
 };
 
+/**
+ * `text` with the first mention of each contract followed by its title, unless that mention already is
+ * (QUA-039): an ID cited alone tells the human nothing. Same rule as .githooks/glossary.mjs, fed here by
+ * the verdict itself (the titles are in it).
+ */
+export function labelIds(text: string, contracts: { id: string; title: string }[]): string {
+  let out = text;
+  for (const k of contracts) {
+    if (!k.title) continue;
+    const m = new RegExp(`(?<![A-Za-z0-9:-])${k.id}(?![0-9])`).exec(out);
+    if (!m) continue;
+    const end = m.index + m[0].length;
+    if (out.slice(end, end + k.title.length + 6).includes(k.title.slice(0, 20))) continue;
+    out = `${out.slice(0, end)}${out[end] === ")" ? ` — ${k.title}` : ` (${k.title})`}${out.slice(end)}`;
+  }
+  return out;
+}
+
 /** Human output of the verdict. The FAIL/MANUAL/ERROR detail stays visible contract by contract. */
 export function formatVerdict(v: Verdict): string {
   const T = TEXTS[v.lang];
@@ -83,7 +101,7 @@ export function formatVerdict(v: Verdict): string {
   const rules = rulesLine(v.rules ?? [], v.lang);
   if (rules) lines.push(rules);
   lines.push("", LABELS[v.status]);
-  return lines.join("\n");
+  return labelIds(lines.join("\n"), v.contracts);
 }
 
 /**
