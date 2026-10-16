@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "contract": "QUA-013",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-16T07:21:51.727Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "9ca8b36206d6d9fc360157853660eb8a63bc05526d98d5b4df8fde824fd2d8ed",
+  "commit": "4a34f42b2f7d616b2b0f2baf2795d6fe5fe33c48",
+  "automated": [
+    {
+      "id": "ci-coverage",
+      "status": "ok"
+    },
+    {
+      "id": "couverture-tests",
+      "status": "ok"
+    },
+    {
+      "id": "couverture-hooks",
+      "status": "ok"
+    }
+  ]
+}
