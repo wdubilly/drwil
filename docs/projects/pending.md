@@ -65,9 +65,10 @@ réalisation :
 1. Fait le 2026-10-13 : `init` sur un projet existant, puis release 0.5.1
    (journal du 2026-10-13).
 2. Fait le 2026-10-13 : protéger master (journal du 2026-10-13).
-3. Sécuriser le moteur (feuille de route du 2026-10-14, phase 1, `[P0]`),
-   décidé en tête par le demandeur le 2026-10-14, avant le catalogue.
-4. Preuves de bout en bout (phase 2), puis fiabiliser le package (phase 3).
+3. Fait le 2026-10-14 : sécuriser le moteur (feuille de route du
+   2026-10-14, phase 1 ; vague 2 ci-dessous).
+4. Fait le 2026-10-15 : preuves de bout en bout (phase 2), puis fiabiliser
+   le package (phase 3) ; vague 2 ci-dessous.
 5. Catalogue, fiche 1 : format.
 6. Catalogue, fiche 2 : profils.
 7. Catalogue, fiche 3 : adoption ciblée.
