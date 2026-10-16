@@ -28,4 +28,5 @@ un contrat modifié non déclaré.
   ou seulement être affiché à côté ?
 - ~~[décision] Un critère lié à un contrôle sans contrat reste-t-il
   permis ?~~ Tranchée le 2026-10-16 (demandeur) : non, toujours un contrat
-  — cadré dans `docs/projects/criteres-obligatoires.md`.
+  — réalisé le 2026-10-16 (`docs/projects/journal.md`, « Critères
+  d'acceptation obligatoires, capitalisés en contrats »).

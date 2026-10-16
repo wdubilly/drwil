@@ -7,6 +7,9 @@ import { readBlock } from "./scope.mjs";
 
 export const BRIEF_DIRS = ["docs/projects/"];
 export const MODEL_RE = /^modele-|^model-/;
+// Routine maintenance (LOW risk, DRWIL-012) is launched like a brief but is not a workstream: no
+// acceptance criteria are required from it.
+export const ROUTINE_RE = /(^|\/)(routine-maintenance|entretien-courant)\.md$/;
 
 /** Project settings (.drwil/ia-first.json); unreadable or missing: none. */
 export function config(root) {
@@ -93,6 +96,17 @@ export function openDecisions(text) {
 /** A brief lists its increments as "- **Lot …" or "- **Increment …" bullets. */
 export function hasIncrements(text) {
   return /^\s*-\s*\*\*(Lot|Increment|Incrément)\b/im.test(text);
+}
+
+/**
+ * A workstream brief without any acceptance criterion (QUA-021): null if it has some, if it is routine
+ * maintenance or cannot be read; otherwise "blocking" or "warning", per `newRequirements` (an already
+ * equipped project is warned, not broken).
+ */
+export function missingCriteria(root, brief) {
+  const p = join(root, brief ?? "");
+  if (!brief || ROUTINE_RE.test(brief) || !existsSync(p) || acceptanceCriteria(readFileSync(p, "utf8")).length) return null;
+  return config(root).newRequirements === "blocking" ? "blocking" : "warning";
 }
 
 /**

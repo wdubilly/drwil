@@ -110,6 +110,10 @@ export const STATE_MESSAGES = {
     startFrom: `lancement refusé : activité {0} (lancer se fait depuis SCOPING, EXPECTATION ou REQUEST)`,
     startHuman: "lancement refusé : c'est une décision humaine (sondage `/drwil-start`, ou terminal interactif)",
     startNotScoped: `lancement refusé : « {0} » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)`,
+    startNoCriteria:
+      "lancement refusé : la fiche « {0} » n'a aucun critère d'acceptation — chacun, prouvé par un contrat, devient la non-régression des chantiers suivants (section « Critères d'acceptation » du modèle de fiche)",
+    closingNoCriteria:
+      "clôture refusée : la fiche « {0} » n'a aucun critère d'acceptation — en écrire, chacun prouvé par un contrat, puis relancer `drwil verify`",
     startInvalid: `lancement refusé : {0}`,
     started: `{0} → BUILD (lancé : {1}){2}`,
     mergeAuthorised: " — fusion automatique autorisée",
@@ -164,6 +168,10 @@ export const STATE_MESSAGES = {
     startFrom: `start refused: activity {0} (start from SCOPING, EXPECTATION or REQUEST)`,
     startHuman: "start refused: it is a human decision (`/drwil-start` poll, or interactive terminal)",
     startNotScoped: `start refused: "{0}" is not a scoped brief (scope block committed, brief not finished)`,
+    startNoCriteria:
+      'start refused: brief "{0}" has no acceptance criterion — each one, proven by a contract, becomes the non-regression of the next workstreams ("Acceptance criteria" section of the brief model)',
+    closingNoCriteria:
+      'closing refused: brief "{0}" has no acceptance criterion — write some, each proven by a contract, then run `drwil verify` again',
     startInvalid: `start refused: {0}`,
     started: `{0} → BUILD (started: {1}){2}`,
     mergeAuthorised: " — automatic merge authorised",

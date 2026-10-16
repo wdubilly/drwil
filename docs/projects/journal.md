@@ -1196,3 +1196,29 @@ l'index ; texte intégral dans l'historique git
   déclarer son contrôle à la main dans `.drwil/ia-first.json` ;
   `tests-contrats` le rappelle en refusant le commit.
 - **Clôturé par** : PR #100.
+
+## 2026-10-16 — Critères d'acceptation obligatoires, capitalisés en contrats
+
+- **Décisions clés** (demandeur, 2026-10-16) : toute fiche de chantier a
+  des critères d'acceptation, quelle que soit sa maturité ; sans eux,
+  `state.mjs start` et la clôture sont refusés si `newRequirements` vaut
+  `blocking`, avertis sinon ; l'entretien courant en est exempt (QUA-021).
+  Un critère est toujours prouvé par un contrat : lié à un contrôle seul,
+  il n'est plus prouvé (`no-contract`) — le code tient enfin la règle déjà
+  écrite de QUA-022 ; un contrat créé par le chantier sans champ Origine
+  n'est pas une preuve durable (`no-origin`). Un critère de jugement
+  humain reste permis, par un contrat Manuel attesté. Modèle de fiche et
+  doc livrée mis à jour.
+- **Intention d'origine** (`docs/intentions/preuve-des-criteres-visible.md`) :
+  question 2 réalisée ; la question 1 (un critère non prouvé change-t-il
+  le verdict de verify ?) reste ouverte, l'intention aussi.
+- **Limites connues** : huit fiches ouvertes n'ont aucun critère (dont
+  `mini-banc`, `ci-matrice-sur-pr`, `drwil-v0-2-gouvernance-executable`,
+  `entretien-sous-barriere-bloquante`, `adopter-seuil-couverture`) : leur
+  lancement est désormais refusé dans ce dépôt, à compléter avant chacune.
+  Le lecteur des critères prend un marqueur humain cité dans la phrase d'un
+  critère pour un vrai marqueur (vu sur la fiche de ce chantier,
+  reformulée). Le motif du champ Origine est écrit deux fois
+  (`packages/drwil/src/criteria.ts`, `originOf`, et
+  `packages/drwil/src/rules.ts`, hors cadrage de ce chantier).
+- **Clôturé par** : PR #102.

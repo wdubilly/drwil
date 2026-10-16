@@ -106,7 +106,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Contourner un contrôle masque silencieusement une régression ou un vrai problème ; c'est l'opposé de QUA-013 (un contrôle qui ne tourne pas ne prouve rien).
 
 ## QUA-021 — Fiche prête avec critères d'acceptation
-**Règle** : Une fiche de chantier déclarée « prête » (`**Maturité**`) a au moins un critère d'acceptation ; une fiche sans critères qui n'est pas « prête » peut être close, avec un avertissement : elle ne laisse aucun test de non-régression aux chantiers suivants.
+**Règle** : Toute fiche de chantier a au moins un critère d'acceptation, quelle que soit sa maturité : sans critère, son lancement (`state.mjs start`, `/drwil-start`) et sa clôture sont refusés si le projet impose les exigences récentes (`newRequirements` : `blocking`, cas de ce dépôt), avertis sinon ; l'entretien courant (`docs/projects/routine-maintenance.md`) en est exempt. Une fiche déclarée « prête » sans critère reste refusée par `check-docs`.
 **Périmètre** : Les fiches de `docs/projects/`.
 **Source de vérité** : `.githooks/briefs.mjs` (`readyGaps`), `.githooks/check-docs.mjs`, `.githooks/state.mjs` (clôture).
 **Preuve** : `check-docs` (hook + CI) refuse la fiche « prête » ; la clôture avertit.
@@ -116,7 +116,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Un chantier sans critère prouvé ne laisse rien à rejouer : la non-régression métier commence par la fiche.
 
 ## QUA-022 — Preuve d'un critère laissée au registre
-**Règle** : Un critère d'acceptation est prouvé par un contrat du registre avec un contrôle rejouable (ou un contrat Manuel attesté pour un jugement humain) ; un critère sans contrat est refusé à la clôture. `drwil verify` classe chaque contrat lié contre la base de la branche : créé, réutilisé tel quel (accepté) ou modifié.
+**Règle** : Un critère d'acceptation est prouvé par un contrat du registre avec un contrôle rejouable (ou un contrat Manuel attesté pour un jugement humain) ; un critère sans contrat, y compris lié à un contrôle seul, est refusé à la clôture. `drwil verify` classe chaque contrat lié contre la base de la branche : créé, réutilisé tel quel (accepté) ou modifié ; un contrat créé par le chantier porte le champ Origine (`<chantier> — « <critère> »`), sinon il n'est pas une preuve durable.
 **Périmètre** : Les critères d'acceptation de la fiche active.
 **Source de vérité** : `packages/drwil/src/criteria.ts` (`evaluateCriteria`, `contractChanges`).
 **Preuve** : `drwil verify` et son évidence, lue par la clôture.
