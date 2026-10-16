@@ -32,6 +32,27 @@ améliore le livrable et ce qu'il coûte en tokens**, sur un format réduit
 qui se lance d'une commande et se rejoue : 2 tâches, 3 répétitions, 2
 conditions, soit 12 passages.
 
+## Critères d'acceptation
+
+(ajoutés le 2026-10-16, critères obligatoires : QUA-021 ; contrats à créer
+par ce chantier, avec leur champ Origine.)
+
+- Le banc se rejoue d'une commande sur une copie jetable du projet de
+  référence, avec et sans drwil, et écrit un résultat JSON par passage
+  (tokens, coût, tours, verdict du juge) ; éprouvé avec un agent simulé —
+  contrat à créer
+- Le juge est indépendant : tests cachés copiés après le passage,
+  contournement détecté sur le diff (test sauté ou supprimé,
+  `--no-verify`, contrôle désactivé), fichiers hors tâche comptés —
+  contrat à créer
+- Un passage qui n'a pas pu tourner est « non mesuré », jamais compté
+  réussi ni raté — contrat à créer
+- Le workflow du banc ne se déclenche qu'à la demande, jamais sur une PR
+  ni un push, et aucun secret n'apparaît dans les résultats — contrat à
+  créer
+- Le rapport de campagne rapporte tous les passages, min et max, avec le
+  protocole daté fixé avant la mesure [humain] — contrat à créer
+
 ## 2. Hors périmètre
 
 - Le banc complet (5 tâches) : après lecture du mini-banc.

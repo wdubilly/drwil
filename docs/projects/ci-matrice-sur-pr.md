@@ -23,6 +23,15 @@ minutes sont gratuites : le sujet est le temps d'attente, plus le coût.
 Intention : diviser par deux les jobs Windows et macOS sans laisser de
 trou de test.
 
+## Critères d'acceptation
+
+(ajoutés le 2026-10-16, critères obligatoires : QUA-021.)
+
+- La suite du kit tourne sur Ubuntu, Windows et macOS avant chaque fusion,
+  mais Windows et macOS une seule fois par push d'une branche avec PR —
+  contrat à créer
+- Chaque contrôle garde une couverture CI prouvée — `QUA-013`
+
 ## 2. Hors périmètre
 
 - Supprimer l'un des deux déclenchements `push` / `pull_request` : écarté

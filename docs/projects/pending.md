@@ -105,6 +105,8 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
+- [ ] [IA] [P1] Un critère non prouvé fait tomber le verdict de verify —
+  `docs/projects/verdict-et-criteres.md`.
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
@@ -152,8 +154,6 @@ trailer, code commun) en anglais, migration des projets équipés par
   touche le sondage, l'état local, la recette de clôture et le gabarit — à
   cadrer avec la vue de relecture (`docs/intentions/vue-de-relecture.md`)
   et la protection de master.
-- [ ] [décision] [P2] Petite correction sous barrière bloquante : voie
-  légère décidée, modalités à définir — `docs/projects/entretien-sous-barriere-bloquante.md`.
 
 ## Vague 5 — catalogue et profils (ce qui casse une compatibilité)
 
@@ -193,10 +193,10 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
   `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [humain] [P2] drwil V0.2 — gouvernance exécutable : lots [IA]
-  fusionnés (PR #34 du dépôt archivé) ; restent le benchmark (DRWIL-022,
-  humain) et la publication (DRWIL-030, décision, voir ligne précédente) —
-  `docs/projects/drwil-v0-2-gouvernance-executable.md`.
+- [ ] [IA] [P2] drwil V0.2 — gouvernance exécutable : dépassée (lots [IA]
+  fusionnés ; benchmark porté par `docs/projects/mini-banc.md`, publication
+  par l'intention `packager-kit-ia-first`), à clore au journal avec la
+  citation du registre — `docs/projects/drwil-v0-2-gouvernance-executable.md`.
 - [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.

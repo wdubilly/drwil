@@ -22,6 +22,16 @@ Objectif : câbler `c8` sur `packages/drwil`, déclarer un contrôle dans
 `.drwil/ia-first.json` → `checks`, migrer `catalogue:QUA-004` vers
 `docs/contracts.md` avec un seuil réellement vérifié en local et en CI.
 
+## Critères d'acceptation
+
+(ajoutés le 2026-10-16, critères obligatoires : QUA-021 ; reste le lot 3b.)
+
+- Les seuils de couverture du paquet sont relevés jusqu'à 100 % lignes,
+  branches et fonctions, ou jusqu'au plafond accepté par une exclusion
+  documentée, et le contrôle reste vert — `QUA-004`
+- Un fichier du paquet jamais importé par les tests est mesuré (`--all`),
+  pas ignoré — `QUA-004`
+
 ## 2. Hors périmètre
 
 - Écrire les tests manquants pour atteindre 100 % dès ce chantier — relève
