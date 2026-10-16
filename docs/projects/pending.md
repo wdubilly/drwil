@@ -105,9 +105,8 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
-- [ ] [IA] [P1] Une documentation à jour pour la 0.6.0, et qui le reste
-  (changelog, README, INSTALL, adoption, carte), après les deux
-  précédentes — `docs/projects/doc-a-jour.md`.
+- [x] [IA] [P1] Une documentation à jour pour la 0.6.0, et qui le reste
+  — fait le 2026-10-16 (voir `docs/projects/journal.md`).
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
@@ -225,6 +224,10 @@ une décision du demandeur.
 - [ ] [décision] Le glossaire des identifiants injecté aussi chez les
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —
   `docs/intentions/glossaire-autres-agents.md`.
+
+- [ ] [décision] La carte et le README d'un projet client dans sa langue,
+  et la justesse des rôles de la carte —
+  `docs/intentions/carte-dans-la-langue-du-projet.md`.
 
 ## Ensuite
 
