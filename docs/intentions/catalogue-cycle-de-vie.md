@@ -7,6 +7,11 @@ validée ligne par ligne, découpage en trois fiches décidé (voir
 explicite de l'intention, critère de sortie mesurable de chaque fiche et
 points ouverts 10 à 14 (côté utilisateur).
 
+**Revu le 2026-10-16** : l'« Existant » du 2026-10-11 compte 11 contrats ;
+le registre en a 23 (QUA-021 à QUA-031 nés des chantiers de
+non-régression, d'ID et de règles métier). Le fond de l'intention reste
+valable (vague 5).
+
 **Projet** : DRWIL — **Niveau de risque** : HIGH (change la source de
 vérité des contrats, le moteur de vérification et le livrable).
 
@@ -323,7 +328,8 @@ AUTO complet possible :
 PARTIEL (automatique + jugement humain nommé) :
 
 - v1:TST-004 : lien défaut → test vérifiable ; « important » est humain
-  (`docs/intentions/non-regression-continue.md`).
+  (intention « non-régression continue », réalisée : `docs/projects/journal.md`,
+  « Intentions closes : livrable en anglais, non-régression continue »).
 - v1:COD-004, v1:COD-008, v1:COD-011 : mesure automatique ; exceptions
   et justifications humaines.
 - v1:SEC-011, v1:COD-007 : recherche de motifs connus ; exhaustivité
@@ -508,7 +514,8 @@ Aucune implémentation ne commence avant que **tous** soient remplis :
   `catalogue:`).
 - `docs/intentions/forge-dans-le-livrable.md` : forge (v1:GIT-003,
   v1:HOOK-014) dans le livrable.
-- `docs/intentions/non-regression-continue.md` : v1:TST-004.
+- `docs/projects/journal.md`, « Intentions closes : livrable en anglais,
+  non-régression continue » : v1:TST-004.
 - `docs/intentions/packager-kit-ia-first.md` : publication npm
   (question 3).
 - `docs/projects/journal.md` : couverture des hooks (2026-10-11).

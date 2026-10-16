@@ -2,6 +2,13 @@
 
 **Statut** (2026-10-04) : en attente — questions à trancher non encore tranchées par le demandeur (voir `docs/projects/suites-kit-portable.md`, point 7). Audit du paquet fait le 2026-10-04 (voir « Constat vérifié » ci-dessous) : le paquet ne fonctionne pas en l'état, bloquant confirmé en conditions réelles.
 
+**Revu le 2026-10-16** : le constat du 2026-10-04 est dépassé. Le paquet
+fonctionne (champ `files`, construction avant empaquetage, test du
+tarball installé comme un utilisateur : contrôle `tarball`), une release
+v0.5.1 existe (GitHub, 2026-10-13) et les questions 3 à 5 sont réglées
+par les faits. Restent la publication sur npm elle-même : questions 1 et 6
+(public ou privé, registre), vague 7 de l'index.
+
 ## Besoin
 Rendre drwil facilement distribuable pour un usage en équipe et/ou hors environnement local, afin de pouvoir l'initialiser avec `npx drwil init` sans dépendre d'un chemin absolu.
 

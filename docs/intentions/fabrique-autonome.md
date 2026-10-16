@@ -5,6 +5,12 @@ et du mini-banc (vague 6) — intention posée par le demandeur à partir d'une 
 externe, corrigée sur l'état réel du dépôt ; questions à trancher en fin
 de fiche.
 
+**Revu le 2026-10-16** : l'« Existant » du 2026-10-10 est en partie
+faux. `master` est protégé depuis le 2026-10-13 (ruleset, CODEOWNERS,
+compte machine de l'agent : journal) et le registre compte 23 contrats,
+dont la plupart prouvés par un contrôle (`drwil verify`). La vision et
+les questions restent valables (vague 6).
+
 **Projet** : DRWIL — **Niveau de risque** : HIGH (touche la gouvernance
 elle-même : qui fusionne, sur quelle preuve).
 
