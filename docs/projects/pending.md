@@ -241,6 +241,9 @@ une décision du demandeur.
 - [ ] [décision] [P3] Couverture du paquet relevée à 100 % (release
   testée par mock, tranché le 2026-10-16) —
   `docs/intentions/couverture-paquet-100.md`.
+- [ ] [décision] [P3] Tout code modifié arrive couvert à 100 % (couverture
+  du diff, adoption en douceur ; proposé le 2026-10-16) —
+  `docs/intentions/couverture-du-diff.md`.
 - [ ] [décision] [P3] Banc complet avec / sans drwil (5 tâches), décidé
   sur les chiffres du mini-banc — `docs/intentions/bench-avec-sans-drwil.md`.
 - [ ] [décision] [P3] Community Ready : fichiers et parcours pour qu'un
