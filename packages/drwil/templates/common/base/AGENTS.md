@@ -66,6 +66,12 @@ Full map and stack: `docs/architecture.md`.
 - **Review remark**: verify it in the code before applying it; if it's
   wrong or out of scope, say so with the reason rather than applying it to
   please.
+- **Closing loops intents**: at the closing of a workstream, each limit
+  left untreated becomes an intent brief in `docs/intentions/` — the agent
+  may write it alone, never a workstream brief (re-scoping it is the
+  requester's decision) — listed in the index as `[decision]` and cited by
+  the journal; the original intent (the brief's `**Intent**` field) is
+  updated, or summarised in the journal and removed when fully covered.
 - **End-of-task report**: files created or changed, checks run and their
   exact results, remaining limits and ambiguities. Present as proven only
   what a check actually verifies; the rest is labeled "human" or "not

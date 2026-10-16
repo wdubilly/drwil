@@ -1148,7 +1148,7 @@ l'index ; texte intégral dans l'historique git
   bonne règle et la vue des règles métier (QUA-029 à QUA-031, 2026-10-16).
 - **Pourquoi closes si tard** : rien ne reliait ces chantiers à leur
   intention à la clôture ; relevé le 2026-10-16 par le demandeur, la
-  mécanique est cadrée dans `docs/projects/consigner-retours-experience.md`.
+  mécanique est cadrée dans le chantier « La clôture boucle les intentions ».
 - **Texte intégral** : `git log --follow -- docs/intentions/<intention>.md`.
 
 ## 2026-10-16 — Attestation sans friction inutile
@@ -1234,8 +1234,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   lancement en un geste et la clôture sur évidence de verify (« Fluidité,
   levier 1 », 2026-10-10) : le 2026-10-16, le correctif ReDoS du caviardage
   a été lancé en un seul sondage sur l'entretien courant.
-- **Aussi dépassée, pas encore close** : la fiche V0.2
-  (`docs/projects/drwil-v0-2-gouvernance-executable.md`), dont les restes
+- **Aussi dépassée, close ensuite** (« Fiche close : drwil V0.2 ») : la
+  fiche V0.2, dont les restes
   sont portés par `docs/projects/mini-banc.md` et
   `docs/intentions/packager-kit-ia-first.md` ; le registre la cite, et sa
   clôture touche donc `docs/contracts.md`, ce qu'un commit de cadrage ne
@@ -1279,10 +1279,44 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (préfixes) : sans réglage, tout commit serait passé pour documentaire et
   n'aurait plus rejoué aucun test. Définition stricte retenue (`docs/` ou
   Markdown). Le contrôle signale déjà quatre fiches ouvertes à compléter
-  (`docs/projects/consigner-retours-experience.md`,
+  (le chantier « La clôture boucle les intentions »,
   `docs/projects/mini-banc.md`, `docs/projects/ci-matrice-sur-pr.md` :
   `.drwil/ia-first.json` ; `docs/projects/adopter-seuil-couverture.md`,
   `docs/projects/ci-matrice-sur-pr.md` : aucun test). Le cadrage a encore
   dû être élargi une fois (le hook Claude) : le rappel de cadrage côté
   agent n'était pas nommé dans le cadrage initial.
 - **Clôturé par** : PR #106.
+
+## 2026-10-16 — Fiche close : drwil V0.2 — gouvernance exécutable
+
+- **Cadrée le 2026-10-05**, elle a livré tous ses lots [IA] (DRWIL-001 à
+  005, 010 à 013, 020, 021, 031 ; PR #34 du dépôt archivé), dont la forme
+  sections du registre (ADR-001 : `docs/contracts.md` est la source
+  canonique des contrats) et `drwil verify` comme primitive de validation.
+- **Ses deux restes sont portés ailleurs** : le benchmark (DRWIL-022) par
+  `docs/projects/mini-banc.md` ; la publication npm (DRWIL-030) par
+  `docs/intentions/packager-kit-ia-first.md`, vague 7.
+- **Close dans le chantier « la clôture boucle les intentions »**, son
+  retrait touchant le registre, qui la citait (ce qu'un commit de cadrage
+  ne peut pas faire).
+- **Texte intégral** : `git log --follow -- docs/projects/drwil-v0-2-gouvernance-executable.md`.
+
+## 2026-10-16 — La clôture boucle les intentions
+
+- **Décisions clés** (demandeur, 2026-10-15 et 2026-10-16) : à la clôture
+  d'un chantier, chaque limite non traitée devient une fiche d'intention
+  (l'agent peut l'écrire seul, jamais une fiche de chantier), listée dans
+  l'index en `[décision]` et citée par le journal ; l'intention d'origine,
+  nommée par le champ `**Intention**` de la fiche, est mise à jour, ou
+  résumée au journal et retirée si elle est entièrement couverte. Règle
+  d'`AGENTS.md`, étape de la recette de clôture, rappel de l'activité
+  CLOSING. Au commit, une fiche supprimée sans que son intention soit
+  touchée est signalée ; une intention sans revue datée depuis 30 jours
+  aussi (ligne « Revu le »), jamais bloquant (QUA-036). La fiche V0.2,
+  dépassée, est close (« Fiche close : drwil V0.2 »).
+- **Appliqué à sa propre clôture** : pas d'intention d'origine (demande
+  directe) ; la seule limite relevée, des fiches ouvertes sans champ
+  Intention, est traitée dans le commit de clôture (`mini-banc` déclare
+  `docs/intentions/bench-avec-sans-drwil.md`, les autres ne viennent
+  d'aucune intention) : aucune intention à consigner.
+- **Clôturé par** : PR #107.

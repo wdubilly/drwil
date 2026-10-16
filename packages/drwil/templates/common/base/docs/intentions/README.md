@@ -11,7 +11,12 @@ A need that is already clear and doable as is does not go through here: it
 goes straight into the workstream index. Shape of a brief (checked,
 QUA-015): a dated (YYYY-MM-DD) « Status » line at the top, sections
 « Need », « Current state » (read from the code, dated) and « Open
-questions ».
+questions ». An intent re-read later and found partly outdated gets a
+dated line under its Status, `**Reviewed on YYYY-MM-DD**: what became
+false, what is still alive`; an intent with no dated review for 30 days is
+reported by the checks. Closing a workstream updates the intent it comes
+from (the brief's `**Intent**` field), or summarises it in the journal and
+removes it when fully covered.
 
 | Brief | In one line |
 |---|---|

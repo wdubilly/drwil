@@ -3,6 +3,7 @@
 **Statut** : cadré le AAAA-MM-JJ — lot 1 en cours.
 **Risque** : MEDIUM
 **Maturité** : à affiner | prêt | en cours
+**Intention** : `docs/intentions/<intention>.md` (quand le chantier en vient)
 
 (maturité : « prêt » = entièrement tranchée, peut être lancée ; « à
 affiner » = points encore ouverts ; « en cours » = en construction.

@@ -6,6 +6,7 @@
 // Each check therefore ends "failed", "OK" or "not run", never hidden.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
 import { checks, projectRoot } from "./engine.mjs";
 
 const root = projectRoot(import.meta.url);
@@ -24,6 +25,9 @@ const T = {
     failed: "échec :",
     ok: (n) => `contrôles exécutés : OK (${n} non exécuté(s), voir ci-dessus)`,
     staleAudit: (f, n) => `audit périmé (${f}, vieux de ${n} jours) : à relancer`,
+    staleIntent: (f, n) => `intention sans revue depuis ${n} jours (${f}) : la revoir, la mettre à jour (ligne « Revu le ») ou la clore`,
+    intentLeft: (b, i) =>
+      `la fiche ${b} est supprimée sans que son intention ${i} soit touchée : la mettre à jour, ou la résumer au journal et la retirer si elle est couverte`,
   },
   en: {
     project: "project checks (lint, tests…)",
@@ -32,6 +36,9 @@ const T = {
     failed: "failed:",
     ok: (n) => `checks run: OK (${n} not run, see above)`,
     staleAudit: (f, n) => `stale audit (${f}, ${n} days old): time to re-run`,
+    staleIntent: (f, n) => `intent not reviewed for ${n} days (${f}): review it, update it ("Reviewed on" line) or close it`,
+    intentLeft: (b, i) =>
+      `brief ${b} is deleted without touching its intent ${i}: update it, or summarise it in the journal and remove it when covered`,
   },
 }[lang];
 
@@ -57,7 +64,8 @@ const unrun = (what, configured = false) =>
   );
 const announce = (name) => console.log(`[ia-first] ${name}…`);
 // "not-applicable" (excluded by design: minimal mode, QUA-017 in CI…) is not shown, as before.
-for (const c of checks(root, { cfg, staged: stagedFiles() })) {
+const staged = stagedFiles();
+for (const c of checks(root, { cfg, staged })) {
   const r = c.run({ beforeRun: announce });
   if (r.status === "fail") failures.push(r.message ?? c.name);
   else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
@@ -81,7 +89,14 @@ for (const file of [
   if (days >= STALE_AFTER_DAYS) notRun.push(T.staleAudit(file, days));
 }
 
+// Reminders on the intents (QUA-036): never blocking, they say what the closing left behind.
+const reminders = [
+  ...(staged ? intentsLeftBehind(root, staged).map((l) => T.intentLeft(l.brief, l.intent)) : []),
+  ...staleIntents(root, cfg).map((s) => T.staleIntent(s.file, s.days)),
+];
+
 for (const c of notRun) console.log(`[ia-first] ⚠ ${T.notRun} ${c}`);
+for (const r of reminders) console.log(`[ia-first] ⚠ ${r}`);
 if (failures.length) {
   for (const c of failures) console.log(`[ia-first] ✗ ${T.failed} ${c}`);
   process.exit(1);

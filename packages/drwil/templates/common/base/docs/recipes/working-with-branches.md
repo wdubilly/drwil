@@ -61,6 +61,13 @@ request, instead of direct commits on the main branch.
   closing source, the index only lists remaining work). Nothing is
   lost — the full history stays in git
   (`git log --follow -- docs/projects/<brief>.md`).
+- Close the intent loop, in the closing commit: each limit left untreated
+  becomes an intent brief (`docs/intentions/`, one per limit, never a
+  workstream brief), listed in `docs/projects/pending.md` as `[decision]`
+  and cited from the journal's « Known limits »; the original intent (the
+  brief's `**Intent**` field) is updated, or summarised in the journal and
+  removed when fully covered. A closing commit that deletes the brief
+  without touching its intent gets a warning.
 - Active governance: the brief can be deleted during CLOSING (the state
   tolerates its absence in that activity only), then go back to Scoping
   (`node .githooks/state.mjs move SCOPING`).

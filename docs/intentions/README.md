@@ -10,7 +10,13 @@ abandonnée, sa fiche est supprimée avec la raison dans le message de commit.
 Un besoin déjà clair et réalisable tel quel ne passe pas par ici : il va
 directement dans l'index des chantiers. Forme d'une fiche (contrôlée,
 QUA-015) : ligne « Statut » en tête, datée (AAAA-MM-JJ), sections « Besoin »,
-« Existant » (relevé dans le code, daté) et « Questions à trancher ».
+« Existant » (relevé dans le code, daté) et « Questions à trancher ». Une
+intention relue plus tard et trouvée en partie dépassée reçoit une ligne
+datée sous son Statut, `**Revu le AAAA-MM-JJ** : ce qui est devenu faux,
+ce qui reste vivant` ; une intention sans revue datée depuis 30 jours est
+signalée par les contrôles. La clôture d'un chantier met à jour
+l'intention dont il vient (champ `**Intention**` de la fiche), ou la
+résume au journal et la retire si elle est entièrement couverte.
 
 Les intentions de ce dépôt sont listées une fois, dans l'index des
 chantiers (`docs/projects/pending.md`, marqueur `[décision]`) : pas de

@@ -2,6 +2,7 @@
 
 **Statut** : cadré le 2026-10-11 — décisions prises, lot 1 à lancer.
 **Risque** : HIGH
+**Intention** : `docs/intentions/bench-avec-sans-drwil.md`
 
 <!-- scope
 files:

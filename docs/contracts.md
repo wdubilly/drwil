@@ -2,7 +2,7 @@
 
 Chaque invariant est identifié par un ID unique. Ne pas les recopier ailleurs : citer l'ID.
 
-Preuve vérifiable (DRWIL-001, `docs/projects/drwil-v0-2-gouvernance-executable.md`) :
+Preuve vérifiable (DRWIL-001, fiche V0.2 close : `docs/projects/journal.md`, « Fiche close : drwil V0.2 ») :
 `**Contrôle**` cite, entre backticks, l'identifiant d'un contrôle connu du
 moteur (socle de `.githooks/run-checks.mjs`, ou `id` d'un contrôle de
 `.drwil/ia-first.json` → `checks`) ; la commande n'est jamais recopiée ici.
@@ -254,6 +254,16 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/scope.test.mjs`, `.githooks/scope-gate.test.mjs`, `.githooks/risk.test.mjs`, `.githooks/engine.test.mjs`
 **Origine** : un cadrage complet du premier coup, un élargissement sans friction — « Un fichier du gabarit cité dans le bloc scope couvre aussi sa copie »
 **Raison** : Neuf élargissements de cadrage en deux jours, chacun un commit à part et un `git stash` du lot en cours : la première friction qu'un vrai projet rencontrerait.
+
+## QUA-036 — La clôture boucle les intentions
+**Règle** : À la clôture d'un chantier, chaque limite non traitée devient une fiche d'intention (`docs/intentions/`, jamais une fiche de chantier : l'agent peut l'écrire seul, la recadrer reste une décision du demandeur), listée dans l'index en `[décision]` et citée par le journal ; l'intention d'origine, nommée par le champ `**Intention**` de la fiche, est mise à jour, ou résumée au journal et retirée si elle est entièrement couverte. Le rappel de l'activité CLOSING et la recette le disent ; le commit qui supprime une fiche sans toucher son intention reçoit un avertissement, sans blocage. Une intention dont la dernière revue datée (Statut, « Revu le … », « Existant » daté) a 30 jours ou plus est signalée par un avertissement non bloquant.
+**Périmètre** : `AGENTS.md`, la recette des branches (section « Closing »), `.githooks/state-texts.mjs`, `.githooks/briefs.mjs`, `.githooks/run-checks.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/briefs.mjs` (`briefIntent`, `intentsLeftBehind`, `lastReview`, `staleIntents`), `.githooks/state-texts.mjs`.
+**Preuve** : tests des hooks.
+**Contrôle** : `tests-qua-036`
+**Tests** : `.githooks/state.test.mjs`, `.githooks/run-checks.test.mjs`
+**Origine** : la clôture boucle les intentions — « À la clôture, le rappel d'activité et la recette demandent de consigner chaque limite non traitée en fiche d'intention »
+**Raison** : Deux intentions réalisées étaient restées ouvertes plusieurs jours et cinq autres disaient faux ; le 2026-10-16, ce bouclage a été fait à la main à chaque clôture.
 
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
