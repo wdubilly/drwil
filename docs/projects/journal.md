@@ -1092,3 +1092,25 @@ l'index ; texte intégral dans l'historique git
   (`docs/intentions/attestation-sans-friction.md`). La vue des règles métier (point 3 de
   `docs/intentions/non-regression-metier.md`) reste à faire.
 - **Clôturé par** : PR #91.
+
+## 2026-10-16 — Vue des règles métier dans drwil verify
+
+- **Décisions clés** : `drwil verify` se termine, en sortie humaine et en
+  sortie agent, par un bilan d'une ligne des règles métier : prouvées par
+  un test, prouvées sans test cité, à compléter, cassées (avec leur
+  chantier d'origine). Le détail règle par règle est dans le JSON
+  (`businessRules`) et dans l'évidence (QUA-031). Une règle métier est un
+  contrat au préfixe `APP` (réglable : `businessPrefixes`) ou un contrat
+  qui porte un champ Origine. Le calcul vit dans
+  `packages/drwil/src/rules.ts`, `packages/drwil/src/verify.ts` étant au plafond de QUA-001
+  (399 lignes). Le tableau complet et l'option `--rules` ont été écartés
+  (2026-10-16).
+- **Limites connues** : `packages/drwil/src/verify.ts` n'a plus de marge (399 lignes sur
+  400) : la prochaine évolution devra d'abord en extraire une partie. Le
+  cadrage oubliait la copie du dépôt de `docs/ia-first.md` (un
+  élargissement), un cas déjà couvert par
+  `docs/intentions/cadrage-copies-et-elargissement.md`. La vue
+  d'avancement HTML et le point 4 de
+  `docs/intentions/non-regression-metier.md` (recette « demander une bonne
+  pratique ») restent à faire.
+- **Clôturé par** : PR #94.
