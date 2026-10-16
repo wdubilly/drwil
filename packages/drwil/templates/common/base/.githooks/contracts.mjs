@@ -7,16 +7,19 @@
 // - table (legacy form): `| ID | Rule | … |`, read for compatibility.
 // Verification fields: `**Check**` (identifier(s) of a check known to the engine,
 // between backticks) and `**Manual**` (the part of the proof that stays human).
+// `**Tests**`: the test files that protect the contract, between backticks (checked by
+// .githooks/check-contract-tests.mjs: each exists and carries the contract's ID).
 // A check's command never lives here.
 
 /** Identifiers of the steps of .githooks/run-checks.mjs. The first four are also those of BASE in check-control-coverage.mjs. */
-export const BASE_CHECKS = ["secrets", "docs-references", "scope-gate", "checks-self-test", "ci-coverage", "main-branch"];
+export const BASE_CHECKS = ["secrets", "docs-references", "contract-tests", "scope-gate", "checks-self-test", "ci-coverage", "main-branch"];
 
 const ID_RE = /^[A-Z][A-Z0-9]*-\d+$/;
 const CHECK_FIELD = /^(contrôle|controle|check)$/i;
 const MANUAL_FIELD = /^(manuel|manual)$/i;
 const RULE_FIELD = /^(règle|regle|rule)$/i;
 const SEVERITY_FIELD = /^(sévérité|severite|severity)$/i;
+const TESTS_FIELD = /^tests$/i;
 
 // Only blocking contracts decide the gate of `drwil verify`; the others are run and shown
 // without changing the exit code. Default: blocking (P0 behaviour). A registry is written in its
@@ -47,7 +50,7 @@ function cells(line) {
 }
 
 /**
- * Contracts of the text, in order: { id, title, line, form, rule, checks, manual, severity, text }.
+ * Contracts of the text, in order: { id, title, line, form, rule, checks, manual, tests, severity, text }.
  * `text`: the raw section (or table row), base of an attestation's fingerprint.
  * Chain intent → requirement → proof: **Reason** (human intent), **Rule** (explicit requirement),
  * **Check** or **Manual** (proof). Missing field: null.
@@ -69,6 +72,7 @@ export function readContracts(text) {
         rule: null,
         checks: null,
         manual: null,
+        tests: null,
         severity: "blocking",
         rawSeverity: null,
         text: line,
@@ -96,6 +100,7 @@ export function readContracts(text) {
       if (CHECK_FIELD.test(name)) current.checks = identifiers(value);
       else if (MANUAL_FIELD.test(name)) current.manual = value;
       else if (RULE_FIELD.test(name)) current.rule = value;
+      else if (TESTS_FIELD.test(name)) current.tests = identifiers(value);
       else if (SEVERITY_FIELD.test(name)) {
         current.rawSeverity = value.replace(/`/g, "").trim();
         current.severity = SEVERITIES[current.rawSeverity.toLowerCase()] ?? null;
@@ -124,6 +129,7 @@ export function readContracts(text) {
       rule: iRule >= 0 ? c[iRule] || null : null,
       checks: iCheck >= 0 && c[iCheck] && c[iCheck] !== "—" ? identifiers(c[iCheck]) : null,
       manual: iManual >= 0 && c[iManual] && c[iManual] !== "—" ? c[iManual] : null,
+      tests: null,
       severity: "blocking",
       rawSeverity: null,
       text: line,

@@ -1067,3 +1067,26 @@ l'index ; texte intégral dans l'historique git
 - **Limites connues** : aucune nouvelle ; la double forme du préfixe reste
   en question dans `docs/intentions/prefixe-catalogue.md`.
 - **Clôturé par** : PR à venir.
+
+## 2026-10-16 — Lien contrat ↔ test, échec attribué à la bonne règle
+
+- **Décisions clés** : le contrôle `contract-tests` du moteur, livré dans
+  le gabarit, vérifie que chaque fichier cité par le champ Tests d'un
+  contrat existe et contient son ID. Il ne dépend pas de la pile, et il
+  est bloquant si `newRequirements` l'impose, avertissement sinon
+  (QUA-029). `drwil verify` signale un contrôle en échec partagé par
+  plusieurs contrats comme non attribuable (QUA-030). APP-001 et la
+  recette d'adoption enseignent un contrôle par règle métier, filtré par
+  l'ID. Dans ce dépôt, QUA-013, QUA-015, QUA-016, QUA-017 et QUA-028
+  citent enfin le contrôle qui rejoue leurs tests (contrats modifiés
+  déclarés ; QUA-013 et QUA-015 réattestés). Lecture des sorties des
+  lanceurs de tests écartée (2026-10-16).
+- **Limites connues** : dans ce dépôt, `couverture-tests` est cité par
+  13 contrats, donc un test cassé les fait tous échouer avec le message de
+  contrôle partagé. C'est honnête mais bruyant : appliquer ici « un
+  contrôle par règle » reste à cadrer. Ajouter un contrôle à un contrat
+  impose de le réattester, même quand la preuve est renforcée. `drwil
+  attest` relance les contrôles cités sans rien afficher, parfois pendant
+  plusieurs minutes. La vue des règles métier (point 3 de
+  `docs/intentions/non-regression-metier.md`) reste à faire.
+- **Clôturé par** : PR #91.

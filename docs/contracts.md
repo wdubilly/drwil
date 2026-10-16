@@ -31,7 +31,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout contrôle listé dans les vérifs.
 **Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution.
 **Preuve** : Sortie lue du contrôle concerné.
-**Contrôle** : `ci-coverage`
+**Contrôle** : `ci-coverage`, `couverture-tests`, `couverture-hooks`
 **Manuel** : lecture de la sortie du contrôle concerné.
 **Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
@@ -65,7 +65,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `docs/projects/`, `docs/intentions/`.
 **Source de vérité** : `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI) ; justesse du contenu : humaine.
-**Contrôle** : `docs-references`
+**Contrôle** : `docs-references`, `couverture-tests`
 **Manuel** : justesse du contenu des fiches.
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
@@ -75,7 +75,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout le dépôt (fichiers indexés), hors `docs/` et le markdown.
 **Source de vérité** : `.githooks/scope.mjs`, `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/scope-reminder.mjs`.
-**Contrôle** : `docs-references`
+**Contrôle** : `docs-references`, `couverture-tests`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 
@@ -84,7 +84,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout dépôt git, y compris avant le tout premier commit, en local uniquement (hooks `pre-commit`/`pre-push`).
 **Source de vérité** : `docs/recipes/working-with-branches.md`.
 **Preuve** : `.githooks/run-checks.mjs` (hook uniquement, jamais en CI).
-**Contrôle** : `main-branch`
+**Contrôle** : `main-branch`, `couverture-tests`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un commit ou un push direct sur la branche principale contourne la revue (pull/merge request) et casse le lien fiche ↔ branche décrit par la recette.
 
@@ -180,10 +180,30 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `docs/contracts.md` et `docs/contracts-catalog.md` (dossiers réglables : `dirs.contracts`, `dirs.catalog`).
 **Source de vérité** : `.githooks/contracts.mjs` (`definedIds`, `idConflicts`), `.githooks/check-docs.mjs`.
 **Preuve** : `check-docs` (hook + CI).
-**Contrôle** : `docs-references`
+**Contrôle** : `docs-references`, `couverture-hooks`
 **Tests** : `.githooks/contracts.test.mjs`, `.githooks/check-docs.test.mjs`
 **Origine** : cohérence des ID de contrat entre registre et catalogue — « Un ID défini à la fois dans le registre et dans le catalogue, ou deux fois dans le catalogue, est signalé par check-docs »
 **Raison** : Deux règles sous un même ID rendent toute citation ambiguë ; le cas s'est produit (SEC-001) et a failli se reproduire (un ID déjà pris par le catalogue proposé pour un nouveau contrat).
+
+## QUA-029 — Les tests cités par un contrat existent et portent son ID
+**Règle** : Chaque fichier cité par le champ Tests d'un contrat existe et contient l'ID du contrat (cité dans le nom du test qui le protège). Indépendant de la pile : les noms de test ne sont pas analysés. Bloquant si le projet impose les exigences récentes (`newRequirements` : `blocking`, cas de ce dépôt), avertissement sinon.
+**Périmètre** : le champ Tests du registre (`docs/contracts.md`, dossier réglable : `dirs.contracts`), livré dans le gabarit.
+**Source de vérité** : `.githooks/check-contract-tests.mjs`, `.githooks/contracts.mjs` (lecture du champ Tests).
+**Preuve** : contrôle `contract-tests` du moteur (hook + CI, `drwil verify`).
+**Contrôle** : `contract-tests`, `couverture-hooks`
+**Tests** : `.githooks/check-contract-tests.test.mjs`, `.githooks/contracts.test.mjs`, `.githooks/engine.test.mjs`
+**Origine** : lien contrat ↔ test, échec attribué à la bonne règle — « Un contrat dont le champ Tests cite un fichier absent, ou un fichier qui ne porte pas son ID, est signalé »
+**Raison** : Une règle métier n'est une non-régression que si son test existe encore : un test supprimé ou renommé laissait le contrat vert sans plus rien prouver.
+
+## QUA-030 — Un contrôle partagé qui échoue est signalé non attribuable
+**Règle** : Quand un contrôle cité par plusieurs contrats échoue, `drwil verify` le dit dans les raisons de chacun (« contrôle partagé par APP-001, APP-002 : échec non attribuable à une seule règle »), au lieu de l'imputer sans réserve. Le registre livré (APP-001) et la recette d'adoption enseignent un contrôle par règle métier, qui filtre ses tests par l'ID.
+**Périmètre** : `packages/drwil/src/verify.ts` ; livrable : `docs/contracts.md` et `docs/recipes/adopt-the-kit.md` du gabarit.
+**Source de vérité** : `packages/drwil/src/verify.ts`, `docs/recipes/adopt-the-kit.md` (étape 5).
+**Preuve** : tests du paquet (`couverture-tests`).
+**Contrôle** : `couverture-tests`
+**Tests** : `packages/drwil/test/cycle.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : lien contrat ↔ test, échec attribué à la bonne règle — « Quand un contrôle cité par plusieurs contrats échoue, verify le dit au lieu de l'imputer sans réserve à chacun »
+**Raison** : Dans un vrai projet, tout passe souvent par un seul `npm test` : verify bloquait bien, mais pouvait désigner APP-001 quand APP-002 était cassé.
 
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).

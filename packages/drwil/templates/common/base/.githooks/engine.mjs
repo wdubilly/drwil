@@ -24,6 +24,7 @@ const TEXTS = {
     noGit: "pas de dépôt git",
     minimalMode: "mode minimal",
     docs: "chemins et contrats cités dans la doc",
+    contractTests: "tests cités par les contrats, présents et porteurs de leur ID (QUA-029)",
     scope: "périmètre de l'attente",
     branch: "branche principale (QUA-017)",
     branchCi: "jamais en CI",
@@ -43,6 +44,7 @@ const TEXTS = {
     noGit: "not a git repository",
     minimalMode: "minimal mode",
     docs: "paths and contracts cited in docs",
+    contractTests: "tests cited by the contracts, present and carrying their ID (QUA-029)",
     scope: "brief scope",
     branch: "main branch (QUA-017)",
     branchCi: "never in CI",
@@ -118,6 +120,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   });
 
   add("docs-references", T.docs, (o, name) => launch(process.execPath, [".githooks/check-docs.mjs"], o, name));
+  add("contract-tests", T.contractTests, (o, name) => launch(process.execPath, [".githooks/check-contract-tests.mjs"], o, name));
 
   // Brief scope gate (.githooks/scope-gate.mjs): at commit time, the local state;
   // elsewhere (push, CI, verify), each commit of the branch is replayed through its trailer.

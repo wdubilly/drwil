@@ -40,6 +40,7 @@ test("forme sections : Contrôle, Manuel, contrats sans champ", () => {
     rule: "aucun secret.",
     checks: ["secrets"],
     manual: null,
+    tests: null,
     severity: "blocking",
     rawSeverity: null,
   });
@@ -53,6 +54,27 @@ test("forme sections : Contrôle, Manuel, contrats sans champ", () => {
   assert.equal(k[2].checks, null);
   assert.equal(k[3].checks, null);
   assert.equal(k[3].manual, null);
+});
+
+test("QUA-029 : champ Tests lu (fichiers entre accents graves), en français et en anglais ; absent = null", () => {
+  const [fr, en, sans] = readContracts(`## APP-002 — Code promo expiré refusé
+**Règle** : un code expiré est refusé.
+**Contrôle** : \`app-002\`
+**Tests** : \`test/promo.test.js\`, \`test/panier.test.js\`
+
+## APP-003 — Expired code refused
+**Rule** : refused.
+**Check** : \`app-003\`
+**Tests**: \`tests/test_promo.py\`
+
+## APP-004 — Sans tests
+**Règle** : rien.
+**Contrôle** : \`app-004\`
+`);
+  assert.deepEqual(fr.tests, ["test/promo.test.js", "test/panier.test.js"]);
+  assert.deepEqual(en.tests, ["tests/test_promo.py"]);
+  assert.equal(sans.tests, null);
+  assert.equal(readContracts("| ID | Règle |\n|---|---|\n| APP-005 | r |")[0].tests, null);
 });
 
 test("forme sections : « **Contrôle:** » et valeur à la ligne suivante", () => {

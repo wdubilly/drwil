@@ -33,9 +33,15 @@ the requester's place (`AGENTS.md`, Conduct section).
 5. **Write the first business contract**: `docs/contracts.md` ships
    `APP-001`, an example to replace. With the requester (`[decision]`), pick
    the project's most critical business rule, write the test that proves
-   it, declare it in `checks` with an `id`, cite it as `**Check**` and
-   remove the `**Manual**` field: `drwil verify` then replays it at every
-   workstream. From then on, each workstream links its acceptance criteria
+   it (its name starts with the contract's ID: `APP-001: …`), declare it in
+   `checks` with an `id`, cite it as `**Check**`, list its test file(s) as
+   `**Tests**` (QUA-029 checks they exist and carry the ID) and remove the
+   `**Manual**` field: `drwil verify` then replays it at every workstream.
+   **One check per business rule**, filtering its tests by the ID
+   (`npm test -- -t "APP-001"`, `pytest -k APP_001`, `go test -run APP001`):
+   a single check shared by several contracts (one plain `npm test`) cannot
+   say which rule a failure breaks — `drwil verify` reports it as not
+   attributable. From then on, each workstream links its acceptance criteria
    to such contracts (`docs/projects/model-brief.md`, « Acceptance
    criteria »): created by the workstream, or reused as they are; a
    contract changed on purpose is declared in the brief (« Modified

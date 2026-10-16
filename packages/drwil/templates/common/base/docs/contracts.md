@@ -107,6 +107,14 @@ contracts » section).
 **Reason** : bypassing a check silently hides a regression, the opposite of QUA-013
 **Manual** : a bypass rarely leaves a machine-checkable trace.
 
+## QUA-029 — A contract's cited tests exist and carry its ID
+**Rule** : Every file cited by the **Tests** field of a contract exists and contains the contract's ID (cited in the name of the test that protects it). Stack-agnostic: test names are not parsed. Blocking if the project enforces recent requirements (`newRequirements`: `blocking`, default of fresh installs), warning otherwise.
+**Scope** : the **Tests** field of this registry
+**Source of truth** : `.githooks/check-contract-tests.mjs`
+**Proof** : `.githooks/check-contract-tests.mjs` (hook + CI, `drwil verify`)
+**Reason** : a business rule is only a non-regression while its test still exists: a deleted or renamed test would leave the contract green while proving nothing
+**Check** : `contract-tests`
+
 
 ## Business (APP)
 
@@ -114,9 +122,9 @@ contracts » section).
 **Rule** : (example) An order with no line is refused. Replace it with the most critical business rule of your project.
 **Scope** : the code that applies this rule
 **Source of truth** : the module that implements it
-**Proof** : a test of this rule, declared as a check (`.drwil/ia-first.json` → `checks`, with an `id`), replayed by `drwil verify` at every workstream
-**Reason** : an acceptance criterion proven by a contract becomes the business non-regression: the next workstreams cannot break it without seeing it
-**Manual** : check to complete — write the test, declare it in `checks` with an `id`, cite it here as **Check**, then remove this field (`docs/recipes/adopt-the-kit.md`, step 5).
+**Proof** : a test of this rule, named after its ID, declared as its own check (`.drwil/ia-first.json` → `checks`, with an `id`, filtering the tests by the ID: `npm test -- -t "APP-001"`), replayed by `drwil verify` at every workstream
+**Reason** : an acceptance criterion proven by a contract becomes the business non-regression: the next workstreams cannot break it without seeing it, and its own check names the broken rule
+**Manual** : check to complete — write the test, declare it in `checks` with an `id`, cite it here as **Check**, list its file as **Tests**, then remove this field (`docs/recipes/adopt-the-kit.md`, step 5).
 
 
 ## Out of registry (these are not contracts)

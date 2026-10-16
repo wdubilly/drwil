@@ -209,3 +209,41 @@ test("critères d'acceptation : la clôture est refusée tant qu'un critère n'e
     rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
+
+test("QUA-030 : un contrôle partagé qui échoue est signalé non attribuable ; QUA-029 : un test cité absent fait échouer le lien", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
+    const cfg = JSON.parse(lire(dir, ".drwil/ia-first.json"));
+    cfg.checks = [
+      { id: "tests", run: 'node -e "process.exit(1)"' },
+      { id: "app-004", run: "node -e 0" },
+    ];
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg, null, 2));
+    const regles = [
+      "## APP-002 — Code promo expiré refusé\n**Règle** : refusé.\n**Contrôle** : `tests`\n**Tests** : `test/promo.test.js`",
+      "## APP-003 — Panier plafonné\n**Règle** : plafonné.\n**Contrôle** : `tests`",
+      "## APP-004 — Commande vide refusée\n**Règle** : refusée.\n**Contrôle** : `app-004`",
+    ];
+    writeFileSync(join(dir, "docs/contracts.md"), `${lire(dir, "docs/contracts.md")}\n${regles.join("\n\n")}\n`);
+
+    const contrat = (v, id) => v.contracts.find((k) => k.id === id);
+    const v = await verify({ targetDir: dir });
+    for (const id of ["APP-002", "APP-003"]) {
+      assert.equal(contrat(v, id).status, "FAIL", id);
+      assert.ok(
+        contrat(v, id).reasons.some((r) => r.includes("tests est partagé par APP-002, APP-003 : échec non attribuable")),
+        id,
+      );
+    }
+    assert.equal(contrat(v, "APP-004").status, "PASS");
+    assert.ok(!contrat(v, "APP-004").reasons.some((r) => r.includes("partagé")));
+    assert.equal(contrat(v, "QUA-029").status, "FAIL", "test cité introuvable : lien rompu");
+
+    mkdirSync(join(dir, "test"));
+    writeFileSync(join(dir, "test/promo.test.js"), 'test("APP-002 : code expiré refusé", () => {});\n');
+    assert.equal(contrat(await verify({ targetDir: dir }), "QUA-029").status, "PASS", "test présent, porteur de l'ID");
+  } finally {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
