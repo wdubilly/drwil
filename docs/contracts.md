@@ -31,7 +31,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout contrôle listé dans les vérifs.
 **Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution.
 **Preuve** : Sortie lue du contrôle concerné.
-**Contrôle** : `ci-coverage`
+**Contrôle** : `ci-coverage`, `couverture-tests`, `couverture-hooks`
 **Manuel** : lecture de la sortie du contrôle concerné.
 **Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
@@ -65,7 +65,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `docs/projects/`, `docs/intentions/`.
 **Source de vérité** : `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI) ; justesse du contenu : humaine.
-**Contrôle** : `docs-references`
+**Contrôle** : `docs-references`, `couverture-tests`
 **Manuel** : justesse du contenu des fiches.
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
@@ -75,7 +75,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout le dépôt (fichiers indexés), hors `docs/` et le markdown.
 **Source de vérité** : `.githooks/scope.mjs`, `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/scope-reminder.mjs`.
-**Contrôle** : `docs-references`
+**Contrôle** : `docs-references`, `couverture-tests`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 
@@ -84,7 +84,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout dépôt git, y compris avant le tout premier commit, en local uniquement (hooks `pre-commit`/`pre-push`).
 **Source de vérité** : `docs/recipes/working-with-branches.md`.
 **Preuve** : `.githooks/run-checks.mjs` (hook uniquement, jamais en CI).
-**Contrôle** : `main-branch`
+**Contrôle** : `main-branch`, `couverture-tests`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un commit ou un push direct sur la branche principale contourne la revue (pull/merge request) et casse le lien fiche ↔ branche décrit par la recette.
 
@@ -180,7 +180,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `docs/contracts.md` et `docs/contracts-catalog.md` (dossiers réglables : `dirs.contracts`, `dirs.catalog`).
 **Source de vérité** : `.githooks/contracts.mjs` (`definedIds`, `idConflicts`), `.githooks/check-docs.mjs`.
 **Preuve** : `check-docs` (hook + CI).
-**Contrôle** : `docs-references`
+**Contrôle** : `docs-references`, `couverture-hooks`
 **Tests** : `.githooks/contracts.test.mjs`, `.githooks/check-docs.test.mjs`
 **Origine** : cohérence des ID de contrat entre registre et catalogue — « Un ID défini à la fois dans le registre et dans le catalogue, ou deux fois dans le catalogue, est signalé par check-docs »
 **Raison** : Deux règles sous un même ID rendent toute citation ambiguë ; le cas s'est produit (SEC-001) et a failli se reproduire (un ID déjà pris par le catalogue proposé pour un nouveau contrat).
