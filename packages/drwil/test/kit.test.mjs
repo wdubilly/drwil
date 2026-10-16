@@ -638,6 +638,61 @@ test("rappel court : hook de saisie Claude livré, empreinte ignorée par Git, r
   assert.equal(rappel().stdout, "", "état inchangé : rien n'est injecté");
 });
 
+test("QUA-037 : un sondage à choix multiple lance la première fiche et met les suivantes en file, avec la fusion", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const fiche = (nom) =>
+    writeFileSync(
+      join(dir, `docs/projects/${nom}.md`),
+      `# Projet : ${nom}\n\n**Statut** : cadré le 2026-10-16.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/${nom}.ts\n-->\n\n## Critères d'acceptation\n\n- Critère — \`APP-001\`\n`,
+    );
+  fiche("un");
+  fiche("deux");
+  fiche("trois");
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+  const sondage = {
+    questions: [
+      {
+        question: "Quelles fiches ?",
+        header: "drwil-start",
+        multiSelect: true,
+        options: ["un", "deux", "trois"].map((n) => ({ label: `docs/projects/${n}.md`, description: n })),
+      },
+      {
+        question: "Fusion ?",
+        header: "drwil-merge",
+        multiSelect: false,
+        options: [
+          { label: "Fusion automatique", description: "" },
+          { label: "Fusion manuelle", description: "" },
+        ],
+      },
+    ],
+  };
+  const r = spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+    cwd: dir,
+    encoding: "utf8",
+    input: JSON.stringify({
+      hook_event_name: "PostToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: sondage,
+      tool_response: {
+        ...sondage,
+        answers: { "Quelles fiches ?": "docs/projects/un.md, docs/projects/trois.md", "Fusion ?": "Fusion automatique" },
+      },
+    }),
+  });
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /file : ensuite docs\/projects\/trois\.md/);
+  const etat = JSON.parse(read(dir, ".drwil/state.json"));
+  assert.equal(etat.active_brief, "docs/projects/un.md");
+  assert.deepEqual(etat.queue, ["docs/projects/trois.md"]);
+  assert.equal(etat.queue_merge, true);
+  assert.equal(etat.auto_merge, true);
+});
+
 test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

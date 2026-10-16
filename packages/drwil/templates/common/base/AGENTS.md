@@ -72,6 +72,10 @@ Full map and stack: `docs/architecture.md`.
   requester's decision) — listed in the index as `[decision]` and cited by
   the journal; the original intent (the brief's `**Intent**` field) is
   updated, or summarised in the journal and removed when fully covered.
+- **Queue of workstreams**: when the human ticked several briefs at start,
+  the agent runs them one after the other without a new poll — start the
+  next one only after the previous PR is merged, and stop at the first one
+  that needs a human (attestation, unfixed FAIL, red CI, decision).
 - **End-of-task report**: files created or changed, checks run and their
   exact results, remaining limits and ambiguities. Present as proven only
   what a check actually verifies; the rest is labeled "human" or "not

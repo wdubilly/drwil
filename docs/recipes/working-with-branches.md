@@ -74,6 +74,12 @@ request, instead of direct commits on the main branch.
   brief's `**Intent**` field) is updated, or summarised in the journal and
   removed when fully covered. A closing commit that deletes the brief
   without touching its intent gets a warning.
+- Queue (decided at start, several briefs ticked in the `/drwil-start` poll): once the
+  closing commit is pushed and the merge scheduled, go back to Scoping, wait until the PR is
+  merged, update the main branch, then start the next brief yourself:
+  `node .githooks/state.mjs next` (allowed to the agent for the head of the queue only). Stop
+  at the first workstream that gets stuck (human attestation, FAIL not fixed, red CI, decision
+  to make) and say why; `node .githooks/state.mjs queue stop` drops what is left.
 - Active governance: the brief can be deleted during CLOSING (the state
   tolerates its absence in that activity only), then go back to Scoping
   (`node .githooks/state.mjs move SCOPING`).

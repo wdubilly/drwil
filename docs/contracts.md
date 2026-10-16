@@ -265,6 +265,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : la clôture boucle les intentions — « À la clôture, le rappel d'activité et la recette demandent de consigner chaque limite non traitée en fiche d'intention »
 **Raison** : Deux intentions réalisées étaient restées ouvertes plusieurs jours et cinq autres disaient faux ; le 2026-10-16, ce bouclage a été fait à la main à chaque clôture.
 
+## QUA-037 — Une file de chantiers décidée d'un geste
+**Règle** : Un seul sondage de lancement à choix multiple, lu par le hook et jamais par l'agent, enregistre une file ordonnée de fiches et la fusion automatique ; seule une fiche prête (maturité « prêt », aucune `[décision]` ouverte, critères d'acceptation) peut y entrer, sinon le lancement entier est refusé. La file reste après une clôture ; l'agent lance seul la tête de file (`node .githooks/state.mjs next`), avec la fusion décidée, et jamais une fiche hors de la file ; tout autre retour en SCOPING, ou `node .githooks/state.mjs queue stop`, l'abandonne. La skill de lancement, la recette de clôture et `AGENTS.md` disent d'attendre la fusion avant la suivante, de s'arrêter au premier chantier qui demande un humain, et de rendre un compte rendu par chantier et un bilan de file.
+**Périmètre** : l'état de gouvernance (`.githooks/state.mjs`, `.githooks/state-cli.mjs`, `.githooks/briefs.mjs`), le hook de sondage (`.claude/hooks/prompt-hook.mjs`), la skill `/drwil-start` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/state.mjs` (`start`, `stopQueue`), `.githooks/briefs.mjs` (`queueable`).
+**Preuve** : tests des hooks et du paquet.
+**Contrôle** : `tests-qua-037`
+**Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : enchaîner plusieurs chantiers sans intervention — « Un seul sondage /drwil-start à choix multiple enregistre une file ordonnée de fiches et la fusion automatique »
+**Raison** : Chaque chantier exigeait un sondage et une autorisation de fusion, même quand rien n'était à trancher : l'humain devait revenir entre deux chantiers. Premier pas vers l'intention « fabrique autonome ».
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

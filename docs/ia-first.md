@@ -422,7 +422,14 @@ allowed scope stays the brief's `scope` block, which is versioned.
 ### Starting and closing
 
 Two human gestures per workstream: **start** and **merge the PR** — only one if the merge is
-authorised at start (below).
+authorised at start (below), and one for a whole **queue**: ticking several briefs in the start
+poll (multiple choice) queues them, with the merge decision. The agent then runs them one after
+the other — the next brief started by `node .githooks/state.mjs next`, allowed to the agent for
+the head of the queue only, once the previous PR is merged — and stops at the first workstream
+that needs a human (attestation, unfixed FAIL, red CI, decision to make); only ready briefs
+(maturity « ready », no open decision, acceptance criteria) can be queued; any return to
+`SCOPING` other than after a closing, or `node .githooks/state.mjs queue stop`, drops the
+queue.
 
 - **Start**: from `SCOPING`, `EXPECTATION` or `REQUEST`, a single decision moves
   to `BUILD` on a **scoped brief** (`scope` block committed in

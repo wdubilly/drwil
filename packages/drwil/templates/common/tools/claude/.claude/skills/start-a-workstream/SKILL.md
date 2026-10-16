@@ -1,6 +1,6 @@
 ---
 name: drwil-start
-description: Start a workstream with one human gesture — open a poll of the scoped briefs; the human's answer, read by the tool, moves governance to BUILD. Use when the human wants to start implementing a brief.
+description: Start a workstream, or a queue of workstreams, with one human gesture — open a poll of the scoped briefs; the human's answer, read by the tool, moves governance to BUILD (several briefs chosen: the next ones are queued and started by the agent after each closing). Use when the human wants to start implementing one or several briefs.
 ---
 
 # Start a workstream (`/drwil-start`)
@@ -23,7 +23,10 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      list; a brief that is not ready keeps its place at the end, its description says "not
      ready: N decision(s) to make first"; a brief with `maturity` `refine` is never hidden, its
      description starts with "to refine: review before starting it"; the human can type another
-     path under "Other".
+     path under "Other". `multiSelect: true` when the human wants to chain several briefs (a
+     queue): the briefs ticked are run in the poll's order, the first now, the next ones
+     started by the agent after each closing; only ready briefs (maturity « ready », no open
+     decision, acceptance criteria) can be queued, otherwise the whole start is refused.
    - Claude Code, **second question** of the same poll: `header` exactly `drwil-merge`,
      options "Automatic merge" (the agent will schedule the merge in CLOSING) and "Manual
      merge", with no recommendation: it is the acceptance decision, taken at start.
@@ -41,6 +44,13 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    scheduled (`gh pr view --json autoMergeRequest`); only then go back to Scoping, which clears
    the authorisation. On failure, stay in CLOSING and report it. Otherwise the merge stays a
    human gesture.
+5. **Queue** (the state says « Queue decided at start »): after each closing, wait until the
+   PR is merged, update the main branch, then start the next brief with
+   `node .githooks/state.mjs next` and implement it — no new poll. Stop at the first
+   workstream that gets stuck (human attestation awaited, FAIL not fixed, red CI, decision to
+   make): say why and what is expected; the queue goes on once it is unblocked, or
+   `node .githooks/state.mjs queue stop` drops it. A short report at each closing (criteria,
+   checks, limits, intents created), a summary at the end of the queue.
 
 Without a poll in the tool: give the human the command `node .githooks/state.mjs start`, to run
 in an interactive terminal.

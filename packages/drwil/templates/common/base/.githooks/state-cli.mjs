@@ -1,7 +1,7 @@
 // Command line of the governance state (split from state.mjs, which stays the entry point:
 // `node .githooks/state.mjs …`, `drwil state …`).
 import { config, scopedBriefs } from "./briefs.mjs";
-import { ACTIVITIES, move, readState, reminderIfChanged, start } from "./state.mjs";
+import { ACTIVITIES, move, readState, reminderIfChanged, start, stopQueue } from "./state.mjs";
 import { context, fill, STATE_MESSAGES } from "./state-texts.mjs";
 
 const texts = (root) => STATE_MESSAGES[config(root).lang === "en" ? "en" : "fr"];
@@ -55,6 +55,14 @@ export async function main(args, root) {
       }
     }
     const r = start(root, choice, { human, autoMerge, request: option(args, "--request") });
+    if (r.code === 0) console.log(`✓ ${r.message}\n\n${context(readState(root), root)}`);
+    else console.error(`✗ ${r.message}`);
+    return r.code;
+  }
+  // The queue (QUA-037): `next` starts its head (allowed to the agent: the human decided the queue),
+  // `queue stop` drops what is left.
+  if (args[0] === "next" || (args[0] === "queue" && args[1] === "stop")) {
+    const r = args[0] === "next" ? start(root, readState(root).state.queue?.[0]) : stopQueue(root);
     if (r.code === 0) console.log(`✓ ${r.message}\n\n${context(readState(root), root)}`);
     else console.error(`✗ ${r.message}`);
     return r.code;

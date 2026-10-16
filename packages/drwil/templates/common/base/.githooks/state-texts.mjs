@@ -17,6 +17,9 @@ const TEXTS = {
     request: (r) => `Demande active : ${r ?? "aucune"}`,
     autoMerge:
       "Fusion automatique autorisée au lancement : en CLOSING, après verify PASS et le push de la clôture, dans cet ordre : attendre que GitHub ait calculé la PR (`gh pr view --json mergeStateStatus`) et, si elle est en retard sur la branche principale (BEHIND), la mettre à jour ; programmer `gh pr merge --auto --merge` ; vérifier que la fusion est bien programmée (`gh pr view --json autoMergeRequest`) ; seulement ensuite revenir en SCOPING, qui efface l'autorisation. En cas d'échec : rester en CLOSING et le signaler.",
+    queue:
+      "File décidée au lancement : ensuite {0}{1}. Après la clôture et la fusion de ce chantier, en SCOPING, lancer la suivante : `node .githooks/state.mjs next`, depuis la branche principale à jour. S'arrêter au premier chantier qui bute (attestation humaine, FAIL non corrigé, CI rouge, décision à prendre) en disant pourquoi et ce qui est attendu. Un compte rendu court à chaque clôture, un bilan en fin de file.",
+    queueMerge: " (fusion automatique)",
     scope: "Périmètre autorisé (bloc scope de la fiche) :",
     noScope: "  (aucun bloc scope : aucun fichier de code autorisé)",
     briefDeleted: "fiche supprimée (clôture)",
@@ -48,6 +51,9 @@ const TEXTS = {
     request: (r) => `Active request: ${r ?? "none"}`,
     autoMerge:
       "Automatic merge authorised at start: in CLOSING, after verify PASS and pushing the closing commit, in this order: wait until GitHub has computed the PR (`gh pr view --json mergeStateStatus`) and, if it is behind the main branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is actually scheduled (`gh pr view --json autoMergeRequest`); only then go back to SCOPING, which clears the authorisation. On failure: stay in CLOSING and report it.",
+    queue:
+      "Queue decided at start: then {0}{1}. After this workstream is closed and merged, in SCOPING, start the next one: `node .githooks/state.mjs next`, from the up-to-date main branch. Stop at the first workstream that gets stuck (human attestation, FAIL not fixed, red CI, decision to make), saying why and what is expected. A short report at each closing, a summary at the end of the queue.",
+    queueMerge: " (automatic merge)",
     scope: "Allowed scope (scope block of the brief):",
     noScope: "  (no scope block: no code file allowed)",
     briefDeleted: "brief deleted (closing)",
@@ -89,6 +95,13 @@ export const STATE_MESSAGES = {
     request: "active_request : chaîne ou null attendu",
     autoMergeType: "auto_merge : booléen attendu",
     autoMergeScoping: "auto_merge : jamais en SCOPING (aucun chantier en cours)",
+    queueType: "queue : liste de fiches attendue",
+    queueMergeType: "queue_merge : booléen attendu",
+    queueNotReady:
+      "lancement refusé : « {0} » ne peut pas entrer dans une file — il faut une fiche prête (maturité « prêt », aucune [décision] ouverte, critères d'acceptation)",
+    queued: "file : ensuite {0}, lancés un à un par l'agent après chaque clôture et fusion (arrêt : `node .githooks/state.mjs queue stop`)",
+    noQueue: "aucune file en cours",
+    queueStopped: "file arrêtée : {0} ne seront pas lancés ; le chantier en cours continue",
     since: "since : horodatage ISO 8601 ou null attendu",
     briefType: "active_brief : chemin de fiche ou null attendu",
     briefPlace: `active_brief : fiche .md de {1} attendue (« {0} »)`,
@@ -147,6 +160,13 @@ export const STATE_MESSAGES = {
     request: "active_request: string or null expected",
     autoMergeType: "auto_merge: boolean expected",
     autoMergeScoping: "auto_merge: never in SCOPING (no workstream in progress)",
+    queueType: "queue: list of briefs expected",
+    queueMergeType: "queue_merge: boolean expected",
+    queueNotReady:
+      'start refused: "{0}" cannot enter a queue — it takes a ready brief (maturity « ready », no open [decision], acceptance criteria)',
+    queued: "queue: then {0}, started one by one by the agent after each closing and merge (stop: `node .githooks/state.mjs queue stop`)",
+    noQueue: "no queue in progress",
+    queueStopped: "queue stopped: {0} will not be started; the current workstream goes on",
     since: "since: ISO 8601 timestamp or null expected",
     briefType: "active_brief: brief path or null expected",
     briefPlace: `active_brief: .md brief of {1} expected ("{0}")`,
@@ -226,6 +246,7 @@ export function context(read, root) {
   }
   lines.push(T.brief(brief), T.request(state.active_request));
   if (state.auto_merge === true) lines.push(T.autoMerge);
+  if (state.queue?.length) lines.push(fill(T.queue, state.queue.join(", "), state.queue_merge ? T.queueMerge : ""));
   if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
   lines.push(T.rule(T.rules[state.activity]), T.footer);
   return lines.join("\n");

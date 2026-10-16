@@ -41,23 +41,22 @@ file ; il n'est rappelé que quand un humain doit vraiment trancher.
 
 ## Critères d'acceptation
 
-(contrat à créer par ce chantier, avec son champ Origine.)
+(contrat créé par ce chantier, avec son champ Origine : QUA-037.)
 
 - Un seul sondage `/drwil-start` à choix multiple enregistre une file
   ordonnée de fiches et la fusion automatique ; la réponse est lue par le
   hook, jamais par l'agent ; seule une fiche prête (maturité « prêt »,
   aucune `[décision]` ouverte, critères présents) peut entrer dans la file
-  — contrat à créer
+  — `QUA-037`
 - Après la clôture d'un chantier de la file et la fusion de sa PR, l'agent
   lance seul la fiche suivante de la file, depuis la branche principale à
-  jour, et jamais une fiche hors de la file — contrat à créer (le même)
+  jour, et jamais une fiche hors de la file — `QUA-037`
 - La file s'arrête au premier chantier qui bute (attestation humaine
   attendue, FAIL non corrigé, CI rouge, décision à prendre) : l'agent dit
-  pourquoi et ce qu'il attend ; la file se relance d'un geste — contrat à
-  créer (le même)
+  pourquoi et ce qu'il attend ; la file se relance d'un geste — `QUA-037`
 - Chaque clôture de la file produit un compte rendu court (critères,
   contrôles, limites, intentions créées), et la fin de la file un bilan —
-  contrat à créer (le même)
+  `QUA-037`
 
 ## 2. Hors périmètre
 

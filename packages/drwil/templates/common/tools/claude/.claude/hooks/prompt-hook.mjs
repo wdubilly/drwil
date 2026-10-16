@@ -5,7 +5,8 @@
 //   default value — the model does not answer in the human's place and preselects nothing (its
 //   recommendation goes through the "(Recommended)" label).
 // - PostToolUse (poll): reads the human's answer and starts the chosen brief
-//   (`.githooks/state.mjs`, the only logic, valid for any tool).
+//   (`.githooks/state.mjs`, the only logic, valid for any tool). A multiple-choice poll queues the
+//   chosen briefs, in the poll's order: the agent starts the next one after each closing (QUA-037).
 // The same hooks serve Claude Code and Copilot CLI, which reads this settings file; only the poll
 // formats differ. A poll that is not drwil's passes through untouched.
 import { readFileSync } from "node:fs";
@@ -87,7 +88,12 @@ async function main() {
   const choice = humanAnswer(input, poll);
   if (!choice) return 0;
   const { start } = await import(pathToFileURL(join(ROOT, ".githooks", "state.mjs")).href);
-  const r = start(ROOT, choice, { human: true, autoMerge: mergeAuthorised(input, poll) });
+  // Several briefs (multiple choice, labels separated by commas; a brief path never holds one): a queue.
+  const [first, ...queue] = String(choice)
+    .split(/,\s*/)
+    .map((c) => c.trim())
+    .filter(Boolean);
+  const r = start(ROOT, first, { human: true, autoMerge: mergeAuthorised(input, poll), queue });
   console.log(
     JSON.stringify({
       hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `[drwil] ${r.code === 0 ? "✓" : "✗"} ${r.message}` },
