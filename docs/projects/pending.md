@@ -200,9 +200,6 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
   `docs/intentions/forge-dans-le-livrable.md`.
 - [ ] [décision] [P2] Validation commerciale : des équipes veulent-elles
   utiliser et payer DRWIL ? — `docs/intentions/validation-commerciale.md`.
-- [ ] [IA] [P2] Prochaine release : signaler dans la note de version que
-  `paths` (`.drwil/ia-first.json` → `checks`) décide désormais aussi de ce
-  qui tourne au commit — voir `docs/projects/journal.md` (2026-10-05).
 
 ## Retours d'expérience (intentions à recadrer)
 

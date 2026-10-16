@@ -1470,6 +1470,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : prose non rafraîchie à la mise à jour et
   « première installation » faussée dans `doctor` (intention « une mise à
   jour rafraîchit aussi la prose que le projet n'a pas touchée »).
-- **Publication** (lot 2) : tag `v0.6.0`, note GitHub et tarball, posés
-  après la fusion de cette PR ; confirmés dans l'index à la suite.
-- **Clôturé par** : PR à venir.
+- **Publication** (lot 2, 2026-10-17) : tag `v0.6.0` poussé, release
+  GitHub publiée avec le tarball `drwil-0.6.0.tgz` attaché, devenue la
+  dernière (téléchargée sans tag, installée sur un projet neuf : version
+  0.6.0, skill `/drwil-start` avec la file, `.githooks/consumption.mjs` présent).
+  Note complétée : `paths` décide aussi de ce qui tourne au commit, et la
+  limite de mise à jour depuis la 0.5.1.
+- **Clôturé par** : PR #124 ; release
+  https://github.com/wdubilly/drwil/releases/tag/v0.6.0.
