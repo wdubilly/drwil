@@ -2709,11 +2709,12 @@ test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusé
   writeFileSync(
     join(dir, ".drwil/evidence/attestations/QUA-001-main.json"),
     JSON.stringify({
-      version: 1,
+      version: 2,
       contract: "QUA-001",
       status: "ATTESTED",
       attestedAt: "2026-10-06T10:00:00.000Z",
       fingerprint: k.fingerprint,
+      proof: k.proof,
     }),
   );
   assert.equal((await verify({ targetDir: dir })).contracts[0].status, "ATTESTED");

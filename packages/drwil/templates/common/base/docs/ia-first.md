@@ -171,14 +171,18 @@ Only **blocking** contracts (the default severity) decide the verdict; a
 code. A malformed registry stays an `ERROR`, whatever the severity.
 
 **Human attestation** (`drwil attest <ID>`): a `MANUAL` contract whose
-automated part passes can receive an explicit human proof. The command shows
-the contract, its rule and its automated proof, requires an interactive
-terminal and typing the contract identifier (no `--yes`: an agent or a
-script cannot attest), then writes the attestation to
-.drwil/evidence/attestations, versioned so it is reviewed. The
-attestation is bound by fingerprint to the contract text and its proof
-definition: if either changes, it becomes stale and the contract is `MANUAL`
-again. `ATTESTED` status: distinct from `PASS`, it satisfies the contract;
+automated part passes can receive an explicit human proof. The command first
+re-runs the checks the contract cites, announcing each one and its result
+(a test suite can take minutes), then shows the contract, its rule and its
+automated proof, requires an interactive terminal and typing the contract
+identifier (no `--yes`: an agent or a script cannot attest), then writes the
+attestation to .drwil/evidence/attestations, versioned so it is reviewed.
+The attestation is bound by fingerprint to the human part of the contract
+(its rule, **Manual** field and severity) and, separately, to the definition
+of each check it covered. A check added later leaves it valid (it must pass
+anyway); a changed human part, or a covered check removed or redefined,
+makes it stale and the contract is `MANUAL` again. An attestation written
+before this rule (version 1) stays bound to the whole contract text. `ATTESTED` status: distinct from `PASS`, it satisfies the contract;
 never attestable: a `PASS`, `FAIL`, `ERROR` or not-applicable contract.
 
 **Business rules**: the output ends with a one-line summary of

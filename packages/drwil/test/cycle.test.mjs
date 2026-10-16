@@ -5,10 +5,10 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { rulesLine } from "../dist/rules.js";
-import { formatForAgent, formatVerdict, init, uninstall, verdictJson, verify } from "../dist/index.js";
+import { attest, fingerprint, formatForAgent, formatVerdict, init, uninstall, verdictJson, verify } from "../dist/index.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -309,6 +309,73 @@ test("QUA-031 : verify termine par le bilan des règles métier ; le détail est
     );
     assert.match(formatVerdict(reglee), /1 prouvée\(s\) sans test cité \(MET-001\)/);
     assert.equal(rulesLine([], "fr"), null, "aucune règle métier : aucune ligne de bilan");
+  } finally {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-032 : une attestation tolère un contrôle ajouté ; règle, Manuel, sévérité, contrôle retiré ou redéfini la rendent obsolète ; une version 1 reste valable", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
+    const base = lire(dir, "docs/contracts.md");
+    const cfg = JSON.parse(lire(dir, ".drwil/ia-first.json"));
+    const regler = (checks) => writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...cfg, checks }, null, 2));
+    const ecrire = ({ regle = "relu.", controle = "`c1`", manuel = "relecture.", severite = "" } = {}) =>
+      writeFileSync(
+        join(dir, "docs/contracts.md"),
+        `${base}\n## APP-009 — Revue humaine\n**Règle** : ${regle}\n**Contrôle** : ${controle}\n**Manuel** : ${manuel}\n${severite}`,
+      );
+    const statut = async () => (await verify({ targetDir: dir, only: ["APP-009"] })).contracts[0].status;
+    const c1 = { id: "c1", run: "node -e 0" };
+    const c2 = { id: "c2", run: "node -e 0" };
+    regler([c1, c2]);
+    ecrire();
+    const sortie = [];
+    const r = await attest({
+      targetDir: dir,
+      id: "APP-009",
+      log: (l) => sortie.push(l),
+      confirm: async () => sortie.push("question") > 0,
+    });
+    assert.equal(r.code, 0);
+    assert.deepEqual(sortie, ["relance de c1…", "  c1 : ok", "question"], "chaque contrôle annoncé, puis son résultat, avant la question");
+    assert.equal(JSON.parse(lire(dir, r.file)).version, 2);
+    assert.equal(await statut(), "ATTESTED");
+
+    ecrire({ controle: "`c1`, `c2`" });
+    assert.equal(await statut(), "ATTESTED", "contrôle ajouté (qui passe) : attestation toujours valable");
+    for (const [cas, variante] of [
+      ["règle changée", { regle: "relu deux fois." }],
+      ["Manuel changé", { manuel: "relecture à deux." }],
+      ["sévérité changée", { severite: "**Sévérité** : avertissement\n" }],
+      ["contrôle attesté retiré", { controle: "`c2`" }],
+    ]) {
+      ecrire(variante);
+      assert.equal(await statut(), "MANUAL", cas);
+    }
+    ecrire();
+    regler([{ ...c1, run: "node -e 1-1" }, c2]);
+    assert.equal(await statut(), "MANUAL", "contrôle attesté redéfini");
+
+    // Version 1, écrite avant ce chantier : jugée par l'ancienne empreinte, valable tant que rien ne change.
+    regler([c1, c2]);
+    rmSync(join(dir, r.file));
+    const lecteur = await import(pathToFileURL(join(dir, ".githooks/contracts.mjs")).href);
+    const k = lecteur.readContracts(lire(dir, "docs/contracts.md")).find((c) => c.id === "APP-009");
+    writeFileSync(
+      join(dir, ".drwil/evidence/attestations/APP-009-v1.json"),
+      JSON.stringify({
+        version: 1,
+        contract: "APP-009",
+        status: "ATTESTED",
+        attestedAt: "2026-10-01T00:00:00.000Z",
+        fingerprint: fingerprint(k, { ...cfg, checks: [c1, c2] }),
+      }),
+    );
+    assert.equal(await statut(), "ATTESTED", "version 1, contrat inchangé");
+    ecrire({ controle: "`c1`, `c2`" });
+    assert.equal(await statut(), "MANUAL", "version 1 : tout changement l'invalide, comme avant");
   } finally {
     rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }

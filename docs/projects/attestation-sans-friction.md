@@ -37,11 +37,11 @@ le contrat, `check-docs` refusant de citer un contrat absent du registre.)
 
 - Ajouter un contrôle à un contrat attesté ne rend pas son attestation
   obsolète ; changer sa règle, son champ Manuel, sa sévérité, ou retirer
-  ou modifier un contrôle déjà attesté, si — contrat à créer
+  ou modifier un contrôle déjà attesté, si — `QUA-032`
 - Une attestation écrite avant ce chantier reste valable tant que son
-  contrat ne change pas — contrat à créer (le même)
+  contrat ne change pas — `QUA-032`
 - `drwil attest` annonce chaque contrôle qu'il relance, puis son résultat,
-  avant le résumé et la question — contrat à créer (le même)
+  avant le résumé et la question — `QUA-032`
 
 ## 2. Hors périmètre
 
@@ -62,9 +62,10 @@ le contrat, `check-docs` refusant de citer un contrat absent du registre.)
   attestation version 1 reste jugée par l'ancienne empreinte.
 - Un contrôle ajouté doit passer : un contrat dont un contrôle échoue
   n'est jamais `ATTESTED` (règle actuelle, inchangée).
-- Les contrôles de verify tournent en sortie capturée : l'annonce passe par
-  le rappel `beforeRun` du moteur (`.githooks/engine.mjs`), sans toucher
-  `.githooks/`.
+- Les contrôles de verify tournent en sortie capturée : verify annonce
+  lui-même chaque contrôle avant et après son lancement (option `onCheck`),
+  sans toucher `.githooks/` ; le rappel `beforeRun` du moteur n'est pas
+  appelé par les contrôles qui ne lancent pas de commande.
 - Contrats à citer : QUA-013 (un contrôle non exécuté n'est pas passé),
   QUA-019 (pas de contournement : la tolérance ne vaut que pour un ajout),
   QUA-018.

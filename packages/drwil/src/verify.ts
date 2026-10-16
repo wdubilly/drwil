@@ -42,8 +42,10 @@ export interface ContractResult {
   attestation: Attestation | null;
   /** Eligible for `drwil attest`: automated part proven, human part remaining. */
   attestable: boolean;
-  /** Current fingerprint of the contract and its proof. */
+  /** Current fingerprint of the human part (rule, Manual, severity): version 2 of an attestation. */
   fingerprint: string;
+  /** Current fingerprint of each cited check's definition, by identifier. */
+  proof: Record<string, string>;
   /** DRWIL-020: only blocking contracts decide the overall verdict. */
   severity: Severity;
   checks: CheckResult[];
@@ -72,16 +74,21 @@ export interface VerifyOptions {
   targetDir: string;
   /** Only verify these contracts (and only run their checks): used by `drwil attest`. */
   only?: string[];
+  /** Called before each check is run (no status), then with its status: `drwil attest` shows them. */
+  onCheck?: (id: string, status?: string) => void;
 }
 
 export interface Attestation {
-  version: 1;
+  /** 1: bound to the whole section and its checks; 2: to the human part and to each attested check. */
+  version: 1 | 2;
   contract: string;
   status: "ATTESTED";
   attestedAt: string;
   actor: { name: string; source: string } | null;
   note: string | null;
   fingerprint: string;
+  /** Version 2: fingerprint of each attested check's definition. */
+  proof?: Record<string, string>;
   commit: string | null;
   automated: { id: string; status: string }[];
 }
@@ -104,6 +111,34 @@ export function fingerprint(k: { text?: string; checks?: string[] | null }, cfg:
   return createHash("sha256")
     .update(JSON.stringify({ contrat: k.text ?? "", preuve: proof }))
     .digest("hex");
+}
+
+const sha = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+
+/**
+ * Version 2 of an attestation (QUA-032): the human part (rule, Manual, severity; the whole section
+ * for a legacy table contract) and, separately, each cited check's definition. A check added later
+ * leaves the attestation valid (it must pass anyway); a changed human part, or an attested check
+ * removed or redefined, makes it obsolete.
+ */
+export function humanFingerprint(k: { text?: string; rule?: string | null; manual?: string | null; severity?: string | null }): string {
+  return sha({ regle: k.rule ?? k.text ?? "", manuel: k.manual ?? null, severite: k.severity ?? null });
+}
+
+export function proofFingerprints(k: { checks?: string[] | null }, cfg: Record<string, any>): Record<string, string> {
+  const checks: any[] = Array.isArray(cfg.checks) ? cfg.checks : [];
+  return Object.fromEntries(
+    (k.checks ?? []).map((id) => {
+      const c = checks.find((x) => x.id === id);
+      return [id, sha(c ? { id, run: c.run, cwd: c.cwd ?? null } : { id })];
+    }),
+  );
+}
+
+/** Does this attestation still cover the contract? Version 1: its old fingerprint, unchanged. */
+function covers(a: Attestation, k: any, cfg: Record<string, any>, proof: Record<string, string>): boolean {
+  if (a.version !== 2) return a.fingerprint === fingerprint(k, cfg);
+  return a.fingerprint === humanFingerprint(k) && Object.entries(a.proof ?? {}).every(([id, h]) => proof[id] === h);
 }
 
 export function readAttestations(root: string): Attestation[] {
@@ -231,7 +266,9 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     const known = cache.get(id);
     if (known) return known;
     const c = available.get(id);
+    if (c) opts.onCheck?.(id);
     const r: CheckResult = c ? { id, ...c.run({ stdio: "pipe" }) } : { id, status: "unknown" };
+    if (c) opts.onCheck?.(id, r.status);
     cache.set(id, r);
     return r;
   };
@@ -276,11 +313,11 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     // not apply here (an attestation does not replace a missing automated proof).
     const attestable =
       status === "MANUAL" && !byContract.has(k.id) && checks.every((r) => r.status === "ok") && (Boolean(k.manual) || k.checks === null);
-    const current = fingerprint(k, cfg);
+    const proof = proofFingerprints(k, cfg);
     let attestation: Attestation | null = null;
     const own = attestations.filter((a) => a.contract === k.id);
     if (attestable && own.length) {
-      attestation = own.find((a) => a.fingerprint === current) ?? null;
+      attestation = own.find((a) => covers(a, k, cfg, proof)) ?? null;
       if (attestation) {
         status = "ATTESTED";
         reasons.push(
@@ -302,7 +339,8 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
       status,
       attestation,
       attestable: attestable && !attestation,
-      fingerprint: current,
+      fingerprint: humanFingerprint(k),
+      proof,
       severity: (k.severity ?? "blocking") as Severity,
       checks,
       manual: k.manual,
