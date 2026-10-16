@@ -5,6 +5,19 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.6.0 (2026-10-17)
+
+### Upgrading from 0.5.1
+
+- `drwil init` refreshes the hooks (`.githooks/`, `.claude/hooks/`) and
+  never loses a project file, but it does not refresh the prose yet: the
+  skills, recipes, `AGENTS.md` and `docs/ia-first.md` installed by 0.5.1
+  stay as they were, listed as « derived », even when untouched. A
+  project upgraded from 0.5.1 thus has the queue and consumption
+  mechanics without the matching `/drwil-start` skill and recipes; a new
+  project installed with 0.6.0 is not affected. `doctor` reports 0.6.0 as
+  the first installed version (0.5.1 did not record its own).
+
 ### Starting a project
 
 - A new project (no code yet) no longer gets invented `backend/` and

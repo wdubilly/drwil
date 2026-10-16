@@ -191,9 +191,6 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
 ## Vague 7 — le produit, quand tout est opérationnel
 
-- [ ] [IA] [P1] Release 0.6.0 pour le pilote (versions, changelog,
-  README, essai réel de mise à jour 0.5.1 → 0.6.0, tag et tarball) —
-  `docs/projects/release-0-6-0.md`.
 - [ ] [décision] [P2] Publication npm du kit, avec une porte avant
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
@@ -232,6 +229,9 @@ une décision du demandeur.
   mémoire de l'agent (README en double, version annoncée non contrôlée,
   toute clôture contrainte à l'exercice, entretien courant compris ;
   constaté le 2026-10-17) — `docs/intentions/doc-visiteur-juste.md`.
+- [ ] [décision] Une mise à jour rafraîchit aussi la prose que le projet
+  n'a pas touchée (skills, recettes ; relevé par l'essai 0.5.1 → 0.6.0 du
+  2026-10-17) — `docs/intentions/maj-prose-non-modifiee.md`.
 
 - [ ] [décision] Le glossaire des identifiants injecté aussi chez les
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —

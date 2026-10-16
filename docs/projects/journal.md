@@ -1449,3 +1449,27 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   mesurée aussi pour les autres outils IA ») ; pas de coût en euros (hors
   périmètre : les tarifs changent).
 - **Clôturé par** : PR #116.
+
+## 2026-10-17 — Release 0.6.0
+
+- **Décisions clés** (demandeur, 2026-10-17) : une fiche dédiée plutôt
+  que l'entretien courant, pour le pilote sur 2 ou 3 projets. Version
+  0.6.0 partout (paquet, racine, verrou) ; section « Unreleased » du
+  changelog renommée « 0.6.0 (2026-10-17) », une « Unreleased » vide
+  au-dessus ; README : la 0.6.0 est la dernière release (QUA-040).
+  Essai réel en plus du test de QUA-027 : projet temporaire équipé avec le
+  tarball 0.5.1 de la release GitHub, mis à jour avec le tarball 0.6.0 —
+  aucun fichier du projet perdu, recette modifiée préservée, hooks en
+  0.6.0 ; `verify` en échec seulement pour le montage de l'essai (master,
+  sans CI, code hors fiche).
+- **Écart** : l'essai a montré que la prose installée (skills, recettes,
+  `AGENTS.md`) n'est jamais rafraîchie, même non modifiée ; les projets du
+  pilote étant neufs, le demandeur a décidé de publier quand même, la
+  limite signalée dans le changelog (« Upgrading from 0.5.1 »).
+- **Intention d'origine** : aucune (demande directe).
+- **Limites connues** : prose non rafraîchie à la mise à jour et
+  « première installation » faussée dans `doctor` (intention « une mise à
+  jour rafraîchit aussi la prose que le projet n'a pas touchée »).
+- **Publication** (lot 2) : tag `v0.6.0`, note GitHub et tarball, posés
+  après la fusion de cette PR ; confirmés dans l'index à la suite.
+- **Clôturé par** : PR à venir.
