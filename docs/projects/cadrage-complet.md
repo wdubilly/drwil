@@ -25,6 +25,9 @@ files:
   - .githooks/check-docs.test.mjs
   - .githooks/run-checks.test.mjs
   - .drwil/ia-first.json
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/scope-reminder.mjs
+  - .claude/hooks/scope-reminder.mjs
+  - packages/drwil/test/kit.test.mjs
   - docs/ia-first.md
   - docs/projects/model-brief.md
   - docs/contracts.md
