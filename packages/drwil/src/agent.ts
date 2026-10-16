@@ -43,6 +43,11 @@ export function formatForAgent(j: VerdictJson): string {
     for (const r of list(status))
       l.push(`  - ${r.id} — ${r.title}: ${r.reasons.filter((x) => !/ok \((automatisé|automated)\)$/.test(x)).join(" ; ")}`);
   }
+  const unproven = j.criteria.filter((c) => c.status !== "pass");
+  if (unproven.length) {
+    l.push("", "Unproven acceptance criteria of the active brief (each one needs a passing contract):");
+    for (const c of unproven) l.push(`  - « ${c.text} » — ${c.link ?? "no proof"}: ${c.status}${c.human ? " (human)" : ""}`);
+  }
   const manual = list("manual");
   if (manual.length) {
     l.push("", "Human attestation required.");

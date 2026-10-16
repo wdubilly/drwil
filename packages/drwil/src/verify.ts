@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { activeBrief, contractChanges, type CriterionResult, judgeBrief, showOrigins } from "./criteria.js";
+import { activeBrief, contractChanges, criteriaVerdict, type CriterionResult, judgeBrief, showOrigins } from "./criteria.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { type BusinessRule, businessRules } from "./rules.js";
 
@@ -361,6 +361,12 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const brief = only ? null : await activeBrief(root);
   const verdict: Verdict = { lang, status, code: CODES[status], contracts: results, errors, unattached };
   verdict.rules = businessRules(results, all, cfg);
-  if (brief) Object.assign(verdict, judgeBrief(brief, results, contractChanges(root, registry, all, reader.readContracts), all));
+  if (brief) {
+    Object.assign(verdict, judgeBrief(brief, results, contractChanges(root, registry, all, reader.readContracts), all));
+    // An unproven criterion of the active brief is part of the verdict, not only of the closing (QUA-034).
+    const fromCriteria = criteriaVerdict(verdict.criteria ?? []);
+    if (fromCriteria) verdict.status = worst([verdict.status, fromCriteria]);
+    verdict.code = CODES[verdict.status];
+  }
   return verdict;
 }

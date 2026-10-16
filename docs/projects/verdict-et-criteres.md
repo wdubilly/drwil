@@ -37,12 +37,11 @@ cours.
 - Un critère automatique non prouvé de la fiche active fait passer le
   verdict de verify à `FAIL` (sortie humaine, sortie agent, JSON) ; un
   critère de jugement humain non encore attesté le fait passer à
-  `MANUAL` — contrat à créer
+  `MANUAL` — `QUA-034`
 - Les critères non prouvés sont listés dans la sortie de verify, chacun
-  avec sa raison, pour l'agent comme pour l'humain — contrat à créer (le
-  même)
+  avec sa raison, pour l'agent comme pour l'humain — `QUA-034`
 - Sans fiche active (CI, `drwil attest`), le verdict ne change pas —
-  contrat à créer (le même)
+  `QUA-034`
 
 ## 2. Hors périmètre
 
