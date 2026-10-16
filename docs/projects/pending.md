@@ -225,9 +225,9 @@ une décision du demandeur.
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —
   `docs/intentions/glossaire-autres-agents.md`.
 
-- [ ] [IA] [P1] La carte, le README et le changelog d'un projet dans la
-  langue choisie (réglage `docLang`) ; README du paquet sans section
-  française — `docs/projects/doc-dans-sa-langue.md`.
+- [x] [IA] [P1] La carte, le README et le changelog d'un projet dans la
+  langue choisie (réglage `docLang`) — fait le 2026-10-16 (voir
+  `docs/projects/journal.md`).
 
 ## Ensuite
 

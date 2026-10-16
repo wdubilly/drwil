@@ -24,6 +24,8 @@ const TEXTS = {
     noScope: "  (aucun bloc scope : aucun fichier de code autorisé)",
     briefDeleted: "fiche supprimée (clôture)",
     rule: (r) => `Règle : ${r}`,
+    docLanguage: (l) =>
+      `Langue de la carte, du README et du changelog : ${{ fr: "français", en: "anglais" }[l] ?? l} (réglage docLang, à défaut la langue du projet).`,
     reminder: (a, b, n) =>
       `[drwil] Rappel : ${a}${b ? ` · ${b}` : " · aucune attente active"}${n === null ? "" : ` · périmètre : ${n} fichier(s) ou motif(s)`} (relire avec \`node .githooks/state.mjs\`).`,
     invalidReminder: "[drwil] Rappel : état invalide, traité comme SCOPING neutre (détail : `node .githooks/state.mjs`).",
@@ -58,6 +60,8 @@ const TEXTS = {
     noScope: "  (no scope block: no code file allowed)",
     briefDeleted: "brief deleted (closing)",
     rule: (r) => `Rule: ${r}`,
+    docLanguage: (l) =>
+      `Language of the map, README and changelog: ${{ fr: "French", en: "English" }[l] ?? l} (docLang setting, else the project language).`,
     reminder: (a, b, n) =>
       `[drwil] Reminder: ${a}${b ? ` · ${b}` : " · no active brief"}${n === null ? "" : ` · scope: ${n} file(s) or pattern(s)`} (read again with \`node .githooks/state.mjs\`).`,
     invalidReminder: "[drwil] Reminder: invalid state, treated as neutral SCOPING (details: `node .githooks/state.mjs`).",
@@ -218,6 +222,9 @@ export const STATE_MESSAGES = {
 
 const language = (root) => (config(root).lang === "en" ? "en" : "fr");
 
+/** Language of what a visitor reads (map, README, changelog): `docLang`, else the project's (QUA-040). */
+export const docLanguage = (root) => config(root).docLang ?? config(root).lang ?? "fr";
+
 /** `scopeGate: off` switches off all governance (gate, trailer, context): withdrawal without deleting anything. */
 export const governanceDisabled = (root) => config(root).scopeGate === "off";
 
@@ -248,7 +255,9 @@ export function context(read, root) {
   if (state.auto_merge === true) lines.push(T.autoMerge);
   if (state.queue?.length) lines.push(fill(T.queue, state.queue.join(", "), state.queue_merge ? T.queueMerge : ""));
   if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
-  lines.push(T.rule(T.rules[state.activity]), T.footer);
+  lines.push(T.rule(T.rules[state.activity]));
+  if (state.activity === "CLOSING") lines.push(T.docLanguage(docLanguage(root)));
+  lines.push(T.footer);
   return lines.join("\n");
 }
 

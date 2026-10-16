@@ -1402,6 +1402,23 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Intention d'origine** : aucune (demande directe).
 - **Limites connues** : carte et README d'un client dans sa langue, et
   justesse des rôles de la carte non contrôlée
-  (`docs/intentions/carte-dans-la-langue-du-projet.md`) ; la section
+  (intention « carte dans la langue du projet », close le même jour) ; la section
   française du README du paquet est gardée, à trancher.
+- **Clôturé par** : PR à venir.
+
+## 2026-10-16 — Carte, README et changelog d'un projet dans la langue choisie
+
+- **Décisions clés** (demandeur, 2026-10-16, sur l'intention « carte dans
+  la langue du projet ») : réglage `docLang` dans `.drwil/ia-first.json`,
+  absent par défaut (la langue du projet) ; la carte, le README et le
+  changelog s'écrivent dans cette langue, donnée à l'agent par l'`AGENTS.md`
+  livré, le rappel CLOSING, les recettes d'adoption et de clôture et
+  `docs/ia-first.md`. La justesse du rôle écrit pour chaque dossier reste
+  une part humaine, assumée dans le contrat (pas de contrôle de carte
+  « figée »). QUA-040 évolue en conséquence, déclaré dans la fiche. Ce
+  dépôt règle `docLang` à `"en"`. README du paquet : section française
+  retirée (demande du 2026-10-16).
+- **Intention d'origine** : entièrement couverte, résumée ici et retirée.
+- **Limites connues** : aucune nouvelle ; aucun contrôle ne vérifie la
+  langue des documents (hors périmètre).
 - **Clôturé par** : PR à venir.

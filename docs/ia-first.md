@@ -345,6 +345,11 @@ the files this project touches.
   `from` also covers the same path under `to`, for the scope barrier, the
   check and the agent-side reminder: a brief names the source of a copy
   without listing the copy.
+- **Language of the public docs** (`docLang` setting, absent by default:
+  the project language `lang`): the language of the map
+  `docs/architecture.md`, the `README.md` and the changelog, for a project
+  that works in one language and shows itself in another. Given to the
+  agent by `AGENTS.md` and the CLOSING reminder.
 - **What a scope usually forgets** (warnings from check-docs): code
   without any test file, or a criterion that creates a contract without
   `.drwil/ia-first.json`, where that contract's own check is declared.
