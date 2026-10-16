@@ -995,6 +995,8 @@ test("principal fiches : liste lisible, JSON, ou aucune fiche", async () => {
   assert.equal(JSON.parse(r.sortie)[0].path, FICHE);
   r = await capturer(() => main(["briefs"], depot()));
   assert.match(r.sortie, /^\(aucune fiche cadrée/);
+  r = await capturer(() => main(["briefs"], depot({ lang: "en" })));
+  assert.match(r.sortie, /^\(no scoped brief/, "ligne de commande en anglais");
 });
 
 test("principal lancer sans terminal : refusé en mode humain, lancé en mode agent (avec --request)", async () => {

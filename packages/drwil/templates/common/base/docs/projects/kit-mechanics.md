@@ -13,6 +13,7 @@ files:
   - .githooks/contracts.mjs
   - .githooks/risk.mjs
   - .githooks/state.mjs
+  - .githooks/state-cli.mjs
   - .githooks/briefs.mjs
   - .githooks/state-texts.mjs
   - .githooks/scope-gate.mjs

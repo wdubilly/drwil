@@ -17,7 +17,8 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
 import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, scopedBriefs } from "./briefs.mjs";
-import { context, fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
+import { main } from "./state-cli.mjs";
+import { fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
 
 // Unchanged interface for the other hooks, the CLI and the tools: everything this file exported
 // before it was split stays importable from here.
@@ -32,6 +33,9 @@ export {
   scopedBriefs,
 } from "./briefs.mjs";
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
+// The command line lives in state-cli.mjs (QUA-001: files under 400 lines); `node .githooks/state.mjs`
+// stays the entry point.
+export { main };
 
 export const ACTIVITIES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
 
@@ -286,98 +290,6 @@ export function reminderIfChanged(root) {
     writeFileSync(file, JSON.stringify({ fingerprint }) + "\n");
   } catch {}
   return text;
-}
-
-/** Value of the `--name value` option in `args`, or undefined. */
-function option(args, name) {
-  const i = args.indexOf(name);
-  return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
-}
-
-/** Entry point shared by `node .githooks/state.mjs` and `drwil state`. Returns the exit code. */
-export async function main(args, root) {
-  if (args[0] === "briefs") {
-    const briefs = scopedBriefs(root);
-    if (args.includes("--json")) console.log(JSON.stringify(briefs, null, 2));
-    else console.log(briefs.length ? briefs.map((b, i) => `${i + 1}. ${b.path} — ${b.title}`).join("\n") : texts(root).noBriefs);
-    return 0;
-  }
-  if (args[0] === "start") {
-    const T = texts(root);
-    const briefs = scopedBriefs(root);
-    const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
-    let choice = args[1];
-    let human = false;
-    let autoMerge = false;
-    if (tty) {
-      // An interactive terminal: the human chooses themselves (never a preselected choice).
-      const { createInterface } = await import("node:readline/promises");
-      const rl = createInterface({ input: process.stdin, output: process.stdout });
-      try {
-        if (!choice) {
-          console.log(
-            briefs
-              .map(
-                (b, i) =>
-                  `${i + 1}. ${b.path} — ${b.title} [${b.priority}${b.ready ? "" : fill(T.notReady, b.decisions)}${b.maturity === "refine" ? T.refine : ""}]`,
-              )
-              .join("\n"),
-          );
-          const n = Number((await rl.question(T.pick)).trim());
-          choice = briefs[n - 1]?.path;
-        }
-        human = choice !== undefined && (await rl.question(fill(T.confirmStart, choice))).trim() === "START";
-        if (human) autoMerge = (await rl.question(T.askMerge)).trim() === "MERGE";
-      } finally {
-        rl.close();
-      }
-      if (!human) {
-        console.error(T.notConfirmed);
-        return 1;
-      }
-    }
-    const r = start(root, choice, { human, autoMerge, request: option(args, "--request") });
-    if (r.code === 0) console.log(`✓ ${r.message}\n\n${context(readState(root), root)}`);
-    else console.error(`✗ ${r.message}`);
-    return r.code;
-  }
-  if (args[0] === "reminder") {
-    // Prompt hook (Claude Code: UserPromptSubmit): writes only if the state changed, never breaks a prompt.
-    try {
-      const text = reminderIfChanged(root);
-      if (text) console.log(text);
-    } catch {}
-    return 0;
-  }
-  if (args[0] !== "move") {
-    // Reading: never breaks an agent's session start.
-    try {
-      const read = readState(root);
-      console.log(args.includes("--json") ? JSON.stringify(read, null, 2) : context(read, root));
-    } catch (e) {
-      console.log(fill(texts(root).unreadableState, e.message));
-    }
-    return 0;
-  }
-  const to = args[1];
-  if (!to || to.startsWith("--")) {
-    console.error(fill(texts(root).usage, ACTIVITIES.join("|")));
-    return 2;
-  }
-  const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
-  const confirm = async (question) => {
-    const { createInterface } = await import("node:readline/promises");
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-    try {
-      return (await rl.question(question)).trim() === to;
-    } finally {
-      rl.close();
-    }
-  };
-  const r = await move(root, { to, brief: option(args, "--brief"), request: option(args, "--request") }, { tty, confirm });
-  if (r.code === 0) console.log(`✓ ${r.message}\n\n${context(readState(root), root)}`);
-  else console.error(`✗ ${r.message}`);
-  return r.code;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
