@@ -54,8 +54,9 @@ contrat) ; rien n'impose le champ Origine.
 - Un contrat créé par le chantier (classé « créé » contre la base de la
   branche) sans champ Origine n'est pas une preuve durable : la clôture est
   refusée — `QUA-022`
-- Un critère de jugement humain reste permis : marqué `[humain]`, prouvé
-  par un contrat à champ Manuel, attesté (`drwil attest`) — `QUA-022`
+- Un critère de jugement humain reste permis : marqué comme tel dans la
+  fiche, prouvé par un contrat à champ Manuel, attesté (`drwil attest`) —
+  `QUA-022`
 
 ## Contrats modifiés
 
