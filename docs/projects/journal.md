@@ -1340,3 +1340,19 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `git checkout` réflexe sur `docs/ia-first.md` a annulé une copie
   régénérée (rattrapée avant le commit) : ce réflexe n'a plus lieu d'être.
 - **Clôturé par** : PR #109.
+
+## 2026-10-16 — Un projet neuf commence par son cadrage global, sans couche inventée
+
+- **Décisions clés** (demandeur, 2026-10-16) : sans pile détectée, `drwil
+  init` n'écrit plus `backend/` ni `frontend/` et dit quoi faire (cadrer le
+  projet, ou `--layers`) ; `drwil init --layers <couches>`, relancé une fois
+  la pile choisie, crée pour chaque couche `AGENTS.md`, `CLAUDE.md` et
+  `GEMINI.md` et l'enregistre. La recette et la skill `/drwil-adopt`
+  commencent un projet neuf par son cadrage global (étape 0 : besoin,
+  première version, pile et couches, premières règles métier, risque ;
+  `AGENTS.md`, carte, premier README) (QUA-038). Premier chantier de la
+  première file réelle (avec `docs/projects/glossaire-des-id.md` et
+  `docs/projects/doc-a-jour.md`).
+- **Intention d'origine** : aucune (demande directe) ; aucune limite non
+  traitée à consigner.
+- **Clôturé par** : PR #110.

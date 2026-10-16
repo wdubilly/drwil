@@ -76,7 +76,10 @@ The baseline of `docs/contracts.md` is deliberately minimal (green from day
 one, with no stack assumption). `docs/contracts-catalog.md` lists common
 generic contracts, not installed by default: a project adopts them one by
 one, with `docs/recipes/adopt-the-kit.md` (or the `adopt-the-kit` skill),
-each adoption staying a decision of the requester.
+each adoption staying a decision of the requester. A new project, with no code
+yet, gets no layer at `init`: the same recipe starts by scoping it (need,
+first version, stack and layers, first business rules, risk), then declares
+its layers with `drwil init --layers`.
 
 ## 4. The check lives in git, not in the tool
 

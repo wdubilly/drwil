@@ -8,7 +8,8 @@ must stay readable by any tool.
 ## The project in 5 lines
 
 {{projectName}} — {{description}}
-Full map and stack: `docs/architecture.md`.
+Full map and stack: `docs/architecture.md`. A new project fills these five
+lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
 
 ## Conduct (always, no machine checks it)
 

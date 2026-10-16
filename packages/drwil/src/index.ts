@@ -49,7 +49,8 @@ const TEXTS = {
     added: "Ajouté aux fichiers du projet, sans rien y écraser (bloc « drwil », retiré par `drwil uninstall`) :",
     stack: "Stack détectée : {0}",
     noStack: "Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).",
-    defaultLayers: "Couches par défaut écrites : {0} — modifiable avec --layers.",
+    noLayers:
+      "Aucune couche écrite : le projet n'a pas encore de code. Le cadrer d'abord (/drwil-adopt : besoin, pile, couches), ou déclarer les couches avec --layers.",
     drifted: "⚠ Fichiers dérivés du template du kit (nombre de lignes ou sections différents, jamais réécrits automatiquement) :",
     obsolete: "Fichiers obsolètes d'une version antérieure du kit supprimés (jamais modifiés depuis l'installation) :",
   },
@@ -62,7 +63,8 @@ const TEXTS = {
     added: 'Added to the project\'s files, nothing overwritten ("drwil" block, removed by `drwil uninstall`):',
     stack: "Detected stack: {0}",
     noStack: "Stack not detected: for the user to decide (see docs/architecture.md).",
-    defaultLayers: "Default layers written: {0} — can be changed with --layers.",
+    noLayers:
+      "No layer written: the project has no code yet. Scope it first (/drwil-adopt: need, stack, layers), or declare the layers with --layers.",
     drifted: "⚠ Files drifted from the kit's template (different line count or sections, never rewritten automatically):",
     obsolete: "Obsolete files of an earlier kit version removed (never modified since installation):",
   },
@@ -108,8 +110,8 @@ function reportStack(r: Resolved): void {
     return;
   }
   console.log(T.noStack);
-  // A default written to disk without the user explicitly asking for it: report it.
-  if (r.opts.layers === undefined && r.layers.length) console.log(fill(T.defaultLayers, r.layers.join(", ")));
+  // No layer invented for a project without code: say what to do instead (QUA-038).
+  if (r.opts.layers === undefined && !r.layers.length) console.log(T.noLayers);
 }
 
 // Never an automatic rewrite: only tells that an already present file drifted from the kit's

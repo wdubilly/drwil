@@ -5,6 +5,17 @@ nothing overwritten), make the kit live on a project that already has
 code. Every choice below is a **`[decision]`**: propose, never decide in
 the requester's place (`AGENTS.md`, Conduct section).
 
+0. **A new project (no code yet, no layer): scope it first.** With the
+   requester, one `[decision]` at a time: the need and its users, the
+   scope of the first version, the stack (hence the layers), the first
+   business rules (hence the first `APP` contracts, step 5) and the risk
+   level. Write the result into `AGENTS.md` (« The project in 5 lines »),
+   `docs/architecture.md` (the map, kept current from then on) and a first
+   `README.md`; open intents for what is left. Then declare the layers:
+   `drwil init --layers <layers>` (nothing to detect yet) creates each
+   layer's `AGENTS.md` and the tools' per-layer instructions; fill them in
+   with the stack's conventions (structure, build and test commands) and
+   declare the stack's checks (step 3).
 1. **Re-read the detected stack** (`.drwil/ia-first.json`): layers, tools,
    CI. Correct it if `init` got it wrong.
 2. **Fill in the layer `AGENTS.md` files** (one per `layers` entry):
