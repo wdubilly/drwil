@@ -230,6 +230,12 @@ une décision du demandeur.
 - [ ] [décision] Non-régression métier alimentée chantier après chantier :
   lien contrat ↔ tests contrôlé chez l'utilisateur, échec attribué au bon
   contrat, vue des règles métier — `docs/intentions/non-regression-metier.md`.
+- [ ] [décision] Un contrôle par règle dans le dépôt drwil : un test cassé
+  désigne son contrat, pas treize —
+  `docs/intentions/un-controle-par-regle-dans-le-depot.md`.
+- [ ] [décision] Attestation sans friction inutile : preuve renforcée sans
+  réattestation, `attest` qui annonce ce qu'il relance —
+  `docs/intentions/attestation-sans-friction.md`.
 
 ## Ensuite
 

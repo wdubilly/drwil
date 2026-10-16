@@ -1084,9 +1084,11 @@ l'index ; texte intégral dans l'historique git
 - **Limites connues** : dans ce dépôt, `couverture-tests` est cité par
   13 contrats, donc un test cassé les fait tous échouer avec le message de
   contrôle partagé. C'est honnête mais bruyant : appliquer ici « un
-  contrôle par règle » reste à cadrer. Ajouter un contrôle à un contrat
-  impose de le réattester, même quand la preuve est renforcée. `drwil
-  attest` relance les contrôles cités sans rien afficher, parfois pendant
-  plusieurs minutes. La vue des règles métier (point 3 de
+  contrôle par règle » reste à cadrer
+  (`docs/intentions/un-controle-par-regle-dans-le-depot.md`). Ajouter un
+  contrôle à un contrat impose de le réattester, même quand la preuve est
+  renforcée, et `drwil attest` relance les contrôles cités sans rien
+  afficher, parfois pendant plusieurs minutes
+  (`docs/intentions/attestation-sans-friction.md`). La vue des règles métier (point 3 de
   `docs/intentions/non-regression-metier.md`) reste à faire.
 - **Clôturé par** : PR #91.
