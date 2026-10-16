@@ -269,6 +269,7 @@ program
         targetDir: process.cwd(),
         id,
         note: opts.note,
+        log: (line) => console.log(line),
         confirm: async (summary) => {
           console.log(`${summary}\n`);
           const rl = createInterface({ input: process.stdin, output: process.stdout });

@@ -1088,8 +1088,8 @@ l'index ; texte intégral dans l'historique git
   (`docs/intentions/un-controle-par-regle-dans-le-depot.md`). Ajouter un
   contrôle à un contrat impose de le réattester, même quand la preuve est
   renforcée, et `drwil attest` relance les contrôles cités sans rien
-  afficher, parfois pendant plusieurs minutes
-  (`docs/intentions/attestation-sans-friction.md`). La vue des règles
+  afficher, parfois pendant plusieurs minutes (réglé ensuite par le
+  chantier « Attestation sans friction inutile », QUA-032). La vue des règles
   métier a été réalisée ensuite (« Vue des règles métier dans drwil
   verify »).
 - **Clôturé par** : PR #91.
@@ -1131,8 +1131,8 @@ l'index ; texte intégral dans l'historique git
   métier dans la vue d'avancement HTML, et une recette « demander une
   bonne pratique hors adoption ».
 - **Suites** : `docs/intentions/un-controle-par-regle-dans-le-depot.md`
-  et `docs/intentions/attestation-sans-friction.md`, nées de ces
-  chantiers.
+  et l'intention « attestation sans friction » (réalisée : chantier
+  « Attestation sans friction inutile »), nées de ces chantiers.
 - **Texte intégral** : `git log --follow -- docs/intentions/non-regression-metier.md`.
 
 ## 2026-10-16 — Intentions closes : livrable en anglais, non-régression continue
@@ -1150,3 +1150,25 @@ l'index ; texte intégral dans l'historique git
   intention à la clôture ; relevé le 2026-10-16 par le demandeur, la
   mécanique est cadrée dans `docs/projects/consigner-retours-experience.md`.
 - **Texte intégral** : `git log --follow -- docs/intentions/<intention>.md`.
+
+## 2026-10-16 — Attestation sans friction inutile
+
+- **Décisions clés** : une attestation version 2 couvre la part humaine
+  du contrat (règle, champ Manuel, sévérité ; toute la section pour un
+  contrat historique en tableau) et, séparément, la définition de chaque
+  contrôle attesté. Un contrôle ajouté ne la rend plus obsolète (il doit
+  passer) ; un changement de la part humaine ou un contrôle attesté
+  retiré ou redéfini, si. Les attestations version 1 restent jugées par
+  leur ancienne empreinte : les cinq du dépôt restent valables.
+  `drwil attest` annonce chaque contrôle qu'il relance et son résultat
+  avant la question (option `onCheck` de verify) (QUA-032). L'évidence
+  sort de `packages/drwil/src/verify.ts` (399 lignes, désormais 366) vers
+  `packages/drwil/src/evidence.ts`.
+- **Intention d'origine** (« attestation sans friction », 2026-10-16) :
+  entièrement couverte, résumée ici et retirée de `docs/intentions/`.
+- **Limites connues** : un contrôle retiré invalide toujours
+  l'attestation : le chantier `docs/projects/un-controle-par-regle.md`
+  demandera de réattester QUA-013 et QUA-015. Le test de l'annonce
+  d'`attest` ne couvre que le français ; les textes anglais sont écrits
+  mais pas éprouvés.
+- **Clôturé par** : PR #98.

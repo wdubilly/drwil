@@ -31,7 +31,7 @@ import {
   formatPreview,
   attest,
 } from "../dist/index.js";
-import { criteriaTable, evaluateCriteria, writeEvidence } from "../dist/verify.js";
+import { criteriaTable, evaluateCriteria, redact, writeEvidence } from "../dist/verify.js";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les projets de test (et leurs hooks) sur le dépôt qui lance la suite.
@@ -2383,6 +2383,20 @@ test("DRWIL-012 : installation neuve sans bruit ; un risque déclaré trop bas e
   assert.match(r.stdout, /risque LOW déclaré.*HIGH au minimum/);
 });
 
+test("caviardage des clés privées : bloc complet, clé chiffrée, temps linéaire sur une entrée piégée (ReDoS)", () => {
+  // En-têtes construits à l'exécution : aucune chaîne en forme de clé dans le source (gitleaks).
+  const borne = (cote, type = "") => `-----${cote} ${type}PRIVATE ${"KEY"}-----`;
+  const cle = `${borne("BEGIN", "RSA ")}\nProc-Type: 4,ENCRYPTED\nDEK-Info: AES-128-CBC,AB12\n\nMIIEow\n${borne("END", "RSA ")}`;
+  assert.equal(redact(`avant ${cle} après`), "avant [REDACTED] après");
+  assert.equal(redact(`${cle}\n${cle}`), "[REDACTED]\n[REDACTED]");
+  assert.equal(redact(`${borne("BEGIN")} sans fin`), `${borne("BEGIN")} sans fin`);
+  // Quadratique avant correction : près de deux secondes pour 20 000 en-têtes sans fin de bloc.
+  const piege = borne("BEGIN").repeat(20000);
+  const debut = performance.now();
+  redact(piege);
+  assert.ok(performance.now() - debut < 1000, `caviardage trop lent : ${Math.round(performance.now() - debut)} ms`);
+});
+
 test("DRWIL-013 : verify --evidence enregistre verdict, horodatage, commit et résumés caviardés", async () => {
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `fuite`"));
   const cfg = config(dir);
@@ -2709,11 +2723,12 @@ test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusé
   writeFileSync(
     join(dir, ".drwil/evidence/attestations/QUA-001-main.json"),
     JSON.stringify({
-      version: 1,
+      version: 2,
       contract: "QUA-001",
       status: "ATTESTED",
       attestedAt: "2026-10-06T10:00:00.000Z",
       fingerprint: k.fingerprint,
+      proof: k.proof,
     }),
   );
   assert.equal((await verify({ targetDir: dir })).contracts[0].status, "ATTESTED");

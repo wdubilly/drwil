@@ -215,6 +215,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : vue des règles métier dans drwil verify — « `drwil verify` se termine par un bilan d'une ligne des règles métier »
 **Raison** : La non-régression métier grandit chantier après chantier ; sans vue, on ne sait ni ce qui est prouvé, ni ce qui reste à compléter, ni quel chantier une règle cassée protège.
 
+## QUA-032 — Une attestation ne coûte que le jugement demandé
+**Règle** : Une attestation (version 2) couvre la part humaine d'un contrat (règle, champ Manuel, sévérité ; toute la section pour un contrat historique en tableau) et, séparément, la définition de chaque contrôle attesté : un contrôle ajouté ensuite ne la rend pas obsolète (il doit passer), un changement de la part humaine ou un contrôle attesté retiré ou redéfini, si. Une attestation version 1 reste jugée par son ancienne empreinte. `drwil attest` annonce chaque contrôle qu'il relance, puis son résultat, avant le résumé et la question.
+**Périmètre** : `drwil attest`, le jugement des attestations par `drwil verify`.
+**Source de vérité** : `packages/drwil/src/verify.ts` (`humanFingerprint`, `proofFingerprints`), `packages/drwil/src/attest.ts`.
+**Preuve** : tests du paquet (`couverture-tests`).
+**Contrôle** : `couverture-tests`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Origine** : attestation sans friction inutile — « Ajouter un contrôle à un contrat attesté ne rend pas son attestation obsolète »
+**Raison** : L'attestation est le seul geste humain obligatoire de la clôture : réattester une preuve seulement renforcée, ou attendre deux minutes devant un terminal muet, coûtait plus que le jugement demandé.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

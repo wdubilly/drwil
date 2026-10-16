@@ -6,17 +6,16 @@
 // (.githooks/engine.mjs), the same as the git hooks, and the contract reader
 // (.githooks/contracts.mjs). The hooks therefore never need drwil, and each check has a single
 // implementation.
-import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { activeBrief, contractChanges, criteriaTable, type CriterionResult, judgeBrief, showOrigins } from "./criteria.js";
+import { activeBrief, contractChanges, type CriterionResult, judgeBrief, showOrigins } from "./criteria.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { type BusinessRule, businessRules } from "./rules.js";
-import { verdictJson } from "./verdict.js";
 
 export { formatVerdict, verdictJson } from "./verdict.js";
+export { redact, writeEvidence } from "./evidence.js";
 export { criteriaTable, evaluateCriteria, type CriterionResult, type CriterionStatus } from "./criteria.js";
 
 /** ATTESTED (DRWIL-013): the automated part is proven and the human part has a valid attestation.
@@ -43,8 +42,10 @@ export interface ContractResult {
   attestation: Attestation | null;
   /** Eligible for `drwil attest`: automated part proven, human part remaining. */
   attestable: boolean;
-  /** Current fingerprint of the contract and its proof. */
+  /** Current fingerprint of the human part (rule, Manual, severity): version 2 of an attestation. */
   fingerprint: string;
+  /** Current fingerprint of each cited check's definition, by identifier. */
+  proof: Record<string, string>;
   /** DRWIL-020: only blocking contracts decide the overall verdict. */
   severity: Severity;
   checks: CheckResult[];
@@ -73,16 +74,21 @@ export interface VerifyOptions {
   targetDir: string;
   /** Only verify these contracts (and only run their checks): used by `drwil attest`. */
   only?: string[];
+  /** Called before each check is run (no status), then with its status: `drwil attest` shows them. */
+  onCheck?: (id: string, status?: string) => void;
 }
 
 export interface Attestation {
-  version: 1;
+  /** 1: bound to the whole section and its checks; 2: to the human part and to each attested check. */
+  version: 1 | 2;
   contract: string;
   status: "ATTESTED";
   attestedAt: string;
   actor: { name: string; source: string } | null;
   note: string | null;
   fingerprint: string;
+  /** Version 2: fingerprint of each attested check's definition. */
+  proof?: Record<string, string>;
   commit: string | null;
   automated: { id: string; status: string }[];
 }
@@ -105,6 +111,34 @@ export function fingerprint(k: { text?: string; checks?: string[] | null }, cfg:
   return createHash("sha256")
     .update(JSON.stringify({ contrat: k.text ?? "", preuve: proof }))
     .digest("hex");
+}
+
+const sha = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+
+/**
+ * Version 2 of an attestation (QUA-032): the human part (rule, Manual, severity; the whole section
+ * for a legacy table contract) and, separately, each cited check's definition. A check added later
+ * leaves the attestation valid (it must pass anyway); a changed human part, or an attested check
+ * removed or redefined, makes it obsolete.
+ */
+export function humanFingerprint(k: { text?: string; rule?: string | null; manual?: string | null; severity?: string | null }): string {
+  return sha({ regle: k.rule ?? k.text ?? "", manuel: k.manual ?? null, severite: k.severity ?? null });
+}
+
+export function proofFingerprints(k: { checks?: string[] | null }, cfg: Record<string, any>): Record<string, string> {
+  const checks: any[] = Array.isArray(cfg.checks) ? cfg.checks : [];
+  return Object.fromEntries(
+    (k.checks ?? []).map((id) => {
+      const c = checks.find((x) => x.id === id);
+      return [id, sha(c ? { id, run: c.run, cwd: c.cwd ?? null } : { id })];
+    }),
+  );
+}
+
+/** Does this attestation still cover the contract? Version 1: its old fingerprint, unchanged. */
+function covers(a: Attestation, k: any, cfg: Record<string, any>, proof: Record<string, string>): boolean {
+  if (a.version !== 2) return a.fingerprint === fingerprint(k, cfg);
+  return a.fingerprint === humanFingerprint(k) && Object.entries(a.proof ?? {}).every(([id, h]) => proof[id] === h);
 }
 
 export function readAttestations(root: string): Attestation[] {
@@ -232,7 +266,9 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     const known = cache.get(id);
     if (known) return known;
     const c = available.get(id);
+    if (c) opts.onCheck?.(id);
     const r: CheckResult = c ? { id, ...c.run({ stdio: "pipe" }) } : { id, status: "unknown" };
+    if (c) opts.onCheck?.(id, r.status);
     cache.set(id, r);
     return r;
   };
@@ -277,11 +313,11 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     // not apply here (an attestation does not replace a missing automated proof).
     const attestable =
       status === "MANUAL" && !byContract.has(k.id) && checks.every((r) => r.status === "ok") && (Boolean(k.manual) || k.checks === null);
-    const current = fingerprint(k, cfg);
+    const proof = proofFingerprints(k, cfg);
     let attestation: Attestation | null = null;
     const own = attestations.filter((a) => a.contract === k.id);
     if (attestable && own.length) {
-      attestation = own.find((a) => a.fingerprint === current) ?? null;
+      attestation = own.find((a) => covers(a, k, cfg, proof)) ?? null;
       if (attestation) {
         status = "ATTESTED";
         reasons.push(
@@ -303,7 +339,8 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
       status,
       attestation,
       attestable: attestable && !attestation,
-      fingerprint: current,
+      fingerprint: humanFingerprint(k),
+      proof,
       severity: (k.severity ?? "blocking") as Severity,
       checks,
       manual: k.manual,
@@ -326,74 +363,4 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   verdict.rules = businessRules(results, all, cfg);
   if (brief) Object.assign(verdict, judgeBrief(brief, results, contractChanges(root, registry, all, reader.readContracts)));
   return verdict;
-}
-
-// Redaction before any evidence is written (SEC-007): a check's output may contain a secret (a test
-// that prints its configuration, a verbose tool). Deliberately broad patterns: better to hide a false
-// positive than to keep a real key.
-const SECRET_PATTERNS: RegExp[] = [
-  /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g,
-  /\b(?:ghp|gho|ghs|ghu|github_pat)_[A-Za-z0-9_]{20,}\b/g,
-  /\bsk-[A-Za-z0-9_-]{20,}\b/g,
-  /\bxox[abposr]-[A-Za-z0-9-]{10,}\b/g,
-  /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
-  /((?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key)\s*[:=]\s*)\S+/gi,
-  /\b[A-Za-z0-9+/_-]{40,}={0,2}\b/g,
-];
-
-export function redact(text: string): string {
-  let t = text;
-  for (const re of SECRET_PATTERNS)
-    t = t.replace(re, (m, prefix) => (typeof prefix === "string" && m.startsWith(prefix) ? `${prefix}[REDACTED]` : "[REDACTED]"));
-  return t;
-}
-
-/**
- * Evidence of a verify run (DRWIL-013): RULE → PROOF → EVIDENCE. Writes
- * .drwil/evidence/verify-<timestamp>.json (outside git) and returns its relative path. Holds the
- * verdict, the timestamp, the commit (and whether the worktree was modified), and for each check its
- * status with a readable summary: the last lines of its output, redacted.
- */
-export function writeEvidence(root: string, v: Verdict, now = new Date()): string {
-  const git = (...args: string[]) => {
-    const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
-    return r.status === 0 ? r.stdout.trim() : null;
-  };
-  const commit = git("rev-parse", "HEAD");
-  const dirty = commit ? Boolean(git("status", "--porcelain")) : null;
-  const summary = (output?: string) =>
-    redact(
-      (output ?? "")
-        .split(/\r?\n/)
-        .map((l) => l.trimEnd())
-        .filter(Boolean)
-        .slice(-5)
-        .join("\n"),
-    );
-  const evidence = {
-    ...verdictJson(v),
-    verifiedAt: now.toISOString(),
-    commit,
-    dirtyWorktree: dirty,
-    evidence: v.contracts.map((k) => ({
-      id: k.id,
-      status: k.status.toLowerCase(),
-      checks: k.checks.map((c) => ({
-        id: c.id,
-        status: c.status,
-        summary: c.status === "ok" ? "ok" : summary(c.output) || redact(c.detail ?? c.message ?? ""),
-      })),
-      manual: k.manual,
-    })),
-    ...(v.criteria ? { criteria: v.criteria } : {}),
-    ...(v.undeclared ? { undeclared: v.undeclared } : {}),
-  };
-  const dir = join(root, ".drwil", "evidence");
-  mkdirSync(dir, { recursive: true });
-  const name = `verify-${now.toISOString().replace(/[:.]/g, "-")}.json`;
-  writeFileSync(join(dir, name), JSON.stringify(evidence, null, 2) + "\n");
-  // Next to the evidence, the table to paste in the pull request (`gh pr create --body-file`); not named
-  // verify-*.json, so verifyEvidence never mistakes it for the evidence.
-  if (v.criteria) writeFileSync(join(dir, name.replace(/^verify-(.+)\.json$/, "criteria-$1.md")), criteriaTable(v.criteria, v.lang));
-  return `.drwil/evidence/${name}`;
 }

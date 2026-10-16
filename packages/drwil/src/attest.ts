@@ -5,7 +5,7 @@
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { fill, type MessageLang } from "./i18n.js";
+import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { ATTESTATIONS_DIR, redact, verify, type Attestation, type ContractResult } from "./verify.js";
 
 export interface AttestOptions {
@@ -18,6 +18,8 @@ export interface AttestOptions {
    * doing without (an agent or a script cannot attest in a human's place).
    */
   confirm: (summary: string) => Promise<boolean>;
+  /** Progress lines while the cited checks are re-run (they can take minutes): QUA-032. */
+  log?: (line: string) => void;
   now?: Date;
 }
 
@@ -45,6 +47,8 @@ const TEXTS = {
     refused: "attestation refusée : rien n'a été enregistré",
     declarative: "git config user.name, déclaratif",
     done: "{0} attesté",
+    checkRun: "relance de {0}…",
+    checkDone: "  {0} : {1}",
   },
   en: {
     rule: "Rule: {0}",
@@ -60,6 +64,8 @@ const TEXTS = {
     refused: "attestation refused: nothing was recorded",
     declarative: "git config user.name, declarative",
     done: "{0} attested",
+    checkRun: "re-running {0}…",
+    checkDone: "  {0}: {1}",
   },
 };
 
@@ -73,7 +79,10 @@ export function contractSummary(k: ContractResult, lang: MessageLang = "en"): st
 }
 
 export async function attest(o: AttestOptions): Promise<AttestResult> {
-  const v = await verify({ targetDir: o.targetDir, only: [o.id] });
+  // verify gives the language only at the end: the project's, read the same way.
+  const L = TEXTS[projectLang(o.targetDir)];
+  const onCheck = (id: string, status?: string) => o.log?.(status ? fill(L.checkDone, id, status) : fill(L.checkRun, id));
+  const v = await verify({ targetDir: o.targetDir, only: [o.id], onCheck });
   const T = TEXTS[v.lang];
   if (v.errors.length && !v.contracts.length) return { code: 2, message: v.errors.join(" ; ") };
   const k = v.contracts.find((c) => c.id === o.id);
@@ -90,7 +99,7 @@ export async function attest(o: AttestOptions): Promise<AttestResult> {
   const name = git("config", "user.name");
   const now = o.now ?? new Date();
   const attestation: Attestation = {
-    version: 1,
+    version: 2,
     contract: k.id,
     status: "ATTESTED",
     attestedAt: now.toISOString(),
@@ -98,6 +107,7 @@ export async function attest(o: AttestOptions): Promise<AttestResult> {
     actor: name ? { name, source: T.declarative } : null,
     note: o.note ? redact(o.note.trim()).slice(0, NOTE_MAX) || null : null,
     fingerprint: k.fingerprint,
+    proof: k.proof,
     commit: git("rev-parse", "HEAD"),
     automated: k.checks.map((c) => ({ id: c.id, status: c.status })),
   };
