@@ -61,7 +61,10 @@ Tranchées par le demandeur le 2026-10-16 (sondage) :
   `newRequirements` ; un contrôle par règle métier, filtré par l'ID, et
   verify signale un contrôle partagé qui échoue.
 - Point 3 : la vue des règles métier dans `drwil verify` d'abord ; la vue
-  d'avancement plus tard.
+  d'avancement plus tard. Précisé le 2026-10-16 : préfixe métier (`APP`
+  par défaut, réglable) plus tout contrat qui porte un champ Origine ; un
+  bilan d'une ligne, le détail dans le JSON — cadré dans
+  `docs/projects/vue-regles-metier.md`, en `[P1]`.
 
 ## Questions à trancher
 
