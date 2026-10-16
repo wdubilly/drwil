@@ -215,7 +215,7 @@ test("contrôles du projet : identifiant, name: nom, report au commit hors chemi
   const sans = parId(checks(racine, { cfg }));
   assert.equal(sans.nomme.name, "Nommé");
   assert.equal(sans.nomme.run({ stdio: "pipe" }).status, "ok");
-  const reporte = parId(checks(racine, { cfg, staged: ["docs/a.md"] }));
+  const reporte = parId(checks(racine, { cfg, staged: ["autre/a.json"] }));
   assert.deepEqual(reporte.nomme.run(), {
     status: "not-run",
     detail: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
@@ -226,6 +226,25 @@ test("contrôles du projet : identifiant, name: nom, report au commit hors chemi
   // checks absent ou mal formé : seuls les contrôles du socle.
   assert.equal(checks(racine, { cfg: { checks: {} } }).length, 7);
   assert.equal(checks(racine).length, 7);
+});
+
+test("QUA-035 : commit de documentation seule : tests des contrôles et contrôles du projet non exécutés, signalés ; avec du code, rejoués", () => {
+  const racine = depot();
+  ecrire(racine, ".githooks/x.test.mjs", "import { test } from 'node:test'; test('t', () => {});\n");
+  const cfg = { checks: [{ id: "lint", run: "node -e 0" }] };
+  const doc = parId(checks(racine, { cfg, staged: ["docs/projects/fiche.md", "README.md"] }));
+  for (const id of ["checks-self-test", "lint"])
+    assert.deepEqual(
+      doc[id].run({ stdio: "pipe" }),
+      { status: "not-run", detail: "commit de documentation seule : rejoué au push et en CI" },
+      id,
+    );
+  assert.match(texts("en").docsOnly, /documentation-only commit/);
+  const code = parId(checks(racine, { cfg, staged: ["docs/projects/fiche.md", "src/a.js"] }));
+  assert.equal(code.lint.run({ stdio: "pipe" }).status, "ok");
+  assert.equal(code["checks-self-test"].run({ stdio: "pipe" }).status, "ok");
+  const pousse = parId(checks(racine, { cfg }));
+  assert.equal(pousse.lint.run({ stdio: "pipe" }).status, "ok", "au push et en CI (rien d'indexé) : toujours rejoué");
 });
 
 test("projectRoot : dossier parent de .githooks/ quel que soit le dossier courant ; DRWIL_ROOT la remplace", () => {

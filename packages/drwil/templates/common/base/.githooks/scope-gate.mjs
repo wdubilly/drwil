@@ -13,7 +13,7 @@
 // Severity: `scopeGate` setting (off | warning | blocking), warning if missing.
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { fnmatch, normalize, readBlock } from "./scope.mjs";
+import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
 
 // Attestations pass like briefs: a human proof already guarded by `drwil attest` (terminal
@@ -68,10 +68,10 @@ export function checkIndex({ files, state, patterns, outOfScope, cfg }) {
   return subject.filter((f) => !covered(f, patterns)).map((f) => T.outsideScope(f, state.active_brief));
 }
 
-/** Patterns of the scope block of `brief` in revision `rev`; none if the brief does not exist there. */
-function patternsAt(root, rev, brief) {
+/** Patterns of the scope block of `brief` in revision `rev`, copies included; none if the brief does not exist there. */
+function patternsAt(root, rev, brief, cfg) {
   const text = brief ? git(root, ["show", `${rev}:${brief}`]) : null;
-  return text === null ? [] : readBlock(text).patterns;
+  return text === null ? [] : withMirrors(readBlock(text).patterns, cfg);
 }
 
 function reference(root, env) {
@@ -111,7 +111,7 @@ function checkBranch(root, base, { outOfScope, cfg }) {
       problems.push(T.noTrailer(short, subject.length));
       continue;
     }
-    const patterns = patternsAt(root, `${c}^`, brief);
+    const patterns = patternsAt(root, `${c}^`, brief, cfg);
     for (const f of subject) if (!covered(f, patterns)) problems.push(T.outsideScopeCommit(short, f, brief));
   }
   return problems;
@@ -128,7 +128,7 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
   let problems;
   if (staged) {
     const { state } = readState(root);
-    problems = checkIndex({ files: staged, state, patterns: patternsAt(root, "HEAD", state.active_brief), outOfScope, cfg });
+    problems = checkIndex({ files: staged, state, patterns: patternsAt(root, "HEAD", state.active_brief, cfg), outOfScope, cfg });
   } else {
     const base = reference(root, env);
     if (!base) return { status: "not-run", problems: [], detail: texts(cfg).noReference, configured: true };

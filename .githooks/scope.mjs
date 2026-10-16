@@ -92,11 +92,25 @@ export function readBlock(text) {
   return { patterns: valid, problems };
 }
 
-/** `{ brief (relative path): patterns }` for the briefs whose block reads without a form error. */
-export function patternsByBrief(briefTexts) {
+/**
+ * Patterns completed by the copies the project declares (`scopeMirrors` of .drwil/ia-first.json, pairs
+ * of path prefixes `{ "from": "templates/", "to": "" }`): a pattern under `from` also covers the same
+ * path under `to`. Lets a brief name the source of a generated copy without listing the copy (QUA-035).
+ */
+export function withMirrors(patterns, cfg = {}) {
+  const mirrors = (Array.isArray(cfg?.scopeMirrors) ? cfg.scopeMirrors : []).filter(
+    (m) => typeof m?.from === "string" && m.from && typeof m.to === "string",
+  );
+  const all = [...patterns];
+  for (const p of patterns) for (const m of mirrors) if (p.startsWith(m.from)) all.push(normalize(m.to + p.slice(m.from.length)));
+  return [...new Set(all)];
+}
+
+/** `{ brief (relative path): patterns }` for the briefs whose block reads without a form error, copies included. */
+export function patternsByBrief(briefTexts, cfg = {}) {
   const result = new Map();
   for (const [rel, text] of briefTexts) {
-    const { patterns } = readBlock(text);
+    const patterns = withMirrors(readBlock(text).patterns, cfg);
     if (patterns.length) result.set(rel, patterns);
   }
   return result;

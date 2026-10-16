@@ -591,6 +591,11 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
   assert.match(refus.stdout, /Écriture refusée \(QUA-016, scopeReminder : blocking\).*scripts\/nouveau\.mjs/);
   assert.equal(hook("PreToolUse", "docs/notes.md").stdout.trim(), "", "la doc n'est jamais du code : jamais refusée");
   assert.equal(hook("PostToolUse", "scripts/nouveau.mjs").stdout.trim(), "", "en bloquant, pas de rappel en double après coup");
+  // QUA-035 : une copie déclarée (scopeMirrors) d'un fichier cadré n'est pas refusée.
+  writeFileSync(join(dir, "docs/projects/gabarit.md"), "# Gabarit\n\n<!-- scope\nfiles:\n  - modele/scripts/nouveau.mjs\n-->\n");
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeMirrors: [{ from: "modele/", to: "" }] }));
+  assert.equal(hook("PreToolUse", "scripts/nouveau.mjs").stdout.trim(), "", "copie de modele/scripts/nouveau.mjs, cadré");
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeMirrors: [] }));
   // En « avertissement » : jamais de refus, un rappel après l'écriture.
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeReminder: "warning" }));
   assert.equal(hook("PreToolUse", "scripts/nouveau.mjs").stdout.trim(), "");

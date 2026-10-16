@@ -334,6 +334,19 @@ the files this project touches.
   secrets file or a pipe into a shell within a Bash command; blocks
   nothing, the person decides.
 
+- **Generated copies** (`scopeMirrors` setting, absent by default): pairs
+  of path prefixes `{ "from": "templates/", "to": "" }`. A scoped file under
+  `from` also covers the same path under `to`, for the scope barrier, the
+  check and the agent-side reminder: a brief names the source of a copy
+  without listing the copy.
+- **What a scope usually forgets** (warnings from check-docs): code
+  without any test file, or a criterion that creates a contract without
+  `.drwil/ia-first.json`, where that contract's own check is declared.
+- **Widening mid-workstream**: a commit that stages documentation only
+  (`docs/`, Markdown) does not replay the tests of the checks nor the
+  project's checks on the working tree, which holds the lot in progress;
+  they are reported not run, and push and CI always replay them.
+
 The block's grammar (`.githooks/scope.mjs`) is shared by the check and
 the reminder: a single source.
 

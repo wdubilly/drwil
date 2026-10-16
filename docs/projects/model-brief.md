@@ -30,7 +30,12 @@ files:
 (bloc `scope` : un chemin ou un motif par ligne, sous `files:` ; couvre
 les fichiers de code que ce chantier touche, pour le rappel de cadrage —
 `docs/ia-first.md`, section 7. Un motif trop large, `**` ou `scripts/*`, est
-refusé : nommer le fichier ou un motif d'au moins deux dossiers.)
+refusé : nommer le fichier ou un motif d'au moins deux dossiers. Lister
+dès le cadrage tout ce que le chantier touchera : le code, **ses tests**,
+et `.drwil/ia-first.json` quand un critère crée un contrat (son contrôle
+propre s'y déclare) — check-docs avertit sinon ; élargir en cours de
+chantier coûte un commit séparé. Dans ce dépôt, un fichier du gabarit
+couvre sa copie (`scopeMirrors`).)
 
 ## 1. Besoin
 

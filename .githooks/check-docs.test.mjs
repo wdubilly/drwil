@@ -280,7 +280,7 @@ test("aucune citation trouvée, dossiers réglés, cadrage désactivé : vert", 
     }),
     "AGENTS.md": "Voir `docs/futur.md` (à créer). Contrat SEC-001.\n",
     "regles.md": "| SEC-001 | r |\n",
-    "suivi/a.md": `# A\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- scope\nfiles:\n  - src/a.js\n-->\n${reprise}`,
+    "suivi/a.md": `# A\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- scope\nfiles:\n  - src/a.js\n  - src/a.test.js\n-->\n${reprise}`,
     "src/a.js": "",
   });
   assert.equal(r.status, 0, r.stdout);

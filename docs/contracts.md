@@ -245,6 +245,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : un critère non prouvé fait tomber le verdict de verify — « Un critère automatique non prouvé de la fiche active fait passer le verdict de verify à FAIL »
 **Raison** : verify pouvait dire `GOVERNANCE: PASS` alors qu'un critère du chantier n'était pas prouvé ; l'agent ne le découvrait qu'à la clôture et pouvait annoncer un travail « vérifié » qui ne l'était pas.
 
+## QUA-035 — Un cadrage complet du premier coup, un élargissement sans friction
+**Règle** : Un fichier cité dans le bloc scope d'une fiche couvre aussi sa copie déclarée par le réglage `scopeMirrors` de `.drwil/ia-first.json` (paires de préfixes source → copie), pour la barrière de périmètre, le rappel de cadrage de check-docs et celui de l'agent ; sans réglage, rien ne change. `check-docs` avertit une fiche dont le cadrage cite du code sans aucun fichier de test, ou dont un critère crée un contrat sans que le cadrage cite `.drwil/ia-first.json`. Un commit qui n'indexe que de la documentation (`docs/`, Markdown) ne rejoue ni les tests des contrôles ni les contrôles du projet : ils sont signalés non exécutés, et le push comme la CI les rejouent toujours (QUA-013).
+**Périmètre** : `.githooks/scope.mjs`, `.githooks/scope-gate.mjs`, `.githooks/risk.mjs`, `.githooks/engine.mjs`, `.claude/hooks/scope-reminder.mjs` ; livré dans le gabarit ; ce dépôt déclare son gabarit dans `scopeMirrors`.
+**Source de vérité** : `.githooks/scope.mjs` (`withMirrors`), `.githooks/risk.mjs` (`scopeGaps`), `.githooks/engine.mjs`.
+**Preuve** : tests des hooks.
+**Contrôle** : `tests-qua-035`
+**Tests** : `.githooks/scope.test.mjs`, `.githooks/scope-gate.test.mjs`, `.githooks/risk.test.mjs`, `.githooks/engine.test.mjs`
+**Origine** : un cadrage complet du premier coup, un élargissement sans friction — « Un fichier du gabarit cité dans le bloc scope couvre aussi sa copie »
+**Raison** : Neuf élargissements de cadrage en deux jours, chacun un commit à part et un `git stash` du lot en cours : la première friction qu'un vrai projet rencontrerait.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

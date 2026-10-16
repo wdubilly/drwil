@@ -56,15 +56,14 @@ friction rencontrée.
 
 - Un fichier du gabarit cité dans le bloc scope couvre aussi sa copie,
   déduite d'un réglage `scopeMirrors` de `.drwil/ia-first.json` (paires de
-  préfixes source → copie ; ce dépôt y déclare son gabarit) — contrat à
-  créer
+  préfixes source → copie ; ce dépôt y déclare son gabarit) — `QUA-035`
 - `check-docs` avertit une fiche dont le cadrage cite du code sans aucun
   fichier de test, ou dont un critère crée un contrat sans que le cadrage
   cite la configuration des contrôles (`.drwil/ia-first.json`, où vit le
-  contrôle propre du contrat) — contrat à créer (le même)
+  contrôle propre du contrat) — `QUA-035`
 - Un commit qui ne touche que des fiches ne rejoue pas les contrôles hors
   documentation : ils sont signalés « non exécutés », rejoués au push et
-  en CI (QUA-013) — contrat à créer (le même)
+  en CI (QUA-013) — `QUA-035`
 
 ## 2. Hors périmètre
 

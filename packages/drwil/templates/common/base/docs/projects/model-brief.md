@@ -28,7 +28,11 @@ files:
 the code files this project touches, for the scoping reminder —
 `docs/ia-first.md`, section 7. A pattern that's too broad, `**` or
 `scripts/*`, is refused: name the file or use a pattern spanning at least
-two folders.)
+two folders. List everything the workstream will touch from the start:
+the code, **its tests**, and `.drwil/ia-first.json` when a criterion
+creates a contract (its own check is declared there) — check-docs warns
+otherwise; widening mid-workstream costs a separate commit. A generated
+copy is covered by its source when `scopeMirrors` declares it.)
 
 ## 1. Need
 
