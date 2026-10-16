@@ -707,7 +707,7 @@ can read directly. The names are the same whatever the project language.
 | `/drwil-adopt` | Make the kit live on an existing project after `init` |
 | `/drwil-audit` | Audit risks and technical debt |
 | `/drwil-value` | Discover the next high-value product features |
-| `/drwil-usage` | Record tokens, model and setup time for a finished lot |
+| `/drwil-usage` | Measure a workstream's tokens from Claude Code's session logs and record its closing line |
 | `/drwil-progress` | Generate a static HTML progress dashboard |
 | `/drwil-release` | Tag and publish a GitHub release (optional module) |
 
@@ -832,7 +832,9 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    contract waiting for the human's `drwil attest`; an unproven acceptance
    criterion makes the verdict fail.
 5. **CLOSING**: the work item is condensed into the journal and deleted,
-   its untreated limits become intents, the README, changelog and
+   its token consumption is recorded (`.drwil/usage.jsonl`, read from
+   Claude Code's session logs), its untreated limits become intents, the
+   README, changelog and
    architecture map are updated when the work changes them, the pull
    request is opened, then back to SCOPING. The merge stays a
    human gesture unless authorised at start.
@@ -993,9 +995,12 @@ Its role is narrower:
 ## Current status
 
 **V0.2 — Executable Governance** is delivered (see
-`packages/drwil/CHANGELOG.md`); 0.6.0 adds the business non-regression
-fed by every workstream, queues of workstreams, readable identifiers and a
-maintained architecture map. Next: trying it on real projects (V1).
+`packages/drwil/CHANGELOG.md`); the latest release is 0.5.1. The coming
+0.6.0, not released yet (the « Unreleased » section of the changelog),
+adds the business non-regression fed by every workstream, queues of
+workstreams, token consumption measured per workstream, readable
+identifiers and a maintained architecture map: until it is released, these
+are only available from the sources. Next: trying it on real projects (V1).
 
 V0.2 covered:
 
