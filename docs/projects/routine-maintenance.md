@@ -17,6 +17,7 @@ files:
   - outils/miroirs.json
   - packages/drwil/src/evidence.ts
   - packages/drwil/test/kit.test.mjs
+  - README.md
 -->
 
 ## Journal
