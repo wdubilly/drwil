@@ -6,6 +6,12 @@ geste, clôture sur évidence de verify), 2 (décision lue par un hook, via
 `docs/projects/journal.md` ; restent les questions 3 et 4, et l'affichage
 de qui décide chaque transition.
 
+**Revu le 2026-10-16** : levier 3, « une PR par chantier » est devenu la
+pratique (fusion automatique choisie au lancement, `/drwil-start`) ;
+l'attestation groupée recoupe `docs/projects/attestation-sans-friction.md`.
+Reste vivant : afficher qui décide chaque transition, et l'ordre des
+leviers restants (question 4).
+
 **Projet** : DRWIL — **Niveau de risque** : HIGH (touche aux transitions
 humaines de la gouvernance).
 

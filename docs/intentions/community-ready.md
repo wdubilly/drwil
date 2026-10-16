@@ -3,6 +3,10 @@
 **Statut** (2026-10-06) : à réaliser — intention posée par le demandeur,
 questions à trancher en fin de fiche.
 
+**Revu le 2026-10-16** : « tout vérifier » est désormais
+`node .githooks/run-checks.mjs` (le script shell n'existe plus). Le reste
+de l'« Existant » et les questions restent valables.
+
 **Projet** : DRWIL — **Lot** : Community Ready — **Cible** : V0.2 /
 post-release — **Niveau de risque** : MEDIUM.
 

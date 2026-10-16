@@ -1134,3 +1134,19 @@ l'index ; texte intégral dans l'historique git
   et `docs/intentions/attestation-sans-friction.md`, nées de ces
   chantiers.
 - **Texte intégral** : `git log --follow -- docs/intentions/non-regression-metier.md`.
+
+## 2026-10-16 — Intentions closes : livrable en anglais, non-régression continue
+
+- **Livrable en anglais** (intention `livrable-full-english`,
+  cadrée le 2026-10-12) : entièrement réalisée par ses trois chantiers, un
+  seul gabarit en anglais (B), le cœur (A), la CLI (C), clos le
+  2026-10-12 (entrées ci-dessus).
+- **Non-régression continue** (intention `non-regression-continue`,
+  questions tranchées le 2026-10-11) : réalisée par le chantier
+  « Capitaliser les tests de non-régression » (QUA-021 à QUA-024,
+  2026-10-15), puis par le lien contrat ↔ test, l'échec attribué à la
+  bonne règle et la vue des règles métier (QUA-029 à QUA-031, 2026-10-16).
+- **Pourquoi closes si tard** : rien ne reliait ces chantiers à leur
+  intention à la clôture ; relevé le 2026-10-16 par le demandeur, la
+  mécanique est cadrée dans `docs/projects/consigner-retours-experience.md`.
+- **Texte intégral** : `git log --follow -- docs/intentions/<intention>.md`.

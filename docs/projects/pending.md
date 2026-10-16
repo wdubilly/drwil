@@ -216,8 +216,9 @@ Limites relevées en cours de chantier, consignées en intention le
 2026-10-15 (chantier « capitaliser les non-régressions ») ; les recadrer est
 une décision du demandeur.
 
-- [ ] [IA] Consigner les retours d'expérience en intentions à la
-  clôture (règle, livrable et dépôt) —
+- [ ] [IA] La clôture boucle les intentions : retours d'expérience
+  consignés, intention d'origine mise à jour ou close, intentions
+  périmées signalées (règle, livrable et dépôt) —
   `docs/projects/consigner-retours-experience.md`.
 - [ ] [décision] Cadrage complet du premier coup (copies du gabarit,
   tests), élargissement sans friction —
