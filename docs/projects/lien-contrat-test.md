@@ -55,11 +55,10 @@ registre.)
 - Quand un contrôle cité par plusieurs contrats échoue, verify le dit
   (« contrôle partagé par APP-001, APP-002 : échec non attribuable, un
   contrôle par règle ») au lieu de l'imputer sans réserve à chacun —
-  contrat à créer
+  `QUA-030`
 - Le registre livré et la recette d'adoption enseignent un contrôle par
   règle métier, qui filtre ses tests par l'ID (`npm test -- -t "APP-002"`,
-  `pytest -k`, `go test -run`) — contrat à créer (le même que le critère
-  précédent)
+  `pytest -k`, `go test -run`) — `QUA-030`
 - Dans ce dépôt, chaque contrat cite le contrôle qui rejoue ses tests :
   un test cassé fait échouer son contrat, pas seulement d'autres — prouvé
   par les contrats modifiés ci-dessous (`couverture-tests`,

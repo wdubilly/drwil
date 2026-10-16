@@ -2086,6 +2086,19 @@ test("QUA-024 : dépôt neuf : init fournit un contrat métier d'exemple, contr�
   assert.match(exemple.reasons.join("\n"), /check to complete/);
 });
 
+test("QUA-030 : le registre livré et la recette d'adoption enseignent un contrôle par règle métier, filtré par l'ID, et le champ Tests", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "en", targetDir: dir, git: false, ci: "none" }));
+  const registre = readFileSync(join(dir, "docs/contracts.md"), "utf8");
+  assert.match(registre, /\*\*Proof\*\* : .*its own check .*`npm test -- -t "APP-001"`/);
+  assert.match(registre, /list its file as \*\*Tests\*\*/);
+  assert.match(registre, /^## QUA-029 — .*\n(.*\n)*\*\*Check\*\* : `contract-tests`/m);
+  const recette = readFileSync(join(dir, "docs/recipes/adopt-the-kit.md"), "utf8");
+  assert.match(recette, /\*\*One check per business rule\*\*/);
+  assert.match(recette, /`pytest -k APP_001`, `go test -run APP001`/);
+  assert.match(recette, /reports it as not\n\s+attributable/);
+});
+
 test("critères d'acceptation : un contrat sans contrôle ni Manuel n'est pas une preuve durable ; un critère humain exige un contrat manuel", () => {
   const contrats = [
     { id: "A", status: "PASS", manual: null, checks: [{ id: "x", status: "ok" }] },

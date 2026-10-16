@@ -138,6 +138,7 @@ const TEXTS = {
     noContract: "aucun contrat trouvé dans {0}",
     ok: "{0} : ok (automatisé)",
     failed: "{0} : échec{1}",
+    shared: "{0} est partagé par {1} : échec non attribuable à une seule règle — un contrôle par règle, qui filtre ses tests par l'ID",
     notRun: "{0} : non exécuté ({1})",
     notApplicable: "{0} : non applicable ici ({1}), preuve non établie",
     noCheck: "aucun contrôle déclaré (contrat historique) : preuve humaine requise",
@@ -153,6 +154,7 @@ const TEXTS = {
     noContract: "no contract found in {0}",
     ok: "{0}: ok (automated)",
     failed: "{0}: failed{1}",
+    shared: "{0} is shared by {1}: failure not attributable to a single rule — one check per rule, filtering its tests by the ID",
     notRun: "{0}: not run ({1})",
     notApplicable: "{0}: not applicable here ({1}), proof not established",
     noCheck: "no declared check (legacy contract): human proof required",
@@ -222,6 +224,8 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   // `whole`: verify judges the whole repository (e.g. gitleaks on the whole history), not an empty index.
   const available = new Map<string, any>(engine.checks(root, { cfg, whole: true }).map((c: any) => [c.id, c]));
   const cache = new Map<string, CheckResult>();
+  // A check cited by several contracts cannot say which rule its failure breaks: verify says so.
+  const citedBy = (id: string) => all.filter((k) => (k.checks ?? []).includes(id)).map((k) => k.id);
   const run = (id: string): CheckResult => {
     const known = cache.get(id);
     if (known) return known;
@@ -241,6 +245,8 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
       else if (r.status === "fail") {
         statuses.push("FAIL");
         reasons.push(fill(T.failed, r.id, r.message ? ` — ${r.message}` : ""));
+        const sharers = citedBy(r.id);
+        if (sharers.length > 1) reasons.push(fill(T.shared, r.id, sharers.join(", ")));
         // The last lines of the output say why, without drowning the verdict.
         const tail = (r.output ?? "")
           .split(/\r?\n/)
