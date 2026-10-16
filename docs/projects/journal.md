@@ -1352,7 +1352,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   première version, pile et couches, premières règles métier, risque ;
   `AGENTS.md`, carte, premier README) (QUA-038). Premier chantier de la
   première file réelle (avec « glossaire des identifiants » et
-  `docs/projects/doc-a-jour.md`).
+  « documentation à jour »).
 - **Intention d'origine** : aucune (demande directe) ; aucune limite non
   traitée à consigner.
 - **Clôturé par** : PR #110.
@@ -1379,3 +1379,29 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   Code (`docs/intentions/glossaire-autres-agents.md`) ; les messages de
   `check-docs` (plafond de QUA-001) ne sont pas annotés.
 - **Clôturé par** : PR #111.
+
+## 2026-10-16 — Une documentation à jour pour la 0.6.0, et qui le reste
+
+- **Décisions clés** (demandeur, 2026-10-16) : drwil entretient la carte
+  du client, pas seulement celle de ce dépôt. Livré à tout projet : le
+  contrôle `architecture-map` signale un dossier de code absent de
+  `docs/architecture.md`, avec la ligne à compléter (réglage
+  `architectureMap.files` pour exiger les fichiers ; ce dépôt l'exige pour
+  `packages/drwil/src/`, `.githooks/` et `outils/`) ; la clôture tient
+  README, ligne « Unreleased » du changelog et carte (recette et rappel
+  CLOSING) ; la release renomme « Unreleased » ; `/drwil-adopt` construit
+  la carte depuis le code (QUA-040). Rattrapage de la doc pour la 0.6.0 :
+  changelog depuis la 0.5.1, README du dépôt et du paquet, INSTALL, chaîne
+  réelle des contrôles dans `docs/ia-first.md`, carte (17 fichiers
+  absents) ; attesté par le demandeur (QUA-041).
+- **Écart** : en cours de chantier, le demandeur a voulu en anglais ce que
+  lit un prospect (README, INSTALL, carte, README et changelog du
+  paquet) ; exception inscrite dans `AGENTS.md`. La table des contrats
+  livrés du README du paquet était fausse (SEC-001 et QUA-004 n'en font
+  pas partie).
+- **Intention d'origine** : aucune (demande directe).
+- **Limites connues** : carte et README d'un client dans sa langue, et
+  justesse des rôles de la carte non contrôlée
+  (`docs/intentions/carte-dans-la-langue-du-projet.md`) ; la section
+  française du README du paquet est gardée, à trancher.
+- **Clôturé par** : PR à venir.

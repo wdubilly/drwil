@@ -12,7 +12,16 @@
 // A check's command never lives here.
 
 /** Identifiers of the steps of .githooks/run-checks.mjs. The first four are also those of BASE in check-control-coverage.mjs. */
-export const BASE_CHECKS = ["secrets", "docs-references", "contract-tests", "scope-gate", "checks-self-test", "ci-coverage", "main-branch"];
+export const BASE_CHECKS = [
+  "secrets",
+  "docs-references",
+  "contract-tests",
+  "architecture-map",
+  "scope-gate",
+  "checks-self-test",
+  "ci-coverage",
+  "main-branch",
+];
 
 const ID_RE = /^[A-Z][A-Z0-9]*-\d+$/;
 const CHECK_FIELD = /^(contrôle|controle|check)$/i;

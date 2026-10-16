@@ -258,6 +258,19 @@ test("contexte en anglais selon .drwil/ia-first.json", () => {
   assert.match(context(readState(racine), racine), /Activity: SCOPING/);
 });
 
+test("QUA-040 : rappel CLOSING : README, changelog « Unreleased » et carte d'architecture, en anglais aussi", () => {
+  const fr = depot({ state: actif("CLOSING") });
+  assert.match(
+    context(readState(fr), fr),
+    /README et ligne « Unreleased » du changelog[^.]*carte docs\/architecture\.md s'il change la structure/,
+  );
+  const en = depot({ state: actif("CLOSING"), lang: "en" });
+  assert.match(
+    context(readState(en), en),
+    /README and « Unreleased » changelog line[^.]*map docs\/architecture\.md if it changes the structure/,
+  );
+});
+
 test("QUA-036 : rappel CLOSING : boucler les intentions (limites en intentions, intention d'origine mise à jour ou close), en anglais aussi", () => {
   const fr = context(readState(depot({ state: actif("CLOSING") })), depot({ state: actif("CLOSING") }));
   assert.match(fr, /chaque limite non traitée devient une fiche d'intention \(jamais une fiche de chantier\)/);

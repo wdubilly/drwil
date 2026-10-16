@@ -67,6 +67,12 @@ request, instead of direct commits on the main branch.
   closing source, the index only lists remaining work). Nothing is
   lost — the full history stays in git
   (`git log --follow -- docs/projects/<brief>.md`).
+- Keep what the user reads current, in the closing commit: a workstream
+  that changes what the user sees updates the `README.md` and adds its line
+  under « Unreleased » in `CHANGELOG.md` (if present); one
+  that changes the structure (folder or module, layer, stack) updates the
+  map `docs/architecture.md` — drwil maintains it, and its check reports
+  any code folder it does not cite yet.
 - Close the intent loop, in the closing commit: each limit left untreated
   becomes an intent brief (`docs/intentions/`, one per limit, never a
   workstream brief), listed in `docs/projects/pending.md` as `[decision]`

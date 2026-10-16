@@ -26,7 +26,10 @@ script only runs on the user's explicit request, never on its own in CI.
    the version is computed *best-effort* from commit messages since the
    last tag, Conventional-Commits style (`feat:` → minor, announced
    breaking change → major, otherwise patch by default); with packages,
-   that computation is only a displayed suggestion.
+   that computation is only a displayed suggestion. In the same PR, if the
+   project keeps a `CHANGELOG.md` (if present), its « Unreleased » section, fed by each
+   workstream's closing, is renamed to that version (a new empty
+   « Unreleased » above it).
 3. Create for real: `node .githooks/create-release.mjs` (annotated tag
    pushed to `origin`, then `gh release create --generate-notes` if `gh`
    is available and authenticated).

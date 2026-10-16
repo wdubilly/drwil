@@ -11,6 +11,12 @@ project once the stack has been chosen.
 
 *(repo to clone, config file to fill in, e.g. `.env` from `.env.example`)*
 
+Once per clone, enable the governance hooks (checks at commit and push):
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## 3. First startup and check
 
 Run and check: `docs/recipes/run-locally.md` (if present).

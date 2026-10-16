@@ -38,7 +38,7 @@ const TEXTS = {
       VERIFY:
         "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en BUILD ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
       CLOSING:
-        "fiche entièrement terminée : la condenser dans le journal puis la supprimer ; sinon mettre à jour statut et reprise. Boucler les intentions : chaque limite non traitée devient une fiche d'intention (jamais une fiche de chantier), listée dans l'index en [décision] et citée par « Limites connues » du journal ; l'intention d'origine (champ Intention de la fiche) est mise à jour, ou résumée au journal et retirée si elle est entièrement couverte. Puis revenir en SCOPING.",
+        "fiche entièrement terminée : la condenser dans le journal puis la supprimer ; sinon mettre à jour statut et reprise. Boucler les intentions : chaque limite non traitée devient une fiche d'intention (jamais une fiche de chantier), listée dans l'index en [décision] et citée par « Limites connues » du journal ; l'intention d'origine (champ Intention de la fiche) est mise à jour, ou résumée au journal et retirée si elle est entièrement couverte. Tenir ce que lit l'utilisateur : README et ligne « Unreleased » du changelog si le chantier change ce qu'il voit, carte docs/architecture.md s'il change la structure. Puis revenir en SCOPING.",
     },
   },
   en: {
@@ -72,7 +72,7 @@ const TEXTS = {
       VERIFY:
         "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to BUILD; MANUAL: human attestation (`npx drwil attest`), then run it again.",
       CLOSING:
-        "brief fully finished: condense it into the journal, then delete it; otherwise update status and hand-off. Close the intent loop: each limit left untreated becomes an intent brief (never a workstream brief), listed in the index as [decision] and cited by the journal's « Known limits »; the original intent (the brief's Intent field) is updated, or summarised in the journal and removed when fully covered. Then go back to SCOPING.",
+        "brief fully finished: condense it into the journal, then delete it; otherwise update status and hand-off. Close the intent loop: each limit left untreated becomes an intent brief (never a workstream brief), listed in the index as [decision] and cited by the journal's « Known limits »; the original intent (the brief's Intent field) is updated, or summarised in the journal and removed when fully covered. Keep what the user reads current: README and « Unreleased » changelog line if the workstream changes what they see, map docs/architecture.md if it changes the structure. Then go back to SCOPING.",
     },
   },
 };

@@ -1,40 +1,46 @@
 # Architecture — drwil
 
-État au 2026-10-11. Carte du dépôt : où vit quoi. À tenir à jour dans le même commit que le code qu'elle décrit. Elle renvoie aux documents qui détaillent, sans les recopier.
+As of 2026-10-16. Map of the repository: what lives where. Kept up to date in the same commit as the code it describes, which the `architecture-map` check enforces (QUA-040): every file of `packages/drwil/src/`, `.githooks/` and `outils/` (tests excluded) is cited here. It points to the documents that go into detail, without copying them.
 
-## Ce que fait drwil
+## What drwil does
 
-drwil est un kit de **gouvernance pour le développement assisté par IA**. Pour un projet logiciel, il installe des consignes pour les agents (Claude Code, Codex, Cursor, Copilot, Gemini), des fiches de chantier, un registre de contrats et des contrôles rejoués au commit, au push et en CI ; `drwil verify` dit ensuite, preuves à l'appui, si le travail est vérifié. Pour qui : une équipe, ou une personne seule, qui fait travailler des agents et veut garder la décision et la preuve.
+drwil is a **governance kit for AI-assisted development**. In a software project, it installs instructions for the agents (Claude Code, Codex, Cursor, Copilot, Gemini), workstream briefs, a contract registry and checks replayed at commit, at push and in CI; `drwil verify` then says, with evidence, whether the work is verified. Every workstream leaves its non-regression behind: its acceptance criteria become contracts of the registry, replayed everywhere afterwards. For whom: a team, or a single person, who has agents do the work and wants to keep the decision and the proof.
 
-Ce dépôt a deux casquettes (QUA-018) : **drwil-le-livrable**, le paquet npm `packages/drwil` et son gabarit ; **drwil-le-dépôt**, ce projet, qui s'applique sa propre gouvernance.
+This repository has two roles (QUA-018): **drwil the deliverable**, the npm package `packages/drwil` and its template; **drwil the repository**, this project, which applies its own governance to itself. The repository's working language is French (briefs, contracts, journal, commits); what a visitor reads first (README, INSTALL, this map, changelog) is in English.
 
 ## Stack
 
-Node.js 22 et plus récent (`engines` du paquet ; CI sur Node 22 et 24), TypeScript pour la CLI, JavaScript sans dépendance (modules `.githooks/*.mjs`) pour les hooks. Une seule dépendance d'exécution : `commander`.
+Node.js 22 or later (package `engines`; CI on Node 22 and 24), TypeScript for the CLI, dependency-free JavaScript (`.githooks/*.mjs` modules) for the hooks. A single runtime dependency: `commander`.
 
-## Le livrable : `packages/drwil`
+## The deliverable: `packages/drwil`
 
-- **CLI** (`packages/drwil/bin/drwil.js`, code dans `packages/drwil/src/`) : `init` installe le gabarit ou met à jour un projet équipé (n'écrase jamais un fichier du projet, `--dry-run` prévisualise), `uninstall` et `resolve-drift` le retirent ou résolvent une dérive ; `verify` juge les contrats (`packages/drwil/src/verify.ts`, verdict mis en forme par `packages/drwil/src/verdict.ts`, présentation pour un agent dans `packages/drwil/src/agent.ts`), `attest` enregistre une preuve humaine (`packages/drwil/src/attest.ts`), `doctor` et `contracts` diagnostiquent (`packages/drwil/src/doctor.ts`), `state` lit et fait évoluer l'état de gouvernance. L'installation : `packages/drwil/src/index.ts` (`init`, git), `packages/drwil/src/install.ts` (ce qu'`init` décide, partagé avec son aperçu), `packages/drwil/src/config.ts` (options et config du projet), `packages/drwil/src/render.ts` (rendu et écriture du gabarit), `packages/drwil/src/manifest.ts` (fichiers installés, désinstallation), `packages/drwil/src/drift.ts` (résolution de dérive), `packages/drwil/src/preview.ts` (aperçu d'`init --dry-run`), `packages/drwil/src/migration.ts` (migration de l'ancien format) ; `packages/drwil/src/stack.ts` détecte la pile ; `packages/drwil/src/i18n.ts` choisit la langue des messages (celle du projet, l'anglais hors projet).
-- **Gabarit** (`packages/drwil/templates/`) : un seul gabarit, en anglais, sous `common/` (`base/` : hooks, documents, recettes ; `tools/` : réglages, hooks et skills par outil IA ; `ci/` : CI GitHub ou GitLab ; `layers/` : consignes par couche ; `optional/` : modules optionnels). Les variables `{{…}}` sont rendues à l'installation.
-- **Tests** : `packages/drwil/test/kit.test.mjs` installe le gabarit dans des projets temporaires et l'éprouve ; couverture suivie par QUA-004.
+- **CLI** (`packages/drwil/bin/drwil.js`, code in `packages/drwil/src/`):
+  - installing: `packages/drwil/src/index.ts` (`init`, git), `packages/drwil/src/install.ts` (what `init` decides, shared with its preview; no layer invented without a detected stack), `packages/drwil/src/config.ts` (options and project config), `packages/drwil/src/render.ts` (rendering and writing the template), `packages/drwil/src/preview.ts` (`init --dry-run` preview), `packages/drwil/src/stack.ts` (stack detection);
+  - an existing project: `packages/drwil/src/essentials.ts` (what drwil requires inside the files `init` does not overwrite), `packages/drwil/src/complete.ts` (adds it without overwriting anything: delimited block, merged JSON and TOML entries), `packages/drwil/src/manifest.ts` (installed files, uninstall), `packages/drwil/src/drift.ts` (drift resolution); `packages/drwil/src/migration.ts` and `packages/drwil/src/migration-table.ts` (migration of the old French names, single table);
+  - verification: `packages/drwil/src/verify.ts` (judges the contracts), `packages/drwil/src/criteria.ts` (acceptance criteria of the active brief: proof by a contract, Origin field, effect on the verdict), `packages/drwil/src/rules.ts` (business rules summary), `packages/drwil/src/evidence.ts` (evidence of a verify run and secret redaction), `packages/drwil/src/verdict.ts` (human output and JSON format, ID labels), `packages/drwil/src/agent.ts` (output for an agent), `packages/drwil/src/attest.ts` (human proof), `packages/drwil/src/doctor.ts` (`doctor` and `contracts`);
+  - `packages/drwil/src/i18n.ts` picks the message language (the project's, English outside a project).
+- **Template** (`packages/drwil/templates/`): a single template, in English, under `common/` (`base/`: hooks, documents, recipes; `tools/`: settings, hooks and skills per AI tool; `ci/`: GitHub or GitLab CI; `layers/`: per-layer instructions; `optional/`: optional modules). `{{…}}` variables are rendered at install time.
+- **Tests**: `packages/drwil/test/kit.test.mjs` installs the template in temporary projects and exercises it; `packages/drwil/test/cycle.test.mjs` runs complete cycles (install, verify, attest, close); coverage tracked by QUA-004.
 
-## Les contrôles : `.githooks/`
+## The checks: `.githooks/`
 
-Copies, dans ce dépôt, des hooks livrés : installées depuis le gabarit par `npm run installer-depot` (`outils/installer-depot.mjs`), jamais éditées ici ; identiques, vérifié par le contrôle `miroirs-gabarit`. Les tests des hooks, eux, s'écrivent ici :
+In this repository, copies of the shipped hooks: installed from the template by `npm run installer-depot` (`outils/installer-depot.mjs`), never edited here; kept identical, as the `miroirs-gabarit` check verifies. The hooks' tests, however, are written here:
 
-- `.githooks/engine.mjs` : moteur unique des contrôles, partagé par les hooks et `drwil verify` ; `.githooks/run-checks.mjs` l'exécute au commit (`pre-commit`), au push (`pre-push`) et en CI.
-- Contrôles du socle : `.githooks/check-docs.mjs` (doc et contrats cités), `.githooks/scope-gate.mjs` (barrière de périmètre de la fiche active), `.githooks/check-control-coverage.mjs` (couverture CI de chaque contrôle).
-- Gouvernance : `.githooks/state.mjs` (état, transitions, lancement ; lit les fiches par `.githooks/briefs.mjs`, met en forme par `.githooks/state-texts.mjs`), `.githooks/scope.mjs` (bloc cadrage des fiches), `.githooks/contracts.mjs` (lecture du registre), `.githooks/risk.mjs` (niveau de risque).
-- Tests des hooks : `.githooks/*.test.mjs`, propres au dépôt, couverture 100 % exigée (QUA-004).
+- `.githooks/engine.mjs`: the single check engine, shared by the hooks and `drwil verify`; `.githooks/run-checks.mjs` runs it at commit (`pre-commit`), at push (`pre-push`) and in CI; `.githooks/glob.mjs` matches the checks' paths, both for deferring at commit and for CI coverage.
+- Baseline checks: `.githooks/check-docs.mjs` (cited docs and contracts), `.githooks/check-contract-tests.mjs` (tests cited by the contracts, QUA-029), `.githooks/check-architecture.mjs` (this map, QUA-040), `.githooks/scope-gate.mjs` (scope gate of the active brief), `.githooks/check-control-coverage.mjs` (CI coverage of each check).
+- Governance: `.githooks/state.mjs` (state, transitions, starting and queueing workstreams; reads the briefs through `.githooks/briefs.mjs`, formats through `.githooks/state-texts.mjs`, command line in `.githooks/state-cli.mjs`), `.githooks/scope.mjs` (briefs' scope block, declared copies), `.githooks/contracts.mjs` (registry reading), `.githooks/risk.mjs` (risk level and what a scope forgets), `.githooks/glossary.mjs` (identifier labels, QUA-039).
+- Extension points to adopt: `.githooks/check-file-size.mjs` (size cap, QUA-001), `.githooks/check-code-rules.mjs` (code hygiene rules, empty by default).
+- Optional modules installed here: `.githooks/dashboard.mjs` (static HTML dashboard), `.githooks/create-release.mjs` (tag and GitHub release note, no npm publishing).
+- Hook tests: `.githooks/*.test.mjs`, specific to this repository, 100 % coverage required (QUA-004).
 
-## Propre au dépôt (jamais livré)
+## Specific to this repository (never shipped)
 
-- `outils/` : `outils/installer-depot.mjs` (le dépôt s'installe depuis son gabarit avec la vraie CLI, sans toucher à `.drwil/` ni aux écarts déclarés), `outils/verifier-miroirs.mjs` et sa liste `outils/miroirs.json` (dépôt et gabarit identiques, écarts déclarés), `outils/audit-dependances.mjs` (SEC-006).
-- Forge : `.github/workflows/ia-first.yml` (CI : contrôles, tests du paquet sur Linux, Windows et macOS), `.github/ruleset-master.json` et `.github/scripts/verifier-ruleset.mjs` (protection de `master`, vérifiée en CI), `.github/CODEOWNERS`.
+- `outils/`: `outils/installer-depot.mjs` (the repository installs itself from its template with the real CLI, without touching `.drwil/` or the declared differences), `outils/verifier-miroirs.mjs` and its list `outils/miroirs.json` (repository and template identical, declared differences), `outils/verifier-tests-contrats.mjs` (tests ↔ contracts link both ways, one check per rule, QUA-033), `outils/tester-tarball.mjs` (the CLI installed from the tarball, as a user would), `outils/audit-dependances.mjs` (SEC-006), `outils/consommation.mjs` (tokens consumed per workstream, read from the session logs).
+- Forge: `.github/workflows/ia-first.yml` (CI: checks, package tests on Linux, Windows and macOS), `.github/ruleset-master.json` and `.github/scripts/verifier-ruleset.mjs` (protection of `master`, verified in CI), `.github/CODEOWNERS`.
 
-## Gouvernance de ce dépôt
+## Governance of this repository
 
-- Consignes des agents : `AGENTS.md` ; réglages et hooks de Claude Code : `.claude/settings.json`, `.claude/hooks/`, skills dans `.claude/skills/`.
-- Invariants : `docs/contracts.md` ; catalogue : `docs/contracts-catalog.md` ; principes : `docs/ia-first.md`.
-- Chantiers : index et ordre de réalisation `docs/projects/pending.md`, fiches dans `docs/projects/`, intentions dans `docs/intentions/`, chantiers clos dans `docs/projects/journal.md` ; recettes dans `docs/recipes/`.
-- Configuration : `.drwil/ia-first.json` (contrôles déclarés, réglages) ; état local `.drwil/state.json` (si présent), jamais versionné ; preuves `.drwil/evidence/` (si présent), dont les attestations humaines versionnées.
+- Agent instructions: `AGENTS.md`; Claude Code settings and hooks: `.claude/settings.json`, `.claude/hooks/`, skills in `.claude/skills/`.
+- Invariants: `docs/contracts.md`; catalog: `docs/contracts-catalog.md`; principles: `docs/ia-first.md`.
+- Workstreams: index and order `docs/projects/pending.md`, briefs in `docs/projects/`, intents in `docs/intentions/`, closed workstreams in `docs/projects/journal.md`; recipes in `docs/recipes/`.
+- Configuration: `.drwil/ia-first.json` (declared checks, settings); local state `.drwil/state.json` (if present), never versioned; evidence `.drwil/evidence/` (if present), including the versioned human attestations.

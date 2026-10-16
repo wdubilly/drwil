@@ -597,7 +597,11 @@ npx drwil init              # install, never overwriting a project file
 ```
 
 The same command works for an empty folder, an existing project, and an
-update.
+update. Then run `/drwil-adopt` with your agent: on an empty folder it
+scopes the project first (need, first version, stack, business rules) and
+no layer is invented until you declare them (`npx drwil init --layers
+api,web`); on existing code it builds the architecture map from the code,
+which drwil keeps current from then on.
 
 **Upgrading a project that already had DRWIL:** `init` refreshes the kit
 mechanics that did not change since their installation; a hook modified by
@@ -814,17 +818,23 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
 ```
 
 1. **SCOPING**: the request is framed as a work item in `docs/projects/`
-   with a `scope` block listing the files the work may touch.
+   with a `scope` block listing the files the work may touch, and its
+   **acceptance criteria**, each proven by a contract of the registry: the
+   business non-regression grows with every workstream.
 2. **Start (human)**: the human picks a framed work item (`/drwil-start`
    or `drwil state start`) and may authorise the merge in advance. The
-   agent cannot start work by itself.
+   agent cannot start work by itself. Several ready work items ticked at
+   once form a queue the agent chains, stopping at the first human gate.
 3. **BUILD**: the agent implements inside the scope; each commit carries a
    `Drwil-Brief` trailer.
 4. **EVIDENCE / VERIFY**: `drwil verify --evidence` writes the proof;
    closing requires `PASS` or `ATTESTED` on the current commit, a `MANUAL`
-   contract waiting for the human's `drwil attest`.
+   contract waiting for the human's `drwil attest`; an unproven acceptance
+   criterion makes the verdict fail.
 5. **CLOSING**: the work item is condensed into the journal and deleted,
-   the pull request is opened, then back to SCOPING. The merge stays a
+   its untreated limits become intents, the README, changelog and
+   architecture map are updated when the work changes them, the pull
+   request is opened, then back to SCOPING. The merge stays a
    human gesture unless authorised at start.
 
 ```bash
@@ -982,9 +992,12 @@ Its role is narrower:
 
 ## Current status
 
-DRWIL is currently focused on **V0.2 — Executable Governance**.
+**V0.2 — Executable Governance** is delivered (see
+`packages/drwil/CHANGELOG.md`); 0.6.0 adds the business non-regression
+fed by every workstream, queues of workstreams, readable identifiers and a
+maintained architecture map. Next: trying it on real projects (V1).
 
-The current work focuses on:
+V0.2 covered:
 
 * structured contracts;
 * executable controls;
@@ -998,17 +1011,14 @@ The current work focuses on:
 * agent integrations;
 * initial benchmark methodology.
 
-The project is still evolving.
-
-The goal of V0.2 is not to solve every possible governance problem.
-
-It is to establish a small, reliable governance engine.
+The project is still evolving: the goal is a small, reliable governance
+engine, not to solve every possible governance problem.
 
 ---
 
 ## Roadmap
 
-### V0.2 — Executable Governance
+### V0.2 — Executable Governance (delivered)
 
 Build a solid local governance and verification engine.
 

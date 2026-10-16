@@ -129,6 +129,15 @@ test("docs-references : lance check-docs du projet ; son échec remonte", () => 
   assert.deepEqual(annonces, ["chemins et contrats cités dans la doc"]);
 });
 
+test("QUA-040 : architecture-map lance check-architecture du projet ; son échec remonte", () => {
+  const racine = depot();
+  ecrire(racine, ".githooks/check-architecture.mjs", "process.exit(1)\n");
+  assert.equal(executer(racine, "architecture-map").status, "fail");
+  ecrire(racine, ".githooks/check-architecture.mjs", "console.log('carte')\n");
+  assert.deepEqual(executer(racine, "architecture-map"), { status: "ok", output: "carte\n" });
+  assert.match(texts("en").architecture, /QUA-040/);
+});
+
 test("QUA-029 : contract-tests lance check-contract-tests du projet ; son échec remonte", () => {
   const racine = depot();
   ecrire(racine, ".githooks/check-contract-tests.mjs", "process.exit(1)\n");
@@ -224,8 +233,8 @@ test("contrôles du projet : identifiant, name: nom, report au commit hors chemi
   const touche = parId(checks(racine, { cfg, staged: ["src/x/y.js"] }));
   assert.equal(touche.nomme.run({ stdio: "pipe" }).status, "ok");
   // checks absent ou mal formé : seuls les contrôles du socle.
-  assert.equal(checks(racine, { cfg: { checks: {} } }).length, 7);
-  assert.equal(checks(racine).length, 7);
+  assert.equal(checks(racine, { cfg: { checks: {} } }).length, 8);
+  assert.equal(checks(racine).length, 8);
 });
 
 test("QUA-035 : commit de documentation seule : tests des contrôles et contrôles du projet non exécutés, signalés ; avec du code, rejoués", () => {

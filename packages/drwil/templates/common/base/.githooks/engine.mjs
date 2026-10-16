@@ -26,6 +26,7 @@ const TEXTS = {
     minimalMode: "mode minimal",
     docs: "chemins et contrats cités dans la doc",
     contractTests: "tests cités par les contrats, présents et porteurs de leur ID (QUA-029)",
+    architecture: "carte d'architecture à jour (QUA-040)",
     scope: "périmètre de l'attente",
     branch: "branche principale (QUA-017)",
     branchCi: "jamais en CI",
@@ -47,6 +48,7 @@ const TEXTS = {
     minimalMode: "minimal mode",
     docs: "paths and contracts cited in docs",
     contractTests: "tests cited by the contracts, present and carrying their ID (QUA-029)",
+    architecture: "architecture map up to date (QUA-040)",
     scope: "brief scope",
     branch: "main branch (QUA-017)",
     branchCi: "never in CI",
@@ -128,6 +130,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
 
   add("docs-references", T.docs, (o, name) => launch(process.execPath, [".githooks/check-docs.mjs"], o, name));
   add("contract-tests", T.contractTests, (o, name) => launch(process.execPath, [".githooks/check-contract-tests.mjs"], o, name));
+  add("architecture-map", T.architecture, (o, name) => launch(process.execPath, [".githooks/check-architecture.mjs"], o, name));
 
   // Brief scope gate (.githooks/scope-gate.mjs): at commit time, the local state;
   // elsewhere (push, CI, verify), each commit of the branch is replayed through its trailer.
