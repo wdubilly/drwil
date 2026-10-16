@@ -105,7 +105,7 @@ mise à jour dans le même commit ») n'a pas suffi.
 ## 3. Contraintes
 
 - À réaliser en dernier avant la 0.6.0, après les fiches
-  `docs/projects/glossaire-des-id.md` et `docs/projects/projet-neuf.md`,
+  `docs/projects/glossaire-des-id.md` et « projet neuf » (journal),
   pour décrire leur résultat ; la règle « Unreleased » s'applique dès
   leurs clôtures (la ligne est ajoutée à la main d'ici là).
 - Une information, une source : le README du dépôt et celui du paquet ne
@@ -135,7 +135,8 @@ Tranchées par le demandeur le 2026-10-16 (sondages) :
   seulement de ce dépôt : contrôle de la carte livré, par dossier par
   défaut et par fichier sur réglage ; README et changelog tenus à la
   clôture (étape et rappel), le cadrage d'un projet neuf écrivant un
-  premier README et la carte (`docs/projects/projet-neuf.md`).
+  premier README et la carte (journal, « Un projet neuf commence par son
+  cadrage global »).
 - `INSTALL.md` et la recette d'adoption font partie du rattrapage.
 
 ## 5. Points à trancher

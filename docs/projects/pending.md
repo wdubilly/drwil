@@ -105,8 +105,6 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
-- [ ] [IA] [P1] Un projet neuf commence par son cadrage global, sans
-  couche inventée — `docs/projects/projet-neuf.md`.
 - [ ] [IA] [P1] Un identifiant cité à l'humain vient avec ce qu'il
   désigne (glossaire injecté par un hook) — `docs/projects/glossaire-des-id.md`.
 - [ ] [IA] [P1] Une documentation à jour pour la 0.6.0, et qui le reste
