@@ -135,7 +135,13 @@ Tranchées par le demandeur le 2026-10-16 (sondage) :
   30 jours dans `.githooks/run-checks.mjs` ; le README des intentions
   documente la ligne « Revu le ». Critère de sortie : tests (récente,
   périmée, plusieurs dates : la plus récente compte).
-- **Lot 4 — contrat** [IA] : contrat de ces règles dans
+- **Lot 4 — clore la fiche V0.2** [IA] (ajouté le 2026-10-16, décision
+  du demandeur) : `docs/projects/drwil-v0-2-gouvernance-executable.md`,
+  dépassée (lots livrés ; benchmark porté par `docs/projects/mini-banc.md`,
+  publication par l'intention `packager-kit-ia-first`), résumée au journal
+  et retirée ; la citation de l'en-tête de `docs/contracts.md` renvoie au
+  journal. Critère de sortie : `check-docs` vert.
+- **Lot 5 — contrat** [IA] : contrat de ces règles dans
   `docs/contracts.md`, ID posé dans les critères. Critère de sortie :
   `drwil verify` évalue chaque critère prouvé.
 
