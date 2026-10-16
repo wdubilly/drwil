@@ -105,8 +105,6 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
-- [ ] [IA] [P1] Un cadrage complet du premier coup, un élargissement sans
-  friction — `docs/projects/cadrage-complet.md`.
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
@@ -216,9 +214,6 @@ une décision du demandeur.
   consignés, intention d'origine mise à jour ou close, intentions
   périmées signalées (règle, livrable et dépôt) —
   `docs/projects/consigner-retours-experience.md`.
-- [ ] [décision] Cadrage complet du premier coup (copies du gabarit,
-  tests), élargissement sans friction —
-  `docs/intentions/cadrage-copies-et-elargissement.md`.
 - [ ] [décision] L'installation du dépôt ne réécrit plus la date de
   `docs/ia-first.md` — `docs/intentions/date-ia-first-installateur.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
