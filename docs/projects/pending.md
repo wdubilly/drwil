@@ -227,9 +227,6 @@ une décision du demandeur.
 - [ ] [décision] Un `doctor` juste sur le dépôt drwil lui-même (manifeste
   et version, installé par `installer-depot`) —
   `docs/intentions/doctor-sur-le-depot-drwil.md`.
-- [ ] [décision] Non-régression métier alimentée chantier après chantier :
-  restent la vue d'avancement HTML et la recette « demander une bonne
-  pratique hors adoption » — `docs/intentions/non-regression-metier.md`.
 - [ ] [décision] Un contrôle par règle dans le dépôt drwil : un test cassé
   désigne son contrat, pas treize —
   `docs/intentions/un-controle-par-regle-dans-le-depot.md`.
