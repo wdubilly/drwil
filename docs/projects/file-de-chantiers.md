@@ -10,6 +10,9 @@ files:
   - packages/drwil/templates/common/base/.githooks/state.mjs
   - packages/drwil/templates/common/base/.githooks/state-texts.mjs
   - packages/drwil/templates/common/base/.githooks/briefs.mjs
+  - packages/drwil/templates/common/base/.githooks/state-cli.mjs
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
   - packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs
   - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
   - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
