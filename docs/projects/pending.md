@@ -221,6 +221,9 @@ une décision du demandeur.
   `docs/intentions/file-pour-copilot.md`.
 - [ ] [décision] L'arrêt d'une file et ses comptes rendus vérifiés par un
   contrôle — `docs/intentions/arret-de-file-verifie.md`.
+- [ ] [décision] Les hooks de l'outil IA lisent la racine du projet, pas
+  le dossier courant (rappel faux après un `cd`, constaté le 2026-10-16) —
+  `docs/intentions/hooks-racine-du-projet.md`.
 
 - [ ] [décision] Le glossaire des identifiants injecté aussi chez les
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —
