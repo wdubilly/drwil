@@ -105,7 +105,7 @@ const executable = (dir, f) => process.platform === "win32" || Boolean(statSync(
 
 test("init d'un projet en français : tous les outils, git et hooks, contrôles verts", async () => {
   const dir = tmp();
-  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", description: "Démo $& littéral" }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", description: "Démo $& littéral", layers: "backend,frontend" }));
   for (const f of [
     "AGENTS.md",
     "CLAUDE.md",
@@ -135,16 +135,26 @@ test("init d'un projet en français : tous les outils, git et hooks, contrôles 
   assert.match(r.stdout, /non exécuté : contrôles du projet/);
 });
 
-test("init sans stack détectée : signale explicitement les couches par défaut", async () => {
+test("QUA-038 : répertoire vide : aucune couche inventée, dit quoi faire ; la pile choisie, init --layers crée les couches", async () => {
   const dir = tmp();
   const lines = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   assert.ok(
-    lines.some((l) => l.includes("Couches par défaut écrites : backend, frontend")),
+    lines.some((l) => l.includes("Aucune couche écrite : le projet n'a pas encore de code. Le cadrer d'abord (/drwil-adopt")),
     lines.join("\n"),
   );
+  for (const couche of ["backend", "frontend"]) assert.ok(!existsSync(join(dir, couche)), `pas de ${couche}/ inventé`);
+  assert.deepEqual(config(dir).layers, []);
+  // La pile choisie au cadrage : init relancé avec les couches les crée et les enregistre.
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, layers: "api,web" }));
+  for (const f of ["api/AGENTS.md", "web/AGENTS.md"]) assert.ok(existsSync(join(dir, f)), f);
+  assert.deepEqual(config(dir).layers, ["api", "web"]);
+  const relance = await capture(() => init({ lang: "fr", targetDir: dir, git: false }));
+  assert.ok(!relance.some((l) => l.includes("Aucune couche écrite")), "projet installé relancé : couches gardées");
+  assert.deepEqual(config(dir).layers, ["api", "web"]);
+  const anglais = await capture(() => init({ lang: "en", targetDir: tmp(), name: "demo", git: false }));
   assert.ok(
-    lines.some((l) => l.includes("--layers")),
-    lines.join("\n"),
+    anglais.some((l) => l.includes("No layer written: the project has no code yet.")),
+    anglais.join("\n"),
   );
 });
 
@@ -1081,7 +1091,7 @@ test("init() signale (sans réécrire) un fichier déjà présent qui a dérivé
 
 test("init écrit un manifeste des fichiers installés (chemin + sha256), fusionné sans perte entre deux init()", async () => {
   const dir = tmp();
-  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
   const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
   assert.ok(Object.keys(manifeste).length > 10, "plusieurs fichiers enregistrés");
   assert.ok("AGENTS.md" in manifeste, "AGENTS.md présent");

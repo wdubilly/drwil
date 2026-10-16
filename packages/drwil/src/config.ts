@@ -16,7 +16,7 @@ export interface InitOptions {
   name?: string;
   short?: string;
   lang?: string;
-  /** CSV. Default: the subfolders where a stack is detected, else backend,frontend. */
+  /** CSV. Default: the subfolders where a stack is detected, else none (declared once the stack is chosen). */
   layers?: string;
   contractPrefixes?: string;
   mode?: string;

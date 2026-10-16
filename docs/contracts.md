@@ -275,6 +275,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : enchaîner plusieurs chantiers sans intervention — « Un seul sondage /drwil-start à choix multiple enregistre une file ordonnée de fiches et la fusion automatique »
 **Raison** : Chaque chantier exigeait un sondage et une autorisation de fusion, même quand rien n'était à trancher : l'humain devait revenir entre deux chantiers. Premier pas vers l'intention « fabrique autonome ».
 
+## QUA-038 — Un projet neuf commence par son cadrage global, sans couche inventée
+**Règle** : Sans pile détectée, `drwil init` n'écrit aucune couche et dit quoi faire (cadrer le projet, ou `--layers`) ; une pile détectée, `--layers` ou un projet déjà installé gardent leurs couches ; `drwil init --layers <couches>`, relancé une fois la pile choisie, crée l'`AGENTS.md` de chaque couche et enregistre les couches. La recette d'adoption commence un projet neuf par son cadrage global (besoin, périmètre, pile, premières règles métier, risque ; `AGENTS.md`, carte, premier README).
+**Périmètre** : `drwil init` (`packages/drwil/src/install.ts`, `packages/drwil/src/index.ts`), la recette d'adoption ; livré.
+**Source de vérité** : `packages/drwil/src/install.ts`, `docs/recipes/adopt-the-kit.md` (étape 0).
+**Preuve** : tests du paquet.
+**Contrôle** : `tests-qua-038`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : un projet neuf commence par son cadrage global — « Sans pile détectée, drwil init n'écrit aucune couche »
+**Raison** : Un répertoire vide recevait backend/ et frontend/ pour un projet qui n'existait pas encore, et l'adoption supposait du code existant.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

@@ -112,7 +112,7 @@ addOptions(
     .description(
       "Install IA-first in the current directory, or update an installed project: creates what is missing, refreshes the kit mechanics unless modified by hand, never overwrites project files",
     ),
-  `Layers CSV ${DEFAULT("subfolders where a stack is detected, else backend,frontend")}`,
+  `Layers CSV ${DEFAULT("subfolders where a stack is detected, else none: declared once the stack is chosen")}`,
 )
   .option("--dry-run", "Only audit the repository and preview what would be written; write nothing")
   .option(

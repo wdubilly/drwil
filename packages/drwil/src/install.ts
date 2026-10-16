@@ -16,14 +16,16 @@ export interface InstallChoices {
 
 /**
  * What `drwil init` decides before writing anything, shared with its preview (`--dry-run`) so that
- * the preview cannot diverge from the installation. A new project gets the default layers; an
- * existing one, the subfolders where a stack was found. The kit mechanics are refreshed when they
+ * the preview cannot diverge from the installation. A new project gets no layer (declared once its stack is
+ * chosen); an existing one, the subfolders where a stack was found. The kit mechanics are refreshed when they
  * did not change since their installation (or were never recorded); a mechanics file modified by
  * hand is reported as drift, never overwritten. `--force` rewrites everything.
  */
 export function installChoices(opts: InitOptions): InstallChoices {
   const existing = readConfig(opts.targetDir) !== null || detectStack(opts.targetDir).length > 0;
-  const r = resolve(opts, (stack) => (stack.length ? stack.map((s) => s.path).filter((p) => p !== ".") : ["backend", "frontend"]));
+  // No stack detected (an empty folder, a new project): no layer is invented; they are declared once
+  // the stack is chosen, when the project is scoped (/drwil-adopt) or with --layers (QUA-038).
+  const r = resolve(opts, (stack) => stack.map((s) => s.path).filter((p) => p !== "."));
   const previous = readManifest(opts.targetDir);
   const unchanged = (rel: string) => {
     const abs = join(opts.targetDir, rel);
