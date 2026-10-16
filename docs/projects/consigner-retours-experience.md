@@ -21,6 +21,7 @@ files:
   - docs/projects/model-brief.md
   - docs/intentions/README.md
   - docs/contracts.md
+  - .drwil/ia-first.json
   - packages/drwil/test/kit.test.mjs
   - AGENTS.md
   - docs/recipes/working-with-branches.md
