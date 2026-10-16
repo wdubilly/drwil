@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
 import { checks, projectRoot } from "./engine.mjs";
+import { annotate, glossary } from "./glossary.mjs";
 
 const root = projectRoot(import.meta.url);
 process.chdir(root);
@@ -95,10 +96,13 @@ const reminders = [
   ...staleIntents(root, cfg).map((s) => T.staleIntent(s.file, s.days)),
 ];
 
-for (const c of notRun) console.log(`[ia-first] ⚠ ${T.notRun} ${c}`);
-for (const r of reminders) console.log(`[ia-first] ⚠ ${r}`);
+// An ID cited to the human comes with its label (QUA-039).
+const labels = glossary(root);
+const say = (line) => console.log(annotate(line, labels));
+for (const c of notRun) say(`[ia-first] ⚠ ${T.notRun} ${c}`);
+for (const r of reminders) say(`[ia-first] ⚠ ${r}`);
 if (failures.length) {
-  for (const c of failures) console.log(`[ia-first] ✗ ${T.failed} ${c}`);
+  for (const c of failures) say(`[ia-first] ✗ ${T.failed} ${c}`);
   process.exit(1);
 }
 console.log(`[ia-first] ${T.ok(notRun.length)}`);

@@ -68,6 +68,15 @@
             "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/scope-reminder.mjs\""
           }
         ]
+      },
+      {
+        "matcher": "Bash|Read|Grep|Glob|WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/id-glossary.mjs\""
+          }
+        ]
       }
     ]
   },

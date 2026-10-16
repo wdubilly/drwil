@@ -353,6 +353,16 @@ the files this project touches.
 The block's grammar (`.githooks/scope.mjs`) is shared by the check and
 the reminder: a single source.
 
+**Readable identifiers.** An identifier cited to a human (contract ID,
+catalog line, lot or point of the active brief) is followed by what it
+designates. A single source, `.githooks/glossary.mjs`, reads the labels in
+the registry, the catalog and the active brief: the checks' outputs and
+`drwil verify` annotate the first mention of each ID; any agent gets the
+labels with `node .githooks/glossary.mjs "<text>"` (`AGENTS.md`, Copilot and
+Cursor instructions); with Claude Code, the `.claude/hooks/id-glossary.mjs`
+(if present) hook slips them into the agent's context after each tool that brings text
+in (shell, reads, searches) and cites them.
+
 ### Governance state
 
 The current activity (`SCOPING`, `EXPECTATION`, `REQUEST`, `BUILD`,

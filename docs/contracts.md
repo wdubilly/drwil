@@ -285,6 +285,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : un projet neuf commence par son cadrage global — « Sans pile détectée, drwil init n'écrit aucune couche »
 **Raison** : Un répertoire vide recevait backend/ et frontend/ pour un projet qui n'existait pas encore, et l'adoption supposait du code existant.
 
+## QUA-039 — Un identifiant cité à l'humain vient avec ce qu'il désigne
+**Règle** : Une seule source, `.githooks/glossary.mjs`, lit les libellés des identifiants (contrats du registre, lignes du catalogue, lots et points numérotés de la fiche active) et les donne à tout agent (`node .githooks/glossary.mjs "<texte>"`). Les sorties de drwil (`drwil verify` humaine et agent, `.githooks/run-checks.mjs`, `.githooks/check-contract-tests.mjs`) font suivre la première mention d'un identifiant de son libellé, jamais deux fois. `AGENTS.md` et les instructions Copilot et Cursor livrées en font la règle. Avec Claude Code, un hook injecte les libellés après chaque outil qui en cite, sans jamais bloquer.
+**Périmètre** : `.githooks/glossary.mjs`, les sorties de drwil, `.claude/hooks/id-glossary.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/glossary.mjs`, `packages/drwil/src/verdict.ts` (`labelIds`).
+**Preuve** : tests des hooks et du paquet.
+**Contrôle** : `tests-qua-039`
+**Tests** : `.githooks/glossary.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/cycle.test.mjs`
+**Origine** : un identifiant cité à l'humain vient avec ce qu'il désigne — « Une seule source repère dans un texte les identifiants et rend leurs libellés »
+**Raison** : La règle écrite (« références lisibles ») ne suffisait pas : des comptes rendus citaient encore « QUA-036 » sans dire ce que c'est. Le libellé doit être sous les yeux de l'agent, quel qu'il soit.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

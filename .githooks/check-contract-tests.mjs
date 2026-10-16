@@ -8,6 +8,7 @@ import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readContracts } from "./contracts.mjs";
+import { annotate, glossary } from "./glossary.mjs";
 
 const TEXTS = {
   fr: {
@@ -59,7 +60,9 @@ export function main(root = process.cwd(), log = console.log) {
   };
   const { links, problems } = linkProblems(contracts, read, lang);
   const blocking = cfg.newRequirements === "blocking";
-  for (const p of problems) log(`  ${blocking ? "✗" : "⚠"} ${p}`);
+  // An ID cited to the human comes with its label (QUA-039).
+  const labels = glossary(root);
+  for (const p of problems) log(annotate(`  ${blocking ? "✗" : "⚠"} ${p}`, labels));
   log(T.summary(links, problems.length));
   if (problems.length && !blocking) log(T.warning);
   return problems.length && blocking ? 1 : 0;

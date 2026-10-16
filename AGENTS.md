@@ -46,7 +46,9 @@ Carte complète : `docs/architecture.md`.
 - **Références lisibles** : toute référence citée à un humain (ID de contrat,
   numéro de point, de lot ou de décision d'une fiche) est suivie de ce
   qu'elle désigne en clair — « QUA-016 (rappel de cadrage) », « point 12
-  (élargissement du cadrage) ». Un ID seul n'est pas lisible.
+  (élargissement du cadrage) ». Un ID seul n'est pas lisible. Libellé :
+  `node .githooks/glossary.mjs "<texte>"` (lu dans le registre, le
+  catalogue et la fiche active).
 - **Laisser propre en passant** : documenter et signaler tout écart trouvé.
 - **La clôture boucle les intentions** : à la clôture d'un chantier, chaque
   limite non traitée devient une fiche d'intention (`docs/intentions/`) —

@@ -573,6 +573,37 @@ test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async 
   assert.equal(rappel.stdout.trim(), "", "le rappel à l'agent se tait aussi quand cadrage est désactivé");
 });
 
+test("QUA-039 : hook glossaire livré et branché sur tout outil ; injecte les libellés cités, rien sinon ; Copilot et Cursor ont la règle", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "en", targetDir: dir, git: false }));
+  const reglages = JSON.parse(read(dir, ".claude/settings.json"));
+  assert.ok(
+    reglages.hooks.PostToolUse.some(
+      (h) => h.matcher === "Bash|Read|Grep|Glob|WebFetch" && /id-glossary\.mjs/.test(JSON.stringify(h.hooks)),
+    ),
+  );
+  const hook = (sortie) =>
+    spawnSync(process.execPath, [".claude/hooks/id-glossary.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({ hook_event_name: "PostToolUse", tool_name: "Bash", tool_response: sortie }),
+    });
+  const r = hook({ stdout: "QUA-013 failed, see catalog:QUA-004" });
+  assert.equal(r.status, 0);
+  const contexte = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
+  assert.match(contexte, /^\[drwil\] Identifiers cited above: QUA-013 — A check that did not run has not passed ; catalog:QUA-004 — /);
+  assert.match(contexte, /always the ID followed by what it designates/);
+  assert.equal(hook("nothing known here").stdout, "", "rien de connu : rien d'injecté");
+  assert.equal(
+    spawnSync(process.execPath, [".claude/hooks/id-glossary.mjs"], { cwd: dir, input: "pas du JSON", encoding: "utf8" }).status,
+    0,
+    "jamais bloquant",
+  );
+  assert.match(read(dir, "AGENTS.md"), /\*\*Readable references\*\*[\s\S]*node \.githooks\/glossary\.mjs/);
+  for (const f of [".github/copilot-instructions.md", ".cursor/rules/ia-first.mdc"])
+    assert.match(read(dir, f), /node \.githooks\/glossary\.mjs/, f);
+});
+
 test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse avant écriture (bloquant) ou rappelle (avertissement)", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

@@ -1351,8 +1351,31 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   commencent un projet neuf par son cadrage global (étape 0 : besoin,
   première version, pile et couches, premières règles métier, risque ;
   `AGENTS.md`, carte, premier README) (QUA-038). Premier chantier de la
-  première file réelle (avec `docs/projects/glossaire-des-id.md` et
+  première file réelle (avec « glossaire des identifiants » et
   `docs/projects/doc-a-jour.md`).
 - **Intention d'origine** : aucune (demande directe) ; aucune limite non
   traitée à consigner.
 - **Clôturé par** : PR #110.
+
+## 2026-10-16 — Un identifiant cité à l'humain vient avec ce qu'il désigne
+
+- **Décisions clés** (demandeur, 2026-10-16) : trois couches multi-agent.
+  Une seule source, `.githooks/glossary.mjs`, lit les libellés (contrats du
+  registre, lignes du catalogue, lots et points numérotés de la fiche
+  active) et les donne à tout agent (`node .githooks/glossary.mjs
+  "<texte>"`). À la source : `drwil verify` (humain et agent),
+  `run-checks` et `check-contract-tests` annotent la première mention d'un
+  identifiant, jamais deux fois (un tiret s'il est déjà entre
+  parenthèses). `AGENTS.md` (règle ajoutée au gabarit, qui ne l'avait
+  pas), Copilot et Cursor en font la règle. Avec Claude Code, un hook
+  injecte les libellés après les outils qui font entrer du texte
+  (QUA-039).
+- **Écart** : le hook devait suivre « tout outil » ; après une édition, il
+  renvoyait à l'agent les libellés de ce qu'il venait d'écrire. Il suit
+  donc le shell, les lectures et les recherches. QUA-034 éprouvé en route :
+  verify a refusé `PASS` tant qu'un critère de la fiche restait non lié.
+- **Intention d'origine** : aucune (demande directe).
+- **Limites connues** : l'injection automatique n'existe que pour Claude
+  Code (`docs/intentions/glossaire-autres-agents.md`) ; les messages de
+  `check-docs` (plafond de QUA-001) ne sont pas annotés.
+- **Clôturé par** : PR #111.

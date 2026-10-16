@@ -3,6 +3,7 @@
 // It never runs `drwil attest`: it presents it as a human action. Output in English, stable whatever
 // the project's language (consumed by agents).
 import { rulesLine } from "./rules.js";
+import { labelIds } from "./verdict.js";
 import type { verdictJson } from "./verify.js";
 
 type VerdictJson = ReturnType<typeof verdictJson>;
@@ -65,5 +66,5 @@ export function formatForAgent(j: VerdictJson): string {
   if (j.errors.length) l.push("", "Registry errors:", ...j.errors.map((e) => `  - ${e}`));
   const rules = rulesLine(j.businessRules, "en");
   if (rules) l.push("", rules);
-  return l.join("\n");
+  return labelIds(l.join("\n"), j.results);
 }
