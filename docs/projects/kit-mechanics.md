@@ -25,6 +25,7 @@ files:
   - .githooks/check-code-rules.test.mjs
   - .githooks/check-control-coverage.test.mjs
   - .githooks/check-docs.test.mjs
+  - .githooks/check-contract-tests.test.mjs
   - .githooks/check-file-size.test.mjs
   - .githooks/create-release.test.mjs
   - .githooks/glob.test.mjs

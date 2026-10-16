@@ -56,8 +56,8 @@ quel chantier d'origine sont touchés.
 
 Tranchées par le demandeur le 2026-10-16 (sondage) :
 
-- Points 1 et 2 : cadrés dans `docs/projects/lien-contrat-test.md`, en
-  `[P1]` — lien contrat ↔ test livré, bloquant ou avertissement selon
+- Points 1 et 2 : réalisés le 2026-10-16 (`docs/projects/journal.md`,
+  « Lien contrat ↔ test », QUA-029 et QUA-030) — lien contrat ↔ test livré, bloquant ou avertissement selon
   `newRequirements` ; un contrôle par règle métier, filtré par l'ID, et
   verify signale un contrôle partagé qui échoue.
 - Point 3 : la vue des règles métier dans `drwil verify` d'abord ; la vue
