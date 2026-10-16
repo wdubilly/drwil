@@ -11,6 +11,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/engine.mjs
   - packages/drwil/templates/common/base/docs/contracts.md
   - packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - .githooks/check-contract-tests.mjs
   - .githooks/check-contract-tests.test.mjs
   - .githooks/contracts.mjs
