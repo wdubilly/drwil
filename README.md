@@ -995,12 +995,11 @@ Its role is narrower:
 ## Current status
 
 **V0.2 — Executable Governance** is delivered (see
-`packages/drwil/CHANGELOG.md`); the latest release is 0.5.1. The coming
-0.6.0, not released yet (the « Unreleased » section of the changelog),
-adds the business non-regression fed by every workstream, queues of
+`packages/drwil/CHANGELOG.md`); the latest release is 0.6.0, which adds
+the business non-regression fed by every workstream, queues of
 workstreams, token consumption measured per workstream, readable
-identifiers and a maintained architecture map: until it is released, these
-are only available from the sources. Next: trying it on real projects (V1).
+identifiers and a maintained architecture map. Next: trying it on real
+projects (V1).
 
 V0.2 covered:
 
