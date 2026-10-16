@@ -15,6 +15,7 @@ files:
   - packages/drwil/templates/common/base/docs/ia-first.md
   - docs/ia-first.md
   - docs/contracts.md
+  - .drwil/ia-first.json
 -->
 
 (cadrage : le paquet, ses tests, la doc livrée et sa copie du dépôt,
