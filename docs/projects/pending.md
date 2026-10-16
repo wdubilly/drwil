@@ -107,8 +107,6 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
   (voir `docs/projects/journal.md`).
 - [ ] [IA] [P1] Un contrôle par règle dans le dépôt drwil —
   `docs/projects/un-controle-par-regle.md`.
-- [ ] [IA] [P1] Attestation sans friction inutile —
-  `docs/projects/attestation-sans-friction.md`.
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
@@ -235,9 +233,6 @@ une décision du demandeur.
 - [ ] [décision] Un contrôle par règle dans le dépôt drwil : un test cassé
   désigne son contrat, pas treize —
   `docs/intentions/un-controle-par-regle-dans-le-depot.md`.
-- [ ] [décision] Attestation sans friction inutile : preuve renforcée sans
-  réattestation, `attest` qui annonce ce qu'il relance —
-  `docs/intentions/attestation-sans-friction.md`.
 
 ## Ensuite
 

@@ -8,7 +8,8 @@ de qui décide chaque transition.
 
 **Revu le 2026-10-16** : levier 3, « une PR par chantier » est devenu la
 pratique (fusion automatique choisie au lancement, `/drwil-start`) ;
-l'attestation groupée recoupe `docs/projects/attestation-sans-friction.md`.
+l'attestation groupée recoupe le chantier « Attestation sans friction
+inutile » (QUA-032, journal du 2026-10-16).
 Reste vivant : afficher qui décide chaque transition, et l'ordre des
 leviers restants (question 4).
 

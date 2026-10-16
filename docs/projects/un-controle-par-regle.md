@@ -79,8 +79,9 @@ le contrat, `check-docs` refusant de citer un contrat absent du registre.)
 - Chaque nouveau contrôle déclare `ciJob` et `paths` (QUA-013, un
   contrôle non exécuté n'est pas passé : couverture CI vérifiée).
 - QUA-013 et QUA-015 ont une part humaine : retirer un contrôle de leur
-  preuve rend leur attestation obsolète, même une fois la fiche
-  `docs/projects/attestation-sans-friction.md` livrée. Prévoir deux
+  preuve rend leur attestation obsolète, même depuis le chantier
+  « Attestation sans friction inutile » (QUA-032 : seul un ajout est
+  toléré). Prévoir deux
   attestations humaines à la clôture.
 - Contrats à citer : QUA-018 (dépôt vs livrable), QUA-030, QUA-004.
 
