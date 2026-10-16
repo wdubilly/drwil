@@ -2,7 +2,8 @@
 
 **Statut** : proposée le 2026-10-16 — limite du chantier « Une
 documentation à jour pour la 0.6.0, et qui le reste » (journal du
-2026-10-16).
+2026-10-16). Tranchée le 2026-10-16 : cadrée dans
+`docs/projects/doc-dans-sa-langue.md`.
 
 ## Besoin
 
