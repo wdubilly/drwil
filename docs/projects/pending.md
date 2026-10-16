@@ -225,6 +225,9 @@ une décision du demandeur.
 - [ ] [décision] Les hooks de l'outil IA lisent la racine du projet, pas
   le dossier courant (rappel faux après un `cd`, constaté le 2026-10-16) —
   `docs/intentions/hooks-racine-du-projet.md`.
+- [ ] [décision] Ce que lit un visiteur reste juste sans dépendre de la
+  mémoire de l'agent (README en double, version annoncée non contrôlée ;
+  constaté le 2026-10-17) — `docs/intentions/doc-visiteur-juste.md`.
 
 - [ ] [décision] Le glossaire des identifiants injecté aussi chez les
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —
