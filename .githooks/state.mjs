@@ -16,8 +16,9 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
-import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, scopedBriefs } from "./briefs.mjs";
-import { context, fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
+import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, queueable, scopedBriefs } from "./briefs.mjs";
+import { main } from "./state-cli.mjs";
+import { fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
 
 // Unchanged interface for the other hooks, the CLI and the tools: everything this file exported
 // before it was split stays importable from here.
@@ -32,6 +33,9 @@ export {
   scopedBriefs,
 } from "./briefs.mjs";
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
+// The command line lives in state-cli.mjs (QUA-001: files under 400 lines); `node .githooks/state.mjs`
+// stays the entry point.
+export { main };
 
 export const ACTIVITIES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
 
@@ -50,7 +54,8 @@ const NEXT = {
 export const NEUTRAL_STATE = Object.freeze({ version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null });
 
 // auto_merge: absent from the neutral state, set only by a human start (`start`).
-const FIELDS = new Set([...Object.keys(NEUTRAL_STATE), "auto_merge"]);
+// queue, queue_merge (QUA-037): the briefs a human queued at start, run next without a new gesture.
+const FIELDS = new Set([...Object.keys(NEUTRAL_STATE), "auto_merge", "queue", "queue_merge"]);
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 const texts = (root) => STATE_MESSAGES[config(root).lang === "en" ? "en" : "fr"];
 
@@ -78,6 +83,11 @@ export function validateState(state, root) {
   if (state.active_request !== null && typeof state.active_request !== "string") problems.push(T.request);
   if (state.auto_merge !== undefined && typeof state.auto_merge !== "boolean") problems.push(T.autoMergeType);
   else if (state.auto_merge === true && state.activity === "SCOPING") problems.push(T.autoMergeScoping);
+  if (state.queue !== undefined) {
+    if (!Array.isArray(state.queue) || state.queue.some((b) => typeof b !== "string")) problems.push(T.queueType);
+    else for (const b of state.queue) problems.push(...validateBrief(b, root, "BUILD", T));
+  }
+  if (state.queue_merge !== undefined && typeof state.queue_merge !== "boolean") problems.push(T.queueMergeType);
   if (state.since !== null && !(typeof state.since === "string" && ISO_RE.test(state.since) && !Number.isNaN(Date.parse(state.since)))) {
     problems.push(T.since);
   }
@@ -171,29 +181,39 @@ const STARTABLE_FROM = new Set(["SCOPING", "EXPECTATION", "REQUEST"]);
  * human answer to a poll read by the tool's hook, or for a choice made in an interactive
  * terminal. `{ code: 0 | 1, message }`.
  */
-export function start(root, brief, { human = false, request, autoMerge = false, now = new Date().toISOString() } = {}) {
+export function start(root, brief, { human = false, request, autoMerge = false, queue = [], now = new Date().toISOString() } = {}) {
   const T = texts(root);
   const read = readState(root);
   const from = read.state.activity;
   if (!STARTABLE_FROM.has(from)) return { code: 1, message: fill(T.startFrom, from) };
-  if (config(root).transitions !== "agent" && !human) return { code: 1, message: T.startHuman };
-  const path = posix.normalize(
-    String(brief ?? "")
-      .trim()
-      .replace(/\\/g, "/"),
-  );
+  const norm = (b) =>
+    posix.normalize(
+      String(b ?? "")
+        .trim()
+        .replace(/\\/g, "/"),
+    );
+  const path = norm(brief);
+  // The head of a queue a human decided is started by the agent, without a new gesture (QUA-037).
+  const fromQueue = !human && from === "SCOPING" && read.state.queue?.[0] === path;
+  if (config(root).transitions !== "agent" && !human && !fromQueue) return { code: 1, message: T.startHuman };
   if (!scopedBriefs(root).some((b) => b.path === path)) return { code: 1, message: fill(T.startNotScoped, brief) };
+  const rest = human ? queue.map(norm) : fromQueue ? read.state.queue.slice(1) : [];
+  const queued = rest.length || fromQueue ? [path, ...rest] : [];
+  const notReady = queued.find((b) => !queueable(root, b));
+  if (notReady) return { code: 1, message: fill(T.queueNotReady, notReady) };
   const missing = missingCriteria(root, path);
   if (missing === "blocking") return { code: 1, message: fill(T.startNoCriteria, path) };
   const state = { version: 1, activity: "BUILD", active_brief: path, active_request: request ?? null, since: now };
-  // Authorising the merge is an acceptance decision: human only, even in agent mode.
-  if (autoMerge === true && human) state.auto_merge = true;
+  // Authorising the merge is an acceptance decision: human only, even in agent mode; a queue carries it.
+  if ((autoMerge === true && human) || (fromQueue && read.state.queue_merge === true)) state.auto_merge = true;
+  if (rest.length) Object.assign(state, { queue: rest, queue_merge: human ? autoMerge === true : read.state.queue_merge === true });
   const problems = validateState(state, root);
   if (problems.length) return { code: 1, message: fill(T.startInvalid, problems.join(" ; ")) };
   mkdirSync(join(root, ".drwil"), { recursive: true });
   writeFileSync(join(root, ".drwil", "state.json"), JSON.stringify(state, null, 2) + "\n");
   const warned = missing ? `\n${fill(T.noCriteria, path)}` : "";
-  return { code: 0, message: fill(T.started, from, path, state.auto_merge ? T.mergeAuthorised : "") + warned };
+  const next = rest.length ? `\n${fill(T.queued, rest.join(", "))}` : "";
+  return { code: 0, message: fill(T.started, from, path, state.auto_merge ? T.mergeAuthorised : "") + next + warned };
 }
 
 /** New state after the transition to `to`, or `{ error }`; writes nothing. */
@@ -208,6 +228,9 @@ export function prepareTransition(read, to, { brief, request, now }, root) {
   let state;
   if (to === "SCOPING") {
     state = { ...NEUTRAL_STATE, since: now };
+    // A queue goes on after a closing; any other return to SCOPING abandons it (QUA-037).
+    if (from === "CLOSING" && read.state.queue?.length)
+      Object.assign(state, { queue: read.state.queue, queue_merge: read.state.queue_merge === true });
   } else if (to === "EXPECTATION") {
     if (!brief) return { error: T.briefNeeded };
     state = {
@@ -267,6 +290,18 @@ export async function move(root, { to, brief, request }, { tty = false, confirm,
   return { code: 0, message: `${resumed}${from} → ${to}${warning}` };
 }
 
+/** Stops the queue (QUA-037): the active workstream goes on, nothing is started after it. */
+export function stopQueue(root) {
+  const T = texts(root);
+  const read = readState(root);
+  if (!read.state.queue) return { code: 0, message: T.noQueue };
+  const state = { ...read.state };
+  delete state.queue;
+  delete state.queue_merge;
+  writeFileSync(join(root, ".drwil", "state.json"), JSON.stringify(state, null, 2) + "\n");
+  return { code: 0, message: fill(T.queueStopped, read.state.queue.join(", ")) };
+}
+
 const REMINDER_FILE = [".drwil", "reminder.json"];
 
 /**
@@ -286,98 +321,6 @@ export function reminderIfChanged(root) {
     writeFileSync(file, JSON.stringify({ fingerprint }) + "\n");
   } catch {}
   return text;
-}
-
-/** Value of the `--name value` option in `args`, or undefined. */
-function option(args, name) {
-  const i = args.indexOf(name);
-  return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
-}
-
-/** Entry point shared by `node .githooks/state.mjs` and `drwil state`. Returns the exit code. */
-export async function main(args, root) {
-  if (args[0] === "briefs") {
-    const briefs = scopedBriefs(root);
-    if (args.includes("--json")) console.log(JSON.stringify(briefs, null, 2));
-    else console.log(briefs.length ? briefs.map((b, i) => `${i + 1}. ${b.path} — ${b.title}`).join("\n") : texts(root).noBriefs);
-    return 0;
-  }
-  if (args[0] === "start") {
-    const T = texts(root);
-    const briefs = scopedBriefs(root);
-    const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
-    let choice = args[1];
-    let human = false;
-    let autoMerge = false;
-    if (tty) {
-      // An interactive terminal: the human chooses themselves (never a preselected choice).
-      const { createInterface } = await import("node:readline/promises");
-      const rl = createInterface({ input: process.stdin, output: process.stdout });
-      try {
-        if (!choice) {
-          console.log(
-            briefs
-              .map(
-                (b, i) =>
-                  `${i + 1}. ${b.path} — ${b.title} [${b.priority}${b.ready ? "" : fill(T.notReady, b.decisions)}${b.maturity === "refine" ? T.refine : ""}]`,
-              )
-              .join("\n"),
-          );
-          const n = Number((await rl.question(T.pick)).trim());
-          choice = briefs[n - 1]?.path;
-        }
-        human = choice !== undefined && (await rl.question(fill(T.confirmStart, choice))).trim() === "START";
-        if (human) autoMerge = (await rl.question(T.askMerge)).trim() === "MERGE";
-      } finally {
-        rl.close();
-      }
-      if (!human) {
-        console.error(T.notConfirmed);
-        return 1;
-      }
-    }
-    const r = start(root, choice, { human, autoMerge, request: option(args, "--request") });
-    if (r.code === 0) console.log(`✓ ${r.message}\n\n${context(readState(root), root)}`);
-    else console.error(`✗ ${r.message}`);
-    return r.code;
-  }
-  if (args[0] === "reminder") {
-    // Prompt hook (Claude Code: UserPromptSubmit): writes only if the state changed, never breaks a prompt.
-    try {
-      const text = reminderIfChanged(root);
-      if (text) console.log(text);
-    } catch {}
-    return 0;
-  }
-  if (args[0] !== "move") {
-    // Reading: never breaks an agent's session start.
-    try {
-      const read = readState(root);
-      console.log(args.includes("--json") ? JSON.stringify(read, null, 2) : context(read, root));
-    } catch (e) {
-      console.log(fill(texts(root).unreadableState, e.message));
-    }
-    return 0;
-  }
-  const to = args[1];
-  if (!to || to.startsWith("--")) {
-    console.error(fill(texts(root).usage, ACTIVITIES.join("|")));
-    return 2;
-  }
-  const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
-  const confirm = async (question) => {
-    const { createInterface } = await import("node:readline/promises");
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-    try {
-      return (await rl.question(question)).trim() === to;
-    } finally {
-      rl.close();
-    }
-  };
-  const r = await move(root, { to, brief: option(args, "--brief"), request: option(args, "--request") }, { tty, confirm });
-  if (r.code === 0) console.log(`✓ ${r.message}\n\n${context(readState(root), root)}`);
-  else console.error(`✗ ${r.message}`);
-  return r.code;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

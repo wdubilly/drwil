@@ -21,6 +21,7 @@ import {
   verifyEvidence,
   scopedBriefs,
   start,
+  stopQueue,
   shortReminder,
   reminderIfChanged,
   briefStatus,
@@ -995,6 +996,8 @@ test("principal fiches : liste lisible, JSON, ou aucune fiche", async () => {
   assert.equal(JSON.parse(r.sortie)[0].path, FICHE);
   r = await capturer(() => main(["briefs"], depot()));
   assert.match(r.sortie, /^\(aucune fiche cadrée/);
+  r = await capturer(() => main(["briefs"], depot({ lang: "en" })));
+  assert.match(r.sortie, /^\(no scoped brief/, "ligne de commande en anglais");
 });
 
 test("principal lancer sans terminal : refusé en mode humain, lancé en mode agent (avec --request)", async () => {
@@ -1140,4 +1143,114 @@ test("fiches cadrées : index réglé, fiche sans titre ; lancer sans fiche ou a
   assert.deepEqual([sansTitre.title, sansTitre.priority], ["docs/projects/sans-titre.md", "P0"]);
   assert.match(start(racine, undefined).message, /« undefined » n'est pas une fiche cadrée/);
   assert.match(start(racine, FICHE, { request: 5 }).message, /^lancement refusé : active_request : chaîne ou null attendu/);
+});
+
+/** Un dépôt avec trois fiches cadrées : a et b prêtes (maturité, critères), c sans critère. */
+function depotFile(config = {}) {
+  const racine = depot({ fiche: false, config });
+  const fiche = (nom, pret) =>
+    writeFileSync(
+      join(racine, "docs", "projects", `${nom}.md`),
+      `# Projet : ${nom}\n\n**Statut** : cadré le 2026-10-16.\n${pret ? "**Maturité** : prêt\n" : ""}\n<!-- scope\nfiles:\n  - src/${nom}.ts\n-->\n\n${pret ? `## Critères d'acceptation\n\n- Critère ${nom} — \`QUA-001\`\n` : ""}`,
+    );
+  fiche("a", true);
+  fiche("b", true);
+  fiche("c", false);
+  writeFileSync(join(racine, ".gitignore"), ".drwil/\n");
+  const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
+  git("init", "-q");
+  git("add", "-A");
+  git("commit", "-qm", "init");
+  return racine;
+}
+const [A, B, C] = ["a", "b", "c"].map((n) => `docs/projects/${n}.md`);
+const ecrireEtat = (racine, etat) => writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(etat));
+
+test("QUA-037 : un geste humain enregistre une file de fiches prêtes et la fusion ; une fiche non prête la refuse entière", () => {
+  const racine = depotFile();
+  const r = start(racine, A, { human: true, autoMerge: true, queue: [B] });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /file : ensuite docs\/projects\/b\.md/);
+  assert.deepEqual(readState(racine).state.queue, [B]);
+  assert.equal(readState(racine).state.queue_merge, true);
+  const refus = depotFile();
+  assert.match(start(refus, A, { human: true, queue: [C] }).message, /« docs\/projects\/c\.md » ne peut pas entrer dans une file/);
+  assert.equal(readState(refus).source, "missing", "rien n'est écrit");
+  assert.equal(start(depotFile(), C, { human: true }).code, 0, "sans file, une fiche non prête se lance comme avant");
+});
+
+test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec la fusion ; hors file ou hors SCOPING, refusé", () => {
+  const racine = depotFile();
+  ecrireEtat(racine, {
+    version: 1,
+    activity: "CLOSING",
+    active_brief: C,
+    active_request: null,
+    since: null,
+    auto_merge: true,
+    queue: [B, A],
+    queue_merge: true,
+  });
+  const p = prepareTransition(readState(racine), "SCOPING", { now: MAINTENANT }, racine);
+  assert.deepEqual(p.state, { ...NEUTRAL_STATE, since: MAINTENANT, queue: [B, A], queue_merge: true });
+  ecrireEtat(racine, p.state);
+  assert.match(start(racine, C).message, /décision humaine/, "fiche hors file");
+  const r = start(racine, B, { now: MAINTENANT });
+  assert.equal(r.code, 0, r.message);
+  assert.deepEqual(readState(racine).state, {
+    version: 1,
+    activity: "BUILD",
+    active_brief: B,
+    active_request: null,
+    since: MAINTENANT,
+    auto_merge: true,
+    queue: [A],
+    queue_merge: true,
+  });
+  assert.match(start(racine, B).message, /activité BUILD/, "pas de relance en pleine réalisation");
+  const abandon = depotFile();
+  ecrireEtat(abandon, {
+    version: 1,
+    activity: "BUILD",
+    active_brief: A,
+    active_request: null,
+    since: null,
+    queue: [B],
+    queue_merge: false,
+  });
+  assert.equal(
+    prepareTransition(readState(abandon), "SCOPING", { now: MAINTENANT }, abandon).state.queue,
+    undefined,
+    "abandon : file perdue",
+  );
+});
+
+test("QUA-037 : arrêter la file ; commandes next et queue stop ; contexte et état invalide, en anglais aussi", async () => {
+  const racine = depotFile();
+  ecrireEtat(racine, { version: 1, activity: "BUILD", active_brief: A, active_request: null, since: null, queue: [B], queue_merge: true });
+  assert.match(context(readState(racine), racine), /File décidée au lancement : ensuite docs\/projects\/b\.md \(fusion automatique\)/);
+  let r = await capturer(() => main(["queue", "stop"], racine));
+  assert.equal(r.code, 0);
+  assert.match(r.sortie, /file arrêtée : docs\/projects\/b\.md ne seront pas lancés/);
+  assert.equal(readState(racine).state.queue, undefined);
+  assert.match(stopQueue(racine).message, /aucune file en cours/);
+  const suivante = depotFile();
+  ecrireEtat(suivante, { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null, queue: [A] });
+  r = await capturer(() => main(["next"], suivante));
+  assert.equal(r.code, 0, r.sortie);
+  assert.equal(readState(suivante).state.active_brief, A);
+  r = await capturer(() => main(["next"], depotFile()));
+  assert.equal(r.code, 1, "sans file, rien à lancer");
+  const anglais = depotFile({ lang: "en" });
+  ecrireEtat(anglais, { version: 1, activity: "BUILD", active_brief: A, active_request: null, since: null, queue: [B] });
+  assert.match(context(readState(anglais), anglais), /Queue decided at start: then docs\/projects\/b\.md\. After/);
+  assert.match(
+    start(depotFile({ lang: "en" }), A, { human: true, queue: [C] }).message,
+    /^start refused: "docs\/projects\/c\.md" cannot enter a queue/,
+  );
+  assert.deepEqual(validateState({ ...NEUTRAL_STATE, queue: "x", queue_merge: 1 }, anglais), [
+    "queue: list of briefs expected",
+    "queue_merge: boolean expected",
+  ]);
+  assert.match(validateState({ ...NEUTRAL_STATE, queue: ["docs/projects/absente.md"] }, racine).join(), /absente\.md/);
 });

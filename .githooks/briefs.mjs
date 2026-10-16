@@ -99,6 +99,15 @@ export function hasIncrements(text) {
 }
 
 /**
+ * Can this brief enter a queue (QUA-037)? Scoped, maturity « ready », no open decision, and
+ * acceptance criteria: a queue runs without a human, so only what needs no decision.
+ */
+export function queueable(root, brief) {
+  const b = scopedBriefs(root).find((x) => x.path === brief);
+  return Boolean(b?.ready && b.maturity === "ready" && acceptanceCriteria(readFileSync(join(root, brief), "utf8")).length);
+}
+
+/**
  * A workstream brief without any acceptance criterion (QUA-021): null if it has some, if it is routine
  * maintenance or cannot be read; otherwise "blocking" or "warning", per `newRequirements` (an already
  * equipped project is warned, not broken).

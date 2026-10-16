@@ -17,6 +17,7 @@ files:
   - .githooks/scope.mjs
   - .githooks/scope.test.mjs
   - .githooks/state.mjs
+  - .githooks/state-cli.mjs
   - .githooks/briefs.mjs
   - .githooks/state-texts.mjs
   - .githooks/state.test.mjs

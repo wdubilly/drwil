@@ -55,6 +55,11 @@ Carte complète : `docs/architecture.md`.
   par le journal ; l'intention d'origine (champ `**Intention**` de la
   fiche) est mise à jour, ou résumée au journal et retirée si elle est
   entièrement couverte.
+- **File de chantiers** : quand l'humain a coché plusieurs fiches au
+  lancement, l'agent les réalise l'une après l'autre sans nouveau sondage —
+  la suivante seulement après la fusion de la précédente, arrêt au premier
+  chantier qui demande un humain (attestation, FAIL non corrigé, CI rouge,
+  décision).
 - **Compte rendu de fin de tâche** : fichiers créés/modifiés, contrôles lancés et résultats exacts, limites et ambiguïtés restantes.
 
 ## Contrats
