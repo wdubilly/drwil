@@ -181,6 +181,17 @@ definition: if either changes, it becomes stale and the contract is `MANUAL`
 again. `ATTESTED` status: distinct from `PASS`, it satisfies the contract;
 never attestable: a `PASS`, `FAIL`, `ERROR` or not-applicable contract.
 
+**Business rules**: the output ends with a one-line summary of
+the business non-regression — rules proven by a test (a passing contract
+with a **Tests** field), proven without a cited test, to complete (a human
+part remains) and broken, each broken rule with the workstream it was born
+from (**Origin**). A business rule is a contract whose prefix is a business
+prefix (`APP` by default; setting `businessPrefixes` of
+`.drwil/ia-first.json`, e.g. `["APP", "BIL"]`) or any contract with an
+**Origin** field. The rule-by-rule detail (state, cited tests, origin) is in
+`drwil verify --json` (`businessRules`) and in the evidence. No business
+rule in the registry: no summary line.
+
 ### Agent / human workflow
 
 ```text
