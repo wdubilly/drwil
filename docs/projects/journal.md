@@ -663,7 +663,7 @@ l'index ; texte intégral dans l'historique git
   quatre catégories (entrée, sortie, cache lu, cache écrit) plus un total
   pondéré indicatif ; temps actif, pauses de plus de 15 minutes retirées.
   [décisions utilisateur]
-- **Résultat** : `outils/consommation.mjs` (propre au dépôt) lit les
+- **Résultat** : l’outil `consommation` (propre au dépôt, livré depuis le 2026-10-16 en `.githooks/consumption.mjs`) lit les
   journaux de session de Claude Code du projet et attribue chaque réponse
   à son chantier par la branche git (`chantier/<fiche>`) ; requête comptée
   une fois ; jamais un contenu de conversation affiché (test dédié) ; sans

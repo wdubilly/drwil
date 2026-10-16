@@ -54,6 +54,11 @@ closing commit; the release renames this section to its version.
   when the user-visible behaviour changes, the map when the structure
   changes. New check `architecture-map`: a code folder the map does not
   cite is reported, with the line to complete.
+- Token consumption per workstream, read from Claude Code's session logs
+  with nothing to type: `node .githooks/consumption.mjs` (tokens in four
+  categories, weighted total, active time, models); at closing,
+  `--record <brief>` appends the line to `.drwil/usage.jsonl`. Only the
+  consumption fields are read, never a message content.
 - New setting `docLang` (absent: the project language): the language of
   the map, README and changelog, given to the agent by `AGENTS.md` and the
   closing reminder.

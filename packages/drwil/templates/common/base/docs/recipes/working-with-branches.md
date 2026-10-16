@@ -68,6 +68,11 @@ request, instead of direct commits on the main branch.
   map `docs/architecture.md` — drwil maintains it, and its check reports
   any code folder it does not cite yet. These three are written in the
   `docLang` language (absent: the project language).
+- Record the workstream's consumption, in the closing commit:
+  `node .githooks/consumption.mjs --record <brief>` appends its line to
+  `.drwil/usage.jsonl` (if present) (tokens, models, active time, read from Claude
+  Code's session logs; never twice for the same workstream). Another AI
+  tool: estimate by hand (`docs/recipes/track-consumption-per-increment.md`).
 - Close the intent loop, in the closing commit: each limit left untreated
   becomes an intent brief (`docs/intentions/`, one per limit, never a
   workstream brief), listed in `docs/projects/pending.md` as `[decision]`

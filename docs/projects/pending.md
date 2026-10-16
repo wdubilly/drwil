@@ -119,7 +119,8 @@ l'agent, revue des code owners ; journal du 2026-10-13).
 ## Vague 3 — mesurer avant de construire
 
 Fait : consommation de tokens par chantier, lue dans les journaux de
-session (`node outils/consommation.mjs`, journal du 2026-10-11).
+session (`node .githooks/consumption.mjs`, livré à tout projet depuis le
+2026-10-16 ; journal du 2026-10-11).
 
 - [ ] [IA] [P1] La consommation de tokens par chantier, mesurée chez tout
   projet et consignée à la clôture (tranché le 2026-10-16, pour le pilote)

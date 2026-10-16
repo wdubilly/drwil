@@ -4,45 +4,56 @@ Goal: know, increment by increment, how many tokens were used, which model was
 employed, and how long the setup took — never for billing or blocking a
 commit, just to inform project tracking.
 
-## Format: `.drwil/usage.jsonl` (to create)
+## Measure: `node .githooks/consumption.mjs`
 
-Append-only file at the project root, one JSON line per increment closure:
+With Claude Code, nothing to type: the script reads the project's session
+logs (`~/.claude/projects/<project path>/`), where each agent answer
+carries its tokens, model, timestamp and git branch. One branch per brief
+(`workstream/<brief>`, and its scoping branch) attributes it:
 
-```json
-{ "workstream": "add-csv-export", "increment": "Lot 2", "tokens": 42000, "model": "claude-sonnet-5", "duration_min": 95, "date": "2026-10-04" }
+```bash
+node .githooks/consumption.mjs                    # per workstream: tokens, weighted, active time, models
+node .githooks/consumption.mjs --since 2026-10-01 --json
+node .githooks/consumption.mjs --record <brief>   # at closing: one line in .drwil/usage.jsonl
 ```
 
-- `workstream`: file name (without extension) of the `docs/projects/<project>.md`
-  brief concerned.
-- `increment`: the increment's title as written in its brief (`## Increments`).
-- `tokens`: order of magnitude of tokens consumed for this increment (integer).
-- `model`: identifier of the model used (e.g. `claude-sonnet-5`). If
-  several models were used on the same increment, either one line per model or
-  `"mixte"`.
-- `duration_min`: setup time for the increment, in minutes.
-- `date`: increment closure date (`YYYY-MM-DD`).
+- Four token categories (input, output, cache read, cache write) and an
+  indicative weighted total (in input-token equivalents: output ×5, cache
+  read ×0.1, cache write ×1.25; prices change).
+- Active time: the gaps between answers, without pauses over 15 minutes.
+- Only the consumption fields are read: never a message content is shown
+  or written. Never blocking: without a readable log, it says so.
 
-The file is never recomputed: each line is written once, at increment closure,
-never rewritten afterwards.
+## Format: `.drwil/usage.jsonl` (if present)
 
-## Who fills the file?
+Append-only and versioned, one JSON line per workstream, written at its
+closing by `--record` (never twice for the same workstream):
 
-No standalone script: session data (tokens, model, duration) is only
-accessible to the running AI agent, not to an external process. So it's
-the AI that, when closing an increment, appends the line:
+```json
+{ "workstream": "add-csv-export", "increment": "all", "tokens": 4200000, "input": 900, "output": 61000, "cache_read": 38000000, "cache_write": 120000, "requests": 64, "model": "claude-opus-5-5", "duration_min": 95, "date": "2026-10-16", "source": "claude-code-logs" }
+```
+
+- `workstream`: the brief's file name, without extension.
+- `tokens`: the weighted total; the four categories follow.
+- `model`: the model, or the models separated by commas.
+- `duration_min`: active time; `date`: closing date (`YYYY-MM-DD`).
+
+## Another AI tool
+
+The script only reads Claude Code's logs. Otherwise, append the line by
+hand at closing, with `"source": "estimate"`:
 
 - **With Copilot CLI**: query `session_store_sql` (`session_usage` table
-  for model and tokens; `turns`/`events` for the increment's start/end
-  timestamps, hence `duration_min`), then append the JSON line to
-  `.drwil/usage.jsonl` (to create).
-- **With another AI tool**, or without a queryable history: estimate by
-  hand (an order of magnitude is enough) and fill `model` and
-  `duration_min` as best as possible rather than omitting the line.
+  for model and tokens; `turns`/`events` for the start/end timestamps,
+  hence `duration_min`).
+- **With another AI tool**: estimate (an order of magnitude is enough) and
+  fill `model` and `duration_min` as best as possible rather than
+  omitting the line.
 
 ## Reading: the dashboard
 
 `docs/recipes/view-progress.md` (optional module
-`.githooks/dashboard.mjs` (to create)) reads `.drwil/usage.jsonl` (to create)
+`.githooks/dashboard.mjs` (to create)) reads `.drwil/usage.jsonl` (if present)
 if it exists
 and shows, per project: total tokens, total minutes and the list of
 models used. If the file is absent, the dashboard works exactly as
@@ -52,5 +63,5 @@ before (no regression).
 
 `audit-risks-and-debt` and `discover-product-value` also show, at the top
 of their report, a short overview (section "Consumption overview")
-summarizing `.drwil/usage.jsonl` (to create) if it exists — never invented if the
+summarizing `.drwil/usage.jsonl` (if present) if it exists — never invented if the
 file is absent.

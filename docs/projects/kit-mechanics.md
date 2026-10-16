@@ -8,6 +8,8 @@ files:
   - .githooks/check-docs.mjs
   - .githooks/check-contract-tests.mjs
   - .githooks/check-architecture.mjs
+  - .githooks/consumption.mjs
+  - .githooks/consumption.test.mjs
   - .githooks/check-architecture.test.mjs
   - .githooks/check-control-coverage.mjs
   - .githooks/glob.mjs

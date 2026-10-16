@@ -315,6 +315,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : une documentation à jour pour la 0.6.0, et qui le reste — « Rattrapage : le changelog couvre tout depuis la 0.5.1 ; les README, INSTALL.md, la recette d'adoption et la carte décrivent le livrable tel qu'il est »
 **Raison** : Un README faux ne se voit pas par un contrôle : il trompe le premier utilisateur avant même son premier chantier.
 
+## QUA-042 — Consommation de tokens mesurée par chantier
+**Règle** : Livré à tout projet. `node .githooks/consumption.mjs` donne, par chantier (branches `workstream/<fiche>` et de cadrage regroupées), les tokens en quatre catégories, un total pondéré indicatif, le temps actif et les modèles, lus dans les journaux de session de Claude Code — seuls les champs de consommation, jamais un contenu de message. À la clôture, `--record <fiche>` ajoute une ligne à `.drwil/usage.jsonl`, jamais deux pour le même chantier ; le rappel CLOSING et la recette de clôture le demandent. Jamais bloquant : sans journal lisible (autre outil IA), il le dit, sort en succès, et la recette garde l'estimation à la main.
+**Périmètre** : `.githooks/consumption.mjs`, `.drwil/usage.jsonl`, recettes de consommation et de clôture ; livré dans le gabarit.
+**Source de vérité** : `.githooks/consumption.mjs`.
+**Preuve** : tests du script.
+**Contrôle** : `tests-qua-042`
+**Tests** : `.githooks/consumption.test.mjs`, `.githooks/state.test.mjs`
+**Origine** : la consommation de tokens par chantier, mesurée chez tout projet — « Livré à tout projet : `node .githooks/consumption.mjs` donne, par chantier, les tokens en quatre catégories, un total pondéré indicatif, le temps actif et les modèles »
+**Raison** : Le pilote de la 0.6.0 sur 2 ou 3 projets doit dire ce que coûte un chantier chez eux ; la mesure n'existait que dans ce dépôt, et la recette livrée la disait impossible.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).
