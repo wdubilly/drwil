@@ -1,7 +1,8 @@
 # Intention : ce que lit un visiteur reste juste sans dépendre de la mémoire de l'agent
 
 **Statut** : proposée le 2026-10-17 — limite de l'entretien courant du
-2026-10-17 (README racine en retard, PR #120).
+2026-10-17 (README racine en retard, PR #120) ; élargie le même jour à la
+cérémonie de clôture (section « Toute clôture fait l'exercice »).
 
 ## Besoin
 
@@ -31,7 +32,29 @@ c'est le demandeur qui a posé la question. Deux causes :
   (`docs/recipes/create-a-release.md`), sans toucher au README.
 - La table des skills n'existe que dans `README.md` (pas en double).
 
+## Toute clôture fait l'exercice (ajouté le 2026-10-17)
+
+Même cause de fond : la clôture de l'entretien courant du 2026-10-17 a
+sauté la boucle des intentions. L'agent avait tronqué la sortie de
+`node .githooks/state.mjs move CLOSING` et n'a pas lu la règle ; une
+limite relevée dans son compte rendu (« Current status » à réécrire à la
+release) est restée dans le chat. Rien ne l'a rattrapé :
+
+- QUA-036 (la clôture boucle les intentions) dit « à la clôture d'un
+  chantier », sans dire si l'entretien courant en est ;
+- son seul garde-fou avertit un commit qui supprime une fiche sans
+  toucher son intention : la fiche d'entretien courant n'est jamais
+  supprimée et n'a pas de champ `**Intention**`, il ne se déclenche
+  jamais pour elle ;
+- le rappel CLOSING parle de condenser ou supprimer la fiche, ce qui ne
+  s'applique pas à l'entretien courant.
+
+**Décision (demandeur, 2026-10-17)** : toute clôture est contrainte à
+l'exercice, entretien courant compris — limites non traitées en
+intentions, ce que lit l'utilisateur tenu à jour, consommation consignée.
+
 ## Questions à trancher
+
 
 - [décision] Source unique : le détail (cycle, installation, commandes)
   vit dans un seul des deux README, l'autre y renvoie — lequel, sachant
@@ -42,3 +65,11 @@ c'est le demandeur qui a posé la question. Deux causes :
   étape de la recette de release qui la réécrit ?
 - [décision] Livrable ou dépôt : ces contrôles servent-ils aussi chez un
   projet client (son README et ses tags), ou seulement à ce dépôt ?
+- [décision] Comment contraindre la clôture, sans dépendre de la
+  lecture du rappel : par exemple, refuser le retour en SCOPING (ou
+  avertir) tant que le commit de clôture ne déclare pas ses limites —
+  une intention citée, ou « Limites : aucune » explicite (dans « Limites
+  connues » du journal pour un chantier, dans la ligne du journal de la
+  fiche pour l'entretien courant) ? Refus ou avertissement ?
+- [décision] Le rappel CLOSING distingue-t-il l'entretien courant (pas de
+  condensation ni de suppression, mais le reste de l'exercice) ?
