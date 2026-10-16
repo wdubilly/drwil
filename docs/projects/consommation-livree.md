@@ -62,12 +62,12 @@ pilote est le moment où ces chiffres servent.
   regroupées), les tokens en quatre catégories, un total pondéré
   indicatif, le temps actif et les modèles, lus dans les journaux de
   session de Claude Code ; il ne lit que les champs de consommation ; sans
-  journal, il le dit et sort en succès — contrat à créer
+  journal, il le dit et sort en succès — `QUA-042`
 - Livré à tout projet : à la clôture, `node .githooks/consumption.mjs
   --record <fiche>` ajoute une ligne au format de la recette à
   `.drwil/usage.jsonl`, jamais deux pour le même chantier ; le rappel
   CLOSING et la recette de clôture le demandent ; sans journal lisible
-  (autre outil IA), la recette garde l'estimation à la main — contrat à créer
+  (autre outil IA), la recette garde l'estimation à la main — `QUA-042`
 
 ## 2. Hors périmètre
 
