@@ -51,7 +51,7 @@ registre.)
 
 - Un contrat dont le champ Tests cite un fichier absent, ou un fichier qui
   ne porte pas son ID, est signalé (bloquant si `newRequirements` vaut
-  `blocking`, avertissement sinon) — contrat à créer
+  `blocking`, avertissement sinon) — `QUA-029`
 - Quand un contrôle cité par plusieurs contrats échoue, verify le dit
   (« contrôle partagé par APP-001, APP-002 : échec non attribuable, un
   contrôle par règle ») au lieu de l'imputer sans réserve à chacun —

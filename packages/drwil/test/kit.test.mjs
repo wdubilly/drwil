@@ -2310,7 +2310,7 @@ test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; con
   let d = await doctor({ targetDir: dir });
   assert.equal(d.code, 0, JSON.stringify(d.points));
   assert.ok(d.points.find((p) => p.id === "hooks").state === "ok");
-  assert.match(d.points.find((p) => p.id === "contracts").detail, /9 contrat\(s\) valide\(s\)/);
+  assert.match(d.points.find((p) => p.id === "contracts").detail, /10 contrat\(s\) valide\(s\)/);
   git(dir, "config", "core.hooksPath", "ailleurs");
   spawnSync(process.execPath, ["-e", "require('fs').unlinkSync('CLAUDE.md')"], { cwd: dir });
   d = await doctor({ targetDir: dir });

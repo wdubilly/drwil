@@ -32,7 +32,11 @@ function git(racine, ...args) {
  */
 function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] } = {}) {
   const racine = tmp();
-  const tout = { ".githooks/check-docs.mjs": `process.exit(${docsOk ? 0 : 1});\n`, ...fichiers };
+  const tout = {
+    ".githooks/check-docs.mjs": `process.exit(${docsOk ? 0 : 1});\n`,
+    ".githooks/check-contract-tests.mjs": "process.exit(0);\n",
+    ...fichiers,
+  };
   for (const [chemin, contenu] of Object.entries(tout)) {
     mkdirSync(dirname(join(racine, chemin)), { recursive: true });
     writeFileSync(join(racine, chemin), contenu);

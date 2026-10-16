@@ -129,6 +129,15 @@ test("docs-references : lance check-docs du projet ; son échec remonte", () => 
   assert.deepEqual(annonces, ["chemins et contrats cités dans la doc"]);
 });
 
+test("QUA-029 : contract-tests lance check-contract-tests du projet ; son échec remonte", () => {
+  const racine = depot();
+  ecrire(racine, ".githooks/check-contract-tests.mjs", "process.exit(1)\n");
+  assert.equal(executer(racine, "contract-tests").status, "fail");
+  ecrire(racine, ".githooks/check-contract-tests.mjs", "console.log('lié')\n");
+  assert.deepEqual(executer(racine, "contract-tests"), { status: "ok", output: "lié\n" });
+  assert.match(texts("en").contractTests, /QUA-029/);
+});
+
 test("périmètre : bloquant = échec marqué ✗, avertissement = ok marqué ⚠ ; affiché hors pipe", () => {
   const racine = depot();
   const indexes = ["src/a.js"];
@@ -215,8 +224,8 @@ test("contrôles du projet : identifiant, name: nom, report au commit hors chemi
   const touche = parId(checks(racine, { cfg, staged: ["src/x/y.js"] }));
   assert.equal(touche.nomme.run({ stdio: "pipe" }).status, "ok");
   // checks absent ou mal formé : seuls les contrôles du socle.
-  assert.equal(checks(racine, { cfg: { checks: {} } }).length, 6);
-  assert.equal(checks(racine).length, 6);
+  assert.equal(checks(racine, { cfg: { checks: {} } }).length, 7);
+  assert.equal(checks(racine).length, 7);
 });
 
 test("projectRoot : dossier parent de .githooks/ quel que soit le dossier courant ; DRWIL_ROOT la remplace", () => {

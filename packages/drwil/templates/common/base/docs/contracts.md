@@ -107,6 +107,14 @@ contracts » section).
 **Reason** : bypassing a check silently hides a regression, the opposite of QUA-013
 **Manual** : a bypass rarely leaves a machine-checkable trace.
 
+## QUA-029 — A contract's cited tests exist and carry its ID
+**Rule** : Every file cited by the **Tests** field of a contract exists and contains the contract's ID (cited in the name of the test that protects it). Stack-agnostic: test names are not parsed. Blocking if the project enforces recent requirements (`newRequirements`: `blocking`, default of fresh installs), warning otherwise.
+**Scope** : the **Tests** field of this registry
+**Source of truth** : `.githooks/check-contract-tests.mjs`
+**Proof** : `.githooks/check-contract-tests.mjs` (hook + CI, `drwil verify`)
+**Reason** : a business rule is only a non-regression while its test still exists: a deleted or renamed test would leave the contract green while proving nothing
+**Check** : `contract-tests`
+
 
 ## Business (APP)
 

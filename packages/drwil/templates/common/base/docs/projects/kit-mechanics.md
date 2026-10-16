@@ -6,6 +6,7 @@
 files:
   - .githooks/run-checks.mjs
   - .githooks/check-docs.mjs
+  - .githooks/check-contract-tests.mjs
   - .githooks/check-control-coverage.mjs
   - .githooks/glob.mjs
   - .githooks/engine.mjs
