@@ -76,8 +76,8 @@ réalisation :
 9. Fluidité sans perte de rigueur (touche aussi les transitions et le
    sondage : après le 8 pour ne pas le refaire).
 10. Petite correction sous barrière bloquante.
-11. Consommation écrite à la clôture (attend des chiffres fiables, que les
-    chantiers 5 à 7 fourniront).
+11. Consommation écrite à la clôture : faite le 2026-10-16, avancée pour
+    le pilote de la 0.6.0 (journal du 2026-10-16).
 12. Vague 6, la fabrique.
 13. Vague 7, le produit, dont la validation commerciale.
 
@@ -119,11 +119,12 @@ l'agent, revue des code owners ; journal du 2026-10-13).
 ## Vague 3 — mesurer avant de construire
 
 Fait : consommation de tokens par chantier, lue dans les journaux de
-session (`node outils/consommation.mjs`, journal du 2026-10-11).
+session (`node .githooks/consumption.mjs`, journal du 2026-10-11) ; livrée
+à tout projet et consignée à la clôture (QUA-042, journal du 2026-10-16).
 
-- [ ] [IA] [P1] La consommation de tokens par chantier, mesurée chez tout
-  projet et consignée à la clôture (tranché le 2026-10-16, pour le pilote)
-  — `docs/projects/consommation-livree.md`.
+- [ ] [décision] La consommation de tokens mesurée aussi pour les autres
+  outils IA (Copilot CLI, Cursor, Codex, Gemini) —
+  `docs/intentions/consommation-autres-outils.md`.
 
 ## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 

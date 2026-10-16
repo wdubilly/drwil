@@ -74,19 +74,20 @@ const etat = (activite) => ({
 });
 const ecrireEtat = (racine, activite) => ecrire(racine, ".drwil/state.json", JSON.stringify(etat(activite)));
 
-test("hors fiches : seules les fiches et les attestations échappent au périmètre", () => {
+test("hors fiches : seules les fiches, les attestations et le journal de consommation échappent au périmètre", () => {
   assert.deepEqual(
     outsideBriefFiles([
       "docs/projects/x.md",
       "docs/intentions/y.md",
       "docs/projects/z.md",
       ".drwil/evidence/attestations/QUA-013-2026-10-09T17-56-29-571Z.json",
+      ".drwil/usage.jsonl",
       "README.md",
       "src/a.js",
     ]),
     ["README.md", "src/a.js"],
   );
-  // Seules les attestations : le reste de .drwil/ (réglages, évidences locales) reste soumis.
+  // Attestations et consommation seulement : le reste de .drwil/ (réglages, évidences locales) reste soumis.
   assert.deepEqual(outsideBriefFiles([".drwil/ia-first.json", ".drwil/evidence/verify-x.json"]), [
     ".drwil/ia-first.json",
     ".drwil/evidence/verify-x.json",
@@ -97,6 +98,8 @@ test("hors fiches : seules les fiches et les attestations échappent au périmè
 test("index : fiches toujours acceptées, le reste seulement en BUILD et dans le cadrage", () => {
   const motifs = ["src/a.js"];
   assert.deepEqual(checkIndex({ files: [FICHE], state: etat("SCOPING"), patterns: [] }), []);
+  // La ligne de consommation s'écrit en CLOSING, pour le commit de clôture.
+  assert.deepEqual(checkIndex({ files: [FICHE, ".drwil/usage.jsonl"], state: etat("CLOSING"), patterns: [] }), []);
   assert.match(checkIndex({ files: ["src/a.js"], state: etat("SCOPING"), patterns: motifs })[0], /SCOPING/);
   assert.match(checkIndex({ files: ["src/a.js"], state: etat("EVIDENCE"), patterns: motifs })[0], /BUILD/);
   assert.deepEqual(checkIndex({ files: ["src/a.js", FICHE], state: etat("BUILD"), patterns: motifs }), []);

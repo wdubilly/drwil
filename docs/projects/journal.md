@@ -663,7 +663,7 @@ l'index ; texte intégral dans l'historique git
   quatre catégories (entrée, sortie, cache lu, cache écrit) plus un total
   pondéré indicatif ; temps actif, pauses de plus de 15 minutes retirées.
   [décisions utilisateur]
-- **Résultat** : `outils/consommation.mjs` (propre au dépôt) lit les
+- **Résultat** : l’outil `consommation` (propre au dépôt, livré depuis le 2026-10-16 en `.githooks/consumption.mjs`) lit les
   journaux de session de Claude Code du projet et attribue chaque réponse
   à son chantier par la branche git (`chantier/<fiche>`) ; requête comptée
   une fois ; jamais un contenu de conversation affiché (test dédié) ; sans
@@ -1422,3 +1422,30 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : aucune nouvelle ; aucun contrôle ne vérifie la
   langue des documents (hors périmètre).
 - **Clôturé par** : PR à venir.
+
+## 2026-10-16 — La consommation de tokens par chantier, mesurée chez tout projet
+
+- **Décisions clés** (demandeur, 2026-10-16, pour le pilote de la 0.6.0) :
+  la mesure propre au dépôt devient `.githooks/consumption.mjs`, livré par
+  le gabarit : par chantier (branches `workstream/<fiche>` et
+  `cadrage/<fiche>` regroupées), tokens en quatre catégories, total
+  pondéré indicatif, temps actif et modèles, lus dans les journaux de
+  session de Claude Code — seuls les champs de consommation, jamais un
+  contenu de message. `--record <fiche>` ajoute la ligne de clôture à
+  `.drwil/usage.jsonl` (versionné), jamais deux fois ; le rappel CLOSING,
+  la recette de clôture et la skill le demandent. Jamais bloquant : sans
+  journal lisible, il le dit et sort en succès. Nouveau contrat QUA-042.
+  Tranche le point 11 de l'ordre des chantiers (consommation écrite à la
+  clôture), avancé pour le pilote.
+- **Écart** : l'outil du dépôt et son test sont retirés au profit de la
+  copie installée et de `.githooks/consumption.test.mjs` ; la recette
+  livrée disait la mesure impossible, c'était faux pour Claude Code. À
+  la clôture, la barrière de périmètre refusait `.drwil/usage.jsonl` en
+  CLOSING : le fichier passe désormais comme les fiches et les
+  attestations (cadrage élargi, chantier relancé par le demandeur).
+- **Intention d'origine** : aucune (demande directe).
+- **Limites connues** : les autres outils IA (Copilot CLI, Cursor, Codex,
+  Gemini) restent à l'estimation à la main (intention « consommation
+  mesurée aussi pour les autres outils IA ») ; pas de coût en euros (hors
+  périmètre : les tarifs changent).
+- **Clôturé par** : PR #116.

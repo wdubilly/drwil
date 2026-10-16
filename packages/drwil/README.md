@@ -200,6 +200,8 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    `MANUAL` contract waits for the human's `drwil attest`. An unproven
    acceptance criterion makes the verdict fail.
 5. **CLOSING** — the work item is condensed into the journal and deleted;
+   its token consumption is recorded (`.drwil/usage.jsonl`, read from
+   Claude Code's session logs);
    its untreated limits become intents; the README, the `CHANGELOG.md`
    « Unreleased » section and the map `docs/architecture.md` are updated
    when the work changes them; the pull request is opened, then back to

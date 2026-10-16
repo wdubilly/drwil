@@ -258,6 +258,13 @@ test("contexte en anglais selon .drwil/ia-first.json", () => {
   assert.match(context(readState(racine), racine), /Activity: SCOPING/);
 });
 
+test("QUA-042 : rappel CLOSING : consigner la consommation du chantier, en anglais aussi", () => {
+  const fr = depot({ state: actif("CLOSING") });
+  assert.match(context(readState(fr), fr), /Consigner la consommation du chantier : `node \.githooks\/consumption\.mjs --record <fiche>`/);
+  const en = depot({ state: actif("CLOSING"), lang: "en" });
+  assert.match(context(readState(en), en), /Record the workstream's consumption: `node \.githooks\/consumption\.mjs --record <brief>`/);
+});
+
 test("QUA-040 : rappel CLOSING : langue de la carte, du README et du changelog, réglage docLang ou langue du projet", () => {
   const ligne = (opts) => {
     const r = depot({ state: actif("CLOSING"), ...opts });

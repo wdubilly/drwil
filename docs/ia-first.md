@@ -503,7 +503,8 @@ never a pass: it is a warning at commit and a failure at push and in CI.
 
 - **Briefs always pass**: `docs/projects/` and `docs/intentions/`, as do
   human attestations, written by `drwil attest`:
-  `.drwil/evidence/attestations/` (if present) — configurable list: `outOfScope`. Any other file,
+  `.drwil/evidence/attestations/` (if present), and the consumption log
+  `.drwil/usage.jsonl` (if present), written at closing — configurable list: `outOfScope`. Any other file,
   code or doc, is subject to the scope.
 - **At commit**: outside briefs, a commit is accepted only in
   `BUILD`, for files covered by the active brief's `scope` block

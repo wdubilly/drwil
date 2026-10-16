@@ -18,8 +18,9 @@ import { governanceDisabled, readState } from "./state.mjs";
 
 // Attestations pass like briefs: a human proof already guarded by `drwil attest` (terminal
 // required, contract fingerprint), reviewed; subjecting them to the scope would force widening
-// every brief in order to close.
-export const OUT_OF_SCOPE = ["docs/projects/*", "docs/intentions/*", ".drwil/evidence/attestations/*"];
+// every brief in order to close. The consumption log likewise: its line is written in CLOSING,
+// for the closing commit (`consumption.mjs --record`).
+export const OUT_OF_SCOPE = ["docs/projects/*", "docs/intentions/*", ".drwil/evidence/attestations/*", ".drwil/usage.jsonl"];
 export const TRAILER = "Drwil-Brief";
 const LEVELS = new Set(["off", "warning", "blocking"]);
 const MARKER = ".githooks/scope-gate.mjs";

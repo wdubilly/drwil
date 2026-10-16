@@ -1,3 +1,4 @@
 {"workstream":"mecanique-ia-first","increment":"Skill audit de risques et dette technique","tokens":90000,"model":"claude-sonnet-5","duration_min":60,"date":"2026-10-04"}
 {"workstream":"mecanique-ia-first","increment":"Skill découverte de valeur produit","tokens":70000,"model":"claude-sonnet-5","duration_min":45,"date":"2026-10-04"}
 {"workstream":"mecanique-ia-first","increment":"Suivi de consommation par lot (recette + tableau de bord)","tokens":80000,"model":"claude-sonnet-5","duration_min":55,"date":"2026-10-04"}
+{"workstream":"consommation-livree","increment":"all","tokens":1421111,"input":162,"output":51888,"cache_read":10083118,"cache_write":122558,"requests":81,"model":"claude-opus-5-5","duration_min":81,"date":"2026-10-16","source":"claude-code-logs"}
