@@ -1,16 +1,16 @@
-# Installation par une autre personne
+# Installing drwil from source
 
-drwil n'est pas encore publié sur npm : il s'utilise depuis un clone de
-ce dépôt, ou depuis le tarball joint à une release GitHub (voir
-`README.md`, section « Installation »).
+drwil is not published on npm yet: use it from a clone of this repository,
+or from the tarball attached to a GitHub release (see `README.md`,
+"Installation" section).
 
-## 1. Prérequis
+## 1. Prerequisites
 
-- Node.js (voir la matrice testée dans `.github/workflows/ia-first.yml`,
-  tests croisés Linux/macOS/Windows) ;
-- npm (fourni avec Node.js).
+- Node.js (see the tested matrix in `.github/workflows/ia-first.yml`,
+  cross-tested on Linux/macOS/Windows);
+- npm (shipped with Node.js).
 
-## 2. Cloner et configurer
+## 2. Clone and set up
 
 ```bash
 git clone https://github.com/wdubilly/drwil.git
@@ -19,39 +19,38 @@ npm install
 npm run build
 ```
 
-Activer les contrôles Git du dépôt, une fois par clone :
+Enable the repository's Git checks, once per clone:
 ```bash
 git config core.hooksPath .githooks
 ```
 
-## 3. Premier démarrage et vérification
+## 3. First run and check
 
 ```bash
-npm test                 # suite de tests du paquet drwil
+npm test                 # the drwil package's test suite
 
-# tester le CLI sur un dossier vide (aucune couche inventée : cadrer
-# d'abord avec /drwil-adopt, puis déclarer les couches avec --layers)
-node bin/drwil.js init --name "MonProjet"
+# try the CLI on an empty folder (no layer is invented: scope the project
+# first with /drwil-adopt, then declare its layers with --layers)
+node bin/drwil.js init --name "MyProject"
 ```
 
-Depuis la racine du dépôt : `node .githooks/run-checks.mjs` rejoue tous
-les contrôles, `node outils/tester-tarball.mjs` éprouve la CLI installée
-depuis le tarball, comme un utilisateur.
+From the repository root: `node .githooks/run-checks.mjs` replays every
+check, `node outils/tester-tarball.mjs` exercises the CLI installed from
+the tarball, as a user would.
 
-## 4. Construire le tarball d'une version
+## 4. Build the tarball of a version
 
 ```bash
 cd packages/drwil
-npm pack                 # construit (prepack) puis produit drwil-<version>.tgz
+npm pack                 # builds (prepack), then produces drwil-<version>.tgz
 ```
 
-La version vient de `packages/drwil/package.json` ; la créer (tag, note
-de release, tarball joint) suit `docs/recipes/create-a-release.md`, qui
-renomme aussi la section « Unreleased » du changelog.
+The version comes from `packages/drwil/package.json`; creating it (tag,
+release note, attached tarball) follows `docs/recipes/create-a-release.md`,
+which also renames the changelog's "Unreleased" section.
 
-## 5. Utiliser un autre outil IA que Claude
+## 5. Using an AI tool other than Claude
 
-`AGENTS.md` est l'entrée commune ; les fichiers propres à un outil (ex.
-`CLAUDE.md`, `GEMINI.md` — si présents) ne font que renvoyer à lui. Un
-nouvel outil : lui faire lire `AGENTS.md` en priorité, sans dupliquer son
-contenu.
+`AGENTS.md` is the shared entry point; tool-specific files (e.g.
+`CLAUDE.md`, `GEMINI.md` — if present) only point to it. A new tool: have
+it read `AGENTS.md` first, without duplicating its content.

@@ -110,4 +110,7 @@ Carte complète : `docs/architecture.md`.
 ## Conventions
 
 - Code, commentaires, messages de commit et interface en français.
+- Exception : ce que lit d'abord un visiteur ou un prospect (`README.md`,
+  `INSTALL.md`, `docs/architecture.md`, `packages/drwil/README.md`,
+  `packages/drwil/CHANGELOG.md`) est en anglais.
 - Commentaires : le **pourquoi** non évident uniquement (contrainte, piège connu). Pas le quoi.
