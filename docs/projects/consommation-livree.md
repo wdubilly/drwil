@@ -23,6 +23,9 @@ files:
   - docs/architecture.md
   - docs/contracts.md
   - .drwil/ia-first.json
+  - packages/drwil/templates/common/base/.githooks/scope-gate.mjs
+  - packages/drwil/templates/common/base/docs/ia-first.md
+  - .githooks/scope-gate.test.mjs
 -->
 
 (cadrage : le script livré et ses textes, ses recettes, le registre livré
@@ -52,6 +55,10 @@ pilote est le moment où ces chiffres servent.
   `.drwil/usage.jsonl`, versionné (les chiffres du pilote voyagent avec le
   projet) ; seuls les champs de consommation sont lus, jamais un contenu
   de message ; jamais bloquant.
+- 2026-10-16 (demandeur, à la clôture) : la barrière de périmètre
+  refusait `.drwil/usage.jsonl` en CLOSING, alors que la recette met la
+  ligne dans le commit de clôture ; il passe comme les fiches et les
+  attestations (cadrage élargi à la barrière, sa doc et son test).
 
 ## Critères d'acceptation
 
