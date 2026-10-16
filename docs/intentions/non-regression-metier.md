@@ -52,16 +52,21 @@ quel chantier d'origine sont touchés.
 4. **Pas de recette pour demander une bonne pratique hors adoption**
    (secondaire) : « je veux tel contrat du catalogue maintenant ».
 
+## Décisions
+
+Tranchées par le demandeur le 2026-10-16 (sondage) :
+
+- Points 1 et 2 : cadrés dans `docs/projects/lien-contrat-test.md`, en
+  `[P1]` — lien contrat ↔ test livré, bloquant ou avertissement selon
+  `newRequirements` ; un contrôle par règle métier, filtré par l'ID, et
+  verify signale un contrôle partagé qui échoue.
+- Point 3 : la vue des règles métier dans `drwil verify` d'abord ; la vue
+  d'avancement plus tard.
+
 ## Questions à trancher
 
-- [décision] Point 1 : livrer `tests-contrats` dans le gabarit, bloquant
-  ou en avertissement pour un projet déjà équipé ?
-- [décision] Point 2 : exiger que le Contrôle d'un contrat cite le
-  contrôle qui rejoue ses Tests (règle vérifiée), ou attribuer l'échec par
-  le nom des tests en échec ?
-- [décision] Point 3 : la vue des règles métier dans `drwil verify`, dans
-  la vue d'avancement, ou les deux ?
-- [décision] Priorité dans l'index.
+- [décision] Point 4 : recette « demander une bonne pratique hors
+  adoption », quand ?
 
 ## Liens
 

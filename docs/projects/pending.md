@@ -105,6 +105,8 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
+- [ ] [IA] [P1] Lien contrat ↔ test chez l'utilisateur, échec attribué à
+  la bonne règle — `docs/projects/lien-contrat-test.md`.
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
