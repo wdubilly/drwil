@@ -115,6 +115,13 @@ contracts » section).
 **Reason** : a business rule is only a non-regression while its test still exists: a deleted or renamed test would leave the contract green while proving nothing
 **Check** : `contract-tests`
 
+## QUA-040 — The architecture map covers the code
+**Rule** : Every folder holding code (the project's code prefixes and layers, two levels deep) is cited in `docs/architecture.md`, a project file `init` never rewrites; the setting `architectureMap.files` requires every file under chosen paths. Blocking if the project enforces recent requirements (`newRequirements`: `blocking`), warning otherwise. A workstream that changes the structure updates the map in its closing commit.
+**Scope** : `docs/architecture.md`
+**Source of truth** : `.githooks/check-architecture.mjs`
+**Proof** : `.githooks/check-architecture.mjs` (hook + CI, `drwil verify`)
+**Reason** : a map no one maintains goes stale silently, and an agent arriving later reads a wrong picture of the project
+**Check** : `architecture-map`
 
 ## Business (APP)
 

@@ -17,7 +17,11 @@ the requester's place (`AGENTS.md`, Conduct section).
    with the stack's conventions (structure, build and test commands) and
    declare the stack's checks (step 3).
 1. **Re-read the detected stack** (`.drwil/ia-first.json`): layers, tools,
-   CI. Correct it if `init` got it wrong.
+   CI. Correct it if `init` got it wrong. Then **build the map**
+   `docs/architecture.md` from the real code (what the application does,
+   stack, every code folder with its role), in place of the skeleton `init`
+   wrote: drwil maintains it from then on (its check reports a code folder
+   it does not cite).
 2. **Fill in the layer `AGENTS.md` files** (one per `layers` entry):
    Context, Test pitfalls, Layer contracts, Style and recipes, Verify —
    from the existing code, not generalities.

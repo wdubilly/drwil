@@ -507,6 +507,8 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
   // un nouveau fichier de code hors de toute fiche bloque le commit.
   mkdirSync(join(dir, "scripts"));
   writeFileSync(join(dir, "scripts/tache.mjs"), "console.log('tache');\n");
+  // Le dossier de code figure sur la carte (QUA-040) : ce test éprouve le cadrage, pas la carte.
+  appendFileSync(join(dir, "docs/architecture.md"), "\n- `scripts/` — tâches du projet\n");
   git(dir, "add", "-A");
   let r = git(dir, "commit", "-qm", "tache");
   assert.notEqual(r.status, 0);
@@ -543,6 +545,8 @@ test("QUA-016 : réglage par défaut (bloquant) : premier commit accepté, code 
 
   mkdirSync(join(dir, "scripts"));
   writeFileSync(join(dir, "scripts/tache.mjs"), "console.log('tache');\n");
+  // Le dossier de code figure sur la carte (QUA-040) : ce test éprouve le cadrage, pas la carte.
+  appendFileSync(join(dir, "docs/architecture.md"), "\n- `scripts/` — tâches du projet\n");
   git(dir, "add", "-A");
   const r = git(dir, "commit", "-qm", "tache non cadrée");
   assert.notEqual(r.status, 0, "bloquant par défaut : code hors fiche refusé");
@@ -561,6 +565,8 @@ test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async 
 
   mkdirSync(join(dir, "scripts"));
   writeFileSync(join(dir, "scripts/tache.mjs"), "console.log('tache');\n");
+  // Le dossier de code figure sur la carte (QUA-040) : ce test éprouve le cadrage, pas la carte.
+  appendFileSync(join(dir, "docs/architecture.md"), "\n- `scripts/` — tâches du projet\n");
   const direct = spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
   assert.doesNotMatch(direct.stdout, /hors de toute fiche/);
   assert.equal(direct.status, 0);
@@ -2441,7 +2447,7 @@ test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; con
   let d = await doctor({ targetDir: dir });
   assert.equal(d.code, 0, JSON.stringify(d.points));
   assert.ok(d.points.find((p) => p.id === "hooks").state === "ok");
-  assert.match(d.points.find((p) => p.id === "contracts").detail, /10 contrat\(s\) valide\(s\)/);
+  assert.match(d.points.find((p) => p.id === "contracts").detail, /11 contrat\(s\) valide\(s\)/);
   git(dir, "config", "core.hooksPath", "ailleurs");
   spawnSync(process.execPath, ["-e", "require('fs').unlinkSync('CLAUDE.md')"], { cwd: dir });
   d = await doctor({ targetDir: dir });

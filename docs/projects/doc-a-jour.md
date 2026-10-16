@@ -67,7 +67,7 @@ mise à jour dans le même commit ») n'a pas suffi.
 
 ## Critères d'acceptation
 
-(contrat à créer par ce chantier, avec son champ Origine.)
+(contrats créés par ce chantier, avec leur champ Origine : QUA-040, outillé ; QUA-041, à part humaine.)
 
 - Livré à tout projet : à la clôture d'un chantier qui change ce que voit
   l'utilisateur, son commit de clôture met à jour le README et ajoute sa
@@ -75,24 +75,22 @@ mise à jour dans le même commit ») n'a pas suffi.
   fichiers ; s'il change la structure (dossier ou module, couche, pile), il
   met à jour la carte `docs/architecture.md` (recette et rappel CLOSING) ;
   la release renomme la section en numéro de version (recette de release)
-  — contrat à créer
+  — `QUA-040`
 - Livré à tout projet : drwil entretient la carte du client, fichier du
   projet que `init` ne réécrit jamais ; à l'adoption d'un projet existant,
   `/drwil-adopt` la construit à partir du code réel (dossiers, pile,
-  couches) au lieu du squelette de l'installation — contrat à créer (le
-  même)
+  couches) au lieu du squelette de l'installation — `QUA-040`
 - Livré à tout projet : un contrôle du moteur signale un dossier de code
   que la carte `docs/architecture.md` ne cite pas, et son message donne la
   ligne à compléter (le chemin ; le rôle reste à écrire par l'agent) ; un réglage exige les
   fichiers plutôt que les dossiers, sur des chemins choisis ; ce dépôt
   l'exige pour `packages/drwil/src/`, `.githooks/` (hors tests) et
-  `outils/` (hors tests) — contrat à créer (le même)
+  `outils/` (hors tests) — `QUA-040`
 - Rattrapage : le changelog couvre tout depuis la 0.5.1 ; les README
   (dépôt et paquet), `INSTALL.md`, la recette d'adoption et la carte
   décrivent le livrable tel qu'il est, en partant du parcours d'un nouvel
   utilisateur (projet neuf ou existant, premier chantier, non-régression
-  métier) [humain] — contrat à créer (le même, part Manuel : justesse du
-  contenu)
+  métier) [humain] — `QUA-041`
 
 ## 2. Hors périmètre
 

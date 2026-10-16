@@ -295,6 +295,26 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : un identifiant cité à l'humain vient avec ce qu'il désigne — « Une seule source repère dans un texte les identifiants et rend leurs libellés »
 **Raison** : La règle écrite (« références lisibles ») ne suffisait pas : des comptes rendus citaient encore « QUA-036 » sans dire ce que c'est. Le libellé doit être sous les yeux de l'agent, quel qu'il soit.
 
+## QUA-040 — drwil entretient la carte, le README et le changelog
+**Règle** : Livré à tout projet. La carte `docs/architecture.md`, fichier du projet qu'`init` ne réécrit jamais, cite chaque dossier de code (deux niveaux) et, sous les chemins réglés (`architectureMap.files`), chaque fichier hors tests : le contrôle `architecture-map` signale un oubli avec la ligne à compléter, bloquant si `newRequirements` l'impose. À l'adoption d'un projet existant, la carte est construite depuis le code. À la clôture d'un chantier, son commit met à jour le README et ajoute sa ligne « Unreleased » au changelog s'il change ce que voit l'utilisateur, et la carte s'il change la structure (recette et rappel CLOSING) ; la release renomme la section « Unreleased » en version.
+**Périmètre** : `.githooks/check-architecture.mjs`, `.githooks/state-texts.mjs`, les recettes de clôture, de release et d'adoption ; livré dans le gabarit ; ce dépôt exige les fichiers de `packages/drwil/src/`, `.githooks/` et `outils/`.
+**Source de vérité** : `.githooks/check-architecture.mjs`, `docs/recipes/working-with-branches.md`.
+**Preuve** : contrôle `architecture-map` et tests des hooks.
+**Contrôle** : `architecture-map`, `tests-qua-040`
+**Tests** : `.githooks/check-architecture.test.mjs`, `.githooks/engine.test.mjs`, `.githooks/state.test.mjs`
+**Origine** : une documentation à jour pour la 0.6.0, et qui le reste — « Un fichier de code de ce dépôt que la carte ne cite pas est signalé par un contrôle »
+**Raison** : Toute la documentation lue par un nouvel utilisateur datait du 2026-10-13 au plus tard, quinze chantiers plus tôt : la règle écrite (« doc mise à jour dans le même commit ») n'avait pas suffi.
+
+## QUA-041 — La documentation lue par un nouvel utilisateur dit vrai
+**Règle** : Le changelog (`packages/drwil/CHANGELOG.md`), les README du dépôt et du paquet, `INSTALL.md`, la recette d'adoption et la carte `docs/architecture.md` décrivent le livrable tel qu'il est, en partant du parcours d'un nouvel utilisateur (projet neuf ou existant, premier chantier, non-régression métier) ; leurs chemins et contrats cités existent.
+**Périmètre** : la documentation d'entrée du dépôt et du paquet.
+**Source de vérité** : le code du livrable ; `docs/projects/journal.md` pour le changelog.
+**Preuve** : contrôle `docs-references` (chemins et contrats cités) ; justesse du contenu : humaine.
+**Contrôle** : `docs-references`
+**Manuel** : justesse du contenu, relu par le demandeur.
+**Origine** : une documentation à jour pour la 0.6.0, et qui le reste — « Rattrapage : le changelog couvre tout depuis la 0.5.1 ; les README, INSTALL.md, la recette d'adoption et la carte décrivent le livrable tel qu'il est »
+**Raison** : Un README faux ne se voit pas par un contrôle : il trompe le premier utilisateur avant même son premier chantier.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

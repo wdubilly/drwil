@@ -35,6 +35,7 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] 
   const tout = {
     ".githooks/check-docs.mjs": `process.exit(${docsOk ? 0 : 1});\n`,
     ".githooks/check-contract-tests.mjs": "process.exit(0);\n",
+    ".githooks/check-architecture.mjs": "process.exit(0);\n",
     ...fichiers,
   };
   for (const [chemin, contenu] of Object.entries(tout)) {
