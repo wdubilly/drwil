@@ -105,9 +105,6 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
-- [ ] [IA] [P1] Enchaîner plusieurs chantiers sans intervention, sur une
-  file décidée d'un geste (à réaliser en premier) —
-  `docs/projects/file-de-chantiers.md`.
 - [ ] [IA] [P1] Un projet neuf commence par son cadrage global, sans
   couche inventée — `docs/projects/projet-neuf.md`.
 - [ ] [IA] [P1] Un identifiant cité à l'humain vient avec ce qu'il
@@ -223,6 +220,11 @@ une décision du demandeur.
 - [ ] [décision] Un `doctor` juste sur le dépôt drwil lui-même (manifeste
   et version, installé par `installer-depot`) —
   `docs/intentions/doctor-sur-le-depot-drwil.md`.
+
+- [ ] [décision] Une file de chantiers aussi pour Copilot CLI —
+  `docs/intentions/file-pour-copilot.md`.
+- [ ] [décision] L'arrêt d'une file et ses comptes rendus vérifiés par un
+  contrôle — `docs/intentions/arret-de-file-verifie.md`.
 
 ## Ensuite
 

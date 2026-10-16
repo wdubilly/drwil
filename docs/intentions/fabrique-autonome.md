@@ -5,6 +5,11 @@ et du mini-banc (vague 6) — intention posée par le demandeur à partir d'une 
 externe, corrigée sur l'état réel du dépôt ; questions à trancher en fin
 de fiche.
 
+**Revu le 2026-10-16** (bis) : premier pas réalisé, une file de chantiers
+décidée d'un geste, enchaînée par l'agent sans nouvelle intervention
+(QUA-037, journal « Une file de chantiers décidée d'un geste ») ; le reste
+de la vision (rôles séparés, orchestrateur, bac à sable) reste ouvert.
+
 **Revu le 2026-10-16** : l'« Existant » du 2026-10-10 est en partie
 faux. `master` est protégé depuis le 2026-10-13 (ruleset, CODEOWNERS,
 compte machine de l'agent : journal) et le registre compte 23 contrats,

@@ -1320,3 +1320,23 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/bench-avec-sans-drwil.md`, les autres ne viennent
   d'aucune intention) : aucune intention à consigner.
 - **Clôturé par** : PR #107.
+
+## 2026-10-16 — Une file de chantiers décidée d'un geste
+
+- **Décisions clés** (demandeur, 2026-10-16) : un sondage `/drwil-start` à
+  choix multiple, lu par le hook, enregistre une file de fiches prêtes
+  (maturité « prêt », aucune décision ouverte, critères) et la fusion
+  automatique ; la file reste après une clôture, l'agent lance seul sa
+  tête (`node .githooks/state.mjs next`) et jamais une fiche hors file ;
+  tout autre retour en SCOPING ou `queue stop` l'abandonne (QUA-037).
+  Extraction préalable : `main()` passe de `.githooks/state.mjs` (386
+  lignes) à `.githooks/state-cli.mjs`, sans changement de comportement.
+- **Intention d'origine** (`docs/intentions/fabrique-autonome.md`) :
+  premier pas réalisé, mise à jour (ligne « Revu le »), gardée ouverte.
+- **Limites connues** : la file ne se décide qu'avec Claude Code
+  (`docs/intentions/file-pour-copilot.md`) ; l'arrêt au premier blocage et
+  les comptes rendus sont des consignes à l'agent, pas une mécanique
+  vérifiée (`docs/intentions/arret-de-file-verifie.md`). En route, un
+  `git checkout` réflexe sur `docs/ia-first.md` a annulé une copie
+  régénérée (rattrapée avant le commit) : ce réflexe n'a plus lieu d'être.
+- **Clôturé par** : PR #109.
