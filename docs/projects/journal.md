@@ -1089,8 +1089,9 @@ l'index ; texte intégral dans l'historique git
   contrôle à un contrat impose de le réattester, même quand la preuve est
   renforcée, et `drwil attest` relance les contrôles cités sans rien
   afficher, parfois pendant plusieurs minutes
-  (`docs/intentions/attestation-sans-friction.md`). La vue des règles métier (point 3 de
-  `docs/intentions/non-regression-metier.md`) reste à faire.
+  (`docs/intentions/attestation-sans-friction.md`). La vue des règles
+  métier a été réalisée ensuite (« Vue des règles métier dans drwil
+  verify »).
 - **Clôturé par** : PR #91.
 
 ## 2026-10-16 — Vue des règles métier dans drwil verify
@@ -1110,7 +1111,26 @@ l'index ; texte intégral dans l'historique git
   cadrage oubliait la copie du dépôt de `docs/ia-first.md` (un
   élargissement), un cas déjà couvert par
   `docs/intentions/cadrage-copies-et-elargissement.md`. La vue
-  d'avancement HTML et le point 4 de
-  `docs/intentions/non-regression-metier.md` (recette « demander une bonne
-  pratique ») restent à faire.
+  d'avancement HTML et la recette « demander une bonne pratique » ont été
+  écartées ensuite (voir l'entrée suivante).
 - **Clôturé par** : PR #94.
+
+## 2026-10-16 — Intention close : la non-régression métier, alimentée chantier après chantier
+
+- **Vision** (demandeur, 2026-10-16) : deux circuits de contrats. Les
+  bonnes pratiques, écrites d'avance, vivent dans le catalogue et entrent
+  au registre quand l'utilisateur les adopte. Les règles métier sont
+  découvertes chantier après chantier : un critère d'acceptation devient
+  un contrat du registre, prouvé par un test, et ce contrat protège les
+  chantiers suivants.
+- **Réalisé** : le lien contrat ↔ test est contrôlé chez l'utilisateur et
+  l'échec est attribué à la bonne règle (QUA-029, QUA-030 : chantier
+  « Lien contrat ↔ test », PR #91) ; la vue des règles métier est dans
+  `drwil verify` (QUA-031 : PR #94).
+- **Écarté** (demandeur, 2026-10-16, « trop statique ») : la vue des règles
+  métier dans la vue d'avancement HTML, et une recette « demander une
+  bonne pratique hors adoption ».
+- **Suites** : `docs/intentions/un-controle-par-regle-dans-le-depot.md`
+  et `docs/intentions/attestation-sans-friction.md`, nées de ces
+  chantiers.
+- **Texte intégral** : `git log --follow -- docs/intentions/non-regression-metier.md`.

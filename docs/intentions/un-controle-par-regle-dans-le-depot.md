@@ -43,6 +43,7 @@ désigner le contrat touché, pas une liste de treize contrats. Le dépôt doit
 
 ## Liens
 
-- `docs/intentions/non-regression-metier.md` : l'intention d'origine.
+- `docs/projects/journal.md`, « Intention close : la non-régression
+  métier » : l'intention d'origine.
 - `docs/recipes/adopt-the-kit.md`, étape 5 : la règle enseignée aux
   utilisateurs.
