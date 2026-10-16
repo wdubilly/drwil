@@ -34,16 +34,17 @@ coûter le jugement demandé, rien de plus. Deux frictions relevées le
   QUA-013 et QUA-015 (chantiers exploitables à froid) ; le demandeur a dû
   réattester les deux pour clore.
 
+## Décisions
+
+Tranchées par le demandeur le 2026-10-16 (sondage) : un contrôle ajouté
+ne rend pas l'attestation obsolète (un contrôle retiré ou modifié, la
+règle, le champ Manuel ou la sévérité, si) ; `drwil attest` annonce
+chaque contrôle relancé et son résultat. Cadré dans
+`docs/projects/attestation-sans-friction.md`, en `[P1]`.
+
 ## Questions à trancher
 
-- [décision] Point 1 : l'empreinte ne couvre plus que la règle, le champ
-  Manuel et les contrôles déjà attestés (un contrôle ajouté ne l'invalide
-  pas, un contrôle retiré ou modifié si), ou garder la réattestation
-  systématique, plus simple et plus prudente ?
-- [décision] Point 2 : annoncer chaque contrôle relancé (« couverture-tests…
-  ok »), ou seulement une ligne « relance des contrôles cités, peut prendre
-  plusieurs minutes » ?
-- [décision] Priorité dans l'index.
+Aucune.
 
 ## Liens
 

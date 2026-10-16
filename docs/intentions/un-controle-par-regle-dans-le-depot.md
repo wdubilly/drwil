@@ -28,18 +28,16 @@ désigner le contrat touché, pas une liste de treize contrats. Le dépôt doit
 - `node --test --test-name-pattern="QUA-016"` sélectionne ces tests ; la
   couverture, elle, n'a de sens que sur la suite complète.
 
+## Décisions
+
+Tranchées par le demandeur le 2026-10-16 (sondage) : un contrôle par
+contrat (`tests-<id>`), filtré par l'ID sur ses fichiers Tests, lancé
+partout ; la couverture n'est plus citée que par QUA-004. Cadré dans
+`docs/projects/un-controle-par-regle.md`, en `[P1]`.
+
 ## Questions à trancher
 
-- [décision] Un contrôle par contrat (`tests-qua-016`…, lancé avec
-  `--test-name-pattern`), ou un seul contrôle qui rejoue tout et attribue
-  l'échec par le nom des tests en échec (écarté pour le livrable le
-  2026-10-16, mais le dépôt n'a qu'un lanceur, `node --test`) ?
-- [décision] Coût : la suite rejouée une fois par contrat allonge `drwil
-  verify` ; accepter, ou ne garder les contrôles par contrat que pour verify
-  et la CI ?
-- [décision] La couverture (QUA-004, seuil de couverture) reste-t-elle un
-  contrôle à part, cité par QUA-004 seul ?
-- [décision] Priorité dans l'index.
+Aucune.
 
 ## Liens
 
