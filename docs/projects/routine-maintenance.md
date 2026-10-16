@@ -15,6 +15,8 @@ précis.
 files:
   - docs/recipes/working-with-branches.md
   - outils/miroirs.json
+  - packages/drwil/src/evidence.ts
+  - packages/drwil/test/kit.test.mjs
 -->
 
 ## Journal
