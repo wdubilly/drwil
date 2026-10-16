@@ -60,7 +60,7 @@ son contexte, **quel que soit l'agent** (drwil est agnostique de l'outil).
   libellé sans rien faire — `QUA-039`
 - `AGENTS.md` et les instructions livrées à Copilot et à Cursor disent de
   citer chaque identifiant avec son libellé et donnent la commande —
-  contrat à créer (le même)
+  `QUA-039`
 - Avec Claude Code, après chaque outil dont la sortie cite des
   identifiants connus, un hook injecte leur libellé et le rappel de la
   règle ; rien si la sortie n'en cite aucun ; jamais bloquant, jamais de
