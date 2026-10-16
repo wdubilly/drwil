@@ -394,7 +394,11 @@ allowed scope stays the brief's `scope` block, which is versioned.
   by a contract, never by a check alone — a checkable criterion becomes a
   contract with a `Check`, a human one a `MANUAL` contract. A contract
   created by the workstream carries the **Origin** field, otherwise it is not
-  a durable proof.
+  a durable proof. While a brief is active, an unproven criterion is part of
+  the `drwil verify` verdict, not only of the closing: `FAIL`, or `MANUAL`
+  when the only gap is a human criterion awaiting its attestation; the
+  unproven criteria are listed in every output (`criteria` in the JSON).
+  Without an active brief (CI, `drwil attest`), the verdict is unchanged.
 - **Tool-side blocks** (Claude Code, `deny` rules in
   `.claude/settings.json`, if present): `git … --no-verify`, `git commit -n` and writing `.drwil/state.json`
   (if present) directly are refused by the tool, not by the model.

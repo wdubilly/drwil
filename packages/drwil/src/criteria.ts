@@ -179,6 +179,16 @@ export function judgeBrief(
   return { criteria: evaluateCriteria(brief.criteria, contracts, changes, origins), undeclared };
 }
 
+/**
+ * What the active brief's criteria do to the verdict (QUA-034): FAIL if one is not proven, MANUAL if
+ * the only gap is a human criterion whose contract awaits its attestation, null if all are proven.
+ */
+export function criteriaVerdict(criteria: CriterionResult[]): "FAIL" | "MANUAL" | null {
+  const open = criteria.filter((c) => c.status !== "pass");
+  if (!open.length) return null;
+  return open.every((c) => c.human && c.status === "not-pass" && c.proof === "manual") ? "MANUAL" : "FAIL";
+}
+
 /** The Origin field of a contract's text (« <workstream> — « <criterion> » »), or null. */
 export function originOf(text?: string): string | null {
   return /^\*\*(?:Origine|Origin)\s*:?\*\*\s*:?\s*(.+)$/m.exec(text ?? "")?.[1].trim() ?? null;

@@ -192,11 +192,13 @@ test("critères d'acceptation : la clôture est refusée tant qu'un critère n'e
     git("add", "-A");
     git("commit", "--no-verify", "-m", "installation et fiche");
 
+    // Tous les contrats passent, mais le critère n'a pas de preuve : le verdict tombe (QUA-034).
     let r = verifier();
-    assert.equal(r.status, 0, "le verdict global des contrats est PASS : seul le critère manque de preuve");
+    assert.equal(r.status, 1, "critère non prouvé : verdict FAIL, pas seulement à la clôture");
+    assert.match(r.stdout, /Critères d'acceptation non prouvés de la fiche active.*« Un export vide est refusé » \(no-proof\)/);
+    assert.match(r.stdout, /GOVERNANCE: FAIL/);
     r = cloturer();
-    assert.notEqual(r.status, 0, "clôture refusée : le critère n'a pas de preuve");
-    assert.match(r.stdout + r.stderr, /Un export vide est refusé.*no-proof/);
+    assert.notEqual(r.status, 0, "clôture refusée : le verdict n'est pas PASS");
     assert.equal(JSON.parse(lire(dir, ".drwil/state.json")).activity, "VERIFY", "l'état n'a pas bougé");
 
     ecrireFiche("Un export vide est refusé — `QUA-001`");
@@ -376,6 +378,67 @@ test("QUA-032 : une attestation tolère un contrôle ajouté ; règle, Manuel, s
     assert.equal(await statut(), "ATTESTED", "version 1, contrat inchangé");
     ecrire({ controle: "`c1`, `c2`" });
     assert.equal(await statut(), "MANUAL", "version 1 : tout changement l'invalide, comme avant");
+  } finally {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-034 : un critère non prouvé fait tomber le verdict (FAIL), un critère humain non attesté le met en MANUAL ; sans fiche active, rien ne change", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
+    const cfg = JSON.parse(lire(dir, ".drwil/ia-first.json"));
+    cfg.checks = [{ id: "ok", run: "node -e 0" }];
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+    writeFileSync(
+      join(dir, "docs/contracts.md"),
+      "# Contrats\n\n## QUA-001 — automatique\n**Règle** : r.\n**Contrôle** : `ok`\n\n## QUA-002 — humain\n**Règle** : r.\n**Contrôle** : `ok`\n**Manuel** : relecture.\n",
+    );
+    const fiche = "docs/projects/essai.md";
+    const criteres = (...lignes) =>
+      writeFileSync(join(dir, fiche), `# Essai\n\n## Critères d'acceptation\n\n${lignes.map((l) => `- ${l}`).join("\n")}\n`);
+    const actif = () =>
+      writeFileSync(
+        join(dir, ".drwil/state.json"),
+        JSON.stringify({ version: 1, activity: "VERIFY", active_brief: fiche, active_request: null, since: null }),
+      );
+    const statut = async () => (await verify({ targetDir: dir, only: undefined })).status;
+    // Sans fiche active : le contrat humain non attesté donne déjà MANUAL, rien de plus.
+    assert.equal(await statut(), "MANUAL");
+
+    criteres("Prouvé — `QUA-001`");
+    actif();
+    writeFileSync(join(dir, "docs/contracts.md"), lire(dir, "docs/contracts.md").replace(/\n## QUA-002[\s\S]*$/, "\n"));
+    assert.equal(await statut(), "PASS", "tout prouvé : PASS");
+
+    criteres("Prouvé — `QUA-001`", "Par un contrôle seul — `ok`");
+    const v = await verify({ targetDir: dir });
+    assert.equal(v.status, "FAIL", "critère automatique non prouvé : FAIL");
+    assert.equal(v.code, 1);
+    assert.match(
+      formatVerdict(v),
+      /Critères d'acceptation non prouvés de la fiche active \(verdict et clôture\) : « Par un contrôle seul » \(no-contract\)/,
+    );
+    const json = verdictJson(v);
+    assert.equal(json.status, "fail");
+    assert.deepEqual(
+      json.criteria.map((c) => [c.text, c.status]),
+      [
+        ["Prouvé", "pass"],
+        ["Par un contrôle seul", "no-contract"],
+      ],
+    );
+    assert.match(
+      formatForAgent(json),
+      /Unproven acceptance criteria of the active brief[^\n]*\n {2}- « Par un contrôle seul » — ok: no-contract/,
+    );
+
+    writeFileSync(
+      join(dir, "docs/contracts.md"),
+      `${lire(dir, "docs/contracts.md")}\n## QUA-002 — humain\n**Règle** : r.\n**Contrôle** : \`ok\`\n**Manuel** : relecture.\n`,
+    );
+    criteres("Prouvé — `QUA-001`", "Relu [humain] — `QUA-002`");
+    assert.equal(await statut(), "MANUAL", "seul manque un jugement humain à attester : MANUAL");
   } finally {
     rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }

@@ -1209,9 +1209,10 @@ l'index ; texte intégral dans l'historique git
   n'est pas une preuve durable (`no-origin`). Un critère de jugement
   humain reste permis, par un contrat Manuel attesté. Modèle de fiche et
   doc livrée mis à jour.
-- **Intention d'origine** (`docs/intentions/preuve-des-criteres-visible.md`) :
-  question 2 réalisée ; la question 1 (un critère non prouvé change-t-il
-  le verdict de verify ?) reste ouverte, l'intention aussi.
+- **Intention d'origine** (« preuve des critères visible ») : question 2
+  réalisée ; la question 1 (un critère non prouvé change-t-il le verdict
+  de verify ?) l'a été ensuite (« Un critère non prouvé fait tomber le
+  verdict de verify »).
 - **Limites connues** : huit fiches ouvertes n'ont aucun critère (dont
   `mini-banc`, `ci-matrice-sur-pr`, `drwil-v0-2-gouvernance-executable`,
   `entretien-sous-barriere-bloquante`, `adopter-seuil-couverture`) : leur
@@ -1240,3 +1241,23 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   clôture touche donc `docs/contracts.md`, ce qu'un commit de cadrage ne
   peut pas faire (barrière de périmètre).
 - **Texte intégral** : `git log --follow -- docs/projects/<fiche>.md`.
+
+## 2026-10-16 — Un critère non prouvé fait tomber le verdict de verify
+
+- **Décisions clés** (demandeur, 2026-10-16) : avec une fiche active,
+  `drwil verify` combine le jugement de ses critères d'acceptation au
+  verdict des contrats : un critère non prouvé donne `FAIL`, ou `MANUAL`
+  si le seul manque est un critère humain à attester ; les critères non
+  prouvés sont listés dans les sorties humaine, agent et JSON (`criteria`).
+  Sans fiche active (CI, `drwil attest`), rien ne change (QUA-034, avec
+  son contrôle propre `tests-qua-034`).
+- **Intention d'origine** (« preuve des critères visible », 2026-10-15) :
+  ses deux questions sont réalisées (critère toujours prouvé par un
+  contrat, puis verdict), elle est résumée ici et retirée de
+  `docs/intentions/`.
+- **Limites connues** : la clôture, sur une évidence `FAIL`, refuse sans
+  nommer le critère fautif (c'est verify qui le nomme, en amont). Le
+  cadrage oubliait `.drwil/ia-first.json`, nécessaire au contrôle propre
+  du contrat créé (QUA-033) : un élargissement, cas couvert par
+  `docs/intentions/cadrage-copies-et-elargissement.md`.
+- **Clôturé par** : PR #104.

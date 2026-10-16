@@ -105,8 +105,6 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
-- [ ] [IA] [P1] Un critère non prouvé fait tomber le verdict de verify —
-  `docs/projects/verdict-et-criteres.md`.
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
@@ -221,8 +219,6 @@ une décision du demandeur.
   `docs/intentions/cadrage-copies-et-elargissement.md`.
 - [ ] [décision] L'installation du dépôt ne réécrit plus la date de
   `docs/ia-first.md` — `docs/intentions/date-ia-first-installateur.md`.
-- [ ] [décision] Preuve des critères visible dès verify ; critère lié à un
-  contrôle sans contrat — `docs/intentions/preuve-des-criteres-visible.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
   `docs/intentions/prefixe-catalogue.md`.
 - [ ] [décision] Un `doctor` juste sur le dépôt drwil lui-même (manifeste

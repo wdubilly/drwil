@@ -25,6 +25,7 @@ const TEXTS = {
       "dont {0} bloquant(s) ({1} satisfait(s)), {2} avertissement(s) non satisfait(s), {3} indicatif(s) non satisfait(s) — seuls les bloquants décident du verdict",
     severity: (s: Severity) => SEVERITY_FR[s],
     undeclared: "Contrats modifiés sans déclaration dans la fiche active (section « Contrats modifiés ») — clôture refusée : {0}",
+    unproven: "Critères d'acceptation non prouvés de la fiche active (verdict et clôture) : {0}",
   },
   en: {
     contracts: "Contracts",
@@ -36,6 +37,7 @@ const TEXTS = {
       "including {0} blocking ({1} satisfied), {2} warning(s) not satisfied, {3} advisory not satisfied — only blocking contracts decide the verdict",
     severity: (s: Severity) => s,
     undeclared: "Contracts modified without declaration in the active brief (« Modified contracts » section) — closing refused: {0}",
+    unproven: "Unproven acceptance criteria of the active brief (verdict and closing): {0}",
   },
 };
 
@@ -56,6 +58,8 @@ export function formatVerdict(v: Verdict): string {
   for (const e of v.errors) lines.push(`! ${e}`);
   if (v.unattached.length) lines.push(fill(T.unattached, v.unattached.join(", ")));
   if (v.undeclared?.length) lines.push(fill(T.undeclared, v.undeclared.join(", ")));
+  const unproven = (v.criteria ?? []).filter((c) => c.status !== "pass");
+  if (unproven.length) lines.push(fill(T.unproven, unproven.map((c) => `« ${c.text} » (${c.status})`).join(", ")));
   const count = (s: Status) => v.contracts.filter((k) => k.status === s).length;
   if (v.contracts.length)
     lines.push(fill(T.counts, v.contracts.length, count("PASS"), count("ATTESTED"), count("FAIL"), count("MANUAL"), count("ERROR")));
@@ -140,5 +144,7 @@ export function verdictJson(v: Verdict) {
     errors: v.errors,
     unlinkedChecks: v.unattached,
     businessRules: v.rules ?? [],
+    /** Acceptance criteria of the active brief, judged (QUA-034); empty without an active brief. */
+    criteria: v.criteria ?? [],
   };
 }
