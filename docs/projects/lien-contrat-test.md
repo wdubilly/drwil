@@ -17,6 +17,7 @@ files:
   - .githooks/contracts.test.mjs
   - .githooks/engine.mjs
   - .githooks/engine.test.mjs
+  - .githooks/run-checks.test.mjs
   - docs/recipes/adopt-the-kit.md
   - packages/drwil/src/verify.ts
   - packages/drwil/test/kit.test.mjs
