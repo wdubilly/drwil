@@ -4,7 +4,9 @@
 // qu'au moment de livrer. Deux sources qui se recoupent, vérifiées dans les deux sens :
 // - le nom d'un test commence par l'ID du contrat qu'il protège (« QUA-016 : … ») ;
 // - le champ « Tests » du contrat liste les fichiers de tests qui le protègent (des fichiers, pas des
-//   noms : un test renommé ne casse pas le lien).
+//   noms : un test renommé ne casse pas le lien) ;
+// - un contrat qui a des tests cite son propre contrôle, `tests-<id>`, qui ne rejoue qu'eux (QUA-033) :
+//   un test cassé fait échouer ce seul contrat, jamais un contrôle partagé (QUA-030).
 // Seuls les ID au préfixe d'un contrat du projet (.drwil/ia-first.json → contractPrefixes) comptent :
 // un autre préfixe (ex. une exigence d'une fiche) n'est pas un contrat.
 // Usage : node outils/verifier-tests-contrats.mjs [racine]
@@ -13,20 +15,20 @@ import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** Contrats du registre (forme sections) : Map ID → { tests: chemins du champ « Tests », ou [] }. */
+/** Contrats du registre (forme sections) : Map ID → { tests, controles } (champs « Tests » et « Contrôle », ou []). */
 export function lireRegistre(texte) {
   const contrats = new Map();
   let courant = null;
   for (const ligne of texte.split(/\r?\n/)) {
     const titre = /^##\s+([A-Z][A-Z0-9]*-\d+)\b/.exec(ligne);
     if (titre) {
-      courant = { tests: [] };
+      courant = { tests: [], controles: [] };
       contrats.set(titre[1], courant);
       continue;
     }
     if (/^##\s/.test(ligne)) courant = null;
-    const champ = /^\*\*Tests\*\*\s*:\s*(.*)$/.exec(ligne);
-    if (courant && champ) courant.tests = [...champ[1].matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+    const champ = /^\*\*(Tests|Contrôle)\*\*\s*:\s*(.*)$/.exec(ligne);
+    if (courant && champ) courant[champ[1] === "Tests" ? "tests" : "controles"] = [...champ[2].matchAll(/`([^`]+)`/g)].map((m) => m[1]);
   }
   return contrats;
 }
@@ -49,7 +51,10 @@ export function testsDuFichier(texte) {
 export function verifier({ registre, fichiers, prefixes, existe }) {
   const problemes = [];
   const estContrat = (id) => prefixes.some((p) => id.startsWith(`${p}-`));
-  for (const [id, { tests }] of registre) {
+  for (const [id, { tests, controles }] of registre) {
+    const propre = `tests-${id.toLowerCase()}`;
+    if (tests.length && !controles.includes(propre))
+      problemes.push(`${id} : a des tests mais ne cite pas son propre contrôle ${propre} (un contrôle par règle)`);
     for (const chemin of tests) {
       if (!existe(chemin)) {
         problemes.push(`${id} : le champ Tests cite ${chemin}, introuvable`);

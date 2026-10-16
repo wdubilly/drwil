@@ -31,7 +31,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout contrôle listé dans les vérifs.
 **Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution.
 **Preuve** : Sortie lue du contrôle concerné.
-**Contrôle** : `ci-coverage`, `couverture-tests`, `couverture-hooks`
+**Contrôle** : `ci-coverage`, `tests-qua-013`
 **Manuel** : lecture de la sortie du contrôle concerné.
 **Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
@@ -65,7 +65,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `docs/projects/`, `docs/intentions/`.
 **Source de vérité** : `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI) ; justesse du contenu : humaine.
-**Contrôle** : `docs-references`, `couverture-tests`
+**Contrôle** : `docs-references`, `tests-qua-015`
 **Manuel** : justesse du contenu des fiches.
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
@@ -75,7 +75,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout le dépôt (fichiers indexés), hors `docs/` et le markdown.
 **Source de vérité** : `.githooks/scope.mjs`, `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/scope-reminder.mjs`.
-**Contrôle** : `docs-references`, `couverture-tests`
+**Contrôle** : `docs-references`, `tests-qua-016`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 
@@ -84,7 +84,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout dépôt git, y compris avant le tout premier commit, en local uniquement (hooks `pre-commit`/`pre-push`).
 **Source de vérité** : `docs/recipes/working-with-branches.md`.
 **Preuve** : `.githooks/run-checks.mjs` (hook uniquement, jamais en CI).
-**Contrôle** : `main-branch`, `couverture-tests`
+**Contrôle** : `main-branch`, `tests-qua-017`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un commit ou un push direct sur la branche principale contourne la revue (pull/merge request) et casse le lien fiche ↔ branche décrit par la recette.
 
@@ -110,7 +110,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Les fiches de `docs/projects/`.
 **Source de vérité** : `.githooks/briefs.mjs` (`readyGaps`), `.githooks/check-docs.mjs`, `.githooks/state.mjs` (clôture).
 **Preuve** : `check-docs` (hook + CI) refuse la fiche « prête » ; la clôture avertit.
-**Contrôle** : `couverture-hooks`, `couverture-tests`
+**Contrôle** : `tests-qua-021`
 **Tests** : `.githooks/check-docs.test.mjs`, `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`
 **Origine** : capitaliser les non-régressions — « Une fiche « prête » sans critères d'acceptation est refusée par check-docs ; une fiche sans critères qui n'est pas « prête » reçoit un avertissement à la clôture »
 **Raison** : Un chantier sans critère prouvé ne laisse rien à rejouer : la non-régression métier commence par la fiche.
@@ -120,7 +120,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Les critères d'acceptation de la fiche active.
 **Source de vérité** : `packages/drwil/src/criteria.ts` (`evaluateCriteria`, `contractChanges`).
 **Preuve** : `drwil verify` et son évidence, lue par la clôture.
-**Contrôle** : `couverture-tests`
+**Contrôle** : `tests-qua-022`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : capitaliser les non-régressions — « Un critère dont le contrat n'existe pas ou n'a pas de contrôle rejouable est refusé à la clôture ; un critère nouveau crée ou modifie son contrat dans la branche »
 **Raison** : La preuve d'un critère doit survivre au chantier, pour être rejouée par les suivants.
@@ -130,7 +130,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Le registre `docs/contracts.md`, comparé à la base de la branche.
 **Source de vérité** : `packages/drwil/src/criteria.ts` (`judgeBrief`, `showOrigins`), `.githooks/briefs.mjs` (`declaredContracts`), `.githooks/state.mjs` (clôture).
 **Preuve** : `drwil verify` et son évidence, lue par la clôture.
-**Contrôle** : `couverture-tests`, `couverture-hooks`
+**Contrôle** : `tests-qua-023`
 **Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/state.test.mjs`
 **Origine** : capitaliser les non-régressions — « Un contrat modifié sans déclaration dans « Contrats modifiés » est refusé ; quand un contrôle échoue, verify affiche le chantier d'origine qu'il protège »
 **Raison** : Assouplir un contrat en silence efface la non-régression qu'il portait ; le changer reste possible, mais décidé.
@@ -140,7 +140,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Le gabarit livré (`packages/drwil/templates/common/base/docs/contracts.md`, `docs/recipes/adopt-the-kit.md`).
 **Source de vérité** : Ces deux fichiers du gabarit.
 **Preuve** : Test sur un `init` neuf.
-**Contrôle** : `couverture-tests`
+**Contrôle** : `tests-qua-024`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : capitaliser les non-régressions — « Un init neuf fournit un contrat métier d'exemple avec un contrôle à compléter »
 **Raison** : Un dépôt neuf démarre sans filet métier : l'exemple montre où et comment poser le premier.
@@ -150,7 +150,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : Tout projet équipé par `drwil init`.
 **Source de vérité** : `packages/drwil/src/manifest.ts` (`writeInstall`, `readInstall`, `uninstall`), `packages/drwil/src/index.ts` (`init`).
 **Preuve** : Test sur un dépôt temporaire.
-**Contrôle** : `couverture-tests`
+**Contrôle** : `tests-qua-025`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : fiabiliser le package npm — « init (installation ou mise à jour) enregistre la version du moteur dans .drwil/install.json sans changer le manifeste ; uninstall le retire »
 **Raison** : Savoir quelle version du moteur tourne dans un projet, pour le diagnostiquer et le mettre à jour.
@@ -160,7 +160,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `drwil doctor`.
 **Source de vérité** : `packages/drwil/src/doctor.ts` (point « version »).
 **Preuve** : Test sur un dépôt temporaire.
-**Contrôle** : `couverture-tests`
+**Contrôle** : `tests-qua-026`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : fiabiliser le package npm — « doctor affiche la version installée et signale un écart avec la CLI »
 **Raison** : Un écart de version silencieux fait tourner des hooks d'une version avec une CLI d'une autre.
@@ -170,7 +170,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `drwil init` sur un projet déjà équipé.
 **Source de vérité** : `packages/drwil/src/index.ts` (`init`), `packages/drwil/src/manifest.ts` (`removeObsolete`, `writeManifest`, `writeInstall`).
 **Preuve** : Test de mise à jour sur un dépôt temporaire, version antérieure simulée hors réseau.
-**Contrôle** : `couverture-tests`
+**Contrôle** : `tests-qua-027`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : fiabiliser le package npm — « Passer d'une version à la suivante préserve les fichiers modifiés par le client et retire les fichiers obsolètes non modifiés »
 **Raison** : Une mise à jour qui écrase le travail du client ou laisse des restes fait renoncer aux mises à jour.
@@ -180,7 +180,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `docs/contracts.md` et `docs/contracts-catalog.md` (dossiers réglables : `dirs.contracts`, `dirs.catalog`).
 **Source de vérité** : `.githooks/contracts.mjs` (`definedIds`, `idConflicts`), `.githooks/check-docs.mjs`.
 **Preuve** : `check-docs` (hook + CI).
-**Contrôle** : `docs-references`, `couverture-hooks`
+**Contrôle** : `docs-references`, `tests-qua-028`
 **Tests** : `.githooks/contracts.test.mjs`, `.githooks/check-docs.test.mjs`
 **Origine** : cohérence des ID de contrat entre registre et catalogue — « Un ID défini à la fois dans le registre et dans le catalogue, ou deux fois dans le catalogue, est signalé par check-docs »
 **Raison** : Deux règles sous un même ID rendent toute citation ambiguë ; le cas s'est produit (SEC-001) et a failli se reproduire (un ID déjà pris par le catalogue proposé pour un nouveau contrat).
@@ -190,7 +190,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : le champ Tests du registre (`docs/contracts.md`, dossier réglable : `dirs.contracts`), livré dans le gabarit.
 **Source de vérité** : `.githooks/check-contract-tests.mjs`, `.githooks/contracts.mjs` (lecture du champ Tests).
 **Preuve** : contrôle `contract-tests` du moteur (hook + CI, `drwil verify`).
-**Contrôle** : `contract-tests`, `couverture-hooks`
+**Contrôle** : `contract-tests`, `tests-qua-029`
 **Tests** : `.githooks/check-contract-tests.test.mjs`, `.githooks/contracts.test.mjs`, `.githooks/engine.test.mjs`
 **Origine** : lien contrat ↔ test, échec attribué à la bonne règle — « Un contrat dont le champ Tests cite un fichier absent, ou un fichier qui ne porte pas son ID, est signalé »
 **Raison** : Une règle métier n'est une non-régression que si son test existe encore : un test supprimé ou renommé laissait le contrat vert sans plus rien prouver.
@@ -200,7 +200,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `packages/drwil/src/verify.ts` ; livrable : `docs/contracts.md` et `docs/recipes/adopt-the-kit.md` du gabarit.
 **Source de vérité** : `packages/drwil/src/verify.ts`, `docs/recipes/adopt-the-kit.md` (étape 5).
 **Preuve** : tests du paquet (`couverture-tests`).
-**Contrôle** : `couverture-tests`
+**Contrôle** : `tests-qua-030`
 **Tests** : `packages/drwil/test/cycle.test.mjs`, `packages/drwil/test/kit.test.mjs`
 **Origine** : lien contrat ↔ test, échec attribué à la bonne règle — « Quand un contrôle cité par plusieurs contrats échoue, verify le dit au lieu de l'imputer sans réserve à chacun »
 **Raison** : Dans un vrai projet, tout passe souvent par un seul `npm test` : verify bloquait bien, mais pouvait désigner APP-001 quand APP-002 était cassé.
@@ -210,7 +210,7 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `packages/drwil/src/rules.ts`, la sortie de `drwil verify` (humaine, agent, JSON, évidence).
 **Source de vérité** : `packages/drwil/src/rules.ts`.
 **Preuve** : tests du paquet (`couverture-tests`).
-**Contrôle** : `couverture-tests`
+**Contrôle** : `tests-qua-031`
 **Tests** : `packages/drwil/test/cycle.test.mjs`
 **Origine** : vue des règles métier dans drwil verify — « `drwil verify` se termine par un bilan d'une ligne des règles métier »
 **Raison** : La non-régression métier grandit chantier après chantier ; sans vue, on ne sait ni ce qui est prouvé, ni ce qui reste à compléter, ni quel chantier une règle cassée protège.
@@ -220,10 +220,20 @@ régression sauf si la fiche active déclare le changement (section
 **Périmètre** : `drwil attest`, le jugement des attestations par `drwil verify`.
 **Source de vérité** : `packages/drwil/src/verify.ts` (`humanFingerprint`, `proofFingerprints`), `packages/drwil/src/attest.ts`.
 **Preuve** : tests du paquet (`couverture-tests`).
-**Contrôle** : `couverture-tests`
+**Contrôle** : `tests-qua-032`
 **Tests** : `packages/drwil/test/cycle.test.mjs`
 **Origine** : attestation sans friction inutile — « Ajouter un contrôle à un contrat attesté ne rend pas son attestation obsolète »
 **Raison** : L'attestation est le seul geste humain obligatoire de la clôture : réattester une preuve seulement renforcée, ou attendre deux minutes devant un terminal muet, coûtait plus que le jugement demandé.
+
+## QUA-033 — Un contrôle par règle dans ce dépôt
+**Règle** : Chaque contrat du registre qui cite des tests (champ Tests) cite aussi son propre contrôle, `tests-<id>` (`tests-qua-016` pour QUA-016), qui ne rejoue que les fichiers de son champ Tests, filtrés par son ID (`node --test --test-name-pattern`) : un test cassé fait échouer ce seul contrat. La couverture (`couverture-tests`, `couverture-hooks`) n'est citée que par QUA-004 (seuil de couverture).
+**Périmètre** : `docs/contracts.md` et `.drwil/ia-first.json` de ce dépôt (règle enseignée au livrable par QUA-030).
+**Source de vérité** : `outils/verifier-tests-contrats.mjs`.
+**Preuve** : contrôle `tests-contrats` (hook + CI) ; un filtre qui ne sélectionnerait aucun test est déjà refusé par ce même contrôle (chaque fichier cité porte un test au nom commençant par l'ID).
+**Contrôle** : `tests-contrats`, `tests-qua-033`
+**Tests** : `outils/verifier-tests-contrats.test.mjs`
+**Origine** : un contrôle par règle dans le dépôt drwil — « Chaque contrat qui cite des tests a son propre contrôle »
+**Raison** : `couverture-tests` partagé par 13 contrats faisait échouer les 13 sur un seul test cassé, chacun « non attribuable » : le dépôt n'appliquait pas la règle qu'il enseigne.
 
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).

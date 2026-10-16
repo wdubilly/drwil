@@ -1084,8 +1084,8 @@ l'index ; texte intégral dans l'historique git
 - **Limites connues** : dans ce dépôt, `couverture-tests` est cité par
   13 contrats, donc un test cassé les fait tous échouer avec le message de
   contrôle partagé. C'est honnête mais bruyant : appliquer ici « un
-  contrôle par règle » reste à cadrer
-  (`docs/intentions/un-controle-par-regle-dans-le-depot.md`). Ajouter un
+  contrôle par règle » a été fait ensuite (chantier « Un contrôle par
+  règle dans le dépôt drwil », QUA-033). Ajouter un
   contrôle à un contrat impose de le réattester, même quand la preuve est
   renforcée, et `drwil attest` relance les contrôles cités sans rien
   afficher, parfois pendant plusieurs minutes (réglé ensuite par le
@@ -1130,9 +1130,9 @@ l'index ; texte intégral dans l'historique git
 - **Écarté** (demandeur, 2026-10-16, « trop statique ») : la vue des règles
   métier dans la vue d'avancement HTML, et une recette « demander une
   bonne pratique hors adoption ».
-- **Suites** : `docs/intentions/un-controle-par-regle-dans-le-depot.md`
-  et l'intention « attestation sans friction » (réalisée : chantier
-  « Attestation sans friction inutile »), nées de ces chantiers.
+- **Suites** : les intentions « un contrôle par règle dans le dépôt » et
+  « attestation sans friction », nées de ces chantiers, toutes deux
+  réalisées ensuite (chantiers du même nom, QUA-033 et QUA-032).
 - **Texte intégral** : `git log --follow -- docs/intentions/non-regression-metier.md`.
 
 ## 2026-10-16 — Intentions closes : livrable en anglais, non-régression continue
@@ -1167,8 +1167,32 @@ l'index ; texte intégral dans l'historique git
 - **Intention d'origine** (« attestation sans friction », 2026-10-16) :
   entièrement couverte, résumée ici et retirée de `docs/intentions/`.
 - **Limites connues** : un contrôle retiré invalide toujours
-  l'attestation : le chantier `docs/projects/un-controle-par-regle.md`
-  demandera de réattester QUA-013 et QUA-015. Le test de l'annonce
+  l'attestation : le chantier « Un contrôle par règle dans le dépôt
+  drwil » a demandé de réattester QUA-013 et QUA-015 (fait). Le test de l'annonce
   d'`attest` ne couvre que le français ; les textes anglais sont écrits
   mais pas éprouvés.
 - **Clôturé par** : PR #98.
+
+## 2026-10-16 — Un contrôle par règle dans le dépôt drwil
+
+- **Décisions clés** : chaque contrat du registre qui cite des tests cite
+  son propre contrôle, `tests-<id>`, qui ne rejoue que les fichiers de son
+  champ Tests filtrés par son ID (17 contrôles, générés depuis le registre,
+  environ 34 s au total). La couverture n'est plus citée que par QUA-004.
+  `tests-contrats` (`outils/verifier-tests-contrats.mjs`) refuse un
+  contrat à tests qui ne cite pas son propre contrôle (QUA-033). QUA-032,
+  créé après le cadrage, a été ajouté aux contrats modifiés par le
+  demandeur. QUA-013 et QUA-015 réattestés (contrôle retiré), au format
+  version 2. Éprouvé dans une copie jetable : un test cassé de QUA-016 fait
+  échouer QUA-016 seul parmi les contrats à tests, sans message de
+  contrôle partagé.
+- **Intention d'origine** (« un contrôle par règle dans le dépôt »,
+  2026-10-16) : entièrement couverte, résumée ici et retirée de
+  `docs/intentions/`.
+- **Limites connues** : QUA-004 (seuil de couverture) échoue aussi sur
+  tout test cassé, sa couverture rejouant toute la suite : c'est sa règle,
+  pas un contrôle partagé. Les tests passent deux fois au push et en CI
+  (contrôle par contrat et couverture). Un nouveau contrat à tests doit
+  déclarer son contrôle à la main dans `.drwil/ia-first.json` ;
+  `tests-contrats` le rappelle en refusant le commit.
+- **Clôturé par** : PR #100.
