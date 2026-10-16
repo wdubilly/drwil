@@ -116,7 +116,7 @@ contracts » section).
 **Check** : `contract-tests`
 
 ## QUA-040 — The architecture map covers the code
-**Rule** : Every folder holding code (the project's code prefixes and layers, two levels deep) is cited in `docs/architecture.md`, a project file `init` never rewrites; the setting `architectureMap.files` requires every file under chosen paths. Blocking if the project enforces recent requirements (`newRequirements`: `blocking`), warning otherwise. A workstream that changes the structure updates the map in its closing commit.
+**Rule** : Every folder holding code (the project's code prefixes and layers, two levels deep) is cited in `docs/architecture.md`, a project file `init` never rewrites; the setting `architectureMap.files` requires every file under chosen paths. Blocking if the project enforces recent requirements (`newRequirements`: `blocking`), warning otherwise. A workstream that changes the structure updates the map in its closing commit. The map, README and changelog are written in the `docLang` language (absent: the project language). The check judges that a folder is cited, not that its written role is right: that part stays human.
 **Scope** : `docs/architecture.md`
 **Source of truth** : `.githooks/check-architecture.mjs`
 **Proof** : `.githooks/check-architecture.mjs` (hook + CI, `drwil verify`)

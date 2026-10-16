@@ -157,8 +157,11 @@ their own instructions". Remove otherwise.)*
 
 - **Project language: {{projectLanguage}}** (`lang` in `.drwil/ia-first.json`).
   Reply, and write briefs, intents, journal entries and commit messages, in
-  that language, even though the kit's own files are in English. Code,
-  comments and UI follow the project's conventions.
+  that language, even though the kit's own files are in English. What a
+  visitor reads first — the map `docs/architecture.md`, the `README.md`
+  and the changelog — is written in the `docLang` setting's language
+  (absent: the project language). Code, comments and UI follow the
+  project's conventions.
 - Comments: only the non-obvious **why** (constraint, domain quirk, known
   pitfall) — not the what, no history, no person's name. The request and
   its date belong in the **commit message** (`git log`/`git blame` find

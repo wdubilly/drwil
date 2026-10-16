@@ -66,7 +66,8 @@ request, instead of direct commits on the main branch.
   under « Unreleased » in `CHANGELOG.md` (if present); one
   that changes the structure (folder or module, layer, stack) updates the
   map `docs/architecture.md` — drwil maintains it, and its check reports
-  any code folder it does not cite yet.
+  any code folder it does not cite yet. These three are written in the
+  `docLang` language (absent: the project language).
 - Close the intent loop, in the closing commit: each limit left untreated
   becomes an intent brief (`docs/intentions/`, one per limit, never a
   workstream brief), listed in `docs/projects/pending.md` as `[decision]`

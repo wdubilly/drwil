@@ -258,6 +258,23 @@ test("contexte en anglais selon .drwil/ia-first.json", () => {
   assert.match(context(readState(racine), racine), /Activity: SCOPING/);
 });
 
+test("QUA-040 : rappel CLOSING : langue de la carte, du README et du changelog, réglage docLang ou langue du projet", () => {
+  const ligne = (opts) => {
+    const r = depot({ state: actif("CLOSING"), ...opts });
+    return context(readState(r), r)
+      .split("\n")
+      .find((l) => /docLang/.test(l));
+  };
+  assert.equal(ligne({}), "Langue de la carte, du README et du changelog : français (réglage docLang, à défaut la langue du projet).");
+  assert.match(ligne({ config: { docLang: "en" } }), /: anglais \(réglage docLang/);
+  assert.match(ligne({ lang: "en" }), /^Language of the map, README and changelog: English \(docLang setting/);
+  assert.match(ligne({ lang: "en", config: { docLang: "fr" } }), /: French \(/);
+  assert.match(ligne({ config: { docLang: "de" } }), /: de \(/);
+  assert.match(ligne({ lang: "en", config: { docLang: "de" } }), /changelog: de \(/);
+  const build = depot({ state: actif("BUILD") });
+  assert.doesNotMatch(context(readState(build), build), /docLang/, "seulement en CLOSING");
+});
+
 test("QUA-040 : rappel CLOSING : README, changelog « Unreleased » et carte d'architecture, en anglais aussi", () => {
   const fr = depot({ state: actif("CLOSING") });
   assert.match(
