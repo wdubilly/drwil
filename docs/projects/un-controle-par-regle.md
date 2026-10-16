@@ -33,7 +33,7 @@ le contrat, `check-docs` refusant de citer un contrat absent du registre.)
 - Chaque contrat qui cite des tests cite son propre contrôle
   (`tests-<id>`), qui ne rejoue que les fichiers de son champ Tests
   filtrés par son ID ; `tests-contrats` refuse un contrat à Tests qui ne le
-  cite pas : un test cassé fait échouer ce seul contrat — contrat à créer
+  cite pas : un test cassé fait échouer ce seul contrat — `QUA-033`
 - La couverture n'est plus citée que par QUA-004 (seuil de couverture) —
   `QUA-004`
 
@@ -58,6 +58,7 @@ le contrat, `check-docs` refusant de citer un contrat absent du registre.)
 - `QUA-029` — ancien critère : « Contrôle `contract-tests`, `couverture-hooks` » — raison : idem (validé le 2026-10-16)
 - `QUA-030` — ancien critère : « Contrôle `couverture-tests` » — raison : idem (validé le 2026-10-16)
 - `QUA-031` — ancien critère : « Contrôle `couverture-tests` » — raison : idem (validé le 2026-10-16)
+- `QUA-032` — ancien critère : « Contrôle `couverture-tests` » — raison : idem ; contrat créé après le cadrage, ajouté par le demandeur (validé le 2026-10-16)
 
 ## 2. Hors périmètre
 

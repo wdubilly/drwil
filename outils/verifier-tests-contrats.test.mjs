@@ -33,6 +33,7 @@ function depot(fichiers, { git = true } = {}) {
 const REGISTRE = [
   "## QUA-001 — un",
   "**Règle** : r",
+  "**Contrôle** : `tests-qua-001`",
   "**Tests** : `a.test.mjs`, `b.test.mjs`",
   "## QUA-002 — sans tests",
   "**Règle** : r",
@@ -45,8 +46,8 @@ test("lireRegistre : champ Tests par contrat, vide sinon ; une section hors cont
   assert.deepEqual(
     [...r],
     [
-      ["QUA-001", { tests: ["a.test.mjs", "b.test.mjs"] }],
-      ["QUA-002", { tests: [] }],
+      ["QUA-001", { tests: ["a.test.mjs", "b.test.mjs"], controles: ["tests-qua-001"] }],
+      ["QUA-002", { tests: [], controles: [] }],
     ],
   );
 });
@@ -84,6 +85,25 @@ test("verifier : fichier introuvable, fichier sans test rattaché, test non cit�
   ]);
 });
 
+test("QUA-033 : un contrat qui a des tests cite son propre contrôle tests-<id> ; sans tests, aucune exigence", () => {
+  const registre = lireRegistre(
+    [
+      "## QUA-004 — partagé",
+      "**Contrôle** : `couverture-tests`, `docs-references`",
+      "**Tests** : `a.test.mjs`",
+      "## QUA-005 — le sien",
+      "**Contrôle** : `docs-references`, `tests-qua-005`",
+      "**Tests** : `a.test.mjs`",
+      "## QUA-006 — sans tests",
+      "**Contrôle** : `couverture-tests`",
+    ].join("\n"),
+  );
+  const fichiers = new Map([["a.test.mjs", 'test("QUA-004 : x", () => {});\ntest("QUA-005 : y", () => {});']]);
+  assert.deepEqual(verifier({ registre, fichiers, prefixes: ["QUA"], existe: () => true }), [
+    "QUA-004 : a des tests mais ne cite pas son propre contrôle tests-qua-004 (un contrôle par règle)",
+  ]);
+});
+
 test("principal : registre et préfixes de la configuration, fichiers de tests suivis par git", () => {
   const journal = { log: [], error: [] };
   const { log, error } = console;
@@ -92,7 +112,7 @@ test("principal : registre et préfixes de la configuration, fichiers de tests s
   try {
     const ok = depot({
       ".drwil/ia-first.json": JSON.stringify({ contractPrefixes: ["REG"], dirs: { contracts: "regles.md" } }),
-      "regles.md": "## REG-001 — r\n**Tests** : `packages/drwil/test/kit.mjs`\n",
+      "regles.md": "## REG-001 — r\n**Contrôle** : `tests-reg-001`\n**Tests** : `packages/drwil/test/kit.mjs`\n",
       "packages/drwil/test/kit.mjs": 'test("REG-001 : x", () => {});',
       "src/a.test.mjs": 'test("QUA-001 : préfixe hors contrats du projet", () => {});',
       "src/non-teste.mjs": 'test("REG-002 : pas un fichier de tests", () => {});',
@@ -118,7 +138,7 @@ test("ligne de commande : racine en argument ou dossier courant", () => {
 });
 
 test("verifier : un fichier cité qui existe mais n'est pas un fichier de tests suivi ne compte pas", () => {
-  const registre = lireRegistre("## QUA-001 — r\n**Tests** : `non-suivi.test.mjs`\n");
+  const registre = lireRegistre("## QUA-001 — r\n**Contrôle** : `tests-qua-001`\n**Tests** : `non-suivi.test.mjs`\n");
   assert.deepEqual(verifier({ registre, fichiers: new Map(), prefixes: ["QUA"], existe: () => true }), [
     "QUA-001 : non-suivi.test.mjs ne contient aucun test dont le nom commence par QUA-001",
   ]);
