@@ -55,16 +55,15 @@ clôture ne la regarde pas, et rien ne signale un constat qui vieillit
 
 - À la clôture, le rappel d'activité et la recette demandent de consigner
   chaque limite non traitée en fiche d'intention, jamais en fiche de
-  chantier — contrat à créer
+  chantier — `QUA-036`
 - Une fiche de chantier déclare son intention d'origine (champ
   `**Intention**`) ; le commit qui supprime la fiche à la clôture est
   averti (sans blocage) s'il ne touche pas cette intention, à mettre à
-  jour ou, entièrement couverte, à résumer au journal et retirer — contrat
-  à créer (le même)
+  jour ou, entièrement couverte, à résumer au journal et retirer —
+  `QUA-036`
 - Une intention dont la dernière date de revue (Statut, « Revu le … » ou
   « Existant (vérifié le …) ») a 30 jours ou plus est signalée par un
-  avertissement non bloquant, comme un audit périmé — contrat à créer (le
-  même)
+  avertissement non bloquant, comme un audit périmé — `QUA-036`
 
 ## 2. Hors périmètre
 
@@ -137,7 +136,7 @@ Tranchées par le demandeur le 2026-10-16 (sondage) :
   documente la ligne « Revu le ». Critère de sortie : tests (récente,
   périmée, plusieurs dates : la plus récente compte).
 - **Lot 4 — clore la fiche V0.2** [IA] (ajouté le 2026-10-16, décision
-  du demandeur) : `docs/projects/drwil-v0-2-gouvernance-executable.md`,
+  du demandeur) : la fiche « drwil V0.2 — gouvernance exécutable »,
   dépassée (lots livrés ; benchmark porté par `docs/projects/mini-banc.md`,
   publication par l'intention `packager-kit-ia-first`), résumée au journal
   et retirée ; la citation de l'en-tête de `docs/contracts.md` renvoie au

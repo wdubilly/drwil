@@ -48,6 +48,13 @@ Carte complète : `docs/architecture.md`.
   qu'elle désigne en clair — « QUA-016 (rappel de cadrage) », « point 12
   (élargissement du cadrage) ». Un ID seul n'est pas lisible.
 - **Laisser propre en passant** : documenter et signaler tout écart trouvé.
+- **La clôture boucle les intentions** : à la clôture d'un chantier, chaque
+  limite non traitée devient une fiche d'intention (`docs/intentions/`) —
+  l'agent peut l'écrire seul, jamais une fiche de chantier (la recadrer est
+  une décision du demandeur) — listée dans l'index en `[décision]` et citée
+  par le journal ; l'intention d'origine (champ `**Intention**` de la
+  fiche) est mise à jour, ou résumée au journal et retirée si elle est
+  entièrement couverte.
 - **Compte rendu de fin de tâche** : fichiers créés/modifiés, contrôles lancés et résultats exacts, limites et ambiguïtés restantes.
 
 ## Contrats

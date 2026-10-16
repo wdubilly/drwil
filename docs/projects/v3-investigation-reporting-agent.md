@@ -47,7 +47,7 @@ Cette expérimentation ne doit pas entraîner prématurément :
 ## 3. Contraintes
 
 - La priorité reste la stabilisation du cœur de DRWIL (V0.2,
-  `docs/projects/drwil-v0-2-gouvernance-executable.md`) avant toute extension.
+  close : `docs/projects/journal.md`, « Fiche close : drwil V0.2 ») avant toute extension.
 - Réutiliser le modèle existant (contrats de `docs/contracts.md`, contrôles du
   moteur, `drwil verify`, évidences et attestations) plutôt que d'en créer un
   second.

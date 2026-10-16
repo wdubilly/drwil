@@ -1234,8 +1234,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   lancement en un geste et la clôture sur évidence de verify (« Fluidité,
   levier 1 », 2026-10-10) : le 2026-10-16, le correctif ReDoS du caviardage
   a été lancé en un seul sondage sur l'entretien courant.
-- **Aussi dépassée, pas encore close** : la fiche V0.2
-  (`docs/projects/drwil-v0-2-gouvernance-executable.md`), dont les restes
+- **Aussi dépassée, close ensuite** (« Fiche close : drwil V0.2 ») : la
+  fiche V0.2, dont les restes
   sont portés par `docs/projects/mini-banc.md` et
   `docs/intentions/packager-kit-ia-first.md` ; le registre la cite, et sa
   clôture touche donc `docs/contracts.md`, ce qu'un commit de cadrage ne
@@ -1286,3 +1286,17 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   dû être élargi une fois (le hook Claude) : le rappel de cadrage côté
   agent n'était pas nommé dans le cadrage initial.
 - **Clôturé par** : PR #106.
+
+## 2026-10-16 — Fiche close : drwil V0.2 — gouvernance exécutable
+
+- **Cadrée le 2026-10-05**, elle a livré tous ses lots [IA] (DRWIL-001 à
+  005, 010 à 013, 020, 021, 031 ; PR #34 du dépôt archivé), dont la forme
+  sections du registre (ADR-001 : `docs/contracts.md` est la source
+  canonique des contrats) et `drwil verify` comme primitive de validation.
+- **Ses deux restes sont portés ailleurs** : le benchmark (DRWIL-022) par
+  `docs/projects/mini-banc.md` ; la publication npm (DRWIL-030) par
+  `docs/intentions/packager-kit-ia-first.md`, vague 7.
+- **Close dans le chantier « la clôture boucle les intentions »**, son
+  retrait touchant le registre, qui la citait (ce qu'un commit de cadrage
+  ne peut pas faire).
+- **Texte intégral** : `git log --follow -- docs/projects/drwil-v0-2-gouvernance-executable.md`.

@@ -191,10 +191,6 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
   `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [IA] [P2] drwil V0.2 — gouvernance exécutable : dépassée (lots [IA]
-  fusionnés ; benchmark porté par `docs/projects/mini-banc.md`, publication
-  par l'intention `packager-kit-ia-first`), à clore au journal avec la
-  citation du registre — `docs/projects/drwil-v0-2-gouvernance-executable.md`.
 - [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.

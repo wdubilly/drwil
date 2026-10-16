@@ -132,7 +132,7 @@ y compris quand elle s'écarte de la recommandation de l'agent (signalé).
 ### Registre actuel
 
 `docs/contracts.md`, forme sections (ADR-001 de
-`docs/projects/drwil-v0-2-gouvernance-executable.md` : ce fichier est
+la fiche V0.2, close : `docs/projects/journal.md`, « Fiche close : drwil V0.2 » ; ce fichier est
 aujourd'hui la source canonique) : 11 contrats — SEC-001, SEC-006,
 SEC-007, QUA-004, QUA-011, QUA-013, QUA-015, QUA-016, QUA-017, QUA-018,
 QUA-019. Champs lus par `.githooks/contracts.mjs` : Règle, Contrôle,

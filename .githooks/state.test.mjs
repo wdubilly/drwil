@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { PassThrough } from "node:stream";
-import { missingCriteria } from "./briefs.mjs";
+import { briefIntent, intentsLeftBehind, lastReview, missingCriteria, staleIntents } from "./briefs.mjs";
 import {
   ACTIVITIES,
   acceptanceCriteria,
@@ -255,6 +255,64 @@ test("contexte : un état invalide est signalé, pas masqué", () => {
 test("contexte en anglais selon .drwil/ia-first.json", () => {
   const racine = depot({ lang: "en" });
   assert.match(context(readState(racine), racine), /Activity: SCOPING/);
+});
+
+test("QUA-036 : rappel CLOSING : boucler les intentions (limites en intentions, intention d'origine mise à jour ou close), en anglais aussi", () => {
+  const fr = context(readState(depot({ state: actif("CLOSING") })), depot({ state: actif("CLOSING") }));
+  assert.match(fr, /chaque limite non traitée devient une fiche d'intention \(jamais une fiche de chantier\)/);
+  assert.match(fr, /l'intention d'origine \(champ Intention de la fiche\) est mise à jour, ou résumée au journal et retirée/);
+  const racine = depot({ state: actif("CLOSING"), lang: "en" });
+  assert.match(context(readState(racine), racine), /each limit left untreated becomes an intent brief \(never a workstream brief\)/);
+});
+
+test("QUA-036 : champ Intention et date de revue : la plus récente compte (Statut, Revu le, Existant daté)", () => {
+  assert.equal(briefIntent("# P\n\n**Intention** : `docs/intentions/a.md`\n"), "docs/intentions/a.md");
+  assert.equal(briefIntent("# P\n\n**Intent**: `docs/intentions/b.md`\n"), "docs/intentions/b.md");
+  assert.equal(briefIntent("# P\n\nIntention : a.md\n"), null);
+  const texte = [
+    "**Statut** : proposée le 2026-09-01.",
+    "",
+    "**Revu le 2026-09-20** : ce qui a changé.",
+    "",
+    "## Existant (vérifié le 2026-09-10)",
+  ].join("\n");
+  assert.equal(lastReview(texte), "2026-09-20");
+  assert.equal(lastReview("**Status** (2026-08-02): to scope.\n\n## Current state (checked on 2026-08-05)\n"), "2026-08-05");
+  assert.equal(lastReview("**Statut** : proposée le AAAA-MM-JJ.\n"), null);
+});
+
+test("QUA-036 : intentions sans revue depuis 30 jours signalées, les plus anciennes d'abord ; README et intention non datée ignorés", () => {
+  const racine = depot();
+  mkdirSync(join(racine, "docs", "intentions"), { recursive: true });
+  const ecrire = (f, statut) => writeFileSync(join(racine, "docs", "intentions", f), `# I\n\n**Statut** : ${statut}\n`);
+  ecrire("ancienne.md", "proposée le 2026-08-01.");
+  ecrire("vieille.md", "proposée le 2026-09-01.");
+  ecrire("recente.md", "proposée le 2026-10-01.");
+  ecrire("README.md", "proposée le 2020-01-01.");
+  ecrire("sans-date.md", "proposée.");
+  const maintenant = new Date("2026-10-16T00:00:00Z").getTime();
+  assert.deepEqual(staleIntents(racine, {}, maintenant), [
+    { file: "docs/intentions/ancienne.md", days: 76 },
+    { file: "docs/intentions/vieille.md", days: 45 },
+  ]);
+  assert.deepEqual(staleIntents(racine, { dirs: { intentions: "idees" } }, maintenant), [], "dossier réglé absent");
+});
+
+test("QUA-036 : au commit, une fiche supprimée sans que son intention soit touchée est signalée ; touchée ou absente, rien", () => {
+  const racine = depot();
+  const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
+  mkdirSync(join(racine, "docs", "intentions"), { recursive: true });
+  writeFileSync(join(racine, "docs", "intentions", "origine.md"), "# Intention\n");
+  writeFileSync(join(racine, FICHE), `${readFileSync(join(racine, FICHE), "utf8")}\n**Intention** : \`docs/intentions/origine.md\`\n`);
+  git("init", "-q");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  git("rm", "-q", FICHE);
+  assert.deepEqual(intentsLeftBehind(racine, [FICHE]), [{ brief: FICHE, intent: "docs/intentions/origine.md" }]);
+  assert.deepEqual(intentsLeftBehind(racine, [FICHE, "docs/intentions/origine.md"]), [], "intention mise à jour dans le même commit");
+  git("rm", "-q", "docs/intentions/origine.md");
+  assert.deepEqual(intentsLeftBehind(racine, [FICHE, "docs/intentions/origine.md"]), [], "intention retirée dans le même commit");
+  assert.deepEqual(intentsLeftBehind(tmp("drwil-hors-git-"), []), [], "hors dépôt git : rien");
 });
 
 const MAINTENANT = "2026-10-09T12:00:00Z";

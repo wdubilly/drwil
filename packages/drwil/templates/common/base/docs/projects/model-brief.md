@@ -3,6 +3,7 @@
 **Status**: scoped on YYYY-MM-DD — increment 1 in progress.
 **Risk**: MEDIUM
 **Maturity**: to refine | ready | in progress
+**Intent**: `docs/intentions/<intent>.md` (when the workstream comes from one)
 
 (maturity: "ready" = fully decided, can be started; "to refine" = points
 still open; "in progress" = being built. Optional: a brief without it

@@ -105,6 +105,43 @@ test("audits : périmé signalé (français), récent, sans date ou sans ligne d
   assert.match(r.stdout, /checks run: OK/);
 });
 
+test("QUA-036 : rappels d'intentions : périmée signalée sans bloquer, en anglais aussi", () => {
+  let r = lancer({
+    "docs/intentions/vieille.md": "# I\n\n**Statut** : proposée le 2020-01-01.\n",
+    "docs/intentions/neuve.md": "# I\n\n**Statut** : proposée le 2999-01-01.\n",
+  });
+  assert.match(r.stdout, /\[ia-first\] ⚠ intention sans revue depuis \d+ jours \(docs\/intentions\/vieille\.md\) : la revoir/);
+  assert.doesNotMatch(r.stdout, /neuve\.md|non exécuté : intention/);
+  r = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "docs/intentions/old.md": "**Status**: proposed on 2020-01-01.\n" });
+  assert.match(r.stdout, /⚠ intent not reviewed for \d+ days \(docs\/intentions\/old\.md\): review it/);
+});
+
+test("QUA-036 : au commit, une fiche supprimée sans que son intention soit touchée est signalée, en anglais aussi", () => {
+  for (const [lang, motif] of [
+    ["fr", /⚠ la fiche docs\/projects\/a\.md est supprimée sans que son intention docs\/intentions\/i\.md soit touchée/],
+    ["en", /⚠ brief docs\/projects\/a\.md is deleted without touching its intent docs\/intentions\/i\.md/],
+  ]) {
+    const racine = tmp();
+    const ecrire = (chemin, contenu) => {
+      mkdirSync(dirname(join(racine, chemin)), { recursive: true });
+      writeFileSync(join(racine, chemin), contenu);
+    };
+    ecrire(".githooks/check-docs.mjs", "process.exit(0);\n");
+    ecrire(".githooks/check-contract-tests.mjs", "process.exit(0);\n");
+    ecrire(".drwil/ia-first.json", JSON.stringify({ lang }));
+    ecrire("docs/intentions/i.md", "# I\n\n**Statut** : proposée le 2999-01-01.\n");
+    ecrire("docs/projects/a.md", "# A\n\n**Intention** : `docs/intentions/i.md`\n");
+    const g = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
+    g("init", "-q", "-b", "travail");
+    g("add", "-A");
+    g("commit", "-qm", "base");
+    g("rm", "-q", "docs/projects/a.md");
+    const env = { ...process.env, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "pre-commit", DRWIL_ROOT: racine };
+    const r = spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env });
+    assert.match(r.stdout, motif, lang);
+  }
+});
+
 test("QUA-013 : hors commit (push, CI), un contrôle non exécuté fait échouer ; au commit, simple avertissement", () => {
   const sansCi = { ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "projet", run: "node -e 0" }] }) };
   let r = lancer(sansCi, { env: { CI: "true" } });
