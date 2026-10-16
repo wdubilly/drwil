@@ -8,11 +8,13 @@ import type { MessageLang } from "./i18n.js";
 import type { ContractResult } from "./verify.js";
 
 /**
- * pass: proven by a durable, passing contract or check. no-proof: no link. unknown-proof: the link
- * names nothing in the registry. not-durable: a contract without a check cannot guard against
- * regressions (unless the criterion is human). not-pass: the proof exists but does not pass.
+ * pass: proven by a durable, passing contract. no-proof: no link. unknown-proof: the link names
+ * nothing in the registry. not-durable: a contract without a check cannot guard against regressions
+ * (unless the criterion is human). no-contract: a check alone proves today but leaves nothing in the
+ * registry (QUA-022). no-origin: a contract created by the workstream without its Origin field.
+ * not-pass: the proof exists but does not pass.
  */
-export type CriterionStatus = "pass" | "no-proof" | "unknown-proof" | "not-durable" | "not-pass";
+export type CriterionStatus = "pass" | "no-proof" | "unknown-proof" | "not-durable" | "no-contract" | "no-origin" | "not-pass";
 
 export interface Criterion {
   text: string;
@@ -35,6 +37,8 @@ export function evaluateCriteria(
   criteria: Criterion[],
   contracts: ContractResult[],
   changes: Map<string, ContractChange> | null = null,
+  /** Contracts carrying an Origin field; null: not checked. */
+  origins: Set<string> | null = null,
 ): CriterionResult[] {
   const passing = (s: string) => s === "pass" || s === "attested";
   return criteria.map((c) => {
@@ -46,11 +50,12 @@ export function evaluateCriteria(
       const proof = contract.status.toLowerCase();
       const human = contract.manual !== null || contract.checks.length === 0;
       if (human !== c.human) return result("not-durable", proof);
+      if (change === "created" && origins && !origins.has(contract.id)) return result("no-origin", proof);
       return result(passing(proof) ? "pass" : "not-pass", proof);
     }
     const check = contracts.flatMap((k) => k.checks).find((r) => r.id === c.link);
     if (!check || c.human) return result("unknown-proof");
-    return result(check.status === "ok" ? "pass" : "not-pass", check.status);
+    return result("no-contract", check.status);
   });
 }
 
@@ -102,6 +107,8 @@ const TABLE = {
       "no-proof": "❌ sans preuve",
       "unknown-proof": "❌ preuve inconnue du registre",
       "not-durable": "❌ preuve non durable",
+      "no-contract": "❌ contrôle sans contrat (rien au registre)",
+      "no-origin": "❌ contrat créé sans champ Origine",
       "not-pass": "❌ preuve non passante",
     },
     none: "aucun critère d'acceptation",
@@ -114,6 +121,8 @@ const TABLE = {
       "no-proof": "❌ no proof",
       "unknown-proof": "❌ proof unknown to the registry",
       "not-durable": "❌ proof not durable",
+      "no-contract": "❌ check without a contract (nothing in the registry)",
+      "no-origin": "❌ contract created without an Origin field",
       "not-pass": "❌ proof not passing",
     },
     none: "no acceptance criteria",
@@ -163,9 +172,16 @@ export function judgeBrief(
   brief: ActiveBrief,
   contracts: ContractResult[],
   changes: Map<string, ContractChange> | null,
+  registry: { id: string; text?: string }[] = [],
 ): { criteria: CriterionResult[]; undeclared: string[] } {
   const undeclared = [...(changes ?? [])].filter(([id, c]) => c === "modified" && !brief.declared.includes(id)).map(([id]) => id);
-  return { criteria: evaluateCriteria(brief.criteria, contracts, changes), undeclared };
+  const origins = new Set(registry.filter((k) => originOf(k.text)).map((k) => k.id));
+  return { criteria: evaluateCriteria(brief.criteria, contracts, changes, origins), undeclared };
+}
+
+/** The Origin field of a contract's text (« <workstream> — « <criterion> » »), or null. */
+export function originOf(text?: string): string | null {
+  return /^\*\*(?:Origine|Origin)\s*:?\*\*\s*:?\s*(.+)$/m.exec(text ?? "")?.[1].trim() ?? null;
 }
 
 const ORIGIN = {
@@ -179,7 +195,7 @@ const ORIGIN = {
  */
 export function showOrigins(results: ContractResult[], contracts: { id: string; text?: string }[], lang: MessageLang): void {
   for (const r of results) {
-    const origin = /^\*\*(?:Origine|Origin)\s*:?\*\*\s*:?\s*(.+)$/m.exec(contracts.find((k) => k.id === r.id)?.text ?? "")?.[1];
-    if (origin && r.status === "FAIL") r.reasons.push(ORIGIN[lang].replace("{0}", origin.trim()));
+    const origin = originOf(contracts.find((k) => k.id === r.id)?.text);
+    if (origin && r.status === "FAIL") r.reasons.push(ORIGIN[lang].replace("{0}", origin));
   }
 }

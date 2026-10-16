@@ -361,6 +361,6 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const brief = only ? null : await activeBrief(root);
   const verdict: Verdict = { lang, status, code: CODES[status], contracts: results, errors, unattached };
   verdict.rules = businessRules(results, all, cfg);
-  if (brief) Object.assign(verdict, judgeBrief(brief, results, contractChanges(root, registry, all, reader.readContracts)));
+  if (brief) Object.assign(verdict, judgeBrief(brief, results, contractChanges(root, registry, all, reader.readContracts), all));
   return verdict;
 }

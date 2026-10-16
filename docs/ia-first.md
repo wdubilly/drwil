@@ -387,9 +387,14 @@ allowed scope stays the brief's `scope` block, which is versioned.
   evidence without running anything: verify stays the only judge, over all
   blocking contracts. `FAIL` or `ERROR`: go back to `BUILD` to fix.
   `MANUAL`: a human attests (`drwil attest <ID>`), then verify runs again. A
-  brief's acceptance criteria are not a parallel system: a checkable
-  criterion becomes a contract with a `Check`, a human one a `MANUAL`
-  contract.
+  brief's acceptance criteria are not a parallel system: every workstream
+  brief has some (starting and closing are refused without any, a warning
+  only if the project does not enforce recent requirements:
+  `newRequirements`; routine maintenance excepted), and each one is proven
+  by a contract, never by a check alone — a checkable criterion becomes a
+  contract with a `Check`, a human one a `MANUAL` contract. A contract
+  created by the workstream carries the **Origin** field, otherwise it is not
+  a durable proof.
 - **Tool-side blocks** (Claude Code, `deny` rules in
   `.claude/settings.json`, if present): `git … --no-verify`, `git commit -n` and writing `.drwil/state.json`
   (if present) directly are refused by the tool, not by the model.

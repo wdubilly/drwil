@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { PassThrough } from "node:stream";
+import { missingCriteria } from "./briefs.mjs";
 import {
   ACTIVITIES,
   acceptanceCriteria,
@@ -395,6 +396,55 @@ test("clôture : PASS ou ATTESTED sur HEAD, arbre propre, autorise sans geste hu
     assert.equal(r.code, 0, r.message);
     assert.equal(readState(racine).state.activity, "CLOSING");
   }
+});
+
+test("QUA-021 : clôture : sans critères, refusée si newRequirements l'impose ; avertie sinon, en anglais aussi", async () => {
+  const exige = depotEnVerify({ newRequirements: "blocking" });
+  exige.evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass" });
+  const refus = await move(exige.racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
+  assert.equal(refus.code, 1);
+  assert.match(refus.message, /^clôture refusée : la fiche « docs\/projects\/exemple\.md » n'a aucun critère d'acceptation/);
+  assert.equal(readState(exige.racine).state.activity, "VERIFY");
+  const anglais = depotEnVerify({ lang: "en" });
+  anglais.evidence("verify-2026-10-09T10-00-00-000Z.json", { status: "pass" });
+  const averti = await move(anglais.racine, { to: "CLOSING" }, { tty: false, now: MAINTENANT });
+  assert.equal(averti.code, 0, averti.message);
+  assert.match(averti.message, /warning: brief "docs\/projects\/exemple\.md" has no acceptance criterion/);
+});
+
+test("QUA-021 : missingCriteria : aucune fiche active, fiche absente ou avec critères, entretien courant : rien à signaler", () => {
+  const { racine } = depotCadre({ newRequirements: "blocking" });
+  assert.equal(missingCriteria(racine, null), null);
+  assert.equal(missingCriteria(racine, "docs/projects/absente.md"), null);
+  assert.equal(missingCriteria(racine, "docs/projects/routine-maintenance.md"), null);
+  assert.equal(missingCriteria(racine, FICHE), "blocking");
+  writeFileSync(join(racine, FICHE), "# Exemple\n\n## Critères d'acceptation\n\n- Un critère — `QUA-001`\n");
+  assert.equal(missingCriteria(racine, FICHE), null);
+});
+
+test("QUA-021 : lancement : sans critères, refusé si newRequirements l'impose, averti sinon ; l'entretien courant en est exempt", () => {
+  const exige = depotCadre({ newRequirements: "blocking" }).racine;
+  const refus = start(exige, FICHE, { human: true, now: MAINTENANT });
+  assert.equal(refus.code, 1);
+  assert.match(refus.message, /^lancement refusé : la fiche « docs\/projects\/exemple\.md » n'a aucun critère d'acceptation/);
+  assert.equal(readState(exige).source, "missing", "rien n'est écrit");
+  const averti = start(depotCadre().racine, FICHE, { human: true, now: MAINTENANT });
+  assert.equal(averti.code, 0);
+  assert.match(averti.message, /\navertissement : la fiche « docs\/projects\/exemple\.md » n'a aucun critère/);
+  const anglais = start(depotCadre({ lang: "en", newRequirements: "blocking" }).racine, FICHE, { human: true });
+  assert.match(anglais.message, /^start refused: brief "docs\/projects\/exemple\.md" has no acceptance criterion/);
+
+  const routine = depotCadre({ newRequirements: "blocking" });
+  // Comme la vraie fiche d'entretien courant : permanente, sans statut ni critères.
+  writeFileSync(
+    join(routine.racine, "docs", "projects", "routine-maintenance.md"),
+    "# Entretien courant\n\n<!-- scope\nfiles:\n  - src/z.ts\n-->\n",
+  );
+  routine.git("add", "-A");
+  routine.git("commit", "-qm", "routine");
+  const r = start(routine.racine, "docs/projects/routine-maintenance.md", { human: true });
+  assert.equal(r.code, 0, r.message);
+  assert.doesNotMatch(r.message, /critère/);
 });
 
 test("QUA-021 : clôture : une fiche sans critères d'acceptation est avertie, la clôture passe ; avec critères, aucun avertissement", async () => {
@@ -897,7 +947,11 @@ test("principal lancer sans terminal : refusé en mode humain, lancé en mode ag
   const agent = depotCadre({ transitions: "agent" }).racine;
   r = await capturer(() => main(["start", FICHE, "--request", "faire X"], agent));
   assert.equal(r.code, 0, r.erreurs);
-  assert.match(r.sortie, /^✓ SCOPING → BUILD \(lancé : docs\/projects\/exemple\.md\)\n\n\[drwil\] État de gouvernance/);
+  // La fiche d'exemple n'a pas de critère : lancée avec un avertissement (newRequirements non imposé, QUA-021).
+  assert.match(
+    r.sortie,
+    /^✓ SCOPING → BUILD \(lancé : docs\/projects\/exemple\.md\)\navertissement : la fiche « docs\/projects\/exemple\.md » n'a aucun critère[^\n]*\n\n\[drwil\] État de gouvernance/,
+  );
   assert.equal(readState(agent).state.active_request, "faire X");
   // --request sans valeur : ignoré.
   const autre = depotCadre({ transitions: "agent" }).racine;

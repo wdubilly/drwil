@@ -16,7 +16,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
-import { acceptanceCriteria, BRIEF_DIRS, briefStatus, config, MODEL_RE, scopedBriefs } from "./briefs.mjs";
+import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, scopedBriefs } from "./briefs.mjs";
 import { context, fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
 
 // Unchanged interface for the other hooks, the CLI and the tools: everything this file exported
@@ -183,6 +183,8 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
       .replace(/\\/g, "/"),
   );
   if (!scopedBriefs(root).some((b) => b.path === path)) return { code: 1, message: fill(T.startNotScoped, brief) };
+  const missing = missingCriteria(root, path);
+  if (missing === "blocking") return { code: 1, message: fill(T.startNoCriteria, path) };
   const state = { version: 1, activity: "BUILD", active_brief: path, active_request: request ?? null, since: now };
   // Authorising the merge is an acceptance decision: human only, even in agent mode.
   if (autoMerge === true && human) state.auto_merge = true;
@@ -190,7 +192,8 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   if (problems.length) return { code: 1, message: fill(T.startInvalid, problems.join(" ; ")) };
   mkdirSync(join(root, ".drwil"), { recursive: true });
   writeFileSync(join(root, ".drwil", "state.json"), JSON.stringify(state, null, 2) + "\n");
-  return { code: 0, message: fill(T.started, from, path, state.auto_merge ? T.mergeAuthorised : "") };
+  const warned = missing ? `\n${fill(T.noCriteria, path)}` : "";
+  return { code: 0, message: fill(T.started, from, path, state.auto_merge ? T.mergeAuthorised : "") + warned };
 }
 
 /** New state after the transition to `to`, or `{ error }`; writes nothing. */
@@ -240,9 +243,11 @@ export async function move(root, { to, brief, request }, { tty = false, confirm,
   if (to === "CLOSING") {
     const evidence = verifyEvidence(root);
     if (!evidence.ok) return { code: 1, message: resumed + fill(T.closingRefused, evidence.reason) };
-    // Warning only: a brief not marked "ready" may close without criteria (check-docs blocks a ready one).
-    if (activeBrief && existsSync(activeBrief) && !acceptanceCriteria(readFileSync(activeBrief, "utf8")).length)
-      warning = "\n" + fill(T.noCriteria, read.state.active_brief);
+    // Every workstream brief has acceptance criteria (QUA-021): refused if the project enforces recent
+    // requirements, a warning otherwise.
+    const missing = missingCriteria(root, read.state.active_brief);
+    if (missing === "blocking") return { code: 1, message: resumed + fill(T.closingNoCriteria, read.state.active_brief) };
+    if (missing) warning = "\n" + fill(T.noCriteria, read.state.active_brief);
   }
   if (
     from === "CLOSING" &&

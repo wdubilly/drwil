@@ -637,7 +637,11 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
   const fiche = "docs/projects/essai.md";
-  writeFileSync(join(dir, fiche), "# Projet : Essai\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- scope\nfiles:\n  - src/essai.ts\n-->\n");
+  // Une fiche de chantier sans critère d'acceptation ne se lance pas (QUA-021).
+  writeFileSync(
+    join(dir, fiche),
+    "# Projet : Essai\n\n**Statut** : cadré le 2026-10-10.\n\n<!-- scope\nfiles:\n  - src/essai.ts\n-->\n\n## Critères d'acceptation\n\n- Essai — `APP-001`\n",
+  );
   git(dir, "init", "-q");
   git(dir, "add", "-A");
   git(dir, "commit", "-qm", "init");
@@ -1976,7 +1980,7 @@ test("verify : critères d'acceptation de la fiche active jugés contre le regis
       ["Contrat rouge", "not-pass"],
       ["Contrat manuel pour un critère automatique", "not-durable"],
       ["Jugement humain non attesté", "not-pass"],
-      ["Prouvé par un contrôle", "pass"],
+      ["Prouvé par un contrôle", "no-contract"],
     ],
   );
   const ecrit = JSON.parse(readFileSync(join(dir, writeEvidence(dir, v)), "utf8"));
@@ -1998,7 +2002,7 @@ test("QUA-022 : critères d'acceptation : contrat créé, réutilisé ou modifi�
   git("checkout", "-qb", "chantier");
   writeFileSync(
     join(dir, "docs/contracts.md"),
-    `# Contrats\n\n${contrat("QUA-001", "**Contrôle** : `ok`")}${contrat("QUA-002", "**Contrôle** : `ok`\nPrécisé.")}${contrat("QUA-003", "**Contrôle** : `ok`")}\n`,
+    `# Contrats\n\n${contrat("QUA-001", "**Contrôle** : `ok`")}${contrat("QUA-002", "**Contrôle** : `ok`\nPrécisé.")}${contrat("QUA-003", "**Contrôle** : `ok`\n**Origine** : essai — « Créé »")}${contrat("QUA-004", "**Contrôle** : `ok`")}\n`,
   );
   writeFileSync(
     join(dir, fiche),
@@ -2010,6 +2014,7 @@ test("QUA-022 : critères d'acceptation : contrat créé, réutilisé ou modifi�
       "- Réutilisé — `QUA-001`",
       "- Modifié — `QUA-002`",
       "- Créé — `QUA-003`",
+      "- Créé sans Origine — `QUA-004`",
       "- Sans contrat — `QUA-404`",
       "- Par un contrôle — `ok`",
       "",
@@ -2022,12 +2027,21 @@ test("QUA-022 : critères d'acceptation : contrat créé, réutilisé ou modifi�
       ["Réutilisé", "pass", "reused"],
       ["Modifié", "pass", "modified"],
       ["Créé", "pass", "created"],
+      ["Créé sans Origine", "no-origin", "created"],
       ["Sans contrat", "unknown-proof", null],
-      ["Par un contrôle", "pass", null],
+      ["Par un contrôle", "no-contract", null],
     ],
   );
   assert.match(criteriaTable(v.criteria, "fr"), /\| Créé \| `QUA-003` \(pass, créé\) \| ✅ prouvé \|/);
   assert.match(criteriaTable(v.criteria, "en"), /`QUA-001` \(pass, reused\)/);
+  assert.match(
+    criteriaTable(v.criteria, "fr"),
+    /\| Créé sans Origine \| `QUA-004` \(pass, créé\) \| ❌ contrat créé sans champ Origine \|/,
+  );
+  assert.match(
+    criteriaTable(v.criteria, "en"),
+    /\| Par un contrôle \| `ok` \(ok\) \| ❌ check without a contract \(nothing in the registry\) \|/,
+  );
 });
 
 test("QUA-023 : régression ou évolution : contrat modifié sans déclaration refusé, déclaré accepté ; l'origine d'un contrat en échec affichée", async () => {
@@ -2111,7 +2125,7 @@ test("critères d'acceptation : un contrat sans contrôle ni Manuel n'est pas un
   assert.equal(juge({ link: "B", human: false }), "not-durable");
   assert.equal(juge({ link: "C", human: true }), "pass");
   assert.equal(juge({ link: "C", human: false }), "not-durable");
-  assert.equal(juge({ link: "x", human: false }), "pass");
+  assert.equal(juge({ link: "x", human: false }), "no-contract", "un contrôle seul ne laisse rien au registre (QUA-022)");
   assert.equal(juge({ link: "x", human: true }), "unknown-proof");
 });
 

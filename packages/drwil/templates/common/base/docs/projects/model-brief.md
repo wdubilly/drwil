@@ -36,13 +36,18 @@ two folders.)
 
 ## Acceptance criteria
 
-(one line per acceptance criterion of the request, linked to its proof: the
-contract or check ID in backticks, e.g. `- An empty export is refused —
-`CTR-012``, or the `[human]` marker for a human judgment, which points to a
-`Manual` contract attested by `drwil attest`. The proof is durable, a
-contract with a replayable `Check` run at every project: it becomes the
-business non-regression. One business-level criterion, not one per technical
-detail. The tool evaluates, never the agent.)
+(mandatory for every workstream brief: without any criterion, starting and
+closing are refused — routine maintenance excepted. One line per acceptance
+criterion of the request, linked to its proof: the ID of a **contract** in
+backticks, never a check alone, e.g. `- An empty export is refused —
+`APP-012``, or the `[human]` marker for a human judgment, which points to a
+`Manual` contract attested by `drwil attest`. The contract is created by the
+workstream, or reused as is (a refactor reuses the existing ones); a created
+contract carries the **Origin** field (`<workstream> — « <criterion> »`). The
+proof is durable, a contract with a replayable `Check` run at every
+workstream: it becomes the business non-regression. One business-level
+criterion, not one per technical detail. The tool evaluates, never the
+agent.)
 
 - Verifiable criterion — `CONTRACT-ID`
 - Human-judgment criterion [human] — `MANUAL-CONTRACT-ID`
