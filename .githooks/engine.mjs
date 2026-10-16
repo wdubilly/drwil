@@ -16,6 +16,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { globToRegex } from "./glob.mjs";
 import { checkScope } from "./scope-gate.mjs";
+import { normalize } from "./scope.mjs";
 
 const TEXTS = {
   fr: {
@@ -37,6 +38,7 @@ const TEXTS = {
     ciCoverage: "couverture CI de chaque contrôle (QUA-013)",
     noCi: "aucune CI configurée (ci: none) : pas de filet pour les contrôles dégradables",
     deferred: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
+    docsOnly: "commit de documentation seule : rejoué au push et en CI",
   },
   en: {
     secrets: "secrets (gitleaks)",
@@ -57,6 +59,7 @@ const TEXTS = {
     ciCoverage: "CI coverage of each check (QUA-013)",
     noCi: "no CI configured (ci: none): no net for degradable checks",
     deferred: "no staged file under its paths: replayed on push and in CI",
+    docsOnly: "documentation-only commit: replayed on push and in CI",
   },
 };
 
@@ -106,6 +109,10 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   };
   const list = [];
   const add = (id, name, run) => list.push({ id, name, run: (o = {}) => run(o, name) });
+  // A commit that stages documentation only (a brief widened mid-workstream) does not replay the tests
+  // on the working tree, which holds the lot in progress (QUA-035); push and CI always replay them.
+  // Strictly docs/ or Markdown: not isCode(), which calls code only what the project declares.
+  const docsOnly = Boolean(staged?.length) && staged.every((f) => /^docs\//.test(normalize(f)) || /\.md$/i.test(f));
 
   add("secrets", T.secrets, (o, name) => {
     if (!full) return { status: "not-applicable", detail: T.minimalMode };
@@ -157,6 +164,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     // These tests try drwil's code: they stay in its repository and do not slow down the commits
     // of an equipped project, which does not receive them.
     if (!tests.length) return { status: "not-applicable", detail: T.noTests };
+    if (docsOnly) return { status: "not-run", detail: T.docsOnly };
     return launch(process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))], o, name);
   });
 
@@ -177,6 +185,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
       id: c.id ?? `project:${name}`,
       name,
       run: (o = {}) => {
+        if (docsOnly) return { status: "not-run", detail: T.docsOnly };
         if (staged && Array.isArray(c.paths) && c.paths.length) {
           const patterns = c.paths.map(globToRegex);
           if (!staged.some((f) => patterns.some((p) => p.test(f)))) return { status: "not-run", detail: T.deferred };

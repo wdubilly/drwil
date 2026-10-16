@@ -105,7 +105,7 @@ async function remind(input, root = ROOT) {
   const projectsDir = join(root, cfg.dirs?.projects ?? "docs/projects");
   const briefs = mdRecursive(projectsDir).filter((p) => !MODEL_RE.test(relative(projectsDir, p)));
   const briefTexts = briefs.map((f) => [relative(root, f), readFileSync(f, "utf8")]);
-  const byBrief = scope.patternsByBrief(briefTexts);
+  const byBrief = scope.patternsByBrief(briefTexts, cfg);
   if (scope.briefsCovering(rel, byBrief).length) return "";
 
   const T = TEXTS[cfg.lang === "en" ? "en" : "fr"];

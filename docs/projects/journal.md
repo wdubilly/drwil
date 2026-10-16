@@ -1051,7 +1051,7 @@ l'index ; texte intégral dans l'historique git
   un conseil qui ne s'y applique pas —
   `docs/intentions/doctor-sur-le-depot-drwil.md`. Le cadrage oubliait
   `docs/contracts.md` (un élargissement), déjà couvert par
-  `docs/intentions/cadrage-copies-et-elargissement.md`.
+  l'intention « cadrage complet » (réalisée : « Un cadrage complet du premier coup », QUA-035).
 - **Clôturé par** : PR à venir.
 
 ## 2026-10-15 — Cohérence des ID de contrat entre registre et catalogue
@@ -1110,7 +1110,7 @@ l'index ; texte intégral dans l'historique git
   400) : la prochaine évolution devra d'abord en extraire une partie. Le
   cadrage oubliait la copie du dépôt de `docs/ia-first.md` (un
   élargissement), un cas déjà couvert par
-  `docs/intentions/cadrage-copies-et-elargissement.md`. La vue
+  l'intention « cadrage complet » (réalisée : « Un cadrage complet du premier coup », QUA-035). La vue
   d'avancement HTML et la recette « demander une bonne pratique » ont été
   écartées ensuite (voir l'entrée suivante).
 - **Clôturé par** : PR #94.
@@ -1259,5 +1259,30 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   nommer le critère fautif (c'est verify qui le nomme, en amont). Le
   cadrage oubliait `.drwil/ia-first.json`, nécessaire au contrôle propre
   du contrat créé (QUA-033) : un élargissement, cas couvert par
-  `docs/intentions/cadrage-copies-et-elargissement.md`.
+  l'intention « cadrage complet » (réalisée : « Un cadrage complet du premier coup », QUA-035).
 - **Clôturé par** : PR #104.
+
+## 2026-10-16 — Un cadrage complet du premier coup, un élargissement sans friction
+
+- **Décisions clés** (demandeur, 2026-10-16) : un fichier cité dans le
+  bloc scope couvre aussi sa copie déclarée par le réglage `scopeMirrors`
+  (paires de préfixes source → copie), pour la barrière de périmètre,
+  check-docs et le hook Claude ; ce dépôt y déclare son gabarit.
+  check-docs avertit un cadrage de code sans aucun test, ou un critère qui
+  crée un contrat sans `.drwil/ia-first.json`. Un commit de documentation
+  seule (`docs/`, Markdown) ne rejoue plus les tests sur l'arbre de
+  travail : signalés non exécutés, rejoués au push et en CI (QUA-035).
+- **Intention d'origine** (« cadrage complet », 2026-10-15) : entièrement
+  couverte, résumée ici et retirée de `docs/intentions/`.
+- **Limites connues** : à la mise au point, le commit documentaire
+  s'appuyait sur `isCode`, qui n'appelle code que ce que le projet déclare
+  (préfixes) : sans réglage, tout commit serait passé pour documentaire et
+  n'aurait plus rejoué aucun test. Définition stricte retenue (`docs/` ou
+  Markdown). Le contrôle signale déjà quatre fiches ouvertes à compléter
+  (`docs/projects/consigner-retours-experience.md`,
+  `docs/projects/mini-banc.md`, `docs/projects/ci-matrice-sur-pr.md` :
+  `.drwil/ia-first.json` ; `docs/projects/adopter-seuil-couverture.md`,
+  `docs/projects/ci-matrice-sur-pr.md` : aucun test). Le cadrage a encore
+  dû être élargi une fois (le hook Claude) : le rappel de cadrage côté
+  agent n'était pas nommé dans le cadrage initial.
+- **Clôturé par** : PR #106.

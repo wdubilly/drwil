@@ -120,6 +120,19 @@ test("pre-commit : le cadrage est lu dans HEAD, pas dans l'index (élargir = com
   assert.match(r.problems.join("\n"), /src\/b\.js/);
 });
 
+test("QUA-035 : pre-commit : un fichier du gabarit cadré couvre sa copie déclarée (scopeMirrors), pas une autre", () => {
+  const racine = depot();
+  ecrireEtat(racine, "BUILD");
+  const cfg = { scopeGate: "blocking", scopeMirrors: [{ from: "src/", to: "copie/" }] };
+  assert.deepEqual(checkScope(racine, { cfg, staged: ["copie/a.js"] }).problems, [], "copie de src/a.js, cadré");
+  assert.match(checkScope(racine, { cfg, staged: ["copie/b.js"] }).problems.join("\n"), /copie\/b\.js/, "copie d'un fichier non cadré");
+  assert.match(
+    checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["copie/a.js"] }).problems.join("\n"),
+    /copie\/a\.js/,
+    "sans réglage",
+  );
+});
+
 test("pre-commit sans état : SCOPING neutre, un fichier hors fiches est refusé", () => {
   const racine = depot();
   const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/a.js"] });

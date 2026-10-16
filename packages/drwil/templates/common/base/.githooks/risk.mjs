@@ -5,6 +5,7 @@
 // - HIGH: brief, Decisions section, related contracts cited, evidence.
 // The level is explicit (`**Risk**: HIGH`) and can only be raised: a scope
 // that touches the governance mechanics imposes HIGH at least.
+import { acceptanceCriteria } from "./briefs.mjs";
 import { fnmatch, readBlock } from "./scope.mjs";
 
 export const LEVELS = ["LOW", "MEDIUM", "HIGH"];
@@ -26,6 +27,9 @@ const TEXTS = {
     missing: (min) => `pas de champ « Risque » alors que le cadrage impose ${min}`,
     decisions: () => `risque HIGH sans section « Décisions »`,
     contracts: () => `risque HIGH sans contrat concerné cité (ID du registre)`,
+    noTest: () => `le cadrage cite du code mais aucun fichier de test : les lister dès le cadrage évite un élargissement en plein chantier`,
+    noChecks: () =>
+      `un critère crée un contrat, mais le cadrage ne cite pas .drwil/ia-first.json, où se déclare son contrôle : l'ajouter dès le cadrage`,
   },
   en: {
     unknown: (v) => `unknown risk level "${v}" (LOW, MEDIUM or HIGH)`,
@@ -33,8 +37,27 @@ const TEXTS = {
     missing: (min) => `no "Risk" field although the scope requires ${min}`,
     decisions: () => `HIGH risk without a "Decisions" section`,
     contracts: () => `HIGH risk without any related contract cited (registry ID)`,
+    noTest: () => `the scope cites code but no test file: listing them when scoping avoids widening it mid-workstream`,
+    noChecks: () =>
+      `a criterion creates a contract, but the scope does not cite .drwil/ia-first.json, where its check is declared: add it when scoping`,
   },
 };
+
+const TEST_FILE = /(\.test\.|\.spec\.|_test\.|(^|\/)(tests?|__tests__)\/)/;
+const NEW_CONTRACT = /contrat à créer|contract to create/i;
+
+/**
+ * What a scope usually forgets (QUA-035), as warnings: code without any test file; a criterion that
+ * creates a contract without the checks configuration, where that contract's own check is declared.
+ */
+export function scopeGaps(text, patterns, T) {
+  const gaps = [];
+  const code = patterns.filter((p) => !p.endsWith(".md") && !p.startsWith("docs/") && !TEST_FILE.test(p));
+  if (code.length && !patterns.some((p) => TEST_FILE.test(p))) gaps.push(T.noTest());
+  if (acceptanceCriteria(text).some((c) => NEW_CONTRACT.test(c.text)) && !patterns.includes(".drwil/ia-first.json"))
+    gaps.push(T.noChecks());
+  return gaps;
+}
 
 /**
  * Checks a brief's risk level. Returns { errors, warnings } (messages without prefix).
@@ -44,18 +67,21 @@ export function checkRisk(text, { sensitive = SENSITIVE_PATHS, idPattern = "(?:S
   const T = TEXTS[lang === "en" ? "en" : "fr"];
   const errors = [];
   const warnings = [];
-  const min = minimumLevel(readBlock(text).patterns, sensitive);
+  const { patterns } = readBlock(text);
+  const min = minimumLevel(patterns, sensitive);
+  // Scope gaps come last: the risk messages say more.
+  const gaps = patterns.length ? scopeGaps(text, patterns, T) : [];
   const m = /^\*\*(?:Risque|Risk)\*\*\s*:\s*`?([^\s`]+)`?/m.exec(text);
   if (!m) {
     if (min === "HIGH") warnings.push(T.missing(min));
-    return { errors, warnings };
+    return { errors, warnings: [...warnings, ...gaps] };
   }
   const level = m[1].toUpperCase();
-  if (!LEVELS.includes(level)) return { errors: [T.unknown(m[1])], warnings };
+  if (!LEVELS.includes(level)) return { errors: [T.unknown(m[1])], warnings: gaps };
   if (LEVELS.indexOf(level) < LEVELS.indexOf(min)) errors.push(T.tooLow(level, min));
   if (level === "HIGH") {
     if (!/^##\s*(\d+\.\s*)?(Décisions|Decisions)\b/m.test(text)) errors.push(T.decisions());
     if (!new RegExp(idPattern).test(text)) errors.push(T.contracts());
   }
-  return { errors, warnings };
+  return { errors, warnings: [...warnings, ...gaps] };
 }

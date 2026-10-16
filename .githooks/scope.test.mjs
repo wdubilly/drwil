@@ -3,7 +3,7 @@
 // (tests des contrôles eux-mêmes), comme tout .githooks/*.test.mjs.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fnmatch, tooBroad, readBlock, isCode, briefsCovering, normalize } from "./scope.mjs";
+import { fnmatch, tooBroad, readBlock, isCode, briefsCovering, normalize, patternsByBrief, withMirrors } from "./scope.mjs";
 
 test("fnmatch : * et ? traversent les séparateurs, le reste est littéral", () => {
   assert.equal(fnmatch("backend/app/x.py", "backend/app/x*"), true);
@@ -50,4 +50,30 @@ test("normaliser, isCode et tooBroad : cas limites (./ répétés, configuration
   assert.equal(isCode("Makefile", { extraCodeFiles: ["Makefile"] }), true);
   assert.equal(isCode(".gitlab-ci.yml", { ciFiles: [".gitlab-ci.yml"] }), true);
   assert.equal(tooBroad("a*"), true);
+});
+
+test("QUA-035 : withMirrors : un motif sous une source couvre sa copie ; réglage absent, mal formé ou hors source : inchangé", () => {
+  const cfg = {
+    scopeMirrors: [
+      { from: "tpl/base/", to: "" },
+      { from: "tpl/claude/", to: "app/" },
+    ],
+  };
+  assert.deepEqual(withMirrors(["tpl/base/.githooks/x.mjs", "src/y.js", "tpl/claude/hooks/*"], cfg), [
+    "tpl/base/.githooks/x.mjs",
+    "src/y.js",
+    "tpl/claude/hooks/*",
+    ".githooks/x.mjs",
+    "app/hooks/*",
+  ]);
+  assert.deepEqual(withMirrors(["tpl/base/x.mjs"]), ["tpl/base/x.mjs"]);
+  assert.deepEqual(withMirrors(["tpl/base/x.mjs"], { scopeMirrors: [{ from: "", to: "a/" }, { to: "b/" }, null, "c"] }), [
+    "tpl/base/x.mjs",
+  ]);
+  assert.deepEqual(withMirrors(["tpl/base/x.mjs", "tpl/base/x.mjs"], { scopeMirrors: [{ from: "tpl/base/", to: "" }] }), [
+    "tpl/base/x.mjs",
+    "x.mjs",
+  ]);
+  const parFiche = patternsByBrief([["docs/projects/a.md", "<!-- scope\nfiles:\n  - tpl/base/.githooks/x.mjs\n-->\n"]], cfg);
+  assert.deepEqual(briefsCovering(".githooks/x.mjs", parFiche), ["docs/projects/a.md"]);
 });

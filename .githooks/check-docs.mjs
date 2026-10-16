@@ -374,7 +374,7 @@ function checkScopeReminder() {
       else if (p.kind === "broad") errors.push(T.scopeBroad(rel, p.pattern));
     }
   }
-  const byBrief = scope.patternsByBrief(briefTexts);
+  const byBrief = scope.patternsByBrief(briefTexts, cfg);
   for (const c of scope.outsideBriefs(indexed, byBrief, cfg)) errors.push(T.outsideBriefs(c));
   return errors;
 }
