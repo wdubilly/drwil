@@ -206,10 +206,6 @@ Limites relevées en cours de chantier, consignées en intention le
 2026-10-15 (chantier « capitaliser les non-régressions ») ; les recadrer est
 une décision du demandeur.
 
-- [ ] [IA] La clôture boucle les intentions : retours d'expérience
-  consignés, intention d'origine mise à jour ou close, intentions
-  périmées signalées (règle, livrable et dépôt) —
-  `docs/projects/consigner-retours-experience.md`.
 - [ ] [décision] L'installation du dépôt ne réécrit plus la date de
   `docs/ia-first.md` — `docs/intentions/date-ia-first-installateur.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
