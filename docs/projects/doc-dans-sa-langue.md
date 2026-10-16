@@ -57,6 +57,10 @@ du paquet, que lit un prospect (demande du 2026-10-16).
   contrôle de la carte juge la présence d'un dossier, pas la justesse de
   son rôle, qui reste humaine — `QUA-040`
 
+## Contrats modifiés
+
+- `QUA-040` — ancien critère : « la release renomme la section « Unreleased » en version » (fin de la règle, sans langue ni limite) — raison : la règle dit désormais la langue de la carte, du README et du changelog (réglage `docLang`, à défaut la langue du projet) et que la justesse du rôle écrit pour chaque dossier reste humaine ; rien n'est retiré (validé le 2026-10-16, décisions du demandeur sur l'intention)
+
 ## 2. Hors périmètre
 
 - Traduire un squelette de carte selon `docLang` : le gabarit reste en
