@@ -13,6 +13,7 @@ files:
   - packages/drwil/test/cycle.test.mjs
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/templates/common/base/docs/ia-first.md
+  - docs/ia-first.md
   - docs/contracts.md
 -->
 
