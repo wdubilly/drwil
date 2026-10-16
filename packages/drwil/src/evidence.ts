@@ -15,13 +15,30 @@ const SECRET_PATTERNS: RegExp[] = [
   /\b(?:ghp|gho|ghs|ghu|github_pat)_[A-Za-z0-9_]{20,}\b/g,
   /\bsk-[A-Za-z0-9_-]{20,}\b/g,
   /\bxox[abposr]-[A-Za-z0-9-]{10,}\b/g,
-  /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
   /((?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key)\s*[:=]\s*)\S+/gi,
   /\b[A-Za-z0-9+/_-]{40,}={0,2}\b/g,
 ];
 
+// Private key blocks, found without a lazy « BEGIN … END » pattern: that one is quadratic on an input
+// repeating BEGIN without END (CodeQL js/polynomial-redos). A block's body may hold dashes (header of a
+// legacy encrypted key): it runs up to the next END, whatever it contains.
+function redactKeyBlocks(text: string): string {
+  const begin = /-----BEGIN [A-Z ]{0,30}PRIVATE KEY-----/g;
+  const end = /-----END [A-Z ]{0,30}PRIVATE KEY-----/g;
+  let out = "";
+  let last = 0;
+  for (let b = begin.exec(text); b; b = begin.exec(text)) {
+    end.lastIndex = begin.lastIndex;
+    const e = end.exec(text);
+    if (!e) break;
+    out += `${text.slice(last, b.index)}[REDACTED]`;
+    last = begin.lastIndex = e.index + e[0].length;
+  }
+  return out + text.slice(last);
+}
+
 export function redact(text: string): string {
-  let t = text;
+  let t = redactKeyBlocks(text);
   for (const re of SECRET_PATTERNS)
     t = t.replace(re, (m, prefix) => (typeof prefix === "string" && m.startsWith(prefix) ? `${prefix}[REDACTED]` : "[REDACTED]"));
   return t;
