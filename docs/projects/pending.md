@@ -121,9 +121,9 @@ l'agent, revue des code owners ; journal du 2026-10-13).
 Fait : consommation de tokens par chantier, lue dans les journaux de
 session (`node outils/consommation.mjs`, journal du 2026-10-11).
 
-- [ ] [décision] [P1] Écrire automatiquement la consommation d'un chantier
-  à sa clôture (lot 2 de la mesure), une fois les chiffres jugés fiables —
-  voir `docs/projects/journal.md` (2026-10-11).
+- [ ] [IA] [P1] La consommation de tokens par chantier, mesurée chez tout
+  projet et consignée à la clôture (tranché le 2026-10-16, pour le pilote)
+  — `docs/projects/consommation-livree.md`.
 
 ## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 
