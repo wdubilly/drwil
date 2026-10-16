@@ -94,9 +94,12 @@ This is the repo's structuring decision. Checks live in `.githooks/`
   same checks as a human.
 
 What `.githooks/run-checks.mjs` chains, in order: secrets (gitleaks, if
-installed), doc references (QUA-011), tests of the checks themselves (if
-any), CI coverage of each check (QUA-013, if there is a CI), then the
-project's own checks declared in `.drwil/ia-first.json` (`checks` key).
+installed), doc references (QUA-011), tests cited by the contracts
+(QUA-029), the architecture map (QUA-040: every code folder cited in
+`docs/architecture.md`), the brief's scope (QUA-016), the main branch
+(QUA-017), tests of the checks themselves (if any), CI coverage of each
+check (QUA-013, if there is a CI), then the project's own checks declared
+in `.drwil/ia-first.json` (`checks` key).
 
 The tests of the checks exercise drwil's own code: they stay in the drwil
 repository and are not shipped, so they never slow down the project's

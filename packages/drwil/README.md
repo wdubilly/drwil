@@ -52,6 +52,7 @@ drwil adds both, and the people in charge stay in charge.
 | Work that survives the session | one `AGENTS.md`, one contract registry, one state on disk: another agent, or a human, resumes without re-reading the chat | `drwil state` |
 | One setup for every tool | Claude Code, Copilot, Cursor, Codex and Gemini read the same rules | `drwil init` |
 | Adoption without a big bang | works on a new or an existing project, previews with `--dry-run`, never overwrites your files: what drwil needs goes into a delimited block | `drwil init --dry-run` |
+| A business non-regression that grows | every workstream lists its acceptance criteria, each proven by a contract of the registry: replayed on every commit, push and CI run afterwards | `drwil verify` (business rules summary) |
 
 Nothing to take on faith: each line is a command you can run.
 
@@ -181,20 +182,28 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
 ```
 
 1. **SCOPING** — the request is framed as a work item
-   (`docs/projects/<name>.md`) with its `scope` block: the files the work
-   may touch. Nothing is built.
+   (`docs/projects/<name>.md`) with its `scope` block (the files the work
+   may touch) and its **acceptance criteria**, each one proven by a
+   contract of the registry (or `[human]`, through an attested contract).
+   Nothing is built.
 2. **Start (human).** The human picks a framed work item (`/drwil-start`
    in Claude Code or Copilot CLI, or `drwil state start` in a terminal)
    and decides at once whether the merge is authorised in advance. The
-   agent cannot start work by itself.
+   agent cannot start work by itself. Ticking several ready work items
+   queues them: the agent chains them, each after the previous merge, and
+   stops at the first one that needs a human.
 3. **BUILD** — the agent implements, only inside the scope. Each commit
    carries a `Drwil-Brief` trailer; widening the scope takes its own
    commit, touching only the work item.
 4. **EVIDENCE / VERIFY** — `drwil verify --evidence` writes the proof.
    Closing requires a `PASS` or `ATTESTED` verdict on the current commit; a
-   `MANUAL` contract waits for the human's `drwil attest`.
-5. **CLOSING** — the work item is condensed into the journal and deleted,
-   the pull request is opened, then back to **SCOPING**. The merge is a
+   `MANUAL` contract waits for the human's `drwil attest`. An unproven
+   acceptance criterion makes the verdict fail.
+5. **CLOSING** — the work item is condensed into the journal and deleted;
+   its untreated limits become intents; the README, the `CHANGELOG.md`
+   « Unreleased » section and the map `docs/architecture.md` are updated
+   when the work changes them; the pull request is opened, then back to
+   **SCOPING**. The merge is a
    human gesture, unless it was authorised at start: the agent then
    schedules `gh pr merge --auto --merge`, and the host merges once the
    required checks pass.
@@ -284,14 +293,20 @@ npx drwil init --name "MyProject" --lang en
 
 A single command for every case:
 
-- **New project** (empty folder, no stack detected): scaffolds the kit's
-  full structure (`AGENTS.md`, `docs/contracts.md`, default layers
-  `backend,frontend`), creates the Git repository on a working branch and
-  enables the hooks.
+- **New project** (empty folder, no stack detected): scaffolds the kit
+  (`AGENTS.md`, `docs/contracts.md`, the map `docs/architecture.md`),
+  creates the Git repository on a working branch and enables the hooks —
+  without inventing layers. Then scope the project with your agent
+  (`/drwil-adopt`: need, first version, stack, first business rules), and
+  declare its layers once decided: `npx drwil init --layers api,web`
+  creates each layer's `AGENTS.md`.
 - **Existing project** (code, Git history, dependencies): detects the
   stack (subfolders become the layers) and the CI already in use
   (`.github/workflows/`, `.gitlab-ci.yml`), and installs the kit on top
   **without ever overwriting a project file**; no new Git repository.
+  `/drwil-adopt` then builds the map `docs/architecture.md` from the real
+  code; drwil keeps it current (the `architecture-map` check reports a
+  code folder it does not cite).
   When a file you already have lacks what drwil needs, `init` adds only
   that, and says so (`--dry-run` shows it first):
   - `.gitignore`, `CLAUDE.md`, `GEMINI.md`, Copilot and Cursor
@@ -339,7 +354,10 @@ the check each one names (`**Contrôle**`/`**Check**`) through the same
 engine as the git hooks (`.githooks/engine.mjs`), and prints a verdict:
 `PASS` (exit 0), `FAIL` or `MANUAL REVIEW REQUIRED` (exit 1), `VERIFY
 ERROR` (exit 2). A contract with a human part is `MANUAL`, never `PASS`;
-an unknown check is an `ERROR`. See `docs/ia-first.md`, section 5, in an
+an unknown check is an `ERROR`. While a work item is active, its
+acceptance criteria are judged too: an unproven one makes the verdict
+fail. The output ends with a summary of the business rules (proven by a
+test, to complete, broken). See `docs/ia-first.md`, section 5, in an
 installed project.
 
 `npx drwil verify --json` prints only a stable JSON document (`version: 1`,
@@ -363,8 +381,8 @@ The attestation (contract, `ATTESTED`, timestamp, git `user.name` marked as
 declarative, redacted note, fingerprint, commit) goes to
 `.drwil/evidence/attestations/`, which is versioned. `verify` then reports
 the contract as `ATTESTED` — satisfied, but never shown as `PASS` — until the
-contract text or its proof definition changes, which makes the attestation
-stale. Exit 0: recorded; 1: refused or not eligible; 2: unknown contract.
+rule, the `Manual` field, the severity or an attested check changes, which
+makes the attestation stale; adding a check to the contract does not. Exit 0: recorded; 1: refused or not eligible; 2: unknown contract.
 
 ### Agent / human workflow (`verify --agent`, `/drwil verify`)
 
@@ -464,7 +482,7 @@ defaults below apply to a new install only.
 | `-n, --name <name>` | Project name | current folder name |
 | `-s, --short <short>` | Short name | — |
 | `-l, --lang <lang>` | Project language: `fr` or `en` (the kit itself is in English) | `en` |
-| `--layers <layers>` | Comma-separated layers | subfolders where a stack is detected, else `backend,frontend` |
+| `--layers <layers>` | Comma-separated layers | subfolders where a stack is detected, else none (new project: decided at scoping) |
 | `-d, --description <text>` | What the application does — fills `AGENTS.md` and `docs/architecture.md` | — |
 | `--tools <tools>` | AI tools to configure, CSV: `claude,codex,cursor,gemini,copilot` | all five |
 | `--ci <ci>` | CI workflow to generate: `none`, `github`, `gitlab` | the CI already in use (`.github/workflows/`, `.gitlab-ci.yml`), else `none` |
@@ -478,8 +496,9 @@ Run `npx drwil init --help` for the live, authoritative list.
 
 ## Supported stacks, AI tools and CI providers
 
-- **Layers**: `backend`, `frontend`, or `generic` (single-folder project)
-  — auto-detected by `init`, explicit via `--layers`.
+- **Layers**: any folder name (`api`, `web`, `backend`…), or `generic`
+  (single-folder project) — auto-detected by `init` on existing code,
+  explicit via `--layers`.
 - **AI tools**: Claude Code, GitHub Copilot, Cursor, Codex, Gemini — pick
   any combination via `--tools`; each gets its own pointer file importing
   the shared `AGENTS.md`.
@@ -495,19 +514,23 @@ the project (commits, PR descriptions, other docs):
 
 | ID | What it guarantees |
 |---|---|
-| SEC-001 | Scope of rights is explicit and reviewed |
 | SEC-006 | No dependency with a known vulnerability |
 | SEC-007 | No secret in the repository (tracked files + history) |
-| QUA-004 | Test coverage stays above a declared threshold |
 | QUA-011 | Documentation never cites a path or ID that doesn't exist |
 | QUA-013 | A check that doesn't actually run in CI is never counted as passed |
 | QUA-015 | Every work item stays resumable cold (dated status + resume section) |
 | QUA-016 | Every tracked code file is covered by a scoping block |
 | QUA-017 | No direct commit/push to the main branch — branch + PR always required |
 | QUA-019 | A blocking check is never disabled or bypassed to make progress |
+| QUA-029 | A test file cited by a contract exists and carries its ID |
+| QUA-040 | The architecture map cites every code folder |
+| APP-001 | Example business contract, to replace with your first one |
 
 A separate **catalog** (`docs/contracts-catalog.md`) lists optional
-contracts a project can choose to adopt beyond this baseline.
+contracts a project can choose to adopt beyond this baseline (test
+coverage threshold, file size cap, rights scope…). Your business rules go
+in the same registry: each workstream's acceptance criteria create or cite
+them, with an **Origin** field.
 
 ## Optional modules (never installed by default)
 
@@ -581,7 +604,10 @@ Un travail traverse des activités, tenues dans un état local
 autorisée d'avance) → **BUILD** (l'IA code, dans le périmètre de la fiche) →
 **EVIDENCE / VERIFY** (`drwil verify --evidence` ; clôture seulement sur
 `PASS` ou `ATTESTED`) → **CLOSING** (journal, fiche supprimée, pull request)
-→ retour en **SCOPING**. La fusion reste un geste humain, sauf si elle a été
+→ retour en **SCOPING**. Chaque fiche liste ses critères d'acceptation,
+prouvés par des contrats du registre : la non-régression métier grandit à
+chaque chantier. Plusieurs fiches cochées au lancement forment une file que
+l'IA enchaîne. La fusion reste un geste humain, sauf si elle a été
 autorisée au lancement. `drwil state` montre où l'on en est.
 
 ## Installer
@@ -595,8 +621,9 @@ npx drwil init --name "MonProjet" --lang fr
 ```
 
 Une seule commande pour tous les cas : sur un projet neuf, elle installe
-la structure complète du kit, crée le dépôt Git sur une branche de
-travail et active les hooks ; sur un projet existant, elle détecte la
+le kit sans inventer de couches, crée le dépôt Git sur une branche de
+travail et active les hooks ; on cadre ensuite le projet avec son agent
+(`/drwil-adopt`), puis on déclare ses couches (`--layers`) ; sur un projet existant, elle détecte la
 stack (les sous-dossiers deviennent les couches) et installe le kit
 par-dessus **sans jamais écraser un fichier du projet** ; sur un projet
 déjà équipé, elle crée ce qui manque, rafraîchit la mécanique du kit
@@ -609,8 +636,8 @@ rien écrire ; `--force` écrase tout, à réserver à un rattrapage
 volontaire.
 
 Options principales : `--lang fr|en` (langue du projet, anglais par
-défaut ; le kit lui-même est en anglais), `--layers backend,frontend`
-(détecté sinon), `--tools claude,copilot,cursor,codex,gemini`,
+défaut ; le kit lui-même est en anglais), `--layers api,web`
+(détecté sur un projet existant, aucun sinon), `--tools claude,copilot,cursor,codex,gemini`,
 `--ci github|gitlab|none`. Voir `npx drwil init --help`.
 
 ## Ce que ça résout, et comment

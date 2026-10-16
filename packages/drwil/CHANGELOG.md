@@ -1,5 +1,93 @@
 # Changelog
 
+## Unreleased
+
+Each workstream that changes what a user sees adds its line here, in its
+closing commit; the release renames this section to its version.
+
+### Starting a project
+
+- A new project (no code yet) no longer gets invented `backend/` and
+  `frontend/` layers: `init` says to scope it first. `/drwil-adopt` now
+  starts a new project by scoping it (need, first version, stack, first
+  business rules, risk) and writes `AGENTS.md`, the map and a first README;
+  the layers are then declared with `drwil init --layers <layers>`, which
+  creates each layer's `AGENTS.md`, `CLAUDE.md` and `GEMINI.md`.
+- `/drwil-adopt` on an existing project builds the map
+  (`docs/architecture.md`) from the real code.
+
+### Every workstream leaves its non-regression
+
+- Acceptance criteria are mandatory for every workstream brief: starting
+  and closing a brief without any are refused (a warning only on a project
+  installed before, see `newRequirements`).
+- Each criterion is proven by a contract of the registry, never by a check
+  alone; a contract created by the workstream carries an **Origin** field.
+- While a brief is active, an unproven criterion makes `drwil verify` fail
+  (or `MANUAL` for a human criterion awaiting its attestation): the agent
+  can no longer claim « verified » too early. The unproven criteria are
+  listed in every output (`criteria` in the JSON).
+- `drwil verify` ends with a summary of the business rules (proven by a
+  test, without a cited test, to complete, broken with their workstream).
+- New check `contract-tests`: a test file cited by a contract (**Tests**
+  field) must exist and carry the contract's ID.
+- A failing check cited by several contracts is reported as « not
+  attributable »; the adoption recipe teaches one check per business rule,
+  filtering its tests by the ID.
+- A brief's **Maturity** (`ready`, `to refine`, `in progress`) orders the
+  start poll; a « ready » brief with an open decision or no increment is
+  refused.
+
+### Scoping and closing
+
+- `scopeMirrors` setting: a scoped file also covers its declared generated
+  copy.
+- check-docs warns about what a scope usually forgets: code without any
+  test file, a contract to create without `.drwil/ia-first.json`.
+- A commit that stages documentation only (a brief widened mid-workstream)
+  no longer replays the tests on the working tree; push and CI still do.
+- Closing loops the intents: each untreated limit becomes an intent brief,
+  the brief's **Intent** is updated or closed (a warning when a brief is
+  deleted without touching it), and intents with no dated review for 30
+  days are reported.
+- Closing keeps what the user reads current: README and this changelog
+  when the user-visible behaviour changes, the map when the structure
+  changes. New check `architecture-map`: a code folder the map does not
+  cite is reported, with the line to complete.
+
+### Running several workstreams
+
+- One start poll with several briefs ticked queues them: the agent runs them
+  one after the other (`node .githooks/state.mjs next`), after each merge,
+  and stops at the first one that needs a human; `queue stop` drops the
+  queue. Only ready briefs can be queued.
+
+### Attestations and readability
+
+- An attestation (version 2) stays valid when a check is added to its
+  contract; it becomes stale when the rule, the Manual field, the severity
+  or an attested check changes. Version 1 attestations keep their old
+  fingerprint.
+- `drwil attest` announces each check it re-runs, and its result.
+- An identifier cited to a human (contract ID, catalog line, lot or point of
+  the active brief) comes with its label: `node .githooks/glossary.mjs
+  "<text>"` for any agent, annotated outputs of `drwil verify` and of the
+  checks, a Claude Code hook; `AGENTS.md`, Copilot and Cursor instructions
+  carry the rule.
+
+### Reliability
+
+- `init` records the engine's version (`.drwil/install.json`) and `doctor`
+  compares it with the CLI; an update from an older version keeps the
+  project's work and refreshes the unchanged mechanics.
+- A dangerous path in the manifest (absolute, `..`, outgoing symbolic link)
+  stops `init` and `uninstall` before any write; outside a commit, a check
+  that should have run and could not makes the checks fail.
+- An ID defined both in the registry and in the catalog, or twice in the
+  catalog, is reported.
+- The redaction of private keys in the evidence runs in linear time (a
+  quadratic pattern on a crafted output).
+
 ## 0.5.1
 
 ### `init` on an existing project: nothing left aside silently

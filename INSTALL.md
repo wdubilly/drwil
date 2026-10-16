@@ -1,7 +1,8 @@
 # Installation par une autre personne
 
 drwil n'est pas encore publié sur npm : il s'utilise depuis un clone de
-ce dépôt.
+ce dépôt, ou depuis le tarball joint à une release GitHub (voir
+`README.md`, section « Installation »).
 
 ## 1. Prérequis
 
@@ -28,13 +29,27 @@ git config core.hooksPath .githooks
 ```bash
 npm test                 # suite de tests du paquet drwil
 
-# tester le CLI sur un dossier vide
-node bin/drwil.js init --name "MonProjet" --layers backend,frontend
+# tester le CLI sur un dossier vide (aucune couche inventée : cadrer
+# d'abord avec /drwil-adopt, puis déclarer les couches avec --layers)
+node bin/drwil.js init --name "MonProjet"
 ```
 
-Voir aussi `README.md` (section « Démarrer ») pour le détail à jour.
+Depuis la racine du dépôt : `node .githooks/run-checks.mjs` rejoue tous
+les contrôles, `node outils/tester-tarball.mjs` éprouve la CLI installée
+depuis le tarball, comme un utilisateur.
 
-## 4. Utiliser un autre outil IA que Claude
+## 4. Construire le tarball d'une version
+
+```bash
+cd packages/drwil
+npm pack                 # construit (prepack) puis produit drwil-<version>.tgz
+```
+
+La version vient de `packages/drwil/package.json` ; la créer (tag, note
+de release, tarball joint) suit `docs/recipes/create-a-release.md`, qui
+renomme aussi la section « Unreleased » du changelog.
+
+## 5. Utiliser un autre outil IA que Claude
 
 `AGENTS.md` est l'entrée commune ; les fichiers propres à un outil (ex.
 `CLAUDE.md`, `GEMINI.md` — si présents) ne font que renvoyer à lui. Un
