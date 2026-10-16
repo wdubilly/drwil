@@ -24,7 +24,19 @@ Relevé le 2026-10-15 :
 - Les tests des contrôles (`.githooks/*.test.mjs`) tournent sur l'arbre de
   travail à chaque commit.
 
+## Décisions
+
+Tranchées par le demandeur le 2026-10-16 (sondage), cadrées dans
+`docs/projects/cadrage-complet.md`, en `[P1]` : un fichier du gabarit
+cadré couvre sa copie (réglage de correspondance) ; un contrôle au cadrage
+avertit des oublis (code sans test, contrat créé sans la configuration des
+contrôles) ; un commit de fiche seule ne rejoue que ce qu'il indexe.
+
 ## Questions à trancher
+
+Aucune (voir « Décisions »).
+
+## Questions d'origine
 
 - [décision] Le cadrage d'un fichier du gabarit vaut-il pour sa copie du
   dépôt (déduite de `outils/miroirs.json`), sans la lister ?
