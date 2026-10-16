@@ -26,4 +26,6 @@ un contrat modifié non déclaré.
 
 - [décision] Un critère non prouvé doit-il changer le verdict de verify,
   ou seulement être affiché à côté ?
-- [décision] Un critère lié à un contrôle sans contrat reste-t-il permis ?
+- ~~[décision] Un critère lié à un contrôle sans contrat reste-t-il
+  permis ?~~ Tranchée le 2026-10-16 (demandeur) : non, toujours un contrat
+  — cadré dans `docs/projects/criteres-obligatoires.md`.
