@@ -43,25 +43,24 @@ Demandé le 2026-10-16, avant d'essayer drwil sur un vrai projet :
 
 ## Critères d'acceptation
 
-(contrat à créer par ce chantier, avec son champ Origine.)
+(contrat créé par ce chantier, avec son champ Origine : QUA-038.)
 
 - Sans pile détectée, `drwil init` n'écrit aucune couche (ni `backend/`
   ni `frontend/`) et le dit ; une pile détectée, ou `--layers`, garde le
-  comportement actuel — contrat à créer
+  comportement actuel — `QUA-038`
 - `/drwil-adopt` reconnaît un projet neuf et commence par son cadrage
   global : besoin et utilisateurs, périmètre de la première version, pile
   (d'où les couches, déclarées à ce moment), premières règles métier (d'où
   les premiers contrats APP), niveau de risque ; le résultat va dans
   `AGENTS.md` (« le projet en 5 lignes »), `docs/architecture.md` (la
   carte, tenue ensuite par son contrôle), un premier `README.md` et les
-  premières intentions — contrat à créer (le même)
+  premières intentions — `QUA-038`
 - Une fois la pile choisie, le cadrage déclare les couches (`drwil init
   --layers <couches>`, la détection ne trouvant encore aucun code), ce qui
   crée l'`AGENTS.md` de chaque couche et les instructions par couche des
   outils (Copilot, Cursor) ; il remplit ensuite chaque `AGENTS.md` de
   couche avec les conventions de la pile (structure, commandes de build et
-  de test) et déclare les contrôles de cette pile — contrat à créer (le
-  même)
+  de test) et déclare les contrôles de cette pile — `QUA-038`
 
 ## 2. Hors périmètre
 

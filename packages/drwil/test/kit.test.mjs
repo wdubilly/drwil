@@ -143,6 +143,9 @@ test("QUA-038 : répertoire vide : aucune couche inventée, dit quoi faire ; la 
     lines.join("\n"),
   );
   for (const couche of ["backend", "frontend"]) assert.ok(!existsSync(join(dir, couche)), `pas de ${couche}/ inventé`);
+  assert.match(read(dir, "docs/recipes/adopt-the-kit.md"), /\*\*A new project \(no code yet, no layer\): scope it first\.\*\*/);
+  assert.match(read(dir, ".claude/skills/adopt-the-kit/SKILL.md"), /a new project is scoped first/);
+  assert.match(read(dir, "AGENTS.md"), /A new project fills these five\s+lines in when it is scoped/);
   assert.deepEqual(config(dir).layers, []);
   // La pile choisie au cadrage : init relancé avec les couches les crée et les enregistre.
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false, layers: "api,web" }));
