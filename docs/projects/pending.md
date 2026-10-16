@@ -105,8 +105,6 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 - [x] [IA] [P1] Preuves de bout en bout : cycle complet, sept activités,
   verdicts, attestations, contournements — fait le 2026-10-15
   (voir `docs/projects/journal.md`).
-- [ ] [IA] [P1] Un identifiant cité à l'humain vient avec ce qu'il
-  désigne (glossaire injecté par un hook) — `docs/projects/glossaire-des-id.md`.
 - [ ] [IA] [P1] Une documentation à jour pour la 0.6.0, et qui le reste
   (changelog, README, INSTALL, adoption, carte), après les deux
   précédentes — `docs/projects/doc-a-jour.md`.
@@ -223,6 +221,10 @@ une décision du demandeur.
   `docs/intentions/file-pour-copilot.md`.
 - [ ] [décision] L'arrêt d'une file et ses comptes rendus vérifiés par un
   contrôle — `docs/intentions/arret-de-file-verifie.md`.
+
+- [ ] [décision] Le glossaire des identifiants injecté aussi chez les
+  autres agents (Cursor, Copilot CLI, Gemini, Codex) —
+  `docs/intentions/glossaire-autres-agents.md`.
 
 ## Ensuite
 

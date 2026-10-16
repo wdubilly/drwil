@@ -105,7 +105,7 @@ mise à jour dans le même commit ») n'a pas suffi.
 ## 3. Contraintes
 
 - À réaliser en dernier avant la 0.6.0, après les fiches
-  `docs/projects/glossaire-des-id.md` et « projet neuf » (journal),
+  « glossaire des identifiants » et « projet neuf » (journal),
   pour décrire leur résultat ; la règle « Unreleased » s'applique dès
   leurs clôtures (la ligne est ajoutée à la main d'ici là).
 - Une information, une source : le README du dépôt et celui du paquet ne
