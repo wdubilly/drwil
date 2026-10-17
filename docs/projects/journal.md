@@ -1595,3 +1595,38 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   réponse, pas encore écrit, suivra la même règle (contrainte de sa
   fiche).
 - **Clôturé par** : la PR de la branche `workstream/hooks-racine-du-projet`.
+
+## 2026-10-17 — Une mise à jour rafraîchit la prose du kit que le projet n'a pas touchée (0.6.3)
+
+- **Décisions clés** (demandeur, sondage du 2026-10-17) : `npx drwil init`
+  rafraîchit aussi la prose et les réglages du kit — skills, recettes,
+  `docs/ia-first.md`, `AGENTS.md`, instructions Cursor et Copilot,
+  catalogue, `.claude/settings.json` (liste `KIT_PROSE`,
+  `packages/drwil/src/config.ts`) — installés par le kit et inchangés
+  (empreinte du manifeste) ; jamais les documents de départ du projet,
+  même inchangés. La prose modifiée est signalée et `resolve-drift` en
+  propose le diff (`.bak`). `doctor` dit « version d'origine inconnue,
+  antérieure à 0.6.0 » pour un projet installé avant l'enregistrement de
+  version. QUA-025, QUA-026 et QUA-027 évoluent (déclarés dans la fiche).
+- **Choix de l'agent en cours de route** :
+  - une prose **hors manifeste** n'est jamais rafraîchie (la règle de la
+    mécanique, « jamais enregistrée = rafraîchie », aurait écrasé un
+    `AGENTS.md` écrit par le projet avant le kit) ; `resolve-drift` ne
+    propose que la prose installée par le kit ;
+  - `CLAUDE.md` et `GEMINI.md` retirés de la liste, contre le texte du
+    critère : un renvoi fixe `@AGENTS.md` que `init` complète quand le
+    projet a son propre `AGENTS.md` ; le rafraîchir défaisait puis
+    refaisait ce bloc à chaque `init` (test « un second init ne change
+    rien » rouge) ;
+  - prose obsolète inchangée retirée, jamais les recettes (protégées) ;
+  - l'aperçu `init --dry-run` dit « mécanique et prose du kit
+    rafraîchies » ; le rendu, le point d'entrée et l'aperçu
+    (`packages/drwil/src/render.ts`, `packages/drwil/src/index.ts`,
+    `packages/drwil/src/preview.ts`) ajoutés au
+    cadrage en cours de chantier (deux élargissements).
+- **Intention d'origine** : « une mise à jour rafraîchit aussi la prose
+  que le projet n'a pas touchée », entièrement couverte (ses trois
+  questions tranchées) : résumée ici et retirée.
+- **Limites connues** : un projet passé en 0.6.0 garde une première
+  version enregistrée à tort (indiscernable après coup, hors périmètre).
+- **Clôturé par** : la PR de la branche `workstream/maj-prose-du-kit`.

@@ -94,8 +94,8 @@ avant les points 5 à 13, en trois versions.
 - **0.6.3** — des mises à jour qui servent, des réponses lisibles : en
   tête, un identifiant sans libellé rattrapé
   (`docs/intentions/identifiant-rattrape-avant-l-humain.md`) et la mise à
-  jour qui rafraîchit la prose non modifiée
-  (`docs/intentions/maj-prose-non-modifiee.md`) ; puis la barrière qui
+  jour qui rafraîchit la prose non modifiée (fait, journal du
+  2026-10-17) ; puis la barrière qui
   laisse passer les documents de cadrage
   (`docs/intentions/barriere-documents-de-cadrage.md`), la racine des
   hooks (fait, journal du 2026-10-17), `npm init -y`
@@ -274,10 +274,6 @@ une décision du demandeur.
   sous la réponse de l'agent (hook de fin de réponse, glossaire élargi,
   rappel réduit ; intention `docs/intentions/identifiant-rattrape-avant-l-humain.md`)
   — `docs/projects/identifiant-libelle-en-fin-de-reponse.md`.
-- [ ] [IA] [P1] 0.6.3 : une mise à jour rafraîchit la prose du kit que le
-  projet n'a pas touchée (skills, recettes, instructions, réglages ;
-  intention `docs/intentions/maj-prose-non-modifiee.md`) —
-  `docs/projects/maj-prose-du-kit.md`.
 - [ ] [IA] [P1] 0.6.3 : les documents produits en cadrage passent la
   barrière en SCOPING (découverte de valeur gardée en stash) —
   `docs/projects/barriere-documents-de-cadrage.md`.

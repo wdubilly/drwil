@@ -67,5 +67,5 @@ Constaté dans la séance du 2026-10-17 :
   identifiants nouveaux, ou retirer ?
 - [décision] Projets déjà installés : `resolve-drift` suffit-il pour
   déclarer le nouveau hook dans `.claude/settings.json`, ou la mise à
-  jour (intention `docs/intentions/maj-prose-non-modifiee.md`) doit-elle
-  le couvrir ?
+  jour doit-elle le couvrir ? (Tranché le 2026-10-17 : la mise à jour le
+  rafraîchit s'il est inchangé, journal du 2026-10-17.)
