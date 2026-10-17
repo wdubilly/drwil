@@ -61,7 +61,7 @@ produce it.
 ### Get started
 
 ```bash
-npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.2/drwil-0.6.2.tgz
+npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.3/drwil-0.6.3.tgz
 npx drwil init       # new, existing or already equipped project
 npx drwil verify     # without a CI: VERIFY ERROR, expected — see Installation, step 3
 ```
@@ -613,12 +613,12 @@ smoother and safer:
 From your project folder:
 
 ```bash
-npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.2/drwil-0.6.2.tgz
+npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.3/drwil-0.6.3.tgz
 ```
 
 `package.json` then points to that URL, and `npx drwil` uses this version.
 To avoid touching `package.json`, replace `npx drwil` with
-`npx --package https://github.com/wdubilly/drwil/releases/download/v0.6.2/drwil-0.6.2.tgz drwil`
+`npx --package https://github.com/wdubilly/drwil/releases/download/v0.6.3/drwil-0.6.3.tgz drwil`
 in the commands below.
 
 To upgrade, run the same command with the new release's URL. A project
@@ -1042,7 +1042,7 @@ Its role is narrower:
 ## Current status
 
 **V0.2 — Executable Governance** is delivered (see
-`packages/drwil/CHANGELOG.md`); the latest release is 0.6.2. 0.6.0 added
+`packages/drwil/CHANGELOG.md`); the latest release is 0.6.3. 0.6.0 added
 the business non-regression fed by every workstream, queues of
 workstreams, token consumption measured per workstream, readable
 identifiers and a maintained architecture map. Next: trying it on real
