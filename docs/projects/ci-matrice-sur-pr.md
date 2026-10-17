@@ -36,12 +36,11 @@ tous les chantiers fusionnés depuis la release précédente.
 
 ## Critères d'acceptation
 
-- Une PR qui touche du code fait tourner la suite du kit sur Ubuntu,
-  Windows et macOS avant sa fusion ; une PR qui ne touche que la
-  documentation ne la fait tourner que sur Ubuntu, sans bloquer sa fusion ;
-  Windows et macOS tournent une fois par push d'une branche avec PR, pas
-  deux ; chaque push sur master la fait tourner sur les trois OS —
-  contrat à créer
+- Toute PR de code, et chaque push sur master, fait tourner la suite du
+  kit sur Ubuntu, Windows et macOS ; Windows et macOS une seule fois par
+  push — contrat à créer
+- Une PR qui ne touche que la documentation ne fait tourner la suite que
+  sur Ubuntu et reste fusionnable — contrat à créer
 - Chaque contrôle garde une couverture CI prouvée — `QUA-013`
 
 ## 2. Hors périmètre
@@ -91,8 +90,8 @@ tous les chantiers fusionnés depuis la release précédente.
   avant release ; cache des dépendances npm (`cache: npm` de
   `actions/setup-node`) sur tous les jobs. Tranche les deux points ouverts
   depuis le 2026-10-10.
-- **2026-10-18 — Ce qui n'est pas du code** (proposé par l'agent, à
-  confirmer à la relecture de cette fiche) : une PR « de documentation »
+- **2026-10-18 — Ce qui n'est pas du code** (proposé par l'agent,
+  validé par le demandeur le 2026-10-18) : une PR « de documentation »
   ne touche que `docs/**` et `.drwil/usage.jsonl` (ligne écrite à la
   clôture). Tout le reste compte comme du code, y compris le Markdown du
   gabarit (`packages/drwil/templates/`), que lisent les tests du kit, et
@@ -118,8 +117,7 @@ tous les chantiers fusionnés depuis la release précédente.
 
 ## 5. Points à trancher
 
-- Aucun : tranchés le 2026-10-18 (section 4) ; la liste « pas du code »
-  se confirme à la relecture de la PR de cadrage.
+- Aucun : tous tranchés le 2026-10-18 (section 4).
 
 ## 6. Increments
 
