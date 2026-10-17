@@ -274,6 +274,10 @@ une décision du demandeur.
   de réponse s'affiche sous la réponse, sans coût pour le modèle (limite
   du chantier du 2026-10-17) —
   `docs/intentions/identifiant-rattrape-avant-l-humain.md`.
+- [ ] [décision] [P1] Une reprise automatique à la clôture : contexte neuf
+  entre deux chantiers d'une file (`/clear` puis reprise par l'état ;
+  demandé le 2026-10-17, en tête de la 0.6.4) —
+  `docs/intentions/reprise-automatique.md`.
 - [ ] [décision] Le budget de temps des contrôles au commit, calibré pour
   les machines Windows de la CI (1500 ms dépassé sans changement de code ;
   relevé le 2026-10-17) — `docs/intentions/budget-temps-windows.md`.
