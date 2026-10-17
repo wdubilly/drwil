@@ -93,7 +93,7 @@ avant les points 5 à 13, en trois versions.
   la release.
 - **0.6.3** — des mises à jour qui servent, des réponses lisibles : en
   tête, un identifiant sans libellé rattrapé (fait, journal du
-  2026-10-17 ; affichage à vérifier, ligne ci-dessous) et la mise à
+  2026-10-17 ; affichage vérifié dans le terminal le même jour) et la mise à
   jour qui rafraîchit la prose non modifiée (fait, journal du
   2026-10-17) ; puis la barrière qui
   laisse passer les documents de cadrage (fait, journal du 2026-10-17),
@@ -270,9 +270,9 @@ une décision du demandeur.
   (dépôt git existant avant `init` ; le reste est cadré en 0.6.3) —
   `docs/intentions/guide-de-demarrage.md`.
 
-- [ ] [humain] [P1] Vérifier dans une nouvelle session que la note de fin
-  de réponse s'affiche sous la réponse, sans coût pour le modèle (limite
-  du chantier du 2026-10-17) —
+- [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
+  de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
+  limite du chantier du 2026-10-17) —
   `docs/intentions/identifiant-rattrape-avant-l-humain.md`.
 - [ ] [décision] [P1] Une reprise automatique à la clôture : contexte neuf
   entre deux chantiers d'une file (un sous-agent par chantier, la session
@@ -286,6 +286,8 @@ une décision du demandeur.
 - [ ] [décision] Copilot CLI lance-t-il les hooks déclarés avec
   `${CLAUDE_PROJECT_DIR}` ? (non vérifié ; limite du chantier « racine
   des hooks » du 2026-10-17) — `docs/intentions/copilot-claude-project-dir.md`.
+- [ ] [IA] [P1] 0.6.3 : release 0.6.3 (version, changelog, README ;
+  tag et note GitHub sur feu vert) — `docs/projects/release-0-6-3.md`.
 - [ ] [décision] `yarn init` laisse-t-il un projet neuf ? (non vérifié ;
   limite du chantier « `npm init -y` » du 2026-10-17) —
   `docs/intentions/projet-neuf-apres-yarn-init.md`.
