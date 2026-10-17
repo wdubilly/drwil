@@ -161,6 +161,33 @@ test("QUA-038 : répertoire vide : aucune couche inventée, dit quoi faire ; la 
   );
 });
 
+test("QUA-038 : un package.json qui n'installe que drwil (README, étape npm install) reste un projet neuf", async () => {
+  const dir = tmp();
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ devDependencies: { drwil: "file:drwil-0.6.1.tgz" } }));
+  const lines = await capture(() => init({ lang: "en", targetDir: dir }));
+  assert.ok(
+    lines.some((l) => l.includes("Stack not detected")),
+    lines.join("\n"),
+  );
+  assert.ok(
+    lines.some((l) => l.includes("Scope it first (/drwil-adopt")),
+    lines.join("\n"),
+  );
+  assert.equal(git(dir, "symbolic-ref", "--short", "HEAD").stdout.trim(), "workstream/kit-installation");
+  assert.match(read(dir, "docs/architecture.md"), /## Stack\s+Not decided\./);
+  assert.deepEqual(config(dir).layers, []);
+  // Un vrai projet Node (une autre dépendance, ou un script) reste une pile détectée.
+  for (const pkg of [
+    { dependencies: { express: "^4" }, devDependencies: { drwil: "file:drwil.tgz" } },
+    { scripts: { test: "node --test" }, devDependencies: { drwil: "file:drwil.tgz" } },
+  ]) {
+    const reel = tmp();
+    writeFileSync(join(reel, "package.json"), JSON.stringify(pkg));
+    await quiet(() => init({ lang: "en", targetDir: reel, git: false }));
+    assert.match(read(reel, "docs/architecture.md"), /`\.\/` : Node\.js/, JSON.stringify(pkg));
+  }
+});
+
 test("init avec --layers explicite : pas de message de défaut", async () => {
   const dir = tmp();
   const lines = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, layers: "admin" }));

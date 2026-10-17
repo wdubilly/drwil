@@ -5,6 +5,19 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.6.1 (2026-10-17)
+
+### Fixed
+
+- A new project installed by following the README is a new project
+  again. The `npm install -D ./drwil-*.tgz` step creates a `package.json`
+  holding drwil alone, which `init` took for a Node.js stack: the empty
+  folder was then handled as existing code (no `git init` nor install
+  branch, no « scope it first » hint, a map saying « Node.js, detected »
+  instead of « Not decided »). A `package.json` with no other dependency
+  and no script is no longer a stack; a real Node project is still
+  detected.
+
 ## 0.6.0 (2026-10-17)
 
 ### Upgrading from 0.5.1

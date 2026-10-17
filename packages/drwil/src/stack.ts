@@ -31,12 +31,18 @@ function detectDir(dir: string): string[] {
     entries = readdirSync(dir);
   } catch {}
 
+  let deps: Record<string, string> = {};
+  let toolingOnly = false;
   if (has("package.json")) {
-    let deps: Record<string, string> = {};
     try {
       const pkg = JSON.parse(read(join(dir, "package.json")));
       deps = { ...pkg.dependencies, ...pkg.devDependencies };
+      // The README installs drwil with `npm install -D` before `init`: a package.json holding drwil
+      // alone (no other dependency, no script) is not a stack, the folder stays a new project (QUA-038).
+      toolingOnly = Object.keys(deps).every((d) => d === "drwil") && !Object.keys(pkg.scripts ?? {}).length;
     } catch {}
+  }
+  if (has("package.json") && !toolingOnly) {
     const table: Record<string, string> = {
       next: "Next.js",
       react: "React",
