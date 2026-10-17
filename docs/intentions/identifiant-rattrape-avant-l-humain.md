@@ -27,11 +27,13 @@ démarrage d'une session : l'agent qui l'écrit ne peut pas l'observer.
   jamais bloquant, rien dans `hookSpecificOutput`.
 - Décision du demandeur (2026-10-17) : vérifier après la fusion, dans une
   nouvelle session.
+- Vérifié le 2026-10-17 par le demandeur, nouvelle session, terminal : à
+  une réponse « QUA-017 » nue, la note « Stop says: [drwil] Identifiants
+  cités sans libellé : QUA-017 — Pas de travail direct sur la branche
+  principale » s'affiche sous la réponse. Une réponse qui explique déjà
+  l'identifiant n'en reçoit pas (normal).
 
 ## Questions à trancher
 
-- [humain] Ouvrir une nouvelle session Claude Code dans ce dépôt, provoquer
-  une réponse qui cite un identifiant nu, et dire si la note apparaît
-  sous la réponse (terminal ; web et desktop si utilisés).
-- [décision] Si elle n'apparaît pas, ou si elle coûte des tokens : autre
-  canal (par exemple `additionalContext` au tour suivant), ou retrait ?
+- [humain] Web et desktop, s'ils sont utilisés : la note apparaît-elle
+  aussi ? (terminal vérifié le 2026-10-17.)
