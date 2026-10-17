@@ -1500,3 +1500,36 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Publication** : release 0.6.1 après la fusion de cette PR, sur feu
   vert du demandeur.
 - **Clôturé par** : PR à venir.
+
+## 2026-10-17 — Un premier essai propre : installation par l'URL de la release, premier `verify` sans CI expliqué (0.6.2)
+
+- **Décisions clés** (demandeur, 2026-10-17) : constaté en installant la
+  0.6.1 dans `drwil_com` vidé, en suivant le README à la lettre. Le
+  tarball téléchargé restait à la racine, exigé par `package.json`
+  (`file:`) et non ignoré par git ; les deux README installent désormais
+  par l'URL de l'asset de la release (rien de déposé, plus besoin de
+  `gh`), avec la variante `npx --package <URL>` et la mise à jour par la
+  nouvelle URL. Le premier `verify` sans CI finit en `VERIFY ERROR`
+  (voulu) : `verify` et `doctor` nomment désormais `npx drwil init --ci
+  github` (ou `--ci gitlab`), et le README l'explique à côté du premier
+  `verify` ; le verdict ne change pas. Choix du demandeur : README **et**
+  messages, plutôt que le README seul. Version 0.6.2 : paquets, verrou,
+  changelog, README.
+- **En cours de chantier** (décision du demandeur) : le critère du
+  message était rattaché à QUA-013 (contrôle non exécuté n'est pas
+  passé), contrat attesté (champ `Manuel`) : `verify` l'a refusé
+  (« preuve non durable »). Nouveau contrat automatisé QUA-043 (un projet
+  sans CI sait comment en déclarer une), contrôle `tests-qua-043` ;
+  cadrage élargi au registre et à `.drwil/ia-first.json`, en deux commits
+  (la fiche ne peut citer un contrat absent du registre).
+- **Intention d'origine** : aucune (défauts constatés sur le pilote).
+- **Limites connues** : l'URL du README porte la version, à changer à
+  chaque release sans contrôle (intention « ce que lit un visiteur reste
+  juste sans dépendre de la mémoire de l'agent », question de la version
+  annoncée) ; la création d'un contrat en cours de chantier exige deux
+  commits, et un contrat mixte (`Contrôle` + `Manuel`) ne peut porter un
+  critère automatisé (ajouté à l'intention « un cycle de vie des fiches
+  sans contournement »).
+- **Publication** : release 0.6.2 après la fusion de la fiche suivante de
+  la file (sondage de lancement), qui part dans la même version.
+- **Clôturé par** : la PR de la branche `workstream/premier-essai-propre`.

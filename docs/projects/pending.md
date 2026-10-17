@@ -86,10 +86,10 @@ Revu le 2026-10-17 par le demandeur, après le premier pilote
 (`drwil_com`) et une découverte de valeur : les retours du pilote passent
 avant les points 5 à 13, en trois versions.
 
-- **0.6.2** — débloquer le pilote : `docs/projects/premier-essai-propre.md`
-  (installation par l'URL de la release, premier `verify` sans CI
-  expliqué) et `docs/projects/sondage-lancement-tous-les-cas.md` (un seul
-  brief, hook jamais muet), lançables en file.
+- **0.6.2** — débloquer le pilote : premier essai propre (installation par
+  l'URL de la release, premier `verify` sans CI expliqué ; fait, journal du
+  2026-10-17) et `docs/projects/sondage-lancement-tous-les-cas.md` (un seul
+  brief, hook jamais muet), lancés en file.
 - **0.6.3** — des mises à jour qui servent, des réponses lisibles : en
   tête, un identifiant sans libellé rattrapé
   (`docs/intentions/identifiant-rattrape-avant-l-humain.md`) et la mise à
@@ -220,9 +220,6 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
 ## Vague 7 — le produit, quand tout est opérationnel
 
-- [ ] [IA] [P1] 0.6.2 : un premier essai propre — installation par l'URL
-  de la release (plus de tarball local), premier `verify` sans CI expliqué
-  (constaté sur `drwil_com` le 2026-10-17) — `docs/projects/premier-essai-propre.md`.
 - [ ] [IA] [P1] Le sondage de lancement marche dans tous les cas : un seul
   brief cadré, et un hook jamais muet (constaté sur `drwil_com` le
   2026-10-17) — `docs/projects/sondage-lancement-tous-les-cas.md`.

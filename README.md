@@ -61,10 +61,9 @@ produce it.
 ### Get started
 
 ```bash
-gh release download --repo wdubilly/drwil --pattern 'drwil-*.tgz'
-npm install -D ./drwil-*.tgz
+npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.2/drwil-0.6.2.tgz
 npx drwil init       # new, existing or already equipped project
-npx drwil verify
+npx drwil verify     # without a CI: VERIFY ERROR, expected — see Installation, step 3
 ```
 
 Details, prerequisites and upgrades: [Installation](#installation).
@@ -569,27 +568,27 @@ Integrations can therefore remain thin adapters around the native CLI.
 ## Installation
 
 DRWIL is not published on npm yet. Install it from the tarball attached to a
-GitHub release (Node.js 22+, and the GitHub CLI `gh` authenticated with access
-to the repository).
+GitHub release, by its URL: nothing to download, no file left in your project
+(Node.js 22+).
 
-### 1. Download the release tarball
+### 1. Install it as a dev dependency
 
-From your project folder (without a tag, `gh` downloads the latest release):
-
-```bash
-gh release download --repo wdubilly/drwil --pattern 'drwil-*.tgz'
-```
-
-### 2. Install it as a dev dependency
+From your project folder:
 
 ```bash
-npm install -D ./drwil-*.tgz
+npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.2/drwil-0.6.2.tgz
 ```
 
-`npx drwil` then uses this version. To avoid touching `package.json`, replace
-`npx drwil` with `npx --package ./drwil-*.tgz drwil` in the commands below.
+`package.json` then points to that URL, and `npx drwil` uses this version.
+To avoid touching `package.json`, replace `npx drwil` with
+`npx --package https://github.com/wdubilly/drwil/releases/download/v0.6.2/drwil-0.6.2.tgz drwil`
+in the commands below.
 
-### 3. Set up DRWIL in the project
+To upgrade, run the same command with the new release's URL. A project
+installed from a downloaded tarball (`file:drwil-*.tgz` in `package.json`)
+switches the same way; the old `drwil-*.tgz` file can then be deleted.
+
+### 2. Set up DRWIL in the project
 
 ```bash
 npx drwil init --dry-run    # preview: what would be written, nothing is written
@@ -618,7 +617,7 @@ A project equipped by an older, French-named version is migrated first (see
 Contracts still in the legacy table format remain readable, but stay `MANUAL`
 until they declare a control.
 
-### 4. Check the installation, then the governance
+### 3. Check the installation, then the governance
 
 ```bash
 npx drwil doctor            # diagnosis, without running any control
@@ -627,7 +626,13 @@ npx drwil verify            # human-readable verdict
 npx drwil verify --agent    # output for an agent (Claude Code: /drwil verify)
 ```
 
-### 5. Attest a MANUAL contract (human, in your own terminal)
+A project without a CI reads `GOVERNANCE: VERIFY ERROR` here, and that is
+expected: the CI-coverage contract (QUA-013) is not run, and a check that did
+not run never counts as passed. Declare a CI to get out of it:
+`npx drwil init --ci github` (or `--ci gitlab`). `verify` and `doctor` say the
+same.
+
+### 4. Attest a MANUAL contract (human, in your own terminal)
 
 ```bash
 npx drwil attest QUA-015 --note "sheets reviewed"
@@ -650,7 +655,8 @@ npx drwil verify
 * Without gitleaks installed, the secrets contract (SEC-007) is `ERROR` in
   `verify` (tool unavailable).
 * Without a CI configured, the CI-coverage contract (QUA-013) is `ERROR`
-  ("no CI configured").
+  ("no CI configured"): `npx drwil init --ci github` (or `--ci gitlab`)
+  declares one.
 
 ---
 
@@ -995,7 +1001,7 @@ Its role is narrower:
 ## Current status
 
 **V0.2 — Executable Governance** is delivered (see
-`packages/drwil/CHANGELOG.md`); the latest release is 0.6.1. 0.6.0 added
+`packages/drwil/CHANGELOG.md`); the latest release is 0.6.2. 0.6.0 added
 the business non-regression fed by every workstream, queues of
 workstreams, token consumption measured per workstream, readable
 identifiers and a maintained architecture map. Next: trying it on real

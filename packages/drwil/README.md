@@ -34,10 +34,14 @@ GOVERNANCE: FAIL                                            (exit 1)
 a part that only a human can judge stays `MANUAL` until they attest it.*
 
 ```bash
-npm install -D ./drwil-<version>.tgz   # tarball attached to the GitHub release
-npx drwil init                         # new, existing or already equipped project
-npx drwil verify
+npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.2/drwil-0.6.2.tgz
+npx drwil init       # new, existing or already equipped project
+npx drwil verify     # without a CI: VERIFY ERROR, expected — `npx drwil init --ci github` declares one
 ```
+
+The tarball is installed from the GitHub release URL: nothing is downloaded
+into the project. To upgrade, run the same command with the new release's
+URL; an old `drwil-*.tgz` left by a previous install can be deleted.
 
 ## What you gain
 

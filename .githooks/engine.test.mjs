@@ -206,6 +206,13 @@ test("couverture CI : sans CI non exécuté, sinon check-control-coverage du pro
   assert.equal(executer(racine, "ci-coverage", { cfg: { ciFiles: ["ci.yml"] } }).status, "ok");
 });
 
+test("QUA-043 : sans CI, le détail de la couverture CI dit comment en déclarer une", () => {
+  const racine = depot();
+  const r = executer(racine, "ci-coverage");
+  assert.equal(r.status, "not-run");
+  assert.match(r.detail, /npx drwil init --ci github.*--ci gitlab/);
+});
+
 test("contrôles du projet : identifiant, name: nom, report au commit hors chemins, cwd", () => {
   const racine = depot();
   ecrire(racine, "sous/marque.js", "");

@@ -15,6 +15,18 @@ Deux frictions constatées dans `drwil_com` :
    rester couvert par le cadrage d'une fiche : `drwil_com` a dû créer une
    fiche de référence « docs/projects/delivered-code.md » (dans son dépôt).
 
+Reproduit dans ce dépôt le 2026-10-17 (chantier « premier essai propre »,
+journal du 2026-10-17) :
+
+3. Créer un contrat en cours de chantier a demandé deux commits : la fiche
+   élargie ne pouvait pas citer le nouvel ID (`check-docs` : « contrat
+   absent de docs/contracts.md ») et le registre ne pouvait pas entrer
+   dans le commit d'élargissement (qui ne touche que la fiche).
+4. Un contrat mixte (`Contrôle` + `Manuel`, ici QUA-013, contrôle non
+   exécuté n'est pas passé) compte comme humain : un critère prouvé par
+   des tests ne peut pas s'y rattacher (« preuve non durable »), ce que
+   rien ne signale au cadrage.
+
 Contrainte du demandeur : réduire les contournements et les gestes
 répétitifs **sans affaiblir les contrôles de périmètre**.
 
