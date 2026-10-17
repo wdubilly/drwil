@@ -1704,3 +1704,21 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   reste en 0.7.0 (intention « la protection de la forge dans le
   livrable »).
 - **Clôturé par** : la PR de la branche `workstream/guide-de-demarrage`.
+
+## 2026-10-17 — Un dossier passé par `npm init -y` reste un projet neuf (0.6.3)
+
+- **Décisions clés** (demandeur, sondage du 2026-10-17) : le script
+  `test` par défaut de `npm init` (`echo "Error: no test specified" &&
+  exit 1`, texte exact) ne compte pas comme un script : un `package.json`
+  qui n'installe que drwil et n'a que ce script reste un projet neuf
+  (dépôt git et branche, invitation à cadrer, pile « Not decided »). Un
+  autre script, ou un `test` réel, garde une pile Node.js détectée.
+  `pnpm init` écrit le même script (vérifié, pnpm 11.28.6) : couvert.
+  QUA-038 (un projet neuf commence par son cadrage global) évolue, rien
+  n'est retiré ; test sous QUA-038 ; changelog « Unreleased ».
+- **Intention d'origine** : « un dossier passé par `npm init -y` reste un
+  projet neuf », entièrement couverte : résumée ici et retirée.
+- **Limites connues** : `yarn init` non essayé (intention « un dossier
+  passé par `yarn init` reste un projet neuf ») ; juger sur la présence
+  de code reste écarté.
+- **Clôturé par** : la PR de la branche `workstream/projet-neuf-apres-npm-init`.

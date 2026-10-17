@@ -99,7 +99,7 @@ avant les points 5 à 13, en trois versions.
   laisse passer les documents de cadrage (fait, journal du 2026-10-17),
   la racine des
   hooks (fait, journal du 2026-10-17), `npm init -y`
-  (`docs/intentions/projet-neuf-apres-npm-init.md`) et un guide de
+  (fait, journal du 2026-10-17) et un guide de
   démarrage réduit (`docs/intentions/guide-de-demarrage.md`). Les six
   sont cadrées le 2026-10-17 (une fiche chacune, lignes de l'index
   ci-dessous).
@@ -286,8 +286,9 @@ une décision du demandeur.
 - [ ] [décision] Copilot CLI lance-t-il les hooks déclarés avec
   `${CLAUDE_PROJECT_DIR}` ? (non vérifié ; limite du chantier « racine
   des hooks » du 2026-10-17) — `docs/intentions/copilot-claude-project-dir.md`.
-- [ ] [IA] [P1] 0.6.3 : un dossier passé par `npm init -y` reste un projet
-  neuf — `docs/projects/projet-neuf-apres-npm-init.md`.
+- [ ] [décision] `yarn init` laisse-t-il un projet neuf ? (non vérifié ;
+  limite du chantier « `npm init -y` » du 2026-10-17) —
+  `docs/intentions/projet-neuf-apres-yarn-init.md`.
 - [ ] [décision] Le glossaire des identifiants injecté aussi chez les
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —
   `docs/intentions/glossaire-autres-agents.md`.
