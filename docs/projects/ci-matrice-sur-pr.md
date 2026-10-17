@@ -40,10 +40,10 @@ tous les chantiers fusionnés depuis la release précédente.
 
 - Toute PR de code, et chaque push sur master, fait tourner la suite du
   kit sur Ubuntu, Windows et macOS ; Windows et macOS une seule fois par
-  push — contrat à créer
+  push — `QUA-045`
 - Une PR qui ne touche que la documentation ne fait tourner la suite que
-  sur Ubuntu et reste fusionnable — contrat à créer
-- Chaque contrôle garde une couverture CI prouvée — `QUA-013`
+  sur Ubuntu et reste fusionnable — `QUA-045`
+- Chaque contrôle garde une couverture CI prouvée [humain] — `QUA-013`
 
 ## 2. Hors périmètre
 
@@ -106,7 +106,7 @@ tous les chantiers fusionnés depuis la release précédente.
 
 ## Contrats concernés
 
-- **Contrat à créer** — la suite du kit tourne sur les trois OS avant la
+- **QUA-045** (créé) — la suite du kit tourne sur les trois OS avant la
   fusion de toute PR de code et à chaque push sur master ; preuve : un test
   qui lit le workflow (sous `.github/scripts/`, contrôle
   propre déclaré dans `.drwil/ia-first.json`).
