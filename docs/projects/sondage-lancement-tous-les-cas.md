@@ -59,9 +59,9 @@ nouveaux cas.
 ## 2. Hors périmètre
 
 - Les hooks qui ne se chargent pas dans une session ouverte avant `init`
-  (Claude Code lit les hooks au démarrage) : hypothèse non prouvée sur
-  `drwil_com`, à vérifier en relançant la session ; si elle se confirme,
-  une phrase dans la doc d'installation, en fiche à part.
+  (Claude Code lit les hooks au démarrage) : cause confirmée par le
+  demandeur le 2026-10-17 sur `drwil_com` ; la doc d'installation le dira
+  (intention `docs/intentions/guide-de-demarrage.md`).
 - La racine du projet lue par les hooks
   (`docs/intentions/hooks-racine-du-projet.md`).
 - Copilot CLI : son `ask_user` accepte un seul choix ; rien ne change.

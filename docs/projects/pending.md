@@ -82,6 +82,35 @@ réalisation :
 12. Vague 6, la fabrique.
 13. Vague 7, le produit, dont la validation commerciale.
 
+Revu le 2026-10-17 par le demandeur, après le premier pilote
+(`drwil_com`) et une découverte de valeur : les retours du pilote passent
+avant les points 5 à 13, en trois versions.
+
+- **0.6.2** — débloquer le pilote : `docs/projects/premier-essai-propre.md`
+  (installation par l'URL de la release, premier `verify` sans CI
+  expliqué) et `docs/projects/sondage-lancement-tous-les-cas.md` (un seul
+  brief, hook jamais muet), lançables en file.
+- **0.6.3** — des mises à jour qui servent, des réponses lisibles : en
+  tête, un identifiant sans libellé rattrapé
+  (`docs/intentions/identifiant-rattrape-avant-l-humain.md`) et la mise à
+  jour qui rafraîchit la prose non modifiée
+  (`docs/intentions/maj-prose-non-modifiee.md`) ; puis la barrière qui
+  laisse passer les documents de cadrage
+  (`docs/intentions/barriere-documents-de-cadrage.md`), la racine des
+  hooks (`docs/intentions/hooks-racine-du-projet.md`), `npm init -y`
+  (`docs/intentions/projet-neuf-apres-npm-init.md`) et un guide de
+  démarrage réduit (`docs/intentions/guide-de-demarrage.md`, après la
+  0.6.2).
+- **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
+  son objet, pour que sa fiche technique soit prête à la sortie.
+- **0.7.0** — la preuve qui dure : attestation liée à son objet
+  (`docs/intentions/attestation-liee-a-son-objet.md`), critères et
+  preuves durables (`docs/intentions/criteres-et-preuves-durables.md`),
+  barrière de fusion vérifiée (`docs/intentions/forge-dans-le-livrable.md`).
+
+Valeur et effort sont des estimations de l'agent, tirées du code et d'un
+seul pilote.
+
 Les trois fiches du catalogue passent en `[P1]` pour que `/drwil-start`
 les propose dans cet ordre.
 
@@ -254,6 +283,14 @@ une décision du demandeur.
   (script `test` par défaut ; limite de la 0.6.1) —
   `docs/intentions/projet-neuf-apres-npm-init.md`.
 
+- [ ] [décision] [P1] Un identifiant sans libellé est rattrapé avant
+  d'arriver à l'humain (réponses de l'agent, glossaire incomplet, rappel
+  trop bruyant ; constaté le 2026-10-17, 0.6.3) —
+  `docs/intentions/identifiant-rattrape-avant-l-humain.md`.
+- [ ] [décision] [P1] Les documents produits en cadrage (découverte de
+  valeur, audit de risques) passent la barrière en SCOPING (commit
+  refusé le 2026-10-17, document gardé en stash, 0.6.3) —
+  `docs/intentions/barriere-documents-de-cadrage.md`.
 - [ ] [décision] Le glossaire des identifiants injecté aussi chez les
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —
   `docs/intentions/glossaire-autres-agents.md`.

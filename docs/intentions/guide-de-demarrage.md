@@ -23,9 +23,10 @@ marche pas), **recommandations** (ils fluidifient et sécurisent) et
    contrôles de CI ; exemple de configuration GitHub, permissions
    nécessaires, limites.
 4. **Redémarrer la session de l'agent** après l'installation ou un
-   changement de hooks (constaté le 2026-10-17 : session `drwil_com`
-   ouverte avant `init`, aucun hook actif — hypothèse à confirmer en
-   relançant). Le présenter comme dépendant de l'outil, avec un contrôle
+   changement de hooks (constaté le 2026-10-17 et confirmé par le
+   demandeur le même jour : la session `drwil_com` avait été ouverte avant
+   `init`, aucun hook n'était actif). Le présenter comme dépendant de
+   l'outil, avec un contrôle
    simple : au démarrage, l'agent affiche « État de gouvernance… ».
 
 ## Existant (vérifié le 2026-10-17)
