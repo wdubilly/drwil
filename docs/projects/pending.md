@@ -191,6 +191,9 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
 ## Vague 7 — le produit, quand tout est opérationnel
 
+- [ ] [IA] [P1] 0.6.2 : un premier essai propre — installation par l'URL
+  de la release (plus de tarball local), premier `verify` sans CI expliqué
+  (constaté sur `drwil_com` le 2026-10-17) — `docs/projects/premier-essai-propre.md`.
 - [ ] [décision] [P2] Publication npm du kit, avec une porte avant
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
