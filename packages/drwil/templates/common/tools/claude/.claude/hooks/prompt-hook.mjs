@@ -9,7 +9,7 @@
 //   chosen briefs, in the poll's order: the agent starts the next one after each closing (QUA-037).
 // The same hooks serve Claude Code and Copilot CLI, which reads this settings file; only the poll
 // formats differ. A poll that is not drwil's passes through untouched.
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -132,7 +132,9 @@ async function main() {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Real paths on both sides: a project path through a symbolic link (macOS /var → /private/var) must
+// still run the hook, not leave it silently idle.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     process.exitCode = await main();
   } catch {

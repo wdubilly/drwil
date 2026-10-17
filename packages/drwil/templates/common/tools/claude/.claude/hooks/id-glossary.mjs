@@ -5,7 +5,7 @@
 // their labels are slipped into the agent's context, with the rule « always the ID followed by what it
 // designates ». The labels come from .githooks/glossary.mjs, the single source, also used by the checks'
 // outputs and by any agent through its command. Never blocking: an error leaves the session untouched.
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -27,7 +27,8 @@ export async function contextFor(input, root) {
   return TEXTS[lang](found.map((f) => `${f.id} — ${f.label}`).join(" ; "));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Real paths on both sides: a project path through a symbolic link must still run the hook.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     // The folder holding this hook's .claude/, never the current folder (an agent's `cd`).
     const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");

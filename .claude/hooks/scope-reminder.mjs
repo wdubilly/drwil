@@ -133,7 +133,8 @@ async function main(input) {
 
 export { remind, main };
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Real paths on both sides: a project path through a symbolic link must still run the guard.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   let input = "";
   process.stdin.on("data", (d) => {
     input += d;

@@ -13,9 +13,9 @@
 // file reads it, it runs no check (a single engine, .githooks/engine.mjs).
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, queueable, scopedBriefs } from "./briefs.mjs";
 import { main } from "./state-cli.mjs";
 import { fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
@@ -332,6 +332,7 @@ export function stateRoot(scriptUrl = import.meta.url, env = process.env) {
   return env.DRWIL_ROOT || join(dirname(fileURLToPath(scriptUrl)), "..");
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Real paths on both sides: a project path through a symbolic link must still run the command.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   process.exitCode = await main(process.argv.slice(2), stateRoot());
 }
