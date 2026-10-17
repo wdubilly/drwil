@@ -38,6 +38,8 @@ DOC_GOUVERNANCE_ET_USAGE.md
 # Empreinte du dernier rappel court injecté à l'agent (`node .githooks/state.mjs reminder`) :
 # locale comme l'état, pour ne le réinjecter que s'il a changé.
 .drwil/reminder.json
+# Identifiants déjà rappelés à l'agent dans sa session (.claude/hooks/id-glossary.mjs) : locale.
+.drwil/glossary.json
 
 # Réglages Claude Code personnels (plugins, exemptions) : jamais versionnés,
 # comme dans le gabarit.

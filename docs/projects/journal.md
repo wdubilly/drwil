@@ -1630,3 +1630,30 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : un projet passé en 0.6.0 garde une première
   version enregistrée à tort (indiscernable après coup, hors périmètre).
 - **Clôturé par** : la PR de la branche `workstream/maj-prose-du-kit`.
+
+## 2026-10-17 — Un identifiant cité sans libellé est complété sous la réponse de l'agent (0.6.3)
+
+- **Décisions clés** (demandeur, sondage du 2026-10-17) : un hook de fin
+  de réponse (`.claude/hooks/reply-glossary.mjs`, `Stop`) affiche à
+  l'humain, sous la réponse, « ID — libellé » pour chaque identifiant dont
+  la première mention n'a pas de glose (parenthèse, tiret, deux-points,
+  cellule de tableau) — note par `systemMessage`, pas de correction par
+  l'agent, rien d'injecté au modèle, jamais bloquant. Glossaire élargi aux
+  `OPT-N` de la découverte de valeur et aux repères déclarés dans une
+  section « Repères » (« Markers »). Rappel après chaque outil : une fois
+  par identifiant et par session (`.drwil/glossary.json` (si présent), ajouté au bloc
+  drwil du `.gitignore` livré, que `init` complète). QUA-039 évolue
+  (déclaré dans la fiche). Racine prise par l'emplacement du hook
+  (QUA-044) ; un projet installé reçoit le hook par `init` si son
+  `.claude/settings.json` est inchangé.
+- **Écart de forme** : le titre de l'intention disait « rattrapé avant
+  d'arriver à l'humain » ; la documentation des hooks montre que la
+  réponse est déjà affichée quand le hook tourne : la note la complète.
+- **Intention d'origine** : réalisée, sauf la vérification de l'affichage
+  réel (décision du demandeur : après la fusion, dans une nouvelle
+  session) ; l'intention est réduite à ce point, en `[humain]` dans
+  l'index.
+- **Limites connues** : affichage de la note dans le terminal, le web et
+  le desktop, et absence de coût en tokens : non vérifiés (intention « la
+  note de fin de réponse s'affiche bien, sans coût pour le modèle »).
+- **Clôturé par** : la PR de la branche `workstream/identifiant-libelle-en-fin-de-reponse`.
