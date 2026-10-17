@@ -60,7 +60,7 @@ const TEXTS = {
     hooksForeign:
       "core.hooksPath = {0} : hooks drwil jamais appelés ({1}) — les appeler depuis {2}, ou `git config core.hooksPath .githooks`",
     fixWith: "{0} — correctif : {1}",
-    noCi: "aucune CI configurée : pas de filet pour les contrôles dégradables (QUA-013)",
+    noCi: "aucune CI configurée : pas de filet pour les contrôles dégradables (QUA-013) — en déclarer une : `npx drwil init --ci github` (ou `--ci gitlab`)",
     ciMissing: "fichier absent : {0}",
     tools: "Outils requis",
     gitState: "node {0}, git {1}{2}",
@@ -93,7 +93,7 @@ const TEXTS = {
     hooksChained: "core.hooksPath = {0}, drwil hooks called from there",
     hooksForeign: "core.hooksPath = {0}: drwil hooks never called ({1}) — call them from {2}, or `git config core.hooksPath .githooks`",
     fixWith: "{0} — fix: {1}",
-    noCi: "no CI configured: no net for degradable checks (QUA-013)",
+    noCi: "no CI configured: no net for degradable checks (QUA-013) — declare one: `npx drwil init --ci github` (or `--ci gitlab`)",
     ciMissing: "missing file: {0}",
     tools: "Required tools",
     gitState: "node {0}, git {1}{2}",

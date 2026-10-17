@@ -201,6 +201,8 @@ test("autotest : sans dossier ou sans test non applicable ; sinon les tests du d
 test("couverture CI : sans CI non exécuté, sinon check-control-coverage du projet", () => {
   const racine = depot();
   assert.equal(executer(racine, "ci-coverage").status, "not-run");
+  // Le message dit comment en sortir, pas seulement ce qui manque.
+  assert.match(executer(racine, "ci-coverage").detail, /npx drwil init --ci github.*--ci gitlab/);
   assert.equal(executer(racine, "ci-coverage", { cfg: { ciFiles: "pas une liste" } }).status, "not-run");
   ecrire(racine, ".githooks/check-control-coverage.mjs", "");
   assert.equal(executer(racine, "ci-coverage", { cfg: { ciFiles: ["ci.yml"] } }).status, "ok");

@@ -5,6 +5,24 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.6.2 (2026-10-17)
+
+### Fixed
+
+- Installing no longer leaves a tarball in the project. The README
+  downloaded `drwil-<version>.tgz` and installed it from the file:
+  `package.json` then required that file (`npm ci` failed without it) and
+  git did not ignore it, so it went into the first commit. Both READMEs now
+  install from the GitHub release URL (`npm install -D
+  https://github.com/wdubilly/drwil/releases/download/v<version>/drwil-<version>.tgz`):
+  nothing is downloaded and `gh` is no longer needed to install. To
+  upgrade, run it with the new URL; an old local tarball can be deleted.
+- The first `verify` of a project without a CI says how to get out of its
+  `VERIFY ERROR`. It is expected (the CI-coverage check did not run, so it
+  never counts as passed), but neither the message nor the README said so:
+  `verify` and `doctor` now name `npx drwil init --ci github` (or
+  `--ci gitlab`), and the README explains it next to the first `verify`.
+
 ## 0.6.1 (2026-10-17)
 
 ### Fixed

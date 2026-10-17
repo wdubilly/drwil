@@ -1527,6 +1527,16 @@ test("ci: none : pas de CI, la couverture QUA-013 est signalée non exécutée (
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout);
   assert.match(r.stdout, /non exécuté : couverture CI de chaque contrôle.*aucune CI configurée/s);
+  // Le premier verify d'un projet neuf finit ici : le message dit comment en sortir.
+  assert.match(r.stdout, /aucune CI configurée.*npx drwil init --ci github/s);
+  const fr = (await doctor({ targetDir: dir })).points.find((p) => p.id === "ci");
+  assert.equal(fr.state, "warning");
+  assert.match(fr.detail, /npx drwil init --ci github.*--ci gitlab/);
+
+  const en = tmp();
+  await quiet(() => init({ lang: "en", targetDir: en, ci: "none" }));
+  assert.match(checks(en).stdout, /no CI configured.*npx drwil init --ci github/s);
+  assert.match((await doctor({ targetDir: en })).points.find((p) => p.id === "ci").detail, /npx drwil init --ci github.*--ci gitlab/);
 });
 
 test("pre-commit : un contrôle du projet hors de ses chemins est reporté (visible), rejoué au push et en direct", async () => {
