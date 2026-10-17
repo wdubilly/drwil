@@ -4,6 +4,15 @@
 (rapport « docs/experiments/acceptance-criteria-report.md » de ce dépôt,
 section 6 de la demande), à faire après les évolutions du kit.
 
+**Revu le 2026-10-17** : réalisé en partie par le chantier « un guide de
+démarrage » (journal du 2026-10-17) — section « Before you start » du
+README (prérequis, redémarrage de session, protection de branche,
+auto-merge) et skill qui dit un auto-merge refusé ; les trois questions
+ci-dessous sont tranchées. Reste vivant : la procédure pour un **dépôt
+git existant** avant `init` (ce que `init` attend, crée ou modifie,
+comment préserver l'historique), une pour un dépôt existant et une pour un
+projet neuf.
+
 ## Besoin
 
 Documenter ce qui fluidifie le démarrage avec un agent, en distinguant
