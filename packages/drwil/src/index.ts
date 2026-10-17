@@ -160,7 +160,7 @@ export async function init(opts: InitOptions): Promise<void> {
   const { added } = await complete(r, { manifest });
   const obsolete = await removeObsolete(opts.targetDir, previous, expected);
   await writeManifest(opts.targetDir, manifest, obsolete);
-  await writeInstall(opts.targetDir, engineVersion());
+  await writeInstall(opts.targetDir, engineVersion(), Object.keys(previous).length > 0);
   await writeConfig(r);
   reportStack(r);
   reportDrifted(drifted, r.lang);

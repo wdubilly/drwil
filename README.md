@@ -602,10 +602,14 @@ no layer is invented until you declare them (`npx drwil init --layers
 api,web`); on existing code it builds the architecture map from the code,
 which drwil keeps current from then on.
 
-**Upgrading a project that already had DRWIL:** `init` refreshes the kit
-mechanics that did not change since their installation; a hook modified by
-hand stays in place and is reported as drifted. Update it with a diff and a
-confirmation per file (a `.bak` backup is kept):
+**Upgrading a project that already had DRWIL:** `init` refreshes what the
+kit installed and the project never modified: its mechanics (hooks) and its
+prose and settings (skills, recipes, `docs/ia-first.md`, the agents'
+instructions, the contract catalog, `.claude/settings.json`). Your own
+documents (README, architecture map, contract registry, briefs…) are never
+touched, even unchanged. A kit file modified by hand stays in place and is
+reported as drifted. Update it with a diff and a confirmation per file (a
+`.bak` backup is kept):
 
 ```bash
 npx drwil resolve-drift

@@ -44,6 +44,7 @@ const TEXTS = {
     version: "Version du moteur",
     noInstall: "inconnue (installation antérieure à .drwil/install.json) : relancer `npx drwil init`",
     sameVersion: "{0} (première installation : {1})",
+    unknownOrigin: "{0} (version d'origine inconnue, antérieure à 0.6.0)",
     olderInstall: "{0} installée, CLI {1} plus récente : mettre à jour par `npx drwil init`",
     newerInstall: "{0} installée, CLI {1} plus ancienne : utiliser une CLI au moins en {0}",
     noAgents: "absent : point d'entrée unique des agents",
@@ -78,6 +79,7 @@ const TEXTS = {
     version: "Engine version",
     noInstall: "unknown (installed before .drwil/install.json): run `npx drwil init` again",
     sameVersion: "{0} (first installed: {1})",
+    unknownOrigin: "{0} (origin unknown, before 0.6.0)",
     olderInstall: "{0} installed, CLI {1} is newer: update with `npx drwil init`",
     newerInstall: "{0} installed, CLI {1} is older: use a CLI at least at {0}",
     noAgents: "missing: the agents' single entry point",
@@ -131,7 +133,9 @@ export async function doctor(opts: { targetDir: string }): Promise<Diagnosis> {
     !install
       ? T.noInstall
       : gap === 0
-        ? fill(T.sameVersion, install.version, install.firstVersion)
+        ? install.firstVersion === null
+          ? fill(T.unknownOrigin, install.version)
+          : fill(T.sameVersion, install.version, install.firstVersion)
         : fill((gap ?? 0) < 0 ? T.olderInstall : T.newerInstall, install.version, cli),
   );
   const agents = existsSync(join(root, "AGENTS.md"));

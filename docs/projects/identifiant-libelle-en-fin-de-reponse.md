@@ -64,8 +64,9 @@ affichée quand il tourne : il complète, il ne réécrit pas.
 - Le rappel après chaque outil ne cite un identifiant qu'une fois par
   session — `QUA-039`
 - Le changelog (« Unreleased ») dit le changement et, pour un projet déjà
-  installé, que `npx drwil resolve-drift` déclare le nouveau hook dans
-  `.claude/settings.json` — `QUA-040`
+  installé, comment le nouveau hook arrive dans `.claude/settings.json` :
+  par `npx drwil init` si le projet ne l'a pas modifié, sinon par
+  `npx drwil resolve-drift` — `QUA-040`
 
 ## Contrats modifiés
 
@@ -82,9 +83,10 @@ affichée quand il tourne : il complète, il ne réécrit pas.
 
 - Les autres agents (Cursor, Copilot CLI, Gemini, Codex) :
   `docs/intentions/glossaire-autres-agents.md`.
-- La mise à jour automatique de `.claude/settings.json` à `init`
-  (intention `docs/intentions/maj-prose-non-modifiee.md`) : en 0.6.3, un
-  projet installé passe par `resolve-drift`.
+- La mise à jour de `.claude/settings.json` sur un projet installé : faite
+  par le chantier « une mise à jour rafraîchit la prose du kit » (journal
+  du 2026-10-17) — `init` le rafraîchit s'il est inchangé, `resolve-drift`
+  propose le diff s'il a été modifié.
 - Réécrire ou bloquer la réponse de l'agent (écarté par le demandeur :
   une note affichée, pas de correction par l'agent).
 
@@ -104,7 +106,9 @@ affichée quand il tourne : il complète, il ne réécrit pas.
   mention libellée plus haut ; sources ajoutées : `OPT-N` et repères
   déclarés ; rappel réduit à une fois par identifiant et par session.
 - Proposé par l'agent (non contesté) : projets installés par
-  `resolve-drift` en 0.6.3 ; convention des repères = section
+  `resolve-drift` en 0.6.3 (revu le 2026-10-17 : `init` suffit si
+  `.claude/settings.json` est inchangé, chantier « une mise à jour
+  rafraîchit la prose du kit », comme sa fiche le prévoyait) ; convention des repères = section
   « Repères » ; mémoire du rappel dans un fichier local ignoré par git,
   comme `.drwil/reminder.json` (si présent).
 

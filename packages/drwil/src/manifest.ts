@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile, readdir, rm } from "node:fs/promises";
 import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve, sep, win32 } from "node:path";
 import { createHash } from "node:crypto";
-import { isMechanics, readConfig } from "./config.js";
+import { isKitProse, isMechanics, readConfig } from "./config.js";
 import { fill, projectLang } from "./i18n.js";
 import { stripAdditions, withoutKitHooks } from "./complete.js";
 
@@ -68,7 +68,8 @@ const INSTALL_PATH = [".drwil", "install.json"];
 export interface InstallRecord {
   format: 1;
   version: string;
-  firstVersion: string;
+  /** null: installed before versions were recorded (before 0.6.0), origin unknown rather than wrong. */
+  firstVersion: string | null;
 }
 
 /** Version of this drwil package, read from its package.json (the single source of the version). */
@@ -79,18 +80,25 @@ export function engineVersion(): string {
 export function readInstall(targetDir: string): InstallRecord | null {
   try {
     const r = JSON.parse(readFileSync(join(targetDir, ...INSTALL_PATH), "utf8"));
-    return typeof r?.version === "string" ? { format: 1, version: r.version, firstVersion: String(r.firstVersion ?? r.version) } : null;
+    if (typeof r?.version !== "string") return null;
+    return { format: 1, version: r.version, firstVersion: r.firstVersion === null ? null : String(r.firstVersion ?? r.version) };
   } catch {
     return null;
   }
 }
 
-/** Records the engine version; the first installed version is kept across updates. Rewritten only when it changes. */
-export async function writeInstall(targetDir: string, version: string): Promise<void> {
-  const previous = readInstall(targetDir);
-  const record: InstallRecord = { format: 1, version, firstVersion: previous?.firstVersion ?? version };
-  const content = JSON.stringify(record, null, 2) + "\n";
+/**
+ * Records the engine version; the first installed version is kept across updates. Rewritten only
+ * when it changes. `upgrade`: a previous installation exists (manifest) — without any record, it
+ * predates the record, so its first version is unknown rather than the current one.
+ */
+export async function writeInstall(targetDir: string, version: string, upgrade = false): Promise<void> {
   const path = join(targetDir, ...INSTALL_PATH);
+  const previous = readInstall(targetDir);
+  const unrecorded = upgrade && !existsSync(path);
+  const firstVersion = previous ? previous.firstVersion : unrecorded ? null : version;
+  const record: InstallRecord = { format: 1, version, firstVersion };
+  const content = JSON.stringify(record, null, 2) + "\n";
   if (existsSync(path) && readFileSync(path, "utf8") === content) return;
   await mkdir(join(targetDir, ".drwil"), { recursive: true });
   await writeFile(path, content);
@@ -118,13 +126,14 @@ function isProtected(rel: string): boolean {
 }
 
 // Files written by an earlier kit version, absent from the current template (`expected`), never
-// modified since installation (unchanged fingerprint): removed. Limited to the kit mechanics (same
-// scope as KIT_MECHANICS) — never the briefs; mechanism shared with `uninstall`.
+// modified since installation (unchanged fingerprint): removed. Limited to the kit mechanics and
+// prose (KIT_MECHANICS, KIT_PROSE) — never the briefs nor the recipes (protected).
 export async function removeObsolete(targetDir: string, previous: Record<string, string>, expected: string[]): Promise<string[]> {
   const expectedSet = new Set(expected);
   const removed: string[] = [];
   for (const [rel, hash] of Object.entries(previous)) {
-    if (!isMechanics(rel) || expectedSet.has(rel) || isProtected(rel) || !isSafeManifestPath(targetDir, rel)) continue;
+    const kit = isMechanics(rel) || isKitProse(rel);
+    if (!kit || expectedSet.has(rel) || isProtected(rel) || !isSafeManifestPath(targetDir, rel)) continue;
     const abs = join(targetDir, rel);
     if (!existsSync(abs)) continue;
     const current = sha256(await readFile(abs, "utf8"));

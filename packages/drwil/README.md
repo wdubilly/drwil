@@ -439,8 +439,9 @@ npx drwil resolve-drift
 ```
 
 When `init` detects that a mechanics file (`.githooks/`,
-`.claude/settings.json`, CI workflow file) has drifted from the version
-shipped by the kit, this command walks through each drifted file, shows a
+`.claude/settings.json`, CI workflow file), or a piece of the kit's prose it
+installed (skills, recipes, agents' instructions…), has drifted from the
+version shipped by the kit, this command walks through each drifted file, shows a
 unified diff, and asks for confirmation before overwriting — always
 creating a `.bak` backup first, and never creating a file that doesn't
 exist yet. `--force` skips the confirmation for scripted/non-interactive

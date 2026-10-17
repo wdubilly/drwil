@@ -36,6 +36,30 @@ export function isMechanics(rel: string): boolean {
   return KIT_MECHANICS.some((m) => rel.startsWith(m));
 }
 
+/**
+ * The kit's prose and settings, refreshed by `init` only when recorded in the manifest and never
+ * modified since: never the project's own documents (README, map, registry, briefs, layers'
+ * AGENTS.md…), even unchanged. A folder ends with `/`; anything else is an exact path. Not CLAUDE.md
+ * nor GEMINI.md: a fixed `@AGENTS.md` pointer that never changes, which complete.ts extends when the
+ * project has its own AGENTS.md — refreshing it would only undo and redo that block at each init.
+ */
+export const KIT_PROSE = [
+  ".claude/skills/",
+  ".claude/settings.json",
+  "docs/recipes/",
+  "docs/ia-first.md",
+  "AGENTS.md",
+  ".cursor/",
+  ".github/copilot-instructions.md",
+  ".github/instructions/",
+  "docs/contracts-catalog.md",
+  "docs/intentions/README.md",
+];
+
+export function isKitProse(rel: string): boolean {
+  return KIT_PROSE.some((p) => (p.endsWith("/") ? rel.startsWith(p) : rel === p));
+}
+
 export const CI_FILES: Record<Ci, string[]> = { none: [], github: [".github/workflows/ia-first.yml"], gitlab: [".gitlab-ci.yml"] };
 
 // Texts rendered into the template, in English like it: `lang` is the project's language, not the kit's.

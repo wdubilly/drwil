@@ -20,7 +20,7 @@ export interface InitPreview {
   protections: string[];
   /** Files `init` would create. */
   created: string[];
-  /** Kit mechanics `init` would refresh (unchanged since their installation). */
+  /** Kit mechanics and prose `init` would refresh (unchanged since their installation). */
   replaced: string[];
   /** Files already present, left as they are (never overwritten). */
   kept: string[];
@@ -49,7 +49,7 @@ const TEXTS = {
     protections: "Protections existantes :",
     noProtection: "  aucune détectée",
     added: "Serait ajouté ({0} fichier(s)) :",
-    replaced: "Mécanique du kit rafraîchie ({0} fichier(s)) :",
+    replaced: "Mécanique et prose du kit rafraîchies, jamais modifiées par le projet ({0} fichier(s)) :",
     kept: "Déjà présents, laissés tels quels ({0}) :",
     drifted: " (diffère du modèle du kit)",
     completed: "Serait ajouté à des fichiers existants, sans rien y écraser ({0}) :",
@@ -69,7 +69,7 @@ const TEXTS = {
     protections: "Existing protections:",
     noProtection: "  none detected",
     added: "Would be added ({0} file(s)):",
-    replaced: "Kit mechanics refreshed ({0} file(s)):",
+    replaced: "Kit mechanics and prose refreshed, never modified by the project ({0} file(s)):",
     kept: "Already present, left as they are ({0}):",
     drifted: " (differs from the kit's template)",
     completed: "Would be added to existing files, nothing overwritten ({0}):",

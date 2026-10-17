@@ -20,6 +20,20 @@ closing commit; the release renames this section to its version.
   project folder), did nothing, silently: no reminder, no start poll, no
   scope guard. They now compare real paths.
 
+### Changed
+
+- An upgrade (`npx drwil init`) also refreshes the kit's prose and
+  settings the project never modified: skills, recipes, `docs/ia-first.md`,
+  the agents' instructions, the contract catalog and `.claude/settings.json`
+  (a new hook arrives on its own). Only files the kit installed and that
+  still match their recorded fingerprint are refreshed; the project's own
+  documents (README, map, registry, briefs) never are. A modified one is
+  reported as drift, and `npx drwil resolve-drift` now offers its diff, with
+  a `.bak` backup. Until 0.6.2, a fixed skill (like the « Not now » option
+  of `/drwil-start`) never reached an installed project.
+- `doctor` says « origin unknown, before 0.6.0 » for a project installed
+  before versions were recorded, instead of a wrong first version.
+
 ## 0.6.2 (2026-10-17)
 
 ### Fixed

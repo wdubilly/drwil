@@ -2600,6 +2600,13 @@ test("QUA-025 : init enregistre la version du moteur dans .drwil/install.json sa
   await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
   assert.deepEqual(installation(), { format: 1, version, firstVersion: version });
 
+  // Installé avant l'enregistrement de version (manifeste, pas d'install.json) : origine inconnue, pas fausse.
+  rmSync(join(dir, ".drwil/install.json"));
+  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+  assert.deepEqual(installation(), { format: 1, version, firstVersion: null });
+  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+  assert.deepEqual(installation(), { format: 1, version, firstVersion: null }, "l'origine inconnue le reste");
+
   assert.ok((await uninstall({ targetDir: dir })).removed.includes(".drwil/install.json"), "listé en simulation");
   assert.ok(existsSync(join(dir, ".drwil/install.json")), "rien retiré en simulation");
   await uninstall({ targetDir: dir, dryRun: false });
@@ -2668,6 +2675,67 @@ test("QUA-026 : doctor affiche la version installée et signale un écart avec l
   assert.match(p.detail, /inconnue \(installation antérieure/);
   // Un écart de version avertit, ne fait jamais échouer doctor à lui seul.
   assert.notEqual(p.state, "problem");
+  // Première version inconnue (projet installé avant l'enregistrement) : dit, pas inventé.
+  writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version, firstVersion: null }));
+  p = await point();
+  assert.equal(p.state, "ok");
+  assert.equal(p.detail, `${version} (version d'origine inconnue, antérieure à 0.6.0)`);
+});
+
+test("QUA-027 : mise à jour : la prose du kit inchangée est rafraîchie, modifiée gardée et signalée ; jamais les documents du projet ni une prose hors manifeste", async () => {
+  const dir = tmp();
+  const empreinte = (texte) => createHash("sha256").update(texte).digest("hex");
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false, ci: "none" }));
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  const vieillir = (rel, texte) => {
+    mkdirSync(join(dir, rel, ".."), { recursive: true });
+    writeFileSync(join(dir, rel), texte);
+    manifeste[rel] = empreinte(texte);
+  };
+  const skill = ".claude/skills/start-a-workstream/SKILL.md";
+  vieillir(skill, "skill de la version précédente\n");
+  vieillir(".claude/settings.json", "{}\n");
+  vieillir("docs/ia-first.md", "doc du kit de la version précédente\n");
+  vieillir(".claude/skills/ancienne/SKILL.md", "skill retirée du gabarit depuis\n");
+  vieillir("docs/architecture.md", "carte de la version précédente\n");
+  // AGENTS.md écrit par le projet, jamais installé par le kit : hors manifeste.
+  writeFileSync(join(dir, "AGENTS.md"), "AGENTS du projet\n");
+  delete manifeste["AGENTS.md"];
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2));
+  const recette = "docs/recipes/working-with-branches.md";
+  appendFileSync(join(dir, recette), "\nAdapté par le projet.\n");
+
+  const lignes = await capture(() => init({ targetDir: dir, git: false, ci: "none" }));
+
+  assert.notEqual(read(dir, skill), "skill de la version précédente\n", "skill inchangée : rafraîchie");
+  assert.match(read(dir, skill), /Not now/);
+  assert.match(read(dir, ".claude/settings.json"), /hooks/, "réglages inchangés : rafraîchis");
+  assert.notEqual(read(dir, "docs/ia-first.md"), "doc du kit de la version précédente\n");
+  assert.equal(existsSync(join(dir, ".claude/skills/ancienne/SKILL.md")), false, "prose obsolète inchangée : retirée");
+  assert.equal(read(dir, "docs/architecture.md"), "carte de la version précédente\n", "document du projet : jamais rafraîchi");
+  assert.match(read(dir, "AGENTS.md"), /^AGENTS du projet/, "prose hors manifeste : jamais écrasée");
+  assert.match(read(dir, recette), /Adapté par le projet/, "prose modifiée : gardée");
+  assert.ok(
+    lignes.some((l) => l.includes(recette)),
+    "et signalée comme dérive",
+  );
+  const apres = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  assert.equal(apres[skill], empreinte(read(dir, skill)), "le manifeste suit la prose rafraîchie");
+
+  // resolve-drift propose la prose modifiée installée par le kit, jamais celle du projet.
+  const proposes = [];
+  await quiet(() =>
+    resolveDrift({ targetDir: dir }, (rel) => {
+      proposes.push(rel);
+      return false;
+    }),
+  );
+  assert.ok(proposes.includes(recette), "prose modifiée : diff proposé");
+  assert.ok(!proposes.includes("AGENTS.md"), "prose du projet : jamais proposée");
+  const r = await quiet(() => resolveDrift({ targetDir: dir }, (rel) => rel === recette));
+  assert.ok(r.resolved.includes(recette));
+  assert.match(read(dir, `${recette}.bak`), /Adapté par le projet/, "sauvegarde .bak");
+  assert.doesNotMatch(read(dir, recette), /Adapté par le projet/);
 });
 
 test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; contracts liste le registre", async () => {
