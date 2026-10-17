@@ -5,6 +5,16 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Fixed
+
+- The agent's hooks find the project root from where they are installed,
+  never from the current folder. After an agent's `cd` into a subfolder,
+  the governance reminder read a missing state (and created a stray
+  `.drwil` there), the start poll could not find the state engine, and
+  the scope guard refused nothing. The hooks now take the folder holding
+  their `.claude/` (the state engine, the parent of its `.githooks/`),
+  like the checks engine already did — the same for every agent.
+
 ## 0.6.2 (2026-10-17)
 
 ### Fixed

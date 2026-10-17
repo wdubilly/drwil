@@ -14,8 +14,8 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join, posix } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, join, posix } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, queueable, scopedBriefs } from "./briefs.mjs";
 import { main } from "./state-cli.mjs";
 import { fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
@@ -323,7 +323,15 @@ export function reminderIfChanged(root) {
   return text;
 }
 
+/**
+ * Root of the command: the parent of .githooks/, like run-checks (engine.mjs, projectRoot — not
+ * imported: scope-gate.mjs imports this file), never the current folder: the agent's hooks call it
+ * from wherever the agent `cd`-ed. `DRWIL_ROOT` replaces it, for tests only.
+ */
+export function stateRoot(scriptUrl = import.meta.url, env = process.env) {
+  return env.DRWIL_ROOT || join(dirname(fileURLToPath(scriptUrl)), "..");
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  // Root = current folder, like the other hooks: no tool-specific variable.
-  process.exitCode = await main(process.argv.slice(2), process.cwd());
+  process.exitCode = await main(process.argv.slice(2), stateRoot());
 }

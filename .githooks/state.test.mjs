@@ -1,9 +1,9 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { PassThrough } from "node:stream";
 import { briefIntent, intentsLeftBehind, lastReview, missingCriteria, staleIntents } from "./briefs.mjs";
@@ -26,6 +26,7 @@ import {
   reminderIfChanged,
   briefStatus,
   briefMaturity,
+  stateRoot,
   transitionAllowed,
   validateState,
 } from "./state.mjs";
@@ -1133,11 +1134,21 @@ test("principal passer : usage sans activité, transition écrite ou refusée, c
   assert.equal(readState(humain).state.activity, "EXPECTATION");
 });
 
-test("ligne de commande : node state.mjs lit l'état du dossier courant", () => {
+test("QUA-044 : ligne de commande : node state.mjs lit l'état de sa racine (DRWIL_ROOT en test), jamais du dossier courant", () => {
   const racine = depot();
-  const r = spawnSync(process.execPath, [fileURLToPath(new URL("./state.mjs", import.meta.url))], { cwd: racine, encoding: "utf8" });
+  const sous = join(racine, "sous");
+  mkdirSync(sous, { recursive: true });
+  const r = spawnSync(process.execPath, [fileURLToPath(new URL("./state.mjs", import.meta.url))], {
+    cwd: sous,
+    encoding: "utf8",
+    env: { ...process.env, DRWIL_ROOT: racine },
+  });
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /Activité : SCOPING/);
+  assert.ok(!existsSync(join(sous, ".drwil")), "rien d'écrit dans le dossier courant");
+  const url = pathToFileURL(join(tmpdir(), "projet", ".githooks", "state.mjs")).href;
+  assert.equal(stateRoot(url, {}), join(tmpdir(), "projet"), "sans DRWIL_ROOT : le parent de .githooks/");
+  assert.equal(stateRoot(url, { DRWIL_ROOT: racine }), racine);
 });
 
 test("cas limites : attente non textuelle, verdict inconnu, configuration « null »", () => {

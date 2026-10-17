@@ -6,8 +6,8 @@
 // designates ». The labels come from .githooks/glossary.mjs, the single source, also used by the checks'
 // outputs and by any agent through its command. Never blocking: an error leaves the session untouched.
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const TEXTS = {
   fr: (list) => `[drwil] Identifiants cités ci-dessus : ${list}. À l'humain, toujours l'ID suivi de ce qu'il désigne.`,
@@ -29,7 +29,9 @@ export async function contextFor(input, root) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    const text = await contextFor(JSON.parse(readFileSync(0, "utf8")), process.cwd());
+    // The folder holding this hook's .claude/, never the current folder (an agent's `cd`).
+    const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+    const text = await contextFor(JSON.parse(readFileSync(0, "utf8")), root);
     if (text) console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: text } }));
   } catch {}
 }

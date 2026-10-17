@@ -10,8 +10,8 @@
 // The same hooks serve Claude Code and Copilot CLI, which reads this settings file; only the poll
 // formats differ. A poll that is not drwil's passes through untouched.
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const MARK = "drwil-start";
 // Optional second question of the same poll (Claude Code): authorise the automatic merge.
@@ -19,8 +19,8 @@ const MERGE_MARK = "drwil-merge";
 const MERGE_YES_RE = /^(fusion automatique|automatic merge)\b/i;
 // With a single scoped brief, the poll's second option (a question needs two): start nothing.
 const NOT_NOW_RE = /^(pas maintenant|not now)\b/i;
-// The tool runs the hook with the project folder as cwd.
-const ROOT = process.cwd();
+// The folder holding this hook's .claude/, never the current folder: it follows the agent's `cd`.
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 const TEXTS = {
   fr: {

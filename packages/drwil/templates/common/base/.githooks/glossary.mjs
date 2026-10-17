@@ -4,7 +4,7 @@
 // the checks' outputs, by any agent (`node .githooks/glossary.mjs "<text>"`) and by the agent-side
 // hooks: the labels are read from the registry, the catalog and the active brief, never copied.
 import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readContracts } from "./contracts.mjs";
 
@@ -82,5 +82,9 @@ export function main(args = process.argv.slice(2), root = process.cwd(), log = c
   return 0;
 }
 
-// Through a symbolic link (an installed copy), argv[1] is the link: compare the real paths.
-if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) process.exitCode = main();
+// Through a symbolic link (an installed copy), argv[1] is the link: compare the real paths. The root
+// comes from the path called, not the current folder (an agent's `cd`): the parent of its .githooks/.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
+  const here = dirname(resolve(process.argv[1]));
+  process.exitCode = main(process.argv.slice(2), basename(here) === ".githooks" ? join(here, "..") : process.cwd());
+}

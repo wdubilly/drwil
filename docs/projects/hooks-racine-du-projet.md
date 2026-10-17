@@ -52,14 +52,13 @@ courant.
   l'appelle, prennent pour racine le dossier qui contient leur
   `.claude/` ou `.githooks/`, jamais le dossier courant : lancés depuis un
   sous-dossier, ils lisent le bon état et n'écrivent aucun `.drwil`
-  ailleurs ; prouvé par les tests — contrat à créer au chantier (« les
-  hooks lisent la racine du projet, pas le dossier courant »), inscrit au
-  registre par le premier commit, puis cité ici par son ID
+  ailleurs ; prouvé par les tests — `QUA-044`
 - Le changelog (« Unreleased ») le dit — `QUA-040`
 
 ## Contrats modifiés
 
-Aucun. Contrat créé au chantier (voir le premier critère).
+Aucun. Contrat créé au chantier : `QUA-044` (les hooks lisent la racine
+du projet, pas le dossier courant), contrôle `tests-qua-044`.
 
 ## 2. Hors périmètre
 
