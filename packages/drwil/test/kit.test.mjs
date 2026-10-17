@@ -770,6 +770,69 @@ test("QUA-037 : un sondage à choix multiple lance la première fiche et met les
   assert.equal(etat.auto_merge, true);
 });
 
+test("QUA-037 : un seul brief : « Pas maintenant » ne lance rien et le dit ; sans réponse lue ou sur erreur, le hook le dit sans bloquer", async () => {
+  // Constaté sur un projet neuf (2026-10-17) : un seul brief, sondage impossible à une option, puis
+  // un hook muet qui laissait l'agent deviner pourquoi rien n'avait démarré.
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const fiche = "docs/projects/seule.md";
+  writeFileSync(
+    join(dir, fiche),
+    "# Projet : Seule\n\n**Statut** : cadré le 2026-10-17.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/seule.ts\n-->\n\n## Critères d'acceptation\n\n- Critère — `APP-001`\n",
+  );
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+  const sondage = {
+    questions: [
+      {
+        question: "Quelle fiche lancer ?",
+        header: "drwil-start",
+        multiSelect: false,
+        options: [
+          { label: fiche, description: "Seule" },
+          { label: "Pas maintenant", description: "Ne rien lancer" },
+        ],
+      },
+    ],
+  };
+  const hook = (reponse) =>
+    spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({
+        hook_event_name: "PostToolUse",
+        tool_name: "AskUserQuestion",
+        tool_input: sondage,
+        tool_response: reponse === undefined ? { ...sondage } : { ...sondage, answers: { "Quelle fiche lancer ?": reponse } },
+      }),
+    });
+  const etat = () => (existsSync(join(dir, ".drwil/state.json")) ? JSON.parse(read(dir, ".drwil/state.json")) : null);
+
+  let r = hook("Pas maintenant");
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /\[drwil\] .*rien n'est lancé.*Pas maintenant/);
+  assert.equal(etat(), null, "« Pas maintenant » ne change pas l'état");
+
+  r = hook(undefined);
+  assert.equal(r.status, 0, "jamais bloquant");
+  assert.match(r.stdout, /\[drwil\] .*aucune réponse lue.*node \.githooks\/state\.mjs start/);
+  assert.equal(etat(), null);
+
+  // Une erreur (ici, le moteur d'état illisible) est dite, l'état reste inchangé, l'outil n'est pas bloqué.
+  const moteur = read(dir, ".githooks/state.mjs");
+  writeFileSync(join(dir, ".githooks/state.mjs"), "throw new Error('moteur cassé');\n");
+  r = hook(fiche);
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /\[drwil\] .*erreur.*moteur cassé.*node \.githooks\/state\.mjs start/);
+  assert.equal(etat(), null);
+  writeFileSync(join(dir, ".githooks/state.mjs"), moteur);
+
+  r = hook(fiche);
+  assert.match(r.stdout, /BUILD \(lancé : docs\/projects\/seule\.md\)/);
+  assert.equal(etat().active_brief, fiche);
+});
+
 test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

@@ -22,6 +22,18 @@ closing commit; the release renames this section to its version.
   never counts as passed), but neither the message nor the README said so:
   `verify` and `doctor` now name `npx drwil init --ci github` (or
   `--ci gitlab`), and the README explains it next to the first `verify`.
+- `/drwil-start` works with a single scoped brief. A poll question needs
+  two options, so the poll could not open on a new project's first brief;
+  the skill now adds a « Not now » option, which the hook reads as « start
+  nothing » and says so.
+- The start poll's hook is never silent. With no answer read, or on an
+  error, it used to exit without a word, leaving the agent to guess why
+  nothing started; it now tells the agent what happened and the fallback
+  (`node .githooks/state.mjs start` in a terminal), without blocking and
+  without touching the state. No `[drwil]` message at all means the hooks
+  are not active in the session (opened before `init`): restart it.
+  Existing projects get the hook from `npx drwil init`; the skill, being
+  prose, is not refreshed yet (planned for 0.6.3).
 
 ## 0.6.1 (2026-10-17)
 

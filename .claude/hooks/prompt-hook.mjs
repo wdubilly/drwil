@@ -17,13 +17,34 @@ const MARK = "drwil-start";
 // Optional second question of the same poll (Claude Code): authorise the automatic merge.
 const MERGE_MARK = "drwil-merge";
 const MERGE_YES_RE = /^(fusion automatique|automatic merge)\b/i;
+// With a single scoped brief, the poll's second option (a question needs two): start nothing.
+const NOT_NOW_RE = /^(pas maintenant|not now)\b/i;
 // The tool runs the hook with the project folder as cwd.
 const ROOT = process.cwd();
 
 const TEXTS = {
-  fr: "drwil : sondage de lancement refusé — il ne doit contenir ni réponse ni valeur par défaut ; c'est l'humain qui choisit.",
-  en: "drwil: start poll refused — it must contain neither an answer nor a default value; the human chooses.",
+  fr: {
+    refused: "drwil : sondage de lancement refusé — il ne doit contenir ni réponse ni valeur par défaut ; c'est l'humain qui choisit.",
+    notNow: "rien n'est lancé (réponse « Pas maintenant ») : l'état est inchangé.",
+    noAnswer:
+      "aucune réponse lue dans le sondage de lancement : rien n'est lancé, l'état est inchangé. Repli : `node .githooks/state.mjs start` dans un terminal interactif.",
+    error: (m) =>
+      `erreur au lancement (${m}) : rien n'est lancé, l'état est inchangé. Repli : \`node .githooks/state.mjs start\` dans un terminal interactif.`,
+  },
+  en: {
+    refused: "drwil: start poll refused — it must contain neither an answer nor a default value; the human chooses.",
+    notNow: "nothing started (answer « Not now »): the state is unchanged.",
+    noAnswer:
+      "no answer read in the start poll: nothing started, the state is unchanged. Fallback: `node .githooks/state.mjs start` in an interactive terminal.",
+    error: (m) =>
+      `error while starting (${m}): nothing started, the state is unchanged. Fallback: \`node .githooks/state.mjs start\` in an interactive terminal.`,
+  },
 };
+
+/** What the agent reads after the poll: never silent on a drwil start poll. */
+function tell(text) {
+  console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `[drwil] ${text}` } }));
+}
 
 /** The start poll, in one of the two known forms; null otherwise. */
 export function startPoll(input) {
@@ -81,24 +102,33 @@ async function main() {
   if (event === "PreToolUse") {
     if (!poll.prefilled) return 0;
     // Exit code 2: the tool blocks the call and gives this message back to the model.
-    console.error(TEXTS[language()]);
+    console.error(TEXTS[language()].refused);
     return 2;
   }
   if (event !== "PostToolUse") return 0;
+  const T = TEXTS[language()];
   const choice = humanAnswer(input, poll);
-  if (!choice) return 0;
-  const { start } = await import(pathToFileURL(join(ROOT, ".githooks", "state.mjs")).href);
+  if (!choice) {
+    tell(`✗ ${T.noAnswer}`);
+    return 0;
+  }
   // Several briefs (multiple choice, labels separated by commas; a brief path never holds one): a queue.
   const [first, ...queue] = String(choice)
     .split(/,\s*/)
     .map((c) => c.trim())
     .filter(Boolean);
-  const r = start(ROOT, first, { human: true, autoMerge: mergeAuthorised(input, poll), queue });
-  console.log(
-    JSON.stringify({
-      hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `[drwil] ${r.code === 0 ? "✓" : "✗"} ${r.message}` },
-    }),
-  );
+  if ([first, ...queue].some((c) => NOT_NOW_RE.test(c))) {
+    tell(T.notNow);
+    return 0;
+  }
+  try {
+    const { start } = await import(pathToFileURL(join(ROOT, ".githooks", "state.mjs")).href);
+    const r = start(ROOT, first, { human: true, autoMerge: mergeAuthorised(input, poll), queue });
+    tell(`${r.code === 0 ? "✓" : "✗"} ${r.message}`);
+  } catch (e) {
+    // Never blocks the tool: the state stays unchanged, the Git gate remains; the agent is told why.
+    tell(`✗ ${T.error(e?.message ?? String(e))}`);
+  }
   return 0;
 }
 
