@@ -235,6 +235,21 @@ une décision du demandeur.
 - [ ] [décision] Une mise à jour rafraîchit aussi la prose que le projet
   n'a pas touchée (skills, recettes ; relevé par l'essai 0.5.1 → 0.6.0 du
   2026-10-17) — `docs/intentions/maj-prose-non-modifiee.md`.
+- [ ] [décision] [P1] drwil_com, priorité 1 : une attestation tombe quand
+  ce qu'elle couvre change (scénario S6) —
+  `docs/intentions/attestation-liee-a-son-objet.md`.
+- [ ] [décision] [P1] drwil_com, priorité 2 : des critères et des preuves
+  qui survivent à la clôture — `docs/intentions/criteres-et-preuves-durables.md`.
+- [ ] [décision] [P1] drwil_com, priorité 3 : vérifier la barrière de
+  fusion (protection absente, mal configurée, conforme) — section « Retour
+  de drwil_com » de `docs/intentions/forge-dans-le-livrable.md`.
+- [ ] [décision] drwil_com, à examiner ensuite : une acceptation humaine
+  par critère — `docs/intentions/acceptation-par-critere.md`.
+- [ ] [décision] drwil_com, à examiner ensuite : un cycle de vie des
+  fiches sans contournement — `docs/intentions/cycle-de-vie-des-fiches.md`.
+- [ ] [décision] drwil_com, en dernier : un guide de démarrage
+  (dépôt existant, auto-merge, protection, redémarrer la session) —
+  `docs/intentions/guide-de-demarrage.md`.
 - [ ] [décision] Un dossier passé par `npm init -y` reste un projet neuf
   (script `test` par défaut ; limite de la 0.6.1) —
   `docs/intentions/projet-neuf-apres-npm-init.md`.
