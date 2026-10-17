@@ -48,8 +48,13 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    commit, in this order — wait until GitHub has computed the PR and, if it is behind the main
    branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is
    scheduled (`gh pr view --json autoMergeRequest`); only then go back to Scoping, which clears
-   the authorisation. On failure, stay in CLOSING and report it. Otherwise the merge stays a
-   human gesture.
+   the authorisation. On failure, stay in CLOSING and report it. If `gh pr merge --auto` fails
+   because the repository does not allow it (« Auto merge is not allowed for this repository »),
+   say « auto-merge not allowed by the repository » and the way out — a repository admin ticks
+   « Allow auto-merge » in the GitHub repository settings (General → Pull Requests), or the
+   human merges by hand — stay in CLOSING, and never say the merge is scheduled: a mergeable PR,
+   auto-merge allowed by the repository, auto-merge scheduled and merge done are four different
+   states. Otherwise the merge stays a human gesture.
 5. **Queue** (the state says « Queue decided at start »): after each closing, wait until the
    PR is merged, update the main branch, then start the next brief with
    `node .githooks/state.mjs next` and implement it — no new poll. Stop at the first

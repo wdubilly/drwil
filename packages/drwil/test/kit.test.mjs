@@ -1003,6 +1003,18 @@ test("QUA-044 : par un chemin qui passe par un lien symbolique, les hooks se lan
   assert.match(garde.stdout, /"permissionDecision":"deny"/, "la garde de cadrage s'est lancée");
 });
 
+test("QUA-037 : la skill de lancement dit un auto-merge refusé par le dépôt, reste en CLOSING et ne le dit jamais programmé", async () => {
+  // Retour de drwil_com (2026-10-17) : sans « Allow auto-merge » dans les réglages du dépôt GitHub,
+  // `gh pr merge --auto` échoue ; rien ne doit laisser croire que la fusion est programmée.
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const skill = read(dir, ".claude/skills/start-a-workstream/SKILL.md");
+  assert.match(skill, /auto-merge not allowed by the repository/);
+  assert.match(skill, /Allow auto-merge/, "la marche à suivre : le réglage du dépôt");
+  assert.match(skill, /stay in CLOSING/);
+  assert.match(skill, /never say the merge is scheduled/);
+});
+
 test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

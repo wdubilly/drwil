@@ -571,6 +571,43 @@ DRWIL is not published on npm yet. Install it from the tarball attached to a
 GitHub release, by its URL: nothing to download, no file left in your project
 (Node.js 22+).
 
+### Before you start: prerequisites, recommendations, options
+
+**Prerequisites** — without them, DRWIL does not work:
+
+* Node.js 22+ and git. In an empty folder, `init` creates the git repository
+  and a first working branch; in an existing repository, it keeps your
+  history and only adds its files.
+
+**Recommendations** — not required, but they make working with an agent
+smoother and safer:
+
+* **Restart your agent's session after `init`** (and after any change to its
+  hooks). Claude Code loads its hooks when a session starts: a session
+  opened before `init` runs none of them — no governance reminder, no start
+  poll, no scope guard. How a tool reloads its configuration depends on the
+  tool. Check that it worked: with Claude Code, a new session starts with
+  `[drwil] Governance state…` (`[drwil] État de gouvernance…` in a French
+  project); with any agent, ask it to run
+  `node .githooks/state.mjs` and read the activity it reports.
+* **Protect the main branch and require the CI checks.** Then nothing merges
+  before the checks are green, auto-merge included. On GitHub: Settings →
+  Rules → Rulesets (or Branches), target the default branch, require a pull
+  request and the status check `checks` (the job of the CI `init` installs),
+  with branches up to date. It takes admin rights on the repository. DRWIL
+  does not set it up nor check it yet; GitLab has its own protected
+  branches.
+
+**Options**:
+
+* **Automatic merge** (chosen when starting a workstream). On GitHub, an
+  admin must tick « Allow auto-merge » (Settings → General → Pull
+  Requests); otherwise `gh pr merge --auto` fails, and the agent says
+  « auto-merge not allowed by the repository » and leaves the merge to you —
+  it never reports a merge as scheduled when it is not. A mergeable PR,
+  auto-merge allowed by the repository, auto-merge scheduled and merge done
+  are four different states.
+
 ### 1. Install it as a dev dependency
 
 From your project folder:

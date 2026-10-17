@@ -36,6 +36,16 @@ closing commit; the release renames this section to its version.
   `.claude/settings.json` is unmodified, otherwise from
   `npx drwil resolve-drift`.
 
+- The README's installation starts with « Before you start »:
+  prerequisites (Node.js 22+, git), recommendations (restart the agent's
+  session after `init` — Claude Code loads its hooks at session start — and
+  how to check the hooks are active; protect the main branch and require
+  the CI checks) and options (automatic merge, which needs « Allow
+  auto-merge » in the GitHub repository settings).
+- When the repository does not allow auto-merge, the start skill says
+  « auto-merge not allowed by the repository » and the way out, stays in
+  CLOSING and never reports the merge as scheduled.
+
 ### Changed
 
 - The scoping recipes' outputs (`docs/value-discovery.md`,

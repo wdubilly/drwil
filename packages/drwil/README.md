@@ -43,6 +43,11 @@ The tarball is installed from the GitHub release URL: nothing is downloaded
 into the project. To upgrade, run the same command with the new release's
 URL; an old `drwil-*.tgz` left by a previous install can be deleted.
 
+After `init`, restart your agent's session: Claude Code loads its hooks when
+a session starts. Prerequisites, recommendations (session restart, branch
+protection) and options (automatic merge) are in the repository README,
+« Before you start ».
+
 ## What you gain
 
 AI coding assistants are fast. What they lack is a boundary and a proof.
