@@ -27,6 +27,9 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      queue): the briefs ticked are run in the poll's order, the first now, the next ones
      started by the agent after each closing; only ready briefs (maturity « ready », no open
      decision, acceptance criteria) can be queued, otherwise the whole start is refused.
+   - **A single scoped brief**: a question needs at least two options, so add a second one,
+     label `Not now` (description: start nothing), never recommended; the hook reads it,
+     starts nothing and says so.
    - Claude Code, **second question** of the same poll: `header` exactly `drwil-merge`,
      options "Automatic merge" (the agent will schedule the merge in CLOSING) and "Manual
      merge", with no recommendation: it is the acceptance decision, taken at start.
@@ -37,7 +40,10 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    - **Forbidden**: filling `answers` or a default value (`default`): the hook refuses the poll.
      The human chooses alone.
 4. After the answer, read the state again: `node .githooks/state.mjs`. In BUILD on the
-   chosen brief: implement. Otherwise: report the refusal as is, without retrying another way. If the state
+   chosen brief: implement. Otherwise: report the refusal as is, without retrying another way;
+   the hook always says why (`[drwil]` message: refusal, « Not now », no answer read, error).
+   No `[drwil]` message at all: the hooks are not active in this session (e.g. opened before
+   `init`) — say so and suggest restarting the session. If the state
    says "Automatic merge authorised": in CLOSING, after verify PASS and pushing the closing
    commit, in this order — wait until GitHub has computed the PR and, if it is behind the main
    branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is
