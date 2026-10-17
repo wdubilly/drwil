@@ -14,6 +14,7 @@ files:
   - packages/drwil/src/doctor.ts
   - packages/drwil/src/render.ts
   - packages/drwil/src/index.ts
+  - packages/drwil/src/preview.ts
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/migration.test.mjs
   - docs/contracts.md
