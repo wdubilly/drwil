@@ -1722,3 +1722,30 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   passé par `yarn init` reste un projet neuf ») ; juger sur la présence
   de code reste écarté.
 - **Clôturé par** : la PR de la branche `workstream/projet-neuf-apres-npm-init`.
+
+## 2026-10-17 — Release 0.6.3
+
+- **Décisions clés** (demandeur, 2026-10-17) : une fiche dédiée, comme la
+  0.6.0. Version 0.6.3 partout (paquet, racine, verrou) ; section
+  « Unreleased » du changelog renommée « 0.6.3 (2026-10-17) », une
+  « Unreleased » vide au-dessus ; les deux README installent depuis la
+  release 0.6.3 (QUA-040, drwil entretient la carte, le README et le
+  changelog). Avant la release, la note de fin de réponse des
+  identifiants sans libellé a été vérifiée par le demandeur dans une
+  nouvelle session (terminal).
+- **Essai réel** en plus du test de QUA-027 (mise à jour sûre d'une
+  version à la suivante) : projet temporaire passé par `npm init -y`,
+  équipé avec le tarball 0.6.2 de la release GitHub, puis mis à jour avec
+  le tarball 0.6.3 — recette modifiée à la main préservée et signalée,
+  fichier du projet intact, hooks rafraîchis, version enregistrée 0.6.3.
+  L'installation 0.6.2 a reproduit le défaut corrigé par la 0.6.3 (pile
+  Node.js détectée, pas de dépôt git) ; `verify` en ERROR seulement pour
+  ce montage (SEC-007, pas de secret dans le dépôt : non exécuté sans
+  dépôt git ; le message d'`init` dit quoi faire).
+- **Publication** : tag `v0.6.3`, note GitHub et tarball, après la fusion
+  et sur feu vert du demandeur (`node .githooks/create-release.mjs`).
+- **Intention d'origine** : aucune (demande directe).
+- **Limites connues** : aucune nouvelle ; le web et le desktop restent à
+  vérifier pour la note de fin de réponse (intention « un identifiant
+  sans libellé est rattrapé avant l'humain »).
+- **Clôturé par** : la PR de la branche `workstream/release-0-6-3`.

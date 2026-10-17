@@ -89,8 +89,8 @@ avant les points 5 à 13, en trois versions.
 - **0.6.2** — débloquer le pilote : premier essai propre (installation par
   l'URL de la release, premier `verify` sans CI expliqué ; fait, journal du
   2026-10-17) et le sondage de lancement dans tous les cas (un seul brief,
-  hook jamais muet ; fait, journal du 2026-10-17), lancés en file ; reste
-  la release.
+  hook jamais muet ; fait, journal du 2026-10-17), lancés en file ;
+  publiée le 2026-10-17 (tag `v0.6.2`).
 - **0.6.3** — des mises à jour qui servent, des réponses lisibles : en
   tête, un identifiant sans libellé rattrapé (fait, journal du
   2026-10-17 ; affichage vérifié dans le terminal le même jour) et la mise à
@@ -286,8 +286,6 @@ une décision du demandeur.
 - [ ] [décision] Copilot CLI lance-t-il les hooks déclarés avec
   `${CLAUDE_PROJECT_DIR}` ? (non vérifié ; limite du chantier « racine
   des hooks » du 2026-10-17) — `docs/intentions/copilot-claude-project-dir.md`.
-- [ ] [IA] [P1] 0.6.3 : release 0.6.3 (version, changelog, README ;
-  tag et note GitHub sur feu vert) — `docs/projects/release-0-6-3.md`.
 - [ ] [décision] `yarn init` laisse-t-il un projet neuf ? (non vérifié ;
   limite du chantier « `npm init -y` » du 2026-10-17) —
   `docs/intentions/projet-neuf-apres-yarn-init.md`.
