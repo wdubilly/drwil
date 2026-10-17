@@ -96,8 +96,8 @@ avant les points 5 à 13, en trois versions.
   2026-10-17 ; affichage à vérifier, ligne ci-dessous) et la mise à
   jour qui rafraîchit la prose non modifiée (fait, journal du
   2026-10-17) ; puis la barrière qui
-  laisse passer les documents de cadrage
-  (`docs/intentions/barriere-documents-de-cadrage.md`), la racine des
+  laisse passer les documents de cadrage (fait, journal du 2026-10-17),
+  la racine des
   hooks (fait, journal du 2026-10-17), `npm init -y`
   (`docs/intentions/projet-neuf-apres-npm-init.md`) et un guide de
   démarrage réduit (`docs/intentions/guide-de-demarrage.md`). Les six
@@ -274,9 +274,9 @@ une décision du demandeur.
   de réponse s'affiche sous la réponse, sans coût pour le modèle (limite
   du chantier du 2026-10-17) —
   `docs/intentions/identifiant-rattrape-avant-l-humain.md`.
-- [ ] [IA] [P1] 0.6.3 : les documents produits en cadrage passent la
-  barrière en SCOPING (découverte de valeur gardée en stash) —
-  `docs/projects/barriere-documents-de-cadrage.md`.
+- [ ] [décision] Le budget de temps des contrôles au commit, calibré pour
+  les machines Windows de la CI (1500 ms dépassé sans changement de code ;
+  relevé le 2026-10-17) — `docs/intentions/budget-temps-windows.md`.
 - [ ] [décision] Copilot CLI lance-t-il les hooks déclarés avec
   `${CLAUDE_PROJECT_DIR}` ? (non vérifié ; limite du chantier « racine
   des hooks » du 2026-10-17) — `docs/intentions/copilot-claude-project-dir.md`.
