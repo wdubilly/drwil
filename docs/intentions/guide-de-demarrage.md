@@ -39,8 +39,8 @@ marche pas), **recommandations** (ils fluidifient et sécurisent) et
 - Skill `/drwil-start`, étape 4 : vérifie déjà que la fusion est
   programmée (`gh pr view --json autoMergeRequest`) avant de revenir en
   SCOPING.
-- Fiches voisines : `docs/projects/premier-essai-propre.md` (installation
-  par l'URL de la release, même section du README : à faire avant),
+- Fiches voisines : premier essai propre (installation par l'URL de la
+  release, même section du README ; fait en 0.6.2, journal du 2026-10-17),
   `docs/projects/sondage-lancement-tous-les-cas.md`.
 
 ## Questions à trancher
