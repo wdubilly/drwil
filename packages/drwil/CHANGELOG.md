@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- A folder that went through `npm init -y` before installing drwil stays
+  a new project. The placeholder `test` script `npm init` writes made it
+  look like an existing Node.js project: no git repository nor branch, no
+  invitation to scope it, and a map saying "Node.js, detected". That exact
+  script no longer counts; any other script, or a real `test`, still
+  makes a detected Node.js stack.
 - The agent's hooks find the project root from where they are installed,
   never from the current folder. After an agent's `cd` into a subfolder,
   the governance reminder read a missing state (and created a stray

@@ -7,6 +7,7 @@ export interface StackEntry {
   technos: string[];
 }
 
+const NPM_INIT_TEST = 'echo "Error: no test specified" && exit 1';
 const IGNORED_DIRS = new Set(["node_modules", "docs", "vendor", "dist", "build", "target", "venv", "scripts"]);
 
 function read(path: string): string {
@@ -39,7 +40,9 @@ function detectDir(dir: string): string[] {
       deps = { ...pkg.dependencies, ...pkg.devDependencies };
       // The README installs drwil with `npm install -D` before `init`: a package.json holding drwil
       // alone (no other dependency, no script) is not a stack, the folder stays a new project (QUA-038).
-      toolingOnly = Object.keys(deps).every((d) => d === "drwil") && !Object.keys(pkg.scripts ?? {}).length;
+      // `npm init -y` writes a placeholder `test` script: that exact text does not count as a script.
+      const scripts = Object.entries(pkg.scripts ?? {}).filter(([name, cmd]) => !(name === "test" && cmd === NPM_INIT_TEST));
+      toolingOnly = Object.keys(deps).every((d) => d === "drwil") && !scripts.length;
     } catch {}
   }
   if (has("package.json") && !toolingOnly) {

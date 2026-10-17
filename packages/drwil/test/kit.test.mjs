@@ -176,10 +176,31 @@ test("QUA-038 : un package.json qui n'installe que drwil (README, étape npm ins
   assert.equal(git(dir, "symbolic-ref", "--short", "HEAD").stdout.trim(), "workstream/kit-installation");
   assert.match(read(dir, "docs/architecture.md"), /## Stack\s+Not decided\./);
   assert.deepEqual(config(dir).layers, []);
-  // Un vrai projet Node (une autre dépendance, ou un script) reste une pile détectée.
+  // Un dossier passé par `npm init -y` : son script test par défaut ne fait pas une pile.
+  const npmInit = tmp();
+  writeFileSync(
+    join(npmInit, "package.json"),
+    JSON.stringify({
+      name: "demo",
+      scripts: { test: 'echo "Error: no test specified" && exit 1' },
+      devDependencies: { drwil: "file:drwil.tgz" },
+    }),
+  );
+  const npmInitLines = await capture(() => init({ lang: "en", targetDir: npmInit }));
+  assert.ok(
+    npmInitLines.some((l) => l.includes("Stack not detected")),
+    npmInitLines.join("\n"),
+  );
+  assert.equal(git(npmInit, "symbolic-ref", "--short", "HEAD").stdout.trim(), "workstream/kit-installation");
+  assert.match(read(npmInit, "docs/architecture.md"), /## Stack\s+Not decided\./);
+  // Un vrai projet Node (une autre dépendance, un test réel, un autre script) reste une pile détectée.
   for (const pkg of [
     { dependencies: { express: "^4" }, devDependencies: { drwil: "file:drwil.tgz" } },
     { scripts: { test: "node --test" }, devDependencies: { drwil: "file:drwil.tgz" } },
+    {
+      scripts: { test: 'echo "Error: no test specified" && exit 1', start: "node index.js" },
+      devDependencies: { drwil: "file:drwil.tgz" },
+    },
   ]) {
     const reel = tmp();
     writeFileSync(join(reel, "package.json"), JSON.stringify(pkg));
