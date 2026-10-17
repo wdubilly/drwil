@@ -103,6 +103,10 @@ avant les points 5 à 13, en trois versions.
   démarrage réduit (`docs/intentions/guide-de-demarrage.md`). Les six
   sont cadrées le 2026-10-17 (une fiche chacune, lignes de l'index
   ci-dessous).
+- **0.6.4** — décidé le 2026-10-18 par le demandeur : en tête, une CI
+  plus rapide (Windows et macOS testés seulement quand une PR touche du
+  code, `docs/projects/ci-matrice-sur-pr.md`) ; puis la file de chantiers
+  menée par sous-agents (`docs/projects/reprise-par-sous-agent.md`).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -278,6 +282,9 @@ une décision du demandeur.
   entre deux chantiers d'une file (un sous-agent par chantier, la session
   principale pilote la file ; demandé le 2026-10-17, en tête de la 0.6.4) —
   `docs/intentions/reprise-automatique.md`.
+- [ ] [IA] [P1] 0.6.4, en tête : Windows et macOS testés seulement quand
+  une PR touche du code (recadré le 2026-10-18) —
+  `docs/projects/ci-matrice-sur-pr.md`.
 - [ ] [IA] [P1] 0.6.4 : une file de chantiers menée par sous-agents, un
   contexte neuf par chantier — `docs/projects/reprise-par-sous-agent.md`.
 - [ ] [décision] Le budget de temps des contrôles au commit, calibré pour
@@ -324,8 +331,6 @@ une décision du demandeur.
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
   restent à trancher — `docs/intentions/importer-tickets-externes.md`.
-- [ ] [décision] [P3] CI : matrice Windows et macOS sur les pull requests
-  seulement (jobs divisés par deux) — `docs/projects/ci-matrice-sur-pr.md`.
 
 ## Points déjà faits d'une fiche encore ouverte
 
