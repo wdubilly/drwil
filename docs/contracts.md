@@ -325,6 +325,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : la consommation de tokens par chantier, mesurée chez tout projet — « Livré à tout projet : `node .githooks/consumption.mjs` donne, par chantier, les tokens en quatre catégories, un total pondéré indicatif, le temps actif et les modèles »
 **Raison** : Le pilote de la 0.6.0 sur 2 ou 3 projets doit dire ce que coûte un chantier chez eux ; la mesure n'existait que dans ce dépôt, et la recette livrée la disait impossible.
 
+## QUA-043 — Un projet sans CI sait comment en déclarer une
+**Règle** : Sans CI déclarée (`ci: none`), le détail du contrôle de couverture CI (`.githooks/engine.mjs`, vu par `run-checks` et `drwil verify`) et la ligne CI de `drwil doctor` nomment la commande qui en déclare une (`npx drwil init --ci github` ou `--ci gitlab`), en français et en anglais. Le verdict ne change pas : le contrôle reste non exécuté, donc jamais passé (QUA-013).
+**Périmètre** : `.githooks/engine.mjs`, `packages/drwil/src/doctor.ts` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/engine.mjs` (texte `noCi`), `packages/drwil/src/doctor.ts` (texte `noCi`).
+**Preuve** : tests du moteur et du paquet.
+**Contrôle** : `tests-qua-043`
+**Tests** : `.githooks/engine.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : un premier essai propre (0.6.2) — « Sans CI déclarée, le détail de QUA-013 (contrôle non exécuté n'est pas passé) dans verify et la ligne CI de doctor disent comment en sortir (npx drwil init --ci github ou --ci gitlab), en français et en anglais, prouvé par les tests ; le verdict reste ERROR »
+**Raison** : Constaté le 2026-10-17 sur le pilote `drwil_com` : le premier `verify` d'un projet neuf, tel que le donne le README, finit en `VERIFY ERROR` sans dire que c'est attendu ni comment en sortir.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

@@ -58,7 +58,7 @@ vide, projet du pilote) en suivant le README à la lettre :
 - Sans CI déclarée, le détail de QUA-013 (contrôle non exécuté n'est pas
   passé) dans `verify` et la ligne CI de `doctor` disent comment en sortir
   (`npx drwil init --ci github` ou `--ci gitlab`), en français et en
-  anglais, prouvé par les tests ; le verdict reste ERROR — `QUA-013`
+  anglais, prouvé par les tests ; le verdict reste ERROR — `QUA-043`
 - Le README dit, à côté du premier `verify`, qu'un projet sans CI y lit
   ERROR et comment en déclarer une — `QUA-040`
 - La version 0.6.2 est la même partout, son changelog dit les deux
@@ -69,9 +69,8 @@ vide, projet du pilote) en suivant le README à la lettre :
 Aucun : QUA-013 garde sa règle (un contrôle non exécuté n'est pas passé) ;
 seul son message dit quoi faire.
 
-Contrat créé (ID attribué au commit qui l'inscrit au registre) : « un
-projet sans CI sait comment en déclarer une », automatisé, avec son
-contrôle de tests. Décision du demandeur du 2026-10-17
+Contrat créé : `QUA-043` (un projet sans CI sait comment en déclarer une),
+automatisé, contrôle `tests-qua-043`. Décision du demandeur du 2026-10-17
 en cours de chantier : QUA-013 porte un champ `Manuel` (contrat attesté),
 un critère prouvé par des tests ne peut pas y être rattaché (« preuve non
 durable ») ; d'où l'élargissement du cadrage au registre et à

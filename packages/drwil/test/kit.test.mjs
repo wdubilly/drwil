@@ -1521,14 +1521,19 @@ test("QUA-013 : un job CI qui ne se déclenche plus sur les bons chemins est dé
   assert.match(r.stdout, /secrets/);
 });
 
-test("QUA-013 : ci: none : pas de CI, la couverture est signalée non exécutée et le message dit comment en sortir", async () => {
+test("QUA-013 : ci: none : pas de CI, la couverture est signalée non exécutée (pas d'échec silencieux)", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, ci: "none" }));
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout);
   assert.match(r.stdout, /non exécuté : couverture CI de chaque contrôle.*aucune CI configurée/s);
-  // Le premier verify d'un projet neuf finit ici : le message dit comment en sortir.
-  assert.match(r.stdout, /aucune CI configurée.*npx drwil init --ci github/s);
+});
+
+test("QUA-043 : sans CI, run-checks et doctor disent comment en déclarer une, en français et en anglais", async () => {
+  // Le premier verify d'un projet neuf finit sur ce non exécuté : le message dit comment en sortir.
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "none" }));
+  assert.match(checks(dir).stdout, /aucune CI configurée.*npx drwil init --ci github/s);
   const fr = (await doctor({ targetDir: dir })).points.find((p) => p.id === "ci");
   assert.equal(fr.state, "warning");
   assert.match(fr.detail, /npx drwil init --ci github.*--ci gitlab/);
