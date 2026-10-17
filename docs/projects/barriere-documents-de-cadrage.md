@@ -13,6 +13,8 @@ files:
   - docs/contracts.md
   - docs/decouverte-valeur.md
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/docs/ia-first.md
+  - docs/ia-first.md
 -->
 
 (cadrage : la barrière de périmètre (gabarit, copie, test), le registre
