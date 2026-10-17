@@ -1559,3 +1559,39 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Publication** : release 0.6.2 après la fusion de cette PR, sur feu
   vert du demandeur ; fin de la file.
 - **Clôturé par** : la PR de la branche `workstream/sondage-lancement-tous-les-cas`.
+
+## 2026-10-17 — Les hooks trouvent la racine du projet par l'emplacement de leur fichier (0.6.3)
+
+- **Décisions clés** (demandeur, 2026-10-17) : racine prise à
+  l'emplacement du fichier du hook, comme le moteur des contrôles
+  (`projectRoot`), plutôt que la variable de l'outil puis git — choix
+  revu après coup sur proposition de l'agent, parce qu'il ne dépend
+  d'aucun outil ; même règle pour tous les hooks livrés. Sondage, garde
+  de cadrage et glossaire prennent le dossier qui contient leur
+  `.claude/` ; le moteur d'état, le parent de son `.githooks/`
+  (`stateRoot`, `DRWIL_ROOT` en test, sans importer le moteur des
+  contrôles pour éviter un cycle avec `.githooks/scope-gate.mjs`) ; la commande du
+  glossaire, le `.githooks/` par lequel elle est appelée (un lien
+  symbolique garde le dossier courant). Trouvé au chantier : depuis un
+  sous-dossier, la garde de cadrage ne refusait plus rien. Nouveau contrat
+  QUA-044 (les hooks lisent la racine du projet, pas le dossier courant),
+  contrôle `tests-qua-044` ; le test « node state.mjs lit l'état du
+  dossier courant » devient son contraire.
+- **CI rouge, chantier rouvert** (décision du demandeur) : la CI macOS a
+  révélé un défaut plus ancien — chaque point d'entrée comparait le
+  chemin appelé à son chemin réel ; par un lien symbolique (`/var` →
+  `/private/var` sur macOS), le hook ne faisait rien, en silence. Clôture
+  annulée sur la branche, fiche relancée par sondage, chemins réels
+  comparés partout (sondage, garde de cadrage, glossaire, moteur d'état),
+  reproduit sous Linux par un test avec un lien vers le projet ; QUA-044
+  le dit. Les jobs Windows n'avaient pas échoué : annulés par l'échec
+  macOS dans la même matrice.
+- **Intention d'origine** : « les hooks de l'outil IA lisent la racine du
+  projet, pas le dossier courant », entièrement couverte (ses deux
+  questions tranchées) : résumée ici et retirée.
+- **Limites connues** : Copilot CLI et `${CLAUDE_PROJECT_DIR}` dans les
+  commandes des hooks, non vérifié (intention « Copilot CLI lance bien
+  les hooks déclarés avec `${CLAUDE_PROJECT_DIR}` ») ; le hook de fin de
+  réponse, pas encore écrit, suivra la même règle (contrainte de sa
+  fiche).
+- **Clôturé par** : la PR de la branche `workstream/hooks-racine-du-projet`.

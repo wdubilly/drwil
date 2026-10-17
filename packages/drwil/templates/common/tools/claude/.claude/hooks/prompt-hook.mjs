@@ -9,9 +9,9 @@
 //   chosen briefs, in the poll's order: the agent starts the next one after each closing (QUA-037).
 // The same hooks serve Claude Code and Copilot CLI, which reads this settings file; only the poll
 // formats differ. A poll that is not drwil's passes through untouched.
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { readFileSync, realpathSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const MARK = "drwil-start";
 // Optional second question of the same poll (Claude Code): authorise the automatic merge.
@@ -19,8 +19,8 @@ const MERGE_MARK = "drwil-merge";
 const MERGE_YES_RE = /^(fusion automatique|automatic merge)\b/i;
 // With a single scoped brief, the poll's second option (a question needs two): start nothing.
 const NOT_NOW_RE = /^(pas maintenant|not now)\b/i;
-// The tool runs the hook with the project folder as cwd.
-const ROOT = process.cwd();
+// The folder holding this hook's .claude/, never the current folder: it follows the agent's `cd`.
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 const TEXTS = {
   fr: {
@@ -132,7 +132,9 @@ async function main() {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Real paths on both sides: a project path through a symbolic link (macOS /var → /private/var) must
+// still run the hook, not leave it silently idle.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     process.exitCode = await main();
   } catch {

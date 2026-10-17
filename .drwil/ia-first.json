@@ -344,6 +344,19 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-044",
+      "name": "tests de QUA-044, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-044 \" .githooks/state.test.mjs packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".githooks/**",
+        ".claude/hooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "tests-qua-043",
       "name": "tests de QUA-043, filtrés par son ID (un contrôle par règle, QUA-033)",
       "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-043 \" .githooks/engine.test.mjs packages/drwil/test/kit.test.mjs",

@@ -833,6 +833,130 @@ test("QUA-037 : un seul brief : « Pas maintenant » ne lance rien et le dit ; s
   assert.equal(etat().active_brief, fiche);
 });
 
+test("QUA-044 : lancés depuis un sous-dossier, les hooks lisent la racine du projet et n'écrivent rien ailleurs", async () => {
+  // Constaté le 2026-10-16 : après un `cd` de l'agent, le rappel lisait un état absent et créait un .drwil
+  // parasite ; la garde de cadrage, ne trouvant pas .githooks/, ne refusait plus rien.
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const fiche = "docs/projects/racine.md";
+  writeFileSync(
+    join(dir, fiche),
+    "# Projet : Racine\n\n**Statut** : cadré le 2026-10-17.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/couvert.ts\n-->\n\n## Critères d'acceptation\n\n- Critère — `APP-001`\n",
+  );
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+  const sous = join(dir, "src", "profond");
+  mkdirSync(sous, { recursive: true });
+  const lancer = (script, args, entree) =>
+    spawnSync(process.execPath, [join(dir, script), ...args], { cwd: sous, encoding: "utf8", input: entree });
+
+  // Sondage : la fiche est lancée à la racine.
+  const sondage = {
+    questions: [
+      {
+        question: "Quelle fiche ?",
+        header: "drwil-start",
+        multiSelect: false,
+        options: [
+          { label: fiche, description: "Racine" },
+          { label: "Pas maintenant", description: "" },
+        ],
+      },
+    ],
+  };
+  const r = lancer(
+    ".claude/hooks/prompt-hook.mjs",
+    [],
+    JSON.stringify({
+      hook_event_name: "PostToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: sondage,
+      tool_response: { ...sondage, answers: { "Quelle fiche ?": fiche } },
+    }),
+  );
+  assert.match(r.stdout, /BUILD \(lancé : docs\/projects\/racine\.md\)/);
+  assert.equal(JSON.parse(read(dir, ".drwil/state.json")).activity, "BUILD");
+
+  // Rappel d'état : l'état réel (BUILD), pas un état absent.
+  rmSync(join(dir, ".drwil/reminder.json"), { force: true });
+  assert.match(lancer(".githooks/state.mjs", ["reminder"]).stdout, /BUILD/);
+
+  // Garde de cadrage : un fichier de code hors fiche reste refusé, un fichier couvert passe.
+  const ecrire = (fichier) =>
+    lancer(
+      ".claude/hooks/scope-reminder.mjs",
+      [],
+      JSON.stringify({
+        hook_event_name: "PreToolUse",
+        tool_name: "Write",
+        tool_input: { file_path: join(dir, fichier) },
+      }),
+    ).stdout;
+  assert.match(ecrire("src/hors.ts"), /"permissionDecision":"deny"/);
+  assert.equal(ecrire("src/couvert.ts").trim(), "");
+
+  // Glossaire : le hook et la commande lisent le registre de la racine.
+  const glose = lancer(
+    ".claude/hooks/id-glossary.mjs",
+    [],
+    JSON.stringify({
+      hook_event_name: "PostToolUse",
+      tool_name: "Bash",
+      tool_response: "voir SEC-007",
+    }),
+  );
+  assert.match(glose.stdout, /SEC-007 — /);
+  assert.match(lancer(".githooks/glossary.mjs", ["SEC-007"]).stdout, /^SEC-007 — /);
+
+  assert.ok(!existsSync(join(sous, ".drwil")), "aucun .drwil parasite dans le sous-dossier");
+});
+
+test("QUA-044 : par un chemin qui passe par un lien symbolique, les hooks se lancent quand même", async () => {
+  // Constaté en CI macOS (2026-10-17) : le dossier temporaire /var y est un lien vers /private/var ; un
+  // hook appelé par ce chemin se croyait importé (chemin appelé ≠ chemin réel) et ne faisait rien.
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const lien = join(tmp(), "projet-lien");
+  symlinkSync(dir, lien, "junction");
+  const lancer = (script, args, entree) =>
+    spawnSync(process.execPath, [join(lien, script), ...args], { cwd: lien, encoding: "utf8", input: entree });
+
+  assert.match(lancer(".githooks/state.mjs", []).stdout, /SCOPING/);
+  const sondage = { questions: [{ question: "Quelle fiche ?", header: "drwil-start", multiSelect: false, options: [] }] };
+  const r = lancer(
+    ".claude/hooks/prompt-hook.mjs",
+    [],
+    JSON.stringify({
+      hook_event_name: "PostToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: sondage,
+      tool_response: { ...sondage },
+    }),
+  );
+  assert.match(r.stdout, /aucune réponse lue/, "le hook du sondage s'est lancé");
+  const glose = lancer(
+    ".claude/hooks/id-glossary.mjs",
+    [],
+    JSON.stringify({
+      hook_event_name: "PostToolUse",
+      tool_name: "Bash",
+      tool_response: "voir SEC-007",
+    }),
+  );
+  assert.match(glose.stdout, /SEC-007 — /, "le hook du glossaire s'est lancé");
+  const garde = lancer(
+    ".claude/hooks/scope-reminder.mjs",
+    [],
+    JSON.stringify({
+      hook_event_name: "PreToolUse",
+      tool_name: "Write",
+      tool_input: { file_path: join(lien, "src/hors.ts") },
+    }),
+  );
+  assert.match(garde.stdout, /"permissionDecision":"deny"/, "la garde de cadrage s'est lancée");
+});
+
 test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

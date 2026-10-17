@@ -335,6 +335,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : un premier essai propre (0.6.2) — « Sans CI déclarée, le détail de QUA-013 (contrôle non exécuté n'est pas passé) dans verify et la ligne CI de doctor disent comment en sortir (npx drwil init --ci github ou --ci gitlab), en français et en anglais, prouvé par les tests ; le verdict reste ERROR »
 **Raison** : Constaté le 2026-10-17 sur le pilote `drwil_com` : le premier `verify` d'un projet neuf, tel que le donne le README, finit en `VERIFY ERROR` sans dire que c'est attendu ni comment en sortir.
 
+## QUA-044 — Les hooks lisent la racine du projet, pas le dossier courant
+**Règle** : Les hooks d'agent livrés (`.claude/hooks/`) prennent pour racine du projet le dossier qui contient leur `.claude/`, et le moteur d'état (`.githooks/state.mjs`) le parent de son `.githooks/` (`DRWIL_ROOT` pour les tests seulement), comme le moteur des contrôles ; la commande du glossaire, le parent du `.githooks/` par lequel elle est appelée. Jamais le dossier courant : lancés depuis un sous-dossier, ils lisent le bon état, la garde de cadrage refuse toujours un fichier de code hors fiche, et rien n'est écrit dans le sous-dossier. Appelés par un chemin qui passe par un lien symbolique, ils se lancent quand même (chemins réels comparés).
+**Périmètre** : `.claude/hooks/` (sondage, garde de cadrage, glossaire), `.githooks/state.mjs`, `.githooks/glossary.mjs` ; livré dans le gabarit.
+**Source de vérité** : chaque hook (constante de racine), `.githooks/state.mjs` (point d'entrée), `.githooks/glossary.mjs` (point d'entrée).
+**Preuve** : tests du paquet et du moteur d'état.
+**Contrôle** : `tests-qua-044`
+**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/state.test.mjs`
+**Origine** : les hooks trouvent la racine du projet par l'emplacement de leur fichier — « Tous les hooks d'agent livrés, et le moteur d'état quand un hook l'appelle, prennent pour racine le dossier qui contient leur `.claude/` ou `.githooks/`, jamais le dossier courant »
+**Raison** : Constaté le 2026-10-16 : après un `cd` de l'agent, le rappel lisait un état absent et créait un `.drwil` parasite ; vérifié au chantier, la garde de cadrage ne refusait plus rien depuis un sous-dossier.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

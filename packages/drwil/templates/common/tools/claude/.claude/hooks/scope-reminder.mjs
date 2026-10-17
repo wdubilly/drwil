@@ -12,10 +12,11 @@
 // The grammar comes from .githooks/scope.mjs, the same as the commit-time check.
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-// Claude Code runs the hook with the project folder as cwd.
-const ROOT = process.cwd();
+// The folder holding this hook's .claude/, never the current folder: after an agent's `cd`, the
+// current folder has no .githooks/ and the guard would refuse nothing.
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const TOOLS = new Set(["Edit", "Write", "MultiEdit"]);
 const MODEL_RE = /^modele-|^model-/;
 
@@ -132,7 +133,8 @@ async function main(input) {
 
 export { remind, main };
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Real paths on both sides: a project path through a symbolic link must still run the guard.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   let input = "";
   process.stdin.on("data", (d) => {
     input += d;

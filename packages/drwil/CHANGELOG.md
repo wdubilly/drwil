@@ -5,6 +5,21 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Fixed
+
+- The agent's hooks find the project root from where they are installed,
+  never from the current folder. After an agent's `cd` into a subfolder,
+  the governance reminder read a missing state (and created a stray
+  `.drwil` there), the start poll could not find the state engine, and
+  the scope guard refused nothing. The hooks now take the folder holding
+  their `.claude/` (the state engine, the parent of its `.githooks/`),
+  like the checks engine already did — the same for every agent.
+- The agent's hooks run when the project path goes through a symbolic
+  link. They compared the path they were called by with their real path
+  and, on a mismatch (macOS `/var` → `/private/var`, a symlinked home or
+  project folder), did nothing, silently: no reminder, no start poll, no
+  scope guard. They now compare real paths.
+
 ## 0.6.2 (2026-10-17)
 
 ### Fixed
