@@ -191,6 +191,9 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
 ## Vague 7 — le produit, quand tout est opérationnel
 
+- [ ] [IA] [P1] 0.6.1 : un projet neuf installé selon le README reste un
+  projet neuf (`package.json` qui n'installe que drwil, constaté sur
+  `drwil_com` le 2026-10-17) — `docs/projects/projet-neuf-apres-npm-install.md`.
 - [ ] [décision] [P2] Publication npm du kit, avec une porte avant
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
