@@ -100,8 +100,9 @@ avant les points 5 à 13, en trois versions.
   (`docs/intentions/barriere-documents-de-cadrage.md`), la racine des
   hooks (`docs/intentions/hooks-racine-du-projet.md`), `npm init -y`
   (`docs/intentions/projet-neuf-apres-npm-init.md`) et un guide de
-  démarrage réduit (`docs/intentions/guide-de-demarrage.md`, après la
-  0.6.2).
+  démarrage réduit (`docs/intentions/guide-de-demarrage.md`). Les six
+  sont cadrées le 2026-10-17 (une fiche chacune, lignes de l'index
+  ci-dessous).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -249,16 +250,10 @@ une décision du demandeur.
   `docs/intentions/file-pour-copilot.md`.
 - [ ] [décision] L'arrêt d'une file et ses comptes rendus vérifiés par un
   contrôle — `docs/intentions/arret-de-file-verifie.md`.
-- [ ] [décision] Les hooks de l'outil IA lisent la racine du projet, pas
-  le dossier courant (rappel faux après un `cd`, constaté le 2026-10-16) —
-  `docs/intentions/hooks-racine-du-projet.md`.
 - [ ] [décision] Ce que lit un visiteur reste juste sans dépendre de la
   mémoire de l'agent (README en double, version annoncée non contrôlée,
   toute clôture contrainte à l'exercice, entretien courant compris ;
   constaté le 2026-10-17) — `docs/intentions/doc-visiteur-juste.md`.
-- [ ] [décision] Une mise à jour rafraîchit aussi la prose que le projet
-  n'a pas touchée (skills, recettes ; relevé par l'essai 0.5.1 → 0.6.0 du
-  2026-10-17) — `docs/intentions/maj-prose-non-modifiee.md`.
 - [ ] [décision] [P1] drwil_com, priorité 1 : une attestation tombe quand
   ce qu'elle couvre change (scénario S6) —
   `docs/intentions/attestation-liee-a-son-objet.md`.
@@ -271,21 +266,27 @@ une décision du demandeur.
   par critère — `docs/intentions/acceptation-par-critere.md`.
 - [ ] [décision] drwil_com, à examiner ensuite : un cycle de vie des
   fiches sans contournement — `docs/intentions/cycle-de-vie-des-fiches.md`.
-- [ ] [décision] drwil_com, en dernier : un guide de démarrage
-  (dépôt existant, auto-merge, protection, redémarrer la session) —
+- [ ] [décision] drwil_com, en dernier : le reste du guide de démarrage
+  (dépôt git existant avant `init` ; le reste est cadré en 0.6.3) —
   `docs/intentions/guide-de-demarrage.md`.
-- [ ] [décision] Un dossier passé par `npm init -y` reste un projet neuf
-  (script `test` par défaut ; limite de la 0.6.1) —
-  `docs/intentions/projet-neuf-apres-npm-init.md`.
 
 - [ ] [IA] [P1] 0.6.3 : un identifiant cité sans libellé est complété
   sous la réponse de l'agent (hook de fin de réponse, glossaire élargi,
   rappel réduit ; intention `docs/intentions/identifiant-rattrape-avant-l-humain.md`)
   — `docs/projects/identifiant-libelle-en-fin-de-reponse.md`.
-- [ ] [décision] [P1] Les documents produits en cadrage (découverte de
-  valeur, audit de risques) passent la barrière en SCOPING (commit
-  refusé le 2026-10-17, document gardé en stash, 0.6.3) —
-  `docs/intentions/barriere-documents-de-cadrage.md`.
+- [ ] [IA] [P1] 0.6.3 : une mise à jour rafraîchit la prose du kit que le
+  projet n'a pas touchée (skills, recettes, instructions, réglages ;
+  intention `docs/intentions/maj-prose-non-modifiee.md`) —
+  `docs/projects/maj-prose-du-kit.md`.
+- [ ] [IA] [P1] 0.6.3 : les documents produits en cadrage passent la
+  barrière en SCOPING (découverte de valeur gardée en stash) —
+  `docs/projects/barriere-documents-de-cadrage.md`.
+- [ ] [IA] [P1] 0.6.3 : les hooks trouvent la racine du projet par
+  l'emplacement de leur fichier — `docs/projects/hooks-racine-du-projet.md`.
+- [ ] [IA] [P1] 0.6.3 : un dossier passé par `npm init -y` reste un projet
+  neuf — `docs/projects/projet-neuf-apres-npm-init.md`.
+- [ ] [IA] [P1] 0.6.3 : un guide de démarrage (redémarrer la session,
+  auto-merge, protection de branche) — `docs/projects/guide-de-demarrage.md`.
 - [ ] [décision] Le glossaire des identifiants injecté aussi chez les
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —
   `docs/intentions/glossaire-autres-agents.md`.
