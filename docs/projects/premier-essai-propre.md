@@ -17,6 +17,8 @@ files:
   - package.json
   - package-lock.json
   - packages/drwil/CHANGELOG.md
+  - docs/contracts.md
+  - .drwil/ia-first.json
 -->
 
 (cadrage : l'installation décrite par les deux README, le message « pas de
@@ -66,6 +68,14 @@ vide, projet du pilote) en suivant le README à la lettre :
 
 Aucun : QUA-013 garde sa règle (un contrôle non exécuté n'est pas passé) ;
 seul son message dit quoi faire.
+
+Contrat créé (ID attribué au commit qui l'inscrit au registre) : « un
+projet sans CI sait comment en déclarer une », automatisé, avec son
+contrôle de tests. Décision du demandeur du 2026-10-17
+en cours de chantier : QUA-013 porte un champ `Manuel` (contrat attesté),
+un critère prouvé par des tests ne peut pas y être rattaché (« preuve non
+durable ») ; d'où l'élargissement du cadrage au registre et à
+`.drwil/ia-first.json`.
 
 ## 2. Hors périmètre
 
