@@ -1533,3 +1533,29 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Publication** : release 0.6.2 après la fusion de la fiche suivante de
   la file (sondage de lancement), qui part dans la même version.
 - **Clôturé par** : la PR de la branche `workstream/premier-essai-propre`.
+
+## 2026-10-17 — Le sondage de lancement marche dans tous les cas : un seul brief, et jamais muet (0.6.2)
+
+- **Décisions clés** (demandeur, 2026-10-17) : constaté sur `drwil_com`.
+  Avec un seul brief cadré, la question du sondage n'avait qu'une option
+  et `AskUserQuestion` rejetait tout l'appel ; la skill ajoute alors
+  l'option « Not now », jamais recommandée, que le hook lit comme « ne
+  rien lancer » et le dit (il accepte aussi « Pas maintenant »). Le hook
+  n'est plus jamais muet sur un sondage `drwil-start` : sans réponse lue
+  ou sur erreur, il dit à l'agent ce qui s'est passé et le repli
+  (`node .githooks/state.mjs start` dans un terminal), sans bloquer ni
+  toucher à l'état ; la skill dit qu'aucun message `[drwil]` signifie des
+  hooks inactifs (session ouverte avant `init`, cause confirmée par le
+  demandeur). Tests sous QUA-037 (une file de chantiers décidée d'un
+  geste), contrat inchangé.
+- **Écart au cadrage** : le critère du changelog citait « Unreleased » ;
+  l'entrée est dans la section 0.6.2, la roadmap mettant ce chantier dans
+  la même release que le précédent.
+- **Intention d'origine** : aucune (défaut constaté sur le pilote).
+- **Limites connues** : un projet déjà installé reçoit le hook par
+  `npx drwil init`, pas la skill (prose non rafraîchie : intention « une
+  mise à jour rafraîchit aussi la prose que le projet n'a pas touchée »,
+  en tête de la 0.6.3).
+- **Publication** : release 0.6.2 après la fusion de cette PR, sur feu
+  vert du demandeur ; fin de la file.
+- **Clôturé par** : la PR de la branche `workstream/sondage-lancement-tous-les-cas`.

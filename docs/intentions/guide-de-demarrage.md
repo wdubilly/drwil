@@ -40,8 +40,9 @@ marche pas), **recommandations** (ils fluidifient et sécurisent) et
   programmée (`gh pr view --json autoMergeRequest`) avant de revenir en
   SCOPING.
 - Fiches voisines : premier essai propre (installation par l'URL de la
-  release, même section du README ; fait en 0.6.2, journal du 2026-10-17),
-  `docs/projects/sondage-lancement-tous-les-cas.md`.
+  release, même section du README) et sondage de lancement dans tous les
+  cas (sans message `[drwil]`, la skill dit déjà de redémarrer la
+  session), faits en 0.6.2, journal du 2026-10-17.
 
 ## Questions à trancher
 

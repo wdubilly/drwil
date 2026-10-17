@@ -88,8 +88,9 @@ avant les points 5 à 13, en trois versions.
 
 - **0.6.2** — débloquer le pilote : premier essai propre (installation par
   l'URL de la release, premier `verify` sans CI expliqué ; fait, journal du
-  2026-10-17) et `docs/projects/sondage-lancement-tous-les-cas.md` (un seul
-  brief, hook jamais muet), lancés en file.
+  2026-10-17) et le sondage de lancement dans tous les cas (un seul brief,
+  hook jamais muet ; fait, journal du 2026-10-17), lancés en file ; reste
+  la release.
 - **0.6.3** — des mises à jour qui servent, des réponses lisibles : en
   tête, un identifiant sans libellé rattrapé
   (`docs/intentions/identifiant-rattrape-avant-l-humain.md`) et la mise à
@@ -220,9 +221,6 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
 ## Vague 7 — le produit, quand tout est opérationnel
 
-- [ ] [IA] [P1] Le sondage de lancement marche dans tous les cas : un seul
-  brief cadré, et un hook jamais muet (constaté sur `drwil_com` le
-  2026-10-17) — `docs/projects/sondage-lancement-tous-les-cas.md`.
 - [ ] [décision] [P2] Publication npm du kit, avec une porte avant
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
