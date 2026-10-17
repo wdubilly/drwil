@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { annotate, cited, glossary, main } from "./glossary.mjs";
+import { annotate, cited, glossary, main, unlabelled } from "./glossary.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./glossary.mjs", import.meta.url));
 
@@ -63,6 +63,46 @@ test("QUA-039 : cités et annotés : première mention, jamais deux fois, ni dan
   assert.equal(annotate("couverture (QUA-016)", g), "couverture (QUA-016 — Rappel de cadrage)", "déjà entre parenthèses : un tiret");
   const beaucoup = new Map(Array.from({ length: 20 }, (_, i) => [`APP-${i + 1}`, `règle ${i + 1}`]));
   assert.equal(cited(Array.from({ length: 20 }, (_, i) => `APP-${i + 1}`).join(" "), beaucoup).length, 15, "au plus quinze");
+});
+
+test("QUA-039 : glossaire : opportunités de la découverte de valeur et repères déclarés par une intention ou une fiche", () => {
+  const g = glossary(
+    projet({
+      "docs/decouverte-valeur.md":
+        "| ID | Fonctionnalité | Pourquoi |\n|---|---|---|\n| OPT-1 | Mise à jour de la prose | x |\n| OPT-10 | Identifiant rattrapé | y |\n",
+      "docs/value-discovery.md": "| ID | Feature | Why |\n|---|---|---|\n| OPT-3 | Release URL | z |\n",
+      "docs/intentions/rapport.md":
+        "# Intention\n\n## Repères\n\n- `S6` — Dépendance ajoutée sous un contrat attesté\n- `S7` — PR réelle sur GitHub\n\n## Besoin\n\n- `S8` — hors section, ignoré\n",
+      "docs/projects/fiche.md": "# Fiche\n\n## Markers\n\n- `R1` — Premier repère\n",
+    }),
+  );
+  assert.equal(g.get("OPT-1"), "Mise à jour de la prose");
+  assert.equal(g.get("OPT-10"), "Identifiant rattrapé");
+  assert.equal(g.get("OPT-3"), "Release URL", "nom anglais de la découverte de valeur");
+  assert.equal(g.get("S6"), "Dépendance ajoutée sous un contrat attesté");
+  assert.equal(g.get("S7"), "PR réelle sur GitHub");
+  assert.equal(g.get("R1"), "Premier repère", "section en anglais");
+  assert.equal(g.has("S8"), false, "seule la section « Repères » compte");
+});
+
+test("QUA-039 : sans libellé : un identifiant cité sans glose, avant toute mention libellée", () => {
+  const g = new Map([
+    ["QUA-039", "Un identifiant cité vient avec ce qu'il désigne"],
+    ["OPT-6", "Attestation liée à son objet"],
+    ["OPT-8", "Barrière vérifiée"],
+    ["lot 2", "à la source"],
+  ]);
+  const ids = (texte) => unlabelled(texte, g).map((c) => c.id);
+  assert.deepEqual(ids("OPT-6 à OPT-8, puis le lot 2."), ["OPT-6", "OPT-8", "lot 2"]);
+  assert.deepEqual(ids("QUA-039 (un identifiant…) ; OPT-6 — attestation ; OPT-8 : barrière ; lot 2 (source)"), []);
+  assert.deepEqual(ids("`QUA-039` (règle) puis QUA-039 seul"), [], "déjà libellé plus haut");
+  assert.deepEqual(ids("QUA-039 seul, puis QUA-039 (règle)"), ["QUA-039"], "nu avant d'être libellé");
+  assert.deepEqual(ids("| OPT-6 | Attestation | x |"), [], "cellule de tableau suivie de son libellé");
+  assert.deepEqual(ids("**OPT-6** — attestation"), [], "en gras, puis tiret");
+  assert.deepEqual(ids("rien de connu"), []);
+  assert.deepEqual(unlabelled("OPT-6 seul", g)[0], { id: "OPT-6", label: "Attestation liée à son objet" });
+  const beaucoup = new Map(Array.from({ length: 20 }, (_, i) => [`APP-${i + 1}`, `règle ${i + 1}`]));
+  assert.equal(unlabelled(Array.from({ length: 20 }, (_, i) => `APP-${i + 1}`).join(" "), beaucoup).length, 15, "au plus quinze");
 });
 
 test("QUA-039 : commande : arguments ou entrée standard, directe ou par un lien symbolique, dossiers réglés", () => {

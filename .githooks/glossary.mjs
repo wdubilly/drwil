@@ -3,7 +3,7 @@
 // numbered point of the active brief, cited alone, tells the human nothing. A single source, read by
 // the checks' outputs, by any agent (`node .githooks/glossary.mjs "<text>"`) and by the agent-side
 // hooks: the labels are read from the registry, the catalog and the active brief, never copied.
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readContracts } from "./contracts.mjs";
@@ -34,7 +34,27 @@ export function glossary(root) {
   for (const m of text.matchAll(/^\s*-\s*\*\*(?:Lot|Increment|Incrément)\s+(\d+[a-z]?)\s*[—–-]\s*([^*]+)\*\*/gim))
     labels.set(`lot ${m[1]}`, short(m[2].trim()));
   for (const m of text.matchAll(/^\s*(\d+)\.\s+\*\*([^*]+)\*\*/gm)) labels.set(`point ${m[1]}`, short(m[2].trim()));
+  // Working documents: the value discovery's opportunities (its French or English name)…
+  for (const name of ["docs/decouverte-valeur.md", "docs/value-discovery.md"])
+    for (const m of read(join(root, name)).matchAll(/^\|\s*(OPT-\d+)\s*\|\s*([^|]+)\|/gm)) labels.set(m[1], short(m[2].trim()));
+  // …and the markers an intention or a brief declares in its « Repères » / « Markers » section.
+  for (const dir of [cfg.dirs?.intentions ?? "docs/intentions", cfg.dirs?.projects ?? "docs/projects"])
+    for (const file of markdown(join(root, dir))) {
+      const section = /^##\s+(?:Repères|Markers)\s*$([\s\S]*?)(?=^##\s|(?![\s\S]))/m.exec(read(file));
+      for (const m of section?.[1].matchAll(/^\s*-\s*`([^`]+)`\s*[—–-]\s*(.+)$/gm) ?? []) labels.set(m[1], short(m[2].trim()));
+    }
   return labels;
+}
+
+/** The Markdown files of a folder (not recursive); none if it is missing. */
+function markdown(dir) {
+  try {
+    return readdirSync(dir)
+      .filter((f) => f.endsWith(".md"))
+      .map((f) => join(dir, f));
+  } catch {
+    return [];
+  }
 }
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -51,6 +71,25 @@ export function cited(text, labels) {
   const found = [];
   for (const [id, label] of labels) {
     if (pattern(id).test(text)) found.push({ id, label });
+    if (found.length >= MAX) break;
+  }
+  return found;
+}
+
+// A gloss right after the ID, on the same line: a parenthesis, a dash, a colon, or the next table cell
+// (code or bold marks around the ID allowed).
+const GLOSS = /^[`*]*\s*[(—–:|]/;
+
+/**
+ * The known identifiers of `text` cited bare: an ID whose mentions are not glossed (GLOSS) before a
+ * glossed one — once labelled, later bare mentions are fine. `[{ id, label }]`, at most fifteen.
+ */
+export function unlabelled(text, labels) {
+  const found = [];
+  for (const [id, label] of labels) {
+    // Only the first mention matters: glossed, the later ones are fine; bare, the ID is bare.
+    const m = pattern(id).exec(text);
+    if (m && !GLOSS.test(text.slice(m.index + m[0].length))) found.push({ id, label });
     if (found.length >= MAX) break;
   }
   return found;

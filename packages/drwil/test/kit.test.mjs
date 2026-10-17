@@ -606,6 +606,52 @@ test("QUA-016 : réglage off, contrôle et rappel à l'agent silencieux", async 
   assert.equal(rappel.stdout.trim(), "", "le rappel à l'agent se tait aussi quand cadrage est désactivé");
 });
 
+test("QUA-039 : fin de réponse : les identifiants cités sans libellé sont affichés sous la réponse ; le rappel ne cite un ID qu'une fois par session", async () => {
+  // Constaté le 2026-10-17 : « OPT-6 à OPT-8 » écrits nus par l'agent, que le rappel après chaque outil ne voyait pas.
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const reglages = JSON.parse(read(dir, ".claude/settings.json"));
+  assert.ok(
+    reglages.hooks.Stop.some((h) => /reply-glossary\.mjs/.test(JSON.stringify(h.hooks))),
+    "hook de fin de réponse déclaré",
+  );
+  assert.match(read(dir, ".gitignore"), /^\.drwil\/glossary\.json$/m, "mémoire du rappel ignorée par git");
+
+  const fin = (message) =>
+    spawnSync(process.execPath, [".claude/hooks/reply-glossary.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({ hook_event_name: "Stop", stop_hook_active: false, last_assistant_message: message }),
+    });
+  let r = fin("La règle QUA-013 tombe, et SEC-007 (pas de secret) tient.");
+  assert.equal(r.status, 0);
+  const sortie = JSON.parse(r.stdout);
+  assert.match(sortie.systemMessage, /^\[drwil\] Identifiants cités sans libellé : QUA-013 — A check that did not run has not passed$/);
+  assert.doesNotMatch(sortie.systemMessage, /SEC-007/, "déjà libellé : pas répété");
+  assert.equal(sortie.hookSpecificOutput, undefined, "rien d'injecté au modèle");
+  assert.equal(sortie.decision, undefined, "jamais bloquant");
+  assert.equal(fin("QUA-013 (contrôle non exécuté) : réglé.").stdout, "", "tout est libellé : rien");
+  assert.equal(fin("").stdout, "");
+  r = spawnSync(process.execPath, [".claude/hooks/reply-glossary.mjs"], { cwd: dir, input: "pas du JSON", encoding: "utf8" });
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout + r.stderr, "", "jamais d'erreur visible");
+
+  // Rappel après chaque outil : un identifiant n'est rappelé qu'une fois par session.
+  const outil = (session, texte) =>
+    spawnSync(process.execPath, [".claude/hooks/id-glossary.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({ session_id: session, hook_event_name: "PostToolUse", tool_name: "Bash", tool_response: texte }),
+    }).stdout;
+  const premier = outil("s1", "QUA-013 et SEC-007");
+  assert.match(premier, /QUA-013 — /);
+  assert.match(premier, /SEC-007 — /);
+  assert.equal(outil("s1", "encore QUA-013"), "", "déjà rappelé dans cette session");
+  assert.match(outil("s1", "QUA-013 puis QUA-016"), /QUA-016 — /);
+  assert.doesNotMatch(outil("s1", "QUA-013 puis QUA-017"), /QUA-013/);
+  assert.match(outil("s2", "QUA-013"), /QUA-013 — /, "nouvelle session : rappelé de nouveau");
+});
+
 test("QUA-039 : hook glossaire livré et branché sur tout outil ; injecte les libellés cités, rien sinon ; Copilot et Cursor ont la règle", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "en", targetDir: dir, git: false }));

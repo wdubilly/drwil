@@ -20,7 +20,27 @@ closing commit; the release renames this section to its version.
   project folder), did nothing, silently: no reminder, no start poll, no
   scope guard. They now compare real paths.
 
+### Added
+
+- With Claude Code, a hook at the end of each agent reply shows the human,
+  under the reply, « ID — label » for each identifier the reply cites bare
+  (no parenthesis, dash, colon or table cell right after its first
+  mention). The reply is already displayed: the note completes it, never
+  rewrites nor blocks it, and nothing is sent to the model. Until now, the
+  rule « an ID cited to a human comes with what it designates » held for
+  drwil's outputs, not for the agent's replies.
+- The glossary of identifiers also knows the value discovery's
+  opportunities (`OPT-N`) and the markers an intention or a brief declares
+  in a « Markers » section (one `` - `ID` — label `` line each).
+- Existing projects get the new hook from `npx drwil init` when their
+  `.claude/settings.json` is unmodified, otherwise from
+  `npx drwil resolve-drift`.
+
 ### Changed
+
+- The glossary reminder slipped into the agent's context after each tool
+  recalls an identifier once per session, not after every tool: repeated
+  lists of a dozen contracts had become noise.
 
 - An upgrade (`npx drwil init`) also refreshes the kit's prose and
   settings the project never modified: skills, recipes, `docs/ia-first.md`,
