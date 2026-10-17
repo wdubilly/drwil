@@ -1521,7 +1521,7 @@ test("QUA-013 : un job CI qui ne se déclenche plus sur les bons chemins est dé
   assert.match(r.stdout, /secrets/);
 });
 
-test("ci: none : pas de CI, la couverture QUA-013 est signalée non exécutée (pas d'échec silencieux)", async () => {
+test("QUA-013 : ci: none : pas de CI, la couverture est signalée non exécutée et le message dit comment en sortir", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, ci: "none" }));
   const r = checks(dir);
