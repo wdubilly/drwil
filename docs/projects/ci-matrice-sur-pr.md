@@ -7,13 +7,15 @@
 <!-- scope
 files:
   - .github/workflows/ia-first.yml
+  - .github/scripts/ci-multi-os.mjs
   - .github/scripts/ci-multi-os.test.mjs
   - .drwil/ia-first.json
   - outils/miroirs.json
   - docs/contracts.md
 -->
 
-(cadrage : le workflow du dépôt ; un test qui lit ce workflow, propre au
+(cadrage : le workflow du dépôt ; le script qui calcule la matrice et son
+test, qui lit aussi ce workflow, propres au
 dépôt ; le contrôle du nouveau contrat déclaré dans `.drwil/ia-first.json` ;
 la raison du job `kit-tests` dans `outils/miroirs.json` si elle change ; le
 registre, pour le nouveau contrat.)
