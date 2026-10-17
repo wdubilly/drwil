@@ -282,8 +282,6 @@ une décision du demandeur.
   des hooks » du 2026-10-17) — `docs/intentions/copilot-claude-project-dir.md`.
 - [ ] [IA] [P1] 0.6.3 : un dossier passé par `npm init -y` reste un projet
   neuf — `docs/projects/projet-neuf-apres-npm-init.md`.
-- [ ] [IA] [P1] 0.6.3 : un guide de démarrage (redémarrer la session,
-  auto-merge, protection de branche) — `docs/projects/guide-de-demarrage.md`.
 - [ ] [décision] Le glossaire des identifiants injecté aussi chez les
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —
   `docs/intentions/glossaire-autres-agents.md`.

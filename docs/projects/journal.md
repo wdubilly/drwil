@@ -1679,3 +1679,28 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   relevé au chantier précédent (intention « un budget de temps des
   contrôles calibré pour les machines Windows de la CI »).
 - **Clôturé par** : la PR de la branche `workstream/barriere-documents-de-cadrage`.
+
+## 2026-10-17 — Un guide de démarrage : prérequis, recommandations, options (0.6.3)
+
+- **Décisions clés** (demandeur, sondage du 2026-10-17) : section
+  « Before you start » dans l'Installation du `README.md` (source unique) :
+  **prérequis** (Node.js 22+, git) ; **recommandations** — redémarrer la
+  session de l'agent après `init` (Claude Code charge ses hooks au
+  démarrage ; constaté et confirmé sur `drwil_com`), avec le contrôle
+  « `[drwil] Governance state…` » et sa limite (dépend de l'outil),
+  protéger la branche principale en exigeant les contrôles de CI (exemple
+  GitHub, droits d'administration, pas encore vérifiée par le kit) ;
+  **option** — l'auto-merge, à autoriser dans les réglages du dépôt
+  GitHub. La skill de lancement dit « auto-merge not allowed by the
+  repository » quand `gh pr merge --auto` échoue pour cette raison, reste
+  en CLOSING et ne dit jamais la fusion programmée (les quatre états
+  distingués). README du paquet : un renvoi. Tests sous QUA-037 (une file
+  de chantiers décidée d'un geste) ; contrats inchangés.
+- **Intention d'origine** : « un guide de démarrage — prérequis,
+  recommandations, options », en partie couverte : mise à jour ; reste le
+  dépôt git existant avant `init`.
+- **Limites connues** : le dépôt git existant avant `init` (intention
+  d'origine, mise à jour) ; la vérification de la protection de branche
+  reste en 0.7.0 (intention « la protection de la forge dans le
+  livrable »).
+- **Clôturé par** : la PR de la branche `workstream/guide-de-demarrage`.
