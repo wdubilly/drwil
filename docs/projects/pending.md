@@ -98,7 +98,7 @@ avant les points 5 à 13, en trois versions.
   (`docs/intentions/maj-prose-non-modifiee.md`) ; puis la barrière qui
   laisse passer les documents de cadrage
   (`docs/intentions/barriere-documents-de-cadrage.md`), la racine des
-  hooks (fait, journal du 2026-10-17), `npm init -y`
+  hooks (`docs/intentions/hooks-racine-du-projet.md`), `npm init -y`
   (`docs/intentions/projet-neuf-apres-npm-init.md`) et un guide de
   démarrage réduit (`docs/intentions/guide-de-demarrage.md`). Les six
   sont cadrées le 2026-10-17 (une fiche chacune, lignes de l'index
@@ -281,9 +281,8 @@ une décision du demandeur.
 - [ ] [IA] [P1] 0.6.3 : les documents produits en cadrage passent la
   barrière en SCOPING (découverte de valeur gardée en stash) —
   `docs/projects/barriere-documents-de-cadrage.md`.
-- [ ] [décision] Copilot CLI lance-t-il les hooks déclarés avec
-  `${CLAUDE_PROJECT_DIR}` ? (non vérifié ; limite du chantier « racine
-  des hooks » du 2026-10-17) — `docs/intentions/copilot-claude-project-dir.md`.
+- [ ] [IA] [P1] 0.6.3 : les hooks trouvent la racine du projet par
+  l'emplacement de leur fichier — `docs/projects/hooks-racine-du-projet.md`.
 - [ ] [IA] [P1] 0.6.3 : un dossier passé par `npm init -y` reste un projet
   neuf — `docs/projects/projet-neuf-apres-npm-init.md`.
 - [ ] [IA] [P1] 0.6.3 : un guide de démarrage (redémarrer la session,
