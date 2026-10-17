@@ -1,12 +1,24 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
-import { resolveFromConfig, type Resolved } from "./config.js";
+import { isKitProse, resolveFromConfig, type Resolved } from "./config.js";
 import { fill, projectLang } from "./i18n.js";
-import { relPosix, render, templatesDir, walk } from "./render.js";
+import { readManifest } from "./manifest.js";
+import { relPosix, render, scaffold, templatesDir, walk } from "./render.js";
 
-// Scope of the resolution: only the mechanics "with no legitimate customisation expected" —
-// .githooks/, .claude/settings.json and the CI file — never the prose (AGENTS.md, docs/recipes/...).
+// The kit's prose (KIT_PROSE) the kit itself installed (in the manifest): a project's own AGENTS.md,
+// never installed by the kit, is never proposed. Same walk as the install, writing nothing.
+async function renderedProse(r: Resolved): Promise<Map<string, string>> {
+  const all = new Map<string, string>();
+  await scaffold(r, { shouldOverwrite: () => false, simulation: { created: [], kept: [], replaced: [] }, rendered: all });
+  const installed = readManifest(r.opts.targetDir);
+  const prose = new Map<string, string>();
+  for (const [rel, content] of all) if (isKitProse(rel) && rel in installed) prose.set(join(r.opts.targetDir, rel), content);
+  return prose;
+}
+
+// Mechanics "with no legitimate customisation expected" — .githooks/, .claude/settings.json and the
+// CI file; the prose comes from renderedProse.
 async function renderedMechanics(r: Resolved): Promise<Map<string, string>> {
   const rendered = new Map<string, string>();
   // `walkDir`: folder walked; `relBase`: folder the relative path is computed from (keeps the
@@ -82,15 +94,16 @@ export interface ResolveDriftReport {
   ignored: string[];
 }
 
-/** Resolves the drift of the mechanics files (`.githooks/`, `.claude/settings.json`, CI file)
- * reported by `init()`: shows a diff, asks for confirmation (unless forced), backs the old
- * file up as `.bak` before overwriting. Never called automatically by `init()`. */
+/** Resolves the drift of the mechanics files (`.githooks/`, `.claude/settings.json`, CI file) and of
+ * the kit's prose it installed (skills, recipes, instructions…) reported by `init()`: shows a diff,
+ * asks for confirmation (unless forced), backs the old file up as `.bak` before overwriting. Never
+ * called automatically by `init()`. */
 export async function resolveDrift(
   opts: ResolveDriftOptions,
   confirm: (rel: string, diff: string) => boolean | Promise<boolean> = defaultConfirm,
 ): Promise<ResolveDriftReport> {
   const r = resolveFromConfig(opts.targetDir);
-  const rendered = await renderedMechanics(r);
+  const rendered = new Map([...(await renderedMechanics(r)), ...(await renderedProse(r))]);
   const resolved: string[] = [];
   const ignored: string[] = [];
   for (const [target, templateContent] of rendered) {

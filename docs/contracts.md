@@ -146,7 +146,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Un dépôt neuf démarre sans filet métier : l'exemple montre où et comment poser le premier.
 
 ## QUA-025 — Version du moteur installé enregistrée
-**Règle** : `init` (installation ou mise à jour) enregistre la version du moteur dans `.drwil/install.json` (si présent ; `format`, `version`, `firstVersion` conservée aux mises à jour ; aucun horodatage, réécrit seulement si la version change), sans modifier le manifeste `.drwil/installed-files.json` (si présent) ; `uninstall` le retire.
+**Règle** : `init` (installation ou mise à jour) enregistre la version du moteur dans `.drwil/install.json` (si présent ; `format`, `version`, `firstVersion` conservée aux mises à jour, `null` — origine inconnue — pour un projet installé avant l'enregistrement : manifeste présent, enregistrement absent ; aucun horodatage, réécrit seulement si la version change), sans modifier le manifeste `.drwil/installed-files.json` (si présent) ; `uninstall` le retire.
 **Périmètre** : Tout projet équipé par `drwil init`.
 **Source de vérité** : `packages/drwil/src/manifest.ts` (`writeInstall`, `readInstall`, `uninstall`), `packages/drwil/src/index.ts` (`init`).
 **Preuve** : Test sur un dépôt temporaire.
@@ -156,7 +156,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Savoir quelle version du moteur tourne dans un projet, pour le diagnostiquer et le mettre à jour.
 
 ## QUA-026 — doctor signale la version installée
-**Règle** : `drwil doctor` affiche la version du moteur installé ; avertissement, jamais problème, si la CLI est plus récente (mettre à jour par `npx drwil init`), plus ancienne, ou si l'enregistrement manque.
+**Règle** : `drwil doctor` affiche la version du moteur installé et sa première version, ou « version d'origine inconnue, antérieure à 0.6.0 » quand elle n'a pas été enregistrée ; avertissement, jamais problème, si la CLI est plus récente (mettre à jour par `npx drwil init`), plus ancienne, ou si l'enregistrement manque.
 **Périmètre** : `drwil doctor`.
 **Source de vérité** : `packages/drwil/src/doctor.ts` (point « version »).
 **Preuve** : Test sur un dépôt temporaire.
@@ -166,7 +166,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Un écart de version silencieux fait tourner des hooks d'une version avec une CLI d'une autre.
 
 ## QUA-027 — Mise à jour sûre d'une version à la suivante
-**Règle** : `drwil init` sur un projet équipé par une version antérieure préserve les fichiers du projet et la mécanique modifiée par le client (signalée comme dérive), rafraîchit la mécanique jamais modifiée, retire les fichiers obsolètes jamais modifiés (en gardant ceux modifiés), tient le manifeste à jour et enregistre la nouvelle version.
+**Règle** : `drwil init` sur un projet équipé par une version antérieure préserve les fichiers du projet et la mécanique modifiée par le client (signalée comme dérive), rafraîchit la mécanique jamais modifiée, rafraîchit aussi la prose et les réglages du kit (skills, recettes, `docs/ia-first.md`, instructions des agents, catalogue, `.claude/settings.json`) installés par le kit et jamais modifiés — jamais les documents de départ du projet ni une prose absente du manifeste —, retire les fichiers obsolètes jamais modifiés (en gardant ceux modifiés ; jamais les fiches ni les recettes), tient le manifeste à jour et enregistre la nouvelle version ; `drwil resolve-drift` propose le diff d'une mécanique ou d'une prose du kit modifiée, avec confirmation par fichier et sauvegarde `.bak`.
 **Périmètre** : `drwil init` sur un projet déjà équipé.
 **Source de vérité** : `packages/drwil/src/index.ts` (`init`), `packages/drwil/src/manifest.ts` (`removeObsolete`, `writeManifest`, `writeInstall`).
 **Preuve** : Test de mise à jour sur un dépôt temporaire, version antérieure simulée hors réseau.

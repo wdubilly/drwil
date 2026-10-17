@@ -106,12 +106,15 @@ export interface WriteOptions {
   // Preview of `init` (DRWIL-011): the same walk as the real install, but writeOut records each file
   // instead of writing it. The preview therefore cannot diverge from what init would do.
   simulation?: { created: string[]; kept: string[]; replaced: string[] };
+  // resolve-drift on the kit's prose: the template's content of each file, as the install renders it.
+  rendered?: Map<string, string>;
 }
 
 async function writeOut(target: string, content: string, targetDir: string, w: WriteOptions): Promise<void> {
-  const { shouldOverwrite, drifted, manifest, expected, simulation } = w;
+  const { shouldOverwrite, drifted, manifest, expected, simulation, rendered } = w;
   const rel = relPosix(targetDir, target);
   if (expected) expected.push(rel);
+  if (rendered) rendered.set(rel, content);
   if (existsSync(target) && !shouldOverwrite(rel)) {
     if (drifted && hasDrifted(target, content)) drifted.push(rel);
     if (simulation) simulation.kept.push(rel);
