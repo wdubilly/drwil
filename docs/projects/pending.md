@@ -92,8 +92,8 @@ avant les points 5 à 13, en trois versions.
   hook jamais muet ; fait, journal du 2026-10-17), lancés en file ; reste
   la release.
 - **0.6.3** — des mises à jour qui servent, des réponses lisibles : en
-  tête, un identifiant sans libellé rattrapé
-  (`docs/intentions/identifiant-rattrape-avant-l-humain.md`) et la mise à
+  tête, un identifiant sans libellé rattrapé (fait, journal du
+  2026-10-17 ; affichage à vérifier, ligne ci-dessous) et la mise à
   jour qui rafraîchit la prose non modifiée (fait, journal du
   2026-10-17) ; puis la barrière qui
   laisse passer les documents de cadrage
@@ -270,10 +270,10 @@ une décision du demandeur.
   (dépôt git existant avant `init` ; le reste est cadré en 0.6.3) —
   `docs/intentions/guide-de-demarrage.md`.
 
-- [ ] [IA] [P1] 0.6.3 : un identifiant cité sans libellé est complété
-  sous la réponse de l'agent (hook de fin de réponse, glossaire élargi,
-  rappel réduit ; intention `docs/intentions/identifiant-rattrape-avant-l-humain.md`)
-  — `docs/projects/identifiant-libelle-en-fin-de-reponse.md`.
+- [ ] [humain] [P1] Vérifier dans une nouvelle session que la note de fin
+  de réponse s'affiche sous la réponse, sans coût pour le modèle (limite
+  du chantier du 2026-10-17) —
+  `docs/intentions/identifiant-rattrape-avant-l-humain.md`.
 - [ ] [IA] [P1] 0.6.3 : les documents produits en cadrage passent la
   barrière en SCOPING (découverte de valeur gardée en stash) —
   `docs/projects/barriere-documents-de-cadrage.md`.
