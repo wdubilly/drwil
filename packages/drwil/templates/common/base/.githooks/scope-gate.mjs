@@ -20,7 +20,18 @@ import { governanceDisabled, readState } from "./state.mjs";
 // required, contract fingerprint), reviewed; subjecting them to the scope would force widening
 // every brief in order to close. The consumption log likewise: its line is written in CLOSING,
 // for the closing commit (`consumption.mjs --record`).
-export const OUT_OF_SCOPE = ["docs/projects/*", "docs/intentions/*", ".drwil/evidence/attestations/*", ".drwil/usage.jsonl"];
+// The scoping recipes' outputs (value discovery, risk audit — French and English names) are scoping
+// work, written in SCOPING: exact names, never a broad pattern on docs/.
+export const OUT_OF_SCOPE = [
+  "docs/projects/*",
+  "docs/intentions/*",
+  ".drwil/evidence/attestations/*",
+  ".drwil/usage.jsonl",
+  "docs/value-discovery.md",
+  "docs/decouverte-valeur.md",
+  "docs/audit-risks.md",
+  "docs/audit-risques.md",
+];
 export const TRAILER = "Drwil-Brief";
 const LEVELS = new Set(["off", "warning", "blocking"]);
 const MARKER = ".githooks/scope-gate.mjs";

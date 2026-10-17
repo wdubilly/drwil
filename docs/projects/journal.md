@@ -1657,3 +1657,25 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   le desktop, et absence de coût en tokens : non vérifiés (intention « la
   note de fin de réponse s'affiche bien, sans coût pour le modèle »).
 - **Clôturé par** : la PR de la branche `workstream/identifiant-libelle-en-fin-de-reponse`.
+
+## 2026-10-17 — Les documents produits en cadrage passent la barrière en SCOPING (0.6.3)
+
+- **Décisions clés** (demandeur, sondage du 2026-10-17) : liste fixe,
+  même règle dans le gabarit et ce dépôt : `docs/value-discovery.md`,
+  `docs/decouverte-valeur.md`, `docs/audit-risks.md` (si présent) et
+  `docs/audit-risques.md` (si présent) rejoignent `OUT_OF_SCOPE`
+  (`.githooks/scope-gate.mjs`) ; aucun motif large sur `docs/`. QUA-035
+  évolue (déclaré dans la fiche). La doc du kit (`docs/ia-first.md`), qui
+  énumère la liste, ajoutée au cadrage en cours de chantier.
+- **Découverte de valeur du 2026-10-17** : récupérée du stash et
+  commitée, ses renvois aux fiches et intentions réalisées depuis
+  remplacés par le journal. Le `stash pop` a aussi rejoué l'état indexé
+  d'autres fichiers au moment du stash : conflits résolus en gardant la
+  version de la branche, seule la découverte de valeur retenue.
+- **Intention d'origine** : « les documents produits en cadrage passent
+  la barrière en SCOPING », entièrement couverte : résumée ici et retirée.
+- **Limites connues** : le budget de temps des contrôles au commit (1500
+  ms) dépassé par une machine Windows de la CI sans changement de code,
+  relevé au chantier précédent (intention « un budget de temps des
+  contrôles calibré pour les machines Windows de la CI »).
+- **Clôturé par** : la PR de la branche `workstream/barriere-documents-de-cadrage`.

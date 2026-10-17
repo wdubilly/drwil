@@ -38,6 +38,12 @@ closing commit; the release renames this section to its version.
 
 ### Changed
 
+- The scoping recipes' outputs (`docs/value-discovery.md`,
+  `docs/audit-risks.md`, and their French names) can be committed while
+  scoping, like briefs and intents. The scope gate refused them outside
+  BUILD although they are scoping work. Exact names only: the rest of
+  `docs/` stays under the scope.
+
 - The glossary reminder slipped into the agent's context after each tool
   recalls an identifier once per session, not after every tool: repeated
   lists of a dozen contracts had become noise.

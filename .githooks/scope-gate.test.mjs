@@ -95,6 +95,21 @@ test("hors fiches : seules les fiches, les attestations et le journal de consomm
   assert.deepEqual(outsideBriefFiles(["docs/autre.md"], ["docs/*"]), [], "liste réglable");
 });
 
+test("QUA-035 : hors fiches : les sorties des recettes de cadrage (valeur, risques, en français et en anglais) aussi, rien d'autre de docs/", () => {
+  // Constaté le 2026-10-17 : la découverte de valeur, faite en SCOPING, y était refusée au commit.
+  assert.deepEqual(
+    outsideBriefFiles([
+      "docs/decouverte-valeur.md",
+      "docs/value-discovery.md",
+      "docs/audit-risques.md",
+      "docs/audit-risks.md",
+      "docs/architecture.md",
+      "docs/decouverte-valeur-bis.md",
+    ]),
+    ["docs/architecture.md", "docs/decouverte-valeur-bis.md"],
+  );
+});
+
 test("index : fiches toujours acceptées, le reste seulement en BUILD et dans le cadrage", () => {
   const motifs = ["src/a.js"];
   assert.deepEqual(checkIndex({ files: [FICHE], state: etat("SCOPING"), patterns: [] }), []);
