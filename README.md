@@ -995,7 +995,7 @@ Its role is narrower:
 ## Current status
 
 **V0.2 — Executable Governance** is delivered (see
-`packages/drwil/CHANGELOG.md`); the latest release is 0.6.0, which adds
+`packages/drwil/CHANGELOG.md`); the latest release is 0.6.1. 0.6.0 added
 the business non-regression fed by every workstream, queues of
 workstreams, token consumption measured per workstream, readable
 identifiers and a maintained architecture map. Next: trying it on real

@@ -1478,3 +1478,25 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   limite de mise à jour depuis la 0.5.1.
 - **Clôturé par** : PR #124 ; release
   https://github.com/wdubilly/drwil/releases/tag/v0.6.0.
+
+## 2026-10-17 — Un projet neuf installé selon le README reste un projet neuf (0.6.1)
+
+- **Décisions clés** (demandeur, 2026-10-17, « corrige en 0.6.1 ») :
+  constaté en installant la 0.6.0 dans `drwil_com` en suivant le README :
+  l'étape `npm install -D ./drwil-*.tgz` crée un `package.json` qui ne
+  déclare que drwil, et `init` y détectait une pile Node.js — le dossier
+  vide était traité en projet existant (pas de `git init` ni de branche,
+  pas d'invitation à cadrer, carte « Node.js, detected » au lieu de « Not
+  decided »). Corrigé dans la détection (`detectDir`), pas dans l'ordre
+  des étapes du README : un `package.json` sans autre dépendance que
+  drwil et sans script n'est plus une pile ; un vrai projet Node reste
+  détecté. QUA-038 évolue (déclaré dans la fiche). Version 0.6.1 :
+  paquets, verrou, changelog, README.
+- **Intention d'origine** : aucune (défaut constaté sur un projet du
+  pilote).
+- **Limites connues** : un dossier passé par `npm init -y` (script `test`
+  par défaut) reste pris pour un projet existant (intention « un dossier
+  passé par `npm init -y` reste un projet neuf »).
+- **Publication** : release 0.6.1 après la fusion de cette PR, sur feu
+  vert du demandeur.
+- **Clôturé par** : PR à venir.
