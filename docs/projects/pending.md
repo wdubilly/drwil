@@ -278,10 +278,10 @@ une décision du demandeur.
   (script `test` par défaut ; limite de la 0.6.1) —
   `docs/intentions/projet-neuf-apres-npm-init.md`.
 
-- [ ] [décision] [P1] Un identifiant sans libellé est rattrapé avant
-  d'arriver à l'humain (réponses de l'agent, glossaire incomplet, rappel
-  trop bruyant ; constaté le 2026-10-17, 0.6.3) —
-  `docs/intentions/identifiant-rattrape-avant-l-humain.md`.
+- [ ] [IA] [P1] 0.6.3 : un identifiant cité sans libellé est complété
+  sous la réponse de l'agent (hook de fin de réponse, glossaire élargi,
+  rappel réduit ; intention `docs/intentions/identifiant-rattrape-avant-l-humain.md`)
+  — `docs/projects/identifiant-libelle-en-fin-de-reponse.md`.
 - [ ] [décision] [P1] Les documents produits en cadrage (découverte de
   valeur, audit de risques) passent la barrière en SCOPING (commit
   refusé le 2026-10-17, document gardé en stash, 0.6.3) —
