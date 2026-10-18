@@ -102,14 +102,15 @@ avant les points 5 à 13, en trois versions.
   (fait, journal du 2026-10-17) et un guide de
   démarrage réduit (`docs/intentions/guide-de-demarrage.md`). Les six
   sont cadrées le 2026-10-17 (une fiche chacune, lignes de l'index
-  ci-dessous).
+  ci-dessous) ; publiée le 2026-10-18 (tag `v0.6.3`).
 - **0.6.4** — décidé le 2026-10-18 par le demandeur : en tête, une CI
   plus rapide (Windows et macOS testés seulement quand une PR touche du
   code ; fait, journal du 2026-10-18) ; puis la file de chantiers
   menée par sous-agents (fait, journal du 2026-10-18) ; ajouté le
   2026-10-18 par le demandeur avant la release : un workflow CI au YAML
   invalide refusé au commit (fait, journal du 2026-10-18) ;
-  enfin la release (`docs/projects/release-0-6-4.md`).
+  enfin la release (fait, journal du 2026-10-18 ; tag `v0.6.4` après la
+  fusion, sur feu vert).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -287,9 +288,6 @@ une décision du demandeur.
 - [ ] [décision] Une file menée par sous-agents avec les autres agents
   (Copilot CLI, Codex, Cursor, Gemini ; limite du chantier du 2026-10-18)
   — `docs/intentions/file-sous-agents-autres-outils.md`.
-- [ ] [IA] [P1] 0.6.4 : release 0.6.4 (version, changelog, README ;
-  tag et note GitHub sur feu vert ; après le YAML s'il est lancé) —
-  `docs/projects/release-0-6-4.md`.
 - [ ] [décision] Le budget de temps des contrôles au commit, calibré pour
   les machines Windows de la CI (1500 ms dépassé sans changement de code ;
   relevé le 2026-10-17) — `docs/intentions/budget-temps-windows.md`.
