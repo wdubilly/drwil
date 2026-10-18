@@ -39,6 +39,7 @@ files:
   - .drwil/ia-first.json
   - outils/miroirs.json
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
 -->
 
 (cadrage : la commande de clôture (close.mjs, à créer), l'état, la liste
@@ -46,7 +47,8 @@ des fiches, `check-docs`, le contrôle des règles de code (référence à une
 fiche dans le code) et la consommation — gabarit et copies du dépôt, avec
 leurs tests propres au dépôt — ; la recette de clôture et `AGENTS.md` ;
 les deux tests qui citent une fiche supprimée ; la carte, le registre,
-les contrôles, les miroirs et le changelog.)
+les contrôles, les miroirs et le changelog ; la fiche de mécanique du kit
+livrée, qui cadre chaque hook livré, donc la commande de clôture.)
 
 ## 1. Besoin
 
@@ -80,10 +82,10 @@ clôture elle-même ; les autres points ont leur fiche (section 2).
   créer » (avec l'ID à écrire), références qui deviendraient mortes, noms
   de fichiers sans chemin ; les branches locales déjà fusionnées sont
   supprimées au lancement du chantier suivant (`git branch -d`, jamais une
-  branche non fusionnée) — contrat à créer
+  branche non fusionnée) — `QUA-048`
 - Un fichier de code cite le contrat qu'il sert, jamais une fiche de
   chantier : signalé dès le BUILD, quand on peut encore le corriger —
-  contrat à créer
+  `QUA-049`
 
 ## 2. Hors périmètre
 
