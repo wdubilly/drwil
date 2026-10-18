@@ -1,6 +1,7 @@
 # Projet : un workflow CI au YAML invalide est refusé avant le push
 
-**Statut** : cadré le 2026-10-18.
+**Statut** : en cours (lot 1 fait le 2026-10-18, branche
+`workstream/workflow-ci-yaml-valide`).
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/workflow-ci-yaml-valide.md`
@@ -36,8 +37,7 @@ livrable.
 ## Critères d'acceptation
 
 - Un fichier de CI du dépôt ou du gabarit qui n'est pas du YAML valide est
-  refusé au commit, avec le fichier et la ligne de l'erreur — contrat à
-  créer
+  refusé au commit, avec le fichier et la ligne de l'erreur — `QUA-046`
 
 ## 2. Hors périmètre
 
@@ -80,7 +80,8 @@ livrable.
 - **2026-10-18 — Le dépôt et le gabarit** (demandeur) : le même test
   couvre les workflows du dépôt et les fichiers de CI du gabarit ; il vit
   dans le dépôt, les utilisateurs n'en paient rien.
-- Contrats concernés : le nouveau contrat (ID donné à la création),
+- **QUA-046** (créé) — fichiers de CI en YAML valide avant le push.
+- Contrats concernés : QUA-046,
   QUA-013 (contrôle non exécuté n'est pas passé : le
   contrôle a son job CI), QUA-018 (dépôt ou livrable), QUA-033 (un
   contrôle par règle dans ce dépôt).
@@ -100,7 +101,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-18) : cadré, rien de construit.
+- **Dernier état** (2026-10-18) : lot 1 commité (test, contrat QUA-046,
+  contrôle `tests-qua-046`), `run-checks` vert.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`),
-  éventuellement en file avec la release 0.6.4.
+- **Prochaine étape** : [IA] clôture (journal, intention, PR).
