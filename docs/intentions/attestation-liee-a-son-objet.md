@@ -33,6 +33,41 @@ mécanisme**.
 - QUA-032 (une attestation ne coûte que le jugement demandé) : à préserver,
   une invalidation trop large ferait réattester sans raison.
 
+## Reproduit dans ce dépôt (2026-10-18)
+
+Deuxième cas, réel, hors `drwil_com` : QUA-013 (contrôle non exécuté
+n'est pas passé), attesté le 2026-10-16 ; son critère [humain] « chaque
+contrôle garde une couverture CI prouvée » a été réutilisé par le chantier
+« Windows et macOS testés seulement quand une PR touche du code » (0.6.4,
+journal du 2026-10-18), qui a changé `.github/workflows/ia-first.yml`
+(job `matrice-os`, matrice de `kit-tests`). L'attestation est restée
+`ATTESTED` ; le chantier a été clos sur `verify` PASS, avec « à
+réattester » en limite. Le 2026-10-18, le demandeur lance
+`drwil attest QUA-013` depuis un terminal :
+
+```
+relance de ci-coverage…
+  ci-coverage : ok
+relance de tests-qua-013…
+  tests-qua-013 : ok
+✗ QUA-013 a déjà une attestation valide (2026-10-16T10:58:07.792Z) : rien à attester
+```
+
+Deux constats :
+
+1. Le défaut S6, reproduit : l'objet du jugement (le workflow de CI) a
+   changé, ni le texte du contrat ni la définition de ses contrôles ;
+   l'attestation ne tombe pas.
+2. Un manque de plus : un humain qui **veut** réattester ne le peut pas.
+   Aucune option de `drwil attest` ne renouvelle une attestation encore
+   valide, et une limite de chantier qui dit « à réattester » ne peut pas
+   être suivie.
+
+Scénario de test pour la fiche : modifier un fichier couvert par QUA-013
+(`.github/workflows/ia-first.yml`) sans toucher au contrat, puis
+`verify` doit rendre `MANUAL` et nommer le fichier ; `drwil attest
+QUA-013` doit alors l'accepter.
+
 ## Principe validé (demandeur, 2026-10-17)
 
 « Une attestation n'est valide que tant que l'objet qu'elle atteste reste
@@ -98,5 +133,8 @@ README du paquet (ce qu'une attestation garantit), changelog.
 - [décision] Mécanisme : empreinte du contenu des fichiers couverts
   (indépendante de git, rejouable en CI), ou commit de référence + `git
   diff` (plus simple, mais dépend de l'historique disponible en CI) ?
+- [décision] Renouveler volontairement une attestation encore valide
+  (constat du 2026-10-18) : option de `drwil attest`, ou inutile une fois
+  l'objet couvert ?
 - [décision] Un changement de forme pur (formatage) fait-il tomber
   l'attestation ? Proposé : oui, faute de moyen sûr de le distinguer.
