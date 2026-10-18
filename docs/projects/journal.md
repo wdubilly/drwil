@@ -1832,3 +1832,34 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   GitHub Actions (expressions, clés inconnues) : actionlint écarté par le
   demandeur, à reprendre en intention si une erreur de ce genre passe.
 - **Clôturé par** : la PR de la branche `workstream/workflow-ci-yaml-valide`.
+
+## 2026-10-18 — Release 0.6.4
+
+- **Décisions clés** (demandeur, 2026-10-18) : une fiche dédiée, comme la
+  0.6.3 ; critères prouvés par des contrats existants, aucun contrat
+  créé. Version 0.6.4 partout (paquet, racine, verrou) ; section
+  « Unreleased » du changelog renommée « 0.6.4 (2026-10-18) », une
+  « Unreleased » vide au-dessus ; les deux README installent depuis la
+  release 0.6.4 (QUA-040, drwil entretient la carte, le README et le
+  changelog). Le chantier du YAML de la CI est passé avant (journal du
+  même jour) ; il ne change rien pour l'utilisateur, donc aucune ligne
+  de changelog.
+- **Essai réel** en plus du test de QUA-027 (mise à jour sûre d'une
+  version à la suivante) : projet temporaire (`git init`, `npm init -y`,
+  branche d'essai) équipé avec le tarball 0.6.3 de la release GitHub,
+  puis mis à jour avec le tarball 0.6.4 construit localement — fichier
+  du projet intact, skill modifiée à la main préservée et signalée en
+  dérive, mécanique non modifiée rafraîchie
+  (`.githooks/consumption.mjs`, `.githooks/state-texts.mjs`,
+  `AGENTS.md`), version enregistrée 0.6.4 (première version 0.6.3). Aucun fichier retiré du gabarit entre les deux
+  versions : le retrait de l'obsolète reste prouvé par le seul test de
+  QUA-027. `verify` en VERIFY ERROR sans CI (QUA-013, un contrôle non
+  exécuté n'est pas passé : attendu et annoncé par le README), puis
+  MANUAL REVIEW REQUIRED après `init --ci github` (contrats à attester
+  par un humain seulement) ; `doctor` sain.
+- **Publication** : tag `v0.6.4`, note GitHub et tarball, après la fusion
+  et sur feu vert du demandeur (`node .githooks/create-release.mjs` ; le
+  `--dry-run` annonce v0.6.4).
+- **Intention d'origine** : aucune (demande directe).
+- **Limites connues** : aucune nouvelle.
+- **Clôturé par** : la PR de la branche `workstream/release-0-6-4`.
