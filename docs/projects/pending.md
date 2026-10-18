@@ -106,7 +106,9 @@ avant les points 5 à 13, en trois versions.
 - **0.6.4** — décidé le 2026-10-18 par le demandeur : en tête, une CI
   plus rapide (Windows et macOS testés seulement quand une PR touche du
   code ; fait, journal du 2026-10-18) ; puis la file de chantiers
-  menée par sous-agents (fait, journal du 2026-10-18).
+  menée par sous-agents (fait, journal du 2026-10-18) ; ajouté le
+  2026-10-18 par le demandeur avant la release : un workflow CI au YAML
+  invalide refusé au commit (`docs/projects/workflow-ci-yaml-valide.md`).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -284,9 +286,9 @@ une décision du demandeur.
 - [ ] [décision] Une file menée par sous-agents avec les autres agents
   (Copilot CLI, Codex, Cursor, Gemini ; limite du chantier du 2026-10-18)
   — `docs/intentions/file-sous-agents-autres-outils.md`.
-- [ ] [décision] Un workflow CI au YAML invalide refusé avant le push (le
-  test du workflow ne le parse pas ; limite du chantier « CI multi-OS »
-  du 2026-10-18) — `docs/intentions/workflow-ci-yaml-valide.md`.
+- [ ] [IA] [P1] Un workflow CI au YAML invalide refusé au commit (dépôt et
+  gabarit ; cadré le 2026-10-18, 0.6.4) —
+  `docs/projects/workflow-ci-yaml-valide.md`.
 - [ ] [décision] Le budget de temps des contrôles au commit, calibré pour
   les machines Windows de la CI (1500 ms dépassé sans changement de code ;
   relevé le 2026-10-17) — `docs/intentions/budget-temps-windows.md`.
