@@ -1892,3 +1892,23 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   la demande, ni gardé ni effacé par l'outil —
   `docs/intentions/feu-vert-publication-enregistre.md`.
 - **Clôturé par** : la PR #157 (branche `chantier/date-gardee-feu-vert`).
+
+## 2026-10-18 — Lever l'alerte CodeQL de la PR 157 (correction intercalée)
+
+- **Décisions clés** (demandeur, 2026-10-18) : correction sur la branche
+  de la PR 157 elle-même, sa fusion automatique désactivée le temps de la
+  correction puis reprogrammée.
+- **Correction** : le test QUA-047 (une date seule ne réécrit pas un
+  document installé) de `packages/drwil/test/kit.test.mjs` insère sa ligne
+  par découpage en lignes puis assemblage, au lieu d'un `replace` sur la
+  seule première occurrence que CodeQL signalait (`js/incomplete-sanitization`,
+  échappement incomplet). Comportement identique ; alerte levée, pas
+  ignorée (QUA-019, pas de contournement).
+- **Intention d'origine** : aucune (CI rouge de la PR 157).
+- **Limites connues** : aucune nouvelle ; le dépassement du budget de
+  temps sous Windows ne s'est pas reproduit (CI verte au premier passage).
+- **Consommation** : non mesurée à part — `.githooks/consumption.mjs` (mesure des
+  tokens) groupe par branche, et la correction a été menée sur celle du
+  chantier « date gardée et feu vert de publication » : ses réponses y
+  sont comptées.
+- **Clôturé par** : la PR #157 (branche `chantier/date-gardee-feu-vert`).
