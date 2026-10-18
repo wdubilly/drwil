@@ -138,3 +138,5 @@ tous les chantiers fusionnés depuis la release précédente.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`), en
   tête de la 0.6.4.
+
+<!-- essai CI : PR de documentation seule, à jeter -->
