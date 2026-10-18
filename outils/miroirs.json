@@ -1,7 +1,7 @@
 {
   "version": 2,
   "ecarts": {
-    ".github/workflows/ia-first.yml": "Jobs vérifiés à part (clé ci) ; contenu différent : étapes propres au dépôt (npm ci, installation de gitleaks, vérification du ruleset) et alerte qui dépend aussi de kit-tests.",
+    ".github/workflows/ia-first.yml": "Jobs vérifiés à part (clé ci) ; contenu différent : étapes propres au dépôt (npm ci et son cache, installation de gitleaks, vérification du ruleset) et alerte qui dépend aussi de kit-tests.",
     ".gitignore": "Entrées propres au dépôt (rapport de couverture, documents internes, évidences).",
     "AGENTS.md": "Consignes propres à chaque projet (le gabarit n'en est que la base).",
     "INSTALL.md": "Installation propre au dépôt drwil (clone, non publié sur npm).",
@@ -24,6 +24,8 @@
     ".github/CODEOWNERS": "Forge de ce dépôt (journal du 2026-10-13, « Protéger master ») ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
     ".github/ruleset-master.json": "Forge de ce dépôt (journal du 2026-10-13, « Protéger master ») ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
     ".github/scripts/verifier-ruleset.mjs": "Forge de ce dépôt (journal du 2026-10-13, « Protéger master ») ; le livrable : docs/intentions/forge-dans-le-livrable.md.",
+    ".github/scripts/ci-multi-os.mjs": "Matrice multi-OS de la CI de ce dépôt (docs/projects/ci-matrice-sur-pr.md, QUA-045) ; le workflow livré n'a pas de matrice.",
+    ".github/scripts/ci-multi-os.test.mjs": "Test de la matrice multi-OS de ce dépôt (QUA-045), non livré comme elle.",
     "docs/audit-risques.md": "Rapport généré pour ce dépôt par le skill d'audit (docs/recipes/audit-risks-and-debt.md).",
     "docs/benchmark-protocole.md": "Protocole de mesure de drwil lui-même (bench avec et sans drwil).",
     "docs/decouverte-valeur.md": "Rapport généré pour ce dépôt par le skill de découverte de valeur.",
@@ -35,7 +37,8 @@
   "ci": {
     "fichier": ".github/workflows/ia-first.yml",
     "jobsPropresAuDepot": {
-      "kit-tests": "Portabilité du paquet testée sur Linux, Windows et macOS (docs/projects/suites-kit-portable.md, point 1)."
+      "kit-tests": "Portabilité du paquet testée sur Linux, Windows et macOS (docs/projects/suites-kit-portable.md, point 1), selon la matrice de matrice-os.",
+      "matrice-os": "Calcule les OS de kit-tests selon l'événement et le code touché (docs/projects/ci-matrice-sur-pr.md, QUA-045)."
     }
   }
 }
