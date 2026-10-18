@@ -1,7 +1,7 @@
 # Intention : une fiche de recette par version, pour une équipe hors dépôt
 
-**Statut** : proposée le 2026-10-18 par le demandeur — PR séparée de la
-clôture allégée (`docs/projects/cloture-allegee.md`), à cadrer ensuite.
+**Statut** : proposée le 2026-10-18 par le demandeur ; cadrée le même jour
+dans `docs/projects/fiche-de-recette.md` (questions tranchées ci-dessous).
 
 ## Besoin
 
@@ -42,9 +42,12 @@ retour.
 
 ## Questions à trancher
 
-- [décision] Format : Markdown joint à la release, HTML statique (comme le
-  tableau de bord), ou les deux ?
-- [décision] Retour de l'équipe : comment un point refusé revient-il dans
-  le dépôt (intention, défaut à corriger, attestation refusée) ?
-- [décision] Livrée à tout projet (QUA-018, dépôt ou livrable), ou d'abord
-  éprouvée dans ce dépôt ?
+Aucune : tranchées le 2026-10-18 par le demandeur.
+
+- Format : Markdown joint à la release (un HTML pourra venir plus tard).
+- Retour de l'équipe : une issue GitHub par point refusé, qui cite son
+  identifiant ; l'agent la range en défaut à corriger ou en intention.
+- Livrée à tout projet (QUA-018), avec le module de release.
+- Approbation avant publication : candidate en pré-release, verdict
+  (approuvée, avec réserves, refusée) donné par une commande humaine,
+  promotion du même tarball ; README : lien fixe `releases/latest`.
