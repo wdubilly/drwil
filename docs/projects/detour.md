@@ -23,6 +23,7 @@ files:
   - docs/recipes/corriger-un-defaut.md
   - packages/drwil/templates/common/base/AGENTS.md
   - AGENTS.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - packages/drwil/test/kit.test.mjs
   - docs/architecture.md
   - docs/contracts.md
@@ -35,7 +36,8 @@ files:
 périmètre qui la reconnaît, l'état qui enregistre le détour — gabarit et
 copies du dépôt, avec leurs tests propres au dépôt — ; la recette
 « corriger un défaut » et `AGENTS.md` ; la carte, le registre, les
-contrôles, les miroirs et le changelog.)
+contrôles, les miroirs et le changelog ; la fiche de mécanique livrée,
+qui cadre la nouvelle commande dans chaque projet installé.)
 
 ## 1. Besoin
 
