@@ -1809,3 +1809,26 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   réécrit hors de l'agent (`git pull` retiré des permissions) et a bloqué
   le push au contrôle des miroirs : restauré sur décision du demandeur.
 - **Clôturé par** : la PR de la branche `workstream/reprise-par-sous-agent`.
+
+## 2026-10-18 — Un workflow CI au YAML invalide est refusé avant le push (0.6.4)
+
+- **Décisions clés** (demandeur, cadrage du 2026-10-18) : un test propre
+  au dépôt, `.github/scripts/workflows-yaml.test.mjs`, parse avec la
+  dépendance de dev `yaml` 2.9.1 (sans dépendance transitive, version
+  exacte) les workflows du dépôt (`.github/workflows/*.yml`) et les
+  fichiers de CI du gabarit (`packages/drwil/templates/common/ci/`, lus
+  par motif) et échoue en nommant fichier et ligne ; un cas négatif rejoue
+  le `run:` non cité de l'incident (corrigé par `9b742a3`). Contrat
+  QUA-046 (fichiers de CI en YAML valide avant le push), contrôle
+  `tests-qua-046` au commit sur `.github/**`, les fichiers de CI du
+  gabarit, `package.json` et son verrou, et dans le job `checks` ; test
+  déclaré propre au dépôt (`outils/miroirs.json`) : rien ne change pour
+  un projet. Vérifié : le workflow d'avant `9b742a3` est refusé à la
+  ligne 86.
+- **Intention d'origine** : « un workflow CI au YAML invalide est refusé
+  avant le push » (limite du chantier du 2026-10-18 sur la matrice
+  multi-OS), entièrement couverte : résumée ici et retirée.
+- **Limites connues** : la syntaxe seule est vérifiée, pas la sémantique
+  GitHub Actions (expressions, clés inconnues) : actionlint écarté par le
+  demandeur, à reprendre en intention si une erreur de ce genre passe.
+- **Clôturé par** : la PR de la branche `workstream/workflow-ci-yaml-valide`.
