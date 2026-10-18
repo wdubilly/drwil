@@ -1,4 +1,4 @@
-// Tests de la matrice multi-OS de la CI du dépôt (docs/projects/ci-matrice-sur-pr.md) : le calcul
+// Tests de la matrice multi-OS de la CI du dépôt (QUA-045, Windows et macOS avant la fusion) : le calcul
 // lui-même, puis le workflow qui doit s'en servir — un script juste mais non branché ne prouve rien.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

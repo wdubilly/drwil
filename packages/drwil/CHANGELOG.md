@@ -17,6 +17,23 @@ closing commit; the release renames this section to its version.
   by subagents publishes without stopping; without it, creating the
   release stays a gesture after the human's agreement.
 
+### Added
+
+- Closing a workstream in one gesture: once the journal entry is written,
+  `node .githooks/close.mjs` deletes the brief, removes its index item and
+  records the consumption, then reports before the commit what would make
+  the closing fail — a criterion still « contract to create » with the ID
+  to write, places citing the brief that would go dead, file names without
+  a path. `--check` gives the report alone, at any time; leaving Build for
+  Evidence gives it too. It never stages, commits, pushes nor merges.
+- Merged local branches are deleted when the next workstream starts
+  (`git branch -d`: never an unmerged branch, the current one nor the main
+  branch).
+- check-docs refuses a code comment citing a workstream brief in a changed
+  file (a warning unless `newRequirements` is `blocking`): code cites the
+  contract it serves, since the brief is deleted at closing. Citations in
+  unchanged files are summed up in one non-blocking warning.
+
 ## 0.6.4 (2026-10-18)
 
 ### Changed

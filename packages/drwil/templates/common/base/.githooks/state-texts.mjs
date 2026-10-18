@@ -45,7 +45,7 @@ const TEXTS = {
       VERIFY:
         "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en BUILD ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
       CLOSING:
-        "fiche entièrement terminée : la condenser dans le journal puis la supprimer ; sinon mettre à jour statut et reprise. Boucler les intentions : chaque limite non traitée devient une fiche d'intention (jamais une fiche de chantier), listée dans l'index en [décision] et citée par « Limites connues » du journal ; l'intention d'origine (champ Intention de la fiche) est mise à jour, ou résumée au journal et retirée si elle est entièrement couverte. Tenir ce que lit l'utilisateur : README et ligne « Unreleased » du changelog si le chantier change ce qu'il voit, carte docs/architecture.md s'il change la structure. Consigner la consommation du chantier : `node .githooks/consumption.mjs --record <fiche>` (journaux de Claude Code ; autre outil : estimer à la main), la ligne entre dans le commit de clôture. Puis revenir en SCOPING.",
+        "fiche entièrement terminée : la condenser dans le journal, puis `node .githooks/close.mjs` la supprime, retire sa ligne de l'index, consigne la consommation et signale ce qui ferait échouer la clôture, avant le commit ; sinon mettre à jour statut et reprise. Boucler les intentions : chaque limite non traitée devient une fiche d'intention (jamais une fiche de chantier), listée dans l'index en [décision] et citée par « Limites connues » du journal ; l'intention d'origine (champ Intention de la fiche) est mise à jour, ou résumée au journal et retirée si elle est entièrement couverte. Tenir ce que lit l'utilisateur : README et ligne « Unreleased » du changelog si le chantier change ce qu'il voit, carte docs/architecture.md s'il change la structure. Consigner la consommation du chantier : `node .githooks/consumption.mjs --record <fiche>` (fait par close.mjs ; journaux de Claude Code ; autre outil : estimer à la main), la ligne entre dans le commit de clôture. Puis revenir en SCOPING.",
     },
   },
   en: {
@@ -85,7 +85,7 @@ const TEXTS = {
       VERIFY:
         "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to BUILD; MANUAL: human attestation (`npx drwil attest`), then run it again.",
       CLOSING:
-        "brief fully finished: condense it into the journal, then delete it; otherwise update status and hand-off. Close the intent loop: each limit left untreated becomes an intent brief (never a workstream brief), listed in the index as [decision] and cited by the journal's « Known limits »; the original intent (the brief's Intent field) is updated, or summarised in the journal and removed when fully covered. Keep what the user reads current: README and « Unreleased » changelog line if the workstream changes what they see, map docs/architecture.md if it changes the structure. Record the workstream's consumption: `node .githooks/consumption.mjs --record <brief>` (Claude Code logs; another tool: estimate by hand), the line goes into the closing commit. Then go back to SCOPING.",
+        "brief fully finished: condense it into the journal, then `node .githooks/close.mjs` deletes it, removes its index line, records the consumption and reports what would make the closing fail, before the commit; otherwise update status and hand-off. Close the intent loop: each limit left untreated becomes an intent brief (never a workstream brief), listed in the index as [decision] and cited by the journal's « Known limits »; the original intent (the brief's Intent field) is updated, or summarised in the journal and removed when fully covered. Keep what the user reads current: README and « Unreleased » changelog line if the workstream changes what they see, map docs/architecture.md if it changes the structure. Record the workstream's consumption: `node .githooks/consumption.mjs --record <brief>` (done by close.mjs; Claude Code logs; another tool: estimate by hand), the line goes into the closing commit. Then go back to SCOPING.",
     },
   },
 };
@@ -148,6 +148,7 @@ export const STATE_MESSAGES = {
     briefNeeded: "ouvrir une attente exige --brief <docs/projects/….md>",
     resumed: `état précédent invalide, repris depuis le neutre ({0}) ; `,
     closingRefused: `clôture refusée : {0}`,
+    closingSignals: "Ce qui ferait échouer la clôture, à corriger tant que le code peut changer (`node .githooks/state.mjs move BUILD`) :",
     stillThere: `retour en SCOPING refusé : {0} se dit terminée mais est encore là — la condenser dans docs/projects/journal.md, la supprimer et retirer sa ligne de l'index (recette « Clôturer »)`,
     humanDecision: `{0} → {1} est une décision humaine : terminal interactif requis (réglage « transitions » : human)`,
     confirm: `Pour passer de {0} à {1}, retapez l'activité visée ({1}) : `,
@@ -213,6 +214,7 @@ export const STATE_MESSAGES = {
     briefNeeded: "opening an expectation requires --brief <docs/projects/….md>",
     resumed: `previous state invalid, resumed from neutral ({0}); `,
     closingRefused: `closing refused: {0}`,
+    closingSignals: "What would make the closing fail, to fix while code can still change (`node .githooks/state.mjs move BUILD`):",
     stillThere: `back to SCOPING refused: {0} says it is done but is still there — condense it into docs/projects/journal.md, delete it and remove its index line ("Closing" recipe)`,
     humanDecision: `{0} → {1} is a human decision: interactive terminal required ("transitions" setting: human)`,
     confirm: `To move from {0} to {1}, type the target activity again ({1}): `,

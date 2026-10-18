@@ -57,6 +57,11 @@ Carte complète : `docs/architecture.md`.
   par le journal ; l'intention d'origine (champ `**Intention**` de la
   fiche) est mise à jour, ou résumée au journal et retirée si elle est
   entièrement couverte.
+- **Clôture en un geste (QUA-048)** : l'entrée du journal écrite,
+  `node .githooks/close.mjs` supprime la fiche, retire sa ligne de l'index,
+  consigne la consommation et signale, avant le commit, ce qui ferait
+  échouer la clôture (`--check` : le signal seul, à tout moment). Le code
+  cite le contrat qu'il sert, jamais une fiche de chantier (QUA-049).
 - **File de chantiers** : quand l'humain a coché plusieurs fiches au
   lancement, l'agent les réalise l'une après l'autre sans nouveau sondage —
   avec Claude Code, chacune dans un sous-agent (contexte neuf), la session

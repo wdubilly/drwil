@@ -27,7 +27,7 @@ registre et le changelog.)
 
 ## 1. Besoin
 
-Point 6 de la clôture allégée (`docs/projects/cloture-allegee.md`, cadrée
+Point 6 de la clôture allégée (cadrage de la 0.6.5, journal du 2026-10-18, cadrée
 le 2026-10-18) : dans la session de la 0.6.4, la file a suivi l'ordre des
 clics dans le sondage, pas celui des options que décrit la skill de
 lancement ; il a fallu arrêter la file et relancer le sondage.
@@ -40,7 +40,8 @@ lancement ; il a fallu arrêter la file et relancer le sondage.
 ## 2. Hors périmètre
 
 - Le reste de la 0.6.5 : la date gardée et le feu vert de publication
-  (fait, journal du 2026-10-18), `docs/projects/cloture-allegee.md`, `docs/projects/detour.md`.
+  (fait, journal du 2026-10-18), la clôture outillée (fait, journal du
+  2026-10-18), `docs/projects/detour.md`.
 
 ## 3. Contraintes
 

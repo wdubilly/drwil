@@ -1912,3 +1912,48 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   chantier « date gardée et feu vert de publication » : ses réponses y
   sont comptées.
 - **Clôturé par** : la PR #157 (branche `chantier/date-gardee-feu-vert`).
+
+## 2026-10-18 — Une clôture allégée, sans encombrants (0.6.5, 3 sur 4)
+
+- **Décisions clés** (demandeur, 2026-10-18) : une PR par fiche de la
+  0.6.5 ; la fiche active reste commitable avec le code (le gain vient du
+  signal, pas d'un changement de la barrière) ; le code cite le contrat,
+  pas la fiche ; livré à tout projet (QUA-018, dépôt ou livrable : gabarit
+  puis `npm run installer-depot`).
+- **La commande de clôture** : contrat créé QUA-048 (une clôture en un
+  geste, ses pièges signalés avant le commit), contrôle `tests-qua-048`.
+  `.githooks/close.mjs`, en CLOSING, supprime la fiche, retire sa ligne
+  d'index et consigne la consommation ; il signale avant le commit un
+  critère encore « contrat à créer » (avec l'ID créé sur la branche à
+  écrire), les références qui deviendraient mortes, les noms de fichiers
+  sans chemin. `--check` donne le signal seul ; le passage de BUILD à
+  EVIDENCE aussi (essayé sur ce chantier : il a listé les cinq
+  références des fiches voisines et de l'index, corrigées ici). Rien
+  n'est commité, poussé ni fusionné ; l'état n'est pas écrit. Cette
+  clôture a été faite avec elle.
+- **Les branches fusionnées** : supprimées au lancement du chantier
+  suivant (`start`, `.githooks/state.mjs`), par `git branch -d` —
+  jamais la courante, la principale, une branche encore au sommet de la
+  principale ni une branche non fusionnée.
+- **Le code cite le contrat** : contrat créé QUA-049 (le code cite le
+  contrat qu'il sert, jamais une fiche de chantier), contrôle
+  `tests-qua-049`. Règle intégrée à `.githooks/check-code-rules.mjs`,
+  lancée par check-docs : bloquante dans un fichier modifié quand
+  `newRequirements` l'impose, un avertissement résumé pour le code
+  inchangé. Les commentaires des deux tests de CI et de
+  `packages/drwil/test/kit.test.mjs` citent désormais le contrat ou le
+  journal. La fiche de mécanique livrée cadre la nouvelle commande
+  (élargissement du cadrage, commit séparé).
+- **Doc** : recette des branches (clôture), `AGENTS.md` du gabarit et du
+  dépôt, rappel CLOSING, carte, changelog (QUA-040, drwil entretient la
+  carte, le README et le changelog).
+- **Intention d'origine** : aucune (relevés de la session de la 0.6.4).
+- **Limites connues** : branches fusionnées par squash non supprimées —
+  `docs/intentions/branches-fusionnees-par-squash.md` ; neuf citations de
+  fiche restées dans du code non modifié, hors cadrage —
+  `docs/intentions/citations-de-fiche-heritees.md` ; commentaires reconnus
+  par une heuristique de ligne —
+  `docs/intentions/commentaires-reconnus-par-heuristique.md` ; le gain
+  reste à mesurer après le détour —
+  `docs/intentions/mesurer-gain-cloture-allegee.md`.
+- **Clôturé par** : la PR #158 (branche `chantier/cloture-allegee`).

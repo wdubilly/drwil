@@ -1,4 +1,4 @@
-// Fichiers de CI du dépôt et du gabarit parsés comme du YAML (docs/projects/workflow-ci-yaml-valide.md) :
+// Fichiers de CI du dépôt et du gabarit parsés comme du YAML (QUA-046, fichiers de CI en YAML valide) :
 // GitHub rejette en bloc un workflow invalide, sans lancer aucun job ; un contrôle placé dans ce
 // workflow ne tournerait donc jamais. Seul un test local attrape l'erreur avant le push.
 import assert from "node:assert/strict";
