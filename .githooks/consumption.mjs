@@ -26,7 +26,7 @@ const USAGE = ".drwil/usage.jsonl";
 
 const TEXTS = {
   fr: {
-    columns: ["chantier", "requêtes", "entrée", "sortie", "cache lu", "cache écrit", "pondéré", "durée", "modèles"],
+    columns: ["chantier", "requêtes", "entrée", "sortie", "cache lu", "cache écrit", "cache lu/req", "pondéré", "durée", "modèles"],
     weighted: "pondéré : indicatif, en équivalent tokens d'entrée (sortie ×5, cache lu ×0,1, cache écrit ×1,25).",
     noLogs: (d) =>
       `consommation : aucun journal de session lisible dans ${d} (Claude Code seulement) — non mesuré ; autre outil IA : estimer à la main (docs/recipes/track-consumption-per-increment.md)`,
@@ -35,13 +35,13 @@ const TEXTS = {
     noBrief: "consommation : --record attend le nom de la fiche (docs/projects/<fiche>.md, sans extension)",
     unreadable: (n) => `consommation : ${n} ligne(s) de journal illisible(s), ignorée(s)`,
     already: (b) => `consommation : ${USAGE} a déjà une ligne pour « ${b} » — rien d'ajouté`,
-    recorded: (b, t) => `consommation : « ${b} » consigné dans ${USAGE} (${t} tokens pondérés)`,
+    recorded: (b, t, c) => `consommation : « ${b} » consigné dans ${USAGE} (${t} tokens pondérés, cache lu moyen par requête : ${c})`,
     noBranch: "(sans branche)",
     main: "(branche principale)",
     branch: (b) => `(branche ${b})`,
   },
   en: {
-    columns: ["workstream", "requests", "input", "output", "cache read", "cache write", "weighted", "time", "models"],
+    columns: ["workstream", "requests", "input", "output", "cache read", "cache write", "cache read/req", "weighted", "time", "models"],
     weighted: "weighted: indicative, in input-token equivalents (output ×5, cache read ×0.1, cache write ×1.25).",
     noLogs: (d) =>
       `consumption: no readable session log in ${d} (Claude Code only) — not measured; another AI tool: estimate by hand (docs/recipes/track-consumption-per-increment.md)`,
@@ -50,7 +50,7 @@ const TEXTS = {
     noBrief: "consumption: --record expects the brief's name (docs/projects/<brief>.md, without extension)",
     unreadable: (n) => `consumption: ${n} unreadable log line(s), ignored`,
     already: (b) => `consumption: ${USAGE} already has a line for "${b}" — nothing added`,
-    recorded: (b, t) => `consumption: "${b}" recorded in ${USAGE} (${t} weighted tokens)`,
+    recorded: (b, t, c) => `consumption: "${b}" recorded in ${USAGE} (${t} weighted tokens, average cache read per request: ${c})`,
     noBranch: "(no branch)",
     main: "(main branch)",
     branch: (b) => `(branch ${b})`,
@@ -118,7 +118,8 @@ export function activeTime(times) {
 /**
  * Aggregates answers: a request counted once (a log repeats an answer over several blocks, each with
  * the request's usage). Returns [{ workstream, requests, input, output, cacheRead, cacheWrite,
- * weighted, models, minutes }], most weighted first.
+ * cacheReadPerRequest, weighted, models, minutes }], most weighted first. The average cache read per
+ * request shows the cost of the context read again, which grows with a long session.
  */
 export function aggregate(answers, { since = null, T = TEXTS.en } = {}) {
   const seen = new Set();
@@ -143,6 +144,7 @@ export function aggregate(answers, { since = null, T = TEXTS.en } = {}) {
       output: g.output,
       cacheRead: g.cacheRead,
       cacheWrite: g.cacheWrite,
+      cacheReadPerRequest: Math.round(g.cacheRead / g.requests),
       weighted: Math.round(Object.entries(WEIGHTS).reduce((s, [k, w]) => s + g[k] * w, 0)),
       models: [...g.models].sort(),
       minutes: Math.round(activeTime(g.t) / 60000),
@@ -165,6 +167,7 @@ export function format(rows, T = TEXTS.en) {
     readable(l.output, fr),
     readable(l.cacheRead, fr),
     readable(l.cacheWrite, fr),
+    readable(l.cacheReadPerRequest, fr),
     readable(l.weighted, fr),
     `${l.minutes} min`,
     l.models.join(", "),
@@ -260,7 +263,7 @@ export function main(args, { env = process.env, root = process.cwd(), log = cons
     }
     mkdirSync(join(root, ".drwil"), { recursive: true });
     appendFileSync(path, `${JSON.stringify(usageLine(rows[0], now.toISOString().slice(0, 10)))}\n`);
-    log(T.recorded(opt.record, rows[0].weighted));
+    log(T.recorded(opt.record, rows[0].weighted, readable(rows[0].cacheReadPerRequest, lang === "fr")));
     return 0;
   }
   log(opt.json ? JSON.stringify({ version: 1, unreadable, workstreams: rows }, null, 2) : format(rows, T));

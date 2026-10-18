@@ -74,9 +74,12 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
   the journal; the original intent (the brief's `**Intent**` field) is
   updated, or summarised in the journal and removed when fully covered.
 - **Queue of workstreams**: when the human ticked several briefs at start,
-  the agent runs them one after the other without a new poll — start the
-  next one only after the previous PR is merged, and stop at the first one
-  that needs a human (attestation, unfixed FAIL, red CI, decision).
+  the agent runs them one after the other without a new poll — with Claude
+  Code, each one in a subagent (fresh context), the main session keeping
+  only the reports; start the next one only after the previous PR is
+  merged (followed with `gh`, 30 minutes at most), and stop at the first
+  one that needs a human (attestation, unfixed FAIL, red CI, decision). A
+  queue resumed in a new session waits for the human's explicit yes.
 - **Readable references**: an identifier cited to a human — contract ID
   (`QUA-015`), catalog line (`catalog:QUA-004`), lot or point of a brief —
   is always followed by what it designates: « QUA-015 (projects resumable

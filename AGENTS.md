@@ -59,9 +59,12 @@ Carte complète : `docs/architecture.md`.
   entièrement couverte.
 - **File de chantiers** : quand l'humain a coché plusieurs fiches au
   lancement, l'agent les réalise l'une après l'autre sans nouveau sondage —
-  la suivante seulement après la fusion de la précédente, arrêt au premier
-  chantier qui demande un humain (attestation, FAIL non corrigé, CI rouge,
-  décision).
+  avec Claude Code, chacune dans un sous-agent (contexte neuf), la session
+  principale ne gardant que les comptes rendus ; la suivante seulement
+  après la fusion de la précédente (suivie par `gh`, 30 minutes au plus),
+  arrêt au premier chantier qui demande un humain (attestation, FAIL non
+  corrigé, CI rouge, décision). Une file reprise dans une nouvelle session
+  attend le oui explicite de l'humain.
 - **Compte rendu de fin de tâche** : fichiers créés/modifiés, contrôles lancés et résultats exacts, limites et ambiguïtés restantes.
 
 ## Contrats

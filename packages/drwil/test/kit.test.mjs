@@ -1036,6 +1036,26 @@ test("QUA-037 : la skill de lancement dit un auto-merge refusé par le dépôt, 
   assert.match(skill, /never say the merge is scheduled/);
 });
 
+test("QUA-037 : la skill et l'AGENTS.md livrés mènent une file un sous-agent par chantier, suivi de fusion borné, reprise confirmée", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  // Blancs ramenés à un espace : les phrases cherchées passent à la ligne dans le Markdown.
+  const skill = read(dir, ".claude/skills/start-a-workstream/SKILL.md").replace(/\s+/g, " ");
+  assert.match(skill, /each workstream in a subagent \(fresh context\)/);
+  assert.match(skill, /its instructions start by reading the state: `node \.githooks\/state\.mjs`/);
+  assert.match(skill, /never `isolation: "worktree"`/, "l'état ignoré par Git n'est pas dans une copie isolée");
+  assert.match(skill, /One subagent at a time/);
+  assert.match(skill, /The main session keeps only the reports/);
+  assert.match(skill, /follows the PR with `gh` until it is merged, 30 minutes at most/);
+  assert.match(skill, /never start the next one on a merge not done/);
+  assert.match(skill, /« the queue resumes with <brief>: shall I start it\? »/);
+  assert.match(skill, /only on an explicit yes/);
+  const agents = read(dir, "AGENTS.md").replace(/\s+/g, " ");
+  assert.match(agents, /with Claude Code, each one in a subagent \(fresh context\)/);
+  assert.match(agents, /30 minutes at most/);
+  assert.match(agents, /explicit yes/);
+});
+
 test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

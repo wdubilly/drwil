@@ -18,8 +18,13 @@ const TEXTS = {
     autoMerge:
       "Fusion automatique autorisée au lancement : en CLOSING, après verify PASS et le push de la clôture, dans cet ordre : attendre que GitHub ait calculé la PR (`gh pr view --json mergeStateStatus`) et, si elle est en retard sur la branche principale (BEHIND), la mettre à jour ; programmer `gh pr merge --auto --merge` ; vérifier que la fusion est bien programmée (`gh pr view --json autoMergeRequest`) ; seulement ensuite revenir en SCOPING, qui efface l'autorisation. En cas d'échec : rester en CLOSING et le signaler.",
     queue:
-      "File décidée au lancement : ensuite {0}{1}. Après la clôture et la fusion de ce chantier, en SCOPING, lancer la suivante : `node .githooks/state.mjs next`, depuis la branche principale à jour. S'arrêter au premier chantier qui bute (attestation humaine, FAIL non corrigé, CI rouge, décision à prendre) en disant pourquoi et ce qui est attendu. Un compte rendu court à chaque clôture, un bilan en fin de file.",
+      "File décidée au lancement : ensuite {0}{1}. Avec Claude Code, chaque chantier de la file se mène dans un sous-agent (contexte neuf), un seul à la fois, dans le dossier du dépôt et jamais dans une copie isolée (worktree : l'état n'y est pas) : sa consigne commence par lire l'état (`node .githooks/state.mjs`), il mène le chantier jusqu'au retour en SCOPING sans lancer la suivante et rend un compte rendu ; la session principale ne garde que leurs comptes rendus (autre outil : tout dans la même session). Après la clôture, la session principale suit la PR par `gh` jusqu'à la fusion, 30 minutes au plus, met à jour la branche principale et lance la suivante : `node .githooks/state.mjs next`, dans un nouveau sous-agent ; plus de suivante : un bilan. S'arrêter au premier chantier qui bute (attestation humaine, FAIL non corrigé, CI rouge, délai de fusion dépassé, décision à prendre) en disant pourquoi et ce qui est attendu ; jamais de suivante sur une fusion non faite. Un compte rendu court à chaque clôture, un bilan en fin de file.",
     queueMerge: " (fusion automatique)",
+    // Un « continue » ambigu a lancé un chantier le 2026-10-17 : une file reprise exige un oui explicite.
+    queueResume:
+      "Reprise de file : si cette session n'a pas mené la clôture précédente (nouvelle session, après `/clear` ou un redémarrage), demander d'abord à l'humain « la file reprend avec {0} : je lance ? » et ne lancer `node .githooks/state.mjs next` que sur un oui explicite ; sans oui explicite, rien n'est lancé.",
+    closingNoQueue:
+      "Hors file : terminer en proposant à l'humain `/clear` avant sa prochaine demande (Claude Code ; autre outil : une nouvelle conversation) — un contexte neuf ne relit pas ce chantier.",
     scope: "Périmètre autorisé (bloc scope de la fiche) :",
     noScope: "  (aucun bloc scope : aucun fichier de code autorisé)",
     briefDeleted: "fiche supprimée (clôture)",
@@ -54,8 +59,12 @@ const TEXTS = {
     autoMerge:
       "Automatic merge authorised at start: in CLOSING, after verify PASS and pushing the closing commit, in this order: wait until GitHub has computed the PR (`gh pr view --json mergeStateStatus`) and, if it is behind the main branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is actually scheduled (`gh pr view --json autoMergeRequest`); only then go back to SCOPING, which clears the authorisation. On failure: stay in CLOSING and report it.",
     queue:
-      "Queue decided at start: then {0}{1}. After this workstream is closed and merged, in SCOPING, start the next one: `node .githooks/state.mjs next`, from the up-to-date main branch. Stop at the first workstream that gets stuck (human attestation, FAIL not fixed, red CI, decision to make), saying why and what is expected. A short report at each closing, a summary at the end of the queue.",
+      "Queue decided at start: then {0}{1}. With Claude Code, each workstream of the queue runs in a subagent (fresh context), one at a time, in the repository folder and never in an isolated copy (worktree: the state is not there): its instructions start by reading the state (`node .githooks/state.mjs`), it carries the workstream until back in SCOPING without starting the next one and returns a report; the main session keeps only their reports (another tool: everything in the same session). After the closing, the main session follows the PR with `gh` until it is merged, 30 minutes at most, updates the main branch and starts the next one: `node .githooks/state.mjs next`, in a new subagent; no next one: a summary. Stop at the first workstream that gets stuck (human attestation, FAIL not fixed, red CI, merge delay exceeded, decision to make), saying why and what is expected; never a next one on a merge not done. A short report at each closing, a summary at the end of the queue.",
     queueMerge: " (automatic merge)",
+    queueResume:
+      "Resuming a queue: if this session did not carry the previous closing (new session, after `/clear` or a restart), first ask the human « the queue resumes with {0}: shall I start it? » and run `node .githooks/state.mjs next` only on an explicit yes; without an explicit yes, nothing is started.",
+    closingNoQueue:
+      "Outside a queue: finish by suggesting `/clear` to the human before their next request (Claude Code; another tool: a new conversation) — a fresh context does not read this workstream again.",
     scope: "Allowed scope (scope block of the brief):",
     noScope: "  (no scope block: no code file allowed)",
     briefDeleted: "brief deleted (closing)",
@@ -254,9 +263,11 @@ export function context(read, root) {
   lines.push(T.brief(brief), T.request(state.active_request));
   if (state.auto_merge === true) lines.push(T.autoMerge);
   if (state.queue?.length) lines.push(fill(T.queue, state.queue.join(", "), state.queue_merge ? T.queueMerge : ""));
+  if (state.queue?.length && state.activity === "SCOPING") lines.push(fill(T.queueResume, state.queue[0]));
   if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
   lines.push(T.rule(T.rules[state.activity]));
   if (state.activity === "CLOSING") lines.push(T.docLanguage(docLanguage(root)));
+  if (state.activity === "CLOSING" && !state.queue?.length) lines.push(T.closingNoQueue);
   lines.push(T.footer);
   return lines.join("\n");
 }

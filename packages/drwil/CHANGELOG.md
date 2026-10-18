@@ -5,6 +5,22 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Changed
+
+- A queue of workstreams no longer piles up in one session. With Claude
+  Code, the start skill and the governance reminder run each workstream
+  in a subagent with a fresh context; the main session keeps only the
+  reports, follows each PR with `gh` until it is merged (30 minutes at
+  most) and never starts the next one on a merge not done. Most of a
+  queue's cost was the context read again, and it grew with each
+  workstream. A queue resumed in a new session (after `/clear` or a
+  restart) now waits for the human's explicit yes before starting the
+  next brief. Outside a queue, the closing reminder suggests `/clear`
+  before the next request.
+- `node .githooks/consumption.mjs` shows the average cache read per
+  request for each workstream (table and `--record`), so the cost of a
+  long context shows.
+
 ## 0.6.3 (2026-10-17)
 
 ### Fixed

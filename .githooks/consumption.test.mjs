@@ -132,6 +132,7 @@ test("QUA-042 : regroupement : le cadrage et le chantier d'une fiche ensemble ; 
     output: 2,
     cacheRead: 20,
     cacheWrite: 8,
+    cacheReadPerRequest: 10,
     weighted: 24,
     models: ["m1", "m2"],
     minutes: 1,
@@ -157,13 +158,15 @@ test("QUA-042 : relevé lisible ou JSON, dans la langue du projet ; aucun conten
   const fr = projet(lignes).lancer([]);
   assert.equal(fr.code, 0);
   assert.match(fr.out, /^chantier +requêtes/);
-  assert.match(fr.out, /^a +2 +2 k +3,0 M +1 k +50 +15,0 M +1 min +claude-opus-5-5$/m);
+  assert.match(fr.out, /^chantier +requêtes +entrée +sortie +cache lu +cache écrit +cache lu\/req/);
+  assert.match(fr.out, /^a +2 +2 k +3,0 M +1 k +50 +500 +15,0 M +1 min +claude-opus-5-5$/m, "cache lu moyen par requête : 1000 / 2");
   assert.match(fr.out, /pondéré : indicatif/);
   assert.match(fr.out, /^\(branche fix\/x\) /m);
   assert.match(fr.err, /1 ligne\(s\) de journal illisible/);
   const en = projet(lignes, { lang: "en" }).lancer([]);
   assert.match(en.out, /^workstream +requests/);
   assert.match(en.out, /3\.0 M/);
+  assert.match(en.out, /cache write +cache read\/req/);
   const json = JSON.parse(projet(lignes).lancer(["--json"]).out);
   assert.equal(json.version, 1);
   assert.equal(json.unreadable, 1);
@@ -218,7 +221,7 @@ test("QUA-042 : --record ajoute une ligne au format de la recette dans .drwil/us
   ]);
   const premier = p.lancer(["--record", "a"]);
   assert.equal(premier.code, 0);
-  assert.match(premier.out, /« a » consigné dans \.drwil\/usage\.jsonl \(673 tokens pondérés\)/);
+  assert.match(premier.out, /« a » consigné dans \.drwil\/usage\.jsonl \(673 tokens pondérés, cache lu moyen par requête : 1 k\)/);
   const usage = join(p.racine, ".drwil", "usage.jsonl");
   writeFileSync(usage, `${readFileSync(usage, "utf8")}{illisible\n`);
   assert.match(p.lancer(["--record", "a"]).out, /a déjà une ligne pour « a »/);
@@ -248,7 +251,7 @@ test("QUA-042 : --record ajoute une ligne au format de la recette dans .drwil/us
     "m1, m2",
   );
   const en = projet([reponse({ id: "r1", t: "2026-10-16T10:00:00Z" })], { lang: "en" });
-  assert.match(en.lancer(["--record", "a"]).out, /"a" recorded in/);
+  assert.match(en.lancer(["--record", "a"]).out, /"a" recorded in .*\(673 weighted tokens, average cache read per request: 1 k\)/);
   assert.match(en.lancer(["--record", "a"]).out, /already has a line for "a"/);
 });
 

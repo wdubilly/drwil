@@ -55,13 +55,30 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    human merges by hand — stay in CLOSING, and never say the merge is scheduled: a mergeable PR,
    auto-merge allowed by the repository, auto-merge scheduled and merge done are four different
    states. Otherwise the merge stays a human gesture.
-5. **Queue** (the state says « Queue decided at start »): after each closing, wait until the
-   PR is merged, update the main branch, then start the next brief with
-   `node .githooks/state.mjs next` and implement it — no new poll. Stop at the first
-   workstream that gets stuck (human attestation awaited, FAIL not fixed, red CI, decision to
-   make): say why and what is expected; the queue goes on once it is unblocked, or
-   `node .githooks/state.mjs queue stop` drops it. A short report at each closing (criteria,
-   checks, limits, intents created), a summary at the end of the queue.
+5. **Queue** (the state says « Queue decided at start »): with Claude Code, run each workstream in a
+   subagent (fresh context), the first one right after the poll: the context read again is most of
+   a queue's cost, and grows with each workstream kept in the same session.
+   - The subagent (Agent tool) works in the repository folder — never `isolation: "worktree"`:
+     `.drwil/state.json` (if present) is ignored by Git, absent from an isolated copy, and the subagent would
+     believe it is in SCOPING. It receives no state reminder at start: its instructions start by
+     reading the state: `node .githooks/state.mjs`, then carry the workstream until back in
+     SCOPING (closing and scheduled merge included), without running `next`, and end with the
+     report. It cannot ask the human: on anything that needs one, it stops and says why.
+   - One subagent at a time; the main session does not change the state while it works and reads
+     it again when it returns. The main session keeps only the reports.
+   - After the closing, the main session follows the PR with `gh` until it is merged, 30 minutes
+     at most (`gh pr view <pr> --json state`), updates the main branch, then starts the next brief
+     with `node .githooks/state.mjs next` and hands it to a new subagent — no new poll. No next
+     brief: the summary.
+   - Stop at the first workstream that gets stuck (human attestation awaited, FAIL not fixed, red
+     CI, merge not done within 30 minutes, decision to make): say why and what is expected; never
+     start the next one on a merge not done. The queue goes on once it is unblocked, or
+     `node .githooks/state.mjs queue stop` drops it. A short report at each closing (criteria,
+     checks, limits, intents created), a summary at the end of the queue.
+   - **Resuming a queue in a new session** (after `/clear` or a restart, the state in SCOPING with
+     a queue): first ask « the queue resumes with <brief>: shall I start it? » and run `next` only
+     on an explicit yes; anything else (« continue », silence, another request) starts nothing.
+   - Another tool (Copilot CLI…): the queue runs in the same session, the rest unchanged.
 
 Without a poll in the tool: give the human the command `node .githooks/state.mjs start`, to run
 in an interactive terminal.
