@@ -1,7 +1,7 @@
 # Intention : l'installation du dépôt ne réécrit plus la date de ia-first.md
 
 **Statut** : proposée le 2026-10-15 — retour d'expérience du chantier
-« capitaliser les non-régressions » (journal du 2026-10-15). Cadrée le 2026-10-18 dans `docs/projects/cloture-allegee.md` (question
+« capitaliser les non-régressions » (journal du 2026-10-15). Cadrée le 2026-10-18 dans `docs/projects/date-gardee-feu-vert.md` (question
 tranchée : la date d'origine est gardée).
 
 ## Besoin
