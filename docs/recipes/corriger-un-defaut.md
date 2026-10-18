@@ -1,32 +1,56 @@
-# Recette : corriger un défaut
+# Recipe: fix a defect
 
-Objectif : qu'un défaut corrigé ne revienne jamais sans être vu. La preuve
-de la correction devient un test de non-régression, rattaché au contrat
-qu'il protège et rejoué à chaque commit, au push et en CI. Propre à ce
-dépôt pour l'instant (décision du 2026-10-11, `docs/projects/journal.md`) ;
-livrée aux projets équipés une fois éprouvée ici.
+Goal: a fixed defect never comes back unnoticed. The proof of the fix
+becomes a non-regression test, attached to the contract it protects and
+replayed at every commit, at push and in CI.
 
-1. **Reproduire, puis établir la cause racine** (`AGENTS.md`, « Cause avant
-   correctif »). Un défaut qu'on ne sait pas reproduire n'a pas encore de
-   test : le dire, ne pas inventer.
-2. **Écrire le test d'abord**, sur le code actuel :
-   - le nom commence par l'ID du contrat protégé, s'il y en a un au
-     registre (`docs/contracts.md`) : `test("QUA-016 : …")` ; sinon, un nom
-     qui dit le comportement attendu, sans ID ;
-   - il décrit le comportement attendu, pas la correction.
-3. **Le voir échouer** pour la bonne raison (le défaut), et le noter :
-   c'est la preuve que le test attrape le défaut. Un test qui passe avant
-   la correction ne prouve rien.
-4. **Corriger**, au plus près de la cause ; aucun autre changement dans le
-   même commit.
-5. **Le voir passer**, puis lancer tous les contrôles :
-   `node .githooks/run-checks.mjs`.
-6. **Rattacher** : si le test porte l'ID d'un contrat, son fichier figure
-   dans le champ « Tests » de ce contrat (`docs/contracts.md`) ; le
-   contrôle de cohérence le vérifie dans les deux sens.
-7. **Le dire** dans le message de commit et la fiche : le défaut, la cause,
-   le test qui le garde (« vu échouer avant la correction »).
+1. **Reproduce, then establish the root cause** (`AGENTS.md`, « Cause
+   before fix »). A defect you cannot reproduce has no test yet: say so,
+   do not invent one.
+2. **Write the test first**, on the current code:
+   - its name starts with the ID of the protected contract, if the
+     registry (`docs/contracts.md`) has one: `test("QUA-016: …")`;
+     otherwise, a name that states the expected behavior, without an ID;
+   - it describes the expected behavior, not the fix.
+3. **See it fail** for the right reason (the defect), and note it: that is
+   the proof the test catches the defect. A test that passes before the fix
+   proves nothing.
+4. **Fix**, as close to the cause as possible; no other change in the same
+   commit.
+5. **See it pass**, then run all checks: `node .githooks/run-checks.mjs`.
+6. **Attach**: if the test carries a contract ID, its file is listed in the
+   « Tests » field of that contract (`docs/contracts.md`); the consistency
+   check verifies it both ways.
+7. **Say it** in the commit message and the brief: the defect, the cause,
+   the test that guards it (« seen failing before the fix »).
 
-Ce qui ne se fait pas : désactiver ou affaiblir un test pour faire passer
-une correction (QUA-019, pas de contournement) ; stocker la preuve ailleurs
-que dans le test exécutable (une seule source).
+## A defect met mid-workstream, outside the scope: the detour
+
+Mid-workstream (BUILD), a prior defect outside the active brief's scope is
+fixed by a detour, never by widening an unrelated scope, never by stopping.
+The agent opens it alone: the check is at the merge of its PR.
+
+1. `node .githooks/detour.mjs open <name> --title <defect> [--files <a,b>]`:
+   the work in progress is set aside by the tool (named stash, recorded in
+   the state), the branch `detour/<name>` starts from the main branch, its
+   short brief is written and the state points at it. Never stash or switch
+   branches by hand.
+2. Scope the short brief (the fix and its test, nothing else) and commit it
+   alone; then steps 1 to 7 above.
+3. Before the push: a journal entry « Detour of <brief>: … » citing the
+   branch `detour/<name>`, and the short brief deleted.
+4. Push, open the PR titled « Detour of <brief>: … », with the merge mode
+   decided at start (automatic merge authorised: schedule it).
+5. Once the PR is merged: `node .githooks/detour.mjs resume`. The
+   workstream's branch is rebased on the fixed main branch, the work is
+   restored and the state is back in BUILD on the original brief. If a step
+   fails, the command refuses without losing anything: say what blocks.
+
+A detour that changes the rules of the game (contracts registry, hook,
+threshold, scope gate, CI) needs the human's yes: the scope gate refuses
+those commits until `node .githooks/detour.mjs allow`, run by the human in
+an interactive terminal. In a queue, the subagent stops there and reports.
+
+What is not done: disabling or weakening a test to make a fix pass (QUA-019,
+no bypassing a check); storing the proof elsewhere than in the executable
+test (one source).

@@ -1,7 +1,7 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -325,4 +325,43 @@ test("branche d'un clone : la référence est origin/HEAD", () => {
   const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, env: {} });
   assert.equal(r.problems.length, 1);
   assert.match(r.problems[0], /src\/b\.js/);
+});
+
+test("QUA-050 : en détour, un fichier qui change les règles du jeu attend le oui de l'humain ; un détour ordinaire passe — en anglais aussi", () => {
+  const detour = { origin_brief: "docs/projects/chantier.md", origin_branch: "chantier/x", branch: "detour/d", stash: null };
+  const state = { ...etat("BUILD"), detour };
+  const patterns = [".githooks/x.mjs", "src/a.js", "docs/contracts.md"];
+  const files = [".githooks/x.mjs", "src/a.js", "docs/contracts.md"];
+  const fr = checkIndex({ files, state, patterns, cfg: {} });
+  assert.deepEqual(
+    fr.map((p) => p.split(" : ")[0]),
+    [".githooks/x.mjs", "docs/contracts.md"],
+  );
+  assert.match(
+    fr[0],
+    /demande le oui de l'humain — `node \.githooks\/detour\.mjs allow` dans un terminal ; en file, le sous-agent s'arrête/,
+  );
+  const en = checkIndex({ files, state, patterns, cfg: { lang: "en" } });
+  assert.match(en[0], /^\.githooks\/x\.mjs: a detour that changes the rules .* needs the human's yes/);
+  assert.deepEqual(checkIndex({ files, state: { ...state, detour: { ...detour, human: true } }, patterns, cfg: {} }), []);
+  assert.deepEqual(checkIndex({ files, state: etat("BUILD"), patterns, cfg: {} }), [], "hors détour, la règle ne s'applique pas");
+});
+
+test("QUA-050 : pendant un rebase, un commit rejoué garde son trailer ; hors dépôt git, rien ne casse", () => {
+  const racine = depot();
+  ecrireEtat(racine, "BUILD");
+  const message = join(racine, "message.txt");
+  for (const dossier of ["rebase-merge", "rebase-apply"]) {
+    writeFileSync(message, "Travail\n\nDrwil-Brief: docs/projects/autre.md\n");
+    mkdirSync(join(racine, ".git", dossier));
+    addTrailer(racine, message);
+    assert.equal(readFileSync(message, "utf8"), "Travail\n\nDrwil-Brief: docs/projects/autre.md\n", dossier);
+    rmdirSync(join(racine, ".git", dossier));
+  }
+  addTrailer(racine, message);
+  assert.match(readFileSync(message, "utf8"), new RegExp(`Drwil-Brief: ${FICHE}`), "hors rebase, le trailer suit l'état");
+  const horsGit = tmp("drwil-hors-git-");
+  ecrireEtat(horsGit, "BUILD");
+  writeFileSync(join(horsGit, "m.txt"), "Travail\n");
+  assert.doesNotThrow(() => addTrailer(horsGit, join(horsGit, "m.txt")));
 });

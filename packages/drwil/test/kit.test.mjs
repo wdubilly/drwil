@@ -1099,6 +1099,23 @@ test("QUA-037 : la skill et l'AGENTS.md livrés mènent une file un sous-agent p
   assert.match(agents, /explicit yes/);
 });
 
+test("QUA-050 : un projet installé reçoit la commande de détour, cadrée par la fiche de mécanique, la recette « corriger un défaut » et la consigne d'AGENTS.md", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  assert.ok(existsSync(join(dir, ".githooks/detour.mjs")));
+  assert.match(read(dir, "docs/projects/kit-mechanics.md"), /^ {2}- \.githooks\/detour\.mjs$/m);
+  const recette = read(dir, "docs/recipes/corriger-un-defaut.md").replace(/\s+/g, " ");
+  assert.match(recette, /`node \.githooks\/detour\.mjs open <name> --title <defect> \[--files <a,b>\]`/);
+  assert.match(recette, /Once the PR is merged: `node \.githooks\/detour\.mjs resume`/);
+  assert.match(recette, /needs the human's yes/);
+  const agents = read(dir, "AGENTS.md").replace(/\s+/g, " ");
+  assert.match(
+    agents,
+    /\*\*Detour for a prior defect\*\*: mid-workstream, a defect outside the active brief's scope is fixed by a detour the agent opens alone/,
+  );
+  assert.match(agents, /\| a defect to fix \| `docs\/contracts\.md` \| `docs\/recipes\/corriger-un-defaut\.md` \|/);
+});
+
 test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

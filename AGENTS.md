@@ -62,6 +62,15 @@ Carte complète : `docs/architecture.md`.
   consigne la consommation et signale, avant le commit, ce qui ferait
   échouer la clôture (`--check` : le signal seul, à tout moment). Le code
   cite le contrat qu'il sert, jamais une fiche de chantier (QUA-049).
+- **Détour pour un défaut préalable (QUA-050)** : en plein chantier, un
+  défaut hors du cadrage se corrige par un détour que l'agent ouvre seul —
+  `node .githooks/detour.mjs open <nom> --title <défaut>` met le travail de
+  côté, part de la branche principale et écrit une fiche courte ; sa PR est
+  intitulée « Détour de <fiche> » ; fusionnée, `node .githooks/detour.mjs
+  resume` restaure le travail sur la branche du chantier rebasée. Jamais
+  d'élargissement sans rapport ni de stash à la main ; un détour qui change
+  les règles du jeu (contrats, hooks, seuils, barrière) attend le oui de
+  l'humain (`docs/recipes/corriger-un-defaut.md`).
 - **File de chantiers** : quand l'humain a coché plusieurs fiches au
   lancement, l'agent les réalise l'une après l'autre sans nouveau sondage —
   avec Claude Code, chacune dans un sous-agent (contexte neuf), la session

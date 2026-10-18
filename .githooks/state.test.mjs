@@ -20,6 +20,7 @@ import {
   prepareTransition,
   verifyEvidence,
   scopedBriefs,
+  setDetour,
   start,
   stopQueue,
   shortReminder,
@@ -1339,4 +1340,82 @@ test("QUA-037 : une file se mène un sous-agent par chantier ; reprise confirmé
   );
   assert.match(etat(anglais, "SCOPING", { queue: [B] }), /« the queue resumes with docs\/projects\/b\.md: shall I start it\? »/);
   assert.match(etat(anglais, "CLOSING"), /Outside a queue: finish by suggesting `\/clear` to the human/);
+});
+
+const DETOUR = { origin_brief: "docs/projects/chantier.md", origin_branch: "chantier/x", branch: "detour/d", stash: null };
+
+test("QUA-050 : un détour se valide — forme, BUILD seul, fiches du détour et du chantier qui peuvent manquer", () => {
+  const racine = depot();
+  const enDetour = (detour, activite = "BUILD", fiche = "docs/projects/detour-d.md") =>
+    validateState(actif(activite, { active_brief: fiche, detour }), racine);
+  assert.deepEqual(enDetour(DETOUR), [], "fiche du détour supprimée par sa PR, fiche du chantier absente de la branche du détour");
+  assert.deepEqual(enDetour({ ...DETOUR, stash: "abc", human: true }), []);
+  for (const mauvais of [
+    null,
+    "x",
+    { ...DETOUR, origin_branch: "" },
+    { ...DETOUR, branch: 1 },
+    { ...DETOUR, stash: 3 },
+    { ...DETOUR, stash: "" },
+    { ...DETOUR, human: "oui" },
+  ])
+    assert.deepEqual(enDetour(mauvais), ["detour : objet { origin_brief, origin_branch, branch, stash, human? } attendu"]);
+  assert.deepEqual(enDetour(DETOUR, "EVIDENCE"), ["detour : seulement en BUILD"]);
+  assert.match(enDetour({ ...DETOUR, origin_brief: "ailleurs/x.md" })[0], /active_brief : fiche \.md de docs\/projects\/ attendue/);
+  assert.match(
+    validateState(actif("BUILD", { active_brief: "docs/projects/absente.md" }), racine)[0],
+    /introuvable/,
+    "hors détour, la fiche doit exister",
+  );
+  assert.deepEqual(validateState(actif("BUILD", { detour: DETOUR }), racine), [], "fiche du chantier présente : valide aussi");
+  assert.deepEqual(validateState(actif("BUILD", { active_brief: "docs/projects/detour-d.md", detour: null }), depot({ lang: "en" })), [
+    "detour: object { origin_brief, origin_branch, branch, stash, human? } expected",
+  ]);
+  assert.deepEqual(validateState(actif("VERIFY", { detour: DETOUR }), depot({ lang: "en" })), ["detour: only in BUILD"]);
+});
+
+test("QUA-050 : en détour, aucune transition sauf l'abandon en SCOPING ; l'état ne s'écrit que par setDetour, jamais invalide", async () => {
+  const racine = depot({ state: actif("BUILD", { detour: DETOUR }) });
+  const r = await move(racine, { to: "EVIDENCE" });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /détour en cours : le reprendre d'abord \(`node \.githooks\/detour\.mjs resume`\)/);
+  const en = depot({ lang: "en", state: actif("BUILD", { detour: DETOUR }) });
+  assert.match((await move(en, { to: "EVIDENCE" })).message, /detour in progress: resume it first/);
+  assert.equal((await move(racine, { to: "SCOPING" })).code, 0);
+  assert.deepEqual(readState(racine).state.detour, undefined);
+
+  const autre = depot({ state: actif("BUILD") });
+  setDetour(autre, "docs/projects/detour-d.md", DETOUR, "2026-10-18T10:00:00Z");
+  assert.deepEqual(
+    readState(autre).state,
+    actif("BUILD", { active_brief: "docs/projects/detour-d.md", since: "2026-10-18T10:00:00Z", detour: DETOUR }),
+  );
+  setDetour(autre, FICHE, null, "2026-10-18T11:00:00Z");
+  assert.deepEqual(readState(autre).state, actif("BUILD", { since: "2026-10-18T11:00:00Z" }));
+  assert.throws(() => setDetour(autre, "ailleurs/x.md", DETOUR), /active_brief : fiche \.md de docs\/projects\/ attendue/);
+  assert.equal(readState(autre).state.active_brief, FICHE, "rien n'est écrit");
+  setDetour(autre, FICHE, DETOUR);
+  assert.match(readState(autre).state.since, /^\d{4}-\d{2}-\d{2}T/, "horodatage par défaut");
+});
+
+test("QUA-050 : le contexte dit le détour en cours et comment le reprendre ; la règle de BUILD dit d'en ouvrir un", () => {
+  const racine = depot({ state: actif("BUILD", { detour: DETOUR }) });
+  const texte = context(readState(racine), racine);
+  assert.match(
+    texte,
+    /Détour en cours \(QUA-050\), ouvert depuis docs\/projects\/chantier\.md \(branche chantier\/x, travail en cours mis de côté par l'outil\) : .* sur la branche detour\/d ; PR intitulée « Détour de docs\/projects\/chantier\.md : … »/,
+  );
+  assert.match(
+    texte,
+    /une fois la PR fusionnée, `node \.githooks\/detour\.mjs resume`\. Jamais de stash ni de changement de branche à la main\./,
+  );
+  assert.match(
+    texte,
+    /Un défaut préalable hors du cadrage : un détour, `node \.githooks\/detour\.mjs open <nom> --title <défaut>`, jamais un élargissement sans rapport\./,
+  );
+  const en = depot({ lang: "en", state: actif("BUILD", { detour: DETOUR }) });
+  const anglais = context(readState(en), en);
+  assert.match(anglais, /Detour in progress \(QUA-050\), opened from docs\/projects\/chantier\.md \(branch chantier\/x/);
+  assert.match(anglais, /A prior defect outside the scope: a detour, `node \.githooks\/detour\.mjs open <name> --title <defect>`/);
+  assert.doesNotMatch(context(readState(depot({ state: actif("BUILD") })), racine), /Détour en cours/);
 });

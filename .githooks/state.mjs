@@ -56,7 +56,8 @@ export const NEUTRAL_STATE = Object.freeze({ version: 1, activity: "SCOPING", ac
 
 // auto_merge: absent from the neutral state, set only by a human start (`start`).
 // queue, queue_merge (QUA-037): the briefs a human queued at start, run next without a new gesture.
-const FIELDS = new Set([...Object.keys(NEUTRAL_STATE), "auto_merge", "queue", "queue_merge"]);
+// detour (QUA-050): the workstream set aside while a prior defect is fixed (.githooks/detour.mjs).
+const FIELDS = new Set([...Object.keys(NEUTRAL_STATE), "auto_merge", "queue", "queue_merge", "detour"]);
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 const texts = (root) => STATE_MESSAGES[config(root).lang === "en" ? "en" : "fr"];
 
@@ -79,14 +80,16 @@ export function validateState(state, root) {
   } else if (state.active_brief === null || state.active_brief === undefined) {
     problems.push(fill(T.briefRequired, state.activity));
   }
+  // A detour's brief is deleted by its own PR, before the resume: its absence is expected too.
   if (state.active_brief !== null && state.active_brief !== undefined)
-    problems.push(...validateBrief(state.active_brief, root, state.activity, T));
+    problems.push(...validateBrief(state.active_brief, root, state.activity === "CLOSING" || state.detour !== undefined, T));
+  if (state.detour !== undefined) problems.push(...validateDetour(state.detour, state.activity, root, T));
   if (state.active_request !== null && typeof state.active_request !== "string") problems.push(T.request);
   if (state.auto_merge !== undefined && typeof state.auto_merge !== "boolean") problems.push(T.autoMergeType);
   else if (state.auto_merge === true && state.activity === "SCOPING") problems.push(T.autoMergeScoping);
   if (state.queue !== undefined) {
     if (!Array.isArray(state.queue) || state.queue.some((b) => typeof b !== "string")) problems.push(T.queueType);
-    else for (const b of state.queue) problems.push(...validateBrief(b, root, "BUILD", T));
+    else for (const b of state.queue) problems.push(...validateBrief(b, root, false, T));
   }
   if (state.queue_merge !== undefined && typeof state.queue_merge !== "boolean") problems.push(T.queueMergeType);
   if (state.since !== null && !(typeof state.since === "string" && ISO_RE.test(state.since) && !Number.isNaN(Date.parse(state.since)))) {
@@ -95,7 +98,7 @@ export function validateState(state, root) {
   return problems;
 }
 
-function validateBrief(brief, root, activity, T) {
+function validateBrief(brief, root, mayBeMissing, T) {
   if (typeof brief !== "string") return [T.briefType];
   const path = posix.normalize(brief.replace(/\\/g, "/"));
   const dir = BRIEF_DIRS.find((d) => path.startsWith(d));
@@ -103,8 +106,23 @@ function validateBrief(brief, root, activity, T) {
   if (MODEL_RE.test(posix.basename(path))) return [fill(T.briefModel, brief)];
   // In CLOSING, the "Closing" recipe deletes the brief: its absence is the normal outcome, and
   // refusing it would make the state invalid at the very moment of going back to SCOPING.
-  if (!existsSync(join(root, path)) && activity !== "CLOSING") return [fill(T.briefMissing, brief)];
+  if (!existsSync(join(root, path)) && !mayBeMissing) return [fill(T.briefMissing, brief)];
   return [];
+}
+
+// The workstream's brief may be missing on the detour's branch, cut from the main branch.
+function validateDetour(d, activity, root, T) {
+  const text = (v) => typeof v === "string" && v !== "";
+  const shape =
+    typeof d === "object" &&
+    d !== null &&
+    text(d.origin_branch) &&
+    text(d.branch) &&
+    (d.stash === null || text(d.stash)) &&
+    (d.human === undefined || typeof d.human === "boolean");
+  if (!shape) return [T.detourType];
+  if (activity !== "BUILD") return [T.detourActivity];
+  return validateBrief(d.origin_brief, root, true, T);
 }
 
 /** `{ state, source: "missing" | "file", problems }`; an invalid state is replaced by the neutral one. */
@@ -228,6 +246,8 @@ export function prepareTransition(read, to, { brief, request, now }, root) {
     return { error: fill(T.forbidden, from, to, allowed) };
   }
   if (brief !== undefined && to !== "EXPECTATION") return { error: T.briefOption };
+  // Abandoning to SCOPING stays possible; the set-aside work stays in `git stash list`.
+  if (read.state.detour && to !== "SCOPING") return { error: T.detourMove };
   let state;
   if (to === "SCOPING") {
     state = { ...NEUTRAL_STATE, since: now };
@@ -306,6 +326,19 @@ export function stopQueue(root) {
   delete state.queue_merge;
   writeFileSync(join(root, ".drwil", "state.json"), JSON.stringify(state, null, 2) + "\n");
   return { code: 0, message: fill(T.queueStopped, read.state.queue.join(", ")) };
+}
+
+/**
+ * Points the state at `brief` with the `detour` record, or back without it (`detour` null), QUA-050.
+ * The only writer for .githooks/detour.mjs; an invalid result is a bug of the caller: it throws.
+ */
+export function setDetour(root, brief, detour, now = new Date().toISOString()) {
+  const state = { ...readState(root).state, active_brief: brief, since: now };
+  if (detour) state.detour = detour;
+  else delete state.detour;
+  const problems = validateState(state, root);
+  if (problems.length) throw new Error(problems.join(" ; "));
+  writeFileSync(join(root, ".drwil", "state.json"), JSON.stringify(state, null, 2) + "\n");
 }
 
 const REMINDER_FILE = [".drwil", "reminder.json"];

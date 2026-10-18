@@ -33,6 +33,22 @@ closing commit; the release renames this section to its version.
   file (a warning unless `newRequirements` is `blocking`): code cites the
   contract it serves, since the brief is deleted at closing. Citations in
   unchanged files are summed up in one non-blocking warning.
+- A detour for a prior defect met mid-workstream, outside the scope:
+  `node .githooks/detour.mjs open <name> --title <defect>` sets the work
+  in progress aside (named stash, recorded in the state), starts the
+  branch `detour/<name>` from the main branch with a short brief and
+  points the state at it; once its PR is merged, `resume` rebases the
+  workstream's branch on the fixed main branch, restores the work and
+  goes back to Build on the original brief — refused without losing
+  anything if a step fails. A detour that changes the rules (contracts
+  registry, hooks, thresholds, the scope gate, CI) waits for the human's
+  yes (`allow`, interactive terminal). The « fix a defect » recipe
+  (`docs/recipes/corriger-un-defaut.md`) is now shipped and describes it.
+
+### Fixed
+
+- A rebase no longer rewrites the `Drwil-Brief` trailer of the replayed
+  commits with the active brief: each keeps the brief it was made under.
 
 ## 0.6.4 (2026-10-18)
 
