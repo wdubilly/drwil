@@ -355,6 +355,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : Windows et macOS testés seulement quand une PR touche du code — « Toute PR de code, et chaque push sur master, fait tourner la suite du kit sur Ubuntu, Windows et macOS ; Windows et macOS une seule fois par push »
 **Raison** : Une PR de documentation attendait Windows (5 à 8 minutes) et macOS pour rien, deux fois par push ; tester à chaque PR de code désigne tout de suite le changement en cause d'un échec propre à un OS.
 
+## QUA-046 — Fichiers de CI en YAML valide avant le push
+**Règle** : Propre au dépôt drwil (QUA-018). Chaque fichier de CI du dépôt (`.github/workflows/*.yml`) et du gabarit (fichiers YAML sous `packages/drwil/templates/common/ci/`, lus par motif) est du YAML valide ; sinon le commit est refusé, avec le fichier et la ligne de l'erreur. Syntaxe seulement : la sémantique propre à GitHub Actions (expressions, clés inconnues) n'est pas vérifiée.
+**Périmètre** : `.github/workflows/`, `packages/drwil/templates/common/ci/`.
+**Source de vérité** : `.github/scripts/workflows-yaml.test.mjs` (parseur `yaml`, dépendance de dev du `package.json` racine).
+**Preuve** : test qui parse chaque fichier couvert ; un cas négatif rejoue le `run:` non cité de l'incident.
+**Contrôle** : `tests-qua-046`
+**Tests** : `.github/scripts/workflows-yaml.test.mjs`
+**Origine** : un workflow CI au YAML invalide est refusé avant le push — « Un fichier de CI du dépôt ou du gabarit qui n'est pas du YAML valide est refusé au commit, avec le fichier et la ligne de l'erreur »
+**Raison** : Un `run:` non cité contenant « : » a rendu le workflow invalide : GitHub l'a rejeté en bloc, aucun job lancé, alors que les contrôles locaux étaient verts ; un contrôle placé dans ce workflow n'aurait pas tourné.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

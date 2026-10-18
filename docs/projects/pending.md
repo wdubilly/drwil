@@ -108,7 +108,7 @@ avant les points 5 à 13, en trois versions.
   code ; fait, journal du 2026-10-18) ; puis la file de chantiers
   menée par sous-agents (fait, journal du 2026-10-18) ; ajouté le
   2026-10-18 par le demandeur avant la release : un workflow CI au YAML
-  invalide refusé au commit (`docs/projects/workflow-ci-yaml-valide.md`) ;
+  invalide refusé au commit (fait, journal du 2026-10-18) ;
   enfin la release (`docs/projects/release-0-6-4.md`).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
@@ -287,9 +287,6 @@ une décision du demandeur.
 - [ ] [décision] Une file menée par sous-agents avec les autres agents
   (Copilot CLI, Codex, Cursor, Gemini ; limite du chantier du 2026-10-18)
   — `docs/intentions/file-sous-agents-autres-outils.md`.
-- [ ] [IA] [P1] Un workflow CI au YAML invalide refusé au commit (dépôt et
-  gabarit ; cadré le 2026-10-18, 0.6.4) —
-  `docs/projects/workflow-ci-yaml-valide.md`.
 - [ ] [IA] [P1] 0.6.4 : release 0.6.4 (version, changelog, README ;
   tag et note GitHub sur feu vert ; après le YAML s'il est lancé) —
   `docs/projects/release-0-6-4.md`.

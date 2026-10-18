@@ -23,7 +23,7 @@ modifié.)
 Demandé le 2026-10-18 : publier la 0.6.4. Ses chantiers sont fusionnés :
 la CI plus rapide (Windows et macOS testés seulement quand une PR touche du
 code) et la file de chantiers menée par sous-agents ; le workflow CI au
-YAML invalide refusé au commit (`docs/projects/workflow-ci-yaml-valide.md`)
+YAML invalide refusé au commit (fait, journal du 2026-10-18)
 passe avant, s'il est lancé (voir Contraintes).
 `node .githooks/create-release.mjs --dry-run` refuse tant que la version
 reste 0.6.3, déjà taguée (vérifié le 2026-10-18).
