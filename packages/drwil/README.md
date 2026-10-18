@@ -34,7 +34,7 @@ GOVERNANCE: FAIL                                            (exit 1)
 a part that only a human can judge stays `MANUAL` until they attest it.*
 
 ```bash
-npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.3/drwil-0.6.3.tgz
+npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.4/drwil-0.6.4.tgz
 npx drwil init       # new, existing or already equipped project
 npx drwil verify     # without a CI: VERIFY ERROR, expected — `npx drwil init --ci github` declares one
 ```

@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.6.4 (2026-10-18)
+
 ### Changed
 
 - A queue of workstreams no longer piles up in one session. With Claude
