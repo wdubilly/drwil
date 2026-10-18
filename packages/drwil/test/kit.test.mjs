@@ -3647,3 +3647,34 @@ test("désinstallation : un manifeste sain (chemins relatifs du dépôt) fonctio
   assert.ok(r.removed.includes(".githooks/engine.mjs"));
   assert.ok(!existsSync(join(dir, ".githooks/engine.mjs")));
 });
+
+test("QUA-047 : installer ou mettre à jour garde la date d'origine d'un document dont seule la date changerait", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const jour = new Date().toISOString().slice(0, 10);
+  const fichier = "docs/ia-first.md";
+  const empreinte = (texte) => createHash("sha256").update(texte).digest("hex");
+  // Installé par une version précédente, un autre jour : enregistré au manifeste tel quel.
+  const installerCommeAvant = (contenu) => {
+    writeFileSync(join(dir, fichier), contenu);
+    const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+    manifeste[fichier] = empreinte(contenu);
+    writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2));
+  };
+  const ancien = read(dir, fichier).replaceAll(jour, "2020-01-02");
+  assert.notEqual(ancien, read(dir, fichier), "le document porte une date");
+  installerCommeAvant(ancien);
+
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  assert.equal(read(dir, fichier), ancien, "mise à jour : seule la date changerait, la date d'origine est gardée");
+  assert.equal(JSON.parse(read(dir, ".drwil/installed-files.json"))[fichier], empreinte(ancien), "le manifeste suit le fichier gardé");
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, force: true }));
+  assert.equal(read(dir, fichier), ancien, "--force non plus ne réécrit pas une date seule");
+
+  // Le reste du document change : réécrit, avec la date du jour.
+  installerCommeAvant(ancien.replace("\n", "\nLigne d'une version précédente.\n"));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const rafraichi = read(dir, fichier);
+  assert.ok(!rafraichi.includes("Ligne d'une version précédente.") && !rafraichi.includes("2020-01-02"), rafraichi.slice(0, 200));
+  assert.ok(rafraichi.includes(jour), "nouvelle date écrite avec le nouveau contenu");
+});

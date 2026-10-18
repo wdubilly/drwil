@@ -365,6 +365,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : un workflow CI au YAML invalide est refusé avant le push — « Un fichier de CI du dépôt ou du gabarit qui n'est pas du YAML valide est refusé au commit, avec le fichier et la ligne de l'erreur »
 **Raison** : Un `run:` non cité contenant « : » a rendu le workflow invalide : GitHub l'a rejeté en bloc, aucun job lancé, alors que les contrôles locaux étaient verts ; un contrôle placé dans ce workflow n'aurait pas tourné.
 
+## QUA-047 — Une date seule ne réécrit pas un document installé
+**Règle** : Livré à tout projet. Installer ou mettre à jour (`drwil init`, avec ou sans `--force`, et `npm run installer-depot` qui s'en sert) ne réécrit pas un fichier du gabarit déjà présent qui ne diffère du rendu que par ses dates (`{{date}}`) : le fichier et sa date d'origine sont gardés, le manifeste suit le fichier gardé. Dès que le reste du document change, il est réécrit avec la date du jour. La date n'est jamais retirée du document.
+**Périmètre** : `packages/drwil/src/render.ts` (rendu et écriture des fichiers du gabarit), `outils/installer-depot.mjs` ; livré dans le gabarit.
+**Source de vérité** : `packages/drwil/src/render.ts` (`keepDate`).
+**Preuve** : tests du paquet et de l'installateur du dépôt (vraie CLI).
+**Contrôle** : `tests-qua-047`
+**Tests** : `packages/drwil/test/kit.test.mjs`, `outils/installer-depot.test.mjs`
+**Origine** : date gardée et feu vert de publication (0.6.5) — « Installer ou mettre à jour ne réécrit pas un document dont seule la date changerait : la date d'origine est gardée, une nouvelle date n'est écrite que si le reste du document change »
+**Raison** : Chaque `npm run installer-depot` réécrivait la date de `docs/ia-first.md`, seul fichier changé : un faux changement à annuler à la main ou qui polluait le commit ; une mise à jour d'un projet faisait le même bruit sur ses documents datés.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).
