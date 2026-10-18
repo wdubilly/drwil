@@ -2,7 +2,9 @@
 
 **Statut** : proposée le 2026-10-18 — limite du chantier « Windows et
 macOS testés seulement quand une PR touche du code » (journal du
-2026-10-18, 0.6.4).
+2026-10-18, 0.6.4). Cadrée le 2026-10-18 :
+`docs/projects/workflow-ci-yaml-valide.md` (questions tranchées : un test
+qui parse, dépôt et gabarit).
 
 ## Besoin
 
