@@ -120,6 +120,14 @@ avant les points 5 à 13, en trois versions.
   intercalée (fait, journal du 2026-10-18) ; puis, dans une PR séparée, la
   fiche de recette pour une équipe hors dépôt
   (`docs/projects/fiche-de-recette.md`), avant la release.
+- **0.6.6** — la compatibilité, décidée le 2026-10-18 par le demandeur
+  (après la 0.6.5) : chaque agent de code tenu par la même gouvernance
+  (`docs/intentions/compatibilite-des-outils.md`), dans cet ordre : le
+  socle (`docs/projects/compat-socle.md`), Copilot CLI
+  (`docs/projects/compat-copilot.md`), Gemini CLI
+  (`docs/projects/compat-gemini.md`), Codex
+  (`docs/projects/compat-codex.md`), Cursor
+  (`docs/projects/compat-cursor.md`).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -282,6 +290,17 @@ une décision du demandeur.
 - [ ] [IA] [P1] 0.6.5 : une fiche de recette par version, pour une
   équipe hors dépôt (cadré le 2026-10-18) —
   `docs/projects/fiche-de-recette.md`.
+- [ ] [IA] [P1] 0.6.6, 1 sur 5 : compatibilité des agents, le socle
+  commun (banc, règle « intention ou demande », en-têtes YAML stricts,
+  matrice) — `docs/projects/compat-socle.md`.
+- [ ] [IA] [P1] 0.6.6, 2 sur 5 : Copilot CLI tenu —
+  `docs/projects/compat-copilot.md`.
+- [ ] [IA] [P1] 0.6.6, 3 sur 5 : Gemini CLI tenu —
+  `docs/projects/compat-gemini.md`.
+- [ ] [IA] [P1] 0.6.6, 4 sur 5 : Codex (à affiner : à installer) —
+  `docs/projects/compat-codex.md`.
+- [ ] [IA] [P1] 0.6.6, 5 sur 5 : Cursor (à affiner : mode de preuve) —
+  `docs/projects/compat-cursor.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
   `docs/intentions/prefixe-catalogue.md`.
 - [ ] [décision] Un `doctor` juste sur le dépôt drwil lui-même (manifeste
