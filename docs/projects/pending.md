@@ -116,7 +116,7 @@ avant les points 5 à 13, en trois versions.
   ordre : date gardée et feu vert de publication
   (fait, journal du 2026-10-18), ordre de la file
   (`docs/projects/ordre-de-la-file.md`), clôture outillée
-  (`docs/projects/cloture-allegee.md`), détour pour une correction
+  (fait, journal du 2026-10-18), détour pour une correction
   intercalée (`docs/projects/detour.md`) ; puis, dans une PR séparée, la
   fiche de recette pour une équipe hors dépôt
   (`docs/projects/fiche-de-recette.md`), avant la release.
@@ -259,10 +259,20 @@ une décision du demandeur.
   lancement, comme la fusion automatique (limite du chantier « date
   gardée et feu vert de publication » du 2026-10-18) —
   `docs/intentions/feu-vert-publication-enregistre.md`.
+- [ ] [décision] Supprimer aussi les branches fusionnées par squash
+  (limite du chantier « une clôture allégée » du 2026-10-18) —
+  `docs/intentions/branches-fusionnees-par-squash.md`.
+- [ ] [décision] Retirer les neuf citations de fiche restées dans le code
+  non modifié (limite du chantier « une clôture allégée » du 2026-10-18) —
+  `docs/intentions/citations-de-fiche-heritees.md`.
+- [ ] [décision] Reconnaître les commentaires de code sans heuristique de
+  ligne (limite du chantier « une clôture allégée » du 2026-10-18) —
+  `docs/intentions/commentaires-reconnus-par-heuristique.md`.
+- [ ] [décision] Mesurer le gain de la clôture allégée après le détour
+  (limite du chantier « une clôture allégée » du 2026-10-18) —
+  `docs/intentions/mesurer-gain-cloture-allegee.md`.
 - [ ] [IA] [P1] 0.6.5, 2 sur 4 : la file suit l'ordre du sondage —
   `docs/projects/ordre-de-la-file.md`.
-- [ ] [IA] [P1] 0.6.5, 3 sur 4 : une clôture allégée, sans encombrants
-  (clôture outillée) — `docs/projects/cloture-allegee.md`.
 - [ ] [IA] [P1] 0.6.5, 4 sur 4 : un détour pour une correction
   intercalée — `docs/projects/detour.md`.
 - [ ] [IA] [P1] 0.6.5 : une fiche de recette par version, pour une

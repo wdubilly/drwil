@@ -39,7 +39,7 @@ contrôles, les miroirs et le changelog.)
 
 ## 1. Besoin
 
-Point 8 de la clôture allégée (`docs/projects/cloture-allegee.md`, ajouté
+Point 8 de la clôture allégée (cadrage de la 0.6.5, journal du 2026-10-18, ajouté
 le 2026-10-18 par le demandeur) : en plein chantier, un défaut préalable
 hors du cadrage oblige l'agent à élargir un cadrage sans rapport ou à
 s'arrêter ; il improvise alors stash, allers-retours de branche et retours
@@ -61,7 +61,8 @@ en cadrage à la main.
 ## 2. Hors périmètre
 
 - Le reste de la 0.6.5 : la date gardée et le feu vert de publication
-  (fait, journal du 2026-10-18), `docs/projects/ordre-de-la-file.md`, `docs/projects/cloture-allegee.md`.
+  (fait, journal du 2026-10-18), `docs/projects/ordre-de-la-file.md`, la clôture outillée (fait,
+  journal du 2026-10-18).
 
 ## 3. Contraintes
 
