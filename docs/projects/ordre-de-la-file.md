@@ -1,6 +1,6 @@
 # Projet : la file suit l'ordre du sondage (0.6.5, 2 sur 4)
 
-**Statut** : cadré le 2026-10-18 (découpé de la clôture allégée).
+**Statut** : en cours (cadré le 2026-10-18, découpé de la clôture allégée).
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -73,6 +73,9 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-18) : cadré, rien de construit.
+- **Dernier état** (2026-10-18) : lots 1 et 2 faits — cause : Claude Code
+  rend un choix multiple dans l'ordre des clics et le hook de sondage le
+  découpait tel quel ; il range désormais les choix dans l'ordre des
+  options (`inPollOrder`), une fiche saisie sous « Autre » après.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : [IA] preuve, vérification, clôture.

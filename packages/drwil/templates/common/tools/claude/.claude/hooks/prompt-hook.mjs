@@ -6,7 +6,8 @@
 //   recommendation goes through the "(Recommended)" label).
 // - PostToolUse (poll): reads the human's answer and starts the chosen brief
 //   (`.githooks/state.mjs`, the only logic, valid for any tool). A multiple-choice poll queues the
-//   chosen briefs, in the poll's order: the agent starts the next one after each closing (QUA-037).
+//   chosen briefs, in the order of the poll's options, never in the order of the clicks: the agent
+//   starts the next one after each closing (QUA-037).
 // The same hooks serve Claude Code and Copilot CLI, which reads this settings file; only the poll
 // formats differ. A poll that is not drwil's passes through untouched.
 import { readFileSync, realpathSync } from "node:fs";
@@ -57,12 +58,14 @@ export function startPoll(input) {
       form: "claude",
       question: q.question,
       mergeQuestion: qMerge?.question ?? null,
+      options: Array.isArray(q.options) ? q.options.map((o) => o?.label) : [],
       prefilled: Boolean(e.answers && Object.keys(e.answers).length),
     };
   // Copilot CLI: message + requestedSchema (options as `enum`), free-text answer.
   if (typeof e.message === "string" && e.message.startsWith(MARK)) {
     const properties = Object.values(e.requestedSchema?.properties ?? {});
-    return { form: "copilot", prefilled: properties.some((p) => p && "default" in p) };
+    const options = properties.find((p) => Array.isArray(p?.enum))?.enum ?? [];
+    return { form: "copilot", options, prefilled: properties.some((p) => p && "default" in p) };
   }
   return null;
 }
@@ -73,6 +76,21 @@ export function humanAnswer(input, poll) {
   const text = input?.tool_result?.text_result_for_llm;
   const m = typeof text === "string" ? /User responded:\s*(.+)\s*$/s.exec(text) : null;
   return m ? m[1].trim() : null;
+}
+
+/**
+ * The chosen labels in the order of the poll's options (QUA-037): Claude Code gives a multiple
+ * choice in the order of the clicks. A label typed under "Other" keeps its typed place, after them.
+ */
+export function inPollOrder(choices, options = []) {
+  const rank = (c) => {
+    const i = options.indexOf(c);
+    return i === -1 ? options.length : i;
+  };
+  return choices
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => rank(a.c) - rank(b.c) || a.i - b.i)
+    .map(({ c }) => c);
 }
 
 /** Automatic merge authorised by the human answer to the second question (Claude Code only). */
@@ -113,10 +131,11 @@ async function main() {
     return 0;
   }
   // Several briefs (multiple choice, labels separated by commas; a brief path never holds one): a queue.
-  const [first, ...queue] = String(choice)
+  const chosen = String(choice)
     .split(/,\s*/)
     .map((c) => c.trim())
     .filter(Boolean);
+  const [first, ...queue] = inPollOrder(chosen, poll.options);
   if ([first, ...queue].some((c) => NOT_NOW_RE.test(c))) {
     tell(T.notNow);
     return 0;
