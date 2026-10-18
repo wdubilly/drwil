@@ -20,6 +20,8 @@ const TEXTS = {
     queue:
       "File décidée au lancement : ensuite {0}{1}. Avec Claude Code, chaque chantier de la file se mène dans un sous-agent (contexte neuf), un seul à la fois, dans le dossier du dépôt et jamais dans une copie isolée (worktree : l'état n'y est pas) : sa consigne commence par lire l'état (`node .githooks/state.mjs`), il mène le chantier jusqu'au retour en SCOPING sans lancer la suivante et rend un compte rendu ; la session principale ne garde que leurs comptes rendus (autre outil : tout dans la même session). Après la clôture, la session principale suit la PR par `gh` jusqu'à la fusion, 30 minutes au plus, met à jour la branche principale et lance la suivante : `node .githooks/state.mjs next`, dans un nouveau sous-agent ; plus de suivante : un bilan. S'arrêter au premier chantier qui bute (attestation humaine, FAIL non corrigé, CI rouge, délai de fusion dépassé, décision à prendre) en disant pourquoi et ce qui est attendu ; jamais de suivante sur une fusion non faite. Un compte rendu court à chaque clôture, un bilan en fin de file.",
     queueMerge: " (fusion automatique)",
+    detour:
+      "Détour en cours (QUA-050), ouvert depuis {0} (branche {1}, travail en cours mis de côté par l'outil) : corriger le défaut sous cette fiche courte, sur la branche {2} ; PR intitulée « Détour de {0} : … », au mode de fusion décidé au lancement ; avant le push, entrée de journal citant la branche {2} et fiche supprimée ; une fois la PR fusionnée, `node .githooks/detour.mjs resume`. Jamais de stash ni de changement de branche à la main.",
     // Un « continue » ambigu a lancé un chantier le 2026-10-17 : une file reprise exige un oui explicite.
     queueResume:
       "Reprise de file : si cette session n'a pas mené la clôture précédente (nouvelle session, après `/clear` ou un redémarrage), demander d'abord à l'humain « la file reprend avec {0} : je lance ? » et ne lancer `node .githooks/state.mjs next` que sur un oui explicite ; sans oui explicite, rien n'est lancé.",
@@ -40,7 +42,8 @@ const TEXTS = {
       SCOPING: "lire, analyser, cadrer ; ne modifier aucun fichier de code.",
       EXPECTATION: "formaliser l'attente dans sa fiche ; ne modifier aucun fichier de code.",
       REQUEST: "expliciter la demande de réalisation ; ne modifier encore aucun fichier de code.",
-      BUILD: "réaliser l'attente, en ne modifiant que les fichiers du périmètre (bloc scope de la fiche active).",
+      BUILD:
+        "réaliser l'attente, en ne modifiant que les fichiers du périmètre (bloc scope de la fiche active). Un défaut préalable hors du cadrage : un détour, `node .githooks/detour.mjs open <nom> --title <défaut>`, jamais un élargissement sans rapport.",
       EVIDENCE: "produire les preuves et lancer les contrôles ; un correctif demande de revenir en BUILD.",
       VERIFY:
         "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en BUILD ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
@@ -61,6 +64,8 @@ const TEXTS = {
     queue:
       "Queue decided at start: then {0}{1}. With Claude Code, each workstream of the queue runs in a subagent (fresh context), one at a time, in the repository folder and never in an isolated copy (worktree: the state is not there): its instructions start by reading the state (`node .githooks/state.mjs`), it carries the workstream until back in SCOPING without starting the next one and returns a report; the main session keeps only their reports (another tool: everything in the same session). After the closing, the main session follows the PR with `gh` until it is merged, 30 minutes at most, updates the main branch and starts the next one: `node .githooks/state.mjs next`, in a new subagent; no next one: a summary. Stop at the first workstream that gets stuck (human attestation, FAIL not fixed, red CI, merge delay exceeded, decision to make), saying why and what is expected; never a next one on a merge not done. A short report at each closing, a summary at the end of the queue.",
     queueMerge: " (automatic merge)",
+    detour:
+      "Detour in progress (QUA-050), opened from {0} (branch {1}, work in progress set aside by the tool): fix the defect under this short brief, on branch {2}; PR titled « Detour of {0}: … », with the merge mode decided at start; before the push, a journal entry citing branch {2} and the brief deleted; once the PR is merged, `node .githooks/detour.mjs resume`. Never stash or switch branches by hand.",
     queueResume:
       "Resuming a queue: if this session did not carry the previous closing (new session, after `/clear` or a restart), first ask the human « the queue resumes with {0}: shall I start it? » and run `node .githooks/state.mjs next` only on an explicit yes; without an explicit yes, nothing is started.",
     closingNoQueue:
@@ -80,7 +85,8 @@ const TEXTS = {
       SCOPING: "read, analyse, frame; do not modify any code file.",
       EXPECTATION: "write down the expectation in its brief; do not modify any code file.",
       REQUEST: "make the implementation request explicit; do not modify any code file yet.",
-      BUILD: "implement the expectation, modifying only the files in the scope (scope block of the active brief).",
+      BUILD:
+        "implement the expectation, modifying only the files in the scope (scope block of the active brief). A prior defect outside the scope: a detour, `node .githooks/detour.mjs open <name> --title <defect>`, never an unrelated widening.",
       EVIDENCE: "produce evidence and run the checks; a fix means going back to BUILD.",
       VERIFY:
         "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to BUILD; MANUAL: human attestation (`npx drwil attest`), then run it again.",
@@ -110,6 +116,9 @@ export const STATE_MESSAGES = {
     autoMergeScoping: "auto_merge : jamais en SCOPING (aucun chantier en cours)",
     queueType: "queue : liste de fiches attendue",
     queueMergeType: "queue_merge : booléen attendu",
+    detourType: "detour : objet { origin_brief, origin_branch, branch, stash, human? } attendu",
+    detourActivity: "detour : seulement en BUILD",
+    detourMove: "détour en cours : le reprendre d'abord (`node .githooks/detour.mjs resume`), ou l'abandonner en SCOPING",
     queueNotReady:
       "lancement refusé : « {0} » ne peut pas entrer dans une file — il faut une fiche prête (maturité « prêt », aucune [décision] ouverte, critères d'acceptation)",
     queued: "file : ensuite {0}, lancés un à un par l'agent après chaque clôture et fusion (arrêt : `node .githooks/state.mjs queue stop`)",
@@ -176,6 +185,9 @@ export const STATE_MESSAGES = {
     autoMergeScoping: "auto_merge: never in SCOPING (no workstream in progress)",
     queueType: "queue: list of briefs expected",
     queueMergeType: "queue_merge: boolean expected",
+    detourType: "detour: object { origin_brief, origin_branch, branch, stash, human? } expected",
+    detourActivity: "detour: only in BUILD",
+    detourMove: "detour in progress: resume it first (`node .githooks/detour.mjs resume`), or abandon it to SCOPING",
     queueNotReady:
       'start refused: "{0}" cannot enter a queue — it takes a ready brief (maturity « ready », no open [decision], acceptance criteria)',
     queued: "queue: then {0}, started one by one by the agent after each closing and merge (stop: `node .githooks/state.mjs queue stop`)",
@@ -266,6 +278,7 @@ export function context(read, root) {
   if (state.auto_merge === true) lines.push(T.autoMerge);
   if (state.queue?.length) lines.push(fill(T.queue, state.queue.join(", "), state.queue_merge ? T.queueMerge : ""));
   if (state.queue?.length && state.activity === "SCOPING") lines.push(fill(T.queueResume, state.queue[0]));
+  if (state.detour) lines.push(fill(T.detour, state.detour.origin_brief, state.detour.origin_branch, state.detour.branch));
   if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
   lines.push(T.rule(T.rules[state.activity]));
   if (state.activity === "CLOSING") lines.push(T.docLanguage(docLanguage(root)));

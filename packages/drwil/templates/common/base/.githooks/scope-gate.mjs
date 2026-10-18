@@ -12,7 +12,10 @@
 //   checked.
 // Severity: `scopeGate` setting (off | warning | blocking), warning if missing.
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { rulesFiles } from "./detour.mjs";
 import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
 
@@ -45,6 +48,8 @@ const TEXTS = {
     outsideScopeCommit: (c, f, brief) => `${c} : ${f} hors du cadrage de ${brief} (dans le parent)`,
     noReference: "aucune branche de référence (origin/HEAD, master, main, ou DRWIL_BASE)",
     failed: (n) => `périmètre de l'attente : ${n} problème(s) (barrière bloquante)`,
+    rules: (f) =>
+      `${f} : un détour qui change les règles du jeu (registre des contrats, hook, seuil, barrière, CI) demande le oui de l'humain — \`node .githooks/detour.mjs allow\` dans un terminal ; en file, le sous-agent s'arrête et le signale`,
   },
   en: {
     activity: (a, n) =>
@@ -54,6 +59,8 @@ const TEXTS = {
     outsideScopeCommit: (c, f, brief) => `${c}: ${f} outside the scope of ${brief} (in the parent)`,
     noReference: "no reference branch (origin/HEAD, master, main, or DRWIL_BASE)",
     failed: (n) => `brief scope: ${n} problem(s) (blocking gate)`,
+    rules: (f) =>
+      `${f}: a detour that changes the rules (contracts registry, hook, threshold, gate, CI) needs the human's yes — \`node .githooks/detour.mjs allow\` in a terminal; in a queue, the subagent stops and reports it`,
   },
 };
 
@@ -77,7 +84,10 @@ export function checkIndex({ files, state, patterns, outOfScope, cfg }) {
   const subject = outsideBriefFiles(files, outOfScope);
   if (!subject.length) return [];
   if (state.activity !== "BUILD") return [T.activity(state.activity, subject.length)];
-  return subject.filter((f) => !covered(f, patterns)).map((f) => T.outsideScope(f, state.active_brief));
+  const problems = subject.filter((f) => !covered(f, patterns)).map((f) => T.outsideScope(f, state.active_brief));
+  // QUA-050: an ordinary detour needs no one; one that changes the rules waits for the human's yes.
+  if (state.detour && state.detour.human !== true) problems.push(...rulesFiles(subject, cfg).map(T.rules));
+  return problems;
 }
 
 /** Patterns of the scope block of `brief` in revision `rev`, copies included; none if the brief does not exist there. */
@@ -150,9 +160,21 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
   return { status: "ok", problems };
 }
 
-/** Adds `Drwil-Brief: <active brief>` to the message (prepare-commit-msg hook); nothing without a brief or governance. */
+/** True while git replays existing commits (rebase): their message, trailer included, is kept as it is. */
+function replaying(root) {
+  return ["rebase-merge", "rebase-apply"].some((name) => {
+    const path = git(root, ["rev-parse", "--git-path", name]);
+    return path !== null && existsSync(resolve(root, path.trim()));
+  });
+}
+
+/**
+ * Adds `Drwil-Brief: <active brief>` to the message (prepare-commit-msg hook); nothing without a brief or
+ * governance, nor during a rebase: a replayed commit keeps the brief it was made under (a detour's resume
+ * rebases the workstream's branch while the state still names the detour's brief).
+ */
 export function addTrailer(root, messageFile) {
-  if (governanceDisabled(root)) return;
+  if (governanceDisabled(root) || replaying(root)) return;
   const { state } = readState(root);
   if (!state.active_brief) return;
   git(root, ["interpret-trailers", "--in-place", "--if-exists", "replace", "--trailer", `${TRAILER}: ${state.active_brief}`, messageFile]);

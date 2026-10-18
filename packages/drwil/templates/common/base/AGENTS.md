@@ -79,6 +79,15 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
   the closing fail (`--check`: the report alone, at any time). Code cites
   the contract it serves, never a workstream brief: the brief is deleted at
   closing.
+- **Detour for a prior defect**: mid-workstream, a defect outside the
+  active brief's scope is fixed by a detour the agent opens alone —
+  `node .githooks/detour.mjs open <name> --title <defect>` sets the work
+  aside, branches from the main branch and writes a short brief; its PR is
+  titled « Detour of <brief> »; once merged, `node .githooks/detour.mjs
+  resume` restores the work on the rebased workstream branch. Never widen
+  an unrelated scope, never stash by hand. A detour that changes the rules
+  (contracts, hooks, thresholds, the gate) waits for the human's yes
+  (`docs/recipes/corriger-un-defaut.md`).
 - **Queue of workstreams**: when the human ticked several briefs at start,
   the agent runs them one after the other without a new poll — with Claude
   Code, each one in a subagent (fresh context), the main session keeping
@@ -128,6 +137,7 @@ project completes the list of contracts to know regardless of the task.
 | an API route | `backend/AGENTS.md` (if present) | `docs/recipes/add-an-api-route.md` |
 | a screen | `frontend/AGENTS.md` (if present) | `docs/recipes/add-a-frontend-screen.md` |
 | a large existing file | `docs/contracts.md` | `docs/recipes/refactor-without-breaking.md` |
+| a defect to fix | `docs/contracts.md` | `docs/recipes/corriger-un-defaut.md` |
 | adopting the kit on an existing project | `.drwil/ia-first.json`, `docs/contracts-catalog.md` | `docs/recipes/adopt-the-kit.md` |
 | an idea to scope (intent) | `docs/intentions/README.md` | — |
 | a pending project | `{{indexFile}}` | — |

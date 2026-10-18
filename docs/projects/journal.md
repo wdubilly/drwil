@@ -1980,3 +1980,46 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   Claude Code est simulé par le test, l'essai réel viendra au prochain
   sondage à choix multiple.
 - **Clôturé par** : la PR #159 (branche `chantier/ordre-de-la-file`).
+
+## 2026-10-18 — Un détour pour une correction intercalée (0.6.5, 4 sur 4)
+
+- **Besoin** : point 8 de la clôture allégée — un défaut préalable hors du
+  cadrage obligeait l'agent à élargir un cadrage sans rapport ou à
+  s'arrêter, et à improviser stash et allers-retours de branche.
+- **Le détour** : contrat créé QUA-050 (un détour pour une correction
+  intercalée, sans élargir le chantier), contrôle `tests-qua-050`.
+  `.githooks/detour.mjs open <nom> --title <défaut>` met le travail en
+  cours de côté (stash nommé, enregistré dans l'état), crée la branche
+  `detour/<nom>` depuis la branche principale (distante si elle existe)
+  et sa fiche courte, et pointe l'état sur elle ; `resume`, PR fusionnée,
+  revient sur la branche du chantier, la rebase sur la branche principale
+  corrigée, restaure le travail et remet l'état en BUILD sur la fiche
+  d'origine. Toute étape qui échoue est refusée sans rien perdre.
+- **La barrière** : elle accepte la correction sous la fiche du détour et
+  refuse, jusqu'au oui de l'humain (`detour.mjs allow`, terminal
+  interactif), un fichier qui change les règles du jeu (registre, hooks,
+  seuils, CI). Défaut corrigé au passage : un rebase réécrivait le
+  trailer `Drwil-Brief` des commits rejoués ; il est gardé.
+- **Doc** : recette « corriger un défaut » livrée, `AGENTS.md` (gabarit et
+  dépôt), rappel de BUILD, carte, registre, miroirs, fiches de mécanique,
+  changelog (QUA-040, drwil entretient la carte, le README et le
+  changelog). Livré à tout projet (QUA-018, dépôt ou livrable).
+- **Incident de CI** : trois tests du détour rouges en CI, faute
+  d'identité git globale (la commande lance elle-même `git rebase` et
+  `git stash`) ; cause reproduite en local avec un `HOME` vide, corrigée
+  par une identité locale au dépôt temporaire des tests. Le chantier,
+  passé en CLOSING avant la CI, a dû être relancé par l'humain : la
+  clôture attend désormais la CI verte.
+- **Intention d'origine** : aucune (point 8 de la clôture allégée).
+- **Limites connues** : `resume` ne reconnaît pas une PR fusionnée par
+  squash — `docs/intentions/branches-fusionnees-par-squash.md`
+  (complétée) ; tout changement du registre des contrats, même un ajout,
+  demande le oui de l'humain —
+  `docs/intentions/registre-ajout-sans-oui.md` ; `package.json` n'est pas
+  compté parmi les seuils — `docs/intentions/seuils-dans-package-json.md` ;
+  gain de la clôture allégée non mesurable par chantier entier
+  (comparaison faite, sans conclusion) —
+  `docs/intentions/mesurer-gain-cloture-allegee.md` (mise à jour).
+- **Consommation** : 4,31 M tokens pondérés, 178 requêtes, 55 minutes
+  (`.drwil/usage.jsonl`).
+- **Clôturé par** : la PR #160 (branche `chantier/detour`).

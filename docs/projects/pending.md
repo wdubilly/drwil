@@ -117,7 +117,7 @@ avant les points 5 à 13, en trois versions.
   (fait, journal du 2026-10-18), ordre de la file
   (fait, journal du 2026-10-18), clôture outillée
   (fait, journal du 2026-10-18), détour pour une correction
-  intercalée (`docs/projects/detour.md`) ; puis, dans une PR séparée, la
+  intercalée (fait, journal du 2026-10-18) ; puis, dans une PR séparée, la
   fiche de recette pour une équipe hors dépôt
   (`docs/projects/fiche-de-recette.md`), avant la release.
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
@@ -259,8 +259,9 @@ une décision du demandeur.
   lancement, comme la fusion automatique (limite du chantier « date
   gardée et feu vert de publication » du 2026-10-18) —
   `docs/intentions/feu-vert-publication-enregistre.md`.
-- [ ] [décision] Supprimer aussi les branches fusionnées par squash
-  (limite du chantier « une clôture allégée » du 2026-10-18) —
+- [ ] [décision] Supprimer aussi les branches fusionnées par squash, et
+  les reconnaître à la reprise d'un détour (limites des chantiers « une
+  clôture allégée » et « un détour » du 2026-10-18) —
   `docs/intentions/branches-fusionnees-par-squash.md`.
 - [ ] [décision] Retirer les neuf citations de fiche restées dans le code
   non modifié (limite du chantier « une clôture allégée » du 2026-10-18) —
@@ -268,11 +269,16 @@ une décision du demandeur.
 - [ ] [décision] Reconnaître les commentaires de code sans heuristique de
   ligne (limite du chantier « une clôture allégée » du 2026-10-18) —
   `docs/intentions/commentaires-reconnus-par-heuristique.md`.
-- [ ] [décision] Mesurer le gain de la clôture allégée après le détour
-  (limite du chantier « une clôture allégée » du 2026-10-18) —
+- [ ] [décision] Mesurer le gain de la clôture allégée à part (comparaison
+  par chantier entier faite le 2026-10-18, sans conclusion ; limite du
+  chantier « une clôture allégée » du 2026-10-18) —
   `docs/intentions/mesurer-gain-cloture-allegee.md`.
-- [ ] [IA] [P1] 0.6.5, 4 sur 4 : un détour pour une correction
-  intercalée — `docs/projects/detour.md`.
+- [ ] [décision] Un ajout au registre des contrats sans le oui de
+  l'humain pendant un détour (limite du chantier « un détour » du
+  2026-10-18) — `docs/intentions/registre-ajout-sans-oui.md`.
+- [ ] [décision] Compter `package.json` parmi les seuils d'un détour
+  (limite du chantier « un détour » du 2026-10-18) —
+  `docs/intentions/seuils-dans-package-json.md`.
 - [ ] [IA] [P1] 0.6.5 : une fiche de recette par version, pour une
   équipe hors dépôt (cadré le 2026-10-18) —
   `docs/projects/fiche-de-recette.md`.

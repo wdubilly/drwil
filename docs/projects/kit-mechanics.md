@@ -29,6 +29,8 @@ files:
   - .githooks/state.test.mjs
   - .githooks/close.mjs
   - .githooks/close.test.mjs
+  - .githooks/detour.mjs
+  - .githooks/detour.test.mjs
   - .githooks/scope-gate.mjs
   - .githooks/scope-gate.test.mjs
   - .githooks/check-code-rules.test.mjs
