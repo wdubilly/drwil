@@ -116,7 +116,18 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-18) : cadré, rien de construit.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`),
-  après la clôture outillée.
+- **Dernier état** (2026-10-18) : lots 1 à 3 faits et poussés (PR 160) ;
+  `drwil verify` en GOVERNANCE: PASS, état passé en CLOSING. La CI de la
+  PR est rouge sur trois tests de `.githooks/detour.test.mjs` : la
+  commande lance elle-même `git rebase` et `git stash`, qui exigent une
+  identité git, absente en CI (reproduit en local sans configuration
+  globale). Le correctif est dans les tests seuls : une identité locale
+  au dépôt temporaire (`git config user.name`, `user.email`).
+- **Travail non commité** : ce correctif de `.githooks/detour.test.mjs`
+  (vérifié : 9 tests verts avec et sans identité globale). Il ne peut pas
+  être commité en CLOSING (la barrière n'accepte du code qu'en BUILD) et
+  revenir en BUILD depuis CLOSING passe par un nouveau lancement.
+- **Prochaine étape** : [humain] relancer le chantier —
+  `node .githooks/state.mjs move SCOPING`, puis `/drwil-start` (fiche
+  `docs/projects/detour.md`, avec la fusion automatique si voulue) ;
+  ensuite [IA] commiter le correctif, CI verte, verify, clôture.
