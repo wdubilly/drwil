@@ -55,6 +55,9 @@ function depot({ lang, journal = true, config = {}, principale = "master", autoM
   const racine = dossier();
   git(racine, "init", "-q", "-b", principale);
   git(racine, "config", "core.hooksPath", "/dev/null");
+  // La commande lance elle-même rebase et stash, qui exigent une identité : la CI n'en a pas de globale.
+  git(racine, "config", "user.name", "t");
+  git(racine, "config", "user.email", "t@t.invalid");
   ecrire(racine, {
     ".drwil/ia-first.json": JSON.stringify({ ...(lang ? { lang } : {}), ...config }),
     ".gitignore": ".drwil/state.json\n.drwil/evidence/\n.drwil/reminder.json\n",
