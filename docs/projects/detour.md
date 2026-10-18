@@ -58,7 +58,7 @@ en cadrage à la main.
   branche principale corrigée et l'état revient en BUILD sur la fiche
   d'origine. Un détour qui changerait un contrat existant, un hook, un
   seuil ou la barrière demande le oui de l'humain ; en file, le
-  sous-agent s'arrête alors — contrat à créer
+  sous-agent s'arrête alors — `QUA-050`
 
 ## 2. Hors périmètre
 
