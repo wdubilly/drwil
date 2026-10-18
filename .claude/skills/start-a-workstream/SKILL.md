@@ -24,7 +24,8 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      ready: N decision(s) to make first"; a brief with `maturity` `refine` is never hidden, its
      description starts with "to refine: review before starting it"; the human can type another
      path under "Other". `multiSelect: true` when the human wants to chain several briefs (a
-     queue): the briefs ticked are run in the poll's order, the first now, the next ones
+     queue): the briefs ticked are run in the order of the poll's options, whatever the order
+     of the clicks (the hook sorts them), the first now, the next ones
      started by the agent after each closing; only ready briefs (maturity « ready », no open
      decision, acceptance criteria) can be queued, otherwise the whole start is refused.
    - **A single scoped brief**: a question needs at least two options, so add a second one,

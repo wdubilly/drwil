@@ -837,6 +837,49 @@ test("QUA-037 : un sondage à choix multiple lance la première fiche et met les
   assert.equal(etat.auto_merge, true);
 });
 
+test("QUA-037 : la file suit l'ordre des options du sondage, quel que soit l'ordre des clics", async () => {
+  // Constaté le 2026-10-18 : Claude Code rend les choix multiples dans l'ordre des clics ; la file
+  // suivait ces clics, pas l'ordre des options que range la skill de lancement.
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  for (const nom of ["un", "deux", "trois", "quatre"])
+    writeFileSync(
+      join(dir, `docs/projects/${nom}.md`),
+      `# Projet : ${nom}\n\n**Statut** : cadré le 2026-10-18.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/${nom}.ts\n-->\n\n## Critères d'acceptation\n\n- Critère — \`APP-001\`\n`,
+    );
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+  const sondage = {
+    questions: [
+      {
+        question: "Quelles fiches ?",
+        header: "drwil-start",
+        multiSelect: true,
+        options: ["un", "deux", "trois"].map((n) => ({ label: `docs/projects/${n}.md`, description: n })),
+      },
+    ],
+  };
+  // Clics : trois, une fiche saisie sous « Autre » (hors options : gardée après, dans l'ordre saisi), puis un.
+  const r = spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+    cwd: dir,
+    encoding: "utf8",
+    input: JSON.stringify({
+      hook_event_name: "PostToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: sondage,
+      tool_response: {
+        ...sondage,
+        answers: { "Quelles fiches ?": "docs/projects/trois.md, docs/projects/quatre.md, docs/projects/un.md" },
+      },
+    }),
+  });
+  assert.equal(r.status, 0);
+  const etat = JSON.parse(read(dir, ".drwil/state.json"));
+  assert.equal(etat.active_brief, "docs/projects/un.md", "la première option cochée est lancée, pas le premier clic");
+  assert.deepEqual(etat.queue, ["docs/projects/trois.md", "docs/projects/quatre.md"]);
+});
+
 test("QUA-037 : un seul brief : « Pas maintenant » ne lance rien et le dit ; sans réponse lue ou sur erreur, le hook le dit sans bloquer", async () => {
   // Constaté sur un projet neuf (2026-10-17) : un seul brief, sondage impossible à une option, puis
   // un hook muet qui laissait l'agent deviner pourquoi rien n'avait démarré.

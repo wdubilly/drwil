@@ -52,6 +52,14 @@ closing commit; the release renames this section to its version.
   request for each workstream (table and `--record`), so the cost of a
   long context shows.
 
+### Fixed
+
+- A queue started from a multiple-choice `/drwil-start` poll follows the
+  order of the poll's options, whatever the order the boxes were ticked
+  in: Claude Code returns the choices in click order, and the queue used
+  to follow it. A brief typed under « Other » comes after the ticked
+  options, in the order typed.
+
 ## 0.6.3 (2026-10-17)
 
 ### Fixed

@@ -1957,3 +1957,26 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   reste à mesurer après le détour —
   `docs/intentions/mesurer-gain-cloture-allegee.md`.
 - **Clôturé par** : la PR #158 (branche `chantier/cloture-allegee`).
+
+## 2026-10-18 — La file suit l'ordre du sondage (0.6.5, 2 sur 4)
+
+- **Cause** : Claude Code rend un choix multiple dans l'ordre des clics
+  (libellés joints par des virgules) ; le hook de sondage
+  (`.claude/hooks/prompt-hook.mjs`) le découpait tel quel, et la file
+  suivait les clics, pas l'ordre des options que range la skill de
+  lancement (constaté dans la session de la 0.6.4 : file arrêtée et
+  sondage relancé).
+- **Correctif** : le hook range les choix dans l'ordre des options du
+  sondage (`inPollOrder`) ; une fiche saisie sous « Autre » vient après,
+  dans l'ordre saisi. Test du paquet qui coche dans le désordre (échouait
+  avant le correctif) — QUA-037 (une file de chantiers décidée d'un
+  geste), dont la règle (« file ordonnée ») est rétablie sans être
+  modifiée : une modification aurait demandé une déclaration validée au
+  cadrage (QUA-023, régression ou évolution d'un contrat). Skill de
+  lancement et changelog à jour ; livré à tout projet (QUA-018, dépôt ou
+  livrable : gabarit puis `npm run installer-depot`).
+- **Intention d'origine** : aucune (point 6 de la clôture allégée).
+- **Limites connues** : aucune non traitée ; le format de réponse de
+  Claude Code est simulé par le test, l'essai réel viendra au prochain
+  sondage à choix multiple.
+- **Clôturé par** : la PR #159 (branche `chantier/ordre-de-la-file`).

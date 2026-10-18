@@ -115,7 +115,7 @@ avant les points 5 à 13, en trois versions.
   allégée, cadrée d'un seul tenant puis réalisée en quatre PR, dans cet
   ordre : date gardée et feu vert de publication
   (fait, journal du 2026-10-18), ordre de la file
-  (`docs/projects/ordre-de-la-file.md`), clôture outillée
+  (fait, journal du 2026-10-18), clôture outillée
   (fait, journal du 2026-10-18), détour pour une correction
   intercalée (`docs/projects/detour.md`) ; puis, dans une PR séparée, la
   fiche de recette pour une équipe hors dépôt
@@ -271,8 +271,6 @@ une décision du demandeur.
 - [ ] [décision] Mesurer le gain de la clôture allégée après le détour
   (limite du chantier « une clôture allégée » du 2026-10-18) —
   `docs/intentions/mesurer-gain-cloture-allegee.md`.
-- [ ] [IA] [P1] 0.6.5, 2 sur 4 : la file suit l'ordre du sondage —
-  `docs/projects/ordre-de-la-file.md`.
 - [ ] [IA] [P1] 0.6.5, 4 sur 4 : un détour pour une correction
   intercalée — `docs/projects/detour.md`.
 - [ ] [IA] [P1] 0.6.5 : une fiche de recette par version, pour une
