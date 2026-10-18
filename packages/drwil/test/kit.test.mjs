@@ -3672,7 +3672,9 @@ test("QUA-047 : installer ou mettre à jour garde la date d'origine d'un documen
   assert.equal(read(dir, fichier), ancien, "--force non plus ne réécrit pas une date seule");
 
   // Le reste du document change : réécrit, avec la date du jour.
-  installerCommeAvant(ancien.replace("\n", "\nLigne d'une version précédente.\n"));
+  const lignes = ancien.split("\n");
+  lignes.splice(1, 0, "Ligne d'une version précédente.");
+  installerCommeAvant(lignes.join("\n"));
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const rafraichi = read(dir, fichier);
   assert.ok(!rafraichi.includes("Ligne d'une version précédente.") && !rafraichi.includes("2020-01-02"), rafraichi.slice(0, 200));
