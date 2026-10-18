@@ -111,6 +111,12 @@ avant les points 5 à 13, en trois versions.
   invalide refusé au commit (fait, journal du 2026-10-18) ;
   enfin la release (fait, journal du 2026-10-18 ; tag `v0.6.4` après la
   fusion, sur feu vert).
+- **0.6.5** — décidé le 2026-10-18 par le demandeur : une clôture
+  allégée, en une seule PR (date gardée, ordre de la file, clôture
+  outillée, feu vert de publication au lancement, détour pour une
+  correction intercalée ; `docs/projects/cloture-allegee.md`) ; puis, dans une PR séparée, la
+  fiche de recette pour une équipe hors dépôt
+  (`docs/intentions/fiche-de-recette.md`, à cadrer).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -246,8 +252,11 @@ Limites relevées en cours de chantier, consignées en intention le
 2026-10-15 (chantier « capitaliser les non-régressions ») ; les recadrer est
 une décision du demandeur.
 
-- [ ] [décision] L'installation du dépôt ne réécrit plus la date de
-  `docs/ia-first.md` — `docs/intentions/date-ia-first-installateur.md`.
+- [ ] [IA] [P1] 0.6.5 : une clôture allégée, sans encombrants (date
+  gardée, ordre de la file, clôture outillée, feu vert de publication,
+  détour ; cadré le 2026-10-18) — `docs/projects/cloture-allegee.md`.
+- [ ] [décision] [P1] 0.6.5 : une fiche de recette par version, pour une
+  équipe hors dépôt — `docs/intentions/fiche-de-recette.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
   `docs/intentions/prefixe-catalogue.md`.
 - [ ] [décision] Un `doctor` juste sur le dépôt drwil lui-même (manifeste
