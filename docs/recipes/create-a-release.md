@@ -12,6 +12,25 @@ package). On this repository, it is already activated as
 `.githooks/create-release.mjs`. Like a commit or a push, this script only
 runs on the user's explicit request, never on its own in CI.
 
+## Publication green light
+
+Creating the release (step 3 below) posts a tag and a note that everyone
+sees: by default it is a gesture **after agreement** — the agent shows
+the `--dry-run` result and waits for the human's yes before creating
+anything.
+
+The human can give that yes **at launch** instead, so that a queue of
+workstreams run by sub-agents (which cannot ask a question) publishes
+without stopping: an explicit sentence in the request that launches the
+workstream or the queue, naming the version — e.g. « publication green
+light: v1.4.0 ». The agent that orchestrates passes it verbatim to the
+sub-agent in charge of the release. With that green light, the agent
+runs the `--dry-run`, then creates the release only if the computed
+version is the one named and the script refused nothing; otherwise, or
+without a green light, it stops after the `--dry-run` and gives the human
+the exact command to run. The green light covers one release, never the
+following ones, and never an npm publication (see « Assumed limits »).
+
 ## Method (once the module is activated)
 
 1. Preview without creating anything: `node .githooks/create-release.mjs
@@ -30,9 +49,10 @@ runs on the user's explicit request, never on its own in CI.
    project keeps a `CHANGELOG.md` (if present), its « Unreleased » section, fed by each
    workstream's closing, is renamed to that version (a new empty
    « Unreleased » above it).
-3. Create for real: `node .githooks/create-release.mjs` (annotated tag
-   pushed to `origin`, then `gh release create --generate-notes` if `gh`
-   is available and authenticated).
+3. Create for real, after the human's agreement or with the green light
+   given at launch (see above): `node .githooks/create-release.mjs`
+   (annotated tag pushed to `origin`, then `gh release create
+   --generate-notes` if `gh` is available and authenticated).
 4. If the repo contains one or more publishable npm packages (tracked
    package.json, with a `name`, without `"private": true`), a tarball
    (`npm pack`) is built for each and attached as a downloadable asset on

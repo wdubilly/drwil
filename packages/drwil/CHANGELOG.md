@@ -5,6 +5,18 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Changed
+
+- Installing or updating (`drwil init`, with or without `--force`) no
+  longer rewrites a document that would differ only by its date, such as
+  `docs/ia-first.md`: the file and its original date are kept; a new date
+  is written only when the rest of the document changes. No more false
+  change to undo after each update.
+- The release recipe and skill let the human give the publication green
+  light at launch, naming the version, so that a queue of workstreams run
+  by subagents publishes without stopping; without it, creating the
+  release stays a gesture after the human's agreement.
+
 ## 0.6.4 (2026-10-18)
 
 ### Changed

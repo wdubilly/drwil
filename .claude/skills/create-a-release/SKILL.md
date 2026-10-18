@@ -9,3 +9,6 @@ installed by default — first check that `.githooks/create-release.mjs` (if pre
 the recipe before continuing). Always start with
 `node .githooks/create-release.mjs --dry-run` and show the result (last
 tag, detected bump, next version) before actually creating anything.
+Create the release only after the human's yes, or with the publication
+green light given at launch for that version (recipe, « Publication
+green light ») — never on a guess, never for an npm publication.

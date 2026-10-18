@@ -193,7 +193,7 @@ test("installerAvecCli : sans projet à construire, l'échec est rendu, jamais u
   assert.match(erreur, /construction de la CLI en échec/);
 });
 
-test("installerAvecCli : la vraie CLI installe le dépôt dans une copie temporaire, le dépôt reste intact", () => {
+test("QUA-047 : la vraie CLI installe le dépôt dans une copie temporaire, le dépôt reste intact, une date seule n'est pas réécrite", () => {
   const config = JSON.parse(readFileSync(join(DEPOT, ".drwil", "ia-first.json"), "utf8"));
   const { erreur, dossier: d } = installerAvecCli(DEPOT, argumentsInit(config, new Set(["base", "tools/claude", "ci/github"])));
   assert.equal(erreur, undefined);
@@ -202,6 +202,8 @@ test("installerAvecCli : la vraie CLI installe le dépôt dans une copie tempora
     assert.ok(existsSync(join(d, f)), f);
   assert.equal(readFileSync(join(d, "CLAUDE.md"), "utf8"), "@AGENTS.md\n");
   assert.ok(!existsSync(join(DEPOT, ".drwil", "installed-files.json")));
+  // Le document daté du dépôt, à jour de son gabarit, ressort identique : sa date d'origine est gardée.
+  assert.equal(readFileSync(join(d, "docs", "ia-first.md"), "utf8"), readFileSync(join(DEPOT, "docs", "ia-first.md"), "utf8"));
   const echec = installerAvecCli(DEPOT, ["init", "--lang", "xx"]);
   assert.match(echec.erreur, /drwil init en échec/);
 });

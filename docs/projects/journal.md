@@ -1863,3 +1863,52 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Intention d'origine** : aucune (demande directe).
 - **Limites connues** : aucune nouvelle.
 - **Clôturé par** : la PR de la branche `workstream/release-0-6-4`.
+
+## 2026-10-18 — Date gardée et feu vert de publication (0.6.5, 1 sur 4)
+
+- **Décisions clés** (demandeur, 2026-10-18) : la date d'origine d'un
+  document installé est gardée, réécrite seulement si le reste du
+  document change, jamais retirée ; une PR par fiche de la 0.6.5.
+- **La date** : contrat créé QUA-047 (une date seule ne réécrit pas un
+  document installé), contrôle `tests-qua-047`. Le rendu
+  (`packages/drwil/src/render.ts`, `keepDate`) laisse `{{date}}` en attente
+  jusqu'à l'écriture : un fichier déjà présent qui ne diffère que par ses
+  dates est gardé tel quel, manifeste compris. Vaut pour `drwil init`
+  (mise à jour, `--force`) et pour `npm run installer-depot` : reproduit
+  avant correctif (`docs/ia-first.md` seul fichier à écrire), plus rien à
+  écrire après. Vérifié en BUILD : une mise à jour d'un projet
+  réécrivait aussi `docs/ia-first.md` (prose du kit rafraîchie) ;
+  `packages/drwil/src/migration.ts` et `packages/drwil/src/manifest.ts` n'avaient rien à changer.
+- **Le feu vert de publication** : recette et skill de release (gabarit et
+  copies du dépôt ; la recette du dépôt, écart déclaré, modifiée à la
+  main) — la création de la release reste un geste après accord, ou se
+  fait avec le feu vert donné au lancement en nommant la version
+  (QUA-040, drwil entretient la carte, le README et le changelog : carte et
+  changelog mis à jour).
+- **Intention d'origine** : « l'installation du dépôt ne réécrit plus la
+  date de ia-first.md » (retour d'expérience du 2026-10-15), entièrement
+  couverte : résumée ici et retirée.
+- **Limites connues** : le feu vert de publication n'est qu'une phrase de
+  la demande, ni gardé ni effacé par l'outil —
+  `docs/intentions/feu-vert-publication-enregistre.md`.
+- **Clôturé par** : la PR #157 (branche `chantier/date-gardee-feu-vert`).
+
+## 2026-10-18 — Lever l'alerte CodeQL de la PR 157 (correction intercalée)
+
+- **Décisions clés** (demandeur, 2026-10-18) : correction sur la branche
+  de la PR 157 elle-même, sa fusion automatique désactivée le temps de la
+  correction puis reprogrammée.
+- **Correction** : le test QUA-047 (une date seule ne réécrit pas un
+  document installé) de `packages/drwil/test/kit.test.mjs` insère sa ligne
+  par découpage en lignes puis assemblage, au lieu d'un `replace` sur la
+  seule première occurrence que CodeQL signalait (`js/incomplete-sanitization`,
+  échappement incomplet). Comportement identique ; alerte levée, pas
+  ignorée (QUA-019, pas de contournement).
+- **Intention d'origine** : aucune (CI rouge de la PR 157).
+- **Limites connues** : aucune nouvelle ; le dépassement du budget de
+  temps sous Windows ne s'est pas reproduit (CI verte au premier passage).
+- **Consommation** : non mesurée à part — `.githooks/consumption.mjs` (mesure des
+  tokens) groupe par branche, et la correction a été menée sur celle du
+  chantier « date gardée et feu vert de publication » : ses réponses y
+  sont comptées.
+- **Clôturé par** : la PR #157 (branche `chantier/date-gardee-feu-vert`).

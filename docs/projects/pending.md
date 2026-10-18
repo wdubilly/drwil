@@ -114,7 +114,7 @@ avant les points 5 à 13, en trois versions.
 - **0.6.5** — décidé le 2026-10-18 par le demandeur : une clôture
   allégée, cadrée d'un seul tenant puis réalisée en quatre PR, dans cet
   ordre : date gardée et feu vert de publication
-  (`docs/projects/date-gardee-feu-vert.md`), ordre de la file
+  (fait, journal du 2026-10-18), ordre de la file
   (`docs/projects/ordre-de-la-file.md`), clôture outillée
   (`docs/projects/cloture-allegee.md`), détour pour une correction
   intercalée (`docs/projects/detour.md`) ; puis, dans une PR séparée, la
@@ -255,8 +255,10 @@ Limites relevées en cours de chantier, consignées en intention le
 2026-10-15 (chantier « capitaliser les non-régressions ») ; les recadrer est
 une décision du demandeur.
 
-- [ ] [IA] [P1] 0.6.5, 1 sur 4 : date gardée et feu vert de publication
-  — `docs/projects/date-gardee-feu-vert.md`.
+- [ ] [décision] Le feu vert de publication enregistré par l'outil au
+  lancement, comme la fusion automatique (limite du chantier « date
+  gardée et feu vert de publication » du 2026-10-18) —
+  `docs/intentions/feu-vert-publication-enregistre.md`.
 - [ ] [IA] [P1] 0.6.5, 2 sur 4 : la file suit l'ordre du sondage —
   `docs/projects/ordre-de-la-file.md`.
 - [ ] [IA] [P1] 0.6.5, 3 sur 4 : une clôture allégée, sans encombrants

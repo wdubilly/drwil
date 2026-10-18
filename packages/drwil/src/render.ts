@@ -33,6 +33,23 @@ function stackAllow(stack: StackEntry[]): string {
   return commands.map((c) => `,\n      "Bash(${c})"`).join("");
 }
 
+// Rendered in place of {{date}} until the target is known: writeOut then keeps the date of the
+// existing file when only the date would change (QUA-047), otherwise writes today's date.
+const DATE_SLOT = "\u0000drwil-date\u0000";
+const today = () => new Date().toISOString().slice(0, 10);
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Content to write for `rendered` (dates left as DATE_SLOT): the existing file itself when it
+ * differs only by its dates — no rewrite that would only change a date — otherwise today's date.
+ */
+export function keepDate(rendered: string, existing: string | undefined): string {
+  const parts = rendered.split(DATE_SLOT);
+  if (parts.length === 1) return rendered;
+  if (existing !== undefined && new RegExp(`^${parts.map(escapeRegExp).join("\\d{4}-\\d{2}-\\d{2}")}$`).test(existing)) return existing;
+  return parts.join(today());
+}
+
 export function render(content: string, r: Resolved, extra: Record<string, string> = {}): string {
   const t = TEXT;
   const stack = r.stack.length
@@ -51,7 +68,7 @@ export function render(content: string, r: Resolved, extra: Record<string, strin
     stack,
     ciLine: ciFile ? t.ciLine(ciFile) : "",
     indexFile: t.dirs.index,
-    date: new Date().toISOString().slice(0, 10),
+    date: today(),
     // Kit files to cover by the scope block of kit-mechanics.md (empty lines if absent).
     scopeCi: ciFile ? `  - ${ciFile}` : "",
     scopeClaude: r.tools.includes("claude") ? "  - .claude/settings.json" : "",
@@ -112,6 +129,7 @@ export interface WriteOptions {
 
 async function writeOut(target: string, content: string, targetDir: string, w: WriteOptions): Promise<void> {
   const { shouldOverwrite, drifted, manifest, expected, simulation, rendered } = w;
+  content = keepDate(content, existsSync(target) ? readFileSync(target, "utf8") : undefined);
   const rel = relPosix(targetDir, target);
   if (expected) expected.push(rel);
   if (rendered) rendered.set(rel, content);
@@ -145,7 +163,7 @@ async function copyTree(srcDir: string, r: Resolved, w: WriteOptions): Promise<v
     const rel = relative(srcDir, file);
     const name = SHIPPED_NAMES[basename(rel)];
     const target = join(r.opts.targetDir, name ? join(dirname(rel), name) : rel);
-    await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, w);
+    await writeOut(target, render(await readFile(file, "utf8"), r, { date: DATE_SLOT }), r.opts.targetDir, w);
   }
 }
 
@@ -160,7 +178,7 @@ export async function scaffold(r: Resolved, w: WriteOptions): Promise<void> {
     const specific = join(template, "layers", `${layer}.md`);
     const source = LAYER_TEMPLATES.includes(layer) && existsSync(specific) ? specific : join(template, "layers", "generic.md");
     const up = "../".repeat(layer.split("/").filter(Boolean).length);
-    const content = render(await readFile(source, "utf8"), r, { layer }).replace("`../AGENTS.md`", `\`${up}AGENTS.md\``);
+    const content = render(await readFile(source, "utf8"), r, { layer, date: DATE_SLOT }).replace("`../AGENTS.md`", `\`${up}AGENTS.md\``);
     await writeOut(join(r.opts.targetDir, layer, "AGENTS.md"), content, r.opts.targetDir, w);
   }
 
