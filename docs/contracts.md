@@ -345,6 +345,16 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : les hooks trouvent la racine du projet par l'emplacement de leur fichier — « Tous les hooks d'agent livrés, et le moteur d'état quand un hook l'appelle, prennent pour racine le dossier qui contient leur `.claude/` ou `.githooks/`, jamais le dossier courant »
 **Raison** : Constaté le 2026-10-16 : après un `cd` de l'agent, le rappel lisait un état absent et créait un `.drwil` parasite ; vérifié au chantier, la garde de cadrage ne refusait plus rien depuis un sous-dossier.
 
+## QUA-045 — Windows et macOS testés avant la fusion de tout code
+**Règle** : Propre au dépôt drwil (QUA-018). La suite du kit (`kit-tests`) tourne sur Ubuntu, Windows et macOS sur toute PR qui touche du code et à chaque push sur master ; sur une PR qui ne touche que `docs/**` et `.drwil/usage.jsonl`, Windows et macOS sont rapportés sous leur nom exigé mais sautent leurs étapes en le disant (notice), Ubuntu teste toujours. Un push sur une autre branche ne rapporte qu'Ubuntu : Windows et macOS une seule fois par push. « Code touché » se lit sur tout le diff de la PR ; un diff illisible fait échouer le calcul, jamais une matrice devinée (QUA-013).
+**Périmètre** : `.github/workflows/ia-first.yml` (jobs `matrice-os` et `kit-tests`), `.github/scripts/ci-multi-os.mjs`.
+**Source de vérité** : `.github/scripts/ci-multi-os.mjs` (fonction `matrice`).
+**Preuve** : tests du calcul et du workflow qui s'en sert.
+**Contrôle** : `tests-qua-045`
+**Tests** : `.github/scripts/ci-multi-os.test.mjs`
+**Origine** : Windows et macOS testés seulement quand une PR touche du code — « Toute PR de code, et chaque push sur master, fait tourner la suite du kit sur Ubuntu, Windows et macOS ; Windows et macOS une seule fois par push »
+**Raison** : Une PR de documentation attendait Windows (5 à 8 minutes) et macOS pour rien, deux fois par push ; tester à chaque PR de code désigne tout de suite le changement en cause d'un échec propre à un OS.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

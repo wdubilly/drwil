@@ -1280,9 +1280,9 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   n'aurait plus rejoué aucun test. Définition stricte retenue (`docs/` ou
   Markdown). Le contrôle signale déjà quatre fiches ouvertes à compléter
   (le chantier « La clôture boucle les intentions »,
-  `docs/projects/mini-banc.md`, `docs/projects/ci-matrice-sur-pr.md` :
+  `docs/projects/mini-banc.md`, `ci-matrice-sur-pr` (close le 2026-10-18) :
   `.drwil/ia-first.json` ; `docs/projects/adopter-seuil-couverture.md`,
-  `docs/projects/ci-matrice-sur-pr.md` : aucun test). Le cadrage a encore
+  `ci-matrice-sur-pr` : aucun test). Le cadrage a encore
   dû être élargi une fois (le hook Claude) : le rappel de cadrage côté
   agent n'était pas nommé dans le cadrage initial.
 - **Clôturé par** : PR #106.
@@ -1749,3 +1749,33 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   vérifier pour la note de fin de réponse (intention « un identifiant
   sans libellé est rattrapé avant l'humain »).
 - **Clôturé par** : la PR de la branche `workstream/release-0-6-3`.
+
+## 2026-10-18 — Windows et macOS testés seulement quand une PR touche du code (0.6.4)
+
+- **Décisions clés** (demandeur, sondage du 2026-10-18) : un job
+  `matrice-os` (`.github/scripts/ci-multi-os.mjs`) calcule les OS de
+  `kit-tests` : Ubuntu seul sur un push de branche ; Ubuntu, Windows et
+  macOS sur une PR et sur un push sur master. Une PR qui ne touche que
+  `docs/**` et `.drwil/usage.jsonl` lance Windows et macOS sans étapes
+  (vert, saut annoncé) : un job de matrice sauté par son `if` ne serait
+  pas rapporté sous le nom exigé par le ruleset. Cache npm sur les jobs.
+  Contrat QUA-045 (Windows et macOS testés avant la fusion de tout code)
+  créé, prouvé par `.github/scripts/ci-multi-os.test.mjs` ; ruleset et
+  workflow du gabarit inchangés (QUA-018, dépôt ou livrable).
+- **Vérifié sur la CI** : PR #147 (du code) : trois OS, une fois chacun ;
+  son push de branche : Ubuntu seul ; PR d'essai #148 (`docs/` seul,
+  fermée sans fusion) : Windows et macOS verts en quelques secondes,
+  étapes sautées, Ubuntu testé.
+- **Incident** : le premier push avait un workflow au YAML invalide
+  (« : » dans un `run:` non cité), rejeté en entier par GitHub alors que
+  les contrôles locaux étaient verts ; corrigé dans un commit séparé.
+- **Intention d'origine** : aucune (fiche ouverte le 2026-10-10).
+- **Limites connues** : le critère [humain] « chaque contrôle garde une
+  couverture CI prouvée » (QUA-013, contrôle non exécuté n'est pas passé)
+  repose sur l'attestation du 2026-10-16, antérieure au chantier : le
+  demandeur, à distance, n'a pas pu attester de nouveau et a choisi de
+  clore sur `verify` PASS ; à réattester depuis un terminal
+  (`npx drwil attest QUA-013`). Le test du workflow ne parse pas le YAML
+  (intention « un workflow CI au YAML invalide est refusé avant le
+  push »).
+- **Clôturé par** : la PR de la branche `workstream/ci-matrice-sur-pr`.
