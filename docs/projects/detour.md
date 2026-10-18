@@ -61,8 +61,8 @@ en cadrage à la main.
 ## 2. Hors périmètre
 
 - Le reste de la 0.6.5 : la date gardée et le feu vert de publication
-  (fait, journal du 2026-10-18), `docs/projects/ordre-de-la-file.md`, la clôture outillée (fait,
-  journal du 2026-10-18).
+  (fait, journal du 2026-10-18), l'ordre de la file (fait, journal du
+  2026-10-18), la clôture outillée (fait, journal du 2026-10-18).
 
 ## 3. Contraintes
 
