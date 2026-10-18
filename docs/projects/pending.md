@@ -106,7 +106,7 @@ avant les points 5 à 13, en trois versions.
 - **0.6.4** — décidé le 2026-10-18 par le demandeur : en tête, une CI
   plus rapide (Windows et macOS testés seulement quand une PR touche du
   code ; fait, journal du 2026-10-18) ; puis la file de chantiers
-  menée par sous-agents (`docs/projects/reprise-par-sous-agent.md`).
+  menée par sous-agents (fait, journal du 2026-10-18).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -278,15 +278,15 @@ une décision du demandeur.
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
   limite du chantier du 2026-10-17) —
   `docs/intentions/identifiant-rattrape-avant-l-humain.md`.
-- [ ] [décision] [P1] Une reprise automatique à la clôture : contexte neuf
-  entre deux chantiers d'une file (un sous-agent par chantier, la session
-  principale pilote la file ; demandé le 2026-10-17, en tête de la 0.6.4) —
-  `docs/intentions/reprise-automatique.md`.
+- [ ] [décision] Une première file menée par sous-agents, observée et
+  mesurée (pilotage livré en 0.6.4, jamais essayé ; limite du chantier du
+  2026-10-18) — `docs/intentions/file-sous-agents-premier-essai.md`.
+- [ ] [décision] Une file menée par sous-agents avec les autres agents
+  (Copilot CLI, Codex, Cursor, Gemini ; limite du chantier du 2026-10-18)
+  — `docs/intentions/file-sous-agents-autres-outils.md`.
 - [ ] [décision] Un workflow CI au YAML invalide refusé avant le push (le
   test du workflow ne le parse pas ; limite du chantier « CI multi-OS »
   du 2026-10-18) — `docs/intentions/workflow-ci-yaml-valide.md`.
-- [ ] [IA] [P1] 0.6.4 : une file de chantiers menée par sous-agents, un
-  contexte neuf par chantier — `docs/projects/reprise-par-sous-agent.md`.
 - [ ] [décision] Le budget de temps des contrôles au commit, calibré pour
   les machines Windows de la CI (1500 ms dépassé sans changement de code ;
   relevé le 2026-10-17) — `docs/intentions/budget-temps-windows.md`.

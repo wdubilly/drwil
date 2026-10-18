@@ -1291,7 +1291,7 @@ test("QUA-037 : arrêter la file ; commandes next et queue stop ; contexte et é
   assert.equal(r.code, 1, "sans file, rien à lancer");
   const anglais = depotFile({ lang: "en" });
   ecrireEtat(anglais, { version: 1, activity: "BUILD", active_brief: A, active_request: null, since: null, queue: [B] });
-  assert.match(context(readState(anglais), anglais), /Queue decided at start: then docs\/projects\/b\.md\. After/);
+  assert.match(context(readState(anglais), anglais), /Queue decided at start: then docs\/projects\/b\.md\. With Claude Code/);
   assert.match(
     start(depotFile({ lang: "en" }), A, { human: true, queue: [C] }).message,
     /^start refused: "docs\/projects\/c\.md" cannot enter a queue/,
@@ -1301,4 +1301,42 @@ test("QUA-037 : arrêter la file ; commandes next et queue stop ; contexte et é
     "queue_merge: boolean expected",
   ]);
   assert.match(validateState({ ...NEUTRAL_STATE, queue: ["docs/projects/absente.md"] }, racine).join(), /absente\.md/);
+});
+
+test("QUA-037 : une file se mène un sous-agent par chantier ; reprise confirmée par l'humain ; hors file, /clear proposé à la clôture", () => {
+  const etat = (racine, activity, extra = {}) => {
+    ecrireEtat(racine, {
+      version: 1,
+      activity,
+      active_brief: activity === "SCOPING" ? null : A,
+      active_request: null,
+      since: null,
+      ...extra,
+    });
+    return context(readState(racine), racine);
+  };
+  const racine = depotFile();
+  const enFile = etat(racine, "BUILD", { queue: [B], queue_merge: true });
+  assert.match(enFile, /Avec Claude Code, chaque chantier de la file se mène dans un sous-agent \(contexte neuf\)/);
+  assert.match(enFile, /sa consigne commence par lire l'état \(`node \.githooks\/state\.mjs`\)/);
+  assert.match(enFile, /jamais dans une copie isolée/, "l'état .drwil/state.json, ignoré par Git, n'y est pas");
+  assert.match(enFile, /la session principale ne garde que leurs comptes rendus/);
+  assert.match(enFile, /suit la PR par `gh` jusqu'à la fusion, 30 minutes au plus/);
+  assert.match(enFile, /jamais de suivante sur une fusion non faite/);
+  assert.match(enFile, /délai de fusion dépassé/);
+  assert.doesNotMatch(enFile, /je lance \?/, "pas de reprise à confirmer pendant un chantier");
+  const reprise = etat(racine, "SCOPING", { queue: [B] });
+  assert.match(reprise, /« la file reprend avec docs\/projects\/b\.md : je lance \? »/);
+  assert.match(reprise, /ne lancer `node \.githooks\/state\.mjs next` que sur un oui explicite/);
+  const horsFile = etat(racine, "CLOSING");
+  assert.match(horsFile, /Hors file : terminer en proposant à l'humain `\/clear` avant sa prochaine demande/);
+  assert.doesNotMatch(etat(racine, "CLOSING", { queue: [B] }), /proposant à l'humain `\/clear`/, "en file, la session continue");
+  assert.doesNotMatch(etat(racine, "BUILD"), /\/clear/);
+  const anglais = depotFile({ lang: "en" });
+  assert.match(
+    etat(anglais, "BUILD", { queue: [B] }),
+    /With Claude Code, each workstream of the queue runs in a subagent \(fresh context\)/,
+  );
+  assert.match(etat(anglais, "SCOPING", { queue: [B] }), /« the queue resumes with docs\/projects\/b\.md: shall I start it\? »/);
+  assert.match(etat(anglais, "CLOSING"), /Outside a queue: finish by suggesting `\/clear` to the human/);
 });
