@@ -290,6 +290,10 @@ une décision du demandeur.
 - [ ] [IA] [P1] 0.6.5 : une fiche de recette par version, pour une
   équipe hors dépôt (cadré le 2026-10-18) —
   `docs/projects/fiche-de-recette.md`.
+- [ ] [décision] [P0] Un push depuis un worktree ne touche jamais le vrai
+  dépôt (régression du correctif du 2026-10-10, constatée le 2026-10-18 :
+  `core.bare=true` écrit dans le dépôt principal) —
+  `docs/intentions/tests-isoles-depuis-un-worktree.md`.
 - [ ] [IA] [P1] 0.6.6, 1 sur 5 : compatibilité des agents, le socle
   commun (banc, règle « intention ou demande », en-têtes YAML stricts,
   matrice) — `docs/projects/compat-socle.md`.
