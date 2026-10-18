@@ -51,7 +51,7 @@ cadrée le 2026-10-18) :
 
 - Installer ou mettre à jour ne réécrit pas un document dont seule la date
   changerait : la date d'origine est gardée, une nouvelle date n'est écrite
-  que si le reste du document change — contrat à créer
+  que si le reste du document change — `QUA-047`
 - La recette de release permet de donner le feu vert de publication au
   lancement, pour qu'une file menée par sous-agents publie sans s'arrêter ;
   sans ce feu vert, la publication reste un geste après accord — `QUA-040`
@@ -80,7 +80,8 @@ cadrée le 2026-10-18) :
   `docs/intentions/date-ia-first-installateur.md`.
 - **2026-10-18 — Une PR par fiche** (demandeur) : la décision « une seule
   PR » portait sur le cadrage de la 0.6.5, pas sur sa réalisation.
-- Contrats concernés : un contrat créé (la date), QUA-040 (drwil entretient
+- Contrats concernés : QUA-047 (créé : une date seule ne réécrit pas un
+  document installé), QUA-040 (drwil entretient
   la carte, le README et le changelog), QUA-018 (dépôt ou livrable),
   QUA-004 (seuil de couverture) et QUA-001 (fichier de code plafonné).
 
