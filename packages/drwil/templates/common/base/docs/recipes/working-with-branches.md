@@ -42,7 +42,8 @@ request, instead of direct commits on the main branch.
 ## Closing
 
 - Once the pull/merge request is merged (merge or squash, project's
-  choice, the kit doesn't impose anything here): delete the branch; brief
+  choice, the kit doesn't impose anything here): the branch is deleted
+  locally at the next start (below); brief
   fully finished: condense it (below); otherwise update its Status (increments
   done, increments left). Only the marker `**Status**: done on YYYY-MM-DD` says
   a brief is finished, and a brief carrying it cannot stay: check-docs
@@ -56,11 +57,22 @@ request, instead of direct commits on the main branch.
 - If the whole brief is now finished (not just one increment among several of a
   brief that otherwise stays open): summarize the brief into a short entry
   in `docs/projects/journal.md` (date, title, key decisions, closing
-  commit/PR), delete the brief file, then remove the matching line from
-  `docs/projects/pending.md` (don't check it: the journal becomes the
-  closing source, the index only lists remaining work). Nothing is
-  lost — the full history stays in git
-  (`git log --follow -- docs/projects/<brief>.md`).
+  commit/PR), then run `node .githooks/close.mjs` (in Closing): it deletes
+  the brief file, removes the matching item from `docs/projects/pending.md`
+  (don't check it: the journal becomes the closing source, the index only
+  lists remaining work) and records the consumption. It stages, commits,
+  pushes and merges nothing. Nothing is lost — the full history stays in
+  git (`git log --follow -- docs/projects/<brief>.md`).
+- Before the closing commit, the same command reports what would make the
+  closing fail: a criterion still « contract to create » (with the ID to
+  write), places citing the brief that would go dead, backticked file names
+  without a path. `node .githooks/close.mjs --check` gives that report
+  alone, at any time; leaving Build for Evidence gives it too, while code
+  can still change. Code cites the contract it serves, never a workstream
+  brief: check-docs refuses such a citation in a changed code file.
+- Local branches already merged into the main branch are deleted when the
+  next workstream starts (`git branch -d`, never an unmerged branch, the
+  current one or the main branch).
 - Keep what the user reads current, in the closing commit: a workstream
   that changes what the user sees updates the `README.md` and adds its line
   under « Unreleased » in `CHANGELOG.md` (if present); one
@@ -68,8 +80,9 @@ request, instead of direct commits on the main branch.
   map `docs/architecture.md` — drwil maintains it, and its check reports
   any code folder it does not cite yet. These three are written in the
   `docLang` language (absent: the project language).
-- Record the workstream's consumption, in the closing commit:
-  `node .githooks/consumption.mjs --record <brief>` appends its line to
+- Record the workstream's consumption, in the closing commit (done by
+  `node .githooks/close.mjs`; by hand:
+  `node .githooks/consumption.mjs --record <brief>`), which appends its line to
   `.drwil/usage.jsonl` (if present) (tokens, models, active time, read from Claude
   Code's session logs; never twice for the same workstream). Another AI
   tool: estimate by hand (`docs/recipes/track-consumption-per-increment.md`).

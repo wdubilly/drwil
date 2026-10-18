@@ -7,6 +7,7 @@ import { execFileSync } from "node:child_process";
 import * as scope from "./scope.mjs";
 import { definedIds, idConflicts, knownChecks, readContracts, validateContracts } from "./contracts.mjs";
 import { checkRisk } from "./risk.mjs";
+import { briefReferenceProblems } from "./check-code-rules.mjs";
 import { briefMaturity, briefStatus, readyGaps } from "./state.mjs";
 
 const root = process.cwd();
@@ -86,8 +87,7 @@ const MARKERS_RE = /\[(IA|humain|décision|AI|human|decision)\]/i;
 // tolerates a date in parentheses right after the word (e.g. "**Status** (2026-10-04):").
 const STATUS_RE = /^\*{0,2}(Statut|Status)\*{0,2}\s?(\([^)]*\))?\s?:/;
 const DATE_RE = /\b\d{4}-\d{2}-\d{2}\b/;
-// Intent sections, accepted in either language (an intent written before the project switched
-// language stays valid); a missing one is named in the project's language.
+// Intent sections, in either language (an intent written before a language switch stays valid), named in the project's.
 const INTENT_SECTIONS = [
   ["## Besoin", "## Need"],
   ["## Existant", "## Current state"],
@@ -125,8 +125,7 @@ function sources() {
   return [...new Set(found)].filter((p) => existsSync(p));
 }
 
-// Known prefixes (root + project layers): a citation outside these prefixes and without a
-// recognised extension is not taken for a path (e.g. an alternative "minimal/full").
+// Known prefixes (root + project layers): a citation outside them without a known extension is no path ("minimal/full").
 const ROOT_PREFIXES = [
   "docs/",
   ".githooks/",
@@ -156,8 +155,7 @@ function looksLikeAPath(s) {
 // A path can be relative to the repository root or to the file that cites it.
 const foundPaths = (doc, cited) => [join(root, cited), join(dirname(doc), cited)].filter((p) => existsSync(p));
 
-// Relative paths in "/" form: Git, even on Windows, does not recognise as ignored a path written
-// with backslashes (seen in Windows CI).
+// "/" form: Git, even on Windows, does not recognise as ignored a path written with backslashes (seen in Windows CI).
 const relPosix = (p) => relative(root, p).split(sep).join("/");
 
 /**
@@ -221,9 +219,8 @@ for (const doc of docs) {
 }
 
 const ignored = ignoredByGit(citations.flatMap((c) => c.found));
-// Requirement added after projects were already equipped: an ignored file no longer proves a
-// citation. Blocking only if the project has it (`newRequirements`: "blocking", default of fresh
-// installs); otherwise reported without breaking a commit that used to pass.
+// Requirement added after projects were already equipped: an ignored file no longer proves a citation. Blocking only
+// if the project has it (`newRequirements`: "blocking", default of fresh installs); otherwise reported, never breaking.
 const newBlocking = cfg.newRequirements === "blocking";
 const newWarnings = [];
 const catalogPath = join(root, cfg.dirs?.catalog ?? "docs/contracts-catalog.md");
@@ -236,6 +233,9 @@ for (const c of citations) {
 }
 
 errors.push(...checkWorkstreams());
+// QUA-049: a code file cites the contract it serves, never a workstream brief (deleted at closing).
+const codeRefs = briefReferenceProblems(root, cfg, lang);
+errors.push(...codeRefs.errors);
 
 // Risk level of project briefs (ceremony follows risk); QUA-016 traceability does not change.
 const riskWarnings = [];
@@ -276,6 +276,7 @@ if (riskWarnings.length) {
   for (const e of riskWarnings) console.log(`  ⚠ ${e}`);
   console.log(T.riskWarnings(riskWarnings.length));
 }
+for (const w of codeRefs.warnings) console.log(`  ⚠ ${w}`);
 if (newWarnings.length) {
   for (const e of newWarnings) console.log(`  ⚠ ${e}`);
   console.log(T.newWarnings(newWarnings.length));
@@ -291,8 +292,7 @@ function checkCheckboxStatus() {
   if (!existsSync(indexPath)) return warnings;
   const relIndex = relative(root, indexPath);
   const lines = readFileSync(indexPath, "utf8").split(/\r?\n/);
-  // groups each bullet (an entry may spread over several indented lines, markdown wrapping long
-  // lines): a new bullet starts at "- [ ]" or "- [x]".
+  // groups each bullet (an entry may spread over several indented lines): a new bullet starts at "- [ ]" or "- [x]".
   let bullet = null;
   const bullets = [];
   for (let i = 0; i < lines.length; i++) {

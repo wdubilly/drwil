@@ -73,6 +73,12 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
   requester's decision) — listed in the index as `[decision]` and cited by
   the journal; the original intent (the brief's `**Intent**` field) is
   updated, or summarised in the journal and removed when fully covered.
+- **Closing in one gesture**: once the journal entry is written,
+  `node .githooks/close.mjs` deletes the brief, removes its index line,
+  records the consumption and reports, before the commit, what would make
+  the closing fail (`--check`: the report alone, at any time). Code cites
+  the contract it serves, never a workstream brief: the brief is deleted at
+  closing.
 - **Queue of workstreams**: when the human ticked several briefs at start,
   the agent runs them one after the other without a new poll — with Claude
   Code, each one in a subagent (fresh context), the main session keeping

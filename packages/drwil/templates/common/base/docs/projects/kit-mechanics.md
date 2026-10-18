@@ -19,6 +19,7 @@ files:
   - .githooks/state-cli.mjs
   - .githooks/briefs.mjs
   - .githooks/state-texts.mjs
+  - .githooks/close.mjs
   - .githooks/scope-gate.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs

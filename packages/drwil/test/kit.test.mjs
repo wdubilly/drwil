@@ -3349,7 +3349,7 @@ test("version unique : la release suit package.json et refuse un numéro déjà 
 });
 
 // Projet déjà installé avec des réglages choisis, différents de chaque défaut : relancer
-// l'installation ne doit en effacer aucun (docs/projects/init-preserve-config.md).
+// l'installation ne doit en effacer aucun (journal du 2026-10-12, « init et apply gardent les réglages »).
 const fichiersDe = (dir, sous = "") =>
   readdirSync(join(dir, sous), { withFileTypes: true })
     .flatMap((e) => (e.isDirectory() ? fichiersDe(dir, join(sous, e.name)) : [join(sous, e.name).replace(/\\/g, "/")]))
@@ -3411,7 +3411,7 @@ test("init sur un projet installé : une option passée remplace sa valeur, les 
   assert.deepEqual(config(dir), { ...cfg, ci: "none", ciFiles: [], mode: "full" });
 });
 
-// Caractérisation avant découpage d'index.ts (docs/projects/refactor-index-etat.md, lot 1) :
+// Caractérisation avant découpage d'index.ts (QUA-001, fichier de code plafonné ; journal du 2026-10-12) :
 // comportements actuels sans test, figés tels quels.
 test("caractérisation : resolveDrift sur un dossier sans installation refuse, avec la commande à lancer", async () => {
   await assert.rejects(
@@ -3497,7 +3497,7 @@ test("langue du projet : anglais par défaut ; --lang fr garde le gabarit anglai
   assert.ok(existsSync(join(fr, "docs/recipes/add-an-api-route.md")) && !existsSync(join(fr, "docs/recettes")));
 });
 
-/** Ramène un projet fraîchement installé à l'ancien format français (avant docs/projects/coeur-en-anglais.md). */
+/** Ramène un projet fraîchement installé à l'ancien format français (avant « Le cœur en anglais », journal du 2026-10-12). */
 function versAncienFormat(dir) {
   const deplacer = (de, vers) => {
     mkdirSync(join(dir, vers, ".."), { recursive: true });

@@ -17,6 +17,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFi
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, queueable, scopedBriefs } from "./briefs.mjs";
+import { closingSignals, pruneMergedBranches, prunedMessage } from "./close.mjs";
 import { main } from "./state-cli.mjs";
 import { fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
 
@@ -213,7 +214,9 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   writeFileSync(join(root, ".drwil", "state.json"), JSON.stringify(state, null, 2) + "\n");
   const warned = missing ? `\n${fill(T.noCriteria, path)}` : "";
   const next = rest.length ? `\n${fill(T.queued, rest.join(", "))}` : "";
-  return { code: 0, message: fill(T.started, from, path, state.auto_merge ? T.mergeAuthorised : "") + next + warned };
+  // The previous workstreams' branches, merged, are no longer needed (QUA-048).
+  const pruned = prunedMessage(root, pruneMergedBranches(root));
+  return { code: 0, message: fill(T.started, from, path, state.auto_merge ? T.mergeAuthorised : "") + next + warned + pruned };
 }
 
 /** New state after the transition to `to`, or `{ error }`; writes nothing. */
@@ -272,6 +275,9 @@ export async function move(root, { to, brief, request }, { tty = false, confirm,
     if (missing === "blocking") return { code: 1, message: resumed + fill(T.closingNoCriteria, read.state.active_brief) };
     if (missing) warning = "\n" + fill(T.noCriteria, read.state.active_brief);
   }
+  // Leaving BUILD: last moment to fix code cheaply, so the closing's pitfalls are reported now (QUA-048).
+  const signals = to === "EVIDENCE" && activeBrief ? closingSignals(root, read.state.active_brief) : [];
+  if (signals.length) warning += `\n${T.closingSignals}\n${signals.map((s) => `  ⚠ ${s}`).join("\n")}`;
   if (
     from === "CLOSING" &&
     to === "SCOPING" &&

@@ -375,6 +375,26 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : date gardée et feu vert de publication (0.6.5) — « Installer ou mettre à jour ne réécrit pas un document dont seule la date changerait : la date d'origine est gardée, une nouvelle date n'est écrite que si le reste du document change »
 **Raison** : Chaque `npm run installer-depot` réécrivait la date de `docs/ia-first.md`, seul fichier changé : un faux changement à annuler à la main ou qui polluait le commit ; une mise à jour d'un projet faisait le même bruit sur ses documents datés.
 
+## QUA-048 — Une clôture en un geste, ses pièges signalés avant le commit
+**Règle** : Livré à tout projet. En CLOSING, `node .githooks/close.mjs` supprime la fiche active, retire sa ligne de l'index et consigne la consommation du chantier ; il ne commite, ne pousse, ne fusionne rien et n'écrit pas l'état. Il signale, avant le commit, ce qui ferait échouer la clôture : critère encore « contrat à créer » (avec l'ID à écrire), références à la fiche qui deviendraient mortes, noms de fichiers sans chemin dans les documents modifiés ; les mêmes signaux sont donnés par `--check` (sans rien écrire) et au passage de BUILD à EVIDENCE, tant que le code peut encore changer. Au lancement du chantier suivant, les branches locales déjà fusionnées dans la branche principale sont supprimées (`git branch -d`) — jamais la branche principale, la courante, une branche encore au sommet de la principale ni une branche non fusionnée.
+**Périmètre** : `.githooks/close.mjs` (commande de clôture, suppression des branches fusionnées), `.githooks/state.mjs` (`start`, `move`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/close.mjs`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires (fusions, branches, journaux de session).
+**Contrôle** : `tests-qua-048`
+**Tests** : `.githooks/close.test.mjs`
+**Origine** : clôture allégée (0.6.5) — « Une commande de clôture fait la mécanique d'un geste — fiche supprimée, ligne d'index retirée, consommation consignée — et signale avant le commit ce qui ferait échouer la clôture ; les branches locales déjà fusionnées sont supprimées au lancement du chantier suivant »
+**Raison** : Relevé dans la session de la 0.6.4 : la clôture coûtait des gestes et des reprises sans gain de qualité — un commit à part pour citer l'ID d'un contrat créé, des références à une fiche supprimée restées fausses, un commit de clôture refusé pour un nom de fichier sans chemin, 53 branches fusionnées jamais supprimées.
+
+## QUA-049 — Le code cite le contrat qu'il sert, jamais une fiche de chantier
+**Règle** : Livré à tout projet. Un commentaire de fichier de code ne cite pas une fiche de chantier (`docs/projects/<fiche>.md`, hors index, journal, modèles et fiches permanentes) : la fiche est supprimée à la clôture, la citation deviendrait fausse. check-docs le refuse dans un fichier modifié (réglage `newRequirements` : `blocking` ; sinon un avertissement), donc dès le BUILD ; les citations des fichiers non modifiés sont résumées en un avertissement, jamais bloquant.
+**Périmètre** : `.githooks/check-code-rules.mjs` (`briefReferences`, `briefReferenceProblems`), `.githooks/check-docs.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/check-code-rules.mjs`.
+**Preuve** : tests des hooks, dont check-docs lancé sur un vrai dépôt git temporaire.
+**Contrôle** : `tests-qua-049`
+**Tests** : `.githooks/check-code-rules.test.mjs`
+**Origine** : clôture allégée (0.6.5) — « Un fichier de code cite le contrat qu'il sert, jamais une fiche de chantier : signalé dès le BUILD, quand on peut encore le corriger »
+**Raison** : En CLOSING aucun fichier de code ne peut changer : deux commentaires de test citant une fiche supprimée à la 0.6.4 sont restés faux. Décision du demandeur du 2026-10-18 : le code cite le contrat, pas la fiche.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).
