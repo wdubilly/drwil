@@ -23,7 +23,11 @@ files:
   - packages/drwil/templates/common/base/.githooks/close.mjs
   - packages/drwil/templates/common/base/.githooks/check-docs.mjs
   - packages/drwil/templates/common/base/.githooks/consumption.mjs
+  - packages/drwil/templates/common/base/.githooks/detour.mjs
+  - packages/drwil/templates/common/base/.githooks/scope-gate.mjs
   - .githooks/state.test.mjs
+  - .githooks/detour.test.mjs
+  - .githooks/scope-gate.test.mjs
   - .githooks/close.test.mjs
   - .githooks/check-docs.test.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs
@@ -32,6 +36,8 @@ files:
   - packages/drwil/templates/common/base/docs/recipes/create-a-release.md
   - docs/recipes/create-a-release.md
   - docs/recipes/working-with-branches.md
+  - packages/drwil/templates/common/base/docs/recipes/corriger-un-defaut.md
+  - docs/recipes/corriger-un-defaut.md
   - packages/drwil/templates/common/base/AGENTS.md
   - AGENTS.md
   - .github/scripts/workflows-yaml.test.mjs
@@ -50,6 +56,8 @@ l'installateur du dépôt ; l'état, une commande de clôture nouvelle
 dépôt ; le hook et la skill de lancement pour l'ordre de la file ; les
 recettes de clôture et de release (gabarit, et copies du dépôt qui en
 diffèrent) ; `AGENTS.md` ; les deux tests qui citent une fiche supprimée ;
+la commande de détour (detour.mjs, à créer), la barrière de périmètre
+qui la reconnaît et la recette « corriger un défaut » ;
 `docs/ia-first.md`, rendu une dernière fois ; la carte, le registre, les
 contrôles, les miroirs et le changelog. Le hook de sondage n'a pas pu être
 lu au cadrage : sa liste de tests est à compléter en BUILD si besoin.)
@@ -87,6 +95,10 @@ sous-agents) et dans les intentions ouvertes :
    la file et relancer le sondage.
 7. **Le feu vert de publication** : un sous-agent ne peut pas le demander ;
    la recette de release ne prévoit pas de le donner au lancement.
+8. **La correction intercalée** (ajouté le 2026-10-18 par le demandeur) :
+   en plein chantier, un défaut préalable hors du cadrage oblige l'agent à
+   élargir un cadrage sans rapport ou à s'arrêter ; il improvise alors
+   stash, allers-retours de branche et retours en cadrage à la main.
 
 ## Critères d'acceptation
 
@@ -105,6 +117,16 @@ sous-agents) et dans les intentions ouvertes :
   contrat à créer
 - La file suit l'ordre des options du sondage, quel que soit l'ordre des
   clics — `QUA-037`
+- En plein chantier, l'agent ouvre seul un détour pour un défaut hors du
+  cadrage : le travail en cours est mis de côté et restauré par l'outil
+  (jamais perdu), la correction passe par sa propre branche partie de la
+  branche principale, sa fiche courte (correction et son test), sa PR
+  marquée « détour de <fiche> » au mode de fusion décidé au lancement, et
+  son entrée de journal ; à la reprise, la branche du chantier part de la
+  branche principale corrigée et l'état revient en BUILD sur la fiche
+  d'origine. Un détour qui changerait un contrat existant, un hook, un
+  seuil ou la barrière demande le oui de l'humain ; en file, le
+  sous-agent s'arrête alors — contrat à créer
 - La recette de release permet de donner le feu vert de publication au
   lancement, pour qu'une file menée par sous-agents publie sans s'arrêter ;
   sans ce feu vert, la publication reste un geste après accord — `QUA-040`
@@ -148,10 +170,21 @@ sous-agents) et dans les intentions ouvertes :
   commande de clôture, pas d'un changement de la barrière.
 - **2026-10-18 — Le code cite le contrat, pas la fiche** (demandeur, sur
   recommandation de l'agent).
-- Contrats concernés : trois contrats créés (date, clôture outillée,
+- **2026-10-18 — Un détour s'ouvre sans demander** (demandeur : « l'humain
+  répondra forcément oui ») : le contrôle est à la fusion de sa PR, pas à
+  son ouverture. Exception, sur recommandation de l'agent : un détour qui
+  change les règles du jeu (contrat existant, hook, seuil, barrière)
+  demande le oui de l'humain ; en file, le sous-agent mène seul un détour
+  ordinaire et s'arrête sur l'exception.
+- **2026-10-18 — Le travail en cours mis de côté par l'outil** (agent) :
+  un stash nommé, enregistré dans l'état et restauré par la commande de
+  reprise, jamais à la main ; la commande refuse de reprendre si la
+  restauration échoue, sans rien perdre.
+- Contrats concernés : quatre contrats créés (détour en plus) (date, clôture outillée,
   référence de code), QUA-037 (une file de chantiers décidée d'un geste),
   QUA-040 (drwil entretient la carte, le README et le changelog), QUA-016
-  (rappel de cadrage), QUA-017 (pas de travail direct sur la branche
+  (rappel de cadrage), QUA-019 (pas de contournement : le détour n'élargit
+  jamais le cadrage de la fiche d'origine), QUA-017 (pas de travail direct sur la branche
   principale), QUA-018 (dépôt ou livrable), QUA-004 et QUA-001.
 
 ## 5. Points à trancher
@@ -167,6 +200,9 @@ Aucun.
   branches fusionnées au lancement suivant, contrôle des références de code,
   recettes et `AGENTS.md`.
 - **Lot 4 — le feu vert de publication** [IA] : recette de release.
+- **Lot 5 — le détour** [IA] : ouverture, mise de côté, reprise ; barrière
+  qui accepte le commit de la correction sous sa fiche de détour ;
+  recette « corriger un défaut » et `AGENTS.md`.
   Critère de sortie de chaque lot : `node .githooks/run-checks.mjs` vert ;
   du chantier : `drwil verify --agent` en `GOVERNANCE: PASS`, et sa propre
   clôture faite avec la nouvelle commande.

@@ -113,8 +113,8 @@ avant les points 5 à 13, en trois versions.
   fusion, sur feu vert).
 - **0.6.5** — décidé le 2026-10-18 par le demandeur : une clôture
   allégée, en une seule PR (date gardée, ordre de la file, clôture
-  outillée, feu vert de publication au lancement ;
-  `docs/projects/cloture-allegee.md`) ; puis, dans une PR séparée, la
+  outillée, feu vert de publication au lancement, détour pour une
+  correction intercalée ; `docs/projects/cloture-allegee.md`) ; puis, dans une PR séparée, la
   fiche de recette pour une équipe hors dépôt
   (`docs/intentions/fiche-de-recette.md`, à cadrer).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
@@ -253,8 +253,8 @@ Limites relevées en cours de chantier, consignées en intention le
 une décision du demandeur.
 
 - [ ] [IA] [P1] 0.6.5 : une clôture allégée, sans encombrants (date
-  gardée, ordre de la file, clôture outillée, feu vert de publication ;
-  cadré le 2026-10-18) — `docs/projects/cloture-allegee.md`.
+  gardée, ordre de la file, clôture outillée, feu vert de publication,
+  détour ; cadré le 2026-10-18) — `docs/projects/cloture-allegee.md`.
 - [ ] [décision] [P1] 0.6.5 : une fiche de recette par version, pour une
   équipe hors dépôt — `docs/intentions/fiche-de-recette.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
