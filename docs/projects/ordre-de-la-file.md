@@ -39,8 +39,8 @@ lancement ; il a fallu arrêter la file et relancer le sondage.
 
 ## 2. Hors périmètre
 
-- Le reste de la 0.6.5 : `docs/projects/date-gardee-feu-vert.md`,
-  `docs/projects/cloture-allegee.md`, `docs/projects/detour.md`.
+- Le reste de la 0.6.5 : la date gardée et le feu vert de publication
+  (fait, journal du 2026-10-18), `docs/projects/cloture-allegee.md`, `docs/projects/detour.md`.
 
 ## 3. Contraintes
 

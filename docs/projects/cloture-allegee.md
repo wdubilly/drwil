@@ -87,8 +87,8 @@ clôture elle-même ; les autres points ont leur fiche (section 2).
 
 ## 2. Hors périmètre
 
-- La date gardée et le feu vert de publication :
-  `docs/projects/date-gardee-feu-vert.md`.
+- La date gardée et le feu vert de publication : fait, journal du
+  2026-10-18.
 - L'ordre de la file : `docs/projects/ordre-de-la-file.md`.
 - Le détour : `docs/projects/detour.md`.
 - La fiche de recette pour une équipe hors dépôt :
