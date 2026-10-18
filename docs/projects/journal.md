@@ -1779,3 +1779,33 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (intention « un workflow CI au YAML invalide est refusé avant le
   push »).
 - **Clôturé par** : la PR de la branche `workstream/ci-matrice-sur-pr`.
+
+## 2026-10-18 — Une file de chantiers menée par sous-agents, un contexte neuf par chantier (0.6.4)
+
+- **Décisions clés** (demandeur, conversation et sondages du 2026-10-17) :
+  avec Claude Code, la skill de lancement et le rappel d'état mènent
+  chaque chantier d'une file dans un sous-agent (contexte neuf), un à la
+  fois, dans le dossier du dépôt (jamais un worktree : l'état ignoré par
+  Git n'y est pas), dont la consigne commence par lire l'état ; la session
+  principale ne garde que les comptes rendus, suit la PR par `gh` jusqu'à
+  la fusion, 30 minutes au plus, et ne lance jamais de suivante sur une
+  fusion non faite. Une file reprise dans une nouvelle session (SCOPING
+  avec une file) demande « la file reprend avec <fiche> : je lance ? » et
+  n'appelle `next` que sur un oui explicite. Hors file, le rappel de
+  clôture propose `/clear`. `.githooks/consumption.mjs` affiche le cache lu moyen
+  par requête (relevé et `--record`), sans l'enregistrer. QUA-037 (file
+  de chantiers) et QUA-042 (consommation par chantier) évoluent, rien
+  n'est retiré ; `AGENTS.md` (gabarit et dépôt) ; changelog « Unreleased ».
+- **Intention d'origine** : « une reprise automatique à la clôture »
+  (2026-10-17 : plus de 90 % du coût d'une file en une session est du
+  cache relu, de 259 000 à 595 000 tokens par requête du premier au
+  cinquième chantier), couverte pour Claude Code : résumée ici et
+  retirée ; le reste devient deux intentions (ci-dessous).
+- **Limites connues** : pilotage jamais essayé sur une vraie file (cette
+  file de la 0.6.4 a été menée en une seule session ; intention « une
+  première file menée par sous-agents, observée et mesurée ») ; autres
+  agents non vérifiés (intention « une file menée par sous-agents avec les
+  autres agents »). Pendant le chantier, `.claude/settings.json` a été
+  réécrit hors de l'agent (`git pull` retiré des permissions) et a bloqué
+  le push au contrôle des miroirs : restauré sur décision du demandeur.
+- **Clôturé par** : la PR de la branche `workstream/reprise-par-sous-agent`.
