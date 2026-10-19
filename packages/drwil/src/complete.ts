@@ -49,6 +49,21 @@ export function addToBlock(content: string, lines: string[], markers: { begin: s
   return `${body}${body ? nl + nl : ""}${[markers.begin, ...lines, markers.end].join(nl)}${nl}`;
 }
 
+const scopeLines = (text: string) =>
+  (/<!-- scope\r?\n([\s\S]*?)-->/.exec(text)?.[1] ?? "").split(/\r?\n/).filter((l) => /^ {2}- \S/.test(l));
+
+/** The `files:` lines of the kit's scope block that the project's block lacks. */
+export function missingScopeLines(own: string, kit: string): string[] {
+  const have = new Set(scopeLines(own));
+  return scopeLines(kit).filter((l) => !have.has(l));
+}
+
+/** Adds lines at the end of the scope block, the project's own lines untouched. */
+export function addToScope(content: string, lines: string[]): string {
+  const nl = eol(content);
+  return content.replace(/^-->/m, `${lines.join(nl)}${nl}-->`);
+}
+
 /** Adds the kit's missing hooks and permissions, never changing nor removing the project's. */
 export function mergeSettings(own: Settings, kit: Settings): Settings {
   const out: Settings = structuredClone(own);
@@ -132,6 +147,17 @@ export async function complete(r: Resolved, opts: { dryRun?: boolean; manifest?:
     }
     await write("AGENTS.md", addToBlock(read("AGENTS.md"), [agentsPointer()], MARKERS.html));
     added.push({ file: "AGENTS.md", items: [agentsPointer()] });
+  }
+
+  // The mechanics brief is generated once and never rewritten: a mechanics file a later version
+  // adds would stay in no brief (the scoping check would fail), so its scope block is completed.
+  const mechanics = "docs/projects/kit-mechanics.md";
+  if (existsSync(join(dir, mechanics))) {
+    const missing = missingScopeLines(read(mechanics), render(templateFile(`base/${mechanics}`), r));
+    if (missing.length) {
+      await write(mechanics, addToScope(read(mechanics), missing));
+      added.push({ file: mechanics, items: missing.map((l) => l.trim().slice(2)) });
+    }
   }
 
   // Read again: the instructions written aside add an import to CLAUDE.md and GEMINI.md.

@@ -2378,3 +2378,17 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (`docs/intentions/banc-gemini-quota.md`).
 - **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI.
 - **Clôturé par** : la branche `chantier/compat-gemini`.
+
+## 2026-10-19 — Détour de docs/projects/release-0-6-7.md : la mise à jour complète la fiche des mécaniques
+
+- **Défaut** : après une mise à jour du kit, un projet déjà équipé échouait à
+  « Docs jamais fausses » (QUA-011, et QUA-015, QUA-016 par le contrôle partagé) : la
+  0.6.7 livre un nouveau fichier de mécanique (`.githooks/skill-headers.mjs`)
+  qu'aucune fiche ne couvrait. Trouvé par l'essai réel de mise à jour 0.6.6 → 0.6.7.
+- **Cause** : `docs/projects/kit-mechanics.md` est générée une seule fois à
+  l'installation et n'est ni de la prose ni de la mécanique du kit : `init` ne la
+  réécrit ni ne la complète jamais.
+- **Correction** : `complete()` ajoute au bloc de cadrage de cette fiche les fichiers
+  de mécanique du kit qui y manquent (rien retiré, lignes du projet gardées,
+  idempotent). Test de non-régression (QUA-027, mise à jour sûre), vu échouer avant la correction.
+- **Clôturé par** : la branche `detour/maj-fiche-mecaniques`.
