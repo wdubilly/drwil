@@ -28,6 +28,14 @@ files:
   - .drwil/ia-first.json
   - outils/miroirs.json
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/src/drift.ts
+  - packages/drwil/src/essentials.ts
+  - packages/drwil/templates/common/base/.githooks/state-cli.mjs
+  - .githooks/state-cli.mjs
+  - packages/drwil/templates/common/base/docs/ia-first.md
+  - docs/projects/journal.md
+  - docs/projects/pending.md
+  - docs/intentions/*.md
 -->
 
 (cadrage : un dossier d'outil Gemini à créer dans le gabarit (réglages et
