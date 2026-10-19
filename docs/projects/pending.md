@@ -141,6 +141,23 @@ avant les points 5 à 13, en trois versions.
   intention le 2026-10-19 (demande de l'humain) : le périmètre de la
   0.6.7 est donc ramené à trois outils (socle, Copilot CLI, Gemini CLI),
   puis la release (`docs/projects/release-0-6-7.md`).
+- **Ordre des versions suivantes**, proposé le 2026-10-19 (à confirmer par
+  le demandeur) :
+  1. 0.6.7, la release (`docs/projects/release-0-6-7.md`).
+  2. 0.6.8, la fluidité de la clôture : retour en SCOPING après la fusion
+     (`docs/intentions/etat-revient-en-scoping-apres-fusion.md`), clôture
+     guidée (`docs/intentions/cloture-chemin-guide.md`), message clair du
+     critère humain (`docs/intentions/critere-humain-message-clair.md`),
+     note à tout moment (`docs/intentions/note-a-tout-moment.md`).
+  3. 0.7.0, la preuve qui dure (ci-dessous), avec la cohérence de la
+     documentation à la clôture (`docs/intentions/cloture-coherence-doc.md`).
+  4. 0.7.x, l'efficacité des agents : sous-agent dès le premier chantier
+     (`docs/intentions/sous-agent-des-le-premier-chantier.md`) avec la
+     consommation de Copilot CLI
+     (`docs/intentions/consommation-autres-outils.md`).
+  5. 0.8, P2 : Codex et Cursor, personas, application de suivi, couche d'un
+     nouveau dossier de code
+     (`docs/intentions/couche-d-un-nouveau-dossier-de-code.md`).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -340,6 +357,9 @@ une décision du demandeur.
   `docs/intentions/banc-gemini-quota.md`.
 - [ ] [IA] [P0] 0.6.7 : release 0.6.7, la compatibilité des agents (candidate,
   verdict humain, promotion) — `docs/projects/release-0-6-7.md`.
+- [ ] [IA] [P1] 0.6.8 : Copilot CLI enchaîne les chantiers (décision de
+  fusion au sondage, retour en SCOPING après fusion, sous-agent par
+  chantier) — `docs/projects/compat-copilot-enchaine.md`.
 - [ ] [décision] `verify` dit pourquoi un critère n'est « pas durable »
   (marqueur `[humain]` manquant ou en trop) —
   `docs/intentions/critere-humain-message-clair.md`.
@@ -389,6 +409,10 @@ une décision du demandeur.
   bloquante — `docs/intentions/cloture-coherence-doc.md`.
 - [ ] [décision] Noter une idée ou une intention à tout moment, sous Claude
   Code, Copilot CLI et Gemini CLI — `docs/intentions/note-a-tout-moment.md`.
+- [ ] [décision] Proposer la couche d'un dossier de code apparu après
+  l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
+- [ ] [décision] Mener plusieurs chantiers en parallèle, ou orchestrer plusieurs
+  agents sur leurs parties — `docs/intentions/chantiers-en-parallele.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
