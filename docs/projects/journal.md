@@ -1949,7 +1949,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   carte, le README et le changelog).
 - **Intention d'origine** : aucune (relevés de la session de la 0.6.4).
 - **Limites connues** : branches fusionnées par squash non supprimées —
-  `docs/intentions/branches-fusionnees-par-squash.md` ; neuf citations de
+  intention couverte et retirée (journal du 2026-10-19) ; neuf citations de
   fiche restées dans du code non modifié, hors cadrage —
   `docs/intentions/citations-de-fiche-heritees.md` ; commentaires reconnus
   par une heuristique de ligne —
@@ -2012,8 +2012,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   clôture attend désormais la CI verte.
 - **Intention d'origine** : aucune (point 8 de la clôture allégée).
 - **Limites connues** : `resume` ne reconnaît pas une PR fusionnée par
-  squash — `docs/intentions/branches-fusionnees-par-squash.md`
-  (complétée) ; tout changement du registre des contrats, même un ajout,
+  squash — intention complétée, puis couverte et retirée (journal du
+  2026-10-19) ; tout changement du registre des contrats, même un ajout,
   demande le oui de l'humain —
   `docs/intentions/registre-ajout-sans-oui.md` ; `package.json` n'est pas
   compté parmi les seuils — `docs/intentions/seuils-dans-package-json.md` ;
@@ -2151,3 +2151,46 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : 0,80 M tokens pondérés, 71 requêtes, 22 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR de la branche `chantier/stab-worktree`.
+
+## 2026-10-19 — Les branches fusionnées par squash reconnues (0.6.6, 2 sur 4)
+
+- **Besoin** : le ménage des branches au lancement et la reprise d'un
+  détour (`node .githooks/detour.mjs resume`) ne reconnaissaient que la
+  fusion classique ; pour une équipe qui fusionne par squash, la branche
+  n'était jamais supprimée et un détour ne pouvait pas reprendre (point de
+  recette v0.6.5-P8).
+- **Cause** (rejouée par un test d'un détour fusionné par squash, refusé
+  « pas encore fusionnée ») : les deux usages ne demandaient qu'à git
+  (`git branch --merged`, `git merge-base --is-ancestor`) ; un squash crée
+  un commit neuf sans lien de parenté avec la branche, que git ne voit
+  donc jamais fusionnée.
+- **Résultat** : une seule fonction « branche fusionnée ? »
+  (`branchMerged`, `.githooks/close.mjs`, gabarit puis copie), partagée par
+  le ménage et la reprise : fusion classique vue par git, ou PR fusionnée
+  de la branche, lue par `gh pr list --state merged`, qui porte son dernier
+  commit (une branche allée plus loin que sa PR n'est pas fusionnée) ;
+  suppression par `git branch -D` sur la seule preuve de `gh`. Une seule
+  question à `gh` pour toutes les branches, posée seulement si git ne
+  suffit pas. Sans `gh` joignable, repli sur git, dit au lancement (branches
+  gardées nommées) et dans le refus de reprise. Deux contrats créés, leurs
+  tests vus en échec avant le correctif : QUA-058 (une branche dont la PR
+  est fusionnée sur GitHub est reconnue fusionnée, squash compris) et
+  QUA-059 (sans gh joignable, seule la fusion classique est reconnue, et
+  c'est dit). Recette des branches, carte et ligne « Unreleased » du
+  changelog à jour.
+- **Décision** : QUA-048 (une clôture en un geste) laissé inchangé : le
+  modifier demandait sa déclaration validée par le demandeur (QUA-023,
+  régression ou évolution d'un contrat).
+- **Intention d'origine** « supprimer aussi les branches fusionnées par
+  squash » : entièrement couverte (ménage et reprise, décision du
+  2026-10-19 « la PR fusionnée via gh fait foi »), résumée ici et retirée.
+- **Limites connues** : le texte de QUA-048 cite encore `git branch -d` —
+  `docs/intentions/qua-048-aligne-sur-squash.md` ; hors de GitHub, et
+  au-delà des 200 PR fusionnées les plus récentes, une branche fusionnée
+  par squash est gardée — `docs/intentions/squash-hors-github.md`.
+  Écart relevé : `close.mjs --check` ne signale pas les citations de
+  l'intention d'origine retirée —
+  `docs/intentions/cloture-signale-intention-retiree.md`.
+- **Consommation** : 0,59 M tokens pondérés, 52 requêtes, 21 minutes
+  (`.drwil/usage.jsonl`).
+- **Clôturé par** : la PR de la branche `chantier/stab-squash`.

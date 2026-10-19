@@ -475,6 +475,26 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : un push depuis un worktree ne touche jamais le vrai dépôt (0.6.6) — « Le lanceur des contrôles retire les variables GIT_* de l'environnement de chaque contrôle qu'il lance, quel que soit le fichier de test »
 **Raison** : Retirer les `GIT_*` dans chaque fichier de test ne tient pas : un fichier ajouté sans ce retrait (`.githooks/check-architecture.test.mjs`, `outils/verifier-miroirs.test.mjs`, `outils/verifier-tests-contrats.test.mjs`) a suffi à rejouer l'incident.
 
+## QUA-058 — Une branche dont la PR est fusionnée sur GitHub est reconnue fusionnée, squash compris
+**Règle** : Livré à tout projet. Une seule fonction dit si une branche est fusionnée dans la branche principale (`branchMerged`), partagée par le ménage des branches au lancement (QUA-048) et la reprise d'un détour (QUA-050) : fusionnée si git la voit dans la branche principale (fusion classique), ou si une PR fusionnée de cette branche, lue par `gh pr list --state merged`, porte son dernier commit (fusion par squash comprise) ; une branche qui a reçu des commits après sa PR n'est pas fusionnée. Une branche ainsi prouvée est supprimée au lancement suivant (`git branch -D`, sur la seule preuve de `gh`) et acceptée par la reprise d'un détour. Une seule question à `gh` pour toutes les branches du ménage, posée seulement si git ne suffit pas.
+**Périmètre** : `.githooks/close.mjs` (`mergedPullRequests`, `branchMerged`, `pruneMergedBranches`), `.githooks/detour.mjs` (`resume`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/close.mjs` (`branchMerged`).
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires, fusions par squash, `gh` simulé (PR au même commit, branche allée plus loin, PR d'un autre commit).
+**Contrôle** : `tests-qua-058`
+**Tests** : `.githooks/close.test.mjs`, `.githooks/detour.test.mjs`
+**Origine** : les branches fusionnées par squash reconnues (0.6.6) — « Une branche dont la PR est fusionnée sur GitHub (y compris par squash) est reconnue fusionnée : supprimée au lancement suivant, et acceptée par la reprise d'un détour »
+**Raison** : Point de recette v0.6.5-P8 : pour une équipe qui fusionne par squash, git ne voit jamais la branche fusionnée — elle n'était jamais supprimée et un détour ne pouvait pas reprendre.
+
+## QUA-059 — Sans gh joignable, seule la fusion classique est reconnue, et c'est dit
+**Règle** : Livré à tout projet. Quand `gh` ne répond pas (absent, non connecté, hors GitHub, trop lent), la reconnaissance d'une branche fusionnée (QUA-058) se replie sur git seul (fusion classique) : aucune branche non fusionnée aux yeux de git n'est supprimée, et le lancement dit « gh injoignable » en nommant les branches gardées ; la reprise d'un détour est refusée en disant de même, état et mise de côté intacts.
+**Périmètre** : `.githooks/close.mjs` (`branchMerged`, `pruneMergedBranches`, `prunedMessage`), `.githooks/detour.mjs` (`resume`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/close.mjs` (`branchMerged`).
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires, `gh` simulé muet puis le vrai `gh` hors GitHub.
+**Contrôle** : `tests-qua-059`
+**Tests** : `.githooks/close.test.mjs`, `.githooks/detour.test.mjs`
+**Origine** : les branches fusionnées par squash reconnues (0.6.6) — « Sans `gh` joignable, la reconnaissance se replie sur git (fusion classique seulement) et le dit clairement, sans jamais supprimer une branche non fusionnée »
+**Raison** : La PR fusionnée via `gh` fait foi (décision du demandeur, 2026-10-19) ; sans elle, rien ne prouve une fusion par squash, et supprimer une branche sur un doute pourrait perdre du travail.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

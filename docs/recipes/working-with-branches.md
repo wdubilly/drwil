@@ -77,8 +77,14 @@ request, instead of direct commits on the main branch.
   can still change. Code cites the contract it serves, never a workstream
   brief: check-docs refuses such a citation in a changed code file.
 - Local branches already merged into the main branch are deleted when the
-  next workstream starts (`git branch -d`, never an unmerged branch, the
-  current one or the main branch).
+  next workstream starts — never an unmerged branch, the current one or
+  the main branch. A branch is merged when git sees it in the main branch
+  (classic merge) or when a merged GitHub pull request carries its last
+  commit, squash included (asked to `gh`); the resume of a detour
+  (`node .githooks/detour.mjs resume`) uses the same test. Without `gh`
+  reachable (absent, not logged in, another forge), only a classic merge
+  is recognised, and the start or the resume says so: a branch merged by
+  squash is then kept, to delete by hand.
 - Keep what the user reads current, in the closing commit: a workstream
   that changes what the user sees updates the `README.md` and adds its line
   under « Unreleased » in `CHANGELOG.md` (if present); one
