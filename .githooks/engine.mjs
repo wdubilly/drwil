@@ -97,12 +97,17 @@ function findGitleaks() {
 export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI) } = {}) {
   const T = texts(cfg.lang);
   const full = (cfg.mode ?? "full") === "full";
-  const launch = (cmd, args, { stdio = "inherit", beforeRun, ...opts } = {}, name) => {
+  const launch = (cmd, args, { stdio = "inherit", beforeRun, keepGit = false, ...opts } = {}, name) => {
     beforeRun?.(name);
     // NODE_TEST_CONTEXT propagates to children: if the engine itself runs under `node --test`
     // (the kit testing its hooks, a harness calling verify…), a `node --test` launched by a check
     // would be silently skipped ("called recursively") and return 0: a false PASS.
     const checkEnv = { ...(opts.env ?? env), NODE_TEST_CONTEXT: undefined };
+    // QUA-057: a hook run from a worktree or by `git commit -a` receives GIT_DIR, GIT_INDEX_FILE…;
+    // a check that inherits them and runs `git init` elsewhere acts on the repository that launched it
+    // (core.bare=true written in the shared config, index soiled). The hook keeps them; its children
+    // run from the project root, where git finds the right repository on its own.
+    if (!keepGit) for (const k of Object.keys(checkEnv)) if (k.startsWith("GIT_")) delete checkEnv[k];
     const r = spawnSync(cmd, args, { cwd: root, stdio, encoding: "utf8", ...opts, env: checkEnv });
     const output = stdio === "pipe" ? `${r.stdout ?? ""}${r.stderr ?? ""}` : undefined;
     // A command that cannot even start is a failure, as before the engine was extracted.
@@ -125,7 +130,9 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     // In CI (or for `drwil verify`) nothing is staged to judge: the whole history is analysed,
     // otherwise a proof of "no secret in the repository" would look at nothing.
     const args = whole ? ["git", "--no-banner", "--redact", "."] : ["git", "--pre-commit", "--staged", "--no-banner", "--redact", "."];
-    return launch(gitleaks, args, o, name);
+    // Only reads the repository, and must see the index of the commit in progress: under
+    // `git commit -a` it is the one named by GIT_INDEX_FILE, not .git/index.
+    return launch(gitleaks, args, { ...o, keepGit: true }, name);
   });
 
   add("docs-references", T.docs, (o, name) => launch(process.execPath, [".githooks/check-docs.mjs"], o, name));

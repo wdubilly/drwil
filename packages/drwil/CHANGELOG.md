@@ -5,6 +5,15 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Fixed
+
+- A `git push` from a secondary worktree no longer touches the main
+  repository: the checks launched by the hooks (and by `drwil verify`) now
+  run without the hook's `GIT_*` variables, so a test that runs `git init`
+  elsewhere can no longer write `core.bare=true` in the shared
+  configuration or soil the index. Only gitleaks keeps them, to read the
+  index of the commit in progress.
+
 ## 0.6.5 (2026-10-19)
 
 ### Changed

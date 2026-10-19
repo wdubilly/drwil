@@ -2115,3 +2115,39 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   Copilot » est fondue dans le lot 1 de `docs/projects/compat-copilot.md`
   (essais du 2026-10-18 : Copilot lance la commande, qui dépasse son délai)
   et retirée.
+
+## 2026-10-19 — Un push depuis un worktree ne touche jamais le vrai dépôt (0.6.6, 1 sur 4)
+
+- **Besoin** : le 2026-10-18, un `git push` depuis un worktree secondaire
+  a fait agir la suite des contrôles sur le vrai dépôt (`core.bare=true`
+  dans la configuration commune, index sali) ; régression du correctif du
+  2026-10-10 (« Tests des contrôles isolés des variables GIT_* du hook »).
+- **Cause** (rejouée dans des dépôts jetables, fichier de test par
+  fichier) : le pre-push lancé depuis un worktree reçoit `GIT_DIR` (le
+  dossier du worktree sous `.git/worktrees/`) ; le moteur des contrôles le
+  transmettait à tout ce qu'il lance. Trois fichiers de test ajoutés sans
+  retrait des `GIT_*` (`.githooks/check-architecture.test.mjs`,
+  `outils/verifier-miroirs.test.mjs`,
+  `outils/verifier-tests-contrats.test.mjs`) font un `git init` ailleurs,
+  qui réinitialisait ce dossier et écrivait `core.bare=true` dans la
+  configuration commune. Les échecs en masse du pre-push pendant
+  l'incident en découlent : sans arbre de travail, les contrôles ne
+  lisaient plus le worktree.
+- **Résultat** : le lanceur du moteur (`.githooks/engine.mjs`, gabarit puis
+  copie) retire les `GIT_*` de l'environnement de chaque contrôle lancé ;
+  gitleaks seul les garde, pour lire l'index du commit en cours
+  (`git commit -a`) ; les hooks gardent les leurs (décision du
+  2026-10-10). Deux contrats créés, leurs tests vus en échec avant le
+  correctif : QUA-056 (un push depuis un worktree ne touche jamais le
+  dépôt principal : push réel depuis un worktree jetable, contrôle
+  hostile, dépôt principal photographié avant et après) et QUA-057 (le
+  lanceur des contrôles retire les GIT_* de leur environnement). Ligne
+  « Unreleased » du changelog ajoutée.
+- **Intention d'origine** « un push depuis un worktree ne touche jamais le
+  vrai dépôt » : entièrement couverte (les deux garde-fous décidés le
+  2026-10-19), résumée ici et retirée.
+- **Limites connues** : aucune ; les fichiers de test qui retirent encore
+  eux-mêmes les `GIT_*` le font désormais en double, sans dommage.
+- **Consommation** : 0,80 M tokens pondérés, 71 requêtes, 22 minutes
+  (`.drwil/usage.jsonl`).
+- **Clôturé par** : la PR de la branche `chantier/stab-worktree`.

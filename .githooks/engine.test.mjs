@@ -1,7 +1,7 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { checks, projectRoot, texts } from "./engine.mjs";
@@ -274,4 +274,42 @@ test("projectRoot : dossier parent de .githooks/ quel que soit le dossier couran
   } finally {
     if (avant !== undefined) process.env.DRWIL_ROOT = avant;
   }
+});
+
+// Un worktree, `git commit -a` : le hook reçoit GIT_DIR, GIT_INDEX_FILE… Un contrôle lancé qui fait
+// `git init` ailleurs les hériterait et agirait sur le dépôt qui le lance, quel que soit le fichier de test.
+test("QUA-057 : le lanceur retire les GIT_* de l'environnement de chaque contrôle qu'il lance", () => {
+  const racine = depot();
+  const herite = "Object.keys(process.env).some((k) => k.startsWith('GIT_'))";
+  ecrire(racine, ".githooks/check-docs.mjs", `process.exit(${herite} ? 1 : 0);\n`);
+  ecrire(racine, ".githooks/check-control-coverage.mjs", `process.exit(${herite} ? 1 : 0);\n`);
+  ecrire(
+    racine,
+    ".githooks/a.test.mjs",
+    `import { test } from 'node:test';\ntest('sans GIT_*', () => { if (${herite}) throw new Error('GIT_* hérité'); });\n`,
+  );
+  const env = {
+    ...process.env,
+    GIT_DIR: join(racine, ".git"),
+    GIT_INDEX_FILE: join(racine, ".git", "index-du-hook"),
+    GIT_WORK_TREE: racine,
+  };
+  const cfg = { ciFiles: ["ci.yml"], checks: [{ id: "projet", run: `node -e "process.exit(${herite} ? 1 : 0)"` }] };
+  for (const id of ["docs-references", "checks-self-test", "ci-coverage", "projet"]) {
+    assert.equal(executer(racine, id, { cfg, env }).status, "ok", id);
+  }
+});
+
+// L'analyse des secrets indexés lit l'index du commit en cours : sous `git commit -a`, c'est
+// GIT_INDEX_FILE qui le désigne, pas .git/index.
+test("QUA-057 : seul gitleaks garde les GIT_* du hook, pour lire l'index du commit en cours", posix, () => {
+  const racine = depot();
+  const outils = tmp();
+  const chemin = join(outils, "gitleaks");
+  ecrire(outils, "gitleaks", `#!/bin/sh\necho "$GIT_INDEX_FILE" >> "${join(outils, "appels")}"\nexit 0\n`);
+  chmodSync(chemin, 0o755);
+  avecEnv({ PATH: `${outils}${delimiter}${dossierGit}`, HOME: tmp() }, () => {
+    assert.equal(executer(racine, "secrets", { env: { PATH: process.env.PATH, GIT_INDEX_FILE: "index-du-hook" } }).status, "ok");
+  });
+  assert.match(readFileSync(join(outils, "appels"), "utf8"), /^index-du-hook$/m);
 });

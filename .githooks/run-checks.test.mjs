@@ -1,7 +1,7 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -178,4 +178,62 @@ test("QUA-013 : hors commit, aucun contrôle du projet déclaré fait échouer, 
   r = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "docs/value-discovery.md": "> Last scan: 2020-01-01\n" });
   assert.match(r.stdout, /⚠ not run: stale audit/);
   assert.doesNotMatch(r.stdout, /✗ failed: not run: stale audit/);
+});
+
+// Rejoue l'incident du 2026-10-18 : un pre-push lancé depuis un worktree reçoit GIT_DIR (le dossier
+// du worktree dans .git/worktrees/) ; un test qui fait `git init` ailleurs sans le retirer
+// réinitialisait ce dossier et écrivait core.bare=true dans la configuration commune.
+test("QUA-056 : un push depuis un worktree laisse le dépôt principal identique (configuration, branches, index, arbre)", () => {
+  const principal = tmp();
+  const distant = tmp();
+  const worktree = join(tmp(), "wt");
+  const marque = join(tmp(), "lance");
+  const ailleurs = tmp();
+  git(principal, "init", "-q", "-b", "main");
+  git(principal, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "a");
+  git(distant, "init", "-q", "--bare");
+  git(principal, "config", "core.hooksPath", dirname(SCRIPT));
+  git(principal, "worktree", "add", "-q", worktree, "-b", "travail");
+  // Un contrôle « hostile », comme un fichier de test qui ne retire pas les GIT_* hérités.
+  const hostile = [
+    'import { spawnSync } from "node:child_process";',
+    'import { writeFileSync } from "node:fs";',
+    'import { join } from "node:path";',
+    "const d = process.argv[3];",
+    'spawnSync("git", ["init", "-q", "-b", "workstream/kit-installation", d]);',
+    'writeFileSync(join(d, "f.txt"), "x");',
+    'spawnSync("git", ["add", "f.txt"], { cwd: d });',
+    'writeFileSync(process.argv[2], "oui");',
+  ].join("\n");
+  for (const [chemin, contenu] of Object.entries({
+    ".githooks/check-docs.mjs": "process.exit(0);\n",
+    ".githooks/check-contract-tests.mjs": "process.exit(0);\n",
+    ".githooks/check-architecture.mjs": "process.exit(0);\n",
+    "hostile.mjs": hostile,
+    ".drwil/ia-first.json": JSON.stringify({
+      mode: "minimal",
+      checks: [{ name: "hostile", run: `node hostile.mjs "${marque}" "${ailleurs}"` }],
+    }),
+  })) {
+    mkdirSync(dirname(join(worktree, chemin)), { recursive: true });
+    writeFileSync(join(worktree, chemin), contenu);
+  }
+  const photo = () =>
+    [
+      readFileSync(join(principal, ".git", "config"), "utf8"),
+      ...[
+        ["branch", "-a"],
+        ["status", "--porcelain"],
+        ["worktree", "list", "--porcelain"],
+      ].map((args) => spawnSync("git", args, { cwd: principal, encoding: "utf8" }).stdout),
+      spawnSync("git", ["status", "--porcelain"], { cwd: worktree, encoding: "utf8" }).stdout,
+    ].join("\n--\n");
+  const avant = photo();
+  const r = spawnSync("git", ["push", "-q", distant, "travail"], {
+    cwd: worktree,
+    encoding: "utf8",
+    env: { ...process.env, DRWIL_ROOT: worktree, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "" },
+  });
+  assert.equal(existsSync(marque), true, `le pre-push n'a pas lancé le contrôle : ${r.stdout}${r.stderr}`);
+  assert.equal(photo(), avant);
 });

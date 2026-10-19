@@ -455,6 +455,26 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : une recette par version, pour une équipe hors dépôt (0.6.5) — « Les README pointent vers la dernière version validée par un lien fixe (releases/latest), qui ne montre jamais une pré-release : aucun commit à chaque version »
 **Raison** : Un README qui cite une version doit être recommité à chaque release, et montrerait une candidate non validée.
 
+## QUA-056 — Un push depuis un worktree ne touche jamais le dépôt principal
+**Règle** : Un `git push` lancé depuis un worktree secondaire (`git worktree add`) laisse le dépôt principal identique : configuration commune (jamais `core.bare=true`), branches, index et arbre, même quand un contrôle lancé au pre-push fait `git init` ou `git add` dans un dossier temporaire.
+**Périmètre** : `.githooks/pre-push`, `.githooks/run-checks.mjs`, `.githooks/engine.mjs` (gabarit et copies du dépôt).
+**Source de vérité** : `.githooks/engine.mjs` (lanceur des contrôles, voir QUA-057).
+**Preuve** : test qui rejoue l'incident du 2026-10-18 dans un dépôt jetable : push depuis un worktree, contrôle hostile, dépôt principal photographié avant et après.
+**Contrôle** : `tests-qua-056`
+**Tests** : `.githooks/run-checks.test.mjs`
+**Origine** : un push depuis un worktree ne touche jamais le vrai dépôt (0.6.6) — « Un push depuis un worktree d'un dépôt jetable laisse le dépôt principal identique (configuration, branches, index, arbre) ; le test rejoue l'incident du 2026-10-18 et échoue sans le correctif »
+**Raison** : Le 2026-10-18, un push depuis un worktree a écrit `core.bare=true` dans la configuration commune et sali l'index : un simple push peut abîmer le dépôt et casser un chantier en cours.
+
+## QUA-057 — Le lanceur des contrôles retire les GIT_* de leur environnement
+**Règle** : Le lanceur des contrôles (`.githooks/engine.mjs`, partagé par les hooks et `drwil verify`) retire les variables `GIT_*` de l'environnement de chaque contrôle qu'il lance (tests des contrôles, contrôles du socle, contrôles déclarés par le projet), quel que soit le fichier de test ; les hooks eux-mêmes les gardent. Seule exception : gitleaks, qui ne fait que lire le dépôt et doit voir l'index du commit en cours (`GIT_INDEX_FILE` sous `git commit -a`).
+**Périmètre** : `.githooks/engine.mjs` (gabarit et copie du dépôt).
+**Source de vérité** : `.githooks/engine.mjs` (fonction `launch`).
+**Preuve** : test du moteur qui lance chaque sorte de contrôle avec `GIT_DIR`, `GIT_INDEX_FILE` et `GIT_WORK_TREE` posés.
+**Contrôle** : `tests-qua-057`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : un push depuis un worktree ne touche jamais le vrai dépôt (0.6.6) — « Le lanceur des contrôles retire les variables GIT_* de l'environnement de chaque contrôle qu'il lance, quel que soit le fichier de test »
+**Raison** : Retirer les `GIT_*` dans chaque fichier de test ne tient pas : un fichier ajouté sans ce retrait (`.githooks/check-architecture.test.mjs`, `outils/verifier-miroirs.test.mjs`, `outils/verifier-tests-contrats.test.mjs`) a suffi à rejouer l'incident.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).
