@@ -136,8 +136,9 @@ avant les points 5 à 13, en trois versions.
   socle (fait, journal du 2026-10-19), Copilot CLI
   (fait, journal du 2026-10-19), Gemini CLI
   (fait, journal du 2026-10-19), Codex
-  (`docs/projects/compat-codex.md`), Cursor
-  (`docs/projects/compat-cursor.md`).
+  (`docs/intentions/compat-codex.md`), Cursor
+  (`docs/intentions/compat-cursor.md`), ces deux derniers repassés en
+  intention le 2026-10-19 (demande de l'humain).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -332,10 +333,10 @@ une décision du demandeur.
 - [ ] [décision] Un passage complet et stable du banc sous Gemini CLI, malgré
   le quota (limite du même chantier) —
   `docs/intentions/banc-gemini-quota.md`.
-- [ ] [IA] [P1] 0.6.7, 4 sur 5 : Codex (à affiner : à installer) —
-  `docs/projects/compat-codex.md`.
-- [ ] [IA] [P1] 0.6.7, 5 sur 5 : Cursor (à affiner : mode de preuve) —
-  `docs/projects/compat-cursor.md`.
+- [ ] [décision] [P1] 0.6.7, 4 sur 5 : Codex (intention : à installer, rien
+  d'essayé) — `docs/intentions/compat-codex.md`.
+- [ ] [décision] [P1] 0.6.7, 5 sur 5 : Cursor (intention : mode de preuve à
+  choisir) — `docs/intentions/compat-cursor.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
   `docs/intentions/prefixe-catalogue.md`.
 - [ ] [décision] Un `doctor` juste sur le dépôt drwil lui-même (manifeste

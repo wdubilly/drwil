@@ -41,8 +41,8 @@ l'humain.
 - le socle (fait, journal du 2026-10-19)
 - Copilot CLI (fait, journal du 2026-10-19)
 - Gemini CLI (fait, journal du 2026-10-19)
-- `docs/projects/compat-codex.md`
-- `docs/projects/compat-cursor.md`
+- Codex : `docs/intentions/compat-codex.md` (intention, pas encore une fiche)
+- Cursor : `docs/intentions/compat-cursor.md` (intention, pas encore une fiche)
 
 ## Questions à trancher
 
