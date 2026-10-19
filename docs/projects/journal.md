@@ -2265,3 +2265,29 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : 0,47 M tokens pondérés, 38 requêtes, 17 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR de la branche `chantier/stab-recette`.
+
+## 2026-10-19 — Release 0.6.6 : version posée, recette ensuite
+
+- **Besoin** : publier la 0.6.6, la stabilisation (push depuis un
+  worktree, branches fusionnées par squash, contrat ajouté pendant un
+  détour, fiche de recette juste ; PR #166 à #169), par le parcours de
+  recette, comme la 0.6.5.
+- **Résultat** : version 0.6.6 partout (paquets, verrou), changelog daté
+  (QUA-040, drwil entretient la carte, le README et le changelog) ; README
+  inchangés, ils pointent vers `releases/latest` (QUA-055, les README
+  pointent vers la dernière version validée).
+  `create-release.mjs --candidate --dry-run` annonce `v0.6.6-rc.1` et sa
+  fiche de recette (QUA-051, une version candidate en pré-release).
+- **Essai réel de mise à jour 0.6.5 → 0.6.6** (QUA-027, mise à jour
+  sûre) : projet temporaire équipé avec le tarball 0.6.5 de la release
+  GitHub, `AGENTS.md` et registre modifiés localement, puis mis à jour
+  avec le tarball 0.6.6 : modifications locales préservées et signalées
+  sans réécriture, seules la mécanique (`close`, `detour`, `engine`,
+  `scope-gate`) et les recettes du kit mises à jour, aucun fichier
+  supprimé, version 0.6.6 enregistrée (première : 0.6.5), `doctor` sain ;
+  `verify` identique à un projet neuf de la 0.6.5 comme de la 0.6.6 (FAIL
+  de QUA-017 sur `main` et ERROR de QUA-013 sans CI, attendus).
+- **Limites connues** : candidate, verdict et promotion restent à mener
+  après la fusion (lots 2 et 3 de la fiche), sur feu vert du demandeur.
+- **Consommation** : 0,47 M tokens pondérés (`.drwil/usage.jsonl`).
+- **Clôturé par** : la PR de la branche `chantier/release-0-6-6`.
