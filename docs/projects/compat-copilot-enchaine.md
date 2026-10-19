@@ -1,8 +1,8 @@
 # Projet : 0.6.8, Copilot CLI enchaîne les chantiers sans interruption
 
-**Statut** : cadré le 2026-10-19 (à raffiner : décisions ouvertes).
+**Statut** : cadré le 2026-10-19 (décisions prises par le demandeur).
 **Risque** : HIGH
-**Maturité** : à raffiner
+**Maturité** : prêt
 
 <!-- scope
 files:
@@ -73,19 +73,20 @@ interruption, comme avec Claude Code. Trois écarts à régler ensemble :
 
 ## 4. Décisions
 
-À trancher par le demandeur avant le lancement :
-
-- [décision] Fusion : un champ de plus dans le formulaire `ask_user` du
-  lancement (la décision est prise au départ), ou une question posée à la
-  clôture ?
-- [décision] Retour en SCOPING : à quel endroit (hook post-merge ou
-  post-checkout, prochain `start`, ou la clôture qui suit la PR) et sans
-  demander, ou avec le oui du demandeur ?
-- [décision] Sous-agent : toujours, ou selon la taille annoncée de la fiche ?
-  Comment l'humain intervient-il quand le sous-agent ne peut pas lui parler
-  (arrêt avec compte rendu puis reprise par la session principale) ?
-- [décision] Les sous-agents de Copilot CLI portent-ils les hooks et l'état ?
-  À vérifier par un essai avant de s'y fier.
+- 2026-10-19 (demandeur) : la fusion se décide au sondage de lancement, par
+  un champ de plus dans le formulaire `ask_user`, comme `drwil-merge` sous
+  Claude Code.
+- 2026-10-19 (demandeur) : le retour en SCOPING se fait au prochain `start`,
+  seul, quand la PR du chantier est fusionnée (vérifié par `gh`), sans
+  demander.
+- 2026-10-19 (demandeur) : le sous-agent est utilisé toujours, même pour un
+  chantier d'une ligne.
+- 2026-10-19 (demandeur) : quand le sous-agent a besoin de l'humain, il
+  s'arrête avec un compte rendu ; la session principale interroge l'humain
+  puis reprend le chantier.
+- À vérifier par un essai au lot 3, avant de s'y fier : les sous-agents de
+  Copilot CLI portent-ils les hooks et l'état ? Sinon, le lot s'arrête et
+  la limite devient une intention.
 
 ## 5. Lots
 
@@ -97,7 +98,6 @@ interruption, comme avec Claude Code. Trois écarts à régler ensemble :
 
 ## 6. Reprise
 
-- **Dernier état** (2026-10-19) : cadré, décisions ouvertes ; rien de commencé.
+- **Dernier état** (2026-10-19) : cadré, décisions prises ; rien de commencé.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] trancher les décisions, puis lancer le
-  chantier (`/drwil-start`).
+- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
