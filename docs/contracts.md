@@ -405,6 +405,56 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : un détour pour une correction intercalée (0.6.5) — « En plein chantier, l'agent ouvre seul un détour pour un défaut hors du cadrage : le travail en cours est mis de côté et restauré par l'outil (jamais perdu), la correction passe par sa propre branche partie de la branche principale, sa fiche courte (correction et son test), sa PR marquée « détour de <fiche> » au mode de fusion décidé au lancement, et son entrée de journal ; à la reprise, la branche du chantier part de la branche principale corrigée et l'état revient en BUILD sur la fiche d'origine. Un détour qui changerait un contrat existant, un hook, un seuil ou la barrière demande le oui de l'humain ; en file, le sous-agent s'arrête alors »
 **Raison** : Point 8 de la clôture allégée (0.6.5) : en plein chantier, un défaut préalable hors du cadrage obligeait l'agent à élargir un cadrage sans rapport ou à s'arrêter ; il improvisait stash, allers-retours de branche et retours en cadrage à la main.
 
+## QUA-051 — Une version candidate en pré-release, avec sa fiche de recette générée
+**Règle** : Livré à tout projet avec le module de release (optionnel). `node .githooks/create-release.mjs --candidate` publie la version en pré-release GitHub `vX.Y.Z-rc.N` (N un de plus que la plus haute candidate de la version), avec son tarball et sa fiche de recette en Markdown, jointe et en note de la pré-release, générée par `.githooks/acceptance-sheet.mjs` (jamais écrite à la main) du dernier tag définitif à la candidate — une candidate n'est jamais le dernier tag définitif. Tarballs et fiche sont produits avant le tag : un échec ne laisse aucun tag. `--candidate --dry-run` montre la version et la fiche sans rien construire ni publier. Aucun fichier suivi n'est modifié (QUA-017).
+**Périmètre** : `.githooks/create-release.mjs` (`--candidate`, `candidateTag`), `.githooks/acceptance-sheet.mjs` ; module optionnel livré dans le gabarit (`templates/common/optional/create-release/`).
+**Source de vérité** : `.githooks/create-release.mjs`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, gh et npm simulés) et du paquet (module livré, jamais copié par défaut, `--candidate --dry-run` dans un projet installé).
+**Contrôle** : `tests-qua-051`
+**Tests** : `.githooks/create-release.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : une recette par version, pour une équipe hors dépôt (0.6.5) — « Une version candidate est publiée en pré-release GitHub (par exemple v0.6.5-rc.1), avec son tarball et une fiche de recette en Markdown générée (jamais écrite à la main) du dernier tag définitif à la candidate, lisible sans Git »
+**Raison** : Une équipe de recette, qui ne lit pas le dépôt, valide chaque version ; son approbation conditionne la publication : elle teste le tarball avant la release définitive.
+
+## QUA-052 — La fiche de recette dit quoi valider, puis ce que la non-régression a prouvé
+**Règle** : En tête de la fiche, « à valider » : un point par critère humain des fiches des chantiers de la plage (retrouvées dans git avant leur suppression), par phrase qui parle d'un essai en réel (fiche ou entrée de journal), par limite connue de l'entrée de journal, et par contrat dont l'attestation est à refaire (statut MANUAL de `drwil verify`) ; chacun dit quoi regarder et comment, porte un identifiant stable `vX.Y.Z-P<n>` et le lien vers la PR de son chantier, retrouvée par le trailer `Drwil-Brief` des commits (commit de fusion ou squash). En dessous, la non-régression : verdict de `drwil verify` (paquet local ; non exécuté = « non disponible », jamais un succès, QUA-013), nombre, ID et libellés des contrats qui passent et citent un test, OS des jobs de CI réussis sur le commit, empreinte sha256 de chaque tarball. Ne cite que des sources existantes ; aucune donnée nominative.
+**Périmètre** : `.githooks/acceptance-sheet.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `.githooks/acceptance-sheet.mjs`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires (fusion par PR, squash, fiche supprimée, journal), gh et verify simulés.
+**Contrôle** : `tests-qua-052`
+**Tests** : `.githooks/acceptance-sheet.test.mjs`
+**Origine** : une recette par version, pour une équipe hors dépôt (0.6.5) — « En tête de la fiche, « à valider » : chaque point dit quoi regarder et comment — critères marqués humain, attestations à refaire, ce qui n'a pas été essayé en réel, limites connues — et porte un identifiant stable (version et numéro de point) et le lien vers la PR de son chantier (retrouvée par le trailer Drwil-Brief des commits) ; en dessous, la non-régression : verdict de drwil verify, nombre de contrats prouvés par un test, leurs ID et libellés, OS testés par la CI, et l'empreinte du tarball »
+**Raison** : L'équipe de recette doit savoir en quelques minutes ce qu'elle a à valider, et ce que la non-régression automatique a déjà prouvé, pour ne pas tout retester.
+
+## QUA-053 — Le verdict de recette est un geste humain, enregistré sur la candidate
+**Règle** : `node .githooks/release-verdict.mjs <vX.Y.Z-rc.N>` enregistre le verdict : `--approve` (approuvée), `--reserve <point>` (approuvée avec réserves) ou `--refuse <point>` (refusée), chaque point cité devant exister dans la fiche de la candidate. Geste humain, comme `drwil attest` : refusé hors d'un terminal interactif et sans le nom de la candidate retapé ; un agent ne l'exécute jamais. Refusé sur une release qui n'est pas une pré-release, ou qui a déjà un verdict. Le verdict garde qui l'a donné (identité GitHub seulement) et quand ; il est enregistré sur la pré-release (asset recette-verdict.json, résumé ajouté à sa note), jamais dans un commit (QUA-017). Chaque réserve et chaque refus devient une issue qui cite son point.
+**Périmètre** : `.githooks/release-verdict.mjs` ; module optionnel livré dans le gabarit ; `AGENTS.md`.
+**Source de vérité** : `.githooks/release-verdict.mjs`.
+**Preuve** : tests des hooks (gh simulé, terminal interactif simulé).
+**Contrôle** : `tests-qua-053`
+**Tests** : `.githooks/release-verdict.test.mjs`
+**Origine** : une recette par version, pour une équipe hors dépôt (0.6.5) — « Une commande humaine enregistre le verdict de recette sur la candidate : approuvée, approuvée avec réserves (chaque réserve citée par l'identifiant de son point) ou refusée (chaque point refusé cité) ; un agent ne l'exécute jamais ; le verdict garde qui l'a donné et quand »
+**Raison** : Décision du demandeur du 2026-10-18 : l'approbation de la recette conditionne la publication ; un verdict donné par l'agent ne serait que sa parole.
+
+## QUA-054 — Seule une candidate approuvée est promue, avec le même tarball
+**Règle** : `node .githooks/promote-release.mjs <vX.Y.Z-rc.N>` refuse une candidate sans verdict ou refusée, une version définitive qui existe déjà, une fiche absente, et un tarball dont l'empreinte diffère de la fiche. Approuvée, avec ou sans réserves, elle pose le tag `vX.Y.Z` sur le commit de la candidate, le pousse, et crée la release définitive (`latest`) avec le même tarball, les réserves et leurs issues listées dans sa note. `--dry-run` montre ce que ferait la promotion sans rien publier. La recette « corriger un défaut » dit comment ranger chaque issue de réserve ou de refus : défaut à corriger (une régression) ou intention (un manque).
+**Périmètre** : `.githooks/promote-release.mjs` ; module optionnel livré dans le gabarit ; recette « corriger un défaut ».
+**Source de vérité** : `.githooks/promote-release.mjs`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local), gh simulé.
+**Contrôle** : `tests-qua-054`
+**Tests** : `.githooks/promote-release.test.mjs`
+**Origine** : une recette par version, pour une équipe hors dépôt (0.6.5) — « La promotion refuse une candidate sans verdict, ou refusée ; approuvée, avec ou sans réserves, elle crée la release définitive sur le même commit avec le même tarball (même empreinte), les réserves listées dans la note de release ; chaque réserve et chaque refus devient une issue, que la recette « corriger un défaut » dit comment ranger : défaut à corriger (une régression) ou intention (un manque) »
+**Raison** : Ce que la recette a validé doit être exactement ce qui est publié.
+
+## QUA-055 — Les README pointent vers la dernière version validée, sans commit à chaque version
+**Règle** : Les README du dépôt et du paquet pointent vers la dernière version validée par le lien fixe `https://github.com/wdubilly/drwil/releases/latest`, qui ne montre jamais une pré-release, et ne citent aucun lien de téléchargement d'une version précise : aucun commit à chaque version.
+**Périmètre** : `README.md`, `packages/drwil/README.md`.
+**Source de vérité** : `README.md`.
+**Preuve** : test du paquet qui lit les deux README.
+**Contrôle** : `tests-qua-055`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : une recette par version, pour une équipe hors dépôt (0.6.5) — « Les README pointent vers la dernière version validée par un lien fixe (releases/latest), qui ne montre jamais une pré-release : aucun commit à chaque version »
+**Raison** : Un README qui cite une version doit être recommité à chaque release, et montrerait une candidate non validée.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

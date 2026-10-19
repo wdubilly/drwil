@@ -19,6 +19,23 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Acceptance before publication, with the release module: `node
+  .githooks/create-release.mjs --candidate` publishes a candidate
+  pre-release (`vX.Y.Z-rc.N`) with its tarball and a generated acceptance
+  sheet — on top, what an acceptance team that does not read the
+  repository has to validate (human criteria, trials for real, known
+  limits, attestations to redo), each point with a stable ID and its
+  workstream's PR; below, the non-regression already proven (`drwil
+  verify` verdict, contracts proven by a test, OS tested by the CI, tarball
+  fingerprint). `release-verdict.mjs` records the verdict — approved, with
+  reserves or refused, a human gesture an agent never runs — on the
+  pre-release, and opens an issue per reserve or refusal;
+  `promote-release.mjs` publishes the final release with the same tarball
+  once approved. `--dry-run` shows the sheet and the promotion without
+  publishing anything.
+- The README install commands point to the latest validated release
+  (`releases/latest`, never a pre-release) instead of a version number to
+  update at each release.
 - Closing a workstream in one gesture: once the journal entry is written,
   `node .githooks/close.mjs` deletes the brief, removes its index item and
   records the consumption, then reports before the commit what would make

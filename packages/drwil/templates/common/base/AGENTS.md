@@ -170,6 +170,9 @@ their own instructions". Remove otherwise.)*
 - Know whether the work is verified: `npx drwil verify --agent` (only
   `GOVERNANCE: PASS` counts as validation). `drwil attest` is a **human**
   action: an agent never runs it and never writes an attestation.
+  Likewise, the acceptance verdict on a candidate release
+  (`.githooks/release-verdict.mjs` (if present), release module) is a
+  **human** gesture: an agent never runs it.
 - Enable hooks (once per clone): `git config core.hooksPath .githooks`
 
 ## Conventions

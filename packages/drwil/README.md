@@ -34,13 +34,15 @@ GOVERNANCE: FAIL                                            (exit 1)
 a part that only a human can judge stays `MANUAL` until they attest it.*
 
 ```bash
-npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.4/drwil-0.6.4.tgz
+npm install -D https://github.com/wdubilly/drwil/releases/download/v<version>/drwil-<version>.tgz
 npx drwil init       # new, existing or already equipped project
 npx drwil verify     # without a CI: VERIFY ERROR, expected — `npx drwil init --ci github` declares one
 ```
 
-The tarball is installed from the GitHub release URL: nothing is downloaded
-into the project. To upgrade, run the same command with the new release's
+`<version>`: the latest validated version, shown on
+[https://github.com/wdubilly/drwil/releases/latest](https://github.com/wdubilly/drwil/releases/latest) (never a
+pre-release; its note gives the exact command). The tarball is installed
+from the GitHub release URL: nothing is downloaded into the project. To upgrade, run the same command with the new release's
 URL; an old `drwil-*.tgz` left by a previous install can be deleted.
 
 After `init`, restart your agent's session: Claude Code loads its hooks when

@@ -2294,6 +2294,37 @@ test("créer une release : --dry-run liste le paquet npm à empaqueter quand il 
   assert.match(r.stdout, /tarball.*packages\/truc/);
 });
 
+test("QUA-051 : module de release livré avec la fiche, le verdict et la promotion ; --candidate --dry-run montre la fiche sans rien publier", async () => {
+  const module = fileURLToPath(new URL("../templates/common/optional/create-release/", import.meta.url));
+  const scripts = ["create-release.mjs", "acceptance-sheet.mjs", "release-verdict.mjs", "promote-release.mjs"];
+  for (const lang of ["fr", "en"]) {
+    const dir = tmp();
+    await quiet(() => init({ lang, targetDir: dir, git: true }));
+    for (const s of scripts) assert.ok(!existsSync(join(dir, ".githooks", s)), `${s} : module optionnel, jamais copié par défaut`);
+    for (const s of scripts) writeFileSync(join(dir, ".githooks", s), readFileSync(join(module, s), "utf8"));
+    git(dir, "add", "-A");
+    const c = git(dir, "commit", "-m", "feat: premier chantier");
+    assert.equal(c.status, 0, c.stdout + c.stderr);
+    const r = spawnSync(process.execPath, [".githooks/create-release.mjs", "--candidate", "--dry-run"], { cwd: dir, encoding: "utf8" });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, lang === "fr" ? /# Fiche de recette — v0\.1\.0-rc\.1/ : /# Acceptance sheet — v0\.1\.0-rc\.1/);
+    assert.match(r.stdout, /--dry-run/);
+    assert.equal(git(dir, "tag", "-l").stdout.trim(), "", "aucun tag en --dry-run");
+    for (const s of ["release-verdict.mjs", "promote-release.mjs"])
+      assert.equal(spawnSync(process.execPath, [`.githooks/${s}`], { cwd: dir, encoding: "utf8" }).status, 2, `${s} sans argument : usage`);
+  }
+  const readme = readFileSync(join(module, "README.md"), "utf8");
+  for (const s of scripts) assert.match(readme, new RegExp(s.replace(".", "\\.")));
+});
+
+test("QUA-055 : les README pointent vers la dernière version validée par un lien fixe, sans numéro de version à recommiter", () => {
+  for (const chemin of ["../../../README.md", "../README.md"]) {
+    const texte = readFileSync(fileURLToPath(new URL(chemin, import.meta.url)), "utf8");
+    assert.match(texte, /https:\/\/github\.com\/wdubilly\/drwil\/releases\/latest/, `${chemin} : lien releases/latest`);
+    assert.doesNotMatch(texte, /drwil\/releases\/download\/v\d/, `${chemin} : aucun lien vers une version précise`);
+  }
+});
+
 // DRWIL-003 : verify = primitive de validation du travail. Contrôles déterministes `ok`/`ko`
 // (pas de gitleaks, absent de certains postes) : seul le verdict est testé, pas les outils.
 async function projetVerify(contrats, reglages = {}) {

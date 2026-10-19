@@ -64,6 +64,37 @@ following ones, and never an npm publication (see « Assumed limits »).
    -d vX.Y.Z && git push origin :refs/tags/vX.Y.Z`) and rerun once the
    fix is in place — never rewrite shared history.
 
+## Acceptance before publication (candidate, verdict, promotion)
+
+When an acceptance team that does not read the repository validates each
+version, its approval conditions the publication: it tests the tarball
+before the final release.
+
+1. Candidate: `node .githooks/create-release.mjs --candidate --dry-run`
+   shows the version and the generated acceptance sheet without building
+   or publishing anything; without `--dry-run` (after the human's yes or
+   the publication green light, as above), the tag `vX.Y.Z-rc.N` is pushed
+   and a GitHub **pre-release** carries the tarball and the sheet (attached
+   and as its note). The sheet is generated, never written by hand: on top,
+   the points to validate (human criteria, trials for real, known limits,
+   attestations to redo), each with a stable ID `vX.Y.Z-P<n>` and its
+   workstream's PR; below, the non-regression already proven (`drwil
+   verify` verdict, contracts proven by a test, OS tested by the CI,
+   tarball fingerprint).
+2. Verdict — **a human gesture, never run by an agent**, like `drwil
+   attest`: `node .githooks/release-verdict.mjs vX.Y.Z-rc.N --approve`, or
+   `--reserve <point>` / `--refuse <point>` for each point concerned. It is
+   recorded on the pre-release with who gave it and when (no commit); each
+   reserve and each refusal becomes an issue, which the agent sorts with
+   the recipe « fix a defect » (defect to fix or intent).
+3. Promotion: `node .githooks/promote-release.mjs vX.Y.Z-rc.N --dry-run`,
+   then without `--dry-run` (same green light as a release). Refused
+   without a verdict or when refused; otherwise the final release `vX.Y.Z`
+   is created on the same commit with the same tarball (fingerprint
+   checked), the reserves listed in its note. It becomes `releases/latest`,
+   which never shows a pre-release: link a README there once, with no
+   commit at each version.
+
 ## Assumed limits
 
 - Designed for GitHub (`gh release create`); on GitLab, only the Git tag

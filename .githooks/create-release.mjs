@@ -6,14 +6,18 @@
 // publishable npm packages (package.json, single source decided and reviewed in a PR); without an
 // npm package, computed from the commit messages the Conventional Commits way, best-effort (safe
 // default: "patch" bump if no type is recognised).
-// Usage: node create-release.mjs [--dry-run]
+// `--candidate` (QUA-051): publishes the version as a candidate pre-release (vX.Y.Z-rc.N) with its
+// tarball and its generated acceptance sheet (acceptance-sheet.mjs); the final release only comes
+// from promote-release.mjs, after the human verdict (release-verdict.mjs).
+// Usage: node create-release.mjs [--candidate] [--dry-run]
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { readFileSync, mkdtempSync } from "node:fs";
+import { readFileSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 
 const dryRun = process.argv.includes("--dry-run");
+const candidate = process.argv.includes("--candidate");
 
 const TEXTS = {
   fr: {
@@ -37,6 +41,9 @@ const TEXTS = {
     attached: "[create-release] tarball(s) attaché(s) à la release : {0}",
     ghFailed: "[create-release] tag créé, mais la release GitHub a échoué (gh indisponible ou permission insuffisante) : {0}",
     catchUp: "[create-release] rattraper à la main : {0}",
+    candidate: "[create-release] candidate : {0} (pré-release ; la release définitive vient de la promotion, après le verdict de recette)",
+    sheet: "[create-release] fiche de recette de {0} :",
+    prerelease: "[create-release] pré-release {0} publiée avec sa fiche de recette ({1}).",
   },
   en: {
     disagree: "packages disagree on the version ({0}): align them in a PR",
@@ -59,6 +66,9 @@ const TEXTS = {
     attached: "[create-release] tarball(s) attached to the release: {0}",
     ghFailed: "[create-release] tag created, but the GitHub release failed (gh unavailable or insufficient permission): {0}",
     catchUp: "[create-release] catch up by hand: {0}",
+    candidate: "[create-release] candidate: {0} (pre-release; the final release comes from the promotion, after the acceptance verdict)",
+    sheet: "[create-release] acceptance sheet of {0}:",
+    prerelease: "[create-release] pre-release {0} published with its acceptance sheet ({1}).",
   },
 };
 
@@ -82,7 +92,9 @@ function latestTag() {
   try {
     // stderr captured (not "inherit"): no tag is the normal state of a first call, not an error
     // to show to the user.
-    return execFileSync("git", ["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*"], {
+    // A candidate (vX.Y.Z-rc.N) is never the latest final tag: the range and the version start
+    // from the last final release.
+    return execFileSync("git", ["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*", "--exclude", "*-*"], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     }).trim();
@@ -196,6 +208,13 @@ export function decideVersion({ latest, bump, versions = [], existingTags = [] }
   return { next, source: `package.json (${versions.map((v) => v.dir).join(", ")})` };
 }
 
+/** Next candidate tag of a version: `vX.Y.Z-rc.N`, N one more than the highest existing (QUA-051). */
+export function candidateTag(version, existingTags) {
+  const prefix = `${version}-rc.`;
+  const n = existingTags.filter((t) => t.startsWith(prefix)).map((t) => parseInt(t.slice(prefix.length), 10) || 0);
+  return `${prefix}${Math.max(0, ...n) + 1}`;
+}
+
 // Builds a tarball (npm pack) for each publishable package found, in a temporary folder, and
 // returns the paths of the produced .tgz.
 function buildTarballs(dirs, T) {
@@ -213,7 +232,35 @@ function buildTarballs(dirs, T) {
   return out;
 }
 
-function main() {
+// Candidate pre-release: tarballs and sheet first (a failure leaves no tag), then the tag, then the
+// pre-release carrying the tarballs and the sheet (attached, and as its note: GitHub shows it).
+async function publishCandidate({ tag, next, packages, existingTags }, T) {
+  const { buildSheet } = await import("./acceptance-sheet.mjs");
+  const rc = candidateTag(next, existingTags);
+  console.log(fill(T.candidate, rc));
+  const tarballs = dryRun ? null : buildTarballs(packages, T);
+  const sheet = buildSheet(process.cwd(), { tag: rc, version: next, from: tag, tarballs, packages: packages.length ? packages : null });
+  if (dryRun) {
+    console.log(`${fill(T.sheet, rc)}\n\n${sheet}`);
+    console.log(T.dryRun);
+    return;
+  }
+  const file = join(mkdtempSync(join(tmpdir(), "create-release-")), `recette-${rc}.md`);
+  writeFileSync(file, sheet);
+  git(["tag", "-a", rc, "-m", `Candidate ${rc}`]);
+  git(["push", "origin", rc]);
+  console.log(fill(T.pushed, rc));
+  const args = ["release", "create", rc, ...tarballs, file, "--prerelease", "--title", rc, "--notes-file", file];
+  try {
+    execFileSync("gh", args, { stdio: "inherit" });
+    console.log(fill(T.prerelease, rc, file));
+  } catch (e) {
+    console.error(fill(T.ghFailed, e.message));
+    console.error(fill(T.catchUp, `gh ${args.join(" ")}`));
+  }
+}
+
+async function main() {
   const T = texts();
   const tag = latestTag();
   const commits = commitsSince(tag);
@@ -236,6 +283,7 @@ function main() {
   console.log(fill(T.bump, packages.length ? T.suggestion : T.detected, bump, commits.length));
   console.log(fill(T.next, next, decision.source));
   if (packages.length > 0) console.log(fill(T.tarballs, packages.join(", ")));
+  if (candidate) return publishCandidate({ tag, next, packages, existingTags }, T);
   if (dryRun) {
     console.log(T.dryRun);
     return;
@@ -258,4 +306,4 @@ function main() {
 // imported for a unit test. pathToFileURL (not a "file://" + argv[1] concatenation): on Windows
 // process.argv[1] uses backslashes (D:\...) while import.meta.url uses slashes (file:///D:/...) —
 // the naive comparison silently fails and main() never runs.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();

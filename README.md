@@ -61,10 +61,14 @@ produce it.
 ### Get started
 
 ```bash
-npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.4/drwil-0.6.4.tgz
+npm install -D https://github.com/wdubilly/drwil/releases/download/v<version>/drwil-<version>.tgz
 npx drwil init       # new, existing or already equipped project
 npx drwil verify     # without a CI: VERIFY ERROR, expected — see Installation, step 3
 ```
+
+`<version>`: the latest validated version, shown on
+[https://github.com/wdubilly/drwil/releases/latest](https://github.com/wdubilly/drwil/releases/latest) — that page
+never shows a pre-release, and its note gives the exact install command.
 
 Details, prerequisites and upgrades: [Installation](#installation).
 
@@ -569,7 +573,10 @@ Integrations can therefore remain thin adapters around the native CLI.
 
 DRWIL is not published on npm yet. Install it from the tarball attached to a
 GitHub release, by its URL: nothing to download, no file left in your project
-(Node.js 22+).
+(Node.js 22+). The latest validated version is always at
+[https://github.com/wdubilly/drwil/releases/latest](https://github.com/wdubilly/drwil/releases/latest): a version is
+published there only once its acceptance has approved it (candidates stay
+pre-releases), and its note gives the exact install command.
 
 ### Before you start: prerequisites, recommendations, options
 
@@ -613,12 +620,13 @@ smoother and safer:
 From your project folder:
 
 ```bash
-npm install -D https://github.com/wdubilly/drwil/releases/download/v0.6.4/drwil-0.6.4.tgz
+npm install -D https://github.com/wdubilly/drwil/releases/download/v<version>/drwil-<version>.tgz
 ```
 
-`package.json` then points to that URL, and `npx drwil` uses this version.
-To avoid touching `package.json`, replace `npx drwil` with
-`npx --package https://github.com/wdubilly/drwil/releases/download/v0.6.4/drwil-0.6.4.tgz drwil`
+`<version>` is the one shown on the latest release page. `package.json`
+then points to that URL, and `npx drwil` uses this version. To avoid
+touching `package.json`, replace `npx drwil` with
+`npx --package https://github.com/wdubilly/drwil/releases/download/v<version>/drwil-<version>.tgz drwil`
 in the commands below.
 
 To upgrade, run the same command with the new release's URL. A project
@@ -756,7 +764,7 @@ can read directly. The names are the same whatever the project language.
 | `/drwil-value` | Discover the next high-value product features |
 | `/drwil-usage` | Measure a workstream's tokens from Claude Code's session logs and record its closing line |
 | `/drwil-progress` | Generate a static HTML progress dashboard |
-| `/drwil-release` | Tag and publish a GitHub release (optional module) |
+| `/drwil-release` | Tag and publish a GitHub release, or a candidate pre-release with its acceptance sheet, then promote it once a human approved it (optional module) |
 
 There is deliberately **no** `/drwil attest`: attestation is a human action,
 run by the human in their own terminal (`drwil attest <CONTRACT_ID>`).
@@ -1042,7 +1050,8 @@ Its role is narrower:
 ## Current status
 
 **V0.2 — Executable Governance** is delivered (see
-`packages/drwil/CHANGELOG.md`); the latest release is 0.6.4. 0.6.0 added
+`packages/drwil/CHANGELOG.md`); the latest validated release is at
+[releases/latest](https://github.com/wdubilly/drwil/releases/latest). 0.6.0 added
 the business non-regression fed by every workstream, queues of
 workstreams, token consumption measured per workstream, readable
 identifiers and a maintained architecture map. Next: trying it on real
