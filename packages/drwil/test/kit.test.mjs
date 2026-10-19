@@ -2944,9 +2944,11 @@ test("QUA-027 : mise à jour : un fichier de mécanique ajouté par la version e
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false, ci: "none" }));
   const fiche = "docs/projects/kit-mechanics.md";
   // Fiche d'une version antérieure : sans le fichier ajouté depuis, avec une ligne propre au projet.
-  const ancienne = read(dir, fiche)
-    .replace(/^ {2}- \.githooks\/skill-headers\.mjs\n/m, "")
-    .replace(/^-->$/m, "  - outils/propre-au-projet.mjs\n-->");
+  const lignes = read(dir, fiche)
+    .split("\n")
+    .filter((l) => l !== "  - .githooks/skill-headers.mjs");
+  lignes.splice(lignes.indexOf("-->"), 0, "  - outils/propre-au-projet.mjs");
+  const ancienne = lignes.join("\n");
   writeFileSync(join(dir, fiche), ancienne);
   assert.doesNotMatch(ancienne, /skill-headers/);
 

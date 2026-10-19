@@ -60,8 +60,9 @@ export function missingScopeLines(own: string, kit: string): string[] {
 
 /** Adds lines at the end of the scope block, the project's own lines untouched. */
 export function addToScope(content: string, lines: string[]): string {
-  const nl = eol(content);
-  return content.replace(/^-->/m, `${lines.join(nl)}${nl}-->`);
+  const all = content.split(/\r?\n/);
+  const end = all.findIndex((l) => l.trimEnd() === "-->");
+  return end < 0 ? content : [...all.slice(0, end), ...lines, ...all.slice(end)].join(eol(content));
 }
 
 /** Adds the kit's missing hooks and permissions, never changing nor removing the project's. */
