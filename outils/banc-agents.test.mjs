@@ -8,6 +8,7 @@ import {
   A_DEFINIR,
   OUTILS,
   analyser,
+  confianceCopilot,
   equiper,
   essayer,
   hooksLances,
@@ -128,6 +129,35 @@ test("QUA-060 : la sonde s'insère après le shebang, couvre dossiers et fichier
   assert.deepEqual(hooksLances(""), []);
 });
 
+test("QUA-060 : Copilot reçoit un COPILOT_HOME temporaire de confiance, copie de la configuration du poste, nettoyé ensuite", () => {
+  const maison = mkdtempSync(join(tmpdir(), "banc-maison-"));
+  const base = mkdtempSync(join(tmpdir(), "banc-base-"));
+  try {
+    writeFileSync(join(maison, "config.json"), '{"trustedFolders":["/deja"],"autre":1}');
+    writeFileSync(join(maison, "settings.json"), "{}");
+    const avec = confianceCopilot("/projet", { maison, base });
+    const config = JSON.parse(readFileSync(join(avec.env.COPILOT_HOME, "config.json"), "utf8"));
+    assert.deepEqual(config.trustedFolders, ["/projet", "/deja"]);
+    assert.equal(config.autre, 1);
+    assert.ok(existsSync(join(avec.env.COPILOT_HOME, "settings.json")));
+    assert.equal(readFileSync(join(maison, "config.json"), "utf8").includes("/projet"), false, "la configuration du poste reste intacte");
+    avec.nettoyer();
+    assert.equal(existsSync(avec.env.COPILOT_HOME), false);
+
+    writeFileSync(join(maison, "config.json"), '{"autre":1}');
+    const sans = confianceCopilot("/projet", { maison, base });
+    assert.deepEqual(JSON.parse(readFileSync(join(sans.env.COPILOT_HOME, "config.json"), "utf8")).trustedFolders, ["/projet"]);
+    sans.nettoyer();
+    rmSync(join(maison, "config.json"));
+    const vide = confianceCopilot("/projet", { maison, base });
+    assert.deepEqual(JSON.parse(readFileSync(join(vide.env.COPILOT_HOME, "config.json"), "utf8")).trustedFolders, ["/projet"]);
+    vide.nettoyer();
+  } finally {
+    rmSync(maison, { recursive: true, force: true });
+    rmSync(base, { recursive: true, force: true });
+  }
+});
+
 test("QUA-060 : lancer retire les GIT_*, signale l'outil absent et le dépassement de délai", () => {
   process.env.GIT_BANC_TEST = "1";
   try {
@@ -140,6 +170,11 @@ test("QUA-060 : lancer retire les GIT_*, signale l'outil absent et le dépasseme
   } finally {
     delete process.env.GIT_BANC_TEST;
   }
+  assert.match(
+    lancer(process.execPath, ["-e", "console.log(process.env.BANC_AJOUT)"], { cwd: tmpdir(), timeout: 30000, env: { BANC_AJOUT: "oui" } })
+      .sortie,
+    /oui/,
+  );
   assert.equal(lancer("outil-qui-nexiste-pas-banc", [], { cwd: tmpdir(), timeout: 30000 }).absent, true);
   assert.equal(lancer(process.execPath, ["-e", "setTimeout(()=>{}, 5000)"], { cwd: tmpdir(), timeout: 100 }).delai, true);
 });

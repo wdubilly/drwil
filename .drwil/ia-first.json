@@ -589,6 +589,31 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-064",
+      "name": "tests de QUA-064, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-064 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/**",
+        "packages/drwil/templates/common/tools/**",
+        "packages/drwil/test/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-065",
+      "name": "tests de QUA-065, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-065 \" .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/state*.mjs",
+        "packages/drwil/templates/common/base/.githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "taille-fichiers",
       "name": "fichiers de code sous 400 lignes, tests exclus (QUA-001)",
       "run": "node .githooks/check-file-size.mjs packages/drwil/src 400 ts && node .githooks/check-file-size.mjs packages/drwil/bin 400 js && node .githooks/check-file-size.mjs .githooks 400 mjs && node .githooks/check-file-size.mjs outils 400 mjs",

@@ -3,7 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve as resolvePath } from "node:path";
-import { CI_FILES, type Resolved } from "./config.js";
+import { CI_FILES, type Resolved, usesClaudeTree } from "./config.js";
 import { fill, type MessageLang } from "./i18n.js";
 import { render, templatesDir } from "./render.js";
 
@@ -203,7 +203,7 @@ export function findGaps(r: Resolved): Gap[] {
     if (r.tools.includes(tool as never) && present(rel) && !read(dir, rel).includes("AGENTS.md"))
       gaps.push({ file: rel, kind: "pointer", missing: [], fix: [pointerLine()] });
 
-  if (r.tools.includes("claude") && present(".claude/settings.json")) {
+  if (usesClaudeTree(r.tools) && present(".claude/settings.json")) {
     try {
       const missing = missingSettings(JSON.parse(read(dir, ".claude/settings.json")), kitSettings(r));
       if (missing.length) gaps.push({ file: ".claude/settings.json", kind: "settings", missing, fix: ["npx drwil init"] });

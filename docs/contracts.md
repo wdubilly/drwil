@@ -537,6 +537,27 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : compatibilité des agents, le socle commun (0.6.7) — « La matrice de compatibilité (`docs/ia-first.md`) donne, outil par outil, ce qui est réellement tenu, et sa date d'essai »
 **Raison** : Dire qu'un outil est compatible sans l'avoir mesuré est la même erreur qu'une doc fausse : la matrice est remplie par le banc, pas par la mémoire de l'agent.
 
+## QUA-064 — Choisir Copilot installe aussi l'arbre `.claude` et les hooks natifs de Copilot
+**Règle** : Livré à tout projet. Quand `copilot` est parmi les outils, `drwil init` installe aussi `.claude/` (réglages, hooks, skills) — Copilot CLI le lit lui-même, ce qui lui donne le blocage d'écriture (QUA-016) et les commandes `/drwil-*` — et les hooks natifs de Copilot (dossier .github/hooks), qui donnent l'état au démarrage de session et le rappel d'état à chaque message. Le pointeur `CLAUDE.md` reste lié au seul outil `claude`.
+**Périmètre** : `packages/drwil/src/config.ts` (`usesClaudeTree`), `packages/drwil/src/render.ts`, `packages/drwil/src/drift.ts`, `packages/drwil/src/essentials.ts` ; `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`.
+**Source de vérité** : `packages/drwil/src/config.ts` (`usesClaudeTree`).
+**Preuve** : test du paquet qui installe un projet avec le seul outil `copilot` et y trouve les hooks, les réglages, les skills et les hooks natifs, sans `CLAUDE.md`.
+**Contrôle** : `tests-qua-064`
+**Manuel** : un `/drwil-start` tapé dans Copilot CLI interactif lance un chantier (le banc ne lance que le mode non interactif).
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : compatibilité des agents, volet Copilot (0.6.7) — « Copilot lit `.claude/` : hooks, réglages et skills lui sont donnés, et ses hooks natifs apportent l'état et le rappel »
+**Raison** : Essais du 2026-10-18 : `--tools copilot` n'installait que des consignes, donc aucun hook ni commande `/drwil-*` ; l'écriture de code hors chantier n'était arrêtée par rien.
+
+## QUA-065 — Les hooks de Copilot parlent son format, sans jamais bloquer
+**Règle** : Livré à tout projet. `node .githooks/state.mjs copilot-start` rend `{"additionalContext": <état>}` et `copilot-message` rend `{"modifiedTransformedPrompt": <rappel> + message}` (le rappel une seule fois par changement d'état), seuls formats que Copilot lit. Aucun ne rend d'erreur ni n'attend une entrée qui ne se ferme pas : l'entrée est lue dès que son JSON est complet, avec un délai de repli de 2 s. `scope-reminder` lit le fichier sous `path` (Copilot) comme sous `file_path` (Claude).
+**Périmètre** : `.githooks/state-cli.mjs`, `.githooks/state.mjs` ; `.claude/hooks/scope-reminder.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/state-cli.mjs` (`main`, `readStdinJson`).
+**Preuve** : tests des deux modes (rappel, une seule fois, entrée vide ou invalide, entrée jamais fermée) ; essai réel du banc sur Copilot (hooks lancés, écriture refusée, rappel reçu).
+**Contrôle** : `tests-qua-065`
+**Tests** : `.githooks/state.test.mjs`
+**Origine** : compatibilité des agents, volet Copilot (0.6.7) — « le rappel d'état est reçu au démarrage et à chaque message, aucun hook ne dépasse le délai »
+**Raison** : `.githooks/state.mjs` imprimait du texte brut que Copilot ignore (rappel jamais reçu), et `scope-reminder` lisait `file_path` alors que Copilot envoie `path` (l'écriture n'était jamais refusée) ; un hook qui attend son entrée sans fin est laissé passer au délai (30 s).
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

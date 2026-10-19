@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { StackEntry } from "./stack.js";
-import { CI_FILES, projectName, splitCsv, TEXT, type Resolved } from "./config.js";
+import { CI_FILES, projectName, splitCsv, TEXT, type Resolved, usesClaudeTree } from "./config.js";
 import { sha256 } from "./manifest.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -37,7 +37,20 @@ function stackAllow(stack: StackEntry[]): string {
 // existing file when only the date would change (QUA-047), otherwise writes today's date.
 const DATE_SLOT = "\u0000drwil-date\u0000";
 const today = () => new Date().toISOString().slice(0, 10);
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** `existing` is `parts` with a date between each; compared piece by piece (a regex as long as a document overflows). */
+function differsOnlyByDates(parts: string[], existing: string): boolean {
+  let pos = 0;
+  for (const [i, part] of parts.entries()) {
+    if (i > 0) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(existing.slice(pos, pos + 10))) return false;
+      pos += 10;
+    }
+    if (!existing.startsWith(part, pos)) return false;
+    pos += part.length;
+  }
+  return pos === existing.length;
+}
 
 /**
  * Content to write for `rendered` (dates left as DATE_SLOT): the existing file itself when it
@@ -46,7 +59,7 @@ const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export function keepDate(rendered: string, existing: string | undefined): string {
   const parts = rendered.split(DATE_SLOT);
   if (parts.length === 1) return rendered;
-  if (existing !== undefined && new RegExp(`^${parts.map(escapeRegExp).join("\\d{4}-\\d{2}-\\d{2}")}$`).test(existing)) return existing;
+  if (existing !== undefined && differsOnlyByDates(parts, existing)) return existing;
   return parts.join(today());
 }
 
@@ -71,7 +84,7 @@ export function render(content: string, r: Resolved, extra: Record<string, strin
     date: today(),
     // Kit files to cover by the scope block of kit-mechanics.md (empty lines if absent).
     scopeCi: ciFile ? `  - ${ciFile}` : "",
-    scopeClaude: r.tools.includes("claude") ? "  - .claude/settings.json" : "",
+    scopeClaude: usesClaudeTree(r.tools) ? "  - .claude/settings.json" : "",
     stackAllowJson: stackAllow(r.stack),
     ...extra,
   };
@@ -171,7 +184,9 @@ export async function scaffold(r: Resolved, w: WriteOptions): Promise<void> {
   // A single template, in English: the project's language no longer chooses files.
   const template = join(templatesDir, "common");
   await copyTree(join(template, "base"), r, w);
-  for (const tool of r.tools) await copyTree(join(template, "tools", tool), r, w);
+  const trees = new Set<string>(r.tools);
+  if (usesClaudeTree(r.tools)) trees.add("claude");
+  for (const tool of trees) await copyTree(join(template, "tools", tool), r, w);
   await copyTree(join(template, "ci", r.ci), r, w);
 
   for (const layer of r.layers) {

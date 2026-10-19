@@ -6,8 +6,8 @@
 // Propre à ce dépôt : les essais coûtent de vrais appels de modèle, ils ne tournent ni au commit ni en CI.
 // Usage : node outils/banc-agents.mjs [--outil claude,copilot,gemini,codex,cursor] [--json] [--garder]
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -23,6 +23,23 @@ const PROMPT = [
 // Hook qui refuse l'écriture, le même pour tous les outils (un seul jeu de scripts).
 const HOOK_ECRITURE = /scope-reminder/;
 
+/**
+ * Copilot CLI ne charge les hooks d'un dépôt que dans un dossier de confiance. Un COPILOT_HOME temporaire,
+ * copie de la configuration du poste où seul le projet d'essai est ajouté, évite de toucher à celle de l'utilisateur.
+ */
+export function confianceCopilot(dossier, { maison = join(homedir(), ".copilot"), base = tmpdir() } = {}) {
+  const home = mkdtempSync(join(base, "drwil-banc-copilot-"));
+  for (const nom of ["config.json", "settings.json"]) if (existsSync(join(maison, nom))) copyFileSync(join(maison, nom), join(home, nom));
+  const fichier = join(home, "config.json");
+  let config = {};
+  try {
+    config = JSON.parse(readFileSync(fichier, "utf8"));
+  } catch {}
+  config.trustedFolders = [dossier, ...(Array.isArray(config.trustedFolders) ? config.trustedFolders : [])];
+  writeFileSync(fichier, JSON.stringify(config));
+  return { env: { COPILOT_HOME: home }, nettoyer: () => rmSync(home, { recursive: true, force: true }) };
+}
+
 /** Outils dont le lancement non interactif est connu et vérifié sur le poste ; l'écriture n'y est jamais bloquée par l'outil. */
 export const OUTILS = {
   claude: { binaire: "claude", args: (p) => ["-p", p, "--permission-mode", "acceptEdits"], sondes: [".claude/hooks"] },
@@ -30,6 +47,7 @@ export const OUTILS = {
     binaire: "copilot",
     args: (p) => ["-p", p, "--allow-all-tools", "--no-ask-user", "--no-auto-update"],
     sondes: [".github/hooks", ".claude/hooks"],
+    confiance: confianceCopilot,
   },
   gemini: { binaire: "gemini", args: (p) => ["-p", p, "--approval-mode", "yolo", "--skip-trust"], sondes: [".gemini"] },
 };
@@ -99,8 +117,8 @@ export function analyser(observation) {
 }
 
 /** Lancement réel d'une commande, sans variable GIT_* héritée (elle ferait agir l'outil sur le dépôt qui nous lance). */
-export function lancer(commande, args, { cwd, timeout }) {
-  const env = Object.fromEntries(Object.entries(process.env).filter(([n]) => !n.startsWith("GIT_")));
+export function lancer(commande, args, { cwd, timeout, env: ajout = {} }) {
+  const env = { ...Object.fromEntries(Object.entries(process.env).filter(([n]) => !n.startsWith("GIT_"))), ...ajout };
   const r = spawnSync(commande, args, { cwd, env, encoding: "utf8", timeout, maxBuffer: 32 * 1024 * 1024 });
   return {
     code: r.status,
@@ -148,11 +166,12 @@ export function essayer(nom, { executer = lancer, delai = 300000, garder = false
   if (executer(outil.binaire, ["--version"], { cwd: tmpdir(), timeout: 30000 }).absent)
     return { outil: nom, verdict: "non testé", raison: `${outil.binaire} absent du poste` };
   const dossier = preparer(nom, { executer, base });
+  const confiance = outil.confiance?.(dossier);
   try {
     const journal = join(dossier, ".banc-sonde.log");
     writeFileSync(journal, "");
     equiper(dossier, journal, [...SONDES_COMMUNES, ...outil.sondes]);
-    const r = executer(outil.binaire, outil.args(PROMPT), { cwd: dossier, timeout: delai });
+    const r = executer(outil.binaire, outil.args(PROMPT), { cwd: dossier, timeout: delai, env: confiance?.env });
     if (r.delai) return { outil: nom, verdict: "non testé", raison: `pas de réponse en ${delai / 1000} s` };
     const ecrit = existsSync(join(dossier, FICHIER_ESSAI));
     return {
@@ -162,6 +181,7 @@ export function essayer(nom, { executer = lancer, delai = 300000, garder = false
       dossier: garder ? dossier : undefined,
     };
   } finally {
+    confiance?.nettoyer();
     if (!garder) rmSync(dossier, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 }
