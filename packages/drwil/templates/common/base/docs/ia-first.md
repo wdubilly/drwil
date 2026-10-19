@@ -261,7 +261,7 @@ never "held". Whatever the tool, the Git barrier at commit still holds.
 |---|---|---|---|---|---|
 | Claude Code | yes | refused by the hook | received | 2026-10-19 (2.1.303) | pending |
 | Copilot CLI | yes | refused by the hook | received | 2026-10-19 (1.0.98) | pending |
-| Gemini CLI | no | accepted | not received | 2026-10-19 (0.61.0) | pending |
+| Gemini CLI | yes | refused by the hook | received | 2026-10-19 (0.61.0) | pending |
 | Codex | not tested | not tested | not tested | not tested | — |
 | Cursor | not tested | not tested | not tested | not tested | — |
 
@@ -278,6 +278,18 @@ Copilot's 30-second delay there was not reproduced, and its cause is not
 established. A hook that fails never counts as an agreement, but a timeout
 lets the call through; the hooks therefore never wait for an input that does
 not close.
+
+Gemini CLI: `--tools gemini` installs the settings of the .gemini folder (hooks for the
+session start, each message and the `write_file` and `replace` tools) and the
+shared scripts of the .claude/hooks folder, the same set as for every other tool
+(only the declaration differs). Like Copilot CLI, it loads a repository's hooks
+only in a **trusted folder** (trust it once in an interactive session; the bench
+sets `GEMINI_CLI_TRUST_WORKSPACE` for its trial project only, `--skip-trust` alone
+does not load them). The trial of 2026-10-18 saw no hook because of that trust.
+Gemini has no `/drwil-*` commands here: **start a workstream with
+`node .githooks/state.mjs start` in an interactive terminal**, then work in
+Gemini CLI. The free-tier quota of the model can make a bench run fail (429, 503):
+a failed run proves nothing and is run again.
 
 ## 7. Projects, resumable cold
 

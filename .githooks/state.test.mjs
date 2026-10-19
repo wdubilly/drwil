@@ -1116,6 +1116,19 @@ test("QUA-065 : principal copilot-message : rappel devant le message, une seule 
     assert.deepEqual(JSON.parse((await capturer(() => main(["copilot-message"], racine, entree(brut)))).sortie), {});
 });
 
+test("QUA-067 : principal gemini-start et gemini-message : l'état et le rappel en JSON natif Gemini, une seule fois, jamais d'échec", async () => {
+  const racine = depot();
+  const debut = JSON.parse((await capturer(() => main(["gemini-start"], racine))).sortie).hookSpecificOutput;
+  assert.equal(debut.hookEventName, "SessionStart");
+  assert.match(debut.additionalContext, /SCOPING/);
+  const message = JSON.parse((await capturer(() => main(["gemini-message"], racine))).sortie).hookSpecificOutput;
+  assert.equal(message.hookEventName, "BeforeAgent");
+  assert.match(message.additionalContext, /^\[drwil\] Rappel/);
+  assert.deepEqual(JSON.parse((await capturer(() => main(["gemini-message"], racine))).sortie), {}, "inchangé : rien");
+  for (const mode of ["gemini-start", "gemini-message"])
+    assert.deepEqual(JSON.parse((await capturer(() => main([mode], null))).sortie), {});
+});
+
 test("QUA-065 : readStdinJson : rend le JSON dès qu'il est complet, sans attendre la fin ni plus que le délai", async () => {
   const ouvert = new PassThrough();
   ouvert.write('{"a":1}');

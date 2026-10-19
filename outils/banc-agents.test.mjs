@@ -9,6 +9,7 @@ import {
   OUTILS,
   analyser,
   confianceCopilot,
+  confianceGemini,
   equiper,
   essayer,
   hooksLances,
@@ -198,6 +199,13 @@ test("QUA-060 : principal rend 0 sans outil non conforme, 1 sinon, et sait sorti
   }
 });
 
+test("QUA-060 : Gemini reçoit la confiance du dossier par une variable propre à l'essai, sans toucher à la configuration du poste", () => {
+  const confiance = confianceGemini();
+  assert.deepEqual(confiance.env, { GEMINI_CLI_TRUST_WORKSPACE: "true" });
+  assert.equal(confiance.nettoyer(), undefined);
+  assert.equal(OUTILS.gemini.confiance, confianceGemini);
+});
+
 test("QUA-063 : la matrice de compatibilité donne, pour chaque outil du banc, ce qui est tenu et la date de son essai", () => {
   const texte = readFileSync(join(RACINE, "packages", "drwil", "templates", "common", "base", "docs", "ia-first.md"), "utf8");
   const matrice = texte.slice(texte.indexOf("### Tool compatibility matrix"));
@@ -217,5 +225,14 @@ test("QUA-063 : la matrice de compatibilité donne, pour chaque outil du banc, c
   assert.ok(
     readFileSync(join(RACINE, "docs", "ia-first.md"), "utf8").includes("### Tool compatibility matrix"),
     "la copie du dépôt porte la matrice",
+  );
+});
+
+test("QUA-068 : la matrice dit comment lancer un chantier sous Gemini CLI", () => {
+  const texte = readFileSync(join(RACINE, "packages", "drwil", "templates", "common", "base", "docs", "ia-first.md"), "utf8");
+  const gemini = texte.slice(texte.indexOf("Gemini CLI: `--tools gemini`"));
+  assert.match(
+    gemini.slice(0, gemini.indexOf("## 7.")),
+    /start a workstream with\s+`node \.githooks\/state\.mjs start` in an interactive terminal/,
   );
 });
