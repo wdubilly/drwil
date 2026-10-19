@@ -66,33 +66,33 @@ elle teste donc le tarball avant la release définitive.
 ## Critères d'acceptation
 
 - Une version candidate est publiée en pré-release GitHub (par exemple
-  `v0.6.5-rc.1`), avec son tarball et une fiche de recette en Markdown
+  v0.6.5-rc.1), avec son tarball et une fiche de recette en Markdown
   générée (jamais écrite à la main) du dernier tag définitif à la
-  candidate, lisible sans Git — contrat à créer
+  candidate, lisible sans Git — `QUA-051`
 - En tête de la fiche, « à valider » : chaque point dit quoi regarder et
-  comment — critères `[humain]`, attestations à refaire, ce qui n'a pas
+  comment — critères marqués humain, attestations à refaire, ce qui n'a pas
   été essayé en réel, limites connues — et porte un identifiant stable
   (version et numéro de point) et le lien vers la PR de son chantier
   (retrouvée par le trailer `Drwil-Brief` des commits) ; en dessous, la
   non-régression : verdict de `drwil verify`, nombre de contrats prouvés
   par un test, leurs ID et libellés, OS testés par la CI, et l'empreinte
-  du tarball — contrat à créer
+  du tarball — `QUA-052`
 - Une commande humaine enregistre le verdict de recette sur la candidate :
   approuvée, approuvée avec réserves (chaque réserve citée par
   l'identifiant de son point) ou refusée (chaque point refusé cité) ; un
   agent ne l'exécute jamais ; le verdict garde qui l'a donné et quand —
-  contrat à créer
+  `QUA-053`
 - La promotion refuse une candidate sans verdict, ou refusée ; approuvée,
   avec ou sans réserves, elle crée la release définitive sur le même
   commit avec le même tarball (même empreinte), les réserves listées dans
   la note de release ; chaque réserve et chaque refus devient une issue,
   que la recette « corriger un défaut » dit comment ranger : défaut à
-  corriger (une régression) ou intention (un manque) — contrat à créer
+  corriger (une régression) ou intention (un manque) — `QUA-054`
 - Les README pointent vers la dernière version validée par un lien fixe
   (`releases/latest`), qui ne montre jamais une pré-release : aucun commit
-  à chaque version — contrat à créer
+  à chaque version — `QUA-055`
 - Livré à tout projet avec le module de release ; `--dry-run` montre la
-  fiche et ce que ferait la promotion sans rien publier — contrat à créer
+  fiche et ce que ferait la promotion sans rien publier — `QUA-051`
 
 ## 2. Hors périmètre
 
