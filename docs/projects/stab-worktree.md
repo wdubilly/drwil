@@ -69,10 +69,10 @@ et casser un chantier en cours.
 
 - Un push depuis un worktree d'un dépôt jetable laisse le dépôt principal
   identique (configuration, branches, index, arbre) ; le test rejoue
-  l'incident du 2026-10-18 et échoue sans le correctif — contrat à créer
+  l'incident du 2026-10-18 et échoue sans le correctif — `QUA-056`
 - Le lanceur des contrôles retire les variables `GIT_*` de
   l'environnement de chaque contrôle qu'il lance, quel que soit le fichier
-  de test — contrat à créer
+  de test — `QUA-057`
 
 ## 2. Hors périmètre
 
