@@ -20,12 +20,16 @@ files:
   - .githooks/state.test.mjs
   - packages/drwil/src/config.ts
   - packages/drwil/src/render.ts
+  - packages/drwil/src/drift.ts
+  - packages/drwil/src/essentials.ts
   - packages/drwil/src/manifest.ts
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/projects/kit-mechanics.md
   - outils/banc-agents.mjs
   - outils/banc-agents.test.mjs
+  - outils/verifier-miroirs.mjs
+  - packages/drwil/templates/common/base/docs/ia-first.md
   - docs/ia-first.md
   - docs/architecture.md
   - docs/contracts.md
@@ -52,10 +56,10 @@ lancé.
 
 - Sous Copilot CLI, en SCOPING, une écriture de fichier de code (`create`,
   `edit`) est refusée avec le motif drwil, en session interactive comme en
-  mode non interactif ; prouvé par le banc [humain] — contrat à créer
+  mode non interactif ; prouvé par le banc [humain] — `QUA-060`, `QUA-064`
 - Copilot CLI reçoit le rappel d'état au démarrage et à chaque message ;
   aucun hook drwil ne dépasse le délai de Copilot (cause du dépassement
-  établie et corrigée, testée hors Copilot) — contrat à créer
+  établie et corrigée, testée hors Copilot) — `QUA-065`
 - `/drwil-start` lance un chantier depuis Copilot CLI (sondage
   `ask_user`), refusé si la réponse est préremplie — `QUA-037`
 
@@ -96,7 +100,7 @@ lancé.
 
 ## 6. Reprise
 
-- **Dernier état** (2026-10-18) : cadré, rien de construit.
-- **Travail non commité** : aucun.
+- **Dernier état** (2026-10-19) : construit, contrôles à relancer ; banc réel Copilot conforme.
+- **Travail non commité** : tout.
 - **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`),
   après le socle.
