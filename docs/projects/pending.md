@@ -300,6 +300,8 @@ une décision du demandeur.
   dépôt (régression du correctif du 2026-10-10, constatée le 2026-10-18 :
   `core.bare=true` écrit dans le dépôt principal) —
   `docs/intentions/tests-isoles-depuis-un-worktree.md`.
+- [ ] [IA] [P0] 0.6.5 : release 0.6.5, première recette réelle
+  (candidate, verdict humain, promotion) — `docs/projects/release-0-6-5.md`.
 - [ ] [IA] [P1] 0.6.6, 1 sur 5 : compatibilité des agents, le socle
   commun (banc, règle « intention ou demande », en-têtes YAML stricts,
   matrice) — `docs/projects/compat-socle.md`.
