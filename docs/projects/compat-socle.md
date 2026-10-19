@@ -1,6 +1,6 @@
 # Projet : compatibilité des agents, le socle commun (0.6.7, 1 sur 5)
 
-**Statut** : cadré le 2026-10-18.
+**Statut** : fait le 2026-10-19.
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/compatibilite-des-outils.md`
@@ -22,6 +22,7 @@ files:
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/projects/kit-mechanics.md
   - packages/drwil/test/kit.test.mjs
+  - packages/drwil/templates/common/base/docs/ia-first.md
   - docs/ia-first.md
   - docs/architecture.md
   - docs/contracts.md
@@ -47,19 +48,19 @@ signale.
 
 ## Critères d'acceptation
 
-- Le banc (outils/banc-agents.mjs, à créer) installe drwil dans un projet temporaire
+- Le banc (`outils/banc-agents.mjs`) installe drwil dans un projet temporaire
   en SCOPING, lance l'agent demandé en mode non interactif avec une consigne
   d'écriture de code, et rend pour chaque outil : hooks lancés ou non,
   écriture refusée ou acceptée, rappel d'état reçu ou non ; un outil absent
-  du poste est signalé « non testé », jamais « conforme » — contrat à créer
+  du poste est signalé « non testé », jamais « conforme » [humain] — `QUA-060`
 - `AGENTS.md` dit qu'en SCOPING un besoin exprimé se cadre (intention ou
   fiche) et ne se code pas, et qu'en cas de doute l'agent demande
-  « intention ou demande de réalisation ? » avant d'agir — contrat à créer
+  « intention ou demande de réalisation ? » avant d'agir — `QUA-061`
 - Chaque en-tête de skill livré se lit en YAML strict ; un en-tête invalide
   est refusé au commit, et `start-a-workstream` apparaît dans
-  `copilot skill list` — contrat à créer
+  `copilot skill list` — `QUA-062`
 - La matrice de compatibilité (`docs/ia-first.md`) donne, outil par outil,
-  ce qui est réellement tenu, et sa date d'essai [humain] — contrat à créer
+  ce qui est réellement tenu, et sa date d'essai [humain] — `QUA-063`
 
 ## 2. Hors périmètre
 
@@ -104,6 +105,6 @@ signale.
 
 ## 6. Reprise
 
-- **Dernier état** (2026-10-18) : cadré, rien de construit.
+- **Dernier état** (2026-10-19) : les 4 lots faits, QUA-060 et QUA-063 attestés, `drwil verify` PASS.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : clôture.
