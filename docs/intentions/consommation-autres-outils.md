@@ -16,6 +16,12 @@ oubliée.
 - Copilot CLI : la recette décrit une requête `session_store_sql` (table
   `session_usage`) à lancer à la main ; rien n'écrit la ligne de
   `.drwil/usage.jsonl`.
+- Copilot CLI, constaté le 2026-10-19 à la clôture de « Gemini CLI tenu » :
+  `.githooks/close.mjs` répond « aucune réponse d'agent dans ~/.claude/projects/… —
+  non mesuré », alors que la session a bien tourné sous Copilot CLI (ses
+  traces sont dans `~/.copilot/session-state/<session>/` : `events.jsonl` et
+  `session.db`, format différent de celui de Claude Code). Copilot CLI est
+  l'outil le plus utilisé sur ce dépôt : à couvrir en premier.
 - Cursor, Codex, Gemini : aucune voie décrite.
 - Sans journal lisible, le script le dit et sort en succès (jamais
   bloquant) : la clôture n'est pas gênée, seulement non mesurée.
@@ -23,6 +29,7 @@ oubliée.
 ## Questions à trancher
 
 - [décision] Quels outils couvrir d'abord (ceux des projets du pilote) ?
+  Proposition : Copilot CLI d'abord (demande du 2026-10-19), puis les autres.
 - [décision] Lire leurs historiques dans le même script (un lecteur par
   outil) ou garder une saisie guidée qui écrit la même ligne ?
 - [décision] Comment garantir, comme pour Claude Code, que seuls les champs

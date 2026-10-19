@@ -337,6 +337,14 @@ une décision du demandeur.
   `docs/intentions/banc-gemini-quota.md`.
 - [ ] [IA] [P0] 0.6.7 : release 0.6.7, la compatibilité des agents (candidate,
   verdict humain, promotion) — `docs/projects/release-0-6-7.md`.
+- [ ] [décision] `verify` dit pourquoi un critère n'est « pas durable »
+  (marqueur `[humain]` manquant ou en trop) —
+  `docs/intentions/critere-humain-message-clair.md`.
+- [ ] [décision] La clôture dit quelle étape suit au lieu de refuser sèchement
+  (chemin BUILD → CLOSING, évidence périmée) —
+  `docs/intentions/cloture-chemin-guide.md`.
+- [ ] [décision] Décision de fusion sous un outil sans second sondage (Copilot
+  CLI) — `docs/intentions/fusion-sans-sondage-copilot.md`.
 - [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
   d'essayé) — `docs/intentions/compat-codex.md`.
 - [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
@@ -370,6 +378,14 @@ une décision du demandeur.
 - [ ] [décision] drwil_com, en dernier : le reste du guide de démarrage
   (dépôt git existant avant `init` ; le reste est cadré en 0.6.3) —
   `docs/intentions/guide-de-demarrage.md`.
+- [ ] [décision] Mener dès le premier chantier dans un sous-agent, pas
+  seulement une file — `docs/intentions/sous-agent-des-le-premier-chantier.md`.
+- [ ] [décision] Convoquer des personas d'agents (`agency-agents`) choisis par
+  le cadrage d'un chantier — `docs/intentions/personas-convoques-par-le-cadrage.md`.
+- [ ] [décision] La clôture vérifie la cohérence de la documentation, de façon
+  bloquante — `docs/intentions/cloture-coherence-doc.md`.
+- [ ] [décision] Noter une idée ou une intention à tout moment, sous Claude
+  Code, Copilot CLI et Gemini CLI — `docs/intentions/note-a-tout-moment.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
