@@ -2056,7 +2056,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Intention d'origine** : couverte, résumée ici et retirée ; la version
   HTML, hors périmètre, devient `docs/intentions/fiche-de-recette-html.md`.
 - **Limites connues** : rien publié en réel (candidate, verdict, promotion
-  éprouvés contre un gh simulé) — `docs/intentions/recette-eprouvee-en-reel.md` ;
+  éprouvés contre un gh simulé) — intention éprouvée le 2026-10-19 sur la
+  0.6.5, résumée au journal (« une fiche de recette juste ») et retirée ;
   essais en réel reconnus par une liste de mots —
   `docs/intentions/essai-reel-reconnu-par-mots.md`.
 - **Consommation** : 3,93 M tokens pondérés, 131 requêtes, 59 minutes
@@ -2085,9 +2086,9 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   venant de la version fusionnée ; il est devenu le `--dry-run` de la
   candidate, la publication restant les lots 2 et 3, après la fusion.
 - **Limites connues** : candidate, verdict et promotion restent à mener
-  après la fusion ; l'intention d'origine
-  `docs/intentions/recette-eprouvee-en-reel.md` est mise à jour, pas
-  retirée.
+  après la fusion ; l'intention d'origine (la recette par version
+  éprouvée en réel) est mise à jour, pas retirée (retirée depuis, journal
+  « une fiche de recette juste »).
 - **Consommation** : 0,70 M tokens pondérés (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR #164 (branche `chantier/release-0-6-5`).
 
@@ -2098,7 +2099,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `v0.6.5` avec le même tarball (sha256 vérifié après téléchargement).
   Premier essai réel du parcours (QUA-051 à QUA-054) : il tient de bout en
   bout ; trois défauts de la fiche générée sont cadrés en 0.6.6
-  (`docs/projects/stab-recette.md`).
+  (corrigés, journal « une fiche de recette juste »).
 - **Première file menée par sous-agents** (0.6.5, 2026-10-18 et 19) : cinq
   chantiers et une correction intercalée, chacun dans un sous-agent ; cache
   lu moyen par requête de 86 k à 183 k selon les chantiers, contre 309 k
@@ -2226,3 +2227,41 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : 0,55 M tokens pondérés, 37 requêtes, 25 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR de la branche `chantier/stab-registre`.
+
+## 2026-10-19 — Une fiche de recette juste, leçons de la 0.6.5 (0.6.6, 4 sur 4)
+
+- **Besoin** : la fiche de recette de `v0.6.5-rc.1`, premier essai réel du
+  parcours, était fausse ou bruyante sur trois points (QUA-052, la fiche
+  dit quoi valider, puis ce que la non-régression a prouvé).
+- **Causes** (chacune rejouée par un test vu en échec, sur le modèle de la
+  fiche réelle) : verify recopié brut, donc FAIL pour QUA-017 (pas de
+  travail direct sur la branche principale) seul, alors qu'une release se
+  crée toujours sur la branche principale ; fiche lue au dernier commit
+  qui la touche, la fusion de la PR, dont le premier parent garde la
+  version du cadrage ; liste de mots « essai réel » appliquée à tout le
+  texte de la fiche et du journal (besoin, décisions, critères).
+- **Résultat** (`.githooks/acceptance-sheet.mjs`, gabarit puis copie) :
+  `releaseVerdict` ne compte pas un contrat qui n'échoue que par son
+  contrôle `main-branch` et la fiche le nomme (tout autre échec, une
+  erreur ou un critère ouvert gardent le verdict de verify) ; chaque fiche
+  est lue au commit de la candidate, sinon juste avant le commit (hors
+  fusion) qui l'a supprimée ; seule une limite connue qui parle d'essai
+  réel devient un point « pas encore essayé en réel ». Rejoué sur
+  `v0.6.4..v0.6.5-rc.1` : 15 points au lieu de 26, verify PASS hors
+  QUA-017. Texte de QUA-052 modifié comme la fiche le déclarait ; README
+  du module, recette de release (gabarit et dépôt) et ligne « Unreleased »
+  du changelog à jour.
+- **Intention d'origine** « la recette par version éprouvée en réel » :
+  entièrement couverte, résumée ici et retirée. Candidate `v0.6.5-rc.1`
+  publiée avec tarball et fiche, verdict « approuvée » donné par le
+  demandeur, promotion en `v0.6.5` avec le même tarball : le parcours
+  tient de bout en bout ; ses trois défauts de fiche sont corrigés ici.
+- **Limites connues** : une fiche fusionnée par squash est encore lue
+  dans sa version du cadrage —
+  `docs/intentions/fiche-recette-apres-squash.md` ; une limite qui cite
+  « en réel » sans parler d'un essai à faire devient un point « pas encore
+  essayé en réel » — `docs/intentions/essai-reel-reconnu-par-mots.md`
+  (mise à jour).
+- **Consommation** : 0,47 M tokens pondérés, 38 requêtes, 17 minutes
+  (`.drwil/usage.jsonl`).
+- **Clôturé par** : la PR de la branche `chantier/stab-recette`.
