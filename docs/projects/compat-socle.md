@@ -19,6 +19,8 @@ files:
   - packages/drwil/templates/common/base/.githooks/skill-headers.mjs
   - .githooks/skill-headers.mjs
   - .githooks/skill-headers.test.mjs
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
   - packages/drwil/test/kit.test.mjs
   - docs/ia-first.md
   - docs/architecture.md
@@ -93,7 +95,9 @@ signale.
   (agent) : le fichier de contrôle des documents est à 398 lignes, sous le
   plafond de 400 (QUA-001, fichier de code plafonné) ; le contrôle des
   en-têtes YAML des skills vit dans un module à part
-  (`.githooks/skill-headers.mjs` (à créer)), appelé par ce fichier.
+  (`.githooks/skill-headers.mjs` (à créer)), appelé par ce fichier. Tout hook
+  livré devant être couvert par la fiche de la mécanique du kit, celle-ci
+  (gabarit et copie) entre dans le cadrage pour y déclarer ce module.
 - **2026-10-18 — Preuve par banc local scripté, attestée par l'humain**
   (demandeur) : la simulation en CI ne prouve pas que l'outil réel lance
   le hook.
