@@ -36,6 +36,8 @@ files:
   - .drwil/ia-first.json
   - outils/miroirs.json
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
 -->
 
 (cadrage : dans le module de release, la génération de la fiche
@@ -46,7 +48,10 @@ au dépôt — ; le README du module ; la recette et la skill de release, la
 recette « corriger un défaut » pour le tri des réserves et des refus ;
 `AGENTS.md` (le verdict est un geste humain) ; le lien vers la dernière
 version validée dans les README ; la carte, le registre, les contrôles, les
-miroirs et le changelog.)
+miroirs et le changelog ; les fiches de mécanique du kit, gabarit et
+dépôt, pour que les nouveaux scripts du module restent dans un cadrage —
+élargi le 2026-10-19 : sans elles, un projet qui active le module ne peut
+pas commiter ses scripts.)
 
 ## 1. Besoin
 
