@@ -13,6 +13,7 @@ import {
   readFingerprints,
   readPoints,
   realTrials,
+  releaseVerdict,
   renderSheet,
   repoUrl,
   runner,
@@ -75,7 +76,7 @@ const FICHE_A = `# Projet : une fiche de recette
 `;
 const JOURNAL0 = "# Journal\n\n## 2026-01-01 — Ancien chantier\n\n- **Limites connues** : vieille limite.\n";
 const ENTREE_A =
-  "\n## 2026-02-01 — Une fiche de recette\n\n- **Doc** : à jour ; l'essai réel viendra plus tard.\n- **Limites connues** : aucune non traitée ; la vue HTML\n  manque — `docs/intentions/x.md` ; une autre limite.\n- **Clôturé par** : la PR #12 (branche `chantier/recette`).\n";
+  "\n## 2026-02-01 — Une fiche de recette\n\n- **Doc** : à jour ; l'essai réel viendra plus tard.\n- **Limites connues** : aucune non traitée ; la vue HTML\n  manque — `docs/intentions/x.md` ; rien publié en réel ; une autre limite.\n- **Clôturé par** : la PR #12 (branche `chantier/recette`).\n";
 const ENTREE_B =
   "\n## 2026-02-02 — Un correctif écrasé\n\n- **Limites connues** : aucune.\n- **Clôturé par** : la branche `chantier/correctif`.\n";
 const ENTREE_C = "\n## 2026-02-03 — Entretien\n\n- **Clôturé par** : la PR #14.\n";
@@ -122,7 +123,7 @@ test("QUA-052 : chantiers de la plage — fiche d'avant sa suppression, PR par l
   assert.equal(workstreams(run, "v1.0.0", "HEAD").find((x) => x.brief === "docs/projects/fantome.md").title, "docs/projects/fantome.md");
 });
 
-test("QUA-052 : points à valider — critères [humain], essais en réel, limites connues, attestations à refaire ; numéros stables", () => {
+test("QUA-052 : points à valider — critères [humain], limites connues (essai réel s'il y est déclaré), attestations à refaire ; numéros stables", () => {
   const racine = historique();
   const T = sheetTexts(racine);
   const verdict = {
@@ -136,11 +137,10 @@ test("QUA-052 : points à valider — critères [humain], essais en réel, limit
     p.map((x) => [x.id, x.kind, x.what]),
     [
       ["v1.1.0-P1", "human", "La fiche se lit en quelques minutes"],
-      ["v1.1.0-P2", "real", "Éprouvé en réel sur la release 1.1.0."],
-      ["v1.1.0-P3", "real", "l'essai réel viendra plus tard."],
-      ["v1.1.0-P4", "limit", "la vue HTML manque — `docs/intentions/x.md`"],
-      ["v1.1.0-P5", "limit", "une autre limite"],
-      ["v1.1.0-P6", "attest", "QUA-902 — Relu"],
+      ["v1.1.0-P2", "limit", "la vue HTML manque — `docs/intentions/x.md`"],
+      ["v1.1.0-P3", "real", "rien publié en réel"],
+      ["v1.1.0-P4", "limit", "une autre limite"],
+      ["v1.1.0-P5", "attest", "QUA-902 — Relu"],
     ],
   );
   assert.match(p.at(-1).how, /relecture.*drwil attest QUA-902/);
@@ -330,4 +330,92 @@ test("QUA-052 : sources muettes — git en échec, merge sans second parent, cha
     buildSheet(racine, { tag: "v1.0.0-rc.1", version: "v1.0.0", from: null, tarballs: null, packages: null }, muet),
     /commit ``/,
   );
+});
+
+// Cas réel de la v0.6.5-rc.1 : la fiche, cadrée sur la branche principale, corrigée sur la branche
+// du chantier (critère rattaché à son contrat), puis supprimée à la clôture ; une phrase de décision
+// ou de besoin parlant d'essai réel ; verify en échec pour la seule règle de la branche principale.
+const FICHE_V1 = `# Projet : release 0.6.5
+
+## 1. Besoin
+
+Publier la 0.6.5 par le parcours de recette, premier essai réel.
+
+## Critères d'acceptation
+
+- [humain] La candidate est publiée avec sa fiche — contrat à créer
+
+## 5. Décisions
+
+- 2026-10-19 (demandeur) : publier par le parcours de recette, premier essai réel.
+`;
+const FICHE_V2 = FICHE_V1.replace("— contrat à créer", "— `QUA-051`");
+
+test("QUA-052 : chaque fiche lue dans sa dernière version avant sa suppression, même cadrée sur la branche principale", () => {
+  const racine = depot();
+  commit(racine, { "docs/projects/journal.md": JOURNAL0 }, "initial");
+  git(racine, "tag", "v1.0.0");
+  commit(racine, { "docs/projects/release.md": FICHE_V1 }, "Cadrage");
+  git(racine, "checkout", "-q", "-b", "chantier/release");
+  commit(racine, { "docs/projects/release.md": FICHE_V2 }, "Critère rattaché", "docs/projects/release.md");
+  git(racine, "checkout", "-q", "master");
+  commit(racine, { "autre.txt": "x" }, "Cadrage d'un autre chantier");
+  git(racine, "checkout", "-q", "chantier/release");
+  git(racine, "merge", "-q", "--no-ff", "master", "-m", "Fusion de master");
+  git(racine, "rm", "-q", "docs/projects/release.md");
+  commit(
+    racine,
+    { "docs/projects/journal.md": `${JOURNAL0}\n## 2026-10-19 — Release\n\n- **Clôturé par** : la PR #20.\n` },
+    "Clôture",
+    "docs/projects/release.md",
+  );
+  git(racine, "checkout", "-q", "master");
+  git(racine, "merge", "-q", "--no-ff", "chantier/release", "-m", "Merge pull request #20 from x/chantier/release");
+  const w = workstreams(runner(racine), "v1.0.0", "HEAD");
+  assert.equal(w[0].text, FICHE_V2);
+  const p = points("v1.1.0", w, null, sheetTexts(racine));
+  assert.deepEqual(
+    p.map((x) => [x.kind, x.what]),
+    [["human", "La candidate est publiée avec sa fiche"]],
+  );
+  // Fiche encore présente au commit de la candidate : lue telle quelle.
+  commit(racine, { "docs/projects/suivante.md": FICHE_V1 }, "Cadrage suivant", "docs/projects/suivante.md");
+  assert.equal(workstreams(runner(racine), "v1.0.0", "HEAD").find((x) => x.brief === "docs/projects/suivante.md").text, FICHE_V1);
+});
+
+test("QUA-052 : créée sur la branche principale, la fiche ne fait pas tomber verify pour la seule règle de cette branche, et le dit", () => {
+  const T = sheetTexts(tmp());
+  const principale = {
+    id: "QUA-017",
+    title: "Pas de travail direct sur la branche principale",
+    status: "fail",
+    severity: "blocking",
+    checks: [
+      { id: "main-branch", status: "fail" },
+      { id: "tests-qua-017", status: "ok" },
+    ],
+  };
+  const autres = [
+    { id: "QUA-001", title: "Un", status: "pass", severity: "blocking", checks: [] },
+    { id: "QUA-002", title: "Deux", status: "manual", severity: "warning" },
+  ];
+  const verdict = { status: "fail", results: [principale, ...autres], errors: [] };
+  assert.deepEqual(releaseVerdict(verdict), { status: "pass", excused: [principale] });
+  const base = { tag: "v1.1.0-rc.1", commit: "0123456", from: "v1.0.0", points: [], proven: [], os: [], tarballs: null, packages: null };
+  assert.match(
+    renderSheet({ ...base, verdict }, T),
+    /Verdict de `drwil verify` : PASS — sans compter QUA-017 \(Pas de travail direct sur la branche principale\), qui refuse le travail sur la branche principale, où toute release se crée\n/,
+  );
+  // Un autre échec, une erreur de configuration ou un critère ouvert : le verdict reste celui de verify.
+  const rouge = { id: "QUA-003", title: "Rouge", status: "fail", checks: [{ id: "x", status: "fail" }] };
+  assert.deepEqual(releaseVerdict({ ...verdict, results: [principale, rouge] }), { status: "fail", excused: [principale] });
+  assert.equal(releaseVerdict({ ...verdict, errors: ["registre illisible"] }).status, "error");
+  assert.equal(releaseVerdict({ ...verdict, results: [principale, { ...autres[1], severity: "blocking" }] }).status, "manual");
+  assert.deepEqual(releaseVerdict({ ...verdict, criteria: [{ status: "not-pass" }] }), { status: "fail", excused: [] });
+  assert.deepEqual(releaseVerdict({ status: "fail", results: [rouge] }), { status: "fail", excused: [] });
+  assert.deepEqual(releaseVerdict({ status: "pass" }), { status: "pass", excused: [] });
+  assert.match(renderSheet({ ...base, verdict: { status: "fail", results: [rouge] } }, T), /Verdict de `drwil verify` : FAIL\n/);
+  const en = tmp();
+  ecrire(en, { ".drwil/ia-first.json": JSON.stringify({ lang: "en" }) });
+  assert.match(renderSheet({ ...base, verdict }, sheetTexts(en)), /verdict: PASS — not counting QUA-017 \(Pas de travail direct/);
 });

@@ -33,12 +33,16 @@ not read the repository:
    acceptance sheet (Markdown, attached and shown as the release note), from
    the latest final tag to the candidate. On top, **to validate**: each
    point says what to look at and how — human acceptance criteria of the
-   workstreams, sentences about a trial for real, known limits from the
-   journal, attestations to redo — with a stable ID (`vX.Y.Z-P<n>`) and the
-   link to its workstream's PR (found through the `Drwil-Brief` trailer of
-   the commits). Below, the **non-regression** already proven: `drwil
-   verify` verdict, contracts proven by a test (IDs and titles), OS tested
-   by the CI on the commit, tarball fingerprint (sha256). `--candidate
+   workstreams (each brief read in its last version before its deletion),
+   known limits from the journal (« not tried for real yet » when the limit
+   says so; a sentence of need or decision never becomes a point),
+   attestations to redo — with a stable ID (`vX.Y.Z-P<n>`) and the link to
+   its workstream's PR (found through the `Drwil-Brief` trailer of the
+   commits). Below, the **non-regression** already proven: `drwil verify`
+   verdict (not counting the rule against direct work on the main branch,
+   where a release is always created, and saying so), contracts proven by a
+   test (IDs and titles), OS tested by the CI on the commit, tarball
+   fingerprint (sha256). `--candidate
    --dry-run` prints the sheet without building or publishing anything.
 2. The acceptance team gives its verdict (human command):
    `node .githooks/release-verdict.mjs vX.Y.Z-rc.N --approve`, or

@@ -14,6 +14,14 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- The acceptance sheet of a candidate release (release module) is right
+  again on three points met with the first real one: its `drwil verify`
+  verdict no longer falls to FAIL only because the release is created on
+  the main branch (the rule against direct work there is not counted, and
+  the sheet says so); each workstream's brief is read in its last version
+  before its deletion, no longer in the scoping version kept on the main
+  branch; and only a known limit that says so becomes a « not tried for
+  real yet » point, never a sentence of need or decision.
 - A `git push` from a secondary worktree no longer touches the main
   repository: the checks launched by the hooks (and by `drwil verify`) now
   run without the hook's `GIT_*` variables, so a test that runs `git init`

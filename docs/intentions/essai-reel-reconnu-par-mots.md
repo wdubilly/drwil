@@ -7,14 +7,18 @@ version, pour une équipe hors dépôt » (journal du 2026-10-19, 0.6.5).
 
 La fiche de recette (QUA-052, la fiche dit quoi valider, puis ce que la
 non-régression a prouvé) range parmi « pas encore essayé en réel » toute
-phrase d'une fiche ou d'une entrée de journal qui contient « en réel »,
-« essai réel » ou leurs équivalents anglais. Une phrase qui le dit
-autrement est manquée ; une phrase qui cite le mot sans parler d'un essai
-à faire devient un point de trop.
+limite connue du journal qui contient « en réel », « essai réel » ou leurs
+équivalents anglais (depuis le 2026-10-19, plus aucune phrase de besoin ou
+de décision : journal « une fiche de recette juste »). Une limite qui le
+dit autrement reste une simple limite ; une limite qui cite le mot sans
+parler d'un essai à faire change de nature — constaté sur la 0.6.5 :
+« essais en réel reconnus par une liste de mots » devient un point « pas
+encore essayé en réel ».
 
 ## Existant (vérifié le 2026-10-19)
 
-- `.githooks/acceptance-sheet.mjs` (`realTrials`) : liste de mots.
+- `.githooks/acceptance-sheet.mjs` (`realTrials`) : liste de mots,
+  appliquée aux seules limites connues.
 - Les critères humains et les limites connues, eux, viennent de champs
   structurés (marqueur humain des critères, champ « Limites connues » du
   journal).
