@@ -3752,7 +3752,8 @@ test("QUA-047 : installer ou mettre à jour garde la date d'origine d'un documen
     manifeste[fichier] = empreinte(contenu);
     writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2));
   };
-  const ancien = read(dir, fichier).replaceAll(jour, "2020-01-02");
+  // Seule la date du rendu (première occurrence, en tête) : une date d'essai écrite en dur dans le document n'en est pas une.
+  const ancien = read(dir, fichier).replace(jour, "2020-01-02");
   assert.notEqual(ancien, read(dir, fichier), "le document porte une date");
   installerCommeAvant(ancien);
 
@@ -3770,4 +3771,33 @@ test("QUA-047 : installer ou mettre à jour garde la date d'origine d'un documen
   const rafraichi = read(dir, fichier);
   assert.ok(!rafraichi.includes("Ligne d'une version précédente.") && !rafraichi.includes("2020-01-02"), rafraichi.slice(0, 200));
   assert.ok(rafraichi.includes(jour), "nouvelle date écrite avec le nouveau contenu");
+});
+
+test("QUA-061 : AGENTS.md livré distingue une intention d'une demande de réalisation en SCOPING", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const agents = read(dir, "AGENTS.md").replace(/\s+/g, " ");
+  assert.match(
+    agents,
+    /\*\*Intention or request\*\*: in SCOPING, a need the human expresses is framed \(an intention or a brief\), never coded/,
+  );
+  assert.match(agents, /ask "intention or implementation request\?" before acting/);
+});
+
+test("QUA-062 : un projet installé refuse au commit un en-tête de skill invalide en YAML strict, et nomme le fichier", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false, tools: "claude" }));
+  assert.ok(existsSync(join(dir, ".githooks/skill-headers.mjs")), "le module de contrôle est livré");
+  const lancer = () => spawnSync(process.execPath, [".githooks/check-docs.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(lancer().status, 0, "les skills livrés se lisent en YAML strict");
+
+  const skill = ".claude/skills/start-a-workstream/SKILL.md";
+  const bon = read(dir, skill);
+  writeFileSync(
+    join(dir, skill),
+    bon.replace(/^description: .*$/m, "description: Lance un chantier (plusieurs fiches: la file) puis la suite."),
+  );
+  const r = lancer();
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout, new RegExp(`${skill.replaceAll(".", "\\.")} : .*ligne 3.*description.*entre guillemets`));
 });

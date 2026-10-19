@@ -65,7 +65,7 @@ lancé.
   `docs/intentions/file-pour-copilot.md` (deux décisions ouvertes).
 - Les sous-agents de Copilot (`--fleet`) :
   `docs/intentions/file-sous-agents-autres-outils.md`.
-- Les en-têtes YAML des skills : `docs/projects/compat-socle.md`.
+- Les en-têtes YAML des skills : fait par le socle (journal du 2026-10-19, QUA-062).
 
 ## 3. Contraintes
 

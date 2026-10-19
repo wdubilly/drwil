@@ -5,6 +5,24 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Added
+
+- `AGENTS.md` now says that, in SCOPING, a need the human expresses is
+  framed (an intention or a brief), never coded, and that the agent asks
+  "intention or implementation request?" when in doubt.
+- The checks now refuse a skill whose YAML header does not read in strict
+  YAML (a plain value holding `: `), with the file and the line. Copilot
+  CLI silently dropped such a skill.
+- `docs/ia-first.md` carries a tool compatibility matrix: for each
+  assistant, whether its hooks run, whether a code write is refused in
+  SCOPING and whether it receives the state reminder, with the date and
+  version of the trial.
+
+### Fixed
+
+- The `/drwil-start` skill header was invalid in strict YAML, so Copilot
+  CLI did not list it.
+
 ## 0.6.6 (2026-10-19)
 
 ### Changed

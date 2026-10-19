@@ -9,6 +9,7 @@ import { definedIds, idConflicts, knownChecks, readContracts, validateContracts 
 import { checkRisk } from "./risk.mjs";
 import { briefReferenceProblems } from "./check-code-rules.mjs";
 import { briefMaturity, briefStatus, readyGaps } from "./state.mjs";
+import { skillHeaderProblems } from "./skill-headers.mjs";
 
 const root = process.cwd();
 const cfg = loadConfig();
@@ -232,7 +233,7 @@ for (const c of citations) {
     (newBlocking ? errors : newWarnings).push(`${c.place} : ${T.path(c.cited)} — ${T.ignoredByGit}`);
 }
 
-errors.push(...checkWorkstreams());
+errors.push(...checkWorkstreams(), ...skillHeaderProblems(root, lang));
 // QUA-049: a code file cites the contract it serves, never a workstream brief (deleted at closing).
 const codeRefs = briefReferenceProblems(root, cfg, lang);
 errors.push(...codeRefs.errors);
