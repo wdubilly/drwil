@@ -332,6 +332,14 @@ une décision du demandeur.
 - [ ] [décision] Un passage complet et stable du banc sous Gemini CLI, malgré
   le quota (limite du même chantier) —
   `docs/intentions/banc-gemini-quota.md`.
+- [ ] [décision] `verify` dit pourquoi un critère n'est « pas durable »
+  (marqueur `[humain]` manquant ou en trop) —
+  `docs/intentions/critere-humain-message-clair.md`.
+- [ ] [décision] La clôture dit quelle étape suit au lieu de refuser sèchement
+  (chemin BUILD → CLOSING, évidence périmée) —
+  `docs/intentions/cloture-chemin-guide.md`.
+- [ ] [décision] Décision de fusion sous un outil sans second sondage (Copilot
+  CLI) — `docs/intentions/fusion-sans-sondage-copilot.md`.
 - [ ] [IA] [P1] 0.6.7, 4 sur 5 : Codex (à affiner : à installer) —
   `docs/projects/compat-codex.md`.
 - [ ] [IA] [P1] 0.6.7, 5 sur 5 : Cursor (à affiner : mode de preuve) —
