@@ -26,3 +26,4 @@
 {"workstream":"release-0-6-5","increment":"all","tokens":704907,"input":40,"output":10404,"cache_read":6187104,"cache_write":27309,"requests":20,"model":"claude-opus-5-5","duration_min":30,"date":"2026-10-19","source":"claude-code-logs"}
 {"workstream":"stab-worktree","increment":"all","tokens":801205,"input":142,"output":8797,"cache_read":6243265,"cache_write":106201,"requests":71,"model":"claude-opus-5-5","duration_min":22,"date":"2026-10-19","source":"claude-code-logs"}
 {"workstream":"stab-squash","increment":"all","tokens":593511,"input":104,"output":706,"cache_read":4762043,"cache_write":90938,"requests":52,"model":"claude-opus-5-5","duration_min":21,"date":"2026-10-19","source":"claude-code-logs"}
+{"workstream":"stab-registre","increment":"all","tokens":550894,"input":74,"output":1160,"cache_read":3239903,"cache_write":176824,"requests":37,"model":"claude-opus-5-5","duration_min":25,"date":"2026-10-19","source":"claude-code-logs"}

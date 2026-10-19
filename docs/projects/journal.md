@@ -2014,8 +2014,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : `resume` ne reconnaît pas une PR fusionnée par
   squash — intention complétée, puis couverte et retirée (journal du
   2026-10-19) ; tout changement du registre des contrats, même un ajout,
-  demande le oui de l'humain —
-  `docs/intentions/registre-ajout-sans-oui.md` ; `package.json` n'est pas
+  demande le oui de l'humain — intention couverte et retirée (journal du
+  2026-10-19, « un contrat ajouté pendant un détour ») ; `package.json` n'est pas
   compté parmi les seuils — `docs/intentions/seuils-dans-package-json.md` ;
   gain de la clôture allégée non mesurable par chantier entier
   (comparaison faite, sans conclusion) —
@@ -2194,3 +2194,35 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : 0,59 M tokens pondérés, 52 requêtes, 21 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR de la branche `chantier/stab-squash`.
+
+## 2026-10-19 — Un contrat ajouté pendant un détour, sans arrêter la file (0.6.6, 3 sur 4)
+
+- **Besoin** : pendant un détour, tout changement du registre des
+  contrats, même un simple ajout, attendait le oui de l'humain (QUA-050,
+  un détour pour une correction intercalée) ; en file, le sous-agent
+  s'arrêtait dès qu'un détour créait un contrat.
+- **Cause** (rejouée par un test : un commit qui n'ajoute qu'un contrat,
+  refusé) : la barrière de périmètre jugeait le registre sur son seul nom
+  (`rulesFiles`), sans lire la nature du changement.
+- **Résultat** : la barrière lit le registre indexé contre celui de HEAD
+  (`contractsAddedOnly`, `.githooks/detour.mjs`, gabarit puis copie) : un
+  ajout pur (chaque bloc existant, préambule compris, gardé mot pour mot ;
+  chaque bloc nouveau un contrat d'ID jamais défini) passe sans le oui ;
+  un contrat modifié, retitré ou retiré, et tout doute (registre créé ou
+  retiré, titre répété, section qui n'est pas un contrat, registre en
+  tableau), le demandent toujours. Texte de QUA-050 modifié comme la fiche
+  le déclarait (décision du demandeur du 2026-10-19) ; `AGENTS.md`
+  (gabarit et dépôt), recette de correction d'un défaut (cadrage élargi
+  dans un commit séparé), carte et ligne « Unreleased » du changelog à
+  jour.
+- **Intention d'origine** « un ajout au registre des contrats sans le oui
+  de l'humain » : entièrement couverte (décision du 2026-10-19 « ajout
+  libre, modification soumise au oui »), résumée ici et retirée.
+- **Limites connues** : à l'ouverture d'un détour, l'annonce « le oui
+  sera demandé » cite encore le registre sans nuance —
+  `docs/intentions/annonce-oui-registre-detour.md` ; un test ajouté à un
+  contrat existant (ligne « Tests ») reste une modification soumise au
+  oui (décision : seul un contrat nouveau est un ajout).
+- **Consommation** : 0,55 M tokens pondérés, 37 requêtes, 25 minutes
+  (`.drwil/usage.jsonl`).
+- **Clôturé par** : la PR de la branche `chantier/stab-registre`.
