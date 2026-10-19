@@ -125,7 +125,7 @@ avant les points 5 à 13, en trois versions.
 - **0.6.6** — la stabilisation, décidée le 2026-10-19 par le demandeur :
   les points bloquants et critiques d'abord, dans cet ordre : un push
   depuis un worktree ne touche jamais le vrai dépôt
-  (`docs/projects/stab-worktree.md`), les branches fusionnées par squash
+  (fait, journal du 2026-10-19), les branches fusionnées par squash
   (`docs/projects/stab-squash.md`), un contrat ajouté pendant un détour
   (`docs/projects/stab-registre.md`), une fiche de recette juste
   (`docs/projects/stab-recette.md`).
@@ -305,8 +305,6 @@ une décision du demandeur.
 - [ ] [décision] Une version HTML de la fiche de recette (hors périmètre
   du chantier « une recette par version » du 2026-10-19) —
   `docs/intentions/fiche-de-recette-html.md`.
-- [ ] [IA] [P0] 0.6.6, 1 sur 4 : un push depuis un worktree ne touche
-  jamais le vrai dépôt — `docs/projects/stab-worktree.md`.
 - [ ] [IA] [P0] 0.6.6, 2 sur 4 : les branches fusionnées par squash
   reconnues — `docs/projects/stab-squash.md`.
 - [ ] [IA] [P0] 0.6.6, 3 sur 4 : un contrat ajouté pendant un détour, sans
