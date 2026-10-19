@@ -44,10 +44,10 @@ plus visible de la 0.6.5 (point de recette v0.6.5-P8).
 
 - Une branche dont la PR est fusionnée sur GitHub (y compris par squash)
   est reconnue fusionnée : supprimée au lancement suivant, et acceptée par
-  la reprise d'un détour — contrat à créer
-- Sans `gh` joignable, la reconnaissance se replie sur git (fusion
+  la reprise d'un détour — `QUA-058`
+- Sans gh joignable, la reconnaissance se replie sur git (fusion
   classique seulement) et le dit clairement, sans jamais supprimer une
-  branche non fusionnée — contrat à créer
+  branche non fusionnée — `QUA-059`
 
 ## 2. Hors périmètre
 
