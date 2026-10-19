@@ -373,6 +373,8 @@ une décision du demandeur.
 - [ ] [décision] drwil_com, en dernier : le reste du guide de démarrage
   (dépôt git existant avant `init` ; le reste est cadré en 0.6.3) —
   `docs/intentions/guide-de-demarrage.md`.
+- [ ] [décision] Mener dès le premier chantier dans un sous-agent, pas
+  seulement une file — `docs/intentions/sous-agent-des-le-premier-chantier.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
