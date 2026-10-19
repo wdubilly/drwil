@@ -2939,6 +2939,29 @@ test("QUA-026 : doctor affiche la version installée et signale un écart avec l
   assert.equal(p.detail, `${version} (version d'origine inconnue, antérieure à 0.6.0)`);
 });
 
+test("QUA-027 : mise à jour : un fichier de mécanique ajouté par la version est couvert par la fiche des mécaniques, le reste de la fiche intact", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false, ci: "none" }));
+  const fiche = "docs/projects/kit-mechanics.md";
+  // Fiche d'une version antérieure : sans le fichier ajouté depuis, avec une ligne propre au projet.
+  const lignes = read(dir, fiche)
+    .split("\n")
+    .filter((l) => l !== "  - .githooks/skill-headers.mjs");
+  lignes.splice(lignes.indexOf("-->"), 0, "  - outils/propre-au-projet.mjs");
+  const ancienne = lignes.join("\n");
+  writeFileSync(join(dir, fiche), ancienne);
+  assert.doesNotMatch(ancienne, /skill-headers/);
+
+  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+
+  const apres = read(dir, fiche);
+  assert.match(apres, /^ {2}- \.githooks\/skill-headers\.mjs$/m, "fichier ajouté par la version : couvert");
+  assert.match(apres, /^ {2}- outils\/propre-au-projet\.mjs$/m, "ligne du projet : gardée");
+  assert.equal(apres.match(/^ {2}- \.githooks\/run-checks\.mjs$/gm).length, 1, "aucun doublon");
+  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+  assert.equal(read(dir, fiche), apres, "idempotent");
+});
+
 test("QUA-027 : mise à jour : la prose du kit inchangée est rafraîchie, modifiée gardée et signalée ; jamais les documents du projet ni une prose hors manifeste", async () => {
   const dir = tmp();
   const empreinte = (texte) => createHash("sha256").update(texte).digest("hex");
