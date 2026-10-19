@@ -12,3 +12,8 @@ tag, detected bump, next version) before actually creating anything.
 Create the release only after the human's yes, or with the publication
 green light given at launch for that version (recipe, « Publication
 green light ») — never on a guess, never for an npm publication.
+With an acceptance team, publish a candidate instead
+(`--candidate`, recipe « Acceptance before publication »); the verdict
+(`.githooks/release-verdict.mjs` (if present)) is a human gesture an agent never runs, and the
+promotion (`.githooks/promote-release.mjs` (if present), `--dry-run` first) needs the same yes as
+a release.

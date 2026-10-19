@@ -51,6 +51,24 @@ threshold, scope gate, CI) needs the human's yes: the scope gate refuses
 those commits until `node .githooks/detour.mjs allow`, run by the human in
 an interactive terminal. In a queue, the subagent stops there and reports.
 
+## A reserve or a refusal from the acceptance team: sort the issue
+
+With the release module, each reserve and each refused point of an
+acceptance verdict (`.githooks/release-verdict.mjs` (if present)) is a GitHub issue that cites its
+point (`vX.Y.Z-P<n>`). The agent sorts each one, and says which in the
+issue:
+
+- **a defect to fix** — something that worked, or that a criterion
+  promised, does not hold (a regression): this recipe, steps 1 to 7, in
+  its own workstream (or a detour if a workstream is under way);
+- **an intent** — a gap, something never promised: an intent brief in
+  `docs/intentions/`, listed in the index as `[décision]`; the requester
+  decides whether it becomes a workstream.
+
+A refused candidate is never promoted: once the fixes are merged, a new
+candidate (`create-release.mjs --candidate`) goes back to the acceptance
+team.
+
 What is not done: disabling or weakening a test to make a fix pass (QUA-019,
 no bypassing a check); storing the proof elsewhere than in the executable
 test (one source).

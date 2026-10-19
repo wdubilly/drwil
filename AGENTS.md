@@ -116,6 +116,9 @@ Carte complète : `docs/architecture.md`.
 - Savoir si le travail est vérifié : `node packages/drwil/bin/drwil.js verify --agent`
   (seul `GOVERNANCE: PASS` vaut validation). `drwil attest` est une action
   **humaine** : un agent ne l'exécute jamais et n'écrit jamais d'attestation.
+  De même, le verdict de recette d'une candidate
+  (`node .githooks/release-verdict.mjs`, module de release) est un geste
+  **humain** : un agent ne l'exécute jamais.
 - Activer les hooks (une fois par clone) : `git config core.hooksPath .githooks`
 - Installer le dépôt depuis son gabarit : `npm run installer-depot`
   (`-- --dry-run` pour lister sans écrire). On n'édite que le gabarit

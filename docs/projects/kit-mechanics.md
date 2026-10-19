@@ -39,6 +39,9 @@ files:
   - .githooks/check-contract-tests.test.mjs
   - .githooks/check-file-size.test.mjs
   - .githooks/create-release.test.mjs
+  - .githooks/acceptance-sheet.test.mjs
+  - .githooks/release-verdict.test.mjs
+  - .githooks/promote-release.test.mjs
   - .githooks/glob.test.mjs
   - .githooks/engine.test.mjs
   - .githooks/run-checks.test.mjs
@@ -54,6 +57,9 @@ files:
   - .githooks/check-contrast.mjs
   - .githooks/dashboard.mjs
   - .githooks/create-release.mjs
+  - .githooks/acceptance-sheet.mjs
+  - .githooks/release-verdict.mjs
+  - .githooks/promote-release.mjs
   - .github/workflows/ia-first.yml
   - .claude/settings.json
 -->

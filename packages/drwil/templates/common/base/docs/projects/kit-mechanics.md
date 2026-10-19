@@ -31,6 +31,9 @@ files:
   - .githooks/check-file-size.legacy.json
   - .githooks/check-code-rules.mjs
   - .githooks/create-release.mjs
+  - .githooks/acceptance-sheet.mjs
+  - .githooks/release-verdict.mjs
+  - .githooks/promote-release.mjs
   - .githooks/dashboard.mjs
   - .githooks/check-colors.mjs
   - .githooks/check-contrast.mjs

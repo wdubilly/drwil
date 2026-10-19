@@ -119,7 +119,7 @@ avant les points 5 à 13, en trois versions.
   (fait, journal du 2026-10-18), détour pour une correction
   intercalée (fait, journal du 2026-10-18) ; puis, dans une PR séparée, la
   fiche de recette pour une équipe hors dépôt
-  (`docs/projects/fiche-de-recette.md`), avant la release.
+  (fait, journal du 2026-10-19), avant la release.
 - **0.6.6** — la compatibilité, décidée le 2026-10-18 par le demandeur
   (après la 0.6.5) : chaque agent de code tenu par la même gouvernance
   (`docs/intentions/compatibilite-des-outils.md`), dans cet ordre : le
@@ -287,9 +287,15 @@ une décision du demandeur.
 - [ ] [décision] Compter `package.json` parmi les seuils d'un détour
   (limite du chantier « un détour » du 2026-10-18) —
   `docs/intentions/seuils-dans-package-json.md`.
-- [ ] [IA] [P1] 0.6.5 : une fiche de recette par version, pour une
-  équipe hors dépôt (cadré le 2026-10-18) —
-  `docs/projects/fiche-de-recette.md`.
+- [ ] [décision] Éprouver en réel la recette par version : candidate de
+  la 0.6.5, verdict, promotion (limite du chantier « une recette par
+  version » du 2026-10-19) — `docs/intentions/recette-eprouvee-en-reel.md`.
+- [ ] [décision] Reconnaître les essais en réel sans liste de mots
+  (limite du chantier « une recette par version » du 2026-10-19) —
+  `docs/intentions/essai-reel-reconnu-par-mots.md`.
+- [ ] [décision] Une version HTML de la fiche de recette (hors périmètre
+  du chantier « une recette par version » du 2026-10-19) —
+  `docs/intentions/fiche-de-recette-html.md`.
 - [ ] [décision] [P0] Un push depuis un worktree ne touche jamais le vrai
   dépôt (régression du correctif du 2026-10-10, constatée le 2026-10-18 :
   `core.bare=true` écrit dans le dépôt principal) —

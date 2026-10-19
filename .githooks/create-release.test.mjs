@@ -1,11 +1,12 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { decideVersion, detectBump, publicPackages, packageVersions, nextVersion } from "./create-release.mjs";
+import { candidateTag, decideVersion, detectBump, publicPackages, packageVersions, nextVersion } from "./create-release.mjs";
+import { sha256 } from "./acceptance-sheet.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -217,4 +218,81 @@ test("--dry-run en anglais : messages selon .drwil/ia-first.json", () => {
     r.stdout,
     /latest tag: \(none\)\n.*detected bump: minor \(1 commit\(s\) analysed\)\n.*next version: v0\.1\.0 \(source: commits\)\n.*--dry-run: no tag nor release created/,
   );
+});
+
+test("QUA-051 : candidateTag — rc.1 d'abord, puis un de plus que la plus haute candidate de la version", () => {
+  assert.equal(candidateTag("v1.1.0", []), "v1.1.0-rc.1");
+  assert.equal(candidateTag("v1.1.0", ["v1.1.0-rc.1", "v1.1.0-rc.3", "v1.2.0-rc.9", "v1.1.0-rc.x"]), "v1.1.0-rc.4");
+});
+
+test("QUA-051 : une candidate n'est jamais le dernier tag définitif", () => {
+  const { racine } = depot({}, ["feat: a"]);
+  git(racine, "tag", "v1.0.0");
+  ecrire(racine, "y.txt", "y");
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "fix: b");
+  git(racine, "tag", "v1.0.1-rc.1");
+  const r = lancer(racine, ["--dry-run"], process.env.PATH);
+  assert.match(r.stdout, /dernier tag : v1\.0\.0\n/);
+});
+
+/** Dépôt avec un tag définitif v1.0.0 puis un paquet a@1.1.0 : la prochaine candidate est v1.1.0-rc.N. */
+function depotCandidat() {
+  const d = depot({}, ["feat: a"]);
+  git(d.racine, "tag", "v1.0.0");
+  ecrire(d.racine, "a/package.json", JSON.stringify({ name: "a", version: "1.1.0" }));
+  git(d.racine, "add", "-A");
+  git(d.racine, "commit", "-q", "-m", "feat: b");
+  return d;
+}
+const NPM_PACK = 'echo "tarball" > "$4/a-1.1.0.tgz"; echo "a-1.1.0.tgz"';
+
+test("QUA-051 : --candidate --dry-run montre la fiche de recette de la candidate sans rien publier", posix, () => {
+  const { racine, origine } = depotCandidat();
+  git(racine, "tag", "v1.1.0-rc.1");
+  const r = lancer(racine, ["--candidate", "--dry-run"], chemin());
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /candidate : v1\.1\.0-rc\.2 \(pré-release/);
+  assert.match(r.stdout, /fiche de recette de v1\.1\.0-rc\.2 :\n\n# Fiche de recette — v1\.1\.0-rc\.2/);
+  assert.match(r.stdout, /du dernier tag définitif v1\.0\.0/);
+  assert.match(r.stdout, /Empreinte du tarball : calculée à la création du tarball/);
+  assert.match(r.stdout, /--dry-run : aucun tag ni release créé/);
+  assert.equal(git(origine, "tag", "-l"), "");
+});
+
+test("QUA-051 : --candidate publie une pré-release avec tarball et fiche de recette (empreinte du tarball)", posix, () => {
+  const { racine, origine } = depotCandidat();
+  const appel = join(racine, "..", `gh-candidate-${Date.now()}`);
+  dossiers.push(appel);
+  const PATH = chemin({ npm: NPM_PACK, gh: `case "$1" in release) echo "$@" > "${appel}" ;; *) exit 1 ;; esac` });
+  const r = lancer(racine, ["--candidate"], PATH);
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(git(origine, "tag", "-l"), "v1.1.0-rc.1");
+  const args = readFileSync(appel, "utf8").trim().split(" ");
+  assert.deepEqual(args.slice(0, 3), ["release", "create", "v1.1.0-rc.1"]);
+  assert.ok(args.includes("--prerelease"));
+  const tgz = args.find((a) => a.endsWith("a-1.1.0.tgz"));
+  const fiche = args.at(-1);
+  assert.match(fiche, /recette-v1\.1\.0-rc\.1\.md$/);
+  assert.ok(args.includes(fiche) && args.indexOf(fiche) < args.indexOf("--prerelease"));
+  assert.match(readFileSync(fiche, "utf8"), new RegExp(`\`a-1\\.1\\.0\\.tgz\` — sha256 \`${sha256(tgz)}\``));
+  assert.match(r.stdout, /pré-release v1\.1\.0-rc\.1 publiée avec sa fiche de recette/);
+});
+
+test("QUA-051 : --candidate, gh indisponible : le tag reste, la commande de rattrapage est donnée", posix, () => {
+  const { racine } = depotCandidat();
+  const r = lancer(racine, ["--candidate"], chemin({ npm: NPM_PACK }));
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(
+    r.stderr,
+    /rattraper à la main : gh release create v1\.1\.0-rc\.1 .*a-1\.1\.0\.tgz .*recette-v1\.1\.0-rc\.1\.md --prerelease/,
+  );
+});
+
+test("QUA-051 : --candidate sans paquet npm : la fiche dit qu'il n'y a pas de tarball", () => {
+  const { racine } = depot({}, ["feat: a"]);
+  const r = lancer(racine, ["--candidate", "--dry-run"], process.env.PATH);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /candidate : v0\.1\.0-rc\.1/);
+  assert.match(r.stdout, /Empreinte du tarball : aucun paquet npm publiable : pas de tarball/);
 });
