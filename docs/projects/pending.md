@@ -218,6 +218,9 @@ trailer, code commun) en anglais, migration des projets équipés par
 - [ ] [décision] [P1] Vue de relecture : montrer à l'humain ce qui demande
   son jugement dans une PR (décisions, cadrage, règles, preuves,
   exceptions) — `docs/intentions/vue-de-relecture.md`.
+- [ ] [décision] [P2] Application de suivi des chantiers, interactive et
+  embarquable avec le paquet (serveur local `drwil ui` recommandé) —
+  `docs/intentions/application-de-suivi-des-chantiers.md`.
 - [ ] [décision] [P1] Relecture avant fusion, choisie au lancement : une
   question de plus dans le sondage (`drwil-review` : aucune, relecture par
   un agent, relecture humaine), indépendante de la fusion automatique ou
