@@ -13,6 +13,12 @@ closing commit; the release renames this section to its version.
   elsewhere can no longer write `core.bare=true` in the shared
   configuration or soil the index. Only gitleaks keeps them, to read the
   index of the commit in progress.
+- Branches merged by squash are now recognised as merged: a branch whose
+  GitHub pull request is merged (asked to `gh`) is deleted at the next
+  workstream start, and `node .githooks/detour.mjs resume` accepts a
+  detour merged that way. Without `gh` reachable, only a classic merge is
+  recognised and the start or the resume says so; a branch is never
+  deleted without proof that it is merged.
 
 ## 0.6.5 (2026-10-19)
 

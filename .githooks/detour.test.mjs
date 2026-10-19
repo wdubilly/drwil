@@ -84,7 +84,7 @@ function depot({ lang, journal = true, config = {}, principale = "master", autoM
 }
 
 /** Ce que fait l'agent sur la branche du détour, puis la fusion de sa PR dans la branche principale. */
-function corrigerEtFusionner(racine, { principale = "master", journal = true, supprimer = true, fusionner = true } = {}) {
+function corrigerEtFusionner(racine, { principale = "master", journal = true, supprimer = true, fusionner = true, squash = false } = {}) {
   ecrire(racine, { [FICHE]: lire(racine, FICHE).replace("files:\n", "files:\n  - src/a.txt\n") });
   git(racine, "add", "-A");
   git(racine, "commit", "-q", "-m", "cadrage du détour");
@@ -97,7 +97,10 @@ function corrigerEtFusionner(racine, { principale = "master", journal = true, su
   git(racine, "commit", "-q", "-m", "clôture du détour");
   if (!fusionner) return;
   git(racine, "switch", "-q", principale);
-  git(racine, "merge", "-q", "--no-ff", "-m", "fusion du détour", BRANCHE);
+  if (squash) {
+    git(racine, "merge", "-q", "--squash", BRANCHE);
+    git(racine, "commit", "-q", "-m", "Détour (#2)");
+  } else git(racine, "merge", "-q", "--no-ff", "-m", "fusion du détour", BRANCHE);
   git(racine, "switch", "-q", BRANCHE);
 }
 
@@ -424,4 +427,38 @@ test("QUA-050 : ligne de commande — open, resume, allow (terminal), usage ; en
   });
   assert.equal(lance.status, 2);
   assert.match(lance.stderr, /^usage : node \.githooks\/detour\.mjs open/);
+});
+
+test("QUA-058 : la reprise accepte un détour dont la PR est fusionnée par squash, prouvée par gh", () => {
+  const racine = depot();
+  open(racine, "date-mal-lue", { title: "t" });
+  corrigerEtFusionner(racine, { squash: true });
+  const pointe = git(racine, "rev-parse", BRANCHE);
+  const appels = [];
+  const gh = (_racine, args) => {
+    appels.push(args.join(" "));
+    return JSON.stringify([{ headRefName: BRANCHE, headRefOid: pointe }]);
+  };
+  const r = resume(racine, { now: MAINTENANT, gh });
+  assert.equal(r.code, 0, r.message);
+  assert.match(appels[0], /^pr list --state merged --json headRefName,headRefOid --limit \d+ --head detour\/date-mal-lue$/);
+  assert.equal(branche(racine), "chantier/x");
+  assert.equal(lire(racine, "src/a.txt"), "ligne 1 corrigée\nligne 2\n");
+  assert.equal(etat(racine).active_brief, ORIGINE);
+});
+
+test("QUA-059 : sans gh joignable, la reprise d'un détour fusionné par squash est refusée et dit pourquoi — rien n'est touché", () => {
+  const racine = depot();
+  open(racine, "date-mal-lue", { title: "t" });
+  corrigerEtFusionner(racine, { squash: true });
+  const r = resume(racine, { gh: () => null });
+  assert.equal(r.code, 1);
+  assert.match(
+    r.message,
+    /detour\/date-mal-lue n'est pas encore fusionnée dans master .*gh injoignable : seule la fusion classique est reconnue/,
+  );
+  const sansPreuve = resume(racine, { gh: () => "[]" });
+  assert.doesNotMatch(sansPreuve.message, /gh injoignable/, "gh a répondu : aucune PR fusionnée");
+  assert.equal(branche(racine), BRANCHE);
+  assert.equal(etat(racine).active_brief, FICHE);
 });

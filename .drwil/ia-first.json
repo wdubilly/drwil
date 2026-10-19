@@ -519,6 +519,28 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-058",
+      "name": "tests de QUA-058, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-058 \" .githooks/close.test.mjs .githooks/detour.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-059",
+      "name": "tests de QUA-059, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-059 \" .githooks/close.test.mjs .githooks/detour.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "taille-fichiers",
       "name": "fichiers de code sous 400 lignes, tests exclus (QUA-001)",
       "run": "node .githooks/check-file-size.mjs packages/drwil/src 400 ts && node .githooks/check-file-size.mjs packages/drwil/bin 400 js && node .githooks/check-file-size.mjs .githooks 400 mjs && node .githooks/check-file-size.mjs outils 400 mjs",
