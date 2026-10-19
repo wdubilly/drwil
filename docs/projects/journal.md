@@ -2391,4 +2391,6 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Correction** : `complete()` ajoute au bloc de cadrage de cette fiche les fichiers
   de mécanique du kit qui y manquent (rien retiré, lignes du projet gardées,
   idempotent). Test de non-régression (QUA-027, mise à jour sûre), vu échouer avant la correction.
+- **CI** : CodeQL a signalé `js/bad-tag-filter` sur une regex de fin de commentaire HTML ;
+  remplacée par une recherche de ligne, sans regex.
 - **Clôturé par** : la branche `detour/maj-fiche-mecaniques`.
