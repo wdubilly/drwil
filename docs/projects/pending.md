@@ -134,7 +134,7 @@ avant les points 5 à 13, en trois versions.
   renumérotée le 2026-10-19 (après la stabilisation) : chaque agent de code tenu par la même gouvernance
   (`docs/intentions/compatibilite-des-outils.md`), dans cet ordre : le
   socle (fait, journal du 2026-10-19), Copilot CLI
-  (`docs/projects/compat-copilot.md`), Gemini CLI
+  (fait, journal du 2026-10-19), Gemini CLI
   (`docs/projects/compat-gemini.md`), Codex
   (`docs/projects/compat-codex.md`), Cursor
   (`docs/projects/compat-cursor.md`).
@@ -316,8 +316,14 @@ une décision du demandeur.
 - [x] [IA] [P1] 0.6.7, 1 sur 5 : compatibilité des agents, le socle
   commun (banc, règle « intention ou demande », en-têtes YAML stricts,
   matrice) — fait, journal du 2026-10-19.
-- [ ] [IA] [P1] 0.6.7, 2 sur 5 : Copilot CLI tenu —
-  `docs/projects/compat-copilot.md`.
+- [x] [IA] [P1] 0.6.7, 2 sur 5 : Copilot CLI tenu — fait, journal du
+  2026-10-19.
+- [ ] [décision] Revenir en SCOPING après la fusion d'un chantier, sans geste
+  à la main (limite du chantier « Copilot CLI tenu » du 2026-10-19) —
+  `docs/intentions/etat-revient-en-scoping-apres-fusion.md`.
+- [ ] [décision] Établir la cause du dépassement de 30 s des hooks en session
+  interactive de Copilot CLI (limite du même chantier) —
+  `docs/intentions/depassement-delai-copilot-interactif.md`.
 - [ ] [IA] [P1] 0.6.7, 3 sur 5 : Gemini CLI tenu —
   `docs/projects/compat-gemini.md`.
 - [ ] [IA] [P1] 0.6.7, 4 sur 5 : Codex (à affiner : à installer) —

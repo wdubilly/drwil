@@ -2113,8 +2113,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   compatibilité des agents renumérotée en 0.6.7, avec la file pour Copilot,
   le glossaire et la consommation des autres outils rattachés ; budget de
   temps sous Windows inchangé. L'intention « `${CLAUDE_PROJECT_DIR}` sous
-  Copilot » est fondue dans le lot 1 de `docs/projects/compat-copilot.md`
-  (essais du 2026-10-18 : Copilot lance la commande, qui dépasse son délai)
+  Copilot » est fondue dans le lot 1 du chantier Copilot CLI tenu
+  (journal du 2026-10-19 ; essais du 2026-10-18 : Copilot lance la commande, qui dépasse son délai)
   et retirée.
 
 ## 2026-10-19 — Un push depuis un worktree ne touche jamais le vrai dépôt (0.6.6, 1 sur 4)
@@ -2314,3 +2314,35 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI,
   et `.githooks/consumption.mjs` ne lit que les journaux de Claude Code.
 - **Clôturé par** : la branche `workstream/compat-socle`.
+
+## 2026-10-19 — Compatibilité des agents, Copilot CLI tenu (0.6.7, 2 sur 5)
+
+- **Causes** (reproduites hors Copilot ou en réel) : en mode non
+  interactif, Copilot ne charge les hooks d'un dépôt que dans un dossier de
+  confiance (le banc ne lançait donc aucun hook) ; le hook d'écriture lisait
+  `file_path` alors que Copilot envoie `path` (rien n'était refusé) ;
+  `.githooks/state.mjs` imprimait du texte brut que Copilot ne lit pas (rappel jamais
+  reçu) ; un hook qui attend la fin de son entrée est bloqué si elle ne se
+  ferme pas, et un délai dépassé laisse passer l'appel.
+- **Décisions clés** : choisir `copilot` installe aussi l'arbre `.claude/`
+  (Copilot le lit : hooks, réglages, skills, donc les mêmes commandes
+  `/drwil-*`) et `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json` (QUA-064, Copilot reçoit l'arbre
+  `.claude` et ses hooks natifs). `.githooks/state.mjs copilot-start` et
+  `copilot-message` rendent le JSON que Copilot lit, sans jamais bloquer :
+  l'entrée est lue dès que son JSON est complet (QUA-065, les hooks de
+  Copilot parlent son format). Le banc crée un `COPILOT_HOME` temporaire où
+  seul le projet d'essai est de confiance, la configuration du poste
+  intacte (QUA-060).
+- **Résultat** (essai du 2026-10-19, Copilot CLI 1.0.98) : hooks lancés,
+  écriture refusée par le hook, rappel d'état reçu ; matrice de
+  compatibilité mise à jour. `keepDate` et la comparaison des miroirs ne
+  construisent plus une expression régulière aussi longue qu'un document
+  (elle débordait avec la matrice).
+- **Limites connues** : le dépassement de 30 s en session interactive n'est
+  pas reproduit, sa cause n'est pas établie
+  (`docs/intentions/depassement-delai-copilot-interactif.md`) ; après la
+  fusion, l'état reste en CLOSING
+  (`docs/intentions/etat-revient-en-scoping-apres-fusion.md`).
+- **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI,
+  et `.githooks/consumption.mjs` ne lit que les journaux de Claude Code.
+- **Clôturé par** : la branche `workstream/compat-copilot`.

@@ -39,7 +39,7 @@ temporaire ; hors CI (comptes requis), son résultat est attesté par
 l'humain.
 
 - le socle (fait, journal du 2026-10-19)
-- `docs/projects/compat-copilot.md`
+- Copilot CLI (fait, journal du 2026-10-19)
 - `docs/projects/compat-gemini.md`
 - `docs/projects/compat-codex.md`
 - `docs/projects/compat-cursor.md`
@@ -66,4 +66,4 @@ l'humain.
   autres agents), `docs/intentions/consommation-autres-outils.md` (la
   consommation des autres outils).
 - L'ex-intention « `${CLAUDE_PROJECT_DIR}` sous Copilot » est fondue dans
-  le lot 1 de `docs/projects/compat-copilot.md` (journal du 2026-10-19).
+  le chantier Copilot CLI tenu (journal du 2026-10-19).
