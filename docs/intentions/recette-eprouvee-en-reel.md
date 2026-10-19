@@ -1,6 +1,6 @@
 # Intention : la recette par version éprouvée en réel
 
-**Statut** : proposée le 2026-10-19 — limite du chantier « une recette par
+**Statut** : en cours depuis le 2026-10-19 (essai sur la 0.6.5) ; proposée le 2026-10-19 — limite du chantier « une recette par
 version, pour une équipe hors dépôt » (journal du 2026-10-19, 0.6.5).
 
 ## Besoin
@@ -22,7 +22,9 @@ les issues sont simulés par les tests.
 
 ## Questions à trancher
 
-- [décision] Publier la candidate de la 0.6.5 (feu vert de publication
-  nommant `v0.6.5-rc.1`), puis faire donner le verdict par l'équipe de
-  recette et promouvoir ; consigner au journal ce que l'essai a appris
-  (format des options de gh, lisibilité de la fiche).
+- Tranché le 2026-10-19 par le demandeur (« oui publions ») : la 0.6.5
+  passe par le parcours de recette. Version posée par le chantier
+  « release 0.6.5 » (journal du 2026-10-19) ; candidate `v0.6.5-rc.1`,
+  verdict et promotion menés après sa fusion. Reste à consigner ici, puis
+  au journal, ce que l'essai a appris (format des options de gh,
+  lisibilité de la fiche), et à retirer cette intention.

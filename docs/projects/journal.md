@@ -2062,3 +2062,31 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : 3,93 M tokens pondérés, 131 requêtes, 59 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR #162 (branche `chantier/fiche-de-recette`).
+
+## 2026-10-19 — Release 0.6.5 : version posée, recette réelle ensuite
+
+- **Besoin** : publier la 0.6.5 (date gardée et feu vert, clôture
+  allégée, ordre de la file, détour, recette par version) par le parcours
+  de recette qu'elle livre, premier essai réel.
+- **Résultat** : version 0.6.5 partout (paquets, verrou), changelog daté
+  (QUA-040, drwil entretient la carte, le README et le changelog) ; README
+  inchangés, ils pointent vers `releases/latest` (QUA-055).
+  `create-release.mjs --candidate --dry-run` annonce `v0.6.5-rc.1` et sa
+  fiche de recette (QUA-051).
+- **Essai réel de mise à jour 0.6.4 → 0.6.5** (QUA-027, mise à jour sûre) :
+  projet temporaire équipé avec le tarball 0.6.4 de la release GitHub,
+  mis à jour avec le tarball 0.6.5 : fichiers du projet préservés,
+  mécanique modifiée signalée sans réécriture, nouveaux fichiers
+  (`.githooks/close.mjs`, `.githooks/detour.mjs`, recette « corriger un défaut ») ajoutés,
+  version enregistrée, `doctor` sain ; `verify` identique à un projet neuf
+  (ERROR : aucune CI déclarée, attendu).
+- **Cadrage corrigé** (commit séparé, fiche seule) : le critère « candidate,
+  verdict, promotion » ne pouvait être prouvé avant la fusion, le tag
+  venant de la version fusionnée ; il est devenu le `--dry-run` de la
+  candidate, la publication restant les lots 2 et 3, après la fusion.
+- **Limites connues** : candidate, verdict et promotion restent à mener
+  après la fusion ; l'intention d'origine
+  `docs/intentions/recette-eprouvee-en-reel.md` est mise à jour, pas
+  retirée.
+- **Consommation** : 0,70 M tokens pondérés (`.drwil/usage.jsonl`).
+- **Clôturé par** : la PR #164 (branche `chantier/release-0-6-5`).

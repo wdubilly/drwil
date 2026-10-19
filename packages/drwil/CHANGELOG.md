@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.6.5 (2026-10-19)
+
 ### Changed
 
 - Installing or updating (`drwil init`, with or without `--force`) no
