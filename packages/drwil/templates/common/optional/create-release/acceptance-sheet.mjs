@@ -35,6 +35,7 @@ const TEXTS = {
     nonRegression: "## Non-régression (déjà prouvée : inutile de la retester)",
     verdict: "Verdict de `drwil verify` : {0}",
     unavailable: "non disponible (verify non exécuté : ce n'est pas un succès)",
+    excused: "{0} — sans compter {1}, qui refuse le travail sur la branche principale, où toute release se crée",
     proven: "Contrats prouvés par un test : {0}",
     os: "OS testés par la CI (jobs réussis sur ce commit) : {0}",
     noOs: "aucun job réussi trouvé (CI en cours, absente ou gh indisponible)",
@@ -63,6 +64,7 @@ const TEXTS = {
     nonRegression: "## Non-regression (already proven: no need to test it again)",
     verdict: "`drwil verify` verdict: {0}",
     unavailable: "unavailable (verify not run: that is not a success)",
+    excused: "{0} — not counting {1}, which refuses work on the main branch, where every release is created",
     proven: "Contracts proven by a test: {0}",
     os: "OS tested by the CI (successful jobs on this commit): {0}",
     noOs: "no successful job found (CI running, absent or gh unavailable)",
@@ -119,11 +121,16 @@ export function sections(text) {
     });
 }
 
-/** Text of the brief as it was last in the range (before its deletion at closing), or null. */
+/**
+ * Text of the brief as it was last in the range, or null: at `to` if it still exists, otherwise just
+ * before the commit that deleted it. A merge commit is never the reference: the brief scoped on the
+ * main branch makes the merge of its PR differ from its first parent, which holds the scoping version.
+ */
 function briefText(run, to, brief) {
-  const last = (run("git", ["log", "-1", "--full-history", "--format=%H", to, "--", brief]) ?? "").trim();
-  if (!last) return null;
-  return run("git", ["show", `${last}:${brief}`]) ?? run("git", ["show", `${last}^:${brief}`]);
+  const now = run("git", ["show", `${to}:${brief}`]);
+  if (now !== null) return now;
+  const del = (run("git", ["log", "-1", "--full-history", "--no-merges", "--diff-filter=D", "--format=%H", to, "--", brief]) ?? "").trim();
+  return del ? run("git", ["show", `${del}^:${brief}`]) : null;
 }
 
 const REAL_RE = /(en réel|essai réel|essayée? en réel|in real (use|life|conditions)|for real|real[- ]world)/i;
@@ -140,7 +147,7 @@ function bullets(text) {
   return items.filter(Boolean);
 }
 
-/** Sentences of a text that speak of a trial for real (« éprouvé en réel », « essai réel »). */
+/** Sentences of a text that speak of a trial for real (« éprouvé en réel », « essai réel »). Only a known limit is read: a sentence of need or decision is not a trial still to make. */
 export function realTrials(text) {
   const flat = text.replace(/`/g, "").replace(/\s+/g, " ");
   return flat
@@ -204,13 +211,7 @@ export function points(version, works, verdict, T) {
   const add = (kind, what, work = null, how = T.hows[kind]) => out.push({ id: `${version}-P${out.length + 1}`, kind, what, how, work });
   for (const w of works) {
     for (const c of acceptanceCriteria(w.text).filter((c) => c.human)) add("human", c.text, w);
-    const body = w.entry
-      ? bullets(w.entry.body)
-          .filter((b) => !LIMITS_RE.test(b))
-          .join("\n")
-      : "";
-    for (const s of new Set([...realTrials(w.text), ...realTrials(body)])) add("real", s, w);
-    for (const l of w.entry ? knownLimits(w.entry.body) : []) add("limit", l, w);
+    for (const l of w.entry ? knownLimits(w.entry.body) : []) add(realTrials(l).length ? "real" : "limit", l, w);
   }
   for (const k of verdict?.results ?? [])
     if (k.status === "manual" && k.attestable) add("attest", `${k.id} — ${k.title}`, null, fill(T.hows.attest, k.manual, k.id));
@@ -226,6 +227,28 @@ export function verifyJson(root, run) {
   } catch {
     return null;
   }
+}
+
+const MAIN = "main-branch";
+const RANK = ["fail", "error", "manual"];
+
+/**
+ * Verdict of `drwil verify` for a release, created on the main branch: a contract that fails only by
+ * its `main-branch` check (no direct work on the main branch) does not count, and is named (`excused`).
+ * Any other failure, a configuration error or an open criterion keeps the verdict of verify.
+ */
+export function releaseVerdict(verdict) {
+  const as = { status: verdict?.status ?? null, excused: [] };
+  const results = verdict?.results ?? [];
+  const onlyMain = (k) =>
+    k.status === "fail" &&
+    k.checks?.some((c) => c.id === MAIN && c.status === "fail") &&
+    k.checks.every((c) => c.status !== "fail" || c.id === MAIN);
+  const excused = results.filter(onlyMain);
+  if (as.status !== "fail" || !excused.length || (verdict.criteria ?? []).some((c) => c.status !== "pass")) return as;
+  const rest = results.filter((k) => !excused.includes(k) && (k.severity ?? "blocking") === "blocking").map((k) => k.status);
+  if (verdict.errors?.length) rest.push("error");
+  return { status: RANK.find((s) => rest.includes(s)) ?? "pass", excused };
 }
 
 /** Contracts that pass and cite a test in the registry: [{ id, title }]. */
@@ -277,7 +300,11 @@ export function renderSheet(data, T) {
     lines.push(`  - ${T.what} : ${p.what}`, `  - ${T.how} : ${p.how}`);
   }
   if (data.points.length) lines.push("");
-  lines.push(T.nonRegression, "", `- ${fill(T.verdict, data.verdict ? data.verdict.status.toUpperCase() : T.unavailable)}`);
+  const v = releaseVerdict(data.verdict);
+  const shown = v.excused.length
+    ? fill(T.excused, v.status.toUpperCase(), v.excused.map((k) => `${k.id} (${k.title})`).join(", "))
+    : v.status?.toUpperCase();
+  lines.push(T.nonRegression, "", `- ${fill(T.verdict, data.verdict ? shown : T.unavailable)}`);
   if (data.verdict) {
     lines.push(`- ${fill(T.proven, data.proven.length)}`);
     for (const k of data.proven) lines.push(`  - ${k.id} — ${k.title}`);

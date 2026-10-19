@@ -76,11 +76,13 @@ before the final release.
    the publication green light, as above), the tag `vX.Y.Z-rc.N` is pushed
    and a GitHub **pre-release** carries the tarball and the sheet (attached
    and as its note). The sheet is generated, never written by hand: on top,
-   the points to validate (human criteria, trials for real, known limits,
-   attestations to redo), each with a stable ID `vX.Y.Z-P<n>` and its
+   the points to validate (human criteria of each brief in its last
+   version, known limits — « not tried for real yet » when the limit says
+   so —, attestations to redo), each with a stable ID `vX.Y.Z-P<n>` and its
    workstream's PR; below, the non-regression already proven (`drwil
-   verify` verdict, contracts proven by a test, OS tested by the CI,
-   tarball fingerprint).
+   verify` verdict, not counting the rule against direct work on the main
+   branch where the release is created, contracts proven by a test, OS
+   tested by the CI, tarball fingerprint).
 2. Verdict — **a human gesture, never run by an agent**, like `drwil
    attest`: `node .githooks/release-verdict.mjs vX.Y.Z-rc.N --approve`, or
    `--reserve <point>` / `--refuse <point>` for each point concerned. It is
