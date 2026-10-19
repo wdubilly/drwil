@@ -377,6 +377,8 @@ une décision du demandeur.
   seulement une file — `docs/intentions/sous-agent-des-le-premier-chantier.md`.
 - [ ] [décision] Convoquer des personas d'agents (`agency-agents`) choisis par
   le cadrage d'un chantier — `docs/intentions/personas-convoques-par-le-cadrage.md`.
+- [ ] [décision] La clôture vérifie la cohérence de la documentation, de façon
+  bloquante — `docs/intentions/cloture-coherence-doc.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
