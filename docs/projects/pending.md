@@ -141,23 +141,33 @@ avant les points 5 à 13, en trois versions.
   intention le 2026-10-19 (demande de l'humain) : le périmètre de la
   0.6.7 est donc ramené à trois outils (socle, Copilot CLI, Gemini CLI),
   puis la release (`docs/projects/release-0-6-7.md`).
-- **Ordre des versions suivantes**, proposé le 2026-10-19 (à confirmer par
-  le demandeur) :
+- **Ordre des versions suivantes**, validé par le demandeur le 2026-10-19 :
   1. 0.6.7, la release (`docs/projects/release-0-6-7.md`).
-  2. 0.6.8, la fluidité de la clôture : retour en SCOPING après la fusion
-     (`docs/intentions/etat-revient-en-scoping-apres-fusion.md`), clôture
-     guidée (`docs/intentions/cloture-chemin-guide.md`), message clair du
-     critère humain (`docs/intentions/critere-humain-message-clair.md`),
-     note à tout moment (`docs/intentions/note-a-tout-moment.md`).
-  3. 0.7.0, la preuve qui dure (ci-dessous), avec la cohérence de la
-     documentation à la clôture (`docs/intentions/cloture-coherence-doc.md`).
-  4. 0.7.x, l'efficacité des agents : sous-agent dès le premier chantier
-     (`docs/intentions/sous-agent-des-le-premier-chantier.md`) avec la
-     consommation de Copilot CLI
-     (`docs/intentions/consommation-autres-outils.md`).
-  5. 0.8, P2 : Codex et Cursor, personas, application de suivi, couche d'un
-     nouveau dossier de code
-     (`docs/intentions/couche-d-un-nouveau-dossier-de-code.md`).
+  2. 0.6.8, Copilot CLI enchaîne les chantiers
+     (`docs/projects/compat-copilot-enchaine.md`) : décision de fusion au
+     sondage, retour en SCOPING après la fusion
+     (`docs/intentions/etat-revient-en-scoping-apres-fusion.md`), sous-agent
+     dès le premier chantier
+     (`docs/intentions/sous-agent-des-le-premier-chantier.md`), puis la
+     file pour Copilot CLI (`docs/intentions/file-sous-agents-autres-outils.md`).
+  3. 0.6.9, la fluidité de la clôture : clôture guidée
+     (`docs/intentions/cloture-chemin-guide.md`), message clair du critère
+     humain (`docs/intentions/critere-humain-message-clair.md`), note à tout
+     moment (`docs/intentions/note-a-tout-moment.md`).
+  4. 0.7.0, la preuve qui dure (ci-dessous), avec la cohérence de la
+     documentation à la clôture (`docs/intentions/cloture-coherence-doc.md`)
+     et la note de recette conservée dans le dépôt
+     (`docs/intentions/note-de-recette-par-version.md`).
+  5. 0.7.x, mesure et efficacité : consommation de Copilot CLI puis des
+     autres outils (`docs/intentions/consommation-autres-outils.md`),
+     fluidité sans perte de rigueur, vue de relecture, relecture avant
+     fusion.
+  6. 0.8, catalogue et adoption (P1) d'abord ; puis, en P2, Codex et Cursor,
+     personas, chantiers en parallèle
+     (`docs/intentions/chantiers-en-parallele.md`), application de suivi,
+     couche d'un nouveau dossier de code
+     (`docs/intentions/couche-d-un-nouveau-dossier-de-code.md`),
+     publication npm et protection de la forge.
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
