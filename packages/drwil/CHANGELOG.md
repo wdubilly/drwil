@@ -18,8 +18,15 @@ closing commit; the release renames this section to its version.
   SCOPING and whether it receives the state reminder, with the date and
   version of the trial.
 
+- Choosing `copilot` now also installs `.claude/` (hooks, settings, skills)
+  and `.github/hooks/drwil.json`: Copilot CLI reads them, so a code write in
+  SCOPING is refused, the state reaches the session and each message, and the
+  `/drwil-*` commands are the same as with Claude Code.
+
 ### Fixed
 
+- The write hook read the file under `file_path` only; Copilot CLI sends
+  `path`, so nothing was refused there.
 - The `/drwil-start` skill header was invalid in strict YAML, so Copilot
   CLI did not list it.
 

@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "contract": "QUA-064",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-19T17:08:28.510Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "1d345781b004234d4051d744f05abae6d5984fcfd8ce632ac2c82688f8d6a032",
+  "proof": {
+    "tests-qua-064": "c77d0518580b6119b5bee07e85cef3976678cc61ad2c6e5953c8223b916c084a"
+  },
+  "commit": "940fc43852a07980b9d2dc23ad9e208dd516b58f",
+  "automated": [
+    {
+      "id": "tests-qua-064",
+      "status": "ok"
+    }
+  ]
+}

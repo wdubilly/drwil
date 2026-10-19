@@ -260,15 +260,24 @@ never "held". Whatever the tool, the Git barrier at commit still holds.
 | Tool | Hooks run | Code write in SCOPING | State reminder | Trial (version) | Attested by the human |
 |---|---|---|---|---|---|
 | Claude Code | yes | refused by the hook | received | 2026-10-19 (2.1.303) | pending |
-| Copilot CLI | no (non-interactive) | not proven: no hook ran | not received | 2026-10-19 (1.0.98) | pending |
+| Copilot CLI | yes | refused by the hook | received | 2026-10-19 (1.0.98) | pending |
 | Gemini CLI | no | accepted | not received | 2026-10-19 (0.61.0) | pending |
 | Codex | not tested | not tested | not tested | not tested | — |
 | Cursor | not tested | not tested | not tested | not tested | — |
 
-Copilot CLI, interactive session (trial of 2026-10-18): the hooks are loaded
-but exceed Copilot's 30-second delay, and Copilot then lets the call through:
-a hook that fails or times out never counts as an agreement, and this tool
-does not enforce it yet.
+Copilot CLI: it reads the .claude folder (settings, hooks, skills) and
+its native hooks (in the .github/hooks folder) itself, so `--tools copilot` installs both, and the
+`/drwil-*` commands are the same as with Claude Code. It loads a repository's
+hooks only in a **trusted folder** (the bench uses a temporary `COPILOT_HOME`
+that trusts the trial project, your configuration untouched). In the trial of
+2026-10-18 the write hook did not refuse because Copilot sends the file as
+`path`, not `file_path`, and the state reminder was not received because
+Copilot reads JSON, not raw text; both are fixed. The interactive session
+cannot be run by the bench (non-interactive mode only): a hook that exceeded
+Copilot's 30-second delay there was not reproduced, and its cause is not
+established. A hook that fails never counts as an agreement, but a timeout
+lets the call through; the hooks therefore never wait for an input that does
+not close.
 
 ## 7. Projects, resumable cold
 

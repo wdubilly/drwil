@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
-import { PassThrough } from "node:stream";
+import { PassThrough, Readable } from "node:stream";
 import { briefIntent, intentsLeftBehind, lastReview, missingCriteria, staleIntents } from "./briefs.mjs";
 import {
   ACTIVITIES,
@@ -14,6 +14,7 @@ import {
   NEUTRAL_STATE,
   context,
   main,
+  readStdinJson,
   requiresHuman,
   readState,
   move,
@@ -1094,6 +1095,39 @@ test("principal rappel : affiché seulement quand l'état change", async () => {
   const racine = depot();
   assert.match((await capturer(() => main(["reminder"], racine))).sortie, /^\[drwil\] Rappel/);
   assert.equal((await capturer(() => main(["reminder"], racine))).sortie, "");
+});
+
+test("QUA-065 : principal copilot-start : l'état en JSON natif Copilot, jamais d'échec", async () => {
+  const racine = depot();
+  const r = await capturer(() => main(["copilot-start"], racine));
+  assert.match(JSON.parse(r.sortie).additionalContext, /SCOPING/);
+  assert.deepEqual(JSON.parse((await capturer(() => main(["copilot-start"], null))).sortie), {});
+});
+
+test("QUA-065 : principal copilot-message : rappel devant le message, une seule fois, jamais bloquant", async () => {
+  const racine = depot();
+  const entree = (texte) => Readable.from([texte]);
+  const message = JSON.stringify({ prompt: "p", transformedPrompt: "bonjour" });
+  const r = JSON.parse((await capturer(() => main(["copilot-message"], racine, entree(message)))).sortie);
+  assert.match(r.modifiedTransformedPrompt, /^\[drwil\] Rappel[\s\S]*\n\nbonjour$/);
+  const encore = await capturer(() => main(["copilot-message"], racine, entree(message)));
+  assert.deepEqual(JSON.parse(encore.sortie), {}, "inchangé : rien");
+  for (const brut of ["", "pas du json", JSON.stringify({ prompt: "p" })])
+    assert.deepEqual(JSON.parse((await capturer(() => main(["copilot-message"], racine, entree(brut)))).sortie), {});
+});
+
+test("QUA-065 : readStdinJson : rend le JSON dès qu'il est complet, sans attendre la fin ni plus que le délai", async () => {
+  const ouvert = new PassThrough();
+  ouvert.write('{"a":1}');
+  assert.deepEqual(await readStdinJson(ouvert, 5000), { a: 1 });
+  const muet = new PassThrough();
+  const debut = Date.now();
+  assert.equal(await readStdinJson(muet, 50), null);
+  assert.ok(Date.now() - debut < 2000);
+  const coupe = new PassThrough();
+  coupe.write("{ incomplet");
+  coupe.end();
+  assert.equal(await readStdinJson(coupe, 5000), null);
 });
 
 test("principal rappel et lecture : une racine inutilisable ne casse jamais la session", async () => {

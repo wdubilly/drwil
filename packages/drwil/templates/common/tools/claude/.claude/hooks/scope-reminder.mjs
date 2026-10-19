@@ -93,7 +93,8 @@ async function remind(input, root = ROOT) {
     return "";
   }
   if (typeof event !== "object" || event === null || !TOOLS.has(event.tool_name)) return "";
-  const path = event.tool_input?.file_path;
+  // Claude Code envoie file_path ; Copilot CLI envoie path pour les mêmes outils.
+  const path = event.tool_input?.file_path ?? event.tool_input?.path;
   if (typeof path !== "string" || !path) return "";
   const rel = relativePath(path, root);
   if (!rel) return "";

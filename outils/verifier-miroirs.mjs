@@ -85,11 +85,17 @@ const normaliser = (texte) => texte.replace(/\r\n/g, "\n");
 export function correspond(installe, gabarit) {
   const [a, g] = [normaliser(installe), normaliser(gabarit)];
   if (!/{{\w+}}/.test(g)) return a === g;
-  const motif = g
-    .split(/{{\w+}}/)
-    .map((m) => m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join("[\\s\\S]*?");
-  return new RegExp(`^${motif}$`).test(a);
+  // Morceau par morceau : une expression régulière aussi longue qu'un document déborde.
+  const morceaux = g.split(/{{\w+}}/);
+  const fin = a.length - morceaux.at(-1).length;
+  if (!a.startsWith(morceaux[0]) || fin < morceaux[0].length || !a.endsWith(morceaux.at(-1))) return false;
+  let pos = morceaux[0].length;
+  for (const m of morceaux.slice(1, -1)) {
+    const i = a.indexOf(m, pos);
+    if (i < 0 || i + m.length > fin) return false;
+    pos = i + m.length;
+  }
+  return true;
 }
 
 /** Une entrée déclarée : chemin exact, dossier (« docs/projects/ ») ou motif (« * » dans un segment). */

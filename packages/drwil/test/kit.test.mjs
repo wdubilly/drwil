@@ -733,6 +733,17 @@ test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse
   const refus = hook("PreToolUse", "scripts/nouveau.mjs");
   assert.match(refus.stdout, /"permissionDecision":"deny"/);
   assert.match(refus.stdout, /Écriture refusée \(QUA-016, scopeReminder : blocking\).*scripts\/nouveau\.mjs/);
+  // Copilot CLI envoie le fichier sous `path`, pas `file_path`.
+  const copilote = spawnSync(process.execPath, [".claude/hooks/scope-reminder.mjs"], {
+    cwd: dir,
+    encoding: "utf8",
+    input: JSON.stringify({
+      hook_event_name: "PreToolUse",
+      tool_name: "Write",
+      tool_input: { path: join(dir, "scripts/nouveau.mjs"), file_text: "x" },
+    }),
+  });
+  assert.match(copilote.stdout, /"permissionDecision":"deny"/);
   assert.equal(hook("PreToolUse", "docs/notes.md").stdout.trim(), "", "la doc n'est jamais du code : jamais refusée");
   assert.equal(hook("PostToolUse", "scripts/nouveau.mjs").stdout.trim(), "", "en bloquant, pas de rappel en double après coup");
   // QUA-035 : une copie déclarée (scopeMirrors) d'un fichier cadré n'est pas refusée.
@@ -1681,6 +1692,22 @@ test("une couche imbriquée renvoie au bon AGENTS.md racine", async () => {
   await quiet(() => init({ lang: "fr", targetDir: dir, layers: "packages/api", git: false }));
   assert.match(read(dir, "packages/api/AGENTS.md"), /`\.\.\/\.\.\/AGENTS\.md`/);
   assert.equal(checks(dir).status, 0);
+});
+
+test("QUA-064 : choisir copilot installe aussi l'arbre .claude (hooks, réglages, skills) que Copilot lit, et ses hooks natifs", async () => {
+  const dir = tmp();
+  await init({ lang: "fr", targetDir: dir, tools: "copilot", git: false });
+  for (const f of [
+    ".claude/settings.json",
+    ".claude/hooks/scope-reminder.mjs",
+    ".claude/skills/start-a-workstream/SKILL.md",
+    ".github/hooks/drwil.json",
+  ])
+    assert.ok(existsSync(join(dir, f)), f);
+  assert.ok(!existsSync(join(dir, "CLAUDE.md")), "le pointeur CLAUDE.md reste lié à l'outil claude");
+  const natifs = JSON.parse(read(dir, ".github/hooks/drwil.json")).hooks;
+  assert.match(natifs.sessionStart[0].command, /state\.mjs copilot-start/);
+  assert.match(natifs.userPromptTransformed[0].command, /state\.mjs copilot-message/);
 });
 
 test("une valeur d'option inconnue est refusée", async () => {

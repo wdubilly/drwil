@@ -12,8 +12,36 @@ function option(args, name) {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
 }
 
+/**
+ * JSON read on `stream`, as soon as it is complete; null if it is empty, invalid or still open after `ms`.
+ * A hook never waits for an input that does not close: the tool would let the call through at its deadline.
+ */
+export function readStdinJson(stream = process.stdin, ms = 2000) {
+  return new Promise((resolve) => {
+    let raw = "";
+    const finish = () => {
+      clearTimeout(timer);
+      stream.pause();
+      try {
+        resolve(JSON.parse(raw));
+      } catch {
+        resolve(null);
+      }
+    };
+    const timer = setTimeout(finish, ms);
+    stream.on("data", (d) => {
+      raw += d;
+      try {
+        JSON.parse(raw);
+        finish();
+      } catch {}
+    });
+    stream.on("end", finish);
+  });
+}
+
 /** Entry point shared by `node .githooks/state.mjs` and `drwil state`. Returns the exit code. */
-export async function main(args, root) {
+export async function main(args, root, input = process.stdin) {
   if (args[0] === "briefs") {
     const briefs = scopedBriefs(root);
     if (args.includes("--json")) console.log(JSON.stringify(briefs, null, 2));
@@ -73,6 +101,20 @@ export async function main(args, root) {
       const text = reminderIfChanged(root);
       if (text) console.log(text);
     } catch {}
+    return 0;
+  }
+  if (args[0] === "copilot-start" || args[0] === "copilot-message") {
+    // Copilot CLI (native hooks, .github/hooks/drwil.json) reads JSON, not raw text. Any failure: no context.
+    let out = {};
+    try {
+      if (args[0] === "copilot-start") out = { additionalContext: context(readState(root), root) };
+      else {
+        const prompt = (await readStdinJson(input))?.transformedPrompt;
+        const text = typeof prompt === "string" ? reminderIfChanged(root) : null;
+        if (text) out = { modifiedTransformedPrompt: `${text}\n\n${prompt}` };
+      }
+    } catch {}
+    console.log(JSON.stringify(out));
     return 0;
   }
   if (args[0] !== "move") {

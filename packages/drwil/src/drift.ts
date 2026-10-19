@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
-import { isKitProse, resolveFromConfig, type Resolved } from "./config.js";
+import { isKitProse, resolveFromConfig, type Resolved, usesClaudeTree } from "./config.js";
 import { fill, projectLang } from "./i18n.js";
 import { readManifest } from "./manifest.js";
 import { relPosix, render, scaffold, templatesDir, walk } from "./render.js";
@@ -31,7 +31,7 @@ async function renderedMechanics(r: Resolved): Promise<Map<string, string>> {
   };
   const base = join(templatesDir, "common", "base");
   await add(join(base, ".githooks"), base);
-  if (r.tools.includes("claude")) {
+  if (usesClaudeTree(r.tools)) {
     const settings = join(templatesDir, "common", "tools", "claude", ".claude", "settings.json");
     rendered.set(join(r.opts.targetDir, ".claude", "settings.json"), render(await readFile(settings, "utf8"), r));
   }

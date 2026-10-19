@@ -18,7 +18,7 @@ import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, queueable, scopedBriefs } from "./briefs.mjs";
 import { closingSignals, pruneMergedBranches, prunedMessage } from "./close.mjs";
-import { main } from "./state-cli.mjs";
+import { main, readStdinJson } from "./state-cli.mjs";
 import { fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
 
 // Unchanged interface for the other hooks, the CLI and the tools: everything this file exported
@@ -36,7 +36,7 @@ export {
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 // The command line lives in state-cli.mjs (QUA-001: files under 400 lines); `node .githooks/state.mjs`
 // stays the entry point.
-export { main };
+export { main, readStdinJson };
 
 export const ACTIVITIES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
 
