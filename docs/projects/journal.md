@@ -2023,3 +2023,42 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : 4,31 M tokens pondérés, 178 requêtes, 55 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR #160 (branche `chantier/detour`).
+
+## 2026-10-19 — Une recette par version, pour une équipe hors dépôt (0.6.5)
+
+- **Besoin** : une équipe de recette, qui ne lit pas le dépôt, valide
+  chaque version avant sa publication ; elle doit savoir en quelques
+  minutes quoi valider et ce que la non-régression a déjà prouvé.
+- **La candidate et sa fiche** : contrats créés QUA-051 (une version
+  candidate en pré-release, avec sa fiche de recette générée) et QUA-052
+  (la fiche dit quoi valider, puis ce que la non-régression a prouvé).
+  `create-release.mjs --candidate` publie `vX.Y.Z-rc.N` avec tarball et
+  fiche, générée par `.githooks/acceptance-sheet.mjs` depuis le dernier tag
+  définitif : points à valider (critères humains des fiches retrouvées dans
+  git, essais en réel, limites connues du journal, attestations à refaire),
+  chacun avec un identifiant `vX.Y.Z-P<n>` et la PR de son chantier par le
+  trailer `Drwil-Brief` ; puis verdict de verify, contrats prouvés par un
+  test, OS de la CI, empreinte sha256. `--dry-run` montre la fiche.
+- **Le verdict et la promotion** : QUA-053 (le verdict de recette est un
+  geste humain, enregistré sur la candidate) — terminal interactif et
+  candidate retapée, une issue par réserve ou refus ; QUA-054 (seule une
+  candidate approuvée est promue, avec le même tarball) — empreinte
+  vérifiée, réserves dans la note ; tri des issues dans la recette
+  « corriger un défaut ». QUA-055 (les README pointent vers la dernière
+  version validée) : `releases/latest`, plus aucun numéro de version.
+- **Doc** : recettes de release et « corriger un défaut », skill,
+  `AGENTS.md` (gabarit et dépôt), README du module, carte, changelog
+  (QUA-040, drwil entretient la carte, le README et le changelog). Livré à
+  tout projet avec le module de release (QUA-018, dépôt ou livrable).
+- **Cadrage élargi** (commit séparé) : les fiches de mécanique du kit,
+  sans quoi un projet qui active le module ne pouvait pas commiter ses
+  nouveaux scripts.
+- **Intention d'origine** : couverte, résumée ici et retirée ; la version
+  HTML, hors périmètre, devient `docs/intentions/fiche-de-recette-html.md`.
+- **Limites connues** : rien publié en réel (candidate, verdict, promotion
+  éprouvés contre un gh simulé) — `docs/intentions/recette-eprouvee-en-reel.md` ;
+  essais en réel reconnus par une liste de mots —
+  `docs/intentions/essai-reel-reconnu-par-mots.md`.
+- **Consommation** : 3,93 M tokens pondérés, 131 requêtes, 59 minutes
+  (`.drwil/usage.jsonl`).
+- **Clôturé par** : la PR #162 (branche `chantier/fiche-de-recette`).

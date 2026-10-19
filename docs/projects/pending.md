@@ -119,7 +119,7 @@ avant les points 5 à 13, en trois versions.
   (fait, journal du 2026-10-18), détour pour une correction
   intercalée (fait, journal du 2026-10-18) ; puis, dans une PR séparée, la
   fiche de recette pour une équipe hors dépôt
-  (`docs/projects/fiche-de-recette.md`), avant la release.
+  (fait, journal du 2026-10-19), avant la release.
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -279,9 +279,15 @@ une décision du demandeur.
 - [ ] [décision] Compter `package.json` parmi les seuils d'un détour
   (limite du chantier « un détour » du 2026-10-18) —
   `docs/intentions/seuils-dans-package-json.md`.
-- [ ] [IA] [P1] 0.6.5 : une fiche de recette par version, pour une
-  équipe hors dépôt (cadré le 2026-10-18) —
-  `docs/projects/fiche-de-recette.md`.
+- [ ] [décision] Éprouver en réel la recette par version : candidate de
+  la 0.6.5, verdict, promotion (limite du chantier « une recette par
+  version » du 2026-10-19) — `docs/intentions/recette-eprouvee-en-reel.md`.
+- [ ] [décision] Reconnaître les essais en réel sans liste de mots
+  (limite du chantier « une recette par version » du 2026-10-19) —
+  `docs/intentions/essai-reel-reconnu-par-mots.md`.
+- [ ] [décision] Une version HTML de la fiche de recette (hors périmètre
+  du chantier « une recette par version » du 2026-10-19) —
+  `docs/intentions/fiche-de-recette-html.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
   `docs/intentions/prefixe-catalogue.md`.
 - [ ] [décision] Un `doctor` juste sur le dépôt drwil lui-même (manifeste
