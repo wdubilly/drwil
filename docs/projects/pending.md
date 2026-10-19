@@ -411,6 +411,8 @@ une décision du demandeur.
   Code, Copilot CLI et Gemini CLI — `docs/intentions/note-a-tout-moment.md`.
 - [ ] [décision] Proposer la couche d'un dossier de code apparu après
   l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
+- [ ] [décision] Mener plusieurs chantiers en parallèle, ou orchestrer plusieurs
+  agents sur leurs parties — `docs/intentions/chantiers-en-parallele.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
