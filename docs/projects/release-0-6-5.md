@@ -36,9 +36,8 @@ candidate, verdict humain, promotion.
 - Les README pointent vers la dernière version validée, sans numéro figé
   à mettre à jour — `QUA-055`
 - Un projet équipé en 0.6.4 passe à la 0.6.5 sans rien perdre — `QUA-027`
-- La candidate `v0.6.5-rc.1` est publiée en pré-release avec sa fiche de
-  recette, le verdict est donné par l'humain, et seule une candidate
-  approuvée est promue en 0.6.5 avec le même tarball [humain] — `QUA-054`
+- `create-release.mjs --candidate --dry-run` annonce la candidate
+  v0.6.5-rc.1 et sa fiche de recette — `QUA-051`
 
 ## 2. Hors périmètre
 
@@ -62,6 +61,11 @@ candidate, verdict humain, promotion.
 
 - 2026-10-19 (demandeur) : publier la 0.6.5 par le parcours de recette,
   premier essai réel (intention d'origine).
+- 2026-10-19 (agent, correction du cadrage) : candidate, verdict et
+  promotion ne se font qu'après la fusion de la PR (le tag vient de la
+  version sur la branche principale) ; ils ne sont donc pas des critères
+  de la PR, mais les lots 2 et 3, menés aussitôt après la fusion et
+  consignés au journal et dans l'intention d'origine.
 - 2026-10-19 (agent, comme pour la 0.6.4) : en plus du test de QUA-027
   (mise à jour sûre d'une version à la suivante), un essai réel — projet
   temporaire équipé avec le tarball 0.6.4 de la release GitHub, mis à jour
