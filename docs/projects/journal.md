@@ -2311,5 +2311,6 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : le banc en CI attend les comptes du demandeur
   (décision du 2026-10-18) ; les hooks de Copilot, Gemini, Codex et
   Cursor relèvent des quatre fiches suivantes.
-- **Consommation** : voir `.drwil/usage.jsonl`.
+- **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI,
+  et `.githooks/consumption.mjs` ne lit que les journaux de Claude Code.
 - **Clôturé par** : la branche `workstream/compat-socle`.
