@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.6.6 (2026-10-19)
+
 ### Changed
 
 - During a detour, a commit that only adds new contracts to the registry
