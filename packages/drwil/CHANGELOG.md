@@ -5,6 +5,13 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Changed
+
+- During a detour, a commit that only adds new contracts to the registry
+  no longer waits for the human's yes (`node .githooks/detour.mjs allow`),
+  so a queue of workstreams no longer stops for it; modifying or removing
+  an existing contract still does, and so does any doubt.
+
 ### Fixed
 
 - A `git push` from a secondary worktree no longer touches the main
@@ -79,6 +86,13 @@ closing commit; the release renames this section to its version.
   yes (`allow`, interactive terminal). The « fix a defect » recipe
   (`docs/recipes/corriger-un-defaut.md`) is now shipped and describes it.
 
+### Changed
+
+- During a detour, a commit that only adds new contracts to the registry
+  no longer waits for the human's yes (`node .githooks/detour.mjs allow`),
+  so a queue of workstreams no longer stops for it; modifying or removing
+  an existing contract still does, and so does any doubt.
+
 ### Fixed
 
 - A rebase no longer rewrites the `Drwil-Brief` trailer of the replayed
@@ -102,6 +116,13 @@ closing commit; the release renames this section to its version.
   request for each workstream (table and `--record`), so the cost of a
   long context shows.
 
+### Changed
+
+- During a detour, a commit that only adds new contracts to the registry
+  no longer waits for the human's yes (`node .githooks/detour.mjs allow`),
+  so a queue of workstreams no longer stops for it; modifying or removing
+  an existing contract still does, and so does any doubt.
+
 ### Fixed
 
 - A queue started from a multiple-choice `/drwil-start` poll follows the
@@ -111,6 +132,13 @@ closing commit; the release renames this section to its version.
   options, in the order typed.
 
 ## 0.6.3 (2026-10-17)
+
+### Changed
+
+- During a detour, a commit that only adds new contracts to the registry
+  no longer waits for the human's yes (`node .githooks/detour.mjs allow`),
+  so a queue of workstreams no longer stops for it; modifying or removing
+  an existing contract still does, and so does any doubt.
 
 ### Fixed
 
@@ -185,6 +213,13 @@ closing commit; the release renames this section to its version.
 
 ## 0.6.2 (2026-10-17)
 
+### Changed
+
+- During a detour, a commit that only adds new contracts to the registry
+  no longer waits for the human's yes (`node .githooks/detour.mjs allow`),
+  so a queue of workstreams no longer stops for it; modifying or removing
+  an existing contract still does, and so does any doubt.
+
 ### Fixed
 
 - Installing no longer leaves a tarball in the project. The README
@@ -214,6 +249,13 @@ closing commit; the release renames this section to its version.
   prose, is not refreshed yet (planned for 0.6.3).
 
 ## 0.6.1 (2026-10-17)
+
+### Changed
+
+- During a detour, a commit that only adds new contracts to the registry
+  no longer waits for the human's yes (`node .githooks/detour.mjs allow`),
+  so a queue of workstreams no longer stops for it; modifying or removing
+  an existing contract still does, and so does any doubt.
 
 ### Fixed
 

@@ -46,10 +46,13 @@ The agent opens it alone: the check is at the merge of its PR.
    restored and the state is back in BUILD on the original brief. If a step
    fails, the command refuses without losing anything: say what blocks.
 
-A detour that changes the rules of the game (contracts registry, hook,
-threshold, scope gate, CI) needs the human's yes: the scope gate refuses
-those commits until `node .githooks/detour.mjs allow`, run by the human in
-an interactive terminal. In a queue, the subagent stops there and reports.
+A detour that changes the rules of the game (an existing contract of the
+registry modified or removed, hook, threshold, scope gate, CI) needs the
+human's yes: the scope gate refuses those commits until
+`node .githooks/detour.mjs allow`, run by the human in an interactive
+terminal. In a queue, the subagent stops there and reports. Adding a new
+contract to the registry, every existing one kept word for word, needs no
+yes; in doubt, the yes is still asked.
 
 ## A reserve or a refusal from the acceptance team: sort the issue
 

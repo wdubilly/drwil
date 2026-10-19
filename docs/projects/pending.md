@@ -127,7 +127,7 @@ avant les points 5 à 13, en trois versions.
   depuis un worktree ne touche jamais le vrai dépôt
   (fait, journal du 2026-10-19), les branches fusionnées par squash
   (fait, journal du 2026-10-19), un contrat ajouté pendant un détour
-  (`docs/projects/stab-registre.md`), une fiche de recette juste
+  (fait, journal du 2026-10-19), une fiche de recette juste
   (`docs/projects/stab-recette.md`).
 - **0.6.7** — la compatibilité, décidée le 2026-10-18 par le demandeur,
   renumérotée le 2026-10-19 (après la stabilisation) : chaque agent de code tenu par la même gouvernance
@@ -297,9 +297,9 @@ une décision du demandeur.
   par chantier entier faite le 2026-10-18, sans conclusion ; limite du
   chantier « une clôture allégée » du 2026-10-18) —
   `docs/intentions/mesurer-gain-cloture-allegee.md`.
-- [ ] [décision] Un ajout au registre des contrats sans le oui de
-  l'humain pendant un détour (limite du chantier « un détour » du
-  2026-10-18) — `docs/intentions/registre-ajout-sans-oui.md`.
+- [ ] [décision] Une annonce juste du oui à l'ouverture d'un détour qui
+  cite le registre (limite du chantier « un contrat ajouté pendant un
+  détour » du 2026-10-19) — `docs/intentions/annonce-oui-registre-detour.md`.
 - [ ] [décision] Compter `package.json` parmi les seuils d'un détour
   (limite du chantier « un détour » du 2026-10-18) —
   `docs/intentions/seuils-dans-package-json.md`.
@@ -312,8 +312,6 @@ une décision du demandeur.
 - [ ] [décision] Une version HTML de la fiche de recette (hors périmètre
   du chantier « une recette par version » du 2026-10-19) —
   `docs/intentions/fiche-de-recette-html.md`.
-- [ ] [IA] [P0] 0.6.6, 3 sur 4 : un contrat ajouté pendant un détour, sans
-  arrêter la file — `docs/projects/stab-registre.md`.
 - [ ] [IA] [P0] 0.6.6, 4 sur 4 : une fiche de recette juste, leçons de la
   0.6.5 — `docs/projects/stab-recette.md`.
 - [ ] [IA] [P1] 0.6.7, 1 sur 5 : compatibilité des agents, le socle

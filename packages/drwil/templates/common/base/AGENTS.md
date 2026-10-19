@@ -86,7 +86,8 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
   titled « Detour of <brief> »; once merged, `node .githooks/detour.mjs
   resume` restores the work on the rebased workstream branch. Never widen
   an unrelated scope, never stash by hand. A detour that changes the rules
-  (contracts, hooks, thresholds, the gate) waits for the human's yes
+  (an existing contract modified or removed, hooks, thresholds, the gate)
+  waits for the human's yes; adding a new contract does not
   (`docs/recipes/corriger-un-defaut.md`).
 - **Queue of workstreams**: when the human ticked several briefs at start,
   the agent runs them one after the other without a new poll — with Claude
