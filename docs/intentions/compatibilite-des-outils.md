@@ -38,7 +38,7 @@ local scripté qui lance chaque CLI en mode non interactif dans un projet
 temporaire ; hors CI (comptes requis), son résultat est attesté par
 l'humain.
 
-- `docs/projects/compat-socle.md`
+- le socle (fait, journal du 2026-10-19)
 - `docs/projects/compat-copilot.md`
 - `docs/projects/compat-gemini.md`
 - `docs/projects/compat-codex.md`

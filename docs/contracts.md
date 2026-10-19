@@ -495,6 +495,48 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : les branches fusionnées par squash reconnues (0.6.6) — « Sans `gh` joignable, la reconnaissance se replie sur git (fusion classique seulement) et le dit clairement, sans jamais supprimer une branche non fusionnée »
 **Raison** : La PR fusionnée via `gh` fait foi (décision du demandeur, 2026-10-19) ; sans elle, rien ne prouve une fusion par squash, et supprimer une branche sur un doute pourrait perdre du travail.
 
+## QUA-060 — Un outil n'est tenu que prouvé par le banc, jamais présumé
+**Règle** : Propre au dépôt drwil (QUA-018). `node outils/banc-agents.mjs` installe drwil dans un projet temporaire (jamais dans le dépôt) en SCOPING, demande à l'agent réel, en mode non interactif, d'écrire un fichier de code, et rend par outil : hooks lancés, écriture refusée ou acceptée, rappel d'état reçu ou non. Un outil n'est « conforme » que si son hook d'écriture a été lancé, le fichier est absent et le rappel est reçu : un refus sans hook lancé (l'agent a obéi aux consignes) est « non éprouvé ». Un outil absent du poste ou dont le lancement n'est pas défini est « non testé », jamais « conforme ».
+**Périmètre** : `outils/banc-agents.mjs`.
+**Source de vérité** : `outils/banc-agents.mjs` (`analyser`, `essayer`).
+**Preuve** : tests du banc avec un exécuteur simulé (aucun vrai agent) ; l'essai sur l'outil réel est un geste du poste.
+**Contrôle** : `tests-qua-060`
+**Manuel** : lancer le banc sur le poste et attester le résultat (colonne « Attested by the human » de la matrice).
+**Tests** : `outils/banc-agents.test.mjs`
+**Origine** : compatibilité des agents, le socle commun (0.6.7) — « Le banc installe drwil dans un projet temporaire en SCOPING, lance l'agent demandé en mode non interactif avec une consigne d'écriture de code, et rend pour chaque outil : hooks lancés ou non, écriture refusée ou acceptée, rappel d'état reçu ou non ; un outil absent du poste est signalé « non testé », jamais « conforme » »
+**Raison** : Sous Copilot CLI et Gemini CLI, essais du 2026-10-18 : rien n'arrêtait l'écriture de code hors chantier, sans que rien ne le signale ; sans preuve par outil réel, une simulation en CI ne dit pas que l'outil lance le hook.
+
+## QUA-061 — En SCOPING, une intention se cadre, une demande de réalisation se code
+**Règle** : Livré à tout projet. `AGENTS.md` dit qu'en SCOPING un besoin exprimé par l'humain se cadre (intention ou fiche) et ne se code pas, et qu'en cas de doute l'agent demande « intention ou demande de réalisation ? » avant d'agir. La règle est dans `AGENTS.md`, lu par tous les outils (consigne seulement : elle ne remplace pas le blocage par hook, QUA-060).
+**Périmètre** : `AGENTS.md` ; livré dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`.
+**Preuve** : test du paquet qui installe un projet et lit la règle dans son `AGENTS.md`.
+**Contrôle** : `tests-qua-061`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : compatibilité des agents, le socle commun (0.6.7) — « `AGENTS.md` dit qu'en SCOPING un besoin exprimé se cadre (intention ou fiche) et ne se code pas, et qu'en cas de doute l'agent demande « intention ou demande de réalisation ? » avant d'agir »
+**Raison** : Essais du 2026-10-18 : aucun outil autre que Claude Code ne distinguait une intention d'une demande de réalisation, et l'agent codait dès qu'un besoin était exprimé.
+
+## QUA-062 — Chaque en-tête de skill se lit en YAML strict
+**Règle** : Livré à tout projet. L'en-tête YAML de chaque `.claude/skills/<skill>/SKILL.md` se lit en YAML strict ; un en-tête invalide (valeur non citée contenant « : » ou « # », caractère réservé en tête, guillemet mal refermé, ligne illisible, en-tête non refermé) est refusé au commit par `.githooks/check-docs.mjs`, avec le fichier et la ligne. Le contrôle ne demande aucune bibliothèque YAML et est vérifié contre le vrai parseur dans les tests.
+**Périmètre** : `.githooks/skill-headers.mjs`, `.githooks/check-docs.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/skill-headers.mjs` (`headerProblems`, `skillHeaderProblems`).
+**Preuve** : tests qui comparent le contrôle au parseur `yaml` sur chaque skill livré, un cas négatif rejoue l'en-tête de `start-a-workstream`, et un projet installé qui refuse le commit.
+**Contrôle** : `tests-qua-062`
+**Tests** : `.githooks/skill-headers.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : compatibilité des agents, le socle commun (0.6.7) — « Chaque en-tête de skill livré se lit en YAML strict ; un en-tête invalide est refusé au commit, et `start-a-workstream` apparaît dans `copilot skill list` »
+**Raison** : Sous Copilot CLI, un en-tête invalide en YAML strict fait disparaître le skill sans que rien ne le signale ; celui de `start-a-workstream` l'était (« : » dans la description).
+
+## QUA-063 — La matrice de compatibilité dit ce qui est tenu, outil par outil, avec sa date d'essai
+**Règle** : Livré à tout projet. `docs/ia-first.md` porte une matrice qui donne, pour chaque outil (Claude Code, Copilot CLI, Gemini CLI, Codex, Cursor), les hooks lancés, l'écriture en SCOPING, le rappel d'état, la date et la version de l'essai, et l'attestation humaine ; un outil jamais essayé y est « not tested », jamais « tenu ».
+**Périmètre** : `docs/ia-first.md` ; livré dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/docs/ia-first.md` (section « Tool compatibility matrix »).
+**Preuve** : test qui lit la matrice : une ligne par outil, date et version si essayé, « not tested » sinon.
+**Contrôle** : `tests-qua-063`
+**Manuel** : l'attestation de chaque ligne par l'humain (colonne « Attested by the human »), après un essai du banc sur son poste.
+**Tests** : `outils/banc-agents.test.mjs`
+**Origine** : compatibilité des agents, le socle commun (0.6.7) — « La matrice de compatibilité (`docs/ia-first.md`) donne, outil par outil, ce qui est réellement tenu, et sa date d'essai »
+**Raison** : Dire qu'un outil est compatible sans l'avoir mesuré est la même erreur qu'une doc fausse : la matrice est remplie par le banc, pas par la mémoire de l'agent.
+
 ## QUA-004 — Seuil de couverture de test
 **Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
 **Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).

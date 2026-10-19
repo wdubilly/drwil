@@ -2291,3 +2291,25 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   après la fusion (lots 2 et 3 de la fiche), sur feu vert du demandeur.
 - **Consommation** : 0,47 M tokens pondérés (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR de la branche `chantier/release-0-6-6`.
+
+## 2026-10-19 — Compatibilité des agents, le socle commun (0.6.7, 1 sur 5)
+
+- **Décisions clés** : un banc local scripté (`outils/banc-agents.mjs`)
+  installe drwil en SCOPING dans un dossier temporaire et lance chaque
+  outil en mode non interactif ; un outil absent ou à lancement non
+  défini est « non testé », jamais « conforme » (QUA-060, un outil n'est
+  tenu que prouvé par le banc). `AGENTS.md` distingue une intention d'une
+  demande de réalisation (QUA-061). Les en-têtes de skills se lisent en
+  YAML strict, refusés au commit par un module à part (QUA-062) ; la
+  description de `start-a-workstream`, invalide, est corrigée. La matrice
+  de compatibilité de `docs/ia-first.md` dit, outil par outil, ce qui est
+  tenu et sa date d'essai (QUA-063).
+- **Résultat** (essai du 2026-10-19) : Claude Code conforme ; Copilot CLI
+  1.0.98 et Gemini CLI 0.61.0 ne lancent aucun hook dans le banc ; Codex
+  et Cursor non testés. Le nom du skill est `drwil-start`, son dossier
+  `start-a-workstream`.
+- **Limites connues** : le banc en CI attend les comptes du demandeur
+  (décision du 2026-10-18) ; les hooks de Copilot, Gemini, Codex et
+  Cursor relèvent des quatre fiches suivantes.
+- **Consommation** : voir `.drwil/usage.jsonl`.
+- **Clôturé par** : la branche `workstream/compat-socle`.

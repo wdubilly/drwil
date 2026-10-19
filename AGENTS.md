@@ -38,6 +38,10 @@ Carte complète : `docs/architecture.md`.
   clore est libre une fois l'évidence de `drwil verify` valide.
   Un commit hors du cadrage de la fiche active est refusé : élargir le
   cadrage dans un commit séparé qui ne touche que la fiche.
+- **Intention ou demande** : en SCOPING, un besoin exprimé par l'humain se
+  cadre (intention ou fiche), il ne se code pas ; quand on ne sait pas si un
+  message est une intention ou une demande de réalisation, demander
+  « intention ou demande de réalisation ? » avant d'agir.
 - **Cause avant correctif** : reproduire puis établir la cause racine avant de modifier le code.
 - **Pas de contournement (QUA-019)** : un contrôle bloquant (test, hook, CI)
   n'est jamais désactivé, sauté (`--no-verify`, skip...) ni contourné pour

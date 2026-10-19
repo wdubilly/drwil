@@ -1,6 +1,6 @@
 # "IA first" architecture — description
 
-State as of 2026-10-17. This document explains **how this repo is built to be
+State as of 2026-10-19. This document explains **how this repo is built to be
 modified by agents**: where the rules live, who checks them, and what is
 not checked. It describes neither the product nor the detail of invariants
 (single source: `docs/contracts.md`); the product, if described, lives in
@@ -247,6 +247,28 @@ What the architecture does not do, and does not claim to do:
 - Projects not yet done are in the project index (`.drwil/ia-first.json` →
   `dirs.index`): "pending" is not an invariant, and must not be presented
   as checked.
+
+### Tool compatibility matrix
+
+What each assistant really holds, measured by the drwil repository's agent
+bench (non-interactive mode, drwil installed in a temporary project in
+SCOPING, the agent asked to write a code file). A tool is "held" only when its own hooks
+ran, the write was refused **by the write hook** (not by the agent obeying
+`AGENTS.md`) and the state reminder arrived. An absent tool is "not tested",
+never "held". Whatever the tool, the Git barrier at commit still holds.
+
+| Tool | Hooks run | Code write in SCOPING | State reminder | Trial (version) | Attested by the human |
+|---|---|---|---|---|---|
+| Claude Code | yes | refused by the hook | received | 2026-10-19 (2.1.303) | pending |
+| Copilot CLI | no (non-interactive) | not proven: no hook ran | not received | 2026-10-19 (1.0.98) | pending |
+| Gemini CLI | no | accepted | not received | 2026-10-19 (0.61.0) | pending |
+| Codex | not tested | not tested | not tested | not tested | — |
+| Cursor | not tested | not tested | not tested | not tested | — |
+
+Copilot CLI, interactive session (trial of 2026-10-18): the hooks are loaded
+but exceed Copilot's 30-second delay, and Copilot then lets the call through:
+a hook that fails or times out never counts as an agreement, and this tool
+does not enforce it yet.
 
 ## 7. Projects, resumable cold
 

@@ -133,7 +133,7 @@ avant les points 5 à 13, en trois versions.
 - **0.6.7** — la compatibilité, décidée le 2026-10-18 par le demandeur,
   renumérotée le 2026-10-19 (après la stabilisation) : chaque agent de code tenu par la même gouvernance
   (`docs/intentions/compatibilite-des-outils.md`), dans cet ordre : le
-  socle (`docs/projects/compat-socle.md`), Copilot CLI
+  socle (fait, journal du 2026-10-19), Copilot CLI
   (`docs/projects/compat-copilot.md`), Gemini CLI
   (`docs/projects/compat-gemini.md`), Codex
   (`docs/projects/compat-codex.md`), Cursor
@@ -313,9 +313,9 @@ une décision du demandeur.
 - [ ] [décision] Lire la dernière version d'une fiche fusionnée par squash
   dans la fiche de recette (limite du chantier « une fiche de recette
   juste » du 2026-10-19) — `docs/intentions/fiche-recette-apres-squash.md`.
-- [ ] [IA] [P1] 0.6.7, 1 sur 5 : compatibilité des agents, le socle
+- [x] [IA] [P1] 0.6.7, 1 sur 5 : compatibilité des agents, le socle
   commun (banc, règle « intention ou demande », en-têtes YAML stricts,
-  matrice) — `docs/projects/compat-socle.md`.
+  matrice) — fait, journal du 2026-10-19.
 - [ ] [IA] [P1] 0.6.7, 2 sur 5 : Copilot CLI tenu —
   `docs/projects/compat-copilot.md`.
 - [ ] [IA] [P1] 0.6.7, 3 sur 5 : Gemini CLI tenu —

@@ -1,6 +1,6 @@
 ---
 name: drwil-start
-description: Start a workstream, or a queue of workstreams, with one human gesture — open a poll of the scoped briefs; the human's answer, read by the tool, moves governance to BUILD (several briefs chosen: the next ones are queued and started by the agent after each closing). Use when the human wants to start implementing one or several briefs.
+description: Start a workstream, or a queue of workstreams, with one human gesture — open a poll of the scoped briefs; the human's answer, read by the tool, moves governance to BUILD (when several briefs are chosen, the next ones are queued and started by the agent after each closing). Use when the human wants to start implementing one or several briefs.
 ---
 
 # Start a workstream (`/drwil-start`)

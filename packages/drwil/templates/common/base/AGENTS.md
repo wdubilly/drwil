@@ -53,6 +53,10 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
   verify` evidence is valid. A commit outside the active brief's
   scoping is refused: widen the scoping in a separate commit touching only
   the brief.
+- **Intention or request**: in SCOPING, a need the human expresses is
+  framed (an intention or a brief), never coded; when it is unclear whether
+  a message is an intention or a request to build, ask "intention or
+  implementation request?" before acting.
 - **Cause before fix**: facing a bug or a red test, reproduce then
   establish the root cause before changing code; no trial fix, no bypassing
   a check (test, hook, CI) to make it pass (QUA-019): if it seems
