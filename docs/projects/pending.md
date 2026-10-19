@@ -138,7 +138,9 @@ avant les points 5 à 13, en trois versions.
   (fait, journal du 2026-10-19), Codex
   (`docs/intentions/compat-codex.md`), Cursor
   (`docs/intentions/compat-cursor.md`), ces deux derniers repassés en
-  intention le 2026-10-19 (demande de l'humain).
+  intention le 2026-10-19 (demande de l'humain) : le périmètre de la
+  0.6.7 est donc ramené à trois outils (socle, Copilot CLI, Gemini CLI),
+  puis la release (`docs/projects/release-0-6-7.md`).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet
@@ -314,10 +316,10 @@ une décision du demandeur.
 - [ ] [décision] Lire la dernière version d'une fiche fusionnée par squash
   dans la fiche de recette (limite du chantier « une fiche de recette
   juste » du 2026-10-19) — `docs/intentions/fiche-recette-apres-squash.md`.
-- [x] [IA] [P1] 0.6.7, 1 sur 5 : compatibilité des agents, le socle
+- [x] [IA] [P1] 0.6.7, 1 sur 3 : compatibilité des agents, le socle
   commun (banc, règle « intention ou demande », en-têtes YAML stricts,
   matrice) — fait, journal du 2026-10-19.
-- [x] [IA] [P1] 0.6.7, 2 sur 5 : Copilot CLI tenu — fait, journal du
+- [x] [IA] [P1] 0.6.7, 2 sur 3 : Copilot CLI tenu — fait, journal du
   2026-10-19.
 - [ ] [décision] Revenir en SCOPING après la fusion d'un chantier, sans geste
   à la main (limite du chantier « Copilot CLI tenu » du 2026-10-19) —
@@ -325,7 +327,7 @@ une décision du demandeur.
 - [ ] [décision] Établir la cause du dépassement de 30 s des hooks en session
   interactive de Copilot CLI (limite du même chantier) —
   `docs/intentions/depassement-delai-copilot-interactif.md`.
-- [x] [IA] [P1] 0.6.7, 3 sur 5 : Gemini CLI tenu — fait, journal du
+- [x] [IA] [P1] 0.6.7, 3 sur 3 : Gemini CLI tenu — fait, journal du
   2026-10-19.
 - [ ] [décision] Commandes `/drwil-*` et sondage de lancement sous Gemini CLI
   (limite du chantier « Gemini CLI tenu » du 2026-10-19) —
@@ -333,9 +335,11 @@ une décision du demandeur.
 - [ ] [décision] Un passage complet et stable du banc sous Gemini CLI, malgré
   le quota (limite du même chantier) —
   `docs/intentions/banc-gemini-quota.md`.
-- [ ] [décision] [P1] 0.6.7, 4 sur 5 : Codex (intention : à installer, rien
+- [ ] [IA] [P0] 0.6.7 : release 0.6.7, la compatibilité des agents (candidate,
+  verdict humain, promotion) — `docs/projects/release-0-6-7.md`.
+- [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
   d'essayé) — `docs/intentions/compat-codex.md`.
-- [ ] [décision] [P1] 0.6.7, 5 sur 5 : Cursor (intention : mode de preuve à
+- [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
   choisir) — `docs/intentions/compat-cursor.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
   `docs/intentions/prefixe-catalogue.md`.
