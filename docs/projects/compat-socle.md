@@ -16,6 +16,9 @@ files:
   - packages/drwil/templates/common/base/.githooks/check-docs.mjs
   - .githooks/check-docs.mjs
   - .githooks/check-docs.test.mjs
+  - packages/drwil/templates/common/base/.githooks/skill-headers.mjs
+  - .githooks/skill-headers.mjs
+  - .githooks/skill-headers.test.mjs
   - packages/drwil/test/kit.test.mjs
   - docs/ia-first.md
   - docs/architecture.md
@@ -86,6 +89,11 @@ signale.
 ## 5. Décisions
 
 - **2026-10-18 — Un socle, puis une fiche par outil** (demandeur).
+- **2026-10-19 — Cadrage élargi : un module de contrôle des en-têtes**
+  (agent) : le fichier de contrôle des documents est à 398 lignes, sous le
+  plafond de 400 (QUA-001, fichier de code plafonné) ; le contrôle des
+  en-têtes YAML des skills vit dans un module à part
+  (`.githooks/skill-headers.mjs` (à créer)), appelé par ce fichier.
 - **2026-10-18 — Preuve par banc local scripté, attestée par l'humain**
   (demandeur) : la simulation en CI ne prouve pas que l'outil réel lance
   le hook.
