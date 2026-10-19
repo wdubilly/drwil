@@ -375,6 +375,8 @@ une décision du demandeur.
   `docs/intentions/guide-de-demarrage.md`.
 - [ ] [décision] Mener dès le premier chantier dans un sous-agent, pas
   seulement une file — `docs/intentions/sous-agent-des-le-premier-chantier.md`.
+- [ ] [décision] Convoquer des personas d'agents (`agency-agents`) choisis par
+  le cadrage d'un chantier — `docs/intentions/personas-convoques-par-le-cadrage.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
