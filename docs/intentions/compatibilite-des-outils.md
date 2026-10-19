@@ -1,7 +1,7 @@
 # Intention : chaque agent de code tenu par la même gouvernance
 
 **Statut** : proposée et cadrée le 2026-10-18 par le demandeur (version
-« compatibilité », après la 0.6.5) ; découpée en un socle et une fiche par
+« compatibilité », 0.6.7, après la stabilisation 0.6.6) ; découpée en un socle et une fiche par
 outil.
 
 ## Besoin
@@ -59,5 +59,11 @@ l'humain.
 ## Liens
 
 - `docs/intentions/file-pour-copilot.md` (une file de chantiers pour Copilot CLI)
-- `docs/intentions/copilot-claude-project-dir.md` (`${CLAUDE_PROJECT_DIR}` sous Copilot)
 - `docs/intentions/file-sous-agents-autres-outils.md` (une file menée par sous-agents avec les autres outils)
+- Rattachées à la 0.6.7 le 2026-10-19 (demandeur), décisions encore
+  ouvertes : `docs/intentions/file-pour-copilot.md` (une file pour Copilot
+  CLI), `docs/intentions/glossaire-autres-agents.md` (le glossaire chez les
+  autres agents), `docs/intentions/consommation-autres-outils.md` (la
+  consommation des autres outils).
+- L'ex-intention « `${CLAUDE_PROJECT_DIR}` sous Copilot » est fondue dans
+  le lot 1 de `docs/projects/compat-copilot.md` (journal du 2026-10-19).

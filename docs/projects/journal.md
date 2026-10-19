@@ -2090,3 +2090,28 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   retirée.
 - **Consommation** : 0,70 M tokens pondérés (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR #164 (branche `chantier/release-0-6-5`).
+
+## 2026-10-19 — Release 0.6.5 publiée par la recette ; cadrage 0.6.6 et 0.6.7
+
+- **Release** : candidate `v0.6.5-rc.1` (pré-release, tarball et fiche de
+  recette), verdict « approuvée » donné par le demandeur, promue en
+  `v0.6.5` avec le même tarball (sha256 vérifié après téléchargement).
+  Premier essai réel du parcours (QUA-051 à QUA-054) : il tient de bout en
+  bout ; trois défauts de la fiche générée sont cadrés en 0.6.6
+  (`docs/projects/stab-recette.md`).
+- **Première file menée par sous-agents** (0.6.5, 2026-10-18 et 19) : cinq
+  chantiers et une correction intercalée, chacun dans un sous-agent ; cache
+  lu moyen par requête de 86 k à 183 k selon les chantiers, contre 309 k
+  pour la release menée ensuite dans la session principale. Trois arrêts,
+  tous débloqués (CI rouge, clôture avant la fin de la CI, limite de
+  session) ; leçon : CI verte avant toute clôture, ajoutée aux consignes
+  des sous-agents. L'intention « une première file menée par sous-agents,
+  observée et mesurée » est couverte, résumée ici et retirée.
+- **Décisions du demandeur** : deux versions, la stabilisation 0.6.6
+  d'abord (worktree, squash, registre, fiche de recette), puis la
+  compatibilité des agents renumérotée en 0.6.7, avec la file pour Copilot,
+  le glossaire et la consommation des autres outils rattachés ; budget de
+  temps sous Windows inchangé. L'intention « `${CLAUDE_PROJECT_DIR}` sous
+  Copilot » est fondue dans le lot 1 de `docs/projects/compat-copilot.md`
+  (essais du 2026-10-18 : Copilot lance la commande, qui dépasse son délai)
+  et retirée.

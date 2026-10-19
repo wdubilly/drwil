@@ -1,6 +1,6 @@
 # Intention : la recette par version éprouvée en réel
 
-**Statut** : en cours depuis le 2026-10-19 (essai sur la 0.6.5) ; proposée le 2026-10-19 — limite du chantier « une recette par
+**Statut** : essai réel fait le 2026-10-19 (0.6.5), suites cadrées en 0.6.6 ; proposée le 2026-10-19 — limite du chantier « une recette par
 version, pour une équipe hors dépôt » (journal du 2026-10-19, 0.6.5).
 
 ## Besoin
@@ -25,6 +25,17 @@ les issues sont simulés par les tests.
 - Tranché le 2026-10-19 par le demandeur (« oui publions ») : la 0.6.5
   passe par le parcours de recette. Version posée par le chantier
   « release 0.6.5 » (journal du 2026-10-19) ; candidate `v0.6.5-rc.1`,
-  verdict et promotion menés après sa fusion. Reste à consigner ici, puis
-  au journal, ce que l'essai a appris (format des options de gh,
-  lisibilité de la fiche), et à retirer cette intention.
+  verdict et promotion menés après sa fusion.
+
+## Essai réel du 2026-10-19 (0.6.5)
+
+- Candidate `v0.6.5-rc.1` publiée en pré-release avec tarball et fiche ;
+  verdict « approuvée » donné par le demandeur dans son terminal ;
+  promotion en `v0.6.5` avec le même tarball (sha256 vérifié après
+  téléchargement). Le parcours tient de bout en bout.
+- Trois défauts de la fiche générée, cadrés en
+  `docs/projects/stab-recette.md` (0.6.6) : faux « verify : FAIL » dû à
+  QUA-017 sur la branche principale ; 26 points dont des faux « essai
+  réel » tirés par mot-clé ; critères lus dans une version périmée des
+  fiches.
+- À retirer à la clôture de `docs/projects/stab-recette.md`.

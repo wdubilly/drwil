@@ -1,6 +1,6 @@
 # Intention : un ajout au registre des contrats sans le oui de l'humain
 
-**Statut** : proposée le 2026-10-18 — limite du chantier « un détour pour
+**Statut** : cadrée le 2026-10-19 en `docs/projects/stab-registre.md` (0.6.6) ; proposée le 2026-10-18 — limite du chantier « un détour pour
 une correction intercalée » (journal du 2026-10-18, 0.6.5, 4 sur 4).
 
 ## Besoin
@@ -26,9 +26,13 @@ l'humain ; en file, le sous-agent s'arrête alors pour rien.
 
 ## Questions à trancher
 
-- [décision] Laisser passer sans oui un ajout pur au registre (nouvelle
+- [tranché] Laisser passer sans oui un ajout pur au registre (nouvelle
   section, ligne « Tests » complétée) et ne demander le oui que pour une
   règle existante modifiée ou retirée — ou garder la règle prudente
   actuelle ?
-- [décision] Si on lit le diff : quelle forme d'ajout compte comme
+- [tranché] Si on lit le diff : quelle forme d'ajout compte comme
   « pur » (nouvel ID seulement, ou aussi un test ajouté à un contrat) ?
+
+## Décisions (2026-10-19, demandeur)
+
+- Un ajout pur au registre passe sans oui, jugé sur le contenu ; modifier ou retirer un contrat existant demande toujours le oui.

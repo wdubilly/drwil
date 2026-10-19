@@ -28,8 +28,13 @@ Mesures `[budget-commit]` lues dans les journaux de CI :
 
 ## Questions à trancher
 
-- [décision] Un budget par système (Windows plus large), une médiane de
+- [tranché] Un budget par système (Windows plus large), une médiane de
   plusieurs mesures, ou un budget inchangé avec relance automatique du
   test en cas de dépassement ?
 - [décision] Le relever reste-t-il une décision humaine (cliquet), comme
   le dit le test ?
+
+## Décisions (2026-10-19, demandeur)
+
+- Ne rien changer pour l'instant : budget gardé, job relancé en cas de
+  dépassement isolé ; la question du cliquet reste ouverte.

@@ -1,6 +1,6 @@
 # Intention : un push depuis un worktree ne touche jamais le vrai dépôt
 
-**Statut** : proposée le 2026-10-18 après un incident constaté par l'agent
+**Statut** : cadrée le 2026-10-19 en `docs/projects/stab-worktree.md` (0.6.6) ; proposée le 2026-10-18 après un incident constaté par l'agent
 pendant le cadrage de la 0.6.6 ; priorité à décider par le demandeur
 (proposée par l'agent avant la 0.6.6).
 
@@ -38,10 +38,10 @@ worktree).
 
 ## Questions à trancher
 
-- [décision] Priorité : un chantier avant la 0.6.6 (recommandé par
+- [tranché] Priorité : un chantier avant la 0.6.6 (recommandé par
   l'agent : un simple push peut abîmer le dépôt et casser un chantier en
   cours), ou dans la 0.6.6 ?
-- [décision] Garde-fou : retrait des `GIT_*` imposé à tout fichier de test
+- [tranché] Garde-fou : retrait des `GIT_*` imposé à tout fichier de test
   par un contrôle, ou isolation centralisée (le lanceur des contrôles
   nettoie l'environnement de ses enfants) ?
 
@@ -50,3 +50,7 @@ worktree).
 Rejouer l'incident : créer un worktree d'un dépôt jetable, y lancer le
 pre-push, vérifier que le dépôt principal (configuration, branches, index)
 reste identique.
+
+## Décisions (2026-10-19, demandeur)
+
+- Priorité : dans la 0.6.6, en premier ; garde-fou : les deux (nettoyage centralisé par le lanceur et test de non-régression depuis un worktree).
