@@ -126,7 +126,7 @@ avant les points 5 à 13, en trois versions.
   les points bloquants et critiques d'abord, dans cet ordre : un push
   depuis un worktree ne touche jamais le vrai dépôt
   (fait, journal du 2026-10-19), les branches fusionnées par squash
-  (`docs/projects/stab-squash.md`), un contrat ajouté pendant un détour
+  (fait, journal du 2026-10-19), un contrat ajouté pendant un détour
   (`docs/projects/stab-registre.md`), une fiche de recette juste
   (`docs/projects/stab-recette.md`).
 - **0.6.7** — la compatibilité, décidée le 2026-10-18 par le demandeur,
@@ -276,10 +276,17 @@ une décision du demandeur.
   lancement, comme la fusion automatique (limite du chantier « date
   gardée et feu vert de publication » du 2026-10-18) —
   `docs/intentions/feu-vert-publication-enregistre.md`.
-- [ ] [décision] Supprimer aussi les branches fusionnées par squash, et
-  les reconnaître à la reprise d'un détour (limites des chantiers « une
-  clôture allégée » et « un détour » du 2026-10-18) —
-  `docs/intentions/branches-fusionnees-par-squash.md`.
+- [ ] [décision] Aligner le texte de QUA-048 (une clôture en un geste)
+  sur la reconnaissance par squash de QUA-058 (limite du chantier « les
+  branches fusionnées par squash reconnues » du 2026-10-19) —
+  `docs/intentions/qua-048-aligne-sur-squash.md`.
+- [ ] [décision] Reconnaître une fusion par squash hors de GitHub (limite
+  du chantier « les branches fusionnées par squash reconnues » du
+  2026-10-19) — `docs/intentions/squash-hors-github.md`.
+- [ ] [décision] La clôture signale aussi les citations d'une intention
+  retirée (écart relevé pendant le chantier « les branches fusionnées par
+  squash reconnues » du 2026-10-19) —
+  `docs/intentions/cloture-signale-intention-retiree.md`.
 - [ ] [décision] Retirer les neuf citations de fiche restées dans le code
   non modifié (limite du chantier « une clôture allégée » du 2026-10-18) —
   `docs/intentions/citations-de-fiche-heritees.md`.
@@ -305,8 +312,6 @@ une décision du demandeur.
 - [ ] [décision] Une version HTML de la fiche de recette (hors périmètre
   du chantier « une recette par version » du 2026-10-19) —
   `docs/intentions/fiche-de-recette-html.md`.
-- [ ] [IA] [P0] 0.6.6, 2 sur 4 : les branches fusionnées par squash
-  reconnues — `docs/projects/stab-squash.md`.
 - [ ] [IA] [P0] 0.6.6, 3 sur 4 : un contrat ajouté pendant un détour, sans
   arrêter la file — `docs/projects/stab-registre.md`.
 - [ ] [IA] [P0] 0.6.6, 4 sur 4 : une fiche de recette juste, leçons de la
