@@ -40,7 +40,7 @@ l'humain.
 
 - le socle (fait, journal du 2026-10-19)
 - Copilot CLI (fait, journal du 2026-10-19)
-- `docs/projects/compat-gemini.md`
+- Gemini CLI (fait, journal du 2026-10-19)
 - `docs/projects/compat-codex.md`
 - `docs/projects/compat-cursor.md`
 

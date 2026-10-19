@@ -573,3 +573,35 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`).
 **Contrôle** : `taille-fichiers`
 **Raison** : Un fichier géant mêle plusieurs sujets ; chaque changement y coûte plus cher à écrire et à relire.
+
+## QUA-066 — Choisir Gemini installe aussi les hooks partagés et ses réglages natifs
+**Règle** : Livré à tout projet. Quand `gemini` est parmi les outils, `drwil init` installe `.gemini/settings.json` — les hooks natifs de Gemini CLI : état au démarrage de session, rappel d'état à chaque message, et le même script `scope-reminder` avant et après `write_file` et `replace` — et les scripts partagés du dossier `.claude/hooks` (un seul jeu pour tous les outils, seule la déclaration diffère). Le pointeur `CLAUDE.md` reste lié au seul outil `claude`.
+**Périmètre** : `packages/drwil/src/config.ts` (`usesClaudeTree`), `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`.
+**Source de vérité** : `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`.
+**Preuve** : test du paquet qui installe un projet avec le seul outil `gemini` et y trouve les réglages natifs, les hooks partagés et `GEMINI.md`, sans `CLAUDE.md`.
+**Contrôle** : `tests-qua-066`
+**Manuel** : approuver le dossier dans une session Gemini CLI interactive (sans cela, Gemini ne lance aucun hook du dépôt).
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : compatibilité des agents, volet Gemini (0.6.7) — « Sous Gemini CLI, en SCOPING, une écriture de fichier de code (`write_file`, `replace`) est refusée avec le motif drwil »
+**Raison** : Essai du 2026-10-18 : `--tools gemini` ne posait que `GEMINI.md`, aucun hook ; sonde du 2026-10-19 : Gemini ne charge les hooks d'un dépôt que dans un dossier de confiance (`--skip-trust` seul ne suffit pas), et lit `GEMINI_PROJECT_DIR`.
+
+## QUA-067 — Les hooks de Gemini parlent son format : refus d'écriture et rappel d'état
+**Règle** : Livré à tout projet. `scope-reminder` refuse `write_file` et `replace` en rendant `{"decision":"deny","reason":…}` sur l'événement `BeforeTool` (et rappelle après coup en mode avertissement, sur `AfterTool`) ; `node .githooks/state.mjs gemini-start` rend `{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":<état>}}` et `gemini-message` rend le rappel sur `BeforeAgent`, une seule fois par changement d'état. Aucun ne rend d'erreur : au pire, rien.
+**Périmètre** : `.githooks/state-cli.mjs`, `.githooks/state.mjs` ; `.claude/hooks/scope-reminder.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/state-cli.mjs` (`main`), `.claude/hooks/scope-reminder.mjs` (`remind`).
+**Preuve** : tests des deux modes (rappel, une seule fois, racine inutilisable) et de `scope-reminder` (refus, avertissement, doc jamais refusée) ; essai réel du banc sur Gemini (hooks lancés, écriture refusée, rappel reçu).
+**Contrôle** : `tests-qua-067`
+**Manuel** : lancer le banc sur le poste et attester la ligne Gemini de la matrice.
+**Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : compatibilité des agents, volet Gemini (0.6.7) — « Gemini CLI reçoit le rappel d'état au démarrage et à chaque message »
+**Raison** : `.githooks/state.mjs` imprimait du texte brut et `scope-reminder` rendait le format de Claude Code (`permissionDecision`), que Gemini ignore ; sans le format natif, ni refus ni rappel n'arrivent.
+
+## QUA-068 — Le lancement d'un chantier sous Gemini est dit clairement dans la matrice
+**Règle** : Livré à tout projet. Gemini CLI n'a pas de commande `/drwil-start` ici : la matrice de `docs/ia-first.md` dit qu'un chantier s'y lance par `node .githooks/state.mjs start` dans un terminal interactif (décision humaine), puis que l'on travaille dans Gemini.
+**Périmètre** : `docs/ia-first.md` ; livré dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/docs/ia-first.md` (section « Tool compatibility matrix »).
+**Preuve** : test qui lit la matrice et y trouve la commande de lancement pour Gemini.
+**Contrôle** : `tests-qua-068`
+**Tests** : `outils/banc-agents.test.mjs`
+**Origine** : compatibilité des agents, volet Gemini (0.6.7) — « Un chantier se lance depuis Gemini CLI : par son sondage s'il en a un, sinon par `node .githooks/state.mjs start` dans un terminal, dit clairement dans la matrice »
+**Raison** : Sans cette consigne, l'utilisateur de Gemini ne sait pas comment passer en BUILD, et l'agent ne peut pas le faire à sa place (décision humaine).

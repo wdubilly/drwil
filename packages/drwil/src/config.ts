@@ -32,8 +32,11 @@ export interface InitOptions {
 /** Folders whose content `init` refreshes by default: the kit mechanics, not the project's docs. */
 export const KIT_MECHANICS = [".githooks/", ".claude/hooks/", ".github/hooks/"];
 
-/** Copilot CLI reads .claude/ (settings, hooks, skills) itself: the tree is installed for it too. */
-export const usesClaudeTree = (tools: readonly string[]): boolean => tools.includes("claude") || tools.includes("copilot");
+/**
+ * Copilot CLI reads .claude/ (settings, hooks, skills) itself: the tree is installed for it too. Gemini CLI
+ * runs the same hook scripts (one set for every tool) from its own .gemini/settings.json.
+ */
+export const usesClaudeTree = (tools: readonly string[]): boolean => ["claude", "copilot", "gemini"].some((t) => tools.includes(t));
 
 export function isMechanics(rel: string): boolean {
   return KIT_MECHANICS.some((m) => rel.startsWith(m));
@@ -49,6 +52,7 @@ export function isMechanics(rel: string): boolean {
 export const KIT_PROSE = [
   ".claude/skills/",
   ".claude/settings.json",
+  ".gemini/settings.json",
   "docs/recipes/",
   "docs/ia-first.md",
   "AGENTS.md",

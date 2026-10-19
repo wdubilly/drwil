@@ -1710,6 +1710,46 @@ test("QUA-064 : choisir copilot installe aussi l'arbre .claude (hooks, réglages
   assert.match(natifs.userPromptTransformed[0].command, /state\.mjs copilot-message/);
 });
 
+test("QUA-066 : choisir gemini installe aussi les hooks partagés et ses réglages natifs, sans les skills ni CLAUDE.md propres à Claude", async () => {
+  const dir = tmp();
+  await init({ lang: "fr", targetDir: dir, tools: "gemini", git: false });
+  for (const f of [".claude/hooks/scope-reminder.mjs", ".gemini/settings.json", "GEMINI.md"]) assert.ok(existsSync(join(dir, f)), f);
+  assert.ok(!existsSync(join(dir, "CLAUDE.md")), "le pointeur CLAUDE.md reste lié à l'outil claude");
+  const hooks = JSON.parse(read(dir, ".gemini/settings.json")).hooks;
+  assert.match(hooks.SessionStart[0].hooks[0].command, /state\.mjs" gemini-start/);
+  assert.match(hooks.BeforeAgent[0].hooks[0].command, /state\.mjs" gemini-message/);
+  for (const evenement of ["BeforeTool", "AfterTool"]) {
+    assert.equal(hooks[evenement][0].matcher, "write_file|replace");
+    assert.match(hooks[evenement][0].hooks[0].command, /\.claude\/hooks\/scope-reminder\.mjs/);
+  }
+});
+
+test("QUA-067 : scope-reminder refuse write_file et replace sous Gemini avec un decision deny, et rappelle après coup en avertissement", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "gemini", git: false }));
+  const hook = (evenement, outil, chemin) =>
+    spawnSync(process.execPath, [".claude/hooks/scope-reminder.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({ hook_event_name: evenement, tool_name: outil, tool_input: { file_path: join(dir, chemin) } }),
+    });
+  for (const outil of ["write_file", "replace"]) {
+    const refus = JSON.parse(hook("BeforeTool", outil, "scripts/nouveau.mjs").stdout);
+    assert.equal(refus.decision, "deny");
+    assert.match(refus.reason, /Écriture refusée \(QUA-016.*scripts\/nouveau\.mjs/);
+  }
+  assert.equal(hook("BeforeTool", "write_file", "docs/notes.md").stdout.trim(), "", "la doc n'est jamais refusée");
+  assert.equal(hook("AfterTool", "write_file", "scripts/nouveau.mjs").stdout.trim(), "", "en bloquant, pas de rappel après coup");
+  writeFileSync(
+    join(dir, ".drwil/ia-first.json"),
+    JSON.stringify({ ...JSON.parse(read(dir, ".drwil/ia-first.json")), scopeReminder: "warning" }),
+  );
+  assert.equal(hook("BeforeTool", "write_file", "scripts/nouveau.mjs").stdout.trim(), "");
+  const rappel = JSON.parse(hook("AfterTool", "write_file", "scripts/nouveau.mjs").stdout).hookSpecificOutput;
+  assert.equal(rappel.hookEventName, "AfterTool");
+  assert.match(rappel.additionalContext, /Rappel de cadrage/);
+});
+
 test("une valeur d'option inconnue est refusée", async () => {
   await assert.rejects(() => init({ targetDir: tmp(), lang: "de" }), /--lang/);
   await assert.rejects(() => init({ lang: "fr", targetDir: tmp(), tools: "claude,vim" }), /--tools/);

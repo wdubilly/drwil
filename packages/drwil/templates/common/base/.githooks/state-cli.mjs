@@ -117,6 +117,17 @@ export async function main(args, root, input = process.stdin) {
     console.log(JSON.stringify(out));
     return 0;
   }
+  if (args[0] === "gemini-start" || args[0] === "gemini-message") {
+    // Gemini CLI (.gemini/settings.json) reads JSON on stdout, not raw text. Any failure: no context.
+    const hookEventName = args[0] === "gemini-start" ? "SessionStart" : "BeforeAgent";
+    let out = {};
+    try {
+      const text = hookEventName === "SessionStart" ? context(readState(root), root) : reminderIfChanged(root);
+      if (text) out = { hookSpecificOutput: { hookEventName, additionalContext: text } };
+    } catch {}
+    console.log(JSON.stringify(out));
+    return 0;
+  }
   if (args[0] !== "move") {
     // Reading: never breaks an agent's session start.
     try {

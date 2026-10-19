@@ -17,7 +17,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // The folder holding this hook's .claude/, never the current folder: after an agent's `cd`, the
 // current folder has no .githooks/ and the guard would refuse nothing.
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const TOOLS = new Set(["Edit", "Write", "MultiEdit"]);
+// Gemini CLI: write_file and replace, events BeforeTool and AfterTool.
+const TOOLS = new Set(["Edit", "Write", "MultiEdit", "write_file", "replace"]);
 const MODEL_RE = /^modele-|^model-/;
 
 const TEXTS = {
@@ -93,7 +94,7 @@ async function remind(input, root = ROOT) {
     return "";
   }
   if (typeof event !== "object" || event === null || !TOOLS.has(event.tool_name)) return "";
-  // Claude Code envoie file_path ; Copilot CLI envoie path pour les mêmes outils.
+  // Claude Code et Gemini CLI envoient file_path ; Copilot CLI envoie path pour les mêmes outils.
   const path = event.tool_input?.file_path ?? event.tool_input?.path;
   if (typeof path !== "string" || !path) return "";
   const rel = relativePath(path, root);
@@ -113,14 +114,17 @@ async function remind(input, root = ROOT) {
   const T = TEXTS[cfg.lang === "en" ? "en" : "fr"];
   const blocking = (cfg.scopeReminder ?? "blocking") === "blocking";
   // Without an event name (direct call, older configuration): PostToolUse behaviour.
-  const before = event.hook_event_name === "PreToolUse";
+  const before = event.hook_event_name === "PreToolUse" || event.hook_event_name === "BeforeTool";
   if (before && blocking) {
+    // Gemini CLI reads a top-level decision, not Claude Code's permissionDecision.
+    if (event.hook_event_name === "BeforeTool") return JSON.stringify({ decision: "deny", reason: T.refused(rel) });
     return JSON.stringify({
       hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: T.refused(rel) },
     });
   }
   if (before || blocking) return "";
-  return JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: T.reminder(rel) } });
+  const after = event.hook_event_name === "AfterTool" ? "AfterTool" : "PostToolUse";
+  return JSON.stringify({ hookSpecificOutput: { hookEventName: after, additionalContext: T.reminder(rel) } });
 }
 
 /** Entry point of the hook: never an error, at worst no reminder. */

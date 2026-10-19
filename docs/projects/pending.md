@@ -135,7 +135,7 @@ avant les points 5 à 13, en trois versions.
   (`docs/intentions/compatibilite-des-outils.md`), dans cet ordre : le
   socle (fait, journal du 2026-10-19), Copilot CLI
   (fait, journal du 2026-10-19), Gemini CLI
-  (`docs/projects/compat-gemini.md`), Codex
+  (fait, journal du 2026-10-19), Codex
   (`docs/projects/compat-codex.md`), Cursor
   (`docs/projects/compat-cursor.md`).
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
@@ -324,8 +324,14 @@ une décision du demandeur.
 - [ ] [décision] Établir la cause du dépassement de 30 s des hooks en session
   interactive de Copilot CLI (limite du même chantier) —
   `docs/intentions/depassement-delai-copilot-interactif.md`.
-- [ ] [IA] [P1] 0.6.7, 3 sur 5 : Gemini CLI tenu —
-  `docs/projects/compat-gemini.md`.
+- [x] [IA] [P1] 0.6.7, 3 sur 5 : Gemini CLI tenu — fait, journal du
+  2026-10-19.
+- [ ] [décision] Commandes `/drwil-*` et sondage de lancement sous Gemini CLI
+  (limite du chantier « Gemini CLI tenu » du 2026-10-19) —
+  `docs/intentions/skills-et-sondage-sous-gemini.md`.
+- [ ] [décision] Un passage complet et stable du banc sous Gemini CLI, malgré
+  le quota (limite du même chantier) —
+  `docs/intentions/banc-gemini-quota.md`.
 - [ ] [IA] [P1] 0.6.7, 4 sur 5 : Codex (à affiner : à installer) —
   `docs/projects/compat-codex.md`.
 - [ ] [IA] [P1] 0.6.7, 5 sur 5 : Cursor (à affiner : mode de preuve) —

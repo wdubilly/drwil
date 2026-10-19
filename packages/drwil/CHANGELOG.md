@@ -22,6 +22,11 @@ closing commit; the release renames this section to its version.
   and `.github/hooks/drwil.json`: Copilot CLI reads them, so a code write in
   SCOPING is refused, the state reaches the session and each message, and the
   `/drwil-*` commands are the same as with Claude Code.
+- Choosing `gemini` now also installs `.gemini/settings.json` and the shared
+  `.claude/hooks` scripts: a code write (`write_file`, `replace`) is refused in
+  SCOPING and the state reaches the session start and each message. Gemini CLI
+  only runs a repository's hooks in a trusted folder; a workstream is started
+  with `node .githooks/state.mjs start` in a terminal.
 
 ### Fixed
 
@@ -29,6 +34,8 @@ closing commit; the release renames this section to its version.
   `path`, so nothing was refused there.
 - The `/drwil-start` skill header was invalid in strict YAML, so Copilot
   CLI did not list it.
+- The write hook answered in Claude Code's format only; it now also answers
+  Gemini CLI's (`decision: deny`), and the state hooks speak its JSON.
 
 ## 0.6.6 (2026-10-19)
 

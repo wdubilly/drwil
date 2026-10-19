@@ -55,12 +55,12 @@ code en SCOPING (`write_file`) sans refus.
 
 - Sous Gemini CLI, en SCOPING, une écriture de fichier de code
   (`write_file`, `replace`) est refusée avec le motif drwil ; prouvé par le
-  banc [humain] — contrat à créer
+  banc [humain] — `QUA-066` (installation) et `QUA-067` (refus)
 - Gemini CLI reçoit le rappel d'état au démarrage et à chaque message —
-  contrat à créer
+  `QUA-067`
 - Un chantier se lance depuis Gemini CLI : par son sondage s'il en a un,
   sinon par `node .githooks/state.mjs start` dans un terminal, dit
-  clairement dans la matrice — contrat à créer
+  clairement dans la matrice — `QUA-068`
 
 ## 2. Hors périmètre
 

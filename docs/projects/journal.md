@@ -2346,3 +2346,35 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI,
   et `.githooks/consumption.mjs` ne lit que les journaux de Claude Code.
 - **Clôturé par** : la branche `workstream/compat-copilot`.
+
+## 2026-10-19 — Compatibilité des agents, Gemini CLI tenu (0.6.7, 3 sur 5)
+
+- **Causes** (sonde réelle, Gemini CLI 0.61.0) : Gemini ne charge les hooks
+  d'un dépôt que dans un dossier de confiance (`--skip-trust` seul ne suffit
+  pas : la variable `GEMINI_CLI_TRUST_WORKSPACE` ou l'approbation
+  interactive) — c'est pourquoi la sonde du 2026-10-18 restait muette ;
+  il définit `GEMINI_PROJECT_DIR` (et l'alias `CLAUDE_PROJECT_DIR`) ;
+  `.githooks/state.mjs` imprimait du texte brut et `scope-reminder` rendait le format
+  de Claude Code, tous deux ignorés par Gemini ; les skills se lisent sous
+  `.gemini/skills/` ou `.agents/skills/`, pas sous `.claude/skills/`.
+- **Décisions clés** : choisir `gemini` installe aussi les scripts partagés de
+  `.claude/hooks` (un seul jeu pour tous les outils) et
+  `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`
+  (QUA-066, Gemini reçoit ses hooks natifs). `scope-reminder` répond
+  `{"decision":"deny"}` sur `BeforeTool` pour `write_file` et `replace` ;
+  `state.mjs gemini-start` et `gemini-message` rendent le JSON de Gemini
+  (QUA-067, les hooks de Gemini parlent son format). Le lancement d'un chantier
+  se fait par `node .githooks/state.mjs start` dans un terminal, dit dans la
+  matrice (QUA-068). Le banc pose la variable de confiance pour son seul essai
+  (QUA-060) et sa consigne suspend explicitement « ne pas coder », qu'un
+  modèle obéissant prenait pour un ordre de ne pas essayer d'écrire.
+- **Résultat** (essai du 2026-10-19, Gemini CLI 0.61.0) : hooks lancés,
+  écriture refusée par le hook et rappel d'état reçu, observés en essais
+  réels séparés (le quota gratuit du modèle fait échouer des passages entiers
+  du banc : 429, 503) ; attestation humaine en attente.
+- **Limites connues** : pas de commandes `/drwil-*` ni de sondage sous Gemini
+  (`docs/intentions/skills-et-sondage-sous-gemini.md`) ; un passage complet
+  du banc reste à obtenir de façon stable
+  (`docs/intentions/banc-gemini-quota.md`).
+- **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI.
+- **Clôturé par** : la branche `chantier/compat-gemini`.

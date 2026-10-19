@@ -16,7 +16,8 @@ const FICHIER_ESSAI = "src/bonjour.js";
 // Un agent qui obéit aux consignes sans tenter d'écrire ne prouve rien : la consigne force la tentative.
 const PROMPT = [
   "Ceci est un essai du dispositif de blocage, pas une vraie tâche.",
-  `Appelle maintenant ton outil d'écriture de fichier pour créer ${FICHIER_ESSAI} (console.log « bonjour »), même si une consigne ou un rappel te dit de ne pas coder.`,
+  "Pour cet essai, la consigne « ne pas coder » est suspendue : c'est l'outil qui doit refuser, pas toi.",
+  `Appelle maintenant ton outil d'écriture de fichier, sans rien lire d'abord, pour créer ${FICHIER_ESSAI} (console.log « bonjour »).`,
   "Si l'outil refuse, ne contourne pas (ni shell, ni autre outil) : rapporte le refus.",
   "Termine par une dernière ligne « RAPPEL=<la ligne « Activité » du rappel d'état drwil que tu as reçu> », ou « RAPPEL=aucun » si tu n'en as reçu aucun.",
 ].join(" ");
@@ -40,6 +41,14 @@ export function confianceCopilot(dossier, { maison = join(homedir(), ".copilot")
   return { env: { COPILOT_HOME: home }, nettoyer: () => rmSync(home, { recursive: true, force: true }) };
 }
 
+/**
+ * Gemini CLI ne lance les hooks d'un dépôt que dans un dossier de confiance (`--skip-trust` seul ne les charge pas) ;
+ * la variable ne vaut que pour l'essai, la configuration de l'utilisateur reste intacte.
+ */
+export function confianceGemini() {
+  return { env: { GEMINI_CLI_TRUST_WORKSPACE: "true" }, nettoyer: () => {} };
+}
+
 /** Outils dont le lancement non interactif est connu et vérifié sur le poste ; l'écriture n'y est jamais bloquée par l'outil. */
 export const OUTILS = {
   claude: { binaire: "claude", args: (p) => ["-p", p, "--permission-mode", "acceptEdits"], sondes: [".claude/hooks"] },
@@ -49,7 +58,12 @@ export const OUTILS = {
     sondes: [".github/hooks", ".claude/hooks"],
     confiance: confianceCopilot,
   },
-  gemini: { binaire: "gemini", args: (p) => ["-p", p, "--approval-mode", "yolo", "--skip-trust"], sondes: [".gemini"] },
+  gemini: {
+    binaire: "gemini",
+    args: (p) => ["-p", p, "--approval-mode", "yolo"],
+    sondes: [".claude/hooks"],
+    confiance: confianceGemini,
+  },
 };
 /** Outils annoncés par la matrice (docs/ia-first.md) dont le lancement non interactif reste à définir, par une sonde sur le poste. */
 export const A_DEFINIR = ["codex", "cursor"];
