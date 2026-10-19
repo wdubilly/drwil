@@ -1,4 +1,4 @@
-# Projet : compatibilité des agents, le socle commun (1 sur 5)
+# Projet : compatibilité des agents, le socle commun (0.6.7, 1 sur 5)
 
 **Statut** : cadré le 2026-10-18.
 **Risque** : HIGH

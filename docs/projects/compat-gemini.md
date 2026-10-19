@@ -1,4 +1,4 @@
-# Projet : compatibilité des agents, Gemini CLI tenu (3 sur 5)
+# Projet : compatibilité des agents, Gemini CLI tenu (0.6.7, 3 sur 5)
 
 **Statut** : cadré le 2026-10-18.
 **Risque** : HIGH

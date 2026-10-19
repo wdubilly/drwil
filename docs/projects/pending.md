@@ -120,8 +120,17 @@ avant les points 5 à 13, en trois versions.
   intercalée (fait, journal du 2026-10-18) ; puis, dans une PR séparée, la
   fiche de recette pour une équipe hors dépôt
   (fait, journal du 2026-10-19), avant la release.
-- **0.6.6** — la compatibilité, décidée le 2026-10-18 par le demandeur
-  (après la 0.6.5) : chaque agent de code tenu par la même gouvernance
+- **0.6.5 publiée** le 2026-10-19 par le parcours de recette (candidate
+  `v0.6.5-rc.1` approuvée, promue en `v0.6.5`).
+- **0.6.6** — la stabilisation, décidée le 2026-10-19 par le demandeur :
+  les points bloquants et critiques d'abord, dans cet ordre : un push
+  depuis un worktree ne touche jamais le vrai dépôt
+  (`docs/projects/stab-worktree.md`), les branches fusionnées par squash
+  (`docs/projects/stab-squash.md`), un contrat ajouté pendant un détour
+  (`docs/projects/stab-registre.md`), une fiche de recette juste
+  (`docs/projects/stab-recette.md`).
+- **0.6.7** — la compatibilité, décidée le 2026-10-18 par le demandeur,
+  renumérotée le 2026-10-19 (après la stabilisation) : chaque agent de code tenu par la même gouvernance
   (`docs/intentions/compatibilite-des-outils.md`), dans cet ordre : le
   socle (`docs/projects/compat-socle.md`), Copilot CLI
   (`docs/projects/compat-copilot.md`), Gemini CLI
@@ -296,20 +305,24 @@ une décision du demandeur.
 - [ ] [décision] Une version HTML de la fiche de recette (hors périmètre
   du chantier « une recette par version » du 2026-10-19) —
   `docs/intentions/fiche-de-recette-html.md`.
-- [ ] [décision] [P0] Un push depuis un worktree ne touche jamais le vrai
-  dépôt (régression du correctif du 2026-10-10, constatée le 2026-10-18 :
-  `core.bare=true` écrit dans le dépôt principal) —
-  `docs/intentions/tests-isoles-depuis-un-worktree.md`.
-- [ ] [IA] [P1] 0.6.6, 1 sur 5 : compatibilité des agents, le socle
+- [ ] [IA] [P0] 0.6.6, 1 sur 4 : un push depuis un worktree ne touche
+  jamais le vrai dépôt — `docs/projects/stab-worktree.md`.
+- [ ] [IA] [P0] 0.6.6, 2 sur 4 : les branches fusionnées par squash
+  reconnues — `docs/projects/stab-squash.md`.
+- [ ] [IA] [P0] 0.6.6, 3 sur 4 : un contrat ajouté pendant un détour, sans
+  arrêter la file — `docs/projects/stab-registre.md`.
+- [ ] [IA] [P0] 0.6.6, 4 sur 4 : une fiche de recette juste, leçons de la
+  0.6.5 — `docs/projects/stab-recette.md`.
+- [ ] [IA] [P1] 0.6.7, 1 sur 5 : compatibilité des agents, le socle
   commun (banc, règle « intention ou demande », en-têtes YAML stricts,
   matrice) — `docs/projects/compat-socle.md`.
-- [ ] [IA] [P1] 0.6.6, 2 sur 5 : Copilot CLI tenu —
+- [ ] [IA] [P1] 0.6.7, 2 sur 5 : Copilot CLI tenu —
   `docs/projects/compat-copilot.md`.
-- [ ] [IA] [P1] 0.6.6, 3 sur 5 : Gemini CLI tenu —
+- [ ] [IA] [P1] 0.6.7, 3 sur 5 : Gemini CLI tenu —
   `docs/projects/compat-gemini.md`.
-- [ ] [IA] [P1] 0.6.6, 4 sur 5 : Codex (à affiner : à installer) —
+- [ ] [IA] [P1] 0.6.7, 4 sur 5 : Codex (à affiner : à installer) —
   `docs/projects/compat-codex.md`.
-- [ ] [IA] [P1] 0.6.6, 5 sur 5 : Cursor (à affiner : mode de preuve) —
+- [ ] [IA] [P1] 0.6.7, 5 sur 5 : Cursor (à affiner : mode de preuve) —
   `docs/projects/compat-cursor.md`.
 - [ ] [décision] Une seule forme pour les ID du catalogue —
   `docs/intentions/prefixe-catalogue.md`.
@@ -345,18 +358,12 @@ une décision du demandeur.
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
   limite du chantier du 2026-10-17) —
   `docs/intentions/identifiant-rattrape-avant-l-humain.md`.
-- [ ] [décision] Une première file menée par sous-agents, observée et
-  mesurée (pilotage livré en 0.6.4, jamais essayé ; limite du chantier du
-  2026-10-18) — `docs/intentions/file-sous-agents-premier-essai.md`.
 - [ ] [décision] Une file menée par sous-agents avec les autres agents
   (Copilot CLI, Codex, Cursor, Gemini ; limite du chantier du 2026-10-18)
   — `docs/intentions/file-sous-agents-autres-outils.md`.
 - [ ] [décision] Le budget de temps des contrôles au commit, calibré pour
   les machines Windows de la CI (1500 ms dépassé sans changement de code ;
   relevé le 2026-10-17) — `docs/intentions/budget-temps-windows.md`.
-- [ ] [décision] Copilot CLI lance-t-il les hooks déclarés avec
-  `${CLAUDE_PROJECT_DIR}` ? (non vérifié ; limite du chantier « racine
-  des hooks » du 2026-10-17) — `docs/intentions/copilot-claude-project-dir.md`.
 - [ ] [décision] `yarn init` laisse-t-il un projet neuf ? (non vérifié ;
   limite du chantier « `npm init -y` » du 2026-10-17) —
   `docs/intentions/projet-neuf-apres-yarn-init.md`.

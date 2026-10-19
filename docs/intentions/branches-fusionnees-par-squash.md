@@ -1,6 +1,6 @@
 # Intention : supprimer aussi les branches fusionnées par squash
 
-**Statut** : proposée le 2026-10-18 — limite du chantier « une clôture
+**Statut** : cadrée le 2026-10-19 en `docs/projects/stab-squash.md` (0.6.6) ; proposée le 2026-10-18 — limite du chantier « une clôture
 allégée, sans encombrants » (journal du 2026-10-18, 0.6.5, 3 sur 4).
 **Revu le 2026-10-18** : complétée par la même limite du chantier « un
 détour pour une correction intercalée » (0.6.5, 4 sur 4) — la reprise
@@ -33,10 +33,14 @@ par squash, elle ne l'est pas aux yeux de Git, et la reprise est refusée
 
 ## Questions à trancher
 
-- [décision] Reconnaître une branche fusionnée par squash (branche
+- [tranché] Reconnaître une branche fusionnée par squash (branche
   distante supprimée par la forge, ou contenu déjà présent dans la branche
   principale) au risque d'un faux positif, ou s'en tenir à `git branch -d` ?
-- [décision] Le même critère sert-il aux deux usages (suppression au
+- [tranché] Le même critère sert-il aux deux usages (suppression au
   lancement, reprise d'un détour), ou la reprise, qui ne supprime rien,
   peut-elle accepter un critère plus large (fiche du détour retirée et
   journal qui cite la branche, déjà vérifiés) ?
+
+## Décisions (2026-10-19, demandeur)
+
+- La PR « merged » via gh fait foi, repli git sans gh ; un seul critère partagé par le ménage et la reprise.

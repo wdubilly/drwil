@@ -1,4 +1,4 @@
-# Projet : compatibilité des agents, Cursor (5 sur 5)
+# Projet : compatibilité des agents, Cursor (0.6.7, 5 sur 5)
 
 **Statut** : cadré le 2026-10-18.
 **Risque** : HIGH

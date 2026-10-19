@@ -1,4 +1,4 @@
-# Projet : compatibilité des agents, Codex (4 sur 5)
+# Projet : compatibilité des agents, Codex (0.6.7, 4 sur 5)
 
 **Statut** : cadré le 2026-10-18.
 **Risque** : HIGH
