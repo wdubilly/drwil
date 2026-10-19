@@ -22,11 +22,14 @@ files:
   - .drwil/ia-first.json
   - outils/miroirs.json
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/docs/recipes/corriger-un-defaut.md
+  - docs/recipes/corriger-un-defaut.md
 -->
 
 (cadrage : la barrière de périmètre et la commande de détour, gabarit et
 copies, avec leurs tests ; `AGENTS.md` ; la carte, le registre, les
-contrôles, les miroirs et le changelog.)
+contrôles, les miroirs et le changelog ; la recette de correction d'un
+défaut, qui décrit le oui du détour.)
 
 ## 1. Besoin
 
