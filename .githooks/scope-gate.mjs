@@ -15,7 +15,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { rulesFiles } from "./detour.mjs";
+import { contractsAddedOnly, isRegistry, rulesFiles } from "./detour.mjs";
 import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
 
@@ -49,7 +49,7 @@ const TEXTS = {
     noReference: "aucune branche de référence (origin/HEAD, master, main, ou DRWIL_BASE)",
     failed: (n) => `périmètre de l'attente : ${n} problème(s) (barrière bloquante)`,
     rules: (f) =>
-      `${f} : un détour qui change les règles du jeu (registre des contrats, hook, seuil, barrière, CI) demande le oui de l'humain — \`node .githooks/detour.mjs allow\` dans un terminal ; en file, le sous-agent s'arrête et le signale`,
+      `${f} : un détour qui change les règles du jeu (contrat existant modifié ou retiré, hook, seuil, barrière, CI) demande le oui de l'humain — \`node .githooks/detour.mjs allow\` dans un terminal ; en file, le sous-agent s'arrête et le signale`,
   },
   en: {
     activity: (a, n) =>
@@ -60,7 +60,7 @@ const TEXTS = {
     noReference: "no reference branch (origin/HEAD, master, main, or DRWIL_BASE)",
     failed: (n) => `brief scope: ${n} problem(s) (blocking gate)`,
     rules: (f) =>
-      `${f}: a detour that changes the rules (contracts registry, hook, threshold, gate, CI) needs the human's yes — \`node .githooks/detour.mjs allow\` in a terminal; in a queue, the subagent stops and reports it`,
+      `${f}: a detour that changes the rules (an existing contract modified or removed, hook, threshold, gate, CI) needs the human's yes — \`node .githooks/detour.mjs allow\` in a terminal; in a queue, the subagent stops and reports it`,
   },
 };
 
@@ -78,15 +78,24 @@ export function outsideBriefFiles(files, outOfScope = OUT_OF_SCOPE) {
 
 const covered = (f, patterns) => patterns.some((p) => fnmatch(f, p));
 
-/** Problems of a commit being prepared (pure). */
-export function checkIndex({ files, state, patterns, outOfScope, cfg }) {
+/**
+ * Problems of a commit being prepared (pure). `addedOnly(f)`: true when the staged registry `f` only
+ * adds new contracts (read by checkScope); without it, any registry change waits for the yes.
+ */
+export function checkIndex({ files, state, patterns, outOfScope, cfg, addedOnly = () => false }) {
   const T = texts(cfg);
   const subject = outsideBriefFiles(files, outOfScope);
   if (!subject.length) return [];
   if (state.activity !== "BUILD") return [T.activity(state.activity, subject.length)];
   const problems = subject.filter((f) => !covered(f, patterns)).map((f) => T.outsideScope(f, state.active_brief));
-  // QUA-050: an ordinary detour needs no one; one that changes the rules waits for the human's yes.
-  if (state.detour && state.detour.human !== true) problems.push(...rulesFiles(subject, cfg).map(T.rules));
+  // QUA-050: an ordinary detour needs no one, nor does adding a contract; one that changes the rules
+  // (an existing contract modified or removed among them) waits for the human's yes.
+  if (state.detour && state.detour.human !== true)
+    problems.push(
+      ...rulesFiles(subject, cfg)
+        .filter((f) => !addedOnly(f))
+        .map(T.rules),
+    );
   return problems;
 }
 
@@ -150,7 +159,16 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
   let problems;
   if (staged) {
     const { state } = readState(root);
-    problems = checkIndex({ files: staged, state, patterns: patternsAt(root, "HEAD", state.active_brief, cfg), outOfScope, cfg });
+    // The staged registry against HEAD's: `git show` fails (null) on a registry created or removed — a doubt.
+    const addedOnly = (f) => isRegistry(f, cfg) && contractsAddedOnly(git(root, ["show", `HEAD:${f}`]), git(root, ["show", `:${f}`]));
+    problems = checkIndex({
+      files: staged,
+      state,
+      patterns: patternsAt(root, "HEAD", state.active_brief, cfg),
+      outOfScope,
+      cfg,
+      addedOnly,
+    });
   } else {
     const base = reference(root, env);
     if (!base) return { status: "not-run", problems: [], detail: texts(cfg).noReference, configured: true };

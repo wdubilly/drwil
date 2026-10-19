@@ -69,8 +69,9 @@ Carte complète : `docs/architecture.md`.
   intitulée « Détour de <fiche> » ; fusionnée, `node .githooks/detour.mjs
   resume` restaure le travail sur la branche du chantier rebasée. Jamais
   d'élargissement sans rapport ni de stash à la main ; un détour qui change
-  les règles du jeu (contrats, hooks, seuils, barrière) attend le oui de
-  l'humain (`docs/recipes/corriger-un-defaut.md`).
+  les règles du jeu (contrat existant modifié ou retiré, hooks, seuils,
+  barrière) attend le oui de l'humain ; ajouter un contrat, non
+  (`docs/recipes/corriger-un-defaut.md`).
 - **File de chantiers** : quand l'humain a coché plusieurs fiches au
   lancement, l'agent les réalise l'une après l'autre sans nouveau sondage —
   avec Claude Code, chacune dans un sous-agent (contexte neuf), la session

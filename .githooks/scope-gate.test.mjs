@@ -5,6 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmdirSync, rmSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { contractsAddedOnly } from "./detour.mjs";
 import { addTrailer, checkScope, outsideBriefFiles, checkIndex } from "./scope-gate.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
@@ -364,4 +365,82 @@ test("QUA-050 : pendant un rebase, un commit rejoué garde son trailer ; hors d�
   ecrireEtat(horsGit, "BUILD");
   writeFileSync(join(horsGit, "m.txt"), "Travail\n");
   assert.doesNotThrow(() => addTrailer(horsGit, join(horsGit, "m.txt")));
+});
+
+const REGISTRE = "docs/contracts.md";
+const contrat = (id, regle) => `## ${id} — Titre de ${id}\n**Règle** : ${regle}\n**Contrôle** : \`tests-${id.toLowerCase()}\`\n`;
+const registre = (...contrats) => `# Contrats\n\nPréambule.\n\n${contrats.join("\n")}`;
+
+/** Dépôt en détour (sans le oui) dont HEAD porte un registre d'un contrat, cadré par la fiche. */
+function depotEnDetour(chemin = REGISTRE) {
+  const racine = depot([chemin, "src/a.js"]);
+  ecrire(racine, chemin, registre(contrat("QUA-001", "une règle.")));
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "registre");
+  const detour = { origin_brief: "docs/projects/chantier.md", origin_branch: "chantier/x", branch: "detour/d", stash: null };
+  ecrire(racine, ".drwil/state.json", JSON.stringify({ ...etat("BUILD"), detour }));
+  return racine;
+}
+
+/** Problèmes du commit qui indexerait `contenu` comme registre (`null` : supprimé). */
+function indexer(racine, contenu, chemin = REGISTRE, cfg = {}) {
+  if (contenu === null) git(racine, "rm", "-q", chemin);
+  else {
+    ecrire(racine, chemin, contenu);
+    git(racine, "add", chemin);
+  }
+  return checkScope(racine, { cfg: { scopeGate: "blocking", ...cfg }, staged: [chemin] }).problems;
+}
+
+test("QUA-050 : en détour, un ajout pur au registre passe sans le oui ; modifier ou retirer un contrat l'attend", () => {
+  const ajout = registre(contrat("QUA-001", "une règle."), contrat("QUA-002", "une nouvelle règle."));
+  assert.deepEqual(indexer(depotEnDetour(), ajout), [], "nouveau contrat ajouté à la fin");
+  const auMilieu = registre(contrat("QUA-003", "insérée avant."), contrat("QUA-001", "une règle."));
+  assert.deepEqual(indexer(depotEnDetour(), auMilieu), [], "nouveau contrat inséré avant un existant");
+  const refus = {
+    "règle existante modifiée": registre(contrat("QUA-001", "une règle changée."), contrat("QUA-002", "nouvelle.")),
+    "titre existant changé": registre(contrat("QUA-001", "une règle.").replace("Titre de", "Autre titre de")),
+    "contrat retiré": registre(contrat("QUA-002", "remplaçante.")),
+    "préambule modifié": registre(contrat("QUA-001", "une règle.")).replace("Préambule.", "Préambule changé."),
+    "section ajoutée qui n'est pas un contrat": registre(contrat("QUA-001", "une règle."), "## Annexe\nTexte.\n"),
+    "ID déjà défini sous un autre titre": registre(contrat("QUA-001", "une règle."), "## QUA-001 — Doublon\n**Règle** : x.\n"),
+    "titre répété, suivi d'un autre contrat": registre(
+      contrat("QUA-001", "une règle."),
+      contrat("QUA-001", "une règle."),
+      contrat("QUA-002", "n."),
+    ),
+    "registre retiré": null,
+  };
+  for (const [cas, contenu] of Object.entries(refus)) {
+    const problemes = indexer(depotEnDetour(), contenu);
+    assert.equal(problemes.length, 1, cas);
+    assert.match(problemes[0], /^docs\/contracts\.md : un détour qui change les règles du jeu/, cas);
+  }
+});
+
+test("QUA-050 : un registre absent de HEAD ou ailleurs (dirs.contracts) se juge de même ; dans le doute, le oui reste demandé", () => {
+  const racine = depot(["docs/autre.md"]);
+  const detour = { origin_brief: "docs/projects/chantier.md", origin_branch: "chantier/x", branch: "detour/d", stash: null };
+  ecrire(racine, ".drwil/state.json", JSON.stringify({ ...etat("BUILD"), detour }));
+  const cfg = { dirs: { contracts: "docs/autre.md" } };
+  assert.equal(indexer(racine, registre(contrat("QUA-001", "r.")), "docs/autre.md", cfg).length, 1, "registre créé : doute");
+  const ailleurs = depotEnDetour("docs/autre.md");
+  assert.deepEqual(indexer(ailleurs, registre(contrat("QUA-001", "une règle."), contrat("QUA-002", "n.")), "docs/autre.md", cfg), []);
+  // Fins de ligne Windows : un ajout reste un ajout.
+  const crlf = depotEnDetour();
+  assert.deepEqual(indexer(crlf, registre(contrat("QUA-001", "une règle."), contrat("QUA-002", "n.")).replace(/\n/g, "\r\n")), []);
+});
+
+test("QUA-050 : contractsAddedOnly, pur — ajout seul de contrats nouveaux, rien d'autre", () => {
+  const avant = registre(contrat("QUA-001", "r."));
+  assert.equal(contractsAddedOnly(avant, registre(contrat("QUA-001", "r."), contrat("QUA-002", "n."))), true);
+  assert.equal(contractsAddedOnly(avant, avant), true, "rien de changé");
+  assert.equal(contractsAddedOnly(null, avant), false);
+  assert.equal(contractsAddedOnly(avant, null), false);
+  assert.equal(contractsAddedOnly(`${avant}\n${contrat("QUA-001", "r.")}`, avant), false, "doublon dans l'ancien registre : doute");
+  assert.equal(
+    contractsAddedOnly("| QUA-009 | tableau |\n", "| QUA-009 | tableau |\n\n## QUA-009 — Doublon\n"),
+    false,
+    "ID déjà défini en tableau",
+  );
 });
