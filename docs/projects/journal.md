@@ -2437,3 +2437,28 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   la fusion `gh` n'a pas été vue sur une PR squash réelle.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `compat-copilot-enchaine`.
+
+## 2026-10-20 — Release 0.6.8, Copilot CLI enchaîne les chantiers
+
+- **Décisions clés** : version 0.6.8 partout (paquet, racine, verrou),
+  changelog daté, PR #187 fusionnée. Candidate `v0.6.8-rc.1` posée sur le
+  commit `88ae1a3` (QUA-051, version candidate et fiche de recette) ; verdict
+  « approuvée » donné par l'humain (QUA-053, verdict humain) ; promotion en
+  `v0.6.8` avec le même tarball, sha256
+  `f0acc19d75c18c958eb2e018387fa15c2abadd624158b8dd314fc866a978c0ed`
+  (QUA-054, seule une candidate approuvée est promue), retéléchargé et
+  vérifié identique.
+- **Essai réel** : projet temporaire équipé avec le tarball 0.6.7 de la
+  release GitHub, puis mis à jour avec le tarball 0.6.8 : 8 fichiers de
+  mécanique mis à jour, le fichier d'installation en 0.6.8, rien de perdu (QUA-027).
+- **Incident** : à la promotion, le tag a été poussé mais la création de la
+  release GitHub a échoué (HTTP 500) ; la commande suggérée par le script,
+  relancée à la main, a réussi au second essai.
+- **Intention retirée** : `fusion-sans-sondage-copilot` est couverte par la
+  0.6.8 (sondage à deux champs, interdiction de programmer la fusion sans
+  réponse « Automatic merge »).
+- **Limites connues** : la détection de la PR de clôture fusionnée n'a pas
+  encore servi sur une vraie PR ; la file pour les autres outils reste
+  portée par `docs/intentions/file-sous-agents-autres-outils.md`.
+- **Consommation** : non mesurée — chantier mené sous Copilot CLI.
+- **Clôturé par** : la branche `cloture-release-0-6-8`.
