@@ -68,8 +68,8 @@ régler ensemble :
 - L'avertissement « fiche supprimée sans que son intention soit touchée »
   compare l'intention à toute la branche depuis la base de fusion, pas au
   seul commit de clôture — `QUA-073`
-- `verify` dit, pour un critère « not-durable », s'il faut ajouter `[humain]`
-  (contrat à attester) ou le retirer (contrat entièrement automatisé), et
+- `verify` dit, pour un critère « not-durable », s'il faut ajouter le marqueur
+  d'attestation humaine (contrat à attester) ou le retirer (contrat entièrement automatisé), et
   nomme le contrat — `QUA-070`
 - une commande de terminal de note ajoute une ligne datée à
   le fichier de notes des intentions, sans changer d'activité ni toucher à la fiche
