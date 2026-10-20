@@ -17,7 +17,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFi
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, queueable, scopedBriefs } from "./briefs.mjs";
-import { closingSignals, pruneMergedBranches, prunedMessage } from "./close.mjs";
+import { closingMerged, closingSignals, noGhText, pruneMergedBranches, prunedMessage } from "./close.mjs";
 import { main, readStdinJson } from "./state-cli.mjs";
 import { fill, shortReminder, STATE_MESSAGES } from "./state-texts.mjs";
 
@@ -203,8 +203,11 @@ const STARTABLE_FROM = new Set(["SCOPING", "EXPECTATION", "REQUEST"]);
 export function start(root, brief, { human = false, request, autoMerge = false, queue = [], now = new Date().toISOString() } = {}) {
   const T = texts(root);
   const read = readState(root);
-  const from = read.state.activity;
-  if (!STARTABLE_FROM.has(from)) return { code: 1, message: fill(T.startFrom, from) };
+  const origin = read.state.activity;
+  // CLOSING, brief deleted and its pull request merged: back to SCOPING by itself, then the start goes on.
+  const closing = origin === "CLOSING";
+  const from = closing ? "SCOPING" : origin;
+  if (!closing && !STARTABLE_FROM.has(from)) return { code: 1, message: fill(T.startFrom, origin) };
   const norm = (b) =>
     posix.normalize(
       String(b ?? "")
@@ -215,6 +218,12 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   // The head of a queue a human decided is started by the agent, without a new gesture (QUA-037).
   const fromQueue = !human && from === "SCOPING" && read.state.queue?.[0] === path;
   if (config(root).transitions !== "agent" && !human && !fromQueue) return { code: 1, message: T.startHuman };
+  if (closing) {
+    const active = read.state.active_brief;
+    if (existsSync(join(root, active))) return { code: 1, message: fill(T.startClosingBrief, active) };
+    const refused = { no: T.startClosingOpen, unknown: `${T.startClosingUnknown} — ${noGhText(root)}` }[closingMerged(root)];
+    if (refused) return { code: 1, message: refused };
+  }
   if (!scopedBriefs(root).some((b) => b.path === path)) return { code: 1, message: fill(T.startNotScoped, brief) };
   const rest = human ? queue.map(norm) : fromQueue ? read.state.queue.slice(1) : [];
   const queued = rest.length || fromQueue ? [path, ...rest] : [];
@@ -234,7 +243,7 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   const next = rest.length ? `\n${fill(T.queued, rest.join(", "))}` : "";
   // The previous workstreams' branches, merged, are no longer needed (QUA-048).
   const pruned = prunedMessage(root, pruneMergedBranches(root));
-  return { code: 0, message: fill(T.started, from, path, state.auto_merge ? T.mergeAuthorised : "") + next + warned + pruned };
+  return { code: 0, message: fill(T.started, origin, path, state.auto_merge ? T.mergeAuthorised : "") + next + warned + pruned };
 }
 
 /** New state after the transition to `to`, or `{ error }`; writes nothing. */

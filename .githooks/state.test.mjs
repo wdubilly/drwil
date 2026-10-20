@@ -947,6 +947,59 @@ test("lancer : un geste humain passe directement en BUILD ; refusé à l'agent e
   assert.match(start(racine, FICHE, { human: true }).message, /activité BUILD/, "pas de relance en pleine réalisation");
 });
 
+test("QUA-037 : lancer depuis CLOSING : seulement fiche supprimée et PR de clôture fusionnée ; la file est conservée", () => {
+  const { racine, git } = depotCadre();
+  const precedent = "docs/projects/precedent.md";
+  const principale = git("branch", "--show-current").stdout.trim();
+  const etat = (extra = {}) =>
+    writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(actif("CLOSING", { active_brief: precedent, ...extra })));
+
+  // Sur la branche principale, fiche supprimée : le retour en SCOPING se fait seul, le lancement continue.
+  etat();
+  const ok = start(racine, FICHE, { human: true, now: MAINTENANT });
+  assert.equal(ok.code, 0, ok.message);
+  assert.match(ok.message, /CLOSING → BUILD/);
+  assert.equal(readState(racine).state.activity, "BUILD");
+
+  // La fiche du chantier est encore là : pas de retour.
+  writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(actif("CLOSING", { active_brief: "docs/projects/finie.md" })));
+  const encore = start(racine, FICHE, { human: true });
+  assert.equal(encore.code, 1);
+  assert.match(encore.message, /finie\.md est encore là/);
+  assert.equal(readState(racine).state.activity, "CLOSING");
+
+  // Branche de chantier non fusionnée : refus (gh ne répond pas dans ce dépôt de test).
+  etat();
+  git("checkout", "-qb", "chantier");
+  writeFileSync(join(racine, "ajout.txt"), "x");
+  git("add", "-A");
+  git("commit", "-qm", "travail");
+  const refus = start(racine, FICHE, { human: true });
+  assert.equal(refus.code, 1);
+  assert.match(refus.message, /fusion de la PR de clôture n'est pas établie/);
+  assert.equal(readState(racine).state.activity, "CLOSING");
+
+  // Branche fusionnée (classique) : le retour se fait.
+  git("checkout", "-q", principale);
+  git("merge", "-q", "--no-ff", "-m", "fusion", "chantier");
+  git("checkout", "-q", "chantier");
+  assert.equal(start(racine, FICHE, { human: true }).code, 0);
+
+  // La file décidée est lancée par l'agent seul, depuis CLOSING aussi.
+  git("checkout", "-q", principale);
+  const suivante = "docs/projects/suivante.md";
+  writeFileSync(
+    join(racine, suivante),
+    "# Projet : suivante\n\n**Statut** : cadré le 2026-10-16.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/suivante.ts\n-->\n\n## Critères d'acceptation\n\n- Critère — `QUA-001`\n",
+  );
+  git("add", "-A");
+  git("commit", "-qm", "suivante");
+  etat({ queue: [suivante], queue_merge: false });
+  const agent = start(racine, suivante);
+  assert.equal(agent.code, 0, agent.message);
+  assert.equal(readState(racine).state.activity, "BUILD");
+});
+
 test("lancer : fiche non cadrée, terminée ou modèle refusée ; mode agent libre", () => {
   const { racine } = depotCadre();
   for (const f of ["docs/projects/sans-cadrage.md", "docs/projects/finie.md", "docs/projects/model-brief.md", "docs/projects/absente.md"]) {

@@ -5,7 +5,17 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { branchMerged, close, closingSignals, main, mainBranch, mergedPullRequests, pruneMergedBranches, prunedMessage } from "./close.mjs";
+import {
+  branchMerged,
+  close,
+  closingMerged,
+  closingSignals,
+  main,
+  mainBranch,
+  mergedPullRequests,
+  pruneMergedBranches,
+  prunedMessage,
+} from "./close.mjs";
 import { move, start } from "./state.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
@@ -291,6 +301,22 @@ function depotSquash() {
   git(racine, "checkout", "-q", "master");
   return { racine, branches };
 }
+
+test("QUA-058 : la PR de clôture est fusionnée sur la branche principale, ou selon git puis gh pour une autre branche ; HEAD détaché ou sans branche principale : inconnu", () => {
+  const { racine, branches } = depotSquash();
+  const pr = (oid) => () => JSON.stringify([{ headRefName: "squash", headRefOid: oid }]);
+  assert.equal(closingMerged(racine, { gh: () => assert.fail("gh inutile sur la branche principale") }), "git");
+  git(racine, "checkout", "-q", "squash");
+  assert.equal(closingMerged(racine, { gh: pr(branches.squash) }), "gh");
+  assert.equal(closingMerged(racine, { gh: pr("0".repeat(40)) }), "no");
+  assert.equal(closingMerged(racine, { gh: () => null }), "unknown");
+  git(racine, "checkout", "-q", "--detach");
+  assert.equal(closingMerged(racine), "unknown");
+  const vide = mkdtempSync(join(tmpdir(), "drwil-clot-"));
+  dossiers.push(vide);
+  git(vide, "init", "-q");
+  assert.equal(closingMerged(vide), "unknown");
+});
 
 test("QUA-058 : une branche dont la PR est fusionnée sur GitHub, par squash compris, est supprimée au lancement — pas une branche allée plus loin", () => {
   const { racine, branches } = depotSquash();
