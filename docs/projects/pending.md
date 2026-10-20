@@ -361,6 +361,8 @@ une décision du demandeur.
   `docs/intentions/banc-gemini-quota.md`.
 - [x] [IA] [P1] 0.6.8 : Copilot CLI enchaîne les chantiers — fait, journal
   du 2026-10-20.
+- [ ] [IA] [P1] 0.6.9 : la fluidité de la clôture — fiche
+  `docs/projects/fluidite-cloture-0-6-9.md`.
 - [ ] [décision] `verify` dit pourquoi un critère n'est « pas durable »
   (marqueur `[humain]` manquant ou en trop) —
   `docs/intentions/critere-humain-message-clair.md`.
