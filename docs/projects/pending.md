@@ -369,8 +369,6 @@ une décision du demandeur.
 - [ ] [décision] La clôture dit quelle étape suit au lieu de refuser sèchement
   (chemin BUILD → CLOSING, évidence périmée) —
   `docs/intentions/cloture-chemin-guide.md`.
-- [ ] [décision] Décision de fusion sous un outil sans second sondage (Copilot
-  CLI) — `docs/intentions/fusion-sans-sondage-copilot.md`.
 - [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
   d'essayé) — `docs/intentions/compat-codex.md`.
 - [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
