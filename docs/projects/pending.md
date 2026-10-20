@@ -140,9 +140,9 @@ avant les points 5 à 13, en trois versions.
   (`docs/intentions/compat-cursor.md`), ces deux derniers repassés en
   intention le 2026-10-19 (demande de l'humain) : le périmètre de la
   0.6.7 est donc ramené à trois outils (socle, Copilot CLI, Gemini CLI),
-  puis la release (`docs/projects/release-0-6-7.md`).
+  puis la release (faite, journal du 2026-10-20).
 - **Ordre des versions suivantes**, validé par le demandeur le 2026-10-19 :
-  1. 0.6.7, la release (`docs/projects/release-0-6-7.md`).
+  1. 0.6.7, la release (faite, journal du 2026-10-20).
   2. 0.6.8, Copilot CLI enchaîne les chantiers
      (`docs/projects/compat-copilot-enchaine.md`) : décision de fusion au
      sondage, retour en SCOPING après la fusion

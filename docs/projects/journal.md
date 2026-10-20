@@ -2379,7 +2379,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI.
 - **Clôturé par** : la branche `chantier/compat-gemini`.
 
-## 2026-10-19 — Détour de docs/projects/release-0-6-7.md : la mise à jour complète la fiche des mécaniques
+## 2026-10-19 — Détour de la release 0.6.7 : la mise à jour complète la fiche des mécaniques
 
 - **Défaut** : après une mise à jour du kit, un projet déjà équipé échouait à
   « Docs jamais fausses » (QUA-011, et QUA-015, QUA-016 par le contrôle partagé) : la
@@ -2394,3 +2394,29 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **CI** : CodeQL a signalé `js/bad-tag-filter` sur une regex de fin de commentaire HTML ;
   remplacée par une recherche de ligne, sans regex.
 - **Clôturé par** : la branche `detour/maj-fiche-mecaniques`.
+
+## 2026-10-20 — Release 0.6.7, la compatibilité des agents (socle, Copilot CLI, Gemini CLI)
+
+- **Décisions clés** : périmètre ramené à trois outils sur cinq, Codex et
+  Cursor repassés en intentions (`docs/intentions/compat-codex.md`,
+  `docs/intentions/compat-cursor.md`). Lot 1 : version 0.6.7 partout (paquet,
+  racine, verrou), changelog daté, PR #183 fusionnée. Un détour (PR #182) a
+  corrigé une mise à jour du kit qui laissait la fiche des mécaniques
+  incomplète, trouvée par l'essai réel 0.6.6 → 0.6.7.
+- **Candidate et promotion** : candidate `v0.6.7-rc.1` posée sur le commit
+  `d74b5f1` (QUA-051, version candidate et fiche de recette) ; verdict
+  « approuvée » donné par l'humain le 2026-10-20 (QUA-053, verdict humain) ;
+  promotion en `v0.6.7` avec le même tarball, sha256
+  `b7e0bad74c3b637b3492e058824dbfe759e7ac15984b526e99a5b6c63d195e07`
+  (QUA-054, seule une candidate approuvée est promue), retéléchargé et
+  vérifié identique.
+- **Limites connues** : celles de la fiche de recette, déjà portées par leurs
+  intentions (`docs/intentions/skills-et-sondage-sous-gemini.md`,
+  `docs/intentions/banc-gemini-quota.md`,
+  `docs/intentions/depassement-delai-copilot-interactif.md`,
+  `docs/intentions/etat-revient-en-scoping-apres-fusion.md`). Observé : après
+  une candidate, `package.json` et les liens du projet équipé pointent vers la
+  dernière release définitive (v0.6.6) alors que le fichier d'installation note le
+  moteur 0.6.7 ; ils s'alignent au `init` suivant la promotion.
+- **Consommation** : non mesurée — chantier mené sous Copilot CLI.
+- **Clôturé par** : la branche `cloture-release-0-6-7`.
