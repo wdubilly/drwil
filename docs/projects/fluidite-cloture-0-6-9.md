@@ -28,6 +28,10 @@ files:
   - docs/intentions/README.md
   - docs/intentions/notes.md
   - .drwil/ia-first.json
+  - .githooks/briefs.mjs
+  - packages/drwil/templates/common/base/.githooks/briefs.mjs
+  - packages/drwil/src/verdict.ts
+  - packages/drwil/src/agent.ts
 -->
 
 (cadrage : la clôture et l'état, le message du critère humain, la commande
