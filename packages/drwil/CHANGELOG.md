@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.6.7 (2026-10-19)
+
 ### Added
 
 - `AGENTS.md` now says that, in SCOPING, a need the human expresses is
@@ -30,6 +32,9 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- Updating a project equipped by an older version now adds the kit's new
+  mechanics files to the scope block of `docs/projects/kit-mechanics.md`; before,
+  they were covered by no brief and the docs check failed after the update.
 - The write hook read the file under `file_path` only; Copilot CLI sends
   `path`, so nothing was refused there.
 - The `/drwil-start` skill header was invalid in strict YAML, so Copilot
