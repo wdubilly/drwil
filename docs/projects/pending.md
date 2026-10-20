@@ -365,8 +365,6 @@ une décision du demandeur.
 - [ ] [décision] Un passage complet et stable du banc sous Gemini CLI, malgré
   le quota (limite du même chantier) —
   `docs/intentions/banc-gemini-quota.md`.
-- [ ] [IA] [P0] 0.6.7 : release 0.6.7, la compatibilité des agents (candidate,
-  verdict humain, promotion) — `docs/projects/release-0-6-7.md`.
 - [ ] [IA] [P1] 0.6.8 : Copilot CLI enchaîne les chantiers (décision de
   fusion au sondage, retour en SCOPING après fusion, sous-agent par
   chantier) — `docs/projects/compat-copilot-enchaine.md`.
