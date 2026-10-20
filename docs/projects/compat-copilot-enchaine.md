@@ -90,6 +90,15 @@ interruption, comme avec Claude Code. Trois écarts à régler ensemble :
   Copilot CLI portent-ils les hooks et l'état ? Sinon, le lot s'arrête et
   la limite devient une intention.
 
+## Contrats modifiés
+
+- `QUA-037` — ancien critère : le lancement d'un chantier part de SCOPING,
+  sans sous-agent exigé dès le premier chantier — raison : le lancement part
+  aussi de CLOSING une fois la PR de clôture fusionnée (git, puis `gh`), le
+  retour en SCOPING est automatique, chaque chantier tourne dans un
+  sous-agent dès le premier, et le sondage Copilot a deux champs (validé le
+  2026-10-20)
+
 ## 5. Lots
 
 - **Lot 1 — décision de fusion** : formulaire, lecture par le hook, état
