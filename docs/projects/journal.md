@@ -2342,7 +2342,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   pas reproduit, sa cause n'est pas établie
   (`docs/intentions/depassement-delai-copilot-interactif.md`) ; après la
   fusion, l'état reste en CLOSING
-  (`docs/intentions/etat-revient-en-scoping-apres-fusion.md`).
+  (le journal du 2026-10-20 (0.6.8)).
 - **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI,
   et `.githooks/consumption.mjs` ne lit que les journaux de Claude Code.
 - **Clôturé par** : la branche `workstream/compat-copilot`.
@@ -2414,9 +2414,26 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   intentions (`docs/intentions/skills-et-sondage-sous-gemini.md`,
   `docs/intentions/banc-gemini-quota.md`,
   `docs/intentions/depassement-delai-copilot-interactif.md`,
-  `docs/intentions/etat-revient-en-scoping-apres-fusion.md`). Observé : après
+  le journal du 2026-10-20 (0.6.8)). Observé : après
   une candidate, `package.json` et les liens du projet équipé pointent vers la
   dernière release définitive (v0.6.6) alors que le fichier d'installation note le
   moteur 0.6.7 ; ils s'alignent au `init` suivant la promotion.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `cloture-release-0-6-7`.
+
+## 2026-10-20 — 0.6.8, Copilot CLI enchaîne les chantiers
+
+- **Décisions clés** : le sondage Copilot porte deux champs (la fiche et
+  `drwil-merge`) lus par le hook ; `state.mjs start` et `next` partent de
+  CLOSING une fois la PR de clôture fusionnée (git, puis `gh` pour un
+  squash), ce qui ramène en SCOPING sans geste à la main (QUA-037, QUA-058) ;
+  chaque chantier d'une file tourne dans un sous-agent dès le premier, sous
+  Claude Code (Agent) comme sous Copilot CLI (`task`).
+- **Preuve** : tests ajoutés (`.githooks/state.test.mjs`,
+  `.githooks/close.test.mjs`, `packages/drwil/test/kit.test.mjs`) ; essai
+  réel sous Copilot CLI attesté par l'humain (QUA-069).
+- **Limites connues** : la file menée par sous-agents avec les autres outils
+  reste portée par `docs/intentions/file-sous-agents-autres-outils.md` ;
+  la fusion `gh` n'a pas été vue sur une PR squash réelle.
+- **Consommation** : non mesurée — chantier mené sous Copilot CLI.
+- **Clôturé par** : la branche `compat-copilot-enchaine`.

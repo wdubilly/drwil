@@ -15,7 +15,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const MARK = "drwil-start";
-// Optional second question of the same poll (Claude Code): authorise the automatic merge.
+// Optional second question (Claude Code) or field (Copilot CLI) of the same poll: authorise the automatic merge.
 const MERGE_MARK = "drwil-merge";
 const MERGE_YES_RE = /^(fusion automatique|automatic merge)\b/i;
 // With a single scoped brief, the poll's second option (a question needs two): start nothing.
@@ -61,11 +61,16 @@ export function startPoll(input) {
       options: Array.isArray(q.options) ? q.options.map((o) => o?.label) : [],
       prefilled: Boolean(e.answers && Object.keys(e.answers).length),
     };
-  // Copilot CLI: message + requestedSchema (options as `enum`), free-text answer.
+  // Copilot CLI: message + requestedSchema (options as `enum`), free-text answer; the merge
+  // decision is a second field named `drwil-merge`, answered as `fiche=…, drwil-merge=…`.
   if (typeof e.message === "string" && e.message.startsWith(MARK)) {
-    const properties = Object.values(e.requestedSchema?.properties ?? {});
-    const options = properties.find((p) => Array.isArray(p?.enum))?.enum ?? [];
-    return { form: "copilot", options, prefilled: properties.some((p) => p && "default" in p) };
+    const entries = Object.entries(e.requestedSchema?.properties ?? {});
+    const properties = entries.map(([, p]) => p);
+    const fieldKey = entries.find(([k, p]) => k !== MERGE_MARK && Array.isArray(p?.enum))?.[0] ?? null;
+    const options = entries.find(([k]) => k === fieldKey)?.[1]?.enum ?? [];
+    const keys = entries.map(([k]) => k);
+    const mergeKey = keys.includes(MERGE_MARK) ? MERGE_MARK : null;
+    return { form: "copilot", options, fieldKey, mergeKey, keys, prefilled: properties.some((p) => p && "default" in p) };
   }
   return null;
 }
@@ -75,7 +80,16 @@ export function humanAnswer(input, poll) {
   if (poll.form === "claude") return input?.tool_response?.answers?.[poll.question] ?? null;
   const text = input?.tool_result?.text_result_for_llm;
   const m = typeof text === "string" ? /User responded:\s*(.+)\s*$/s.exec(text) : null;
-  return m ? m[1].trim() : null;
+  if (!m) return null;
+  // One field: the whole answer. Several: `key=value, key=value`, in the schema's order of keys or not.
+  return poll.mergeKey ? copilotField(m[1].trim(), poll.keys, poll.fieldKey) : m[1].trim();
+}
+
+/** The value of `key` in a Copilot CLI answer `key=value, key=value`; null if absent. */
+function copilotField(answer, keys, key) {
+  const esc = (k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const m = new RegExp(`(?:^|,\\s*)${esc(key ?? "")}=(.*?)(?=,\\s*(?:${keys.map(esc).join("|")})=|$)`, "s").exec(answer);
+  return m ? m[1].trim() || null : null;
 }
 
 /**
@@ -93,10 +107,16 @@ export function inPollOrder(choices, options = []) {
     .map(({ c }) => c);
 }
 
-/** Automatic merge authorised by the human answer to the second question (Claude Code only). */
+/** Automatic merge authorised by the human answer to the merge question (second question or field). */
 export function mergeAuthorised(input, poll) {
-  if (poll.form !== "claude" || !poll.mergeQuestion) return false;
-  return MERGE_YES_RE.test(String(input?.tool_response?.answers?.[poll.mergeQuestion] ?? ""));
+  if (poll.form === "claude") {
+    if (!poll.mergeQuestion) return false;
+    return MERGE_YES_RE.test(String(input?.tool_response?.answers?.[poll.mergeQuestion] ?? ""));
+  }
+  if (!poll.mergeKey) return false;
+  const text = input?.tool_result?.text_result_for_llm;
+  const m = typeof text === "string" ? /User responded:\s*(.+)\s*$/s.exec(text) : null;
+  return MERGE_YES_RE.test(String(m ? (copilotField(m[1].trim(), poll.keys, poll.mergeKey) ?? "") : ""));
 }
 
 function language() {

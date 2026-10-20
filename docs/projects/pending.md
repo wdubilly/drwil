@@ -143,13 +143,10 @@ avant les points 5 à 13, en trois versions.
   puis la release (faite, journal du 2026-10-20).
 - **Ordre des versions suivantes**, validé par le demandeur le 2026-10-19 :
   1. 0.6.7, la release (faite, journal du 2026-10-20).
-  2. 0.6.8, Copilot CLI enchaîne les chantiers
-     (`docs/projects/compat-copilot-enchaine.md`) : décision de fusion au
-     sondage, retour en SCOPING après la fusion
-     (`docs/intentions/etat-revient-en-scoping-apres-fusion.md`), sous-agent
-     dès le premier chantier
-     (`docs/intentions/sous-agent-des-le-premier-chantier.md`), puis la
-     file pour Copilot CLI (`docs/intentions/file-sous-agents-autres-outils.md`).
+  2. 0.6.8, Copilot CLI enchaîne les chantiers (fait, journal du
+     2026-10-20) : décision de fusion au sondage, retour en SCOPING après la
+     fusion, sous-agent dès le premier chantier ; reste la file pour les
+     autres outils (`docs/intentions/file-sous-agents-autres-outils.md`).
   3. 0.6.9, la fluidité de la clôture : clôture guidée
      (`docs/intentions/cloture-chemin-guide.md`), message clair du critère
      humain (`docs/intentions/critere-humain-message-clair.md`), note à tout
@@ -351,9 +348,6 @@ une décision du demandeur.
   matrice) — fait, journal du 2026-10-19.
 - [x] [IA] [P1] 0.6.7, 2 sur 3 : Copilot CLI tenu — fait, journal du
   2026-10-19.
-- [ ] [décision] Revenir en SCOPING après la fusion d'un chantier, sans geste
-  à la main (limite du chantier « Copilot CLI tenu » du 2026-10-19) —
-  `docs/intentions/etat-revient-en-scoping-apres-fusion.md`.
 - [ ] [décision] Établir la cause du dépassement de 30 s des hooks en session
   interactive de Copilot CLI (limite du même chantier) —
   `docs/intentions/depassement-delai-copilot-interactif.md`.
@@ -365,9 +359,8 @@ une décision du demandeur.
 - [ ] [décision] Un passage complet et stable du banc sous Gemini CLI, malgré
   le quota (limite du même chantier) —
   `docs/intentions/banc-gemini-quota.md`.
-- [ ] [IA] [P1] 0.6.8 : Copilot CLI enchaîne les chantiers (décision de
-  fusion au sondage, retour en SCOPING après fusion, sous-agent par
-  chantier) — `docs/projects/compat-copilot-enchaine.md`.
+- [x] [IA] [P1] 0.6.8 : Copilot CLI enchaîne les chantiers — fait, journal
+  du 2026-10-20.
 - [ ] [décision] `verify` dit pourquoi un critère n'est « pas durable »
   (marqueur `[humain]` manquant ou en trop) —
   `docs/intentions/critere-humain-message-clair.md`.
@@ -409,8 +402,6 @@ une décision du demandeur.
 - [ ] [décision] drwil_com, en dernier : le reste du guide de démarrage
   (dépôt git existant avant `init` ; le reste est cadré en 0.6.3) —
   `docs/intentions/guide-de-demarrage.md`.
-- [ ] [décision] Mener dès le premier chantier dans un sous-agent, pas
-  seulement une file — `docs/intentions/sous-agent-des-le-premier-chantier.md`.
 - [ ] [décision] Convoquer des personas d'agents (`agency-agents`) choisis par
   le cadrage d'un chantier — `docs/intentions/personas-convoques-par-le-cadrage.md`.
 - [ ] [décision] La clôture vérifie la cohérence de la documentation, de façon

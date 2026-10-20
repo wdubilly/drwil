@@ -1267,6 +1267,50 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     tool_result: { result_type: "success", text_result_for_llm: `User responded: ${fiche}` },
   });
   assert.equal(etat().activity, "BUILD");
+  assert.equal(etat().auto_merge, undefined);
+
+  // Copilot CLI, champ `drwil-merge` : seule la réponse humaine autorise la fusion automatique, quel que soit l'ordre des champs.
+  const copilotFusion = {
+    message: copilot.message,
+    requestedSchema: {
+      properties: {
+        choix: copilot.requestedSchema.properties.choix,
+        "drwil-merge": { type: "string", enum: ["Automatic merge", "Manual merge"] },
+      },
+    },
+  };
+  assert.equal(
+    hook({
+      hook_event_name: "PreToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: {
+        ...copilotFusion,
+        requestedSchema: {
+          properties: {
+            ...copilotFusion.requestedSchema.properties,
+            "drwil-merge": { enum: ["Automatic merge"], default: "Automatic merge" },
+          },
+        },
+      },
+    }).status,
+    2,
+  );
+  for (const [reponse, auto] of [
+    [`choix=${fiche}, drwil-merge=Automatic merge`, true],
+    [`drwil-merge=Automatic merge, choix=${fiche}`, true],
+    [`choix=${fiche}, drwil-merge=Manual merge`, false],
+    [`choix=${fiche}`, false],
+  ]) {
+    rmSync(join(dir, ".drwil/state.json"));
+    hook({
+      hook_event_name: "PostToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: copilotFusion,
+      tool_result: { result_type: "success", text_result_for_llm: `User responded: ${reponse}` },
+    });
+    assert.equal(etat().activity, "BUILD", reponse);
+    assert.equal(etat().auto_merge, auto ? true : undefined, reponse);
+  }
 });
 
 test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {

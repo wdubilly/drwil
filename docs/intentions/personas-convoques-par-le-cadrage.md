@@ -40,5 +40,5 @@ d'une fiche, pendant BUILD, comme relecteurs ou sous-agents.
   complète ou condensée (mission et critères de réussite seulement) ?
 - [décision] Mécanisme de convocation selon l'outil (sous-agents sous Claude
   Code, agents personnalisés sous Copilot CLI) : à cadrer avec
-  `docs/intentions/sous-agent-des-le-premier-chantier.md`, sans le mêler au
+  le journal du 2026-10-20 (0.6.8), sans le mêler au
   chantier de compatibilité des agents.

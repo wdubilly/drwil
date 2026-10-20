@@ -34,8 +34,10 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    - Claude Code, **second question** of the same poll: `header` exactly `drwil-merge`,
      options "Automatic merge" (the agent will schedule the merge in CLOSING) and "Manual
      merge", with no recommendation: it is the acceptance decision, taken at start.
-   - Copilot CLI: `message` starting with `drwil-start :`, choices = exact paths (no second
-     question: manual merge).
+   - Copilot CLI: `message` starting with `drwil-start :`; a first field whose `enum` = the exact
+     paths, and a **second field named exactly `drwil-merge`** with `enum` "Automatic merge" and
+     "Manual merge" (no `default`, no recommendation): the hook reads `fiche=…, drwil-merge=…`.
+     No `drwil-merge` answer read: manual merge.
    - **Recommend**: the first ready brief, first, with "(Recommended)" and the reason in
      its **description** — never in the label.
    - **Forbidden**: filling `answers` or a default value (`default`): the hook refuses the poll.
@@ -55,19 +57,26 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    « Allow auto-merge » in the GitHub repository settings (General → Pull Requests), or the
    human merges by hand — stay in CLOSING, and never say the merge is scheduled: a mergeable PR,
    auto-merge allowed by the repository, auto-merge scheduled and merge done are four different
-   states. Otherwise the merge stays a human gesture.
-5. **Queue** (the state says « Queue decided at start »): with Claude Code, run each workstream in a
-   subagent (fresh context), the first one right after the poll: the context read again is most of
-   a queue's cost, and grows with each workstream kept in the same session.
-   - The subagent (Agent tool) works in the repository folder — never `isolation: "worktree"`:
+   states. Otherwise the merge stays a human gesture: never schedule `gh pr merge --auto` without
+   the "Automatic merge" answer, in any tool. Once the PR is merged and the main branch updated,
+   the next `node .githooks/state.mjs start` or `next` goes back to SCOPING by itself (brief deleted,
+   closing PR merged): no `move SCOPING` to run.
+5. **Subagent from the first workstream** (Claude Code and Copilot CLI, queue or not): run each
+   workstream in a subagent (fresh context), the first one right after the poll — Claude Code:
+   the Agent tool; Copilot CLI: the `task` tool, `general-purpose` agent, `mode: "sync"`. The
+   context read again is most of a queue's cost, and grows with each workstream kept in the same
+   session. The main session keeps only the reports and the human decisions. A subagent that needs
+   the human stops with a report saying why; the main session asks the human, then resumes the
+   workstream (a new subagent, whose instructions start by reading the state).
+   - The subagent works in the repository folder — never `isolation: "worktree"`:
      `.drwil/state.json` (if present) is ignored by Git, absent from an isolated copy, and the subagent would
      believe it is in SCOPING. It receives no state reminder at start: its instructions start by
-     reading the state: `node .githooks/state.mjs`, then carry the workstream until back in
-     SCOPING (closing and scheduled merge included), without running `next`, and end with the
-     report. It cannot ask the human: on anything that needs one, it stops and says why.
+     reading the state: `node .githooks/state.mjs`, then carry the workstream until the closing is
+     pushed (merge scheduled if authorised; the state then stays CLOSING until the merge), without
+     running `next`, and end with the report. It cannot ask the human: on anything that needs one, it stops and says why.
    - One subagent at a time; the main session does not change the state while it works and reads
      it again when it returns. The main session keeps only the reports.
-   - After the closing, the main session follows the PR with `gh` until it is merged, 30 minutes
+   - **Queue** (the state says « Queue decided at start »): after the closing, the main session follows the PR with `gh` until it is merged, 30 minutes
      at most (`gh pr view <pr> --json state`), updates the main branch, then starts the next brief
      with `node .githooks/state.mjs next` and hands it to a new subagent — no new poll. No next
      brief: the summary.
@@ -79,7 +88,8 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    - **Resuming a queue in a new session** (after `/clear` or a restart, the state in SCOPING with
      a queue): first ask « the queue resumes with <brief>: shall I start it? » and run `next` only
      on an explicit yes; anything else (« continue », silence, another request) starts nothing.
-   - Another tool (Copilot CLI…): the queue runs in the same session, the rest unchanged.
+   - Another tool (Gemini CLI…): no subagent yet, the queue runs in the same session, the rest
+     unchanged.
 
 Without a poll in the tool: give the human the command `node .githooks/state.mjs start`, to run
 in an interactive terminal.

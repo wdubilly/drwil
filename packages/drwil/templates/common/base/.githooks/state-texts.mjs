@@ -142,7 +142,11 @@ export const STATE_MESSAGES = {
     undeclared: `contrat(s) modifié(s) sans déclaration : {0} — régression, ou évolution à déclarer dans la section « Contrats modifiés » de la fiche (validée par le demandeur), puis ${RERUN.fr}`,
     noCriteria:
       "avertissement : la fiche « {0} » n'a aucun critère d'acceptation — ce chantier ne laisse aucun test de non-régression aux suivants (section « Critères d'acceptation » du modèle de fiche)",
-    startFrom: `lancement refusé : activité {0} (lancer se fait depuis SCOPING, EXPECTATION ou REQUEST)`,
+    startFrom: `lancement refusé : activité {0} (lancer se fait depuis SCOPING, EXPECTATION ou REQUEST, ou CLOSING une fois la PR de clôture fusionnée)`,
+    startClosingBrief: "lancement refusé : CLOSING et la fiche {0} est encore là — la clôturer d'abord (recette « Clôturer »)",
+    startClosingOpen:
+      "lancement refusé : CLOSING, la PR de clôture n'est pas fusionnée — attendre la fusion (et mettre la branche principale à jour), puis relancer",
+    startClosingUnknown: "lancement refusé : CLOSING, la fusion de la PR de clôture n'est pas établie",
     startHuman: "lancement refusé : c'est une décision humaine (sondage `/drwil-start`, ou terminal interactif)",
     startNotScoped: `lancement refusé : « {0} » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)`,
     startNoCriteria:
@@ -211,7 +215,11 @@ export const STATE_MESSAGES = {
     undeclared: `contract(s) modified without declaration: {0} — a regression, or a change to declare in the « Modified contracts » section of the brief (approved by the requester), then ${RERUN.en}`,
     noCriteria:
       'warning: brief "{0}" has no acceptance criterion — this workstream leaves no non-regression test for the next ones ("Acceptance criteria" section of the brief model)',
-    startFrom: `start refused: activity {0} (start from SCOPING, EXPECTATION or REQUEST)`,
+    startFrom: `start refused: activity {0} (start from SCOPING, EXPECTATION or REQUEST, or CLOSING once the closing PR is merged)`,
+    startClosingBrief: 'start refused: CLOSING and brief {0} is still there — close it first ("Closing" recipe)',
+    startClosingOpen:
+      "start refused: CLOSING, the closing PR is not merged — wait for the merge (and update the main branch), then start again",
+    startClosingUnknown: "start refused: CLOSING, the closing PR's merge is not established",
     startHuman: "start refused: it is a human decision (`/drwil-start` poll, or interactive terminal)",
     startNotScoped: `start refused: "{0}" is not a scoped brief (scope block committed, brief not finished)`,
     startNoCriteria:

@@ -16,7 +16,7 @@ du demandeur, puis n'a pas suivi la PR ni ramené l'état en SCOPING.
 - Le skill de lancement dit : sans réponse « fusion automatique », la fusion
   reste un geste humain ; rien dans l'outil n'empêche l'agent de la programmer.
 - Le retour en SCOPING après fusion est déjà une intention distincte :
-  `docs/intentions/etat-revient-en-scoping-apres-fusion.md`.
+  le journal du 2026-10-20 (0.6.8).
 
 ## Questions à trancher
 

@@ -18,7 +18,7 @@ lots entre plusieurs agents, chacun sur sa partie, sous une orchestration.
 - Un worktree par chantier existe déjà pour les détours et les pushs
   (QUA-056, un push depuis un worktree ne touche jamais le dépôt principal).
 - Les sous-agents d'une file sont prévus, un seul à la fois
-  (`docs/intentions/sous-agent-des-le-premier-chantier.md`).
+  (le journal du 2026-10-20 (0.6.8)).
 
 ## Questions à trancher
 

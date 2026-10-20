@@ -5,6 +5,15 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Added
+
+- Copilot CLI chains workstreams: its start poll carries two fields (the
+  brief and `drwil-merge`), and `.githooks/state.mjs start` / `next` now
+  work from CLOSING once the closing PR is merged (checked with git, then
+  `gh`), so the state returns to SCOPING by itself.
+- Each workstream of a queue runs in a subagent from the first one, under
+  Claude Code and Copilot CLI alike.
+
 ## 0.6.7 (2026-10-19)
 
 ### Added

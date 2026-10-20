@@ -519,15 +519,20 @@ queue.
 - **Close**: free as soon as the `drwil verify` evidence is valid (see
   above); closing removes rights, and accepting the work remains the human
   PR merge.
-- **Merge authorised at start** (Claude Code): a second question of the
-  poll (`drwil-merge`) lets the human accept in advance; their answer,
+- **Merge authorised at start** (Claude Code: a second question of the
+  poll, Copilot CLI: a second field) named `drwil-merge` lets the human
+  accept in advance; their answer,
   read by the hook, is kept in the local state (`auto_merge`) until
   going back to Scoping, never set by the agent (even with
   `transitions: agent`). In CLOSING, after verify PASS and pushing the
   closing commit, the agent schedules `gh pr merge --auto --merge`: the
   host only merges once the required checks pass ("Allow auto-merge"
   repository setting required). In the terminal, `start` asks the same
-  question (type `MERGE`).
+  question (type `MERGE`). Without that answer, the agent never schedules
+  the merge, in any tool. Once the closing PR is merged, the next `start`
+  (or `next`) goes back to Scoping by itself: the brief is deleted and the
+  PR merged (main branch current, or the branch merged, `gh` for a
+  squash).
 - **Limit**: an agent with a shell could call these functions itself or
   rewrite the local state; Claude Code's `deny` rules block calling the hook
   directly, and cheating stays visible and refused off the machine (commit

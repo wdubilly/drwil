@@ -103,6 +103,20 @@ export function branchMerged(root, branch, main, prs) {
 }
 
 /**
+ * Is the closing pull request merged? The state does not keep the workstream's branch: on the main
+ * branch (updated after the merge) the closing commit is there; on another branch, `branchMerged`
+ * answers for it. "git" | "gh" | "no" | "unknown" (gh silent, or no main branch / detached HEAD).
+ */
+export function closingMerged(root, { gh } = {}) {
+  const main = mainBranch(root);
+  const current = git(root, "symbolic-ref", "--quiet", "--short", "HEAD");
+  if (!main || !current) return "unknown";
+  if (current === main) return "git";
+  const verdict = branchMerged(root, current, main, []);
+  return verdict === "no" ? branchMerged(root, current, main, mergedPullRequests(root, { branch: current, gh })) : verdict;
+}
+
+/**
  * Deletes the local branches proved merged into the main branch (`branchMerged`), never the main
  * branch, the current one, nor a branch still at the main branch's tip (just created, its work not
  * started). `{ deleted, unproven }`: unproven, the branches kept because gh did not answer; outside git:
