@@ -21,6 +21,8 @@ files:
   - packages/drwil/test/kit.test.mjs
   - docs/ia-first.md
   - docs/contracts.md
+  - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/docs/ia-first.md
 -->
 
 (cadrage : le sondage et son hook, le skill de lancement, l'état et la
@@ -37,9 +39,9 @@ interruption, comme avec Claude Code. Trois écarts à régler ensemble :
    (`docs/intentions/fusion-sans-sondage-copilot.md`).
 2. Pas de retour automatique en SCOPING après la fusion : l'état reste en
    CLOSING et il faut `state.mjs move SCOPING` à la main
-   (`docs/intentions/etat-revient-en-scoping-apres-fusion.md`).
+   (journal 0.6.8).
 3. Pas de sous-agent par chantier : le contexte grossit à chaque chantier
-   d'une file (`docs/intentions/sous-agent-des-le-premier-chantier.md`).
+   d'une file (journal 0.6.8).
 
 ## Critères d'acceptation
 
@@ -52,7 +54,7 @@ interruption, comme avec Claude Code. Trois écarts à régler ensemble :
 - Un chantier est mené dans un sous-agent à contexte neuf : la session
   principale ne garde que le compte rendu et les décisions humaines — `QUA-037`
 - Un essai sous Copilot CLI réel enchaîne deux fiches prêtes d'un seul
-  sondage et s'arrête au premier blocage humain — [humain] `QUA-037`
+  sondage et s'arrête au premier blocage humain — [humain] `QUA-069`
 
 ## 2. Hors périmètre
 
@@ -98,6 +100,6 @@ interruption, comme avec Claude Code. Trois écarts à régler ensemble :
 
 ## 6. Reprise
 
-- **Dernier état** (2026-10-19) : cadré, décisions prises ; rien de commencé.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Dernier état** (2026-10-20) : lots 1 à 3 codés et testés ; `run-checks` vert ; contrat QUA-069 (essai réel) créé.
+- **Travail non commité** : tout le chantier (gabarit, miroirs, tests, contrats, changelog).
+- **Prochaine étape** : [humain] essai réel sous Copilot CLI puis `drwil attest QUA-069` ; ensuite clôture (`node .githooks/close.mjs`).
