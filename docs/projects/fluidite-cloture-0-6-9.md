@@ -32,6 +32,10 @@ files:
   - packages/drwil/templates/common/base/.githooks/briefs.mjs
   - packages/drwil/src/verdict.ts
   - packages/drwil/src/agent.ts
+  - docs/architecture.md
+  - packages/drwil/templates/common/base/docs/ia-first.md
+  - packages/drwil/templates/common/base/docs/intentions/README.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
 -->
 
 (cadrage : la clôture et l'état, le message du critère humain, la commande
@@ -60,22 +64,22 @@ régler ensemble :
 - Depuis une activité autre que CLOSING, `.githooks/close.mjs` et `.githooks/close.mjs --check`
   nomment le chemin restant jusqu'à CLOSING (commandes `state.mjs move`
   dans l'ordre) et, si l'évidence date d'un autre commit que HEAD, la
-  commande qui la renouvelle — `QUA-048`
+  commande qui la renouvelle — `QUA-073`
 - L'avertissement « fiche supprimée sans que son intention soit touchée »
   compare l'intention à toute la branche depuis la base de fusion, pas au
-  seul commit de clôture — `QUA-048`
+  seul commit de clôture — `QUA-073`
 - `verify` dit, pour un critère « not-durable », s'il faut ajouter `[humain]`
   (contrat à attester) ou le retirer (contrat entièrement automatisé), et
-  nomme le contrat — contrat à créer
+  nomme le contrat — `QUA-070`
 - une commande de terminal de note ajoute une ligne datée à
   le fichier de notes des intentions, sans changer d'activité ni toucher à la fiche
-  active, depuis n'importe quel outil — contrat à créer
+  active, depuis n'importe quel outil — `QUA-071`
 - Le skill `/drwil-note` appelle cette commande et ne code rien (une note
   est toujours une intention) — `QUA-061`
 - Compatibilité Claude Code prouvée sans session réelle : le skill
   `/drwil-note` a la même forme que les autres skills `/drwil-*` (test du
   gabarit) et les hooks Claude Code existants, rejoués avec leurs entrées
-  simulées, donnent la même sortie qu'avant — contrat à créer
+  simulées, donnent la même sortie qu'avant — `QUA-072`
 - Un essai réel d'une clôture depuis BUILD, en suivant seulement les
   messages, aboutit sans lire le code, sous Copilot CLI ou en terminal ;
   l'essai sous Claude Code est reporté faute de crédit — [humain] `QUA-048`
@@ -123,7 +127,14 @@ Confirmées par le demandeur le 2026-10-20 :
 - **Lot 3 — note à tout moment** : le script de note, skill, fichier de notes,
   miroir, tests, doc, contrats.
 
-## 6. Reprise
+## 6. Contrats modifiés
+
+- `QUA-048` : ajout de sa ligne **Manuel** (l'essai réel d'une clôture depuis
+  BUILD, critère [humain]) ; les critères automatisés du chemin guidé et de
+  la comparaison à la branche entière sont portés par le contrat créé
+  `QUA-073`, un contrat ne pouvant être à la fois à attester et automatisé.
+
+## 7. Reprise
 
 - **Dernier état** (2026-10-20) : cadré, rien de commencé ; prête.
 - **Travail non commité** : cette fiche et la ligne d'index.
