@@ -1,5 +1,6 @@
 // Presentation of the `drwil verify` verdict (split from verify.ts, which re-exports it): human
 // output and stable machine format.
+import { durabilityHint } from "./criteria.js";
 import { fill } from "./i18n.js";
 import { rulesLine } from "./rules.js";
 import type { Severity, Status, Verdict } from "./verify.js";
@@ -77,7 +78,13 @@ export function formatVerdict(v: Verdict): string {
   if (v.unattached.length) lines.push(fill(T.unattached, v.unattached.join(", ")));
   if (v.undeclared?.length) lines.push(fill(T.undeclared, v.undeclared.join(", ")));
   const unproven = (v.criteria ?? []).filter((c) => c.status !== "pass");
-  if (unproven.length) lines.push(fill(T.unproven, unproven.map((c) => `« ${c.text} » (${c.status})`).join(", ")));
+  if (unproven.length)
+    lines.push(
+      fill(
+        T.unproven,
+        unproven.map((c) => `« ${c.text} » (${[c.status, durabilityHint(c, v.lang)].filter(Boolean).join(" : ")})`).join(", "),
+      ),
+    );
   const count = (s: Status) => v.contracts.filter((k) => k.status === s).length;
   if (v.contracts.length)
     lines.push(fill(T.counts, v.contracts.length, count("PASS"), count("ATTESTED"), count("FAIL"), count("MANUAL"), count("ERROR")));

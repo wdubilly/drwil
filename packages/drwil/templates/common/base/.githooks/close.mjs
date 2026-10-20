@@ -14,7 +14,7 @@ import { acceptanceCriteria, config } from "./briefs.mjs";
 import { changedFiles } from "./check-code-rules.mjs";
 import { main as consumption } from "./consumption.mjs";
 import { definedIds } from "./contracts.mjs";
-import { readState, stateRoot } from "./state.mjs";
+import { readState, stateRoot, verifyEvidence } from "./state.mjs";
 
 const TEXTS = {
   fr: {
@@ -22,6 +22,8 @@ const TEXTS = {
     noBrief: "clôture : aucune fiche active ni fiche donnée",
     notClosing: (a) =>
       `clôture refusée : activité ${a} — la mécanique de clôture se fait en CLOSING (\`--check\` signale sans rien écrire)`,
+    path: (steps) => `Chemin jusqu'à CLOSING, dans l'ordre :\n${steps.map((s) => `  ${s}`).join("\n")}`,
+    rerun: "`npx drwil verify --evidence` (l'évidence ne date pas de HEAD : la renouveler une fois le travail commité)",
     deleted: (b) => `fiche supprimée : ${b}`,
     indexLine: (f) => `ligne d'index retirée : ${f}`,
     noIndexLine: (f, b) =>
@@ -41,6 +43,8 @@ const TEXTS = {
     usage: "usage: node .githooks/close.mjs [--check] [<brief path>] [--logs <folder>]",
     noBrief: "closing: no active brief and no brief given",
     notClosing: (a) => `closing refused: activity ${a} — the closing mechanics run in CLOSING (\`--check\` reports without writing)`,
+    path: (steps) => `Path to CLOSING, in order:\n${steps.map((s) => `  ${s}`).join("\n")}`,
+    rerun: "`npx drwil verify --evidence` (the evidence is not from HEAD: renew it once the work is committed)",
     deleted: (b) => `brief deleted: ${b}`,
     indexLine: (f) => `index line removed: ${f}`,
     noIndexLine: (f, b) => `no index line to remove for ${b} in ${f} (line missing, or shared by several briefs: remove it by hand)`,
@@ -230,6 +234,23 @@ export function closingSignals(root, brief, text = existsSync(join(root, brief))
   return [...criteriaToCreate(root, brief, text), ...deadReferences(root, brief), ...bareNames(root)];
 }
 
+const STEPS = ["BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
+
+/**
+ * The commands that remain from `activity` to CLOSING (neighbouring transitions only), the evidence
+ * renewal placed before the last one when it is absent or from another commit than HEAD; null outside
+ * a started workstream, where closing is not in the agent's hands.
+ */
+export function pathToClosing(root, activity) {
+  const at = STEPS.indexOf(activity);
+  if (at < 0 || at === STEPS.length - 1) return null;
+  const T = texts(root);
+  const steps = STEPS.slice(at + 1).map((a) => `node .githooks/state.mjs move ${a}`);
+  const evidence = verifyEvidence(root);
+  if (!evidence.ok && (evidence.code === "noEvidence" || evidence.code === "otherCommit")) steps.splice(steps.length - 1, 0, T.rerun);
+  return T.path(steps);
+}
+
 /**
  * `{ code, message }`. Without `check`: the mechanics (CLOSING only) — brief deleted, index item
  * removed, consumption recorded — then the signals. With `check`: the signals only.
@@ -239,7 +260,8 @@ export function close(root, { brief, check = false, env = process.env, logs } = 
   const { state } = readState(root);
   const path = brief ? posix.normalize(brief.replace(/\\/g, "/")) : state.active_brief;
   if (!path) return { code: 1, message: T.noBrief };
-  if (!check && state.activity !== "CLOSING") return { code: 1, message: T.notClosing(state.activity) };
+  const route = pathToClosing(root, state.activity);
+  if (!check && state.activity !== "CLOSING") return { code: 1, message: [T.notClosing(state.activity), route].filter(Boolean).join("\n") };
   const text = existsSync(join(root, path)) ? readFileSync(join(root, path), "utf8") : "";
   const done = [];
   if (!check) {
@@ -260,7 +282,7 @@ export function close(root, { brief, check = false, env = process.env, logs } = 
   }
   const signals = closingSignals(root, path, text);
   const report = signals.length ? [T.signals, ...signals.map((s) => `  ⚠ ${s}`)] : [T.clean];
-  return { code: signals.length ? 1 : 0, message: [...done, ...report, ...(check ? [] : [T.rest])].join("\n") };
+  return { code: signals.length ? 1 : 0, message: [...done, ...report, ...(check ? [route] : [T.rest])].filter(Boolean).join("\n") };
 }
 
 /** Entry point: `node .githooks/close.mjs [--check] [<brief>] [--logs <folder>]`. Returns the exit code. */

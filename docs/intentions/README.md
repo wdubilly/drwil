@@ -18,6 +18,13 @@ signalée par les contrôles. La clôture d'un chantier met à jour
 l'intention dont il vient (champ `**Intention**` de la fiche), ou la
 résume au journal et la retire si elle est entièrement couverte.
 
+Une idée d'une ligne, trop légère pour une fiche, se note d'une commande :
+`node .githooks/note.mjs "<texte>"` ajoute une ligne datée à
+`docs/intentions/notes.md` (si présent) (hors de l'index des chantiers), à tout moment et
+depuis tout outil, sans changer d'activité ; une note est toujours une
+intention, jamais un ordre de coder. Elle est promue en fiche d'intention
+quand elle mûrit, et sa ligne est alors retirée.
+
 Les intentions de ce dépôt sont listées une fois, dans l'index des
 chantiers (`docs/projects/pending.md`, marqueur `[décision]`) : pas de
 seconde liste ici.

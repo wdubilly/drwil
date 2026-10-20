@@ -99,6 +99,26 @@ export function contractChanges(
   );
 }
 
+const HINT = {
+  fr: {
+    add: "{0} est à attester : ajouter [humain] au critère",
+    remove: "{0} est entièrement automatisé : retirer [humain] du critère",
+  },
+  en: {
+    add: "{0} is attested by a human: add [human] to the criterion",
+    remove: "{0} is fully automated: remove [human] from the criterion",
+  },
+} satisfies Record<MessageLang, Record<string, string>>;
+
+/**
+ * What to change for a « not-durable » criterion, naming its contract: a human criterion on an automated
+ * contract loses its marker, an automated criterion on a contract to attest gains it. Null for any other status.
+ */
+export function durabilityHint(c: Pick<CriterionResult, "status" | "link" | "human">, lang: MessageLang): string | null {
+  if (c.status !== "not-durable") return null;
+  return HINT[lang][c.human ? "remove" : "add"].replace("{0}", c.link ?? "");
+}
+
 const TABLE = {
   fr: {
     head: ["Critère", "Preuve", "Verdict"],
@@ -138,7 +158,8 @@ export function criteriaTable(criteria: CriterionResult[], lang: MessageLang): s
   const rows = criteria.map((c) => {
     const detail = [c.proof && cell(c.proof), c.change && T.change[c.change]].filter(Boolean).join(", ");
     const proof = c.link ? `\`${cell(c.link)}\`${detail ? ` (${detail})` : ""}` : "—";
-    return `| ${cell(c.text)}${c.human ? " [human]" : ""} | ${proof} | ${T.status[c.status]} |`;
+    const hint = durabilityHint(c, lang);
+    return `| ${cell(c.text)}${c.human ? " [human]" : ""} | ${proof} | ${T.status[c.status]}${hint ? ` — ${cell(hint)}` : ""} |`;
   });
   return [`| ${T.head.join(" | ")} |`, "|---|---|---|", ...rows].join("\n") + "\n";
 }

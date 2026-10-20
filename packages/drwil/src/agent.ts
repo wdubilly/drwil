@@ -2,6 +2,7 @@
 // particular agent. Pure adapter: it only reads verify's v1 JSON (verdictJson) and recomputes no rule.
 // It never runs `drwil attest`: it presents it as a human action. Output in English, stable whatever
 // the project's language (consumed by agents).
+import { durabilityHint } from "./criteria.js";
 import { rulesLine } from "./rules.js";
 import { labelIds } from "./verdict.js";
 import type { verdictJson } from "./verify.js";
@@ -47,7 +48,10 @@ export function formatForAgent(j: VerdictJson): string {
   const unproven = j.criteria.filter((c) => c.status !== "pass");
   if (unproven.length) {
     l.push("", "Unproven acceptance criteria of the active brief (each one needs a passing contract):");
-    for (const c of unproven) l.push(`  - « ${c.text} » — ${c.link ?? "no proof"}: ${c.status}${c.human ? " (human)" : ""}`);
+    for (const c of unproven) {
+      const hint = durabilityHint(c, "en");
+      l.push(`  - « ${c.text} » — ${c.link ?? "no proof"}: ${c.status}${c.human ? " (human)" : ""}${hint ? ` — ${hint}` : ""}`);
+    }
   }
   const manual = list("manual");
   if (manual.length) {

@@ -381,6 +381,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/close.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (fusions, branches, journaux de session).
 **Contrôle** : `tests-qua-048`
+**Manuel** : un essai réel d'une clôture depuis BUILD, en suivant seulement les messages, aboutit sans lire le code, sous Copilot CLI ou en terminal ; l'essai sous Claude Code est reporté (attestation humaine : `drwil attest QUA-048`).
 **Tests** : `.githooks/close.test.mjs`
 **Origine** : clôture allégée (0.6.5) — « Une commande de clôture fait la mécanique d'un geste — fiche supprimée, ligne d'index retirée, consommation consignée — et signale avant le commit ce qui ferait échouer la clôture ; les branches locales déjà fusionnées sont supprimées au lancement du chantier suivant »
 **Raison** : Relevé dans la session de la 0.6.4 : la clôture coûtait des gestes et des reprises sans gain de qualité — un commit à part pour citer l'ID d'un contrat créé, des références à une fiche supprimée restées fausses, un commit de clôture refusé pour un nom de fichier sans chemin, 53 branches fusionnées jamais supprimées.
@@ -614,3 +615,43 @@ régression sauf si la fiche active déclare le changement (section
 **Manuel** : l'essai lui-même, que seul l'humain peut faire et attester (`drwil attest QUA-069`).
 **Origine** : 0.6.8, Copilot CLI enchaîne les chantiers sans interruption — « Un essai sous Copilot CLI réel enchaîne deux fiches prêtes d'un seul sondage et s'arrête au premier blocage humain »
 **Raison** : Les hooks et les sous-agents de Copilot CLI ne se prouvent pas par un test local : sans essai réel, la compatibilité serait présumée, pas tenue (QUA-060).
+
+## QUA-070 — `verify` dit s'il faut ajouter ou retirer `[humain]` sur un critère « not-durable »
+**Règle** : Livré à tout projet. Pour un critère d'acceptation « not-durable », `verify` (sortie lisible, sortie pour agent, tableau des critères écrit à côté de l'évidence) nomme le contrat et dit quoi changer : ajouter `[humain]` quand le contrat est à attester (ligne **Manuel**, ou sans contrôle), le retirer quand le contrat est entièrement automatisé ; un seul message par sens, en français ou en anglais selon la langue du projet. Aucun message ne dit cela à l'élargissement du cadrage.
+**Périmètre** : `packages/drwil/src/criteria.ts` (`durabilityHint`), `packages/drwil/src/verdict.ts`, `packages/drwil/src/agent.ts` ; code du paquet, livré avec lui.
+**Source de vérité** : `packages/drwil/src/criteria.ts` (`durabilityHint`).
+**Preuve** : tests du paquet : un message par sens dans le tableau et la sortie lisible, dans les deux langues.
+**Contrôle** : `tests-qua-070`
+**Tests** : `packages/drwil/test/criteria.test.mjs`
+**Origine** : fluidité de la clôture (0.6.9) — « `verify` dit, pour un critère « not-durable », s'il faut ajouter `[humain]` (contrat à attester) ou le retirer (contrat entièrement automatisé), et nomme le contrat »
+**Raison** : Relevé le 2026-10-19 : `verify` répondait seulement « not-durable » ; il fallait lire `packages/drwil/src/criteria.ts` pour comprendre qu'un marqueur manquait ou était de trop.
+
+## QUA-071 — Une note s'ajoute à tout moment, d'une commande de terminal, sans changer d'activité
+**Règle** : Livré à tout projet. `node .githooks/note.mjs "<texte>"` ajoute une ligne datée au fichier de notes des intentions (`docs/intentions/notes.md` (si présent), créé au besoin) et date sa ligne « Statut » ; elle n'écrit pas l'état, ne change pas d'activité, ne touche pas la fiche active, ne commite rien, et fonctionne depuis n'importe quel outil (aucun code propre à un outil) ; une note vide est refusée. Le rappel d'état la cite. La note reste hors de l'index des chantiers.
+**Périmètre** : `.githooks/note.mjs`, `.githooks/state-texts.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/note.mjs` (`note`).
+**Preuve** : tests sur de vrais dépôts git temporaires : ligne ajoutée, état et fiche inchangés, fichier créé, note vide refusée, ligne de commande.
+**Contrôle** : `tests-qua-071`
+**Tests** : `.githooks/note.test.mjs`
+**Origine** : fluidité de la clôture (0.6.9) — « une commande de terminal de note ajoute une ligne datée au fichier de notes des intentions, sans changer d'activité ni toucher à la fiche active, depuis n'importe quel outil »
+**Raison** : Aucun geste court pour consigner une idée en plein chantier (2026-10-19) : une fiche d'intention complète est trop lourde, et un agent qui reçoit une idée en BUILD risquait de la coder.
+
+## QUA-072 — Les hooks et skills de Claude Code ne changent pas, prouvé sans session réelle
+**Règle** : Livré à tout projet. Le skill `/drwil-note` a la même forme que les autres skills `/drwil-*` (en-tête YAML `name` et `description` lisibles, corps qui nomme la commande), et les hooks de Claude Code existants (`.claude/hooks/prompt-hook.mjs` du sondage, `.claude/hooks/scope-reminder.mjs`), rejoués avec leurs entrées simulées, donnent la même sortie qu'avant ce chantier.
+**Périmètre** : `.claude/skills/drwil-note/SKILL.md`, `.claude/hooks/prompt-hook.mjs`, `.claude/hooks/scope-reminder.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/test/kit.test.mjs` (entrées simulées et sorties attendues des hooks).
+**Preuve** : test du paquet qui installe un projet, lit la forme du skill et rejoue les hooks avec des entrées simulées ; aucune session réelle ni appel au modèle.
+**Contrôle** : `tests-qua-072`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : fluidité de la clôture (0.6.9) — « Compatibilité Claude Code prouvée sans session réelle : le skill `/drwil-note` a la même forme que les autres skills `/drwil-*` (test du gabarit) et les hooks Claude Code existants, rejoués avec leurs entrées simulées, donnent la même sortie qu'avant »
+**Raison** : Pas de session Claude Code réelle disponible (plus de crédit) ; sans preuve déterministe, une régression des hooks de l'outil de référence passerait inaperçue.
+
+## QUA-073 — Hors de CLOSING, la clôture dit le chemin restant, et l'avertissement d'intention regarde toute la branche
+**Règle** : Livré à tout projet. Depuis une activité autre que CLOSING (de BUILD à VERIFY), `node .githooks/close.mjs` et `--check` nomment le chemin restant jusqu'à CLOSING — les commandes `state.mjs move`, dans l'ordre, transitions voisines seulement — et, si l'évidence de `verify` manque ou date d'un autre commit que HEAD, la commande qui la renouvelle, placée avant le passage en CLOSING ; ils n'avancent jamais l'état (QUA-048). L'avertissement « fiche supprimée sans que son intention soit touchée » compare l'intention à toute la branche depuis la base de fusion, pas au seul commit de clôture : une intention mise à jour ou retirée par un commit précédent du chantier n'est pas signalée.
+**Périmètre** : `.githooks/close.mjs` (`pathToClosing`), `.githooks/state.mjs` (`verifyEvidence`), `.githooks/briefs.mjs` (`intentsLeftBehind`) ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/close.mjs` (`pathToClosing`), `.githooks/briefs.mjs` (`intentsLeftBehind`).
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires : chemin depuis chaque activité, évidence absente, périmée ou à jour, intention touchée dans un commit précédent, jamais touchée, retirée.
+**Contrôle** : `tests-qua-073`
+**Tests** : `.githooks/close.test.mjs`
+**Origine** : fluidité de la clôture (0.6.9) — « Depuis une activité autre que CLOSING, `.githooks/close.mjs` et `.githooks/close.mjs --check` nomment le chemin restant jusqu'à CLOSING et, si l'évidence date d'un autre commit que HEAD, la commande qui la renouvelle »
+**Raison** : Le 2026-10-19, la clôture depuis BUILD répondait « clôture refusée » sans dire la suite : il a fallu tâtonner entre les transitions voisines, puis relancer `verify --evidence` ; l'avertissement d'intention signalait à tort une intention déjà mise à jour dans un commit précédent.
