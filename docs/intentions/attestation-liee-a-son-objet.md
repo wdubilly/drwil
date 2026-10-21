@@ -122,19 +122,8 @@ README du paquet (ce qu'une attestation garantit), changelog.
 
 ## Questions à trancher
 
-- [décision] La règle de validité proposée par l'agent : l'objet attesté
-  = les chemins déclarés par le contrat ? Comment prouver qu'ils
-  correspondent à la preuve et au contrat ?
-- [décision] Fichier couvert supprimé, renommé, ajouté (sous un motif
-  couvert) : chacun fait-il tomber l'attestation ?
-- [décision] Où déclarer la couverture : nouveau champ du contrat (par
-  exemple `**Covers**` : motifs de chemins), ou réutiliser `**Scope**` en
-  le rendant lisible par une machine ?
-- [décision] Mécanisme : empreinte du contenu des fichiers couverts
-  (indépendante de git, rejouable en CI), ou commit de référence + `git
-  diff` (plus simple, mais dépend de l'historique disponible en CI) ?
-- [décision] Renouveler volontairement une attestation encore valide
-  (constat du 2026-10-18) : option de `drwil attest`, ou inutile une fois
-  l'objet couvert ?
-- [décision] Un changement de forme pur (formatage) fait-il tomber
-  l'attestation ? Proposé : oui, faute de moyen sûr de le distinguer.
+Aucune : toutes tranchées par le demandeur le 2026-10-21, détail dans `docs/projects/attestation-liee-a-son-objet.md` :
+règle sur les chemins couverts (couverture absente signalée sans invalider) ;
+champ `**Covers**` ; supprimé, renommé, ajouté font tomber l'attestation ;
+empreinte du contenu, indépendante de git ; renouvellement par option de
+`drwil attest` ; un changement de forme pur la fait tomber.

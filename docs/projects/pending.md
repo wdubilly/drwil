@@ -380,9 +380,9 @@ une décision du demandeur.
   mémoire de l'agent (README en double, version annoncée non contrôlée,
   toute clôture contrainte à l'exercice, entretien courant compris ;
   constaté le 2026-10-17) — `docs/intentions/doc-visiteur-juste.md`.
-- [ ] [décision] [P1] drwil_com, priorité 1 : une attestation tombe quand
+- [ ] [IA] [P1] drwil_com, priorité 1 : une attestation tombe quand
   ce qu'elle couvre change (scénario S6) —
-  `docs/intentions/attestation-liee-a-son-objet.md`.
+  fiche `docs/projects/attestation-liee-a-son-objet.md`.
 - [ ] [décision] [P1] drwil_com, priorité 2 : des critères et des preuves
   qui survivent à la clôture — `docs/intentions/criteres-et-preuves-durables.md`.
 - [ ] [décision] [P1] drwil_com, priorité 3 : vérifier la barrière de
