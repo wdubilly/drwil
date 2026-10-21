@@ -5,6 +5,19 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.6.9 (2026-10-21)
+
+### Added
+
+- Guided closing: closing from an activity other than CLOSING now names the
+  remaining path and the command that renews stale evidence, without moving
+  the state. The intention warning compares the whole branch.
+- `verify` tells the human whether to add or remove the `[humain]` marker on
+  a criterion, and names the contract concerned.
+- A terminal note command (`node .githooks/note.mjs '<text>'`) records an
+  idea as one dated line, without changing the activity, from any tool.
+- Claude Code hooks and skills are unchanged, proven by simulated inputs.
+
 ## 0.6.8 (2026-10-20)
 
 ### Added
