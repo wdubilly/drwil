@@ -2483,3 +2483,24 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   entièrement couvertes, sont retirées.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `workstream/fluidite-cloture-0-6-9`.
+
+## 2026-10-21 — Release 0.6.9, la fluidité de la clôture
+
+- **Décisions clés** : version 0.6.9 partout (paquet, racine, verrou),
+  changelog daté, PR #192 fusionnée. Candidate `v0.6.9-rc.1` posée sur le
+  commit `7605c3a` (QUA-051, version candidate et fiche de recette) ; verdict
+  « approuvée » donné par l'humain (QUA-053, verdict humain) ; promotion en
+  `v0.6.9` avec le même tarball, sha256
+  `c3122188f9fdc499a0dcbd6a93e4ce81e6afef6d14d73f66d33640d508804ee5`
+  (QUA-054, seule une candidate approuvée est promue), retéléchargé et
+  vérifié identique. Les README ne figent aucun numéro de version
+  (QUA-055), ils n'ont pas changé.
+- **Essai réel** : projet temporaire équipé avec le tarball 0.6.8 de la
+  release GitHub, puis mis à jour avec le tarball 0.6.9 : fichiers de
+  mécanique mis à jour, `.githooks/note.mjs` ajouté, le fichier d'installation en
+  0.6.9, rien de perdu, `doctor` « Healthy » (QUA-027).
+- **Limites connues** : l'essai de clôture sous Claude Code reste reporté
+  faute de crédit ; les limites P3 à P5 de la fiche de recette sont celles de
+  la 0.6.8 et de la 0.6.9, déjà portées par leurs intentions.
+- **Consommation** : non mesurée — chantier mené sous Copilot CLI.
+- **Clôturé par** : la branche `cloture-release-0-6-9`.
