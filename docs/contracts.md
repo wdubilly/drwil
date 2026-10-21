@@ -712,7 +712,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/recette-note.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, gh et npm simulés) : la note « sans verdict » en français et en anglais, la release directe qui la propose, `--dry-run`.
 **Contrôle** : `tests-qua-079`
-**Tests** : `.githooks/recette-note.test.mjs`
+**Tests** : `.githooks/recette-note.test.mjs`, `.githooks/create-release.test.mjs`
 **Origine** : note de recette par version — « Une version publiée sans candidate ni verdict reçoit quand même sa note, générée avec la mention « sans verdict », à compléter par l'humain »
 **Raison** : La note reste obligatoire à chaque version : une version sans recette doit le dire plutôt que laisser un trou.
 
@@ -722,6 +722,6 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/recette-note.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, sans origin, gh simulé en échec) : tag et release présents malgré l'échec, commande de rattrapage nommée, note gardée, rattrapage par la ligne de commande.
 **Contrôle** : `tests-qua-080`
-**Tests** : `.githooks/recette-note.test.mjs`, `.githooks/promote-release.test.mjs`
+**Tests** : `.githooks/recette-note.test.mjs`, `.githooks/promote-release.test.mjs`, `.githooks/create-release.test.mjs`
 **Origine** : note de recette par version — « Le tag et la release GitHub ne dépendent pas de la PR de la note : si la branche, la PR ou l'écriture échoue, la promotion le dit avec la commande de rattrapage, sans défaire ce qui est publié »
 **Raison** : Une release publiée ne se défait pas ; la note se rattrape.

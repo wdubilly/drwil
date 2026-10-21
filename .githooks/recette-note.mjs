@@ -28,6 +28,7 @@ const TEXTS = {
     reserves: "### Réserves",
     prints: "## Empreintes des tarballs",
     noTarball: "aucun tarball",
+    notBuilt: "calculées à la publication (aucun tarball construit en --dry-run)",
     sheet: "## Fiche de recette — {0}",
     complete: "## À compléter",
     todo: ["Ce qui a été validé : …", "Par qui : …", "Quand : …"],
@@ -55,6 +56,7 @@ const TEXTS = {
     reserves: "### Reserves",
     prints: "## Tarball fingerprints",
     noTarball: "no tarball",
+    notBuilt: "computed at publication (no tarball built in --dry-run)",
     sheet: "## Acceptance sheet — {0}",
     complete: "## To complete",
     todo: ["What was validated: …", "By whom: …", "When: …"],
@@ -77,7 +79,8 @@ export const notePath = (version) => `docs/recettes/${version}.md`;
 
 /**
  * Text of the note. `verdict` null: version published without a candidate (`commits`: subjects of
- * the range). `sheet` / `tag` / `url`: the candidate's, when there is one.
+ * the range). `sheet` / `tag` / `url`: the candidate's, when there is one. `tarballs` null: not
+ * built (`--dry-run`).
  */
 export function renderNote({ version, tag, url, verdict, sheet, tarballs, commits = [], date }, T) {
   const lines = [fill(T.title, version), ""];
@@ -90,12 +93,8 @@ export function renderNote({ version, tag, url, verdict, sheet, tarballs, commit
     const reserves = verdict.points.filter((p) => p.type === "reserve");
     if (reserves.length) lines.push(T.reserves, "", ...reserves.map((p) => `- ${p.id} : ${p.what}${p.issue ? ` (${p.issue})` : ""}`), "");
   }
-  lines.push(
-    T.prints,
-    "",
-    ...(tarballs.length ? tarballs.map((t) => `- \`${t.name}\` — sha256 \`${t.sha256}\``) : [`- ${T.noTarball}`]),
-    "",
-  );
+  const prints = tarballs?.map((t) => `- \`${t.name}\` — sha256 \`${t.sha256}\``) ?? [`- ${T.notBuilt}`];
+  lines.push(T.prints, "", ...(prints.length ? prints : [`- ${T.noTarball}`]), "");
   if (!verdict) {
     lines.push(T.complete, "", ...T.todo.map((x) => `- ${x}`), "");
     if (commits.length) lines.push(T.changes, "", ...commits.map((c) => `- ${c}`), "");

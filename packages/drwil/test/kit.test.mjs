@@ -2359,6 +2359,18 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/create-release.mjs"), readFileSync(src, "utf8"));
+  for (const f of ["recette-note.mjs", "acceptance-sheet.mjs"]) {
+    writeFileSync(join(dir, ".githooks", f), readFileSync(src.replace("create-release.mjs", f), "utf8"));
+  }
+  const mecanique = join(dir, "docs/projects/kit-mechanics.md");
+  // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).
+  writeFileSync(
+    mecanique,
+    readFileSync(mecanique, "utf8").replace(
+      "  - .githooks/create-release.mjs\n",
+      "  - .githooks/create-release.mjs\n  - .githooks/recette-note.mjs\n",
+    ),
+  );
   git(dir, "add", "-A");
   git(dir, "commit", "-m", "feat: premier chantier");
   const r = spawnSync(process.execPath, [".githooks/create-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
@@ -2396,6 +2408,18 @@ test("créer une release : --dry-run liste le paquet npm à empaqueter quand il 
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/create-release.mjs"), readFileSync(src, "utf8"));
+  for (const f of ["recette-note.mjs", "acceptance-sheet.mjs"]) {
+    writeFileSync(join(dir, ".githooks", f), readFileSync(src.replace("create-release.mjs", f), "utf8"));
+  }
+  const mecanique = join(dir, "docs/projects/kit-mechanics.md");
+  // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).
+  writeFileSync(
+    mecanique,
+    readFileSync(mecanique, "utf8").replace(
+      "  - .githooks/create-release.mjs\n",
+      "  - .githooks/create-release.mjs\n  - .githooks/recette-note.mjs\n",
+    ),
+  );
   mkdirSync(join(dir, "packages/truc"), { recursive: true });
   writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc", version: "1.0.0" }));
   git(dir, "add", "-A");

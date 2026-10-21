@@ -36,7 +36,7 @@ function depot(fichiers = {}, sujets = ["fix: a"]) {
   const racine = tmp();
   const origine = tmp();
   git(origine, "init", "-q", "--bare");
-  git(racine, "init", "-q", "-b", "travail");
+  git(racine, "init", "-q", "-b", "master");
   git(racine, "config", "user.email", "test@example.invalid");
   git(racine, "config", "user.name", "Test");
   git(racine, "remote", "add", "origin", origine);
@@ -46,6 +46,7 @@ function depot(fichiers = {}, sujets = ["fix: a"]) {
     git(racine, "add", "-A");
     git(racine, "commit", "-q", "-m", s);
   });
+  git(racine, "push", "-q", "origin", "master");
   return { racine, origine };
 }
 
@@ -162,7 +163,7 @@ test("--dry-run : version calculée, rien créé (avec et sans paquet)", () => {
   assert.equal(r.status, 0, r.stderr);
   assert.match(
     r.stdout,
-    /dernier tag : v1\.0\.0\n.*bump détecté : patch \(1 commit\(s\) analysé\(s\)\)\n.*prochaine version : v1\.0\.1 \(source : commits\)\n.*--dry-run/,
+    /dernier tag : v1\.0\.0\n.*bump détecté : patch \(1 commit\(s\) analysé\(s\)\)\n.*prochaine version : v1\.0\.1 \(source : commits\)\n[\s\S]*--dry-run/,
   );
   assert.equal(git(sans.racine, "tag", "-l"), "v1.0.0");
   const avec = depot({ "a/package.json": JSON.stringify({ name: "a", version: "0.2.0" }) });
@@ -216,7 +217,65 @@ test("--dry-run en anglais : messages selon .drwil/ia-first.json", () => {
   assert.equal(r.status, 0, r.stderr);
   assert.match(
     r.stdout,
-    /latest tag: \(none\)\n.*detected bump: minor \(1 commit\(s\) analysed\)\n.*next version: v0\.1\.0 \(source: commits\)\n.*--dry-run: no tag nor release created/,
+    /latest tag: \(none\)\n.*detected bump: minor \(1 commit\(s\) analysed\)\n.*next version: v0\.1\.0 \(source: commits\)\n[\s\S]*--dry-run: no tag nor release created/,
+  );
+});
+
+const GH_PR_OK = (appel) => `echo "$@" >> "${appel}"; case "$1" in pr) echo "https://exemple.invalid/pull/3" ;; esac`;
+
+test(
+  "QUA-079 : release directe — la note « sans verdict » (changements, empreinte du tarball) arrive par la branche recette/<version> et une PR",
+  posix,
+  () => {
+    const { racine, origine } = depotCandidat();
+    const appel = join(racine, "..", `gh-directe-${Date.now()}`);
+    dossiers.push(appel);
+    const masterAvant = git(origine, "rev-parse", "master");
+    const r = lancer(racine, [], chemin({ npm: NPM_PACK, gh: GH_PR_OK(appel) }));
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(git(origine, "tag", "-l"), "v1.1.0");
+    const note = git(origine, "show", "recette/v1.1.0:docs/recettes/v1.1.0.md");
+    assert.match(note, /^# Note de recette de v1\.1\.0\n/);
+    assert.match(note, /Verdict : sans verdict — version publiée sans candidate ni verdict de recette ; à compléter par l'humain/);
+    assert.match(note, /- `a-1\.1\.0\.tgz` — sha256 `[0-9a-f]{64}`/);
+    assert.match(note, /## À compléter/);
+    assert.match(note, /## Changements\n\n- feat: b$/);
+    assert.doesNotMatch(note, /Candidate/);
+    assert.match(r.stdout, /note de v1\.1\.0 proposée par la PR https:\/\/exemple\.invalid\/pull\/3/);
+    assert.match(readFileSync(appel, "utf8"), /pr create --base master --head recette\/v1\.1\.0/);
+    assert.equal(git(racine, "status", "--porcelain"), "");
+    assert.equal(git(origine, "rev-parse", "master"), masterAvant, "master distante intacte");
+  },
+);
+
+test("QUA-079 : release directe --dry-run — la note est montrée, sans branche ni PR ni tag", posix, () => {
+  const { racine, origine } = depotCandidat();
+  const r = lancer(racine, ["--dry-run"], chemin());
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /note de recette : docs\/recettes\/v1\.1\.0\.md\n\n# Note de recette de v1\.1\.0\n/);
+  assert.match(r.stdout, /sans verdict/);
+  assert.match(r.stdout, /Empreintes des tarballs\n\n- calculées à la publication/);
+  assert.match(r.stdout, /--dry-run : aucune branche ni PR créée/);
+  assert.match(r.stdout, /--dry-run : aucun tag ni release créé/);
+  assert.equal(git(origine, "tag", "-l"), "");
+  assert.equal(git(origine, "branch", "--list", "recette/*"), "");
+});
+
+test("QUA-080 : release directe — la PR de la note en échec ne défait ni le tag ni la release ; rattrapage dit", posix, () => {
+  const { racine, origine } = depotCandidat();
+  const appel = join(racine, "..", `gh-echec-${Date.now()}`);
+  dossiers.push(appel);
+  const r = lancer(racine, [], chemin({ npm: NPM_PACK, gh: `echo "$@" >> "${appel}"; case "$1" in pr) exit 1 ;; esac` }));
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(git(origine, "tag", "-l"), "v1.1.0");
+  assert.match(readFileSync(appel, "utf8"), /^release create v1\.1\.0 /);
+  assert.match(
+    r.stderr,
+    /branche recette\/v1\.1\.0 poussée, mais la PR a échoué ; rattraper : gh pr create --base master --head recette\/v1\.1\.0/,
+  );
+  assert.match(
+    r.stderr,
+    /la release publiée n'est pas défaite ; rattraper la note : node \.githooks\/recette-note\.mjs v1\.1\.0 \S+v1\.1\.0\.md/,
   );
 });
 
