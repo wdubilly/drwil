@@ -1,7 +1,7 @@
 # Preuve de clôture — criteres-et-preuves-durables
 
 **Clos le** : 2026-10-21
-**Commit vérifié** : `28006adce1` — verdict `drwil verify` : PASS
+**Commit vérifié** : `d6baa8830c` — verdict `drwil verify` : PASS
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
 

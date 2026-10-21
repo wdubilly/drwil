@@ -383,9 +383,6 @@ une décision du demandeur.
 - [ ] [décision] Déclarer ce que couvrent les contrats attestés du dépôt
   (champ `**Couvre**`, puis réattestation) —
   `docs/intentions/couverture-des-contrats-attestes.md`.
-- [ ] [IA] [P1] drwil_com, priorité 2 : des critères et des preuves
-  qui survivent à la clôture —
-  fiche `docs/projects/criteres-et-preuves-durables.md`.
 - [ ] [décision] [P1] drwil_com, priorité 3 : vérifier la barrière de
   fusion (protection absente, mal configurée, conforme) — section « Retour
   de drwil_com » de `docs/intentions/forge-dans-le-livrable.md`.
