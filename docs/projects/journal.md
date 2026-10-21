@@ -2469,7 +2469,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   nomme le chemin restant et la commande qui renouvelle l'évidence périmée,
   sans avancer l'état (QUA-073) ; l'avertissement d'intention compare toute la
   branche (QUA-073) ; `verify` dit s'il faut ajouter ou retirer le marqueur
-  `[humain]` d'un critère, contrat nommé (QUA-070) ; `node .githooks/note.mjs`
+  `[humain]` d'un critère, contrat nommé (QUA-070) ; la commande de terminal de note
   note une idée en une ligne datée, sans changer d'activité, depuis tout outil
   (QUA-071, QUA-061) ; les hooks et skills de Claude Code sont inchangés,
   prouvés par des entrées simulées (QUA-072).

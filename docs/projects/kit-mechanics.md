@@ -30,6 +30,8 @@ files:
   - .githooks/state.test.mjs
   - .githooks/close.mjs
   - .githooks/close.test.mjs
+  - .githooks/note.mjs
+  - .githooks/note.test.mjs
   - .githooks/detour.mjs
   - .githooks/detour.test.mjs
   - .githooks/scope-gate.mjs
