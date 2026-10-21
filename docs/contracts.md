@@ -437,8 +437,8 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Décision du demandeur du 2026-10-18 : l'approbation de la recette conditionne la publication ; un verdict donné par l'agent ne serait que sa parole.
 
 ## QUA-054 — Seule une candidate approuvée est promue, avec le même tarball
-**Règle** : `node .githooks/promote-release.mjs <vX.Y.Z-rc.N>` refuse une candidate sans verdict ou refusée, une version définitive qui existe déjà, une fiche absente, et un tarball dont l'empreinte diffère de la fiche. Approuvée, avec ou sans réserves, elle pose le tag `vX.Y.Z` sur le commit de la candidate, le pousse, et crée la release définitive (`latest`) avec le même tarball, les réserves et leurs issues listées dans sa note. `--dry-run` montre ce que ferait la promotion sans rien publier. La recette « corriger un défaut » dit comment ranger chaque issue de réserve ou de refus : défaut à corriger (une régression) ou intention (un manque).
-**Périmètre** : `.githooks/promote-release.mjs` ; module optionnel livré dans le gabarit ; recette « corriger un défaut ».
+**Règle** : `node .githooks/promote-release.mjs <vX.Y.Z-rc.N>` refuse une candidate sans verdict ou refusée, une version définitive qui existe déjà, une fiche absente, et un tarball dont l'empreinte diffère de la fiche. Approuvée, avec ou sans réserves, elle pose le tag `vX.Y.Z` sur le commit de la candidate, le pousse, et crée la release définitive (`latest`) avec le même tarball, les réserves et leurs issues listées dans sa note, puis ouvre une PR qui porte la note de recette de la version dans le dépôt (QUA-078) ; l'échec de cette PR ne défait pas ce qui est publié (QUA-080). Elle ne modifie aucun fichier suivi de la branche courante. `--dry-run` montre ce que ferait la promotion, note comprise, sans rien publier. La recette « corriger un défaut » dit comment ranger chaque issue de réserve ou de refus : défaut à corriger (une régression) ou intention (un manque).
+**Périmètre** : `.githooks/promote-release.mjs`, `.githooks/recette-note.mjs` ; module optionnel livré dans le gabarit ; recette « corriger un défaut ».
 **Source de vérité** : `.githooks/promote-release.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local), gh simulé.
 **Contrôle** : `tests-qua-054`
@@ -695,3 +695,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/doc-coherence.test.mjs`, `.githooks/close.test.mjs`
 **Origine** : clôture qui vérifie la cohérence de la documentation — « Une intention nouvelle qui cite un chemin déjà cité par une autre intention est signalée en avertissement, sans mots clés »
 **Raison** : Le 2026-10-19, une intention a été presque recréée alors qu'elle existait déjà (`docs/intentions/consommation-autres-outils.md`).
+
+## QUA-078 — La note de recette d'une version promue arrive dans le dépôt par une PR dédiée
+**Règle** : Livré à tout projet avec le module de release (optionnel). La promotion d'une candidate approuvée (QUA-054) écrit la note de la version dans le dossier des recettes (`docs/recettes/README.md`), un fichier par version : la fiche de recette de la candidate, le verdict, les réserves, l'auteur et la date du verdict, le sha256 de chaque tarball (`.githooks/recette-note.mjs`, jamais écrite à la main). Elle arrive par une branche dédiée `recette/vX.Y.Z`, partie de la branche principale distante, et une PR : jamais un commit sur la branche principale (QUA-017), ni l'arbre, l'index ou la branche courante touchés. Une note déjà dans le dépôt n'est pas refaite. `--dry-run` montre la note sans rien écrire.
+**Périmètre** : `.githooks/recette-note.mjs`, `.githooks/promote-release.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `.githooks/recette-note.mjs`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local), gh simulé : trois cas de note (approuvée, avec réserves), branche poussée sans toucher la branche principale ni l'arbre, PR demandée, `--dry-run` sans écriture.
+**Contrôle** : `tests-qua-078`
+**Tests** : `.githooks/recette-note.test.mjs`
+**Origine** : note de recette par version — « La promotion d'une candidate approuvée écrit la note de la version dans `docs/recettes/<version>.md` — la fiche de recette, le verdict, les réserves, l'auteur et la date du verdict, le sha256 de chaque tarball — sur une branche dédiée et une PR, jamais sur la branche principale ; `--dry-run` montre la note sans rien écrire »
+**Raison** : La fiche et le verdict n'existaient que sur la pré-release GitHub : ils ne suivaient pas le code et se perdraient avec la forge.
+
+## QUA-079 — Une version publiée sans candidate reçoit quand même sa note, « sans verdict »
+**Règle** : Livré à tout projet avec le module de release (optionnel). `node .githooks/create-release.mjs` (sans `--candidate`) écrit, après le tag et la release, la note de la version par le même module (QUA-078) : la mention « sans verdict — version publiée sans candidate ni verdict de recette ; à compléter par l'humain », les empreintes des tarballs, les changements depuis le dernier tag et une partie « à compléter » (ce qui a été validé, par qui, quand). Elle arrive par la même branche dédiée et la même PR ; `--dry-run` la montre sans rien écrire.
+**Périmètre** : `.githooks/recette-note.mjs`, `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `.githooks/recette-note.mjs`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, gh et npm simulés) : la note « sans verdict » en français et en anglais, la release directe qui la propose, `--dry-run`.
+**Contrôle** : `tests-qua-079`
+**Tests** : `.githooks/recette-note.test.mjs`
+**Origine** : note de recette par version — « Une version publiée sans candidate ni verdict reçoit quand même sa note, générée avec la mention « sans verdict », à compléter par l'humain »
+**Raison** : La note reste obligatoire à chaque version : une version sans recette doit le dire plutôt que laisser un trou.
+
+## QUA-080 — Le tag et la release publiés ne dépendent jamais de la PR de la note
+**Règle** : Livré à tout projet avec le module de release (optionnel). Le tag et la release GitHub sont publiés avant la note et ne dépendent pas d'elle : si la branche, la PR ou l'écriture de la note échoue, la promotion (QUA-054) comme la création directe d'une release (QUA-079) le disent, avec la commande de rattrapage (`node .githooks/recette-note.mjs vX.Y.Z <fichier de la note>`, ou `gh pr create` quand seule la PR a échoué), sans défaire ce qui est publié ; la note est gardée dans un fichier. Une branche de note déjà poussée n'est jamais écrasée.
+**Périmètre** : `.githooks/recette-note.mjs`, `.githooks/promote-release.mjs`, `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `.githooks/recette-note.mjs`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, sans origin, gh simulé en échec) : tag et release présents malgré l'échec, commande de rattrapage nommée, note gardée, rattrapage par la ligne de commande.
+**Contrôle** : `tests-qua-080`
+**Tests** : `.githooks/recette-note.test.mjs`
+**Origine** : note de recette par version — « Le tag et la release GitHub ne dépendent pas de la PR de la note : si la branche, la PR ou l'écriture échoue, la promotion le dit avec la commande de rattrapage, sans défaire ce qui est publié »
+**Raison** : Une release publiée ne se défait pas ; la note se rattrape.
