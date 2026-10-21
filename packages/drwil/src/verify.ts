@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { changeLines, type Coverage, coverageChanges, coverageOf, lacksCoverage, noCoversMessage } from "./coverage.js";
 import { activeBrief, contractChanges, criteriaVerdict, type CriterionResult, judgeBrief, showOrigins } from "./criteria.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { type BusinessRule, businessRules } from "./rules.js";
@@ -42,7 +43,12 @@ export interface ContractResult {
   attestation: Attestation | null;
   /** Eligible for `drwil attest`: automated part proven, human part remaining. */
   attestable: boolean;
-  /** Current fingerprint of the human part (rule, Manual, severity): version 2 of an attestation. */
+  /** A valid attestation `drwil attest --renew` can replace. */
+  renewable: boolean;
+  /** `**Covers**` patterns (null if absent) and current fingerprint of each covered file. */
+  covers: string[] | null;
+  coverage: Coverage;
+  /** Current fingerprint of the human part (rule, Manual, severity, coverage patterns). */
   fingerprint: string;
   /** Current fingerprint of each cited check's definition, by identifier. */
   proof: Record<string, string>;
@@ -79,8 +85,8 @@ export interface VerifyOptions {
 }
 
 export interface Attestation {
-  /** 1: bound to the whole section and its checks; 2: to the human part and to each attested check. */
-  version: 1 | 2;
+  /** 1: bound to the whole section and its checks; 2: to the human part and to each attested check; 3: and to the content of the covered files. */
+  version: 1 | 2 | 3;
   contract: string;
   status: "ATTESTED";
   attestedAt: string;
@@ -89,6 +95,9 @@ export interface Attestation {
   fingerprint: string;
   /** Version 2: fingerprint of each attested check's definition. */
   proof?: Record<string, string>;
+  /** Version 3: patterns of the `**Covers**` field and fingerprint of each file they matched. */
+  covers?: string[] | null;
+  coverage?: Coverage;
   commit: string | null;
   automated: { id: string; status: string }[];
 }
@@ -119,10 +128,18 @@ const sha = (value: unknown) => createHash("sha256").update(JSON.stringify(value
  * Version 2 of an attestation (QUA-032): the human part (rule, Manual, severity; the whole section
  * for a legacy table contract) and, separately, each cited check's definition. A check added later
  * leaves the attestation valid (it must pass anyway); a changed human part, or an attested check
- * removed or redefined, makes it obsolete.
+ * removed or redefined, makes it obsolete. Version 3 (QUA-081) adds the coverage patterns, in the
+ * hash only when declared: a contract without any keeps the version 2 hash.
  */
-export function humanFingerprint(k: { text?: string; rule?: string | null; manual?: string | null; severity?: string | null }): string {
-  return sha({ regle: k.rule ?? k.text ?? "", manuel: k.manual ?? null, severite: k.severity ?? null });
+export function humanFingerprint(k: {
+  text?: string;
+  rule?: string | null;
+  manual?: string | null;
+  severity?: string | null;
+  covers?: string[] | null;
+}): string {
+  const base = { regle: k.rule ?? k.text ?? "", manuel: k.manual ?? null, severite: k.severity ?? null };
+  return sha(k.covers?.length ? { ...base, couvre: [...k.covers].sort() } : base);
 }
 
 export function proofFingerprints(k: { checks?: string[] | null }, cfg: Record<string, any>): Record<string, string> {
@@ -135,10 +152,15 @@ export function proofFingerprints(k: { checks?: string[] | null }, cfg: Record<s
   );
 }
 
-/** Does this attestation still cover the contract? Version 1: its old fingerprint, unchanged. */
-function covers(a: Attestation, k: any, cfg: Record<string, any>, proof: Record<string, string>): boolean {
-  if (a.version !== 2) return a.fingerprint === fingerprint(k, cfg);
-  return a.fingerprint === humanFingerprint(k) && Object.entries(a.proof ?? {}).every(([id, h]) => proof[id] === h);
+/**
+ * Does this attestation still cover the contract? Version 1: its old fingerprint, unchanged; version 2:
+ * the human part without coverage, as written then; version 3: also the content of the covered files.
+ */
+function covers(a: Attestation, k: any, cfg: Record<string, any>, proof: Record<string, string>, coverage: Coverage): boolean {
+  if (a.version !== 2 && a.version !== 3) return a.fingerprint === fingerprint(k, cfg);
+  const human = humanFingerprint(a.version === 3 ? k : { ...k, covers: null });
+  const files = a.version !== 3 || coverageChanges(a.coverage ?? {}, coverage).length === 0;
+  return a.fingerprint === human && files && Object.entries(a.proof ?? {}).every(([id, h]) => proof[id] === h);
 }
 
 export function readAttestations(root: string): Attestation[] {
@@ -314,10 +336,11 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     const attestable =
       status === "MANUAL" && !byContract.has(k.id) && checks.every((r) => r.status === "ok") && (Boolean(k.manual) || k.checks === null);
     const proof = proofFingerprints(k, cfg);
+    const coverage = coverageOf(root, k.covers);
     let attestation: Attestation | null = null;
     const own = attestations.filter((a) => a.contract === k.id);
     if (attestable && own.length) {
-      attestation = own.find((a) => covers(a, k, cfg, proof)) ?? null;
+      attestation = own.find((a) => covers(a, k, cfg, proof, coverage)) ?? null;
       if (attestation) {
         status = "ATTESTED";
         reasons.push(
@@ -330,8 +353,10 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
         );
       } else {
         reasons.push(fill(T.obsolete, own[0].attestedAt));
+        if (own[0].version === 3) reasons.push(...changeLines(own[0].coverage, coverage, lang));
       }
     }
+    if (lacksCoverage(k) && !byContract.has(k.id)) reasons.push(noCoversMessage(lang));
     return {
       id: k.id,
       title: k.title,
@@ -339,6 +364,9 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
       status,
       attestation,
       attestable: attestable && !attestation,
+      renewable: attestable && attestation !== null,
+      covers: k.covers ?? null,
+      coverage,
       fingerprint: humanFingerprint(k),
       proof,
       severity: (k.severity ?? "blocking") as Severity,

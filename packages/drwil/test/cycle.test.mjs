@@ -2,14 +2,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { rulesLine } from "../dist/rules.js";
 import { labelIds } from "../dist/verdict.js";
-import { attest, fingerprint, formatForAgent, formatVerdict, init, uninstall, verdictJson, verify } from "../dist/index.js";
+import { attest, doctor, fingerprint, formatForAgent, formatVerdict, init, uninstall, verdictJson, verify } from "../dist/index.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -343,7 +343,7 @@ test("QUA-032 : une attestation tolère un contrôle ajouté ; règle, Manuel, s
     });
     assert.equal(r.code, 0);
     assert.deepEqual(sortie, ["relance de c1…", "  c1 : ok", "question"], "chaque contrôle annoncé, puis son résultat, avant la question");
-    assert.equal(JSON.parse(lire(dir, r.file)).version, 2);
+    assert.equal(JSON.parse(lire(dir, r.file)).version, 3);
     assert.equal(await statut(), "ATTESTED");
 
     ecrire({ controle: "`c1`, `c2`" });
@@ -467,5 +467,167 @@ test("QUA-039 : les sorties de verify font suivre un ID de son titre, une fois, 
     }
   } finally {
     rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+// Projet temporaire avec un contrat humain APP-009 qui couvre `src/` et `package.json` (QUA-081).
+async function projetCouvert(couvre = "`src/**`, `package.json`") {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
+  mkdirSync(join(dir, "src"), { recursive: true });
+  writeFileSync(join(dir, "src/a.js"), "export const a = 1;\n");
+  writeFileSync(join(dir, "src/b.js"), "export const b = 2;\n");
+  writeFileSync(join(dir, "package.json"), '{ "dependencies": {} }\n');
+  writeFileSync(join(dir, "hors.txt"), "hors couverture\n");
+  const base = lire(dir, "docs/contracts.md");
+  const ligne = couvre ? `**Couvre** : ${couvre}\n` : "";
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    `${base}\n## APP-009 — Dépendances relues\n**Règle** : relues.\n**Manuel** : relecture.\n${ligne}`,
+  );
+  const contrat = async () => (await verify({ targetDir: dir, only: ["APP-009"] })).contracts[0];
+  const oui = async () => true;
+  return { dir, contrat, oui };
+}
+const nettoyer = (dir) => rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+
+test("QUA-081 : un fichier couvert modifié, ajouté, supprimé ou renommé fait tomber l'attestation et est nommé ; un fichier hors couverture, non", async () => {
+  const { dir, contrat, oui } = await projetCouvert();
+  try {
+    const r = await attest({ targetDir: dir, id: "APP-009", confirm: oui });
+    assert.equal(r.code, 0);
+    const a = JSON.parse(lire(dir, r.file));
+    assert.equal(a.version, 3);
+    assert.deepEqual(Object.keys(a.coverage), ["package.json", "src/a.js", "src/b.js"], "fichiers couverts, par chemin");
+    assert.equal((await contrat()).status, "ATTESTED");
+
+    writeFileSync(join(dir, "hors.txt"), "autre contenu\n");
+    assert.equal((await contrat()).status, "ATTESTED", "fichier hors couverture : attestation intacte");
+    writeFileSync(join(dir, "src/a.js"), lire(dir, "src/a.js").replace(/\n/g, "\r\n"));
+    assert.equal((await contrat()).status, "ATTESTED", "fins de ligne : sans effet");
+
+    const tombe = async (cas, attendu) => {
+      const k = await contrat();
+      assert.equal(k.status, "MANUAL", cas);
+      assert.ok(
+        k.reasons.some((l) => l.includes(attendu)),
+        `${cas} : ${k.reasons.join(" | ")}`,
+      );
+      const v = await verify({ targetDir: dir, only: ["APP-009"] });
+      assert.notEqual(v.status, "PASS", `${cas} : verify ne rend plus PASS`);
+    };
+    writeFileSync(join(dir, "package.json"), '{ "dependencies": { "x": "1" } }\n');
+    await tombe("fichier modifié (scénario S6 : une dépendance ajoutée)", "modifié : package.json");
+    writeFileSync(join(dir, "package.json"), '{ "dependencies": {} }\n');
+    assert.equal((await contrat()).status, "ATTESTED", "contenu rétabli : de nouveau valide");
+
+    writeFileSync(join(dir, "src/c.js"), "export const c = 3;\n");
+    await tombe("fichier ajouté", "ajouté : src/c.js");
+    rmSync(join(dir, "src/c.js"));
+    rmSync(join(dir, "src/b.js"));
+    await tombe("fichier supprimé", "supprimé : src/b.js");
+    writeFileSync(join(dir, "src/b.js"), "export const b = 2;\n");
+    renameSync(join(dir, "src/b.js"), join(dir, "src/renomme.js"));
+    await tombe("fichier renommé", "renommé : src/b.js → src/renomme.js");
+  } finally {
+    nettoyer(dir);
+  }
+});
+
+test("QUA-081 : l'ordre des motifs ne change pas l'empreinte ; changer la couverture touche le contrat", async () => {
+  const { dir, contrat, oui } = await projetCouvert();
+  try {
+    await attest({ targetDir: dir, id: "APP-009", confirm: oui });
+    const registre = lire(dir, "docs/contracts.md");
+    writeFileSync(join(dir, "docs/contracts.md"), registre.replace("`src/**`, `package.json`", "`package.json`, `src/**`"));
+    assert.equal((await contrat()).status, "ATTESTED", "motifs dans un autre ordre");
+    writeFileSync(join(dir, "docs/contracts.md"), registre.replace("`src/**`, `package.json`", "`src/**`"));
+    assert.equal((await contrat()).status, "MANUAL", "motif retiré : le contrat a changé, à attester de nouveau");
+  } finally {
+    nettoyer(dir);
+  }
+});
+
+test("QUA-082 : sans Couvre, l'attestation tient mais verify et doctor le signalent ; les versions 1 et 2 restent valables, la réattestation passe en version 3", async () => {
+  const { dir, contrat, oui } = await projetCouvert("");
+  try {
+    const avant = await contrat();
+    assert.ok(
+      avant.reasons.some((l) => l.includes("aucune couverture déclarée")),
+      "contrat attestable sans couverture : signalé",
+    );
+    const r = await attest({ targetDir: dir, id: "APP-009", confirm: oui });
+    assert.equal(r.code, 0);
+    writeFileSync(join(dir, "src/a.js"), "changé\n");
+    let k = await contrat();
+    assert.equal(k.status, "ATTESTED", "sans couverture, un fichier modifié ne fait pas tomber l'attestation");
+    assert.ok(
+      k.reasons.some((l) => l.includes("aucune couverture déclarée")),
+      "signalé aussi quand il est attesté",
+    );
+    const point = (await doctor({ targetDir: dir })).points.find((p) => p.id === "coverage");
+    assert.equal(point.state, "warning");
+    assert.match(point.detail, /APP-009/);
+
+    // Version 2 (empreinte de la partie humaine, sans couverture) : lue telle quelle.
+    const registre = lire(dir, "docs/contracts.md");
+    rmSync(join(dir, r.file));
+    const lecteur = await import(pathToFileURL(join(dir, ".githooks/contracts.mjs")).href);
+    const c = lecteur.readContracts(registre).find((x) => x.id === "APP-009");
+    const humaine = sha(JSON.stringify({ regle: c.rule, manuel: c.manual, severite: c.severity }));
+    writeFileSync(
+      join(dir, ".drwil/evidence/attestations/APP-009-v2.json"),
+      JSON.stringify({
+        version: 2,
+        contract: "APP-009",
+        status: "ATTESTED",
+        attestedAt: "2026-10-01T00:00:00.000Z",
+        fingerprint: humaine,
+        proof: {},
+      }),
+    );
+    assert.equal((await contrat()).status, "ATTESTED", "version 2 valable telle quelle");
+    writeFileSync(join(dir, "docs/contracts.md"), `${registre}**Couvre** : \`src/**\`\n`);
+    assert.equal((await contrat()).status, "ATTESTED", "version 2 : jugée sans couverture, aucune réattestation forcée");
+    const renouvelee = await attest({ targetDir: dir, id: "APP-009", confirm: oui, renew: true });
+    assert.equal(renouvelee.code, 0);
+    assert.equal(JSON.parse(lire(dir, renouvelee.file)).version, 3, "la première réattestation passe au nouveau format");
+    k = await contrat();
+    assert.equal(k.status, "ATTESTED");
+    assert.ok(!k.reasons.some((l) => l.includes("aucune couverture déclarée")), "couverture déclarée : plus de signalement");
+  } finally {
+    nettoyer(dir);
+  }
+});
+
+test("QUA-083 : drwil attest --renew remplace une attestation encore valide, après la même confirmation ; sans l'option, rien n'est renouvelé", async () => {
+  const { dir, contrat, oui } = await projetCouvert();
+  try {
+    assert.equal((await attest({ targetDir: dir, id: "APP-009", confirm: oui, now: new Date("2026-10-06T08:00:00Z") })).code, 0);
+    const sans = await attest({ targetDir: dir, id: "APP-009", confirm: oui });
+    assert.equal(sans.code, 1);
+    assert.match(sans.message, /--renew/, "le message indique l'option");
+    const resumes = [];
+    const refus = await attest({ targetDir: dir, id: "APP-009", renew: true, confirm: async (r) => resumes.push(r) && false });
+    assert.equal(refus.code, 1, "sans confirmation, rien n'est renouvelé");
+    assert.match(resumes[0], /Renouvellement : l'attestation du 2026-10-06/);
+    assert.equal(readdirSync(join(dir, ".drwil/evidence/attestations")).length, 1);
+    const ok = await attest({ targetDir: dir, id: "APP-009", renew: true, confirm: oui, now: new Date("2026-10-07T08:00:00Z") });
+    assert.equal(ok.code, 0);
+    assert.equal(readdirSync(join(dir, ".drwil/evidence/attestations")).length, 2, "l'historique est conservé");
+    assert.equal((await contrat()).attestation.attestedAt, "2026-10-07T08:00:00.000Z");
+
+    // Rien à renouveler : un contrat sans attestation valide s'atteste sans l'option.
+    writeFileSync(join(dir, "src/a.js"), "changé\n");
+    const inutile = await attest({ targetDir: dir, id: "APP-009", renew: true, confirm: oui });
+    assert.equal(inutile.code, 1);
+    assert.match(inutile.message, /rien à renouveler/);
+
+    const bin = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
+    const cli = spawnSync(process.execPath, [bin, "attest", "APP-009", "--renew"], { cwd: dir, encoding: "utf8", input: "APP-009\n", env });
+    assert.equal(cli.status, 1, "sans terminal interactif, aucun renouvellement (pas de --yes, identifiant non lu sur stdin)");
+    assert.equal(readdirSync(join(dir, ".drwil/evidence/attestations")).length, 2);
+  } finally {
+    nettoyer(dir);
   }
 });

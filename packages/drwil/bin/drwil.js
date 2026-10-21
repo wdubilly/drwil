@@ -256,6 +256,7 @@ program
     "Record an explicit human attestation for a MANUAL contract (interactive terminal only; tied to the contract's current text and proof)",
   )
   .option("--note <text>", "Short note kept with the attestation (redacted, 500 chars max)")
+  .option("--renew", "Renew on purpose an attestation that is still valid (same interactive confirmation)")
   .action(async (id, opts) => {
     const T = texts();
     // Never an attestation without a human in front of a terminal: no --yes, no redirected stdin.
@@ -269,6 +270,7 @@ program
         targetDir: process.cwd(),
         id,
         note: opts.note,
+        renew: opts.renew,
         log: (line) => console.log(line),
         confirm: async (summary) => {
           console.log(`${summary}\n`);

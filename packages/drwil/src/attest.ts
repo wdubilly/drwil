@@ -1,6 +1,6 @@
 // `drwil attest <ID>` (DRWIL-013, continued): explicit and traceable human proof of a MANUAL contract.
 // It is not "the user typed y": the attestation is bound by fingerprint to the contract's text and to
-// the definition of its proof; if one changes, it becomes obsolete and the contract is MANUAL again.
+// the definition of its proof and to the content of the files it covers; if one changes, it becomes obsolete and the contract is MANUAL again.
 // It is recorded in .drwil/evidence/attestations/ (versioned, reviewed in PRs).
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -12,6 +12,8 @@ export interface AttestOptions {
   targetDir: string;
   id: string;
   note?: string;
+  /** Renew an attestation that is still valid (QUA-083): the confirmation stays the same. */
+  renew?: boolean;
   /**
    * Human confirmation: receives the summary shown, returns true only if the human confirms.
    * The CLI requires an interactive terminal and typing the contract's identifier; no flag allows
@@ -41,7 +43,11 @@ const TEXTS = {
     legacy: "contrat historique sans contrôle : toute la preuve",
     unknown: "contrat inconnu : {0}",
     alreadyPass: "{0} est déjà prouvé automatiquement (PASS) : rien à attester",
-    alreadyAttested: "{0} a déjà une attestation valide ({1}) : rien à attester",
+    alreadyAttested:
+      "{0} a déjà une attestation valide ({1}) : rien à attester (la renouveler volontairement : `drwil attest {0} --renew`)",
+    renewing: "Renouvellement : l'attestation du {0} est encore valide, elle sera remplacée par une nouvelle (l'historique est conservé).",
+    renewUseless: "{0} n'a pas d'attestation valide : rien à renouveler, `drwil attest {0}` suffit",
+    covered: "Fichiers couverts : {0}",
     notAttestable:
       "{0} n'est pas attestable ({1}) : seule une partie humaine restante s'atteste, jamais un contrôle en échec, non exécuté ou non applicable — {2}",
     refused: "attestation refusée : rien n'a été enregistré",
@@ -58,7 +64,10 @@ const TEXTS = {
     legacy: "legacy contract without a check: the whole proof",
     unknown: "unknown contract: {0}",
     alreadyPass: "{0} is already proven automatically (PASS): nothing to attest",
-    alreadyAttested: "{0} already has a valid attestation ({1}): nothing to attest",
+    alreadyAttested: "{0} already has a valid attestation ({1}): nothing to attest (renew it on purpose: `drwil attest {0} --renew`)",
+    renewing: "Renewal: the attestation of {0} is still valid, it will be replaced by a new one (the history is kept).",
+    renewUseless: "{0} has no valid attestation: nothing to renew, `drwil attest {0}` is enough",
+    covered: "Covered files: {0}",
     notAttestable:
       "{0} is not attestable ({1}): only a remaining human part can be attested, never a failing, not run or not applicable check — {2}",
     refused: "attestation refused: nothing was recorded",
@@ -75,6 +84,7 @@ export function contractSummary(k: ContractResult, lang: MessageLang = "en"): st
   if (k.checks.length) l.push(T.automated, ...k.checks.map((c) => `  ✓ ${c.id} : ${c.status}`));
   else l.push(T.noAutomated);
   l.push(fill(T.human, k.manual ?? T.legacy));
+  if (k.covers) l.push(fill(T.covered, `${Object.keys(k.coverage).length} (${k.covers.join(", ")})`));
   return l.join("\n");
 }
 
@@ -88,9 +98,11 @@ export async function attest(o: AttestOptions): Promise<AttestResult> {
   const k = v.contracts.find((c) => c.id === o.id);
   if (!k) return { code: 2, message: fill(T.unknown, o.id) };
   if (k.status === "PASS") return { code: 1, message: fill(T.alreadyPass, o.id) };
-  if (k.status === "ATTESTED") return { code: 1, message: fill(T.alreadyAttested, o.id, k.attestation?.attestedAt) };
-  if (!k.attestable) return { code: 1, message: fill(T.notAttestable, o.id, k.status, k.reasons.join(" ; ")) };
-  if (!(await o.confirm(contractSummary(k, v.lang)))) return { code: 1, message: T.refused };
+  if (o.renew && !k.renewable) return { code: 1, message: fill(T.renewUseless, o.id) };
+  if (k.status === "ATTESTED" && !o.renew) return { code: 1, message: fill(T.alreadyAttested, o.id, k.attestation?.attestedAt) };
+  if (!k.attestable && !k.renewable) return { code: 1, message: fill(T.notAttestable, o.id, k.status, k.reasons.join(" ; ")) };
+  const renewing = k.renewable && k.attestation ? `${fill(T.renewing, k.attestation.attestedAt)}\n` : "";
+  if (!(await o.confirm(renewing + contractSummary(k, v.lang)))) return { code: 1, message: T.refused };
 
   const git = (...args: string[]) => {
     const r = spawnSync("git", args, { cwd: o.targetDir, encoding: "utf8" });
@@ -99,7 +111,7 @@ export async function attest(o: AttestOptions): Promise<AttestResult> {
   const name = git("config", "user.name");
   const now = o.now ?? new Date();
   const attestation: Attestation = {
-    version: 2,
+    version: 3,
     contract: k.id,
     status: "ATTESTED",
     attestedAt: now.toISOString(),
@@ -108,6 +120,8 @@ export async function attest(o: AttestOptions): Promise<AttestResult> {
     note: o.note ? redact(o.note.trim()).slice(0, NOTE_MAX) || null : null,
     fingerprint: k.fingerprint,
     proof: k.proof,
+    covers: k.covers,
+    coverage: k.coverage,
     commit: git("rev-parse", "HEAD"),
     automated: k.checks.map((c) => ({ id: c.id, status: c.status })),
   };
