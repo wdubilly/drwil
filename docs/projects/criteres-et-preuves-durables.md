@@ -25,6 +25,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/close.mjs
   - packages/drwil/templates/common/base/.githooks/state.mjs
   - packages/drwil/templates/common/base/docs/ia-first.md
+  - packages/drwil/templates/common/base/docs/preuves/README.md
   - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
   - packages/drwil/templates/common/base/gitignore
   - .github/workflows/ia-first.yml
@@ -138,6 +139,10 @@ Prises par le demandeur le 2026-10-21 :
   critères d'une preuve de clôture dont la preuve a disparu doivent être
   nommés dans les sorties humaine, agent et JSON ; sans ces deux fichiers,
   ils ne pouvaient être affichés que déguisés en erreurs de registre.
+- `packages/drwil/templates/common/base/docs/preuves/README.md` : le dossier
+  des preuves de clôture est livré avec le gabarit, expliqué sur place —
+  sinon le livrable crée un dossier que rien ne présente, et le dossier
+  n'existe dans un projet neuf qu'à sa première clôture.
 - `.githooks/state.mjs` et sa copie du gabarit : la clôture lit la dernière
   évidence de `drwil verify --evidence` (commit vérifié, couverture) que
   `verifyEvidence` sait déjà retrouver — la lire une seule fois, exportée,
