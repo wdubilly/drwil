@@ -63,12 +63,25 @@ request, instead of direct commits on the main branch.
 - If the whole brief is now finished (not just one increment among several of a
   brief that otherwise stays open): summarize the brief into a short entry
   in `docs/projects/journal.md` (date, title, key decisions, closing
-  commit/PR), then run `node .githooks/close.mjs` (in Closing): it deletes
+  commit/PR, and the closing proof of the workstream — the entry cites it),
+  then run `node .githooks/close.mjs` (in Closing): it writes the closing
+  proof (below), deletes
   the brief file, removes the matching item from `docs/projects/pending.md`
   (don't check it: the journal becomes the closing source, the index only
   lists remaining work) and records the consumption. It stages, commits,
   pushes and merges nothing. Nothing is lost — the full history stays in
   git (`git log --follow -- docs/projects/<brief>.md`).
+- The closing writes the workstream's proof first, a versioned file in
+  `docs/preuves/` (`dirs.proofs` setting): every acceptance criterion with
+  its contract, that contract's checks, the verified commit and the
+  fingerprint of the files it covers, copied from the latest `drwil verify
+  --evidence` evidence. Without an evidence of the verified commit, with a
+  verdict that does not pass, or if the file cannot be written, the closing
+  is refused and nothing is deleted: renew the evidence (`npx drwil verify
+  --evidence`) after the closing commit, then close. `drwil verify` replays
+  these criteria afterwards and fails, naming them, when a proof has
+  disappeared (QUA-085 — critère dont la preuve a disparu) — a row is never
+  deleted to make a verdict green.
 - Before the closing commit, the same command reports what would make the
   closing fail: a criterion still « contract to create » (with the ID to
   write), places citing the brief that would go dead, backticked file names

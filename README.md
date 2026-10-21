@@ -887,8 +887,15 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
 4. **EVIDENCE / VERIFY**: `drwil verify --evidence` writes the proof;
    closing requires `PASS` or `ATTESTED` on the current commit, a `MANUAL`
    contract waiting for the human's `drwil attest`; an unproven acceptance
-   criterion makes the verdict fail.
-5. **CLOSING**: the work item is condensed into the journal and deleted,
+   criterion makes the verdict fail. The work item judged is found without
+   the local state too (`Drwil-Brief` trailer of the branch's commits), and
+   the criteria of the closing proofs are replayed: one whose proof has
+   disappeared makes the verdict fail and is named.
+5. **CLOSING**: the work item is condensed into the journal, its closing
+   proof is written (`docs/preuves/<work item>.md`: every criterion, its
+   contract, that contract's checks, the verified commit and the
+   fingerprint of the covered files) — without it the closing is refused —
+   and the item itself is deleted,
    its token consumption is recorded (`.drwil/usage.jsonl`, read from
    Claude Code's session logs), its untreated limits become intents, the
    README, changelog and

@@ -17,6 +17,19 @@ closing commit; the release renames this section to its version.
   without dropping its attestation.
 - `drwil attest <ID> --renew` renews on purpose an attestation that is still
   valid, from an interactive terminal, retyping the identifier.
+- Criteria that survive the closing: the closing writes a versioned proof
+  file per work item (`docs/preuves/<work item>.md`) — every acceptance
+  criterion with its contract, that contract's checks, the verified commit
+  and the fingerprint of the covered files, copied from the latest
+  `verify --evidence` evidence. Without that evidence, or if the file
+  cannot be written, the closing is refused and nothing is deleted; the
+  journal entry cites the proof.
+- `verify` replays the criteria of those proofs: one whose proof has
+  disappeared (check removed, contract abandoned or failing) makes the
+  verdict `FAIL` and is named, with the same exit code locally and in CI.
+- The work item whose criteria are judged is found without the local state
+  too, from the `Drwil-Brief` trailer of the branch's commits: CI judges
+  the same criteria as the machine that wrote them.
 
 ## 0.6.9 (2026-10-21)
 

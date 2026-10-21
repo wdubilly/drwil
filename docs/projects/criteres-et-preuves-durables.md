@@ -70,14 +70,14 @@ et prouvé, qui survit à la clôture, sans versionner chaque exécution.
 - La clôture d'un chantier écrit un fichier de preuve versionné, un par
   chantier, cité par son entrée de journal : il garde chaque critère, son
   contrat, son contrôle, le commit vérifié et l'empreinte des fichiers couverts ;
-  la clôture est refusée si ce fichier ne peut pas être écrit — contrat à créer
+  la clôture est refusée si ce fichier ne peut pas être écrit — `QUA-084`
 - Un critère dont la preuve a disparu (contrôle retiré, test supprimé, contrat
   abandonné) fait échouer un contrôle qui le nomme, avec le même code en local
-  et en CI ; jamais un avertissement — contrat à créer
+  et en CI ; jamais un avertissement — `QUA-085`
 - En CI, les critères de la fiche du chantier sont jugés sans
   `.drwil/state.json` (si présent) : la fiche est lue depuis le trailer `Drwil-Brief` des
   commits de la branche ; après la clôture, ce sont les critères du fichier de
-  preuve qui sont rejoués — contrat à créer
+  preuve qui sont rejoués — `QUA-086`
 
 ## Contrats modifiés
 
