@@ -397,6 +397,23 @@ the contract as `ATTESTED` — satisfied, but never shown as `PASS` — until th
 rule, the `Manual` field, the severity or an attested check changes, which
 makes the attestation stale; adding a check to the contract does not. Exit 0: recorded; 1: refused or not eligible; 2: unknown contract.
 
+A contract can declare what its attestation judges with a `**Covers**` field
+(path patterns between backticks: `` `package.json`, `src/auth/**` ``). The
+attestation (version 3) then records a fingerprint of the content of each file
+matched, read from the files themselves (not from git; line endings and path
+order change nothing). A covered file modified, added, removed or renamed
+makes the attestation stale and `verify` names it; a file outside the patterns
+changes nothing. A contract with a human part and no `**Covers**` keeps its
+attestation, but `verify` and `doctor` flag it. Attestations of version 1 and 2
+stay valid as they are; the next one is version 3.
+
+```bash
+npx drwil attest QUA-015 --renew
+```
+
+`--renew` replaces, on purpose, an attestation that is still valid (the history
+is kept). Same interactive terminal, same typing of the identifier: no `--yes`.
+
 ### Agent / human workflow (`verify --agent`, `/drwil verify`)
 
 ```text

@@ -28,6 +28,9 @@ engine (`.githooks/engine.mjs`, or the `id` of a check in
 of the two, plus a **Rule**; an unknown check is an error. A contract still
 in table form (legacy) is still read, but without a Check it is never
 proven (`MANUAL`).
+`**Covers**` (optional) lists, in backticks, the path patterns of what the
+contract judges: an attestation falls when a file under them changes
+(`docs/ia-first.md`, validity rule).
 `**Severity**` (optional): `blocking` (default), `warning` or `advisory`.
 Only blocking contracts decide the `drwil verify` verdict; the others are
 run and shown without changing its exit code.

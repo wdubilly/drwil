@@ -8,6 +8,9 @@ moteur (socle de `.githooks/run-checks.mjs`, ou `id` d'un contrôle de
 `.drwil/ia-first.json` → `checks`) ; la commande n'est jamais recopiée ici.
 `**Manuel**` décrit la partie de la preuve qui reste humaine. Au moins l'un
 des deux ; un contrôle inconnu est une erreur de configuration.
+`**Couvre**` (facultatif) : les motifs de chemins, entre backticks, de ce que le
+contrat juge ; une attestation tombe quand un fichier sous ces motifs change
+(`docs/ia-first.md`, règle de validité).
 `**Sévérité**` (facultatif) : `blocking` (défaut), `warning` ou
 `indicatif`. Seuls les contrats bloquants décident du verdict de
 `drwil verify` ; les autres sont exécutés et affichés sans changer son code
@@ -216,9 +219,9 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : La non-régression métier grandit chantier après chantier ; sans vue, on ne sait ni ce qui est prouvé, ni ce qui reste à compléter, ni quel chantier une règle cassée protège.
 
 ## QUA-032 — Une attestation ne coûte que le jugement demandé
-**Règle** : Une attestation (version 2) couvre la part humaine d'un contrat (règle, champ Manuel, sévérité ; toute la section pour un contrat historique en tableau) et, séparément, la définition de chaque contrôle attesté : un contrôle ajouté ensuite ne la rend pas obsolète (il doit passer), un changement de la part humaine ou un contrôle attesté retiré ou redéfini, si. Une attestation version 1 reste jugée par son ancienne empreinte. `drwil attest` annonce chaque contrôle qu'il relance, puis son résultat, avant le résumé et la question.
+**Règle** : Une attestation (version 3) couvre la part humaine d'un contrat (règle, champ Manuel, sévérité, motifs du champ Couvre ; toute la section pour un contrat historique en tableau), séparément la définition de chaque contrôle attesté et l'empreinte du contenu des fichiers du champ Couvre (QUA-081) : un contrôle ajouté ensuite ne la rend pas obsolète (il doit passer), un changement de la part humaine, un contrôle attesté retiré ou redéfini ou un fichier couvert changé, si. Une attestation version 2 reste jugée sans couverture, une version 1 par son ancienne empreinte. `drwil attest` annonce chaque contrôle qu'il relance, puis son résultat, avant le résumé et la question.
 **Périmètre** : `drwil attest`, le jugement des attestations par `drwil verify`.
-**Source de vérité** : `packages/drwil/src/verify.ts` (`humanFingerprint`, `proofFingerprints`), `packages/drwil/src/attest.ts`.
+**Source de vérité** : `packages/drwil/src/verify.ts` (`humanFingerprint`, `proofFingerprints`), `packages/drwil/src/attest.ts`, `packages/drwil/src/coverage.ts`.
 **Preuve** : tests du paquet (`couverture-tests`).
 **Contrôle** : `tests-qua-032`
 **Tests** : `packages/drwil/test/cycle.test.mjs`
@@ -725,3 +728,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/recette-note.test.mjs`, `.githooks/promote-release.test.mjs`, `.githooks/create-release.test.mjs`
 **Origine** : note de recette par version — « Le tag et la release GitHub ne dépendent pas de la PR de la note : si la branche, la PR ou l'écriture échoue, la promotion le dit avec la commande de rattrapage, sans défaire ce qui est publié »
 **Raison** : Une release publiée ne se défait pas ; la note se rattrape.
+
+## QUA-081 — Une attestation tombe quand un fichier qu'elle couvre change
+**Règle** : Livré à tout projet. Un contrat déclare ce qu'il juge par le champ `**Couvre**` (motifs de chemins entre backticks). L'attestation (version 3) enregistre l'empreinte du contenu de chaque fichier couvert, lue sur les fichiers eux-mêmes (indépendante de git ; l'ordre des chemins et les fins de ligne ne la changent pas). Un fichier couvert modifié, ajouté, supprimé ou renommé sans toucher au contrat fait passer le contrat en `MANUAL` : `drwil verify` ne rend plus PASS et nomme le fichier ; un fichier hors des motifs laisse l'attestation `ATTESTED`. Tout changement de contenu compte, y compris de simple forme.
+**Périmètre** : `drwil verify`, `drwil attest`, `.githooks/contracts.mjs` (lecture du champ) ; livré dans le gabarit.
+**Source de vérité** : `packages/drwil/src/coverage.ts` (`coverageOf`, `coverageChanges`), `packages/drwil/src/verify.ts`, `.githooks/contracts.mjs`.
+**Preuve** : tests du paquet sur des dépôts temporaires (dont le scénario d'une dépendance ajoutée) et de l'analyseur de contrats.
+**Contrôle** : `tests-qua-081`
+**Tests** : `packages/drwil/test/cycle.test.mjs`, `.githooks/contracts.test.mjs`
+**Origine** : attestation liée à son objet — « Un fichier couvert par un contrat, modifié, ajouté, supprimé ou renommé sans toucher au contrat, fait tomber son attestation en MANUAL ; verify ne rend plus PASS et nomme le fichier ; un fichier hors couverture laisse l'attestation ATTESTED »
+**Raison** : Une attestation restait `ATTESTED` après un changement de ce qu'elle était censée couvrir (une dépendance ajoutée, un workflow modifié) : une preuve humaine périmée valait validation.
+
+## QUA-082 — Un contrat attestable sans couverture est signalé, ses attestations anciennes restent lisibles
+**Règle** : Livré à tout projet. Un contrat à partie humaine sans champ `**Couvre**` est signalé par `drwil verify` (ligne du contrat) et `drwil doctor` (avertissement), sans faire tomber son attestation existante. Une attestation de version 1 ou 2 reste lisible et valide telle quelle, sans réattestation forcée ; la première réattestation passe à la version 3.
+**Périmètre** : `drwil verify`, `drwil doctor`, `drwil attest` ; livré dans le gabarit.
+**Source de vérité** : `packages/drwil/src/coverage.ts` (`lacksCoverage`), `packages/drwil/src/verify.ts` (`covers`), `packages/drwil/src/doctor.ts`.
+**Preuve** : tests du paquet sur des dépôts temporaires (attestations des versions 2 et 3, signalement, réattestation).
+**Contrôle** : `tests-qua-082`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Origine** : attestation liée à son objet — « Un contrat attestable sans Covers est signalé par verify et doctor sans faire tomber son attestation ; une attestation de format ancien reste lisible, sa première réattestation passe au nouveau format »
+**Raison** : Imposer une couverture à tous les contrats déjà attestés forcerait des réattestations humaines en masse (une attestation ne coûte que le jugement demandé, QUA-032) ; le signalement dit ce qui reste à couvrir.
+
+## QUA-083 — `drwil attest` renouvelle volontairement une attestation encore valide
+**Règle** : Livré à tout projet. `drwil attest <ID> --renew` remplace une attestation encore valide par une nouvelle (l'historique est conservé), sans l'option le contrat déjà attesté reste refusé. Le renouvellement est un geste humain comme toute attestation : terminal interactif, identifiant retapé, aucune option `--yes` ; sans terminal, rien n'est écrit.
+**Périmètre** : `drwil attest` (CLI et moteur).
+**Source de vérité** : `packages/drwil/src/attest.ts`, `packages/drwil/bin/drwil.js`.
+**Preuve** : tests du paquet : renouvellement, refus sans confirmation, refus sans option, refus sans terminal.
+**Contrôle** : `tests-qua-083`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Origine** : attestation liée à son objet — « drwil attest renouvelle volontairement une attestation encore valide (option dédiée), toujours depuis un terminal interactif, sans que l'identifiant retapé ni l'identité du geste soient affaiblis »
+**Raison** : Un humain qui veut réattester une attestation encore valide (après relecture d'un fichier non couvert, ou pour passer en version 3) ne le pouvait pas.
