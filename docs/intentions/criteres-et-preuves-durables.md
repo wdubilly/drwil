@@ -1,6 +1,11 @@
 # Intention : des critères et des preuves qui survivent à la clôture
 
-**Statut** : proposée le 2026-10-17 — retour d'expérience de `drwil_com`
+**Statut** : couverte le 2026-10-21 par le chantier du même nom (journal) ; ce
+qui reste ouvert tient dans deux intentions filles,
+`docs/intentions/nom-du-dossier-des-preuves.md` et
+`docs/intentions/preuve-des-chantiers-deja-clos.md`.
+
+Proposée le 2026-10-17 — retour d'expérience de `drwil_com`
 (rapport « docs/experiments/acceptance-criteria-report.md » de ce dépôt,
 écarts 1 et 3), priorité 2 du demandeur.
 
@@ -81,7 +86,7 @@ un chantier), changelog.
 ## Questions à trancher
 
 Aucune : toutes tranchées par le demandeur le 2026-10-21, détail dans
-`docs/projects/criteres-et-preuves-durables.md` : les trois pistes retenues,
+`docs/projects/journal.md` : les trois pistes retenues,
 unifiées par un fichier de preuve de clôture par chantier ; une preuve disparue
 fait échouer franchement, même code en local et en CI ; un fichier par chantier
 cité par le journal ; pas d'identifiant propre pour un critère (contrat et

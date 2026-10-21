@@ -406,6 +406,12 @@ une décision du demandeur.
   l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
 - [ ] [décision] Mener plusieurs chantiers en parallèle, ou orchestrer plusieurs
   agents sur leurs parties — `docs/intentions/chantiers-en-parallele.md`.
+- [ ] [décision] Nommer le dossier des preuves dans la langue du projet
+  (dossier `proofs` en anglais ; limite du chantier du 2026-10-21) —
+  `docs/intentions/nom-du-dossier-des-preuves.md`.
+- [ ] [décision] Rattraper, ou assumer, l'absence de preuve de clôture pour les
+  chantiers clos avant la règle (limite du chantier du 2026-10-21) —
+  `docs/intentions/preuve-des-chantiers-deja-clos.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
