@@ -2547,8 +2547,9 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   plus la PR de la note, déclaré dans la fiche) ; il reste prouvé par son test.
   Recettes et skills de release (dépôt et gabarit) mis à jour.
 - **Limites connues** : `.githooks/recette-note.mjs` n'est cité ni par la fiche des
-  mécaniques du kit (dépôt et gabarit) ni par le README du module, hors du
-  cadrage : le test du kit contourne le manque dans son projet de test
+  mécaniques livrée au kit ni par le README du module, hors du cadrage (la
+  fiche des mécaniques du dépôt le cite, ajouté à la clôture) : le test du
+  kit contourne le manque dans son projet de test
   (intention `docs/intentions/recette-note-dans-la-fiche-des-mecaniques.md`).
   Les notes des versions déjà publiées ne sont pas rétro-écrites (hors
   périmètre). Aucune release réelle n'a été jouée : tests sur dépôts
