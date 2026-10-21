@@ -409,6 +409,9 @@ une décision du demandeur.
 - [ ] [décision] Rattraper, ou assumer, l'absence de preuve de clôture pour les
   chantiers clos avant la règle (limite du chantier du 2026-10-21) —
   `docs/intentions/preuve-des-chantiers-deja-clos.md`.
+- [ ] [décision] Corriger un défaut révélé après la clôture, quand plus aucune
+  activité ne ramène en BUILD (vécu le 2026-10-21) —
+  `docs/intentions/defaut-revele-apres-la-cloture.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
