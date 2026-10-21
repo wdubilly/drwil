@@ -80,16 +80,9 @@ un chantier), changelog.
 
 ## Questions à trancher
 
-- [décision] Quelles pistes retenir (1, 2, 3, ou une combinaison), et
-  comment se référencent-elles (critère → contrat → contrôle → preuve de
-  clôture) ?
-- [décision] Un critère dont la preuve a disparu (contrôle retiré, test
-  supprimé, contrat abandonné) : comment est-il signalé, en local et en
-  CI ?
-- [décision] Format durable des critères : section structurée du journal,
-  fichier par chantier, ou registre unique des critères ?
-- [décision] Un critère reçoit-il un ID propre (stable après la
-  clôture), ou reste-t-il identifié par son contrat ?
-- [décision] Ordre avec l'intention « une attestation tombe quand ce
-  qu'elle couvre change » : la preuve de clôture doit-elle porter
-  l'empreinte de l'objet attesté ?
+Aucune : toutes tranchées par le demandeur le 2026-10-21, détail dans
+`docs/projects/criteres-et-preuves-durables.md` : les trois pistes retenues,
+unifiées par un fichier de preuve de clôture par chantier ; une preuve disparue
+fait échouer franchement, même code en local et en CI ; un fichier par chantier
+cité par le journal ; pas d'identifiant propre pour un critère (contrat et
+chantier) ; la preuve de clôture porte l'empreinte des fichiers couverts.
