@@ -22,6 +22,7 @@ files:
   - .githooks/closure-proof.mjs
   - .githooks/close.test.mjs
   - .githooks/scope-gate.mjs
+  - .githooks/scope-gate.test.mjs
   - .githooks/state.mjs
   - packages/drwil/templates/common/base/.githooks/close.mjs
   - packages/drwil/templates/common/base/.githooks/closure-proof.mjs
