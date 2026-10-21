@@ -2,9 +2,12 @@
 // Promotion of a candidate to the final release (QUA-054): refused without a verdict or when the
 // verdict is « refused »; approved, with or without reserves, it tags the candidate's commit with
 // the final version and publishes the final release with the same tarball (fingerprint checked
-// against the acceptance sheet), the reserves and their issues listed in its note. Never modifies a
-// tracked file (QUA-017). The final release becomes `releases/latest`, which never shows a
-// pre-release (QUA-055). `--dry-run` shows what the promotion would do without publishing anything.
+// against the acceptance sheet), the reserves and their issues listed in its note. Then it proposes
+// the version's acceptance note (recette-note.mjs, QUA-078) through a dedicated branch and a PR:
+// never a commit on the current or the main branch (QUA-017), and a failure there never undoes the
+// published tag and release (QUA-080). The final release becomes `releases/latest`, which never shows
+// a pre-release (QUA-055). `--dry-run` shows what the promotion would do, note included, without
+// publishing anything.
 // Usage: node .githooks/promote-release.mjs <vX.Y.Z-rc.N> [--dry-run]
 import { mkdtempSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -12,6 +15,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fill, readFingerprints, repoUrl, runner, sha256 } from "./acceptance-sheet.mjs";
 import { config } from "./briefs.mjs";
+import { publishNote, noteTexts, renderNote } from "./recette-note.mjs";
 import { asset, CANDIDATE_RE, sheetAsset, VERDICT_ASSET } from "./release-verdict.mjs";
 
 const TEXTS = {
@@ -119,7 +123,14 @@ export function promote(root, { tag, dryRun = false }, { run = runner(root) } = 
   const note = releaseNote({ tag, url: view.url, verdict, tarballs, repo: repoUrl(run), final }, T);
   const lines = [fill(T.plan, tag, T.kinds[verdict.verdict], final, commit.slice(0, 7), tarballs.map((t) => t.name).join(", ") || T.none)];
   lines.push(T.note, "", note);
-  if (dryRun) return { code: 0, message: [...lines, T.dryRun].join("\n") };
+  const recette = {
+    version: final,
+    note: renderNote(
+      { version: final, tag, url: view.url, verdict, sheet, tarballs, date: new Date().toISOString().slice(0, 10) },
+      noteTexts(root),
+    ),
+  };
+  if (dryRun) return { code: 0, message: [...lines, publishNote(root, { ...recette, dryRun }, { run }).message, T.dryRun].join("\n") };
   const prev = (
     run("git", ["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*", "--exclude", "*-*", commit]) ?? ""
   ).trim();
@@ -144,7 +155,8 @@ export function promote(root, { tag, dryRun = false }, { run = runner(root) } = 
   ];
   args.push("--generate-notes", ...(prev ? ["--notes-start-tag", prev] : []));
   if (run("gh", args) === null) return refused([...lines, fill(T.ghFailed, final, `gh ${args.join(" ")}`)].join("\n"));
-  return { code: 0, message: [...lines, fill(T.published, final)].join("\n") };
+  const written = publishNote(root, recette, { run });
+  return { code: written.code, message: [...lines, fill(T.published, final), written.message].join("\n") };
 }
 
 /** Entry point; `deps` ({ run }) injected by the tests. Returns the exit code. */

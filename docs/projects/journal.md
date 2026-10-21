@@ -2529,3 +2529,30 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   automatiquement : à retirer à la main.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `workstream/cloture-coherence-doc`.
+
+## 2026-10-21 — Une note de recette conservée dans le dépôt, à chaque version
+
+- **Décisions clés** : à chaque version, une note `docs/recettes/<version>.md`
+  (fiche de recette, verdict, réserves, auteur et date, sha256 de chaque
+  tarball) arrive par une PR dédiée, jamais sur la branche principale
+  (QUA-078). Le commit de la note est construit en plomberie git (index
+  privé), poussé sur `recette/<version>` sans toucher l'arbre, l'index ni la
+  branche courante, et ne remplace jamais une branche distante existante.
+  Une version publiée sans candidate reçoit la même note, « sans verdict »,
+  avec un bloc à compléter par l'humain (QUA-079). Le tag et la release sont
+  publiés avant la note et n'en dépendent jamais : un échec de la PR est dit
+  avec la commande de rattrapage, la note est gardée dans un fichier
+  (QUA-080). `--dry-run` montre la note sans rien écrire, pour la promotion
+  comme pour la release directe. QUA-054 est modifié (la promotion ouvre en
+  plus la PR de la note, déclaré dans la fiche) ; il reste prouvé par son test.
+  Recettes et skills de release (dépôt et gabarit) mis à jour.
+- **Limites connues** : `.githooks/recette-note.mjs` n'est cité ni par la fiche des
+  mécaniques livrée au kit ni par le README du module, hors du cadrage (la
+  fiche des mécaniques du dépôt le cite, ajouté à la clôture) : le test du
+  kit contourne le manque dans son projet de test
+  (intention `docs/intentions/recette-note-dans-la-fiche-des-mecaniques.md`).
+  Les notes des versions déjà publiées ne sont pas rétro-écrites (hors
+  périmètre). Aucune release réelle n'a été jouée : tests sur dépôts
+  temporaires, origine nu local et `gh` simulé.
+- **Consommation** : non mesurée — chantier mené sous Copilot CLI.
+- **Clôturé par** : la branche `workstream/note-de-recette-par-version`.
