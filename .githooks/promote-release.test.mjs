@@ -32,7 +32,7 @@ function git(racine, ...args) {
 const TAG = "v1.1.0-rc.1";
 const TGZ = "a-1.1.0.tgz";
 /** Dépôt avec un origin nu local, un tag définitif v1.0.0 et la candidate ; identité locale (la CI n'en a pas). */
-function depot({ origine = true } = {}) {
+function depot({ origine = true, poussee = true } = {}) {
   const racine = tmp();
   git(racine, "init", "-q", "-b", "master");
   git(racine, "config", "user.email", "test@example.invalid");
@@ -46,6 +46,7 @@ function depot({ origine = true } = {}) {
   writeFileSync(join(racine, "a.txt"), "a");
   git(racine, "add", "-A");
   git(racine, "commit", "-q", "-m", "a");
+  if (origine && poussee) git(racine, "push", "-q", "origin", "master");
   git(racine, "tag", "v1.0.0");
   writeFileSync(join(racine, "b.txt"), "b");
   git(racine, "add", "-A");
@@ -76,6 +77,7 @@ function exec(
     view = { isPrerelease: true, url: "https://exemple.invalid/r", assets: [{ name: TGZ }, { name: "x.md" }] },
     assets = {},
     create = true,
+    pr = true,
   } = {},
 ) {
   const vrai = runner(racine);
@@ -83,6 +85,7 @@ function exec(
   const run = (cmd, args, o) => {
     if (cmd !== "gh") return vrai(cmd, args, o);
     appels.push(args);
+    if (args[0] === "pr") return pr ? "https://exemple.invalid/pull/9\n" : null;
     if (args[1] === "view") return view ? JSON.stringify(view) : null;
     if (args[1] === "download") {
       const nom = args[args.indexOf("--pattern") + 1];
@@ -143,7 +146,10 @@ test("QUA-054 : --dry-run — même commit, même tarball, réserves et issues d
   assert.match(r.message, new RegExp(`\`a-1\\.1\\.0\\.tgz\` — sha256 \`${empreinte}\``));
   assert.doesNotMatch(r.message, /Installer/);
   assert.match(r.message, /--dry-run : aucun tag ni release créé/);
-  assert.ok(!appels.some((a) => a[1] === "create"));
+  assert.match(r.message, /note de recette : docs\/recettes\/v1\.1\.0\.md\n\n# Note de recette de v1\.1\.0\n/);
+  assert.match(r.message, /--dry-run : aucune branche ni PR créée/);
+  assert.ok(!appels.some((a) => a[1] === "create" || a[0] === "pr"));
+  assert.equal(git(racine, "ls-remote", "--heads", "origin", "recette/*"), "");
   assert.equal(git(racine, "tag", "-l", "v1.1.0"), "");
 });
 
@@ -207,6 +213,60 @@ test("QUA-054 : note de release — commande d'installation depuis l'URL du dép
   assert.match(note, /approuvée par @recetteuse/);
   assert.doesNotMatch(note, /Réserves/);
   assert.match(note, /### Installer\n\n- `npm install -D https:\/\/github\.com\/o\/r\/releases\/download\/v1\.1\.0\/a-1\.1\.0\.tgz`\n$/);
+});
+
+const PUBLIEE = (racine, opts = {}) => {
+  const assets = { [VERDICT_ASSET]: JSON.stringify(VERDICT), [sheetAsset(TAG)]: fiche(sha()), [TGZ]: "tarball\n" };
+  return exec(racine, { assets, ...opts });
+};
+
+test("QUA-078 : promotion — la note de la version arrive par la branche recette/<version> et une PR, jamais sur master ni dans l'arbre", () => {
+  const { racine } = { racine: depot() };
+  const origine = git(racine, "remote", "get-url", "origin");
+  const master = git(racine, "rev-parse", "master");
+  const masterDistante = git(origine, "rev-parse", "master");
+  const { run, appels } = PUBLIEE(racine);
+  const r = promote(racine, { tag: TAG }, { run });
+  assert.equal(r.code, 0, r.message);
+  assert.match(
+    r.message,
+    /release v1\.1\.0 publiée \(releases\/latest\)\.\n.*note de v1\.1\.0 proposée par la PR https:\/\/exemple\.invalid\/pull\/9/,
+  );
+  const note = git(origine, "show", "recette/v1.1.0:docs/recettes/v1.1.0.md");
+  assert.match(note, /^# Note de recette de v1\.1\.0\n/);
+  assert.match(note, /Candidate : \[v1\.1\.0-rc\.1\]\(https:\/\/exemple\.invalid\/r\)/);
+  assert.match(note, /Verdict : approuvée avec réserves, donné par @recetteuse le 2026-10-19T10:00:00\.000Z/);
+  assert.match(note, /- v1\.1\.0-P1 : Lisible \(https:\/\/exemple\.invalid\/i\/1\)/);
+  assert.match(note, new RegExp(`- \`a-1\\.1\\.0\\.tgz\` — sha256 \`${sha()}\``));
+  assert.match(note, /## Fiche de recette — v1\.1\.0-rc\.1/);
+  assert.equal(git(racine, "rev-parse", "master"), master);
+  assert.equal(git(origine, "rev-parse", "master"), masterDistante);
+  assert.equal(git(origine, "rev-parse", "recette/v1.1.0~1"), masterDistante);
+  assert.equal(git(racine, "status", "--porcelain"), "");
+  assert.ok(appels.findIndex((a) => a[0] === "pr") > appels.findIndex((a) => a[1] === "create"), "la note vient après la release");
+});
+
+test("QUA-080 : la PR de la note en échec ne défait pas le tag ni la release, et la commande de rattrapage est dite", () => {
+  const racine = depot();
+  const { run, appels } = PUBLIEE(racine, { pr: false });
+  const r = promote(racine, { tag: TAG }, { run });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /release v1\.1\.0 publiée \(releases\/latest\)/);
+  assert.match(
+    r.message,
+    /branche recette\/v1\.1\.0 poussée, mais la PR a échoué ; rattraper : gh pr create --base master --head recette\/v1\.1\.0/,
+  );
+  assert.match(r.message, /la release publiée n'est pas défaite/);
+  assert.equal(git(racine, "tag", "-l", "v1.1.0"), "v1.1.0");
+  assert.ok(git(racine, "ls-remote", "--tags", "origin", "v1.1.0").length > 0);
+  assert.ok(appels.some((a) => a[1] === "create"));
+
+  const sansMaster = depot({ poussee: false });
+  const bis = promote(sansMaster, { tag: TAG }, PUBLIEE(sansMaster));
+  assert.equal(bis.code, 1);
+  assert.match(bis.message, /release v1\.1\.0 publiée/);
+  assert.match(bis.message, /branche principale de origin introuvable/);
+  assert.match(bis.message, /recette-note\.mjs v1\.1\.0 \S+\.md/);
 });
 
 function capturer(fn) {

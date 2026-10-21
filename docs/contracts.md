@@ -702,7 +702,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/recette-note.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local), gh simulé : trois cas de note (approuvée, avec réserves), branche poussée sans toucher la branche principale ni l'arbre, PR demandée, `--dry-run` sans écriture.
 **Contrôle** : `tests-qua-078`
-**Tests** : `.githooks/recette-note.test.mjs`
+**Tests** : `.githooks/recette-note.test.mjs`, `.githooks/promote-release.test.mjs`
 **Origine** : note de recette par version — « La promotion d'une candidate approuvée écrit la note de la version dans `docs/recettes/<version>.md` — la fiche de recette, le verdict, les réserves, l'auteur et la date du verdict, le sha256 de chaque tarball — sur une branche dédiée et une PR, jamais sur la branche principale ; `--dry-run` montre la note sans rien écrire »
 **Raison** : La fiche et le verdict n'existaient que sur la pré-release GitHub : ils ne suivaient pas le code et se perdraient avec la forge.
 
@@ -722,6 +722,6 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/recette-note.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, sans origin, gh simulé en échec) : tag et release présents malgré l'échec, commande de rattrapage nommée, note gardée, rattrapage par la ligne de commande.
 **Contrôle** : `tests-qua-080`
-**Tests** : `.githooks/recette-note.test.mjs`
+**Tests** : `.githooks/recette-note.test.mjs`, `.githooks/promote-release.test.mjs`
 **Origine** : note de recette par version — « Le tag et la release GitHub ne dépendent pas de la PR de la note : si la branche, la PR ou l'écriture échoue, la promotion le dit avec la commande de rattrapage, sans défaire ce qui est publié »
 **Raison** : Une release publiée ne se défait pas ; la note se rattrape.

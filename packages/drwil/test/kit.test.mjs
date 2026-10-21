@@ -2407,12 +2407,21 @@ test("créer une release : --dry-run liste le paquet npm à empaqueter quand il 
 
 test("QUA-051 : module de release livré avec la fiche, le verdict et la promotion ; --candidate --dry-run montre la fiche sans rien publier", async () => {
   const module = fileURLToPath(new URL("../templates/common/optional/create-release/", import.meta.url));
-  const scripts = ["create-release.mjs", "acceptance-sheet.mjs", "release-verdict.mjs", "promote-release.mjs"];
+  const scripts = ["create-release.mjs", "acceptance-sheet.mjs", "release-verdict.mjs", "promote-release.mjs", "recette-note.mjs"];
   for (const lang of ["fr", "en"]) {
     const dir = tmp();
     await quiet(() => init({ lang, targetDir: dir, git: true }));
     for (const s of scripts) assert.ok(!existsSync(join(dir, ".githooks", s)), `${s} : module optionnel, jamais copié par défaut`);
     for (const s of scripts) writeFileSync(join(dir, ".githooks", s), readFileSync(join(module, s), "utf8"));
+    // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).
+    const mecanique = join(dir, "docs/projects/kit-mechanics.md");
+    writeFileSync(
+      mecanique,
+      readFileSync(mecanique, "utf8").replace(
+        "  - .githooks/promote-release.mjs\n",
+        "  - .githooks/promote-release.mjs\n  - .githooks/recette-note.mjs\n",
+      ),
+    );
     git(dir, "add", "-A");
     const c = git(dir, "commit", "-m", "feat: premier chantier");
     assert.equal(c.status, 0, c.stdout + c.stderr);
@@ -2421,11 +2430,11 @@ test("QUA-051 : module de release livré avec la fiche, le verdict et la promoti
     assert.match(r.stdout, lang === "fr" ? /# Fiche de recette — v0\.1\.0-rc\.1/ : /# Acceptance sheet — v0\.1\.0-rc\.1/);
     assert.match(r.stdout, /--dry-run/);
     assert.equal(git(dir, "tag", "-l").stdout.trim(), "", "aucun tag en --dry-run");
-    for (const s of ["release-verdict.mjs", "promote-release.mjs"])
+    for (const s of ["release-verdict.mjs", "promote-release.mjs", "recette-note.mjs"])
       assert.equal(spawnSync(process.execPath, [`.githooks/${s}`], { cwd: dir, encoding: "utf8" }).status, 2, `${s} sans argument : usage`);
   }
   const readme = readFileSync(join(module, "README.md"), "utf8");
-  for (const s of scripts) assert.match(readme, new RegExp(s.replace(".", "\\.")));
+  for (const s of scripts.filter((x) => x !== "recette-note.mjs")) assert.match(readme, new RegExp(s.replace(".", "\\.")));
 });
 
 test("QUA-055 : les README pointent vers la dernière version validée par un lien fixe, sans numéro de version à recommiter", () => {

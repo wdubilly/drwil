@@ -748,7 +748,7 @@
     {
       "id": "tests-qua-078",
       "name": "tests de QUA-078, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-078 \" .githooks/recette-note.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-078 \" .githooks/recette-note.test.mjs .githooks/promote-release.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",
@@ -770,7 +770,7 @@
     {
       "id": "tests-qua-080",
       "name": "tests de QUA-080, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-080 \" .githooks/recette-note.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-080 \" .githooks/recette-note.test.mjs .githooks/promote-release.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",
