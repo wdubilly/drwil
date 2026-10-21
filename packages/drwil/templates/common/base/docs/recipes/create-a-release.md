@@ -97,7 +97,7 @@ before the final release.
    which never shows a pre-release: link a README there once, with no
    commit at each version.
 4. Acceptance note: right after the release, the promotion opens a pull
-   request carrying the version note, one file per version in `docs/recettes/README.md`'s folder (sheet, verdict, reserves,
+   request carrying the version note, one file per version, named after it, in the `recettes` folder under `docs` (sheet, verdict, reserves,
    who and when, tarball fingerprint) on a dedicated branch
    `recette/vX.Y.Z` — built without touching the working tree, the index
    or the current branch, and never overwriting an existing remote branch.
