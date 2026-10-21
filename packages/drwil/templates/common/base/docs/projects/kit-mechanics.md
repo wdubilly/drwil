@@ -22,6 +22,7 @@ files:
   - .githooks/briefs.mjs
   - .githooks/state-texts.mjs
   - .githooks/close.mjs
+  - .githooks/closure-proof.mjs
   - .githooks/detour.mjs
   - .githooks/note.mjs
   - .githooks/scope-gate.mjs

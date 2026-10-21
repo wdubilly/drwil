@@ -67,7 +67,7 @@ const INDEX = [
  * Dépôt git temporaire : master avec un contrat, branche chantier/exemple avec la fiche, l'index et
  * l'état `activite`. Rend la racine.
  */
-function depot({ activite = "CLOSING", criteres = "- Un critère — `QUA-001`", lang, index = INDEX } = {}) {
+function depot({ activite = "CLOSING", criteres = "- Un critère — `QUA-001`", lang, index = INDEX, evidence = {} } = {}) {
   const racine = dossier();
   git(racine, "init", "-q", "-b", "master");
   ecrire(racine, {
@@ -84,7 +84,31 @@ function depot({ activite = "CLOSING", criteres = "- Un critère — `QUA-001`",
   git(racine, "commit", "-q", "-m", "cadrage");
   const etat = { version: 1, activity: activite, active_brief: FICHE, active_request: null, since: null };
   ecrire(racine, { ".drwil/state.json": JSON.stringify(etat) });
+  if (evidence) ecrireEvidence(racine, evidence);
   return racine;
+}
+
+/**
+ * Dernière évidence de `drwil verify --evidence` (hors git) : ce que la clôture recopie dans la
+ * preuve de clôture, jamais un jugement refait par elle.
+ */
+function ecrireEvidence(racine, { statut = "pass", commit, contrats } = {}) {
+  const contenu = {
+    status: statut,
+    commit: commit ?? git(racine, "rev-parse", "HEAD"),
+    dirtyWorktree: false,
+    evidence: contrats ?? [
+      {
+        id: "QUA-001",
+        status: "pass",
+        checks: [{ id: "tests-qua-001", status: "ok", summary: "ok" }],
+        manual: null,
+        covers: ["src/**"],
+        coverage: { "src/a.mjs": "ab12cd34" },
+      },
+    ],
+  };
+  ecrire(racine, { ".drwil/evidence/verify-2026-10-18T10-00-00-000Z.json": JSON.stringify(contenu) });
 }
 
 /** Dossier de journaux de Claude Code avec une réponse sur la branche du chantier. */
@@ -168,6 +192,7 @@ test("QUA-048 : références qui deviendraient mortes et noms de fichiers sans c
   assert.match(r.message, /docs\/projects\/journal\.md:1 : `close\.mjs` sans chemin/);
   assert.doesNotMatch(r.message, /`(README|autre|neuf|option|-x)\./);
   assert.deepEqual(closingSignals(racine, "docs/projects/absente.md"), [
+    "docs/projects/journal.md : l'entrée de journal du chantier ne cite pas `docs/preuves/absente.md` — la preuve de clôture se cite depuis le journal",
     "docs/projects/journal.md:1 : `close.mjs` sans chemin, refusé par check-docs — écrire son chemin depuis la racine",
   ]);
 });
@@ -237,7 +262,7 @@ test("QUA-048 : ligne de commande — usage, --check, refus et racine du projet 
   assert.equal(fin.status, 0, fin.stderr);
   assert.match(
     fin.stdout,
-    /^brief deleted: docs\/projects\/exemple\.md\nindex line removed: docs\/projects\/pending\.md\nconsumption: "exemple" recorded/,
+    /^closing proof written: docs\/preuves\/exemple\.md\nbrief deleted: docs\/projects\/exemple\.md\nindex line removed: docs\/projects\/pending\.md\nconsumption: "exemple" recorded/,
   );
   assert.match(fin.stdout, /Left to the agent: the journal entry/);
   const sortie = [];
@@ -262,6 +287,7 @@ test("QUA-048 : en anglais, dossiers réglés, sans branche principale ni regist
     "docs/notes.md": "See `docs/projects/exemple.md` and `nu.mjs`.\n",
     ".drwil/state.json": JSON.stringify({ version: 1, activity: "CLOSING", active_brief: FICHE, active_request: null, since: null }),
   });
+  ecrireEvidence(racine);
   assert.equal(mainBranch(racine), null);
   let r = close(racine, { check: true });
   assert.match(
@@ -275,7 +301,7 @@ test("QUA-048 : en anglais, dossiers réglés, sans branche principale ni regist
   r = close(racine, { env: { ...process.env, CLAUDE_CONFIG_DIR: dossier() } });
   assert.match(
     r.message,
-    /^brief deleted: docs\/projects\/exemple\.md\nno index line to remove for docs\/projects\/exemple\.md in docs\/idx\.md/,
+    /^closing proof written: docs\/preuves\/exemple\.md\nbrief deleted: docs\/projects\/exemple\.md\nno index line to remove for docs\/projects\/exemple\.md in docs\/idx\.md/,
   );
   assert.match(r.message, /consumption: no readable session log/);
   assert.equal(prunedMessage(racine, { deleted: ["a", "b"], unproven: [] }), "\nmerged local branches deleted: a, b");
@@ -383,7 +409,7 @@ test("QUA-058 : sans simulation injectée, la commande gh du PATH est interrogé
 });
 
 test("QUA-073 : hors CLOSING, la clôture et --check nomment les commandes restantes dans l'ordre, et l'évidence périmée ou absente à renouveler", () => {
-  const racine = depot({ activite: "BUILD" });
+  const racine = depot({ activite: "BUILD", evidence: false });
   const renouveler = "`npx drwil verify --evidence`";
   const etapes = (activite) =>
     pathToClosing(racine, activite)
@@ -517,7 +543,7 @@ test("QUA-074 : les messages de la clôture suivent la langue du projet (anglais
 test("QUA-077 : références à la fiche réorientées vers le journal, intention non touchée refusée, doublon d'intention seulement signalé", () => {
   const racine = depot();
   ecrire(racine, {
-    "docs/projects/journal.md": "# Journal\n",
+    "docs/projects/journal.md": "# Journal\n\n## exemple\n\nPreuve : `docs/preuves/exemple.md`.\n",
     "docs/recipes/r.md": "Fiche : `docs/projects/exemple.md`.\n",
     "docs/intentions/origine.md": "# Origine\n\nCite `src/a.mjs`.\n",
     "docs/projects/exemple.md": fiche("- Un critère — `QUA-001`").replace(
@@ -527,6 +553,7 @@ test("QUA-077 : références à la fiche réorientées vers le journal, intentio
   });
   git(racine, "add", "-A");
   git(racine, "commit", "-q", "-m", "origine");
+  ecrireEvidence(racine);
   // L'intention d'origine existe avant le chantier : la base de comparaison est ce commit.
   process.env.DRWIL_BASE = git(racine, "rev-parse", "HEAD");
   ecrire(racine, { "docs/intentions/neuve.md": "# Neuve\n\nCite `src/a.mjs`.\n" });
@@ -550,4 +577,97 @@ test("QUA-076 : --fix est accepté par la ligne de commande, une option inconnue
     spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8", env: { ...process.env, DRWIL_ROOT: racine } });
   assert.equal(lancer("--check", "--fix").status, 0);
   assert.equal(lancer("--fixe").status, 2);
+});
+
+test("QUA-084 : la clôture écrit la preuve versionnée du chantier — critères, contrats, contrôles, commit vérifié et empreinte des fichiers couverts", () => {
+  const racine = depot({ criteres: "- Un critère — `QUA-001`\n- Relu [humain] — `QUA-002`" });
+  const head = git(racine, "rev-parse", "HEAD");
+  const r = close(racine, { logs: journaux() });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /^preuve de clôture écrite : docs\/preuves\/exemple\.md/);
+  const preuve = readFileSync(join(racine, "docs/preuves/exemple.md"), "utf8");
+  assert.match(preuve, /^# Preuve de clôture — exemple/);
+  assert.match(preuve, new RegExp(`\\*\\*Commit vérifié\\*\\* : \`${head.slice(0, 10)}\` — verdict \`drwil verify\` : PASS`));
+  assert.match(preuve, /\| Un critère \| `QUA-001` \| `tests-qua-001` \| `sha256:[0-9a-f]{16}` \(1 fichier\(s\)\) \|/);
+  assert.match(preuve, /\| Relu \[humain\] \| `QUA-002` \| — \| — \|/, "un contrat absent de l'évidence : rien d'inventé");
+  assert.ok(!existsSync(join(racine, FICHE)), "la fiche n'est supprimée qu'une fois la preuve écrite");
+});
+
+test("QUA-084 : sans évidence du commit vérifié, la clôture est refusée et la fiche reste ; l'entrée de journal doit citer la preuve", () => {
+  const sansEvidence = depot({ evidence: false });
+  const r = close(sansEvidence, { logs: journaux() });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /^clôture refusée : la preuve de clôture ne peut pas être écrite — aucune évidence/);
+  assert.ok(existsSync(join(sansEvidence, FICHE)), "aucune fiche supprimée sans sa preuve");
+  assert.ok(!existsSync(join(sansEvidence, "docs/preuves/exemple.md")));
+
+  const perimee = depot({ evidence: { commit: "0".repeat(40) } });
+  assert.match(close(perimee, {}).message, /ne date pas de HEAD : la renouveler/);
+  assert.ok(existsSync(join(perimee, FICHE)));
+
+  const echouee = depot({ evidence: { statut: "fail" } });
+  assert.match(close(echouee, {}).message, /le verdict de la dernière évidence est FAIL/);
+
+  // Entrée de journal : la preuve se cite, sinon elle est introuvable depuis le journal.
+  const racine = depot({ activite: "BUILD" });
+  ecrire(racine, { "docs/projects/journal.md": "# Journal\n\n## exemple\n\nFait.\n" });
+  assert.ok(
+    closingSignals(racine, FICHE).some((s) => /ne cite pas `docs\/preuves\/exemple\.md`/.test(s)),
+    "le journal qui ne cite pas la preuve ferait échouer la clôture",
+  );
+  ecrire(racine, { "docs/projects/journal.md": "# Journal\n\n## exemple\n\nPreuve : `docs/preuves/exemple.md`.\n" });
+  assert.deepEqual(closingSignals(racine, FICHE), []);
+});
+
+test("QUA-084 : la preuve suit la langue du projet, dit quand il n'y a aucun critère, et refuse la clôture si elle ne peut pas être écrite", () => {
+  const anglais = depot({ lang: "en", criteres: "- A criterion — `QUA-001`" });
+  assert.equal(close(anglais, { logs: journaux() }).code, 0);
+  const preuve = readFileSync(join(anglais, "docs/preuves/exemple.md"), "utf8");
+  assert.match(preuve, /^# Closing proof — exemple/);
+  assert.match(preuve, /\*\*Closed on\*\*: \d{4}-\d\d-\d\d/);
+  assert.match(preuve, /\*\*Verified commit\*\*: `[0-9a-f]{10}` — `drwil verify` verdict: PASS/);
+  assert.match(preuve, /\| Criterion \| Contract \| Check \| Fingerprint of the covered files \|/);
+  assert.match(preuve, /\| A criterion \| `QUA-001` \| `tests-qua-001` \| `sha256:[0-9a-f]{16}` \(1 file\(s\)\) \|/);
+
+  // Évidence sans tableau de contrats, et contrat prouvé sans contrôle ni couverture : rien d'inventé.
+  const sansDetail = depot({ evidence: { contrats: [{ id: "QUA-001", status: "pass" }] } });
+  assert.equal(close(sansDetail, { logs: journaux() }).code, 0);
+  assert.match(readFileSync(join(sansDetail, "docs/preuves/exemple.md"), "utf8"), /\| Un critère \| `QUA-001` \| — \| — \|/);
+
+  const horsTableau = depot({ evidence: { contrats: { "QUA-001": "pass" } } });
+  assert.equal(close(horsTableau, { logs: journaux() }).code, 0);
+
+  const sansVerdict = depot({ evidence: { statut: null } });
+  assert.match(close(sansVerdict, {}).message, /le verdict de la dernière évidence est \?/);
+
+  const sansCritere = depot({ criteres: "_rien_" });
+  assert.equal(close(sansCritere, { logs: journaux() }).code, 0);
+  assert.match(readFileSync(join(sansCritere, "docs/preuves/exemple.md"), "utf8"), /_aucun critère d'acceptation_/);
+
+  // Dossier des preuves occupé par un fichier : la preuve ne peut pas être écrite, rien n'est supprimé.
+  const bloque = depot({ lang: "en" });
+  const reglages = { lang: "en", contractPrefixes: ["QUA"], dirs: { proofs: "occupe/preuves", projects: "docs/projects" } };
+  ecrire(bloque, { ".drwil/ia-first.json": JSON.stringify(reglages), occupe: "x" });
+  const r = close(bloque, { logs: journaux() });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /^closing refused: the closing proof cannot be written — occupe\/preuves\/exemple\.md:/);
+  assert.ok(existsSync(join(bloque, FICHE)), "aucune fiche supprimée quand sa preuve ne peut pas être écrite");
+
+  const bloqueFr = depot({});
+  const reglagesFr = { contractPrefixes: ["QUA"], dirs: { proofs: "occupe/preuves" } };
+  ecrire(bloqueFr, { ".drwil/ia-first.json": JSON.stringify(reglagesFr), occupe: "x" });
+  assert.match(
+    close(bloqueFr, {}).message,
+    /^clôture refusée : la preuve de clôture ne peut pas être écrite — occupe\/preuves\/exemple\.md :/,
+  );
+
+  const perimeeEn = depot({ lang: "en", evidence: { commit: "0".repeat(40) } });
+  assert.match(close(perimeeEn, {}).message, /is not from HEAD: renew it/);
+  const echoueeEn = depot({ lang: "en", evidence: { statut: "fail" } });
+  assert.match(close(echoueeEn, {}).message, /the latest evidence's verdict is FAIL/);
+
+  // Journal d'un projet anglais : la preuve s'y cite aussi.
+  const journal = depot({ activite: "BUILD", lang: "en" });
+  ecrire(journal, { "docs/projects/journal.md": "# Journal\n" });
+  assert.ok(closingSignals(journal, FICHE).some((s) => /does not cite `docs\/preuves\/exemple\.md`/.test(s)));
 });
