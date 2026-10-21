@@ -11,6 +11,8 @@ files:
   - packages/drwil/src/attest.ts
   - packages/drwil/src/doctor.ts
   - packages/drwil/src/index.ts
+  - packages/drwil/src/coverage.ts
+  - packages/drwil/bin/drwil.js
   - packages/drwil/test/cycle.test.mjs
   - packages/drwil/test/kit.test.mjs
   - .githooks/contracts.mjs
