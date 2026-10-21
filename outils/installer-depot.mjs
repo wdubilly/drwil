@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Le dépôt s'installe depuis son gabarit (docs/projects/depot-installe-par-gabarit.md) : le gabarit
+// Le dépôt s'installe depuis son gabarit (journal « Le dépôt s'installe depuis son gabarit », docs/projects/journal.md) : le gabarit
 // (packages/drwil/templates/) est la seule source, les copies du dépôt en sont l'installation.
 // `drwil init` lancé sur le dépôt lui-même n'y rafraîchirait que la mécanique inchangée et ne
 // recopierait aucun document déjà présent : il ne convient pas tel quel. On installe donc avec la vraie CLI
@@ -8,7 +8,7 @@
 // hors fichiers déclarés propres au gabarit et hors .drwil/. Les modules optionnels, que la CLI
 // n'installe pas, sont recopiés tels quels.
 // Avant d'installer, le dépôt passe de l'ancien format aux noms anglais avec la migration de la CLI
-// (docs/projects/coeur-en-anglais.md) : état, config, journal de consommation, blocs et chemins des fiches.
+// (journal « Le cœur en anglais », docs/projects/journal.md) : état, config, journal de consommation, blocs et chemins des fiches.
 // Hors de portée : un fichier retiré du gabarit reste dans le dépôt (miroirs-gabarit le signale).
 // Usage : node outils/installer-depot.mjs [--dry-run] [racine]
 import { spawnSync } from "node:child_process";

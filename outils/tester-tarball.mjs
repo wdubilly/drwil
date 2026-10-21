@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// La CLI telle que la reçoit un utilisateur (docs/projects/tester-tarball.md). Propre à ce dépôt : les
+// La CLI telle que la reçoit un utilisateur (journal « Tester la CLI installée depuis le tarball », docs/projects/journal.md). Propre à ce dépôt : les
 // tests du paquet exercent le code depuis le dépôt ; ici on construit le tarball (`npm pack`), on compare
 // son contenu à la liste attendue, on l'installe dans un projet vierge, puis on lance la CLI installée :
 // `drwil --version`, `drwil init` (CI GitHub, cas courant) et `drwil verify` dans un projet temporaire.

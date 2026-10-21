@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Matrice des OS de kit-tests (docs/projects/ci-matrice-sur-pr.md, contrat QUA-045). Les checks
+// Matrice des OS de kit-tests (contrat QUA-045). Les checks
 // « kit-tests (<os>) » sont exigés par le ruleset de master : sur une PR, les trois sont toujours
 // rapportés ; Windows et macOS n'y lancent la suite que si la PR touche du code. Un push de branche ne
 // rapporte qu'Ubuntu (un check vert sans tests sur le commit de la PR masquerait son échec) ; un push
