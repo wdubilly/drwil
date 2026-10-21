@@ -380,9 +380,6 @@ une décision du demandeur.
   mémoire de l'agent (README en double, version annoncée non contrôlée,
   toute clôture contrainte à l'exercice, entretien courant compris ;
   constaté le 2026-10-17) — `docs/intentions/doc-visiteur-juste.md`.
-- [ ] [IA] [P1] drwil_com, priorité 1 : une attestation tombe quand
-  ce qu'elle couvre change (scénario S6) —
-  fiche `docs/projects/attestation-liee-a-son-objet.md`.
 - [ ] [décision] Déclarer ce que couvrent les contrats attestés du dépôt
   (champ `**Couvre**`, puis réattestation) —
   `docs/intentions/couverture-des-contrats-attestes.md`.
