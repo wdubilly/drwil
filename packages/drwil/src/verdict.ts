@@ -27,6 +27,7 @@ const TEXTS = {
     severity: (s: Severity) => SEVERITY_FR[s],
     undeclared: "Contrats modifiés sans déclaration dans la fiche active (section « Contrats modifiés ») — clôture refusée : {0}",
     unproven: "Critères d'acceptation non prouvés de la fiche active (verdict et clôture) : {0}",
+    proofs: "Critères de chantiers clos dont la preuve a disparu (fichier de preuve de clôture rejoué) : {0}",
   },
   en: {
     contracts: "Contracts",
@@ -39,6 +40,7 @@ const TEXTS = {
     severity: (s: Severity) => s,
     undeclared: "Contracts modified without declaration in the active brief (« Modified contracts » section) — closing refused: {0}",
     unproven: "Unproven acceptance criteria of the active brief (verdict and closing): {0}",
+    proofs: "Criteria of closed workstreams whose proof has disappeared (closing proof file replayed): {0}",
   },
 };
 
@@ -85,6 +87,8 @@ export function formatVerdict(v: Verdict): string {
         unproven.map((c) => `« ${c.text} » (${[c.status, durabilityHint(c, v.lang)].filter(Boolean).join(" : ")})`).join(", "),
       ),
     );
+  if (v.proofs?.length)
+    lines.push(fill(T.proofs, v.proofs.map((c) => `${c.workstream} « ${c.text} » (${c.link ?? "—"} : ${c.status})`).join(", ")));
   const count = (s: Status) => v.contracts.filter((k) => k.status === s).length;
   if (v.contracts.length)
     lines.push(fill(T.counts, v.contracts.length, count("PASS"), count("ATTESTED"), count("FAIL"), count("MANUAL"), count("ERROR")));
@@ -171,5 +175,7 @@ export function verdictJson(v: Verdict) {
     businessRules: v.rules ?? [],
     /** Acceptance criteria of the active brief, judged (QUA-034); empty without an active brief. */
     criteria: v.criteria ?? [],
+    /** Criteria of the closed workstreams whose proof has disappeared (QUA-085); empty when they all hold. */
+    closureProofs: v.proofs ?? [],
   };
 }

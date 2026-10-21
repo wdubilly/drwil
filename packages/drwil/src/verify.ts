@@ -10,8 +10,9 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { judgeDurable, type ProofResult } from "./closure.js";
 import { changeLines, type Coverage, coverageChanges, coverageOf, lacksCoverage, noCoversMessage } from "./coverage.js";
-import { activeBrief, contractChanges, criteriaVerdict, type CriterionResult, judgeBrief, showOrigins } from "./criteria.js";
+import { type CriterionResult, showOrigins } from "./criteria.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { type BusinessRule, businessRules } from "./rules.js";
 
@@ -73,6 +74,8 @@ export interface Verdict {
   criteria?: CriterionResult[];
   /** Contracts modified in the branch that the active brief does not declare; absent without an active brief. */
   undeclared?: string[];
+  /** Criteria of the closed workstreams whose proof has disappeared (QUA-085); empty when they all hold. */
+  proofs?: ProofResult[];
   rules?: BusinessRule[];
 }
 
@@ -176,14 +179,14 @@ export function readAttestations(root: string): Attestation[] {
   return all.sort((a, b) => String(b.attestedAt).localeCompare(String(a.attestedAt)));
 }
 
-const CODES: Record<Status, 0 | 1 | 2> = { PASS: 0, ATTESTED: 0, FAIL: 1, MANUAL: 1, ERROR: 2 };
+export const CODES: Record<Status, 0 | 1 | 2> = { PASS: 0, ATTESTED: 0, FAIL: 1, MANUAL: 1, ERROR: 2 };
 
 /**
  * Deterministic priority, per contract as for the overall verdict: FAIL > ERROR > MANUAL > PASS.
  * FAIL wins (a failure is established); ERROR comes before MANUAL (a proof that could not be produced
  * makes the verdict undeterminable); PASS only if everything is proven.
  */
-function worst(statuses: Status[]): Status {
+export function worst(statuses: Status[]): Status {
   for (const s of ["FAIL", "ERROR", "MANUAL"] as const) if (statuses.includes(s)) return s;
   return "PASS";
 }
@@ -386,15 +389,9 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const status = worst([...deciding, ...(configKo ? (["ERROR"] as Status[]) : [])]);
   for (const r of results) delete r.invalidConfig;
   showOrigins(results, all, lang);
-  const brief = only ? null : await activeBrief(root);
   const verdict: Verdict = { lang, status, code: CODES[status], contracts: results, errors, unattached };
   verdict.rules = businessRules(results, all, cfg);
-  if (brief) {
-    Object.assign(verdict, judgeBrief(brief, results, contractChanges(root, registry, all, reader.readContracts), all));
-    // An unproven criterion of the active brief is part of the verdict, not only of the closing (QUA-034).
-    const fromCriteria = criteriaVerdict(verdict.criteria ?? []);
-    if (fromCriteria) verdict.status = worst([verdict.status, fromCriteria]);
-    verdict.code = CODES[verdict.status];
-  }
+  // Criteria of the active brief and of the closed workstreams (QUA-034, QUA-085), judged outside this file (QUA-001).
+  if (!only) await judgeDurable(verdict, { root, registry, cfg, contracts: all, read: reader.readContracts });
   return verdict;
 }

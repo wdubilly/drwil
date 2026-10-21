@@ -18,6 +18,7 @@ export {
   type Status,
 } from "./verify.js";
 export { attest, contractSummary, type AttestResult } from "./attest.js";
+export { type ClosureProof, judgeProofs, parseProof, type ProofResult, PROOFS_DIR, readProofs } from "./closure.js";
 export { formatForAgent } from "./agent.js";
 export { doctor, formatDiagnosis, diagnosisJson, listContracts, type Diagnosis } from "./doctor.js";
 export { LANGS, TOOLS, CIS, type InitOptions } from "./config.js";
