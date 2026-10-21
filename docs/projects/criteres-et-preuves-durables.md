@@ -19,10 +19,13 @@ files:
   - packages/drwil/test/cycle.test.mjs
   - packages/drwil/test/kit.test.mjs
   - .githooks/close.mjs
+  - .githooks/closure-proof.mjs
   - .githooks/close.test.mjs
   - .githooks/scope-gate.mjs
   - .githooks/state.mjs
   - packages/drwil/templates/common/base/.githooks/close.mjs
+  - packages/drwil/templates/common/base/.githooks/closure-proof.mjs
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - packages/drwil/templates/common/base/.githooks/state.mjs
   - packages/drwil/templates/common/base/docs/ia-first.md
   - packages/drwil/templates/common/base/docs/preuves/README.md
@@ -139,6 +142,11 @@ Prises par le demandeur le 2026-10-21 :
   critères d'une preuve de clôture dont la preuve a disparu doivent être
   nommés dans les sorties humaine, agent et JSON ; sans ces deux fichiers,
   ils ne pouvaient être affichés que déguisés en erreurs de registre.
+- `.githooks/closure-proof.mjs` et sa copie du gabarit, cité par la fiche de
+  la mécanique du gabarit (un fichier de code hors fiche est refusé par le
+  rappel de cadrage) : l'écriture de la preuve est un module à part — la
+  porter dans `.githooks/close.mjs` pousserait ce fichier au-delà du plafond
+  de QUA-001 (fichier de code plafonné).
 - `packages/drwil/templates/common/base/docs/preuves/README.md` : le dossier
   des preuves de clôture est livré avec le gabarit, expliqué sur place —
   sinon le livrable crée un dossier que rien ne présente, et le dossier
