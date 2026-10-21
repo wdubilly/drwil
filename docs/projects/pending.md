@@ -149,15 +149,16 @@ avant les points 5 à 13, en trois versions.
      autres outils (`docs/intentions/file-sous-agents-autres-outils.md`).
   3. 0.6.9, la fluidité de la clôture (faite, journal du 2026-10-21) :
      clôture guidée, message clair du critère humain, note à tout moment.
-  4. 0.7.0, la preuve qui dure (ci-dessous), avec la cohérence de la
+  4. Avant la 0.7.0 (demande du 2026-10-21), la cohérence de la
      documentation à la clôture (`docs/intentions/cloture-coherence-doc.md`)
      et la note de recette conservée dans le dépôt
      (`docs/intentions/note-de-recette-par-version.md`).
-  5. 0.7.x, mesure et efficacité : consommation de Copilot CLI puis des
+  5. 0.7.0, la preuve qui dure (ci-dessous).
+  6. 0.7.x, mesure et efficacité : consommation de Copilot CLI puis des
      autres outils (`docs/intentions/consommation-autres-outils.md`),
      fluidité sans perte de rigueur, vue de relecture, relecture avant
      fusion.
-  6. 0.8, catalogue et adoption (P1) d'abord ; puis, en P2, Codex et Cursor,
+  7. 0.8, catalogue et adoption (P1) d'abord ; puis, en P2, Codex et Cursor,
      personas, chantiers en parallèle
      (`docs/intentions/chantiers-en-parallele.md`), application de suivi,
      couche d'un nouveau dossier de code
@@ -397,8 +398,10 @@ une décision du demandeur.
   `docs/intentions/guide-de-demarrage.md`.
 - [ ] [décision] Convoquer des personas d'agents (`agency-agents`) choisis par
   le cadrage d'un chantier — `docs/intentions/personas-convoques-par-le-cadrage.md`.
-- [ ] [décision] La clôture vérifie la cohérence de la documentation, de façon
-  bloquante — `docs/intentions/cloture-coherence-doc.md`.
+- [ ] [décision] [P1] La clôture vérifie la cohérence de la documentation, de
+  façon bloquante (cadrée le 2026-10-21, avant la 0.7.0) — fiche
+  `docs/projects/cloture-coherence-doc.md`, intention
+  `docs/intentions/cloture-coherence-doc.md`.
 - [ ] [décision] Proposer la couche d'un dossier de code apparu après
   l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
 - [ ] [décision] Mener plusieurs chantiers en parallèle, ou orchestrer plusieurs

@@ -20,15 +20,21 @@ et se perdraient avec la forge.
 - Intentions voisines : `docs/intentions/fiche-de-recette-html.md` (autre
   format de la fiche) et `docs/intentions/fiche-recette-apres-squash.md`.
 
+## Décisions du demandeur (2026-10-21)
+
+- [décision prise] Où : un fichier par version, `docs/recettes/<version>.md`.
+- [décision prise] Qui l'écrit : la promotion (`.githooks/promote-release.mjs`)
+  copie la fiche et le verdict dans le dépôt.
+- [décision prise] Arrivée sur la branche principale, protégée : une PR par
+  version.
+- [décision prise] Une version sans candidate ni verdict : la note reste
+  obligatoire.
+
 ## Questions à trancher
 
-- [décision] Où : un fichier par version (`docs/recettes/<version>.md`), ou une
-  section par version dans un seul fichier ?
-- [décision] Qui l'écrit : la promotion (`.githooks/promote-release.mjs`) copie la fiche
-  et le verdict dans le dépôt, ou l'humain les commite ?
-- [décision] Comment l'arrivée sur la branche principale, protégée, se fait :
-  une PR par version, ou un commit de la promotion ?
-- [décision] Une version sans candidate ni verdict : note obligatoire, ou
-  refus de la promotion (contrôle bloquant) ?
 - [décision] Que contient la note en plus de la fiche générée : verdict et
   réserves, auteur du verdict, date, tarball vérifié ?
+- [décision] « Note obligatoire » : que fait la promotion d'une version sans
+  verdict (note écrite à la main par l'humain, ou note générée vide) ?
+- Ordre : ce chantier passe après « la clôture vérifie la cohérence de la
+  documentation » (décision du 2026-10-21).
