@@ -61,7 +61,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Une doc fausse égare les IA.
 
 ## QUA-015 — Chantiers exploitables à froid
-**Règle** : Chaque case ouverte de l'index des chantiers porte un marqueur `[IA]`, `[humain]` ou `[décision]` ; chaque fiche de `docs/projects/` et de `docs/intentions/` (hors index et README) a une ligne « Statut » en tête, datée (AAAA-MM-JJ) ; chaque fiche d'intention a les sections « Besoin », « Existant » et « Questions à trancher » ; chaque fiche de projet a une section « Reprise ». Extension (2026-10-04) : la case d'une ligne d'index qui cite une fiche dont le « Statut » contient `fait`/`terminé`/`clos` doit être cochée, et réciproquement une case cochée doit citer une fiche qui se dit terminée — avertissement non bloquant (la prose de « Statut » n'est pas un champ structuré, angles morts assumés).
+**Règle** : Chaque case ouverte de l'index des chantiers porte un marqueur `[IA]`, `[humain]` ou `[décision]` ; chaque fiche de `docs/projects/` et de `docs/intentions/` (hors index et README) a une ligne « Statut » en tête, datée (AAAA-MM-JJ) ; chaque fiche d'intention a les sections « Besoin », « Existant » et « Questions à trancher » ; chaque fiche de projet a une section « Reprise ». Extension (2026-10-04) : la case d'une ligne d'index qui cite une fiche dont le « Statut » contient `fait`/`terminé`/`clos` doit être cochée, et réciproquement une case cochée doit citer une fiche qui se dit terminée — avertissement non bloquant au commit, bloquant à la clôture (QUA-074) ; la prose de « Statut » n'est pas un champ structuré, angles morts assumés.
 **Périmètre** : `docs/projects/`, `docs/intentions/`.
 **Source de vérité** : `docs/ia-first.md` (section 7).
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI) ; justesse du contenu : humaine.
@@ -256,7 +256,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Neuf élargissements de cadrage en deux jours, chacun un commit à part et un `git stash` du lot en cours : la première friction qu'un vrai projet rencontrerait.
 
 ## QUA-036 — La clôture boucle les intentions
-**Règle** : À la clôture d'un chantier, chaque limite non traitée devient une fiche d'intention (`docs/intentions/`, jamais une fiche de chantier : l'agent peut l'écrire seul, la recadrer reste une décision du demandeur), listée dans l'index en `[décision]` et citée par le journal ; l'intention d'origine, nommée par le champ `**Intention**` de la fiche, est mise à jour, ou résumée au journal et retirée si elle est entièrement couverte. Le rappel de l'activité CLOSING et la recette le disent ; le commit qui supprime une fiche sans toucher son intention reçoit un avertissement, sans blocage. Une intention dont la dernière revue datée (Statut, « Revu le … », « Existant » daté) a 30 jours ou plus est signalée par un avertissement non bloquant.
+**Règle** : À la clôture d'un chantier, chaque limite non traitée devient une fiche d'intention (`docs/intentions/`, jamais une fiche de chantier : l'agent peut l'écrire seul, la recadrer reste une décision du demandeur), listée dans l'index en `[décision]` et citée par le journal ; l'intention d'origine, nommée par le champ `**Intention**` de la fiche, est mise à jour, ou résumée au journal et retirée si elle est entièrement couverte. Le rappel de l'activité CLOSING et la recette le disent ; le commit qui supprime une fiche sans toucher son intention reçoit un avertissement, sans blocage ; la clôture, elle, le refuse (QUA-074). Une intention dont la dernière revue datée (Statut, « Revu le … », « Existant » daté) a 30 jours ou plus est signalée par un avertissement non bloquant.
 **Périmètre** : `AGENTS.md`, la recette des branches (section « Closing »), `.githooks/state-texts.mjs`, `.githooks/briefs.mjs`, `.githooks/run-checks.mjs` ; livré dans le gabarit.
 **Source de vérité** : `.githooks/briefs.mjs` (`briefIntent`, `intentsLeftBehind`, `lastReview`, `staleIntents`), `.githooks/state-texts.mjs`.
 **Preuve** : tests des hooks.
@@ -376,7 +376,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Chaque `npm run installer-depot` réécrivait la date de `docs/ia-first.md`, seul fichier changé : un faux changement à annuler à la main ou qui polluait le commit ; une mise à jour d'un projet faisait le même bruit sur ses documents datés.
 
 ## QUA-048 — Une clôture en un geste, ses pièges signalés avant le commit
-**Règle** : Livré à tout projet. En CLOSING, `node .githooks/close.mjs` supprime la fiche active, retire sa ligne de l'index et consigne la consommation du chantier ; il ne commite, ne pousse, ne fusionne rien et n'écrit pas l'état. Il signale, avant le commit, ce qui ferait échouer la clôture : critère encore « contrat à créer » (avec l'ID à écrire), références à la fiche qui deviendraient mortes, noms de fichiers sans chemin dans les documents modifiés ; les mêmes signaux sont donnés par `--check` (sans rien écrire) et au passage de BUILD à EVIDENCE, tant que le code peut encore changer. Au lancement du chantier suivant, les branches locales déjà fusionnées dans la branche principale sont supprimées (`git branch -d`) — jamais la branche principale, la courante, une branche encore au sommet de la principale ni une branche non fusionnée.
+**Règle** : Livré à tout projet. En CLOSING, `node .githooks/close.mjs` supprime la fiche active, retire sa ligne de l'index et consigne la consommation du chantier ; il ne commite, ne pousse, ne fusionne rien et n'écrit pas l'état. Il signale, avant le commit, ce qui ferait échouer la clôture : critère encore « contrat à créer » (avec l'ID à écrire), références à la fiche qui deviendraient mortes, noms de fichiers sans chemin dans les documents modifiés, et les incohérences de documentation de QUA-074 ; les mêmes signaux sont donnés par `--check` (sans rien écrire) et au passage de BUILD à EVIDENCE, tant que le code peut encore changer. Au lancement du chantier suivant, les branches locales déjà fusionnées dans la branche principale sont supprimées (`git branch -d`) — jamais la branche principale, la courante, une branche encore au sommet de la principale ni une branche non fusionnée.
 **Périmètre** : `.githooks/close.mjs` (commande de clôture, suppression des branches fusionnées), `.githooks/state.mjs` (`start`, `move`) ; livré dans le gabarit.
 **Source de vérité** : `.githooks/close.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (fusions, branches, journaux de session).
@@ -387,7 +387,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Relevé dans la session de la 0.6.4 : la clôture coûtait des gestes et des reprises sans gain de qualité — un commit à part pour citer l'ID d'un contrat créé, des références à une fiche supprimée restées fausses, un commit de clôture refusé pour un nom de fichier sans chemin, 53 branches fusionnées jamais supprimées.
 
 ## QUA-049 — Le code cite le contrat qu'il sert, jamais une fiche de chantier
-**Règle** : Livré à tout projet. Un commentaire de fichier de code ne cite pas une fiche de chantier (`docs/projects/<fiche>.md`, hors index, journal, modèles et fiches permanentes) : la fiche est supprimée à la clôture, la citation deviendrait fausse. check-docs le refuse dans un fichier modifié (réglage `newRequirements` : `blocking` ; sinon un avertissement), donc dès le BUILD ; les citations des fichiers non modifiés sont résumées en un avertissement, jamais bloquant.
+**Règle** : Livré à tout projet. Un commentaire de fichier de code ne cite pas une fiche de chantier (`docs/projects/<fiche>.md`, hors index, journal, modèles et fiches permanentes) : la fiche est supprimée à la clôture, la citation deviendrait fausse. check-docs le refuse dans un fichier modifié (réglage `newRequirements` : `blocking` ; sinon un avertissement), donc dès le BUILD ; au commit, les citations des fichiers non modifiés sont résumées en un avertissement ; la clôture refuse toutes les citations, fichier modifié ou non (QUA-074).
 **Périmètre** : `.githooks/check-code-rules.mjs` (`briefReferences`, `briefReferenceProblems`), `.githooks/check-docs.mjs` ; livré dans le gabarit.
 **Source de vérité** : `.githooks/check-code-rules.mjs`.
 **Preuve** : tests des hooks, dont check-docs lancé sur un vrai dépôt git temporaire.
@@ -655,3 +655,43 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/close.test.mjs`
 **Origine** : fluidité de la clôture (0.6.9) — « Depuis une activité autre que CLOSING, `.githooks/close.mjs` et `.githooks/close.mjs --check` nomment le chemin restant jusqu'à CLOSING et, si l'évidence date d'un autre commit que HEAD, la commande qui la renouvelle »
 **Raison** : Le 2026-10-19, la clôture depuis BUILD répondait « clôture refusée » sans dire la suite : il a fallu tâtonner entre les transitions voisines, puis relancer `verify --evidence` ; l'avertissement d'intention signalait à tort une intention déjà mise à jour dans un commit précédent.
+
+## QUA-074 — La clôture refuse toute incohérence de l'index, des fiches et du code, en un seul message
+**Règle** : Livré à tout projet. `node .githooks/close.mjs` (en CLOSING) et `--check` (à tout moment) refusent, dans le même message que les autres signaux de clôture (QUA-048) et sans empiler le chemin restant jusqu'à CLOSING (QUA-073), toute incohérence de l'index et des fiches, sur tout l'index à chaque clôture : une case cochée ou ouverte qui contredit le statut de la fiche citée (QUA-015), un commentaire de fichier de code, modifié ou non, qui cite une fiche de chantier (QUA-049), une fiche supprimée dont l'intention n'est pas touchée par la branche ni par le dossier de travail (QUA-036). Au commit, ces écarts restent des avertissements : seule la clôture refuse. La clôture ne commite, ne pousse, ne fusionne rien et n'écrit pas l'état (QUA-048) ; elle ne réécrit jamais le code.
+**Périmètre** : `.githooks/close.mjs` (`closingReport`), `.githooks/doc-coherence.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/close.mjs` (`closingReport`), `.githooks/doc-coherence.mjs` (`checkboxProblems`, `codeCitations`, `intentLeft`).
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires : index et fiches incohérents refusés en un seul message, rien écrit sans `--fix`.
+**Contrôle** : `tests-qua-074`
+**Tests** : `.githooks/doc-coherence.test.mjs`, `.githooks/close.test.mjs`
+**Origine** : clôture qui vérifie la cohérence de la documentation — « La clôture (`.githooks/close.mjs` et `--check`) refuse, en un seul message avec les autres signaux de clôture, toute incohérence de l'index et des fiches »
+**Raison** : Le 2026-10-21, le commit de clôture de la 0.6.9 a été refusé deux fois par check-docs (renvois vers des intentions retirées, fichier de code cité hors de toute fiche), chaque fois découvert au dernier moment ; les avertissements ne sont lus par personne.
+
+## QUA-075 — Les règles de cohérence sont écrites une fois, lues par le commit et par la clôture
+**Règle** : Livré à tout projet. Les règles de cohérence entre l'index, les fiches et le code (case et statut, citations de fiche, références mortes) vivent dans `.githooks/doc-coherence.mjs` ; `.githooks/check-docs.mjs` (au commit, en avertissement) et `.githooks/close.mjs` (à la clôture, bloquant) les lisent du même module : une même incohérence est vue par les deux, avec le même message.
+**Périmètre** : `.githooks/doc-coherence.mjs`, `.githooks/check-docs.mjs`, `.githooks/close.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/doc-coherence.mjs`.
+**Preuve** : un test lance check-docs et la lecture de la clôture sur le même dépôt temporaire et retrouve le même message ; les deux fichiers importent le module.
+**Contrôle** : `tests-qua-075`
+**Tests** : `.githooks/doc-coherence.test.mjs`
+**Origine** : clôture qui vérifie la cohérence de la documentation — « Ces règles ne sont écrites qu'une fois : `.githooks/check-docs.mjs` (au commit) et `.githooks/close.mjs` (à la clôture) les lisent du même module, et une même incohérence est vue par les deux »
+**Raison** : Deux copies d'une règle divergent : la clôture aurait refusé ce que le commit laisse passer, ou l'inverse.
+
+## QUA-076 — La clôture propose les corrections sans jugement, et ne les écrit qu'avec `--fix`
+**Règle** : Livré à tout projet. Pour chaque incohérence corrigeable sans jugement, la clôture propose la correction en diff (ancienne ligne, nouvelle ligne) sans rien écrire, et ne l'applique qu'avec `--fix`, jamais d'elle-même : une case de l'index alignée sur le statut de la fiche (seulement si toutes les fiches citées par la ligne s'accordent, et si une case rouverte garde son marqueur) ; une référence morte — vers la fiche du chantier qui se clôt, elle est réorientée vers le journal ; vers toute autre fiche ou intention retirée, la citation est supprimée. Une ligne modifiée entre la proposition et `--fix` n'est pas réécrite. Le reste (citation de fiche dans du code, intention non touchée, case ambiguë) refuse en disant la correction à faire.
+**Périmètre** : `.githooks/close.mjs` (`close`), `.githooks/doc-coherence.mjs` (`deadReferences`, `proposals`, `applyProposals`) ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/doc-coherence.mjs`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires : diff proposé sans écriture, `--fix` qui écrit, ligne modifiée laissée, fins de ligne conservées.
+**Contrôle** : `tests-qua-076`
+**Tests** : `.githooks/doc-coherence.test.mjs`, `.githooks/close.test.mjs`
+**Origine** : clôture qui vérifie la cohérence de la documentation — « Pour chaque incohérence corrigeable sans jugement (case cochée ou ouverte alignée sur le statut de la fiche ; référence morte vers une fiche ou une intention retirée, supprimée ou réorientée vers le journal), la clôture propose la correction (liste ou diff) sans rien écrire, et ne l'applique qu'avec `--fix` ; le reste refuse en disant la correction à faire »
+**Raison** : Bloquer sans dire quoi changer coûte un aller-retour par écart ; décision du demandeur du 2026-10-21 : proposer toujours, n'écrire qu'avec `--fix`.
+
+## QUA-077 — Une intention nouvelle qui cite un chemin déjà cité par une autre est signalée
+**Règle** : Livré à tout projet. À la clôture (et à `--check`), une intention ajoutée par la branche ou pas encore commitée qui cite, entre backticks, un chemin (hors `docs/`) déjà cité par une autre intention est signalée par un avertissement non bloquant, sans mots clés : le chemin seul fait le lien. Le fichier de notes et le README des intentions n'en sont pas.
+**Périmètre** : `.githooks/doc-coherence.mjs` (`twinIntents`), `.githooks/close.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/doc-coherence.mjs` (`twinIntents`).
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires : doublon signalé, notes et README écartés, intention déjà fusionnée non signalée.
+**Contrôle** : `tests-qua-077`
+**Tests** : `.githooks/doc-coherence.test.mjs`, `.githooks/close.test.mjs`
+**Origine** : clôture qui vérifie la cohérence de la documentation — « Une intention nouvelle qui cite un chemin déjà cité par une autre intention est signalée en avertissement, sans mots clés »
+**Raison** : Le 2026-10-19, une intention a été presque recréée alors qu'elle existait déjà (`docs/intentions/consommation-autres-outils.md`).

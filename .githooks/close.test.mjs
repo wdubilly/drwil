@@ -26,6 +26,7 @@ for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete p
 const SCRIPT = fileURLToPath(new URL("./close.mjs", import.meta.url));
 let dossiers = [];
 afterEach(() => {
+  delete process.env.DRWIL_BASE;
   for (const d of dossiers) rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   dossiers = [];
 });
@@ -457,4 +458,96 @@ test("QUA-073 : l'avertissement d'intention compare à la branche entière — i
   git(racine, "commit", "-qm", "retire l'intention");
   git(racine, "rm", "-q", FICHE);
   assert.deepEqual(intentsLeftBehind(racine, [FICHE]), [], "intention retirée sur la branche");
+});
+
+test("QUA-074 : un index et des fiches incohérents sont refusés en un seul message, avec la correction en diff — rien n'est écrit sans --fix", () => {
+  const index = [
+    INDEX.trimEnd(),
+    "- [x] [IA] Autre, cochée à tort — `docs/projects/autre.md`",
+    "- [x] [IA] Deux fiches — `docs/projects/autre.md` `docs/projects/vieille.md`",
+    "",
+  ].join("\n");
+  const racine = depot({ activite: "BUILD", index });
+  ecrire(racine, {
+    "docs/projects/autre.md": "# Autre\n\n**Statut** : terminé le 2026-10-01.\n",
+    "docs/projects/vieille.md": "# Vieille\n\n**Statut** : en cours (2026-10-01)\n",
+    "docs/recipes/r.md": "Voir `docs/intentions/retiree.md`.\n",
+    "src/code.mjs": "// voir docs/projects/autre.md\n",
+    "ci.yml": `# voir ${FICHE}\n`,
+  });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "écarts");
+  const avant = readFileSync(join(racine, "docs/projects/pending.md"), "utf8");
+  const r = close(racine, { check: true });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /pending\.md:3 : case ouverte mais la fiche docs\/projects\/autre\.md se dit déjà terminée/);
+  assert.match(r.message, /src\/code\.mjs:1 cite la fiche de chantier docs\/projects\/autre\.md : réécrire ce commentaire/);
+  assert.match(r.message, /r\.md:1 cite docs\/intentions\/retiree\.md, déjà retirée/);
+  assert.match(r.message, /pending\.md:8 : .* — à corriger à la main \(la case dépend de plusieurs fiches/);
+  assert.match(r.message, /ci\.yml:1 cite docs\/projects\/exemple\.md, qui sera supprimée/);
+  assert.match(r.message, /Corrections proposées, rien n'est écrit/);
+  assert.match(r.message, / {4}- - \[ \] \[IA\] Autre chantier — `docs\/projects\/autre\.md`\.\n {4}\+ - \[x\] \[IA\] Autre chantier/);
+  assert.equal(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), avant);
+  const corrige = close(racine, { check: true, fix: true });
+  assert.match(corrige.message, /corrections appliquées : 2/);
+  assert.match(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), /- \[x\] \[IA\] Autre chantier/);
+  assert.equal(readFileSync(join(racine, "docs/recipes/r.md"), "utf8"), "Voir.\n");
+  assert.equal(corrige.code, 1, "le code, à réécrire à la main, bloque encore");
+  assert.doesNotMatch(corrige.message, /Corrections proposées/);
+  assert.equal(close(racine, { check: true }).message.includes("case ouverte"), false);
+});
+
+test("QUA-074 : les messages de la clôture suivent la langue du projet (anglais)", () => {
+  const index = [INDEX.trimEnd(), "- [x] [IA] Other — `docs/projects/autre.md`", ""].join("\n");
+  const racine = depot({ activite: "BUILD", lang: "en", index });
+  ecrire(racine, {
+    "docs/projects/autre.md": "# Autre\n\n**Status**: closed 2026-10-01.\n",
+    "docs/recipes/r.md": "See `docs/intentions/gone.md`.\n",
+    "src/code.mjs": "// see docs/projects/autre.md\n",
+  });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "gaps");
+  const r = close(racine, { check: true });
+  assert.match(r.message, /already removed|cites docs\/intentions\/gone\.md/);
+  assert.match(r.message, /Proposed corrections/);
+  assert.match(r.message, /workstream brief/);
+  assert.match(close(racine, { check: true, fix: true }).message, /corrections applied: \d/);
+});
+
+test("QUA-077 : références à la fiche réorientées vers le journal, intention non touchée refusée, doublon d'intention seulement signalé", () => {
+  const racine = depot();
+  ecrire(racine, {
+    "docs/projects/journal.md": "# Journal\n",
+    "docs/recipes/r.md": "Fiche : `docs/projects/exemple.md`.\n",
+    "docs/intentions/origine.md": "# Origine\n\nCite `src/a.mjs`.\n",
+    "docs/projects/exemple.md": fiche("- Un critère — `QUA-001`").replace(
+      "# Projet : Exemple",
+      "# Projet : Exemple\n\n**Intention** : `docs/intentions/origine.md`",
+    ),
+  });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "origine");
+  // L'intention d'origine existe avant le chantier : la base de comparaison est ce commit.
+  process.env.DRWIL_BASE = git(racine, "rev-parse", "HEAD");
+  ecrire(racine, { "docs/intentions/neuve.md": "# Neuve\n\nCite `src/a.mjs`.\n" });
+  const r = close(racine, { logs: journaux() });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /sans que son intention docs\/intentions\/origine\.md soit touchée/);
+  assert.match(r.message, /r\.md:1 cite docs\/projects\/exemple\.md, qui sera supprimée : à réorienter vers le journal/);
+  assert.match(
+    r.message,
+    /Avertissements \(non bloquants\) :\n {2}⚠ intention docs\/intentions\/neuve\.md : cite src\/a\.mjs, déjà cité par docs\/intentions\/origine\.md/,
+  );
+  ecrire(racine, { "docs/intentions/origine.md": "# Origine mise à jour\n\nCite `src/a.mjs`.\n" });
+  const fin = close(racine, { fix: true, logs: journaux() });
+  assert.equal(fin.code, 0, fin.message);
+  assert.equal(readFileSync(join(racine, "docs/recipes/r.md"), "utf8"), "Fiche : `docs/projects/journal.md`.\n");
+});
+
+test("QUA-076 : --fix est accepté par la ligne de commande, une option inconnue reste refusée", () => {
+  const racine = depot({ activite: "BUILD" });
+  const lancer = (...args) =>
+    spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8", env: { ...process.env, DRWIL_ROOT: racine } });
+  assert.equal(lancer("--check", "--fix").status, 0);
+  assert.equal(lancer("--fixe").status, 2);
 });

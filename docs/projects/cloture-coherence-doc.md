@@ -69,18 +69,18 @@ incohérent, et refuser tant que ça l'est.
   case cochée ou ouverte contredisant le statut de la fiche citée,
   citation de fiche de chantier dans du code non modifié, fiche supprimée
   sans que son intention soit touchée — sur tout l'index, à chaque clôture —
-  contrat à créer
+  `QUA-074`
 - Ces règles ne sont écrites qu'une fois : `.githooks/check-docs.mjs` (au commit) et
   `.githooks/close.mjs` (à la clôture) les lisent du même module, et une même
-  incohérence est vue par les deux — contrat à créer
+  incohérence est vue par les deux — `QUA-075`
 - Pour chaque incohérence corrigeable sans jugement (case cochée ou ouverte
   alignée sur le statut de la fiche ; référence morte vers une fiche ou une
   intention retirée, supprimée ou réorientée vers le journal), la clôture
   propose la correction (liste ou diff) sans rien écrire, et ne l'applique
   qu'avec `--fix` ; le reste refuse en disant la correction à faire —
-  contrat à créer
+  `QUA-076`
 - Une intention nouvelle qui cite un chemin déjà cité par une autre
-  intention est signalée en avertissement, sans mots clés — contrat à créer
+  intention est signalée en avertissement, sans mots clés — `QUA-077`
 
 ## Contrats modifiés
 

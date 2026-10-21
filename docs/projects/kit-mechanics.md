@@ -40,6 +40,7 @@ files:
   - .githooks/check-code-rules.test.mjs
   - .githooks/check-control-coverage.test.mjs
   - .githooks/check-docs.test.mjs
+  - .githooks/doc-coherence.test.mjs
   - .githooks/skill-headers.test.mjs
   - .githooks/check-contract-tests.test.mjs
   - .githooks/check-file-size.test.mjs

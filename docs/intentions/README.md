@@ -17,6 +17,7 @@ ce qui reste vivant` ; une intention sans revue datée depuis 30 jours est
 signalée par les contrôles. La clôture d'un chantier met à jour
 l'intention dont il vient (champ `**Intention**` de la fiche), ou la
 résume au journal et la retire si elle est entièrement couverte.
+La clôture refuse un chantier dont l'intention n'a pas été touchée (`node .githooks/close.mjs`), et signale en avertissement une intention nouvelle qui cite un chemin déjà cité par une autre.
 
 Une idée d'une ligne, trop légère pour une fiche, se note d'une commande :
 `node .githooks/note.mjs "<texte>"` ajoute une ligne datée à

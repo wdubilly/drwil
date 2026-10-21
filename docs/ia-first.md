@@ -497,6 +497,16 @@ allowed scope stays the brief's `scope` block, which is versioned.
   commands, in order, neighbouring transitions only — and, when the evidence is
   missing or from another commit than `HEAD`, the command that renews it. It
   never advances the state itself.
+- **Documentation coherence at closing**: `node .githooks/close.mjs` (and `--check`)
+  refuses, in the same single message, what check-docs only warns about at each commit —
+  an index box that contradicts the status of the brief it cites, a code
+  comment citing a workstream brief, changed or not, a deleted brief whose
+  intent the branch never touched — over the whole index, at every closing.
+  The rules live once, in `.githooks/doc-coherence.mjs`, read by both. Every correction
+  that needs no judgement (box aligned on the status; dead reference redirected to the
+  journal when it targets the closing brief, deleted otherwise) is proposed as a diff
+  and written only with `--fix`; the rest says the correction to make. A new intent
+  citing a path another intent already cites is flagged by a warning (path only).
 - **Tool-side blocks** (Claude Code, `deny` rules in
   `.claude/settings.json`, if present): `git … --no-verify`, `git commit -n` and writing `.drwil/state.json`
   (if present) directly are refused by the tool, not by the model.

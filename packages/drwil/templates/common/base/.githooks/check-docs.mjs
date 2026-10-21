@@ -8,7 +8,7 @@ import * as scope from "./scope.mjs";
 import { definedIds, idConflicts, knownChecks, readContracts, validateContracts } from "./contracts.mjs";
 import { checkRisk } from "./risk.mjs";
 import { briefReferenceProblems } from "./check-code-rules.mjs";
-import { checkboxProblems, STATUS_RE } from "./doc-coherence.mjs";
+import { checkboxProblems, MARKERS_RE, OPTIONAL_RE, STATUS_RE, TO_CREATE_RE } from "./doc-coherence.mjs";
 import { briefMaturity, briefStatus, readyGaps } from "./state.mjs";
 import { skillHeaderProblems } from "./skill-headers.mjs";
 
@@ -75,11 +75,6 @@ const scopeLevel = SCOPE_LEVELS.has(cfg.scopeReminder) ? cfg.scopeReminder : "wa
 
 const CODE_RE = /`([^`\s]+)`/g;
 const EXT_RE = /\.(md|mdc|mjs|cjs|js|ts|tsx|jsx|py|sh|json|ya?ml|toml|txt)$/;
-// A line that declares the file optional must not fail the check.
-const OPTIONAL_RE = /si présent|if present/i;
-// A planned path not created yet, marked right after the citation, is not an error.
-const TO_CREATE_RE = /^\s*\(à créer\)|^\s*\(to create\)/i;
-const MARKERS_RE = /\[(IA|humain|décision|AI|human|decision)\]/i;
 const DATE_RE = /\b\d{4}-\d{2}-\d{2}\b/;
 // Intent sections, in either language (an intent written before a language switch stays valid), named in the project's.
 const INTENT_SECTIONS = [
