@@ -28,6 +28,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/closure-proof.mjs
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - packages/drwil/templates/common/base/.githooks/state.mjs
+  - packages/drwil/templates/common/base/.githooks/scope-gate.mjs
   - packages/drwil/templates/common/base/docs/ia-first.md
   - packages/drwil/templates/common/base/docs/preuves/README.md
   - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
