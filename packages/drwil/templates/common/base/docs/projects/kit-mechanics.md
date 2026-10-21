@@ -7,6 +7,7 @@ files:
   - .githooks/run-checks.mjs
   - .githooks/check-docs.mjs
   - .githooks/skill-headers.mjs
+  - .githooks/doc-coherence.mjs
   - .githooks/check-contract-tests.mjs
   - .githooks/check-architecture.mjs
   - .githooks/consumption.mjs

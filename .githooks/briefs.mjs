@@ -235,8 +235,11 @@ export function briefIntent(text) {
   return INTENT_FIELD.exec(text)?.[1] ?? null;
 }
 
-/** Files the branch changed since its merge base with the main branch (DRWIL_BASE, origin/HEAD, then the usual names); [] without a base. */
-function branchFiles(root) {
+/**
+ * Files the branch changed since its merge base with the main branch (DRWIL_BASE, origin/HEAD, then the
+ * usual names), only those of a git `--diff-filter` (e.g. "A", added) if given; [] without a base.
+ */
+export function branchFiles(root, filter) {
   const git = (...args) => {
     const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
     return r.status === 0 ? r.stdout.trim() : "";
@@ -252,7 +255,10 @@ function branchFiles(root) {
   for (const ref of refs) {
     if (!ref || !git("rev-parse", "--verify", "--quiet", `${ref}^{commit}`)) continue;
     const base = git("merge-base", "HEAD", ref);
-    if (base) return git("diff", "--name-only", "--no-renames", `${base}..HEAD`).split("\n").filter(Boolean);
+    if (base)
+      return git("diff", "--name-only", "--no-renames", ...(filter ? [`--diff-filter=${filter}`] : []), `${base}..HEAD`)
+        .split("\n")
+        .filter(Boolean);
   }
   return [];
 }

@@ -7,6 +7,7 @@ files:
   - .githooks/run-checks.mjs
   - .githooks/check-docs.mjs
   - .githooks/skill-headers.mjs
+  - .githooks/doc-coherence.mjs
   - .githooks/check-contract-tests.mjs
   - .githooks/check-architecture.mjs
   - .githooks/consumption.mjs
@@ -39,6 +40,7 @@ files:
   - .githooks/check-code-rules.test.mjs
   - .githooks/check-control-coverage.test.mjs
   - .githooks/check-docs.test.mjs
+  - .githooks/doc-coherence.test.mjs
   - .githooks/skill-headers.test.mjs
   - .githooks/check-contract-tests.test.mjs
   - .githooks/check-file-size.test.mjs

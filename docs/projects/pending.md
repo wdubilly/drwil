@@ -150,7 +150,7 @@ avant les points 5 à 13, en trois versions.
   3. 0.6.9, la fluidité de la clôture (faite, journal du 2026-10-21) :
      clôture guidée, message clair du critère humain, note à tout moment.
   4. Avant la 0.7.0 (demande du 2026-10-21), la cohérence de la
-     documentation à la clôture (`docs/intentions/cloture-coherence-doc.md`)
+     documentation à la clôture (faite, journal du 2026-10-21)
      et la note de recette conservée dans le dépôt
      (`docs/intentions/note-de-recette-par-version.md`).
   5. 0.7.0, la preuve qui dure (ci-dessous).
@@ -397,10 +397,8 @@ une décision du demandeur.
   `docs/intentions/guide-de-demarrage.md`.
 - [ ] [décision] Convoquer des personas d'agents (`agency-agents`) choisis par
   le cadrage d'un chantier — `docs/intentions/personas-convoques-par-le-cadrage.md`.
-- [ ] [décision] [P1] La clôture vérifie la cohérence de la documentation, de
-  façon bloquante (cadrée le 2026-10-21, avant la 0.7.0) — fiche
-  `docs/projects/cloture-coherence-doc.md`, intention
-  `docs/intentions/cloture-coherence-doc.md`.
+- [ ] [décision] Détecter un intitulé d'index ou un paragraphe de version devenu
+  faux — `docs/intentions/intitule-d-index-devenu-faux.md`.
 - [ ] [décision] Proposer la couche d'un dossier de code apparu après
   l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
 - [ ] [décision] Mener plusieurs chantiers en parallèle, ou orchestrer plusieurs
@@ -456,19 +454,3 @@ une décision du demandeur.
   dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
   main — outil cible, mode d'authentification et ponctuel vs continu
   restent à trancher — `docs/intentions/importer-tickets-externes.md`.
-
-## Points déjà faits d'une fiche encore ouverte
-
-- [x] [IA] Aucun `.gitignore` dans les modèles du kit —
-  `docs/projects/suites-kit-portable.md` (point 9).
-- [x] [IA] Contrôles du dépôt drwil lui-même — fait le 2026-10-04 —
-  `docs/projects/suites-kit-portable.md` (point 5).
-- [x] [IA] check-docs.mjs : faux positifs et écarts relevés dans drwil —
-  corrigé le 2026-10-04 (lot 2 de l'extraction) —
-  `docs/projects/suites-kit-portable.md` (point 8).
-- [x] [IA] [P2] Tester le kit sous Windows et macOS — matrice CI ajoutée
-  le 2026-10-04, verte sur les 3 OS (run CI `37238852012`) —
-  `docs/projects/suites-kit-portable.md` (point 1).
-- [x] [IA] [P3] Supprimer à l'`init` les fichiers obsolètes d'une ancienne version
-  du kit — fait le 2026-10-05 —
-  `docs/projects/suites-kit-portable.md` (point 3).

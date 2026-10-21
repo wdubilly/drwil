@@ -1,4 +1,4 @@
-// Migration d'un projet équipé par une version française du kit (docs/projects/coeur-en-anglais.md).
+// Migration d'un projet équipé par une version française du kit (journal « Le cœur en anglais », docs/projects/journal.md).
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";

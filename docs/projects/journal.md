@@ -2504,3 +2504,28 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   la 0.6.8 et de la 0.6.9, déjà portées par leurs intentions.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `cloture-release-0-6-9`.
+
+## 2026-10-21 — La clôture vérifie la cohérence de la documentation, de façon bloquante
+
+- **Décisions clés** : la clôture (`.githooks/close.mjs`, `--check`) refuse en
+  un seul message, sur tout l'index, une case contredisant le statut de la
+  fiche (QUA-015), une citation de fiche de chantier dans du code, modifié ou
+  non (QUA-049), et une fiche supprimée dont l'intention n'est pas touchée
+  (QUA-036) ; au commit, ces écarts restent des avertissements (QUA-074).
+  Les règles vivent une fois dans `.githooks/doc-coherence.mjs`, lu par
+  `check-docs` et par la clôture (QUA-075). Chaque correction sans jugement
+  est proposée en diff et n'est écrite qu'avec `--fix` : case alignée sur le
+  statut, référence morte réorientée vers le journal (fiche qui se clôt) ou
+  supprimée (QUA-076). Une intention nouvelle citant un chemin déjà cité par
+  une autre est signalée en avertissement (QUA-077). Les cinq cases de
+  `suites-kit-portable` et neuf citations de fiche dans des commentaires de
+  code ont été corrigées avant de devenir bloquantes. QUA-015, QUA-036 et
+  QUA-049 sont modifiés (déclarés dans la fiche) ; QUA-015 a été réattesté
+  par l'humain.
+- **Limites connues** : un intitulé d'index devenu faux et un paragraphe de
+  version qui ne suit plus ses cases ne sont pas détectés (non détectables de
+  façon sûre) : intention `docs/intentions/intitule-d-index-devenu-faux.md`.
+  Une ligne d'index commune à la fiche et à son intention ne se retire pas
+  automatiquement : à retirer à la main.
+- **Consommation** : non mesurée — chantier mené sous Copilot CLI.
+- **Clôturé par** : la branche `workstream/cloture-coherence-doc`.
