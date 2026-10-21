@@ -12,6 +12,8 @@ files:
   - packages/drwil/src/coverage.ts
   - packages/drwil/src/evidence.ts
   - packages/drwil/src/verify.ts
+  - packages/drwil/src/verdict.ts
+  - packages/drwil/src/agent.ts
   - packages/drwil/src/index.ts
   - packages/drwil/bin/drwil.js
   - packages/drwil/test/cycle.test.mjs
@@ -19,16 +21,18 @@ files:
   - .githooks/close.mjs
   - .githooks/close.test.mjs
   - .githooks/scope-gate.mjs
+  - .githooks/state.mjs
   - packages/drwil/templates/common/base/.githooks/close.mjs
+  - packages/drwil/templates/common/base/.githooks/state.mjs
   - packages/drwil/templates/common/base/docs/ia-first.md
-  - packages/drwil/templates/common/base/docs/recipes/close-a-workstream.md
+  - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
   - packages/drwil/templates/common/base/gitignore
   - .github/workflows/ia-first.yml
   - docs/preuves/*.md
   - docs/ia-first.md
   - docs/contracts.md
   - docs/architecture.md
-  - docs/recipes/close-a-workstream.md
+  - docs/recipes/working-with-branches.md
   - .drwil/ia-first.json
   - .gitignore
   - outils/miroirs.json
@@ -122,6 +126,22 @@ Prises par le demandeur le 2026-10-21 :
   et son chantier.
 - La preuve de clôture porte l'empreinte des fichiers couverts, comme
   l'attestation.
+
+Élargissements du cadrage par l'agent, le 2026-10-21 (chacun dit pourquoi) :
+
+- `docs/recipes/working-with-branches.md` et sa copie du gabarit remplacent
+  la recette de clôture séparée du cadrage initial (jamais créée) : la
+  recette de clôture existe déjà, c'est la section « Closing » de la recette
+  des branches — une information, une seule source, plutôt qu'une seconde
+  recette qui la recopierait.
+- `packages/drwil/src/verdict.ts` et `packages/drwil/src/agent.ts` : les
+  critères d'une preuve de clôture dont la preuve a disparu doivent être
+  nommés dans les sorties humaine, agent et JSON ; sans ces deux fichiers,
+  ils ne pouvaient être affichés que déguisés en erreurs de registre.
+- `.githooks/state.mjs` et sa copie du gabarit : la clôture lit la dernière
+  évidence de `drwil verify --evidence` (commit vérifié, couverture) que
+  `verifyEvidence` sait déjà retrouver — la lire une seule fois, exportée,
+  plutôt que d'en recopier la logique dans la clôture.
 
 ## 5. Points à trancher
 
