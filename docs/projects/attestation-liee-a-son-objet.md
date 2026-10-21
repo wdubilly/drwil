@@ -54,13 +54,13 @@ conforme à l'état évalué.
 - Un fichier couvert par un contrat (champ `**Covers**`), modifié, ajouté,
   supprimé ou renommé sans toucher au contrat, fait tomber son attestation en
   `MANUAL` ; `verify` ne rend plus PASS et nomme le fichier qui a changé ;
-  un fichier hors couverture laisse l'attestation `ATTESTED` — contrat à créer
+  un fichier hors couverture laisse l'attestation `ATTESTED` — contrat `QUA-081`
 - Un contrat attestable sans `**Covers**` est signalé par `verify` et `doctor`
   sans faire tomber son attestation ; une attestation de format ancien reste
-  lisible, sa première réattestation passe au nouveau format — contrat à créer
+  lisible, sa première réattestation passe au nouveau format — contrat `QUA-082`
 - `drwil attest` renouvelle volontairement une attestation encore valide (option
   dédiée), toujours depuis un terminal interactif, sans que l'identifiant
-  retapé ni l'identité du geste soient affaiblis — contrat à créer
+  retapé ni l'identité du geste soient affaiblis — contrat `QUA-083`
 
 ## Contrats modifiés
 

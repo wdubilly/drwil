@@ -122,7 +122,7 @@ README du paquet (ce qu'une attestation garantit), changelog.
 
 ## Questions à trancher
 
-Aucune : toutes tranchées par le demandeur le 2026-10-21, détail dans `docs/projects/attestation-liee-a-son-objet.md` :
+Aucune : toutes tranchées par le demandeur le 2026-10-21, détail dans `docs/projects/journal.md` :
 règle sur les chemins couverts (couverture absente signalée sans invalider) ;
 champ `**Covers**` ; supprimé, renommé, ajouté font tomber l'attestation ;
 empreinte du contenu, indépendante de git ; renouvellement par option de
