@@ -360,6 +360,9 @@ une décision du demandeur.
   `docs/intentions/banc-gemini-quota.md`.
 - [x] [IA] [P1] 0.6.8 : Copilot CLI enchaîne les chantiers — fait, journal
   du 2026-10-20.
+- [ ] [IA] [P1] Release 0.6.9, la fluidité de la clôture (version, changelog,
+  candidate, verdict humain, promotion) — fiche
+  `docs/projects/release-0-6-9.md`.
 - [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
   d'essayé) — `docs/intentions/compat-codex.md`.
 - [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
