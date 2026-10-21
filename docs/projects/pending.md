@@ -166,8 +166,8 @@ avant les points 5 à 13, en trois versions.
      publication npm et protection de la forge.
 - **Pendant la 0.6.3** : trancher les questions de l'attestation liée à
   son objet, pour que sa fiche technique soit prête à la sortie.
-- **0.7.0** — la preuve qui dure : attestation liée à son objet
-  (`docs/intentions/attestation-liee-a-son-objet.md`), critères et
+- **0.7.0** — la preuve qui dure : attestation liée à son objet (fait,
+  journal du 2026-10-21), critères et
   preuves durables (`docs/intentions/criteres-et-preuves-durables.md`),
   barrière de fusion vérifiée (`docs/intentions/forge-dans-le-livrable.md`).
 
@@ -380,9 +380,9 @@ une décision du demandeur.
   mémoire de l'agent (README en double, version annoncée non contrôlée,
   toute clôture contrainte à l'exercice, entretien courant compris ;
   constaté le 2026-10-17) — `docs/intentions/doc-visiteur-juste.md`.
-- [ ] [décision] [P1] drwil_com, priorité 1 : une attestation tombe quand
-  ce qu'elle couvre change (scénario S6) —
-  `docs/intentions/attestation-liee-a-son-objet.md`.
+- [ ] [décision] Déclarer ce que couvrent les contrats attestés du dépôt
+  (champ `**Couvre**`, puis réattestation) —
+  `docs/intentions/couverture-des-contrats-attestes.md`.
 - [ ] [décision] [P1] drwil_com, priorité 2 : des critères et des preuves
   qui survivent à la clôture — `docs/intentions/criteres-et-preuves-durables.md`.
 - [ ] [décision] [P1] drwil_com, priorité 3 : vérifier la barrière de

@@ -547,6 +547,8 @@ The agent must not execute it on behalf of the user.
 
 Attestations are versioned and tied to the relevant contract/control fingerprint so that changes to the governed proof invalidate the previous attestation.
 
+A contract can also declare the files it judges (`**Covers**` field, path patterns): the attestation records a fingerprint of their content, and a covered file modified, added, removed or renamed makes it stale (`verify` names the file). A still-valid attestation can be renewed on purpose with `drwil attest <CONTRACT_ID> --renew`, from the same interactive terminal.
+
 ---
 
 ## Agent independence

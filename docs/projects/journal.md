@@ -2556,3 +2556,33 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   temporaires, origine nu local et `gh` simulé.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `workstream/note-de-recette-par-version`.
+
+## 2026-10-21 — Une attestation tombe quand ce qu'elle couvre change
+
+- **Décisions clés** : la règle de validité est écrite avant le mécanisme
+  (`docs/ia-first.md`, dépôt et gabarit) : une attestation n'est valide que
+  tant que l'objet attesté reste celui jugé. Un contrat déclare cet objet par
+  le champ `**Couvre**` / `**Covers**` (motifs de chemins, lus par
+  `.githooks/contracts.mjs`). L'attestation version 3 enregistre l'empreinte
+  du contenu des fichiers couverts, lue sur les fichiers (indépendante de
+  git, ordre des chemins et fins de ligne sans effet) ; un fichier modifié,
+  ajouté, supprimé ou renommé la fait tomber et `verify` le nomme, un fichier
+  hors couverture non (QUA-081, Une attestation tombe quand un fichier
+  qu'elle couvre change). Un contrat attestable sans couverture est signalé
+  par `verify` et `doctor` sans perdre son attestation ; les versions 1 et 2
+  restent valables, la première réattestation passe en version 3 (QUA-082).
+  `drwil attest <ID> --renew` renouvelle une attestation encore valide, même
+  terminal interactif, même identifiant retapé, jamais de `--yes` (QUA-083).
+  QUA-032 est modifié (déclaré dans la fiche) : une attestation couvre aussi
+  l'empreinte des fichiers couverts ; il reste prouvé par son test. La logique
+  est dans un nouveau module (`packages/drwil/src/coverage.ts`) pour tenir
+  `packages/drwil/src/verify.ts` à 400 lignes. Le cadrage a été élargi en cours de route
+  (nouveau module, option de la CLI) par un commit qui ne touche que la fiche.
+- **Limites connues** : aucun contrat attesté du dépôt ne déclare `**Couvre**`
+  (hors périmètre : cela exige des réattestations humaines) — intention
+  `docs/intentions/couverture-des-contrats-attestes.md`. Un changement de
+  forme pur fait tomber l'attestation (aucun moyen sûr de le distinguer).
+  Le test rouge du scénario S6 n'a pas été commité seul (les hooks rejouent
+  les tests à chaque commit de code) : il est commité vert avec le mécanisme.
+- **Consommation** : non mesurée — chantier mené sous Copilot CLI.
+- **Clôturé par** : la branche `cadrage-attestation-liee`.

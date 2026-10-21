@@ -5,6 +5,19 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Added
+
+- An attestation falls when what it covers changes: a contract can declare
+  the files it judges (`**Covers**` field, path patterns), the attestation
+  (version 3) records a fingerprint of their content, and a covered file
+  modified, added, removed or renamed makes it stale — `verify` names the
+  file. A file outside the patterns changes nothing; version 1 and 2
+  attestations stay valid as they are.
+- `verify` and `doctor` flag a contract with a human part and no `**Covers**`,
+  without dropping its attestation.
+- `drwil attest <ID> --renew` renews on purpose an attestation that is still
+  valid, from an interactive terminal, retyping the identifier.
+
 ## 0.6.9 (2026-10-21)
 
 ### Added

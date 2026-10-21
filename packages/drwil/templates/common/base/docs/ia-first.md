@@ -188,8 +188,29 @@ The attestation is bound by fingerprint to the human part of the contract
 of each check it covered. A check added later leaves it valid (it must pass
 anyway); a changed human part, or a covered check removed or redefined,
 makes it stale and the contract is `MANUAL` again. An attestation written
-before this rule (version 1) stays bound to the whole contract text. `ATTESTED` status: distinct from `PASS`, it satisfies the contract;
+before this rule (version 1) stays bound to the whole contract text.
+`ATTESTED` status: distinct from `PASS`, it satisfies the contract;
 never attestable: a `PASS`, `FAIL`, `ERROR` or not-applicable contract.
+
+**Validity rule**: an attestation is valid only as long as the object it
+attests stays as it was when judged. The object is what the contract declares
+it covers, as paths: the **Covers** field lists path patterns between
+backticks (``**Covers**: `.github/workflows/*.yml`, `src/auth/**` ``; `*` stays
+in a folder, `**` crosses folders, a trailing `/` means the whole folder).
+The attestation (version 3) records a fingerprint of the content of every file
+matched; a file modified, added, removed or renamed under a pattern, without the
+contract being touched, makes the attestation stale: `verify` names the file
+and the contract is `MANUAL` again. The fingerprint reads the files themselves
+(independent of git, replayable in CI); path order and line endings change
+nothing. A pure formatting change counts as a change: there is no safe way to
+tell it from a real one. A file outside every pattern leaves the attestation
+valid. An attestable contract without **Covers** keeps its attestation (never
+dropped for lack of coverage) but `verify` and `doctor` flag it: its
+attestation cannot fall when the code it judged changes. An attestation of
+version 1 or 2 stays valid as it is; its first renewal passes to version 3.
+`drwil attest <ID> --renew` renews on purpose an attestation that is still
+valid, from an interactive terminal and retyping the identifier, like any
+attestation.
 
 **Business rules**: the output ends with a one-line summary of
 the business non-regression — rules proven by a test (a passing contract

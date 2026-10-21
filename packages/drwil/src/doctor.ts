@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
+import { lacksCoverage } from "./coverage.js";
 import { loadProject } from "./verify.js";
 import { resolveFromConfig } from "./config.js";
 import { AUTO_KINDS, describeGap, findGaps, hooksPath, scriptsDir, unchainedHooks } from "./essentials.js";
@@ -55,6 +56,8 @@ const TEXTS = {
     validContracts: "{0} contrat(s) valide(s) ({1})",
     proofs: "Preuves automatisées",
     noCheck: " (sans Contrôle, toujours MANUAL : {0})",
+    coverage: "Couverture des attestations",
+    noCovers: " (sans Couvre, leur attestation ne tombe pas si le code jugé change : {0})",
     hooks: "Hooks git",
     hooksOff: "inactifs : lancer `git config core.hooksPath .githooks`",
     hooksChained: "core.hooksPath = {0}, hooks drwil appelés depuis là",
@@ -90,6 +93,8 @@ const TEXTS = {
     validContracts: "{0} valid contract(s) ({1})",
     proofs: "Automated proofs",
     noCheck: " (without Check, always MANUAL: {0})",
+    coverage: "Attestation coverage",
+    noCovers: " (without Covers, their attestation does not fall if the code they judged changes: {0})",
     hooks: "Git hooks",
     hooksOff: "inactive: run `git config core.hooksPath .githooks`",
     hooksChained: "core.hooksPath = {0}, drwil hooks called from there",
@@ -167,6 +172,15 @@ export async function doctor(opts: { targetDir: string }): Promise<Diagnosis> {
     T.proofs,
     noCheck.length ? "warning" : "ok",
     `${provable}/${contracts.length}${noCheck.length ? fill(T.noCheck, noCheck.join(", ")) : ""}`,
+  );
+
+  const uncovered = contracts.filter(lacksCoverage);
+  const human = contracts.filter((k) => k.form === "section" && (k.manual || k.checks === null)).length;
+  point(
+    "coverage",
+    T.coverage,
+    uncovered.length ? "warning" : "ok",
+    `${human - uncovered.length}/${human}${uncovered.length ? fill(T.noCovers, uncovered.map((k) => k.id).join(", ")) : ""}`,
   );
 
   // A hook manager of the project (husky…) is fine as long as it calls the drwil hooks.

@@ -41,6 +41,7 @@ test("forme sections : Contrôle, Manuel, contrats sans champ", () => {
     checks: ["secrets"],
     manual: null,
     tests: null,
+    covers: null,
     severity: "blocking",
     rawSeverity: null,
   });
@@ -75,6 +76,27 @@ test("QUA-029 : champ Tests lu (fichiers entre accents graves), en français et 
   assert.deepEqual(en.tests, ["tests/test_promo.py"]);
   assert.equal(sans.tests, null);
   assert.equal(readContracts("| ID | Règle |\n|---|---|\n| APP-005 | r |")[0].tests, null);
+});
+
+test("QUA-081 : champ Couvre / Covers lu (motifs entre accents graves) ; absent = null", () => {
+  const [fr, en, sans] = readContracts(`## APP-006 — Dépendances relues
+**Règle** : relues.
+**Manuel** : relecture
+**Couvre** : \`package.json\`, \`src/auth/**\`
+
+## APP-007 — Workflow relu
+**Rule** : reviewed.
+**Manual** : review
+**Covers**: \`.github/workflows/*.yml\`
+
+## APP-008 — Sans couverture
+**Règle** : rien.
+**Manuel** : relecture
+`);
+  assert.deepEqual(fr.covers, ["package.json", "src/auth/**"]);
+  assert.deepEqual(en.covers, [".github/workflows/*.yml"]);
+  assert.equal(sans.covers, null);
+  assert.equal(readContracts("| ID | Règle |\n|---|---|\n| APP-005 | r |")[0].covers, null);
 });
 
 test("forme sections : « **Contrôle:** » et valeur à la ligne suivante", () => {
