@@ -31,16 +31,35 @@ place des avertissements, éviterait des erreurs qui passent aujourd'hui.
 - Un renvoi vers une fiche supprimée, vu seulement parce qu'un chemin cité
   devenait introuvable.
 
+## Décisions du demandeur (2026-10-21)
+
+- [décision prise] Tout devient bloquant à la clôture : les écarts de
+  QUA-015 (case cochée / statut de la fiche) et de QUA-049 (citations de
+  fiche dans du code non modifié) passent d'avertissement à bloquant, au moment
+  de clore. Conséquence : ces deux contrats existants sont modifiés.
+- [décision prise] Où : dans `.githooks/close.mjs` (clôture et `--check`), en
+  réutilisant les règles de `check-docs`, sans les dupliquer.
+- [décision prise] Doublon d'intention : un avertissement quand une nouvelle
+  intention cite un chemin déjà cité par une autre, sans mots clés.
+- [décision prise] Coût : tout l'index à chaque clôture.
+- [décision prise] Corriger, pas seulement bloquer : la clôture propose
+  chaque correction (liste ou diff) et l'applique seulement avec `--fix` ;
+  corrigés ainsi : cases de l'index alignées sur le statut de la fiche,
+  références mortes supprimées ou réorientées vers le journal.
+- [décision prise] Référence morte : réorientée vers le journal quand elle
+  vise la fiche du chantier qui se clôt, supprimée sinon. Citation de fiche
+  voulue : aucune exception. Intitulé d'index devenu faux : hors de ce
+  chantier, reste une limite (non détectable de façon sûre).
+- Ordre : ce chantier passe avant « une note de recette conservée dans le
+  dépôt ».
+
 ## Questions à trancher
 
-- [décision] Quelles incohérences deviennent bloquantes à la clôture, et
-  lesquelles restent des avertissements (l'écart avec QUA-015 et QUA-049 est
-  aujourd'hui un choix de faible friction) ?
-- [décision] Où le vérifier : dans `.githooks/close.mjs` (au moment de
-  clore), dans `check-docs` (à chaque commit), ou dans les deux ?
-- [décision] Comment détecter un doublon d'intention sans heuristique
-  fragile (titre, chemin cité, mots clés) ?
-- [décision] Comment garder le coût bas : seulement les fichiers touchés par
-  le chantier, ou tout l'index à chaque clôture ?
+- Le message de clôture unique : ne pas empiler ce signal avec le chemin
+  restant jusqu'à CLOSING (QUA-073).
+- Le traitement des avertissements QUA-015 et QUA-049 déjà présents dans le
+  dépôt (cinq cases cochées de `suites-kit-portable`, neuf citations de fiche
+  dans du code non modifié) : à corriger avant de les rendre bloquants.
+
 - Lien : la clôture dit déjà quelle étape suit (QUA-073, chemin restant jusqu'à
   CLOSING) : à cadrer avec elle pour ne pas empiler deux messages de clôture.

@@ -1,115 +1,106 @@
 # Découverte de valeur et opportunités produit
 
-> Dernier scan : 2026-10-17 (le précédent, du 2026-10-05, est remplacé :
-> ses quatre opportunités sont traitées ou reprises par des intentions).
-> État du projet : paquet `drwil` 0.6.1 publié en release GitHub
-> (tarball), en pilote sur un premier projet neuf (`drwil_com`). Deux
-> fiches prêtes : « premier essai propre » (0.6.2) et « sondage de
-> lancement dans tous les cas ». Six intentions nées du pilote le même
-> jour. Objet de ce scan : préparer la roadmap de la 0.6.3, puis de la
-> 0.7.0. Commité plus tard (chantier « documents de cadrage sous la
-> barrière ») : les chemins des fiches et intentions réalisées depuis sont
-> remplacés par un renvoi au journal du 2026-10-17 ; la roadmap suivie
-> vit dans `docs/projects/pending.md` (« Ordre de réalisation »).
+> Dernier scan : 2026-10-21 (le précédent, du 2026-10-17, est remplacé :
+> ses opportunités OPT-1 à OPT-5 et OPT-10 sont livrées en 0.6.2 et 0.6.3,
+> OPT-6 à OPT-8 sont reprises ci-dessous, OPT-9 aussi).
+> État du projet : paquet `drwil` 0.6.9 fusionné (PR #190, fluidité de la
+> clôture). Copilot CLI et Gemini CLI tenus, Codex et Cursor repassés en
+> intention. Prochaine version : 0.7.0, « la preuve qui dure », aucune
+> fiche cadrée. Objet de ce scan : vérifier l'ordre de la 0.7.0 et de la
+> 0.7.x avant de cadrer. La roadmap suivie vit dans
+> `docs/projects/pending.md` (« Ordre de réalisation »).
 
 ## Aperçu de consommation
 
-`.drwil/usage.jsonl` : 7 entrées, dont 4 depuis le dernier scan (mesure
-automatique depuis le 2026-10-16, modèle `claude-opus-5-5`) : 3 253 189
-tokens pour 4 chantiers (consommation livrée 1,42 M, release 0.6.0
-0,94 M, projet neuf après `npm install` 0,77 M, entretien courant
-0,12 M). Les quelque 65 clôtures du 2026-10-05 au 2026-10-15 précèdent la
-mesure : non chiffrées.
+`.drwil/usage.jsonl` : 28 chantiers mesurés automatiquement (journaux de
+Claude Code, modèle `claude-opus-5-5`), soit 35,06 M de tokens et
+890 minutes ; dont 15 depuis le dernier scan : 19,47 M de tokens et
+526 minutes (dernier chantier mesuré : 2026-10-19). Les plus coûteux : le
+détour (4,31 M), la fiche de recette (3,93 M), la reprise par sous-agent
+(2,45 M). Les chantiers 0.6.7 à 0.6.9, menés sous Copilot CLI, ne sont
+pas mesurés : la mesure automatique ne lit que Claude Code (voir OPT-1).
 
 ## Opportunités prioritaires (matrice valeur / effort)
 
-Lecture pour la roadmap : 🟢 effort faible, 🟡 moyen, 🔴 élevé ; « format »
-= change un format, une sortie ou le verdict (version mineure, pas un
-correctif).
+Lecture : 🟢 effort faible, 🟡 moyen, 🔴 élevé ; « format » = change un
+format, une sortie ou le verdict (version mineure, pas un correctif).
 
 | ID | Fonctionnalité proposée | Pourquoi (valeur) | État du code existant | Effort | Action recommandée |
 |---|---|---|---|---|---|
-| OPT-1 | Une mise à jour rafraîchit la prose que le projet n'a pas touchée (skills, recettes) | Sans elle, **aucun correctif de skill n'atteint un projet installé** : `init` ne rafraîchit que `.githooks/` et `.claude/hooks/` (`KIT_MECHANICS`, `packages/drwil/src/config.ts`). Le correctif du sondage modifie la skill `/drwil-start` : `drwil_com` ne le recevrait pas en passant en 0.6.3, sauf `--force` qui écrase aussi ce qu'il a modifié. | Manifeste avec empreintes déjà écrit à l'installation (`packages/drwil/src/manifest.ts`) ; règle « rafraîchir si inchangé » déjà appliquée aux hooks (`packages/drwil/src/install.ts`, `shouldOverwrite`). Intention « une mise à jour rafraîchit aussi la prose » (réalisée, journal du 2026-10-17). | 🟡 Moyen | **0.6.3, en premier** : condition pour que les autres correctifs servent au pilote. |
-| OPT-2 | Le sondage de lancement marche dans tous les cas (un seul brief, hook jamais muet) | Bloquant constaté le 2026-10-17 : un projet neuf n'a qu'un brief, le sondage ne s'ouvre pas ; repli en terminal seulement. | Fiche prête « le sondage de lancement marche dans tous les cas » (réalisée, journal du 2026-10-17). | 🟢 Faible | **0.6.2**, avec la fiche « premier essai propre » : tout projet installé en 0.6.2 a la bonne skill ; un projet déjà installé la reçoit avec OPT-1. |
-| OPT-3 | Les hooks lisent la racine du projet, pas le dossier courant | Rappel d'état faux après un `cd` (constaté le 2026-10-16) ; un lancement par sondage peut chercher `.githooks/state.mjs` au mauvais endroit. | `.claude/settings.json` passe déjà `${CLAUDE_PROJECT_DIR}` pour trouver les hooks : la variable est disponible ; `.claude/hooks/prompt-hook.mjs` et `.githooks/state.mjs` prennent `process.cwd()`. Intention « les hooks lisent la racine du projet » (réalisée, journal du 2026-10-17). | 🟢 Faible | **0.6.3**, juste après OPT-2 (mêmes fichiers). |
-| OPT-4 | Un dossier passé par `npm init -y` reste un projet neuf | Réflexe courant d'un utilisateur Node ; même défaut que la 0.6.1 (projet neuf pris pour existant). | `detectDir` (`packages/drwil/src/stack.ts`), test du parcours déjà écrit pour la 0.6.1. Intention « un dossier passé par `npm init -y` reste un projet neuf » (réalisée, journal du 2026-10-17). | 🟢 Faible | **0.6.3**. |
-| OPT-5 | Guide de démarrage, version réduite : redémarrer la session après `init` et vérifier les hooks, autorisation de l'auto-merge | Constaté le 2026-10-17 et confirmé par le demandeur : une session ouverte avant `init` n'a aucun hook actif ; rien n'en parle dans la doc. | Section « Installation » du `README.md` ; skill `/drwil-start` vérifie déjà la fusion programmée. Intention `docs/intentions/guide-de-demarrage.md`. | 🟢 Faible | **0.6.3**, après la 0.6.2 (même section du README). Dépôt existant et protection de branche : plus tard. |
-| OPT-10 | Un identifiant sans libellé est rattrapé avant d'arriver à l'humain | Constaté par le demandeur le 2026-10-17 : les réponses de l'agent citent des ID nus (« OPT-6 à OPT-8 », « scénario S6 ») ; le rappel actuel ne relit que ce que l'agent lit, et fait trop de bruit pour être lu. | `.githooks/glossary.mjs` (source unique des libellés), `.claude/hooks/id-glossary.mjs` (rappel après chaque outil) ; pas de hook de fin de réponse. Intention `docs/intentions/identifiant-rattrape-avant-l-humain.md`. | 🟡 Moyen | **0.6.3, en tête** avec OPT-1 (demande du demandeur : rapidement). |
-| OPT-6 | Une attestation tombe quand ce qu'elle couvre change | Confiance dans le verdict : aujourd'hui un PASS peut reposer sur une attestation d'un état révolu (scénario S6 du pilote). | Empreintes d'attestation déjà en place (`packages/drwil/src/verify.ts`), mais liées au texte du contrat et à la définition des contrôles ; `**Scope**` est de la prose. Intention `docs/intentions/attestation-liee-a-son-objet.md`. | 🔴 Élevé, format | **0.7.0**, priorité 1 ; mécanisme à trancher dans la fiche technique. |
-| OPT-7 | Des critères et des preuves qui survivent à la clôture | Traçabilité après le chantier et rejeu en CI : aujourd'hui seuls les contrats durent. | `activeBrief` (`packages/drwil/src/criteria.ts`) ; trailer `Drwil-Brief` déjà écrit sur les commits ; `packages/drwil/src/evidence.ts`. Intention `docs/intentions/criteres-et-preuves-durables.md`. | 🔴 Élevé, format | **0.7.0**, priorité 2. |
-| OPT-8 | Vérifier la barrière de fusion (absente, mal configurée, conforme, non vérifié) | Sans protection, une fusion automatique passe avant la CI (PR #1 du pilote). | `drwil doctor` (`packages/drwil/src/doctor.ts`) ; vérification de ruleset propre à ce dépôt (`.github/scripts/verifier-ruleset.mjs`). Intention `docs/intentions/forge-dans-le-livrable.md`. | 🟡 Moyen | **0.7.0**, priorité 3 (nouveau diagnostic, pas un correctif). |
-| OPT-9 | Publier `drwil` sur npm | Rendrait l'URL de release et le tarball inutiles : `npx drwil init` direct. | Paquet empaquetable et éprouvé en CI (contrôle `tarball`) ; décision produit en vague 7 (`docs/intentions/packager-kit-ia-first.md`). | 🟢 Faible technique, décision | Hors 0.6.x : décision du demandeur. |
+| OPT-1 | La consommation de Copilot CLI mesurée à la clôture | Copilot CLI est l'outil le plus utilisé sur ce dépôt et les trois derniers chantiers (0.6.7 à 0.6.9) ne sont pas chiffrés : l'objectif « baisser la consommation de tokens » n'est plus mesuré. | `.githooks/consumption.mjs` ne lit que `~/.claude/projects/` ; les traces de Copilot sont dans `~/.copilot/session-store.db` (table `session_usage`) et `~/.copilot/session-state/`. Intention `docs/intentions/consommation-autres-outils.md`. | 🟡 Moyen | **0.7.x, tôt** : un lecteur par outil, Copilot CLI d'abord ; garantir que seuls les champs de consommation sont lus. |
+| OPT-2 | Une attestation tombe quand ce qu'elle couvre change | Confiance dans le verdict : un PASS peut reposer sur une attestation d'un état révolu. Treize contrats reposent déjà sur une attestation humaine. | Attestations versionnées par empreinte (`packages/drwil/src/verify.ts`, `packages/drwil/src/attest.ts`), liées au texte du contrat et à la définition des contrôles, pas à son objet. Intention `docs/intentions/attestation-liee-a-son-objet.md`. | 🔴 Élevé, format | **0.7.0, priorité 1** (retour du pilote `drwil_com`) ; mécanisme à trancher dans la fiche technique. |
+| OPT-3 | Des critères et des preuves qui survivent à la clôture | Traçabilité après le chantier et rejeu en CI : aujourd'hui la fiche et ses critères sont supprimés à la clôture, seuls les contrats durent. | `activeBrief` (`packages/drwil/src/criteria.ts`) ; `packages/drwil/src/evidence.ts` ; trailer `Drwil-Brief` déjà écrit sur les commits. Intention `docs/intentions/criteres-et-preuves-durables.md`. | 🔴 Élevé, format | **0.7.0, priorité 2**. |
+| OPT-4 | Vérifier la barrière de fusion (absente, mal configurée, conforme, non vérifiée) | Sans protection de branche, une fusion automatique passe avant la CI (PR du pilote). Ici la PR #190 est restée bloquée jusqu'au vert : la barrière existe, mais le livrable ne la contrôle pas chez le client. | `drwil doctor` (`packages/drwil/src/doctor.ts`) ; vérification de ruleset propre à ce dépôt (`.github/scripts/verifier-ruleset.mjs`). Intention `docs/intentions/forge-dans-le-livrable.md`. | 🟡 Moyen | **0.7.0, priorité 3** (nouveau diagnostic, pas un correctif). |
+| OPT-5 | La clôture vérifie la cohérence de la documentation | Constaté à la clôture du 2026-10-21 : le commit de clôture a été refusé deux fois par `check-docs` (chemins cités vers des intentions retirées, fichier de code cité hors de toute fiche), chaque fois découvert au dernier moment. | `.githooks/check-docs.mjs` (bloquant au commit), `.githooks/close.mjs` (signale déjà intention touchée, références mortes, QUA-048 et QUA-073). Intention `docs/intentions/cloture-coherence-doc.md` (trois décisions ouvertes : bloquant ou non, doublons, coût). | 🟡 Moyen | **0.7.0, en complément** : même moment (la clôture), à cadrer avec les messages existants pour ne pas les empiler. |
+| OPT-6 | Une note de recette conservée dans le dépôt à chaque version | La fiche de recette et le verdict n'existent que sur la pré-release GitHub : ils ne suivent pas le code. | Fiche de recette (QUA-051), verdict humain (QUA-053), promotion (QUA-054). Intention `docs/intentions/note-de-recette-par-version.md`. | 🟢 Faible | **0.7.0, en complément** : prolonge les contrats de release existants. |
+| OPT-7 | Une vue de relecture : ce qui demande le jugement humain dans une PR | Le goulot est le temps d'arbitrage du demandeur, pas le code ; montrer décisions, cadrage, règles, preuves et exceptions réduit le temps de relecture. | Fiche de recette HTML en intention (`docs/intentions/fiche-de-recette-html.md`), tableau de bord (`.githooks/dashboard.mjs`). Intention `docs/intentions/vue-de-relecture.md`. | 🔴 Élevé | **0.7.x**, après la preuve durable (elle réutilise les critères conservés d'OPT-3). |
+| OPT-8 | Fluidité : afficher qui décide chaque transition | Reste vivant de l'intention de fluidité : l'humain ne voit pas, d'un coup d'œil, ce que l'agent peut faire seul. | Réglage `transitions` de `.drwil/ia-first.json`, `node .githooks/state.mjs`. Intention `docs/intentions/fluidite-sans-perte-de-rigueur.md`. | 🟡 Moyen | **0.7.x**, après OPT-7 (même surface d'affichage). |
+| OPT-9 | Retirer les citations de fiche restées dans le code non modifié | Neuf citations signalées en avertissement à chaque `check-docs` (QUA-049) : du bruit qui masque les vrais signaux. | `.githooks/check-code-rules.mjs` (`briefReferences`). Intention `docs/intentions/citations-de-fiche-heritees.md`. | 🟢 Faible | À glisser dans un chantier qui touche déjà ces fichiers. |
+| OPT-10 | Publier `drwil` sur npm | Rendrait l'URL de release et le tarball inutiles : `npx drwil init` direct. | Paquet empaquetable et éprouvé en CI (contrôle `tarball`). Intention `docs/intentions/packager-kit-ia-first.md`. | 🟢 Faible technique, décision | Hors 0.7.x : décision du demandeur. |
 
-Écartés de la roadmap utilisateur (valeur pour un utilisateur du pilote
-faible aujourd'hui) : date réécrite à l'installation du dépôt et `doctor`
-sur le dépôt drwil (propres à ce dépôt) ; préfixe du catalogue ; file,
-glossaire et consommation pour les autres agents (le pilote utilise Claude
-Code) ; couverture du diff (projets existants, pas le pilote).
+Écartés de la roadmap proche (valeur faible aujourd'hui ou décision
+produit préalable) : Codex et Cursor (repassés en intention le
+2026-10-19), personas, chantiers en parallèle, application de suivi,
+validation commerciale, couche d'un nouveau dossier de code, couverture
+à 100 %.
 
 ## Analyse détaillée des meilleures pistes
 
-### OPT-1 — Une mise à jour rafraîchit la prose non modifiée
-- **Problème résolu** : un projet qui passe d'une 0.6.x à la suivante a
-  des hooks à jour mais des skills et recettes d'origine — état mélangé,
-  constaté de 0.5.1 à 0.6.0.
-- **Briques existantes réutilisables** : `packages/drwil/src/manifest.ts`
-  (empreinte de chaque fichier installé), `packages/drwil/src/install.ts`
-  (`shouldOverwrite` : mécanique inchangée réécrite), `packages/drwil/src/config.ts`
-  (`KIT_MECHANICS`).
-- **Ce qu'il reste à faire** : trancher les questions de l'intention
-  (toute prose inchangée, ou seulement skills et recettes ; signaler la
-  prose modifiée), puis étendre la règle et ses tests.
-- **Impact si implémenté** : chaque correctif de la 0.6.x atteint le
-  pilote par un simple `init`, sans `--force`.
-
-### OPT-2 et OPT-3 — Sondage fiable, hooks à la bonne racine
-- **Problème résolu** : le seul geste de lancement dans le chat échoue
-  sur un projet neuf, sans rien dire.
-- **Briques existantes réutilisables** : `.claude/hooks/prompt-hook.mjs`,
-  `.githooks/state.mjs` (`start`), test du sondage dans
-  `packages/drwil/test/kit.test.mjs` ; `${CLAUDE_PROJECT_DIR}` déjà
-  utilisé dans `.claude/settings.json`.
-- **Ce qu'il reste à faire** : OPT-2 est cadrée ; OPT-3 demande deux
-  décisions (source de la racine, autres hooks).
-- **Impact si implémenté** : `/drwil-start` marche du premier coup, et un
-  échec dit toujours pourquoi.
-
-### OPT-6 — Attestation liée à son objet (0.7.0)
+### OPT-2 — Attestation liée à son objet (0.7.0)
 - **Problème résolu** : un PASS ne peut plus reposer sur un jugement
   humain périmé.
 - **Briques existantes réutilisables** : `packages/drwil/src/verify.ts`
-  (attestation version 2, empreintes par contrôle) ;
-  `packages/drwil/src/attest.ts`.
+  (empreintes par contrôle), `packages/drwil/src/attest.ts` ;
+  attestations déjà archivées dans `.drwil/evidence/attestations/`.
 - **Ce qu'il reste à faire** : la fiche technique (règle de validité,
-  correspondance attestation–contrat–preuve–objet, fichiers supprimés,
-  renommés, ajoutés), principe validé le 2026-10-17.
+  correspondance attestation, contrat, preuve et objet ; fichiers
+  supprimés, renommés, ajoutés), principe validé le 2026-10-17.
 - **Impact si implémenté** : la promesse « DRWIL demands the proof » tient
   aussi pour les preuves humaines.
 
+### OPT-3 — Critères et preuves durables (0.7.0)
+- **Problème résolu** : à la clôture, la fiche est supprimée avec ses
+  critères d'acceptation ; seule la ligne de contrat reste.
+- **Briques existantes réutilisables** : `packages/drwil/src/criteria.ts`,
+  `packages/drwil/src/evidence.ts`, trailer `Drwil-Brief`.
+- **Ce qu'il reste à faire** : où conserver critères et preuves, sans
+  réintroduire des citations de fiche mortes (QUA-049), et comment les
+  rejouer en CI.
+- **Impact si implémenté** : une revue ultérieure retrouve ce qui a été
+  accepté et par quelle preuve.
+
+### OPT-1 — Consommation de Copilot CLI (0.7.x)
+- **Problème résolu** : la mesure s'arrête au 2026-10-19 ; trois chantiers
+  menés sous Copilot CLI sont « non mesurés ».
+- **Briques existantes réutilisables** : `.githooks/consumption.mjs` et sa
+  ligne `.drwil/usage.jsonl` ; `~/.copilot/session-store.db` (table
+  `session_usage`).
+- **Ce qu'il reste à faire** : un lecteur Copilot qui ne lit que les champs
+  de consommation, jamais un contenu de message, et qui écrit la même
+  ligne.
+- **Impact si implémenté** : chaque clôture chiffrée, quel que soit l'outil.
+
 ## Roadmap qui en découle (proposée, à valider)
 
-Revue le même jour : le pilote est bloqué maintenant sur `/drwil-start`,
-et le goulot est le temps d'arbitrage du demandeur, pas le code.
+Décision du demandeur le 2026-10-21 : les deux compléments, liés au
+dernier chantier (la clôture), passent avant le cœur de la 0.7.0.
 
-- **0.6.2** — débloquer le pilote : « premier essai propre » et OPT-2
-  (sondage de lancement dans tous les cas), deux fiches prêtes, lançables
-  en file (faites, journal du 2026-10-17).
-- **0.6.3** — des mises à jour qui servent, et des réponses lisibles :
-  en tête OPT-10 (identifiant sans libellé rattrapé) et OPT-1 (mise à
-  jour de la prose non modifiée), puis OPT-3 (racine des hooks), OPT-4
-  (`npm init -y`), OPT-5 (guide de démarrage réduit).
-- **Pendant la 0.6.3** : trancher les questions d'OPT-6 (attestation liée
-  à son objet), pour que sa fiche technique soit prête à la sortie de la
-  0.6.3.
-- **0.7.0** — « la preuve qui dure » : OPT-6 (attestation liée à son
-  objet), OPT-7 (critères et preuves durables), OPT-8 (barrière de fusion
-  vérifiée).
+- **Avant la 0.7.0** — clôture et recette, deux chantiers distincts, dans
+  cet ordre : OPT-5 (cohérence de la documentation à la clôture, friction
+  vue le jour même), puis OPT-6 (note de recette conservée dans le dépôt).
+- **0.7.0** — « la preuve qui dure » : OPT-2, OPT-3, OPT-4, dans l'ordre
+  du pilote.
+- **0.7.x** — mesure et efficacité : OPT-1 en tête (la mesure manque
+  déjà), puis OPT-7 et OPT-8.
+- **À glisser** : OPT-9 dans un chantier voisin. **Décision du demandeur** :
+  OPT-10.
 
-Limite : valeur et effort sont des estimations de l'agent, tirées du code
-et d'un seul pilote.
+Limite : valeur et effort sont des estimations de l'agent, tirées du code,
+des journaux et d'un seul pilote.
 
 ## Prochaine étape
 
-Choisir les ID et répondre : « Valide OPT-X pour la convertir en
-intention » — ici toutes ont déjà une intention ou une fiche : valider
-la roadmap, puis cadrer les fiches de la 0.6.3.
+Valider la roadmap, ou répondre : « Valide OPT-X pour la convertir en
+intention » — ici toutes ont déjà une intention ; l'étape suivante est de
+cadrer la fiche de clôture et de recette (OPT-5 et OPT-6), puis celle de la
+0.7.0 (décisions ouvertes de l'attestation liée à son objet d'abord).
