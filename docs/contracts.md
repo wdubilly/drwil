@@ -30,9 +30,9 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Principe de défense en profondeur.
 
 ## QUA-013 — Contrôle non exécuté n'est pas passé
-**Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé.
-**Périmètre** : Tout contrôle listé dans les vérifs.
-**Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution.
+**Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé. La règle vaut aussi pour les critères d'acceptation, ceux de la fiche active comme ceux des fiches de preuve de clôture : une preuve absente, périmée ou non rejouée ne vaut jamais un succès, en local comme en CI.
+**Périmètre** : Tout contrôle listé dans les vérifs, et tout critère d'acceptation jugé par `drwil verify`.
+**Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution, `packages/drwil/src/closure.ts` pour les critères.
 **Preuve** : Sortie lue du contrôle concerné.
 **Contrôle** : `ci-coverage`, `tests-qua-013`
 **Manuel** : lecture de la sortie du contrôle concerné.
@@ -239,9 +239,9 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : `couverture-tests` partagé par 13 contrats faisait échouer les 13 sur un seul test cassé, chacun « non attribuable » : le dépôt n'appliquait pas la règle qu'il enseigne.
 
 ## QUA-034 — Un critère non prouvé fait tomber le verdict de verify
-**Règle** : Quand une fiche est active, `drwil verify` combine le jugement de ses critères d'acceptation au verdict des contrats : un critère non prouvé le fait passer à `FAIL`, ou à `MANUAL` si le seul manque est un critère de jugement humain dont le contrat attend son attestation. Les critères non prouvés sont listés dans la sortie humaine, la sortie agent et le JSON (`criteria`). Sans fiche active (CI, `drwil attest`), le verdict ne change pas.
+**Règle** : Quand une fiche est jugée, `drwil verify` combine le jugement de ses critères d'acceptation au verdict des contrats : un critère non prouvé le fait passer à `FAIL`, ou à `MANUAL` si le seul manque est un critère de jugement humain dont le contrat attend son attestation. Les critères non prouvés sont listés dans la sortie humaine, la sortie agent et le JSON (`criteria`). La fiche jugée ne vient plus du seul état local : elle est trouvée sans lui (QUA-086). Hors d'une fiche jugée (branche principale, `drwil attest`), le verdict ne change pas.
 **Périmètre** : `drwil verify` (verdict, code de sortie, sorties humaine, agent et JSON).
-**Source de vérité** : `packages/drwil/src/criteria.ts` (`criteriaVerdict`), `packages/drwil/src/verify.ts`.
+**Source de vérité** : `packages/drwil/src/criteria.ts` (`criteriaVerdict`), `packages/drwil/src/closure.ts` (`judgeDurable`).
 **Preuve** : tests du paquet.
 **Contrôle** : `tests-qua-034`
 **Tests** : `packages/drwil/test/cycle.test.mjs`
@@ -758,3 +758,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/cycle.test.mjs`
 **Origine** : attestation liée à son objet — « drwil attest renouvelle volontairement une attestation encore valide (option dédiée), toujours depuis un terminal interactif, sans que l'identifiant retapé ni l'identité du geste soient affaiblis »
 **Raison** : Un humain qui veut réattester une attestation encore valide (après relecture d'un fichier non couvert, ou pour passer en version 3) ne le pouvait pas.
+
+## QUA-084 — La clôture écrit la preuve versionnée du chantier, ou elle est refusée
+**Règle** : Livré à tout projet. Avant de supprimer quoi que ce soit, la clôture (`node .githooks/close.mjs`) écrit un fichier de preuve versionné par chantier (`docs/preuves/<chantier>.md`, réglage `dirs.proofs`) : la date de clôture, le commit vérifié et son verdict, puis chaque critère d'acceptation avec son contrat, les contrôles de ce contrat et l'empreinte des fichiers qu'il couvre, recopiés de la dernière évidence de `drwil verify --evidence` — jamais un jugement refait par la clôture. Sans évidence du commit vérifié, avec un verdict non passant, ou si le fichier ne peut pas être écrit, la clôture est refusée et la fiche reste. L'entrée de journal du chantier cite ce fichier.
+**Périmètre** : `.githooks/close.mjs`, `.githooks/closure-proof.mjs` et l'évidence de `drwil verify --evidence` (couverture par contrat) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/closure-proof.mjs`, `packages/drwil/src/evidence.ts`.
+**Preuve** : tests des hooks et du paquet : preuve écrite, journal qui la cite, refus sans évidence, évidence d'un autre commit, verdict non passant, fichier non écrivable.
+**Contrôle** : `tests-qua-084`
+**Tests** : `.githooks/close.test.mjs`, `packages/drwil/test/cycle.test.mjs`
+**Origine** : des critères et des preuves qui survivent à la clôture — « La clôture d'un chantier écrit un fichier de preuve versionné, un par chantier, cité par son entrée de journal : il garde chaque critère, son contrat, son contrôle, le commit vérifié et l'empreinte des fichiers couverts ; la clôture est refusée si ce fichier ne peut pas être écrit »
+**Raison** : la fiche supprimée à la clôture emportait ses critères d'acceptation : plus rien ne disait ce qu'un chantier avait fait accepter, ni ce qui le prouvait.
+
+## QUA-085 — Un critère dont la preuve a disparu fait échouer `verify`, en le nommant
+**Règle** : Livré à tout projet. `drwil verify` rejoue les critères des fichiers de preuve de clôture : un critère dont la preuve a disparu — contrat absent du registre, contrat en échec, ou contrat sans aucun contrôle alors que le critère n'est pas de jugement humain — fait passer le verdict à `FAIL`, jamais à un avertissement, avec le même code de sortie en local et en CI. Les critères concernés sont nommés dans la sortie humaine, la sortie agent et le JSON (`closureProofs`). Un contrat attestable qui attend son attestation n'est pas une preuve disparue.
+**Périmètre** : `drwil verify` (verdict, code de sortie, sorties humaine, agent et JSON).
+**Source de vérité** : `packages/drwil/src/closure.ts` (`judgeProofs`).
+**Preuve** : tests du paquet : contrôle retiré, contrat abandonné, contrat en échec, contrat attestable en attente.
+**Contrôle** : `tests-qua-085`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Origine** : des critères et des preuves qui survivent à la clôture — « Un critère dont la preuve a disparu (contrôle retiré, test supprimé, contrat abandonné) fait échouer un contrôle qui le nomme, avec le même code en local et en CI ; jamais un avertissement »
+**Raison** : une fois le chantier clos, retirer son contrôle ou son contrat ne faisait rien échouer : la preuve d'un critère accepté pouvait disparaître en silence.
+
+## QUA-086 — La fiche jugée est trouvée sans état local
+**Règle** : Livré à tout projet. `drwil verify` juge les critères de la fiche du chantier même sans état local : la fiche est alors lue depuis le trailer `Drwil-Brief` des commits de la branche, de sorte que la CI juge les mêmes critères que la machine qui les a écrits, avec le même code et le même code de sortie. Hors d'une branche portant ce trailer (branche principale, `drwil attest`), aucun critère de fiche n'est jugé ; après la clôture, ce sont les critères du fichier de preuve qui sont rejoués.
+**Périmètre** : `drwil verify` (choix de la fiche jugée), en local comme en CI.
+**Source de vérité** : `packages/drwil/src/closure.ts` (`trailerBrief`, `briefToJudge`), `packages/drwil/src/criteria.ts`.
+**Preuve** : tests du paquet : sans état local, la fiche du trailer est jugée ; sans trailer, aucun critère.
+**Contrôle** : `tests-qua-086`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Origine** : des critères et des preuves qui survivent à la clôture — « En CI, les critères de la fiche du chantier sont jugés sans état local : la fiche est lue depuis le trailer `Drwil-Brief` des commits de la branche ; après la clôture, ce sont les critères du fichier de preuve qui sont rejoués »
+**Raison** : l'état local est ignoré par git : la CI ne voyait aucune fiche active et laissait passer un critère non prouvé que la machine locale refusait.
