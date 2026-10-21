@@ -51,13 +51,13 @@ par qui, avec quel verdict.
   `docs/recettes/<version>.md` — la fiche de recette, le verdict, les
   réserves, l'auteur et la date du verdict, le sha256 de chaque tarball —
   sur une branche dédiée et une PR, jamais sur la branche principale ;
-  `--dry-run` montre la note sans rien écrire — contrat à créer
+  `--dry-run` montre la note sans rien écrire — contrat QUA-078
 - Une version publiée sans candidate ni verdict reçoit quand même sa note,
   générée avec la mention « sans verdict », à compléter par l'humain — contrat
-  à créer
+  QUA-079
 - Le tag et la release GitHub ne dépendent pas de la PR de la note : si la
   branche, la PR ou l'écriture échoue, la promotion le dit avec la commande
-  de rattrapage, sans défaire ce qui est publié — contrat à créer
+  de rattrapage, sans défaire ce qui est publié — contrat QUA-080
 
 ## Contrats modifiés
 
