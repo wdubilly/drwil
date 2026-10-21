@@ -32,9 +32,10 @@ et se perdraient avec la forge.
 
 ## Questions à trancher
 
-- [décision] Que contient la note en plus de la fiche générée : verdict et
-  réserves, auteur du verdict, date, tarball vérifié ?
-- [décision] « Note obligatoire » : que fait la promotion d'une version sans
-  verdict (note écrite à la main par l'humain, ou note générée vide) ?
+- [décision prise] Contenu de la note, en plus de la fiche générée : verdict,
+  réserves, auteur et date du verdict, sha256 du tarball (2026-10-21).
+- [décision prise] Version sans verdict : note générée avec la mention
+  « sans verdict », à compléter par l'humain (2026-10-21).
 - Ordre : ce chantier passe après « la clôture vérifie la cohérence de la
-  documentation » (décision du 2026-10-21).
+  documentation » (fait le 2026-10-21) ; cadré dans
+  `docs/projects/note-de-recette-par-version.md`.
