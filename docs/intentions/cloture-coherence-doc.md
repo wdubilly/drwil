@@ -42,5 +42,5 @@ place des avertissements, éviterait des erreurs qui passent aujourd'hui.
   fragile (titre, chemin cité, mots clés) ?
 - [décision] Comment garder le coût bas : seulement les fichiers touchés par
   le chantier, ou tout l'index à chaque clôture ?
-- Lien : `docs/intentions/cloture-chemin-guide.md` (la clôture dit quelle
-  étape suit), à cadrer avec elle pour ne pas empiler deux messages de clôture.
+- Lien : la clôture dit déjà quelle étape suit (QUA-073, chemin restant jusqu'à
+  CLOSING) : à cadrer avec elle pour ne pas empiler deux messages de clôture.
