@@ -815,7 +815,7 @@
     {
       "id": "tests-qua-084",
       "name": "tests de QUA-084, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-084 \" .githooks/close.test.mjs packages/drwil/test/cycle.test.mjs",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-084 \" .githooks/close.test.mjs .githooks/scope-gate.test.mjs packages/drwil/test/cycle.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",

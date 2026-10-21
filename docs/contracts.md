@@ -761,11 +761,11 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-084 — La clôture écrit la preuve versionnée du chantier, ou elle est refusée
 **Règle** : Livré à tout projet. Avant de supprimer quoi que ce soit, la clôture (`node .githooks/close.mjs`) écrit un fichier de preuve versionné par chantier (`docs/preuves/<chantier>.md`, réglage `dirs.proofs`) : la date de clôture, le commit vérifié et son verdict, puis chaque critère d'acceptation avec son contrat, les contrôles de ce contrat et l'empreinte des fichiers qu'il couvre, recopiés de la dernière évidence de `drwil verify --evidence` — jamais un jugement refait par la clôture. Sans évidence du commit vérifié, avec un verdict non passant, ou si le fichier ne peut pas être écrit, la clôture est refusée et la fiche reste. L'entrée de journal du chantier cite ce fichier.
-**Périmètre** : `.githooks/close.mjs`, `.githooks/closure-proof.mjs` et l'évidence de `drwil verify --evidence` (couverture par contrat) ; livré dans le gabarit.
+**Périmètre** : `.githooks/close.mjs`, `.githooks/closure-proof.mjs`, la barrière de périmètre qui laisse passer la preuve écrite en CLOSING (`.githooks/scope-gate.mjs`) et l'évidence de `drwil verify --evidence` (couverture par contrat) ; livré dans le gabarit.
 **Source de vérité** : `.githooks/closure-proof.mjs`, `packages/drwil/src/evidence.ts`.
-**Preuve** : tests des hooks et du paquet : preuve écrite, journal qui la cite, refus sans évidence, évidence d'un autre commit, verdict non passant, fichier non écrivable.
+**Preuve** : tests des hooks et du paquet : preuve écrite, journal qui la cite, refus sans évidence, évidence d'un autre commit, verdict non passant, fichier non écrivable, preuve commitée en CLOSING.
 **Contrôle** : `tests-qua-084`
-**Tests** : `.githooks/close.test.mjs`, `packages/drwil/test/cycle.test.mjs`
+**Tests** : `.githooks/close.test.mjs`, `.githooks/scope-gate.test.mjs`, `packages/drwil/test/cycle.test.mjs`
 **Origine** : des critères et des preuves qui survivent à la clôture — « La clôture d'un chantier écrit un fichier de preuve versionné, un par chantier, cité par son entrée de journal : il garde chaque critère, son contrat, son contrôle, le commit vérifié et l'empreinte des fichiers couverts ; la clôture est refusée si ce fichier ne peut pas être écrit »
 **Raison** : la fiche supprimée à la clôture emportait ses critères d'acceptation : plus rien ne disait ce qu'un chantier avait fait accepter, ni ce qui le prouvait.
 

@@ -30,6 +30,7 @@ files:
   - .githooks/state-texts.mjs
   - .githooks/state.test.mjs
   - .githooks/close.mjs
+  - .githooks/closure-proof.mjs
   - .githooks/close.test.mjs
   - .githooks/note.mjs
   - .githooks/note.test.mjs
