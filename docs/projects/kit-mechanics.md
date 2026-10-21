@@ -48,6 +48,7 @@ files:
   - .githooks/acceptance-sheet.test.mjs
   - .githooks/release-verdict.test.mjs
   - .githooks/promote-release.test.mjs
+  - .githooks/recette-note.test.mjs
   - .githooks/glob.test.mjs
   - .githooks/engine.test.mjs
   - .githooks/run-checks.test.mjs
@@ -66,6 +67,7 @@ files:
   - .githooks/acceptance-sheet.mjs
   - .githooks/release-verdict.mjs
   - .githooks/promote-release.mjs
+  - .githooks/recette-note.mjs
   - .github/workflows/ia-first.yml
   - .claude/settings.json
 -->

@@ -405,8 +405,6 @@ une décision du demandeur.
   l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
 - [ ] [décision] Mener plusieurs chantiers en parallèle, ou orchestrer plusieurs
   agents sur leurs parties — `docs/intentions/chantiers-en-parallele.md`.
-- [ ] [IA] [P1] Une note de recette conservée dans le dépôt, à chaque version,
-  avec son verdict — fiche `docs/projects/note-de-recette-par-version.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
