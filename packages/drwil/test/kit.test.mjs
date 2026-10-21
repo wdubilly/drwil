@@ -3935,3 +3935,53 @@ test("QUA-062 : un projet installé refuse au commit un en-tête de skill invali
   assert.equal(r.status, 1, r.stdout + r.stderr);
   assert.match(r.stdout, new RegExp(`${skill.replaceAll(".", "\\.")} : .*ligne 3.*description.*entre guillemets`));
 });
+
+test("QUA-072 : le skill /drwil-note a la forme des autres skills /drwil-*, et les hooks de Claude Code rejoués donnent leur sortie d'avant", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const enTete = (f) => /^---\nname: (drwil-[\w-]+)\ndescription: (.+)\n(?:[\w-]+: .+\n)*---\n\n/.exec(read(dir, f));
+  for (const skill of ["start-a-workstream", "view-progress", "drwil-note"]) {
+    const m = enTete(`.claude/skills/${skill}/SKILL.md`);
+    assert.ok(m, `${skill} : en-tête name / description comme les autres skills /drwil-*`);
+    assert.match(m[2], /\. Use /, `${skill} : la description dit quand l'utiliser`);
+  }
+  assert.equal(enTete(".claude/skills/drwil-note/SKILL.md")[1], "drwil-note");
+
+  const rejouer = (script, entree) => spawnSync(process.execPath, [script], { cwd: dir, encoding: "utf8", input: JSON.stringify(entree) });
+  const ecriture = { hook_event_name: "PreToolUse", tool_name: "Write", tool_input: { file_path: join(dir, "src/a.ts") } };
+  const refus = rejouer(".claude/hooks/scope-reminder.mjs", ecriture);
+  assert.equal(refus.status, 0);
+  assert.deepEqual(JSON.parse(refus.stdout), {
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
+      permissionDecisionReason:
+        "Écriture refusée (QUA-016, scopeReminder : blocking) : aucune fiche de docs/projects/ ne couvre src/a.ts. Rattacher d'abord ce chemin, ou un motif qui le couvre, au bloc « scope » de la fiche du chantier en cours (ou à docs/projects/routine-maintenance.md pour une petite tâche), puis réessayer.",
+    },
+  });
+  const sondage = { questions: [{ question: "Fiches ?", header: "drwil-start", multiSelect: false, options: [] }] };
+  const vide = rejouer(".claude/hooks/prompt-hook.mjs", {
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: sondage,
+    tool_response: { ...sondage, answers: { "Fiches ?": "docs/projects/absente.md" } },
+  });
+  assert.equal(vide.status, 0);
+  assert.deepEqual(JSON.parse(vide.stdout), {
+    hookSpecificOutput: {
+      hookEventName: "PostToolUse",
+      additionalContext:
+        "[drwil] ✗ lancement refusé : « docs/projects/absente.md » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)",
+    },
+  });
+});
+
+test("QUA-061 : le skill /drwil-note appelle la commande de note et ne code rien — une note est toujours une intention", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const skill = read(dir, ".claude/skills/drwil-note/SKILL.md").replace(/\s+/g, " ");
+  assert.match(skill, /node \.githooks\/note\.mjs "\$text"/);
+  assert.match(skill, /always an intent, never an order to code\*\*/);
+  assert.match(skill, /Do not code it, do not frame it, do not open a brief, do not move the activity/);
+  assert.ok(existsSync(join(dir, ".githooks/note.mjs")), "la commande appelée est livrée avec le skill");
+});

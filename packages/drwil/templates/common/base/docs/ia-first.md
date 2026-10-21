@@ -342,6 +342,14 @@ scope requires HIGH gets a warning.
 A `[decision]` only moves forward once decided by the requester; a
 `[human]` gesture is never done by the agent, who raises it.
 
+**Noting an idea at any moment**: `node .githooks/note.mjs "<text>"`, from any
+tool or a terminal, appends one dated line to the intents' notes file
+(`docs/intentions/notes.md` (if present), outside the index) without changing the activity
+or touching the active brief; under Claude Code, `/drwil-note` calls it. A
+note is always an intent, never an order to code; it is
+committed with the branch in progress and promoted to an intent brief when it
+matures.
+
 **Hand-off**: the "Hand-off" section of every brief (dated last
 state, uncommitted work, next step with its marker) acts as a hand-off file:
 another agent, another tool or a person picks it back up cold from it,
@@ -481,6 +489,14 @@ allowed scope stays the brief's `scope` block, which is versioned.
   when the only gap is a human criterion awaiting its attestation; the
   unproven criteria are listed in every output (`criteria` in the JSON).
   Without an active brief (CI, `drwil attest`), the verdict is unchanged.
+  A criterion judged « not-durable » says what to change, naming its
+  contract: add `[human]` when the contract is to be attested, remove it when
+  the contract is fully automated.
+- **Closing from another activity**: `node .githooks/close.mjs` (and
+  `--check`) outside CLOSING names the remaining path — the `state.mjs move`
+  commands, in order, neighbouring transitions only — and, when the evidence is
+  missing or from another commit than `HEAD`, the command that renews it. It
+  never advances the state itself.
 - **Tool-side blocks** (Claude Code, `deny` rules in
   `.claude/settings.json`, if present): `git … --no-verify`, `git commit -n` and writing `.drwil/state.json`
   (if present) directly are refused by the tool, not by the model.

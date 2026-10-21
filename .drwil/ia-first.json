@@ -654,6 +654,54 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-070",
+      "name": "tests de QUA-070, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-070 \" packages/drwil/test/criteria.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-071",
+      "name": "tests de QUA-071, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-071 \" .githooks/note.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-072",
+      "name": "tests de QUA-072, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-072 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".claude/**",
+
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-073",
+      "name": "tests de QUA-073, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-073 \" .githooks/close.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "taille-fichiers",
       "name": "fichiers de code sous 400 lignes, tests exclus (QUA-001)",
       "run": "node .githooks/check-file-size.mjs packages/drwil/src 400 ts && node .githooks/check-file-size.mjs packages/drwil/bin 400 js && node .githooks/check-file-size.mjs .githooks 400 mjs && node .githooks/check-file-size.mjs outils 400 mjs",

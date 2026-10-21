@@ -235,19 +235,44 @@ export function briefIntent(text) {
   return INTENT_FIELD.exec(text)?.[1] ?? null;
 }
 
+/** Files the branch changed since its merge base with the main branch (DRWIL_BASE, origin/HEAD, then the usual names); [] without a base. */
+function branchFiles(root) {
+  const git = (...args) => {
+    const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+    return r.status === 0 ? r.stdout.trim() : "";
+  };
+  const refs = [
+    process.env.DRWIL_BASE,
+    git("symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"),
+    "origin/master",
+    "origin/main",
+    "master",
+    "main",
+  ];
+  for (const ref of refs) {
+    if (!ref || !git("rev-parse", "--verify", "--quiet", `${ref}^{commit}`)) continue;
+    const base = git("merge-base", "HEAD", ref);
+    if (base) return git("diff", "--name-only", "--no-renames", `${base}..HEAD`).split("\n").filter(Boolean);
+  }
+  return [];
+}
+
 /**
- * At commit time: the briefs this commit deletes whose intent still exists but is not part of the
- * commit — `[{ brief, intent }]`. A warning, never a refusal: an intent may already be up to date.
+ * At commit time: the briefs this commit deletes whose intent still exists but was not touched by
+ * the commit nor, earlier, by the branch (compared from the merge base) — `[{ brief, intent }]`.
+ * A warning, never a refusal: an intent may already be up to date.
  */
 export function intentsLeftBehind(root, staged) {
   const r = spawnSync("git", ["diff", "--cached", "--name-only", "--diff-filter=D", "--no-renames", "-z"], { cwd: root, encoding: "utf8" });
   if (r.status !== 0) return [];
   const deleted = r.stdout.split("\0").filter((f) => f && BRIEF_DIRS.some((d) => f.startsWith(d)) && f.endsWith(".md"));
+  if (!deleted.length) return [];
+  const touched = new Set([...staged, ...branchFiles(root)]);
   const left = [];
   for (const brief of deleted) {
     // A staged deletion always exists in HEAD: its text is there to read.
     const intent = briefIntent(spawnSync("git", ["show", `HEAD:${brief}`], { cwd: root, encoding: "utf8" }).stdout);
-    if (intent && existsSync(join(root, intent)) && !staged.includes(intent)) left.push({ brief, intent });
+    if (intent && existsSync(join(root, intent)) && !touched.has(intent)) left.push({ brief, intent });
   }
   return left;
 }

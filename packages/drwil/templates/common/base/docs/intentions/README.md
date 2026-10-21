@@ -22,6 +22,13 @@ removes it when fully covered.
 |---|---|
 *(empty at install — one line per brief created)*
 
+A one-line idea, too light for a brief, is noted with one command:
+`node .githooks/note.mjs "<text>"` appends a dated line to
+`docs/intentions/notes.md` (if present) (outside the workstream index), at any moment and
+from any tool, without changing the activity; a note is always an intent,
+never an order to code. It is promoted to an intent brief when it matures,
+and its line is then removed.
+
 ## Brief template
 
 ```

@@ -2462,3 +2462,24 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   portée par `docs/intentions/file-sous-agents-autres-outils.md`.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `cloture-release-0-6-8`.
+
+## 2026-10-21 — 0.6.9, la fluidité de la clôture
+
+- **Décisions clés** : la clôture depuis une activité autre que CLOSING
+  nomme le chemin restant et la commande qui renouvelle l'évidence périmée,
+  sans avancer l'état (QUA-073) ; l'avertissement d'intention compare toute la
+  branche (QUA-073) ; `verify` dit s'il faut ajouter ou retirer le marqueur
+  `[humain]` d'un critère, contrat nommé (QUA-070) ; la commande de terminal de note
+  note une idée en une ligne datée, sans changer d'activité, depuis tout outil
+  (QUA-071, QUA-061) ; les hooks et skills de Claude Code sont inchangés,
+  prouvés par des entrées simulées (QUA-072).
+- **Preuve** : tests des hooks et du paquet ; essai réel d'une clôture
+  depuis BUILD sous Copilot CLI, en suivant seulement les messages, attesté par
+  l'humain (QUA-048).
+- **Limites connues** : l'essai sous Claude Code est reporté faute de crédit ;
+  les commandes `/drwil-*` sous Gemini CLI restent portées par
+  `docs/intentions/skills-et-sondage-sous-gemini.md`. Les intentions
+  `cloture-chemin-guide`, `critere-humain-message-clair` et `note-a-tout-moment`,
+  entièrement couvertes, sont retirées.
+- **Consommation** : non mesurée — chantier mené sous Copilot CLI.
+- **Clôturé par** : la branche `workstream/fluidite-cloture-0-6-9`.

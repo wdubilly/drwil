@@ -37,7 +37,7 @@ const TEXTS = {
       `[drwil] Rappel : ${a}${b ? ` · ${b}` : " · aucune attente active"}${n === null ? "" : ` · périmètre : ${n} fichier(s) ou motif(s)`} (relire avec \`node .githooks/state.mjs\`).`,
     invalidReminder: "[drwil] Rappel : état invalide, traité comme SCOPING neutre (détail : `node .githooks/state.mjs`).",
     footer:
-      "Ne jamais écrire .drwil/state.json à la main. Lancer un chantier : `/drwil-start` (sondage) ou `node .githooks/state.mjs start` dans un terminal — décision humaine, sauf réglage « transitions » : agent. Changer d'activité : `node .githooks/state.mjs move <ACTIVITE>` ; clore est libre sur évidence de verify valide.",
+      "Ne jamais écrire .drwil/state.json à la main. Lancer un chantier : `/drwil-start` (sondage) ou `node .githooks/state.mjs start` dans un terminal — décision humaine, sauf réglage « transitions » : agent. Changer d'activité : `node .githooks/state.mjs move <ACTIVITE>` ; clore est libre sur évidence de verify valide. Noter une idée sans changer d'activité : `node .githooks/note.mjs '<texte>'` (une note est une intention, jamais un ordre de coder).",
     rules: {
       SCOPING: "lire, analyser, cadrer ; ne modifier aucun fichier de code.",
       EXPECTATION: "formaliser l'attente dans sa fiche ; ne modifier aucun fichier de code.",
@@ -80,7 +80,7 @@ const TEXTS = {
       `[drwil] Reminder: ${a}${b ? ` · ${b}` : " · no active brief"}${n === null ? "" : ` · scope: ${n} file(s) or pattern(s)`} (read again with \`node .githooks/state.mjs\`).`,
     invalidReminder: "[drwil] Reminder: invalid state, treated as neutral SCOPING (details: `node .githooks/state.mjs`).",
     footer:
-      'Never write .drwil/state.json by hand. Start a workstream: `/drwil-start` (poll) or `node .githooks/state.mjs start` in a terminal — a human decision, unless the "transitions" setting is agent. Change activity: `node .githooks/state.mjs move <ACTIVITY>`; closing is free on valid verify evidence.',
+      'Never write .drwil/state.json by hand. Start a workstream: `/drwil-start` (poll) or `node .githooks/state.mjs start` in a terminal — a human decision, unless the "transitions" setting is agent. Change activity: `node .githooks/state.mjs move <ACTIVITY>`; closing is free on valid verify evidence. Note an idea without changing activity: `node .githooks/note.mjs "<text>"` (a note is an intent, never an order to code).',
     rules: {
       SCOPING: "read, analyse, frame; do not modify any code file.",
       EXPECTATION: "write down the expectation in its brief; do not modify any code file.",

@@ -12,10 +12,12 @@ import {
   closingSignals,
   main,
   mainBranch,
+  pathToClosing,
   mergedPullRequests,
   pruneMergedBranches,
   prunedMessage,
 } from "./close.mjs";
+import { intentsLeftBehind } from "./briefs.mjs";
 import { move, start } from "./state.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
@@ -122,7 +124,7 @@ test("QUA-048 : hors CLOSING, la mécanique est refusée ; --check signale sans 
   assert.ok(existsSync(join(racine, FICHE)));
   const verif = close(racine, { check: true });
   assert.equal(verif.code, 0, verif.message);
-  assert.equal(verif.message, "Rien ne ferait échouer la clôture.");
+  assert.match(verif.message, /^Rien ne ferait échouer la clôture\.\nChemin jusqu'à CLOSING/);
   assert.ok(existsSync(join(racine, FICHE)));
   ecrire(racine, {
     ".drwil/state.json": JSON.stringify({ version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null }),
@@ -223,7 +225,7 @@ test("QUA-048 : ligne de commande — usage, --check, refus et racine du projet 
   assert.equal(lancer("a.md", "b.md").status, 2);
   const verif = lancer("--check");
   assert.equal(verif.status, 0);
-  assert.equal(verif.stdout.trim(), "Nothing would make the closing fail.");
+  assert.match(verif.stdout, /^Nothing would make the closing fail\.\nPath to CLOSING, in order:\n/);
   const refus = lancer();
   assert.equal(refus.status, 1);
   assert.match(refus.stderr, /closing refused: activity BUILD/);
@@ -245,7 +247,7 @@ test("QUA-048 : ligne de commande — usage, --check, refus et racine du projet 
   } finally {
     console.log = log;
   }
-  assert.deepEqual(sortie, ["Nothing would make the closing fail."]);
+  assert.deepEqual(sortie, ["Nothing would make the closing fail."], "en CLOSING, aucun chemin à dire");
 });
 
 test("QUA-048 : en anglais, dossiers réglés, sans branche principale ni registre ni index ; journaux lus selon l'environnement", () => {
@@ -377,4 +379,82 @@ test("QUA-058 : sans simulation injectée, la commande gh du PATH est interrogé
   } finally {
     process.env.PATH = chemin;
   }
+});
+
+test("QUA-073 : hors CLOSING, la clôture et --check nomment les commandes restantes dans l'ordre, et l'évidence périmée ou absente à renouveler", () => {
+  const racine = depot({ activite: "BUILD" });
+  const renouveler = "`npx drwil verify --evidence`";
+  const etapes = (activite) =>
+    pathToClosing(racine, activite)
+      .split("\n")
+      .slice(1)
+      .map((l) => l.trim());
+  const sansEvidence = etapes("BUILD");
+  assert.equal(sansEvidence.length, 4);
+  assert.deepEqual(
+    [sansEvidence[0], sansEvidence[1], sansEvidence[3]],
+    ["node .githooks/state.mjs move EVIDENCE", "node .githooks/state.mjs move VERIFY", "node .githooks/state.mjs move CLOSING"],
+  );
+  assert.match(
+    sansEvidence[2],
+    /^`npx drwil verify --evidence` \(l'évidence ne date pas de HEAD/,
+    "sans évidence : à produire avant CLOSING",
+  );
+  assert.equal(etapes("VERIFY").at(-1), "node .githooks/state.mjs move CLOSING");
+  assert.equal(pathToClosing(racine, "CLOSING"), null);
+  assert.equal(pathToClosing(racine, "SCOPING"), null, "avant BUILD, la clôture n'est pas à portée de l'agent");
+
+  const refus = close(racine);
+  assert.equal(refus.code, 1);
+  assert.match(
+    refus.message,
+    /clôture refusée : activité BUILD[^\n]*\nChemin jusqu'à CLOSING, dans l'ordre :\n {2}node .* move EVIDENCE\n/,
+  );
+  assert.match(close(racine, { check: true }).message, /move VERIFY\n/);
+
+  // Évidence du HEAD courant, propre : plus rien à renouveler ; d'un autre commit : à renouveler.
+  const head = git(racine, "rev-parse", "HEAD");
+  const evidence = (commit) =>
+    ecrire(racine, {
+      ".drwil/evidence/verify-2026-10-20T10-00-00Z.json": JSON.stringify({ commit, dirtyWorktree: false, status: "pass", criteria: [] }),
+    });
+  evidence(head);
+  assert.doesNotMatch(pathToClosing(racine, "BUILD"), /verify --evidence/);
+  evidence("0".repeat(40));
+  assert.ok(pathToClosing(racine, "VERIFY").includes(renouveler));
+  assert.equal(pathToClosing(racine, "VERIFY").indexOf(renouveler) < pathToClosing(racine, "VERIFY").indexOf("move CLOSING"), true);
+
+  const anglais = depot({ activite: "EVIDENCE", lang: "en" });
+  assert.match(close(anglais).message, /closing refused: activity EVIDENCE[^\n]*\nPath to CLOSING, in order:\n {2}node .* move VERIFY\n/);
+});
+
+test("QUA-073 : l'avertissement d'intention compare à la branche entière — intention touchée dans un commit précédent, jamais touchée, retirée", () => {
+  const racine = depot({ activite: "CLOSING" });
+  ecrire(racine, {
+    "docs/intentions/origine.md": "# Intention\n",
+    "docs/projects/autre.md": "# Autre\n\n**Intention** : `docs/intentions/origine.md`\n",
+  });
+  git(racine, "checkout", "-q", "master");
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "intention");
+  git(racine, "checkout", "-q", "chantier/exemple");
+  git(racine, "rebase", "-q", "master");
+  ecrire(racine, { [FICHE]: `${readFileSync(join(racine, FICHE), "utf8")}\n**Intention** : \`docs/intentions/origine.md\`\n` });
+  git(racine, "commit", "-qam", "lien");
+  git(racine, "rm", "-q", FICHE);
+  assert.deepEqual(
+    intentsLeftBehind(racine, [FICHE]),
+    [{ brief: FICHE, intent: "docs/intentions/origine.md" }],
+    "jamais touchée sur la branche",
+  );
+  git(racine, "reset", "-q", "--hard");
+  ecrire(racine, { "docs/intentions/origine.md": "# Intention\n\nMise à jour.\n" });
+  git(racine, "commit", "-qam", "met à jour l'intention");
+  git(racine, "rm", "-q", FICHE);
+  assert.deepEqual(intentsLeftBehind(racine, [FICHE]), [], "touchée par un commit précédent de la branche");
+  git(racine, "reset", "-q", "--hard");
+  git(racine, "rm", "-q", "docs/intentions/origine.md");
+  git(racine, "commit", "-qm", "retire l'intention");
+  git(racine, "rm", "-q", FICHE);
+  assert.deepEqual(intentsLeftBehind(racine, [FICHE]), [], "intention retirée sur la branche");
 });

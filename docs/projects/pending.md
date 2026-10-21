@@ -147,10 +147,8 @@ avant les points 5 à 13, en trois versions.
      2026-10-20) : décision de fusion au sondage, retour en SCOPING après la
      fusion, sous-agent dès le premier chantier ; reste la file pour les
      autres outils (`docs/intentions/file-sous-agents-autres-outils.md`).
-  3. 0.6.9, la fluidité de la clôture : clôture guidée
-     (`docs/intentions/cloture-chemin-guide.md`), message clair du critère
-     humain (`docs/intentions/critere-humain-message-clair.md`), note à tout
-     moment (`docs/intentions/note-a-tout-moment.md`).
+  3. 0.6.9, la fluidité de la clôture (faite, journal du 2026-10-21) :
+     clôture guidée, message clair du critère humain, note à tout moment.
   4. 0.7.0, la preuve qui dure (ci-dessous), avec la cohérence de la
      documentation à la clôture (`docs/intentions/cloture-coherence-doc.md`)
      et la note de recette conservée dans le dépôt
@@ -361,14 +359,6 @@ une décision du demandeur.
   `docs/intentions/banc-gemini-quota.md`.
 - [x] [IA] [P1] 0.6.8 : Copilot CLI enchaîne les chantiers — fait, journal
   du 2026-10-20.
-- [ ] [IA] [P1] 0.6.9 : la fluidité de la clôture — fiche
-  `docs/projects/fluidite-cloture-0-6-9.md`.
-- [ ] [décision] `verify` dit pourquoi un critère n'est « pas durable »
-  (marqueur `[humain]` manquant ou en trop) —
-  `docs/intentions/critere-humain-message-clair.md`.
-- [ ] [décision] La clôture dit quelle étape suit au lieu de refuser sèchement
-  (chemin BUILD → CLOSING, évidence périmée) —
-  `docs/intentions/cloture-chemin-guide.md`.
 - [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
   d'essayé) — `docs/intentions/compat-codex.md`.
 - [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
@@ -406,8 +396,6 @@ une décision du demandeur.
   le cadrage d'un chantier — `docs/intentions/personas-convoques-par-le-cadrage.md`.
 - [ ] [décision] La clôture vérifie la cohérence de la documentation, de façon
   bloquante — `docs/intentions/cloture-coherence-doc.md`.
-- [ ] [décision] Noter une idée ou une intention à tout moment, sous Claude
-  Code, Copilot CLI et Gemini CLI — `docs/intentions/note-a-tout-moment.md`.
 - [ ] [décision] Proposer la couche d'un dossier de code apparu après
   l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
 - [ ] [décision] Mener plusieurs chantiers en parallèle, ou orchestrer plusieurs

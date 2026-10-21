@@ -151,7 +151,7 @@ export function requiresHuman(from, to, mode) {
 
 /**
  * Latest verify evidence (.drwil/evidence/verify-*.json, outside git): `{ ok: true }`
- * if it allows closing, otherwise `{ ok: false, reason }`. Verdict pass or attested,
+ * if it allows closing, otherwise `{ ok: false, reason }` (`code` "noEvidence" or "otherCommit" when it is to be renewed). Verdict pass or attested,
  * on the HEAD commit, clean worktree at verify time and now: otherwise, what is
  * closed would not be what was verified.
  */
@@ -164,7 +164,7 @@ export function verifyEvidence(root) {
         .filter((n) => /^verify-.+\.json$/.test(n))
         .sort()
     : [];
-  if (!names.length) return { ok: false, reason: T.noEvidence };
+  if (!names.length) return { ok: false, code: "noEvidence", reason: T.noEvidence };
   const name = names.at(-1);
   let ev;
   try {
@@ -178,7 +178,7 @@ export function verifyEvidence(root) {
   };
   const head = git("rev-parse", "HEAD");
   if (!head) return { ok: false, reason: T.noHead };
-  if (ev.commit !== head) return { ok: false, reason: fill(T.otherCommit, name) };
+  if (ev.commit !== head) return { ok: false, code: "otherCommit", reason: fill(T.otherCommit, name) };
   if (ev.dirtyWorktree !== false || git("status", "--porcelain") !== "") return { ok: false, reason: T.dirty };
   if (ev.status === "pass" || ev.status === "attested") {
     // Evidence without `criteria` (no active brief, or written by an older verify): nothing to judge.
