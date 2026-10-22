@@ -33,6 +33,12 @@ closing commit; the release renames this section to its version.
 - The adoption recipe and the catalog: a new project starts at 100 %
   coverage with its e2e test; no longer « a low threshold first ».
 
+### Fixed
+
+- The release note of a version (`docs/recettes/`) passes the scope
+  barrier: committed by the release module with no trailer, it was refused
+  by the CI.
+
 ## 0.6.10 (2026-10-22)
 
 ### Added
