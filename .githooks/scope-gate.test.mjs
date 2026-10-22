@@ -111,6 +111,12 @@ test("QUA-035 : hors fiches : les sorties des recettes de cadrage (valeur, risqu
   );
 });
 
+test("QUA-084 : hors fiches : la preuve de clôture, écrite en CLOSING pour le commit de clôture", () => {
+  // Constaté le 2026-10-21 : la clôture écrivait sa preuve, puis la barrière refusait de la commiter.
+  assert.deepEqual(outsideBriefFiles(["docs/preuves/x.md", "docs/preuves/README.md", "docs/preuve.md"]), ["docs/preuve.md"]);
+  assert.deepEqual(checkIndex({ files: [FICHE, "docs/preuves/x.md"], state: etat("CLOSING"), patterns: [] }), []);
+});
+
 test("index : fiches toujours acceptées, le reste seulement en BUILD et dans le cadrage", () => {
   const motifs = ["src/a.js"];
   assert.deepEqual(checkIndex({ files: [FICHE], state: etat("SCOPING"), patterns: [] }), []);

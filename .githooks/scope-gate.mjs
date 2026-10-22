@@ -22,7 +22,8 @@ import { governanceDisabled, readState } from "./state.mjs";
 // Attestations pass like briefs: a human proof already guarded by `drwil attest` (terminal
 // required, contract fingerprint), reviewed; subjecting them to the scope would force widening
 // every brief in order to close. The consumption log likewise: its line is written in CLOSING,
-// for the closing commit (`consumption.mjs --record`).
+// for the closing commit (`consumption.mjs --record`). The closing proof likewise (QUA-084): the
+// closing writes it in CLOSING, for the closing commit, and refuses to close without it.
 // The scoping recipes' outputs (value discovery, risk audit — French and English names) are scoping
 // work, written in SCOPING: exact names, never a broad pattern on docs/.
 export const OUT_OF_SCOPE = [
@@ -30,6 +31,7 @@ export const OUT_OF_SCOPE = [
   "docs/intentions/*",
   ".drwil/evidence/attestations/*",
   ".drwil/usage.jsonl",
+  "docs/preuves/*",
   "docs/value-discovery.md",
   "docs/decouverte-valeur.md",
   "docs/audit-risks.md",

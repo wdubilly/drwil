@@ -1,6 +1,6 @@
 # "IA first" architecture — description
 
-State as of 2026-10-20. This document explains **how this repo is built to be
+State as of 2026-10-21. This document explains **how this repo is built to be
 modified by agents**: where the rules live, who checks them, and what is
 not checked. It describes neither the product nor the detail of invariants
 (single source: `docs/contracts.md`); the product, if described, lives in
@@ -509,10 +509,44 @@ allowed scope stays the brief's `scope` block, which is versioned.
   the `drwil verify` verdict, not only of the closing: `FAIL`, or `MANUAL`
   when the only gap is a human criterion awaiting its attestation; the
   unproven criteria are listed in every output (`criteria` in the JSON).
-  Without an active brief (CI, `drwil attest`), the verdict is unchanged.
-  A criterion judged « not-durable » says what to change, naming its
-  contract: add `[human]` when the contract is to be attested, remove it when
-  the contract is fully automated.
+  The brief is found without the local state too: it is named by
+  `.drwil/state.json` (if present), or by the `Drwil-Brief` trailer of the
+  branch's commits — so CI judges the same criteria as the machine that wrote them,
+  with the same code and the same exit code. Outside a branch carrying that
+  trailer (the main branch, `drwil attest`), no criterion is judged and the
+  verdict is unchanged. A criterion judged « not-durable » says what to
+  change, naming its contract: add `[human]` when the contract is to be
+  attested, remove it when the contract is fully automated.
+- **Closing proof**: the closing writes one versioned file per workstream,
+  `docs/preuves/<name>.md` (`dirs.proofs` setting), from the evidence it
+  required — nothing is judged again at that moment. Its form: a heading
+  (workstream, closing date, verified commit and its verdict), then one
+  table row per acceptance criterion.
+
+  ```markdown
+  # Closing proof — my-workstream
+
+  **Closed on**: 2026-10-21
+  **Verified commit**: `3f1c9a2b10` — `drwil verify` verdict: PASS
+
+  criteria of this workstream, and what still proves them today (replayed by `drwil verify` after the closing):
+
+  | Criterion | Contract | Check | Fingerprint of the covered files |
+  |---|---|---|---|
+  | the docs never cite a path that does not exist | `QUA-011` | `check-docs` | `sha256:1f3ac07b…` (2 file(s)) |
+  | the human validated the pricing rule [human] | `APP-001` | — | — |
+  ```
+
+  The checks are those the contract ran; the fingerprint covers the files of
+  its **Covers** field (`—` without one), as an attestation records them. The
+  journal entry cites the file, and **the closing is refused when it cannot
+  be written**: no brief is deleted while what it had proven would stay
+  unwritten. Unlike the run evidence, this file is documentation, versioned
+  with the code: `drwil verify` replays its criteria after the closing and
+  fails, naming them, when a proof has disappeared — a contract gone from the
+  registry, a contract that lost its check, or one that no longer passes. A
+  row is never deleted to make the verdict green: the proof is restored, or
+  the criterion retired on purpose by a workstream that says so.
 - **Closing from another activity**: `node .githooks/close.mjs` (and
   `--check`) outside CLOSING names the remaining path — the `state.mjs move`
   commands, in order, neighbouring transitions only — and, when the evidence is
@@ -604,7 +638,8 @@ never a pass: it is a warning at commit and a failure at push and in CI.
 - **Briefs always pass**: `docs/projects/` and `docs/intentions/`, as do
   human attestations, written by `drwil attest`:
   `.drwil/evidence/attestations/` (if present), and the consumption log
-  `.drwil/usage.jsonl` (if present), written at closing, and the scoping recipes' outputs,
+  `.drwil/usage.jsonl` (if present), written at closing, as is the closing
+  proof `docs/preuves/`, and the scoping recipes' outputs,
   written in SCOPING (value discovery and risk audit:
   `docs/value-discovery.md` (if present), `docs/audit-risks.md` (if present), and their French
   names) — configurable list: `outOfScope`. Any other file,

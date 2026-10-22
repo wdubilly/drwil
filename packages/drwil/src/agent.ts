@@ -53,6 +53,14 @@ export function formatForAgent(j: VerdictJson): string {
       l.push(`  - « ${c.text} » — ${c.link ?? "no proof"}: ${c.status}${c.human ? " (human)" : ""}${hint ? ` — ${hint}` : ""}`);
     }
   }
+  const broken = j.closureProofs ?? [];
+  if (broken.length) {
+    l.push(
+      "",
+      "Criteria of closed workstreams whose proof has disappeared (closing proof replayed): restore the proof, never the proof file alone.",
+    );
+    for (const c of broken) l.push(`  - ${c.workstream} « ${c.text} » — ${c.link ?? "no proof"}: ${c.status} (${c.file})`);
+  }
   const manual = list("manual");
   if (manual.length) {
     l.push("", "Human attestation required.");

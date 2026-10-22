@@ -9,7 +9,18 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { rulesLine } from "../dist/rules.js";
 import { labelIds } from "../dist/verdict.js";
-import { attest, doctor, fingerprint, formatForAgent, formatVerdict, init, uninstall, verdictJson, verify } from "../dist/index.js";
+import {
+  attest,
+  doctor,
+  fingerprint,
+  formatForAgent,
+  formatVerdict,
+  init,
+  uninstall,
+  verdictJson,
+  verify,
+  writeEvidence,
+} from "../dist/index.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -627,6 +638,123 @@ test("QUA-083 : drwil attest --renew remplace une attestation encore valide, apr
     const cli = spawnSync(process.execPath, [bin, "attest", "APP-009", "--renew"], { cwd: dir, encoding: "utf8", input: "APP-009\n", env });
     assert.equal(cli.status, 1, "sans terminal interactif, aucun renouvellement (pas de --yes, identifiant non lu sur stdin)");
     assert.equal(readdirSync(join(dir, ".drwil/evidence/attestations")).length, 2);
+  } finally {
+    nettoyer(dir);
+  }
+});
+
+// Projet installé avec un seul contrôle vert et un registre minimal : base des preuves de clôture.
+async function projetPreuve(contrats = "# Contrats\n\n## QUA-001 — automatique\n**Règle** : r.\n**Contrôle** : `ok`\n") {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-preuve-"));
+  await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const cfg = JSON.parse(lire(dir, ".drwil/ia-first.json"));
+  cfg.checks = [{ id: "ok", run: "node -e 0" }];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+  writeFileSync(join(dir, "docs/contracts.md"), contrats);
+  return dir;
+}
+
+const preuve = (dir, chantier, ...lignes) => {
+  mkdirSync(join(dir, "docs/preuves"), { recursive: true });
+  writeFileSync(
+    join(dir, `docs/preuves/${chantier}.md`),
+    `# Preuve de clôture — ${chantier}\n\n**Clos le** : 2026-10-21\n**Commit vérifié** : \`abc1234567\` — verdict \`drwil verify\` : PASS\n\n` +
+      `| Critère | Contrat | Contrôle | Empreinte des fichiers couverts |\n|---|---|---|---|\n${lignes.join("\n")}\n`,
+  );
+};
+
+test("QUA-085 : après la clôture, les critères du fichier de preuve sont rejoués ; une preuve disparue fait échouer verify en nommant le critère", async () => {
+  const dir = await projetPreuve();
+  try {
+    preuve(dir, "essai", "| Le registre garde la règle | `QUA-001` | `ok` | `sha256:1f3ac07b` (2 fichier(s)) |");
+    let v = await verify({ targetDir: dir });
+    assert.equal(v.status, "PASS", "preuve encore tenue : le verdict ne change pas");
+    assert.deepEqual(v.proofs, [], "aucun critère de chantier clos en défaut");
+
+    // Contrôle retiré du contrat : la preuve n'est plus durable, et le chantier est clos depuis longtemps.
+    writeFileSync(join(dir, "docs/contracts.md"), "# Contrats\n\n## QUA-001 — automatique\n**Règle** : r.\n**Manuel** : relecture.\n");
+    v = await verify({ targetDir: dir });
+    assert.equal(v.status, "FAIL", "preuve disparue : FAIL franc, jamais un avertissement");
+    assert.equal(v.code, 1);
+    assert.deepEqual(
+      v.proofs.map((c) => [c.workstream, c.text, c.status]),
+      [["essai", "Le registre garde la règle", "not-durable"]],
+    );
+    assert.match(
+      formatVerdict(v),
+      /Critères de chantiers clos dont la preuve a disparu \(fichier[^)]*\) : essai « Le registre garde la règle »/,
+    );
+    const json = verdictJson(v);
+    assert.equal(json.closureProofs.length, 1);
+    assert.match(
+      formatForAgent(json),
+      /proof has disappeared \(closing proof replayed\)[^\n]*\n {2}- essai « Le registre garde la règle » — QUA-001/,
+    );
+
+    // Contrat abandonné : le lien ne désigne plus rien au registre.
+    writeFileSync(join(dir, "docs/contracts.md"), "# Contrats\n\n## QUA-009 — autre\n**Règle** : r.\n**Contrôle** : `ok`\n");
+    v = await verify({ targetDir: dir });
+    assert.equal(v.status, "FAIL");
+    assert.deepEqual(
+      v.proofs.map((c) => c.status),
+      ["unknown-proof"],
+    );
+  } finally {
+    nettoyer(dir);
+  }
+});
+
+test("QUA-084 : l'évidence de verify porte la couverture des contrats, que la clôture recopie sans la recalculer", async () => {
+  const { dir } = await projetCouvert();
+  try {
+    const v = await verify({ targetDir: dir });
+    const fichier = writeEvidence(dir, v);
+    const ev = JSON.parse(lire(dir, fichier));
+    const couvert = ev.evidence.find((k) => k.id === "APP-009");
+    assert.deepEqual(couvert.covers, ["src/**", "package.json"]);
+    assert.deepEqual(Object.keys(couvert.coverage).sort(), ["package.json", "src/a.js", "src/b.js"]);
+    assert.ok(
+      ev.evidence.every((k) => k.id === "APP-009" || !("coverage" in k)),
+      "un contrat sans Couvre n'invente aucune couverture",
+    );
+  } finally {
+    nettoyer(dir);
+  }
+});
+
+test("QUA-086 : sans état local, la fiche jugée est lue depuis le trailer Drwil-Brief des commits de la branche", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-preuve-"));
+  const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8", env });
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: true }));
+    const cfg = JSON.parse(lire(dir, ".drwil/ia-first.json"));
+    cfg.checks = [{ id: "ok", run: "node -e 0" }];
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+    writeFileSync(join(dir, "docs/contracts.md"), "# Contrats\n\n## QUA-001 — automatique\n**Règle** : r.\n**Contrôle** : `ok`\n");
+    git("config", "user.email", "test@exemple.invalid");
+    git("config", "user.name", "Test");
+    git("config", "commit.gpgsign", "false");
+    git("branch", "-M", "main");
+    git("add", "-A");
+    git("commit", "--no-verify", "-m", "installation");
+    git("checkout", "-b", "travail");
+
+    const fiche = "docs/projects/essai.md";
+    writeFileSync(join(dir, fiche), "# Essai\n\n## Critères d'acceptation\n\n- Par un contrôle seul — `ok`\n");
+    git("add", "-A");
+    git("commit", "--no-verify", "-m", `travail\n\nDrwil-Brief: ${fiche}`);
+
+    assert.ok(!existsSync(join(dir, ".drwil/state.json")), "aucun état local, comme en CI");
+    const v = await verify({ targetDir: dir });
+    assert.equal(v.status, "FAIL", "les critères de la fiche du trailer sont jugés sans état local");
+    assert.deepEqual(
+      (v.criteria ?? []).map((c) => [c.text, c.status]),
+      [["Par un contrôle seul", "no-contract"]],
+    );
+
+    // Sur la branche principale, aucun commit ne porte le trailer : rien n'est jugé.
+    git("checkout", "main");
+    assert.equal((await verify({ targetDir: dir })).criteria, undefined);
   } finally {
     nettoyer(dir);
   }

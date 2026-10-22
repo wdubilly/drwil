@@ -32,6 +32,7 @@
     "docs/decouverte-valeur.md": "Rapport généré pour ce dépôt par le skill de découverte de valeur.",
     "docs/intentions/": "Intentions de drwil : contenu du projet, pas du gabarit.",
     "docs/projects/*": "Fiches des chantiers de drwil : contenu du projet, pas du gabarit.",
+    "docs/preuves/*.md": "Preuves de clôture des chantiers de drwil (QUA-084) : écrites par la clôture, propres au projet ; le gabarit ne livre que le README du dossier.",
     "docs/recettes/": "Notes de recette des versions de drwil : contenu du projet, pas du gabarit."
   },
   "propresAuGabarit": {},

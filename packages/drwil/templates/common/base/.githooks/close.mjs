@@ -24,6 +24,7 @@ import {
   proposals,
   twinIntents,
 } from "./doc-coherence.mjs";
+import { closureProof, proofNotCited, proofText, writeProof } from "./closure-proof.mjs";
 import { readState, stateRoot, verifyEvidence } from "./state.mjs";
 
 const TEXTS = {
@@ -237,9 +238,12 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
   const cfg = config(root);
   const lang = cfg.lang === "en" ? "en" : "fr";
   const T = texts(root);
-  const plain = [...criteriaToCreate(root, brief, text), ...deadReferences(root, brief), ...bareNames(root)].map((message) => ({
-    message,
-  }));
+  const plain = [
+    ...criteriaToCreate(root, brief, text),
+    ...proofNotCited(root, brief),
+    ...deadReferences(root, brief),
+    ...bareNames(root),
+  ].map((message) => ({ message }));
   const reported = new Set(plain.map((p) => /^(\S+:\d+) /.exec(p.message)?.[1]));
   const code = codeCitations(root, cfg, lang).filter((c) => !reported.has(c.place));
   const boxes = checkboxProblems(root, cfg, lang, { except: brief }).map((p) => ({
@@ -291,6 +295,11 @@ export function close(root, { brief, check = false, fix = false, env = process.e
   const text = existsSync(join(root, path)) ? readFileSync(join(root, path), "utf8") : "";
   const done = [];
   if (!check) {
+    // The proof first: a brief is never deleted while what it had proven would stay unwritten (QUA-084).
+    const proof = closureProof(root, path, text, { head: git(root, "rev-parse", "HEAD") });
+    const problem = proof.problem ?? writeProof(root, proof);
+    if (problem) return { code: 1, message: proofText(root, "proofRefused", problem) };
+    done.push(proofText(root, "proofWritten", proof.file));
     if (existsSync(join(root, path))) {
       unlinkSync(join(root, path));
       done.push(T.deleted(path));

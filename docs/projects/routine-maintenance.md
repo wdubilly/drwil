@@ -16,6 +16,7 @@ files:
   - docs/recipes/working-with-branches.md
   - outils/miroirs.json
   - packages/drwil/src/evidence.ts
+  - packages/drwil/src/closure.ts
   - packages/drwil/test/kit.test.mjs
   - README.md
 -->
@@ -27,4 +28,5 @@ files:
 | 2026-10-06 | Le `.gitignore` du gabarit était absent du paquet npm (npm retire tout `.gitignore`) : livré sous le nom `gitignore`, renommé à l'installation (`packages/drwil/src/index.ts`) ; test via `npm pack --dry-run`. | fait |
 | 2026-10-14 | Renvois vers la fiche « Protéger master » supprimée, remplacés par le journal du 2026-10-13 (`docs/recipes/working-with-branches.md`, `outils/miroirs.json`). | fait |
 | 2026-10-16 | Caviardage des clés privées en temps linéaire (`packages/drwil/src/evidence.ts`) : le motif paresseux « BEGIN … END » était quadratique sur une entrée qui répète BEGIN sans END (alerte CodeQL #1, `js/polynomial-redos`, réapparue en déplaçant le code et bloquant la PR #98, remplacée par ce correctif). Recherche BEGIN puis END suivant ; une clé chiffrée à l'ancienne (tirets dans l'en-tête) reste caviardée en bloc ; test : 1 927 ms avant, 16 ms après. | fait |
+| 2026-10-21 | Lecture du commit vérifié d'une preuve de clôture en temps linéaire (`packages/drwil/src/closure.ts`) : `\s*:?\s*` était polynomial sur une ligne « **Commit vérifié** » suivie de nombreux espaces (alerte CodeQL `js/polynomial-redos`, bloquant la PR #197 par un fil de revue non résolu) ; quantificateurs bornés, les deux formats (français avec espace avant les deux-points, anglais sans) restent lus. | fait |
 | 2026-10-17 | README racine en retard sur la clôture du chantier consommation : étape CLOSING sans la consommation enregistrée, ligne `/drwil-usage` d'avant la mesure automatique, « Current status » qui présentait la 0.6.0 comme sortie alors que la dernière release est la 0.5.1 (`README.md`). Ordre de réalisation de l'index : points 3 et 4 marqués faits, comme la vague 2. | fait |

@@ -60,7 +60,7 @@ export function evaluateCriteria(
 }
 
 // Same reference as the hooks' scope gate (scope-gate.mjs): DRWIL_BASE, then origin/HEAD, then the usual names.
-function mergeBase(root: string, env: NodeJS.ProcessEnv): string | null {
+export function mergeBase(root: string, env: NodeJS.ProcessEnv = process.env): string | null {
   const git = (...args: string[]) => {
     const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
     return r.status === 0 ? r.stdout.trim() : null;
@@ -170,14 +170,23 @@ export interface ActiveBrief {
   declared: string[];
 }
 
-/** Active brief (.drwil/state.json), read by the project's own briefs.mjs; null when there is none to read. */
-export async function activeBrief(root: string): Promise<ActiveBrief | null> {
+/** Brief named by the local state (.drwil/state.json); null without a state or a named brief. */
+export function stateBrief(root: string): string | null {
   try {
     const brief = JSON.parse(readFileSync(join(root, ".drwil", "state.json"), "utf8"))?.active_brief;
-    if (typeof brief !== "string") return null;
+    return typeof brief === "string" ? brief : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The brief at `path`, read by the project's own briefs.mjs; null when there is none to read. */
+export async function readBrief(root: string, path: string | null): Promise<ActiveBrief | null> {
+  if (!path) return null;
+  try {
     const mod = await import(pathToFileURL(join(root, ".githooks", "briefs.mjs")).href);
     if (typeof mod.acceptanceCriteria !== "function") return null;
-    const text = readFileSync(join(root, brief), "utf8");
+    const text = readFileSync(join(root, path), "utf8");
     // A briefs.mjs older than the declarations declares nothing.
     return {
       criteria: mod.acceptanceCriteria(text),
@@ -186,6 +195,11 @@ export async function activeBrief(root: string): Promise<ActiveBrief | null> {
   } catch {
     return null;
   }
+}
+
+/** Active brief (.drwil/state.json), read by the project's own briefs.mjs; null when there is none to read. */
+export function activeBrief(root: string): Promise<ActiveBrief | null> {
+  return readBrief(root, stateBrief(root));
 }
 
 /** Criteria judged, and the contracts the branch modified without the brief declaring them (a regression until declared). */

@@ -80,6 +80,8 @@ export function writeEvidence(root: string, v: Verdict, now = new Date()): strin
         summary: c.status === "ok" ? "ok" : summary(c.output) || redact(c.detail ?? c.message ?? ""),
       })),
       manual: k.manual,
+      // Coverage computed once by coverage.ts: the closing's proof file carries its fingerprint (QUA-084).
+      ...(k.covers ? { covers: k.covers, coverage: k.coverage ?? {} } : {}),
     })),
     ...(v.criteria ? { criteria: v.criteria } : {}),
     ...(v.undeclared ? { undeclared: v.undeclared } : {}),

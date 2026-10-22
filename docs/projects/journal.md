@@ -2586,3 +2586,47 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   les tests à chaque commit de code) : il est commité vert avec le mécanisme.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `cadrage-attestation-liee`.
+
+## 2026-10-21 — Des critères et des preuves qui survivent à la clôture
+
+- **Décisions clés** : la clôture n'est plus une perte de mémoire. Elle écrit
+  un document versionné par chantier, `docs/preuves/criteres-et-preuves-durables.md`
+  pour celui-ci : chaque critère y porte son contrat, ses contrôles, le commit
+  vérifié et l'empreinte des fichiers couverts, recopiés de l'évidence du
+  verdict (aucun jugement rejoué à la clôture, la couverture reste calculée par
+  `packages/drwil/src/coverage.ts`). La clôture est refusée si ce fichier ne
+  peut pas être écrit, si l'évidence ne date pas de HEAD ou si son verdict
+  n'est pas PASS, et `close.mjs --check` signale l'entrée de journal qui ne
+  cite pas la preuve (QUA-084, Une clôture laisse une preuve versionnée de ses
+  critères). Après la clôture, `drwil verify` rejoue les critères du fichier de
+  preuve et échoue franchement, même code en local et en CI, en nommant le
+  critère dont la preuve a disparu — contrôle retiré, test supprimé, contrat
+  abandonné (QUA-085, Un critère dont la preuve a disparu fait échouer la
+  vérification). La fiche jugée est trouvée sans état local, par le trailer
+  `Drwil-Brief` des commits de la branche quand `.drwil/state.json` (si présent)
+  est absent, le cas de la CI (QUA-086, La fiche jugée est trouvée sans état
+  local).
+  QUA-013 (Contrôle non exécuté n'est pas passé) et QUA-034 (Critères
+  d'acceptation vérifiables) sont étendus, l'attestation de QUA-013 renouvelée
+  par l'humain. La logique du rejeu est dans un nouveau module
+  (`packages/drwil/src/closure.ts`), et l'écriture de la preuve dans
+  `.githooks/closure-proof.mjs`, pour tenir `packages/drwil/src/verify.ts` à
+  400 lignes et `.githooks/close.mjs` sous le plafond (QUA-001). Le cadrage a
+  été élargi deux fois en cours de route (dossier de preuves du gabarit, module
+  d'écriture de la preuve) par des commits qui ne touchent que la fiche.
+  Enseignement de la clôture elle-même : la première preuve écrite s'est heurtée
+  à la barrière de périmètre, qui refuse en CLOSING tout fichier hors fiches —
+  la clôture écrivait donc un document que le commit refusait. La preuve de
+  clôture échappe désormais au périmètre jugé, comme les attestations et le
+  journal de consommation, tous écrits en CLOSING pour le commit de clôture.
+- **Limites connues** : le dossier des preuves garde son nom français dans un
+  gabarit anglais, seul le réglage `dirs.proofs` le change —
+  `docs/intentions/nom-du-dossier-des-preuves.md`. Les chantiers clos avant
+  cette règle n'ont pas de preuve, et aucune n'est écrite après coup (hors
+  périmètre) — `docs/intentions/preuve-des-chantiers-deja-clos.md`. Les trois
+  contrats créés ne déclarent pas de `**Couvre**`, comme les autres contrats du
+  dépôt : la colonne d'empreinte de cette première preuve affiche « — », le
+  mécanisme l'écrit dès qu'un contrat déclare sa couverture —
+  `docs/intentions/couverture-des-contrats-attestes.md`.
+- **Consommation** : non mesurée — chantier mené sous Copilot CLI.
+- **Clôturé par** : la branche `cadrage-criteres-durables`.

@@ -210,8 +210,12 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    Closing requires a `PASS` or `ATTESTED` verdict on the current commit; a
    `MANUAL` contract waits for the human's `drwil attest`. An unproven
    acceptance criterion makes the verdict fail.
-5. **CLOSING** — the work item is condensed into the journal and deleted;
-   its token consumption is recorded (`.drwil/usage.jsonl`, read from
+5. **CLOSING** — the work item is condensed into the journal, its closing
+   proof is written (`docs/preuves/<work item>.md`: every criterion, its
+   contract, that contract's checks, the verified commit and the
+   fingerprint of the covered files) and the item itself is deleted;
+   without that proof, the closing is refused. Its token consumption is
+   recorded (`.drwil/usage.jsonl`, read from
    Claude Code's session logs);
    its untreated limits become intents; the README, the `CHANGELOG.md`
    « Unreleased » section and the map `docs/architecture.md` are updated
@@ -369,7 +373,11 @@ engine as the git hooks (`.githooks/engine.mjs`), and prints a verdict:
 ERROR` (exit 2). A contract with a human part is `MANUAL`, never `PASS`;
 an unknown check is an `ERROR`. While a work item is active, its
 acceptance criteria are judged too: an unproven one makes the verdict
-fail. The output ends with a summary of the business rules (proven by a
+fail. The item judged is found without the local state as well — from the
+`Drwil-Brief` trailer of the branch's commits — so CI judges the same
+criteria as the machine that wrote them. After the closing, the criteria
+of the closing proofs are replayed: one whose proof has disappeared (check
+removed, contract abandoned) makes the verdict `FAIL` and is named. The output ends with a summary of the business rules (proven by a
 test, to complete, broken). See `docs/ia-first.md`, section 5, in an
 installed project.
 

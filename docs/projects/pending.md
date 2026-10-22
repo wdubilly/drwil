@@ -383,8 +383,6 @@ une décision du demandeur.
 - [ ] [décision] Déclarer ce que couvrent les contrats attestés du dépôt
   (champ `**Couvre**`, puis réattestation) —
   `docs/intentions/couverture-des-contrats-attestes.md`.
-- [ ] [décision] [P1] drwil_com, priorité 2 : des critères et des preuves
-  qui survivent à la clôture — `docs/intentions/criteres-et-preuves-durables.md`.
 - [ ] [décision] [P1] drwil_com, priorité 3 : vérifier la barrière de
   fusion (protection absente, mal configurée, conforme) — section « Retour
   de drwil_com » de `docs/intentions/forge-dans-le-livrable.md`.
@@ -405,6 +403,15 @@ une décision du demandeur.
   l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
 - [ ] [décision] Mener plusieurs chantiers en parallèle, ou orchestrer plusieurs
   agents sur leurs parties — `docs/intentions/chantiers-en-parallele.md`.
+- [ ] [décision] Nommer le dossier des preuves dans la langue du projet
+  (dossier `proofs` en anglais ; limite du chantier du 2026-10-21) —
+  `docs/intentions/nom-du-dossier-des-preuves.md`.
+- [ ] [décision] Rattraper, ou assumer, l'absence de preuve de clôture pour les
+  chantiers clos avant la règle (limite du chantier du 2026-10-21) —
+  `docs/intentions/preuve-des-chantiers-deja-clos.md`.
+- [ ] [décision] Corriger un défaut révélé après la clôture, quand plus aucune
+  activité ne ramène en BUILD (vécu le 2026-10-21) —
+  `docs/intentions/defaut-revele-apres-la-cloture.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
