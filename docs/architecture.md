@@ -1,6 +1,6 @@
 # Architecture — drwil
 
-As of 2026-10-16. Map of the repository: what lives where. Kept up to date in the same commit as the code it describes, which the `architecture-map` check enforces (QUA-040): every file of `packages/drwil/src/`, `.githooks/` and `outils/` (tests excluded) is cited here. It points to the documents that go into detail, without copying them.
+As of 2026-10-23. Map of the repository: what lives where. Kept up to date in the same commit as the code it describes, which the `architecture-map` check enforces (QUA-040): every file of `packages/drwil/src/`, `.githooks/` and `outils/` (tests excluded) is cited here. It points to the documents that go into detail, without copying them.
 
 ## What drwil does
 
@@ -35,7 +35,7 @@ In this repository, copies of the shipped hooks: installed from the template by 
 
 ## Specific to this repository (never shipped)
 
-- `outils/`: `outils/installer-depot.mjs` (the repository installs itself from its template with the real CLI, without touching `.drwil/` or the declared differences), `outils/verifier-miroirs.mjs` and its list `outils/miroirs.json` (repository and template identical, declared differences), `outils/verifier-tests-contrats.mjs` (tests ↔ contracts link both ways, one check per rule, QUA-033), `outils/tester-tarball.mjs` (the CLI installed from the tarball, as a user would), `outils/banc-agents.mjs` (agent bench: installs drwil in a temporary project in SCOPING, asks the real agent to write code, reports hooks run, write refused or accepted, state reminder; an absent tool is "not tested", QUA-060), `outils/audit-dependances.mjs` (SEC-006).
+- `outils/`: `outils/installer-depot.mjs` (the repository installs itself from its template with the real CLI, without touching `.drwil/` or the declared differences), `outils/verifier-miroirs.mjs` and its list `outils/miroirs.json` (repository and template identical, declared differences), `outils/verifier-tests-contrats.mjs` (tests ↔ contracts link both ways, one check per rule, QUA-033), `outils/tester-tarball.mjs` (the CLI installed from the tarball, as a user would), `outils/banc-agents.mjs` (agent bench: installs drwil in a temporary project in SCOPING, asks the real agent to write code, reports hooks run, write refused or accepted, state reminder; an absent tool is "not tested", QUA-060), `outils/banc.mjs` and its judge `outils/banc-juge.mjs` (mini-bench, same instruction with and without drwil: a throwaway copy of `bench/reference/` per run, the tasks of `bench/taches/`, hidden tests copied after the run, one JSON result per run, campaign on demand in `.github/workflows/banc.yml`, protocol `docs/benchmark-protocole.md`, QUA-101 to QUA-106), `outils/audit-dependances.mjs` (SEC-006).
 - Forge: `.github/workflows/ia-first.yml` (CI: checks, package tests on Linux, Windows and macOS), `.github/ruleset-master.json` and `.github/scripts/verifier-ruleset.mjs` (protection of `master`, verified in CI), `.github/CODEOWNERS`.
 
 ## Governance of this repository

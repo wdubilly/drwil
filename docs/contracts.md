@@ -929,3 +929,65 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/pr-watch.test.mjs`, `packages/drwil/test/guarantees.test.mjs`
 **Origine** : garanties obligatoires à l'adoption — « Après un push ou la création d'une PR, un script attend la fin de la CI (`gh pr checks`) et dit « verte », « fusionnée » ou « rouge » avec le contrôle en échec ; l'agent corrige l'échec sans jamais le contourner (QUA-019, pas de contournement) ; sans accès à la forge, le suivi reste « non exécuté » et le dit (QUA-013) ; script Node, valable pour tous les outils »
 **Raison** : L'agent annonçait une PR prête sans avoir vu sa CI finir.
+
+## QUA-101 — Le mini-banc se rejoue d'une commande et écrit un résultat JSON par passage
+**Règle** : Propre au dépôt drwil (QUA-018). `node outils/banc.mjs passage` prépare une copie jetable de `bench/reference/` hors du dépôt (jamais dedans, et rien n'y reste), sous git, avec drwil installé par le vrai `drwil init` pour la condition « avec » (hooks actifs, `transitions: agent`), lance l'agent en mode non interactif sur la consigne mot pour mot d'une tâche de `bench/taches/` (même modèle, même effort, plafond de tours, flux JSON), puis écrit un résultat JSON par passage : tokens, coût estimé, tours, durée, verdict du juge. `node outils/banc.mjs plan` donne les passages, l'ordre avec/sans tiré au sort par tâche ; un passage d'essai est seul et hors mesure.
+**Périmètre** : `outils/banc.mjs`, `bench/`.
+**Source de vérité** : `outils/banc.mjs` (`preparer`, `passage`, `plan`).
+**Preuve** : tests du banc avec un agent simulé (aucun vrai agent), drwil init réel.
+**Contrôle** : `tests-qua-101`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : mini-banc — « Le banc se rejoue d'une commande sur une copie jetable du projet de référence, avec et sans drwil, et écrit un résultat JSON par passage (tokens, coût, tours, verdict du juge) ; éprouvé avec un agent simulé »
+**Raison** : Savoir si drwil améliore le livrable et ce qu'il coûte demande une mesure rejouable, pas une impression.
+
+## QUA-102 — Le juge du mini-banc est indépendant de drwil
+**Règle** : Propre au dépôt drwil (QUA-018). Le juge (`outils/banc-juge.mjs`) ne s'appuie sur aucun contrôle de drwil : les tests cachés de la tâche ne sont copiés dans la copie qu'après le passage de l'agent, puis lancés ; les tests visibles sont relancés (régression : en échec après, pas avant) ; le diff et les commandes de l'agent relèvent les contournements (test sauté ou supprimé, commande de test changée, `--no-verify`, `core.hooksPath`, fichier de contrôle modifié) ; les fichiers de code touchés hors de la tâche sont comptés, ceux de la gouvernance (`docs/`, `.drwil/`) à part. Réussi = tests cachés verts, aucun contournement, aucune régression.
+**Périmètre** : `outils/banc-juge.mjs`.
+**Source de vérité** : `outils/banc-juge.mjs` (`juger`, `contournements`, `diff`).
+**Preuve** : tests du banc avec un agent simulé.
+**Contrôle** : `tests-qua-102`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : mini-banc — « Le juge est indépendant : tests cachés copiés après le passage, contournement détecté sur le diff (test sauté ou supprimé, `--no-verify`, contrôle désactivé), fichiers hors tâche comptés »
+**Raison** : Juger le livrable par les contrôles de drwil, ce serait juger le produit par lui-même.
+
+## QUA-103 — Un passage du mini-banc qui n'a pas pu tourner est « non mesuré »
+**Règle** : Propre au dépôt drwil (QUA-018), application de QUA-013 (contrôle non exécuté n'est pas passé). Un passage dont l'agent est absent, dont la préparation échoue, qui dépasse son délai, qui ne rend aucun message de résultat ou dont l'agent finit en erreur (hors plafond de tours atteint, qui est jugé) est « non mesuré », avec sa raison : jamais compté réussi ni raté, et le rapport le compte à part.
+**Périmètre** : `outils/banc.mjs` (`passage`), `outils/banc-juge.mjs` (`rapport`).
+**Source de vérité** : `outils/banc.mjs` (`passage`).
+**Preuve** : tests du banc avec un agent simulé.
+**Contrôle** : `tests-qua-103`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : mini-banc — « Un passage qui n'a pas pu tourner est « non mesuré », jamais compté réussi ni raté »
+**Raison** : Un passage tombé (quotas, panne) compté raté ou réussi fausserait la comparaison sans que rien ne le dise.
+
+## QUA-104 — Le mini-banc mesure à part le coût de la gouvernance
+**Règle** : Propre au dépôt drwil (QUA-018). Chaque résultat de passage porte, lus du flux de l'agent et calculés de la même façon avec et sans drwil : les blocages (appel d'outil refusé par un contrôle), les faux blocages (refus d'écrire un fichier de la tâche, ou d'un commit dans un passage jugé réussi), le nombre d'appels de contrôle et le temps passé dans ces appels (refusés, ou commandes de contrôle : hooks, drwil, commit, push).
+**Périmètre** : `outils/banc-juge.mjs` (`lireFlux`, `gouvernance`).
+**Source de vérité** : `outils/banc-juge.mjs` (`gouvernance`).
+**Preuve** : tests du banc sur un flux simulé.
+**Contrôle** : `tests-qua-104`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : mini-banc — « Le coût de la gouvernance est mesuré à part : faux blocages (contrôle qui refuse un travail correct) et temps passé à satisfaire les contrôles, avec et sans drwil (ajouté le 2026-10-22, revue externe) »
+**Raison** : La barrière a refusé de vrais écarts mais coûté des allers-retours (2026-10-09) : ce coût se mesure plutôt qu'il ne se suppose.
+
+## QUA-105 — Le workflow du mini-banc ne tourne qu'à la demande, sans secret dans les résultats
+**Règle** : Propre au dépôt drwil (QUA-018). `.github/workflows/banc.yml` ne se déclenche que par `workflow_dispatch`, jamais sur une PR ni un push ; jeton GitHub du job en lecture seule ; version de Claude Code épinglée ; deux passages à la fois au plus (fenêtre d'usage de l'abonnement) ; seul secret, le jeton d'abonnement `CLAUDE_CODE_OAUTH_TOKEN`. L'agent ne reçoit que le strict nécessaire de l'environnement ; tout jeton ou clé présent dans un résultat est masqué avant l'écriture, et le masque est dit. Le retrait des tâches et de l'historique avant le passage (`--isoler`) ne s'emploie que sur une machine de CI.
+**Périmètre** : `.github/workflows/banc.yml`, `outils/banc.mjs` (`envAgent`, `isoler`), `outils/banc-juge.mjs` (`masquerSecrets`, `ecrireResultat`).
+**Source de vérité** : `.github/workflows/banc.yml`, `outils/banc-juge.mjs`.
+**Preuve** : tests du banc (workflow lu en YAML, résultats écrits avec un faux jeton).
+**Contrôle** : `tests-qua-105`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : mini-banc — « Le workflow du banc ne se déclenche qu'à la demande, jamais sur une PR ni un push, et aucun secret n'apparaît dans les résultats »
+**Raison** : Chaque passage consomme l'abonnement du demandeur : il ne part que sur son geste, et son jeton ne sort jamais du job.
+
+## QUA-106 — Le rapport du mini-banc rapporte tous les passages, min et max, sur un protocole daté avant la mesure
+**Règle** : Propre au dépôt drwil (QUA-018). `node outils/banc.mjs rapport` liste tous les passages de la campagne, mesurés ou non, puis par tâche et condition le min, le max et la moyenne de chaque mesure ; les passages d'essai n'y comptent pas. Il est refusé si `docs/benchmark-protocole.md` ne date pas le protocole réduit, ou s'il le date après un passage mesuré. Le rapport de campagne est versionné, daté, à côté du protocole, sans aucun passage relancé parce qu'il s'est mal passé.
+**Périmètre** : `outils/banc-juge.mjs` (`rapport`, `dateProtocole`), `docs/benchmark-protocole.md`.
+**Source de vérité** : `outils/banc-juge.mjs` (`rapport`).
+**Preuve** : tests du banc ; la campagne et son rapport sont un geste humain.
+**Contrôle** : `tests-qua-106`
+**Manuel** : après la campagne (lot 2 : jeton d'abonnement en secret, workflow déclenché), vérifier que le rapport daté à côté du protocole rapporte les 12 passages, aucun relancé, et que le protocole réduit était daté avant le premier passage.
+**Couvre** : `outils/banc-juge.mjs`, `docs/benchmark-protocole.md`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : mini-banc — « Le rapport de campagne rapporte tous les passages, min et max, avec le protocole daté fixé avant la mesure »
+**Raison** : Avec 3 répétitions, seule une dispersion honnête de tous les passages dit quelque chose ; un protocole ajusté après coup ne dit plus rien.

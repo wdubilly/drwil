@@ -1068,6 +1068,81 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-101",
+      "name": "tests de QUA-101, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-101 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        "bench/**",
+        "packages/drwil/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-102",
+      "name": "tests de QUA-102, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-102 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        "bench/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-103",
+      "name": "tests de QUA-103, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-103 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        "bench/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-104",
+      "name": "tests de QUA-104, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-104 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        "bench/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-105",
+      "name": "tests de QUA-105, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-105 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        "bench/**",
+        ".github/workflows/banc.yml",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-106",
+      "name": "tests de QUA-106, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-106 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        "bench/**",
+        "docs/benchmark-protocole.md",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "transitions": "human",

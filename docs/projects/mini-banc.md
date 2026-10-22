@@ -45,21 +45,20 @@ par ce chantier, avec leur champ Origine.)
 - Le banc se rejoue d'une commande sur une copie jetable du projet de
   référence, avec et sans drwil, et écrit un résultat JSON par passage
   (tokens, coût, tours, verdict du juge) ; éprouvé avec un agent simulé —
-  contrat à créer
+  `QUA-101`
 - Le juge est indépendant : tests cachés copiés après le passage,
   contournement détecté sur le diff (test sauté ou supprimé,
   `--no-verify`, contrôle désactivé), fichiers hors tâche comptés —
-  contrat à créer
+  `QUA-102`
 - Un passage qui n'a pas pu tourner est « non mesuré », jamais compté
-  réussi ni raté — contrat à créer
+  réussi ni raté — `QUA-103`
 - Le coût de la gouvernance est mesuré à part : faux blocages (contrôle qui
   refuse un travail correct) et temps passé à satisfaire les contrôles, avec
-  et sans drwil (ajouté le 2026-10-22, revue externe) — contrat à créer
+  et sans drwil (ajouté le 2026-10-22, revue externe) — `QUA-104`
 - Le workflow du banc ne se déclenche qu'à la demande, jamais sur une PR
-  ni un push, et aucun secret n'apparaît dans les résultats — contrat à
-  créer
+  ni un push, et aucun secret n'apparaît dans les résultats — `QUA-105`
 - Le rapport de campagne rapporte tous les passages, min et max, avec le
-  protocole daté fixé avant la mesure [humain] — contrat à créer
+  protocole daté fixé avant la mesure [humain] — `QUA-106`
 
 ## 2. Hors périmètre
 

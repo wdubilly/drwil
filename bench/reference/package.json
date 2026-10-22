@@ -1,0 +1,13 @@
+{
+  "name": "banc-boutique",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Petite boutique en ligne : panier, remises et affichage des prix.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  }
+}
