@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — dernière note le 2026-10-21.
+**Statut** : ouverte en permanence — dernière note le 2026-10-22.
 
 ## Besoin
 
@@ -26,3 +26,5 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-10-21 — Adoption d'un projet existant : scopeReminder bloque dès l'init (tout le code déjà là est hors fiche, 438 fichiers chez run-box-v2). Pistes : init en warning si du code existe ; fiche d'amorçage « code existant » générée par init ; étape dans /drwil-adopt pour choisir le niveau de rappel.
 - 2026-10-21 — Afficher l'état de gouvernance (SCOPING, BUILD, VERIFY, CLOSING) en continu dans le terminal pour suivre l'avancement. Pistes : réglage statusLine de Claude Code livré par le kit avec un script .githooks/state-line.mjs lisant .drwil/state.json ; même script réutilisable dans l'invite du shell ; vérifier si Copilot CLI offre l'équivalent.
 - 2026-10-21 — Chantiers trop gros : « critères et preuves durables » a pris 2 h 45, 31 fichiers, 3 contrats créés et 2 étendus, car il touchait trois mécaniques liées (jugement des critères, clôture, CI) ; les deux précédents tenaient en 40 min. Piste : cadrer une fiche par lot (un lot = un chantier vérifiable seul) plutôt qu'une fiche à quatre lots, et le dire dans la recette de cadrage.
+- 2026-10-22 — Le passage BUILD → EVIDENCE sur l'entretien courant (fiche permanente) annonce sa suppression et liste ~40 faux avertissements « cite docs/projects/routine-maintenance.md, qui sera supprimée » : le signal de clôture devrait exempter la fiche permanente.
+- 2026-10-22 — Le hook pre-push applique QUA-017 (pas de travail direct sur la branche principale) à la branche courante, pas à la référence poussée : depuis master, le push de recette/vX.Y.Z par recette-note.mjs (lancé par create-release.mjs) est refusé, la note de recette n'est pas écrite (v0.7.0, 2026-10-22). Juger la référence distante lue sur l'entrée standard ; recette-note.mjs devrait aussi afficher la sortie de git en cas d'échec.
