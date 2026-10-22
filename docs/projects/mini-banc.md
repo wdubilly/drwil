@@ -8,6 +8,7 @@
 files:
   - outils/banc.mjs
   - outils/banc.test.mjs
+  - outils/banc-juge.mjs
   - bench/reference/package.json
   - bench/reference/src/*
   - bench/reference/test/*
