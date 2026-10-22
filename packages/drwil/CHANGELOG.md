@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.6.10 (2026-10-22)
+
 ### Added
 
 - An attestation falls when what it covers changes: a contract can declare
