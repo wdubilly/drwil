@@ -19,6 +19,8 @@ files:
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/templates/common/base/.githooks/briefs.mjs
   - packages/drwil/templates/common/base/README.md
+  - packages/drwil/templates/common/base/AGENTS.md
+  - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
   - packages/drwil/templates/common/optional/create-release/*
   - packages/drwil/templates/common/base/docs/features.md
   - packages/drwil/templates/common/base/docs/contracts-catalog.md
@@ -126,6 +128,11 @@ attribuer à ce moment-là dans le registre.)
   non) ; l'agent le met à jour dans la PR de version, ou enregistre
   « inchangé » avec sa raison (une ligne versionnée) ; un document qui
   garde du texte de squelette bloque aussi — contrat à créer
+- Une PR qui ne touche que de la documentation est mise en fusion
+  automatique par l'agent sans poser la question `drwil-merge` ; le sondage
+  ne garde la question que pour les PR qui touchent du code. Le dépôt doit
+  autoriser l'auto-merge, sinon le message de refus existant s'applique —
+  contrat à créer
 
 ## Contrats modifiés
 
@@ -203,6 +210,10 @@ attribuer à ce moment-là dans le registre.)
   recette reste après le tag, dans sa PR (elle a besoin de l'empreinte du
   tarball).
 
+- 2026-10-22 (demandeur) : règle livrée au kit : toute PR de documentation
+  seule se fusionne en automatique sans poser la question ; même chantier,
+  lot supplémentaire.
+
 ## 5. Lots
 
 Un seul chantier : l'e2e est obligatoire au même titre que la couverture, donc
@@ -232,6 +243,9 @@ aucune release ne part avec l'une sans l'autre.
   texte de squelette dans le README, `AGENTS.md` et `docs/features.md`,
   fiche bloquante `[P0]` ; examen imposé par `packages/drwil/templates/common/optional/create-release/create-release.mjs`
   (`packages/drwil/templates/common/optional/create-release/`) avant le tag.
+- **Lot 2quater — fusion automatique des PR de documentation** : règle dans
+  `packages/drwil/templates/common/base/AGENTS.md` et le skill
+  `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
 - **Lot 3 — documents** : recette, catalogue et skill d'adoption.
 
 ## 6. Reprise
