@@ -1,4 +1,4 @@
-# Projet : garanties obligatoires à l'adoption — couverture, e2e et versionnement
+# Projet : garanties obligatoires à l'adoption — couverture, e2e, versionnement et présentation du projet
 
 **Statut** : cadré le 2026-10-22 — rien de commencé.
 **Risque** : HIGH
@@ -18,6 +18,8 @@ files:
   - packages/drwil/src/i18n.ts
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/templates/common/base/.githooks/briefs.mjs
+  - packages/drwil/templates/common/base/README.md
+  - packages/drwil/templates/common/base/docs/features.md
   - packages/drwil/templates/common/base/docs/contracts-catalog.md
   - packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md
   - packages/drwil/templates/common/tools/claude/.claude/skills/adopt-the-kit/SKILL.md
@@ -100,6 +102,15 @@ attribuer à ce moment-là dans le registre.)
   forge, le contrôle reste « non exécuté » et la fiche reste ouverte
   (QUA-013) — contrat à créer
 
+- Le README livré présente le **produit de l'utilisateur** d'abord (ce que fait
+  l'application, pour qui, comment la lancer) ; l'outillage drwil n'y tient
+  que quelques lignes de renvoi vers `AGENTS.md` et `docs/` — contrat à créer
+- Tant que le README, la ligne « Le projet en 5 lignes » d'`AGENTS.md` ou
+  `docs/features.md` gardent le texte du squelette (« to describe »,
+  « template to fill in »), une fiche bloquante `[P0]` demande à l'humain de
+  les rédiger (à partir de la carte `docs/architecture.md` si elle existe) ;
+  elle se clôt quand le texte a changé — contrat à créer
+
 ## Contrats modifiés
 
 - Entrée `catalog:QUA-004` du **gabarit livré** — ancien critère : « Test
@@ -164,6 +175,11 @@ attribuer à ce moment-là dans le registre.)
   fiche bloquante ; la fiche inclut la protection de la branche principale ;
   même chantier que les garanties, en lot supplémentaire.
 
+- 2026-10-22 (demandeur) : le README d'un projet gouverné doit correspondre au
+  projet de l'utilisateur, pas à drwil ; constat sur `drwil_dbox` : README,
+  « 5 lignes » et `docs/features.md` jamais remplis alors que la carte l'est (seule
+  la carte a un contrôle) ; même chantier, lot supplémentaire.
+
 ## 5. Lots
 
 Un seul chantier : l'e2e est obligatoire au même titre que la couverture, donc
@@ -185,6 +201,10 @@ aucune release ne part avec l'une sans l'autre.
   forge (gabarits GitHub et GitLab existants), fiche bloquante `[P0]` quand un
   élément manque, protection de la branche principale par `gh` ou `glab` avec
   l'accord de l'humain.
+- **Lot 2ter — présentation du projet** : gabarit du README recentré sur le
+  produit (`packages/drwil/templates/common/base/README.md`), détection du
+  texte de squelette dans le README, `AGENTS.md` et `docs/features.md`,
+  fiche bloquante `[P0]`.
 - **Lot 3 — documents** : recette, catalogue et skill d'adoption.
 
 ## 6. Reprise
