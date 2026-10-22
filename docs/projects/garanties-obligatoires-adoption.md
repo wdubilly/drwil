@@ -47,6 +47,7 @@ files:
   - .claude/skills/adopt-the-kit/SKILL.md
   - docs/recipes/adopt-the-kit.md
   - docs/features.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
 -->
 
 (périmètre : la commande des garanties et son code, la détection de pile
@@ -56,7 +57,8 @@ carte ; à compléter au lancement si le découpage du code l'exige — élargir
 coûte un commit séparé. Élargi au lancement (2026-10-22) : la CLI
 `packages/drwil/bin/drwil.js` qui expose la commande, les modules `guarantees-*.ts`
 (plafond de 400 lignes, QUA-001), les copies installées du gabarit dans le
-dépôt (`.githooks/`, `.claude/skills/`, recette) et leurs tests.)
+dépôt (`.githooks/`, `.claude/skills/`, recette) et leurs tests ; puis le
+cadrage livré de la mécanique du kit, qui doit couvrir les nouveaux scripts.)
 
 ## 1. Besoin
 
