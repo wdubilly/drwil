@@ -19,6 +19,10 @@ files:
   - packages/drwil/src/closure.ts
   - packages/drwil/test/kit.test.mjs
   - README.md
+  - package.json
+  - package-lock.json
+  - packages/drwil/package.json
+  - packages/drwil/CHANGELOG.md
 -->
 
 ## Journal
