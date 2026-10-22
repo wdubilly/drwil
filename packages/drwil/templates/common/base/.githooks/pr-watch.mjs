@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Follows the CI of a pull request after a push or its creation (QUA-100): waits until its checks are
-// over, then says « green », « merged » or « red » with the failing checks. A red CI is fixed, never
+// over (`gh pr view --json statusCheckRollup`), then says « green », « merged » or « red » with the failing checks. A red CI is fixed, never
 // bypassed (QUA-019). Without gh reachable, or past the time limit, the follow-up is « not run »,
 // never « green » (QUA-013). Valid for every AI tool: a plain Node script on top of `gh`.
 // Usage: node .githooks/pr-watch.mjs [<pr number>] [--timeout <minutes>]
@@ -57,15 +57,24 @@ export function ghJson(args, run = spawnSync) {
   }
 }
 
+/**
+ * Bucket of one check of `statusCheckRollup`: a check run (status, conclusion) or a commit status
+ * (state). Read from `gh pr view`, which every gh version knows (`gh pr checks --json` came later).
+ */
+export function bucket(c) {
+  if (c.state !== undefined) return c.state === "SUCCESS" ? "pass" : ["PENDING", "EXPECTED"].includes(c.state) ? "pending" : "fail";
+  if (c.status !== "COMPLETED") return "pending";
+  if (["SUCCESS", "NEUTRAL", "SKIPPED"].includes(c.conclusion)) return "pass";
+  return c.conclusion === "CANCELLED" ? "cancel" : "fail";
+}
+
 /** One look at the PR: { state: "merged" | "closed" | "green" | "red" | "pending" | "none" | "not-run", … }. */
 export function look(pr, gh) {
-  const view = gh(["pr", "view", ...(pr ? [pr] : []), "--json", "number,state"]);
+  const view = gh(["pr", "view", ...(pr ? [pr] : []), "--json", "number,state,statusCheckRollup"]);
   if (!view) return { state: "not-run" };
   if (view.state === "MERGED") return { state: "merged", number: view.number };
   if (view.state === "CLOSED") return { state: "closed", number: view.number };
-  // `gh pr checks` exits 8 while checks are pending: its JSON is still read.
-  const checks = gh(["pr", "checks", String(view.number), "--json", "name,bucket"]);
-  if (!Array.isArray(checks)) return { state: "not-run", number: view.number };
+  const checks = (view.statusCheckRollup ?? []).map((c) => ({ name: c.name ?? c.context, bucket: bucket(c) }));
   if (!checks.length) return { state: "none", number: view.number };
   const failed = checks.filter((c) => c.bucket === "fail" || c.bucket === "cancel").map((c) => c.name);
   if (failed.length) return { state: "red", number: view.number, failed };
