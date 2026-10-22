@@ -102,6 +102,14 @@ attribuer à ce moment-là dans le registre.)
   `glab` **avec l'accord de l'humain**, jamais en silence ; sans accès à la
   forge, le contrôle reste « non exécuté » et la fiche reste ouverte
   (QUA-013) — contrat à créer
+- Bonnes pratiques de versionnement imposées par la même protection de
+  branche : CI verte obligatoire, sans contournement même pour les
+  administrateurs ; la CI rejoue les contrôles du hook local, donc un
+  `--no-verify` est rattrapé avant la fusion ; l'usage de `--no-verify` est
+  signalé par `drwil verify` quand il est détectable. Projet neuf : tout est
+  imposé dès `init` (fiche bloquante `[P0]`) ; projet existant adopté : même
+  liste en fiche `[P1]` non bloquante, tant que l'humain ne l'a pas décidé
+  autrement — contrat à créer
 
 - Le README livré présente le **produit de l'utilisateur** d'abord (ce que fait
   l'application, pour qui, comment la lancer) ; l'outillage drwil n'y tient
@@ -215,7 +223,10 @@ aucune release ne part avec l'une sans l'autre.
 - **Lot 2bis — versionnement** : détection du dépôt, de la CI et de la
   forge (gabarits GitHub et GitLab existants), fiche bloquante `[P0]` quand un
   élément manque, protection de la branche principale par `gh` ou `glab` avec
-  l'accord de l'humain.
+  l'accord de l'humain ; mêmes règles de bonne pratique (CI obligatoire sans
+  contournement administrateur, CI rejouant les contrôles du hook, signalement
+  de `--no-verify` si détectable), imposées sur projet neuf, en `[P1]` non
+  bloquant sur projet existant.
 - **Lot 2ter — présentation du projet** : gabarit du README recentré sur le
   produit (`packages/drwil/templates/common/base/README.md`), détection du
   texte de squelette dans le README, `AGENTS.md` et `docs/features.md`,
