@@ -15,6 +15,9 @@ files:
   - .github/workflows/banc.yml
   - docs/benchmark-protocole.md
   - outils/miroirs.json
+  - docs/contracts.md
+  - .drwil/ia-first.json
+  - docs/architecture.md
 -->
 
 (cadrage : ce dépôt seulement — QUA-018 (périmètre explicite : dépôt drwil
