@@ -31,13 +31,32 @@ files:
   - .drwil/ia-first.json
   - docs/architecture.md
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/bin/drwil.js
+  - packages/drwil/src/guarantees-*.ts
+  - packages/drwil/test/kit.test.mjs
+  - packages/drwil/test/cycle.test.mjs
+  - .githooks/briefs.mjs
+  - .githooks/state.test.mjs
+  - .githooks/pr-watch.mjs
+  - .githooks/pr-watch.test.mjs
+  - .githooks/create-release.mjs
+  - .githooks/create-release.test.mjs
+  - .githooks/release-review.mjs
+  - .githooks/release-review.test.mjs
+  - .claude/skills/start-a-workstream/SKILL.md
+  - .claude/skills/adopt-the-kit/SKILL.md
+  - docs/recipes/adopt-the-kit.md
+  - docs/features.md
 -->
 
 (périmètre : la commande des garanties et son code, la détection de pile
 réutilisée, la prise en compte dans `verify` et dans l'ordre des fiches, ses
 tests, le catalogue, la recette et le skill d'adoption, le registre et la
 carte ; à compléter au lancement si le découpage du code l'exige — élargir
-coûte un commit séparé.)
+coûte un commit séparé. Élargi au lancement (2026-10-22) : la CLI
+`packages/drwil/bin/drwil.js` qui expose la commande, les modules `guarantees-*.ts`
+(plafond de 400 lignes, QUA-001), les copies installées du gabarit dans le
+dépôt (`.githooks/`, `.claude/skills/`, recette) et leurs tests.)
 
 ## 1. Besoin
 
