@@ -20,6 +20,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/briefs.mjs
   - packages/drwil/templates/common/base/README.md
   - packages/drwil/templates/common/base/AGENTS.md
+  - packages/drwil/templates/common/base/.githooks/pr-watch.mjs
   - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
   - packages/drwil/templates/common/optional/create-release/*
   - packages/drwil/templates/common/base/docs/features.md
@@ -133,6 +134,12 @@ attribuer à ce moment-là dans le registre.)
   ne garde la question que pour les PR qui touchent du code. Le dépôt doit
   autoriser l'auto-merge, sinon le message de refus existant s'applique —
   contrat à créer
+- Après un push ou la création d'une PR, un script attend la fin de la CI
+  (`gh pr checks`) et dit « verte », « fusionnée » ou « rouge » avec le
+  contrôle en échec ; l'agent corrige l'échec sans jamais le contourner
+  (QUA-019, pas de contournement) ; sans accès à la forge, le suivi reste
+  « non exécuté » et le dit (QUA-013) ; script Node, valable pour tous les
+  outils — contrat à créer
 
 ## Contrats modifiés
 
@@ -218,6 +225,9 @@ attribuer à ce moment-là dans le registre.)
   seule se fusionne en automatique sans poser la question ; même chantier,
   lot supplémentaire.
 
+- 2026-10-22 (demandeur) : le suivi de la CI d'une PR par un script (verte,
+  rouge, fusionnée) est un minimum ; même chantier, lot supplémentaire.
+
 ## 5. Lots
 
 Un seul chantier : l'e2e est obligatoire au même titre que la couverture, donc
@@ -250,6 +260,9 @@ aucune release ne part avec l'une sans l'autre.
 - **Lot 2quater — fusion automatique des PR de documentation** : règle dans
   `packages/drwil/templates/common/base/AGENTS.md` et le skill
   `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
+- **Lot 2quinquies — suivi de la PR** : script Node du gabarit (dossier
+  `.githooks` du gabarit de base) qui suit la CI d'une PR par `gh`, et
+  consigne dans `AGENTS.md` de le lancer après un push.
 - **Lot 3 — documents** : recette, catalogue et skill d'adoption.
 
 ## 6. Reprise
