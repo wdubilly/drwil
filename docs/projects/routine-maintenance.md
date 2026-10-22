@@ -23,6 +23,10 @@ files:
   - package-lock.json
   - packages/drwil/package.json
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/.githooks/scope-gate.mjs
+  - .githooks/scope-gate.test.mjs
+  - packages/drwil/templates/common/base/docs/ia-first.md
+  - docs/contracts.md
 -->
 
 ## Journal
