@@ -1,4 +1,4 @@
-# Projet : garanties obligatoires à l'adoption — couverture à 100 % et e2e
+# Projet : garanties obligatoires à l'adoption — couverture, e2e et versionnement
 
 **Statut** : cadré le 2026-10-22 — rien de commencé.
 **Risque** : HIGH
@@ -11,6 +11,8 @@ drwil-le-dépôt, QUA-018. Un seuil de couverture ne redescend jamais.)
 files:
   - packages/drwil/src/index.ts
   - packages/drwil/src/stack.ts
+  - packages/drwil/src/doctor.ts
+  - packages/drwil/src/config.ts
   - packages/drwil/src/guarantees.ts
   - packages/drwil/src/verify.ts
   - packages/drwil/src/i18n.ts
@@ -90,6 +92,14 @@ attribuer à ce moment-là dans le registre.)
   bloquante, cible 100 % ; l'e2e reste exigé comme sur un projet neuf —
   contrat à créer
 
+- Un projet gouverné a un dépôt Git et une forge, GitHub ou GitLab : CI
+  déclarée (`--ci github|gitlab`), dépôt distant, protection de la branche
+  principale (fusion par PR/MR, contrôles requis). Un élément absent crée une
+  fiche bloquante `[P0]` ; la protection de branche se pose par `gh` ou
+  `glab` **avec l'accord de l'humain**, jamais en silence ; sans accès à la
+  forge, le contrôle reste « non exécuté » et la fiche reste ouverte
+  (QUA-013) — contrat à créer
+
 ## Contrats modifiés
 
 - Entrée `catalog:QUA-004` du **gabarit livré** — ancien critère : « Test
@@ -112,6 +122,7 @@ attribuer à ce moment-là dans le registre.)
   100 % garantit que chaque ligne est **exécutée** par un test, pas qu'elle
   est **correcte** — limite à écrire dans la recette.
 - La publication sur npm.
+- Toute forge autre que GitHub et GitLab (Bitbucket, Gitea…).
 
 ## 3. Contraintes
 
@@ -148,6 +159,11 @@ attribuer à ce moment-là dans le registre.)
 - 2026-10-22 (demandeur) : projet existant adopté : cliquet au niveau mesuré
   + 100 % sur le code nouveau ou modifié + fiche de montée non bloquante.
 
+- 2026-10-22 (demandeur) : le versionnement est une garantie obligatoire au
+  même titre : GitHub ou GitLab (CI et dépôt distant) obligatoire, sinon
+  fiche bloquante ; la fiche inclut la protection de la branche principale ;
+  même chantier que les garanties, en lot supplémentaire.
+
 ## 5. Lots
 
 Un seul chantier : l'e2e est obligatoire au même titre que la couverture, donc
@@ -165,6 +181,10 @@ aucune release ne part avec l'une sans l'autre.
   critiques ; le test est écrit avec l'outil de la pile (choix du demandeur) ;
   un seul contrôle le rejoue ; la fiche ne se clôt qu'une fois ce contrôle
   vert.
+- **Lot 2bis — versionnement** : détection du dépôt, de la CI et de la
+  forge (gabarits GitHub et GitLab existants), fiche bloquante `[P0]` quand un
+  élément manque, protection de la branche principale par `gh` ou `glab` avec
+  l'accord de l'humain.
 - **Lot 3 — documents** : recette, catalogue et skill d'adoption.
 
 ## 6. Reprise
