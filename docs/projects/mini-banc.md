@@ -48,6 +48,9 @@ par ce chantier, avec leur champ Origine.)
   contrat à créer
 - Un passage qui n'a pas pu tourner est « non mesuré », jamais compté
   réussi ni raté — contrat à créer
+- Le coût de la gouvernance est mesuré à part : faux blocages (contrôle qui
+  refuse un travail correct) et temps passé à satisfaire les contrôles, avec
+  et sans drwil (ajouté le 2026-10-22, revue externe) — contrat à créer
 - Le workflow du banc ne se déclenche qu'à la demande, jamais sur une PR
   ni un push, et aucun secret n'apparaît dans les résultats — contrat à
   créer
