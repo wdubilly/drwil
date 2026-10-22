@@ -19,6 +19,7 @@ files:
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/templates/common/base/.githooks/briefs.mjs
   - packages/drwil/templates/common/base/README.md
+  - packages/drwil/templates/common/optional/create-release/*
   - packages/drwil/templates/common/base/docs/features.md
   - packages/drwil/templates/common/base/docs/contracts-catalog.md
   - packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md
@@ -110,6 +111,13 @@ attribuer à ce moment-là dans le registre.)
   « template to fill in »), une fiche bloquante `[P0]` demande à l'humain de
   les rédiger (à partir de la carte `docs/architecture.md` si elle existe) ;
   elle se clôt quand le texte a changé — contrat à créer
+- La commande de release refuse de poser le tag (aperçu et création) tant que
+  l'examen de `README.md`, `docs/features.md` et `docs/architecture.md`
+  n'est pas fait : pour chacun, le script montre ce qui a changé depuis le
+  dernier tag (chantiers clos, fichiers de code touchés, document modifié ou
+  non) ; l'agent le met à jour dans la PR de version, ou enregistre
+  « inchangé » avec sa raison (une ligne versionnée) ; un document qui
+  garde du texte de squelette bloque aussi — contrat à créer
 
 ## Contrats modifiés
 
@@ -180,6 +188,13 @@ attribuer à ce moment-là dans le registre.)
   « 5 lignes » et `docs/features.md` jamais remplis alors que la carte l'est (seule
   la carte a un contrôle) ; même chantier, lot supplémentaire.
 
+- 2026-10-22 (demandeur) : c'est la commande de release qui impose la mise à
+  jour du README, de `docs/features.md` et de la carte, pas la clôture ; le
+  script impose l'examen, l'agent rédige ; ces mises à jour partent dans la PR
+  de version, avant le tag (la version publiée doit les contenir) ; la note de
+  recette reste après le tag, dans sa PR (elle a besoin de l'empreinte du
+  tarball).
+
 ## 5. Lots
 
 Un seul chantier : l'e2e est obligatoire au même titre que la couverture, donc
@@ -204,7 +219,8 @@ aucune release ne part avec l'une sans l'autre.
 - **Lot 2ter — présentation du projet** : gabarit du README recentré sur le
   produit (`packages/drwil/templates/common/base/README.md`), détection du
   texte de squelette dans le README, `AGENTS.md` et `docs/features.md`,
-  fiche bloquante `[P0]`.
+  fiche bloquante `[P0]` ; examen imposé par `packages/drwil/templates/common/optional/create-release/create-release.mjs`
+  (`packages/drwil/templates/common/optional/create-release/`) avant le tag.
 - **Lot 3 — documents** : recette, catalogue et skill d'adoption.
 
 ## 6. Reprise
