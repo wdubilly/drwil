@@ -110,8 +110,8 @@ attribuer à ce moment-là dans le registre.)
   `--no-verify` est rattrapé avant la fusion ; l'usage de `--no-verify` est
   signalé par `drwil verify` quand il est détectable. Projet neuf : tout est
   imposé dès `init` (fiche bloquante `[P0]`) ; projet existant adopté : même
-  liste en fiche `[P1]` non bloquante, tant que l'humain ne l'a pas décidé
-  autrement — contrat à créer
+  liste, aussi en fiche bloquante `[P0]` (aucune souplesse, contrairement à
+  la couverture) — contrat à créer
 
 - Le README livré présente le **produit de l'utilisateur** d'abord (ce que fait
   l'application, pour qui, comment la lancer) ; l'outillage drwil n'y tient
@@ -210,6 +210,10 @@ attribuer à ce moment-là dans le registre.)
   recette reste après le tag, dans sa PR (elle a besoin de l'empreinte du
   tarball).
 
+- 2026-10-22 (demandeur) : les bonnes pratiques de versionnement (CI sans
+  contournement, `--no-verify` rattrapé) sont bloquantes aussi sur projet
+  existant, sans la souplesse de la couverture.
+
 - 2026-10-22 (demandeur) : règle livrée au kit : toute PR de documentation
   seule se fusionne en automatique sans poser la question ; même chantier,
   lot supplémentaire.
@@ -236,8 +240,8 @@ aucune release ne part avec l'une sans l'autre.
   élément manque, protection de la branche principale par `gh` ou `glab` avec
   l'accord de l'humain ; mêmes règles de bonne pratique (CI obligatoire sans
   contournement administrateur, CI rejouant les contrôles du hook, signalement
-  de `--no-verify` si détectable), imposées sur projet neuf, en `[P1]` non
-  bloquant sur projet existant.
+  de `--no-verify` si détectable), imposées en fiche bloquante `[P0]`, sur
+  projet neuf comme sur projet existant.
 - **Lot 2ter — présentation du projet** : gabarit du README recentré sur le
   produit (`packages/drwil/templates/common/base/README.md`), détection du
   texte de squelette dans le README, `AGENTS.md` et `docs/features.md`,
