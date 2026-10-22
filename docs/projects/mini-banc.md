@@ -86,8 +86,9 @@ par ce chantier, avec leur champ Origine.)
 - **Bac à sable** : chaque passage sur une machine de CI neuve, dans une
   copie jetable du projet de référence ; outils de l'agent limités à
   cette copie ; jeton GitHub du job en lecture seule ; aucun autre secret
-  que l'identifiant du modèle, jamais affiché (masqué par GitHub, et
-  vérifié dans les résultats) ; plafond de tours par passage.
+  que le jeton d'abonnement Claude (`CLAUDE_CODE_OAUTH_TOKEN`), jamais
+  affiché (masqué par GitHub, et vérifié absent des résultats) ; plafond
+  de tours par passage.
 - **Honnêteté** (règles du protocole) : tous les passages rapportés, aucun
   relancé parce qu'il s'est mal passé ; min et max, pas seulement la
   moyenne ; le protocole réduit est daté et fixé avant toute mesure.
@@ -115,6 +116,10 @@ par ce chantier, avec leur champ Origine.)
   banc, avec un plafond de dépense fixé chez Anthropic, en secret GitHub —
   le coût reste borné hors de drwil. [décision utilisateur, sur
   recommandation]
+  Revue le 2026-10-22 : `claude -p` authentifié par l'abonnement Claude du
+  demandeur (jeton `claude setup-token`, secret GitHub
+  `CLAUDE_CODE_OAUTH_TOKEN`), plus de clé API dédiée. [décision
+  utilisateur]
 
 ## Contrats concernés
 
@@ -138,9 +143,10 @@ par ce chantier, avec leur champ Origine.)
   dans `docs/benchmark-protocole.md`. Critère de sortie : tests verts
   (agent simulé) ; un passage d'essai réel, en CI, hors mesure, va au
   bout (il demande le secret : geste humain préalable, voir lot 2).
-- **Lot 2 — campagne** [humain] : créer la clé API dédiée avec son
-  plafond, l'enregistrer en secret GitHub, puis déclencher le workflow
-  pour les 12 passages (dépense : geste humain). Critère de sortie :
+- **Lot 2 — campagne** [humain] : générer le jeton d'abonnement avec
+  `claude setup-token`, l'enregistrer en secret GitHub
+  `CLAUDE_CODE_OAUTH_TOKEN`, puis déclencher le workflow pour les 12
+  passages (consommation des quotas de l'abonnement : geste humain). Critère de sortie :
   rapport daté à côté du protocole, tous les passages rapportés.
 - **Lot 3 — lecture** [décision] : ce que les chiffres changent à la
   feuille de route (fluidité, fabrique, banc complet).
