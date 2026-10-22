@@ -647,7 +647,12 @@ update. Then run `/drwil-adopt` with your agent: on an empty folder it
 scopes the project first (need, first version, stack, business rules) and
 no layer is invented until you declare them (`npx drwil init --layers
 api,web`); on existing code it builds the architecture map from the code,
-which drwil keeps current from then on.
+which drwil keeps current from then on. Once the stack is known,
+`/drwil-adopt` runs `drwil guarantees`: 100 % coverage per layer (a ratchet
+on an existing project in test debt), an `e2e` check of the critical paths,
+a protected forge with a CI, and a README that presents your product; each
+guarantee not held gets a blocking brief, and `drwil verify` stays FAIL
+until it is held.
 
 **Upgrading a project that already had DRWIL:** `init` refreshes what the
 kit installed and the project never modified: its mechanics (hooks) and its
@@ -845,6 +850,18 @@ drwil contracts [--json]
 ```
 
 Lists and validates the contract registry without running any check.
+
+### Mandatory guarantees
+
+```bash
+drwil guarantees --dry-run   # what would be wired, writing nothing
+drwil guarantees             # wire them; a blocking brief per guarantee not held
+drwil guarantees --protect   # also protect the main branch (human's agreement only)
+```
+
+Run by `/drwil-adopt` once the stack is known: 100 % coverage per layer,
+`e2e` of the critical paths, protected forge with a CI, project
+presentation.
 
 ### Update and uninstall
 
@@ -1063,7 +1080,10 @@ Its role is narrower:
 [releases/latest](https://github.com/wdubilly/drwil/releases/latest). 0.6.0 added
 the business non-regression fed by every workstream, queues of
 workstreams, token consumption measured per workstream, readable
-identifiers and a maintained architecture map. Next: trying it on real
+identifiers and a maintained architecture map. 0.7.0 makes the
+guarantees of a governed project mandatory at adoption (100 % coverage,
+`e2e`, protected forge, a README that presents the product) and reviews the
+README, features and map before every release. Next: trying it on real
 projects (V1).
 
 V0.2 covered:
