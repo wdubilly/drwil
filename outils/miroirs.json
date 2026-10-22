@@ -9,6 +9,7 @@
     "docs/architecture.md": "Carte propre au dépôt drwil (le gabarit livre le modèle à rendre).",
     "docs/contracts-catalog.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt, en français : catalogue:QUA-004 et catalogue:QUA-001 adoptés par ce dépôt, donc retirés de son catalogue.",
     "docs/contracts.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt, en français : registre des contrats de drwil.",
+    "docs/features.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt, en français : fonctionnalités de drwil, examinées avant chaque release.",
     "docs/intentions/README.md": "Table des fiches remplacée par un renvoi à l'index des chantiers (une information, une seule source).",
     "docs/projects/journal.md": "Contenu propre au projet, semé par le gabarit puis rempli par le dépôt, en français : chantiers clôturés de drwil.",
     "docs/projects/kit-mechanics.md": "Le cadrage du dépôt couvre en plus ses fichiers non livrés (tests des hooks, outils, modules optionnels installés) ; en français.",
