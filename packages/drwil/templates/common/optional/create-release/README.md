@@ -22,6 +22,15 @@ without an extra PR.
   **human** gesture (interactive terminal, the candidate's name typed back);
   an agent never runs it.
 - `promote-release.mjs`: promotes an approved candidate to the final release.
+- `release-review.mjs`: review of `README.md`, `docs/features.md` and
+  `docs/architecture.md` before any tag, preview included (imported by
+  `create-release.mjs`): for each one, what changed since the latest tag
+  (closed workstreams, code files touched, document modified or not); a
+  document not modified must be recorded « unchanged » with its reason, one
+  line of `docs/release-review.md` (`- vX.Y.Z — `README.md` — unchanged:
+  <reason>`), and a document still carrying skeleton text blocks the
+  release. The agent updates the documents in the version PR, before the
+  tag.
 
 ## Acceptance before publication (candidate, verdict, promotion)
 

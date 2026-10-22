@@ -19,6 +19,8 @@ import {
   formatDiagnosis,
   diagnosisJson,
   listContracts,
+  guarantees,
+  formatGuarantees,
   fill,
   projectLang,
   TOOLS,
@@ -220,6 +222,24 @@ program
       verdictJson,
     ),
   );
+
+program
+  .command("guarantees")
+  .description(
+    "Wire the mandatory guarantees once the stack is known: 100 % coverage per layer, e2e of the critical paths, protected forge with CI, project presentation; a blocking brief for each one not held (exit 1)",
+  )
+  .option("--dry-run", "Show what would be wired and written; write nothing")
+  .option("--protect", "Set the protection of the main branch on the forge (gh or glab) — only with the human's agreement")
+  .action((opts) => {
+    try {
+      const r = guarantees({ targetDir: process.cwd(), dryRun: opts.dryRun, protect: opts.protect });
+      console.log(formatGuarantees(r).join("\n"));
+      if (r.briefs.some((b) => b.blocking)) process.exitCode = 1;
+    } catch (e) {
+      console.error(`✗ ${e.message}`);
+      process.exit(2);
+    }
+  });
 
 program
   .command("doctor")

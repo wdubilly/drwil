@@ -27,6 +27,8 @@ files:
   - .githooks/state.mjs
   - .githooks/state-cli.mjs
   - .githooks/briefs.mjs
+  - .githooks/pr-watch.mjs
+  - .githooks/pr-watch.test.mjs
   - .githooks/state-texts.mjs
   - .githooks/state.test.mjs
   - .githooks/close.mjs
@@ -65,6 +67,8 @@ files:
   - .githooks/check-contrast.mjs
   - .githooks/dashboard.mjs
   - .githooks/create-release.mjs
+  - .githooks/release-review.mjs
+  - .githooks/release-review.test.mjs
   - .githooks/acceptance-sheet.mjs
   - .githooks/release-verdict.mjs
   - .githooks/promote-release.mjs

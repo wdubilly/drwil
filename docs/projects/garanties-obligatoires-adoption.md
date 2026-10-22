@@ -87,37 +87,37 @@ attribuer à ce moment-là dans le registre.)
 - Une commande drwil, lancée par `/drwil-adopt` une fois la pile connue, câble
   dans `.drwil/ia-first.json` → `checks` le contrôle de couverture de chaque
   couche dont la pile est dans la table des outils, à 100 % lignes, branches,
-  fonctions et instructions — contrat à créer
+  fonctions et instructions — `QUA-087`
 - Pour une couche dont l'outil de couverture est absent ou inconnu, la
   commande crée une fiche bloquante `[P0]` (`docs/projects/couverture-<couche>.md`)
   qui demande au demandeur de choisir l'outil ; tant qu'elle existe, `verify`
   est en `FAIL` sur cette couche et `/drwil-start` ne propose qu'elle —
-  contrat à créer
+  `QUA-088`
 - Le même mécanisme exige un e2e des chemins critiques (`catalog:QUA-020`) :
   une fiche bloquante `[P0]` demande au demandeur de nommer ces chemins, et
   ne se clôt que lorsqu'un test e2e rejoué par un contrôle les couvre —
-  contrat à créer
+  `QUA-089`
 - Aucune exception : pas de profil léger, pas de dérogation à ces garanties ;
   une exclusion de fichier (configuration, point d'entrée…) reste permise si
   elle est déclarée et justifiée dans le contrat de couverture du projet —
-  contrat à créer
+  `QUA-090`
 - Un outil de couverture non installable ou non lançable ne donne jamais un
   « passé » : la commande le dit, le contrôle reste « non exécuté » et la
-  fiche bloquante est créée (QUA-013) — contrat à créer
+  fiche bloquante est créée (QUA-013) — `QUA-091`
 - La recette d'adoption et le catalogue disent : projet neuf = 100 % et e2e
   d'emblée ; projet existant en dette = seuil bas, couverture du diff,
   cliquet — la recette ne se contredit plus — `QUA-011`
 - [humain] Sur un dossier vide, une pile connue (Node/TypeScript d'abord) puis
   un premier test : le contrôle à 100 % passe, retirer le test le fait échouer ;
   sur une pile hors table, la fiche bloquante apparaît et bloque —
-  contrat Manuel à créer, attesté par l'humain
+  `QUA-092`
 
 - Sur un projet **existant** adopté avec du code legacy non couvert, la
   commande mesure la couverture actuelle de chaque couche et la pose comme
   seuil (cliquet, jamais en baisse), exige 100 % sur le code nouveau ou
   modifié (couverture du diff) et crée une fiche de montée `[P1]` non
   bloquante, cible 100 % ; l'e2e reste exigé comme sur un projet neuf —
-  contrat à créer
+  `QUA-093`
 
 - Un projet gouverné a un dépôt Git et une forge, GitHub ou GitLab : CI
   déclarée (`--ci github|gitlab`), dépôt distant, protection de la branche
@@ -125,7 +125,7 @@ attribuer à ce moment-là dans le registre.)
   fiche bloquante `[P0]` ; la protection de branche se pose par `gh` ou
   `glab` **avec l'accord de l'humain**, jamais en silence ; sans accès à la
   forge, le contrôle reste « non exécuté » et la fiche reste ouverte
-  (QUA-013) — contrat à créer
+  (QUA-013) — `QUA-094`
 - Bonnes pratiques de versionnement imposées par la même protection de
   branche : CI verte obligatoire, sans contournement même pour les
   administrateurs ; la CI rejoue les contrôles du hook local, donc un
@@ -133,34 +133,34 @@ attribuer à ce moment-là dans le registre.)
   signalé par `drwil verify` quand il est détectable. Projet neuf : tout est
   imposé dès `init` (fiche bloquante `[P0]`) ; projet existant adopté : même
   liste, aussi en fiche bloquante `[P0]` (aucune souplesse, contrairement à
-  la couverture) — contrat à créer
+  la couverture) — `QUA-095`
 
 - Le README livré présente le **produit de l'utilisateur** d'abord (ce que fait
   l'application, pour qui, comment la lancer) ; l'outillage drwil n'y tient
-  que quelques lignes de renvoi vers `AGENTS.md` et `docs/` — contrat à créer
+  que quelques lignes de renvoi vers `AGENTS.md` et `docs/` — `QUA-096`
 - Tant que le README, la ligne « Le projet en 5 lignes » d'`AGENTS.md` ou
   `docs/features.md` gardent le texte du squelette (« to describe »,
   « template to fill in »), une fiche bloquante `[P0]` demande à l'humain de
   les rédiger (à partir de la carte `docs/architecture.md` si elle existe) ;
-  elle se clôt quand le texte a changé — contrat à créer
+  elle se clôt quand le texte a changé — `QUA-097`
 - La commande de release refuse de poser le tag (aperçu et création) tant que
   l'examen de `README.md`, `docs/features.md` et `docs/architecture.md`
   n'est pas fait : pour chacun, le script montre ce qui a changé depuis le
   dernier tag (chantiers clos, fichiers de code touchés, document modifié ou
   non) ; l'agent le met à jour dans la PR de version, ou enregistre
   « inchangé » avec sa raison (une ligne versionnée) ; un document qui
-  garde du texte de squelette bloque aussi — contrat à créer
+  garde du texte de squelette bloque aussi — `QUA-098`
 - Une PR qui ne touche que de la documentation est mise en fusion
   automatique par l'agent sans poser la question `drwil-merge` ; le sondage
   ne garde la question que pour les PR qui touchent du code. Le dépôt doit
   autoriser l'auto-merge, sinon le message de refus existant s'applique —
-  contrat à créer
+  `QUA-099`
 - Après un push ou la création d'une PR, un script attend la fin de la CI
   (`gh pr checks`) et dit « verte », « fusionnée » ou « rouge » avec le
   contrôle en échec ; l'agent corrige l'échec sans jamais le contourner
   (QUA-019, pas de contournement) ; sans accès à la forge, le suivi reste
   « non exécuté » et le dit (QUA-013) ; script Node, valable pour tous les
-  outils — contrat à créer
+  outils — `QUA-100`
 
 ## Contrats modifiés
 

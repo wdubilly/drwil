@@ -27,7 +27,9 @@ export { resolveDrift, type ResolveDriftOptions, type ResolveDriftReport } from 
 export { previewInit, formatPreview, type InitPreview } from "./preview.js";
 export { migrate, formatMigration, type MigrationPlan } from "./migration.js";
 export { fill, projectLang, type MessageLang } from "./i18n.js";
-import { writeConfig, type InitOptions, type Resolved } from "./config.js";
+export { guarantees, formatGuarantees, guaranteeFailures, type GuaranteesReport, type GuaranteesOptions } from "./guarantees.js";
+export { COVERAGE_TOOLS, toolFor, skeletonFiles, type CoverageTool, type Exec } from "./guarantees-table.js";
+import { readConfig, writeConfig, type InitOptions, type Resolved } from "./config.js";
 import { installChoices } from "./install.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { scaffold } from "./render.js";
@@ -54,6 +56,8 @@ const TEXTS = {
       "Aucune couche écrite : le projet n'a pas encore de code. Le cadrer d'abord (/drwil-adopt : besoin, pile, couches), ou déclarer les couches avec --layers.",
     drifted: "⚠ Fichiers dérivés du template du kit (nombre de lignes ou sections différents, jamais réécrits automatiquement) :",
     obsolete: "Fichiers obsolètes d'une version antérieure du kit supprimés (jamais modifiés depuis l'installation) :",
+    guarantees:
+      "Garanties obligatoires (couverture 100 %, e2e, forge protégée, présentation) : `npx drwil guarantees` une fois la pile connue (/drwil-adopt).",
   },
   en: {
     noGit: "⚠ git not found: repository and hooks not configured (run `git init` then `git config core.hooksPath .githooks`).",
@@ -68,6 +72,8 @@ const TEXTS = {
       "No layer written: the project has no code yet. Scope it first (/drwil-adopt: need, stack, layers), or declare the layers with --layers.",
     drifted: "⚠ Files drifted from the kit's template (different line count or sections, never rewritten automatically):",
     obsolete: "Obsolete files of an earlier kit version removed (never modified since installation):",
+    guarantees:
+      "Mandatory guarantees (100 % coverage, e2e, protected forge, presentation): `npx drwil guarantees` once the stack is known (/drwil-adopt).",
   },
 };
 
@@ -172,4 +178,6 @@ export async function init(opts: InitOptions): Promise<void> {
   // Last, once git is set up: what drwil still needs and leaves to the human, never silently.
   const left = formatGaps((await complete(r, { dryRun: true })).gaps, r.lang);
   if (left.length) console.log(left.join("\n"));
+  // Not yet enforced: wired once the stack is known (QUA-087), never silently skipped.
+  if (readConfig(opts.targetDir)?.guarantees === undefined) console.log(TEXTS[r.lang].guarantees);
 }
