@@ -2674,8 +2674,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `--no-verify` n'est pas détecté par `verify`, seule la CI le rattrape —
   `docs/intentions/no-verify-detecte-par-verify.md`. `verify` échoue tant que
   la garantie n'est pas tenue, pas du seul fait que la fiche existe :
-  interprétation à confirmer —
-  `docs/intentions/verify-echoue-tant-que-la-fiche-existe.md`. JVM : ni
+  interprétation validée par le demandeur le 2026-10-22 (sinon la fiche ne
+  pourrait jamais se clore, la clôture exigeant un verify PASS). JVM : ni
   mesure de la couverture actuelle ni cliquet remonté automatiquement —
   `docs/intentions/couverture-jvm-mesuree.md`. Le dépôt drwil n'est pas
   soumis aux garanties et son `docs/features.md` est encore le squelette, ce
