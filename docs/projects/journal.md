@@ -2686,3 +2686,23 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Consommation** : 4,25 M tokens pondérés (`.drwil/usage.jsonl`).
 - **Clôturé par** : la branche `workstream/garanties-obligatoires-adoption`
   (PR #203).
+
+## 2026-10-22 — La note de recette échappe à la barrière de périmètre
+
+- **Décisions clés** : la note de recette d'une version
+  (`docs/recettes/<version>.md`), écrite et commitée par plomberie par
+  `.githooks/recette-note.mjs`, sans trailer `Drwil-Brief` ni fiche active,
+  était refusée en CI par la barrière de périmètre (PR #199, note de la
+  v0.6.10). `docs/recettes/*` rejoint `OUT_OF_SCOPE`
+  (`.githooks/scope-gate.mjs`, gabarit et copie), comme les attestations et
+  la preuve de clôture ; aucun motif large sur `docs/`, un fichier voisin
+  reste soumis au périmètre (test QUA-035). Pas de trailer ajouté au commit
+  de la note : aucune fiche n'est active à la publication. Règle de QUA-035
+  (le cadrage complet du premier coup) complétée, modification déclarée et
+  validée par le demandeur ; d'abord rattaché à l'entretien courant, le
+  correctif a reçu une fiche dédiée pour que cette déclaration disparaisse
+  avec elle. Doc `docs/ia-first.md` et `CHANGELOG` complétés.
+  Preuve de clôture : `docs/preuves/note-recette-hors-perimetre.md`.
+- **Limites connues** : aucune ; les autres écarts relevés le même jour
+  (CODEOWNERS, contournements) sont traités à part.
+- **Clôturé par** : la branche `entretien-note-recette-hors-perimetre`.
