@@ -413,6 +413,16 @@ une décision du demandeur.
 - [ ] [décision] Corriger un défaut révélé après la clôture, quand plus aucune
   activité ne ramène en BUILD (vécu le 2026-10-21) —
   `docs/intentions/defaut-revele-apres-la-cloture.md`.
+- [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
+  la barrière n'est qu'un avertissement par défaut (revue externe du
+  2026-10-22) — `docs/intentions/niveaux-de-protection-dans-doctor.md`.
+- [ ] [décision] [P0] Compléter la suite des contournements testés, en tête
+  les hooks modifiés dans la PR elle-même (revue externe du 2026-10-22) —
+  `docs/intentions/contournements-a-completer.md`.
+- [ ] [décision] [P1] CODEOWNERS cite le registre sous son nom actuel
+  (`docs/contracts.md`) — `docs/intentions/codeowners-registre.md`.
+- [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
+  externe du 2026-10-22) — `docs/intentions/e2e-et-attestation-precises.md`.
 - [ ] [décision] `init` impose les garanties obligatoires lui-même au lieu de
   renvoyer vers `drwil guarantees` (limite du chantier « garanties
   obligatoires à l'adoption » du 2026-10-22) —
