@@ -456,6 +456,9 @@ une décision du demandeur.
 
 ## Ensuite
 
+- [ ] [IA] [P0] La note de recette échappe à la barrière de périmètre
+  (débloque la PR #199 ; cadré le 2026-10-22, correctif fait) —
+  `docs/projects/note-recette-hors-perimetre.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
