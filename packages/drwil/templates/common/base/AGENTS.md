@@ -100,6 +100,23 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
   merged (followed with `gh`, 30 minutes at most), and stop at the first
   one that needs a human (attestation, unfixed FAIL, red CI, decision). A
   queue resumed in a new session waits for the human's explicit yes.
+- **Documentation-only PR**: a PR that touches only documentation
+  (Markdown files, `docs/`) is put in automatic merge by the agent
+  (`gh pr merge --auto --merge`) without asking the `drwil-merge` question;
+  the poll keeps that question for PRs that touch code. The repository must
+  allow auto-merge, otherwise say « auto-merge not allowed by the
+  repository » and leave the merge to the human.
+- **Follow the CI of a PR**: after a push or creating a PR, run
+  `node .githooks/pr-watch.mjs [<number>]`: it waits for the end of the CI
+  and says « green », « merged » or « red » with the failing check. A red
+  CI is fixed at its cause, never bypassed (QUA-019); without `gh`
+  reachable, the follow-up is « not run », never « green » (QUA-013).
+- **Mandatory guarantees**: once the stack is known (`/drwil-adopt`),
+  `npx drwil guarantees` wires 100 % test coverage per layer and requires
+  an e2e test of the critical paths, a protected forge with a CI and a
+  written presentation of the product; each one not held gets a blocking
+  `[P0]` brief, offered alone at start, and `drwil verify` stays FAIL until
+  it is held. No waiver: only a declared and justified exclusion.
 - **Readable references**: an identifier cited to a human — contract ID
   (`QUA-015`), catalog line (`catalog:QUA-004`), lot or point of a brief —
   is always followed by what it designates: « QUA-015 (projects resumable

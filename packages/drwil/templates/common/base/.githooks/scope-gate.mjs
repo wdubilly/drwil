@@ -25,13 +25,16 @@ import { governanceDisabled, readState } from "./state.mjs";
 // for the closing commit (`consumption.mjs --record`). The closing proof likewise (QUA-084): the
 // closing writes it in CLOSING, for the closing commit, and refuses to close without it.
 // The scoping recipes' outputs (value discovery, risk audit — French and English names) are scoping
-// work, written in SCOPING: exact names, never a broad pattern on docs/.
+// work, written in SCOPING: exact names, never a broad pattern on docs/. The release notes
+// likewise (`docs/recettes/`): written by `recette-note.mjs` and committed by git plumbing, with no
+// hook, so no trailer, while no brief is active; reviewed in their pull request.
 export const OUT_OF_SCOPE = [
   "docs/projects/*",
   "docs/intentions/*",
   ".drwil/evidence/attestations/*",
   ".drwil/usage.jsonl",
   "docs/preuves/*",
+  "docs/recettes/*",
   "docs/value-discovery.md",
   "docs/decouverte-valeur.md",
   "docs/audit-risks.md",

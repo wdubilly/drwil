@@ -20,6 +20,7 @@ files:
   - .githooks/state.mjs
   - .githooks/state-cli.mjs
   - .githooks/briefs.mjs
+  - .githooks/pr-watch.mjs
   - .githooks/state-texts.mjs
   - .githooks/close.mjs
   - .githooks/closure-proof.mjs
@@ -35,6 +36,7 @@ files:
   - .githooks/check-file-size.legacy.json
   - .githooks/check-code-rules.mjs
   - .githooks/create-release.mjs
+  - .githooks/release-review.mjs
   - .githooks/acceptance-sheet.mjs
   - .githooks/release-verdict.mjs
   - .githooks/promote-release.mjs

@@ -23,6 +23,10 @@ files:
   - package-lock.json
   - packages/drwil/package.json
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/.githooks/scope-gate.mjs
+  - .githooks/scope-gate.test.mjs
+  - packages/drwil/templates/common/base/docs/ia-first.md
+  - docs/contracts.md
 -->
 
 ## Journal
@@ -35,3 +39,4 @@ files:
 | 2026-10-21 | Lecture du commit vérifié d'une preuve de clôture en temps linéaire (`packages/drwil/src/closure.ts`) : `\s*:?\s*` était polynomial sur une ligne « **Commit vérifié** » suivie de nombreux espaces (alerte CodeQL `js/polynomial-redos`, bloquant la PR #197 par un fil de revue non résolu) ; quantificateurs bornés, les deux formats (français avec espace avant les deux-points, anglais sans) restent lus. | fait |
 | 2026-10-17 | README racine en retard sur la clôture du chantier consommation : étape CLOSING sans la consommation enregistrée, ligne `/drwil-usage` d'avant la mesure automatique, « Current status » qui présentait la 0.6.0 comme sortie alors que la dernière release est la 0.5.1 (`README.md`). Ordre de réalisation de l'index : points 3 et 4 marqués faits, comme la vague 2. | fait |
 | 2026-10-22 | Montée de version 0.6.10 (`package.json`, `package-lock.json`, `packages/drwil/package.json`) : « Unreleased » du `CHANGELOG` renommée, le chantier des critères durables et le correctif ReDoS partent en release directe. | fait |
+| 2026-10-22 | La note de recette d'une version (`docs/recettes/`) échappe à la barrière de périmètre (`OUT_OF_SCOPE`, gabarit de `.githooks/scope-gate.mjs`) : commitée par plomberie par `.githooks/recette-note.mjs`, sans trailer `Drwil-Brief` ni fiche active, elle était refusée en CI (PR #199, note de la v0.6.10). Mené par un chantier dédié : voir le journal (`docs/projects/journal.md`, 2026-10-22, « La note de recette échappe à la barrière de périmètre »). | fait |

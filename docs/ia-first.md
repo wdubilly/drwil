@@ -1,6 +1,6 @@
 # "IA first" architecture — description
 
-State as of 2026-10-21. This document explains **how this repo is built to be
+State as of 2026-10-22. This document explains **how this repo is built to be
 modified by agents**: where the rules live, who checks them, and what is
 not checked. It describes neither the product nor the detail of invariants
 (single source: `docs/contracts.md`); the product, if described, lives in
@@ -639,7 +639,9 @@ never a pass: it is a warning at commit and a failure at push and in CI.
   human attestations, written by `drwil attest`:
   `.drwil/evidence/attestations/` (if present), and the consumption log
   `.drwil/usage.jsonl` (if present), written at closing, as is the closing
-  proof `docs/preuves/`, and the scoping recipes' outputs,
+  proof `docs/preuves/`, the release notes `docs/recettes/` (if present),
+  written by the release module and reviewed in their pull request, and
+  the scoping recipes' outputs,
   written in SCOPING (value discovery and risk audit:
   `docs/value-discovery.md` (if present), `docs/audit-risks.md` (if present), and their French
   names) — configurable list: `outOfScope`. Any other file,

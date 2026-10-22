@@ -39,6 +39,15 @@ export function briefStatus(text) {
   return "open";
 }
 
+// Mandatory guarantee not held (`drwil guarantees`, QUA-088): while such a brief exists, it is the
+// only one offered at start.
+const GUARANTEE_LINE_RE = /^\*\*(?:Garantie|Guarantee)\*\*\s*:\s*(?:bloquante|blocking)\b/m;
+
+/** Is this brief a blocking guarantee brief (header line `**Guarantee**: blocking`)? */
+export function blockingGuarantee(text) {
+  return GUARANTEE_LINE_RE.test(text.split(/\r?\n/).slice(0, 15).join("\n"));
+}
+
 const MATURITY_LINE_RE = /^\*\*(?:Maturité|Maturity)\*\*\s*:\s*(.*)$/;
 
 /**
@@ -190,7 +199,8 @@ export function readyGaps(text) {
  * finished, whose `scope` block exists in HEAD — the validated scope is the committed one,
  * as for the scope gate. `[{ path, title, priority, decisions, ready, maturity }]`: ready ones first (no
  * open decision), then by maturity ("ready", then "in-progress" and "unset", "refine" last), then by
- * index priority, then by path. A "refine" brief is listed, never hidden.
+ * index priority, then by path. A "refine" brief is listed, never hidden. While a blocking guarantee
+ * brief exists (QUA-088), only those are listed.
  */
 export function scopedBriefs(root) {
   const priorities = indexPriorities(root);
@@ -214,10 +224,12 @@ export function scopedBriefs(root) {
         decisions,
         ready: decisions === 0,
         maturity: briefMaturity(r.stdout),
+        guarantee: blockingGuarantee(r.stdout),
       });
     }
   }
-  return briefs.sort(
+  const guarantees = briefs.filter((b) => b.guarantee);
+  return (guarantees.length ? guarantees : briefs).sort(
     (a, b) =>
       Number(b.ready) - Number(a.ready) ||
       MATURITY_RANK[a.maturity] - MATURITY_RANK[b.maturity] ||

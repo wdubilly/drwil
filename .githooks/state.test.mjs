@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { PassThrough, Readable } from "node:stream";
-import { briefIntent, intentsLeftBehind, lastReview, missingCriteria, staleIntents } from "./briefs.mjs";
+import { blockingGuarantee, briefIntent, intentsLeftBehind, lastReview, missingCriteria, staleIntents } from "./briefs.mjs";
 import {
   ACTIVITIES,
   acceptanceCriteria,
@@ -868,6 +868,27 @@ test("fiches cadrées : à maturité égale la priorité décide ; « à affiner
       ["docs/projects/aa-affiner.md", "refine"],
     ],
   );
+});
+
+test("QUA-088 fiches cadrées : tant qu'une fiche de garantie bloquante existe, elle seule est proposée", () => {
+  const { racine, git } = depotCadre();
+  const fiche = (nom, entete) =>
+    `# ${nom}\n\n**Status**: opened on 2026-10-22.\n${entete}\n\n<!-- scope\nfiles:\n  - .drwil/ia-first.json\n-->\n`;
+  writeFileSync(join(racine, "docs", "projects", "couverture-root.md"), fiche("couverture", "**Garantie** : bloquante"));
+  writeFileSync(join(racine, "docs", "projects", "versioning.md"), fiche("versioning", "**Guarantee**: blocking"));
+  writeFileSync(join(racine, "docs", "projects", "montee.md"), fiche("montee", "**Garantie** : non bloquante"));
+  git("add", "-A");
+  git("commit", "-qm", "garanties");
+  assert.deepEqual(
+    scopedBriefs(racine).map((f) => f.path),
+    ["docs/projects/couverture-root.md", "docs/projects/versioning.md"],
+  );
+  assert.equal(blockingGuarantee("# x\n\n**Garantie** : bloquante\n"), true);
+  assert.equal(blockingGuarantee("# x\n\n**Maturité** : prêt\n"), false);
+  // Fiches de garantie retirées : la liste ordinaire revient.
+  git("rm", "-q", "docs/projects/couverture-root.md", "docs/projects/versioning.md");
+  git("commit", "-qm", "résolues");
+  assert.ok(scopedBriefs(racine).some((f) => f.path === FICHE));
 });
 
 test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CLOSING, effacée en SCOPING", () => {

@@ -14,6 +14,7 @@ import { judgeDurable, type ProofResult } from "./closure.js";
 import { changeLines, type Coverage, coverageChanges, coverageOf, lacksCoverage, noCoversMessage } from "./coverage.js";
 import { type CriterionResult, showOrigins } from "./criteria.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
+import { judgeGuarantees } from "./guarantees.js";
 import { type BusinessRule, businessRules } from "./rules.js";
 
 export { formatVerdict, verdictJson } from "./verdict.js";
@@ -393,5 +394,6 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   verdict.rules = businessRules(results, all, cfg);
   // Criteria of the active brief and of the closed workstreams (QUA-034, QUA-085), judged outside this file (QUA-001).
   if (!only) await judgeDurable(verdict, { root, registry, cfg, contracts: all, read: reader.readContracts });
+  if (!only) judgeGuarantees(verdict, root, cfg, all);
   return verdict;
 }

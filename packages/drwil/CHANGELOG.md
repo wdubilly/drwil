@@ -5,6 +5,40 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Added
+
+- `drwil guarantees`: the mandatory guarantees of a governed project, run by
+  `/drwil-adopt` once the stack is known. Every layer whose stack is in the
+  table (Node/TypeScript, Python, Go, JVM) gets its coverage check at 100 %
+  (lines, branches, functions, statements, as far as the tool measures
+  them); an existing project in test debt gets a ratchet at its measured
+  level, 100 % on new or modified code and a non-blocking climb brief. A
+  stack outside the table, a tool that cannot run, no `e2e` check of the
+  critical paths, an incomplete forge (Git, GitHub or GitLab remote, CI
+  replaying the hook, protected main branch with no administrator bypass)
+  or a README still in skeleton: each gets a blocking `[P0]` brief, the
+  only one offered at start, and `drwil verify` is FAIL until it is held.
+  `--protect` sets the branch protection, with the human's agreement only.
+- `.githooks/pr-watch.mjs` follows the CI of a pull request: green, merged
+  or red with the failing check; « not run » without `gh`.
+- Release module: no tag, preview included, before the README, features and
+  map are reviewed — updated, or recorded « unchanged » with a reason.
+
+### Changed
+
+- The shipped README presents the user's product first; drwil keeps a few
+  lines pointing to `AGENTS.md` and `docs/`.
+- A documentation-only pull request is put in automatic merge without the
+  `drwil-merge` question.
+- The adoption recipe and the catalog: a new project starts at 100 %
+  coverage with its e2e test; no longer « a low threshold first ».
+
+### Fixed
+
+- The release note of a version (`docs/recettes/`) passes the scope
+  barrier: committed by the release module with no trailer, it was refused
+  by the CI.
+
 ## 0.6.10 (2026-10-22)
 
 ### Added

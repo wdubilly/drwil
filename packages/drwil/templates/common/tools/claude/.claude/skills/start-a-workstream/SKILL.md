@@ -34,6 +34,9 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    - Claude Code, **second question** of the same poll: `header` exactly `drwil-merge`,
      options "Automatic merge" (the agent will schedule the merge in CLOSING) and "Manual
      merge", with no recommendation: it is the acceptance decision, taken at start.
+     Only for briefs whose scope touches code: a brief whose scope is documentation only
+     (Markdown files, `docs/`) gets no `drwil-merge` question — its PR is put in automatic merge
+     by the agent (« Documentation-only PR » rule of `AGENTS.md`), if the repository allows it.
    - Copilot CLI: `message` starting with `drwil-start :`; a first field whose `enum` = the exact
      paths, and a **second field named exactly `drwil-merge`** with `enum` "Automatic merge" and
      "Manual merge" (no `default`, no recommendation): the hook reads `fiche=…, drwil-merge=…`.
@@ -61,6 +64,8 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    the "Automatic merge" answer, in any tool. Once the PR is merged and the main branch updated,
    the next `node .githooks/state.mjs start` or `next` goes back to SCOPING by itself (brief deleted,
    closing PR merged): no `move SCOPING` to run.
+   After each push or PR creation, follow its CI with `node .githooks/pr-watch.mjs <number>`
+   (green, merged or red with the failing check); a red CI is fixed, never bypassed.
 5. **Subagent from the first workstream** (Claude Code and Copilot CLI, queue or not): run each
    workstream in a subagent (fresh context), the first one right after the poll — Claude Code:
    the Agent tool; Copilot CLI: the `task` tool, `general-purpose` agent, `mode: "sync"`. The
