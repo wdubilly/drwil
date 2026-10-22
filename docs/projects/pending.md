@@ -423,10 +423,6 @@ une décision du demandeur.
 - [ ] [décision] `drwil verify` signale un `--no-verify` (aujourd'hui rattrapé
   par la CI seule ; limite du même chantier) —
   `docs/intentions/no-verify-detecte-par-verify.md`.
-- [ ] [décision] Confirmer ce qui fait échouer `verify` sur une garantie :
-  garantie non tenue ou fiche encore présente (interprétation de l'agent ;
-  limite du même chantier) —
-  `docs/intentions/verify-echoue-tant-que-la-fiche-existe.md`.
 - [ ] [décision] Mesurer la couverture actuelle d'un projet JVM et remonter
   son cliquet (limite du même chantier) —
   `docs/intentions/couverture-jvm-mesuree.md`.
