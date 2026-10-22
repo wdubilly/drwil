@@ -12,6 +12,8 @@
 // Without `--candidate`, the version is published directly: its acceptance note, « no verdict », is
 // then proposed through a dedicated branch and a PR (recette-note.mjs, QUA-079); a failure there
 // never undoes the tag and the release (QUA-080).
+// Before any tag, preview included, the review of README.md, docs/features.md and
+// docs/architecture.md must be done (release-review.mjs, QUA-098): otherwise the release is refused.
 // Usage: node create-release.mjs [--candidate] [--dry-run]
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -303,6 +305,14 @@ async function main() {
   console.log(fill(T.bump, packages.length ? T.suggestion : T.detected, bump, commits.length));
   console.log(fill(T.next, next, decision.source));
   if (packages.length > 0) console.log(fill(T.tarballs, packages.join(", ")));
+  const { reviewDocuments } = await import("./release-review.mjs");
+  const review = reviewDocuments(process.cwd(), { tag, version: next, lang: T === TEXTS.en ? "en" : "fr" });
+  console.log(review.lines.join("\n"));
+  if (!review.ok) {
+    console.error(fill(T.refused, review.refused));
+    process.exitCode = 1;
+    return;
+  }
   if (candidate) return publishCandidate({ tag, next, packages, existingTags }, T);
   if (dryRun) {
     console.log((await directNote({ next, commits, tarballs: packages.length ? null : [] })).message);

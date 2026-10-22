@@ -788,3 +788,144 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/cycle.test.mjs`
 **Origine** : des critères et des preuves qui survivent à la clôture — « En CI, les critères de la fiche du chantier sont jugés sans état local : la fiche est lue depuis le trailer `Drwil-Brief` des commits de la branche ; après la clôture, ce sont les critères du fichier de preuve qui sont rejoués »
 **Raison** : l'état local est ignoré par git : la CI ne voyait aucune fiche active et laissait passer un critère non prouvé que la machine locale refusait.
+
+## QUA-087 — Les garanties câblent la couverture à 100 % de chaque couche dont la pile est dans la table
+**Règle** : Livré à tout projet. `drwil guarantees`, lancé par `/drwil-adopt` une fois la pile connue, déclare dans `.drwil/ia-first.json` → `checks` le contrôle `coverage-<couche>` de chaque couche dont la pile est dans la table des outils (Node/TypeScript, Python, Go, JVM ; une pile = une ligne) : 100 % sur lignes, branches, fonctions et instructions, autant que l'outil les mesure, dit tel quel (Go : instructions seulement ; Python : un taux combiné ; JVM : la règle JaCoCo du fichier de build). Un contrôle déjà déclaré est signalé, jamais remplacé.
+**Périmètre** : `drwil guarantees` (câblage de la couverture).
+**Source de vérité** : `packages/drwil/src/guarantees.ts`, `packages/drwil/src/guarantees-table.ts`.
+**Preuve** : tests du paquet sur des projets temporaires, exécuteur de commandes simulé : contrôle à 100 % câblé, contrôle existant gardé, lignes de la table.
+**Contrôle** : `tests-qua-087`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Une commande drwil, lancée par `/drwil-adopt` une fois la pile connue, câble dans `.drwil/ia-first.json` → `checks` le contrôle de couverture de chaque couche dont la pile est dans la table des outils, à 100 % lignes, branches, fonctions et instructions »
+**Raison** : Le câblage se faisait à la main, pile par pile : la promesse de qualité restait déclarative.
+
+## QUA-088 — Une garantie non tenue écrit une fiche bloquante, met `verify` en FAIL et passe seule au lancement
+**Règle** : Livré à tout projet. Pour une couche dont l'outil de couverture est absent ou inconnu (et pour toute garantie non tenue), `drwil guarantees` écrit une fiche `[P0]` portant `**Garantie** : bloquante` (`docs/projects/couverture-<couche>.md`, jamais réécrite si elle existe) et la liste à l'index. Une fois les garanties imposées (`guarantees.enforced`), `drwil verify` est en `FAIL` tant qu'une garantie n'est pas tenue — contrôle non déclaré ou cité par aucun contrat —, en nommant la couche ; tant qu'une fiche bloquante existe, `/drwil-start` ne propose qu'elle.
+**Périmètre** : `drwil guarantees`, `drwil verify`, `.githooks/briefs.mjs` (`scopedBriefs`).
+**Source de vérité** : `packages/drwil/src/guarantees.ts` (`guaranteeFailures`), `packages/drwil/src/guarantees-briefs.ts`, `.githooks/briefs.mjs`.
+**Preuve** : tests du paquet (pile hors table, verify en FAIL puis levé) et des hooks (seules les fiches bloquantes proposées).
+**Contrôle** : `tests-qua-088`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`, `.githooks/state.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Pour une couche dont l'outil de couverture est absent ou inconnu, la commande crée une fiche bloquante `[P0]` (`docs/projects/couverture-<couche>.md`) qui demande au demandeur de choisir l'outil ; tant qu'elle existe, `verify` est en `FAIL` sur cette couche et `/drwil-start` ne propose qu'elle »
+**Raison** : Rien n'empêchait de continuer à travailler quand l'outil d'une pile manquait.
+
+## QUA-089 — Un test e2e des chemins critiques est exigé de tout projet
+**Règle** : Livré à tout projet. Sans contrôle `e2e` déclaré, `drwil guarantees` écrit la fiche bloquante `[P0]` des chemins critiques (e2e-chemins-critiques.md), qui demande au demandeur de nommer les chemins critiques et l'outil e2e de la pile (`catalog:QUA-020`) ; `drwil verify` est en `FAIL` tant que le contrôle `e2e` n'est pas déclaré et cité par un contrat, donc la fiche ne se clôt qu'une fois ce contrôle rejoué.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees.ts`.
+**Preuve** : tests du paquet : fiche écrite, échec tant que `e2e` manque, levé une fois déclaré et cité.
+**Contrôle** : `tests-qua-089`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Le même mécanisme exige un e2e des chemins critiques (`catalog:QUA-020`) : une fiche bloquante `[P0]` demande au demandeur de nommer ces chemins, et ne se clôt que lorsqu'un test e2e rejoué par un contrôle les couvre »
+**Raison** : L'e2e n'était qu'un objectif du catalogue, jamais exigé.
+
+## QUA-090 — Aucune dérogation aux garanties, seulement une exclusion déclarée et justifiée
+**Règle** : Livré à tout projet. Les garanties n'ont ni profil léger ni option pour les abaisser. Une exclusion de fichier se déclare dans `.drwil/ia-first.json` → `guarantees.exclusions` (`{ layer, path, reason }`) : justifiée, elle est passée à l'outil (`--exclude`, `--omit`) ; sans raison, elle est refusée, signalée par la commande et par `drwil verify` (FAIL).
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees.ts` (`exclusionsOf`).
+**Preuve** : tests du paquet : exclusion justifiée appliquée, exclusion sans raison refusée et en échec.
+**Contrôle** : `tests-qua-090`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Aucune exception : pas de profil léger, pas de dérogation à ces garanties ; une exclusion de fichier (configuration, point d'entrée…) reste permise si elle est déclarée et justifiée dans le contrat de couverture du projet »
+**Raison** : Une garantie qui se négocie au cas par cas n'en est plus une ; une exclusion sans raison cache une dette.
+
+## QUA-091 — Un outil de couverture non lançable ne donne jamais un « passé »
+**Règle** : Livré à tout projet. Avant de câbler, `drwil guarantees` lance la sonde de l'outil dans la couche (par exemple `npx --no-install c8 --version`) : en échec, la commande le dit (« non exécuté, jamais passé »), aucun contrôle n'est câblé et la fiche bloquante est écrite (QUA-013).
+**Périmètre** : `drwil guarantees`.
+**Source de vérité** : `packages/drwil/src/guarantees.ts` (`coverLayer`), `packages/drwil/src/guarantees-table.ts` (`probe`).
+**Preuve** : tests du paquet : sonde en échec, aucun contrôle, fiche bloquante.
+**Contrôle** : `tests-qua-091`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Un outil de couverture non installable ou non lançable ne donne jamais un « passé » : la commande le dit, le contrôle reste « non exécuté » et la fiche bloquante est créée (QUA-013) »
+**Raison** : Un contrôle câblé sur un outil absent échouerait plus tard sans dire pourquoi, ou serait désactivé.
+
+## QUA-092 — Sur un dossier vide, la garantie de couverture se prouve en vrai
+**Règle** : Livré à tout projet. Sur un dossier vide puis une pile connue (Node/TypeScript d'abord) et un premier test, le contrôle câblé par `drwil guarantees` à 100 % passe, et retirer le test le fait échouer ; sur une pile hors table, la fiche bloquante apparaît et bloque (`drwil verify` en FAIL, `/drwil-start` ne propose qu'elle).
+**Périmètre** : `drwil guarantees`, `drwil verify`, `/drwil-start` sur un vrai projet.
+**Source de vérité** : `packages/drwil/src/guarantees.ts`.
+**Preuve** : essai réel par l'humain ; parties automatisées : contrats QUA-087 et QUA-088.
+**Contrôle** : `tests-qua-087`, `tests-qua-088`
+**Manuel** : sur un dossier vide, `npx drwil init`, une pile Node/TypeScript (`package.json`, c8 installé) et un premier test : `npx drwil guarantees` câble `coverage-root`, le contrôle passe à 100 % ; retirer le test le fait échouer. Puis une pile hors table (Rust) : la fiche bloquante apparaît, `drwil verify` est en FAIL, `/drwil-start` ne propose qu'elle.
+**Couvre** : `packages/drwil/src/guarantees*.ts`
+**Origine** : garanties obligatoires à l'adoption — « Sur un dossier vide, une pile connue (Node/TypeScript d'abord) puis un premier test : le contrôle à 100 % passe, retirer le test le fait échouer ; sur une pile hors table, la fiche bloquante apparaît et bloque »
+**Raison** : Les tests simulent les outils ; seul un essai réel prouve que c8 câblé à 100 % tient sur un vrai projet.
+
+## QUA-093 — Un projet existant en dette garde un cliquet au niveau mesuré et 100 % sur le diff
+**Règle** : Livré à tout projet. Sur une couche qui a déjà du code de sa pile, `drwil guarantees` mesure la couverture actuelle (outil de la table) : à 100 %, le contrôle est câblé à 100 % ; en dessous, il est câblé au niveau mesuré (cliquet, jamais abaissé par la commande), un contrôle `coverage-diff-<couche>` exige 100 % sur le code nouveau ou modifié (`diff-cover`) et une fiche de montée `[P1]` non bloquante vise 100 %. Mesure impossible, non prise en charge (JVM) ou outil de diff absent : fiche bloquante. L'e2e reste exigé comme sur un projet neuf.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees.ts` (`existing`), `packages/drwil/src/guarantees-table.ts` (`measure`, `diff`).
+**Preuve** : tests du paquet : mesure simulée (Node, Python, Go), cliquet, diff, fiche de montée, cas bloquants.
+**Contrôle** : `tests-qua-093`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Sur un projet **existant** adopté avec du code legacy non couvert, la commande mesure la couverture actuelle de chaque couche et la pose comme seuil (cliquet, jamais en baisse), exige 100 % sur le code nouveau ou modifié (couverture du diff) et crée une fiche de montée `[P1]` non bloquante, cible 100 % ; l'e2e reste exigé comme sur un projet neuf »
+**Raison** : Exiger 100 % d'emblée d'un projet en dette bloquerait tout ; ne rien exiger laisserait la dette grandir.
+
+## QUA-094 — Un projet gouverné a un dépôt, une forge GitHub ou GitLab, une CI et une branche principale protégée
+**Règle** : Livré à tout projet. `drwil guarantees` vérifie le dépôt Git, le dépôt distant `origin` sur GitHub ou GitLab, la CI déclarée (`ci`) et son fichier, et la protection de la branche principale lue par `gh` ou `glab`. Un élément absent écrit la fiche bloquante du versionnement (versionnement.md) ; sans accès à la forge, la protection reste « non exécuté » et la fiche reste ouverte (QUA-013). La protection se pose par `drwil guarantees --protect`, avec l'accord de l'humain, jamais en silence ; une protection vérifiée est enregistrée (`guarantees.protection`) et `drwil verify`, qui ne joint pas la forge, l'exige.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees-forge.ts`.
+**Preuve** : tests du paquet, exécuteur simulé : sans dépôt, sans origin, sans CI, gh injoignable, ruleset complet, enregistrement de la protection, verify hors ligne.
+**Contrôle** : `tests-qua-094`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Un projet gouverné a un dépôt Git et une forge, GitHub ou GitLab : CI déclarée (`--ci github|gitlab`), dépôt distant, protection de la branche principale (fusion par PR/MR, contrôles requis). Un élément absent crée une fiche bloquante `[P0]` ; la protection de branche se pose par `gh` ou `glab` **avec l'accord de l'humain**, jamais en silence ; sans accès à la forge, le contrôle reste « non exécuté » et la fiche reste ouverte (QUA-013) »
+**Raison** : Sans forge protégée, les hooks locaux se contournent et rien ne rattrape l'écart avant la fusion.
+
+## QUA-095 — La protection de branche impose CI verte, sans contournement administrateur, et une CI qui rejoue le hook
+**Règle** : Livré à tout projet, neuf comme existant, sans souplesse. La protection attendue : fusion par PR/MR, contrôles de CI requis, aucun contournement par les administrateurs (GitHub : `enforce_admins` ou ruleset ; GitLab : aucun push direct, pipeline requis, pas de force push). La CI doit rejouer les contrôles du hook (`node .githooks/run-checks.mjs`), ce qui rattrape un `--no-verify` avant la fusion. Chaque manque est une raison de la fiche bloquante `[P0]`. La détection directe d'un `--no-verify` n'existe pas encore : c'est la CI qui le rattrape.
+**Périmètre** : `drwil guarantees`.
+**Source de vérité** : `packages/drwil/src/guarantees-forge.ts`.
+**Preuve** : tests du paquet : protection classique incomplète, CI sans run-checks, GitLab, pose par `--protect` seulement.
+**Contrôle** : `tests-qua-095`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Bonnes pratiques de versionnement imposées par la même protection de branche : CI verte obligatoire, sans contournement même pour les administrateurs ; la CI rejoue les contrôles du hook local, donc un `--no-verify` est rattrapé avant la fusion ; l'usage de `--no-verify` est signalé par `drwil verify` quand il est détectable. Projet neuf : tout est imposé dès `init` (fiche bloquante `[P0]`) ; projet existant adopté : même liste, aussi en fiche bloquante `[P0]` (aucune souplesse, contrairement à la couverture) »
+**Raison** : Une protection contournable par un administrateur ou une CI qui ne rejoue pas le hook laisse passer ce que le hook local refuse.
+
+## QUA-096 — Le README livré présente d'abord le produit de l'utilisateur
+**Règle** : Livré à tout projet. Le gabarit `README.md` commence par le produit (ce que fait l'application, pour qui, comment la lancer, sa documentation) ; l'outillage drwil n'y tient que quelques lignes de renvoi vers `AGENTS.md` et `docs/`, en fin de fichier.
+**Périmètre** : gabarit `packages/drwil/templates/common/base/README.md`.
+**Source de vérité** : `packages/drwil/templates/common/base/README.md`.
+**Preuve** : test du paquet sur le gabarit : ordre des sections, renvoi court.
+**Contrôle** : `tests-qua-096`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Le README livré présente le **produit de l'utilisateur** d'abord (ce que fait l'application, pour qui, comment la lancer) ; l'outillage drwil n'y tient que quelques lignes de renvoi vers `AGENTS.md` et `docs/` »
+**Raison** : Le README livré parlait de drwil plus que du projet de l'utilisateur.
+
+## QUA-097 — Une présentation restée en squelette écrit une fiche bloquante
+**Règle** : Livré à tout projet. Tant que `README.md`, `AGENTS.md` (« Le projet en 5 lignes ») ou `docs/features.md` gardent du texte du squelette (« to describe », « template to fill in », « à décrire », « gabarit à remplir »), `drwil guarantees` écrit la fiche bloquante `[P0]` de présentation (presentation-du-projet.md) et `drwil verify` est en `FAIL` ; tout est levé une fois le texte rédigé.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees-table.ts` (`skeletonFiles`).
+**Preuve** : tests du paquet : fiche et échec sur un projet installé, levés après rédaction ; garanties toutes tenues.
+**Contrôle** : `tests-qua-097`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Tant que le README, la ligne « Le projet en 5 lignes » d'`AGENTS.md` ou `docs/features.md` gardent le texte du squelette (« to describe », « template to fill in »), une fiche bloquante `[P0]` demande à l'humain de les rédiger (à partir de la carte `docs/architecture.md` si elle existe) ; elle se clôt quand le texte a changé »
+**Raison** : Constat sur un projet adopté : README, 5 lignes et fonctionnalités jamais remplis alors que la carte l'était.
+
+## QUA-098 — La release exige l'examen du README, des fonctionnalités et de la carte avant le tag
+**Règle** : Livré à tout projet avec le module de release (optionnel). Avant tout tag, aperçu compris, `.githooks/create-release.mjs` examine `README.md`, `docs/features.md` et `docs/architecture.md` (`.githooks/release-review.mjs`) : il montre, pour chacun, les chantiers clos depuis le dernier tag, le nombre de fichiers de code touchés et si le document a changé. Un document inchangé sans ligne « inchangé : <raison> » pour la version dans le fichier d'examen des versions (release-review.md, sous docs/), ou qui garde du texte de squelette, fait refuser la release. L'agent met les documents à jour dans la PR de version, avant le tag.
+**Périmètre** : `.githooks/create-release.mjs`, `.githooks/release-review.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `.githooks/release-review.mjs`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires : document inchangé refusé, raison enregistrée acceptée, squelette bloquant, aperçu refusé.
+**Contrôle** : `tests-qua-098`
+**Tests** : `.githooks/release-review.test.mjs`, `.githooks/create-release.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « La commande de release refuse de poser le tag (aperçu et création) tant que l'examen de `README.md`, `docs/features.md` et `docs/architecture.md` n'est pas fait : pour chacun, le script montre ce qui a changé depuis le dernier tag (chantiers clos, fichiers de code touchés, document modifié ou non) ; l'agent le met à jour dans la PR de version, ou enregistre « inchangé » avec sa raison (une ligne versionnée) ; un document qui garde du texte de squelette bloque aussi »
+**Raison** : Les documents lus d'abord par un visiteur vieillissaient d'une version à l'autre sans que rien ne le signale.
+
+## QUA-099 — Une PR de documentation seule part en fusion automatique sans question
+**Règle** : Livré à tout projet. La consigne d'`AGENTS.md` et le skill de lancement disent : une PR qui ne touche que de la documentation (Markdown, `docs/`) est mise en fusion automatique par l'agent (`gh pr merge --auto --merge`) sans poser la question `drwil-merge`, gardée pour les PR qui touchent du code ; si le dépôt n'autorise pas l'auto-merge, le message de refus existant s'applique.
+**Périmètre** : gabarits `AGENTS.md` et skill `start-a-workstream`.
+**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
+**Preuve** : test du paquet sur les gabarits livrés.
+**Contrôle** : `tests-qua-099`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Une PR qui ne touche que de la documentation est mise en fusion automatique par l'agent sans poser la question `drwil-merge` ; le sondage ne garde la question que pour les PR qui touchent du code. Le dépôt doit autoriser l'auto-merge, sinon le message de refus existant s'applique »
+**Raison** : Poser la question de fusion pour une PR de documentation seule coûtait un geste humain sans enjeu.
+
+## QUA-100 — Le suivi de la CI d'une PR dit verte, fusionnée ou rouge, jamais « verte » sans l'avoir vu
+**Règle** : Livré à tout projet. `node .githooks/pr-watch.mjs [<n>]` suit la CI d'une PR par `gh` jusqu'à la fin de ses contrôles (30 minutes au plus) et dit « verte », « fusionnée » ou « rouge » avec les contrôles en échec (codes 0, 0, 1) ; sans `gh` joignable, sans contrôle ou après le délai, le suivi est « non exécuté » (code 2), jamais « verte » (QUA-013). `AGENTS.md` consigne de le lancer après chaque push ou création de PR, et de corriger une CI rouge sans la contourner (QUA-019).
+**Périmètre** : `.githooks/pr-watch.mjs` ; consigne d'`AGENTS.md`.
+**Source de vérité** : `.githooks/pr-watch.mjs`.
+**Preuve** : tests des hooks (gh simulé, attente, délai, ligne de commande) et du paquet (consigne livrée).
+**Contrôle** : `tests-qua-100`
+**Tests** : `.githooks/pr-watch.test.mjs`, `packages/drwil/test/guarantees.test.mjs`
+**Origine** : garanties obligatoires à l'adoption — « Après un push ou la création d'une PR, un script attend la fin de la CI (`gh pr checks`) et dit « verte », « fusionnée » ou « rouge » avec le contrôle en échec ; l'agent corrige l'échec sans jamais le contourner (QUA-019, pas de contournement) ; sans accès à la forge, le suivi reste « non exécuté » et le dit (QUA-013) ; script Node, valable pour tous les outils »
+**Raison** : L'agent annonçait une PR prête sans avoir vu sa CI finir.

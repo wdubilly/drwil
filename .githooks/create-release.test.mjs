@@ -355,3 +355,19 @@ test("QUA-051 : --candidate sans paquet npm : la fiche dit qu'il n'y a pas de ta
   assert.match(r.stdout, /candidate : v0\.1\.0-rc\.1/);
   assert.match(r.stdout, /Empreinte du tarball : aucun paquet npm publiable : pas de tarball/);
 });
+
+test("QUA-098 release refusée tant que l'examen des documents n'est pas fait (aperçu compris)", () => {
+  const { racine } = depot({ "README.md": "# Produit\n" }, ["feat: a"]);
+  git(racine, "tag", "v1.0.0", "HEAD");
+  ecrire(racine, "x.txt", "x");
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "fix: b");
+  let r = lancer(racine, ["--dry-run"], process.env.PATH);
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /✗ README\.md : inchangé depuis le dernier tag, sans raison enregistrée/);
+  assert.match(r.stderr, /✗ release refusée : examen des documents non fait : v1\.0\.1/);
+  ecrire(racine, "docs/release-review.md", "- v1.0.1 — `README.md` — inchangé : correctif interne\n");
+  r = lancer(racine, ["--dry-run"], process.env.PATH);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /✓ README\.md : inchangé — correctif interne/);
+});

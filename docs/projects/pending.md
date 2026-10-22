@@ -265,7 +265,8 @@ critère de sortie de chaque fiche —
   de contrats déjà tenus (v1:CTR-003, v1:CTR-010, v1:CTR-012) — fiche 1.
 - [ ] [décision] [P1] Profils par risque du produit (LÉGER, STANDARD,
   RENFORCÉ, CRITIQUE ; DOGFOODING cumulable) : contrats applicables et
-  sévérité choisis par profil (v1:CTR-014, v1:HOOK-006) — fiche 2.
+  sévérité choisis par profil (v1:CTR-014, v1:HOOK-006), hors garanties
+  obligatoires de l'adoption (décidé le 2026-10-22) — fiche 2.
 - [ ] [décision] [P1] Adoption ciblée : détection et questions à `init`,
   liste classée, `drwil contracts add <ID>` — fiche 3.
 
@@ -412,6 +413,29 @@ une décision du demandeur.
 - [ ] [décision] Corriger un défaut révélé après la clôture, quand plus aucune
   activité ne ramène en BUILD (vécu le 2026-10-21) —
   `docs/intentions/defaut-revele-apres-la-cloture.md`.
+- [ ] [décision] `init` impose les garanties obligatoires lui-même au lieu de
+  renvoyer vers `drwil guarantees` (limite du chantier « garanties
+  obligatoires à l'adoption » du 2026-10-22) —
+  `docs/intentions/init-impose-les-garanties.md`.
+- [ ] [décision] Bloquer les commits de code d'une couche dont la garantie
+  n'est pas tenue (limite du même chantier) —
+  `docs/intentions/commits-bloques-par-une-garantie.md`.
+- [ ] [décision] `drwil verify` signale un `--no-verify` (aujourd'hui rattrapé
+  par la CI seule ; limite du même chantier) —
+  `docs/intentions/no-verify-detecte-par-verify.md`.
+- [ ] [décision] Confirmer ce qui fait échouer `verify` sur une garantie :
+  garantie non tenue ou fiche encore présente (interprétation de l'agent ;
+  limite du même chantier) —
+  `docs/intentions/verify-echoue-tant-que-la-fiche-existe.md`.
+- [ ] [décision] Mesurer la couverture actuelle d'un projet JVM et remonter
+  son cliquet (limite du même chantier) —
+  `docs/intentions/couverture-jvm-mesuree.md`.
+- [ ] [décision] Soumettre le dépôt drwil à ses propres garanties ; son
+  `docs/features.md` en squelette fera refuser la prochaine release (limite
+  du même chantier) — `docs/intentions/garanties-sur-le-depot-drwil.md`.
+- [ ] [décision] Une rubrique propre aux garanties dans la sortie
+  `verify --agent`, au lieu de « Registry errors » (limite du même
+  chantier) — `docs/intentions/garanties-dans-la-sortie-agent.md`.
 
 - [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
   de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
@@ -436,9 +460,6 @@ une décision du demandeur.
 
 ## Ensuite
 
-- [ ] [IA] [P0] Garanties obligatoires à l'adoption : couverture, e2e et versionnement
-  (commande de câblage par pile, recette et catalogue ; cadré le
-  2026-10-22, prête) — `docs/projects/garanties-obligatoires-adoption.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.

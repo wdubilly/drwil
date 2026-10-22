@@ -2339,6 +2339,17 @@ test("créer une release : détection du bump semver (Conventional Commits, best
   assert.equal(nextVersion("v1.2.3", "major"), "v2.0.0");
 });
 
+/** Rédige la présentation livrée en squelette (README, fonctionnalités, carte) : la release l'exige (QUA-098). */
+function presentationRedigee(dir) {
+  for (const f of ["README.md", "docs/features.md", "docs/architecture.md"]) {
+    const texte = readFileSync(join(dir, f), "utf8");
+    writeFileSync(
+      join(dir, f),
+      texte.replace(/\((?:to describe|à décrire)[^)]*\)/g, "rédigé").replace(/template to fill in|gabarit à remplir/g, "rédigé"),
+    );
+  }
+}
+
 test("créer une release : module optionnel (pas copié par défaut), recette/skill livrés en FR et EN, --dry-run sans réseau", async () => {
   for (const lang of ["fr", "en"]) {
     const dir = tmp();
@@ -2356,10 +2367,11 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
   // Script utilisable en pratique : --dry-run, sans toucher au réseau ni créer de tag.
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
+  presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/create-release.mjs"), readFileSync(src, "utf8"));
-  for (const f of ["recette-note.mjs", "acceptance-sheet.mjs"]) {
+  for (const f of ["recette-note.mjs", "acceptance-sheet.mjs", "release-review.mjs"]) {
     writeFileSync(join(dir, ".githooks", f), readFileSync(src.replace("create-release.mjs", f), "utf8"));
   }
   const mecanique = join(dir, "docs/projects/kit-mechanics.md");
@@ -2405,10 +2417,11 @@ test("créer une release : repère les paquets npm publiables (package.json suiv
 test("créer une release : --dry-run liste le paquet npm à empaqueter quand il y en a un", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
+  presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
   mkdirSync(join(dir, ".githooks"), { recursive: true });
   const src = fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
   writeFileSync(join(dir, ".githooks/create-release.mjs"), readFileSync(src, "utf8"));
-  for (const f of ["recette-note.mjs", "acceptance-sheet.mjs"]) {
+  for (const f of ["recette-note.mjs", "acceptance-sheet.mjs", "release-review.mjs"]) {
     writeFileSync(join(dir, ".githooks", f), readFileSync(src.replace("create-release.mjs", f), "utf8"));
   }
   const mecanique = join(dir, "docs/projects/kit-mechanics.md");
@@ -2431,10 +2444,18 @@ test("créer une release : --dry-run liste le paquet npm à empaqueter quand il 
 
 test("QUA-051 : module de release livré avec la fiche, le verdict et la promotion ; --candidate --dry-run montre la fiche sans rien publier", async () => {
   const module = fileURLToPath(new URL("../templates/common/optional/create-release/", import.meta.url));
-  const scripts = ["create-release.mjs", "acceptance-sheet.mjs", "release-verdict.mjs", "promote-release.mjs", "recette-note.mjs"];
+  const scripts = [
+    "create-release.mjs",
+    "acceptance-sheet.mjs",
+    "release-verdict.mjs",
+    "promote-release.mjs",
+    "recette-note.mjs",
+    "release-review.mjs",
+  ];
   for (const lang of ["fr", "en"]) {
     const dir = tmp();
     await quiet(() => init({ lang, targetDir: dir, git: true }));
+    presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
     for (const s of scripts) assert.ok(!existsSync(join(dir, ".githooks", s)), `${s} : module optionnel, jamais copié par défaut`);
     for (const s of scripts) writeFileSync(join(dir, ".githooks", s), readFileSync(join(module, s), "utf8"));
     // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).

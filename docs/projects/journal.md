@@ -2630,3 +2630,59 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/couverture-des-contrats-attestes.md`.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `cadrage-criteres-durables`.
+
+## 2026-10-22 — Garanties obligatoires à l'adoption : couverture, e2e, versionnement et présentation
+
+- **Décisions clés** : le contrat est universel, seule la preuve change selon
+  la techno. `drwil guarantees`, lancé par `/drwil-adopt` une fois la pile
+  connue, câble dans `.drwil/ia-first.json` le contrôle de couverture à 100 %
+  de chaque couche dont la pile est dans la table des outils
+  (Node/TypeScript, Python, Go, JVM ; une ligne par pile, l'outil qui ne
+  mesure qu'une partie des métriques le dit) (QUA-087, couverture câblée à
+  100 % par couche). Une pile hors table ou un outil absent écrit une fiche
+  bloquante `[P0]`, seule proposée au lancement, et `verify` est en FAIL tant
+  que la garantie n'est pas tenue (QUA-088, fiche bloquante quand l'outil
+  manque) ; l'e2e des chemins critiques est exigé de la même manière (QUA-089,
+  e2e obligatoire). Aucune dérogation, seules des exclusions déclarées et
+  justifiées (QUA-090) ; un outil non lançable ne donne jamais « passé »
+  (QUA-091). Projet existant en dette : cliquet au niveau mesuré, 100 % sur le
+  code nouveau ou modifié, fiche de montée `[P1]` non bloquante (QUA-093).
+  Versionnement : Git, forge GitHub ou GitLab, CI qui rejoue les contrôles du
+  hook, branche principale protégée sans contournement administrateur, posée
+  par `gh`/`glab` avec l'accord de l'humain seulement (`--protect`), sinon
+  fiche bloquante, sur projet neuf comme existant (QUA-094, QUA-095).
+  Présentation : le README livré présente le produit de l'utilisateur
+  (QUA-096) ; un README, une ligne « 5 lignes » d'`AGENTS.md` ou un
+  `docs/features.md` resté en squelette écrit une fiche bloquante (QUA-097) ;
+  la release refuse le tag tant que README, fonctionnalités et carte ne sont
+  pas examinés (`.githooks/release-review.mjs`, QUA-098). Une PR de documentation seule
+  part en fusion automatique sans question (QUA-099) ; `.githooks/pr-watch.mjs` suit la
+  CI d'une PR et dit verte, fusionnée ou rouge (QUA-100), lu par
+  `gh pr view` (`statusCheckRollup`). La recette d'adoption et le catalogue
+  ne se contredisent plus (QUA-011) ; `catalog:QUA-004` et `catalog:QUA-020`
+  du gabarit modifiés comme déclaré dans la fiche. Le code est découpé en
+  modules `guarantees-*.ts` pour tenir le plafond de 400 lignes (QUA-001).
+  L'essai réel sur un dossier vide (QUA-092) est attesté par l'humain.
+  Cadrage élargi deux fois au lancement par des commits qui ne touchent que la
+  fiche. Ces garanties sont hors de l'adaptation au risque : reporté dans
+  `docs/intentions/catalogue-cycle-de-vie.md` (fiche 2, profils).
+  Preuve de clôture : `docs/preuves/garanties-obligatoires-adoption.md`.
+- **Limites connues** : `init` n'impose pas les garanties, il renvoie vers
+  `drwil guarantees` — `docs/intentions/init-impose-les-garanties.md`. Les
+  commits de code d'une couche ne sont pas bloqués tant que sa fiche de
+  garantie existe — `docs/intentions/commits-bloques-par-une-garantie.md`.
+  `--no-verify` n'est pas détecté par `verify`, seule la CI le rattrape —
+  `docs/intentions/no-verify-detecte-par-verify.md`. `verify` échoue tant que
+  la garantie n'est pas tenue, pas du seul fait que la fiche existe :
+  interprétation à confirmer —
+  `docs/intentions/verify-echoue-tant-que-la-fiche-existe.md`. JVM : ni
+  mesure de la couverture actuelle ni cliquet remonté automatiquement —
+  `docs/intentions/couverture-jvm-mesuree.md`. Le dépôt drwil n'est pas
+  soumis aux garanties et son `docs/features.md` est encore le squelette, ce
+  qui fera refuser la prochaine release (QUA-098) —
+  `docs/intentions/garanties-sur-le-depot-drwil.md`. La sortie `--agent`
+  range les garanties non tenues sous « Registry errors » —
+  `docs/intentions/garanties-dans-la-sortie-agent.md`.
+- **Consommation** : 4,25 M tokens pondérés (`.drwil/usage.jsonl`).
+- **Clôturé par** : la branche `workstream/garanties-obligatoires-adoption`
+  (PR #203).

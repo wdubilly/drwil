@@ -12,6 +12,15 @@ le registre en a 23 (QUA-021 à QUA-031 nés des chantiers de
 non-régression, d'ID et de règles métier). Le fond de l'intention reste
 valable (vague 5).
 
+**Revu le 2026-10-22** : le chantier « garanties obligatoires à
+l'adoption » (journal du 2026-10-22) tranche, par décision du demandeur du
+2026-10-22, que les garanties obligatoires d'un projet gouverné — couverture
+à 100 % (cliquet et couverture du diff sur un projet existant), e2e des
+chemins critiques, forge protégée, présentation du projet — sont **hors de
+l'adaptation au risque** : la fiche 2 (profils par risque, Q9) ne peut ni les
+alléger ni les retirer, quel que soit le profil. Le reste de l'intention
+reste vivant.
+
 **Projet** : DRWIL — **Niveau de risque** : HIGH (change la source de
 vérité des contrats, le moteur de vérification et le livrable).
 
