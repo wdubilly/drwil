@@ -83,6 +83,13 @@ attribuer à ce moment-là dans le registre.)
   sur une pile hors table, la fiche bloquante apparaît et bloque —
   contrat Manuel à créer, attesté par l'humain
 
+- Sur un projet **existant** adopté avec du code legacy non couvert, la
+  commande mesure la couverture actuelle de chaque couche et la pose comme
+  seuil (cliquet, jamais en baisse), exige 100 % sur le code nouveau ou
+  modifié (couverture du diff) et crée une fiche de montée `[P1]` non
+  bloquante, cible 100 % ; l'e2e reste exigé comme sur un projet neuf —
+  contrat à créer
+
 ## Contrats modifiés
 
 - Entrée `catalog:QUA-004` du **gabarit livré** — ancien critère : « Test
@@ -101,8 +108,6 @@ attribuer à ce moment-là dans le registre.)
 
 - Le 100 % du paquet `packages/drwil` lui-même : intention
   `docs/intentions/couverture-paquet-100.md`.
-- Un projet **existant** adopté en dette de tests : seuil bas, couverture du
-  diff et cliquet (recette `adopt-the-kit`, étape 4).
 - La qualité des tests (un test qui ne vérifie rien) : une couverture à
   100 % garantit que chaque ligne est **exécutée** par un test, pas qu'elle
   est **correcte** — limite à écrire dans la recette.
@@ -140,6 +145,9 @@ attribuer à ce moment-là dans le registre.)
   la même manière ; **pour tout projet, sans exception** — c'est la garantie
   de drwil.
 
+- 2026-10-22 (demandeur) : projet existant adopté : cliquet au niveau mesuré
+  + 100 % sur le code nouveau ou modifié + fiche de montée non bloquante.
+
 ## 5. Lots
 
 Un seul chantier : l'e2e est obligatoire au même titre que la couverture, donc
@@ -150,6 +158,9 @@ aucune release ne part avec l'une sans l'autre.
   n'existe pas), commande de câblage à 100 %, fiche bloquante `[P0]`, prise en
   compte dans `verify`, l'ordre de `/drwil-start` et les commits de code de
   la couche.
+- **Lot 1bis — projet existant** : mesure du niveau actuel, cliquet,
+  couverture du diff à 100 % sur le code nouveau ou modifié, fiche de montée
+  `[P1]` non bloquante.
 - **Lot 2 — e2e obligatoire** : la fiche bloquante demande les chemins
   critiques ; le test est écrit avec l'outil de la pile (choix du demandeur) ;
   un seul contrôle le rejoue ; la fiche ne se clôt qu'une fois ce contrôle
