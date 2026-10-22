@@ -27,6 +27,7 @@ files:
   - .githooks/scope-gate.test.mjs
   - packages/drwil/templates/common/base/docs/ia-first.md
   - docs/contracts.md
+  - docs/features.md
 -->
 
 ## Journal
