@@ -81,7 +81,7 @@ export function parseProof(file: string, text: string): ClosureProof {
   return {
     file,
     workstream: basename(file).replace(/\.md$/, ""),
-    commit: /^\*\*(?:Commit vérifié|Verified commit)\*\*\s*:?\s*`?([0-9a-f]{7,40})/m.exec(text)?.[1] ?? null,
+    commit: /^\*\*(?:Commit vérifié|Verified commit)\*\* ?:? ?`?([0-9a-f]{7,40})/m.exec(text)?.[1] ?? null,
     criteria,
   };
 }
