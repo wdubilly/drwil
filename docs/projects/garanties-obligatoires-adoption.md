@@ -142,15 +142,28 @@ attribuer à ce moment-là dans le registre.)
 
 ## 5. Lots
 
-(à affiner au lancement : table des outils et commande de câblage ; fiche
-bloquante et prise en compte dans `verify` et `/drwil-start` ; e2e ; recette,
-catalogue et skill.)
+Un seul chantier : l'e2e est obligatoire au même titre que la couverture, donc
+aucune release ne part avec l'une sans l'autre.
+
+- **Lot 1 — couverture** : table des outils (Node/TypeScript, Python, Go, JVM
+  d'abord ; toute autre pile passe par la fiche bloquante tant que sa ligne
+  n'existe pas), commande de câblage à 100 %, fiche bloquante `[P0]`, prise en
+  compte dans `verify`, l'ordre de `/drwil-start` et les commits de code de
+  la couche.
+- **Lot 2 — e2e obligatoire** : la fiche bloquante demande les chemins
+  critiques ; le test est écrit avec l'outil de la pile (choix du demandeur) ;
+  un seul contrôle le rejoue ; la fiche ne se clôt qu'une fois ce contrôle
+  vert.
+- **Lot 3 — documents** : recette, catalogue et skill d'adoption.
 
 ## 6. Reprise
 
-- **Dernier état** (2026-10-22) : cadré ; maturité « à affiner ».
-- **À trancher avant « prêt »** : (a) la fiche bloquante empêche-t-elle aussi
-  les commits de code de la couche, ou seulement le verdict de `verify` ? (b)
-  la table des outils, ligne par ligne ; (c) la forme du contrôle e2e par
-  pile.
-- **Prochaine étape** : écrire la table des outils et lever (a) à (c).
+- **Dernier état** (2026-10-22) : cadré ; recommandations de l'agent : blocage
+  du verdict **et** des commits de code de la couche concernée (les commits de
+  documents et de la fiche restent libres) ; table de départ Node/TypeScript,
+  Python, Go, JVM ; e2e non automatisé par pile. À valider par le demandeur.
+- **Avant « prêt »** : valider les recommandations ci-dessus ; valider la
+  modification des entrées `catalog:QUA-004` et `catalog:QUA-020` ; reporter
+  dans la décision P1 « profils par risque » que ces garanties sont hors de
+  l'adaptation au risque.
+- **Prochaine étape** : après ces validations, passer la maturité à « prêt ».
