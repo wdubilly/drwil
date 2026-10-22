@@ -438,7 +438,7 @@ une décision du demandeur.
 
 - [ ] [IA] [P0] Garanties obligatoires à l'adoption : couverture à 100 % et e2e
   (commande de câblage par pile, recette et catalogue ; cadré le
-  2026-10-22, à affiner) — `docs/projects/garanties-obligatoires-adoption.md`.
+  2026-10-22, prête) — `docs/projects/garanties-obligatoires-adoption.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.

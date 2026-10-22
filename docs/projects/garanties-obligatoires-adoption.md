@@ -2,7 +2,7 @@
 
 **Statut** : cadré le 2026-10-22 — rien de commencé.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 
 (cadrage : le livrable — le gabarit de `packages/drwil/templates/` —, pas
 drwil-le-dépôt, QUA-018. Un seuil de couverture ne redescend jamais.)
@@ -95,13 +95,13 @@ attribuer à ce moment-là dans le registre.)
 - Entrée `catalog:QUA-004` du **gabarit livré** — ancien critère : « Test
   coverage does not drop below a declared threshold; on a project already in
   test debt […] diff coverage » — raison : y ajouter le cas du projet neuf
-  (100 % d'emblée, obligatoire). Rien n'est retiré. (à valider par le
-  demandeur au lancement)
+  (100 % d'emblée, obligatoire). Rien n'est retiré. (validé par le
+  demandeur le 2026-10-22)
 - Entrée `catalog:QUA-020` du **gabarit livré** — ancien critère : « The
   project's critical paths are covered by an automated end-to-end test,
   replayed in CI » (présenté comme un objectif) — raison : elle devient une
-  garantie obligatoire à l'adoption. (à valider par le demandeur au
-  lancement)
+  garantie obligatoire à l'adoption. (validé par le demandeur le
+  2026-10-22)
 - `QUA-004` du **dépôt drwil** : inchangé.
 
 ## 2. Hors périmètre
@@ -172,9 +172,9 @@ aucune release ne part avec l'une sans l'autre.
 - **Dernier état** (2026-10-22) : cadré ; recommandations de l'agent : blocage
   du verdict **et** des commits de code de la couche concernée (les commits de
   documents et de la fiche restent libres) ; table de départ Node/TypeScript,
-  Python, Go, JVM ; e2e non automatisé par pile. À valider par le demandeur.
-- **Avant « prêt »** : valider les recommandations ci-dessus ; valider la
-  modification des entrées `catalog:QUA-004` et `catalog:QUA-020` ; reporter
-  dans la décision P1 « profils par risque » que ces garanties sont hors de
+  Python, Go, JVM ; e2e non automatisé par pile. Validées par le demandeur le 2026-10-22.
+- **Prêt** : recommandations, modification de `catalog:QUA-004` et
+  `catalog:QUA-020` validées le 2026-10-22 ; reste à reporter dans la
+  décision P1 « profils par risque » que ces garanties sont hors de
   l'adaptation au risque.
-- **Prochaine étape** : après ces validations, passer la maturité à « prêt ».
+- **Prochaine étape** : lancer le lot 1 (`/drwil-start`).
