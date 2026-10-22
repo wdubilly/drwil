@@ -19,6 +19,8 @@ files:
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/templates/common/base/.githooks/briefs.mjs
   - packages/drwil/templates/common/base/README.md
+  - packages/drwil/templates/common/base/AGENTS.md
+  - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
   - packages/drwil/templates/common/optional/create-release/*
   - packages/drwil/templates/common/base/docs/features.md
   - packages/drwil/templates/common/base/docs/contracts-catalog.md
@@ -102,6 +104,14 @@ attribuer à ce moment-là dans le registre.)
   `glab` **avec l'accord de l'humain**, jamais en silence ; sans accès à la
   forge, le contrôle reste « non exécuté » et la fiche reste ouverte
   (QUA-013) — contrat à créer
+- Bonnes pratiques de versionnement imposées par la même protection de
+  branche : CI verte obligatoire, sans contournement même pour les
+  administrateurs ; la CI rejoue les contrôles du hook local, donc un
+  `--no-verify` est rattrapé avant la fusion ; l'usage de `--no-verify` est
+  signalé par `drwil verify` quand il est détectable. Projet neuf : tout est
+  imposé dès `init` (fiche bloquante `[P0]`) ; projet existant adopté : même
+  liste, aussi en fiche bloquante `[P0]` (aucune souplesse, contrairement à
+  la couverture) — contrat à créer
 
 - Le README livré présente le **produit de l'utilisateur** d'abord (ce que fait
   l'application, pour qui, comment la lancer) ; l'outillage drwil n'y tient
@@ -118,6 +128,11 @@ attribuer à ce moment-là dans le registre.)
   non) ; l'agent le met à jour dans la PR de version, ou enregistre
   « inchangé » avec sa raison (une ligne versionnée) ; un document qui
   garde du texte de squelette bloque aussi — contrat à créer
+- Une PR qui ne touche que de la documentation est mise en fusion
+  automatique par l'agent sans poser la question `drwil-merge` ; le sondage
+  ne garde la question que pour les PR qui touchent du code. Le dépôt doit
+  autoriser l'auto-merge, sinon le message de refus existant s'applique —
+  contrat à créer
 
 ## Contrats modifiés
 
@@ -195,6 +210,14 @@ attribuer à ce moment-là dans le registre.)
   recette reste après le tag, dans sa PR (elle a besoin de l'empreinte du
   tarball).
 
+- 2026-10-22 (demandeur) : les bonnes pratiques de versionnement (CI sans
+  contournement, `--no-verify` rattrapé) sont bloquantes aussi sur projet
+  existant, sans la souplesse de la couverture.
+
+- 2026-10-22 (demandeur) : règle livrée au kit : toute PR de documentation
+  seule se fusionne en automatique sans poser la question ; même chantier,
+  lot supplémentaire.
+
 ## 5. Lots
 
 Un seul chantier : l'e2e est obligatoire au même titre que la couverture, donc
@@ -215,12 +238,18 @@ aucune release ne part avec l'une sans l'autre.
 - **Lot 2bis — versionnement** : détection du dépôt, de la CI et de la
   forge (gabarits GitHub et GitLab existants), fiche bloquante `[P0]` quand un
   élément manque, protection de la branche principale par `gh` ou `glab` avec
-  l'accord de l'humain.
+  l'accord de l'humain ; mêmes règles de bonne pratique (CI obligatoire sans
+  contournement administrateur, CI rejouant les contrôles du hook, signalement
+  de `--no-verify` si détectable), imposées en fiche bloquante `[P0]`, sur
+  projet neuf comme sur projet existant.
 - **Lot 2ter — présentation du projet** : gabarit du README recentré sur le
   produit (`packages/drwil/templates/common/base/README.md`), détection du
   texte de squelette dans le README, `AGENTS.md` et `docs/features.md`,
   fiche bloquante `[P0]` ; examen imposé par `packages/drwil/templates/common/optional/create-release/create-release.mjs`
   (`packages/drwil/templates/common/optional/create-release/`) avant le tag.
+- **Lot 2quater — fusion automatique des PR de documentation** : règle dans
+  `packages/drwil/templates/common/base/AGENTS.md` et le skill
+  `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
 - **Lot 3 — documents** : recette, catalogue et skill d'adoption.
 
 ## 6. Reprise
