@@ -1,6 +1,6 @@
 # Projet : mini-banc — même consigne, avec et sans drwil
 
-**Statut** : cadré le 2026-10-11 — décisions prises, lot 1 à lancer.
+**Statut** : en cours — lot 1 réalisé et éprouvé avec un agent simulé (2026-10-23) ; passage d'essai réel en CI en attente du jeton d'abonnement (geste humain, lot 2).
 **Risque** : HIGH
 **Intention** : `docs/intentions/bench-avec-sans-drwil.md`
 
@@ -153,7 +153,14 @@ par ce chantier, avec leur champ Origine.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-12) : fiche cadrée, banc en CI décidé, rien
-  de réalisé.
+- **Dernier état** (2026-10-23) : lot 1 réalisé sur la branche
+  `workstream/mini-banc` — projet de référence et tâches (`bench/`),
+  `outils/banc.mjs` et son juge `outils/banc-juge.mjs`, workflow
+  `.github/workflows/banc.yml`, protocole réduit daté, contrats QUA-101 à
+  QUA-106. Tests verts avec un agent simulé (drwil init réel).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] `/drwil-lancer`.
+- **Prochaine étape** : [humain] `claude setup-token`, puis
+  `gh secret set CLAUDE_CODE_OAUTH_TOKEN`, puis le passage d'essai :
+  `gh workflow run banc.yml -f essai=true -f modele=<identifiant complet>` ;
+  budget écrit au protocole ; puis la campagne (lot 2) et l'attestation
+  de QUA-106 sur son rapport.
