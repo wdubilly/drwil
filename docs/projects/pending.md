@@ -436,6 +436,9 @@ une décision du demandeur.
 
 ## Ensuite
 
+- [ ] [IA] [P2] 100 % de couverture dès le départ d'une pile neuve
+  (commande de câblage par pile, recette et catalogue ; cadré le
+  2026-10-22, à affiner) — `docs/projects/couverture-100-pile-neuve.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
