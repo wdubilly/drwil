@@ -2735,3 +2735,28 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   dossiers vides `drwil-banc-*` à la racine (même intention, détour à
   ouvrir).
 - **Clôturé par** : la branche `workstream/mini-banc` (PR #208).
+
+## 2026-10-23 — Mini-banc : déroulé conservé et copie réaliste
+
+- **Décisions clés** : chaque passage qui a lancé l'agent, mesuré ou non,
+  écrit à côté de son résultat le déroulé de la session (flux
+  `stream-json` de `claude -p`, même nom en `.jsonl`), jetons masqués avant
+  l'écriture ; le résultat dit fichier, lignes et masques, et `deroule:
+  null` quand l'agent n'a pas été lancé ; le rapport ne lit que les
+  résultats (QUA-107). La copie « avec drwil » est installée comme chez un
+  utilisateur : tarball du paquet construit dans le dépôt (`npm pack`), en
+  dépendance de développement, puis `npx drwil init` ; `npx drwil` s'y
+  résout sur place, hors réseau ; dans les deux conditions, un dépôt
+  distant local qui a déjà la branche principale (QUA-108). Prouvé sur une
+  vraie copie : `npx drwil verify` hors réseau, aucune fiche bloquante, une
+  branche poussée hooks actifs. `.github/workflows/banc.yml` inchangé ;
+  protocole réduit complété et re-daté au 2026-10-23, avant toute mesure.
+  Preuve de clôture : `docs/preuves/deroule-banc.md`.
+- **Limites connues** : le job de passage de `.github/workflows/banc.yml` n'installe pas
+  gitleaks, donc l'agent « avec » peut commiter mais pas pousser —
+  `docs/intentions/gitleaks-au-banc.md` ; dans une copie fraîchement
+  adoptée, les contrôles refusent tout commit tant que le code n'est pas
+  couvert par une fiche et la carte (comportement réel de drwil, mesuré
+  par le banc, pas corrigé) ; l'essai réel et la campagne restent à lancer
+  — `docs/intentions/campagne-mini-banc.md`.
+- **Clôturé par** : la branche `workstream/deroule-banc` (PR #210).
