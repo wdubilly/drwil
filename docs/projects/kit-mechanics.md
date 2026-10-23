@@ -28,6 +28,8 @@ files:
   - .githooks/state-cli.mjs
   - .githooks/briefs.mjs
   - .githooks/pr-watch.mjs
+  - .githooks/base-checks.mjs
+  - .githooks/base-checks.test.mjs
   - .githooks/pr-watch.test.mjs
   - .githooks/state-texts.mjs
   - .githooks/state.test.mjs

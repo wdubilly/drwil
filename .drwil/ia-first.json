@@ -1225,6 +1225,42 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-113",
+      "name": "tests de QUA-113, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-113 \" .githooks/base-checks.test.mjs .github/scripts/workflows-yaml.test.mjs packages/drwil/test/cycle.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        ".github/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-114",
+      "name": "tests de QUA-114, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-114 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".claude/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-115",
+      "name": "tests de QUA-115, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-115 \" packages/drwil/test/guarantees.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "transitions": "human",

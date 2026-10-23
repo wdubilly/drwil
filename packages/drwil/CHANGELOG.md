@@ -15,6 +15,26 @@ closing commit; the release renames this section to its version.
   commit, even of a brief alone, now passes with the blocking defaults; a
   new project and an update are unchanged, an existing brief or map is
   never rewritten and `uninstall` leaves the brief in place (QUA-110).
+- The CI replays the checks with the main branch's hooks: off the main
+  branch, the `checks` job (GitHub and GitLab) runs the main branch's copy
+  of the new `.githooks/base-checks.mjs`, which lays the main branch's
+  `.githooks/` over the working tree for one run of `run-checks.mjs`, with
+  the branch's list of checks. A pull request that weakens or deletes a
+  hook, or removes a check from `.drwil/ia-first.json`, fails, unless the
+  brief declares it in « Modified contracts »; a main branch that cannot be
+  found is « not run », never a success (QUA-113). The GitLab `checks` job
+  now clones the full history (`GIT_DEPTH: "0"`).
+- The Claude Code shell guard refuses, without asking, any command that
+  skips the git hooks or writes, removes or overrides `core.hooksPath`
+  (`--no-verify`, `commit -n`, `-c core.hooksPath=`, `git config
+  core.hooksPath …`, `--unset`, `GIT_CONFIG_*`), also in a compound
+  command or a `sh -c "…"`; reading the setting still passes, the other
+  risks still ask (QUA-114).
+- `drwil guarantees` and `drwil doctor` read the bypass list
+  (`bypass_actors`) of the rulesets protecting the main branch with the
+  human's token: a non-empty list is a gap of the protection; without an
+  administrator token it is said « not verified », never counted as held
+  (QUA-115).
 
 ### Fixed
 

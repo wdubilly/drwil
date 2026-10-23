@@ -704,6 +704,76 @@ test("QUA-039 : hook glossaire livré et branché sur tout outil ; injecte les l
     assert.match(read(dir, f), /node \.githooks\/glossary\.mjs/, f);
 });
 
+test("QUA-114 garde shell : refus, sans demander, de toute commande qui saute les hooks ou écrit core.hooksPath ; la lecture passe", async () => {
+  const { skipsHooks, main } = await import(new URL("../templates/common/tools/claude/.claude/hooks/bash-guard.mjs", import.meta.url));
+  const refusees = [
+    "git commit --no-verify -m x",
+    "git push --no-verify",
+    "git commit --no-verif -m x",
+    "git commit -n -m x",
+    "git commit -anm x",
+    "git -C sous commit -qn",
+    "git -c core.hooksPath=/dev/null commit -m x",
+    "git -c core.hookspath= commit -m x",
+    "git -ccore.hooksPath=/dev/null commit",
+    "git --config-env=core.hooksPath=VIDE commit",
+    "git --config-env core.hooksPath=VIDE commit",
+    "git config core.hooksPath /dev/null",
+    'git config --local core.hooksPath ""',
+    "git config set core.hooksPath x",
+    "git config --unset core.hooksPath",
+    "git config unset core.hooksPath",
+    "git config --remove-section core",
+    "git config --file .git/config core.hooksPath x",
+    "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null git commit -m x",
+    "export GIT_CONFIG_PARAMETERS=\"'core.hooksPath'='/dev/null'\"",
+    "sed -i 's/hooksPath = .githooks//' .git/config",
+    "echo '[core] hooksPath = x' >> .git/config",
+    "npm test && git commit --no-verify -m x",
+    "true; /usr/bin/git commit -n",
+    'bash -c "git config core.hooksPath /dev/null"',
+    "sh -c 'cd a && git commit --no-verify'",
+    'eval "git commit -n -m \\"x\\""',
+    "(git commit -n)",
+  ];
+  for (const c of refusees) assert.equal(skipsHooks(c), true, c);
+  const permises = [
+    "git config core.hooksPath",
+    "git config --get core.hooksPath",
+    "git config get core.hooksPath",
+    "git config --list",
+    "git config user.name Test",
+    "git commit -m 'retire -n et --no-verify du message'",
+    "git commit -m -n",
+    "git commit -F notes.txt",
+    "git commit -mn",
+    "git commit -- -n",
+    "git log -n 3",
+    "git push -n",
+    "grep -rn hooksPath .githooks",
+    "GIT_CONFIG_GLOBAL=/dev/null git status",
+    "cat .git/config",
+    "echo git",
+    "ls",
+  ];
+  for (const c of permises) assert.equal(skipsHooks(c), false, c);
+
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const garde = (command) =>
+    spawnSync(process.execPath, [".claude/hooks/bash-guard.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({ tool_name: "Bash", tool_input: { command } }),
+    }).stdout;
+  const refus = JSON.parse(garde("git commit --no-verify -m x && cat .env"));
+  assert.equal(refus.hookSpecificOutput.permissionDecision, "deny", "le refus l'emporte sur la demande d'accord");
+  assert.match(refus.hookSpecificOutput.permissionDecisionReason, /refusé \(QUA-114\).*se corrige, il ne se contourne pas \(QUA-019\)/);
+  assert.equal(garde("git config core.hooksPath"), "");
+  assert.match(garde("cat .env"), /"permissionDecision":"ask"/, "les autres risques gardent la demande d'accord");
+  assert.match(main(JSON.stringify({ tool_name: "Bash", tool_input: { command: "git commit -n" } })), /"permissionDecision":"deny"/);
+});
+
 test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse avant écriture (bloquant) ou rappelle (avertissement)", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

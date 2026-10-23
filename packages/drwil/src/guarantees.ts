@@ -319,6 +319,8 @@ export function formatGuarantees(r: GuaranteesReport): string[] {
   const gaps = [...r.forge.missing, ...(r.forge.notRun ? [r.forge.notRun] : [])];
   if (!gaps.length) out.push(`✓ ${fill(T.forgeOk, r.forge.forge, r.forge.branch)}`);
   for (const g of gaps) out.push(`✗ ${fill(T.forgeGap, g)}`);
+  // QUA-115: unread without an administrator token, said so, never counted as held nor as a gap.
+  if (r.forge.unverified) out.push(`⚠ ${fill(T.forgeGap, r.forge.unverified)}`);
   if (r.forge.forge && !r.forge.protected && r.forge.notRun === null) out.push(`  ${T.protectHint}`);
   out.push(r.skeleton.length ? `✗ ${fill(T.skeleton, r.skeleton.join(", "))}` : `✓ ${T.presentationOk}`);
   for (const w of r.written) out.push(fill(T.brief, w));

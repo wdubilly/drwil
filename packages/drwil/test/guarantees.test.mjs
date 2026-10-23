@@ -6,8 +6,18 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, write
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { COVERAGE_TOOLS, formatGuarantees, guaranteeFailures, guarantees, init, skeletonFiles, toolFor, verify } from "../dist/index.js";
-import { forgeOf, inspectForge, protectBranch } from "../dist/guarantees-forge.js";
+import {
+  COVERAGE_TOOLS,
+  doctor,
+  formatGuarantees,
+  guaranteeFailures,
+  guarantees,
+  init,
+  skeletonFiles,
+  toolFor,
+  verify,
+} from "../dist/index.js";
+import { bypassDiagnosis, forgeOf, inspectForge, protectBranch, rulesetBypass } from "../dist/guarantees-forge.js";
 import { hasSources } from "../dist/guarantees-table.js";
 import { renderBrief } from "../dist/guarantees-briefs.js";
 
@@ -413,6 +423,87 @@ test("QUA-095 bonnes pratiques : PR, contrôles requis, sans contournement admin
   const gl = [];
   assert.equal(protectBranch(dir, "gitlab", "main", faux([[/glab api/, OK]], gl)), true);
   assert.equal(gl.length, 2);
+});
+
+test("QUA-115 bypass_actors : lu avec un jeton administrateur, une liste non vide est un manque ; sinon « non vérifié », jamais tenu", async () => {
+  const dir = await projet();
+  const regles = json([
+    { type: "pull_request", ruleset_id: 7 },
+    { type: "required_status_checks", ruleset_id: 7 },
+  ]);
+  const forge = (ruleset) => faux([...FORGE_OK.slice(0, 4), [/rules\/branches\/main/, regles], [/rulesets\/7/, ruleset]]);
+  // Jeton administrateur, liste vide : tenu, rien de non vérifié.
+  let f = inspectForge(dir, config(dir), forge(json({ bypass_actors: [] })), "fr");
+  assert.deepEqual([f.missing, f.unverified, f.protected], [[], null, true]);
+  // Jeton administrateur, un rôle contourne : manque bloquant.
+  f = inspectForge(
+    dir,
+    config(dir),
+    forge(json({ bypass_actors: [{ actor_type: "RepositoryRole", actor_id: 5 }, { actor_type: "OrganizationAdmin" }] })),
+    "fr",
+  );
+  assert.deepEqual(f.missing, [
+    "protection de `main` incomplète : le ruleset a des acteurs qui le contournent (bypass_actors : RepositoryRole 5, OrganizationAdmin)",
+  ]);
+  assert.equal(f.protected, false);
+  // Jeton non administrateur (champ absent), ruleset illisible, ou règles sans ruleset : non vérifié, dit, non bloquant.
+  for (const reponse of [json({ name: "master" }), { status: 1, stdout: "" }]) {
+    f = inspectForge(dir, config(dir), forge(reponse), "fr");
+    assert.deepEqual([f.missing, f.protected], [[], true]);
+    assert.match(f.unverified, /contournement du ruleset \(bypass_actors\) non vérifié : lisible seulement avec un jeton administrateur/);
+  }
+  f = inspectForge(dir, config(dir), faux(FORGE_OK), "en");
+  assert.match(f.unverified, /ruleset bypass \(bypass_actors\) not verified/);
+  const r = guarantees({
+    targetDir: dir,
+    exec: faux([[/c8 --version/, OK], ...FORGE_OK.slice(0, 4), [/rules\/branches\/main/, regles], [/rulesets\/7/, json({})]]),
+  });
+  const sortie = formatGuarantees(r).join("\n");
+  assert.match(sortie, /⚠ Versionnement : contournement du ruleset \(bypass_actors\) non vérifié/);
+  assert.match(sortie, /✓ Versionnement : dépôt, forge github/, "non vérifié n'est ni un manque ni une protection tenue de plus");
+  assert.deepEqual(rulesetBypass(faux([[/rules\/branches/, json("pas une liste")]]), dir, "main"), { state: "no-ruleset", actors: [] });
+
+  // drwil doctor : le même constat, avec le jeton de l'humain.
+  const github = [
+    [/^git remote get-url/, { status: 0, stdout: "https://github.com/a/b.git" }],
+    [/^git symbolic-ref/, { status: 1, stdout: "" }],
+  ];
+  const diag = (...regles) => bypassDiagnosis(dir, faux([...github, ...regles]), "fr");
+  assert.equal(bypassDiagnosis(dir, faux([[/^git remote get-url/, { status: 0, stdout: "https://gitlab.com/a/b.git" }]]), "fr"), null);
+  assert.equal(bypassDiagnosis(dir, faux([]), "fr"), null, "sans dépôt distant, rien à dire");
+  assert.equal(diag().state, "warning", "gh absent ou non connecté : non vérifié");
+  assert.equal(
+    diag([/gh auth/, OK], [/rules\/branches/, json([])]),
+    null,
+    "sans ruleset, la protection classique est jugée par guarantees",
+  );
+  assert.deepEqual(diag([/gh auth/, OK], [/rules\/branches\/main/, regles], [/rulesets\/7/, json({})]), {
+    state: "warning",
+    detail:
+      "contournement du ruleset (bypass_actors) non vérifié : lisible seulement avec un jeton administrateur du dépôt (`gh auth login` d'un administrateur, puis `drwil guarantees`)",
+  });
+  assert.deepEqual(diag([/gh auth/, OK], [/rules\/branches\/main/, regles], [/rulesets\/7/, json({ bypass_actors: [] })]), {
+    state: "ok",
+    detail: "aucun acteur ne contourne le ruleset de `main`",
+  });
+  assert.equal(
+    diag(
+      [/gh auth/, OK],
+      [/rules\/branches\/main/, regles],
+      [/rulesets\/7/, json({ bypass_actors: [{ actor_type: "Team", actor_id: 1 }] })],
+    ).state,
+    "problem",
+  );
+  const d = await doctor({
+    targetDir: dir,
+    exec: faux([...github, [/gh auth/, OK], [/rules\/branches\/main/, regles], [/rulesets\/7/, json({})]]),
+  });
+  const point = d.points.find((p) => p.id === "bypass");
+  assert.deepEqual([point.label, point.state], ["Contournement du ruleset", "warning"]);
+  assert.equal(
+    (await doctor({ targetDir: dir, exec: faux([]) })).points.some((p) => p.id === "bypass"),
+    false,
+  );
 });
 
 test("QUA-096 le README livré présente d'abord le produit, l'outillage drwil en quelques lignes de renvoi", () => {
