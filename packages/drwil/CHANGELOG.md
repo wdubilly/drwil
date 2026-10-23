@@ -9,7 +9,7 @@ closing commit; the release renames this section to its version.
 
 - `init` attaches the existing code: on a first install of a project that
   already has code files indexed by git, it writes a reference brief
-  `docs/projects/existing-code.md` whose `scope` block lists each of them
+  « existing code » (file existing-code.md of `docs/projects/`) whose `scope` block lists each of them
   (the kit's files excluded) and cites their folders in the map
   `docs/architecture.md` (role « to describe at adoption »). The first
   commit, even of a brief alone, now passes with the blocking defaults; a

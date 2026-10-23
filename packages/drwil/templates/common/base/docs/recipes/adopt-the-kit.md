@@ -25,7 +25,7 @@ the requester's place (`AGENTS.md`, Conduct section).
    (absent: the project language), in place of the skeleton `init` wrote: drwil maintains it from then on (its check reports a code folder
    it does not cite). On a project that already had indexed code, `init`
    also wrote the reference brief « existing code »
-   (`existing-code.md` in `docs/projects/`, if present): its `scope` block lists every code
+   (file existing-code.md of `docs/projects/`): its `scope` block lists every code
    file indexed before the kit, and the map's « Existing code » section
    cites their folders with a role « to describe at adoption » — so that the
    first commit, even of a brief alone, passes. Replace those roles with
