@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — dernière note le 2026-10-22.
+**Statut** : ouverte en permanence — dernière note le 2026-10-23.
 
 ## Besoin
 
@@ -29,3 +29,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-10-22 — Le passage BUILD → EVIDENCE sur l'entretien courant (fiche permanente) annonce sa suppression et liste ~40 faux avertissements « cite docs/projects/routine-maintenance.md, qui sera supprimée » : le signal de clôture devrait exempter la fiche permanente.
 - 2026-10-22 — Le hook pre-push applique QUA-017 (pas de travail direct sur la branche principale) à la branche courante, pas à la référence poussée : depuis master, le push de recette/vX.Y.Z par recette-note.mjs (lancé par create-release.mjs) est refusé, la note de recette n'est pas écrite (v0.7.0, 2026-10-22). Juger la référence distante lue sur l'entrée standard ; recette-note.mjs devrait aussi afficher la sortie de git en cas d'échec.
 - 2026-10-22 — Le test QUA-060 « refuse tout dossier situé dans le dépôt » (outils/banc-agents.test.mjs, preparer avec base: RACINE) laisse un dossier vide drwil-banc-* à la racine du dépôt à chaque lancement : preparer crée le dossier (mkdtempSync) avant de refuser, sans le supprimer ; ~470 dossiers vides constatés le 2026-10-23. Correctif : supprimer le dossier avant de lever l'erreur (comme outils/banc.mjs), puis nettoyer la racine.
+- 2026-10-23 — Une CI rouge révélée après le commit de clôture n'a aucun chemin gouverné : depuis CLOSING seul SCOPING est permis, la fiche est supprimée (cadrage non élargissable) et un détour ne s'ouvre qu'en BUILD ; cas vécu sur la PR #213 (motif QUA-108), contourné par l'entretien courant.
