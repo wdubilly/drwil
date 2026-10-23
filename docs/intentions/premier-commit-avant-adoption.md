@@ -1,7 +1,9 @@
 # Intention : un projet tout juste installé refuse même un commit de fiche
 
 **Statut** : proposée le 2026-10-23 — découverte du passage d'essai réel du
-mini-banc (run 39966784905).
+mini-banc (run 39966784905) ; cadrée le 2026-10-23 :
+`docs/projects/premier-commit-avant-adoption.md` (`init` rattache le code
+existant ; les deux autres voies écartées, voir sa section Décisions).
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (touche les hooks du
 gabarit livré).

@@ -29,6 +29,9 @@ garantie câblée ni fiche bloquante.
 - `docs/intentions/premier-commit-avant-adoption.md` (2026-10-23) : avant
   l'adoption, un projet existant refuse même un commit de fiche ; même
   décision de fond sur l'état d'un projet entre `init` et `/drwil-adopt`.
+  Tranché pour sa part le 2026-10-23 : un projet existant est utilisable
+  tel quel après `init`, qui rattache son code
+  (`docs/projects/premier-commit-avant-adoption.md`).
 
 ## Questions à trancher
 
