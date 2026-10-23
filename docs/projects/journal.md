@@ -2753,10 +2753,38 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   protocole réduit complété et re-daté au 2026-10-23, avant toute mesure.
   Preuve de clôture : `docs/preuves/deroule-banc.md`.
 - **Limites connues** : le job de passage de `.github/workflows/banc.yml` n'installe pas
-  gitleaks, donc l'agent « avec » peut commiter mais pas pousser —
-  `docs/intentions/gitleaks-au-banc.md` ; dans une copie fraîchement
+  gitleaks, donc l'agent « avec » peut commiter mais pas pousser — traité
+  par « Mini-banc prêt pour l'essai réel », entrée suivante ; dans une copie fraîchement
   adoptée, les contrôles refusent tout commit tant que le code n'est pas
   couvert par une fiche et la carte (comportement réel de drwil, mesuré
   par le banc, pas corrigé) ; l'essai réel et la campagne restent à lancer
   — `docs/intentions/campagne-mini-banc.md`.
+- **Clôturé par** : la branche `workstream/deroule-banc` (PR #210).
+
+## 2026-10-23 — Mini-banc prêt pour l'essai réel
+
+- **Décisions clés** : le test de QUA-108 (copie préparée comme chez un
+  utilisateur réel) lance git avec l'environnement de l'agent du banc
+  (`envAgent`, sans `CI`) et non celui du runner : avec `CI=true`, les
+  hooks de la copie se croyaient en CI et refusaient le push (cause de la
+  CI rouge de la PR #210) ; les tests du banc passent désormais avec et
+  sans `CI=true`. Le job `passage` de `.github/workflows/banc.yml` installe
+  gitleaks 8.21.2 avec la même étape que la CI principale (archive vérifiée
+  par sa somme, `~/.local/bin`) : nouveau contrat QUA-109 (le job de
+  passage installe gitleaks comme la CI principale), prouvé par un test qui
+  lit les deux workflows, contrôle `tests-qua-109`. Protocole réduit :
+  limite « gitleaks absent » retirée, outils de la machine décrits, toujours
+  daté du 2026-10-23 avant toute mesure. Carte : banc cité de QUA-101 à
+  QUA-109. Intention `gitleaks-au-banc` entièrement couverte, retirée :
+  sans gitleaks dans le job de passage, le contrôle des secrets de la copie
+  « avec » était « non exécuté » et le push refusé (QUA-013), ce qui aurait
+  pesé contre drwil pour une installation incomplète du banc ; décision du
+  2026-10-23 : l'installer comme la CI principale. Preuve de clôture :
+  `docs/preuves/banc-pret-essai.md`.
+- **Limites connues** : l'essai réel n'a toujours pas tourné (geste humain,
+  après la fusion de la PR #210), ni la campagne —
+  `docs/intentions/campagne-mini-banc.md` ; gitleaks reste absent des
+  prérequis du README de drwil (décision produit à part, hors de ce
+  chantier) ; dossiers vides `drwil-banc-*` du test QUA-060 : même
+  intention, détour à ouvrir.
 - **Clôturé par** : la branche `workstream/deroule-banc` (PR #210).

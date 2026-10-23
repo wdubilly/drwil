@@ -3,8 +3,11 @@
 **Statut** (2026-10-23) : le banc rejouable est livré (journal `docs/projects/journal.md`,
 lot 1, branche `workstream/mini-banc`), puis le déroulé de session conservé et la
 copie « avec drwil » installée comme chez un utilisateur (journal, « Mini-banc :
-déroulé conservé et copie réaliste », QUA-107 et QUA-108). Restent le passage
-d'essai réel en CI, la campagne de 12 passages et la lecture des chiffres.
+déroulé conservé et copie réaliste », QUA-107 et QUA-108), enfin le banc prêt
+pour l'essai réel (journal, « Mini-banc prêt pour l'essai réel » : test de
+QUA-108 fidèle à l'agent, gitleaks dans le job de passage, QUA-109). L'essai
+réel peut se lancer dès la fusion de la PR #210. Restent le passage d'essai
+réel en CI, la campagne de 12 passages et la lecture des chiffres.
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (un agent tourne sans surveillance,
 avec le jeton d'abonnement, et le workflow touche `.github/`).
@@ -21,15 +24,14 @@ avant de construire la fabrique autonome.
 
 1. **Essai réel en CI** [humain], maintenant que le déroulé de session est
    conservé (journal du 2026-10-23, QUA-107) : le secret `CLAUDE_CODE_OAUTH_TOKEN` est
-   enregistré (2026-10-23) ; après la fusion du lot 1,
+   enregistré (2026-10-23) ; après la fusion de la PR #210,
    `gh workflow run banc.yml -f essai=true -f modele=<identifiant complet>`.
    Il doit aller au bout. C'est aussi ce qui confirme le format JSON de
    `claude -p` (`stream-json`, `usage`, `num_turns`, `total_cost_usd`,
    `error_max_turns`) et l'option `--max-turns`, vérifiés seulement en simulation.
    Lire le déroulé (`<tâche>-<condition>-<rép>.jsonl` de l'artefact) : lancement
-   du chantier, blocages et leur cause. Voir d'abord
-   `docs/intentions/gitleaks-au-banc.md` : sans gitleaks dans le job, l'agent
-   « avec » ne peut pas pousser.
+   du chantier, blocages et leur cause. gitleaks est installé dans le job
+   de passage (QUA-109) : l'agent « avec » peut pousser.
 2. **Budget** [humain] : écrit au protocole après l'essai, ce qui le re-date
    (QUA-106 exige un protocole daté avant la première mesure).
 3. **Campagne** [humain] : 12 passages par `.github/workflows/banc.yml`, en `max-parallel: 2`
