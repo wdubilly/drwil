@@ -277,9 +277,6 @@ aucune fusion autonome sans elle. Le mini-banc y a été déplacé le
 2026-10-12 (demandeur) : il mesure le drwil restructuré qui fera tourner la
 fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
-- [ ] [IA] [P2] Déroulé de session du mini-banc conservé, secrets
-  masqués, et copie « avec drwil » installée comme chez un utilisateur,
-  avant le passage d'essai — `docs/projects/deroule-banc.md`.
 - [ ] [décision] [P2] Campagne du mini-banc : essai réel en CI avec
   l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
 - [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,

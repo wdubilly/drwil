@@ -1,5 +1,5 @@
-// Juge du mini-banc (QUA-102 à QUA-106), indépendant des contrôles de drwil : lecture du flux de l'agent,
-// coût de la gouvernance, diff, contournements, tests cachés, secrets masqués, rapport de campagne.
+// Juge du mini-banc (QUA-102 à QUA-107), indépendant des contrôles de drwil : lecture du flux de l'agent,
+// coût de la gouvernance, diff, contournements, tests cachés, secrets masqués, déroulé écrit, rapport de campagne.
 // Séparé de outils/banc.mjs (QUA-001, fichier de code plafonné). Propre à ce dépôt (QUA-018).
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
@@ -193,11 +193,24 @@ export function masquerSecrets(texte, env = process.env) {
   return { texte: sortie, masques };
 }
 
-/** Écrit le résultat d'un passage, secrets masqués ; un masque posé est dit dans le résultat. */
+/**
+ * Écrit le résultat d'un passage, secrets masqués ; un masque posé est dit dans le résultat. Le déroulé de la
+ * session (`deroule` : les lignes du flux de l'agent, telles que reçues) va à côté, même nom en JSON Lines, que le
+ * rapport ne lit pas ; masqué avant l'écriture, son fichier, ses lignes et ses masques sont dits dans le résultat,
+ * et un passage qui n'a pas lancé l'agent dit qu'il n'en a pas (`deroule: null`).
+ */
 export function ecrireResultat(resultat, dossier, env = process.env) {
   mkdirSync(dossier, { recursive: true });
-  const { texte, masques } = masquerSecrets(JSON.stringify(resultat, null, 2), env);
-  const fichier = join(dossier, `${resultat.tache}-${resultat.condition}-${resultat.repetition}.json`);
+  const nom = `${resultat.tache}-${resultat.condition}-${resultat.repetition}`;
+  const { deroule, ...sansDeroule } = resultat;
+  let resume = null;
+  if (Array.isArray(deroule)) {
+    const ecrit = masquerSecrets(deroule.map((l) => `${l}\n`).join(""), env);
+    writeFileSync(join(dossier, `${nom}.jsonl`), ecrit.texte);
+    resume = { fichier: `${nom}.jsonl`, lignes: deroule.length, secretsMasques: ecrit.masques };
+  }
+  const { texte, masques } = masquerSecrets(JSON.stringify({ ...sansDeroule, deroule: resume }, null, 2), env);
+  const fichier = join(dossier, `${nom}.json`);
   writeFileSync(fichier, masques ? texte.replace(/^\{/, `{\n  "secretsMasques": ${masques},`) : texte);
   return fichier;
 }

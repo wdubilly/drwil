@@ -990,3 +990,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `outils/banc.test.mjs`
 **Origine** : mini-banc — « Le rapport de campagne rapporte tous les passages, min et max, avec le protocole daté fixé avant la mesure »
 **Raison** : Avec 3 répétitions, seule une dispersion honnête de tous les passages dit quelque chose ; un protocole ajusté après coup ne dit plus rien.
+
+## QUA-107 — Le mini-banc conserve le déroulé de chaque passage, secrets masqués
+**Règle** : Propre au dépôt drwil (QUA-018). Chaque passage qui a lancé l'agent, mesuré ou non (délai dépassé, pas de résultat, erreur de l'agent), écrit à côté de son résultat le déroulé de la session de l'agent (le flux `stream-json` de `claude -p`), tel que reçu, ligne à ligne, dans un fichier de même nom en JSON Lines (`.jsonl`) ; tout jeton ou clé y est masqué avant l'écriture (`masquerSecrets`, comme le résultat, QUA-105), et le résultat dit le fichier, le nombre de lignes et le nombre de masques. Un passage qui n'a pas lancé l'agent n'a pas de déroulé, et son résultat le dit (`deroule: null`). Le rapport ne lit que les résultats, jamais un déroulé.
+**Périmètre** : `outils/banc.mjs` (`passage`), `outils/banc-juge.mjs` (`ecrireResultat`).
+**Source de vérité** : `outils/banc-juge.mjs` (`ecrireResultat`).
+**Preuve** : tests du banc (passage simulé avec un faux jeton dans le flux, passages non mesurés, rapport sur un dossier qui contient un déroulé).
+**Contrôle** : `tests-qua-107`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : deroule-banc — « Chaque passage, mesuré ou non, écrit le déroulé de la session de l'agent à côté de son résultat, tel que reçu, ligne à ligne ; tout jeton ou clé y est masqué avant l'écriture, et le résultat dit le nombre de masques ; le rapport ne lit que les résultats, jamais un déroulé »
+**Raison** : Le résultat ne garde que les chiffres et le verdict : on saurait qu'un agent a été bloqué, pas où ni pourquoi ; le dépôt est public, l'artefact du run se télécharge.
+
+## QUA-108 — La copie du mini-banc est préparée comme chez un utilisateur réel
+**Règle** : Propre au dépôt drwil (QUA-018). Dans la condition « avec », drwil est installé dans la copie depuis le tarball de la version construite dans ce dépôt (`npm pack`, jamais une version publiée ailleurs), en dépendance de développement, puis `init` par ce paquet ; `npx drwil` s'y résout sur place, jamais sur le registre npm, et `npx drwil verify` y tourne hors réseau ; aucune fiche bloquante n'y existe (garanties obligatoires ni câblées ni exigées après un simple `init`). Dans les deux conditions, la copie a un dépôt distant local (`origin`), qui a déjà sa branche principale, où pousser une branche ; seule l'installation de drwil diffère.
+**Périmètre** : `outils/banc.mjs` (`installerDrwil`, `preparer`).
+**Source de vérité** : `outils/banc.mjs` (`preparer`).
+**Preuve** : tests du banc sur une copie préparée réellement (tarball, `npx drwil verify` hors réseau, push d'une branche hooks actifs).
+**Contrôle** : `tests-qua-108`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : deroule-banc — « La copie est préparée comme chez un utilisateur réel : dans la condition « avec », drwil est installé depuis le tarball du dépôt en dépendance de développement, puis `init` par ce paquet, et `npx drwil` s'y résout sur place, jamais sur le registre npm ; dans les deux conditions, la copie a un dépôt distant local où pousser une branche. Prouvé sur une copie préparée réellement : `npx drwil verify` y tourne hors réseau, aucune fiche bloquante n'y existe, une branche s'y pousse »
+**Raison** : drwil n'est pas publié sur npm et la copie n'avait aucun dépôt distant : `npx drwil verify` et un push y auraient échoué par la faute du banc, faussant la mesure contre la condition « avec ».
+
+## QUA-109 — Le job de passage du mini-banc installe gitleaks comme la CI principale
+**Règle** : Propre au dépôt drwil (QUA-018). Le job `passage` de `.github/workflows/banc.yml` installe gitleaks avant le passage, avec la même étape que la CI principale (`.github/workflows/ia-first.yml`) : version épinglée, archive vérifiée par sa somme sha256 publiée, installée dans `~/.local/bin`, là où le moteur le cherche (`HOME` passe à l'agent, QUA-105).
+**Périmètre** : `.github/workflows/banc.yml` (job `passage`).
+**Source de vérité** : `.github/workflows/banc.yml`.
+**Preuve** : test du banc qui lit les deux workflows en YAML et compare l'étape d'installation.
+**Contrôle** : `tests-qua-109`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : banc-pret-essai — « Le job de passage du banc installe gitleaks en version épinglée, archive vérifiée par sa somme, comme la CI principale ; prouvé par la lecture du workflow »
+**Raison** : Sans gitleaks, le contrôle des secrets de la copie « avec » est « non exécuté » et le push refusé (QUA-013) : la mesure pèserait contre drwil pour une installation incomplète du banc.

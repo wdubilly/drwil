@@ -1143,6 +1143,44 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-107",
+      "name": "tests de QUA-107, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-107 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        "bench/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-108",
+      "name": "tests de QUA-108, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-108 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        "bench/**",
+        "packages/drwil/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-109",
+      "name": "tests de QUA-109, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-109 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        ".github/workflows/banc.yml",
+        ".github/workflows/ia-first.yml",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "transitions": "human",

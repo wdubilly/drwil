@@ -63,6 +63,15 @@ jobs:
       - run: npm run build
       # Version de Claude Code épinglée : la même pour tous les passages d'une campagne.
       - run: npm install -g @anthropic-ai/claude-code@2.1.309
+      # Sans gitleaks, le contrôle des secrets de la copie « avec » serait « non exécuté » et le push refusé
+      # (QUA-013) : la mesure pèserait contre drwil (QUA-109). Même version et même somme que la CI principale
+      # (ia-first.yml) ; installé là où le moteur le cherche (~/.local/bin), HOME et PATH passent à l'agent.
+      - name: Installer gitleaks 8.21.2
+        run: |
+          curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
+          echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | sha256sum -c -
+          mkdir -p ~/.local/bin && tar -xzf gitleaks.tar.gz -C ~/.local/bin gitleaks && rm gitleaks.tar.gz
+          ~/.local/bin/gitleaks version
       # Valeurs passées par l'environnement, jamais interpolées dans le script du shell.
       - name: Passage ${{ matrix.tache }} ${{ matrix.condition }} ${{ matrix.repetition }}
         run: |
