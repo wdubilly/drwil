@@ -488,7 +488,9 @@ une décision du demandeur.
 ## Ensuite
 
 Ordre de réalisation (2026-10-23), porté par les priorités ci-dessous
-(même priorité : ordre des chemins) : 1. `docs/projects/barriere-commit-de-fusion.md` ;
+(même priorité : ordre des chemins) : 1. la barrière de périmètre
+jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
+`docs/projects/journal.md`) ;
 2. `docs/projects/codeowners-registre.md` (protège le registre avant les
 chantiers qui ajoutent des contrats) ;
 3. `docs/projects/reouvrir-apres-cloture.md` (touche aussi la barrière :
@@ -506,9 +508,6 @@ actifs » s'appuie sur le 4).
 - [ ] [IA] [P0] CODEOWNERS protège le registre sous son nom actuel, un
   contrôle refuse un chemin absent (cadré le 2026-10-23) —
   `docs/projects/codeowners-registre.md`.
-- [ ] [IA] [P0] La barrière de périmètre juge une fusion sur sa seule
-  résolution (cas de la PR #213 ; cadré le 2026-10-23) —
-  `docs/projects/barriere-commit-de-fusion.md`.
 - [ ] [IA] [P1] Rouvrir un chantier dont la PR révèle un défaut après la
   clôture (CodeQL le 2026-10-21, CI rouge sur la PR #213 ; cadré le
   2026-10-23) — `docs/projects/reouvrir-apres-cloture.md`.
