@@ -17,7 +17,8 @@ avant de construire la fabrique autonome.
 
 ## Ce qui reste, dans l'ordre
 
-1. **Essai réel en CI** [humain] : le secret `CLAUDE_CODE_OAUTH_TOKEN` est
+1. **Essai réel en CI** [humain], après la fiche `docs/projects/deroule-banc.md`
+   (déroulé de session conservé) : le secret `CLAUDE_CODE_OAUTH_TOKEN` est
    enregistré (2026-10-23) ; après la fusion du lot 1,
    `gh workflow run banc.yml -f essai=true -f modele=<identifiant complet>`.
    Il doit aller au bout. C'est aussi ce qui confirme le format JSON de
