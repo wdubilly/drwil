@@ -98,7 +98,7 @@ fiches (DRWIL-012, niveaux de risque).
 Précisé le 2026-10-11 (demandeur) : **mesurer avant de construire**. La
 mesure de la consommation est faite (`.githooks/consumption.mjs`, vague 3
 de `docs/projects/pending.md`) ; le mini-banc avec / sans drwil
-(`docs/projects/mini-banc.md`) passe en tête de la vague 6, juste avant le
+(`docs/projects/journal.md`) passe en tête de la vague 6, juste avant le
 pilote (déplacé le 2026-10-12) : il mesure le drwil restructuré qui fera
 tourner la fabrique. Les étapes 2 à 5 se décident sur ces chiffres. La fabrique passe **avant
 la publication** (vague 6, pilote dans ce dépôt ; publication en vague 7),

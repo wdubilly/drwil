@@ -1,0 +1,102 @@
+# Mini-banc « même consigne, avec et sans drwil » (QUA-105 : à la demande seulement, aucun secret dans
+# les résultats ; protocole : docs/benchmark-protocole.md). Propre à ce dépôt (QUA-018), jamais livré.
+# Jamais déclenché par une PR ni un push : chaque passage consomme les quotas de l'abonnement Claude
+# du demandeur (jeton `claude setup-token`, secret CLAUDE_CODE_OAUTH_TOKEN).
+name: banc
+on:
+  workflow_dispatch:
+    inputs:
+      essai:
+        description: "Passage d'essai seul, hors mesure (mise au point, budget)"
+        type: boolean
+        default: true
+      modele:
+        description: "Identifiant complet du modèle, le même pour tous les passages"
+        type: string
+        required: true
+      effort:
+        description: "Réglage d'effort de l'agent, le même pour tous les passages"
+        type: string
+        default: "high"
+      max_tours:
+        description: "Plafond de tours par passage"
+        type: string
+        default: "40"
+      repetitions:
+        description: "Répétitions par tâche et par condition"
+        type: string
+        default: "3"
+# Jeton GitHub du job en lecture seule : l'agent n'a rien à écrire sur la forge.
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrice: ${{ steps.plan.outputs.matrice }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - id: plan
+        run: echo "matrice=$(node outils/banc.mjs plan --repetitions "$REPETITIONS" $( [ "$ESSAI" = "true" ] && echo --essai ))" >> "$GITHUB_OUTPUT"
+        env:
+          REPETITIONS: ${{ inputs.repetitions }}
+          ESSAI: ${{ inputs.essai }}
+  passage:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      # Les passages partagent la fenêtre d'usage de l'abonnement : deux à la fois au plus.
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.plan.outputs.matrice) }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # Version de Claude Code épinglée : la même pour tous les passages d'une campagne.
+      - run: npm install -g @anthropic-ai/claude-code@2.1.309
+      # Valeurs passées par l'environnement, jamais interpolées dans le script du shell.
+      - name: Passage ${{ matrix.tache }} ${{ matrix.condition }} ${{ matrix.repetition }}
+        run: |
+          node outils/banc.mjs passage --isoler --tache "$TACHE" --condition "$CONDITION" --repetition "$REPETITION" \
+            $( [ "$ESSAI" = "true" ] && echo --essai ) \
+            --modele "$MODELE" --effort "$EFFORT" --max-tours "$MAX_TOURS" --sortie "$RUNNER_TEMP/resultats-banc"
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          TACHE: ${{ matrix.tache }}
+          CONDITION: ${{ matrix.condition }}
+          REPETITION: ${{ matrix.repetition }}
+          ESSAI: ${{ matrix.essai }}
+          MODELE: ${{ inputs.modele }}
+          EFFORT: ${{ inputs.effort }}
+          MAX_TOURS: ${{ inputs.max_tours }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: banc-${{ matrix.tache }}-${{ matrix.condition }}-${{ matrix.repetition }}
+          path: ${{ runner.temp }}/resultats-banc
+  rapport:
+    needs: passage
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: banc-*
+          path: resultats-banc
+      - run: node outils/banc.mjs rapport resultats-banc > rapport-banc.md && cat rapport-banc.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rapport-banc
+          path: rapport-banc.md
