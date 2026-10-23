@@ -2788,3 +2788,39 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   chantier) ; dossiers vides `drwil-banc-*` du test QUA-060 : même
   intention, détour à ouvrir.
 - **Clôturé par** : la branche `workstream/deroule-banc` (PR #210).
+
+## 2026-10-23 — `init` rattache le code existant, le premier commit passe
+
+- **Décisions clés** : à la première installation d'un projet qui a déjà
+  du code indexé par git, `init` écrit la fiche de référence « code
+  existant » (statut « référence — … », bloc `scope` fichier par fichier,
+  jugé par la grammaire installée `.githooks/scope.mjs` avec le réglage
+  qu'`init` vient d'écrire, hors fichiers du kit et fichiers déjà couverts)
+  et ajoute à la carte qu'il vient d'écrire une section « Code existant »
+  qui cite chacun de leurs dossiers, rôle « à décrire à l'adoption ».
+  Nouveau module `packages/drwil/src/existing-code.ts`, appelé par `init`
+  seulement sans réglage ni manifeste antérieurs. Un projet neuf, du code
+  non indexé et une mise à jour ne changent pas ; une fiche ou une carte
+  préexistante n'est jamais réécrite (les dossiers à citer sont dits) ;
+  `uninstall` laisse la fiche (dossier des fiches protégé). Nouveau contrat
+  QUA-110 (`init` rattache le code indexé avant le kit : le premier commit
+  d'une fiche passe), contrôle `tests-qua-110`, prouvé sur un vrai projet
+  installé, hooks actifs et réglages bloquants, où le commit d'installation
+  puis celui d'une fiche seule passent. Recette d'adoption (étape 1) : ce
+  que devient la fiche (QUA-041, la documentation lue par un nouvel
+  utilisateur dit vrai, critère marqué `[humain]`). Changelog et carte du
+  dépôt. Intention d'origine entièrement couverte, retirée : juste après
+  `init` sur un projet existant, le commit d'une fiche seule échouait sur
+  la dette antérieure (QUA-016 rappel de cadrage, QUA-040 carte entretenue),
+  constaté par le mini-banc (run 39966784905) ; décisions du 2026-10-23 :
+  `init` rattache le code, seulement le code indexé. Preuve de clôture :
+  `docs/preuves/premier-commit-avant-adoption.md`.
+- **Limites connues** : l'aperçu `init --dry-run` n'annonce pas le
+  rattachement — `docs/intentions/apercu-init-code-existant.md` ; une carte
+  préexistante et un chemin qu'un bloc `scope` ne peut pas nommer restent à
+  traiter à la main — `docs/intentions/code-existant-non-rattache.md` ;
+  « pas encore de code » affiché à un projet sans pile détectée qui en a —
+  `docs/intentions/message-sans-couche-code-existant.md` ; une seconde
+  installation signale la carte comme dérivée du gabarit, comme toute carte
+  complétée ; la justesse de la recette reste un jugement humain (QUA-041).
+- **Clôturé par** : la branche `workstream/premier-commit-avant-adoption`.

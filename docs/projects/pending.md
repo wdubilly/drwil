@@ -279,8 +279,6 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
 - [ ] [IA] [P2] Mini-banc : copie « avec » adoptée avant le passage, juge
   et raison d'erreur corrigés — `docs/projects/banc-copie-adoptee.md`.
-- [ ] [IA] [P2] `init` rattache le code existant, le premier commit de fiche
-  passe avant l'adoption — `docs/projects/premier-commit-avant-adoption.md`.
 - [ ] [décision] [P2] Campagne du mini-banc : essai réel en CI avec
   l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
 - [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
@@ -462,6 +460,16 @@ une décision du demandeur.
 - [ ] [décision] Le glossaire des identifiants injecté aussi chez les
   autres agents (Cursor, Copilot CLI, Gemini, Codex) —
   `docs/intentions/glossaire-autres-agents.md`.
+- [ ] [décision] L'aperçu d'`init` (`--dry-run`) annonce le rattachement
+  du code existant (limite du chantier « `init` rattache le code existant »
+  du 2026-10-23) — `docs/intentions/apercu-init-code-existant.md`.
+- [ ] [décision] Le code existant qu'`init` ne peut pas rattacher seul :
+  carte présente avant l'installation, chemin qu'un bloc `scope` ne peut
+  pas nommer (limite du même chantier) —
+  `docs/intentions/code-existant-non-rattache.md`.
+- [ ] [décision] « Pas encore de code » dit à un projet sans pile détectée
+  qui en a (écart relevé pendant le même chantier) —
+  `docs/intentions/message-sans-couche-code-existant.md`.
 
 - [x] [IA] [P1] La carte, le README et le changelog d'un projet dans la
   langue choisie (réglage `docLang`) — fait le 2026-10-16 (voir

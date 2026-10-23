@@ -23,7 +23,17 @@ the requester's place (`AGENTS.md`, Conduct section).
    `docs/architecture.md` from the real code (what the application does,
    stack, every code folder with its role), in the `docLang` language
    (absent: the project language), in place of the skeleton `init` wrote: drwil maintains it from then on (its check reports a code folder
-   it does not cite).
+   it does not cite). On a project that already had indexed code, `init`
+   also wrote the reference brief « existing code »
+   (file existing-code.md of `docs/projects/`): its `scope` block lists every code
+   file indexed before the kit, and the map's « Existing code » section
+   cites their folders with a role « to describe at adoption » — so that the
+   first commit, even of a brief alone, passes. Replace those roles with
+   the real ones here. The brief then stays: a file a workstream touches
+   enters the `scope` block of that workstream's brief, as any code; a
+   deleted file leaves its list; the brief is kept as long as it covers a
+   file. `init` never rewrites it, an update never creates it and
+   `uninstall` leaves it in place.
 2. **Fill in the layer `AGENTS.md` files** (one per `layers` entry):
    Context, Test pitfalls, Layer contracts, Style and recipes, Verify —
    from the existing code, not generalities.

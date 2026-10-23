@@ -75,7 +75,8 @@ créer.)
 ## 2. Hors périmètre
 
 - Changer drwil pour qu'un projet non adopté accepte un commit de fiche :
-  décision produit, `docs/intentions/premier-commit-avant-adoption.md`.
+  décision produit, réglée par `init` qui rattache le code existant
+  (journal du 2026-10-23, « `init` rattache le code existant, le premier commit passe »).
 - Les garanties obligatoires (`drwil guarantees`) : la forge protégée est
   impossible dans le bac à sable ; le protocole le dit.
 - Le nettoyage de la règle `Write(**/.drwil/state.json)` des réglages
