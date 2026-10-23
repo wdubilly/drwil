@@ -57,8 +57,11 @@ par ce chantier, avec leur champ Origine.)
   et sans drwil (ajouté le 2026-10-22, revue externe) — `QUA-104`
 - Le workflow du banc ne se déclenche qu'à la demande, jamais sur une PR
   ni un push, et aucun secret n'apparaît dans les résultats — `QUA-105`
-- Le rapport de campagne rapporte tous les passages, min et max, avec le
-  protocole daté fixé avant la mesure [humain] — `QUA-106`
+- Le rapport liste tous les passages, min et max, et il est refusé si le
+  protocole n'est pas daté avant le premier passage mesuré — `QUA-106`
+  (le rapport de la vraie campagne, geste humain, est suivi par
+  `docs/intentions/campagne-mini-banc.md` : recadré le 2026-10-23, la
+  campagne ne peut tourner qu'après la fusion de ce lot)
 
 ## 2. Hors périmètre
 
@@ -141,8 +144,9 @@ par ce chantier, avec leur champ Origine.)
   passage ; workflow `.github/workflows/banc.yml` (à créer), à la
   demande, en matrice, déclaré propre au dépôt (`outils/miroirs.json`) ; protocole réduit daté
   dans `docs/benchmark-protocole.md`. Critère de sortie : tests verts
-  (agent simulé) ; un passage d'essai réel, en CI, hors mesure, va au
-  bout (il demande le secret : geste humain préalable, voir lot 2).
+  (agent simulé). Le passage d'essai réel en CI passe à l'intention
+  `docs/intentions/campagne-mini-banc.md` : GitHub ne déclenche à la
+  main qu'un workflow présent sur la branche principale (recadré le 2026-10-23).
 - **Lot 2 — campagne** [humain] : générer le jeton d'abonnement avec
   `claude setup-token`, l'enregistrer en secret GitHub
   `CLAUDE_CODE_OAUTH_TOKEN`, puis déclencher le workflow pour les 12
@@ -159,8 +163,6 @@ par ce chantier, avec leur champ Origine.)
   `.github/workflows/banc.yml`, protocole réduit daté, contrats QUA-101 à
   QUA-106. Tests verts avec un agent simulé (drwil init réel).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] `claude setup-token`, puis
-  `gh secret set CLAUDE_CODE_OAUTH_TOKEN`, puis le passage d'essai :
-  `gh workflow run banc.yml -f essai=true -f modele=<identifiant complet>` ;
-  budget écrit au protocole ; puis la campagne (lot 2) et l'attestation
-  de QUA-106 sur son rapport.
+- **Prochaine étape** : clore le lot 1 et fusionner (le secret
+  `CLAUDE_CODE_OAUTH_TOKEN` est enregistré depuis le 2026-10-23) ; l'essai
+  réel et la campagne suivent l'intention `docs/intentions/campagne-mini-banc.md`.

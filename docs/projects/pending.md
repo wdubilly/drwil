@@ -280,6 +280,8 @@ fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 - [ ] [IA] [P2] Mini-banc avec / sans drwil, en CI à la demande : 2
   tâches, 3 répétitions, juge indépendant, tokens mesurés —
   `docs/projects/mini-banc.md`.
+- [ ] [décision] [P2] Campagne du mini-banc : essai réel en CI avec
+  l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
 - [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
   mutation, rôles séparés, une session par fiche, auto-fusion LOW),
   cadrée sur les chiffres du mini-banc et de la consommation —
