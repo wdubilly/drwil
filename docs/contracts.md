@@ -1040,3 +1040,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/scope-gate.test.mjs`
 **Origine** : barriere-commit-de-fusion — « Pendant une fusion, la barrière ne juge que la résolution : un fichier indexé identique à sa version dans l'un des deux parents passe, quels que soient l'activité et le cadrage ; un fichier différent des deux parents (conflit résolu, combinaison) reste jugé comme tout fichier indexé ; hors fusion, rien ne change »
 **Raison** : Au commit d'une fusion de la branche principale dans une branche de chantier, la barrière comptait comme écrits par l'auteur les fichiers que la branche principale apportait (PR #213, 2026-10-23) : chaque conflit entre une branche de chantier et la branche principale bloquait le commit.
+
+## QUA-112 — Chaque ligne de CODEOWNERS cite un chemin suivi par Git
+**Règle** : Propre au dépôt drwil, jamais livré (QUA-018). Chaque ligne utile de `.github/CODEOWNERS` cite un motif qui correspond à au moins un fichier ou dossier suivi par Git, lu selon la syntaxe GitHub (`/` en tête ou au milieu ancre à la racine, `/` final ne vise qu'un dossier, `*` reste dans un segment, `**` en traverse plusieurs) ; un motif à la syntaxe non prise en charge (`?`, `[`, `\`, `!`), un `CODEOWNERS` absent ou un `git ls-files` qui échoue est une erreur, jamais un succès (QUA-013). En particulier, le registre des contrats y est cité sous son nom actuel.
+**Périmètre** : `.github/CODEOWNERS` de ce dépôt ; rejoué au commit et en CI sur tout changement (un renommage peut vider une ligne).
+**Source de vérité** : `outils/verifier-codeowners.mjs`.
+**Preuve** : contrôle `codeowners` sur le dépôt ; tests sur des dépôts temporaires : fichier et dossier suivis acceptés, chemin absent refusé avec sa ligne, fichier présent mais non suivi refusé, motif non interprété en erreur, `CODEOWNERS` absent ou dépôt illisible en erreur.
+**Contrôle** : `codeowners`, `tests-qua-112`
+**Tests** : `outils/verifier-codeowners.test.mjs`
+**Origine** : codeowners-registre — « `.github/CODEOWNERS` cite le registre sous son nom actuel, et un contrôle du dépôt, rejoué au commit et en CI, refuse toute ligne de `CODEOWNERS` dont le chemin ne correspond à aucun fichier ni dossier suivi par Git »
+**Raison** : `CODEOWNERS` citait encore l'ancien nom docs/contrats.md après le renommage du registre en `docs/contracts.md` : GitHub ignore en silence une ligne qui ne correspond à rien, et une modification des contrats n'exigeait plus la revue du propriétaire que le ruleset impose (`require_code_owner_review`) aux autres zones sensibles.
