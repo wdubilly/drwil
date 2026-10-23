@@ -29,6 +29,7 @@ files:
   - docs/contracts.md
   - docs/features.md
   - outils/banc.test.mjs
+  - outils/verifier-codeowners.mjs
 -->
 
 ## Journal
