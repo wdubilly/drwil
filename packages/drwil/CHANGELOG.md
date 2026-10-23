@@ -16,6 +16,16 @@ closing commit; the release renames this section to its version.
   new project and an update are unchanged, an existing brief or map is
   never rewritten and `uninstall` leaves the brief in place (QUA-110).
 
+### Fixed
+
+- The scope gate judges a merge commit on its resolution only: while a
+  merge is in progress, a staged file identical to its version in one of
+  the two parents is brought as it is and passes, whatever the activity and
+  the scope; a file that differs from both (a resolved conflict) is still
+  judged. Committing the merge of the main branch into a workstream branch
+  after a conflict was refused for the files the main branch brought
+  (QUA-111).
+
 ## 0.7.0 (2026-10-22)
 
 ### Added

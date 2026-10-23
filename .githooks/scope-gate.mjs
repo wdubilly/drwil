@@ -5,7 +5,7 @@
 // - Briefs (docs/projects/, docs/intentions/…) can always be committed.
 // - At commit time, any other file requires the BUILD activity and must be covered by the
 //   scope block of the active brief as it is in HEAD: widening its scope takes a separate
-//   commit, visible on its own.
+//   commit, visible on its own. During a merge, only the resolution is judged (QUA-111).
 // - Elsewhere (pre-push, CI, verify), there is no local state: each commit of the branch is
 //   replayed against the scope of the brief named by its `Drwil-Brief` trailer, read in its
 //   parent. A commit is judged by its parent's rules: without a gate in the parent, it is not
@@ -153,6 +153,32 @@ function checkBranch(root, base, { outOfScope, cfg }) {
   return problems;
 }
 
+/** `mode sha` of `f` in `rev` (null: the index); "" when absent; null when git fails. */
+function entry(root, rev, f) {
+  const args = rev ? ["ls-tree", "-z", "--full-tree", rev, "--", f] : ["ls-files", "--stage", "-z", "--", f];
+  const out = git(root, ["--literal-pathspecs", ...args]);
+  if (out === null) return null;
+  const line = out.split("\0").find((l) => l.endsWith(`\t${f}`));
+  if (!line) return "";
+  // ls-tree: `mode type sha`; ls-files --stage: `mode sha stage`.
+  const fields = line.split("\t")[0].split(" ");
+  return `${fields[0]} ${fields[rev ? 2 : 1]}`;
+}
+
+/**
+ * QUA-111: during a merge (MERGE_HEAD), only the resolution is the author's: a staged file identical to
+ * one of the two parents (deleted and absent there included) is brought as it is, not judged. A failed
+ * git call keeps the file judged, never lets it pass (QUA-013).
+ */
+function resolution(root, staged) {
+  if (git(root, ["rev-parse", "--verify", "--quiet", "MERGE_HEAD^{commit}"]) === null) return staged;
+  return staged.filter((f) => {
+    const own = entry(root, null, f);
+    if (own === null) return true;
+    return !["HEAD", "MERGE_HEAD"].some((rev) => entry(root, rev, f) === own);
+  });
+}
+
 /**
  * Full check for the engine: `{ status, problems, message?, detail? }`.
  * `staged` (staged files) is only given at pre-commit; otherwise the branch is replayed.
@@ -167,7 +193,7 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
     // The staged registry against HEAD's: `git show` fails (null) on a registry created or removed — a doubt.
     const addedOnly = (f) => isRegistry(f, cfg) && contractsAddedOnly(git(root, ["show", `HEAD:${f}`]), git(root, ["show", `:${f}`]));
     problems = checkIndex({
-      files: staged,
+      files: resolution(root, staged),
       state,
       patterns: patternsAt(root, "HEAD", state.active_brief, cfg),
       outOfScope,

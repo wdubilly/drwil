@@ -455,3 +455,99 @@ test("QUA-050 : contractsAddedOnly, pur — ajout seul de contrats nouveaux, rie
     "ID déjà défini en tableau",
   );
 });
+
+/** Branche `chantier` née de `main`, `main` avancée par `surMain`, puis fusion de `main` sans commit (MERGE_HEAD posé). */
+function fusion(racine, { surChantier = () => {}, surMain }) {
+  git(racine, "checkout", "-q", "-b", "chantier");
+  surChantier();
+  git(racine, "checkout", "-q", "main");
+  surMain();
+  git(racine, "checkout", "-q", "chantier");
+  spawnSync("git", ["merge", "--no-commit", "--no-ff", "-q", "main"], { cwd: racine, encoding: "utf8" });
+}
+const indexes = (racine) => git(racine, "diff", "--cached", "--name-only").split("\n").filter(Boolean);
+const commiter = (racine, message) => {
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", message);
+};
+
+test("QUA-111 : fusion de la branche principale en SCOPING : les fichiers apportés tels quels passent", () => {
+  // Constaté le 2026-10-23 (PR #213) : la fusion de master apportait un fichier déjà fusionné, refusé « hors fiches ».
+  const racine = depot();
+  fusion(racine, {
+    surMain: () => {
+      ecrire(racine, "outils/banc.test.mjs", "t\n");
+      ecrire(racine, "src/a.js", "a\n");
+      commiter(racine, "travail fusionné");
+    },
+  });
+  assert.deepEqual(indexes(racine).sort(), ["outils/banc.test.mjs", "src/a.js"]);
+  for (const activite of ["SCOPING", "CLOSING", "BUILD"]) {
+    ecrireEtat(racine, activite);
+    assert.deepEqual(
+      checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: indexes(racine) }),
+      { status: "ok", problems: [] },
+      activite,
+    );
+  }
+});
+
+test("QUA-111 : fusion : un conflit résolu sur un fichier de code hors cadrage reste jugé, le reste apporté passe", () => {
+  const racine = depot(["src/a.js"]);
+  ecrire(racine, "src/c.js", "base\n");
+  commiter(racine, "c");
+  fusion(racine, {
+    surChantier: () => {
+      ecrire(racine, "src/c.js", "chantier\n");
+      commiter(racine, "côté chantier");
+    },
+    surMain: () => {
+      ecrire(racine, "src/c.js", "principale\n");
+      ecrire(racine, "outils/x.js", "x\n");
+      commiter(racine, "côté principale");
+    },
+  });
+  ecrire(racine, "src/c.js", "chantier\nprincipale\n");
+  git(racine, "add", "src/c.js");
+  const staged = indexes(racine);
+  assert.deepEqual(staged.sort(), ["outils/x.js", "src/c.js"]);
+  ecrireEtat(racine, "SCOPING");
+  const enCadrage = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged });
+  assert.equal(enCadrage.status, "fail");
+  assert.match(enCadrage.problems[0], /^1 fichier\(s\) hors fiches commité\(s\) en SCOPING/);
+  ecrireEtat(racine, "BUILD");
+  const enBuild = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged });
+  assert.equal(enBuild.problems.length, 1, enBuild.problems.join("\n"));
+  assert.match(enBuild.problems[0], /^src\/c\.js : hors du cadrage/);
+});
+
+test("QUA-111 : fusion : un fichier supprimé par la branche principale passe comme apporté", () => {
+  const racine = depot();
+  ecrire(racine, "src/d.js", "d\n");
+  commiter(racine, "d");
+  fusion(racine, {
+    surMain: () => {
+      git(racine, "rm", "-q", "src/d.js");
+      git(racine, "commit", "-q", "-m", "retire d");
+    },
+  });
+  assert.deepEqual(indexes(racine), ["src/d.js"]);
+  ecrireEtat(racine, "SCOPING");
+  assert.deepEqual(checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/d.js"] }).problems, []);
+  // Un chemin que git refuse de lire (hors du dépôt) : la comparaison échoue, le fichier reste jugé (QUA-013).
+  const illisible = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/d.js", "../dehors.js"] });
+  assert.match(illisible.problems[0], /^1 fichier\(s\) hors fiches/);
+});
+
+test("QUA-111 : hors fusion, rien ne change ; un parent illisible juge le fichier, jamais ne le laisse passer (QUA-013)", () => {
+  const racine = depot();
+  ecrire(racine, "src/a.js", "a\n");
+  git(racine, "add", "src/a.js");
+  ecrireEtat(racine, "SCOPING");
+  const ordinaire = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/a.js"] });
+  assert.equal(ordinaire.status, "fail");
+  assert.match(ordinaire.problems[0], /SCOPING/);
+  // MERGE_HEAD vers un commit inexistant : la comparaison échoue, le fichier reste jugé.
+  writeFileSync(join(racine, ".git", "MERGE_HEAD"), `${"0".repeat(40)}\n`);
+  assert.equal(checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/a.js"] }).status, "fail");
+});

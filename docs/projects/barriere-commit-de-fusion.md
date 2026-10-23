@@ -35,14 +35,11 @@ Au push et en CI, `checkBranch` ignore déjà les commits de fusion
 
 ## Critères d'acceptation
 
-(le contrat est à créer au lancement, avec son champ **Origine** ; ID à
-attribuer à ce moment-là dans le registre, sans doute le suivant libre.)
-
 - Pendant une fusion, la barrière ne juge que la résolution : un fichier
   indexé identique à sa version dans l'un des deux parents passe, quels que
   soient l'activité et le cadrage ; un fichier différent des deux parents
   (conflit résolu, combinaison) reste jugé comme tout fichier indexé ; hors
-  fusion, rien ne change — contrat à créer
+  fusion, rien ne change — QUA-111
 
 ## 2. Hors périmètre
 
