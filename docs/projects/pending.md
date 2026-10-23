@@ -410,20 +410,20 @@ une décision du demandeur.
   chantiers clos avant la règle (limite du chantier du 2026-10-21) —
   `docs/intentions/preuve-des-chantiers-deja-clos.md`.
 - [ ] [décision] Corriger un défaut révélé après la clôture, quand plus aucune
-  activité ne ramène en BUILD (vécu le 2026-10-21 ; cadré le 2026-10-23 dans
-  `docs/projects/reouvrir-apres-cloture.md`, reste l'attente de CodeQL) —
+  activité ne ramène en BUILD (vécu le 2026-10-21 ; cadrée le 2026-10-23,
+  fiche listée sous « Ensuite » ; reste l'attente de CodeQL) —
   `docs/intentions/defaut-revele-apres-la-cloture.md`.
 - [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
-  2026-10-22) — cadré le 2026-10-23 dans `docs/projects/niveau-de-protection.md` —
+  2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
   `docs/intentions/niveaux-de-protection-dans-doctor.md`.
 - [ ] [décision] [P0] Compléter la suite des contournements testés, en tête
   les hooks modifiés dans la PR elle-même (revue externe du 2026-10-22) —
-  cadré le 2026-10-23 dans `docs/projects/contournements-completes.md`,
+  cadrée le 2026-10-23 (fiche listée sous « Ensuite »),
   restent le clone superficiel et l'auto-élargissement —
   `docs/intentions/contournements-a-completer.md`.
 - [ ] [décision] [P1] CODEOWNERS cite le registre sous son nom actuel
-  (`docs/contracts.md`) — cadré le 2026-10-23 dans `docs/projects/codeowners-registre.md` —
+  (`docs/contracts.md`) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
   `docs/intentions/codeowners-registre.md`.
 - [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
   externe du 2026-10-22) — `docs/intentions/e2e-et-attestation-precises.md`.
