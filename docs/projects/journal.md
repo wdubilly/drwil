@@ -2859,3 +2859,26 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   le nouvel essai réel reste à lancer [humain] —
   `docs/intentions/campagne-mini-banc.md`.
 - **Clôturé par** : la branche `workstream/banc-copie-adoptee`.
+
+## 2026-10-23 — La barrière de périmètre juge un commit de fusion sur sa seule résolution
+
+- **Décisions clés** : au commit (pre-commit), pendant une fusion
+  (`MERGE_HEAD` présent), la barrière de périmètre ne juge plus que la
+  résolution : un fichier indexé identique, mode et contenu, à sa version
+  dans `HEAD` ou dans `MERGE_HEAD` (supprimé et absent d'un parent compris)
+  est apporté tel quel et passe, quels que soient l'activité et le cadrage ;
+  un conflit résolu reste jugé comme tout fichier indexé ; un appel git qui
+  échoue juge le fichier (QUA-013, contrôle non exécuté n'est pas passé).
+  Nouveau contrat QUA-111 (la barrière juge un commit de fusion sur sa seule
+  résolution), ajout pur au registre, sans élargir QUA-035 (cadrage
+  complet, élargissement sans friction) ; contrôle `tests-qua-111` ; livré
+  dans le gabarit (`resolution`, `.githooks/scope-gate.mjs`) ; ligne
+  « Fixed » du changelog. Le push et la CI ignoraient déjà les fusions
+  (`checkBranch`) : inchangés. Une fusion sans conflit ne passe pas par le
+  pre-commit ; une fusion « octopus » refuse tout conflit : seul le cas
+  vécu (conflit résolu puis `git commit`) était touché. Intention d'origine
+  couverte : la note du 2026-10-23 sur la barrière et les commits de fusion
+  (cas de la PR #213) est retirée de `docs/intentions/notes.md`. Preuve de
+  clôture : `docs/preuves/barriere-commit-de-fusion.md`.
+- **Limites connues** : aucune.
+- **Clôturé par** : la branche `workstream/barriere-commit-de-fusion`.
