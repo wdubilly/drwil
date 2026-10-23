@@ -277,8 +277,9 @@ aucune fusion autonome sans elle. Le mini-banc y a été déplacé le
 2026-10-12 (demandeur) : il mesure le drwil restructuré qui fera tourner la
 fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
-- [ ] [décision] [P2] gitleaks dans le job de passage du mini-banc : sans
-  lui, l'agent « avec » ne peut pas pousser — `docs/intentions/gitleaks-au-banc.md`.
+- [ ] [IA] [P2] Mini-banc prêt pour l'essai réel : test QUA-108 fidèle à
+  l'agent, gitleaks dans le job de passage, carte à jour —
+  `docs/projects/banc-pret-essai.md`.
 - [ ] [décision] [P2] Campagne du mini-banc : essai réel en CI avec
   l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
 - [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,

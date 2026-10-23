@@ -1,7 +1,8 @@
 # Intention : gitleaks dans le job de passage du mini-banc
 
-**Statut** : proposée le 2026-10-23 — limite du chantier « Mini-banc : déroulé
-conservé et copie réaliste » (journal du 2026-10-23).
+**Statut** (2026-10-23) : tranchée — gitleaks installé dans le job de passage,
+cadré dans `docs/projects/banc-pret-essai.md`. Limite du chantier « Mini-banc :
+déroulé conservé et copie réaliste » (journal du 2026-10-23).
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (le changement touche
 `.github/workflows/banc.yml`, où tourne l'agent avec le jeton d'abonnement).
@@ -25,6 +26,6 @@ quoi qu'il fasse, ce qui pèse sur la mesure contre la condition « avec ».
 
 ## Questions à trancher
 
-- [décision] Installer gitleaks dans le job de passage (comme la CI
-  principale) avant l'essai réel, ou garder le refus comme mesure d'un
-  utilisateur qui ne l'a pas installé ?
+- Tranché le 2026-10-23 : installer gitleaks dans le job de passage, comme
+  la CI principale — on mesure drwil, pas une installation incomplète.
+  [décision utilisateur]
