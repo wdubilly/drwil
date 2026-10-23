@@ -422,9 +422,10 @@ une décision du demandeur.
   cadrée le 2026-10-23 (fiche listée sous « Ensuite »),
   restent le clone superficiel et l'auto-élargissement —
   `docs/intentions/contournements-a-completer.md`.
-- [ ] [décision] [P1] CODEOWNERS cite le registre sous son nom actuel
-  (`docs/contracts.md`) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
-  `docs/intentions/codeowners-registre.md`.
+- [ ] [décision] Lire les erreurs que GitHub relève dans CODEOWNERS
+  (propriétaire inconnu, syntaxe), au-delà des chemins (limite du chantier
+  « CODEOWNERS protège le registre » du 2026-10-24) —
+  `docs/intentions/codeowners-erreurs-github.md`.
 - [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
   externe du 2026-10-22) — `docs/intentions/e2e-et-attestation-precises.md`.
 - [ ] [décision] `init` impose les garanties obligatoires lui-même au lieu de
@@ -491,8 +492,8 @@ Ordre de réalisation (2026-10-23), porté par les priorités ci-dessous
 (même priorité : ordre des chemins) : 1. la barrière de périmètre
 jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 `docs/projects/journal.md`) ;
-2. `docs/projects/codeowners-registre.md` (protège le registre avant les
-chantiers qui ajoutent des contrats) ;
+2. CODEOWNERS protégeant le registre sous son nom actuel (fait le
+2026-10-24, voir `docs/projects/journal.md`) ;
 3. `docs/projects/reouvrir-apres-cloture.md` (touche aussi la barrière :
 après le 2) ; 4. `docs/projects/contournements-completes.md` ;
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
@@ -505,9 +506,6 @@ actifs » s'appuie sur le 4).
 - [ ] [IA] [P2] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
-- [ ] [IA] [P0] CODEOWNERS protège le registre sous son nom actuel, un
-  contrôle refuse un chemin absent (cadré le 2026-10-23) —
-  `docs/projects/codeowners-registre.md`.
 - [ ] [IA] [P1] Rouvrir un chantier dont la PR révèle un défaut après la
   clôture (CodeQL le 2026-10-21, CI rouge sur la PR #213 ; cadré le
   2026-10-23) — `docs/projects/reouvrir-apres-cloture.md`.

@@ -2882,3 +2882,27 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   clôture : `docs/preuves/barriere-commit-de-fusion.md`.
 - **Limites connues** : aucune.
 - **Clôturé par** : la branche `workstream/barriere-commit-de-fusion`.
+
+## 2026-10-24 — CODEOWNERS protège le registre sous son nom actuel
+
+- **Décisions clés** : la ligne de `.github/CODEOWNERS` qui citait l'ancien
+  nom du registre (docs/contrats.md) cite `/docs/contracts.md` : une
+  modification des contrats exige de nouveau la revue du propriétaire.
+  Nouveau contrôle propre au dépôt, jamais livré (QUA-018, dépôt drwil ou
+  livrable gabarit) : `outils/verifier-codeowners.mjs` refuse, au commit et
+  en CI, toute ligne dont le motif ne correspond à aucun fichier ni dossier
+  suivi par Git (syntaxe GitHub : `/` ancre, `/` final vise un dossier,
+  `*` et `**`) ; un motif à syntaxe non prise en charge (`?`, `[`, `\`,
+  `!`), un CODEOWNERS absent ou un `git ls-files` en échec est une erreur
+  (QUA-013, contrôle non exécuté n'est pas passé). Nouveau contrat QUA-112
+  (chaque ligne de CODEOWNERS cite un chemin suivi par Git), contrôles
+  `codeowners` (chemins `**` : un renommage n'importe où peut vider une
+  ligne) et `tests-qua-112` ; carte d'architecture complétée (cadrage
+  élargi à `docs/architecture.md` dans un commit de fiche seul). Intention
+  d'origine couverte, résumée ici et retirée
+  (docs/intentions/codeowners-registre.md). Preuve de clôture :
+  `docs/preuves/codeowners-registre.md`.
+- **Limites connues** : le contrôle ne juge que les chemins, pas les
+  propriétaires ni les erreurs que GitHub relève —
+  `docs/intentions/codeowners-erreurs-github.md`.
+- **Clôturé par** : la branche `workstream/codeowners-registre`.
