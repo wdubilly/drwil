@@ -22,6 +22,14 @@ avant de construire la fabrique autonome.
 
 ## Ce qui reste, dans l'ordre
 
+**Ordre décidé le 2026-10-23** (demandeur) : d'abord régler l'adoption
+(`docs/intentions/premier-commit-avant-adoption.md`), puis relire
+`docs/projects/banc-copie-adoptee.md` à la lumière de cette décision (la
+copie adoptée peut s'en trouver simplifiée), la réaliser, puis un nouveau
+passage d'essai réel. Le second essai (run 39966784905) a tourné de bout en
+bout, verdict « raté » : l'agent a buté sur la dette d'un `init` sans
+adoption.
+
 1. **Essai réel en CI** [humain], maintenant que le déroulé de session est
    conservé (journal du 2026-10-23, QUA-107) : le secret `CLAUDE_CODE_OAUTH_TOKEN` est
    enregistré (2026-10-23) ; après la fusion de la PR #210,

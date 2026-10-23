@@ -277,6 +277,10 @@ aucune fusion autonome sans elle. Le mini-banc y a été déplacé le
 2026-10-12 (demandeur) : il mesure le drwil restructuré qui fera tourner la
 fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
+- [ ] [IA] [P2] Mini-banc : copie « avec » adoptée avant le passage, juge
+  et raison d'erreur corrigés — `docs/projects/banc-copie-adoptee.md`.
+- [ ] [décision] [P2] Un projet tout juste installé refuse même un commit de
+  fiche, avant l'adoption — `docs/intentions/premier-commit-avant-adoption.md`.
 - [ ] [décision] [P2] Campagne du mini-banc : essai réel en CI avec
   l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
 - [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
