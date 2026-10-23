@@ -24,7 +24,7 @@ export function lireCodeowners(texte) {
   });
 }
 
-const echapper = (c) => c.replace(/[.+^${}()|]/g, "\\$&");
+const echapper = (c) => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** { regex, dossier } d'un motif, ou null s'il contient une syntaxe que ce contrôle ne sait pas lire. */
 export function compiler(motif) {
