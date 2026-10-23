@@ -1,4 +1,4 @@
-# Projet : déroulé de session du mini-banc
+# Projet : déroulé de session et copie réaliste du mini-banc
 
 **Statut** : cadré le 2026-10-23.
 **Risque** : HIGH
@@ -33,15 +33,34 @@ session de l'agent (le flux `stream-json` de `claude -p`), secrets masqués,
 à côté de son résultat, dans l'artefact du run. Il sert aussi à la
 relecture humaine de l'« annonce sans preuve », que le juge ne mesure pas.
 
+Le passage doit aussi être un test réel : la copie « avec drwil » doit
+être installée comme chez un utilisateur. Relevé le 2026-10-23 dans le
+code : drwil n'est pas publié sur npm (`npm view drwil` : 404), il
+s'installe depuis le tarball d'une release ; or la copie du banc reçoit
+drwil par `drwil init` lancé depuis le dépôt, sans paquet installé, et les
+consignes installées font lancer `npx drwil verify` à l'agent, qui
+échouerait ou irait chercher un paquet homonyme sur le registre npm. Et la
+copie n'a aucun dépôt distant : pousser sa branche, geste normal sous
+drwil, échouerait aussi. Le blocage n'est pas dans drwil mais dans le
+banc : il fausserait la mesure contre la condition « avec ».
+
 ## Critères d'acceptation
 
-(contrat à créer par ce chantier, avec son champ Origine.)
+(contrats à créer par ce chantier, avec leur champ Origine.)
 
 - Chaque passage, mesuré ou non, écrit le déroulé de la session de l'agent
   à côté de son résultat, tel que reçu, ligne à ligne ; tout jeton ou clé y
   est masqué avant l'écriture, et le résultat dit le nombre de masques ;
   le rapport ne lit que les résultats, jamais un déroulé — contrat à
   créer
+- La copie est préparée comme chez un utilisateur réel : dans la
+  condition « avec », drwil est installé depuis le tarball du dépôt en
+  dépendance de développement, puis `init` par ce paquet, et `npx drwil`
+  s'y résout sur place, jamais sur le registre npm ; dans les deux
+  conditions, la copie a un dépôt distant local où pousser une branche.
+  Prouvé sur une copie préparée réellement : `npx drwil verify` y tourne
+  hors réseau, aucune fiche bloquante n'y existe, une branche s'y pousse —
+  contrat à créer
 
 ## 2. Hors périmètre
 
@@ -52,6 +71,12 @@ relecture humaine de l'« annonce sans preuve », que le juge ne mesure pas.
 - `.github/workflows/banc.yml` : le déroulé s'écrit dans le dossier de
   sortie déjà envoyé en artefact, rétention par défaut de GitHub.
 - La campagne elle-même : `docs/intentions/campagne-mini-banc.md`.
+- Une forge simulée (PR, fusion) : aucune dans le bac à sable ; un agent
+  sous drwil s'arrête au plus à la clôture, limite écrite au protocole.
+  L'agent est jugé sur son livrable, pas sur sa clôture.
+- Les garanties obligatoires (`drwil guarantees`, forge protégée) : ni
+  câblées ni exigées après un simple `init`, comme chez un projet qui
+  vient d'adopter drwil ; le protocole le dit.
 
 ## 3. Contraintes
 
@@ -66,6 +91,10 @@ relecture humaine de l'« annonce sans preuve », que le juge ne mesure pas.
   qui n'a pas lancé l'agent n'en a pas, et le résultat le dit.
 - Le protocole réduit n'a encore aucune mesure : le compléter (table des
   mesures) le re-date, sans conséquence sur une mesure.
+- Mêmes conditions de départ avec et sans drwil : le dépôt distant local
+  existe dans les deux ; seule l'installation de drwil diffère.
+- Le tarball est celui de la version construite par le workflow
+  (`npm run build`, puis `npm pack`), jamais une version publiée ailleurs.
 - Fichiers de code sous 400 lignes (QUA-001) : `outils/banc.mjs` et
   `outils/banc-juge.mjs` en ont 260 chacun.
 
@@ -77,6 +106,9 @@ relecture humaine de l'« annonce sans preuve », que le juge ne mesure pas.
 - **2026-10-23 — Un fichier par passage, à côté du résultat**
   (même nom que le résultat, extension JSON Lines), dans l'artefact existant.
   [proposé par l'agent, validé avec la fiche]
+- **2026-10-23 — Un test réel** : la copie « avec drwil » installée comme
+  chez un utilisateur (tarball, `npx drwil` local), un dépôt distant local
+  dans les deux conditions. [décision utilisateur]
 
 ## 5. Points à trancher
 
@@ -90,6 +122,12 @@ relecture humaine de l'« annonce sans preuve », que le juge ne mesure pas.
   Critère de sortie : tests verts, dont un passage simulé avec un faux
   jeton dans le flux, masqué dans le déroulé écrit, et un rapport qui
   ignore le déroulé.
+- **Lot 2 — copie réaliste** [IA] : `preparer` installe drwil depuis le
+  tarball dans la condition « avec » et crée le dépôt distant local dans
+  les deux ; contrat et contrôle ; conditions du protocole complétées.
+  Critère de sortie : un test prépare une vraie copie « avec » et y fait
+  tourner `npx drwil verify` hors réseau, sans fiche bloquante, et y
+  pousse une branche.
 
 ## 7. Reprise
 
@@ -97,4 +135,5 @@ relecture humaine de l'« annonce sans preuve », que le juge ne mesure pas.
   `CLAUDE_CODE_OAUTH_TOKEN` est enregistré, le workflow `banc` est actif
   sur la branche principale, l'essai attend ce chantier.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`) ;
+  après sa fusion, le passage d'essai réel.
