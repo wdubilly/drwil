@@ -51,8 +51,7 @@ banc : il fausserait la mesure contre la condition « avec ».
 - Chaque passage, mesuré ou non, écrit le déroulé de la session de l'agent
   à côté de son résultat, tel que reçu, ligne à ligne ; tout jeton ou clé y
   est masqué avant l'écriture, et le résultat dit le nombre de masques ;
-  le rapport ne lit que les résultats, jamais un déroulé — contrat à
-  créer
+  le rapport ne lit que les résultats, jamais un déroulé — `QUA-107`
 - La copie est préparée comme chez un utilisateur réel : dans la
   condition « avec », drwil est installé depuis le tarball du dépôt en
   dépendance de développement, puis `init` par ce paquet, et `npx drwil`
@@ -60,7 +59,7 @@ banc : il fausserait la mesure contre la condition « avec ».
   conditions, la copie a un dépôt distant local où pousser une branche.
   Prouvé sur une copie préparée réellement : `npx drwil verify` y tourne
   hors réseau, aucune fiche bloquante n'y existe, une branche s'y pousse —
-  contrat à créer
+  `QUA-108`
 
 ## 2. Hors périmètre
 

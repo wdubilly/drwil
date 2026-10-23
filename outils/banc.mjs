@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// Mini-banc « même consigne, avec et sans drwil » (QUA-101 à QUA-106). Propre à ce dépôt (QUA-018) : il
+// Mini-banc « même consigne, avec et sans drwil » (QUA-101 à QUA-108). Propre à ce dépôt (QUA-018) : il
 // mesure le livrable, il n'en fait pas partie. Un passage = une tâche de bench/taches/, une condition
-// (avec ou sans drwil), sur une copie jetable de bench/reference/ ; l'agent tourne en mode non
-// interactif (`claude -p`, flux JSON), puis un juge indépendant de drwil copie les tests cachés, relit
-// le diff et écrit un résultat JSON. La campagne tourne en CI, à la demande (.github/workflows/banc.yml).
+// (avec ou sans drwil, installé depuis son tarball), sur une copie jetable de bench/reference/ avec un
+// dépôt distant local ; l'agent tourne en mode non interactif (`claude -p`, flux JSON), puis un juge
+// indépendant de drwil copie les tests cachés, relit le diff et écrit un résultat JSON, déroulé à côté.
+// La campagne tourne en CI, à la demande (.github/workflows/banc.yml).
 // Usage :
 //   node outils/banc.mjs plan [--repetitions 3] [--essai]
 //   node outils/banc.mjs passage --tache bug --condition avec --repetition 1 --modele <id> [--effort high]
@@ -33,6 +34,7 @@ export { CONDITIONS };
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const REFERENCE = join(RACINE, "bench", "reference");
 export const TACHES = join(RACINE, "bench", "taches");
+const PAQUET = join(RACINE, "packages", "drwil");
 const ENV_AGENT = ["PATH", "HOME", "USER", "LANG", "LC_ALL", "TMPDIR", "TERM", "SHELL", "CLAUDE_CODE_OAUTH_TOKEN"];
 
 /** Une tâche lue de son fichier Markdown : consigne mot pour mot, fichiers de la tâche, tests cachés. */
@@ -87,40 +89,66 @@ export function lancer(commande, args, { cwd, timeout = 120000, env } = {}) {
   };
 }
 
-/** Installation de drwil dans la copie, comme un projet existant qui l'adopte ; gestes humains délégués (transitions : agent). */
-export function installerDrwil(dossier, executer = lancer) {
-  const drwil = join(RACINE, "packages", "drwil", "bin", "drwil.js");
+/**
+ * Installation de drwil dans la copie comme chez un utilisateur (QUA-108) : le tarball de la version construite
+ * dans ce dépôt (`npm pack`), à côté de la copie, en dépendance de développement, puis `init` par ce paquet ;
+ * `npx drwil` s'y résout sur place, jamais sur le registre npm (drwil n'y est pas publié). Gestes humains
+ * délégués (transitions : agent).
+ */
+export function installerDrwil(dossier, executer = lancer, paquet = PAQUET) {
+  const racine = dirname(dossier);
+  const etape = (nom, r) => {
+    if (r.code !== 0) throw new Error(`${nom} : ${r.sortie.trim().split("\n").slice(-2).join(" | ")}`);
+  };
+  etape("npm pack", executer("npm", ["pack", "--pack-destination", racine], { cwd: paquet, timeout: 300000 }));
+  const tarball = readdirSync(racine).find((f) => /^drwil-.+\.tgz$/.test(f));
+  if (!tarball) throw new Error("npm pack : aucun tarball drwil-*.tgz produit");
+  const npm = ["install", "--save-dev", "--prefer-offline", "--no-audit", "--no-fund", `../${tarball}`];
+  etape("npm install", executer("npm", npm, { cwd: dossier, timeout: 300000 }));
   const args = ["init", "--name", "boutique", "--lang", "fr", "--tools", "claude", "--ci", "none", "--layers", "", "--no-git"];
-  const r = executer(process.execPath, [drwil, ...args], { cwd: dossier });
-  if (r.code !== 0) throw new Error(`drwil init : ${r.sortie.trim().split("\n").slice(-2).join(" | ")}`);
+  etape("npx drwil init", executer("npx", ["--offline", "drwil", ...args], { cwd: dossier }));
   const fichier = join(dossier, ".drwil", "ia-first.json");
   writeFileSync(fichier, JSON.stringify({ ...JSON.parse(readFileSync(fichier, "utf8")), transitions: "agent" }, null, 2) + "\n");
 }
 
-/** Copie jetable du projet de référence, sous git, drwil installé pour la condition « avec » ; jamais dans le dépôt. */
+/**
+ * Copie jetable du projet de référence, jamais dans le dépôt : dans un dossier temporaire qui porte aussi son dépôt
+ * distant local (`distant.git`, où pousser une branche, dans les deux conditions) et, pour la condition « avec »,
+ * le tarball de drwil installé. Le dépôt distant reçoit la branche principale telle que préparée, avant
+ * l'activation des hooks : mêmes conditions de départ avec et sans drwil, seule l'installation diffère.
+ */
 export function preparer({ condition, base = tmpdir(), executer = lancer, installer = installerDrwil }) {
-  const dossier = realpathSync(mkdtempSync(join(base, "banc-")));
-  if (dossier === RACINE || dossier.startsWith(RACINE + sep)) {
-    rmSync(dossier, { recursive: true, force: true });
-    throw new Error(`le banc ne lance jamais un agent dans le dépôt : ${dossier}`);
+  const racine = realpathSync(mkdtempSync(join(base, "banc-")));
+  if (racine === RACINE || racine.startsWith(RACINE + sep)) {
+    rmSync(racine, { recursive: true, force: true });
+    throw new Error(`le banc ne lance jamais un agent dans le dépôt : ${racine}`);
   }
-  cpSync(REFERENCE, dossier, { recursive: true });
-  const git = (...a) => {
-    const r = executer("git", a, { cwd: dossier });
-    if (r.code !== 0) throw new Error(`git ${a[0]} : ${r.sortie.trim()}`);
-  };
-  git("init", "-q", "-b", "master");
-  git("config", "user.name", "banc");
-  git("config", "user.email", "banc@exemple.invalid");
-  git("add", "-A");
-  git("commit", "-qm", "Projet de référence");
-  if (condition === "avec") {
-    installer(dossier, executer);
+  const dossier = join(racine, "projet");
+  try {
+    cpSync(REFERENCE, dossier, { recursive: true });
+    const git = (...a) => {
+      const r = executer("git", a, { cwd: dossier });
+      if (r.code !== 0) throw new Error(`git ${a[0]} : ${r.sortie.trim()}`);
+    };
+    git("init", "-q", "-b", "master");
+    git("config", "user.name", "banc");
+    git("config", "user.email", "banc@exemple.invalid");
     git("add", "-A");
-    git("commit", "-qm", "drwil installé");
-    git("config", "core.hooksPath", ".githooks");
+    git("commit", "-qm", "Projet de référence");
+    git("init", "-q", "--bare", "-b", "master", join(racine, "distant.git"));
+    git("remote", "add", "origin", join(racine, "distant.git"));
+    if (condition === "avec") {
+      installer(dossier, executer);
+      git("add", "-A");
+      git("commit", "-qm", "drwil installé");
+    }
+    git("push", "-q", "-u", "origin", "master");
+    if (condition === "avec") git("config", "core.hooksPath", ".githooks");
+    return dossier;
+  } catch (e) {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    throw e;
   }
-  return dossier;
 }
 
 /** Arguments de `claude -p` : même modèle, même effort, plafond de tours ; flux JSON pour les tokens et les appels d'outils. */
@@ -182,11 +210,13 @@ export async function passage(o) {
     const args = argsAgent({ consigne: tache.consigne, modele, effort, maxTours });
     const r = await agent("claude", args, { cwd: dossier, env: envAgent(env), timeout: delai });
     if (r.absent) return nonMesure("claude absent du poste", { versionAgent });
-    if (r.delai) return nonMesure(`délai de ${delai / 1000} s dépassé`, { versionAgent });
+    // Le déroulé, même partiel (délai, erreur), est ce qui dit où l'agent a été bloqué (QUA-107).
+    const deroule = r.lignes.map((l) => l.texte);
+    if (r.delai) return nonMesure(`délai de ${delai / 1000} s dépassé`, { versionAgent, deroule });
     const { resultat, appels } = lireFlux(r.lignes);
-    if (!resultat) return nonMesure(`aucun résultat de l'agent (code ${r.code})`, { versionAgent });
+    if (!resultat) return nonMesure(`aucun résultat de l'agent (code ${r.code})`, { versionAgent, deroule });
     if (resultat.is_error && resultat.subtype !== "error_max_turns")
-      return nonMesure(`erreur de l'agent : ${resultat.subtype ?? "inconnue"}`, { versionAgent, ...mesures(resultat) });
+      return nonMesure(`erreur de l'agent : ${resultat.subtype ?? "inconnue"}`, { versionAgent, ...mesures(resultat), deroule });
     const commandes = appels.filter((a) => a.nom === "Bash").map((a) => String(a.entree.command ?? ""));
     const { reussi, juge } = juger({ dossier, tache, avant, echecsAvant, commandes, executer });
     return {
@@ -198,9 +228,10 @@ export async function passage(o) {
       ...mesures(resultat),
       juge,
       gouvernance: gouvernance(appels, { fichiers: tache.fichiers, dossier, reussi }),
+      deroule,
     };
   } finally {
-    if (!o.garder) rmSync(dossier, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    if (!o.garder) rmSync(dirname(dossier), { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 }
 

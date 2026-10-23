@@ -108,7 +108,7 @@ test("QUA-101 : la condition avec installe drwil (hooks actifs, transitions : ag
     garder: true,
     agent: agentSimule({ agir: (d) => writeFileSync(join(d, "src", "panier.js"), CORRIGE), vu }),
   });
-  dossiers.push(vu.cwd);
+  dossiers.push(dirname(vu.cwd));
   assert.equal(r.verdict, "réussi");
   assert.equal(JSON.parse(readFileSync(join(vu.cwd, ".drwil", "ia-first.json"), "utf8")).transitions, "agent");
   assert.equal(lancer("git", ["config", "core.hooksPath"], { cwd: vu.cwd }).sortie.trim(), ".githooks");
@@ -442,5 +442,121 @@ test("QUA-106 : un protocole non daté, ou daté après un passage mesuré, refu
   const p = { tache: "bug", condition: "sans", repetition: 1, date: "2026-10-01T10:00:00Z", statut: "non mesuré", verdict: null };
   assert.throws(() => rapport([p], { protocole: "pas de date" }), /protocole non daté/);
   assert.throws(() => rapport([p], { protocole: "**Protocole réduit** : fixé le 2026-10-22" }), /après un passage du 2026-10-01/);
-  assert.equal(dateProtocole(readFileSync(join(RACINE, "docs", "benchmark-protocole.md"), "utf8")), "2026-10-22");
+  assert.equal(dateProtocole(readFileSync(join(RACINE, "docs", "benchmark-protocole.md"), "utf8")), "2026-10-23");
+});
+
+const FAUX_JETON = "sk-ant-oat01-faux-jeton-du-banc";
+
+test("QUA-107 : chaque passage écrit son déroulé à côté du résultat, ligne à ligne, jetons masqués", async () => {
+  const sortie = dossier();
+  const env = { CLAUDE_CODE_OAUTH_TOKEN: FAUX_JETON };
+  const flux = [
+    ligne(1, { type: "system", subtype: "init", cwd: "/copie" }),
+    ...appel("1", "Bash", { command: "env" }, 2, 3, `CLAUDE_CODE_OAUTH_TOKEN=${FAUX_JETON}`),
+  ];
+  const r = await lancerPassage({ env, agent: agentSimule({ flux }) });
+  assert.equal(r.deroule.length, 4, "le flux tel que reçu, résultat compris");
+  const fichier = ecrireResultat(r, sortie, env);
+  assert.ok(fichier.endsWith("bug-sans-1.json"));
+  const ecrit = readFileSync(join(sortie, "bug-sans-1.jsonl"), "utf8");
+  assert.doesNotMatch(ecrit, /faux-jeton-du-banc/);
+  const lignes = ecrit.trimEnd().split("\n");
+  assert.equal(lignes.length, 4);
+  assert.deepEqual(JSON.parse(lignes[0]), { type: "system", subtype: "init", cwd: "/copie" });
+  assert.match(lignes[2], /CLAUDE_CODE_OAUTH_TOKEN=\*\*\*/);
+  const resultat = JSON.parse(readFileSync(fichier, "utf8"));
+  assert.deepEqual(resultat.deroule, { fichier: "bug-sans-1.jsonl", lignes: 4, secretsMasques: 1 });
+  assert.equal(resultat.secretsMasques, undefined, "le résultat lui-même ne portait aucun jeton");
+});
+
+test("QUA-107 : un passage non mesuré garde son déroulé partiel ; sans agent lancé, le résultat dit qu'il n'y en a pas", async () => {
+  const sortie = dossier();
+  const partiel = { code: null, lignes: [ligne(1, { type: "system", subtype: "init" })], delai: true };
+  const lent = await lancerPassage({ agent: async () => partiel, delai: 5000 });
+  assert.equal(lent.statut, "non mesuré");
+  ecrireResultat(lent, sortie, {});
+  assert.equal(readFileSync(join(sortie, "bug-sans-1.jsonl"), "utf8"), `${partiel.lignes[0].texte}\n`);
+  const erreur = await lancerPassage({
+    agent: agentSimule({ resultat: resultatAgent({ is_error: true, subtype: "error_during_execution" }) }),
+  });
+  assert.equal(erreur.deroule.length, 1);
+  const absent = await lancerPassage({ executer: () => ({ code: null, sortie: "", absent: true }) });
+  const ecrit = JSON.parse(readFileSync(ecrireResultat({ ...absent, repetition: 2 }, sortie, {}), "utf8"));
+  assert.equal(ecrit.deroule, null);
+  assert.ok(!existsSync(join(sortie, "bug-sans-2.jsonl")));
+});
+
+test("QUA-107 : le rapport ne lit que les résultats, jamais un déroulé", async () => {
+  const sortie = dossier();
+  const journal = [];
+  const log = console.log;
+  console.log = (m) => journal.push(String(m));
+  try {
+    const options = { executer, base: dossier(), agent: agentSimule({ flux: [{ t: 1, texte: "pas du JSON" }] }), env: {} };
+    assert.equal(await principal(["passage", "--tache", "bug", "--condition", "sans", "--modele", "m", "--sortie", sortie], options), 0);
+    assert.deepEqual(readdirSync(sortie).sort(), ["bug-sans-1.json", "bug-sans-1.jsonl"]);
+    assert.equal(await principal(["rapport", sortie]), 0);
+  } finally {
+    console.log = log;
+  }
+  assert.match(journal.at(-1), /Tous les passages \(1\)/);
+});
+
+/** Environnement sans réseau pour npm : hors ligne, registre injoignable ; aucune variable GIT_* héritée. */
+const horsReseau = () => ({
+  ...Object.fromEntries(Object.entries(process.env).filter(([n]) => !n.startsWith("GIT_") && n !== "NODE_TEST_CONTEXT")),
+  npm_config_offline: "true",
+  npm_config_registry: "http://127.0.0.1:9/",
+});
+const FICHE_BLOQUANTE = /\*\*(Garantie|Guarantee)\*\*\s*:\s*(bloquante|blocking)/i;
+const gitOk = (cwd, ...args) => {
+  const r = lancer("git", args, { cwd });
+  assert.equal(r.code, 0, `git ${args.join(" ")} : ${r.sortie}`);
+  return r.sortie;
+};
+
+test("QUA-108 : la copie avec drwil est installée comme chez un utilisateur : tarball, npx local hors réseau, dépôt distant", () => {
+  const copie = preparer({ condition: "avec", base: dossier() });
+  const racine = dirname(copie);
+  const paquet = JSON.parse(readFileSync(join(copie, "package.json"), "utf8"));
+  assert.match(paquet.devDependencies.drwil, /^file:\.\.\/drwil-.+\.tgz$/, "drwil en dépendance de développement, depuis le tarball");
+  assert.ok(existsSync(join(racine, paquet.devDependencies.drwil.slice("file:../".length))), "le tarball reste à côté de la copie");
+  const version = JSON.parse(readFileSync(join(RACINE, "packages", "drwil", "package.json"), "utf8")).version;
+  const env = horsReseau();
+  assert.equal(lancer("npx", ["drwil", "--version"], { cwd: copie, env }).sortie.trim(), version, "npx drwil résolu sur place");
+  const verify = lancer("npx", ["drwil", "verify", "--agent"], { cwd: copie, env, timeout: 300000 });
+  assert.match(verify.sortie, /GOVERNANCE: (PASS|FAIL|ERROR)/, verify.sortie);
+  assert.doesNotMatch(verify.sortie, /E404|ENOTFOUND|ENOTCACHED|ECONNREFUSED|EAI_AGAIN/);
+  const fiches = readdirSync(join(copie, "docs", "projects")).filter((f) => f.endsWith(".md"));
+  for (const f of fiches) assert.doesNotMatch(readFileSync(join(copie, "docs", "projects", f), "utf8"), FICHE_BLOQUANTE, f);
+  assert.equal(gitOk(copie, "status", "--porcelain"), "", "installation commitée, node_modules ignoré");
+  assert.equal(gitOk(copie, "config", "core.hooksPath").trim(), ".githooks");
+  assert.equal(gitOk(copie, "rev-parse", "master"), gitOk(copie, "rev-parse", "origin/master"), "le distant a la branche principale");
+  // Une branche se pousse, hooks actifs : le travail cadré comme sous drwil (fiche, carte), sans contournement.
+  gitOk(copie, "switch", "-q", "-c", "essai");
+  const fiche = ["# Projet : boutique", "", "**Statut** : cadré le 2026-10-23.", "**Risque** : MEDIUM", "", "<!-- scope", "files:"];
+  fiche.push("  - src/panier.js", "  - src/format.js", "-->", "", "## 1. Besoin", "", "Reprendre la boutique.", "");
+  fiche.push("## Critères d'acceptation", "", "- Le panier se calcule [humain] — `APP-001`", "");
+  fiche.push("## 7. Reprise", "", "- **Prochaine étape** : [IA] reprendre la boutique.");
+  writeFileSync(join(copie, "docs", "projects", "boutique.md"), `${fiche.join("\n")}\n`);
+  const index = join(copie, "docs", "projects", "pending.md");
+  writeFileSync(index, `${readFileSync(index, "utf8")}- [ ] [IA] reprendre la boutique : \`docs/projects/boutique.md\`\n`);
+  const carte = join(copie, "docs", "architecture.md");
+  writeFileSync(carte, `${readFileSync(carte, "utf8")}\n- \`src/\` — code de la boutique\n`);
+  gitOk(copie, "add", "-A");
+  gitOk(copie, "commit", "-qm", "Cadrage de la boutique");
+  gitOk(copie, "push", "-q", "-u", "origin", "essai");
+  assert.match(gitOk(copie, "ls-remote", "origin"), /refs\/heads\/essai/);
+});
+
+test("QUA-108 : la copie sans drwil a le même dépôt distant local, et rien de drwil", () => {
+  const copie = preparer({ condition: "sans", base: dossier() });
+  assert.equal(JSON.parse(readFileSync(join(copie, "package.json"), "utf8")).devDependencies, undefined);
+  assert.ok(!existsSync(join(copie, "node_modules")) && !existsSync(join(copie, ".githooks")));
+  assert.deepEqual(readdirSync(dirname(copie)).sort(), ["distant.git", "projet"]);
+  gitOk(copie, "switch", "-q", "-c", "essai");
+  gitOk(copie, "push", "-q", "-u", "origin", "essai");
+  const distant = gitOk(copie, "ls-remote", "origin");
+  assert.match(distant, /refs\/heads\/master/);
+  assert.match(distant, /refs\/heads\/essai/);
 });
