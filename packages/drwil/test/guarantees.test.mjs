@@ -430,6 +430,8 @@ test("QUA-115 bypass_actors : lu avec un jeton administrateur, une liste non vid
   const regles = json([
     { type: "pull_request", ruleset_id: 7 },
     { type: "required_status_checks", ruleset_id: 7 },
+    // Un ruleset_id qui n'est pas un entier n'entre jamais dans une commande.
+    { type: "deletion", ruleset_id: "7; rm -rf ." },
   ]);
   const forge = (ruleset) => faux([...FORGE_OK.slice(0, 4), [/rules\/branches\/main/, regles], [/rulesets\/7/, ruleset]]);
   // Jeton administrateur, liste vide : tenu, rien de non vérifié.

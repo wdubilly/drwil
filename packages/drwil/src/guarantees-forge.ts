@@ -101,7 +101,7 @@ function mainBranch(exec: Exec, root: string): string {
  */
 export function rulesetBypass(exec: Exec, root: string, branch: string): Bypass {
   const rules = json(exec, `gh api repos/{owner}/{repo}/rules/branches/${branch}`, root);
-  const ids = [...new Set((Array.isArray(rules) ? rules : []).map((r) => at(r, "ruleset_id")).filter((id) => id != null))];
+  const ids = [...new Set((Array.isArray(rules) ? rules : []).map((r) => at(r, "ruleset_id")).filter((id) => Number.isInteger(id)))];
   if (!ids.length) return { state: "no-ruleset", actors: [] };
   const actors: string[] = [];
   for (const id of ids) {
