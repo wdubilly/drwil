@@ -1203,6 +1203,28 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "codeowners",
+      "name": "chaque ligne de .github/CODEOWNERS cite un chemin suivi par Git (QUA-112)",
+      "run": "node outils/verifier-codeowners.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "**"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-112",
+      "name": "tests de QUA-112, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-112 \" outils/verifier-codeowners.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        ".github/CODEOWNERS",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "transitions": "human",
