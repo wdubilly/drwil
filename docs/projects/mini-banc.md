@@ -58,10 +58,9 @@ par ce chantier, avec leur champ Origine.)
 - Le workflow du banc ne se déclenche qu'à la demande, jamais sur une PR
   ni un push, et aucun secret n'apparaît dans les résultats — `QUA-105`
 - Le rapport liste tous les passages, min et max, et il est refusé si le
-  protocole n'est pas daté avant le premier passage mesuré — `QUA-106`
-  (le rapport de la vraie campagne, geste humain, est suivi par
-  `docs/intentions/campagne-mini-banc.md` : recadré le 2026-10-23, la
-  campagne ne peut tourner qu'après la fusion de ce lot)
+  protocole n'est pas daté avant le premier passage mesuré (recadré le
+  2026-10-23 : la vraie campagne, qui ne tourne qu'après la fusion de ce
+  lot, est suivie par `docs/intentions/campagne-mini-banc.md`) — `QUA-106`
 
 ## 2. Hors périmètre
 
