@@ -24,6 +24,12 @@ garantie câblée ni fiche bloquante.
   `guarantees.enforced` n'est pas posé : avant le premier
   `drwil guarantees`, `verify` ne signale aucune garantie manquante.
 
+## Intentions voisines
+
+- `docs/intentions/premier-commit-avant-adoption.md` (2026-10-23) : avant
+  l'adoption, un projet existant refuse même un commit de fiche ; même
+  décision de fond sur l'état d'un projet entre `init` et `/drwil-adopt`.
+
 ## Questions à trancher
 
 - [décision] `init` doit-il lancer `drwil guarantees` lui-même quand la pile

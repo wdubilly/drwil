@@ -30,6 +30,19 @@ l'adoption bute dès sa première tâche, sans chemin évident.
   commit séparé, terminer l'adoption, corriger sans commit) et a refusé de
   maquiller le cadrage.
 
+## Intentions voisines
+
+- `docs/intentions/init-impose-les-garanties.md` : même constat (un projet
+  installé sans adoption reste incomplet), sous l'angle des garanties
+  obligatoires.
+- `docs/intentions/guide-de-demarrage.md` : la procédure restée ouverte pour
+  un dépôt git existant avant `init` (ce qu'`init` attend, crée ou modifie).
+
+Décision de fond partagée : ce que vaut un projet entre `init` et
+`/drwil-adopt` — utilisable tel quel, ou orienté d'abord vers l'adoption.
+Trancher la troisième question ci-dessous tranche aussi une partie de
+`init-impose-les-garanties`.
+
 ## Questions à trancher
 
 - [décision] Un commit qui ne touche que des fiches doit-il passer malgré une
