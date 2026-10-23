@@ -57,7 +57,7 @@ mais ne dit pas comment rattacher le code existant à une fiche.
 - La recette d'adoption dit ce que devient la fiche « code existant » :
   la carte réécrite depuis le code (étape 1), le code rattaché aux fiches
   des chantiers qui le touchent ensuite, la fiche gardée tant qu'elle
-  couvre un fichier — `QUA-041`
+  couvre un fichier [humain] — `QUA-041`
 
 ## 2. Hors périmètre
 
