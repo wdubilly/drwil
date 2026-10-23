@@ -66,7 +66,8 @@ ce protocole, jamais dans ce protocole.
 
 **Protocole réduit** : fixé le 2026-10-23 — aucune mesure réalisée (re-daté le
 2026-10-23 avant toute mesure : déroulé conservé, copie installée comme chez un
-utilisateur ; première version du 2026-10-22).
+utilisateur, gitleaks installé sur la machine du passage ; première version du
+2026-10-22).
 
 Format réduit du protocole ci-dessus, pour savoir vite si drwil améliore le
 livrable et ce qu'il coûte, d'une commande et rejouable. Les règles
@@ -98,6 +99,10 @@ après un passage mesuré), anciennes mesures conservées.
 - **Garanties obligatoires** (`drwil guarantees`, forge protégée) : ni
   câblées ni exigées, comme chez un projet qui vient d'adopter drwil par un
   simple `init` ; aucune fiche bloquante dans la copie.
+- **Outils de la machine** : le job de passage installe gitleaks comme la
+  CI principale (même version épinglée, archive vérifiée par sa somme,
+  `~/.local/bin`) : le contrôle des secrets de la copie « avec » s'exécute,
+  le push n'est pas refusé pour un outil absent (QUA-109).
 - **Passages** : 2 tâches × 2 conditions × 3 répétitions = 12 passages ;
   l'ordre avec/sans est tiré au sort par tâche (`node outils/banc.mjs plan`).
 - **Agent** : Claude Code en mode non interactif (`claude -p`, flux
@@ -145,10 +150,7 @@ d'où le masquage avant l'écriture.
 
 Limites connues : le juge ne relit pas le compte rendu de l'agent
 (« annonce sans preuve » reste à la relecture humaine, sur le déroulé) ;
-le job de passage du workflow n'installe pas gitleaks : dans la condition
-« avec », le contrôle des secrets y est « non exécuté », ce qui laisse
-commiter mais refuse le push (QUA-013), comme chez un utilisateur qui n'a
-pas installé gitleaks ; un agent qui
+un agent qui
 chercherait les tests cachés hors de sa copie (réseau, dépôt public) n'est
 pas empêché, seulement rendu peu probable (tâches et historique retirés de
 la machine de CI avant le passage).

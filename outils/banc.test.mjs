@@ -509,8 +509,10 @@ const horsReseau = () => ({
   npm_config_registry: "http://127.0.0.1:9/",
 });
 const FICHE_BLOQUANTE = /\*\*(Garantie|Guarantee)\*\*\s*:\s*(bloquante|blocking)/i;
+// Git avec l'environnement de l'agent du banc (envAgent, sans CI) : celui du runner ferait croire aux hooks de
+// la copie qu'ils tournent en CI, où un contrôle non exécuté est un échec, et refuserait un push que l'agent réussit.
 const gitOk = (cwd, ...args) => {
-  const r = lancer("git", args, { cwd });
+  const r = lancer("git", args, { cwd, env: envAgent(process.env) });
   assert.equal(r.code, 0, `git ${args.join(" ")} : ${r.sortie}`);
   return r.sortie;
 };
@@ -559,4 +561,21 @@ test("QUA-108 : la copie sans drwil a le même dépôt distant local, et rien de
   const distant = gitOk(copie, "ls-remote", "origin");
   assert.match(distant, /refs\/heads\/master/);
   assert.match(distant, /refs\/heads\/essai/);
+});
+
+test("QUA-109 : le job de passage installe gitleaks comme la CI principale, version épinglée, archive vérifiée, avant le passage", () => {
+  const lire = (nom) => parse(readFileSync(join(RACINE, ".github", "workflows", nom), "utf8"));
+  const etapeGitleaks = (job) => job.steps.findIndex((e) => /gitleaks/i.test(e.name ?? "") && /sha256sum -c/.test(e.run ?? ""));
+  const etapes = lire("banc.yml").jobs.passage.steps;
+  const i = etapeGitleaks({ steps: etapes });
+  assert.ok(i >= 0, "étape d'installation de gitleaks dans le job passage");
+  const run = etapes[i].run;
+  assert.match(run, /releases\/download\/v(\d+\.\d+\.\d+)\/gitleaks_\1_linux_x64\.tar\.gz/, "version épinglée");
+  assert.match(run, /echo "[0-9a-f]{64} {2}gitleaks\.tar\.gz" \| sha256sum -c -/, "archive vérifiée par sa somme");
+  assert.match(run, /-C ~\/\.local\/bin gitleaks/, "installé là où le moteur le cherche");
+  const principale = Object.values(lire("ia-first.yml").jobs)
+    .flatMap((j) => j.steps ?? [])
+    .find((e) => etapeGitleaks({ steps: [e] }) === 0);
+  assert.equal(run, principale.run, "même URL, même somme, même emplacement que la CI principale");
+  assert.ok(i < etapes.findIndex((e) => /banc\.mjs passage/.test(e.run ?? "")), "installé avant le passage");
 });

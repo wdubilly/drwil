@@ -1010,3 +1010,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `outils/banc.test.mjs`
 **Origine** : deroule-banc — « La copie est préparée comme chez un utilisateur réel : dans la condition « avec », drwil est installé depuis le tarball du dépôt en dépendance de développement, puis `init` par ce paquet, et `npx drwil` s'y résout sur place, jamais sur le registre npm ; dans les deux conditions, la copie a un dépôt distant local où pousser une branche. Prouvé sur une copie préparée réellement : `npx drwil verify` y tourne hors réseau, aucune fiche bloquante n'y existe, une branche s'y pousse »
 **Raison** : drwil n'est pas publié sur npm et la copie n'avait aucun dépôt distant : `npx drwil verify` et un push y auraient échoué par la faute du banc, faussant la mesure contre la condition « avec ».
+
+## QUA-109 — Le job de passage du mini-banc installe gitleaks comme la CI principale
+**Règle** : Propre au dépôt drwil (QUA-018). Le job `passage` de `.github/workflows/banc.yml` installe gitleaks avant le passage, avec la même étape que la CI principale (`.github/workflows/ia-first.yml`) : version épinglée, archive vérifiée par sa somme sha256 publiée, installée dans `~/.local/bin`, là où le moteur le cherche (`HOME` passe à l'agent, QUA-105).
+**Périmètre** : `.github/workflows/banc.yml` (job `passage`).
+**Source de vérité** : `.github/workflows/banc.yml`.
+**Preuve** : test du banc qui lit les deux workflows en YAML et compare l'étape d'installation.
+**Contrôle** : `tests-qua-109`
+**Tests** : `outils/banc.test.mjs`
+**Origine** : banc-pret-essai — « Le job de passage du banc installe gitleaks en version épinglée, archive vérifiée par sa somme, comme la CI principale ; prouvé par la lecture du workflow »
+**Raison** : Sans gitleaks, le contrôle des secrets de la copie « avec » est « non exécuté » et le push refusé (QUA-013) : la mesure pèserait contre drwil pour une installation incomplète du banc.

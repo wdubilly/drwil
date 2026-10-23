@@ -1168,6 +1168,19 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-109",
+      "name": "tests de QUA-109, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-109 \" outils/banc.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        ".github/workflows/banc.yml",
+        ".github/workflows/ia-first.yml",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "transitions": "human",
