@@ -527,7 +527,7 @@ test("QUA-108 : la copie avec drwil est installée comme chez un utilisateur : t
   const env = horsReseau();
   assert.equal(lancer("npx", ["drwil", "--version"], { cwd: copie, env }).sortie.trim(), version, "npx drwil résolu sur place");
   const verify = lancer("npx", ["drwil", "verify", "--agent"], { cwd: copie, env, timeout: 300000 });
-  assert.match(verify.sortie, /GOVERNANCE: (PASS|FAIL|ERROR)/, verify.sortie);
+  assert.match(verify.sortie, /GOVERNANCE: (PASS|FAIL|VERIFY ERROR)/, verify.sortie);
   assert.doesNotMatch(verify.sortie, /E404|ENOTFOUND|ENOTCACHED|ECONNREFUSED|EAI_AGAIN/);
   const fiches = readdirSync(join(copie, "docs", "projects")).filter((f) => f.endsWith(".md"));
   for (const f of fiches) assert.doesNotMatch(readFileSync(join(copie, "docs", "projects", f), "utf8"), FICHE_BLOQUANTE, f);
