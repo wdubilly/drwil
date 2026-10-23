@@ -39,7 +39,7 @@ Au push et en CI, `checkBranch` ignore déjà les commits de fusion
   indexé identique à sa version dans l'un des deux parents passe, quels que
   soient l'activité et le cadrage ; un fichier différent des deux parents
   (conflit résolu, combinaison) reste jugé comme tout fichier indexé ; hors
-  fusion, rien ne change — QUA-111
+  fusion, rien ne change — `QUA-111`
 
 ## 2. Hors périmètre
 
