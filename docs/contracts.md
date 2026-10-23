@@ -984,9 +984,8 @@ régression sauf si la fiche active déclare le changement (section
 **Règle** : Propre au dépôt drwil (QUA-018). `node outils/banc.mjs rapport` liste tous les passages de la campagne, mesurés ou non, puis par tâche et condition le min, le max et la moyenne de chaque mesure ; les passages d'essai n'y comptent pas. Il est refusé si `docs/benchmark-protocole.md` ne date pas le protocole réduit, ou s'il le date après un passage mesuré. Le rapport de campagne est versionné, daté, à côté du protocole, sans aucun passage relancé parce qu'il s'est mal passé.
 **Périmètre** : `outils/banc-juge.mjs` (`rapport`, `dateProtocole`), `docs/benchmark-protocole.md`.
 **Source de vérité** : `outils/banc-juge.mjs` (`rapport`).
-**Preuve** : tests du banc ; la campagne et son rapport sont un geste humain.
+**Preuve** : tests du banc. La campagne et son rapport sont un geste humain, qui ne peut venir qu'après la fusion du workflow sur la branche principale : sa vérification manuelle s'ajoutera ici quand la campagne sera lancée (`docs/intentions/campagne-mini-banc.md`).
 **Contrôle** : `tests-qua-106`
-**Manuel** : après la campagne (lot 2 : jeton d'abonnement en secret, workflow déclenché), vérifier que le rapport daté à côté du protocole rapporte les 12 passages, aucun relancé, et que le protocole réduit était daté avant le premier passage.
 **Couvre** : `outils/banc-juge.mjs`, `docs/benchmark-protocole.md`
 **Tests** : `outils/banc.test.mjs`
 **Origine** : mini-banc — « Le rapport de campagne rapporte tous les passages, min et max, avec le protocole daté fixé avant la mesure »

@@ -17,8 +17,8 @@ avant de construire la fabrique autonome.
 
 ## Ce qui reste, dans l'ordre
 
-1. **Essai réel en CI** [humain] : `claude setup-token`, puis
-   `gh secret set CLAUDE_CODE_OAUTH_TOKEN`, puis
+1. **Essai réel en CI** [humain] : le secret `CLAUDE_CODE_OAUTH_TOKEN` est
+   enregistré (2026-10-23) ; après la fusion du lot 1,
    `gh workflow run banc.yml -f essai=true -f modele=<identifiant complet>`.
    Il doit aller au bout. C'est aussi ce qui confirme le format JSON de
    `claude -p` (`stream-json`, `usage`, `num_turns`, `total_cost_usd`,
@@ -29,15 +29,18 @@ avant de construire la fabrique autonome.
    pour ménager le quota de l'abonnement. Le coût en dollars de la sortie JSON
    est une estimation, pas une facture.
 4. **Rapport** : `node outils/banc.mjs rapport`, daté à côté du protocole, tous
-   les passages rapportés, min et max, aucun relancé.
+   les passages rapportés, min et max, aucun relancé. Rendre alors à QUA-106
+   (rapport du mini-banc) sa ligne **Manuel**, retirée le 2026-10-23 pour
+   pouvoir fusionner le lot 1 : vérifier que le rapport rapporte les 12
+   passages, aucun relancé, sur un protocole daté avant le premier passage.
 5. **Lecture** [décision] : ce que les chiffres changent à la feuille de route
    (fluidité, fabrique, banc complet).
 
 ## Limites connues
 
 - Le passage d'essai réel n'a jamais été lancé : le workflow n'est testé qu'en simulation.
-- `.github/workflows/banc.yml` n'existe que sur `workstream/mini-banc` tant que le lot 1 n'est pas
-  fusionné ; l'essai se lance donc après fusion (ou avec `--ref`).
+- GitHub ne déclenche à la main (`workflow_dispatch`) qu'un workflow présent sur la
+  branche principale : l'essai se lance après la fusion du lot 1, jamais avant (`--ref` seul ne suffit pas).
 - Un agent déterminé pourrait chercher les tests cachés sur le dépôt public :
   `--isoler` le rend difficile, sans l'empêcher (écrit au protocole).
 - Le juge ne relit pas le compte rendu de l'agent : l'« annonce sans preuve » reste jugée à la main.
@@ -54,5 +57,4 @@ sur `workstream/mini-banc`, tests verts avec un agent simulé. Aucun passage ré
 
 ## Questions à trancher
 
-- [décision] Faut-il lancer l'essai réel avant la fusion du lot 1, en `--ref workstream/mini-banc`, plutôt qu'après ?
 - [décision] Budget de la campagne : fixé après l'essai, à écrire au protocole.
