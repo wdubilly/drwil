@@ -50,7 +50,7 @@ champ Origine.)
   jamais celui du runner, et passe en CI comme en local — `QUA-108`
 - Le job de passage du banc installe gitleaks en version épinglée, archive
   vérifiée par sa somme, comme la CI principale ; prouvé par la lecture du
-  workflow — contrat à créer
+  workflow — `QUA-109`
 - La carte d'architecture cite les contrats du banc à jour — `QUA-040`
 
 ## 2. Hors périmètre
