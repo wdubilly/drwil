@@ -37,6 +37,7 @@ import { assertSafeManifest, engineVersion, removeObsolete, writeInstall, writeM
 import { formatMigration, migrate } from "./migration.js";
 import { complete, type Addition } from "./complete.js";
 import { formatGaps, hooksPath } from "./essentials.js";
+import { attachExistingCode, type ProjectConfig } from "./existing-code.js";
 
 // Branch created by `init()` before the very first commit: nobody ever needs to push to
 // master/main again, not even for the bootstrap.
@@ -160,6 +161,9 @@ export async function init(opts: InitOptions): Promise<void> {
   await migrateFirst(opts.targetDir);
   assertSafeManifest(opts.targetDir);
   const { r, existing, previous, shouldOverwrite } = installChoices(opts);
+  // Read before anything is written: only a first install attaches the existing code (QUA-110).
+  const firstInstall = readConfig(opts.targetDir) === null && !Object.keys(previous).length;
+  const hadMap = existsSync(join(opts.targetDir, "docs", "architecture.md"));
   const drifted: string[] = [];
   const manifest: Record<string, string> = {};
   const expected: string[] = [];
@@ -173,6 +177,7 @@ export async function init(opts: InitOptions): Promise<void> {
   reportDrifted(drifted, r.lang);
   reportObsolete(obsolete, r.lang);
   reportAdded(added, r.lang);
+  if (firstInstall) await attachExistingCode(opts.targetDir, (readConfig(opts.targetDir) ?? {}) as ProjectConfig, { hadMap, lang: r.lang });
   // An existing project gets no new repository: only the hooks are enabled if there is one.
   if (opts.git !== false) setupGit(opts.targetDir, !existing, r.lang);
   // Last, once git is set up: what drwil still needs and leaves to the human, never silently.

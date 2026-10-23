@@ -44,19 +44,16 @@ mais ne dit pas comment rattacher le code existant à une fiche.
 
 ## Critères d'acceptation
 
-(le contrat est à créer au lancement, avec son champ **Origine** ; ID à
-attribuer à ce moment-là dans le registre.)
-
 - Sur un projet qui a déjà des fichiers de code indexés, `init` écrit une
   fiche de référence « code existant » dont le bloc `scope` couvre chacun
   d'eux (hors fichiers du kit), et une carte d'architecture qui cite chacun
   de leurs dossiers ; prouvé sur un vrai projet installé : un commit qui ne
   touche qu'une fiche y passe, hooks actifs et réglages bloquants, et
   `run-checks` n'y signale aucun fichier hors fiche ni dossier absent de la
-  carte — contrat à créer
+  carte — `QUA-110`
 - Un projet neuf (aucun code indexé) et la mise à jour d'un projet déjà
   installé ne changent pas : aucune fiche « code existant » créée, aucune
-  fiche ni carte existante réécrite — contrat à créer
+  fiche ni carte existante réécrite — `QUA-110`
 - La recette d'adoption dit ce que devient la fiche « code existant » :
   la carte réécrite depuis le code (étape 1), le code rattaché aux fiches
   des chantiers qui le touchent ensuite, la fiche gardée tant qu'elle

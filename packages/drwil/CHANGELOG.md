@@ -5,6 +5,17 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Added
+
+- `init` attaches the existing code: on a first install of a project that
+  already has code files indexed by git, it writes a reference brief
+  `docs/projects/existing-code.md` whose `scope` block lists each of them
+  (the kit's files excluded) and cites their folders in the map
+  `docs/architecture.md` (role « to describe at adoption »). The first
+  commit, even of a brief alone, now passes with the blocking defaults; a
+  new project and an update are unchanged, an existing brief or map is
+  never rewritten and `uninstall` leaves the brief in place (QUA-110).
+
 ## 0.7.0 (2026-10-22)
 
 ### Added
