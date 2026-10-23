@@ -5,9 +5,13 @@ lot 1, branche `workstream/mini-banc`), puis le déroulé de session conservé e
 copie « avec drwil » installée comme chez un utilisateur (journal, « Mini-banc :
 déroulé conservé et copie réaliste », QUA-107 et QUA-108), enfin le banc prêt
 pour l'essai réel (journal, « Mini-banc prêt pour l'essai réel » : test de
-QUA-108 fidèle à l'agent, gitleaks dans le job de passage, QUA-109). L'essai
-réel peut se lancer dès la fusion de la PR #210. Restent le passage d'essai
-réel en CI, la campagne de 12 passages et la lecture des chiffres.
+QUA-108 fidèle à l'agent, gitleaks dans le job de passage, QUA-109). Après
+le second essai (run 39966784905), la copie « avec » est adoptée, la lecture
+du réglage des hooks n'est plus un contournement et une erreur de l'agent
+dit son message réel (journal du 2026-10-23, « Mini-banc : copie « avec »
+adoptée, juge et raison d'erreur corrigés », QUA-108, QUA-102, QUA-103).
+Restent un nouveau passage d'essai réel en CI, la campagne de 12 passages
+et la lecture des chiffres.
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (un agent tourne sans surveillance,
 avec le jeton d'abonnement, et le workflow touche `.github/`).
@@ -23,12 +27,11 @@ avant de construire la fabrique autonome.
 ## Ce qui reste, dans l'ordre
 
 **Ordre décidé le 2026-10-23** (demandeur) : d'abord régler l'adoption
-(journal du 2026-10-23, « `init` rattache le code existant, le premier commit passe »), puis relire
-`docs/projects/banc-copie-adoptee.md` à la lumière de cette décision (la
-copie adoptée peut s'en trouver simplifiée), la réaliser, puis un nouveau
-passage d'essai réel. Le second essai (run 39966784905) a tourné de bout en
-bout, verdict « raté » : l'agent a buté sur la dette d'un `init` sans
-adoption.
+(journal du 2026-10-23, « `init` rattache le code existant, le premier commit passe »), puis
+la copie adoptée (journal du 2026-10-23, « Mini-banc : copie « avec » adoptée, juge et
+raison d'erreur corrigés ») — faits —, puis un nouveau passage d'essai réel. Le second
+essai (run 39966784905) avait tourné de bout en bout, verdict « raté » : l'agent avait
+buté sur la dette d'un `init` sans adoption.
 
 1. **Essai réel en CI** [humain], maintenant que le déroulé de session est
    conservé (journal du 2026-10-23, QUA-107) : le secret `CLAUDE_CODE_OAUTH_TOKEN` est
@@ -36,7 +39,9 @@ adoption.
    `gh workflow run banc.yml -f essai=true -f modele=<identifiant complet>`.
    Il doit aller au bout. C'est aussi ce qui confirme le format JSON de
    `claude -p` (`stream-json`, `usage`, `num_turns`, `total_cost_usd`,
-   `error_max_turns`) et l'option `--max-turns`, vérifiés seulement en simulation.
+   `error_max_turns`) et l'option `--max-turns`, vérifiés seulement en simulation,
+   ainsi que le champ `result` d'un message de résultat en erreur, lu pour la
+   raison d'un passage non mesuré (QUA-103).
    Lire le déroulé (`<tâche>-<condition>-<rép>.jsonl` de l'artefact) : lancement
    du chantier, blocages et leur cause. gitleaks est installé dans le job
    de passage (QUA-109) : l'agent « avec » peut pousser.
