@@ -21,6 +21,9 @@ files:
   - packages/drwil/src/guarantees-forge.ts
   - packages/drwil/src/guarantees.ts
   - packages/drwil/src/doctor.ts
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
+  - docs/architecture.md
   - packages/drwil/test/guarantees.test.mjs
   - .github/scripts/verifier-ruleset.mjs
   - docs/contracts.md
@@ -32,7 +35,10 @@ files:
 `scopeMirrors` ; `.github/workflows/ia-first.yml` du dépôt n'est pas une
 copie et s'édite à part. Élargi le 2026-10-24 à `packages/drwil/src/guarantees.ts`
 et `packages/drwil/src/doctor.ts` : le « non vérifié » de `bypass_actors` doit s'afficher dans
-`drwil guarantees` et `drwil doctor`, critère 3.)
+`drwil guarantees` et `drwil doctor`, critère 3 ; puis à la fiche de la
+mécanique du kit (gabarit et dépôt) et à la carte : le nouveau hook
+`.githooks/base-checks.mjs` doit y être cité, sinon les contrôles de
+cadrage et de carte le refusent.)
 
 ## 1. Besoin
 
@@ -55,25 +61,23 @@ ouverts :
 
 ## Critères d'acceptation
 
-(les contrats sont à créer au lancement, avec leur champ **Origine** ; ID
-à attribuer à ce moment-là dans le registre.)
+(contrats créés au lancement, avec leur champ **Origine**.)
 
 - Sur une PR, la CI rejoue aussi les contrôles avec le code des hooks de la
   branche principale (sa `.githooks/`) et la liste de contrôles de la PR :
   une PR qui affaiblit un hook échoue ; un contrôle retiré de
   `.drwil/ia-first.json` fait échouer la CI, sauf s'il est déclaré dans
   « Contrats modifiés » de la fiche du chantier, validé par le demandeur ;
-  prouvé par un scénario de contournement dans un vrai dépôt — contrat à
-  créer
+  prouvé par un scénario de contournement dans un vrai dépôt — `QUA-113`
 - La garde shell de Claude Code refuse à l'agent, sans demander, toute
   commande qui saute les hooks ou écrit, supprime ou surcharge
   `core.hooksPath` (`--no-verify`, `commit -n`, `-c core.hooksPath=`,
   `git config core.hooksPath`, `--unset`, `GIT_CONFIG_*`), y compris dans
   une commande composée ou un `sh -c` ; une simple lecture du réglage
-  passe — contrat à créer
+  passe — `QUA-114`
 - `bypass_actors` reste non comparé en CI, limite écrite : `drwil
   guarantees` et `doctor` le vérifient avec le jeton de l'humain quand il
-  est administrateur, et le disent « non vérifié » sinon — contrat à créer
+  est administrateur, et le disent « non vérifié » sinon — `QUA-115`
 
 ## Contrats modifiés
 
