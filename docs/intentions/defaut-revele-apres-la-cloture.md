@@ -1,7 +1,10 @@
 # Intention : corriger un défaut révélé après la clôture
 
 **Statut** : proposée le 2026-10-21 — défaut de gouvernance vécu à la clôture
-du chantier « des critères et des preuves qui survivent à la clôture ».
+du chantier « des critères et des preuves qui survivent à la clôture » ;
+cadrée le 2026-10-23 dans `docs/projects/reouvrir-apres-cloture.md` (réouverture
+sur la branche, par l'agent, bornée), qui tranche la première et la troisième
+question ; reste ici la deuxième (attendre CodeQL avant la clôture).
 
 ## Besoin
 
