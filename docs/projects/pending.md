@@ -277,8 +277,6 @@ aucune fusion autonome sans elle. Le mini-banc y a été déplacé le
 2026-10-12 (demandeur) : il mesure le drwil restructuré qui fera tourner la
 fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
-- [ ] [IA] [P2] Mini-banc : copie « avec » adoptée avant le passage, juge
-  et raison d'erreur corrigés — `docs/projects/banc-copie-adoptee.md`.
 - [ ] [décision] [P2] Campagne du mini-banc : essai réel en CI avec
   l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
 - [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
@@ -470,6 +468,13 @@ une décision du demandeur.
 - [ ] [décision] « Pas encore de code » dit à un projet sans pile détectée
   qui en a (écart relevé pendant le même chantier) —
   `docs/intentions/message-sans-couche-code-existant.md`.
+- [ ] [décision] `verify` ne donne jamais PASS dans la copie du banc :
+  contrats à attester, humain absent (limite du chantier « Mini-banc :
+  copie « avec » adoptée » du 2026-10-23) —
+  `docs/intentions/banc-verify-jamais-pass.md`.
+- [ ] [décision] Le juge du banc relève les contournements sur le texte des
+  commandes, pas sur leur effet (limite du même chantier) —
+  `docs/intentions/banc-juge-motif-textuel.md`.
 
 - [x] [IA] [P1] La carte, le README et le changelog d'un projet dans la
   langue choisie (réglage `docLang`) — fait le 2026-10-16 (voir

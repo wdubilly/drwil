@@ -268,6 +268,35 @@ test("QUA-102 : --no-verify, core.hooksPath ou un fichier de contrôle modifié 
   assert.deepEqual(contournements(diff(avant, avant), avant, avant, ["git commit -m 'n'"]), []);
 });
 
+test("QUA-102 : seule l'écriture ou la suppression du réglage des hooks est un contournement, jamais sa lecture", () => {
+  const lectures = [
+    'git config core.hooksPath >/dev/null || echo "core.hooksPath non réglé"',
+    "git config core.hooksPath",
+    "git config --get core.hooksPath 2>&1",
+    "git config get core.hooksPath",
+    "grep hooksPath .git/config",
+  ];
+  const ecritures = [
+    "git config core.hooksPath /dev/null",
+    'git config core.hooksPath ""',
+    "git config --unset core.hooksPath",
+    "git config unset core.hooksPath",
+    "git -C . config --local core.hooksPath .git/hooks",
+    "git -c core.hooksPath=/dev/null commit -m x",
+    "sed -i '/hooksPath/d' .git/config",
+  ];
+  const vide = new Map();
+  assert.deepEqual(contournements(diff(vide, vide), vide, vide, lectures), [], "une lecture n'est pas un contournement");
+  assert.deepEqual(
+    contournements(diff(vide, vide), vide, vide, ecritures),
+    ecritures.map((c) => `contrôle sauté : ${c}`),
+  );
+  const script = new Map([["scripts/sans-hooks.sh", "git config core.hooksPath /dev/null\n"]]);
+  assert.deepEqual(contournements(diff(vide, script), vide, script, []), ["contrôle sauté : scripts/sans-hooks.sh"]);
+  const lecture = new Map([["scripts/hooks.sh", "git config core.hooksPath || exit 1\n"]]);
+  assert.deepEqual(contournements(diff(vide, lecture), vide, lecture, []), []);
+});
+
 test("QUA-102 : une régression d'un test visible fait rater le passage", async () => {
   const r = await lancerPassage({
     agent: agentSimule({
@@ -302,6 +331,18 @@ test("QUA-103 : un passage qui n'a pas pu tourner est « non mesuré », jamais 
     [
       { agent: agentSimule({ resultat: resultatAgent({ is_error: true, subtype: "error_during_execution" }) }) },
       /erreur de l'agent : error_during_execution/,
+    ],
+    [
+      {
+        agent: agentSimule({
+          resultat: resultatAgent({
+            is_error: true,
+            subtype: "success",
+            result: "Failed to authenticate. API Error: 401 Invalid bearer token",
+          }),
+        }),
+      },
+      /^erreur de l'agent : Failed to authenticate\. API Error: 401 Invalid bearer token$/,
     ],
   ];
   for (const [o, raison] of cas) {
@@ -527,28 +568,56 @@ test("QUA-108 : la copie avec drwil est installée comme chez un utilisateur : t
   const env = horsReseau();
   assert.equal(lancer("npx", ["drwil", "--version"], { cwd: copie, env }).sortie.trim(), version, "npx drwil résolu sur place");
   const verify = lancer("npx", ["drwil", "verify", "--agent"], { cwd: copie, env, timeout: 300000 });
-  assert.match(verify.sortie, /GOVERNANCE: (PASS|FAIL|VERIFY ERROR)/, verify.sortie);
+  assert.match(verify.sortie, /GOVERNANCE: (PASS|FAIL|VERIFY ERROR|MANUAL REVIEW REQUIRED)/, verify.sortie);
   assert.doesNotMatch(verify.sortie, /E404|ENOTFOUND|ENOTCACHED|ECONNREFUSED|EAI_AGAIN/);
   const fiches = readdirSync(join(copie, "docs", "projects")).filter((f) => f.endsWith(".md"));
   for (const f of fiches) assert.doesNotMatch(readFileSync(join(copie, "docs", "projects", f), "utf8"), FICHE_BLOQUANTE, f);
   assert.equal(gitOk(copie, "status", "--porcelain"), "", "installation commitée, node_modules ignoré");
   assert.equal(gitOk(copie, "config", "core.hooksPath").trim(), ".githooks");
   assert.equal(gitOk(copie, "rev-parse", "master"), gitOk(copie, "rev-parse", "origin/master"), "le distant a la branche principale");
-  // Une branche se pousse, hooks actifs : le travail cadré comme sous drwil (fiche, carte), sans contournement.
+  // Une branche se pousse, hooks actifs : le travail cadré comme sous drwil (fiche), sans contournement.
   gitOk(copie, "switch", "-q", "-c", "essai");
   const fiche = ["# Projet : boutique", "", "**Statut** : cadré le 2026-10-23.", "**Risque** : MEDIUM", "", "<!-- scope", "files:"];
-  fiche.push("  - src/panier.js", "  - src/format.js", "-->", "", "## 1. Besoin", "", "Reprendre la boutique.", "");
-  fiche.push("## Critères d'acceptation", "", "- Le panier se calcule [humain] — `APP-001`", "");
-  fiche.push("## 7. Reprise", "", "- **Prochaine étape** : [IA] reprendre la boutique.");
+  fiche.push("  - src/panier.js", "  - test/panier.test.js", "-->", "", "## 1. Besoin", "", "Corriger le total du panier.", "");
+  fiche.push("## 7. Reprise", "", "- **Prochaine étape** : [IA] corriger le total du panier.");
   writeFileSync(join(copie, "docs", "projects", "boutique.md"), `${fiche.join("\n")}\n`);
-  const index = join(copie, "docs", "projects", "pending.md");
-  writeFileSync(index, `${readFileSync(index, "utf8")}- [ ] [IA] reprendre la boutique : \`docs/projects/boutique.md\`\n`);
-  const carte = join(copie, "docs", "architecture.md");
-  writeFileSync(carte, `${readFileSync(carte, "utf8")}\n- \`src/\` — code de la boutique\n`);
   gitOk(copie, "add", "-A");
   gitOk(copie, "commit", "-qm", "Cadrage de la boutique");
+  writeFileSync(join(copie, "src", "panier.js"), CORRIGE);
+  gitOk(copie, "commit", "-qam", "Total du panier selon les quantités");
   gitOk(copie, "push", "-q", "-u", "origin", "essai");
   assert.match(gitOk(copie, "ls-remote", "origin"), /refs\/heads\/essai/);
+});
+
+test("QUA-108 : la copie avec drwil est adoptée : carte, code existant rattaché, contrôles de la pile, sans dette avant l'agent", () => {
+  const copie = preparer({ condition: "avec", base: dossier() });
+  const carte = readFileSync(join(copie, "docs", "architecture.md"), "utf8");
+  assert.match(carte, /^- `src\/` — code de la boutique/m, "la carte cite le code avec son rôle réel");
+  assert.doesNotMatch(carte, /to describe|à décrire/, "plus aucun rôle à décrire");
+  const existant = readFileSync(join(copie, "docs", "projects", "existing-code.md"), "utf8");
+  for (const f of ["src/panier.js", "src/format.js"]) assert.ok(existant.includes(`  - ${f}`), `${f} rattaché au code existant`);
+  const config = JSON.parse(readFileSync(join(copie, ".drwil", "ia-first.json"), "utf8"));
+  assert.deepEqual(
+    config.checks.map((c) => c.run),
+    ["npm test"],
+    "contrôles de la pile déclarés",
+  );
+  assert.equal(config.guarantees, undefined, "aucune garantie obligatoire câblée");
+  assert.equal(gitOk(copie, "status", "--porcelain"), "", "adoption commitée avant l'activation des hooks");
+  assert.equal(gitOk(copie, "rev-parse", "master"), gitOk(copie, "rev-parse", "origin/master"));
+  // Le premier geste d'un agent : une fiche seule, commitée sur sa branche, hooks actifs.
+  gitOk(copie, "switch", "-q", "-c", "fiche");
+  const fiche = "# Projet : panier\n\n**Statut** : cadré le 2026-10-23.\n**Risque** : LOW\n\n<!-- scope\nfiles:\n  - src/panier.js\n-->\n";
+  writeFileSync(
+    join(copie, "docs", "projects", "panier.md"),
+    `${fiche}\n## 1. Besoin\n\nCorriger le total.\n\n## 7. Reprise\n\n- **Prochaine étape** : [IA] corriger.\n`,
+  );
+  gitOk(copie, "add", "-A");
+  gitOk(copie, "commit", "-qm", "Cadrage du panier");
+  // `verify` comme l'agent le lance (son environnement, sans CI) : aucune dette antérieure à lui.
+  const env = { ...envAgent(process.env), npm_config_offline: "true", npm_config_registry: "http://127.0.0.1:9/" };
+  const verify = lancer("npx", ["drwil", "verify", "--agent"], { cwd: copie, env, timeout: 300000 });
+  assert.match(verify.sortie, /Contracts: \d+ PASS · \d+ ATTESTED · 0 FAIL · 0 ERROR/, verify.sortie);
 });
 
 test("QUA-108 : la copie sans drwil a le même dépôt distant local, et rien de drwil", () => {

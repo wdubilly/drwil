@@ -24,6 +24,7 @@ import {
   lancerTests,
   lireFlux,
   mesures,
+  messageErreur,
   rapport,
   testsVisibles,
   gouvernance,
@@ -92,7 +93,9 @@ export function lancer(commande, args, { cwd, timeout = 120000, env } = {}) {
 /**
  * Installation de drwil dans la copie comme chez un utilisateur (QUA-108) : le tarball de la version construite
  * dans ce dépôt (`npm pack`), à côté de la copie, en dépendance de développement, puis `init` par ce paquet ;
- * `npx drwil` s'y résout sur place, jamais sur le registre npm (drwil n'y est pas publié). Gestes humains
+ * `npx drwil` s'y résout sur place, jamais sur le registre npm (drwil n'y est pas publié). CI GitHub déclarée,
+ * comme un projet gouverné (sans elle, `verify` ne peut juger la couverture CI des contrôles, QUA-013, et le
+ * signale avant tout travail de l'agent) ; son workflow ne tourne jamais dans le bac à sable. Gestes humains
  * délégués (transitions : agent).
  */
 export function installerDrwil(dossier, executer = lancer, paquet = PAQUET) {
@@ -105,10 +108,38 @@ export function installerDrwil(dossier, executer = lancer, paquet = PAQUET) {
   if (!tarball) throw new Error("npm pack : aucun tarball drwil-*.tgz produit");
   const npm = ["install", "--save-dev", "--prefer-offline", "--no-audit", "--no-fund", `../${tarball}`];
   etape("npm install", executer("npm", npm, { cwd: dossier, timeout: 300000 }));
-  const args = ["init", "--name", "boutique", "--lang", "fr", "--tools", "claude", "--ci", "none", "--layers", "", "--no-git"];
+  const args = ["init", "--name", "boutique", "--lang", "fr", "--tools", "claude", "--ci", "github", "--layers", "", "--no-git"];
   etape("npx drwil init", executer("npx", ["--offline", "drwil", ...args], { cwd: dossier }));
+  adopter(dossier);
+}
+
+/**
+ * Adoption fixe, identique à chaque passage, après `init` (QUA-108), comme un utilisateur avant sa première tâche
+ * (docs/recipes/adopt-the-kit.md, étapes 1 à 3) : `init` a déjà rattaché le code indexé à la fiche « code
+ * existant » et cité ses dossiers dans la carte ; restent les rôles réels de la carte et les contrôles de la pile
+ * (`npm test`). Aucune couche, aucune garantie obligatoire (forge protégée impossible dans le bac à sable). Un
+ * texte attendu absent fait échouer la préparation : jamais une copie à moitié adoptée en silence.
+ */
+export function adopter(dossier) {
+  const remplacer = (relatif, motif, texte) => {
+    const fichier = join(dossier, relatif);
+    const avant = readFileSync(fichier, "utf8");
+    if (!motif.test(avant)) throw new Error(`adoption : ${relatif} sans ${motif}`);
+    writeFileSync(fichier, avant.replace(motif, texte));
+  };
+  const description = JSON.parse(readFileSync(join(dossier, "package.json"), "utf8")).description;
+  remplacer("docs/architecture.md", /^\((to describe|à décrire)[^)\n]*\)$/m, description);
+  remplacer(
+    "docs/architecture.md",
+    /^(Dossiers de code indexés avant l'installation du kit[^;\n]*); le rôle[^\n]*$/m,
+    "$1 : rôles décrits à l'adoption.",
+  );
+  const role = "- `src/` — code de la boutique : panier et remises (`src/panier.js`), affichage des prix (`src/format.js`)";
+  remplacer("docs/architecture.md", /^- `src\/` — .*$/m, role);
   const fichier = join(dossier, ".drwil", "ia-first.json");
-  writeFileSync(fichier, JSON.stringify({ ...JSON.parse(readFileSync(fichier, "utf8")), transitions: "agent" }, null, 2) + "\n");
+  const config = JSON.parse(readFileSync(fichier, "utf8"));
+  const checks = [...(config.checks ?? []), { name: "tests du projet", run: "npm test" }];
+  writeFileSync(fichier, JSON.stringify({ ...config, checks, transitions: "agent" }, null, 2) + "\n");
 }
 
 /**
@@ -140,7 +171,7 @@ export function preparer({ condition, base = tmpdir(), executer = lancer, instal
     if (condition === "avec") {
       installer(dossier, executer);
       git("add", "-A");
-      git("commit", "-qm", "drwil installé");
+      git("commit", "-qm", "drwil installé et adopté");
     }
     git("push", "-q", "-u", "origin", "master");
     if (condition === "avec") git("config", "core.hooksPath", ".githooks");
@@ -216,7 +247,7 @@ export async function passage(o) {
     const { resultat, appels } = lireFlux(r.lignes);
     if (!resultat) return nonMesure(`aucun résultat de l'agent (code ${r.code})`, { versionAgent, deroule });
     if (resultat.is_error && resultat.subtype !== "error_max_turns")
-      return nonMesure(`erreur de l'agent : ${resultat.subtype ?? "inconnue"}`, { versionAgent, ...mesures(resultat), deroule });
+      return nonMesure(`erreur de l'agent : ${messageErreur(resultat)}`, { versionAgent, ...mesures(resultat), deroule });
     const commandes = appels.filter((a) => a.nom === "Bash").map((a) => String(a.entree.command ?? ""));
     const { reussi, juge } = juger({ dossier, tache, avant, echecsAvant, commandes, executer });
     return {

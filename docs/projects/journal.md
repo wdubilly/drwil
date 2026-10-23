@@ -2824,3 +2824,38 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   installation signale la carte comme dérivée du gabarit, comme toute carte
   complétée ; la justesse de la recette reste un jugement humain (QUA-041).
 - **Clôturé par** : la branche `workstream/premier-commit-avant-adoption`.
+
+## 2026-10-23 — Mini-banc : copie « avec » adoptée, juge et raison d'erreur corrigés
+
+- **Décisions clés** : la copie « avec » part d'un projet adopté, comme un
+  utilisateur réel avant sa première tâche (décision du 2026-10-23). Le code
+  de la copie étant commité avant `init`, `init` y écrit déjà la fiche
+  « code existant » et la section de carte qui cite le dossier des sources (QUA-110, `init`
+  rattache le code indexé avant le kit) : l'ordre de `preparer` n'a pas
+  changé. L'adoption fixe (`adopter`, `outils/banc.mjs`, étapes 1 à 3 de la
+  recette d'adoption) n'ajoute que ce qui manquait : CI déclarée
+  (`init --ci github`, sans quoi `verify` signalait QUA-013 — contrôle non
+  exécuté n'est pas passé — en ERROR avant l'agent ; le workflow ne tourne
+  jamais dans le bac à sable), rôles réels dans la carte, contrôle de la pile
+  `npm test` ; ni contrat métier ni garanties obligatoires ; commitée avant
+  l'activation des hooks. Le juge ne compte plus que l'écriture, la
+  suppression ou la surcharge du réglage des hooks (`ecritHooks`,
+  `outils/banc-juge.mjs`), jamais sa lecture (faux positif de l'essai réel).
+  Une erreur de l'agent dit son message réel (`messageErreur` : texte du
+  résultat, puis ses erreurs, le `subtype` seulement à défaut). Contrats
+  modifiés : QUA-108 (copie préparée comme chez un utilisateur réel, état
+  adopté), QUA-102 (juge indépendant, lecture non comptée), QUA-103 (non
+  mesuré, raison réelle). Prouvé sur une vraie copie adoptée : commit d'une
+  fiche seule accepté hooks actifs, `verify` sans FAIL ni ERROR ; tests du
+  banc verts avec et sans `CI=true` (l'attendu de verdict du test QUA-108
+  admet « MANUAL REVIEW REQUIRED », seul verdict sur la branche principale
+  en CI). Protocole réduit complété et re-daté du 2026-10-23, toujours avant
+  toute mesure. Preuve de clôture : `docs/preuves/banc-copie-adoptee.md`.
+- **Limites connues** : `verify` ne donne jamais PASS dans la copie
+  (contrats à attester, humain absent) —
+  `docs/intentions/banc-verify-jamais-pass.md` ; le juge lit le texte des
+  commandes, pas leur effet — `docs/intentions/banc-juge-motif-textuel.md` ;
+  le champ `result` d'un résultat en erreur n'est vérifié qu'en simulation, et
+  le nouvel essai réel reste à lancer [humain] —
+  `docs/intentions/campagne-mini-banc.md`.
+- **Clôturé par** : la branche `workstream/banc-copie-adoptee`.
