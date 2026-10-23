@@ -12,6 +12,7 @@ files:
   - outils/verifier-codeowners.test.mjs
   - docs/contracts.md
   - .drwil/ia-first.json
+  - docs/architecture.md
 -->
 
 ## 1. Besoin
@@ -34,7 +35,7 @@ attribuer à ce moment-là dans le registre.)
 - `.github/CODEOWNERS` cite le registre sous son nom actuel, et un
   contrôle du dépôt, rejoué au commit et en CI, refuse toute ligne de
   `CODEOWNERS` dont le chemin ne correspond à aucun fichier ni dossier
-  suivi par Git — contrat à créer
+  suivi par Git — `QUA-112`
 
 ## 2. Hors périmètre
 
@@ -57,6 +58,8 @@ attribuer à ce moment-là dans le registre.)
 
 - 2026-10-23 — Corriger le chemin et ajouter un contrôle propre au dépôt
   (demandeur).
+- 2026-10-24 — Cadrage élargi à `docs/architecture.md` : la carte doit
+  citer le nouvel outil (QUA-040, carte d'architecture à jour) (agent).
 
 ## 5. Points à trancher
 
