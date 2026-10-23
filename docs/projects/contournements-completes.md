@@ -19,6 +19,8 @@ files:
   - packages/drwil/test/cycle.test.mjs
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/src/guarantees-forge.ts
+  - packages/drwil/src/guarantees.ts
+  - packages/drwil/src/doctor.ts
   - packages/drwil/test/guarantees.test.mjs
   - .github/scripts/verifier-ruleset.mjs
   - docs/contracts.md
@@ -28,7 +30,9 @@ files:
 
 (Les copies installées, `.githooks/` et `.claude/`, sont couvertes par
 `scopeMirrors` ; `.github/workflows/ia-first.yml` du dépôt n'est pas une
-copie et s'édite à part.)
+copie et s'édite à part. Élargi le 2026-10-24 à `packages/drwil/src/guarantees.ts`
+et `packages/drwil/src/doctor.ts` : le « non vérifié » de `bypass_actors` doit s'afficher dans
+`drwil guarantees` et `drwil doctor`, critère 3.)
 
 ## 1. Besoin
 
