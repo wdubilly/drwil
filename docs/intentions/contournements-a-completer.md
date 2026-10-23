@@ -1,7 +1,8 @@
 # Intention : compléter la suite des contournements testés
 
 **Statut** : proposée le 2026-10-22 — revue externe du dépôt ; inventaire
-de l'existant fait le même jour.
+de l'existant fait le même jour ;
+cadrée le 2026-10-23 dans `docs/projects/contournements-completes.md` (les trois questions sont tranchées ; restent ici le clone superficiel et l'agent qui élargit son cadrage).
 
 ## Besoin
 

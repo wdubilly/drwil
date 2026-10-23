@@ -1,7 +1,8 @@
 # Intention : CODEOWNERS cite le registre sous son nom actuel
 
 **Statut** : proposée le 2026-10-22 — écart relevé pendant l'inventaire des
-contournements.
+contournements ;
+cadrée le 2026-10-23 dans `docs/projects/codeowners-registre.md` (la question est tranchée).
 
 ## Besoin
 

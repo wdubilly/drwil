@@ -1,7 +1,8 @@
 # Intention : `doctor` dit le niveau de protection réel d'un projet
 
 **Statut** : proposée le 2026-10-22 — revue externe du dépôt, constat vérifié
-dans le code.
+dans le code ;
+cadrée le 2026-10-23 dans `docs/projects/niveau-de-protection.md` (les deux questions sont tranchées).
 
 ## Besoin
 
