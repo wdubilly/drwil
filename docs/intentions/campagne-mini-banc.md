@@ -1,7 +1,7 @@
 # Intention : lancer la campagne du mini-banc et lire ses chiffres
 
-**Statut** (2026-10-23) : le banc rejouable est livré (fiche `docs/projects/mini-banc.md`,
-lot 1, sur `workstream/mini-banc`). Restent le passage d'essai réel en CI, la
+**Statut** (2026-10-23) : le banc rejouable est livré (journal `docs/projects/journal.md`,
+lot 1, branche `workstream/mini-banc`). Restent le passage d'essai réel en CI, la
 campagne de 12 passages et la lecture des chiffres.
 
 **Projet** : DRWIL — **Niveau de risque** : HIGH (un agent tourne sans surveillance,

@@ -1236,7 +1236,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   a été lancé en un seul sondage sur l'entretien courant.
 - **Aussi dépassée, close ensuite** (« Fiche close : drwil V0.2 ») : la
   fiche V0.2, dont les restes
-  sont portés par `docs/projects/mini-banc.md` et
+  sont portés par `docs/projects/journal.md` et
   `docs/intentions/packager-kit-ia-first.md` ; le registre la cite, et sa
   clôture touche donc `docs/contracts.md`, ce qu'un commit de cadrage ne
   peut pas faire (barrière de périmètre).
@@ -1280,7 +1280,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   n'aurait plus rejoué aucun test. Définition stricte retenue (`docs/` ou
   Markdown). Le contrôle signale déjà quatre fiches ouvertes à compléter
   (le chantier « La clôture boucle les intentions »,
-  `docs/projects/mini-banc.md`, `ci-matrice-sur-pr` (close le 2026-10-18) :
+  `docs/projects/journal.md`, `ci-matrice-sur-pr` (close le 2026-10-18) :
   `.drwil/ia-first.json` ; `docs/projects/adopter-seuil-couverture.md`,
   `ci-matrice-sur-pr` : aucun test). Le cadrage a encore
   dû être élargi une fois (le hook Claude) : le rappel de cadrage côté
@@ -1294,7 +1294,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   sections du registre (ADR-001 : `docs/contracts.md` est la source
   canonique des contrats) et `drwil verify` comme primitive de validation.
 - **Ses deux restes sont portés ailleurs** : le benchmark (DRWIL-022) par
-  `docs/projects/mini-banc.md` ; la publication npm (DRWIL-030) par
+  `docs/projects/journal.md` ; la publication npm (DRWIL-030) par
   `docs/intentions/packager-kit-ia-first.md`, vague 7.
 - **Close dans le chantier « la clôture boucle les intentions »**, son
   retrait touchant le registre, qui la citait (ce qu'un commit de cadrage
@@ -2706,3 +2706,32 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : aucune ; les autres écarts relevés le même jour
   (CODEOWNERS, contournements) sont traités à part.
 - **Clôturé par** : la branche `entretien-note-recette-hors-perimetre`.
+
+## 2026-10-23 — Mini-banc : même consigne, avec et sans drwil (lot 1, banc rejouable)
+
+- **Décisions clés** : un banc rejouable d'une commande
+  (`outils/banc.mjs`, juge à part dans `outils/banc-juge.mjs`) lance un
+  agent sur une copie jetable du projet de référence `bench/reference/`
+  (panier avec le bug des quantités), avec et sans drwil, sur deux tâches
+  (`bench/taches/` : un bug, un piège), et écrit un résultat JSON par
+  passage : tokens, coût estimé, tours, verdict du juge. Le juge est
+  indépendant de drwil : tests cachés copiés après le passage,
+  contournements détectés sur le diff, fichiers hors tâche comptés ; un
+  passage qui n'a pas tourné est « non mesuré » ; le coût de la
+  gouvernance (faux blocages, temps passé à satisfaire les contrôles) est
+  mesuré à part. Le workflow `.github/workflows/banc.yml` ne tourne qu'à
+  la demande, sur l'abonnement Claude du demandeur (secret
+  `CLAUDE_CODE_OAUTH_TOKEN`, enregistré le 2026-10-23), deux passages à la
+  fois. Contrats QUA-101 à QUA-106, protocole réduit daté dans
+  `docs/benchmark-protocole.md`. Recadré à la clôture : GitHub ne déclenche
+  à la main qu'un workflow présent sur la branche principale, donc l'essai
+  réel et la campagne ne peuvent venir qu'après la fusion ; la ligne
+  Manuel de QUA-106 (rapport du mini-banc) est retirée jusqu'à la campagne,
+  décision du demandeur. Preuve de clôture : `docs/preuves/mini-banc.md`.
+- **Limites connues** : aucun passage réel n'a tourné, le workflow n'est
+  éprouvé qu'avec un agent simulé ; essai réel, budget, campagne de 12
+  passages, rapport et retour de la ligne Manuel de QUA-106 :
+  `docs/intentions/campagne-mini-banc.md`. Le test QUA-060 laisse des
+  dossiers vides `drwil-banc-*` à la racine (même intention, détour à
+  ouvrir).
+- **Clôturé par** : la branche `workstream/mini-banc` (PR #208).
