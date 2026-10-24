@@ -42,6 +42,14 @@ files:
   - .githooks/doc-coherence.test.mjs
   - packages/drwil/test/cycle.test.mjs
   - packages/drwil/test/existing-code.test.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/read-guard.mjs
+  - .claude/hooks/read-guard.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/bash-guard.mjs
+  - .claude/hooks/bash-guard.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/settings.json
+  - .claude/settings.json
+  - packages/drwil/templates/common/base/docs/ia-first.md
+  - docs/ia-first.md
 -->
 
 (Dépôt ou livrable (QUA-018, périmètre explicite dépôt vs gabarit) : les deux,
@@ -116,6 +124,10 @@ session), `.githooks/consumption.mjs` (indicateur comparé),
 `.githooks/doc-coherence.mjs` (`twinIntents` : doublons possibles regroupés
 par chemin cité, ce que `close.mjs --check` affiche ; QUA-077, une intention
 nouvelle qui cite un chemin déjà cité est signalée, reste vrai tel quel).
+Le lot 4 ajoute un hook Claude Code (read-guard, dans `.claude/hooks/`) et
+étend `.claude/hooks/bash-guard.mjs` : hors de `.githooks/`, donc hors du
+rejeu de QUA-113 ; QUA-114 (refus du saut des hooks git) et QUA-072 (les
+hooks et skills de Claude Code ne changent pas) restent vrais tels quels.
 
 ## 2. Hors périmètre
 
@@ -176,6 +188,14 @@ nouvelle qui cite un chemin déjà cité est signalée, reste vrai tel quel).
   critère sans preuve fait tomber le verdict (QUA-034, un critère non
   prouvé fait tomber le verdict) ; il devient une intention de relevé
   (`docs/intentions/`, `[décision]` à l'index), créée à la clôture.
+- 2026-10-24 — Lot 4 « forcer la lecture ciblée » ajouté (décision du
+  demandeur, qui vaut accord pour un changement des hooks) : hook Claude Code
+  `PreToolUse` sur Read qui refuse la lecture sans plage du registre et du
+  journal, et `.claude/hooks/bash-guard.mjs` qui refuse leur `cat` entier ;
+  Claude Code seulement (Gemini, Copilot, Codex, Cursor : intention à créer
+  à la clôture). Cadrage élargi aux hooks, aux réglages Claude Code livrés et à
+  `docs/ia-first.md` qui décrit les gardes. Critère d'acceptation
+  ajouté avec le contrat qu'il cite, au premier commit du lot.
 
 ## 5. Points à trancher
 
@@ -198,6 +218,11 @@ nouvelle qui cite un chemin déjà cité est signalée, reste vrai tel quel).
   invitation à une nouvelle session après la clôture. Critère de sortie :
   critères de
   sous-agent et de session verts, preuve QUA-072 à jour.
+- **Lot 4 — forcer la lecture ciblée** [IA] : hook `PreToolUse` Read
+  (read-guard, dans `.claude/hooks/`) branché dans les réglages livrés,
+  `cat`/`less`/`more` du registre ou du journal refusés par
+  `.claude/hooks/bash-guard.mjs`, phrase dans `AGENTS.md`. Critère de sortie :
+  critère de lecture forcée vert, `node .githooks/run-checks.mjs` OK.
 
 ## 7. Reprise
 
