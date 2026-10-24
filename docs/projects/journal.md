@@ -3018,4 +3018,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   tombe quand un contrôle change de forme sans changer d'effet (six
   attestations périmées par les champs `build` / `needsBuild`) —
   `docs/intentions/attestation-sur-l-effet-du-controle.md`.
+- **Preuve de clôture** : `docs/preuves/acceleration-ci.md`.
 - **Clôturé par** : la branche `workstream/acceleration-ci` (PR #221).
