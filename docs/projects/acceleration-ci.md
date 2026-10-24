@@ -56,7 +56,14 @@ retirer ni affaiblir aucun contrôle.
 
 Aucun contrat existant n'est modifié : QUA-033 (un contrôle par règle) et
 QUA-013 (un contrôle non exécuté n'est pas un succès) restent vrais tels
-quels ; le chantier ne fait que les tenir plus vite.
+quels ; le chantier ne fait que les tenir plus vite. Les hooks ci-dessous
+changent, et le rejeu par la branche principale (QUA-113) doit garder leur
+version de la PR : le moteur de la base ne connaît ni `build` ni `parallel`,
+et ferait tourner les contrôles sans compilation.
+
+- `.githooks/engine.mjs` : réglages `build` / `needsBuild` (une compilation par
+  passage) et `parallel` (contrôles lancés ensemble, verdict d'un passage en série).
+- `.githooks/run-checks.mjs` : lit les résultats parallèles dans l'ordre de la liste.
 
 ## 2. Hors périmètre
 
