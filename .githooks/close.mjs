@@ -24,7 +24,7 @@ import {
   proposals,
   twinIntents,
 } from "./doc-coherence.mjs";
-import { closureProof, proofNotCited, proofText, writeProof } from "./closure-proof.mjs";
+import { closureProof, proofNotCited, proofPath, proofText, writeProof } from "./closure-proof.mjs";
 import { readState, stateRoot, verifyEvidence } from "./state.mjs";
 
 const TEXTS = {
@@ -53,6 +53,8 @@ const TEXTS = {
     pruned: (l) => `branches locales fusionnées supprimées : ${l}`,
     noGh: "gh injoignable : seule la fusion classique est reconnue, une PR fusionnée par squash ne l'est pas",
     kept: (l) => `branches gardées : ${l}`,
+    twice: (j, f, n) =>
+      `${j} : ${n} entrées citent \`${f}\` — un chantier rouvert met à jour son entrée de journal, il n'en ajoute pas une seconde`,
   },
   en: {
     usage: "usage: node .githooks/close.mjs [--check] [--fix] [<brief path>] [--logs <folder>]",
@@ -79,6 +81,7 @@ const TEXTS = {
     pruned: (l) => `merged local branches deleted: ${l}`,
     noGh: "gh unreachable: classic merge only is recognised, a pull request merged by squash is not",
     kept: (l) => `branches kept: ${l}`,
+    twice: (j, f, n) => `${j}: ${n} entries cite \`${f}\` — a reopened workstream updates its journal entry, it never adds a second one`,
   },
 };
 
@@ -95,7 +98,7 @@ export function mainBranch(root) {
 }
 
 // gh absent, unauthenticated, outside GitHub or too slow: null, and the caller falls back to git.
-const ghRun = (root, args) => {
+export const ghRun = (root, args) => {
   const r = spawnSync("gh", args, { cwd: root, encoding: "utf8", timeout: 20000 });
   return r.status === 0 ? r.stdout : null;
 };
@@ -198,6 +201,48 @@ function criteriaToCreate(root, brief, text) {
   return open.map((c, i) => T.toCreate(short(c.text), brief, ids.length === open.length ? `\`${ids[i]}\`` : T.candidates(ids)));
 }
 
+/** A single journal entry per workstream (QUA-118): its proof cited by two `## ` entries is an entry doubled. */
+function journalTwice(root, brief) {
+  const journal = `${config(root).dirs?.projects ?? "docs/projects"}/journal.md`;
+  if (!existsSync(join(root, journal))) return [];
+  const proof = proofPath(root, brief);
+  const n = readFileSync(join(root, journal), "utf8")
+    .split(/^## /m)
+    .slice(1)
+    .filter((entry) => entry.includes(proof)).length;
+  return n > 1 ? [texts(root).twice(journal, proof, n)] : [];
+}
+
+const USAGE = [".drwil", "usage.jsonl"];
+const recorded = (text, name) =>
+  text.split("\n").some((l) => {
+    try {
+      return JSON.parse(l).workstream === name;
+    } catch {
+      return false;
+    }
+  });
+
+/**
+ * Records the consumption; for a reopened workstream (QUA-118), its line is replaced by the new total
+ * (the logs are read again in full), never doubled, and kept as it was when nothing is measured.
+ */
+function recordConsumption(root, name, { reopened, env, logs, log }) {
+  const file = join(root, ...USAGE);
+  const before = reopened && existsSync(file) ? readFileSync(file, "utf8") : null;
+  const replace = before !== null && recorded(before, name);
+  if (replace)
+    writeFileSync(
+      file,
+      before
+        .split("\n")
+        .filter((l) => !recorded(l, name))
+        .join("\n"),
+    );
+  consumption(["--record", name, ...(logs ? ["--logs", logs] : [])], { env, root, log, err: log });
+  if (replace && !recorded(readFileSync(file, "utf8"), name)) writeFileSync(file, before);
+}
+
 /** Places (file:line) of the non-Markdown files citing the brief (the Markdown ones are corrected by `deadCitations`). */
 function deadReferences(root, brief) {
   const T = texts(root);
@@ -241,6 +286,7 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
   const plain = [
     ...criteriaToCreate(root, brief, text),
     ...proofNotCited(root, brief),
+    ...journalTwice(root, brief),
     ...deadReferences(root, brief),
     ...bareNames(root),
   ].map((message) => ({ message }));
@@ -312,8 +358,7 @@ export function close(root, { brief, check = false, fix = false, env = process.e
       writeFileSync(join(root, index), lines.join("\n"));
       done.push(T.indexLine(index));
     } else done.push(T.noIndexLine(index, path));
-    const record = ["--record", posix.basename(path, ".md"), ...(logs ? ["--logs", logs] : [])];
-    consumption(record, { env, root, log: (m) => done.push(m), err: (m) => done.push(m) });
+    recordConsumption(root, posix.basename(path, ".md"), { reopened: Boolean(state.reopened), env, logs, log: (m) => done.push(m) });
   }
   let report = closingReport(root, path, text);
   let proposed = proposals(root, report.problems);

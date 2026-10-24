@@ -2948,3 +2948,39 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/tests-garde-shell-a-leur-place.md`.
 - **Clôturé par** : la branche `workstream/contournements-completes`
   (PR #219).
+
+## 2026-10-24 — Rouvrir un chantier dont la PR révèle un défaut après la clôture
+
+- **Décisions clés** : en CLOSING, quand la PR du chantier, ouverte et non
+  fusionnée, révèle un défaut (CI rouge, analyse de la forge), l'agent
+  rouvre seul le chantier par `node .githooks/state.mjs reopen` : fusion
+  automatique annulée d'abord (relue, sinon refus), fiche restaurée telle
+  qu'au parent du commit qui l'a supprimée, dans un commit qui ne touche
+  qu'elle, BUILD sur la même branche avec la marque `reopened`,
+  autorisation de fusion et file gardées, sans réécrire l'historique ;
+  refus sans rien changer hors CLOSING, sur un arbre modifié, hors branche
+  de chantier, sur une PR fusionnée, fermée ou inconnue — QUA-116 (un
+  chantier clos dont la PR révèle un défaut se rouvre sur sa branche). Un
+  correctif de réouverture qui change les règles du jeu attend le oui de
+  l'humain par l'exception du détour (`detour.mjs allow`) — QUA-117. La
+  nouvelle clôture réécrit la preuve, remplace la ligne de consommation par
+  le nouveau total et refuse une seconde entrée de journal citant la même
+  preuve — QUA-118. `writeState` devient le seul écrivain de l'état ; le
+  rappel et la réouverture vivent dans `.githooks/state-cli.mjs` (QUA-001,
+  fichiers sous 400 lignes). Cycle complet prouvé dans un projet installé,
+  hooks réels et `gh` simulé dans le PATH. Contrats ajoutés au registre,
+  contrôles `tests-qua-116` à `tests-qua-118`, ligne « Unreleased » du
+  changelog. Chantier rouvert une fois sur sa propre PR (#220) : le rejeu
+  par la branche principale (QUA-113) échouait faute de déclaration des
+  hooks modifiés ; la fiche les déclare maintenant dans « Contrats
+  modifiés ». Intention d'origine mise à jour
+  (`docs/intentions/defaut-revele-apres-la-cloture.md`) : y reste l'attente
+  de CodeQL avant la clôture. Preuve de clôture :
+  `docs/preuves/reouvrir-apres-cloture.md`.
+- **Limites connues** : une réouverture refusée après l'annulation de la
+  fusion automatique la laisse annulée —
+  `docs/intentions/reouverture-fusion-annulee-apres-echec.md` ; pas encore
+  essayée sur une vraie PR, cycle complet sauté sous Windows —
+  `docs/intentions/reouverture-eprouvee-en-reel.md`.
+- **Clôturé par** : la branche `workstream/reouvrir-apres-cloture`
+  (PR #220).

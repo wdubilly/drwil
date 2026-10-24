@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — dernière note le 2026-10-23.
+**Statut** : ouverte en permanence — dernière note le 2026-10-24.
 
 ## Besoin
 
@@ -33,3 +33,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-10-23 — Désinstallation : après drwil guarantees --protect (contrôle checks requis, enforce_admins), uninstall retire le workflow de CI sans toucher la forge, donc toute PR vers la branche principale reste bloquée sur un contrôle qui ne vient plus. uninstall devrait au moins le signaler (et la doc Uninstalling du README le dire) ; piste : proposer la commande gh qui lève la protection, avec l'accord de l'humain.
 - 2026-10-23 — Réduire la consommation par chantier (barriere-commit-de-fusion : 1,6 M pondérés, 64 % de contexte relu, 85 min pour un petit correctif) : (1) sorties de state.mjs, run-checks et verify courtes en mode agent (seulement ce qui change ou échoue) ; (2) vérifier au cadrage que chaque critère sera lu par verify (ID entre backticks) ; (3) contrôle rapide formatage + couverture du seul fichier touché avant run-checks ; (4) consumption.mjs attribue par nom de branche : une branche de cadrage nommée d'après une fiche (cadrage/barriere-commit-de-fusion, qui en cadrait cinq) gonfle le chiffre de cette fiche — attribuer par session ou par chantier ; (5) mesurer le temps par étape (dev, contrôles, clôture, attente CI) pour savoir quelle piste rapporte le plus.
 - 2026-10-23 — Un lancement intercalé efface la file en silence : le 2026-10-24, lancer l'entretien courant par /drwil-start (pour corriger la PR #218 bloquée en CLOSING) a remplacé la file décidée au lancement (reouvrir-apres-cloture, contournements-completes) ; state.mjs next a ensuite refusé, sans dire que la file avait disparu. Attendu : un lancement intercalé suspend la file (ou demande), et next/state disent clairement qu'il n'y a plus de file et pourquoi.
+- 2026-10-24 — Accélérer la CI sans perte de qualité : run-checks lance 99 fois tsc --build + node --test filtré (un par contrat, QUA-033) en série, ≈3,4 min sur 4,8 au 24/10 ; pistes : tsc une seule fois, tests-<id> en parallèle, suite unique + verdict par contrat via reporter (décision humaine, QUA-033), jobs CI découpés via ciJob, retirer le doublon push/pull_request, cache npm/build. Mesures : tableau de bord https://claude.ai/artifact/LVTAv9omSJ4h8bL9s22vbT

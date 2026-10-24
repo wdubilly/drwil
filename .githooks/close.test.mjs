@@ -671,3 +671,98 @@ test("QUA-084 : la preuve suit la langue du projet, dit quand il n'y a aucun cri
   ecrire(journal, { "docs/projects/journal.md": "# Journal\n" });
   assert.ok(closingSignals(journal, FICHE).some((s) => /does not cite `docs\/preuves\/exemple\.md`/.test(s)));
 });
+
+/** Journaux de Claude Code avec `n` réponses sur la branche du chantier (le total d'un chantier rouvert grandit). */
+function journauxDe(n) {
+  const d = dossier();
+  const usage = { input_tokens: 10, output_tokens: 100, cache_read_input_tokens: 1000, cache_creation_input_tokens: 50 };
+  const lignes = Array.from({ length: n }, (_, i) => ({
+    type: "assistant",
+    requestId: `r${i}`,
+    timestamp: `2026-10-18T10:0${i}:00Z`,
+    gitBranch: "chantier/exemple",
+    message: { model: "claude-opus-5-5", usage },
+  }));
+  writeFileSync(join(d, "s.jsonl"), lignes.map((l) => JSON.stringify(l)).join("\n") + "\n");
+  return d;
+}
+
+const lignesDe = (racine, chantier) =>
+  readFileSync(join(racine, ".drwil/usage.jsonl"), "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((l) => JSON.parse(l))
+    .filter((l) => l.workstream === chantier);
+
+/** Première clôture commitée, puis réouverture (fiche restaurée, correctif commité) et nouvelle évidence : état CLOSING rouvert. */
+function depotRouvert(options) {
+  const racine = depot(options);
+  assert.equal(close(racine, { logs: journauxDe(1) }).code, 0);
+  ecrire(racine, { "docs/projects/journal.md": "# Journal\n\n## exemple\n\nPreuve : `docs/preuves/exemple.md`.\n" });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "clôture");
+  const premiere = readFileSync(join(racine, "docs/preuves/exemple.md"), "utf8");
+  git(racine, "checkout", "-q", "HEAD~1", "--", FICHE);
+  git(racine, "commit", "-q", "-m", "réouverture");
+  ecrire(racine, { "src/a.mjs": "correctif\n" });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "correctif");
+  const etat = { version: 1, activity: "CLOSING", active_brief: FICHE, active_request: null, since: null, reopened: { pr: 42 } };
+  ecrire(racine, { ".drwil/state.json": JSON.stringify(etat) });
+  ecrireEvidence(racine);
+  return { racine, premiere };
+}
+
+test("QUA-118 : la nouvelle clôture d'un chantier rouvert remplace sa ligne de consommation et réécrit la preuve sur le nouveau commit vérifié", () => {
+  const { racine, premiere } = depotRouvert();
+  assert.equal(lignesDe(racine, "exemple")[0].requests, 1);
+  const head = git(racine, "rev-parse", "HEAD");
+  const r = close(racine, { logs: journauxDe(3) });
+  assert.equal(r.code, 0, r.message);
+  const lignes = lignesDe(racine, "exemple");
+  assert.equal(lignes.length, 1, "une seule ligne de consommation, jamais doublée");
+  assert.equal(lignes[0].requests, 3, "le nouveau total du chantier, journaux relus en entier");
+  const preuve = readFileSync(join(racine, "docs/preuves/exemple.md"), "utf8");
+  assert.notEqual(preuve, premiere);
+  assert.match(preuve, new RegExp(`\\*\\*Commit vérifié\\*\\* : \`${head.slice(0, 10)}\``), "preuve réécrite sur le nouveau commit");
+  assert.ok(!existsSync(join(racine, FICHE)));
+  assert.match(r.message, /Rien ne ferait échouer la clôture/, "l'entrée de journal mise à jour, citée une fois");
+});
+
+test("QUA-118 : rien de mesuré, la ligne de consommation reste telle quelle ; hors réouverture, jamais remplacée", () => {
+  const { racine } = depotRouvert();
+  const avant = readFileSync(join(racine, ".drwil/usage.jsonl"), "utf8");
+  close(racine, { logs: dossier() });
+  assert.equal(readFileSync(join(racine, ".drwil/usage.jsonl"), "utf8"), avant, "journaux vides : la ligne précédente est gardée");
+
+  const ordinaire = depot();
+  close(ordinaire, { logs: journauxDe(1) });
+  ecrire(ordinaire, { [FICHE]: fiche("- Un critère — `QUA-001`") });
+  const r = close(ordinaire, { logs: journauxDe(3) });
+  assert.match(r.message, /déjà une ligne pour « exemple »/);
+  assert.equal(lignesDe(ordinaire, "exemple")[0].requests, 1);
+});
+
+test("QUA-118 : une seconde entrée de journal pour le même chantier fait échouer la clôture, en le disant — en anglais aussi", () => {
+  const { racine } = depotRouvert();
+  ecrire(racine, {
+    "docs/projects/journal.md":
+      "# Journal\n\n## exemple\n\nPreuve : `docs/preuves/exemple.md`.\n\n## autre\n\nRien.\n\n## exemple, rouvert\n\nPreuve : `docs/preuves/exemple.md`.\n",
+  });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "journal doublé");
+  ecrireEvidence(racine);
+  const r = close(racine, { logs: journauxDe(2) });
+  assert.equal(r.code, 1);
+  assert.match(
+    r.message,
+    /docs\/projects\/journal\.md : 2 entrées citent `docs\/preuves\/exemple\.md` — un chantier rouvert met à jour son entrée de journal, il n'en ajoute pas une seconde/,
+  );
+  const en = depot({ lang: "en", activite: "BUILD" });
+  ecrire(en, { "docs/projects/journal.md": "# J\n\n## a\n\n`docs/preuves/exemple.md`\n\n## b\n\n`docs/preuves/exemple.md`\n" });
+  assert.ok(
+    closingSignals(en, FICHE).some((s) =>
+      /2 entries cite `docs\/preuves\/exemple\.md` — a reopened workstream updates its journal entry/.test(s),
+    ),
+  );
+});

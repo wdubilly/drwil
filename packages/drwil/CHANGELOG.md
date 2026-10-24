@@ -7,6 +7,18 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- A workstream whose pull request reveals a defect after the closing
+  commit (red CI, forge analysis) is reopened by the agent with one
+  command, `node .githooks/state.mjs reopen`: in CLOSING, PR open and not
+  merged, the scheduled automatic merge is cancelled first, the brief is
+  restored as it was before the closing (a commit of its own) and the
+  state goes back to BUILD on the same branch, keeping the merge
+  authorisation and the queue; refused without changing anything on a
+  merged, closed or unknown PR (QUA-116). A reopening fix that changes the
+  rules waits for the human's yes, like a detour (QUA-117). The new closing
+  replaces the consumption line instead of keeping the old one, rewrites
+  the proof, and refuses a second journal entry for the same workstream
+  (QUA-118).
 - `init` attaches the existing code: on a first install of a project that
   already has code files indexed by git, it writes a reference brief
   « existing code » (file existing-code.md of `docs/projects/`) whose `scope` block lists each of them

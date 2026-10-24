@@ -22,6 +22,8 @@ import {
   verifyEvidence,
   scopedBriefs,
   setDetour,
+  reopen,
+  writeState,
   start,
   stopQueue,
   shortReminder,
@@ -1539,4 +1541,226 @@ test("QUA-050 : le contexte dit le détour en cours et comment le reprendre ; la
   assert.match(anglais, /Detour in progress \(QUA-050\), opened from docs\/projects\/chantier\.md \(branch chantier\/x/);
   assert.match(anglais, /A prior defect outside the scope: a detour, `node \.githooks\/detour\.mjs open <name> --title <defect>`/);
   assert.doesNotMatch(context(readState(depot({ state: actif("BUILD") })), racine), /Détour en cours/);
+});
+
+// --- Réouverture d'un chantier clos dont la PR révèle un défaut (QUA-116) ---
+
+const CONTENU_FICHE = `# Projet : Exemple
+
+**Statut** : cadré le 2026-10-23.
+
+<!-- scope
+files:
+  - src/a.ts
+-->
+
+## Critères d'acceptation
+
+- Un critère — \`QUA-001\`
+`;
+
+/**
+ * Dépôt git : branche principale, branche workstream/exemple où la fiche est commitée puis supprimée
+ * par le commit de clôture ; état CLOSING (fusion automatique et file décidées au lancement).
+ */
+function depotClos({ lang } = {}) {
+  const racine = depot({ fiche: false, lang });
+  const git = (...args) => {
+    const r = spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
+    assert.equal(r.status, 0, `git ${args.join(" ")} : ${r.stderr}`);
+    return r.stdout.trim();
+  };
+  writeFileSync(join(racine, ".gitignore"), ".drwil/state.json\n.drwil/reminder.json\n");
+  writeFileSync(join(racine, "docs", "projects", "suivante.md"), CONTENU_FICHE.replace("Exemple", "Suivante"));
+  git("init", "-q", "-b", "master");
+  git("config", "user.name", "t");
+  git("config", "user.email", "t@t");
+  git("add", "-A");
+  git("commit", "-qm", "init");
+  git("checkout", "-qb", "workstream/exemple");
+  writeFileSync(join(racine, FICHE), CONTENU_FICHE);
+  git("add", "-A");
+  git("commit", "-qm", "cadrage");
+  mkdirSync(join(racine, "src"));
+  writeFileSync(join(racine, "src", "a.ts"), "a\n");
+  git("add", "-A");
+  git("commit", "-qm", "travail");
+  writeFileSync(join(racine, FICHE), `${CONTENU_FICHE}\nDernière retouche avant la clôture.\n`);
+  git("commit", "-qam", "reprise");
+  rmSync(join(racine, FICHE));
+  writeFileSync(join(racine, "docs", "projects", "journal.md"), "# Journal\n\n## Exemple\n\n- Clos.\n");
+  git("add", "-A");
+  git("commit", "-qm", "clôture");
+  writeState(racine, actif("CLOSING", { auto_merge: true, queue: ["docs/projects/suivante.md"], queue_merge: true }));
+  return { racine, git };
+}
+
+/** gh simulé : `pr view` rend la PR (`pr` null : gh muet), `pr merge --disable-auto` l'annule ; appels consignés. */
+function ghSimule(racine, pr, { annule = true, resteProgrammee = false } = {}) {
+  const appels = [];
+  let courante = pr && { ...pr };
+  const gh = (_root, args) => {
+    appels.push({ args, head: spawnSync("git", ["rev-parse", "HEAD"], { cwd: racine, encoding: "utf8" }).stdout.trim() });
+    if (args[0] === "pr" && args[1] === "view") return courante ? JSON.stringify(courante) : null;
+    if (args[0] === "pr" && args[1] === "merge" && args.includes("--disable-auto")) {
+      if (!annule) return null;
+      if (!resteProgrammee) courante = { ...courante, autoMergeRequest: null };
+      return "";
+    }
+    return null;
+  };
+  return { gh, appels };
+}
+
+const PR_OUVERTE = { number: 42, state: "OPEN", autoMergeRequest: { mergeMethod: "MERGE" } };
+
+test("QUA-116 : depuis CLOSING, PR ouverte, la réouverture annule d'abord la fusion automatique, restaure la fiche dans son propre commit et repasse en BUILD", () => {
+  const { racine, git } = depotClos();
+  const avant = git("rev-parse", "HEAD");
+  const attendu = git("show", `${avant}~1:${FICHE}`);
+  const { gh, appels } = ghSimule(racine, PR_OUVERTE);
+  const r = reopen(racine, { gh, now: MAINTENANT });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /CLOSING → BUILD \(réouverture de docs\/projects\/exemple\.md, PR #42 ouverte\)/);
+  assert.match(r.message, /fusion automatique annulée/);
+  assert.match(r.message, /restaurée telle qu'avant la clôture, dans son propre commit/);
+
+  // Fusion automatique annulée avant tout commit.
+  const annulation = appels.find((a) => a.args.includes("--disable-auto"));
+  assert.deepEqual(annulation.args, ["pr", "merge", "42", "--disable-auto"]);
+  assert.equal(annulation.head, avant, "l'annulation passe avant le premier commit");
+
+  // Fiche telle qu'au commit qui précède la clôture, dans un commit qui ne touche qu'elle ; historique gardé.
+  assert.equal(readFileSync(join(racine, FICHE), "utf8").trim(), attendu);
+  assert.equal(git("rev-parse", "HEAD~1"), avant, "un commit de plus, rien de réécrit");
+  assert.equal(git("diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"), FICHE);
+  assert.match(git("log", "-1", "--format=%s"), /^Réouverture de docs\/projects\/exemple\.md : défaut révélé par la PR #42$/);
+  assert.equal(git("branch", "--show-current"), "workstream/exemple", "même branche");
+  assert.equal(git("status", "--porcelain"), "");
+
+  // BUILD sur la fiche, fusion autorisée et file gardées.
+  assert.deepEqual(
+    readState(racine).state,
+    actif("BUILD", { since: MAINTENANT, auto_merge: true, queue: ["docs/projects/suivante.md"], queue_merge: true, reopened: { pr: 42 } }),
+  );
+  const texte = context(readState(racine), racine);
+  assert.match(texte, /Chantier rouvert après sa clôture \(QUA-116\), PR #42 ouverte : corriger le défaut sur cette branche/);
+  assert.match(texte, /attend le oui de l'humain \(`node \.githooks\/detour\.mjs allow`/);
+});
+
+test("QUA-116 : sans fusion automatique programmée, rien n'est annulé ; fiche encore dans HEAD, rien n'est restauré", () => {
+  const { racine } = depotClos();
+  const { gh, appels } = ghSimule(racine, { ...PR_OUVERTE, autoMergeRequest: null });
+  assert.equal(reopen(racine, { gh, now: MAINTENANT }).code, 0);
+  assert.ok(!appels.some((a) => a.args.includes("--disable-auto")));
+
+  // Clôture pas encore commitée (fiche dans HEAD) : état seul, aucun commit.
+  const autre = depotClos();
+  autre.git("reset", "-q", "--hard", "HEAD~1");
+  const tete = autre.git("rev-parse", "HEAD");
+  const r = reopen(autre.racine, { gh: ghSimule(autre.racine, PR_OUVERTE).gh });
+  assert.equal(r.code, 0, r.message);
+  assert.doesNotMatch(r.message, /restaurée/);
+  assert.equal(autre.git("rev-parse", "HEAD"), tete);
+  assert.equal(readState(autre.racine).state.activity, "BUILD");
+});
+
+test("QUA-116 : réouverture refusée sans rien changer — hors CLOSING, arbre modifié, branche principale, PR fusionnée, fermée ou inconnue, rien à restaurer", () => {
+  const cas = [
+    [
+      "hors CLOSING",
+      ({ racine }) => writeState(racine, actif("VERIFY", { active_brief: "docs/projects/suivante.md" })),
+      PR_OUVERTE,
+      /activité VERIFY — on rouvre depuis CLOSING/,
+    ],
+    ["arbre modifié", ({ racine }) => writeFileSync(join(racine, "src", "a.ts"), "b\n"), PR_OUVERTE, /arbre modifié/],
+    ["branche principale", ({ git }) => git("checkout", "-q", "master"), PR_OUVERTE, /branche du chantier/],
+    ["gh muet", () => {}, null, /état de la PR de workstream\/exemple est inconnu \(gh absent/],
+    ["PR fusionnée", () => {}, { ...PR_OUVERTE, state: "MERGED" }, /PR #42 est MERGED, pas ouverte — un défaut après la fusion/],
+    ["PR fermée", () => {}, { ...PR_OUVERTE, state: "CLOSED" }, /PR #42 est CLOSED/],
+    ["réponse illisible", () => {}, { state: "OPEN" }, /inconnu/],
+    [
+      "aucun commit de clôture",
+      ({ racine }) => writeState(racine, actif("CLOSING", { active_brief: "docs/projects/jamais.md" })),
+      PR_OUVERTE,
+      /aucun commit de workstream\/exemple ne supprime docs\/projects\/jamais\.md/,
+    ],
+  ];
+  for (const [nom, preparer, pr, motif] of cas) {
+    const d = depotClos();
+    preparer(d);
+    const tete = d.git("rev-parse", "HEAD");
+    const etat = readState(d.racine).state;
+    const { gh, appels } = ghSimule(d.racine, pr);
+    const r = reopen(d.racine, { gh });
+    assert.equal(r.code, 1, nom);
+    assert.match(r.message, motif, nom);
+    assert.match(r.message, /rien n'a changé/, nom);
+    assert.ok(!appels.some((a) => a.args.includes("--disable-auto")), `${nom} : fusion automatique laissée`);
+    assert.equal(d.git("rev-parse", "HEAD"), tete, `${nom} : aucun commit`);
+    assert.deepEqual(readState(d.racine).state, etat, `${nom} : état inchangé`);
+  }
+});
+
+test("QUA-116 : annulation de la fusion automatique en échec, ou fusion encore programmée : refus avant tout commit ; commit refusé par un hook : fiche retirée", () => {
+  for (const options of [{ annule: false }, { resteProgrammee: true }]) {
+    const { racine, git } = depotClos();
+    const tete = git("rev-parse", "HEAD");
+    const r = reopen(racine, { gh: ghSimule(racine, PR_OUVERTE, options).gh });
+    assert.equal(r.code, 1);
+    assert.match(r.message, /fusion automatique de la PR #42 n'a pas pu être annulée \(`gh pr merge 42 --disable-auto`\)/);
+    assert.equal(git("rev-parse", "HEAD"), tete);
+    assert.ok(!existsSync(join(racine, FICHE)));
+    assert.equal(readState(racine).state.activity, "CLOSING");
+  }
+  // Un hook pre-commit qui refuse : rien ne reste, ni fiche ni index, état inchangé.
+  const { racine, git } = depotClos();
+  const tete = git("rev-parse", "HEAD");
+  writeFileSync(join(racine, ".git", "hooks", "pre-commit"), "#!/bin/sh\necho 'refusé par le hook' >&2\nexit 1\n", { mode: 0o755 });
+  const r = reopen(racine, { gh: ghSimule(racine, PR_OUVERTE).gh });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /le commit de la fiche restaurée a échoué \(refusé par le hook\) — fiche retirée, état inchangé/);
+  assert.match(r.message, /fusion automatique annulée : à reprogrammer/);
+  assert.equal(git("rev-parse", "HEAD"), tete);
+  assert.equal(git("status", "--porcelain"), "");
+  assert.equal(readState(racine).state.activity, "CLOSING");
+});
+
+test("QUA-116 : l'état rouvert se valide de BUILD à CLOSING, suit les transitions et tombe au retour en SCOPING ; commande et anglais", async () => {
+  const racine = depot({ state: actif("BUILD", { reopened: { pr: 7 } }) });
+  assert.deepEqual(readState(racine).problems, []);
+  assert.match(validateState(actif("BUILD", { reopened: true }), racine)[0], /reopened : objet \{ pr, human\? \} attendu/);
+  assert.match(validateState(actif("BUILD", { reopened: { pr: 7, human: "oui" } }), racine)[0], /reopened : objet/);
+  assert.match(validateState({ ...NEUTRAL_STATE, reopened: { pr: 7 } }, racine)[0], /reopened : seulement de BUILD à CLOSING/);
+  assert.match(validateState(actif("REQUEST", { reopened: { pr: 7 } }), racine)[0], /seulement de BUILD à CLOSING/);
+  assert.throws(() => writeState(racine, actif("BUILD", { reopened: 1 })), /reopened/);
+  assert.deepEqual(readState(racine).state.reopened, { pr: 7 }, "rien d'écrit");
+
+  for (const vers of ["EVIDENCE", "BUILD", "EVIDENCE", "VERIFY"]) assert.equal((await move(racine, { to: vers })).code, 0, vers);
+  assert.deepEqual(readState(racine).state.reopened, { pr: 7 }, "gardé jusqu'à la clôture");
+  writeState(racine, actif("CLOSING", { reopened: { pr: 7 }, auto_merge: true }));
+  assert.equal((await move(racine, { to: "SCOPING" })).code, 0);
+  assert.equal(readState(racine).state.reopened, undefined, "le retour en SCOPING l'efface");
+
+  // La règle de CLOSING dit la réouverture, en dernier : jamais un contournement.
+  const clos = depot({ state: actif("CLOSING") });
+  assert.match(
+    context(readState(clos), clos),
+    /Un défaut révélé par la PR, ouverte et pas encore fusionnée .*`node \.githooks\/state\.mjs reopen`/,
+  );
+
+  // Commande : hors CLOSING, refus lisible ; en anglais aussi.
+  let r = await capturer(() => main(["reopen"], racine));
+  assert.equal(r.code, 1);
+  assert.match(r.erreurs, /^✗ réouverture refusée : activité SCOPING/);
+  const en = depotClos({ lang: "en" });
+  r = await capturer(() => main(["reopen"], en.racine));
+  assert.equal(r.code, 1, "sans PR sur une forge, l'état de la PR est inconnu");
+  assert.match(r.erreurs, /reopening refused: the state of the PR of workstream\/exemple is unknown/);
+  const ok = reopen(en.racine, { gh: ghSimule(en.racine, PR_OUVERTE).gh });
+  assert.match(ok.message, /CLOSING → BUILD \(reopening of docs\/projects\/exemple\.md, PR #42 open\)/);
+  assert.match(en.git("log", "-1", "--format=%s"), /^Reopening of docs\/projects\/exemple\.md: defect revealed by PR #42$/);
+  r = await capturer(() => main(["reopen"], en.racine));
+  assert.match(r.erreurs, /reopening refused: activity BUILD/);
+  assert.match(context(readState(en.racine), en.racine), /Workstream reopened after its closing \(QUA-116\), PR #42 open/);
 });
