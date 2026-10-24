@@ -419,13 +419,28 @@ une décision du demandeur.
   `docs/intentions/niveaux-de-protection-dans-doctor.md`.
 - [ ] [décision] [P0] Compléter la suite des contournements testés, en tête
   les hooks modifiés dans la PR elle-même (revue externe du 2026-10-22) —
-  cadrée le 2026-10-23 (fiche listée sous « Ensuite »),
-  restent le clone superficiel et l'auto-élargissement —
+  cadrée le 2026-10-23, réalisée le 2026-10-24 (voir
+  `docs/projects/journal.md`), restent le clone superficiel et
+  l'auto-élargissement —
   `docs/intentions/contournements-a-completer.md`.
 - [ ] [décision] Lire les erreurs que GitHub relève dans CODEOWNERS
   (propriétaire inconnu, syntaxe), au-delà des chemins (limite du chantier
   « CODEOWNERS protège le registre » du 2026-10-24) —
   `docs/intentions/codeowners-erreurs-github.md`.
+- [ ] [décision] L'étape de rejeu ne se retire pas du workflow par la PR
+  elle-même (limite du chantier « les contournements restants fermés ou
+  assumés » du 2026-10-24) —
+  `docs/intentions/rejeu-retirable-du-workflow.md`.
+- [ ] [décision] Un contrôle redéfini sous le même identifiant est comparé
+  (limite du même chantier) —
+  `docs/intentions/controle-redefini-meme-nom.md`.
+- [ ] [décision] La garde shell juge l'effet d'une commande, pas son texte
+  (variables, texte cité ; limite du même chantier) —
+  `docs/intentions/garde-shell-par-le-texte.md`.
+- [ ] [décision] Réduire la durée du rejeu par la branche principale en CI
+  (limite du même chantier) — `docs/intentions/duree-du-rejeu-en-ci.md`.
+- [ ] [décision] Les tests de la garde shell à côté de leur hook (limite du
+  même chantier) — `docs/intentions/tests-garde-shell-a-leur-place.md`.
 - [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
   externe du 2026-10-22) — `docs/intentions/e2e-et-attestation-precises.md`.
 - [ ] [décision] `init` impose les garanties obligatoires lui-même au lieu de
@@ -495,14 +510,11 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 2. CODEOWNERS protégeant le registre sous son nom actuel (fait le
 2026-10-24, voir `docs/projects/journal.md`) ;
 3. `docs/projects/reouvrir-apres-cloture.md` (touche aussi la barrière :
-après le 2) ; 4. `docs/projects/contournements-completes.md` ;
+après le 2) ; 4. les contournements restants fermés ou assumés (fait le
+2026-10-24, voir `docs/projects/journal.md`) ;
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
 
-- [ ] [IA] [P2] Les contournements restants fermés ou assumés : CI qui
-  rejoue les hooks de la branche principale, garde shell qui refuse,
-  `bypass_actors` en limite écrite (cadré le 2026-10-23) —
-  `docs/projects/contournements-completes.md`.
 - [ ] [IA] [P2] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
