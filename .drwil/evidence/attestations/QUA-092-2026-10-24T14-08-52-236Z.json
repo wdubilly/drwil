@@ -1,0 +1,36 @@
+{
+  "version": 3,
+  "contract": "QUA-092",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-24T14:08:52.236Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "6aed27920f2b58e4aad2665f905a0898f9c41b300ae5f120ac4d08d38e545784",
+  "proof": {
+    "tests-qua-087": "160dd4a63d1a9a21671ae8c02a7d04d8ca9e5bdfcceb460a0f39895e6ad11c70",
+    "tests-qua-088": "5a061abbc2f2364a657c23ee21a86c7931a9211e698e8b77c1042c47b61f2e75"
+  },
+  "covers": [
+    "packages/drwil/src/guarantees*.ts"
+  ],
+  "coverage": {
+    "packages/drwil/src/guarantees-briefs.ts": "984ea296762a9765bb699872d22f5dbdd7445bfa0799a922b9dce57a98bf9c26",
+    "packages/drwil/src/guarantees-forge.ts": "e4444e2fe41f54fcacb9781a819e6b4050c9593eff17f3b1d3ba19ee337cf798",
+    "packages/drwil/src/guarantees-table.ts": "507333e6369f9a4f004c81f68492cd52c6902089d5cbaa15df771b9ed46cfb13",
+    "packages/drwil/src/guarantees.ts": "5edbc7eadb6b916c2fc3ef4ab88323fe86dc85ed691ed4e03c4c1c5557076a8a"
+  },
+  "commit": "d979aec1333710415ce17876c6234687c2e6d341",
+  "automated": [
+    {
+      "id": "tests-qua-087",
+      "status": "ok"
+    },
+    {
+      "id": "tests-qua-088",
+      "status": "ok"
+    }
+  ]
+}

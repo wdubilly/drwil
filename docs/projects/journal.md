@@ -3014,5 +3014,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/alea-couverture-qua-004-au-pre-push.md` ; relevé hooks
   inchangés — `docs/intentions/releve-duree-checks-hooks-inchanges.md` ; les
   objectifs de durée de CI en indicateur suivi plutôt qu'en contrat attesté —
-  `docs/intentions/objectifs-de-duree-ci-en-indicateur.md`.
+  `docs/intentions/objectifs-de-duree-ci-en-indicateur.md` ; une attestation
+  tombe quand un contrôle change de forme sans changer d'effet (six
+  attestations périmées par les champs `build` / `needsBuild`) —
+  `docs/intentions/attestation-sur-l-effet-du-controle.md`.
 - **Clôturé par** : la branche `workstream/acceleration-ci` (PR #221).

@@ -450,6 +450,9 @@ une décision du demandeur.
   même chantier) — `docs/intentions/ci-livree-aux-projets-non-mis-a-jour.md`.
 - [ ] [décision] Un échec non expliqué de QUA-004 au pre-push (limite du même
   chantier) — `docs/intentions/alea-couverture-qua-004-au-pre-push.md`.
+- [ ] [décision] Une attestation ne tombe pas quand un contrôle change de
+  forme sans changer d'effet (limite du même chantier) —
+  `docs/intentions/attestation-sur-l-effet-du-controle.md`.
 - [ ] [décision] Les objectifs de durée de CI en indicateur suivi, pas en
   contrat attesté (limite du même chantier) —
   `docs/intentions/objectifs-de-duree-ci-en-indicateur.md`.
