@@ -70,10 +70,11 @@ un par critère ci-dessous sauf l'indicateur.)
 - Un agent obtient le texte complet d'un contrat par son ID, ou une entrée du
   journal par son chantier, sans lire le fichier entier ; `AGENTS.md` et les
   recettes pointent vers cette lecture ciblée, jamais vers la lecture du
-  fichier entier
+  fichier entier `QUA-124`
 - Un agent obtient en une lecture courte la liste de tous les contrats (ID et
   titre, aucun omis) ; `AGENTS.md` y renvoie avant toute modification
   importante, pour identifier les contrats applicables sans connaître leur ID
+  `QUA-125`
 - `run-checks` n'affiche en sortie que les contrôles en échec (chacun avec le
   contrat fautif, QUA-033) et une ligne de résumé ; le détail complet reste
   lisible dans un fichier, et un contrôle non exécuté reste un échec visible

@@ -270,3 +270,43 @@ test("QUA-042 : dossier des journaux de Claude Code ; ligne de commande, directe
   symlinkSync(SCRIPT, lien);
   assert.equal(spawnSync(process.execPath, [lien], { cwd: racine, encoding: "utf8", env }).status, 0);
 });
+
+test("QUA-042 : --recorded compare les chantiers consignés par leur cache lu moyen par requête, sans journal de session", () => {
+  const p = projet([], { lang: "fr" });
+  const usage = join(p.racine, ".drwil", "usage.jsonl");
+  const vide = main(["--recorded"], {
+    root: p.racine,
+    log: () => assert.fail("rien à afficher"),
+    err: (l) => assert.match(l, /aucune ligne/),
+  });
+  assert.equal(vide, 0, "sans usage.jsonl : dit, jamais bloquant");
+  writeFileSync(
+    usage,
+    [
+      JSON.stringify({ workstream: "avant", date: "2026-10-24", requests: 147, cache_read: 24_900_000 }),
+      "{illisible",
+      "null",
+      JSON.stringify({ autre: 1 }),
+      JSON.stringify({ workstream: "estime", source: "estimate", tokens: 5 }),
+      JSON.stringify({ workstream: "apres", date: "2026-10-30", requests: 100, cache_read: 9_000_000 }),
+      "",
+    ].join("\n"),
+  );
+  const out = [];
+  assert.equal(main(["--recorded"], { root: p.racine, log: (l) => out.push(l), err: () => assert.fail("aucune erreur") }), 0);
+  const lignes = out.join("\n").split("\n");
+  assert.match(lignes[0], /^chantier\s+date\s+requêtes\s+cache lu\s+cache lu\/req$/);
+  assert.match(lignes[1], /^avant\s+2026-10-24\s+147\s+24,9 M\s+169 k$/, "le plus ancien d'abord, comme écrit");
+  assert.match(lignes[2], /^estime\s+—\s+—\s+—\s+—$/, "estimation sans requêtes : non mesurée, jamais 0");
+  assert.match(lignes[3], /^apres\s+2026-10-30\s+100\s+9,0 M\s+90 k$/);
+  assert.equal(lignes.length, 4, "lignes illisibles ou sans chantier ignorées");
+  const en = projet([], { lang: "en" });
+  mkdirSync(join(en.racine, ".drwil"), { recursive: true });
+  writeFileSync(join(en.racine, ".drwil", "usage.jsonl"), `${JSON.stringify({ workstream: "w", requests: 2, cache_read: 1500 })}\n`);
+  const anglais = [];
+  main(["--recorded"], { root: en.racine, log: (l) => anglais.push(l) });
+  assert.match(anglais[0], /^workstream\s+date\s+requests\s+cache read\s+cache read\/req\nw\s+—\s+2\s+2 k\s+750$/);
+  const errs = [];
+  main(["--recorded"], { root: dossier(), err: (l) => errs.push(l) });
+  assert.match(errs[0], /aucune ligne dans \.drwil\/usage\.jsonl/);
+});

@@ -1194,7 +1194,10 @@ test("QUA-050 : un projet installé reçoit la commande de détour, cadrée par 
     agents,
     /\*\*Detour for a prior defect\*\*: mid-workstream, a defect outside the active brief's scope is fixed by a detour the agent opens alone/,
   );
-  assert.match(agents, /\| a defect to fix \| `docs\/contracts\.md` \| `docs\/recipes\/corriger-un-defaut\.md` \|/);
+  assert.match(
+    agents,
+    /\| a defect to fix \| `node \.githooks\/glossary\.mjs --contract <ID>` \| `docs\/recipes\/corriger-un-defaut\.md` \|/,
+  );
 });
 
 test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {

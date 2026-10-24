@@ -1160,3 +1160,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/base-checks.test.mjs`, `.githooks/run-checks.test.mjs`
 **Origine** : acceleration-ci — « Chaque contrôle n'est joué qu'une seule fois par PR en CI, à l'endroit stratégique qui permet à l'agent de corriger son développement, sans perte de garantie : un hook ne peut jamais être affaibli par une PR, la CI reste la porte de confiance »
 **Raison** : Le rejeu complet doublait le job `checks` même quand la PR ne touchait ni hooks ni contrôles, et `npm test` refaisait `couverture-tests`.
+
+## QUA-124 — Un contrat ou une entrée du journal se lit seul, sans lire tout le fichier
+**Règle** : Livré à tout projet. `node .githooks/glossary.mjs --contract <ID>` rend le texte complet d'un contrat du registre (titre et champs, tels qu'écrits), `--journal <chantier>` l'entrée du journal d'un chantier (celle qui cite sa preuve de clôture ou sa branche, à défaut celle dont le titre contient le texte donné) ; un ID ou un chantier inconnu le dit et sort en 1, jamais une sortie vide. `AGENTS.md` (gabarit et dépôt) et les recettes renvoient à cette lecture ciblée, jamais à la lecture du registre ou du journal entiers.
+**Périmètre** : `.githooks/glossary.mjs` (`contractText`, `journalEntries`) ; `AGENTS.md`, `docs/recipes/working-with-branches.md`, `docs/recipes/track-consumption-per-increment.md` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/glossary.mjs`.
+**Preuve** : tests des hooks sur des projets temporaires : texte complet d'un contrat, entrée par preuve, par branche (jamais la branche voisine), par titre, dossiers réglés, inconnus en français et en anglais, ligne de commande.
+**Contrôle** : `tests-qua-124`
+**Tests** : `.githooks/glossary.test.mjs`
+**Origine** : reduction-contexte — « Un agent obtient le texte complet d'un contrat par son ID, ou une entrée du journal par son chantier, sans lire le fichier entier ; `AGENTS.md` et les recettes pointent vers cette lecture ciblée, jamais vers la lecture du fichier entier »
+**Raison** : Un fichier lu reste dans le contexte et se relit à chaque requête : `docs/contracts.md` et `docs/projects/journal.md` lus en entier pesaient près de la moitié du cache lu d'un chantier (relevé du 2026-10-24).
+
+## QUA-125 — La liste de tous les contrats se lit en une lecture courte
+**Règle** : Livré à tout projet. `node .githooks/glossary.mjs --contracts` rend une ligne par contrat du registre, « ID — titre », titre jamais raccourci, aucun omis ; `AGENTS.md` (gabarit et dépôt) y renvoie avant toute modification importante, pour identifier les contrats applicables sans connaître leur ID, puis lire chacun par `--contract`.
+**Périmètre** : `.githooks/glossary.mjs` (`contractList`) ; `AGENTS.md` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/glossary.mjs`.
+**Preuve** : tests des hooks : titre long gardé entier, contrat sans titre, section libre ignorée, registre absent.
+**Contrôle** : `tests-qua-125`
+**Tests** : `.githooks/glossary.test.mjs`
+**Origine** : reduction-contexte — « Un agent obtient en une lecture courte la liste de tous les contrats (ID et titre, aucun omis) ; `AGENTS.md` y renvoie avant toute modification importante, pour identifier les contrats applicables sans connaître leur ID »
+**Raison** : Sans liste complète, la lecture ciblée ferait manquer un contrat applicable dont l'agent ignore l'ID : la gouvernance s'affaiblirait pour gagner du contexte.

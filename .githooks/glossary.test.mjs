@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { annotate, cited, glossary, main, unlabelled } from "./glossary.mjs";
+import { annotate, cited, contractList, contractText, glossary, journalEntries, main, unlabelled } from "./glossary.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./glossary.mjs", import.meta.url));
 
@@ -135,4 +135,68 @@ test("QUA-039 : commande : arguments ou entrée standard, directe ou par un lien
     spawnSync(process.execPath, [SCRIPT, "QUA-015"], { cwd: projet(COMPLET), encoding: "utf8" }).stdout,
     "QUA-015 — Chantiers exploitables à froid\n",
   );
+});
+
+const JOURNAL = [
+  "# Journal\n\nIntroduction.\n",
+  "## 2026-10-04 — Ancien chantier sans preuve\n\n- **Clôturé par** : commit `b2751b4`.\n",
+  "## 2026-10-24 — Accélérer la CI\n\n- **Preuve de clôture** : `docs/preuves/acceleration-ci.md`.\n",
+  "## 2026-10-25 — Chantier d'une branche\n\n- **Clôturé par** : la branche `workstream/essai` (PR #3).\n",
+  "## 2026-10-26 — Branche voisine\n\n- **Clôturé par** : la branche `workstream/essai-bis`.\n",
+].join("\n");
+
+test("QUA-124 : lecture ciblée : texte complet d'un contrat par son ID, entrée du journal par son chantier, sans lire tout le fichier", () => {
+  const racine = projet({ ...COMPLET, "docs/projects/journal.md": JOURNAL });
+  assert.equal(contractText(racine, "QUA-016"), "## QUA-016 — Rappel de cadrage\n**Règle** : r.");
+  assert.equal(contractText(racine, "QUA-999"), null);
+  assert.deepEqual(journalEntries(racine, "acceleration-ci"), [
+    "## 2026-10-24 — Accélérer la CI\n\n- **Preuve de clôture** : `docs/preuves/acceleration-ci.md`.",
+  ]);
+  assert.equal(journalEntries(racine, "essai").length, 1, "par sa branche, jamais la branche voisine");
+  assert.match(journalEntries(racine, "essai")[0], /Chantier d'une branche/);
+  assert.match(journalEntries(racine, "ANCIEN chantier")[0], /^## 2026-10-04/, "sans preuve ni branche : par son titre");
+  assert.deepEqual(journalEntries(racine, "absent"), []);
+  assert.deepEqual(journalEntries(projet({}), "x"), [], "pas de journal : rien");
+  const reglee = projet({
+    ".drwil/ia-first.json": JSON.stringify({ lang: "en", dirs: { projects: "suivi", proofs: "preuves" } }),
+    "suivi/journal.md": "## 2026-10-24 — Réglé\n\n- **Proof**: `preuves/regle.md`.\n",
+  });
+  assert.equal(journalEntries(reglee, "regle").length, 1, "dossiers réglés");
+  const lignes = [];
+  const log = (l) => lignes.push(l);
+  assert.equal(main(["--contract", "QUA-015"], racine, log), 0);
+  assert.equal(main(["--journal", "acceleration-ci"], racine, log), 0);
+  assert.equal(main(["--contract", "QUA-999"], racine, log), 1);
+  assert.equal(main(["--journal", "absent"], racine, log), 1);
+  assert.equal(main(["--contract"], racine, log), 2, "ID manquant : l'usage");
+  assert.equal(main(["--journal", "x"], reglee, log), 1);
+  assert.equal(main(["--contract", "X-1"], reglee, log), 1);
+  assert.deepEqual(lignes, [
+    "## QUA-015 — Chantiers exploitables à froid\n**Règle** : r.",
+    "## 2026-10-24 — Accélérer la CI\n\n- **Preuve de clôture** : `docs/preuves/acceleration-ci.md`.",
+    "contrat QUA-999 absent du registre (liste : node .githooks/glossary.mjs --contracts)",
+    "aucune entrée du journal pour « absent » (ni sa preuve, ni sa branche, ni son titre)",
+    "usage : node .githooks/glossary.mjs [<texte>] | --contract <ID> | --contracts | --journal <chantier>",
+    'no journal entry for "x" (neither its proof, nor its branch, nor its title)',
+    "contract X-1 not in the registry (list: node .githooks/glossary.mjs --contracts)",
+  ]);
+  const lien = join(racine, "lien.mjs");
+  symlinkSync(SCRIPT, lien);
+  const r = spawnSync(process.execPath, [lien, "--contract", "QUA-016"], { cwd: racine, encoding: "utf8" });
+  assert.equal(r.stdout, "## QUA-016 — Rappel de cadrage\n**Règle** : r.\n");
+});
+
+test("QUA-125 : liste courte de tous les contrats : ID et titre complet, aucun omis", () => {
+  const long = `Titre ${"long ".repeat(30)}`.trim();
+  const racine = projet({
+    "docs/contracts.md": `## QUA-001 — ${long}\n**Règle** : r.\n\n## Section libre\n\n## APP-002\n**Règle** : sans titre.\n\n## SEC-003 — Secret\n`,
+  });
+  assert.deepEqual(contractList(racine), [`QUA-001 — ${long}`, "APP-002", "SEC-003 — Secret"], "titre jamais raccourci");
+  const lignes = [];
+  assert.equal(
+    main(["--contracts"], racine, (l) => lignes.push(l)),
+    0,
+  );
+  assert.equal(lignes.length, 3);
+  assert.deepEqual(contractList(projet({})), [], "registre absent : liste vide");
 });

@@ -7,6 +7,15 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Targeted reading, so an agent does not read whole files into its context:
+  `node .githooks/glossary.mjs --contract <ID>` gives a contract's full
+  text, `--contracts` lists every contract (ID and title, none left out),
+  `--journal <brief>` gives a workstream's journal entry; `AGENTS.md` and the
+  recipes point to them instead of reading `docs/contracts.md` or the
+  journal end to end.
+- `node .githooks/consumption.mjs --recorded` compares the recorded
+  workstreams by their average cache read per request (read from
+  `.drwil/usage.jsonl` only, no session log needed).
 - `.drwil/ia-first.json` accepts `build` (the compile command, run once per
   pass by the first check that needs it, `needsBuild: true`; a failed build
   fails every dependent check) and `parallel: true` (command checks run
