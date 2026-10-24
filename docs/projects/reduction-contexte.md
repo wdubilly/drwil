@@ -83,13 +83,13 @@ un par critère ci-dessous sauf l'indicateur.)
 - `run-checks` n'affiche en sortie que les contrôles en échec (chacun avec le
   contrat fautif, QUA-033) et une ligne de résumé ; le détail complet reste
   lisible dans un fichier, et un contrôle non exécuté reste un échec visible
-  (QUA-013)
+  (QUA-013) `QUA-126`
 - Le résumé de `run-checks` compte les avertissements non bloquants et donne
   le chemin du fichier de détail ; un avertissement n'est jamais tu sans être
-  compté
+  compté `QUA-127`
 - `close.mjs --check` regroupe ses avertissements de doublon possible (une
   ligne par fichier cité, pas une par intention) ; les erreurs bloquantes
-  restent toutes affichées
+  restent toutes affichées `QUA-128`
 - Avec Claude Code, les passages longs (`run-checks`, `drwil verify`) peuvent
   tourner dans un sous-agent livré (nommé `drwil-checks`, à créer dans l'arbre `.claude` du gabarit) qui ne
   renvoie que le verdict et les échecs ; pour les autres outils, `AGENTS.md`

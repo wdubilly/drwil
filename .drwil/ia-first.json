@@ -1421,6 +1421,39 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-126",
+      "name": "tests de QUA-126, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-126 \" .githooks/run-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-127",
+      "name": "tests de QUA-127, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-127 \" .githooks/run-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-128",
+      "name": "tests de QUA-128, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-128 \" .githooks/close.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "transitions": "human",

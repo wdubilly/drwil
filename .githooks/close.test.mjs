@@ -18,6 +18,7 @@ import {
   prunedMessage,
 } from "./close.mjs";
 import { intentsLeftBehind } from "./briefs.mjs";
+import { twinIntents } from "./doc-coherence.mjs";
 import { move, start } from "./state.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
@@ -563,7 +564,7 @@ test("QUA-077 : références à la fiche réorientées vers le journal, intentio
   assert.match(r.message, /r\.md:1 cite docs\/projects\/exemple\.md, qui sera supprimée : à réorienter vers le journal/);
   assert.match(
     r.message,
-    /Avertissements \(non bloquants\) :\n {2}⚠ intention docs\/intentions\/neuve\.md : cite src\/a\.mjs, déjà cité par docs\/intentions\/origine\.md/,
+    /Avertissements \(non bloquants\) :\n {2}⚠ src\/a\.mjs : cité par docs\/intentions\/neuve\.md, déjà cité par docs\/intentions\/origine\.md/,
   );
   ecrire(racine, { "docs/intentions/origine.md": "# Origine mise à jour\n\nCite `src/a.mjs`.\n" });
   const fin = close(racine, { fix: true, logs: journaux() });
@@ -765,4 +766,42 @@ test("QUA-118 : une seconde entrée de journal pour le même chantier fait écho
       /2 entries cite `docs\/preuves\/exemple\.md` — a reopened workstream updates its journal entry/.test(s),
     ),
   );
+});
+
+test("QUA-128 : --check regroupe les doublons possibles, une ligne par chemin cité ; les erreurs bloquantes restent toutes affichées", () => {
+  const racine = depot({ activite: "BUILD" });
+  ecrire(racine, {
+    "docs/intentions/origine.md": "# Origine\n\nCite `src/a.mjs`.\n",
+    "docs/recipes/r.md": "Fiche : `docs/projects/exemple.md`.\n",
+    "docs/recipes/s.md": "Encore : `docs/projects/exemple.md`.\n",
+  });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "origine");
+  process.env.DRWIL_BASE = git(racine, "rev-parse", "HEAD");
+  ecrire(racine, {
+    "docs/intentions/une.md": "# Une\n\nCite `src/a.mjs` et `src/b.mjs`.\n",
+    "docs/intentions/deux.md": "# Deux\n\nCite `src/a.mjs` et `src/b.mjs`.\n",
+    "docs/intentions/trois.md": "# Trois\n\nCite `src/a.mjs`.\n",
+  });
+  const r = close(racine, { check: true });
+  const avertissements = r.message.split("\n").filter((l) => l.startsWith("  ⚠") && /doublon possible/.test(l));
+  assert.equal(avertissements.length, 2, r.message);
+  assert.match(
+    avertissements[0],
+    /^ {2}⚠ src\/a\.mjs : cité par docs\/intentions\/(deux|trois|une)\.md, docs\/intentions\/(deux|trois|une)\.md, docs\/intentions\/(deux|trois|une)\.md, déjà cité par docs\/intentions\/origine\.md — doublon possible, à vérifier$/,
+  );
+  assert.match(
+    avertissements[1],
+    /^ {2}⚠ src\/b\.mjs : cité par docs\/intentions\/(deux|une)\.md, docs\/intentions\/(deux|une)\.md — doublon possible, à vérifier$/,
+    "entre nouvelles seulement",
+  );
+  assert.equal(r.code, 1, "les erreurs bloquantes décident");
+  assert.match(r.message, /r\.md:1 cite docs\/projects\/exemple\.md/);
+  assert.match(r.message, /s\.md:1 cite docs\/projects\/exemple\.md/, "chaque erreur bloquante, aucune regroupée");
+  const en = twinIntents(racine, { dirs: {} }, "en");
+  assert.match(
+    en[1],
+    /^src\/b\.mjs: cited by docs\/intentions\/(deux|une)\.md, docs\/intentions\/(deux|une)\.md — possible duplicate, to check$/,
+  );
+  assert.match(en[0], /, already cited by docs\/intentions\/origine\.md — possible duplicate, to check$/);
 });

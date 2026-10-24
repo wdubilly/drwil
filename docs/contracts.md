@@ -1180,3 +1180,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/glossary.test.mjs`
 **Origine** : reduction-contexte — « Un agent obtient en une lecture courte la liste de tous les contrats (ID et titre, aucun omis) ; `AGENTS.md` y renvoie avant toute modification importante, pour identifier les contrats applicables sans connaître leur ID »
 **Raison** : Sans liste complète, la lecture ciblée ferait manquer un contrat applicable dont l'agent ignore l'ID : la gouvernance s'affaiblirait pour gagner du contexte.
+
+## QUA-126 — `run-checks` n'affiche que ses échecs et un résumé, le détail complet dans un fichier
+**Règle** : Livré à tout projet. `.githooks/run-checks.mjs` n'affiche en sortie que les contrôles en échec — chacun nommé avec son contrat et son libellé (QUA-033, un contrôle par règle ; QUA-039, un identifiant vient avec ce qu'il désigne), suivi des 40 dernières lignes de sa sortie (toute la sortie en CI, où le fichier ne survit pas au job) — puis une ligne de résumé. Le rapport complet (chaque contrôle annoncé, sa sortie, chaque avertissement, chaque échec, le résumé) est écrit dans `.drwil/evidence/run-checks.log` (si présent), hors de git ; un rapport impossible à écrire ne change pas le verdict. Un contrôle non exécuté hors commit reste un échec affiché (QUA-013, un contrôle non exécuté n'est pas un succès) ; le code de sortie ne change pas.
+**Périmètre** : `.githooks/run-checks.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/run-checks.mjs`.
+**Preuve** : tests des hooks sur des projets temporaires : sortie d'un échec long (contrat libellé, 40 dernières lignes, renvoi au fichier), rien d'un contrôle réussi ni d'annonce, détail complet dans l'ordre, CI avec toute la sortie, non exécuté en échec visible, rapport impossible à écrire.
+**Contrôle** : `tests-qua-126`
+**Tests** : `.githooks/run-checks.test.mjs`
+**Origine** : reduction-contexte — « `run-checks` n'affiche en sortie que les contrôles en échec (chacun avec le contrat fautif, QUA-033) et une ligne de résumé ; le détail complet reste lisible dans un fichier, et un contrôle non exécuté reste un échec visible (QUA-013) »
+**Raison** : La sortie complète de `run-checks` (annonces, sorties des suites de tests réussies, avertissements) entrait dans le contexte de l'agent et s'y relisait à chaque requête, pour un verdict qui tient en une ligne.
+
+## QUA-127 — Le résumé de `run-checks` compte chaque avertissement et dit où lire le détail
+**Règle** : Livré à tout projet. La ligne de résumé de `.githooks/run-checks.mjs` donne le nombre d'avertissements non bloquants (contrôles non exécutés au commit, audits périmés, rappels d'intentions), en réussite comme en échec, et le chemin du rapport complet ; un avertissement n'est jamais tu sans être compté : le compte est celui des lignes `⚠` du rapport.
+**Périmètre** : `.githooks/run-checks.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/run-checks.mjs`.
+**Preuve** : tests des hooks : quatre avertissements de natures différentes comptés et présents au rapport, résumé en échec et en réussite, en français et en anglais, renvoi au fichier d'une sortie coupée.
+**Contrôle** : `tests-qua-127`
+**Tests** : `.githooks/run-checks.test.mjs`
+**Origine** : reduction-contexte — « Le résumé de `run-checks` compte les avertissements non bloquants et donne le chemin du fichier de détail ; un avertissement n'est jamais tu sans être compté »
+**Raison** : Retirer les avertissements de la sortie sans les compter les aurait rendus invisibles : la gouvernance perdait ce que le contexte gagnait.
+
+## QUA-128 — Les doublons d'intention possibles se signalent une fois par chemin cité
+**Règle** : Livré à tout projet. À la clôture et à `node .githooks/close.mjs --check`, les avertissements de doublon possible (QUA-077, une intention nouvelle qui cite un chemin déjà cité est signalée) sont regroupés : une ligne par chemin cité, qui nomme chaque intention nouvelle qui le cite et, s'il y en a, les intentions plus anciennes ; deux intentions nouvelles qui se citent l'une l'autre sont nommées une fois. Les erreurs bloquantes restent toutes affichées, une par problème.
+**Périmètre** : `.githooks/doc-coherence.mjs` (`twinIntents`), `.githooks/close.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/doc-coherence.mjs` (`twinIntents`).
+**Preuve** : tests des hooks sur un vrai dépôt git temporaire : trois intentions nouvelles et une ancienne sur deux chemins ⇒ deux lignes, entre nouvelles seulement, en français et en anglais ; deux erreurs bloquantes toutes deux affichées.
+**Contrôle** : `tests-qua-128`
+**Tests** : `.githooks/close.test.mjs`
+**Origine** : reduction-contexte — « `close.mjs --check` regroupe ses avertissements de doublon possible (une ligne par fichier cité, pas une par intention) ; les erreurs bloquantes restent toutes affichées »
+**Raison** : Une clôture qui crée plusieurs intentions sur le même fichier produisait une ligne par paire, répétée à chaque `--check`, sans rien dire de plus.

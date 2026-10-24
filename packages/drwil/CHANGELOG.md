@@ -13,6 +13,14 @@ closing commit; the release renames this section to its version.
   `--journal <brief>` gives a workstream's journal entry; `AGENTS.md` and the
   recipes point to them instead of reading `docs/contracts.md` or the
   journal end to end.
+- `.githooks/run-checks.mjs` shows only the failed checks (each with its
+  contract and the last 40 lines of its output; all of it in CI) and one
+  summary line counting the non-blocking warnings; the full report goes to
+  `.drwil/evidence/run-checks.log`. A check that did not run still fails
+  visibly outside a commit; the exit code is unchanged.
+- `node .githooks/close.mjs --check` groups its possible-duplicate warnings:
+  one line per cited path, naming every new intent citing it; blocking
+  errors are all still shown.
 - `node .githooks/consumption.mjs --recorded` compares the recorded
   workstreams by their average cache read per request (read from
   `.drwil/usage.jsonl` only, no session log needed).

@@ -49,8 +49,12 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] 
   const base = { ...process.env, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "" };
   // DRWIL_ROOT : sans elle, run-checks jugerait le dépôt drwil (parent de son .githooks/).
   // Dossier courant ailleurs : seule la racine compte, comme pour un hook lancé depuis une couche.
-  return spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_ROOT: racine, ...env } });
+  const r = spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_ROOT: racine, ...env } });
+  return { ...r, racine, detail: detail(racine) };
 }
+/** Le rapport complet que run-checks écrit à côté de sa sortie courte (QUA-126) ; vide s'il manque. */
+const DETAIL = ".drwil/evidence/run-checks.log";
+const detail = (racine) => (existsSync(join(racine, DETAIL)) ? readFileSync(join(racine, DETAIL), "utf8") : "");
 
 test("racine du projet, pas le dossier courant : contrôles annoncés, non exécutés signalés, bilan OK", () => {
   const r = lancer(
@@ -58,10 +62,15 @@ test("racine du projet, pas le dossier courant : contrôles annoncés, non exéc
     { env: { DRWIL_HOOK: "pre-commit" } },
   );
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(r.stdout, /^\[ia-first\] chemins et contrats cités dans la doc…$/m);
-  assert.match(r.stdout, /^\[ia-first\] projet…$/m);
-  assert.match(r.stdout, /^\[ia-first\] ⚠ non exécuté : couverture CI de chaque contrôle \(QUA-013\) \(aucune CI configurée/m);
-  assert.match(r.stdout, /^\[ia-first\] contrôles exécutés : OK \(\d+ non exécuté\(s\), voir ci-dessus\)\n$/m);
+  assert.match(r.detail, /^\[ia-first\] chemins et contrats cités dans la doc…$/m);
+  assert.match(r.detail, /^\[ia-first\] projet…$/m);
+  assert.match(r.detail, /^\[ia-first\] ⚠ non exécuté : couverture CI de chaque contrôle \(QUA-013\) \(aucune CI configurée/m);
+  assert.equal(
+    r.stdout,
+    "[ia-first] contrôles exécutés : OK (1 avertissement(s), non exécutés compris — détail : .drwil/evidence/run-checks.log)\n",
+    "réussite : la seule ligne de résumé",
+  );
+  assert.match(r.detail, /contrôles exécutés : OK \(1 avertissement/, "le rapport complet finit par le même résumé");
 });
 
 test("en anglais : échecs listés (message du contrôle ou son nom), aucun contrôle du projet déclaré", () => {
@@ -71,7 +80,7 @@ test("en anglais : échecs listés (message du contrôle ou son nom), aucun cont
   );
   assert.equal(r.status, 1);
   assert.match(
-    r.stdout,
+    r.detail,
     /^\[ia-first\] ⚠ not run: project checks \(lint, tests…\) \(none declared in \.drwil\/ia-first\.json → checks\)$/m,
   );
   assert.match(r.stdout, /^\[ia-first\] ✗ failed: paths and contracts cited in docs$/m);
@@ -82,7 +91,7 @@ test("en anglais : échecs listés (message du contrôle ou son nom), aucun cont
 test("sans configuration, hors dépôt git, au commit : rien d'indexé, contrôles du projet absents", () => {
   const r = lancer({}, { depot: false, env: { DRWIL_HOOK: "pre-commit" } });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(r.stdout, /⚠ non exécuté : contrôles du projet \(lint, tests…\) \(aucun déclaré/);
+  assert.match(r.detail, /⚠ non exécuté : contrôles du projet \(lint, tests…\) \(aucun déclaré/);
 });
 
 test("audits : périmé signalé (français), récent, sans date ou sans ligne de scan ignorés", () => {
@@ -90,19 +99,19 @@ test("audits : périmé signalé (français), récent, sans date ou sans ligne d
     "docs/audit-risques.md": "# Audit\n\n> Dernier scan : 2020-01-01\n",
     "docs/decouverte-valeur.md": "# Valeur\n\n> Dernier scan : 2999-01-01\n",
   });
-  assert.match(r.stdout, /⚠ non exécuté : audit périmé \(docs\/audit-risques\.md, vieux de \d+ jours\) : à relancer/);
-  assert.doesNotMatch(r.stdout, /decouverte-valeur/);
+  assert.match(r.detail, /⚠ non exécuté : audit périmé \(docs\/audit-risques\.md, vieux de \d+ jours\) : à relancer/);
+  assert.doesNotMatch(r.detail, /decouverte-valeur/);
   r = lancer({
     ".drwil/ia-first.json": JSON.stringify({ lang: "en" }),
     "docs/audit-risks.md": "# Risks\n\nno scan line\n",
     "docs/value-discovery.md": "# Value\n\n> Last scan: never\n",
   });
-  assert.doesNotMatch(r.stdout, /stale audit/);
+  assert.doesNotMatch(r.detail, /stale audit/);
   r = lancer(
     { ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "docs/value-discovery.md": "> Last scan: 2020-01-01\n" },
     { env: { DRWIL_HOOK: "pre-commit" } },
   );
-  assert.match(r.stdout, /⚠ not run: stale audit \(docs\/value-discovery\.md, \d+ days old\): time to re-run/);
+  assert.match(r.detail, /⚠ not run: stale audit \(docs\/value-discovery\.md, \d+ days old\): time to re-run/);
   assert.match(r.stdout, /checks run: OK/);
 });
 
@@ -111,10 +120,10 @@ test("QUA-036 : rappels d'intentions : périmée signalée sans bloquer, en angl
     "docs/intentions/vieille.md": "# I\n\n**Statut** : proposée le 2020-01-01.\n",
     "docs/intentions/neuve.md": "# I\n\n**Statut** : proposée le 2999-01-01.\n",
   });
-  assert.match(r.stdout, /\[ia-first\] ⚠ intention sans revue depuis \d+ jours \(docs\/intentions\/vieille\.md\) : la revoir/);
-  assert.doesNotMatch(r.stdout, /neuve\.md|non exécuté : intention/);
+  assert.match(r.detail, /\[ia-first\] ⚠ intention sans revue depuis \d+ jours \(docs\/intentions\/vieille\.md\) : la revoir/);
+  assert.doesNotMatch(r.detail, /neuve\.md|non exécuté : intention/);
   r = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "docs/intentions/old.md": "**Status**: proposed on 2020-01-01.\n" });
-  assert.match(r.stdout, /⚠ intent not reviewed for \d+ days \(docs\/intentions\/old\.md\): review it/);
+  assert.match(r.detail, /⚠ intent not reviewed for \d+ days \(docs\/intentions\/old\.md\): review it/);
 });
 
 test("QUA-036 : au commit, une fiche supprimée sans que son intention soit touchée est signalée, en anglais aussi", () => {
@@ -138,8 +147,8 @@ test("QUA-036 : au commit, une fiche supprimée sans que son intention soit touc
     g("commit", "-qm", "base");
     g("rm", "-q", "docs/projects/a.md");
     const env = { ...process.env, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "pre-commit", DRWIL_ROOT: racine };
-    const r = spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env });
-    assert.match(r.stdout, motif, lang);
+    spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env });
+    assert.match(detail(racine), motif, lang);
   }
 });
 
@@ -151,7 +160,7 @@ test("QUA-039 : un ID cité dans un message est suivi de son titre, lu dans le r
     },
     { env: { DRWIL_HOOK: "pre-commit" }, indexer: ["docs/contracts.md"] },
   );
-  assert.match(r.stdout, /non exécuté : couverture \(QUA-004 — Seuil de couverture de test\)/);
+  assert.match(r.detail, /non exécuté : couverture \(QUA-004 — Seuil de couverture de test\)/);
 });
 
 test("QUA-013 : hors commit (push, CI), un contrôle non exécuté fait échouer ; au commit, simple avertissement", () => {
@@ -162,13 +171,13 @@ test("QUA-013 : hors commit (push, CI), un contrôle non exécuté fait échouer
   assert.doesNotMatch(r.stdout, /contrôles exécutés : OK/);
   r = lancer(sansCi, { env: { DRWIL_HOOK: "pre-commit" } });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(r.stdout, /⚠ non exécuté : couverture CI/);
+  assert.match(r.detail, /⚠ non exécuté : couverture CI/);
 });
 
 test("QUA-013 : hors CI, un projet non configuré (pas de CI) reste un avertissement visible", () => {
   const r = lancer({ ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "projet", run: "node -e 0" }] }) });
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(r.stdout, /⚠ non exécuté : couverture CI/);
+  assert.match(r.detail, /⚠ non exécuté : couverture CI/);
 });
 
 test("QUA-013 : hors commit, aucun contrôle du projet déclaré fait échouer, en anglais aussi ; l'audit périmé reste un avertissement", () => {
@@ -176,7 +185,7 @@ test("QUA-013 : hors commit, aucun contrôle du projet déclaré fait échouer, 
   assert.equal(r.status, 1, r.stdout + r.stderr);
   assert.match(r.stdout, /^\[ia-first\] ✗ failed: not run: project checks \(lint, tests…\) \(none declared/m);
   r = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en" }), "docs/value-discovery.md": "> Last scan: 2020-01-01\n" });
-  assert.match(r.stdout, /⚠ not run: stale audit/);
+  assert.match(r.detail, /⚠ not run: stale audit/);
   assert.doesNotMatch(r.stdout, /✗ failed: not run: stale audit/);
 });
 
@@ -255,12 +264,12 @@ test("QUA-119 : avec `parallel`, rapport dans l'ordre de la liste, sorties group
     { env: { DRWIL_HOOK: "pre-commit" } },
   );
   assert.equal(r.status, 1, r.stdout + r.stderr);
-  const lignes = r.stdout.split("\n");
+  const lignes = r.detail.split("\n");
   const rang = (re) => lignes.findIndex((l) => re.test(l));
   assert.ok(rang(/^\[ia-first\] Lent…$/) < rang(/^sortie lente$/));
   assert.ok(rang(/^sortie lente$/) < rang(/^\[ia-first\] Cassé \(QUA-999\)…$/));
   assert.ok(rang(/^trace$/) > rang(/^\[ia-first\] Cassé/));
-  assert.match(r.stdout, /^\[ia-first\] ⚠ non exécuté : Reporté \(/m);
+  assert.match(r.detail, /^\[ia-first\] ⚠ non exécuté : Reporté \(/m);
   assert.match(r.stdout, /^\[ia-first\] ✗ échec : Cassé \(QUA-999\)/m);
   assert.doesNotMatch(r.stdout, /✗ échec : Lent/);
 });
@@ -289,4 +298,98 @@ test("QUA-123 : le job checks joue la suite une seule fois sur Node 22, sans npm
   assert.doesNotMatch(checks, /npm test/);
   assert.match(checks, /run: node \.githooks\/run-checks\.mjs/);
   assert.match(job("kit-tests"), /node-version: 24/);
+});
+
+test("QUA-126 : sortie limitée aux contrôles en échec (contrat nommé, fin de leur sortie) et au résumé ; détail complet dans un fichier", () => {
+  const long = `node -e "for(let i=1;i<=50;i++)console.log('ligne '+i);process.exit(1)"`;
+  const cfg = {
+    checks: [
+      { name: "bavard", run: "node -e \"console.log('sortie de réussite')\"" },
+      { name: "couverture (QUA-004)", run: long },
+    ],
+  };
+  const fichiers = {
+    "docs/contracts.md": "## QUA-004 — Seuil de couverture de test\n**Règle** : r.\n",
+    ".drwil/ia-first.json": JSON.stringify(cfg),
+  };
+  const r = lancer(fichiers);
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  const lignes = r.stdout.trimEnd().split("\n");
+  assert.equal(lignes[0], "[ia-first] ✗ échec : couverture (QUA-004 — Seuil de couverture de test)", "le contrat fautif, avec son libellé");
+  assert.equal(lignes[1], "    … 10 ligne(s) plus haut, dans .drwil/evidence/run-checks.log");
+  assert.equal(lignes[2], "    ligne 11");
+  assert.equal(lignes.at(-2), "    ligne 50");
+  assert.match(
+    lignes.at(-1),
+    /^\[ia-first\] contrôles exécutés : 1 en échec, \d+ avertissement\(s\) — détail : \.drwil\/evidence\/run-checks\.log$/,
+  );
+  assert.equal(lignes.length, 43, "ni annonce, ni avertissement, ni sortie d'un contrôle réussi");
+  assert.doesNotMatch(r.stdout, /sortie de réussite|bavard|…$/m);
+  assert.match(r.detail, /^\[ia-first\] bavard…\nsortie de réussite$/m, "le détail garde tout, dans l'ordre");
+  assert.match(r.detail, /^ligne 1$/m);
+  assert.match(r.detail, /^\[ia-first\] ✗ échec : couverture/m);
+  const ci = lancer(fichiers, { env: { CI: "true" } });
+  assert.match(ci.stdout, /^ {4}ligne 1$/m, "en CI, toute la sortie : le fichier ne survit pas au job");
+  assert.doesNotMatch(ci.stdout, /plus haut/);
+  assert.match(
+    ci.stdout,
+    /^\[ia-first\] ✗ échec : non exécuté : couverture CI de chaque contrôle/m,
+    "non exécuté hors commit : un échec visible (QUA-013)",
+  );
+});
+
+test("QUA-126 : un rapport impossible à écrire ne change pas le verdict ; un échec sans sortie reste nommé", () => {
+  const r = lancer(
+    { ".drwil/evidence": "un fichier, pas un dossier", ".drwil/ia-first.json": JSON.stringify({ checks: [] }) },
+    { docsOk: false },
+  );
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /^\[ia-first\] ✗ échec : chemins et contrats cités dans la doc$/m);
+  assert.match(r.stdout, /^\[ia-first\] contrôles exécutés : 1 en échec/m);
+  const ok = lancer({
+    ".drwil/evidence": "fichier",
+    ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "p", run: "node -e 0" }] }),
+  });
+  assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+  assert.match(ok.stdout, /contrôles exécutés : OK/);
+});
+
+test("QUA-127 : le résumé compte chaque avertissement non bloquant et donne le chemin du détail, en anglais aussi", () => {
+  const fichiers = {
+    ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "p", run: "node -e 0", paths: ["src/**"] }] }),
+    "docs/audit-risques.md": "> Dernier scan : 2020-01-01\n",
+    "docs/intentions/vieille.md": "# I\n\n**Statut** : proposée le 2020-01-01.\n",
+  };
+  const r = lancer(fichiers, { env: { DRWIL_HOOK: "pre-commit" } });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  // Reporté (p), couverture CI absente, audit périmé, intention sans revue : quatre, aucun tu.
+  const avertissements = r.detail.split("\n").filter((l) => l.startsWith("[ia-first] ⚠"));
+  assert.equal(avertissements.length, 4, r.detail);
+  assert.equal(
+    r.stdout,
+    "[ia-first] contrôles exécutés : OK (4 avertissement(s), non exécutés compris — détail : .drwil/evidence/run-checks.log)\n",
+  );
+  const en = lancer(
+    { ...fichiers, ".drwil/ia-first.json": JSON.stringify({ lang: "en", checks: [{ name: "p", run: "node -e 0", paths: ["src/**"] }] }) },
+    {
+      docsOk: false,
+      env: { DRWIL_HOOK: "pre-commit" },
+    },
+  );
+  assert.match(en.stdout, /^\[ia-first\] checks run: 1 failed, 3 warning\(s\) — detail: \.drwil\/evidence\/run-checks\.log$/m);
+  const ok = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en", checks: [{ name: "p", run: "node -e 0" }] }) });
+  assert.match(
+    ok.stdout,
+    /^\[ia-first\] checks run: OK \(\d+ warning\(s\), not run included — detail: \.drwil\/evidence\/run-checks\.log\)$/m,
+  );
+  const longue = lancer(
+    {
+      ".drwil/ia-first.json": JSON.stringify({
+        lang: "en",
+        checks: [{ name: "x", run: `node -e "for(let i=0;i<45;i++)console.log(i);process.exit(1)"` }],
+      }),
+    },
+    {},
+  );
+  assert.match(longue.stdout, /^ {4}… 5 line\(s\) above, in \.drwil\/evidence\/run-checks\.log$/m);
 });

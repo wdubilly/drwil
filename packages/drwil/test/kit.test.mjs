@@ -94,7 +94,14 @@ const envTest = { ...process.env, CI: "" };
 delete envTest.DRWIL_PUSH_TAGS_ONLY;
 delete envTest.DRWIL_PUSH_NO_BRANCH;
 delete envTest.DRWIL_HOOK;
-const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
+// run-checks n'affiche que ses échecs et un résumé (QUA-126) : le rapport complet, écrit à côté, s'y ajoute
+// pour que les attentes sur un avertissement ou une annonce gardent leur sens.
+const withDetail = (r, dir) => {
+  const detail = join(dir, ".drwil/evidence/run-checks.log");
+  return { ...r, stdout: r.stdout + (existsSync(detail) ? readFileSync(detail, "utf8") : "") };
+};
+const checks = (dir) =>
+  withDetail(spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest }), dir);
 const git = (dir, ...args) =>
   spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
@@ -2083,7 +2090,9 @@ test("pre-commit : un contrôle du projet hors de ses chemins est reporté (visi
   git(dir, "add", "-A");
   const horsChemins = git(dir, "commit", "-qm", "rien sous src/");
   assert.equal(horsChemins.status, 0, "aucun fichier indexé sous src/ : reporté, pas lancé : " + horsChemins.stdout + horsChemins.stderr);
-  assert.match(horsChemins.stdout + horsChemins.stderr, /non exécuté : suite lourde \(aucun fichier indexé sous ses chemins/);
+  // Visible dans le rapport complet, compté dans le résumé (QUA-127).
+  assert.match(horsChemins.stdout + horsChemins.stderr, /contrôles exécutés : OK \(\d+ avertissement\(s\)/);
+  assert.match(read(dir, ".drwil/evidence/run-checks.log"), /non exécuté : suite lourde \(aucun fichier indexé sous ses chemins/);
 
   mkdirSync(join(dir, "src"), { recursive: true });
   writeFileSync(join(dir, "src/a.ts"), "export const a = 1;\n");
