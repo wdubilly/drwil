@@ -1,7 +1,9 @@
 # Intention : les tests laissent des dossiers /tmp/drwil-* jamais supprimés
 
 **Statut** : proposée le 2026-10-24 — limite constatée pendant la clôture du
-chantier « réduire le contexte relu par chantier ».
+chantier « réduire le contexte relu par chantier » ; cadrée le 2026-10-24 dans
+`docs/projects/dossiers-temporaires-des-tests.md` (les deux questions sont
+tranchées : racine par passe et comptage, une racine par passe).
 
 ## Besoin
 

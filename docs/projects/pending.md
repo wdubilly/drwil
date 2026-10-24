@@ -431,7 +431,8 @@ une décision du demandeur.
   lecture ciblée ne suffit pas (limite du même chantier) —
   `docs/intentions/decoupage-registre-et-journal.md`.
 - [ ] [décision] Les tests laissent des dossiers `/tmp/drwil-*` jamais
-  supprimés (inodes épuisés le 2026-10-24) —
+  supprimés (inodes épuisés le 2026-10-24) — cadrée le 2026-10-24 (fiche
+  listée sous « Ensuite ») —
   `docs/intentions/tests-dossiers-temporaires-non-supprimes.md`.
 - [ ] [décision] Éprouver les gardes de lecture et le sous-agent de contrôles
   dans une vraie session Claude Code (limite du même chantier) —
@@ -553,7 +554,10 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
 
-- [ ] [IA] [P2] `doctor` dit le niveau de protection réel, la barrière
+- [ ] [IA] [P1] Les contrôles ne laissent plus de dossiers temporaires :
+  racine temporaire par passe, fuites nommées, dossiers vides du banc
+  (cadré le 2026-10-24) — `docs/projects/dossiers-temporaires-des-tests.md`.
+- [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
