@@ -2943,7 +2943,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   le texte, trompée par des variables et trop stricte sur un texte cité
   (heredoc refusé) — `docs/intentions/garde-shell-par-le-texte.md` ; le
   rejeu double environ la durée du job `checks` (~3 min de plus) —
-  `docs/intentions/duree-du-rejeu-en-ci.md` ; les tests de la garde shell
+  l'intention sur la durée du rejeu (traitée et retirée le 2026-10-24) ; les tests de la garde shell
   sont dans `packages/drwil/test/kit.test.mjs` —
   `docs/intentions/tests-garde-shell-a-leur-place.md`.
 - **Clôturé par** : la branche `workstream/contournements-completes`
@@ -2984,3 +2984,33 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/reouverture-eprouvee-en-reel.md`.
 - **Clôturé par** : la branche `workstream/reouvrir-apres-cloture`
   (PR #220).
+
+## 2026-10-24 — Accélérer la CI sans perte de qualité
+
+- **Décisions clés** : mesure d'abord (série 203 s sur 8 cœurs, 250 s sur
+  2 cœurs : le coût est le CPU des contrôles lourds, pas `tsc`). Une
+  compilation par passage (réglages `build` / `needsBuild`) et contrôles en
+  parallèle, au plus la moitié des cœurs, verdict lu dans l'ordre de la liste
+  (QUA-119 contrôles plus rapides, QUA-120 compilation unique). Push d'une
+  branche à PR ouverte sauté sans changer les noms de checks exigés (QUA-121).
+  Cadrage élargi le 2026-10-24 par le demandeur : chaque contrôle joué une seule
+  fois par PR (QUA-123) : rejeu QUA-113 sauté, et dit, quand `.githooks/` et
+  `.drwil/ia-first.json` sont identiques à la base (QUA-113 modifié, validé par le
+  demandeur) ; suite jouée une fois sur Node 22 dans `checks`. Critère de durée
+  reformulé (QUA-122) : hooks modifiés ≤ 3m55 (30 % sous ≈5m35) ; hooks
+  inchangés relevé après fusion. Intention d'origine (« Accélérer la CI »)
+  réduite à ce qui reste (suite unique avec reporter, jobs découpés, cache) ;
+  l'intention sur la durée du rejeu est couverte et retirée.
+- **Relevés réels (job `checks`, PR #221)** : référence PR #220 ≈ 5m35 ;
+  5m33 avant l'élargissement ; hooks modifiés (rejeu complet) : 3m02, 3m45,
+  4m37 sur trois passages (deux sur trois sous 3m55). Hooks inchangés : pas
+  encore relevé (le saut n'agit qu'après fusion).
+- **Limites connues** : tests de `.githooks/` plus joués sur Node 24 —
+  `docs/intentions/tests-des-hooks-sur-node-24.md` ; `checks-self-test` et
+  `couverture-hooks` non départagés —
+  `docs/intentions/checks-self-test-contre-couverture-hooks.md` ; gain pour les
+  projets adoptés — `docs/intentions/ci-livree-aux-projets-non-mis-a-jour.md` ;
+  échec non expliqué de QUA-004 —
+  `docs/intentions/alea-couverture-qua-004-au-pre-push.md` ; relevé hooks
+  inchangés — `docs/intentions/releve-duree-checks-hooks-inchanges.md`.
+- **Clôturé par** : la branche `workstream/acceleration-ci` (PR #221).
