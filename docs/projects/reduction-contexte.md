@@ -35,6 +35,8 @@ files:
   - docs/intentions/notes.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - .drwil/ia-first.json
+  - packages/drwil/test/kit.test.mjs
 -->
 
 (Dépôt ou livrable (QUA-018, périmètre explicite dépôt vs gabarit) : les deux,
@@ -141,6 +143,11 @@ session), `.githooks/consumption.mjs` (indicateur comparé).
   contrôles en sous-agent, une session par chantier (demandeur).
 - 2026-10-24 — Mesure : indicateur sans seuil, cache lu moyen par requête
   (demandeur).
+- 2026-10-24 — Cadrage élargi au lancement (agent, en rapport direct avec la
+  fiche) : `.drwil/ia-first.json`, où chaque contrat créé déclare son
+  contrôle `tests-qua-NNN` (QUA-033, un contrôle par règle), et
+  `packages/drwil/test/kit.test.mjs`, qui porte la preuve de QUA-072 (les
+  hooks et skills de Claude Code ne changent pas) où entre le sous-agent.
 - 2026-10-24 — Qualité conservée (demandeur) : trois garde-fous ajoutés aux
   critères — liste courte de tous les contrats, avertissements comptés dans
   le résumé, verdict du sous-agent recopié mot pour mot et sans accès à
