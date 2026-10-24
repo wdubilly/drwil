@@ -232,9 +232,11 @@ hooks et skills de Claude Code ne changent pas) restent vrais tels quels.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-24) : lots 1 à 3 réalisés et commités sur
-  `workstream/reduction-contexte` (QUA-124 à QUA-131 créés, contrôles
-  `tests-qua-124` à `tests-qua-131`) ; `node .githooks/run-checks.mjs` OK.
+- **Dernier état** (2026-10-24) : lots 1 à 4 réalisés et commités sur
+  `workstream/reduction-contexte` (QUA-124 à QUA-132 créés, contrôles
+  `tests-qua-124` à `tests-qua-132`) ; `node .githooks/run-checks.mjs` OK.
+  Lot 4 (lecture forcée) : Claude Code seulement ; Gemini, Copilot, Codex et
+  Cursor deviennent une intention créée à la clôture.
   Critère indicateur sorti vers une intention de relevé (décision du
   demandeur). Reste QUA-122 (job `checks` nettement plus court) en MANUAL :
   son attestation couvre `.drwil/ia-first.json`, modifié ici pour déclarer
