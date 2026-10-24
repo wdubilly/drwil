@@ -162,6 +162,11 @@ ni `build` ni `parallel`, et ferait tourner les contrôles sans compilation.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-24) : cadré ; rien de commencé.
-- **Travail non commité** : la fiche et sa ligne d'index.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Dernier état** (2026-10-24) : lots 1 à 3 faits (QUA-119 à QUA-123), PR #221.
+  Mesures CI du job `checks` : référence PR #220 ≈ 5m35 ; PR #221 avant
+  l'élargissement 5m33 ; après (hooks MODIFIÉS, donc rejeu complet, `npm test`
+  Node 22 retiré) 3m02. Hooks inchangés (rejeu sauté) : à relever sur la
+  première PR après fusion, la copie de base-checks lue sur master ne
+  connaissant pas encore le saut. Reste à l'humain : trois passages consécutifs
+  et l'attestation de QUA-122 (lot 4). Limite : les tests de `.githooks/` ne
+  tournent plus que sur Node 22 (plus sur 24) dans `checks`.
