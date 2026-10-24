@@ -442,8 +442,23 @@ une décision du demandeur.
 - [ ] [décision] La garde shell juge l'effet d'une commande, pas son texte
   (variables, texte cité ; limite du même chantier) —
   `docs/intentions/garde-shell-par-le-texte.md`.
-- [ ] [décision] Réduire la durée du rejeu par la branche principale en CI
-  (limite du même chantier) — `docs/intentions/duree-du-rejeu-en-ci.md`.
+- [ ] [décision] Jouer aussi les tests de `.githooks/` sur Node 24 (limite
+  du chantier « accélérer la CI ») — `docs/intentions/tests-des-hooks-sur-node-24.md`.
+- [ ] [décision] `checks-self-test` double-t-il `couverture-hooks` ? (limite
+  du même chantier) — `docs/intentions/checks-self-test-contre-couverture-hooks.md`.
+- [ ] [décision] Le gain de CI atteint-il les projets adoptés ? (limite du
+  même chantier) — `docs/intentions/ci-livree-aux-projets-non-mis-a-jour.md`.
+- [ ] [décision] Un échec non expliqué de QUA-004 au pre-push (limite du même
+  chantier) — `docs/intentions/alea-couverture-qua-004-au-pre-push.md`.
+- [ ] [décision] Une attestation ne tombe pas quand un contrôle change de
+  forme sans changer d'effet (limite du même chantier) —
+  `docs/intentions/attestation-sur-l-effet-du-controle.md`.
+- [ ] [décision] Les objectifs de durée de CI en indicateur suivi, pas en
+  contrat attesté (limite du même chantier) —
+  `docs/intentions/objectifs-de-duree-ci-en-indicateur.md`.
+- [ ] [IA] Relever la durée du job `checks` hooks inchangés, sur la première
+  PR ordinaire après fusion (limite du même chantier) —
+  `docs/intentions/releve-duree-checks-hooks-inchanges.md`.
 - [ ] [décision] Les tests de la garde shell à côté de leur hook (limite du
   même chantier) — `docs/intentions/tests-garde-shell-a-leur-place.md`.
 - [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue

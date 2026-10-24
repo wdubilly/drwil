@@ -52,6 +52,8 @@ test("QUA-113 un hook affaibli par la PR échoue au rejeu ; le hook de la PR est
   const d = depot();
   d.ecrire("src/ok.js", "ok\n");
   d.commit("travail sain");
+  d.ecrire(".githooks/run-checks.mjs", `${RUN_CHECKS}// retouche\n`);
+  d.commit("hook retouché");
   assert.deepEqual(d.rejouer(), { status: "ok", lines: ["contrôles rejoués avec les hooks de « main » : OK"] });
 
   d.ecrire(".githooks/run-checks.mjs", AFFAIBLI);
@@ -127,6 +129,7 @@ test("QUA-113 branche principale introuvable : non exécuté, jamais un succès"
   assert.match(d.rejouer(["--base"]).lines[0], /^non exécuté : branche principale inconnue/);
   // Branche orpheline : HEAD sans commit, l'historique de la PR ne se lit pas.
   d.git("checkout", "-q", "--orphan", "orpheline");
+  d.ecrire(".githooks/lib.mjs", "export const v = 3;\n");
   const r = d.rejouer();
   assert.equal(r.status, "not-run");
   assert.match(r.lines[0], /^non exécuté : git log /);
@@ -174,11 +177,56 @@ test("QUA-113 la branche principale vient de --base, DRWIL_BASE, puis des variab
 test("QUA-113 en ligne de commande : code 0 si rejoué ou non applicable, 1 sinon", () => {
   const cli = (dir, ...args) => spawnSync(process.execPath, [SCRIPT, ...args], { cwd: dir, encoding: "utf8", env });
   const d = depot();
+  d.ecrire(".githooks/lib.mjs", "export const v = 4;\n");
+  d.commit("hook modifié");
   let r = cli(d.dir, "--base", "main");
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /^\[ia-first\] contrôles rejoués avec les hooks de « main » : OK$/m);
   assert.equal(cli(depot({ hooks: false }).dir, "--base", "main").status, 0);
   r = cli(d.dir, "--base", "absente");
   assert.equal(r.status, 1);
+  const intact = depot();
+  r = cli(intact.dir, "--base", "main");
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^\[ia-first\] rejeu sauté : /m);
+  rmSync(intact.dir, { recursive: true, force: true });
   rmSync(d.dir, { recursive: true, force: true });
+});
+
+test("QUA-123 hooks et configuration identiques à la base : rejeu sauté, dit à voix haute", () => {
+  const d = depot();
+  d.ecrire("src/ok.js", "ok\n");
+  d.ecrire("faute", "x\n");
+  d.commit("travail hors hooks");
+  assert.deepEqual(d.rejouer(), {
+    status: "skipped",
+    lines: [
+      "rejeu sauté : .githooks/ et .drwil/ia-first.json sont identiques à ceux de « main », le rejeu serait strictement le passage déjà fait",
+    ],
+  });
+  const en = depot({ lang: "en" });
+  assert.match(en.rejouer().lines[0], /^replay skipped: .*identical to those of "main"/);
+});
+
+test("QUA-123 un hook ou la configuration modifiés (suivis ou non), un contrôle retiré : rejeu, jamais de saut", () => {
+  const d = depot();
+  d.ecrire(".githooks/lib.mjs", "export const v = 2;\n");
+  d.commit("hook modifié");
+  assert.equal(d.rejouer().status, "ok", "rejeu complet");
+  const nouveau = depot();
+  nouveau.ecrire(".githooks/nouveau.mjs", "export {};\n");
+  assert.match(nouveau.rejouer().lines.at(-1), /OK$/, "fichier non suivi : rejeu");
+  const cfg = depot();
+  cfg.ecrire(".drwil/ia-first.json", JSON.stringify({ checks: [{ id: "a", run: "true" }] }));
+  cfg.commit("deux contrôles retirés");
+  const r = cfg.rejouer();
+  assert.equal(r.status, "fail");
+  assert.match(r.lines[0], /contrôle « b » retiré/);
+});
+
+test("QUA-123 lecture git en échec : rejeu, jamais de saut", () => {
+  const d = depot();
+  writeFileSync(join(d.dir, ".git", "index"), "pas un index");
+  const r = d.rejouer();
+  assert.notEqual(r.status, "skipped");
 });

@@ -7,6 +7,15 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `.drwil/ia-first.json` accepts `build` (the compile command, run once per
+  pass by the first check that needs it, `needsBuild: true`; a failed build
+  fails every dependent check) and `parallel: true` (command checks run
+  together, at most half the cores; the report and the verdict stay those of a
+  serial run, a check opts out with `parallel: false`).
+- On a pull request, `.githooks/base-checks.mjs` skips the replay with the main
+  branch's hooks (QUA-113) when `.githooks/` and `.drwil/ia-first.json` are
+  byte for byte the main branch's, saying so in its output; any difference,
+  doubt or failing Git read still replays in full.
 - A workstream whose pull request reveals a defect after the closing
   commit (red CI, forge analysis) is reopened by the agent with one
   command, `node .githooks/state.mjs reopen`: in CLOSING, PR open and not

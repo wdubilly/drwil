@@ -2,14 +2,20 @@ name: ia-first
 on: [push, pull_request]
 jobs:
   checks:
+    # Sauté sur le push d'une branche dont la PR ouverte porte déjà ces checks (voir matrice-os).
+    needs: matrice-os
+    if: needs.matrice-os.outputs.saute != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      # La plus ancienne version de Node prise en charge (engines : >= 22) joue ici toute la suite, une
+      # seule fois (couverture-tests, couverture-hooks…) : le job est exigé par la forge, une ligne de
+      # matrice en plus renommerait les checks exigés. Node 24 joue la suite du paquet dans kit-tests.
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
       - run: npm ci
       # Sans gitleaks, SEC-007 (pas de secret) serait « non exécuté » ici, et verify en ERROR dans le
@@ -43,12 +49,6 @@ jobs:
       - run: node .github/scripts/verifier-ruleset.mjs
         env:
           GH_TOKEN: ${{ github.token }}
-      # La plus ancienne version de Node prise en charge (engines : >= 22) est testée ici, dans ce
-      # job exigé par la forge : une ligne de matrice en plus renommerait les checks exigés.
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-      - run: node --version && npm test --workspace packages/drwil
       # Non-régression (journal « Capitaliser les tests de non-régression », docs/projects/journal.md) : sur une PR en échec, les mêmes
       # contrôles sont rejoués sur la base de la PR pour dire si l'échec était déjà là. Le verdict ne
       # change pas — le job reste en échec : un échec préexistant se corrige aussi, il ne s'excuse pas.
@@ -73,12 +73,34 @@ jobs:
   matrice-os:
     runs-on: ubuntu-latest
     outputs:
-      matrice: ${{ steps.calcul.outputs.matrice }}
+      matrice: ${{ steps.calcul.outputs.matrice || steps.saute.outputs.matrice }}
+      saute: ${{ steps.pr.outputs.saute }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      # Un push sur une branche qui a déjà une PR ouverte rejouerait les mêmes jobs que la PR sur le
+      # même commit : `checks` et les tests de kit-tests sont sautés, la PR garde les siens. Sans PR
+      # (ou si GitHub ne répond pas), le push teste comme avant ; master et les tags ne sont jamais sautés.
+      - id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENEMENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PRINCIPALE: ${{ github.event.repository.default_branch }}
+          BRANCHE: ${{ github.ref_name }}
+        run: |
+          saute=false
+          if [ "$EVENEMENT" = push ] && [[ "$REF" == refs/heads/* ]] && [ "$REF" != "refs/heads/$PRINCIPALE" ]; then
+            ouvertes=$(gh pr list --repo "${{ github.repository }}" --head "$BRANCHE" --state open --json number --jq length) || ouvertes=0
+            if [ "$ouvertes" != "0" ]; then saute=true; echo "::notice::Push sauté : la pull request ouverte de $BRANCHE porte déjà ces checks."; fi
+          fi
+          echo "saute=$saute" >> "$GITHUB_OUTPUT"
+      - id: saute
+        if: steps.pr.outputs.saute == 'true'
+        run: echo 'matrice=[{"os":"ubuntu-latest","tester":false}]' >> "$GITHUB_OUTPUT"
       - id: calcul
+        if: steps.pr.outputs.saute != 'true'
         env:
           PRINCIPALE: ${{ github.event.repository.default_branch }}
           BASE: ${{ github.event.pull_request.base.sha }}
@@ -99,7 +121,7 @@ jobs:
     # un check exigé qui ne vient jamais. Sans tests, chaque étape est sautée, et le saut est dit.
     steps:
       - if: ${{ !matrix.tester }}
-        run: 'echo "::notice::${{ matrix.os }} non testé : la PR ne touche que la documentation (docs/, .drwil/usage.jsonl)."'
+        run: 'echo "::notice::${{ matrix.os }} non testé : la PR ne touche que la documentation (docs/, .drwil/usage.jsonl), ou ce push a une PR ouverte qui porte déjà ces checks."'
       - if: ${{ matrix.tester }}
         uses: actions/checkout@v7
       - if: ${{ matrix.tester }}

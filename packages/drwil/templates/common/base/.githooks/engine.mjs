@@ -9,9 +9,9 @@
 // - "not-run": it should have run but could not (missing tool, deferred
 //   at commit time) — never a success (QUA-013);
 // - "not-applicable": excluded by design in this context (e.g. QUA-017 in CI).
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
-import { homedir } from "node:os";
+import { availableParallelism, homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { globToRegex } from "./glob.mjs";
@@ -40,6 +40,8 @@ const TEXTS = {
     noCi: "aucune CI configurée (ci: none) : pas de filet pour les contrôles dégradables — en déclarer une : `npx drwil init --ci github` (ou `--ci gitlab`)",
     deferred: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
     docsOnly: "commit de documentation seule : rejoué au push et en CI",
+    buildFailed: (n) => `${n} : la compilation du projet (build) est en échec`,
+    buildMissing: (n) => `${n} déclare needsBuild sans « build » dans .drwil/ia-first.json`,
   },
   en: {
     secrets: "secrets (gitleaks)",
@@ -62,6 +64,8 @@ const TEXTS = {
     noCi: "no CI configured (ci: none): no net for degradable checks — declare one: `npx drwil init --ci github` (or `--ci gitlab`)",
     deferred: "no staged file under its paths: replayed on push and in CI",
     docsOnly: "documentation-only commit: replayed on push and in CI",
+    buildFailed: (n) => `${n}: the project build failed`,
+    buildMissing: (n) => `${n} declares needsBuild without a "build" in .drwil/ia-first.json`,
   },
 };
 
@@ -97,25 +101,70 @@ function findGitleaks() {
 export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI) } = {}) {
   const T = texts(cfg.lang);
   const full = (cfg.mode ?? "full") === "full";
+  // NODE_TEST_CONTEXT propagates to children: if the engine itself runs under `node --test`
+  // (the kit testing its hooks, a harness calling verify…), a `node --test` launched by a check
+  // would be silently skipped ("called recursively") and return 0: a false PASS.
+  // QUA-057: a hook run from a worktree or by `git commit -a` receives GIT_DIR, GIT_INDEX_FILE…;
+  // a check that inherits them and runs `git init` elsewhere acts on the repository that launched it
+  // (core.bare=true written in the shared config, index soiled). The hook keeps them; its children
+  // run from the project root, where git finds the right repository on its own.
+  const prepare = (opts, keepGit) => {
+    const checkEnv = { ...(opts.env ?? env), NODE_TEST_CONTEXT: undefined };
+    if (!keepGit) for (const k of Object.keys(checkEnv)) if (k.startsWith("GIT_")) delete checkEnv[k];
+    return { cwd: root, encoding: "utf8", ...opts, env: checkEnv };
+  };
   const launch = (cmd, args, { stdio = "inherit", beforeRun, keepGit = false, ...opts } = {}, name) => {
     beforeRun?.(name);
-    // NODE_TEST_CONTEXT propagates to children: if the engine itself runs under `node --test`
-    // (the kit testing its hooks, a harness calling verify…), a `node --test` launched by a check
-    // would be silently skipped ("called recursively") and return 0: a false PASS.
-    const checkEnv = { ...(opts.env ?? env), NODE_TEST_CONTEXT: undefined };
-    // QUA-057: a hook run from a worktree or by `git commit -a` receives GIT_DIR, GIT_INDEX_FILE…;
-    // a check that inherits them and runs `git init` elsewhere acts on the repository that launched it
-    // (core.bare=true written in the shared config, index soiled). The hook keeps them; its children
-    // run from the project root, where git finds the right repository on its own.
-    if (!keepGit) for (const k of Object.keys(checkEnv)) if (k.startsWith("GIT_")) delete checkEnv[k];
-    const r = spawnSync(cmd, args, { cwd: root, stdio, encoding: "utf8", ...opts, env: checkEnv });
+    const r = spawnSync(cmd, args, { stdio, ...prepare(opts, keepGit) });
     const output = stdio === "pipe" ? `${r.stdout ?? ""}${r.stderr ?? ""}` : undefined;
     // A command that cannot even start is a failure, as before the engine was extracted.
     if (r.error) return { status: "fail", detail: r.error.message, output };
     return { status: r.status === 0 ? "ok" : "fail", output };
   };
+  // Same verdict as `launch`, without blocking: the output is always captured (`launched`: the
+  // command did start, so the caller shows its name with its output).
+  const launchAsync = (cmd, args, { keepGit = false, ...opts } = {}) =>
+    new Promise((resolve) => {
+      let output = "";
+      let done = false;
+      const end = (r) => {
+        if (!done) resolve({ ...r, output, launched: true });
+        done = true;
+      };
+      const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"], ...prepare(opts, keepGit) });
+      for (const stream of [child.stdout, child.stderr]) stream.on("data", (d) => (output += d));
+      child.on("error", (e) => end({ status: "fail", detail: e.message }));
+      child.on("close", (code) => end({ status: code === 0 ? "ok" : "fail" }));
+    });
+  // The project is compiled once per run, by the first check that needs it (`needsBuild`); a failed
+  // build fails every check that depends on it, never lets it pass.
+  let built;
+  let buildReported = false;
+  const buildVerdict = (name, r) => {
+    if (r.status === "ok") return null;
+    const output = buildReported ? undefined : r.output;
+    buildReported = true;
+    return { status: "fail", message: T.buildFailed(name), output, launched: output !== undefined };
+  };
+  const buildOpts = { shell: true };
+  const build = (name, o) => {
+    if (!cfg.build) return { status: "fail", message: T.buildMissing(name) };
+    built ??= launch(cfg.build, [], { ...buildOpts, stdio: o.stdio }, "build");
+    return buildVerdict(name, built);
+  };
+  const buildAsync = async (name) => {
+    if (!cfg.build) return { status: "fail", message: T.buildMissing(name) };
+    buildPending ??= built ? Promise.resolve(built) : launchAsync(cfg.build, [], buildOpts);
+    built = await buildPending;
+    return buildVerdict(name, built);
+  };
+  let buildPending;
   const list = [];
-  const add = (id, name, run) => list.push({ id, name, run: (o = {}) => run(o, name) });
+  // `parallel` (setting, off by default): checks that only run a command also get `runAsync`, to be
+  // started together by `startParallel`; their verdict does not depend on the order they run in.
+  const parallel = cfg.parallel === true;
+  const add = (id, name, run, runAsync) =>
+    list.push({ id, name, run: (o = {}) => run(o, name), ...(runAsync && parallel ? { runAsync: () => runAsync(name) } : {}) });
   // A commit that stages documentation only (a brief widened mid-workstream) does not replay the tests
   // on the working tree, which holds the lot in progress (QUA-035); push and CI always replay them.
   // Strictly docs/ or Markdown: not isCode(), which calls code only what the project declares.
@@ -167,7 +216,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     return { status: "ok" };
   });
 
-  add("checks-self-test", T.selfTests, (o, name) => {
+  const selfTests = () => {
     if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const dir = join(root, ".githooks");
     const tests = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".test.mjs")) : [];
@@ -175,8 +224,20 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     // of an equipped project, which does not receive them.
     if (!tests.length) return { status: "not-applicable", detail: T.noTests };
     if (docsOnly) return { status: "not-run", detail: T.docsOnly };
-    return launch(process.execPath, ["--test", ...tests.map((f) => join(".githooks", f))], o, name);
-  });
+    return { args: ["--test", ...tests.map((f) => join(".githooks", f))] };
+  };
+  add(
+    "checks-self-test",
+    T.selfTests,
+    (o, name) => {
+      const t = selfTests();
+      return t.args ? launch(process.execPath, t.args, o, name) : t;
+    },
+    async () => {
+      const t = selfTests();
+      return t.args ? launchAsync(process.execPath, t.args) : t;
+    },
+  );
 
   add("ci-coverage", T.ciCoverage, (o, name) => {
     if (!full) return { status: "not-applicable", detail: T.minimalMode };
@@ -191,18 +252,55 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   // (QUA-013) and the pre-push as well as CI always replay it.
   for (const c of Array.isArray(cfg.checks) ? cfg.checks : []) {
     const name = c.name ?? c.run;
+    const skipped = () => {
+      if (docsOnly) return { status: "not-run", detail: T.docsOnly };
+      if (staged && Array.isArray(c.paths) && c.paths.length) {
+        const patterns = c.paths.map(globToRegex);
+        if (!staged.some((f) => patterns.some((p) => p.test(f)))) return { status: "not-run", detail: T.deferred };
+      }
+      return null;
+    };
+    const cwd = c.cwd ? join(root, c.cwd) : root;
     list.push({
       id: c.id ?? `project:${name}`,
       name,
-      run: (o = {}) => {
-        if (docsOnly) return { status: "not-run", detail: T.docsOnly };
-        if (staged && Array.isArray(c.paths) && c.paths.length) {
-          const patterns = c.paths.map(globToRegex);
-          if (!staged.some((f) => patterns.some((p) => p.test(f)))) return { status: "not-run", detail: T.deferred };
-        }
-        return launch(c.run, [], { ...o, shell: true, cwd: c.cwd ? join(root, c.cwd) : root }, name);
-      },
+      run: (o = {}) => skipped() ?? (c.needsBuild ? build(name, o) : null) ?? launch(c.run, [], { ...o, shell: true, cwd }, name),
+      ...(parallel && c.parallel !== false
+        ? {
+            runAsync: async () =>
+              skipped() ?? (c.needsBuild ? await buildAsync(name) : null) ?? launchAsync(c.run, [], { shell: true, cwd }),
+          }
+        : {}),
     });
   }
   return list;
+}
+
+/**
+ * Starts the `runAsync` of the checks that have one, in list order, at most `limit` at a time (by default half
+ * the cores, two at least: the suites launched by a check are parallel themselves, and a full load
+ * would break the timing tests among them):
+ * returns a Map id → Promise of the result. The caller reads the results in the list order, so the
+ * report is the one of a sequential run.
+ */
+export function startParallel(list, limit = Math.max(2, availableParallelism() >> 1)) {
+  const waiting = new Map();
+  const pending = list.filter((c) => c.runAsync);
+  for (const c of pending) waiting.set(c.id, Promise.withResolvers());
+  let active = 0;
+  const next = () => {
+    while (active < Math.max(1, limit) && pending.length) {
+      const c = pending.shift();
+      const { resolve, reject } = waiting.get(c.id);
+      active++;
+      c.runAsync()
+        .then(resolve, reject)
+        .finally(() => {
+          active--;
+          next();
+        });
+    }
+  };
+  next();
+  return new Map([...waiting].map(([id, d]) => [id, d.promise]));
 }

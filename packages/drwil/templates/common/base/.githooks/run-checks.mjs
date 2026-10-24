@@ -7,7 +7,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
-import { checks, projectRoot } from "./engine.mjs";
+import { checks, projectRoot, startParallel } from "./engine.mjs";
 import { annotate, glossary } from "./glossary.mjs";
 
 const root = projectRoot(import.meta.url);
@@ -66,8 +66,19 @@ const unrun = (what, configured = false) =>
 const announce = (name) => console.log(`[ia-first] ${name}…`);
 // "not-applicable" (excluded by design: minimal mode, QUA-017 in CI…) is not shown, as before.
 const staged = stagedFiles();
-for (const c of checks(root, { cfg, staged })) {
-  const r = c.run({ beforeRun: announce });
+const list = checks(root, { cfg, staged });
+// Checks with a `runAsync` (setting `parallel`) are all started up front; their result is read
+// here in the list order, so the report and the verdict are those of a sequential run.
+const started = startParallel(list);
+for (const c of list) {
+  let r;
+  if (started.has(c.id)) {
+    r = await started.get(c.id);
+    if (r.launched) {
+      announce(c.name);
+      if (r.output) process.stdout.write(r.output);
+    }
+  } else r = c.run({ beforeRun: announce });
   if (r.status === "fail") failures.push(r.message ?? c.name);
   else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
 }
