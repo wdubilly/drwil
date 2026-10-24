@@ -56,6 +56,18 @@ files:
   - docs/intentions/decoupage-registre-et-journal.md
   - docs/intentions/tests-dossiers-temporaires-non-supprimes.md
   - docs/intentions/gardes-de-lecture-en-session-reelle.md
+  - packages/drwil/templates/common/base/.githooks/scope-gate.mjs
+  - .githooks/scope-gate.mjs
+  - packages/drwil/templates/common/base/.githooks/base-checks.mjs
+  - .githooks/base-checks.mjs
+  - packages/drwil/templates/common/base/.githooks/pr-watch.mjs
+  - .githooks/pr-watch.mjs
+  - packages/drwil/templates/common/base/.githooks/check-code-rules.mjs
+  - .githooks/check-code-rules.mjs
+  - packages/drwil/templates/common/base/.githooks/check-file-size.mjs
+  - .githooks/check-file-size.mjs
+  - packages/drwil/templates/common/optional/create-release/create-release.mjs
+  - .githooks/create-release.mjs
 -->
 
 (Dépôt ou livrable (QUA-018, périmètre explicite dépôt vs gabarit) : les deux,
@@ -124,22 +136,47 @@ un par critère ci-dessous.)
 
 ## Contrats modifiés
 
-Aucun contrat existant n'est modifié. QUA-013 (un contrôle non exécuté n'est
-pas un succès), QUA-033 (un contrôle par règle, l'échec nomme sa règle) et
-QUA-039 (un identifiant cité vient avec ce qu'il désigne) restent vrais tels
-quels : la sortie raccourcie garde l'échec, son contrat et son libellé.
+- `QUA-044` (les hooks lisent la racine du projet, pas le dossier courant) :
+  modifié à la réouverture (QUA-116, défaut révélé par la PR #223), oui de
+  l'humain donné (QUA-117, correctif qui change les règles du jeu). Son
+  périmètre s'étend à tous les points d'entrée de `.githooks/` et
+  `.claude/hooks/` livrés : chemins réels comparés des deux côtés, et un test
+  refuse tout point d'entrée qui compare `import.meta.url` à
+  `pathToFileURL(process.argv[1])`.
+
+QUA-013 (un contrôle non exécuté n'est pas un succès), QUA-033 (un contrôle
+par règle, l'échec nomme sa règle) et QUA-039 (un identifiant cité vient avec
+ce qu'il désigne) restent vrais tels quels : la sortie raccourcie garde
+l'échec, son contrat et son libellé. QUA-077 (une intention nouvelle qui cite
+un chemin déjà cité est signalée), QUA-114 (refus du saut des hooks git) et
+QUA-072 (les hooks et skills de Claude Code ne changent pas) restent vrais
+tels quels.
+
 Les hooks ci-dessous changent, et le rejeu par la branche principale
-(QUA-113) garde leur version de la PR : `.githooks/glossary.mjs` (lecture par ID ou par
-chantier), `.githooks/run-checks.mjs` (sortie limitée aux échecs), `.githooks/close.mjs`
-(avertissements regroupés), `.githooks/state-texts.mjs` (invitation à une nouvelle
-session), `.githooks/consumption.mjs` (indicateur comparé),
-`.githooks/doc-coherence.mjs` (`twinIntents` : doublons possibles regroupés
-par chemin cité, ce que `close.mjs --check` affiche ; QUA-077, une intention
-nouvelle qui cite un chemin déjà cité est signalée, reste vrai tel quel).
+(QUA-113) garde leur version de la PR (un fichier par puce) :
+
+- `.githooks/glossary.mjs` : lecture par ID ou par chantier.
+- `.githooks/run-checks.mjs` : sortie limitée aux échecs.
+- `.githooks/close.mjs` : avertissements regroupés.
+- `.githooks/state-texts.mjs` : invitation à une nouvelle session.
+- `.githooks/state.test.mjs` : tests de l'invitation (le moteur
+  `.githooks/state.mjs` ne change pas).
+- `.githooks/consumption.mjs` : indicateur comparé.
+- `.githooks/doc-coherence.mjs` : `twinIntents`, doublons possibles regroupés
+  par chemin cité, ce que `close.mjs --check` affiche.
+- `.githooks/scope-gate.mjs` : point d'entrée par chemins réels (QUA-044).
+- `.githooks/base-checks.mjs` : point d'entrée par chemins réels (QUA-044).
+- `.githooks/pr-watch.mjs` : point d'entrée par chemins réels (QUA-044).
+- `.githooks/check-code-rules.mjs` : point d'entrée par chemins réels des
+  deux côtés (QUA-044).
+- `.githooks/check-file-size.mjs` : point d'entrée par chemins réels des deux
+  côtés (QUA-044).
+- `.githooks/create-release.mjs` : point d'entrée par chemins réels (QUA-044,
+  module de release).
+
 Le lot 4 ajoute un hook Claude Code (read-guard, dans `.claude/hooks/`) et
 étend `.claude/hooks/bash-guard.mjs` : hors de `.githooks/`, donc hors du
-rejeu de QUA-113 ; QUA-114 (refus du saut des hooks git) et QUA-072 (les
-hooks et skills de Claude Code ne changent pas) restent vrais tels quels.
+rejeu de QUA-113.
 
 ## 2. Hors périmètre
 
@@ -213,6 +250,14 @@ hooks et skills de Claude Code ne changent pas) restent vrais tels quels.
   fiches d'intention qui bouclent les limites du chantier (`docs/intentions/`,
   `[décision]` à l'index), dont le relevé de l'indicateur et la lecture
   forcée pour les autres outils décidés par le demandeur.
+
+- 2026-10-24 — Réouverture (QUA-116, défaut révélé par la PR #223 : CI
+  rouge), oui de l'humain (QUA-117, `detour.mjs allow`) : tous les points
+  d'entrée de `.githooks/` et `.claude/hooks/` comparent les chemins réels
+  (le garde shell ne se lançait pas par un lien symbolique, macOS) ; un test
+  de QUA-044 refuse la récidive ; le garde shell lit un chemin Windows
+  (`C:\…`) sans traiter `\` comme échappement ; « Contrats modifiés » cite
+  un hook par puce (QUA-113). Cadrage élargi à ces points d'entrée.
 
 ## 5. Points à trancher
 
