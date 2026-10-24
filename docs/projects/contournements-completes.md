@@ -144,6 +144,16 @@ s'arrête et le demande.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-23) : cadré.
+- **Dernier état** (2026-10-24) : lots 1 et 2 réalisés et commités ;
+  `node .githooks/run-checks.mjs` OK, rejeu `node .githooks/base-checks.mjs
+  --base origin/master` OK (3 min) ; `drwil verify --agent` en MANUAL REVIEW :
+  l'attestation de QUA-092 (garantie de couverture prouvée sur un dossier
+  vide) est tombée, `packages/drwil/src/guarantees-forge.ts` et
+  `packages/drwil/src/guarantees.ts` étant dans son
+  champ **Couvre**.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : [humain] rejouer l'essai manuel de QUA-092 puis
+  `drwil attest QUA-092` ; ensuite clôture par l'agent (journal, intentions
+  des limites : étape de rejeu retirable du workflow par la PR elle-même,
+  contrôle redéfini sous le même nom non comparé, garde shell trompée par
+  une commande construite par variables).
