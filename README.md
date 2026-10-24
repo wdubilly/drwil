@@ -1083,8 +1083,14 @@ workstreams, token consumption measured per workstream, readable
 identifiers and a maintained architecture map. 0.7.0 makes the
 guarantees of a governed project mandatory at adoption (100 % coverage,
 `e2e`, protected forge, a README that presents the product) and reviews the
-README, features and map before every release. Next: trying it on real
-projects (V1).
+README, features and map before every release. 0.8.0 closes the remaining
+bypasses (the CI replays the checks with the main branch's hooks, the
+Claude Code shell guard refuses skipping the hooks, `bypass_actors` is
+checked), lets `init` attach a project's existing code so the first commit
+passes, reopens a workstream whose pull request reveals a defect after its
+closing, and cuts the context an agent rereads (targeted reading of the
+registry and the journal, short check outputs, checks in a subagent).
+Next: trying it on real projects (V1).
 
 V0.2 covered:
 

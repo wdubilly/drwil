@@ -9,8 +9,10 @@ la personne qui l'utilise sur son projet. Le détail des commandes est dans
 Équipe un dossier vide, un projet existant ou un projet déjà équipé, sans
 jamais écraser un fichier du projet. `--dry-run` montre ce qui serait
 écrit. Une mise à jour rafraîchit ce que le kit a installé et que le projet
-n'a pas modifié ; un fichier du kit modifié à la main est signalé en dérive
-et repris par `drwil resolve-drift` (diff, confirmation, sauvegarde `.bak`).
+n'a pas modifié ; sur un projet qui a déjà du code, `init` le rattache à une
+fiche « code existant » pour que le premier commit passe. Un fichier du kit
+modifié à la main est signalé en dérive et repris par `drwil resolve-drift`
+(diff, confirmation, sauvegarde `.bak`).
 `drwil uninstall` ne retire que ce que le kit a installé et garde
 l'historique de gouvernance (`.drwil/`).
 
@@ -53,8 +55,25 @@ rappelé par les hooks ; lancement par un sondage dont l'humain choisit la
 réponse (`/drwil-start`), file de chantiers, barrière de périmètre au
 commit, détour pour un défaut préalable, clôture en un geste
 (`.githooks/close.mjs`) avec preuve versionnée et consommation de tokens
-mesurée. Une idée se note à tout moment sans changer d'activité
-(`/drwil-note`).
+mesurée. Un chantier dont la PR révèle un défaut après la clôture se
+rouvre d'une commande (`node .githooks/state.mjs reopen`). Une idée se note
+à tout moment sans changer d'activité (`/drwil-note`).
+
+## Garde-fous contre le contournement
+
+Sur une PR, la CI rejoue les contrôles avec les hooks de la branche
+principale : un hook affaibli ou un contrôle retiré échoue. Avec Claude
+Code, la garde shell refuse le saut des hooks (`--no-verify`, écriture de
+`core.hooksPath`) ; `drwil guarantees` et `drwil doctor` vérifient la liste
+de contournement (`bypass_actors`) des règles de la branche principale.
+
+## Contexte de l'agent
+
+Lecture ciblée du registre et du journal (`node .githooks/glossary.mjs
+--contract <ID>`, `--contracts`, `--journal <fiche>`) ; avec Claude Code,
+leur lecture entière est refusée. `run-checks` n'affiche que les contrôles
+en échec ; un sous-agent `drwil-checks` lance les contrôles longs et ne rend
+que le verdict.
 
 ## Outils d'IA pris en charge
 
