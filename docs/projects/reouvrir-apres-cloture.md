@@ -102,6 +102,19 @@ QUA-117, QUA-118.)
   (seul SCOPING) reste vraie pour `move` ; la réouverture est une commande à
   part, comme le détour.
 
+## Contrats modifiés
+
+Le rejeu par la branche principale (QUA-113) garde la version de la PR des
+hooks déclarés ici : leurs tests portent les nouveaux contrats QUA-116,
+QUA-117 et QUA-118, que les tests de la branche principale ignorent.
+
+- `.githooks/state.mjs` : réouverture (`reopen`), état « rouvert » (QUA-116)
+- `.githooks/state-cli.mjs` : commande `reopen` (QUA-116)
+- `.githooks/state-texts.mjs` : textes de la réouverture (QUA-116)
+- `.githooks/close.mjs` : nouvelle clôture sans doublon (QUA-118)
+- `.githooks/scope-gate.mjs` : correctif qui change les règles du jeu (QUA-117)
+- `.githooks/detour.mjs` : alignement sur l'état rouvert (QUA-116)
+
 ## 4. Décisions
 
 - 2026-10-23 — Rouvrir le chantier sur sa branche, plutôt qu'un détour
