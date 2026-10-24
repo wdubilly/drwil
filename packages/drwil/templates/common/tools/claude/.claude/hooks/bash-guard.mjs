@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { readFileSync, realpathSync } from "node:fs";
+import { dirname, isAbsolute, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Guard of Claude Code's shell commands (PreToolUse hook, Bash matcher).
 //
@@ -16,6 +16,18 @@ import { pathToFileURL } from "node:url";
 // removing or overriding core.hooksPath (--no-verify, commit -n, -c core.hooksPath=,
 // git config core.hooksPath …, GIT_CONFIG_*), also inside a compound command or a `sh -c "…"`.
 // A blocking check is fixed, never bypassed (QUA-019); reading the setting stays allowed.
+//
+// Also refused: `cat`, `less` or `more` of the contract registry or the journal, read whole (QUA-132,
+// the shell side of .claude/hooks/read-guard.mjs). Judged on the text of the command, like the rest:
+// `sed -n`, `grep`, `head` stay allowed, and a reading hidden behind a variable is not seen.
+
+// The folder holding this hook's .claude/, never the current folder (an agent's `cd`, QUA-044).
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+// Optional: without the read guard (a partial copy), this guard keeps its other refusals.
+let readGuard = null;
+try {
+  readGuard = await import("./read-guard.mjs");
+} catch {}
 
 // Left edge: no letter, no `$`, no `\` (a `\.env` regex is not a file).
 const BEFORE = "(?<![\\w$\\\\])";
@@ -55,8 +67,9 @@ const HOOKS_OVERRIDE = /^(?:--config-env=)?core\.hookspath=/i;
 /**
  * Commands of a shell text, each one a list of words (quotes removed), and the quoted strings,
  * analysed again as commands (`sh -c "…"`). A linear scan, no regular expression on the whole text.
+ * `literal`: a `\` stays in the word, quoted or not (a Windows path, `C:\Users\…`).
  */
-function split(text) {
+function split(text, literal = false) {
   const commands = [[]];
   const quoted = [];
   let word = null;
@@ -74,7 +87,7 @@ function split(text) {
         quoted.push(inner);
         continue;
       }
-      const escaped = ch === "\\" && quote === '"' && i + 1 < text.length;
+      const escaped = ch === "\\" && !literal && quote === '"' && i + 1 < text.length;
       const add = escaped ? text[++i] : ch;
       word += add;
       inner += add;
@@ -82,7 +95,7 @@ function split(text) {
       quote = ch;
       inner = "";
       word = word ?? "";
-    } else if (ch === "\\" && i + 1 < text.length) word = (word ?? "") + text[++i];
+    } else if (ch === "\\" && !literal && i + 1 < text.length) word = (word ?? "") + text[++i];
     else if (" \t\r".includes(ch)) end();
     else if (";&|\n()`".includes(ch)) {
       end();
@@ -145,6 +158,35 @@ export function skipsHooks(command, depth = 0) {
   return commands.some(commandSkips) || quoted.some((q) => skipsHooks(q, depth + 1));
 }
 
+const WHOLE_READERS = new Set(["cat", "less", "more"]);
+
+/**
+ * The guarded file (registry or journal, QUA-132) that a shell command reads whole with `cat`, `less`
+ * or `more`, or null. A relative path matches by its end (the agent may have `cd`'d), an absolute
+ * one must be the project's file. The words are read twice, `\` as an escape (POSIX shell) and as
+ * a character: an unquoted Windows path (`C:\Users\…`) would otherwise lose its separators.
+ */
+export function wholeRead(command, root = ROOT) {
+  if (!readGuard) return null;
+  const files = readGuard.guardedFiles(root);
+  const target = (arg) => {
+    if (isAbsolute(arg)) return readGuard.guardedTarget(arg, root);
+    const a = arg.replace(/\\/g, "/").replace(/^\.\//, "");
+    return files.find((rel) => a === rel || a.endsWith(`/${rel}`)) ?? null;
+  };
+  const text = String(command);
+  for (const words of [...split(text).commands, ...split(text, true).commands]) {
+    let i = 0;
+    while (i < words.length && /^\w+=/.test(words[i])) i++;
+    if (!WHOLE_READERS.has((words[i] ?? "").split("/").pop())) continue;
+    for (const arg of words.slice(i + 1)) {
+      const found = arg.startsWith("-") ? null : target(arg);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 const TEXTS = {
   fr: {
     env: "fichier .env (secrets) : utiliser .env.example, versionné et sans secret",
@@ -197,6 +239,18 @@ function main(input) {
     return JSON.stringify({
       hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: T.refused },
     });
+  let whole = null;
+  try {
+    whole = wholeRead(command);
+  } catch {}
+  if (whole)
+    return JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason: readGuard.refusal(whole, ROOT),
+      },
+    });
   const found = reason(command, T);
   if (found === null) return "";
   return JSON.stringify({
@@ -210,7 +264,7 @@ function main(input) {
 
 export { reason, main };
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   let input = "";
   process.stdin.on("data", (d) => {
     input += d;

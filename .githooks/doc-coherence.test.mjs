@@ -177,7 +177,7 @@ test("QUA-077 : doublon d'intention : une intention nouvelle citant un chemin d�
     "docs/intentions/notes.md": "- `.githooks/close.mjs`\n",
   });
   assert.deepEqual(twinIntents(racine, {}, "fr"), [
-    "intention docs/intentions/neuve.md : cite .githooks/close.mjs, déjà cité par docs/intentions/ancienne.md — doublon possible, à vérifier",
+    ".githooks/close.mjs : cité par docs/intentions/neuve.md, déjà cité par docs/intentions/ancienne.md — doublon possible, à vérifier",
   ]);
   git(racine, "add", "docs/intentions/neuve.md");
   git(racine, "commit", "-q", "-m", "neuve");

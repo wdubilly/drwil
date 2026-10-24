@@ -339,14 +339,14 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Constaté le 2026-10-17 sur le pilote `drwil_com` : le premier `verify` d'un projet neuf, tel que le donne le README, finit en `VERIFY ERROR` sans dire que c'est attendu ni comment en sortir.
 
 ## QUA-044 — Les hooks lisent la racine du projet, pas le dossier courant
-**Règle** : Les hooks d'agent livrés (`.claude/hooks/`) prennent pour racine du projet le dossier qui contient leur `.claude/`, et le moteur d'état (`.githooks/state.mjs`) le parent de son `.githooks/` (`DRWIL_ROOT` pour les tests seulement), comme le moteur des contrôles ; la commande du glossaire, le parent du `.githooks/` par lequel elle est appelée. Jamais le dossier courant : lancés depuis un sous-dossier, ils lisent le bon état, la garde de cadrage refuse toujours un fichier de code hors fiche, et rien n'est écrit dans le sous-dossier. Appelés par un chemin qui passe par un lien symbolique, ils se lancent quand même (chemins réels comparés).
-**Périmètre** : `.claude/hooks/` (sondage, garde de cadrage, glossaire), `.githooks/state.mjs`, `.githooks/glossary.mjs` ; livré dans le gabarit.
-**Source de vérité** : chaque hook (constante de racine), `.githooks/state.mjs` (point d'entrée), `.githooks/glossary.mjs` (point d'entrée).
-**Preuve** : tests du paquet et du moteur d'état.
+**Règle** : Les hooks d'agent livrés (`.claude/hooks/`) prennent pour racine du projet le dossier qui contient leur `.claude/`, et le moteur d'état (`.githooks/state.mjs`) le parent de son `.githooks/` (`DRWIL_ROOT` pour les tests seulement), comme le moteur des contrôles ; la commande du glossaire, le parent du `.githooks/` par lequel elle est appelée. Jamais le dossier courant : lancés depuis un sous-dossier, ils lisent le bon état, la garde de cadrage refuse toujours un fichier de code hors fiche, et rien n'est écrit dans le sous-dossier. Appelés par un chemin qui passe par un lien symbolique, ils se lancent quand même : tout point d'entrée livré de `.githooks/` et `.claude/hooks/` (modules optionnels compris) compare les chemins réels des deux côtés (`realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))`), jamais une URL tirée de `process.argv[1]` ni un chemin réel à un chemin non résolu.
+**Périmètre** : `.claude/hooks/` (sondage, garde de cadrage, glossaire, gardes de lecture et du shell), `.githooks/state.mjs`, `.githooks/glossary.mjs` ; pour le point d'entrée, tout script livré dans `.githooks/` et `.claude/hooks/` ; livré dans le gabarit.
+**Source de vérité** : chaque hook (constante de racine), `.githooks/state.mjs` (point d'entrée), `.githooks/glossary.mjs` (point d'entrée), le point d'entrée de chaque script livré.
+**Preuve** : tests du paquet et du moteur d'état ; un test parcourt les scripts du gabarit et refuse tout point d'entrée qui ne compare pas les chemins réels des deux côtés.
 **Contrôle** : `tests-qua-044`
 **Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/state.test.mjs`
 **Origine** : les hooks trouvent la racine du projet par l'emplacement de leur fichier — « Tous les hooks d'agent livrés, et le moteur d'état quand un hook l'appelle, prennent pour racine le dossier qui contient leur `.claude/` ou `.githooks/`, jamais le dossier courant »
-**Raison** : Constaté le 2026-10-16 : après un `cd` de l'agent, le rappel lisait un état absent et créait un `.drwil` parasite ; vérifié au chantier, la garde de cadrage ne refusait plus rien depuis un sous-dossier.
+**Raison** : Constaté le 2026-10-16 : après un `cd` de l'agent, le rappel lisait un état absent et créait un `.drwil` parasite ; vérifié au chantier, la garde de cadrage ne refusait plus rien depuis un sous-dossier. Étendu le 2026-10-24 (PR #223, CI macOS rouge) : la correction par chemins réels n'avait pas été appliquée partout — le garde shell, la garde de commit, le rejeu des hooks de la branche principale, le suivi de PR et la création de release comparaient encore des URL et ne faisaient rien par un lien symbolique.
 
 ## QUA-045 — Windows et macOS testés avant la fusion de tout code
 **Règle** : Propre au dépôt drwil (QUA-018). La suite du kit (`kit-tests`) tourne sur Ubuntu, Windows et macOS sur toute PR qui touche du code et à chaque push sur master ; sur une PR qui ne touche que `docs/**` et `.drwil/usage.jsonl`, Windows et macOS sont rapportés sous leur nom exigé mais sautent leurs étapes en le disant (notice), Ubuntu teste toujours. Un push sur une autre branche ne rapporte qu'Ubuntu : Windows et macOS une seule fois par push. « Code touché » se lit sur tout le diff de la PR ; un diff illisible fait échouer le calcul, jamais une matrice devinée (QUA-013).
@@ -1160,3 +1160,93 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/base-checks.test.mjs`, `.githooks/run-checks.test.mjs`
 **Origine** : acceleration-ci — « Chaque contrôle n'est joué qu'une seule fois par PR en CI, à l'endroit stratégique qui permet à l'agent de corriger son développement, sans perte de garantie : un hook ne peut jamais être affaibli par une PR, la CI reste la porte de confiance »
 **Raison** : Le rejeu complet doublait le job `checks` même quand la PR ne touchait ni hooks ni contrôles, et `npm test` refaisait `couverture-tests`.
+
+## QUA-124 — Un contrat ou une entrée du journal se lit seul, sans lire tout le fichier
+**Règle** : Livré à tout projet. `node .githooks/glossary.mjs --contract <ID>` rend le texte complet d'un contrat du registre (titre et champs, tels qu'écrits), `--journal <chantier>` l'entrée du journal d'un chantier (celle qui cite sa preuve de clôture ou sa branche, à défaut celle dont le titre contient le texte donné) ; un ID ou un chantier inconnu le dit et sort en 1, jamais une sortie vide. `AGENTS.md` (gabarit et dépôt) et les recettes renvoient à cette lecture ciblée, jamais à la lecture du registre ou du journal entiers.
+**Périmètre** : `.githooks/glossary.mjs` (`contractText`, `journalEntries`) ; `AGENTS.md`, `docs/recipes/working-with-branches.md`, `docs/recipes/track-consumption-per-increment.md` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/glossary.mjs`.
+**Preuve** : tests des hooks sur des projets temporaires : texte complet d'un contrat, entrée par preuve, par branche (jamais la branche voisine), par titre, dossiers réglés, inconnus en français et en anglais, ligne de commande.
+**Contrôle** : `tests-qua-124`
+**Tests** : `.githooks/glossary.test.mjs`
+**Origine** : reduction-contexte — « Un agent obtient le texte complet d'un contrat par son ID, ou une entrée du journal par son chantier, sans lire le fichier entier ; `AGENTS.md` et les recettes pointent vers cette lecture ciblée, jamais vers la lecture du fichier entier »
+**Raison** : Un fichier lu reste dans le contexte et se relit à chaque requête : `docs/contracts.md` et `docs/projects/journal.md` lus en entier pesaient près de la moitié du cache lu d'un chantier (relevé du 2026-10-24).
+
+## QUA-125 — La liste de tous les contrats se lit en une lecture courte
+**Règle** : Livré à tout projet. `node .githooks/glossary.mjs --contracts` rend une ligne par contrat du registre, « ID — titre », titre jamais raccourci, aucun omis ; `AGENTS.md` (gabarit et dépôt) y renvoie avant toute modification importante, pour identifier les contrats applicables sans connaître leur ID, puis lire chacun par `--contract`.
+**Périmètre** : `.githooks/glossary.mjs` (`contractList`) ; `AGENTS.md` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/glossary.mjs`.
+**Preuve** : tests des hooks : titre long gardé entier, contrat sans titre, section libre ignorée, registre absent.
+**Contrôle** : `tests-qua-125`
+**Tests** : `.githooks/glossary.test.mjs`
+**Origine** : reduction-contexte — « Un agent obtient en une lecture courte la liste de tous les contrats (ID et titre, aucun omis) ; `AGENTS.md` y renvoie avant toute modification importante, pour identifier les contrats applicables sans connaître leur ID »
+**Raison** : Sans liste complète, la lecture ciblée ferait manquer un contrat applicable dont l'agent ignore l'ID : la gouvernance s'affaiblirait pour gagner du contexte.
+
+## QUA-126 — `run-checks` n'affiche que ses échecs et un résumé, le détail complet dans un fichier
+**Règle** : Livré à tout projet. `.githooks/run-checks.mjs` n'affiche en sortie que les contrôles en échec — chacun nommé avec son contrat et son libellé (QUA-033, un contrôle par règle ; QUA-039, un identifiant vient avec ce qu'il désigne), suivi des 40 dernières lignes de sa sortie (toute la sortie en CI, où le fichier ne survit pas au job) — puis une ligne de résumé. Le rapport complet (chaque contrôle annoncé, sa sortie, chaque avertissement, chaque échec, le résumé) est écrit dans `.drwil/evidence/run-checks.log` (si présent), hors de git ; un rapport impossible à écrire ne change pas le verdict. Un contrôle non exécuté hors commit reste un échec affiché (QUA-013, un contrôle non exécuté n'est pas un succès) ; le code de sortie ne change pas.
+**Périmètre** : `.githooks/run-checks.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/run-checks.mjs`.
+**Preuve** : tests des hooks sur des projets temporaires : sortie d'un échec long (contrat libellé, 40 dernières lignes, renvoi au fichier), rien d'un contrôle réussi ni d'annonce, détail complet dans l'ordre, CI avec toute la sortie, non exécuté en échec visible, rapport impossible à écrire.
+**Contrôle** : `tests-qua-126`
+**Tests** : `.githooks/run-checks.test.mjs`
+**Origine** : reduction-contexte — « `run-checks` n'affiche en sortie que les contrôles en échec (chacun avec le contrat fautif, QUA-033) et une ligne de résumé ; le détail complet reste lisible dans un fichier, et un contrôle non exécuté reste un échec visible (QUA-013) »
+**Raison** : La sortie complète de `run-checks` (annonces, sorties des suites de tests réussies, avertissements) entrait dans le contexte de l'agent et s'y relisait à chaque requête, pour un verdict qui tient en une ligne.
+
+## QUA-127 — Le résumé de `run-checks` compte chaque avertissement et dit où lire le détail
+**Règle** : Livré à tout projet. La ligne de résumé de `.githooks/run-checks.mjs` donne le nombre d'avertissements non bloquants (contrôles non exécutés au commit, audits périmés, rappels d'intentions), en réussite comme en échec, et le chemin du rapport complet ; un avertissement n'est jamais tu sans être compté : le compte est celui des lignes `⚠` du rapport.
+**Périmètre** : `.githooks/run-checks.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/run-checks.mjs`.
+**Preuve** : tests des hooks : quatre avertissements de natures différentes comptés et présents au rapport, résumé en échec et en réussite, en français et en anglais, renvoi au fichier d'une sortie coupée.
+**Contrôle** : `tests-qua-127`
+**Tests** : `.githooks/run-checks.test.mjs`
+**Origine** : reduction-contexte — « Le résumé de `run-checks` compte les avertissements non bloquants et donne le chemin du fichier de détail ; un avertissement n'est jamais tu sans être compté »
+**Raison** : Retirer les avertissements de la sortie sans les compter les aurait rendus invisibles : la gouvernance perdait ce que le contexte gagnait.
+
+## QUA-128 — Les doublons d'intention possibles se signalent une fois par chemin cité
+**Règle** : Livré à tout projet. À la clôture et à `node .githooks/close.mjs --check`, les avertissements de doublon possible (QUA-077, une intention nouvelle qui cite un chemin déjà cité est signalée) sont regroupés : une ligne par chemin cité, qui nomme chaque intention nouvelle qui le cite et, s'il y en a, les intentions plus anciennes ; deux intentions nouvelles qui se citent l'une l'autre sont nommées une fois. Les erreurs bloquantes restent toutes affichées, une par problème.
+**Périmètre** : `.githooks/doc-coherence.mjs` (`twinIntents`), `.githooks/close.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/doc-coherence.mjs` (`twinIntents`).
+**Preuve** : tests des hooks sur un vrai dépôt git temporaire : trois intentions nouvelles et une ancienne sur deux chemins ⇒ deux lignes, entre nouvelles seulement, en français et en anglais ; deux erreurs bloquantes toutes deux affichées.
+**Contrôle** : `tests-qua-128`
+**Tests** : `.githooks/close.test.mjs`
+**Origine** : reduction-contexte — « `close.mjs --check` regroupe ses avertissements de doublon possible (une ligne par fichier cité, pas une par intention) ; les erreurs bloquantes restent toutes affichées »
+**Raison** : Une clôture qui crée plusieurs intentions sur le même fichier produisait une ligne par paire, répétée à chaque `--check`, sans rien dire de plus.
+
+## QUA-129 — Les contrôles longs tournent dans un sous-agent qui ne rend que le verdict et les échecs
+**Règle** : Livré à tout projet. Avec Claude Code (et les outils qui reçoivent l'arbre `.claude`), le gabarit livre le sous-agent `drwil-checks` (`.claude/agents/drwil-checks.md`) : il lance `node .githooks/run-checks.mjs` puis `drwil verify --agent` et ne rend que le verdict et les échecs, sans rien modifier. `AGENTS.md` (gabarit et dépôt) donne la consigne pour tout outil : les contrôles longs en sous-agent si l'outil le permet, sans droit d'écriture ; sinon, les lancer directement. Aucune promesse au-delà de cette consigne écrite pour Copilot, Gemini et Codex (QUA-060, un outil n'est tenu que prouvé par le banc). Les hooks et skills de Claude Code ne changent pas (QUA-072).
+**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
+**Preuve** : test du paquet qui installe un projet Claude Code (sous-agent livré, commandes lancées, consigne d'`AGENTS.md`) et un projet Codex seul (pas d'arbre `.claude`, consigne présente) ; en-tête du sous-agent dans la preuve de QUA-072.
+**Contrôle** : `tests-qua-129`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : reduction-contexte — « Avec Claude Code, les passages longs (`run-checks`, `drwil verify`) peuvent tourner dans un sous-agent livré (nommé `drwil-checks`, à créer dans l'arbre `.claude` du gabarit) qui ne renvoie que le verdict et les échecs ; pour les autres outils, `AGENTS.md` donne la consigne « si l'outil le permet » »
+**Raison** : Les sorties des contrôles longs restaient dans le contexte de la session principale ; un sous-agent les lit dans un contexte à part et n'en rend que la conclusion.
+
+## QUA-130 — Le sous-agent des contrôles recopie le verdict mot pour mot, sans attester ni écrire
+**Règle** : Livré à tout projet. Le sous-agent `drwil-checks` recopie mot pour mot, sans reformulation ni résumé, la ligne de verdict `GOVERNANCE: …` de `drwil verify --agent` et les listes des contrats en échec, non vérifiés ou à attester (et des critères non prouvés), ainsi que les lignes d'échec de `run-checks` ; une commande qui ne tourne pas est dite « not run », jamais réussie. Ses outils sont une liste fermée sans outil d'écriture (`Bash`, `Read`, `Grep`, `Glob`) ; il n'exécute jamais `drwil attest` ni le verdict de recette (`drwil attest` exige de toute façon un terminal interactif et la saisie de l'ID). `AGENTS.md` dit que la session principale n'annonce « vérifié » que sur la ligne recopiée.
+**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
+**Preuve** : test du paquet sur un projet installé : liste d'outils fermée sans écriture, interdits et format de recopie mot pour mot dans le sous-agent, consigne de la session principale dans `AGENTS.md`. Le comportement d'une session réelle n'est pas rejoué (pas de session Claude Code dans les tests, comme pour QUA-072).
+**Contrôle** : `tests-qua-130`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : reduction-contexte — « Le sous-agent recopie mot pour mot la ligne de verdict (`GOVERNANCE: …`) et la liste des contrats en échec ou à attester, sans reformulation ; il n'a accès ni à `drwil attest` ni à l'écriture de fichiers ; la session principale n'annonce « vérifié » que sur cette ligne recopiée »
+**Raison** : Un sous-agent qui résume pourrait transformer un FAIL en « presque bon » ; la gouvernance ne repose que sur la ligne de verdict elle-même.
+
+## QUA-131 — Après une clôture, le chantier suivant se lance dans une nouvelle session
+**Règle** : Livré à tout projet. Revenu en SCOPING par une transition (après une clôture, hors file), le rappel d'état (`node .githooks/state.mjs`, la sortie de `move` et l'injection de début de session) invite à lancer le chantier suivant dans une nouvelle session, pour tout outil (Claude Code : `/clear` ; autre outil : une nouvelle conversation). Une file garde son sous-agent par chantier : en file, c'est le texte de la file qui parle. Un état neutre (aucune transition) ne le dit pas.
+**Périmètre** : `.githooks/state-texts.mjs` (`context`) ; `AGENTS.md`, `docs/recipes/working-with-branches.md` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/state-texts.mjs`.
+**Preuve** : tests des hooks sur un dépôt temporaire : CLOSING → SCOPING par `move` puis contexte, état neutre, file, BUILD, en français et en anglais.
+**Contrôle** : `tests-qua-131`
+**Tests** : `.githooks/state.test.mjs`
+**Origine** : reduction-contexte — « Après le retour en SCOPING qui suit une clôture, le rappel d'état invite à ouvrir une nouvelle session pour le chantier suivant, pour tous les outils ; la file de chantiers garde son sous-agent par chantier »
+**Raison** : Une session qui enchaîne plusieurs chantiers garde tout le contexte des précédents et le relit à chaque requête.
+
+## QUA-132 — Avec Claude Code, le registre et le journal ne se lisent jamais en entier
+**Règle** : Livré à tout projet qui installe Claude Code. Le hook `PreToolUse` sur l'outil Read (`.claude/hooks/read-guard.mjs`, branché dans `.claude/settings.json`) refuse, avant qu'elle ait lieu, la lecture sans plage (ni `offset` ni `limit`) du registre des contrats (`dirs.contracts` de `.drwil/ia-first.json`, par défaut `docs/contracts.md`) et du journal (fichier journal.md de `dirs.projects`, par défaut `docs/projects/journal.md`) ; `.claude/hooks/bash-guard.mjs` refuse `cat`, `less` ou `more` de ces fichiers dans une commande shell. Le refus renvoie vers `node .githooks/glossary.mjs --contract <ID>`, `--contracts` et `--journal <chantier>`. Restent permises : une lecture par plage (pour éditer), une recherche (Grep, `grep`, `sed -n`, `head`). Chemin absolu ou relatif, normalisé (liens symboliques résolus) ; un fichier absent du projet, une entrée inattendue ou une erreur interne laissent passer la lecture. Limites assumées : la garde shell juge le texte de la commande (une lecture cachée derrière une variable ou un autre programme n'est pas vue) ; les autres outils (Gemini, Copilot, Codex, Cursor) n'ont que la consigne écrite d'`AGENTS.md`.
+**Périmètre** : `.claude/hooks/read-guard.mjs`, `.claude/hooks/bash-guard.mjs`, `.claude/settings.json`, `AGENTS.md` ; livrés dans le gabarit.
+**Source de vérité** : `.claude/hooks/read-guard.mjs` (`guardedFiles`, `decide`).
+**Preuve** : test du paquet qui installe un projet et rejoue les hooks avec des entrées simulées : lecture entière refusée (chemin absolu, relatif, par un lien symbolique, depuis un sous-dossier), lecture par plage permise, autre fichier permis, fichier absent ou entrée invalide permis, chemins lus dans la configuration, message en français et en anglais ; `cat`, `less` et `more` refusés, `sed -n`, `grep` et `head` permis ; le `.claude/settings.json` livré branche le hook sur Read.
+**Contrôle** : `tests-qua-132`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : reduction-contexte — « Avec Claude Code, la lecture entière de `docs/contracts.md` ou de `docs/projects/journal.md` est refusée avant qu'elle ait lieu (outil Read sans plage, `cat`/`less`/`more` du fichier dans une commande shell), avec un renvoi vers `node .githooks/glossary.mjs --contract <ID>`, `--contracts` et `--journal <chantier>` ; une lecture par plage et une recherche restent permises ; `AGENTS.md` le dit »
+**Raison** : La consigne écrite de lecture ciblée (QUA-124) ne suffit pas : un agent qui lit le registre ou le journal en entier y ajoute des dizaines de milliers de tokens, relus à chaque requête suivante.

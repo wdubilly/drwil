@@ -95,18 +95,25 @@ Carte complète : `docs/architecture.md`.
   arrêt au premier chantier qui demande un humain (attestation, FAIL non
   corrigé, CI rouge, décision). Une file reprise dans une nouvelle session
   attend le oui explicite de l'humain.
+- **Une session par chantier** : une clôture faite et l'état revenu en
+  SCOPING, le chantier suivant se lance dans une nouvelle session (Claude
+  Code : `/clear` ; autre outil : une nouvelle conversation) : un contexte
+  neuf ne relit pas le chantier clos. Une file garde son sous-agent par
+  chantier.
 - **Compte rendu de fin de tâche** : fichiers créés/modifiés, contrôles lancés et résultats exacts, limites et ambiguïtés restantes.
 
 ## Contrats
 
-`docs/contracts.md` est la **source unique** des invariants. Citer l'ID. Avant une modification importante, identifier les contrats et la recette applicables.
+`docs/contracts.md` est la **source unique** des invariants. Citer l'ID. Avant une modification importante, identifier les contrats et la recette applicables : `node .githooks/glossary.mjs --contracts` liste tous les contrats (ID et titre, aucun omis) en une lecture courte, puis `node .githooks/glossary.mjs --contract <ID>` donne le texte complet de chacun des contrats applicables. Jamais le registre entier : un fichier lu reste dans le contexte et se relit à chaque requête. Avec Claude Code, la lecture entière (sans plage) du registre ou du journal est refusée : passer par `node .githooks/glossary.mjs` (une lecture par plage reste permise, pour éditer). Un chantier passé : `node .githooks/glossary.mjs --journal <fiche>` donne son entrée du journal, pas tout le journal.
 
 ## Charger le contexte progressivement
 
 1. Ce fichier (toujours).
 2. Le fichier de la couche touchée (si existant) : lire le `AGENTS.md` du dossier concerné.
 3. La recette ou le document indiqué ci-dessous.
-4. `docs/contracts.md` pour le détail d'un ID, ou quand un contrôle échoue.
+4. Le détail d'un contrat, ou quand un contrôle échoue :
+   `node .githooks/glossary.mjs --contract <ID>` (son texte complet), jamais
+   tout `docs/contracts.md`.
 5. Rien d'autre sans raison.
 
 | Si tu touches à… | Lis d'abord | Recette |
@@ -114,7 +121,7 @@ Carte complète : `docs/architecture.md`.
 | une route API | `backend/AGENTS.md` (si présent) | `docs/recipes/add-an-api-route.md` |
 | un écran | `frontend/AGENTS.md` (si présent) | `docs/recipes/add-a-frontend-screen.md` |
 | refactor important | — | `docs/recipes/refactor-without-breaking.md` |
-| un défaut à corriger | `docs/contracts.md` | `docs/recipes/corriger-un-defaut.md` |
+| un défaut à corriger | `node .githooks/glossary.mjs --contract <ID>` | `docs/recipes/corriger-un-defaut.md` |
 | déploiement | `docs/deployment.md` (si présent) | `docs/recipes/deploy-to-production.md` |
 
 | Si on te demande… | Lis d'abord | Recette |
@@ -128,13 +135,22 @@ Carte complète : `docs/architecture.md`.
 
 ## Commandes
 
-- Tout vérifier : `node .githooks/run-checks.mjs`
+- Tout vérifier : `node .githooks/run-checks.mjs` (n'affiche que les
+  contrôles en échec et un résumé qui compte les avertissements ; détail
+  complet dans `.drwil/evidence/run-checks.log` (si présent)).
 - Savoir si le travail est vérifié : `node packages/drwil/bin/drwil.js verify --agent`
   (seul `GOVERNANCE: PASS` vaut validation). `drwil attest` est une action
   **humaine** : un agent ne l'exécute jamais et n'écrit jamais d'attestation.
   De même, le verdict de recette d'une candidate
   (`node .githooks/release-verdict.mjs`, module de release) est un geste
   **humain** : un agent ne l'exécute jamais.
+- Contrôles longs en sous-agent, si l'outil le permet : avec Claude Code, le
+  sous-agent `drwil-checks` (`.claude/agents/drwil-checks.md` (si présent)) lance
+  `run-checks` et `drwil verify --agent` et ne rend que le verdict et les
+  échecs, la ligne `GOVERNANCE: …` et les contrats en échec ou à attester
+  recopiés mot pour mot ; la session principale n'annonce « vérifié » que
+  sur cette ligne recopiée. Autre outil : de même s'il permet un sous-agent
+  sans droit d'écriture, sinon les lancer directement.
 - Activer les hooks (une fois par clone) : `git config core.hooksPath .githooks`
 - Installer le dépôt depuis son gabarit : `npm run installer-depot`
   (`-- --dry-run` pour lister sans écrire). On n'édite que le gabarit

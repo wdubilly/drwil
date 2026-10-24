@@ -409,8 +409,15 @@ the files this project touches.
   at install.
 - **Shell command guard** (Claude Code, PreToolUse hook
   `.claude/hooks/bash-guard.mjs`, if present): asks for approval on a
-  secrets file or a pipe into a shell within a Bash command; blocks
-  nothing, the person decides.
+  secrets file or a pipe into a shell within a Bash command, the person
+  decides; refuses outright skipping the git hooks and `cat`, `less` or
+  `more` of the contract registry or the journal.
+- **Targeted reading** (Claude Code, PreToolUse hook on Read, read-guard in
+  `.claude/hooks/`, if present): reading `docs/contracts.md` or
+  `docs/projects/journal.md` whole, without a range, is refused before it
+  happens, with `node .githooks/glossary.mjs --contract <ID>`, `--contracts`
+  and `--journal <brief>` instead; a read by range (to edit) and a search
+  stay allowed.
 
 - **Generated copies** (`scopeMirrors` setting, absent by default): pairs
   of path prefixes `{ "from": "templates/", "to": "" }`. A scoped file under

@@ -75,6 +75,8 @@ test("QUA-110 : un vrai projet installé, hooks actifs et réglages bloquants : 
   for (const d of ["src/lib/", "src/", "app/models/"]) assert.ok(carte.includes(`- \`${d}\` — à décrire à l'adoption`), d);
 
   const verif = spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env });
+  // Sortie courte (QUA-126) : les avertissements sont dans le rapport complet, écrit à côté.
+  verif.stdout += readFileSync(join(dir, ".drwil/evidence/run-checks.log"), "utf8");
   assert.doesNotMatch(verif.stdout, /hors de toute fiche/, verif.stdout);
   assert.doesNotMatch(verif.stdout, /absent de la carte/, verif.stdout);
 

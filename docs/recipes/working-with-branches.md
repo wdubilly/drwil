@@ -38,7 +38,10 @@ request, instead of direct commits on the main branch.
   already has this section).
 - Checks (`.githooks/run-checks.mjs`) must be
   green before opening the pull/merge request, not only before merging
-  it.
+  it. Their output shows only the failed checks and a summary line (warnings
+  counted, full detail in `.drwil/evidence/run-checks.log` (if present)); with Claude
+  Code, the `drwil-checks` subagent can run them and return only the verdict
+  and the failures, copied word for word.
 - Before merging: check that the pull/merge request CI status checks
   are green (`gh pr checks <n> --watch` on GitHub). Since 2026-10-10,
   this repository also enforces them on the forge side (ruleset on
@@ -68,7 +71,8 @@ request, instead of direct commits on the main branch.
   proof (below), deletes
   the brief file, removes the matching item from `docs/projects/pending.md`
   (don't check it: the journal becomes the closing source, the index only
-  lists remaining work) and records the consumption. It stages, commits,
+  lists remaining work; a past entry is read by itself:
+  `node .githooks/glossary.mjs --journal <brief>`, never the whole journal) and records the consumption. It stages, commits,
   pushes and merges nothing. Nothing is lost — the full history stays in
   git (`git log --follow -- docs/projects/<brief>.md`).
 - The closing writes the workstream's proof first, a versioned file in
@@ -145,7 +149,10 @@ request, instead of direct commits on the main branch.
   to make) and say why; `node .githooks/state.mjs queue stop` drops what is left.
 - Active governance: the brief can be deleted during CLOSING (the state
   tolerates its absence in that activity only), then go back to Scoping
-  (`node .githooks/state.mjs move SCOPING`).
+  (`node .githooks/state.mjs move SCOPING`). The next workstream starts in a
+  new session (Claude Code: `/clear`; another tool: a new conversation): a
+  fresh context does not read the closed workstream again; a queue keeps its
+  subagent per workstream.
 - If the brief still has open points elsewhere (multi-increment project), don't
   condense anything: check the matching box in the index as before, the
   brief stays active until it's fully finished.

@@ -12,9 +12,9 @@
 //   checked.
 // Severity: `scopeGate` setting (off | warning | blocking), warning if missing.
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { contractsAddedOnly, isRegistry, rulesFiles } from "./detour.mjs";
 import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
@@ -236,7 +236,7 @@ export function addTrailer(root, messageFile) {
 
 // `node .githooks/scope-gate.mjs --trailer <file>` (prepare-commit-msg). Never blocks the commit:
 // addTrailer does not throw, a git failure leaves the message as it is.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const i = process.argv.indexOf("--trailer");
   if (i >= 0 && process.argv[i + 1]) addTrailer(process.cwd(), process.argv[i + 1]);
 }

@@ -4,8 +4,11 @@
 // shared with `drwil verify` and lays out the output for a human who commits.
 // QUA-013: a check that did not run is not a passed check.
 // Each check therefore ends "failed", "OK" or "not run", never hidden.
+// QUA-126, QUA-127: the output shows the failed checks only, then one summary line counting the warnings;
+// the full report (each check, its output, every warning) goes to a file — an agent reads the outputs
+// again at each request, a passed check's output is only context to pay for.
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
 import { checks, projectRoot, startParallel } from "./engine.mjs";
 import { annotate, glossary } from "./glossary.mjs";
@@ -24,7 +27,9 @@ const T = {
     noCheck: "aucun déclaré dans .drwil/ia-first.json → checks",
     notRun: "non exécuté :",
     failed: "échec :",
-    ok: (n) => `contrôles exécutés : OK (${n} non exécuté(s), voir ci-dessus)`,
+    ok: (n, f) => `contrôles exécutés : OK (${n} avertissement(s), non exécutés compris — détail : ${f})`,
+    ko: (k, n, f) => `contrôles exécutés : ${k} en échec, ${n} avertissement(s) — détail : ${f}`,
+    tail: (n, f) => `    … ${n} ligne(s) plus haut, dans ${f}`,
     staleAudit: (f, n) => `audit périmé (${f}, vieux de ${n} jours) : à relancer`,
     staleIntent: (f, n) => `intention sans revue depuis ${n} jours (${f}) : la revoir, la mettre à jour (ligne « Revu le ») ou la clore`,
     intentLeft: (b, i) =>
@@ -35,7 +40,9 @@ const T = {
     noCheck: "none declared in .drwil/ia-first.json → checks",
     notRun: "not run:",
     failed: "failed:",
-    ok: (n) => `checks run: OK (${n} not run, see above)`,
+    ok: (n, f) => `checks run: OK (${n} warning(s), not run included — detail: ${f})`,
+    ko: (k, n, f) => `checks run: ${k} failed, ${n} warning(s) — detail: ${f}`,
+    tail: (n, f) => `    … ${n} line(s) above, in ${f}`,
     staleAudit: (f, n) => `stale audit (${f}, ${n} days old): time to re-run`,
     staleIntent: (f, n) => `intent not reviewed for ${n} days (${f}): review it, update it ("Reviewed on" line) or close it`,
     intentLeft: (b, i) =>
@@ -63,7 +70,11 @@ const unrun = (what, configured = false) =>
   (atCommit || (configured && !process.env.CI) ? notRun : failures).push(
     atCommit || (configured && !process.env.CI) ? what : `${T.notRun} ${what}`,
   );
-const announce = (name) => console.log(`[ia-first] ${name}…`);
+// The full report, written to DETAIL at the end; the output keeps the failures and the summary.
+const DETAIL = ".drwil/evidence/run-checks.log";
+const report = [];
+const outputs = new Map();
+const announce = (name) => report.push(`[ia-first] ${name}…`);
 // "not-applicable" (excluded by design: minimal mode, QUA-017 in CI…) is not shown, as before.
 const staged = stagedFiles();
 const list = checks(root, { cfg, staged });
@@ -74,13 +85,13 @@ for (const c of list) {
   let r;
   if (started.has(c.id)) {
     r = await started.get(c.id);
-    if (r.launched) {
-      announce(c.name);
-      if (r.output) process.stdout.write(r.output);
-    }
-  } else r = c.run({ beforeRun: announce });
-  if (r.status === "fail") failures.push(r.message ?? c.name);
-  else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
+    if (r.launched) announce(c.name);
+  } else r = c.run({ beforeRun: announce, stdio: "pipe", maxBuffer: 1 << 30 });
+  if (r.output) report.push(r.output.replace(/\n$/, ""));
+  if (r.status === "fail") {
+    failures.push(r.message ?? c.name);
+    outputs.set(failures.at(-1), r.output);
+  } else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
 }
 if (!Array.isArray(cfg.checks) || !cfg.checks.length) unrun(`${T.project} (${T.noCheck})`, true);
 
@@ -109,11 +120,26 @@ const reminders = [
 
 // An ID cited to the human comes with its label (QUA-039).
 const labels = glossary(root);
-const say = (line) => console.log(annotate(line, labels));
-for (const c of notRun) say(`[ia-first] ⚠ ${T.notRun} ${c}`);
-for (const r of reminders) say(`[ia-first] ⚠ ${r}`);
-if (failures.length) {
-  for (const c of failures) say(`[ia-first] ✗ ${T.failed} ${c}`);
-  process.exit(1);
+const label = (line) => annotate(line, labels);
+const warnings = [...notRun.map((c) => `[ia-first] ⚠ ${T.notRun} ${c}`), ...reminders.map((r) => `[ia-first] ⚠ ${r}`)].map(label);
+// A failed check comes with the end of its output (in CI, the whole of it: the file does not outlive the job).
+const TAIL = 40;
+const shown = [];
+for (const c of failures) {
+  shown.push(label(`[ia-first] ✗ ${T.failed} ${c}`));
+  const lines = (outputs.get(c) ?? "").replace(/\n$/, "").split("\n").filter(Boolean);
+  const cut = process.env.CI ? 0 : Math.max(0, lines.length - TAIL);
+  if (cut) shown.push(T.tail(cut, DETAIL));
+  shown.push(...lines.slice(cut).map((l) => `    ${l}`));
 }
-console.log(`[ia-first] ${T.ok(notRun.length)}`);
+const summary = `[ia-first] ${failures.length ? T.ko(failures.length, warnings.length, DETAIL) : T.ok(warnings.length, DETAIL)}`;
+// Never at the cost of the verdict: a report that cannot be written changes nothing to the exit code.
+try {
+  mkdirSync(".drwil/evidence", { recursive: true });
+  writeFileSync(
+    DETAIL,
+    `${[...report, ...warnings, ...failures.map((c) => label(`[ia-first] ✗ ${T.failed} ${c}`)), summary].join("\n")}\n`,
+  );
+} catch {}
+for (const line of [...shown, summary]) console.log(line);
+if (failures.length) process.exitCode = 1;

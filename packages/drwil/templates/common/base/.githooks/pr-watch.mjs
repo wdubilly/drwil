@@ -6,9 +6,9 @@
 // Usage: node .githooks/pr-watch.mjs [<pr number>] [--timeout <minutes>]
 // Exit code: 0 green or merged, 1 red or closed without merge, 2 not run.
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const TEXTS = {
   fr: {
@@ -117,7 +117,7 @@ export function parseArgs(argv) {
   return { pr, timeout };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const interval = Number(process.env.DRWIL_PR_WATCH_INTERVAL) || 15_000;
   const r = await watch({ ...parseArgs(process.argv.slice(2)), interval, log: console.log });
   (r.code === 0 ? console.log : console.error)(r.message);

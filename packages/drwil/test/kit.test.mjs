@@ -94,7 +94,14 @@ const envTest = { ...process.env, CI: "" };
 delete envTest.DRWIL_PUSH_TAGS_ONLY;
 delete envTest.DRWIL_PUSH_NO_BRANCH;
 delete envTest.DRWIL_HOOK;
-const checks = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest });
+// run-checks n'affiche que ses échecs et un résumé (QUA-126) : le rapport complet, écrit à côté, s'y ajoute
+// pour que les attentes sur un avertissement ou une annonce gardent leur sens.
+const withDetail = (r, dir) => {
+  const detail = join(dir, ".drwil/evidence/run-checks.log");
+  return { ...r, stdout: r.stdout + (existsSync(detail) ? readFileSync(detail, "utf8") : "") };
+};
+const checks = (dir) =>
+  withDetail(spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env: envTest }), dir);
 const git = (dir, ...args) =>
   spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
@@ -774,6 +781,103 @@ test("QUA-114 garde shell : refus, sans demander, de toute commande qui saute le
   assert.match(main(JSON.stringify({ tool_name: "Bash", tool_input: { command: "git commit -n" } })), /"permissionDecision":"deny"/);
 });
 
+test("QUA-132 lecture ciblée forcée : registre et journal refusés en entier (Read sans plage, cat/less/more), plage et recherche permises", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const lire = (tool_input, cwd = dir, script = join(dir, ".claude/hooks/read-guard.mjs")) =>
+    spawnSync(process.execPath, [script], { cwd, encoding: "utf8", input: JSON.stringify({ tool_name: "Read", tool_input }) });
+  const refuse = (r, quoi) => {
+    const sortie = JSON.parse(r.stdout).hookSpecificOutput;
+    assert.equal(sortie.permissionDecision, "deny", quoi);
+    assert.match(sortie.permissionDecisionReason, /Lecture refusée \(QUA-132, lecture ciblée\)/, quoi);
+    assert.match(sortie.permissionDecisionReason, /glossary\.mjs --contract <ID>.*--contracts.*--journal <chantier>/, quoi);
+  };
+  // Lecture entière : chemin absolu, relatif, avec ./ et .., depuis un sous-dossier.
+  refuse(lire({ file_path: join(dir, "docs/contracts.md") }), "registre, chemin absolu");
+  refuse(lire({ file_path: join(dir, "docs/projects/journal.md") }), "journal, chemin absolu");
+  refuse(lire({ file_path: "docs/contracts.md" }), "chemin relatif");
+  refuse(lire({ file_path: "./docs/projects/../contracts.md" }), "chemin normalisé");
+  mkdirSync(join(dir, "src/profond"), { recursive: true });
+  refuse(lire({ file_path: join(dir, "docs/contracts.md") }, join(dir, "src/profond")), "depuis un sous-dossier");
+  const lien = join(tmp(), "projet-lien");
+  symlinkSync(dir, lien, "junction");
+  refuse(lire({ file_path: join(lien, "docs/contracts.md") }, lien, join(lien, ".claude/hooks/read-guard.mjs")), "par un lien");
+  // Permis : une plage, un autre fichier, un fichier absent, une entrée inattendue.
+  assert.equal(lire({ file_path: join(dir, "docs/contracts.md"), offset: 10, limit: 20 }).stdout, "", "plage permise");
+  assert.equal(lire({ file_path: join(dir, "docs/projects/journal.md"), limit: 50 }).stdout, "", "limit seul permis");
+  assert.equal(lire({ file_path: join(dir, "AGENTS.md") }).stdout, "", "autre fichier permis");
+  assert.equal(lire({ file_path: join(tmp(), "docs/contracts.md") }).stdout, "", "hors du projet : permis");
+  const absent = spawnSync(process.execPath, [join(dir, ".claude/hooks/read-guard.mjs")], {
+    cwd: dir,
+    encoding: "utf8",
+    input: "pas du JSON",
+  });
+  assert.equal(absent.status, 0, "entrée invalide : jamais d'erreur");
+  assert.equal(absent.stdout, "", "entrée invalide : la lecture passe");
+  rmSync(join(dir, "docs/projects/journal.md"));
+  assert.equal(lire({ file_path: join(dir, "docs/projects/journal.md") }).stdout, "", "fichier absent : la lecture passe");
+  // Chemins lus dans la configuration, message dans la langue du projet.
+  writeFileSync(join(dir, "registre.md"), "# Registre\n");
+  writeFileSync(
+    join(dir, ".drwil/ia-first.json"),
+    JSON.stringify({ ...config(dir), lang: "en", dirs: { ...config(dir).dirs, contracts: "registre.md" } }),
+  );
+  assert.equal(lire({ file_path: join(dir, "docs/contracts.md") }).stdout, "", "l'ancien chemin n'est plus gardé");
+  assert.match(
+    JSON.parse(lire({ file_path: join(dir, "registre.md") }).stdout).hookSpecificOutput.permissionDecisionReason,
+    /^Read refused \(QUA-132/,
+  );
+  writeFileSync(
+    join(dir, ".drwil/ia-first.json"),
+    JSON.stringify({ ...config(dir), lang: "fr", dirs: { ...config(dir).dirs, contracts: "docs/contracts.md" } }),
+  );
+
+  // Garde shell : cat, less, more refusés ; sed -n, grep, head permis.
+  const shell = (command, cwd = dir) =>
+    spawnSync(process.execPath, [join(dir, ".claude/hooks/bash-guard.mjs")], {
+      cwd,
+      encoding: "utf8",
+      input: JSON.stringify({ tool_name: "Bash", tool_input: { command } }),
+    }).stdout;
+  for (const c of [
+    "cat docs/contracts.md",
+    "cat -n ./docs/contracts.md | head -5",
+    `less ${join(dir, "docs/contracts.md")}`,
+    "npm test && more docs/contracts.md",
+    "LANG=C /bin/cat ../../docs/contracts.md",
+    // Constaté en CI Windows (2026-10-24, PR #223) : `\` lu comme échappement effaçait les séparateurs.
+    `less ${join(dir, "docs/contracts.md").replace(/\//g, "\\")}`,
+  ])
+    assert.match(shell(c, join(dir, "src/profond")), /"permissionDecision":"deny".*QUA-132/, c);
+  for (const c of [
+    "sed -n 1,40p docs/contracts.md",
+    "grep -n QUA-013 docs/contracts.md",
+    "head -50 docs/contracts.md",
+    "cat AGENTS.md",
+    "echo docs/contracts.md",
+  ])
+    assert.equal(shell(c), "", c);
+  assert.match(shell("cat .env"), /"permissionDecision":"ask"/, "les autres risques gardent la demande d'accord");
+
+  // Les mêmes fonctions, appelées dans le processus (sur le gabarit, avec la racine du projet).
+  const garde = await import(new URL("../templates/common/tools/claude/.claude/hooks/read-guard.mjs", import.meta.url));
+  const { wholeRead } = await import(new URL("../templates/common/tools/claude/.claude/hooks/bash-guard.mjs", import.meta.url));
+  const entree = (tool_input) => JSON.stringify({ tool_name: "Read", tool_input });
+  assert.match(garde.main(entree({ file_path: "docs/contracts.md" }), dir), /"permissionDecision":"deny"/);
+  assert.equal(garde.main(entree({ file_path: "docs/contracts.md", offset: 1 }), dir), "");
+  assert.equal(garde.main(JSON.stringify({ tool_name: "Bash", tool_input: {} }), dir), "", "autre outil");
+  assert.equal(garde.main("pas du JSON", dir), "");
+  assert.equal(garde.guardedTarget(undefined, dir), null);
+  assert.equal(wholeRead("cat docs/contracts.md", dir), "docs/contracts.md");
+  assert.equal(wholeRead(`cat ${join(dir, "docs/contracts.md")}`, dir), "docs/contracts.md");
+  assert.equal(wholeRead("cat -A AGENTS.md", dir), null);
+
+  // Le gabarit branche le hook sur Read, avant l'outil ; AGENTS.md le dit.
+  const reglages = JSON.parse(read(dir, ".claude/settings.json"));
+  assert.ok(reglages.hooks.PreToolUse.some((h) => h.matcher === "Read" && h.hooks[0].command.includes(".claude/hooks/read-guard.mjs")));
+  assert.match(read(dir, "AGENTS.md"), /reading the\s+registry or the journal whole \(without a range\) is refused/);
+});
+
 test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse avant écriture (bloquant) ou rappelle (avertissement)", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
@@ -1146,6 +1250,46 @@ test("QUA-044 : par un chemin qui passe par un lien symbolique, les hooks se lan
     }),
   );
   assert.match(garde.stdout, /"permissionDecision":"deny"/, "la garde de cadrage s'est lancée");
+  // Constaté en CI macOS (2026-10-24, PR #223) : le garde shell comparait encore des URL.
+  const shell = lancer(
+    ".claude/hooks/bash-guard.mjs",
+    [],
+    JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat docs/contracts.md" } }),
+  );
+  assert.match(shell.stdout, /"permissionDecision":"deny"/, "le garde shell s'est lancé");
+});
+
+test("QUA-044 : tout point d'entrée livré compare les chemins réels, jamais une URL de process.argv[1]", () => {
+  // Récidive constatée le 2026-10-24 (PR #223) : la correction de 2026-10-17 n'avait pas été appliquée
+  // partout. Un point d'entrée qui compare des URL, ou un chemin réel à un chemin non résolu, ne se
+  // lance pas par un lien symbolique (/var → /private/var sur macOS) : il ne fait rien, sans erreur.
+  const entree = (ligne) => /process\.argv\[1\]/.test(ligne) && /import\.meta\.url/.test(ligne);
+  const sain = (ligne) =>
+    ligne.includes("realpathSync(process.argv[1])") &&
+    ligne.includes("realpathSync(fileURLToPath(import.meta.url))") &&
+    !/pathToFileURL\(process\.argv\[1\]\)/.test(ligne);
+  assert.ok(!sain("if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {"), "le détecteur voit les URL");
+  assert.ok(!sain("if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {"), "et un seul côté résolu");
+  const racine = fileURLToPath(new URL("../templates/", import.meta.url));
+  const fautifs = [];
+  let points = 0;
+  const parcourir = (dossier) => {
+    for (const e of readdirSync(dossier, { withFileTypes: true })) {
+      const chemin = join(dossier, e.name);
+      if (e.isDirectory()) parcourir(chemin);
+      else if (e.name.endsWith(".mjs"))
+        readFileSync(chemin, "utf8")
+          .split("\n")
+          .forEach((ligne, i) => {
+            if (!entree(ligne)) return;
+            points++;
+            if (!sain(ligne)) fautifs.push(`${chemin.slice(racine.length)}:${i + 1}`);
+          });
+    }
+  };
+  parcourir(racine);
+  assert.ok(points >= 20, `points d'entrée trouvés : ${points}`);
+  assert.deepEqual(fautifs, [], "points d'entrée qui ne comparent pas les chemins réels des deux côtés");
 });
 
 test("QUA-037 : la skill de lancement dit un auto-merge refusé par le dépôt, reste en CLOSING et ne le dit jamais programmé", async () => {
@@ -1194,7 +1338,10 @@ test("QUA-050 : un projet installé reçoit la commande de détour, cadrée par 
     agents,
     /\*\*Detour for a prior defect\*\*: mid-workstream, a defect outside the active brief's scope is fixed by a detour the agent opens alone/,
   );
-  assert.match(agents, /\| a defect to fix \| `docs\/contracts\.md` \| `docs\/recipes\/corriger-un-defaut\.md` \|/);
+  assert.match(
+    agents,
+    /\| a defect to fix \| `node \.githooks\/glossary\.mjs --contract <ID>` \| `docs\/recipes\/corriger-un-defaut\.md` \|/,
+  );
 });
 
 test("lancer par sondage : la réponse humaine lance (formats Claude Code et Copilot CLI), un sondage pré-rempli est refusé", async () => {
@@ -2080,7 +2227,9 @@ test("pre-commit : un contrôle du projet hors de ses chemins est reporté (visi
   git(dir, "add", "-A");
   const horsChemins = git(dir, "commit", "-qm", "rien sous src/");
   assert.equal(horsChemins.status, 0, "aucun fichier indexé sous src/ : reporté, pas lancé : " + horsChemins.stdout + horsChemins.stderr);
-  assert.match(horsChemins.stdout + horsChemins.stderr, /non exécuté : suite lourde \(aucun fichier indexé sous ses chemins/);
+  // Visible dans le rapport complet, compté dans le résumé (QUA-127).
+  assert.match(horsChemins.stdout + horsChemins.stderr, /contrôles exécutés : OK \(\d+ avertissement\(s\)/);
+  assert.match(read(dir, ".drwil/evidence/run-checks.log"), /non exécuté : suite lourde \(aucun fichier indexé sous ses chemins/);
 
   mkdirSync(join(dir, "src"), { recursive: true });
   writeFileSync(join(dir, "src/a.ts"), "export const a = 1;\n");
@@ -4070,6 +4219,10 @@ test("QUA-072 : le skill /drwil-note a la forme des autres skills /drwil-*, et l
     assert.match(m[2], /\. Use /, `${skill} : la description dit quand l'utiliser`);
   }
   assert.equal(enTete(".claude/skills/drwil-note/SKILL.md")[1], "drwil-note");
+  // Le sous-agent des contrôles (QUA-129) s'ajoute à l'arbre sans changer les hooks ni les skills : même en-tête.
+  const agent = enTete(".claude/agents/drwil-checks.md");
+  assert.equal(agent?.[1], "drwil-checks");
+  assert.match(agent[2], /\. Use /);
 
   const rejouer = (script, entree) => spawnSync(process.execPath, [script], { cwd: dir, encoding: "utf8", input: JSON.stringify(entree) });
   const ecriture = { hook_event_name: "PreToolUse", tool_name: "Write", tool_input: { file_path: join(dir, "src/a.ts") } };
@@ -4098,6 +4251,40 @@ test("QUA-072 : le skill /drwil-note a la forme des autres skills /drwil-*, et l
         "[drwil] ✗ lancement refusé : « docs/projects/absente.md » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)",
     },
   });
+});
+
+test("QUA-129 : sous-agent drwil-checks livré avec Claude Code pour les contrôles longs ; consigne « si l'outil le permet » pour les autres", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const agent = read(dir, ".claude/agents/drwil-checks.md").replace(/\s+/g, " ");
+  assert.match(agent, /Run `node \.githooks\/run-checks\.mjs` from the project root/);
+  assert.match(agent, /Run `npx drwil verify --agent`/);
+  assert.match(agent, /report their verdict/);
+  const consigne =
+    /Long checks in a subagent, if the tool allows it: with Claude Code, the `drwil-checks` subagent .* runs `run-checks` and `drwil verify --agent` and returns only the verdict and the failures.* Another tool: the same if it allows a subagent without write access, otherwise run them directly\./;
+  assert.match(read(dir, "AGENTS.md").replace(/\s+/g, " "), consigne);
+  const codex = tmp();
+  await quiet(() => init({ lang: "en", targetDir: codex, tools: "codex", git: false }));
+  assert.equal(existsSync(join(codex, ".claude/agents/drwil-checks.md")), false, "sans Claude Code, pas d'arbre .claude");
+  assert.match(read(codex, "AGENTS.md").replace(/\s+/g, " "), consigne, "la consigne reste, pour tout outil");
+});
+
+test("QUA-130 : le sous-agent recopie mot pour mot verdict et contrats, sans accès à l'attestation ni à l'écriture ; « vérifié » sur cette seule ligne", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const texte = read(dir, ".claude/agents/drwil-checks.md");
+  const outils = /^tools: (.+)$/m.exec(texte)?.[1].split(/,\s*/);
+  assert.deepEqual(outils, ["Bash", "Read", "Grep", "Glob"], "liste fermée : aucun outil d'écriture");
+  for (const ecriture of ["Write", "Edit", "MultiEdit", "NotebookEdit"]) assert.ok(!outils.includes(ecriture), ecriture);
+  const corps = texte.replace(/\s+/g, " ");
+  assert.match(corps, /no file written or edited, no commit, no push, no fix attempted/);
+  assert.match(corps, /You never run `drwil attest` nor `\.githooks\/release-verdict\.mjs`/);
+  assert.match(corps, /every line copied word for word from the outputs, never rephrased, summarised, translated or completed/);
+  assert.match(corps, /<the line containing "GOVERNANCE:">/);
+  assert.match(corps, /failing contracts, contracts not verified, unproven criteria, attestation required, registry errors/);
+  assert.match(corps, /reported as « not run » with its error: never as passed/);
+  assert.match(corps, /The main session says « verified » only on the `GOVERNANCE: PASS` line you copied/);
+  assert.match(read(dir, "AGENTS.md").replace(/\s+/g, " "), /the main session says « verified » only on that copied line/);
 });
 
 test("QUA-061 : le skill /drwil-note appelle la commande de note et ne code rien — une note est toujours une intention", async () => {

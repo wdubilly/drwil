@@ -17,7 +17,7 @@ const TEXTS = {
       `${place} cite la fiche de chantier ${b} : réécrire ce commentaire en citant le contrat que ce code sert (la clôture ne touche pas au code) (QUA-049)`,
     intentLeft: (b, i) =>
       `la fiche ${b} est supprimée sans que son intention ${i} soit touchée : la mettre à jour, ou la résumer au journal et la retirer si elle est couverte (QUA-036)`,
-    twin: (i, p, others) => `intention ${i} : cite ${p}, déjà cité par ${others} — doublon possible, à vérifier`,
+    twin: (p, news, old) => `${p} : cité par ${news}${old ? `, déjà cité par ${old}` : ""} — doublon possible, à vérifier`,
   },
   en: {
     openButDone: (brief) => `item unchecked but ${brief} already says it is done (QUA-015)`,
@@ -28,7 +28,7 @@ const TEXTS = {
       `${place} cites the workstream brief ${b}: rewrite this comment citing the contract this code serves (closing does not touch code) (QUA-049)`,
     intentLeft: (b, i) =>
       `brief ${b} is deleted without touching its intent ${i}: update it, or summarise it in the journal and remove it when covered (QUA-036)`,
-    twin: (i, p, others) => `intent ${i}: cites ${p}, already cited by ${others} — possible duplicate, to check`,
+    twin: (p, news, old) => `${p}: cited by ${news}${old ? `, already cited by ${old}` : ""} — possible duplicate, to check`,
   },
 };
 
@@ -178,6 +178,7 @@ const CITED_PATH = /`([^`\s<>{}*?|=:@$]+\/[^`\s]+\.[a-z]+)`/g;
 /**
  * Warnings: a new intent (added on the branch or not committed yet) citing a path another intent
  * already cites — by path only, never by keywords. Paths under docs/ are shared by nature: skipped.
+ * One warning per path cited, naming every new intent citing it (QUA-128), not one per intent.
  */
 export function twinIntents(root, cfg, lang) {
   const T = TEXTS[lang === "en" ? "en" : "fr"];
@@ -192,14 +193,19 @@ export function twinIntents(root, cfg, lang) {
   const all = (git(root, ["ls-files", "-z", "--cached", "--others", "--exclude-standard"]) ?? "").split("\0").filter(mine);
   const paths = (f) =>
     [...new Set([...readFileSync(join(root, f), "utf8").matchAll(CITED_PATH)].map((m) => m[1]))].filter((p) => !p.startsWith("docs/"));
-  const warnings = [];
+  const byPath = new Map();
   for (const f of new Set(added.filter((f) => mine(f) && existsSync(join(root, f))))) {
     for (const p of paths(f)) {
       const others = all.filter((o) => o !== f && existsSync(join(root, o)) && paths(o).includes(p));
-      if (others.length) warnings.push(T.twin(f, p, others.join(", ")));
+      if (!others.length) continue;
+      const g = byPath.get(p) ?? { news: new Set(), others: new Set() };
+      byPath.set(p, g);
+      g.news.add(f);
+      for (const o of others) g.others.add(o);
     }
   }
-  return warnings;
+  // The new intents citing each other are named once, among the new ones.
+  return [...byPath].map(([p, g]) => T.twin(p, [...g.news].join(", "), [...g.others].filter((o) => !g.news.has(o)).join(", ")));
 }
 
 /**

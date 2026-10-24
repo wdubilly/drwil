@@ -29,6 +29,8 @@ const TEXTS = {
       "Reprise de file : si cette session n'a pas mené la clôture précédente (nouvelle session, après `/clear` ou un redémarrage), demander d'abord à l'humain « la file reprend avec {0} : je lance ? » et ne lancer `node .githooks/state.mjs next` que sur un oui explicite ; sans oui explicite, rien n'est lancé.",
     closingNoQueue:
       "Hors file : terminer en proposant à l'humain `/clear` avant sa prochaine demande (Claude Code ; autre outil : une nouvelle conversation) — un contexte neuf ne relit pas ce chantier.",
+    nextSession:
+      "Après une clôture, le chantier suivant se lance dans une nouvelle session (Claude Code : `/clear` ; autre outil : une nouvelle conversation) — un contexte neuf ne relit pas le chantier clos ; si cette session vient d'en clore un, le proposer à l'humain avant sa prochaine demande. Une file garde son sous-agent par chantier.",
     scope: "Périmètre autorisé (bloc scope de la fiche) :",
     noScope: "  (aucun bloc scope : aucun fichier de code autorisé)",
     briefDeleted: "fiche supprimée (clôture)",
@@ -74,6 +76,8 @@ const TEXTS = {
       "Resuming a queue: if this session did not carry the previous closing (new session, after `/clear` or a restart), first ask the human « the queue resumes with {0}: shall I start it? » and run `node .githooks/state.mjs next` only on an explicit yes; without an explicit yes, nothing is started.",
     closingNoQueue:
       "Outside a queue: finish by suggesting `/clear` to the human before their next request (Claude Code; another tool: a new conversation) — a fresh context does not read this workstream again.",
+    nextSession:
+      "After a closing, the next workstream starts in a new session (Claude Code: `/clear`; another tool: a new conversation) — a fresh context does not read the closed workstream again; if this session just closed one, suggest it to the human before their next request. A queue keeps its subagent per workstream.",
     scope: "Allowed scope (scope block of the brief):",
     noScope: "  (no scope block: no code file allowed)",
     briefDeleted: "brief deleted (closing)",
@@ -335,6 +339,8 @@ export function context(read, root) {
   lines.push(T.rule(T.rules[state.activity]));
   if (state.activity === "CLOSING") lines.push(T.docLanguage(docLanguage(root)));
   if (state.activity === "CLOSING" && !state.queue?.length) lines.push(T.closingNoQueue);
+  // Back in SCOPING by a move (`since` set; a missing state has none), outside a queue: one session per workstream (QUA-131).
+  if (state.activity === "SCOPING" && state.since && !state.queue?.length) lines.push(T.nextSession);
   lines.push(T.footer);
   return lines.join("\n");
 }

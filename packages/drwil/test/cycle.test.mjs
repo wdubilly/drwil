@@ -39,7 +39,13 @@ const silence = async (fn) => {
     console.warn = warn;
   }
 };
-const controles = (dir) => spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env });
+// run-checks n'affiche que ses échecs et un résumé (QUA-126) : le rapport complet, écrit à côté, s'y ajoute
+// pour que les attentes sur un avertissement ou une annonce gardent leur sens.
+const avecDetail = (r, dir) => {
+  const detail = join(dir, ".drwil/evidence/run-checks.log");
+  return { ...r, stdout: r.stdout + (existsSync(detail) ? readFileSync(detail, "utf8") : "") };
+};
+const controles = (dir) => avecDetail(spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: dir, encoding: "utf8", env }), dir);
 
 test("cycle complet : installer, modifier, vérifier, mettre à jour, désinstaller", async () => {
   const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));

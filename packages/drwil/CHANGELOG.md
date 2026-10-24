@@ -7,6 +7,37 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Targeted reading, so an agent does not read whole files into its context:
+  `node .githooks/glossary.mjs --contract <ID>` gives a contract's full
+  text, `--contracts` lists every contract (ID and title, none left out),
+  `--journal <brief>` gives a workstream's journal entry; `AGENTS.md` and the
+  recipes point to them instead of reading `docs/contracts.md` or the
+  journal end to end.
+- `.githooks/run-checks.mjs` shows only the failed checks (each with its
+  contract and the last 40 lines of its output; all of it in CI) and one
+  summary line counting the non-blocking warnings; the full report goes to
+  `.drwil/evidence/run-checks.log`. A check that did not run still fails
+  visibly outside a commit; the exit code is unchanged.
+- `node .githooks/close.mjs --check` groups its possible-duplicate warnings:
+  one line per cited path, naming every new intent citing it; blocking
+  errors are all still shown.
+- With Claude Code, a `drwil-checks` subagent (`.claude/agents/drwil-checks.md`)
+  runs `run-checks` and `drwil verify --agent` and returns only the verdict and
+  the failures, copied word for word; it has no write tool and never attests.
+  `AGENTS.md` tells any tool to do the same if it allows it.
+- With Claude Code, reading `docs/contracts.md` or the journal whole is
+  refused before it happens: a new `PreToolUse` hook on Read
+  (`.claude/hooks/read-guard.mjs`) blocks a read without a range, and
+  `.claude/hooks/bash-guard.mjs` blocks their `cat`, `less` or `more`; the
+  message points to `node .githooks/glossary.mjs --contract <ID>`,
+  `--contracts` and `--journal <brief>`. A read by range and a search stay
+  allowed.
+- Back in SCOPING after a closing, the state reminder invites starting the
+  next workstream in a new session (Claude Code: `/clear`; another tool: a new
+  conversation); a queue keeps its subagent per workstream.
+- `node .githooks/consumption.mjs --recorded` compares the recorded
+  workstreams by their average cache read per request (read from
+  `.drwil/usage.jsonl` only, no session log needed).
 - `.drwil/ia-first.json` accepts `build` (the compile command, run once per
   pass by the first check that needs it, `needsBuild: true`; a failed build
   fails every dependent check) and `parallel: true` (command checks run
@@ -66,6 +97,12 @@ closing commit; the release renames this section to its version.
   judged. Committing the merge of the main branch into a workstream branch
   after a conflict was refused for the files the main branch brought
   (QUA-111).
+- Every shipped script of `.githooks/` and `.claude/hooks/` now runs when
+  called through a symbolic link (`/var` → `/private/var` on macOS): the
+  shell guard, the scope gate's commit trailer, the main-branch hook replay,
+  the PR watch and the release script compared URLs and silently did
+  nothing (QUA-044). The shell guard also reads an unquoted Windows path
+  (`C:\Users\…`) instead of losing its separators.
 
 ## 0.7.0 (2026-10-22)
 

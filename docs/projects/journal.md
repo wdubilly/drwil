@@ -3020,3 +3020,70 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/attestation-sur-l-effet-du-controle.md`.
 - **Preuve de clôture** : `docs/preuves/acceleration-ci.md`.
 - **Clôturé par** : la branche `workstream/acceleration-ci` (PR #221).
+
+## 2026-10-24 — Réduire le contexte relu par chantier
+
+- **Décisions clés** : cible dépôt et livrable (demandeur). Quatre leviers,
+  sans contrôle retiré ni règle moins visible : lecture ciblée — un contrat
+  par son ID, la liste courte de tous les contrats, une entrée de journal
+  par chantier (`node .githooks/glossary.mjs --contract`, `--contracts`,
+  `--journal` ; QUA-124 lecture seule d'un contrat ou d'une entrée, QUA-125
+  liste courte des contrats) ; sorties courtes — `run-checks` n'affiche que
+  ses échecs et un résumé qui compte les avertissements, détail dans
+  `.drwil/evidence/run-checks.log` (si présent) (QUA-126, QUA-127), doublons d'intention
+  regroupés par chemin dans `close.mjs --check` (QUA-128) ; sous-agent
+  `drwil-checks` pour Claude Code, qui recopie le verdict mot pour mot sans
+  attester ni écrire (QUA-129, QUA-130) ; une nouvelle session après chaque
+  clôture (QUA-131). Lot 4 ajouté par le demandeur : avec Claude Code, le
+  registre et le journal ne se lisent jamais en entier (hook read-guard et
+  `bash-guard`, QUA-132). L'indicateur (cache lu moyen par requête) sorti
+  des critères par le demandeur, faute de preuve possible avant deux
+  chantiers comparables (QUA-034, un critère non prouvé fait tomber le
+  verdict) : il devient une intention de relevé. QUA-122 (job `checks`
+  nettement plus court) réattesté par l'humain, son attestation couvrant
+  `.drwil/ia-first.json` modifié ici. Intention d'origine (note du
+  2026-10-24) couverte et retirée, sauf le rappel d'état raccourci (non
+  retenu par le demandeur) et la mesure (reprise par l'intention de relevé).
+- **Relevé de référence** : ≈ 170 k de cache lu par requête
+  (« rouvrir après clôture », 24,9 M pour 147 requêtes). Ce chantier, qui
+  construit les leviers au fil de ses lots : 40,0 M pour 307 requêtes
+  (≈ 130 k), 6,68 M tokens pondérés, 150 min — pas encore une mesure de
+  l'effet (intention de relevé ci-dessous).
+- **Constaté à la clôture** : une première tentative est tombée sur 33 FAIL
+  `ENOSPC` — 13 500 dossiers `/tmp/drwil-*` laissés par les tests avaient
+  épuisé les inodes du tmpfs `/tmp` ; une passe de `verify --evidence` en
+  laisse 92 de plus. La garde shell de QUA-132 refuse aussi un ajout en fin
+  de journal par `cat >> … <<EOF` (écriture jugée comme une lecture) : le
+  journal s'édite par l'outil d'édition.
+- **Réouverture (PR #223, CI rouge ; QUA-116 réouverture après clôture,
+  oui de l'humain selon QUA-117)** : macOS — le garde shell comparait
+  `import.meta.url` à une URL de `process.argv[1]` et ne se lançait pas par
+  `/var` → `/private/var` ; la correction de 2026-10-17 (QUA-044, les hooks
+  lisent la racine du projet) n'avait pas été appliquée partout. Tous les
+  points d'entrée livrés de `.githooks/` et `.claude/hooks/` comparent
+  désormais les chemins réels des deux côtés, et un test de QUA-044
+  parcourt le gabarit pour refuser la récidive ; QUA-044 étendu en
+  conséquence. Windows — l'hypothèse du nom court 8.3 écartée par le log
+  (les lectures Read par chemin absolu passaient) : le garde shell lisait
+  `\` comme échappement et effaçait les séparateurs de `C:\Users\…` ; les
+  mots sont relus sans échappement. Rejeu par les hooks de la branche
+  principale (QUA-113) : « Contrats modifiés » cite désormais un hook par
+  puce.
+- **Limites connues** : relevé de l'indicateur —
+  `docs/intentions/releve-cache-lu-par-requete.md` ; recettes et skills qui
+  renvoient encore au registre entier —
+  `docs/intentions/recettes-qui-lisent-le-registre-entier.md` ; lecture
+  forcée pour Gemini CLI, Copilot CLI, Codex et Cursor —
+  `docs/intentions/lecture-ciblee-forcee-autres-outils.md` ; découpage du
+  registre et du journal — `docs/intentions/decoupage-registre-et-journal.md` ;
+  dossiers temporaires des tests jamais supprimés, troisième occurrence,
+  besoin d'un anti-récidive —
+  `docs/intentions/tests-dossiers-temporaires-non-supprimes.md` ; points
+  d'entrée des scripts propres au dépôt (`outils/`, `.github/scripts/`)
+  hors du test de QUA-044 — note du 2026-10-24 de
+  `docs/intentions/notes.md` ; gardes de
+  lecture et sous-agent non éprouvés dans une vraie session Claude Code,
+  et garde shell qui prend `cat >>` pour une lecture —
+  `docs/intentions/gardes-de-lecture-en-session-reelle.md`.
+- **Preuve de clôture** : `docs/preuves/reduction-contexte.md`.
+- **Clôturé par** : la branche `workstream/reduction-contexte`.

@@ -16,8 +16,8 @@
 // docs/architecture.md must be done (release-review.mjs, QUA-098): otherwise the release is refused.
 // Usage: node create-release.mjs [--candidate] [--dry-run]
 import { execFileSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
-import { existsSync, readFileSync, mkdtempSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { existsSync, readFileSync, mkdtempSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname, basename } from "node:path";
 
@@ -336,7 +336,7 @@ async function main() {
 }
 
 // Only runs when launched directly (node create-release.mjs), not when detectBump/nextVersion are
-// imported for a unit test. pathToFileURL (not a "file://" + argv[1] concatenation): on Windows
-// process.argv[1] uses backslashes (D:\...) while import.meta.url uses slashes (file:///D:/...) —
-// the naive comparison silently fails and main() never runs.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();
+// imported for a unit test. Real paths on both sides (QUA-044): a "file://" + argv[1] concatenation
+// fails on Windows (D:\... against file:///D:/...), and a URL comparison fails through a symbolic
+// link (/var → /private/var on macOS) — main() would silently never run.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) await main();
