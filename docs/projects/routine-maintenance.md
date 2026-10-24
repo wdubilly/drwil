@@ -30,6 +30,7 @@ files:
   - docs/features.md
   - outils/banc.test.mjs
   - outils/verifier-codeowners.mjs
+  - docs/architecture.md
 -->
 
 ## Journal
