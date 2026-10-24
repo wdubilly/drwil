@@ -418,6 +418,24 @@ une décision du demandeur.
 - [ ] [décision] Éprouver la réouverture sur une vraie PR et sous Windows
   (limite du chantier du 2026-10-24) —
   `docs/intentions/reouverture-eprouvee-en-reel.md`.
+- [ ] [décision] Relever le cache lu moyen par requête sur deux chantiers
+  comparables, comparé aux ≈ 170 k du 2026-10-24 (limite du chantier
+  « réduire le contexte relu ») — `docs/intentions/releve-cache-lu-par-requete.md`.
+- [ ] [décision] Les recettes et skills qui renvoient encore au registre des
+  contrats entier (limite du même chantier) —
+  `docs/intentions/recettes-qui-lisent-le-registre-entier.md`.
+- [ ] [décision] Forcer la lecture ciblée avec Gemini CLI, Copilot CLI, Codex
+  et Cursor (limite du même chantier) —
+  `docs/intentions/lecture-ciblee-forcee-autres-outils.md`.
+- [ ] [décision] Découper le registre des contrats et le journal, si la
+  lecture ciblée ne suffit pas (limite du même chantier) —
+  `docs/intentions/decoupage-registre-et-journal.md`.
+- [ ] [décision] Les tests laissent des dossiers `/tmp/drwil-*` jamais
+  supprimés (inodes épuisés le 2026-10-24) —
+  `docs/intentions/tests-dossiers-temporaires-non-supprimes.md`.
+- [ ] [décision] Éprouver les gardes de lecture et le sous-agent de contrôles
+  dans une vraie session Claude Code (limite du même chantier) —
+  `docs/intentions/gardes-de-lecture-en-session-reelle.md`.
 - [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
   2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
@@ -535,10 +553,6 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
 
-- [ ] [IA] [P1] Réduire le contexte relu par chantier : lecture ciblée des
-  contrats et du journal, sorties courtes, contrôles en sous-agent, une
-  session par chantier (cadré le 2026-10-24) —
-  `docs/projects/reduction-contexte.md`.
 - [ ] [IA] [P2] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
