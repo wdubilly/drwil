@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.8.0 (2026-10-25)
+
 ### Added
 
 - Targeted reading, so an agent does not read whole files into its context:
