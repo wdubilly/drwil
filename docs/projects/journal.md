@@ -2970,7 +2970,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   fichiers sous 400 lignes). Cycle complet prouvé dans un projet installé,
   hooks réels et `gh` simulé dans le PATH. Contrats ajoutés au registre,
   contrôles `tests-qua-116` à `tests-qua-118`, ligne « Unreleased » du
-  changelog. Intention d'origine mise à jour
+  changelog. Chantier rouvert une fois sur sa propre PR (#220) : le rejeu
+  par la branche principale (QUA-113) échouait faute de déclaration des
+  hooks modifiés ; la fiche les déclare maintenant dans « Contrats
+  modifiés ». Intention d'origine mise à jour
   (`docs/intentions/defaut-revele-apres-la-cloture.md`) : y reste l'attente
   de CodeQL avant la clôture. Preuve de clôture :
   `docs/preuves/reouvrir-apres-cloture.md`.
