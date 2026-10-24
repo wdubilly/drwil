@@ -790,3 +790,172 @@ test("QUA-086 : sans état local, la fiche jugée est lue depuis le trailer Drwi
     nettoyer(dir);
   }
 });
+
+// gh simulé par un script du PATH : Windows ne lance sans shell qu'un .exe ; la mécanique y reste
+// prouvée par les tests des hooks (gh injecté).
+test("QUA-118 : cycle complet d'un chantier rouvert — clôture, réouverture, correctif, nouvelle clôture : une entrée de journal, une ligne de consommation, la preuve réécrite", {
+  skip: process.platform === "win32",
+}, async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  const outils = mkdtempSync(join(tmpdir(), "drwil-gh-"));
+  const journaux = mkdtempSync(join(tmpdir(), "drwil-journaux-"));
+  // gh simulé dans le PATH : la PR #7 du chantier, ouverte, fusion automatique programmée jusqu'à son annulation.
+  const pr = join(outils, "pr.json");
+  writeFileSync(pr, JSON.stringify({ number: 7, state: "OPEN", autoMergeRequest: { mergeMethod: "MERGE" } }));
+  writeFileSync(
+    join(outils, "gh"),
+    `#!/usr/bin/env node
+const fs = require("node:fs");
+const a = process.argv.slice(2);
+const pr = JSON.parse(fs.readFileSync(${JSON.stringify(pr)}, "utf8"));
+if (a[0] === "pr" && a[1] === "view") { process.stdout.write(JSON.stringify(pr)); process.exit(0); }
+if (a[0] === "pr" && a[1] === "merge" && a.includes("--disable-auto")) {
+  fs.writeFileSync(${JSON.stringify(pr)}, JSON.stringify({ ...pr, autoMergeRequest: null }));
+  process.exit(0);
+}
+process.exit(1);
+`,
+    { mode: 0o755 },
+  );
+  const envGh = { ...env, PATH: `${outils}:${process.env.PATH}` };
+  const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8", env });
+  const cli = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
+  const node = (...args) => spawnSync(process.execPath, args, { cwd: dir, encoding: "utf8", env: envGh });
+  const verifier = () => {
+    const r = node(cli, "verify", "--evidence");
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+  };
+  const deplacer = (...activites) => {
+    for (const a of activites) {
+      const r = node(".githooks/state.mjs", "move", a);
+      assert.equal(r.status, 0, `${a} : ${r.stdout}${r.stderr}`);
+    }
+  };
+  const reponses = (n) =>
+    writeFileSync(
+      join(journaux, "s.jsonl"),
+      Array.from({ length: n }, (_, i) =>
+        JSON.stringify({
+          type: "assistant",
+          requestId: `r${i}`,
+          timestamp: `2026-10-24T10:0${i}:00Z`,
+          gitBranch: "workstream/essai",
+          message: {
+            model: "claude-opus-5-5",
+            usage: { input_tokens: 1, output_tokens: 2, cache_read_input_tokens: 3, cache_creation_input_tokens: 4 },
+          },
+        }),
+      ).join("\n") + "\n",
+    );
+  const cloturer = (entree) => {
+    writeFileSync(
+      join(dir, "docs/projects/journal.md"),
+      `# Journal\n\n## 2026-10-24 — Essai\n\n${entree}\n\nPreuve : \`docs/preuves/essai.md\`.\n`,
+    );
+    const r = node(".githooks/close.mjs", "--logs", journaux);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    git("add", "-A");
+    const c = git("commit", "-q", "-m", "Clôture de l'essai");
+    assert.equal(c.status, 0, `commit de clôture, hooks compris : ${c.stdout}${c.stderr}`);
+  };
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: true }));
+    git("config", "user.email", "test@exemple.invalid");
+    git("config", "user.name", "Test");
+    git("config", "commit.gpgsign", "false");
+    git("branch", "-M", "main");
+    const cfg = JSON.parse(lire(dir, ".drwil/ia-first.json"));
+    cfg.checks = [{ id: "ok", name: "toujours vert", run: 'node -e "process.exit(0)"' }];
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+    // Chaque contrat installé gardé (la doc les cite), prouvé par le contrôle toujours vert : verify PASS.
+    const ids = [...lire(dir, "docs/contracts.md").matchAll(/^## ([A-Z]+-\d{3}) /gm)].map((m) => m[1]);
+    writeFileSync(
+      join(dir, "docs/contracts.md"),
+      `# Contrats\n\n${[...ids, "APP-002"].map((id) => `## ${id} — titre\n**Règle** : exigence.\n**Contrôle** : \`ok\`\n`).join("\n")}`,
+    );
+    mkdirSync(join(dir, "src"), { recursive: true });
+    writeFileSync(join(dir, "src/a.js"), "export const a = 0;\n");
+    // Code déjà là avant le chantier : couvert par l'entretien courant, il le reste une fois la fiche close.
+    const entretien = "docs/projects/routine-maintenance.md";
+    writeFileSync(join(dir, entretien), lire(dir, entretien).replace("<!-- scope\nfiles:\n", "<!-- scope\nfiles:\n  - src/a.js\n"));
+    writeFileSync(join(dir, "docs/architecture.md"), `${lire(dir, "docs/architecture.md")}\n- \`src/\` — code de l'essai.\n`);
+    git("add", "-A");
+    git("commit", "--no-verify", "-m", "installation");
+    git("checkout", "-b", "workstream/essai");
+
+    const fiche = "docs/projects/essai.md";
+    writeFileSync(
+      join(dir, fiche),
+      "# Projet : essai\n\n**Statut** : cadré le 2026-10-24.\n\n<!-- scope\nfiles:\n  - src/a.js\n-->\n\n## Critères d'acceptation\n\n- Un export vide est refusé — `APP-002`\n\n## 7. Reprise\n\n- **Prochaine étape** : réaliser.\n",
+    );
+    git("add", "-A");
+    const cadrage = git("commit", "-q", "-m", "Cadrage de l'essai");
+    assert.equal(cadrage.status, 0, cadrage.stdout + cadrage.stderr);
+    writeFileSync(
+      join(dir, ".drwil/state.json"),
+      JSON.stringify({ version: 1, activity: "BUILD", active_brief: fiche, active_request: null, since: null, auto_merge: true }),
+    );
+    writeFileSync(join(dir, "src/a.js"), "export const a = 1;\n");
+    git("add", "-A");
+    const travail = git("commit", "-q", "-m", "Travail");
+    assert.equal(travail.status, 0, travail.stdout + travail.stderr);
+
+    // Première clôture.
+    deplacer("EVIDENCE", "VERIFY");
+    verifier();
+    deplacer("CLOSING");
+    reponses(1);
+    cloturer("Première clôture.");
+    const premiere = lire(dir, "docs/preuves/essai.md");
+    assert.ok(!existsSync(join(dir, fiche)));
+
+    // La PR révèle un défaut : réouverture, d'une commande.
+    const r = node(".githooks/state.mjs", "reopen");
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /CLOSING → BUILD \(réouverture de docs\/projects\/essai\.md, PR #7 ouverte\)/);
+    assert.match(r.stdout, /fusion automatique annulée/);
+    assert.equal(JSON.parse(readFileSync(pr, "utf8")).autoMergeRequest, null);
+    assert.ok(existsSync(join(dir, fiche)), "fiche restaurée");
+    const etat = JSON.parse(lire(dir, ".drwil/state.json"));
+    assert.equal(etat.activity, "BUILD");
+    assert.deepEqual(etat.reopened, { pr: 7 });
+    assert.equal(etat.auto_merge, true, "l'autorisation de fusion du lancement est gardée");
+
+    // Correctif ordinaire : la barrière le laisse passer sans personne.
+    writeFileSync(join(dir, "src/a.js"), "export const a = 2;\n");
+    git("add", "-A");
+    const correctif = git("commit", "-q", "-m", "Correctif révélé par la PR");
+    assert.equal(correctif.status, 0, correctif.stdout + correctif.stderr);
+
+    // Nouvelle clôture : comme la première.
+    deplacer("EVIDENCE", "VERIFY");
+    verifier();
+    const verifie = git("rev-parse", "HEAD").stdout.trim();
+    deplacer("CLOSING");
+    reponses(3);
+    cloturer("Première clôture, puis réouverture pour un défaut révélé par la PR #7.");
+    const journal = lire(dir, "docs/projects/journal.md");
+    assert.equal(journal.match(/^## /gm).length, 1, "une seule entrée de journal, mise à jour");
+    const usage = lire(dir, ".drwil/usage.jsonl")
+      .split("\n")
+      .filter(Boolean)
+      .map((l) => JSON.parse(l));
+    assert.deepEqual(
+      usage.filter((l) => l.workstream === "essai").map((l) => l.requests),
+      [3],
+      "une seule ligne de consommation, au nouveau total",
+    );
+    const preuve = lire(dir, "docs/preuves/essai.md");
+    assert.notEqual(preuve, premiere);
+    assert.match(preuve, new RegExp(`\\*\\*Commit vérifié\\*\\* : \`${verifie.slice(0, 10)}\``));
+    // Historique jamais réécrit : la première clôture reste dans la branche.
+    assert.match(
+      git("log", "--format=%s").stdout,
+      /Clôture de l'essai[\s\S]*Réouverture de docs\/projects\/essai\.md[\s\S]*Clôture de l'essai/,
+    );
+    deplacer("SCOPING");
+    assert.equal(JSON.parse(lire(dir, ".drwil/state.json")).reopened, undefined);
+  } finally {
+    for (const d of [dir, outils, journaux]) rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});

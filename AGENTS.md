@@ -76,6 +76,17 @@ Carte complète : `docs/architecture.md`.
   les règles du jeu (contrat existant modifié ou retiré, hooks, seuils,
   barrière) attend le oui de l'humain ; ajouter un contrat, non
   (`docs/recipes/corriger-un-defaut.md`).
+- **Défaut révélé après la clôture (QUA-116)** : en CLOSING, quand la PR du
+  chantier, ouverte et pas encore fusionnée, révèle un défaut (CI rouge,
+  analyse de la forge), l'agent rouvre seul le chantier :
+  `node .githooks/state.mjs reopen` annule d'abord la fusion automatique,
+  restaure la fiche telle qu'avant le commit de clôture (dans son propre
+  commit) et repasse en BUILD sur la même branche — jamais d'historique
+  réécrit ni de push forcé. Un correctif qui change les règles du jeu
+  attend le oui de l'humain, comme un détour (QUA-117) ; la nouvelle
+  clôture met à jour l'entrée de journal du chantier, jamais une seconde,
+  et réécrit la preuve (QUA-118). Un défaut révélé après la fusion relève
+  d'un nouveau chantier.
 - **File de chantiers** : quand l'humain a coché plusieurs fiches au
   lancement, l'agent les réalise l'une après l'autre sans nouveau sondage —
   avec Claude Code, chacune dans un sous-agent (contexte neuf), la session

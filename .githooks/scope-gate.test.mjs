@@ -5,7 +5,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmdirSync, rmSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { contractsAddedOnly } from "./detour.mjs";
+import { allow, contractsAddedOnly } from "./detour.mjs";
+import { readState } from "./state.mjs";
 import { addTrailer, checkScope, outsideBriefFiles, checkIndex } from "./scope-gate.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
@@ -550,4 +551,60 @@ test("QUA-111 : hors fusion, rien ne change ; un parent illisible juge le fichie
   // MERGE_HEAD vers un commit inexistant : la comparaison échoue, le fichier reste jugé.
   writeFileSync(join(racine, ".git", "MERGE_HEAD"), `${"0".repeat(40)}\n`);
   assert.equal(checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/a.js"] }).status, "fail");
+});
+
+test("QUA-117 : chantier rouvert, un correctif qui change les règles du jeu attend le oui de l'humain ; un correctif ordinaire passe — en anglais aussi", () => {
+  const state = { ...etat("BUILD"), reopened: { pr: 42 } };
+  const patterns = [".githooks/x.mjs", "src/a.js", "docs/contracts.md", ".github/workflows/ci.yml", ".drwil/ia-first.json"];
+  const files = [".githooks/x.mjs", "src/a.js", "docs/contracts.md", ".github/workflows/ci.yml", ".drwil/ia-first.json"];
+  const fr = checkIndex({ files, state, patterns, cfg: {} });
+  assert.deepEqual(
+    fr.map((p) => p.split(" : ")[0]),
+    [".githooks/x.mjs", "docs/contracts.md", ".github/workflows/ci.yml", ".drwil/ia-first.json"],
+  );
+  assert.match(
+    fr[0],
+    /un correctif de réouverture qui change les règles du jeu \(contrat existant modifié ou retiré, hook, seuil, barrière, CI\) demande le oui de l'humain — `node \.githooks\/detour\.mjs allow`/,
+  );
+  // La source du gabarit d'une copie déclarée change les règles comme la copie.
+  const miroirs = { scopeMirrors: [{ from: "gabarit/", to: "" }] };
+  assert.equal(checkIndex({ files: ["gabarit/.githooks/y.mjs"], state, patterns: ["gabarit/**"], cfg: miroirs }).length, 1);
+  assert.deepEqual(checkIndex({ files: ["src/a.js"], state, patterns, cfg: {} }), [], "correctif ordinaire : personne");
+  const en = checkIndex({ files, state, patterns, cfg: { lang: "en" } });
+  assert.match(en[0], /^\.githooks\/x\.mjs: a reopening fix that changes the rules .* needs the human's yes/);
+  assert.deepEqual(checkIndex({ files, state: { ...state, reopened: { pr: 42, human: true } }, patterns, cfg: {} }), []);
+});
+
+test("QUA-117 : chantier rouvert, un ajout pur au registre passe sans le oui ; modifier un contrat l'attend ; le oui se donne dans un terminal", async () => {
+  const rouvert = () => {
+    const racine = depotEnDetour();
+    ecrire(racine, ".drwil/state.json", JSON.stringify({ ...etat("BUILD"), reopened: { pr: 42 } }));
+    return racine;
+  };
+  assert.deepEqual(indexer(rouvert(), registre(contrat("QUA-001", "une règle."), contrat("QUA-002", "nouvelle."))), []);
+  const refus = indexer(rouvert(), registre(contrat("QUA-001", "une règle changée.")));
+  assert.equal(refus.length, 1);
+  assert.match(refus[0], /^docs\/contracts\.md : un correctif de réouverture qui change les règles du jeu/);
+
+  const racine = rouvert();
+  assert.match((await allow(racine)).message, /terminal interactif/, "sans terminal, aucun oui");
+  const questions = [];
+  const non = await allow(racine, {
+    tty: true,
+    confirm: async (q) => {
+      questions.push(q);
+      return false;
+    },
+  });
+  assert.equal(non.code, 1);
+  assert.match(
+    questions[0],
+    /Le correctif de la réouverture de docs\/projects\/exemple\.md change les règles du jeu\. L'autoriser \? Retapez DETOUR/,
+  );
+  assert.deepEqual(readState(racine).state.reopened, { pr: 42 }, "refus : rien d'écrit");
+  const oui = await allow(racine, { tty: true, confirm: async () => true });
+  assert.equal(oui.code, 0);
+  assert.match(oui.message, /réouverture de docs\/projects\/exemple\.md autorisée à changer les règles du jeu/);
+  assert.deepEqual(readState(racine).state.reopened, { pr: 42, human: true });
+  assert.deepEqual(indexer(racine, registre(contrat("QUA-001", "une règle changée."))), [], "après le oui, le correctif passe");
 });

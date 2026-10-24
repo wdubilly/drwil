@@ -1,6 +1,6 @@
 # Projet : rouvrir un chantier dont la PR révèle un défaut après la clôture
 
-**Statut** : cadré le 2026-10-23.
+**Statut** : en cours depuis le 2026-10-24 (lots 1 et 2 réalisés sur la branche `workstream/reouvrir-apres-cloture`).
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/defaut-revele-apres-la-cloture.md` (et la note du 2026-10-23 de `docs/intentions/notes.md` sur la CI rouge après le commit de clôture)
@@ -49,8 +49,8 @@ chantier sur sa branche, corrige, et clôt de nouveau.
 
 ## Critères d'acceptation
 
-(les contrats sont à créer au lancement, avec leur champ **Origine** ; ID
-à attribuer à ce moment-là dans le registre.)
+(contrats créés au lancement, avec leur champ **Origine** : QUA-116,
+QUA-117, QUA-118.)
 
 - En CLOSING, quand la PR du chantier est ouverte et non fusionnée, l'agent
   rouvre le chantier seul, par une commande : la fiche revient telle
@@ -59,16 +59,16 @@ chantier sur sa branche, corrige, et clôt de nouveau.
   pousser en force ; une fusion automatique programmée est annulée avant
   tout ; la réouverture est refusée, sans rien changer, hors CLOSING, sur
   une PR fusionnée ou fermée, et quand l'état de la PR est inconnu (`gh`
-  absent) — contrat à créer
+  absent) — `QUA-116`
 - Un correctif de réouverture qui change les règles du jeu (contrat
   existant modifié ou retiré, hook, seuil, barrière, CI) voit ses commits
   refusés par la barrière de périmètre jusqu'au oui de l'humain, comme un
-  détour ; un correctif ordinaire passe sans personne — contrat à créer
+  détour ; un correctif ordinaire passe sans personne — `QUA-117`
 - La nouvelle clôture passe comme la première : une seule entrée de
   journal pour le chantier (mise à jour, jamais doublée), une seule ligne
   de consommation, preuve de clôture réécrite sur le nouveau commit
   vérifié ; l'autorisation de fusion automatique et la file décidées au
-  lancement sont gardées — contrat à créer
+  lancement sont gardées — `QUA-118`
 
 ## 2. Hors périmètre
 
@@ -136,6 +136,7 @@ chantier sur sa branche, corrige, et clôt de nouveau.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-23) : cadré.
+- **Dernier état** (2026-10-24) : lots 1 et 2 réalisés ; contrats QUA-116,
+  QUA-117, QUA-118 au registre, contrôles `tests-qua-116` à `tests-qua-118`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : [IA] preuves, verify, clôture.

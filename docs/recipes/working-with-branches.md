@@ -118,6 +118,25 @@ request, instead of direct commits on the main branch.
   brief's `**Intent**` field) is updated, or summarised in the journal and
   removed when fully covered. A closing commit that deletes the brief
   without touching its intent gets a warning.
+- Defect revealed by the PR after the closing commit, before the merge (red
+  CI, forge code analysis): never a workaround nor routine maintenance —
+  `node .githooks/state.mjs reopen` (in CLOSING, on the workstream's branch,
+  clean worktree, the PR open: gh must answer, otherwise refused) cancels
+  the scheduled automatic merge first (`gh pr merge --disable-auto`: a
+  branch whose merge is scheduled receives no push), restores the brief as
+  it was before the commit that deleted it, in a commit touching only the
+  brief, and moves back to BUILD on it, keeping the merge authorisation and
+  the queue decided at start. Widen its scope, if needed, in a separate
+  commit; commit the fix and push normally (no history rewritten). A fix
+  that changes the rules (an existing contract modified or removed, hook,
+  threshold, gate, CI) waits for the human's yes, like a detour
+  (`node .githooks/detour.mjs allow`, interactive terminal). Then Evidence,
+  Verify and Closing as the first time: update the workstream's journal
+  entry (a second entry citing the same proof makes the closing fail),
+  `node .githooks/close.mjs` rewrites the proof on the new verified commit
+  and replaces the consumption line with the new total; schedule the merge
+  again if it was authorised. A PR already merged or closed is refused: a
+  new workstream, or routine maintenance.
 - Queue (decided at start, several briefs ticked in the `/drwil-start` poll): once the
   closing commit is pushed and the merge scheduled, go back to Scoping, wait until the PR is
   merged, update the main branch, then start the next brief yourself:

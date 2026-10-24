@@ -22,6 +22,8 @@ const TEXTS = {
     queueMerge: " (fusion automatique)",
     detour:
       "Détour en cours (QUA-050), ouvert depuis {0} (branche {1}, travail en cours mis de côté par l'outil) : corriger le défaut sous cette fiche courte, sur la branche {2} ; PR intitulée « Détour de {0} : … », au mode de fusion décidé au lancement ; avant le push, entrée de journal citant la branche {2} et fiche supprimée ; une fois la PR fusionnée, `node .githooks/detour.mjs resume`. Jamais de stash ni de changement de branche à la main.",
+    reopened:
+      "Chantier rouvert après sa clôture (QUA-116), PR #{0} ouverte : corriger le défaut sur cette branche, sans réécrire l'historique ni pousser en force ; un correctif qui change les règles du jeu (contrat existant modifié ou retiré, hook, seuil, barrière, CI) attend le oui de l'humain (`node .githooks/detour.mjs allow`, terminal ; en file, le sous-agent s'arrête) ; puis EVIDENCE, VERIFY et CLOSING comme la première fois : l'entrée de journal du chantier se met à jour (jamais une seconde), `node .githooks/close.mjs` réécrit la preuve et remplace la ligne de consommation.",
     // Un « continue » ambigu a lancé un chantier le 2026-10-17 : une file reprise exige un oui explicite.
     queueResume:
       "Reprise de file : si cette session n'a pas mené la clôture précédente (nouvelle session, après `/clear` ou un redémarrage), demander d'abord à l'humain « la file reprend avec {0} : je lance ? » et ne lancer `node .githooks/state.mjs next` que sur un oui explicite ; sans oui explicite, rien n'est lancé.",
@@ -48,7 +50,7 @@ const TEXTS = {
       VERIFY:
         "lancer `npx drwil verify --evidence` ; seul son verdict compte, pas l'affirmation de l'agent. PASS ou ATTESTED : clore ; FAIL ou ERROR : revenir en BUILD ; MANUAL : attestation humaine (`npx drwil attest`), puis relancer.",
       CLOSING:
-        "fiche entièrement terminée : la condenser dans le journal, puis `node .githooks/close.mjs` la supprime, retire sa ligne de l'index, consigne la consommation et signale ce qui ferait échouer la clôture (incohérences de documentation comprises ; `--fix` applique les corrections proposées), avant le commit ; sinon mettre à jour statut et reprise. Boucler les intentions : chaque limite non traitée devient une fiche d'intention (jamais une fiche de chantier), listée dans l'index en [décision] et citée par « Limites connues » du journal ; l'intention d'origine (champ Intention de la fiche) est mise à jour, ou résumée au journal et retirée si elle est entièrement couverte. Tenir ce que lit l'utilisateur : README et ligne « Unreleased » du changelog si le chantier change ce qu'il voit, carte docs/architecture.md s'il change la structure. Consigner la consommation du chantier : `node .githooks/consumption.mjs --record <fiche>` (fait par close.mjs ; journaux de Claude Code ; autre outil : estimer à la main), la ligne entre dans le commit de clôture. Puis revenir en SCOPING.",
+        "fiche entièrement terminée : la condenser dans le journal, puis `node .githooks/close.mjs` la supprime, retire sa ligne de l'index, consigne la consommation et signale ce qui ferait échouer la clôture (incohérences de documentation comprises ; `--fix` applique les corrections proposées), avant le commit ; sinon mettre à jour statut et reprise. Boucler les intentions : chaque limite non traitée devient une fiche d'intention (jamais une fiche de chantier), listée dans l'index en [décision] et citée par « Limites connues » du journal ; l'intention d'origine (champ Intention de la fiche) est mise à jour, ou résumée au journal et retirée si elle est entièrement couverte. Tenir ce que lit l'utilisateur : README et ligne « Unreleased » du changelog si le chantier change ce qu'il voit, carte docs/architecture.md s'il change la structure. Consigner la consommation du chantier : `node .githooks/consumption.mjs --record <fiche>` (fait par close.mjs ; journaux de Claude Code ; autre outil : estimer à la main), la ligne entre dans le commit de clôture. Puis revenir en SCOPING. Un défaut révélé par la PR, ouverte et pas encore fusionnée (CI rouge, analyse de la forge) : `node .githooks/state.mjs reopen` rouvre le chantier sur sa branche (fusion automatique annulée d'abord, fiche restaurée, BUILD), jamais un contournement.",
     },
   },
   en: {
@@ -66,6 +68,8 @@ const TEXTS = {
     queueMerge: " (automatic merge)",
     detour:
       "Detour in progress (QUA-050), opened from {0} (branch {1}, work in progress set aside by the tool): fix the defect under this short brief, on branch {2}; PR titled « Detour of {0}: … », with the merge mode decided at start; before the push, a journal entry citing branch {2} and the brief deleted; once the PR is merged, `node .githooks/detour.mjs resume`. Never stash or switch branches by hand.",
+    reopened:
+      "Workstream reopened after its closing (QUA-116), PR #{0} open: fix the defect on this branch, without rewriting history or force-pushing; a fix that changes the rules (an existing contract modified or removed, hook, threshold, gate, CI) waits for the human's yes (`node .githooks/detour.mjs allow`, terminal; in a queue, the subagent stops); then EVIDENCE, VERIFY and CLOSING like the first time: the workstream's journal entry is updated (never a second one), `node .githooks/close.mjs` rewrites the proof and replaces the consumption line.",
     queueResume:
       "Resuming a queue: if this session did not carry the previous closing (new session, after `/clear` or a restart), first ask the human « the queue resumes with {0}: shall I start it? » and run `node .githooks/state.mjs next` only on an explicit yes; without an explicit yes, nothing is started.",
     closingNoQueue:
@@ -91,7 +95,7 @@ const TEXTS = {
       VERIFY:
         "run `npx drwil verify --evidence`; only its verdict counts, not the agent's claim. PASS or ATTESTED: close; FAIL or ERROR: go back to BUILD; MANUAL: human attestation (`npx drwil attest`), then run it again.",
       CLOSING:
-        "brief fully finished: condense it into the journal, then `node .githooks/close.mjs` deletes it, removes its index line, records the consumption and reports what would make the closing fail (documentation inconsistencies included; `--fix` applies the proposed corrections), before the commit; otherwise update status and hand-off. Close the intent loop: each limit left untreated becomes an intent brief (never a workstream brief), listed in the index as [decision] and cited by the journal's « Known limits »; the original intent (the brief's Intent field) is updated, or summarised in the journal and removed when fully covered. Keep what the user reads current: README and « Unreleased » changelog line if the workstream changes what they see, map docs/architecture.md if it changes the structure. Record the workstream's consumption: `node .githooks/consumption.mjs --record <brief>` (done by close.mjs; Claude Code logs; another tool: estimate by hand), the line goes into the closing commit. Then go back to SCOPING.",
+        "brief fully finished: condense it into the journal, then `node .githooks/close.mjs` deletes it, removes its index line, records the consumption and reports what would make the closing fail (documentation inconsistencies included; `--fix` applies the proposed corrections), before the commit; otherwise update status and hand-off. Close the intent loop: each limit left untreated becomes an intent brief (never a workstream brief), listed in the index as [decision] and cited by the journal's « Known limits »; the original intent (the brief's Intent field) is updated, or summarised in the journal and removed when fully covered. Keep what the user reads current: README and « Unreleased » changelog line if the workstream changes what they see, map docs/architecture.md if it changes the structure. Record the workstream's consumption: `node .githooks/consumption.mjs --record <brief>` (done by close.mjs; Claude Code logs; another tool: estimate by hand), the line goes into the closing commit. Then go back to SCOPING. A defect revealed by the PR, open and not merged yet (red CI, forge analysis): `node .githooks/state.mjs reopen` reopens the workstream on its branch (automatic merge cancelled first, brief restored, BUILD), never a workaround.",
     },
   },
 };
@@ -119,6 +123,26 @@ export const STATE_MESSAGES = {
     detourType: "detour : objet { origin_brief, origin_branch, branch, stash, human? } attendu",
     detourActivity: "detour : seulement en BUILD",
     detourMove: "détour en cours : le reprendre d'abord (`node .githooks/detour.mjs resume`), ou l'abandonner en SCOPING",
+    reopenedType: "reopened : objet { pr, human? } attendu (pr : numéro de la PR)",
+    reopenedActivity: "reopened : seulement de BUILD à CLOSING",
+    reopenFrom:
+      "réouverture refusée : activité {0} — on rouvre depuis CLOSING un chantier clos dont la PR, ouverte, révèle un défaut ; rien n'a changé",
+    reopenDirty: "réouverture refusée : arbre modifié — commiter ou retirer d'abord ; rien n'a changé",
+    reopenBranch:
+      "réouverture refusée : il faut être sur la branche du chantier (ni la branche principale, ni un HEAD détaché) ; rien n'a changé",
+    reopenUnknown:
+      "réouverture refusée : l'état de la PR de {0} est inconnu (gh absent, non connecté, ou aucune PR) — un état non établi ne rouvre rien ; rien n'a changé",
+    reopenNotOpen:
+      "réouverture refusée : la PR #{0} est {1}, pas ouverte — un défaut après la fusion relève d'un nouveau chantier ou de l'entretien courant ; rien n'a changé",
+    reopenNoBrief: "réouverture refusée : aucun commit de {1} ne supprime {0} — rien à restaurer ; rien n'a changé",
+    reopenAutoMerge:
+      "réouverture refusée : la fusion automatique de la PR #{0} n'a pas pu être annulée (`gh pr merge {0} --disable-auto`) — la branche ne reçoit rien tant qu'elle est programmée ; rien d'autre n'a changé",
+    reopenCancelled: "fusion automatique annulée : à reprogrammer après la nouvelle clôture, comme la première fois",
+    reopenMessage: "Réouverture de {0} : défaut révélé par la PR #{1}",
+    reopenCommitFailed: "réouverture refusée : le commit de la fiche restaurée a échoué ({0}) — fiche retirée, état inchangé",
+    reopenRestored:
+      "fiche {0} restaurée telle qu'avant la clôture, dans son propre commit ({1}) ; son cadrage s'élargit comme d'habitude, dans un commit séparé",
+    reopened: "CLOSING → BUILD (réouverture de {0}, PR #{1} ouverte)",
     queueNotReady:
       "lancement refusé : « {0} » ne peut pas entrer dans une file — il faut une fiche prête (maturité « prêt », aucune [décision] ouverte, critères d'acceptation)",
     queued: "file : ensuite {0}, lancés un à un par l'agent après chaque clôture et fusion (arrêt : `node .githooks/state.mjs queue stop`)",
@@ -174,7 +198,7 @@ export const STATE_MESSAGES = {
     askMerge: "Fusion automatique à la fin du chantier ? Retapez MERGE, sinon Entrée : ",
     notConfirmed: "✗ lancement non confirmé : état inchangé",
     unreadableState: `[drwil] état de gouvernance illisible : {0}`,
-    usage: `usage : node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <texte>] | start [<fiche>] | briefs [--json] | reminder`,
+    usage: `usage : node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <texte>] | start [<fiche>] | reopen | briefs [--json] | reminder`,
   },
   en: {
     or: " or ",
@@ -192,6 +216,25 @@ export const STATE_MESSAGES = {
     detourType: "detour: object { origin_brief, origin_branch, branch, stash, human? } expected",
     detourActivity: "detour: only in BUILD",
     detourMove: "detour in progress: resume it first (`node .githooks/detour.mjs resume`), or abandon it to SCOPING",
+    reopenedType: "reopened: object { pr, human? } expected (pr: the PR's number)",
+    reopenedActivity: "reopened: only from BUILD to CLOSING",
+    reopenFrom:
+      "reopening refused: activity {0} — a closed workstream whose open PR reveals a defect is reopened from CLOSING; nothing changed",
+    reopenDirty: "reopening refused: worktree modified — commit or remove first; nothing changed",
+    reopenBranch: "reopening refused: it takes the workstream's branch (neither the main branch nor a detached HEAD); nothing changed",
+    reopenUnknown:
+      "reopening refused: the state of the PR of {0} is unknown (gh missing, not logged in, or no PR) — a state not established reopens nothing; nothing changed",
+    reopenNotOpen:
+      "reopening refused: PR #{0} is {1}, not open — a defect after the merge belongs to a new workstream or to routine maintenance; nothing changed",
+    reopenNoBrief: "reopening refused: no commit of {1} deletes {0} — nothing to restore; nothing changed",
+    reopenAutoMerge:
+      "reopening refused: the automatic merge of PR #{0} could not be cancelled (`gh pr merge {0} --disable-auto`) — the branch receives nothing while it is scheduled; nothing else changed",
+    reopenCancelled: "automatic merge cancelled: schedule it again after the new closing, like the first time",
+    reopenMessage: "Reopening of {0}: defect revealed by PR #{1}",
+    reopenCommitFailed: "reopening refused: the commit of the restored brief failed ({0}) — brief removed, state unchanged",
+    reopenRestored:
+      "brief {0} restored as it was before the closing, in a commit of its own ({1}); its scope widens as usual, in a separate commit",
+    reopened: "CLOSING → BUILD (reopening of {0}, PR #{1} open)",
     queueNotReady:
       'start refused: "{0}" cannot enter a queue — it takes a ready brief (maturity « ready », no open [decision], acceptance criteria)',
     queued: "queue: then {0}, started one by one by the agent after each closing and merge (stop: `node .githooks/state.mjs queue stop`)",
@@ -247,7 +290,7 @@ export const STATE_MESSAGES = {
     askMerge: "Automatic merge at the end of the workstream? Type MERGE, otherwise Enter: ",
     notConfirmed: "✗ start not confirmed: state unchanged",
     unreadableState: `[drwil] governance state unreadable: {0}`,
-    usage: `usage: node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <text>] | start [<brief>] | briefs [--json] | reminder`,
+    usage: `usage: node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <text>] | start [<brief>] | reopen | briefs [--json] | reminder`,
   },
 };
 
@@ -287,6 +330,7 @@ export function context(read, root) {
   if (state.queue?.length) lines.push(fill(T.queue, state.queue.join(", "), state.queue_merge ? T.queueMerge : ""));
   if (state.queue?.length && state.activity === "SCOPING") lines.push(fill(T.queueResume, state.queue[0]));
   if (state.detour) lines.push(fill(T.detour, state.detour.origin_brief, state.detour.origin_branch, state.detour.branch));
+  if (state.reopened) lines.push(fill(T.reopened, state.reopened.pr));
   if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
   lines.push(T.rule(T.rules[state.activity]));
   if (state.activity === "CLOSING") lines.push(T.docLanguage(docLanguage(root)));

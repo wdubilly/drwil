@@ -1205,6 +1205,40 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-116",
+      "name": "tests de QUA-116, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-116 \" .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-117",
+      "name": "tests de QUA-117, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-117 \" .githooks/scope-gate.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-118",
+      "name": "tests de QUA-118, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "npx tsc --build packages/drwil && node --test --test-name-pattern=\"^QUA-118 \" .githooks/close.test.mjs packages/drwil/test/cycle.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "codeowners",
       "name": "chaque ligne de .github/CODEOWNERS cite un chemin suivi par Git (QUA-112)",
       "run": "node outils/verifier-codeowners.mjs",

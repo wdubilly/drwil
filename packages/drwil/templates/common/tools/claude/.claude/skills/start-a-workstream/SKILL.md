@@ -65,7 +65,11 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    the next `node .githooks/state.mjs start` or `next` goes back to SCOPING by itself (brief deleted,
    closing PR merged): no `move SCOPING` to run.
    After each push or PR creation, follow its CI with `node .githooks/pr-watch.mjs <number>`
-   (green, merged or red with the failing check); a red CI is fixed, never bypassed.
+   (green, merged or red with the failing check); a red CI is fixed, never bypassed. Red after
+   the closing commit, PR not merged yet: `node .githooks/state.mjs reopen` (in CLOSING) cancels
+   the scheduled merge, restores the brief and moves back to BUILD on the same branch; fix,
+   close again (journal entry updated, never doubled), then schedule the merge again if it was
+   authorised.
 5. **Subagent from the first workstream** (Claude Code and Copilot CLI, queue or not): run each
    workstream in a subagent (fresh context), the first one right after the poll — Claude Code:
    the Agent tool; Copilot CLI: the `task` tool, `general-purpose` agent, `mode: "sync"`. The

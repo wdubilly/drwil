@@ -93,6 +93,16 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
   (an existing contract modified or removed, hooks, thresholds, the gate)
   waits for the human's yes; adding a new contract does not
   (`docs/recipes/corriger-un-defaut.md`).
+- **Defect revealed after the closing**: in CLOSING, when the workstream's
+  PR, open and not merged yet, reveals a defect (red CI, forge analysis),
+  the agent reopens the workstream alone with `node .githooks/state.mjs
+  reopen`: the automatic merge is cancelled first, the brief comes back as
+  it was before the closing commit (a commit of its own), BUILD again on the
+  same branch — no history rewritten, no force push. The fix follows the
+  detour's rule: one that changes the rules waits for the human's yes. The
+  new closing updates the workstream's journal entry (never a second one)
+  and rewrites the proof; a defect found after the merge is a new
+  workstream.
 - **Queue of workstreams**: when the human ticked several briefs at start,
   the agent runs them one after the other without a new poll — with Claude
   Code, each one in a subagent (fresh context), the main session keeping
