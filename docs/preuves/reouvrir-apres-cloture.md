@@ -1,7 +1,7 @@
 # Preuve de clôture — reouvrir-apres-cloture
 
 **Clos le** : 2026-10-24
-**Commit vérifié** : `5f8f5e26da` — verdict `drwil verify` : PASS
+**Commit vérifié** : `8ffa979a27` — verdict `drwil verify` : PASS
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
 
