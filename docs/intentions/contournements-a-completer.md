@@ -2,7 +2,10 @@
 
 **Statut** : proposée le 2026-10-22 — revue externe du dépôt ; inventaire
 de l'existant fait le même jour ;
-cadrée le 2026-10-23 dans `docs/projects/contournements-completes.md` (les trois questions sont tranchées ; restent ici le clone superficiel et l'agent qui élargit son cadrage).
+cadrée le 2026-10-23, réalisée le 2026-10-24 (journal du 2026-10-24, « Les
+contournements restants fermés ou assumés ») : les trois questions sont
+tranchées ; restent ici le clone superficiel et l'agent qui élargit son
+cadrage.
 
 ## Besoin
 
@@ -30,27 +33,20 @@ Couverts, avec le résultat exigé :
 
 ## Trous relevés
 
-- **Hooks modifiés dans la PR elle-même** : la CI exécute les scripts de la
-  branche contrôlée, donc une PR qui affaiblit `.githooks/run-checks.mjs` se
-  valide elle-même. Dans ce dépôt, seule la relecture d'un code owner la
-  protège ; un projet adopté n'a pas de CODEOWNERS
-  (`docs/intentions/forge-dans-le-livrable.md`).
-- **`bypass_actors` non comparé en CI** : `.github/scripts/verifier-ruleset.mjs`
-  ne le compare que s'il est lu des deux côtés, et le jeton de la CI n'est pas
-  administrateur.
+Traités le 2026-10-24 (QUA-113, la CI rejoue les contrôles avec les hooks de
+la branche principale ; QUA-114, la garde shell refuse le saut des hooks ;
+QUA-115, `bypass_actors` vérifié avec le jeton de l'humain) : hooks modifiés
+dans la PR, `core.hooksPath` en local, `bypass_actors`. Leurs limites ont
+leurs propres intentions, citées par le journal. Restent :
+
 - **Clone superficiel** : non testé. La CI fait `fetch-depth: 0`, dans ce
   dépôt comme dans le gabarit.
 - **Un agent qui élargit lui-même son cadrage puis code** : voulu, seulement
   visible en relecture.
-- **En local, `git -c core.hooksPath=…`** : rien ne l'empêche ; la garde shell
-  (`.claude/hooks/bash-guard.mjs`) ne le voit pas. La CI le rattrape.
 
 ## Questions à trancher
 
-- [décision] Pour les hooks modifiés : exécuter en CI les contrôles de la
-  branche principale plutôt que ceux de la branche, exiger une relecture
-  humaine sur `.githooks/`, ou les deux ?
-- [décision] Vérifier `bypass_actors` avec un jeton administrateur dédié, ou
-  l'assumer comme une limite documentée ?
-- [décision] La garde shell demande-t-elle l'accord sur `--no-verify` et
-  `core.hooksPath`, au risque de multiplier les demandes ?
+- [décision] Tester un clone superficiel (la CI le refuse-t-elle en « non
+  exécuté »), ou assumer `fetch-depth: 0` comme seule défense ?
+- [décision] Un élargissement de cadrage par l'agent doit-il être signalé à
+  l'humain au-delà de la relecture ?

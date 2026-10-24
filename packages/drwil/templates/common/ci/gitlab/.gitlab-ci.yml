@@ -5,6 +5,9 @@ stages:
 checks:
   stage: test
   image: node:24
+  # Full history: the replay below reads the main branch's hooks and the branch's commits.
+  variables:
+    GIT_DEPTH: "0"
   script:
     # Without gitleaks the secrets check is "not run", which fails run-checks in CI (QUA-013).
     # Pinned version, archive checked against its published sum; installed where the engine looks (~/.local/bin).
@@ -12,6 +15,22 @@ checks:
     - echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | sha256sum -c -
     - mkdir -p ~/.local/bin && tar -xzf gitleaks.tar.gz -C ~/.local/bin gitleaks && rm gitleaks.tar.gz
     - node .githooks/run-checks.mjs
+    # QUA-113: off the main branch, the checks are replayed with the main branch's hooks (its
+    # .githooks/, read through Git) and the branch's list of checks: a merge request that weakens
+    # a hook or removes a check does not validate itself. The main branch's copy of base-checks.mjs
+    # runs; the branch's only while the main branch has none yet (kit adoption).
+    - |
+      target="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-$CI_DEFAULT_BRANCH}"
+      if [ -z "$CI_COMMIT_TAG" ] && [ "$CI_COMMIT_BRANCH" != "$target" ]; then
+        git fetch --quiet origin "+refs/heads/$target:refs/remotes/origin/$target"
+        base="origin/$target"
+        if git cat-file -e "$base:.githooks/base-checks.mjs" 2>/dev/null; then
+          git show "$base:.githooks/base-checks.mjs" > /tmp/base-checks.mjs
+          node /tmp/base-checks.mjs --base "$base"
+        else
+          node .githooks/base-checks.mjs --base "$base"
+        fi
+      fi
 
 # No branch protection is possible on an equivalent GitLab plan (merging stays
 # an unconditional click): only an after-the-fact alert is possible.

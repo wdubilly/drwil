@@ -66,3 +66,17 @@ test("QUA-046 : le `run:` non cité de l'incident (« : » dans le message) est 
   const corrige = incident.replace(/run: (.*)$/m, "run: '$1'");
   assert.deepEqual(erreurs(corrige), []);
 });
+
+test("QUA-113 : les trois CI rejouent, dans le job checks, les contrôles avec la copie de base-checks.mjs de la branche principale", () => {
+  for (const fichier of [
+    ".github/workflows/ia-first.yml",
+    "packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml",
+    "packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml",
+  ]) {
+    const ci = parseAllDocuments(readFileSync(join(RACINE, fichier), "utf8"))[0].toJS();
+    // Le job exigé par la protection (checks) : un job à part ne bloquerait pas la fusion.
+    const job = JSON.stringify(ci.jobs?.checks ?? ci.checks);
+    assert.match(job, /git show \\"\$base:\.githooks\/base-checks\.mjs\\" > /, `${fichier} : copie lue sur la branche principale`);
+    assert.match(job, /base-checks\.mjs(?:\\")? --base \\"\$base\\"/, `${fichier} : rejeu lancé`);
+  }
+});

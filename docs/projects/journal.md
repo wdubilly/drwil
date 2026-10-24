@@ -2906,3 +2906,45 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   propriétaires ni les erreurs que GitHub relève —
   `docs/intentions/codeowners-erreurs-github.md`.
 - **Clôturé par** : la branche `workstream/codeowners-registre`.
+
+## 2026-10-24 — Les contournements restants fermés ou assumés
+
+- **Décisions clés** : trois trous de l'inventaire du 2026-10-22 traités.
+  Sur une PR, la CI rejoue aussi les contrôles avec les hooks de la branche
+  principale (`.githooks/base-checks.mjs`, nouveau, livré dans le gabarit
+  avec les deux CI GitHub et GitLab et la CI du dépôt) : ses hooks sont lus
+  par `git show <base>:.githooks/…` dans un dossier temporaire, la liste de
+  contrôles reste celle de la PR, un contrôle retiré de
+  `.drwil/ia-first.json` échoue sauf s'il est cité dans « Contrats
+  modifiés » de la fiche, base introuvable « non exécuté » (QUA-013,
+  contrôle non exécuté n'est pas passé) ; scénario de contournement dans
+  `packages/drwil/test/cycle.test.mjs` — QUA-113 (la CI rejoue les
+  contrôles avec les hooks de la branche principale). La garde shell de
+  Claude Code refuse, sans demander, le saut des hooks et toute écriture,
+  suppression ou surcharge de `core.hooksPath` (`--no-verify`, `commit -n`,
+  `-c`, `git config`, `--unset`, `GIT_CONFIG_*`), y compris dans une
+  commande composée ou un `sh -c` ; une lecture du réglage passe — QUA-114
+  (la garde shell refuse le saut des hooks). `bypass_actors` reste non
+  comparé en CI (pas de jeton administrateur, décision du demandeur) :
+  `drwil guarantees` et `doctor` le vérifient avec le jeton de l'humain
+  quand il est administrateur, « non vérifié » sinon — QUA-115
+  (`bypass_actors` vérifié avec le jeton de l'humain). Contrats ajoutés au
+  registre, contrôles `tests-qua-113` à `tests-qua-115`, ligne
+  « Unreleased » du changelog. Attestation de QUA-092 (garantie de
+  couverture prouvée sur un dossier vide) renouvelée par l'humain, son champ
+  **Couvre** citant les fichiers des garanties touchés. Intention d'origine
+  mise à jour (`docs/intentions/contournements-a-completer.md`) : y restent
+  le clone superficiel et l'agent qui élargit son cadrage. Preuve de
+  clôture : `docs/preuves/contournements-completes.md`.
+- **Limites connues** : une PR peut encore retirer l'étape de rejeu du
+  workflow lui-même — `docs/intentions/rejeu-retirable-du-workflow.md` ;
+  un contrôle redéfini sous le même identifiant n'est pas comparé —
+  `docs/intentions/controle-redefini-meme-nom.md` ; la garde shell juge
+  le texte, trompée par des variables et trop stricte sur un texte cité
+  (heredoc refusé) — `docs/intentions/garde-shell-par-le-texte.md` ; le
+  rejeu double environ la durée du job `checks` (~3 min de plus) —
+  `docs/intentions/duree-du-rejeu-en-ci.md` ; les tests de la garde shell
+  sont dans `packages/drwil/test/kit.test.mjs` —
+  `docs/intentions/tests-garde-shell-a-leur-place.md`.
+- **Clôturé par** : la branche `workstream/contournements-completes`
+  (PR #219).

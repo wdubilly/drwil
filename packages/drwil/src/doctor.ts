@@ -9,6 +9,8 @@ import { loadProject } from "./verify.js";
 import { resolveFromConfig } from "./config.js";
 import { AUTO_KINDS, describeGap, findGaps, hooksPath, scriptsDir, unchainedHooks } from "./essentials.js";
 import { compareVersions, engineVersion, readInstall } from "./manifest.js";
+import { bypassDiagnosis } from "./guarantees-forge.js";
+import { defaultExec, type Exec } from "./guarantees-table.js";
 
 export type PointState = "ok" | "warning" | "problem";
 
@@ -57,6 +59,7 @@ const TEXTS = {
     proofs: "Preuves automatisées",
     noCheck: " (sans Contrôle, toujours MANUAL : {0})",
     coverage: "Couverture des attestations",
+    bypass: "Contournement du ruleset",
     noCovers: " (sans Couvre, leur attestation ne tombe pas si le code jugé change : {0})",
     hooks: "Hooks git",
     hooksOff: "inactifs : lancer `git config core.hooksPath .githooks`",
@@ -94,6 +97,7 @@ const TEXTS = {
     proofs: "Automated proofs",
     noCheck: " (without Check, always MANUAL: {0})",
     coverage: "Attestation coverage",
+    bypass: "Ruleset bypass",
     noCovers: " (without Covers, their attestation does not fall if the code they judged changes: {0})",
     hooks: "Git hooks",
     hooksOff: "inactive: run `git config core.hooksPath .githooks`",
@@ -116,7 +120,7 @@ function toolPresent(cmd: string, args: string[]): boolean {
   return !spawnSync(cmd, args, { stdio: "ignore" }).error;
 }
 
-export async function doctor(opts: { targetDir: string }): Promise<Diagnosis> {
+export async function doctor(opts: { targetDir: string; exec?: Exec }): Promise<Diagnosis> {
   const root = opts.targetDir;
   const project = await loadProject(root);
   if (typeof project === "string") return { lang: projectLang(root), code: 2, points: [], error: project };
@@ -206,6 +210,10 @@ export async function doctor(opts: { targetDir: string }): Promise<Diagnosis> {
     !ciFiles.length ? "warning" : ciMissing.length ? "problem" : "ok",
     !ciFiles.length ? T.noCi : ciMissing.length ? fill(T.ciMissing, ciMissing.join(", ")) : ciFiles.join(", "),
   );
+
+  // QUA-115: read with the human's token, the only one that sees a ruleset's bypass list.
+  const bypass = bypassDiagnosis(root, opts.exec ?? defaultExec, lang);
+  if (bypass) point("bypass", T.bypass, bypass.state, bypass.detail);
 
   const git = toolPresent("git", ["--version"]);
   const gitleaks =

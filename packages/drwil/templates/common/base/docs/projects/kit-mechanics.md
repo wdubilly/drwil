@@ -21,6 +21,7 @@ files:
   - .githooks/state-cli.mjs
   - .githooks/briefs.mjs
   - .githooks/pr-watch.mjs
+  - .githooks/base-checks.mjs
   - .githooks/state-texts.mjs
   - .githooks/close.mjs
   - .githooks/closure-proof.mjs

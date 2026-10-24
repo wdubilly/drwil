@@ -2,6 +2,9 @@
 // replaying the hook's checks, protected main branch (merge through PR/MR, required checks, no
 // bypass even for administrators). Without access to the forge, the protection stays "not run",
 // never "passed" (QUA-013). The protection is only set with `--protect`: the human's agreement.
+// A GitHub ruleset's bypass list (`bypass_actors`) is only returned to an administrator (QUA-115):
+// read with the human's token when it is one, a non-empty list is a gap; otherwise "not verified",
+// never "held". The CI token is not an administrator: the CI does not compare it.
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -20,7 +23,12 @@ export interface ForgeReport {
   notRun: string | null;
   /** Protection read on the forge and complete. */
   protected: boolean;
+  /** Read only with an administrator token (QUA-115): said "not verified", never counted as held. */
+  unverified: string | null;
 }
+
+/** Bypass list of the GitHub rulesets protecting a branch (QUA-115). */
+export type Bypass = { state: "none" | "bypass" | "unverified" | "no-ruleset"; actors: string[] };
 
 const TEXTS = {
   fr: {
@@ -36,6 +44,10 @@ const TEXTS = {
     adminBypass: "les administrateurs peuvent contourner",
     pushAllowed: "push direct autorisé",
     notRun: "protection de la branche non vérifiée (non exécuté) : {0} injoignable ou non connecté",
+    rulesetBypass: "le ruleset a des acteurs qui le contournent (bypass_actors : {0})",
+    bypassNone: "aucun acteur ne contourne le ruleset de `{0}`",
+    bypassUnverified:
+      "contournement du ruleset (bypass_actors) non vérifié : lisible seulement avec un jeton administrateur du dépôt (`gh auth login` d'un administrateur, puis `drwil guarantees`)",
   },
   en: {
     noGit: "no Git repository (`git init`)",
@@ -50,6 +62,10 @@ const TEXTS = {
     adminBypass: "administrators can bypass",
     pushAllowed: "direct push allowed",
     notRun: "branch protection not checked (not run): {0} unreachable or not logged in",
+    rulesetBypass: "the ruleset has actors that bypass it (bypass_actors: {0})",
+    bypassNone: "no actor bypasses the ruleset of `{0}`",
+    bypassUnverified:
+      "ruleset bypass (bypass_actors) not verified: readable only with a repository administrator token (`gh auth login` as an administrator, then `drwil guarantees`)",
   },
 };
 
@@ -78,14 +94,58 @@ function mainBranch(exec: Exec, root: string): string {
   return ok(exec, "git rev-parse --verify --quiet refs/heads/master", root) ? "master" : "main";
 }
 
+/**
+ * Bypass list of the rulesets that apply to `branch` (QUA-115): each one read by its ID; a ruleset
+ * that cannot be read, or that comes without `bypass_actors` (a token that is not an administrator's),
+ * makes the whole "unverified".
+ */
+export function rulesetBypass(exec: Exec, root: string, branch: string): Bypass {
+  const rules = json(exec, `gh api repos/{owner}/{repo}/rules/branches/${branch}`, root);
+  const ids = [...new Set((Array.isArray(rules) ? rules : []).map((r) => at(r, "ruleset_id")).filter((id) => Number.isInteger(id)))];
+  if (!ids.length) return { state: "no-ruleset", actors: [] };
+  const actors: string[] = [];
+  for (const id of ids) {
+    const list = at(json(exec, `gh api repos/{owner}/{repo}/rulesets/${id}`, root), "bypass_actors");
+    if (!Array.isArray(list)) return { state: "unverified", actors: [] };
+    actors.push(...list.map((a) => `${at(a, "actor_type")} ${at(a, "actor_id") ?? ""}`.trim()));
+  }
+  return { state: actors.length ? "bypass" : "none", actors };
+}
+
+/**
+ * For `drwil doctor` (QUA-115): the bypass of the rulesets protecting the main branch, read with the
+ * human's token; null off GitHub or without a ruleset (the classic protection is judged by `drwil guarantees`).
+ */
+export function bypassDiagnosis(
+  root: string,
+  exec: Exec,
+  lang: MessageLang,
+): { state: "ok" | "warning" | "problem"; detail: string } | null {
+  const T = TEXTS[lang];
+  const remote = exec("git remote get-url origin", root);
+  if (remote.status !== 0 || forgeOf(remote.stdout) !== "github") return null;
+  const branch = mainBranch(exec, root);
+  if (!ok(exec, "gh auth status", root)) return { state: "warning", detail: T.bypassUnverified };
+  const b = rulesetBypass(exec, root, branch);
+  if (b.state === "no-ruleset") return null;
+  if (b.state === "unverified") return { state: "warning", detail: T.bypassUnverified };
+  return b.state === "bypass"
+    ? { state: "problem", detail: fill(T.rulesetBypass, b.actors.join(", ")) }
+    : { state: "ok", detail: fill(T.bypassNone, branch) };
+}
+
 /** What the GitHub protection of `branch` lacks ([] = complete); null if it cannot be read. */
-function githubGaps(exec: Exec, root: string, branch: string, lang: MessageLang): string[] | null {
+function githubGaps(exec: Exec, root: string, branch: string, lang: MessageLang, report: ForgeReport): string[] | null {
   const T = TEXTS[lang];
   if (!ok(exec, "gh auth status", root)) return null;
   // Rulesets first (the current way), then the classic protection.
   const rules = json(exec, `gh api repos/{owner}/{repo}/rules/branches/${branch}`, root);
   const types = new Set<unknown>(Array.isArray(rules) ? rules.map((r) => at(r, "type")) : []);
-  if (types.has("pull_request") && types.has("required_status_checks")) return [];
+  if (types.has("pull_request") && types.has("required_status_checks")) {
+    const bypass = rulesetBypass(exec, root, branch);
+    if (bypass.state === "unverified" || bypass.state === "no-ruleset") report.unverified = T.bypassUnverified;
+    return bypass.state === "bypass" ? [fill(T.partial, branch, fill(T.rulesetBypass, bypass.actors.join(", ")))] : [];
+  }
   const p = json(exec, `gh api repos/{owner}/{repo}/branches/${branch}/protection`, root);
   if (!p) return [fill(T.unprotected, branch)];
   const gaps: string[] = [];
@@ -113,7 +173,7 @@ function gitlabGaps(exec: Exec, root: string, branch: string, lang: MessageLang)
 /** Inspects the repository, the CI and the forge; reads only, writes nothing. */
 export function inspectForge(root: string, cfg: GuaranteeConfig, exec: Exec, lang: MessageLang): ForgeReport {
   const T = TEXTS[lang];
-  const report: ForgeReport = { forge: null, branch: "main", missing: [], notRun: null, protected: false };
+  const report: ForgeReport = { forge: null, branch: "main", missing: [], notRun: null, protected: false, unverified: null };
   if (!ok(exec, "git rev-parse --is-inside-work-tree", root)) {
     report.missing.push(T.noGit);
     return report;
@@ -130,7 +190,8 @@ export function inspectForge(root: string, cfg: GuaranteeConfig, exec: Exec, lan
     else if (!readFileSync(join(root, f), "utf8").includes("run-checks.mjs")) report.missing.push(T.noReplay);
   }
   if (!report.forge) return report;
-  const gaps = (report.forge === "github" ? githubGaps : gitlabGaps)(exec, root, report.branch, lang);
+  const gaps =
+    report.forge === "github" ? githubGaps(exec, root, report.branch, lang, report) : gitlabGaps(exec, root, report.branch, lang);
   if (gaps === null) report.notRun = fill(T.notRun, report.forge === "github" ? "gh" : "glab");
   else {
     report.missing.push(...gaps);

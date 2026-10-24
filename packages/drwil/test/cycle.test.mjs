@@ -132,6 +132,37 @@ test("contournements : un commit passé avec --no-verify ou sans hooks est repri
   }
 });
 
+test("QUA-113 contournements : une branche qui affaiblit un hook se valide elle-même, le rejeu avec les hooks de la branche principale la refuse", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8", env });
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: true }));
+    git("config", "user.email", "test@exemple.invalid");
+    git("config", "user.name", "Test");
+    git("config", "commit.gpgsign", "false");
+    git("branch", "-M", "main");
+    git("add", "-A");
+    git("commit", "--no-verify", "-m", "installation");
+    git("checkout", "-b", "travail");
+
+    // La PR affaiblit le contrôle des références de la doc, puis glisse une référence cassée.
+    writeFileSync(join(dir, ".githooks/check-docs.mjs"), "process.exit(0);\n");
+    writeFileSync(join(dir, "docs/ia-first.md"), `${lire(dir, "docs/ia-first.md")}\nVoir \`docs/absent.md\`.\n`);
+    git("add", "-A");
+    git("commit", "--no-verify", "-m", "hook affaibli");
+    assert.doesNotMatch(controles(dir).stdout, /docs\/absent\.md/, "le hook de la branche ne voit plus la référence cassée");
+
+    const rejeu = spawnSync(process.execPath, [".githooks/base-checks.mjs", "--base", "main"], { cwd: dir, encoding: "utf8", env });
+    assert.equal(rejeu.status, 1, rejeu.stdout + rejeu.stderr);
+    assert.match(rejeu.stdout, /docs\/absent\.md/, "le hook de la branche principale la voit");
+    assert.match(rejeu.stdout, /les contrôles échouent avec les hooks de « main »/);
+    assert.equal(lire(dir, ".githooks/check-docs.mjs"), "process.exit(0);\n", "la copie de travail est rendue telle quelle");
+    assert.equal(git("status", "--porcelain").stdout, "");
+  } finally {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
 test("contournements : un état local falsifié n'empêche pas le rejeu du cadrage sur la branche (CI, pre-push)", async () => {
   const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
   const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8", env });
