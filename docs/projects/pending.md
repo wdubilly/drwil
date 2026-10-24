@@ -520,6 +520,9 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
 
+- [ ] [IA] [P1] Accélérer la CI sans perte de qualité : un seul `tsc`,
+  contrôles en parallèle, doublon push / pull_request retiré (cadré le
+  2026-10-24) — `docs/projects/acceleration-ci.md`.
 - [ ] [IA] [P2] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
