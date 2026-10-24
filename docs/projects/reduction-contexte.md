@@ -70,7 +70,7 @@ contrôle retiré, aucune règle moins visible pour l'agent.
 ## Critères d'acceptation
 
 (contrats à créer au registre au lancement, avec leur champ **Origine**,
-un par critère ci-dessous sauf l'indicateur.)
+un par critère ci-dessous.)
 
 - Un agent obtient le texte complet d'un contrat par son ID, ou une entrée du
   journal par son chantier, sans lire le fichier entier ; `AGENTS.md` et les
@@ -101,9 +101,6 @@ un par critère ci-dessous sauf l'indicateur.)
 - Après le retour en SCOPING qui suit une clôture, le rappel d'état invite à
   ouvrir une nouvelle session pour le chantier suivant, pour tous les outils ;
   la file de chantiers garde son sous-agent par chantier `QUA-131`
-- Indicateur, sans seuil (décision du demandeur) : cache lu moyen par requête
-  (`.githooks/consumption.mjs`) relevé sur deux chantiers comparables après celui-ci,
-  comparé aux environ 170 k du 2026-10-24, consigné au journal [humain].
 
 ## Contrats modifiés
 
@@ -130,6 +127,10 @@ nouvelle qui cite un chemin déjà cité est signalée, reste vrai tel quel).
 - Le contexte apporté par l'outil lui-même (définitions d'outils, serveurs
   MCP, skills de l'utilisateur) : hors de drwil.
 - Tout affaiblissement d'un contrôle ou d'un hook, tout seuil baissé.
+- Le relevé de l'indicateur (cache lu moyen par requête sur deux chantiers
+  comparables après celui-ci) : sorti des critères d'acceptation (décision
+  du demandeur du 2026-10-24), repris par une intention de relevé créée à
+  la clôture, qui s'appuie sur `node .githooks/consumption.mjs --recorded`.
 
 ## 3. Contraintes
 
@@ -170,6 +171,12 @@ nouvelle qui cite un chemin déjà cité est signalée, reste vrai tel quel).
   le résumé, verdict du sous-agent recopié mot pour mot et sans accès à
   l'attestation.
 
+- 2026-10-24 — Indicateur sorti des critères (demandeur, à la vérification) :
+  son relevé n'est possible qu'après deux chantiers comparables, et un
+  critère sans preuve fait tomber le verdict (QUA-034, un critère non
+  prouvé fait tomber le verdict) ; il devient une intention de relevé
+  (`docs/intentions/`, `[décision]` à l'index), créée à la clôture.
+
 ## 5. Points à trancher
 
 (aucun)
@@ -191,26 +198,16 @@ nouvelle qui cite un chemin déjà cité est signalée, reste vrai tel quel).
   invitation à une nouvelle session après la clôture. Critère de sortie :
   critères de
   sous-agent et de session verts, preuve QUA-072 à jour.
-- **Lot 4 — relevé** [humain] : cache lu moyen par requête sur deux
-  chantiers comparables, consigné au journal. Critère de sortie : relevé
-  écrit (indicateur, sans seuil).
 
 ## 7. Reprise
 
 - **Dernier état** (2026-10-24) : lots 1 à 3 réalisés et commités sur
   `workstream/reduction-contexte` (QUA-124 à QUA-131 créés, contrôles
-  `tests-qua-124` à `tests-qua-131`) ; `node .githooks/run-checks.mjs` OK ;
-  activité EVIDENCE. `drwil verify --evidence` : GOVERNANCE: FAIL, pour deux
-  raisons qui demandent l'humain :
-  1. QUA-122 (job `checks` nettement plus court) repasse en MANUAL : son
-     attestation couvre `.drwil/ia-first.json`, modifié ici pour déclarer
-     les contrôles des contrats créés — à attester de nouveau.
-  2. Le critère « Indicateur, sans seuil » n'a pas de preuve liée (aucun
-     contrat, décision du demandeur) : `verify` le compte non prouvé
-     (QUA-034, un critère non prouvé fait tomber le verdict), et son relevé
-     n'est possible qu'après deux chantiers comparables.
+  `tests-qua-124` à `tests-qua-131`) ; `node .githooks/run-checks.mjs` OK.
+  Critère indicateur sorti vers une intention de relevé (décision du
+  demandeur). Reste QUA-122 (job `checks` nettement plus court) en MANUAL :
+  son attestation couvre `.drwil/ia-first.json`, modifié ici pour déclarer
+  les contrôles des contrats créés.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher le sort du critère indicateur
-  (le sortir des critères vers une intention de relevé, ou lui donner un
-  contrat « Manuel » à attester) ; [humain] `drwil attest QUA-122` dans un
+- **Prochaine étape** : [humain] `npx drwil attest QUA-122` dans un
   terminal ; puis l'agent : `drwil verify --evidence`, VERIFY, CLOSING.
