@@ -1210,3 +1210,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/close.test.mjs`
 **Origine** : reduction-contexte — « `close.mjs --check` regroupe ses avertissements de doublon possible (une ligne par fichier cité, pas une par intention) ; les erreurs bloquantes restent toutes affichées »
 **Raison** : Une clôture qui crée plusieurs intentions sur le même fichier produisait une ligne par paire, répétée à chaque `--check`, sans rien dire de plus.
+
+## QUA-129 — Les contrôles longs tournent dans un sous-agent qui ne rend que le verdict et les échecs
+**Règle** : Livré à tout projet. Avec Claude Code (et les outils qui reçoivent l'arbre `.claude`), le gabarit livre le sous-agent `drwil-checks` (`.claude/agents/drwil-checks.md`) : il lance `node .githooks/run-checks.mjs` puis `drwil verify --agent` et ne rend que le verdict et les échecs, sans rien modifier. `AGENTS.md` (gabarit et dépôt) donne la consigne pour tout outil : les contrôles longs en sous-agent si l'outil le permet, sans droit d'écriture ; sinon, les lancer directement. Aucune promesse au-delà de cette consigne écrite pour Copilot, Gemini et Codex (QUA-060, un outil n'est tenu que prouvé par le banc). Les hooks et skills de Claude Code ne changent pas (QUA-072).
+**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
+**Preuve** : test du paquet qui installe un projet Claude Code (sous-agent livré, commandes lancées, consigne d'`AGENTS.md`) et un projet Codex seul (pas d'arbre `.claude`, consigne présente) ; en-tête du sous-agent dans la preuve de QUA-072.
+**Contrôle** : `tests-qua-129`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : reduction-contexte — « Avec Claude Code, les passages longs (`run-checks`, `drwil verify`) peuvent tourner dans un sous-agent livré (nommé `drwil-checks`, à créer dans l'arbre `.claude` du gabarit) qui ne renvoie que le verdict et les échecs ; pour les autres outils, `AGENTS.md` donne la consigne « si l'outil le permet » »
+**Raison** : Les sorties des contrôles longs restaient dans le contexte de la session principale ; un sous-agent les lit dans un contexte à part et n'en rend que la conclusion.
+
+## QUA-130 — Le sous-agent des contrôles recopie le verdict mot pour mot, sans attester ni écrire
+**Règle** : Livré à tout projet. Le sous-agent `drwil-checks` recopie mot pour mot, sans reformulation ni résumé, la ligne de verdict `GOVERNANCE: …` de `drwil verify --agent` et les listes des contrats en échec, non vérifiés ou à attester (et des critères non prouvés), ainsi que les lignes d'échec de `run-checks` ; une commande qui ne tourne pas est dite « not run », jamais réussie. Ses outils sont une liste fermée sans outil d'écriture (`Bash`, `Read`, `Grep`, `Glob`) ; il n'exécute jamais `drwil attest` ni le verdict de recette (`drwil attest` exige de toute façon un terminal interactif et la saisie de l'ID). `AGENTS.md` dit que la session principale n'annonce « vérifié » que sur la ligne recopiée.
+**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
+**Preuve** : test du paquet sur un projet installé : liste d'outils fermée sans écriture, interdits et format de recopie mot pour mot dans le sous-agent, consigne de la session principale dans `AGENTS.md`. Le comportement d'une session réelle n'est pas rejoué (pas de session Claude Code dans les tests, comme pour QUA-072).
+**Contrôle** : `tests-qua-130`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : reduction-contexte — « Le sous-agent recopie mot pour mot la ligne de verdict (`GOVERNANCE: …`) et la liste des contrats en échec ou à attester, sans reformulation ; il n'a accès ni à `drwil attest` ni à l'écriture de fichiers ; la session principale n'annonce « vérifié » que sur cette ligne recopiée »
+**Raison** : Un sous-agent qui résume pourrait transformer un FAIL en « presque bon » ; la gouvernance ne repose que sur la ligne de verdict elle-même.
+
+## QUA-131 — Après une clôture, le chantier suivant se lance dans une nouvelle session
+**Règle** : Livré à tout projet. Revenu en SCOPING par une transition (après une clôture, hors file), le rappel d'état (`node .githooks/state.mjs`, la sortie de `move` et l'injection de début de session) invite à lancer le chantier suivant dans une nouvelle session, pour tout outil (Claude Code : `/clear` ; autre outil : une nouvelle conversation). Une file garde son sous-agent par chantier : en file, c'est le texte de la file qui parle. Un état neutre (aucune transition) ne le dit pas.
+**Périmètre** : `.githooks/state-texts.mjs` (`context`) ; `AGENTS.md`, `docs/recipes/working-with-branches.md` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/state-texts.mjs`.
+**Preuve** : tests des hooks sur un dépôt temporaire : CLOSING → SCOPING par `move` puis contexte, état neutre, file, BUILD, en français et en anglais.
+**Contrôle** : `tests-qua-131`
+**Tests** : `.githooks/state.test.mjs`
+**Origine** : reduction-contexte — « Après le retour en SCOPING qui suit une clôture, le rappel d'état invite à ouvrir une nouvelle session pour le chantier suivant, pour tous les outils ; la file de chantiers garde son sous-agent par chantier »
+**Raison** : Une session qui enchaîne plusieurs chantiers garde tout le contexte des précédents et le relit à chaque requête.

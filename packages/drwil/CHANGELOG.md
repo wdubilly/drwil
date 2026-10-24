@@ -21,6 +21,13 @@ closing commit; the release renames this section to its version.
 - `node .githooks/close.mjs --check` groups its possible-duplicate warnings:
   one line per cited path, naming every new intent citing it; blocking
   errors are all still shown.
+- With Claude Code, a `drwil-checks` subagent (`.claude/agents/drwil-checks.md`)
+  runs `run-checks` and `drwil verify --agent` and returns only the verdict and
+  the failures, copied word for word; it has no write tool and never attests.
+  `AGENTS.md` tells any tool to do the same if it allows it.
+- Back in SCOPING after a closing, the state reminder invites starting the
+  next workstream in a new session (Claude Code: `/clear`; another tool: a new
+  conversation); a queue keeps its subagent per workstream.
 - `node .githooks/consumption.mjs --recorded` compares the recorded
   workstreams by their average cache read per request (read from
   `.drwil/usage.jsonl` only, no session log needed).

@@ -1465,6 +1465,43 @@ test("QUA-037 : une file se mène un sous-agent par chantier ; reprise confirmé
   assert.match(etat(anglais, "CLOSING"), /Outside a queue: finish by suggesting `\/clear` to the human/);
 });
 
+test("QUA-131 : revenu en SCOPING après une clôture, le rappel invite à une nouvelle session, pour tout outil ; la file garde son sous-agent", async () => {
+  const racine = depotFile();
+  ecrireEtat(racine, { version: 1, activity: "CLOSING", active_brief: A, active_request: null, since: "2026-10-24T10:00:00Z" });
+  const r = await move(racine, { to: "SCOPING" });
+  assert.equal(r.code, 0, r.message);
+  const apres = context(readState(racine), racine);
+  assert.match(
+    apres,
+    /Après une clôture, le chantier suivant se lance dans une nouvelle session \(Claude Code : `\/clear` ; autre outil : une nouvelle conversation\) — un contexte neuf ne relit pas le chantier clos/,
+  );
+  assert.match(apres, /Une file garde son sous-agent par chantier\./);
+  writeFileSync(
+    join(racine, ".drwil", "state.json"),
+    JSON.stringify({ ...JSON.parse(readFileSync(join(racine, ".drwil", "state.json"), "utf8")), since: null }),
+  );
+  assert.doesNotMatch(context(readState(racine), racine), /nouvelle session/, "état neutre (aucun retour) : rien");
+  ecrireEtat(racine, {
+    version: 1,
+    activity: "SCOPING",
+    active_brief: null,
+    active_request: null,
+    since: "2026-10-24T10:00:00Z",
+    queue: [B],
+  });
+  const enFile = context(readState(racine), racine);
+  assert.doesNotMatch(enFile, /Après une clôture/, "en file, la reprise de file parle");
+  assert.match(enFile, /chaque chantier de la file se mène dans un sous-agent/, "la file garde son sous-agent par chantier");
+  ecrireEtat(racine, { version: 1, activity: "BUILD", active_brief: A, active_request: null, since: "2026-10-24T10:00:00Z" });
+  assert.doesNotMatch(context(readState(racine), racine), /nouvelle session/);
+  const anglais = depotFile({ lang: "en" });
+  ecrireEtat(anglais, { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: "2026-10-24T10:00:00Z" });
+  assert.match(
+    context(readState(anglais), anglais),
+    /After a closing, the next workstream starts in a new session \(Claude Code: `\/clear`; another tool: a new conversation\).*A queue keeps its subagent per workstream\./,
+  );
+});
+
 const DETOUR = { origin_brief: "docs/projects/chantier.md", origin_branch: "chantier/x", branch: "detour/d", stash: null };
 
 test("QUA-050 : un détour se valide — forme, BUILD seul, fiches du détour et du chantier qui peuvent manquer", () => {

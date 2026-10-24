@@ -93,14 +93,14 @@ un par critère ci-dessous sauf l'indicateur.)
 - Avec Claude Code, les passages longs (`run-checks`, `drwil verify`) peuvent
   tourner dans un sous-agent livré (nommé `drwil-checks`, à créer dans l'arbre `.claude` du gabarit) qui ne
   renvoie que le verdict et les échecs ; pour les autres outils, `AGENTS.md`
-  donne la consigne « si l'outil le permet »
+  donne la consigne « si l'outil le permet » `QUA-129`
 - Le sous-agent recopie mot pour mot la ligne de verdict (`GOVERNANCE: …`) et
   la liste des contrats en échec ou à attester, sans reformulation ; il n'a
   accès ni à `drwil attest` ni à l'écriture de fichiers ; la session
-  principale n'annonce « vérifié » que sur cette ligne recopiée
+  principale n'annonce « vérifié » que sur cette ligne recopiée `QUA-130`
 - Après le retour en SCOPING qui suit une clôture, le rappel d'état invite à
   ouvrir une nouvelle session pour le chantier suivant, pour tous les outils ;
-  la file de chantiers garde son sous-agent par chantier
+  la file de chantiers garde son sous-agent par chantier `QUA-131`
 - Indicateur, sans seuil (décision du demandeur) : cache lu moyen par requête
   (`.githooks/consumption.mjs`) relevé sur deux chantiers comparables après celui-ci,
   comparé aux environ 170 k du 2026-10-24, consigné au journal [humain].

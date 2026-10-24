@@ -4082,6 +4082,10 @@ test("QUA-072 : le skill /drwil-note a la forme des autres skills /drwil-*, et l
     assert.match(m[2], /\. Use /, `${skill} : la description dit quand l'utiliser`);
   }
   assert.equal(enTete(".claude/skills/drwil-note/SKILL.md")[1], "drwil-note");
+  // Le sous-agent des contrôles (QUA-129) s'ajoute à l'arbre sans changer les hooks ni les skills : même en-tête.
+  const agent = enTete(".claude/agents/drwil-checks.md");
+  assert.equal(agent?.[1], "drwil-checks");
+  assert.match(agent[2], /\. Use /);
 
   const rejouer = (script, entree) => spawnSync(process.execPath, [script], { cwd: dir, encoding: "utf8", input: JSON.stringify(entree) });
   const ecriture = { hook_event_name: "PreToolUse", tool_name: "Write", tool_input: { file_path: join(dir, "src/a.ts") } };
@@ -4110,6 +4114,40 @@ test("QUA-072 : le skill /drwil-note a la forme des autres skills /drwil-*, et l
         "[drwil] ✗ lancement refusé : « docs/projects/absente.md » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)",
     },
   });
+});
+
+test("QUA-129 : sous-agent drwil-checks livré avec Claude Code pour les contrôles longs ; consigne « si l'outil le permet » pour les autres", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const agent = read(dir, ".claude/agents/drwil-checks.md").replace(/\s+/g, " ");
+  assert.match(agent, /Run `node \.githooks\/run-checks\.mjs` from the project root/);
+  assert.match(agent, /Run `npx drwil verify --agent`/);
+  assert.match(agent, /report their verdict/);
+  const consigne =
+    /Long checks in a subagent, if the tool allows it: with Claude Code, the `drwil-checks` subagent .* runs `run-checks` and `drwil verify --agent` and returns only the verdict and the failures.* Another tool: the same if it allows a subagent without write access, otherwise run them directly\./;
+  assert.match(read(dir, "AGENTS.md").replace(/\s+/g, " "), consigne);
+  const codex = tmp();
+  await quiet(() => init({ lang: "en", targetDir: codex, tools: "codex", git: false }));
+  assert.equal(existsSync(join(codex, ".claude/agents/drwil-checks.md")), false, "sans Claude Code, pas d'arbre .claude");
+  assert.match(read(codex, "AGENTS.md").replace(/\s+/g, " "), consigne, "la consigne reste, pour tout outil");
+});
+
+test("QUA-130 : le sous-agent recopie mot pour mot verdict et contrats, sans accès à l'attestation ni à l'écriture ; « vérifié » sur cette seule ligne", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const texte = read(dir, ".claude/agents/drwil-checks.md");
+  const outils = /^tools: (.+)$/m.exec(texte)?.[1].split(/,\s*/);
+  assert.deepEqual(outils, ["Bash", "Read", "Grep", "Glob"], "liste fermée : aucun outil d'écriture");
+  for (const ecriture of ["Write", "Edit", "MultiEdit", "NotebookEdit"]) assert.ok(!outils.includes(ecriture), ecriture);
+  const corps = texte.replace(/\s+/g, " ");
+  assert.match(corps, /no file written or edited, no commit, no push, no fix attempted/);
+  assert.match(corps, /You never run `drwil attest` nor `\.githooks\/release-verdict\.mjs`/);
+  assert.match(corps, /every line copied word for word from the outputs, never rephrased, summarised, translated or completed/);
+  assert.match(corps, /<the line containing "GOVERNANCE:">/);
+  assert.match(corps, /failing contracts, contracts not verified, unproven criteria, attestation required, registry errors/);
+  assert.match(corps, /reported as « not run » with its error: never as passed/);
+  assert.match(corps, /The main session says « verified » only on the `GOVERNANCE: PASS` line you copied/);
+  assert.match(read(dir, "AGENTS.md").replace(/\s+/g, " "), /the main session says « verified » only on that copied line/);
 });
 
 test("QUA-061 : le skill /drwil-note appelle la commande de note et ne code rien — une note est toujours une intention", async () => {
