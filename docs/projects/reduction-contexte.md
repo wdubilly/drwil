@@ -197,6 +197,20 @@ nouvelle qui cite un chemin déjà cité est signalée, reste vrai tel quel).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-24) : cadré ; rien de commencé.
-- **Travail non commité** : la fiche et sa ligne d'index.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Dernier état** (2026-10-24) : lots 1 à 3 réalisés et commités sur
+  `workstream/reduction-contexte` (QUA-124 à QUA-131 créés, contrôles
+  `tests-qua-124` à `tests-qua-131`) ; `node .githooks/run-checks.mjs` OK ;
+  activité EVIDENCE. `drwil verify --evidence` : GOVERNANCE: FAIL, pour deux
+  raisons qui demandent l'humain :
+  1. QUA-122 (job `checks` nettement plus court) repasse en MANUAL : son
+     attestation couvre `.drwil/ia-first.json`, modifié ici pour déclarer
+     les contrôles des contrats créés — à attester de nouveau.
+  2. Le critère « Indicateur, sans seuil » n'a pas de preuve liée (aucun
+     contrat, décision du demandeur) : `verify` le compte non prouvé
+     (QUA-034, un critère non prouvé fait tomber le verdict), et son relevé
+     n'est possible qu'après deux chantiers comparables.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [décision] trancher le sort du critère indicateur
+  (le sortir des critères vers une intention de relevé, ou lui donner un
+  contrat « Manuel » à attester) ; [humain] `drwil attest QUA-122` dans un
+  terminal ; puis l'agent : `drwil verify --evidence`, VERIFY, CLOSING.
