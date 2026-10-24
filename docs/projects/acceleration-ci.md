@@ -10,11 +10,17 @@ files:
   - .github/workflows/ia-first.yml
   - packages/drwil/templates/common/base/.githooks/engine.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - packages/drwil/templates/common/base/.githooks/base-checks.mjs
+  - .githooks/base-checks.test.mjs
   - .githooks/engine.test.mjs
   - .githooks/run-checks.test.mjs
   - .drwil/ia-first.json
   - docs/contracts.md
   - packages/drwil/CHANGELOG.md
+  - docs/intentions/duree-du-rejeu-en-ci.md
+  - docs/intentions/notes.md
+  - docs/projects/pending.md
+  - docs/projects/journal.md
 -->
 
 (Dépôt ou livrable (QUA-018, périmètre explicite dépôt vs gabarit) : les deux.
@@ -32,38 +38,56 @@ une correction d'une ligne ; la réouverture de la PR #220 l'a coûté deux
 fois. Le demandeur veut un job `checks` au moins deux fois plus court, sans
 retirer ni affaiblir aucun contrôle.
 
+**Élargi le 2026-10-24 (demandeur)** : objectif « chaque contrôle joué une
+seule fois par PR en CI, sans perte de garantie ». Le retour de correction
+de l'agent est le hook pre-push local (`run-checks`) ; la CI reste la porte de
+confiance (un hook local peut être sauté, QUA-019, QUA-114). Les doublons de
+la CI (rejeu par la branche principale quand rien n'a changé, `npm test` de
+Node 22 qui refait ce que fait déjà `couverture-tests`) entrent donc dans le
+périmètre ; un hook ne doit jamais pouvoir être affaibli par une PR.
+
 ## Critères d'acceptation
 
-(les contrats sont à créer au lancement, avec leur champ **Origine** ; ID
-à attribuer à ce moment-là dans le registre.)
+(contrats créés au registre au lancement, avec leur champ **Origine** :
+QUA-119 à QUA-122.)
 
 - Les contrôles du projet s'exécutent à la même exigence qu'avant, plus vite :
   chaque contrat garde son contrôle propre, un échec nomme toujours le contrat
   fautif, et un contrôle qui ne s'est pas exécuté reste un échec (QUA-013,
-  un contrôle non exécuté n'est jamais un succès) — contrat à créer
+  un contrôle non exécuté n'est jamais un succès) — QUA-119
 - La compilation du paquet n'est faite qu'une fois par passage de
-  `run-checks`, pas une fois par contrôle ; une compilation en échec fait
-  échouer tous les contrôles qui en dépendent, jamais passer — contrat à créer
+  run-checks, pas une fois par contrôle ; une compilation en échec fait
+  échouer tous les contrôles qui en dépendent, jamais passer — QUA-120
 - Le workflow ne lance pas deux fois les mêmes jobs pour un même commit de
   branche (push et pull_request) ; un push sur la branche principale garde
   l'alerte de CI cassée et les noms de checks exigés par le ruleset de master
-  (`checks`, `kit-tests (<os>)`) ne changent pas — contrat à créer
-- Le job `checks` dure au moins deux fois moins que les 3,4 min mesurées,
+  (checks, kit-tests (<os>)) ne changent pas — QUA-121
+- Le job checks dure au moins deux fois moins que les 3,4 min mesurées,
   relevé sur trois passages de CI consécutifs et consigné dans le journal
-  [humain] — contrat manuel à créer
+  [humain] — QUA-122
 
 ## Contrats modifiés
 
-Aucun contrat existant n'est modifié : QUA-033 (un contrôle par règle) et
+- QUA-113 (sur une PR, la CI rejoue les contrôles avec les hooks de la branche
+  principale) — ancien critère : « la CI lance toujours le rejeu ». Nouveau :
+  le rejeu n'est sauté que si `.githooks/` et la liste de contrôles de
+  `.drwil/ia-first.json` sont identiques octet pour octet à la base (le rejeu
+  serait alors strictement le même passage) ; au moindre écart, doute ou lecture
+  Git en échec, rejeu complet (QUA-013) ; chaque saut est dit dans la sortie.
+  Raison : le rejeu doublait la durée du job `checks` sans rien vérifier de plus
+  quand rien n'a changé. Validé le 2026-10-24 par le demandeur.
+
+Aucun autre contrat existant n'est modifié : QUA-033 (un contrôle par règle) et
 QUA-013 (un contrôle non exécuté n'est pas un succès) restent vrais tels
-quels ; le chantier ne fait que les tenir plus vite. Les hooks ci-dessous
-changent, et le rejeu par la branche principale (QUA-113) doit garder leur
-version de la PR : le moteur de la base ne connaît ni `build` ni `parallel`,
-et ferait tourner les contrôles sans compilation.
+quels. Les hooks ci-dessous changent, et le rejeu par la branche principale
+(QUA-113) doit garder leur version de la PR : le moteur de la base ne connaît
+ni `build` ni `parallel`, et ferait tourner les contrôles sans compilation.
 
 - `.githooks/engine.mjs` : réglages `build` / `needsBuild` (une compilation par
   passage) et `parallel` (contrôles lancés ensemble, verdict d'un passage en série).
 - `.githooks/run-checks.mjs` : lit les résultats parallèles dans l'ordre de la liste.
+- `.githooks/base-checks.mjs` : saut du rejeu quand hooks et liste de contrôles
+  sont identiques à la base ; son test `.githooks/base-checks.test.mjs` avec lui.
 
 ## 2. Hors périmètre
 
@@ -72,10 +96,9 @@ et ferait tourner les contrôles sans compilation.
   seulement si, après ce chantier, la CI reste trop lente.
 - Découper le job `checks` en plusieurs jobs (`ciJob`) : cela renommerait les
   checks exigés par le ruleset de master (réglage de la forge).
-- Retirer un contrôle, baisser un seuil, ou sauter un contrôle sur une PR.
-- Le test de Node 22 (plus ancienne version prise en charge, `engines`) : il
-  reste, seule sa duplication éventuelle avec les contrôles filtrés se mesure
-  au lot 1.
+- Tout affaiblissement d'un hook, retirer un contrôle, baisser un seuil.
+- `checks-self-test` contre `couverture-hooks` : retiré seulement si le lot 1
+  prouve qu'aucune garantie n'est perdue, sinon fiche d'intention.
 
 ## 3. Contraintes
 
@@ -102,6 +125,13 @@ et ferait tourner les contrôles sans compilation.
   pas nécessaire à la qualité (QUA-033 garde pour but qu'un échec nomme sa
   règle ; le reporter donnerait la même information mais change la règle du
   jeu) ; à reprendre seulement si le gain reste insuffisant.
+
+- 2026-10-24 — Cadrage élargi (demandeur) : chaque contrôle joué une seule
+  fois par PR en CI, à l'endroit qui permet à l'agent de corriger (le hook
+  pre-push) ; la CI reste la porte de confiance ; un hook ne peut jamais être
+  affaibli par une PR. Rejeu QUA-113 sauté seulement si hooks et liste de
+  contrôles sont identiques à la base ; Node 22 testé une seule fois, sans
+  refaire ce que `couverture-tests` exécute déjà ; chaque saut est dit.
 
 ## 5. Points à trancher
 
