@@ -67,9 +67,10 @@ QUA-119 à QUA-123.)
   identiques à la base ; un doute ou un écart rejoue ; la suite ne tourne
   qu'une fois sur Node 22 dans le job checks, sans perte de garantie —
   QUA-123
-- Le job checks dure au moins deux fois moins que les 3,4 min mesurées,
-  relevé sur trois passages de CI consécutifs et consigné dans le journal
-  [humain] — QUA-122
+- Hooks modifiés : le job checks dure au moins 30 % de moins que la référence
+  (environ 5m35, soit 3m55 au plus), relevé sur trois passages de CI et consigné
+  dans le journal ; hooks inchangés : durée relevée sur la première PR ordinaire
+  après fusion, suivie par une intention jusqu'au relevé [humain] — QUA-122
 
 ## Contrats modifiés
 
@@ -137,6 +138,13 @@ ni `build` ni `parallel`, et ferait tourner les contrôles sans compilation.
   affaibli par une PR. Rejeu QUA-113 sauté seulement si hooks et liste de
   contrôles sont identiques à la base ; Node 22 testé une seule fois, sans
   refaire ce que `couverture-tests` exécute déjà ; chaque saut est dit.
+
+- 2026-10-24 — Critère de durée reformulé (demandeur, option 1) : hooks
+  modifiés, `checks` au moins 30 % plus court que la référence (≈ 5m35, soit
+  ≤ 3m55 ; relevé sur trois passages) ; hooks inchangés, durée relevée sur la
+  première PR ordinaire après fusion, suivie par une intention. Raison : la CI
+  lit sur master l'ancienne copie de base-checks, le saut du rejeu n'agit
+  qu'après fusion. QUA-122 (contrat créé par ce chantier) est reformulé.
 
 ## 5. Points à trancher
 

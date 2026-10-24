@@ -1141,14 +1141,14 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : acceleration-ci — « Le workflow ne lance pas deux fois les mêmes jobs pour un même commit de branche (push et pull_request) ; un push sur la branche principale garde l'alerte de CI cassée et les noms de checks exigés par le ruleset de master ne changent pas »
 **Raison** : Chaque commit poussé sur une branche à PR faisait tourner `checks` et `kit-tests` deux fois, pour le même verdict.
 
-## QUA-122 — Le job `checks` dure au moins deux fois moins que les 3,4 min mesurées
-**Règle** : Propre au dépôt drwil (QUA-018). Le job `checks` de la CI dure au plus la moitié de la durée de référence du 2026-10-24 (environ 3,4 min), relevé sur trois passages de CI consécutifs consignés dans le journal.
+## QUA-122 — Le job `checks` est nettement plus court, hooks modifiés comme hooks inchangés
+**Règle** : Propre au dépôt drwil (QUA-018). Hooks modifiés (rejeu complet) : le job `checks` de la CI dure au moins 30 % de moins que la référence du 2026-10-24 (environ 5m35, soit 3m55 au plus), relevé sur trois passages de CI consignés dans le journal. Hooks inchangés (rejeu sauté, QUA-123) : durée relevée sur la première PR ordinaire après fusion, suivie par une intention jusqu'au relevé.
 **Périmètre** : `.github/workflows/ia-first.yml`, `.drwil/ia-first.json`.
 **Source de vérité** : `docs/projects/journal.md` (relevé des trois durées).
 **Preuve** : aucune automatique : une durée de CI dépend de la charge de la forge, elle se relève sur la forge.
-**Manuel** : relever la durée du job `checks` sur trois passages de CI consécutifs et la consigner au journal, puis attester.
+**Manuel** : relever la durée du job `checks` sur trois passages de CI (hooks modifiés) et la consigner au journal, puis attester ; le relevé hooks inchangés suit par intention.
 **Couvre** : `.github/workflows/ia-first.yml`, `.drwil/ia-first.json`
-**Origine** : acceleration-ci — « Le job `checks` dure au moins deux fois moins que les 3,4 min mesurées, relevé sur trois passages de CI consécutifs et consigné dans le journal »
+**Origine** : acceleration-ci — « Hooks modifiés : job `checks` au moins 30 % plus court que la référence ≈5m35 (≤ 3m55), relevé sur trois passages de CI ; hooks inchangés : durée relevée sur la première PR ordinaire après fusion, suivie par une intention jusqu'à relevé »
 **Raison** : Sans mesure sur la forge, le gain annoncé reste une impression.
 
 ## QUA-123 — Chaque contrôle n'est joué qu'une fois par PR en CI, sans perte de garantie
