@@ -3055,6 +3055,20 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   laisse 92 de plus. La garde shell de QUA-132 refuse aussi un ajout en fin
   de journal par `cat >> … <<EOF` (écriture jugée comme une lecture) : le
   journal s'édite par l'outil d'édition.
+- **Réouverture (PR #223, CI rouge ; QUA-116 réouverture après clôture,
+  oui de l'humain selon QUA-117)** : macOS — le garde shell comparait
+  `import.meta.url` à une URL de `process.argv[1]` et ne se lançait pas par
+  `/var` → `/private/var` ; la correction de 2026-10-17 (QUA-044, les hooks
+  lisent la racine du projet) n'avait pas été appliquée partout. Tous les
+  points d'entrée livrés de `.githooks/` et `.claude/hooks/` comparent
+  désormais les chemins réels des deux côtés, et un test de QUA-044
+  parcourt le gabarit pour refuser la récidive ; QUA-044 étendu en
+  conséquence. Windows — l'hypothèse du nom court 8.3 écartée par le log
+  (les lectures Read par chemin absolu passaient) : le garde shell lisait
+  `\` comme échappement et effaçait les séparateurs de `C:\Users\…` ; les
+  mots sont relus sans échappement. Rejeu par les hooks de la branche
+  principale (QUA-113) : « Contrats modifiés » cite désormais un hook par
+  puce.
 - **Limites connues** : relevé de l'indicateur —
   `docs/intentions/releve-cache-lu-par-requete.md` ; recettes et skills qui
   renvoient encore au registre entier —
@@ -3062,8 +3076,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   forcée pour Gemini CLI, Copilot CLI, Codex et Cursor —
   `docs/intentions/lecture-ciblee-forcee-autres-outils.md` ; découpage du
   registre et du journal — `docs/intentions/decoupage-registre-et-journal.md` ;
-  dossiers temporaires des tests jamais supprimés —
-  `docs/intentions/tests-dossiers-temporaires-non-supprimes.md` ; gardes de
+  dossiers temporaires des tests jamais supprimés, troisième occurrence,
+  besoin d'un anti-récidive —
+  `docs/intentions/tests-dossiers-temporaires-non-supprimes.md` ; points
+  d'entrée des scripts propres au dépôt (`outils/`, `.github/scripts/`)
+  hors du test de QUA-044 — note du 2026-10-24 de
+  `docs/intentions/notes.md` ; gardes de
   lecture et sous-agent non éprouvés dans une vraie session Claude Code,
   et garde shell qui prend `cat >>` pour une lecture —
   `docs/intentions/gardes-de-lecture-en-session-reelle.md`.

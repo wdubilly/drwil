@@ -1,7 +1,7 @@
 # Preuve de clôture — reduction-contexte
 
 **Clos le** : 2026-10-24
-**Commit vérifié** : `6000a5e115` — verdict `drwil verify` : PASS
+**Commit vérifié** : `2b92a5ebf9` — verdict `drwil verify` : PASS
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
 

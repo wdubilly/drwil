@@ -19,9 +19,31 @@ et chaque commit (hook `run-checks`) en laisse aussi (26 constatés).
   dossiers vides `drwil-banc-*` laissés par le test QUA-060 (un outil n'est tenu que prouvé
   par le banc) dans `outils/banc-agents.test.mjs`.
 
+## Historique : troisième occurrence (complété le 2026-10-24)
+
+- 2026-10-05, journal « Garder le commit rapide sans perdre de contrôle » :
+  7 919 restes des tests du kit avaient épuisé les inodes de `/tmp` ;
+  correction : suppression après chaque test (gardés si le test échoue).
+- 2026-10-09, journal « Les tests des hooks nettoient leurs dossiers
+  temporaires » : 40 061 dossiers, inodes épuisés ; correction : `afterEach`
+  dans `.githooks/state.test.mjs` et `.githooks/scope-gate.test.mjs`.
+- 2026-10-24 : 13 500 dossiers, `verify` en FAIL `ENOSPC` (ci-dessus).
+
+Les deux corrections étaient faites fichier par fichier, sans garde-fou :
+les tests écrits depuis fuient à nouveau (92 dossiers par `verify`).
+
+## Besoin réel : l'anti-récidive (décision de l'humain du 2026-10-24)
+
+Corriger les fuites actuelles ne suffit pas : il faut empêcher qu'un nouveau
+test en recrée. Pistes :
+
+1. un contrôle qui compte les `drwil-*` du dossier temporaire avant et après
+   une passe des tests, et échoue si leur nombre augmente ;
+2. un utilitaire unique de dossier temporaire de test (créé, puis supprimé
+   après un test réussi, gardé et affiché en cas d'échec) et une règle qui
+   refuse un `mkdtempSync` direct dans un fichier de test.
+
 ## Questions à trancher
 
-- Supprimer chaque dossier temporaire en fin de test (`after`/`t.after`), ou
-  un dossier racine par passe supprimé à la fin ?
-- Un contrôle qui compte les `drwil-*` restants après la suite, pour que le
-  défaut ne revienne pas ?
+- Piste 1, piste 2 ou les deux ?
+- Un dossier racine par passe, supprimé à la fin, ou un dossier par test ?
