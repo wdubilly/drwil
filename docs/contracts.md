@@ -1110,3 +1110,43 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/close.test.mjs`, `packages/drwil/test/cycle.test.mjs`
 **Origine** : reouvrir-apres-cloture — « La nouvelle clôture passe comme la première : une seule entrée de journal pour le chantier (mise à jour, jamais doublée), une seule ligne de consommation, preuve de clôture réécrite sur le nouveau commit vérifié ; l'autorisation de fusion automatique et la file décidées au lancement sont gardées »
 **Raison** : Sans elle, la seconde clôture d'un chantier rouvert gardait la consommation de la première (« déjà une ligne »), et rien n'empêchait une seconde entrée de journal pour le même chantier.
+
+## QUA-119 — Les contrôles du projet vont plus vite sans rien perdre de leur exigence
+**Règle** : Livré à tout projet. Avec le réglage `parallel` de `.drwil/ia-first.json`, le moteur sait lancer en même temps (au plus la moitié des cœurs, deux au moins, Node seul) les contrôles de commande — ceux du projet et les tests des contrôles eux-mêmes ; un contrôle peut y renoncer (`parallel: false`). `.githooks/run-checks.mjs` lit les résultats dans l'ordre de la liste : mêmes rapport, mêmes sorties groupées par contrôle et même verdict qu'une exécution en série. Chaque contrat garde son contrôle propre (QUA-033, un contrôle par règle), un échec nomme son contrôle, une commande qui ne peut pas démarrer échoue, un contrôle reporté reste « non exécuté » (QUA-013, un contrôle non exécuté n'est pas un succès). Sans le réglage, tout reste en série.
+**Périmètre** : `.githooks/engine.mjs` (`checks`, `startParallel`), `.githooks/run-checks.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/engine.mjs` (`startParallel`).
+**Preuve** : tests des hooks : mêmes verdicts en parallèle et en série (réussite, échec, commande introuvable, autotest), contrôle qui renonce, sans réglage rien en parallèle, limite de concurrence ; run-checks sur un projet temporaire : ordre du rapport, sorties groupées, non exécuté signalé.
+**Contrôle** : `tests-qua-119`
+**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`
+**Origine** : acceleration-ci — « Les contrôles du projet s'exécutent à la même exigence qu'avant, plus vite : chaque contrat garde son contrôle propre, un échec nomme toujours le contrat fautif, et un contrôle qui ne s'est pas exécuté reste un échec »
+**Raison** : Le job `checks` durait environ 3,4 min en série ; une PR attendait 5 à 6 min à chaque passage, y compris pour une correction d'une ligne.
+
+## QUA-120 — La compilation du projet n'est faite qu'une fois par passage
+**Règle** : Livré à tout projet. Le réglage `build` de `.drwil/ia-first.json` déclare la commande de compilation ; un contrôle qui en dépend le dit (`needsBuild`) et ne la relance pas : le moteur la fait une fois par passage, au premier contrôle qui doit réellement tourner (un contrôle reporté ne la déclenche pas), en série comme en parallèle. Une compilation en échec fait échouer chaque contrôle qui en dépend, en nommant ce contrôle, sa sortie dite une seule fois ; `needsBuild` sans `build` déclaré échoue aussi : jamais un succès faute d'avoir compilé (QUA-013, un contrôle non exécuté n'est pas un succès).
+**Périmètre** : `.githooks/engine.mjs` (`checks`), `.drwil/ia-first.json` (`build`, `needsBuild`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/engine.mjs` (`build`, `buildAsync`).
+**Preuve** : tests des hooks : un seul build pour plusieurs contrôles, en série puis en parallèle, aucun build quand rien n'en dépend ou que le contrôle est reporté, build en échec (message nommant le contrôle, sortie dite une fois, en français et en anglais), `needsBuild` sans `build`.
+**Contrôle** : `tests-qua-120`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : acceleration-ci — « La compilation du paquet n'est faite qu'une fois par passage de `run-checks`, pas une fois par contrôle ; une compilation en échec fait échouer tous les contrôles qui en dépendent, jamais passer »
+**Raison** : 56 contrôles refaisaient chacun `tsc --build` avant leur `node --test` filtré.
+
+## QUA-121 — Le workflow ne rejoue pas deux fois un même commit de branche
+**Règle** : Propre au dépôt drwil (QUA-018). Un push sur une branche qui a déjà une pull request ouverte est sauté, l'étape `pr` du job `matrice-os` le reconnaissant : `checks` ne tourne pas et `kit-tests` rapporte ses noms exigés sans tester, en le disant (notice), la PR gardant ses propres checks ; sans PR ouverte, ou si GitHub ne répond pas, le push teste comme avant (QUA-045) ; un push sur la branche principale n'est jamais sauté et garde l'alerte de CI cassée (`alert-if-ci-broken`). Les noms de checks exigés par le ruleset de master ne changent pas : `checks` et `kit-tests (<os>)`.
+**Périmètre** : `.github/workflows/ia-first.yml`.
+**Source de vérité** : `.github/workflows/ia-first.yml` (étape `pr` du job `matrice-os`).
+**Preuve** : test de la structure du workflow : déclencheurs inchangés, `checks` dépend de `matrice-os` et saute sur sa sortie, la matrice de `kit-tests` devient non testée, master et GitHub muet jamais sautés, noms exigés et alerte conservés.
+**Contrôle** : `tests-qua-121`
+**Tests** : `.githooks/run-checks.test.mjs`
+**Origine** : acceleration-ci — « Le workflow ne lance pas deux fois les mêmes jobs pour un même commit de branche (push et pull_request) ; un push sur la branche principale garde l'alerte de CI cassée et les noms de checks exigés par le ruleset de master ne changent pas »
+**Raison** : Chaque commit poussé sur une branche à PR faisait tourner `checks` et `kit-tests` deux fois, pour le même verdict.
+
+## QUA-122 — Le job `checks` dure au moins deux fois moins que les 3,4 min mesurées
+**Règle** : Propre au dépôt drwil (QUA-018). Le job `checks` de la CI dure au plus la moitié de la durée de référence du 2026-10-24 (environ 3,4 min), relevé sur trois passages de CI consécutifs consignés dans le journal.
+**Périmètre** : `.github/workflows/ia-first.yml`, `.drwil/ia-first.json`.
+**Source de vérité** : `docs/projects/journal.md` (relevé des trois durées).
+**Preuve** : aucune automatique : une durée de CI dépend de la charge de la forge, elle se relève sur la forge.
+**Manuel** : relever la durée du job `checks` sur trois passages de CI consécutifs et la consigner au journal, puis attester.
+**Couvre** : `.github/workflows/ia-first.yml`, `.drwil/ia-first.json`
+**Origine** : acceleration-ci — « Le job `checks` dure au moins deux fois moins que les 3,4 min mesurées, relevé sur trois passages de CI consécutifs et consigné dans le journal »
+**Raison** : Sans mesure sur la forge, le gain annoncé reste une impression.

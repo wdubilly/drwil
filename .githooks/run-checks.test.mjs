@@ -237,3 +237,46 @@ test("QUA-056 : un push depuis un worktree laisse le dépôt principal identique
   assert.equal(existsSync(marque), true, `le pre-push n'a pas lancé le contrôle : ${r.stdout}${r.stderr}`);
   assert.equal(photo(), avant);
 });
+
+test("QUA-119 : avec `parallel`, rapport dans l'ordre de la liste, sorties groupées par contrôle, verdict d'une exécution en série", () => {
+  const lent = "node -e \"setTimeout(()=>console.log('sortie lente'),400)\"";
+  const r = lancer(
+    {
+      ".drwil/ia-first.json": JSON.stringify({
+        parallel: true,
+        build: "node -e \"console.log('compilé')\"",
+        checks: [
+          { id: "lent", name: "Lent", run: lent, needsBuild: true },
+          { id: "casse", name: "Cassé (QUA-999)", run: "node -e \"console.log('trace');process.exit(1)\"" },
+          { id: "reporte", name: "Reporté", run: "node -e 0", paths: ["src/**"] },
+        ],
+      }),
+    },
+    { env: { DRWIL_HOOK: "pre-commit" } },
+  );
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  const lignes = r.stdout.split("\n");
+  const rang = (re) => lignes.findIndex((l) => re.test(l));
+  assert.ok(rang(/^\[ia-first\] Lent…$/) < rang(/^sortie lente$/));
+  assert.ok(rang(/^sortie lente$/) < rang(/^\[ia-first\] Cassé \(QUA-999\)…$/));
+  assert.ok(rang(/^trace$/) > rang(/^\[ia-first\] Cassé/));
+  assert.match(r.stdout, /^\[ia-first\] ⚠ non exécuté : Reporté \(/m);
+  assert.match(r.stdout, /^\[ia-first\] ✗ échec : Cassé \(QUA-999\)/m);
+  assert.doesNotMatch(r.stdout, /✗ échec : Lent/);
+});
+
+test("QUA-121 : le workflow saute le push d'une branche à PR ouverte, jamais master, et garde noms exigés et alerte", () => {
+  const wf = readFileSync(join(dirname(SCRIPT), "..", ".github", "workflows", "ia-first.yml"), "utf8");
+  const job = (nom) => wf.split(/^ {2}(?=[\w-]+:$)/m).find((b) => b.startsWith(`${nom}:`)) ?? "";
+  assert.match(wf, /^on: \[push, pull_request\]$/m);
+  const calcul = job("matrice-os");
+  assert.match(calcul, /gh pr list .*--head "\$BRANCHE" --state open/);
+  assert.match(calcul, /\|\| ouvertes=0/, "GitHub muet : le push teste");
+  assert.match(calcul, /\[ "\$REF" != "refs\/heads\/\$PRINCIPALE" \]/, "master jamais sauté");
+  assert.match(calcul, /"tester":false/, "push sauté : kit-tests ne teste pas");
+  assert.match(job("checks"), /needs: matrice-os\n\s+if: needs\.matrice-os\.outputs\.saute != 'true'/);
+  assert.match(job("kit-tests"), /needs: matrice-os/);
+  assert.match(job("kit-tests"), /name: kit-tests \(\$\{\{ matrix\.os \}\}\)/);
+  assert.match(job("alert-if-ci-broken"), /needs: \[checks, kit-tests\]/);
+  assert.match(job("alert-if-ci-broken"), /github\.event_name == 'push'/);
+});

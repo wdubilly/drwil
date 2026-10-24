@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
-import { checks, projectRoot, texts } from "./engine.mjs";
+import { checks, projectRoot, startParallel, texts } from "./engine.mjs";
 import { pathToFileURL } from "node:url";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
@@ -312,4 +312,121 @@ test("QUA-057 : seul gitleaks garde les GIT_* du hook, pour lire l'index du comm
     assert.equal(executer(racine, "secrets", { env: { PATH: process.env.PATH, GIT_INDEX_FILE: "index-du-hook" } }).status, "ok");
   });
   assert.match(readFileSync(join(outils, "appels"), "utf8"), /^index-du-hook$/m);
+});
+
+const compte = (racine) => readFileSync(join(racine, "builds"), "utf8").trim().split("\n").length;
+const cmdBuild = (sortie = 0) =>
+  `node -e "require('fs').appendFileSync('builds','x\\n');console.log('sortie du build');process.exit(${sortie})"`;
+
+test("QUA-120 : la compilation n'est faite qu'une fois par passage, par le premier contrôle qui en dépend", async () => {
+  const racine = depot();
+  const cfg = {
+    build: cmdBuild(),
+    parallel: true,
+    checks: [
+      { id: "a", run: "node -e 0", needsBuild: true },
+      { id: "b", run: "node -e 0", needsBuild: true },
+      { id: "c", run: "node -e 0" },
+    ],
+  };
+  const liste = parId(checks(racine, { cfg }));
+  assert.equal(liste.c.run({ stdio: "pipe" }).status, "ok");
+  assert.throws(() => readFileSync(join(racine, "builds")), "rien ne dépend du build : pas compilé");
+  assert.equal(liste.a.run({ stdio: "pipe" }).status, "ok");
+  assert.equal(liste.b.run({ stdio: "pipe" }).status, "ok");
+  assert.equal(compte(racine), 1);
+  assert.equal((await liste.b.runAsync()).status, "ok", "compilé en série, relu en parallèle");
+  assert.equal(compte(racine), 1);
+  const parallele = parId(checks(racine, { cfg }));
+  assert.equal((await parallele.a.runAsync()).status, "ok");
+  assert.equal(compte(racine), 2, "autre passage, autre compilation");
+  assert.equal((await parallele.b.runAsync()).status, "ok");
+  assert.equal(compte(racine), 2);
+});
+
+test("QUA-120 : une compilation en échec fait échouer chaque contrôle qui en dépend, nommé, sa sortie dite une fois", async () => {
+  const racine = depot();
+  const cfg = {
+    build: cmdBuild(1),
+    parallel: true,
+    checks: [
+      { id: "a", name: "Alpha", run: "node -e 0", needsBuild: true },
+      { id: "b", name: "Bravo", run: "node -e 0", needsBuild: true },
+      { id: "c", run: "node -e 0", needsBuild: true },
+    ],
+  };
+  const liste = parId(checks(racine, { cfg }));
+  const a = liste.a.run({ stdio: "pipe" });
+  assert.equal(a.status, "fail");
+  assert.equal(a.message, "Alpha : la compilation du projet (build) est en échec");
+  assert.match(a.output, /sortie du build/);
+  const b = liste.b.run({ stdio: "pipe" });
+  assert.deepEqual([b.status, b.message, b.output], ["fail", "Bravo : la compilation du projet (build) est en échec", undefined]);
+  const asynchrone = parId(checks(racine, { cfg }));
+  const [x, y] = await Promise.all([asynchrone.a.runAsync(), asynchrone.c.runAsync()]);
+  assert.deepEqual([x.status, y.status], ["fail", "fail"]);
+  assert.equal([x, y].filter((r) => r.output !== undefined).length, 1, "sortie du build dite une fois");
+  assert.equal(compte(racine), 2);
+  const sans = parId(
+    checks(racine, { cfg: { lang: "en", parallel: true, checks: [{ id: "a", name: "Alpha", run: "node -e 0", needsBuild: true }] } }),
+  );
+  const manque = 'Alpha declares needsBuild without a "build" in .drwil/ia-first.json';
+  assert.equal(sans.a.run({ stdio: "pipe" }).message, manque);
+  assert.equal((await sans.a.runAsync()).message, manque);
+  const fr = parId(checks(racine, { cfg: { checks: [{ id: "a", name: "Alpha", run: "node -e 0", needsBuild: true }] } }));
+  assert.match(fr.a.run({ stdio: "pipe" }).message, /^Alpha déclare needsBuild sans « build »/);
+  const en = parId(
+    checks(racine, { cfg: { lang: "en", build: cmdBuild(1), checks: [{ id: "a", name: "Alpha", run: "node -e 0", needsBuild: true }] } }),
+  );
+  assert.equal(en.a.run({ stdio: "pipe" }).message, "Alpha: the project build failed");
+});
+
+test("QUA-120 : un contrôle reporté (hors chemins, doc seule) ne déclenche pas la compilation", async () => {
+  const racine = depot();
+  const cfg = { build: cmdBuild(), parallel: true, checks: [{ id: "a", run: "node -e 0", needsBuild: true, paths: ["src/**"] }] };
+  const liste = parId(checks(racine, { cfg, staged: ["autre/a.json"] }));
+  assert.equal(liste.a.run().status, "not-run");
+  assert.equal((await liste.a.runAsync()).status, "not-run");
+  assert.throws(() => readFileSync(join(racine, "builds")));
+});
+
+test("QUA-119 : en parallèle, mêmes verdicts qu'en série, un échec nomme son contrôle, un contrôle non lancé reste non exécuté", async () => {
+  const racine = depot();
+  ecrire(racine, ".githooks/a.test.mjs", "import { test } from 'node:test';\ntest('échoue', () => { throw new Error('x'); });\n");
+  const cfg = {
+    parallel: true,
+    checks: [
+      { id: "bon", run: "node -e \"console.log('bonjour')\"" },
+      { id: "mauvais", name: "Mauvais", run: 'node -e "process.exit(3)"' },
+      { id: "seul", run: "node -e 0", parallel: false },
+      { id: "inexistant", run: "node -e 0", cwd: "absent" },
+    ],
+  };
+  const liste = parId(checks(racine, { cfg }));
+  assert.equal(liste.seul.runAsync, undefined, "opt-out");
+  assert.equal(
+    checks(racine, { cfg: { checks: cfg.checks } }).some((c) => c.runAsync),
+    false,
+    "sans parallel, tout reste en série",
+  );
+  const lancee = startParallel(Object.values(liste), 2);
+  assert.deepEqual([...lancee.keys()].sort(), ["bon", "checks-self-test", "inexistant", "mauvais"].sort());
+  const bon = await lancee.get("bon");
+  assert.deepEqual([bon.status, bon.launched, bon.output.trim()], ["ok", true, "bonjour"]);
+  assert.equal((await lancee.get("mauvais")).status, "fail");
+  assert.equal((await lancee.get("inexistant")).status, "fail", "ne pas pouvoir lancer est un échec");
+  assert.equal((await lancee.get("checks-self-test")).status, "fail");
+  assert.equal(liste.mauvais.run({ stdio: "pipe" }).status, "fail");
+});
+
+test("QUA-119 : l'autotest en parallèle suit les mêmes cas qu'en série ; sans limite, au plus la moitié des cœurs", async () => {
+  const racine = depot();
+  const liste = parId(checks(racine, { cfg: { parallel: true } }));
+  assert.equal((await liste["checks-self-test"].runAsync()).detail, "tests propres au dépôt drwil, non livrés");
+  ecrire(racine, ".githooks/a.test.mjs", "import { test } from 'node:test';\ntest('ok', () => {});\n");
+  const r = await liste["checks-self-test"].runAsync();
+  assert.deepEqual([r.status, r.launched], ["ok", true]);
+  const vide = startParallel([{ id: "x", runAsync: async () => ({ status: "ok" }) }]);
+  assert.equal((await vide.get("x")).status, "ok");
+  assert.equal(startParallel([]).size, 0);
 });
