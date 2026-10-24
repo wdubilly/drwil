@@ -156,7 +156,9 @@ applicable contracts and recipe: `node .githooks/glossary.mjs --contracts`
 lists every contract (ID and title, none left out) in one short read, then
 `node .githooks/glossary.mjs --contract <ID>` gives the full text of each
 applicable one. Never read the whole registry: a file read stays in the
-context and is read again at every request. A failing check flags a
+context and is read again at every request; with Claude Code, reading the
+registry or the journal whole (without a range) is refused, go through
+`node .githooks/glossary.mjs` (a read by range stays allowed, to edit). A failing check flags a
 contract: read that contract before bypassing anything. A past workstream:
 `node .githooks/glossary.mjs --journal <brief>` gives its journal entry,
 not the whole journal. Always installed baseline:

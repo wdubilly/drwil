@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, isAbsolute, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Guard of Claude Code's shell commands (PreToolUse hook, Bash matcher).
 //
@@ -16,6 +16,18 @@ import { pathToFileURL } from "node:url";
 // removing or overriding core.hooksPath (--no-verify, commit -n, -c core.hooksPath=,
 // git config core.hooksPath …, GIT_CONFIG_*), also inside a compound command or a `sh -c "…"`.
 // A blocking check is fixed, never bypassed (QUA-019); reading the setting stays allowed.
+//
+// Also refused: `cat`, `less` or `more` of the contract registry or the journal, read whole (QUA-132,
+// the shell side of .claude/hooks/read-guard.mjs). Judged on the text of the command, like the rest:
+// `sed -n`, `grep`, `head` stay allowed, and a reading hidden behind a variable is not seen.
+
+// The folder holding this hook's .claude/, never the current folder (an agent's `cd`, QUA-044).
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+// Optional: without the read guard (a partial copy), this guard keeps its other refusals.
+let readGuard = null;
+try {
+  readGuard = await import("./read-guard.mjs");
+} catch {}
 
 // Left edge: no letter, no `$`, no `\` (a `\.env` regex is not a file).
 const BEFORE = "(?<![\\w$\\\\])";
@@ -145,6 +157,33 @@ export function skipsHooks(command, depth = 0) {
   return commands.some(commandSkips) || quoted.some((q) => skipsHooks(q, depth + 1));
 }
 
+const WHOLE_READERS = new Set(["cat", "less", "more"]);
+
+/**
+ * The guarded file (registry or journal, QUA-132) that a shell command reads whole with `cat`, `less`
+ * or `more`, or null. A relative path matches by its end (the agent may have `cd`'d), an absolute
+ * one must be the project's file.
+ */
+export function wholeRead(command, root = ROOT) {
+  if (!readGuard) return null;
+  const files = readGuard.guardedFiles(root);
+  const target = (arg) => {
+    if (isAbsolute(arg)) return readGuard.guardedTarget(arg, root);
+    const a = arg.replace(/\\/g, "/").replace(/^\.\//, "");
+    return files.find((rel) => a === rel || a.endsWith(`/${rel}`)) ?? null;
+  };
+  for (const words of split(String(command)).commands) {
+    let i = 0;
+    while (i < words.length && /^\w+=/.test(words[i])) i++;
+    if (!WHOLE_READERS.has((words[i] ?? "").split("/").pop())) continue;
+    for (const arg of words.slice(i + 1)) {
+      const found = arg.startsWith("-") ? null : target(arg);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 const TEXTS = {
   fr: {
     env: "fichier .env (secrets) : utiliser .env.example, versionné et sans secret",
@@ -196,6 +235,18 @@ function main(input) {
   if (skipsHooks(command))
     return JSON.stringify({
       hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: T.refused },
+    });
+  let whole = null;
+  try {
+    whole = wholeRead(command);
+  } catch {}
+  if (whole)
+    return JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason: readGuard.refusal(whole, ROOT),
+      },
     });
   const found = reason(command, T);
   if (found === null) return "";

@@ -25,6 +25,13 @@ closing commit; the release renames this section to its version.
   runs `run-checks` and `drwil verify --agent` and returns only the verdict and
   the failures, copied word for word; it has no write tool and never attests.
   `AGENTS.md` tells any tool to do the same if it allows it.
+- With Claude Code, reading `docs/contracts.md` or the journal whole is
+  refused before it happens: a new `PreToolUse` hook on Read
+  (`.claude/hooks/read-guard.mjs`) blocks a read without a range, and
+  `.claude/hooks/bash-guard.mjs` blocks their `cat`, `less` or `more`; the
+  message points to `node .githooks/glossary.mjs --contract <ID>`,
+  `--contracts` and `--journal <brief>`. A read by range and a search stay
+  allowed.
 - Back in SCOPING after a closing, the state reminder invites starting the
   next workstream in a new session (Claude Code: `/clear`; another tool: a new
   conversation); a queue keeps its subagent per workstream.

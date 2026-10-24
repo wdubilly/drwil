@@ -109,6 +109,12 @@ un par critère ci-dessous.)
 - Après le retour en SCOPING qui suit une clôture, le rappel d'état invite à
   ouvrir une nouvelle session pour le chantier suivant, pour tous les outils ;
   la file de chantiers garde son sous-agent par chantier `QUA-131`
+- Avec Claude Code, la lecture entière de `docs/contracts.md` ou de
+  `docs/projects/journal.md` est refusée avant qu'elle ait lieu (outil Read
+  sans plage, `cat`/`less`/`more` du fichier dans une commande shell), avec
+  un renvoi vers `node .githooks/glossary.mjs --contract <ID>`, `--contracts`
+  et `--journal <chantier>` ; une lecture par plage et une recherche restent
+  permises ; `AGENTS.md` le dit `QUA-132`
 
 ## Contrats modifiés
 

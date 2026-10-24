@@ -781,6 +781,101 @@ test("QUA-114 garde shell : refus, sans demander, de toute commande qui saute le
   assert.match(main(JSON.stringify({ tool_name: "Bash", tool_input: { command: "git commit -n" } })), /"permissionDecision":"deny"/);
 });
 
+test("QUA-132 lecture ciblée forcée : registre et journal refusés en entier (Read sans plage, cat/less/more), plage et recherche permises", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const lire = (tool_input, cwd = dir, script = join(dir, ".claude/hooks/read-guard.mjs")) =>
+    spawnSync(process.execPath, [script], { cwd, encoding: "utf8", input: JSON.stringify({ tool_name: "Read", tool_input }) });
+  const refuse = (r, quoi) => {
+    const sortie = JSON.parse(r.stdout).hookSpecificOutput;
+    assert.equal(sortie.permissionDecision, "deny", quoi);
+    assert.match(sortie.permissionDecisionReason, /Lecture refusée \(QUA-132, lecture ciblée\)/, quoi);
+    assert.match(sortie.permissionDecisionReason, /glossary\.mjs --contract <ID>.*--contracts.*--journal <chantier>/, quoi);
+  };
+  // Lecture entière : chemin absolu, relatif, avec ./ et .., depuis un sous-dossier.
+  refuse(lire({ file_path: join(dir, "docs/contracts.md") }), "registre, chemin absolu");
+  refuse(lire({ file_path: join(dir, "docs/projects/journal.md") }), "journal, chemin absolu");
+  refuse(lire({ file_path: "docs/contracts.md" }), "chemin relatif");
+  refuse(lire({ file_path: "./docs/projects/../contracts.md" }), "chemin normalisé");
+  mkdirSync(join(dir, "src/profond"), { recursive: true });
+  refuse(lire({ file_path: join(dir, "docs/contracts.md") }, join(dir, "src/profond")), "depuis un sous-dossier");
+  const lien = join(tmp(), "projet-lien");
+  symlinkSync(dir, lien, "junction");
+  refuse(lire({ file_path: join(lien, "docs/contracts.md") }, lien, join(lien, ".claude/hooks/read-guard.mjs")), "par un lien");
+  // Permis : une plage, un autre fichier, un fichier absent, une entrée inattendue.
+  assert.equal(lire({ file_path: join(dir, "docs/contracts.md"), offset: 10, limit: 20 }).stdout, "", "plage permise");
+  assert.equal(lire({ file_path: join(dir, "docs/projects/journal.md"), limit: 50 }).stdout, "", "limit seul permis");
+  assert.equal(lire({ file_path: join(dir, "AGENTS.md") }).stdout, "", "autre fichier permis");
+  assert.equal(lire({ file_path: join(tmp(), "docs/contracts.md") }).stdout, "", "hors du projet : permis");
+  const absent = spawnSync(process.execPath, [join(dir, ".claude/hooks/read-guard.mjs")], {
+    cwd: dir,
+    encoding: "utf8",
+    input: "pas du JSON",
+  });
+  assert.equal(absent.status, 0, "entrée invalide : jamais d'erreur");
+  assert.equal(absent.stdout, "", "entrée invalide : la lecture passe");
+  rmSync(join(dir, "docs/projects/journal.md"));
+  assert.equal(lire({ file_path: join(dir, "docs/projects/journal.md") }).stdout, "", "fichier absent : la lecture passe");
+  // Chemins lus dans la configuration, message dans la langue du projet.
+  writeFileSync(join(dir, "registre.md"), "# Registre\n");
+  writeFileSync(
+    join(dir, ".drwil/ia-first.json"),
+    JSON.stringify({ ...config(dir), lang: "en", dirs: { ...config(dir).dirs, contracts: "registre.md" } }),
+  );
+  assert.equal(lire({ file_path: join(dir, "docs/contracts.md") }).stdout, "", "l'ancien chemin n'est plus gardé");
+  assert.match(
+    JSON.parse(lire({ file_path: join(dir, "registre.md") }).stdout).hookSpecificOutput.permissionDecisionReason,
+    /^Read refused \(QUA-132/,
+  );
+  writeFileSync(
+    join(dir, ".drwil/ia-first.json"),
+    JSON.stringify({ ...config(dir), lang: "fr", dirs: { ...config(dir).dirs, contracts: "docs/contracts.md" } }),
+  );
+
+  // Garde shell : cat, less, more refusés ; sed -n, grep, head permis.
+  const shell = (command, cwd = dir) =>
+    spawnSync(process.execPath, [join(dir, ".claude/hooks/bash-guard.mjs")], {
+      cwd,
+      encoding: "utf8",
+      input: JSON.stringify({ tool_name: "Bash", tool_input: { command } }),
+    }).stdout;
+  for (const c of [
+    "cat docs/contracts.md",
+    "cat -n ./docs/contracts.md | head -5",
+    `less ${join(dir, "docs/contracts.md")}`,
+    "npm test && more docs/contracts.md",
+    "LANG=C /bin/cat ../../docs/contracts.md",
+  ])
+    assert.match(shell(c, join(dir, "src/profond")), /"permissionDecision":"deny".*QUA-132/, c);
+  for (const c of [
+    "sed -n 1,40p docs/contracts.md",
+    "grep -n QUA-013 docs/contracts.md",
+    "head -50 docs/contracts.md",
+    "cat AGENTS.md",
+    "echo docs/contracts.md",
+  ])
+    assert.equal(shell(c), "", c);
+  assert.match(shell("cat .env"), /"permissionDecision":"ask"/, "les autres risques gardent la demande d'accord");
+
+  // Les mêmes fonctions, appelées dans le processus (sur le gabarit, avec la racine du projet).
+  const garde = await import(new URL("../templates/common/tools/claude/.claude/hooks/read-guard.mjs", import.meta.url));
+  const { wholeRead } = await import(new URL("../templates/common/tools/claude/.claude/hooks/bash-guard.mjs", import.meta.url));
+  const entree = (tool_input) => JSON.stringify({ tool_name: "Read", tool_input });
+  assert.match(garde.main(entree({ file_path: "docs/contracts.md" }), dir), /"permissionDecision":"deny"/);
+  assert.equal(garde.main(entree({ file_path: "docs/contracts.md", offset: 1 }), dir), "");
+  assert.equal(garde.main(JSON.stringify({ tool_name: "Bash", tool_input: {} }), dir), "", "autre outil");
+  assert.equal(garde.main("pas du JSON", dir), "");
+  assert.equal(garde.guardedTarget(undefined, dir), null);
+  assert.equal(wholeRead("cat docs/contracts.md", dir), "docs/contracts.md");
+  assert.equal(wholeRead(`cat ${join(dir, "docs/contracts.md")}`, dir), "docs/contracts.md");
+  assert.equal(wholeRead("cat -A AGENTS.md", dir), null);
+
+  // Le gabarit branche le hook sur Read, avant l'outil ; AGENTS.md le dit.
+  const reglages = JSON.parse(read(dir, ".claude/settings.json"));
+  assert.ok(reglages.hooks.PreToolUse.some((h) => h.matcher === "Read" && h.hooks[0].command.includes(".claude/hooks/read-guard.mjs")));
+  assert.match(read(dir, "AGENTS.md"), /reading the\s+registry or the journal whole \(without a range\) is refused/);
+});
+
 test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse avant écriture (bloquant) ou rappelle (avertissement)", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

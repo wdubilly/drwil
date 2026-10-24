@@ -104,7 +104,7 @@ Carte complète : `docs/architecture.md`.
 
 ## Contrats
 
-`docs/contracts.md` est la **source unique** des invariants. Citer l'ID. Avant une modification importante, identifier les contrats et la recette applicables : `node .githooks/glossary.mjs --contracts` liste tous les contrats (ID et titre, aucun omis) en une lecture courte, puis `node .githooks/glossary.mjs --contract <ID>` donne le texte complet de chacun des contrats applicables. Jamais le registre entier : un fichier lu reste dans le contexte et se relit à chaque requête. Un chantier passé : `node .githooks/glossary.mjs --journal <fiche>` donne son entrée du journal, pas tout le journal.
+`docs/contracts.md` est la **source unique** des invariants. Citer l'ID. Avant une modification importante, identifier les contrats et la recette applicables : `node .githooks/glossary.mjs --contracts` liste tous les contrats (ID et titre, aucun omis) en une lecture courte, puis `node .githooks/glossary.mjs --contract <ID>` donne le texte complet de chacun des contrats applicables. Jamais le registre entier : un fichier lu reste dans le contexte et se relit à chaque requête. Avec Claude Code, la lecture entière (sans plage) du registre ou du journal est refusée : passer par `node .githooks/glossary.mjs` (une lecture par plage reste permise, pour éditer). Un chantier passé : `node .githooks/glossary.mjs --journal <fiche>` donne son entrée du journal, pas tout le journal.
 
 ## Charger le contexte progressivement
 
