@@ -280,3 +280,13 @@ test("QUA-121 : le workflow saute le push d'une branche à PR ouverte, jamais ma
   assert.match(job("alert-if-ci-broken"), /needs: \[checks, kit-tests\]/);
   assert.match(job("alert-if-ci-broken"), /github\.event_name == 'push'/);
 });
+
+test("QUA-123 : le job checks joue la suite une seule fois sur Node 22, sans npm test séparé ; kit-tests garde Node 24", () => {
+  const wf = readFileSync(join(dirname(SCRIPT), "..", ".github", "workflows", "ia-first.yml"), "utf8");
+  const job = (nom) => wf.split(/^ {2}(?=[\w-]+:$)/m).find((b) => b.startsWith(`${nom}:`)) ?? "";
+  const checks = job("checks");
+  assert.equal(checks.match(/node-version: \d+/g)?.join(), "node-version: 22");
+  assert.doesNotMatch(checks, /npm test/);
+  assert.match(checks, /run: node \.githooks\/run-checks\.mjs/);
+  assert.match(job("kit-tests"), /node-version: 24/);
+});

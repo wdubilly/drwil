@@ -23,6 +23,8 @@ const TEXTS = {
       "non exécuté : branche principale « {0} » introuvable dans le dépôt (premier push, branche orpheline, clone superficiel ?)",
     unreadable: "non exécuté : {0}",
     noHooks: "non applicable : « {0} » n'a pas encore de .githooks/ (adoption du kit), rien à rejouer",
+    skipped:
+      "rejeu sauté : .githooks/ et .drwil/ia-first.json sont identiques à ceux de « {0} », le rejeu serait strictement le passage déjà fait",
     kept: "{0} : version de la PR gardée, déclarée dans « Contrats modifiés »",
     removed:
       "contrôle « {0} » retiré de .drwil/ia-first.json sans déclaration : le citer entre backticks dans la section « Contrats modifiés » de la fiche, validée par le demandeur",
@@ -34,6 +36,8 @@ const TEXTS = {
     unknownBase: 'not run: main branch "{0}" not found in the repository (first push, orphan branch, shallow clone?)',
     unreadable: "not run: {0}",
     noHooks: 'not applicable: "{0}" has no .githooks/ yet (kit adoption), nothing to replay',
+    skipped:
+      'replay skipped: .githooks/ and .drwil/ia-first.json are identical to those of "{0}", the replay would be strictly the run already done',
     kept: "{0}: PR version kept, declared in « Modified contracts »",
     removed:
       'check "{0}" removed from .drwil/ia-first.json without declaration: cite it in backticks in the « Modified contracts » section of the brief, approved by the requester',
@@ -101,7 +105,18 @@ function runChecks(root, env, stdio) {
   return spawnSync(process.execPath, [join(".githooks", "run-checks.mjs")], { cwd: root, env, stdio }).status;
 }
 
-/** Replays the checks; `{ status: "ok" | "fail" | "not-run" | "not-applicable", lines }`. */
+/**
+ * True only when `.githooks/` and the config are byte for byte the base's (tracked or not): the replay
+ * would then be the very run already done. Any doubt (a failing git, a difference) means "replay".
+ */
+function unchanged(root, base) {
+  const paths = [".githooks/", ".drwil/ia-first.json"];
+  const diff = git(root, ["diff", "--quiet", base, "--", ...paths], true);
+  const extra = git(root, ["ls-files", "--others", "--exclude-standard", "--", ...paths], true);
+  return diff === "" && extra?.trim() === "";
+}
+
+/** Replays the checks; `{ status: "ok" | "skipped" | "fail" | "not-run" | "not-applicable", lines }`. */
 export function replay(root, { argv = [], env = process.env, stdio = "inherit" } = {}) {
   let T = TEXTS.fr;
   try {
@@ -114,6 +129,7 @@ export function replay(root, { argv = [], env = process.env, stdio = "inherit" }
     const base = found.trim();
     const hooks = git(root, ["ls-tree", "-r", "-z", "--name-only", base, "--", ".githooks/"]).split("\0").filter(Boolean);
     if (!hooks.length) return { status: "not-applicable", lines: [say(T.noHooks, ref)] };
+    if (unchanged(root, base)) return { status: "skipped", lines: [say(T.skipped, ref)] };
     const declared = declarations(root, base, cfg.dirs?.projects ?? "docs/projects");
     const baseCfg = git(root, ["show", `${base}:.drwil/ia-first.json`], true);
     const now = new Set(keys(cfg));
@@ -161,5 +177,5 @@ function overlay(root, base, files, run) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const r = replay(process.cwd(), { argv: process.argv.slice(2) });
   for (const line of r.lines) console.log(`[ia-first] ${line}`);
-  process.exitCode = r.status === "ok" || r.status === "not-applicable" ? 0 : 1;
+  process.exitCode = ["ok", "skipped", "not-applicable"].includes(r.status) ? 0 : 1;
 }

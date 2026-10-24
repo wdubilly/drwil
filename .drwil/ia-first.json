@@ -1387,6 +1387,18 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-123",
+      "name": "tests de QUA-123, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-123 \" .githooks/base-checks.test.mjs .githooks/run-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".github/workflows/**",
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "transitions": "human",

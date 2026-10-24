@@ -49,7 +49,7 @@ périmètre ; un hook ne doit jamais pouvoir être affaibli par une PR.
 ## Critères d'acceptation
 
 (contrats créés au registre au lancement, avec leur champ **Origine** :
-QUA-119 à QUA-122.)
+QUA-119 à QUA-123.)
 
 - Les contrôles du projet s'exécutent à la même exigence qu'avant, plus vite :
   chaque contrat garde son contrôle propre, un échec nomme toujours le contrat
@@ -62,6 +62,11 @@ QUA-119 à QUA-122.)
   branche (push et pull_request) ; un push sur la branche principale garde
   l'alerte de CI cassée et les noms de checks exigés par le ruleset de master
   (checks, kit-tests (<os>)) ne changent pas — QUA-121
+- Chaque contrôle n'est joué qu'une fois par PR en CI : le rejeu par la branche
+  principale est sauté, et dit, seulement quand hooks et liste de contrôles sont
+  identiques à la base ; un doute ou un écart rejoue ; la suite ne tourne
+  qu'une fois sur Node 22 dans le job checks, sans perte de garantie —
+  QUA-123
 - Le job checks dure au moins deux fois moins que les 3,4 min mesurées,
   relevé sur trois passages de CI consécutifs et consigné dans le journal
   [humain] — QUA-122
