@@ -50,6 +50,12 @@ files:
   - .claude/settings.json
   - packages/drwil/templates/common/base/docs/ia-first.md
   - docs/ia-first.md
+  - docs/intentions/releve-cache-lu-par-requete.md
+  - docs/intentions/recettes-qui-lisent-le-registre-entier.md
+  - docs/intentions/lecture-ciblee-forcee-autres-outils.md
+  - docs/intentions/decoupage-registre-et-journal.md
+  - docs/intentions/tests-dossiers-temporaires-non-supprimes.md
+  - docs/intentions/gardes-de-lecture-en-session-reelle.md
 -->
 
 (Dépôt ou livrable (QUA-018, périmètre explicite dépôt vs gabarit) : les deux,
@@ -202,6 +208,11 @@ hooks et skills de Claude Code ne changent pas) restent vrais tels quels.
   à la clôture). Cadrage élargi aux hooks, aux réglages Claude Code livrés et à
   `docs/ia-first.md` qui décrit les gardes. Critère d'acceptation
   ajouté avec le contrat qu'il cite, au premier commit du lot.
+
+- 2026-10-24 — Cadrage élargi à la clôture (agent, en rapport direct) : les
+  fiches d'intention qui bouclent les limites du chantier (`docs/intentions/`,
+  `[décision]` à l'index), dont le relevé de l'indicateur et la lecture
+  forcée pour les autres outils décidés par le demandeur.
 
 ## 5. Points à trancher
 
