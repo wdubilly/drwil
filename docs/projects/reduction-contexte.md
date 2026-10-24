@@ -37,6 +37,11 @@ files:
   - docs/projects/journal.md
   - .drwil/ia-first.json
   - packages/drwil/test/kit.test.mjs
+  - packages/drwil/templates/common/base/.githooks/doc-coherence.mjs
+  - .githooks/doc-coherence.mjs
+  - .githooks/doc-coherence.test.mjs
+  - packages/drwil/test/cycle.test.mjs
+  - packages/drwil/test/existing-code.test.mjs
 -->
 
 (Dépôt ou livrable (QUA-018, périmètre explicite dépôt vs gabarit) : les deux,
@@ -110,7 +115,10 @@ Les hooks ci-dessous changent, et le rejeu par la branche principale
 (QUA-113) garde leur version de la PR : `.githooks/glossary.mjs` (lecture par ID ou par
 chantier), `.githooks/run-checks.mjs` (sortie limitée aux échecs), `.githooks/close.mjs`
 (avertissements regroupés), `.githooks/state-texts.mjs` (invitation à une nouvelle
-session), `.githooks/consumption.mjs` (indicateur comparé).
+session), `.githooks/consumption.mjs` (indicateur comparé),
+`.githooks/doc-coherence.mjs` (`twinIntents` : doublons possibles regroupés
+par chemin cité, ce que `close.mjs --check` affiche ; QUA-077, une intention
+nouvelle qui cite un chemin déjà cité est signalée, reste vrai tel quel).
 
 ## 2. Hors périmètre
 
@@ -149,6 +157,14 @@ session), `.githooks/consumption.mjs` (indicateur comparé).
   contrôle `tests-qua-NNN` (QUA-033, un contrôle par règle), et
   `packages/drwil/test/kit.test.mjs`, qui porte la preuve de QUA-072 (les
   hooks et skills de Claude Code ne changent pas) où entre le sous-agent.
+- 2026-10-24 — Cadrage élargi en BUILD (agent, en rapport direct) :
+  `.githooks/doc-coherence.mjs` et son test, où naissent les
+  avertissements de doublon que `.githooks/close.mjs` affiche (ce fichier est à deux
+  lignes de son plafond de 400, QUA-001) ; les aides de test de
+  `packages/drwil/test/cycle.test.mjs` et
+  `packages/drwil/test/existing-code.test.mjs`, qui lisent la sortie de
+  `run-checks` et doivent lire aussi son rapport complet, sans quoi leurs
+  `doesNotMatch` deviendraient vides de sens.
 - 2026-10-24 — Qualité conservée (demandeur) : trois garde-fous ajoutés aux
   critères — liste courte de tous les contrats, avertissements comptés dans
   le résumé, verdict du sous-agent recopié mot pour mot et sans accès à
