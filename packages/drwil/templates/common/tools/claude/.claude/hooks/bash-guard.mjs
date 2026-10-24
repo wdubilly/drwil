@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 // Guard of Claude Code's shell commands (PreToolUse hook, Bash matcher).
 //
@@ -67,8 +67,9 @@ const HOOKS_OVERRIDE = /^(?:--config-env=)?core\.hookspath=/i;
 /**
  * Commands of a shell text, each one a list of words (quotes removed), and the quoted strings,
  * analysed again as commands (`sh -c "…"`). A linear scan, no regular expression on the whole text.
+ * `literal`: a `\` stays in the word, quoted or not (a Windows path, `C:\Users\…`).
  */
-function split(text) {
+function split(text, literal = false) {
   const commands = [[]];
   const quoted = [];
   let word = null;
@@ -86,7 +87,7 @@ function split(text) {
         quoted.push(inner);
         continue;
       }
-      const escaped = ch === "\\" && quote === '"' && i + 1 < text.length;
+      const escaped = ch === "\\" && !literal && quote === '"' && i + 1 < text.length;
       const add = escaped ? text[++i] : ch;
       word += add;
       inner += add;
@@ -94,7 +95,7 @@ function split(text) {
       quote = ch;
       inner = "";
       word = word ?? "";
-    } else if (ch === "\\" && i + 1 < text.length) word = (word ?? "") + text[++i];
+    } else if (ch === "\\" && !literal && i + 1 < text.length) word = (word ?? "") + text[++i];
     else if (" \t\r".includes(ch)) end();
     else if (";&|\n()`".includes(ch)) {
       end();
@@ -162,7 +163,8 @@ const WHOLE_READERS = new Set(["cat", "less", "more"]);
 /**
  * The guarded file (registry or journal, QUA-132) that a shell command reads whole with `cat`, `less`
  * or `more`, or null. A relative path matches by its end (the agent may have `cd`'d), an absolute
- * one must be the project's file.
+ * one must be the project's file. The words are read twice, `\` as an escape (POSIX shell) and as
+ * a character: an unquoted Windows path (`C:\Users\…`) would otherwise lose its separators.
  */
 export function wholeRead(command, root = ROOT) {
   if (!readGuard) return null;
@@ -172,7 +174,8 @@ export function wholeRead(command, root = ROOT) {
     const a = arg.replace(/\\/g, "/").replace(/^\.\//, "");
     return files.find((rel) => a === rel || a.endsWith(`/${rel}`)) ?? null;
   };
-  for (const words of split(String(command)).commands) {
+  const text = String(command);
+  for (const words of [...split(text).commands, ...split(text, true).commands]) {
     let i = 0;
     while (i < words.length && /^\w+=/.test(words[i])) i++;
     if (!WHOLE_READERS.has((words[i] ?? "").split("/").pop())) continue;
@@ -261,7 +264,7 @@ function main(input) {
 
 export { reason, main };
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   let input = "";
   process.stdin.on("data", (d) => {
     input += d;

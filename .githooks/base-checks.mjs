@@ -9,10 +9,10 @@
 // Self-contained (Node built-ins only): the CI runs the main branch's copy of this very file.
 // QUA-013: a main branch that cannot be found or read is "not run", never a success.
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 // Messages with `{0}` filled by `say` (strings, not functions: each one stays covered by any test).
 const TEXTS = {
@@ -174,7 +174,7 @@ function overlay(root, base, files, run) {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const r = replay(process.cwd(), { argv: process.argv.slice(2) });
   for (const line of r.lines) console.log(`[ia-first] ${line}`);
   process.exitCode = ["ok", "skipped", "not-applicable"].includes(r.status) ? 0 : 1;

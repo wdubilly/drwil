@@ -97,6 +97,12 @@ closing commit; the release renames this section to its version.
   judged. Committing the merge of the main branch into a workstream branch
   after a conflict was refused for the files the main branch brought
   (QUA-111).
+- Every shipped script of `.githooks/` and `.claude/hooks/` now runs when
+  called through a symbolic link (`/var` → `/private/var` on macOS): the
+  shell guard, the scope gate's commit trailer, the main-branch hook replay,
+  the PR watch and the release script compared URLs and silently did
+  nothing (QUA-044). The shell guard also reads an unquoted Windows path
+  (`C:\Users\…`) instead of losing its separators.
 
 ## 0.7.0 (2026-10-22)
 

@@ -845,6 +845,8 @@ test("QUA-132 lecture ciblée forcée : registre et journal refusés en entier (
     `less ${join(dir, "docs/contracts.md")}`,
     "npm test && more docs/contracts.md",
     "LANG=C /bin/cat ../../docs/contracts.md",
+    // Constaté en CI Windows (2026-10-24, PR #223) : `\` lu comme échappement effaçait les séparateurs.
+    `less ${join(dir, "docs/contracts.md").replace(/\//g, "\\")}`,
   ])
     assert.match(shell(c, join(dir, "src/profond")), /"permissionDecision":"deny".*QUA-132/, c);
   for (const c of [
@@ -1248,6 +1250,46 @@ test("QUA-044 : par un chemin qui passe par un lien symbolique, les hooks se lan
     }),
   );
   assert.match(garde.stdout, /"permissionDecision":"deny"/, "la garde de cadrage s'est lancée");
+  // Constaté en CI macOS (2026-10-24, PR #223) : le garde shell comparait encore des URL.
+  const shell = lancer(
+    ".claude/hooks/bash-guard.mjs",
+    [],
+    JSON.stringify({ tool_name: "Bash", tool_input: { command: "cat docs/contracts.md" } }),
+  );
+  assert.match(shell.stdout, /"permissionDecision":"deny"/, "le garde shell s'est lancé");
+});
+
+test("QUA-044 : tout point d'entrée livré compare les chemins réels, jamais une URL de process.argv[1]", () => {
+  // Récidive constatée le 2026-10-24 (PR #223) : la correction de 2026-10-17 n'avait pas été appliquée
+  // partout. Un point d'entrée qui compare des URL, ou un chemin réel à un chemin non résolu, ne se
+  // lance pas par un lien symbolique (/var → /private/var sur macOS) : il ne fait rien, sans erreur.
+  const entree = (ligne) => /process\.argv\[1\]/.test(ligne) && /import\.meta\.url/.test(ligne);
+  const sain = (ligne) =>
+    ligne.includes("realpathSync(process.argv[1])") &&
+    ligne.includes("realpathSync(fileURLToPath(import.meta.url))") &&
+    !/pathToFileURL\(process\.argv\[1\]\)/.test(ligne);
+  assert.ok(!sain("if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {"), "le détecteur voit les URL");
+  assert.ok(!sain("if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {"), "et un seul côté résolu");
+  const racine = fileURLToPath(new URL("../templates/", import.meta.url));
+  const fautifs = [];
+  let points = 0;
+  const parcourir = (dossier) => {
+    for (const e of readdirSync(dossier, { withFileTypes: true })) {
+      const chemin = join(dossier, e.name);
+      if (e.isDirectory()) parcourir(chemin);
+      else if (e.name.endsWith(".mjs"))
+        readFileSync(chemin, "utf8")
+          .split("\n")
+          .forEach((ligne, i) => {
+            if (!entree(ligne)) return;
+            points++;
+            if (!sain(ligne)) fautifs.push(`${chemin.slice(racine.length)}:${i + 1}`);
+          });
+    }
+  };
+  parcourir(racine);
+  assert.ok(points >= 20, `points d'entrée trouvés : ${points}`);
+  assert.deepEqual(fautifs, [], "points d'entrée qui ne comparent pas les chemins réels des deux côtés");
 });
 
 test("QUA-037 : la skill de lancement dit un auto-merge refusé par le dépôt, reste en CLOSING et ne le dit jamais programmé", async () => {
