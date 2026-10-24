@@ -3012,5 +3012,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   projets adoptés — `docs/intentions/ci-livree-aux-projets-non-mis-a-jour.md` ;
   échec non expliqué de QUA-004 —
   `docs/intentions/alea-couverture-qua-004-au-pre-push.md` ; relevé hooks
-  inchangés — `docs/intentions/releve-duree-checks-hooks-inchanges.md`.
+  inchangés — `docs/intentions/releve-duree-checks-hooks-inchanges.md` ; les
+  objectifs de durée de CI en indicateur suivi plutôt qu'en contrat attesté —
+  `docs/intentions/objectifs-de-duree-ci-en-indicateur.md`.
 - **Clôturé par** : la branche `workstream/acceleration-ci` (PR #221).

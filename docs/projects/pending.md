@@ -450,6 +450,9 @@ une décision du demandeur.
   même chantier) — `docs/intentions/ci-livree-aux-projets-non-mis-a-jour.md`.
 - [ ] [décision] Un échec non expliqué de QUA-004 au pre-push (limite du même
   chantier) — `docs/intentions/alea-couverture-qua-004-au-pre-push.md`.
+- [ ] [décision] Les objectifs de durée de CI en indicateur suivi, pas en
+  contrat attesté (limite du même chantier) —
+  `docs/intentions/objectifs-de-duree-ci-en-indicateur.md`.
 - [ ] [IA] Relever la durée du job `checks` hooks inchangés, sur la première
   PR ordinaire après fusion (limite du même chantier) —
   `docs/intentions/releve-duree-checks-hooks-inchanges.md`.
