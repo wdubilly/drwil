@@ -2,9 +2,10 @@
 
 **Statut** : proposée le 2026-10-21 — défaut de gouvernance vécu à la clôture
 du chantier « des critères et des preuves qui survivent à la clôture » ;
-cadrée le 2026-10-23 dans `docs/projects/reouvrir-apres-cloture.md` (réouverture
-sur la branche, par l'agent, bornée), qui tranche la première et la troisième
-question ; reste ici la deuxième (attendre CodeQL avant la clôture).
+première et troisième questions tranchées et livrées le 2026-10-24
+(`node .githooks/state.mjs reopen`, QUA-116 à QUA-118 ; journal du
+2026-10-24, « Rouvrir un chantier dont la PR révèle un défaut après la
+clôture ») ; reste ici la deuxième (attendre CodeQL avant la clôture).
 
 ## Besoin
 

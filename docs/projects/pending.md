@@ -409,10 +409,15 @@ une décision du demandeur.
 - [ ] [décision] Rattraper, ou assumer, l'absence de preuve de clôture pour les
   chantiers clos avant la règle (limite du chantier du 2026-10-21) —
   `docs/intentions/preuve-des-chantiers-deja-clos.md`.
-- [ ] [décision] Corriger un défaut révélé après la clôture, quand plus aucune
-  activité ne ramène en BUILD (vécu le 2026-10-21 ; cadrée le 2026-10-23,
-  fiche listée sous « Ensuite » ; reste l'attente de CodeQL) —
-  `docs/intentions/defaut-revele-apres-la-cloture.md`.
+- [ ] [décision] Attendre le verdict de CodeQL avant la clôture (vécu le
+  2026-10-21 ; la réouverture est livrée le 2026-10-24, reste cette
+  question) — `docs/intentions/defaut-revele-apres-la-cloture.md`.
+- [ ] [décision] Reprogrammer, ou non, la fusion automatique quand une
+  réouverture échoue après l'avoir annulée (limite du chantier du
+  2026-10-24) — `docs/intentions/reouverture-fusion-annulee-apres-echec.md`.
+- [ ] [décision] Éprouver la réouverture sur une vraie PR et sous Windows
+  (limite du chantier du 2026-10-24) —
+  `docs/intentions/reouverture-eprouvee-en-reel.md`.
 - [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
   2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
@@ -509,8 +514,8 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 `docs/projects/journal.md`) ;
 2. CODEOWNERS protégeant le registre sous son nom actuel (fait le
 2026-10-24, voir `docs/projects/journal.md`) ;
-3. `docs/projects/reouvrir-apres-cloture.md` (touche aussi la barrière :
-après le 2) ; 4. les contournements restants fermés ou assumés (fait le
+3. la réouverture d'un chantier dont la PR révèle un défaut (fait le
+2026-10-24, voir `docs/projects/journal.md`) ; 4. les contournements restants fermés ou assumés (fait le
 2026-10-24, voir `docs/projects/journal.md`) ;
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
@@ -518,9 +523,6 @@ actifs » s'appuie sur le 4).
 - [ ] [IA] [P2] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
-- [ ] [IA] [P1] Rouvrir un chantier dont la PR révèle un défaut après la
-  clôture (CodeQL le 2026-10-21, CI rouge sur la PR #213 ; cadré le
-  2026-10-23) — `docs/projects/reouvrir-apres-cloture.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
