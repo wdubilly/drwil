@@ -1,6 +1,6 @@
 # Intention : découper `.githooks/close.mjs`, arrivé au plafond de lignes
 
-**Statut** : proposée le 2026-10-25 — limite constatée à la clôture du chantier
+**Statut** : cadrée le 2026-10-25 dans `docs/projects/decouper-close.md` — limite constatée à la clôture du chantier
 « un hook modifié se déclare avant la clôture, et le retour en SCOPING attend
 la CI » (journal du 2026-10-25).
 
@@ -22,6 +22,7 @@ pèserait sur un chantier qui n'en parle pas.
 
 ## Questions à trancher
 
-- [décision] Découper maintenant (par exemple les branches fusionnées dans
-  leur propre module), ou au prochain chantier qui touche la clôture ? Un
-  nouveau module dans `.githooks/` est un hook modifié à déclarer (QUA-137).
+Le demandeur a choisi le 2026-10-25 un chantier dédié maintenant, livré
+aux projets et installé dans le dépôt, sans changement de comportement.
+Déclarations et critères : `docs/projects/decouper-close.md`.
+Aucun point restant à trancher pour ce chantier.
