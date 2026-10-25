@@ -9,6 +9,8 @@
 files:
   - packages/drwil/templates/common/base/.githooks/engine.mjs
   - .githooks/engine.mjs
+  - packages/drwil/templates/common/base/.githooks/fingerprints.mjs
+  - .githooks/fingerprints.mjs
   - .githooks/engine.test.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
   - .githooks/run-checks.mjs
