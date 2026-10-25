@@ -70,7 +70,7 @@ réécriture de l'adresse e-mail des commits, recommence à la PR #1.
   pour confirmer, fichier modifié depuis l'installation jamais supprimé
   automatiquement) et le nettoyage automatique des fichiers obsolètes de
   `.githooks/` d'une ancienne version du kit (point 3 de
-  `suites-kit-portable.md`, traité avec ce chantier). `docs/projects/`,
+  l'intention « suites-kit-portable » (abandonnée le 2026-10-25), traité avec ce chantier). `docs/projects/`,
   `docs/intentions/`, `docs/recipes/` (et équivalents anglais) jamais
   touchés dans les deux cas.
 - **Clôturé par** : PR #6.
@@ -1049,7 +1049,7 @@ l'index ; texte intégral dans l'historique git
 - **Limites connues** : sur ce dépôt, installé par `installer-depot` et non
   par `init`, `doctor` avertit d'un manifeste et d'une version absents, avec
   un conseil qui ne s'y applique pas —
-  `docs/intentions/doctor-sur-le-depot-drwil.md`. Le cadrage oubliait
+  `docs/intentions/petits-defauts.md` (ex-« doctor-sur-le-depot-drwil », regroupée le 2026-10-25). Le cadrage oubliait
   `docs/contracts.md` (un élargissement), déjà couvert par
   l'intention « cadrage complet » (réalisée : « Un cadrage complet du premier coup », QUA-035).
 - **Clôturé par** : PR à venir.
@@ -1065,7 +1065,7 @@ l'index ; texte intégral dans l'historique git
   `catalogue:SEC-013` ; le registre ne change pas. Lecture et comparaison
   dans `.githooks/contracts.mjs`, `check-docs` étant au plafond de QUA-001.
 - **Limites connues** : aucune nouvelle ; la double forme du préfixe reste
-  en question dans `docs/intentions/prefixe-catalogue.md`.
+  en question dans `docs/intentions/petits-defauts.md` (ex-« prefixe-catalogue », regroupée le 2026-10-25).
 - **Clôturé par** : PR à venir.
 
 ## 2026-10-16 — Lien contrat ↔ test, échec attribué à la bonne règle
@@ -1334,9 +1334,9 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Intention d'origine** (`docs/intentions/fabrique-autonome.md`) :
   premier pas réalisé, mise à jour (ligne « Revu le »), gardée ouverte.
 - **Limites connues** : la file ne se décide qu'avec Claude Code
-  (`docs/intentions/file-pour-copilot.md`) ; l'arrêt au premier blocage et
+  (l'intention « file-pour-copilot » (couverte, retirée le 2026-10-25)) ; l'arrêt au premier blocage et
   les comptes rendus sont des consignes à l'agent, pas une mécanique
-  vérifiée (`docs/intentions/arret-de-file-verifie.md`). En route, un
+  vérifiée (`docs/intentions/cloture-et-attestations.md` (ex-« arret-de-file-verifie », regroupée le 2026-10-25)). En route, un
   `git checkout` réflexe sur `docs/ia-first.md` a annulé une copie
   régénérée (rattrapée avant le commit) : ce réflexe n'a plus lieu d'être.
 - **Clôturé par** : PR #109.
@@ -1376,7 +1376,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   verify a refusé `PASS` tant qu'un critère de la fiche restait non lié.
 - **Intention d'origine** : aucune (demande directe).
 - **Limites connues** : l'injection automatique n'existe que pour Claude
-  Code (`docs/intentions/glossaire-autres-agents.md`) ; les messages de
+  Code (`docs/intentions/compatibilite-des-outils.md` (ex-« glossaire-autres-agents », regroupée le 2026-10-25)) ; les messages de
   `check-docs` (plafond de QUA-001) ne sont pas annotés.
 - **Clôturé par** : PR #111.
 
@@ -1890,7 +1890,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   couverte : résumée ici et retirée.
 - **Limites connues** : le feu vert de publication n'est qu'une phrase de
   la demande, ni gardé ni effacé par l'outil —
-  `docs/intentions/feu-vert-publication-enregistre.md`.
+  `docs/intentions/cloture-et-attestations.md` (ex-« feu-vert-publication-enregistre », regroupée le 2026-10-25).
 - **Clôturé par** : la PR #157 (branche `chantier/date-gardee-feu-vert`).
 
 ## 2026-10-18 — Lever l'alerte CodeQL de la PR 157 (correction intercalée)
@@ -1951,11 +1951,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : branches fusionnées par squash non supprimées —
   intention couverte et retirée (journal du 2026-10-19) ; neuf citations de
   fiche restées dans du code non modifié, hors cadrage —
-  `docs/intentions/citations-de-fiche-heritees.md` ; commentaires reconnus
+  `docs/intentions/petits-defauts.md` (ex-« citations-de-fiche-heritees », regroupée le 2026-10-25) ; commentaires reconnus
   par une heuristique de ligne —
-  `docs/intentions/commentaires-reconnus-par-heuristique.md` ; le gain
+  l'intention « commentaires-reconnus-par-heuristique » (abandonnée le 2026-10-25) ; le gain
   reste à mesurer après le détour —
-  `docs/intentions/mesurer-gain-cloture-allegee.md`.
+  l'intention « mesurer-gain-cloture-allegee » (abandonnée le 2026-10-25).
 - **Clôturé par** : la PR #158 (branche `chantier/cloture-allegee`).
 
 ## 2026-10-18 — La file suit l'ordre du sondage (0.6.5, 2 sur 4)
@@ -2016,10 +2016,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   2026-10-19) ; tout changement du registre des contrats, même un ajout,
   demande le oui de l'humain — intention couverte et retirée (journal du
   2026-10-19, « un contrat ajouté pendant un détour ») ; `package.json` n'est pas
-  compté parmi les seuils — `docs/intentions/seuils-dans-package-json.md` ;
+  compté parmi les seuils — `docs/intentions/petits-defauts.md` (ex-« seuils-dans-package-json », regroupée le 2026-10-25) ;
   gain de la clôture allégée non mesurable par chantier entier
   (comparaison faite, sans conclusion) —
-  `docs/intentions/mesurer-gain-cloture-allegee.md` (mise à jour).
+  l'intention « mesurer-gain-cloture-allegee » (abandonnée le 2026-10-25) (mise à jour).
 - **Consommation** : 4,31 M tokens pondérés, 178 requêtes, 55 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR #160 (branche `chantier/detour`).
@@ -2054,12 +2054,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   sans quoi un projet qui active le module ne pouvait pas commiter ses
   nouveaux scripts.
 - **Intention d'origine** : couverte, résumée ici et retirée ; la version
-  HTML, hors périmètre, devient `docs/intentions/fiche-de-recette-html.md`.
+  HTML, hors périmètre, devient l'intention « fiche-de-recette-html » (abandonnée le 2026-10-25).
 - **Limites connues** : rien publié en réel (candidate, verdict, promotion
   éprouvés contre un gh simulé) — intention éprouvée le 2026-10-19 sur la
   0.6.5, résumée au journal (« une fiche de recette juste ») et retirée ;
   essais en réel reconnus par une liste de mots —
-  `docs/intentions/essai-reel-reconnu-par-mots.md`.
+  l'intention « essai-reel-reconnu-par-mots » (abandonnée le 2026-10-25).
 - **Consommation** : 3,93 M tokens pondérés, 131 requêtes, 59 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR #162 (branche `chantier/fiche-de-recette`).
@@ -2186,12 +2186,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   squash » : entièrement couverte (ménage et reprise, décision du
   2026-10-19 « la PR fusionnée via gh fait foi »), résumée ici et retirée.
 - **Limites connues** : le texte de QUA-048 cite encore `git branch -d` —
-  `docs/intentions/qua-048-aligne-sur-squash.md` ; hors de GitHub, et
+  `docs/intentions/petits-defauts.md` (ex-« qua-048-aligne-sur-squash », regroupée le 2026-10-25) ; hors de GitHub, et
   au-delà des 200 PR fusionnées les plus récentes, une branche fusionnée
-  par squash est gardée — `docs/intentions/squash-hors-github.md`.
+  par squash est gardée — l'intention « squash-hors-github » (abandonnée le 2026-10-25).
   Écart relevé : `close.mjs --check` ne signale pas les citations de
   l'intention d'origine retirée —
-  `docs/intentions/cloture-signale-intention-retiree.md`.
+  `docs/intentions/petits-defauts.md` (ex-« cloture-signale-intention-retiree », regroupée le 2026-10-25).
 - **Consommation** : 0,59 M tokens pondérés, 52 requêtes, 21 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR de la branche `chantier/stab-squash`.
@@ -2221,7 +2221,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   libre, modification soumise au oui »), résumée ici et retirée.
 - **Limites connues** : à l'ouverture d'un détour, l'annonce « le oui
   sera demandé » cite encore le registre sans nuance —
-  `docs/intentions/annonce-oui-registre-detour.md` ; un test ajouté à un
+  `docs/intentions/petits-defauts.md` (ex-« annonce-oui-registre-detour », regroupée le 2026-10-25) ; un test ajouté à un
   contrat existant (ligne « Tests ») reste une modification soumise au
   oui (décision : seul un contrat nouveau est un ajout).
 - **Consommation** : 0,55 M tokens pondérés, 37 requêtes, 25 minutes
@@ -2258,9 +2258,9 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   tient de bout en bout ; ses trois défauts de fiche sont corrigés ici.
 - **Limites connues** : une fiche fusionnée par squash est encore lue
   dans sa version du cadrage —
-  `docs/intentions/fiche-recette-apres-squash.md` ; une limite qui cite
+  `docs/intentions/cloture-et-attestations.md` (ex-« fiche-recette-apres-squash », regroupée le 2026-10-25) ; une limite qui cite
   « en réel » sans parler d'un essai à faire devient un point « pas encore
-  essayé en réel » — `docs/intentions/essai-reel-reconnu-par-mots.md`
+  essayé en réel » — l'intention « essai-reel-reconnu-par-mots » (abandonnée le 2026-10-25)
   (mise à jour).
 - **Consommation** : 0,47 M tokens pondérés, 38 requêtes, 17 minutes
   (`.drwil/usage.jsonl`).
@@ -2340,7 +2340,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (elle débordait avec la matrice).
 - **Limites connues** : le dépassement de 30 s en session interactive n'est
   pas reproduit, sa cause n'est pas établie
-  (`docs/intentions/depassement-delai-copilot-interactif.md`) ; après la
+  (l'intention « depassement-delai-copilot-interactif » (abandonnée le 2026-10-25)) ; après la
   fusion, l'état reste en CLOSING
   (le journal du 2026-10-20 (0.6.8)).
 - **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI,
@@ -2373,9 +2373,9 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   réels séparés (le quota gratuit du modèle fait échouer des passages entiers
   du banc : 429, 503) ; attestation humaine en attente.
 - **Limites connues** : pas de commandes `/drwil-*` ni de sondage sous Gemini
-  (`docs/intentions/skills-et-sondage-sous-gemini.md`) ; un passage complet
+  (`docs/intentions/compatibilite-des-outils.md` (ex-« skills-et-sondage-sous-gemini », regroupée le 2026-10-25)) ; un passage complet
   du banc reste à obtenir de façon stable
-  (`docs/intentions/banc-gemini-quota.md`).
+  (`docs/intentions/compatibilite-des-outils.md` (ex-« banc-gemini-quota », regroupée le 2026-10-25)).
 - **Consommation** : non mesurée — le chantier a été mené sous Copilot CLI.
 - **Clôturé par** : la branche `chantier/compat-gemini`.
 
@@ -2411,9 +2411,9 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (QUA-054, seule une candidate approuvée est promue), retéléchargé et
   vérifié identique.
 - **Limites connues** : celles de la fiche de recette, déjà portées par leurs
-  intentions (`docs/intentions/skills-et-sondage-sous-gemini.md`,
-  `docs/intentions/banc-gemini-quota.md`,
-  `docs/intentions/depassement-delai-copilot-interactif.md`,
+  intentions (`docs/intentions/compatibilite-des-outils.md` (ex-« skills-et-sondage-sous-gemini », regroupée le 2026-10-25),
+  `docs/intentions/compatibilite-des-outils.md` (ex-« banc-gemini-quota », regroupée le 2026-10-25),
+  l'intention « depassement-delai-copilot-interactif » (abandonnée le 2026-10-25),
   le journal du 2026-10-20 (0.6.8)). Observé : après
   une candidate, `package.json` et les liens du projet équipé pointent vers la
   dernière release définitive (v0.6.6) alors que le fichier d'installation note le
@@ -2433,7 +2433,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `.githooks/close.test.mjs`, `packages/drwil/test/kit.test.mjs`) ; essai
   réel sous Copilot CLI attesté par l'humain (QUA-069).
 - **Limites connues** : la file menée par sous-agents avec les autres outils
-  reste portée par `docs/intentions/file-sous-agents-autres-outils.md` ;
+  reste portée par `docs/intentions/compatibilite-des-outils.md` (ex-« file-sous-agents-autres-outils », regroupée le 2026-10-25) ;
   la fusion `gh` n'a pas été vue sur une PR squash réelle.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `compat-copilot-enchaine`.
@@ -2459,7 +2459,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   réponse « Automatic merge »).
 - **Limites connues** : la détection de la PR de clôture fusionnée n'a pas
   encore servi sur une vraie PR ; la file pour les autres outils reste
-  portée par `docs/intentions/file-sous-agents-autres-outils.md`.
+  portée par `docs/intentions/compatibilite-des-outils.md` (ex-« file-sous-agents-autres-outils », regroupée le 2026-10-25).
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `cloture-release-0-6-8`.
 
@@ -2478,7 +2478,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   l'humain (QUA-048).
 - **Limites connues** : l'essai sous Claude Code est reporté faute de crédit ;
   les commandes `/drwil-*` sous Gemini CLI restent portées par
-  `docs/intentions/skills-et-sondage-sous-gemini.md`. Les intentions
+  `docs/intentions/compatibilite-des-outils.md` (ex-« skills-et-sondage-sous-gemini », regroupée le 2026-10-25). Les intentions
   `cloture-chemin-guide`, `critere-humain-message-clair` et `note-a-tout-moment`,
   entièrement couvertes, sont retirées.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
@@ -2524,7 +2524,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   par l'humain.
 - **Limites connues** : un intitulé d'index devenu faux et un paragraphe de
   version qui ne suit plus ses cases ne sont pas détectés (non détectables de
-  façon sûre) : intention `docs/intentions/intitule-d-index-devenu-faux.md`.
+  façon sûre) : intention `docs/intentions/petits-defauts.md` (ex-« intitule-d-index-devenu-faux », regroupée le 2026-10-25).
   Une ligne d'index commune à la fiche et à son intention ne se retire pas
   automatiquement : à retirer à la main.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
@@ -2550,7 +2550,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   mécaniques livrée au kit ni par le README du module, hors du cadrage (la
   fiche des mécaniques du dépôt le cite, ajouté à la clôture) : le test du
   kit contourne le manque dans son projet de test
-  (intention `docs/intentions/recette-note-dans-la-fiche-des-mecaniques.md`).
+  (intention `docs/intentions/petits-defauts.md` (ex-« recette-note-dans-la-fiche-des-mecaniques », regroupée le 2026-10-25)).
   Les notes des versions déjà publiées ne sont pas rétro-écrites (hors
   périmètre). Aucune release réelle n'a été jouée : tests sur dépôts
   temporaires, origine nu local et `gh` simulé.
@@ -2580,7 +2580,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (nouveau module, option de la CLI) par un commit qui ne touche que la fiche.
 - **Limites connues** : aucun contrat attesté du dépôt ne déclare `**Couvre**`
   (hors périmètre : cela exige des réattestations humaines) — intention
-  `docs/intentions/couverture-des-contrats-attestes.md`. Un changement de
+  `docs/intentions/cloture-et-attestations.md` (ex-« couverture-des-contrats-attestes », regroupée le 2026-10-25). Un changement de
   forme pur fait tomber l'attestation (aucun moyen sûr de le distinguer).
   Le test rouge du scénario S6 n'a pas été commité seul (les hooks rejouent
   les tests à chaque commit de code) : il est commité vert avec le mécanisme.
@@ -2621,13 +2621,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   journal de consommation, tous écrits en CLOSING pour le commit de clôture.
 - **Limites connues** : le dossier des preuves garde son nom français dans un
   gabarit anglais, seul le réglage `dirs.proofs` le change —
-  `docs/intentions/nom-du-dossier-des-preuves.md`. Les chantiers clos avant
+  `docs/intentions/petits-defauts.md` (ex-« nom-du-dossier-des-preuves », regroupée le 2026-10-25). Les chantiers clos avant
   cette règle n'ont pas de preuve, et aucune n'est écrite après coup (hors
-  périmètre) — `docs/intentions/preuve-des-chantiers-deja-clos.md`. Les trois
+  périmètre) — l'intention « preuve-des-chantiers-deja-clos » (abandonnée le 2026-10-25). Les trois
   contrats créés ne déclarent pas de `**Couvre**`, comme les autres contrats du
   dépôt : la colonne d'empreinte de cette première preuve affiche « — », le
   mécanisme l'écrit dès qu'un contrat déclare sa couverture —
-  `docs/intentions/couverture-des-contrats-attestes.md`.
+  `docs/intentions/cloture-et-attestations.md` (ex-« couverture-des-contrats-attestes », regroupée le 2026-10-25).
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
 - **Clôturé par** : la branche `cadrage-criteres-durables`.
 
@@ -2668,21 +2668,21 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/catalogue-cycle-de-vie.md` (fiche 2, profils).
   Preuve de clôture : `docs/preuves/garanties-obligatoires-adoption.md`.
 - **Limites connues** : `init` n'impose pas les garanties, il renvoie vers
-  `drwil guarantees` — `docs/intentions/init-impose-les-garanties.md`. Les
+  `drwil guarantees` — `docs/intentions/garanties-la-suite.md` (ex-« init-impose-les-garanties », regroupée le 2026-10-25). Les
   commits de code d'une couche ne sont pas bloqués tant que sa fiche de
-  garantie existe — `docs/intentions/commits-bloques-par-une-garantie.md`.
+  garantie existe — `docs/intentions/garanties-la-suite.md` (ex-« commits-bloques-par-une-garantie », regroupée le 2026-10-25).
   `--no-verify` n'est pas détecté par `verify`, seule la CI le rattrape —
-  `docs/intentions/no-verify-detecte-par-verify.md`. `verify` échoue tant que
+  `docs/intentions/garanties-la-suite.md` (ex-« no-verify-detecte-par-verify », regroupée le 2026-10-25). `verify` échoue tant que
   la garantie n'est pas tenue, pas du seul fait que la fiche existe :
   interprétation validée par le demandeur le 2026-10-22 (sinon la fiche ne
   pourrait jamais se clore, la clôture exigeant un verify PASS). JVM : ni
   mesure de la couverture actuelle ni cliquet remonté automatiquement —
-  `docs/intentions/couverture-jvm-mesuree.md`. Le dépôt drwil n'est pas
+  l'intention « couverture-jvm-mesuree » (abandonnée le 2026-10-25). Le dépôt drwil n'est pas
   soumis aux garanties et son `docs/features.md` est encore le squelette, ce
   qui fera refuser la prochaine release (QUA-098) —
-  `docs/intentions/garanties-sur-le-depot-drwil.md`. La sortie `--agent`
+  `docs/intentions/garanties-la-suite.md` (ex-« garanties-sur-le-depot-drwil », regroupée le 2026-10-25). La sortie `--agent`
   range les garanties non tenues sous « Registry errors » —
-  `docs/intentions/garanties-dans-la-sortie-agent.md`.
+  `docs/intentions/garanties-la-suite.md` (ex-« garanties-dans-la-sortie-agent », regroupée le 2026-10-25).
 - **Consommation** : 4,25 M tokens pondérés (`.drwil/usage.jsonl`).
 - **Clôturé par** : la branche `workstream/garanties-obligatoires-adoption`
   (PR #203).
@@ -2816,11 +2816,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `init` rattache le code, seulement le code indexé. Preuve de clôture :
   `docs/preuves/premier-commit-avant-adoption.md`.
 - **Limites connues** : l'aperçu `init --dry-run` n'annonce pas le
-  rattachement — `docs/intentions/apercu-init-code-existant.md` ; une carte
+  rattachement — `docs/intentions/petits-defauts.md` (ex-« apercu-init-code-existant », regroupée le 2026-10-25) ; une carte
   préexistante et un chemin qu'un bloc `scope` ne peut pas nommer restent à
-  traiter à la main — `docs/intentions/code-existant-non-rattache.md` ;
+  traiter à la main — `docs/intentions/petits-defauts.md` (ex-« code-existant-non-rattache », regroupée le 2026-10-25) ;
   « pas encore de code » affiché à un projet sans pile détectée qui en a —
-  `docs/intentions/message-sans-couche-code-existant.md` ; une seconde
+  `docs/intentions/petits-defauts.md` (ex-« message-sans-couche-code-existant », regroupée le 2026-10-25) ; une seconde
   installation signale la carte comme dérivée du gabarit, comme toute carte
   complétée ; la justesse de la recette reste un jugement humain (QUA-041).
 - **Clôturé par** : la branche `workstream/premier-commit-avant-adoption`.
@@ -2904,7 +2904,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/preuves/codeowners-registre.md`.
 - **Limites connues** : le contrôle ne juge que les chemins, pas les
   propriétaires ni les erreurs que GitHub relève —
-  `docs/intentions/codeowners-erreurs-github.md`.
+  `docs/intentions/contournements-restants.md` (ex-« codeowners-erreurs-github », regroupée le 2026-10-25).
 - **Clôturé par** : la branche `workstream/codeowners-registre`.
 
 ## 2026-10-24 — Les contournements restants fermés ou assumés
@@ -2937,15 +2937,15 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   le clone superficiel et l'agent qui élargit son cadrage. Preuve de
   clôture : `docs/preuves/contournements-completes.md`.
 - **Limites connues** : une PR peut encore retirer l'étape de rejeu du
-  workflow lui-même — `docs/intentions/rejeu-retirable-du-workflow.md` ;
+  workflow lui-même — `docs/intentions/contournements-restants.md` (ex-« rejeu-retirable-du-workflow », regroupée le 2026-10-25) ;
   un contrôle redéfini sous le même identifiant n'est pas comparé —
-  `docs/intentions/controle-redefini-meme-nom.md` ; la garde shell juge
+  `docs/intentions/contournements-restants.md` (ex-« controle-redefini-meme-nom », regroupée le 2026-10-25) ; la garde shell juge
   le texte, trompée par des variables et trop stricte sur un texte cité
-  (heredoc refusé) — `docs/intentions/garde-shell-par-le-texte.md` ; le
+  (heredoc refusé) — `docs/intentions/contournements-restants.md` (ex-« garde-shell-par-le-texte », regroupée le 2026-10-25) ; le
   rejeu double environ la durée du job `checks` (~3 min de plus) —
   l'intention sur la durée du rejeu (traitée et retirée le 2026-10-24) ; les tests de la garde shell
   sont dans `packages/drwil/test/kit.test.mjs` —
-  `docs/intentions/tests-garde-shell-a-leur-place.md`.
+  `docs/intentions/contournements-restants.md` (ex-« tests-garde-shell-a-leur-place », regroupée le 2026-10-25).
 - **Clôturé par** : la branche `workstream/contournements-completes`
   (PR #219).
 
@@ -2974,14 +2974,14 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   par la branche principale (QUA-113) échouait faute de déclaration des
   hooks modifiés ; la fiche les déclare maintenant dans « Contrats
   modifiés ». Intention d'origine mise à jour
-  (`docs/intentions/defaut-revele-apres-la-cloture.md`) : y reste l'attente
+  (`docs/intentions/cloture-et-attestations.md` (ex-« defaut-revele-apres-la-cloture », regroupée le 2026-10-25)) : y reste l'attente
   de CodeQL avant la clôture. Preuve de clôture :
   `docs/preuves/reouvrir-apres-cloture.md`.
 - **Limites connues** : une réouverture refusée après l'annulation de la
   fusion automatique la laisse annulée —
-  `docs/intentions/reouverture-fusion-annulee-apres-echec.md` ; pas encore
+  `docs/intentions/cloture-et-attestations.md` (ex-« reouverture-fusion-annulee-apres-echec », regroupée le 2026-10-25) ; pas encore
   essayée sur une vraie PR, cycle complet sauté sous Windows —
-  `docs/intentions/reouverture-eprouvee-en-reel.md`.
+  `docs/intentions/cloture-et-attestations.md` (ex-« reouverture-eprouvee-en-reel », regroupée le 2026-10-25).
 - **Clôturé par** : la branche `workstream/reouvrir-apres-cloture`
   (PR #220).
 
@@ -3006,18 +3006,18 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   4m37 sur trois passages (deux sur trois sous 3m55). Hooks inchangés : pas
   encore relevé (le saut n'agit qu'après fusion).
 - **Limites connues** : tests de `.githooks/` plus joués sur Node 24 —
-  `docs/intentions/tests-des-hooks-sur-node-24.md` ; `checks-self-test` et
+  `docs/intentions/suivi-ci-et-contexte.md` (ex-« tests-des-hooks-sur-node-24 », regroupée le 2026-10-25) ; `checks-self-test` et
   `couverture-hooks` non départagés —
-  `docs/intentions/checks-self-test-contre-couverture-hooks.md` ; gain pour les
-  projets adoptés — `docs/intentions/ci-livree-aux-projets-non-mis-a-jour.md` ;
+  `docs/intentions/suivi-ci-et-contexte.md` (ex-« checks-self-test-contre-couverture-hooks », regroupée le 2026-10-25) ; gain pour les
+  projets adoptés — `docs/intentions/suivi-ci-et-contexte.md` (ex-« ci-livree-aux-projets-non-mis-a-jour », regroupée le 2026-10-25) ;
   échec non expliqué de QUA-004 —
-  `docs/intentions/alea-couverture-qua-004-au-pre-push.md` ; relevé hooks
-  inchangés — `docs/intentions/releve-duree-checks-hooks-inchanges.md` ; les
+  `docs/intentions/suivi-ci-et-contexte.md` (ex-« alea-couverture-qua-004-au-pre-push », regroupée le 2026-10-25) ; relevé hooks
+  inchangés — `docs/intentions/suivi-ci-et-contexte.md` (ex-« releve-duree-checks-hooks-inchanges », regroupée le 2026-10-25) ; les
   objectifs de durée de CI en indicateur suivi plutôt qu'en contrat attesté —
-  `docs/intentions/objectifs-de-duree-ci-en-indicateur.md` ; une attestation
+  `docs/intentions/suivi-ci-et-contexte.md` (ex-« objectifs-de-duree-ci-en-indicateur », regroupée le 2026-10-25) ; une attestation
   tombe quand un contrôle change de forme sans changer d'effet (six
   attestations périmées par les champs `build` / `needsBuild`) —
-  `docs/intentions/attestation-sur-l-effet-du-controle.md`.
+  `docs/intentions/cloture-et-attestations.md` (ex-« attestation-sur-l-effet-du-controle », regroupée le 2026-10-25).
 - **Preuve de clôture** : `docs/preuves/acceleration-ci.md`.
 - **Clôturé par** : la branche `workstream/acceleration-ci` (PR #221).
 
@@ -3070,12 +3070,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   principale (QUA-113) : « Contrats modifiés » cite désormais un hook par
   puce.
 - **Limites connues** : relevé de l'indicateur —
-  `docs/intentions/releve-cache-lu-par-requete.md` ; recettes et skills qui
+  `docs/intentions/suivi-ci-et-contexte.md` (ex-« releve-cache-lu-par-requete », regroupée le 2026-10-25) ; recettes et skills qui
   renvoient encore au registre entier —
-  `docs/intentions/recettes-qui-lisent-le-registre-entier.md` ; lecture
+  `docs/intentions/petits-defauts.md` (ex-« recettes-qui-lisent-le-registre-entier », regroupée le 2026-10-25) ; lecture
   forcée pour Gemini CLI, Copilot CLI, Codex et Cursor —
-  `docs/intentions/lecture-ciblee-forcee-autres-outils.md` ; découpage du
-  registre et du journal — `docs/intentions/decoupage-registre-et-journal.md` ;
+  `docs/intentions/compatibilite-des-outils.md` (ex-« lecture-ciblee-forcee-autres-outils », regroupée le 2026-10-25) ; découpage du
+  registre et du journal — `docs/intentions/suivi-ci-et-contexte.md` (ex-« decoupage-registre-et-journal », regroupée le 2026-10-25) ;
   dossiers temporaires des tests jamais supprimés, troisième occurrence,
   besoin d'un anti-récidive —
   `docs/intentions/tests-dossiers-temporaires-non-supprimes.md` ; points
@@ -3084,7 +3084,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/notes.md` ; gardes de
   lecture et sous-agent non éprouvés dans une vraie session Claude Code,
   et garde shell qui prend `cat >>` pour une lecture —
-  `docs/intentions/gardes-de-lecture-en-session-reelle.md`.
+  `docs/intentions/suivi-ci-et-contexte.md` (ex-« gardes-de-lecture-en-session-reelle », regroupée le 2026-10-25).
 - **Preuve de clôture** : `docs/preuves/reduction-contexte.md`.
 - **Clôturé par** : la branche `workstream/reduction-contexte`.
 
@@ -3121,6 +3121,6 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (correctif ordinaire : aucun fichier de règles modifié par la
   réouverture).
 - **Limites connues** : la note de la v0.7.0 reste absente, son fichier
-  temporaire perdu — `docs/intentions/note-recette-v0-7-0.md`.
+  temporaire perdu — l'intention « note-recette-v0-7-0 » (abandonnée le 2026-10-25).
 - **Preuve de clôture** : `docs/preuves/pre-push-reference-poussee.md`.
 - **Clôturé par** : la branche `workstream/pre-push-reference-poussee`.

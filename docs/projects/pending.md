@@ -36,6 +36,12 @@ Chaque vague y contribue :
 | 6 — la fabrique | mini-banc avec / sans drwil, puis pilote autonome dans ce dépôt, gradué par le risque |
 | 7 — le produit | publier, quand tout est opérationnel |
 
+Objectifs stabilisés par le demandeur le 2026-10-21 (base de la refonte
+de la roadmap) : prouver la valeur par des chiffres avant de décider de
+publier ou vendre ; cible : solo et équipe, avec un réglage équipe / solo ;
+horizon : quelques jours ; contraintes à tenir ensemble : rigueur, fluidité,
+coût, en visant la fabrique autonome.
+
 ## Ordre de réalisation (2026-10-11)
 
 Décidé par le demandeur le 2026-10-11, revu le même jour : **mesurer avant
@@ -146,7 +152,7 @@ avant les points 5 à 13, en trois versions.
   2. 0.6.8, Copilot CLI enchaîne les chantiers (fait, journal du
      2026-10-20) : décision de fusion au sondage, retour en SCOPING après la
      fusion, sous-agent dès le premier chantier ; reste la file pour les
-     autres outils (`docs/intentions/file-sous-agents-autres-outils.md`).
+     autres outils (`docs/intentions/compatibilite-des-outils.md`).
   3. 0.6.9, la fluidité de la clôture (faite, journal du 2026-10-21) :
      clôture guidée, message clair du critère humain, note à tout moment.
   4. Avant la 0.7.0 (demande du 2026-10-21), la cohérence de la
@@ -160,7 +166,7 @@ avant les points 5 à 13, en trois versions.
      fusion.
   7. 0.8, catalogue et adoption (P1) d'abord ; puis, en P2, Codex et Cursor,
      personas, chantiers en parallèle
-     (`docs/intentions/chantiers-en-parallele.md`), application de suivi,
+     et application de suivi (tous trois abandonnés le 2026-10-25),
      couche d'un nouveau dossier de code
      (`docs/intentions/couche-d-un-nouveau-dossier-de-code.md`),
      publication npm et protection de la forge.
@@ -168,7 +174,7 @@ avant les points 5 à 13, en trois versions.
   son objet, pour que sa fiche technique soit prête à la sortie.
 - **0.7.0** — la preuve qui dure : attestation liée à son objet (fait,
   journal du 2026-10-21), critères et
-  preuves durables (`docs/intentions/criteres-et-preuves-durables.md`),
+  preuves durables (fait, journal du 2026-10-21),
   barrière de fusion vérifiée (`docs/intentions/forge-dans-le-livrable.md`).
 
 Valeur et effort sont des estimations de l'agent, tirées du code et d'un
@@ -241,9 +247,6 @@ trailer, code commun) en anglais, migration des projets équipés par
 - [ ] [décision] [P1] Vue de relecture : montrer à l'humain ce qui demande
   son jugement dans une PR (décisions, cadrage, règles, preuves,
   exceptions) — `docs/intentions/vue-de-relecture.md`.
-- [ ] [décision] [P2] Application de suivi des chantiers, interactive et
-  embarquable avec le paquet (serveur local `drwil ui` recommandé) —
-  `docs/intentions/application-de-suivi-des-chantiers.md`.
 - [ ] [décision] [P1] Relecture avant fusion, choisie au lancement : une
   question de plus dans le sondage (`drwil-review` : aucune, relecture par
   un agent, relecture humaine), indépendante de la fusion automatique ou
@@ -302,62 +305,13 @@ Limites relevées en cours de chantier, consignées en intention le
 2026-10-15 (chantier « capitaliser les non-régressions ») ; les recadrer est
 une décision du demandeur.
 
-- [ ] [décision] Le feu vert de publication enregistré par l'outil au
-  lancement, comme la fusion automatique (limite du chantier « date
-  gardée et feu vert de publication » du 2026-10-18) —
-  `docs/intentions/feu-vert-publication-enregistre.md`.
-- [ ] [décision] Aligner le texte de QUA-048 (une clôture en un geste)
-  sur la reconnaissance par squash de QUA-058 (limite du chantier « les
-  branches fusionnées par squash reconnues » du 2026-10-19) —
-  `docs/intentions/qua-048-aligne-sur-squash.md`.
-- [ ] [décision] Reconnaître une fusion par squash hors de GitHub (limite
-  du chantier « les branches fusionnées par squash reconnues » du
-  2026-10-19) — `docs/intentions/squash-hors-github.md`.
-- [ ] [décision] La clôture signale aussi les citations d'une intention
-  retirée (écart relevé pendant le chantier « les branches fusionnées par
-  squash reconnues » du 2026-10-19) —
-  `docs/intentions/cloture-signale-intention-retiree.md`.
-- [ ] [décision] Retirer les neuf citations de fiche restées dans le code
-  non modifié (limite du chantier « une clôture allégée » du 2026-10-18) —
-  `docs/intentions/citations-de-fiche-heritees.md`.
-- [ ] [décision] Reconnaître les commentaires de code sans heuristique de
-  ligne (limite du chantier « une clôture allégée » du 2026-10-18) —
-  `docs/intentions/commentaires-reconnus-par-heuristique.md`.
-- [ ] [décision] Mesurer le gain de la clôture allégée à part (comparaison
-  par chantier entier faite le 2026-10-18, sans conclusion ; limite du
-  chantier « une clôture allégée » du 2026-10-18) —
-  `docs/intentions/mesurer-gain-cloture-allegee.md`.
-- [ ] [décision] Une annonce juste du oui à l'ouverture d'un détour qui
-  cite le registre (limite du chantier « un contrat ajouté pendant un
-  détour » du 2026-10-19) — `docs/intentions/annonce-oui-registre-detour.md`.
-- [ ] [décision] Compter `package.json` parmi les seuils d'un détour
-  (limite du chantier « un détour » du 2026-10-18) —
-  `docs/intentions/seuils-dans-package-json.md`.
-- [ ] [décision] Reconnaître les essais en réel sans liste de mots
-  (limite du chantier « une recette par version » du 2026-10-19) —
-  `docs/intentions/essai-reel-reconnu-par-mots.md`.
-- [ ] [décision] Une version HTML de la fiche de recette (hors périmètre
-  du chantier « une recette par version » du 2026-10-19) —
-  `docs/intentions/fiche-de-recette-html.md`.
-- [ ] [décision] Lire la dernière version d'une fiche fusionnée par squash
-  dans la fiche de recette (limite du chantier « une fiche de recette
-  juste » du 2026-10-19) — `docs/intentions/fiche-recette-apres-squash.md`.
 - [x] [IA] [P1] 0.6.7, 1 sur 3 : compatibilité des agents, le socle
   commun (banc, règle « intention ou demande », en-têtes YAML stricts,
   matrice) — fait, journal du 2026-10-19.
 - [x] [IA] [P1] 0.6.7, 2 sur 3 : Copilot CLI tenu — fait, journal du
   2026-10-19.
-- [ ] [décision] Établir la cause du dépassement de 30 s des hooks en session
-  interactive de Copilot CLI (limite du même chantier) —
-  `docs/intentions/depassement-delai-copilot-interactif.md`.
 - [x] [IA] [P1] 0.6.7, 3 sur 3 : Gemini CLI tenu — fait, journal du
   2026-10-19.
-- [ ] [décision] Commandes `/drwil-*` et sondage de lancement sous Gemini CLI
-  (limite du chantier « Gemini CLI tenu » du 2026-10-19) —
-  `docs/intentions/skills-et-sondage-sous-gemini.md`.
-- [ ] [décision] Un passage complet et stable du banc sous Gemini CLI, malgré
-  le quota (limite du même chantier) —
-  `docs/intentions/banc-gemini-quota.md`.
 - [x] [IA] [P1] 0.6.8 : Copilot CLI enchaîne les chantiers — fait, journal
   du 2026-10-20.
 - [x] [IA] [P1] Release 0.6.9, la fluidité de la clôture — fait, journal
@@ -366,171 +320,30 @@ une décision du demandeur.
   d'essayé) — `docs/intentions/compat-codex.md`.
 - [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
   choisir) — `docs/intentions/compat-cursor.md`.
-- [ ] [décision] Une seule forme pour les ID du catalogue —
-  `docs/intentions/prefixe-catalogue.md`.
-- [ ] [décision] Un `doctor` juste sur le dépôt drwil lui-même (manifeste
-  et version, installé par `installer-depot`) —
-  `docs/intentions/doctor-sur-le-depot-drwil.md`.
 
-- [ ] [décision] Une file de chantiers aussi pour Copilot CLI —
-  `docs/intentions/file-pour-copilot.md`.
-- [ ] [décision] L'arrêt d'une file et ses comptes rendus vérifiés par un
-  contrôle — `docs/intentions/arret-de-file-verifie.md`.
-- [ ] [décision] Ce que lit un visiteur reste juste sans dépendre de la
-  mémoire de l'agent (README en double, version annoncée non contrôlée,
-  toute clôture contrainte à l'exercice, entretien courant compris ;
-  constaté le 2026-10-17) — `docs/intentions/doc-visiteur-juste.md`.
-- [ ] [décision] Déclarer ce que couvrent les contrats attestés du dépôt
-  (champ `**Couvre**`, puis réattestation) —
-  `docs/intentions/couverture-des-contrats-attestes.md`.
 - [ ] [décision] [P1] drwil_com, priorité 3 : vérifier la barrière de
   fusion (protection absente, mal configurée, conforme) — section « Retour
   de drwil_com » de `docs/intentions/forge-dans-le-livrable.md`.
-- [ ] [décision] drwil_com, à examiner ensuite : une acceptation humaine
-  par critère — `docs/intentions/acceptation-par-critere.md`.
-- [ ] [décision] drwil_com, à examiner ensuite : un cycle de vie des
-  fiches sans contournement — `docs/intentions/cycle-de-vie-des-fiches.md`.
 - [ ] [décision] drwil_com, en dernier : le reste du guide de démarrage
   (dépôt git existant avant `init` ; le reste est cadré en 0.6.3) —
   `docs/intentions/guide-de-demarrage.md`.
-- [ ] [décision] Convoquer des personas d'agents (`agency-agents`) choisis par
-  le cadrage d'un chantier — `docs/intentions/personas-convoques-par-le-cadrage.md`.
-- [ ] [décision] Détecter un intitulé d'index ou un paragraphe de version devenu
-  faux — `docs/intentions/intitule-d-index-devenu-faux.md`.
-- [ ] [décision] Citer `.githooks/recette-note.mjs` dans la fiche des mécaniques du kit et
-  dans le README du module de release — `docs/intentions/recette-note-dans-la-fiche-des-mecaniques.md`.
 - [ ] [décision] Proposer la couche d'un dossier de code apparu après
   l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
-- [ ] [décision] Mener plusieurs chantiers en parallèle, ou orchestrer plusieurs
-  agents sur leurs parties — `docs/intentions/chantiers-en-parallele.md`.
-- [ ] [décision] Nommer le dossier des preuves dans la langue du projet
-  (dossier `proofs` en anglais ; limite du chantier du 2026-10-21) —
-  `docs/intentions/nom-du-dossier-des-preuves.md`.
-- [ ] [décision] Rattraper, ou assumer, l'absence de preuve de clôture pour les
-  chantiers clos avant la règle (limite du chantier du 2026-10-21) —
-  `docs/intentions/preuve-des-chantiers-deja-clos.md`.
-- [ ] [décision] Attendre le verdict de CodeQL avant la clôture (vécu le
-  2026-10-21 ; la réouverture est livrée le 2026-10-24, reste cette
-  question) — `docs/intentions/defaut-revele-apres-la-cloture.md`.
-- [ ] [décision] Reprogrammer, ou non, la fusion automatique quand une
-  réouverture échoue après l'avoir annulée (limite du chantier du
-  2026-10-24) — `docs/intentions/reouverture-fusion-annulee-apres-echec.md`.
-- [ ] [décision] Éprouver la réouverture sur une vraie PR et sous Windows
-  (limite du chantier du 2026-10-24) —
-  `docs/intentions/reouverture-eprouvee-en-reel.md`.
-- [ ] [décision] Relever le cache lu moyen par requête sur deux chantiers
-  comparables, comparé aux ≈ 170 k du 2026-10-24 (limite du chantier
-  « réduire le contexte relu ») — `docs/intentions/releve-cache-lu-par-requete.md`.
-- [ ] [décision] Les recettes et skills qui renvoient encore au registre des
-  contrats entier (limite du même chantier) —
-  `docs/intentions/recettes-qui-lisent-le-registre-entier.md`.
-- [ ] [décision] Forcer la lecture ciblée avec Gemini CLI, Copilot CLI, Codex
-  et Cursor (limite du même chantier) —
-  `docs/intentions/lecture-ciblee-forcee-autres-outils.md`.
-- [ ] [décision] Découper le registre des contrats et le journal, si la
-  lecture ciblée ne suffit pas (limite du même chantier) —
-  `docs/intentions/decoupage-registre-et-journal.md`.
 - [ ] [décision] Les tests laissent des dossiers `/tmp/drwil-*` jamais
   supprimés (inodes épuisés le 2026-10-24) — cadrée le 2026-10-24 (fiche
   listée sous « Ensuite ») —
   `docs/intentions/tests-dossiers-temporaires-non-supprimes.md`.
-- [ ] [décision] Éprouver les gardes de lecture et le sous-agent de contrôles
-  dans une vraie session Claude Code (limite du même chantier) —
-  `docs/intentions/gardes-de-lecture-en-session-reelle.md`.
-- [ ] [décision] Donner sa note de recette à la v0.7.0, publiée sans
-  (limite du chantier « le pre-push juge la branche poussée ») —
-  `docs/intentions/note-recette-v0-7-0.md`.
 - [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
   2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
   `docs/intentions/niveaux-de-protection-dans-doctor.md`.
-- [ ] [décision] [P0] Compléter la suite des contournements testés, en tête
-  les hooks modifiés dans la PR elle-même (revue externe du 2026-10-22) —
-  cadrée le 2026-10-23, réalisée le 2026-10-24 (voir
-  `docs/projects/journal.md`), restent le clone superficiel et
-  l'auto-élargissement —
+- [ ] [décision] [P1] Les deux contournements restants de la revue externe
+  du 2026-10-22 : le clone superficiel et l'auto-élargissement du cadrage
+  (le reste est fait, journal du 2026-10-24) —
   `docs/intentions/contournements-a-completer.md`.
-- [ ] [décision] Lire les erreurs que GitHub relève dans CODEOWNERS
-  (propriétaire inconnu, syntaxe), au-delà des chemins (limite du chantier
-  « CODEOWNERS protège le registre » du 2026-10-24) —
-  `docs/intentions/codeowners-erreurs-github.md`.
-- [ ] [décision] L'étape de rejeu ne se retire pas du workflow par la PR
-  elle-même (limite du chantier « les contournements restants fermés ou
-  assumés » du 2026-10-24) —
-  `docs/intentions/rejeu-retirable-du-workflow.md`.
-- [ ] [décision] Un contrôle redéfini sous le même identifiant est comparé
-  (limite du même chantier) —
-  `docs/intentions/controle-redefini-meme-nom.md`.
-- [ ] [décision] La garde shell juge l'effet d'une commande, pas son texte
-  (variables, texte cité ; limite du même chantier) —
-  `docs/intentions/garde-shell-par-le-texte.md`.
-- [ ] [décision] Jouer aussi les tests de `.githooks/` sur Node 24 (limite
-  du chantier « accélérer la CI ») — `docs/intentions/tests-des-hooks-sur-node-24.md`.
-- [ ] [décision] `checks-self-test` double-t-il `couverture-hooks` ? (limite
-  du même chantier) — `docs/intentions/checks-self-test-contre-couverture-hooks.md`.
-- [ ] [décision] Le gain de CI atteint-il les projets adoptés ? (limite du
-  même chantier) — `docs/intentions/ci-livree-aux-projets-non-mis-a-jour.md`.
-- [ ] [décision] Un échec non expliqué de QUA-004 au pre-push (limite du même
-  chantier) — `docs/intentions/alea-couverture-qua-004-au-pre-push.md`.
-- [ ] [décision] Une attestation ne tombe pas quand un contrôle change de
-  forme sans changer d'effet (limite du même chantier) —
-  `docs/intentions/attestation-sur-l-effet-du-controle.md`.
-- [ ] [décision] Les objectifs de durée de CI en indicateur suivi, pas en
-  contrat attesté (limite du même chantier) —
-  `docs/intentions/objectifs-de-duree-ci-en-indicateur.md`.
-- [ ] [IA] Relever la durée du job `checks` hooks inchangés, sur la première
-  PR ordinaire après fusion (limite du même chantier) —
-  `docs/intentions/releve-duree-checks-hooks-inchanges.md`.
-- [ ] [décision] Les tests de la garde shell à côté de leur hook (limite du
-  même chantier) — `docs/intentions/tests-garde-shell-a-leur-place.md`.
 - [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
   externe du 2026-10-22) — `docs/intentions/e2e-et-attestation-precises.md`.
-- [ ] [décision] `init` impose les garanties obligatoires lui-même au lieu de
-  renvoyer vers `drwil guarantees` (limite du chantier « garanties
-  obligatoires à l'adoption » du 2026-10-22) —
-  `docs/intentions/init-impose-les-garanties.md`.
-- [ ] [décision] Bloquer les commits de code d'une couche dont la garantie
-  n'est pas tenue (limite du même chantier) —
-  `docs/intentions/commits-bloques-par-une-garantie.md`.
-- [ ] [décision] `drwil verify` signale un `--no-verify` (aujourd'hui rattrapé
-  par la CI seule ; limite du même chantier) —
-  `docs/intentions/no-verify-detecte-par-verify.md`.
-- [ ] [décision] Mesurer la couverture actuelle d'un projet JVM et remonter
-  son cliquet (limite du même chantier) —
-  `docs/intentions/couverture-jvm-mesuree.md`.
-- [ ] [décision] Soumettre le dépôt drwil à ses propres garanties ; son
-  `docs/features.md` en squelette fera refuser la prochaine release (limite
-  du même chantier) — `docs/intentions/garanties-sur-le-depot-drwil.md`.
-- [ ] [décision] Une rubrique propre aux garanties dans la sortie
-  `verify --agent`, au lieu de « Registry errors » (limite du même
-  chantier) — `docs/intentions/garanties-dans-la-sortie-agent.md`.
 
-- [ ] [humain] [P3] Vérifier sur le web et le desktop que la note de fin
-  de réponse s'affiche sous la réponse (terminal vérifié le 2026-10-17 ;
-  limite du chantier du 2026-10-17) —
-  `docs/intentions/identifiant-rattrape-avant-l-humain.md`.
-- [ ] [décision] Une file menée par sous-agents avec les autres agents
-  (Copilot CLI, Codex, Cursor, Gemini ; limite du chantier du 2026-10-18)
-  — `docs/intentions/file-sous-agents-autres-outils.md`.
-- [ ] [décision] Le budget de temps des contrôles au commit, calibré pour
-  les machines Windows de la CI (1500 ms dépassé sans changement de code ;
-  relevé le 2026-10-17) — `docs/intentions/budget-temps-windows.md`.
-- [ ] [décision] `yarn init` laisse-t-il un projet neuf ? (non vérifié ;
-  limite du chantier « `npm init -y` » du 2026-10-17) —
-  `docs/intentions/projet-neuf-apres-yarn-init.md`.
-- [ ] [décision] Le glossaire des identifiants injecté aussi chez les
-  autres agents (Cursor, Copilot CLI, Gemini, Codex) —
-  `docs/intentions/glossaire-autres-agents.md`.
-- [ ] [décision] L'aperçu d'`init` (`--dry-run`) annonce le rattachement
-  du code existant (limite du chantier « `init` rattache le code existant »
-  du 2026-10-23) — `docs/intentions/apercu-init-code-existant.md`.
-- [ ] [décision] Le code existant qu'`init` ne peut pas rattacher seul :
-  carte présente avant l'installation, chemin qu'un bloc `scope` ne peut
-  pas nommer (limite du même chantier) —
-  `docs/intentions/code-existant-non-rattache.md`.
-- [ ] [décision] « Pas encore de code » dit à un projet sans pile détectée
-  qui en a (écart relevé pendant le même chantier) —
-  `docs/intentions/message-sans-couche-code-existant.md`.
 - [ ] [décision] `verify` ne donne jamais PASS dans la copie du banc :
   contrats à attester, humain absent (limite du chantier « Mini-banc :
   copie « avec » adoptée » du 2026-10-23) —
@@ -538,6 +351,26 @@ une décision du demandeur.
 - [ ] [décision] Le juge du banc relève les contournements sur le texte des
   commandes, pas sur leur effet (limite du même chantier) —
   `docs/intentions/banc-juge-motif-textuel.md`.
+
+- [ ] [décision] [P1] Suivre la durée de la CI et le contexte relu, et trancher
+  leurs calibrages (10 intentions regroupées le 2026-10-25) —
+  `docs/intentions/suivi-ci-et-contexte.md`.
+- [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
+  d'autorisation à chaque commande (demande du 2026-10-25) —
+  `docs/intentions/installation-fluide.md`.
+- [ ] [décision] Les garanties obligatoires, la suite (6 intentions
+  regroupées le 2026-10-25) — `docs/intentions/garanties-la-suite.md`.
+- [ ] [décision] Les contournements encore ouverts (5 intentions regroupées
+  le 2026-10-25) — `docs/intentions/contournements-restants.md`.
+- [ ] [décision] Clôture, réouverture et attestations : ce qui reste
+  (10 intentions regroupées le 2026-10-25) —
+  `docs/intentions/cloture-et-attestations.md`.
+- [ ] [décision] Les petits défauts relevés, en un chantier d'entretien
+  (15 intentions et 5 notes regroupées le 2026-10-25) —
+  `docs/intentions/petits-defauts.md`.
+- [ ] [décision] Les autres outils au niveau de Claude Code (5 suites
+  regroupées le 2026-10-25 dans l'intention mère) —
+  `docs/intentions/compatibilite-des-outils.md`.
 
 - [x] [IA] [P1] La carte, le README et le changelog d'un projet dans la
   langue choisie (réglage `docLang`) — fait le 2026-10-16 (voir
@@ -569,9 +402,6 @@ actifs » s'appuie sur le 4).
 - [ ] [décision] [P3] Couverture du paquet relevée à 100 % (release
   testée par mock, tranché le 2026-10-16) —
   `docs/intentions/couverture-paquet-100.md`.
-- [ ] [décision] [P3] Tout code modifié arrive couvert à 100 % (couverture
-  du diff, adoption en douceur ; proposé le 2026-10-16) —
-  `docs/intentions/couverture-du-diff.md`.
 - [ ] [décision] [P3] Banc complet avec / sans drwil (5 tâches), décidé
   sur les chiffres du mini-banc — `docs/intentions/bench-avec-sans-drwil.md`.
 - [ ] [décision] [P3] Community Ready : fichiers et parcours pour qu'un
@@ -580,11 +410,3 @@ actifs » s'appuie sur le 4).
   COM) — `docs/intentions/community-ready.md`.
 - [ ] [humain] [P3] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projects/suites-kit-portable.md` (point 2).
-- [ ] [décision] [P3] V3 — investigation & reporting par agent : DRWIL
-  gouverne-t-il le travail d'agents au-delà du code ? Expérimentation après
-  stabilisation du cœur, sans code pour l'instant —
-  `docs/projects/v3-investigation-reporting-agent.md`.
-- [ ] [décision] [P3] Importer un ticket externe (Jira ou autre) pour en
-  dériver une fiche d'intention/cadrage, plutôt que de tout retaper à la
-  main — outil cible, mode d'authentification et ponctuel vs continu
-  restent à trancher — `docs/intentions/importer-tickets-externes.md`.

@@ -38,4 +38,4 @@ et barrière Git seulement ».
   manuel guidé ?
 - [décision] Quand la reprendre en fiche (la version 0.6.7 attend Codex et Cursor) ?
 - Hors périmètre : la file et les sous-agents sous Cursor
-  (`docs/intentions/file-sous-agents-autres-outils.md`).
+  (`docs/intentions/compatibilite-des-outils.md`).
