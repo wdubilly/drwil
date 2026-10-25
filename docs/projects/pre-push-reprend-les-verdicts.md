@@ -1,6 +1,6 @@
 # Projet : le pre-push reprend un verdict « ok » dont les fichiers n'ont pas changé
 
-**Statut** : cadré le 2026-10-25 — dépend de `docs/projects/verify-reprise-par-controle.md`.
+**Statut** : cadré le 2026-10-25 — dépend de `docs/projects/journal.md`.
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/suivi-ci-et-contexte.md`
@@ -52,7 +52,7 @@ CI, porte de confiance, rejoue toujours tout.
 ## 2. Hors périmètre
 
 - Le calcul de l'empreinte par contrôle et sa consignation par `run-checks` :
-  `docs/projects/verify-reprise-par-controle.md` (lots 2 et 3), dont ce
+  `docs/projects/journal.md` (lots 2 et 3), dont ce
   chantier dépend ; il ne peut être lancé qu'après.
 - La reprise par `verify` et par `run-checks` hors hook : même fiche.
 - Le pre-commit : il diffère déjà par `paths` des fichiers indexés.
