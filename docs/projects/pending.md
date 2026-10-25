@@ -397,6 +397,9 @@ actifs » s'appuie sur le 4).
   itérations
   (cadré le 2026-10-25) —
   `docs/projects/verify-reprise-par-controle.md`.
+- [ ] [IA] [P1] Le pre-push reprend un verdict « ok » dont les fichiers
+  n'ont pas changé (cadré le 2026-10-25, après la fiche précédente) —
+  `docs/projects/pre-push-reprend-les-verdicts.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
