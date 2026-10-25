@@ -20,6 +20,8 @@ files:
   - docs/intentions/decouper-close.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - docs/projects/kit-mechanics.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
 -->
 
 ## 1. Besoin
