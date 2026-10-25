@@ -95,5 +95,5 @@ Aucun : preuve complémentaire et déclaration du test autorisées.
 - **Dernier état** (2026-10-25) : cadré, sans réalisation commencée.
 - **Prochaine étape** : [humain] lancer dans une nouvelle session avec
   `/drwil-start` ; faire d'abord le chantier
-  `docs/projects/duree-ci-en-indicateur.md` évite que l'ajout du test au
+  `docs/projects/journal.md` évite que l'ajout du test au
   contrôle demande une nouvelle attestation de durée.

@@ -10,10 +10,11 @@ Les chantiers « accélérer la CI sans perte de qualité » et « réduire le c
 
 Statut d'origine : proposée le 2026-10-24 — limite du chantier « accélérer la CI sans perte de qualité » (journal du 2026-10-24), décision du demandeur.
 
-Les objectifs de durée de CI ne doivent pas être des contrats bloquants attestés
-à la main : la durée dépend des runners et évolue avec le projet. Il faut en faire
-un indicateur suivi : relevé par chantier, tendance dans le tableau de bord,
-seuil d'alerte non bloquant, réévalué au fil du projet.
+Fait le 2026-10-25 (journal) : la durée du job `checks` est relevée à la main
+dans le journal de chaque chantier (référence de CI, catégorie hooks modifiés
+ou inchangés), sans blocage ; QUA-122 est conservé comme preuve historique
+(`docs/mesures-ci-reference.md`). Reste : tendance dans le tableau de bord et
+seuil d'alerte non bloquant, réévalués au fil du projet.
 
 ### relever la durée du job `checks` quand les hooks sont inchangés (ex-« releve-duree-checks-hooks-inchanges »)
 
@@ -131,6 +132,8 @@ Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10
 
 - QUA-122 (durée du job `checks`) est un contrat Manuel, attesté par l'humain après
   trois relevés consignés au journal.
+- Relevé le 2026-10-25 : QUA-122 devient une preuve historique couvrant le seul
+  `docs/mesures-ci-reference.md` ; le relevé courant se fait au journal.
 
 ### relever la durée du job `checks` quand les hooks sont inchangés (ex-« releve-duree-checks-hooks-inchanges »)
 
@@ -209,10 +212,10 @@ Mesures `[budget-commit]` lues dans les journaux de CI :
 
 ### suivre la durée de la CI comme un indicateur, pas comme un contrat attesté (ex-« objectifs-de-duree-ci-en-indicateur »)
 
-Décisions du demandeur le 2026-10-25 : relevé manuel par chantier au
-journal, référence de CI et distinction hooks modifiés/inchangés ;
-QUA-122 (durée du job `checks`) conservé comme preuve historique.
-Cadrage : `docs/projects/duree-ci-en-indicateur.md`.
+Décisions du demandeur le 2026-10-25, réalisées (journal « la durée du job
+`checks` devient un indicateur ») : relevé manuel par chantier au journal,
+référence de CI et distinction hooks modifiés/inchangés ; QUA-122 (durée du
+job `checks`) conservé comme preuve historique.
 
 - [décision] Dans un chantier ultérieur : comment le tableau de bord
   montre-t-il la tendance et quel seuil d'alerte non bloquant appliquer ?
