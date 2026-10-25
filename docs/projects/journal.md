@@ -3163,3 +3163,35 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/notes.md` aussi.
 - **Preuve de clôture** : `docs/preuves/dossiers-temporaires-des-tests.md`.
 - **Clôturé par** : la branche `workstream/dossiers-temporaires-des-tests`.
+
+## 2026-10-25 — Chaque contrôle dit combien de temps il a pris
+
+- **Besoin** : un `verify --evidence` a pris environ 4 min 30 et six passes
+  25 à 30 min d'un chantier de 45 min, sans qu'on sache lesquels des 121
+  contrôles coûtent le plus ; la mesure précède le choix de ce qu'il faut
+  accélérer (premier des quatre chantiers sur la durée des contrôles).
+- **Décisions clés** : QUA-136 (durée par contrôle, nouveau contrat) : le
+  moteur (`.githooks/engine.mjs`, livré dans le gabarit) renvoie `durationMs`
+  en millisecondes entières pour chaque contrôle exécuté, en synchrone
+  (`run`) comme en parallèle (`runAsync`) ; un contrôle non exécuté ou non
+  applicable n'a pas de durée, jamais 0. `run-checks` l'écrit au détail
+  (`.drwil/evidence/run-checks.log` (si présent)) après chaque contrôle, puis liste les
+  contrôles du plus lent au plus rapide en fin de fichier en disant que, sur
+  une passe parallèle, la durée est celle du contrôle et non sa part de la
+  passe ; `drwil verify --evidence` l'écrit par contrôle dans `verify-*.json`.
+  QUA-126 (sortie courte de `run-checks`) précisé : la ligne de résumé nomme
+  aussi les trois contrôles les plus lents avec leur durée.
+- **Mesure** : première passe de `node .githooks/run-checks.mjs` avec le
+  résumé : les plus lents sont `drwil: build + tests + seuil de couverture
+  (QUA-004)` (≈ 120 s), `hooks de gouvernance : tests + couverture (QUA-004)`
+  (≈ 38 s) et `tests des contrôles eux-mêmes` (≈ 34 s), mesurés sur une passe
+  parallèle, donc en partie recouverts.
+- **Limites connues** : `.githooks/engine.mjs` est à 400 lignes, le plafond
+  de QUA-001 : un prochain ajout au moteur demandera de le découper ; la
+  lecture de ces durées par le tableau « Durée de la CI drwil » reste à faire
+  (intention `docs/intentions/suivi-ci-et-contexte.md`, mise à jour). La
+  fiche `docs/projects/verify-en-parallele.md` cite encore la fiche
+  supprimée (hors cadrage ici, à réorienter vers ce journal quand elle sera
+  lancée).
+- **Preuve de clôture** : `docs/preuves/duree-par-controle.md` (si présent).
+- **Clôturé par** : la branche `chantier/duree-par-controle`.
