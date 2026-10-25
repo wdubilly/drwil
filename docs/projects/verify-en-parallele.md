@@ -26,7 +26,7 @@ files:
 (`packages/drwil/src/verify.ts`, `c.run`), alors que `run-checks` les lance
 déjà en parallèle quand le réglage `parallel` est actif (QUA-119, moteur
 `startParallel`). Sur ce dépôt, la passe de `verify` dure donc la somme de
-tous ses contrôles. À lancer après `docs/projects/duree-par-controle.md`,
+tous ses contrôles. À lancer après `docs/projects/journal.md`,
 dont les chiffres diront le gain attendu.
 
 ## Critères d'acceptation

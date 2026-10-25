@@ -3452,6 +3452,20 @@ test("caviardage des clés privées : bloc complet, clé chiffrée, temps linéa
   assert.ok(performance.now() - debut < 1000, `caviardage trop lent : ${Math.round(performance.now() - debut)} ms`);
 });
 
+test("QUA-136 : verify --evidence consigne la durée de chaque contrôle exécuté en millisecondes entières", async () => {
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`"));
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "x");
+  const r = cli(dir, "verify", "--json", "--evidence");
+  const chemin = /évidence : (\S+)/.exec(r.stderr)?.[1];
+  assert.ok(chemin, r.stderr);
+  const e = JSON.parse(read(dir, chemin));
+  const duree = e.evidence.find((k) => k.id === "QUA-001").checks[0];
+  assert.equal(duree.status, "ok");
+  assert.ok(Number.isInteger(duree.durationMs) && duree.durationMs >= 0, JSON.stringify(duree));
+});
+
 test("DRWIL-013 : verify --evidence enregistre verdict, horodatage, commit et résumés caviardés", async () => {
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `fuite`"));
   const cfg = config(dir);

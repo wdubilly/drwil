@@ -5,6 +5,16 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Added
+
+- Each check says how long it took (QUA-136): the engine measures every check
+  it runs, in whole milliseconds; `run-checks` writes each duration to
+  `.drwil/evidence/run-checks.log`, lists the checks from slowest to fastest at
+  the end of the file, and names the three slowest in its summary line;
+  `drwil verify --evidence` records each check's duration in `verify-*.json`. A
+  check that did not run has no duration. On a parallel pass the duration is the
+  check's own, not its share of the pass.
+
 ### Fixed
 
 - The checks no longer leave temporary folders behind (QUA-133, QUA-134): each

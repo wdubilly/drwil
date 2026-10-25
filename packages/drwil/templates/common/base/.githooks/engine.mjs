@@ -19,9 +19,9 @@ import { globToRegex } from "./glob.mjs";
 import { checkScope } from "./scope-gate.mjs";
 import { normalize } from "./scope.mjs";
 
-// One temporary root per pass (QUA-133): every check gets its own sub-folder as TMPDIR/TMP/TEMP, removed
-// at the end of the pass. The folders of the failed checks are moved to a fixed path, replaced at each
-// failure and never piled up. A pass that dies before `finish` is cleaned by the `exit` handler.
+// One temporary root per pass (QUA-133): every check gets its own sub-folder as TMPDIR/TMP/TEMP, removed at the end of the pass. The
+// folders of the failed checks are moved to a fixed path, replaced at each failure and never piled up. A pass that dies before `finish`
+// is cleaned by the `exit` handler.
 const passes = new Set();
 let exitHooked = false;
 const hookExit = () => {
@@ -123,13 +123,11 @@ function findGitleaks() {
 export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI) } = {}) {
   const T = texts(cfg.lang);
   const full = (cfg.mode ?? "full") === "full";
-  // NODE_TEST_CONTEXT propagates to children: if the engine itself runs under `node --test`
-  // (the kit testing its hooks, a harness calling verify…), a `node --test` launched by a check
-  // would be silently skipped ("called recursively") and return 0: a false PASS.
-  // QUA-057: a hook run from a worktree or by `git commit -a` receives GIT_DIR, GIT_INDEX_FILE…;
-  // a check that inherits them and runs `git init` elsewhere acts on the repository that launched it
-  // (core.bare=true written in the shared config, index soiled). The hook keeps them; its children
-  // run from the project root, where git finds the right repository on its own.
+  // NODE_TEST_CONTEXT propagates to children: if the engine itself runs under `node --test` (the kit testing its hooks, a harness calling
+  // verify…), a `node --test` launched by a check would be silently skipped ("called recursively") and return 0: a false PASS. QUA-057: a
+  // hook run from a worktree or by `git commit -a` receives GIT_DIR, GIT_INDEX_FILE…; a check that inherits them and runs `git init`
+  // elsewhere acts on the repository that launched it (core.bare=true written in the shared config, index soiled). The hook keeps them;
+  // its children run from the project root, where git finds the right repository on its own.
   const base = env.TMPDIR || tmpdir();
   const failedPath = join(base, `drwil-checks-failed-${createHash("sha1").update(root).digest("hex").slice(0, 8)}`);
   let passRoot = null;
@@ -247,9 +245,9 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   const parallel = cfg.parallel === true;
   const add = (id, name, run, runAsync) =>
     list.push({ id, name, run: (o = {}) => run(o, name), ...(runAsync && parallel ? { runAsync: () => runAsync(name) } : {}) });
-  // A commit that stages documentation only (a brief widened mid-workstream) does not replay the tests
-  // on the working tree, which holds the lot in progress (QUA-035); push and CI always replay them.
-  // Strictly docs/ or Markdown: not isCode(), which calls code only what the project declares.
+  // A commit that stages documentation only (a brief widened mid-workstream) does not replay the tests on the working tree, which holds
+  // the lot in progress (QUA-035); push and CI always replay them. Strictly docs/ or Markdown: not isCode(), which calls code only what
+  // the project declares.
   const docsOnly = Boolean(staged?.length) && staged.every((f) => /^docs\//.test(normalize(f)) || /\.md$/i.test(f));
 
   add("secrets", T.secrets, (o, name) => {
@@ -280,16 +278,13 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     return { status: r.status, message: r.message, detail: r.detail, configured: r.configured, output };
   });
 
-  // QUA-017: never work directly on the main branch, including the very first commit (no more
-  // bootstrap exception: `init()` always creates a working branch before any commit).
-  // `symbolic-ref` (unlike `rev-parse --abbrev-ref HEAD`) works even before the first commit
-  // (HEAD not created yet). Never in CI (env.CI): CI also runs on master after a legitimate merge,
-  // which must not be blocked retroactively — only the local hooks (pre-commit/pre-push) apply it.
-  // Never either on a push of tags only (DRWIL_PUSH_TAGS_ONLY, set by .githooks/pre-push from the
-  // hook's standard input): a tag never changes a branch; nor on a remote branch deletion
-  // (DRWIL_PUSH_NO_BRANCH). At push time, the pushed remote branches (DRWIL_PUSH_REFS) are judged,
-  // not the current branch: `recette/vX.Y.Z` pushed from master does not touch master, while
-  // `work:master` pushed from another branch does.
+  // QUA-017: never work directly on the main branch, including the very first commit (no more bootstrap exception: `init()` always
+  // creates a working branch before any commit). `symbolic-ref` (unlike `rev-parse --abbrev-ref HEAD`) works even before the first commit
+  // (HEAD not created yet). Never in CI (env.CI): CI also runs on master after a legitimate merge, which must not be blocked
+  // retroactively — only the local hooks (pre-commit/pre-push) apply it. Never either on a push of tags only (DRWIL_PUSH_TAGS_ONLY, set
+  // by .githooks/pre-push from the hook's standard input): a tag never changes a branch; nor on a remote branch deletion
+  // (DRWIL_PUSH_NO_BRANCH). At push time, the pushed remote branches (DRWIL_PUSH_REFS) are judged, not the current branch:
+  // `recette/vX.Y.Z` pushed from master does not touch master, while `work:master` pushed from another branch does.
   add("main-branch", T.branch, () => {
     if (env.CI) return { status: "not-applicable", detail: T.branchCi };
     if (env.DRWIL_PUSH_TAGS_ONLY === "1") return { status: "not-applicable", detail: T.branchTags };
@@ -337,9 +332,8 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     return launch(process.execPath, [".githooks/check-control-coverage.mjs"], o, name);
   });
 
-  // Stack checks (lint, typecheck, tests) are declared by the project, not by the kit.
-  // At pre-commit only (`staged` given), a check that declares `paths` is deferred if no staged
-  // file matches them: a docs commit does not rerun the whole test suite. It stays "not run"
+  // Stack checks (lint, typecheck, tests) are declared by the project, not by the kit. At pre-commit only (`staged` given), a check that
+  // declares `paths` is deferred if no staged file matches them: a docs commit does not rerun the whole test suite. It stays "not run"
   // (QUA-013) and the pre-push as well as CI always replay it.
   for (const c of Array.isArray(cfg.checks) ? cfg.checks : []) {
     const name = c.name ?? c.run;
@@ -364,6 +358,14 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
         : {}),
     });
   }
+  // QUA-136: a check that ran reports `durationMs` (whole ms, its own on a parallel pass); not-run and not-applicable have none, never 0.
+  const timed = (fn) => (o) => {
+    const start = performance.now();
+    const end = (r) => (r.status.startsWith("not-") ? r : { ...r, durationMs: Math.round(performance.now() - start) });
+    const r = fn(o);
+    return r instanceof Promise ? r.then(end) : end(r);
+  };
+  for (const c of list) for (const k of ["run", "runAsync"]) if (c[k]) c[k] = timed(c[k]);
   list.finish = finish;
   return list;
 }

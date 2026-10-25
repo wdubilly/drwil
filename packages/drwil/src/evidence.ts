@@ -77,6 +77,7 @@ export function writeEvidence(root: string, v: Verdict, now = new Date()): strin
       checks: k.checks.map((c) => ({
         id: c.id,
         status: c.status,
+        ...(c.durationMs === undefined ? {} : { durationMs: c.durationMs }),
         summary: c.status === "ok" ? "ok" : summary(c.output) || redact(c.detail ?? c.message ?? ""),
       })),
       manual: k.manual,

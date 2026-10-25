@@ -38,7 +38,9 @@ function depot(branche = "travail") {
   return racine;
 }
 const parId = (liste) => Object.fromEntries(liste.map((c) => [c.id, c]));
-const executer = (racine, id, options = {}, o = { stdio: "pipe" }) => parId(checks(racine, options))[id].run(o);
+// La durée (QUA-136) varie à chaque passe : les tests de verdict la retirent, le test de QUA-136 la juge.
+const sansDuree = ({ durationMs, ...r }) => r;
+const executer = (racine, id, options = {}, o = { stdio: "pipe" }) => sansDuree(parId(checks(racine, options))[id].run(o));
 
 /** Exécute `fn` avec PATH et HOME remplacés (gitleaks introuvable ou factice), puis les rétablit. */
 function avecEnv(valeurs, fn) {
@@ -117,7 +119,7 @@ test("lancer : commande impossible à lancer = échec ; sortie capturée seuleme
   assert.ok(r.detail);
   // Sans options : stdio hérité, rien de capturé.
   const ok = parId(checks(racine, { cfg: { checks: [{ run: "node -e 0" }] } }))["project:node -e 0"].run();
-  assert.deepEqual(ok, { status: "ok", output: undefined });
+  assert.deepEqual(sansDuree(ok), { status: "ok", output: undefined });
 });
 
 test("docs-references : lance check-docs du projet ; son échec remonte", () => {
@@ -348,7 +350,7 @@ test("QUA-120 : la compilation n'est faite qu'une fois par passage, par le premi
   assert.equal(compte(racine), 1);
   assert.equal((await liste.b.runAsync()).status, "ok", "compilé en série, relu en parallèle");
   assert.equal(compte(racine), 1);
-  const parallele = parId(checks(racine, { cfg }));
+  const parallele = parId(checks(racine, { cfg, staged: ["README.md.txt"] }));
   assert.equal((await parallele.a.runAsync()).status, "ok");
   assert.equal(compte(racine), 2, "autre passage, autre compilation");
   assert.equal((await parallele.b.runAsync()).status, "ok");
@@ -515,4 +517,29 @@ test("QUA-133 : sans dossier temporaire utilisable, le contrôle tourne avec cel
   } finally {
     chmodSync(join(base, readdirSync(base)[0]), 0o700);
   }
+});
+
+test("QUA-136 : un contrôle exécuté a sa durée en millisecondes entières, en synchrone comme en parallèle ; un contrôle non exécuté n'en a pas", async () => {
+  const racine = depot();
+  const cfg = {
+    parallel: true,
+    checks: [
+      { id: "lent", run: `node -e "setTimeout(()=>{},150)"` },
+      { id: "casse", run: "node -e process.exit(1)" },
+      { id: "reporte", run: "node -e 0", paths: ["src/**"] },
+    ],
+  };
+  const liste = parId(checks(racine, { cfg, staged: ["README.md.txt"] }));
+  const lent = liste.lent.run({ stdio: "pipe" });
+  assert.ok(Number.isInteger(lent.durationMs) && lent.durationMs >= 100, `durée : ${lent.durationMs}`);
+  const casse = liste.casse.run({ stdio: "pipe" });
+  assert.equal(casse.status, "fail");
+  assert.ok(Number.isInteger(casse.durationMs), "un échec a aussi sa durée");
+  const reporte = liste.reporte.run({ stdio: "pipe" });
+  assert.equal(reporte.status, "not-run");
+  assert.ok(!("durationMs" in reporte), "non exécuté : durée absente, jamais 0");
+  const parallele = parId(checks(racine, { cfg, staged: ["README.md.txt"] }));
+  const asynchrone = await parallele.lent.runAsync();
+  assert.ok(Number.isInteger(asynchrone.durationMs) && asynchrone.durationMs >= 100, `durée : ${asynchrone.durationMs}`);
+  assert.ok(!("durationMs" in (await parallele.reporte.runAsync())), "non exécuté en parallèle : durée absente");
 });

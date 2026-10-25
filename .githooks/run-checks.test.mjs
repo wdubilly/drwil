@@ -69,9 +69,9 @@ test("racine du projet, pas le dossier courant : contrôles annoncés, non exéc
   assert.match(r.detail, /^\[ia-first\] chemins et contrats cités dans la doc…$/m);
   assert.match(r.detail, /^\[ia-first\] projet…$/m);
   assert.match(r.detail, /^\[ia-first\] ⚠ non exécuté : couverture CI de chaque contrôle \(QUA-013\) \(aucune CI configurée/m);
-  assert.equal(
+  assert.match(
     r.stdout,
-    "[ia-first] contrôles exécutés : OK (1 avertissement(s), non exécutés compris — détail : .drwil/evidence/run-checks.log)\n",
+    /^\[ia-first\] contrôles exécutés : OK \(1 avertissement\(s\), non exécutés compris — détail : \.drwil\/evidence\/run-checks\.log\) — les plus lents : [^\n]+\n$/,
     "réussite : la seule ligne de résumé",
   );
   assert.match(r.detail, /contrôles exécutés : OK \(1 avertissement/, "le rapport complet finit par le même résumé");
@@ -328,7 +328,11 @@ test("QUA-126 : sortie limitée aux contrôles en échec (contrat nommé, fin de
     /^\[ia-first\] contrôles exécutés : 1 en échec, \d+ avertissement\(s\) — détail : \.drwil\/evidence\/run-checks\.log/,
   );
   assert.equal(lignes.length, 43, "ni annonce, ni avertissement, ni sortie d'un contrôle réussi");
-  assert.doesNotMatch(r.stdout, /sortie de réussite|bavard|…$/m);
+  assert.doesNotMatch(
+    lignes.slice(0, -1).join("\n"),
+    /sortie de réussite|bavard|…$/m,
+    "le résumé seul peut nommer un contrôle réussi, parmi les plus lents",
+  );
   assert.match(r.detail, /^\[ia-first\] bavard…\nsortie de réussite$/m, "le détail garde tout, dans l'ordre");
   assert.match(r.detail, /^ligne 1$/m);
   assert.match(r.detail, /^\[ia-first\] ✗ échec : couverture/m);
@@ -369,9 +373,9 @@ test("QUA-127 : le résumé compte chaque avertissement non bloquant et donne le
   // Reporté (p), couverture CI absente, audit périmé, intention sans revue : quatre, aucun tu.
   const avertissements = r.detail.split("\n").filter((l) => l.startsWith("[ia-first] ⚠"));
   assert.equal(avertissements.length, 4, r.detail);
-  assert.equal(
+  assert.match(
     r.stdout,
-    "[ia-first] contrôles exécutés : OK (4 avertissement(s), non exécutés compris — détail : .drwil/evidence/run-checks.log)\n",
+    /^\[ia-first\] contrôles exécutés : OK \(4 avertissement\(s\), non exécutés compris — détail : \.drwil\/evidence\/run-checks\.log\) — les plus lents : [^\n]+\n$/,
   );
   const en = lancer(
     { ...fichiers, ".drwil/ia-first.json": JSON.stringify({ lang: "en", checks: [{ name: "p", run: "node -e 0", paths: ["src/**"] }] }) },
@@ -384,7 +388,7 @@ test("QUA-127 : le résumé compte chaque avertissement non bloquant et donne le
   const ok = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en", checks: [{ name: "p", run: "node -e 0" }] }) });
   assert.match(
     ok.stdout,
-    /^\[ia-first\] checks run: OK \(\d+ warning\(s\), not run included — detail: \.drwil\/evidence\/run-checks\.log\)$/m,
+    /^\[ia-first\] checks run: OK \(\d+ warning\(s\), not run included — detail: \.drwil\/evidence\/run-checks\.log\)( — slowest: .+)?$/m,
   );
   const longue = lancer(
     {
@@ -424,4 +428,32 @@ test("QUA-134 : une racine temporaire qu'on ne parvient pas à supprimer est un 
   chmodSync(join(base, readdirSync(base)[0]), 0o700);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.detail, /^\[ia-first\] ⚠ dossier temporaire de la passe non supprimé/m);
+});
+
+test("QUA-136 : chaque contrôle exécuté a sa durée au détail, du plus lent au plus rapide en fin de fichier ; le résumé nomme les trois plus lents", () => {
+  const lent = (ms) => `node -e "setTimeout(()=>{},${ms})"`;
+  const config = (lang) => ({
+    ".drwil/ia-first.json": JSON.stringify({
+      lang,
+      checks: [
+        { name: "rapide", run: lent(0) },
+        { name: "moyen", run: lent(250) },
+        { name: "lent", run: lent(600) },
+        { name: "pas-si-rapide", run: lent(120) },
+      ],
+    }),
+  });
+  const fr = lancer(config("fr"));
+  assert.equal(fr.status, 0, fr.stdout + fr.stderr);
+  assert.match(fr.detail, /^\[ia-first\] lent : durée : \d+ ms$/m);
+  assert.doesNotMatch(fr.detail, /^\[ia-first\] contrôles du projet \(lint, tests…\) : durée/m, "un contrôle non exécuté n'a pas de durée");
+  const classe = fr.detail.split("contrôles du plus lent au plus rapide")[1].split("\n").slice(1).filter(Boolean);
+  const noms = classe.map((l) => l.replace(/^\s*\d+ ms\s+/, ""));
+  assert.deepEqual(noms.slice(0, 3), ["lent", "moyen", "pas-si-rapide"]);
+  assert.ok(noms.length >= 4, "tous les contrôles exécutés y figurent");
+  assert.match(fr.stdout, /— les plus lents : lent \d+ ms, moyen \d+ ms, pas-si-rapide \d+ ms\n$/);
+  assert.match(fr.detail, /en passe parallèle, elles se recouvrent/);
+  const en = lancer(config("en"));
+  assert.match(en.detail, /^\[ia-first\] lent : duration: \d+ ms$/m);
+  assert.match(en.stdout, /— slowest: lent \d+ ms, moyen \d+ ms, pas-si-rapide \d+ ms\n$/);
 });
