@@ -144,9 +144,11 @@ export function lancer(commande, args, { cwd, timeout, env: ajout = {} }) {
 
 /** Projet temporaire où drwil est installé en SCOPING ; refuse tout dossier situé dans le dépôt lui-même. */
 export function preparer(outil, { executer = lancer, base = tmpdir() } = {}) {
+  // La base se juge avant toute création : refuser après coup laissait un dossier vide dans le dépôt.
+  const racineBase = realpathSync(base);
+  if (racineBase === RACINE || racineBase.startsWith(RACINE + sep))
+    throw new Error(`le banc ne lance jamais un agent dans le dépôt : ${racineBase}`);
   const dossier = realpathSync(mkdtempSync(join(base, "drwil-banc-")));
-  if (dossier === RACINE || dossier.startsWith(RACINE + sep))
-    throw new Error(`le banc ne lance jamais un agent dans le dépôt : ${dossier}`);
   const init = executer(
     process.execPath,
     [

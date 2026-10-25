@@ -1,7 +1,7 @@
-import { afterEach, test } from "node:test";
+import { after, afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { checks, projectRoot, startParallel, texts } from "./engine.mjs";
@@ -10,6 +10,10 @@ import { pathToFileURL } from "node:url";
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
+// Les dossiers gardés par un contrôle en échec (QUA-133) vont dans un temporaire propre à ce fichier, supprimé à la fin.
+const racineTemp = mkdtempSync(join(tmpdir(), "drwil-moteur-racine-"));
+process.env.TMPDIR = racineTemp;
+after(() => rmSync(racineTemp, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
 let dossiers = [];
 afterEach(() => {
   for (const d of dossiers) rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
@@ -436,4 +440,79 @@ test("QUA-119 : l'autotest en parallèle suit les mêmes cas qu'en série ; sans
   const vide = startParallel([{ id: "x", runAsync: async () => ({ status: "ok" }) }]);
   assert.equal((await vide.get("x")).status, "ok");
   assert.equal(startParallel([]).size, 0);
+});
+
+test("QUA-133 : chaque contrôle a un TMPDIR, TMP et TEMP propres, supprimés à la fin de la passe ; un contrôle en échec garde le sien, au même chemin", () => {
+  const racine = depot();
+  const base = tmp();
+  const ecrireTemp = `require("fs").writeFileSync(require("path").join(process.env.TMPDIR,"reste"),"x");if(process.env.TMP!==process.env.TMPDIR||process.env.TEMP!==process.env.TMPDIR)process.exit(2)`;
+  const lancerPasse = (echec) => {
+    const liste = checks(racine, {
+      cfg: {
+        checks: [
+          { name: "fuit", run: `node -e '${ecrireTemp}'` },
+          { name: "tombe", run: `node -e '${ecrireTemp};process.exit(${echec ? 1 : 0})'` },
+        ],
+      },
+      env: { ...process.env, TMPDIR: base },
+    });
+    const resultats = liste.filter((c) => c.id.startsWith("project:")).map((c) => c.run({ stdio: "pipe" }));
+    return { resultats, fin: liste.finish() };
+  };
+  const reussie = lancerPasse(false);
+  assert.deepEqual(
+    reussie.resultats.map((r) => r.status),
+    ["ok", "ok"],
+    "les variables valent le dossier du contrôle",
+  );
+  assert.deepEqual(readdirSync(base), [], "passe réussie : aucun dossier drwil-* laissé");
+  assert.equal(reussie.fin.kept, null);
+  assert.deepEqual(reussie.fin.leaks, [
+    { name: "fuit", count: 1 },
+    { name: "tombe", count: 1 },
+  ]);
+  assert.equal(reussie.resultats[0].leaked, 1);
+
+  const premiere = lancerPasse(true);
+  const gardes = readdirSync(base);
+  assert.equal(gardes.length, 1, "seul le dossier gardé reste");
+  assert.equal(premiere.fin.kept, join(base, gardes[0]));
+  assert.equal(readdirSync(premiere.fin.kept).length, 1, "le contrôle en échec seul est gardé");
+  const seconde = lancerPasse(true);
+  assert.equal(seconde.fin.kept, premiere.fin.kept, "même chemin d'une passe à l'autre");
+  assert.equal(readdirSync(base).length, 1, "remplacé, jamais accumulé");
+});
+
+test("QUA-133 : sans dossier temporaire utilisable, le contrôle tourne avec celui dont il hérite ; une racine non supprimable est signalée, jamais fatale", {
+  skip: process.platform === "win32" || process.getuid?.() === 0,
+}, () => {
+  const racine = depot();
+  const absent = join(tmp(), "absent");
+  const sans = checks(racine, { cfg: { checks: [{ name: "p", run: "node -e 0" }] }, env: { ...process.env, TMPDIR: absent } });
+  assert.equal(sans.find((c) => c.id === "project:p").run({ stdio: "pipe" }).status, "ok");
+  assert.deepEqual(sans.finish(), { kept: null, leaks: [], cleanupFailed: false });
+
+  const efface = checks(racine, {
+    cfg: { checks: [{ name: "efface", run: `node -e 'require("fs").rmSync(process.env.TMPDIR, { recursive: true })'` }] },
+    env: { ...process.env, TMPDIR: tmp() },
+  });
+  assert.equal(
+    efface.find((c) => c.id === "project:efface").run({ stdio: "pipe" }).leaked,
+    undefined,
+    "un dossier disparu ne compte aucune fuite",
+  );
+  efface.finish();
+
+  const base = tmp();
+  const liste = checks(racine, {
+    cfg: { checks: [{ name: "p", run: `node -e 'require("fs").chmodSync(process.env.TMPDIR + "/..", 0o500)'` }] },
+    env: { ...process.env, TMPDIR: base },
+  });
+  const r = liste.find((c) => c.id === "project:p").run({ stdio: "pipe" });
+  assert.equal(r.status, "ok");
+  try {
+    assert.equal(liste.finish().cleanupFailed, true);
+  } finally {
+    chmodSync(join(base, readdirSync(base)[0]), 0o700);
+  }
 });

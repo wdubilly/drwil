@@ -29,6 +29,9 @@ const T = {
     failed: "échec :",
     ok: (n, f) => `contrôles exécutés : OK (${n} avertissement(s), non exécutés compris — détail : ${f})`,
     ko: (k, n, f) => `contrôles exécutés : ${k} en échec, ${n} avertissement(s) — détail : ${f}`,
+    leak: (name, n) => `${name} laisse ${n} élément(s) dans son dossier temporaire : le supprimer à la source`,
+    keptTmp: (d) => `dossiers temporaires des contrôles en échec gardés pour le diagnostic : ${d}`,
+    cleanupFailed: "dossier temporaire de la passe non supprimé (fichier encore ouvert ?)",
     tail: (n, f) => `    … ${n} ligne(s) plus haut, dans ${f}`,
     staleAudit: (f, n) => `audit périmé (${f}, vieux de ${n} jours) : à relancer`,
     staleIntent: (f, n) => `intention sans revue depuis ${n} jours (${f}) : la revoir, la mettre à jour (ligne « Revu le ») ou la clore`,
@@ -42,6 +45,9 @@ const T = {
     failed: "failed:",
     ok: (n, f) => `checks run: OK (${n} warning(s), not run included — detail: ${f})`,
     ko: (k, n, f) => `checks run: ${k} failed, ${n} warning(s) — detail: ${f}`,
+    leak: (name, n) => `${name} leaves ${n} item(s) in its temporary folder: remove them at the source`,
+    keptTmp: (d) => `temporary folders of the failed checks kept for diagnosis: ${d}`,
+    cleanupFailed: "the pass's temporary folder was not removed (file still open?)",
     tail: (n, f) => `    … ${n} line(s) above, in ${f}`,
     staleAudit: (f, n) => `stale audit (${f}, ${n} days old): time to re-run`,
     staleIntent: (f, n) => `intent not reviewed for ${n} days (${f}): review it, update it ("Reviewed on" line) or close it`,
@@ -81,18 +87,21 @@ const list = checks(root, { cfg, staged });
 // Checks with a `runAsync` (setting `parallel`) are all started up front; their result is read
 // here in the list order, so the report and the verdict are those of a sequential run.
 const started = startParallel(list);
+const leaks = [];
 for (const c of list) {
   let r;
   if (started.has(c.id)) {
     r = await started.get(c.id);
     if (r.launched) announce(c.name);
   } else r = c.run({ beforeRun: announce, stdio: "pipe", maxBuffer: 1 << 30 });
+  if (r.leaked) leaks.push({ name: c.name, count: r.leaked });
   if (r.output) report.push(r.output.replace(/\n$/, ""));
   if (r.status === "fail") {
     failures.push(r.message ?? c.name);
     outputs.set(failures.at(-1), r.output);
   } else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
 }
+const end = list.finish();
 if (!Array.isArray(cfg.checks) || !cfg.checks.length) unrun(`${T.project} (${T.noCheck})`, true);
 
 // Non-blocking reminder (comfort, not a contract): an audit (opportunity, risks/debt) whose
@@ -121,7 +130,12 @@ const reminders = [
 // An ID cited to the human comes with its label (QUA-039).
 const labels = glossary(root);
 const label = (line) => annotate(line, labels);
-const warnings = [...notRun.map((c) => `[ia-first] ⚠ ${T.notRun} ${c}`), ...reminders.map((r) => `[ia-first] ⚠ ${r}`)].map(label);
+const warnings = [
+  ...notRun.map((c) => `[ia-first] ⚠ ${T.notRun} ${c}`),
+  ...reminders.map((r) => `[ia-first] ⚠ ${r}`),
+  ...leaks.map((l) => `[ia-first] ⚠ ${T.leak(l.name, l.count)}`),
+  ...(end.cleanupFailed ? [`[ia-first] ⚠ ${T.cleanupFailed}`] : []),
+].map(label);
 // A failed check comes with the end of its output (in CI, the whole of it: the file does not outlive the job).
 const TAIL = 40;
 const shown = [];
@@ -132,7 +146,7 @@ for (const c of failures) {
   if (cut) shown.push(T.tail(cut, DETAIL));
   shown.push(...lines.slice(cut).map((l) => `    ${l}`));
 }
-const summary = `[ia-first] ${failures.length ? T.ko(failures.length, warnings.length, DETAIL) : T.ok(warnings.length, DETAIL)}`;
+const summary = `[ia-first] ${failures.length ? T.ko(failures.length, warnings.length, DETAIL) : T.ok(warnings.length, DETAIL)}${end.kept ? ` — ${T.keptTmp(end.kept)}` : ""}`;
 // Never at the cost of the verdict: a report that cannot be written changes nothing to the exit code.
 try {
   mkdirSync(".drwil/evidence", { recursive: true });

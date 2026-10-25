@@ -329,10 +329,10 @@ une décision du demandeur.
   `docs/intentions/guide-de-demarrage.md`.
 - [ ] [décision] Proposer la couche d'un dossier de code apparu après
   l'installation — `docs/intentions/couche-d-un-nouveau-dossier-de-code.md`.
-- [ ] [décision] Les tests laissent des dossiers `/tmp/drwil-*` jamais
-  supprimés (inodes épuisés le 2026-10-24) — cadrée le 2026-10-24 (fiche
-  listée sous « Ensuite ») —
-  `docs/intentions/tests-dossiers-temporaires-non-supprimes.md`.
+- [ ] [décision] Les tests qui laissent des fichiers dans leur dossier
+  temporaire se corrigent à la source (31 contrôles nommés par
+  `run-checks` le 2026-10-25) —
+  `docs/intentions/tests-qui-laissent-des-fichiers-temporaires.md`.
 - [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
   2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —

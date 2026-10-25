@@ -1,5 +1,5 @@
 // Tests de bout en bout du kit : installe dans des dossiers temporaires et lance les vrais contrôles.
-import { test, afterEach } from "node:test";
+import { test, after, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
@@ -40,9 +40,15 @@ for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete p
 // Chaque dossier temporaire est supprimé après son test : sans ça, la suite (lancée à chaque
 // commit par le hook) en laissait ~70 par passage et finissait par épuiser les inodes de /tmp.
 // Ceux d'un test en échec sont gardés (et affichés) pour le diagnostic.
+const tmpReel = tmpdir();
+// Les hooks lancés par les projets de test gardent le dossier temporaire de leurs contrôles en échec (QUA-133) :
+// dans une racine propre à ce fichier, supprimée à la fin, pour qu'ils ne s'accumulent pas dans /tmp.
+const racineHooks = mkdtempSync(join(tmpReel, "drwil-kit-racine-"));
+process.env.TMPDIR = racineHooks;
+after(() => rmSync(racineHooks, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
 let dossiersDuTest = [];
 const tmp = () => {
-  const dir = mkdtempSync(join(tmpdir(), "drwil-"));
+  const dir = mkdtempSync(join(tmpReel, "drwil-"));
   dossiersDuTest.push(dir);
   return dir;
 };

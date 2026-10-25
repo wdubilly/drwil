@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, test } from "node:test";
@@ -107,7 +107,10 @@ test("QUA-060 : le projet temporaire est en SCOPING, hors du dépôt, et nettoy�
   assert.throws(() => preparer("claude", { executer: simule({ etat: "Activité : BUILD" }), base }), /pas en SCOPING/);
   assert.throws(() => preparer("claude", { executer: simule({ etat: "" }), base }), /pas en SCOPING/);
   assert.throws(() => preparer("claude", { executer: simule({ initCode: 1 }), base }), /installation de drwil impossible : boom \| suite/);
+  const restes = () => readdirSync(RACINE).filter((n) => n.startsWith("drwil-banc-")).length;
+  const avant = restes();
   assert.throws(() => preparer("claude", { executer: simule({}), base: RACINE }), /jamais un agent dans le dépôt/);
+  assert.equal(restes(), avant, "le refus ne crée aucun dossier dans le dépôt");
   const nettoye = essayer("claude", { executer: simule({}), base });
   assert.equal(nettoye.dossier, undefined);
 });

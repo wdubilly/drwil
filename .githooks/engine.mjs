@@ -10,13 +10,35 @@
 //   at commit time) — never a success (QUA-013);
 // - "not-applicable": excluded by design in this context (e.g. QUA-017 in CI).
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
-import { availableParallelism, homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync } from "node:fs";
+import { availableParallelism, homedir, tmpdir } from "node:os";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { globToRegex } from "./glob.mjs";
 import { checkScope } from "./scope-gate.mjs";
 import { normalize } from "./scope.mjs";
+
+// One temporary root per pass (QUA-133): every check gets its own sub-folder as TMPDIR/TMP/TEMP, removed
+// at the end of the pass. The folders of the failed checks are moved to a fixed path, replaced at each
+// failure and never piled up. A pass that dies before `finish` is cleaned by the `exit` handler.
+const passes = new Set();
+let exitHooked = false;
+const hookExit = () => {
+  if (exitHooked) return;
+  exitHooked = true;
+  process.on("exit", () => {
+    for (const finish of [...passes]) finish();
+  });
+};
+const removeTree = (dir) => {
+  try {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 const TEXTS = {
   fr: {
@@ -108,30 +130,90 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   // a check that inherits them and runs `git init` elsewhere acts on the repository that launched it
   // (core.bare=true written in the shared config, index soiled). The hook keeps them; its children
   // run from the project root, where git finds the right repository on its own.
-  const prepare = (opts, keepGit) => {
+  const base = env.TMPDIR || tmpdir();
+  const failedPath = join(base, `drwil-checks-failed-${createHash("sha1").update(root).digest("hex").slice(0, 8)}`);
+  let passRoot = null;
+  let sequence = 0;
+  const launches = [];
+  const tempFor = (name) => {
+    try {
+      if (!passRoot) {
+        passRoot = mkdtempSync(join(base, "drwil-checks-"));
+        passes.add(finish);
+        hookExit();
+      }
+      const dir = join(
+        passRoot,
+        `${++sequence}-${String(name)
+          .replace(/[^\w.-]+/g, "_")
+          .slice(0, 40)}`,
+      );
+      mkdirSync(dir);
+      const temp = { name, dir, failed: false, leaked: 0 };
+      launches.push(temp);
+      return temp;
+    } catch {
+      return null; // no temporary root: the check keeps the inherited one, as before
+    }
+  };
+  const settle = (temp, ok) => {
+    if (!temp) return {};
+    temp.failed = !ok;
+    try {
+      temp.leaked = readdirSync(temp.dir).length;
+    } catch {}
+    return temp.leaked ? { leaked: temp.leaked } : {};
+  };
+  // Ends the pass: counts what the checks left, keeps the failed ones' folders, removes the rest.
+  function finish() {
+    passes.delete(finish);
+    const result = {
+      kept: null,
+      leaks: launches.filter((l) => l.leaked).map((l) => ({ name: l.name, count: l.leaked })),
+      cleanupFailed: false,
+    };
+    if (!passRoot) return result;
+    const failed = launches.filter((l) => l.failed);
+    if (failed.length) {
+      removeTree(failedPath);
+      try {
+        mkdirSync(failedPath);
+        for (const l of failed) renameSync(l.dir, join(failedPath, basename(l.dir)));
+        result.kept = failedPath;
+      } catch {}
+    }
+    result.cleanupFailed = !removeTree(passRoot);
+    passRoot = null;
+    launches.length = 0;
+    return result;
+  }
+  const prepare = (opts, keepGit, temp) => {
     const checkEnv = { ...(opts.env ?? env), NODE_TEST_CONTEXT: undefined };
+    if (temp) checkEnv.TMPDIR = checkEnv.TMP = checkEnv.TEMP = temp.dir;
     if (!keepGit) for (const k of Object.keys(checkEnv)) if (k.startsWith("GIT_")) delete checkEnv[k];
     return { cwd: root, encoding: "utf8", ...opts, env: checkEnv };
   };
   const launch = (cmd, args, { stdio = "inherit", beforeRun, keepGit = false, ...opts } = {}, name) => {
     beforeRun?.(name);
-    const r = spawnSync(cmd, args, { stdio, ...prepare(opts, keepGit) });
+    const temp = tempFor(name);
+    const r = spawnSync(cmd, args, { stdio, ...prepare(opts, keepGit, temp) });
     const output = stdio === "pipe" ? `${r.stdout ?? ""}${r.stderr ?? ""}` : undefined;
     // A command that cannot even start is a failure, as before the engine was extracted.
-    if (r.error) return { status: "fail", detail: r.error.message, output };
-    return { status: r.status === 0 ? "ok" : "fail", output };
+    if (r.error) return { status: "fail", detail: r.error.message, output, ...settle(temp, false) };
+    return { status: r.status === 0 ? "ok" : "fail", output, ...settle(temp, r.status === 0) };
   };
   // Same verdict as `launch`, without blocking: the output is always captured (`launched`: the
   // command did start, so the caller shows its name with its output).
-  const launchAsync = (cmd, args, { keepGit = false, ...opts } = {}) =>
+  const launchAsync = (cmd, args, { keepGit = false, ...opts } = {}, name) =>
     new Promise((resolve) => {
       let output = "";
       let done = false;
+      const temp = tempFor(name);
       const end = (r) => {
-        if (!done) resolve({ ...r, output, launched: true });
+        if (!done) resolve({ ...r, output, launched: true, ...settle(temp, r.status === "ok") });
         done = true;
       };
-      const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"], ...prepare(opts, keepGit) });
+      const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"], ...prepare(opts, keepGit, temp) });
       for (const stream of [child.stdout, child.stderr]) stream.on("data", (d) => (output += d));
       child.on("error", (e) => end({ status: "fail", detail: e.message }));
       child.on("close", (code) => end({ status: code === 0 ? "ok" : "fail" }));
@@ -154,7 +236,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   };
   const buildAsync = async (name) => {
     if (!cfg.build) return { status: "fail", message: T.buildMissing(name) };
-    buildPending ??= built ? Promise.resolve(built) : launchAsync(cfg.build, [], buildOpts);
+    buildPending ??= built ? Promise.resolve(built) : launchAsync(cfg.build, [], buildOpts, "build");
     built = await buildPending;
     return buildVerdict(name, built);
   };
@@ -242,9 +324,9 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
       const t = selfTests();
       return t.args ? launch(process.execPath, t.args, o, name) : t;
     },
-    async () => {
+    async (name) => {
       const t = selfTests();
-      return t.args ? launchAsync(process.execPath, t.args) : t;
+      return t.args ? launchAsync(process.execPath, t.args, {}, name) : t;
     },
   );
 
@@ -277,11 +359,12 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
       ...(parallel && c.parallel !== false
         ? {
             runAsync: async () =>
-              skipped() ?? (c.needsBuild ? await buildAsync(name) : null) ?? launchAsync(c.run, [], { shell: true, cwd }),
+              skipped() ?? (c.needsBuild ? await buildAsync(name) : null) ?? launchAsync(c.run, [], { shell: true, cwd }, name),
           }
         : {}),
     });
   }
+  list.finish = finish;
   return list;
 }
 

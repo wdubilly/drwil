@@ -503,7 +503,7 @@ régression sauf si la fiche active déclare le changement (section
 **Règle** : Propre au dépôt drwil (QUA-018). `node outils/banc-agents.mjs` installe drwil dans un projet temporaire (jamais dans le dépôt) en SCOPING, demande à l'agent réel, en mode non interactif, d'écrire un fichier de code, et rend par outil : hooks lancés, écriture refusée ou acceptée, rappel d'état reçu ou non. Un outil n'est « conforme » que si son hook d'écriture a été lancé, le fichier est absent et le rappel est reçu : un refus sans hook lancé (l'agent a obéi aux consignes) est « non éprouvé ». Un outil absent du poste ou dont le lancement n'est pas défini est « non testé », jamais « conforme ».
 **Périmètre** : `outils/banc-agents.mjs`.
 **Source de vérité** : `outils/banc-agents.mjs` (`analyser`, `essayer`).
-**Preuve** : tests du banc avec un exécuteur simulé (aucun vrai agent) ; l'essai sur l'outil réel est un geste du poste.
+**Preuve** : tests du banc avec un exécuteur simulé (aucun vrai agent) ; une base située dans le dépôt est refusée avant toute création, la racine du dépôt ne reçoit aucun `drwil-banc-*` de plus ; l'essai sur l'outil réel est un geste du poste.
 **Contrôle** : `tests-qua-060`
 **Manuel** : lancer le banc sur le poste et attester le résultat (colonne « Attested by the human » de la matrice).
 **Tests** : `outils/banc-agents.test.mjs`
@@ -1250,3 +1250,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : reduction-contexte — « Avec Claude Code, la lecture entière de `docs/contracts.md` ou de `docs/projects/journal.md` est refusée avant qu'elle ait lieu (outil Read sans plage, `cat`/`less`/`more` du fichier dans une commande shell), avec un renvoi vers `node .githooks/glossary.mjs --contract <ID>`, `--contracts` et `--journal <chantier>` ; une lecture par plage et une recherche restent permises ; `AGENTS.md` le dit »
 **Raison** : La consigne écrite de lecture ciblée (QUA-124) ne suffit pas : un agent qui lit le registre ou le journal en entier y ajoute des dizaines de milliers de tokens, relus à chaque requête suivante.
+
+## QUA-133 — Chaque passe des contrôles a sa racine temporaire, supprimée à la fin
+**Règle** : Livré à tout projet. Le moteur de contrôles (`.githooks/engine.mjs` : hooks, `run-checks`, `drwil verify`, CI) crée à chaque passe un dossier `drwil-checks-*` dans le dossier temporaire du système et donne à chaque contrôle qu'il lance son propre sous-dossier comme `TMPDIR`, `TMP` et `TEMP` ; la racine est supprimée à la fin de la passe (ou à la sortie du processus), de sorte qu'une passe réussie ne laisse aucun dossier `drwil-*`. Les sous-dossiers des contrôles en échec sont déplacés sous un chemin fixe par projet (`drwil-checks-failed-<empreinte>`), remplacé à chaque échec, jamais accumulé, et le résumé de `run-checks` dit ce chemin.
+**Périmètre** : `.githooks/engine.mjs`, `.githooks/run-checks.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/engine.mjs` (`checks`, `finish`).
+**Preuve** : test du moteur avec des contrôles simulés qui écrivent dans leur dossier temporaire : variables identiques et propres au contrôle, aucun reste après une passe réussie, dossier du contrôle en échec gardé au même chemin et remplacé à la passe suivante ; test de `run-checks` : le chemin gardé figure au résumé.
+**Contrôle** : `tests-qua-133`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : dossiers-temporaires-des-tests — « Chaque passe du moteur de contrôles donne à chaque contrôle qu'elle lance un dossier temporaire propre à la passe (variables `TMPDIR`, `TMP` et `TEMP`), supprimé à la fin de la passe ; une passe en échec garde le dossier temporaire de ses contrôles en échec pour le diagnostic, au même chemin d'une passe à l'autre »
+**Raison** : Troisième épuisement des inodes de `/tmp` par des dossiers `drwil-*` de tests jamais supprimés (7 919, 40 061, 13 500) : corriger les tests un à un n'empêchait pas les suivants de fuir.
+
+## QUA-134 — Un contrôle qui laisse des fichiers temporaires est nommé et compté comme avertissement
+**Règle** : Livré à tout projet. Le rapport de `.githooks/run-checks.mjs` nomme chaque contrôle qui laisse des éléments dans son dossier temporaire (QUA-133, une racine temporaire par passe), avec leur nombre, et le résumé les compte parmi les avertissements (QUA-127, le résumé compte chaque avertissement) ; la fuite ne fait pas échouer la passe, la racine par passe l'empêchant déjà de s'accumuler. Une racine qu'on ne parvient pas à supprimer (fichier encore ouvert) est de même un avertissement, jamais un échec de la passe.
+**Périmètre** : `.githooks/engine.mjs`, `.githooks/run-checks.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/run-checks.mjs`.
+**Preuve** : test de `run-checks` : un contrôle qui écrit dans son dossier temporaire est nommé avec son nombre d'éléments, compté au résumé, sans changer le verdict, en français et en anglais ; aucun reste après la passe ; racine non supprimable signalée en avertissement.
+**Contrôle** : `tests-qua-134`
+**Tests** : `.githooks/run-checks.test.mjs`
+**Origine** : dossiers-temporaires-des-tests — « Un contrôle qui laisse des fichiers dans son dossier temporaire est nommé dans le rapport, avec le nombre d'éléments laissés, et compté comme avertissement dans le résumé ; il ne fait pas échouer la passe »
+**Raison** : Faire échouer la passe sur une fuite aurait bloqué tous les commits tant que les fuites actuelles ne sont pas corrigées ; sans les nommer, personne ne les corrigerait à la source.

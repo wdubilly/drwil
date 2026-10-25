@@ -57,25 +57,29 @@ pas dans le dossier temporaire).
   CI) donne à chaque contrôle qu'elle lance un dossier temporaire propre à
   la passe (variables `TMPDIR`, `TMP` et `TEMP`), supprimé à la fin de la
   passe : après une passe réussie, le dossier temporaire du système ne
-  contient pas plus de dossiers `drwil-*` qu'avant — contrat à créer
+  contient pas plus de dossiers `drwil-*` qu'avant — `QUA-133`
 - Une passe en échec garde le dossier temporaire de ses contrôles en échec
   pour le diagnostic, au même chemin d'une passe à l'autre (remplacé, jamais
-  accumulé), et le résumé de `run-checks` dit ce chemin — même contrat
+  accumulé), et le résumé de `run-checks` dit ce chemin — `QUA-133`
 - Un contrôle qui laisse des fichiers dans son dossier temporaire est
   nommé dans le rapport, avec le nombre d'éléments laissés, et compté comme
   avertissement dans le résumé (QUA-127, le résumé compte chaque
-  avertissement) ; il ne fait pas échouer la passe — contrat à créer
+  avertissement) ; il ne fait pas échouer la passe — `QUA-134`
 - Le banc refuse une base située dans le dépôt sans y créer de dossier :
   après le test du refus, la racine du dépôt ne contient aucun nouveau
   `drwil-banc-*` — preuve ajoutée à QUA-060 (un outil n'est tenu que prouvé
-  par le banc)
+  par le banc) — `QUA-060`
 
 ## Contrats modifiés
 
-(à compléter au lancement : une puce par fichier de `.githooks/` modifié,
-nom entre backticks en tête de puce, pour que la CI rejoue les contrôles
-avec la version de la branche — QUA-113, la CI rejoue les contrôles avec
-les hooks de la branche principale.)
+(une puce par fichier de `.githooks/` modifié, nom entre backticks en tête
+de puce, pour que la CI rejoue les contrôles avec la version de la branche —
+QUA-113, la CI rejoue les contrôles avec les hooks de la branche principale.)
+
+- `.githooks/engine.mjs` — racine temporaire par passe, comptage des fuites
+- `.githooks/engine.test.mjs` — test de la racine par passe
+- `.githooks/run-checks.mjs` — avertissement de fuite, chemin gardé au résumé
+- `.githooks/run-checks.test.mjs` — test de l'avertissement de fuite
 
 ## 2. Hors périmètre
 
