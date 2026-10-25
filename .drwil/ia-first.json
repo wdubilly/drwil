@@ -481,7 +481,7 @@
     {
       "id": "tests-qua-048",
       "name": "tests de QUA-048, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-048 \" .githooks/close.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-048 \" .githooks/close.test.mjs .githooks/close-branches.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",
@@ -603,7 +603,7 @@
     {
       "id": "tests-qua-058",
       "name": "tests de QUA-058, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-058 \" .githooks/close.test.mjs .githooks/detour.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-058 \" .githooks/close-branches.test.mjs .githooks/detour.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",
@@ -614,7 +614,7 @@
     {
       "id": "tests-qua-059",
       "name": "tests de QUA-059, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-059 \" .githooks/close.test.mjs .githooks/detour.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-059 \" .githooks/close-branches.test.mjs .githooks/detour.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",

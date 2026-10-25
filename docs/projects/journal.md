@@ -3222,7 +3222,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   par l'humain.
 - **Limites connues** : l'attestation de QUA-122 tombe à chaque contrôle
   ajouté (intention « couverture-de-qua-122 », réglée le 2026-10-25) ; `.githooks/close.mjs`
-  est au plafond de 400 lignes de QUA-001 (`docs/intentions/decouper-close.md`) ;
+  est au plafond de 400 lignes de QUA-001 (intention « decouper-close », traitée
+  par le chantier du 2026-10-26) ;
   le test unitaire du nouveau texte reste à écrire dans
   `.githooks/state.test.mjs`, en déclarant le hook
   (`docs/intentions/test-unitaire-fusion-automatique.md`) ; le test de durée
@@ -3344,3 +3345,22 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   « couverture-de-qua-122 », entièrement couverte, est retirée.
 - **Preuve de clôture** : `docs/preuves/duree-ci-en-indicateur.md` (si présent).
 - **Clôturé par** : la branche `workstream/duree-ci-en-indicateur`.
+
+## 2026-10-26 — Séparer la gestion des branches de la mécanique de clôture
+
+- **Décisions clés** : la reconnaissance et la suppression des branches
+  fusionnées (QUA-048, QUA-058, QUA-059) quittent `.githooks/close.mjs` pour
+  `.githooks/close-branches.mjs`, livré dans le gabarit et installé dans le
+  dépôt ; `.githooks/close.mjs` ré-exporte les mêmes fonctions, sans changement de
+  comportement. Les deux fichiers restent sous le plafond de 400 lignes
+  (QUA-001) et gardent 100 % de couverture (QUA-004). Les tests de branches
+  sont déplacés dans `.githooks/close-branches.test.mjs`, les sélecteurs et
+  les contrats adaptés. Décision humaine en cours de chantier : cadrage élargi
+  aux deux `kit-mechanics.md` (dépôt et gabarit), qui déclarent chaque hook du
+  kit ; QUA-048 attesté par l'humain.
+- **Durée de CI (job checks)** : non mesurée — la CI de la PR n'a pas encore
+  passé à l'écriture de cette entrée.
+- **Limites connues** : aucune ; l'intention « découper close », entièrement
+  couverte, est retirée.
+- **Preuve de clôture** : `docs/preuves/decouper-close.md` (si présent).
+- **Clôturé par** : la branche `workstream/decouper-close`.
