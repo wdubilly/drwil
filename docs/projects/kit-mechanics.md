@@ -35,8 +35,10 @@ files:
   - .githooks/state-texts.mjs
   - .githooks/state.test.mjs
   - .githooks/close.mjs
+  - .githooks/close-branches.mjs
   - .githooks/closure-proof.mjs
   - .githooks/close.test.mjs
+  - .githooks/close-branches.test.mjs
   - .githooks/note.mjs
   - .githooks/note.test.mjs
   - .githooks/detour.mjs

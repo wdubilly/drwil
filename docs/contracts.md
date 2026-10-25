@@ -380,12 +380,12 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-048 — Une clôture en un geste, ses pièges signalés avant le commit
 **Règle** : Livré à tout projet. En CLOSING, `node .githooks/close.mjs` supprime la fiche active, retire sa ligne de l'index et consigne la consommation du chantier ; il ne commite, ne pousse, ne fusionne rien et n'écrit pas l'état. Il signale, avant le commit, ce qui ferait échouer la clôture : critère encore « contrat à créer » (avec l'ID à écrire), références à la fiche qui deviendraient mortes, noms de fichiers sans chemin dans les documents modifiés ; les mêmes signaux sont donnés par `--check` (sans rien écrire) et au passage de BUILD à EVIDENCE, tant que le code peut encore changer. Au lancement du chantier suivant, les branches locales déjà fusionnées dans la branche principale sont supprimées (`git branch -d`) — jamais la branche principale, la courante, une branche encore au sommet de la principale ni une branche non fusionnée.
-**Périmètre** : `.githooks/close.mjs` (commande de clôture, suppression des branches fusionnées), `.githooks/state.mjs` (`start`, `move`) ; livré dans le gabarit.
-**Source de vérité** : `.githooks/close.mjs`.
+**Périmètre** : `.githooks/close.mjs` (commande de clôture), `.githooks/close-branches.mjs` (suppression des branches fusionnées, exports repris par `.githooks/close.mjs`), `.githooks/state.mjs` (`start`, `move`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/close.mjs`, `.githooks/close-branches.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (fusions, branches, journaux de session).
 **Contrôle** : `tests-qua-048`
 **Manuel** : un essai réel d'une clôture depuis BUILD, en suivant seulement les messages, aboutit sans lire le code, sous Copilot CLI ou en terminal ; l'essai sous Claude Code est reporté (attestation humaine : `drwil attest QUA-048`).
-**Tests** : `.githooks/close.test.mjs`
+**Tests** : `.githooks/close.test.mjs`, `.githooks/close-branches.test.mjs`
 **Origine** : clôture allégée (0.6.5) — « Une commande de clôture fait la mécanique d'un geste — fiche supprimée, ligne d'index retirée, consommation consignée — et signale avant le commit ce qui ferait échouer la clôture ; les branches locales déjà fusionnées sont supprimées au lancement du chantier suivant »
 **Raison** : Relevé dans la session de la 0.6.4 : la clôture coûtait des gestes et des reprises sans gain de qualité — un commit à part pour citer l'ID d'un contrat créé, des références à une fiche supprimée restées fausses, un commit de clôture refusé pour un nom de fichier sans chemin, 53 branches fusionnées jamais supprimées.
 
@@ -481,21 +481,21 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-058 — Une branche dont la PR est fusionnée sur GitHub est reconnue fusionnée, squash compris
 **Règle** : Livré à tout projet. Une seule fonction dit si une branche est fusionnée dans la branche principale (`branchMerged`), partagée par le ménage des branches au lancement (QUA-048) et la reprise d'un détour (QUA-050) : fusionnée si git la voit dans la branche principale (fusion classique), ou si une PR fusionnée de cette branche, lue par `gh pr list --state merged`, porte son dernier commit (fusion par squash comprise) ; une branche qui a reçu des commits après sa PR n'est pas fusionnée. Une branche ainsi prouvée est supprimée au lancement suivant (`git branch -D`, sur la seule preuve de `gh`) et acceptée par la reprise d'un détour. Une seule question à `gh` pour toutes les branches du ménage, posée seulement si git ne suffit pas.
-**Périmètre** : `.githooks/close.mjs` (`mergedPullRequests`, `branchMerged`, `pruneMergedBranches`), `.githooks/detour.mjs` (`resume`) ; livré dans le gabarit.
-**Source de vérité** : `.githooks/close.mjs` (`branchMerged`).
+**Périmètre** : `.githooks/close-branches.mjs` (`mergedPullRequests`, `branchMerged`, `pruneMergedBranches`, repris par `.githooks/close.mjs`), `.githooks/detour.mjs` (`resume`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/close-branches.mjs` (`branchMerged`).
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires, fusions par squash, `gh` simulé (PR au même commit, branche allée plus loin, PR d'un autre commit).
 **Contrôle** : `tests-qua-058`
-**Tests** : `.githooks/close.test.mjs`, `.githooks/detour.test.mjs`
+**Tests** : `.githooks/close-branches.test.mjs`, `.githooks/detour.test.mjs`
 **Origine** : les branches fusionnées par squash reconnues (0.6.6) — « Une branche dont la PR est fusionnée sur GitHub (y compris par squash) est reconnue fusionnée : supprimée au lancement suivant, et acceptée par la reprise d'un détour »
 **Raison** : Point de recette v0.6.5-P8 : pour une équipe qui fusionne par squash, git ne voit jamais la branche fusionnée — elle n'était jamais supprimée et un détour ne pouvait pas reprendre.
 
 ## QUA-059 — Sans gh joignable, seule la fusion classique est reconnue, et c'est dit
 **Règle** : Livré à tout projet. Quand `gh` ne répond pas (absent, non connecté, hors GitHub, trop lent), la reconnaissance d'une branche fusionnée (QUA-058) se replie sur git seul (fusion classique) : aucune branche non fusionnée aux yeux de git n'est supprimée, et le lancement dit « gh injoignable » en nommant les branches gardées ; la reprise d'un détour est refusée en disant de même, état et mise de côté intacts.
-**Périmètre** : `.githooks/close.mjs` (`branchMerged`, `pruneMergedBranches`, `prunedMessage`), `.githooks/detour.mjs` (`resume`) ; livré dans le gabarit.
-**Source de vérité** : `.githooks/close.mjs` (`branchMerged`).
+**Périmètre** : `.githooks/close-branches.mjs` (`branchMerged`, `pruneMergedBranches`, `prunedMessage`, repris par `.githooks/close.mjs`), `.githooks/detour.mjs` (`resume`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/close-branches.mjs` (`branchMerged`).
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires, `gh` simulé muet puis le vrai `gh` hors GitHub.
 **Contrôle** : `tests-qua-059`
-**Tests** : `.githooks/close.test.mjs`, `.githooks/detour.test.mjs`
+**Tests** : `.githooks/close-branches.test.mjs`, `.githooks/detour.test.mjs`
 **Origine** : les branches fusionnées par squash reconnues (0.6.6) — « Sans `gh` joignable, la reconnaissance se replie sur git (fusion classique seulement) et le dit clairement, sans jamais supprimer une branche non fusionnée »
 **Raison** : La PR fusionnée via `gh` fait foi (décision du demandeur, 2026-10-19) ; sans elle, rien ne prouve une fusion par squash, et supprimer une branche sur un doute pourrait perdre du travail.
 

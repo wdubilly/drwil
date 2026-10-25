@@ -57,6 +57,11 @@ closing commit; the release renames this section to its version.
   CI keeps the workstream in CLOSING, where `node .githooks/state.mjs reopen`
   applies.
 
+- The merged local branches' recognition and deletion move from
+  `.githooks/close.mjs` to the new `.githooks/close-branches.mjs` (QUA-048,
+  QUA-058, QUA-059), so that the closing command stays under the 400-line cap
+  (QUA-001); `close.mjs` re-exports the same functions and nothing else changes.
+
 ### Fixed
 
 - The checks no longer leave temporary folders behind (QUA-133, QUA-134): each

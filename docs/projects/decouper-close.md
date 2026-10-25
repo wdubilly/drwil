@@ -43,7 +43,7 @@ Recette : `docs/recipes/refactor-without-breaking.md`.
 - Les exports publics actuellement importés depuis
   `.githooks/close.mjs` restent disponibles à ce chemin ; clôture,
   `--check`, `--fix`, codes de sortie et messages en français et en anglais
-  gardent leur comportement — `QUA-048`
+  gardent leur comportement [human] — `QUA-048`
 - La reconnaissance des fusions classiques et par squash, le refus de
   supprimer une branche non fusionnée ou protégée et le signal lorsque
   `gh` est injoignable restent identiques — `QUA-058`
