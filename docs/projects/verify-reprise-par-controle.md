@@ -64,7 +64,7 @@ rigueur.
 - La preuve et la sortie disent, contrôle par contrôle, « repris (fichiers
   du contrôle inchangés) », « repris (arbre identique) » ou « rejoué » —
   `QUA-141`
-- Un contrôle repris a bien tourné : QUA-013 le dit — `QUA-013`
+- [humain] Un contrôle repris a bien tourné : QUA-013 le dit — `QUA-013`
 
 ## 2. Hors périmètre
 
