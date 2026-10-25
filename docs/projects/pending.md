@@ -390,6 +390,12 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
 
+- [ ] [IA] [P1] Chaque contrôle dit combien de temps il a pris (cadré le
+  2026-10-25, à lancer en premier des trois) — `docs/projects/duree-par-controle.md`.
+- [ ] [IA] [P1] `drwil verify` joue ses contrôles en parallèle (cadré le
+  2026-10-25) — `docs/projects/verify-en-parallele.md`.
+- [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
+  (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
