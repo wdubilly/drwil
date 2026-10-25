@@ -109,5 +109,5 @@ Aucun : découpage sans changement de comportement autorisé.
 - **Dernier état** (2026-10-25) : cadré, sans réalisation commencée.
 - **Prochaine étape** : [humain] lancer dans une nouvelle session avec
   `/drwil-start` ; faire d'abord le chantier
-  `docs/projects/duree-ci-en-indicateur.md` évite une réattestation de durée
+  `docs/projects/journal.md` évite une réattestation de durée
   si les sélecteurs de contrôles doivent changer.
