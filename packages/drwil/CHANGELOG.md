@@ -16,8 +16,9 @@ closing commit; the release renames this section to its version.
   as a count in `--agent`), and replays any other check — different
   fingerprint, missing verdict, a check that did not run, or one declared
   `"reuse": false` because it reads the network, the forge or the clock. CI
-  always replays everything. QUA-013 now says why a reused verdict
-  is a check that ran, not a stale proof.
+  always replays everything, and `drwil verify --no-reuse` replays
+  everything on demand. QUA-013 now says why a reused verdict is a check that
+  ran, not a stale proof.
 
 - `drwil verify` plays its checks in parallel (QUA-139): with the `parallel`
   setting, the command checks the contracts cite start together (same limit as

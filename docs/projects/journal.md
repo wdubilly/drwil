@@ -3251,3 +3251,29 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   reste un réglage, non activé par défaut chez les projets.
 - **Preuve de clôture** : `docs/preuves/verify-en-parallele.md` (si présent).
 - **Clôturé par** : la branche `chantier/verify-en-parallele`.
+
+## 2026-10-25 — `drwil verify` reprend les verdicts de `run-checks`
+
+- **Besoin** : `drwil verify` rejouait tous les contrôles cités par le registre,
+  alors que `run-checks` venait de les jouer sur le même code.
+- **Décisions clés** : QUA-140 (nouveau contrat) : le moteur calcule une empreinte
+  de l'arbre (commit, branche, modifications suivies, fichiers non suivis non
+  ignorés) et de `.drwil/ia-first.json` ; une passe de `run-checks` hors hook
+  consigne le verdict ok ou fail de chaque contrôle dans
+  `.drwil/evidence/run-checks-verdicts.json` (si présent) si l'arbre n'a pas changé pendant la
+  passe ; `verify` reprend le verdict d'un contrôle à l'empreinte identique, le dit
+  contrat par contrat (preuve, `--evidence`, `--agent`) et rejoue tout autre
+  contrôle (empreinte différente, verdict absent ou non exécuté, `reuse: false`,
+  `secrets` hors CI). `reuse: false` est posé sur `audit-dependances` et
+  `tarball` ; l'option `--no-reuse` rejoue tout. QUA-013 est précisé : un verdict
+  repris sur un arbre identique est une exécution du contrôle, tout autre verdict
+  repris reste un échec. Le cadrage a été élargi à `packages/drwil/bin/drwil.js`
+  pour l'option (décision du demandeur du 2026-10-25). Mesure sur ce dépôt
+  (`drwil verify --agent`, arbre inchangé après `run-checks`) : 2,0 s avec la
+  reprise (137 contrôles repris, 2 rejoués) contre 1 min 57 avec `--no-reuse`
+  (139 rejoués).
+- **Limites connues** : `verify` rejoue encore tout après un FAIL
+  (`docs/projects/verify-rejoue-les-echecs.md`) ; la moindre modification de
+  l'arbre (une note, la fiche) invalide la reprise.
+- **Preuve de clôture** : `docs/preuves/verify-reprend-run-checks.md` (si présent).
+- **Clôturé par** : la branche `workstream/verify-reprend-run-checks`.

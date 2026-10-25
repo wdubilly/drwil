@@ -391,7 +391,8 @@ contract (« reused from run-checks of … » or « replayed »), and replays an
 check whose fingerprint differs, whose verdict is missing or is not `ok` or
 `fail`, or that the project declares always replayed with `"reuse": false` in
 its `checks` (a check that reads the network, the forge or the clock). CI
-always replays everything.
+always replays everything. `npx drwil verify --no-reuse` replays every check
+even on an identical tree.
 
 `npx drwil verify --json` prints only a stable JSON document (`version: 1`,
 `status`, `exitCode`, `contracts` counts, per-contract `results`) with the

@@ -3599,6 +3599,17 @@ test("QUA-140 : verify rejoue un contrôle sans verdict, non exécuté, déclar�
   assert.equal(sans.status, "FAIL");
 });
 
+test("QUA-140 : l'option --no-reuse de la commande verify rejoue tout, sans elle les verdicts sont repris", async () => {
+  const dir = await projetReprise(contrat("QUA-001", "**Contrôle** : `ok`"), { verdicts: { ok: { status: "ok" } } });
+  const cli = (...args) =>
+    spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify", ...args], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+  assert.match(cli().stdout, /repris de run-checks du 2026-10-25T10:00:00.000Z/);
+  assert.doesNotMatch(cli("--no-reuse").stdout, /repris de run-checks/);
+});
+
 test("DRWIL-013 : verify --evidence enregistre verdict, horodatage, commit et résumés caviardés", async () => {
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `fuite`"));
   const cfg = config(dir);
