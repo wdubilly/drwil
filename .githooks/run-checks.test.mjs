@@ -54,7 +54,17 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [],
       git(racine, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x");
     }
   }
-  const base = { ...process.env, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "", TMPDIR: tmp() };
+  const base = {
+    ...process.env,
+    HOME: tmp(),
+    USERPROFILE: tmp(),
+    CI: "",
+    DRWIL_HOOK: "",
+    DRWIL_PUSH_REFS: "",
+    DRWIL_PUSH_TAGS_ONLY: "",
+    DRWIL_PUSH_NO_BRANCH: "",
+    TMPDIR: tmp(),
+  };
   // DRWIL_ROOT : sans elle, run-checks jugerait le dépôt drwil (parent de son .githooks/).
   // Dossier courant ailleurs : seule la racine compte, comme pour un hook lancé depuis une couche.
   const r = spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_ROOT: racine, ...env } });
