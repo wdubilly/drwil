@@ -93,6 +93,7 @@ const capture = async (fn) => {
 const envTest = { ...process.env, CI: "" };
 delete envTest.DRWIL_PUSH_TAGS_ONLY;
 delete envTest.DRWIL_PUSH_NO_BRANCH;
+delete envTest.DRWIL_PUSH_REFS;
 delete envTest.DRWIL_HOOK;
 // run-checks n'affiche que ses échecs et un résumé (QUA-126) : le rapport complet, écrit à côté, s'y ajoute
 // pour que les attentes sur un avertissement ou une annonce gardent leur sens.
@@ -2113,6 +2114,36 @@ test("QUA-017 : un push ne contenant que des tags ou des suppressions de branche
   const suppressionMixte = git(dir, "push", "-q", "origin", ":chantier/autre", "master");
   assert.notEqual(suppressionMixte.status, 0, "suppression + branche principale : contrôlé, par prudence");
   assert.match(suppressionMixte.stdout + suppressionMixte.stderr, /travail direct sur la branche principale/);
+});
+
+// Cas du 2026-10-25 (note de recette v0.8.0) : au push, la référence distante poussée est jugée,
+// pas la branche courante — `recette-note.mjs` pousse `recette/vX.Y.Z` depuis master.
+test("QUA-017 : au push, la référence distante poussée est jugée, pas la branche courante", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-qm", "premier commit").status, 0);
+  const remote = tmp();
+  assert.equal(spawnSync("git", ["init", "-q", "--bare", remote]).status, 0);
+  git(dir, "remote", "add", "origin", remote);
+  git(dir, "checkout", "-qb", "master");
+
+  const depuisMaster = git(dir, "push", "-q", "origin", "HEAD:refs/heads/recette/v1.0.0");
+  assert.equal(
+    depuisMaster.status,
+    0,
+    "pousser recette/x depuis master ne touche pas master : " + depuisMaster.stdout + depuisMaster.stderr,
+  );
+  assert.doesNotMatch(depuisMaster.stdout + depuisMaster.stderr, /travail direct sur la branche principale/);
+
+  git(dir, "checkout", "-qb", "travail");
+  for (const cible of ["master", "main"]) {
+    const versPrincipale = git(dir, "push", "-q", "origin", `travail:refs/heads/${cible}`);
+    assert.notEqual(versPrincipale.status, 0, `pousser vers ${cible} depuis une autre branche reste refusé`);
+    assert.match(versPrincipale.stdout + versPrincipale.stderr, new RegExp(`travail direct sur la branche principale \\(${cible}\\)`));
+  }
+  const versTravail = git(dir, "push", "-q", "origin", "travail");
+  assert.equal(versTravail.status, 0, versTravail.stdout + versTravail.stderr);
 });
 
 test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et commit-msg livrés", async () => {

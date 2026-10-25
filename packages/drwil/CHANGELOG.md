@@ -5,6 +5,17 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Fixed
+
+- At push time, the main-branch check (QUA-017) judges the pushed remote
+  branches (the `pre-push` hook's standard input), not the current branch:
+  pushing `recette/vX.Y.Z` from `master` now passes, and pushing to
+  `refs/heads/master` (or `main`) from any other branch is refused. The
+  acceptance note of a release can reach the repository again.
+- When the acceptance note's branch cannot be pushed,
+  `.githooks/recette-note.mjs` shows git's output (the reason of the refusal)
+  along with the catch-up command.
+
 ## 0.8.0 (2026-10-25)
 
 ### Added
