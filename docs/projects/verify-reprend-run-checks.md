@@ -44,8 +44,8 @@ compter.
 - `drwil verify` reprend le verdict d'un contrôle joué par `run-checks` sur
   un arbre et une configuration identiques, le dit dans sa preuve, contrat
   par contrat, et rejoue tout contrôle dont l'empreinte diffère, dont le
-  verdict manque ou qui dépend de l'extérieur — contrat à créer
-- Un contrôle repris a bien tourné : QUA-013 le dit — `QUA-013` modifié
+  verdict manque ou qui dépend de l'extérieur — `QUA-140`
+- [humain] Un contrôle repris a bien tourné : QUA-013 le dit — `QUA-013` modifié
 
 ## Contrats modifiés
 
