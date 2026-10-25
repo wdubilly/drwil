@@ -32,6 +32,7 @@ export interface CheckResult {
   detail?: string;
   message?: string;
   output?: string;
+  durationMs?: number; // whole ms (QUA-136); absent when the check did not run, never 0
 }
 
 export type Severity = "blocking" | "warning" | "advisory";

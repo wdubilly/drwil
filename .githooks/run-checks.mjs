@@ -32,6 +32,10 @@ const T = {
     leak: (name, n) => `${name} laisse ${n} élément(s) dans son dossier temporaire : le supprimer à la source`,
     keptTmp: (d) => `dossiers temporaires des contrôles en échec gardés pour le diagnostic : ${d}`,
     cleanupFailed: "dossier temporaire de la passe non supprimé (fichier encore ouvert ?)",
+    duration: (ms) => `durée : ${ms} ms`,
+    slowest:
+      "contrôles du plus lent au plus rapide (durée de chaque contrôle ; en passe parallèle, elles se recouvrent : ce n'est pas sa part de la passe) :",
+    slowestSummary: "les plus lents :",
     tail: (n, f) => `    … ${n} ligne(s) plus haut, dans ${f}`,
     staleAudit: (f, n) => `audit périmé (${f}, vieux de ${n} jours) : à relancer`,
     staleIntent: (f, n) => `intention sans revue depuis ${n} jours (${f}) : la revoir, la mettre à jour (ligne « Revu le ») ou la clore`,
@@ -48,6 +52,10 @@ const T = {
     leak: (name, n) => `${name} leaves ${n} item(s) in its temporary folder: remove them at the source`,
     keptTmp: (d) => `temporary folders of the failed checks kept for diagnosis: ${d}`,
     cleanupFailed: "the pass's temporary folder was not removed (file still open?)",
+    duration: (ms) => `duration: ${ms} ms`,
+    slowest:
+      "checks from slowest to fastest (each check's own duration; on a parallel pass they overlap: it is not its share of the pass):",
+    slowestSummary: "slowest:",
     tail: (n, f) => `    … ${n} line(s) above, in ${f}`,
     staleAudit: (f, n) => `stale audit (${f}, ${n} days old): time to re-run`,
     staleIntent: (f, n) => `intent not reviewed for ${n} days (${f}): review it, update it ("Reviewed on" line) or close it`,
@@ -88,6 +96,7 @@ const list = checks(root, { cfg, staged });
 // here in the list order, so the report and the verdict are those of a sequential run.
 const started = startParallel(list);
 const leaks = [];
+const timings = [];
 for (const c of list) {
   let r;
   if (started.has(c.id)) {
@@ -96,6 +105,10 @@ for (const c of list) {
   } else r = c.run({ beforeRun: announce, stdio: "pipe", maxBuffer: 1 << 30 });
   if (r.leaked) leaks.push({ name: c.name, count: r.leaked });
   if (r.output) report.push(r.output.replace(/\n$/, ""));
+  if (r.durationMs !== undefined) {
+    report.push(`[ia-first] ${c.name} : ${T.duration(r.durationMs)}`);
+    timings.push({ name: c.name, ms: r.durationMs });
+  }
   if (r.status === "fail") {
     failures.push(r.message ?? c.name);
     outputs.set(failures.at(-1), r.output);
@@ -146,13 +159,27 @@ for (const c of failures) {
   if (cut) shown.push(T.tail(cut, DETAIL));
   shown.push(...lines.slice(cut).map((l) => `    ${l}`));
 }
-const summary = `[ia-first] ${failures.length ? T.ko(failures.length, warnings.length, DETAIL) : T.ok(warnings.length, DETAIL)}${end.kept ? ` — ${T.keptTmp(end.kept)}` : ""}`;
+// QUA-126: the three slowest checks of the pass, to see where the time goes without opening the detail.
+// Never empty: the checks of the base (docs, contracts, architecture) always run.
+const slowest = timings.toSorted((a, b) => b.ms - a.ms);
+const slowestSummary = ` — ${T.slowestSummary} ${slowest
+  .slice(0, 3)
+  .map((t) => `${t.name} ${t.ms} ms`)
+  .join(", ")}`;
+const summary = `[ia-first] ${failures.length ? T.ko(failures.length, warnings.length, DETAIL) : T.ok(warnings.length, DETAIL)}${slowestSummary}${end.kept ? ` — ${T.keptTmp(end.kept)}` : ""}`;
 // Never at the cost of the verdict: a report that cannot be written changes nothing to the exit code.
 try {
   mkdirSync(".drwil/evidence", { recursive: true });
   writeFileSync(
     DETAIL,
-    `${[...report, ...warnings, ...failures.map((c) => label(`[ia-first] ✗ ${T.failed} ${c}`)), summary].join("\n")}\n`,
+    `${[
+      ...report,
+      ...warnings,
+      ...failures.map((c) => label(`[ia-first] ✗ ${T.failed} ${c}`)),
+      summary,
+      `[ia-first] ${T.slowest}`,
+      ...slowest.map((t) => `  ${t.ms} ms  ${t.name}`),
+    ].join("\n")}\n`,
   );
 } catch {}
 for (const line of [...shown, summary]) console.log(line);
