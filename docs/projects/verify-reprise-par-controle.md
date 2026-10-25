@@ -16,6 +16,7 @@ files:
   - packages/drwil/src/verify.ts
   - packages/drwil/src/evidence.ts
   - packages/drwil/src/agent.ts
+  - packages/drwil/bin/drwil.js
   - packages/drwil/test/kit.test.mjs
   - docs/contracts.md
   - .drwil/ia-first.json
