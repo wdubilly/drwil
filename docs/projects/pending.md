@@ -333,6 +333,9 @@ une décision du demandeur.
   temporaire se corrigent à la source (31 contrôles nommés par
   `run-checks` le 2026-10-25) —
   `docs/intentions/tests-qui-laissent-des-fichiers-temporaires.md`.
+- [ ] [décision] [P1] Un hook modifié se déclare avant le push, et le
+  retour en SCOPING attend la CI (PR #232, troisième occurrence) —
+  `docs/intentions/hooks-declares-et-scoping-apres-ci.md`.
 - [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
   2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
