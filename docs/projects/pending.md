@@ -165,8 +165,9 @@ avant les points 5 à 13, en trois versions.
      fluidité sans perte de rigueur, vue de relecture, relecture avant
      fusion.
   7. 0.8, catalogue et adoption (P1) d'abord ; puis, en P2, Codex et Cursor,
-     personas, chantiers en parallèle
-     et application de suivi (tous trois abandonnés le 2026-10-25),
+     personas et application de suivi (abandonnés le 2026-10-25),
+     chantiers en parallèle (abandonnés puis rouverts le même jour,
+     `docs/projects/worktree-par-chantier.md`),
      couche d'un nouveau dossier de code
      (`docs/intentions/couche-d-un-nouveau-dossier-de-code.md`),
      publication npm et protection de la forge.
@@ -402,6 +403,13 @@ actifs » s'appuie sur le 4).
   son comportement — `docs/projects/decouper-close.md`.
 - [ ] [IA] [P1] Compléter le test unitaire de QUA-138 (retour en SCOPING
   après la fusion) — `docs/projects/test-unitaire-fusion-automatique.md`.
+- [ ] [IA] [P1] Un chantier par worktree, lancé au sondage : garde
+  de doublon, installation déclarée, retard sur master signalé (cadré le
+  2026-10-25, après le découpage de la clôture) —
+  `docs/projects/worktree-par-chantier.md`.
+- [ ] [décision] [P2] La file de chantiers menée en parallèle, un worktree
+  par chantier ; modifie QUA-037 (cadré le 2026-10-25, après la
+  précédente) — `docs/projects/file-en-parallele.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
