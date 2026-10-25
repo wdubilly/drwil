@@ -57,6 +57,14 @@ poussée » sans montrer la sortie de git.
   principale est touchée ; la règle gagne la précision « au push, la
   référence distante poussée est jugée, pas la branche courante » (validé le
   2026-10-25)
+- `.githooks/pre-push` — passe au moteur les branches distantes poussées
+  (QUA-017 ci-dessus) ; version de la branche gardée au rejeu par les hooks
+  de la branche principale (QUA-113)
+- `.githooks/engine.mjs` — le contrôle `main-branch` juge ces références
+  (QUA-017 ci-dessus) ; version de la branche gardée au rejeu (QUA-113)
+- `.githooks/recette-note.mjs` — montre la sortie de git en cas d'échec
+  (QUA-080, critère du cadrage) ; version de la branche gardée au rejeu
+  (QUA-113)
 
 ## 2. Hors périmètre
 
