@@ -7,6 +7,13 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- The checks no longer leave temporary folders behind (QUA-133, QUA-134): each
+  pass of the check engine (hooks, `run-checks`, `drwil verify`, CI) gives
+  every check its own `TMPDIR`/`TMP`/`TEMP` under a `drwil-checks-*` root,
+  removed at the end of the pass; the folders of failed checks are kept at a
+  fixed path (replaced each time, named in the `run-checks` summary), and a
+  check that leaves files in its folder is named in the report and counted as
+  a warning.
 - At push time, the main-branch check (QUA-017) judges the pushed remote
   branches (the `pre-push` hook's standard input), not the current branch:
   pushing `recette/vX.Y.Z` from `master` now passes, and pushing to

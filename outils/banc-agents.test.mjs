@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, test } from "node:test";
@@ -235,4 +235,11 @@ test("QUA-068 : la matrice dit comment lancer un chantier sous Gemini CLI", () =
     gemini.slice(0, gemini.indexOf("## 7.")),
     /start a workstream with\s+`node \.githooks\/state\.mjs start` in an interactive terminal/,
   );
+});
+
+test("QUA-135 : le banc refuse une base située dans le dépôt sans y créer de dossier", () => {
+  const restes = () => readdirSync(RACINE).filter((n) => n.startsWith("drwil-banc-")).length;
+  const avant = restes();
+  assert.throws(() => preparer("claude", { executer: simule({}), base: RACINE }), /jamais un agent dans le dépôt/);
+  assert.equal(restes(), avant, "le refus ne crée aucun dossier dans le dépôt");
 });

@@ -3078,7 +3078,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   registre et du journal — `docs/intentions/suivi-ci-et-contexte.md` (ex-« decoupage-registre-et-journal », regroupée le 2026-10-25) ;
   dossiers temporaires des tests jamais supprimés, troisième occurrence,
   besoin d'un anti-récidive —
-  `docs/intentions/tests-dossiers-temporaires-non-supprimes.md` ; points
+ ; points
   d'entrée des scripts propres au dépôt (`outils/`, `.github/scripts/`)
   hors du test de QUA-044 — note du 2026-10-24 de
   `docs/intentions/notes.md` ; gardes de
@@ -3124,3 +3124,42 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   temporaire perdu — l'intention « note-recette-v0-7-0 » (abandonnée le 2026-10-25).
 - **Preuve de clôture** : `docs/preuves/pre-push-reference-poussee.md`.
 - **Clôturé par** : la branche `workstream/pre-push-reference-poussee`.
+
+## 2026-10-25 — Les contrôles ne laissent plus de dossiers temporaires derrière eux
+
+- **Besoin** : troisième épuisement des inodes de `/tmp` par des dossiers
+  `drwil-*` de tests jamais supprimés (7 919, 40 061, 13 500 ; `drwil verify` en
+  33 FAIL `ENOSPC` le 2026-10-24), et 958 dossiers vides `drwil-banc-*` à la
+  racine du dépôt. Les corrections fichier par fichier n'avaient pas empêché les
+  tests suivants de fuir.
+- **Décisions clés** : QUA-133 (racine temporaire par passe, supprimée à la
+  fin) : le moteur (`.githooks/engine.mjs`, livré dans le gabarit) crée un
+  dossier `drwil-checks-*` par passe et un sous-dossier par contrôle
+  (`TMPDIR`, `TMP`, `TEMP`), le supprime à la fin de la passe ou à la sortie du
+  processus ; les sous-dossiers des contrôles en échec sont déplacés sous un
+  chemin fixe par projet (`drwil-checks-failed-<empreinte>`), remplacé à chaque
+  échec, et le résumé de `run-checks` dit ce chemin. QUA-134 (une fuite est
+  nommée et comptée) : un contrôle qui laisse des fichiers est nommé avec leur
+  nombre et compté comme avertissement, sans faire échouer la passe ; une
+  racine non supprimable est aussi un avertissement. QUA-135 (le banc refuse une
+  base du dépôt sans y créer de dossier, complète QUA-060) : `preparer` juge la
+  base avant de créer le dossier ; la racine du dépôt ne reçoit plus de
+  `drwil-banc-*`.
+  Les tests qui lancent des hooks (moteur, `run-checks`, kit) ont leur racine
+  temporaire propre, supprimée à la fin, pour que les dossiers gardés après un
+  échec simulé ne s'accumulent pas.
+- **Mesure** : `ls -d /tmp/drwil-* | wc -l` autour d'une passe de
+  `node .githooks/run-checks.mjs` : 4 887 avant, 4 887 après (environ 26 de plus
+  par commit auparavant) ; 958 dossiers vides `drwil-banc-*` supprimés (`rmdir`),
+  0 après une passe du test du banc. Les 4 887 dossiers restants sont des
+  restes antérieurs, non vidés ici.
+- **Limites connues** : 31 contrôles nomment des fuites (intention
+  `docs/intentions/tests-qui-laissent-des-fichiers-temporaires.md`), le résumé
+  passe de 1 à 31 avertissements ; `drwil verify` appelle le moteur sans
+  `finish` (`packages/drwil/src/verify.ts`, hors cadrage) : sa racine est
+  supprimée à la sortie du processus, mais il ne nomme pas les fuites ;
+  `npm test` lancé à la main hors du moteur n'est pas couvert. L'intention
+  d'origine, entièrement couverte, est retirée ; la note du 2026-10-22 de
+  `docs/intentions/notes.md` aussi.
+- **Preuve de clôture** : `docs/preuves/dossiers-temporaires-des-tests.md`.
+- **Clôturé par** : la branche `workstream/dossiers-temporaires-des-tests`.

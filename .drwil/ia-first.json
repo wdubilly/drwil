@@ -1504,6 +1504,39 @@
       ],
       "degradable": false,
       "needsBuild": true
+    },
+    {
+      "id": "tests-qua-133",
+      "name": "tests de QUA-133, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-133 \" .githooks/engine.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-134",
+      "name": "tests de QUA-134, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-134 \" .githooks/run-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-135",
+      "name": "tests de QUA-135, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-135 \" outils/banc-agents.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "transitions": "human",

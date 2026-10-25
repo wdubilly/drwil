@@ -1,7 +1,7 @@
-import { afterEach, test } from "node:test";
+import { after, afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,10 @@ import { fileURLToPath } from "node:url";
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
 const SCRIPT = fileURLToPath(new URL("./run-checks.mjs", import.meta.url));
+// Les dossiers gardés par un contrôle en échec (QUA-133) vont dans un temporaire propre à ce fichier, supprimé à la fin.
+const racineTemp = mkdtempSync(join(tmpdir(), "drwil-run-checks-racine-"));
+process.env.TMPDIR = racineTemp;
+after(() => rmSync(racineTemp, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
 let dossiers = [];
 afterEach(() => {
   for (const d of dossiers) rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
@@ -46,7 +50,7 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] 
     git(racine, "init", "-q", "-b", "travail");
     if (indexer.length) git(racine, "add", ...indexer);
   }
-  const base = { ...process.env, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "" };
+  const base = { ...process.env, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "", TMPDIR: tmp() };
   // DRWIL_ROOT : sans elle, run-checks jugerait le dépôt drwil (parent de son .githooks/).
   // Dossier courant ailleurs : seule la racine compte, comme pour un hook lancé depuis une couche.
   const r = spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_ROOT: racine, ...env } });
@@ -321,7 +325,7 @@ test("QUA-126 : sortie limitée aux contrôles en échec (contrat nommé, fin de
   assert.equal(lignes.at(-2), "    ligne 50");
   assert.match(
     lignes.at(-1),
-    /^\[ia-first\] contrôles exécutés : 1 en échec, \d+ avertissement\(s\) — détail : \.drwil\/evidence\/run-checks\.log$/,
+    /^\[ia-first\] contrôles exécutés : 1 en échec, \d+ avertissement\(s\) — détail : \.drwil\/evidence\/run-checks\.log/,
   );
   assert.equal(lignes.length, 43, "ni annonce, ni avertissement, ni sortie d'un contrôle réussi");
   assert.doesNotMatch(r.stdout, /sortie de réussite|bavard|…$/m);
@@ -376,7 +380,7 @@ test("QUA-127 : le résumé compte chaque avertissement non bloquant et donne le
       env: { DRWIL_HOOK: "pre-commit" },
     },
   );
-  assert.match(en.stdout, /^\[ia-first\] checks run: 1 failed, 3 warning\(s\) — detail: \.drwil\/evidence\/run-checks\.log$/m);
+  assert.match(en.stdout, /^\[ia-first\] checks run: 1 failed, 3 warning\(s\) — detail: \.drwil\/evidence\/run-checks\.log/m);
   const ok = lancer({ ".drwil/ia-first.json": JSON.stringify({ lang: "en", checks: [{ name: "p", run: "node -e 0" }] }) });
   assert.match(
     ok.stdout,
@@ -392,4 +396,32 @@ test("QUA-127 : le résumé compte chaque avertissement non bloquant et donne le
     {},
   );
   assert.match(longue.stdout, /^ {4}… 5 line\(s\) above, in \.drwil\/evidence\/run-checks\.log$/m);
+});
+
+test("QUA-134 : un contrôle qui laisse des fichiers dans son dossier temporaire est nommé et compté comme avertissement, sans faire échouer ; un échec dit où est gardé le dossier", () => {
+  const base = tmp();
+  const fuit = (code) =>
+    `node -e "require('fs').writeFileSync(require('path').join(process.env.TMPDIR,'reste'),'x');process.exit(${code})"`;
+  const config = (lang, code) => ({ ".drwil/ia-first.json": JSON.stringify({ lang, checks: [{ name: "fuyard", run: fuit(code) }] }) });
+  const ok = lancer(config("fr", 0), { env: { TMPDIR: base } });
+  assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+  assert.match(ok.detail, /^\[ia-first\] ⚠ fuyard laisse 1 élément\(s\) dans son dossier temporaire/m);
+  assert.match(ok.stdout, /contrôles exécutés : OK \(3 avertissement\(s\)/, "la fuite est comptée avec les non exécutés");
+  assert.equal(readdirSync(base).length, 0, "passe réussie : rien ne reste");
+  const ko = lancer(config("en", 1), { env: { TMPDIR: base } });
+  assert.equal(ko.status, 1);
+  const gardes = readdirSync(base);
+  assert.equal(gardes.length, 1);
+  assert.ok(ko.stdout.includes(`temporary folders of the failed checks kept for diagnosis: ${join(base, gardes[0])}`), ko.stdout);
+});
+
+test("QUA-134 : une racine temporaire qu'on ne parvient pas à supprimer est un avertissement compté, jamais un échec", {
+  skip: process.platform === "win32" || process.getuid?.() === 0,
+}, () => {
+  const base = tmp();
+  const verrou = `node -e "require('fs').chmodSync(process.env.TMPDIR + '/..', 0o500)"`;
+  const r = lancer({ ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "verrou", run: verrou }] }) }, { env: { TMPDIR: base } });
+  chmodSync(join(base, readdirSync(base)[0]), 0o700);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.detail, /^\[ia-first\] ⚠ dossier temporaire de la passe non supprimé/m);
 });
