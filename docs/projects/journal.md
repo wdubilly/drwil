@@ -3230,3 +3230,24 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   suivie par `docs/intentions/suivi-ci-et-contexte.md`).
 - **Preuve de clôture** : `docs/preuves/hooks-declares-et-scoping-apres-ci.md` (si présent).
 - **Clôturé par** : la branche `chantier/hooks-declares-et-scoping-apres-ci`.
+
+## 2026-10-25 — `drwil verify` joue ses contrôles en parallèle
+
+- **Besoin** : `drwil verify` jouait les contrôles cités par le registre l'un
+  après l'autre, alors que `run-checks` les lance déjà en parallèle (QUA-119) ;
+  sa passe durait la somme de tous ses contrôles.
+- **Décisions clés** : QUA-139 (nouveau contrat) : `verify`
+  (`packages/drwil/src/verify.ts`) suit le réglage `parallel` du projet ; il
+  lance par `startParallel` du moteur installé les contrôles de commande cités
+  (même limite que `run-checks`, un contrôle partagé joué une fois) et lit leurs
+  résultats dans l'ordre du registre : mêmes statuts, raisons et ordre qu'en
+  série. Sans le réglage, ou avec un moteur sans `startParallel`, la passe reste
+  en série. Aucun changement du moteur ni du gabarit. Mesure sur ce dépôt
+  (8 cœurs, `drwil verify --agent`) : 3 min 26 en série (`parallel` coupé),
+  2 min 06 en parallèle, soit environ 39 % de moins.
+- **Limites connues** : `verify` rejoue encore tout après un FAIL
+  (`docs/projects/verify-rejoue-les-echecs.md`) et ne reprend pas les verdicts
+  de `run-checks` (`docs/projects/verify-reprend-run-checks.md`) ; `parallel`
+  reste un réglage, non activé par défaut chez les projets.
+- **Preuve de clôture** : `docs/preuves/verify-en-parallele.md` (si présent).
+- **Clôturé par** : la branche `chantier/verify-en-parallele`.

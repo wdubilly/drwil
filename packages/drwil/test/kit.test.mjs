@@ -3466,6 +3466,44 @@ test("QUA-136 : verify --evidence consigne la durée de chaque contrôle exécut
   assert.ok(Number.isInteger(duree.durationMs) && duree.durationMs >= 0, JSON.stringify(duree));
 });
 
+test("QUA-139 : avec parallel, verify rend le même verdict contrat par contrat qu'en série, dans l'ordre du registre", async () => {
+  const contrats =
+    contrat("QUA-001", "**Contrôle** : `ko`") +
+    contrat("QUA-002", "**Contrôle** : `ok`") +
+    contrat("QUA-003", "**Contrôle** : `ko`, `ok`\n**Manuel** : relecture") +
+    contrat("QUA-004", "**Contrôle** : `absent`");
+  const lire = async (reglages) => {
+    const dir = await projetVerify(contrats, reglages);
+    const cfg = config(dir);
+    cfg.checks.push({ id: "absent", name: "introuvable", run: "commande-qui-n-existe-pas-139" });
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+    const v = await verify({ targetDir: dir });
+    return {
+      status: v.status,
+      contrats: v.contracts.map((k) => [k.id, k.status, k.reasons, k.checks.map((c) => [c.id, c.status])]),
+    };
+  };
+  const serie = await lire({ parallel: false });
+  const parallele = await lire({ parallel: true });
+  assert.equal(serie.status, "FAIL");
+  assert.deepEqual(parallele, serie);
+});
+
+test("QUA-139 : avec parallel, les contrôles cités se jouent en même temps ; sans le réglage, en série", async () => {
+  const rdv = (moi, autre) =>
+    `node -e "const f=require('fs');f.writeFileSync('${moi}','');const t=Date.now();while(!f.existsSync('${autre}')){if(Date.now()-t>4000)process.exit(1)}"`;
+  const contrats = contrat("QUA-001", "**Contrôle** : `a`") + contrat("QUA-002", "**Contrôle** : `b`");
+  const jouer = async (parallel) => {
+    const dir = await projetVerify(contrats, { parallel });
+    const cfg = config(dir);
+    cfg.checks.push({ id: "a", name: "a", run: rdv("a.flag", "b.flag") }, { id: "b", name: "b", run: rdv("b.flag", "a.flag") });
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+    return verify({ targetDir: dir });
+  };
+  assert.equal((await jouer(true)).status, "PASS", "chacun attend que l'autre ait démarré : impossible en série");
+  assert.equal((await jouer(false)).status, "FAIL");
+});
+
 test("DRWIL-013 : verify --evidence enregistre verdict, horodatage, commit et résumés caviardés", async () => {
   const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `fuite`"));
   const cfg = config(dir);
