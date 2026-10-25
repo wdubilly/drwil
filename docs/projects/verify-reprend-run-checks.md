@@ -17,6 +17,7 @@ files:
   - packages/drwil/src/evidence.ts
   - packages/drwil/src/agent.ts
   - packages/drwil/bin/drwil.js
+  - docs/projects/verify-rejoue-les-echecs.md
   - packages/drwil/test/kit.test.mjs
   - docs/contracts.md
   - .drwil/ia-first.json
@@ -57,6 +58,16 @@ compter.
   exécution du contrôle sur ce même code, pas une preuve périmée ; la règle
   le précise, et tout autre verdict repris reste un échec (validé le
   2026-10-25)
+- `.githooks/engine.mjs` — empreinte de l'arbre et de la configuration
+  (`treeFingerprint`), drapeau `reuse` des contrôles (validé par le demandeur le
+  2026-10-25, fichier du périmètre cadré)
+- `.githooks/engine.test.mjs` — tests de l'empreinte et du drapeau `reuse`
+  (validé par le demandeur le 2026-10-25, fichier du périmètre cadré)
+- `.githooks/run-checks.mjs` — consigne le verdict de chaque contrôle avec
+  l'empreinte, hors passe de hook (validé par le demandeur le 2026-10-25,
+  fichier du périmètre cadré)
+- `.githooks/run-checks.test.mjs` — tests de la consignation des verdicts
+  (validé par le demandeur le 2026-10-25, fichier du périmètre cadré)
 
 ## 2. Hors périmètre
 
