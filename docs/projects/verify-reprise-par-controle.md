@@ -13,6 +13,7 @@ files:
   - .githooks/fingerprints.mjs
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/projects/kit-mechanics.md
+  - docs/architecture.md
   - .githooks/engine.test.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
   - .githooks/run-checks.mjs
@@ -47,23 +48,22 @@ rigueur.
 
 ## Critères d'acceptation
 
-(le contrat voisin de `QUA-140` est à créer au lancement, avec son champ
-**Origine** ; ID à attribuer à ce moment-là dans le registre.)
+(le contrat voisin de `QUA-140` est `QUA-141`, avec son champ **Origine**.)
 
 - Un `run-checks` lancé hors hook et hors CI ne rejoue que les contrôles
   « ok » dont les fichiers du `paths` ou la déclaration ont changé, et le
   dit (« repris », « rejoué ») ; un contrôle en échec, sans verdict ou sans
-  `paths` est rejoué ; une option le force à tout rejouer — contrat à créer
+  `paths` est rejoué ; une option le force à tout rejouer — `QUA-141`
 - Un `verify` hors preuve de clôture reprend le verdict d'un contrôle de
   `run-checks` quand les fichiers de son `paths` et sa déclaration sont
   identiques à l'octet près, même si l'arbre a changé ailleurs ; il rejoue
-  le contrôle sinon — contrat à créer
+  le contrôle sinon — `QUA-141`
 - Un contrôle sans `paths` garde l'empreinte de tout l'arbre, et la preuve
   de clôture (`verify --evidence`) aussi : aucun verdict de clôture n'est
-  repris par contrôle — contrat à créer
+  repris par contrôle — `QUA-141`
 - La preuve et la sortie disent, contrôle par contrôle, « repris (fichiers
   du contrôle inchangés) », « repris (arbre identique) » ou « rejoué » —
-  contrat à créer
+  `QUA-141`
 - Un contrôle repris a bien tourné : QUA-013 le dit — `QUA-013`
 
 ## 2. Hors périmètre
@@ -114,6 +114,17 @@ rigueur.
    preuve de clôture » ; la clôture exige toujours la passe `--evidence`
    sur l'arbre entier.
 
+## Contrats modifiés
+
+- `.githooks/engine.mjs` — empreinte propre à chaque contrôle (`controlFingerprints`), déclarée par le demandeur (QUA-137).
+- `.githooks/fingerprints.mjs` — nouveau : les empreintes, sorties de l'engine (plafond de 400 lignes).
+- `.githooks/run-checks.mjs` — reprise d'un verdict « ok » par contrôle, option `--tout-rejouer`.
+- `.githooks/engine.test.mjs` — tests des empreintes de contrôle.
+- `.githooks/run-checks.test.mjs` — tests de la reprise par contrôle.
+- `QUA-013` (un contrôle non exécuté n'est pas passé) : précisé, un verdict
+  repris sur les seuls fichiers du contrôle est une exécution pour une
+  itération ; `QUA-140` reste inchangé sur le fond.
+
 ## 5. Points à trancher
 
 - Aucun : tout est tranché.
@@ -145,6 +156,6 @@ rigueur.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-25) : cadré, prêt à lancer.
+- **Dernier état** (2026-10-25) : réalisé, en clôture.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
