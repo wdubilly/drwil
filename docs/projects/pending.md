@@ -390,9 +390,6 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
 
-- [ ] [IA] [P1] Les contrôles ne laissent plus de dossiers temporaires :
-  racine temporaire par passe, fuites nommées, dossiers vides du banc
-  (cadré le 2026-10-24) — `docs/projects/dossiers-temporaires-des-tests.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
