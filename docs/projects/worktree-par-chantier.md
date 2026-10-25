@@ -101,7 +101,7 @@ nettoyage après la fusion.)
 
 - `.githooks/close.mjs` est au plafond de 400 lignes (QUA-001, fichier de code
   plafonné) : ce chantier vient **après**
-  `docs/projects/decouper-close.md`. `.githooks/state.mjs` est à 384 lignes : la
+  `docs/projects/journal.md`. `.githooks/state.mjs` est à 384 lignes : la
   création du worktree et la garde vivent dans un nouveau module, .githooks/worktree.mjs, `.githooks/state.mjs`
   ne fait que l'appeler.
 - Un worktree hérite de la configuration commune : ne jamais écrire dans
@@ -155,4 +155,4 @@ Validées par le demandeur le 2026-10-25 :
 - **Dernier état** (2026-10-25) : cadré, prêt à lancer.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] lancer (`/drwil-start`) après la clôture
-  de `docs/projects/decouper-close.md`.
+  de `docs/projects/journal.md`.
