@@ -46,7 +46,7 @@ complète qu'une fois, pour le verdict.
 ## 2. Hors périmètre
 
 - Reprendre le verdict d'un contrôle déjà joué par `run-checks` :
-  `docs/projects/verify-reprend-run-checks.md`.
+  `docs/projects/journal.md`.
 - Paralléliser la passe : `docs/projects/journal.md`.
 - Changer la règle de VERIFY : clore exige toujours une passe complète
   `verify --evidence` en PASS ou ATTESTED.

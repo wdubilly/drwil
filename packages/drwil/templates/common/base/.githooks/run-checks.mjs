@@ -7,10 +7,11 @@
 // QUA-126, QUA-127: the output shows the failed checks only, then one summary line counting the warnings;
 // the full report (each check, its output, every warning) goes to a file — an agent reads the outputs
 // again at each request, a passed check's output is only context to pay for.
+// QUA-140: a pass outside any hook leaves each check's verdict (ok / fail) with the fingerprint of the tree, for `drwil verify` to reuse.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
-import { checks, projectRoot, startParallel } from "./engine.mjs";
+import { checks, projectRoot, startParallel, treeFingerprint } from "./engine.mjs";
 import { annotate, glossary } from "./glossary.mjs";
 
 const root = projectRoot(import.meta.url);
@@ -91,6 +92,13 @@ const outputs = new Map();
 const announce = (name) => report.push(`[ia-first] ${name}…`);
 // "not-applicable" (excluded by design: minimal mode, QUA-017 in CI…) is not shown, as before.
 const staged = stagedFiles();
+// A hook pass judges the index or the pushed reference, not the whole tree `drwil verify` judges: it leaves nothing to reuse.
+const VERDICTS = ".drwil/evidence/run-checks-verdicts.json";
+const hooked = ["DRWIL_HOOK", "DRWIL_PUSH_REFS", "DRWIL_PUSH_TAGS_ONLY", "DRWIL_PUSH_NO_BRANCH"].some((k) => process.env[k]);
+const fingerprint = hooked ? null : treeFingerprint(root);
+const verdicts = {};
+// Only `secrets` judges something else here than in `drwil verify` (the index, not the whole history, outside CI): never reusable.
+const reusableByVerify = (id) => id !== "secrets" || Boolean(process.env.CI);
 const list = checks(root, { cfg, staged });
 // Checks with a `runAsync` (setting `parallel`) are all started up front; their result is read
 // here in the list order, so the report and the verdict are those of a sequential run.
@@ -103,6 +111,13 @@ for (const c of list) {
     r = await started.get(c.id);
     if (r.launched) announce(c.name);
   } else r = c.run({ beforeRun: announce, stdio: "pipe", maxBuffer: 1 << 30 });
+  if (r.status === "ok" || r.status === "fail")
+    verdicts[c.id] = {
+      status: r.status,
+      reusable: reusableByVerify(c.id),
+      durationMs: r.durationMs,
+      output: (r.output ?? "").split("\n").slice(-20).join("\n"),
+    };
   if (r.leaked) leaks.push({ name: c.name, count: r.leaked });
   if (r.output) report.push(r.output.replace(/\n$/, ""));
   if (r.durationMs !== undefined) {
@@ -115,6 +130,13 @@ for (const c of list) {
   } else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
 }
 const end = list.finish();
+// A tree changed during the pass (a check writing a file…) leaves nothing: the verdicts were not taken on one tree.
+if (fingerprint && treeFingerprint(root) === fingerprint) {
+  try {
+    mkdirSync(".drwil/evidence", { recursive: true });
+    writeFileSync(VERDICTS, JSON.stringify({ ranAt: new Date().toISOString(), fingerprint, checks: verdicts }, null, 2));
+  } catch {}
+}
 if (!Array.isArray(cfg.checks) || !cfg.checks.length) unrun(`${T.project} (${T.noCheck})`, true);
 
 // Non-blocking reminder (comfort, not a contract): an audit (opportunity, risks/debt) whose

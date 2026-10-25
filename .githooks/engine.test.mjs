@@ -1,10 +1,10 @@
 import { after, afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
-import { checks, projectRoot, startParallel, texts } from "./engine.mjs";
+import { checks, projectRoot, startParallel, texts, treeFingerprint } from "./engine.mjs";
 import { pathToFileURL } from "node:url";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
@@ -542,4 +542,52 @@ test("QUA-136 : un contrôle exécuté a sa durée en millisecondes entières, e
   const asynchrone = await parallele.lent.runAsync();
   assert.ok(Number.isInteger(asynchrone.durationMs) && asynchrone.durationMs >= 100, `durée : ${asynchrone.durationMs}`);
   assert.ok(!("durationMs" in (await parallele.reporte.runAsync())), "non exécuté en parallèle : durée absente");
+});
+
+test("QUA-140 : l'empreinte de l'arbre est stable, et change d'un octet d'un fichier suivi, d'un fichier non suivi, de la branche, de la configuration ; sans commit, aucune", () => {
+  const racine = depot();
+  ecrire(racine, ".drwil/ia-first.json", "{}");
+  ecrire(racine, "a.txt", "a\n");
+  assert.equal(treeFingerprint(racine), null, "sans commit : rien de reprenable");
+  git(racine, "add", "-A");
+  git(racine, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x");
+  const base = treeFingerprint(racine);
+  assert.match(base, /^[0-9a-f]{64}$/);
+  assert.equal(treeFingerprint(racine), base);
+  ecrire(racine, ".gitignore", "ignore.txt\n");
+  const ignore = treeFingerprint(racine);
+  ecrire(racine, "ignore.txt", "x");
+  assert.equal(treeFingerprint(racine), ignore, "un fichier ignoré ne change pas l'empreinte");
+  const vues = new Set([base, ignore]);
+  for (const alteration of [
+    () => ecrire(racine, "a.txt", "b\n"),
+    () => ecrire(racine, "nouveau.txt", ""),
+    () => ecrire(racine, "nouveau.txt", "!"),
+    () => ecrire(racine, ".drwil/ia-first.json", '{ "lang": "en" }'),
+    () => git(racine, "checkout", "-q", "-b", "autre"),
+  ]) {
+    alteration();
+    vues.add(treeFingerprint(racine));
+  }
+  assert.equal(vues.size, 7, "chaque altération donne une empreinte jamais vue");
+  symlinkSync(racine, join(racine, "lien"), "junction");
+  assert.equal(treeFingerprint(racine), null, "un fichier non suivi illisible : aucune empreinte, rien n'est repris");
+});
+
+test("QUA-140 : un contrôle est reprenable sauf si le projet déclare reuse: false", () => {
+  const liste = parId(
+    checks(depot(), {
+      cfg: {
+        checks: [
+          { id: "reseau", run: "node -e 0", reuse: false },
+          { id: "local", run: "node -e 0" },
+          { name: "sans-id", run: "node -e 0", reuse: false },
+        ],
+      },
+    }),
+  );
+  assert.equal(liste.reseau.reuse, false);
+  assert.equal(liste["project:sans-id"].reuse, false);
+  assert.equal(liste.local.reuse, true);
+  assert.equal(liste["docs-references"].reuse, true);
 });

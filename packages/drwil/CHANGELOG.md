@@ -7,6 +7,19 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil verify` no longer replays what `run-checks` has just played (QUA-140):
+  a `run-checks` pass outside any hook records each check's verdict with a
+  fingerprint of the tree (commit, branch, uncommitted and untracked changes)
+  and of `.drwil/ia-first.json`; `verify` takes the verdict of a check whose
+  fingerprint is identical, says so contract by contract (« reused from
+  run-checks of … » or « replayed », in the reasons, in `verify --evidence` and
+  as a count in `--agent`), and replays any other check — different
+  fingerprint, missing verdict, a check that did not run, or one declared
+  `"reuse": false` because it reads the network, the forge or the clock. CI
+  always replays everything, and `drwil verify --no-reuse` replays
+  everything on demand. QUA-013 now says why a reused verdict is a check that
+  ran, not a stale proof.
+
 - `drwil verify` plays its checks in parallel (QUA-139): with the `parallel`
   setting, the command checks the contracts cite start together (same limit as
   `run-checks`) and are read in registry order, so each contract gets the same

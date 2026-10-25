@@ -18,7 +18,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   init,
   uninstall,
@@ -3502,6 +3502,112 @@ test("QUA-139 : avec parallel, les contrôles cités se jouent en même temps ; 
   };
   assert.equal((await jouer(true)).status, "PASS", "chacun attend que l'autre ait démarré : impossible en série");
   assert.equal((await jouer(false)).status, "FAIL");
+});
+
+// QUA-140 : le verdict « ok » consigné pour `ko` est faux exprès : un contrôle rejoué rendrait FAIL, un contrôle repris rend PASS.
+async function projetReprise(contrats, { verdicts = { ok: { status: "ok" }, ko: { status: "ok" } }, cfg: modifier } = {}) {
+  const dir = await projetVerify(contrats);
+  if (modifier) {
+    const cfg = config(dir);
+    modifier(cfg);
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+  }
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "x");
+  const moteur = await import(pathToFileURL(join(dir, ".githooks", "engine.mjs")).href);
+  mkdirSync(join(dir, ".drwil/evidence"), { recursive: true });
+  const ranAt = "2026-10-25T10:00:00.000Z";
+  writeFileSync(
+    join(dir, ".drwil/evidence/run-checks-verdicts.json"),
+    JSON.stringify({ ranAt, fingerprint: moteur.treeFingerprint(dir), checks: verdicts }),
+  );
+  return dir;
+}
+const origines = (v) => Object.fromEntries(v.contracts.flatMap((k) => k.checks.map((c) => [c.id, c.reusedAt ?? "rejoué"])));
+
+test("QUA-140 : verify reprend le verdict de run-checks sur un arbre identique, le dit contrat par contrat, et garde son échec", async () => {
+  const dir = await projetReprise(contrat("QUA-001", "**Contrôle** : `ko`") + contrat("QUA-002", "**Contrôle** : `ok`"), {
+    verdicts: { ko: { status: "fail", output: "cause venue de run-checks" }, ok: { status: "ok" } },
+  });
+  const v = await verify({ targetDir: dir });
+  assert.deepEqual(origines(v), { ko: "2026-10-25T10:00:00.000Z", ok: "2026-10-25T10:00:00.000Z" });
+  assert.deepEqual(
+    v.contracts.map((k) => k.status),
+    ["FAIL", "PASS"],
+  );
+  const raisons = v.contracts[0].reasons.join("\n");
+  assert.match(raisons, /ko : repris de run-checks du 2026-10-25T10:00:00.000Z/);
+  assert.match(raisons, /cause venue de run-checks/, "un échec repris garde sa cause");
+  const e = JSON.parse(read(dir, writeEvidence(dir, v)));
+  assert.deepEqual(e.evidence[1].checks[0].reusedFrom, "run-checks");
+  const agent = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify", "--agent"], {
+    cwd: dir,
+    encoding: "utf8",
+    env: envTest,
+  });
+  assert.match(agent.stdout, /Checks \(per contract\): 2 reused from run-checks on an identical tree, 0 replayed/);
+  assert.doesNotMatch(agent.stdout, /reused from run-checks of|repris de run-checks du/, "les raisons d'origine ne noient pas la sortie");
+});
+
+test("QUA-140 : verify rejoue tout contrôle dont l'empreinte diffère (un octet, un fichier non suivi, la configuration)", async () => {
+  const contrats = contrat("QUA-001", "**Contrôle** : `ko`");
+  const rejoue = async (altere) => {
+    const dir = await projetReprise(contrats);
+    writeFileSync(join(dir, "docs", "note.md"), "a\n");
+    git(dir, "add", "-A");
+    git(dir, "commit", "-qm", "y");
+    const moteur = await import(pathToFileURL(join(dir, ".githooks", "engine.mjs")).href);
+    const fichier = join(dir, ".drwil/evidence/run-checks-verdicts.json");
+    writeFileSync(
+      fichier,
+      JSON.stringify({ ...JSON.parse(read(dir, ".drwil/evidence/run-checks-verdicts.json")), fingerprint: moteur.treeFingerprint(dir) }),
+    );
+    assert.equal((await verify({ targetDir: dir })).status, "PASS", "arbre identique : repris");
+    altere(dir);
+    return verify({ targetDir: dir });
+  };
+  for (const [nom, altere] of [
+    ["un octet d'un fichier suivi", (dir) => writeFileSync(join(dir, "docs", "note.md"), "b\n")],
+    ["un fichier non suivi", (dir) => writeFileSync(join(dir, "nouveau.txt"), "")],
+    ["la configuration", (dir) => writeFileSync(join(dir, ".drwil/ia-first.json"), `${read(dir, ".drwil/ia-first.json")}\n`)],
+  ]) {
+    const v = await rejoue(altere);
+    assert.equal(v.status, "FAIL", `${nom} : rejoué, donc rouge`);
+    assert.deepEqual(origines(v), { ko: "rejoué" }, nom);
+  }
+});
+
+test("QUA-140 : verify rejoue un contrôle sans verdict, non exécuté, déclaré reuse: false, ou avec reuse: false", async () => {
+  const contrats = contrat("QUA-001", "**Contrôle** : `ko`") + contrat("QUA-002", "**Contrôle** : `ok`");
+  const tous = { ok: { status: "ok" }, ko: { status: "ok" } };
+  const sansVerdict = await verify({ targetDir: await projetReprise(contrats, { verdicts: { ok: { status: "ok" } } }) });
+  assert.deepEqual(origines(sansVerdict), { ko: "rejoué", ok: "2026-10-25T10:00:00.000Z" });
+  assert.equal(sansVerdict.status, "FAIL");
+  const nonExecute = await verify({
+    targetDir: await projetReprise(contrats, { verdicts: { ok: { status: "ok" }, ko: { status: "not-run" } } }),
+  });
+  assert.equal(origines(nonExecute).ko, "rejoué", "seuls « ok » et « fail » sont repris");
+  const exterieur = await verify({
+    targetDir: await projetReprise(contrats, { verdicts: tous, cfg: (cfg) => (cfg.checks[1].reuse = false) }),
+  });
+  assert.deepEqual(origines(exterieur), { ko: "rejoué", ok: "2026-10-25T10:00:00.000Z" }, "reuse: false : toujours rejoué");
+  const dir = await projetReprise(contrats, { verdicts: tous });
+  assert.equal((await verify({ targetDir: dir })).status, "PASS");
+  const sans = await verify({ targetDir: dir, reuse: false });
+  assert.deepEqual(origines(sans), { ko: "rejoué", ok: "rejoué" });
+  assert.equal(sans.status, "FAIL");
+});
+
+test("QUA-140 : l'option --no-reuse de la commande verify rejoue tout, sans elle les verdicts sont repris", async () => {
+  const dir = await projetReprise(contrat("QUA-001", "**Contrôle** : `ok`"), { verdicts: { ok: { status: "ok" } } });
+  const cli = (...args) =>
+    spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify", ...args], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+  assert.match(cli().stdout, /repris de run-checks du 2026-10-25T10:00:00.000Z/);
+  assert.doesNotMatch(cli("--no-reuse").stdout, /repris de run-checks/);
 });
 
 test("DRWIL-013 : verify --evidence enregistre verdict, horodatage, commit et résumés caviardés", async () => {

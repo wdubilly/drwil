@@ -7,18 +7,19 @@
 // (.githooks/contracts.mjs). The hooks therefore never need drwil, and each check has a single
 // implementation.
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { judgeDurable, type ProofResult } from "./closure.js";
 import { changeLines, type Coverage, coverageChanges, coverageOf, lacksCoverage, noCoversMessage } from "./coverage.js";
 import { type CriterionResult, showOrigins } from "./criteria.js";
+import { type Attestation, readAttestations, reusableVerdicts } from "./evidence.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { judgeGuarantees } from "./guarantees.js";
 import { type BusinessRule, businessRules } from "./rules.js";
 
 export { formatVerdict, verdictJson } from "./verdict.js";
-export { redact, writeEvidence } from "./evidence.js";
+export { ATTESTATIONS_DIR, readAttestations, redact, writeEvidence, type Attestation } from "./evidence.js";
 export { criteriaTable, evaluateCriteria, type CriterionResult, type CriterionStatus } from "./criteria.js";
 
 /** ATTESTED (DRWIL-013): the automated part is proven and the human part has a valid attestation.
@@ -33,6 +34,7 @@ export interface CheckResult {
   message?: string;
   output?: string;
   durationMs?: number; // whole ms (QUA-136); absent when the check did not run, never 0
+  reusedAt?: string; // QUA-140: taken from the `run-checks` pass of this date instead of being replayed
 }
 
 export type Severity = "blocking" | "warning" | "advisory";
@@ -87,28 +89,9 @@ export interface VerifyOptions {
   only?: string[];
   /** Called before each check is run (no status), then with its status: `drwil attest` shows them. */
   onCheck?: (id: string, status?: string) => void;
+  /** QUA-140: `false` replays every check instead of taking the verdicts of a `run-checks` pass on an identical tree. */
+  reuse?: boolean;
 }
-
-export interface Attestation {
-  /** 1: bound to the whole section and its checks; 2: to the human part and to each attested check; 3: and to the content of the covered files. */
-  version: 1 | 2 | 3;
-  contract: string;
-  status: "ATTESTED";
-  attestedAt: string;
-  actor: { name: string; source: string } | null;
-  note: string | null;
-  fingerprint: string;
-  /** Version 2: fingerprint of each attested check's definition. */
-  proof?: Record<string, string>;
-  /** Version 3: patterns of the `**Covers**` field and fingerprint of each file they matched. */
-  covers?: string[] | null;
-  coverage?: Coverage;
-  commit: string | null;
-  automated: { id: string; status: string }[];
-}
-
-/** Versioned folder of the attestations (the rest of .drwil/evidence/ is outside git). */
-export const ATTESTATIONS_DIR = [".drwil", "evidence", "attestations"];
 
 /**
  * Fingerprint of what an attestation covers: the contract's text and the definition of the checks
@@ -168,19 +151,6 @@ function covers(a: Attestation, k: any, cfg: Record<string, any>, proof: Record<
   return a.fingerprint === human && files && Object.entries(a.proof ?? {}).every(([id, h]) => proof[id] === h);
 }
 
-export function readAttestations(root: string): Attestation[] {
-  const dir = join(root, ...ATTESTATIONS_DIR);
-  if (!existsSync(dir)) return [];
-  const all: Attestation[] = [];
-  for (const f of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
-    try {
-      const a = JSON.parse(readFileSync(join(dir, f), "utf8"));
-      if (a?.status === "ATTESTED" && typeof a.contract === "string" && typeof a.fingerprint === "string") all.push(a);
-    } catch {}
-  }
-  return all.sort((a, b) => String(b.attestedAt).localeCompare(String(a.attestedAt)));
-}
-
 export const CODES: Record<Status, 0 | 1 | 2> = { PASS: 0, ATTESTED: 0, FAIL: 1, MANUAL: 1, ERROR: 2 };
 
 /**
@@ -200,6 +170,8 @@ const TEXTS = {
     noRegistry: "registre des contrats absent ({0})",
     noContract: "aucun contrat trouvé dans {0}",
     ok: "{0} : ok (automatisé)",
+    reused: "{0} : repris de run-checks du {1}",
+    replayed: "{0} : rejoué",
     failed: "{0} : échec{1}",
     shared: "{0} est partagé par {1} : échec non attribuable à une seule règle — un contrôle par règle, qui filtre ses tests par l'ID",
     notRun: "{0} : non exécuté ({1})",
@@ -216,6 +188,8 @@ const TEXTS = {
     noRegistry: "contract registry missing ({0})",
     noContract: "no contract found in {0}",
     ok: "{0}: ok (automated)",
+    reused: "{0}: reused from run-checks of {1}",
+    replayed: "{0}: replayed",
     failed: "{0}: failed{1}",
     shared: "{0} is shared by {1}: failure not attributable to a single rule — one check per rule, filtering its tests by the ID",
     notRun: "{0}: not run ({1})",
@@ -292,9 +266,18 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   // QUA-139: with the engine's `parallel` setting the cited command checks are started together (same limit as
   // run-checks), then read in registry order: the verdict and the reasons are those of a serial pass.
   const cited = [...new Set(contracts.flatMap((k) => ((k.checks ?? []) as string[]).filter((id) => available.has(id))))];
-  const started: Map<string, Promise<any>> | undefined = engine.startParallel?.(cited.map((id) => available.get(id)));
+  // QUA-140: a verdict `run-checks` left on an identical tree and configuration is taken, not replayed.
+  const reused = opts.reuse === false ? new Map() : reusableVerdicts(root, engine, available);
+  const started: Map<string, Promise<any>> | undefined = engine.startParallel?.(
+    cited.filter((id) => !reused.has(id)).map((id) => available.get(id)),
+  );
   const run = async (id: string): Promise<void> => {
     opts.onCheck?.(id);
+    const taken = reused.get(id);
+    if (taken) {
+      opts.onCheck?.(id, taken.status);
+      return void cache.set(id, { id, status: taken.status, output: taken.output, durationMs: taken.durationMs, reusedAt: taken.ranAt });
+    }
     const pending = started?.get(id);
     const { launched: _launched, ...raw } = pending
       ? await pending.catch((e: Error) => ({ status: "not-run", detail: e.message }))
@@ -310,6 +293,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     // An unknown check is already a validation error: it is not "run".
     const checks = ((k.checks ?? []) as string[]).filter((id) => available.has(id)).map((id) => cache.get(id) ?? { id, status: "unknown" });
     for (const r of checks) {
+      if (r.status === "ok" || r.status === "fail") reasons.push(fill(r.reusedAt ? T.reused : T.replayed, r.id, r.reusedAt));
       if (r.status === "ok") reasons.push(fill(T.ok, r.id));
       else if (r.status === "fail") {
         statuses.push("FAIL");

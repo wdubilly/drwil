@@ -34,7 +34,7 @@ function git(racine, ...args) {
  * check-docs y est un bouchon : ce test éprouve l'adaptateur, pas les contrôles (engine.test.mjs).
  * HOME temporaire : un gitleaks de ~/.local/bin ne s'invite pas ; DRWIL_HOOK et CI fixés par le test.
  */
-function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] } = {}) {
+function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [], valider = false } = {}) {
   const racine = tmp();
   const tout = {
     ".githooks/check-docs.mjs": `process.exit(${docsOk ? 0 : 1});\n`,
@@ -49,8 +49,22 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [] 
   if (depot) {
     git(racine, "init", "-q", "-b", "travail");
     if (indexer.length) git(racine, "add", ...indexer);
+    if (valider) {
+      git(racine, "add", "-A");
+      git(racine, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x");
+    }
   }
-  const base = { ...process.env, HOME: tmp(), USERPROFILE: tmp(), CI: "", DRWIL_HOOK: "", TMPDIR: tmp() };
+  const base = {
+    ...process.env,
+    HOME: tmp(),
+    USERPROFILE: tmp(),
+    CI: "",
+    DRWIL_HOOK: "",
+    DRWIL_PUSH_REFS: "",
+    DRWIL_PUSH_TAGS_ONLY: "",
+    DRWIL_PUSH_NO_BRANCH: "",
+    TMPDIR: tmp(),
+  };
   // DRWIL_ROOT : sans elle, run-checks jugerait le dépôt drwil (parent de son .githooks/).
   // Dossier courant ailleurs : seule la racine compte, comme pour un hook lancé depuis une couche.
   const r = spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_ROOT: racine, ...env } });
@@ -456,4 +470,47 @@ test("QUA-136 : chaque contrôle exécuté a sa durée au détail, du plus lent 
   const en = lancer(config("en"));
   assert.match(en.detail, /^\[ia-first\] lent : duration: \d+ ms$/m);
   assert.match(en.stdout, /— slowest: lent \d+ ms, moyen \d+ ms, pas-si-rapide \d+ ms\n$/);
+});
+
+const VERDICTS = ".drwil/evidence/run-checks-verdicts.json";
+
+test("QUA-140 : une passe hors hook consigne le verdict ok ou fail de chaque contrôle avec l'empreinte de l'arbre ; ni non exécuté, ni passe de hook", async () => {
+  const fichiers = {
+    ".drwil/ia-first.json": JSON.stringify({
+      checks: [
+        { id: "vert", run: "node -e 0" },
+        { id: "rouge", run: "node -e \"console.log('cause');process.exit(1)\"" },
+        { id: "reporte", run: "node -e 0", paths: ["src/**"] },
+      ],
+    }),
+  };
+  const r = lancer(fichiers, { valider: true });
+  const consigne = JSON.parse(readFileSync(join(r.racine, VERDICTS), "utf8"));
+  assert.equal(consigne.checks.vert.status, "ok");
+  assert.equal(consigne.checks.rouge.status, "fail");
+  assert.match(consigne.checks.rouge.output, /cause/);
+  assert.ok(
+    !("secrets" in consigne.checks) || consigne.checks.secrets.reusable === false,
+    "secrets hors CI ne juge pas ce que verify juge",
+  );
+  assert.match(consigne.ranAt, /^\d{4}-\d{2}-\d{2}T/);
+  const { treeFingerprint } = await import("./engine.mjs");
+  assert.equal(consigne.fingerprint, treeFingerprint(r.racine));
+  const hook = lancer(fichiers, { valider: true, env: { DRWIL_HOOK: "pre-commit" } });
+  assert.ok(!existsSync(join(hook.racine, VERDICTS)), "une passe de hook ne laisse rien à reprendre");
+  const push = lancer(fichiers, { valider: true, env: { DRWIL_PUSH_REFS: "refs/heads/travail" } });
+  assert.ok(!existsSync(join(push.racine, VERDICTS)), "une passe de pre-push non plus");
+});
+
+test("QUA-140 : un arbre changé pendant la passe, ou sans commit, ne laisse aucun verdict", () => {
+  const ecrivain = { id: "ecrit", run: "node -e \"require('fs').writeFileSync('intrus.txt','x')\"" };
+  const change = lancer({ ".drwil/ia-first.json": JSON.stringify({ checks: [ecrivain] }) }, { valider: true });
+  assert.ok(!existsSync(join(change.racine, VERDICTS)), "le verdict n'est pas pris sur un seul arbre");
+  const sansCommit = lancer({ ".drwil/ia-first.json": JSON.stringify({ checks: [{ id: "vert", run: "node -e 0" }] }) });
+  assert.ok(!existsSync(join(sansCommit.racine, VERDICTS)), "sans commit : pas d'empreinte, rien de repris");
+  const bloque = lancer(
+    { ".drwil/ia-first.json": JSON.stringify({ checks: [{ id: "vert", run: "node -e 0" }] }), ".drwil/evidence": "fichier" },
+    { valider: true },
+  );
+  assert.equal(bloque.status, 0, "des verdicts qui ne s'écrivent pas ne changent pas le verdict de la passe");
 });

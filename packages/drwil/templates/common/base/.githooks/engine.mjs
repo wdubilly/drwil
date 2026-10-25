@@ -1,17 +1,11 @@
-// Single check engine:
-// .githooks/run-checks.mjs (git adapter) and `drwil verify` both use it,
-// neither reimplements a check. Dependency-free: the hooks stay self-contained.
-//
-// Each check has a stable identifier (cited by the **Check** field of
-// docs/contracts.md) and returns one of these results (stable values: they leave the hooks
-// through `drwil verify` and its evidence):
-// - "ok" / "fail";
-// - "not-run": it should have run but could not (missing tool, deferred
-//   at commit time) — never a success (QUA-013);
-// - "not-applicable": excluded by design in this context (e.g. QUA-017 in CI).
+// Single check engine: .githooks/run-checks.mjs (git adapter) and `drwil verify` both use it, neither reimplements a check.
+// Dependency-free: the hooks stay self-contained. Each check has a stable identifier (cited by the **Check** field of
+// docs/contracts.md) and returns one of these results (stable values: they leave the hooks through `drwil verify` and its evidence):
+// "ok" / "fail"; "not-run": it should have run but could not (missing tool, deferred at commit time), never a success (QUA-013);
+// "not-applicable": excluded by design in this context (e.g. QUA-017 in CI).
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync } from "node:fs";
 import { availableParallelism, homedir, tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,9 +13,8 @@ import { globToRegex } from "./glob.mjs";
 import { checkScope } from "./scope-gate.mjs";
 import { normalize } from "./scope.mjs";
 
-// One temporary root per pass (QUA-133): every check gets its own sub-folder as TMPDIR/TMP/TEMP, removed at the end of the pass. The
-// folders of the failed checks are moved to a fixed path, replaced at each failure and never piled up. A pass that dies before `finish`
-// is cleaned by the `exit` handler.
+// One temporary root per pass (QUA-133): each check gets its own sub-folder as TMPDIR/TMP/TEMP, removed at the end of the pass; the
+// failed checks' folders move to a fixed path, replaced at each failure. A pass dying before `finish` is cleaned by the `exit` handler.
 const passes = new Set();
 let exitHooked = false;
 const hookExit = () => {
@@ -91,17 +84,39 @@ const TEXTS = {
   },
 };
 
-/**
- * Project root for run-checks.mjs (`scriptUrl`: its import.meta.url): the parent folder of
- * `.githooks/`, whatever the current folder. `DRWIL_ROOT` replaces it, for its tests only:
- * without it, run-checks would only be tried on the drwil repository itself.
- */
+/** Project root for run-checks.mjs (`scriptUrl`: its import.meta.url): the parent of `.githooks/`; `DRWIL_ROOT` replaces it, for its tests only. */
 export function projectRoot(scriptUrl, env = process.env) {
   return env.DRWIL_ROOT || join(dirname(fileURLToPath(scriptUrl)), "..");
 }
 
 export function texts(lang) {
   return TEXTS[lang === "en" ? "en" : "fr"];
+}
+
+/**
+ * QUA-140: fingerprint of what a check judges (commit, branch, uncommitted changes incl. untracked files not ignored, local state,
+ * configuration; not the evidence files of the pass itself): one byte of difference changes it. `null` if git does not answer: nothing is then reusable.
+ */
+export function treeFingerprint(root) {
+  try {
+    const git = (...args) => spawnSync("git", args, { cwd: root, maxBuffer: 1 << 30 });
+    const h = createHash("sha256");
+    const part = (b) => h.update(`${Buffer.byteLength(b)}:`).update(b);
+    const outs = [
+      "rev-parse HEAD",
+      "symbolic-ref -q HEAD",
+      "diff HEAD --binary --no-ext-diff",
+      "ls-files -o --exclude-standard -z -- :(exclude,glob).drwil/evidence/*",
+    ].map((a) => git(...a.split(" ")));
+    if (outs.some((r, i) => r.status !== 0 && i !== 1)) return null;
+    for (const r of outs) part(r.stdout);
+    const read = (f) => (existsSync(join(root, f)) ? readFileSync(join(root, f)) : "");
+    for (const f of outs[3].stdout.toString().split("\0").filter(Boolean)) part(read(f));
+    for (const f of [".drwil/ia-first.json", ".drwil/state.json"]) part(read(f));
+    return h.digest("hex");
+  } catch {
+    return null;
+  }
 }
 
 function findGitleaks() {
@@ -112,22 +127,18 @@ function findGitleaks() {
 }
 
 /**
- * The project's checks, in the hooks' run order: [{ id, name, run }].
- * `run({ stdio, beforeRun })` returns { status, detail?, message?, output? } (`message`:
- * explanation of a failure to show instead of the name); `beforeRun` is called just before
- * actually launching the command (not for a skipped check).
- * `staged` (pre-commit hook only): staged files, to defer a project check outside its `paths`;
- * null everywhere else (nothing is deferred).
+ * The project's checks, in the hooks' run order: [{ id, name, run, reuse }].
+ * `run({ stdio, beforeRun })` returns { status, detail?, message?, output? } (`message`: explanation of a failure to show instead of
+ * the name); `beforeRun` is called just before actually launching the command (not for a skipped check).
+ * `staged` (pre-commit hook only): staged files, to defer a project check outside its `paths`; null everywhere else.
  * `whole`: analyses the whole repository rather than the staged files only (CI, `drwil verify`).
  */
 export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI) } = {}) {
   const T = texts(cfg.lang);
   const full = (cfg.mode ?? "full") === "full";
-  // NODE_TEST_CONTEXT propagates to children: if the engine itself runs under `node --test` (the kit testing its hooks, a harness calling
-  // verify…), a `node --test` launched by a check would be silently skipped ("called recursively") and return 0: a false PASS. QUA-057: a
-  // hook run from a worktree or by `git commit -a` receives GIT_DIR, GIT_INDEX_FILE…; a check that inherits them and runs `git init`
-  // elsewhere acts on the repository that launched it (core.bare=true written in the shared config, index soiled). The hook keeps them;
-  // its children run from the project root, where git finds the right repository on its own.
+  // NODE_TEST_CONTEXT propagates to children: under `node --test`, a `node --test` launched by a check would be silently skipped
+  // ("called recursively") and return 0: a false PASS. QUA-057: a hook run from a worktree or by `git commit -a` receives GIT_DIR,
+  // GIT_INDEX_FILE…; a check inheriting them that runs `git init` elsewhere would soil the launching repository: children lose them.
   const base = env.TMPDIR || tmpdir();
   const failedPath = join(base, `drwil-checks-failed-${createHash("sha1").update(root).digest("hex").slice(0, 8)}`);
   let passRoot = null;
@@ -200,8 +211,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     if (r.error) return { status: "fail", detail: r.error.message, output, ...settle(temp, false) };
     return { status: r.status === 0 ? "ok" : "fail", output, ...settle(temp, r.status === 0) };
   };
-  // Same verdict as `launch`, without blocking: the output is always captured (`launched`: the
-  // command did start, so the caller shows its name with its output).
+  // Same verdict as `launch`, without blocking: output always captured (`launched`: the command did start).
   const launchAsync = (cmd, args, { keepGit = false, ...opts } = {}, name) =>
     new Promise((resolve) => {
       let output = "";
@@ -216,8 +226,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
       child.on("error", (e) => end({ status: "fail", detail: e.message }));
       child.on("close", (code) => end({ status: code === 0 ? "ok" : "fail" }));
     });
-  // The project is compiled once per run, by the first check that needs it (`needsBuild`); a failed
-  // build fails every check that depends on it, never lets it pass.
+  // The project is compiled once per run, by the first check that needs it (`needsBuild`); a failed build fails its dependents.
   let built;
   let buildReported = false;
   const buildVerdict = (name, r) => {
@@ -240,14 +249,12 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   };
   let buildPending;
   const list = [];
-  // `parallel` (setting, off by default): checks that only run a command also get `runAsync`, to be
-  // started together by `startParallel`; their verdict does not depend on the order they run in.
+  // `parallel` (setting, off by default): checks that only run a command also get `runAsync`, started together by `startParallel`.
   const parallel = cfg.parallel === true;
   const add = (id, name, run, runAsync) =>
     list.push({ id, name, run: (o = {}) => run(o, name), ...(runAsync && parallel ? { runAsync: () => runAsync(name) } : {}) });
-  // A commit that stages documentation only (a brief widened mid-workstream) does not replay the tests on the working tree, which holds
-  // the lot in progress (QUA-035); push and CI always replay them. Strictly docs/ or Markdown: not isCode(), which calls code only what
-  // the project declares.
+  // A commit staging documentation only (docs/ or Markdown, not isCode()) does not replay the tests on the working tree (QUA-035);
+  // push and CI always do.
   const docsOnly = Boolean(staged?.length) && staged.every((f) => /^docs\//.test(normalize(f)) || /\.md$/i.test(f));
 
   add("secrets", T.secrets, (o, name) => {
@@ -256,11 +263,9 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     if (!gitleaks) return { status: "not-run", detail: T.gitleaksMissing };
     if (spawnSync("git", ["rev-parse", "--git-dir"], { cwd: root, stdio: "ignore" }).status !== 0)
       return { status: "not-run", detail: T.noGit, configured: true };
-    // In CI (or for `drwil verify`) nothing is staged to judge: the whole history is analysed,
-    // otherwise a proof of "no secret in the repository" would look at nothing.
+    // In CI (or for `drwil verify`) nothing is staged to judge: the whole history is analysed, not an empty index.
     const args = whole ? ["git", "--no-banner", "--redact", "."] : ["git", "--pre-commit", "--staged", "--no-banner", "--redact", "."];
-    // Only reads the repository, and must see the index of the commit in progress: under
-    // `git commit -a` it is the one named by GIT_INDEX_FILE, not .git/index.
+    // Must see the index of the commit in progress: under `git commit -a`, the one named by GIT_INDEX_FILE.
     return launch(gitleaks, args, { ...o, keepGit: true }, name);
   });
 
@@ -268,8 +273,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   add("contract-tests", T.contractTests, (o, name) => launch(process.execPath, [".githooks/check-contract-tests.mjs"], o, name));
   add("architecture-map", T.architecture, (o, name) => launch(process.execPath, [".githooks/check-architecture.mjs"], o, name));
 
-  // Brief scope gate (.githooks/scope-gate.mjs): at commit time, the local state;
-  // elsewhere (push, CI, verify), each commit of the branch is replayed through its trailer.
+  // Brief scope gate: at commit time the local state; elsewhere (push, CI, verify) each commit of the branch, through its trailer.
   add("scope-gate", T.scope, (o, name) => {
     o.beforeRun?.(name);
     const r = checkScope(root, { cfg, staged, env });
@@ -278,13 +282,10 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     return { status: r.status, message: r.message, detail: r.detail, configured: r.configured, output };
   });
 
-  // QUA-017: never work directly on the main branch, including the very first commit (no more bootstrap exception: `init()` always
-  // creates a working branch before any commit). `symbolic-ref` (unlike `rev-parse --abbrev-ref HEAD`) works even before the first commit
-  // (HEAD not created yet). Never in CI (env.CI): CI also runs on master after a legitimate merge, which must not be blocked
-  // retroactively — only the local hooks (pre-commit/pre-push) apply it. Never either on a push of tags only (DRWIL_PUSH_TAGS_ONLY, set
-  // by .githooks/pre-push from the hook's standard input): a tag never changes a branch; nor on a remote branch deletion
-  // (DRWIL_PUSH_NO_BRANCH). At push time, the pushed remote branches (DRWIL_PUSH_REFS) are judged, not the current branch:
-  // `recette/vX.Y.Z` pushed from master does not touch master, while `work:master` pushed from another branch does.
+  // QUA-017: never work directly on the main branch, including the very first commit (`init()` always creates a working branch first).
+  // `symbolic-ref` works even before the first commit. Never in CI (a merge landing on master is legitimate), nor on a push of tags
+  // only (DRWIL_PUSH_TAGS_ONLY) or of branch deletions (DRWIL_PUSH_NO_BRANCH), both set by .githooks/pre-push. At push time, the pushed
+  // remote branches (DRWIL_PUSH_REFS) are judged, not the current one: `recette/vX.Y.Z` pushed from master does not touch master.
   add("main-branch", T.branch, () => {
     if (env.CI) return { status: "not-applicable", detail: T.branchCi };
     if (env.DRWIL_PUSH_TAGS_ONLY === "1") return { status: "not-applicable", detail: T.branchTags };
@@ -306,8 +307,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const dir = join(root, ".githooks");
     const tests = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".test.mjs")) : [];
-    // These tests try drwil's code: they stay in its repository and do not slow down the commits
-    // of an equipped project, which does not receive them.
+    // These tests try drwil's code: an equipped project does not receive them.
     if (!tests.length) return { status: "not-applicable", detail: T.noTests };
     if (docsOnly) return { status: "not-run", detail: T.docsOnly };
     return { args: ["--test", ...tests.map((f) => join(".githooks", f))] };
@@ -332,9 +332,8 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     return launch(process.execPath, [".githooks/check-control-coverage.mjs"], o, name);
   });
 
-  // Stack checks (lint, typecheck, tests) are declared by the project, not by the kit. At pre-commit only (`staged` given), a check that
-  // declares `paths` is deferred if no staged file matches them: a docs commit does not rerun the whole test suite. It stays "not run"
-  // (QUA-013) and the pre-push as well as CI always replay it.
+  // Stack checks (lint, typecheck, tests) are declared by the project. At pre-commit only (`staged` given), a check declaring `paths`
+  // is deferred if no staged file matches: it stays "not run" (QUA-013), and the pre-push as well as CI replay it.
   for (const c of Array.isArray(cfg.checks) ? cfg.checks : []) {
     const name = c.name ?? c.run;
     const skipped = () => {
@@ -366,16 +365,17 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     return r instanceof Promise ? r.then(end) : end(r);
   };
   for (const c of list) for (const k of ["run", "runAsync"]) if (c[k]) c[k] = timed(c[k]);
+  // QUA-140: `reuse: false` in the project's check declares it always replayed (it reads the network, the forge, the clock).
+  const declared = Array.isArray(cfg.checks) ? cfg.checks : [];
+  for (const c of list) c.reuse = declared.find((d) => (d.id ?? `project:${d.name ?? d.run}`) === c.id)?.reuse !== false;
   list.finish = finish;
   return list;
 }
 
 /**
- * Starts the `runAsync` of the checks that have one, in list order, at most `limit` at a time (by default half
- * the cores, two at least: the suites launched by a check are parallel themselves, and a full load
- * would break the timing tests among them):
- * returns a Map id → Promise of the result. The caller reads the results in the list order, so the
- * report is the one of a sequential run.
+ * Starts the `runAsync` of the checks that have one, in list order, at most `limit` at a time (by default half the cores, two at
+ * least: the suites a check launches are parallel themselves): returns a Map id → Promise of the result. The caller reads them in
+ * the list order, so the report is the one of a sequential run.
  */
 export function startParallel(list, limit = Math.max(2, availableParallelism() >> 1)) {
   const waiting = new Map();
