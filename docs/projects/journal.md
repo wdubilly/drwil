@@ -3247,7 +3247,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   2 min 06 en parallèle, soit environ 39 % de moins.
 - **Limites connues** : `verify` rejoue encore tout après un FAIL
   (`docs/projects/verify-rejoue-les-echecs.md`) et ne reprend pas les verdicts
-  de `run-checks` (`docs/projects/verify-reprend-run-checks.md`) ; `parallel`
+  de `run-checks` (`docs/projects/journal.md`) ; `parallel`
   reste un réglage, non activé par défaut chez les projets.
 - **Preuve de clôture** : `docs/preuves/verify-en-parallele.md` (si présent).
 - **Clôturé par** : la branche `chantier/verify-en-parallele`.
