@@ -87,9 +87,12 @@ Validées par le demandeur le 2026-10-25 :
 - `.githooks/close.mjs` : extraction de la gestion des branches, exports
   publics maintenus ; déclaration autorisée par le demandeur, tests
   associés compris (QUA-137, hooks modifiés déclarés).
-- `QUA-048` (clôture en un geste), `QUA-058` (fusion par squash reconnue)
-  et `QUA-059` (repli sans `gh`) : seules les références de source et de
+- `QUA-048` (clôture en un geste) : seules les références de source et de
   tests peuvent être adaptées au découpage ; invariants inchangés.
+- `QUA-058` (fusion par squash reconnue) : seules les références de source
+  et de tests peuvent être adaptées au découpage ; invariants inchangés.
+- `QUA-059` (repli sans `gh`) : seules les références de source et de tests
+  peuvent être adaptées au découpage ; invariants inchangés.
 
 ## 5. Points à trancher
 
