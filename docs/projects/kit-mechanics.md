@@ -16,6 +16,7 @@ files:
   - .githooks/check-control-coverage.mjs
   - .githooks/glob.mjs
   - .githooks/engine.mjs
+  - .githooks/fingerprints.mjs
   - .githooks/contracts.mjs
   - .githooks/glossary.mjs
   - .githooks/glossary.test.mjs

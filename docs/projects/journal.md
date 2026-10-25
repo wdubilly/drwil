@@ -3277,3 +3277,41 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   l'arbre (une note, la fiche) invalide la reprise.
 - **Preuve de clôture** : `docs/preuves/verify-reprend-run-checks.md` (si présent).
 - **Clôturé par** : la branche `workstream/verify-reprend-run-checks`.
+
+## 2026-10-25 — `run-checks` et `drwil verify` reprennent un verdict contrôle par contrôle
+
+- **Besoin** : depuis QUA-140 (reprise sur un arbre identique), un octet changé
+  n'importe où invalidait tous les verdicts : pendant les itérations, le gain
+  était nul et `run-checks` rejouait toujours tout.
+- **Décisions clés** : QUA-141 (nouveau contrat, voisin de QUA-140 qu'il laisse
+  intact) : un contrôle qui déclare `paths` a une empreinte propre (sa
+  déclaration, le moteur et le contenu des fichiers que ses `paths`
+  désignent) ; hors hook, hors CI et sans `--tout-rejouer`, `run-checks` ne
+  rejoue pas un contrôle « ok » à l'empreinte identique et `drwil verify` le
+  reprend de même ; sans `paths`, en échec, `reuse: false` ou `reuse: "tree"`,
+  le contrôle est rejoué. `verify --evidence` et `--no-reuse` gardent
+  l'empreinte de tout l'arbre (la preuve de clôture n'est jamais reprise par
+  contrôle) ; un verdict repris par contrôle n'entre jamais dans l'empreinte de
+  l'arbre (`played`). Le PASS reste PASS, avec « ne vaut pas preuve de
+  clôture » dans la raison de chaque contrôle repris et sur la ligne de
+  `--agent`. QUA-013 précisé. Audit des `paths` de ce dépôt par traçage des
+  lectures de chaque contrôle : `paths` complétés, et `reuse: "tree"` sur
+  `tests-qua-047`, `tests-qua-112`, `miroirs-gabarit`, `tests-contrats` et
+  `codeowners` (ils lisent presque tout) ; un test garde que chaque fichier de
+  test lancé par un contrôle est sous ses `paths`. Le cadrage a été élargi à
+  `packages/drwil/bin/drwil.js` (option de `verify`), puis à
+  `.githooks/fingerprints.mjs` (l'`.githooks/engine.mjs` était au plafond de 400 lignes)
+  et aux deux fiches `kit-mechanics.md` qui doivent le citer ; les trois
+  élargissements ratifiés par le demandeur. Mesure sur ce dépôt : une passe
+  de `run-checks` complète 2 min 46 s ; après une modification de
+  `docs/projects/pending.md`, 1 min 23 s (121 contrôles repris, 17 rejoués).
+- **Limites connues** : l'audit des `paths` est ponctuel (par traçage), rien ne
+  surveille qu'un contrôle ne lit pas un fichier hors de ses `paths`
+  (`docs/intentions/reprise-par-controle-limites.md`) ; le pre-push rejoue
+  encore tout (`docs/projects/pre-push-reprend-les-verdicts.md`) ; le verdict
+  humain de `verify` ne porte pas lui-même la mention « ne vaut pas preuve de
+  clôture » (`packages/drwil/src/verdict.ts` hors cadrage) ; le test
+  QUA-136 (classement des durées) est sensible à la charge de la machine
+  quand toute la suite tourne en parallèle.
+- **Preuve de clôture** : `docs/preuves/verify-reprise-par-controle.md` (si présent).
+- **Clôturé par** : la branche `cadrage/verify-reprise-par-controle`.

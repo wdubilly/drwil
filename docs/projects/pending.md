@@ -224,6 +224,9 @@ session (`node .githooks/consumption.mjs`, journal du 2026-10-11) ; livrée
 - [ ] [décision] La consommation de tokens mesurée aussi pour les autres
   outils IA (Copilot CLI, Cursor, Codex, Gemini) —
   `docs/intentions/consommation-autres-outils.md`.
+- [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
+  par contrôle, QUA-141) —
+  `docs/intentions/reprise-par-controle-limites.md`.
 
 ## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 

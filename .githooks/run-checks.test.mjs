@@ -54,6 +54,11 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [],
       git(racine, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x");
     }
   }
+  const r = passe(racine, { env });
+  return { ...r, racine, detail: detail(racine) };
+}
+/** Une passe de run-checks sur une racine déjà préparée (`args` : ses options). */
+function passe(racine, { env = {}, args = [] } = {}) {
   const base = {
     ...process.env,
     HOME: tmp(),
@@ -67,8 +72,8 @@ function lancer(fichiers, { depot = true, docsOk = true, env = {}, indexer = [],
   };
   // DRWIL_ROOT : sans elle, run-checks jugerait le dépôt drwil (parent de son .githooks/).
   // Dossier courant ailleurs : seule la racine compte, comme pour un hook lancé depuis une couche.
-  const r = spawnSync(process.execPath, [SCRIPT], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_ROOT: racine, ...env } });
-  return { ...r, racine, detail: detail(racine) };
+  const r = spawnSync(process.execPath, [SCRIPT, ...args], { cwd: tmp(), encoding: "utf8", env: { ...base, DRWIL_ROOT: racine, ...env } });
+  return { ...r, detail: detail(racine) };
 }
 /** Le rapport complet que run-checks écrit à côté de sa sortie courte (QUA-126) ; vide s'il manque. */
 const DETAIL = ".drwil/evidence/run-checks.log";
@@ -513,4 +518,153 @@ test("QUA-140 : un arbre changé pendant la passe, ou sans commit, ne laisse auc
     { valider: true },
   );
   assert.equal(bloque.status, 0, "des verdicts qui ne s'écrivent pas ne changent pas le verdict de la passe");
+});
+
+const compte = (racine) => (existsSync(join(racine, "compteur.log")) ? readFileSync(join(racine, "compteur.log"), "utf8").length : 0);
+const consigne = (racine) => JSON.parse(readFileSync(join(racine, VERDICTS), "utf8"));
+
+test("QUA-141 : hors hook et hors CI, un contrôle « ok » dont les fichiers du paths n'ont pas changé est repris, le dit, et ne reçoit pas l'empreinte de l'arbre", () => {
+  const joue = (nom) => `node -e "require('fs').appendFileSync('compteur.log','x')" ${nom}`;
+  const config = (compteur) => ({
+    checks: [
+      { id: "compteur", run: compteur, paths: ["src/**"] },
+      { id: "autre", run: "node -e 0", paths: ["autre/**"] },
+      { id: "sans-chemin", run: "node -e 0" },
+    ],
+  });
+  const r = lancer(
+    {
+      ".drwil/ia-first.json": JSON.stringify(config(joue("a"))),
+      ".gitignore": "compteur.log\n",
+      "src/a.txt": "a\n",
+      "autre/b.txt": "b\n",
+      "hors.txt": "h\n",
+    },
+    { valider: true },
+  );
+  const { racine } = r;
+  assert.equal(compte(racine), 1);
+  assert.doesNotMatch(r.stdout, /repris/, "première passe : rien à reprendre");
+  const premiere = consigne(racine);
+  assert.match(premiere.checks.compteur.control, /^[0-9a-f]{64}$/);
+  assert.equal(premiere.checks["sans-chemin"].control, null, "sans paths : pas d'empreinte propre");
+  assert.ok(premiere.played.includes("compteur") && premiere.played.includes("sans-chemin"));
+
+  // Rien n'a changé, sauf un fichier hors de tout paths : repris, dit, et sans l'empreinte de l'arbre entier (invariant de QUA-141).
+  writeFileSync(join(racine, "hors.txt"), "autre chose\n");
+  const deuxieme = passe(racine);
+  assert.equal(deuxieme.status, 0, deuxieme.stdout + deuxieme.stderr);
+  assert.equal(compte(racine), 1, "le contrôle n'a pas rejoué");
+  assert.match(deuxieme.detail, /^\[ia-first\] node -e "require.* a : repris \(fichiers du contrôle inchangés, run-checks du \d{4}-/m);
+  assert.match(deuxieme.detail, /^\[ia-first\] node -e 0…$/m);
+  assert.match(deuxieme.stdout, /— 2 repris \(fichiers du contrôle inchangés\), \d+ rejoué\(s\) — /);
+  const reprise = consigne(racine);
+  assert.equal(reprise.checks.compteur.ranAt, premiere.checks.compteur.ranAt, "le verdict repris garde sa date");
+  assert.equal(reprise.checks.compteur.control, premiere.checks.compteur.control);
+  assert.deepEqual(
+    reprise.played.filter((id) => ["compteur", "autre", "sans-chemin"].includes(id)),
+    ["sans-chemin"],
+    "seul un contrôle joué dans la passe entre dans l'empreinte de l'arbre",
+  );
+
+  // Un octet d'un fichier du paths, la déclaration : rejoué ; l'autre contrôle reste repris.
+  writeFileSync(join(racine, "src/a.txt"), "b\n");
+  assert.match(passe(racine).stdout, /— 1 repris/);
+  assert.equal(compte(racine), 2);
+  writeFileSync(join(racine, ".drwil/ia-first.json"), JSON.stringify(config(joue("autre-declaration"))));
+  passe(racine);
+  assert.equal(compte(racine), 3, "déclaration changée : rejoué");
+
+  // « Tout rejouer », CI, hook : tout rejoué.
+  for (const [args, env] of [
+    [["--tout-rejouer"], {}],
+    [["--replay-all"], {}],
+    [[], { CI: "1" }],
+  ]) {
+    const avant = compte(racine);
+    const p = passe(racine, { args, env });
+    assert.equal(compte(racine), avant + 1, `${args.join(" ")} ${JSON.stringify(env)} : rejoué`);
+    assert.doesNotMatch(p.stdout, /repris/);
+  }
+  // Un hook choisit ses contrôles sur les fichiers indexés : il ne reprend jamais rien.
+  assert.doesNotMatch(passe(racine, { env: { DRWIL_HOOK: "pre-commit" } }).stdout, /repris/);
+});
+
+test('QUA-141 : un contrôle en échec, sans paths, ou déclaré reuse: false ou reuse: "tree" est rejoué à chaque passe', () => {
+  const joue = (sortie) => `node -e "require('fs').appendFileSync('compteur.log','x');process.exit(${sortie})"`;
+  const r = lancer(
+    {
+      ".drwil/ia-first.json": JSON.stringify({
+        checks: [
+          { id: "rouge", run: joue(1), paths: ["src/**"] },
+          { id: "reseau", run: joue(0), paths: ["src/**"], reuse: false },
+          { id: "arbre", run: joue(0), paths: ["src/**"], reuse: "tree" },
+          { id: "vide", run: joue(0), paths: ["rien/**"] },
+        ],
+      }),
+      ".gitignore": "compteur.log\n",
+      "src/a.txt": "a\n",
+    },
+    { valider: true },
+  );
+  assert.equal(r.status, 1, "le contrôle rouge échoue");
+  assert.equal(compte(r.racine), 4);
+  const p = passe(r.racine);
+  assert.equal(compte(r.racine), 8, "tous rejoués");
+  assert.equal(p.status, 1);
+  assert.doesNotMatch(p.stdout, /repris/);
+  const v = consigne(r.racine);
+  assert.deepEqual(
+    Object.entries(v.checks)
+      .filter(([id]) => ["rouge", "reseau", "arbre", "vide"].includes(id))
+      .map(([id, c]) => [id, c.control === null]),
+    [
+      ["rouge", false],
+      ["reseau", true],
+      ["arbre", true],
+      ["vide", true],
+    ],
+    "reuse: false, reuse: \"tree\" et paths sans fichier n'ont pas d'empreinte propre ; un échec en a une mais n'est jamais repris",
+  );
+});
+
+test("QUA-141 : un contrôle dont les fichiers changent pendant la passe ne laisse pas d'empreinte propre", () => {
+  const r = lancer(
+    {
+      ".drwil/ia-first.json": JSON.stringify({
+        checks: [{ id: "ecrit", run: "node -e \"require('fs').writeFileSync('src/intrus.txt','x')\"", paths: ["src/**"] }],
+      }),
+      "src/a.txt": "a\n",
+    },
+    { valider: true },
+  );
+  assert.ok(!existsSync(join(r.racine, VERDICTS)), "rien n'est consigné : le contrôle a modifié ce qu'il juge");
+});
+
+test("QUA-141 : en anglais, la reprise se dit en anglais", () => {
+  const racine = lancer(
+    {
+      ".drwil/ia-first.json": JSON.stringify({ lang: "en", checks: [{ id: "un", run: "node -e 0", paths: ["src/**"] }] }),
+      "src/a.txt": "a\n",
+    },
+    { valider: true },
+  ).racine;
+  const p = passe(racine);
+  assert.match(p.detail, /^\[ia-first\] node -e 0 : reused \(check files unchanged, run-checks of \d{4}-/m);
+  assert.match(p.stdout, /1 reused \(check files unchanged\), \d+ replayed/);
+});
+
+test("QUA-141 : un arbre changé hors des fichiers du contrôle garde son empreinte propre sans empreinte d'arbre ; un fichier de verdicts sans contrôles se lit", () => {
+  const fichiers = {
+    ".drwil/ia-first.json": JSON.stringify({
+      checks: [{ id: "ecrit", run: "node -e \"require('fs').writeFileSync('autre.txt','x')\"", paths: ["src/**"] }],
+    }),
+    "src/a.txt": "a\n",
+    [VERDICTS]: "{}",
+  };
+  const r = lancer(fichiers, { valider: true });
+  const verdicts = consigne(r.racine);
+  assert.equal(verdicts.fingerprint, null);
+  assert.deepEqual(verdicts.played, []);
+  assert.match(verdicts.checks.ecrit.control, /^[0-9a-f]{64}$/);
 });

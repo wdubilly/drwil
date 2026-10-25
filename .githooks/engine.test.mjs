@@ -4,8 +4,9 @@ import { spawnSync } from "node:child_process";
 import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
-import { checks, projectRoot, startParallel, texts, treeFingerprint } from "./engine.mjs";
-import { pathToFileURL } from "node:url";
+import { checks, controlFingerprints, projectRoot, startParallel, texts, treeFingerprint } from "./engine.mjs";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { globToRegex } from "./glob.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -590,4 +591,77 @@ test("QUA-140 : un contrôle est reprenable sauf si le projet déclare reuse: fa
   assert.equal(liste["project:sans-id"].reuse, false);
   assert.equal(liste.local.reuse, true);
   assert.equal(liste["docs-references"].reuse, true);
+});
+
+test("QUA-141 : l'empreinte d'un contrôle est stable, change d'un octet d'un fichier de son paths, d'un fichier non suivi qu'il couvre ou de sa déclaration, pas d'un fichier hors paths ni ignoré", () => {
+  const racine = depot();
+  ecrire(racine, ".gitignore", "ignore.txt\n");
+  ecrire(racine, "src/a.txt", "a\n");
+  ecrire(racine, "hors.txt", "h\n");
+  git(racine, "add", "-A");
+  git(racine, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x");
+  const empreinte = (declaration = { id: "c", run: "node -e 0", paths: ["src/**"] }) =>
+    controlFingerprints(racine, checks(racine, { cfg: { checks: [declaration] } })).get("c");
+  const base = empreinte();
+  assert.match(base, /^[0-9a-f]{64}$/);
+  assert.equal(empreinte(), base, "stable");
+  ecrire(racine, "hors.txt", "autre\n");
+  ecrire(racine, "ignore.txt", "x");
+  ecrire(racine, ".drwil/evidence/run-checks.log", "x");
+  assert.equal(empreinte(), base, "hors paths, ignoré ou preuve de la passe : inchangée");
+  const vues = new Set([base]);
+  for (const alteration of [
+    () => ecrire(racine, "src/a.txt", "b\n"),
+    () => ecrire(racine, "src/nouveau.txt", ""),
+    () => ecrire(racine, "src/nouveau.txt", "!"),
+    () => rmSync(join(racine, "src/a.txt")),
+  ]) {
+    alteration();
+    vues.add(empreinte());
+  }
+  vues.add(empreinte({ id: "c", run: "node -e 1", paths: ["src/**"] }));
+  assert.equal(vues.size, 6, "chaque altération donne une empreinte jamais vue");
+  assert.ok(!vues.has(null));
+});
+
+test("QUA-141 : sans paths, avec reuse: false ou reuse: \"tree\", sans fichier sous ses paths ou sans git, un contrôle n'a pas d'empreinte propre", () => {
+  const racine = depot();
+  ecrire(racine, "src/a.txt", "a\n");
+  const cfg = {
+    checks: [
+      { id: "avec", run: "node -e 0", paths: ["src/**"] },
+      { id: "sans", run: "node -e 0" },
+      { id: "reseau", run: "node -e 0", paths: ["src/**"], reuse: false },
+      { id: "arbre", run: "node -e 0", paths: ["src/**"], reuse: "tree" },
+      { id: "vide", run: "node -e 0", paths: ["rien/**"] },
+    ],
+  };
+  const liste = checks(racine, { cfg });
+  const empreintes = controlFingerprints(racine, liste);
+  assert.match(empreintes.get("avec"), /^[0-9a-f]{64}$/, "même sans commit : les fichiers non suivis comptent");
+  for (const id of ["sans", "reseau", "arbre", "vide", "docs-references"]) assert.equal(empreintes.get(id), null, id);
+  assert.deepEqual(
+    liste.filter((c) => c.perControl).map((c) => c.id),
+    ["avec", "vide"],
+  );
+  assert.equal(parId(liste).arbre.reuse, true, 'reuse: "tree" reste repris sur l\'arbre entier (QUA-140)');
+  const horsGit = tmp();
+  assert.equal(controlFingerprints(horsGit, checks(horsGit, { cfg })).get("avec"), null, "sans dépôt git : rien n'est repris");
+  symlinkSync(".", join(racine, "src", "boucle"));
+  assert.equal(controlFingerprints(racine, liste).get("avec"), null, "un fichier qui ne se lit pas : rien n'est repris");
+});
+
+test("QUA-141 : un contrôle repris sur ses seuls paths les déclare tous — chaque fichier de test qu'il lance est sous ses paths", () => {
+  const cfg = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", ".drwil", "ia-first.json"), "utf8"));
+  const oublis = [];
+  for (const c of cfg.checks) {
+    if (!Array.isArray(c.paths) || c.reuse === false || c.reuse === "tree") continue;
+    const motifs = c.paths.map(globToRegex);
+    for (const f of c.run.match(/[\w./-]+\.test\.mjs/g) ?? []) if (!motifs.some((m) => m.test(f))) oublis.push(`${c.id} : ${f}`);
+  }
+  assert.deepEqual(
+    oublis,
+    [],
+    'un fichier lu hors de paths ferait reprendre un verdict périmé : l\'ajouter aux paths, ou déclarer reuse: "tree"',
+  );
 });
