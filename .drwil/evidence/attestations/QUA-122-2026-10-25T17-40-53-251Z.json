@@ -1,0 +1,23 @@
+{
+  "version": 3,
+  "contract": "QUA-122",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-25T17:40:53.251Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "a34b5a7ed26d46699ed97a20e45f5b467f2a2fb923cc59d7b9080c2deb657807",
+  "proof": {},
+  "covers": [
+    ".github/workflows/ia-first.yml",
+    ".drwil/ia-first.json"
+  ],
+  "coverage": {
+    ".drwil/ia-first.json": "f16f798945d9bfa0909a2765fb49941ae88ba7df3e98c718339a04f3e4656be9",
+    ".github/workflows/ia-first.yml": "97a56ae5126ef9de1ca3e89ab41d56651589e9acee735c923e2bfbb8c3c276ec"
+  },
+  "commit": "8d43dc33ed0bad99fa84cdde5f4d92c08e1cfe7a",
+  "automated": []
+}
