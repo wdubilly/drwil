@@ -3113,6 +3113,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   depuis `master` après la fusion de ce chantier ; la note arrive par sa PR
   dédiée `recette/v0.8.0` (QUA-079, une version publiée sans candidate
   reçoit quand même sa note).
+- **Réouverture (PR #227, CI rouge ; QUA-116 réouverture après clôture)** :
+  le rejeu des contrôles par les hooks de `master` (QUA-113) refusait
+  `.githooks/pre-push`, `.githooks/engine.mjs` et
+  `.githooks/recette-note.mjs`, non déclarés dans « Contrats modifiés » ;
+  ils y sont cités, un par puce, dans un commit qui ne touche que la fiche
+  (correctif ordinaire : aucun fichier de règles modifié par la
+  réouverture).
 - **Limites connues** : la note de la v0.7.0 reste absente, son fichier
   temporaire perdu — `docs/intentions/note-recette-v0-7-0.md`.
 - **Preuve de clôture** : `docs/preuves/pre-push-reference-poussee.md`.

@@ -1,7 +1,7 @@
 # Preuve de clôture — pre-push-reference-poussee
 
 **Clos le** : 2026-10-25
-**Commit vérifié** : `952fae9a61` — verdict `drwil verify` : PASS
+**Commit vérifié** : `0127d44f90` — verdict `drwil verify` : PASS
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
 
