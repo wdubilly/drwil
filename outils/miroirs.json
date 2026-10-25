@@ -31,6 +31,7 @@
     ".github/scripts/workflows-yaml.test.mjs": "Test qui parse les fichiers de CI du dépôt et du gabarit (QUA-046) ; vérifie le gabarit ici, rien n'est livré.",
     "docs/audit-risques.md": "Rapport généré pour ce dépôt par le skill d'audit (docs/recipes/audit-risks-and-debt.md).",
     "docs/benchmark-protocole.md": "Protocole de mesure de drwil lui-même (bench avec et sans drwil).",
+    "docs/mesures-ci-reference.md": "Mesures historiques de la CI de drwil (preuve de QUA-122, chantier d'accélération du 2026-10-24) : propres au dépôt, non livrées.",
     "docs/decouverte-valeur.md": "Rapport généré pour ce dépôt par le skill de découverte de valeur.",
     "docs/intentions/": "Intentions de drwil : contenu du projet, pas du gabarit.",
     "docs/projects/*": "Fiches des chantiers de drwil : contenu du projet, pas du gabarit.",
