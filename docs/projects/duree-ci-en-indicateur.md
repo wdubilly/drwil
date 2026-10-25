@@ -13,6 +13,7 @@ files:
   - docs/intentions/suivi-ci-et-contexte.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - outils/miroirs.json
 -->
 
 ## 1. Besoin
