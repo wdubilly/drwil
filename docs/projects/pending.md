@@ -392,6 +392,11 @@ actifs » s'appuie sur le 4).
 
 - [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
   (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
+- [ ] [IA] [P1] `run-checks` et `drwil verify` reprennent un verdict
+  contrôle par contrôle (empreinte des seuls fichiers du contrôle), pour les
+  itérations
+  (cadré le 2026-10-25) —
+  `docs/projects/verify-reprise-par-controle.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
