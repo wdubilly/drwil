@@ -1,8 +1,9 @@
 // Evidence of a `drwil verify` run and redaction of what it keeps (split from verify.ts, which
 // re-exports it).
 import { spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import type { Coverage } from "./coverage.js";
 import { criteriaTable } from "./criteria.js";
 import { verdictJson } from "./verdict.js";
 import type { Verdict } from "./verify.js";
@@ -78,6 +79,7 @@ export function writeEvidence(root: string, v: Verdict, now = new Date()): strin
         id: c.id,
         status: c.status,
         ...(c.durationMs === undefined ? {} : { durationMs: c.durationMs }),
+        ...(c.reusedAt ? { reusedFrom: "run-checks", reusedAt: c.reusedAt } : { replayed: true }),
         summary: c.status === "ok" ? "ok" : summary(c.output) || redact(c.detail ?? c.message ?? ""),
       })),
       manual: k.manual,
@@ -95,4 +97,74 @@ export function writeEvidence(root: string, v: Verdict, now = new Date()): strin
   // verify-*.json, so verifyEvidence never mistakes it for the evidence.
   if (v.criteria) writeFileSync(join(dir, name.replace(/^verify-(.+)\.json$/, "criteria-$1.md")), criteriaTable(v.criteria, v.lang));
   return `.drwil/evidence/${name}`;
+}
+
+export interface Attestation {
+  /** 1: bound to the whole section and its checks; 2: to the human part and to each attested check; 3: and to the content of the covered files. */
+  version: 1 | 2 | 3;
+  contract: string;
+  status: "ATTESTED";
+  attestedAt: string;
+  actor: { name: string; source: string } | null;
+  note: string | null;
+  fingerprint: string;
+  /** Version 2: fingerprint of each attested check's definition. */
+  proof?: Record<string, string>;
+  /** Version 3: patterns of the `**Covers**` field and fingerprint of each file they matched. */
+  covers?: string[] | null;
+  coverage?: Coverage;
+  commit: string | null;
+  automated: { id: string; status: string }[];
+}
+
+/** Versioned folder of the attestations (the rest of .drwil/evidence/ is outside git). */
+export const ATTESTATIONS_DIR = [".drwil", "evidence", "attestations"];
+
+export function readAttestations(root: string): Attestation[] {
+  const dir = join(root, ...ATTESTATIONS_DIR);
+  if (!existsSync(dir)) return [];
+  const all: Attestation[] = [];
+  for (const f of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
+    try {
+      const a = JSON.parse(readFileSync(join(dir, f), "utf8"));
+      if (a?.status === "ATTESTED" && typeof a.contract === "string" && typeof a.fingerprint === "string") all.push(a);
+    } catch {}
+  }
+  return all.sort((a, b) => String(b.attestedAt).localeCompare(String(a.attestedAt)));
+}
+
+/** Verdict of a check played by a `run-checks` pass on the same tree (QUA-140). */
+export interface ReusedVerdict {
+  status: "ok" | "fail";
+  output: string;
+  durationMs?: number;
+  ranAt: string;
+}
+
+/**
+ * QUA-140: verdicts `run-checks` left (.drwil/evidence/run-checks-verdicts.json) that `verify` may take instead of replaying the check.
+ * Only if the fingerprint of the tree and of the configuration is the one of the pass; only "ok" and "fail"; never a check that
+ * declares `reuse: false` (the engine says so), nor one `run-checks` judged otherwise than `verify` would. Anything else: replayed.
+ */
+export function reusableVerdicts(
+  root: string,
+  engine: { treeFingerprint?: (root: string) => string | null },
+  available: Map<string, { reuse?: boolean }>,
+): Map<string, ReusedVerdict> {
+  const reused = new Map<string, ReusedVerdict>();
+  try {
+    const file: {
+      fingerprint?: string;
+      ranAt?: string;
+      checks?: Record<string, Partial<ReusedVerdict> & { status?: string; reusable?: boolean }>;
+    } = JSON.parse(readFileSync(join(root, ".drwil", "evidence", "run-checks-verdicts.json"), "utf8"));
+    const now = engine.treeFingerprint?.(root);
+    if (typeof now !== "string" || file.fingerprint !== now) return reused;
+    for (const [id, v] of Object.entries(file.checks ?? {})) {
+      const status = v?.status;
+      if ((status === "ok" || status === "fail") && v.reusable !== false && available.get(id)?.reuse === true)
+        reused.set(id, { status, output: String(v.output ?? ""), durationMs: v.durationMs, ranAt: String(file.ranAt) });
+    }
+  } catch {}
+  return reused;
 }

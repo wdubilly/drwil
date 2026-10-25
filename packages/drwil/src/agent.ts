@@ -23,12 +23,17 @@ const LABELS: Record<string, string> = {
   manual: "GOVERNANCE: MANUAL REVIEW REQUIRED",
 };
 
+// QUA-140: each contract says, per check, whether its verdict was taken from `run-checks` or replayed (either language of the reasons).
+const REUSED = /: (repris de run-checks du|reused from run-checks of) /;
+const REPLAYED = /: (rejoué|replayed)$/;
+
 export function formatForAgent(j: VerdictJson): string {
   const c = j.contracts;
   const l = [
     "drwil verify — result for the agent",
     `Contracts: ${c.passed} PASS · ${c.attested} ATTESTED · ${c.failed} FAIL · ${c.error} ERROR · ${c.manual} MANUAL (${c.total} total)`,
     `Verdict: ${LABELS[j.status] ?? j.status} (exit ${j.exitCode})`,
+    ...reuseLine(j),
     `Next step: ${CONDUCT[j.status] ?? CONDUCT.error}`,
   ];
   if (j.status === "pass" && c.attested)
@@ -43,7 +48,9 @@ export function formatForAgent(j: VerdictJson): string {
     l.push("", `${title}:`);
     // Successful checks are noise here, in either language of the reasons.
     for (const r of list(status))
-      l.push(`  - ${r.id} — ${r.title}: ${r.reasons.filter((x) => !/ok \((automatisé|automated)\)$/.test(x)).join(" ; ")}`);
+      l.push(
+        `  - ${r.id} — ${r.title}: ${r.reasons.filter((x) => !/ok \((automatisé|automated)\)$/.test(x) && !REUSED.test(x) && !REPLAYED.test(x)).join(" ; ")}`,
+      );
   }
   const unproven = j.criteria.filter((c) => c.status !== "pass");
   if (unproven.length) {
@@ -79,4 +86,11 @@ export function formatForAgent(j: VerdictJson): string {
   const rules = rulesLine(j.businessRules, "en");
   if (rules) l.push("", rules);
   return labelIds(l.join("\n"), j.results);
+}
+
+function reuseLine(j: VerdictJson): string[] {
+  const reasons = j.results.flatMap((r) => r.reasons);
+  const reused = reasons.filter((x) => REUSED.test(x)).length;
+  const replayed = reasons.filter((x) => REPLAYED.test(x)).length;
+  return reused + replayed ? [`Checks (per contract): ${reused} reused from run-checks on an identical tree, ${replayed} replayed`] : [];
 }

@@ -939,6 +939,7 @@
       "id": "audit-dependances",
       "name": "audit des dépendances, failles high et critical (SEC-006)",
       "run": "node outils/audit-dependances.mjs",
+      "reuse": false,
       "ciJob": "checks",
       "paths": [
         "package.json",
@@ -953,6 +954,7 @@
       "id": "tarball",
       "name": "CLI installée depuis le tarball, comme un utilisateur (contenu, --version, init, verify)",
       "run": "node outils/tester-tarball.mjs",
+      "reuse": false,
       "ciJob": "checks",
       "paths": [
         "packages/drwil/**",
@@ -1581,6 +1583,19 @@
       "run": "node --test --test-name-pattern=\"^QUA-139 \" packages/drwil/test/kit.test.mjs",
       "ciJob": "checks",
       "paths": [
+        "packages/drwil/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-140",
+      "name": "tests de QUA-140, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-140 \" .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
         "packages/drwil/**",
         ".drwil/ia-first.json"
       ],

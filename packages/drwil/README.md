@@ -381,6 +381,18 @@ removed, contract abandoned) makes the verdict `FAIL` and is named. The output e
 test, to complete, broken). See `docs/ia-first.md`, section 5, in an
 installed project.
 
+A check that `run-checks` has just played is not played twice (QUA-140): a
+`run-checks` pass outside any git hook leaves each check's verdict in
+`.drwil/evidence/run-checks-verdicts.json` (git-ignored), with a fingerprint of
+the commit, the branch, the uncommitted changes (tracked files, and untracked
+files that are not ignored) and `.drwil/ia-first.json`. `verify` takes the
+verdict of a check whose fingerprint is identical to the byte, says so for each
+contract (« reused from run-checks of … » or « replayed »), and replays any
+check whose fingerprint differs, whose verdict is missing or is not `ok` or
+`fail`, or that the project declares always replayed with `"reuse": false` in
+its `checks` (a check that reads the network, the forge or the clock). CI
+always replays everything.
+
 `npx drwil verify --json` prints only a stable JSON document (`version: 1`,
 `status`, `exitCode`, `contracts` counts, per-contract `results`) with the
 same exit codes; `fail` and `manual` stay distinct. Raw check output is not
