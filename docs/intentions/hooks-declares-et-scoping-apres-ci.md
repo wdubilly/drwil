@@ -4,6 +4,10 @@
 « chaque contrôle dit combien de temps il a pris », mené sous Copilot CLI),
 troisième occurrence connue après la PR #220 (journal du 2026-10-24).
 
+**Cadrée le 2026-10-25** : `docs/projects/hooks-declares-et-scoping-apres-ci.md`
+(questions tranchées par le demandeur : signal à la clôture, retour en
+SCOPING après la fusion, rappel du oui du demandeur).
+
 ## Besoin
 
 Deux trous, rencontrés ensemble sur la PR #232 :
