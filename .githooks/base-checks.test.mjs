@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { baseRef, declaredIn, replay } from "./base-checks.mjs";
+import { baseRef, declaredIn, replay, undeclaredHooks } from "./base-checks.mjs";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -229,4 +229,90 @@ test("QUA-123 lecture git en échec : rejeu, jamais de saut", () => {
   writeFileSync(join(d.dir, ".git", "index"), "pas un index");
   const r = d.rejouer();
   assert.notEqual(r.status, "skipped");
+});
+
+// QUA-137 : avant la clôture, les fichiers de .githooks/ modifiés par la branche et non déclarés.
+const nonDeclares = (d, texte = "") => undeclaredHooks(d.dir, texte, { env });
+
+test("QUA-137 un hook modifié ou supprimé sans déclaration est nommé, avec la puce à écrire et le oui du demandeur", () => {
+  const d = depot();
+  assert.deepEqual(nonDeclares(d), { files: [], lines: [] }, "rien de modifié : rien à signaler");
+  d.ecrire(".githooks/lib.mjs", "export const v = 2;\n");
+  d.ecrire(".githooks/nouveau.mjs", "// ajouté par la branche, rien à remettre\n");
+  d.commit("hook modifié");
+  d.git("rm", "-q", ".githooks/run-checks.mjs");
+  const r = nonDeclares(d);
+  assert.deepEqual(
+    r.files,
+    [".githooks/lib.mjs", ".githooks/run-checks.mjs"],
+    "modifié commité et supprimé non commité ; l'ajout ne compte pas",
+  );
+  assert.equal(
+    r.lines[0],
+    "`.githooks/lib.mjs` modifié par la branche sans être déclaré : en CI, le rejeu par la branche principale (QUA-113) remettrait sa version et ferait échouer les contrôles — ajouter à la section « Contrats modifiés » de la fiche la puce « - `.githooks/lib.mjs` — <ce qui change> (validé par le demandeur le <date>) » ; déclarer un hook change les règles du jeu : la puce s'écrit sur le oui du demandeur, jamais sans",
+  );
+});
+
+test("QUA-137 un hook déclaré n'est plus signalé, son test avec lui, fiche commitée, supprimée à la clôture ou pas encore commitée", () => {
+  const d = depot();
+  d.ecrire(".githooks/lib.mjs", "export const v = 2;\n");
+  d.ecrire(".githooks/lib.test.mjs", "// test de la v2\n");
+  d.commit("hook et test modifiés");
+  assert.deepEqual(nonDeclares(d).files, [".githooks/lib.mjs", ".githooks/lib.test.mjs"]);
+  const fiche = "# Projet\n\n## Contrats modifiés\n\n- `.githooks/lib.mjs` — correctif (validé par le demandeur)\n";
+  assert.deepEqual(nonDeclares(d, fiche).files, [], "la fiche telle qu'elle est, déclaration pas encore commitée");
+  d.ecrire("docs/projects/x.md", fiche);
+  d.commit("déclaration");
+  assert.deepEqual(nonDeclares(d).files, [], "le test suit la déclaration de son module");
+  d.git("rm", "-q", "docs/projects/x.md");
+  d.commit("clôture");
+  assert.deepEqual(nonDeclares(d).files, [], "la fiche supprimée se lit à sa version d'avant suppression");
+  d.ecrire(".githooks/lib.test.mjs", "// seul le test change\n");
+  d.ecrire("docs/projects/y.md", "## Contrats modifiés\n\n- `.githooks/autre.mjs` — sans rapport\n");
+  d.commit("autre fiche");
+  assert.deepEqual(nonDeclares(d).files, [], "déclaré par une fiche de la branche, quelle qu'elle soit");
+});
+
+test("QUA-137 branche principale introuvable ou historique illisible : non exécuté, jamais un succès ; sans .githooks/ : rien à comparer ; en anglais", () => {
+  const d = depot();
+  d.git("branch", "-m", "main", "tronc");
+  d.ecrire(".githooks/lib.mjs", "export const v = 2;\n");
+  const r = nonDeclares(d);
+  assert.deepEqual(r.files, []);
+  assert.deepEqual(r.lines, [
+    "hooks non déclarés : non exécuté — branche principale introuvable (DRWIL_BASE, origin/HEAD, origin/master, origin/main, master ou main) : les fichiers de .githooks/ modifiés par la branche ne sont pas comparés à « Contrats modifiés », ce n'est pas un succès",
+  ]);
+  assert.deepEqual(undeclaredHooks(d.dir, "", { env: { ...env, DRWIL_BASE: "tronc" } }).files, [".githooks/lib.mjs"], "DRWIL_BASE d'abord");
+  d.git("checkout", "-q", "--orphan", "orpheline");
+  const orpheline = undeclaredHooks(d.dir, "", { env: { ...env, DRWIL_BASE: "tronc" } });
+  assert.deepEqual(orpheline.files, []);
+  assert.match(orpheline.lines[0], /^hooks non déclarés : non exécuté — git merge-base /);
+  const sans = depot({ hooks: false });
+  assert.deepEqual(nonDeclares(sans), { files: [], lines: [] });
+  const en = depot({ lang: "en" });
+  en.ecrire(".githooks/lib.mjs", "export const v = 2;\n");
+  assert.match(
+    nonDeclares(en).lines[0],
+    /^`\.githooks\/lib\.mjs` modified by the branch without being declared: .* on the requester's yes, never without$/,
+  );
+  en.git("branch", "-m", "main", "trunk");
+  assert.match(nonDeclares(en).lines[0], /^undeclared hooks: not run — main branch not found .*this is not a success$/);
+});
+
+test("QUA-137 la branche principale vient d'origin/HEAD avant les noms usuels ; dossier des fiches réglé ; sans configuration, en français", () => {
+  const d = depot({ lang: "en" });
+  d.ecrire(".drwil/ia-first.json", JSON.stringify({ lang: "en", dirs: { projects: "briefs" }, checks: CHECKS }));
+  d.ecrire(".githooks/lib.mjs", "export const v = 2;\n");
+  d.ecrire("briefs/x.md", "## Modified contracts\n\n- `.githooks/lib.mjs` — v2\n");
+  d.commit("declared");
+  d.git("update-ref", "refs/remotes/origin/tronc", "main");
+  d.git("symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/tronc");
+  d.git("branch", "-m", "main", "ancienne");
+  assert.deepEqual(nonDeclares(d), { files: [], lines: [] }, "origin/HEAD trouvé, fiche lue dans briefs/");
+  d.ecrire(".githooks/run-checks.mjs", AFFAIBLI);
+  assert.deepEqual(nonDeclares(d).files, [".githooks/run-checks.mjs"]);
+  rmSync(join(d.dir, ".drwil/ia-first.json"));
+  const sans = nonDeclares(d);
+  assert.deepEqual(sans.files, [".githooks/lib.mjs", ".githooks/run-checks.mjs"], "sans configuration : fiches lues dans docs/projects/");
+  assert.match(sans.lines[0], /^`\.githooks\/lib\.mjs` modifié par la branche sans être déclaré/);
 });

@@ -805,3 +805,45 @@ test("QUA-128 : --check regroupe les doublons possibles, une ligne par chemin ci
   );
   assert.match(en[0], /, already cited by docs\/intentions\/origine\.md — possible duplicate, to check$/);
 });
+
+test("QUA-137 : un hook modifié non déclaré est signalé à --check et en quittant BUILD, et refuse la clôture avant toute écriture ; déclaré, elle passe", async () => {
+  const racine = depot({ activite: "BUILD" });
+  git(racine, "checkout", "-q", "master");
+  ecrire(racine, { ".githooks/lib.mjs": "export const v = 1;\n" });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "hook");
+  git(racine, "checkout", "-q", "chantier/exemple");
+  git(racine, "merge", "-q", "--no-edit", "master");
+  ecrire(racine, { ".githooks/lib.mjs": "export const v = 2;\n" });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "hook modifié");
+  const signal = /⚠ `\.githooks\/lib\.mjs` modifié par la branche sans être déclaré : .*la puce s'écrit sur le oui du demandeur/;
+  const verif = close(racine, { check: true });
+  assert.equal(verif.code, 1);
+  assert.match(verif.message, signal);
+  const m = await move(racine, { to: "EVIDENCE" });
+  assert.equal(m.code, 0, m.message);
+  assert.match(m.message, /Ce qui ferait échouer la clôture/);
+  assert.match(m.message, signal);
+
+  ecrire(racine, {
+    ".drwil/state.json": JSON.stringify({ version: 1, activity: "CLOSING", active_brief: FICHE, active_request: null, since: null }),
+  });
+  ecrireEvidence(racine);
+  const refus = close(racine, { logs: journaux() });
+  assert.equal(refus.code, 1);
+  assert.match(refus.message, /^Avant le commit, ce qui ferait échouer la clôture :\n {2}⚠ `\.githooks\/lib\.mjs` modifié/);
+  assert.ok(existsSync(join(racine, FICHE)), "fiche gardée");
+  assert.ok(!existsSync(join(racine, "docs/preuves/exemple.md")), "aucune preuve écrite");
+  assert.match(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), /exemple/, "index intact");
+
+  ecrire(racine, {
+    [FICHE]: `${readFileSync(join(racine, FICHE), "utf8")}\n## Contrats modifiés\n\n- \`.githooks/lib.mjs\` — v2 (validé par le demandeur)\n`,
+  });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "déclaration");
+  ecrireEvidence(racine);
+  const r = close(racine, { logs: journaux() });
+  assert.doesNotMatch(r.message, /\.githooks\/lib\.mjs/, r.message);
+  assert.ok(!existsSync(join(racine, FICHE)), "déclaré : la clôture passe");
+});

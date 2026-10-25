@@ -965,3 +965,37 @@ process.exit(1);
     for (const d of [dir, outils, journaux]) rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
+
+test("QUA-138 : avec la fusion automatique, le projet installé ne revient en SCOPING qu'une fois la PR fusionnée, suivie par pr-watch ; CI rouge : reopen ; délai dépassé : CLOSING", async () => {
+  for (const lang of ["fr", "en"]) {
+    const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+    try {
+      await silence(() => init({ lang, targetDir: dir, git: true }));
+      const etat = {
+        version: 1,
+        activity: "CLOSING",
+        active_brief: "docs/projects/x.md",
+        active_request: null,
+        since: null,
+        auto_merge: true,
+      };
+      writeFileSync(join(dir, ".drwil/state.json"), JSON.stringify(etat));
+      const r = spawnSync(process.execPath, [".githooks/state.mjs"], { cwd: dir, encoding: "utf8", env });
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.match(
+        r.stdout,
+        lang === "fr"
+          ? /gh pr merge --auto --merge.*autoMergeRequest.*node \.githooks\/pr-watch\.mjs <numéro>.*« fusionnée ».*30 minutes au plus.*la PR fusionnée, seulement ensuite revenir en SCOPING.*CI rouge avant la fusion : rester en CLOSING et rouvrir le chantier \(`node \.githooks\/state\.mjs reopen`.*Délai dépassé, ou autre échec : rester en CLOSING et le signaler/s
+          : /gh pr merge --auto --merge.*autoMergeRequest.*node \.githooks\/pr-watch\.mjs <number>.*« merged ».*30 minutes at most.*the PR merged, only then go back to SCOPING.*Red CI before the merge: stay in CLOSING and reopen the workstream \(`node \.githooks\/state\.mjs reopen`.*Time limit exceeded, or any other failure: stay in CLOSING and report it/s,
+      );
+      const skill = join(dir, ".claude/skills/start-a-workstream/SKILL.md");
+      assert.ok(existsSync(skill), "skill de lancement installé");
+      assert.match(
+        lire(dir, ".claude/skills/start-a-workstream/SKILL.md").replace(/\s+/g, " "),
+        /autoMergeRequest`\); follow the PR with `node \.githooks\/pr-watch\.mjs <number>`.*the PR merged, only then go back to Scoping.*Red CI before the merge: stay in CLOSING and `node \.githooks\/state\.mjs reopen`/,
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    }
+  }
+});

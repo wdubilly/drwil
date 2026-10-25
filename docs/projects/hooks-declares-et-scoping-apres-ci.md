@@ -55,11 +55,11 @@ attribuer à ce moment-là dans le registre.)
   et absent des « Contrats modifiés » de ses fiches, nomme la puce à
   écrire et rappelle qu'elle demande le oui du demandeur ; la clôture est
   refusée tant qu'il en reste ; sans branche principale lisible, le signal
-  est « non exécuté » et le dit, jamais un succès — contrat à créer
+  est « non exécuté » et le dit, jamais un succès — `QUA-137`
 - Avec la fusion automatique, le retour en SCOPING n'a lieu qu'une fois la
   PR fusionnée, suivie par `node .githooks/pr-watch.mjs` (30 minutes au
   plus) ; CI rouge : l'état reste en CLOSING et `reopen` s'applique ; délai
-  dépassé : rester en CLOSING et le signaler — contrat à créer
+  dépassé : rester en CLOSING et le signaler — `QUA-138`
 
 ## Contrats modifiés
 

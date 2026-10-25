@@ -30,6 +30,11 @@ const TEXTS = {
       "contrôle « {0} » retiré de .drwil/ia-first.json sans déclaration : le citer entre backticks dans la section « Contrats modifiés » de la fiche, validée par le demandeur",
     failed: "les contrôles échouent avec les hooks de « {0} » : un hook affaibli ou contourné par la PR ?",
     ok: "contrôles rejoués avec les hooks de « {0} » : OK",
+    undeclared:
+      "`{0}` modifié par la branche sans être déclaré : en CI, le rejeu par la branche principale (QUA-113) remettrait sa version et ferait échouer les contrôles — ajouter à la section « Contrats modifiés » de la fiche la puce « - `{0}` — <ce qui change> (validé par le demandeur le <date>) » ; déclarer un hook change les règles du jeu : la puce s'écrit sur le oui du demandeur, jamais sans",
+    hooksNotRun:
+      "hooks non déclarés : non exécuté — {0} : les fichiers de .githooks/ modifiés par la branche ne sont pas comparés à « Contrats modifiés », ce n'est pas un succès",
+    hooksNoBase: "branche principale introuvable (DRWIL_BASE, origin/HEAD, origin/master, origin/main, master ou main)",
   },
   en: {
     noBase: "not run: unknown main branch (--base, DRWIL_BASE, GITHUB_BASE_REF, CI_MERGE_REQUEST_TARGET_BRANCH_NAME or CI_DEFAULT_BRANCH)",
@@ -43,9 +48,14 @@ const TEXTS = {
       'check "{0}" removed from .drwil/ia-first.json without declaration: cite it in backticks in the « Modified contracts » section of the brief, approved by the requester',
     failed: 'the checks fail with the hooks of "{0}": a hook weakened or bypassed by the PR?',
     ok: 'checks replayed with the hooks of "{0}": OK',
+    undeclared:
+      "`{0}` modified by the branch without being declared: in CI, the replay by the main branch (QUA-113) would put back its version and make the checks fail — add to the « Modified contracts » section of the brief the bullet « - `{0}` — <what changes> (approved by the requester on <date>) »; declaring a hook changes the rules: the bullet is written on the requester's yes, never without",
+    hooksNotRun:
+      "undeclared hooks: not run — {0}: the .githooks/ files modified by the branch are not compared to « Modified contracts », this is not a success",
+    hooksNoBase: "main branch not found (DRWIL_BASE, origin/HEAD, origin/master, origin/main, master or main)",
   },
 };
-const say = (template, value) => template.replace("{0}", value);
+const say = (template, value) => template.replaceAll("{0}", () => value);
 
 const SECTION = /^##\s*(\d+\.\s*)?(Contrats modifiés|Modified contracts)\b/i;
 const BULLET = /^\s*-\s+`([^`\s]+)`/;
@@ -97,6 +107,36 @@ export function declarations(root, base, briefsDir) {
     }
   }
   return out;
+}
+
+/**
+ * QUA-137: files of `.githooks/` the branch modifies or deletes (working tree against its merge base
+ * with the main branch) without declaring them, asked by the closing before the CI's replay: the replay would put them back at the main branch's version.
+ * `text`: the active brief as it stands (a declaration not committed yet counts). `{ files, lines }`,
+ * one message per file; no main branch or git failing: no file and one "not run" line, never a
+ * silent success (QUA-013); no `.githooks/` at all: nothing to compare.
+ */
+export function undeclaredHooks(root, text = "", { env = process.env } = {}) {
+  let T = TEXTS.fr;
+  if (!existsSync(join(root, ".githooks"))) return { files: [], lines: [] };
+  try {
+    const file = join(root, ".drwil", "ia-first.json");
+    const cfg = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {};
+    T = TEXTS[cfg.lang === "en" ? "en" : "fr"];
+    const origin = git(root, ["symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"], true)?.trim();
+    const refs = [env.DRWIL_BASE, origin, "origin/master", "origin/main", "master", "main"];
+    const ref = refs.find((r) => r && git(root, ["rev-parse", "--verify", "--quiet", `${r}^{commit}`], true) !== null);
+    if (!ref) return { files: [], lines: [say(T.hooksNotRun, T.hooksNoBase)] };
+    const base = git(root, ["merge-base", "HEAD", ref]).trim();
+    const declared = declarations(root, base, cfg.dirs?.projects ?? "docs/projects");
+    for (const token of declaredIn(text)) declared.add(token);
+    const changed = git(root, ["diff", "--no-renames", "--name-only", "--diff-filter=MD", base, "--", ".githooks/"]);
+    const isDeclared = (f) => declared.has(f) || declared.has(f.replace(/\.test\.mjs$/, ".mjs"));
+    const files = changed.split("\n").filter((f) => f && !isDeclared(f));
+    return { files, lines: files.map((f) => say(T.undeclared, f)) };
+  } catch (e) {
+    return { files: [], lines: [say(T.hooksNotRun, e.message)] };
+  }
 }
 
 const keys = (cfg) => (Array.isArray(cfg.checks) ? cfg.checks : []).map((c) => String(c.id ?? c.name ?? c.run));
