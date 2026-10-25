@@ -37,12 +37,11 @@ durée des contrôles, les trois autres (`docs/projects/verify-en-parallele.md`,
 
 ## Critères d'acceptation
 
-(le contrat est à créer au lancement, avec son champ **Origine** ; ID
-à attribuer à ce moment-là dans le registre.)
+(contrat créé au lancement : `QUA-136`, avec son champ **Origine**.)
 
 - Chaque contrôle joué par `run-checks` ou par `drwil verify` a sa durée
   consignée dans le détail de la passe (`.drwil/evidence/run-checks.log` (si présent)) et
-  dans la preuve de `verify` (`verify-*.json`) — contrat à créer
+  dans la preuve de `verify` (`verify-*.json`) — `QUA-136`
 - Le résumé de `run-checks` nomme les trois contrôles les plus lents de la
   passe, avec leur durée — `QUA-126` modifié
 
