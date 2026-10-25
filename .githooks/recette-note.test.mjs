@@ -1,7 +1,7 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -187,6 +187,21 @@ test("QUA-080 : échec de la branche ou de la PR — signalé avec la commande d
 
   const rejoue = publishNote(racine, { version: "v1.1.0", note: "# Autre\n" }, ghSimule());
   assert.equal(rejoue.code, 1, "branche distante déjà là : pas d'écrasement");
+});
+
+test("QUA-080 : push refusé — la sortie de git (raison du refus) est montrée, avec la commande de rattrapage", () => {
+  const { racine, nu } = depot();
+  const crochet = join(nu, "hooks", "pre-receive");
+  writeFileSync(crochet, "#!/bin/sh\necho 'refus du distant : branche protégée' >&2\nexit 1\n");
+  chmodSync(crochet, 0o755);
+  const r = publishNote(racine, { version: "v1.3.0", note: "# Note\n" }, ghSimule());
+  assert.equal(r.code, 1);
+  assert.match(r.message, /branche recette\/v1\.3\.0 non créée ou non poussée : note non écrite\nsortie de git :\n {2}/);
+  assert.match(r.message, /refus du distant : branche protégée/);
+  assert.match(r.message, /rattraper la note : node \.githooks\/recette-note\.mjs v1\.3\.0 \S+\.md/);
+
+  const sansFichier = publishNote(racine, { version: "v1.4.0", note: "n\n", file: join(tmp(), "absent.md") }, ghSimule());
+  assert.match(sansFichier.message, /sortie de git :\n {2}git hash-object : /);
 });
 
 test("QUA-080 : ligne de commande — rattrape une note depuis son fichier ; usage ; --dry-run", () => {

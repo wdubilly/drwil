@@ -437,6 +437,9 @@ une décision du demandeur.
 - [ ] [décision] Éprouver les gardes de lecture et le sous-agent de contrôles
   dans une vraie session Claude Code (limite du même chantier) —
   `docs/intentions/gardes-de-lecture-en-session-reelle.md`.
+- [ ] [décision] Donner sa note de recette à la v0.7.0, publiée sans
+  (limite du chantier « le pre-push juge la branche poussée ») —
+  `docs/intentions/note-recette-v0-7-0.md`.
 - [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
   2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
@@ -554,9 +557,6 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
 
-- [ ] [IA] [P1] Le pre-push juge la branche poussée, pas la branche
-  courante : la note de recette d'une release arrive enfin (cadré le
-  2026-10-25) — `docs/projects/pre-push-reference-poussee.md`.
 - [ ] [IA] [P1] Les contrôles ne laissent plus de dossiers temporaires :
   racine temporaire par passe, fuites nommées, dossiers vides du banc
   (cadré le 2026-10-24) — `docs/projects/dossiers-temporaires-des-tests.md`.

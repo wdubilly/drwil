@@ -3087,3 +3087,40 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/gardes-de-lecture-en-session-reelle.md`.
 - **Preuve de clôture** : `docs/preuves/reduction-contexte.md`.
 - **Clôturé par** : la branche `workstream/reduction-contexte`.
+
+## 2026-10-25 — Le pre-push juge la branche poussée, la note de recette arrive enfin
+
+- **Cause** : le contrôle `main-branch` de QUA-017 (pas de travail direct
+  sur la branche principale) lisait `git symbolic-ref HEAD`, même au push ;
+  depuis `master`, le push de `recette/vX.Y.Z` par `.githooks/recette-note.mjs` était
+  refusé (v0.7.0 le 2026-10-22, v0.8.0 le 2026-10-25), et inversement
+  `travail:master` poussé depuis une autre branche passait. Reproduit par un
+  test sur un vrai dépôt git avant correction.
+- **Décisions clés** : le `pre-push` passe au moteur les branches distantes
+  poussées (`DRWIL_PUSH_REFS`, lues sur son entrée standard, hors tags et
+  suppressions) ; `main-branch` refuse si l'une est `master`/`main`,
+  accepte sinon, d'où qu'on pousse. Sans entrée standard (lancement à la
+  main), la branche courante reste jugée ; le `pre-commit` aussi. QUA-017
+  précisé en ce sens (contrat modifié, validé au cadrage).
+  `.githooks/recette-note.mjs` montre la sortie de git (« sortie de git : », raison du
+  refus) avec la commande de rattrapage quand la branche de la note n'est
+  pas créée ou pas poussée (QUA-080, le tag et la release ne dépendent
+  jamais de la PR de la note). Note du 2026-10-22 de
+  `docs/intentions/notes.md` entièrement couverte, retirée.
+- **Lot 3 (note de la v0.8.0)** : selon la décision du demandeur (corriger
+  le hook avant de rattraper, jamais depuis une autre branche), le
+  rattrapage `node .githooks/recette-note.mjs v0.8.0 <note>` se lance
+  depuis `master` après la fusion de ce chantier ; la note arrive par sa PR
+  dédiée `recette/v0.8.0` (QUA-079, une version publiée sans candidate
+  reçoit quand même sa note).
+- **Réouverture (PR #227, CI rouge ; QUA-116 réouverture après clôture)** :
+  le rejeu des contrôles par les hooks de `master` (QUA-113) refusait
+  `.githooks/pre-push`, `.githooks/engine.mjs` et
+  `.githooks/recette-note.mjs`, non déclarés dans « Contrats modifiés » ;
+  ils y sont cités, un par puce, dans un commit qui ne touche que la fiche
+  (correctif ordinaire : aucun fichier de règles modifié par la
+  réouverture).
+- **Limites connues** : la note de la v0.7.0 reste absente, son fichier
+  temporaire perdu — `docs/intentions/note-recette-v0-7-0.md`.
+- **Preuve de clôture** : `docs/preuves/pre-push-reference-poussee.md`.
+- **Clôturé par** : la branche `workstream/pre-push-reference-poussee`.

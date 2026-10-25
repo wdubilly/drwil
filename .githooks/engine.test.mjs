@@ -187,6 +187,13 @@ test("branche principale : refusée hors CI, tolérée pour un push sans branche
   assert.equal(executer(maitre, "main-branch", { env: { CI: "1" } }).status, "not-applicable");
   assert.equal(executer(maitre, "main-branch", { env: { DRWIL_PUSH_TAGS_ONLY: "1" } }).detail, "push de tags uniquement");
   assert.equal(executer(maitre, "main-branch", { env: { DRWIL_PUSH_NO_BRANCH: "1" } }).status, "not-applicable");
+  // Au push, les références distantes poussées sont jugées, pas la branche courante.
+  assert.deepEqual(executer(maitre, "main-branch", { env: { DRWIL_PUSH_REFS: " refs/heads/recette/v1.0.0" } }), { status: "ok" });
+  const versMain = executer(depot("travail"), "main-branch", { env: { DRWIL_PUSH_REFS: "refs/heads/travail refs/heads/main" } });
+  assert.equal(versMain.status, "fail");
+  assert.match(versMain.message, /branche principale \(main\)/);
+  // Vide (lancement sans entrée standard) : retour à la branche courante.
+  assert.equal(executer(maitre, "main-branch", { env: { DRWIL_PUSH_REFS: "" } }).status, "fail");
 });
 
 test("autotest : sans dossier ou sans test non applicable ; sinon les tests du dépôt tournent (même sous node --test)", () => {

@@ -205,11 +205,20 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   // which must not be blocked retroactively — only the local hooks (pre-commit/pre-push) apply it.
   // Never either on a push of tags only (DRWIL_PUSH_TAGS_ONLY, set by .githooks/pre-push from the
   // hook's standard input): a tag never changes a branch; nor on a remote branch deletion
-  // (DRWIL_PUSH_NO_BRANCH).
+  // (DRWIL_PUSH_NO_BRANCH). At push time, the pushed remote branches (DRWIL_PUSH_REFS) are judged,
+  // not the current branch: `recette/vX.Y.Z` pushed from master does not touch master, while
+  // `work:master` pushed from another branch does.
   add("main-branch", T.branch, () => {
     if (env.CI) return { status: "not-applicable", detail: T.branchCi };
     if (env.DRWIL_PUSH_TAGS_ONLY === "1") return { status: "not-applicable", detail: T.branchTags };
     if (env.DRWIL_PUSH_NO_BRANCH === "1") return { status: "not-applicable", detail: T.branchNoBranch };
+    if (env.DRWIL_PUSH_REFS?.trim()) {
+      const pushed = env.DRWIL_PUSH_REFS.trim()
+        .split(/\s+/)
+        .map((r) => r.replace(/^refs\/heads\//, ""));
+      const main = pushed.find((b) => ["master", "main"].includes(b));
+      return main ? { status: "fail", message: T.branchProtected(main) } : { status: "ok" };
+    }
     const branch = spawnSync("git", ["symbolic-ref", "--short", "HEAD"], { cwd: root, encoding: "utf8" });
     const branchName = branch.status === 0 ? branch.stdout.trim() : null;
     if (branchName && ["master", "main"].includes(branchName)) return { status: "fail", message: T.branchProtected(branchName) };

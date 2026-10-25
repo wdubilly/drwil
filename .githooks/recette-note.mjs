@@ -41,6 +41,7 @@ const TEXTS = {
     body: "Note de recette de {0}, générée à la publication de la version (jamais écrite à la main, sauf la partie à compléter d'une version sans verdict).",
     noBase: "branche principale de origin introuvable (git fetch, remote origin) : note non écrite",
     pushFailed: "branche {0} non créée ou non poussée : note non écrite",
+    gitSaid: "sortie de git :",
     prFailed: "branche {0} poussée, mais la PR a échoué ; rattraper : {1}",
     catchUp: "la release publiée n'est pas défaite ; rattraper la note : {0}",
   },
@@ -69,6 +70,7 @@ const TEXTS = {
     body: "Acceptance note of {0}, generated when the version was published (never written by hand, except the part to complete of a version without a verdict).",
     noBase: "origin's main branch not found (git fetch, remote origin): note not written",
     pushFailed: "branch {0} not created or not pushed: note not written",
+    gitSaid: "git output:",
     prFailed: "branch {0} pushed, but the PR failed; catch up: {1}",
     catchUp: "the published release is not undone; catch up the note: {0}",
   },
@@ -107,15 +109,22 @@ export function renderNote({ version, tag, url, verdict, sheet, tarballs, commit
   return `${lines.join("\n").trimEnd()}\n`;
 }
 
-function gitIn(root, args, { env = {}, input } = {}) {
+/** git's result: `out` (stdout) when it succeeds, else null; `said`: what git printed, for a failure. */
+function gitRun(root, args, { env = {}, input } = {}) {
   const r = spawnSync("git", args, { cwd: root, encoding: "utf8", input, env: { ...process.env, ...env } });
-  return r.status === 0 ? r.stdout.trim() : null;
+  // join: stdout/stderr are null when git could not be launched at all.
+  const said = [r.stderr, r.stdout].join("").trim();
+  return { out: r.status === 0 ? r.stdout.trim() : null, said };
 }
 
-/** Like gitIn, but a failing command throws: a sequence of steps stops at the first failure. */
+function gitIn(root, args, options) {
+  return gitRun(root, args, options).out;
+}
+
+/** Like gitIn, but a failing command throws with git's output: a sequence of steps stops at the first failure. */
 function must(root, args, options) {
-  const out = gitIn(root, args, options);
-  if (out === null) throw new Error(`git ${args[0]} failed`);
+  const { out, said } = gitRun(root, args, options);
+  if (out === null) throw new Error(`git ${args[0]} : ${said}`);
   return out;
 }
 
@@ -126,10 +135,11 @@ function mainBranch(root) {
   return candidates.find((b) => gitIn(root, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${b}^{commit}`])) ?? null;
 }
 
-/** Commit of the note on the main branch's tip, on a private index; returns its sha or null. */
+/** Commit of the note on the main branch's tip, on a private index; returns { sha, said } (sha null on failure). */
 function commitNote(root, { base, version, file }) {
   let index = "";
   let sha = null;
+  let said = "";
   try {
     index = join(must(root, ["rev-parse", "--absolute-git-dir"]), "recette-note.index");
     const env = { GIT_INDEX_FILE: index };
@@ -138,11 +148,12 @@ function commitNote(root, { base, version, file }) {
     must(root, ["update-index", "--add", "--cacheinfo", `100644,${blob},${notePath(version)}`], { env });
     const tree = must(root, ["write-tree"], { env });
     sha = must(root, ["commit-tree", tree, "-p", base, "-m", `Note de recette de ${version}`]);
-  } catch {
-    // a failed step leaves no commit
+  } catch (e) {
+    // a failed step leaves no commit; what git said is shown to the user
+    said = e.message;
   }
   rmSync(index, { force: true });
-  return sha;
+  return { sha, said };
 }
 
 /**
@@ -167,9 +178,12 @@ export function publishNote(root, { version, note, file, dryRun = false }, { run
   if (!main) return failed(T.noBase);
   const base = `refs/remotes/origin/${main}`;
   if (gitIn(root, ["cat-file", "-e", `${base}:${path}`]) !== null) return { code: 0, message: fill(T.already, path) };
-  const commit = commitNote(root, { base, version, file });
-  if (!commit || gitIn(root, ["push", "-q", "origin", `${commit}:refs/heads/${branch}`]) === null)
-    return failed(fill(T.pushFailed, branch));
+  const { sha: commit, said } = commitNote(root, { base, version, file });
+  // Without git's output, a refused push (hook, protection, existing branch) stays a mystery.
+  const push = commit ? gitRun(root, ["push", "-q", "origin", `${commit}:refs/heads/${branch}`]) : { out: null, said };
+  if (push.out === null) {
+    return failed(`${fill(T.pushFailed, branch)}\n${T.gitSaid}\n${push.said.replace(/^/gm, "  ")}`);
+  }
   const args = ["pr", "create", "--base", main, "--head", branch, "--title", fill(T.title_pr, version), "--body", fill(T.body, version)];
   const url = run("gh", args);
   if (url === null) return failed(fill(T.prFailed, branch, `gh pr create --base ${main} --head ${branch} --fill`));
