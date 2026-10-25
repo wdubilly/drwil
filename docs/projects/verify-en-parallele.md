@@ -40,9 +40,8 @@ dont les chiffres diront le gain attendu.
 
 ## 2. Hors périmètre
 
-- Reprendre le résultat d'un contrôle déjà joué au lieu de le rejouer :
-  écarté par le demandeur le 2026-10-25 (QUA-013, un contrôle non exécuté
-  n'est pas passé, reste entier).
+- Reprendre le verdict d'un contrôle déjà joué par `run-checks` :
+  `docs/projects/verify-reprend-run-checks.md`.
 - Rejouer seulement les échecs : `docs/projects/verify-rejoue-les-echecs.md`.
 - Activer `parallel` par défaut chez les projets : il reste un réglage.
 

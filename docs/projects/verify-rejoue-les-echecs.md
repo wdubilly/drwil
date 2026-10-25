@@ -45,8 +45,8 @@ complète qu'une fois, pour le verdict.
 
 ## 2. Hors périmètre
 
-- Reprendre un résultat sans rejouer le contrôle : écarté par le demandeur
-  le 2026-10-25 (QUA-013 reste entier).
+- Reprendre le verdict d'un contrôle déjà joué par `run-checks` :
+  `docs/projects/verify-reprend-run-checks.md`.
 - Paralléliser la passe : `docs/projects/verify-en-parallele.md`.
 - Changer la règle de VERIFY : clore exige toujours une passe complète
   `verify --evidence` en PASS ou ATTESTED.
@@ -56,6 +56,9 @@ complète qu'une fois, pour le verdict.
 - S'appuie sur l'option `only` qui sert déjà à `drwil attest`
   (`packages/drwil/src/attest.ts`) : un même chemin de code, pas un second.
 - Sans preuve précédente lisible, l'option le dit et ne rejoue rien.
+- QUA-013 (un contrôle non exécuté n'est pas passé) : les contrats que
+  `--failed` ne rejoue pas ne sont pas jugés, d'où un verdict partiel qui ne
+  vaut jamais PASS.
 
 ## 4. Décisions
 

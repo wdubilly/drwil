@@ -30,9 +30,10 @@ files:
 leurs contrôles. Le 2026-10-25, un `verify --evidence` a pris ≈ 4 min 30 et
 six passes ont pris 25 à 30 min d'un chantier de 45 min, sans qu'on puisse
 dire lesquels des 121 contrôles coûtent le plus. Il faut cette mesure avant
-de choisir quoi accélérer : c'est le premier des trois chantiers sur la
-durée des contrôles, les deux autres (`docs/projects/verify-en-parallele.md`,
-`docs/projects/verify-rejoue-les-echecs.md`) se jugeront sur ses chiffres.
+de choisir quoi accélérer : c'est le premier des quatre chantiers sur la
+durée des contrôles, les trois autres (`docs/projects/verify-en-parallele.md`,
+`docs/projects/verify-rejoue-les-echecs.md`,
+`docs/projects/verify-reprend-run-checks.md`) se jugeront sur ses chiffres.
 
 ## Critères d'acceptation
 

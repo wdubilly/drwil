@@ -391,11 +391,14 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 actifs » s'appuie sur le 4).
 
 - [ ] [IA] [P1] Chaque contrôle dit combien de temps il a pris (cadré le
-  2026-10-25, à lancer en premier des trois) — `docs/projects/duree-par-controle.md`.
+  2026-10-25, à lancer en premier des quatre) — `docs/projects/duree-par-controle.md`.
 - [ ] [IA] [P1] `drwil verify` joue ses contrôles en parallèle (cadré le
   2026-10-25) — `docs/projects/verify-en-parallele.md`.
 - [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
   (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
+- [ ] [IA] [P1] `drwil verify` reprend les verdicts de `run-checks` sur un
+  arbre identique (cadré le 2026-10-25, QUA-013 précisé) —
+  `docs/projects/verify-reprend-run-checks.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
