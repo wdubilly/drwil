@@ -11,6 +11,8 @@ files:
   - .githooks/engine.mjs
   - packages/drwil/templates/common/base/.githooks/fingerprints.mjs
   - .githooks/fingerprints.mjs
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
   - .githooks/engine.test.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
   - .githooks/run-checks.mjs
