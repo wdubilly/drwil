@@ -114,6 +114,13 @@ liés à un seul fichier.
 
 - 2026-10-24 — Accélérer la CI sans perte de qualité (reste après le chantier du 2026-10-24, voir `docs/projects/journal.md`) : suite unique + verdict par contrat via reporter (décision humaine, QUA-033) et jobs CI découpés via ciJob (renomment les checks exigés par le ruleset), seulement si la CI reste trop lente ; cache de compilation. Mesures : tableau de bord https://claude.ai/artifact/LVTAv9omSJ4h8bL9s22vbT
 
+### Durée de `drwil verify` et de chaque contrôle (notes du 2026-10-25)
+
+Reprises de `docs/intentions/notes.md` ; cadrées le 2026-10-25 en quatre fiches : `docs/projects/duree-par-controle.md`, `docs/projects/verify-en-parallele.md`, `docs/projects/verify-rejoue-les-echecs.md`, `docs/projects/verify-reprend-run-checks.md` (reprise d'un verdict de `run-checks` sur un arbre identique, QUA-013 précisé).
+
+- 2026-10-25 — Chronométrer chaque contrôle de run-checks : le script ne le fait pas encore, donc on ne sait pas lesquels des 121 contrôles coûtent le plus (prochaine mesure utile du tableau « Durée de la CI drwil », https://claude.ai/artifact/LVTAv9omSJ4h8bL9s22vbT). À rattacher à docs/intentions/suivi-ci-et-contexte.md.
+- 2026-10-25 — drwil verify est long (verify --evidence : ≈ 4 min 30 de bout en bout, PASS, le 2026-10-25 en VERIFY) : il relance en série tous les contrôles cités par le registre (packages/drwil/src/verify.ts, c.run), dont la suite complète du paquet avec couverture (npm run test:coverage) et 53 suites node --test filtrées par contrat (≈ 18 s à elles seules), alors que run-checks vient de les jouer en parallèle (QUA-119). Pistes : paralléliser verify via runAsync (.githooks/engine.mjs) ; reprendre les résultats de run-checks sur un arbre inchangé (à trancher au regard de QUA-013) ; suite unique avec verdict par contrat (QUA-033) ; après un PASS, ne pas tout rejouer quand seule la doc a changé (comme le « commit de documentation seule » de run-checks) ; après un FAIL, rejouer d'abord les seuls contrats en échec (option only, déjà utilisée par drwil attest). Vécu le 2026-10-25 (chantier dossiers-temporaires-des-tests, PR #230) : six passes de verify --evidence en 30 min (≈ 25 à 30 min sur 45), dont deux ou trois dues à des notes modifiées dans l'arbre pendant VERIFY ; un ou deux auraient suffi. À rattacher à docs/intentions/suivi-ci-et-contexte.md.
+
 ## Existant
 
 Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10-25.
