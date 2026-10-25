@@ -38,4 +38,4 @@ rappel d'état, blocage avant écriture, lancement) ou déclarer honnêtement
 - [décision] Prérequis humain : installer Codex sur le poste et s'y connecter.
 - [décision] Quand la reprendre en fiche (la version 0.6.7 attend Codex et Cursor) ?
 - Hors périmètre : la file et les sous-agents sous Codex
-  (`docs/intentions/file-sous-agents-autres-outils.md`).
+  (`docs/intentions/compatibilite-des-outils.md`).
