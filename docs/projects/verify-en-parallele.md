@@ -36,7 +36,7 @@ dont les chiffres diront le gain attendu.
 
 - Avec le réglage `parallel`, `drwil verify` lance en parallèle les contrôles
   qui le permettent et rend le même verdict, contrat par contrat, qu'une
-  passe en série (QUA-139)
+  passe en série — `QUA-139`
 
 ## 2. Hors périmètre
 
