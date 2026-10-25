@@ -333,14 +333,6 @@ une décision du demandeur.
   temporaire se corrigent à la source (31 contrôles nommés par
   `run-checks` le 2026-10-25) —
   `docs/intentions/tests-qui-laissent-des-fichiers-temporaires.md`.
-- [ ] [décision] L'attestation de QUA-122 (durée du job `checks`) tombe à
-  chaque contrôle ajouté dans `.drwil/ia-first.json` : restreindre son
-  « Couvre » — `docs/intentions/couverture-de-qua-122.md`.
-- [ ] [décision] `.githooks/close.mjs` est au plafond de 400 lignes : le
-  découper avant le prochain ajout — `docs/intentions/decouper-close.md`.
-- [ ] [décision] Un test unitaire du texte de fusion automatique (QUA-138)
-  dans `.githooks/state.test.mjs`, en déclarant le hook —
-  `docs/intentions/test-unitaire-fusion-automatique.md`.
 - [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
   2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
@@ -408,6 +400,13 @@ actifs » s'appuie sur le 4).
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
+- [ ] [IA] [P1] Durée de CI en indicateur non bloquant, QUA-122 (durée du
+  job `checks`) conservé comme preuve historique — à faire avant les deux
+  fiches suivantes — `docs/projects/duree-ci-en-indicateur.md`.
+- [ ] [IA] [P1] Séparer la gestion des branches de la clôture, sans changer
+  son comportement — `docs/projects/decouper-close.md`.
+- [ ] [IA] [P1] Compléter le test unitaire de QUA-138 (retour en SCOPING
+  après la fusion) — `docs/projects/test-unitaire-fusion-automatique.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
