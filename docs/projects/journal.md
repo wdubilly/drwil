@@ -3326,7 +3326,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   champ « Couvre » : ajouter un contrôle à `.drwil/ia-first.json` ou modifier
   le workflow n'invalide plus son attestation. QUA-023 (évolution déclarée
   d'un contrat) respecté, histoire conservée ; aucune ancienne preuve
-  réécrite. Dépôt drwil uniquement, pas le livrable.
+  réécrite. Dépôt drwil uniquement, pas le livrable. Décision humaine en
+  cours de chantier : `docs/mesures-ci-reference.md` n'est pas livré dans le
+  gabarit ; le cadrage est élargi à `outils/miroirs.json`, qui le déclare
+  propre au dépôt (`propresAuDepot`).
 - **Relevé de la durée de CI (procédure, pour chaque chantier)** : une ligne
   `- **Durée de CI (job checks)** : <durée> — <référence du passage de CI> —
   hooks modifiés | hooks inchangés` dans l'entrée du journal ; « non mesurée »

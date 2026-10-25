@@ -1,0 +1,21 @@
+{
+  "version": 3,
+  "contract": "QUA-122",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-25T22:21:34.537Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "52a564d7defccb903009ab1dc4ac8470df3fca5ae8eee3053e631d2182f23f80",
+  "proof": {},
+  "covers": [
+    "docs/mesures-ci-reference.md"
+  ],
+  "coverage": {
+    "docs/mesures-ci-reference.md": "a8742bfc3ff25ced1b9dc863b11acfcdc6f730240ead23f9621c50795337ad95"
+  },
+  "commit": "f69ee4c5fc4d54c8583d24b82ef5bf84de1ad0d3",
+  "automated": []
+}
