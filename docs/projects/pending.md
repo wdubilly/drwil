@@ -333,6 +333,14 @@ une décision du demandeur.
   temporaire se corrigent à la source (31 contrôles nommés par
   `run-checks` le 2026-10-25) —
   `docs/intentions/tests-qui-laissent-des-fichiers-temporaires.md`.
+- [ ] [décision] L'attestation de QUA-122 (durée du job `checks`) tombe à
+  chaque contrôle ajouté dans `.drwil/ia-first.json` : restreindre son
+  « Couvre » — `docs/intentions/couverture-de-qua-122.md`.
+- [ ] [décision] `.githooks/close.mjs` est au plafond de 400 lignes : le
+  découper avant le prochain ajout — `docs/intentions/decouper-close.md`.
+- [ ] [décision] Un test unitaire du texte de fusion automatique (QUA-138)
+  dans `.githooks/state.test.mjs`, en déclarant le hook —
+  `docs/intentions/test-unitaire-fusion-automatique.md`.
 - [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
   2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
@@ -390,10 +398,6 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
 
-- [ ] [IA] [P1] Un hook modifié se déclare avant la clôture, et le retour en
-  SCOPING attend la CI (cadré le 2026-10-25, avant les trois chantiers
-  `verify`, qui modifient des hooks) —
-  `docs/projects/hooks-declares-et-scoping-apres-ci.md`.
 - [ ] [IA] [P1] `drwil verify` joue ses contrôles en parallèle (cadré le
   2026-10-25) — `docs/projects/verify-en-parallele.md`.
 - [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs

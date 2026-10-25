@@ -3192,3 +3192,41 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (intention `docs/intentions/suivi-ci-et-contexte.md`, mise à jour).
 - **Preuve de clôture** : `docs/preuves/duree-par-controle.md` (si présent).
 - **Clôturé par** : la branche `chantier/duree-par-controle`.
+
+## 2026-10-25 — Un hook modifié se déclare avant la clôture, et le retour en SCOPING attend la CI
+
+- **Besoin** : deux trous rencontrés ensemble sur la PR #232 (troisième
+  occurrence après la PR #220). Un fichier de `.githooks/` modifié sans être
+  déclaré dans « Contrats modifiés » n'était vu qu'en CI, par le rejeu
+  QUA-113 (la CI rejoue les contrôles avec les hooks de la branche
+  principale) ; et la fusion automatique faisait revenir en SCOPING dès la
+  fusion programmée, avant la fin de la CI, d'où `reopen` (QUA-116,
+  réouverture d'un chantier clos, permise en CLOSING seul) ne pouvait plus
+  partir. L'intention d'origine (`hooks-declares-et-scoping-apres-ci`),
+  entièrement couverte, est résumée ici et retirée : signal à la clôture
+  plutôt qu'au pre-push, retour en SCOPING après la fusion plutôt que
+  `reopen` depuis SCOPING, rappel du oui du demandeur dans le signal.
+- **Décisions clés** : QUA-137 (nouveau contrat) : `undeclaredHooks`
+  (`.githooks/base-checks.mjs`, même règle que le rejeu : test qui suit son
+  module, fiche supprimée lue avant suppression, fiche active lue telle
+  qu'elle est) est appelé par `.githooks/close.mjs` — signal à `--check` et
+  au passage de BUILD à EVIDENCE, clôture refusée avant toute écriture ;
+  sans branche principale lisible, « non exécuté », jamais un succès.
+  QUA-138 (nouveau contrat) : la procédure de fusion automatique
+  (`.githooks/state-texts.mjs`, skill de lancement) suit la PR par
+  `node .githooks/pr-watch.mjs` jusqu'à « fusionnée » (30 minutes au plus)
+  avant SCOPING ; CI rouge : `reopen` en CLOSING ; délai dépassé : rester en
+  CLOSING. Le rejeu local avec les hooks de `master` est vert, les cinq
+  hooks du chantier déclarés. L'ajout de deux contrôles à
+  `.drwil/ia-first.json` a fait tomber l'attestation de QUA-122, réattestée
+  par l'humain.
+- **Limites connues** : l'attestation de QUA-122 tombe à chaque contrôle
+  ajouté (`docs/intentions/couverture-de-qua-122.md`) ; `.githooks/close.mjs`
+  est au plafond de 400 lignes de QUA-001 (`docs/intentions/decouper-close.md`) ;
+  le test unitaire du nouveau texte reste à écrire dans
+  `.githooks/state.test.mjs`, en déclarant le hook
+  (`docs/intentions/test-unitaire-fusion-automatique.md`) ; le test de durée
+  de QUA-136 a échoué une fois au pre-commit puis passé (fragilité déjà
+  suivie par `docs/intentions/suivi-ci-et-contexte.md`).
+- **Preuve de clôture** : `docs/preuves/hooks-declares-et-scoping-apres-ci.md` (si présent).
+- **Clôturé par** : la branche `chantier/hooks-declares-et-scoping-apres-ci`.

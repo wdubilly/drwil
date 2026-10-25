@@ -7,6 +7,13 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- A hook modified by the branch without being declared is reported before the
+  closing (QUA-137): `node .githooks/close.mjs --check`, the move from BUILD to
+  EVIDENCE and the closing name each `.githooks/` file the branch modifies or
+  deletes that no brief lists under « Modified contracts », with the bullet to
+  write (on the requester's yes); the closing is refused, before writing
+  anything, while one is left — instead of the CI's replay failing later.
+
 - Each check says how long it took (QUA-136): the engine measures every check
   it runs, in whole milliseconds; `run-checks` writes each duration to
   `.drwil/evidence/run-checks.log`, lists the checks from slowest to fastest at
@@ -14,6 +21,14 @@ closing commit; the release renames this section to its version.
   `drwil verify --evidence` records each check's duration in `verify-*.json`. A
   check that did not run has no duration. On a parallel pass the duration is the
   check's own, not its share of the pass.
+
+### Changed
+
+- With the automatic merge, the return to SCOPING waits for the merge
+  (QUA-138): after scheduling it, the agent follows the PR with
+  `node .githooks/pr-watch.mjs` until it is merged (30 minutes at most); a red
+  CI keeps the workstream in CLOSING, where `node .githooks/state.mjs reopen`
+  applies.
 
 ### Fixed
 

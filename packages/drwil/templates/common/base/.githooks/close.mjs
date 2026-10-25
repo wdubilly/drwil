@@ -10,6 +10,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
+import { undeclaredHooks } from "./base-checks.mjs";
 import { acceptanceCriteria, config } from "./briefs.mjs";
 import { changedFiles } from "./check-code-rules.mjs";
 import { main as consumption } from "./consumption.mjs";
@@ -174,8 +175,6 @@ export function prunedMessage(root, { deleted, unproven }) {
 /** Text saying gh did not answer (for the detour's resume refusal). */
 export const noGhText = (root) => texts(root).noGh;
 
-const indexPath = (root) => config(root).dirs?.index ?? "docs/projects/pending.md";
-
 /** Contract IDs the project defines in `text`, per its prefixes. */
 function contractIds(root, text) {
   const prefixes = config(root).contractPrefixes ?? ["SEC", "QUA"];
@@ -285,6 +284,7 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
   const T = texts(root);
   const plain = [
     ...criteriaToCreate(root, brief, text),
+    ...undeclaredHooks(root, text).lines,
     ...proofNotCited(root, brief),
     ...journalTwice(root, brief),
     ...deadReferences(root, brief),
@@ -341,6 +341,8 @@ export function close(root, { brief, check = false, fix = false, env = process.e
   const text = existsSync(join(root, path)) ? readFileSync(join(root, path), "utf8") : "";
   const done = [];
   if (!check) {
+    const hooks = undeclaredHooks(root, text); // QUA-137: refused before anything is written
+    if (hooks.files.length) return { code: 1, message: [T.signals, ...hooks.lines.map((s) => `  ⚠ ${s}`)].join("\n") };
     // The proof first: a brief is never deleted while what it had proven would stay unwritten (QUA-084).
     const proof = closureProof(root, path, text, { head: git(root, "rev-parse", "HEAD") });
     const problem = proof.problem ?? writeProof(root, proof);
@@ -350,7 +352,7 @@ export function close(root, { brief, check = false, fix = false, env = process.e
       unlinkSync(join(root, path));
       done.push(T.deleted(path));
     }
-    const index = indexPath(root);
+    const index = config(root).dirs?.index ?? "docs/projects/pending.md";
     const lines = existsSync(join(root, index)) ? readFileSync(join(root, index), "utf8").split("\n") : [];
     const item = indexItem(lines, path);
     if (item) {
