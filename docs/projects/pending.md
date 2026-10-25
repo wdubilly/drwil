@@ -225,6 +225,9 @@ session (`node .githooks/consumption.mjs`, journal du 2026-10-11) ; livrée
 - [ ] [décision] La consommation de tokens mesurée aussi pour les autres
   outils IA (Copilot CLI, Cursor, Codex, Gemini) —
   `docs/intentions/consommation-autres-outils.md`.
+- [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
+  par contrôle, QUA-141) —
+  `docs/intentions/reprise-par-controle-limites.md`.
 
 ## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 
@@ -393,6 +396,9 @@ actifs » s'appuie sur le 4).
 
 - [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
   (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
+- [ ] [IA] [P1] Le pre-push reprend un verdict « ok » dont les fichiers
+  n'ont pas changé (cadré le 2026-10-25, après la fiche précédente) —
+  `docs/projects/pre-push-reprend-les-verdicts.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.

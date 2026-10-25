@@ -35,6 +35,7 @@ export interface CheckResult {
   output?: string;
   durationMs?: number; // whole ms (QUA-136); absent when the check did not run, never 0
   reusedAt?: string; // QUA-140: taken from the `run-checks` pass of this date instead of being replayed
+  reusedBasis?: "tree" | "control"; // QUA-141: identical tree, or identical files and declaration of the check only
 }
 
 export type Severity = "blocking" | "warning" | "advisory";
@@ -91,6 +92,8 @@ export interface VerifyOptions {
   onCheck?: (id: string, status?: string) => void;
   /** QUA-140: `false` replays every check instead of taking the verdicts of a `run-checks` pass on an identical tree. */
   reuse?: boolean;
+  /** QUA-141: the closing evidence (`--evidence`) judges the whole tree: no verdict is taken by check, only by identical tree. */
+  evidence?: boolean;
 }
 
 /**
@@ -170,7 +173,9 @@ const TEXTS = {
     noRegistry: "registre des contrats absent ({0})",
     noContract: "aucun contrat trouvé dans {0}",
     ok: "{0} : ok (automatisé)",
-    reused: "{0} : repris de run-checks du {1}",
+    reused: "{0} : repris (arbre identique) de run-checks du {1}",
+    reusedControl:
+      "{0} : repris (fichiers du contrôle inchangés) de run-checks du {1} — reprise par contrôle : ne vaut pas preuve de clôture",
     replayed: "{0} : rejoué",
     failed: "{0} : échec{1}",
     shared: "{0} est partagé par {1} : échec non attribuable à une seule règle — un contrôle par règle, qui filtre ses tests par l'ID",
@@ -188,7 +193,8 @@ const TEXTS = {
     noRegistry: "contract registry missing ({0})",
     noContract: "no contract found in {0}",
     ok: "{0}: ok (automated)",
-    reused: "{0}: reused from run-checks of {1}",
+    reused: "{0}: reused (identical tree) from run-checks of {1}",
+    reusedControl: "{0}: reused (check files unchanged) from run-checks of {1} — per-check reuse: not a closing proof",
     replayed: "{0}: replayed",
     failed: "{0}: failed{1}",
     shared: "{0} is shared by {1}: failure not attributable to a single rule — one check per rule, filtering its tests by the ID",
@@ -267,7 +273,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   // run-checks), then read in registry order: the verdict and the reasons are those of a serial pass.
   const cited = [...new Set(contracts.flatMap((k) => ((k.checks ?? []) as string[]).filter((id) => available.has(id))))];
   // QUA-140: a verdict `run-checks` left on an identical tree and configuration is taken, not replayed.
-  const reused = opts.reuse === false ? new Map() : reusableVerdicts(root, engine, available);
+  const reused = opts.reuse === false ? new Map() : reusableVerdicts(root, engine, available, !opts.evidence);
   const started: Map<string, Promise<any>> | undefined = engine.startParallel?.(
     cited.filter((id) => !reused.has(id)).map((id) => available.get(id)),
   );
@@ -276,7 +282,14 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     const taken = reused.get(id);
     if (taken) {
       opts.onCheck?.(id, taken.status);
-      return void cache.set(id, { id, status: taken.status, output: taken.output, durationMs: taken.durationMs, reusedAt: taken.ranAt });
+      return void cache.set(id, {
+        id,
+        status: taken.status,
+        output: taken.output,
+        durationMs: taken.durationMs,
+        reusedAt: taken.ranAt,
+        reusedBasis: taken.basis,
+      });
     }
     const pending = started?.get(id);
     const { launched: _launched, ...raw } = pending
@@ -293,7 +306,8 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     // An unknown check is already a validation error: it is not "run".
     const checks = ((k.checks ?? []) as string[]).filter((id) => available.has(id)).map((id) => cache.get(id) ?? { id, status: "unknown" });
     for (const r of checks) {
-      if (r.status === "ok" || r.status === "fail") reasons.push(fill(r.reusedAt ? T.reused : T.replayed, r.id, r.reusedAt));
+      if (r.status === "ok" || r.status === "fail")
+        reasons.push(fill(!r.reusedAt ? T.replayed : r.reusedBasis === "control" ? T.reusedControl : T.reused, r.id, r.reusedAt));
       if (r.status === "ok") reasons.push(fill(T.ok, r.id));
       else if (r.status === "fail") {
         statuses.push("FAIL");

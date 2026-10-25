@@ -20,6 +20,15 @@ closing commit; the release renames this section to its version.
   everything on demand. QUA-013 now says why a reused verdict is a check that
   ran, not a stale proof.
 
+- `run-checks` and `drwil verify` reuse a verdict check by check while you
+  iterate (QUA-141): a check that declares `paths` has its own fingerprint
+  (its declaration and the files its `paths` match); outside a hook and CI, a
+  check whose last verdict is `ok` on the same fingerprint is not replayed, and
+  the output says so (« reused (check files unchanged) »). Checks without
+  `paths`, declared `"reuse": false` or `"reuse": "tree"`, or failed, are
+  replayed; `run-checks --replay-all` replays everything. The closing proof
+  (`verify --evidence`) and `--no-reuse` keep the fingerprint of the whole tree.
+
 - `drwil verify` plays its checks in parallel (QUA-139): with the `parallel`
   setting, the command checks the contracts cite start together (same limit as
   `run-checks`) and are read in registry order, so each contract gets the same

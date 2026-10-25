@@ -5,13 +5,16 @@
 // "not-applicable": excluded by design in this context (e.g. QUA-017 in CI).
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { availableParallelism, homedir, tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { globToRegex } from "./glob.mjs";
+import { controlFingerprints, treeFingerprint } from "./fingerprints.mjs";
 import { checkScope } from "./scope-gate.mjs";
 import { normalize } from "./scope.mjs";
+
+export { controlFingerprints, treeFingerprint };
 
 // One temporary root per pass (QUA-133): each check gets its own sub-folder as TMPDIR/TMP/TEMP, removed at the end of the pass; the
 // failed checks' folders move to a fixed path, replaced at each failure. A pass dying before `finish` is cleaned by the `exit` handler.
@@ -91,32 +94,6 @@ export function projectRoot(scriptUrl, env = process.env) {
 
 export function texts(lang) {
   return TEXTS[lang === "en" ? "en" : "fr"];
-}
-
-/**
- * QUA-140: fingerprint of what a check judges (commit, branch, uncommitted changes incl. untracked files not ignored, local state,
- * configuration; not the evidence files of the pass itself): one byte of difference changes it. `null` if git does not answer: nothing is then reusable.
- */
-export function treeFingerprint(root) {
-  try {
-    const git = (...args) => spawnSync("git", args, { cwd: root, maxBuffer: 1 << 30 });
-    const h = createHash("sha256");
-    const part = (b) => h.update(`${Buffer.byteLength(b)}:`).update(b);
-    const outs = [
-      "rev-parse HEAD",
-      "symbolic-ref -q HEAD",
-      "diff HEAD --binary --no-ext-diff",
-      "ls-files -o --exclude-standard -z -- :(exclude,glob).drwil/evidence/*",
-    ].map((a) => git(...a.split(" ")));
-    if (outs.some((r, i) => r.status !== 0 && i !== 1)) return null;
-    for (const r of outs) part(r.stdout);
-    const read = (f) => (existsSync(join(root, f)) ? readFileSync(join(root, f)) : "");
-    for (const f of outs[3].stdout.toString().split("\0").filter(Boolean)) part(read(f));
-    for (const f of [".drwil/ia-first.json", ".drwil/state.json"]) part(read(f));
-    return h.digest("hex");
-  } catch {
-    return null;
-  }
 }
 
 function findGitleaks() {
@@ -348,6 +325,9 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     list.push({
       id: c.id ?? `project:${name}`,
       name,
+      // QUA-141: what the check declares, for its own fingerprint (a project check only).
+      declaration: JSON.stringify([c, c.needsBuild ? cfg.build : null]),
+      paths: Array.isArray(c.paths) && c.paths.length ? c.paths : null,
       run: (o = {}) => skipped() ?? (c.needsBuild ? build(name, o) : null) ?? launch(c.run, [], { ...o, shell: true, cwd }, name),
       ...(parallel && c.parallel !== false
         ? {
@@ -367,7 +347,13 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   for (const c of list) for (const k of ["run", "runAsync"]) if (c[k]) c[k] = timed(c[k]);
   // QUA-140: `reuse: false` in the project's check declares it always replayed (it reads the network, the forge, the clock).
   const declared = Array.isArray(cfg.checks) ? cfg.checks : [];
-  for (const c of list) c.reuse = declared.find((d) => (d.id ?? `project:${d.name ?? d.run}`) === c.id)?.reuse !== false;
+  // QUA-141: a check is also reused on its own (`perControl`) when it declares `paths` and neither `reuse: false` nor `reuse: "tree"`.
+  for (const c of list) {
+    const reuse = declared.find((d) => (d.id ?? `project:${d.name ?? d.run}`) === c.id)?.reuse;
+    c.reuse = reuse !== false;
+    c.perControl = c.reuse && reuse !== "tree" && Array.isArray(c.paths);
+  }
+  list.fingerprints = () => controlFingerprints(root, list);
   list.finish = finish;
   return list;
 }

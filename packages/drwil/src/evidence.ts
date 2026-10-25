@@ -79,7 +79,7 @@ export function writeEvidence(root: string, v: Verdict, now = new Date()): strin
         id: c.id,
         status: c.status,
         ...(c.durationMs === undefined ? {} : { durationMs: c.durationMs }),
-        ...(c.reusedAt ? { reusedFrom: "run-checks", reusedAt: c.reusedAt } : { replayed: true }),
+        ...(c.reusedAt ? { reusedFrom: "run-checks", reusedAt: c.reusedAt, reusedBasis: c.reusedBasis } : { replayed: true }),
         summary: c.status === "ok" ? "ok" : summary(c.output) || redact(c.detail ?? c.message ?? ""),
       })),
       manual: k.manual,
@@ -133,37 +133,57 @@ export function readAttestations(root: string): Attestation[] {
   return all.sort((a, b) => String(b.attestedAt).localeCompare(String(a.attestedAt)));
 }
 
-/** Verdict of a check played by a `run-checks` pass on the same tree (QUA-140). */
+/** Verdict of a check played by a `run-checks` pass (QUA-140), on the same tree or on the same files of the check (QUA-141). */
 export interface ReusedVerdict {
   status: "ok" | "fail";
   output: string;
   durationMs?: number;
   ranAt: string;
+  /** `tree`: identical tree (QUA-140); `control`: the files of the check's `paths` and its declaration are identical (QUA-141). */
+  basis: "tree" | "control";
 }
 
 /**
- * QUA-140: verdicts `run-checks` left (.drwil/evidence/run-checks-verdicts.json) that `verify` may take instead of replaying the check.
- * Only if the fingerprint of the tree and of the configuration is the one of the pass; only "ok" and "fail"; never a check that
- * declares `reuse: false` (the engine says so), nor one `run-checks` judged otherwise than `verify` would. Anything else: replayed.
+ * Verdicts `run-checks` left (.drwil/evidence/run-checks-verdicts.json) that `verify` may take instead of replaying the check.
+ * QUA-140: if the fingerprint of the tree and of the configuration is the one of the pass (and the check was played in it).
+ * QUA-141, only with `perControl` (never for the closing evidence): or if the check's own fingerprint (`controlFingerprints` of the
+ * engine: its declaration and the files of its `paths`) is the recorded one, wherever else the tree changed.
+ * Only "ok" and "fail"; never a check that declares `reuse: false` (the engine says so), nor one `run-checks` judged otherwise than
+ * `verify` would. Anything else: replayed.
  */
 export function reusableVerdicts(
   root: string,
-  engine: { treeFingerprint?: (root: string) => string | null },
+  engine: {
+    treeFingerprint?: (root: string) => string | null;
+    controlFingerprints?: (root: string, list: unknown[]) => Map<string, string | null>;
+  },
   available: Map<string, { reuse?: boolean }>,
+  perControl = false,
 ): Map<string, ReusedVerdict> {
   const reused = new Map<string, ReusedVerdict>();
   try {
     const file: {
-      fingerprint?: string;
+      fingerprint?: string | null;
       ranAt?: string;
-      checks?: Record<string, Partial<ReusedVerdict> & { status?: string; reusable?: boolean }>;
+      played?: string[];
+      checks?: Record<string, Partial<ReusedVerdict> & { status?: string; reusable?: boolean; control?: string | null }>;
     } = JSON.parse(readFileSync(join(root, ".drwil", "evidence", "run-checks-verdicts.json"), "utf8"));
     const now = engine.treeFingerprint?.(root);
-    if (typeof now !== "string" || file.fingerprint !== now) return reused;
+    const sameTree = typeof now === "string" && file.fingerprint === now;
+    // Without `played` (file of QUA-140), every verdict was played in the pass of the tree fingerprint.
+    const played = Array.isArray(file.played) ? new Set(file.played) : null;
+    const controls = perControl ? engine.controlFingerprints?.(root, [...available.values()]) : undefined;
     for (const [id, v] of Object.entries(file.checks ?? {})) {
       const status = v?.status;
-      if ((status === "ok" || status === "fail") && v.reusable !== false && available.get(id)?.reuse === true)
-        reused.set(id, { status, output: String(v.output ?? ""), durationMs: v.durationMs, ranAt: String(file.ranAt) });
+      if ((status !== "ok" && status !== "fail") || v.reusable === false || available.get(id)?.reuse !== true) continue;
+      const basis =
+        sameTree && (!played || played.has(id))
+          ? "tree"
+          : typeof v.control === "string" && controls?.get(id) === v.control
+            ? "control"
+            : null;
+      if (basis)
+        reused.set(id, { status, output: String(v.output ?? ""), durationMs: v.durationMs, ranAt: String(v.ranAt ?? file.ranAt), basis });
     }
   } catch {}
   return reused;

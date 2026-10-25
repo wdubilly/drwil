@@ -23,8 +23,10 @@ const LABELS: Record<string, string> = {
   manual: "GOVERNANCE: MANUAL REVIEW REQUIRED",
 };
 
-// QUA-140: each contract says, per check, whether its verdict was taken from `run-checks` or replayed (either language of the reasons).
-const REUSED = /: (repris de run-checks du|reused from run-checks of) /;
+// QUA-140, QUA-141: each contract says, per check, whether its verdict was taken from `run-checks` (identical tree, or the files of the
+// check alone) or replayed (either language of the reasons).
+const REUSED = /: (repris|reused) \(/;
+const REUSED_CONTROL = /: (repris|reused) \((fichiers du contrôle inchangés|check files unchanged)\)/;
 const REPLAYED = /: (rejoué|replayed)$/;
 
 export function formatForAgent(j: VerdictJson): string {
@@ -90,7 +92,14 @@ export function formatForAgent(j: VerdictJson): string {
 
 function reuseLine(j: VerdictJson): string[] {
   const reasons = j.results.flatMap((r) => r.reasons);
-  const reused = reasons.filter((x) => REUSED.test(x)).length;
+  const control = reasons.filter((x) => REUSED_CONTROL.test(x)).length;
+  const reused = reasons.filter((x) => REUSED.test(x)).length - control;
   const replayed = reasons.filter((x) => REPLAYED.test(x)).length;
-  return reused + replayed ? [`Checks (per contract): ${reused} reused from run-checks on an identical tree, ${replayed} replayed`] : [];
+  if (!(reused + control + replayed)) return [];
+  const line = `Checks (per contract): ${reused} reused from run-checks on an identical tree, ${replayed} replayed`;
+  return control
+    ? [
+        `${line}, ${control} reused from run-checks on unchanged check files (per-check reuse: not a closing proof; \`verify --evidence\` replays on the whole tree)`,
+      ]
+    : [line];
 }

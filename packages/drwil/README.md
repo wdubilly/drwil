@@ -394,6 +394,16 @@ its `checks` (a check that reads the network, the forge or the clock). CI
 always replays everything. `npx drwil verify --no-reuse` replays every check
 even on an identical tree.
 
+While iterating, a check is also reused on its own files (QUA-141): a check that
+declares `paths` gets a fingerprint of its declaration and of the files those
+`paths` match. Outside a hook and CI, `run-checks` does not replay a check whose
+last verdict is `ok` on the same fingerprint, and `verify` takes it the same
+way, saying « reused (check files unchanged) … per-check reuse: not a closing
+proof ». A check without `paths`, declared `"reuse": false` or `"reuse": "tree"`
+(it reads more than its `paths`), or that failed, is replayed. `run-checks
+--replay-all` replays everything, and `verify --evidence` (the closing proof)
+and `--no-reuse` only reuse a verdict on an identical whole tree.
+
 `npx drwil verify --json` prints only a stable JSON document (`version: 1`,
 `status`, `exitCode`, `contracts` counts, per-contract `results`) with the
 same exit codes; `fail` and `manual` stay distinct. Raw check output is not
