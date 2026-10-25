@@ -1,6 +1,6 @@
 # Intention : l'attestation de la durée du job `checks` ne tombe plus à chaque contrôle ajouté
 
-**Statut** : proposée le 2026-10-25 — limite constatée à la clôture du chantier
+**Statut** : cadrée le 2026-10-25 dans `docs/projects/duree-ci-en-indicateur.md` — limite constatée à la clôture du chantier
 « un hook modifié se déclare avant la clôture, et le retour en SCOPING attend
 la CI » (journal du 2026-10-25).
 
@@ -23,8 +23,7 @@ cause (historique de `.drwil/evidence/attestations/`).
 
 ## Questions à trancher
 
-- [décision] Restreindre « Couvre » de QUA-122 au workflow
-  `.github/workflows/ia-first.yml`, ou aux seuls réglages de
-  `.drwil/ia-first.json` qui jouent sur la durée de la CI (modifier un
-  contrat existant : décision du demandeur), ou régler la question avec
-  l'indicateur de `docs/intentions/suivi-ci-et-contexte.md` ?
+Décisions prises par le demandeur le 2026-10-25, consignées dans
+`docs/projects/duree-ci-en-indicateur.md` : indicateur manuel non bloquant
+au journal et conservation de QUA-122 comme preuve historique. Aucun
+point restant à trancher pour ce chantier.

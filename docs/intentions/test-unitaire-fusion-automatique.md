@@ -1,6 +1,6 @@
 # Intention : un test unitaire du texte de fusion automatique qui attend la fusion
 
-**Statut** : proposée le 2026-10-25 — limite constatée à la clôture du chantier
+**Statut** : cadrée le 2026-10-25 dans `docs/projects/test-unitaire-fusion-automatique.md` — limite constatée à la clôture du chantier
 « un hook modifié se déclare avant la clôture, et le retour en SCOPING attend
 la CI » (journal du 2026-10-25).
 
@@ -27,7 +27,7 @@ branche principale (QUA-113) et refuser la clôture (QUA-137).
 
 ## Questions à trancher
 
-- [décision] Ajouter ce test unitaire en déclarant `.githooks/state.mjs` (ou
-  `.githooks/state.test.mjs`) dans « Contrats modifiés » de sa fiche — une
-  déclaration de hook, sur le oui du demandeur — ou s'en tenir au test du
-  cycle ?
+Le demandeur a choisi le 2026-10-25 d'ajouter le test unitaire et de
+déclarer le fichier de test concerné. Critères et déclaration :
+`docs/projects/test-unitaire-fusion-automatique.md`.
+Aucun point restant à trancher pour ce chantier.
