@@ -1526,6 +1526,17 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-135",
+      "name": "tests de QUA-135, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-135 \" outils/banc-agents.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "transitions": "human",

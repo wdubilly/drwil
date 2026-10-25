@@ -68,7 +68,7 @@ pas dans le dossier temporaire).
 - Le banc refuse une base située dans le dépôt sans y créer de dossier :
   après le test du refus, la racine du dépôt ne contient aucun nouveau
   `drwil-banc-*` — preuve ajoutée à QUA-060 (un outil n'est tenu que prouvé
-  par le banc) — `tests-qua-060`
+  par le banc) — `QUA-135`
 
 ## Contrats modifiés
 
@@ -80,7 +80,6 @@ QUA-113, la CI rejoue les contrôles avec les hooks de la branche principale.)
 - `.githooks/engine.test.mjs` — test de la racine par passe
 - `.githooks/run-checks.mjs` — avertissement de fuite, chemin gardé au résumé
 - `.githooks/run-checks.test.mjs` — test de l'avertissement de fuite
-- `QUA-060` — preuve complétée : le banc refuse une base du dépôt sans créer de dossier
 
 ## 2. Hors périmètre
 

@@ -107,10 +107,7 @@ test("QUA-060 : le projet temporaire est en SCOPING, hors du dépôt, et nettoy�
   assert.throws(() => preparer("claude", { executer: simule({ etat: "Activité : BUILD" }), base }), /pas en SCOPING/);
   assert.throws(() => preparer("claude", { executer: simule({ etat: "" }), base }), /pas en SCOPING/);
   assert.throws(() => preparer("claude", { executer: simule({ initCode: 1 }), base }), /installation de drwil impossible : boom \| suite/);
-  const restes = () => readdirSync(RACINE).filter((n) => n.startsWith("drwil-banc-")).length;
-  const avant = restes();
   assert.throws(() => preparer("claude", { executer: simule({}), base: RACINE }), /jamais un agent dans le dépôt/);
-  assert.equal(restes(), avant, "le refus ne crée aucun dossier dans le dépôt");
   const nettoye = essayer("claude", { executer: simule({}), base });
   assert.equal(nettoye.dossier, undefined);
 });
@@ -238,4 +235,11 @@ test("QUA-068 : la matrice dit comment lancer un chantier sous Gemini CLI", () =
     gemini.slice(0, gemini.indexOf("## 7.")),
     /start a workstream with\s+`node \.githooks\/state\.mjs start` in an interactive terminal/,
   );
+});
+
+test("QUA-135 : le banc refuse une base située dans le dépôt sans y créer de dossier", () => {
+  const restes = () => readdirSync(RACINE).filter((n) => n.startsWith("drwil-banc-")).length;
+  const avant = restes();
+  assert.throws(() => preparer("claude", { executer: simule({}), base: RACINE }), /jamais un agent dans le dépôt/);
+  assert.equal(restes(), avant, "le refus ne crée aucun dossier dans le dépôt");
 });

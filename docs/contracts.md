@@ -503,7 +503,7 @@ régression sauf si la fiche active déclare le changement (section
 **Règle** : Propre au dépôt drwil (QUA-018). `node outils/banc-agents.mjs` installe drwil dans un projet temporaire (jamais dans le dépôt) en SCOPING, demande à l'agent réel, en mode non interactif, d'écrire un fichier de code, et rend par outil : hooks lancés, écriture refusée ou acceptée, rappel d'état reçu ou non. Un outil n'est « conforme » que si son hook d'écriture a été lancé, le fichier est absent et le rappel est reçu : un refus sans hook lancé (l'agent a obéi aux consignes) est « non éprouvé ». Un outil absent du poste ou dont le lancement n'est pas défini est « non testé », jamais « conforme ».
 **Périmètre** : `outils/banc-agents.mjs`.
 **Source de vérité** : `outils/banc-agents.mjs` (`analyser`, `essayer`).
-**Preuve** : tests du banc avec un exécuteur simulé (aucun vrai agent) ; une base située dans le dépôt est refusée avant toute création, la racine du dépôt ne reçoit aucun `drwil-banc-*` de plus ; l'essai sur l'outil réel est un geste du poste.
+**Preuve** : tests du banc avec un exécuteur simulé (aucun vrai agent) ; l'essai sur l'outil réel est un geste du poste.
 **Contrôle** : `tests-qua-060`
 **Manuel** : lancer le banc sur le poste et attester le résultat (colonne « Attested by the human » de la matrice).
 **Tests** : `outils/banc-agents.test.mjs`
@@ -1270,3 +1270,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/run-checks.test.mjs`
 **Origine** : dossiers-temporaires-des-tests — « Un contrôle qui laisse des fichiers dans son dossier temporaire est nommé dans le rapport, avec le nombre d'éléments laissés, et compté comme avertissement dans le résumé ; il ne fait pas échouer la passe »
 **Raison** : Faire échouer la passe sur une fuite aurait bloqué tous les commits tant que les fuites actuelles ne sont pas corrigées ; sans les nommer, personne ne les corrigerait à la source.
+
+## QUA-135 — Le banc refuse une base située dans le dépôt sans y créer de dossier
+**Règle** : Propre au dépôt drwil (QUA-018). `preparer` d'`outils/banc-agents.mjs` juge la base du projet temporaire avant toute création : une base située dans le dépôt est refusée, et la racine du dépôt ne reçoit aucun dossier `drwil-banc-*` de plus (le dossier n'est pas créé puis abandonné). Complète QUA-060 (un outil n'est tenu que prouvé par le banc, projet temporaire hors du dépôt).
+**Périmètre** : `outils/banc-agents.mjs`.
+**Source de vérité** : `outils/banc-agents.mjs` (`preparer`).
+**Preuve** : test du banc : le refus d'une base située dans le dépôt, puis le nombre de dossiers `drwil-banc-*` de la racine du dépôt, inchangé.
+**Contrôle** : `tests-qua-135`
+**Tests** : `outils/banc-agents.test.mjs`
+**Origine** : dossiers-temporaires-des-tests — « Le banc refuse une base située dans le dépôt sans y créer de dossier : après le test du refus, la racine du dépôt ne contient aucun nouveau `drwil-banc-*` »
+**Raison** : Le test du refus créait un dossier vide à la racine du dépôt à chaque passe (958 relevés le 2026-10-25) : le refus arrivait après la création.
