@@ -47,7 +47,7 @@ complète qu'une fois, pour le verdict.
 
 - Reprendre le verdict d'un contrôle déjà joué par `run-checks` :
   `docs/projects/verify-reprend-run-checks.md`.
-- Paralléliser la passe : `docs/projects/verify-en-parallele.md`.
+- Paralléliser la passe : `docs/projects/journal.md`.
 - Changer la règle de VERIFY : clore exige toujours une passe complète
   `verify --evidence` en PASS ou ATTESTED.
 

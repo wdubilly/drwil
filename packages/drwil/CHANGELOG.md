@@ -7,6 +7,11 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil verify` plays its checks in parallel (QUA-139): with the `parallel`
+  setting, the command checks the contracts cite start together (same limit as
+  `run-checks`) and are read in registry order, so each contract gets the same
+  verdict and reasons as a serial pass. Without the setting, nothing changes.
+
 - A hook modified by the branch without being declared is reported before the
   closing (QUA-137): `node .githooks/close.mjs --check`, the move from BUILD to
   EVIDENCE and the closing name each `.githooks/` file the branch modifies or

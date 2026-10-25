@@ -116,7 +116,7 @@ liés à un seul fichier.
 
 ### Durée de `drwil verify` et de chaque contrôle (notes du 2026-10-25)
 
-Reprises de `docs/intentions/notes.md` ; cadrées le 2026-10-25 en quatre fiches, dont la première est faite (durée par contrôle, QUA-136, voir `docs/projects/journal.md`) ; restent `docs/projects/verify-en-parallele.md`, `docs/projects/verify-rejoue-les-echecs.md`, `docs/projects/verify-reprend-run-checks.md` (reprise d'un verdict de `run-checks` sur un arbre identique, QUA-013 précisé).
+Reprises de `docs/intentions/notes.md` ; cadrées le 2026-10-25 en quatre fiches, dont deux sont faites (durée par contrôle, QUA-136 ; `verify` en parallèle, QUA-139, voir `docs/projects/journal.md`) ; restent `docs/projects/verify-rejoue-les-echecs.md`, `docs/projects/verify-reprend-run-checks.md` (reprise d'un verdict de `run-checks` sur un arbre identique, QUA-013 précisé).
 
 - 2026-10-25 — Chronométrer chaque contrôle : fait (QUA-136, journal du 2026-10-25, durée par contrôle) ; reste à faire lire ces durées par le tableau « Durée de la CI drwil » (https://claude.ai/artifact/LVTAv9omSJ4h8bL9s22vbT), hors de ce chantier. À rattacher à docs/intentions/suivi-ci-et-contexte.md.
 - 2026-10-25 — drwil verify est long (verify --evidence : ≈ 4 min 30 de bout en bout, PASS, le 2026-10-25 en VERIFY) : il relance en série tous les contrôles cités par le registre (packages/drwil/src/verify.ts, c.run), dont la suite complète du paquet avec couverture (npm run test:coverage) et 53 suites node --test filtrées par contrat (≈ 18 s à elles seules), alors que run-checks vient de les jouer en parallèle (QUA-119). Pistes : paralléliser verify via runAsync (.githooks/engine.mjs) ; reprendre les résultats de run-checks sur un arbre inchangé (à trancher au regard de QUA-013) ; suite unique avec verdict par contrat (QUA-033) ; après un PASS, ne pas tout rejouer quand seule la doc a changé (comme le « commit de documentation seule » de run-checks) ; après un FAIL, rejouer d'abord les seuls contrats en échec (option only, déjà utilisée par drwil attest). Vécu le 2026-10-25 (chantier dossiers-temporaires-des-tests, PR #230) : six passes de verify --evidence en 30 min (≈ 25 à 30 min sur 45), dont deux ou trois dues à des notes modifiées dans l'arbre pendant VERIFY ; un ou deux auraient suffi. À rattacher à docs/intentions/suivi-ci-et-contexte.md.
@@ -209,11 +209,14 @@ Mesures `[budget-commit]` lues dans les journaux de CI :
 
 ### suivre la durée de la CI comme un indicateur, pas comme un contrat attesté (ex-« objectifs-de-duree-ci-en-indicateur »)
 
-- [décision] Où consigner le relevé par chantier (`.drwil/usage.jsonl` ou un
-  fichier à part) et comment le tableau de bord en montre la tendance ?
-- [décision] Quel seuil d'alerte non bloquant, et que devient QUA-122 une fois
-  l'indicateur en place (le contrat est attesté : le modifier ou le retirer
-  invalide l'attestation, décision du demandeur) ?
+Décisions du demandeur le 2026-10-25 : relevé manuel par chantier au
+journal, référence de CI et distinction hooks modifiés/inchangés ;
+QUA-122 (durée du job `checks`) conservé comme preuve historique.
+Cadrage : `docs/projects/duree-ci-en-indicateur.md`.
+
+- [décision] Dans un chantier ultérieur : comment le tableau de bord
+  montre-t-il la tendance et quel seuil d'alerte non bloquant appliquer ?
+  Ni tableau de bord ni seuil nouveau dans la fiche cadrée.
 
 ### relever la durée du job `checks` quand les hooks sont inchangés (ex-« releve-duree-checks-hooks-inchanges »)
 

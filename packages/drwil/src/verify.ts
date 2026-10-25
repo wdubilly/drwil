@@ -289,22 +289,26 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const cache = new Map<string, CheckResult>();
   // A check cited by several contracts cannot say which rule its failure breaks: verify says so.
   const citedBy = (id: string) => all.filter((k) => (k.checks ?? []).includes(id)).map((k) => k.id);
-  const run = (id: string): CheckResult => {
-    const known = cache.get(id);
-    if (known) return known;
-    const c = available.get(id);
-    if (c) opts.onCheck?.(id);
-    const r: CheckResult = c ? { id, ...c.run({ stdio: "pipe" }) } : { id, status: "unknown" };
-    if (c) opts.onCheck?.(id, r.status);
-    cache.set(id, r);
-    return r;
+  // QUA-139: with the engine's `parallel` setting the cited command checks are started together (same limit as
+  // run-checks), then read in registry order: the verdict and the reasons are those of a serial pass.
+  const cited = [...new Set(contracts.flatMap((k) => ((k.checks ?? []) as string[]).filter((id) => available.has(id))))];
+  const started: Map<string, Promise<any>> | undefined = engine.startParallel?.(cited.map((id) => available.get(id)));
+  const run = async (id: string): Promise<void> => {
+    opts.onCheck?.(id);
+    const pending = started?.get(id);
+    const { launched: _launched, ...raw } = pending
+      ? await pending.catch((e: Error) => ({ status: "not-run", detail: e.message }))
+      : available.get(id).run({ stdio: "pipe" });
+    opts.onCheck?.(id, raw.status);
+    cache.set(id, { id, ...raw });
   };
+  for (const id of cited) await run(id);
 
   const results: (ContractResult & { invalidConfig?: boolean })[] = contracts.map((k) => {
     const reasons = [...(byContract.get(k.id) ?? [])];
     const statuses: Status[] = reasons.length ? ["ERROR"] : [];
     // An unknown check is already a validation error: it is not "run".
-    const checks = ((k.checks ?? []) as string[]).filter((id) => available.has(id)).map(run);
+    const checks = ((k.checks ?? []) as string[]).filter((id) => available.has(id)).map((id) => cache.get(id) ?? { id, status: "unknown" });
     for (const r of checks) {
       if (r.status === "ok") reasons.push(fill(T.ok, r.id));
       else if (r.status === "fail") {
@@ -313,12 +317,8 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
         const sharers = citedBy(r.id);
         if (sharers.length > 1) reasons.push(fill(T.shared, r.id, sharers.join(", ")));
         // The last lines of the output say why, without drowning the verdict.
-        const tail = (r.output ?? "")
-          .split(/\r?\n/)
-          .map((l) => l.trimEnd())
-          .filter(Boolean)
-          .slice(-3);
-        for (const l of tail) reasons.push(`  │ ${l}`);
+        const lines = (r.output ?? "").split(/\r?\n/).map((l) => l.trimEnd());
+        for (const l of lines.filter(Boolean).slice(-3)) reasons.push(`  │ ${l}`);
       } else if (r.status === "not-run") {
         statuses.push("ERROR");
         reasons.push(fill(T.notRun, r.id, r.detail));
@@ -382,8 +382,8 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     };
   });
 
-  const cited = new Set(contracts.flatMap((k) => k.checks ?? []));
-  const unattached = [...available.keys()].filter((id) => !cited.has(id));
+  const citedIds = new Set(contracts.flatMap((k) => k.checks ?? []));
+  const unattached = [...available.keys()].filter((id) => !citedIds.has(id));
   // Gate: blocking contracts only; a malformed registry stays an ERROR whatever the severity of the
   // contract concerned (the configuration itself is not reliable).
   const deciding = results.filter((r) => r.severity === "blocking").map((r) => r.status);

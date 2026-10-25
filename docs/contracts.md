@@ -1310,3 +1310,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/cycle.test.mjs`
 **Origine** : hooks-declares-et-scoping-apres-ci — « Avec la fusion automatique, le retour en SCOPING n'a lieu qu'une fois la PR fusionnée, suivie par `node .githooks/pr-watch.mjs` (30 minutes au plus) ; CI rouge : l'état reste en CLOSING et `reopen` s'applique ; délai dépassé : rester en CLOSING et le signaler »
 **Raison** : La procédure faisait revenir en SCOPING dès la fusion programmée, avant la fin de la CI : une CI rouge ensuite ne pouvait plus rouvrir le chantier, `reopen` n'étant permis qu'en CLOSING (PR #232).
+
+## QUA-139 — `drwil verify` joue ses contrôles en parallèle quand le projet le permet
+**Règle** : Livré à tout projet. Avec le réglage `parallel` de `.drwil/ia-first.json` (QUA-119), `drwil verify` lance ensemble les contrôles de commande cités par les contrats (même limite que `run-checks` : au plus la moitié des cœurs, deux au moins) et lit leurs résultats dans l'ordre du registre : chaque contrat reçoit le même verdict et les mêmes raisons, dans le même ordre, qu'une passe en série. Un contrôle cité par plusieurs contrats n'est joué qu'une fois ; un contrôle qui ne se lance pas reste une erreur (QUA-013, un contrôle non exécuté n'est pas un succès). Sans le réglage, ou avec un moteur installé qui ne sait pas lancer en parallèle, la passe reste en série.
+**Périmètre** : `packages/drwil/src/verify.ts` (`verify`) ; utilise `startParallel` du moteur (`.githooks/engine.mjs`).
+**Source de vérité** : `packages/drwil/src/verify.ts`.
+**Preuve** : tests du paquet : mêmes statuts, raisons et contrôles, contrat par contrat, en parallèle et en série (échec, réussite, contrôle partagé, preuve humaine, commande introuvable) ; deux contrôles qui s'attendent l'un l'autre ne passent qu'avec le réglage.
+**Contrôle** : `tests-qua-139`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : verify-en-parallele — « Avec le réglage `parallel`, `drwil verify` lance en parallèle les contrôles qui le permettent et rend le même verdict, contrat par contrat, qu'une passe en série »
+**Raison** : La passe de `verify` durait la somme de tous ses contrôles, alors que `run-checks` les lance déjà en parallèle.
