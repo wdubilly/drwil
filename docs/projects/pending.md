@@ -402,7 +402,7 @@ actifs » s'appuie sur le 4).
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
-- [ ] [IA] [P1] Durée de CI en indicateur non bloquant, QUA-122 (durée du
+- [x] [IA] [P1] Durée de CI en indicateur non bloquant, QUA-122 (durée du
   job `checks`) conservé comme preuve historique — à faire avant les deux
   fiches suivantes — `docs/projects/duree-ci-en-indicateur.md`.
 - [ ] [IA] [P1] Séparer la gestion des branches de la clôture, sans changer

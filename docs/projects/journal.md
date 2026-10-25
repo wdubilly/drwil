@@ -3221,7 +3221,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `.drwil/ia-first.json` a fait tomber l'attestation de QUA-122, réattestée
   par l'humain.
 - **Limites connues** : l'attestation de QUA-122 tombe à chaque contrôle
-  ajouté (`docs/intentions/couverture-de-qua-122.md`) ; `.githooks/close.mjs`
+  ajouté (intention « couverture-de-qua-122 », réglée le 2026-10-25) ; `.githooks/close.mjs`
   est au plafond de 400 lignes de QUA-001 (`docs/intentions/decouper-close.md`) ;
   le test unitaire du nouveau texte reste à écrire dans
   `.githooks/state.test.mjs`, en déclarant le hook
@@ -3315,3 +3315,29 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   quand toute la suite tourne en parallèle.
 - **Preuve de clôture** : `docs/preuves/verify-reprise-par-controle.md` (si présent).
 - **Clôturé par** : la branche `cadrage/verify-reprise-par-controle`.
+
+## 2026-10-25 — La durée du job `checks` devient un indicateur, pas une attestation à renouveler
+
+- **Décisions clés** : QUA-122 (durée du job `checks`) conserve son identifiant
+  et devient une preuve historique bornée aux mesures du chantier
+  d'accélération de la CI du 2026-10-24 (3m02, 3m45, 4m37 sur trois passages à
+  hooks modifiés, référence ≈ 5m35, hooks inchangés non relevé), conservées
+  avec leurs limites dans `docs/mesures-ci-reference.md`, seul fichier de son
+  champ « Couvre » : ajouter un contrôle à `.drwil/ia-first.json` ou modifier
+  le workflow n'invalide plus son attestation. QUA-023 (évolution déclarée
+  d'un contrat) respecté, histoire conservée ; aucune ancienne preuve
+  réécrite. Dépôt drwil uniquement, pas le livrable.
+- **Relevé de la durée de CI (procédure, pour chaque chantier)** : une ligne
+  `- **Durée de CI (job checks)** : <durée> — <référence du passage de CI> —
+  hooks modifiés | hooks inchangés` dans l'entrée du journal ; « non mesurée »
+  si le relevé manque ou est inexploitable. Sans seuil, il ne bloque ni
+  `verify` ni la clôture (détail : `docs/mesures-ci-reference.md`).
+- **Durée de CI (job checks)** : non mesurée — la CI de la PR n'a pas encore
+  passé à l'écriture de cette entrée.
+- **Limites connues** : tendance au tableau de bord et seuil d'alerte non
+  bloquant restent à décider (`docs/intentions/suivi-ci-et-contexte.md`) ;
+  relevé hooks inchangés toujours attendu (même intention) ; l'attestation
+  historique de QUA-122 est un geste humain, non fait par l'agent. L'intention
+  « couverture-de-qua-122 », entièrement couverte, est retirée.
+- **Preuve de clôture** : `docs/preuves/duree-ci-en-indicateur.md` (si présent).
+- **Clôturé par** : la branche `workstream/duree-ci-en-indicateur`.
