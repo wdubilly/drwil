@@ -3189,9 +3189,6 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : `.githooks/engine.mjs` est à 400 lignes, le plafond
   de QUA-001 : un prochain ajout au moteur demandera de le découper ; la
   lecture de ces durées par le tableau « Durée de la CI drwil » reste à faire
-  (intention `docs/intentions/suivi-ci-et-contexte.md`, mise à jour). La
-  fiche `docs/projects/verify-en-parallele.md` cite encore la fiche
-  supprimée (hors cadrage ici, à réorienter vers ce journal quand elle sera
-  lancée).
+  (intention `docs/intentions/suivi-ci-et-contexte.md`, mise à jour).
 - **Preuve de clôture** : `docs/preuves/duree-par-controle.md` (si présent).
 - **Clôturé par** : la branche `chantier/duree-par-controle`.
