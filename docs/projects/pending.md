@@ -63,8 +63,13 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    données du projet hors prose du kit, alertes avant et après écrasement,
    détection de stack élargie ; constatée sur drwil_dbox le 2026-10-26,
    donc en tête du thème ; ces intentions touchent `packages/drwil/src`
-   et les gabarits, pas les fichiers partagés des fiches cadrées) ;
-   F. fluidité et relecture (après `cycle-de-vie-des-fiches`) ;
+   et les gabarits, pas les fichiers partagés des fiches cadrées), puis le
+   parcours fluide (worktree toujours proposé, attestation depuis le chat,
+   ajout ou adoption d'un contrat par commande, jugé important ; demandés le 2026-10-27 : ils touchent le sondage de lancement et
+   `drwil attest`, donc `.githooks/state.mjs` que les fiches cadrées
+   partagent, d'où leur place après elles) ;
+   F. fluidité et relecture, dont l'accueil de session (après
+   `cycle-de-vie-des-fiches`) ;
    G. clôture, file et chantiers en parallèle (après
    `cycle-de-vie-des-fiches`, qui modifie déjà `.githooks/close.mjs`, et
    `next-attend-la-fusion`, voisine de la file) : la clôture d'une fiche
@@ -162,7 +167,9 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 ### Adoption, installation, documentation
 
 - [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
-  d'autorisation à chaque commande (demande du 2026-10-25) —
+  d'autorisation à chaque commande, avec le worktree toujours proposé,
+  l'attestation depuis le chat et l'ajout ou l'adoption d'un contrat par
+  commande (demandes des 2026-10-25 et 2026-10-27) —
   `docs/intentions/installation-fluide.md`.
 - [ ] [décision] L'adoption et `init` sur un projet réel : code existant,
   couche d'un dossier apparu après l'installation, dépôt git existant avant
@@ -216,6 +223,10 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   (décisions, cadrage, règles, preuves, exceptions), et une question de plus
   dans le sondage (`drwil-review`), cadrées ensemble avec la protection de
   master — `docs/intentions/vue-de-relecture.md`.
+- [ ] [décision] Un accueil drwil court à l'ouverture d'une session (où en
+  est le projet, commandes utiles ; l'essentiel seulement, le détail à la
+  demande ; demande du 2026-10-27) —
+  `docs/intentions/accueil-drwil-a-l-ouverture.md`.
 
 ### Coût en tokens
 
