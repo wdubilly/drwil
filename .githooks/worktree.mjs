@@ -102,8 +102,9 @@ function briefOf(dir) {
 export function situation(root) {
   const all = worktrees(root)?.filter((w) => existsSync(w.path));
   if (!all?.length) return null;
-  const me = realpathSync(root);
-  const self = all.find((w) => realpathSync(w.path) === me);
+  // `.native`: on Windows git answers the long name while a temporary folder may carry the short (8.3) one.
+  const me = realpathSync.native(root);
+  const self = all.find((w) => realpathSync.native(w.path) === me);
   if (!self) return null;
   const others = all.filter((w) => w !== self).map((w) => ({ ...w, brief: briefOf(w.path) }));
   return { self: { ...self, brief: briefOf(self.path) }, main: all[0], others };
