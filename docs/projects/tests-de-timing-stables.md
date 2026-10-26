@@ -11,6 +11,8 @@ files:
   - .githooks/run-checks.test.mjs
   - .githooks/state.test.mjs
   - .githooks/create-release.test.mjs
+  - .githooks/run-checks.mjs
+  - packages/drwil/templates/common/base/.githooks/run-checks.mjs
   - docs/intentions/tests-de-timing-instables.md
   - docs/projects/pending.md
   - docs/projects/journal.md
@@ -25,8 +27,10 @@ Chaque refus coûte une passe complète (environ 3 minutes) et pousse à
 relancer à l'aveugle. Un push ne doit plus dépendre de la charge, sans
 désactiver ni contourner de contrôle (QUA-019, pas de contournement).
 
-Périmètre : **tests du dépôt** (drwil-le-dépôt, QUA-018) ; aucun fichier du
-gabarit livré (`packages/drwil/templates/`) n'est à modifier.
+Périmètre : **tests du dépôt** (drwil-le-dépôt, QUA-018), plus le comptage
+de l'avertissement dans `.githooks/run-checks.mjs` (point 5, élargi sur le oui du
+demandeur le 2026-10-26) : seul ce hook du gabarit livré
+(`packages/drwil/templates/`) est à modifier, avec sa copie installée.
 
 ## Critères d'acceptation
 
@@ -68,6 +72,17 @@ gabarit livré (`packages/drwil/templates/`) n'est à modifier.
 2. **QUA-136** : contrôles factices à durée imposée (déterministe).
 3. **Recensement** des autres tests mesurant une durée : dans le même
    chantier.
+
+## Contrats modifiés
+
+(déclarés sur le oui du demandeur le 2026-10-26)
+
+- `.githooks/run-checks.test.mjs` — test de QUA-136 (durée de chaque
+  contrôle) rendu indépendant de la charge.
+- `.githooks/state.test.mjs` — mesure de durée retirée du test de
+  `readStdinJson`.
+- `.githooks/run-checks.mjs` — comptage d'un avertissement remonté par un
+  test (budget au commit).
 
 ## 5. Points à trancher
 
