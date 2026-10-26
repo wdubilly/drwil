@@ -59,9 +59,14 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    `niveau-de-protection`) ; C. cible de couverture (après
    `verify-rejoue-les-echecs`) ; D. preuves et contrôles (après
    `attestations-sur-l-effet-et-couvre`) ; E. adoption et documentation,
-   dont la détection de stack élargie (quand on veut) ; F. fluidité et
-   relecture (après `cycle-de-vie-des-fiches`) ; G. clôture d'une fiche permanente (après
-   `cycle-de-vie-des-fiches`, qui modifie déjà `.githooks/close.mjs`) —
+   dont la montée de version sans perte pour le projet (CI extensible,
+   données du projet hors prose du kit, alertes avant et après écrasement,
+   détection de stack élargie ; constatée sur drwil_dbox le 2026-10-26,
+   donc en tête du thème ; ces intentions touchent `packages/drwil/src`
+   et les gabarits, pas les fichiers partagés des fiches cadrées) ;
+   F. fluidité et relecture (après `cycle-de-vie-des-fiches`) ;
+   G. clôture d'une fiche permanente (après `cycle-de-vie-des-fiches`, qui
+   modifie déjà `.githooks/close.mjs`) —
    `docs/intentions/cloture-fiche-permanente.md`.
 3. **Grands sujets, ensuite** : catalogue et profils, autres outils, banc et
    fabrique (après le catalogue, décision du 2026-10-26), produit.
