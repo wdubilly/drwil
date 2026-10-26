@@ -65,7 +65,7 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    donc en tête du thème ; ces intentions touchent `packages/drwil/src`
    et les gabarits, pas les fichiers partagés des fiches cadrées), puis le
    parcours fluide (worktree toujours proposé, attestation depuis le chat,
-   demandés le 2026-10-27 : ils touchent le sondage de lancement et
+   ajout ou adoption d'un contrat par commande, jugé important ; demandés le 2026-10-27 : ils touchent le sondage de lancement et
    `drwil attest`, donc `.githooks/state.mjs` que les fiches cadrées
    partagent, d'où leur place après elles) ;
    F. fluidité et relecture (après `cycle-de-vie-des-fiches`) ;
@@ -166,8 +166,9 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 ### Adoption, installation, documentation
 
 - [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
-  d'autorisation à chaque commande, avec le worktree toujours proposé et
-  l'attestation depuis le chat (demandes des 2026-10-25 et 2026-10-27) —
+  d'autorisation à chaque commande, avec le worktree toujours proposé,
+  l'attestation depuis le chat et l'ajout ou l'adoption d'un contrat par
+  commande (demandes des 2026-10-25 et 2026-10-27) —
   `docs/intentions/installation-fluide.md`.
 - [ ] [décision] L'adoption et `init` sur un projet réel : code existant,
   couche d'un dossier apparu après l'installation, dépôt git existant avant
