@@ -177,6 +177,9 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 - [ ] [décision] Le sondage parallèle (plusieurs worktrees) vérifié dans
   Copilot CLI ; le sondage à une fiche l'est (2026-10-26) —
   `docs/intentions/sondage-worktree-copilot-cli.md`.
+- [ ] [décision] La clôture en un geste reconnaît une fiche permanente
+  (l'entretien courant, clos à la main pour les versions 0.8.0 et 0.9.0) —
+  `docs/intentions/cloture-fiche-permanente.md`.
 
 ### Fluidité et relecture
 
