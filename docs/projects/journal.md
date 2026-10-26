@@ -3484,6 +3484,30 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   par le demandeur (`detour.mjs allow`).
 - **Clôturé par** : la branche `detour/recoupement-index-journal`.
 
+## 2026-10-26 — La doc dit le lancement de chantiers en parallèle
+
+- **Décisions clés** : fiche de documentation seule, séparée des chantiers de
+  code. `docs/ia-first.md` (gabarit puis copie) ne dit plus qu'une file reste
+  toujours dans le dossier du dépôt : il décrit la question `drwil-parallel`,
+  le lancement par le hook, le plafond `maxParallel` (3 par défaut), les refus
+  dont le recoupement des cadrages (index et journal exceptés) et le travail
+  en sous-agents (QUA-147 à QUA-149). `docs/architecture.md` cite
+  `launchParallel` et `scopesOverlap` ; deux lignes au changelog. Un détour
+  (PR #250, branche `detour/recoupement-index-journal`) a corrigé
+  `scopesOverlap`, qui refusait toute file parallèle de deux fiches
+  ordinaires à cause de l'index et du journal.
+- **Écart au cadrage** : critères recadrés pour être prouvables (QUA-040 en
+  preuve ; `run-checks` passé en critère de sortie du lot, QUA-018 étant
+  attesté) ; champ Intention corrigé en « aucune », la fiche classant
+  `docs/intentions/nettoyage-des-worktrees.md` hors périmètre.
+- **Intention d'origine** : aucune (écart de doc constaté après le chantier
+  file-en-parallele).
+- **Limites connues** : le retrait des worktrees et le repositionnement après
+  clôture restent à trancher (`docs/intentions/nettoyage-des-worktrees.md`) ;
+  le lancement par vagues au-delà de `maxParallel` reste sans besoin établi.
+- **Preuve de clôture** : `docs/preuves/doc-lancement-parallele.md`.
+- **Clôturé par** : la branche `workstream/doc-lancement-parallele`.
+
 ## 2026-10-26 — Le pre-push reprend un verdict « ok » dont les fichiers du contrôle n'ont pas changé
 
 - **Décisions clés** : QUA-152 (le pre-push reprend un verdict « ok » dont les

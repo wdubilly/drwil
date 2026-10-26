@@ -415,9 +415,6 @@ actifs » s'appuie sur le 4).
   `docs/projects/niveau-de-protection.md`.
 - [ ] [IA] [P1] Compléter le test unitaire de QUA-138 (retour en SCOPING
   après la fusion) — `docs/projects/test-unitaire-fusion-automatique.md`.
-- [ ] [IA] [P2] La doc dit le lancement de chantiers en parallèle
-  (`docs/ia-first.md` devenu faux, `docs/architecture.md` incomplet ; cadré le
-  2026-10-26) — `docs/projects/doc-lancement-parallele.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
