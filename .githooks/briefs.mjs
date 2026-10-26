@@ -3,7 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { readBlock } from "./scope.mjs";
+import { fnmatch, readBlock, withMirrors } from "./scope.mjs";
 
 export const BRIEF_DIRS = ["docs/projects/"];
 export const MODEL_RE = /^modele-|^model-/;
@@ -114,6 +114,32 @@ export function hasIncrements(text) {
 export function queueable(root, brief) {
   const b = scopedBriefs(root).find((x) => x.path === brief);
   return Boolean(b?.ready && b.maturity === "ready" && acceptanceCriteria(readFileSync(join(root, brief), "utf8")).length);
+}
+
+const wildcardAt = (p) => [...p].findIndex((c) => c === "*" || c === "?");
+
+// Can one path match both patterns? Exact for a literal, conservative (shared prefix) for two globs.
+function patternsMeet(a, b) {
+  const [ia, ib] = [wildcardAt(a), wildcardAt(b)];
+  if (ia === -1 && ib === -1) return a === b;
+  if (ia === -1) return fnmatch(a, b);
+  if (ib === -1) return fnmatch(b, a);
+  const [pa, pb] = [a.slice(0, ia), b.slice(0, ib)];
+  return pa.startsWith(pb) || pb.startsWith(pa);
+}
+
+/**
+ * First pair of `scope` patterns (committed in HEAD, installed copies included) that two briefs
+ * share: `{ a, b }`, or null. Two workstreams in parallel on such files would meet at the merge.
+ */
+export function scopesOverlap(root, briefA, briefB) {
+  const patterns = (brief) => {
+    const r = spawnSync("git", ["show", `HEAD:${brief}`], { cwd: root, encoding: "utf8" });
+    return r.status === 0 ? withMirrors(readBlock(r.stdout).patterns, config(root)) : [];
+  };
+  const [pa, pb] = [patterns(briefA), patterns(briefB)];
+  for (const a of pa) for (const b of pb) if (patternsMeet(a, b)) return { a, b };
+  return null;
 }
 
 /**

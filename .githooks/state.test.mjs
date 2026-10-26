@@ -1465,6 +1465,44 @@ test("QUA-037 : une file se mène un sous-agent par chantier ; reprise confirmé
   assert.match(etat(anglais, "CLOSING"), /Outside a queue: finish by suggesting `\/clear` to the human/);
 });
 
+const enParallele = (racine) => {
+  ecrireEtat(racine, { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null, parallel: [A, B] });
+  return context(readState(racine), racine);
+};
+
+test("QUA-148 : en file parallèle, un sous-agent par worktree, comptes rendus seuls, une PR suivie par chantier ; rien hors file parallèle", () => {
+  const texte = enParallele(depotFile());
+  assert.match(texte, /File en parallèle décidée au lancement : docs\/projects\/a\.md, docs\/projects\/b\.md/);
+  assert.match(texte, /la session principale n'en crée aucun/);
+  assert.match(texte, /dont le dossier de travail est son worktree/);
+  assert.match(texte, /jamais `isolation: "worktree"`/);
+  assert.match(texte, /sa consigne commence par lire l'état dans ce dossier/);
+  assert.match(texte, /la session principale ne garde que leurs comptes rendus/);
+  assert.match(texte, /suit chaque PR par `gh` jusqu'à la fusion, 30 minutes au plus chacune, sans attendre la fusion d'un autre chantier/);
+  assert.match(texte, /le sous-agent rebase et résout seul/);
+  const anglais = enParallele(depotFile({ lang: "en" }));
+  assert.match(anglais, /Parallel queue decided at start: docs\/projects\/a\.md, docs\/projects\/b\.md/);
+  assert.match(anglais, /whose working folder is its worktree/);
+  assert.match(anglais, /the main session keeps only their reports/);
+  assert.match(anglais, /the subagent rebases and resolves it alone/);
+  assert.doesNotMatch(context(readState(depotFile()), depotFile()), /File en parallèle/);
+});
+
+test("QUA-149 : en file parallèle, le chantier qui demande un humain arrête son seul sous-agent, rien n'est relancé, le bilan dit l'état de chacun", () => {
+  const texte = enParallele(depotFile());
+  assert.match(
+    texte,
+    /Un chantier qui demande un humain \(attestation, FAIL non corrigé, CI rouge, délai de fusion dépassé, décision à prendre\)/,
+  );
+  assert.match(texte, /arrête son sous-agent en disant pourquoi et ce qui est attendu/);
+  assert.match(texte, /les autres continuent et la session principale ne lance rien de plus d'elle-même/);
+  assert.match(texte, /un bilan de file en fin : l'état de chaque chantier \(worktree, branche, fiche, activité, PR\)/);
+  const anglais = enParallele(depotFile({ lang: "en" }));
+  assert.match(anglais, /stops its own subagent, saying why and what is expected/);
+  assert.match(anglais, /the others go on and the main session starts nothing more by itself/);
+  assert.match(anglais, /the state of each workstream \(worktree, branch, brief, activity, PR\)/);
+});
+
 test("QUA-131 : revenu en SCOPING après une clôture, le rappel invite à une nouvelle session, pour tout outil ; la file garde son sous-agent", async () => {
   const racine = depotFile();
   ecrireEtat(racine, { version: 1, activity: "CLOSING", active_brief: A, active_request: null, since: "2026-10-24T10:00:00Z" });

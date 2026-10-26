@@ -8,7 +8,7 @@ Deux chantiers en worktrees touchent chacun l'index des chantiers et le journal 
 
 ## Existant
 
-Relevé le 2026-10-26 : le signal de retard de `close --check` (QUA-146) prévient la branche en retard sur la principale ; la recette décrit les conflits attendus. Aucune résolution automatique ; non mesuré sur des chantiers réels.
+Relevé le 2026-10-26 : le signal de retard de `close --check` (QUA-146) prévient la branche en retard sur la principale ; la recette décrit les conflits attendus. Aucune résolution automatique ; non mesuré sur des chantiers réels. Relevé le 2026-10-26 (chantier « une file en parallèle ») : en file parallèle, le sous-agent rebase et résout seul ces conflits (QUA-148) ; essai sur des chantiers réels à faire.
 
 ## Questions à trancher
 

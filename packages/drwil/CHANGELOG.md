@@ -7,6 +7,17 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- A queue of workstreams can run in parallel (QUA-147 to QUA-149): a
+  `drwil-parallel` question of the `/drwil-start` poll ("Parallel queue" /
+  "Sequential queue", sequential staying the default) makes the hook launch
+  each ticked brief in its own worktree, at most `maxParallel` active at once
+  (`.drwil/ia-first.json`, 3 by default); briefs whose `scope` blocks overlap
+  are refused, nothing being created. The main session runs one subagent per
+  worktree and keeps only the reports; a workstream that needs a human stops
+  its own subagent without interrupting the others, and the queue summary
+  gives the state of each. `QUA-037` (a queue decided in one gesture) now
+  distinguishes the two modes.
+
 - One workstream per worktree (QUA-142 to QUA-146): the `/drwil-start` poll
   can carry a `drwil-worktree` question ("New worktree" / "This folder"); the
   human's answer, read by the hook, creates the sibling folder

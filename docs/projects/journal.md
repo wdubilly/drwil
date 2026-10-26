@@ -3396,3 +3396,36 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   demandeur).
 - **Preuve de clôture** : `docs/preuves/worktree-par-chantier.md` (si présent).
 - **Clôturé par** : la branche `workstream/worktree-par-chantier`.
+
+## 2026-10-26 — Une file de chantiers menée en parallèle, un worktree par chantier
+
+- **Décisions clés** : le sondage de lancement porte une question
+  `drwil-parallel` (« File en parallèle » / « File séquentielle », la
+  séquentielle restant le défaut) ; la réponse, lue par le hook, lance chaque
+  fiche cochée dans son worktree par `launchParallel` de
+  `.githooks/worktree.mjs` (QUA-147), au plus 3 chantiers actifs à la fois
+  (réglage `maxParallel`), les fiches dont les blocs `scope` se recoupent
+  étant refusées sans rien créer (`scopesOverlap` de `.githooks/briefs.mjs`) ;
+  les fiches lancées sont enregistrées dans le champ `parallel` de l'état du
+  dossier d'origine. Le rappel d'état et la skill de lancement disent un
+  sous-agent par worktree, les comptes rendus seuls dans la session principale
+  (QUA-148), l'arrêt du seul chantier qui demande un humain et le bilan de file
+  (QUA-149). QUA-037 modifié, texte validé par le demandeur le 2026-10-26 :
+  modes séquentiel et parallèle. Décisions du demandeur : N = 3, cadrages qui
+  se recoupent refusés, ordre de fusion libre, conflits de clôture résolus par
+  le sous-agent qui rebase, worktrees en dossier frère. Hooks déclarés dans
+  « Contrats modifiés » sur le oui du demandeur du 2026-10-26 (ajouts
+  seulement).
+- **Durée de CI (job checks)** : non mesurée — la CI de la PR n'a pas encore
+  passé à l'écriture de cette entrée.
+- **Limites connues** : le critère « un chantier qui demande un humain arrête
+  le lancement des suivants » est lu comme « la session principale ne relance
+  rien d'elle-même » : tout est lancé d'un coup, dans la limite de N ; pas de
+  lancement par vagues au-delà de N. Le nettoyage des worktrees fusionnés reste
+  à la main (`docs/intentions/nettoyage-des-worktrees.md`) ; la résolution des
+  conflits de clôture par le sous-agent n'est pas essayée sur des chantiers
+  réels (`docs/intentions/conflits-de-cloture-entre-worktrees.md`) ; la file
+  parallèle n'est pas essayée dans Copilot CLI
+  (`docs/intentions/sondage-worktree-copilot-cli.md`).
+- **Preuve de clôture** : `docs/preuves/file-en-parallele.md`.
+- **Clôturé par** : la branche `workstream/file-en-parallele`.

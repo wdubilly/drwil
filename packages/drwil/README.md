@@ -211,7 +211,14 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    item already active in another worktree cannot be started again, the
    state reminder tells each agent the folders are one repository, and
    `node .githooks/close.mjs --check` reports a branch behind the main
-   branch without refusing the closing.
+   branch without refusing the closing. With several work items ticked, a
+   fourth question (`drwil-parallel`: "Parallel queue" / "Sequential queue")
+   runs the queue in parallel instead: the hook launches each work item in its
+   own worktree, at most `maxParallel` at once (`.drwil/ia-first.json`, 3 by
+   default) and refuses work items whose `scope` blocks overlap; the main
+   session runs one subagent per worktree, keeps only their reports, and a work
+   item that needs a human stops its own subagent without interrupting the
+   others.
 3. **BUILD** — the agent implements, only inside the scope. Each commit
    carries a `Drwil-Brief` trailer; widening the scope takes its own
    commit, touching only the work item.
