@@ -3,7 +3,7 @@
 **Statut** : cadré le 2026-10-26.
 **Risque** : LOW
 **Maturité** : prêt
-**Intention** : `docs/intentions/nettoyage-des-worktrees.md`
+**Intention** : aucune (écart de doc constaté après le chantier file-en-parallele)
 
 <!-- scope
 files:
