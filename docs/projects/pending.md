@@ -162,7 +162,8 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 ### Adoption, installation, documentation
 
 - [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
-  d'autorisation à chaque commande (demande du 2026-10-25) —
+  d'autorisation à chaque commande, avec le worktree toujours proposé et
+  l'attestation depuis le chat (demandes des 2026-10-25 et 2026-10-27) —
   `docs/intentions/installation-fluide.md`.
 - [ ] [décision] L'adoption et `init` sur un projet réel : code existant,
   couche d'un dossier apparu après l'installation, dépôt git existant avant
