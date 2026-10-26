@@ -58,9 +58,9 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    suite) ; B. protection, garanties, contournements (après
    `niveau-de-protection`) ; C. cible de couverture (après
    `verify-rejoue-les-echecs`) ; D. preuves et contrôles (après
-   `attestations-sur-l-effet-et-couvre`) ; E. adoption et documentation
-   (quand on veut) ; F. fluidité et relecture (après
-   `cycle-de-vie-des-fiches`) ; G. clôture d'une fiche permanente (après
+   `attestations-sur-l-effet-et-couvre`) ; E. adoption et documentation,
+   dont la détection de stack élargie (quand on veut) ; F. fluidité et
+   relecture (après `cycle-de-vie-des-fiches`) ; G. clôture d'une fiche permanente (après
    `cycle-de-vie-des-fiches`, qui modifie déjà `.githooks/close.mjs`) —
    `docs/intentions/cloture-fiche-permanente.md`.
 3. **Grands sujets, ensuite** : catalogue et profils, autres outils, banc et
@@ -159,6 +159,15 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   `init` — `docs/intentions/adoption-et-init.md`.
 - [ ] [décision] Une documentation qui reste juste : renvois, citations,
   index, doc visiteur — `docs/intentions/coherence-de-la-doc.md`.
+- [ ] [décision] [P1] Un CI du kit que la mise à jour n'écrase pas : étape C++
+  et job Windows perdus sur drwil_dbox le 2026-10-26 —
+  `docs/intentions/ci-extensible-sans-perte.md`.
+- [ ] [décision] [P1] Les données du projet (tableau des fiches) hors des
+  fichiers de prose que le kit réécrit —
+  `docs/intentions/donnees-du-projet-hors-prose-du-kit.md`.
+- [ ] [décision] Alerter avant et après un écrasement (diff de `resolve-drift`,
+  `doctor` sur stack vide ou `.bak`) —
+  `docs/intentions/alertes-avant-et-apres-ecrasement.md`.
 - [ ] [décision] La détection de stack reconnaît plus de technologies (C/C++,
   Swift, Elixir…) et signale une stack vide (constaté sur drwil_dbox le
   2026-10-26) — `docs/intentions/detection-de-stack-elargie.md`.
