@@ -228,6 +228,12 @@ session (`node .githooks/consumption.mjs`, journal du 2026-10-11) ; livrée
 - [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
   par contrôle, QUA-141) —
   `docs/intentions/reprise-par-controle-limites.md`.
+- [ ] [décision] Le sondage « Nouveau worktree » vérifié dans Copilot CLI —
+  `docs/intentions/sondage-worktree-copilot-cli.md`.
+- [ ] [décision] Nettoyer le worktree d'un chantier fusionné —
+  `docs/intentions/nettoyage-des-worktrees.md`.
+- [ ] [décision] Conflits d'index et de journal entre chantiers en parallèle —
+  `docs/intentions/conflits-de-cloture-entre-worktrees.md`.
 
 ## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 

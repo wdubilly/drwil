@@ -3364,3 +3364,30 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   couverte, est retirée.
 - **Preuve de clôture** : `docs/preuves/decouper-close.md` (si présent).
 - **Clôturé par** : la branche `workstream/decouper-close`.
+
+## 2026-10-26 — Un chantier par worktree, lancé d'un geste humain
+
+- **Décisions clés** : nouveau module `.githooks/worktree.mjs`, livré dans le
+  gabarit et installé dans le dépôt. La réponse humaine « Nouveau worktree »
+  du sondage crée un dossier frère `../<dépôt>-<fiche>`, branche
+  `workstream/<fiche>` coupée de `origin/<principale>` à jour
+  (`git worktree add --no-track`, aucune écriture dans la configuration
+  commune) et y lance le chantier (QUA-142) ; le rappel d'état nomme le dépôt
+  principal et liste les worktrees (QUA-143) ; la commande déclarée par le
+  réglage `worktreeInstall` y est lancée (QUA-144) ; une fiche déjà active
+  dans un autre worktree est refusée avec son chemin (QUA-145) ; `close
+  --check` signale le retard sur la branche principale sans refuser la
+  clôture (QUA-146). Hooks `.githooks/state.mjs`,
+  `.githooks/state-texts.mjs` et `.githooks/close.mjs` modifiés, déclarés dans « Contrats modifiés » sur le oui du demandeur du
+  2026-10-26 ; cadrage élargi aux deux `kit-mechanics.md`, dans un commit
+  séparé.
+- **Durée de CI (job checks)** : non mesurée — la CI de la PR n'a pas encore
+  passé à l'écriture de cette entrée.
+- **Limites connues** : sondage non essayé dans Copilot CLI
+  (`docs/intentions/sondage-worktree-copilot-cli.md`) ; nettoyage des worktrees
+  fusionnés à la main (`docs/intentions/nettoyage-des-worktrees.md`) ; conflits
+  d'index et de journal entre chantiers parallèles non résolus
+  (`docs/intentions/conflits-de-cloture-entre-worktrees.md`). Une file de
+  plusieurs fiches reste dans le dossier du dépôt.
+- **Preuve de clôture** : `docs/preuves/worktree-par-chantier.md` (si présent).
+- **Clôturé par** : la branche `workstream/worktree-par-chantier`.
