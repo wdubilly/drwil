@@ -3389,5 +3389,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   d'index et de journal entre chantiers parallèles non résolus
   (`docs/intentions/conflits-de-cloture-entre-worktrees.md`). Une file de
   plusieurs fiches reste dans le dossier du dépôt.
+- **Défaut révélé après la clôture** : la CI Windows de la PR a échoué, git y
+  rendant le nom long d'un dossier que le dossier temporaire désignait par son
+  nom court (8.3) ; la comparaison de chemins de `.githooks/worktree.mjs`
+  passe par `realpathSync.native` (correctif de réouverture, validé par le
+  demandeur).
 - **Preuve de clôture** : `docs/preuves/worktree-par-chantier.md` (si présent).
 - **Clôturé par** : la branche `workstream/worktree-par-chantier`.
