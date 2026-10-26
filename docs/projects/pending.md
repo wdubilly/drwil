@@ -42,7 +42,228 @@ publier ou vendre ; cible : solo et équipe, avec un réglage équipe / solo ;
 horizon : quelques jours ; contraintes à tenir ensemble : rigueur, fluidité,
 coût, en visant la fabrique autonome.
 
-## Ordre de réalisation (2026-10-11)
+## Plan d'action (2026-10-26)
+
+Décidé avec le demandeur le 2026-10-26 ; **remplace les ordres précédents**
+(section « Historique »). Deux voies : la **réalisation** des fiches cadrées,
+une à la fois (elles partagent `.githooks/state.mjs`, `.githooks/state.test.mjs`
+et `packages/drwil/test/cycle.test.mjs` ; seule `niveau-de-protection` touche un
+autre code), et le **cadrage** par thème, entre deux chantiers. Les priorités
+des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
+
+1. **Réaliser les fiches cadrées**, dans l'ordre de la section suivante ; un
+   chantier par session, le suivant après la fusion du précédent.
+2. **Cadrer par thème** (l'agent propose les réponses, le demandeur tranche
+   en un sondage, une PR de cadrage par thème) : A. release allégée (tout de
+   suite) ; B. protection, garanties, contournements (après
+   `niveau-de-protection`) ; C. cible de couverture (après
+   `verify-rejoue-les-echecs`) ; D. preuves et contrôles (après
+   `attestations-sur-l-effet-et-couvre`) ; E. adoption et documentation
+   (quand on veut) ; F. fluidité et relecture (après
+   `cycle-de-vie-des-fiches`).
+3. **Grands sujets, ensuite** : catalogue et profils, autres outils, banc et
+   fabrique (après le catalogue, décision du 2026-10-26), produit.
+
+Une limite trouvée à une clôture rejoint l'intention de son thème, jamais un
+doublon. Une intention qui attend une condition (chiffres du banc, essai réel
+d'un outil) la dit dans son statut.
+
+## Fiches cadrées, dans l'ordre de réalisation
+
+- [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
+  bloque dès l'installation neuve (cadré le 2026-10-23) —
+  `docs/projects/niveau-de-protection.md`.
+- [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
+  (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
+- [ ] [IA] [P2] Un cycle de vie des fiches sans contournement : registre en
+  SCOPING, code livré, acceptation des critères, hooks déclarés au lancement, ligne d'index retirée
+  (cadré le 2026-10-26, élargi le même jour) — `docs/projects/cycle-de-vie-des-fiches.md`.
+- [ ] [IA] [P2] `next` n'enchaîne pas tant que la PR du chantier précédent
+  n'est pas fusionnée (cadré le 2026-10-26) —
+  `docs/projects/next-attend-la-fusion.md`.
+- [ ] [IA] [P2] La réouverture dit ce qu'elle a annulé, et son cycle complet se
+  joue aussi sous Windows (cadré le 2026-10-26) —
+  `docs/projects/reouverture-dite-et-eprouvee.md`.
+- [ ] [IA] [P3] Une attestation tombe quand ce qu'elle juge change, pas quand
+  la forme d'un contrôle change ; `Couvre` déclaré pour les contrats attestés
+  (cadré le 2026-10-26, chemins tranchés le même jour ; après la réouverture,
+  pour une seule séance de réattestation) —
+  `docs/projects/attestations-sur-l-effet-et-couvre.md`.
+- [ ] [IA] [P3] Compléter le test unitaire de QUA-138 (retour en SCOPING
+  après la fusion), en dernier : il teste les textes que les fiches
+  précédentes modifient — `docs/projects/test-unitaire-fusion-automatique.md`.
+
+En attente d'une décision (à affiner) ou d'un geste humain :
+
+- [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
+  Claude, module front, cliquet ; recadré le 2026-10-16 ; à affiner :
+  attend la cible de `docs/intentions/couverture-paquet-100.md`) —
+  `docs/projects/adopter-seuil-couverture.md`.
+- [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
+  qui signale un squash (cadré le 2026-10-26 ; à affiner : attend
+  `docs/intentions/release-allegee.md`) —
+  `docs/projects/release-feu-vert-et-squash.md`.
+- [ ] [humain] [P3] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
+  `docs/projects/suites-kit-portable.md` (point 2).
+
+## Intentions par thème
+
+### Preuves, contrôles, vitesse
+
+- [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
+  externe du 2026-10-22) — `docs/intentions/e2e-et-attestation-precises.md`.
+- [ ] [décision] [P1] Suivre la durée de la CI et le contexte relu, et trancher
+  leurs calibrages (dont l'avertissement `[ia-first-warning]` et un `verify`
+  en FAIL sans contrat en échec, repris le 2026-10-26) —
+  `docs/intentions/suivi-ci-et-contexte.md`.
+- [ ] [décision] Le pre-push connaît le commit local poussé, pas seulement la
+  référence distante (reprise d'un verdict au pre-push, QUA-152) —
+  `docs/intentions/pre-push-commit-pousse.md`.
+- [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
+  par contrôle, QUA-141) —
+  `docs/intentions/reprise-par-controle-limites.md`.
+- [ ] [décision] Les tests qui laissent des fichiers dans leur dossier
+  temporaire se corrigent à la source (31 contrôles nommés par
+  `run-checks` le 2026-10-25) —
+  `docs/intentions/tests-qui-laissent-des-fichiers-temporaires.md`.
+- [ ] [décision] [P3] La couverture à 100 %, le paquet et tout code modifié :
+  une seule cible à trancher avec la fiche ci-dessus (release testée par
+  mock, tranché le 2026-10-16) — `docs/intentions/couverture-paquet-100.md`.
+
+### Protection, garanties, contournements
+
+- [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
+  la barrière n'est qu'un avertissement par défaut (revue externe du
+  2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
+  `docs/intentions/niveaux-de-protection-dans-doctor.md`.
+- [ ] [décision] Les garanties obligatoires, la suite (`doctor` sur le dépôt
+  drwil compris), à cadrer avec ou juste après la fiche du niveau de
+  protection — `docs/intentions/garanties-la-suite.md`.
+- [ ] [décision] [P1] Les contournements encore ouverts : juger l'effet, pas
+  le texte (garde shell, juge du banc), le clone superficiel,
+  l'auto-élargissement du cadrage, les seuils d'un détour —
+  `docs/intentions/contournements-restants.md`.
+- [ ] [décision] [P1] drwil_com, priorité 3 : vérifier la barrière de
+  fusion (protection absente, mal configurée, conforme) — section « Retour
+  de drwil_com » de `docs/intentions/forge-dans-le-livrable.md`.
+
+### Adoption, installation, documentation
+
+- [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
+  d'autorisation à chaque commande (demande du 2026-10-25) —
+  `docs/intentions/installation-fluide.md`.
+- [ ] [décision] L'adoption et `init` sur un projet réel : code existant,
+  couche d'un dossier apparu après l'installation, dépôt git existant avant
+  `init` — `docs/intentions/adoption-et-init.md`.
+- [ ] [décision] Une documentation qui reste juste : renvois, citations,
+  index, doc visiteur — `docs/intentions/coherence-de-la-doc.md`.
+
+### Release
+
+- [ ] [décision] [P2] Alléger la release, puis outiller ce qui reste ; la
+  fiche du feu vert de publication attend ses réponses —
+  `docs/intentions/release-allegee.md`.
+
+### Clôture, file et chantiers en parallèle
+
+- [ ] [décision] Clôture, réouverture et attestations : cadrée en cinq fiches
+  le 2026-10-26 ; reste la note « un lancement intercalé efface la file » —
+  `docs/intentions/cloture-et-attestations.md`.
+- [ ] [décision] Se repositionner après une clôture : nettoyer le worktree et
+  les branches, revenir sur `master`, créer la branche de cadrage —
+  `docs/intentions/nettoyage-des-worktrees.md`.
+- [ ] [décision] Conflits d'index et de journal entre chantiers en parallèle —
+  `docs/intentions/conflits-de-cloture-entre-worktrees.md`.
+- [ ] [décision] Le sondage parallèle (plusieurs worktrees) vérifié dans
+  Copilot CLI ; le sondage à une fiche l'est (2026-10-26) —
+  `docs/intentions/sondage-worktree-copilot-cli.md`.
+
+### Fluidité et relecture
+
+- [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
+  regroupement (PR, attestations) et qui décide chaque transition (agent ou
+  humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
+  `docs/intentions/fluidite-sans-perte-de-rigueur.md`.
+- [ ] [décision] [P1] Vue de relecture et relecture avant fusion, choisie
+  au lancement : montrer à l'humain ce qui demande son jugement dans une PR
+  (décisions, cadrage, règles, preuves, exceptions), et une question de plus
+  dans le sondage (`drwil-review`), cadrées ensemble avec la protection de
+  master — `docs/intentions/vue-de-relecture.md`.
+
+### Coût en tokens
+
+- [ ] [décision] La consommation de tokens mesurée aussi pour les autres
+  outils IA (Copilot CLI, Cursor, Codex, Gemini) —
+  `docs/intentions/consommation-autres-outils.md`.
+
+### Catalogue et profils (casse une compatibilité : avant la publication npm)
+
+Questions du catalogue tranchées le 2026-10-13 (porte avant publication
+reportée à la phase produit) ; reste à valider l'intention et à écrire le
+critère de sortie de chaque fiche —
+`docs/intentions/catalogue-cycle-de-vie.md`.
+
+- [ ] [décision] [P1] Format du catalogue : JSON canonique, schéma
+  versionné, statuts (+ NOT_APPLICABLE), sévérités BLOQUANT / MAJEUR /
+  MINEUR avec échéance, mode de contrôle, Markdown généré, une quinzaine
+  de contrats déjà tenus (v1:CTR-003, v1:CTR-010, v1:CTR-012) — fiche 1.
+- [ ] [décision] [P1] Profils par risque du produit (LÉGER, STANDARD,
+  RENFORCÉ, CRITIQUE ; DOGFOODING cumulable) : contrats applicables et
+  sévérité choisis par profil (v1:CTR-014, v1:HOOK-006), hors garanties
+  obligatoires de l'adoption (décidé le 2026-10-22) — fiche 2.
+- [ ] [décision] [P1] Adoption ciblée : détection et questions à `init`,
+  liste classée, `drwil contracts add <ID>` — fiche 3.
+
+### Autres outils
+
+- [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
+  d'essayé) — `docs/intentions/compat-codex.md`.
+- [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
+  choisir) — `docs/intentions/compat-cursor.md`.
+- [ ] [décision] Les autres outils au niveau de Claude Code (5 suites
+  regroupées le 2026-10-25 dans l'intention mère) —
+  `docs/intentions/compatibilite-des-outils.md`.
+
+### Banc et fabrique (après le catalogue, décision du 2026-10-26)
+
+Prérequis : la protection de master (faite le 2026-10-13) ; le banc mesure le
+drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
+
+- [ ] [décision] `verify` ne donne jamais PASS dans la copie du banc :
+  contrats à attester, humain absent (limite du chantier « Mini-banc :
+  copie « avec » adoptée » du 2026-10-23) —
+  `docs/intentions/banc-verify-jamais-pass.md`.
+- [ ] [décision] [P2] Campagne du mini-banc : essai réel en CI avec
+  l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
+- [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
+  mutation, rôles séparés, une session par fiche, auto-fusion LOW),
+  cadrée sur les chiffres du mini-banc et de la consommation —
+  `docs/intentions/fabrique-autonome.md`.
+- [ ] [décision] [P3] Banc complet avec / sans drwil (5 tâches), décidé
+  sur les chiffres du mini-banc — `docs/intentions/bench-avec-sans-drwil.md`.
+
+### Produit, quand tout est opérationnel
+
+- [ ] [décision] [P2] Publication npm du kit, avec une porte avant
+  `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
+  question 3 du catalogue, reportée ici le 2026-10-13 —
+  `docs/intentions/packager-kit-ia-first.md`.
+- [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
+  CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
+  `docs/intentions/forge-dans-le-livrable.md`.
+- [ ] [décision] [P2] Validation commerciale : des équipes veulent-elles
+  utiliser et payer DRWIL ? — `docs/intentions/validation-commerciale.md`.
+- [ ] [décision] [P3] Community Ready : fichiers et parcours pour qu'un
+  contributeur externe puisse participer sans demander au mainteneur ;
+  questions à trancher (langue, gabarit de PR, canal sécurité, contrats
+  COM) — `docs/intentions/community-ready.md`.
+
+## Historique
+
+Ordres et vagues décidés avant le plan d'action du 2026-10-26, gardés pour
+leurs décisions et leurs dates ; les cases ouvertes sont remontées plus haut.
+
+### Ordre de réalisation (2026-10-11)
 
 Décidé par le demandeur le 2026-10-11, revu le même jour : **mesurer avant
 de construire** (vague 3 insérée, les suivantes renumérotées), puis **la
@@ -184,14 +405,14 @@ seul pilote.
 Les trois fiches du catalogue passent en `[P1]` pour que `/drwil-start`
 les propose dans cet ordre.
 
-## Vague 1 — hygiène et preuves : terminée le 2026-10-11
+### Vague 1 — hygiène et preuves : terminée le 2026-10-11
 
 Faite dans l'ordre : la règle `git -c` recalibrée, SEC-006 outillé, la
 carte du dépôt, la consigne de fusion automatique, lint, formatage et
 versions de Node (voir `docs/projects/journal.md`). Le README a été
 repris le 2026-10-12.
 
-## Vague 2 — rendre les décisions humaines prouvables, relever les preuves
+### Vague 2 — rendre les décisions humaines prouvables, relever les preuves
 
 Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 
@@ -216,31 +437,13 @@ CLI testée depuis le tarball ; gitleaks en CI (journal, 2026-10-11).
 Fait le 2026-10-13 : la protection de master (compte machine de
 l'agent, revue des code owners ; journal du 2026-10-13).
 
-## Vague 3 — mesurer avant de construire
+### Vague 3 — mesurer avant de construire
 
 Fait : consommation de tokens par chantier, lue dans les journaux de
 session (`node .githooks/consumption.mjs`, journal du 2026-10-11) ; livrée
 à tout projet et consignée à la clôture (QUA-042, journal du 2026-10-16).
 
-- [ ] [décision] La consommation de tokens mesurée aussi pour les autres
-  outils IA (Copilot CLI, Cursor, Codex, Gemini) —
-  `docs/intentions/consommation-autres-outils.md`.
-- [ ] [décision] Le pre-push connaît le commit local poussé, pas seulement la
-  référence distante (reprise d'un verdict au pre-push, QUA-152) —
-  `docs/intentions/pre-push-commit-pousse.md`.
-- [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
-  par contrôle, QUA-141) —
-  `docs/intentions/reprise-par-controle-limites.md`.
-- [ ] [décision] Le sondage parallèle (plusieurs worktrees) vérifié dans
-  Copilot CLI ; le sondage à une fiche l'est (2026-10-26) —
-  `docs/intentions/sondage-worktree-copilot-cli.md`.
-- [ ] [décision] Se repositionner après une clôture : nettoyer le worktree et
-  les branches, revenir sur `master`, créer la branche de cadrage —
-  `docs/intentions/nettoyage-des-worktrees.md`.
-- [ ] [décision] Conflits d'index et de journal entre chantiers en parallèle —
-  `docs/intentions/conflits-de-cloture-entre-worktrees.md`.
-
-## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
+### Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 
 Ordre décidé le 2026-10-12 (demandeur) : duplication, puis refactor, puis
 anglais (chantiers B, A, C, `DRWIL-012` avec C), puis fluidité et voie légère, puis vue de
@@ -255,61 +458,24 @@ livrable en anglais, chantiers B et A : un seul gabarit, en anglais,
 `lang` devient la langue du projet ; cœur (hooks, état, config, bloc,
 trailer, code commun) en anglais, migration des projets équipés par
 `init` / `apply`, version 0.4.0 — journal du 2026-10-12.
-- [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
-  regroupement (PR, attestations) et qui décide chaque transition (agent ou
-  humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
-  `docs/intentions/fluidite-sans-perte-de-rigueur.md`.
-- [ ] [décision] [P1] Vue de relecture et relecture avant fusion, choisie
-  au lancement : montrer à l'humain ce qui demande son jugement dans une PR
-  (décisions, cadrage, règles, preuves, exceptions), et une question de plus
-  dans le sondage (`drwil-review`), cadrées ensemble avec la protection de
-  master — `docs/intentions/vue-de-relecture.md`.
 
-## Vague 5 — catalogue et profils (ce qui casse une compatibilité)
+### Vague 5 — catalogue et profils (ce qui casse une compatibilité)
 
 Questions du catalogue tranchées le 2026-10-13 (porte avant publication
 reportée à la vague 7) ; reste à valider l'intention et à écrire le
 critère de sortie de chaque fiche —
 `docs/intentions/catalogue-cycle-de-vie.md`.
 
-- [ ] [décision] [P1] Format du catalogue : JSON canonique, schéma
-  versionné, statuts (+ NOT_APPLICABLE), sévérités BLOQUANT / MAJEUR /
-  MINEUR avec échéance, mode de contrôle, Markdown généré, une quinzaine
-  de contrats déjà tenus (v1:CTR-003, v1:CTR-010, v1:CTR-012) — fiche 1.
-- [ ] [décision] [P1] Profils par risque du produit (LÉGER, STANDARD,
-  RENFORCÉ, CRITIQUE ; DOGFOODING cumulable) : contrats applicables et
-  sévérité choisis par profil (v1:CTR-014, v1:HOOK-006), hors garanties
-  obligatoires de l'adoption (décidé le 2026-10-22) — fiche 2.
-- [ ] [décision] [P1] Adoption ciblée : détection et questions à `init`,
-  liste classée, `drwil contracts add <ID>` — fiche 3.
-
-## Vague 6 — la fabrique, en pilote dans ce dépôt
+### Vague 6 — la fabrique, en pilote dans ce dépôt
 
 Prérequis : la protection de master (vague 2), reportée le 2026-10-11 :
 aucune fusion autonome sans elle. Le mini-banc y a été déplacé le
 2026-10-12 (demandeur) : il mesure le drwil restructuré qui fera tourner la
 fabrique, et c'est la décision de la fabrique qui a besoin de ses chiffres.
 
-- [ ] [décision] [P2] Campagne du mini-banc : essai réel en CI avec
-  l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
-- [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
-  mutation, rôles séparés, une session par fiche, auto-fusion LOW),
-  cadrée sur les chiffres du mini-banc et de la consommation —
-  `docs/intentions/fabrique-autonome.md`.
+### Vague 7 — le produit, quand tout est opérationnel
 
-## Vague 7 — le produit, quand tout est opérationnel
-
-- [ ] [décision] [P2] Publication npm du kit, avec une porte avant
-  `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
-  question 3 du catalogue, reportée ici le 2026-10-13 —
-  `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
-  CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
-  `docs/intentions/forge-dans-le-livrable.md`.
-- [ ] [décision] [P2] Validation commerciale : des équipes veulent-elles
-  utiliser et payer DRWIL ? — `docs/intentions/validation-commerciale.md`.
-
-## Retours d'expérience (intentions à recadrer)
+### Retours d'expérience
 
 Limites relevées en cours de chantier, consignées en intention le
 2026-10-15 (chantier « capitaliser les non-régressions ») ; les recadrer est
@@ -326,79 +492,6 @@ une décision du demandeur.
   du 2026-10-20.
 - [x] [IA] [P1] Release 0.6.9, la fluidité de la clôture — fait, journal
   du 2026-10-21.
-Rangé par thème le 2026-10-26 (rangement du backlog, décisions du
-demandeur du même jour) : une intention par futur chantier, sans doublon ;
-les fiches cadrées sont sous « Ensuite ».
-
-### Preuves, attestations, contrôles
-
-- [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
-  externe du 2026-10-22) — `docs/intentions/e2e-et-attestation-precises.md`.
-- [ ] [décision] [P1] Suivre la durée de la CI et le contexte relu, et trancher
-  leurs calibrages (dont l'avertissement `[ia-first-warning]` et un `verify`
-  en FAIL sans contrat en échec, repris le 2026-10-26) —
-  `docs/intentions/suivi-ci-et-contexte.md`.
-- [ ] [décision] Les tests qui laissent des fichiers dans leur dossier
-  temporaire se corrigent à la source (31 contrôles nommés par
-  `run-checks` le 2026-10-25) —
-  `docs/intentions/tests-qui-laissent-des-fichiers-temporaires.md`.
-
-### Protection, garanties, contournements
-
-- [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
-  la barrière n'est qu'un avertissement par défaut (revue externe du
-  2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
-  `docs/intentions/niveaux-de-protection-dans-doctor.md`.
-- [ ] [décision] Les garanties obligatoires, la suite (`doctor` sur le dépôt
-  drwil compris), à cadrer avec ou juste après la fiche du niveau de
-  protection — `docs/intentions/garanties-la-suite.md`.
-- [ ] [décision] [P1] Les contournements encore ouverts : juger l'effet, pas
-  le texte (garde shell, juge du banc), le clone superficiel,
-  l'auto-élargissement du cadrage, les seuils d'un détour —
-  `docs/intentions/contournements-restants.md`.
-- [ ] [décision] [P1] drwil_com, priorité 3 : vérifier la barrière de
-  fusion (protection absente, mal configurée, conforme) — section « Retour
-  de drwil_com » de `docs/intentions/forge-dans-le-livrable.md`.
-
-### Adoption, installation, documentation
-
-- [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
-  d'autorisation à chaque commande (demande du 2026-10-25) —
-  `docs/intentions/installation-fluide.md`.
-- [ ] [décision] L'adoption et `init` sur un projet réel : code existant,
-  couche d'un dossier apparu après l'installation, dépôt git existant avant
-  `init` — `docs/intentions/adoption-et-init.md`.
-- [ ] [décision] Une documentation qui reste juste : renvois, citations,
-  index, doc visiteur — `docs/intentions/coherence-de-la-doc.md`.
-
-### Release
-
-- [ ] [décision] [P2] Alléger la release, puis outiller ce qui reste ; la
-  fiche du feu vert de publication attend ses réponses —
-  `docs/intentions/release-allegee.md`.
-
-### Clôture et file de chantiers
-
-- [ ] [décision] Clôture, réouverture et attestations : cadrée en cinq fiches
-  le 2026-10-26 ; reste la note « un lancement intercalé efface la file » —
-  `docs/intentions/cloture-et-attestations.md`.
-
-### Banc
-
-- [ ] [décision] `verify` ne donne jamais PASS dans la copie du banc :
-  contrats à attester, humain absent (limite du chantier « Mini-banc :
-  copie « avec » adoptée » du 2026-10-23) —
-  `docs/intentions/banc-verify-jamais-pass.md`.
-
-### Autres outils
-
-- [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
-  d'essayé) — `docs/intentions/compat-codex.md`.
-- [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
-  choisir) — `docs/intentions/compat-cursor.md`.
-- [ ] [décision] Les autres outils au niveau de Claude Code (5 suites
-  regroupées le 2026-10-25 dans l'intention mère) —
-  `docs/intentions/compatibilite-des-outils.md`.
 
 ### Fait
 
@@ -406,7 +499,7 @@ les fiches cadrées sont sous « Ensuite ».
   langue choisie (réglage `docLang`) — fait le 2026-10-16 (voir
   `docs/projects/journal.md`).
 
-## Ensuite
+### Ordres précédents (2026-10-23 et 2026-10-26, avant le plan d'action)
 
 Ordre de réalisation (2026-10-23), porté par les priorités ci-dessous
 (même priorité : ordre des chemins) : 1. la barrière de périmètre
@@ -432,42 +525,3 @@ s'enchaînent, jamais en parallèle : 1. `verify-rejoue-les-echecs` ;
 précédentes modifient). `niveau-de-protection` touche un autre code et
 peut s'intercaler ; `release-feu-vert-et-squash` attend
 `docs/intentions/release-allegee.md`.
-
-- [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
-  (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
-- [ ] [IA] [P1] Une attestation tombe quand ce qu'elle juge change, pas quand
-  la forme d'un contrôle change ; `Couvre` déclaré pour les contrats attestés
-  (cadré le 2026-10-26, quatre chemins à valider) —
-  `docs/projects/attestations-sur-l-effet-et-couvre.md`.
-- [ ] [IA] [P2] Un cycle de vie des fiches sans contournement : registre en
-  SCOPING, code livré, acceptation des critères, hooks déclarés au lancement, ligne d'index retirée
-  (cadré le 2026-10-26, élargi le même jour) — `docs/projects/cycle-de-vie-des-fiches.md`.
-- [ ] [IA] [P2] `next` n'enchaîne pas tant que la PR du chantier précédent
-  n'est pas fusionnée (cadré le 2026-10-26) —
-  `docs/projects/next-attend-la-fusion.md`.
-- [ ] [IA] [P2] La réouverture dit ce qu'elle a annulé, et son cycle complet se
-  joue aussi sous Windows (cadré le 2026-10-26) —
-  `docs/projects/reouverture-dite-et-eprouvee.md`.
-- [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
-  bloque dès l'installation neuve (cadré le 2026-10-23) —
-  `docs/projects/niveau-de-protection.md`.
-- [ ] [IA] [P1] Compléter le test unitaire de QUA-138 (retour en SCOPING
-  après la fusion) — `docs/projects/test-unitaire-fusion-automatique.md`.
-- [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
-  Claude, module front, cliquet ; recadré le 2026-10-16) —
-  `docs/projects/adopter-seuil-couverture.md`.
-- [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
-  qui signale un squash (cadré le 2026-10-26 ; attend
-  `docs/intentions/release-allegee.md`) —
-  `docs/projects/release-feu-vert-et-squash.md`.
-- [ ] [décision] [P3] La couverture à 100 %, le paquet et tout code modifié :
-  une seule cible à trancher avec la fiche ci-dessus (release testée par
-  mock, tranché le 2026-10-16) — `docs/intentions/couverture-paquet-100.md`.
-- [ ] [décision] [P3] Banc complet avec / sans drwil (5 tâches), décidé
-  sur les chiffres du mini-banc — `docs/intentions/bench-avec-sans-drwil.md`.
-- [ ] [décision] [P3] Community Ready : fichiers et parcours pour qu'un
-  contributeur externe puisse participer sans demander au mainteneur ;
-  questions à trancher (langue, gabarit de PR, canal sécurité, contrats
-  COM) — `docs/intentions/community-ready.md`.
-- [ ] [humain] [P3] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
-  `docs/projects/suites-kit-portable.md` (point 2).

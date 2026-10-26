@@ -4,7 +4,7 @@
 d'origine faits (c8 câblé, QUA-004 adopté, seuils au réel avec cliquet,
 le 2026-10-11) ; reste le lot 1 ci-dessous.
 **Risque** : HIGH
-**Maturité** : prêt
+**Maturité** : à affiner (2026-10-26, plan d'action : attend la cible de couverture tranchée dans `docs/intentions/couverture-paquet-100.md`)
 **Intention** : `docs/intentions/couverture-paquet-100.md` (le 100 % du
 paquet, sorti de ce chantier au recadrage)
 

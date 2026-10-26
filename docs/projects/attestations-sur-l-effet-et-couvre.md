@@ -1,8 +1,8 @@
 # Projet : une attestation tombe quand ce qu'elle juge change, pas quand la forme d'un contrôle change
 
-**Statut** : cadré le 2026-10-26.
+**Statut** : cadré le 2026-10-26 ; §5 tranché le même jour (plan d'action du backlog).
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 **Intention** : `docs/intentions/cloture-et-attestations.md` (parties « déclarer ce que couvrent les contrats attestés » et « une attestation ne doit pas tomber quand un contrôle change de forme sans changer d'effet »)
 
 <!-- scope
@@ -101,6 +101,17 @@ lancement.)
    tomber l'attestation).
 5. Les contrats qui jugent une conduite ou un essai (SEC-001, QUA-019, QUA-069,
    QUA-150) reçoivent aussi des chemins : aucun contrat attesté sans `Couvre`.
+6. (2026-10-26, plan d'action) §5 tranché : QUA-019 et QUA-069 validés tels que
+   proposés ; **SEC-001** déclare `**Couvre** : aucun`, avec sa raison (contrat
+   de conduite ; `package.json` le ferait tomber à chaque release) ; **QUA-150**
+   est réduit aux tests conservés avec justification (`.githooks/engine.test.mjs`,
+   `outils/banc.test.mjs`, `outils/banc-agents.test.mjs`). Un `Couvre` « aucun »
+   justifié compte comme déclaré pour `drwil doctor`.
+7. (2026-10-26, plan d'action) Ordre : ce chantier passe après
+   `docs/projects/reouverture-dite-et-eprouvee.md`. QUA-048, QUA-067 et QUA-069
+   couvrent `.githooks/state.mjs` et `.githooks/state-cli.mjs`, que modifient
+   `cycle-de-vie-des-fiches`, `next-attend-la-fusion` et la réouverture : déclarés
+   avant, leurs attestations tomberaient à chacun de ces chantiers.
 
 ## 5. Points à trancher
 
@@ -126,22 +137,22 @@ trouver quand même des chemins) — **à valider ou corriger** :
 
 | Contrat | Ce qu'il juge | `Couvre` proposé |
 |---|---|---|
-| SEC-001 | Portée des droits (drwil n'a pas de backend) | `packages/drwil/package.json` |
+| SEC-001 | Portée des droits (drwil n'a pas de backend) | aucun, avec sa raison (décision 6) ; proposé d'abord : `packages/drwil/package.json` |
 | QUA-019 | Pas de contournement d'un contrôle | `.githooks/pre-commit`, `.githooks/pre-push`, `.github/workflows/ia-first.yml` |
 | QUA-069 | Essai réel sous Copilot CLI | `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`, `.githooks/state-cli.mjs` |
-| QUA-150 | Tests qui mesurent une durée | `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`, `.githooks/state.test.mjs`, `.githooks/engine.test.mjs`, `outils/banc.test.mjs`, `outils/banc-agents.test.mjs` |
+| QUA-150 | Tests qui mesurent une durée | `.githooks/engine.test.mjs`, `outils/banc.test.mjs`, `outils/banc-agents.test.mjs` (décision 6 ; proposé d'abord avec aussi `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`, `.githooks/state.test.mjs`) |
 
-- [décision] Ces quatre propositions sont-elles justes ? (QUA-150 tombera à
-  chaque modification de l'un de ces six tests : à réduire ?)
+- Tranché le 2026-10-26 (décision 6) : les deux tableaux sont validés, SEC-001
+  et QUA-150 corrigés comme ci-dessus.
 
 ## 6. Increments
 
 - **Lot 1 — empreinte sur l'effet** [IA] : calcul de l'empreinte sans les champs d'exécution, lecture des attestations existantes (versions 2 et 3), message qui dit pourquoi une attestation tombe ; tests ; contrats et contrôles `tests-qua-<id>` ; README et changelog.
-- **Lot 2 — `Couvre` des 15 contrats** [IA] : champs `**Couvre**` du tableau validé ; `drwil doctor` ne signale plus que ce qui reste ; tests.
+- **Lot 2 — `Couvre` des 15 contrats** [IA] : champs `**Couvre**` du tableau validé, dont `aucun` justifié pour SEC-001 (lu comme déclaré par `drwil doctor`) ; `drwil doctor` ne signale plus que ce qui reste ; tests.
 - **Lot 3 — réattestation** [humain] : `drwil attest <ID> --renew` pour chaque attestation tombée, en une séance ; `drwil verify --evidence` en PASS. Critère de sortie : `node .githooks/run-checks.mjs` OK.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-26) : cadré, quatre propositions de chemins (contrats de conduite) à valider (§5).
+- **Dernier état** (2026-10-26) : cadré, §5 tranché ; à lancer après `reouverture-dite-et-eprouvee` (décision 7).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] valider le §5, puis lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`) à son tour dans le plan d'action de `docs/projects/pending.md`.
