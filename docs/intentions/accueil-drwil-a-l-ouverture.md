@@ -32,3 +32,7 @@ où obtenir le détail à la demande, au lieu de tout recopier.
   hook à l'humain : le demander à l'agent dans sa première réponse ?
 - [décision] Taille maximale de l'accueil, et mesure de son coût en tokens
   (à rapprocher de l'intention sur le suivi du contexte relu).
+- [décision] Un petit ASCII art (logo drwil) en tête de l'accueil, demandé le
+  2026-10-27 : à quelques lignes seulement, et réservé à ce que l'humain voit
+  (message d'un hook) car injecté à l'agent il coûterait des tokens à chaque
+  session sans lui servir.
