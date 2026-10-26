@@ -42,6 +42,32 @@ request, instead of direct commits on the main branch.
 - Before merging: check that the pull/merge request CI status checks
   are green (`gh pr checks <n> --watch` on GitHub).
 
+## One workstream per worktree
+
+To work two workstreams at once, run each one in its own worktree, with its
+own terminal and agent session (the main session and its subagents work in
+that folder only):
+
+- At `/drwil-start`, answer "New worktree" to the `drwil-worktree` question:
+  the folder `../<repository>-<brief>` and its branch `workstream/<brief>`
+  are created from the up-to-date main branch, the install command declared
+  as `worktreeInstall` in `.drwil/ia-first.json` is run there (none declared:
+  the output says to install the dependencies), and the workstream starts
+  there. Open a terminal in that folder and start the agent; the folder you
+  answered from is unchanged.
+- A brief already active in another worktree cannot be started again: the
+  refusal gives that folder's path.
+- The state reminder of each folder says the others are worktrees of the same
+  repository: never modify another folder's files.
+- Expect conflicts at closing on the index (`docs/projects/pending.md`) and
+  on `docs/projects/journal.md`, which every workstream edits: merge the main
+  branch into yours (`node .githooks/close.mjs --check` reports a branch
+  behind it and gives the command) and resolve them by hand before the
+  closing; the closing is not refused for being late.
+- After the merge, clean up by hand, nothing does it for you:
+  `git worktree remove ../<repository>-<brief>`, then `git worktree prune`;
+  the merged branch is deleted at the next start.
+
 ## Closing
 
 - Once the pull/merge request is merged (merge or squash, project's

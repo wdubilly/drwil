@@ -7,6 +7,18 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- One workstream per worktree (QUA-142 to QUA-146): the `/drwil-start` poll
+  can carry a `drwil-worktree` question ("New worktree" / "This folder"); the
+  human's answer, read by the hook, creates the sibling folder
+  `../<repository>-<brief>` and its branch from the up-to-date main branch,
+  runs the optional `worktreeInstall` command of `.drwil/ia-first.json` there
+  and starts the workstream in it, the origin folder's state unchanged.
+  Starting a brief already active in another worktree is refused with that
+  worktree's path; the state reminder names the main repository and lists the
+  open worktrees, so an agent never takes one for a separate repository;
+  `close.mjs --check` reports a branch behind the main branch and the command
+  to update it, without refusing the closing. New hook `.githooks/worktree.mjs`.
+
 - `drwil verify` no longer replays what `run-checks` has just played (QUA-140):
   a `run-checks` pass outside any hook records each check's verdict with a
   fingerprint of the tree (commit, branch, uncommitted and untracked changes)

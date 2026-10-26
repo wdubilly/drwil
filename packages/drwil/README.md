@@ -202,7 +202,16 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    and decides at once whether the merge is authorised in advance. The
    agent cannot start work by itself. Ticking several ready work items
    queues them: the agent chains them, each after the previous merge, and
-   stops at the first one that needs a human.
+   stops at the first one that needs a human. A third question of the poll
+   (`drwil-worktree`) can run the work item in a new sibling worktree
+   `../<repository>-<work item>` instead: the human's answer creates it
+   from the up-to-date main branch, runs the optional `worktreeInstall`
+   command of `.drwil/ia-first.json` there and starts the work item in
+   that folder (one terminal and one agent session per worktree). A work
+   item already active in another worktree cannot be started again, the
+   state reminder tells each agent the folders are one repository, and
+   `node .githooks/close.mjs --check` reports a branch behind the main
+   branch without refusing the closing.
 3. **BUILD** — the agent implements, only inside the scope. Each commit
    carries a `Drwil-Brief` trailer; widening the scope takes its own
    commit, touching only the work item.
