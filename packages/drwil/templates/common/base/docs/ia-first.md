@@ -635,7 +635,30 @@ queue.
   that folder's path. The state reminder names the main repository, the branch
   and the workstream of a worktree, says the other listed folders are worktrees
   of the same repository, and lists the open worktrees in the main folder.
-  A single brief per worktree: a queue stays in the repository folder.
+  A single brief per worktree; a sequential queue stays in the repository
+  folder.
+- **Parallel queue at start**: when several briefs are ticked, a
+  `drwil-parallel` question of the poll (Claude Code, exact header) or field
+  (Copilot CLI), "Parallel queue" or "Sequential queue", with no
+  recommendation nor default, lets the human run the queue in parallel;
+  "Sequential queue" keeps the queue in the repository folder (above). The
+  hook reads the answer (never the model) and launches each ticked brief, in
+  the poll's order, in its own worktree as above, with the merge decided at
+  the poll; no queue is written in a worktree. At most `maxParallel`
+  workstreams are active at once, all worktrees counted (setting of
+  `.drwil/ia-first.json`, 3 by default). Refused, nothing being created: fewer
+  than two briefs, a brief chosen twice, a brief that cannot enter a queue, a
+  brief already active elsewhere, going over `maxParallel`, two briefs (both
+  chosen, or one chosen and one active in a worktree) whose `scope` blocks
+  overlap — the workstreams' index and journal excepted: every closing
+  modifies them, and their conflict is resolved when rebasing. A failed launch stops the next ones without undoing those already
+  launched; the origin folder's state records the launched briefs
+  (`parallel`). With Claude Code, each workstream then runs in a subagent
+  whose working folder is its worktree; the main session keeps only the
+  reports and follows each PR until it is merged; on a closing conflict on the
+  workstreams' index or journal, the subagent rebases and resolves it alone; a
+  workstream that needs a human stops its own subagent, the others go on, and
+  a queue summary gives the state of each.
 - **Limit**: an agent with a shell could call these functions itself or
   rewrite the local state; Claude Code's `deny` rules block calling the hook
   directly, and cheating stays visible and refused off the machine (commit
