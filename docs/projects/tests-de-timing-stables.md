@@ -13,6 +13,7 @@ files:
   - .githooks/create-release.test.mjs
   - .githooks/run-checks.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - docs/contracts.md
   - docs/intentions/tests-de-timing-instables.md
   - docs/projects/pending.md
   - docs/projects/journal.md
