@@ -43,10 +43,10 @@ demandeur le 2026-10-26) : seul ce hook du gabarit livré
 - Le test de QUA-136 (durée de chaque contrôle, trois plus lents au résumé)
   utilise des contrôles factices à durée imposée : son résultat ne dépend
   d'aucune mesure d'un contrôle réel — `QUA-136`
-- Jugement humain : les autres tests du dépôt qui mesurent une durée sont
+- [humain] Jugement humain : les autres tests du dépôt qui mesurent une durée sont
   recensés au journal, et chacun est rendu déterministe ou passé en
   indicateur, ou sa conservation est justifiée — `QUA-150`
-- Jugement humain : cinq passes consécutives du pre-push sous charge
+- [humain] Jugement humain : cinq passes consécutives du pre-push sous charge
   (`taskset`, contrôles en parallèle) ne refusent plus aucun push pour un test
   de timing, résultat consigné au journal — `QUA-151`
 
