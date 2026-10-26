@@ -37,16 +37,15 @@ CI, porte de confiance, rejoue toujours tout.
 
 ## Critères d'acceptation
 
-(le contrat est à créer au lancement, avec son champ **Origine** ; ID
-à attribuer à ce moment-là dans le registre.)
+(contrat créé au lancement : QUA-152 — le pre-push reprend un verdict « ok » dont les fichiers du contrôle n'ont pas changé.)
 
 - Le pre-push reprend le verdict « ok » d'un contrôle dont l'empreinte
   (fichiers de son `paths` et sa déclaration) est identique à celle d'un
   passage précédent, le dit dans sa sortie (« repris », « rejoué »), et
   rejoue tout contrôle dont l'empreinte diffère, sans `paths`, sans verdict
   « ok », en `reuse: false`, ou dont l'arbre de travail diffère du commit
-  poussé — contrat à créer
-- La CI ne reprend jamais un verdict : elle rejoue tout — contrat à créer
+  poussé — `QUA-152`
+- La CI ne reprend jamais un verdict : elle rejoue tout — `QUA-152`
 - Un contrôle repris a bien tourné : QUA-013 le dit — `QUA-013`
 
 ## 2. Hors périmètre
