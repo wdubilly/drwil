@@ -87,6 +87,15 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- `docs/ia-first.md` no longer says that a queue always stays in the
+  repository folder: it describes the parallel queue (QUA-147), its
+  `drwil-parallel` question, the `maxParallel` limit (3 by default) and the
+  refusal of briefs whose `scope` blocks overlap.
+
+- A parallel queue no longer refuses two briefs that only share the
+  workstreams' index and journal (QUA-147): every closing modifies them, and
+  their conflict is resolved when rebasing.
+
 - The checks no longer leave temporary folders behind (QUA-133, QUA-134): each
   pass of the check engine (hooks, `run-checks`, `drwil verify`, CI) gives
   every check its own `TMPDIR`/`TMP`/`TEMP` under a `drwil-checks-*` root,
