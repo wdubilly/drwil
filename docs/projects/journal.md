@@ -3466,3 +3466,20 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/tests-de-timing-instables.md`.
 - **Preuve de clôture** : `docs/preuves/tests-de-timing-stables.md`.
 - **Clôturé par** : la branche `chantier/tests-de-timing-stables`.
+
+## 2026-10-26 — Détour de docs/projects/doc-lancement-parallele.md : le recoupement des cadrages ignore l'index et le journal
+
+- **Défaut** : en file parallèle (QUA-147), deux fiches ordinaires étaient
+  refusées pour « cadrages recoupés » : toutes deux déclarent
+  `docs/projects/pending.md` et `docs/projects/journal.md`. Trouvé en
+  documentant la file parallèle, sur les fiches `doc-lancement-parallele` et
+  `tests-de-timing-stables`.
+- **Cause** : `scopesOverlap` (`.githooks/briefs.mjs`) comparait tous les
+  motifs des blocs `scope`, y compris l'index et le journal des chantiers que
+  toute clôture modifie.
+- **Correction** : ces deux fichiers (chemins du réglage `dirs`, sinon par
+  défaut) sont exclus du recoupement ; leur conflit de clôture se règle au
+  rebase par le sous-agent (QUA-148). QUA-147 le dit. Test de non-régression
+  (QUA-147), vu échouer avant la correction. Changement des règles accordé
+  par le demandeur (`detour.mjs allow`).
+- **Clôturé par** : la branche `detour/recoupement-index-journal`.
