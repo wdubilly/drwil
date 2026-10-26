@@ -14,6 +14,8 @@ Le hook de pré-push lance les contrôles en parallèle ; la machine est alors c
 
 ## Questions à trancher
 
+Tranchées le 2026-10-26 et cadrées dans `docs/projects/tests-de-timing-stables.md` : budget en indicateur (avertissement compté), QUA-136 par contrôles factices à durée imposée, recensement dans le même chantier, tests du dépôt seulement (QUA-018). Texte d'origine :
+
 - [décision] Le test de budget doit-il rester bloquant (mais robuste : médiane de plusieurs mesures, ou budget relevé) ou devenir un indicateur (avertissement compté) ? Le relever ou le passer en avertissement change un seuil : décision du demandeur.
 - [décision] Le test de QUA-136 doit-il rendre les durées simulées déterministes (contrôles factices dont la durée est imposée, pas mesurée) plutôt que dépendre de contrôles réels ?
 - [décision] Un recensement des autres tests qui mesurent une durée : à faire dans le même chantier ou non ?

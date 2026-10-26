@@ -413,9 +413,9 @@ actifs » s'appuie sur le 4).
 - [ ] [décision] [P2] La file de chantiers menée en parallèle, un worktree
   par chantier ; modifie QUA-037 (cadré le 2026-10-25, après la
   précédente) — `docs/projects/file-en-parallele.md`.
-- [ ] [décision] [P2] Des tests de timing qui échouent sous la charge du
-  hook de pré-push (4 pushs refusés sur 5, le 2026-10-26) —
-  `docs/intentions/tests-de-timing-instables.md`.
+- [ ] [IA] [P2] Des tests de timing qui échouent sous la charge du hook de
+  pré-push : budget en indicateur, QUA-136 déterministe (cadré le
+  2026-10-26) — `docs/projects/tests-de-timing-stables.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
