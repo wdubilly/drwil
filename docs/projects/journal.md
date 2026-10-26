@@ -3309,7 +3309,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : l'audit des `paths` est ponctuel (par traçage), rien ne
   surveille qu'un contrôle ne lit pas un fichier hors de ses `paths`
   (`docs/intentions/reprise-par-controle-limites.md`) ; le pre-push rejoue
-  encore tout (`docs/projects/pre-push-reprend-les-verdicts.md`) ; le verdict
+  encore tout (`docs/projects/journal.md`, entrée du 2026-10-26) ; le verdict
   humain de `verify` ne porte pas lui-même la mention « ne vaut pas preuve de
   clôture » (`packages/drwil/src/verdict.ts` hors cadrage) ; le test
   QUA-136 (classement des durées) est sensible à la charge de la machine
@@ -3466,3 +3466,30 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/tests-de-timing-instables.md`.
 - **Preuve de clôture** : `docs/preuves/tests-de-timing-stables.md`.
 - **Clôturé par** : la branche `chantier/tests-de-timing-stables`.
+
+## 2026-10-26 — Le pre-push reprend un verdict « ok » dont les fichiers du contrôle n'ont pas changé
+
+- **Décisions clés** : QUA-152 (le pre-push reprend un verdict « ok » dont les
+  fichiers du contrôle n'ont pas changé, la CI rejoue tout). Au pre-push,
+  `run-checks` reprend, pour un contrôle qui déclare `paths`, le verdict « ok »
+  d'une passe de `run-checks` ou d'un pre-push précédent à l'empreinte propre
+  identique (QUA-141, pas une seconde empreinte), le dit (« repris … run-checks du
+  … » ou « pre-push du … », puis le décompte) et rejoue le reste. Les verdicts du
+  pre-push vont dans `.drwil/evidence/pre-push-verdicts.json` (si présent, hors de git),
+  que `verify` ignore : QUA-140 reste intact, un hook n'écrit pas les verdicts de
+  `run-checks`. Tout est rejoué si l'arbre n'est pas le commit poussé (fichier
+  modifié ou non suivi, référence poussée autre que la branche courante ou
+  plusieurs), en CI, avec `--tout-rejouer`, et pour un contrôle sans `paths`, en
+  échec, `reuse: false` ou `reuse: "tree"`. QUA-013 précisé : un verdict repris au
+  pre-push a tourné sur les mêmes fichiers. Mesure sur ce dépôt (pre-push simulé
+  par `DRWIL_PUSH_REFS`, commit de documentation seule, après une passe complète de
+  `run-checks` de 3 min 58) : 51 s, 130 contrôles repris, 17 rejoués, contre 3 min
+  33 à 3 min 58 pour une passe complète.
+- **Limites connues** : `.githooks/pre-push` ne transmet pas le sha local poussé
+  (hors cadrage) : le pre-push compare le nom de la référence à la branche
+  courante (`docs/intentions/pre-push-commit-pousse.md`) ; la reprise suppose que
+  chaque contrôle ne lit que ses `paths`
+  (`docs/intentions/reprise-par-controle-limites.md`) ; la mesure simule le hook,
+  ce n'est pas un push réel.
+- **Preuve de clôture** : `docs/preuves/pre-push-reprend-les-verdicts.md` (si présent).
+- **Clôturé par** : la branche `chantier/pre-push-reprend-les-verdicts`.
