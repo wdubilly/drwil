@@ -65,11 +65,16 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    donc en tête du thème ; ces intentions touchent `packages/drwil/src`
    et les gabarits, pas les fichiers partagés des fiches cadrées) ;
    F. fluidité et relecture (après `cycle-de-vie-des-fiches`) ;
-   G. clôture d'une fiche permanente (après `cycle-de-vie-des-fiches`, qui
-   modifie déjà `.githooks/close.mjs`) —
-   `docs/intentions/cloture-fiche-permanente.md`.
-3. **Grands sujets, ensuite** : catalogue et profils, autres outils, banc et
-   fabrique (après le catalogue, décision du 2026-10-26), produit.
+   G. clôture, file et chantiers en parallèle (après
+   `cycle-de-vie-des-fiches`, qui modifie déjà `.githooks/close.mjs`, et
+   `next-attend-la-fusion`, voisine de la file) : la clôture d'une fiche
+   permanente, la note « un lancement intercalé efface la file » de
+   `docs/intentions/cloture-et-attestations.md`, le repositionnement après
+   une clôture, les conflits d'index et de journal entre worktrees.
+3. **Grands sujets, ensuite** : catalogue et profils, autres outils (dont
+   le sondage parallèle dans Copilot CLI et la consommation de tokens des
+   autres outils), banc et fabrique (après le catalogue, décision du
+   2026-10-26), produit.
 
 Une limite trouvée à une clôture rejoint l'intention de son thème, jamais un
 doublon. Une intention qui attend une condition (chiffres du banc, essai réel
