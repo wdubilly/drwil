@@ -52,6 +52,14 @@ closing commit; the release renames this section to its version.
   replayed; `run-checks --replay-all` replays everything. The closing proof
   (`verify --evidence`) and `--no-reuse` keep the fingerprint of the whole tree.
 
+- The pre-push reuses a verdict check by check (QUA-152): a check that declares
+  `paths` whose own fingerprint is that of an `ok` verdict (of `run-checks` or of
+  a previous pre-push, in `.drwil/evidence/pre-push-verdicts.json`, ignored by
+  `verify`) is not replayed, and the output says « reused » or « replayed ». A
+  working tree that is not the pushed commit, a check without `paths`, failed,
+  or declared `"reuse": false` / `"reuse": "tree"`, is replayed in full; CI
+  always replays everything.
+
 - `drwil verify` plays its checks in parallel (QUA-139): with the `parallel`
   setting, the command checks the contracts cite start together (same limit as
   `run-checks`) and are read in registry order, so each contract gets the same

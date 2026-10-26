@@ -1874,6 +1874,20 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-152",
+      "name": "tests de QUA-152, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-152 \" .githooks/run-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "worktreeInstall": "npm ci",

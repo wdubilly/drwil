@@ -420,6 +420,16 @@ proof ». A check without `paths`, declared `"reuse": false` or `"reuse": "tree"
 --replay-all` replays everything, and `verify --evidence` (the closing proof)
 and `--no-reuse` only reuse a verdict on an identical whole tree.
 
+At push time the pre-push does the same (QUA-152): a check whose `paths` files
+and declaration are those of an `ok` verdict (of `run-checks`, or of a previous
+pre-push, kept in `.drwil/evidence/pre-push-verdicts.json`, which `verify`
+ignores) is not replayed, and the output says « reused » or « replayed » for
+each. A pushed documentation-only commit no longer replays the code checks.
+Everything is replayed when the working tree is not the pushed commit (uncommitted
+or untracked files, or a pushed reference other than the current branch), for a
+check without `paths`, failed, or declared `"reuse": false` / `"reuse": "tree"`;
+CI never reuses anything.
+
 `npx drwil verify --json` prints only a stable JSON document (`version: 1`,
 `status`, `exitCode`, `contracts` counts, per-contract `results`) with the
 same exit codes; `fail` and `manual` stay distinct. Raw check output is not

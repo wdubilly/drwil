@@ -10,6 +10,8 @@
 // QUA-140: a pass outside any hook leaves each check's verdict (ok / fail) with the fingerprint of the tree, for `drwil verify` to reuse.
 // QUA-141: outside any hook and CI, a check "ok" whose own fingerprint (its declaration and the files of its `paths`) is the one of the
 // last pass is not replayed (`--tout-rejouer` / `--replay-all` replays everything); its verdict keeps its own fingerprint only.
+// QUA-152: the pre-push does the same, from the verdicts of `run-checks` and its own (a separate file `verify` ignores), only when the
+// working tree is the pushed commit; never in CI.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
@@ -36,7 +38,7 @@ const T = {
     keptTmp: (d) => `dossiers temporaires des contrôles en échec gardés pour le diagnostic : ${d}`,
     cleanupFailed: "dossier temporaire de la passe non supprimé (fichier encore ouvert ?)",
     duration: (ms) => `durée : ${ms} ms`,
-    reused: (at) => `repris (fichiers du contrôle inchangés, run-checks du ${at})`,
+    reused: (at, src) => `repris (fichiers du contrôle inchangés, ${src} du ${at})`,
     replayed: "rejoué",
     reuseSummary: (r, p) => `${r} repris (fichiers du contrôle inchangés), ${p} rejoué(s)`,
     slowest:
@@ -59,7 +61,7 @@ const T = {
     keptTmp: (d) => `temporary folders of the failed checks kept for diagnosis: ${d}`,
     cleanupFailed: "the pass's temporary folder was not removed (file still open?)",
     duration: (ms) => `duration: ${ms} ms`,
-    reused: (at) => `reused (check files unchanged, run-checks of ${at})`,
+    reused: (at, src) => `reused (check files unchanged, ${src} of ${at})`,
     replayed: "replayed",
     reuseSummary: (r, p) => `${r} reused (check files unchanged), ${p} replayed`,
     slowest:
@@ -111,22 +113,44 @@ const reusableByVerify = (id) => id !== "secrets" || Boolean(process.env.CI);
 const list = checks(root, { cfg, staged });
 // QUA-141: the verdicts of the last pass, to keep an "ok" whose check files did not change (never in a hook or in CI, never with the option).
 const replayAll = process.argv.some((a) => a === "--tout-rejouer" || a === "--replay-all");
-const controls = hooked ? new Map() : list.fingerprints();
-let last = {};
-try {
-  last = JSON.parse(readFileSync(VERDICTS, "utf8")).checks ?? {};
-} catch {}
-const reuseActive = !hooked && !process.env.CI && !replayAll;
-const reused = new Set(
-  !reuseActive
-    ? []
-    : list
-        .filter((c) => {
-          const v = last[c.id];
-          return c.perControl && v?.status === "ok" && v.reusable !== false && controls.get(c.id) && v.control === controls.get(c.id);
-        })
-        .map((c) => c.id),
-);
+// QUA-152: at push time the pre-push judges the working tree, so it only reuses when that tree is the pushed commit: a clean tree, and the
+// one pushed reference is the current branch (the hook gives remote references only: any other push is replayed in full).
+const PREPUSH = ".drwil/evidence/pre-push-verdicts.json";
+function pushedTreeIsWorkTree() {
+  const git = (...a) => spawnSync("git", a, { encoding: "utf8" });
+  const branch = git("symbolic-ref", "--short", "-q", "HEAD");
+  const status = git("status", "--porcelain");
+  const pushed = process.env.DRWIL_PUSH_REFS.trim();
+  return branch.status === 0 && status.status === 0 && status.stdout.trim() === "" && pushed === `refs/heads/${branch.stdout.trim()}`;
+}
+const prePush = Boolean(process.env.DRWIL_PUSH_REFS) && !atCommit && !process.env.CI && !replayAll && pushedTreeIsWorkTree();
+const controls = hooked && !prePush ? new Map() : list.fingerprints();
+const readVerdicts = (file) => {
+  try {
+    return JSON.parse(readFileSync(file, "utf8")).checks ?? {};
+  } catch {
+    return {};
+  }
+};
+const files = prePush
+  ? [
+      [VERDICTS, "run-checks"],
+      [PREPUSH, "pre-push"],
+    ]
+  : [[VERDICTS, "run-checks"]];
+const sources = files.map(([f, name]) => [readVerdicts(f), name]);
+const reuseActive = (!hooked || prePush) && !process.env.CI && !replayAll;
+// The verdict to keep for a check: an "ok" of a source whose own fingerprint is the current one.
+function lastOf(c) {
+  if (!reuseActive || !c.perControl || !controls.get(c.id)) return null;
+  for (const [m, name] of sources) {
+    const v = m[c.id];
+    if (v?.status === "ok" && v.reusable !== false && v.control === controls.get(c.id)) return { v, name };
+  }
+  return null;
+}
+const keptFrom = new Map(list.map((c) => [c.id, lastOf(c)]).filter(([, k]) => k));
+const reused = new Set(keptFrom.keys());
 // Checks with a `runAsync` (setting `parallel`) are all started up front; their result is read
 // here in the list order, so the report and the verdict are those of a sequential run.
 const started = startParallel(list.filter((c) => !reused.has(c.id)));
@@ -137,9 +161,9 @@ const flagged = [];
 for (const c of list) {
   let r;
   if (reused.has(c.id)) {
-    const v = last[c.id];
+    const { v, name } = keptFrom.get(c.id);
     verdicts[c.id] = v;
-    report.push(`[ia-first] ${c.name} : ${T.reused(v.ranAt)}`);
+    report.push(`[ia-first] ${c.name} : ${T.reused(v.ranAt, name)}`);
     continue;
   }
   if (started.has(c.id)) {
@@ -186,6 +210,14 @@ if (!hooked) {
       );
     } catch {}
   }
+}
+if (prePush) {
+  const after = list.fingerprints();
+  const ok = Object.entries(verdicts).filter(([id, v]) => v.status === "ok" && v.control && after.get(id) === v.control);
+  try {
+    mkdirSync(".drwil/evidence", { recursive: true });
+    writeFileSync(PREPUSH, JSON.stringify({ ranAt, checks: Object.fromEntries(ok) }, null, 2));
+  } catch {}
 }
 if (!Array.isArray(cfg.checks) || !cfg.checks.length) unrun(`${T.project} (${T.noCheck})`, true);
 
