@@ -1,6 +1,6 @@
 # Projet : `next` n'enchaîne pas tant que la PR du chantier précédent n'est pas fusionnée
 
-**Statut** : cadré le 2026-10-26.
+**Statut** : cadré le 2026-10-26, élargi le même jour (copies du dépôt des hooks et recettes du gabarit ajoutées au cadrage, sur le oui du demandeur).
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/cloture-et-attestations.md` (partie « l'arrêt d'une file et ses comptes rendus vérifiés par un contrôle »)
@@ -17,6 +17,9 @@ files:
   - docs/intentions/cloture-et-attestations.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - .githooks/state-cli.mjs
+  - .githooks/state-texts.mjs
+  - .githooks/state.mjs
 -->
 
 ## 1. Besoin

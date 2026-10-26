@@ -2,6 +2,7 @@
 
 **Statut** (2026-10-09) : à cadrer — intention posée par le demandeur,
 questions à trancher en fin de fiche.
+Rangement du 2026-10-26 : la relecture avant fusion, qui n'avait qu'une ligne d'index, est reprise en fin de fichier.
 
 **Projet** : DRWIL — **Cible** : après la gouvernance (machine d'état et
 double barrière) — **Niveau de risque** : MEDIUM.
@@ -70,3 +71,11 @@ cette PR (ou ce chantier) ? », en 5 à 10 points précis plutôt qu'un diff.
    aussi une validation humaine point par point (comme `drwil attest`) ?
 5. **Livrable** : outil du dépôt drwil seulement, ou livré dans le gabarit
    (QUA-018, périmètre dépôt / gabarit) ?
+
+## Reprises du rangement du 2026-10-26
+
+### relecture avant fusion, choisie au lancement (ex-ligne de l'index)
+
+**Besoin** :
+
+Une question de plus dans le sondage (`drwil-review` : aucune, relecture par un agent, relecture humaine), indépendante de la fusion automatique ou manuelle ; combinaison fusion automatique + relecture humaine refusée ; touche le sondage, l'état local, la recette de clôture et le gabarit. À cadrer avec la vue de relecture et la protection de master (décision antérieure, reprise de `docs/projects/pending.md`).

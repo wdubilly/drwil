@@ -1,6 +1,6 @@
 # Projet : un cycle de vie des fiches sans contournement (registre, code livré, acceptation des critères)
 
-**Statut** : cadré le 2026-10-26.
+**Statut** : cadré le 2026-10-26, élargi le même jour (lots 4 et 5, deux notes reprises au rangement du backlog ; copies du dépôt des hooks du gabarit ; sur le oui du demandeur).
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/cloture-et-attestations.md` (parties « un cycle de vie des fiches sans contournement » et « une acceptation humaine par critère »)
@@ -12,6 +12,12 @@ files:
   - packages/drwil/templates/common/base/.githooks/state.mjs
   - packages/drwil/templates/common/base/.githooks/state-texts.mjs
   - packages/drwil/templates/common/base/.githooks/doc-coherence.mjs
+  - .githooks/doc-coherence.mjs
+  - .githooks/doc-coherence.test.mjs
+  - .githooks/close.test.mjs
+  - packages/drwil/templates/common/base/.githooks/base-checks.mjs
+  - .githooks/base-checks.mjs
+  - .githooks/base-checks.test.mjs
   - packages/drwil/src/closure.ts
   - packages/drwil/src/criteria.ts
   - packages/drwil/src/evidence.ts
@@ -25,12 +31,17 @@ files:
   - docs/intentions/cloture-et-attestations.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - .githooks/scope-gate.mjs
+  - .githooks/scope.mjs
+  - .githooks/state-texts.mjs
+  - .githooks/state.mjs
 -->
 
 ## 1. Besoin
 
 Trois frictions vécues dans `drwil_com`, reproduites ici le 2026-10-17, et un
-trou de preuve.
+trou de preuve ; deux frictions du cycle vécues dans ce dépôt (points 4 et 5,
+notes du 2026-10-26 reprises au rangement du backlog).
 
 1. **Le registre en SCOPING.** Un critère doit citer un contrat déjà inscrit au
    registre, mais écrire `docs/contracts.md` pendant le cadrage déclenche
@@ -45,6 +56,14 @@ trou de preuve.
 3. **L'acceptation des critères.** « Critères validés par le demandeur » est une
    phrase écrite par l'agent dans la fiche : elle ne prouve rien. Rien
    n'enregistre la décision du demandeur sur les critères.
+4. **Les hooks déclarés trop tard.** Un chantier qui modifie un hook du gabarit
+   bloque à la clôture tant que la puce « Contrats modifiés » n'est pas écrite
+   sur le oui du demandeur (QUA-137, hook modifié non déclaré) : le signal
+   n'arrive qu'en fin de chantier. Note d'origine :
+   - 2026-10-26 — Récurrent : un chantier qui modifie un hook du gabarit bloque à la clôture tant que la puce « Contrats modifiés » n'est pas écrite sur le oui du demandeur (QUA-137) ; la demander dès le cadrage de la fiche, ou la déclarer au lancement, pour éviter l'arrêt en fin de chantier.
+5. **La ligne d'index qui reste.** `.githooks/close.mjs` ne retire pas la ligne d'index
+   d'une fiche quand cette ligne cite aussi d'autres documents. Note d'origine :
+   - 2026-10-26 — `.githooks/close.mjs` ne retire pas un élément d'index qui cite, en plus de sa fiche, des docs (docs/ia-first.md…) : indexItem (doc-coherence.mjs) compte tout docs/*.md comme une fiche ; vu à la clôture de doc-lancement-parallele
 
 ## Critères d'acceptation
 
@@ -65,12 +84,24 @@ attribuer à ce moment-là dans le registre.)
   ensuite redemande un geste humain avant la clôture — contrat à créer
 - Aucun agent ne peut écrire l'acceptation : elle vient du sondage lu par le
   hook ou du terminal interactif [humain] — contrat à créer (`Manuel`, attesté)
+- Au lancement (sondage et `node .githooks/state.mjs start`), une fiche dont le
+  bloc `scope` cite un fichier existant de `.githooks/` sans puce « Contrats
+  modifiés » qui le nomme est signalée, avec la puce à écrire sur le oui du
+  demandeur ; le refus de clôture de QUA-137 reste inchangé — `QUA-137`
+  (contrat modifié)
+- `node .githooks/close.mjs` retire la ligne d'index d'une fiche même quand
+  cette ligne cite aussi d'autres documents de `docs/` : seule une fiche de
+  `docs/projects/` compte comme fiche de la ligne — `QUA-074` (contrat modifié)
 
 ## Contrats modifiés
 
 (à compléter au lancement après lecture du texte des contrats concernés :
 QUA-035 (cadrage complet du premier coup), QUA-016 (rappel de cadrage), la
-règle de périmètre de `.githooks/scope-gate.mjs`, et le contrat de la preuve de clôture.
+règle de périmètre de `.githooks/scope-gate.mjs`, et le contrat de la preuve de clôture ;
+pour les lots 4 et 5 : QUA-137 (hook modifié non déclaré, signalé aussi au
+lancement) et QUA-074 (cohérence de l'index à la clôture). Les hooks du dépôt
+modifiés (`.githooks/state.mjs`, `.githooks/doc-coherence.mjs`,
+`.githooks/base-checks.mjs`…) sont à déclarer ici en puces, sur le oui du demandeur.
 Chaque ancien critère et sa raison sont à écrire ici et à valider par le
 demandeur avant le lancement.)
 
@@ -105,10 +136,15 @@ demandeur avant le lancement.)
    barrière n'est pas affaiblie.
 3. Le lancement par sondage vaut acceptation ; l'outil enregistre l'empreinte des
    critères acceptés, dans la preuve de clôture ; identité déclarative.
+4. (2026-10-26, rangement du backlog) Les deux notes « hooks déclarés trop
+   tard » et « ligne d'index qui reste » rejoignent cette fiche, en lots 4 et 5 ;
+   au lancement, un hook non déclaré est signalé seulement, jamais bloqué : le
+   refus reste à la clôture (QUA-137).
 
 ## 5. Points à trancher
 
-- Aucun : tout est tranché le 2026-10-26, y compris « déjà livré » (fichier de
+- Aucun : tout est tranché le 2026-10-26, y compris le lot 4 (signaler
+  seulement au lancement, le refus reste à la clôture), et « déjà livré » (fichier de
   code suivi par git sur la branche principale à la date du lancement ; un
   fichier nouveau ou différent reste soumis à une fiche active) et l'acceptation
   (empreinte de la section « Critères d'acceptation » enregistrée au lancement ;
@@ -119,7 +155,11 @@ demandeur avant le lancement.)
 
 - **Lot 1 — registre en SCOPING** [IA] : `docs/contracts.md` accepté en SCOPING, `check-docs` accepte la citation d'un ID ajouté dans le même commit ; tests de `.githooks/scope-gate.test.mjs` ; contrat et contrôle.
 - **Lot 2 — code livré couvert** [IA] : règle de couverture par défaut, tests qui prouvent que la barrière n'est pas affaiblie (fichier nouveau ou modifié toujours refusé hors fiche) ; contrat et contrôle.
-- **Lot 3 — acceptation des critères** [IA] : empreinte enregistrée au lancement, lue à la clôture, dite dans la preuve ; tests de `.githooks/state.test.mjs` et du paquet ; contrat et contrôle ; attestation `Manuel` de l'absence d'écriture par l'agent. Critère de sortie : `node .githooks/run-checks.mjs` OK, `drwil verify --agent` PASS.
+- **Lot 3 — acceptation des critères** [IA] : empreinte enregistrée au lancement, lue à la clôture, dite dans la preuve ; tests de `.githooks/state.test.mjs` et du paquet ; contrat et contrôle ; attestation `Manuel` de l'absence d'écriture par l'agent. 
+- **Lot 4 — hooks déclarés au lancement** [IA] : le lancement nomme chaque fichier existant de `.githooks/` cité par le cadrage sans puce « Contrats modifiés » (même règle que `undeclaredHooks`, `.githooks/base-checks.mjs`) ; tests de `.githooks/state.test.mjs` et `.githooks/base-checks.test.mjs`.
+- **Lot 5 — ligne d'index retirée** [IA] : `indexItem` (`.githooks/doc-coherence.mjs`) ne compte comme fiche que `docs/projects/*.md` ; test de `.githooks/doc-coherence.test.mjs` et `.githooks/close.test.mjs` sur une ligne qui cite aussi `docs/ia-first.md`.
+
+Critère de sortie : `node .githooks/run-checks.mjs` OK, `drwil verify --agent` PASS.
 
 ## 7. Reprise
 

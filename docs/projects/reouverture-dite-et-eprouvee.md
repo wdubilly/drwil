@@ -1,6 +1,6 @@
 # Projet : la réouverture dit ce qu'elle a annulé, et son cycle complet se joue aussi sous Windows
 
-**Statut** : cadré le 2026-10-26.
+**Statut** : cadré le 2026-10-26, élargi le même jour (copies du dépôt des hooks et recettes du gabarit ajoutées au cadrage, sur le oui du demandeur).
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/cloture-et-attestations.md` (parties « une réouverture refusée après l'annulation de la fusion automatique » et « la réouverture éprouvée sur une vraie PR et sous Windows »)
@@ -17,6 +17,8 @@ files:
   - docs/intentions/cloture-et-attestations.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - .githooks/state-cli.mjs
+  - .githooks/state-texts.mjs
 -->
 
 ## 1. Besoin
