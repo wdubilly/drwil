@@ -63,7 +63,11 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    données du projet hors prose du kit, alertes avant et après écrasement,
    détection de stack élargie ; constatée sur drwil_dbox le 2026-10-26,
    donc en tête du thème ; ces intentions touchent `packages/drwil/src`
-   et les gabarits, pas les fichiers partagés des fiches cadrées) ;
+   et les gabarits, pas les fichiers partagés des fiches cadrées), puis le
+   parcours fluide (worktree toujours proposé, attestation depuis le chat,
+   demandés le 2026-10-27 : ils touchent le sondage de lancement et
+   `drwil attest`, donc `.githooks/state.mjs` que les fiches cadrées
+   partagent, d'où leur place après elles) ;
    F. fluidité et relecture (après `cycle-de-vie-des-fiches`) ;
    G. clôture, file et chantiers en parallèle (après
    `cycle-de-vie-des-fiches`, qui modifie déjà `.githooks/close.mjs`, et
