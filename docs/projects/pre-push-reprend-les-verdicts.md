@@ -46,7 +46,7 @@ CI, porte de confiance, rejoue toujours tout.
   « ok », en `reuse: false`, ou dont l'arbre de travail diffère du commit
   poussé — `QUA-152`
 - La CI ne reprend jamais un verdict : elle rejoue tout — `QUA-152`
-- Un contrôle repris a bien tourné : QUA-013 le dit — `QUA-013`
+- [humain] Un contrôle repris a bien tourné : QUA-013 le dit — `QUA-013`
 
 ## Contrats modifiés
 
