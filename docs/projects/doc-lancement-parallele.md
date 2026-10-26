@@ -39,7 +39,6 @@ Périmètre : **drwil-le-livrable** pour `docs/ia-first.md` (on édite le gabari
   `.githooks/briefs.mjs` (recoupement des `scope`) et le réglage
   `maxParallel` — `QUA-040`
 - La ligne « Unreleased » du changelog du paquet le dit — `QUA-040`
-- `node .githooks/run-checks.mjs` OK (dont `miroirs-gabarit`) — `QUA-018`
 
 ## 2. Hors périmètre
 
@@ -70,7 +69,7 @@ Périmètre : **drwil-le-livrable** pour `docs/ia-first.md` (on édite le gabari
 
 - **Lot 1 — documentation** [IA] : `docs/ia-first.md` (gabarit puis copie),
   `docs/architecture.md`, changelog. Critère de sortie :
-  `node .githooks/run-checks.mjs` OK, `drwil verify --agent` PASS.
+  `node .githooks/run-checks.mjs` OK (dont `miroirs-gabarit`), `drwil verify --agent` PASS.
 
 ## 7. Reprise
 
