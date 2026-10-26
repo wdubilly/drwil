@@ -52,6 +52,7 @@ CI, porte de confiance, rejoue toujours tout.
 
 - `.githooks/run-checks.mjs` — le pre-push reprend un verdict « ok » dont les fichiers du contrôle n'ont pas changé et le dit ; la CI rejoue tout (validé par le demandeur le 2026-10-26)
 - `.githooks/run-checks.test.mjs` — tests de cette reprise, sur dépôts temporaires (validé par le demandeur le 2026-10-26)
+- `QUA-013` — ancienne règle : le verdict repris par `run-checks` sur un arbre identique (QUA-140) ou sur les seuls fichiers du contrôle (QUA-141) est une exécution du contrôle ; nouvelle règle : le verdict repris par le pre-push sur les seuls fichiers du contrôle (QUA-152) l'est aussi — raison : le critère « un contrôle repris a bien tourné » ; rien n'est retiré (validé par le demandeur le 2026-10-26)
 
 ## 2. Hors périmètre
 
