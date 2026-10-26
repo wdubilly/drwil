@@ -691,3 +691,114 @@ test("QUA-141 : un arbre changé hors des fichiers du contrôle garde son emprei
   assert.deepEqual(verdicts.played, []);
   assert.match(verdicts.checks.ecrit.control, /^[0-9a-f]{64}$/);
 });
+
+const PREPUSH = ".drwil/evidence/pre-push-verdicts.json";
+const valide = (racine) => {
+  git(racine, "add", "-A");
+  git(racine, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "y");
+};
+
+test("QUA-152 : au pre-push, un contrôle « ok » aux fichiers inchangés est repris (verdicts de run-checks ou du pre-push), le dit, et ne touche pas aux verdicts de run-checks", () => {
+  const joue = (nom) => `node -e "require('fs').appendFileSync('compteur.log','x')" ${nom}`;
+  const { racine } = lancer(
+    {
+      ".drwil/ia-first.json": JSON.stringify({ checks: [{ id: "compteur", run: joue("a"), paths: ["src/**"] }] }),
+      ".gitignore": "compteur.log\n.drwil/evidence/\n",
+      "src/a.txt": "a\n",
+      "doc.md": "d\n",
+    },
+    { valider: true },
+  );
+  const push = { env: { DRWIL_PUSH_REFS: "refs/heads/travail" } };
+  const verdictsRunChecks = readFileSync(join(racine, VERDICTS), "utf8");
+  assert.equal(compte(racine), 1);
+
+  // Commit de documentation seule : repris depuis run-checks, dit.
+  writeFileSync(join(racine, "doc.md"), "autre\n");
+  valide(racine);
+  const reprise = passe(racine, push);
+  assert.equal(reprise.status, 0, reprise.stdout + reprise.stderr);
+  assert.equal(compte(racine), 1, "repris, pas rejoué");
+  assert.match(reprise.detail, /^\[ia-first\] node -e "require.* a : repris \(fichiers du contrôle inchangés, run-checks du \d{4}-/m);
+  assert.match(reprise.stdout, /\d+ repris \(fichiers du contrôle inchangés\)/);
+  assert.equal(readFileSync(join(racine, VERDICTS), "utf8"), verdictsRunChecks, "un pre-push n'écrit pas les verdicts de run-checks");
+  assert.match(JSON.parse(readFileSync(join(racine, PREPUSH), "utf8")).checks.compteur.control, /^[0-9a-f]{64}$/);
+
+  // Code modifié : rejoué, puis repris au pre-push suivant sur le verdict du pre-push (run-checks n'a plus l'empreinte).
+  writeFileSync(join(racine, "src/a.txt"), "b\n");
+  valide(racine);
+  assert.doesNotMatch(passe(racine, push).stdout, /compteur.*repris/);
+  assert.equal(compte(racine), 2, "fichier du paths modifié : rejoué");
+  writeFileSync(join(racine, "doc.md"), "encore\n");
+  valide(racine);
+  const seconde = passe(racine, push);
+  assert.equal(compte(racine), 2);
+  assert.match(seconde.detail, /a : repris \(fichiers du contrôle inchangés, pre-push du \d{4}-/);
+  assert.equal(readFileSync(join(racine, VERDICTS), "utf8"), verdictsRunChecks);
+
+  // Arbre sale, autre référence poussée, CI, « tout rejouer » : tout rejoué.
+  const cas = [
+    ["arbre sale", () => writeFileSync(join(racine, "intrus.txt"), "x\n"), push],
+    ["autre référence", () => {}, { env: { DRWIL_PUSH_REFS: "refs/heads/autre" } }],
+    ["deux références", () => {}, { env: { DRWIL_PUSH_REFS: "refs/heads/travail refs/heads/autre" } }],
+    ["CI", () => {}, { env: { DRWIL_PUSH_REFS: "refs/heads/travail", CI: "1" } }],
+    ["tout rejouer", () => {}, { ...push, args: ["--tout-rejouer"] }],
+  ];
+  for (const [nom, prepare, options] of cas) {
+    prepare();
+    const avant = compte(racine);
+    const p = passe(racine, options);
+    assert.equal(compte(racine), avant + 1, `${nom} : rejoué`);
+    assert.doesNotMatch(p.stdout, /repris/, nom);
+    rmSync(join(racine, "intrus.txt"), { force: true });
+    writeFileSync(join(racine, "doc.md"), `${nom}\n`);
+    valide(racine);
+  }
+});
+
+test('QUA-152 : au pre-push, un contrôle en échec, sans paths, reuse: false ou reuse: "tree" est rejoué', () => {
+  const joue = (sortie) => `node -e "require('fs').appendFileSync('compteur.log','x');process.exit(${sortie})"`;
+  const { racine } = lancer(
+    {
+      ".drwil/ia-first.json": JSON.stringify({
+        checks: [
+          { id: "rouge", run: joue(1), paths: ["src/**"] },
+          { id: "reseau", run: joue(0), paths: ["src/**"], reuse: false },
+          { id: "arbre", run: joue(0), paths: ["src/**"], reuse: "tree" },
+          { id: "sans-chemin", run: joue(0) },
+          {
+            id: "ecrit",
+            run: "node -e \"if (!process.env.DRWIL_PUSH_REFS) process.exit(1); require('fs').writeFileSync('src/intrus.txt','x')\"",
+            paths: ["src/**"],
+          },
+        ],
+      }),
+      ".gitignore": "compteur.log\n.drwil/evidence/\n",
+      "src/a.txt": "a\n",
+    },
+    { valider: true },
+  );
+  const avant = compte(racine);
+  const p = passe(racine, { env: { DRWIL_PUSH_REFS: "refs/heads/travail" } });
+  assert.equal(compte(racine), avant * 2, "tous rejoués");
+  assert.equal(p.status, 1);
+  assert.doesNotMatch(p.stdout, /repris/);
+  assert.deepEqual(
+    Object.keys(JSON.parse(readFileSync(join(racine, PREPUSH), "utf8")).checks).filter((id) => id === "rouge" || id === "ecrit"),
+    [],
+    "ni un échec, ni un contrôle dont les fichiers ont changé pendant la passe, ne sont consignés",
+  );
+});
+
+test("QUA-152 : au pre-push, des verdicts qui ne s'écrivent pas ne changent pas le verdict de la passe", () => {
+  const { racine } = lancer(
+    {
+      ".drwil/ia-first.json": JSON.stringify({ checks: [{ id: "vert", run: "node -e 0", paths: ["src/**"] }] }),
+      ".drwil/evidence": "fichier",
+      "src/a.txt": "a\n",
+    },
+    { valider: true },
+  );
+  const p = passe(racine, { env: { DRWIL_PUSH_REFS: "refs/heads/travail" } });
+  assert.equal(p.status, 0, p.stdout + p.stderr);
+});
