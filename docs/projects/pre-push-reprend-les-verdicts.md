@@ -48,6 +48,11 @@ CI, porte de confiance, rejoue toujours tout.
 - La CI ne reprend jamais un verdict : elle rejoue tout — `QUA-152`
 - Un contrôle repris a bien tourné : QUA-013 le dit — `QUA-013`
 
+## Contrats modifiés
+
+- `.githooks/run-checks.mjs` — le pre-push reprend un verdict « ok » dont les fichiers du contrôle n'ont pas changé et le dit ; la CI rejoue tout (validé par le demandeur le 2026-10-26)
+- `.githooks/run-checks.test.mjs` — tests de cette reprise, sur dépôts temporaires (validé par le demandeur le 2026-10-26)
+
 ## 2. Hors périmètre
 
 - Le calcul de l'empreinte par contrôle et sa consignation par `run-checks` :
