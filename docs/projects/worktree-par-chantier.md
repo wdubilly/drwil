@@ -73,20 +73,31 @@ le gabarit, puis installer ses copies avec `npm run installer-depot`.
   chantier du dossier, dit que les autres dossiers listés sont des
   worktrees du même dépôt et qu'on ne modifie que le sien ; dans le
   dossier principal, il liste les worktrees ouverts et leur chantier —
-  contrat à créer
+  `QUA-143`
 - Une commande d'installation déclarée dans `.drwil/ia-first.json` est
   lancée dans le nouveau worktree ; sans réglage, rien n'est lancé et la
   sortie dit quoi faire ; un échec d'installation est dit, le worktree et
-  l'état restent — `QUA-143`
+  l'état restent — `QUA-144`
 - Le lancement d'une fiche déjà active dans un autre worktree du même
-  dépôt est refusé, avec le chemin de ce worktree — `QUA-144`
+  dépôt est refusé, avec le chemin de ce worktree — `QUA-145`
 - `node .githooks/close.mjs --check` signale une branche de chantier en
   retard sur la branche principale et donne la commande de mise à jour ;
-  la clôture n'est pas refusée pour ce motif — `QUA-145`
+  la clôture n'est pas refusée pour ce motif — `QUA-146`
 
 (la recette, lot 3, accompagne ces contrats sans en être un : un terminal
 et une session par worktree, conflits attendus sur l'index et le journal,
 nettoyage après la fusion.)
+
+## Contrats modifiés
+
+- `.githooks/state.mjs` — garde de doublon au lancement : une fiche déjà
+  active dans un autre worktree du même dépôt est refusée (validé par le
+  demandeur le 2026-10-26)
+- `.githooks/state-texts.mjs` — rappel d'état : textes de la garde et
+  liste des worktrees (validé par le demandeur le 2026-10-26)
+- `.githooks/close.mjs` — `--check` signale le retard de la branche sur la
+  branche principale distante, sans refuser la clôture (validé par le
+  demandeur le 2026-10-26)
 
 ## 2. Hors périmètre
 
