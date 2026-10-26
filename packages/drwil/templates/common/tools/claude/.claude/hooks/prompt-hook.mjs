@@ -18,6 +18,9 @@ const MARK = "drwil-start";
 // Optional second question (Claude Code) or field (Copilot CLI) of the same poll: authorise the automatic merge.
 const MERGE_MARK = "drwil-merge";
 const MERGE_YES_RE = /^(fusion automatique|automatic merge)\b/i;
+// Optional third question or field: run the workstream in a new worktree (QUA-142).
+const WORKTREE_MARK = "drwil-worktree";
+const WORKTREE_YES_RE = /^(nouveau worktree|new worktree)\b/i;
 // With a single scoped brief, the poll's second option (a question needs two): start nothing.
 const NOT_NOW_RE = /^(pas maintenant|not now)\b/i;
 // The folder holding this hook's .claude/, never the current folder: it follows the agent's `cd`.
@@ -44,7 +47,14 @@ const TEXTS = {
 
 /** What the agent reads after the poll: never silent on a drwil start poll. */
 function tell(text) {
-  console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `[drwil] ${text}` } }));
+  console.log(
+    JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PostToolUse",
+        additionalContext: `[drwil] ${text}`,
+      },
+    }),
+  );
 }
 
 /** The start poll, in one of the two known forms; null otherwise. */
@@ -53,11 +63,13 @@ export function startPoll(input) {
   // Claude Code: questions[{ question, header, options }], answers in `answers`.
   const q = Array.isArray(e.questions) ? e.questions.find((x) => x?.header === MARK) : null;
   const qMerge = q ? e.questions.find((x) => x?.header === MERGE_MARK) : null;
+  const qWorktree = q ? e.questions.find((x) => x?.header === WORKTREE_MARK) : null;
   if (q)
     return {
       form: "claude",
       question: q.question,
       mergeQuestion: qMerge?.question ?? null,
+      worktreeQuestion: qWorktree?.question ?? null,
       options: Array.isArray(q.options) ? q.options.map((o) => o?.label) : [],
       prefilled: Boolean(e.answers && Object.keys(e.answers).length),
     };
@@ -66,11 +78,20 @@ export function startPoll(input) {
   if (typeof e.message === "string" && e.message.startsWith(MARK)) {
     const entries = Object.entries(e.requestedSchema?.properties ?? {});
     const properties = entries.map(([, p]) => p);
-    const fieldKey = entries.find(([k, p]) => k !== MERGE_MARK && Array.isArray(p?.enum))?.[0] ?? null;
+    const fieldKey = entries.find(([k, p]) => k !== MERGE_MARK && k !== WORKTREE_MARK && Array.isArray(p?.enum))?.[0] ?? null;
     const options = entries.find(([k]) => k === fieldKey)?.[1]?.enum ?? [];
     const keys = entries.map(([k]) => k);
     const mergeKey = keys.includes(MERGE_MARK) ? MERGE_MARK : null;
-    return { form: "copilot", options, fieldKey, mergeKey, keys, prefilled: properties.some((p) => p && "default" in p) };
+    const worktreeKey = keys.includes(WORKTREE_MARK) ? WORKTREE_MARK : null;
+    return {
+      form: "copilot",
+      options,
+      fieldKey,
+      mergeKey,
+      worktreeKey,
+      keys,
+      prefilled: properties.some((p) => p && "default" in p),
+    };
   }
   return null;
 }
@@ -82,7 +103,7 @@ export function humanAnswer(input, poll) {
   const m = typeof text === "string" ? /User responded:\s*(.+)\s*$/s.exec(text) : null;
   if (!m) return null;
   // One field: the whole answer. Several: `key=value, key=value`, in the schema's order of keys or not.
-  return poll.mergeKey ? copilotField(m[1].trim(), poll.keys, poll.fieldKey) : m[1].trim();
+  return poll.mergeKey || poll.worktreeKey ? copilotField(m[1].trim(), poll.keys, poll.fieldKey) : m[1].trim();
 }
 
 /** The value of `key` in a Copilot CLI answer `key=value, key=value`; null if absent. */
@@ -107,17 +128,20 @@ export function inPollOrder(choices, options = []) {
     .map(({ c }) => c);
 }
 
-/** Automatic merge authorised by the human answer to the merge question (second question or field). */
-export function mergeAuthorised(input, poll) {
-  if (poll.form === "claude") {
-    if (!poll.mergeQuestion) return false;
-    return MERGE_YES_RE.test(String(input?.tool_response?.answers?.[poll.mergeQuestion] ?? ""));
-  }
-  if (!poll.mergeKey) return false;
+/** The yes of an optional question (Claude Code) or field (Copilot CLI) of the poll, read in the human's answer. */
+function answeredYes(input, poll, question, key, yes) {
+  if (poll.form === "claude") return question ? yes.test(String(input?.tool_response?.answers?.[question] ?? "")) : false;
+  if (!key) return false;
   const text = input?.tool_result?.text_result_for_llm;
   const m = typeof text === "string" ? /User responded:\s*(.+)\s*$/s.exec(text) : null;
-  return MERGE_YES_RE.test(String(m ? (copilotField(m[1].trim(), poll.keys, poll.mergeKey) ?? "") : ""));
+  return yes.test(String(m ? (copilotField(m[1].trim(), poll.keys, key) ?? "") : ""));
 }
+
+/** Automatic merge authorised by the human answer to the merge question (second question or field). */
+export const mergeAuthorised = (input, poll) => answeredYes(input, poll, poll.mergeQuestion, poll.mergeKey, MERGE_YES_RE);
+
+/** New worktree chosen by the human answer to the worktree question (third question or field), QUA-142. */
+export const worktreeChosen = (input, poll) => answeredYes(input, poll, poll.worktreeQuestion, poll.worktreeKey, WORKTREE_YES_RE);
 
 function language() {
   try {
@@ -161,8 +185,14 @@ async function main() {
     return 0;
   }
   try {
-    const { start } = await import(pathToFileURL(join(ROOT, ".githooks", "state.mjs")).href);
-    const r = start(ROOT, first, { human: true, autoMerge: mergeAuthorised(input, poll), queue });
+    const autoMerge = mergeAuthorised(input, poll);
+    // The new folder's state is written by its own start; this folder's state does not change.
+    const r = worktreeChosen(input, poll)
+      ? await (await import(pathToFileURL(join(ROOT, ".githooks", "worktree.mjs")).href)).launchInWorktree(ROOT, first, {
+          autoMerge,
+          queue,
+        })
+      : (await import(pathToFileURL(join(ROOT, ".githooks", "state.mjs")).href)).start(ROOT, first, { human: true, autoMerge, queue });
     tell(`${r.code === 0 ? "✓" : "✗"} ${r.message}`);
   } catch (e) {
     // Never blocks the tool: the state stays unchanged, the Git gate remains; the agent is told why.
