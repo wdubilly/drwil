@@ -318,12 +318,13 @@ test("budget de temps : les contrôles au commit d'un projet équipé restent ra
   console.log(`[budget-commit] ${process.platform} : ${ms} ms`);
   // Mesuré le 2026-10-11 : Linux 107 ms (CI) et 369 ms (poste), macOS 361 ms, Windows 342 ms ; 2237 ms sous la charge du
   // pre-push (contrôles en parallèle). La durée dépend de la charge, pas du code : un dépassement est un avertissement affiché,
-  // jamais un échec (seul le statut des contrôles mesurés bloque, ci-dessus). Le seuil ne se relève que sur décision (cliquet).
+  // jamais un échec, mais compté au résumé de run-checks (seul le statut des contrôles mesurés bloque, ci-dessus). Le seuil ne se relève que sur décision (cliquet).
   const BUDGET_COMMIT_MS = 1500;
   if (ms > BUDGET_COMMIT_MS) {
-    const message = `⚠ budget de temps dépassé : contrôles au commit d'un projet équipé : ${ms} ms, budget ${BUDGET_COMMIT_MS} ms`;
-    t.diagnostic(message);
-    process.stderr.write(`[budget-commit] ${message}\n`);
+    const message = `budget de temps dépassé : contrôles au commit d'un projet équipé : ${ms} ms, budget ${BUDGET_COMMIT_MS} ms`;
+    t.diagnostic(`⚠ ${message}`);
+    // Repris et compté par run-checks (avertissement non bloquant du résumé).
+    console.log(`[ia-first-warning] ${message}`);
   }
 });
 

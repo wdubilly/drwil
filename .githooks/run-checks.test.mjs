@@ -449,6 +449,16 @@ test("QUA-134 : une racine temporaire qu'on ne parvient pas à supprimer est un 
   assert.match(r.detail, /^\[ia-first\] ⚠ dossier temporaire de la passe non supprimé/m);
 });
 
+test("QUA-127 : une ligne [ia-first-warning] dans la sortie d'un contrôle réussi est un avertissement compté, sans faire échouer", () => {
+  const passe = (commande) => lancer({ ".drwil/ia-first.json": JSON.stringify({ checks: [{ name: "mesure", run: commande }] }) });
+  const compte = (r) => Number(r.stdout.match(/OK \((\d+) avertissement/)[1]);
+  const sans = passe("node -e 0");
+  const avec = passe(`node -e "console.log('[ia-first-warning] budget dépassé : 2000 ms')"`);
+  assert.equal(avec.status, 0, avec.stdout + avec.stderr);
+  assert.match(avec.detail, /^\[ia-first\] ⚠ budget dépassé : 2000 ms$/m);
+  assert.equal(compte(avec), compte(sans) + 1);
+});
+
 test("QUA-136 : chaque contrôle exécuté a sa durée au détail, du plus lent au plus rapide en fin de fichier ; le résumé nomme les trois plus lents", () => {
   // Aucune attente sur la durée réelle d'un contrôle : sous charge, les contrôles réels de la passe (gitleaks…) s'intercalent. On
   // vérifie la cohérence des durées consignées (tri décroissant, résumé = trois premières du classement), pas leur valeur.
