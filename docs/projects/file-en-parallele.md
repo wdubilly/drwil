@@ -37,7 +37,7 @@ Une file de chantiers (QUA-037, une file de chantiers décidée d'un geste)
 se mène aujourd'hui un chantier à la fois, dans le dossier du dépôt : le
 suivant attend la fusion du précédent. Des chantiers indépendants
 attendent donc leur tour sans raison. Avec un worktree par chantier,
-lancé par le sondage (`docs/projects/worktree-par-chantier.md`), la
+lancé par le sondage (`docs/projects/journal.md`), la
 session principale peut mener plusieurs chantiers de la file à la fois,
 chacun dans un sous-agent qui travaille dans son propre worktree.
 
@@ -70,14 +70,14 @@ Périmètre : **livrable et ses miroirs dans le dépôt**.
 ## 2. Hors périmètre
 
 - La création d'un worktree et la garde de doublon :
-  `docs/projects/worktree-par-chantier.md`, à faire avant.
+  `docs/projects/journal.md`, à faire avant.
 - Une file en parallèle sous un autre outil que Claude Code.
 - Des chantiers qui dépendent l'un de l'autre : le sondage les refuse en
   parallèle, ou la file reste séquentielle (point à trancher).
 
 ## 3. Contraintes
 
-- Fait après `docs/projects/worktree-par-chantier.md`.
+- Fait après `docs/projects/journal.md`.
 - La fusion automatique reste celle de QUA-138 (le retour en SCOPING
   attend la fusion de la PR), chantier par chantier, dans son worktree.
 - Deux chantiers de la file qui touchent les mêmes fichiers de code se
@@ -102,7 +102,7 @@ Validées par le demandeur le 2026-10-25 :
 - [décision] Ordre de fusion : libre, ou dans l'ordre de la file.
 - [décision] Texte exact de QUA-037 modifié.
 - [décision] Emplacement des worktrees menés par une session : le dossier
-  frère de `docs/projects/worktree-par-chantier.md` demande une
+  frère de `docs/projects/journal.md` demande une
   autorisation à la session principale ; un dossier sous le dépôt
   l'évite, mais chaque outil qui parcourt le disque devrait l'exclure.
 
@@ -124,4 +124,4 @@ Validées par le demandeur le 2026-10-25 :
   ouvertes.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [décision] trancher les points ouverts, après la
-  clôture de `docs/projects/worktree-par-chantier.md`.
+  clôture de `docs/projects/journal.md`.
