@@ -39,7 +39,11 @@ Exécute les contrôles des contrats et rend un verdict de gouvernance, en
 texte, en JSON (`--json`) ou pour un agent (`--agent`, seul
 `GOVERNANCE: PASS` vaut validation). Un contrôle non exécuté n'est jamais
 compté comme passé ; un critère de la fiche active sans preuve fait tomber
-le verdict. `drwil doctor` diagnostique l'installation, `drwil contracts`
+le verdict. Le verdict d'un contrôle est repris quand ce qu'il juge n'a pas
+changé (`run-checks`, `drwil verify`, le pre-push ; la CI rejoue tout,
+`--no-reuse` et `--replay-all` aussi), et la sortie dit repris ou rejoué ;
+`verify` peut jouer ses contrôles en parallèle, et chaque contrôle dit sa
+durée. `drwil doctor` diagnostique l'installation, `drwil contracts`
 valide le registre sans rien exécuter.
 
 ## Attestation humaine (`drwil attest`)
@@ -55,7 +59,12 @@ rappelé par les hooks ; lancement par un sondage dont l'humain choisit la
 réponse (`/drwil-start`), file de chantiers, barrière de périmètre au
 commit, détour pour un défaut préalable, clôture en un geste
 (`.githooks/close.mjs`) avec preuve versionnée et consommation de tokens
-mesurée. Un chantier dont la PR révèle un défaut après la clôture se
+mesurée ; un hook modifié sans être déclaré est signalé avant la clôture,
+qui le refuse. Un chantier peut se lancer dans son propre worktree, et une
+file de chantiers en parallèle, un worktree par fiche (au plus
+`maxParallel` à la fois, fiches dont les périmètres se recoupent
+refusées). Avec la fusion automatique, le retour au cadrage attend la
+fusion de la PR. Un chantier dont la PR révèle un défaut après la clôture se
 rouvre d'une commande (`node .githooks/state.mjs reopen`). Une idée se note
 à tout moment sans changer d'activité (`/drwil-note`).
 
