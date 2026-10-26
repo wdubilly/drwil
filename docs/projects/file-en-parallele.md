@@ -92,19 +92,23 @@ Validées par le demandeur le 2026-10-25 :
 2. Le lancement reste humain : c'est le sondage qui décide la file et son
    mode.
 
+Validées par le demandeur le 2026-10-26 :
+
+3. N = 3 chantiers actifs au plus, réglable dans `.drwil/ia-first.json`.
+4. Conflits de clôture sur `pending.md` et `journal.md` : le sous-agent
+   rebase et résout seul ; un conflit hors de ces deux fichiers l'arrête et
+   il le signale.
+5. Ordre de fusion libre : la première prête est la première fusionnée.
+6. Worktrees dans le dossier frère du dépôt ; l'autorisation est demandée
+   une fois à la session principale.
+7. Recoupement des blocs `scope` : le sondage lance en parallèle les fiches
+   disjointes et met en séquence celles qui se recoupent (la fusion de la
+   première débloque la suivante).
+
 ## 5. Points à trancher
 
-- [décision] Nombre maximal de chantiers actifs à la fois (N).
-- [décision] Conflits de clôture sur `pending.md` et `journal.md` : le
-  sous-agent rebase et résout seul, ou s'arrête et le signale.
-- [décision] Deux fiches dont les blocs `scope` se recoupent : refusées en
-  parallèle au sondage, ou acceptées avec un avertissement.
-- [décision] Ordre de fusion : libre, ou dans l'ordre de la file.
-- [décision] Texte exact de QUA-037 modifié.
-- [décision] Emplacement des worktrees menés par une session : le dossier
-  frère de `docs/projects/journal.md` demande une
-  autorisation à la session principale ; un dossier sous le dépôt
-  l'évite, mais chaque outil qui parcourt le disque devrait l'exclure.
+- [décision] Texte exact de QUA-037 modifié (à valider à la rédaction du
+  contrat, au lot 2).
 
 ## 6. Increments
 
@@ -120,8 +124,7 @@ Validées par le demandeur le 2026-10-25 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-25) : cadré sur le principe, cinq décisions
-  ouvertes.
+- **Dernier état** (2026-10-25) : décisions 3 à 7 validées le 2026-10-26 ; reste
+  le texte de QUA-037, à rédiger au lot 2.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher les points ouverts, après la
-  clôture de `docs/projects/journal.md`.
+- **Prochaine étape** : lancer le chantier (`/drwil-start`).
