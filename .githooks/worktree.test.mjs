@@ -342,6 +342,35 @@ test("QUA-147 un lancement qui échoue arrête les suivants sans défaire ceux d
   assert.deepEqual(readState(d.racine).state.parallel, [A]);
 });
 
+test("QUA-147 l'index et le journal des chantiers, que toute clôture modifie, ne font pas recouper deux cadrages", () => {
+  const cloture = ["docs/projects/pending.md", "docs/projects/journal.md"];
+  const d = depot();
+  const fiches = {
+    "docs/projects/h1.md": [...cloture, "src/h1.js"],
+    "docs/projects/h2.md": [...cloture, "src/h2.js"],
+    "docs/projects/h3.md": [...cloture, "src/h1.js"],
+  };
+  ecrire(d.racine, Object.fromEntries(Object.entries(fiches).map(([f, p]) => [f, PRETE(f, p)])));
+  git(d.racine, "add", "-A");
+  git(d.racine, "commit", "-q", "-m", "fiches");
+  const [h1, h2, h3] = Object.keys(fiches);
+  assert.equal(scopesOverlap(d.racine, h1, h2), null, "seuls l'index et le journal sont partagés");
+  assert.deepEqual(scopesOverlap(d.racine, h1, h3), { a: "src/h1.js", b: "src/h1.js" }, "un autre fichier partagé recoupe toujours");
+
+  // Dossiers réglés : l'index et le journal réglés sont ignorés, l'index par défaut redevient un fichier comme un autre.
+  const e = depot({ dirs: { index: "suivi/index.md", projects: "suivi" } });
+  ecrire(e.racine, {
+    "suivi/k1.md": PRETE("k1", ["suivi/index.md", "suivi/journal.md", "src/k1.js"]),
+    "suivi/k2.md": PRETE("k2", ["suivi/index.md", "suivi/journal.md", "src/k2.js"]),
+    "suivi/k3.md": PRETE("k3", ["docs/projects/pending.md", "src/k3.js"]),
+    "suivi/k4.md": PRETE("k4", ["docs/projects/pending.md", "src/k4.js"]),
+  });
+  git(e.racine, "add", "-A");
+  git(e.racine, "commit", "-q", "-m", "fiches");
+  assert.equal(scopesOverlap(e.racine, "suivi/k1.md", "suivi/k2.md"), null);
+  assert.deepEqual(scopesOverlap(e.racine, "suivi/k3.md", "suivi/k4.md"), { a: "docs/projects/pending.md", b: "docs/projects/pending.md" });
+});
+
 test("QUA-147 le recoupement des cadrages compare littéraux et motifs, une fiche déjà active ailleurs et un état invalide sont refusés", async () => {
   const d = depot();
   const fiches = {
