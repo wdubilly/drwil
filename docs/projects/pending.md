@@ -230,7 +230,8 @@ session (`node .githooks/consumption.mjs`, journal du 2026-10-11) ; livrée
   `docs/intentions/reprise-par-controle-limites.md`.
 - [ ] [décision] Le sondage « Nouveau worktree » vérifié dans Copilot CLI —
   `docs/intentions/sondage-worktree-copilot-cli.md`.
-- [ ] [décision] Nettoyer le worktree d'un chantier fusionné —
+- [ ] [décision] Se repositionner après une clôture : nettoyer le worktree et
+  les branches, revenir sur `master`, créer la branche de cadrage —
   `docs/intentions/nettoyage-des-worktrees.md`.
 - [ ] [décision] Conflits d'index et de journal entre chantiers en parallèle —
   `docs/intentions/conflits-de-cloture-entre-worktrees.md`.
