@@ -68,7 +68,8 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    ajout ou adoption d'un contrat par commande, jugé important ; demandés le 2026-10-27 : ils touchent le sondage de lancement et
    `drwil attest`, donc `.githooks/state.mjs` que les fiches cadrées
    partagent, d'où leur place après elles) ;
-   F. fluidité et relecture (après `cycle-de-vie-des-fiches`) ;
+   F. fluidité et relecture, dont l'accueil de session (après
+   `cycle-de-vie-des-fiches`) ;
    G. clôture, file et chantiers en parallèle (après
    `cycle-de-vie-des-fiches`, qui modifie déjà `.githooks/close.mjs`, et
    `next-attend-la-fusion`, voisine de la file) : la clôture d'une fiche
@@ -222,6 +223,10 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   (décisions, cadrage, règles, preuves, exceptions), et une question de plus
   dans le sondage (`drwil-review`), cadrées ensemble avec la protection de
   master — `docs/intentions/vue-de-relecture.md`.
+- [ ] [décision] Un accueil drwil court à l'ouverture d'une session (où en
+  est le projet, commandes utiles ; l'essentiel seulement, le détail à la
+  demande ; demande du 2026-10-27) —
+  `docs/intentions/accueil-drwil-a-l-ouverture.md`.
 
 ### Coût en tokens
 
