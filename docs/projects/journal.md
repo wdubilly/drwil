@@ -3429,3 +3429,40 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (`docs/intentions/sondage-worktree-copilot-cli.md`).
 - **Preuve de clôture** : `docs/preuves/file-en-parallele.md`.
 - **Clôturé par** : la branche `workstream/file-en-parallele`.
+
+## 2026-10-26 — Les tests de timing ne dépendent plus de la charge de la machine
+
+- **Décisions clés** : cause établie en reproduisant sous `taskset -c 0` avec
+  4 passes concurrentes : le budget au commit dépasse 1500 ms (1501 à 1579 ms)
+  alors que le code n'est pas en cause. Le budget de temps au commit devient un
+  indicateur : un dépassement émet `[ia-first-warning] …`, ligne que
+  `run-checks` reprend comme avertissement compté au résumé (nouveau mécanisme
+  de `.githooks/run-checks.mjs` et de son gabarit, sans nouveau contrat ; le
+  statut non nul des contrôles mesurés reste bloquant ; seuil de 1500 ms
+  inchangé). Le test de QUA-136 (durée de chaque contrôle) ne compare plus de
+  durées réelles : il vérifie la cohérence des durées consignées (détail =
+  classement, tri décroissant, résumé = trois premières du classement) —
+  lecture retenue plutôt que des contrôles factices à durée imposée, dont
+  l'ordre dépend de la limite de concurrence du parallèle. Hooks déclarés dans
+  « Contrats modifiés » sur le oui du demandeur du 2026-10-26.
+- **Recensement des tests qui mesurent une durée** : caviardage des clés
+  privées (`packages/drwil/test/kit.test.mjs`, < 1000 ms) → meilleur de trois passes ; lecture de
+  stdin (`.githooks/state.test.mjs`) → assertion de durée retirée (le test n'aboutit pas
+  sans le délai) ; `.githooks/engine.test.mjs` (`>= 100` ms, borne basse que la charge
+  ne peut qu'augmenter), `outils/banc*.test.mjs` (délai de 100 ms contre une
+  attente de 5 s) et le rendez-vous de QUA-139 (garde de 4 s) → conservés,
+  justifiés ; noms uniques par `Date.now()` (`.githooks/create-release.test.mjs`) et
+  attente injectée de `.githooks/pr-watch.test.mjs` : pas de mesure.
+- **Durée de CI (job checks)** : non mesurée — la CI de la PR n'a pas encore
+  passé à l'écriture de cette entrée.
+- **Cinq passes sous charge (2026-10-26)** : 5 passes consécutives de
+  `.githooks/run-checks.mjs` en conditions de pre-push (`DRWIL_PUSH_REFS` posé,
+  `taskset -c 0,1`, `parallel: true`) : 5 sur 5 « contrôles exécutés : OK »,
+  code de sortie 0 chacune, aucune en échec ; plus lent contrôle de 99 852 à
+  151 631 ms.
+- **Limites connues** : ces cinq passes simulent le hook, ce ne sont pas cinq
+  pushs réels. Le mécanisme
+  `[ia-first-warning]` n'est pas encore dans le texte de QUA-127 :
+  `docs/intentions/tests-de-timing-instables.md`.
+- **Preuve de clôture** : docs/preuves/tests-de-timing-stables.md.
+- **Clôturé par** : la branche `chantier/tests-de-timing-stables`.
