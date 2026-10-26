@@ -74,7 +74,8 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
 3. **Grands sujets, ensuite** : catalogue et profils, autres outils (dont
    le sondage parallèle dans Copilot CLI et la consommation de tokens des
    autres outils), banc et fabrique (après le catalogue, décision du
-   2026-10-26), produit.
+   2026-10-26), produit (dont le tableau de bord en serveur local léger,
+   qui reprend la vue de relecture).
 
 Une limite trouvée à une clôture rejoint l'intention de son thème, jamais un
 doublon. Une intention qui attend une condition (chiffres du banc, essai réel
@@ -284,6 +285,10 @@ drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
   contributeur externe puisse participer sans demander au mainteneur ;
   questions à trancher (langue, gabarit de PR, canal sécurité, contrats
   COM) — `docs/intentions/community-ready.md`.
+- [ ] [décision] [P3] Un tableau de bord interactif en serveur local léger
+  pour suivre les chantiers (reprise du 2026-10-27 d'une intention retirée au
+  ménage ; le serveur n'a jamais existé) —
+  `docs/intentions/tableau-de-bord-serveur-leger.md`.
 
 ## Historique
 
