@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.9.0 (2026-10-26)
+
 ### Added
 
 - A queue of workstreams can run in parallel (QUA-147 to QUA-149): a

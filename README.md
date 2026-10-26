@@ -1090,6 +1090,12 @@ checked), lets `init` attach a project's existing code so the first commit
 passes, reopens a workstream whose pull request reveals a defect after its
 closing, and cuts the context an agent rereads (targeted reading of the
 registry and the journal, short check outputs, checks in a subagent).
+0.9.0 runs workstreams side by side, one per worktree, a queue possibly in
+parallel; reuses a check's verdict when what it judges has not changed
+(`run-checks`, `drwil verify`, the pre-push), plays `verify`'s checks in
+parallel and times every check; refuses a closing whose branch modifies a
+hook it does not declare; and, with the automatic merge, returns to SCOPING
+only once the pull request is merged.
 Next: trying it on real projects (V1).
 
 V0.2 covered:

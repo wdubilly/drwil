@@ -1,7 +1,7 @@
 {
   "name": "drwil",
   "license": "MIT",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "type": "module",
   "engines": {
     "node": ">=22"
