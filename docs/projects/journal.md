@@ -3427,5 +3427,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   réels (`docs/intentions/conflits-de-cloture-entre-worktrees.md`) ; la file
   parallèle n'est pas essayée dans Copilot CLI
   (`docs/intentions/sondage-worktree-copilot-cli.md`).
-- **Preuve de clôture** : `docs/preuves/file-en-parallele.md` (si présent).
+- **Preuve de clôture** : `docs/preuves/file-en-parallele.md`.
 - **Clôturé par** : la branche `workstream/file-en-parallele`.
