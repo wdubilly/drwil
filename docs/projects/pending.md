@@ -228,7 +228,8 @@ session (`node .githooks/consumption.mjs`, journal du 2026-10-11) ; livrée
 - [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
   par contrôle, QUA-141) —
   `docs/intentions/reprise-par-controle-limites.md`.
-- [ ] [décision] Le sondage « Nouveau worktree » vérifié dans Copilot CLI —
+- [ ] [décision] Le sondage parallèle (plusieurs worktrees) vérifié dans
+  Copilot CLI ; le sondage à une fiche l'est (2026-10-26) —
   `docs/intentions/sondage-worktree-copilot-cli.md`.
 - [ ] [décision] Se repositionner après une clôture : nettoyer le worktree et
   les branches, revenir sur `master`, créer la branche de cadrage —
@@ -414,6 +415,9 @@ actifs » s'appuie sur le 4).
 - [ ] [IA] [P2] Des tests de timing qui échouent sous la charge du hook de
   pré-push : budget en indicateur, QUA-136 déterministe (cadré le
   2026-10-26) — `docs/projects/tests-de-timing-stables.md`.
+- [ ] [IA] [P2] La doc dit le lancement de chantiers en parallèle
+  (`docs/ia-first.md` devenu faux, `docs/architecture.md` incomplet ; cadré le
+  2026-10-26) — `docs/projects/doc-lancement-parallele.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
