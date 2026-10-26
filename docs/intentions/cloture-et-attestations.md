@@ -1,6 +1,6 @@
 # Intention : clôture, réouverture et attestations : ce qui reste
 
-**Statut** : proposée le 2026-10-25 — regroupement de 10 intentions lors du ménage du 2026-10-25 ; chaque partie reprend l'une d'elles, avec son statut d'origine.
+**Statut** : proposée le 2026-10-25 — regroupement de 10 intentions lors du ménage du 2026-10-25 ; chaque partie reprend l'une d'elles, avec son statut d'origine. Cadrée le 2026-10-26 en cinq fiches (voir « Cadrage du 2026-10-26 » ci-dessous) ; l'intention reste là tant que ces fiches ne sont pas closes.
 
 ## Besoin
 
@@ -140,6 +140,18 @@ branche du chantier : la dernière version. Avec une fusion par squash, le
 commit qui la supprime est le squash lui-même, posé sur la branche
 principale : son parent garde la version du cadrage, et les critères
 corrigés ou rattachés pendant le chantier n'apparaissent pas corrigés.
+
+## Cadrage du 2026-10-26
+
+Les dix parties se cadrent en cinq fiches, décidées par le demandeur le 2026-10-26 :
+
+- `docs/projects/attestations-sur-l-effet-et-couvre.md` : empreinte d'une attestation sur l'effet du contrôle et `Couvre` des 15 contrats attestés, un seul chantier et une seule séance de réattestation (parties « couverture des contrats attestés » et « attestation sur l'effet du contrôle ») ; tableau `Couvre` à valider.
+- `docs/projects/reouverture-dite-et-eprouvee.md` : la réouverture dit ce qu'elle a annulé et qui reprogramme la fusion ; son cycle complet se joue sous Windows (parties « fusion annulée après échec » et « réouverture éprouvée »).
+- `docs/projects/next-attend-la-fusion.md` : `next` refuse tant que la PR précédente n'est pas fusionnée (partie « arrêt de file »).
+- `docs/projects/cycle-de-vie-des-fiches.md` : registre en SCOPING, code livré couvert, acceptation des critères (parties « cycle de vie des fiches » et « acceptation par critère ») ; trois propositions à valider.
+- `docs/projects/release-feu-vert-et-squash.md` : feu vert de publication enregistré, recette qui signale un squash (parties « feu vert » et « recette après squash »).
+
+Décidé de ne rien faire : attendre CodeQL avant la clôture (`reopen` suffit, partie « défaut révélé après la clôture » : la deuxième question est close). Un essai réel de la réouverture sur une vraie PR reste une note, à la prochaine CI rouge après une clôture.
 
 ## Existant
 

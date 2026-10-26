@@ -377,9 +377,22 @@ une décision du demandeur.
   regroupées le 2026-10-25) — `docs/intentions/garanties-la-suite.md`.
 - [ ] [décision] Les contournements encore ouverts (5 intentions regroupées
   le 2026-10-25) — `docs/intentions/contournements-restants.md`.
-- [ ] [décision] Clôture, réouverture et attestations : ce qui reste
-  (10 intentions regroupées le 2026-10-25) —
-  `docs/intentions/cloture-et-attestations.md`.
+- [ ] [IA] [P1] Une attestation tombe quand ce qu'elle juge change, pas quand
+  la forme d'un contrôle change ; `Couvre` déclaré pour les contrats attestés
+  (cadré le 2026-10-26, tableau à valider) —
+  `docs/projects/attestations-sur-l-effet-et-couvre.md`.
+- [ ] [IA] [P2] La réouverture dit ce qu'elle a annulé, et son cycle complet se
+  joue aussi sous Windows (cadré le 2026-10-26) —
+  `docs/projects/reouverture-dite-et-eprouvee.md`.
+- [ ] [IA] [P2] `next` n'enchaîne pas tant que la PR du chantier précédent
+  n'est pas fusionnée (cadré le 2026-10-26) —
+  `docs/projects/next-attend-la-fusion.md`.
+- [ ] [IA] [P2] Un cycle de vie des fiches sans contournement : registre en
+  SCOPING, code livré, acceptation des critères (cadré le 2026-10-26, trois
+  propositions à valider) — `docs/projects/cycle-de-vie-des-fiches.md`.
+- [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
+  qui signale un squash (cadré le 2026-10-26) —
+  `docs/projects/release-feu-vert-et-squash.md`.
 - [ ] [décision] Les petits défauts relevés, en un chantier d'entretien
   (15 intentions et 5 notes regroupées le 2026-10-25) —
   `docs/intentions/petits-defauts.md`.
