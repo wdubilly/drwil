@@ -379,7 +379,7 @@ une décision du demandeur.
   le 2026-10-25) — `docs/intentions/contournements-restants.md`.
 - [ ] [IA] [P1] Une attestation tombe quand ce qu'elle juge change, pas quand
   la forme d'un contrôle change ; `Couvre` déclaré pour les contrats attestés
-  (cadré le 2026-10-26, tableau à valider) —
+  (cadré le 2026-10-26, quatre chemins à valider) —
   `docs/projects/attestations-sur-l-effet-et-couvre.md`.
 - [ ] [IA] [P2] La réouverture dit ce qu'elle a annulé, et son cycle complet se
   joue aussi sous Windows (cadré le 2026-10-26) —
@@ -388,8 +388,7 @@ une décision du demandeur.
   n'est pas fusionnée (cadré le 2026-10-26) —
   `docs/projects/next-attend-la-fusion.md`.
 - [ ] [IA] [P2] Un cycle de vie des fiches sans contournement : registre en
-  SCOPING, code livré, acceptation des critères (cadré le 2026-10-26, trois
-  propositions à valider) — `docs/projects/cycle-de-vie-des-fiches.md`.
+  SCOPING, code livré, acceptation des critères (cadré le 2026-10-26, prêt) — `docs/projects/cycle-de-vie-des-fiches.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
   qui signale un squash (cadré le 2026-10-26) —
   `docs/projects/release-feu-vert-et-squash.md`.

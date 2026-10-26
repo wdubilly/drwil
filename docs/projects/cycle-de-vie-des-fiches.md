@@ -2,7 +2,7 @@
 
 **Statut** : cadré le 2026-10-26.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 **Intention** : `docs/intentions/cloture-et-attestations.md` (parties « un cycle de vie des fiches sans contournement » et « une acceptation humaine par critère »)
 
 <!-- scope
@@ -51,9 +51,10 @@ trou de preuve.
 (les contrats sont à créer au lancement, avec leur champ **Origine** ; IDs à
 attribuer à ce moment-là dans le registre.)
 
-- Un nouveau contrat s'écrit au registre en SCOPING sans avertissement de
-  périmètre, dans le même commit que la fiche qui le cite ; un contrat existant
-  modifié ou retiré reste soumis au contrôle « Contrats modifiés » — contrat à
+- Le registre des contrats s'écrit en SCOPING sans avertissement de périmètre,
+  et un nouveau contrat entre dans le même commit que la fiche qui le cite ; la
+  régression d'un contrat modifié dans une branche sans ligne « Contrats
+  modifiés » reste signalée par `drwil verify` et refuse la clôture — contrat à
   créer
 - Un fichier de code déjà présent sur la branche principale reste couvert par
   défaut après la clôture d'une fiche ; le cadrage ne garde que le code nouveau
@@ -95,8 +96,10 @@ demandeur avant le lancement.)
 
 (validées par le demandeur le 2026-10-26)
 
-1. Le registre (`docs/contracts.md`) s'écrit en SCOPING sans avertissement, et un
-   nouveau contrat entre dans le même commit que sa fiche.
+1. Le registre (`docs/contracts.md`) s'écrit en SCOPING sans avertissement
+   (ajout, modification et retrait), et un nouveau contrat entre dans le même
+   commit que sa fiche. Le garde-fou reste la régression de contrat détectée par
+   `drwil verify` à la clôture, non le périmètre.
 2. Un fichier de code déjà sur la branche principale reste couvert par défaut ;
    le cadrage ne garde que le code nouveau ou modifié, après vérification que la
    barrière n'est pas affaiblie.
@@ -105,28 +108,21 @@ demandeur avant le lancement.)
 
 ## 5. Points à trancher
 
-- [décision] Registre en SCOPING : proposition de l'agent — n'autoriser sans
-  avertissement que l'**ajout** d'un contrat ; toute modification ou tout
-  retrait d'un contrat existant garde l'avertissement et le contrôle « Contrats
-  modifiés » (c'est le cas qui change les règles du jeu). Validé ?
-- [décision] « Déjà livré » : proposition de l'agent — un fichier de code
-  suivi par git sur la branche principale **à la date du lancement**, donc
-  couvert sans fiche ; un fichier nouveau ou dont le contenu diffère de la
-  branche principale reste soumis à une fiche active. Validé ?
-- [décision] Acceptation : proposition de l'agent — l'empreinte porte sur le
-  texte de la section « Critères d'acceptation » ; l'état enregistre l'empreinte
-  au lancement ; un critère modifié après le lancement bloque la clôture
-  (`close.mjs --check`) tant que l'humain ne relance pas ou n'accepte pas de
-  nouveau. Validé ?
+- Aucun : tout est tranché le 2026-10-26, y compris « déjà livré » (fichier de
+  code suivi par git sur la branche principale à la date du lancement ; un
+  fichier nouveau ou différent reste soumis à une fiche active) et l'acceptation
+  (empreinte de la section « Critères d'acceptation » enregistrée au lancement ;
+  un critère modifié ensuite bloque la clôture tant que l'humain n'accepte pas de
+  nouveau).
 
 ## 6. Increments
 
-- **Lot 1 — registre en SCOPING** [IA] : `docs/contracts.md` accepté en SCOPING pour l'ajout seul, `check-docs` accepte la citation d'un ID ajouté dans le même commit ; tests de `.githooks/scope-gate.test.mjs` ; contrat et contrôle.
+- **Lot 1 — registre en SCOPING** [IA] : `docs/contracts.md` accepté en SCOPING, `check-docs` accepte la citation d'un ID ajouté dans le même commit ; tests de `.githooks/scope-gate.test.mjs` ; contrat et contrôle.
 - **Lot 2 — code livré couvert** [IA] : règle de couverture par défaut, tests qui prouvent que la barrière n'est pas affaiblie (fichier nouveau ou modifié toujours refusé hors fiche) ; contrat et contrôle.
 - **Lot 3 — acceptation des critères** [IA] : empreinte enregistrée au lancement, lue à la clôture, dite dans la preuve ; tests de `.githooks/state.test.mjs` et du paquet ; contrat et contrôle ; attestation `Manuel` de l'absence d'écriture par l'agent. Critère de sortie : `node .githooks/run-checks.mjs` OK, `drwil verify --agent` PASS.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-26) : cadré, trois propositions à valider (§5).
+- **Dernier état** (2026-10-26) : cadré, prêt à lancer.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] valider le §5, puis lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).

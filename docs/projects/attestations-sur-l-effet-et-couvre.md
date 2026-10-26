@@ -56,9 +56,8 @@ attribuer à ce moment-là dans le registre.)
 - Une attestation tombe quand l'effet d'un contrôle change (commande, test visé
   ou `paths`), comme avant : QUA-013 (un contrôle non exécuté n'est pas passé)
   reste vrai — contrat à créer
-- Chaque contrat attesté du dépôt déclare ce qu'il couvre (`**Couvre**`) ou dit
-  pourquoi il n'a rien à couvrir ; `drwil doctor` ne signale plus aucun contrat
-  attesté sans couverture déclarée — contrat à créer
+- Chaque contrat attesté du dépôt déclare ce qu'il couvre (`**Couvre**`) ;
+  `drwil doctor` ne signale plus aucun contrat attesté sans couverture déclarée — contrat à créer
 - Les attestations tombées par le chantier sont réattestées par l'humain en une
   seule séance, et `drwil verify --evidence` rend `GOVERNANCE: PASS` [humain]
   — contrat à créer (`Manuel`, attesté par `drwil attest`)
@@ -97,6 +96,11 @@ lancement.)
    séance de réattestation.
 3. Les chemins `Couvre` sont proposés par l'agent dans cette fiche (§5) ; le
    demandeur les valide avant le lancement.
+4. Tableau des 11 contrats à fichiers validé, sauf QUA-013, QUA-015 et QUA-041
+   dont les listes sont **réduites** (un fichier lu souvent ne doit pas faire
+   tomber l'attestation).
+5. Les contrats qui jugent une conduite ou un essai (SEC-001, QUA-019, QUA-069,
+   QUA-150) reçoivent aussi des chemins : aucun contrat attesté sans `Couvre`.
 
 ## 5. Points à trancher
 
@@ -105,10 +109,10 @@ et le **Manuel** de chaque contrat le 2026-10-26 — **à valider ou corriger** 
 
 | Contrat | Ce qu'il juge | `Couvre` proposé |
 |---|---|---|
-| QUA-013 | Contrôle non exécuté n'est pas passé | `.github/workflows/ia-first.yml`, `packages/drwil/src/verify.ts`, `packages/drwil/src/verdict.ts`, `.githooks/run-checks.mjs` |
-| QUA-015 | Fiches lisibles à froid | `docs/projects/model-brief.md`, `.githooks/briefs.mjs` |
+| QUA-013 | Contrôle non exécuté n'est pas passé | `.github/workflows/ia-first.yml`, `packages/drwil/src/verdict.ts` (liste réduite) |
+| QUA-015 | Fiches lisibles à froid | `.githooks/briefs.mjs` (liste réduite) |
 | QUA-018 | Dépôt vs livrable | `outils/miroirs.json` |
-| QUA-041 | Documentation d'entrée juste | `README.md`, `INSTALL.md`, `docs/architecture.md`, `packages/drwil/README.md` |
+| QUA-041 | Documentation d'entrée juste | `README.md`, `packages/drwil/README.md` (liste réduite) |
 | QUA-048 | Clôture en un geste | `.githooks/close.mjs`, `.githooks/close-branches.mjs`, `.githooks/state.mjs` |
 | QUA-060 | Le banc prouve un outil | `outils/banc-agents.mjs` |
 | QUA-063 | Matrice de compatibilité | `docs/ia-first.md` |
@@ -117,17 +121,18 @@ et le **Manuel** de chaque contrat le 2026-10-26 — **à valider ou corriger** 
 | QUA-067 | Hooks Gemini | `.githooks/state-cli.mjs`, `.githooks/state.mjs`, `.claude/hooks/scope-reminder.mjs` |
 | QUA-151 | Push indépendant de la charge | `.githooks/run-checks.mjs`, `.githooks/pre-push` |
 
-- [décision] Contrats qui jugent une **conduite ou un essai** et non des
-  fichiers : SEC-001 (pas de backend), QUA-019 (pas de contournement), QUA-069
-  (essai réel sous Copilot CLI), QUA-150 (recensement des tests de durée, jugé
-  à un instant donné). Proposition : leur attestation ne porte sur aucun
-  chemin ; ils le disent (champ ou ligne explicite) et `drwil doctor` ne les
-  signale plus. Validé ?
-- [décision] Chemins larges (QUA-013, QUA-015, QUA-041) : tomber à chaque
-  modification d'un fichier lu souvent coûte une réattestation. Proposition :
-  garder les chemins du tableau, quitte à réattester ; sinon réduire la liste.
-  Validé ?
-- [décision] Le tableau ci-dessus est-il juste, contrat par contrat ?
+Contrats qui jugent une **conduite ou un essai** (le demandeur a demandé de leur
+trouver quand même des chemins) — **à valider ou corriger** :
+
+| Contrat | Ce qu'il juge | `Couvre` proposé |
+|---|---|---|
+| SEC-001 | Portée des droits (drwil n'a pas de backend) | `packages/drwil/package.json` |
+| QUA-019 | Pas de contournement d'un contrôle | `.githooks/pre-commit`, `.githooks/pre-push`, `.github/workflows/ia-first.yml` |
+| QUA-069 | Essai réel sous Copilot CLI | `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`, `.githooks/state-cli.mjs` |
+| QUA-150 | Tests qui mesurent une durée | `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`, `.githooks/state.test.mjs`, `.githooks/engine.test.mjs`, `outils/banc.test.mjs`, `outils/banc-agents.test.mjs` |
+
+- [décision] Ces quatre propositions sont-elles justes ? (QUA-150 tombera à
+  chaque modification de l'un de ces six tests : à réduire ?)
 
 ## 6. Increments
 
@@ -137,6 +142,6 @@ et le **Manuel** de chaque contrat le 2026-10-26 — **à valider ou corriger** 
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-26) : cadré, tableau `Couvre` à valider (§5).
+- **Dernier état** (2026-10-26) : cadré, quatre propositions de chemins (contrats de conduite) à valider (§5).
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] valider le §5, puis lancer le chantier (`/drwil-start`).
