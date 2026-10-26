@@ -410,6 +410,9 @@ actifs » s'appuie sur le 4).
   `docs/projects/niveau-de-protection.md`.
 - [ ] [IA] [P1] Compléter le test unitaire de QUA-138 (retour en SCOPING
   après la fusion) — `docs/projects/test-unitaire-fusion-automatique.md`.
+- [ ] [IA] [P2] Des tests de timing qui échouent sous la charge du hook de
+  pré-push : budget en indicateur, QUA-136 déterministe (cadré le
+  2026-10-26) — `docs/projects/tests-de-timing-stables.md`.
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
   Claude, module front, cliquet ; recadré le 2026-10-16) —
   `docs/projects/adopter-seuil-couverture.md`.
