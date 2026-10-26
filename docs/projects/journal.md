@@ -3464,5 +3464,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   pushs réels. Le mécanisme
   `[ia-first-warning]` n'est pas encore dans le texte de QUA-127 :
   `docs/intentions/tests-de-timing-instables.md`.
-- **Preuve de clôture** : docs/preuves/tests-de-timing-stables.md.
+- **Preuve de clôture** : `docs/preuves/tests-de-timing-stables.md`.
 - **Clôturé par** : la branche `chantier/tests-de-timing-stables`.
