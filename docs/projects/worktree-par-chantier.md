@@ -33,6 +33,8 @@ files:
   - packages/drwil/CHANGELOG.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
 -->
 
 ## 1. Besoin
@@ -64,7 +66,7 @@ le gabarit, puis installer ses copies avec `npm run installer-depot`.
   crée le dossier et sa branche depuis la branche principale à jour, et y
   lance le chantier : son fichier d'état (.drwil/state.json) est écrit par
   `.githooks/state.mjs`, jamais à la main, et l'état du dossier d'origine
-  ne change pas — contrat à créer
+  ne change pas — `QUA-142`
 - Un agent ne prend jamais un worktree pour un dépôt distinct : dans un
   worktree, le rappel d'état (`node .githooks/state.mjs` et l'injection
   de début de session) nomme le dépôt principal, la branche et le
@@ -75,12 +77,12 @@ le gabarit, puis installer ses copies avec `npm run installer-depot`.
 - Une commande d'installation déclarée dans `.drwil/ia-first.json` est
   lancée dans le nouveau worktree ; sans réglage, rien n'est lancé et la
   sortie dit quoi faire ; un échec d'installation est dit, le worktree et
-  l'état restent — contrat à créer
+  l'état restent — `QUA-143`
 - Le lancement d'une fiche déjà active dans un autre worktree du même
-  dépôt est refusé, avec le chemin de ce worktree — contrat à créer
+  dépôt est refusé, avec le chemin de ce worktree — `QUA-144`
 - `node .githooks/close.mjs --check` signale une branche de chantier en
   retard sur la branche principale et donne la commande de mise à jour ;
-  la clôture n'est pas refusée pour ce motif — contrat à créer
+  la clôture n'est pas refusée pour ce motif — `QUA-145`
 
 (la recette, lot 3, accompagne ces contrats sans en être un : un terminal
 et une session par worktree, conflits attendus sur l'index et le journal,
