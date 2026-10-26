@@ -6,7 +6,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { close } from "./close.mjs";
 import { context, readState, start } from "./state.mjs";
-import { activeElsewhere, launchInWorktree, lateLines } from "./worktree.mjs";
+import { scopesOverlap } from "./briefs.mjs";
+import { activeElsewhere, launchInWorktree, launchParallel, lateLines } from "./worktree.mjs";
 
 // Voir state.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -237,4 +238,143 @@ test("QUA-142 un worktree sans branche est listé sans nom de branche, et un dé
   assert.equal(r.code, 1);
   assert.match(r.message, /Chantier non lancé dans le worktree/);
   assert.ok(existsSync(e.voisin), "le worktree reste");
+});
+
+// Fiches prêtes : A, B et D sont disjointes, C recoupe A.
+const PRETE = (nom, fichiers) => `# Projet : ${nom}
+
+**Statut** : cadré le 2026-10-26.
+**Maturité** : prêt
+
+<!-- scope
+files:
+${fichiers.map((f) => `  - ${f}`).join("\n")}
+-->
+
+## Critères d'acceptation
+
+- ${nom} — contrat à créer
+
+## Points à trancher
+
+## Incréments
+
+- **Lot 1** : ${nom}
+`;
+const A = "docs/projects/a.md";
+const B = "docs/projects/b.md";
+const C = "docs/projects/c.md";
+const D = "docs/projects/d.md";
+
+/** Dépôt avec les fiches A, B, C et D poussées sur master. */
+function depotParallele(config = {}) {
+  const d = depot(config);
+  ecrire(d.racine, {
+    [A]: PRETE("A", ["src/commun.js", "src/a.js"]),
+    [B]: PRETE("B", ["src/b.js"]),
+    [C]: PRETE("C", ["src/commun.js"]),
+    [D]: PRETE("D", ["src/d.js"]),
+  });
+  git(d.racine, "add", "-A");
+  git(d.racine, "commit", "-q", "-m", "fiches prêtes");
+  git(d.racine, "push", "-q", "origin", "master");
+  return { ...d, dossier: (f) => join(d.parent, `projet-${f}`) };
+}
+
+test("QUA-147 une file en parallèle lance chaque fiche dans son worktree, porte la fusion et s'enregistre dans le dossier d'origine", async () => {
+  const d = depotParallele();
+  const r = await launchParallel(d.racine, [A, B], { autoMerge: true });
+  assert.equal(r.code, 0, r.message);
+  for (const [fiche, nom] of [
+    [A, "a"],
+    [B, "b"],
+  ]) {
+    const etat = readState(d.dossier(nom)).state;
+    assert.equal(etat.activity, "BUILD");
+    assert.equal(etat.active_brief, fiche);
+    assert.equal(etat.auto_merge, true);
+    assert.equal(etat.queue, undefined, "aucune file dans un worktree : chacun mène sa fiche");
+  }
+  const origine = readState(d.racine).state;
+  assert.equal(origine.activity, "SCOPING");
+  assert.deepEqual(origine.parallel, [A, B]);
+});
+
+test("QUA-147 une file en parallèle refusée ne crée rien : une fiche, doublon, fiche non prête, recoupement des cadrages", async () => {
+  const d = depotParallele();
+  const refus = async (fiches, motif) => {
+    const r = await launchParallel(d.racine, fiches);
+    assert.equal(r.code, 1);
+    assert.match(r.message, motif);
+    assert.equal(existsSync(d.dossier("a")) || existsSync(d.dossier("b")) || existsSync(d.dossier("c")), false);
+    assert.equal(readState(d.racine).state.parallel, undefined);
+  };
+  await refus([A], /au moins deux fiches/);
+  await refus([A, A], /choisie deux fois/);
+  await refus([A, FICHE], /ne peut pas entrer dans une file/);
+  await refus([A, C], /se recoupent \(src\/commun\.js et src\/commun\.js\)/);
+});
+
+test("QUA-147 au plus maxParallel chantiers sont actifs à la fois, ceux d'un autre worktree comptent, et un cadrage recoupé par un actif est refusé", async () => {
+  const d = depotParallele({ maxParallel: 2 });
+  const trop = await launchParallel(d.racine, [A, B, D]);
+  assert.match(trop.message, /0 chantier\(s\) déjà actifs, 3 demandés, au plus 2/);
+  assert.equal(existsSync(d.dossier("a")), false);
+  assert.equal((await launchInWorktree(d.racine, B)).code, 0);
+  const encore = await launchParallel(d.racine, [A, C]);
+  assert.match(encore.message, /1 chantier\(s\) déjà actifs, 2 demandés, au plus 2/);
+  assert.equal(existsSync(d.dossier("a")), false);
+  // Sans réglage : trois à la fois ; C recoupe A, déjà actif dans son worktree.
+  const e = depotParallele();
+  assert.equal((await launchInWorktree(e.racine, A)).code, 0);
+  const recoupe = await launchParallel(e.racine, [B, C]);
+  assert.match(recoupe.message, /se recoupent/);
+  assert.equal(existsSync(e.dossier("b")), false);
+});
+
+test("QUA-147 un lancement qui échoue arrête les suivants sans défaire ceux déjà lancés", async () => {
+  const d = depotParallele();
+  mkdirSync(d.dossier("b"));
+  const r = await launchParallel(d.racine, [A, B]);
+  assert.equal(r.code, 1);
+  assert.match(r.message, /interrompue à docs\/projects\/b\.md/);
+  assert.equal(readState(d.dossier("a")).state.activity, "BUILD");
+  assert.deepEqual(readState(d.racine).state.parallel, [A]);
+});
+
+test("QUA-147 le recoupement des cadrages compare littéraux et motifs, une fiche déjà active ailleurs et un état invalide sont refusés", async () => {
+  const d = depot();
+  const fiches = {
+    "docs/projects/g1.md": ["src/a/*.js", "lib/x.js"],
+    "docs/projects/g2.md": ["src/a/b*.js", "doc/*.md"],
+    "docs/projects/g3.md": ["src/c/*.js", "lib/x.js"],
+    "docs/projects/g4.md": ["src/a/z.js", "src/d/e.js"],
+    "docs/projects/g5.md": ["src/q/*.js", "src/r/f.js"],
+  };
+  ecrire(d.racine, Object.fromEntries(Object.entries(fiches).map(([f, p]) => [f, PRETE(f, p)])));
+  git(d.racine, "add", "-A");
+  git(d.racine, "commit", "-q", "-m", "fiches");
+  const [g1, g2, g3, g4, g5] = Object.keys(fiches);
+  assert.deepEqual(scopesOverlap(d.racine, g1, g2), { a: "src/a/*.js", b: "src/a/b*.js" }, "deux motifs de même racine");
+  assert.deepEqual(scopesOverlap(d.racine, g1, g3), { a: "lib/x.js", b: "lib/x.js" }, "deux littéraux égaux");
+  assert.deepEqual(scopesOverlap(d.racine, g1, g4), { a: "src/a/*.js", b: "src/a/z.js" }, "un motif couvre le littéral");
+  assert.deepEqual(scopesOverlap(d.racine, g4, g1), { a: "src/a/z.js", b: "src/a/*.js" }, "un littéral couvert par le motif");
+  assert.equal(scopesOverlap(d.racine, g5, g2), null);
+  assert.equal(scopesOverlap(d.racine, g5, "docs/projects/absente.md"), null, "fiche absente de HEAD : aucun cadrage");
+
+  const p = depotParallele();
+  assert.equal((await launchInWorktree(p.racine, A)).code, 0);
+  assert.match((await launchParallel(p.racine, [A, B])).message, /déjà active dans/);
+  assert.match((await launchParallel(join(p.racine, "sous"), [A, B])).message, /pas un dépôt git lisible/);
+  ecrire(p.racine, {
+    ".drwil/state.json": JSON.stringify({
+      version: 1,
+      activity: "SCOPING",
+      active_brief: null,
+      active_request: null,
+      since: null,
+      parallel: "a",
+    }),
+  });
+  assert.match(readState(p.racine).problems.join(), /parallel : liste de fiches attendue/);
 });

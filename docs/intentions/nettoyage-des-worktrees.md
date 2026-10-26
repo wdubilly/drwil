@@ -8,7 +8,7 @@ Un worktree créé au lancement (`../<dépôt>-<fiche>`) reste sur le disque apr
 
 ## Existant
 
-Relevé le 2026-10-26 : la recette `docs/recipes/working-with-branches.md` indique le nettoyage à la main (`git worktree remove`) ; aucun outil ne le fait, et la suppression des branches fusionnées (QUA-048) ne retire pas le dossier.
+Relevé le 2026-10-26 : la recette `docs/recipes/working-with-branches.md` indique le nettoyage à la main (`git worktree remove`) ; aucun outil ne le fait, et la suppression des branches fusionnées (QUA-048) ne retire pas le dossier. Relevé le 2026-10-26 (chantier « une file en parallèle ») : une file parallèle (QUA-147) laisse jusqu'à N worktrees à retirer d'un coup.
 
 ## Questions à trancher
 

@@ -49,13 +49,13 @@ Périmètre : **livrable et ses miroirs dans le dépôt**.
 
 - Au sondage, l'humain choisit de mener la file en parallèle ; chaque
   fiche choisie est lancée dans son propre worktree par le hook, jamais
-  par l'agent ; au plus N chantiers sont actifs à la fois — contrat à créer
+  par l'agent ; au plus N chantiers sont actifs à la fois — `QUA-147`
 - Chaque chantier se mène dans un sous-agent dont le dossier de travail
   est son worktree ; la session principale ne garde que les comptes
-  rendus — contrat à créer
+  rendus — `QUA-148`
 - Un chantier qui demande un humain arrête le lancement des suivants,
   sans interrompre ceux qui tournent ; le bilan de file dit l'état de
-  chacun — contrat à créer
+  chacun — `QUA-149`
 
 ## Contrats modifiés
 
@@ -65,7 +65,20 @@ Périmètre : **livrable et ses miroirs dans le dépôt**.
   ne lance jamais de suivante sur une fusion non faite » — raison : en
   mode parallèle, choisi au sondage, plusieurs chantiers tournent à la
   fois, chacun dans son worktree ; le mode séquentiel reste le défaut,
-  inchangé (validé le 2026-10-25, sur le principe ; texte à valider).
+  inchangé (validé le 2026-10-26, texte soumis puis validé).
+- `.githooks/state.mjs` — champ `parallel` de l'état et `recordParallel`
+  (ajout, rien d'existant retiré) (validé par le demandeur le 2026-10-26).
+- `.githooks/state-texts.mjs` — rappel d'état de la file parallèle et
+  message du champ `parallel` (ajout) (validé par le demandeur le
+  2026-10-26).
+- `.githooks/worktree.mjs` — `launchParallel` et plafond `maxParallel`
+  (ajout) (validé par le demandeur le 2026-10-26).
+- `.githooks/briefs.mjs` — `scopesOverlap`, recoupement des cadrages
+  (ajout) (validé par le demandeur le 2026-10-26).
+- `.claude/hooks/prompt-hook.mjs` — question `drwil-parallel` du sondage
+  (ajout) (validé par le demandeur le 2026-10-26).
+- `.githooks/state.test.mjs` et `.githooks/worktree.test.mjs` — tests
+  ajoutés (validé par le demandeur le 2026-10-26).
 
 ## 2. Hors périmètre
 
@@ -92,19 +105,21 @@ Validées par le demandeur le 2026-10-25 :
 2. Le lancement reste humain : c'est le sondage qui décide la file et son
    mode.
 
+Validées par le demandeur le 2026-10-26 :
+
+3. Au plus 3 chantiers actifs à la fois (réglage `maxParallel`).
+4. Deux fiches dont les blocs `scope` se recoupent sont refusées en
+   parallèle au sondage, sans rien créer.
+5. Ordre de fusion libre.
+6. Conflits de clôture sur `pending.md` et `journal.md` : le sous-agent
+   rebase et résout seul (lot 2).
+7. Worktrees menés par une session : dossier frère du dépôt (autorisation
+   demandée à la session principale).
+
 ## 5. Points à trancher
 
-- [décision] Nombre maximal de chantiers actifs à la fois (N).
-- [décision] Conflits de clôture sur `pending.md` et `journal.md` : le
-  sous-agent rebase et résout seul, ou s'arrête et le signale.
-- [décision] Deux fiches dont les blocs `scope` se recoupent : refusées en
-  parallèle au sondage, ou acceptées avec un avertissement.
-- [décision] Ordre de fusion : libre, ou dans l'ordre de la file.
-- [décision] Texte exact de QUA-037 modifié.
-- [décision] Emplacement des worktrees menés par une session : le dossier
-  frère de `docs/projects/journal.md` demande une
-  autorisation à la session principale ; un dossier sous le dépôt
-  l'évite, mais chaque outil qui parcourt le disque devrait l'exclure.
+- [décision] Texte exact de QUA-037 modifié (lot 2 : texte soumis au
+  demandeur avant écriture).
 
 ## 6. Increments
 
@@ -120,8 +135,9 @@ Validées par le demandeur le 2026-10-25 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-25) : cadré sur le principe, cinq décisions
-  ouvertes.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher les points ouverts, après la
-  clôture de `docs/projects/journal.md`.
+- **Dernier état** (2026-10-26) : lot 1 réalisé (QUA-147 : sondage,
+  lancement des worktrees, plafond N, refus des cadrages qui se
+  recoupent, enregistrement `parallel`) ; points décidés en section 4.
+- **Travail non commité** : tout le lot 1.
+- **Prochaine étape** : lot 2, après validation par le demandeur du texte
+  de QUA-037 modifié.
