@@ -1340,3 +1340,53 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit.test.mjs`
 **Origine** : verify-reprise-par-controle — « `run-checks` et `drwil verify` reprennent un verdict contrôle par contrôle, pour les itérations, sur une empreinte propre à chaque contrôle ; la preuve de clôture garde l'empreinte de tout l'arbre »
 **Raison** : Depuis QUA-140, un octet changé n'importe où invalide tous les verdicts : pendant les itérations, le gain était nul et `run-checks` rejouait tout.
+
+## QUA-142 — Le sondage de lancement peut mener le chantier dans un nouveau worktree, sur la seule réponse de l'humain
+**Règle** : Livré à tout projet. Le sondage `/drwil-start` peut porter une troisième question (Claude Code, en-tête `drwil-worktree`) ou un troisième champ (Copilot CLI, nommé `drwil-worktree`) : « Nouveau worktree » ou « Ce dossier », sans recommandation ni valeur par défaut. La réponse, lue par le hook (`.claude/hooks/prompt-hook.mjs`) et jamais par l'agent, crée le dossier frère `../<dépôt>-<fiche>` et sa branche `workstream/<fiche>` depuis la branche principale distante après `git fetch` (sans réseau : depuis la branche locale, et la sortie le dit), sans option qui écrive dans la configuration commune (`--no-track`, QUA-056), puis lance le chantier dans ce dossier par le `start` de `.githooks/state.mjs` : l'état du nouveau dossier est écrit par lui, jamais à la main, et l'état du dossier d'origine ne change pas. Refusé sans rien créer : plusieurs fiches à la fois (la file reste dans le dossier du dépôt, QUA-037), fiche non cadrée, dossier ou branche déjà existants, branche principale locale absente ; un `git worktree add` qui échoue refuse aussi.
+**Périmètre** : `.githooks/worktree.mjs` (`launchInWorktree`), `.claude/hooks/prompt-hook.mjs` (`worktreeChosen`), `.claude/skills/start-a-workstream/SKILL.md` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/worktree.mjs` (`launchInWorktree`).
+**Preuve** : tests sur dépôts jetables (dépôt `origin` nu et clone) : dossier et branche créés depuis une branche principale avancée sur `origin`, état BUILD écrit dans le worktree, aucun état dans le dossier d'origine, configuration du dépôt principal identique avant et après ; refus sans rien créer ; repli sans réseau ; hook rejoué sur les deux formes de sondage (réponse « Nouveau worktree » lancée dans le worktree, « Ce dossier » dans le dossier d'origine).
+**Contrôle** : `tests-qua-142`
+**Tests** : `.githooks/worktree.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : worktree-par-chantier — « Au sondage de lancement, l'humain peut choisir de mener le chantier dans un nouveau worktree ; la réponse, lue par le hook et jamais par l'agent, crée le dossier et sa branche depuis la branche principale à jour, et y lance le chantier : son fichier d'état est écrit par `.githooks/state.mjs`, jamais à la main, et l'état du dossier d'origine ne change pas »
+**Raison** : Travailler deux chantiers à la fois imposait `git worktree add`, l'installation et le lancement à la main, et rien ne laissait à l'humain le choix au moment où il lance.
+
+## QUA-143 — Un agent ne prend jamais un worktree pour un dépôt distinct : le rappel d'état nomme le dépôt principal et les worktrees
+**Règle** : Livré à tout projet. Dans un worktree, le rappel d'état (`node .githooks/state.mjs` et l'injection de début de session) nomme le dépôt principal, la branche et le chantier du dossier, dit que les autres dossiers listés sont des worktrees du même dépôt et qu'on ne modifie que le sien ; dans le dossier principal, il liste les worktrees ouverts, leur branche et leur chantier. La liste vient de `git worktree list --porcelain` et de l'état de chaque dossier listé ; un dossier listé mais disparu est ignoré, pas une erreur. Sans autre worktree, le rappel ne change pas.
+**Périmètre** : `.githooks/worktree.mjs` (`worktreeLines`), `.githooks/state-texts.mjs` (`context`) ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/worktree.mjs` (`worktreeLines`).
+**Preuve** : tests sur dépôts jetables : rappel d'un worktree et du dossier principal, absence de mention sans autre worktree, dossier disparu ignoré.
+**Contrôle** : `tests-qua-143`
+**Tests** : `.githooks/worktree.test.mjs`
+**Origine** : worktree-par-chantier — « Un agent ne prend jamais un worktree pour un dépôt distinct : dans un worktree, le rappel d'état nomme le dépôt principal, la branche et le chantier du dossier, dit que les autres dossiers listés sont des worktrees du même dépôt et qu'on ne modifie que le sien ; dans le dossier principal, il liste les worktrees ouverts et leur chantier »
+**Raison** : Un agent qui voit un dossier frère portant le même projet peut le croire distinct et y écrire, ou croire son propre dossier isolé du reste.
+
+## QUA-144 — La commande d'installation déclarée est lancée dans le nouveau worktree, son échec est dit sans rien défaire
+**Règle** : Livré à tout projet. Le réglage facultatif `worktreeInstall` de `.drwil/ia-first.json` (par exemple `npm ci`) est lancé dans le nouveau worktree, avant le lancement du chantier. Sans réglage, rien n'est lancé et la sortie dit d'installer les dépendances dans ce dossier. Un échec est dit avec la fin de sa sortie ; le worktree et l'état restent, le chantier est lancé quand même.
+**Périmètre** : `.githooks/worktree.mjs` (`launchInWorktree`) ; `docs/ia-first.md` (réglage) ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/worktree.mjs`.
+**Preuve** : tests sur dépôts jetables : commande lancée dans le nouveau dossier et pas dans l'autre, échec dit avec sa sortie et état BUILD gardé, absence de réglage dite.
+**Contrôle** : `tests-qua-144`
+**Tests** : `.githooks/worktree.test.mjs`
+**Origine** : worktree-par-chantier — « Une commande d'installation déclarée dans `.drwil/ia-first.json` est lancée dans le nouveau worktree ; sans réglage, rien n'est lancé et la sortie dit quoi faire ; un échec d'installation est dit, le worktree et l'état restent »
+**Raison** : Un worktree neuf n'a pas les dépendances ignorées par git : sans elles, les contrôles du chantier échouent pour une raison sans rapport avec lui.
+
+## QUA-145 — Une fiche déjà active dans un autre worktree du même dépôt ne se relance pas
+**Règle** : Livré à tout projet. `start` (`.githooks/state.mjs`), donc aussi le lancement en worktree, refuse une fiche dont l'état d'un autre worktree du même dépôt (`git worktree list --porcelain`, état lu dans chaque dossier) dit qu'elle est active (toute activité hors SCOPING), en donnant le chemin de ce worktree et sans rien changer. Un dossier disparu, ou sans état lisible, ne retient rien. Le lancement en worktree refuse aussi une fiche active dans le dossier d'origine, avant de rien créer.
+**Périmètre** : `.githooks/worktree.mjs` (`activeElsewhere`), `.githooks/state.mjs` (`start`) ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/worktree.mjs` (`activeElsewhere`).
+**Preuve** : tests sur dépôts jetables : relance depuis le dossier principal et directe refusées avec le chemin, état inchangé, dossier disparu ignoré.
+**Contrôle** : `tests-qua-145`
+**Tests** : `.githooks/worktree.test.mjs`
+**Origine** : worktree-par-chantier — « Le lancement d'une fiche déjà active dans un autre worktree du même dépôt est refusé, avec le chemin de ce worktree »
+**Raison** : Le fichier d'état n'est pas versionné et chaque dossier a le sien : rien n'empêchait de mener la même fiche dans deux dossiers, qui se seraient heurtés à la clôture.
+
+## QUA-146 — `close --check` signale une branche de chantier en retard sur la branche principale, sans refuser la clôture
+**Règle** : Livré à tout projet. `node .githooks/close.mjs --check` mesure, après `git fetch origin <branche principale>`, le retard de la branche courante sur `origin/<branche principale>` ; en retard, il le dit avec le nombre de commits et la commande de mise à jour (`git merge origin/<branche principale>`). Le signal ne change ni le code de sortie ni la clôture. Sans réseau (fetch en échec), il dit qu'il ne conclut rien ; sans remote `origin`, sur la branche principale ou en HEAD détaché, il ne dit rien.
+**Périmètre** : `.githooks/worktree.mjs` (`lateLines`), `.githooks/close.mjs` (`close`) ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/worktree.mjs` (`lateLines`).
+**Preuve** : test sur dépôt jetable avec `origin` nu : à jour, aucun signal ; en retard d'un commit, signal avec la commande et même code de sortie ; sur la branche principale, aucun ; origine disparue, « non mesuré ».
+**Contrôle** : `tests-qua-146`
+**Tests** : `.githooks/worktree.test.mjs`
+**Origine** : worktree-par-chantier — « `node .githooks/close.mjs --check` signale une branche de chantier en retard sur la branche principale et donne la commande de mise à jour ; la clôture n'est pas refusée pour ce motif »
+**Raison** : Deux chantiers menés en parallèle se rencontrent à la clôture sur l'index et le journal, sans que rien ne prévienne qu'une branche est en retard.
