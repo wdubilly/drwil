@@ -167,7 +167,7 @@ avant les points 5 à 13, en trois versions.
   7. 0.8, catalogue et adoption (P1) d'abord ; puis, en P2, Codex et Cursor,
      personas et application de suivi (abandonnés le 2026-10-25),
      chantiers en parallèle (abandonnés puis rouverts le même jour,
-     `docs/projects/worktree-par-chantier.md`),
+     `docs/projects/journal.md`),
      couche d'un nouveau dossier de code
      (`docs/intentions/couche-d-un-nouveau-dossier-de-code.md`),
      publication npm et protection de la forge.
@@ -228,6 +228,12 @@ session (`node .githooks/consumption.mjs`, journal du 2026-10-11) ; livrée
 - [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
   par contrôle, QUA-141) —
   `docs/intentions/reprise-par-controle-limites.md`.
+- [ ] [décision] Le sondage « Nouveau worktree » vérifié dans Copilot CLI —
+  `docs/intentions/sondage-worktree-copilot-cli.md`.
+- [ ] [décision] Nettoyer le worktree d'un chantier fusionné —
+  `docs/intentions/nettoyage-des-worktrees.md`.
+- [ ] [décision] Conflits d'index et de journal entre chantiers en parallèle —
+  `docs/intentions/conflits-de-cloture-entre-worktrees.md`.
 
 ## Vague 4 — restructurations, protégées par les filets, décidées sur les chiffres
 
@@ -404,10 +410,6 @@ actifs » s'appuie sur le 4).
   `docs/projects/niveau-de-protection.md`.
 - [ ] [IA] [P1] Compléter le test unitaire de QUA-138 (retour en SCOPING
   après la fusion) — `docs/projects/test-unitaire-fusion-automatique.md`.
-- [ ] [IA] [P1] Un chantier par worktree, lancé au sondage : garde
-  de doublon, installation déclarée, retard sur master signalé (cadré le
-  2026-10-25, après le découpage de la clôture) —
-  `docs/projects/worktree-par-chantier.md`.
 - [ ] [décision] [P2] La file de chantiers menée en parallèle, un worktree
   par chantier ; modifie QUA-037 (cadré le 2026-10-25, après la
   précédente) — `docs/projects/file-en-parallele.md`.

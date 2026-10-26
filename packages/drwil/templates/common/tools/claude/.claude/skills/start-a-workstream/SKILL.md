@@ -37,6 +37,17 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      Only for briefs whose scope touches code: a brief whose scope is documentation only
      (Markdown files, `docs/`) gets no `drwil-merge` question — its PR is put in automatic merge
      by the agent (« Documentation-only PR » rule of `AGENTS.md`), if the repository allows it.
+   - **Worktree question** (optional, only when the repository can host sibling folders): Claude
+     Code, a question of the same poll, `header` exactly `drwil-worktree`, options "New worktree"
+     (the workstream runs in a new sibling folder `../<repository>-<brief>`, branch
+     `workstream/<brief>` cut from the up-to-date main branch) and "This folder", no recommendation;
+     Copilot CLI, a field named exactly `drwil-worktree` with the same two values in its `enum`.
+     It is the human's choice, read by the hook: with "New worktree" the hook creates the folder,
+     runs the install command declared in `.drwil/ia-first.json` (`worktreeInstall`, optional) and
+     starts the workstream **there**; this folder's state does not change. Only one brief at a time
+     (a queue stays in the repository folder). Then tell the human to open a terminal in the new
+     folder and start the agent there, and stop: never work the brief from this folder. A brief
+     already active in another worktree is refused with that worktree's path.
    - Copilot CLI: `message` starting with `drwil-start :`; a first field whose `enum` = the exact
      paths, and a **second field named exactly `drwil-merge`** with `enum` "Automatic merge" and
      "Manual merge" (no `default`, no recommendation): the hook reads `fiche=…, drwil-merge=…`.

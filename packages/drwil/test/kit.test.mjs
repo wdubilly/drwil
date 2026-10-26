@@ -1537,6 +1537,105 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
   }
 });
 
+test("QUA-142 : la réponse « Nouveau worktree » du sondage lance le chantier dans un worktree frère, « Ce dossier » dans le dossier d'origine", async () => {
+  const parent = tmp();
+  const dir = join(parent, "projet");
+  mkdirSync(dir);
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const fiche = "docs/projects/essai.md";
+  writeFileSync(
+    join(dir, fiche),
+    "# Projet : Essai\n\n**Statut** : cadré le 2026-10-26.\n\n<!-- scope\nfiles:\n  - src/essai.ts\n-->\n\n## Critères d'acceptation\n\n- Essai — `APP-001`\n",
+  );
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+  const voisin = join(parent, "projet-essai");
+  const hook = (entree) =>
+    spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify(entree),
+    });
+  const etatDe = (d) => (existsSync(join(d, ".drwil/state.json")) ? JSON.parse(read(d, ".drwil/state.json")) : null);
+  const rejouer = (sondage, reponse) => {
+    const r = hook({
+      hook_event_name: "PostToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: sondage,
+      ...reponse,
+    });
+    assert.equal(r.status, 0);
+    return r;
+  };
+  const choix = {
+    question: "Quelle fiche lancer ?",
+    header: "drwil-start",
+    multiSelect: false,
+    options: [{ label: fiche }, { label: "docs/projects/autre.md" }],
+  };
+  const lieu = {
+    question: "Où mener le chantier ?",
+    header: "drwil-worktree",
+    multiSelect: false,
+    options: [{ label: "Nouveau worktree" }, { label: "Ce dossier" }],
+  };
+  const claude = { questions: [choix, lieu] };
+  const reponse = (r) => ({
+    tool_response: {
+      ...claude,
+      answers: { "Quelle fiche lancer ?": fiche, "Où mener le chantier ?": r },
+    },
+  });
+
+  // Un sondage avec la question du lieu et une réponse déjà remplie est refusé comme les autres.
+  assert.equal(
+    hook({
+      hook_event_name: "PreToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: {
+        ...claude,
+        answers: { "Où mener le chantier ?": "Nouveau worktree" },
+      },
+    }).status,
+    2,
+  );
+  rejouer(claude, reponse("Ce dossier"));
+  assert.equal(etatDe(dir).activity, "BUILD", "« Ce dossier » : lancé là");
+  assert.equal(existsSync(voisin), false);
+  rmSync(join(dir, ".drwil/state.json"));
+
+  const r = rejouer(claude, reponse("Nouveau worktree"));
+  assert.match(r.stdout, /Worktree créé/);
+  assert.equal(etatDe(dir), null, "l'état du dossier d'origine ne change pas");
+  assert.equal(etatDe(voisin).active_brief, fiche);
+  assert.equal(etatDe(voisin).activity, "BUILD");
+
+  // Copilot CLI : champ `drwil-worktree`, réponse `clé=valeur`, quel que soit l'ordre.
+  git(dir, "worktree", "remove", "--force", voisin);
+  git(dir, "branch", "-D", "workstream/essai");
+  const copilot = {
+    message: "drwil-start : quelle fiche lancer ?",
+    requestedSchema: {
+      properties: {
+        choix: { type: "string", enum: [fiche, "docs/projects/autre.md"] },
+        "drwil-worktree": {
+          type: "string",
+          enum: ["New worktree", "This folder"],
+        },
+      },
+    },
+  };
+  rejouer(copilot, {
+    tool_result: {
+      result_type: "success",
+      text_result_for_llm: `User responded: drwil-worktree=New worktree, choix=${fiche}`,
+    },
+  });
+  assert.equal(etatDe(dir), null);
+  assert.equal(etatDe(voisin).activity, "BUILD");
+});
+
 test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));

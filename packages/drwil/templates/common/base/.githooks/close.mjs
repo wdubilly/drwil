@@ -26,6 +26,7 @@ import {
 } from "./doc-coherence.mjs";
 import { closureProof, proofNotCited, proofPath, proofText, writeProof } from "./closure-proof.mjs";
 import { mainBranch } from "./close-branches.mjs";
+import { lateLines } from "./worktree.mjs";
 import { readState, stateRoot, verifyEvidence } from "./state.mjs";
 
 // Compatibility: the branches' functions live in close-branches.mjs, importers keep this path.
@@ -300,7 +301,7 @@ export function close(root, { brief, check = false, fix = false, env = process.e
     ...(problems.length ? [T.signals, ...problems.map((s) => `  ⚠ ${s}`)] : [T.clean]),
     ...(diff.length ? [T.proposed, ...diff] : []),
     ...(report.warnings.length ? [T.warnings, ...report.warnings.map((w) => `  ⚠ ${w}`)] : []),
-    ...(check ? [route] : [T.rest]),
+    ...(check ? [...lateLines(root), route] : [T.rest]),
   ];
   return { code: problems.length ? 1 : 0, message: lines.filter(Boolean).join("\n") };
 }

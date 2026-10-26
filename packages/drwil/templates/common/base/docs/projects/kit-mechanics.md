@@ -26,6 +26,7 @@ files:
   - .githooks/state-texts.mjs
   - .githooks/close.mjs
   - .githooks/close-branches.mjs
+  - .githooks/worktree.mjs
   - .githooks/closure-proof.mjs
   - .githooks/detour.mjs
   - .githooks/note.mjs

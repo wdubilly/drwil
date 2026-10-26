@@ -621,6 +621,21 @@ queue.
   (or `next`) goes back to Scoping by itself: the brief is deleted and the
   PR merged (main branch current, or the branch merged, `gh` for a
   squash).
+- **Worktree at start**: an optional
+  third question of the poll (Claude Code) or field (Copilot CLI) named
+  `drwil-worktree`, "New worktree" or "This folder", lets the human run the
+  workstream in a sibling folder `../<repository>-<brief>`, branch
+  `workstream/<brief>` cut from the up-to-date main branch. The hook reads the
+  answer (never the model), creates the folder, runs the command declared by
+  the `worktreeInstall` setting of `.drwil/ia-first.json` (optional, e.g.
+  `npm ci`; without it nothing is run and the output says what to do; a failure
+  is reported, the folder and the state stay) and starts the workstream there
+  through `.githooks/state.mjs`: the origin folder's state does not change. A
+  brief already active in another worktree of the repository is refused, with
+  that folder's path. The state reminder names the main repository, the branch
+  and the workstream of a worktree, says the other listed folders are worktrees
+  of the same repository, and lists the open worktrees in the main folder.
+  A single brief per worktree: a queue stays in the repository folder.
 - **Limit**: an agent with a shell could call these functions itself or
   rewrite the local state; Claude Code's `deny` rules block calling the hook
   directly, and cheating stays visible and refused off the machine (commit

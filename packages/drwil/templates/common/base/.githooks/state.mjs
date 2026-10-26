@@ -17,6 +17,7 @@ import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BRIEF_DIRS, briefStatus, config, missingCriteria, MODEL_RE, queueable, scopedBriefs } from "./briefs.mjs";
 import { closingMerged, closingSignals, noGhText, pruneMergedBranches, prunedMessage } from "./close.mjs";
+import { activeElsewhere } from "./worktree.mjs";
 import { main, readStdinJson, reminderIfChanged, reopen } from "./state-cli.mjs";
 import { fill, STATE_MESSAGES } from "./state-texts.mjs";
 
@@ -244,6 +245,8 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   const queued = rest.length || fromQueue ? [path, ...rest] : [];
   const notReady = queued.find((b) => !queueable(root, b));
   if (notReady) return { code: 1, message: fill(T.queueNotReady, notReady) };
+  const elsewhere = activeElsewhere(root, path);
+  if (elsewhere) return { code: 1, message: fill(T.startBusy, path, elsewhere) };
   const missing = missingCriteria(root, path);
   if (missing === "blocking") return { code: 1, message: fill(T.startNoCriteria, path) };
   const state = { version: 1, activity: "BUILD", active_brief: path, active_request: request ?? null, since: now };

@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readBlock } from "./scope.mjs";
 import { config } from "./briefs.mjs";
+import { worktreeLines } from "./worktree.mjs";
 
 const TEXTS = {
   fr: {
@@ -176,6 +177,7 @@ export const STATE_MESSAGES = {
       "lancement refusé : CLOSING, la PR de clôture n'est pas fusionnée — attendre la fusion (et mettre la branche principale à jour), puis relancer",
     startClosingUnknown: "lancement refusé : CLOSING, la fusion de la PR de clôture n'est pas établie",
     startHuman: "lancement refusé : c'est une décision humaine (sondage `/drwil-start`, ou terminal interactif)",
+    startBusy: "lancement refusé : la fiche {0} est déjà active dans le worktree {1}",
     startNotScoped: `lancement refusé : « {0} » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)`,
     startNoCriteria:
       "lancement refusé : la fiche « {0} » n'a aucun critère d'acceptation — chacun, prouvé par un contrat, devient la non-régression des chantiers suivants (section « Critères d'acceptation » du modèle de fiche)",
@@ -268,6 +270,7 @@ export const STATE_MESSAGES = {
       "start refused: CLOSING, the closing PR is not merged — wait for the merge (and update the main branch), then start again",
     startClosingUnknown: "start refused: CLOSING, the closing PR's merge is not established",
     startHuman: "start refused: it is a human decision (`/drwil-start` poll, or interactive terminal)",
+    startBusy: "start refused: brief {0} is already active in the worktree {1}",
     startNotScoped: `start refused: "{0}" is not a scoped brief (scope block committed, brief not finished)`,
     startNoCriteria:
       'start refused: brief "{0}" has no acceptance criterion — each one, proven by a contract, becomes the non-regression of the next workstreams ("Acceptance criteria" section of the brief model)',
@@ -341,6 +344,7 @@ export function context(read, root) {
   if (state.activity === "CLOSING" && !state.queue?.length) lines.push(T.closingNoQueue);
   // Back in SCOPING by a move (`since` set; a missing state has none), outside a queue: one session per workstream (QUA-131).
   if (state.activity === "SCOPING" && state.since && !state.queue?.length) lines.push(T.nextSession);
+  lines.push(...worktreeLines(root));
   lines.push(T.footer);
   return lines.join("\n");
 }

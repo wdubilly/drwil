@@ -1772,8 +1772,72 @@
       ],
       "degradable": false,
       "needsBuild": true
+    },
+    {
+      "id": "tests-qua-142",
+      "name": "tests de QUA-142, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-142 \" .githooks/worktree.test.mjs packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-143",
+      "name": "tests de QUA-143, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-143 \" .githooks/worktree.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-144",
+      "name": "tests de QUA-144, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-144 \" .githooks/worktree.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-145",
+      "name": "tests de QUA-145, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-145 \" .githooks/worktree.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-146",
+      "name": "tests de QUA-146, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-146 \" .githooks/worktree.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
+  "worktreeInstall": "npm ci",
   "transitions": "human",
   "scopeGate": "blocking",
   "scopeMirrors": [

@@ -39,6 +39,8 @@ files:
   - .githooks/closure-proof.mjs
   - .githooks/close.test.mjs
   - .githooks/close-branches.test.mjs
+  - .githooks/worktree.mjs
+  - .githooks/worktree.test.mjs
   - .githooks/note.mjs
   - .githooks/note.test.mjs
   - .githooks/detour.mjs
