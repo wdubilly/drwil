@@ -130,6 +130,39 @@ Statut d'origine : ouverte le 2026-10-26 — limite non traitée de la clôture 
 
 `run-checks` compte désormais comme avertissement non bloquant toute ligne `[ia-first-warning] <texte>` imprimée par un contrôle (le test de budget de temps au commit s'en sert). Le texte du contrat QUA-127 (résumé comptant chaque avertissement non bloquant) et la doc livrée ne le disent pas encore : `docs/contracts.md`, le catalogue et la doc des hooks étaient hors du cadrage du chantier.
 
+### les chantiers vont-ils plus vite ? un journal des passes locales
+
+Statut d'origine : proposée le 2026-10-26 — demande de l'humain, qui a
+l'impression que les chantiers vont plus vite depuis la 0.9.0.
+
+Le gain attendu de la 0.9.0 (reprise d'un verdict par `run-checks`,
+`verify` et le pre-push : QUA-140, QUA-141, QUA-152) se joue en local, où
+rien n'en garde la trace : on ne peut ni le montrer ni dire si les chantiers
+vont plus vite. Garder, pour chaque passe locale (pre-commit, pre-push,
+`run-checks`, `verify`), une ligne : date, branche ou chantier, contrôles
+repris et rejoués, durée réelle de la passe ; la lire par chantier et dans
+le tableau « Durée de la CI drwil »
+(https://claude.ai/artifact/LVTAv9omSJ4h8bL9s22vbT).
+
+Constat chiffré du 2026-10-26 (`.drwil/usage.jsonl`, chantiers d'au moins
+5 minutes ; tokens pris comme taille du chantier) :
+
+| Période | Chantiers | Durée médiane | Tokens médians | Minutes par million de tokens |
+|---|---|---|---|---|
+| 16 au 20 oct. | 27 | 25 min | 0,80 M | 33 |
+| 21 au 24 oct. | 11 | 42 min | 2,42 M | 25 |
+| 25 et 26 oct. (0.9.0) | 8 | 43 min | 0,72 M | 44 |
+
+Aucun gain de durée visible ; la CI de la forge s'allonge (run médian de
+3,2 à 5,9 min par chantier, job Windows de 4,3 à 6,1 min) et pèse environ
+15 % d'un chantier. En local, le dernier pre-push du 26 a repris 130
+contrôles et en a rejoué 17 (le plus lent : 40 s, contre 2 min 25 s pour la
+couverture du paquet sur une passe complète), mais ce n'est qu'un instantané
+écrasé à la passe suivante. Les 54 preuves `verify --evidence` du 25 et du
+26 ont toutes rejoué tous leurs contrôles (129 à 143, de 3 à 7 min de durée
+cumulée) : la reprise sur le verdict de `run-checks` (QUA-140) n'a jamais
+servi à une preuve de clôture.
+
 ## Existant
 
 Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10-25.
@@ -221,6 +254,21 @@ Mesures `[budget-commit]` lues dans les journaux de CI :
 - `.githooks/run-checks.mjs` (et son gabarit) reprend les lignes `[ia-first-warning] <texte>` de la sortie d'un contrôle ; test ciblé « QUA-127 » dans `.githooks/run-checks.test.mjs`.
 - Le test « budget de temps » de `packages/drwil/test/kit.test.mjs` l'émet au dépassement de 1500 ms.
 
+### les chantiers vont-ils plus vite ? un journal des passes locales
+
+**Existant (relevé le 2026-10-26)** :
+
+- `.drwil/evidence/run-checks-verdicts.json` (si présent) et
+  `.drwil/evidence/pre-push-verdicts.json` (si présent) : verdict et durée de chaque
+  contrôle de la dernière passe seulement, écrasés à la suivante.
+- `.drwil/evidence/run-checks.log` (si présent) : détail de la dernière passe (repris,
+  rejoués, durées), écrasé lui aussi.
+- `.drwil/evidence/verify-*.json` : une preuve horodatée par passe de
+  `verify --evidence`, avec la durée et le drapeau `replayed` de chaque
+  contrôle depuis la 0.9.0 ; rien pour le pre-commit ni le pre-push.
+- `.drwil/usage.jsonl` : durée et tokens par chantier, sans le temps passé
+  dans les contrôles.
+
 ## Questions à trancher
 
 - [décision] Découper ce regroupement en lots, chacun vérifiable seul, et choisir le premier.
@@ -301,3 +349,13 @@ job `checks`) conservé comme preuve historique.
 
 - [décision] Compléter le texte de QUA-127 (et sa preuve : le test ciblé de `.githooks/run-checks.test.mjs`) plutôt que créer un contrat : modifier un contrat existant est une décision du demandeur.
 - Les autres tests qui mesurent une durée, recensés au journal (`.githooks/engine.test.mjs`, `outils/banc*.test.mjs`, rendez-vous de QUA-139), sont conservés avec justification ; les passer en indicateur est possible par le même mécanisme, si une instabilité s'y révèle.
+
+### les chantiers vont-ils plus vite ? un journal des passes locales
+
+- [décision] Où vit le journal : un fichier ajouté à chaque passe dans
+  `.drwil/evidence/` (ignoré par git, local à la machine), ou une colonne
+  « temps des contrôles » dans `.drwil/usage.jsonl` à la clôture ?
+- [décision] Pourquoi `verify --evidence` ne reprend jamais un verdict de
+  `run-checks` : arbre modifié entre les deux passes, ou empreinte qui ne
+  correspond pas ? À établir avant de toucher au code.
+- Livré aux projets adoptés, ou propre à ce dépôt ?
