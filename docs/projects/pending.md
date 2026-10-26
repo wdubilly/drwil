@@ -410,9 +410,6 @@ actifs » s'appuie sur le 4).
   `docs/projects/niveau-de-protection.md`.
 - [ ] [IA] [P1] Compléter le test unitaire de QUA-138 (retour en SCOPING
   après la fusion) — `docs/projects/test-unitaire-fusion-automatique.md`.
-- [ ] [décision] [P2] La file de chantiers menée en parallèle, un worktree
-  par chantier ; modifie QUA-037 (cadré le 2026-10-25, après la
-  précédente) — `docs/projects/file-en-parallele.md`.
 - [ ] [IA] [P2] Des tests de timing qui échouent sous la charge du hook de
   pré-push : budget en indicateur, QUA-136 déterministe (cadré le
   2026-10-26) — `docs/projects/tests-de-timing-stables.md`.

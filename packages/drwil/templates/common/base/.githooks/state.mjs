@@ -56,9 +56,10 @@ export const NEUTRAL_STATE = Object.freeze({ version: 1, activity: "SCOPING", ac
 
 // auto_merge: absent from the neutral state, set only by a human start (`start`).
 // queue, queue_merge (QUA-037): the briefs a human queued at start, run next without a new gesture.
+// parallel (QUA-147): the briefs a human launched at once, each in its own worktree, recorded by the main folder.
 // detour (QUA-050): the workstream set aside while a prior defect is fixed (.githooks/detour.mjs).
 // reopened (QUA-116): the workstream reopened after its closing, `{ pr, human? }`, until back in SCOPING.
-const FIELDS = new Set([...Object.keys(NEUTRAL_STATE), "auto_merge", "queue", "queue_merge", "detour", "reopened"]);
+const FIELDS = new Set([...Object.keys(NEUTRAL_STATE), "auto_merge", "queue", "queue_merge", "detour", "reopened", "parallel"]);
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 const texts = (root) => STATE_MESSAGES[config(root).lang === "en" ? "en" : "fr"];
 
@@ -96,6 +97,8 @@ export function validateState(state, root) {
     if (!Array.isArray(state.queue) || state.queue.some((b) => typeof b !== "string")) problems.push(T.queueType);
     else for (const b of state.queue) problems.push(...validateBrief(b, root, false, T));
   }
+  if (state.parallel !== undefined && (!Array.isArray(state.parallel) || state.parallel.some((b) => typeof b !== "string")))
+    problems.push(T.parallelType);
   if (state.queue_merge !== undefined && typeof state.queue_merge !== "boolean") problems.push(T.queueMergeType);
   if (state.since !== null && !(typeof state.since === "string" && ISO_RE.test(state.since) && !Number.isNaN(Date.parse(state.since)))) {
     problems.push(T.since);
@@ -362,6 +365,11 @@ export function setDetour(root, brief, detour, now = new Date().toISOString()) {
   if (detour) state.detour = detour;
   else delete state.detour;
   writeState(root, state);
+}
+
+/** Records in this folder's state the briefs launched in parallel (QUA-147), the rest of the state unchanged. */
+export function recordParallel(root, briefs) {
+  writeState(root, { ...readState(root).state, parallel: briefs });
 }
 
 /** Writes `state` to .drwil/state.json, the only place that does; an invalid state is a bug of the caller: it throws. */

@@ -6,8 +6,10 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, join, posix } from "node:path";
-import { config, scopedBriefs } from "./briefs.mjs";
+import { config, queueable, scopedBriefs, scopesOverlap } from "./briefs.mjs";
 import { mainBranch } from "./close-branches.mjs";
+
+const DEFAULT_MAX_PARALLEL = 3;
 
 const TEXTS = {
   fr: {
@@ -19,6 +21,16 @@ const TEXTS = {
     none: "aucun",
     noRepo: "worktree refusé : ce dossier n'est pas un dépôt git lisible ; rien n'est créé",
     manyBriefs: "worktree refusé : un seul chantier à la fois par worktree (la file reste dans le dossier du dépôt) ; rien n'est créé",
+    parallelOne: "file en parallèle refusée : au moins deux fiches sont attendues ; rien n'est créé",
+    parallelDuplicate: "file en parallèle refusée : la fiche {0} est choisie deux fois ; rien n'est créé",
+    parallelNotReady:
+      "file en parallèle refusée : {0} ne peut pas entrer dans une file (cadrée, maturité « prêt », aucune décision ouverte, critères d'acceptation) ; rien n'est créé",
+    parallelTooMany:
+      "file en parallèle refusée : {0} chantier(s) déjà actifs, {1} demandés, au plus {2} à la fois (réglage « maxParallel » de .drwil/ia-first.json) ; rien n'est créé",
+    parallelOverlap:
+      "file en parallèle refusée : les cadrages de {0} et de {1} se recoupent ({2} et {3}), ils se rencontreraient à la fusion ; rien n'est créé",
+    parallelDone: "File en parallèle : {0} chantier(s) lancé(s) sur {1}, chacun dans son worktree, au plus {2} actifs à la fois.",
+    parallelStopped: "✗ File en parallèle interrompue à {0} : les suivants ne sont pas lancés, ceux déjà lancés tournent.",
     notScoped: "worktree refusé : {0} n'est pas une fiche cadrée ; rien n'est créé",
     busy: "worktree refusé : la fiche {0} est déjà active dans {1} ; rien n'est créé",
     noMain: "worktree refusé : aucune branche principale locale (main ou master) ; rien n'est créé",
@@ -46,6 +58,16 @@ const TEXTS = {
     none: "none",
     noRepo: "worktree refused: this folder is not a readable git repository; nothing created",
     manyBriefs: "worktree refused: one workstream at a time per worktree (a queue stays in the repository folder); nothing created",
+    parallelOne: "parallel queue refused: at least two briefs are expected; nothing created",
+    parallelDuplicate: "parallel queue refused: brief {0} is chosen twice; nothing created",
+    parallelNotReady:
+      'parallel queue refused: {0} cannot enter a queue (scoped, maturity "ready", no open decision, acceptance criteria); nothing created',
+    parallelTooMany:
+      'parallel queue refused: {0} workstream(s) already active, {1} requested, at most {2} at a time ("maxParallel" setting of .drwil/ia-first.json); nothing created',
+    parallelOverlap:
+      "parallel queue refused: the scopes of {0} and {1} overlap ({2} and {3}), they would meet at the merge; nothing created",
+    parallelDone: "Parallel queue: {0} workstream(s) launched out of {1}, each in its own worktree, at most {2} active at a time.",
+    parallelStopped: "✗ Parallel queue interrupted at {0}: the next ones are not launched, those already launched keep running.",
     notScoped: "worktree refused: {0} is not a scoped brief; nothing created",
     busy: "worktree refused: brief {0} is already active in {1}; nothing created",
     noMain: "worktree refused: no local main branch (main or master); nothing created",
@@ -178,6 +200,58 @@ export async function launchInWorktree(root, brief, { autoMerge = false, queue =
   const started = start(dir, path, { human: true, autoMerge, now });
   lines.push(started.code === 0 ? started.message : fill(T.startFailed, started.message), fill(T.open, dir));
   return { code: started.code, message: lines.join("\n"), path: dir };
+}
+
+const maxParallel = (root) => {
+  const n = config(root).maxParallel;
+  return Number.isInteger(n) && n > 0 ? n : DEFAULT_MAX_PARALLEL;
+};
+
+/**
+ * Launches a queue in parallel (QUA-147), the human's answer being the only way in: each brief in its
+ * own worktree by `launchInWorktree`, at most `maxParallel` workstreams active at once (default 3),
+ * briefs whose scopes overlap refused. Everything is checked before anything is created; a launch that
+ * fails stops the next ones, never those already launched. The launched briefs are recorded in this
+ * folder's state (`parallel`). `{ code, message }`.
+ */
+export async function launchParallel(root, briefs, { autoMerge = false, now } = {}) {
+  const T = texts(root);
+  const s = situation(root);
+  if (!s) return { code: 1, message: T.noRepo };
+  const paths = briefs.map((b) => posix.normalize(String(b).trim().replace(/\\/g, "/")));
+  if (paths.length < 2) return { code: 1, message: T.parallelOne };
+  const twice = paths.find((b, i) => paths.indexOf(b) !== i);
+  if (twice) return { code: 1, message: fill(T.parallelDuplicate, twice) };
+  const notReady = paths.find((b) => !queueable(root, b));
+  if (notReady) return { code: 1, message: fill(T.parallelNotReady, notReady) };
+  const active = [s.self, ...s.others].filter((w) => w.brief);
+  const holder = active.find((w) => paths.includes(w.brief));
+  if (holder) return { code: 1, message: fill(T.busy, holder.brief, holder.path) };
+  const max = maxParallel(root);
+  if (active.length + paths.length > max) return { code: 1, message: fill(T.parallelTooMany, active.length, paths.length, max) };
+  const all = [...paths, ...active.map((w) => w.brief)];
+  for (const [i, a] of paths.entries())
+    for (const b of all.slice(i + 1)) {
+      const meet = scopesOverlap(root, a, b);
+      if (meet) return { code: 1, message: fill(T.parallelOverlap, a, b, meet.a, meet.b) };
+    }
+  const lines = [];
+  const launched = [];
+  for (const brief of paths) {
+    const r = await launchInWorktree(root, brief, { autoMerge, now });
+    lines.push(r.message);
+    if (r.code !== 0) {
+      lines.push(fill(T.parallelStopped, brief));
+      break;
+    }
+    launched.push(brief);
+  }
+  if (launched.length) {
+    const { recordParallel } = await import("./state.mjs");
+    recordParallel(root, launched);
+    lines.push(fill(T.parallelDone, launched.length, paths.length, max));
+  }
+  return { code: launched.length === paths.length ? 0 : 1, message: lines.join("\n\n") };
 }
 
 /** Lines of `close --check` about the lag of the workstream branch behind the main branch (QUA-146); never a refusal. */

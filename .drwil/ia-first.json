@@ -1835,6 +1835,45 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-147",
+      "name": "tests de QUA-147, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-147 \" .githooks/worktree.test.mjs packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-148",
+      "name": "tests de QUA-148, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-148 \" .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-149",
+      "name": "tests de QUA-149, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-149 \" .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "worktreeInstall": "npm ci",

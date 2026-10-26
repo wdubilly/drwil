@@ -1636,6 +1636,77 @@ test("QUA-142 : la réponse « Nouveau worktree » du sondage lance le chantier 
   assert.equal(etatDe(voisin).activity, "BUILD");
 });
 
+test("QUA-147 : la réponse « File en parallèle » du sondage lance chaque fiche cochée dans son worktree, « File séquentielle » garde la file du dossier", async () => {
+  const parent = tmp();
+  const dir = join(parent, "projet");
+  mkdirSync(dir);
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const fiches = ["docs/projects/un.md", "docs/projects/deux.md"];
+  for (const [i, f] of fiches.entries())
+    writeFileSync(
+      join(dir, f),
+      `# Projet : Essai ${i}\n\n**Statut** : cadré le 2026-10-26.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/essai${i}.ts\n-->\n\n## Critères d'acceptation\n\n- Essai — \`APP-001\`\n\n## Incréments\n\n- **Lot 1** : essai\n`,
+    );
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+  const etatDe = (d) => (existsSync(join(d, ".drwil/state.json")) ? JSON.parse(read(d, ".drwil/state.json")) : null);
+  const choix = {
+    question: "Quelles fiches lancer ?",
+    header: "drwil-start",
+    multiSelect: true,
+    options: fiches.map((label) => ({ label })),
+  };
+  const mode = {
+    question: "Quel mode pour la file ?",
+    header: "drwil-parallel",
+    multiSelect: false,
+    options: [{ label: "File en parallèle" }, { label: "File séquentielle" }],
+  };
+  const sondage = { questions: [choix, mode] };
+  const rejouer = (evenement, reponse) =>
+    spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({
+        hook_event_name: evenement,
+        tool_name: "AskUserQuestion",
+        tool_input: sondage,
+        tool_response: { ...sondage, answers: reponse },
+      }),
+    });
+
+  // Une réponse déjà remplie dans le sondage est refusée comme pour les autres questions.
+  assert.equal(
+    spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({
+        hook_event_name: "PreToolUse",
+        tool_name: "AskUserQuestion",
+        tool_input: { ...sondage, answers: { "Quel mode pour la file ?": "File en parallèle" } },
+      }),
+    }).status,
+    2,
+  );
+  rejouer("PostToolUse", { "Quelles fiches lancer ?": fiches.join(", "), "Quel mode pour la file ?": "File séquentielle" });
+  assert.equal(etatDe(dir).active_brief, fiches[0]);
+  assert.deepEqual(etatDe(dir).queue, [fiches[1]]);
+  assert.equal(etatDe(dir).parallel, undefined);
+  rmSync(join(dir, ".drwil/state.json"));
+
+  // Cochées dans le désordre : l'ordre du sondage prévaut.
+  const r = rejouer("PostToolUse", {
+    "Quelles fiches lancer ?": `${fiches[1]}, ${fiches[0]}`,
+    "Quel mode pour la file ?": "File en parallèle",
+  });
+  assert.match(r.stdout, /File en parallèle : 2 chantier\(s\) lancé\(s\) sur 2/);
+  assert.deepEqual(etatDe(dir).parallel, fiches);
+  assert.equal(etatDe(dir).activity, "SCOPING");
+  assert.equal(etatDe(join(parent, "projet-un")).active_brief, fiches[0]);
+  assert.equal(etatDe(join(parent, "projet-deux")).active_brief, fiches[1]);
+});
+
 test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
