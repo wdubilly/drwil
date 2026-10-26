@@ -11,6 +11,11 @@ selon tous leurs aspects (état, cadrage, preuves, coût, intentions et
 décisions en attente). Il doit être **embarquable avec le paquet** et
 **interactif a minima** : lecture seule ne suffit pas.
 
+Précisé le 2026-10-27 : il doit **reprendre ce que font les artifacts Claude**
+utilisés jusqu'ici (l'artifact de tri des intentions et celui des mesures de
+la CI) et **remplacer le tableau de bord actuel** (`drwil-progress`, HTML
+statique), pas s'y ajouter.
+
 ## Existant (relevé le 2026-10-27)
 
 - Le skill `drwil-progress` génère un tableau de bord HTML statique
@@ -21,6 +26,10 @@ décisions en attente). Il doit être **embarquable avec le paquet** et
 - Intention voisine : `docs/intentions/vue-de-relecture.md` (ce qui demande le
   jugement de l'humain dans une PR), qui garde pour règle l'absence de
   serveur ou de SaaS imposé par défaut.
+- Les artifacts Claude sont des pages hébergées par Claude, hors du dépôt : le
+  tri des intentions (cité par le message du ménage du 2026-10-26) et le
+  tableau de bord des mesures de la CI (cité par `docs/intentions/suivi-ci-et-contexte.md`).
+  Leur contenu n'est pas relevé ici : à inventorier avant de cadrer.
 - Aucun serveur n'existe : le message du ménage des intentions du 2026-10-26
   la jugeait couverte par le tableau de bord statique, ce qui ne répond pas
   au besoin d'interactivité.
@@ -39,6 +48,13 @@ affiché dans le terminal de l'humain, pour qu'un agent qui appellerait l'API
 locale ne puisse pas les déclencher.
 
 ## Questions à trancher
+
+- [décision] Inventaire : que montrent exactement les artifacts Claude à
+  reprendre (tri des intentions, mesures de la CI, autres), et que garde-t-on
+  du tableau de bord statique avant de le retirer ?
+- [décision] Remplacement : le skill `drwil-progress` et le module
+  `visualiser-avancement` sont-ils retirés, ou réduits à une commande qui
+  lance le serveur ? Comment migrer un projet qui les utilise ?
 
 - [décision] Quelle piste : statique enrichi, serveur local, ou application
   native ? Le serveur local reste-t-il optionnel (pas imposé par défaut) ?

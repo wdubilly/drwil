@@ -286,7 +286,8 @@ drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
   questions à trancher (langue, gabarit de PR, canal sécurité, contrats
   COM) — `docs/intentions/community-ready.md`.
 - [ ] [décision] [P3] Un tableau de bord interactif en serveur local léger
-  pour suivre les chantiers (reprise du 2026-10-27 d'une intention retirée au
+  pour suivre les chantiers : reprend les artifacts Claude et remplace le
+  tableau de bord statique (reprise du 2026-10-27 d'une intention retirée au
   ménage ; le serveur n'a jamais existé) —
   `docs/intentions/tableau-de-bord-serveur-leger.md`.
 
