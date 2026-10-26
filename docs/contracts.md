@@ -1420,3 +1420,21 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/state.test.mjs`
 **Origine** : file-en-parallele — « Un chantier qui demande un humain arrête le lancement des suivants, sans interrompre ceux qui tournent ; le bilan de file dit l'état de chacun »
 **Raison** : Sans règle, un chantier bloqué en parallèle aurait fait tout arrêter, ou la session principale aurait relancé d'elle-même ce qui attendait l'humain.
+
+## QUA-150 — Les tests du dépôt qui mesurent une durée sont recensés, et chacun est rendu stable ou sa conservation justifiée
+**Règle** : Les tests du dépôt qui mesurent une durée (`performance.now`, `Date.now`, comparaison de durées, délai) sont recensés à l'entrée de journal du chantier « tests de timing stables » ; chacun y est rendu déterministe, passé en indicateur (ligne `[ia-first-warning]`, avertissement compté par `run-checks`) ou conservé avec sa justification. Un test de timing qu'une charge de machine peut faire échouer sans qu'aucun code ne soit en cause n'est pas une preuve : il se corrige ou se justifie.
+**Périmètre** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`, `.githooks/state.test.mjs`, `.githooks/engine.test.mjs`, `outils/banc.test.mjs`, `outils/banc-agents.test.mjs` ; l'entrée de journal du chantier.
+**Source de vérité** : `docs/projects/journal.md` (entrée « Les tests de timing ne dépendent plus de la charge de la machine »).
+**Preuve** : attestation humaine : relecture du recensement et de chaque justification.
+**Manuel** : jugement humain : le recensement est complet et chaque test conservé l'est à bon droit.
+**Origine** : tests-de-timing-stables — « Les autres tests du dépôt qui mesurent une durée sont recensés au journal ; chacun est rendu déterministe ou passé en indicateur, ou sa conservation est justifiée »
+**Raison** : Le pre-push parallèle refusait des pushs sur des tests de durée, sans défaut de code : chaque refus coûtait une passe complète et poussait à relancer à l'aveugle.
+
+## QUA-151 — Un push ne dépend pas de la charge de la machine : cinq passes consécutives sous charge ne refusent rien
+**Règle** : Cinq passes consécutives de `.githooks/run-checks.mjs` en conditions de pre-push (références poussées, contrôles en parallèle, processeurs restreints par `taskset`) ne refusent aucun push pour un test de timing ; le résultat de chaque passe est consigné à l'entrée de journal du chantier « tests de timing stables ».
+**Périmètre** : `.githooks/run-checks.mjs`, `.githooks/pre-push` ; l'entrée de journal du chantier.
+**Source de vérité** : `docs/projects/journal.md` (entrée « Les tests de timing ne dépendent plus de la charge de la machine »).
+**Preuve** : attestation humaine : relecture du résultat consigné des cinq passes, ou rejeu par l'humain.
+**Manuel** : jugement humain : la charge simulée est représentative du pre-push et les cinq passes consignées sont convaincantes.
+**Origine** : tests-de-timing-stables — « Cinq passes consécutives du pre-push sous charge (`taskset`, contrôles en parallèle) ne refusent plus aucun push pour un test de timing »
+**Raison** : La stabilité d'un test de durée ne se prouve que par la répétition sous charge ; une seule passe verte ne dit rien.

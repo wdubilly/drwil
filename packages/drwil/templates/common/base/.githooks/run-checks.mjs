@@ -132,6 +132,8 @@ const reused = new Set(
 const started = startParallel(list.filter((c) => !reused.has(c.id)));
 const leaks = [];
 const timings = [];
+// A check (a test of the package…) reports a non-blocking warning by printing a line "[ia-first-warning] <text>": counted in the summary.
+const flagged = [];
 for (const c of list) {
   let r;
   if (reused.has(c.id)) {
@@ -156,6 +158,7 @@ for (const c of list) {
   if (reuseActive && reused.size > 0 && r.durationMs !== undefined) report.push(`[ia-first] ${c.name} : ${T.replayed}`);
   if (r.leaked) leaks.push({ name: c.name, count: r.leaked });
   if (r.output) report.push(r.output.replace(/\n$/, ""));
+  for (const m of (r.output ?? "").matchAll(/^\[ia-first-warning\] (.+)$/gm)) flagged.push(m[1].trim());
   if (r.durationMs !== undefined) {
     report.push(`[ia-first] ${c.name} : ${T.duration(r.durationMs)}`);
     timings.push({ name: c.name, ms: r.durationMs });
@@ -215,6 +218,7 @@ const label = (line) => annotate(line, labels);
 const warnings = [
   ...notRun.map((c) => `[ia-first] ⚠ ${T.notRun} ${c}`),
   ...reminders.map((r) => `[ia-first] ⚠ ${r}`),
+  ...flagged.map((w) => `[ia-first] ⚠ ${w}`),
   ...leaks.map((l) => `[ia-first] ⚠ ${T.leak(l.name, l.count)}`),
   ...(end.cleanupFailed ? [`[ia-first] ⚠ ${T.cleanupFailed}`] : []),
 ].map(label);
