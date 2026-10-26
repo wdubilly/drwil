@@ -114,6 +114,8 @@ liés à un seul fichier.
 ### Notes reprises de `docs/intentions/notes.md`
 
 - 2026-10-24 — Accélérer la CI sans perte de qualité (reste après le chantier du 2026-10-24, voir `docs/projects/journal.md`) : suite unique + verdict par contrat via reporter (décision humaine, QUA-033) et jobs CI découpés via ciJob (renomment les checks exigés par le ruleset), seulement si la CI reste trop lente ; cache de compilation. Mesures : tableau de bord https://claude.ai/artifact/LVTAv9omSJ4h8bL9s22vbT
+- 2026-10-23 — Réduire la consommation par chantier (barriere-commit-de-fusion : 1,6 M pondérés, 64 % de contexte relu, 85 min pour un petit correctif) : (1) sorties de state.mjs, run-checks et verify courtes en mode agent (seulement ce qui change ou échoue) ; (2) vérifier au cadrage que chaque critère sera lu par verify (ID entre backticks) ; (3) contrôle rapide formatage + couverture du seul fichier touché avant run-checks ; (4) consumption.mjs attribue par nom de branche : une branche de cadrage nommée d'après une fiche (cadrage/barriere-commit-de-fusion, qui en cadrait cinq) gonfle le chiffre de cette fiche — attribuer par session ou par chantier ; (5) mesurer le temps par étape (dev, contrôles, clôture, attente CI) pour savoir quelle piste rapporte le plus.
+- 2026-10-26 — Verify en FAIL sans contrat en échec : contrat MANUAL (QUA-013, QUA-048) ou arbre modifié (dirtyWorktree) ; vu sur au moins 4 des 17 FAIL des 25 et 26 octobre (MANUAL), d autres avec arbre modifié. À rattacher à docs/intentions/suivi-ci-et-contexte.md.
 
 ### Durée de `drwil verify` et de chaque contrôle (notes du 2026-10-25)
 
@@ -121,6 +123,12 @@ Reprises de `docs/intentions/notes.md` ; cadrées le 2026-10-25 en quatre fiches
 
 - 2026-10-25 — Chronométrer chaque contrôle : fait (QUA-136, journal du 2026-10-25, durée par contrôle) ; reste à faire lire ces durées par le tableau « Durée de la CI drwil » (https://claude.ai/artifact/LVTAv9omSJ4h8bL9s22vbT), hors de ce chantier. À rattacher à docs/intentions/suivi-ci-et-contexte.md.
 - 2026-10-25 — drwil verify est long (verify --evidence : ≈ 4 min 30 de bout en bout, PASS, le 2026-10-25 en VERIFY) : il relance en série tous les contrôles cités par le registre (packages/drwil/src/verify.ts, c.run), dont la suite complète du paquet avec couverture (npm run test:coverage) et 53 suites node --test filtrées par contrat (≈ 18 s à elles seules), alors que run-checks vient de les jouer en parallèle (QUA-119). Pistes : paralléliser verify via runAsync (.githooks/engine.mjs) — fait (QUA-139) ; reprendre les résultats de run-checks sur un arbre inchangé — fait (QUA-140, QUA-013 précisé), puis contrôle par contrôle pour les itérations — fait (QUA-141) ; suite unique avec verdict par contrat (QUA-033) ; après un PASS, ne pas tout rejouer quand seule la doc a changé (comme le « commit de documentation seule » de run-checks) ; après un FAIL, rejouer d'abord les seuls contrats en échec (option only, déjà utilisée par drwil attest). Vécu le 2026-10-25 (chantier dossiers-temporaires-des-tests, PR #230) : six passes de verify --evidence en 30 min (≈ 25 à 30 min sur 45), dont deux ou trois dues à des notes modifiées dans l'arbre pendant VERIFY ; un ou deux auraient suffi. À rattacher à docs/intentions/suivi-ci-et-contexte.md.
+
+### documenter l'avertissement émis par un contrôle (`[ia-first-warning]`) dans son contrat (ex-« tests-de-timing-instables »)
+
+Statut d'origine : ouverte le 2026-10-26 — limite non traitée de la clôture « tests de timing stables » (journal du 2026-10-26).
+
+`run-checks` compte désormais comme avertissement non bloquant toute ligne `[ia-first-warning] <texte>` imprimée par un contrôle (le test de budget de temps au commit s'en sert). Le texte du contrat QUA-127 (résumé comptant chaque avertissement non bloquant) et la doc livrée ne le disent pas encore : `docs/contracts.md`, le catalogue et la doc des hooks étaient hors du cadrage du chantier.
 
 ## Existant
 
@@ -206,6 +214,13 @@ Mesures `[budget-commit]` lues dans les journaux de CI :
 - Un fichier par registre ; le catalogue, `check-docs`, `.githooks/glossary.mjs`,
   `.githooks/close.mjs` et `.githooks/doc-coherence.mjs` les lisent.
 
+### documenter l'avertissement émis par un contrôle (`[ia-first-warning]`) dans son contrat (ex-« tests-de-timing-instables »)
+
+**Existant (relevé le 2026-10-26)** :
+
+- `.githooks/run-checks.mjs` (et son gabarit) reprend les lignes `[ia-first-warning] <texte>` de la sortie d'un contrôle ; test ciblé « QUA-127 » dans `.githooks/run-checks.test.mjs`.
+- Le test « budget de temps » de `packages/drwil/test/kit.test.mjs` l'émet au dépassement de 1500 ms.
+
 ## Questions à trancher
 
 - [décision] Découper ce regroupement en lots, chacun vérifiable seul, et choisir le premier.
@@ -281,3 +296,8 @@ job `checks`) conservé comme preuve historique.
 - Forme : un fichier par contrat, par année de journal, ou archive des
   entrées anciennes ? Change le format lu par les contrôles et le catalogue :
   migration pour les projets adoptés.
+
+### documenter l'avertissement émis par un contrôle (`[ia-first-warning]`) dans son contrat (ex-« tests-de-timing-instables »)
+
+- [décision] Compléter le texte de QUA-127 (et sa preuve : le test ciblé de `.githooks/run-checks.test.mjs`) plutôt que créer un contrat : modifier un contrat existant est une décision du demandeur.
+- Les autres tests qui mesurent une durée, recensés au journal (`.githooks/engine.test.mjs`, `outils/banc*.test.mjs`, rendez-vous de QUA-139), sont conservés avec justification ; les passer en indicateur est possible par le même mécanisme, si une instabilité s'y révèle.

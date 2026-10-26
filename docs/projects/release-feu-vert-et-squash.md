@@ -1,6 +1,6 @@
 # Projet : le feu vert de publication est enregistré par l'outil au lancement, et la fiche de recette signale un squash
 
-**Statut** : cadré le 2026-10-26.
+**Statut** : cadré le 2026-10-26, élargi le même jour (copies du dépôt des hooks et recettes du gabarit ajoutées au cadrage, sur le oui du demandeur).
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/cloture-et-attestations.md` (parties « le feu vert de publication enregistré par l'outil au lancement » et « la dernière version d'une fiche fusionnée par squash dans la fiche de recette »)
@@ -19,6 +19,11 @@ files:
   - docs/intentions/cloture-et-attestations.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - .githooks/state-texts.mjs
+  - .githooks/state.mjs
+  - docs/recipes/create-a-release.md
+  - .githooks/acceptance-sheet.mjs
+  - .githooks/acceptance-sheet.test.mjs
 -->
 
 ## 1. Besoin

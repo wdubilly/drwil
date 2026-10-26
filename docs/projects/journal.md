@@ -1049,7 +1049,7 @@ l'index ; texte intégral dans l'historique git
 - **Limites connues** : sur ce dépôt, installé par `installer-depot` et non
   par `init`, `doctor` avertit d'un manifeste et d'une version absents, avec
   un conseil qui ne s'y applique pas —
-  `docs/intentions/petits-defauts.md` (ex-« doctor-sur-le-depot-drwil », regroupée le 2026-10-25). Le cadrage oubliait
+  `docs/intentions/garanties-la-suite.md` (ex-« doctor-sur-le-depot-drwil », regroupée le 2026-10-25). Le cadrage oubliait
   `docs/contracts.md` (un élargissement), déjà couvert par
   l'intention « cadrage complet » (réalisée : « Un cadrage complet du premier coup », QUA-035).
 - **Clôturé par** : PR à venir.
@@ -1065,7 +1065,7 @@ l'index ; texte intégral dans l'historique git
   `catalogue:SEC-013` ; le registre ne change pas. Lecture et comparaison
   dans `.githooks/contracts.mjs`, `check-docs` étant au plafond de QUA-001.
 - **Limites connues** : aucune nouvelle ; la double forme du préfixe reste
-  en question dans `docs/intentions/petits-defauts.md` (ex-« prefixe-catalogue », regroupée le 2026-10-25).
+  en question dans `docs/intentions/adoption-et-init.md` (ex-« prefixe-catalogue », regroupée le 2026-10-25).
 - **Clôturé par** : PR à venir.
 
 ## 2026-10-16 — Lien contrat ↔ test, échec attribué à la bonne règle
@@ -1951,7 +1951,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : branches fusionnées par squash non supprimées —
   intention couverte et retirée (journal du 2026-10-19) ; neuf citations de
   fiche restées dans du code non modifié, hors cadrage —
-  `docs/intentions/petits-defauts.md` (ex-« citations-de-fiche-heritees », regroupée le 2026-10-25) ; commentaires reconnus
+  `docs/intentions/coherence-de-la-doc.md` (ex-« citations-de-fiche-heritees », regroupée le 2026-10-25) ; commentaires reconnus
   par une heuristique de ligne —
   l'intention « commentaires-reconnus-par-heuristique » (abandonnée le 2026-10-25) ; le gain
   reste à mesurer après le détour —
@@ -2016,7 +2016,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   2026-10-19) ; tout changement du registre des contrats, même un ajout,
   demande le oui de l'humain — intention couverte et retirée (journal du
   2026-10-19, « un contrat ajouté pendant un détour ») ; `package.json` n'est pas
-  compté parmi les seuils — `docs/intentions/petits-defauts.md` (ex-« seuils-dans-package-json », regroupée le 2026-10-25) ;
+  compté parmi les seuils — `docs/intentions/contournements-restants.md` (ex-« seuils-dans-package-json », regroupée le 2026-10-25) ;
   gain de la clôture allégée non mesurable par chantier entier
   (comparaison faite, sans conclusion) —
   l'intention « mesurer-gain-cloture-allegee » (abandonnée le 2026-10-25) (mise à jour).
@@ -2186,12 +2186,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   squash » : entièrement couverte (ménage et reprise, décision du
   2026-10-19 « la PR fusionnée via gh fait foi »), résumée ici et retirée.
 - **Limites connues** : le texte de QUA-048 cite encore `git branch -d` —
-  `docs/intentions/petits-defauts.md` (ex-« qua-048-aligne-sur-squash », regroupée le 2026-10-25) ; hors de GitHub, et
+  `docs/intentions/release-allegee.md` (ex-« qua-048-aligne-sur-squash », regroupée le 2026-10-25) ; hors de GitHub, et
   au-delà des 200 PR fusionnées les plus récentes, une branche fusionnée
   par squash est gardée — l'intention « squash-hors-github » (abandonnée le 2026-10-25).
   Écart relevé : `close.mjs --check` ne signale pas les citations de
   l'intention d'origine retirée —
-  `docs/intentions/petits-defauts.md` (ex-« cloture-signale-intention-retiree », regroupée le 2026-10-25).
+  `docs/intentions/coherence-de-la-doc.md` (ex-« cloture-signale-intention-retiree », regroupée le 2026-10-25).
 - **Consommation** : 0,59 M tokens pondérés, 52 requêtes, 21 minutes
   (`.drwil/usage.jsonl`).
 - **Clôturé par** : la PR de la branche `chantier/stab-squash`.
@@ -2221,7 +2221,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   libre, modification soumise au oui »), résumée ici et retirée.
 - **Limites connues** : à l'ouverture d'un détour, l'annonce « le oui
   sera demandé » cite encore le registre sans nuance —
-  `docs/intentions/petits-defauts.md` (ex-« annonce-oui-registre-detour », regroupée le 2026-10-25) ; un test ajouté à un
+  `docs/intentions/coherence-de-la-doc.md` (ex-« annonce-oui-registre-detour », regroupée le 2026-10-25) ; un test ajouté à un
   contrat existant (ligne « Tests ») reste une modification soumise au
   oui (décision : seul un contrat nouveau est un ajout).
 - **Consommation** : 0,55 M tokens pondérés, 37 requêtes, 25 minutes
@@ -2524,7 +2524,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   par l'humain.
 - **Limites connues** : un intitulé d'index devenu faux et un paragraphe de
   version qui ne suit plus ses cases ne sont pas détectés (non détectables de
-  façon sûre) : intention `docs/intentions/petits-defauts.md` (ex-« intitule-d-index-devenu-faux », regroupée le 2026-10-25).
+  façon sûre) : intention `docs/intentions/coherence-de-la-doc.md` (ex-« intitule-d-index-devenu-faux », regroupée le 2026-10-25).
   Une ligne d'index commune à la fiche et à son intention ne se retire pas
   automatiquement : à retirer à la main.
 - **Consommation** : non mesurée — chantier mené sous Copilot CLI.
@@ -2550,7 +2550,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   mécaniques livrée au kit ni par le README du module, hors du cadrage (la
   fiche des mécaniques du dépôt le cite, ajouté à la clôture) : le test du
   kit contourne le manque dans son projet de test
-  (intention `docs/intentions/petits-defauts.md` (ex-« recette-note-dans-la-fiche-des-mecaniques », regroupée le 2026-10-25)).
+  (intention `docs/intentions/release-allegee.md` (ex-« recette-note-dans-la-fiche-des-mecaniques », regroupée le 2026-10-25)).
   Les notes des versions déjà publiées ne sont pas rétro-écrites (hors
   périmètre). Aucune release réelle n'a été jouée : tests sur dépôts
   temporaires, origine nu local et `gh` simulé.
@@ -2621,7 +2621,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   journal de consommation, tous écrits en CLOSING pour le commit de clôture.
 - **Limites connues** : le dossier des preuves garde son nom français dans un
   gabarit anglais, seul le réglage `dirs.proofs` le change —
-  `docs/intentions/petits-defauts.md` (ex-« nom-du-dossier-des-preuves », regroupée le 2026-10-25). Les chantiers clos avant
+  `docs/intentions/adoption-et-init.md` (ex-« nom-du-dossier-des-preuves », regroupée le 2026-10-25). Les chantiers clos avant
   cette règle n'ont pas de preuve, et aucune n'est écrite après coup (hors
   périmètre) — l'intention « preuve-des-chantiers-deja-clos » (abandonnée le 2026-10-25). Les trois
   contrats créés ne déclarent pas de `**Couvre**`, comme les autres contrats du
@@ -2816,11 +2816,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `init` rattache le code, seulement le code indexé. Preuve de clôture :
   `docs/preuves/premier-commit-avant-adoption.md`.
 - **Limites connues** : l'aperçu `init --dry-run` n'annonce pas le
-  rattachement — `docs/intentions/petits-defauts.md` (ex-« apercu-init-code-existant », regroupée le 2026-10-25) ; une carte
+  rattachement — `docs/intentions/adoption-et-init.md` (ex-« apercu-init-code-existant », regroupée le 2026-10-25) ; une carte
   préexistante et un chemin qu'un bloc `scope` ne peut pas nommer restent à
-  traiter à la main — `docs/intentions/petits-defauts.md` (ex-« code-existant-non-rattache », regroupée le 2026-10-25) ;
+  traiter à la main — `docs/intentions/adoption-et-init.md` (ex-« code-existant-non-rattache », regroupée le 2026-10-25) ;
   « pas encore de code » affiché à un projet sans pile détectée qui en a —
-  `docs/intentions/petits-defauts.md` (ex-« message-sans-couche-code-existant », regroupée le 2026-10-25) ; une seconde
+  `docs/intentions/adoption-et-init.md` (ex-« message-sans-couche-code-existant », regroupée le 2026-10-25) ; une seconde
   installation signale la carte comme dérivée du gabarit, comme toute carte
   complétée ; la justesse de la recette reste un jugement humain (QUA-041).
 - **Clôturé par** : la branche `workstream/premier-commit-avant-adoption`.
@@ -2854,7 +2854,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : `verify` ne donne jamais PASS dans la copie
   (contrats à attester, humain absent) —
   `docs/intentions/banc-verify-jamais-pass.md` ; le juge lit le texte des
-  commandes, pas leur effet — `docs/intentions/banc-juge-motif-textuel.md` ;
+  commandes, pas leur effet — `docs/intentions/contournements-restants.md` (ex-« banc-juge-motif-textuel ») ;
   le champ `result` d'un résultat en erreur n'est vérifié qu'en simulation, et
   le nouvel essai réel reste à lancer [humain] —
   `docs/intentions/campagne-mini-banc.md`.
@@ -2933,7 +2933,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   « Unreleased » du changelog. Attestation de QUA-092 (garantie de
   couverture prouvée sur un dossier vide) renouvelée par l'humain, son champ
   **Couvre** citant les fichiers des garanties touchés. Intention d'origine
-  mise à jour (`docs/intentions/contournements-a-completer.md`) : y restent
+  mise à jour (`docs/intentions/contournements-restants.md` (ex-« contournements-a-completer »)) : y restent
   le clone superficiel et l'agent qui élargit son cadrage. Preuve de
   clôture : `docs/preuves/contournements-completes.md`.
 - **Limites connues** : une PR peut encore retirer l'étape de rejeu du
@@ -3072,7 +3072,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : relevé de l'indicateur —
   `docs/intentions/suivi-ci-et-contexte.md` (ex-« releve-cache-lu-par-requete », regroupée le 2026-10-25) ; recettes et skills qui
   renvoient encore au registre entier —
-  `docs/intentions/petits-defauts.md` (ex-« recettes-qui-lisent-le-registre-entier », regroupée le 2026-10-25) ; lecture
+  `docs/intentions/coherence-de-la-doc.md` (ex-« recettes-qui-lisent-le-registre-entier », regroupée le 2026-10-25) ; lecture
   forcée pour Gemini CLI, Copilot CLI, Codex et Cursor —
   `docs/intentions/compatibilite-des-outils.md` (ex-« lecture-ciblee-forcee-autres-outils », regroupée le 2026-10-25) ; découpage du
   registre et du journal — `docs/intentions/suivi-ci-et-contexte.md` (ex-« decoupage-registre-et-journal », regroupée le 2026-10-25) ;
@@ -3463,7 +3463,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : ces cinq passes simulent le hook, ce ne sont pas cinq
   pushs réels. Le mécanisme
   `[ia-first-warning]` n'est pas encore dans le texte de QUA-127 :
-  `docs/intentions/tests-de-timing-instables.md`.
+  `docs/intentions/suivi-ci-et-contexte.md` (ex-« tests-de-timing-instables »).
 - **Preuve de clôture** : `docs/preuves/tests-de-timing-stables.md`.
 - **Clôturé par** : la branche `chantier/tests-de-timing-stables`.
 

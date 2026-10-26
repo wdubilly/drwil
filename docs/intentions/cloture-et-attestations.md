@@ -141,6 +141,10 @@ commit qui la supprime est le squash lui-même, posé sur la branche
 principale : son parent garde la version du cadrage, et les critères
 corrigés ou rattachés pendant le chantier n'apparaissent pas corrigés.
 
+### Notes reprises de `docs/intentions/notes.md`
+
+- 2026-10-23 — Un lancement intercalé efface la file en silence : le 2026-10-24, lancer l'entretien courant par /drwil-start (pour corriger la PR #218 bloquée en CLOSING) a remplacé la file décidée au lancement (reouvrir-apres-cloture, contournements-completes) ; state.mjs next a ensuite refusé, sans dire que la file avait disparu. Attendu : un lancement intercalé suspend la file (ou demande), et next/state disent clairement qu'il n'y a plus de file et pourquoi.
+
 ## Cadrage du 2026-10-26
 
 Les dix parties se cadrent en cinq fiches, décidées par le demandeur le 2026-10-26 :
@@ -152,6 +156,7 @@ Les dix parties se cadrent en cinq fiches, décidées par le demandeur le 2026-1
 - `docs/projects/release-feu-vert-et-squash.md` : feu vert de publication enregistré, recette qui signale un squash (parties « feu vert » et « recette après squash »).
 
 Décidé de ne rien faire : attendre CodeQL avant la clôture (`reopen` suffit, partie « défaut révélé après la clôture » : la deuxième question est close). Un essai réel de la réouverture sur une vraie PR reste une note, à la prochaine CI rouge après une clôture.
+Rangement du 2026-10-26 : la fiche `docs/projects/release-feu-vert-et-squash.md` attend `docs/intentions/release-allegee.md` (alléger d'abord, décision du demandeur). Reste non cadrée ici : la note « un lancement intercalé efface la file », voisine de `docs/projects/next-attend-la-fusion.md`.
 
 ## Existant
 

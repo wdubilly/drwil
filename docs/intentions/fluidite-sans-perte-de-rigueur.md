@@ -5,6 +5,7 @@ geste, clôture sur évidence de verify), 2 (décision lue par un hook, via
 `/drwil-lancer`) et 7 (rappel de l'état) faits le 2026-10-10, voir
 `docs/projects/journal.md` ; restent les questions 3 et 4, et l'affichage
 de qui décide chaque transition.
+Rangement du 2026-10-26 : deux notes reprises en fin de fichier ; le levier 3 (attestation groupée) touche `docs/projects/attestations-sur-l-effet-et-couvre.md`.
 
 **Revu le 2026-10-16** : levier 3, « une PR par chantier » est devenu la
 pratique (fusion automatique choisie au lancement, `/drwil-start`) ;
@@ -93,3 +94,21 @@ hors du poste) en sollicitant l'humain **moins souvent et au bon moment**.
    groupée : oui ou non ?
 4. **Ordre** : quels leviers en premier, et dans quelle fiche (révision de
    la gouvernance, ou fiches séparées) ?
+
+## Reprises du rangement du 2026-10-26
+
+### afficher l'état de gouvernance en continu (ex-note du 2026-10-21)
+
+**Besoin** :
+
+- 2026-10-21 — Afficher l'état de gouvernance (SCOPING, BUILD, VERIFY, CLOSING) en continu dans le terminal pour suivre l'avancement. Pistes : réglage statusLine de Claude Code livré par le kit avec un script .githooks/state-line.mjs lisant .drwil/state.json ; même script réutilisable dans l'invite du shell ; vérifier si Copilot CLI offre l'équivalent.
+
+**Existant** :
+
+- Levier 7 ci-dessus (rappel court de l'état à chaque message) : fait.
+
+### des chantiers plus petits, une fiche par lot (ex-note du 2026-10-21)
+
+**Besoin** :
+
+- 2026-10-21 — Chantiers trop gros : « critères et preuves durables » a pris 2 h 45, 31 fichiers, 3 contrats créés et 2 étendus, car il touchait trois mécaniques liées (jugement des critères, clôture, CI) ; les deux précédents tenaient en 40 min. Piste : cadrer une fiche par lot (un lot = un chantier vérifiable seul) plutôt qu'une fiche à quatre lots, et le dire dans la recette de cadrage.
