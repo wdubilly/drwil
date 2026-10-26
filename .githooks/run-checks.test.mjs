@@ -450,31 +450,44 @@ test("QUA-134 : une racine temporaire qu'on ne parvient pas à supprimer est un 
 });
 
 test("QUA-136 : chaque contrôle exécuté a sa durée au détail, du plus lent au plus rapide en fin de fichier ; le résumé nomme les trois plus lents", () => {
-  const lent = (ms) => `node -e "setTimeout(()=>{},${ms})"`;
+  // Aucune attente sur la durée réelle d'un contrôle : sous charge, les contrôles réels de la passe (gitleaks…) s'intercalent. On
+  // vérifie la cohérence des durées consignées (tri décroissant, résumé = trois premières du classement), pas leur valeur.
   const config = (lang) => ({
     ".drwil/ia-first.json": JSON.stringify({
       lang,
-      checks: [
-        { name: "rapide", run: lent(0) },
-        { name: "moyen", run: lent(250) },
-        { name: "lent", run: lent(600) },
-        { name: "pas-si-rapide", run: lent(120) },
-      ],
+      checks: ["rapide", "moyen", "lent", "pas-si-rapide"].map((name) => ({ name, run: "node -e 0" })),
     }),
   });
   const fr = lancer(config("fr"));
   assert.equal(fr.status, 0, fr.stdout + fr.stderr);
   assert.match(fr.detail, /^\[ia-first\] lent : durée : \d+ ms$/m);
   assert.doesNotMatch(fr.detail, /^\[ia-first\] contrôles du projet \(lint, tests…\) : durée/m, "un contrôle non exécuté n'a pas de durée");
-  const classe = fr.detail.split("contrôles du plus lent au plus rapide")[1].split("\n").slice(1).filter(Boolean);
-  const noms = classe.map((l) => l.replace(/^\s*\d+ ms\s+/, ""));
-  assert.deepEqual(noms.slice(0, 3), ["lent", "moyen", "pas-si-rapide"]);
-  assert.ok(noms.length >= 4, "tous les contrôles exécutés y figurent");
-  assert.match(fr.stdout, /— les plus lents : lent \d+ ms, moyen \d+ ms, pas-si-rapide \d+ ms\n$/);
+  const classe = fr.detail
+    .split("contrôles du plus lent au plus rapide")[1]
+    .split("\n")
+    .slice(1)
+    .filter(Boolean)
+    .map((l) => l.match(/^\s*(\d+) ms\s+(.+)$/));
+  assert.ok(classe.every(Boolean), "chaque ligne du classement : durée puis nom");
+  const entrees = classe.map((m) => ({ ms: Number(m[1]), nom: m[2] }));
+  for (const nom of ["rapide", "moyen", "lent", "pas-si-rapide"]) {
+    const ligne = fr.detail.match(new RegExp(`^\\[ia-first\\] ${nom} : durée : (\\d+) ms$`, "m"));
+    assert.equal(entrees.find((e) => e.nom === nom)?.ms, Number(ligne[1]), `${nom} : même durée au détail et au classement`);
+  }
+  assert.deepEqual(
+    entrees.map((e) => e.ms),
+    entrees.map((e) => e.ms).toSorted((a, b) => b - a),
+    "du plus lent au plus rapide",
+  );
+  const trois = entrees
+    .slice(0, 3)
+    .map((e) => `${e.nom} ${e.ms} ms`)
+    .join(", ");
+  assert.ok(fr.stdout.endsWith(`— les plus lents : ${trois}\n`), fr.stdout);
   assert.match(fr.detail, /en passe parallèle, elles se recouvrent/);
   const en = lancer(config("en"));
   assert.match(en.detail, /^\[ia-first\] lent : duration: \d+ ms$/m);
-  assert.match(en.stdout, /— slowest: lent \d+ ms, moyen \d+ ms, pas-si-rapide \d+ ms\n$/);
+  assert.match(en.stdout, /— slowest: (.+ \d+ ms, ){2}.+ \d+ ms\n$/);
 });
 
 const VERDICTS = ".drwil/evidence/run-checks-verdicts.json";

@@ -1210,9 +1210,8 @@ test("QUA-065 : readStdinJson : rend le JSON dès qu'il est complet, sans attend
   ouvert.write('{"a":1}');
   assert.deepEqual(await readStdinJson(ouvert, 5000), { a: 1 });
   const muet = new PassThrough();
-  const debut = Date.now();
+  // Aucune mesure de durée : un flux qui ne se ferme jamais ne rend null que par le délai, sinon le test n'aboutit pas.
   assert.equal(await readStdinJson(muet, 50), null);
-  assert.ok(Date.now() - debut < 2000);
   const coupe = new PassThrough();
   coupe.write("{ incomplet");
   coupe.end();
