@@ -150,7 +150,7 @@ Constat chiffré du 2026-10-26 (`.drwil/usage.jsonl`, chantiers d'au moins
 | Période | Chantiers | Durée médiane | Tokens médians | Minutes par million de tokens |
 |---|---|---|---|---|
 | 16 au 20 oct. | 27 | 25 min | 0,80 M | 33 |
-| 21 au 24 oct. | 11 | 42 min | 2,42 M | 25 |
+| 21 au 24 oct. | 11 | 67 min | 2,42 M | 24 |
 | 25 et 26 oct. (0.9.0) | 8 | 43 min | 0,72 M | 44 |
 
 Aucun gain de durée visible ; la CI de la forge s'allonge (run médian de
