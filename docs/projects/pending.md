@@ -100,8 +100,6 @@ d'un outil) la dit dans son statut.
 
 - [ ] [IA] [P1] Les hooks d'agent livrés sous le plafond de 200 lignes
   (cadré le 2026-10-27, 0.10.0) — `docs/projects/hooks-agent-sous-le-plafond.md`.
-- [ ] [IA] [P1] Un `AGENTS.md` court (100 lignes) qui aiguille vers le détail
-  (cadré le 2026-10-27, 0.10.0) — `docs/projects/agents-md-court.md`.
 - [ ] [IA] [P1] Un contrôle livré qui surveille la taille de tous les fichiers
   générés par drwil, bloquant sur le gabarit et avertissant chez un projet adopté (cadré le 2026-10-27, 0.10.0) —
   `docs/projects/surveillance-taille-du-kit.md`.

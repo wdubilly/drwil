@@ -81,7 +81,7 @@ fichiers que la CLI installe chez un projet :
 ## Décisions (sondage du 2026-10-27)
 
 Cadrées en trois fiches, dans l'ordre : `docs/projects/hooks-agent-sous-le-plafond.md`,
-`docs/projects/agents-md-court.md`, `docs/projects/surveillance-taille-du-kit.md`.
+`docs/projects/journal.md`, `docs/projects/surveillance-taille-du-kit.md`.
 
 - `AGENTS.md` : 100 lignes, gabarit et copie du dépôt ; règles sans contrôle
   machine en une ligne chacune, détail renvoyé à `docs/`.
