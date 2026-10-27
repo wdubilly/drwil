@@ -1,0 +1,42 @@
+import { projectLang } from "./i18n.js";
+
+// Messages of the commands, in the language of the project of the current folder (English outside a project).
+export const TEXTS = {
+  fr: {
+    initDone: "Gouvernance IA-first installée dans",
+    nothingToRemove: "Rien à supprimer.",
+    removed: "Fichiers supprimés :",
+    wouldRemove: "Fichiers qui seraient supprimés (--yes pour confirmer) :",
+    modified: "Modifiés depuis l'installation, non supprimés :",
+    cleaned: "Ajouts drwil retirés de ces fichiers du projet :",
+    wouldClean: "Ajouts drwil qui seraient retirés de ces fichiers du projet :",
+    noDrift: "Rien à résoudre : aucune dérive sur la mécanique du kit.",
+    resolved: "Fichiers résolus (ancien sauvegardé en .bak) :",
+    ignored: "Dérive laissée en l'état (confirmation refusée ou terminal non interactif sans --force) :",
+    evidence: "évidence : {0}",
+    manual: "  [manuel]",
+    noTerminal: "attestation refusée : un terminal interactif est requis (un agent ou un script ne peut pas attester {0})",
+    retype: "Pour attester, retapez l'identifiant du contrat ({0}) : ",
+    attested: "{0} : {1} (à commiter avec le travail attesté)",
+    noState: "{0} introuvable : lancer « drwil init » pour installer le lecteur d'état",
+  },
+  en: {
+    initDone: "IA-first scaffolding applied to",
+    nothingToRemove: "Nothing to remove.",
+    removed: "Files removed:",
+    wouldRemove: "Files that would be removed (--yes to confirm):",
+    modified: "Modified since installation, not removed:",
+    cleaned: "drwil additions removed from these project files:",
+    wouldClean: "drwil additions that would be removed from these project files:",
+    noDrift: "Nothing to resolve: no drift on the kit mechanics.",
+    resolved: "Files resolved (old one backed up as .bak):",
+    ignored: "Drift left as it is (confirmation refused, or non-interactive terminal without --force):",
+    evidence: "evidence: {0}",
+    manual: "  [manual]",
+    noTerminal: "attestation refused: an interactive terminal is required (an agent or a script cannot attest {0})",
+    retype: "To attest, type the contract's identifier again ({0}): ",
+    attested: "{0}: {1} (to commit with the attested work)",
+    noState: '{0} not found: run "drwil init" to install the state reader',
+  },
+};
+export const texts = () => TEXTS[projectLang(process.cwd())];

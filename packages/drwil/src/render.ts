@@ -2,9 +2,9 @@ import { mkdir, readFile, writeFile, readdir, chmod } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { StackEntry } from "./stack.js";
 import { CI_FILES, projectName, splitCsv, TEXT, type Resolved, usesClaudeTree } from "./config.js";
 import { sha256 } from "./manifest.js";
+import { stackAllow } from "./render-stack.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -12,26 +12,6 @@ export const templatesDir = join(dirname(__dirname), "templates");
 
 // Layers with a dedicated template in templates/common/layers; the others get generic.md.
 const LAYER_TEMPLATES = ["backend", "frontend"];
-
-// Test/lint commands allowed by default in .claude/settings.json, according to the detected technology
-// (a model the project completes).
-const STACK_ALLOW: Record<string, string[]> = {
-  "Node.js": ["npm test:*", "npm run:*", "npx vitest:*", "npx tsc:*", "npx eslint:*"],
-  Python: ["pytest:*", "python3 -m pytest:*"],
-  Go: ["go test:*", "go build:*"],
-  Rust: ["cargo test:*", "cargo build:*"],
-  "Java/Maven": ["mvn test:*"],
-  "JVM/Gradle": ["./gradlew test:*"],
-  ".NET": ["dotnet test:*"],
-  Ruby: ["bundle exec rspec:*"],
-  PHP: ["composer test:*"],
-};
-
-function stackAllow(stack: StackEntry[]): string {
-  const technos = new Set(stack.flatMap((s) => s.technos.flatMap((t) => Object.keys(STACK_ALLOW).filter((k) => t.includes(k)))));
-  const commands = [...technos].flatMap((t) => STACK_ALLOW[t]);
-  return commands.map((c) => `,\n      "Bash(${c})"`).join("");
-}
 
 // Rendered in place of {{date}} until the target is known: writeOut then keeps the date of the
 // existing file when only the date would change (QUA-047), otherwise writes today's date.

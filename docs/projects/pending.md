@@ -90,8 +90,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] La CLI du paquet découpée sous 200 lignes (14 fichiers,
-  cadré le 2026-10-27) — `docs/projects/decoupe-cli-du-paquet.md`.
 - [ ] [IA] [P1] Les hooks de base livrés découpés sous 200 lignes (17
   fichiers ; pas d'adoption encore : aucune compatibilité avec une
   installation antérieure ; cadré le 2026-10-27) —

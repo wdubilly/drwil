@@ -3552,3 +3552,24 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   livrés, modules et outils).
 - **Preuve de clôture** : `docs/preuves/plafond-200-lignes.md` (si présent).
 - **Clôturé par** : la branche `chantier/plafond-200-lignes`.
+
+## 2026-10-27 — La CLI du paquet découpée sous 200 lignes
+
+- **Décisions clés** : les 14 fichiers de `packages/drwil/src/*.ts` et
+  `packages/drwil/bin/drwil.js` au-dessus de 200 lignes passent à 200 lignes
+  au plus, un fichier par commit, comportement inchangé : le texte est
+  déplacé, pas retranscrit. Le bin ne garde que l'enregistrement des
+  commandes, portées par `cli-install`, `cli-verify` et `cli-attest`. Les
+  ré-exports gardent les chemins d'import existants, sauf `stripAdditions`
+  (désormais dans `packages/drwil/src/complete-strip.ts`, un seul test change
+  de chemin). Les exports publics de `packages/drwil/src/index.ts` ne
+  changent pas. Les plafonds hérités de
+  `.githooks/check-file-size.legacy.json` sont retirés et la carte
+  d'architecture (QUA-040) est complétée à chaque pas. Dans
+  `packages/drwil/src/verify-project.ts`, un `biome-ignore-all` sur `noExplicitAny` couvre le
+  moteur et le lecteur de contrats chargés dynamiquement.
+- **Limites connues** : les hooks livrés et les modules et outils restent
+  aux deux fiches suivantes ; la sortie est groupée en 0.10.0, sans release
+  propre.
+- **Preuve de clôture** : `docs/preuves/decoupe-cli-du-paquet.md` (si présent).
+- **Clôturé par** : la branche `chantier/decoupe-cli-du-paquet`.

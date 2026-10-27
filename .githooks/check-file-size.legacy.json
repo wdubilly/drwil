@@ -23,19 +23,5 @@
   "outils/banc-agents.mjs": 225,
   "outils/banc-juge.mjs": 314,
   "outils/banc.mjs": 322,
-  "outils/verifier-miroirs.mjs": 282,
-  "packages/drwil/bin/drwil.js": 331,
-  "packages/drwil/src/complete.ts": 241,
-  "packages/drwil/src/config.ts": 248,
-  "packages/drwil/src/criteria.ts": 246,
-  "packages/drwil/src/doctor.ts": 268,
-  "packages/drwil/src/essentials.ts": 268,
-  "packages/drwil/src/existing-code.ts": 216,
-  "packages/drwil/src/guarantees-forge.ts": 229,
-  "packages/drwil/src/guarantees-table.ts": 213,
-  "packages/drwil/src/guarantees.ts": 377,
-  "packages/drwil/src/manifest.ts": 245,
-  "packages/drwil/src/migration.ts": 379,
-  "packages/drwil/src/render.ts": 205,
-  "packages/drwil/src/verify.ts": 398
+  "outils/verifier-miroirs.mjs": 282
 }

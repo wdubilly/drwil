@@ -66,7 +66,7 @@ changelog le dit.
 - Toute compatibilité avec une installation antérieure (ré-exports, refus
   de mise à jour) : aucun projet n'a encore adopté le kit.
 - La CLI et les modules optionnels : fiches
-  `docs/projects/decoupe-cli-du-paquet.md` et
+  `docs/projects/journal.md` et
   `docs/projects/decoupe-modules-et-outils.md`.
 
 ## 3. Contraintes
@@ -110,4 +110,4 @@ Aucun.
 - **Dernier état** (2026-10-27) : cadré, rien de construit.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] lancer le chantier, après la fusion de
-  `docs/projects/decoupe-cli-du-paquet.md`.
+  `docs/projects/journal.md`.

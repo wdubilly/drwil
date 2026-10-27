@@ -1,11 +1,13 @@
 // What drwil needs inside files `init` keeps as they are (a project file is never overwritten):
 // found missing here, reported with their fix by `init`, its preview and `doctor`, never silently.
-import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, resolve as resolvePath } from "node:path";
+import { join } from "node:path";
 import { CI_FILES, type Resolved, usesClaudeTree } from "./config.js";
-import { fill, type MessageLang } from "./i18n.js";
 import { render, templatesDir } from "./render.js";
+import { hooksPath, scriptsDir, unchainedHooks } from "./essentials-hooks.js";
+
+export { formatGaps, describeGap } from "./essentials-format.js";
+export { hooksPath, scriptsDir, unchainedHooks } from "./essentials-hooks.js";
 
 /** Delimiters of what drwil adds to a project file: `uninstall` removes exactly this block. */
 export const MARKERS = {
@@ -15,9 +17,6 @@ export const MARKERS = {
 
 /** drwil instructions written aside when the project already has its own AGENTS.md. */
 export const DEDICATED_AGENTS = ".drwil/AGENTS.md";
-
-// Hooks drwil installs in git; commit-msg is shipped disabled, so it is not required.
-const GIT_HOOKS = ["pre-commit", "pre-push", "prepare-commit-msg"];
 
 export type GapKind = "lines" | "instructions" | "pointer" | "settings" | "gitleaks" | "ci" | "hooksPath" | "unreadable";
 
@@ -33,33 +32,6 @@ export interface Gap {
   /** Lines to paste (or commands to run) to fix it. */
   fix: string[];
 }
-
-const TEXTS = {
-  fr: {
-    title: "⚠ drwil a besoin de contenu absent de fichiers gardés tels quels :",
-    lines: "lignes manquantes",
-    instructions: "aucune consigne drwil (état de gouvernance, contrats, commandes) : les agents ignorent la gouvernance",
-    pointer: "ne renvoie pas à AGENTS.md : l'outil ne lit pas les consignes",
-    settings: "hooks et permissions drwil manquants",
-    gitleaks: "liste blanche du manifeste du kit manquante (faux positifs de SEC-007)",
-    ci: "job `checks` absent : les contrôles ne tournent jamais en CI (QUA-013)",
-    hooksPath: "gardé tel quel : hooks drwil inactifs tant qu'ils n'y sont pas appelés ({0})",
-    unreadable: "illisible : {0}",
-    fix: "    correctif :",
-  },
-  en: {
-    title: "⚠ drwil needs content missing from files kept as they are:",
-    lines: "missing lines",
-    instructions: "no drwil instructions (governance state, contracts, commands): agents ignore the governance",
-    pointer: "does not point to AGENTS.md: the tool does not read the instructions",
-    settings: "missing drwil hooks and permissions",
-    gitleaks: "missing allowlist of the kit manifest (SEC-007 false positives)",
-    ci: "no `checks` job: the checks never run in CI (QUA-013)",
-    hooksPath: "kept as it is: drwil hooks inactive until called from there ({0})",
-    unreadable: "unreadable: {0}",
-    fix: "    fix:",
-  },
-};
 
 export function templateFile(rel: string): string {
   return readFileSync(join(templatesDir, "common", rel), "utf8");
@@ -147,27 +119,6 @@ export function templateJob(ciTemplate: string, job: string): string[] {
 
 const CI_TEMPLATES: Record<string, string> = { github: "ci/github/.github/workflows/ia-first.yml", gitlab: "ci/gitlab/.gitlab-ci.yml" };
 
-/** `core.hooksPath` of the repository, `undefined` when unset or outside a git repository. */
-export function hooksPath(targetDir: string): string | undefined {
-  if (!existsSync(join(targetDir, ".git"))) return undefined;
-  const r = spawnSync("git", ["config", "core.hooksPath"], { cwd: targetDir, encoding: "utf8" });
-  return r.status === 0 && r.stdout.trim() ? r.stdout.trim() : undefined;
-}
-
-// husky 9 points core.hooksPath to `.husky/_`, generated: the project's scripts live in `.husky/`.
-export const scriptsDir = (path: string) => {
-  const p = path.replace(/\/$/, "");
-  return p.endsWith("/_") ? dirname(p) : p;
-};
-
-/** drwil hooks not called by the project's own hooks. */
-export function unchainedHooks(targetDir: string, path: string): string[] {
-  const dirs = [resolvePath(targetDir, path), resolvePath(targetDir, scriptsDir(path))];
-  const calls = (hook: string) =>
-    dirs.some((d) => existsSync(join(d, hook)) && readFileSync(join(d, hook), "utf8").includes(`.githooks/${hook}`));
-  return GIT_HOOKS.filter((h) => !calls(h));
-}
-
 const read = (targetDir: string, rel: string) => readFileSync(join(targetDir, rel), "utf8");
 
 /** Everything drwil needs that is missing from the project's files, with its fix. */
@@ -244,25 +195,4 @@ export function gitleaksBlock(): string[] {
   const from = lines.findIndex((l) => l.trim() === "[allowlist]");
   const to = lines.findIndex((l, i) => i > from && l.trim() === "]");
   return lines.slice(from, to + 1);
-}
-
-/** What is missing, in one sentence. */
-export function describeGap(g: Gap, lang: MessageLang): string {
-  const T = TEXTS[lang];
-  if (g.kind === "hooksPath") return fill(T.hooksPath, g.missing.join(", "));
-  if (g.kind === "unreadable") return fill(T.unreadable, g.missing[0]);
-  return T[g.kind];
-}
-
-/** Human-readable report of the gaps, empty if there is none. */
-export function formatGaps(gaps: Gap[], lang: MessageLang): string[] {
-  if (!gaps.length) return [];
-  const T = TEXTS[lang];
-  const out = [T.title];
-  for (const g of gaps) {
-    out.push(`  - ${g.file}: ${describeGap(g, lang)}`);
-    if (g.kind === "lines" || g.kind === "settings") out.push(...g.missing.map((m) => `      ${m}`));
-    if (g.fix.length) out.push(T.fix, ...g.fix.map((f) => `      ${f}`));
-  }
-  return out;
 }

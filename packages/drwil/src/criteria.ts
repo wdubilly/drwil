@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { MessageLang } from "./i18n.js";
+import { HINT, ORIGIN, TABLE } from "./criteria-texts.js";
 import type { ContractResult } from "./verify.js";
 
 /**
@@ -99,17 +100,6 @@ export function contractChanges(
   );
 }
 
-const HINT = {
-  fr: {
-    add: "{0} est à attester : ajouter [humain] au critère",
-    remove: "{0} est entièrement automatisé : retirer [humain] du critère",
-  },
-  en: {
-    add: "{0} is attested by a human: add [human] to the criterion",
-    remove: "{0} is fully automated: remove [human] from the criterion",
-  },
-} satisfies Record<MessageLang, Record<string, string>>;
-
 /**
  * What to change for a « not-durable » criterion, naming its contract: a human criterion on an automated
  * contract loses its marker, an automated criterion on a contract to attest gains it. Null for any other status.
@@ -118,37 +108,6 @@ export function durabilityHint(c: Pick<CriterionResult, "status" | "link" | "hum
   if (c.status !== "not-durable") return null;
   return HINT[lang][c.human ? "remove" : "add"].replace("{0}", c.link ?? "");
 }
-
-const TABLE = {
-  fr: {
-    head: ["Critère", "Preuve", "Verdict"],
-    status: {
-      pass: "✅ prouvé",
-      "no-proof": "❌ sans preuve",
-      "unknown-proof": "❌ preuve inconnue du registre",
-      "not-durable": "❌ preuve non durable",
-      "no-contract": "❌ contrôle sans contrat (rien au registre)",
-      "no-origin": "❌ contrat créé sans champ Origine",
-      "not-pass": "❌ preuve non passante",
-    },
-    none: "aucun critère d'acceptation",
-    change: { created: "créé", reused: "réutilisé", modified: "modifié" },
-  },
-  en: {
-    head: ["Criterion", "Proof", "Verdict"],
-    status: {
-      pass: "✅ proven",
-      "no-proof": "❌ no proof",
-      "unknown-proof": "❌ proof unknown to the registry",
-      "not-durable": "❌ proof not durable",
-      "no-contract": "❌ check without a contract (nothing in the registry)",
-      "no-origin": "❌ contract created without an Origin field",
-      "not-pass": "❌ proof not passing",
-    },
-    none: "no acceptance criteria",
-    change: { created: "created", reused: "reused", modified: "modified" },
-  },
-} satisfies Record<MessageLang, unknown>;
 
 /** Review table "criterion → proof → verdict" for the pull request body; built from the evaluation, never typed by the agent. */
 export function criteriaTable(criteria: CriterionResult[], lang: MessageLang): string {
@@ -228,11 +187,6 @@ export function criteriaVerdict(criteria: CriterionResult[]): "FAIL" | "MANUAL" 
 export function originOf(text?: string): string | null {
   return /^\*\*(?:Origine|Origin)\s*:?\*\*\s*:?\s*(.+)$/m.exec(text ?? "")?.[1].trim() ?? null;
 }
-
-const ORIGIN = {
-  fr: "protège {0} — régression si ce changement n'est pas déclaré dans la fiche active",
-  en: "protects {0} — a regression unless this change is declared in the active brief",
-} satisfies Record<MessageLang, string>;
 
 /**
  * A failing contract born from an acceptance criterion says which one (« **Origine** : <workstream> —

@@ -6,243 +6,44 @@
 // (.githooks/engine.mjs), the same as the git hooks, and the contract reader
 // (.githooks/contracts.mjs). The hooks therefore never need drwil, and each check has a single
 // implementation.
-import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
-import { judgeDurable, type ProofResult } from "./closure.js";
-import { changeLines, type Coverage, coverageChanges, coverageOf, lacksCoverage, noCoversMessage } from "./coverage.js";
-import { type CriterionResult, showOrigins } from "./criteria.js";
+import { judgeDurable } from "./closure.js";
+import { changeLines, coverageOf, lacksCoverage, noCoversMessage } from "./coverage.js";
+import { showOrigins } from "./criteria.js";
 import { type Attestation, readAttestations, reusableVerdicts } from "./evidence.js";
-import { fill, projectLang, type MessageLang } from "./i18n.js";
+import { covers, humanFingerprint, proofFingerprints } from "./fingerprint.js";
+import { fill, projectLang } from "./i18n.js";
 import { judgeGuarantees } from "./guarantees.js";
-import { type BusinessRule, businessRules } from "./rules.js";
+import { businessRules } from "./rules.js";
+import { globalError, loadProject } from "./verify-project.js";
+import { TEXTS } from "./verify-texts.js";
+import {
+  CODES,
+  type CheckResult,
+  type ContractResult,
+  type Severity,
+  type Status,
+  type Verdict,
+  type VerifyOptions,
+  worst,
+} from "./verify-types.js";
 
 export { formatVerdict, verdictJson } from "./verdict.js";
 export { ATTESTATIONS_DIR, readAttestations, redact, writeEvidence, type Attestation } from "./evidence.js";
 export { criteriaTable, evaluateCriteria, type CriterionResult, type CriterionStatus } from "./criteria.js";
-
-/** ATTESTED (DRWIL-013): the automated part is proven and the human part has a valid attestation.
- *  Distinct from PASS (fully automated proof), but it satisfies the contract. */
-export type Status = "PASS" | "ATTESTED" | "FAIL" | "MANUAL" | "ERROR";
-
-export interface CheckResult {
-  id: string;
-  /** Raw result of the engine: ok | fail | not-run | not-applicable | unknown. */
-  status: string;
-  detail?: string;
-  message?: string;
-  output?: string;
-  durationMs?: number; // whole ms (QUA-136); absent when the check did not run, never 0
-  reusedAt?: string; // QUA-140: taken from the `run-checks` pass of this date instead of being replayed
-  reusedBasis?: "tree" | "control"; // QUA-141: identical tree, or identical files and declaration of the check only
-}
-
-export type Severity = "blocking" | "warning" | "advisory";
-
-export interface ContractResult {
-  id: string;
-  title: string;
-  rule: string | null;
-  status: Status;
-  /** Valid human attestation retained (ATTESTED status), otherwise null. */
-  attestation: Attestation | null;
-  /** Eligible for `drwil attest`: automated part proven, human part remaining. */
-  attestable: boolean;
-  /** A valid attestation `drwil attest --renew` can replace. */
-  renewable: boolean;
-  /** `**Covers**` patterns (null if absent) and current fingerprint of each covered file. */
-  covers: string[] | null;
-  coverage: Coverage;
-  /** Current fingerprint of the human part (rule, Manual, severity, coverage patterns). */
-  fingerprint: string;
-  /** Current fingerprint of each cited check's definition, by identifier. */
-  proof: Record<string, string>;
-  /** DRWIL-020: only blocking contracts decide the overall verdict. */
-  severity: Severity;
-  checks: CheckResult[];
-  manual: string | null;
-  reasons: string[];
-}
-
-export interface Verdict {
-  lang: MessageLang;
-  status: Status;
-  /** 0 PASS; 1 FAIL or MANUAL; 2 ERROR (configuration, tooling, execution). */
-  code: 0 | 1 | 2;
-  contracts: ContractResult[];
-  /** Errors not attached to a single contract (missing engine, empty registry, duplicate…). */
-  errors: string[];
-  /** Engine checks no contract cites: not run by verify, reported for information. */
-  unattached: string[];
-  /** Acceptance criteria of the active brief, each judged against its proof; absent without an active brief. */
-  criteria?: CriterionResult[];
-  /** Contracts modified in the branch that the active brief does not declare; absent without an active brief. */
-  undeclared?: string[];
-  /** Criteria of the closed workstreams whose proof has disappeared (QUA-085); empty when they all hold. */
-  proofs?: ProofResult[];
-  rules?: BusinessRule[];
-}
-
-export interface VerifyOptions {
-  targetDir: string;
-  /** Only verify these contracts (and only run their checks): used by `drwil attest`. */
-  only?: string[];
-  /** Called before each check is run (no status), then with its status: `drwil attest` shows them. */
-  onCheck?: (id: string, status?: string) => void;
-  /** QUA-140: `false` replays every check instead of taking the verdicts of a `run-checks` pass on an identical tree. */
-  reuse?: boolean;
-  /** QUA-141: the closing evidence (`--evidence`) judges the whole tree: no verdict is taken by check, only by identical tree. */
-  evidence?: boolean;
-}
-
-/**
- * Fingerprint of what an attestation covers: the contract's text and the definition of the checks
- * it cites (command and folder of a project check). If one changes, the attestation is obsolete.
- */
-export function fingerprint(k: { text?: string; checks?: string[] | null }, cfg: Record<string, any>): string {
-  const checks: any[] = Array.isArray(cfg.checks) ? cfg.checks : [];
-  const proof = (k.checks ?? []).map((id) => {
-    const c = checks.find((x) => x.id === id);
-    return c ? { id, run: c.run, cwd: c.cwd ?? null } : { id };
-  });
-  // The hashed keys ("contrat", "preuve") stay as they are: renaming them would make every existing
-  // attestation obsolete.
-  return createHash("sha256")
-    .update(JSON.stringify({ contrat: k.text ?? "", preuve: proof }))
-    .digest("hex");
-}
-
-const sha = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
-
-/**
- * Version 2 of an attestation (QUA-032): the human part (rule, Manual, severity; the whole section
- * for a legacy table contract) and, separately, each cited check's definition. A check added later
- * leaves the attestation valid (it must pass anyway); a changed human part, or an attested check
- * removed or redefined, makes it obsolete. Version 3 (QUA-081) adds the coverage patterns, in the
- * hash only when declared: a contract without any keeps the version 2 hash.
- */
-export function humanFingerprint(k: {
-  text?: string;
-  rule?: string | null;
-  manual?: string | null;
-  severity?: string | null;
-  covers?: string[] | null;
-}): string {
-  const base = { regle: k.rule ?? k.text ?? "", manuel: k.manual ?? null, severite: k.severity ?? null };
-  return sha(k.covers?.length ? { ...base, couvre: [...k.covers].sort() } : base);
-}
-
-export function proofFingerprints(k: { checks?: string[] | null }, cfg: Record<string, any>): Record<string, string> {
-  const checks: any[] = Array.isArray(cfg.checks) ? cfg.checks : [];
-  return Object.fromEntries(
-    (k.checks ?? []).map((id) => {
-      const c = checks.find((x) => x.id === id);
-      return [id, sha(c ? { id, run: c.run, cwd: c.cwd ?? null } : { id })];
-    }),
-  );
-}
-
-/**
- * Does this attestation still cover the contract? Version 1: its old fingerprint, unchanged; version 2:
- * the human part without coverage, as written then; version 3: also the content of the covered files.
- */
-function covers(a: Attestation, k: any, cfg: Record<string, any>, proof: Record<string, string>, coverage: Coverage): boolean {
-  if (a.version !== 2 && a.version !== 3) return a.fingerprint === fingerprint(k, cfg);
-  const human = humanFingerprint(a.version === 3 ? k : { ...k, covers: null });
-  const files = a.version !== 3 || coverageChanges(a.coverage ?? {}, coverage).length === 0;
-  return a.fingerprint === human && files && Object.entries(a.proof ?? {}).every(([id, h]) => proof[id] === h);
-}
-
-export const CODES: Record<Status, 0 | 1 | 2> = { PASS: 0, ATTESTED: 0, FAIL: 1, MANUAL: 1, ERROR: 2 };
-
-/**
- * Deterministic priority, per contract as for the overall verdict: FAIL > ERROR > MANUAL > PASS.
- * FAIL wins (a failure is established); ERROR comes before MANUAL (a proof that could not be produced
- * makes the verdict undeterminable); PASS only if everything is proven.
- */
-export function worst(statuses: Status[]): Status {
-  for (const s of ["FAIL", "ERROR", "MANUAL"] as const) if (statuses.includes(s)) return s;
-  return "PASS";
-}
-
-const TEXTS = {
-  fr: {
-    noEngine: "moteur de contrôles absent (.githooks/engine.mjs, .githooks/contracts.mjs) : relancer `drwil init`",
-    noConfig: "configuration illisible ou absente (.drwil/ia-first.json)",
-    noRegistry: "registre des contrats absent ({0})",
-    noContract: "aucun contrat trouvé dans {0}",
-    ok: "{0} : ok (automatisé)",
-    reused: "{0} : repris (arbre identique) de run-checks du {1}",
-    reusedControl:
-      "{0} : repris (fichiers du contrôle inchangés) de run-checks du {1} — reprise par contrôle : ne vaut pas preuve de clôture",
-    replayed: "{0} : rejoué",
-    failed: "{0} : échec{1}",
-    shared: "{0} est partagé par {1} : échec non attribuable à une seule règle — un contrôle par règle, qui filtre ses tests par l'ID",
-    notRun: "{0} : non exécuté ({1})",
-    notApplicable: "{0} : non applicable ici ({1}), preuve non établie",
-    noCheck: "aucun contrôle déclaré (contrat historique) : preuve humaine requise",
-    human: "humain requis : {0}",
-    attested: "attesté le {0}{1}{2}",
-    by: " par {0} ({1})",
-    obsolete: "attestation du {0} obsolète : le contrat ou sa preuve a changé depuis, à attester de nouveau",
-  },
-  en: {
-    noEngine: "check engine missing (.githooks/engine.mjs, .githooks/contracts.mjs): run `drwil init` again",
-    noConfig: "configuration unreadable or missing (.drwil/ia-first.json)",
-    noRegistry: "contract registry missing ({0})",
-    noContract: "no contract found in {0}",
-    ok: "{0}: ok (automated)",
-    reused: "{0}: reused (identical tree) from run-checks of {1}",
-    reusedControl: "{0}: reused (check files unchanged) from run-checks of {1} — per-check reuse: not a closing proof",
-    replayed: "{0}: replayed",
-    failed: "{0}: failed{1}",
-    shared: "{0} is shared by {1}: failure not attributable to a single rule — one check per rule, filtering its tests by the ID",
-    notRun: "{0}: not run ({1})",
-    notApplicable: "{0}: not applicable here ({1}), proof not established",
-    noCheck: "no declared check (legacy contract): human proof required",
-    human: "human required: {0}",
-    attested: "attested on {0}{1}{2}",
-    by: " by {0} ({1})",
-    obsolete: "attestation of {0} obsolete: the contract or its proof changed since, to attest again",
-  },
-};
-
-function globalError(message: string, lang: MessageLang): Verdict {
-  return { lang, status: "ERROR", code: 2, contracts: [], errors: [message], unattached: [] };
-}
-
-export interface Project {
-  lang: MessageLang;
-  cfg: Record<string, any>;
-  registry: string;
-  engine: any;
-  contracts: any;
-}
-
-/**
- * Loads the engine and the contract reader installed in the project (never the package's ones):
- * verify, doctor and contracts judge what the project's hooks actually run.
- * Returns an error message if the project cannot be used.
- */
-export async function loadProject(root: string): Promise<Project | string> {
-  const lang = projectLang(root);
-  const T = TEXTS[lang];
-  const enginePath = join(root, ".githooks", "engine.mjs");
-  const contractsPath = join(root, ".githooks", "contracts.mjs");
-  if (!existsSync(enginePath) || !existsSync(contractsPath)) return T.noEngine;
-  let cfg: Record<string, any>;
-  try {
-    cfg = JSON.parse(readFileSync(join(root, ".drwil", "ia-first.json"), "utf8"));
-  } catch {
-    return T.noConfig;
-  }
-  const registry: string = cfg.dirs?.contracts ?? "docs/contracts.md";
-  if (!existsSync(join(root, registry))) return fill(T.noRegistry, registry);
-  const engine = await import(pathToFileURL(enginePath).href);
-  const contracts = await import(pathToFileURL(contractsPath).href);
-  return { lang, cfg, registry, engine, contracts };
-}
+export { fingerprint, humanFingerprint, proofFingerprints } from "./fingerprint.js";
+export { loadProject, type Project } from "./verify-project.js";
+export {
+  CODES,
+  worst,
+  type CheckResult,
+  type ContractResult,
+  type Severity,
+  type Status,
+  type Verdict,
+  type VerifyOptions,
+} from "./verify-types.js";
 
 export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const root = opts.targetDir;
