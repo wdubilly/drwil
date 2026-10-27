@@ -16,6 +16,7 @@ files:
   - outils/banc-agents.mjs
   - outils/verifier-miroirs.mjs
   - outils/banc-texts.mjs
+  - outils/miroirs.json
   - outils/banc-run.mjs
   - outils/banc-juge-rules.mjs
   - outils/banc-agents-cli.mjs
