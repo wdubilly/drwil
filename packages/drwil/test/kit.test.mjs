@@ -119,12 +119,24 @@ const config = (dir) => JSON.parse(read(dir, ".drwil/ia-first.json"));
 // (déjà fait sur Linux/macOS par le test "lot 4 : commit-msg livré désactivé") n'a pas de sens.
 const executable = (dir, f) => process.platform === "win32" || Boolean(statSync(join(dir, f)).mode & 0o100);
 
-test("AGENTS.md du gabarit : un aiguillage de 100 lignes au plus, qui renvoie au détail des règles (ia-first.md, section 8)", () => {
-  const base = join(fileURLToPath(new URL("../templates/common/base/", import.meta.url)));
-  const lignes = readFileSync(join(base, "AGENTS.md"), "utf8").trimEnd().split("\n");
+test("QUA-153 : AGENTS.md du gabarit tient en 100 lignes et chacune de ses règles de conduite a son détail en section 8 de docs/ia-first.md", () => {
+  const base = fileURLToPath(new URL("../templates/common/base/", import.meta.url));
+  const agents = readFileSync(join(base, "AGENTS.md"), "utf8");
+  const lignes = agents.trimEnd().split("\n");
   assert.ok(lignes.length <= 100, `AGENTS.md du gabarit : ${lignes.length} lignes, plafond 100`);
-  assert.match(lignes.join("\n"), /`docs\/ia-first\.md`, section 8/);
-  assert.match(readFileSync(join(base, "docs/ia-first.md"), "utf8"), /^## 8\. Conduct rules, in detail$/m);
+  const iaFirst = readFileSync(join(base, "docs/ia-first.md"), "utf8");
+  const detail = iaFirst.slice(iaFirst.search(/^## 8\. Conduct rules, in detail$/m));
+  assert.ok(detail.length < iaFirst.length, "section 8 présente");
+  assert.match(agents, /`docs\/ia-first\.md`, section 8/);
+  const noms = (texte) => [...texte.matchAll(/^- \*\*([^*]+)\*\*/gm)].map((m) => m[1]);
+  const conduite = agents.slice(agents.indexOf("## Conduct"), agents.indexOf("## Contracts"));
+  const regles = noms(conduite);
+  assert.ok(regles.length >= 20, `règles de conduite relevées : ${regles.length}`);
+  for (const nom of regles)
+    assert.ok(
+      noms(detail).some((d) => d.startsWith(nom)),
+      `règle « ${nom} » sans détail en section 8`,
+    );
 });
 
 test("init d'un projet en français : tous les outils, git et hooks, contrôles verts", async () => {

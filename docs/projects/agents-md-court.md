@@ -33,20 +33,20 @@ demande.
 
 ## Critères d'acceptation
 
-- `AGENTS.md` du gabarit et celui du dépôt font 100 lignes au plus.
+- `AGENTS.md` du gabarit et celui du dépôt font 100 lignes au plus. — `QUA-153`
 - Chaque règle sans contrôle machine reste dans `AGENTS.md` en une ligne ;
-  son détail est dans un document de `docs/` cité par cette ligne.
+  son détail est dans un document de `docs/` cité par cette ligne. — `QUA-153`
 - Aucune règle n'est perdue : chaque règle de l'ancien texte se retrouve dans
-  l'aiguillage ou dans le document cité.
+  l'aiguillage ou dans le document cité. — `QUA-153`
 - Le plafond est tenu par le contrôle de taille du kit (fiche suivante) ;
-  d'ici là, un test du gabarit échoue au-dessus de 100 lignes.
+  d'ici là, un test du gabarit échoue au-dessus de 100 lignes. — `QUA-153`
 
 - Une mise à jour du kit ne perd pas ce que le projet a écrit dans son
   `AGENTS.md` : le gabarit court se met à jour sans écraser les consignes
   propres au projet, et dit ce qu'il a changé (même exigence que
   `docs/intentions/donnees-du-projet-hors-prose-du-kit.md` et
   `docs/intentions/alertes-avant-et-apres-ecrasement.md`). Un projet qui a
-  déjà un `AGENTS.md` long reçoit l'aiguillage court sans perdre ses règles.
+  déjà un `AGENTS.md` long reçoit l'aiguillage court sans perdre ses règles. — `QUA-027`
 
 ## 2. Hors périmètre
 

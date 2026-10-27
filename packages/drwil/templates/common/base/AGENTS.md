@@ -29,7 +29,7 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
 - **Closing loops intents**: each untreated limit becomes an intent brief in `docs/intentions/`, never a workstream brief.
 - **Closing in one gesture**: journal entry, then `node .githooks/close.mjs` (`--check` for the report alone).
 - **Detour**: a defect outside the brief's scope → `node .githooks/detour.mjs open`; a detour that changes the rules waits for the human.
-- **Defect after the closing**: in CLOSING, a defect of the open PR → `node .githooks/state.mjs reopen`, never a rewritten history.
+- **Defect revealed after the closing**: in CLOSING, a defect of the open PR → `node .githooks/state.mjs reopen`, never a rewritten history.
 - **Queue of workstreams**: one after the other, each merged before the next; stop at the first that needs a human.
 - **One session per workstream**: once closed and back in SCOPING, the next one starts in a new session.
 - **Documentation-only PR**: put in automatic merge by the agent (`gh pr merge --auto --merge`).

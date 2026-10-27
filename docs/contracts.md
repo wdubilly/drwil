@@ -1449,3 +1449,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/run-checks.test.mjs`
 **Origine** : pre-push-reprend-les-verdicts — « Le pre-push ne rejoue pas un contrôle dont les fichiers n'ont pas changé depuis un passage « ok », le dit dans sa sortie, et rejoue tout quand l'arbre de travail n'est pas le commit poussé ; la CI rejoue toujours tout »
 **Raison** : Le 2026-10-25, pousser un commit de documentation seule a rejoué tout le paquet (build, tests, couverture) : 2 min 32 s pour des contrôles qui ne jugent aucun des fichiers poussés.
+
+## QUA-153 — Le `AGENTS.md` livré est un aiguillage de 100 lignes au plus, dont chaque règle a son détail dans `docs/ia-first.md`
+**Règle** : Livré à tout projet. `AGENTS.md`, relu à chaque requête, tient en 100 lignes au plus (gabarit et copie du dépôt) : une ligne par règle de conduite qu'aucun contrôle machine ne rattrape, qui renvoie à la section 8 de `docs/ia-first.md` où le texte complet de chaque règle est conservé sous le même nom en gras ; aucune règle n'est perdue. Le plafond sur le gabarit est tenu par un test du paquet, d'ici à ce que le contrôle de taille du kit le reprenne.
+**Périmètre** : `AGENTS.md`, `docs/ia-first.md` (section 8) ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first.md` (section 8).
+**Preuve** : test du paquet qui lit le gabarit : au plus 100 lignes, renvoi à la section 8, et chaque règle de conduite de `AGENTS.md` retrouvée sous son nom dans la section 8.
+**Contrôle** : `tests-qua-153`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : agents-md-court — « `AGENTS.md` du gabarit et celui du dépôt font 100 lignes au plus. »
+**Raison** : `AGENTS.md` est chargé à chaque requête par tout agent : livré à 247 lignes, il coûtait du contexte à chaque message.
