@@ -149,9 +149,11 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 ### Protection, garanties, contournements
 
-- [ ] [décision] [P0] `doctor` dit le niveau de protection réel d'un projet ;
+- [ ] [décision] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
-  2026-10-22) — cadrée le 2026-10-23 (fiche listée sous « Ensuite ») —
+  2026-10-22) — entièrement cadrée le 2026-10-23 en fiche 1 de « Fiches
+  cadrées, dans l'ordre de réalisation », rien à cadrer ; retirée à la
+  clôture de cette fiche —
   `docs/intentions/niveaux-de-protection-dans-doctor.md`.
 - [ ] [décision] Les garanties obligatoires, la suite (`doctor` sur le dépôt
   drwil compris), à cadrer avec ou juste après la fiche du niveau de
