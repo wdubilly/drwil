@@ -24,7 +24,6 @@
   "outils/banc-juge.mjs": 314,
   "outils/banc.mjs": 322,
   "outils/verifier-miroirs.mjs": 282,
-  "packages/drwil/src/complete.ts": 241,
   "packages/drwil/src/config.ts": 248,
   "packages/drwil/src/criteria.ts": 246,
   "packages/drwil/src/essentials.ts": 268

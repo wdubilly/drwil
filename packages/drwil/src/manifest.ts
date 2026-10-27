@@ -4,7 +4,7 @@ import { dirname, isAbsolute, join, resolve, sep, win32 } from "node:path";
 import { createHash } from "node:crypto";
 import { isKitProse, isMechanics, readConfig } from "./config.js";
 import { fill, projectLang } from "./i18n.js";
-import { stripAdditions, withoutKitHooks } from "./complete.js";
+import { stripAdditions, withoutKitHooks } from "./complete-strip.js";
 
 export { compareVersions, engineVersion, type InstallRecord, readInstall, writeInstall } from "./install-record.js";
 

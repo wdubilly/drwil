@@ -1897,7 +1897,8 @@ test("projet existant : uninstall retire ce que drwil a ajouté, rien d'autre", 
 });
 
 test("ajouts sans écraser : liste blanche gitleaks sous ses deux formes, bloc complété en place", async () => {
-  const { mergeGitleaks, addToBlock, stripAdditions } = await import("../dist/complete.js");
+  const { mergeGitleaks, addToBlock } = await import("../dist/complete.js");
+  const { stripAdditions } = await import("../dist/complete-strip.js");
   const nouveau = mergeGitleaks("[[allowlists]]\npaths = ['''a''']\n");
   assert.match(nouveau, /# >>> drwil\n\[\[allowlists\]\]\npaths = \[/, "forme récente : une table de plus, pas [allowlist]");
   assert.equal(stripAdditions(nouveau), "[[allowlists]]\npaths = ['''a''']\n");
