@@ -96,4 +96,10 @@ Cadrées en trois fiches, dans l'ordre : `docs/projects/hooks-agent-sous-le-plaf
 
 ## Questions à trancher
 
-- Aucune : tout est tranché et cadré en fiches (voir ci-dessus).
+- Le point 2 est fait (2026-10-27) : `AGENTS.md` du gabarit 93 lignes (247
+  avant), celui du dépôt 76 (169 avant) ; le détail des règles est dans la
+  section 8 de `docs/ia-first.md`, qui passe de 729 à 916 lignes, donc
+  au-dessus du plafond de 800 prévu pour les documents lus à la demande :
+  fallait-il garder ce détail dans `docs/ia-first.md` (décision 4 : pas de
+  découpe) ou le sortir dans un document à part, avant que la fiche
+  `surveillance-taille-du-kit` ne pose le plafond ? [décision]
