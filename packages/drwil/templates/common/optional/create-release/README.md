@@ -15,9 +15,12 @@ without an extra PR.
   or breaking type is recognised), then posts the tag and the release.
   `--dry-run` mode: prints the computed version without creating anything.
   `--candidate`: publishes a candidate pre-release instead (`vX.Y.Z-rc.N`),
-  see « Acceptance before publication » below.
+  see « Acceptance before publication » below. Its messages and its version
+  logic are in `create-release-texts.mjs` and `create-release-version.mjs`.
 - `acceptance-sheet.mjs`: generates the acceptance sheet of a candidate
-  (imported by `create-release.mjs --candidate`, never written by hand).
+  (imported by `create-release.mjs --candidate`, never written by hand); its
+  messages are in `acceptance-sheet-texts.mjs`, its workstreams and points in
+  `acceptance-sheet-works.mjs`.
 - `release-verdict.mjs`: records the acceptance verdict on a candidate — a
   **human** gesture (interactive terminal, the candidate's name typed back);
   an agent never runs it.
@@ -87,10 +90,10 @@ Like any commit or push, this script must never run on its own: it is
 started only when the user explicitly asks (e.g. "make a release", "tag a
 version"), not automatically at each merge.
 
-1. Copy the module's `.mjs` files (`create-release.mjs`,
-   `acceptance-sheet.mjs`, `release-verdict.mjs`, `promote-release.mjs`)
-   into the project's `.githooks/` — `create-release.mjs` alone is enough
-   without the candidate path.
+1. Copy **all** the module's `.mjs` files (each script comes with the
+   files it imports: `create-release-texts.mjs`, `create-release-version.mjs`,
+   `acceptance-sheet-texts.mjs`, `acceptance-sheet-works.mjs`,
+   `recette-note-texts.mjs`…) into the project's `.githooks/`.
 2. Preview without creating anything: `node .githooks/create-release.mjs --dry-run`.
 3. Actually create the tag and the release: `node .githooks/create-release.mjs`
    (needs `git push` to `origin` and an authenticated `gh` for the release
