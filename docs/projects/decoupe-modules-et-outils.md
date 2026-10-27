@@ -17,6 +17,7 @@ files:
   - outils/verifier-miroirs.mjs
   - outils/banc-texts.mjs
   - outils/miroirs.json
+  - docs/intentions/decouper-les-fichiers-plafonnes.md
   - outils/banc-run.mjs
   - outils/banc-juge-rules.mjs
   - outils/banc-agents-cli.mjs
@@ -107,7 +108,6 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-27) : cadré, rien de construit.
+- **Dernier état** (2026-10-27) : réalisé, 8 fichiers découpés, plafonds hérités vidés ; clôture en cours.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier, après la fusion de
-  `docs/projects/journal.md`.
+- **Prochaine étape** : fusion de la PR, puis la sortie 0.10.0 avec sa recette.

@@ -131,14 +131,6 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 ## Intentions par thème
 
-### Taille des fichiers (après le plafond, avant les autres fiches)
-
-- [ ] [décision] Découper les fichiers plafonnés sous 200 lignes : cadrée le
-  2026-10-27 en trois fiches, de la deuxième à la quatrième de « Fiches
-  cadrées, dans l'ordre de réalisation », rien à cadrer ; retirée à la
-  clôture de la dernière —
-  `docs/intentions/decouper-les-fichiers-plafonnes.md`.
-
 ### Preuves, contrôles, vitesse
 
 - [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
