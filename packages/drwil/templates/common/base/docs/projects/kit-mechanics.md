@@ -45,6 +45,8 @@ files:
   - .githooks/engine-texts.mjs
   - .githooks/run-checks-texts.mjs
   - .githooks/run-checks-verdicts.mjs
+  - .githooks/detour-rules.mjs
+  - .githooks/detour-texts.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit
