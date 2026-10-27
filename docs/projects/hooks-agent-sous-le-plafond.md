@@ -11,6 +11,11 @@ files:
   - packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs
   - .claude/hooks/bash-guard.mjs
   - .claude/hooks/prompt-hook.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/shell-split.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/start-poll.mjs
+  - .claude/hooks/shell-split.mjs
+  - .claude/hooks/start-poll.mjs
+  - .drwil/ia-first.json
   - .githooks/check-file-size.mjs
   - .githooks/check-file-size.test.mjs
   - packages/drwil/templates/common/base/.githooks/check-file-size.mjs
