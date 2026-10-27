@@ -82,7 +82,9 @@ Lecture ciblée du registre et du journal (`node .githooks/glossary.mjs
 --contract <ID>`, `--contracts`, `--journal <fiche>`) ; avec Claude Code,
 leur lecture entière est refusée. `run-checks` n'affiche que les contrôles
 en échec ; un sous-agent `drwil-checks` lance les contrôles longs et ne rend
-que le verdict.
+que le verdict. L'`AGENTS.md` installé est un aiguillage court : il renvoie
+vers le détail (contrats, recettes, fichier de la couche touchée) au lieu de
+le recopier, pour que l'agent ne relise que ce dont il a besoin.
 
 ## Outils d'IA pris en charge
 
