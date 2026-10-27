@@ -16,6 +16,8 @@ files:
   - docs/intentions/fichiers-charges-courts.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - packages/drwil/test/kit.test.mjs
+  - packages/drwil/test/guarantees.test.mjs
 -->
 
 Contrats concernés : QUA-001 (fichier de code plafonné), QUA-018 (dépôt et livrable).
