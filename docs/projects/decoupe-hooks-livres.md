@@ -80,6 +80,28 @@ changelog le dit.
 - Sortie groupée en 0.10.0 ; le changelog et `INSTALL.md` disent qu'un
   projet déjà équipé se désinstalle puis se réinstalle.
 
+## Contrats modifiés
+
+- `.githooks/base-checks.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/briefs.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/check-control-coverage.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/check-docs.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/close.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/consumption.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/contracts.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/detour.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/doc-coherence.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/engine.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/fingerprints.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/glossary.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/run-checks.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/scope-gate.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/state-cli.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/state-texts.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/state.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/worktree.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+- `.githooks/check-file-size.legacy.json` — les plafonds hérités des 17 hooks sont retirés ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27, au cadrage de la fiche).
+
 ## 4. Décisions
 
 - 2026-10-27 — Tout fichier sous 200 lignes, sans exception (demandeur).
