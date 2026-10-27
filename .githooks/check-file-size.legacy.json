@@ -35,6 +35,5 @@
   "packages/drwil/src/guarantees-table.ts": 213,
   "packages/drwil/src/guarantees.ts": 377,
   "packages/drwil/src/manifest.ts": 245,
-  "packages/drwil/src/migration.ts": 379,
   "packages/drwil/src/render.ts": 205
 }
