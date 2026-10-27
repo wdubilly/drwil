@@ -53,6 +53,8 @@ files:
   - .githooks/check-docs-texts.mjs
   - .githooks/check-docs-workstreams.mjs
   - .githooks/check-docs-paths.mjs
+  - .githooks/close-checks.mjs
+  - .githooks/close-texts.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit
