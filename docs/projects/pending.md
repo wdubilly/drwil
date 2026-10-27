@@ -90,9 +90,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] Les modules optionnels et les outils du dépôt découpés sous
-  200 lignes, le fichier des plafonds hérités vidé (8 fichiers, cadré le
-  2026-10-27) — `docs/projects/decoupe-modules-et-outils.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
