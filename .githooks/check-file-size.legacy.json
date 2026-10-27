@@ -33,7 +33,6 @@
   "packages/drwil/src/existing-code.ts": 216,
   "packages/drwil/src/guarantees-forge.ts": 229,
   "packages/drwil/src/guarantees-table.ts": 213,
-  "packages/drwil/src/guarantees.ts": 377,
   "packages/drwil/src/manifest.ts": 245,
   "packages/drwil/src/render.ts": 205
 }
