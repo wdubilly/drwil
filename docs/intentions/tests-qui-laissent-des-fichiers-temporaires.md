@@ -23,6 +23,16 @@ nomme à chaque passe. Ils masquent les vrais avertissements : le résumé de
   règle refusant `mkdtempSync` direct (une quarantaine de fichiers à migrer) ;
   faire échouer la passe sur une fuite (tous les commits seraient bloqués tant
   que les fuites ne sont pas corrigées).
+- 2026-10-27 — Un nettoyage qui échoue au hasard : sur la PR #268 (une ligne
+  de doc), le job `checks` a échoué sur le seul test « QUA-118 : cycle
+  complet d'un chantier rouvert » (`packages/drwil/test/cycle.test.mjs`),
+  le test passé mais sa suppression du dépôt temporaire refusée
+  (`ENOTEMPTY: directory not empty, rmdir '…/drwil-cycle-…/.git/objects'`) ;
+  le job relancé sans changement est passé. Hypothèse non établie : un
+  processus git encore actif (un `gc` automatique, ou le `gh` simulé du
+  test) écrit dans `.git/objects` pendant la suppression, plus longtemps que
+  les cinq essais à 100 ms d'intervalle de la fonction `nettoyer` du même
+  fichier. Cause à reproduire avant tout correctif.
 
 ## Questions à trancher
 
