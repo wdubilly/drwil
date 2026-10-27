@@ -1,7 +1,7 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -91,4 +91,37 @@ test("check-file-size : messages en anglais selon .drwil/ia-first.json", () => {
   } finally {
     process.chdir(avant);
   }
+});
+
+test("QUA-001 : 200 lignes acceptées, 201 refusées", () => {
+  const dir = racine({ "src/ok.js": lignes(200), "src/gros.js": lignes(201) });
+  const r = lancer(dir, "src", "200", "js");
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /src\/gros\.js : 201 lignes, maximum 200/);
+  assert.doesNotMatch(r.stderr, /ok\.js/);
+});
+
+test("QUA-001 : un fichier plafonné qui grossit est refusé", () => {
+  const dir = racine({ "src/vieux.js": lignes(301) });
+  const avant = process.cwd();
+  try {
+    process.chdir(dir);
+    assert.deepEqual(check({ root: "src", maxLines: 200, extensions: ["js"], legacy: { "src/vieux.js": 300 } }), [
+      "src/vieux.js : 301 lignes, plafond hérité 300 (ne doit plus grossir, extraire plutôt)",
+    ]);
+  } finally {
+    process.chdir(avant);
+  }
+});
+
+test("QUA-001 : le livrable propose 200 lignes, son défaut reste 400", () => {
+  const base = join(dirname(SCRIPT), "..", "packages", "drwil", "templates", "common", "base");
+  const lire = (chemin) => readFileSync(join(base, chemin), "utf8");
+  assert.match(lire(".githooks/check-file-size.mjs"), /check-file-size\.mjs frontend\/src 200 ts,tsx,js,jsx,py/);
+  assert.match(lire("docs/recipes/adopt-the-kit.md"), /proposes 200 lines/);
+  assert.match(lire("docs/recipes/refactor-without-breaking.md"), /proposes 200 lines/);
+  assert.match(lire("docs/contracts-catalog.md"), /catalog:QUA-001 \| [^|]*proposes 200 lines/);
+  const dir = racine({ "src/a.js": lignes(400), "src/b.js": lignes(401) });
+  assert.match(lancer(dir, "src").stderr, /b\.js : 401 lignes, maximum 400/);
+  assert.doesNotMatch(lancer(dir, "src").stderr, /a\.js/);
 });

@@ -571,11 +571,12 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Sans seuil vérifié, la couverture peut régresser silencieusement à chaque ajout de code.
 
 ## QUA-001 — Fichier de code plafonné
-**Règle** : Un fichier de code ne dépasse pas 400 lignes, tests exclus ; un fichier déjà au-dessus à l'adoption serait plafonné à sa taille actuelle et ne pourrait que maigrir (`.githooks/check-file-size.legacy.json`, vide à l'adoption le 2026-10-12, après découpage — voir `docs/projects/journal.md`).
+**Règle** : Un fichier de code ne dépasse pas 200 lignes, tests exclus ; un fichier déjà au-dessus au 2026-10-27 est plafonné à sa taille mesurée ce jour-là et ne peut que maigrir (`.githooks/check-file-size.legacy.json`). Le livrable propose 200 lignes à l'adoption (recette d'adoption, catalogue, exemple du script) ; le défaut du script livré reste 400 sans plafond donné, pour ne casser aucun projet déjà adopté.
 **Périmètre** : `packages/drwil/src/` (fichiers ts), `packages/drwil/bin/` (fichiers js), `.githooks/` et `outils/` (fichiers mjs).
 **Source de vérité** : `.drwil/ia-first.json` → `checks` (contrôle `taille-fichiers`), `.githooks/check-file-size.mjs`.
 **Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`).
-**Contrôle** : `taille-fichiers`
+**Tests** : `.githooks/check-file-size.test.mjs`
+**Contrôle** : `taille-fichiers`, `tests-qua-001`
 **Raison** : Un fichier géant mêle plusieurs sujets ; chaque changement y coûte plus cher à écrire et à relire.
 
 ## QUA-066 — Choisir Gemini installe aussi les hooks partagés et ses réglages natifs

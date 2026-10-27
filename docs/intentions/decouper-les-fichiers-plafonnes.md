@@ -1,7 +1,7 @@
 # Intention : découper les fichiers plafonnés sous 200 lignes
 
 **Statut** : proposée et cadrée le 2026-10-27 en trois fiches, réalisées juste
-après `docs/projects/plafond-200-lignes.md` et avant les autres fiches
+après `docs/projects/journal.md` et avant les autres fiches
 cadrées : `docs/projects/decoupe-cli-du-paquet.md`,
 `docs/projects/decoupe-hooks-livres.md`,
 `docs/projects/decoupe-modules-et-outils.md`. Retirée à la clôture de la

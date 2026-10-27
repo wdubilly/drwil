@@ -19,7 +19,7 @@ files:
 ## 1. Besoin
 
 Deuxième des quatre chantiers de la taille des fichiers, après
-`docs/projects/plafond-200-lignes.md`. Les 14 fichiers de la CLI au-dessus
+`docs/projects/journal.md`. Les 14 fichiers de la CLI au-dessus
 de 200 lignes (relevé du 2026-10-27, `docs/intentions/decouper-les-fichiers-plafonnes.md`)
 sont découpés sous 200 lignes, sans changer le comportement. La CLI
 s'exécute depuis le paquet et n'est jamais copiée dans un projet : la mise
@@ -75,4 +75,4 @@ Aucun.
 - **Dernier état** (2026-10-27) : cadré, rien de construit.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] lancer le chantier, après la fusion de
-  `docs/projects/plafond-200-lignes.md`.
+  `docs/projects/journal.md`.

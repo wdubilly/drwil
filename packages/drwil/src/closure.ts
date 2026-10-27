@@ -2,7 +2,7 @@
 // versioned proof file per workstream (docs/preuves/<workstream>.md); verify replays its criteria
 // afterwards, and names any whose proof has disappeared. Judged without local state: the brief comes
 // from .drwil/state.json when it exists, from the branch's Drwil-Brief trailer otherwise (CI).
-// Split from verify.ts (QUA-001: files under 400 lines).
+// Split from verify.ts (QUA-001: files under 200 lines).
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";

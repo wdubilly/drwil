@@ -5,6 +5,14 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Changed
+
+- Code files are capped at 200 lines in the drwil repository (QUA-001), files
+  above it being capped at their measured size; the kit now proposes 200 lines
+  when a project adopts the file-size check (adoption recipe, catalog, script
+  example). The script's default without a ceiling stays 400, so no adopted
+  project breaks on update.
+
 ## 0.9.0 (2026-10-26)
 
 ### Added

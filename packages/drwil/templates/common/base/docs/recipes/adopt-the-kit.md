@@ -70,7 +70,8 @@ the requester's place (`AGENTS.md`, Conduct section).
    actually wired up (not a promise):
    - `catalog:QUA-001` (file size): `.githooks/check-file-size.mjs` is
      already shipped by the kit (opt-in) — only needs declaring in
-     `checks` with the root and ceiling chosen by the requester.
+     `checks` with the root and the ceiling chosen by the requester — the kit
+     proposes 200 lines (the script's default, without a ceiling, stays 400).
    - `catalog:QUA-014` (contrast): copy
      `templates/common/optional/front-quality/` (see its README) if a
      front end is detected, then declare its two checks.

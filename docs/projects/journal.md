@@ -3534,3 +3534,21 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   ce n'est pas un push réel.
 - **Preuve de clôture** : `docs/preuves/pre-push-reprend-les-verdicts.md` (si présent).
 - **Clôturé par** : la branche `chantier/pre-push-reprend-les-verdicts`.
+
+## 2026-10-27 — Un fichier de code plafonné à 200 lignes, dans le dépôt et proposé au livrable
+
+- **Décisions clés** : QUA-001 (fichier de code plafonné) passe de 400 à 200
+  lignes. Les 39 fichiers du périmètre au-dessus de 200 lignes, mesurés au
+  lancement du chantier, sont plafonnés à leur taille dans
+  `.githooks/check-file-size.legacy.json` (écart déclaré dans
+  `outils/miroirs.json` : le gabarit livre ce fichier vide) et ne peuvent que
+  maigrir, sans découpe ici. Le livrable propose 200 lignes à l'adoption
+  (recette d'adoption, recette de refactor, catalogue, registre livré, exemple
+  du script qui écrit son plafond en entier) ; le défaut du script reste 400
+  sans plafond donné, pour ne casser aucun projet déjà adopté. Un contrôle
+  `tests-qua-001` prouve plafond, plafonds hérités et proposition au livrable.
+- **Limites connues** : les 39 fichiers restent au-dessus de 200 lignes ;
+  leur découpe relève des fiches cadrées suivantes (CLI du paquet, hooks
+  livrés, modules et outils).
+- **Preuve de clôture** : `docs/preuves/plafond-200-lignes.md` (si présent).
+- **Clôturé par** : la branche `chantier/plafond-200-lignes`.
