@@ -106,6 +106,14 @@ Aucun.
   `.githooks/check-file-size.legacy.json` vide, `drwil verify --agent` en
   PASS.
 
+## Contrats modifiés
+
+- `.githooks/acceptance-sheet.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27)
+- `.githooks/create-release.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27)
+- `.githooks/dashboard.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27)
+- `.githooks/recette-note.mjs` — découpé sous 200 lignes, sans changement de comportement ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27)
+- `.githooks/check-file-size.legacy.json` — les plafonds hérités des 8 derniers fichiers sont retirés, le fichier est vide ; le critère d'acceptation et le bloc de cadrage de la fiche le demandent (validé par le demandeur le 2026-10-27)
+
 ## 7. Reprise
 
 - **Dernier état** (2026-10-27) : réalisé, 8 fichiers découpés, plafonds hérités vidés ; clôture en cours.
