@@ -572,7 +572,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-001 — Fichier de code plafonné
 **Règle** : Un fichier de code ne dépasse pas 200 lignes, tests exclus ; un fichier déjà au-dessus au 2026-10-27 est plafonné à sa taille mesurée ce jour-là et ne peut que maigrir (`.githooks/check-file-size.legacy.json`). Le livrable propose 200 lignes à l'adoption (recette d'adoption, catalogue, exemple du script) ; le défaut du script livré reste 400 sans plafond donné, pour ne casser aucun projet déjà adopté.
-**Périmètre** : `packages/drwil/src/` (fichiers ts), `packages/drwil/bin/` (fichiers js), `.githooks/` et `outils/` (fichiers mjs).
+**Périmètre** : `packages/drwil/src/` (fichiers ts), `packages/drwil/bin/` (fichiers js), `.githooks/`, `outils/`, `.claude/hooks/` et les hooks d'agent du gabarit `packages/drwil/templates/common/tools/claude/.claude/hooks/` (fichiers mjs).
 **Source de vérité** : `.drwil/ia-first.json` → `checks` (contrôle `taille-fichiers`), `.githooks/check-file-size.mjs`.
 **Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`).
 **Tests** : `.githooks/check-file-size.test.mjs`

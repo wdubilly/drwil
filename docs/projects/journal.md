@@ -3673,3 +3673,25 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/couverture-hooks-intermittente.md`.
 - **Preuve de clôture** : `docs/preuves/agents-md-court.md` (si présent).
 - **Clôturé par** : la branche `chantier/agents-md-court`.
+
+## 2026-10-27 — Les hooks d'agent livrés sous le plafond de 200 lignes
+
+- **Décisions clés** : `.claude/hooks/bash-guard.mjs` (276 lignes) devient 160 lignes et
+  `.claude/hooks/prompt-hook.mjs` (227) 122, comportement inchangé : la lecture d'un texte
+  shell et la détection d'un saut des hooks git passent dans `.claude/hooks/shell-split.mjs`
+  (119), la lecture du sondage de lancement dans `.claude/hooks/start-poll.mjs` (109). Les
+  hooks ré-exportent ce que les tests importaient. Le contrôle `taille-fichiers`
+  (QUA-001) couvre désormais `.claude/hooks/` et les hooks d'agent du gabarit ;
+  un test de `.githooks/check-file-size.test.mjs` le vérifie. Le cadrage de la
+  fiche a été élargi une fois, dans un commit qui ne touche que la fiche : les
+  quatre fichiers des deux modules et `.drwil/ia-first.json` (déclaration du
+  contrôle), conséquences directes du critère. Aucune compatibilité avec une
+  installation antérieure : un projet équipé reçoit les deux fichiers à la
+  mise à jour (changelog, section non publiée).
+- **Limites connues** : la déclaration du test de `.githooks/check-file-size.test.mjs`
+  et l'élargissement du cadrage ont été faits par l'agent sur la base du
+  cadrage validé le 2026-10-27, sans nouveau oui du demandeur ; à confirmer à
+  la relecture. Restent les points 2 (fait) et 3 de l'intention
+  `docs/intentions/fichiers-charges-courts.md` : le contrôle livré dans le paquet.
+- **Preuve de clôture** : `docs/preuves/hooks-agent-sous-le-plafond.md` (si présent).
+- **Clôturé par** : la branche `chantier/hooks-agent-sous-le-plafond`.
