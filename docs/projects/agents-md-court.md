@@ -73,6 +73,27 @@ demande.
 3. La mise à jour d'`AGENTS.md` chez un projet adopté est dans le périmètre.
 4. `docs/ia-first.md` est lu par section, pas découpé.
 
+## Contrats modifiés
+
+Validé le 2026-10-27 par le demandeur (« oui si on a 0 régression »),
+condition jugée satisfaite par lui le même jour : `run-checks` seul vert sur
+la branche et sur la principale, `verify` PASS ; un échec intermittent de
+couverture des hooks, vu sous charge parallèle, reste non diagnostiqué
+(`docs/intentions/couverture-hooks-intermittente.md`).
+
+- `QUA-061` — périmètre étendu à `docs/ia-first.md` section 8, rien n'est
+  retiré (le texte complet des règles y est déplacé depuis `AGENTS.md`).
+- `QUA-099` — périmètre étendu à `docs/ia-first.md` section 8, rien n'est
+  retiré.
+- `QUA-100` — périmètre étendu à `docs/ia-first.md` section 8, rien n'est
+  retiré.
+- `QUA-129` — périmètre étendu à `docs/ia-first.md` section 8, rien n'est
+  retiré.
+- `QUA-130` — périmètre étendu à `docs/ia-first.md` section 8, rien n'est
+  retiré.
+- `QUA-132` — périmètre étendu à `docs/ia-first.md` section 8, rien n'est
+  retiré.
+
 ## 6. Increments
 
 - **Lot 1 — `AGENTS.md` aiguillage** [IA] : réécriture du gabarit (100 lignes), détail déplacé dans `docs/`, copie du dépôt alignée, test de taille ; mesure avant et après de la consommation. Critère de sortie : `node .githooks/run-checks.mjs` OK, `drwil verify --agent` PASS.
