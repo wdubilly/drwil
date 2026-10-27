@@ -49,6 +49,10 @@ The version comes from `packages/drwil/package.json`; creating it (tag,
 release note, attached tarball) follows `docs/recipes/create-a-release.md`,
 which also renames the changelog's "Unreleased" section.
 
+A project already equipped by an earlier version (before 0.10.0, which splits
+the base hooks into smaller modules) removes the kit and installs it again:
+`npx drwil uninstall --yes`, then `init`.
+
 ## 5. Using an AI tool other than Claude
 
 `AGENTS.md` is the shared entry point; tool-specific files (e.g.
