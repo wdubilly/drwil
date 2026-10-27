@@ -1,0 +1,53 @@
+// Messages of check-docs, French and English (split from check-docs.mjs).
+export const TEXTS = {
+  fr: {
+    path: (c) => `chemin cité introuvable \`${c}\``,
+    contract: (id, f) => `contrat ${id} absent de ${f}`,
+    duplicate: (id, f) => `${f} : contrat ${id} défini plusieurs fois`,
+    marker: () => `case ouverte sans marqueur [IA], [humain] ou [décision]`,
+    status: (f) => `${f} : pas de ligne « Statut » datée (AAAA-MM-JJ) en tête`,
+    handOff: (f) => `${f} : section « Reprise » absente (passation)`,
+    section: (f, s) => `${f} : section « ${s} » absente`,
+    outsideBriefs: (c) => `\`${c}\` : fichier de code hors de toute fiche de docs/projects/ (bloc cadrage)`,
+    scopeHeader: (f) => `${f} : bloc scope sans ligne « files: »`,
+    scopeLine: (f, l) => `${f} : ligne de cadrage non comprise « ${l} »`,
+    scopeBroad: (f, p) => `${f} : motif de cadrage trop large « ${p} »`,
+    summary: (n, e) => `check-docs : ${n} fichiers scannés, ${e} erreur(s)`,
+    scopeWarnings: (n) =>
+      `check-docs : ${n} avertissement(s) de cadrage (QUA-016, non bloquant — réglage "scopeReminder" de .drwil/ia-first.json)`,
+    briefDone: (brief) =>
+      `${brief} : fiche terminée encore présente — la condenser dans docs/projects/journal.md, la supprimer et retirer sa ligne de l'index (QUA-015)`,
+    consistencyWarnings: (n) => `check-docs : ${n} avertissement(s) de cohérence case/statut (QUA-015, non bloquant)`,
+    readyUndecided: (f) => `${f} : fiche « prête » mais un point [décision] reste à trancher (section « Points à trancher »)`,
+    readyNoIncrement: (f) => `${f} : fiche « prête » mais sans aucun lot (« - **Lot … »)`,
+    readyNoCriteria: (f) => `${f} : fiche « prête » mais sans critère d'acceptation (section « Critères d'acceptation »)`,
+    riskWarnings: (n) => `check-docs : ${n} avertissement(s) de niveau de risque (non bloquant)`,
+    ignoredByGit: "fichier ignoré par Git : absent en CI (ajouter « (si présent) »)",
+    newWarnings: (n) =>
+      `check-docs : ${n} avertissement(s) d'exigence récente (réglage « newRequirements » : warning ; « blocking » pour l'imposer)`,
+  },
+  en: {
+    path: (c) => `cited path not found \`${c}\``,
+    contract: (id, f) => `contract ${id} missing from ${f}`,
+    duplicate: (id, f) => `${f}: contract ${id} defined more than once`,
+    marker: () => `open item without an [AI], [human] or [decision] marker`,
+    status: (f) => `${f}: no dated « Status » line (YYYY-MM-DD) at the top`,
+    handOff: (f) => `${f}: missing « Hand-off » section`,
+    section: (f, s) => `${f}: missing « ${s} » section`,
+    outsideBriefs: (c) => `\`${c}\`: code file outside any docs/projects/ brief (scope block)`,
+    scopeHeader: (f) => `${f}: scope block without a « files: » line`,
+    scopeLine: (f, l) => `${f}: scope line not understood « ${l} »`,
+    scopeBroad: (f, p) => `${f}: scope pattern too broad « ${p} »`,
+    summary: (n, e) => `check-docs: ${n} files scanned, ${e} error(s)`,
+    scopeWarnings: (n) => `check-docs: ${n} scope warning(s) (QUA-016, non-blocking — "scopeReminder" setting in .drwil/ia-first.json)`,
+    briefDone: (brief) =>
+      `${brief}: finished card still present — condense it into docs/projects/journal.md, delete it and remove its index line (QUA-015)`,
+    consistencyWarnings: (n) => `check-docs: ${n} checkbox/status consistency warning(s) (QUA-015, non-blocking)`,
+    readyUndecided: (f) => `${f}: brief marked "ready" but a [decision] point is still open (« Points to decide » section)`,
+    readyNoIncrement: (f) => `${f}: brief marked "ready" but has no increment ("- **Increment …")`,
+    readyNoCriteria: (f) => `${f}: brief marked "ready" but has no acceptance criterion (« Acceptance criteria » section)`,
+    riskWarnings: (n) => `check-docs: ${n} risk level warning(s) (non-blocking)`,
+    ignoredByGit: 'file ignored by Git: missing in CI (add "(if present)")',
+    newWarnings: (n) => `check-docs: ${n} recent-requirement warning(s) (setting "newRequirements": warning; "blocking" to enforce it)`,
+  },
+};

@@ -50,6 +50,9 @@ files:
   - .githooks/briefs-criteria.mjs
   - .githooks/briefs-intents.mjs
   - .githooks/briefs-overlap.mjs
+  - .githooks/check-docs-texts.mjs
+  - .githooks/check-docs-workstreams.mjs
+  - .githooks/check-docs-paths.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit
