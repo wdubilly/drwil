@@ -87,7 +87,7 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] Un fichier de code plafonné à 200 lignes au lieu de 400, dans
+- [ ] [IA] [P0] Un fichier de code plafonné à 200 lignes au lieu de 400, dans
   le dépôt et proposé au livrable ; les fichiers au-dessus plafonnés à leur
   taille (cadré le 2026-10-27 ; en premier : les fiches suivantes extraient
   au lieu de faire grossir un fichier plafonné) —
