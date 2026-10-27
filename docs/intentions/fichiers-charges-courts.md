@@ -1,8 +1,11 @@
-# Intention : les hooks d'agent sous le plafond, et un `AGENTS.md` court qui aiguille vers le détail
+# Intention : surveiller la taille des fichiers générés par drwil, hooks d'agent et `AGENTS.md` compris
 
 **Statut** : proposée le 2026-10-27 — demande de l'humain, après la
 clôture des quatre chantiers de la taille des fichiers (plafond à 200
-lignes et découpes, `.githooks/check-file-size.legacy.json` vidé).
+lignes et découpes, `.githooks/check-file-size.legacy.json` vidé) ;
+élargie le même jour à un mécanisme de surveillance livré dans le paquet,
+en tête de pile, dans la 0.10.0 avec les quatre chantiers de taille
+(demande de l'humain).
 
 ## Besoin
 
@@ -21,6 +24,15 @@ fichiers que la CLI installe chez un projet :
    aiguillage court, qui garde en permanence l'essentiel et renvoie au
    détail (`docs/`, recettes, `node .githooks/glossary.mjs`) seulement quand
    il sert (proposition retenue le 2026-10-27 : environ 100 lignes au plus).
+3. **Un mécanisme qui surveille tous les fichiers générés par drwil.**
+   Corriger les deux points précédents une fois ne suffit pas : rien ne
+   retient un fichier livré de regrossir. Un contrôle mécanique surveille la
+   taille de chaque fichier que la CLI installe chez un projet (code, hooks,
+   documents, réglages), chacun sous un plafond selon sa sorte. Il est
+   **livré dans le paquet** et déclaré à l'installation : un projet adopté
+   le reçoit d'office, sans le choisir, et il ne porte que sur les fichiers
+   du kit, jamais sur le code du projet. Dans ce dépôt, le même contrôle
+   joue sur le gabarit (`packages/drwil/templates/`), avant toute release.
 
 ## Existant (relevé le 2026-10-27)
 
@@ -47,6 +59,14 @@ fichiers que la CLI installe chez un projet :
 
 ## Piste
 
+- Un contrôle de la taille du kit lit la liste des fichiers installés
+  (`.drwil/installed-files.json` (si présent) chez un projet, le gabarit dans
+  ce dépôt) et compare chacun au plafond de sa sorte : 200 lignes pour le
+  code et les hooks (QUA-001), un plafond propre aux documents chargés à
+  chaque session (`AGENTS.md`), un autre, plus large, pour les documents
+  lus à la demande. Un fichier du kit modifié à la main par le projet reste
+  surveillé : c'est lui qui le fait grossir.
+
 - QUA-001 étend son périmètre à `.claude/hooks/` (fichiers mjs, dépôt et
   gabarit) ; bash-guard.mjs et prompt-hook.mjs sont découpés sous 200
   lignes, sans plafond hérité.
@@ -58,19 +78,22 @@ fichiers que la CLI installe chez un projet :
   comparable (`node .githooks/consumption.mjs --recorded`), pour savoir ce
   que l'aiguillage fait gagner.
 
+## Décisions (sondage du 2026-10-27)
+
+Cadrées en trois fiches, dans l'ordre : `docs/projects/hooks-agent-sous-le-plafond.md`,
+`docs/projects/agents-md-court.md`, `docs/projects/surveillance-taille-du-kit.md`.
+
+- `AGENTS.md` : 100 lignes, gabarit et copie du dépôt ; règles sans contrôle
+  machine en une ligne chacune, détail renvoyé à `docs/`.
+- `docs/ia-first.md` : lu par section avec `node .githooks/glossary.mjs`,
+  pas découpé.
+- Plafonds du kit, en lignes : 200 (code, hooks), 100 (`AGENTS.md`), 800
+  (documents lus à la demande), 250 (recettes).
+- Un dépassement bloque sur le gabarit de ce dépôt et avertit chez un projet adopté.
+- La mise à jour d'`AGENTS.md` chez un projet adopté ne perd rien (fiche `agents-md-court`).
+- Un outil de découpe et des fiches d'allègement à l'adoption : intention séparée, pour plus tard (`docs/intentions/alleger-les-fichiers-de-l-adoptant.md`).
+- Contrat neuf pour la taille du kit ; QUA-001 garde le code.
+
 ## Questions à trancher
 
-- [décision] Plafond d'`AGENTS.md` : 100 lignes, 150, ou une taille en
-  octets (ce que paie le contexte) ? Pour le gabarit seulement, ou aussi
-  pour la copie du dépôt ?
-- [décision] Quelles règles restent dans l'aiguillage ? Celles qu'aucun
-  contrôle ne rattrape (« Conduct (always, no machine checks it) ») sont
-  celles qu'un agent risque d'oublier s'il ne les voit pas : les garder en
-  une ligne, ou les renvoyer au détail ?
-- [décision] Le plafond d'`AGENTS.md` : un nouveau contrat, ou QUA-001
-  étendu aux documents chargés à chaque session ?
-- [décision] `docs/ia-first.md` (729 lignes, lu à la demande) : découpé
-  en documents par sujet, ou lu par section comme le registre avec
-  `node .githooks/glossary.mjs` ?
-- [décision] Cadré avant les fiches 5 et suivantes, ou entre deux
-  chantiers comme un thème ?
+- Aucune : tout est tranché et cadré en fiches (voir ci-dessus).
