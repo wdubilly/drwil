@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.10.0 (2026-10-27)
+
 ### Changed
 
 - The agent hooks installed in `.claude/hooks/` that exceeded 200 lines are

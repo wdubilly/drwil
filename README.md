@@ -1095,7 +1095,10 @@ parallel; reuses a check's verdict when what it judges has not changed
 (`run-checks`, `drwil verify`, the pre-push), plays `verify`'s checks in
 parallel and times every check; refuses a closing whose branch modifies a
 hook it does not declare; and, with the automatic merge, returns to SCOPING
-only once the pull request is merged.
+only once the pull request is merged. 0.10.0 splits the agent hooks installed
+in `.claude/hooks/` under 200 lines, with no change of behavior (a project
+already equipped gets the new files on update), and installs a short
+`AGENTS.md` that routes to the layers' files.
 Next: trying it on real projects (V1).
 
 V0.2 covered:
