@@ -17,6 +17,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
 import { checks, projectRoot, startParallel, treeFingerprint } from "./engine.mjs";
 import { annotate, glossary } from "./glossary.mjs";
+import { loadReuse, saveVerdicts } from "./run-checks-verdicts.mjs";
+import { TEXTS } from "./run-checks-texts.mjs";
 
 const root = projectRoot(import.meta.url);
 process.chdir(root);
@@ -26,54 +28,7 @@ try {
   cfg = JSON.parse(readFileSync(".drwil/ia-first.json", "utf8"));
 } catch {}
 const lang = cfg.lang === "en" ? "en" : "fr";
-const T = {
-  fr: {
-    project: "contrôles du projet (lint, tests…)",
-    noCheck: "aucun déclaré dans .drwil/ia-first.json → checks",
-    notRun: "non exécuté :",
-    failed: "échec :",
-    ok: (n, f) => `contrôles exécutés : OK (${n} avertissement(s), non exécutés compris — détail : ${f})`,
-    ko: (k, n, f) => `contrôles exécutés : ${k} en échec, ${n} avertissement(s) — détail : ${f}`,
-    leak: (name, n) => `${name} laisse ${n} élément(s) dans son dossier temporaire : le supprimer à la source`,
-    keptTmp: (d) => `dossiers temporaires des contrôles en échec gardés pour le diagnostic : ${d}`,
-    cleanupFailed: "dossier temporaire de la passe non supprimé (fichier encore ouvert ?)",
-    duration: (ms) => `durée : ${ms} ms`,
-    reused: (at, src) => `repris (fichiers du contrôle inchangés, ${src} du ${at})`,
-    replayed: "rejoué",
-    reuseSummary: (r, p) => `${r} repris (fichiers du contrôle inchangés), ${p} rejoué(s)`,
-    slowest:
-      "contrôles du plus lent au plus rapide (durée de chaque contrôle ; en passe parallèle, elles se recouvrent : ce n'est pas sa part de la passe) :",
-    slowestSummary: "les plus lents :",
-    tail: (n, f) => `    … ${n} ligne(s) plus haut, dans ${f}`,
-    staleAudit: (f, n) => `audit périmé (${f}, vieux de ${n} jours) : à relancer`,
-    staleIntent: (f, n) => `intention sans revue depuis ${n} jours (${f}) : la revoir, la mettre à jour (ligne « Revu le ») ou la clore`,
-    intentLeft: (b, i) =>
-      `la fiche ${b} est supprimée sans que son intention ${i} soit touchée : la mettre à jour, ou la résumer au journal et la retirer si elle est couverte`,
-  },
-  en: {
-    project: "project checks (lint, tests…)",
-    noCheck: "none declared in .drwil/ia-first.json → checks",
-    notRun: "not run:",
-    failed: "failed:",
-    ok: (n, f) => `checks run: OK (${n} warning(s), not run included — detail: ${f})`,
-    ko: (k, n, f) => `checks run: ${k} failed, ${n} warning(s) — detail: ${f}`,
-    leak: (name, n) => `${name} leaves ${n} item(s) in its temporary folder: remove them at the source`,
-    keptTmp: (d) => `temporary folders of the failed checks kept for diagnosis: ${d}`,
-    cleanupFailed: "the pass's temporary folder was not removed (file still open?)",
-    duration: (ms) => `duration: ${ms} ms`,
-    reused: (at, src) => `reused (check files unchanged, ${src} of ${at})`,
-    replayed: "replayed",
-    reuseSummary: (r, p) => `${r} reused (check files unchanged), ${p} replayed`,
-    slowest:
-      "checks from slowest to fastest (each check's own duration; on a parallel pass they overlap: it is not its share of the pass):",
-    slowestSummary: "slowest:",
-    tail: (n, f) => `    … ${n} line(s) above, in ${f}`,
-    staleAudit: (f, n) => `stale audit (${f}, ${n} days old): time to re-run`,
-    staleIntent: (f, n) => `intent not reviewed for ${n} days (${f}): review it, update it ("Reviewed on" line) or close it`,
-    intentLeft: (b, i) =>
-      `brief ${b} is deleted without touching its intent ${i}: update it, or summarise it in the journal and remove it when covered`,
-  },
-}[lang];
+const T = TEXTS[lang];
 
 // At pre-commit only (DRWIL_HOOK=pre-commit, set by .githooks/pre-commit), the engine defers
 // a project check outside its `paths`. If git does not answer, everything runs (never deferred by default).
@@ -103,7 +58,6 @@ const announce = (name) => report.push(`[ia-first] ${name}…`);
 // "not-applicable" (excluded by design: minimal mode, QUA-017 in CI…) is not shown, as before.
 const staged = stagedFiles();
 // A hook pass judges the index or the pushed reference, not the whole tree `drwil verify` judges: it leaves nothing to reuse.
-const VERDICTS = ".drwil/evidence/run-checks-verdicts.json";
 const hooked = ["DRWIL_HOOK", "DRWIL_PUSH_REFS", "DRWIL_PUSH_TAGS_ONLY", "DRWIL_PUSH_NO_BRANCH"].some((k) => process.env[k]);
 const fingerprint = hooked ? null : treeFingerprint(root);
 const verdicts = {};
@@ -113,43 +67,7 @@ const reusableByVerify = (id) => id !== "secrets" || Boolean(process.env.CI);
 const list = checks(root, { cfg, staged });
 // QUA-141: the verdicts of the last pass, to keep an "ok" whose check files did not change (never in a hook or in CI, never with the option).
 const replayAll = process.argv.some((a) => a === "--tout-rejouer" || a === "--replay-all");
-// QUA-152: at push time the pre-push judges the working tree, so it only reuses when that tree is the pushed commit: a clean tree, and the
-// one pushed reference is the current branch (the hook gives remote references only: any other push is replayed in full).
-const PREPUSH = ".drwil/evidence/pre-push-verdicts.json";
-function pushedTreeIsWorkTree() {
-  const git = (...a) => spawnSync("git", a, { encoding: "utf8" });
-  const branch = git("symbolic-ref", "--short", "-q", "HEAD");
-  const status = git("status", "--porcelain");
-  const pushed = process.env.DRWIL_PUSH_REFS.trim();
-  return branch.status === 0 && status.status === 0 && status.stdout.trim() === "" && pushed === `refs/heads/${branch.stdout.trim()}`;
-}
-const prePush = Boolean(process.env.DRWIL_PUSH_REFS) && !atCommit && !process.env.CI && !replayAll && pushedTreeIsWorkTree();
-const controls = hooked && !prePush ? new Map() : list.fingerprints();
-const readVerdicts = (file) => {
-  try {
-    return JSON.parse(readFileSync(file, "utf8")).checks ?? {};
-  } catch {
-    return {};
-  }
-};
-const files = prePush
-  ? [
-      [VERDICTS, "run-checks"],
-      [PREPUSH, "pre-push"],
-    ]
-  : [[VERDICTS, "run-checks"]];
-const sources = files.map(([f, name]) => [readVerdicts(f), name]);
-const reuseActive = (!hooked || prePush) && !process.env.CI && !replayAll;
-// The verdict to keep for a check: an "ok" of a source whose own fingerprint is the current one.
-function lastOf(c) {
-  if (!reuseActive || !c.perControl || !controls.get(c.id)) return null;
-  for (const [m, name] of sources) {
-    const v = m[c.id];
-    if (v?.status === "ok" && v.reusable !== false && v.control === controls.get(c.id)) return { v, name };
-  }
-  return null;
-}
-const keptFrom = new Map(list.map((c) => [c.id, lastOf(c)]).filter(([, k]) => k));
+const { prePush, controls, reuseActive, keptFrom } = loadReuse(list, { hooked, atCommit, replayAll });
 const reused = new Set(keptFrom.keys());
 // Checks with a `runAsync` (setting `parallel`) are all started up front; their result is read
 // here in the list order, so the report and the verdict are those of a sequential run.
@@ -193,32 +111,7 @@ for (const c of list) {
   } else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
 }
 const end = list.finish();
-// A tree changed during the pass (a check writing a file…) leaves no tree fingerprint, a check whose files changed no check fingerprint
-// (the verdicts were not taken on one tree): what is left of neither is not written. Only the checks played in this pass are in the
-// whole-tree fingerprint (`played`): a verdict kept from the last pass carries its own fingerprint only (QUA-141).
-if (!hooked) {
-  const after = list.fingerprints();
-  const stable = Boolean(fingerprint) && treeFingerprint(root) === fingerprint;
-  for (const [id, v] of Object.entries(verdicts)) if (v.control && after.get(id) !== v.control) v.control = null;
-  const played = Object.keys(verdicts).filter((id) => !reused.has(id));
-  if (stable || Object.values(verdicts).some((v) => v.control)) {
-    try {
-      mkdirSync(".drwil/evidence", { recursive: true });
-      writeFileSync(
-        VERDICTS,
-        JSON.stringify({ ranAt, fingerprint: stable ? fingerprint : null, played: stable ? played : [], checks: verdicts }, null, 2),
-      );
-    } catch {}
-  }
-}
-if (prePush) {
-  const after = list.fingerprints();
-  const ok = Object.entries(verdicts).filter(([id, v]) => v.status === "ok" && v.control && after.get(id) === v.control);
-  try {
-    mkdirSync(".drwil/evidence", { recursive: true });
-    writeFileSync(PREPUSH, JSON.stringify({ ranAt, checks: Object.fromEntries(ok) }, null, 2));
-  } catch {}
-}
+saveVerdicts({ root, list, verdicts, reused, fingerprint, ranAt, hooked, prePush });
 if (!Array.isArray(cfg.checks) || !cfg.checks.length) unrun(`${T.project} (${T.noCheck})`, true);
 
 // Non-blocking reminder (comfort, not a contract): an audit (opportunity, risks/debt) whose

@@ -43,6 +43,8 @@ files:
   - .githooks/engine-launch.mjs
   - .githooks/engine-pass.mjs
   - .githooks/engine-texts.mjs
+  - .githooks/run-checks-texts.mjs
+  - .githooks/run-checks-verdicts.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit

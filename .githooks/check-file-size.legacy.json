@@ -1,6 +1,5 @@
 {
   ".githooks/acceptance-sheet.mjs": 355,
-  ".githooks/base-checks.mjs": 221,
   ".githooks/briefs.mjs": 348,
   ".githooks/check-control-coverage.mjs": 210,
   ".githooks/check-docs.mjs": 344,
@@ -13,7 +12,6 @@
   ".githooks/doc-coherence.mjs": 246,
   ".githooks/glossary.mjs": 206,
   ".githooks/recette-note.mjs": 216,
-  ".githooks/run-checks.mjs": 292,
   ".githooks/scope-gate.mjs": 242,
   ".githooks/worktree.mjs": 273,
   "outils/banc-agents.mjs": 225,

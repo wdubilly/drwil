@@ -1,12 +1,10 @@
 #!/usr/bin/env node
-// Replays the checks with the main branch's hooks (QUA-113). In CI, a pull/merge request runs the
-// scripts of the branch it checks: a PR that weakens `.githooks/` or removes a check from
-// `.drwil/ia-first.json` would validate itself. Here the hooks are read from the main branch through
-// Git (never a second clone), laid over the PR's working tree for the time of one run of
-// `run-checks.mjs`, then restored; the list of checks stays the PR's. A check removed from that list,
-// or a hook file kept at its PR version, must be cited in backticks at the head of a bullet of the
-// « Contrats modifiés » section of a brief of the PR (approved by the requester).
-// Self-contained (Node built-ins only): the CI runs the main branch's copy of this very file.
+// Replays the checks with the main branch's hooks (QUA-113): a PR that weakens `.githooks/` or removes a check from
+// `.drwil/ia-first.json` would otherwise validate itself. The hooks are read from the main branch through Git, laid over
+// the PR's working tree for one run of `run-checks.mjs`, then restored; the list of checks stays the PR's. A check removed
+// from it, or a hook kept at its PR version, is cited in backticks at the head of a bullet of the « Contrats modifiés »
+// section of a brief of the PR (approved by the requester).
+// Self-contained (Node built-ins only, no sibling import): the CI runs the main branch's copy of this very file, alone.
 // QUA-013: a main branch that cannot be found or read is "not run", never a success.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, realpathSync } from "node:fs";
@@ -56,10 +54,8 @@ const TEXTS = {
   },
 };
 const say = (template, value) => template.replaceAll("{0}", () => value);
-
 const SECTION = /^##\s*(\d+\.\s*)?(Contrats modifiés|Modified contracts)\b/i;
 const BULLET = /^\s*-\s+`([^`\s]+)`/;
-
 /** Output of a git command; null when `maybe` and it fails, otherwise a failure throws (QUA-013). */
 function git(root, args, maybe = false) {
   const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -88,14 +84,10 @@ export function declaredIn(text) {
   return out;
 }
 
-/**
- * What the briefs touched by the PR (commits `base..HEAD`) declare, each read at its last version:
- * the working tree, or the parent of the commit that deleted it (a closed workstream).
- */
+/** What the briefs touched by the PR (`base..HEAD`) declare, each at its last version (the parent of the commit that deleted it). */
 export function declarations(root, base, briefsDir) {
-  const out = new Set();
+  const [out, seen] = [new Set(), new Set()];
   const log = git(root, ["log", "--no-renames", "--format=%H", "--name-status", `${base}..HEAD`, "--", briefsDir]);
-  const seen = new Set();
   let commit = "";
   for (const line of log.split("\n").filter(Boolean)) {
     const [status, file] = line.split("\t");
@@ -110,11 +102,9 @@ export function declarations(root, base, briefsDir) {
 }
 
 /**
- * QUA-137: files of `.githooks/` the branch modifies or deletes (working tree against its merge base
- * with the main branch) without declaring them, asked by the closing before the CI's replay: the replay would put them back at the main branch's version.
- * `text`: the active brief as it stands (a declaration not committed yet counts). `{ files, lines }`,
- * one message per file; no main branch or git failing: no file and one "not run" line, never a
- * silent success (QUA-013); no `.githooks/` at all: nothing to compare.
+ * QUA-137: files of `.githooks/` the branch modifies or deletes (against its merge base with the main branch) without declaring
+ * them: the CI's replay would put them back. `text`: the active brief as it stands. `{ files, lines }`, one message per file;
+ * no main branch or git failing: one "not run" line, never a silent success (QUA-013); no `.githooks/`: nothing to compare.
  */
 export function undeclaredHooks(root, text = "", { env = process.env } = {}) {
   let T = TEXTS.fr;
@@ -140,15 +130,7 @@ export function undeclaredHooks(root, text = "", { env = process.env } = {}) {
 }
 
 const keys = (cfg) => (Array.isArray(cfg.checks) ? cfg.checks : []).map((c) => String(c.id ?? c.name ?? c.run));
-
-function runChecks(root, env, stdio) {
-  return spawnSync(process.execPath, [join(".githooks", "run-checks.mjs")], { cwd: root, env, stdio }).status;
-}
-
-/**
- * True only when `.githooks/` and the config are byte for byte the base's (tracked or not): the replay
- * would then be the very run already done. Any doubt (a failing git, a difference) means "replay".
- */
+/** True only when `.githooks/` and the config are byte for byte the base's: any doubt means "replay". */
 function unchanged(root, base) {
   const paths = [".githooks/", ".drwil/ia-first.json"];
   const diff = git(root, ["diff", "--quiet", base, "--", ...paths], true);
@@ -175,11 +157,12 @@ export function replay(root, { argv = [], env = process.env, stdio = "inherit" }
     const now = new Set(keys(cfg));
     const removed = keys(JSON.parse(baseCfg ?? "{}")).filter((k) => !now.has(k) && !declared.has(k));
     const kept = hooks.filter((f) => declared.has(f) || declared.has(f.replace(/\.test\.mjs$/, ".mjs")));
+    const run = () => spawnSync(process.execPath, [join(".githooks", "run-checks.mjs")], { cwd: root, env, stdio }).status;
     const status = overlay(
       root,
       base,
       hooks.filter((f) => !kept.includes(f)),
-      () => runChecks(root, env, stdio),
+      run,
     );
     const lines = [...kept.map((f) => say(T.kept, f)), ...removed.map((k) => say(T.removed, k)), say(status === 0 ? T.ok : T.failed, ref)];
     return { status: status === 0 && !removed.length ? "ok" : "fail", lines };
@@ -188,11 +171,7 @@ export function replay(root, { argv = [], env = process.env, stdio = "inherit" }
   }
 }
 
-/**
- * Lays the main branch's version of `files` over the working tree for the time of `run`, then puts
- * back the PR's (a file the PR deleted is removed again). Everything is read through Git into a
- * temporary folder first: a failed read leaves the working tree untouched.
- */
+/** Lays the main branch's `files` over the working tree for `run`, then puts back the PR's; read into a temporary folder first. */
 function overlay(root, base, files, run) {
   const dir = mkdtempSync(join(tmpdir(), "drwil-base-checks-"));
   const saved = new Map();
