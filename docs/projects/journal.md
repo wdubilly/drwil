@@ -3550,4 +3550,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : les 39 fichiers restent au-dessus de 200 lignes ;
   leur découpe relève des fiches cadrées suivantes (CLI du paquet, hooks
   livrés, modules et outils).
+- **Preuve de clôture** : `docs/preuves/plafond-200-lignes.md` (si présent).
 - **Clôturé par** : la branche `chantier/plafond-200-lignes`.
