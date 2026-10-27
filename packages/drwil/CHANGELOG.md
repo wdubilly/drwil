@@ -12,6 +12,14 @@ closing commit; the release renames this section to its version.
   when a project adopts the file-size check (adoption recipe, catalog, script
   example). The script's default without a ceiling stays 400, so no adopted
   project breaks on update.
+- The 17 base hooks installed in `.githooks/` that exceeded 200 lines are split
+  into smaller modules (`state-*`, `engine-*`, `run-checks-*`, `detour-*`,
+  `briefs-*`, `check-docs-*`, `close-*`, `consumption-*`, `worktree-texts`,
+  `doc-coherence-*`, `scope-gate-*`, `contracts-validate`,
+  `check-control-coverage-jobs`, `glossary-labels`), none above 200 lines, with no
+  change of behavior. No compatibility with an earlier installation is kept: a
+  project already equipped runs `npx drwil uninstall --yes`, then installs the kit
+  again.
 
 ## 0.9.0 (2026-10-26)
 

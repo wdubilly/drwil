@@ -60,7 +60,7 @@ fichier du périmètre de QUA-001 ne dépasse 200 lignes.
 
 - La CLI et les hooks de base : fiches
   `docs/projects/journal.md` et
-  `docs/projects/decoupe-hooks-livres.md`.
+  `docs/projects/journal.md`.
 - Changer ce que mesure le banc ou ce que vérifient les miroirs.
 
 ## 3. Contraintes
@@ -97,4 +97,4 @@ Aucun.
 - **Dernier état** (2026-10-27) : cadré, rien de construit.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [humain] lancer le chantier, après la fusion de
-  `docs/projects/decoupe-hooks-livres.md`.
+  `docs/projects/journal.md`.

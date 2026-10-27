@@ -11,13 +11,14 @@
 //   parent. A commit is judged by its parent's rules: without a gate in the parent, it is not
 //   checked.
 // Severity: `scopeGate` setting (off | warning | blocking), warning if missing.
-import { spawnSync } from "node:child_process";
 import { existsSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { contractsAddedOnly, isRegistry, rulesFiles } from "./detour.mjs";
 import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
+import { git, resolution } from "./scope-gate-merge.mjs";
+import { TRAILER, texts } from "./scope-gate-texts.mjs";
 
 // Attestations pass like briefs: a human proof already guarded by `drwil attest` (terminal
 // required, contract fingerprint), reviewed; subjecting them to the scope would force widening
@@ -40,45 +41,9 @@ export const OUT_OF_SCOPE = [
   "docs/audit-risks.md",
   "docs/audit-risques.md",
 ];
-export const TRAILER = "Drwil-Brief";
+export { TRAILER };
 const LEVELS = new Set(["off", "warning", "blocking"]);
 const MARKER = ".githooks/scope-gate.mjs";
-
-const TEXTS = {
-  fr: {
-    activity: (a, n) =>
-      `${n} fichier(s) hors fiches commité(s) en ${a} : seule l'activité BUILD l'autorise (node .githooks/state.mjs move …)`,
-    outsideScope: (f, brief) => `${f} : hors du cadrage de ${brief} (dans HEAD) — l'ajouter au bloc scope et commiter la fiche d'abord`,
-    noTrailer: (c, n) => `${c} : ${n} fichier(s) hors fiches sans trailer ${TRAILER}`,
-    outsideScopeCommit: (c, f, brief) => `${c} : ${f} hors du cadrage de ${brief} (dans le parent)`,
-    noReference: "aucune branche de référence (origin/HEAD, master, main, ou DRWIL_BASE)",
-    failed: (n) => `périmètre de l'attente : ${n} problème(s) (barrière bloquante)`,
-    rules: (f) =>
-      `${f} : un détour qui change les règles du jeu (contrat existant modifié ou retiré, hook, seuil, barrière, CI) demande le oui de l'humain — \`node .githooks/detour.mjs allow\` dans un terminal ; en file, le sous-agent s'arrête et le signale`,
-    reopenRules: (f) =>
-      `${f} : un correctif de réouverture qui change les règles du jeu (contrat existant modifié ou retiré, hook, seuil, barrière, CI) demande le oui de l'humain — \`node .githooks/detour.mjs allow\` dans un terminal ; en file, le sous-agent s'arrête et le signale`,
-  },
-  en: {
-    activity: (a, n) =>
-      `${n} file(s) outside briefs committed in ${a}: only the BUILD activity allows it (node .githooks/state.mjs move …)`,
-    outsideScope: (f, brief) => `${f}: outside the scope of ${brief} (in HEAD) — add it to the scope block and commit the brief first`,
-    noTrailer: (c, n) => `${c}: ${n} file(s) outside briefs without a ${TRAILER} trailer`,
-    outsideScopeCommit: (c, f, brief) => `${c}: ${f} outside the scope of ${brief} (in the parent)`,
-    noReference: "no reference branch (origin/HEAD, master, main, or DRWIL_BASE)",
-    failed: (n) => `brief scope: ${n} problem(s) (blocking gate)`,
-    rules: (f) =>
-      `${f}: a detour that changes the rules (an existing contract modified or removed, hook, threshold, gate, CI) needs the human's yes — \`node .githooks/detour.mjs allow\` in a terminal; in a queue, the subagent stops and reports it`,
-    reopenRules: (f) =>
-      `${f}: a reopening fix that changes the rules (an existing contract modified or removed, hook, threshold, gate, CI) needs the human's yes — \`node .githooks/detour.mjs allow\` in a terminal; in a queue, the subagent stops and reports it`,
-  },
-};
-
-const texts = (cfg) => TEXTS[cfg?.lang === "en" ? "en" : "fr"];
-
-function git(root, args) {
-  const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
-  return r.status === 0 ? r.stdout : null;
-}
 
 /** Files subject to the scope: everything but briefs (configurable list). */
 export function outsideBriefFiles(files, outOfScope = OUT_OF_SCOPE) {
@@ -156,32 +121,6 @@ function checkBranch(root, base, { outOfScope, cfg }) {
     for (const f of subject) if (!covered(f, patterns)) problems.push(T.outsideScopeCommit(short, f, brief));
   }
   return problems;
-}
-
-/** `mode sha` of `f` in `rev` (null: the index); "" when absent; null when git fails. */
-function entry(root, rev, f) {
-  const args = rev ? ["ls-tree", "-z", "--full-tree", rev, "--", f] : ["ls-files", "--stage", "-z", "--", f];
-  const out = git(root, ["--literal-pathspecs", ...args]);
-  if (out === null) return null;
-  const line = out.split("\0").find((l) => l.endsWith(`\t${f}`));
-  if (!line) return "";
-  // ls-tree: `mode type sha`; ls-files --stage: `mode sha stage`.
-  const fields = line.split("\t")[0].split(" ");
-  return `${fields[0]} ${fields[rev ? 2 : 1]}`;
-}
-
-/**
- * QUA-111: during a merge (MERGE_HEAD), only the resolution is the author's: a staged file identical to
- * one of the two parents (deleted and absent there included) is brought as it is, not judged. A failed
- * git call keeps the file judged, never lets it pass (QUA-013).
- */
-function resolution(root, staged) {
-  if (git(root, ["rev-parse", "--verify", "--quiet", "MERGE_HEAD^{commit}"]) === null) return staged;
-  return staged.filter((f) => {
-    const own = entry(root, null, f);
-    if (own === null) return true;
-    return !["HEAD", "MERGE_HEAD"].some((rev) => entry(root, rev, f) === own);
-  });
 }
 
 /**

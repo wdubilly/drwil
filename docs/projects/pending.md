@@ -90,10 +90,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] Les hooks de base livrés découpés sous 200 lignes (17
-  fichiers ; pas d'adoption encore : aucune compatibilité avec une
-  installation antérieure ; cadré le 2026-10-27) —
-  `docs/projects/decoupe-hooks-livres.md`.
 - [ ] [IA] [P1] Les modules optionnels et les outils du dépôt découpés sous
   200 lignes, le fichier des plafonds hérités vidé (8 fichiers, cadré le
   2026-10-27) — `docs/projects/decoupe-modules-et-outils.md`.

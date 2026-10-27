@@ -2,35 +2,14 @@
 // commit, as warnings) and close.mjs (at closing, blocking and corrective) read them from here, so
 // the same inconsistency is seen by both.
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { branchFiles, briefIntent, briefStatus } from "./briefs.mjs";
 import { briefReferences, changedFiles } from "./check-code-rules.mjs";
+import { applyProposals, proposals } from "./doc-coherence-fixes.mjs";
+import { TEXTS } from "./doc-coherence-texts.mjs";
 
-const TEXTS = {
-  fr: {
-    openButDone: (brief) => `case ouverte mais la fiche ${brief} se dit déjà terminée (QUA-015)`,
-    checkedButOpen: (brief) => `case cochée mais la fiche ${brief} ne se dit pas terminée (QUA-015)`,
-    deadClosing: (place, b) => `${place} cite ${b}, qui sera supprimée : à réorienter vers le journal`,
-    deadGone: (place, b) => `${place} cite ${b}, déjà retirée : citation à supprimer`,
-    codeCite: (place, b) =>
-      `${place} cite la fiche de chantier ${b} : réécrire ce commentaire en citant le contrat que ce code sert (la clôture ne touche pas au code) (QUA-049)`,
-    intentLeft: (b, i) =>
-      `la fiche ${b} est supprimée sans que son intention ${i} soit touchée : la mettre à jour, ou la résumer au journal et la retirer si elle est couverte (QUA-036)`,
-    twin: (p, news, old) => `${p} : cité par ${news}${old ? `, déjà cité par ${old}` : ""} — doublon possible, à vérifier`,
-  },
-  en: {
-    openButDone: (brief) => `item unchecked but ${brief} already says it is done (QUA-015)`,
-    checkedButOpen: (brief) => `item checked but ${brief} does not say it is done (QUA-015)`,
-    deadClosing: (place, b) => `${place} cites ${b}, which will be deleted: to redirect to the journal`,
-    deadGone: (place, b) => `${place} cites ${b}, already removed: citation to delete`,
-    codeCite: (place, b) =>
-      `${place} cites the workstream brief ${b}: rewrite this comment citing the contract this code serves (closing does not touch code) (QUA-049)`,
-    intentLeft: (b, i) =>
-      `brief ${b} is deleted without touching its intent ${i}: update it, or summarise it in the journal and remove it when covered (QUA-036)`,
-    twin: (p, news, old) => `${p}: cited by ${news}${old ? `, already cited by ${old}` : ""} — possible duplicate, to check`,
-  },
-};
+export { applyProposals, proposals };
 
 export const MARKERS_RE = /\[(IA|humain|décision|AI|human|decision)\]/i;
 // A line that declares the file optional must not fail the check.
@@ -206,41 +185,4 @@ export function twinIntents(root, cfg, lang) {
   }
   // The new intents citing each other are named once, among the new ones.
   return [...byPath].map(([p, g]) => T.twin(p, [...g.news].join(", "), [...g.others].filter((o) => !g.news.has(o)).join(", ")));
-}
-
-/**
- * The line rewrites behind the findings, merged per line: `[{ file, line, from, to }]` — what the
- * closing proposes (a diff) and what `--fix` writes.
- */
-export function proposals(root, findings) {
-  const edits = new Map();
-  for (const f of findings) {
-    const edit = f.edit ?? (f.fixTo ? (s) => s.replace(/\[( |x|X)\]/, `[${f.fixTo}]`) : null);
-    if (edit) edits.set(`${f.file}\0${f.line}`, [...(edits.get(`${f.file}\0${f.line}`) ?? []), { file: f.file, line: f.line, edit }]);
-  }
-  const out = [];
-  for (const list of edits.values()) {
-    const lines = readFileSync(join(root, list[0].file), "utf8").split(/\r?\n/);
-    const from = lines[list[0].line - 1];
-    const to = list.reduce((s, e) => e.edit(s), from);
-    if (to !== from) out.push({ file: list[0].file, line: list[0].line, from, to });
-  }
-  return out.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
-}
-
-/** Writes the proposals; a line that changed since they were computed is left alone. Returns how many were applied. */
-export function applyProposals(root, list) {
-  let applied = 0;
-  for (const file of new Set(list.map((p) => p.file))) {
-    const raw = readFileSync(join(root, file), "utf8");
-    const lines = raw.split("\n");
-    for (const p of list.filter((x) => x.file === file)) {
-      const cr = lines[p.line - 1].endsWith("\r") ? "\r" : "";
-      if (lines[p.line - 1].replace(/\r$/, "") !== p.from) continue;
-      lines[p.line - 1] = p.to + cr;
-      applied++;
-    }
-    writeFileSync(join(root, file), lines.join("\n"));
-  }
-  return applied;
 }
