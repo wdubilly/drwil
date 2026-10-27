@@ -1,8 +1,8 @@
 // QUA-140, QUA-141: fingerprints of what the checks judge, split from engine.mjs (which re-exports them) to keep it under the size cap.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { globToRegex } from "./glob.mjs";
 
@@ -50,10 +50,13 @@ export function controlFingerprints(root, list) {
     .split("\0")
     .filter((f) => f && !f.startsWith(".drwil/evidence/"))
     .sort();
-  const engine = createHash("sha256")
-    .update(readFileSync(fileURLToPath(import.meta.url)))
-    .update(readFileSync(fileURLToPath(new URL("./engine.mjs", import.meta.url))))
-    .digest("hex");
+  const dir = dirname(fileURLToPath(import.meta.url));
+  const engineFiles = readdirSync(dir)
+    .filter((n) => /^engine(-[\w-]+)?\.mjs$/.test(n))
+    .sort();
+  const engineHash = createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url)));
+  for (const n of engineFiles) engineHash.update(readFileSync(join(dir, n)));
+  const engine = engineHash.digest("hex");
   const hashes = new Map();
   const hashOf = (f) => {
     if (!hashes.has(f)) {
