@@ -1,9 +1,9 @@
 # Intention : découper les fichiers plafonnés sous 200 lignes
 
 **Statut** : proposée et cadrée le 2026-10-27 en trois fiches, réalisées juste
-après `docs/projects/journal.md` et avant les autres fiches
-cadrées : `docs/projects/decoupe-cli-du-paquet.md`,
-`docs/projects/decoupe-hooks-livres.md`,
+après `docs/projects/journal.md` et avant les autres fiches cadrées. La
+première, la CLI du paquet (14 fichiers), est faite et consignée au journal ;
+restent `docs/projects/decoupe-hooks-livres.md` et
 `docs/projects/decoupe-modules-et-outils.md`. Retirée à la clôture de la
 dernière.
 
