@@ -63,6 +63,41 @@ files:
   - .githooks/engine.test.mjs
   - .githooks/run-checks.test.mjs
   - .githooks/dashboard.test.mjs
+  - .githooks/state-evidence.mjs
+  - .githooks/state-transitions.mjs
+  - .githooks/state-validate.mjs
+  - .githooks/state-messages.mjs
+  - .githooks/state-messages-en.mjs
+  - .githooks/state-messages-fr.mjs
+  - .githooks/state-context-texts.mjs
+  - .githooks/state-reopen.mjs
+  - .githooks/engine-branch.mjs
+  - .githooks/engine-launch.mjs
+  - .githooks/engine-pass.mjs
+  - .githooks/engine-texts.mjs
+  - .githooks/run-checks-texts.mjs
+  - .githooks/run-checks-verdicts.mjs
+  - .githooks/detour-rules.mjs
+  - .githooks/detour-texts.mjs
+  - .githooks/briefs-criteria.mjs
+  - .githooks/briefs-intents.mjs
+  - .githooks/briefs-overlap.mjs
+  - .githooks/check-docs-texts.mjs
+  - .githooks/check-docs-workstreams.mjs
+  - .githooks/check-docs-paths.mjs
+  - .githooks/close-checks.mjs
+  - .githooks/close-texts.mjs
+  - .githooks/consumption-format.mjs
+  - .githooks/consumption-log.mjs
+  - .githooks/consumption-texts.mjs
+  - .githooks/worktree-texts.mjs
+  - .githooks/doc-coherence-fixes.mjs
+  - .githooks/doc-coherence-texts.mjs
+  - .githooks/scope-gate-merge.mjs
+  - .githooks/scope-gate-texts.mjs
+  - .githooks/contracts-validate.mjs
+  - .githooks/check-control-coverage-jobs.mjs
+  - .githooks/glossary-labels.mjs
   - .githooks/prepare-commit-msg
   - .githooks/pre-commit
   - .githooks/pre-push
