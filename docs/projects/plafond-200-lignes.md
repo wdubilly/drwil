@@ -78,7 +78,7 @@ est proposé à l'adoption (`catalog:QUA-001`), et le script livré applique
 
 - Les plafonds hérités se mesurent au lancement du chantier, pas au
   cadrage : les tailles du 2026-10-27 auront changé.
-- Ce chantier passe en premier, avant les fiches 1 à 7 (décision du
+- Ce chantier passe en premier, avant les sept autres fiches cadrées (décision du
   2026-10-27). Elles font grossir `.githooks/state.mjs`,
   `.githooks/close.mjs` et `verify` : une fois le plafond posé, chacune
   extrait du code dans un nouveau fichier de moins de 200 lignes au lieu
@@ -96,7 +96,7 @@ est proposé à l'adoption (`catalog:QUA-001`), et le script livré applique
   peuvent que maigrir, sans découpe dans ce chantier (demandeur).
 - 2026-10-27 — Livrable : 200 lignes proposées à l'adoption, défaut du
   script inchangé à 400, pour ne casser aucun projet adopté (demandeur).
-- 2026-10-27 — Ce chantier passe avant les fiches 1 à 7 (demandeur).
+- 2026-10-27 — Ce chantier passe avant les sept autres fiches cadrées (demandeur).
 
 ## 5. Points à trancher
 

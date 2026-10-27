@@ -156,7 +156,7 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 - [ ] [décision] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
-  2026-10-22) — entièrement cadrée le 2026-10-23 en fiche 1 de « Fiches
+  2026-10-22) — entièrement cadrée le 2026-10-23 en fiche 2 de « Fiches
   cadrées, dans l'ordre de réalisation », rien à cadrer ; retirée à la
   clôture de cette fiche —
   `docs/intentions/niveaux-de-protection-dans-doctor.md`.
