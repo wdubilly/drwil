@@ -4,7 +4,6 @@
   ".githooks/contracts.mjs": 242,
   ".githooks/create-release.mjs": 342,
   ".githooks/dashboard.mjs": 347,
-  ".githooks/doc-coherence.mjs": 246,
   ".githooks/glossary.mjs": 206,
   ".githooks/recette-note.mjs": 216,
   ".githooks/scope-gate.mjs": 242,
