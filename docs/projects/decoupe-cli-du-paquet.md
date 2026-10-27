@@ -51,6 +51,13 @@ s'exécute depuis le paquet et n'est jamais copiée dans un projet : la mise
 - Sortie groupée en 0.10.0 avec les trois autres chantiers de la taille des
   fichiers : pas de release propre.
 
+## Contrats modifiés
+
+- `.githooks/check-file-size.legacy.json` — les plafonds hérités des 14
+  fichiers de la CLI sont retirés, un par commit : le critère d'acceptation
+  et le bloc de cadrage de la fiche le demandent (validé par le demandeur le
+  2026-10-27, au cadrage de la fiche).
+
 ## 4. Décisions
 
 - 2026-10-27 — Tout fichier sous 200 lignes, sans exception (demandeur).
