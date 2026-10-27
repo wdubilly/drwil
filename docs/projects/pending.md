@@ -52,12 +52,10 @@ autre code), et le **cadrage** par thème, entre deux chantiers. Les priorités
 des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
 
 1. **Réaliser les fiches cadrées**, dans l'ordre de la section suivante ; un
-   chantier par session, le suivant après la fusion du précédent. Juste
-   après `plafond-200-lignes` et avant les autres, cadrer puis réaliser la
-   découpe des fichiers plafonnés en trois fiches (CLI du paquet, hooks de
-   base livrés, modules optionnels et outils), sans rien casser à la mise à
-   jour d'un projet adopté (décision du 2026-10-27) —
-   `docs/intentions/decouper-les-fichiers-plafonnes.md`.
+   chantier par session, le suivant après la fusion du précédent. Les quatre
+   premières (plafond à 200 lignes, puis découpe de la CLI, des hooks de
+   base, des modules et outils) sortent ensemble en 0.10.0 (décision du
+   2026-10-27).
 2. **Cadrer par thème** (l'agent propose les réponses, le demandeur tranche
    en un sondage, une PR de cadrage par thème) : A. release allégée (tout de
    suite) ; B. protection, garanties, contournements (après
@@ -97,6 +95,15 @@ d'un outil) la dit dans son statut.
   taille (cadré le 2026-10-27 ; en premier : les fiches suivantes extraient
   au lieu de faire grossir un fichier plafonné) —
   `docs/projects/plafond-200-lignes.md`.
+- [ ] [IA] [P1] La CLI du paquet découpée sous 200 lignes (14 fichiers,
+  cadré le 2026-10-27) — `docs/projects/decoupe-cli-du-paquet.md`.
+- [ ] [IA] [P1] Les hooks de base livrés découpés sous 200 lignes (17
+  fichiers ; pas d'adoption encore : aucune compatibilité avec une
+  installation antérieure ; cadré le 2026-10-27) —
+  `docs/projects/decoupe-hooks-livres.md`.
+- [ ] [IA] [P1] Les modules optionnels et les outils du dépôt découpés sous
+  200 lignes, le fichier des plafonds hérités vidé (8 fichiers, cadré le
+  2026-10-27) — `docs/projects/decoupe-modules-et-outils.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
@@ -137,10 +144,10 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 ### Taille des fichiers (après le plafond, avant les autres fiches)
 
-- [ ] [décision] [P0] Découper les fichiers plafonnés sous 200 lignes (39
-  fichiers, dont 21 hooks livrés aux projets adoptés), en trois fiches, sans
-  rien casser à la mise à jour par `drwil init` d'un projet qui a modifié un
-  hook (demande du 2026-10-27) —
+- [ ] [décision] Découper les fichiers plafonnés sous 200 lignes : cadrée le
+  2026-10-27 en trois fiches, de la deuxième à la quatrième de « Fiches
+  cadrées, dans l'ordre de réalisation », rien à cadrer ; retirée à la
+  clôture de la dernière —
   `docs/intentions/decouper-les-fichiers-plafonnes.md`.
 
 ### Preuves, contrôles, vitesse
@@ -169,7 +176,7 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 - [ ] [décision] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
-  2026-10-22) — entièrement cadrée le 2026-10-23 en fiche 2 de « Fiches
+  2026-10-22) — entièrement cadrée le 2026-10-23 en fiche 5 de « Fiches
   cadrées, dans l'ordre de réalisation », rien à cadrer ; retirée à la
   clôture de cette fiche —
   `docs/intentions/niveaux-de-protection-dans-doctor.md`.
