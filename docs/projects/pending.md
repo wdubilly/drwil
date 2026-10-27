@@ -78,7 +78,12 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    `next-attend-la-fusion`, voisine de la file) : la clôture d'une fiche
    permanente, la note « un lancement intercalé efface la file » de
    `docs/intentions/cloture-et-attestations.md`, le repositionnement après
-   une clôture, les conflits d'index et de journal entre worktrees.
+   une clôture, les conflits d'index et de journal entre worktrees ;
+   H. fichiers chargés courts : les hooks d'agent sous le plafond de 200
+   lignes, et un `AGENTS.md` court qui aiguille vers le détail (tout de
+   suite, demande du 2026-10-27 ; il touche `AGENTS.md` et
+   `.claude/hooks/`, pas les fichiers partagés des fiches cadrées) —
+   `docs/intentions/fichiers-charges-courts.md`.
 3. **Grands sujets, ensuite** : catalogue et profils, autres outils (dont
    le sondage parallèle dans Copilot CLI et la consommation de tokens des
    autres outils), banc et fabrique (après le catalogue, décision du
@@ -127,6 +132,14 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   `docs/projects/suites-kit-portable.md` (point 2).
 
 ## Intentions par thème
+
+### Fichiers chargés courts
+
+- [ ] [décision] [P1] Les hooks d'agent sous le plafond de 200 lignes
+  (`.claude/hooks/` hors de QUA-001 : bash-guard 276 lignes, prompt-hook
+  227) et un `AGENTS.md` court qui aiguille vers le détail (247 lignes
+  livrées, chargées à chaque session ; environ 100 visées) — demande du
+  2026-10-27 — `docs/intentions/fichiers-charges-courts.md`.
 
 ### Preuves, contrôles, vitesse
 
