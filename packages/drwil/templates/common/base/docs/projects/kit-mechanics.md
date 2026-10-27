@@ -55,6 +55,9 @@ files:
   - .githooks/check-docs-paths.mjs
   - .githooks/close-checks.mjs
   - .githooks/close-texts.mjs
+  - .githooks/consumption-format.mjs
+  - .githooks/consumption-log.mjs
+  - .githooks/consumption-texts.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit
