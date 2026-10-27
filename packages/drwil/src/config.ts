@@ -1,7 +1,7 @@
-import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
+import { TEXT } from "./config-text.js";
 import { detectStack, type StackEntry } from "./stack.js";
 
 export const LANGS = ["fr", "en"] as const;
@@ -67,26 +67,8 @@ export function isKitProse(rel: string): boolean {
   return KIT_PROSE.some((p) => (p.endsWith("/") ? rel.startsWith(p) : rel === p));
 }
 
+export { TEXT };
 export const CI_FILES: Record<Ci, string[]> = { none: [], github: [".github/workflows/ia-first.yml"], gitlab: [".gitlab-ci.yml"] };
-
-// Texts rendered into the template, in English like it: `lang` is the project's language, not the kit's.
-export const TEXT = {
-  // The project's language, as the AGENTS.md instruction names it to the agent.
-  languages: { fr: "French", en: "English" } as Record<string, string>,
-  description: "(to describe: what the application does, for whom)",
-  layer: (l: string) => `- \`${l}/\` — see \`${l}/AGENTS.md\``,
-  noLayer: "No separate layer: the code lives at the repository root.",
-  stackNote: "Detected at install time from project files: to be confirmed by the user.",
-  stackUndecided: "Not decided. The user chooses it; an AI proposes one and waits for approval before writing application code.",
-  ciLine: (f: string) => ` and in CI (\`${f}\`)`,
-  dirs: {
-    projects: "docs/projects",
-    intentions: "docs/intentions",
-    recipes: "docs/recipes",
-    contracts: "docs/contracts.md",
-    index: "docs/projects/pending.md",
-  },
-};
 
 export interface Resolved {
   opts: InitOptions;
@@ -127,7 +109,7 @@ const csv = (v: unknown) => (Array.isArray(v) ? v.join(",") : undefined);
 const text = (v: unknown) => (typeof v === "string" ? v : undefined);
 
 /** CI of an existing config: its `ci` key, otherwise deduced from `ciFiles` (configs older than the key). */
-function ciFromConfig(config: Record<string, unknown>): string | undefined {
+export function ciFromConfig(config: Record<string, unknown>): string | undefined {
   if (typeof config.ci === "string") return config.ci;
   const first = Array.isArray(config.ciFiles) ? config.ciFiles[0] : undefined;
   return first === undefined ? undefined : CIS.find((c) => CI_FILES[c][0] === first);
@@ -200,49 +182,4 @@ export function readConfig(targetDir: string): Record<string, unknown> | null {
   } catch {
     return null;
   }
-}
-
-export async function writeConfig(r: Resolved): Promise<void> {
-  const previous = readConfig(r.opts.targetDir);
-  // Settings entered by the project: kept as they are; those derived from an option (CI files) are
-  // only recomputed if the option changed.
-  const keep = (key: string, fallback: string[]) => (Array.isArray(previous?.[key]) ? (previous[key] as string[]) : fallback);
-  const config = {
-    // Project-specific keys, unknown to the kit: never lost.
-    ...previous,
-    projectName: projectName(r),
-    projectShort: r.opts.short ?? projectName(r),
-    lang: r.lang,
-    layers: r.layers,
-    contractPrefixes: splitCsv(r.opts.contractPrefixes ?? "SEC,QUA"),
-    tools: r.tools,
-    ci: r.ci,
-    // An installed project's folders do not move with its language: its briefs live there.
-    dirs: previous?.dirs ?? TEXT.dirs,
-    stack: r.stack,
-    // The project's checks are entered by the user or the AI: a reinstall must not erase them.
-    checks: Array.isArray(previous?.checks) ? previous.checks : [],
-    // Severity of the scope reminder (QUA-016 only): "blocking" | "warning" | "off". Default
-    // "blocking"; a value already chosen by the project is never overwritten by a reinstall.
-    scopeReminder: typeof previous?.scopeReminder === "string" ? previous.scopeReminder : "blocking",
-    // Transitions of the governance state (.githooks/state.mjs): "human" (opening and starting
-    // require an interactive terminal) | "agent". Never overwritten.
-    transitions: typeof previous?.transitions === "string" ? previous.transitions : "human",
-    // Scope gate of the active brief (.githooks/scope-gate.mjs): "off" | "warning" | "blocking".
-    // "warning" at install time: the project sees the gaps before hardening.
-    scopeGate: typeof previous?.scopeGate === "string" ? previous.scopeGate : "warning",
-    // Requirements added by a kit version later than the install (today: a cited path that only
-    // exists as a file ignored by Git): "blocking" for a fresh install, "warning" for an already
-    // equipped project that does not have this setting yet — an update never breaks a commit
-    // that used to pass. Never overwritten afterwards.
-    newRequirements: typeof previous?.newRequirements === "string" ? previous.newRequirements : previous ? "warning" : "blocking",
-    layerPrefixes: keep("layerPrefixes", ["app", "tests", "src", "scripts"]),
-    codePrefixes: keep("codePrefixes", ["scripts", ".githooks", "e2e"]),
-    extraCodeFiles: keep("extraCodeFiles", []),
-    extraCodeGlobs: keep("extraCodeGlobs", ["docker-compose*.yml"]),
-    ciFiles: previous && ciFromConfig(previous) === r.ci ? keep("ciFiles", CI_FILES[r.ci]) : CI_FILES[r.ci],
-    mode: r.mode,
-  };
-  await mkdir(join(r.opts.targetDir, ".drwil"), { recursive: true });
-  await writeFile(join(r.opts.targetDir, ".drwil", "ia-first.json"), JSON.stringify(config, null, 2) + "\n");
 }
