@@ -64,6 +64,8 @@ files:
   - .githooks/scope-gate-merge.mjs
   - .githooks/scope-gate-texts.mjs
   - .githooks/contracts-validate.mjs
+  - .githooks/check-control-coverage-jobs.mjs
+  - .githooks/glossary-labels.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit
