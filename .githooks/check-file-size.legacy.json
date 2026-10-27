@@ -1,6 +1,5 @@
 {
   ".githooks/acceptance-sheet.mjs": 355,
-  ".githooks/briefs.mjs": 348,
   ".githooks/check-control-coverage.mjs": 210,
   ".githooks/check-docs.mjs": 344,
   ".githooks/close.mjs": 325,

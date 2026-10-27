@@ -3,8 +3,12 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { fnmatch, readBlock, withMirrors } from "./scope.mjs";
+import { acceptanceCriteria, declaredContracts } from "./briefs-criteria.mjs";
+import { scopesOverlap } from "./briefs-overlap.mjs";
+import { branchFiles, briefIntent, intentsLeftBehind, lastReview, staleIntents } from "./briefs-intents.mjs";
+import { readBlock } from "./scope.mjs";
 
+export { scopesOverlap, acceptanceCriteria, declaredContracts, branchFiles, briefIntent, intentsLeftBehind, lastReview, staleIntents };
 export const BRIEF_DIRS = ["docs/projects/"];
 export const MODEL_RE = /^modele-|^model-/;
 // Routine maintenance (LOW risk, DRWIL-012) is launched like a brief but is not a workstream: no
@@ -67,7 +71,7 @@ export function briefMaturity(text) {
   return "unset";
 }
 
-const DEFAULT_INDEX = ["docs/projects/pending.md"];
+export const DEFAULT_INDEX = ["docs/projects/pending.md"];
 const MATURITY_RANK = { ready: 0, "in-progress": 1, unset: 1, refine: 2 };
 const DEFAULT_PRIORITY = 2;
 
@@ -116,36 +120,6 @@ export function queueable(root, brief) {
   return Boolean(b?.ready && b.maturity === "ready" && acceptanceCriteria(readFileSync(join(root, brief), "utf8")).length);
 }
 
-const wildcardAt = (p) => [...p].findIndex((c) => c === "*" || c === "?");
-
-// Can one path match both patterns? Exact for a literal, conservative (shared prefix) for two globs.
-function patternsMeet(a, b) {
-  const [ia, ib] = [wildcardAt(a), wildcardAt(b)];
-  if (ia === -1 && ib === -1) return a === b;
-  if (ia === -1) return fnmatch(a, b);
-  if (ib === -1) return fnmatch(b, a);
-  const [pa, pb] = [a.slice(0, ia), b.slice(0, ib)];
-  return pa.startsWith(pb) || pb.startsWith(pa);
-}
-
-/**
- * First pair of `scope` patterns (committed in HEAD, installed copies included) that two briefs
- * share: `{ a, b }`, or null. Two workstreams in parallel on such files would meet at the merge.
- * The workstreams' index and journal do not count: nearly every brief declares them for its closing,
- * and their closing conflict is resolved by the workstream's subagent (QUA-148).
- */
-export function scopesOverlap(root, briefA, briefB) {
-  const dirs = config(root).dirs ?? {};
-  const closing = new Set([dirs.index ?? DEFAULT_INDEX[0], `${dirs.projects ?? "docs/projects"}/journal.md`]);
-  const patterns = (brief) => {
-    const r = spawnSync("git", ["show", `HEAD:${brief}`], { cwd: root, encoding: "utf8" });
-    return r.status === 0 ? withMirrors(readBlock(r.stdout).patterns, config(root)).filter((p) => !closing.has(p)) : [];
-  };
-  const [pa, pb] = [patterns(briefA), patterns(briefB)];
-  for (const a of pa) for (const b of pb) if (patternsMeet(a, b)) return { a, b };
-  return null;
-}
-
 /**
  * A workstream brief without any acceptance criterion (QUA-021): null if it has some, if it is routine
  * maintenance or cannot be read; otherwise "blocking" or "warning", per `newRequirements` (an already
@@ -155,61 +129,6 @@ export function missingCriteria(root, brief) {
   const p = join(root, brief ?? "");
   if (!brief || ROUTINE_RE.test(brief) || !existsSync(p) || acceptanceCriteria(readFileSync(p, "utf8")).length) return null;
   return config(root).newRequirements === "blocking" ? "blocking" : "warning";
-}
-
-/**
- * Acceptance criteria of a brief: one bullet per criterion in the "Critères d'acceptation" section.
- * `[{ text, link, human }]`: `link` is the backticked contract or check ID of the line (null when
- * absent: a criterion without proof, for the evaluation to refuse), `human` is set by `[humain]`.
- */
-export function acceptanceCriteria(text) {
-  // A criterion wrapped over several lines keeps its proof at the end: read each bullet whole.
-  const items = [];
-  let inside = false;
-  let open = false;
-  for (const line of text.split(/\r?\n/)) {
-    if (/^##\s/.test(line)) {
-      inside = /^##\s*(\d+\.\s*)?(Critères d'acceptation|Acceptance criteria)\b/i.test(line);
-      open = false;
-      continue;
-    }
-    const item = inside ? /^\s*-\s+(.+)$/.exec(line) : null;
-    if (item) items.push(item[1]);
-    else if (open && /^\s+\S/.test(line)) items[items.length - 1] += ` ${line.trim()}`;
-    open = Boolean(item) || (open && /^\s+\S/.test(line));
-  }
-  const criteria = [];
-  for (const item of items) {
-    const human = /\[(humain|human)\]/i.test(item);
-    // The proof is the last backticked ID: code quoted earlier in the sentence (`init`) is not one.
-    const proof = /`([A-Za-z][\w.:-]*)`[^`]*$/.exec(item);
-    const link = proof?.[1] ?? null;
-    const label = (proof ? item.slice(0, proof.index) + item.slice(proof.index + proof[1].length + 2) : item)
-      .replace(/\[(humain|human)\]/gi, "")
-      .replace(/`([^`]*)`/g, "$1")
-      .replace(/\s*[—–:-]\s*$/, "")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (label) criteria.push({ text: label, link, human });
-  }
-  return criteria;
-}
-
-/**
- * Contracts the brief declares as changed on purpose (« Contrats modifiés » section): the ID in backticks
- * at the head of each bullet. A contract modified in the branch without this declaration is refused.
- */
-export function declaredContracts(text) {
-  const ids = [];
-  let inside = false;
-  for (const line of text.split(/\r?\n/)) {
-    if (/^##\s/.test(line)) inside = /^##\s*(\d+\.\s*)?(Contrats modifiés|Modified contracts)\b/i.test(line);
-    else if (inside) {
-      const id = /^\s*-\s+`([A-Za-z][\w.:-]*)`/.exec(line)?.[1];
-      if (id) ids.push(id);
-    }
-  }
-  return ids;
 }
 
 /**
@@ -266,83 +185,4 @@ export function scopedBriefs(root) {
       a.priority.localeCompare(b.priority) ||
       a.path.localeCompare(b.path),
   );
-}
-
-// The brief → intent loop (QUA-036): a workstream brief names the intent it comes from; at closing,
-// that intent is updated, or summarised in the journal and removed when fully covered.
-const INTENT_FIELD = /^\*\*(?:Intention|Intent)\*\*\s*:\s*`([^`]+)`/m;
-
-/** Path of the intent a brief comes from (`**Intention**: `docs/intentions/x.md``), or null. */
-export function briefIntent(text) {
-  return INTENT_FIELD.exec(text)?.[1] ?? null;
-}
-
-/**
- * Files the branch changed since its merge base with the main branch (DRWIL_BASE, origin/HEAD, then the
- * usual names), only those of a git `--diff-filter` (e.g. "A", added) if given; [] without a base.
- */
-export function branchFiles(root, filter) {
-  const git = (...args) => {
-    const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
-    return r.status === 0 ? r.stdout.trim() : "";
-  };
-  const refs = [
-    process.env.DRWIL_BASE,
-    git("symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"),
-    "origin/master",
-    "origin/main",
-    "master",
-    "main",
-  ];
-  for (const ref of refs) {
-    if (!ref || !git("rev-parse", "--verify", "--quiet", `${ref}^{commit}`)) continue;
-    const base = git("merge-base", "HEAD", ref);
-    if (base)
-      return git("diff", "--name-only", "--no-renames", ...(filter ? [`--diff-filter=${filter}`] : []), `${base}..HEAD`)
-        .split("\n")
-        .filter(Boolean);
-  }
-  return [];
-}
-
-/**
- * At commit time: the briefs this commit deletes whose intent still exists but was not touched by
- * the commit nor, earlier, by the branch (compared from the merge base) — `[{ brief, intent }]`.
- * A warning, never a refusal: an intent may already be up to date.
- */
-export function intentsLeftBehind(root, staged) {
-  const r = spawnSync("git", ["diff", "--cached", "--name-only", "--diff-filter=D", "--no-renames", "-z"], { cwd: root, encoding: "utf8" });
-  if (r.status !== 0) return [];
-  const deleted = r.stdout.split("\0").filter((f) => f && BRIEF_DIRS.some((d) => f.startsWith(d)) && f.endsWith(".md"));
-  if (!deleted.length) return [];
-  const touched = new Set([...staged, ...branchFiles(root)]);
-  const left = [];
-  for (const brief of deleted) {
-    // A staged deletion always exists in HEAD: its text is there to read.
-    const intent = briefIntent(spawnSync("git", ["show", `HEAD:${brief}`], { cwd: root, encoding: "utf8" }).stdout);
-    if (intent && existsSync(join(root, intent)) && !touched.has(intent)) left.push({ brief, intent });
-  }
-  return left;
-}
-
-const REVIEW_DATES =
-  /^\*\*(?:Statut|Status)\*\*[^\n]*?(\d{4}-\d{2}-\d{2})|^\*\*(?:Revu le|Reviewed on)\s+(\d{4}-\d{2}-\d{2})\*\*|^##\s*(?:Existant|Current state)[^\n]*?(\d{4}-\d{2}-\d{2})/gm;
-
-/** Latest dated review of an intent: its Status line, a « Revu le … » line or a dated « Existant » heading; null if none. */
-export function lastReview(text) {
-  const dates = [...text.matchAll(REVIEW_DATES)].map((m) => m[1] ?? m[2] ?? m[3]);
-  return dates.length ? dates.sort().at(-1) : null;
-}
-
-/** Intents whose latest review is `days` old or more — `[{ file, days }]`, the oldest first. */
-export function staleIntents(root, cfg, now = Date.now(), days = 30) {
-  const dir = cfg?.dirs?.intentions ?? "docs/intentions";
-  if (!existsSync(join(root, dir))) return [];
-  const stale = [];
-  for (const f of readdirSync(join(root, dir)).filter((f) => f.endsWith(".md") && !/^readme\.md$/i.test(f))) {
-    const date = lastReview(readFileSync(join(root, dir, f), "utf8"));
-    const age = date ? Math.floor((now - new Date(date).getTime()) / 86400000) : null;
-    if (age !== null && age >= days) stale.push({ file: `${dir}/${f}`, days: age });
-  }
-  return stale.sort((a, b) => b.days - a.days);
 }

@@ -47,6 +47,9 @@ files:
   - .githooks/run-checks-verdicts.mjs
   - .githooks/detour-rules.mjs
   - .githooks/detour-texts.mjs
+  - .githooks/briefs-criteria.mjs
+  - .githooks/briefs-intents.mjs
+  - .githooks/briefs-overlap.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit
