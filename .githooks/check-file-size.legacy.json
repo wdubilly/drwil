@@ -29,7 +29,6 @@
   "packages/drwil/src/criteria.ts": 246,
   "packages/drwil/src/doctor.ts": 268,
   "packages/drwil/src/essentials.ts": 268,
-  "packages/drwil/src/guarantees-forge.ts": 229,
   "packages/drwil/src/guarantees-table.ts": 213,
   "packages/drwil/src/manifest.ts": 245,
   "packages/drwil/src/render.ts": 205
