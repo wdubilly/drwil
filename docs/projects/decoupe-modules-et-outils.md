@@ -59,7 +59,7 @@ fichier du périmètre de QUA-001 ne dépasse 200 lignes.
 ## 2. Hors périmètre
 
 - La CLI et les hooks de base : fiches
-  `docs/projects/decoupe-cli-du-paquet.md` et
+  `docs/projects/journal.md` et
   `docs/projects/decoupe-hooks-livres.md`.
 - Changer ce que mesure le banc ou ce que vérifient les miroirs.
 
