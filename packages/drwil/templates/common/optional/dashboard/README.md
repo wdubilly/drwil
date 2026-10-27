@@ -10,11 +10,12 @@ section 7).
 
 ## Contents
 
-- `dashboard.mjs`: the generator, bilingual (FR/EN according to `.drwil/ia-first.json -> lang`).
+- `dashboard.mjs`: the generator, bilingual (FR/EN according to `.drwil/ia-first.json -> lang`);
+  its messages are in `dashboard-texts.mjs`, its readers of the sources in `dashboard-read.mjs`.
 
 ## Activation
 
-1. Copy `dashboard.mjs` into the project's `.githooks/`.
+1. Copy `dashboard.mjs`, `dashboard-texts.mjs` and `dashboard-read.mjs` into the project's `.githooks/`.
 2. Run it by hand, when needed: `node .githooks/dashboard.mjs
    [output-path]` (default: `docs/dashboard.html`). **Never** in CI
    or at commit — it is a reading tool, not a check.

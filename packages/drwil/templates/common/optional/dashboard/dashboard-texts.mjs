@@ -1,0 +1,56 @@
+// Messages of the dashboard (dashboard.mjs), in both languages, and the helper that fills them.
+export const TEXTS = {
+  fr: {
+    title: "Tableau de bord — {0}",
+    generated:
+      "Généré le {0} depuis les fichiers du dépôt (rien n'est recalculé : statuts et lots affichés tels qu'écrits dans chaque fiche).",
+    pending: "Chantiers en attente",
+    workstreams: "Chantiers (fiches de docs/projects/)",
+    contracts: "Contrats",
+    noStatus: "(pas de ligne Statut)",
+    status: "Statut : {0}",
+    maturity: "Maturité : {0}",
+    missing: "(absent)",
+    noCheckbox: "(aucune case trouvée)",
+    noBrief: "(aucune fiche)",
+    none: "(aucun)",
+    installed: "Installés ({0} — socle du projet)",
+    catalog: "Au catalogue, non installés ({0})",
+    simpleColumns: ["ID", "Règle"],
+    usage: "Consommation (.drwil/usage.jsonl)",
+    usageColumns: ["Chantier", "Tokens (total)", "Durée (min)", "Modèles employés"],
+    noUsage: "(.drwil/usage.jsonl absent — aucune donnée de consommation)",
+    audits: "Derniers audits",
+    notGenerated: "({0} absent — pas encore généré, voir le skill correspondant)",
+    staleAudit: "⚠ scan vieux de {0} jours, à relancer",
+    done: "Tableau de bord généré : {0}",
+  },
+  en: {
+    title: "Dashboard — {0}",
+    generated:
+      "Generated on {0} from the repository files (nothing is recomputed: statuses and increments are shown as written in each brief).",
+    pending: "Pending work",
+    workstreams: "Workstreams (docs/projects/ briefs)",
+    contracts: "Contracts",
+    noStatus: "(no Status line)",
+    status: "Status: {0}",
+    maturity: "Maturity: {0}",
+    missing: "(missing)",
+    noCheckbox: "(no checkbox found)",
+    noBrief: "(no brief)",
+    none: "(none)",
+    installed: "Installed ({0} — project baseline)",
+    catalog: "In the catalog, not installed ({0})",
+    simpleColumns: ["ID", "Rule"],
+    usage: "Consumption (.drwil/usage.jsonl)",
+    usageColumns: ["Workstream", "Tokens (total)", "Duration (min)", "Models used"],
+    noUsage: "(.drwil/usage.jsonl missing — no consumption data)",
+    audits: "Latest audits",
+    notGenerated: "({0} missing — not generated yet, see the matching skill)",
+    staleAudit: "⚠ scan {0} days old, time to re-run",
+    done: "Dashboard generated: {0}",
+  },
+};
+
+/** Fills the `{0}`, `{1}`… holes of a message. */
+export const fill = (message, ...values) => message.replace(/\{(\d)\}/g, (_, i) => values[i]);
