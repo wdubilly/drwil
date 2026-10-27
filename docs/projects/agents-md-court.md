@@ -18,6 +18,7 @@ files:
   - docs/projects/journal.md
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/guarantees.test.mjs
+  - .drwil/ia-first.json
 -->
 
 Contrats concernés : QUA-001 (fichier de code plafonné), QUA-018 (dépôt et livrable).
