@@ -8,7 +8,7 @@ change of behaviour.
    error cases. Commit them alone, green, before touching the code.
 2. Split in small steps, one commit each, checks green every time
    (`node .githooks/run-checks.mjs`): extract the pure logic first (with
-   its tests), then the rest. A file above a reasonable ceiling is a signal
+   its tests), then the rest. A file above a reasonable ceiling (the kit proposes 200 lines) is a signal
    to split: the kit ships an opt-in guard (`.githooks/check-file-size.mjs`,
    inherited ceilings in `.githooks/check-file-size.legacy.json` — they can
    only go down) and an empty extension point for the project's own hygiene

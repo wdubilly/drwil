@@ -34,7 +34,7 @@ export {
   scopedBriefs,
 } from "./briefs.mjs";
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
-// The command line lives in state-cli.mjs (QUA-001: files under 400 lines); `node .githooks/state.mjs`
+// The command line lives in state-cli.mjs (QUA-001: files under 200 lines); `node .githooks/state.mjs`
 // stays the entry point.
 export { main, readStdinJson, reminderIfChanged, reopen };
 

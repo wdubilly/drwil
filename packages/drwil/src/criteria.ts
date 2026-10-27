@@ -1,5 +1,5 @@
 // Acceptance criteria of the active brief, judged against the verify verdict: the tool evaluates, the
-// agent never grades itself. Split from verify.ts (QUA-001: files under 400 lines).
+// agent never grades itself. Split from verify.ts (QUA-001: files under 200 lines).
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

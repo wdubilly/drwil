@@ -2,8 +2,9 @@
 // Guard against giant files (see docs/recipes/refactor-without-breaking.md).
 // Extension point to adopt: a project that wants this check adds it to
 // .drwil/ia-first.json -> checks, for example:
-//   { "name": "file size", "run": "node .githooks/check-file-size.mjs frontend/src" }
-// Root, ceiling and extensions as arguments (no dependency on a stack).
+//   { "name": "file size", "run": "node .githooks/check-file-size.mjs frontend/src 200 ts,tsx,js,jsx,py" }
+// Root, ceiling and extensions as arguments (no dependency on a stack); the kit
+// proposes 200 lines at adoption, the default without a ceiling stays 400.
 // Files already too big before adoption are capped at their current size in
 // check-file-size.legacy.json (next to it): they can only shrink; when a
 // refactor reduces one, lower or remove its cap.

@@ -143,5 +143,5 @@ contracts » section).
 |---|---|---|
 | Commits, personal data in an AI's outputs, secrets in tool output, attack testing on a real target, docs kept current in the same commit | conduct (human) | `AGENTS.md`, Conduct section |
 | Refactor without behavior change | procedure (human) | `docs/recipes/refactor-without-breaking.md` |
-| File size, project-specific code hygiene rules | opt-in tooling (no universal threshold) | `.githooks/check-file-size.mjs`, `.githooks/check-code-rules.mjs`, `docs/recipes/refactor-without-breaking.md` |
+| File size, project-specific code hygiene rules | opt-in tooling (the kit proposes 200 lines, no imposed threshold) | `.githooks/check-file-size.mjs`, `.githooks/check-code-rules.mjs`, `docs/recipes/refactor-without-breaking.md` |
 | Tests shipped with every new component | convention (human) | the relevant layer's `AGENTS.md` |

@@ -2,6 +2,7 @@
   "version": 2,
   "ecarts": {
     ".github/workflows/ia-first.yml": "Jobs vérifiés à part (clé ci) ; contenu différent : étapes propres au dépôt (npm ci et son cache, installation de gitleaks, vérification du ruleset) et alerte qui dépend aussi de kit-tests.",
+    ".githooks/check-file-size.legacy.json": "Plafonds hérités du dépôt (fichiers au-dessus de 200 lignes au 2026-10-27, QUA-001) ; le gabarit livre le fichier vide, celui d'un projet qui adopte.",
     ".gitignore": "Entrées propres au dépôt (rapport de couverture, documents internes, évidences).",
     "AGENTS.md": "Consignes propres à chaque projet (le gabarit n'en est que la base).",
     "INSTALL.md": "Installation propre au dépôt drwil (clone, non publié sur npm).",
