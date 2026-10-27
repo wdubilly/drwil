@@ -20,6 +20,13 @@ closing commit; the release renames this section to its version.
   change of behavior. No compatibility with an earlier installation is kept: a
   project already equipped runs `npx drwil uninstall --yes`, then installs the kit
   again.
+- The optional modules are split the same way, none above 200 lines, with no
+  change of behavior: release (`create-release-texts`, `create-release-version`,
+  `acceptance-sheet-texts`, `acceptance-sheet-works`, `recette-note-texts`) and
+  dashboard (`dashboard-texts`, `dashboard-read`). A project that already enabled
+  one of them copies every `.mjs` file of the module into `.githooks/` again (each
+  module's README lists them), and may list the new files in its
+  `docs/projects/kit-mechanics.md`.
 
 ## 0.9.0 (2026-10-26)
 

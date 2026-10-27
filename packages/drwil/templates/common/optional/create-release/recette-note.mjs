@@ -13,70 +13,9 @@ import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { fill, runner } from "./acceptance-sheet.mjs";
-import { config } from "./briefs.mjs";
+import { noteTexts } from "./recette-note-texts.mjs";
 
-const TEXTS = {
-  fr: {
-    usage: "usage : node .githooks/recette-note.mjs <vX.Y.Z> <note.md> [--dry-run]",
-    title: "# Note de recette de {0}",
-    published: "Publiée le {0}.",
-    candidate: "Candidate : [{0}]({1})",
-    verdict: "Verdict : {0}, donné par @{1} le {2}",
-    kinds: { approved: "approuvée", reserved: "approuvée avec réserves" },
-    noVerdict: "Verdict : sans verdict — version publiée sans candidate ni verdict de recette ; à compléter par l'humain.",
-    verdictNote: "Note du verdict : {0}",
-    reserves: "### Réserves",
-    prints: "## Empreintes des tarballs",
-    noTarball: "aucun tarball",
-    notBuilt: "calculées à la publication (aucun tarball construit en --dry-run)",
-    sheet: "## Fiche de recette — {0}",
-    complete: "## À compléter",
-    todo: ["Ce qui a été validé : …", "Par qui : …", "Quand : …"],
-    changes: "## Changements",
-    where: "[recette-note] note de recette : {0}",
-    dryRun: "[recette-note] --dry-run : aucune branche ni PR créée.",
-    already: "[recette-note] {0} est déjà dans le dépôt : rien à faire.",
-    opened: "[recette-note] note de {0} proposée par la PR {1} (branche {2}).",
-    title_pr: "Note de recette de {0}",
-    body: "Note de recette de {0}, générée à la publication de la version (jamais écrite à la main, sauf la partie à compléter d'une version sans verdict).",
-    noBase: "branche principale de origin introuvable (git fetch, remote origin) : note non écrite",
-    pushFailed: "branche {0} non créée ou non poussée : note non écrite",
-    gitSaid: "sortie de git :",
-    prFailed: "branche {0} poussée, mais la PR a échoué ; rattraper : {1}",
-    catchUp: "la release publiée n'est pas défaite ; rattraper la note : {0}",
-  },
-  en: {
-    usage: "usage: node .githooks/recette-note.mjs <vX.Y.Z> <note.md> [--dry-run]",
-    title: "# Acceptance note of {0}",
-    published: "Published on {0}.",
-    candidate: "Candidate: [{0}]({1})",
-    verdict: "Verdict: {0}, given by @{1} on {2}",
-    kinds: { approved: "approved", reserved: "approved with reserves" },
-    noVerdict: "Verdict: no verdict — version published without a candidate or an acceptance verdict; to be completed by a human.",
-    verdictNote: "Verdict note: {0}",
-    reserves: "### Reserves",
-    prints: "## Tarball fingerprints",
-    noTarball: "no tarball",
-    notBuilt: "computed at publication (no tarball built in --dry-run)",
-    sheet: "## Acceptance sheet — {0}",
-    complete: "## To complete",
-    todo: ["What was validated: …", "By whom: …", "When: …"],
-    changes: "## Changes",
-    where: "[recette-note] acceptance note: {0}",
-    dryRun: "[recette-note] --dry-run: no branch nor PR created.",
-    already: "[recette-note] {0} is already in the repository: nothing to do.",
-    opened: "[recette-note] note of {0} proposed by PR {1} (branch {2}).",
-    title_pr: "Acceptance note of {0}",
-    body: "Acceptance note of {0}, generated when the version was published (never written by hand, except the part to complete of a version without a verdict).",
-    noBase: "origin's main branch not found (git fetch, remote origin): note not written",
-    pushFailed: "branch {0} not created or not pushed: note not written",
-    gitSaid: "git output:",
-    prFailed: "branch {0} pushed, but the PR failed; catch up: {1}",
-    catchUp: "the published release is not undone; catch up the note: {0}",
-  },
-};
-
-export const noteTexts = (root) => TEXTS[config(root).lang === "en" ? "en" : "fr"];
+export { noteTexts };
 export const notePath = (version) => `docs/recettes/${version}.md`;
 
 /**

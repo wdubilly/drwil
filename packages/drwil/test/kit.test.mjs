@@ -2608,12 +2608,19 @@ test("lot 7 : même nombre de fichiers livrés en français et en anglais", asyn
   assert.equal(compter(en), compter(fr));
 });
 
+// Copie tous les scripts d'un module optionnel dans .githooks/ (un module tient en plusieurs fichiers, QUA-001).
+// `fichiers` restreint la copie aux scripts d'un seul chantier de test (le reste du module n'est pas cadré).
+const copierModule = (dir, nom, fichiers = null) => {
+  const src = fileURLToPath(new URL(`../templates/common/optional/${nom}/`, import.meta.url));
+  mkdirSync(join(dir, ".githooks"), { recursive: true });
+  for (const f of readdirSync(src).filter((x) => x.endsWith(".mjs") && (!fichiers || fichiers.includes(x))))
+    writeFileSync(join(dir, ".githooks", f), readFileSync(join(src, f), "utf8"));
+};
+
 test("module optionnel tableau de bord : génère un HTML lisant chantiers et contrats tels quels", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
-  mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/dashboard/dashboard.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/dashboard.mjs"), readFileSync(src, "utf8"));
+  copierModule(dir, "dashboard");
   writeFileSync(
     join(dir, "docs/projects/un-chantier.md"),
     "# Projet : un chantier\n\n**Statut** : cadré le 2026-10-04 — lot 1 en cours.\n\n" +
@@ -2634,9 +2641,7 @@ test("module optionnel tableau de bord : génère un HTML lisant chantiers et co
 test("module optionnel tableau de bord : agrège .drwil/usage.jsonl par chantier, sans régression si absent", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
-  mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/dashboard/dashboard.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/dashboard.mjs"), readFileSync(src, "utf8"));
+  copierModule(dir, "dashboard");
 
   // Sans fichier usage.jsonl : pas de régression, message d'absence explicite.
   let r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
@@ -2679,9 +2684,7 @@ test("module optionnel tableau de bord : agrège .drwil/usage.jsonl par chantier
 test("module optionnel tableau de bord : affiche les derniers audits, sans régression si absents", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
-  mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/dashboard/dashboard.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/dashboard.mjs"), readFileSync(src, "utf8"));
+  copierModule(dir, "dashboard");
 
   // Sans rapport d'audit : pas de régression, message d'absence explicite.
   let r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
@@ -2709,9 +2712,7 @@ test("module optionnel tableau de bord : affiche les derniers audits, sans régr
 test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-checks.mjs", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
-  mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/dashboard/dashboard.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/dashboard.mjs"), readFileSync(src, "utf8"));
+  copierModule(dir, "dashboard");
 
   // rapport récent : pas d'avertissement.
   writeFileSync(
@@ -2801,19 +2802,14 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
-  mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/create-release.mjs"), readFileSync(src, "utf8"));
-  for (const f of ["recette-note.mjs", "acceptance-sheet.mjs", "release-review.mjs"]) {
-    writeFileSync(join(dir, ".githooks", f), readFileSync(src.replace("create-release.mjs", f), "utf8"));
-  }
+  copierModule(dir, "create-release");
   const mecanique = join(dir, "docs/projects/kit-mechanics.md");
   // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).
   writeFileSync(
     mecanique,
     readFileSync(mecanique, "utf8").replace(
       "  - .githooks/create-release.mjs\n",
-      "  - .githooks/create-release.mjs\n  - .githooks/recette-note.mjs\n",
+      "  - .githooks/create-release.mjs\n  - .githooks/recette-note.mjs\n  - .githooks/recette-note-texts.mjs\n",
     ),
   );
   git(dir, "add", "-A");
@@ -2851,19 +2847,14 @@ test("créer une release : --dry-run liste le paquet npm à empaqueter quand il 
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
   presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
-  mkdirSync(join(dir, ".githooks"), { recursive: true });
-  const src = fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url));
-  writeFileSync(join(dir, ".githooks/create-release.mjs"), readFileSync(src, "utf8"));
-  for (const f of ["recette-note.mjs", "acceptance-sheet.mjs", "release-review.mjs"]) {
-    writeFileSync(join(dir, ".githooks", f), readFileSync(src.replace("create-release.mjs", f), "utf8"));
-  }
+  copierModule(dir, "create-release");
   const mecanique = join(dir, "docs/projects/kit-mechanics.md");
   // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).
   writeFileSync(
     mecanique,
     readFileSync(mecanique, "utf8").replace(
       "  - .githooks/create-release.mjs\n",
-      "  - .githooks/create-release.mjs\n  - .githooks/recette-note.mjs\n",
+      "  - .githooks/create-release.mjs\n  - .githooks/recette-note.mjs\n  - .githooks/recette-note-texts.mjs\n",
     ),
   );
   mkdirSync(join(dir, "packages/truc"), { recursive: true });
@@ -2890,14 +2881,14 @@ test("QUA-051 : module de release livré avec la fiche, le verdict et la promoti
     await quiet(() => init({ lang, targetDir: dir, git: true }));
     presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
     for (const s of scripts) assert.ok(!existsSync(join(dir, ".githooks", s)), `${s} : module optionnel, jamais copié par défaut`);
-    for (const s of scripts) writeFileSync(join(dir, ".githooks", s), readFileSync(join(module, s), "utf8"));
+    copierModule(dir, "create-release");
     // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).
     const mecanique = join(dir, "docs/projects/kit-mechanics.md");
     writeFileSync(
       mecanique,
       readFileSync(mecanique, "utf8").replace(
         "  - .githooks/promote-release.mjs\n",
-        "  - .githooks/promote-release.mjs\n  - .githooks/recette-note.mjs\n",
+        "  - .githooks/promote-release.mjs\n  - .githooks/recette-note.mjs\n  - .githooks/recette-note-texts.mjs\n",
       ),
     );
     git(dir, "add", "-A");
@@ -4301,11 +4292,7 @@ test("version unique : la release suit package.json et refuse un numéro déjà 
 
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
-  mkdirSync(join(dir, ".githooks"), { recursive: true });
-  writeFileSync(
-    join(dir, ".githooks/create-release.mjs"),
-    readFileSync(fileURLToPath(new URL("../templates/common/optional/create-release/create-release.mjs", import.meta.url)), "utf8"),
-  );
+  copierModule(dir, "create-release", ["create-release.mjs", "create-release-texts.mjs", "create-release-version.mjs"]);
   mkdirSync(join(dir, "packages/truc"), { recursive: true });
   writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc", version: "1.0.0" }));
   git(dir, "add", "-A");

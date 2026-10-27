@@ -1,10 +1,2 @@
 {
-  ".githooks/acceptance-sheet.mjs": 355,
-  ".githooks/create-release.mjs": 342,
-  ".githooks/dashboard.mjs": 347,
-  ".githooks/recette-note.mjs": 216,
-  "outils/banc-agents.mjs": 225,
-  "outils/banc-juge.mjs": 314,
-  "outils/banc.mjs": 322,
-  "outils/verifier-miroirs.mjs": 282
 }

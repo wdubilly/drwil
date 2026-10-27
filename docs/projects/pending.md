@@ -90,9 +90,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] Les modules optionnels et les outils du dépôt découpés sous
-  200 lignes, le fichier des plafonds hérités vidé (8 fichiers, cadré le
-  2026-10-27) — `docs/projects/decoupe-modules-et-outils.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
@@ -130,14 +127,6 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   `docs/projects/suites-kit-portable.md` (point 2).
 
 ## Intentions par thème
-
-### Taille des fichiers (après le plafond, avant les autres fiches)
-
-- [ ] [décision] Découper les fichiers plafonnés sous 200 lignes : cadrée le
-  2026-10-27 en trois fiches, de la deuxième à la quatrième de « Fiches
-  cadrées, dans l'ordre de réalisation », rien à cadrer ; retirée à la
-  clôture de la dernière —
-  `docs/intentions/decouper-les-fichiers-plafonnes.md`.
 
 ### Preuves, contrôles, vitesse
 

@@ -75,11 +75,17 @@ files:
   - .githooks/check-file-size.legacy.json
   - .githooks/check-code-rules.mjs
   - .githooks/create-release.mjs
+  - .githooks/create-release-texts.mjs
+  - .githooks/create-release-version.mjs
   - .githooks/release-review.mjs
   - .githooks/acceptance-sheet.mjs
+  - .githooks/acceptance-sheet-texts.mjs
+  - .githooks/acceptance-sheet-works.mjs
   - .githooks/release-verdict.mjs
   - .githooks/promote-release.mjs
   - .githooks/dashboard.mjs
+  - .githooks/dashboard-texts.mjs
+  - .githooks/dashboard-read.mjs
   - .githooks/check-colors.mjs
   - .githooks/check-contrast.mjs
 {{scopeCi}}

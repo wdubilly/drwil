@@ -98,6 +98,13 @@ files:
   - .githooks/contracts-validate.mjs
   - .githooks/check-control-coverage-jobs.mjs
   - .githooks/glossary-labels.mjs
+  - .githooks/acceptance-sheet-texts.mjs
+  - .githooks/acceptance-sheet-works.mjs
+  - .githooks/create-release-texts.mjs
+  - .githooks/create-release-version.mjs
+  - .githooks/dashboard-read.mjs
+  - .githooks/dashboard-texts.mjs
+  - .githooks/recette-note-texts.mjs
   - .githooks/prepare-commit-msg
   - .githooks/pre-commit
   - .githooks/pre-push

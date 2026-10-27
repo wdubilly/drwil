@@ -3600,3 +3600,33 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   note de `docs/intentions/notes.md` écrite par le demandeur.
 - **Preuve de clôture** : `docs/preuves/decoupe-hooks-livres.md` (si présent).
 - **Clôturé par** : la branche `chantier/decoupe-hooks-livres`.
+
+## 2026-10-27 — Les modules optionnels et les outils du dépôt découpés sous 200 lignes
+
+- **Décisions clés** : les 8 derniers fichiers au-dessus de 200 lignes passent
+  à 200 lignes au plus, comportement inchangé, un fichier par commit, son
+  plafond hérité retiré dans le même commit ; `.githooks/check-file-size.legacy.json`
+  est vide (QUA-001). Module de release : `acceptance-sheet-texts`,
+  `acceptance-sheet-works`, `create-release-texts`, `create-release-version`,
+  `recette-note-texts`. Tableau de bord : `dashboard-texts`, `dashboard-read`
+  (lecteurs à paramètres `(racine, cfg)`). Outils du dépôt : `banc-run`,
+  `banc-juge-rules`, `banc-texts`, `banc-agents-cli`, `verifier-miroirs-lib`.
+  Les ré-exports gardent les chemins d'import : aucun test d'`outils/` ni des
+  modules n'est modifié. Un module tenant désormais en plusieurs fichiers, les
+  tests du kit copient tous ses fichiers .mjs (`copierModule` dans le test du kit) ;
+  le README de chaque module dit de copier tous ses fichiers. Le cadrage de la
+  fiche a été élargi deux fois (copies `.githooks/` des modules, `kit-mechanics.md`
+  du gabarit, `outils/miroirs.json`), chaque fois dans un commit qui ne touche que
+  la fiche ; l'écart déclaré du fichier des plafonds hérités est retiré, le
+  dépôt et le gabarit étant redevenus identiques. Aucune compatibilité avec
+  une installation antérieure : un projet qui a activé le module de release ou
+  le tableau de bord recopie tous les fichiers du module (changelog, section
+  non publiée).
+- **Limites connues** : la sortie en 0.10.0 et sa recette (`docs/recettes/`) se
+  font à la release, pas dans ce chantier ; le numéro de version du paquet reste
+  0.9.0 d'ici là. `kit-mechanics.md` du gabarit ne cite toujours pas
+  les fichiers de la note de recette (les tests du kit les ajoutent,
+  comme avant, pour la note de recette). L'intention d'origine est entièrement
+  couverte et retirée.
+- **Preuve de clôture** : `docs/preuves/decoupe-modules-et-outils.md` (si présent).
+- **Clôturé par** : la branche `chantier/decoupe-hooks-livres`.
