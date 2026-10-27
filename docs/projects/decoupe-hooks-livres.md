@@ -1,6 +1,6 @@
 # Projet : les hooks de base livrés découpés sous 200 lignes
 
-**Statut** : cadré le 2026-10-27.
+**Statut** : fait le 2026-10-27.
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/decouper-les-fichiers-plafonnes.md`
@@ -129,7 +129,9 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-27) : cadré, rien de construit.
+- **Dernier état** (2026-10-27) : fait. Les 17 hooks de base sont sous 200
+  lignes, leurs plafonds hérités retirés, 35 modules ajoutés cités par
+  `docs/projects/kit-mechanics.md` et par la carte d'architecture.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier, après la fusion de
-  `docs/projects/journal.md`.
+- **Prochaine étape** : [humain] lancer la fiche
+  `docs/projects/decoupe-modules-et-outils.md`.

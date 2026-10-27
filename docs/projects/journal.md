@@ -3573,3 +3573,30 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   propre.
 - **Preuve de clôture** : `docs/preuves/decoupe-cli-du-paquet.md` (si présent).
 - **Clôturé par** : la branche `chantier/decoupe-cli-du-paquet`.
+
+## 2026-10-27 — Les hooks de base livrés découpés sous 200 lignes
+
+- **Décisions clés** : les 17 hooks de base de
+  `packages/drwil/templates/common/base/.githooks/` au-dessus de 200 lignes
+  passent à 200 lignes au plus, comportement inchangé : le texte est déplacé,
+  pas retranscrit. Textes, aides et sous-commandes vivent dans des modules
+  voisins (`state-*`, `engine-*`, `run-checks-*`, `detour-*`, `briefs-*`,
+  `check-docs-*`, `close-*`, `consumption-*`, `worktree-texts`,
+  `doc-coherence-*`, `scope-gate-*`, `contracts-validate`,
+  `check-control-coverage-jobs`, `glossary-labels`), chacun cité par
+  `kit-mechanics.md` et par la carte d'architecture (QUA-040). Les
+  ré-exports gardent les chemins d'import des tests, aucun test n'est
+  modifié. `.githooks/fingerprints.mjs` empreint tous les fichiers `engine*.mjs`.
+  `.githooks/base-checks.mjs` reste un fichier unique et autonome (la CI l'exécute
+  seul depuis la branche de base) : il tient en 200 lignes pile, sans
+  marge. Les plafonds hérités des 17 hooks sont retirés de
+  `.githooks/check-file-size.legacy.json`. Aucune compatibilité avec une
+  installation antérieure : le changelog et `INSTALL.md` disent qu'un projet
+  déjà équipé se désinstalle puis se réinstalle (sortie groupée en 0.10.0).
+- **Limites connues** : les modules optionnels et les outils du dépôt restent
+  à la fiche suivante. `.githooks/run-checks.mjs` et `.githooks/base-checks.mjs` partagent un
+  commit (la carte d'architecture, `kit-mechanics.md` et le fichier des
+  plafonds hérités sont communs) ; le commit de `.githooks/engine.mjs` embarque une
+  note de `docs/intentions/notes.md` écrite par le demandeur.
+- **Preuve de clôture** : `docs/preuves/decoupe-hooks-livres.md` (si présent).
+- **Clôturé par** : la branche `chantier/decoupe-hooks-livres`.
