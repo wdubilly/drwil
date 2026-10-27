@@ -12,8 +12,8 @@ import {
   hasSources,
   slugOf,
   type Thresholds,
-  toolFor,
 } from "./guarantees-table.js";
+import { toolFor } from "./guarantees-tools.js";
 import { fill, type MessageLang } from "./i18n.js";
 
 export interface LayerReport {
