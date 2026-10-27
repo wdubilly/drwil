@@ -63,6 +63,7 @@ files:
   - .githooks/doc-coherence-texts.mjs
   - .githooks/scope-gate-merge.mjs
   - .githooks/scope-gate-texts.mjs
+  - .githooks/contracts-validate.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit
