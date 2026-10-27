@@ -1,8 +1,11 @@
-# Intention : découper les fichiers plafonnés, sans rien casser à la mise à jour d'un projet adopté
+# Intention : découper les fichiers plafonnés sous 200 lignes
 
-**Statut** : proposée le 2026-10-27 — demande de l'humain, à cadrer en
-trois fiches juste après `docs/projects/plafond-200-lignes.md` et avant les
-autres fiches cadrées.
+**Statut** : proposée et cadrée le 2026-10-27 en trois fiches, réalisées juste
+après `docs/projects/plafond-200-lignes.md` et avant les autres fiches
+cadrées : `docs/projects/decoupe-cli-du-paquet.md`,
+`docs/projects/decoupe-hooks-livres.md`,
+`docs/projects/decoupe-modules-et-outils.md`. Retirée à la clôture de la
+dernière.
 
 ## Besoin
 
@@ -12,10 +15,10 @@ demandeur veut que tous maigrissent sous 200 lignes, pour que les fiches
 suivantes partent sur des fichiers courts au lieu d'extraire en route, et
 que `.githooks/check-file-size.legacy.json` se vide.
 
-Ce n'est pas qu'un refactor du dépôt : 21 de ces fichiers sont des hooks
-copiés dans les projets adoptés. Leur découpe arrive chez chaque projet à
-sa prochaine mise à jour par `npx drwil init`, qui doit rester sûre : rien
-de cassé, rien de perdu, rien d'écrasé de ce que le projet a modifié.
+21 de ces fichiers sont des hooks copiés dans les projets qui adoptent le
+kit : leur découpe ajoute des fichiers livrés. Aucun projet n'a encore
+adopté le kit : un projet d'essai déjà équipé se désinstalle puis se
+réinstalle.
 
 ## Existant (relevé le 2026-10-27)
 
@@ -59,46 +62,18 @@ Mise à jour d'un projet adopté (`packages/drwil/src/install.ts`,
 - Précédent : `.githooks/close-branches.mjs` extrait de `.githooks/close.mjs` dans la 0.9.0,
   qui ré-exporte les mêmes fonctions (journal du 2026-10-26).
 
-## Le risque propre à la mise à jour
+## Décisions du cadrage (2026-10-27)
 
-Un projet qui a modifié un hook à la main garde son ancienne version : la
-mise à jour la signale sans l'écraser. Les autres hooks, rafraîchis, et les
-nouveaux fichiers, installés, cohabitent alors avec cet ancien fichier.
-Si un hook rafraîchi importe d'un fichier découpé une fonction qui a quitté
-sa version ancienne, ou d'un nouveau fichier une fonction que l'ancienne
-version définit encore autrement, le hook casse au premier commit du
-projet, hors de toute CI de drwil.
-
-## Piste
-
-- Chaque fichier découpé garde ses exports d'origine en les ré-exportant
-  depuis ses nouveaux modules (comme `.githooks/close.mjs` pour `.githooks/close-branches.mjs`) :
-  un appelant ancien ou nouveau trouve toujours la même fonction au même
-  endroit.
-- Un test de mise à jour rejoue l'installation d'une version précédente,
-  modifie un hook découpé à la main, met à jour et prouve que les hooks
-  tournent encore (premier commit accepté), que le fichier modifié est
-  signalé et non écrasé, et que les nouveaux fichiers sont au manifeste.
-- Chaque nouveau fichier livré est cité par `docs/projects/kit-mechanics.md` et retiré
-  par `uninstall`.
-- Trois fiches, chacune sa PR, un fichier découpé par commit, contrôles
-  verts à chaque pas (recette `docs/recipes/refactor-without-breaking.md`),
-  chaque plafond hérité baissé ou retiré dans le même commit :
-  1. la CLI du paquet (14 fichiers, aucun effet sur les fichiers d'un
-     projet) ;
-  2. les hooks de base livrés (17 fichiers, la mise à jour en jeu) ;
-  3. les modules optionnels livrés et les outils du dépôt (8 fichiers).
-- Le changelog dit ce que la mise à jour ajoute aux projets, et qu'un hook
-  modifié à la main se réconcilie par `resolve-drift`.
+- Tout fichier sous 200 lignes, sans exception, même une table de textes ;
+  `.githooks/check-file-size.legacy.json` se vide à la fin (demandeur).
+- Aucune compatibilité avec une installation antérieure : aucun projet n'a
+  encore adopté le kit ; un projet d'essai déjà équipé se désinstalle puis
+  se réinstalle, et le changelog le dit (demandeur). Les ré-exports, le
+  test de mise à jour depuis la 0.9.0 et le refus de mise à jour, envisagés
+  au cadrage, sont abandonnés.
+- Le plafond et les trois découpes sortent ensemble en 0.10.0
+  (recommandation de l'agent, sans préférence du demandeur).
 
 ## Questions à trancher
 
-- [décision] Les ré-exports restent-ils pour toujours, ou une version
-  ultérieure les retire-t-elle, une fois les projets mis à jour ?
-- [décision] Le test de mise à jour part-il de la dernière version publiée
-  (0.9.0) ou de la plus ancienne encore migrée ?
-- [décision] Un fichier qui ne se découpe pas proprement sous 200 lignes
-  (une table de textes comme `.githooks/state-texts.mjs`) garde-t-il un plafond
-  hérité, déclaré et justifié, plutôt qu'un découpage artificiel ?
-- [décision] Les trois fiches sortent-elles dans une même version, ou une
-  version chacune ?
+Aucune : toutes tranchées au cadrage du 2026-10-27.
