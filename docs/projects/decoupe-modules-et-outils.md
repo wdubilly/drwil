@@ -20,6 +20,17 @@ files:
   - outils/banc-juge-rules.mjs
   - outils/banc-agents-cli.mjs
   - outils/verifier-miroirs-lib.mjs
+  - .githooks/acceptance-sheet.mjs
+  - .githooks/acceptance-sheet-texts.mjs
+  - .githooks/acceptance-sheet-works.mjs
+  - .githooks/create-release.mjs
+  - .githooks/create-release-texts.mjs
+  - .githooks/create-release-version.mjs
+  - .githooks/recette-note.mjs
+  - .githooks/recette-note-texts.mjs
+  - .githooks/dashboard.mjs
+  - .githooks/dashboard-texts.mjs
+  - .githooks/dashboard-read.mjs
   - outils/banc.test.mjs
   - outils/banc-agents.test.mjs
   - outils/verifier-miroirs.test.mjs
@@ -30,6 +41,7 @@ files:
   - packages/drwil/test/*.test.mjs
   - .githooks/check-file-size.legacy.json
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/architecture.md
   - docs/projects/pending.md
   - docs/projects/journal.md
