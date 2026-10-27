@@ -31,6 +31,14 @@ files:
   - .githooks/detour.mjs
   - .githooks/note.mjs
   - .githooks/scope-gate.mjs
+  - .githooks/state-evidence.mjs
+  - .githooks/state-transitions.mjs
+  - .githooks/state-validate.mjs
+  - .githooks/state-messages.mjs
+  - .githooks/state-messages-en.mjs
+  - .githooks/state-messages-fr.mjs
+  - .githooks/state-context-texts.mjs
+  - .githooks/state-reopen.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit
