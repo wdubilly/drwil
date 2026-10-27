@@ -53,6 +53,15 @@ est proposé à l'adoption (`catalog:QUA-001`), et le script livré applique
 
 ## Contrats modifiés
 
+- `.githooks/check-file-size.legacy.json` — remplit les plafonds hérités des
+  39 fichiers au-dessus de 200 lignes (validé par le demandeur le 2026-10-27).
+- `.githooks/check-file-size.mjs` — l'exemple du script écrit son plafond de
+  200 lignes en entier, défaut inchangé à 400 (validé par le demandeur le
+  2026-10-27).
+- `.githooks/check-file-size.test.mjs` — tests « QUA-001 » du plafond et de la
+  proposition au livrable (validé par le demandeur le 2026-10-27).
+- `.githooks/state.mjs` — commentaire « files under 200 lines » seulement
+  (validé par le demandeur le 2026-10-27).
 - `QUA-001` — ancien critère : « Un fichier de code ne dépasse pas 400
   lignes, tests exclus ; un fichier déjà au-dessus à l'adoption serait
   plafonné à sa taille actuelle et ne pourrait que maigrir
