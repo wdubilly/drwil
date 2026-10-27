@@ -52,7 +52,12 @@ autre code), et le **cadrage** par thème, entre deux chantiers. Les priorités
 des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
 
 1. **Réaliser les fiches cadrées**, dans l'ordre de la section suivante ; un
-   chantier par session, le suivant après la fusion du précédent.
+   chantier par session, le suivant après la fusion du précédent. Juste
+   après `plafond-200-lignes` et avant les autres, cadrer puis réaliser la
+   découpe des fichiers plafonnés en trois fiches (CLI du paquet, hooks de
+   base livrés, modules optionnels et outils), sans rien casser à la mise à
+   jour d'un projet adopté (décision du 2026-10-27) —
+   `docs/intentions/decouper-les-fichiers-plafonnes.md`.
 2. **Cadrer par thème** (l'agent propose les réponses, le demandeur tranche
    en un sondage, une PR de cadrage par thème) : A. release allégée (tout de
    suite) ; B. protection, garanties, contournements (après
@@ -129,6 +134,14 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   `docs/projects/suites-kit-portable.md` (point 2).
 
 ## Intentions par thème
+
+### Taille des fichiers (après le plafond, avant les autres fiches)
+
+- [ ] [décision] [P0] Découper les fichiers plafonnés sous 200 lignes (39
+  fichiers, dont 21 hooks livrés aux projets adoptés), en trois fiches, sans
+  rien casser à la mise à jour par `drwil init` d'un projet qui a modifié un
+  hook (demande du 2026-10-27) —
+  `docs/intentions/decouper-les-fichiers-plafonnes.md`.
 
 ### Preuves, contrôles, vitesse
 
