@@ -7,6 +7,15 @@ closing commit; the release renames this section to its version.
 
 ### Changed
 
+- The `AGENTS.md` installed by the kit is now a short switchboard (93 lines
+  instead of 247, about half the context read at every request): one line per
+  conduct rule that no machine checks, the contracts to know and the "if you
+  touch… read first" table. The full text of each rule moved to section 8 of
+  `docs/ia-first.md`, read by section. A project's `AGENTS.md` is never lost on
+  update: a file the project modified is reported as drift and replaced only
+  after the per-file diff is confirmed (`.bak` backup), and a project with its
+  own `AGENTS.md` keeps it. A project that kept the former long `AGENTS.md` moves
+  to the short one with `npx drwil resolve-drift`, rule by rule from the diff.
 - Code files are capped at 200 lines in the drwil repository (QUA-001), files
   above it being capped at their measured size; the kit now proposes 200 lines
   when a project adopts the file-size check (adoption recipe, catalog, script

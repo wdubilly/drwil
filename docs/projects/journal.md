@@ -3630,3 +3630,46 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   couverte et retirée.
 - **Preuve de clôture** : `docs/preuves/decoupe-modules-et-outils.md` (si présent).
 - **Clôturé par** : la branche `chantier/decoupe-hooks-livres`.
+
+## 2026-10-27 — Un `AGENTS.md` court qui aiguille vers le détail
+
+- **Décisions clés** : l'`AGENTS.md` du gabarit passe de 247 à 93 lignes
+  (15 011 à 7 167 octets, environ la moitié du contexte relu à chaque
+  requête), celui du dépôt de 169 à 76 lignes (11 546 à 6 563 octets) ;
+  plafond de 100 lignes. Chaque règle de conduite qu'aucun contrôle machine
+  ne rattrape reste en une ligne ; son texte complet, repris tel quel, est
+  dans la section 8 de `docs/ia-first.md` (« Conduct rules, in detail »),
+  sous le même nom en gras, avec les règles des sections Contrats,
+  Commandes et Conventions et une règle sur la mise à jour du kit.
+  `docs/ia-first.md` reste un seul document, lu par section. Contrat QUA-153
+  (le `AGENTS.md` livré tient en 100 lignes et chaque règle a son détail dans
+  `docs/ia-first.md`) et son contrôle `tests-qua-153` ; les tests du kit qui
+  cherchaient une phrase dans `AGENTS.md` la cherchent dans `AGENTS.md` et
+  `docs/ia-first.md` (aide `consignes`). Périmètre et source de vérité de
+  QUA-061, QUA-099, QUA-100, QUA-129, QUA-130 et QUA-132 étendus à la
+  section 8. La mise à jour chez un projet adopté ne perd rien : c'est le
+  comportement existant (QUA-027, mise à jour sûre) — un `AGENTS.md` modifié
+  est signalé comme dérive et remplacé seulement après confirmation du diff,
+  avec sauvegarde `.bak` ; un projet qui a le sien le garde (consignes du kit
+  écrites à part). Le cadrage de la fiche a été élargi trois fois (tests du
+  kit et des garanties, réglage des contrôles), chaque fois dans un commit qui
+  ne touche que la fiche ; les critères y ont été reliés à leur contrat.
+- **Limites connues** : `docs/ia-first.md` passe de 729 à 916 lignes, au-dessus
+  du plafond de 800 prévu pour les documents lus à la demande par la fiche
+  suivante (question [décision] ajoutée à
+  `docs/intentions/fichiers-charges-courts.md`) ; l'aiguillage du dépôt
+  (français) renvoie à un détail en anglais. Aucun outil ne reprend encore une
+  ancienne `AGENTS.md` longue vers la courte : `resolve-drift` montre le diff,
+  le projet reprend ses règles à la main. Le contrôle de taille du kit (fiche
+  suivante) reprendra le test de 100 lignes. Le point 2 de l'intention
+  d'origine est fait ; les points 1 et 3 restent. Le demandeur a validé le
+  2026-10-27, sous condition de zéro régression, l'extension du périmètre des
+  six contrats (section « Contrats modifiés » de la fiche) ; la condition a été
+  jugée satisfaite par lui : `run-checks` seul vert sur la branche et sur la
+  principale, `verify` PASS. Un échec intermittent de la couverture des hooks
+  (QUA-004, seuil de couverture de test) est apparu deux fois sous charge
+  parallèle (96,55 % puis 94,24 %), jamais en passage seul ni sur la principale ;
+  sa cause n'a pas été diagnostiquée, par décision du demandeur : intention
+  `docs/intentions/couverture-hooks-intermittente.md`.
+- **Preuve de clôture** : `docs/preuves/agents-md-court.md` (si présent).
+- **Clôturé par** : la branche `chantier/agents-md-court`.

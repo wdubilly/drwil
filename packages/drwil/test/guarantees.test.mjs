@@ -553,7 +553,7 @@ test("QUA-097 garanties tenues : verify ne signale rien, la commande le dit", as
 });
 
 test("QUA-099 PR de documentation seule : fusion automatique sans la question drwil-merge, gardée pour le code", () => {
-  const agents = readFileSync(join(TEMPLATES, "base", "AGENTS.md"), "utf8");
+  const agents = readFileSync(join(TEMPLATES, "base", "docs", "ia-first.md"), "utf8");
   assert.match(
     agents,
     /\*\*Documentation-only PR\*\*: a PR that touches only documentation[\s\S]*without asking the `drwil-merge` question[\s\S]*auto-merge not allowed by the\s+repository/,
@@ -566,7 +566,7 @@ test("QUA-099 PR de documentation seule : fusion automatique sans la question dr
 });
 
 test("QUA-100 suivi de la CI : la consigne de lancer pr-watch après un push est livrée", () => {
-  const agents = readFileSync(join(TEMPLATES, "base", "AGENTS.md"), "utf8");
+  const agents = readFileSync(join(TEMPLATES, "base", "docs", "ia-first.md"), "utf8");
   assert.match(
     agents,
     /`node \.githooks\/pr-watch\.mjs \[<number>\]`[\s\S]*« green », « merged » or « red »[\s\S]*never bypassed \(QUA-019\)/,

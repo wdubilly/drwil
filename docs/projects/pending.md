@@ -55,7 +55,9 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    chantier par session, le suivant après la fusion du précédent. Les quatre
    premières (plafond à 200 lignes, puis découpe de la CLI, des hooks de
    base, des modules et outils) sortent ensemble en 0.10.0 (décision du
-   2026-10-27).
+   2026-10-27) ; le thème H (hooks d'agent et `AGENTS.md` courts, et le
+   contrôle livré qui surveille la taille de tous les fichiers générés par
+   drwil) y entre aussi, en tête de pile (décision du 2026-10-27).
 2. **Cadrer par thème** (l'agent propose les réponses, le demandeur tranche
    en un sondage, une PR de cadrage par thème) : A. release allégée (tout de
    suite) ; B. protection, garanties, contournements (après
@@ -64,7 +66,7 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    `attestations-sur-l-effet-et-couvre`) ; E. adoption et documentation,
    dont la montée de version sans perte pour le projet (CI extensible,
    données du projet hors prose du kit, alertes avant et après écrasement,
-   détection de stack élargie ; constatée sur drwil_dbox le 2026-10-26,
+   détection de stack élargie, aide à alléger les fichiers de l'adoptant (après la 0.10.0) ; constatée sur drwil_dbox le 2026-10-26,
    donc en tête du thème ; ces intentions touchent `packages/drwil/src`
    et les gabarits, pas les fichiers partagés des fiches cadrées), puis le
    parcours fluide (worktree toujours proposé, attestation depuis le chat,
@@ -80,8 +82,9 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    `docs/intentions/cloture-et-attestations.md`, le repositionnement après
    une clôture, les conflits d'index et de journal entre worktrees ;
    H. fichiers chargés courts : les hooks d'agent sous le plafond de 200
-   lignes, et un `AGENTS.md` court qui aiguille vers le détail (tout de
-   suite, demande du 2026-10-27 ; il touche `AGENTS.md` et
+   lignes, un `AGENTS.md` court qui aiguille vers le détail, et un contrôle
+   livré dans le paquet qui surveille la taille de tous les fichiers générés
+   par drwil (tout de suite, en 0.10.0, demande du 2026-10-27 ; il touche `AGENTS.md` et
    `.claude/hooks/`, pas les fichiers partagés des fiches cadrées) —
    `docs/intentions/fichiers-charges-courts.md`.
 3. **Grands sujets, ensuite** : catalogue et profils, autres outils (dont
@@ -95,6 +98,11 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P1] Les hooks d'agent livrés sous le plafond de 200 lignes
+  (cadré le 2026-10-27, 0.10.0) — `docs/projects/hooks-agent-sous-le-plafond.md`.
+- [ ] [IA] [P1] Un contrôle livré qui surveille la taille de tous les fichiers
+  générés par drwil, bloquant sur le gabarit et avertissant chez un projet adopté (cadré le 2026-10-27, 0.10.0) —
+  `docs/projects/surveillance-taille-du-kit.md`.
 - [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
   bloque dès l'installation neuve (cadré le 2026-10-23) —
   `docs/projects/niveau-de-protection.md`.
@@ -135,11 +143,8 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 ### Fichiers chargés courts
 
-- [ ] [décision] [P1] Les hooks d'agent sous le plafond de 200 lignes
-  (`.claude/hooks/` hors de QUA-001 : bash-guard 276 lignes, prompt-hook
-  227) et un `AGENTS.md` court qui aiguille vers le détail (247 lignes
-  livrées, chargées à chaque session ; environ 100 visées) — demande du
-  2026-10-27 — `docs/intentions/fichiers-charges-courts.md`.
+Entièrement cadré le 2026-10-27 en trois fiches (voir « Fiches cadrées »),
+rien à cadrer : `docs/intentions/fichiers-charges-courts.md`.
 
 ### Preuves, contrôles, vitesse
 
@@ -152,6 +157,9 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 - [ ] [décision] Le pre-push connaît le commit local poussé, pas seulement la
   référence distante (reprise d'un verdict au pre-push, QUA-152) —
   `docs/intentions/pre-push-commit-pousse.md`.
+- [ ] [décision] Comprendre l'échec intermittent de la couverture des hooks
+  (QUA-004) vu deux fois sous charge parallèle, jamais reproduit seul —
+  `docs/intentions/couverture-hooks-intermittente.md`.
 - [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
   par contrôle, QUA-141) —
   `docs/intentions/reprise-par-controle-limites.md`.
@@ -167,8 +175,8 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 - [ ] [décision] `doctor` dit le niveau de protection réel d'un projet ;
   la barrière n'est qu'un avertissement par défaut (revue externe du
-  2026-10-22) — entièrement cadrée le 2026-10-23 en fiche 5 de « Fiches
-  cadrées, dans l'ordre de réalisation », rien à cadrer ; retirée à la
+  2026-10-22) — entièrement cadrée le 2026-10-23 dans
+  `docs/projects/niveau-de-protection.md`, rien à cadrer ; retirée à la
   clôture de cette fiche —
   `docs/intentions/niveaux-de-protection-dans-doctor.md`.
 - [ ] [décision] Les garanties obligatoires, la suite (`doctor` sur le dépôt
@@ -206,6 +214,9 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 - [ ] [décision] La détection de stack reconnaît plus de technologies (C/C++,
   Swift, Elixir…) et signale une stack vide (constaté sur drwil_dbox le
   2026-10-26) — `docs/intentions/detection-de-stack-elargie.md`.
+- [ ] [décision] [P3] Aider l'adoptant à alléger ses fichiers (outil de
+  découpe, fiches d'allègement à l'adoption) — demande du 2026-10-27, après
+  la 0.10.0 — `docs/intentions/alleger-les-fichiers-de-l-adoptant.md`.
 
 ### Release
 

@@ -512,8 +512,8 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-061 — En SCOPING, une intention se cadre, une demande de réalisation se code
 **Règle** : Livré à tout projet. `AGENTS.md` dit qu'en SCOPING un besoin exprimé par l'humain se cadre (intention ou fiche) et ne se code pas, et qu'en cas de doute l'agent demande « intention ou demande de réalisation ? » avant d'agir. La règle est dans `AGENTS.md`, lu par tous les outils (consigne seulement : elle ne remplace pas le blocage par hook, QUA-060).
-**Périmètre** : `AGENTS.md` ; livré dans le gabarit.
-**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`.
+**Périmètre** : `AGENTS.md`, `docs/ia-first.md` (section 8) ; livré dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first.md` (section 8).
 **Preuve** : test du paquet qui installe un projet et lit la règle dans son `AGENTS.md`.
 **Contrôle** : `tests-qua-061`
 **Tests** : `packages/drwil/test/kit.test.mjs`
@@ -913,8 +913,8 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-099 — Une PR de documentation seule part en fusion automatique sans question
 **Règle** : Livré à tout projet. La consigne d'`AGENTS.md` et le skill de lancement disent : une PR qui ne touche que de la documentation (Markdown, `docs/`) est mise en fusion automatique par l'agent (`gh pr merge --auto --merge`) sans poser la question `drwil-merge`, gardée pour les PR qui touchent du code ; si le dépôt n'autorise pas l'auto-merge, le message de refus existant s'applique.
-**Périmètre** : gabarits `AGENTS.md` et skill `start-a-workstream`.
-**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
+**Périmètre** : gabarits `AGENTS.md`, `docs/ia-first.md` (section 8) et skill `start-a-workstream`.
+**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first.md` (section 8), `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
 **Preuve** : test du paquet sur les gabarits livrés.
 **Contrôle** : `tests-qua-099`
 **Tests** : `packages/drwil/test/guarantees.test.mjs`
@@ -923,7 +923,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-100 — Le suivi de la CI d'une PR dit verte, fusionnée ou rouge, jamais « verte » sans l'avoir vu
 **Règle** : Livré à tout projet. `node .githooks/pr-watch.mjs [<n>]` suit la CI d'une PR par `gh` jusqu'à la fin de ses contrôles (30 minutes au plus) et dit « verte », « fusionnée » ou « rouge » avec les contrôles en échec (codes 0, 0, 1) ; sans `gh` joignable, sans contrôle ou après le délai, le suivi est « non exécuté » (code 2), jamais « verte » (QUA-013). `AGENTS.md` consigne de le lancer après chaque push ou création de PR, et de corriger une CI rouge sans la contourner (QUA-019).
-**Périmètre** : `.githooks/pr-watch.mjs` ; consigne d'`AGENTS.md`.
+**Périmètre** : `.githooks/pr-watch.mjs` ; consigne d'`AGENTS.md` et son texte complet (`docs/ia-first.md`, section 8).
 **Source de vérité** : `.githooks/pr-watch.mjs`.
 **Preuve** : tests des hooks (gh simulé, attente, délai, ligne de commande) et du paquet (consigne livrée).
 **Contrôle** : `tests-qua-100`
@@ -1214,7 +1214,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-129 — Les contrôles longs tournent dans un sous-agent qui ne rend que le verdict et les échecs
 **Règle** : Livré à tout projet. Avec Claude Code (et les outils qui reçoivent l'arbre `.claude`), le gabarit livre le sous-agent `drwil-checks` (`.claude/agents/drwil-checks.md`) : il lance `node .githooks/run-checks.mjs` puis `drwil verify --agent` et ne rend que le verdict et les échecs, sans rien modifier. `AGENTS.md` (gabarit et dépôt) donne la consigne pour tout outil : les contrôles longs en sous-agent si l'outil le permet, sans droit d'écriture ; sinon, les lancer directement. Aucune promesse au-delà de cette consigne écrite pour Copilot, Gemini et Codex (QUA-060, un outil n'est tenu que prouvé par le banc). Les hooks et skills de Claude Code ne changent pas (QUA-072).
-**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md` ; livrés dans le gabarit.
+**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md`, `docs/ia-first.md` (section 8) ; livrés dans le gabarit.
 **Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
 **Preuve** : test du paquet qui installe un projet Claude Code (sous-agent livré, commandes lancées, consigne d'`AGENTS.md`) et un projet Codex seul (pas d'arbre `.claude`, consigne présente) ; en-tête du sous-agent dans la preuve de QUA-072.
 **Contrôle** : `tests-qua-129`
@@ -1224,7 +1224,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-130 — Le sous-agent des contrôles recopie le verdict mot pour mot, sans attester ni écrire
 **Règle** : Livré à tout projet. Le sous-agent `drwil-checks` recopie mot pour mot, sans reformulation ni résumé, la ligne de verdict `GOVERNANCE: …` de `drwil verify --agent` et les listes des contrats en échec, non vérifiés ou à attester (et des critères non prouvés), ainsi que les lignes d'échec de `run-checks` ; une commande qui ne tourne pas est dite « not run », jamais réussie. Ses outils sont une liste fermée sans outil d'écriture (`Bash`, `Read`, `Grep`, `Glob`) ; il n'exécute jamais `drwil attest` ni le verdict de recette (`drwil attest` exige de toute façon un terminal interactif et la saisie de l'ID). `AGENTS.md` dit que la session principale n'annonce « vérifié » que sur la ligne recopiée.
-**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md` ; livrés dans le gabarit.
+**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md`, `docs/ia-first.md` (section 8) ; livrés dans le gabarit.
 **Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
 **Preuve** : test du paquet sur un projet installé : liste d'outils fermée sans écriture, interdits et format de recopie mot pour mot dans le sous-agent, consigne de la session principale dans `AGENTS.md`. Le comportement d'une session réelle n'est pas rejoué (pas de session Claude Code dans les tests, comme pour QUA-072).
 **Contrôle** : `tests-qua-130`
@@ -1244,7 +1244,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-132 — Avec Claude Code, le registre et le journal ne se lisent jamais en entier
 **Règle** : Livré à tout projet qui installe Claude Code. Le hook `PreToolUse` sur l'outil Read (`.claude/hooks/read-guard.mjs`, branché dans `.claude/settings.json`) refuse, avant qu'elle ait lieu, la lecture sans plage (ni `offset` ni `limit`) du registre des contrats (`dirs.contracts` de `.drwil/ia-first.json`, par défaut `docs/contracts.md`) et du journal (fichier journal.md de `dirs.projects`, par défaut `docs/projects/journal.md`) ; `.claude/hooks/bash-guard.mjs` refuse `cat`, `less` ou `more` de ces fichiers dans une commande shell. Le refus renvoie vers `node .githooks/glossary.mjs --contract <ID>`, `--contracts` et `--journal <chantier>`. Restent permises : une lecture par plage (pour éditer), une recherche (Grep, `grep`, `sed -n`, `head`). Chemin absolu ou relatif, normalisé (liens symboliques résolus) ; un fichier absent du projet, une entrée inattendue ou une erreur interne laissent passer la lecture. Limites assumées : la garde shell juge le texte de la commande (une lecture cachée derrière une variable ou un autre programme n'est pas vue) ; les autres outils (Gemini, Copilot, Codex, Cursor) n'ont que la consigne écrite d'`AGENTS.md`.
-**Périmètre** : `.claude/hooks/read-guard.mjs`, `.claude/hooks/bash-guard.mjs`, `.claude/settings.json`, `AGENTS.md` ; livrés dans le gabarit.
+**Périmètre** : `.claude/hooks/read-guard.mjs`, `.claude/hooks/bash-guard.mjs`, `.claude/settings.json`, `AGENTS.md`, `docs/ia-first.md` (section 8) ; livrés dans le gabarit.
 **Source de vérité** : `.claude/hooks/read-guard.mjs` (`guardedFiles`, `decide`).
 **Preuve** : test du paquet qui installe un projet et rejoue les hooks avec des entrées simulées : lecture entière refusée (chemin absolu, relatif, par un lien symbolique, depuis un sous-dossier), lecture par plage permise, autre fichier permis, fichier absent ou entrée invalide permis, chemins lus dans la configuration, message en français et en anglais ; `cat`, `less` et `more` refusés, `sed -n`, `grep` et `head` permis ; le `.claude/settings.json` livré branche le hook sur Read.
 **Contrôle** : `tests-qua-132`
@@ -1449,3 +1449,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/run-checks.test.mjs`
 **Origine** : pre-push-reprend-les-verdicts — « Le pre-push ne rejoue pas un contrôle dont les fichiers n'ont pas changé depuis un passage « ok », le dit dans sa sortie, et rejoue tout quand l'arbre de travail n'est pas le commit poussé ; la CI rejoue toujours tout »
 **Raison** : Le 2026-10-25, pousser un commit de documentation seule a rejoué tout le paquet (build, tests, couverture) : 2 min 32 s pour des contrôles qui ne jugent aucun des fichiers poussés.
+
+## QUA-153 — Le `AGENTS.md` livré est un aiguillage de 100 lignes au plus, dont chaque règle a son détail dans `docs/ia-first.md`
+**Règle** : Livré à tout projet. `AGENTS.md`, relu à chaque requête, tient en 100 lignes au plus (gabarit et copie du dépôt) : une ligne par règle de conduite qu'aucun contrôle machine ne rattrape, qui renvoie à la section 8 de `docs/ia-first.md` où le texte complet de chaque règle est conservé sous le même nom en gras ; aucune règle n'est perdue. Le plafond sur le gabarit est tenu par un test du paquet, d'ici à ce que le contrôle de taille du kit le reprenne.
+**Périmètre** : `AGENTS.md`, `docs/ia-first.md` (section 8) ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first.md` (section 8).
+**Preuve** : test du paquet qui lit le gabarit : au plus 100 lignes, renvoi à la section 8, et chaque règle de conduite de `AGENTS.md` retrouvée sous son nom dans la section 8.
+**Contrôle** : `tests-qua-153`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : agents-md-court — « `AGENTS.md` du gabarit et celui du dépôt font 100 lignes au plus. »
+**Raison** : `AGENTS.md` est chargé à chaque requête par tout agent : livré à 247 lignes, il coûtait du contexte à chaque message.

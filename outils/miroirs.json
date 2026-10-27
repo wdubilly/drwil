@@ -3,7 +3,7 @@
   "ecarts": {
     ".github/workflows/ia-first.yml": "Jobs vérifiés à part (clé ci) ; contenu différent : étapes propres au dépôt (npm ci et son cache, installation de gitleaks, vérification du ruleset) et alerte qui dépend aussi de kit-tests.",
     ".gitignore": "Entrées propres au dépôt (rapport de couverture, documents internes, évidences).",
-    "AGENTS.md": "Consignes propres à chaque projet (le gabarit n'en est que la base).",
+    "AGENTS.md": "Consignes propres à chaque projet (le gabarit n'en est que la base), en français ; même aiguillage de 100 lignes au plus, le détail des règles est dans docs/ia-first.md, section 8.",
     "INSTALL.md": "Installation propre au dépôt drwil (clone, non publié sur npm).",
     "README.md": "Présentation propre au dépôt drwil.",
     "docs/architecture.md": "Carte propre au dépôt drwil (le gabarit livre le modèle à rendre).",

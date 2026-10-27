@@ -112,10 +112,32 @@ const checks = (dir) =>
 const git = (dir, ...args) =>
   spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
+// AGENTS.md est un aiguillage court : le texte complet des règles est dans la section 8 de docs/ia-first.md.
+const consignes = (dir) => `${read(dir, "AGENTS.md")}\n${read(dir, "docs/ia-first.md")}`;
 const config = (dir) => JSON.parse(read(dir, ".drwil/ia-first.json"));
 // NTFS n'a pas de bit d'exécution : sous Windows chmod est un no-op, donc ce contrôle
 // (déjà fait sur Linux/macOS par le test "lot 4 : commit-msg livré désactivé") n'a pas de sens.
 const executable = (dir, f) => process.platform === "win32" || Boolean(statSync(join(dir, f)).mode & 0o100);
+
+test("QUA-153 : AGENTS.md du gabarit tient en 100 lignes et chacune de ses règles de conduite a son détail en section 8 de docs/ia-first.md", () => {
+  const base = fileURLToPath(new URL("../templates/common/base/", import.meta.url));
+  const agents = readFileSync(join(base, "AGENTS.md"), "utf8");
+  const lignes = agents.trimEnd().split("\n");
+  assert.ok(lignes.length <= 100, `AGENTS.md du gabarit : ${lignes.length} lignes, plafond 100`);
+  const iaFirst = readFileSync(join(base, "docs/ia-first.md"), "utf8");
+  const detail = iaFirst.slice(iaFirst.search(/^## 8\. Conduct rules, in detail$/m));
+  assert.ok(detail.length < iaFirst.length, "section 8 présente");
+  assert.match(agents, /`docs\/ia-first\.md`, section 8/);
+  const noms = (texte) => [...texte.matchAll(/^- \*\*([^*]+)\*\*/gm)].map((m) => m[1]);
+  const conduite = agents.slice(agents.indexOf("## Conduct"), agents.indexOf("## Contracts"));
+  const regles = noms(conduite);
+  assert.ok(regles.length >= 20, `règles de conduite relevées : ${regles.length}`);
+  for (const nom of regles)
+    assert.ok(
+      noms(detail).some((d) => d.startsWith(nom)),
+      `règle « ${nom} » sans détail en section 8`,
+    );
+});
 
 test("init d'un projet en français : tous les outils, git et hooks, contrôles verts", async () => {
   const dir = tmp();
@@ -888,7 +910,7 @@ test("QUA-132 lecture ciblée forcée : registre et journal refusés en entier (
   // Le gabarit branche le hook sur Read, avant l'outil ; AGENTS.md le dit.
   const reglages = JSON.parse(read(dir, ".claude/settings.json"));
   assert.ok(reglages.hooks.PreToolUse.some((h) => h.matcher === "Read" && h.hooks[0].command.includes(".claude/hooks/read-guard.mjs")));
-  assert.match(read(dir, "AGENTS.md"), /reading the\s+registry or the journal whole \(without a range\) is refused/);
+  assert.match(consignes(dir), /reading the\s+registry or the journal whole \(without a range\) is refused/);
 });
 
 test("hooks Claude Code : garde-fou-bash demande l'accord, rappel-cadrage refuse avant écriture (bloquant) ou rappelle (avertissement)", async () => {
@@ -1331,7 +1353,7 @@ test("QUA-037 : la skill et l'AGENTS.md livrés mènent une file un sous-agent p
   assert.match(skill, /never start the next one on a merge not done/);
   assert.match(skill, /« the queue resumes with <brief>: shall I start it\? »/);
   assert.match(skill, /only on an explicit yes/);
-  const agents = read(dir, "AGENTS.md").replace(/\s+/g, " ");
+  const agents = consignes(dir).replace(/\s+/g, " ");
   assert.match(agents, /with Claude Code, each one in a subagent \(fresh context\)/);
   assert.match(agents, /30 minutes at most/);
   assert.match(agents, /explicit yes/);
@@ -1346,7 +1368,7 @@ test("QUA-050 : un projet installé reçoit la commande de détour, cadrée par 
   assert.match(recette, /`node \.githooks\/detour\.mjs open <name> --title <defect> \[--files <a,b>\]`/);
   assert.match(recette, /Once the PR is merged: `node \.githooks\/detour\.mjs resume`/);
   assert.match(recette, /needs the human's yes/);
-  const agents = read(dir, "AGENTS.md").replace(/\s+/g, " ");
+  const agents = consignes(dir).replace(/\s+/g, " ");
   assert.match(
     agents,
     /\*\*Detour for a prior defect\*\*: mid-workstream, a defect outside the active brief's scope is fixed by a detour the agent opens alone/,
@@ -4170,7 +4192,7 @@ test("/drwil verify (Claude) : adaptateur de la CLI, jamais d'attestation par l'
     );
     assert.match(skill, /Never run `drwil attest`/);
     assert.match(read(dir, "AGENTS.md"), /drwil verify --agent/);
-    assert.match(read(dir, "AGENTS.md"), /an agent never runs it/);
+    assert.match(consignes(dir), /an agent never runs it/);
   }
 });
 
@@ -4647,7 +4669,7 @@ test("QUA-047 : installer ou mettre à jour garde la date d'origine d'un documen
 test("QUA-061 : AGENTS.md livré distingue une intention d'une demande de réalisation en SCOPING", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
-  const agents = read(dir, "AGENTS.md").replace(/\s+/g, " ");
+  const agents = consignes(dir).replace(/\s+/g, " ");
   assert.match(
     agents,
     /\*\*Intention or request\*\*: in SCOPING, a need the human expresses is framed \(an intention or a brief\), never coded/,
@@ -4726,11 +4748,11 @@ test("QUA-129 : sous-agent drwil-checks livré avec Claude Code pour les contrô
   assert.match(agent, /report their verdict/);
   const consigne =
     /Long checks in a subagent, if the tool allows it: with Claude Code, the `drwil-checks` subagent .* runs `run-checks` and `drwil verify --agent` and returns only the verdict and the failures.* Another tool: the same if it allows a subagent without write access, otherwise run them directly\./;
-  assert.match(read(dir, "AGENTS.md").replace(/\s+/g, " "), consigne);
+  assert.match(consignes(dir).replace(/\s+/g, " "), consigne);
   const codex = tmp();
   await quiet(() => init({ lang: "en", targetDir: codex, tools: "codex", git: false }));
   assert.equal(existsSync(join(codex, ".claude/agents/drwil-checks.md")), false, "sans Claude Code, pas d'arbre .claude");
-  assert.match(read(codex, "AGENTS.md").replace(/\s+/g, " "), consigne, "la consigne reste, pour tout outil");
+  assert.match(consignes(codex).replace(/\s+/g, " "), consigne, "la consigne reste, pour tout outil");
 });
 
 test("QUA-130 : le sous-agent recopie mot pour mot verdict et contrats, sans accès à l'attestation ni à l'écriture ; « vérifié » sur cette seule ligne", async () => {
@@ -4748,7 +4770,7 @@ test("QUA-130 : le sous-agent recopie mot pour mot verdict et contrats, sans acc
   assert.match(corps, /failing contracts, contracts not verified, unproven criteria, attestation required, registry errors/);
   assert.match(corps, /reported as « not run » with its error: never as passed/);
   assert.match(corps, /The main session says « verified » only on the `GOVERNANCE: PASS` line you copied/);
-  assert.match(read(dir, "AGENTS.md").replace(/\s+/g, " "), /the main session says « verified » only on that copied line/);
+  assert.match(consignes(dir).replace(/\s+/g, " "), /the main session says « verified » only on that copied line/);
 });
 
 test("QUA-061 : le skill /drwil-note appelle la commande de note et ne code rien — une note est toujours une intention", async () => {
