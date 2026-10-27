@@ -61,6 +61,8 @@ files:
   - .githooks/worktree-texts.mjs
   - .githooks/doc-coherence-fixes.mjs
   - .githooks/doc-coherence-texts.mjs
+  - .githooks/scope-gate-merge.mjs
+  - .githooks/scope-gate-texts.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit
