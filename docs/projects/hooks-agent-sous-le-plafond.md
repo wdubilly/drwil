@@ -66,6 +66,17 @@ moment-là.)
 
 - **Lot 1 — hooks sous 200 lignes** [IA] : périmètre de QUA-001 étendu à `.claude/hooks/` (contrôle `taille-fichiers`), découpe des deux hooks, tests de `.githooks/check-file-size.test.mjs` ; installation dans le dépôt. Critère de sortie : `node .githooks/run-checks.mjs` OK, `drwil verify --agent` PASS.
 
+## Contrats modifiés
+
+Validé par le demandeur le 2026-10-27 (sondage de cadrage : décision 1, et
+lot 1 qui nomme ce fichier de tests).
+
+- `QUA-001` — périmètre étendu à `.claude/hooks/` et aux hooks d'agent du
+  gabarit ; rien n'est retiré.
+- `.githooks/check-file-size.test.mjs` — un test vérifie que le contrôle
+  `taille-fichiers` couvre les hooks d'agent du dépôt et du gabarit (validé
+  par le demandeur le 2026-10-27).
+
 ## 7. Reprise
 
 - **Dernier état** (2026-10-27) : cadré, prêt à lancer.

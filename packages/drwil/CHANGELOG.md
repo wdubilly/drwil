@@ -7,6 +7,11 @@ closing commit; the release renames this section to its version.
 
 ### Changed
 
+- The agent hooks installed in `.claude/hooks/` that exceeded 200 lines are
+  split, none above 200 lines, with no change of behavior: `bash-guard.mjs`
+  now imports `shell-split.mjs`, and `prompt-hook.mjs` imports `start-poll.mjs`.
+  A project already equipped gets both new files on update; the hooks stay
+  scripts run by Claude Code, Gemini CLI and Copilot CLI alike.
 - The `AGENTS.md` installed by the kit is now a short switchboard (93 lines
   instead of 247, about half the context read at every request): one line per
   conduct rule that no machine checks, the contracts to know and the "if you

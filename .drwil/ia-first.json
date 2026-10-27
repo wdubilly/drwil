@@ -976,13 +976,15 @@
     {
       "id": "taille-fichiers",
       "name": "fichiers de code sous 200 lignes, tests exclus (QUA-001)",
-      "run": "node .githooks/check-file-size.mjs packages/drwil/src 200 ts && node .githooks/check-file-size.mjs packages/drwil/bin 200 js && node .githooks/check-file-size.mjs .githooks 200 mjs && node .githooks/check-file-size.mjs outils 200 mjs",
+      "run": "node .githooks/check-file-size.mjs packages/drwil/src 200 ts && node .githooks/check-file-size.mjs packages/drwil/bin 200 js && node .githooks/check-file-size.mjs .githooks 200 mjs && node .githooks/check-file-size.mjs outils 200 mjs && node .githooks/check-file-size.mjs .claude/hooks 200 mjs && node .githooks/check-file-size.mjs packages/drwil/templates/common/tools/claude/.claude/hooks 200 mjs",
       "ciJob": "checks",
       "paths": [
         "packages/drwil/src/**",
         "packages/drwil/bin/**",
         ".githooks/**",
         "outils/**",
+        ".claude/hooks/**",
+        "packages/drwil/templates/common/tools/claude/.claude/hooks/**",
         "package.json",
         "package-lock.json",
         ".drwil/ia-first.json"

@@ -125,3 +125,14 @@ test("QUA-001 : le livrable propose 200 lignes, son défaut reste 400", () => {
   assert.match(lancer(dir, "src").stderr, /b\.js : 401 lignes, maximum 400/);
   assert.doesNotMatch(lancer(dir, "src").stderr, /a\.js/);
 });
+
+test("QUA-001 : le contrôle du dépôt couvre les hooks d'agent, de ce dépôt et du gabarit", () => {
+  const racineDepot = join(dirname(SCRIPT), "..");
+  const controle = JSON.parse(readFileSync(join(racineDepot, ".drwil", "ia-first.json"), "utf8")).checks.find(
+    (c) => c.id === "taille-fichiers",
+  );
+  for (const dossier of [".claude/hooks", "packages/drwil/templates/common/tools/claude/.claude/hooks"]) {
+    assert.ok(controle.run.includes(`check-file-size.mjs ${dossier} 200 mjs`), dossier);
+    assert.ok(controle.paths.includes(`${dossier}/**`), dossier);
+  }
+});

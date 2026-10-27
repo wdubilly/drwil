@@ -80,7 +80,7 @@ fichiers que la CLI installe chez un projet :
 
 ## Décisions (sondage du 2026-10-27)
 
-Cadrées en trois fiches, dans l'ordre : `docs/projects/hooks-agent-sous-le-plafond.md`,
+Cadrées en trois fiches, dans l'ordre : `docs/projects/journal.md` (hooks-agent-sous-le-plafond),
 `docs/projects/journal.md`, `docs/projects/surveillance-taille-du-kit.md`.
 
 - `AGENTS.md` : 100 lignes, gabarit et copie du dépôt ; règles sans contrôle
@@ -96,6 +96,9 @@ Cadrées en trois fiches, dans l'ordre : `docs/projects/hooks-agent-sous-le-plaf
 
 ## Questions à trancher
 
+- Le point 1 est fait (2026-10-27) : bash-guard (276 lignes) et prompt-hook
+  (227) sont découpés (`shell-split`, `start-poll`), les hooks d'agent du
+  dépôt et du gabarit sont sous le contrôle `taille-fichiers` (QUA-001).
 - Le point 2 est fait (2026-10-27) : `AGENTS.md` du gabarit 93 lignes (247
   avant), celui du dépôt 76 (169 avant) ; le détail des règles est dans la
   section 8 de `docs/ia-first.md`, qui passe de 729 à 916 lignes, donc
