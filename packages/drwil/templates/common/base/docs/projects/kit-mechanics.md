@@ -58,6 +58,7 @@ files:
   - .githooks/consumption-format.mjs
   - .githooks/consumption-log.mjs
   - .githooks/consumption-texts.mjs
+  - .githooks/worktree-texts.mjs
   - .githooks/prepare-commit-msg
   - .githooks/scope.mjs
   - .githooks/pre-commit

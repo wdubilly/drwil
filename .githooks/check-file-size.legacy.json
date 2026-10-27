@@ -8,7 +8,6 @@
   ".githooks/glossary.mjs": 206,
   ".githooks/recette-note.mjs": 216,
   ".githooks/scope-gate.mjs": 242,
-  ".githooks/worktree.mjs": 273,
   "outils/banc-agents.mjs": 225,
   "outils/banc-juge.mjs": 314,
   "outils/banc.mjs": 322,
