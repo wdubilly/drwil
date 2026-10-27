@@ -3662,6 +3662,14 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   ancienne `AGENTS.md` longue vers la courte : `resolve-drift` montre le diff,
   le projet reprend ses règles à la main. Le contrôle de taille du kit (fiche
   suivante) reprendra le test de 100 lignes. Le point 2 de l'intention
-  d'origine est fait ; les points 1 et 3 restent.
+  d'origine est fait ; les points 1 et 3 restent. Le demandeur a validé le
+  2026-10-27, sous condition de zéro régression, l'extension du périmètre des
+  six contrats (section « Contrats modifiés » de la fiche) ; la condition a été
+  jugée satisfaite par lui : `run-checks` seul vert sur la branche et sur la
+  principale, `verify` PASS. Un échec intermittent de la couverture des hooks
+  (QUA-004, seuil de couverture de test) est apparu deux fois sous charge
+  parallèle (96,55 % puis 94,24 %), jamais en passage seul ni sur la principale ;
+  sa cause n'a pas été diagnostiquée, par décision du demandeur : intention
+  `docs/intentions/couverture-hooks-intermittente.md`.
 - **Preuve de clôture** : `docs/preuves/agents-md-court.md` (si présent).
 - **Clôturé par** : la branche `chantier/agents-md-court`.

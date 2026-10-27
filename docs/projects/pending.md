@@ -159,6 +159,9 @@ rien à cadrer : `docs/intentions/fichiers-charges-courts.md`.
 - [ ] [décision] Le pre-push connaît le commit local poussé, pas seulement la
   référence distante (reprise d'un verdict au pre-push, QUA-152) —
   `docs/intentions/pre-push-commit-pousse.md`.
+- [ ] [décision] Comprendre l'échec intermittent de la couverture des hooks
+  (QUA-004) vu deux fois sous charge parallèle, jamais reproduit seul —
+  `docs/intentions/couverture-hooks-intermittente.md`.
 - [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
   par contrôle, QUA-141) —
   `docs/intentions/reprise-par-controle-limites.md`.
