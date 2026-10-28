@@ -1649,3 +1649,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/scope-gate.test.mjs`
 **Origine** : cycle-de-vie-des-fiches — « Le registre des contrats s'écrit en SCOPING sans avertissement de périmètre, et un nouveau contrat entre dans le même commit que la fiche qui le cite ; la régression d'un contrat modifié dans une branche sans ligne « Contrats modifiés » reste signalée par `drwil verify` et refuse la clôture »
 **Raison** : Écrire le registre pendant le cadrage déclenchait l'avertissement de périmètre : créer un contrat en cours de chantier demandait deux commits (la fiche ne peut citer l'ID avant qu'il soit inscrit).
+
+## QUA-173 — Le code déjà livré sur la branche principale reste couvert par défaut après la clôture d'une fiche
+**Règle** : Livré à tout projet. Un fichier de code suivi par git sur la branche principale (base de fusion de HEAD avec `DRWIL_BASE`, `origin/HEAD`, `origin/master`, `origin/main`, `master` puis `main`) et identique dans la copie de travail est « livré » : le rappel de cadrage (`outsideBriefs`, `.githooks/scope.mjs`) ne le signale pas quand aucune fiche ne le cite plus. Un fichier nouveau, modifié ou retiré par la branche n'est pas livré et reste soumis à une fiche ; la barrière de périmètre à la validation et au rejeu (QUA-172, `.githooks/scope-gate.mjs`) n'est pas touchée : tout fichier modifié exige toujours une fiche active qui le cadre. Branche principale introuvable, historique ou dépôt illisible : aucun fichier n'est livré, jamais un succès par défaut (QUA-013).
+**Périmètre** : `.githooks/scope.mjs` (`deliveredFiles`, `outsideBriefs`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/scope.mjs` (`deliveredFiles`).
+**Preuve** : tests sur de vrais dépôts git temporaires : fichier identique livré, fichier nouveau, modifié ou retiré non livré, fiche qui couvre un fichier non livré, branche principale introuvable ou hors dépôt git sans fichier livré, lecture du dépôt où le hook est installé.
+**Contrôle** : `tests-qua-173`
+**Tests** : `.githooks/scope.test.mjs`
+**Origine** : cycle-de-vie-des-fiches — « Un fichier de code déjà présent sur la branche principale reste couvert par défaut après la clôture d'une fiche ; le cadrage ne garde que le code nouveau ou modifié, et la barrière de périmètre n'est pas affaiblie pour un fichier hors de ce cas »
+**Raison** : La clôture supprime la fiche alors que tout fichier de code doit rester couvert : drwil_com a dû créer à la main une fiche de référence « code livré ».

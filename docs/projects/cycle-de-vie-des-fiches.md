@@ -73,12 +73,11 @@ attribuer à ce moment-là dans le registre.)
 - Le registre des contrats s'écrit en SCOPING sans avertissement de périmètre,
   et un nouveau contrat entre dans le même commit que la fiche qui le cite ; la
   régression d'un contrat modifié dans une branche sans ligne « Contrats
-  modifiés » reste signalée par `drwil verify` et refuse la clôture — contrat à
-  créer
+  modifiés » reste signalée par `drwil verify` et refuse la clôture — `QUA-172`
 - Un fichier de code déjà présent sur la branche principale reste couvert par
   défaut après la clôture d'une fiche ; le cadrage ne garde que le code nouveau
   ou modifié, et la barrière de périmètre n'est pas affaiblie pour un fichier
-  hors de ce cas — contrat à créer
+  hors de ce cas — `QUA-173`
 - Le lancement par sondage enregistre l'empreinte des critères acceptés par
   l'humain ; l'empreinte entre dans la preuve de clôture ; un critère modifié
   ensuite redemande un geste humain avant la clôture — contrat à créer
@@ -100,6 +99,7 @@ validé le cadrage et ce bloc `scope` le 2026-10-26 ; les anciens critères des
 contrats modifiés sont repris dans chaque puce.)
 
 - `.githooks/scope-gate.mjs` — la barrière accepte le registre des contrats en SCOPING et au rejeu d'un commit sans trailer qui n'écrit que lui ; en BUILD, EVIDENCE et CLOSING il reste jugé comme avant (nouveau contrat QUA-172) (validé par le demandeur le 2026-10-26)
+- `.githooks/scope.mjs` — `outsideBriefs` ne signale plus un fichier de code déjà livré (suivi et identique sur la branche principale) quand aucune fiche ne le cite ; un fichier nouveau, modifié ou retiré reste soumis à une fiche et la barrière de périmètre ne change pas (nouveau contrat QUA-173) (validé par le demandeur le 2026-10-26)
 
 ## 2. Hors périmètre
 
@@ -159,6 +159,6 @@ Critère de sortie : `node .githooks/run-checks.mjs` OK, `drwil verify --agent` 
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-26) : cadré, prêt à lancer.
+- **Dernier état** (2026-10-28) : lots 1 (QUA-172, registre en SCOPING) et 2 (QUA-173, code livré couvert) faits.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : lot 3 — acceptation des critères.

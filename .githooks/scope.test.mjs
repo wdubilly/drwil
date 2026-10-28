@@ -3,7 +3,25 @@
 // (tests des contrôles eux-mêmes), comme tout .githooks/*.test.mjs.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fnmatch, tooBroad, readBlock, isCode, briefsCovering, normalize, patternsByBrief, withMirrors } from "./scope.mjs";
+import { spawnSync } from "node:child_process";
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
+import {
+  briefsCovering,
+  deliveredFiles,
+  fnmatch,
+  isCode,
+  normalize,
+  outsideBriefs,
+  patternsByBrief,
+  readBlock,
+  tooBroad,
+  withMirrors,
+} from "./scope.mjs";
+
+for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
 test("fnmatch : * et ? traversent les séparateurs, le reste est littéral", () => {
   assert.equal(fnmatch("backend/app/x.py", "backend/app/x*"), true);
@@ -76,4 +94,76 @@ test("QUA-035 : withMirrors : un motif sous une source couvre sa copie ; réglag
   ]);
   const parFiche = patternsByBrief([["docs/projects/a.md", "<!-- scope\nfiles:\n  - tpl/base/.githooks/x.mjs\n-->\n"]], cfg);
   assert.deepEqual(briefsCovering(".githooks/x.mjs", parFiche), ["docs/projects/a.md"]);
+});
+
+/** Dépôt sur `main` avec un fichier livré (src/livre.js), puis une branche de chantier. */
+function depotLivre() {
+  const racine = mkdtempSync(join(tmpdir(), "drwil-livre-"));
+  const git = (...args) => assert.equal(spawnSync("git", args, { cwd: racine, encoding: "utf8" }).status, 0, args.join(" "));
+  const ecrire = (f, c) => {
+    mkdirSync(dirname(join(racine, f)), { recursive: true });
+    writeFileSync(join(racine, f), c);
+  };
+  git("init", "-q", "-b", "main");
+  git("config", "user.email", "t@example.invalid");
+  git("config", "user.name", "T");
+  ecrire("src/livre.js", "a\n");
+  ecrire("src/modifie.js", "a\n");
+  ecrire("src/retire.js", "a\n");
+  git("add", ".");
+  git("commit", "-q", "-m", "base");
+  git("checkout", "-q", "-b", "chantier");
+  return { racine, git, ecrire };
+}
+
+test("QUA-173 : un fichier livré (identique sur la branche principale) reste couvert, un fichier nouveau, modifié ou retiré ne l'est pas", () => {
+  const { racine, git, ecrire } = depotLivre();
+  try {
+    ecrire("src/modifie.js", "b\n");
+    ecrire("src/neuf.js", "n\n");
+    git("add", "src/neuf.js");
+    git("rm", "-q", "src/retire.js");
+    const livres = deliveredFiles(racine, { DRWIL_BASE: "main" });
+    assert.deepEqual([...livres], ["src/livre.js"]);
+    const cfg = { codePrefixes: ["src"] };
+    const tous = ["src/livre.js", "src/modifie.js", "src/neuf.js", "src/inconnu.js"];
+    assert.deepEqual(outsideBriefs(tous, new Map(), cfg, livres), ["src/inconnu.js", "src/modifie.js", "src/neuf.js"]);
+    // Une fiche couvre toujours ce qu'elle cite, livré ou non ; sans ensemble donné, rien n'est livré.
+    const fiche = patternsByBrief([["docs/projects/a.md", "<!-- scope\nfiles:\n  - src/modifie.js\n-->\n"]], cfg);
+    assert.deepEqual(outsideBriefs(tous, fiche, cfg, livres), ["src/inconnu.js", "src/neuf.js"]);
+    assert.deepEqual(outsideBriefs(tous, new Map(), cfg, new Set()).length, 4);
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-173 : sans branche principale lisible ou hors dépôt git, rien n'est livré (jamais un succès par défaut)", () => {
+  const { racine, git } = depotLivre();
+  try {
+    git("branch", "-q", "-m", "chantier", "isolee");
+    git("branch", "-q", "-D", "main");
+    assert.equal(deliveredFiles(racine, {}).size, 0);
+    assert.equal(deliveredFiles(join(racine, "src", "absent"), {}).size, 0);
+    // Dépôt nu : l'arbre se lit, la comparaison à la copie de travail échoue — rien n'est livré.
+    const nu = join(racine, "nu.git");
+    git("clone", "-q", "--bare", ".", nu);
+    assert.equal(deliveredFiles(nu, { DRWIL_BASE: "refs/heads/isolee" }).size, 0);
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-173 : sans ensemble donné, outsideBriefs lit le dépôt où le hook est installé", async () => {
+  const { racine, ecrire } = depotLivre();
+  try {
+    mkdirSync(join(racine, ".githooks"));
+    copyFileSync(new URL("./scope.mjs", import.meta.url), join(racine, ".githooks", "scope.mjs"));
+    ecrire("src/neuf.js", "n\n");
+    spawnSync("git", ["add", "src/neuf.js"], { cwd: racine });
+    const installe = await import(pathToFileURL(join(racine, ".githooks", "scope.mjs")).href);
+    const hors = installe.outsideBriefs(["src/livre.js", "src/neuf.js"], new Map(), { codePrefixes: ["src"] });
+    assert.deepEqual(hors, ["src/neuf.js"]);
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
 });
