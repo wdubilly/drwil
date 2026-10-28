@@ -77,7 +77,7 @@ const git = (root, args) => {
   return r.status === 0 ? r.stdout : null;
 };
 
-/** Lines [from, to) of the index item citing this brief, and it alone; null if there is none. */
+/** Lines [from, to) of the index item citing this brief, and it alone among the briefs (`docs/projects/`: any other document cited stays); null if there is none. */
 export function indexItem(lines, brief) {
   for (let i = 0; i < lines.length; i++) {
     if (!/^\s*- \[[ xX]\]/.test(lines[i])) continue;
@@ -87,7 +87,7 @@ export function indexItem(lines, brief) {
       lines
         .slice(i, end)
         .join("\n")
-        .match(/`docs\/[^`]+\.md`/g),
+        .match(/`docs\/projects\/[^`]+\.md`/g),
     );
     if (cited.has(`\`${brief}\``) && cited.size === 1) return [i, end];
   }

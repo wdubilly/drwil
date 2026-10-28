@@ -197,6 +197,16 @@ test("QUA-048 : un élément d'index commun à plusieurs fiches n'est pas retir�
   assert.equal(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), index);
 });
 
+test("QUA-074 : la ligne d'index qui cite aussi un autre document de docs/ est retirée avec sa fiche", () => {
+  const index =
+    "# Index\n\n- [ ] [IA] Une fiche — `docs/projects/exemple.md`, voir `docs/ia-first.md`.\n- [ ] Autre — `docs/projects/autre.md`.\n";
+  const racine = depot({ index });
+  const r = close(racine, { logs: dossier() });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /ligne d'index retirée/);
+  assert.equal(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), "# Index\n\n- [ ] Autre — `docs/projects/autre.md`.\n");
+});
+
 test("QUA-048 : start supprime les branches fusionnées et le dit ; move vers EVIDENCE signale les pièges de la clôture", async () => {
   const racine = depot({ activite: "SCOPING", criteres: "- Refusé — contrat à créer" });
   git(racine, "checkout", "-q", "master");

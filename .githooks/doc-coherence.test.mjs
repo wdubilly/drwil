@@ -5,7 +5,16 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { applyProposals, checkboxProblems, codeCitations, deadReferences, intentLeft, proposals, twinIntents } from "./doc-coherence.mjs";
+import {
+  applyProposals,
+  checkboxProblems,
+  codeCitations,
+  deadReferences,
+  indexItem,
+  intentLeft,
+  proposals,
+  twinIntents,
+} from "./doc-coherence.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -200,4 +209,13 @@ test("QUA-075 : check-docs et la clôture lisent la même règle, dans le même 
   for (const lecteur of ["check-docs.mjs", "close.mjs"]) {
     assert.match(readFileSync(join(HOOKS, lecteur), "utf8"), /from "\.\/doc-coherence\.mjs"/, `${lecteur} lit le module partagé`);
   }
+});
+
+test("QUA-074 : élément d'index : seule une fiche de docs/projects/ compte comme fiche, un autre document cité n'empêche pas de le retirer", () => {
+  const brief = "docs/projects/exemple.md";
+  const mixte = ["- [ ] [IA] Une fiche — `docs/projects/exemple.md`, voir `docs/ia-first.md`.", "- [ ] Autre — `docs/projects/autre.md`."];
+  assert.deepEqual(indexItem(mixte, brief), [0, 1]);
+  assert.deepEqual(indexItem(["- [ ] Suite", "  `docs/projects/exemple.md` et `docs/architecture.md`"], brief), [0, 2]);
+  assert.equal(indexItem(["- [ ] Deux — `docs/projects/exemple.md`, `docs/projects/autre.md`."], brief), null);
+  assert.equal(indexItem(["- [ ] Seulement un document — `docs/ia-first.md`."], brief), null);
 });
