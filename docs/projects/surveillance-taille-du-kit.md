@@ -36,22 +36,22 @@ projet. Dans ce dépôt, il joue sur le gabarit (`packages/drwil/templates/`).
 
 ## Critères d'acceptation
 
-(le contrat est à créer au lancement, avec son champ **Origine** ; ID à
-attribuer à ce moment-là dans le registre. QUA-001 garde le code.)
+(contrat créé : `QUA-157`, qui porte chaque critère ; le code du projet reste
+au contrat du plafond de fichier de code.)
 
 - Le contrôle lit la liste des fichiers installés
   (le manifeste d'installation d'un projet adopté, le gabarit dans ce dépôt) et
   compare chacun au plafond de sa sorte, en lignes : 200 pour le code et les
   hooks, 100 pour `AGENTS.md`, 800 pour les documents lus à la demande, 250
-  pour les recettes.
+  pour les recettes — `QUA-157`
 - Sur le gabarit de ce dépôt, un dépassement **bloque** (commit, CI, avant
   release). Chez un projet adopté, il **avertit** seulement, en nommant le
-  fichier et sa limite : le projet a pu enrichir un fichier du kit exprès.
-- Un fichier du kit modifié à la main par le projet reste surveillé.
+  fichier et sa limite : le projet a pu enrichir un fichier du kit exprès — `QUA-157`
+- Un fichier du kit modifié à la main par le projet reste surveillé — `QUA-157`
 - Un projet adopté reçoit le contrôle à l'installation, déclaré dans ses
-  réglages, sans geste de sa part ; le code du projet n'est jamais mesuré.
+  réglages, sans geste de sa part ; le code du projet n'est jamais mesuré — `QUA-157`
 - `docs/ia-first.md` (729 lignes) et la recette `docs/recipes/working-with-branches.md`
-  (203 lignes) tiennent leur plafond ou le plafond de leur sorte les couvre.
+  (203 lignes) tiennent leur plafond ou le plafond de leur sorte les couvre (plafond hérité de 916 lignes pour `docs/ia-first.md`) — `QUA-157`
 
 ## 2. Hors périmètre
 
