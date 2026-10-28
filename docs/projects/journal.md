@@ -3750,4 +3750,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (`docs/intentions/controle-du-kit-masque-l-alerte-sans-controle.md`) ; un projet neuf reçoit l'avertissement sur
   `docs/ia-first.md` (916 lignes, plafond 800) tant que ce document n'est pas réduit
   (`docs/intentions/fichiers-charges-courts.md`).
+- **Preuve de clôture** : `docs/preuves/surveillance-taille-du-kit.md`.
 - **Clôturé par** : la branche `workstream/surveillance-taille-du-kit`.
