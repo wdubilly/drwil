@@ -28,6 +28,9 @@ files:
   - .githooks/state.test.mjs
   - packages/drwil/test/kit.test.mjs
   - docs/contracts.md
+  - docs/architecture.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
   - .drwil/ia-first.json
   - packages/drwil/CHANGELOG.md
   - docs/intentions/cloture-et-attestations.md
@@ -82,9 +85,9 @@ attribuer à ce moment-là dans le registre.)
   hors de ce cas — `QUA-173`
 - Le lancement par sondage enregistre l'empreinte des critères acceptés par
   l'humain ; l'empreinte entre dans la preuve de clôture ; un critère modifié
-  ensuite redemande un geste humain avant la clôture — contrat à créer
+  ensuite redemande un geste humain avant la clôture — `QUA-174`
 - Aucun agent ne peut écrire l'acceptation : elle vient du sondage lu par le
-  hook ou du terminal interactif [humain] — contrat à créer (`Manuel`, attesté)
+  hook ou du terminal interactif [humain] — `QUA-175` (`Manuel`, attesté)
 - Au lancement (sondage et `node .githooks/state.mjs start`), une fiche dont le
   bloc `scope` cite un fichier existant de `.githooks/` sans puce « Contrats
   modifiés » qui le nomme est signalée, avec la puce à écrire sur le oui du
@@ -102,6 +105,8 @@ contrats modifiés sont repris dans chaque puce.)
 
 - `.githooks/scope-gate.mjs` — la barrière accepte le registre des contrats en SCOPING et au rejeu d'un commit sans trailer qui n'écrit que lui ; en BUILD, EVIDENCE et CLOSING il reste jugé comme avant (nouveau contrat QUA-172) (validé par le demandeur le 2026-10-26)
 - `.githooks/scope.mjs` — `outsideBriefs` ne signale plus un fichier de code déjà livré (suivi et identique sur la branche principale) quand aucune fiche ne le cite ; un fichier nouveau, modifié ou retiré reste soumis à une fiche et la barrière de périmètre ne change pas (nouveau contrat QUA-173) (validé par le demandeur le 2026-10-26)
+- `.githooks/state.mjs` — le lancement décidé par l'humain enregistre l'empreinte des critères acceptés (fiche et file), le lancement en mode agent n'enregistre rien, le retour en SCOPING l'oublie ; commande `accept` (nouveaux contrats QUA-174 et QUA-175) (validé par le demandeur le 2026-10-26)
+- `.githooks/closure-proof.mjs` — la preuve de clôture dit les critères acceptés et la clôture est refusée si un critère a changé depuis l'acceptation (nouveau contrat QUA-174) (validé par le demandeur le 2026-10-26)
 
 ## 2. Hors périmètre
 
@@ -161,6 +166,6 @@ Critère de sortie : `node .githooks/run-checks.mjs` OK, `drwil verify --agent` 
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-28) : lots 1 (QUA-172, registre en SCOPING) et 2 (QUA-173, code livré couvert) faits.
+- **Dernier état** (2026-10-28) : lots 1 (QUA-172), 2 (QUA-173) et 3 (QUA-174, QUA-175, acceptation des critères) faits.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 3 — acceptation des critères.
+- **Prochaine étape** : lot 4 — hooks déclarés au lancement.
