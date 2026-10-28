@@ -65,6 +65,8 @@ test("QUA-110 : un vrai projet installé, hooks actifs et réglages bloquants : 
   const cfg = JSON.parse(read(dir, ".drwil/ia-first.json"));
   assert.equal(cfg.scopeReminder, "blocking");
   assert.equal(cfg.newRequirements, "blocking");
+  // Le commit du kit se fait en SCOPING : la barrière de périmètre, bloquante à l'installation neuve, le refuserait.
+  writeFileSync(join(dir, ".drwil/ia-first.json"), `${JSON.stringify({ ...cfg, scopeGate: "warning" }, null, 2)}\n`);
   assert.equal(git(dir, "config", "core.hooksPath").stdout.trim(), ".githooks", "hooks actifs");
 
   const fiche = read(dir, BRIEF);

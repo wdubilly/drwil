@@ -3695,3 +3695,15 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/fichiers-charges-courts.md` : le contrôle livré dans le paquet.
 - **Preuve de clôture** : `docs/preuves/hooks-agent-sous-le-plafond.md` (si présent).
 - **Clôturé par** : la branche `chantier/hooks-agent-sous-le-plafond`.
+
+## 2026-10-28 — Détour de docs/projects/niveau-de-protection.md : des tests d'installation supposent la barrière en avertissement par défaut
+
+- **Défaut** : deux tests commitaient l'installation, ou du code, en SCOPING en comptant sur une barrière de périmètre
+  (`scopeGate`) en avertissement par défaut : « QUA-110 : un vrai projet installé » (`packages/drwil/test/existing-code.test.mjs`)
+  et « QUA-108 : la copie avec drwil est installée » (`outils/banc.test.mjs`). Trouvés en rendant la barrière bloquante à
+  l'installation neuve (fiche `niveau-de-protection`).
+- **Cause** : le défaut `warning` de `scopeGate` n'était écrit nulle part dans ces tests : ils le supposaient.
+- **Correction** : le premier règle explicitement la barrière en avertissement avant le commit du kit ; le second suit le
+  vrai parcours d'un utilisateur sous barrière bloquante (fiche aux critères d'acceptation, puis `state.mjs start`). Sans
+  effet sur le comportement livré ; la suite passe avec l'ancien et le nouveau défaut.
+- **Clôturé par** : la branche `detour/tests-barriere-explicite`.
