@@ -109,3 +109,9 @@ Cadrées en trois fiches, dans l'ordre : `docs/projects/journal.md` (hooks-agent
   Provisoire (2026-10-28, demandeur) : le plafond hérité `kitSizeLegacy`
   (916 lignes) de `.drwil/ia-first.json` tolère ce fichier, qui ne peut que
   maigrir (QUA-157) ; la question reste ouverte.
+  **Orientation (2026-10-28, demandeur)** : abaisser le plafond des documents
+  lus à la demande (400 ou 500 lignes, valeur à fixer à la fiche, 800 étant
+  trop haut pour le coût en tokens) et découper `docs/ia-first.md` en
+  sections courtes autonomes, chargées seulement quand leur situation se
+  présente ; la fiche retire alors `kitSizeLegacy`. À cadrer pour la 0.11,
+  juste après `surveillance-taille-du-kit`.
