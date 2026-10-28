@@ -321,3 +321,45 @@ test("intention : intitulés acceptés dans les deux langues, l'absent nommé da
   assert.doesNotMatch(r.stdout, /« (Besoin|Need|Existant|Current state) »/);
   assert.match(r.stdout, /docs\/intentions\/mixte\.md : section « Questions à trancher » absente/);
 });
+
+const brouillon = (fichier) => `# F\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- scope\nfiles:\n  - ${fichier}\n-->\n${reprise}`;
+const lignesDe = (n) => "x\n".repeat(n);
+const cadrage = JSON.stringify({ codePrefixes: ["src"], scopeReminder: "warning" });
+
+test("QUA-158 : un fichier du scope à 180 lignes avertit sans bloquer et demande de lister sa découpe", () => {
+  const r = verifier({ ".drwil/ia-first.json": cadrage, "docs/projects/f.md": brouillon("src/gros.js"), "src/gros.js": lignesDe(180) });
+  assert.equal(r.status, 0, r.stdout);
+  assert.match(r.stdout, /⚠ docs\/projects\/f\.md : `src\/gros\.js` fait 180 lignes \(plafond 200\) — lister d'avance/);
+});
+
+test("QUA-158 : en dessous du seuil, aucun avertissement de taille", () => {
+  const r = verifier({ ".drwil/ia-first.json": cadrage, "docs/projects/f.md": brouillon("src/petit.js"), "src/petit.js": lignesDe(179) });
+  assert.equal(r.status, 0, r.stdout);
+  assert.doesNotMatch(r.stdout, /plafond 200/);
+});
+
+test("QUA-158 : un fichier du scope inexistant est ignoré", () => {
+  const r = verifier({ ".drwil/ia-first.json": cadrage, "docs/projects/f.md": brouillon("src/futur.js") });
+  assert.equal(r.status, 0, r.stdout);
+  assert.doesNotMatch(r.stdout, /plafond 200/);
+});
+
+test("QUA-158 : avec le réglage bloquant, l'avis de taille n'est pas émis (il ne bloque jamais)", () => {
+  const r = verifier({
+    ".drwil/ia-first.json": JSON.stringify({ codePrefixes: ["src"], scopeReminder: "blocking" }),
+    "docs/projects/f.md": brouillon("src/gros.js"),
+    "src/gros.js": lignesDe(190),
+  });
+  assert.equal(r.status, 0, r.stdout);
+  assert.doesNotMatch(r.stdout, /plafond 200/);
+});
+
+test("QUA-158 : l'avis de taille existe en anglais", () => {
+  const r = verifier({
+    ".drwil/ia-first.json": JSON.stringify({ codePrefixes: ["src"], lang: "en" }),
+    "docs/projects/f.md": brouillon("src/gros.js"),
+    "src/gros.js": lignesDe(180),
+  });
+  assert.equal(r.status, 0, r.stdout);
+  assert.match(r.stdout, /`src\/gros\.js` is 180 lines \(ceiling 200\) — list upfront/);
+});

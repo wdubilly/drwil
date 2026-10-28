@@ -3,9 +3,12 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { MARKERS_RE, STATUS_RE } from "./doc-coherence.mjs";
 import * as scope from "./scope.mjs";
+import { CEILINGS } from "./check-kit-size.mjs";
 import { briefMaturity, briefStatus, readyGaps } from "./state.mjs";
 import { execFileSync } from "node:child_process";
 
+// Warning threshold: 90 % of the code ceiling (QUA-001, QUA-157), read from the same source so both move together.
+export const NEAR_CEILING = Math.ceil(CEILINGS.code * 0.9);
 const DATE_RE = /\b\d{4}-\d{2}-\d{2}\b/;
 // Intent sections, in either language (an intent written before a language switch stays valid), named in the project's.
 const INTENT_SECTIONS = [
@@ -76,6 +79,16 @@ export function workstreamChecks({ root, cfg, T, lang }) {
         if (p.kind === "header") errors.push(T.scopeHeader(rel));
         else if (p.kind === "line") errors.push(T.scopeLine(rel, p.line));
         else if (p.kind === "broad") errors.push(T.scopeBroad(rel, p.pattern));
+      }
+    }
+    // Never blocking: under "blocking" the reminder's errors fail the commit, so this advice is then left out.
+    for (const [rel, text] of cfg.scopeReminder === "blocking" ? [] : briefTexts) {
+      for (const pattern of scope.readBlock(text).patterns) {
+        if (/[*?]/.test(pattern) || !scope.isCode(pattern, cfg)) continue;
+        const path = join(root, pattern);
+        if (!existsSync(path)) continue;
+        const lines = readFileSync(path, "utf8").split("\n").length - 1;
+        if (lines >= NEAR_CEILING) errors.push(T.nearCeiling(rel, pattern, lines, CEILINGS.code));
       }
     }
     const byBrief = scope.patternsByBrief(briefTexts, cfg);

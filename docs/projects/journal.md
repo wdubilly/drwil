@@ -3752,3 +3752,14 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (`docs/intentions/fichiers-charges-courts.md`).
 - **Preuve de clôture** : `docs/preuves/surveillance-taille-du-kit.md`.
 - **Clôturé par** : la branche `workstream/surveillance-taille-du-kit`.
+
+## 2026-10-28 — Le cadrage d'une fiche anticipe les découpes, pour qu'un fichier neuf n'arrête plus un chantier
+
+- **Décisions clés** : contrat neuf QUA-158 ; le rappel de cadrage (QUA-016) avertit quand un fichier de code nommé dans le scope
+  atteint 90 % du plafond de code (180 sur 200, lu de `CEILINGS.code` de `.githooks/check-kit-size.mjs`, une seule source avec QUA-001 et
+  QUA-157) ; jamais bloquant (avis omis sous `scopeReminder: blocking`, muet sous `off`) ; motifs à joker et fichiers inexistants
+  ignorés ; le modèle de fiche (dépôt et gabarit) rappelle la carte d'architecture et `docs/projects/kit-mechanics.md`.
+  La barrière de périmètre ne change pas.
+- **Limites connues** : l'admission automatique des fichiers dérivés reste l'intention
+  `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`.
+- **Clôturé par** : la branche `workstream/scope-anticipe-les-decoupes`.

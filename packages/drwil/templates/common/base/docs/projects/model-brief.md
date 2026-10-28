@@ -33,7 +33,10 @@ two folders. List everything the workstream will touch from the start:
 the code, **its tests**, and `.drwil/ia-first.json` when a criterion
 creates a contract (its own check is declared there) — check-docs warns
 otherwise; widening mid-workstream costs a separate commit. A generated
-copy is covered by its source when `scopeMirrors` declares it.)
+copy is covered by its source when `scopeMirrors` declares it. A code file
+at 180 lines or more (the ceiling is 200) will be split: list the files its
+split creates. Adding a code file or a hook also touches the architecture
+map and `docs/projects/kit-mechanics.md`: list them too.)
 
 ## 1. Need
 

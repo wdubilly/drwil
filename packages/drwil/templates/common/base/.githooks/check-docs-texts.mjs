@@ -12,6 +12,8 @@ export const TEXTS = {
     scopeHeader: (f) => `${f} : bloc scope sans ligne « files: »`,
     scopeLine: (f, l) => `${f} : ligne de cadrage non comprise « ${l} »`,
     scopeBroad: (f, p) => `${f} : motif de cadrage trop large « ${p} »`,
+    nearCeiling: (f, c, n, max) =>
+      `${f} : \`${c}\` fait ${n} lignes (plafond ${max}) — lister d'avance dans le scope les fichiers issus de sa découpe, avec la carte d'architecture et docs/projects/kit-mechanics.md`,
     summary: (n, e) => `check-docs : ${n} fichiers scannés, ${e} erreur(s)`,
     scopeWarnings: (n) =>
       `check-docs : ${n} avertissement(s) de cadrage (QUA-016, non bloquant — réglage "scopeReminder" de .drwil/ia-first.json)`,
@@ -38,6 +40,8 @@ export const TEXTS = {
     scopeHeader: (f) => `${f}: scope block without a « files: » line`,
     scopeLine: (f, l) => `${f}: scope line not understood « ${l} »`,
     scopeBroad: (f, p) => `${f}: scope pattern too broad « ${p} »`,
+    nearCeiling: (f, c, n, max) =>
+      `${f}: \`${c}\` is ${n} lines (ceiling ${max}) — list upfront in the scope the files its split will create, with the architecture map and docs/projects/kit-mechanics.md`,
     summary: (n, e) => `check-docs: ${n} files scanned, ${e} error(s)`,
     scopeWarnings: (n) => `check-docs: ${n} scope warning(s) (QUA-016, non-blocking — "scopeReminder" setting in .drwil/ia-first.json)`,
     briefDone: (brief) =>

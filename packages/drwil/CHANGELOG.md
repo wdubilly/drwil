@@ -7,6 +7,11 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- The scoping reminder now warns, never blocking, when a code file listed in
+  a brief's scope is 180 lines or more (90 % of the 200-line ceiling, read
+  from the same source): the brief should list upfront the files its split
+  will create. The brief model also reminds to list the architecture map and
+  `docs/projects/kit-mechanics.md` when a code file or a hook is added.
 - A size check for the files the kit installs (`.githooks/check-kit-size.mjs`,
   declared as `taille-kit` in `.drwil/ia-first.json` by `drwil init`, without
   touching the project's own checks): ceilings in lines of 200 for code, hooks

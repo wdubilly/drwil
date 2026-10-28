@@ -36,7 +36,10 @@ dès le cadrage tout ce que le chantier touchera : le code, **ses tests**,
 et `.drwil/ia-first.json` quand un critère crée un contrat (son contrôle
 propre s'y déclare) — check-docs avertit sinon ; élargir en cours de
 chantier coûte un commit séparé. Dans ce dépôt, un fichier du gabarit
-couvre sa copie (`scopeMirrors`).)
+couvre sa copie (`scopeMirrors`). Un fichier de code à 180 lignes ou plus
+(le plafond est 200) sera découpé : lister les fichiers que sa découpe crée.
+Ajouter un fichier de code ou un hook touche aussi la carte d'architecture
+et `docs/projects/kit-mechanics.md` : les lister aussi.)
 
 ## 1. Besoin
 
