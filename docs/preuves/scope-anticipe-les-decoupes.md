@@ -1,7 +1,7 @@
 # Preuve de clôture — scope-anticipe-les-decoupes
 
 **Clos le** : 2026-10-28
-**Commit vérifié** : `7e69f6ca3a` — verdict `drwil verify` : PASS
+**Commit vérifié** : `c515b66793` — verdict `drwil verify` : PASS
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
 
