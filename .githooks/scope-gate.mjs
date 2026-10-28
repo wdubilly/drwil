@@ -2,7 +2,7 @@
 // Scope gate (docs/ia-first.md, "Scope gate"), the engine's "scope-gate" check
 // (.githooks/engine.mjs): commit, push, CI, `drwil verify`.
 //
-// - Briefs (docs/projects/, docs/intentions/…) can always be committed.
+// - Briefs (docs/projects/, docs/intentions/…) can always be committed; so can the contracts registry in SCOPING.
 // - At commit time, any other file requires the BUILD activity and must be covered by the
 //   scope block of the active brief as it is in HEAD: widening its scope takes a separate
 //   commit, visible on its own. During a merge, only the resolution is judged (QUA-111).
@@ -58,7 +58,10 @@ const covered = (f, patterns) => patterns.some((p) => fnmatch(f, p));
  */
 export function checkIndex({ files, state, patterns, outOfScope, cfg, addedOnly = () => false }) {
   const T = texts(cfg);
-  const subject = outsideBriefFiles(files, outOfScope);
+  // The registry is written in SCOPING, like a brief: a criterion cites a contract already in it, and a new contract
+  // enters in the same commit as the brief that cites it. The guard stays the regression check of `verify` (QUA-023).
+  const scoping = state.activity === "SCOPING";
+  const subject = outsideBriefFiles(files, outOfScope).filter((f) => !(scoping && isRegistry(f, cfg)));
   if (!subject.length) return [];
   if (state.activity !== "BUILD") return [T.activity(state.activity, subject.length)];
   const problems = subject.filter((f) => !covered(f, patterns)).map((f) => T.outsideScope(f, state.active_brief));
@@ -114,7 +117,9 @@ function checkBranch(root, base, { outOfScope, cfg }) {
       .filter(Boolean);
     const brief = values.at(-1);
     if (!brief) {
-      problems.push(T.noTrailer(short, subject.length));
+      // A commit without trailer was made in SCOPING (no active brief): the registry is accepted there, like a brief.
+      const rest = subject.filter((f) => !isRegistry(f, cfg));
+      if (rest.length) problems.push(T.noTrailer(short, rest.length));
       continue;
     }
     const patterns = patternsAt(root, `${c}^`, brief, cfg);

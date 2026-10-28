@@ -95,15 +95,11 @@ attribuer à ce moment-là dans le registre.)
 
 ## Contrats modifiés
 
-(à compléter au lancement après lecture du texte des contrats concernés :
-QUA-035 (cadrage complet du premier coup), QUA-016 (rappel de cadrage), la
-règle de périmètre de `.githooks/scope-gate.mjs`, et le contrat de la preuve de clôture ;
-pour les lots 4 et 5 : QUA-137 (hook modifié non déclaré, signalé aussi au
-lancement) et QUA-074 (cohérence de l'index à la clôture). Les hooks du dépôt
-modifiés (`.githooks/state.mjs`, `.githooks/doc-coherence.mjs`,
-`.githooks/base-checks.mjs`…) sont à déclarer ici en puces, sur le oui du demandeur.
-Chaque ancien critère et sa raison sont à écrire ici et à valider par le
-demandeur avant le lancement.)
+(déclarés sur l'ordre de réaliser le chantier donné par le demandeur, qui a
+validé le cadrage et ce bloc `scope` le 2026-10-26 ; les anciens critères des
+contrats modifiés sont repris dans chaque puce.)
+
+- `.githooks/scope-gate.mjs` — la barrière accepte le registre des contrats en SCOPING et au rejeu d'un commit sans trailer qui n'écrit que lui ; en BUILD, EVIDENCE et CLOSING il reste jugé comme avant (nouveau contrat QUA-172) (validé par le demandeur le 2026-10-26)
 
 ## 2. Hors périmètre
 

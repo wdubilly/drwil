@@ -1639,3 +1639,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/state-lots.test.mjs`
 **Origine** : lots-en-sous-agents — « Le mode d'emploi du lancement … dit qu'un sous-agent neuf traite chaque lot, la passation se faisant par les commits et la section « Reprise » de la fiche »
 **Raison** : Les outils ne lancent pas de sous-agent : c'est la consigne du skill qui fait enchaîner les lots.
+
+## QUA-172 — Le registre des contrats s'écrit en SCOPING comme une fiche, et reste soumis au cadrage en BUILD
+**Règle** : Livré à tout projet. La barrière de périmètre (`.githooks/scope-gate.mjs`) accepte le registre des contrats (`docs/contracts.md`, ou `dirs.contracts`) en SCOPING, sans avertissement, comme une fiche : un nouveau contrat entre dans le même commit que la fiche qui le cite. Au rejeu d'une branche (CI, pre-push, `verify`), un commit sans trailer `Drwil-Brief` (fait en SCOPING) qui n'écrit que le registre passe ; tout autre fichier hors fiche du même commit reste signalé. En BUILD, EVIDENCE ou CLOSING, le registre reste jugé comme tout autre fichier (cadrage de la fiche, ou activité refusée) ; la régression d'un contrat modifié sans ligne « Contrats modifiés » reste signalée par `drwil verify` et refuse la clôture (QUA-023, QUA-084).
+**Périmètre** : `.githooks/scope-gate.mjs` (`checkIndex`, `checkBranch`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/scope-gate.mjs` (`checkIndex`).
+**Preuve** : tests de la barrière : registre accepté en SCOPING seul ou avec une fiche, refusé avec un fichier de code, jugé en BUILD et CLOSING, registre déclaré par `dirs.contracts` ; rejeu d'une branche : commit sans trailer qui n'écrit que le registre accepté, commit avec trailer jugé.
+**Contrôle** : `tests-qua-172`
+**Tests** : `.githooks/scope-gate.test.mjs`
+**Origine** : cycle-de-vie-des-fiches — « Le registre des contrats s'écrit en SCOPING sans avertissement de périmètre, et un nouveau contrat entre dans le même commit que la fiche qui le cite ; la régression d'un contrat modifié dans une branche sans ligne « Contrats modifiés » reste signalée par `drwil verify` et refuse la clôture »
+**Raison** : Écrire le registre pendant le cadrage déclenchait l'avertissement de périmètre : créer un contrat en cours de chantier demandait deux commits (la fiche ne peut citer l'ID avant qu'il soit inscrit).
