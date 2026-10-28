@@ -94,5 +94,21 @@ export const MESSAGES_FR = {
   askMerge: "Fusion automatique à la fin du chantier ? Retapez MERGE, sinon Entrée : ",
   notConfirmed: "✗ lancement non confirmé : état inchangé",
   unreadableState: `[drwil] état de gouvernance illisible : {0}`,
-  usage: `usage : node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <texte>] | start [<fiche>] | reopen | briefs [--json] | reminder`,
+  lotNone:
+    "aucun enchaînement de lots : la fiche active n'a pas au moins deux lots dont un [IA] (section « Increments », puces « **Lot N — titre** [IA|humain] »)",
+  lotActivity: "lot suivant refusé : activité {0} — les lots s'enchaînent en BUILD",
+  lotDirty:
+    "lot suivant refusé : le lot {0} n'est pas commité (arbre modifié, ou état de git inconnu) — commiter d'abord ; rien n'a changé",
+  lotLast: "lot suivant refusé : le lot {0} est le dernier lot [IA] et il est déjà fait — clore la fiche",
+  lotAdvanced: "lot {0} fait → lot courant : {1}{2}",
+  lotLastDone: "lot {0} fait : c'est le dernier lot [IA], la clôture est possible{1}",
+  lotHumansLeft: " ; lot(s) [humain] à faire, sautés : {0}",
+  lotRemaining:
+    "clôture refusée : lot(s) [IA] pas faits : {0} — les enchaîner un par un, `node .githooks/state.mjs lot next` après le commit de chacun (le dernier aussi)",
+  lotCurrent: "Lot courant : {0}",
+  lotDone: "Lots [IA] faits : {0}",
+  lotLeft: "Lots [IA] restants : {0}",
+  lotHumans: "Lots [humain] à faire (sautés par l'enchaînement, rappelés à la clôture) : {0}",
+  lotNothing: "aucun",
+  usage: `usage : node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <texte>] | start [<fiche>] | lot [next] | reopen | briefs [--json] | reminder`,
 };

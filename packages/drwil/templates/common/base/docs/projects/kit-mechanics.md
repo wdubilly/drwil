@@ -20,6 +20,9 @@ files:
   - .githooks/risk.mjs
   - .githooks/state.mjs
   - .githooks/state-cli.mjs
+  - .githooks/state-lots.mjs
+  - .githooks/state-cli-lots.mjs
+  - .githooks/briefs-lots.mjs
   - .githooks/briefs.mjs
   - .githooks/pr-watch.mjs
   - .githooks/merge-auto.mjs

@@ -9,6 +9,7 @@ import { cadredOrder, pollComparator } from "./briefs-order.mjs";
 import { branchFiles, briefIntent, intentsLeftBehind, lastReview, staleIntents } from "./briefs-intents.mjs";
 import { readBlock } from "./scope.mjs";
 
+export { readLots } from "./briefs-lots.mjs";
 export { scopesOverlap, acceptanceCriteria, declaredContracts, branchFiles, briefIntent, intentsLeftBehind, lastReview, staleIntents };
 export const BRIEF_DIRS = ["docs/projects/"];
 export const MODEL_RE = /^modele-|^model-/;

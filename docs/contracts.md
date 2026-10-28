@@ -1579,3 +1579,63 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : sondage-copilot-choix-multiple — « Le sondage `/drwil-start` de Copilot CLI propose et lit un choix multiple (file de chantiers) »
 **Raison** : Sans ce champ, Copilot CLI ne proposait jamais la file ni le lancement en parallèle que le hook sait lire.
+
+## QUA-166 — Les lots d'une fiche se lisent dans sa section « Increments » et `state.mjs lot` dit le lot courant, ceux qui sont faits et ceux qui restent
+**Règle** : Livré à tout projet. Les lots d'une fiche sont lus dans sa section « Increments » (puces « **Lot N — titre** [IA|humain] » ; sans étiquette, un lot est [IA]) par `.githooks/briefs-lots.mjs`. `node .githooks/state.mjs lot` dit le lot courant, les lots [IA] faits, ceux qui restent et les lots [humain] à faire ; un lot dont l'état est inconnu n'est pas compté fait (QUA-013, un contrôle non exécuté n'est pas passé). Une fiche à un seul lot, ou sans lot, n'a pas de lot courant.
+**Périmètre** : `.githooks/briefs-lots.mjs`, `.githooks/state-lots.mjs`, `.githooks/state-cli-lots.mjs`
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/briefs-lots.mjs`.
+**Preuve** : test de lecture des puces (étiquettes, section, doublons) et de la commande `lot` sur un dépôt de test.
+**Contrôle** : `tests-qua-166`
+**Tests** : `.githooks/state-lots.test.mjs`
+**Origine** : lots-en-sous-agents — « La commande `state.mjs lot` dit le lot courant, ceux qui sont faits et ceux qui restent »
+**Raison** : Un lot courant lu par l'outil, jamais déduit de la conversation, est la condition pour qu'un sous-agent neuf sache quel lot traiter.
+
+## QUA-167 — `state.mjs lot next` ne passe au lot suivant que si le lot courant est commité, et jamais au-delà du dernier
+**Règle** : Livré à tout projet. `node .githooks/state.mjs lot next` marque le lot courant fait et passe au lot [IA] suivant seulement si l'arbre est propre (un état de git inconnu refuse aussi) ; au dernier lot [IA] il le marque fait sans aller plus loin, et un nouvel appel est refusé. Il ne s'exécute qu'en BUILD, par l'outil (l'état n'est jamais écrit à la main). Le lot courant, local comme l'état, dans un fichier de `.drwil/`, est effacé au lancement d'un chantier et au retour en SCOPING.
+**Périmètre** : `.githooks/state-lots.mjs` (`nextLot`), `.githooks/state.mjs` (`start`, `move`)
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/state-lots.mjs`.
+**Preuve** : tests : arbre modifié refusé, pas de passage au-delà du dernier lot, lot oublié au retour en SCOPING.
+**Contrôle** : `tests-qua-167`
+**Tests** : `.githooks/state-lots.test.mjs`
+**Origine** : lots-en-sous-agents — « `state.mjs lot next` passe au lot suivant seulement si le lot courant est commité (arbre propre) ; il ne passe jamais à un lot au-delà du dernier »
+**Raison** : Le lot suivant démarre sur la preuve du lot précédent, ses commits : un lot non commité ferait perdre son travail au sous-agent neuf.
+
+## QUA-168 — Le rappel d'état d'un chantier à lots nomme le lot courant et dit de ne traiter que lui
+**Règle** : Livré à tout projet. En BUILD, le contexte (`.githooks/state-texts.mjs`) et le rappel injecté à chaque message (`shortReminder`), en français et en anglais, nomment le lot courant, disent de ne traiter que lui et de passer par `lot next` une fois commité ; au dernier lot [IA], de vérifier puis clore.
+**Périmètre** : `.githooks/state-texts.mjs`, `.githooks/state-context-texts.mjs`
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/state-texts.mjs`.
+**Preuve** : test du contexte et du rappel d'une fiche à lots : lot courant nommé, « ne traiter que lui ».
+**Contrôle** : `tests-qua-168`
+**Tests** : `.githooks/state-lots.test.mjs`
+**Origine** : lots-en-sous-agents — « Le rappel d'état d'un chantier à lots nomme le lot courant et dit de ne traiter que lui »
+**Raison** : Sans le rappel, un sous-agent neuf relirait toute la fiche et traiterait plusieurs lots, ce que l'enchaînement veut éviter.
+
+## QUA-169 — Un lot [humain] est sauté par l'enchaînement, nommé comme restant à faire et rappelé à la clôture
+**Règle** : Livré à tout projet. `lot next` saute les lots [humain], continue sur les lots [IA] suivants et nomme les lots [humain] restant à faire ; le contexte les rappelle en BUILD et en CLOSING, avec ce qui est attendu (leur critère est jugé par `verify`).
+**Périmètre** : `.githooks/state-lots.mjs`, `.githooks/state-texts.mjs`
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/state-lots.mjs`.
+**Preuve** : tests : lot [humain] sauté et nommé par `lot next`, rappelé dans le contexte de CLOSING.
+**Contrôle** : `tests-qua-169`
+**Tests** : `.githooks/state-lots.test.mjs`
+**Origine** : lots-en-sous-agents — « Un lot [humain] est sauté par l'enchaînement, nommé comme restant à faire, et rappelé à la clôture avec ce qui est attendu »
+**Raison** : Un lot humain ne s'exécute pas dans un sous-agent : il ne doit ni bloquer l'enchaînement ni disparaître de la clôture.
+
+## QUA-170 — La clôture d'une fiche à lots reste unique : refusée tant qu'un lot [IA] n'est pas fait, inchangée pour une fiche à un seul lot
+**Règle** : Livré à tout projet. Le passage à CLOSING est refusé, avant toute autre vérification, tant qu'un lot [IA] de la fiche n'est pas fait (`lot next` après le commit de chacun, le dernier compris) ; un lot [humain] n'est que rappelé, son critère est jugé par `verify`. Une fiche à un seul lot, ou sans lot, se comporte comme avant : scope, critères, `verify` et clôture restent ceux de la fiche.
+**Périmètre** : `.githooks/state.mjs` (`move`), `.githooks/state-lots.mjs` (`lotsRefusal`)
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/state-lots.mjs`.
+**Preuve** : tests : clôture refusée avec les lots restants nommés, acceptée une fois faits (le refus suivant est celui de l'évidence), fiche à un lot ou sans lot inchangée.
+**Contrôle** : `tests-qua-170`
+**Tests** : `.githooks/state-lots.test.mjs`
+**Origine** : lots-en-sous-agents — « La clôture reste unique : refusée tant qu'un lot [IA] n'est pas fait … une fiche à un seul lot (ou sans lot) se comporte comme avant »
+**Raison** : Une clôture autorisée avec un lot [IA] manquant livrerait une fiche à moitié réalisée.
+
+## QUA-171 — Le mode d'emploi du lancement dit qu'un sous-agent neuf traite chaque lot, la passation se faisant par les commits et la section « Reprise »
+**Règle** : Livré à tout projet. Le skill `start-a-workstream` dit qu'une fiche à lots se réalise avec un sous-agent neuf par lot (même fiche, branche et PR, une clôture), dont la consigne commence par lire l'état, que la passation se fait par les commits et la section « Reprise » de la fiche, que le sous-agent lance `lot next` une fois son lot commité, que le dernier lot clôt la fiche, et que `verify --failed` n'est lancé entre deux lots qu'après un échec.
+**Périmètre** : skill `start-a-workstream` ; livré dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
+**Preuve** : test sur le gabarit livré : sous-agent neuf par lot, `lot next` et section de reprise cités.
+**Contrôle** : `tests-qua-171`
+**Tests** : `.githooks/state-lots.test.mjs`
+**Origine** : lots-en-sous-agents — « Le mode d'emploi du lancement … dit qu'un sous-agent neuf traite chaque lot, la passation se faisant par les commits et la section « Reprise » de la fiche »
+**Raison** : Les outils ne lancent pas de sous-agent : c'est la consigne du skill qui fait enchaîner les lots.

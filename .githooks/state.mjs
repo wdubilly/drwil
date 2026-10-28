@@ -16,6 +16,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { main, readStdinJson, reminderIfChanged } from "./state-cli.mjs";
 import { reopen } from "./state-reopen.mjs";
+import { clearLots, lotsRefusal } from "./state-lots.mjs";
+import { move as moveBase, start as startBase } from "./state-transitions.mjs";
 import { fill } from "./state-texts.mjs";
 import { readState, texts, validateState } from "./state-validate.mjs";
 
@@ -37,7 +39,26 @@ export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 export { main, readStdinJson, reminderIfChanged, reopen };
 export { ACTIVITIES, NEUTRAL_STATE, readState, transitionAllowed, validateState } from "./state-validate.mjs";
 export { latestEvidence, requiresHuman, verifyEvidence } from "./state-evidence.mjs";
-export { move, prepareTransition, start } from "./state-transitions.mjs";
+export { prepareTransition } from "./state-transitions.mjs";
+
+/** Starts a workstream (state-transitions.mjs); the lots of a previous one are forgotten. */
+export function start(root, brief, opts) {
+  const r = startBase(root, brief, opts);
+  if (r.code === 0) clearLots(root);
+  return r;
+}
+
+/**
+ * Applies a transition (state-transitions.mjs). The closing is refused while an [IA] lot of the brief is
+ * not done; the lots are forgotten on the return to SCOPING.
+ */
+export async function move(root, args, opts) {
+  const refusal = args.to === "CLOSING" ? lotsRefusal(root) : null;
+  if (refusal) return { code: 1, message: refusal };
+  const r = await moveBase(root, args, opts);
+  if (r.code === 0 && args.to === "SCOPING") clearLots(root);
+  return r;
+}
 
 /** Stops the queue (QUA-037): the active workstream goes on, nothing is started after it. */
 export function stopQueue(root) {
