@@ -12,7 +12,7 @@ files:
   - .githooks/check-kit-size.test.mjs
   - packages/drwil/templates/common/base/.drwil/ia-first.json
   - .drwil/ia-first.json
-  - packages/drwil/src
+  - packages/drwil/src/config-write.ts
   - docs/contracts.md
   - packages/drwil/CHANGELOG.md
   - docs/intentions/fichiers-charges-courts.md
