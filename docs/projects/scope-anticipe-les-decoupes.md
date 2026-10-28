@@ -49,11 +49,10 @@ attribuer à ce moment-là dans le registre.)
 
 - Le rappel de cadrage avertit, sans jamais bloquer, quand un fichier de code
   du scope d'une fiche atteint 180 lignes ou plus, et dit de lister d'avance les
-  fichiers issus de sa découpe ; en dessous, aucun avertissement — contrat à
-  créer
+  fichiers issus de sa découpe ; en dessous, aucun avertissement — QUA-158
 - Le modèle de fiche (dépôt et gabarit) rappelle la carte d'architecture et
   `docs/projects/kit-mechanics.md` à lister quand un fichier de code ou un hook
-  est ajouté — contrat à créer
+  est ajouté — QUA-158
 
 ## 2. Hors périmètre
 
