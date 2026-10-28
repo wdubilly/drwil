@@ -14,6 +14,9 @@ const PARALLEL_YES_RE = /^(file en parallèle|parallel queue)\b/i;
 // With a single scoped brief, the poll's second option (a question needs two): start nothing.
 export const NOT_NOW_RE = /^(pas maintenant|not now)\b/i;
 
+// Copilot CLI field of the briefs: single choice (`enum`) or multiple choice (type `array`, values in `items.enum`).
+const briefOptions = (p) => (Array.isArray(p?.enum) ? p.enum : p?.type === "array" && Array.isArray(p.items?.enum) ? p.items.enum : null);
+
 /** The start poll, in one of the two known forms; null otherwise. */
 export function startPoll(input) {
   const e = input?.tool_input ?? {};
@@ -38,8 +41,9 @@ export function startPoll(input) {
     const entries = Object.entries(e.requestedSchema?.properties ?? {});
     const properties = entries.map(([, p]) => p);
     const fieldKey =
-      entries.find(([k, p]) => k !== MERGE_MARK && k !== WORKTREE_MARK && k !== PARALLEL_MARK && Array.isArray(p?.enum))?.[0] ?? null;
-    const options = entries.find(([k]) => k === fieldKey)?.[1]?.enum ?? [];
+      entries.find(([k, p]) => k !== MERGE_MARK && k !== WORKTREE_MARK && k !== PARALLEL_MARK && briefOptions(p))?.[0] ?? null;
+    const field = entries.find(([k]) => k === fieldKey)?.[1];
+    const options = briefOptions(field) ?? [];
     const keys = entries.map(([k]) => k);
     const mergeKey = keys.includes(MERGE_MARK) ? MERGE_MARK : null;
     const worktreeKey = keys.includes(WORKTREE_MARK) ? WORKTREE_MARK : null;
@@ -48,6 +52,7 @@ export function startPoll(input) {
       form: "copilot",
       options,
       fieldKey,
+      multiple: field?.type === "array",
       mergeKey,
       worktreeKey,
       parallelKey,
@@ -65,7 +70,21 @@ export function humanAnswer(input, poll) {
   const m = typeof text === "string" ? /User responded:\s*(.+)\s*$/s.exec(text) : null;
   if (!m) return null;
   // One field: the whole answer. Several: `key=value, key=value`, in the schema's order of keys or not.
-  return poll.mergeKey || poll.worktreeKey || poll.parallelKey ? copilotField(m[1].trim(), poll.keys, poll.fieldKey) : m[1].trim();
+  const answer = poll.mergeKey || poll.worktreeKey || poll.parallelKey ? copilotField(m[1].trim(), poll.keys, poll.fieldKey) : m[1].trim();
+  return poll.multiple ? unbracketed(answer) : answer;
+}
+
+/** A multiple choice may come back as a list `[a, b]` or `["a", "b"]`: only the values are kept, comma-separated. */
+function unbracketed(answer) {
+  const list = answer ? /^\[(.*)\]$/s.exec(answer.trim()) : null;
+  if (!list) return answer;
+  return (
+    list[1]
+      .split(/,\s*/)
+      .map((v) => v.trim().replace(/^["']|["']$/g, ""))
+      .filter(Boolean)
+      .join(", ") || null
+  );
 }
 
 /** The value of `key` in a Copilot CLI answer `key=value, key=value`; null if absent. */

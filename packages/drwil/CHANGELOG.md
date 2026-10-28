@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- With Copilot CLI, the `/drwil-start` poll now offers a multiple-choice
+  field of briefs (a queue, optionally in parallel): the start hook reads a
+  field of type `array` (values in `items.enum`) like the single-choice one,
+  in the poll's order of options, and the launch skill tells the agent to ask
+  it. The exact shape of Copilot's answer is still to be confirmed by a real
+  run.
 - `node .githooks/merge-auto.mjs <pr>` schedules the automatic merge of a pull
   request in the safe order, instead of a list of `gh` commands left to the
   agent: it waits until GitHub has computed the PR, updates it if it is

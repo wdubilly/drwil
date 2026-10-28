@@ -3806,3 +3806,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Preuve de clôture** : `docs/preuves/fusion-auto-ordonnee.md`.
 - **Clôturé par** : la branche `cadrage/merge-auto-ordonnee`.
 
+## 2026-10-28 — Le sondage `/drwil-start` de Copilot CLI propose et lit un choix multiple
+
+- **Décisions clés** : contrat neuf QUA-165 ; le hook `.claude/hooks/start-poll.mjs` reconnaît le champ des fiches de Copilot CLI à choix unique (`enum`) ou multiple (type `array`, `items.enum`) et lit la réponse (valeurs séparées par des virgules, ou liste entre crochets) comme une file, dans l'ordre des options ; le skill `start-a-workstream` dit de poser un champ `fiche` à choix multiple avec `drwil-merge`, `drwil-worktree` et (au moins deux fiches prêtes) `drwil-parallel`. `.claude/hooks/prompt-hook.mjs` n'a pas changé (il découpait déjà la réponse par virgules).
+- **Hooks modifiés** : `.claude/hooks/start-poll.mjs` (gabarit et copie).
+- **Limites connues** : la forme réelle de la réponse de Copilot CLI à un choix multiple n'est pas relevée (essai humain, lot 3 de la fiche) ; reportée dans `docs/intentions/sondage-worktree-copilot-cli.md`.
+- **Preuve de clôture** : `docs/preuves/sondage-copilot-choix-multiple.md`.
+- **Clôturé par** : la branche `cadrage/merge-auto-ordonnee`.

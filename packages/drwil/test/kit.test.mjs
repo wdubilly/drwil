@@ -1747,6 +1747,58 @@ test("QUA-147 : la réponse « File en parallèle » du sondage lance chaque fic
   assert.equal(etatDe(join(parent, "projet-deux")).active_brief, fiches[1]);
 });
 
+test("QUA-165 : sous Copilot CLI, le champ des fiches à choix multiple (array, items.enum) est lu comme une file dans l'ordre des options, le choix unique reste lu", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const fiches = ["docs/projects/un.md", "docs/projects/deux.md"];
+  for (const [i, f] of fiches.entries())
+    writeFileSync(
+      join(dir, f),
+      `# Projet : Essai ${i}\n\n**Statut** : cadré le 2026-10-26.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/essai${i}.ts\n-->\n\n## Critères d'acceptation\n\n- Essai — \`APP-001\`\n\n## Incréments\n\n- **Lot 1** : essai\n`,
+    );
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+  const etat = () => (existsSync(join(dir, ".drwil/state.json")) ? JSON.parse(read(dir, ".drwil/state.json")) : null);
+  const schema = {
+    properties: {
+      fiche: { type: "array", items: { type: "string", enum: fiches } },
+      "drwil-merge": { type: "string", enum: ["Automatic merge", "Manual merge"] },
+      "drwil-parallel": { type: "string", enum: ["Parallel queue", "Sequential queue"] },
+    },
+  };
+  const rejouer = (evenement, reponse, requestedSchema = schema) =>
+    spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({
+        hook_event_name: evenement,
+        tool_name: "ask_user",
+        tool_input: { message: "drwil-start : quelles fiches lancer ?", requestedSchema },
+        tool_result: { result_type: "success", text_result_for_llm: `User responded: ${reponse}` },
+      }),
+    });
+
+  // Cochées dans le désordre : la file suit l'ordre des options, la fusion reste lue.
+  rejouer("PostToolUse", `fiche=${fiches[1]}, ${fiches[0]}, drwil-merge=Automatic merge, drwil-parallel=Sequential queue`);
+  assert.equal(etat().active_brief, fiches[0]);
+  assert.deepEqual(etat().queue, [fiches[1]]);
+  assert.equal(etat().auto_merge, true);
+  rmSync(join(dir, ".drwil/state.json"));
+
+  // Liste entre crochets : mêmes valeurs ; une seule fiche cochée est un lancement simple.
+  rejouer("PostToolUse", `fiche=["${fiches[1]}"], drwil-merge=Manual merge, drwil-parallel=Sequential queue`);
+  assert.equal(etat().active_brief, fiches[1]);
+  assert.deepEqual(etat().queue ?? [], []);
+  rmSync(join(dir, ".drwil/state.json"));
+
+  // Le hook ne remplit jamais la réponse : une valeur par défaut est refusée.
+  const avecDefaut = structuredClone(schema);
+  avecDefaut.properties.fiche.default = [fiches[0]];
+  assert.equal(rejouer("PreToolUse", "", avecDefaut).status, 2);
+  assert.equal(rejouer("PreToolUse", "").status, 0);
+});
+
 test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
