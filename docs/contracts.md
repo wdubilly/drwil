@@ -1459,3 +1459,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : agents-md-court — « `AGENTS.md` du gabarit et celui du dépôt font 100 lignes au plus. »
 **Raison** : `AGENTS.md` est chargé à chaque requête par tout agent : livré à 247 lignes, il coûtait du contexte à chaque message.
+
+## QUA-154 — Une installation neuve écrit la barrière de périmètre en bloquant, un projet déjà installé garde son réglage, même absent
+**Règle** : Livré à tout projet. `drwil init` écrit `scopeGate` à `blocking` quand le projet n'a pas encore de configuration ; sur un projet déjà installé, il garde la valeur choisie et, à défaut de réglage, écrit `warning` : une mise à jour ne bloque jamais un commit qui passait. La barrière n'est ainsi jamais un simple avertissement par défaut sans que rien ne le dise (`drwil doctor` le montre : QUA-155).
+**Périmètre** : `drwil init` (écriture de `.drwil/ia-first.json`) ; livré par le paquet.
+**Source de vérité** : `packages/drwil/src/config-write.ts`.
+**Preuve** : test du paquet : installation neuve en bloquant ; réinstallation d'un projet sans réglage en avertissement ; réglage choisi gardé.
+**Contrôle** : `tests-qua-154`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : niveau-de-protection — « Une installation neuve écrit la barrière de périmètre en bloquant ; un projet déjà installé garde son réglage, même absent, et rien ne change pour lui »
+**Raison** : Le 2026-10-22, une revue externe a relevé qu'un projet qui adopte drwil croit avoir une barrière de périmètre alors qu'elle n'était qu'un avertissement par défaut, y compris sur une installation neuve.
+
+## QUA-155 — `drwil doctor` dit le niveau de protection du projet, chacun prouvé par une vérification, jamais par une déclaration
+**Règle** : Livré à tout projet. `drwil doctor` (texte et `--json`) affiche le niveau de protection : 1 diagnostic seul, 2 gouvernance locale active (hooks branchés, barrière bloquante), 3 contrôles CI actifs (la CI rejoue les contrôles du hook), 4 protection de forge vérifiée (branche protégée, contrôles requis, aucun contournement administrateur : la lecture de forge de QUA-094 et QUA-095, sans la refaire). Le niveau atteint est le plus haut sans trou ; un niveau que `doctor` n'a pas pu vérifier (sans `gh` ni `glab` joignable, ou contournement non lisible) est « non vérifié », jamais atteint (QUA-013). La sortie dit la commande qui mène au niveau suivant. Le calcul est unique, dans un module lu aussi par `drwil verify`.
+**Périmètre** : `drwil doctor` ; livré par le paquet.
+**Source de vérité** : `packages/drwil/src/protection.ts`.
+**Preuve** : tests du paquet : chaque niveau atteint, manquant ou non vérifié par un exécuteur de forge simulé ; commande du niveau suivant ; sortie texte et `--json`, en français et en anglais.
+**Contrôle** : `tests-qua-155`
+**Tests** : `packages/drwil/test/protection.test.mjs`
+**Origine** : niveau-de-protection — « `drwil doctor` affiche le niveau de protection du projet, chacun prouvé par une vérification, jamais par une déclaration ; un niveau qu'il n'a pas pu vérifier est « non vérifié », jamais atteint ; il dit la commande qui mène au niveau suivant (`--json` compris) »
+**Raison** : Le 2026-10-22, aucune sortie ne distinguait « une règle est écrite » de « la garantie est tenue » : un projet pouvait se croire protégé alors que sa barrière n'était qu'un avertissement.
+
+## QUA-156 — Sous garanties obligatoires, une barrière de périmètre non bloquante fait échouer `drwil verify`, avec la commande qui la durcit
+**Règle** : Livré à tout projet. Une fois les garanties imposées (`drwil guarantees`, QUA-088), `drwil verify` rend FAIL tant que `scopeGate` n'est pas `blocking`, et le message nomme la commande qui la durcit. Sans garanties imposées, rien n'est jugé.
+**Périmètre** : `drwil verify` ; livré par le paquet.
+**Source de vérité** : `packages/drwil/src/guarantees.ts` (`judgeGuarantees`), `packages/drwil/src/protection.ts` (`scopeGateFailure`).
+**Preuve** : test du paquet : FAIL avec la commande de durcissement sous garanties et barrière en avertissement ; PASS une fois bloquante ; rien sans garanties imposées.
+**Contrôle** : `tests-qua-156`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : niveau-de-protection — « Un projet sous garanties obligatoires dont la barrière n'est pas bloquante fait échouer `drwil verify`, avec la commande qui la durcit »
+**Raison** : Une garantie « obligatoire » qui laisse la barrière de périmètre en avertissement ne garantit rien : la décision du demandeur du 2026-10-23 est que `verify`, pas seulement `doctor`, échoue.

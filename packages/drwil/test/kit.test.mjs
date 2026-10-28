@@ -115,6 +115,10 @@ const read = (dir, f) => readFileSync(join(dir, f), "utf8");
 // AGENTS.md est un aiguillage court : le texte complet des règles est dans la section 8 de docs/ia-first.md.
 const consignes = (dir) => `${read(dir, "AGENTS.md")}\n${read(dir, "docs/ia-first.md")}`;
 const config = (dir) => JSON.parse(read(dir, ".drwil/ia-first.json"));
+// Une installation neuve a la barrière de périmètre bloquante, qui refuse le commit du kit en SCOPING : les tests
+// qui commitent l'installation sans lancer de chantier la règlent en avertissement.
+const enAvertissement = (dir) =>
+  writeFileSync(join(dir, ".drwil/ia-first.json"), `${JSON.stringify({ ...config(dir), scopeGate: "warning" }, null, 2)}\n`);
 // NTFS n'a pas de bit d'exécution : sous Windows chmod est un no-op, donc ce contrôle
 // (déjà fait sur Linux/macOS par le test "lot 4 : commit-msg livré désactivé") n'a pas de sens.
 const executable = (dir, f) => process.platform === "win32" || Boolean(statSync(join(dir, f)).mode & 0o100);
@@ -285,6 +289,7 @@ test("un second init rafraîchit la mécanique inchangée, signale celle modifi�
 test("le hook refuse un commit dont la doc cite un chemin inexistant", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
+  enAvertissement(dir);
   assert.equal(git(dir, "add", "-A").status, 0);
   assert.equal(git(dir, "commit", "-qm", "init").status, 0, "premier commit accepté");
   appendFileSync(join(dir, "docs/ia-first.md"), "\nVoir `docs/inexistant.md` et SEC-999.\n");
@@ -411,6 +416,7 @@ test("init en anglais, Codex seul, CI GitHub", async () => {
 test("installation anglaise : le cadrage (QUA-016) ne bloque pas le premier commit", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, lang: "en" }));
+  enAvertissement(dir);
   assert.equal(git(dir, "add", "-A").status, 0);
   assert.equal(git(dir, "commit", "-qm", "init").status, 0, "premier commit accepté");
 });
@@ -586,6 +592,7 @@ test("doublon d'ID dans le registre des contrats", async () => {
 test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc cadrage", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
+  enAvertissement(dir);
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeReminder: "blocking" }));
   assert.equal(git(dir, "add", "-A").status, 0);
   const rInit = git(dir, "commit", "-qm", "init");
@@ -627,6 +634,7 @@ test("QUA-016 : rappel de cadrage réglé sur bloquant, débloqué par le bloc c
 test("QUA-016 : réglage par défaut (bloquant) : premier commit accepté, code orphelin refusé ; avertissement toujours possible", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
+  enAvertissement(dir);
   assert.equal(config(dir).scopeReminder, "blocking", "réglage par défaut écrit à l'installation (docs/projects/journal.md, garde-fous)");
   git(dir, "add", "-A");
   assert.equal(git(dir, "commit", "-qm", "init").status, 0, "les fichiers du kit sont couverts : le premier commit passe");
@@ -1758,8 +1766,8 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
   assert.equal(ok.status, 0, ok.stderr);
   assert.match(drwilEtat().stdout, /Activité : EXPECTATION/);
 
-  // Barrière de périmètre : livrée en avertissement, hook du trailer exécutable, couverte par la fiche mécanique.
-  assert.equal(config(dir).scopeGate, "warning");
+  // Barrière de périmètre : livrée bloquante à l'installation neuve, hook du trailer exécutable, couverte par la fiche mécanique.
+  assert.equal(config(dir).scopeGate, "blocking");
   if (process.platform !== "win32")
     assert.ok(statSync(join(dir, ".githooks/prepare-commit-msg")).mode & 0o111, "prepare-commit-msg exécutable");
   assert.match(read(dir, "docs/projects/kit-mechanics.md"), /\.githooks\/scope-gate\.mjs/);
@@ -2226,6 +2234,7 @@ test("une valeur d'option inconnue est refusée", async () => {
 test("QUA-017 : pas de travail direct sur la branche principale, même pour le tout premier commit", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
+  enAvertissement(dir);
   // init() bascule déjà sur une branche de travail avant tout commit (plus jamais sur master/main).
   const branche = git(dir, "symbolic-ref", "--short", "HEAD");
   assert.equal(
@@ -2277,6 +2286,7 @@ test("QUA-017 : pas de travail direct sur la branche principale, même pour le t
 test("QUA-017 : un push ne contenant que des tags ou des suppressions de branches n'est jamais bloqué, un push de la branche principale continue de l'être", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
+  enAvertissement(dir);
   git(dir, "add", "-A");
   const premier = git(dir, "commit", "-qm", "premier commit");
   assert.equal(premier.status, 0, premier.stdout + premier.stderr);
@@ -2326,6 +2336,7 @@ test("QUA-017 : un push ne contenant que des tags ou des suppressions de branche
 test("QUA-017 : au push, la référence distante poussée est jugée, pas la branche courante", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
+  enAvertissement(dir);
   git(dir, "add", "-A");
   assert.equal(git(dir, "commit", "-qm", "premier commit").status, 0);
   const remote = tmp();
@@ -2457,6 +2468,7 @@ test("QUA-043 : sans CI, run-checks et doctor disent comment en déclarer une, e
 test("pre-commit : un contrôle du projet hors de ses chemins est reporté (visible), rejoué au push et en direct", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
+  enAvertissement(dir);
   const cfg = config(dir);
   cfg.checks = [{ name: "suite lourde", run: 'node -e "process.exit(1)"', paths: ["src/**"] }];
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
@@ -2810,6 +2822,7 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
   for (const lang of ["fr", "en"]) {
     const dir = tmp();
     await quiet(() => init({ targetDir: dir, lang, git: false }));
+    enAvertissement(dir);
     // Le script lui-même n'est jamais copié automatiquement.
     assert.ok(!existsSync(join(dir, ".githooks/create-release.mjs")), "le module optionnel ne doit pas être copié par défaut");
     // La recette (toujours livrée) documente l'activation du module.
@@ -2823,6 +2836,7 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
   // Script utilisable en pratique : --dry-run, sans toucher au réseau ni créer de tag.
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
+  enAvertissement(dir);
   presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
   copierModule(dir, "create-release");
   const mecanique = join(dir, "docs/projects/kit-mechanics.md");
@@ -2868,6 +2882,7 @@ test("créer une release : repère les paquets npm publiables (package.json suiv
 test("créer une release : --dry-run liste le paquet npm à empaqueter quand il y en a un", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
+  enAvertissement(dir);
   presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
   copierModule(dir, "create-release");
   const mecanique = join(dir, "docs/projects/kit-mechanics.md");
@@ -2901,6 +2916,7 @@ test("QUA-051 : module de release livré avec la fiche, le verdict et la promoti
   for (const lang of ["fr", "en"]) {
     const dir = tmp();
     await quiet(() => init({ lang, targetDir: dir, git: true }));
+    enAvertissement(dir);
     presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
     for (const s of scripts) assert.ok(!existsSync(join(dir, ".githooks", s)), `${s} : module optionnel, jamais copié par défaut`);
     copierModule(dir, "create-release");
@@ -4314,6 +4330,7 @@ test("version unique : la release suit package.json et refuse un numéro déjà 
 
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: true }));
+  enAvertissement(dir);
   copierModule(dir, "create-release", ["create-release.mjs", "create-release-texts.mjs", "create-release-version.mjs"]);
   mkdirSync(join(dir, "packages/truc"), { recursive: true });
   writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc", version: "1.0.0" }));
@@ -4781,4 +4798,18 @@ test("QUA-061 : le skill /drwil-note appelle la commande de note et ne code rien
   assert.match(skill, /always an intent, never an order to code\*\*/);
   assert.match(skill, /Do not code it, do not frame it, do not open a brief, do not move the activity/);
   assert.ok(existsSync(join(dir, ".githooks/note.mjs")), "la commande appelée est livrée avec le skill");
+});
+
+test("QUA-154 : installation neuve : barrière de périmètre bloquante ; projet déjà installé : son réglage gardé, avertissement s'il n'en a pas", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  assert.equal(config(dir).scopeGate, "blocking");
+  const sans = { ...config(dir) };
+  delete sans.scopeGate;
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(sans, null, 2));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  assert.equal(config(dir).scopeGate, "warning", "une mise à jour ne bloque pas des commits du jour au lendemain");
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeGate: "off" }, null, 2));
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  assert.equal(config(dir).scopeGate, "off", "le réglage choisi est gardé");
 });

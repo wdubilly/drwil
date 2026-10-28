@@ -10,6 +10,8 @@ import { coverLayer, type LayerContext, type LayerReport } from "./guarantees-la
 import { TEXTS } from "./guarantees-texts.js";
 import { type DeclaredCheck, type Exec, type GuaranteeConfig, defaultExec, layersOf, skeletonFiles } from "./guarantees-table.js";
 import { briefTitle, type GuaranteeBrief, writeBriefs } from "./guarantees-briefs.js";
+import { scopeGateFailure } from "./protection.js";
+import { guaranteeFailures } from "./guarantees-verify.js";
 import { type ForgeReport, inspectForge, protectBranch } from "./guarantees-forge.js";
 
 export interface GuaranteesOptions {
@@ -118,5 +120,20 @@ export function formatGuarantees(r: GuaranteesReport): string[] {
   return out;
 }
 
-export { guaranteeFailures, judgeGuarantees } from "./guarantees-verify.js";
+export { guaranteeFailures } from "./guarantees-verify.js";
+
+/** A guarantee not held makes the verdict FAIL, named among the errors (QUA-088); the scope gate too. */
+export function judgeGuarantees(
+  v: { status: string; code: number; errors: string[] },
+  root: string,
+  cfg: GuaranteeConfig,
+  contracts: { checks?: string[] | null }[],
+): void {
+  const gate = scopeGateFailure(cfg, projectLang(root));
+  const failures = [...guaranteeFailures(root, cfg, contracts), ...(gate ? [gate] : [])];
+  if (!failures.length) return;
+  v.errors.push(...failures);
+  v.status = "FAIL";
+  v.code = 1;
+}
 export type { LayerReport };

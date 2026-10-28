@@ -5,6 +5,19 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Changed
+
+- A new install writes the scope gate (`scopeGate`) as `blocking` instead of
+  `warning`. A project already installed keeps its setting, and `warning`
+  when it had none: an update never blocks a commit that used to pass.
+- `drwil doctor` prints the protection level the project really holds
+  (1 diagnosis only, 2 local governance active, 3 CI checks active, 4 forge
+  protection verified), each proved by a check; a level it cannot verify is
+  "not verified", never reached. It gives the command to the next level
+  (`protection` in `--json`).
+- Under the mandatory guarantees, `drwil verify` is FAIL while `scopeGate`
+  is not `blocking`, and names the command that hardens it.
+
 ## 0.10.0 (2026-10-27)
 
 ### Changed

@@ -31,8 +31,9 @@ export async function writeConfig(r: Resolved): Promise<void> {
     // require an interactive terminal) | "agent". Never overwritten.
     transitions: typeof previous?.transitions === "string" ? previous.transitions : "human",
     // Scope gate of the active brief (.githooks/scope-gate.mjs): "off" | "warning" | "blocking".
-    // "warning" at install time: the project sees the gaps before hardening.
-    scopeGate: typeof previous?.scopeGate === "string" ? previous.scopeGate : "warning",
+    // "blocking" for a fresh install; an already installed project keeps its setting, "warning" when
+    // it has none: an update never blocks a commit that used to pass. `drwil doctor` shows how to harden.
+    scopeGate: typeof previous?.scopeGate === "string" ? previous.scopeGate : previous ? "warning" : "blocking",
     // Requirements added by a kit version later than the install (today: a cited path that only
     // exists as a file ignored by Git): "blocking" for a fresh install, "warning" for an already
     // equipped project that does not have this setting yet — an update never breaks a commit
