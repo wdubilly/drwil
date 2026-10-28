@@ -110,6 +110,11 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P1] Le cadrage d'une fiche avertit quand un fichier de son scope
+  est proche du plafond et rappelle les fichiers à lister pour un fichier neuf :
+  plus d'arrêt de chantier sur une découpe (cadré le 2026-10-28, avant les
+  fiches qui touchent des fichiers à 200 lignes) —
+  `docs/projects/scope-anticipe-les-decoupes.md`.
 - [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
   (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
 - [ ] [IA] [P2] Un cycle de vie des fiches sans contournement : registre en
