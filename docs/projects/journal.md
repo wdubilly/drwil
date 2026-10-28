@@ -3798,3 +3798,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Preuve de clôture** : `docs/preuves/sondage-suit-l-ordre-de-pending.md`.
 - **Clôturé par** : la branche `cadrage/lots-en-sous-agents-et-ordre-du-sondage`.
 
+## 2026-10-28 — La fusion automatique s'enchaîne dans l'ordre par un outil, pas par une consigne
+
+- **Décisions clés** : contrats neufs QUA-161 à QUA-164 ; `node .githooks/merge-auto.mjs [<n>]` (module livré à part, `pr-watch` inchangé) lit l'autorisation `auto_merge` de l'état avant tout appel à `gh`, attend que `mergeStateStatus` soit connu, met à jour la PR si elle est `BEHIND` (une fois, puis attend de nouveau l'état), programme `gh pr merge --auto --merge`, vérifie `autoMergeRequest` et dit où suivre la PR. Un état inconnu ou pas à jour après 5 minutes, `gh` absent ou illisible : « non exécuté » (code 2) ; conflit, PR fermée, refus du dépôt (« Auto merge is not allowed… », avec la sortie à suivre) ou programmation non vue : « refusé » (code 1) ; jamais un message qui prétend la fusion programmée (QUA-013). La consigne de l'état (fr, en) et le skill `start-a-workstream` appellent l'outil au lieu de lister les commandes `gh` ; les phrases suivantes (suivi par `pr-watch`, retour en SCOPING après la fusion, `reopen`) sont inchangées (QUA-138). Test de l'outil à 100 % de couverture, `gh` simulé, une ligne de commande avec un `gh` factice.
+- **Hooks modifiés** : `.githooks/state-context-texts.mjs` (consigne `autoMerge`) ; neufs : `.githooks/merge-auto.mjs`, `.githooks/merge-auto.test.mjs`.
+- **Limites connues** : le test de la consigne (QUA-164) lit les gabarits livrés, il n'éprouve pas le texte injecté par l'état en projet installé (`packages/drwil/test/cycle.test.mjs`, QUA-138, le fait toujours) ; l'outil ne suit pas la CI (`pr-watch`) ; `gh pr update-branch` n'a pas été éprouvé sur une vraie PR `BEHIND` (`gh` simulé seulement ; intention `docs/intentions/merge-auto-eprouve-en-reel.md`).
+- **Clôturé par** : la branche `cadrage/merge-auto-ordonnee`.
+

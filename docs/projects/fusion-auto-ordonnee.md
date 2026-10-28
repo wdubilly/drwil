@@ -1,6 +1,6 @@
 # Projet : la fusion automatique s'enchaîne dans l'ordre par un outil, pas par une consigne
 
-**Statut** : cadré le 2026-10-28.
+**Statut** : fait le 2026-10-28.
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/cloture-et-attestations.md` (partie « la file et la fusion »)
@@ -44,16 +44,16 @@ attribuer à ce moment-là dans le registre.)
 
 - `node .githooks/merge-auto.mjs <numéro>` enchaîne, dans cet ordre : attendre que
   GitHub ait calculé la PR, la mettre à jour si elle est `BEHIND`, programmer
-  l'auto-merge, vérifier qu'il est programmé — contrat à créer
+  l'auto-merge, vérifier qu'il est programmé `QUA-161`
 - L'outil ne programme jamais l'auto-merge sur une PR dont l'état n'est pas calculé
   ou pas à jour ; délai dépassé, `gh` absent ou refus (« Auto merge is not allowed
   for this repository ») : il le dit, avec la sortie à suivre, et ne prétend jamais
-  que la fusion est programmée — contrat à créer
+  que la fusion est programmée `QUA-162`
 - Il ne s'exécute qu'avec l'autorisation « Automatic merge » donnée au lancement
-  (lue dans l'état) ; sans elle il refuse — contrat à créer
+  (lue dans l'état) ; sans elle il refuse `QUA-163`
 - La consigne de l'état et le skill appellent cet outil au lieu de lister les
   commandes `gh` ; le suivi (`pr-watch`) et le retour en SCOPING après la fusion
-  restent inchangés — contrat à créer
+  restent inchangés `QUA-164`
 
 ## 2. Hors périmètre
 
@@ -87,6 +87,10 @@ attribuer à ce moment-là dans le registre.)
 - **Lot 2 — les consignes** [IA] : `.githooks/state-context-texts.mjs` (fr, en) et le skill appellent l'outil.
 
 Critère de sortie : `node .githooks/run-checks.mjs` OK, `drwil verify --agent` PASS.
+
+## Contrats modifiés
+
+- `.githooks/state-context-texts.mjs` — la consigne `autoMerge` (fr, en) appelle `node .githooks/merge-auto.mjs <numéro>` au lieu de lister les commandes `gh` (validé par le demandeur le 2026-10-28, lot 2 de la fiche cadrée ; le suivi et le retour en SCOPING sont inchangés, QUA-138).
 
 ## 7. Reprise
 

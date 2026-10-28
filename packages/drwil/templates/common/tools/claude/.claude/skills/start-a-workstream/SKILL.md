@@ -73,14 +73,15 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    No `[drwil]` message at all: the hooks are not active in this session (e.g. opened before
    `init`) — say so and suggest restarting the session. If the state
    says "Automatic merge authorised": in CLOSING, after verify PASS and pushing the closing
-   commit, in this order — wait until GitHub has computed the PR and, if it is behind the main
-   branch (BEHIND), update it; schedule `gh pr merge --auto --merge`; check that the merge is
-   scheduled (`gh pr view --json autoMergeRequest`); follow the PR with
+   commit, in this order — run `node .githooks/merge-auto.mjs <number>` (never chain the `gh` commands by hand): it waits until GitHub has
+   computed the PR, updates it if it is behind the main branch (BEHIND), schedules
+   `gh pr merge --auto --merge` and checks that the merge is scheduled
+   (`gh pr view --json autoMergeRequest`); follow the PR with
    `node .githooks/pr-watch.mjs <number>`, run again while it says green without merged, 30 minutes
    at most in all; the PR merged, only then go back to Scoping, which clears the authorisation —
    never before: once in Scoping, a red CI can no longer reopen the workstream. Red CI before the
    merge: stay in CLOSING and `node .githooks/state.mjs reopen` (it cancels the scheduled merge).
-   Time limit exceeded, or any other failure: stay in CLOSING and report it. If `gh pr merge --auto` fails
+   Time limit exceeded, or any other failure: stay in CLOSING and report it. If `.githooks/merge-auto.mjs` refuses
    because the repository does not allow it (« Auto merge is not allowed for this repository »),
    say « auto-merge not allowed by the repository » and the way out — a repository admin ticks
    « Allow auto-merge » in the GitHub repository settings (General → Pull Requests), or the

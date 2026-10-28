@@ -7,6 +7,15 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `node .githooks/merge-auto.mjs <pr>` schedules the automatic merge of a pull
+  request in the safe order, instead of a list of `gh` commands left to the
+  agent: it waits until GitHub has computed the PR, updates it if it is
+  behind the main branch, runs `gh pr merge --auto --merge`, then checks that
+  the merge is really scheduled. It runs only with the "Automatic merge"
+  authorisation given at start, and says "not scheduled" on a state not
+  computed in time, a conflict, `gh` missing or a repository that does not
+  allow auto-merge. The state's procedure and the launch skill now call it;
+  following the PR (`pr-watch`) is unchanged.
 - The scoping reminder now warns, never blocking, when a code file listed in
   a brief's scope is 180 lines or more (90 % of the 200-line ceiling, read
   from the same source): the brief should list upfront the files its split

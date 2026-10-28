@@ -158,6 +158,8 @@ Les dix parties se cadrent en cinq fiches, décidées par le demandeur le 2026-1
 Décidé de ne rien faire : attendre CodeQL avant la clôture (`reopen` suffit, partie « défaut révélé après la clôture » : la deuxième question est close). Un essai réel de la réouverture sur une vraie PR reste une note, à la prochaine CI rouge après une clôture.
 Rangement du 2026-10-26 : la fiche `docs/projects/release-feu-vert-et-squash.md` attend `docs/intentions/release-allegee.md` (alléger d'abord, décision du demandeur). Reste non cadrée ici : la note « un lancement intercalé efface la file », voisine de `docs/projects/next-attend-la-fusion.md`.
 
+Fait le 2026-10-28 (chantier « la fusion automatique s'enchaîne dans l'ordre par un outil ») : `node .githooks/merge-auto.mjs <numéro>` programme la fusion dans l'ordre (état calculé, mise à jour si `BEHIND`, programmation, vérification), QUA-161 à QUA-164 ; la consigne de l'état et le skill l'appellent. Restent, non traités : le suivi `pr-watch` et le retour en SCOPING, inchangés ; la fusion manuelle et la décision de fusion (sondage).
+
 ## Existant
 
 Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10-25.

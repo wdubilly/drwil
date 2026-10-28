@@ -1529,3 +1529,43 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/state.test.mjs`
 **Origine** : sondage-suit-l-ordre-de-pending — « `state.mjs briefs` liste les fiches d'une version dans l'ordre des lignes ouvertes de la section « Fiches cadrées » de `docs/projects/pending.md`, une fiche pas prête gardant sa place ; une fiche absente de l'index vient après »
 **Raison** : Le sondage triait par priorité P1-P3 et ignorait l'ordre de réalisation de l'index : une fiche P3 pouvait être proposée avant une P2 qui devait passer avant, et le demandeur lançait dans le désordre sans le savoir.
+
+## QUA-161 — La fusion automatique d'une PR s'enchaîne dans l'ordre par un outil : état calculé, mise à jour si BEHIND, programmation, vérification
+**Règle** : Livré à tout projet. `node .githooks/merge-auto.mjs [<n>]` enchaîne, dans cet ordre : attendre que GitHub ait calculé la PR (`mergeStateStatus` connu), la mettre à jour (`gh pr update-branch`) si elle est `BEHIND` puis attendre de nouveau l'état, programmer `gh pr merge --auto --merge`, vérifier par `gh pr view --json autoMergeRequest` que la fusion est programmée, et dire où suivre la PR (`pr-watch`). Sortie 0 : programmée et vérifiée.
+**Périmètre** : `.githooks/merge-auto.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/merge-auto.mjs` (`mergeAuto`).
+**Preuve** : test avec `gh` simulé : ordre exact des appels (état inconnu, `BEHIND`, mise à jour, programmation, vérification), PR déjà à jour, PR de la branche courante sans numéro.
+**Contrôle** : `tests-qua-161`
+**Tests** : `.githooks/merge-auto.test.mjs`
+**Origine** : fusion-auto-ordonnee — « `node .githooks/merge-auto.mjs <numéro>` enchaîne, dans cet ordre : attendre que GitHub ait calculé la PR, la mettre à jour si elle est `BEHIND`, programmer l'auto-merge, vérifier qu'il est programmé »
+**Raison** : L'ordre sûr de la fusion automatique ne vivait que dans un texte : un sous-agent (PR #292) puis l'agent principal (PR #293) ont programmé l'auto-merge avant la mise à jour de la branche, le 2026-10-28.
+
+## QUA-162 — L'outil de fusion automatique ne programme jamais sur un état inconnu ou pas à jour, et ne dit jamais la fusion programmée sans l'avoir vue
+**Règle** : Livré à tout projet. `node .githooks/merge-auto.mjs` ne programme jamais l'auto-merge d'une PR dont l'état n'est pas calculé ou qui est encore `BEHIND` : délai dépassé (5 minutes par défaut) ou `gh` injoignable, c'est « non exécuté » (code 2). PR fermée ou fusionnée, en conflit, refus de `gh` (dont « Auto merge is not allowed for this repository », avec la sortie à suivre : un administrateur coche « Allow auto-merge », ou l'humain fusionne) ou programmation non vue après coup : « refusé » (code 1). Aucun de ces messages ne prétend que la fusion est programmée (QUA-013).
+**Périmètre** : `.githooks/merge-auto.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/merge-auto.mjs` (`mergeAuto`).
+**Preuve** : test avec `gh` simulé : état inconnu, `BEHIND` persistant, conflit, PR fermée, échec de la mise à jour, `gh` absent ou illisible, refus du dépôt, autre refus, programmation non vue ; aucun appel de programmation avant un état à jour.
+**Contrôle** : `tests-qua-162`
+**Tests** : `.githooks/merge-auto.test.mjs`
+**Origine** : fusion-auto-ordonnee — « L'outil ne programme jamais l'auto-merge sur une PR dont l'état n'est pas calculé ou pas à jour ; délai dépassé, `gh` absent ou refus : il le dit, avec la sortie à suivre, et ne prétend jamais que la fusion est programmée »
+**Raison** : Un état inconnu pris pour un feu vert est un contrôle non exécuté pris pour un succès (QUA-013) ; le refus du dépôt doit rester dit tel quel, avec la sortie.
+
+## QUA-163 — L'outil de fusion automatique ne s'exécute qu'avec l'autorisation « Automatic merge » donnée au lancement
+**Règle** : Livré à tout projet. `node .githooks/merge-auto.mjs` lit l'état (`.drwil/state.json` (si présent), `auto_merge`) avant tout appel à `gh` : sans l'autorisation donnée au lancement (réponse humaine « Automatic merge », ou fusion automatique de la file), il refuse (code 1) sans rien lancer, la fusion restant un geste humain. Messages en français ou en anglais selon la langue du projet.
+**Périmètre** : `.githooks/merge-auto.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/merge-auto.mjs` (`mergeAuto`).
+**Preuve** : test : état sans `auto_merge` ou absent, refus sans aucun appel `gh`, en français et en anglais ; ligne de commande avec un `gh` factice.
+**Contrôle** : `tests-qua-163`
+**Tests** : `.githooks/merge-auto.test.mjs`
+**Origine** : fusion-auto-ordonnee — « Il ne s'exécute qu'avec l'autorisation « Automatic merge » donnée au lancement (lue dans l'état) ; sans elle il refuse »
+**Raison** : La fusion est la décision d'acceptation, prise par l'humain au lancement : un outil qui programme l'auto-merge sans cette autorisation la lui prendrait.
+
+## QUA-164 — La consigne de l'état et le skill de lancement appellent l'outil de fusion automatique, le suivi et le retour en SCOPING restent
+**Règle** : Livré à tout projet. Avec la fusion automatique autorisée, la consigne donnée par l'état (`.githooks/state-context-texts.mjs`, `autoMerge`, en français et en anglais) et le skill `start-a-workstream` disent de lancer `node .githooks/merge-auto.mjs <numéro>` au lieu de lister les commandes `gh` à enchaîner à la main, puis de suivre la PR par `node .githooks/pr-watch.mjs <numéro>` et de ne revenir en SCOPING qu'une fois la PR fusionnée ; CI rouge avant la fusion : rester en CLOSING et `reopen` (QUA-138, inchangé).
+**Périmètre** : `.githooks/state-context-texts.mjs` (`autoMerge`), skill `start-a-workstream` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/state-context-texts.mjs` (`autoMerge`), `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
+**Preuve** : test sur les gabarits livrés : l'appel de l'outil précède le suivi par `pr-watch`, dans la consigne française, anglaise et le skill, sans mise à jour à la main.
+**Contrôle** : `tests-qua-164`
+**Tests** : `.githooks/merge-auto.test.mjs`
+**Origine** : fusion-auto-ordonnee — « La consigne de l'état et le skill appellent cet outil au lieu de lister les commandes `gh` ; le suivi (`pr-watch`) et le retour en SCOPING après la fusion restent inchangés »
+**Raison** : Une consigne qui liste les commandes dépend de la mémoire de l'agent ; l'outil porte l'ordre, la consigne n'a plus qu'à l'appeler.
