@@ -1,7 +1,7 @@
 # Preuve de clôture — surveillance-taille-du-kit
 
 **Clos le** : 2026-10-28
-**Commit vérifié** : `8dcf027d3e` — verdict `drwil verify` : PASS
+**Commit vérifié** : `c7c97f839f` — verdict `drwil verify` : PASS
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
 
