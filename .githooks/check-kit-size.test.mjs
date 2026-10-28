@@ -132,6 +132,9 @@ test("QUA-157 projet adopté : liste d'installation absente, illisible ou vide, 
 
 test("QUA-157 installation : drwil init déclare le contrôle sans effacer ceux du projet, une seule fois", () => {
   const dir = racine({ ".drwil/ia-first.json": JSON.stringify({ checks: [{ id: "mien", name: "mien", run: "node -e 0" }] }) });
+  // dist/ n'est pas versionné et le job « checks » de la CI ne construit rien : on construit ici (incrémental).
+  const build = spawnSync("npx", ["tsc", "--build"], { cwd: dirname(dirname(CLI)), encoding: "utf8", shell: true });
+  assert.equal(build.status, 0, build.stdout + build.stderr);
   const init = () =>
     spawnSync(process.execPath, [CLI, "init", "--no-git", "--lang", "en", "--tools", "claude"], { cwd: dir, encoding: "utf8" });
   assert.equal(init().status, 0);
