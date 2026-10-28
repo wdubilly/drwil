@@ -32,6 +32,7 @@ files:
   - .githooks/state-context-texts.mjs
   - docs/architecture.md
   - docs/projects/kit-mechanics.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/contracts.md
   - .drwil/ia-first.json
   - packages/drwil/CHANGELOG.md
