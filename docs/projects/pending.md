@@ -101,9 +101,6 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P1] Un contrôle livré qui surveille la taille de tous les fichiers
   générés par drwil, bloquant sur le gabarit et avertissant chez un projet adopté (cadré le 2026-10-27, 0.10.0) —
   `docs/projects/surveillance-taille-du-kit.md`.
-- [ ] [IA] [P1] `doctor` dit le niveau de protection réel, la barrière
-  bloque dès l'installation neuve (cadré le 2026-10-23) —
-  `docs/projects/niveau-de-protection.md`.
 - [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
   (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
 - [ ] [IA] [P2] Un cycle de vie des fiches sans contournement : registre en
@@ -574,7 +571,7 @@ jugeant une fusion sur sa résolution (fait le 2026-10-23, voir
 3. la réouverture d'un chantier dont la PR révèle un défaut (fait le
 2026-10-24, voir `docs/projects/journal.md`) ; 4. les contournements restants fermés ou assumés (fait le
 2026-10-24, voir `docs/projects/journal.md`) ;
-5. `docs/projects/niveau-de-protection.md` (son niveau « contrôles CI
+5. `docs/projects/journal.md` (son niveau « contrôles CI
 actifs » s'appuie sur le 4).
 
 Ordre des fiches cadrées, proposé au rangement du 2026-10-26 : plusieurs
