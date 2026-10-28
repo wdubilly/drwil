@@ -12,6 +12,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/state.mjs
   - packages/drwil/templates/common/base/.githooks/state-texts.mjs
   - packages/drwil/templates/common/base/.githooks/state-acceptance.mjs
+  - packages/drwil/templates/common/base/.githooks/state-hooks.mjs
   - packages/drwil/templates/common/base/.githooks/closure-proof.mjs
   - packages/drwil/templates/common/base/.githooks/doc-coherence.mjs
   - .githooks/doc-coherence.mjs
