@@ -3707,3 +3707,14 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   vrai parcours d'un utilisateur sous barrière bloquante (fiche aux critères d'acceptation, puis `state.mjs start`). Sans
   effet sur le comportement livré ; la suite passe avec l'ancien et le nouveau défaut.
 - **Clôturé par** : la branche `detour/tests-barriere-explicite`.
+
+## 2026-10-28 — Détour de docs/projects/niveau-de-protection.md : `drwil guarantees` câble c8 avec les scripts du kit dans la mesure
+
+- **Défaut** : `drwil guarantees` câblait `coverage-root` avec `c8 --all` ; `--all` compte aussi les scripts du kit installé
+  (`.githooks/`, `.claude/`…), jamais exécutés par les tests du projet : niveau mesuré ~0,01 % au lieu de 100 %, et cliquet
+  câblé à ce niveau. Trouvé par l'essai réel Node/TypeScript de QUA-092.
+- **Cause** : aucune exclusion des dossiers du kit dans la commande c8 (`packages/drwil/src/guarantees-tools.ts`).
+- **Correction** : liste fixe de dossiers du kit exclus de la commande câblée et de la mesure du cliquet ; test
+  `QUA-087 câblage : c8 exclut…` vu échouer avant. Les autres piles ne comptent que les fichiers exécutés : sans effet.
+  Essai réel refait : niveau câblé 100 %, retirer le test fait échouer.
+- **Clôturé par** : la branche `detour/couverture-sans-kit`.
