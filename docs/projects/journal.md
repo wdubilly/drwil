@@ -3779,6 +3779,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   de la fiche à `packages/drwil/src/cli-verify.ts`, `packages/drwil/src/verdict.ts`, `packages/drwil/src/verify-types.ts`, au nouveau `packages/drwil/src/failed.ts`, au rappel d'état `.githooks/state-context-texts.mjs` (dépôt et
   gabarit) et à `docs/architecture.md`. `packages/drwil/src/verify.ts` et `packages/drwil/src/evidence.ts` n'ont pas bougé (déjà couvert par l'intention
   `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`).
+  Chantier rouvert une fois (PR #290, CI rouge) : les deux hooks modifiés (`.githooks/state-context-texts.mjs`, `.githooks/state.test.mjs`)
+  n'étaient pas déclarés dans « Contrats modifiés », le rejeu par les hooks de la branche principale (QUA-113) les avait remis à leur version.
 - **Limites connues** : la mesure ne sépare pas le gain de `--failed` de celui de la reprise par contrôle (QUA-141) ; la passe complète de
   clôture reste obligatoire (règle de VERIFY inchangée).
 - **Preuve de clôture** : `docs/preuves/verify-rejoue-les-echecs.md` (si présent).
