@@ -69,11 +69,11 @@ attribuer à ce moment-là dans le registre.)
   commité (arbre propre) ; il ne passe jamais à un lot au-delà du dernier — `QUA-167`
 - Le rappel d'état d'un chantier à lots nomme le lot courant et dit de ne traiter
   que lui — `QUA-168`
-- Un lot [humain] est sauté par l'enchaînement, nommé comme restant à faire, et
+- Un lot confié à l'humain est sauté par l'enchaînement, nommé comme restant à faire, et
   rappelé à la clôture avec ce qui est attendu ; l'enchaînement continue sur les
   lots [IA] suivants — `QUA-169`
 - La clôture reste unique : refusée tant qu'un lot [IA] n'est pas fait (un lot
-  [humain] n'est que rappelé : son critère est jugé par `verify`) ; une fiche à un
+  confié à l'humain n'est que rappelé : son critère est jugé par `verify`) ; une fiche à un
   seul lot (ou sans lot) se comporte comme avant — `QUA-170`
 - Le mode d'emploi du lancement (`.claude/skills/start-a-workstream/SKILL.md`) dit
   qu'un sous-agent neuf traite chaque lot, la passation se faisant par les
