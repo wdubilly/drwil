@@ -117,6 +117,14 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P2] Le sondage `/drwil-start` suit l'ordre de cette section, une
+  fiche pas prête gardant sa place (cadré le 2026-10-28 ; à faire en premier :
+  les fiches suivantes se lancent ensuite dans l'ordre) —
+  `docs/projects/sondage-suit-l-ordre-de-pending.md`.
+- [ ] [IA] [P2] Une fiche à plusieurs lots se réalise lot par lot, un sous-agent
+  neuf par lot, une seule clôture (cadré le 2026-10-28 ; avant les fiches à
+  lots de la 0.11.0) —
+  `docs/projects/lots-en-sous-agents.md`.
 - [ ] [IA] [P2] `docs/ia-first.md` en sections courtes autonomes, plafond des
   documents lus à la demande abaissé à 400 ou 500 lignes, `kitSizeLegacy`
   retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
