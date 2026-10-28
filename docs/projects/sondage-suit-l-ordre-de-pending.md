@@ -40,18 +40,17 @@ d'autre : une seule source d'ordre.
 
 ## Critères d'acceptation
 
-(le contrat est à créer au lancement, avec son champ **Origine** ; ID à
-attribuer à ce moment-là dans le registre.)
+(contrat créé au lancement, avec son champ **Origine** : `QUA-160`.)
 
 - `state.mjs briefs` liste les fiches d'une version dans l'ordre des lignes
   ouvertes de la section « Fiches cadrées » de `pending.md` (celle du HEAD
-  commité), quelles que soient leur priorité et leur maturité — contrat à créer
+  commité), quelles que soient leur priorité et leur maturité — `QUA-160`
 - Une fiche pas prête (décisions ouvertes) garde sa place dans cet ordre, signalée
-  « pas prête : N décision(s) à prendre d'abord », jamais reléguée à la fin — contrat à créer
+  « pas prête : N décision(s) à prendre d'abord », jamais reléguée à la fin — `QUA-160`
 - Une fiche absente de l'index est listée après les fiches indexées, dans l'ordre
   d'avant (prête, maturité, priorité, chemin) ; une fiche de garantie bloquante
-  (QUA-088) reste seule listée — contrat à créer
-- Le mode d'emploi du sondage (`.claude/skills/start-a-workstream/SKILL.md`) dit cet ordre et plus l'ancien — contrat à créer
+  (QUA-088) reste seule listée — `QUA-160`
+- Le mode d'emploi du sondage (`.claude/skills/start-a-workstream/SKILL.md`) dit cet ordre et plus l'ancien — `QUA-160`
 
 ## 2. Hors périmètre
 
@@ -69,6 +68,11 @@ attribuer à ce moment-là dans le registre.)
 - Ajouter un hook touche la carte d'architecture et `docs/projects/kit-mechanics.md`.
 - On n'édite que le gabarit, la copie du dépôt est régénérée (`npm run installer-depot`).
 - Hooks modifiés : à déclarer dans « Contrats modifiés » au lancement.
+
+## Contrats modifiés
+
+- `.githooks/briefs.mjs` — le tri du sondage passe par `.githooks/briefs-order.mjs` (nouveau hook).
+- `.githooks/state.test.mjs` — un test de l'ordre du sondage (QUA-160).
 
 ## 4. Décisions
 
