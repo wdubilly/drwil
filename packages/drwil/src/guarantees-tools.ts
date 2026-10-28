@@ -3,6 +3,9 @@ import { join } from "node:path";
 import { ALL_METRICS, at, type CoverageTool, pct, readJson } from "./guarantees-table.js";
 
 const C8_EXCLUDE = (ex: string[]) => ex.map((e) => ` --exclude=${JSON.stringify(e)}`).join("");
+// --all compte les fichiers jamais chargés : les scripts du kit installé (jamais exécutés par les tests du projet) ruineraient la mesure.
+const KIT_DIRS = [".githooks", ".claude", ".github", ".gemini", ".cursor"].map((d) => `${d}/**`);
+const C8_KIT = KIT_DIRS.map((e) => ` --exclude=${JSON.stringify(e)}`).join("");
 const DIFF_COVER = "diff-cover --version";
 
 export const COVERAGE_TOOLS: CoverageTool[] = [
@@ -12,10 +15,10 @@ export const COVERAGE_TOOLS: CoverageTool[] = [
     metrics: ALL_METRICS,
     probe: "npx --no-install c8 --version",
     run: (t, ex) =>
-      `npx c8 --check-coverage --lines ${t.lines ?? 100} --branches ${t.branches ?? 100} --functions ${t.functions ?? 100} --statements ${t.statements ?? 100} --all${C8_EXCLUDE(ex)} npm test`,
+      `npx c8 --check-coverage --lines ${t.lines ?? 100} --branches ${t.branches ?? 100} --functions ${t.functions ?? 100} --statements ${t.statements ?? 100} --all${C8_KIT}${C8_EXCLUDE(ex)} npm test`,
     sources: [".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".mts", ".cts", ".vue", ".svelte"],
     measure: {
-      run: (report) => `npx c8 --reporter=json-summary --report-dir=${report} --all npm test`,
+      run: (report) => `npx c8 --reporter=json-summary --report-dir=${report} --all${C8_KIT} npm test`,
       read: (dir, report) => {
         const total = at(readJson(join(dir, report, "coverage-summary.json")), "total");
         if (!total) return null;

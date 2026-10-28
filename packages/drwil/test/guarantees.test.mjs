@@ -77,13 +77,23 @@ function citer(dir, id, controles) {
   );
 }
 
+test("QUA-087 câblage : c8 exclut de la mesure les scripts du kit installé, jamais exécutés par les tests du projet", async () => {
+  const dir = await projet();
+  guarantees({ targetDir: dir, exec: faux([[/c8 --version/, OK], ...FORGE_OK]) });
+  const { run } = config(dir).checks.find((c) => c.id === "coverage-root");
+  for (const kit of [".githooks", ".claude", ".github", ".gemini", ".cursor"]) assert.ok(run.includes(`--exclude="${kit}/**"`), kit);
+});
+
 test("QUA-087 câblage : une couche de pile connue reçoit son contrôle à 100 % sur les quatre métriques", async () => {
   const dir = await projet();
   const r = guarantees({ targetDir: dir, exec: faux([[/c8 --version/, OK], ...FORGE_OK]) });
   const [couche] = r.layers;
   assert.deepEqual([couche.layer, couche.slug, couche.tool, couche.mode, couche.status], [".", "root", "c8", "new", "wired"]);
   const controle = config(dir).checks.find((c) => c.id === "coverage-root");
-  assert.match(controle.run, /--check-coverage --lines 100 --branches 100 --functions 100 --statements 100 --all npm test/);
+  assert.match(
+    controle.run,
+    /--check-coverage --lines 100 --branches 100 --functions 100 --statements 100 --all --exclude="\.githooks\/\*\*".* npm test/,
+  );
   assert.deepEqual(controle.paths, ["**"]);
   assert.equal(config(dir).guarantees.enforced, true);
   assert.equal(config(dir).guarantees.layers.root, "new");
