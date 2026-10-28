@@ -61,6 +61,11 @@ pas les durées) : le lot 1 le chiffre avant de livrer.
 - Après un FAIL, le rappel de l'état en VERIFY propose `--failed`, puis la
   passe complète `verify --evidence` — `QUA-159`
 
+## Contrats modifiés
+
+- `.githooks/state-context-texts.mjs` — le rappel de l'état en VERIFY propose `--failed` après un FAIL, puis la passe complète (validé le 2026-10-25, décision 3 de la section 4 ; le fichier du texte, absent du scope d'origine, a été ajouté par un commit de la fiche)
+- `.githooks/state.test.mjs` — un test du nouveau rappel de VERIFY, fichier du lot 2 (validé le 2026-10-25, section 6)
+
 ## 2. Hors périmètre
 
 - Reprendre le verdict d'un contrôle déjà joué par `run-checks` :
