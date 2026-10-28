@@ -1,7 +1,7 @@
 # Intention : le scope d'une fiche suit les fichiers découpés et la carte d'architecture
 
 **Statut** : proposée le 2026-10-28 — limite relevée aux chantiers `niveau-de-protection` et `surveillance-taille-du-kit`.
-**Revu le 2026-10-28** : cadrée le jour même en `docs/projects/scope-anticipe-les-decoupes.md` (piste retenue : alerter au cadrage et rappeler dans le modèle de fiche, barrière inchangée). Reste vivante : l'admission automatique des fichiers dérivés, à reprendre si les arrêts persistent.
+**Revu le 2026-10-28** : cadrée le jour même en `docs/projects/journal.md` (piste retenue : alerter au cadrage et rappeler dans le modèle de fiche, barrière inchangée). Reste vivante : l'admission automatique des fichiers dérivés, à reprendre si les arrêts persistent.
 
 ## Besoin
 

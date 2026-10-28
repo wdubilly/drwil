@@ -3762,4 +3762,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   La barrière de périmètre ne change pas.
 - **Limites connues** : l'admission automatique des fichiers dérivés reste l'intention
   `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`.
+- **Preuve de clôture** : `docs/preuves/scope-anticipe-les-decoupes.md`.
 - **Clôturé par** : la branche `workstream/scope-anticipe-les-decoupes`.
