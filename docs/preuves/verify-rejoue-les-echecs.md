@@ -1,7 +1,7 @@
 # Preuve de clôture — verify-rejoue-les-echecs
 
 **Clos le** : 2026-10-28
-**Commit vérifié** : `67eaef5200` — verdict `drwil verify` : PASS
+**Commit vérifié** : `63ad88f237` — verdict `drwil verify` : PASS
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
 
