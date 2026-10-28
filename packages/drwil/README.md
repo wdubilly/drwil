@@ -226,6 +226,14 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    Closing requires a `PASS` or `ATTESTED` verdict on the current commit; a
    `MANUAL` contract waits for the human's `drwil attest`. An unproven
    acceptance criterion makes the verdict fail.
+   After a `FAIL`, `drwil verify --failed` (QUA-159) replays only the
+   contracts that were not `PASS` or `ATTESTED` at the last evidence, so a fix
+   is checked without a full pass. Its verdict is partial: it says so
+   (`GOVERNANCE: PARTIAL (--failed) — NOT A VERDICT`, `"status": "partial"`
+   in `--json`), never exits 0, writes no evidence and does not judge the
+   contracts it left out. A contract only awaiting an attestation is named, not
+   replayed. Without a readable previous evidence it says so and replays
+   nothing. The closing proof is still a full `drwil verify --evidence`.
 5. **CLOSING** — the work item is condensed into the journal, its closing
    proof is written (`docs/preuves/<work item>.md`: every criterion, its
    contract, that contract's checks, the verified commit and the

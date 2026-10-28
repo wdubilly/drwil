@@ -20,6 +20,12 @@ closing commit; the release renames this section to its version.
   its ceiling, never a blocker; the project's own code is never measured.
   `kitSizeLegacy` in `.drwil/ia-first.json` tolerates a file already above its
   ceiling, which can only shrink.
+- `drwil verify --failed` replays only the contracts that were not `PASS` or
+  `ATTESTED` at the last evidence, to check a fix without a full pass. The
+  verdict is partial (`GOVERNANCE: PARTIAL (--failed) — NOT A VERDICT`, never
+  exit 0, no evidence written, never a closing proof); a contract awaiting an
+  attestation is named, not replayed; the VERIFY reminder suggests it after a
+  `FAIL`, then the full `verify --evidence`.
 
 ### Changed
 

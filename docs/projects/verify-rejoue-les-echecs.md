@@ -52,17 +52,14 @@ pas les durées) : le lot 1 le chiffre avant de livrer.
 
 ## Critères d'acceptation
 
-(le contrat est à créer au lancement, avec son champ **Origine** ; ID
-à attribuer à ce moment-là dans le registre.)
-
 - `drwil verify --failed` rejoue les seuls contrats qui n'étaient pas PASS ou
   ATTESTED à la dernière preuve ; ce verdict partiel le dit, n'est jamais
-  `GOVERNANCE: PASS` et ne vaut jamais preuve de clôture — contrat à créer
-- Sans preuve précédente lisible, l'option le dit et ne rejoue rien
+  `GOVERNANCE: PASS` et ne vaut jamais preuve de clôture — `QUA-159`
+- Sans preuve précédente lisible, l'option le dit et ne rejoue rien — `QUA-159`
 - Un contrat seulement en attente d'attestation (MANUAL) n'est pas un
-  contrôle en échec : le verdict partiel le dit et renvoie à `drwil attest`
+  contrôle en échec : le verdict partiel le dit et renvoie à `drwil attest` — `QUA-159`
 - Après un FAIL, le rappel de l'état en VERIFY propose `--failed`, puis la
-  passe complète `verify --evidence`
+  passe complète `verify --evidence` — `QUA-159`
 
 ## 2. Hors périmètre
 

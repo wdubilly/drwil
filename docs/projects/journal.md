@@ -3764,3 +3764,22 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`.
 - **Preuve de clôture** : `docs/preuves/scope-anticipe-les-decoupes.md`.
 - **Clôturé par** : la branche `workstream/scope-anticipe-les-decoupes`.
+
+## 2026-10-28 — Après un FAIL, `drwil verify --failed` rejoue les seuls contrats qui n'étaient pas PASS ou ATTESTED
+
+- **Décisions clés** : contrat neuf QUA-159 ; l'option lit la dernière preuve `verify-*.json` lisible et rejoue, par `only` (le chemin d'`attest`),
+  les contrats ni PASS, ni ATTESTED, ni MANUAL seul (un contrat absent de la preuve est rejoué) ; verdict partiel : libellé
+  `GOVERNANCE: PARTIAL (--failed) — NOT A VERDICT`, `status` « partial » en JSON, code de sortie jamais 0, aucune preuve écrite, ni critères
+  ni garanties jugés ; sans preuve lisible, il le dit et ne rejoue rien ; un MANUAL est nommé et renvoie à `drwil attest` ; `--failed` et
+  `--evidence` s'excluent (commander) ; le rappel de VERIFY propose `--failed` après un FAIL, puis la passe complète. QUA-141 et QUA-152
+  inchangés. Mesure sur ce dépôt (151 contrats, un contrat rendu rouge exprès) : passe complète `verify --evidence` 2 min 50 s quand la
+  configuration a changé (rien à reprendre) et 12 à 14 s quand les verdicts de `run-checks` sont repris ; `verify --failed` après la
+  correction 0,3 s, un seul contrat rejoué, son contrôle repris de `run-checks` (fichiers inchangés).
+- **Écart au cadrage** : le scope listait `packages/drwil/src/verify.ts` (199 lignes, au plafond) mais pas les fichiers où l'option vit ; élargi par un commit
+  de la fiche à `packages/drwil/src/cli-verify.ts`, `packages/drwil/src/verdict.ts`, `packages/drwil/src/verify-types.ts`, au nouveau `packages/drwil/src/failed.ts`, au rappel d'état `.githooks/state-context-texts.mjs` (dépôt et
+  gabarit) et à `docs/architecture.md`. `packages/drwil/src/verify.ts` et `packages/drwil/src/evidence.ts` n'ont pas bougé (déjà couvert par l'intention
+  `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`).
+- **Limites connues** : la mesure ne sépare pas le gain de `--failed` de celui de la reprise par contrôle (QUA-141) ; la passe complète de
+  clôture reste obligatoire (règle de VERIFY inchangée).
+- **Preuve de clôture** : `docs/preuves/verify-rejoue-les-echecs.md` (si présent).
+- **Clôturé par** : la branche `workstream/verify-rejoue-les-echecs`.
