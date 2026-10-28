@@ -117,8 +117,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
-  (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
 - [ ] [IA] [P2] `docs/ia-first.md` en sections courtes autonomes, plafond des
   documents lus à la demande abaissé à 400 ou 500 lignes, `kitSizeLegacy`
   retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,

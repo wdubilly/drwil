@@ -3247,7 +3247,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (8 cœurs, `drwil verify --agent`) : 3 min 26 en série (`parallel` coupé),
   2 min 06 en parallèle, soit environ 39 % de moins.
 - **Limites connues** : `verify` rejoue encore tout après un FAIL
-  (`docs/projects/verify-rejoue-les-echecs.md`) et ne reprend pas les verdicts
+  (`docs/projects/journal.md`) et ne reprend pas les verdicts
   de `run-checks` (`docs/projects/journal.md`) ; `parallel`
   reste un réglage, non activé par défaut chez les projets.
 - **Preuve de clôture** : `docs/preuves/verify-en-parallele.md` (si présent).
@@ -3274,7 +3274,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   reprise (137 contrôles repris, 2 rejoués) contre 1 min 57 avec `--no-reuse`
   (139 rejoués).
 - **Limites connues** : `verify` rejoue encore tout après un FAIL
-  (`docs/projects/verify-rejoue-les-echecs.md`) ; la moindre modification de
+  (`docs/projects/journal.md`) ; la moindre modification de
   l'arbre (une note, la fiche) invalide la reprise.
 - **Preuve de clôture** : `docs/preuves/verify-reprend-run-checks.md` (si présent).
 - **Clôturé par** : la branche `workstream/verify-reprend-run-checks`.
