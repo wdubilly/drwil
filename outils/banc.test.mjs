@@ -603,8 +603,8 @@ test("QUA-108 : la copie avec drwil est adoptée : carte, code existant rattach�
   const config = JSON.parse(readFileSync(join(copie, ".drwil", "ia-first.json"), "utf8"));
   assert.deepEqual(
     config.checks.map((c) => c.run),
-    ["npm test"],
-    "contrôles de la pile déclarés",
+    ["node .githooks/check-kit-size.mjs", "npm test"],
+    "contrôles de la pile déclarés, après celui du kit (QUA-157)",
   );
   assert.equal(config.guarantees, undefined, "aucune garantie obligatoire câblée");
   assert.equal(gitOk(copie, "status", "--porcelain"), "", "adoption commitée avant l'activation des hooks");

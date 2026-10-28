@@ -92,6 +92,18 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    autres outils), banc et fabrique (après le catalogue, décision du
    2026-10-26), produit.
 
+**Versions visées (décidé avec le demandeur le 2026-10-28)** :
+
+- **0.11.0** : la réalisation des sept fiches cadrées de la section suivante,
+  une par session, dans l'ordre indiqué ; entre deux chantiers, le cadrage des
+  thèmes C (cible de couverture) et D (preuves et contrôles).
+- **0.12.0** : la fluidité de l'adoption (thèmes B, E, F et G), cadrée pendant
+  la 0.11 : le premier commit du kit sous la barrière bloquante, le
+  `judgeGuarantees` mort, la clôture d'une fiche permanente (qui laisse
+  l'état en BUILD après une montée de version), les garanties, la montée de
+  version sans perte, le worktree toujours proposé et l'attestation depuis le
+  chat.
+
 Une limite trouvée à une clôture rejoint l'intention de son thème, jamais un
 doublon. Une intention qui attend une condition (chiffres du banc, essai réel
 d'un outil) la dit dans son statut.
@@ -168,11 +180,15 @@ rien à cadrer : `docs/intentions/fichiers-charges-courts.md`.
 
 ### Protection, garanties, contournements
 
-- [ ] [décision] Le premier commit du kit est refusé en SCOPING sous la
+- [ ] [décision] [P1] Le premier commit du kit est refusé en SCOPING sous la
   barrière bloquante, et la recette d'adoption ne le dit pas —
   `docs/intentions/premier-commit-du-kit-sous-barriere-bloquante.md`.
 - [ ] [décision] Un `judgeGuarantees` mort reste dans `packages/drwil/src/guarantees-verify.ts` —
   `docs/intentions/juge-des-garanties-en-double.md`.
+- [ ] [décision] Le contrôle `taille-kit` déclaré à l'installation compte comme
+  contrôle du projet et masque l'alerte « aucun contrôle du projet déclaré »,
+  même en CI chez un projet neuf —
+  `docs/intentions/controle-du-kit-masque-l-alerte-sans-controle.md`.
 - [ ] [décision] Les garanties obligatoires, la suite (`doctor` sur le dépôt
   drwil compris), à cadrer avec ou juste après la fiche du niveau de
   protection — `docs/intentions/garanties-la-suite.md`.

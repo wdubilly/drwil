@@ -73,6 +73,7 @@ files:
   - .githooks/commit-msg
   - .githooks/check-file-size.mjs
   - .githooks/check-file-size.legacy.json
+  - .githooks/check-kit-size.mjs
   - .githooks/check-code-rules.mjs
   - .githooks/create-release.mjs
   - .githooks/create-release-texts.mjs

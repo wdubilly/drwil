@@ -68,7 +68,8 @@
         "packages/**",
         ".drwil/ia-first.json"
       ],
-      "degradable": false
+      "degradable": false,
+      "needsBuild": true
     },
     {
       "id": "tests-qua-013",
@@ -1958,8 +1959,39 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "taille-kit",
+      "name": "taille des fichiers du kit : plafonds par sorte, bloquant sur le gabarit (QUA-157)",
+      "run": "node .githooks/check-kit-size.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/templates/**",
+        ".githooks/check-kit-size.mjs",
+        "package.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-157",
+      "name": "tests de QUA-157, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-157 \" .githooks/check-kit-size.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
     }
   ],
+  "kitSizeLegacy": {
+    "docs/ia-first.md": 916
+  },
   "worktreeInstall": "npm ci",
   "transitions": "human",
   "scopeGate": "blocking",
