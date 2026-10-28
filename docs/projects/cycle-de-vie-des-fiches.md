@@ -88,7 +88,7 @@ attribuer à ce moment-là dans le registre.)
   l'humain ; l'empreinte entre dans la preuve de clôture ; un critère modifié
   ensuite redemande un geste humain avant la clôture — `QUA-174`
 - Aucun agent ne peut écrire l'acceptation : elle vient du sondage lu par le
-  hook ou du terminal interactif [humain] — `QUA-175` (`Manuel`, attesté)
+  hook ou du terminal interactif [humain] — `QUA-175`
 - Au lancement (sondage et `node .githooks/state.mjs start`), une fiche dont le
   bloc `scope` cite un fichier existant de `.githooks/` sans puce « Contrats
   modifiés » qui le nomme est signalée, avec la puce à écrire sur le oui du
@@ -112,6 +112,8 @@ contrats modifiés sont repris dans chaque puce.)
 - `.githooks/state.mjs` — le lancement ajoute à son message le signalement des hooks cités sans puce (`.githooks/state-hooks.mjs`, modifie QUA-137) (validé par le demandeur le 2026-10-26)
 - `.githooks/doc-coherence.mjs` — `indexItem` ne compte comme fiche que `docs/projects/*.md` : la ligne d'index d'une fiche qui cite aussi un autre document de `docs/` est retirée à la clôture ; ancien critère de QUA-074 : la clôture refuse les incohérences de l'index sans distinguer la fiche des autres documents cités (modifie QUA-074) (validé par le demandeur le 2026-10-26)
 - `.githooks/close.test.mjs` — tests de la preuve de clôture (empreinte des critères) et de la ligne d'index retirée ; aucun contrôle affaibli (validé par le demandeur le 2026-10-26)
+- `QUA-137` — contrat modifié : le lancement signale les hooks cités sans puce ; le refus de clôture est inchangé (validé par le demandeur le 2026-10-26)
+- `QUA-074` — contrat modifié : seule une fiche de `docs/projects/` compte comme fiche d'une ligne d'index (validé par le demandeur le 2026-10-26)
 
 ## 2. Hors périmètre
 
