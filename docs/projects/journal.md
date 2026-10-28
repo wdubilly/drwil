@@ -3795,5 +3795,6 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `.githooks/briefs-order.mjs` (`.githooks/briefs.mjs` restait sous le plafond de 200 lignes) ; la skill `/drwil-start` du gabarit dit le nouvel ordre.
 - **Hooks modifiés** : `.githooks/briefs.mjs`, `.githooks/state.test.mjs` ; neuf : `.githooks/briefs-order.mjs`.
 - **Limites connues** : la section « Fiches cadrées » est reconnue par son titre (français ou anglais) ; l'ordre d'une fiche déjà lancée dans une file n'est pas relu.
-- **Clôturé par** : la branche `workstream/sondage-suit-l-ordre-de-pending`.
+- **Preuve de clôture** : `docs/preuves/sondage-suit-l-ordre-de-pending.md`.
+- **Clôturé par** : la branche `cadrage/lots-en-sous-agents-et-ordre-du-sondage`.
 

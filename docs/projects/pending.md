@@ -117,10 +117,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P2] Le sondage `/drwil-start` suit l'ordre de cette section, une
-  fiche pas prête gardant sa place (cadré le 2026-10-28 ; à faire en premier :
-  les fiches suivantes se lancent ensuite dans l'ordre) —
-  `docs/projects/sondage-suit-l-ordre-de-pending.md`.
 - [ ] [IA] [P2] Une fiche à plusieurs lots se réalise lot par lot, un sous-agent
   neuf par lot, une seule clôture (cadré le 2026-10-28 ; avant les fiches à
   lots de la 0.11.0) —
