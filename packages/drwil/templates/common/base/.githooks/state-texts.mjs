@@ -6,6 +6,7 @@ import { readBlock } from "./scope.mjs";
 import { config } from "./briefs.mjs";
 import { worktreeLines } from "./worktree.mjs";
 import { TEXTS } from "./state-context-texts.mjs";
+import { lotLabel, lotStatus } from "./state-lots.mjs";
 
 import { fill, STATE_MESSAGES } from "./state-messages.mjs";
 
@@ -18,6 +19,18 @@ export const docLanguage = (root) => config(root).docLang ?? config(root).lang ?
 
 /** `scopeGate: off` switches off all governance (gate, trailer, context): withdrawal without deleting anything. */
 export const governanceDisabled = (root) => config(root).scopeGate === "off";
+
+/** Lines of a brief with lots: the current lot to work on alone (BUILD), the [human] lots to do (BUILD, CLOSING). */
+function lotContext(read, root, T) {
+  const status = lotStatus(root, read);
+  if (!status) return [];
+  const { activity } = read.state;
+  const lines = [];
+  if (activity === "BUILD") lines.push(T.lot(lotLabel(status.current), status.current === status.ia.at(-1)));
+  if (status.humans.length && (activity === "BUILD" || activity === "CLOSING"))
+    lines.push(T.lotHumans(status.humans.map(lotLabel).join(" ; ")));
+  return lines;
+}
 
 /** Readable context to reinject to the agent, built from the disk only. */
 export function context(read, root) {
@@ -50,6 +63,7 @@ export function context(read, root) {
   if (state.detour) lines.push(fill(T.detour, state.detour.origin_brief, state.detour.origin_branch, state.detour.branch));
   if (state.reopened) lines.push(fill(T.reopened, state.reopened.pr));
   if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
+  lines.push(...lotContext(read, root, T));
   lines.push(T.rule(T.rules[state.activity]));
   if (state.activity === "CLOSING") lines.push(T.docLanguage(docLanguage(root)));
   if (state.activity === "CLOSING" && !state.queue?.length) lines.push(T.closingNoQueue);
@@ -81,5 +95,6 @@ export function shortReminder(read, root) {
         }
         return T.reminder(state.activity, state.active_brief, n);
       })();
-  return `${head}\n${T.rule(T.rules[state.activity])}`;
+  const lot = problems.length ? [] : lotContext(read, root, T);
+  return [head, ...lot, T.rule(T.rules[state.activity])].join("\n");
 }

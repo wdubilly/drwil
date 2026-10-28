@@ -117,10 +117,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P2] Une fiche à plusieurs lots se réalise lot par lot, un sous-agent
-  neuf par lot, une seule clôture (cadré le 2026-10-28 ; avant les fiches à
-  lots de la 0.11.0) —
-  `docs/projects/lots-en-sous-agents.md`.
 - [ ] [IA] [P2] `docs/ia-first.md` en sections courtes autonomes, plafond des
   documents lus à la demande abaissé à 400 ou 500 lignes, `kitSizeLegacy`
   retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
@@ -266,6 +262,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] Le sondage parallèle (plusieurs worktrees) vérifié dans
   Copilot CLI ; le sondage à une fiche l'est (2026-10-26) —
   `docs/intentions/sondage-worktree-copilot-cli.md`.
+- [ ] [décision] L'enchaînement des lots (un sous-agent neuf par lot) éprouvé sur
+  une vraie fiche à lots, consommation mesurée —
+  `docs/intentions/essai-reel-lots-en-sous-agents.md`.
 - [ ] [décision] [P1] (0.12.0, 2) La clôture en un geste reconnaît une fiche permanente
   (l'entretien courant, clos à la main pour les versions 0.8.0 et 0.9.0 ; sans
   cela l'état reste en BUILD après une montée de version et `/drwil-start` est refusé) —

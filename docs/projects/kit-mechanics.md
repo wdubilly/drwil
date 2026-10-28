@@ -27,6 +27,10 @@ files:
   - .githooks/scope.test.mjs
   - .githooks/state.mjs
   - .githooks/state-cli.mjs
+  - .githooks/state-lots.mjs
+  - .githooks/state-cli-lots.mjs
+  - .githooks/briefs-lots.mjs
+  - .githooks/state-lots.test.mjs
   - .githooks/briefs.mjs
   - .githooks/pr-watch.mjs
   - .githooks/merge-auto.mjs

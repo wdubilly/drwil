@@ -93,5 +93,20 @@ export const MESSAGES_EN = {
   askMerge: "Automatic merge at the end of the workstream? Type MERGE, otherwise Enter: ",
   notConfirmed: "✗ start not confirmed: state unchanged",
   unreadableState: `[drwil] governance state unreadable: {0}`,
-  usage: `usage: node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <text>] | start [<brief>] | reopen | briefs [--json] | reminder`,
+  lotNone:
+    "no lot chaining: the active brief has no two lots with at least one [IA] ('Increments' section, bullets « **Lot N — title** [IA|human] »)",
+  lotActivity: "next lot refused: activity {0} — lots are chained in BUILD",
+  lotDirty: "next lot refused: lot {0} is not committed (modified tree, or git state unknown) — commit first; nothing changed",
+  lotLast: "next lot refused: lot {0} is the last [IA] lot and it is already done — close the brief",
+  lotAdvanced: "lot {0} done → current lot: {1}{2}",
+  lotLastDone: "lot {0} done: it is the last [IA] lot, closing is possible{1}",
+  lotHumansLeft: "; [human] lot(s) to do, skipped: {0}",
+  lotRemaining:
+    "closing refused: [IA] lot(s) not done: {0} — chain them one by one, `node .githooks/state.mjs lot next` after each one's commit (the last one too)",
+  lotCurrent: "Current lot: {0}",
+  lotDone: "[IA] lots done: {0}",
+  lotLeft: "[IA] lots left: {0}",
+  lotHumans: "[human] lots to do (skipped by the chaining, recalled at closing): {0}",
+  lotNothing: "none",
+  usage: `usage: node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <text>] | start [<brief>] | lot [next] | reopen | briefs [--json] | reminder`,
 };

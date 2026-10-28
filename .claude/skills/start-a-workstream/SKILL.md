@@ -108,6 +108,17 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    session. The main session keeps only the reports and the human decisions. A subagent that needs
    the human stops with a report saying why; the main session asks the human, then resumes the
    workstream (a new subagent, whose instructions start by reading the state).
+   - **A brief with several lots** (« Increments » section: bullets « **Lot N — title** [IA|human] »; the
+     state names the current lot): one fresh subagent per lot, one at a time, on the same brief,
+     branch and PR, with a single closing. Its instructions start by reading the state (it names the
+     current lot: work on that one only) and the brief's « Reprise » (« Hand-off ») section, which, with
+     the commits, carries the hand-over from one lot to the next. Once the lot is committed, the subagent
+     runs `node .githooks/state.mjs lot next` and ends with its report; the main session starts a new
+     subagent for the next lot (`node .githooks/state.mjs lot` says which). A [human] lot is skipped, named
+     as still to do and recalled at the closing; the chaining goes on with the next [IA] lots. The
+     subagent of the last lot runs `lot next` too (it marks it done), verifies and closes the brief: the
+     closing is refused while an [IA] lot is not done. Between two lots, `verify --failed` only after a
+     failure: the full pass is the closing's. A brief with a single lot, or none, runs as before.
    - Sequential queue or single workstream: the subagent works in the repository folder — never `isolation: "worktree"`:
      `.drwil/state.json` (if present) is ignored by Git, absent from an isolated copy, and the subagent would
      believe it is in SCOPING. It receives no state reminder at start: its instructions start by

@@ -7,6 +7,16 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- A brief with several lots (bullets « **Lot N — title** [IA|human] » of its
+  « Increments » section) is now carried lot by lot: `node .githooks/state.mjs
+  lot` names the current lot, the lots done and those left, and `lot next`
+  moves on once the lot is committed (never past the last one). The state's
+  reminder names the current lot and says to work on it only; a [human] lot is
+  skipped and recalled at the closing; the closing stays single and is refused
+  while an [IA] lot is not done. The launch skill tells the agent to give each
+  lot a fresh subagent (Claude Code, Copilot CLI), the hand-over going through
+  the commits and the brief's hand-off section. A brief with one lot, or none,
+  runs as before.
 - With Copilot CLI, the `/drwil-start` poll now offers a multiple-choice
   field of briefs (a queue, optionally in parallel): the start hook reads a
   field of type `array` (values in `items.enum`) like the single-choice one,

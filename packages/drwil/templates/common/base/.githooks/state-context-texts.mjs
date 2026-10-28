@@ -28,6 +28,10 @@ export const TEXTS = {
       "Hors file : terminer en proposant à l'humain `/clear` avant sa prochaine demande (Claude Code ; autre outil : une nouvelle conversation) — un contexte neuf ne relit pas ce chantier.",
     nextSession:
       "Après une clôture, le chantier suivant se lance dans une nouvelle session (Claude Code : `/clear` ; autre outil : une nouvelle conversation) — un contexte neuf ne relit pas le chantier clos ; si cette session vient d'en clore un, le proposer à l'humain avant sa prochaine demande. Une file garde son sous-agent par chantier.",
+    lot: (cur, last) =>
+      `Lot courant : ${cur} — ne traiter que lui (un sous-agent neuf par lot, la passation par les commits et la section « Reprise » de la fiche) ; une fois commité, \`node .githooks/state.mjs lot next\`${last ? " (dernier lot [IA] : il le marque fait, puis vérifier et clore)" : " passe au suivant"}.`,
+    lotHumans: (l) =>
+      `Lot(s) [humain] à faire, sautés par l'enchaînement, à rappeler à la clôture (leur critère est jugé par verify) : ${l}.`,
     scope: "Périmètre autorisé (bloc scope de la fiche) :",
     noScope: "  (aucun bloc scope : aucun fichier de code autorisé)",
     briefDeleted: "fiche supprimée (clôture)",
@@ -77,6 +81,9 @@ export const TEXTS = {
       "Outside a queue: finish by suggesting `/clear` to the human before their next request (Claude Code; another tool: a new conversation) — a fresh context does not read this workstream again.",
     nextSession:
       "After a closing, the next workstream starts in a new session (Claude Code: `/clear`; another tool: a new conversation) — a fresh context does not read the closed workstream again; if this session just closed one, suggest it to the human before their next request. A queue keeps its subagent per workstream.",
+    lot: (cur, last) =>
+      `Current lot: ${cur} — work on it only (a fresh subagent per lot, handed over through the commits and the brief's « Hand-off » section); once committed, \`node .githooks/state.mjs lot next\`${last ? " (last [IA] lot: it marks it done, then verify and close)" : " moves on to the next one"}.`,
+    lotHumans: (l) => `[human] lot(s) to do, skipped by the chaining, to recall at closing (their criterion is judged by verify): ${l}.`,
     scope: "Allowed scope (scope block of the brief):",
     noScope: "  (no scope block: no code file allowed)",
     briefDeleted: "brief deleted (closing)",

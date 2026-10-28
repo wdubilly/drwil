@@ -18,4 +18,3 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 
 ## Notes
 - 2026-10-27 — Contrôler de façon déterministe que le corps d'une PR suit .github/pull_request_template.md (titres présents), en CI ou hook : aujourd'hui seule la consigne à l'agent l'impose (écart constaté sur la PR #273 du chantier plafond-200-lignes).
-- 2026-10-28 — Découper une fiche à plusieurs lots : un sous-agent neuf par lot (même fiche, branche et PR, une seule clôture), sous-file de lots et lot courant dans l'état, arrêt sur un lot [humain] ; en tête des fiches restantes de la 0.11.0 (décidé avec le demandeur le 2026-10-28)
