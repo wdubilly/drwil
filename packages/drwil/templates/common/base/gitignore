@@ -38,6 +38,8 @@ htmlcov/
 # Fingerprint of the last short reminder injected to the agent (`node .githooks/state.mjs reminder`):
 # local like the state, so it is only reinjected when it changed.
 .drwil/reminder.json
+# Lots faits de la fiche en cours (`node .githooks/state.mjs lot next`) : local comme l'état.
+.drwil/lot.json
 # Identifiers already recalled to the agent in its session (.claude/hooks/id-glossary.mjs): local.
 .drwil/glossary.json
 # <<< drwil
