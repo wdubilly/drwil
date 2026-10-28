@@ -11,6 +11,13 @@ files:
   - packages/drwil/src/agent.ts
   - packages/drwil/src/evidence.ts
   - packages/drwil/bin/drwil.js
+  - packages/drwil/src/cli-verify.ts
+  - packages/drwil/src/failed.ts
+  - packages/drwil/src/verdict.ts
+  - packages/drwil/src/verify-types.ts
+  - .githooks/state-context-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
+  - docs/architecture.md
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/cycle.test.mjs
   - packages/drwil/templates/common/base/.githooks/state.mjs
