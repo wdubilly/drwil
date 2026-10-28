@@ -117,10 +117,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P2] La fusion automatique s'enchaîne dans l'ordre par un outil
-  (merge-auto), plus par une consigne ; ordre sauté deux fois le
-  2026-10-28 (cadré le 2026-10-28, en tête de pile) —
-  `docs/projects/fusion-auto-ordonnee.md`.
 - [ ] [IA] [P2] Le sondage `/drwil-start` de Copilot CLI propose et lit un choix
   multiple (file de chantiers, parallèle), en tête de pile (cadré le 2026-10-28) —
   `docs/projects/sondage-copilot-choix-multiple.md`.
@@ -175,6 +171,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Preuves, contrôles, vitesse
 
+- [ ] [décision] La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
+  vraie PR en retard sur la branche principale —
+  `docs/intentions/merge-auto-eprouve-en-reel.md`.
 - [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
   externe du 2026-10-22) — `docs/intentions/e2e-et-attestation-precises.md`.
 - [ ] [décision] [P1] Suivre la durée de la CI et le contexte relu, et trancher
