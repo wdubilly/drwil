@@ -8,6 +8,7 @@
 <!-- scope
 files:
   - packages/drwil/src/config.ts
+  - packages/drwil/src/config-write.ts
   - packages/drwil/src/doctor.ts
   - packages/drwil/src/guarantees.ts
   - packages/drwil/src/protection.ts
@@ -16,6 +17,7 @@ files:
   - packages/drwil/test/protection.test.mjs
   - packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md
   - docs/contracts.md
+  - docs/architecture.md
   - .drwil/ia-first.json
   - packages/drwil/CHANGELOG.md
   - packages/drwil/README.md
@@ -90,7 +92,8 @@ PASS, FAIL, MANUAL ou ERROR).
 
 ## 6. Increments
 
-- **Lot 1 — défaut à l'installation neuve** [IA] : `packages/drwil/src/config.ts` et ses
+- **Lot 1 — défaut à l'installation neuve** [IA] : `packages/drwil/src/config.ts` et
+  `packages/drwil/src/config-write.ts` (où le défaut `scopeGate` est écrit) et leurs
   tests (installation neuve, mise à jour avec et sans réglage).
 - **Lot 2 — niveau de protection** [IA] : module protection.ts,
   affichage par `doctor` (texte et `--json`), échec de `verify` sous
@@ -101,6 +104,8 @@ PASS, FAIL, MANUAL ou ERROR).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-23) : cadré.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Dernier état** (2026-10-28) : lots 1 et 2 réalisés (QUA-154, QUA-155,
+  QUA-156) ; détour PR #283 (deux tests hors cadrage qui supposaient la
+  barrière en avertissement par défaut).
+- **Travail non commité** : aucun une fois la clôture commitée.
+- **Prochaine étape** : fusion de la PR du chantier.
