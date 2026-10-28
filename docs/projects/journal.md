@@ -3813,3 +3813,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : la forme réelle de la réponse de Copilot CLI à un choix multiple n'est pas relevée (essai humain, lot 3 de la fiche) ; reportée dans `docs/intentions/sondage-worktree-copilot-cli.md`.
 - **Preuve de clôture** : `docs/preuves/sondage-copilot-choix-multiple.md`.
 - **Clôturé par** : la branche `cadrage/merge-auto-ordonnee`.
+
+## 2026-10-28 — Une fiche à plusieurs lots se réalise lot par lot, un sous-agent neuf par lot
+
+- **Décisions clés** : contrats neufs QUA-166 à QUA-171 ; `.githooks/briefs-lots.mjs` lit les puces « **Lot N — titre** [IA|humain] » de la section « Increments » (sans étiquette : IA) ; `state.mjs lot` dit le lot courant, les lots [IA] faits et restants, les lots [humain] à faire ; `lot next` marque le lot courant fait (arbre propre exigé) et passe au lot [IA] suivant, jamais au-delà du dernier ; le rappel d'état nomme le lot courant et dit de ne traiter que lui ; un lot [humain] est sauté, nommé et rappelé en CLOSING ; le passage à CLOSING est refusé tant qu'un lot [IA] n'est pas fait, une fiche à un lot ou sans lot restant inchangée. Le lot courant tient dans un fichier local de `.drwil/` (le validateur d'état, hors cadrage, n'a pas de champ de plus), effacé au lancement d'un chantier et au retour en SCOPING ; `start` et `move` sont enveloppés dans `.githooks/state.mjs`. Le skill `start-a-workstream` dit : un sous-agent neuf par lot, passation par les commits et la section « Reprise », `verify --failed` seulement après un échec.
+- **Hooks modifiés** : `.githooks/state.mjs`, `.githooks/state-cli.mjs`, `.githooks/briefs.mjs`, `.githooks/state-texts.mjs`, `.githooks/state-context-texts.mjs`, `.githooks/state-messages-fr.mjs`, `.githooks/state-messages-en.mjs` ; neufs : `.githooks/briefs-lots.mjs`, `.githooks/state-lots.mjs`, `.githooks/state-cli-lots.mjs`, `.githooks/state-lots.test.mjs`.
+- **Cadrage élargi** : le gabarit de `kit-mechanics.md` (liste des fichiers livrés), omis du bloc scope, ajouté dans un commit séparé.
+- **Limites connues** : aucun outil ne lance les sous-agents, la consigne du skill les enchaîne (Claude Code et Copilot CLI ; Gemini CLI reste en une session) et n'a pas été éprouvée sur une vraie fiche à lots (`docs/intentions/essai-reel-lots-en-sous-agents.md`) ; le dernier lot doit lui aussi passer par `lot next` avant la clôture.
+- **Preuve de clôture** : `docs/preuves/lots-en-sous-agents.md`.
+- **Clôturé par** : la branche `workstream/lots-en-sous-agents`.
