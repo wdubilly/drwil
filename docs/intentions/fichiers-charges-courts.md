@@ -81,7 +81,7 @@ fichiers que la CLI installe chez un projet :
 ## Décisions (sondage du 2026-10-27)
 
 Cadrées en trois fiches, dans l'ordre : `docs/projects/journal.md` (hooks-agent-sous-le-plafond),
-`docs/projects/journal.md`, `docs/projects/surveillance-taille-du-kit.md`.
+`docs/projects/journal.md`, `docs/projects/journal.md`.
 
 - `AGENTS.md` : 100 lignes, gabarit et copie du dépôt ; règles sans contrôle
   machine en une ligne chacune, détail renvoyé à `docs/`.
@@ -106,3 +106,6 @@ Cadrées en trois fiches, dans l'ordre : `docs/projects/journal.md` (hooks-agent
   fallait-il garder ce détail dans `docs/ia-first.md` (décision 4 : pas de
   découpe) ou le sortir dans un document à part, avant que la fiche
   `surveillance-taille-du-kit` ne pose le plafond ? [décision]
+  Provisoire (2026-10-28, demandeur) : le plafond hérité `kitSizeLegacy`
+  (916 lignes) de `.drwil/ia-first.json` tolère ce fichier, qui ne peut que
+  maigrir (QUA-157) ; la question reste ouverte.

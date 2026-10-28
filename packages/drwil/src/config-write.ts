@@ -4,6 +4,18 @@ import { join } from "node:path";
 import { CI_FILES, ciFromConfig, projectName, readConfig, type Resolved, splitCsv } from "./config.js";
 import { TEXT } from "./config-text.js";
 
+const KIT_SIZE_CHECK = {
+  id: "taille-kit",
+  name: "taille des fichiers du kit : un dépassement avertit, il ne bloque pas",
+  run: "node .githooks/check-kit-size.mjs",
+};
+
+/** The project's checks, plus the kit-size one when the project does not declare it yet (by its id). */
+function withKitSize(previous: unknown): unknown[] {
+  const checks = Array.isArray(previous) ? previous : [];
+  return checks.some((c) => c?.id === KIT_SIZE_CHECK.id) ? checks : [...checks, KIT_SIZE_CHECK];
+}
+
 export async function writeConfig(r: Resolved): Promise<void> {
   const previous = readConfig(r.opts.targetDir);
   // Settings entered by the project: kept as they are; those derived from an option (CI files) are
@@ -22,8 +34,9 @@ export async function writeConfig(r: Resolved): Promise<void> {
     // An installed project's folders do not move with its language: its briefs live there.
     dirs: previous?.dirs ?? TEXT.dirs,
     stack: r.stack,
-    // The project's checks are entered by the user or the AI: a reinstall must not erase them.
-    checks: Array.isArray(previous?.checks) ? previous.checks : [],
+    // The project's checks are entered by the user or the AI: a reinstall must not erase them; the kit's
+    // own size check is declared once, without any gesture, and a project that removes its id gets it back.
+    checks: withKitSize(previous?.checks),
     // Severity of the scope reminder (QUA-016 only): "blocking" | "warning" | "off". Default
     // "blocking"; a value already chosen by the project is never overwritten by a reinstall.
     scopeReminder: typeof previous?.scopeReminder === "string" ? previous.scopeReminder : "blocking",

@@ -3735,3 +3735,20 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `packages/drwil/src/guarantees-verify.ts` (`docs/intentions/juge-des-garanties-en-double.md`) ; essai Rust non refait (pas de cargo).
 - **Preuve de clôture** : `docs/preuves/niveau-de-protection.md` (si présent).
 - **Clôturé par** : la branche `workstream/niveau-de-protection`.
+
+## 2026-10-28 — Surveillance de la taille du kit : un contrôle livré, bloquant sur le gabarit, avertissant chez un projet adopté
+
+- **Décisions clés** : contrat neuf QUA-157 (QUA-001 garde le code du projet) ; plafonds en lignes 200 (code, hooks, réglages),
+  100 (`AGENTS.md`), 800 (documents), 250 (recettes) ; `.githooks/check-kit-size.mjs` mesure le gabarit dans ce dépôt (un
+  dépassement échoue) et la liste des fichiers installés chez un projet adopté (un dépassement avertit, jamais bloquant ; liste
+  absente ou vide : échec, QUA-013) ; `drwil init` déclare le contrôle `taille-kit` sans effacer les contrôles du projet ;
+  `docs/ia-first.md` (916 lignes) tenu par le plafond hérité `kitSizeLegacy` (décision de l'humain, la question reste ouverte).
+- **Écart au cadrage** : `docs/projects/kit-mechanics.md` (dépôt et gabarit), `packages/drwil/test/kit.test.mjs` et
+  `outils/banc.test.mjs` ajoutés au scope sur décision de l'humain : le contrôle déclaré compte comme contrôle du projet et
+  masque l'alerte « aucun contrôle du projet déclaré » ; les deux tests en tirent la conséquence.
+- **Limites connues** : ce masquage, y compris en CI chez un projet neuf
+  (`docs/intentions/controle-du-kit-masque-l-alerte-sans-controle.md`) ; un projet neuf reçoit l'avertissement sur
+  `docs/ia-first.md` (916 lignes, plafond 800) tant que ce document n'est pas réduit
+  (`docs/intentions/fichiers-charges-courts.md`).
+- **Preuve de clôture** : `docs/preuves/surveillance-taille-du-kit.md`.
+- **Clôturé par** : la branche `workstream/surveillance-taille-du-kit`.

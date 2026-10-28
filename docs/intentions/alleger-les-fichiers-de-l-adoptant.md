@@ -4,7 +4,7 @@
 
 ## Besoin
 
-Le contrôle de taille du kit (`docs/projects/surveillance-taille-du-kit.md`)
+Le contrôle de taille du kit (`docs/projects/journal.md`)
 avertit un projet adopté dont un fichier du kit dépasse son plafond, et
 QUA-001 (fichier de code plafonné) plafonne son code. L'avertissement dit
 quoi, pas comment : le kit gagnerait à proposer de quoi alléger.

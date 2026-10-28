@@ -172,7 +172,10 @@ test("init d'un projet en français : tous les outils, git et hooks, contrôles 
   assert.match(read(dir, "docs/architecture.md"), /Not decided/);
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(r.stdout, /non exécuté : contrôles du projet/);
+  // Le contrôle du kit (taille-kit, QUA-157) compte comme contrôle déclaré : l'alerte « aucun contrôle du projet »
+  // n'apparaît plus (limite actée : docs/intentions/controle-du-kit-masque-l-alerte-sans-controle.md).
+  assert.doesNotMatch(r.stdout, /non exécuté : contrôles du projet/);
+  assert.match(r.stdout, /taille des fichiers du kit/);
 });
 
 test("QUA-038 : répertoire vide : aucune couche inventée, dit quoi faire ; la pile choisie, init --layers crée les couches", async () => {

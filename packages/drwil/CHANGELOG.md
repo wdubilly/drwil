@@ -5,6 +5,17 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Added
+
+- A size check for the files the kit installs (`.githooks/check-kit-size.mjs`,
+  declared as `taille-kit` in `.drwil/ia-first.json` by `drwil init`, without
+  touching the project's own checks): ceilings in lines of 200 for code, hooks
+  and settings, 100 for `AGENTS.md`, 800 for on-demand documents, 250 for
+  recipes. In an installed project an overrun is a warning naming the file and
+  its ceiling, never a blocker; the project's own code is never measured.
+  `kitSizeLegacy` in `.drwil/ia-first.json` tolerates a file already above its
+  ceiling, which can only shrink.
+
 ### Changed
 
 - A new install writes the scope gate (`scopeGate`) as `blocking` instead of
