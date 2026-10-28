@@ -579,10 +579,14 @@ test("QUA-108 : la copie avec drwil est installée comme chez un utilisateur : t
   gitOk(copie, "switch", "-q", "-c", "essai");
   const fiche = ["# Projet : boutique", "", "**Statut** : cadré le 2026-10-23.", "**Risque** : MEDIUM", "", "<!-- scope", "files:"];
   fiche.push("  - src/panier.js", "  - test/panier.test.js", "-->", "", "## 1. Besoin", "", "Corriger le total du panier.", "");
+  fiche.push("## Critères d'acceptation", "", "- Le total du panier suit les quantités — contrat à créer", "");
   fiche.push("## 7. Reprise", "", "- **Prochaine étape** : [IA] corriger le total du panier.");
   writeFileSync(join(copie, "docs", "projects", "boutique.md"), `${fiche.join("\n")}\n`);
   gitOk(copie, "add", "-A");
   gitOk(copie, "commit", "-qm", "Cadrage de la boutique");
+  // La barrière de périmètre, bloquante à l'installation neuve, n'accepte du code qu'en BUILD (transitions : agent).
+  const lance = lancer(process.execPath, [".githooks/state.mjs", "start", "docs/projects/boutique.md"], { cwd: copie });
+  assert.equal(lance.code, 0, lance.sortie);
   writeFileSync(join(copie, "src", "panier.js"), CORRIGE);
   gitOk(copie, "commit", "-qam", "Total du panier selon les quantités");
   gitOk(copie, "push", "-q", "-u", "origin", "essai");
