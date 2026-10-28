@@ -266,6 +266,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] Le sondage parallèle (plusieurs worktrees) vérifié dans
   Copilot CLI ; le sondage à une fiche l'est (2026-10-26) —
   `docs/intentions/sondage-worktree-copilot-cli.md`.
+- [ ] [décision] L'enchaînement des lots (un sous-agent neuf par lot) éprouvé sur
+  une vraie fiche à lots, consommation mesurée —
+  `docs/intentions/essai-reel-lots-en-sous-agents.md`.
 - [ ] [décision] [P1] (0.12.0, 2) La clôture en un geste reconnaît une fiche permanente
   (l'entretien courant, clos à la main pour les versions 0.8.0 et 0.9.0 ; sans
   cela l'état reste en BUILD après une montée de version et `/drwil-start` est refusé) —

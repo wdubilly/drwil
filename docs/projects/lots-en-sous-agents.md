@@ -62,20 +62,20 @@ attribuer à ce moment-là dans le registre.)
 
 - Les lots d'une fiche sont lus dans sa section « Increments » (puces
   « **Lot N — titre** [IA|humain] ») et la commande `state.mjs lot` dit le lot
-  courant, ceux qui sont faits et ceux qui restent — contrat à créer
+  courant, ceux qui sont faits et ceux qui restent — `QUA-166`
 - `state.mjs lot next` passe au lot suivant seulement si le lot courant est
-  commité (arbre propre) ; il ne passe jamais à un lot au-delà du dernier — contrat à créer
+  commité (arbre propre) ; il ne passe jamais à un lot au-delà du dernier — `QUA-167`
 - Le rappel d'état d'un chantier à lots nomme le lot courant et dit de ne traiter
-  que lui — contrat à créer
+  que lui — `QUA-168`
 - Un lot [humain] est sauté par l'enchaînement, nommé comme restant à faire, et
   rappelé à la clôture avec ce qui est attendu ; l'enchaînement continue sur les
-  lots [IA] suivants — contrat à créer
+  lots [IA] suivants — `QUA-169`
 - La clôture reste unique : refusée tant qu'un lot [IA] n'est pas fait (un lot
   [humain] n'est que rappelé : son critère est jugé par `verify`) ; une fiche à un
-  seul lot (ou sans lot) se comporte comme avant — contrat à créer
+  seul lot (ou sans lot) se comporte comme avant — `QUA-170`
 - Le mode d'emploi du lancement (`.claude/skills/start-a-workstream/SKILL.md`) dit
   qu'un sous-agent neuf traite chaque lot, la passation se faisant par les
-  commits et la section « Reprise » de la fiche — contrat à créer
+  commits et la section « Reprise » de la fiche — `QUA-171`
 
 ## 2. Hors périmètre
 
@@ -129,8 +129,18 @@ attribuer à ce moment-là dans le registre.)
 - **Lot 3 — mode d'emploi et doc** [IA] : le fichier SKILL.md du gabarit, architecture,
   `kit-mechanics.md`, changelog, journal. Critère de sortie : `verify --agent` PASS.
 
+## Contrats modifiés
+
+(aucun contrat existant n'est modifié ; hooks modifiés, déclarés comme la contrainte « Hooks modifiés » de la fiche le demande, validés par le demandeur le 2026-10-28)
+
+- `.githooks/briefs.mjs` — réexporte `readLots` (lecture des lots) (validé par le demandeur le 2026-10-28).
+- `.githooks/state-cli.mjs` — sous-commande `lot` (validé par le demandeur le 2026-10-28).
+- `.githooks/state-context-texts.mjs` — rappel du lot courant et des lots [humain] (validé par le demandeur le 2026-10-28).
+- `.githooks/state-messages-fr.mjs` — messages des lots (validé par le demandeur le 2026-10-28).
+- `.githooks/state-messages-en.mjs` — messages des lots (validé par le demandeur le 2026-10-28).
+
 ## 7. Reprise
 
-- **Dernier état** (2026-10-28) : cadré, tout tranché, prêt à lancer.
+- **Dernier état** (2026-10-28) : lots 1 à 3 réalisés et commités, contrats QUA-166 à QUA-171 créés ; reste la clôture.
 - **Travail non commité** : cette fiche et son entrée d'index.
 - **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
