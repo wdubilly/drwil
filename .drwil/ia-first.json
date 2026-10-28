@@ -2227,6 +2227,36 @@
       ],
       "degradable": false,
       "needsBuild": true
+    },
+    {
+      "id": "tests-qua-174",
+      "name": "tests de QUA-174, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-174 \" .githooks/state.test.mjs .githooks/close.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-175",
+      "name": "tests de QUA-175, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-175 \" .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
     }
   ],
   "kitSizeLegacy": {

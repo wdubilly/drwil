@@ -12,9 +12,10 @@
 // Closing (VERIFY → CLOSING) requires the evidence of `drwil verify --evidence`: this
 // file reads it, it runs no check (a single engine, .githooks/engine.mjs).
 import { mkdirSync, realpathSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
-import { main, readStdinJson, reminderIfChanged } from "./state-cli.mjs";
+import { main as mainBase, readStdinJson, reminderIfChanged } from "./state-cli.mjs";
+import { accept, forgetAcceptance, recordAcceptance } from "./state-acceptance.mjs";
 import { reopen } from "./state-reopen.mjs";
 import { clearLots, lotsRefusal } from "./state-lots.mjs";
 import { move as moveBase, start as startBase } from "./state-transitions.mjs";
@@ -36,15 +37,31 @@ export {
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 // The command line lives in state-cli.mjs (QUA-001: files under 200 lines); `node .githooks/state.mjs`
 // stays the entry point.
-export { main, readStdinJson, reminderIfChanged, reopen };
+export { readStdinJson, reminderIfChanged, reopen };
 export { ACTIVITIES, NEUTRAL_STATE, readState, transitionAllowed, validateState } from "./state-validate.mjs";
 export { latestEvidence, requiresHuman, verifyEvidence } from "./state-evidence.mjs";
 export { prepareTransition } from "./state-transitions.mjs";
 
-/** Starts a workstream (state-transitions.mjs); the lots of a previous one are forgotten. */
-export function start(root, brief, opts) {
+/** Command line (state-cli.mjs) and its `accept` command (state-acceptance.mjs): the human's acceptance of the criteria. */
+export async function main(args, root, input) {
+  return args[0] === "accept" ? accept(root) : mainBase(args, root, input);
+}
+
+/**
+ * Starts a workstream (state-transitions.mjs); the lots of a previous one are forgotten. The human's start (poll,
+ * interactive terminal) records the acceptance of the criteria of the brief and of those it queues; any other start
+ * keeps the acceptance of a brief taken from the queue the human decided, and forgets that of the others.
+ */
+export function start(root, brief, opts = {}) {
+  const queued = readState(root).state.queue?.[0];
   const r = startBase(root, brief, opts);
-  if (r.code === 0) clearLots(root);
+  if (r.code !== 0) return r;
+  clearLots(root);
+  const { active_brief: active } = readState(root).state;
+  if (opts.human === true) {
+    const norm = (b) => posix.normalize(String(b).trim().replace(/\\/g, "/"));
+    for (const b of [active, ...(opts.queue ?? []).map(norm)]) recordAcceptance(root, b);
+  } else if (queued !== active) forgetAcceptance(root, active);
   return r;
 }
 
@@ -55,8 +72,12 @@ export function start(root, brief, opts) {
 export async function move(root, args, opts) {
   const refusal = args.to === "CLOSING" ? lotsRefusal(root) : null;
   if (refusal) return { code: 1, message: refusal };
+  const before = readState(root).state.active_brief;
   const r = await moveBase(root, args, opts);
-  if (r.code === 0 && args.to === "SCOPING") clearLots(root);
+  if (r.code === 0 && args.to === "SCOPING") {
+    clearLots(root);
+    if (before) forgetAcceptance(root, before);
+  }
   return r;
 }
 

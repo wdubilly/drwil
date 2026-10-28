@@ -1659,3 +1659,24 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/scope.test.mjs`
 **Origine** : cycle-de-vie-des-fiches — « Un fichier de code déjà présent sur la branche principale reste couvert par défaut après la clôture d'une fiche ; le cadrage ne garde que le code nouveau ou modifié, et la barrière de périmètre n'est pas affaiblie pour un fichier hors de ce cas »
 **Raison** : La clôture supprime la fiche alors que tout fichier de code doit rester couvert : drwil_com a dû créer à la main une fiche de référence « code livré ».
+
+## QUA-174 — Les critères d'acceptation acceptés au lancement sont figés : un critère modifié ensuite refuse la clôture
+**Règle** : Livré à tout projet. Le lancement décidé par l'humain (sondage lu par le hook, terminal interactif) enregistre, pour la fiche lancée et celles qu'il met en file, l'empreinte (`sha256:` et 16 hexadécimaux) de la section « Critères d'acceptation » : texte de chaque puce, lignes de continuation jointes, espaces normalisés, preuve citée (`` `ID` ``, « contrat à créer ») exclue, si bien qu'un lien de preuve ajouté en cours de chantier ne la change pas. L'enregistrement est local, dans un fichier du dossier d'évidence `.drwil/evidence/` (hors git) : une empreinte, jamais les critères. La clôture (`.githooks/closure-proof.mjs`) relit l'empreinte : identique ou absente (fiche lancée sans l'humain), elle écrit la ligne « Critères acceptés » dans la preuve (empreinte et date, ou « aucune acceptation enregistrée ») ; modifiée, elle est refusée sans rien écrire (ni preuve, ni fiche supprimée) jusqu'à ce que l'humain accepte de nouveau les critères (`node .githooks/state.mjs accept`, terminal interactif, saisie de `ACCEPT` après affichage des critères). Un lancement refusé, une fiche sans critère ou illisible n'enregistrent rien.
+**Périmètre** : `.githooks/state-acceptance.mjs`, `.githooks/state.mjs` (`start`, `move`, commande `accept`), `.githooks/closure-proof.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/state-acceptance.mjs` (`criteriaFingerprint`, `acceptanceCheck`).
+**Preuve** : tests : empreinte insensible à la preuve citée et à la mise en forme mais sensible au texte, enregistrement au lancement humain (fiche et file), refus sans enregistrement, preuve de clôture avec ou sans acceptation (français, anglais), clôture refusée sur critère modifié ou retiré sans rien écrire, commande `accept` (confirmation, sans chantier, sans critère).
+**Contrôle** : `tests-qua-174`
+**Tests** : `.githooks/state.test.mjs`, `.githooks/close.test.mjs`
+**Origine** : cycle-de-vie-des-fiches — « Le lancement par sondage enregistre l'empreinte des critères acceptés par l'humain ; l'empreinte entre dans la preuve de clôture ; un critère modifié ensuite redemande un geste humain avant la clôture »
+**Raison** : Rien ne figeait les critères acceptés : un agent pouvait les réécrire en cours de chantier, puis clore sur ses propres critères.
+
+## QUA-175 — Aucun agent ne peut écrire l'acceptation des critères
+**Règle** : Livré à tout projet. L'acceptation n'est enregistrée que par un lancement dont l'appelant atteste la décision humaine (`start(…, { human: true })` : sondage lu par le hook, `.githooks/worktree.mjs`) ou par la commande `accept` d'un terminal interactif (entrée et sortie standard attachées à un terminal). Un lancement en mode agent (`transitions: agent`, sans sondage) n'enregistre rien et oublie l'acceptation de la fiche lancée, sauf celle qu'elle avait reçue en tête de file d'un lancement humain ; le retour en SCOPING oublie celle de la fiche quittée. `accept` sans terminal est refusée sans rien écrire. Un fichier d'acceptation absent, illisible ou d'une autre forme vaut « aucune acceptation », jamais une erreur ni un succès par défaut (QUA-013).
+**Périmètre** : `.githooks/state-acceptance.mjs` (`accept`), `.githooks/state.mjs` (`start`, `move`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/state-acceptance.mjs` et `.githooks/state.mjs` (`start`).
+**Preuve** : tests : lancement en mode agent sans enregistrement et effaçant une ancienne acceptation, fiche prise en file conservée, retour en SCOPING, fichier illisible ou d'une autre forme, `accept` refusée sans terminal.
+**Manuel** : vérifier qu'aucune commande, aucun hook ni aucun outil de l'agent n'écrit ce fichier d'acceptation ; l'écriture directe du fichier par un agent n'est pas empêchée par ce contrat (gardes d'écriture hors périmètre).
+**Contrôle** : `tests-qua-175`
+**Tests** : `.githooks/state.test.mjs`
+**Origine** : cycle-de-vie-des-fiches — « Aucun agent ne peut écrire l'acceptation : elle vient du sondage lu par le hook ou du terminal interactif »
+**Raison** : Une acceptation que l'agent peut s'accorder lui-même ne prouve rien du consentement de l'humain.

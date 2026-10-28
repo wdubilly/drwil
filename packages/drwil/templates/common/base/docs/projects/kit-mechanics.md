@@ -43,6 +43,7 @@ files:
   - .githooks/state-messages-fr.mjs
   - .githooks/state-context-texts.mjs
   - .githooks/state-reopen.mjs
+  - .githooks/state-acceptance.mjs
   - .githooks/engine-branch.mjs
   - .githooks/engine-launch.mjs
   - .githooks/engine-pass.mjs
