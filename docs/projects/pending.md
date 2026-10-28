@@ -117,9 +117,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P2] Le sondage `/drwil-start` de Copilot CLI propose et lit un choix
-  multiple (file de chantiers, parallèle), en tête de pile (cadré le 2026-10-28) —
-  `docs/projects/sondage-copilot-choix-multiple.md`.
 - [ ] [IA] [P2] Une fiche à plusieurs lots se réalise lot par lot, un sous-agent
   neuf par lot, une seule clôture (cadré le 2026-10-28 ; avant les fiches à
   lots de la 0.11.0) —
@@ -171,6 +168,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Preuves, contrôles, vitesse
 
+- [ ] [décision] L'ordre du sondage `/drwil-start` ne fonctionne pas chez
+  l'adoptant (section « Fiches cadrées » absente du gabarit, aucun signal) —
+  `docs/intentions/ordre-du-sondage-chez-l-adoptant.md`.
 - [ ] [décision] La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
   vraie PR en retard sur la branche principale —
   `docs/intentions/merge-auto-eprouve-en-reel.md`.

@@ -1,6 +1,6 @@
 # Projet : le sondage `/drwil-start` de Copilot CLI propose et lit un choix multiple (file de chantiers)
 
-**Statut** : cadré le 2026-10-28.
+**Statut** : fait le 2026-10-28.
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/sondage-worktree-copilot-cli.md` (partie « sondage parallèle dans Copilot CLI »)
@@ -42,15 +42,15 @@ attribuer à ce moment-là dans le registre.)
 
 - `packages/drwil/templates/common/tools/claude/.claude/hooks/start-poll.mjs` reconnaît, pour Copilot CLI, un champ des fiches à choix multiple
   (type `array`, valeurs dans `items.enum`) comme il reconnaît le champ à choix unique,
-  et en tire la liste des options — contrat à créer
+  et en tire la liste des options — `QUA-165`
 - La réponse Copilot à un choix multiple (forme relevée par un essai réel, consignée
   dans l'intention) est lue comme une file, dans l'ordre des options du sondage
   (`inPollOrder`), les champs `drwil-merge`, `drwil-worktree` et `drwil-parallel`
-  restant lus comme avant — contrat à créer
-- Le choix unique d'une fiche continue de fonctionner à l'identique — contrat à créer
+  restant lus comme avant — `QUA-165`
+- Le choix unique d'une fiche continue de fonctionner à l'identique — `QUA-165`
 - Le skill dit à l'agent Copilot de poser un champ `fiche` à choix multiple, toujours
   accompagné des champs `drwil-merge`, `drwil-worktree` et (avec au moins deux fiches
-  prêtes) `drwil-parallel` — contrat à créer
+  prêtes) `drwil-parallel` — `QUA-165`
 
 ## 2. Hors périmètre
 

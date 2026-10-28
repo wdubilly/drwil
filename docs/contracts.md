@@ -1569,3 +1569,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/merge-auto.test.mjs`
 **Origine** : fusion-auto-ordonnee — « La consigne de l'état et le skill appellent cet outil au lieu de lister les commandes `gh` ; le suivi (`pr-watch`) et le retour en SCOPING après la fusion restent inchangés »
 **Raison** : Une consigne qui liste les commandes dépend de la mémoire de l'agent ; l'outil porte l'ordre, la consigne n'a plus qu'à l'appeler.
+
+## QUA-165 — Sous Copilot CLI, le sondage de lancement propose et lit un choix multiple de fiches, comme sous Claude Code
+**Règle** : Livré à tout projet. Le hook de lecture du sondage (`.claude/hooks/start-poll.mjs`) reconnaît, sous Copilot CLI, le champ des fiches à choix unique (`enum`) comme à choix multiple (type `array`, valeurs dans `items.enum`) et en tire la liste des options. La réponse à un choix multiple (valeurs séparées par des virgules, ou liste entre crochets, les champs `drwil-merge`, `drwil-worktree` et `drwil-parallel` restant lus comme avant) est lue comme une file, dans l'ordre des options du sondage (`inPollOrder`, QUA-037) ; une seule fiche cochée est un lancement simple, et le choix unique est lu à l'identique. Une valeur par défaut dans le champ reste refusée (le hook ne répond jamais à la place de l'humain). Le skill `start-a-workstream` dit à l'agent Copilot de poser un champ `fiche` à choix multiple, toujours accompagné de `drwil-merge` et `drwil-worktree`, et de `drwil-parallel` avec au moins deux fiches prêtes.
+**Périmètre** : `.claude/hooks/start-poll.mjs`, skill `start-a-workstream` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/hooks/start-poll.mjs`, `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
+**Preuve** : test du hook rejoué sur un sondage Copilot à champ `array` : file lue dans l'ordre des options malgré une réponse en désordre, fusion lue, liste entre crochets, une seule fiche, valeur par défaut refusée. La forme réelle de la réponse de Copilot CLI n'est pas encore relevée (essai humain, `docs/intentions/sondage-worktree-copilot-cli.md`).
+**Contrôle** : `tests-qua-165`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : sondage-copilot-choix-multiple — « Le sondage `/drwil-start` de Copilot CLI propose et lit un choix multiple (file de chantiers) »
+**Raison** : Sans ce champ, Copilot CLI ne proposait jamais la file ni le lancement en parallèle que le hook sait lire.

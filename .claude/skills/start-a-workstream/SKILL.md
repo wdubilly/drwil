@@ -59,9 +59,13 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      once (`.drwil/ia-first.json`, 3 by default), and refuses without creating anything briefs whose
      `scope` blocks overlap; "Sequential queue" keeps the queue in this folder. Never recommended:
      the agent does not start those worktrees itself.
-   - Copilot CLI: `message` starting with `drwil-start :`; a first field whose `enum` = the exact
-     paths, and a **second field named exactly `drwil-merge`** with `enum` "Automatic merge" and
-     "Manual merge" (no `default`, no recommendation): the hook reads `fiche=…, drwil-merge=…`.
+   - Copilot CLI: `message` starting with `drwil-start :`; a first field `fiche` with **multiple
+     choice**: `type: "array"` and `items.enum` = the exact paths (the human ticks one brief, or
+     several for a queue; one ticked is a simple start), and a **second field named exactly
+     `drwil-merge`** with `enum` "Automatic merge" and "Manual merge" (no `default`, no
+     recommendation): the hook reads `fiche=…, drwil-merge=…`, the ticked briefs in the order of
+     the options. Always ask `drwil-merge` and `drwil-worktree` with it, and, with at least two
+     ready briefs, `drwil-parallel`. A single-choice field (`enum` alone) is still read the same.
      No `drwil-merge` answer read: manual merge.
    - **Recommend**: the first ready brief, first, with "(Recommended)" and the reason in
      its **description** — never in the label.
