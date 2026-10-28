@@ -1499,3 +1499,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/check-kit-size.test.mjs`
 **Origine** : surveillance de la taille du kit — « Un contrôle livré surveille la taille de chaque fichier que la CLI installe, chacun sous le plafond de sa sorte ; il bloque sur le gabarit de ce dépôt et avertit chez un projet adopté »
 **Raison** : Corriger les hooks et `AGENTS.md` une fois ne retenait pas un fichier livré de regrossir ; chaque ligne d'`AGENTS.md` se paie à chaque requête de l'agent.
+
+## QUA-158 — Le rappel de cadrage avertit, dès la rédaction d'une fiche, qu'un fichier de code de son scope est proche du plafond de taille
+**Règle** : Livré à tout projet. Le rappel de cadrage (QUA-016) mesure chaque fichier de code nommé dans le bloc scope d'une fiche (motifs à joker et fichiers inexistants ignorés) et, à 90 % du plafond de code (180 lignes pour 200), avertit en nommant la fiche, le fichier, sa taille et le plafond, et en disant de lister d'avance les fichiers issus de sa découpe, la carte d'architecture et `docs/projects/kit-mechanics.md`. Jamais bloquant : un avertissement dans le réglage par défaut (`warning`), muet avec `off`, absent avec `blocking` (où les messages du rappel feraient échouer le commit). Le seuil se déduit de `CEILINGS.code` (QUA-001, QUA-157), jamais une seconde valeur en dur. Le modèle de fiche rappelle les mêmes fichiers à lister quand un fichier de code ou un hook est ajouté. La barrière de périmètre (`scope-gate`) ne change pas.
+**Périmètre** : `.githooks/check-docs-workstreams.mjs` ; `.githooks/check-docs-texts.mjs` ; `docs/projects/model-brief.md` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/check-docs-workstreams.mjs` (`NEAR_CEILING`), `.githooks/check-kit-size.mjs` (`CEILINGS`).
+**Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`) ; tests : à 180 lignes, en dessous, fichier inexistant.
+**Contrôle** : `tests-qua-158`
+**Tests** : `.githooks/check-docs.test.mjs`
+**Origine** : le cadrage d'une fiche anticipe les découpes — « Le rappel de cadrage avertit, sans jamais bloquer, quand un fichier de code du scope d'une fiche atteint 180 lignes ou plus, et dit de lister d'avance les fichiers issus de sa découpe ; en dessous, aucun avertissement »
+**Raison** : Deux chantiers de suite se sont arrêtés sur un fichier issu d'une découpe, absent de leur scope ; la barrière fait son travail, c'est le cadrage qui ne l'avait pas prévu.
