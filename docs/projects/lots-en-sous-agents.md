@@ -138,6 +138,8 @@ attribuer à ce moment-là dans le registre.)
 - `.githooks/state-context-texts.mjs` — rappel du lot courant et des lots [humain] (validé par le demandeur le 2026-10-28).
 - `.githooks/state-messages-fr.mjs` — messages des lots (validé par le demandeur le 2026-10-28).
 - `.githooks/state-messages-en.mjs` — messages des lots (validé par le demandeur le 2026-10-28).
+- `.githooks/state-texts.mjs` — lignes de lot du contexte et du rappel (validé par le demandeur le 2026-10-28).
+- `.githooks/state.mjs` — `start` et `move` enveloppés : lots oubliés, clôture refusée tant qu'un lot [IA] n'est pas fait (validé par le demandeur le 2026-10-28).
 
 ## 7. Reprise
 
