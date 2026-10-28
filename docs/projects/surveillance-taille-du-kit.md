@@ -18,8 +18,12 @@ files:
   - docs/intentions/fichiers-charges-courts.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - docs/projects/kit-mechanics.md
+  - docs/architecture.md
+  - outils/banc.test.mjs
+  - packages/drwil/test/kit.test.mjs
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
 -->
-
 ## 1. Besoin
 
 Corriger les hooks et `AGENTS.md` une fois ne suffit pas : rien ne retient un
