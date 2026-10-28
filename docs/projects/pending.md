@@ -171,12 +171,11 @@ rien à cadrer : `docs/intentions/fichiers-charges-courts.md`.
 
 ### Protection, garanties, contournements
 
-- [ ] [décision] `doctor` dit le niveau de protection réel d'un projet ;
-  la barrière n'est qu'un avertissement par défaut (revue externe du
-  2026-10-22) — entièrement cadrée le 2026-10-23 dans
-  `docs/projects/niveau-de-protection.md`, rien à cadrer ; retirée à la
-  clôture de cette fiche —
-  `docs/intentions/niveaux-de-protection-dans-doctor.md`.
+- [ ] [décision] Le premier commit du kit est refusé en SCOPING sous la
+  barrière bloquante, et la recette d'adoption ne le dit pas —
+  `docs/intentions/premier-commit-du-kit-sous-barriere-bloquante.md`.
+- [ ] [décision] Un `judgeGuarantees` mort reste dans `packages/drwil/src/guarantees-verify.ts` —
+  `docs/intentions/juge-des-garanties-en-double.md`.
 - [ ] [décision] Les garanties obligatoires, la suite (`doctor` sur le dépôt
   drwil compris), à cadrer avec ou juste après la fiche du niveau de
   protection — `docs/intentions/garanties-la-suite.md`.

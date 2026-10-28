@@ -1,0 +1,41 @@
+{
+  "version": 3,
+  "contract": "QUA-092",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-28T09:50:48.732Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "6aed27920f2b58e4aad2665f905a0898f9c41b300ae5f120ac4d08d38e545784",
+  "proof": {
+    "tests-qua-087": "160dd4a63d1a9a21671ae8c02a7d04d8ca9e5bdfcceb460a0f39895e6ad11c70",
+    "tests-qua-088": "5a061abbc2f2364a657c23ee21a86c7931a9211e698e8b77c1042c47b61f2e75"
+  },
+  "covers": [
+    "packages/drwil/src/guarantees*.ts"
+  ],
+  "coverage": {
+    "packages/drwil/src/guarantees-briefs.ts": "984ea296762a9765bb699872d22f5dbdd7445bfa0799a922b9dce57a98bf9c26",
+    "packages/drwil/src/guarantees-forge-texts.ts": "9ef6dea7521b407b0313f9f5679cb8bbd339bb4132947c2a132b8a9b07e315c5",
+    "packages/drwil/src/guarantees-forge.ts": "3740b23007dcbb722070ff7a8eda874a4bfe609104f0cb1e7766f05a9b09b6b3",
+    "packages/drwil/src/guarantees-layers.ts": "99a4d22c8e9b7a31898f61a8e5e602cf74ac694a773bfe6d07d97032f28970e6",
+    "packages/drwil/src/guarantees-table.ts": "4ffededade046c42f15f96909d2e106a901a7cfb6e9d79af79beb2d73e0e90c2",
+    "packages/drwil/src/guarantees-texts.ts": "cfbdf3459f718767fc41f3ce791af37991fd602500a37afdddb1e9db107673cc",
+    "packages/drwil/src/guarantees-tools.ts": "98e37f5d531ba20f9ed572e18cd849d0a02c3f9750947445316e1470e4f7ed24",
+    "packages/drwil/src/guarantees-verify.ts": "b798e796b35197cc9c810a104147beaafcfaabf37128ad4ee40418bf9a905eb5",
+    "packages/drwil/src/guarantees.ts": "4e494b6e0c8cb0d31718fe5a6b3b9af244eb23e6476b74126d9b4c9589d64cf2"
+  },
+  "commit": "ab81df381754373f6def0cb6367322b855164f56",
+  "automated": [
+    {
+      "id": "tests-qua-087",
+      "status": "ok"
+    },
+    {
+      "id": "tests-qua-088",
+      "status": "ok"
+    }
+  ]
+}

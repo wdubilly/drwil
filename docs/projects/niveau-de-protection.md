@@ -3,7 +3,7 @@
 **Statut** : cadré le 2026-10-23.
 **Risque** : HIGH
 **Maturité** : prêt
-**Intention** : `docs/intentions/niveaux-de-protection-dans-doctor.md`
+**Intention** : `docs/intentions/niveaux-de-protection-dans-doctor.md` (si présent)
 
 <!-- scope
 files:
