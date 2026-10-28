@@ -42,7 +42,7 @@ PASS, FAIL, MANUAL ou ERROR).
 
 - Une installation neuve écrit la barrière de périmètre en bloquant ; un
   projet déjà installé garde son réglage, même absent, et rien ne change
-  pour lui — contrat à créer
+  pour lui — `QUA-154`
 - `drwil doctor` affiche le niveau de protection du projet, chacun prouvé
   par une vérification, jamais par une déclaration : 1 diagnostic seul
   (règles en avertissement), 2 gouvernance locale active (hooks branchés,
@@ -50,10 +50,10 @@ PASS, FAIL, MANUAL ou ERROR).
   hook), 4 protection de forge vérifiée (branche protégée, contrôles
   requis, aucun contournement administrateur) ; un niveau qu'il n'a pas pu
   vérifier est dit « non vérifié », jamais atteint ; il dit la commande qui
-  mène au niveau suivant (`--json` compris) — contrat à créer
+  mène au niveau suivant (`--json` compris) — `QUA-155`
 - Un projet sous garanties obligatoires dont la barrière n'est pas
   bloquante fait échouer `drwil verify`, avec la commande qui la durcit —
-  contrat à créer
+  `QUA-156`
 
 ## 2. Hors périmètre
 
