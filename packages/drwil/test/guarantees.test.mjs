@@ -583,3 +583,23 @@ test("QUA-100 suivi de la CI : la consigne de lancer pr-watch après un push est
   );
   assert.ok(existsSync(join(TEMPLATES, "base", ".githooks", "pr-watch.mjs")));
 });
+
+test("QUA-156 : sous garanties obligatoires, une barrière de périmètre non bloquante fait échouer verify, avec la commande qui la durcit", async () => {
+  const dir = await projet();
+  guarantees({ targetDir: dir, exec: faux([[/c8 --version/, OK], ...FORGE_OK]) });
+  assert.ok(!guaranteeFailures(dir, config(dir), []).some((e) => /scopeGate/.test(e)));
+  ecrireConfig(dir, { ...config(dir), scopeGate: "warning" });
+  const v = await verify({ targetDir: dir });
+  assert.equal(v.status, "FAIL");
+  const message = v.errors.find((e) => /garantie de barrière non tenue : `scopeGate` est en « warning »/.test(e));
+  assert.ok(message, v.errors.join("\n"));
+  // La commande citée durcit réellement le réglage.
+  const commande = /node -e "[^"]+"/.exec(message)[0].slice("node -e ".length + 1, -1);
+  assert.equal(spawnSync(process.execPath, ["-e", commande], { cwd: dir }).status, 0);
+  assert.equal(config(dir).scopeGate, "blocking");
+  assert.ok(!(await verify({ targetDir: dir })).errors.some((e) => /scopeGate/.test(e)));
+  // Sans garanties imposées, rien n'est jugé.
+  const libre = await projet();
+  ecrireConfig(libre, { ...config(libre), scopeGate: "warning" });
+  assert.ok(!(await verify({ targetDir: libre })).errors.some((e) => /scopeGate/.test(e)));
+});

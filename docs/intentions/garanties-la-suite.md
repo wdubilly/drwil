@@ -5,7 +5,7 @@
 ## Besoin
 
 Le chantier « garanties obligatoires à l'adoption » (2026-10-22) a laissé ses suites en intentions séparées : imposer les garanties dès `init`, bloquer ce qui ne les tient pas, les rendre lisibles dans `verify --agent`, y soumettre le dépôt drwil lui-même. Elles décrivent une même mécanique et se cadrent ensemble.
-Rangement du 2026-10-26 : ces parties touchent le même code que `docs/projects/niveau-de-protection.md` (`doctor`, garanties) ; à cadrer avec cette fiche ou juste après. La partie « tout code modifié arrive couvert à 100 % » a rejoint `docs/intentions/couverture-paquet-100.md`.
+Rangement du 2026-10-26 : ces parties touchent le même code que `docs/projects/journal.md` (`doctor`, garanties) ; à cadrer avec cette fiche ou juste après. La partie « tout code modifié arrive couvert à 100 % » a rejoint `docs/intentions/couverture-paquet-100.md`.
 
 ### `init` impose les garanties obligatoires lui-même (ex-« init-impose-les-garanties »)
 

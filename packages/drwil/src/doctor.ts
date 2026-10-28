@@ -11,6 +11,7 @@ import { resolveFromConfig } from "./config.js";
 import { AUTO_KINDS, describeGap, findGaps, hooksPath, scriptsDir, unchainedHooks } from "./essentials.js";
 import { compareVersions, engineVersion, readInstall } from "./manifest.js";
 import { bypassDiagnosis } from "./guarantees-forge.js";
+import { computeProtection, formatProtection, protectionJson, type Protection } from "./protection.js";
 import { defaultExec, type Exec } from "./guarantees-table.js";
 
 export type PointState = "ok" | "warning" | "problem";
@@ -27,6 +28,7 @@ export interface Diagnosis {
   /** 0: healthy (warnings tolerated); 1: at least one problem; 2: not a usable drwil project. */
   code: 0 | 1 | 2;
   points: DiagnosisPoint[];
+  protection?: Protection;
   error?: string;
 }
 
@@ -149,7 +151,9 @@ export async function doctor(opts: { targetDir: string; exec?: Exec }): Promise<
     fill(T.gitState, process.version, git ? T.present : T.absent, full ? fill(T.gitleaks, gitleaks ? T.present : T.gitleaksMissing) : ""),
   );
 
-  return { lang, code: points.some((p) => p.state === "problem") ? 1 : 0, points };
+  const hooksOk = points.find((p) => p.id === "hooks")?.state === "ok";
+  const protection = computeProtection(root, cfg, opts.exec ?? defaultExec, lang, hooksOk);
+  return { lang, code: points.some((p) => p.state === "problem") ? 1 : 0, points, protection };
 }
 
 const SYMBOLS: Record<PointState, string> = { ok: "✓", warning: "⚠", problem: "✗" };
@@ -159,6 +163,7 @@ export function formatDiagnosis(d: Diagnosis): string {
   const T = TEXTS[d.lang];
   const lines = ["drwil doctor", ""];
   for (const p of d.points) lines.push(`${SYMBOLS[p.state]} ${p.label.padEnd(22)} ${p.detail}`);
+  if (d.protection) lines.push("", ...formatProtection(d.protection));
   lines.push("", d.code === 0 ? T.healthy : T.problems);
   return lines.join("\n");
 }
@@ -171,6 +176,7 @@ export function diagnosisJson(d: Diagnosis) {
     exitCode: d.code,
     ...(d.error ? { error: d.error } : {}),
     checks: d.points.map((p) => ({ id: p.id, label: p.label, state: p.state, detail: p.detail })),
+    ...(d.protection ? { protection: protectionJson(d.protection) } : {}),
   };
 }
 

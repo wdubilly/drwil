@@ -500,7 +500,16 @@ registry validity, contracts with an automated proof, git hooks
 (`core.hooksPath`, or the drwil hooks called from your hook manager), CI
 file, required tools (git, gitleaks), and what drwil needs inside your own
 files (`.gitignore` entries, `@AGENTS.md` import, Claude hooks, CI job),
-each with its fix. Exit 0:
+each with its fix. It also gives the **protection level** actually held,
+each level proved by a check and never declared: 1 diagnosis only, 2 local
+governance active (hooks wired, `scopeGate` blocking), 3 CI checks active
+(the CI replays the hook's checks), 4 forge protection verified (protected
+branch, required checks, no administrator bypass). A level it could not
+verify (no reachable `gh` or `glab`) is "not verified", never reached, and
+it prints the command that leads to the next level (`protection` in
+`--json`). A new install writes `scopeGate` as `blocking`; an installed
+project keeps its setting (`warning` when it had none), and under the
+mandatory guarantees `verify` fails on a non-blocking one. Exit 0:
 healthy (warnings allowed); 1: problems; 2: not a drwil project.
 
 ### `contracts` — list and validate the contract registry

@@ -3718,3 +3718,20 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   `QUA-087 câblage : c8 exclut…` vu échouer avant. Les autres piles ne comptent que les fichiers exécutés : sans effet.
   Essai réel refait : niveau câblé 100 %, retirer le test fait échouer.
 - **Clôturé par** : la branche `detour/couverture-sans-kit`.
+
+## 2026-10-28 — Niveau de protection : `doctor` le dit, la barrière de périmètre bloque dès l'installation
+
+- **Décisions clés** : l'installation neuve écrit `scopeGate` en `blocking`, un projet déjà installé garde son réglage même absent
+  (QUA-154) ; `drwil doctor` affiche quatre niveaux, chacun prouvé par une vérification, un niveau non vérifiable est « non
+  vérifié », la commande du niveau suivant est donnée, `--json` compris (QUA-155) ; sous garanties obligatoires, `verify` échoue
+  si la barrière n'est pas bloquante, avec la commande qui la durcit (QUA-156). Nouveau module `packages/drwil/src/protection.ts`.
+  Intention `niveaux-de-protection-dans-doctor` entièrement couverte : retirée.
+- **Écart au cadrage** : `packages/drwil/src/config-write.ts` puis `docs/architecture.md` ajoutés au scope sur décision de l'humain. Deux détours :
+  `detour/tests-barriere-explicite` (PR #283, tests d'installation qui supposaient l'avertissement par défaut) et
+  `detour/couverture-sans-kit` (PR #284, c8 `--all` comptait les scripts du kit). L'attestation de QUA-092 a été refaite par
+  l'humain après l'essai réel Node.
+- **Limites connues** : le premier commit du kit en SCOPING est refusé sous barrière bloquante, sans que la recette d'adoption le
+  dise (`docs/intentions/premier-commit-du-kit-sous-barriere-bloquante.md`) ; un `judgeGuarantees` mort reste dans
+  `packages/drwil/src/guarantees-verify.ts` (`docs/intentions/juge-des-garanties-en-double.md`) ; essai Rust non refait (pas de cargo).
+- **Preuve de clôture** : `docs/preuves/niveau-de-protection.md` (si présent).
+- **Clôturé par** : la branche `workstream/niveau-de-protection`.
