@@ -39,6 +39,8 @@ files:
   - docs/intentions/notes.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - .gitignore
+  - packages/drwil/templates/common/base/gitignore
 -->
 
 ## 1. Besoin
