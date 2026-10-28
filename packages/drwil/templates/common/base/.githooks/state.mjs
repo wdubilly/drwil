@@ -11,12 +11,13 @@
 // An invalid state is brought back to neutral AND reported: never hidden, never permissive.
 // Closing (VERIFY → CLOSING) requires the evidence of `drwil verify --evidence`: this
 // file reads it, it runs no check (a single engine, .githooks/engine.mjs).
-import { mkdirSync, realpathSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { main as mainBase, readStdinJson, reminderIfChanged } from "./state-cli.mjs";
 import { accept, forgetAcceptance, recordAcceptance } from "./state-acceptance.mjs";
 import { reopen } from "./state-reopen.mjs";
+import { undeclaredCitedWarning } from "./state-hooks.mjs";
 import { clearLots, lotsRefusal } from "./state-lots.mjs";
 import { move as moveBase, start as startBase } from "./state-transitions.mjs";
 import { fill } from "./state-texts.mjs";
@@ -62,7 +63,7 @@ export function start(root, brief, opts = {}) {
     const norm = (b) => posix.normalize(String(b).trim().replace(/\\/g, "/"));
     for (const b of [active, ...(opts.queue ?? []).map(norm)]) recordAcceptance(root, b);
   } else if (queued !== active) forgetAcceptance(root, active);
-  return r;
+  return { ...r, message: r.message + undeclaredCitedWarning(root, readFileSync(join(root, active), "utf8")) };
 }
 
 /**

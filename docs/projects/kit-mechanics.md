@@ -79,6 +79,7 @@ files:
   - .githooks/state-context-texts.mjs
   - .githooks/state-reopen.mjs
   - .githooks/state-acceptance.mjs
+  - .githooks/state-hooks.mjs
   - .githooks/engine-branch.mjs
   - .githooks/engine-launch.mjs
   - .githooks/engine-pass.mjs

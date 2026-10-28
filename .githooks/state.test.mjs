@@ -2045,3 +2045,48 @@ test("QUA-174 : accept au terminal : l'humain voit les critères et confirme ; s
   writeFileSync(join(en, FICHE), "# Projet : Exemple\n");
   assert.match((await avecTerminal([], () => capturer(() => main(["accept"], en)))).erreurs, /has no acceptance criteria/);
 });
+
+/** Fiche dont le bloc scope cite des hooks ; les fichiers de `.githooks/` listés existent dans le dépôt. */
+function depotHooks({ lang, puces = "", scope, existants = ["etat.mjs", "etat.test.mjs", "outil.mjs", "pose.mjs"] } = {}) {
+  const lignes = scope ?? [
+    ".githooks/etat.mjs",
+    ".githooks/etat.test.mjs",
+    "packages/kit/templates/.githooks/outil.mjs",
+    ".githooks/pose.mjs",
+    ".githooks/absent.mjs",
+    ".githooks/*.mjs",
+    "docs/x.githooks/etat.mjs",
+    "src/a.ts",
+  ];
+  const texte = `# Projet : Hooks\n\n**Statut** : cadré le 2026-10-09.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n${lignes.map((l) => `  - ${l}`).join("\n")}\n-->\n\n## Critères d'acceptation\n\n- Un critère — \`QUA-001\`\n\n## Contrats modifiés\n\n${puces}\n`;
+  const { racine, git } = depotCriteres({ lang, texte });
+  mkdirSync(join(racine, ".githooks"), { recursive: true });
+  for (const f of existants) writeFileSync(join(racine, ".githooks", f), "");
+  git("add", "-A");
+  git("commit", "-qm", "hooks");
+  return racine;
+}
+
+test("QUA-137 : le lancement nomme chaque hook existant cité par le cadrage sans puce, sans jamais refuser", () => {
+  const sans = start(depotHooks({ puces: "- `.githooks/pose.mjs` — change (validé par le demandeur le 2026-10-09)" }), FICHE, {
+    human: true,
+  });
+  assert.equal(sans.code, 0, sans.message);
+  assert.match(
+    sans.message,
+    /\navertissement : le cadrage cite `\.githooks\/etat\.mjs`, `\.githooks\/outil\.mjs` sans puce dans « Contrats modifiés »/,
+  );
+  assert.match(sans.message, /la clôture sera refusée \(QUA-137\)/);
+  assert.doesNotMatch(sans.message, /pose\.mjs|absent|test\.mjs/);
+
+  const en = start(depotHooks({ lang: "en", puces: "" }), FICHE, { human: true });
+  assert.match(
+    en.message,
+    /\nwarning: the scope cites `\.githooks\/etat\.mjs`, `\.githooks\/outil\.mjs`, `\.githooks\/pose\.mjs` without a bullet/,
+  );
+
+  const tout = ["- `.githooks/etat.mjs` — a", "- `.githooks/outil.mjs` — b", "- `.githooks/pose.mjs` — c"].join("\n");
+  assert.doesNotMatch(start(depotHooks({ puces: tout }), FICHE, { human: true }).message, /avertissement : le cadrage cite/);
+  const seulTest = depotHooks({ scope: [".githooks/etat.test.mjs"], puces: "" });
+  assert.match(start(seulTest, FICHE, { human: true }).message, /cite `\.githooks\/etat\.mjs` sans puce/);
+});

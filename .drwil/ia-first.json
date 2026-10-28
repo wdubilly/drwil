@@ -1721,7 +1721,7 @@
     {
       "id": "tests-qua-137",
       "name": "tests de QUA-137, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-137 \" .githooks/base-checks.test.mjs .githooks/close.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-137 \" .githooks/base-checks.test.mjs .githooks/close.test.mjs .githooks/state.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",

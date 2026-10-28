@@ -108,6 +108,8 @@ contrats modifiés sont repris dans chaque puce.)
 - `.githooks/scope.mjs` — `outsideBriefs` ne signale plus un fichier de code déjà livré (suivi et identique sur la branche principale) quand aucune fiche ne le cite ; un fichier nouveau, modifié ou retiré reste soumis à une fiche et la barrière de périmètre ne change pas (nouveau contrat QUA-173) (validé par le demandeur le 2026-10-26)
 - `.githooks/state.mjs` — le lancement décidé par l'humain enregistre l'empreinte des critères acceptés (fiche et file), le lancement en mode agent n'enregistre rien, le retour en SCOPING l'oublie ; commande `accept` (nouveaux contrats QUA-174 et QUA-175) (validé par le demandeur le 2026-10-26)
 - `.githooks/closure-proof.mjs` — la preuve de clôture dit les critères acceptés et la clôture est refusée si un critère a changé depuis l'acceptation (nouveau contrat QUA-174) (validé par le demandeur le 2026-10-26)
+- `.githooks/base-checks.mjs` — `hookDeclared` sort la règle de déclaration (un hook par sa puce, un test par celle de son module) pour que le lancement l'applique ; le refus de clôture est inchangé ; ancien critère de QUA-137 : refuser la clôture tant qu'un hook modifié n'est pas déclaré, sans signalement au lancement (modifie QUA-137) (validé par le demandeur le 2026-10-26)
+- `.githooks/state.mjs` — le lancement ajoute à son message le signalement des hooks cités sans puce (`.githooks/state-hooks.mjs`, modifie QUA-137) (validé par le demandeur le 2026-10-26)
 
 ## 2. Hors périmètre
 
@@ -167,6 +169,6 @@ Critère de sortie : `node .githooks/run-checks.mjs` OK, `drwil verify --agent` 
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-28) : lots 1 (QUA-172), 2 (QUA-173) et 3 (QUA-174, QUA-175, acceptation des critères) faits.
+- **Dernier état** (2026-10-28) : lots 1 (QUA-172), 2 (QUA-173), 3 (QUA-174, QUA-175) et 4 (QUA-137 modifié, hooks cités signalés au lancement) faits.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 4 — hooks déclarés au lancement.
+- **Prochaine étape** : lot 5 — ligne d'index retirée.
