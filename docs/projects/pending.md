@@ -117,10 +117,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P2] La fusion automatique s'enchaîne dans l'ordre par un outil
-  (merge-auto), plus par une consigne ; ordre sauté deux fois le
-  2026-10-28 (cadré le 2026-10-28, en tête de pile) —
-  `docs/projects/fusion-auto-ordonnee.md`.
 - [ ] [IA] [P2] Le sondage `/drwil-start` de Copilot CLI propose et lit un choix
   multiple (file de chantiers, parallèle), en tête de pile (cadré le 2026-10-28) —
   `docs/projects/sondage-copilot-choix-multiple.md`.
