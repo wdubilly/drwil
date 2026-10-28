@@ -18,4 +18,3 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 
 ## Notes
 - 2026-10-27 — Contrôler de façon déterministe que le corps d'une PR suit .github/pull_request_template.md (titres présents), en CI ou hook : aujourd'hui seule la consigne à l'agent l'impose (écart constaté sur la PR #273 du chantier plafond-200-lignes).
-- 2026-10-28 — Après une montée de version, l'état reste en BUILD sur routine-maintenance (clôture faite à la main) : le chantier de cloture-fiche-permanente doit prévoir le retour en SCOPING, sinon /drwil-start est refusé

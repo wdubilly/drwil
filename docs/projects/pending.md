@@ -104,6 +104,13 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
   version sans perte, le worktree toujours proposé et l'attestation depuis le
   chat.
 
+Ordre de la 0.12.0 (tag `(0.12.0, n)` sur chaque intention de « Intentions par
+thème ») : 1 le premier commit du kit, 2 la clôture d'une fiche permanente,
+3 le `judgeGuarantees` mort, 4 le contrôle du kit qui masque l'alerte, 5 les
+garanties, la suite ; puis les thèmes E (montée de version sans perte,
+worktree toujours proposé, attestation depuis le chat) et F, à cadrer pendant
+la 0.11.
+
 Une limite trouvée à une clôture rejoint l'intention de son thème, jamais un
 doublon. Une intention qui attend une condition (chiffres du banc, essai réel
 d'un outil) la dit dans son statut.
@@ -117,6 +124,11 @@ d'un outil) la dit dans son statut.
   `docs/projects/scope-anticipe-les-decoupes.md`.
 - [ ] [IA] [P1] Après un FAIL, `drwil verify` rejoue d'abord les seuls échecs
   (cadré le 2026-10-25) — `docs/projects/verify-rejoue-les-echecs.md`.
+- [ ] [IA] [P2] `docs/ia-first.md` en sections courtes autonomes, plafond des
+  documents lus à la demande abaissé à 400 ou 500 lignes, `kitSizeLegacy`
+  retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
+  puis lancer juste après la fiche précédente) —
+  `docs/projects/ia-first-en-sections-courtes.md`.
 - [ ] [IA] [P2] Un cycle de vie des fiches sans contournement : registre en
   SCOPING, code livré, acceptation des critères, hooks déclarés au lancement, ligne d'index retirée
   (cadré le 2026-10-26, élargi le même jour) — `docs/projects/cycle-de-vie-des-fiches.md`.
@@ -152,8 +164,10 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 ### Fichiers chargés courts
 
-Entièrement cadré le 2026-10-27 en trois fiches (voir « Fiches cadrées »),
-rien à cadrer : `docs/intentions/fichiers-charges-courts.md`.
+Cadré le 2026-10-27 en trois fiches (livrées), puis le 2026-10-28 en une
+quatrième (voir « Fiches cadrées », 0.11.0) :
+`docs/projects/ia-first-en-sections-courtes.md`. Intention :
+`docs/intentions/fichiers-charges-courts.md`.
 
 ### Preuves, contrôles, vitesse
 
@@ -182,16 +196,16 @@ rien à cadrer : `docs/intentions/fichiers-charges-courts.md`.
 
 ### Protection, garanties, contournements
 
-- [ ] [décision] [P1] Le premier commit du kit est refusé en SCOPING sous la
+- [ ] [décision] [P1] (0.12.0, 1) Le premier commit du kit est refusé en SCOPING sous la
   barrière bloquante, et la recette d'adoption ne le dit pas —
   `docs/intentions/premier-commit-du-kit-sous-barriere-bloquante.md`.
-- [ ] [décision] Un `judgeGuarantees` mort reste dans `packages/drwil/src/guarantees-verify.ts` —
+- [ ] [décision] [P2] (0.12.0, 3) Un `judgeGuarantees` mort reste dans `packages/drwil/src/guarantees-verify.ts` —
   `docs/intentions/juge-des-garanties-en-double.md`.
-- [ ] [décision] Le contrôle `taille-kit` déclaré à l'installation compte comme
+- [ ] [décision] [P2] (0.12.0, 4) Le contrôle `taille-kit` déclaré à l'installation compte comme
   contrôle du projet et masque l'alerte « aucun contrôle du projet déclaré »,
   même en CI chez un projet neuf —
   `docs/intentions/controle-du-kit-masque-l-alerte-sans-controle.md`.
-- [ ] [décision] Les garanties obligatoires, la suite (`doctor` sur le dépôt
+- [ ] [décision] [P2] (0.12.0, 5) Les garanties obligatoires, la suite (`doctor` sur le dépôt
   drwil compris), à cadrer avec ou juste après la fiche du niveau de
   protection — `docs/intentions/garanties-la-suite.md`.
 - [ ] [décision] [P1] Les contournements encore ouverts : juger l'effet, pas
@@ -249,8 +263,9 @@ rien à cadrer : `docs/intentions/fichiers-charges-courts.md`.
 - [ ] [décision] Le sondage parallèle (plusieurs worktrees) vérifié dans
   Copilot CLI ; le sondage à une fiche l'est (2026-10-26) —
   `docs/intentions/sondage-worktree-copilot-cli.md`.
-- [ ] [décision] La clôture en un geste reconnaît une fiche permanente
-  (l'entretien courant, clos à la main pour les versions 0.8.0 et 0.9.0) —
+- [ ] [décision] [P1] (0.12.0, 2) La clôture en un geste reconnaît une fiche permanente
+  (l'entretien courant, clos à la main pour les versions 0.8.0 et 0.9.0 ; sans
+  cela l'état reste en BUILD après une montée de version et `/drwil-start` est refusé) —
   `docs/intentions/cloture-fiche-permanente.md`.
 
 ### Fluidité et relecture

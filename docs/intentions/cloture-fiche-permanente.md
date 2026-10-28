@@ -43,3 +43,12 @@ le disent.
   la fiche, ou réglage de `.drwil/ia-first.json` ?
 - [décision] La consommation d'un entretien est-elle consignée à chaque
   clôture, comme pour un chantier ?
+
+## Constat du 2026-10-28
+
+Après la montée de version 0.10.0, la clôture a été faite à la main : l'état
+est resté en BUILD sur `routine-maintenance`, et `/drwil-start` a été refusé
+(`state.mjs start` n'accepte que SCOPING, EXPECTATION, REQUEST ou CLOSING avec
+PR fusionnée). Il a fallu `state.mjs move SCOPING`. `.githooks/close.mjs` ne convient pas
+tel quel : il supprimerait la fiche (plus de 15 citations). Le chantier prévoit
+donc aussi le retour en SCOPING à la clôture d'une fiche permanente.
