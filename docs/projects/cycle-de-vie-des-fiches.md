@@ -111,6 +111,7 @@ contrats modifiés sont repris dans chaque puce.)
 - `.githooks/base-checks.mjs` — `hookDeclared` sort la règle de déclaration (un hook par sa puce, un test par celle de son module) pour que le lancement l'applique ; le refus de clôture est inchangé ; ancien critère de QUA-137 : refuser la clôture tant qu'un hook modifié n'est pas déclaré, sans signalement au lancement (modifie QUA-137) (validé par le demandeur le 2026-10-26)
 - `.githooks/state.mjs` — le lancement ajoute à son message le signalement des hooks cités sans puce (`.githooks/state-hooks.mjs`, modifie QUA-137) (validé par le demandeur le 2026-10-26)
 - `.githooks/doc-coherence.mjs` — `indexItem` ne compte comme fiche que `docs/projects/*.md` : la ligne d'index d'une fiche qui cite aussi un autre document de `docs/` est retirée à la clôture ; ancien critère de QUA-074 : la clôture refuse les incohérences de l'index sans distinguer la fiche des autres documents cités (modifie QUA-074) (validé par le demandeur le 2026-10-26)
+- `.githooks/close.test.mjs` — tests de la preuve de clôture (empreinte des critères) et de la ligne d'index retirée ; aucun contrôle affaibli (validé par le demandeur le 2026-10-26)
 
 ## 2. Hors périmètre
 

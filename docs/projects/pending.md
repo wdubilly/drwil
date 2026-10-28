@@ -122,9 +122,6 @@ d'un outil) la dit dans son statut.
   retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
   puis lancer juste après la fiche précédente) —
   `docs/projects/ia-first-en-sections-courtes.md`.
-- [ ] [IA] [P2] Un cycle de vie des fiches sans contournement : registre en
-  SCOPING, code livré, acceptation des critères, hooks déclarés au lancement, ligne d'index retirée
-  (cadré le 2026-10-26, élargi le même jour) — `docs/projects/cycle-de-vie-des-fiches.md`.
 - [ ] [IA] [P2] `next` n'enchaîne pas tant que la PR du chantier précédent
   n'est pas fusionnée (cadré le 2026-10-26) —
   `docs/projects/next-attend-la-fusion.md`.
