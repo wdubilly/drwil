@@ -54,6 +54,12 @@ attribuer à ce moment-là dans le registre.)
   `docs/projects/kit-mechanics.md` à lister quand un fichier de code ou un hook
   est ajouté — `QUA-158`
 
+## Contrats modifiés
+
+- `.githooks/check-docs-texts.mjs` — message de l'avis de taille, fr et en (validé par le demandeur le 2026-10-28, au cadrage : fichier du scope de la fiche)
+- `.githooks/check-docs-workstreams.mjs` — le rappel de cadrage mesure les fichiers de code du scope (validé par le demandeur le 2026-10-28, au cadrage : fichier du scope de la fiche)
+- `.githooks/check-docs.test.mjs` — tests de QUA-158 (validé par le demandeur le 2026-10-28, au cadrage : fichier du scope de la fiche)
+
 ## 2. Hors périmètre
 
 - La barrière de périmètre (`scope-gate`) : inchangée, aucun fichier admis sans
