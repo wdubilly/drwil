@@ -10,6 +10,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/briefs.mjs
   - packages/drwil/templates/common/base/.githooks/briefs-order.mjs
   - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - .githooks/state.test.mjs
   - .githooks/briefs.mjs
   - .githooks/briefs-order.mjs
