@@ -4,7 +4,7 @@
 // the project's language (consumed by agents).
 import { durabilityHint } from "./criteria.js";
 import { rulesLine } from "./rules.js";
-import { labelIds } from "./verdict.js";
+import { labelIds, PARTIAL_LABEL } from "./verdict.js";
 import type { verdictJson } from "./verify.js";
 
 type VerdictJson = ReturnType<typeof verdictJson>;
@@ -13,6 +13,8 @@ const CONDUCT: Record<string, string> = {
   pass: "Work is verified by drwil. You may continue or finish the task.",
   fail: "Work is NOT verified. Fix the failing contracts below, then run `drwil verify` again. Do not claim the work is done.",
   error: "drwil could not establish the verdict. Report the verification problem to the human; do not claim the work is verified.",
+  partial:
+    "This is a partial verdict (--failed): the contracts not replayed are not judged. Work is NOT verified. Fix the failing contracts, replay with `drwil verify --failed`, then run the full pass `drwil verify --evidence`.",
   manual: "Work is NOT verified yet. Stop claiming validation and ask the human to attest the contracts below.",
 };
 
@@ -34,9 +36,10 @@ export function formatForAgent(j: VerdictJson): string {
   const l = [
     "drwil verify — result for the agent",
     `Contracts: ${c.passed} PASS · ${c.attested} ATTESTED · ${c.failed} FAIL · ${c.error} ERROR · ${c.manual} MANUAL (${c.total} total)`,
-    `Verdict: ${LABELS[j.status] ?? j.status} (exit ${j.exitCode})`,
+    `Verdict: ${j.status === "partial" ? PARTIAL_LABEL : (LABELS[j.status] ?? j.status)} (exit ${j.exitCode})`,
     ...reuseLine(j),
     `Next step: ${CONDUCT[j.status] ?? CONDUCT.error}`,
+    ...partialLines(j),
   ];
   if (j.status === "pass" && c.attested)
     l.push(`Note: ${c.attested} contract(s) are satisfied by a human attestation, not by an automated proof.`);
@@ -88,6 +91,20 @@ export function formatForAgent(j: VerdictJson): string {
   const rules = rulesLine(j.businessRules, "en");
   if (rules) l.push("", rules);
   return labelIds(l.join("\n"), j.results);
+}
+
+function partialLines(j: VerdictJson): string[] {
+  const p = "partial" in j ? j.partial : undefined;
+  if (!p) return [];
+  if (!p.previous) return ["Partial: no readable previous evidence in .drwil/evidence/, nothing replayed. Run `drwil verify --evidence`."];
+  return [
+    `Partial: ${p.replayed.length} contract(s) replayed (outcome of the replayed ones: ${p.outcome}), ${p.skipped} PASS or ATTESTED at ${p.previous} not replayed, so not judged.`,
+    ...(p.manual.length
+      ? [
+          `Awaiting attestation, not failing, not replayed: ${p.manual.join(", ")} — HUMAN ACTION, never run it yourself: \`drwil attest <CONTRACT_ID>\``,
+        ]
+      : []),
+  ];
 }
 
 function reuseLine(j: VerdictJson): string[] {

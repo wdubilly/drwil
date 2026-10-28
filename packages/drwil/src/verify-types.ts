@@ -66,6 +66,18 @@ export interface Verdict {
   /** Criteria of the closed workstreams whose proof has disappeared (QUA-085); empty when they all hold. */
   proofs?: ProofResult[];
   rules?: BusinessRule[];
+  /** QUA-159: set by `verify --failed`; the verdict is then partial, never a proof of closing. */
+  partial?: PartialRun;
+}
+
+/** What a `verify --failed` pass replayed and left out, against the last evidence (`previous`, null when none is readable). */
+export interface PartialRun {
+  previous: string | null;
+  replayed: string[];
+  /** Contracts only awaiting an attestation at the last evidence: not failures, not replayed (`drwil attest`). */
+  manual: string[];
+  /** Contracts PASS or ATTESTED at the last evidence, not replayed. */
+  skipped: number;
 }
 
 export interface VerifyOptions {

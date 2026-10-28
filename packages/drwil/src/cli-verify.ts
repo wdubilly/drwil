@@ -1,4 +1,4 @@
-import type { Command } from "commander";
+import { type Command, Option } from "commander";
 import {
   doctor,
   diagnosisJson,
@@ -14,6 +14,7 @@ import {
   writeEvidence,
 } from "./index.js";
 import { texts } from "./cli-texts.js";
+import { verifyFailed } from "./failed.js";
 
 // --json: only the JSON goes to stdout (no human line), with the same exit codes.
 async function machine<R extends { code?: number; exitCode?: number }>(
@@ -41,12 +42,18 @@ export function registerVerify(program: Command): void {
     )
     .option("--json", "Machine-readable output (stable format, version 1), same exit codes")
     .option("--evidence", "Also record the run as evidence in .drwil/evidence/ (verdict, timestamp, commit, redacted summaries)")
+    .addOption(
+      new Option(
+        "--failed",
+        "Replay only the contracts that were not PASS or ATTESTED at the last evidence: a partial verdict, never PASS, no evidence written",
+      ).conflicts("evidence"),
+    )
     .option("--agent", "Output meant for an AI agent (counts, verdict, next step, human actions); same exit codes")
     .option("--no-reuse", "Replay every check, even those whose verdict `run-checks` left on an identical tree or on unchanged check files")
     .action((opts) =>
       machine(
         async (o) => {
-          const v = await verify({ ...o, reuse: opts.reuse, evidence: opts.evidence });
+          const v = await (opts.failed ? verifyFailed : verify)({ ...o, reuse: opts.reuse, evidence: opts.evidence });
           // The evidence is written next to the verdict: its path goes to stderr so as not to break stdout's JSON.
           if (opts.evidence) console.error(fill(texts().evidence, writeEvidence(o.targetDir, v)));
           return v;

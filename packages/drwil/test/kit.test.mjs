@@ -32,6 +32,7 @@ import {
   attest,
 } from "../dist/index.js";
 import { criteriaTable, evaluateCriteria, redact, writeEvidence } from "../dist/verify.js";
+import { verifyFailed } from "../dist/failed.js";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les projets de test (et leurs hooks) sur le dépôt qui lance la suite.
@@ -3922,6 +3923,87 @@ test("QUA-141 : la preuve de clôture (evidence) et --no-reuse ne reprennent rie
     });
   assert.equal(JSON.parse(cli().stdout).status, "pass", "sans --evidence : repris par contrôle");
   assert.equal(JSON.parse(cli("--evidence").stdout).status, "fail", "--evidence : rejoué sur l'arbre entier, ko est rouge");
+});
+
+// QUA-159 : une preuve écrite à la main, pour fixer ce que `--failed` rejoue.
+function avecPreuve(dir, resultats, nom = "verify-2026-10-26T10-00-00-000Z.json") {
+  mkdirSync(join(dir, ".drwil/evidence"), { recursive: true });
+  writeFileSync(join(dir, ".drwil/evidence", nom), typeof resultats === "string" ? resultats : JSON.stringify({ results: resultats }));
+}
+const preuves = (dir) => readdirSync(join(dir, ".drwil/evidence")).filter((f) => /^verify-/.test(f));
+
+test("QUA-159 : verify --failed rejoue les seuls contrats ni PASS ni ATTESTED, nomme le MANUAL sans le rejouer, ne rend jamais PASS ni ne signe de preuve", async () => {
+  const dir = await projetVerify(
+    contrat("QUA-001", "**Contrôle** : `ko`") +
+      contrat("QUA-002", "**Contrôle** : `ko`") +
+      contrat("QUA-003", "**Manuel** : appréciation") +
+      contrat("QUA-004", "**Contrôle** : `ok`") +
+      contrat("QUA-005", "**Contrôle** : `ko`"),
+  );
+  avecPreuve(dir, [
+    { id: "QUA-001", status: "pass" },
+    { id: "QUA-002", status: "attested" },
+    { id: "QUA-003", status: "manual" },
+    { id: "QUA-004", status: "fail" },
+  ]);
+  // Une preuve plus récente illisible, puis sans contrat : ignorées, la dernière lisible fait foi.
+  avecPreuve(dir, "pas du JSON", "verify-2026-10-27T10-00-00-000Z.json");
+  avecPreuve(dir, [], "verify-2026-10-28T10-00-00-000Z.json");
+  const avant = preuves(dir);
+  const j = JSON.parse(cli(dir, "verify", "--failed", "--json").stdout);
+  assert.equal(j.status, "partial");
+  assert.equal(j.exitCode, 1);
+  assert.deepEqual(j.partial, {
+    previous: ".drwil/evidence/verify-2026-10-26T10-00-00-000Z.json",
+    replayed: ["QUA-004", "QUA-005"],
+    manual: ["QUA-003"],
+    skipped: 2,
+    outcome: "fail",
+  });
+  assert.deepEqual(
+    j.results.map((r) => [r.id, r.status]),
+    [
+      ["QUA-004", "pass"],
+      ["QUA-005", "fail"],
+    ],
+    "QUA-001 (ko, PASS à la preuve) n'est pas rejoué : il serait FAIL",
+  );
+  const humain = cli(dir, "verify", "--failed");
+  assert.equal(humain.status, 1);
+  assert.match(humain.stdout, /Verdict partiel \(--failed\), jamais une preuve de clôture : 2 contrat\(s\) rejoué\(s\)/);
+  assert.match(humain.stdout, /En attente d'attestation, pas en échec, non rejoué\(s\) : QUA-003/);
+  assert.match(humain.stdout, /GOVERNANCE: PARTIAL \(--failed\) — NOT A VERDICT/);
+  const agent = cli(dir, "verify", "--failed", "--agent").stdout;
+  assert.match(agent, /Verdict: GOVERNANCE: PARTIAL \(--failed\) — NOT A VERDICT \(exit 1\)/);
+  assert.match(
+    agent,
+    /2 contract\(s\) replayed .* 2 PASS or ATTESTED at \.drwil\/evidence\/verify-2026-10-26.* not replayed, so not judged/,
+  );
+  assert.match(agent, /Awaiting attestation, not failing, not replayed: QUA-003 — HUMAN ACTION/);
+  assert.match(agent, /then run the full pass `drwil verify --evidence`/);
+  assert.doesNotMatch(humain.stdout + agent, /GOVERNANCE: PASS/);
+  assert.deepEqual(preuves(dir), avant, "un verdict partiel n'écrit aucune preuve");
+});
+
+test("QUA-159 : verify --failed rendu vert reste partiel (exit 1, jamais PASS) ; sans preuve lisible il le dit et ne rejoue rien ; avec --evidence il refuse", async () => {
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`"));
+  const sans = cli(dir, "verify", "--failed");
+  assert.equal(sans.status, 1);
+  assert.match(sans.stdout, /Aucune preuve précédente lisible dans \.drwil\/evidence\/ : rien n'est rejoué/);
+  assert.doesNotMatch(sans.stdout, /GOVERNANCE: PASS|QUA-001/);
+  assert.match(cli(dir, "verify", "--failed", "--agent").stdout, /no readable previous evidence.*nothing replayed/);
+  avecPreuve(dir, "[]");
+  assert.equal(JSON.parse(cli(dir, "verify", "--failed", "--json").stdout).partial.previous, null, "preuve sans résultats : illisible");
+  avecPreuve(dir, [{ id: "QUA-001", status: "fail" }]);
+  const vert = JSON.parse(cli(dir, "verify", "--failed", "--json").stdout);
+  assert.deepEqual([vert.status, vert.exitCode, vert.partial.outcome], ["partial", 1, "pass"]);
+  const double = cli(dir, "verify", "--failed", "--evidence");
+  assert.notEqual(double.status, 0);
+  assert.match(double.stderr, /--failed.*--evidence|--evidence.*--failed/);
+  assert.equal(preuves(dir).length, 1);
+  const horsProjet = await verifyFailed({ targetDir: tmp() });
+  assert.equal(horsProjet.status, "ERROR", "un projet que verify ne charge pas : verify dit pourquoi");
+  assert.equal(horsProjet.partial, undefined);
 });
 
 test("DRWIL-013 : verify --evidence enregistre verdict, horodatage, commit et résumés caviardés", async () => {

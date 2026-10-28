@@ -658,6 +658,19 @@ test("messages : commandes drwil complètes (npx), jamais « drwil » seul", () 
   assert.match(context(readState(racine), racine), /`npx drwil verify --evidence`/);
 });
 
+test("QUA-159 : le rappel de VERIFY propose, après un FAIL, --failed puis la passe complète, dans les deux langues", () => {
+  const fr = depot({ state: actif("VERIFY") });
+  assert.match(
+    context(readState(fr), fr),
+    /FAIL ou ERROR : revenir en BUILD, corriger, rejouer les seuls échecs \(`npx drwil verify --failed` : verdict partiel, jamais une preuve de clôture\), puis refaire la passe complète `npx drwil verify --evidence`/,
+  );
+  const en = depot({ state: actif("VERIFY"), lang: "en" });
+  assert.match(
+    context(readState(en), en),
+    /replay only the failures \(`npx drwil verify --failed`: a partial verdict, never a closing proof\), then redo the full pass `npx drwil verify --evidence`/,
+  );
+});
+
 test("rappel court : activité, fiche et taille du périmètre en deux lignes ; état invalide signalé", () => {
   const racine = depot({ state: actif("BUILD") });
   const texte = shortReminder(readState(racine), racine);

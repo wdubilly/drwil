@@ -12,6 +12,8 @@ const LABELS: Record<Status, string> = {
   MANUAL: "GOVERNANCE: MANUAL REVIEW REQUIRED",
   ERROR: "GOVERNANCE: VERIFY ERROR",
 };
+// QUA-159: a partial verdict never carries the PASS label an agent or a script reads as "verified".
+export const PARTIAL_LABEL = "GOVERNANCE: PARTIAL (--failed) — NOT A VERDICT";
 const SYMBOLS: Record<Status, string> = { PASS: "✓", ATTESTED: "◆", FAIL: "✗", MANUAL: "?", ERROR: "!" };
 const SEVERITY_FR: Record<Severity, string> = { blocking: "bloquant", warning: "avertissement", advisory: "indicatif" };
 
@@ -28,6 +30,11 @@ const TEXTS = {
     undeclared: "Contrats modifiés sans déclaration dans la fiche active (section « Contrats modifiés ») — clôture refusée : {0}",
     unproven: "Critères d'acceptation non prouvés de la fiche active (verdict et clôture) : {0}",
     proofs: "Critères de chantiers clos dont la preuve a disparu (fichier de preuve de clôture rejoué) : {0}",
+    partial:
+      "Verdict partiel (--failed), jamais une preuve de clôture : {0} contrat(s) rejoué(s) depuis la preuve {1}, {2} PASS ou ATTESTED non rejoué(s) donc non jugé(s)",
+    partialNone: "Aucune preuve précédente lisible dans .drwil/evidence/ : rien n'est rejoué. Lancer `drwil verify --evidence`.",
+    partialManual: "En attente d'attestation, pas en échec, non rejoué(s) : {0} — `drwil attest <ID>`",
+    partialEnd: "Passe complète à faire pour le verdict : `drwil verify --evidence`",
   },
   en: {
     contracts: "Contracts",
@@ -41,6 +48,11 @@ const TEXTS = {
     undeclared: "Contracts modified without declaration in the active brief (« Modified contracts » section) — closing refused: {0}",
     unproven: "Unproven acceptance criteria of the active brief (verdict and closing): {0}",
     proofs: "Criteria of closed workstreams whose proof has disappeared (closing proof file replayed): {0}",
+    partial:
+      "Partial verdict (--failed), never a closing proof: {0} contract(s) replayed since the evidence {1}, {2} PASS or ATTESTED not replayed, so not judged",
+    partialNone: "No readable previous evidence in .drwil/evidence/: nothing is replayed. Run `drwil verify --evidence`.",
+    partialManual: "Awaiting attestation, not failing, not replayed: {0} — `drwil attest <ID>`",
+    partialEnd: "A full pass is still needed for the verdict: `drwil verify --evidence`",
   },
 };
 
@@ -111,7 +123,13 @@ export function formatVerdict(v: Verdict): string {
     );
   const rules = rulesLine(v.rules ?? [], v.lang);
   if (rules) lines.push(rules);
-  lines.push("", LABELS[v.status]);
+  if (v.partial) {
+    const p = v.partial;
+    lines.push(p.previous ? fill(T.partial, p.replayed.length, p.previous, p.skipped) : T.partialNone);
+    if (p.manual.length) lines.push(fill(T.partialManual, p.manual.join(", ")));
+    lines.push(T.partialEnd);
+  }
+  lines.push("", v.partial ? PARTIAL_LABEL : LABELS[v.status]);
   return labelIds(lines.join("\n"), v.contracts);
 }
 
@@ -124,7 +142,8 @@ export function verdictJson(v: Verdict) {
   const count = (s: Status) => v.contracts.filter((k) => k.status === s).length;
   return {
     version: 1,
-    status: v.status.toLowerCase(),
+    status: v.partial ? "partial" : v.status.toLowerCase(),
+    ...(v.partial ? { partial: { ...v.partial, outcome: v.status.toLowerCase() } } : {}),
     exitCode: v.code,
     contracts: {
       total: v.contracts.length,
