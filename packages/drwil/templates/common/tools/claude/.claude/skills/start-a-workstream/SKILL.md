@@ -10,9 +10,11 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
 
 1. List the scoped briefs: `node .githooks/state.mjs briefs --json` (`scope` block committed,
    brief neither finished nor a reference). None: say so and stop. The list is **already
-   ordered**: ready briefs first (`ready`: no open `[decision]`), then by `maturity` (`ready`,
-   then `in-progress` and `unset`, then `refine`), then by index `priority`;
-   `decisions` counts those still to decide.
+   ordered**, in the realisation order of the index (`docs/projects/pending.md`, "Fiches
+   cadrées" section, open items top to bottom): a brief that is not ready keeps its place there
+   (`ready` false, `decisions` counts those still to decide), whatever its priority or maturity;
+   the briefs the index does not cite come after, ready ones first, then by `maturity`, then by
+   index `priority`.
 2. Read the "Proposed order" sections of the intentions (`docs/intentions/`): they may put one
    brief before another of the same rank. Also note the index's P1 intentions that have no framed
    brief yet.
@@ -20,7 +22,7 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    preceded by a short message citing the P1 intentions "to frame" (never offered for start):
    - Claude Code: `header` exactly `drwil-start`; one option per brief, **label = exact path**
      (e.g. `docs/projects/<brief>.md`), description = title. At most 4 options, the first of the
-     list; a brief that is not ready keeps its place at the end, its description says "not
+     list; a brief that is not ready keeps its place in the list, its description says "not
      ready: N decision(s) to make first"; a brief with `maturity` `refine` is never hidden, its
      description starts with "to refine: review before starting it"; the human can type another
      path under "Other". `multiSelect: true` when the human wants to chain several briefs (a

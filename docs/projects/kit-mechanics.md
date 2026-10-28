@@ -83,6 +83,7 @@ files:
   - .githooks/briefs-criteria.mjs
   - .githooks/briefs-intents.mjs
   - .githooks/briefs-overlap.mjs
+  - .githooks/briefs-order.mjs
   - .githooks/check-docs-texts.mjs
   - .githooks/check-docs-workstreams.mjs
   - .githooks/check-docs-paths.mjs

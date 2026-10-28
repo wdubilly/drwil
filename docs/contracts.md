@@ -1519,3 +1519,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/state.test.mjs`
 **Origine** : verify-rejoue-les-echecs — « `drwil verify --failed` rejoue les seuls contrats qui n'étaient pas PASS ou ATTESTED à la dernière preuve ; ce verdict partiel le dit, n'est jamais `GOVERNANCE: PASS` et ne vaut jamais preuve de clôture »
 **Raison** : Corriger un contrat après un FAIL obligeait à une passe complète de `verify` pour savoir si la correction tient : six passes ont pris 25 à 30 min d'un chantier de 45 min, avec 17 passes FAIL sur 40 en deux jours.
+
+## QUA-160 — Le sondage de lancement propose les fiches dans l'ordre de réalisation de l'index, une fiche pas prête gardant sa place
+**Règle** : Livré à tout projet. `state.mjs briefs` (donc le sondage `/drwil-start`) liste les fiches cadrées dans l'ordre des lignes ouvertes de la section « Fiches cadrées » de l'index des chantiers, lu depuis le HEAD commité par la lecture qui donne déjà les priorités : quelles que soient leur priorité et leur maturité, et sans reléguer en fin de liste une fiche pas prête (`ready` faux, décisions à prendre), qui garde sa place. Une fiche absente de cette section est listée après les fiches indexées, dans l'ordre d'avant (prête d'abord, maturité, priorité, chemin). Une fiche de garantie bloquante (QUA-088) reste seule listée. La file (`queue`, QUA-037) n'accepte toujours que des fiches prêtes. Le mode d'emploi du sondage (`.claude/skills/start-a-workstream/SKILL.md`) dit cet ordre et plus l'ancien.
+**Périmètre** : `.githooks/briefs.mjs`, `.githooks/briefs-order.mjs`, `.claude/skills/start-a-workstream/SKILL.md` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/briefs-order.mjs` (`cadredOrder`, `pollComparator`), `.githooks/briefs.mjs` (`scopedBriefs`).
+**Preuve** : test de l'ordre suivi, de la fiche pas prête en place, de la fiche non indexée après et de la garantie bloquante seule.
+**Contrôle** : `tests-qua-160`
+**Tests** : `.githooks/state.test.mjs`
+**Origine** : sondage-suit-l-ordre-de-pending — « `state.mjs briefs` liste les fiches d'une version dans l'ordre des lignes ouvertes de la section « Fiches cadrées » de `docs/projects/pending.md`, une fiche pas prête gardant sa place ; une fiche absente de l'index vient après »
+**Raison** : Le sondage triait par priorité P1-P3 et ignorait l'ordre de réalisation de l'index : une fiche P3 pouvait être proposée avant une P2 qui devait passer avant, et le demandeur lançait dans le désordre sans le savoir.

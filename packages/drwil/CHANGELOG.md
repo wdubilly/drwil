@@ -29,6 +29,11 @@ closing commit; the release renames this section to its version.
 
 ### Changed
 
+- The `/drwil-start` poll (`state.mjs briefs`) now lists the briefs in the
+  realisation order of the index's "Fiches cadrées" section, not by priority:
+  a brief that is not ready keeps its place, and the briefs the index does not
+  cite come after, in the previous order.
+
 - A new install writes the scope gate (`scopeGate`) as `blocking` instead of
   `warning`. A project already installed keeps its setting, and `warning`
   when it had none: an update never blocks a commit that used to pass.
