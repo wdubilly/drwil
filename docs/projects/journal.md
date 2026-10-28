@@ -3785,3 +3785,15 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   clôture reste obligatoire (règle de VERIFY inchangée).
 - **Preuve de clôture** : `docs/preuves/verify-rejoue-les-echecs.md` (si présent).
 - **Clôturé par** : la branche `workstream/verify-rejoue-les-echecs`.
+
+## 2026-10-28 — Le sondage `/drwil-start` suit l'ordre de réalisation de `pending.md`
+
+- **Décisions clés** : contrat neuf QUA-160 ; `state.mjs briefs` liste les fiches dans l'ordre des lignes ouvertes de la section « Fiches cadrées » de l'index
+  (lu du HEAD par la lecture des priorités, `indexReading`), sans tenir compte de la priorité ni de la maturité ; une fiche pas prête garde sa place
+  (« si elle doit être réalisée avant, elle est avant ») ; une fiche non indexée vient après, dans l'ancien ordre (prête, maturité, priorité, chemin) ;
+  une fiche de garantie bloquante (QUA-088) reste seule listée ; la file n'accepte toujours que des fiches prêtes. Le tri vit dans le nouveau hook
+  `.githooks/briefs-order.mjs` (`.githooks/briefs.mjs` restait sous le plafond de 200 lignes) ; la skill `/drwil-start` du gabarit dit le nouvel ordre.
+- **Hooks modifiés** : `.githooks/briefs.mjs`, `.githooks/state.test.mjs` ; neuf : `.githooks/briefs-order.mjs`.
+- **Limites connues** : la section « Fiches cadrées » est reconnue par son titre (français ou anglais) ; l'ordre d'une fiche déjà lancée dans une file n'est pas relu.
+- **Clôturé par** : la branche `workstream/sondage-suit-l-ordre-de-pending`.
+

@@ -5,6 +5,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { acceptanceCriteria, declaredContracts } from "./briefs-criteria.mjs";
 import { scopesOverlap } from "./briefs-overlap.mjs";
+import { cadredOrder, pollComparator } from "./briefs-order.mjs";
 import { branchFiles, briefIntent, intentsLeftBehind, lastReview, staleIntents } from "./briefs-intents.mjs";
 import { readBlock } from "./scope.mjs";
 
@@ -72,15 +73,16 @@ export function briefMaturity(text) {
 }
 
 export const DEFAULT_INDEX = ["docs/projects/pending.md"];
-const MATURITY_RANK = { ready: 0, "in-progress": 1, unset: 1, refine: 2 };
 const DEFAULT_PRIORITY = 2;
 
-/** Priority of each brief cited by an open item of the committed index ([P0] to [P3], [P2] without a tag). */
-function indexPriorities(root) {
+/** Priority ([P0] to [P3], [P2] without a tag) and order of the briefs cited by the committed index's open items. */
+function indexReading(root) {
   const priorities = new Map();
+  let order = new Map();
   for (const path of [config(root).dirs?.index, ...DEFAULT_INDEX].filter(Boolean)) {
     const r = spawnSync("git", ["show", `HEAD:${path}`], { cwd: root, encoding: "utf8" });
     if (r.status !== 0) continue;
+    order = cadredOrder(r.stdout);
     // An item: its "- [ ]" line and its continuation lines; a checked item of a brief with several
     // increments says nothing about the priority of the remaining work.
     for (const item of r.stdout.split(/\r?\n(?=\s*- \[)/)) {
@@ -92,7 +94,7 @@ function indexPriorities(root) {
     }
     break;
   }
-  return priorities;
+  return { priorities, order };
 }
 
 /** `[decision]` items still open in the "Points to decide" section ("Points à trancher"). */
@@ -146,13 +148,14 @@ export function readyGaps(text) {
 /**
  * Briefs that can be started: briefs of docs/projects/, models excluded, not
  * finished, whose `scope` block exists in HEAD — the validated scope is the committed one,
- * as for the scope gate. `[{ path, title, priority, decisions, ready, maturity }]`: ready ones first (no
- * open decision), then by maturity ("ready", then "in-progress" and "unset", "refine" last), then by
- * index priority, then by path. A "refine" brief is listed, never hidden. While a blocking guarantee
+ * as for the scope gate. `[{ path, title, priority, decisions, ready, maturity }]`: in the order of the
+ * index's "Fiches cadrées" section, a brief not ready keeping its place; the briefs the index does not
+ * cite come after, ready ones first, then by maturity, index priority and path. A "refine" brief is
+ * listed, never hidden. While a blocking guarantee
  * brief exists (QUA-088), only those are listed.
  */
 export function scopedBriefs(root) {
-  const priorities = indexPriorities(root);
+  const { priorities, order } = indexReading(root);
   const briefs = [];
   for (const dir of BRIEF_DIRS) {
     const abs = join(root, dir);
@@ -178,11 +181,5 @@ export function scopedBriefs(root) {
     }
   }
   const guarantees = briefs.filter((b) => b.guarantee);
-  return (guarantees.length ? guarantees : briefs).sort(
-    (a, b) =>
-      Number(b.ready) - Number(a.ready) ||
-      MATURITY_RANK[a.maturity] - MATURITY_RANK[b.maturity] ||
-      a.priority.localeCompare(b.priority) ||
-      a.path.localeCompare(b.path),
-  );
+  return (guarantees.length ? guarantees : briefs).sort(pollComparator(order));
 }

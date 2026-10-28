@@ -885,6 +885,50 @@ test("fiches cadrées : à maturité égale la priorité décide ; « à affiner
   );
 });
 
+test("QUA-160 fiches cadrées : le sondage suit l'ordre de « Fiches cadrées », une fiche pas prête garde sa place, les non indexées après", () => {
+  const { racine, git } = depotCadre();
+  const fiche = (nom, points, maturite) =>
+    `# ${nom}\n\n**Statut** : cadré le 2026-10-10.\n${maturite}\n\n<!-- scope\nfiles:\n  - src/${nom}.ts\n-->\n\n## 5. Points à trancher\n\n${points}\n`;
+  const ouverte = "- [décision] Choisir A ou B ?";
+  writeFileSync(join(racine, "docs", "projects", "premiere.md"), fiche("premiere", ouverte, "**Maturité** : à affiner"));
+  writeFileSync(join(racine, "docs", "projects", "seconde.md"), fiche("seconde", "(aucun.)", "**Maturité** : prêt"));
+  writeFileSync(join(racine, "docs", "projects", "hors-index.md"), fiche("hors-index", "(aucun.)", "**Maturité** : prêt"));
+  writeFileSync(
+    join(racine, "docs", "projects", "pending.md"),
+    [
+      "# Index",
+      "",
+      "## Fiches cadrées, dans l'ordre de réalisation",
+      "",
+      "- [ ] [IA] [P3] Première, pas prête —",
+      "  `docs/projects/premiere.md`.",
+      "- [x] [IA] [P0] Faite — `docs/projects/hors-index.md`.",
+      "- [ ] [IA] [P1] Seconde — `docs/projects/seconde.md`.",
+      "",
+      "## Intentions par thème",
+      "",
+      `- [ ] [IA] [P0] Hors section — \`${FICHE}\`.`,
+      "",
+    ].join("\n"),
+  );
+  git("add", "-A");
+  git("commit", "-qm", "ordre");
+  const fiches = scopedBriefs(racine);
+  assert.deepEqual(
+    fiches.map((f) => f.path),
+    ["docs/projects/premiere.md", "docs/projects/seconde.md", "docs/projects/hors-index.md", FICHE],
+  );
+  assert.equal(fiches[0].ready, false);
+  // Une fiche de garantie bloquante reste seule listée, même indexée après d'autres.
+  writeFileSync(join(racine, "docs", "projects", "garantie.md"), fiche("garantie", "(aucun.)", "**Garantie** : bloquante"));
+  git("add", "-A");
+  git("commit", "-qm", "garantie");
+  assert.deepEqual(
+    scopedBriefs(racine).map((f) => f.path),
+    ["docs/projects/garantie.md"],
+  );
+});
+
 test("QUA-088 fiches cadrées : tant qu'une fiche de garantie bloquante existe, elle seule est proposée", () => {
   const { racine, git } = depotCadre();
   const fiche = (nom, entete) =>
