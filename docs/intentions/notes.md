@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-10-28 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-10-29 (rangement du backlog).
 
 ## Besoin
 
@@ -18,3 +18,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 
 ## Notes
 - 2026-10-27 — Contrôler de façon déterministe que le corps d'une PR suit .github/pull_request_template.md (titres présents), en CI ou hook : aujourd'hui seule la consigne à l'agent l'impose (écart constaté sur la PR #273 du chantier plafond-200-lignes).
+- 2026-10-29 — Garde d'écriture sur .drwil/evidence/acceptance.json : un agent peut encore écrire à la main l'acceptation des critères (limite de QUA-175, gardes d'écriture des hooks d'agent hors périmètre du chantier cycle-de-vie-des-fiches). À cadrer : refuser toute écriture de ce fichier par un outil d'agent, ou la détecter à la clôture.
