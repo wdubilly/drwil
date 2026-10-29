@@ -83,6 +83,27 @@ attribuer à ce moment-là dans le registre.)
 - `QUA-013` (un contrôle non exécuté n'est pas passé) — précisé, pas affaibli :
   une attestation dont un contrôle cité change d'effet tombe toujours (QUA-184).
 
+Champ `**Couvre**` ajouté (lot 2, QUA-185), règle inchangée, selon le tableau
+du §5 validé le 2026-10-26 (décision 6) ; QUA-175, hors tableau, gardé par le
+demandeur le 2026-10-29 — raison : l'attestation tombe quand ce qu'elle juge
+change ; rien n'est retiré :
+
+- `SEC-001` (portée des droits) — `aucun`, avec sa raison.
+- `QUA-015` (chantiers exploitables à froid)
+- `QUA-018` (dépôt vs livrable)
+- `QUA-019` (pas de contournement d'un contrôle)
+- `QUA-041` (documentation d'entrée juste)
+- `QUA-048` (clôture en un geste)
+- `QUA-060` (le banc prouve un outil)
+- `QUA-063` (matrice de compatibilité)
+- `QUA-064` (Copilot installe `.claude` et ses hooks)
+- `QUA-066` (Gemini installe ses hooks)
+- `QUA-067` (hooks Gemini)
+- `QUA-069` (essai réel sous Copilot CLI)
+- `QUA-150` (tests qui mesurent une durée)
+- `QUA-151` (push indépendant de la charge)
+- `QUA-175` (aucun agent n'écrit l'acceptation des critères)
+
 ## 2. Hors périmètre
 
 - Reprendre le verdict d'un contrôle (QUA-140, QUA-141, QUA-152) : déjà fait.
