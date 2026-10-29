@@ -122,9 +122,6 @@ d'un outil) la dit dans son statut.
   retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
   puis lancer juste après la fiche précédente) —
   `docs/projects/ia-first-en-sections-courtes.md`.
-- [ ] [IA] [P2] La réouverture dit ce qu'elle a annulé, et son cycle complet se
-  joue aussi sous Windows (cadré le 2026-10-26) —
-  `docs/projects/reouverture-dite-et-eprouvee.md`.
 - [ ] [IA] [P3] Une attestation tombe quand ce qu'elle juge change, pas quand
   la forme d'un contrôle change ; `Couvre` déclaré pour les contrats attestés
   (cadré le 2026-10-26, chemins tranchés le même jour ; après la réouverture,

@@ -3841,3 +3841,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : à chaque invite en CLOSING, la fusion est vérifiée, donc un appel `gh` (20 s au plus) quand git ne la voit pas ; sous Copilot CLI une file de plusieurs fiches ne se coche plus d'un sondage (une fiche par sondage) ; cause de l'échec du champ à choix multiple non établie.
 - **Preuve de clôture** : `docs/preuves/retour-scoping-branche-sondage.md`.
 - **Clôturé par** : la branche `workstream/retour-scoping-branche-sondage`.
+
+## 2026-10-29 — La réouverture dit ce qu'elle a annulé, et son cycle complet se joue aussi sous Windows
+
+- **Décisions clés** : contrats neufs QUA-181 et QUA-182 ; une réouverture qui échoue après avoir annulé la fusion automatique ne la reprogramme jamais seule (au risque de fusionner le code fautif) : le refus le dit, l'état garde en CLOSING la marque `merge_cancelled` (numéro de la PR), redite par le contexte et le rappel jusqu'à une réouverture réussie ou au retour en SCOPING (option retenue par le demandeur le 2026-10-29) ; le cycle complet de QUA-118 n'est plus sauté sous Windows : son `gh` simulé y est un `gh.cmd`, un module préchargé (`NODE_OPTIONS`) donne le shell aux appels `gh` des hooks, sans rien changer aux hooks ni à Linux. Rien ajouté pour CodeQL (`reopen` suffit) ; l'essai sur une vraie PR reste une note.
+- **Hooks modifiés** : `.githooks/state-reopen.mjs`, `.githooks/state-validate.mjs`, `.githooks/state-transitions.mjs`, `.githooks/state-texts.mjs`, `.githooks/state-context-texts.mjs`, messages fr et en (gabarit et copies) ; `.githooks/state-cli.mjs` inchangé. Aucun contrat existant modifié.
+- **Cadrage élargi** : les messages fr et en et les hooks de réouverture, de validation, de contexte et de transitions de l'état ajoutés au scope, et les hooks déclarés « validés par le demandeur », sur décision humaine du 2026-10-29.
+- **Limites connues** : la marque ne tombe pas quand l'humain reprogramme la fusion sans rouvrir (`docs/intentions/rappel-fusion-annulee-reprogrammee.md`) ; la voie Windows du test (`gh.cmd`, module préchargé) est écrite mais n'a été exécutée que sous Linux, elle attend un poste ou une CI Windows.
+- **Preuve de clôture** : `docs/preuves/reouverture-dite-et-eprouvee.md`.
+- **Clôturé par** : la branche `workstream/reouverture-dite-et-eprouvee`.
