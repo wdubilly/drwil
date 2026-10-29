@@ -68,8 +68,9 @@ Aucun autre document lu à la demande du kit ne dépasse 163 lignes.
   lire les autres, et chaque renvoi existant vers `docs/ia-first.md` mène à la bonne
   section — `QUA-190`
 - Aucun contenu n'est perdu : le texte de chaque règle de la section 8 et des
-  sections 1 à 7 se retrouve, mot pour mot, dans une section — [humain] revue
-  de la découpe — `QUA-191`
+  sections 1 à 7 se retrouve, mot pour mot, dans une section, prouvé une fois
+  par une comparaison automatique au moment de la découpe, sortie versée à la
+  preuve de clôture (pas de contrat permanent : le texte évoluera ensuite)
 
 ## Contrats modifiés
 
