@@ -96,28 +96,6 @@ n'accepte le code qu'en BUILD, et aucun chemin ne ramène en BUILD. Résultat
 attendu : un défaut révélé après la clôture se corrige sans attendre un geste
 humain de relance, ou l'outillage dit clairement pourquoi il l'exige.
 
-### une réouverture refusée après l'annulation de la fusion automatique (ex-« reouverture-fusion-annulee-apres-echec »)
-
-Statut d'origine : proposée le 2026-10-24 — limite du chantier « rouvrir un chantier dont la PR révèle un défaut après la clôture » (journal du 2026-10-24).
-
-`node .githooks/state.mjs reopen` annule la fusion automatique avant tout
-commit (une branche dont la fusion est programmée ne reçoit rien). Si le
-commit de la fiche restaurée échoue ensuite (un hook pre-commit qui refuse,
-par exemple), la réouverture est refusée, l'état reste en CLOSING, mais la
-fusion automatique reste annulée : le message le dit (« à reprogrammer »),
-rien ne la reprogramme.
-
-### la réouverture éprouvée sur une vraie PR et sous Windows (ex-« reouverture-eprouvee-en-reel »)
-
-Statut d'origine : proposée le 2026-10-24 — limite du chantier « rouvrir un chantier dont la PR révèle un défaut après la clôture » (journal du 2026-10-24).
-
-La réouverture (QUA-116, un chantier clos dont la PR révèle un défaut se
-rouvre sur sa branche) est prouvée par des tests à `gh` simulé : injecté dans
-les tests des hooks, script du PATH dans le cycle complet de
-`packages/drwil/test/cycle.test.mjs`, sauté sous Windows (un script du PATH
-n'y est pas lancé sans shell). Elle n'a pas encore servi sur une vraie PR
-GitHub, avec une vraie fusion automatique programmée puis annulée.
-
 ### le feu vert de publication enregistré par l'outil au lancement (ex-« feu-vert-publication-enregistre »)
 
 Statut d'origine : proposée le 2026-10-18 — limite du chantier « date gardée et feu vert de publication » (journal du 2026-10-18, 0.6.5, 1 sur 4).
@@ -150,7 +128,7 @@ corrigés ou rattachés pendant le chantier n'apparaissent pas corrigés.
 Les dix parties se cadrent en cinq fiches, décidées par le demandeur le 2026-10-26 :
 
 - `docs/projects/attestations-sur-l-effet-et-couvre.md` : empreinte d'une attestation sur l'effet du contrôle et `Couvre` des 15 contrats attestés, un seul chantier et une seule séance de réattestation (parties « couverture des contrats attestés » et « attestation sur l'effet du contrôle ») ; tableau `Couvre` à valider.
-- `docs/projects/reouverture-dite-et-eprouvee.md` : la réouverture dit ce qu'elle a annulé et qui reprogramme la fusion ; son cycle complet se joue sous Windows (parties « fusion annulée après échec » et « réouverture éprouvée »).
+- `docs/projects/journal.md` (chantier fait le 2026-10-29) : la réouverture dit ce qu'elle a annulé et qui reprogramme la fusion ; son cycle complet se joue sous Windows (parties « fusion annulée après échec » et « réouverture éprouvée », QUA-181 et QUA-182) ; reste l'essai sur une vraie PR, en note.
 - `docs/projects/journal.md` (ex-`next-attend-la-fusion`, fusionnée le 2026-10-29) : `next` refuse tant que la PR précédente n'est pas fusionnée (partie « arrêt de file »).
 - `docs/projects/journal.md` (chantier fait le 2026-10-28) : registre en SCOPING, code livré couvert, acceptation des critères, hooks déclarés au lancement, ligne d'index retirée (parties « cycle de vie des fiches » et « acceptation par critère »), QUA-172 à QUA-175, QUA-137 et QUA-074 modifiés.
 - `docs/projects/release-feu-vert-et-squash.md` : feu vert de publication enregistré, recette qui signale un squash (parties « feu vert » et « recette après squash »).
@@ -234,23 +212,6 @@ Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10
   (`docs/projects/routine-maintenance.md`), puis demander à l'humain
   `move SCOPING` et `start` — deux commandes pour une ligne de code.
 
-### une réouverture refusée après l'annulation de la fusion automatique (ex-« reouverture-fusion-annulee-apres-echec »)
-
-**Existant (vérifié le 2026-10-24)** :
-
-- `.githooks/state-cli.mjs` (`reopen`) : annulation par `gh pr merge
-  --disable-auto`, puis commit de la fiche ; en cas d'échec du commit, la
-  fiche est retirée et le texte `reopenCancelled` est ajouté au refus.
-
-### la réouverture éprouvée sur une vraie PR et sous Windows (ex-« reouverture-eprouvee-en-reel »)
-
-**Existant (vérifié le 2026-10-24)** :
-
-- `.githooks/state-cli.mjs` (`reopen`) appelle `gh pr view <branche> --json
-  number,state,autoMergeRequest` et `gh pr merge <n> --disable-auto`.
-- Le test de cycle QUA-118 (nouvelle clôture d'un chantier rouvert) est sauté
-  sous Windows ; la mécanique y reste couverte par les tests des hooks.
-
 ### le feu vert de publication enregistré par l'outil au lancement (ex-« feu-vert-publication-enregistre »)
 
 **Existant (vérifié le 2026-10-18)** :
@@ -331,19 +292,6 @@ Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10
   avant d'écrire la preuve, pour que ces défauts tombent encore en BUILD ?
 - Un retour en BUILD après clôture oblige-t-il à réécrire la preuve du chantier
   (le commit vérifié change) ?
-
-### une réouverture refusée après l'annulation de la fusion automatique (ex-« reouverture-fusion-annulee-apres-echec »)
-
-- [décision] Reprogrammer la fusion automatique quand la réouverture échoue
-  après l'annulation (au risque d'une fusion du code fautif), ou laisser la
-  fusion à l'humain, comme aujourd'hui ?
-
-### la réouverture éprouvée sur une vraie PR et sous Windows (ex-« reouverture-eprouvee-en-reel »)
-
-- [décision] Un essai réel à la prochaine CI rouge après une clôture suffit-il,
-  ou faut-il un scénario du banc ?
-- [décision] Un `gh` simulé lançable sous Windows (`gh.cmd` et `shell`) pour
-  ne plus sauter le cycle complet ?
 
 ### le feu vert de publication enregistré par l'outil au lancement (ex-« feu-vert-publication-enregistre »)
 

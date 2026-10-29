@@ -164,6 +164,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] L'ordre du sondage `/drwil-start` ne fonctionne pas chez
   l'adoptant (section « Fiches cadrées » absente du gabarit, aucun signal) —
   `docs/intentions/ordre-du-sondage-chez-l-adoptant.md`.
+- [ ] [décision] Le rappel « fusion annulée » de l'état doit tomber quand
+  l'humain reprogramme la fusion —
+  `docs/intentions/rappel-fusion-annulee-reprogrammee.md`.
 - [ ] [décision] La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
   vraie PR en retard sur la branche principale —
   `docs/intentions/merge-auto-eprouve-en-reel.md`.
