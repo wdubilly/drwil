@@ -26,7 +26,17 @@ export const NEUTRAL_STATE = Object.freeze({ version: 1, activity: "SCOPING", ac
 // parallel (QUA-147): the briefs a human launched at once, each in its own worktree, recorded by the main folder.
 // detour (QUA-050): the workstream set aside while a prior defect is fixed (.githooks/detour.mjs).
 // reopened (QUA-116): the workstream reopened after its closing, `{ pr, human? }`, until back in SCOPING.
-const FIELDS = new Set([...Object.keys(NEUTRAL_STATE), "auto_merge", "queue", "queue_merge", "detour", "reopened", "parallel"]);
+// merge_cancelled: the automatic merge a failed reopening cancelled, `{ pr }`, until a reopening succeeds or back in SCOPING.
+const FIELDS = new Set([
+  ...Object.keys(NEUTRAL_STATE),
+  "auto_merge",
+  "queue",
+  "queue_merge",
+  "detour",
+  "reopened",
+  "parallel",
+  "merge_cancelled",
+]);
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 export const texts = (root) => STATE_MESSAGES[config(root).lang === "en" ? "en" : "fr"];
 
@@ -57,6 +67,9 @@ export function validateState(state, root) {
   if (r !== undefined && !(r && typeof r === "object" && Number.isInteger(r.pr) && [undefined, true, false].includes(r.human)))
     problems.push(T.reopenedType);
   else if (r !== undefined && !["BUILD", "EVIDENCE", "VERIFY", "CLOSING"].includes(state.activity)) problems.push(T.reopenedActivity);
+  const m = state.merge_cancelled;
+  if (m !== undefined && !(m && typeof m === "object" && Number.isInteger(m.pr))) problems.push(T.mergeCancelledType);
+  else if (m !== undefined && state.activity !== "CLOSING") problems.push(T.mergeCancelledActivity);
   if (state.active_request !== null && typeof state.active_request !== "string") problems.push(T.request);
   if (state.auto_merge !== undefined && typeof state.auto_merge !== "boolean") problems.push(T.autoMergeType);
   else if (state.auto_merge === true && state.activity === "SCOPING") problems.push(T.autoMergeScoping);

@@ -31,6 +31,10 @@ export const MESSAGES_EN = {
   reopenNoBrief: "reopening refused: no commit of {1} deletes {0} — nothing to restore; nothing changed",
   reopenAutoMerge:
     "reopening refused: the automatic merge of PR #{0} could not be cancelled (`gh pr merge {0} --disable-auto`) — the branch receives nothing while it is scheduled; nothing else changed",
+  reopenCancelledHuman:
+    "automatic merge cancelled and NOT scheduled again: the tool never reschedules it by itself (it could merge the faulty code) — it is up to the human to schedule it again, once decided; the state reminder says so again in CLOSING",
+  mergeCancelledType: "merge_cancelled: object { pr } expected (pr: the PR number)",
+  mergeCancelledActivity: "merge_cancelled: only in CLOSING",
   reopenCancelled: "automatic merge cancelled: schedule it again after the new closing, like the first time",
   reopenMessage: "Reopening of {0}: defect revealed by PR #{1}",
   reopenCommitFailed: "reopening refused: the commit of the restored brief failed ({0}) — brief removed, state unchanged",

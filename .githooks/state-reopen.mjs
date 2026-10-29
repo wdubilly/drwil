@@ -68,10 +68,16 @@ export function reopen(root, { gh = ghRun, now = new Date().toISOString() } = {}
     if (r.status !== 0) {
       raw("reset", "-q", "--", brief);
       unlinkSync(join(root, brief));
-      return { code: 1, message: fill(T.reopenCommitFailed, r.stderr.trim().split("\n").at(-1)) + cancelled };
+      // The tool never reschedules the merge (it could merge the faulty code): the mark keeps the reminder alive.
+      if (cancelled) writeState(root, { ...state, merge_cancelled: { pr: pr.number } });
+      return {
+        code: 1,
+        message: fill(T.reopenCommitFailed, r.stderr.trim().split("\n").at(-1)) + (cancelled && `\n${T.reopenCancelledHuman}`),
+      };
     }
   }
-  writeState(root, { ...state, activity: "BUILD", since: now, reopened: { pr: pr.number } });
+  const { merge_cancelled: _, ...kept } = state;
+  writeState(root, { ...kept, activity: "BUILD", since: now, reopened: { pr: pr.number } });
   const restored = text === null ? "" : `\n${fill(T.reopenRestored, brief, git("rev-parse", "--short", "HEAD"))}`;
   return { code: 0, message: fill(T.reopened, brief, pr.number) + restored + cancelled };
 }

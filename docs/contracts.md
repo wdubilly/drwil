@@ -1730,3 +1730,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : retour-scoping-branche-sondage — « Le sondage multi-choix revient vide sous Copilot CLI ; le même champ en choix unique est lu »
 **Raison** : Le champ en tableau prescrit par le skill revenait vide trois fois : le lancement ne partait pas.
+
+## QUA-181 — Une réouverture échouée après l'annulation de la fusion automatique dit que l'humain la reprogramme
+**Règle** : Livré à tout projet. Quand `node .githooks/state.mjs reopen` (QUA-116) échoue après avoir annulé la fusion automatique (commit de la fiche restaurée refusé), le refus dit que la fusion est annulée et non reprogrammée, que l'outil ne la reprogramme jamais seul (au risque de fusionner le code fautif) et qu'il revient à l'humain de la reprogrammer. L'état garde alors, en CLOSING seulement, la marque `merge_cancelled` (numéro de la PR) ; le contexte et le rappel d'état le redisent, en français et en anglais, jusqu'à une réouverture réussie (qui l'efface) ou au retour en SCOPING. Sans fusion programmée, rien n'est annulé et aucune marque n'est posée.
+**Périmètre** : `.githooks/state-reopen.mjs` (`reopen`), `.githooks/state-validate.mjs` (champ `merge_cancelled`), `.githooks/state-transitions.mjs` (`prepareTransition`), `.githooks/state-texts.mjs` (contexte, rappel), `.githooks/state-messages-fr.mjs` et `.githooks/state-messages-en.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/state-reopen.mjs` (`reopen`).
+**Preuve** : tests : hook pre-commit qui refuse avec fusion programmée (marque posée, message, rappel et contexte, en français et en anglais), réouverture réussie ensuite (marque effacée), sans fusion programmée (pas de marque), marque invalide ou hors CLOSING refusée, retour en SCOPING qui l'efface.
+**Contrôle** : `tests-qua-181`
+**Tests** : `.githooks/state.test.mjs`
+**Origine** : reouverture-dite-et-eprouvee — « Quand la réouverture échoue après l'annulation de la fusion automatique, le refus dit que la fusion est annulée, qu'elle n'est pas reprogrammée par l'outil, et qu'il revient à l'humain de la reprogrammer ; le rappel d'état en CLOSING le redit tant que la fusion n'est pas reprogrammée »
+**Raison** : Le message disait « à reprogrammer » sans dire qui ni quand : une fusion annulée par une réouverture échouée pouvait rester oubliée, ou être reprogrammée par l'agent sur du code fautif.
+
+## QUA-182 — Le cycle complet d'un chantier rouvert se joue aussi sous Windows
+**Règle** : Livré à tout projet. Le test du cycle complet d'un chantier rouvert (QUA-118 : clôture, réouverture, correctif, nouvelle clôture) n'est plus sauté sous Windows : son `gh` simulé y est un `gh.cmd` du PATH, et un module préchargé (`NODE_OPTIONS`) donne le shell aux appels `gh` des hooks, sans rien changer aux hooks ni au test sous Linux, où `gh` reste un script à shebang. Aucun test du cycle n'est sauté par plateforme.
+**Périmètre** : `packages/drwil/test/cycle.test.mjs` (cycle de QUA-118).
+**Source de vérité** : `packages/drwil/test/cycle.test.mjs`.
+**Preuve** : test : le `gh` simulé du cycle se lance par le PATH et répond (script à shebang sous Linux, `gh.cmd` et shell préchargé sous Windows) ; le test du cycle (QUA-118) n'a plus de `skip` par plateforme ; la voie Windows n'est exécutée que sur un poste ou une CI Windows.
+**Contrôle** : `tests-qua-182`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Origine** : reouverture-dite-et-eprouvee — « Le test du cycle complet d'une réouverture (QUA-118 : nouvelle clôture d'un chantier rouvert) se joue aussi sous Windows, avec un `gh` simulé lançable (`gh.cmd` et shell), au lieu d'être sauté »
+**Raison** : Le seul test du cycle de réouverture était sauté sous Windows : un script du PATH n'y est pas lancé sans shell, la mécanique n'y était prouvée que par des tests à `gh` injecté.

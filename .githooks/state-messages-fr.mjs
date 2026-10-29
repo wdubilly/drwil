@@ -32,6 +32,10 @@ export const MESSAGES_FR = {
   reopenNoBrief: "réouverture refusée : aucun commit de {1} ne supprime {0} — rien à restaurer ; rien n'a changé",
   reopenAutoMerge:
     "réouverture refusée : la fusion automatique de la PR #{0} n'a pas pu être annulée (`gh pr merge {0} --disable-auto`) — la branche ne reçoit rien tant qu'elle est programmée ; rien d'autre n'a changé",
+  reopenCancelledHuman:
+    "fusion automatique annulée et NON reprogrammée : l'outil ne la reprogramme jamais seul (au risque de fusionner le code fautif) — il revient à l'humain de la reprogrammer, quand il a décidé ; le rappel d'état le redit en CLOSING",
+  mergeCancelledType: "merge_cancelled : objet { pr } attendu (pr : numéro de la PR)",
+  mergeCancelledActivity: "merge_cancelled : seulement en CLOSING",
   reopenCancelled: "fusion automatique annulée : à reprogrammer après la nouvelle clôture, comme la première fois",
   reopenMessage: "Réouverture de {0} : défaut révélé par la PR #{1}",
   reopenCommitFailed: "réouverture refusée : le commit de la fiche restaurée a échoué ({0}) — fiche retirée, état inchangé",

@@ -122,9 +122,6 @@ d'un outil) la dit dans son statut.
   retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
   puis lancer juste après la fiche précédente) —
   `docs/projects/ia-first-en-sections-courtes.md`.
-- [ ] [IA] [P2] La réouverture dit ce qu'elle a annulé, et son cycle complet se
-  joue aussi sous Windows (cadré le 2026-10-26) —
-  `docs/projects/reouverture-dite-et-eprouvee.md`.
 - [ ] [IA] [P3] Une attestation tombe quand ce qu'elle juge change, pas quand
   la forme d'un contrôle change ; `Couvre` déclaré pour les contrats attestés
   (cadré le 2026-10-26, chemins tranchés le même jour ; après la réouverture,
@@ -164,6 +161,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] L'ordre du sondage `/drwil-start` ne fonctionne pas chez
   l'adoptant (section « Fiches cadrées » absente du gabarit, aucun signal) —
   `docs/intentions/ordre-du-sondage-chez-l-adoptant.md`.
+- [ ] [décision] Le rappel « fusion annulée » de l'état doit tomber quand
+  l'humain reprogramme la fusion —
+  `docs/intentions/rappel-fusion-annulee-reprogrammee.md`.
 - [ ] [décision] La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
   vraie PR en retard sur la branche principale —
   `docs/intentions/merge-auto-eprouve-en-reel.md`.

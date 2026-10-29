@@ -62,6 +62,7 @@ export function context(read, root) {
   if (state.queue?.length && state.activity === "SCOPING") lines.push(fill(T.queueResume, state.queue[0]));
   if (state.detour) lines.push(fill(T.detour, state.detour.origin_brief, state.detour.origin_branch, state.detour.branch));
   if (state.reopened) lines.push(fill(T.reopened, state.reopened.pr));
+  if (state.merge_cancelled) lines.push(fill(T.mergeCancelled, state.merge_cancelled.pr));
   if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
   lines.push(...lotContext(read, root, T));
   lines.push(T.rule(T.rules[state.activity]));
@@ -96,5 +97,6 @@ export function shortReminder(read, root) {
         return T.reminder(state.activity, state.active_brief, n);
       })();
   const lot = problems.length ? [] : lotContext(read, root, T);
-  return [head, ...lot, T.rule(T.rules[state.activity])].join("\n");
+  const cancelled = !problems.length && state.merge_cancelled ? [fill(T.mergeCancelled, state.merge_cancelled.pr)] : [];
+  return [head, ...lot, ...cancelled, T.rule(T.rules[state.activity])].join("\n");
 }
