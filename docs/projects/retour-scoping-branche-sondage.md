@@ -88,9 +88,9 @@ attribuer à ce moment-là dans le registre.)
 
 ## Contrats modifiés
 
-(à établir au lancement : QUA-017 reste inchangé (filet de sécurité) ; QUA-037
-(file de chantiers) et le contrat de retour en SCOPING depuis CLOSING, dont
-QUA-138, sont probablement modifiés. Le demandeur valide chaque puce.)
+- `QUA-037` (file de chantiers) : phrase sur le retour en SCOPING à la fusion constatée — validé par le demandeur (2026-10-29).
+- `QUA-165` (sondage Copilot CLI) : le skill prescrit le choix unique, QUA-180 fixe le champ — validé par le demandeur (2026-10-29).
+- `QUA-017` (filet de sécurité) et `QUA-138` : inchangés.
 
 ## 2. Hors périmètre
 
