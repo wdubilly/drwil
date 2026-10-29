@@ -3858,3 +3858,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : aucune nouvelle ; chantier mené par Copilot CLI jusqu'au lot 2, puis clos par Claude Code après la séance d'attestation.
 - **Preuve de clôture** : `docs/preuves/attestations-sur-l-effet-et-couvre.md`.
 - **Clôturé par** : la branche `workstream/attestations-sur-l-effet-et-couvre`.
+
+## 2026-10-29 — En fin de cadrage, un sondage demande quoi faire de la PR
+
+- **Décisions clés** : contrats neufs QUA-187 à QUA-189 ; skill `scope-a-workstream` (`/drwil-scope`, au menu `/drwil`) : à la fin d'un cadrage poussé, sondage `drwil-scope` à trois réponses (« Automatic merge », « Manual merge », « Continue scoping »), sans réponse par défaut ni recommandée, lu par le hook de sondage sous Claude Code et Copilot CLI ; « Automatic merge » écrit `scoping_merge: { branch }` dans l'état (SCOPING seulement, refusé sur la branche principale), seule autorisation de `.githooks/merge-auto.mjs` en SCOPING, et pour la PR de cette branche seulement ; `queue_merge` écarté (il déclencherait la fusion du chantier suivant de la file). QUA-163 modifié en conséquence. Recette `docs/recipes/working-with-branches.md` (dépôt et gabarit), README du paquet, carte et changelog à jour.
+- **Hooks modifiés** : `.githooks/merge-auto.mjs`, `.githooks/state.mjs`, `.githooks/state-texts.mjs`, `.githooks/state-validate.mjs`, `.githooks/state-messages-fr.mjs`, `.githooks/state-messages-en.mjs` (gabarit et copies) ; hook de sondage `.claude/hooks/start-poll.mjs`.
+- **Cadrage élargi** : validation et messages de l'état, menu `/drwil`, copies installées, puis recette du gabarit et README du paquet, sur décisions du demandeur du 2026-10-29. Attestations de QUA-048, QUA-067 et QUA-175 refaites par l'humain (`.githooks/state.mjs` modifié, qu'elles couvrent).
+- **Limites connues** : une autorisation `scoping_merge` reste dans l'état après la fusion de sa PR, jusqu'à la sortie de SCOPING ou une autre réponse, sans effet (`.githooks/merge-auto.mjs` refuse une PR fermée ou d'une autre branche) ; la recette du gabarit n'a pas la puce « This folder » de la copie du dépôt, écart préexistant noté dans `docs/intentions/notes.md`.
+- **Preuve de clôture** : `docs/preuves/fin-de-cadrage-sondage.md`.
+- **Clôturé par** : la branche `workstream/fin-de-cadrage-sondage`.
