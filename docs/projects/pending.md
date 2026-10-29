@@ -162,9 +162,6 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   leurs calibrages (dont l'avertissement `[ia-first-warning]` et un `verify`
   en FAIL sans contrat en échec, repris le 2026-10-26) —
   `docs/intentions/suivi-ci-et-contexte.md`.
-- [ ] [décision] Un cadrage poussé est pris en compte à sa fusion : sondage de
-  fin de cadrage (fusion automatique, manuelle ou continuer) et signalement des
-  cadrages non fusionnés — `docs/intentions/cadrage-pris-en-compte-a-la-fusion.md`.
 - [ ] [décision] Le pre-push connaît le commit local poussé, pas seulement la
   référence distante (reprise d'un verdict au pre-push, QUA-152) —
   `docs/intentions/pre-push-commit-pousse.md`.
