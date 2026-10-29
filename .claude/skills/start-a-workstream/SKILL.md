@@ -52,20 +52,21 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      already active in another worktree is refused with that worktree's path.
    - **Parallel question** (optional, only with `multiSelect: true` and at least two ready briefs):
      Claude Code, a question of the same poll, `header` exactly `drwil-parallel`, options
-     "Parallel queue" and "Sequential queue", no recommendation; Copilot CLI, a field named exactly
-     `drwil-parallel` with the same two values in its `enum`. It is the human's choice, read by the
+     "Parallel queue" and "Sequential queue", no recommendation (Copilot CLI: never, one brief per
+     poll). It is the human's choice, read by the
      hook: with "Parallel queue" the hook launches every brief ticked, in the order of the options,
      each in its own worktree (as for "New worktree"), at most `maxParallel` workstreams active at
      once (`.drwil/ia-first.json`, 3 by default), and refuses without creating anything briefs whose
      `scope` blocks overlap; "Sequential queue" keeps the queue in this folder. Never recommended:
      the agent does not start those worktrees itself.
-   - Copilot CLI: `message` starting with `drwil-start :`; a first field `fiche` with **multiple
-     choice**: `type: "array"` and `items.enum` = the exact paths (the human ticks one brief, or
-     several for a queue; one ticked is a simple start), and a **second field named exactly
-     `drwil-merge`** with `enum` "Automatic merge" and "Manual merge" (no `default`, no
-     recommendation): the hook reads `fiche=…, drwil-merge=…`, the ticked briefs in the order of
-     the options. Always ask `drwil-merge` and `drwil-worktree` with it, and, with at least two
-     ready briefs, `drwil-parallel`. A single-choice field (`enum` alone) is still read the same.
+   - Copilot CLI: `message` starting with `drwil-start :`; a first field `fiche` with **single
+     choice**: `type: "string"` and `enum` = the exact paths, **never** `type: "array"` (a multiple
+     choice field came back empty under Copilot CLI: only the single choice is read reliably), and a
+     **second field named exactly `drwil-merge`** with `enum` "Automatic merge" and "Manual merge"
+     (no `default`, no recommendation): the hook reads `fiche=…, drwil-merge=…`. One brief per poll,
+     so no queue from Copilot CLI (to chain several briefs, use Claude Code); always ask
+     `drwil-merge` and `drwil-worktree` with it, and never `drwil-parallel` (it needs several
+     briefs). The hook still reads a multiple choice field if another tool sends one.
      No `drwil-merge` answer read: manual merge.
    - **Recommend**: the first ready brief, first, with "(Recommended)" and the reason in
      its **description** — never in the label.

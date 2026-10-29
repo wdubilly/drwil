@@ -156,7 +156,8 @@ QUA-138, sont probablement modifiés. Le demandeur valide chaque puce.)
   sur la branche d'origine et suppression de `workstream/<fiche>` entre deux lancements), QUA-108 du banc (cadrage sur
   `cadrage/boutique`, fusionnée en avance rapide, puis lancement depuis `master`). Correctif au passage : la branche part de la
   principale locale si elle a des commits que `origin` n'a pas (sinon le cadrage non poussé disparaissait de l'arbre).
-- **Travail non commité** : aucun.
-- **Prochaine étape** : lot 3 — sondage en choix unique (skill gabarit et sa copie, `packages/drwil/templates/common/tools/claude/.claude/hooks/start-poll.mjs`, test, contrat). Section
-  « Contrats modifiés » : QUA-037 modifié au lot 1 (phrase sur le retour en SCOPING), à valider par le demandeur ; QUA-138 et
-  QUA-017 inchangés.
+- **Lot 3 réalisé** (2026-10-29) : le skill prescrit pour Copilot CLI un champ `fiche` en choix unique (`enum` seul, jamais `array`),
+  une fiche par sondage, sans `drwil-parallel` ; le hook `.claude/hooks/start-poll.mjs` lisait déjà le choix unique et lit toujours un tableau
+  (inchangé). Contrat QUA-180, contrôle `tests-qua-180`, test dans `packages/drwil/test/kit.test.mjs`, QUA-165 renvoie à QUA-180.
+  Le scope avait perdu `packages/drwil/test/kit.test.mjs` au lot 2 : rétabli. Contrats modifiés à valider par le demandeur :
+  QUA-037 (lot 1) ; QUA-165 (le skill ne prescrit plus le choix multiple).

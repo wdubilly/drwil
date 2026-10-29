@@ -28,6 +28,10 @@ closing commit; the release renames this section to its version.
   `workstream/<brief>`, cut from the up-to-date main branch (kept if you are
   already on it); it is refused, with what to do, when the current branch is not
   merged, the working tree is dirty or the branch already exists.
+- The `/drwil-start` poll under Copilot CLI now asks for the brief as a single
+  choice (one brief per poll), the only form read reliably (the multiple choice
+  field came back empty); the hook still reads a multiple choice field if
+  another tool sends one.
 - A brief with several lots (bullets « **Lot N — title** [IA|human] » of its
   « Increments » section) is now carried lot by lot: `node .githooks/state.mjs
   lot` names the current lot, the lots done and those left, and `lot next`
