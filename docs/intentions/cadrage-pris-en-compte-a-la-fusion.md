@@ -1,6 +1,7 @@
 # Intention : un cadrage poussé est pris en compte à sa fusion, et la fin d'un cadrage demande quoi en faire
 
 **Statut** : proposée le 2026-10-29 — demande de l'humain, promue de la note du même jour.
+**Revu le 2026-10-29** : cadrée en fiche `docs/projects/fin-de-cadrage-sondage.md` ; décisions : sondage dans un skill propre au cadrage, aucun signalement des cadrages non fusionnés, une branche et une PR pour plusieurs cadrages, `merge-auto` ordonnée sans ordre dans le sondage.
 
 ## Besoin
 
