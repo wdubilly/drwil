@@ -65,6 +65,12 @@ export const MESSAGES_EN = {
   startClosingOpen:
     "start refused: CLOSING, the closing PR is not merged — wait for the merge (and update the main branch), then start again",
   startClosingUnknown: "start refused: CLOSING, the closing PR's merge is not established",
+  settled: "CLOSING → SCOPING: the workstream's pull request is merged",
+  settleOpen: "CLOSING: the workstream's pull request is not merged — the state stays CLOSING (back to SCOPING once the merge is seen)",
+  settleUnknown: "CLOSING: the workstream's pull request merge is not established — the state stays CLOSING",
+  nextOpen:
+    "next refused: the previous workstream's pull request is not merged — wait for the merge (and update the main branch), then retry",
+  nextUnknown: "next refused: the previous workstream's pull request merge is not established",
   startHuman: "start refused: it is a human decision (`/drwil-start` poll, or interactive terminal)",
   startBusy: "start refused: brief {0} is already active in the worktree {1}",
   startNotScoped: `start refused: "{0}" is not a scoped brief (scope block committed, brief not finished)`,
@@ -108,5 +114,16 @@ export const MESSAGES_EN = {
   lotLeft: "[IA] lots left: {0}",
   lotHumans: "[human] lots to do (skipped by the chaining, recalled at closing): {0}",
   lotNothing: "none",
+  branchUnmerged:
+    "start refused: the current branch {0} is not merged into {1}; merge it, or go back to {1} (`git switch {1}`), then retry; nothing created",
+  branchUnknown:
+    "start refused: the merge of the current branch {0} is not established ({1}); go back to {2} (`git switch {2}`) or make gh reachable, then retry; nothing created",
+  branchDirty:
+    "start refused: the working tree has uncommitted changes; commit or stash them (`git stash -u`), then retry; nothing created",
+  branchTaken:
+    "start refused: branch {0} already exists; switch to it (`git switch {0}`) to resume the workstream, or delete it if stale, then retry; nothing created",
+  branchFailed: "start refused: git switch failed ({0}); nothing created",
+  branchCreated: "Branch created: {0} (from {1}).{2}",
+  branchStale: "\ngit fetch failed: the branch starts from the local branch {0}, possibly behind the remote main branch",
   usage: `usage: node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <text>] | start [<brief>] | lot [next] | reopen | briefs [--json] | reminder`,
 };

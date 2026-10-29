@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { scopedBriefs } from "./briefs.mjs";
 import { ACTIVITIES, move, readState, start, stopQueue } from "./state.mjs";
+import { nextHead, settleClosing } from "./state-transitions.mjs";
 import { reopen } from "./state-reopen.mjs";
 import { context, fill, shortReminder } from "./state-texts.mjs";
 import { texts } from "./state-validate.mjs";
@@ -119,13 +120,21 @@ export async function main(args, root, input = process.stdin) {
   // The queue (QUA-037): `next` starts its head (allowed to the agent: the human decided the queue),
   // `queue stop` drops what is left.
   if (args[0] === "next" || (args[0] === "queue" && args[1] === "stop")) {
-    const r = args[0] === "next" ? start(root, readState(root).state.queue?.[0]) : stopQueue(root);
+    const r = args[0] === "next" ? nextHead(root) : stopQueue(root);
     return report(r, root);
   }
   if (args[0] === "lot") return (await import("./state-cli-lots.mjs")).lotCommand(args, root);
   if (args[0] === "reopen") {
     const r = reopen(root);
     return report(r, root);
+  }
+  const prompt = ["reminder", "copilot-message", "gemini-message"].includes(args[0]);
+  let settled = "";
+  if (args[0] !== "move") {
+    // Reading: the closing whose PR is merged is over; a failure here never breaks a session.
+    try {
+      settled = (await settleClosing(root, { chain: prompt })).message;
+    } catch {}
   }
   if (args[0] === "reminder") {
     // Prompt hook (Claude Code: UserPromptSubmit): writes only if the state changed, never breaks a prompt.
@@ -164,7 +173,7 @@ export async function main(args, root, input = process.stdin) {
     // Reading: never breaks an agent's session start.
     try {
       const read = readState(root);
-      console.log(args.includes("--json") ? JSON.stringify(read, null, 2) : context(read, root));
+      console.log(args.includes("--json") ? JSON.stringify(read, null, 2) : (settled ? `${settled}\n\n` : "") + context(read, root));
     } catch (e) {
       console.log(fill(texts(root).unreadableState, e.message));
     }

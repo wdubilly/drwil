@@ -14,6 +14,8 @@ import {
   NEUTRAL_STATE,
   context,
   main,
+  nextHead,
+  settleClosing,
   readStdinJson,
   requiresHuman,
   readState,
@@ -1042,6 +1044,8 @@ test("QUA-037 : lancer depuis CLOSING : seulement fiche supprimée et PR de clô
   assert.equal(ok.code, 0, ok.message);
   assert.match(ok.message, /CLOSING → BUILD/);
   assert.equal(readState(racine).state.activity, "BUILD");
+  git("checkout", "-q", principale);
+  git("branch", "-q", "-D", "workstream/exemple");
 
   // La fiche du chantier est encore là : pas de retour.
   writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(actif("CLOSING", { active_brief: "docs/projects/finie.md" })));
@@ -1066,6 +1070,7 @@ test("QUA-037 : lancer depuis CLOSING : seulement fiche supprimée et PR de clô
   git("merge", "-q", "--no-ff", "-m", "fusion", "chantier");
   git("checkout", "-q", "chantier");
   assert.equal(start(racine, FICHE, { human: true }).code, 0);
+  assert.equal(git("branch", "--show-current").stdout.trim(), "workstream/exemple");
 
   // La file décidée est lancée par l'agent seul, depuis CLOSING aussi.
   git("checkout", "-q", principale);
@@ -1186,7 +1191,7 @@ test("principal lancer sans terminal : refusé en mode humain, lancé en mode ag
   // La fiche d'exemple n'a pas de critère : lancée avec un avertissement (newRequirements non imposé, QUA-021).
   assert.match(
     r.sortie,
-    /^✓ SCOPING → BUILD \(lancé : docs\/projects\/exemple\.md\)\navertissement : la fiche « docs\/projects\/exemple\.md » n'a aucun critère[^\n]*\n\n\[drwil\] État de gouvernance/,
+    /^✓ Branche créée : workstream\/exemple \(depuis \w+\)\.\nSCOPING → BUILD \(lancé : docs\/projects\/exemple\.md\)\navertissement : la fiche « docs\/projects\/exemple\.md » n'a aucun critère[^\n]*\n\n\[drwil\] État de gouvernance/,
   );
   assert.equal(readState(agent).state.active_request, "faire X");
   // --request sans valeur : ignoré.
@@ -2089,4 +2094,134 @@ test("QUA-137 : le lancement nomme chaque hook existant cité par le cadrage san
   assert.doesNotMatch(start(depotHooks({ puces: tout }), FICHE, { human: true }).message, /avertissement : le cadrage cite/);
   const seulTest = depotHooks({ scope: [".githooks/etat.test.mjs"], puces: "" });
   assert.match(start(seulTest, FICHE, { human: true }).message, /cite `\.githooks\/etat\.mjs` sans puce/);
+});
+
+// --- La file attend la fusion et l'état revient en SCOPING (QUA-176 à QUA-178) ---
+
+/** Dépôt de file : état CLOSING sur la branche principale, fiche active supprimée, file [B]. */
+function depotFermeture(extra = {}) {
+  const racine = depotFile();
+  const git = (...args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
+  ecrireEtat(racine, {
+    version: 1,
+    activity: "CLOSING",
+    active_brief: "docs/projects/fini.md",
+    active_request: null,
+    since: null,
+    queue: [B],
+    ...extra,
+  });
+  return { racine, git, principale: git("branch", "--show-current").stdout.trim() };
+}
+const ghVide = () => "[]";
+const ghAbsent = () => null;
+
+test("QUA-176 : lire l'état en CLOSING dont la PR est fusionnée ramène en SCOPING ; ouverte, inconnue ou fiche encore là : l'état reste CLOSING", async () => {
+  const { racine, git, principale } = depotFermeture();
+  const lire = () => capturer(() => main([], racine));
+  // Sur la branche principale (fusion constatée) : retour en SCOPING, dit, file conservée, sans lancer la suivante.
+  let r = await lire();
+  assert.match(r.sortie, /^CLOSING → SCOPING : la PR du chantier est fusionnée/);
+  assert.deepEqual([readState(racine).state.activity, readState(racine).state.queue], ["SCOPING", [B]]);
+  r = await lire();
+  assert.doesNotMatch(r.sortie, /fusionnée\n/, "déjà en SCOPING : rien à dire");
+
+  // Branche de chantier : PR ouverte (gh répond sans la PR), puis gh absent ; l'état reste CLOSING et le dit.
+  ecrireEtat(racine, { version: 1, activity: "CLOSING", active_brief: "docs/projects/fini.md", active_request: null, since: null });
+  git("checkout", "-qb", "chantier");
+  writeFileSync(join(racine, "x.txt"), "x");
+  git("add", "-A");
+  git("commit", "-qm", "travail");
+  assert.match((await settleClosing(racine, { gh: ghVide })).message, /PR du chantier n'est pas fusionnée — l'état reste CLOSING/);
+  assert.match((await settleClosing(racine, { gh: ghAbsent })).message, /n'est pas établie — l'état reste CLOSING — gh injoignable/);
+  r = await lire();
+  assert.match(r.sortie, /l'état reste CLOSING/);
+  assert.equal(readState(racine).state.activity, "CLOSING");
+
+  // Fusionnée (classique) : retour ; avec un `--json` la lecture ne change pas de forme.
+  git("checkout", "-q", principale);
+  git("merge", "-q", "--no-ff", "-m", "fusion", "chantier");
+  git("checkout", "-q", "chantier");
+  assert.equal(JSON.parse((await capturer(() => main(["--json"], racine))).sortie).state.activity, "SCOPING");
+
+  // La fiche active est encore là : pas de retour.
+  ecrireEtat(racine, { version: 1, activity: "CLOSING", active_brief: A, active_request: null, since: null });
+  assert.match((await settleClosing(racine)).message, /la fiche docs\/projects\/a\.md est encore là/);
+  assert.equal(readState(racine).state.activity, "CLOSING");
+  // Hors CLOSING : rien à dire.
+  assert.equal((await settleClosing(depotFile())).message, "");
+});
+
+test("QUA-177 : next refuse de lancer la tête de file tant que la PR du chantier précédent n'est pas fusionnée ; inconnue : refus", async () => {
+  const { racine, git, principale } = depotFermeture({ activity: "SCOPING", active_brief: null });
+  // Sur la branche principale : la fusion est constatée.
+  assert.equal(nextHead(racine, { gh: ghAbsent }).code, 0);
+  assert.equal(readState(racine).state.active_brief, B);
+
+  const enCours = () =>
+    ecrireEtat(racine, { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null, queue: [A] });
+  enCours();
+  git("checkout", "-qb", "chantier");
+  writeFileSync(join(racine, "x.txt"), "x");
+  git("add", "-A");
+  git("commit", "-qm", "travail");
+  let r = nextHead(racine, { gh: ghVide });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /next refusé : la PR du chantier précédent n'est pas fusionnée/);
+  r = nextHead(racine, { gh: ghAbsent });
+  assert.match(r.message, /next refusé : la fusion de la PR du chantier précédent n'est pas établie — gh injoignable/);
+  assert.equal(readState(racine).state.activity, "SCOPING");
+  assert.equal((await capturer(() => main(["next"], racine))).code, 1, "gh ne répond pas dans ce dépôt de test");
+
+  // Dépôt sans branche principale locale (ni main ni master, pas d'origin/HEAD) : établi nulle part, refus.
+  git("branch", "-m", "tronc");
+  git("branch", "-D", principale);
+  r = nextHead(racine, { gh: ghAbsent });
+  assert.match(r.message, /next refusé : la fusion de la PR du chantier précédent n'est pas établie/);
+  assert.equal((await settleClosing(racine, { gh: ghAbsent })).message, "");
+
+  // Fusionnée : le lancement a lieu.
+  git("branch", "-m", principale);
+  git("checkout", "-qb", "autre");
+  git("merge", "-q", "chantier");
+  assert.equal(nextHead(racine, { gh: ghAbsent }).code, 0);
+});
+
+test("QUA-178 : la file enchaîne le chantier suivant à la fusion constatée dans la session ; une file reprise dans une nouvelle session attend le oui", async () => {
+  // Invite de la session en cours : la fusion constatée lance la tête de file, sans nouveau geste.
+  const { racine } = depotFermeture({ queue_merge: true });
+  const sortie = await capturer(() => main(["reminder"], racine));
+  assert.equal(sortie.code, 0);
+  const apres = readState(racine).state;
+  assert.deepEqual([apres.activity, apres.active_brief, apres.auto_merge], ["BUILD", B, true]);
+  const { message } = await settleClosing(racine, { chain: true });
+  assert.equal(message, "", "plus en CLOSING : rien à enchaîner");
+
+  // Sans file : retour en SCOPING seul. Refus de la suivante (non prête) : dit, l'état reste SCOPING.
+  const sans = depotFermeture({ queue: undefined }).racine;
+  assert.match((await settleClosing(sans, { chain: true })).message, /^CLOSING → SCOPING : la PR du chantier est fusionnée$/);
+  const pasPrete = depotFermeture({ queue: [C] }).racine;
+  const refus = (await settleClosing(pasPrete, { chain: true })).message;
+  assert.match(refus, /^CLOSING → SCOPING.*\nlancement refusé/s);
+  assert.equal(readState(pasPrete).state.activity, "SCOPING");
+
+  // Début de session (lecture simple, copilot-start, gemini-start) : retour en SCOPING, file gardée, rien de lancé.
+  for (const commande of [[], ["copilot-start"], ["gemini-start"]]) {
+    const nouvelle = depotFermeture().racine;
+    await capturer(() => main(commande, nouvelle));
+    const etat = readState(nouvelle).state;
+    assert.deepEqual([etat.activity, etat.queue], ["SCOPING", [B]], commande.join());
+  }
+  // Invites des autres outils : elles enchaînent aussi.
+  for (const commande of [["copilot-message"], ["gemini-message"]]) {
+    const outil = depotFermeture().racine;
+    await capturer(() => main(commande, outil));
+    assert.equal(readState(outil).state.activity, "BUILD", commande.join());
+  }
+});
+
+test("QUA-176 : un échec de la lecture ne casse jamais le début de session", async () => {
+  const racine = depotFile();
+  writeFileSync(join(racine, ".drwil", "state.json"), "{ pas du json");
+  assert.equal((await capturer(() => main([], racine))).code, 0);
 });

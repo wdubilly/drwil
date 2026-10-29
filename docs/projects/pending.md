@@ -122,11 +122,6 @@ d'un outil) la dit dans son statut.
   retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
   puis lancer juste après la fiche précédente) —
   `docs/projects/ia-first-en-sections-courtes.md`.
-- [ ] [IA] [P2] La file attend la fusion (`next`), l'état revient en SCOPING à la
-  fusion constatée, branche créée au lancement en « This folder », sondage en
-  choix unique sous Copilot CLI (cadré le 2026-10-29, fusion de l'ancienne fiche
-  `next-attend-la-fusion` du 2026-10-26) —
-  `docs/projects/retour-scoping-branche-sondage.md`.
 - [ ] [IA] [P2] La réouverture dit ce qu'elle a annulé, et son cycle complet se
   joue aussi sous Windows (cadré le 2026-10-26) —
   `docs/projects/reouverture-dite-et-eprouvee.md`.

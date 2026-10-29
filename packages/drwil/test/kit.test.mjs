@@ -1643,7 +1643,10 @@ test("QUA-142 : la réponse « Nouveau worktree » du sondage lance le chantier 
   rejouer(claude, reponse("Ce dossier"));
   assert.equal(etatDe(dir).activity, "BUILD", "« Ce dossier » : lancé là");
   assert.equal(existsSync(voisin), false);
+  assert.equal(git(dir, "branch", "--show-current").stdout.trim(), "workstream/essai", "« Ce dossier » crée la branche du chantier");
   rmSync(join(dir, ".drwil/state.json"));
+  git(dir, "switch", "-q", "-");
+  git(dir, "branch", "-D", "workstream/essai");
 
   const r = rejouer(claude, reponse("Nouveau worktree"));
   assert.match(r.stdout, /Worktree créé/);
@@ -1734,6 +1737,8 @@ test("QUA-147 : la réponse « File en parallèle » du sondage lance chaque fic
   assert.deepEqual(etatDe(dir).queue, [fiches[1]]);
   assert.equal(etatDe(dir).parallel, undefined);
   rmSync(join(dir, ".drwil/state.json"));
+  git(dir, "switch", "-q", "-");
+  git(dir, "branch", "-D", "workstream/un");
 
   // Cochées dans le désordre : l'ordre du sondage prévaut.
   const r = rejouer("PostToolUse", {
@@ -1797,6 +1802,49 @@ test("QUA-165 : sous Copilot CLI, le champ des fiches à choix multiple (array, 
   avecDefaut.properties.fiche.default = [fiches[0]];
   assert.equal(rejouer("PreToolUse", "", avecDefaut).status, 2);
   assert.equal(rejouer("PreToolUse", "").status, 0);
+});
+
+test("QUA-180 : le skill prescrit à Copilot CLI le champ des fiches en choix unique, et le hook lit une fiche en enum seul comme un tableau", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const skill = read(dir, ".claude/skills/start-a-workstream/SKILL.md").replace(/\s+/g, " ");
+  assert.match(skill, /a first field `fiche` with \*\*single choice\*\*: `type: "string"` and `enum`/);
+  assert.match(skill, /\*\*never\*\* `type: "array"`/);
+  assert.doesNotMatch(skill, /`type: "array"` and `items\.enum`/);
+
+  const fiche = "docs/projects/un.md";
+  writeFileSync(
+    join(dir, fiche),
+    "# Projet : Essai\n\n**Statut** : cadré le 2026-10-26.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/essai.ts\n-->\n\n## Critères d'acceptation\n\n- Essai — `APP-001`\n\n## Incréments\n\n- **Lot 1** : essai\n",
+  );
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+  const etat = () => JSON.parse(read(dir, ".drwil/state.json"));
+  const rejouer = (fichesSchema, reponse) =>
+    spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({
+        hook_event_name: "PostToolUse",
+        tool_name: "ask_user",
+        tool_input: {
+          message: "drwil-start : quelle fiche lancer ?",
+          requestedSchema: {
+            properties: { fiche: fichesSchema, "drwil-merge": { type: "string", enum: ["Automatic merge", "Manual merge"] } },
+          },
+        },
+        tool_result: { result_type: "success", text_result_for_llm: `User responded: ${reponse}` },
+      }),
+    });
+
+  rejouer({ type: "string", enum: [fiche] }, `fiche=${fiche}, drwil-merge=Automatic merge`);
+  assert.equal(etat().active_brief, fiche);
+  assert.equal(etat().auto_merge, true);
+  rmSync(join(dir, ".drwil/state.json"));
+
+  rejouer({ type: "array", items: { type: "string", enum: [fiche] } }, `fiche=["${fiche}"], drwil-merge=Manual merge`);
+  assert.equal(etat().active_brief, fiche);
 });
 
 test("transitions : humain par défaut, façade drwil etat, blocages Claude sur l'état et le saut des hooks", async () => {

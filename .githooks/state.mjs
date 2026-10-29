@@ -41,7 +41,7 @@ export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 export { readStdinJson, reminderIfChanged, reopen };
 export { ACTIVITIES, NEUTRAL_STATE, readState, transitionAllowed, validateState } from "./state-validate.mjs";
 export { latestEvidence, requiresHuman, verifyEvidence } from "./state-evidence.mjs";
-export { prepareTransition } from "./state-transitions.mjs";
+export { nextHead, prepareTransition, settleClosing } from "./state-transitions.mjs";
 
 /** Command line (state-cli.mjs) and its `accept` command (state-acceptance.mjs): the human's acceptance of the criteria. */
 export async function main(args, root, input) {

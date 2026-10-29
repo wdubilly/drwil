@@ -3832,3 +3832,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Réouverture** : la CI de la PR #298 a refusé la couverture des branches de `.githooks/scope.mjs` (lecture de `origin/HEAD`, absent en CI) ; un test l'a couverte, sur le oui de l'humain (`detour.mjs allow`).
 - **Preuve de clôture** : `docs/preuves/cycle-de-vie-des-fiches.md`.
 - **Clôturé par** : la branche `workstream/cycle-de-vie-des-fiches`.
+
+## 2026-10-29 — La file attend la fusion, l'état revient en SCOPING, branche créée au lancement, sondage en choix unique
+
+- **Décisions clés** : contrats neufs QUA-176 à QUA-180 ; lire l'état en CLOSING dont la PR est fusionnée (`closingMerged`) ramène en SCOPING, un état inconnu (`gh` absent, PR introuvable) restant CLOSING (QUA-013) ; `next` refuse tant que la PR précédente n'est pas fusionnée ; une file décidée au lancement enchaîne le suivant à la fusion constatée en session, une file reprise dans une nouvelle session attend le oui de l'humain ; « This folder » crée `workstream/<fiche>` depuis la branche principale à jour (refus : arbre sale, branche non fusionnée, branche existante) ; sous Copilot CLI le skill prescrit le champ `fiche` en choix unique (`enum` seul, une fiche par sondage), le hook lit encore un tableau. Contrats modifiés : QUA-037 (retour en SCOPING), QUA-165 (le skill ne prescrit plus le choix multiple), à valider par le demandeur. Fiche `next-attend-la-fusion` fusionnée ici.
+- **Hooks modifiés** : `.githooks/state-transitions.mjs`, `.githooks/state-cli.mjs`, `.githooks/state-texts.mjs`, `.githooks/worktree.mjs`, messages fr et en ; skill `start-a-workstream`.
+- **Cadrage élargi** : `packages/drwil/test/kit.test.mjs` et `outils/banc.test.mjs` ajoutés au scope sur décision humaine (tests QUA-108, QUA-142, QUA-147 adaptés) ; la ligne de `packages/drwil/test/kit.test.mjs` avait été perdue au lot 2 et a été rétablie par un commit séparé.
+- **Limites connues** : à chaque invite en CLOSING, la fusion est vérifiée, donc un appel `gh` (20 s au plus) quand git ne la voit pas ; sous Copilot CLI une file de plusieurs fiches ne se coche plus d'un sondage (une fiche par sondage) ; cause de l'échec du champ à choix multiple non établie.
+- **Preuve de clôture** : `docs/preuves/retour-scoping-branche-sondage.md`.
+- **Clôturé par** : la branche `workstream/retour-scoping-branche-sondage`.

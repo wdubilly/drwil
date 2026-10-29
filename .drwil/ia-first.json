@@ -2257,6 +2257,81 @@
       ],
       "degradable": false,
       "needsBuild": true
+    },
+    {
+      "id": "tests-qua-176",
+      "name": "tests de QUA-176, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-176 \" .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-177",
+      "name": "tests de QUA-177, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-177 \" .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-178",
+      "name": "tests de QUA-178, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-178 \" .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-179",
+      "name": "tests de QUA-179, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-179 \" .githooks/worktree.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-180",
+      "name": "tests de QUA-180, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-180 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
     }
   ],
   "kitSizeLegacy": {

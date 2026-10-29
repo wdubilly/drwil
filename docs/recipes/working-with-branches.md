@@ -18,6 +18,15 @@ request, instead of direct commits on the main branch.
   the very first commit. Renaming this branch (or creating another one
   named after the current brief) is up to the project.
 
+- At `/drwil-start` in "This folder", the branch is created for you: the start
+  creates `workstream/<brief-slug>` from the up-to-date main branch
+  (`origin/<main>` after a `git fetch`, or the local main branch if it holds commits `origin` lacks) and switches to it, then goes to BUILD.
+  Already on that branch, it is kept. The start is refused, nothing changed,
+  and the message says what to do, if the current branch is not merged into the
+  main branch (or its merge cannot be established: `gh` unreachable, detached
+  HEAD), if the working tree has uncommitted changes, or if the branch already
+  exists elsewhere (switch to it, or delete it if stale).
+
 ## During the work
 
 - The brief is updated **on the branch**, just like for direct work on the

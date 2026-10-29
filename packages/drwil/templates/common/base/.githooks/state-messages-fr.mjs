@@ -66,6 +66,12 @@ export const MESSAGES_FR = {
   startClosingOpen:
     "lancement refusé : CLOSING, la PR de clôture n'est pas fusionnée — attendre la fusion (et mettre la branche principale à jour), puis relancer",
   startClosingUnknown: "lancement refusé : CLOSING, la fusion de la PR de clôture n'est pas établie",
+  settled: "CLOSING → SCOPING : la PR du chantier est fusionnée",
+  settleOpen: "CLOSING : la PR du chantier n'est pas fusionnée — l'état reste CLOSING (retour en SCOPING à la fusion constatée)",
+  settleUnknown: "CLOSING : la fusion de la PR du chantier n'est pas établie — l'état reste CLOSING",
+  nextOpen:
+    "next refusé : la PR du chantier précédent n'est pas fusionnée — attendre la fusion (et mettre la branche principale à jour), puis relancer",
+  nextUnknown: "next refusé : la fusion de la PR du chantier précédent n'est pas établie",
   startHuman: "lancement refusé : c'est une décision humaine (sondage `/drwil-start`, ou terminal interactif)",
   startBusy: "lancement refusé : la fiche {0} est déjà active dans le worktree {1}",
   startNotScoped: `lancement refusé : « {0} » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)`,
@@ -110,5 +116,16 @@ export const MESSAGES_FR = {
   lotLeft: "Lots [IA] restants : {0}",
   lotHumans: "Lots [humain] à faire (sautés par l'enchaînement, rappelés à la clôture) : {0}",
   lotNothing: "aucun",
+  branchUnmerged:
+    "lancement refusé : la branche courante {0} n'est pas fusionnée dans {1} ; la fusionner, ou revenir sur {1} (`git switch {1}`), puis relancer ; rien n'est créé",
+  branchUnknown:
+    "lancement refusé : la fusion de la branche courante {0} n'est pas établie ({1}) ; revenir sur {2} (`git switch {2}`) ou rendre gh joignable, puis relancer ; rien n'est créé",
+  branchDirty:
+    "lancement refusé : l'arbre de travail a des modifications non commitées ; les commiter ou les remiser (`git stash -u`), puis relancer ; rien n'est créé",
+  branchTaken:
+    "lancement refusé : la branche {0} existe déjà ; s'y placer (`git switch {0}`) pour reprendre le chantier, ou la supprimer si elle est périmée, puis relancer ; rien n'est créé",
+  branchFailed: "lancement refusé : git switch a échoué ({0}) ; rien n'est créé",
+  branchCreated: "Branche créée : {0} (depuis {1}).{2}",
+  branchStale: "\ngit fetch a échoué : la branche part de la branche locale {0}, peut-être en retard sur la branche principale distante",
   usage: `usage : node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <texte>] | start [<fiche>] | lot [next] | reopen | briefs [--json] | reminder`,
 };
