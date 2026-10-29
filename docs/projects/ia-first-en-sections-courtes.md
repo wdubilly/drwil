@@ -175,3 +175,10 @@ Aucun.
   identiques, **0 ligne perdue ou modifiée**. Copie du dépôt : 828 lignes,
   827 identiques, **0 ligne perdue** ; une ligne modifiée, la date « State as
   of » de l'introduction (2026-10-27 devenu 2026-10-29, mise à jour voulue).
+- **Extension de QUA-190** (2026-10-29) : la comparaison ci-dessus est un
+  contrôle du jour de la découpe, hors dépôt. L'invariant durable est prouvé
+  par deux tests de QUA-190 : le sommaire ne garde que l'introduction et la
+  table des sections (aucun paragraphe de règle) ; aucun paragraphe d'au moins
+  40 caractères n'apparaît dans deux fichiers, ni au sommaire et dans une
+  section. Chacun a été prouvé par mutation (règle ajoutée au sommaire,
+  paragraphe dupliqué : échec), puis la mutation annulée.

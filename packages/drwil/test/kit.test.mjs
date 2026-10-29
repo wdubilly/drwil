@@ -209,6 +209,47 @@ test("QUA-190 : docs/ia-first.md est un sommaire court qui donne le fichier de c
   );
 });
 
+// Paragraphes d'un texte (séparés par une ligne vide), espaces normalisés.
+const paragraphesIaFirst = (texte) =>
+  texte
+    .split(/\n\s*\n/)
+    .map((p) => p.trim().replace(/\s+/g, " "))
+    .filter(Boolean);
+
+test("QUA-190 : le sommaire ne garde que l'introduction et la table des sections, aucun paragraphe de règle", () => {
+  for (const base of [join(GABARIT, "base"), DEPOT]) {
+    const { sommaire } = sectionsIaFirst(base);
+    const i = sommaire.indexOf("\n## ");
+    assert.ok(i > 0, "le sommaire a un titre « ## » après l'introduction");
+    const introduction = sommaire.slice(0, i).trim().split("\n").length;
+    assert.ok(introduction <= 15, `introduction : ${introduction} lignes, 15 au plus`);
+    for (const p of paragraphesIaFirst(sommaire.slice(i))) {
+      if (/^#{1,6} [^\n]*$/.test(p)) continue; // titre seul
+      if (p.startsWith("|")) continue; // table des sections
+      assert.match(p, /`docs\/ia-first(\.md|\/)/, `paragraphe de règle dans le sommaire : « ${p.slice(0, 60)}… »`);
+      assert.ok(p.length < 400, `paragraphe trop long pour un renvoi : « ${p.slice(0, 60)}… »`);
+    }
+  }
+});
+
+test("QUA-190 : aucun paragraphe de règle n'apparaît dans deux fichiers, ni à la fois dans le sommaire et une section", () => {
+  for (const base of [join(GABARIT, "base"), DEPOT]) {
+    const { sommaire, sections } = sectionsIaFirst(base);
+    const vus = new Map();
+    for (const { chemin, texte } of [{ chemin: "docs/ia-first.md", texte: sommaire }, ...sections]) {
+      const dansFichier = new Set();
+      for (const p of paragraphesIaFirst(texte)) {
+        if (p.length < 40 || /^#{1,6} [^|]*$/.test(p)) continue; // trivial ou titre
+        if (/^Section \d+ of the "IA first" description, read on its own\./.test(p)) continue; // en-tête de renvoi
+        if (dansFichier.has(p)) continue;
+        dansFichier.add(p);
+        assert.ok(!vus.has(p), `paragraphe en double entre ${vus.get(p)} et ${chemin} : « ${p.slice(0, 60)}… »`);
+        vus.set(p, chemin);
+      }
+    }
+  }
+});
+
 test("QUA-190 : chaque renvoi à docs/ia-first.md mène à une section existante, les plus lus au fichier exact", () => {
   const base = join(GABARIT, "base");
   const { sommaire, sections } = sectionsIaFirst(base);
