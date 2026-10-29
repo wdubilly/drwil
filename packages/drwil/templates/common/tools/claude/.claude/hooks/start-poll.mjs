@@ -1,5 +1,6 @@
 // Reading of the start poll for prompt-hook.mjs: the two known forms (Claude Code, Copilot CLI), the
-// human's answer and the optional questions (merge, worktree, parallel queue). Pure functions.
+// human's answer and the optional questions (merge, worktree, parallel queue); and the end-of-scoping
+// poll (`drwil-scope`, QUA-187). Pure functions.
 
 const MARK = "drwil-start";
 // Optional second question (Claude Code) or field (Copilot CLI) of the same poll: authorise the automatic merge.
@@ -126,3 +127,53 @@ export const worktreeChosen = (input, poll) => answeredYes(input, poll, poll.wor
 
 /** Parallel queue chosen by the human answer to the parallel question (fourth question or field), QUA-147. */
 export const parallelChosen = (input, poll) => answeredYes(input, poll, poll.parallelQuestion, poll.parallelKey, PARALLEL_YES_RE);
+
+// End-of-scoping poll (QUA-187): its own header (12 characters at most under Claude Code), exactly three answers.
+const SCOPE_MARK = "drwil-scope";
+const SCOPE_ANSWERS = [
+  ["auto", /^(fusion automatique|automatic merge)$/i],
+  ["manual", /^(fusion manuelle|manual merge)$/i],
+  ["continue", /^(continuer à cadrer|continue scoping)$/i],
+];
+const scopeAnswer = (label) => SCOPE_ANSWERS.find(([, re]) => re.test(String(label ?? "").trim()))?.[0] ?? null;
+const RECOMMENDED_RE = /\((recommended|recommandée?)\)/i;
+
+/** The end-of-scoping poll, in one of the two known forms (Claude Code, Copilot CLI); null otherwise. */
+export function scopePoll(input) {
+  const e = input?.tool_input ?? {};
+  const q = Array.isArray(e.questions) ? e.questions.find((x) => x?.header === SCOPE_MARK) : null;
+  if (q) {
+    const options = Array.isArray(q.options) ? q.options : [];
+    return {
+      form: "claude",
+      question: q.question,
+      answers: options.map((o) => scopeAnswer(o?.label)),
+      recommended: options.some((o) => RECOMMENDED_RE.test(`${o?.label ?? ""} ${o?.description ?? ""}`)),
+      prefilled: Boolean(e.answers && Object.keys(e.answers).length) || q.multiSelect === true,
+    };
+  }
+  if (typeof e.message !== "string" || !e.message.startsWith(SCOPE_MARK)) return null;
+  // Copilot CLI: a single-choice field (`enum` only) named `drwil-scope`, the only one read reliably.
+  const field = e.requestedSchema?.properties?.[SCOPE_MARK];
+  return {
+    form: "copilot",
+    answers: Array.isArray(field?.enum) ? field.enum.map(scopeAnswer) : [],
+    recommended: (field?.enum ?? []).some((v) => RECOMMENDED_RE.test(String(v))),
+    prefilled: Object.values(e.requestedSchema?.properties ?? {}).some((p) => p && "default" in p) || field?.type === "array",
+  };
+}
+
+/** Exactly the three answers, none recommended, nothing filled in nor preselected: the human chooses alone. */
+export const scopePollValid = (poll) =>
+  !poll.prefilled &&
+  !poll.recommended &&
+  poll.answers.length === 3 &&
+  ["auto", "manual", "continue"].every((a) => poll.answers.includes(a));
+
+/** The human's answer to the end-of-scoping poll: "auto", "manual", "continue", or null if missing or unknown. */
+export function scopeChoice(input, poll) {
+  if (poll.form === "claude") return scopeAnswer(input?.tool_response?.answers?.[poll.question]);
+  const text = input?.tool_result?.text_result_for_llm;
+  const m = typeof text === "string" ? /User responded:\s*(.+)\s*$/s.exec(text) : null;
+  return m ? scopeAnswer(m[1].trim().replace(new RegExp(`^${SCOPE_MARK}=`), "")) : null;
+}

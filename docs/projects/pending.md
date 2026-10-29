@@ -125,9 +125,6 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P3] Compléter le test unitaire de QUA-138 (retour en SCOPING
   après la fusion), en dernier : il teste les textes que les fiches
   précédentes modifient — `docs/projects/test-unitaire-fusion-automatique.md`.
-- [ ] [IA] [P3] Un skill de cadrage demande, en fin de cadrage, quoi faire de la
-  PR (fusion automatique, manuelle, ou continuer ; cadré le 2026-10-29, après
-  `retour-scoping-branche-sondage`) — `docs/projects/fin-de-cadrage-sondage.md`.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 

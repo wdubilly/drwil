@@ -1567,7 +1567,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Un état inconnu pris pour un feu vert est un contrôle non exécuté pris pour un succès (QUA-013) ; le refus du dépôt doit rester dit tel quel, avec la sortie.
 
 ## QUA-163 — L'outil de fusion automatique ne s'exécute qu'avec l'autorisation « Automatic merge » donnée au lancement
-**Règle** : Livré à tout projet. `node .githooks/merge-auto.mjs` lit l'état (`.drwil/state.json` (si présent), `auto_merge`) avant tout appel à `gh` : sans l'autorisation donnée au lancement (réponse humaine « Automatic merge », ou fusion automatique de la file), il refuse (code 1) sans rien lancer, la fusion restant un geste humain. Messages en français ou en anglais selon la langue du projet.
+**Règle** : Livré à tout projet. `node .githooks/merge-auto.mjs` lit l'état (`.drwil/state.json` (si présent), `auto_merge`) avant tout appel à `gh` : sans l'autorisation donnée au lancement (réponse humaine « Automatic merge », ou fusion automatique de la file), ni, en SCOPING, celle de la réponse « Automatic merge » au sondage de fin de cadrage pour la branche où elle a été donnée (`scoping_merge`, QUA-188), il refuse (code 1) sans rien lancer, la fusion restant un geste humain. Messages en français ou en anglais selon la langue du projet.
 **Périmètre** : `.githooks/merge-auto.mjs` ; livré dans le gabarit.
 **Source de vérité** : `.githooks/merge-auto.mjs` (`mergeAuto`).
 **Preuve** : test : état sans `auto_merge` ou absent, refus sans aucun appel `gh`, en français et en anglais ; ligne de commande avec un `gh` factice.
@@ -1807,4 +1807,34 @@ régression sauf si la fiche active déclare le changement (section
 **Couvre** : `aucun` — jugement ponctuel d'une séance : aucun fichier ne le juge, ses attestations changent à chaque séance
 **Origine** : attestations-sur-l-effet-et-couvre — « Les attestations tombées par le chantier sont réattestées par l'humain en une seule séance, et `drwil verify --evidence` rend `GOVERNANCE: PASS` »
 **Raison** : Changer l'empreinte et déclarer `Couvre` périment toutes les attestations ; les faire dans un seul chantier ne coûte à l'humain qu'une séance.
+
+## QUA-187 — En fin de cadrage, le skill pose un sondage à trois réponses, sans réponse par défaut ni recommandée
+**Règle** : Livré à tout projet. Le skill `scope-a-workstream` (`/drwil-scope`, cité au menu `/drwil`) pose, à la fin d'un cadrage poussé et sa PR ouverte, un sondage d'une seule question, en-tête `drwil-scope` (12 caractères au plus), choix unique, à exactement trois réponses : « Automatic merge », « Manual merge », « Continue scoping » ; sous Copilot CLI, un champ `drwil-scope` en choix unique (`enum` seul). Le hook du sondage (`.claude/hooks/prompt-hook.mjs`, lecture dans `.claude/hooks/start-poll.mjs`) refuse avant affichage un sondage recommandé, prérempli, avec valeur par défaut, à choix multiple ou sans exactement ces trois réponses ; après la réponse, il la transmet seul à `.githooks/state.mjs` (`scopingMerge`), qui écrit l'autorisation `scoping_merge: { branch }` en SCOPING seulement, jamais sur la branche principale ni sur un état invalide.
+**Périmètre** : skill `scope-a-workstream`, menu `/drwil`, `.claude/hooks/prompt-hook.mjs`, `.claude/hooks/start-poll.mjs`, `.githooks/state.mjs`, `.githooks/state-validate.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/skills/scope-a-workstream/SKILL.md`, `.claude/hooks/start-poll.mjs` (`scopePoll`, `scopePollValid`, `scopeChoice`).
+**Preuve** : test : le skill livré prescrit l'en-tête, les trois réponses et l'interdiction de recommander ; le hook rejoué refuse les sondages non conformes (Claude Code et Copilot CLI), écrit l'autorisation sur la réponse « Automatic merge » pour la branche courante, la retire sur une autre réponse, et refuse sur la branche principale et hors SCOPING.
+**Contrôle** : `tests-qua-187`
+**Tests** : `.githooks/state.test.mjs`
+**Origine** : fin-de-cadrage-sondage — « Un skill de cadrage pose, à la fin d'un cadrage poussé, un sondage à trois réponses : « Automatic merge », « Manual merge », « Continue scoping » ; jamais de réponse par défaut ni recommandée »
+**Raison** : Un cadrage poussé n'est pris en compte qu'à la fusion de sa PR, et rien ne demandait quoi en faire : quatre PR de cadrage sont restées à fusionner à la main ; la décision reste humaine, lue par l'outil.
+
+## QUA-188 — La réponse « Automatic merge » de fin de cadrage ouvre l'outil de fusion automatique pour la PR de sa branche, en SCOPING
+**Règle** : Livré à tout projet. En SCOPING, `node .githooks/merge-auto.mjs` accepte l'autorisation `scoping_merge: { branch }` que seule la réponse « Automatic merge » au sondage de fin de cadrage écrit (QUA-187), et seulement pour la PR dont la branche (`headRefName`) est celle de l'autorisation : la PR d'une autre branche est refusée (code 1) sans rien programmer ; sans cette autorisation il refuse comme avant (QUA-163), sans appel à `gh`. Le rappel d'état en SCOPING dit l'autorisation, la branche et la suite (`.githooks/merge-auto.mjs`, puis `.githooks/pr-watch.mjs`). L'autorisation n'existe qu'en SCOPING (`.githooks/state-validate.mjs`), jamais `queue_merge`.
+**Périmètre** : `.githooks/merge-auto.mjs`, `.githooks/state-texts.mjs`, `.githooks/state-validate.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/merge-auto.mjs` (`mergeAuto`).
+**Preuve** : test : en SCOPING avec l'autorisation, la PR de la branche est programmée puis vérifiée ; celle d'une autre branche refusée après une seule lecture ; sans autorisation, refus sans appel `gh` ; rappel d'état en français et en anglais.
+**Contrôle** : `tests-qua-188`
+**Tests** : `.githooks/merge-auto.test.mjs`
+**Origine** : fin-de-cadrage-sondage — « La réponse « Automatic merge », lue par le hook, autorise `.githooks/merge-auto.mjs` pour la PR de cadrage en SCOPING (aujourd'hui refusé : `auto_merge` n'existe qu'après un lancement) ; sans cette réponse, `.githooks/merge-auto.mjs` refuse comme avant »
+**Raison** : Fusionner une PR de cadrage sans geste manuel, par la seule voie sûre (`merge-auto`), sans jamais ouvrir la fusion d'une autre PR.
+
+## QUA-189 — « Manual merge » et « Continue scoping » ne programment rien ; « Continue scoping » garde la branche et la PR
+**Règle** : Livré à tout projet. Les réponses « Manual merge » et « Continue scoping » au sondage de fin de cadrage n'écrivent aucune autorisation et retirent celle d'une réponse précédente : `node .githooks/merge-auto.mjs` refuse ensuite sans appel à `gh`. « Continue scoping » laisse la PR ouverte : le message du hook et le skill `scope-a-workstream` disent que les cadrages suivants se commitent sur la même branche (une branche, une PR) et que le sondage se repose au cadrage suivant ; « Manual merge » laisse la fusion à l'humain.
+**Périmètre** : `.githooks/state.mjs` (`scopingMerge`), skill `scope-a-workstream` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/state.mjs` (`scopingMerge`).
+**Preuve** : test : après chaque réponse, état sans `scoping_merge`, `merge-auto` refuse sans appel `gh`, message de « Continue scoping » qui nomme la branche ; le skill livré prescrit la même branche.
+**Contrôle** : `tests-qua-189`
+**Tests** : `.githooks/merge-auto.test.mjs`
+**Origine** : fin-de-cadrage-sondage — « La réponse « Continue scoping » laisse la PR ouverte et garde la même branche pour les cadrages suivants (une branche, une PR) ; « Manual merge » ne programme rien »
+**Raison** : On cadre souvent plusieurs fiches à la suite et on veut les relire ensemble : la fusion repoussée ne doit rien programmer en douce.
 

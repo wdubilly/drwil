@@ -57,6 +57,8 @@ export function context(read, root) {
   }
   lines.push(T.brief(brief), T.request(state.active_request));
   if (state.auto_merge === true) lines.push(T.autoMerge);
+  // End-of-scoping poll answered « Automatic merge » (QUA-188): the scoping PR of that branch only.
+  if (state.scoping_merge) lines.push(fill(STATE_MESSAGES[language(root)].scopingMergeReminder, state.scoping_merge.branch));
   if (state.queue?.length) lines.push(fill(T.queue, state.queue.join(", "), state.queue_merge ? T.queueMerge : ""));
   if (state.parallel?.length) lines.push(fill(T.parallel, state.parallel.join(", ")));
   if (state.queue?.length && state.activity === "SCOPING") lines.push(fill(T.queueResume, state.queue[0]));
