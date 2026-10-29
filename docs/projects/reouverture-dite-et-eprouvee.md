@@ -19,6 +19,18 @@ files:
   - docs/projects/journal.md
   - .githooks/state-cli.mjs
   - .githooks/state-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
+  - packages/drwil/templates/common/base/.githooks/state-reopen.mjs
+  - packages/drwil/templates/common/base/.githooks/state-validate.mjs
+  - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-transitions.mjs
+  - .githooks/state-messages-fr.mjs
+  - .githooks/state-messages-en.mjs
+  - .githooks/state-reopen.mjs
+  - .githooks/state-validate.mjs
+  - .githooks/state-context-texts.mjs
+  - .githooks/state-transitions.mjs
 -->
 
 ## 1. Besoin
@@ -50,6 +62,19 @@ attribuer à ce moment-là dans le registre.)
 - Le test du cycle complet d'une réouverture (QUA-118 : nouvelle clôture d'un
   chantier rouvert) se joue aussi sous Windows, avec un `gh` simulé lançable
   (`gh.cmd` et shell), au lieu d'être sauté — contrat à créer
+
+## Contrats modifiés
+
+- Aucun contrat existant modifié : QUA-116 et QUA-118 inchangés.
+- `.githooks/state-cli.mjs` — réouverture refusée : pose du marqueur `merge_cancelled` (validé par le demandeur le 2026-10-29).
+- `.githooks/state-texts.mjs` — rappel d'état en CLOSING tant que la fusion annulée n'est pas reprogrammée (validé par le demandeur le 2026-10-29).
+- `.githooks/state-reopen.mjs` — marqueur `merge_cancelled`, effacé à la réouverture réussie (validé par le demandeur le 2026-10-29).
+- `.githooks/state-validate.mjs` — champ d'état `merge_cancelled` accepté (validé par le demandeur le 2026-10-29).
+- `.githooks/state-transitions.mjs` — marqueur effacé au retour en SCOPING (validé par le demandeur le 2026-10-29).
+- `.githooks/state-messages-fr.mjs` — texte `reopenCancelled` et rappel (validé par le demandeur le 2026-10-29).
+- `.githooks/state-messages-en.mjs` — mêmes textes en anglais (validé par le demandeur le 2026-10-29).
+- `.githooks/state-context-texts.mjs` — texte du rappel, si besoin (validé par le demandeur le 2026-10-29).
+- `.githooks/state.test.mjs` — tests du message et du rappel (validé par le demandeur le 2026-10-29).
 
 ## 2. Hors périmètre
 
