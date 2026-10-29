@@ -122,11 +122,6 @@ d'un outil) la dit dans son statut.
   retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
   puis lancer juste après la fiche précédente) —
   `docs/projects/ia-first-en-sections-courtes.md`.
-- [ ] [IA] [P3] Une attestation tombe quand ce qu'elle juge change, pas quand
-  la forme d'un contrôle change ; `Couvre` déclaré pour les contrats attestés
-  (cadré le 2026-10-26, chemins tranchés le même jour ; après la réouverture,
-  pour une seule séance de réattestation) —
-  `docs/projects/attestations-sur-l-effet-et-couvre.md`.
 - [ ] [IA] [P3] Compléter le test unitaire de QUA-138 (retour en SCOPING
   après la fusion), en dernier : il teste les textes que les fiches
   précédentes modifient — `docs/projects/test-unitaire-fusion-automatique.md`.
