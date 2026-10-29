@@ -1732,7 +1732,7 @@
     {
       "id": "tests-qua-138",
       "name": "tests de QUA-138, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-138 \" packages/drwil/test/cycle.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-138 \" .githooks/state.test.mjs packages/drwil/test/cycle.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",
