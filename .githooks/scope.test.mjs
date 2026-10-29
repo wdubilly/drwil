@@ -153,6 +153,19 @@ test("QUA-173 : sans branche principale lisible ou hors dépôt git, rien n'est 
   }
 });
 
+test("QUA-173 : la branche principale se lit aussi par origin/HEAD, quand le dépôt en a un", () => {
+  const { racine, git } = depotLivre();
+  try {
+    git("branch", "-q", "-m", "chantier", "isolee");
+    git("branch", "-q", "-D", "main");
+    git("update-ref", "refs/remotes/origin/pivot", "HEAD");
+    git("symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/pivot");
+    assert.ok(deliveredFiles(racine, {}).has("src/livre.js"));
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
 test("QUA-173 : sans ensemble donné, outsideBriefs lit le dépôt où le hook est installé", async () => {
   const { racine, ecrire } = depotLivre();
   try {
