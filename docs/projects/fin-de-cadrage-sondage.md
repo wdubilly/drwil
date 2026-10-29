@@ -27,6 +27,17 @@ files:
   - .githooks/merge-auto.mjs
   - .githooks/state.mjs
   - .githooks/state-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-validate.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
+  - .githooks/state-validate.mjs
+  - .githooks/state-messages-fr.mjs
+  - .githooks/state-messages-en.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/skills/drwil/SKILL.md
+  - .claude/skills/drwil/SKILL.md
+  - .claude/skills/scope-a-workstream/SKILL.md
+  - .claude/hooks/start-poll.mjs
+  - .claude/hooks/prompt-hook.mjs
 -->
 
 ## 1. Besoin
@@ -59,9 +70,28 @@ attribuer à ce moment-là dans le registre.)
 
 ## Contrats modifiés
 
-(à établir au lancement : le contrat qui dit que `.githooks/merge-auto.mjs` exige
-`auto_merge` de l'état est probablement modifié, pour accepter l'autorisation
-donnée à la fin d'un cadrage ; le demandeur valide chaque puce.)
+(validés par le demandeur le 2026-10-29)
+
+- `QUA-163` (l'outil de fusion automatique ne s'exécute qu'avec l'autorisation
+  donnée au lancement) — ancien critère : seule l'autorisation `auto_merge` du
+  lancement l'ouvre — nouveau : il s'ouvre aussi, en SCOPING, sur l'autorisation
+  donnée par la réponse « Automatic merge » du sondage de fin de cadrage, pour la
+  branche où elle a été donnée ; sans elle, refus comme avant — raison : fusionner
+  une PR de cadrage sans geste manuel ; rien n'est retiré.
+
+Hooks modifiés (QUA-137) :
+
+- `.githooks/merge-auto.mjs` : en SCOPING, accepte l'autorisation de la réponse
+  « Automatic merge », pour sa branche ; sinon refuse comme avant.
+- `.githooks/state.mjs` : une fonction écrit cette autorisation, appelée par le
+  hook, jamais par l'agent.
+- `.githooks/state-texts.mjs` : le rappel en SCOPING dit que la fusion
+  automatique de la PR de cadrage est autorisée.
+- `.githooks/state-validate.mjs` : nouveau champ d'état `scoping_merge: { branch }`,
+  valable en SCOPING seulement (`queue_merge` écarté : il déclencherait la
+  fusion du chantier suivant de la file).
+- `.githooks/state-messages-fr.mjs`, `.githooks/state-messages-en.mjs` : messages
+  d'erreur de ce champ.
 
 ## 2. Hors périmètre
 
@@ -93,6 +123,7 @@ donnée à la fin d'un cadrage ; le demandeur valide chaque puce.)
 ## 5. Points à trancher
 
 - Aucun : tout est tranché.
+- (2026-10-29, au lancement) périmètre élargi à la validation et aux messages de l'état, au menu `/drwil` (le skill y figure) et aux copies installées ; en-tête du sondage de 12 caractères au plus (`drwil-scope`) — validé par le demandeur.
 
 ## 6. Increments
 
