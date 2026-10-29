@@ -9,6 +9,7 @@ import { close, closingSignals, main, mainBranch, pathToClosing, prunedMessage }
 import { intentsLeftBehind } from "./briefs.mjs";
 import { twinIntents } from "./doc-coherence.mjs";
 import { move, start } from "./state.mjs";
+import { recordAcceptance } from "./state-acceptance.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -194,6 +195,16 @@ test("QUA-048 : un élément d'index commun à plusieurs fiches n'est pas retir�
   assert.match(r.message, /aucune ligne d'index à retirer pour docs\/projects\/exemple\.md .*commune à plusieurs fiches/);
   assert.match(r.message, /pending\.md:3 cite docs\/projects\/exemple\.md/);
   assert.equal(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), index);
+});
+
+test("QUA-074 : la ligne d'index qui cite aussi un autre document de docs/ est retirée avec sa fiche", () => {
+  const index =
+    "# Index\n\n- [ ] [IA] Une fiche — `docs/projects/exemple.md`, voir `docs/ia-first.md`.\n- [ ] Autre — `docs/projects/autre.md`.\n";
+  const racine = depot({ index });
+  const r = close(racine, { logs: dossier() });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /ligne d'index retirée/);
+  assert.equal(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), "# Index\n\n- [ ] Autre — `docs/projects/autre.md`.\n");
 });
 
 test("QUA-048 : start supprime les branches fusionnées et le dit ; move vers EVIDENCE signale les pièges de la clôture", async () => {
@@ -717,4 +728,65 @@ test("QUA-137 : un hook modifié non déclaré est signalé à --check et en qui
   const r = close(racine, { logs: journaux() });
   assert.doesNotMatch(r.message, /\.githooks\/lib\.mjs/, r.message);
   assert.ok(!existsSync(join(racine, FICHE)), "déclaré : la clôture passe");
+});
+
+test("QUA-174 : la preuve de clôture dit les critères acceptés au lancement, ou qu'aucune acceptation n'est enregistrée", () => {
+  const sans = depot();
+  assert.equal(close(sans, { logs: journaux() }).code, 0);
+  assert.match(readFileSync(join(sans, "docs/preuves/exemple.md"), "utf8"), /\*\*Critères acceptés\*\* : aucune acceptation enregistrée/);
+
+  const avec = depot();
+  const accepte = recordAcceptance(avec, FICHE, new Date("2026-10-20T10:00:00Z"));
+  assert.equal(close(avec, { logs: journaux() }).code, 0);
+  const preuve = readFileSync(join(avec, "docs/preuves/exemple.md"), "utf8");
+  assert.ok(
+    preuve.includes(`**Critères acceptés** : empreinte \`${accepte.fingerprint}\`, acceptés par l'humain au lancement le 2026-10-20`),
+    preuve,
+  );
+
+  const anglais = depot({ lang: "en" });
+  recordAcceptance(anglais, FICHE, new Date("2026-10-20T10:00:00Z"));
+  assert.equal(close(anglais, { logs: journaux() }).code, 0);
+  assert.match(readFileSync(join(anglais, "docs/preuves/exemple.md"), "utf8"), /\*\*Criteria accepted\*\*: fingerprint `sha256:/);
+});
+
+test("QUA-174 : un critère modifié depuis l'acceptation refuse la clôture sans rien écrire ; un lien de preuve ajouté ne le modifie pas", () => {
+  const racine = depot({ criteres: "- Un critère — contrat à créer" });
+  recordAcceptance(racine, FICHE);
+  ecrire(racine, { [FICHE]: fiche("- Un critère — `QUA-001`") });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "lien de preuve");
+  assert.equal(close(racine, { check: true }).code, 0);
+
+  ecrire(racine, { [FICHE]: fiche("- Un autre critère — `QUA-001`") });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "critère modifié");
+  ecrireEvidence(racine);
+  const r = close(racine, { logs: journaux() });
+  assert.equal(r.code, 1, r.message);
+  assert.match(
+    r.message,
+    /^clôture refusée : la preuve de clôture ne peut pas être écrite — les critères de la fiche ne sont plus ceux que l'humain a acceptés/,
+  );
+  assert.match(r.message, /node \.githooks\/state\.mjs accept/);
+  assert.ok(
+    existsSync(join(racine, FICHE)) && !existsSync(join(racine, "docs/preuves/exemple.md")),
+    "ni fiche supprimée, ni preuve écrite",
+  );
+
+  const anglais = depot({ lang: "en", criteres: "- Un critère — `QUA-001`" });
+  recordAcceptance(anglais, FICHE);
+  ecrire(anglais, { [FICHE]: fiche("- Changé — `QUA-001`") });
+  git(anglais, "add", "-A");
+  git(anglais, "commit", "-q", "-m", "critère modifié");
+  ecrireEvidence(anglais);
+  assert.match(close(anglais, { logs: journaux() }).message, /no longer those the human accepted at the start/);
+
+  const retires = depot({ criteres: "- Un critère — `QUA-001`" });
+  recordAcceptance(retires, FICHE);
+  ecrire(retires, { [FICHE]: "# Exemple\n" });
+  git(retires, "add", "-A");
+  git(retires, "commit", "-q", "-m", "critères retirés");
+  ecrireEvidence(retires);
+  assert.match(close(retires, { logs: journaux() }).message, /—/);
 });

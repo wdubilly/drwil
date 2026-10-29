@@ -11,8 +11,13 @@
 //     -->
 //
 // A code file is covered if it matches a pattern (fnmatch style) of a brief,
-// delivered or not. Nothing here throws on an unreadable brief: the mechanism
+// delivered or not; a file already delivered on the main branch stays covered by default.
+// Nothing here throws on an unreadable brief: the mechanism
 // helps, it must never break.
+
+import { execFileSync } from "node:child_process";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const BLOCK_RE = /<!--[ \t]*scope[ \t]*\r?\n([\s\S]*?)-->/;
 const ENTRY_RE = /^-[ \t]+(\S+)$/;
@@ -123,12 +128,55 @@ export function briefsCovering(path, byBrief) {
   return briefs;
 }
 
-/** Code files of `paths` that no brief covers, sorted. */
-export function outsideBriefs(paths, byBrief, cfg) {
+function gitOut(root, args) {
+  try {
+    return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], maxBuffer: 1 << 28 });
+  } catch {
+    return null;
+  }
+}
+
+/** Merge base of HEAD with the main branch (`DRWIL_BASE`, `origin/HEAD`, `origin/master`, `origin/main`, `master`, `main`), or null. */
+function mainBase(root, env) {
+  const candidates = env.DRWIL_BASE ? [env.DRWIL_BASE] : [];
+  const origin = gitOut(root, ["symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"]);
+  if (origin) candidates.push(origin.trim());
+  candidates.push("origin/master", "origin/main", "master", "main");
+  for (const ref of candidates) {
+    if (gitOut(root, ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`]) === null) continue;
+    const base = gitOut(root, ["merge-base", "HEAD", ref]);
+    if (base) return base.trim();
+  }
+  return null;
+}
+
+/**
+ * Files already delivered: tracked on the main branch (its merge base with HEAD) and identical in the working
+ * tree. A file new or different there is not delivered and stays subject to a brief; without a readable main
+ * branch the set is empty, never a success by default (QUA-013).
+ */
+export function deliveredFiles(root, env = process.env) {
+  const base = mainBase(root, env);
+  if (!base) return new Set();
+  const tree = gitOut(root, ["ls-tree", "-r", "--name-only", "-z", base]);
+  const changed = gitOut(root, ["diff", "--name-only", "-z", "--no-renames", base]);
+  if ([tree, changed].includes(null)) return new Set();
+  const different = new Set(changed.split("\0").filter(Boolean));
+  return new Set(tree.split("\0").filter((f) => f && !different.has(f)));
+}
+
+// Root of the project: this module lives in its `.githooks/` (QUA-044).
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
+/**
+ * Code files of `paths` that no brief covers, sorted. A delivered file (`deliveredFiles`) stays covered
+ * by default once the brief that listed it is closed (QUA-173).
+ */
+export function outsideBriefs(paths, byBrief, cfg, delivered = deliveredFiles(ROOT)) {
   const set = new Set();
   for (const path of paths) {
     const p = normalize(path);
-    if (isCode(p, cfg) && briefsCovering(p, byBrief).length === 0) set.add(p);
+    if (isCode(p, cfg) && !delivered.has(p) && briefsCovering(p, byBrief).length === 0) set.add(p);
   }
   return [...set].sort();
 }

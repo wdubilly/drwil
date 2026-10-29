@@ -7,6 +7,16 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- The brief life cycle no longer needs workarounds: the contracts registry is
+  written in SCOPING like a brief, in the same commit as the brief that cites
+  a new contract; a code file already delivered on the main branch stays
+  covered after its brief is closed (a new or modified file still needs a
+  brief); the criteria the human accepts at start are fingerprinted, said in
+  the closing proof, and a criterion modified afterwards refuses the closing
+  until the human accepts again with `node .githooks/state.mjs accept`
+  (interactive terminal only); the start names every `.githooks/` file the
+  scope cites without a « Modified contracts » bullet; the closing removes the
+  index line of a brief even when it also cites another document of `docs/`.
 - A brief with several lots (bullets « **Lot N — title** [IA|human] » of its
   « Increments » section) is now carried lot by lot: `node .githooks/state.mjs
   lot` names the current lot, the lots done and those left, and `lot next`

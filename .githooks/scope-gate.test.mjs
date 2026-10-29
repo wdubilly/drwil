@@ -608,3 +608,43 @@ test("QUA-117 : chantier rouvert, un ajout pur au registre passe sans le oui ; m
   assert.deepEqual(readState(racine).state.reopened, { pr: 42, human: true });
   assert.deepEqual(indexer(racine, registre(contrat("QUA-001", "une règle changée."))), [], "après le oui, le correctif passe");
 });
+
+test("QUA-172 : en SCOPING le registre des contrats s'écrit comme une fiche ; en BUILD il reste soumis au cadrage — en anglais aussi", () => {
+  const registre = "docs/contracts.md";
+  assert.deepEqual(checkIndex({ files: [FICHE, registre], state: etat("SCOPING"), patterns: [] }), []);
+  assert.match(checkIndex({ files: [registre, "src/a.js"], state: etat("SCOPING"), patterns: [] }).join("\n"), /1 fichier/);
+  assert.match(checkIndex({ files: [registre], state: etat("BUILD"), patterns: ["src/a.js"] })[0], /contracts\.md.*hors du cadrage/);
+  assert.match(checkIndex({ files: [registre], state: etat("CLOSING"), patterns: [] })[0], /CLOSING/);
+  assert.deepEqual(checkIndex({ files: [registre], state: etat("BUILD"), patterns: [registre] }), []);
+  // Source d'un gabarit déclaré (scopeMirrors) : la copie d'un registre n'est pas le registre.
+  const cfg = { lang: "en", dirs: { contracts: "docs/ctr.md" } };
+  assert.deepEqual(checkIndex({ files: ["docs/ctr.md"], state: etat("SCOPING"), patterns: [], cfg }), []);
+  assert.match(checkIndex({ files: ["docs/contracts.md"], state: etat("SCOPING"), patterns: [], cfg })[0], /only the BUILD activity/);
+});
+
+test("QUA-172 : branche : un commit sans trailer qui n'écrit que le registre passe, le reste du même commit reste signalé", () => {
+  const racine = depot(["src/a.js"]);
+  git(racine, "checkout", "-q", "-b", "chantier");
+  ecrire(racine, "docs/contracts.md", "## QUA-900 — Nouveau\n");
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "registre seul, en cadrage");
+  const cfg = { scopeGate: "blocking" };
+  const env = { DRWIL_BASE: "main" };
+  assert.equal(checkScope(racine, { cfg, env }).status, "ok");
+
+  ecrire(racine, "docs/contracts.md", "## QUA-900 — Nouveau\n\nplus\n");
+  ecrire(racine, "src/b.js", "b\n");
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "registre et code, sans trailer");
+  const r = checkScope(racine, { cfg, env });
+  assert.equal(r.status, "fail");
+  assert.match(r.problems.join("\n"), /1 fichier\(s\) hors fiches sans trailer/);
+
+  // Avec trailer (BUILD), le registre est jugé contre le cadrage du parent.
+  const autre = depot(["src/a.js"]);
+  git(autre, "checkout", "-q", "-b", "chantier");
+  ecrire(autre, "docs/contracts.md", "## QUA-900 — Nouveau\n");
+  git(autre, "add", ".");
+  git(autre, "commit", "-q", "-m", "registre en BUILD\n\nDrwil-Brief: docs/projects/exemple.md");
+  assert.match(checkScope(autre, { cfg, env }).problems.join("\n"), /docs\/contracts\.md hors du cadrage/);
+});

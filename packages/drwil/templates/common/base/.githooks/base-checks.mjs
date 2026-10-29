@@ -73,6 +73,8 @@ export function baseRef(argv, env) {
   return branch ? `origin/${branch}` : null;
 }
 
+/** A hook is declared when its file is, or the module a test file follows. */
+export const hookDeclared = (declared, f) => declared.has(f) || declared.has(f.replace(/\.test\.mjs$/, ".mjs"));
 /** Tokens in backticks at the head of the bullets of the « Contrats modifiés » sections of `text`. */
 export function declaredIn(text) {
   const out = [];
@@ -100,7 +102,6 @@ export function declarations(root, base, briefsDir) {
   }
   return out;
 }
-
 /**
  * QUA-137: files of `.githooks/` the branch modifies or deletes (against its merge base with the main branch) without declaring
  * them: the CI's replay would put them back. `text`: the active brief as it stands. `{ files, lines }`, one message per file;
@@ -121,14 +122,12 @@ export function undeclaredHooks(root, text = "", { env = process.env } = {}) {
     const declared = declarations(root, base, cfg.dirs?.projects ?? "docs/projects");
     for (const token of declaredIn(text)) declared.add(token);
     const changed = git(root, ["diff", "--no-renames", "--name-only", "--diff-filter=MD", base, "--", ".githooks/"]);
-    const isDeclared = (f) => declared.has(f) || declared.has(f.replace(/\.test\.mjs$/, ".mjs"));
-    const files = changed.split("\n").filter((f) => f && !isDeclared(f));
+    const files = changed.split("\n").filter((f) => f && !hookDeclared(declared, f));
     return { files, lines: files.map((f) => say(T.undeclared, f)) };
   } catch (e) {
     return { files: [], lines: [say(T.hooksNotRun, e.message)] };
   }
 }
-
 const keys = (cfg) => (Array.isArray(cfg.checks) ? cfg.checks : []).map((c) => String(c.id ?? c.name ?? c.run));
 /** True only when `.githooks/` and the config are byte for byte the base's: any doubt means "replay". */
 function unchanged(root, base) {

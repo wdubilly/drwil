@@ -35,6 +35,8 @@ import {
   validateState,
 } from "./state.mjs";
 
+import { accept, acceptanceCheck, criteriaFingerprint, recordAcceptance } from "./state-acceptance.mjs";
+
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -1894,4 +1896,197 @@ test("QUA-116 : l'état rouvert se valide de BUILD à CLOSING, suit les transiti
   r = await capturer(() => main(["reopen"], en.racine));
   assert.match(r.erreurs, /reopening refused: activity BUILD/);
   assert.match(context(readState(en.racine), en.racine), /Workstream reopened after its closing \(QUA-116\), PR #42 open/);
+});
+
+const CRITERES = (extra = "") =>
+  `# Projet : Exemple\n\n**Statut** : cadré le 2026-10-09.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/auth/login.ts\n-->\n\n## Critères d'acceptation\n\n- Un critère sur\n  deux lignes — contrat à créer\n- Autre critère [humain] — \`QUA-001\` (contrat modifié)${extra}\n\n## 6. Increments\n\n- **Lot 1** [IA] : tout.\n`;
+
+/** Dépôt cadré dont la fiche porte des critères, lançable par un humain (sans terminal : `start(…, { human: true })`). */
+function depotCriteres({ lang, texte = CRITERES() } = {}) {
+  const { racine, git } = depotCadre(lang ? { lang } : undefined);
+  writeFileSync(join(racine, FICHE), texte);
+  git("add", "-A");
+  git("commit", "-qm", "critères");
+  return { racine, git };
+}
+const accepte = (racine) => JSON.parse(readFileSync(join(racine, ".drwil", "evidence", "acceptance.json"), "utf8"));
+
+test("QUA-174 : l'empreinte des critères ignore la preuve citée et la mise en forme, pas le texte ni [humain]", () => {
+  const base = criteriaFingerprint(CRITERES());
+  assert.match(base, /^sha256:[0-9a-f]{16}$/);
+  const lie = CRITERES()
+    .replace("deux lignes — contrat à créer", "deux lignes — `QUA-172`")
+    .replace("`QUA-001` (contrat modifié)", "`QUA-002`");
+  assert.equal(criteriaFingerprint(lie), base, "un lien de preuve écrit ensuite ne change pas l'empreinte");
+  assert.equal(criteriaFingerprint(CRITERES().replace("Un critère sur\n  deux lignes", "Un  critère sur deux lignes")), base);
+  assert.equal(criteriaFingerprint(CRITERES().replace("deux lignes", "trois lignes")) === base, false);
+  assert.equal(criteriaFingerprint(CRITERES().replace("Autre critère [humain]", "Autre critère")) === base, false);
+  assert.equal(criteriaFingerprint(CRITERES().replace("— contrat à créer", "— contract to create")), base);
+  assert.equal(criteriaFingerprint("# Fiche\n\n## 2. Hors périmètre\n\n- rien\n"), null);
+  assert.equal(criteriaFingerprint("## Acceptance criteria\n- One\n"), criteriaFingerprint("## Critères d'acceptation\n- One\n"));
+});
+
+test("QUA-174 : le lancement humain enregistre l'empreinte des critères acceptés, de la fiche et de celles qu'il met en file", () => {
+  const { racine, git } = depotCriteres();
+  writeFileSync(join(racine, "docs", "projects", "suivante.md"), CRITERES().replace("src/auth/login.ts", "src/s.ts"));
+  git("add", "-A");
+  git("commit", "-qm", "suivante");
+  const r = start(racine, FICHE, { human: true, queue: ["docs\\projects\\suivante.md"], now: "2026-10-20T10:00:00.000Z" });
+  assert.equal(r.code, 0, r.message);
+  const tout = accepte(racine);
+  assert.deepEqual(Object.keys(tout).sort(), [FICHE, "docs/projects/suivante.md"].sort());
+  assert.equal(tout[FICHE].fingerprint, criteriaFingerprint(readFileSync(join(racine, FICHE), "utf8")));
+  assert.match(tout[FICHE].acceptedAt, /^\d{4}-\d{2}-\d{2}T/);
+  const lu = readFileSync(join(racine, FICHE), "utf8");
+  assert.equal(acceptanceCheck(racine, FICHE, lu).kind, "same");
+  assert.equal(acceptanceCheck(racine, FICHE, lu.replace("Un critère", "Un autre critère")).kind, "changed");
+});
+
+test("QUA-174 : un lancement refusé n'enregistre rien ; sans critère ou sans fiche lisible, rien non plus", () => {
+  const { racine } = depotCriteres();
+  assert.equal(start(racine, "docs/projects/inconnue.md", { human: true }).code, 1);
+  assert.equal(existsSync(join(racine, ".drwil", "evidence", "acceptance.json")), false);
+  const sans = depotCadre().racine;
+  assert.equal(start(sans, FICHE, { human: true }).code, 0);
+  assert.equal(existsSync(join(sans, ".drwil", "evidence", "acceptance.json")), false, "la fiche d'exemple n'a aucun critère");
+  assert.equal(acceptanceCheck(sans, FICHE, "").kind, "none");
+  assert.equal(recordAcceptance(sans, "docs/projects/absente.md"), null);
+});
+
+test("QUA-175 : la fiche prise en file par l'agent garde l'acceptation que l'humain a donnée, une autre est oubliée", () => {
+  const { racine, git } = depotCriteres();
+  writeFileSync(join(racine, "docs", "projects", "suivante.md"), CRITERES().replace("src/auth/login.ts", "src/s.ts"));
+  git("add", "-A");
+  git("commit", "-qm", "suivante");
+  assert.equal(start(racine, FICHE, { human: true, queue: ["docs/projects/suivante.md"] }).code, 0);
+  const donnee = accepte(racine)["docs/projects/suivante.md"];
+  writeState(racine, { ...NEUTRAL_STATE, queue: ["docs/projects/suivante.md"] });
+  assert.equal(start(racine, "docs/projects/suivante.md").code, 0);
+  assert.deepEqual(accepte(racine)["docs/projects/suivante.md"], donnee);
+  assert.equal(accepte(racine)[FICHE] !== undefined, true);
+});
+
+test("QUA-175 : mode agent, sans humain : le lancement n'enregistre aucune acceptation, et efface une ancienne", async () => {
+  const { racine } = depotCriteres();
+  writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ transitions: "agent" }));
+  mkdirSync(join(racine, ".drwil", "evidence"), { recursive: true });
+  writeFileSync(
+    join(racine, ".drwil", "evidence", "acceptance.json"),
+    JSON.stringify({ [FICHE]: { fingerprint: "sha256:ancienne" }, autre: { fingerprint: "x" } }),
+  );
+  assert.equal(start(racine, FICHE).code, 0);
+  assert.deepEqual(Object.keys(accepte(racine)), ["autre"]);
+  // Fichier absent ou illisible : aucune acceptation, jamais une erreur.
+  writeFileSync(join(racine, ".drwil", "evidence", "acceptance.json"), "pas du json");
+  assert.equal(acceptanceCheck(racine, FICHE, "").kind, "none");
+  writeFileSync(join(racine, ".drwil", "evidence", "acceptance.json"), "[]");
+  assert.equal(acceptanceCheck(racine, FICHE, "").kind, "none");
+  const retour = await move(racine, { to: "SCOPING" });
+  assert.equal(retour.code, 0, retour.message);
+});
+
+test("QUA-175 : le retour en SCOPING oublie l'acceptation de la fiche quittée", async () => {
+  const { racine } = depotCriteres();
+  assert.equal(start(racine, FICHE, { human: true }).code, 0);
+  assert.deepEqual(Object.keys(accepte(racine)), [FICHE]);
+  const r = await move(racine, { to: "SCOPING" });
+  assert.equal(r.code, 0, r.message);
+  assert.deepEqual(accepte(racine), {});
+});
+
+test("QUA-175 : accept refusé sans terminal interactif, ligne de commande comprise — en anglais aussi", async () => {
+  const { racine } = depotCriteres();
+  start(racine, FICHE, { human: true });
+  let r = await capturer(() => main(["accept"], racine));
+  assert.equal(r.code, 1);
+  assert.match(r.erreurs, /^✗ acceptation refusée : seul un terminal interactif/);
+  assert.equal(await accept(racine), 1);
+  const en = depotCriteres({ lang: "en" }).racine;
+  r = await capturer(() => main(["accept"], en));
+  assert.match(r.erreurs, /^✗ acceptance refused: only an interactive terminal/);
+});
+
+test("QUA-174 : accept au terminal : l'humain voit les critères et confirme ; sans confirmation, sans chantier ou sans critère, rien", async () => {
+  const { racine } = depotCriteres();
+  const sansChantier = await avecTerminal([], () => capturer(() => main(["accept"], racine)));
+  assert.equal(sansChantier.code, 1);
+  assert.match(sansChantier.erreurs, /aucun chantier actif/);
+
+  start(racine, FICHE, { human: true });
+  writeFileSync(join(racine, FICHE), CRITERES().replace("Un critère", "Un critère modifié"));
+  const non = await avecTerminal(["oui"], () => capturer(() => main(["accept"], racine)));
+  assert.equal(non.code, 1);
+  assert.match(non.erreurs, /acceptation non confirmée/);
+  assert.match(
+    non.sortie,
+    /^Critères de docs\/projects\/exemple\.md :\n- Un critère modifié sur deux lignes — contrat à créer\n- Autre critère/,
+  );
+  assert.equal(acceptanceCheck(racine, FICHE, readFileSync(join(racine, FICHE), "utf8")).kind, "changed");
+
+  const oui = await avecTerminal(["ACCEPT"], () => capturer(() => main(["accept"], racine)));
+  assert.equal(oui.code, 0, oui.erreurs);
+  assert.match(oui.sortie, /✓ critères de docs\/projects\/exemple\.md acceptés \(empreinte sha256:/);
+  assert.equal(acceptanceCheck(racine, FICHE, readFileSync(join(racine, FICHE), "utf8")).kind, "same");
+
+  writeFileSync(join(racine, FICHE), "# Projet : Exemple\n\n**Statut** : cadré le 2026-10-09.\n");
+  const rien = await avecTerminal([], () => capturer(() => main(["accept"], racine)));
+  assert.match(rien.erreurs, /n'a aucun critère d'acceptation/);
+  rmSync(join(racine, FICHE));
+  mkdirSync(join(racine, FICHE));
+  assert.match((await avecTerminal([], () => capturer(() => main(["accept"], racine)))).erreurs, /n'a aucun critère|aucun chantier/);
+
+  const en = depotCriteres({ lang: "en" }).racine;
+  start(en, FICHE, { human: true });
+  const enOk = await avecTerminal(["ACCEPT"], () => capturer(() => main(["accept"], en)));
+  assert.match(
+    enOk.sortie,
+    /^Criteria of docs\/projects\/exemple\.md:[\s\S]*✓ criteria of docs\/projects\/exemple\.md accepted \(fingerprint sha256:/,
+  );
+  writeFileSync(join(en, FICHE), "# Projet : Exemple\n");
+  assert.match((await avecTerminal([], () => capturer(() => main(["accept"], en)))).erreurs, /has no acceptance criteria/);
+});
+
+/** Fiche dont le bloc scope cite des hooks ; les fichiers de `.githooks/` listés existent dans le dépôt. */
+function depotHooks({ lang, puces = "", scope, existants = ["etat.mjs", "etat.test.mjs", "outil.mjs", "pose.mjs"] } = {}) {
+  const lignes = scope ?? [
+    ".githooks/etat.mjs",
+    ".githooks/etat.test.mjs",
+    "packages/kit/templates/.githooks/outil.mjs",
+    ".githooks/pose.mjs",
+    ".githooks/absent.mjs",
+    ".githooks/*.mjs",
+    "docs/x.githooks/etat.mjs",
+    "src/a.ts",
+  ];
+  const texte = `# Projet : Hooks\n\n**Statut** : cadré le 2026-10-09.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n${lignes.map((l) => `  - ${l}`).join("\n")}\n-->\n\n## Critères d'acceptation\n\n- Un critère — \`QUA-001\`\n\n## Contrats modifiés\n\n${puces}\n`;
+  const { racine, git } = depotCriteres({ lang, texte });
+  mkdirSync(join(racine, ".githooks"), { recursive: true });
+  for (const f of existants) writeFileSync(join(racine, ".githooks", f), "");
+  git("add", "-A");
+  git("commit", "-qm", "hooks");
+  return racine;
+}
+
+test("QUA-137 : le lancement nomme chaque hook existant cité par le cadrage sans puce, sans jamais refuser", () => {
+  const sans = start(depotHooks({ puces: "- `.githooks/pose.mjs` — change (validé par le demandeur le 2026-10-09)" }), FICHE, {
+    human: true,
+  });
+  assert.equal(sans.code, 0, sans.message);
+  assert.match(
+    sans.message,
+    /\navertissement : le cadrage cite `\.githooks\/etat\.mjs`, `\.githooks\/outil\.mjs` sans puce dans « Contrats modifiés »/,
+  );
+  assert.match(sans.message, /la clôture sera refusée \(QUA-137\)/);
+  assert.doesNotMatch(sans.message, /pose\.mjs|absent|test\.mjs/);
+
+  const en = start(depotHooks({ lang: "en", puces: "" }), FICHE, { human: true });
+  assert.match(
+    en.message,
+    /\nwarning: the scope cites `\.githooks\/etat\.mjs`, `\.githooks\/outil\.mjs`, `\.githooks\/pose\.mjs` without a bullet/,
+  );
+
+  const tout = ["- `.githooks/etat.mjs` — a", "- `.githooks/outil.mjs` — b", "- `.githooks/pose.mjs` — c"].join("\n");
+  assert.doesNotMatch(start(depotHooks({ puces: tout }), FICHE, { human: true }).message, /avertissement : le cadrage cite/);
+  const seulTest = depotHooks({ scope: [".githooks/etat.test.mjs"], puces: "" });
+  assert.match(start(seulTest, FICHE, { human: true }).message, /cite `\.githooks\/etat\.mjs` sans puce/);
 });

@@ -3822,3 +3822,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : aucun outil ne lance les sous-agents, la consigne du skill les enchaîne (Claude Code et Copilot CLI ; Gemini CLI reste en une session) et n'a pas été éprouvée sur une vraie fiche à lots (`docs/intentions/essai-reel-lots-en-sous-agents.md`) ; le dernier lot doit lui aussi passer par `lot next` avant la clôture.
 - **Preuve de clôture** : `docs/preuves/lots-en-sous-agents.md`.
 - **Clôturé par** : la branche `workstream/lots-en-sous-agents`.
+
+## 2026-10-28 — Un cycle de vie des fiches sans contournement
+
+- **Décisions clés** : contrats neufs QUA-172 à QUA-175 ; le registre des contrats s'écrit en SCOPING comme une fiche (barrière `scope-gate` : ni sujet de cadrage, ni fichier hors fiche pour un commit sans trailer qui n'écrit que lui) ; un fichier déjà livré sur la branche principale (suivi et identique) reste couvert après la clôture de sa fiche, la barrière n'est pas affaiblie ; l'empreinte des critères acceptés est enregistrée au lancement décidé par l'humain (dossier d'évidence local), dite dans la preuve de clôture, et un critère modifié depuis refuse la clôture jusqu'à `node .githooks/state.mjs accept` (terminal interactif) ; aucun lancement en mode agent n'enregistre d'acceptation. Contrats modifiés : QUA-137 (le lancement nomme les hooks cités sans puce, signalement seulement) et QUA-074 (`indexItem` ne compte comme fiche que `docs/projects/*.md`).
+- **Hooks modifiés** : `.githooks/scope-gate.mjs`, `.githooks/scope.mjs`, `.githooks/state.mjs`, `.githooks/closure-proof.mjs`, `.githooks/base-checks.mjs`, `.githooks/doc-coherence.mjs` ; neufs : `.githooks/state-acceptance.mjs`, `.githooks/state-hooks.mjs`.
+- **Cadrage élargi** : trois commits séparés ajoutent au bloc scope les modules neufs, `docs/architecture.md` et les listes de `kit-mechanics.md`, omis du cadrage initial.
+- **Limites connues** : l'acceptation est un fichier local que rien n'empêche un agent d'écrire à la main (les gardes d'écriture des hooks d'agent sont hors périmètre) ; l'attestation `Manuel` de QUA-175 est un geste humain.
+- **Réouverture** : la CI de la PR #298 a refusé la couverture des branches de `.githooks/scope.mjs` (lecture de `origin/HEAD`, absent en CI) ; un test l'a couverte, sur le oui de l'humain (`detour.mjs allow`).
+- **Preuve de clôture** : `docs/preuves/cycle-de-vie-des-fiches.md`.
+- **Clôturé par** : la branche `workstream/cycle-de-vie-des-fiches`.

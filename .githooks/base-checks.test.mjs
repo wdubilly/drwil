@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { baseRef, declaredIn, replay, undeclaredHooks } from "./base-checks.mjs";
+import { baseRef, declaredIn, hookDeclared, replay, undeclaredHooks } from "./base-checks.mjs";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -315,4 +315,12 @@ test("QUA-137 la branche principale vient d'origin/HEAD avant les noms usuels ; 
   const sans = nonDeclares(d);
   assert.deepEqual(sans.files, [".githooks/lib.mjs", ".githooks/run-checks.mjs"], "sans configuration : fiches lues dans docs/projects/");
   assert.match(sans.lines[0], /^`\.githooks\/lib\.mjs` modifié par la branche sans être déclaré/);
+});
+
+test("QUA-137 : hookDeclared : un hook est déclaré par sa puce, un fichier de test par celle de son module", () => {
+  const declared = new Set([".githooks/etat.mjs"]);
+  assert.equal(hookDeclared(declared, ".githooks/etat.mjs"), true);
+  assert.equal(hookDeclared(declared, ".githooks/etat.test.mjs"), true);
+  assert.equal(hookDeclared(declared, ".githooks/autre.mjs"), false);
+  assert.equal(hookDeclared(declared, ".githooks/autre.test.mjs"), false);
 });

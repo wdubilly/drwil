@@ -1721,7 +1721,7 @@
     {
       "id": "tests-qua-137",
       "name": "tests de QUA-137, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-137 \" .githooks/base-checks.test.mjs .githooks/close.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-137 \" .githooks/base-checks.test.mjs .githooks/close.test.mjs .githooks/state.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",
@@ -2187,6 +2187,66 @@
       "id": "tests-qua-171",
       "name": "tests de QUA-171, filtrés par son ID (un contrôle par règle, QUA-033)",
       "run": "node --test --test-name-pattern=\"^QUA-171 \" .githooks/state-lots.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-172",
+      "name": "tests de QUA-172, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-172 \" .githooks/scope-gate.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-173",
+      "name": "tests de QUA-173, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-173 \" .githooks/scope.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-174",
+      "name": "tests de QUA-174, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-174 \" .githooks/state.test.mjs .githooks/close.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-175",
+      "name": "tests de QUA-175, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-175 \" .githooks/state.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",
