@@ -110,7 +110,7 @@ lancement.)
 7. (2026-10-26, plan d'action) Ordre : ce chantier passe après
    `docs/projects/reouverture-dite-et-eprouvee.md`. QUA-048, QUA-067 et QUA-069
    couvrent `.githooks/state.mjs` et `.githooks/state-cli.mjs`, que modifient
-   `cycle-de-vie-des-fiches`, `next-attend-la-fusion` et la réouverture : déclarés
+   `cycle-de-vie-des-fiches`, `retour-scoping-branche-sondage` et la réouverture : déclarés
    avant, leurs attestations tomberaient à chacun de ces chantiers.
 
 ## 5. Points à trancher

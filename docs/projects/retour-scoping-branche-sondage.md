@@ -1,9 +1,9 @@
-# Projet : retour en SCOPING à la fusion constatée, branche créée au lancement, sondage multi-choix lu
+# Projet : la file attend la fusion, l'état revient en SCOPING à la fusion constatée, branche créée au lancement, sondage en choix unique
 
-**Statut** : cadré le 2026-10-29 — décisions du périmètre, du déclencheur et de la file prises par le demandeur.
+**Statut** : cadré le 2026-10-29 — fiche issue de la fusion avec `next-attend-la-fusion` (cadrée le 2026-10-26) ; décisions prises par le demandeur.
 **Risque** : HIGH
-**Maturité** : à affiner
-**Intention** : `docs/intentions/notes.md` (trois notes du 2026-10-29)
+**Maturité** : prêt
+**Intention** : `docs/intentions/cloture-et-attestations.md` (partie « l'arrêt d'une file et ses comptes rendus vérifiés par un contrôle ») et `docs/intentions/notes.md` (trois notes du 2026-10-29)
 
 <!-- scope
 files:
@@ -43,14 +43,21 @@ consignés en notes le 2026-10-29 :
    demande un geste de plus. La règle « jamais avant la fusion » reste juste
    (une CI rouge doit pouvoir rouvrir le chantier) : c'est le déclencheur, à la
    fusion constatée, qui manque.
-2. **Une file ne repart pas seule.** Une file décidée au lancement devrait
+2. **`next` ne vérifie pas la fusion** (fiche `next-attend-la-fusion`, fusionnée
+   ici). `start` depuis CLOSING exige déjà que la PR du chantier soit fusionnée
+   (`closingMerged`), mais `next` (qui lance la tête de file depuis SCOPING) ne
+   le vérifie pas : si l'état est revenu en SCOPING avant la fusion (retour
+   manuel, fusion automatique annulée), l'agent peut lancer le suivant sur une
+   branche pas à jour. La consigne « la suivante après la fusion de la
+   précédente » n'est qu'écrite dans `AGENTS.md`.
+3. **Une file ne repart pas seule.** Une file décidée au lancement devrait
    enchaîner le chantier suivant dès que la fusion du précédent est constatée,
    sans geste de plus.
-3. **Le lancement en « This folder » ne crée pas de branche.** Il passe en BUILD
+4. **Le lancement en « This folder » ne crée pas de branche.** Il passe en BUILD
    sur la branche courante, souvent la principale : c'est le seul refus de
    commit (QUA-017) qui force ensuite une branche. « New worktree » crée déjà
    `workstream/<fiche>`.
-4. **Le sondage multi-choix revient vide.** Sous Copilot CLI, le champ `fiche` en
+5. **Le sondage multi-choix revient vide.** Sous Copilot CLI, le champ `fiche` en
    tableau (`type: "array"`, `items.enum`), tel que le prescrit le skill, est
    revenu vide trois fois le 2026-10-28 malgré la case cochée ; le même champ en
    choix unique (`enum` seul) est lu. Cause non établie.
@@ -64,6 +71,9 @@ attribuer à ce moment-là dans le registre.)
   `gh`, via `closingMerged`) ramène l'état en SCOPING et le dit ; PR ouverte,
   introuvable ou `gh` absent : l'état reste CLOSING et le dit, jamais un retour
   — contrat à créer
+- `state.mjs next` refuse de lancer la tête de file tant que la PR du chantier
+  précédent n'est pas fusionnée, et le dit ; PR introuvable ou `gh` absent :
+  refus qui le dit, jamais un lancement — contrat à créer
 - Une file décidée au lancement enchaîne le chantier suivant dès que la fusion
   du précédent est constatée, sans nouveau geste ; une file reprise dans une
   nouvelle session attend toujours le oui explicite de l'humain — contrat à
@@ -72,9 +82,9 @@ attribuer à ce moment-là dans le registre.)
   sur `workstream/<fiche>` depuis la branche principale à jour ; depuis une
   branche de chantier il la garde ; une branche déjà existante ou un arbre sale
   est refusé avec un message qui dit quoi faire — contrat à créer
-- Le sondage `/drwil-start` de Copilot CLI, avec plusieurs fiches cochées, est
-  lu complètement (une ou plusieurs fiches, dans l'ordre des options) — contrat
-  à créer
+- Le skill `/drwil-start` prescrit pour Copilot CLI un champ `fiche` en choix
+  unique (`enum` seul), seul lu de façon fiable, et le hook lit cette réponse
+  — contrat à créer
 
 ## Contrats modifiés
 
@@ -106,31 +116,33 @@ QUA-138, sont probablement modifiés. Le demandeur valide chaque puce.)
 (validées par le demandeur le 2026-10-29)
 
 1. Périmètre : les trois notes (retour en SCOPING, branche au lancement,
-   sondage multi-choix), en lots séparés.
+   sondage), plus `next-attend-la-fusion` fusionnée ici ; lots séparés.
 2. Déclencheur du retour : le rappel d'état (la lecture de `.githooks/state.mjs`) vérifie
    la fusion par `gh`.
-3. File : le chantier suivant démarre seul à la fusion constatée.
+3. File : le chantier suivant démarre seul à la fusion constatée ; `next`
+   refuse tant que la PR précédente n'est pas fusionnée. Le compte rendu de
+   clôture d'une file reste une consigne.
+4. Fiches : fusion de `next-attend-la-fusion` dans celle-ci, sans enquête
+   préalable sur le sondage.
+5. Sondage : sans enquête, le skill prescrit le choix unique pour Copilot CLI.
+   Conséquence acceptée : une file de plusieurs fiches ne se coche plus d'un
+   sondage sous Copilot CLI (une fiche par sondage).
+6. Branche : « This folder » crée `workstream/<fiche>` depuis la branche
+   principale à jour dans tous les cas ; refus si la branche courante n'est pas
+   fusionnée ou si l'arbre est sale.
 
 ## 5. Points à trancher
 
-- **Chevauchement avec `next-attend-la-fusion`** : cette fiche fait aussi
-  vérifier la fusion à `next`. À la réalisation, laquelle passe en premier, et
-  le lot 1 réutilise-t-il sa vérification ?
-- **Cause du sondage vide** : reproduire d'abord (skill, hook `.claude/hooks/start-poll.mjs` ou
-  schéma de Copilot CLI) ; si la cause est hors du dépôt, le lot 3 se limite à
-  prescrire le choix unique dans le skill.
-- **Comportement hors file au lancement de « This folder »** : la branche
-  `workstream/<fiche>` est-elle créée aussi quand on est déjà sur une autre
-  branche de travail non fusionnée ?
+- Aucun : tout est tranché.
 
 ## 6. Increments
 
-- **Lot 1 — retour en SCOPING à la fusion constatée, file comprise** [IA] : la lecture de l'état vérifie la fusion (`closingMerged`) et revient en SCOPING ; la file enchaîne le chantier suivant ; messages fr et en ; tests de `.githooks/state.test.mjs` (fusionnée, ouverte, `gh` absent, file qui s'enchaîne, file reprise en nouvelle session) ; contrats et contrôles `tests-qua-<id>` ; ligne « Unreleased » du changelog. Critère de sortie : `node .githooks/run-checks.mjs` OK.
+- **Lot 1 — la file attend la fusion et l'état revient en SCOPING** [IA] : `next` vérifie la fusion (`closingMerged`, `noGhText`) ; la lecture de l'état la vérifie aussi et revient en SCOPING ; la file enchaîne le chantier suivant ; messages fr et en ; tests de `.githooks/state.test.mjs` (fusionnée, ouverte, `gh` absent, file qui s'enchaîne, file reprise en nouvelle session) ; contrats et contrôles `tests-qua-<id>` ; ligne « Unreleased » du changelog. Critère de sortie : `node .githooks/run-checks.mjs` OK.
 - **Lot 2 — branche créée au lancement en « This folder »** [IA] : création de `workstream/<fiche>` depuis la branche principale à jour, refus sur arbre sale ou branche existante ; recette `docs/recipes/working-with-branches.md` mise à jour ; tests ; contrat. Critère de sortie : idem.
-- **Lot 3 — sondage multi-choix lu** [IA] : reproduction et cause d'abord, puis correctif du hook ou du skill ; test ; contrat. Critère de sortie : idem, `drwil verify --agent` PASS.
+- **Lot 3 — sondage en choix unique** [IA] : le skill (gabarit et sa copie) prescrit le choix unique pour Copilot CLI, le hook le lit ; test ; contrat. Critère de sortie : idem, `drwil verify --agent` PASS.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-29) : cadré, à affiner (trois points à trancher).
+- **Dernier état** (2026-10-29) : cadré, prêt à lancer.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] trancher les points de la section 5, puis lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
