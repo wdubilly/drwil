@@ -1,16 +1,35 @@
 // Transitions of the governance state (split from state.mjs, which re-exports them): starting a
 // workstream in one gesture, preparing and applying a transition.
 import { existsSync, readFileSync } from "node:fs";
-import { join, posix } from "node:path";
+import { basename, join, posix } from "node:path";
 import { config, missingCriteria, queueable, scopedBriefs, briefStatus } from "./briefs.mjs";
-import { closingMerged, closingSignals, noGhText, pruneMergedBranches, prunedMessage } from "./close.mjs";
-import { activeElsewhere } from "./worktree.mjs";
+import { closingMerged, closingSignals, mainBranch, noGhText, pruneMergedBranches, prunedMessage } from "./close.mjs";
+import { activeElsewhere, createBranch, git } from "./worktree.mjs";
 import { ACTIVITIES, readState, texts, transitionAllowed, validateState, NEUTRAL_STATE } from "./state-validate.mjs";
 import { requiresHuman, verifyEvidence } from "./state-evidence.mjs";
 import { fill } from "./state-texts.mjs";
 import { move as moveAll, start as startAll, writeState } from "./state.mjs";
 
 const STARTABLE_FROM = new Set(["SCOPING", "EXPECTATION", "REQUEST"]);
+
+/** "This folder" start (QUA-179): keeps the workstream branch, else cuts it from the up-to-date main branch. */
+function prepareBranch(root, path) {
+  const T = texts(root);
+  const main = mainBranch(root);
+  const branch = `workstream/${basename(path, ".md")}`;
+  const current = git(root, "symbolic-ref", "--quiet", "--short", "HEAD");
+  if (!main || current === branch) return { code: 0, message: "" };
+  const merged = closingMerged(root);
+  const refused =
+    (merged === "no" && fill(T.branchUnmerged, current, main)) ||
+    (merged === "unknown" && fill(T.branchUnknown, current ?? "HEAD", noGhText(root), main)) ||
+    (git(root, "status", "--porcelain") !== "" && T.branchDirty) ||
+    (git(root, "rev-parse", "--verify", "--quiet", `refs/heads/${branch}`) !== null && fill(T.branchTaken, branch));
+  if (refused) return { code: 1, message: refused };
+  const made = createBranch(root, branch, main);
+  if (made.error) return { code: 1, message: fill(T.branchFailed, made.error) };
+  return { code: 0, message: fill(T.branchCreated, branch, made.base, made.stale ? fill(T.branchStale, main) : "") };
+}
 
 /**
  * Starts a workstream in one gesture: from SCOPING, EXPECTATION or REQUEST, moves straight to
@@ -57,12 +76,22 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   if (rest.length) Object.assign(state, { queue: rest, queue_merge: human ? autoMerge === true : read.state.queue_merge === true });
   const problems = validateState(state, root);
   if (problems.length) return { code: 1, message: fill(T.startInvalid, problems.join(" ; ")) };
+  const branch = prepareBranch(root, path);
+  if (branch.code !== 0) return branch;
   writeState(root, state);
   const warned = missing ? `\n${fill(T.noCriteria, path)}` : "";
   const next = rest.length ? `\n${fill(T.queued, rest.join(", "))}` : "";
   // The previous workstreams' branches, merged, are no longer needed (QUA-048).
   const pruned = prunedMessage(root, pruneMergedBranches(root));
-  return { code: 0, message: fill(T.started, origin, path, state.auto_merge ? T.mergeAuthorised : "") + next + warned + pruned };
+  return {
+    code: 0,
+    message:
+      (branch.message ? `${branch.message}\n` : "") +
+      fill(T.started, origin, path, state.auto_merge ? T.mergeAuthorised : "") +
+      next +
+      warned +
+      pruned,
+  };
 }
 
 /** New state after the transition to `to`, or `{ error }`; writes nothing. */
@@ -144,10 +173,8 @@ export async function move(root, { to, brief, request }, { tty = false, confirm,
 }
 
 /**
- * Reading the state in CLOSING (brief deleted) whose closing PR is merged brings it back to SCOPING, and a
- * queue decided at launch goes on with its head when `chain` (a prompt of the running session, never a session
- * start: a queue resumed in a new session waits for the human's yes). Open or unknown PR (QUA-013): CLOSING stays.
- * `{ message }`, empty when there is nothing to say.
+ * CLOSING (brief deleted) with its PR merged goes back to SCOPING, and the queue goes on with its head when `chain`
+ * (a prompt, never a session start: a resumed queue waits for the human's yes); open or unknown PR: stays (QUA-013).
  */
 export async function settleClosing(root, { chain = false, gh } = {}) {
   const T = texts(root);
@@ -162,10 +189,7 @@ export async function settleClosing(root, { chain = false, gh } = {}) {
   return { message: head && chain ? `${T.settled}\n${startAll(root, head).message}` : T.settled };
 }
 
-/**
- * Starts the head of the queue (`next`) once the previous workstream's pull request is merged
- * (closingMerged); open or unknown (QUA-013): refused, said. Without a queue, `start` refuses.
- */
+/** Starts the head of the queue (`next`) once the previous PR is merged; open or unknown (QUA-013): refused, said. */
 export function nextHead(root, { gh } = {}) {
   const T = texts(root);
   const head = readState(root).state.queue?.[0];

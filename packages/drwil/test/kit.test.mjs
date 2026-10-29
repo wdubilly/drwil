@@ -1643,7 +1643,10 @@ test("QUA-142 : la réponse « Nouveau worktree » du sondage lance le chantier 
   rejouer(claude, reponse("Ce dossier"));
   assert.equal(etatDe(dir).activity, "BUILD", "« Ce dossier » : lancé là");
   assert.equal(existsSync(voisin), false);
+  assert.equal(git(dir, "branch", "--show-current").stdout.trim(), "workstream/essai", "« Ce dossier » crée la branche du chantier");
   rmSync(join(dir, ".drwil/state.json"));
+  git(dir, "switch", "-q", "-");
+  git(dir, "branch", "-D", "workstream/essai");
 
   const r = rejouer(claude, reponse("Nouveau worktree"));
   assert.match(r.stdout, /Worktree créé/);
@@ -1734,6 +1737,8 @@ test("QUA-147 : la réponse « File en parallèle » du sondage lance chaque fic
   assert.deepEqual(etatDe(dir).queue, [fiches[1]]);
   assert.equal(etatDe(dir).parallel, undefined);
   rmSync(join(dir, ".drwil/state.json"));
+  git(dir, "switch", "-q", "-");
+  git(dir, "branch", "-D", "workstream/un");
 
   // Cochées dans le désordre : l'ordre du sondage prévaut.
   const r = rejouer("PostToolUse", {

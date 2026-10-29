@@ -24,6 +24,10 @@ closing commit; the release renames this section to its version.
   previous workstream's pull request is merged; a queue decided at start goes
   on by itself when the merge is seen at a prompt of the running session,
   while a queue resumed in a new session still waits for the human's yes.
+- Starting a workstream in « This folder » now creates and switches to
+  `workstream/<brief>`, cut from the up-to-date main branch (kept if you are
+  already on it); it is refused, with what to do, when the current branch is not
+  merged, the working tree is dirty or the branch already exists.
 - A brief with several lots (bullets « **Lot N — title** [IA|human] » of its
   « Increments » section) is now carried lot by lot: `node .githooks/state.mjs
   lot` names the current lot, the lots done and those left, and `lot next`

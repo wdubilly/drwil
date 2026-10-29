@@ -1710,3 +1710,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/state.test.mjs`
 **Origine** : retour-scoping-branche-sondage — « Une file décidée au lancement devrait enchaîner le chantier suivant dès que la fusion du précédent est constatée, sans geste de plus ; une file reprise dans une nouvelle session attend toujours le oui explicite de l'humain »
 **Raison** : Une file ne repartait pas seule après la fusion : l'humain devait relancer chaque chantier, alors qu'il avait décidé la file d'un geste.
+
+## QUA-179 — Lancer en « This folder » crée `workstream/<fiche>` depuis la branche principale à jour
+**Règle** : Livré à tout projet. Un lancement dans le dossier courant (`start`, hors « New worktree » qui crée déjà sa branche) crée et bascule sur `workstream/<fiche>`, coupée de `origin/<principale>` après un `git fetch` (sans suivi, `--no-track`), ou de la branche locale si elle porte des commits que `origin` n'a pas (jamais un commit local perdu) ou si le fetch échoue (et le dit) ; si la branche courante est déjà `workstream/<fiche>`, elle est gardée et rien n'est refusé. Refus, qui dit quoi faire et sans rien changer (ni branche, ni état) : branche courante non fusionnée dans la principale, ou fusion non établie (`gh` absent, HEAD détachée, QUA-013), même preuve que QUA-176 (`closingMerged`) ; arbre de travail avec des modifications non commitées ; branche `workstream/<fiche>` déjà existante ailleurs. Sans branche principale locale (`main` ou `master`) ou hors git, aucune branche n'est créée. Le refus de commit sur la branche principale (QUA-017) reste le filet de sécurité.
+**Périmètre** : `.githooks/worktree.mjs` (`prepareBranch`), `.githooks/state-transitions.mjs` (`start`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/worktree.mjs` (`prepareBranch`).
+**Preuve** : tests : création depuis `origin` à jour sans suivi, depuis la principale locale en avance sur `origin`, branche gardée, arbre sale, branche non fusionnée, fusion non établie, branche existante, `git switch` en échec, branche fusionnée quittée, messages anglais, `fetch` en échec, sans branche principale.
+**Contrôle** : `tests-qua-179`
+**Tests** : `.githooks/worktree.test.mjs`
+**Origine** : retour-scoping-branche-sondage — « Un lancement en "This folder" depuis la branche principale crée et bascule sur workstream/<fiche> depuis la branche principale à jour ; depuis une branche de chantier il la garde ; une branche déjà existante ou un arbre sale est refusé avec un message qui dit quoi faire »
+**Raison** : Le lancement en « This folder » passait en BUILD sur la branche courante, souvent la principale : seul le refus de commit forçait ensuite à créer la branche à la main.

@@ -12,10 +12,27 @@ import { fill, label, texts } from "./worktree-texts.mjs";
 
 const DEFAULT_MAX_PARALLEL = 3;
 
-const git = (root, ...args) => {
+export const git = (root, ...args) => {
   const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
   return r.status === 0 ? r.stdout.trim() : null;
 };
+
+const fetchMain = (root, main) =>
+  spawnSync("git", ["fetch", "--quiet", "origin", main], {
+    cwd: root,
+    encoding: "utf8",
+    timeout: 20000,
+    env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+  }).status === 0;
+
+/** Switches to the new `branch` cut from the main branch, or its remote if it contains it (QUA-179): `{ base, error, stale }`. */
+export function createBranch(root, branch, main) {
+  const fetched = fetchMain(root, main);
+  const remote = fetched && git(root, "merge-base", "--is-ancestor", main, `origin/${main}`) !== null;
+  const base = remote ? `origin/${main}` : main;
+  const r = spawnSync("git", ["switch", "--no-track", "-c", branch, base], { cwd: root, encoding: "utf8" });
+  return { base, error: r.status === 0 ? null : r.stderr.trim(), stale: !fetched && git(root, "remote", "get-url", "origin") !== null };
+}
 
 /** The worktrees (`{ path, branch }`, the first one is the main repository); null if git does not answer. */
 export function worktrees(root) {
@@ -104,17 +121,12 @@ export async function launchInWorktree(root, brief, { autoMerge = false, queue =
   if (existsSync(dir)) return { code: 1, message: fill(T.exists, dir) };
   if (git(root, "rev-parse", "--verify", "--quiet", `refs/heads/${branch}`) !== null)
     return { code: 1, message: fill(T.branchExists, branch) };
-  const fetched = spawnSync("git", ["fetch", "--quiet", "origin", main], {
-    cwd: root,
-    encoding: "utf8",
-    timeout: 20000,
-    env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
-  });
-  const base = fetched.status === 0 ? `origin/${main}` : main;
+  const fetched = fetchMain(root, main);
+  const base = fetched ? `origin/${main}` : main;
   const added = spawnSync("git", ["worktree", "add", "--no-track", "-b", branch, dir, base], { cwd: root, encoding: "utf8" });
   if (added.status !== 0) return { code: 1, message: fill(T.addFailed, added.stderr.trim()) };
   const lines = [fill(T.created, dir, branch, base)];
-  if (fetched.status !== 0) lines.push(fill(T.stale, main));
+  if (!fetched) lines.push(fill(T.stale, main));
   lines.push(install(root, dir));
   const { start } = await import("./state.mjs");
   const started = start(dir, path, { human: true, autoMerge, now });
@@ -181,13 +193,8 @@ export function lateLines(root) {
   const current = git(root, "rev-parse", "--abbrev-ref", "HEAD");
   if (!main || !current || current === "HEAD" || current === main) return [];
   if (git(root, "remote", "get-url", "origin") === null) return [];
-  const fetched = spawnSync("git", ["fetch", "--quiet", "origin", main], {
-    cwd: root,
-    encoding: "utf8",
-    timeout: 20000,
-    env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
-  });
-  if (fetched.status !== 0) return [fill(T.lateUnknown, main)];
+  const fetched = fetchMain(root, main);
+  if (!fetched) return [fill(T.lateUnknown, main)];
   const behind = Number(git(root, "rev-list", "--count", `HEAD..origin/${main}`));
   return behind > 0 ? [fill(T.late, behind, main)] : [];
 }

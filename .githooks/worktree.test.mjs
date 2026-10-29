@@ -1,9 +1,9 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 import { close } from "./close.mjs";
 import { context, readState, start } from "./state.mjs";
 import { scopesOverlap } from "./briefs.mjs";
@@ -187,7 +187,8 @@ test("QUA-145 une fiche déjà active dans un autre worktree est refusée avec l
   // Le dossier disparu ne retient plus la fiche.
   rmSync(d.voisin, { recursive: true });
   assert.equal(activeElsewhere(d.racine, FICHE), null);
-  assert.equal(start(d.racine, FICHE, { human: true }).code, 0);
+  // La branche du worktree disparu existe encore : le lancement ici la refuse (QUA-179).
+  assert.match(start(d.racine, FICHE, { human: true }).message, /la branche workstream\/exemple existe déjà/);
 });
 
 test("QUA-146 close --check signale une branche en retard sur la branche principale distante sans refuser la clôture", () => {
@@ -406,4 +407,146 @@ test("QUA-147 le recoupement des cadrages compare littéraux et motifs, une fich
     }),
   });
   assert.match(readState(p.racine).problems.join(), /parallel : liste de fiches attendue/);
+});
+
+// Un faux gh qui répond « aucune PR fusionnée » : la fusion d'une branche non fusionnée est alors établie « non ».
+function ghSansPr(parent) {
+  const bin = join(parent, "bin");
+  ecrire(bin, { gh: "#!/bin/sh\necho '[]'\n" });
+  chmodSync(join(bin, "gh"), 0o755);
+  return `${bin}${delimiter}${process.env.PATH}`;
+}
+
+test("QUA-179 « This folder » crée workstream/<fiche> depuis la branche principale à jour, la garde si on y est déjà", () => {
+  const d = depot();
+  avancerOrigine(d);
+  const r = start(d.racine, FICHE, { human: true });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /^Branche créée : workstream\/exemple \(depuis origin\/master\)\./);
+  assert.equal(git(d.racine, "rev-parse", "--abbrev-ref", "HEAD"), "workstream/exemple");
+  assert.ok(existsSync(join(d.racine, "recent.txt")), "la branche part de origin/master à jour");
+  assert.equal(git(d.racine, "for-each-ref", "--format=%(upstream)", "refs/heads/workstream/exemple"), "", "pas de suivi de origin/master");
+  // Déjà sur la branche du chantier, arbre en cours de travail : gardée, rien de refusé.
+  rmSync(join(d.racine, ".drwil", "state.json"));
+  ecrire(d.racine, { "travail.txt": "en cours" });
+  const garde = start(d.racine, FICHE, { human: true });
+  assert.equal(garde.code, 0, garde.message);
+  assert.doesNotMatch(garde.message, /Branche créée/);
+});
+
+test("QUA-179 la branche part de la principale locale quand elle a des commits que origin n'a pas", () => {
+  const d = depot();
+  ecrire(d.racine, { "local.txt": "x" });
+  git(d.racine, "add", "-A");
+  git(d.racine, "commit", "-q", "-m", "local");
+  const r = start(d.racine, FICHE, { human: true });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /^Branche créée : workstream\/exemple \(depuis master\)\.\n/);
+  assert.ok(existsSync(join(d.racine, "local.txt")));
+});
+
+test("QUA-179 le lancement est refusé sans rien changer : arbre sale, branche non fusionnée, branche existante, git qui échoue", () => {
+  const d = depot();
+  const intact = () => {
+    assert.equal(existsSync(join(d.racine, ".drwil", "state.json")), false, "l'état n'est pas écrit");
+    assert.equal(git(d.racine, "rev-parse", "--abbrev-ref", "HEAD"), actuelle);
+  };
+  let actuelle = "master";
+  ecrire(d.racine, { "sale.txt": "x" });
+  const sale = start(d.racine, FICHE, { human: true });
+  assert.equal(sale.code, 1);
+  assert.match(sale.message, /modifications non commitées/);
+  assert.equal(git(d.racine, "branch", "--list", "workstream/*"), "");
+  intact();
+  rmSync(join(d.racine, "sale.txt"));
+
+  git(d.racine, "branch", "workstream/exemple");
+  const prise = start(d.racine, FICHE, { human: true });
+  assert.equal(prise.code, 1);
+  assert.match(prise.message, /la branche workstream\/exemple existe déjà.*git switch workstream\/exemple/);
+  intact();
+  git(d.racine, "branch", "-q", "-D", "workstream/exemple");
+
+  git(d.racine, "switch", "-q", "-c", "autre");
+  ecrire(d.racine, { "autre.txt": "x" });
+  git(d.racine, "add", "-A");
+  git(d.racine, "commit", "-q", "-m", "travail non fusionné");
+  actuelle = "autre";
+  const inconnue = start(d.racine, FICHE, { human: true });
+  assert.equal(inconnue.code, 1);
+  assert.match(inconnue.message, /^lancement refusé : la fusion de la branche courante autre n'est pas établie \(gh injoignable/);
+  intact();
+  const chemin = process.env.PATH;
+  process.env.PATH = ghSansPr(d.parent);
+  const nonFusionnee = start(d.racine, FICHE, { human: true });
+  process.env.PATH = chemin;
+  assert.equal(nonFusionnee.code, 1);
+  assert.match(nonFusionnee.message, /^lancement refusé : la branche courante autre n'est pas fusionnée dans master/);
+  intact();
+  git(d.racine, "checkout", "-q", "--detach");
+  actuelle = "HEAD";
+  assert.match(
+    start(d.racine, FICHE, { human: true }).message,
+    /^lancement refusé : la fusion de la branche courante HEAD n'est pas établie/,
+  );
+  intact();
+
+  git(d.racine, "switch", "-q", "master");
+  actuelle = "master";
+  writeFileSync(join(d.racine, ".git", "index.lock"), "");
+  const echec = start(d.racine, FICHE, { human: true });
+  rmSync(join(d.racine, ".git", "index.lock"));
+  assert.equal(echec.code, 1);
+  assert.match(echec.message, /^lancement refusé : git switch a échoué/);
+  intact();
+});
+
+test("QUA-179 une branche déjà fusionnée est quittée, messages anglais ; fetch en échec dit la branche peut-être en retard", () => {
+  const d = depot({ lang: "en" });
+  git(d.racine, "switch", "-q", "-c", "workstream/ancien");
+  ecrire(d.racine, { "ancien.txt": "x" });
+  git(d.racine, "add", "-A");
+  git(d.racine, "commit", "-q", "-m", "ancien");
+  git(d.racine, "switch", "-q", "master");
+  git(d.racine, "merge", "-q", "--no-ff", "-m", "fusion", "workstream/ancien");
+  git(d.racine, "switch", "-q", "workstream/ancien");
+  git(d.racine, "remote", "set-url", "origin", join(d.parent, "absent.git"));
+  const r = start(d.racine, FICHE, { human: true });
+  assert.equal(r.code, 0, r.message);
+  assert.match(
+    r.message,
+    /^Branch created: workstream\/exemple \(from master\)\.\ngit fetch failed: the branch starts from the local branch master/,
+  );
+  git(d.racine, "switch", "-q", "master");
+  rmSync(join(d.racine, ".drwil", "state.json"));
+  git(d.racine, "branch", "-q", "-D", "workstream/exemple");
+  git(d.racine, "checkout", "-q", "--detach");
+  assert.match(start(d.racine, FICHE, { human: true }).message, /^start refused: the merge of the current branch HEAD is not established/);
+  git(d.racine, "switch", "-q", "master");
+  ecrire(d.racine, { "sale.txt": "x" });
+  assert.match(start(d.racine, FICHE, { human: true }).message, /^start refused: the working tree has uncommitted changes/);
+  git(d.racine, "switch", "-q", "-c", "autre2");
+  git(d.racine, "add", "-A");
+  git(d.racine, "commit", "-q", "-m", "x");
+  const chemin = process.env.PATH;
+  process.env.PATH = ghSansPr(d.parent);
+  const nonFusionnee = start(d.racine, FICHE, { human: true });
+  process.env.PATH = chemin;
+  assert.match(nonFusionnee.message, /^start refused: the current branch autre2 is not merged into master/);
+  git(d.racine, "switch", "-q", "master");
+  git(d.racine, "branch", "workstream/exemple");
+  assert.match(start(d.racine, FICHE, { human: true }).message, /^start refused: branch workstream\/exemple already exists/);
+  git(d.racine, "branch", "-q", "-D", "workstream/exemple");
+  writeFileSync(join(d.racine, ".git", "index.lock"), "");
+  const echec = start(d.racine, FICHE, { human: true });
+  rmSync(join(d.racine, ".git", "index.lock"));
+  assert.match(echec.message, /^start refused: git switch failed/);
+});
+
+test("QUA-179 sans branche principale locale, le lancement ne crée aucune branche", () => {
+  const d = depot();
+  git(d.racine, "branch", "-m", "trunk");
+  const r = start(d.racine, FICHE, { human: true });
+  assert.equal(r.code, 0, r.message);
+  assert.equal(git(d.racine, "rev-parse", "--abbrev-ref", "HEAD"), "trunk");
 });

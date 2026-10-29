@@ -30,8 +30,6 @@ files:
   - .githooks/state-transitions.mjs
   - .githooks/state-texts.mjs
   - .githooks/worktree.mjs
-  - packages/drwil/test/kit.test.mjs
-  - outils/banc.test.mjs
 -->
 
 ## 1. Besoin
@@ -145,11 +143,19 @@ QUA-138, sont probablement modifiés. Le demandeur valide chaque puce.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-29) : lot 1 réalisé et commité sur `workstream/retour-scoping-branche-sondage`
-  (`settleClosing` et `nextHead` dans `.githooks/state-transitions.mjs`, messages fr/en, contrats QUA-176 à QUA-178 et leurs
-  contrôles, QUA-037 mis à jour, changelog, tests `.githooks/state.test.mjs`). Limite : à chaque invite en CLOSING
-  (fiche supprimée) la fusion est vérifiée, donc un appel `gh` (20 s au plus) quand git ne la voit pas.
+- **Dernier état** (2026-10-29) : lots 1 et 2 réalisés sur `workstream/retour-scoping-branche-sondage`. Lot 1 : `settleClosing` et
+  `nextHead` (QUA-176 à QUA-178, QUA-037 mis à jour). Lot 2 : `prepareBranch` dans `.githooks/state-transitions.mjs`, appelée par
+  `start` avant l'écriture de l'état, et `createBranch` dans `.githooks/worktree.mjs` (fetch puis `git switch --no-track -c`) ;
+  messages dans `.githooks/state-messages-fr.mjs` et `.githooks/state-messages-en.mjs` ; contrat QUA-179 et contrôle
+  `tests-qua-179`, tests dans `.githooks/worktree.test.mjs`, recette et changelog. Le flux « branche créée à la main puis `start` »
+  est conservé (branche gardée si elle porte le nom `workstream/<fiche>`). Plafond de 200 lignes (QUA-001) : la logique de
+  décision est dans `.githooks/state-transitions.mjs`, non dans `.githooks/worktree.mjs` (193 lignes avant le lot).
+- **Décision humaine** (2026-10-29) : le scope couvre `packages/drwil/test/kit.test.mjs` et `outils/banc.test.mjs` (commit séparé) ;
+  le lancement depuis une branche non fusionnée d'un autre nom reste refusé (décision 6). Tests adaptés : QUA-142 et QUA-147 (retour
+  sur la branche d'origine et suppression de `workstream/<fiche>` entre deux lancements), QUA-108 du banc (cadrage sur
+  `cadrage/boutique`, fusionnée en avance rapide, puis lancement depuis `master`). Correctif au passage : la branche part de la
+  principale locale si elle a des commits que `origin` n'a pas (sinon le cadrage non poussé disparaissait de l'arbre).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 2 — branche créée au lancement en « This folder » (`.githooks/worktree.mjs`), puis lot 3 (sondage
-  en choix unique). Section « Contrats modifiés » : QUA-037 modifié (phrase sur le retour en SCOPING), à valider
-  par le demandeur ; QUA-138 inchangé.
+- **Prochaine étape** : lot 3 — sondage en choix unique (skill gabarit et sa copie, `packages/drwil/templates/common/tools/claude/.claude/hooks/start-poll.mjs`, test, contrat). Section
+  « Contrats modifiés » : QUA-037 modifié au lot 1 (phrase sur le retour en SCOPING), à valider par le demandeur ; QUA-138 et
+  QUA-017 inchangés.

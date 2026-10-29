@@ -1044,6 +1044,8 @@ test("QUA-037 : lancer depuis CLOSING : seulement fiche supprimée et PR de clô
   assert.equal(ok.code, 0, ok.message);
   assert.match(ok.message, /CLOSING → BUILD/);
   assert.equal(readState(racine).state.activity, "BUILD");
+  git("checkout", "-q", principale);
+  git("branch", "-q", "-D", "workstream/exemple");
 
   // La fiche du chantier est encore là : pas de retour.
   writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(actif("CLOSING", { active_brief: "docs/projects/finie.md" })));
@@ -1068,6 +1070,7 @@ test("QUA-037 : lancer depuis CLOSING : seulement fiche supprimée et PR de clô
   git("merge", "-q", "--no-ff", "-m", "fusion", "chantier");
   git("checkout", "-q", "chantier");
   assert.equal(start(racine, FICHE, { human: true }).code, 0);
+  assert.equal(git("branch", "--show-current").stdout.trim(), "workstream/exemple");
 
   // La file décidée est lancée par l'agent seul, depuis CLOSING aussi.
   git("checkout", "-q", principale);
@@ -1188,7 +1191,7 @@ test("principal lancer sans terminal : refusé en mode humain, lancé en mode ag
   // La fiche d'exemple n'a pas de critère : lancée avec un avertissement (newRequirements non imposé, QUA-021).
   assert.match(
     r.sortie,
-    /^✓ SCOPING → BUILD \(lancé : docs\/projects\/exemple\.md\)\navertissement : la fiche « docs\/projects\/exemple\.md » n'a aucun critère[^\n]*\n\n\[drwil\] État de gouvernance/,
+    /^✓ Branche créée : workstream\/exemple \(depuis \w+\)\.\nSCOPING → BUILD \(lancé : docs\/projects\/exemple\.md\)\navertissement : la fiche « docs\/projects\/exemple\.md » n'a aucun critère[^\n]*\n\n\[drwil\] État de gouvernance/,
   );
   assert.equal(readState(agent).state.active_request, "faire X");
   // --request sans valeur : ignoré.

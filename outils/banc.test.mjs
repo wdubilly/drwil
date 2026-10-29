@@ -576,7 +576,8 @@ test("QUA-108 : la copie avec drwil est installée comme chez un utilisateur : t
   assert.equal(gitOk(copie, "config", "core.hooksPath").trim(), ".githooks");
   assert.equal(gitOk(copie, "rev-parse", "master"), gitOk(copie, "rev-parse", "origin/master"), "le distant a la branche principale");
   // Une branche se pousse, hooks actifs : le travail cadré comme sous drwil (fiche), sans contournement.
-  gitOk(copie, "switch", "-q", "-c", "essai");
+  // Le cadrage se fait sur sa branche, fusionnée ; le lancement crée seul la branche du chantier depuis la principale.
+  gitOk(copie, "switch", "-q", "-c", "cadrage/boutique");
   const fiche = ["# Projet : boutique", "", "**Statut** : cadré le 2026-10-23.", "**Risque** : MEDIUM", "", "<!-- scope", "files:"];
   fiche.push("  - src/panier.js", "  - test/panier.test.js", "-->", "", "## 1. Besoin", "", "Corriger le total du panier.", "");
   fiche.push("## Critères d'acceptation", "", "- Le total du panier suit les quantités — contrat à créer", "");
@@ -584,13 +585,16 @@ test("QUA-108 : la copie avec drwil est installée comme chez un utilisateur : t
   writeFileSync(join(copie, "docs", "projects", "boutique.md"), `${fiche.join("\n")}\n`);
   gitOk(copie, "add", "-A");
   gitOk(copie, "commit", "-qm", "Cadrage de la boutique");
+  gitOk(copie, "switch", "-q", "master");
+  gitOk(copie, "merge", "-q", "--ff-only", "cadrage/boutique");
   // La barrière de périmètre, bloquante à l'installation neuve, n'accepte du code qu'en BUILD (transitions : agent).
   const lance = lancer(process.execPath, [".githooks/state.mjs", "start", "docs/projects/boutique.md"], { cwd: copie });
   assert.equal(lance.code, 0, lance.sortie);
+  assert.equal(gitOk(copie, "branch", "--show-current").trim(), "workstream/boutique");
   writeFileSync(join(copie, "src", "panier.js"), CORRIGE);
   gitOk(copie, "commit", "-qam", "Total du panier selon les quantités");
-  gitOk(copie, "push", "-q", "-u", "origin", "essai");
-  assert.match(gitOk(copie, "ls-remote", "origin"), /refs\/heads\/essai/);
+  gitOk(copie, "push", "-q", "-u", "origin", "workstream/boutique");
+  assert.match(gitOk(copie, "ls-remote", "origin"), /refs\/heads\/workstream\/boutique/);
 });
 
 test("QUA-108 : la copie avec drwil est adoptée : carte, code existant rattaché, contrôles de la pile, sans dette avant l'agent", () => {
