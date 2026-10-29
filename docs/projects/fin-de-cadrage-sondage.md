@@ -38,6 +38,8 @@ files:
   - .claude/skills/scope-a-workstream/SKILL.md
   - .claude/hooks/start-poll.mjs
   - .claude/hooks/prompt-hook.mjs
+  - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
+  - packages/drwil/README.md
 -->
 
 ## 1. Besoin
@@ -124,6 +126,7 @@ Hooks modifiés (QUA-137) :
 
 - Aucun : tout est tranché.
 - (2026-10-29, au lancement) périmètre élargi à la validation et aux messages de l'état, au menu `/drwil` (le skill y figure) et aux copies installées ; en-tête du sondage de 12 caractères au plus (`drwil-scope`) — validé par le demandeur.
+- (2026-10-29, en VERIFY) périmètre élargi à la recette du gabarit (`packages/drwil/templates/common/base/docs/recipes/working-with-branches.md`) et au README du paquet, pour qu'un projet installé décrive `/drwil-scope` — décision du demandeur.
 
 ## 6. Increments
 
