@@ -196,7 +196,13 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    (`docs/projects/<name>.md`) with its `scope` block (the files the work
    may touch) and its **acceptance criteria**, each one proven by a
    contract of the registry (or `[human]`, through an attested contract).
-   Nothing is built.
+   Nothing is built. The scoping is committed on its own branch and goes
+   through a pull request: `/drwil-start` offers a brief only once that PR
+   is merged. Once it is pushed, `/drwil-scope` asks the human what to do
+   with the PR — « Automatic merge », « Manual merge » or « Continue
+   scoping » (same branch, same PR), with no default answer; only the
+   human's « Automatic merge », read by the hook, lets the agent schedule
+   that PR's merge (`.githooks/merge-auto.mjs`, for that branch only).
 2. **Start (human).** The human picks a framed work item (`/drwil-start`
    in Claude Code or Copilot CLI, or `drwil state start` in a terminal)
    and decides at once whether the merge is authorised in advance. The
