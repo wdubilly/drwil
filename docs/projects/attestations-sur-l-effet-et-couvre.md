@@ -15,6 +15,7 @@ files:
   - packages/drwil/src/doctor-texts.ts
   - packages/drwil/src/fingerprint.ts
   - packages/drwil/test/kit.test.mjs
+  - packages/drwil/test/cycle.test.mjs
   - docs/contracts.md
   - .drwil/ia-first.json
   - packages/drwil/README.md
