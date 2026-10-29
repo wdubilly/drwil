@@ -159,6 +159,8 @@ Aucun.
   sections ; `kitSizeLegacy` retiré ; QUA-157 modifié, QUA-190 (sommaire et
   renvois, tests) et QUA-191 (revue humaine de la découpe) créés.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : clôture ; QUA-191 attend l'attestation de l'humain
-  (`drwil attest QUA-191`), ainsi que les attestations tombées par les
-  fichiers qu'elles couvrent (QUA-063, QUA-064, QUA-066, QUA-150).
+- **Prochaine étape** : clôture, après l'humain. `drwil verify --agent`
+  (2026-10-29, lot 2 commité) : 163 PASS, 16 ATTESTED, 0 FAIL, 4 MANUAL —
+  QUA-191 (revue de la découpe) à attester, et les attestations tombées
+  parce que le lot touche un fichier qu'elles couvrent : QUA-064 et QUA-066
+  (`packages/drwil/src/config.ts`), QUA-150 (`outils/banc-agents.test.mjs`).
