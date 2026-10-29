@@ -59,14 +59,14 @@ attribuer à ce moment-là dans le registre.)
 
 - Un skill de cadrage pose, à la fin d'un cadrage poussé, un sondage à trois
   réponses : « Automatic merge », « Manual merge », « Continue scoping » ;
-  jamais de réponse par défaut ni recommandée — contrat à créer
+  jamais de réponse par défaut ni recommandée — `QUA-187`
 - La réponse « Automatic merge », lue par le hook, autorise `.githooks/merge-auto.mjs`
   pour la PR de cadrage en SCOPING (aujourd'hui refusé : `auto_merge` n'existe
   qu'après un lancement) ; sans cette réponse, `.githooks/merge-auto.mjs` refuse comme
-  avant — contrat à créer
+  avant — `QUA-188`
 - La réponse « Continue scoping » laisse la PR ouverte et garde la même branche
   pour les cadrages suivants (une branche, une PR) ; « Manual merge » ne
-  programme rien — contrat à créer
+  programme rien — `QUA-189`
 
 ## Contrats modifiés
 
