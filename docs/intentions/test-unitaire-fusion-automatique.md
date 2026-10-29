@@ -42,3 +42,11 @@ Le demandeur a choisi le 2026-10-25 d'ajouter le test unitaire et de
 déclarer le fichier de test concerné. Critères et déclaration :
 l'entrée du journal du chantier (`docs/projects/journal.md`).
 Aucun point restant à trancher pour ce chantier.
+
+## Limite restante (2026-10-29)
+
+« Périmètre » et « Source de vérité » de QUA-138 nomment
+`.githooks/state-texts.mjs`, alors que le texte `autoMerge` vit dans
+`.githooks/state-context-texts.mjs`, importé par le premier. Le chantier
+déclarait la règle inchangée : l'écart n'est pas corrigé. À trancher :
+nommer `.githooks/state-context-texts.mjs` dans le contrat.

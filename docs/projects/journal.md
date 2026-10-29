@@ -3867,3 +3867,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : une autorisation `scoping_merge` reste dans l'état après la fusion de sa PR, jusqu'à la sortie de SCOPING ou une autre réponse, sans effet (`.githooks/merge-auto.mjs` refuse une PR fermée ou d'une autre branche) ; la recette du gabarit n'a pas la puce « This folder » de la copie du dépôt, écart préexistant noté dans `docs/intentions/notes.md`.
 - **Preuve de clôture** : `docs/preuves/fin-de-cadrage-sondage.md`.
 - **Clôturé par** : la branche `workstream/fin-de-cadrage-sondage`.
+
+## 2026-10-29 — Le test unitaire prouve que la procédure de fusion automatique attend la fusion avant SCOPING
+
+- **Décisions clés** : aucun contrat neuf ; QUA-138 (avec la fusion automatique, le retour en SCOPING attend la fusion de la PR) complété, règle inchangée : test unitaire « QUA-138 : … » dans `.githooks/state.test.mjs` qui vérifie, en français et en anglais, chaque étape après la précédente (programmation, vérification, suivi par `node .githooks/pr-watch.mjs`, relance tant que « verte » sans « fusionnée », 30 minutes au plus, retour en SCOPING seulement la PR fusionnée, CI rouge : CLOSING et `reopen`, délai dépassé ou échec : CLOSING signalé) et qu'aucun SCOPING n'est cité avant le suivi ; sa sensibilité prouvée par une régression locale non commitée (SCOPING dès la programmation), qui le fait échouer dans les deux langues. Le contrôle `tests-qua-138` exécute ce test et celui du cycle installé (`packages/drwil/test/cycle.test.mjs`) ; « Preuve » et « Tests » du contrat à jour. Ancien test « fusion autorisée… » gardé (calcul de la PR, BEHIND, autorisation humaine).
+- **Hooks modifiés** : `.githooks/state.test.mjs` seul, déclaré dans la fiche sur décision du demandeur du 2026-10-25 ; aucun module de production touché.
+- **Limites connues** : « Périmètre » et « Source de vérité » de QUA-138 nomment `.githooks/state-texts.mjs`, alors que le texte `autoMerge` vit dans `.githooks/state-context-texts.mjs` (importé par le premier) : écart de doc préexistant, non corrigé (règle déclarée inchangée), signalé dans `docs/intentions/test-unitaire-fusion-automatique.md`.
+- **Preuve de clôture** : `docs/preuves/test-unitaire-fusion-automatique.md`.
+- **Clôturé par** : la branche `workstream/test-unitaire-fusion-automatique`.
