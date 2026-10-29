@@ -10,7 +10,8 @@ moteur (socle de `.githooks/run-checks.mjs`, ou `id` d'un contrôle de
 des deux ; un contrôle inconnu est une erreur de configuration.
 `**Couvre**` (facultatif) : les motifs de chemins, entre backticks, de ce que le
 contrat juge ; une attestation tombe quand un fichier sous ces motifs change
-(`docs/ia-first.md`, règle de validité).
+(`docs/ia-first.md`, règle de validité) ; `aucun` suivi de sa raison déclare un
+contrat que des fichiers ne jugent pas (QUA-185).
 `**Sévérité**` (facultatif) : `blocking` (défaut), `warning` ou
 `indicatif`. Seuls les contrats bloquants décident du verdict de
 `drwil verify` ; les autres sont exécutés et affichés sans changer son code
@@ -27,15 +28,17 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : Code backend (couche autorisations).
 **Preuve** : Tests d'autorisation.
 **Manuel** : tests d'autorisation propres au projet (drwil n'a pas de backend).
+**Couvre** : `aucun` — contrat de conduite (drwil n'a pas de backend) : aucun fichier précis ne le juge, et le manifeste du paquet ferait tomber l'attestation à chaque release
 **Raison** : Principe de défense en profondeur.
 
 ## QUA-013 — Contrôle non exécuté n'est pas passé
-**Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé. La règle vaut aussi pour les critères d'acceptation, ceux de la fiche active comme ceux des fiches de preuve de clôture : une preuve absente, périmée ou non rejouée ne vaut jamais un succès, en local comme en CI. Le verdict d'un contrôle joué par `run-checks` sur un arbre et une configuration identiques (QUA-140), ou, pour une itération, sur les seuls fichiers du contrôle identiques (QUA-141, QUA-152 au pre-push), est une exécution du contrôle sur ce même code, pas une preuve périmée ; tout autre verdict repris reste un échec.
+**Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé. La règle vaut aussi pour les critères d'acceptation, ceux de la fiche active comme ceux des fiches de preuve de clôture : une preuve absente, périmée ou non rejouée ne vaut jamais un succès, en local comme en CI. Une attestation dont un contrôle cité change d'effet (commande, test visé ou `paths`) tombe : l'empreinte sur l'effet (QUA-183) ne laisse jamais vivre un jugement dont la preuve n'est plus la même (QUA-184). Le verdict d'un contrôle joué par `run-checks` sur un arbre et une configuration identiques (QUA-140), ou, pour une itération, sur les seuls fichiers du contrôle identiques (QUA-141, QUA-152 au pre-push), est une exécution du contrôle sur ce même code, pas une preuve périmée ; tout autre verdict repris reste un échec.
 **Périmètre** : Tout contrôle listé dans les vérifs, et tout critère d'acceptation jugé par `drwil verify`.
 **Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution, `packages/drwil/src/closure.ts` pour les critères.
 **Preuve** : Sortie lue du contrôle concerné.
 **Contrôle** : `ci-coverage`, `tests-qua-013`
 **Manuel** : lecture de la sortie du contrôle concerné.
+**Couvre** : `.github/workflows/ia-first.yml`, `packages/drwil/src/verdict.ts`
 **Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
 
@@ -70,6 +73,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI) ; justesse du contenu : humaine.
 **Contrôle** : `docs-references`, `tests-qua-015`
 **Manuel** : justesse du contenu des fiches.
+**Couvre** : `.githooks/briefs.mjs`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
 
@@ -98,6 +102,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : Mixte. Le contrôle `miroirs-gabarit` (`outils/verifier-miroirs.mjs`) prouve : tout fichier présent des deux côtés est identique ou son écart est déclaré avec sa raison ; aucun fichier n'existe d'un seul côté (dossiers miroirs du dépôt, parties du gabarit installées ici) sans être déclaré ; la CI du dépôt contient tous les jobs du gabarit, ses jobs en plus sont déclarés, et un job déclaré propre au dépôt qui apparaît dans le gabarit est refusé (la fuite qui a motivé ce contrat) ; le contenu livré (tout `packages/drwil/templates/`) ne cite pas l'historique interne de drwil — numéro de PR, décision datée du demandeur, ADR, lot interne, projet d'origine, fiche propre à ce dépôt. Hors de sa portée : les identifiants internes `DRWIL-…` encore affichés par deux messages livrés (les retirer change une sortie : à décider à part), le contenu d'un fichier dont l'écart est déclaré, le texte des variables d'un gabarit (comparé dans sa forme), la comparaison des miroirs pour une autre langue que celle du dépôt (`packages/drwil/templates/en/`, que la recherche d'historique interne couvre pourtant), et la part humaine : demander la casquette visée avant d'agir.
 **Contrôle** : `miroirs-gabarit`
 **Manuel** : appréciation contextuelle du périmètre.
+**Couvre** : `outils/miroirs.json`
 **Raison** : Un changement fait sans clarifier le périmètre risque de fuiter du dogfood vers le gabarit exporté (ou l'inverse), comme déjà vu pour le job CI de release (dogfood-only, pas destiné au gabarit).
 
 ## QUA-019 — Pas de contournement d'un contrôle
@@ -106,6 +111,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : Ce contrat (rappelé dans `AGENTS.md`).
 **Preuve** : Humaine — un contournement laisse rarement une trace automatisable (voir `catalogue:QUA-009` pour le cas outillable d'un test désactivé).
 **Manuel** : un contournement laisse rarement une trace automatisable.
+**Couvre** : `.githooks/pre-commit`, `.githooks/pre-push`, `.github/workflows/ia-first.yml`
 **Raison** : Contourner un contrôle masque silencieusement une régression ou un vrai problème ; c'est l'opposé de QUA-013 (un contrôle qui ne tourne pas ne prouve rien).
 
 ## QUA-021 — Fiche prête avec critères d'acceptation
@@ -219,7 +225,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : La non-régression métier grandit chantier après chantier ; sans vue, on ne sait ni ce qui est prouvé, ni ce qui reste à compléter, ni quel chantier une règle cassée protège.
 
 ## QUA-032 — Une attestation ne coûte que le jugement demandé
-**Règle** : Une attestation (version 3) couvre la part humaine d'un contrat (règle, champ Manuel, sévérité, motifs du champ Couvre ; toute la section pour un contrat historique en tableau), séparément la définition de chaque contrôle attesté et l'empreinte du contenu des fichiers du champ Couvre (QUA-081) : un contrôle ajouté ensuite ne la rend pas obsolète (il doit passer), un changement de la part humaine, un contrôle attesté retiré ou redéfini ou un fichier couvert changé, si. Une attestation version 2 reste jugée sans couverture, une version 1 par son ancienne empreinte. `drwil attest` annonce chaque contrôle qu'il relance, puis son résultat, avant le résumé et la question.
+**Règle** : Une attestation (version 4) couvre la part humaine d'un contrat (règle, champ Manuel, sévérité, motifs du champ Couvre ; toute la section pour un contrat historique en tableau), séparément l'effet de chaque contrôle attesté (QUA-183, QUA-184) et l'empreinte du contenu des fichiers du champ Couvre (QUA-081) : un contrôle ajouté ensuite ne la rend pas obsolète (il doit passer), un changement de la part humaine, un contrôle attesté retiré ou dont l'effet change ou un fichier couvert changé, si. Une attestation version 3 reste jugée par la définition de ses contrôles (commande et dossier), une version 2 sans couverture, une version 1 par son ancienne empreinte. `drwil attest` annonce chaque contrôle qu'il relance, puis son résultat, avant le résumé et la question.
 **Périmètre** : `drwil attest`, le jugement des attestations par `drwil verify`.
 **Source de vérité** : `packages/drwil/src/verify.ts` (`humanFingerprint`, `proofFingerprints`), `packages/drwil/src/attest.ts`, `packages/drwil/src/coverage.ts`.
 **Preuve** : tests du paquet (`couverture-tests`).
@@ -315,6 +321,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : contrôle `docs-references` (chemins et contrats cités) ; justesse du contenu : humaine.
 **Contrôle** : `docs-references`
 **Manuel** : justesse du contenu, relu par le demandeur.
+**Couvre** : `README.md`, `packages/drwil/README.md`
 **Origine** : une documentation à jour pour la 0.6.0, et qui le reste — « Rattrapage : le changelog couvre tout depuis la 0.5.1 ; les README, INSTALL.md, la recette d'adoption et la carte décrivent le livrable tel qu'il est »
 **Raison** : Un README faux ne se voit pas par un contrôle : il trompe le premier utilisateur avant même son premier chantier.
 
@@ -385,6 +392,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (fusions, branches, journaux de session).
 **Contrôle** : `tests-qua-048`
 **Manuel** : un essai réel d'une clôture depuis BUILD, en suivant seulement les messages, aboutit sans lire le code, sous Copilot CLI ou en terminal ; l'essai sous Claude Code est reporté (attestation humaine : `drwil attest QUA-048`).
+**Couvre** : `.githooks/close.mjs`, `.githooks/close-branches.mjs`, `.githooks/state.mjs`
 **Tests** : `.githooks/close.test.mjs`, `.githooks/close-branches.test.mjs`
 **Origine** : clôture allégée (0.6.5) — « Une commande de clôture fait la mécanique d'un geste — fiche supprimée, ligne d'index retirée, consommation consignée — et signale avant le commit ce qui ferait échouer la clôture ; les branches locales déjà fusionnées sont supprimées au lancement du chantier suivant »
 **Raison** : Relevé dans la session de la 0.6.4 : la clôture coûtait des gestes et des reprises sans gain de qualité — un commit à part pour citer l'ID d'un contrat créé, des références à une fiche supprimée restées fausses, un commit de clôture refusé pour un nom de fichier sans chemin, 53 branches fusionnées jamais supprimées.
@@ -506,6 +514,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : tests du banc avec un exécuteur simulé (aucun vrai agent) ; l'essai sur l'outil réel est un geste du poste.
 **Contrôle** : `tests-qua-060`
 **Manuel** : lancer le banc sur le poste et attester le résultat (colonne « Attested by the human » de la matrice).
+**Couvre** : `outils/banc-agents.mjs`
 **Tests** : `outils/banc-agents.test.mjs`
 **Origine** : compatibilité des agents, le socle commun (0.6.7) — « Le banc installe drwil dans un projet temporaire en SCOPING, lance l'agent demandé en mode non interactif avec une consigne d'écriture de code, et rend pour chaque outil : hooks lancés ou non, écriture refusée ou acceptée, rappel d'état reçu ou non ; un outil absent du poste est signalé « non testé », jamais « conforme » »
 **Raison** : Sous Copilot CLI et Gemini CLI, essais du 2026-10-18 : rien n'arrêtait l'écriture de code hors chantier, sans que rien ne le signale ; sans preuve par outil réel, une simulation en CI ne dit pas que l'outil lance le hook.
@@ -537,6 +546,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : test qui lit la matrice : une ligne par outil, date et version si essayé, « not tested » sinon.
 **Contrôle** : `tests-qua-063`
 **Manuel** : l'attestation de chaque ligne par l'humain (colonne « Attested by the human »), après un essai du banc sur son poste.
+**Couvre** : `docs/ia-first.md`
 **Tests** : `outils/banc-agents.test.mjs`
 **Origine** : compatibilité des agents, le socle commun (0.6.7) — « La matrice de compatibilité (`docs/ia-first.md`) donne, outil par outil, ce qui est réellement tenu, et sa date d'essai »
 **Raison** : Dire qu'un outil est compatible sans l'avoir mesuré est la même erreur qu'une doc fausse : la matrice est remplie par le banc, pas par la mémoire de l'agent.
@@ -548,6 +558,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : test du paquet qui installe un projet avec le seul outil `copilot` et y trouve les hooks, les réglages, les skills et les hooks natifs, sans `CLAUDE.md`.
 **Contrôle** : `tests-qua-064`
 **Manuel** : un `/drwil-start` tapé dans Copilot CLI interactif lance un chantier (le banc ne lance que le mode non interactif).
+**Couvre** : `packages/drwil/src/config.ts`, `packages/drwil/src/render.ts`, `packages/drwil/src/drift.ts`, `packages/drwil/src/essentials.ts`, `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : compatibilité des agents, volet Copilot (0.6.7) — « Copilot lit `.claude/` : hooks, réglages et skills lui sont donnés, et ses hooks natifs apportent l'état et le rappel »
 **Raison** : Essais du 2026-10-18 : `--tools copilot` n'installait que des consignes, donc aucun hook ni commande `/drwil-*` ; l'écriture de code hors chantier n'était arrêtée par rien.
@@ -586,6 +597,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : test du paquet qui installe un projet avec le seul outil `gemini` et y trouve les réglages natifs, les hooks partagés et `GEMINI.md`, sans `CLAUDE.md`.
 **Contrôle** : `tests-qua-066`
 **Manuel** : approuver le dossier dans une session Gemini CLI interactive (sans cela, Gemini ne lance aucun hook du dépôt).
+**Couvre** : `packages/drwil/src/config.ts`, `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : compatibilité des agents, volet Gemini (0.6.7) — « Sous Gemini CLI, en SCOPING, une écriture de fichier de code (`write_file`, `replace`) est refusée avec le motif drwil »
 **Raison** : Essai du 2026-10-18 : `--tools gemini` ne posait que `GEMINI.md`, aucun hook ; sonde du 2026-10-19 : Gemini ne charge les hooks d'un dépôt que dans un dossier de confiance (`--skip-trust` seul ne suffit pas), et lit `GEMINI_PROJECT_DIR`.
@@ -597,6 +609,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : tests des deux modes (rappel, une seule fois, racine inutilisable) et de `scope-reminder` (refus, avertissement, doc jamais refusée) ; essai réel du banc sur Gemini (hooks lancés, écriture refusée, rappel reçu).
 **Contrôle** : `tests-qua-067`
 **Manuel** : lancer le banc sur le poste et attester la ligne Gemini de la matrice.
+**Couvre** : `.githooks/state-cli.mjs`, `.githooks/state.mjs`, `.claude/hooks/scope-reminder.mjs`
 **Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`
 **Origine** : compatibilité des agents, volet Gemini (0.6.7) — « Gemini CLI reçoit le rappel d'état au démarrage et à chaque message »
 **Raison** : `.githooks/state.mjs` imprimait du texte brut et `scope-reminder` rendait le format de Claude Code (`permissionDecision`), que Gemini ignore ; sans le format natif, ni refus ni rappel n'arrivent.
@@ -617,6 +630,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `docs/ia-first.md` (matrice de compatibilité, ligne Copilot CLI).
 **Preuve** : attestation humaine de l'essai, avec la version de Copilot CLI et la date.
 **Manuel** : l'essai lui-même, que seul l'humain peut faire et attester (`drwil attest QUA-069`).
+**Couvre** : `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`, `.githooks/state-cli.mjs`
 **Origine** : 0.6.8, Copilot CLI enchaîne les chantiers sans interruption — « Un essai sous Copilot CLI réel enchaîne deux fiches prêtes d'un seul sondage et s'arrête au premier blocage humain »
 **Raison** : Les hooks et les sous-agents de Copilot CLI ne se prouvent pas par un test local : sans essai réel, la compatibilité serait présumée, pas tenue (QUA-060).
 
@@ -741,7 +755,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Une attestation restait `ATTESTED` après un changement de ce qu'elle était censée couvrir (une dépendance ajoutée, un workflow modifié) : une preuve humaine périmée valait validation.
 
 ## QUA-082 — Un contrat attestable sans couverture est signalé, ses attestations anciennes restent lisibles
-**Règle** : Livré à tout projet. Un contrat à partie humaine sans champ `**Couvre**` est signalé par `drwil verify` (ligne du contrat) et `drwil doctor` (avertissement), sans faire tomber son attestation existante. Une attestation de version 1 ou 2 reste lisible et valide telle quelle, sans réattestation forcée ; la première réattestation passe à la version 3.
+**Règle** : Livré à tout projet. Un contrat à partie humaine sans champ `**Couvre**` est signalé par `drwil verify` (ligne du contrat) et `drwil doctor` (avertissement), sans faire tomber son attestation existante. Une attestation de version 1 ou 2 reste lisible et valide telle quelle, sans réattestation forcée ; la première réattestation passe à la version 4 (QUA-183).
 **Périmètre** : `drwil verify`, `drwil doctor`, `drwil attest` ; livré dans le gabarit.
 **Source de vérité** : `packages/drwil/src/coverage.ts` (`lacksCoverage`), `packages/drwil/src/verify.ts` (`covers`), `packages/drwil/src/doctor.ts`.
 **Preuve** : tests du paquet sur des dépôts temporaires (attestations des versions 2 et 3, signalement, réattestation).
@@ -1428,6 +1442,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `docs/projects/journal.md` (entrée « Les tests de timing ne dépendent plus de la charge de la machine »).
 **Preuve** : attestation humaine : relecture du recensement et de chaque justification.
 **Manuel** : jugement humain : le recensement est complet et chaque test conservé l'est à bon droit.
+**Couvre** : `.githooks/engine.test.mjs`, `outils/banc.test.mjs`, `outils/banc-agents.test.mjs`
 **Origine** : tests-de-timing-stables — « Les autres tests du dépôt qui mesurent une durée sont recensés au journal ; chacun est rendu déterministe ou passé en indicateur, ou sa conservation est justifiée »
 **Raison** : Le pre-push parallèle refusait des pushs sur des tests de durée, sans défaut de code : chaque refus coûtait une passe complète et poussait à relancer à l'aveugle.
 
@@ -1437,6 +1452,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `docs/projects/journal.md` (entrée « Les tests de timing ne dépendent plus de la charge de la machine »).
 **Preuve** : attestation humaine : relecture du résultat consigné des cinq passes, ou rejeu par l'humain.
 **Manuel** : jugement humain : la charge simulée est représentative du pre-push et les cinq passes consignées sont convaincantes.
+**Couvre** : `.githooks/run-checks.mjs`, `.githooks/pre-push`
 **Origine** : tests-de-timing-stables — « Cinq passes consécutives du pre-push sous charge (`taskset`, contrôles en parallèle) ne refusent plus aucun push pour un test de timing »
 **Raison** : La stabilité d'un test de durée ne se prouve que par la répétition sous charge ; une seule passe verte ne dit rien.
 
@@ -1676,6 +1692,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/state-acceptance.mjs` et `.githooks/state.mjs` (`start`).
 **Preuve** : tests : lancement en mode agent sans enregistrement et effaçant une ancienne acceptation, fiche prise en file conservée, retour en SCOPING, fichier illisible ou d'une autre forme, `accept` refusée sans terminal.
 **Manuel** : vérifier qu'aucune commande, aucun hook ni aucun outil de l'agent n'écrit ce fichier d'acceptation ; l'écriture directe du fichier par un agent n'est pas empêchée par ce contrat (gardes d'écriture hors périmètre).
+**Couvre** : `.githooks/state-acceptance.mjs`, `.githooks/state.mjs`
 **Contrôle** : `tests-qua-175`
 **Tests** : `.githooks/state.test.mjs`
 **Origine** : cycle-de-vie-des-fiches — « Aucun agent ne peut écrire l'acceptation : elle vient du sondage lu par le hook ou du terminal interactif »
@@ -1750,3 +1767,44 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/cycle.test.mjs`
 **Origine** : reouverture-dite-et-eprouvee — « Le test du cycle complet d'une réouverture (QUA-118 : nouvelle clôture d'un chantier rouvert) se joue aussi sous Windows, avec un `gh` simulé lançable (`gh.cmd` et shell), au lieu d'être sauté »
 **Raison** : Le seul test du cycle de réouverture était sauté sous Windows : un script du PATH n'y est pas lancé sans shell, la mécanique n'y était prouvée que par des tests à `gh` injecté.
+
+## QUA-183 — L'empreinte d'une attestation porte sur l'effet des contrôles, pas sur leur forme d'exécution
+**Règle** : Livré à tout projet. L'attestation (version 4) lie chaque contrôle cité à son effet : la commande (qui porte les tests visés), son dossier et ses `paths` (ordre indifférent). Les champs d'exécution (`build`, `needsBuild`, `parallel`, `reuse` et tout autre champ de la déclaration) n'y entrent pas : en ajouter ou en retirer un ne fait pas tomber l'attestation. Les attestations de version 1, 2 et 3 restent lues par leur empreinte d'origine ; la première réattestation passe à la version 4, et `drwil verify` dit pour une attestation obsolète quelle partie a changé et, pour une ancienne version, laquelle est lue.
+**Périmètre** : `drwil attest`, le jugement des attestations par `drwil verify`.
+**Source de vérité** : `packages/drwil/src/fingerprint.ts` (`proofFingerprints`, `covers`, `obsoleteReasons`), `packages/drwil/src/attest.ts`.
+**Preuve** : test du paquet sur un dépôt temporaire : champs d'exécution et ordre des paths changés, attestation intacte ; attestation de version 3 lue puis rendue obsolète avec la raison.
+**Contrôle** : `tests-qua-183`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : attestations-sur-l-effet-et-couvre — « L'empreinte d'une attestation porte sur l'effet des contrôles que le contrat cite (commande, tests visés, `paths`) et plus sur les champs d'exécution (`build`, `needsBuild`, `parallel`, `reuse`) : ajouter ou retirer un champ d'exécution ne fait pas tomber l'attestation »
+**Raison** : Le 2026-10-24, l'ajout de champs de compilation et de parallélisme à une centaine de contrôles a périmé six attestations alors que l'effet des contrôles n'avait pas changé : l'humain a dû tout réattester.
+
+## QUA-184 — Une attestation tombe quand l'effet d'un contrôle cité change
+**Règle** : Livré à tout projet. Une attestation (version 4) devient obsolète, et le contrat repasse en `MANUAL`, quand la commande d'un contrôle cité, un test qu'elle vise ou ses `paths` changent, ou quand un contrôle attesté est retiré ; la sortie de `drwil verify` nomme le contrôle dont l'effet a changé. Rétablir l'effet d'origine rend l'attestation de nouveau valable. Précise QUA-013 : l'empreinte sur l'effet ne rend jamais valable un jugement sur un contrôle qui a vraiment changé.
+**Périmètre** : le jugement des attestations par `drwil verify`.
+**Source de vérité** : `packages/drwil/src/fingerprint.ts` (`proofFingerprints`, `obsoleteReasons`), `packages/drwil/src/verify.ts`.
+**Preuve** : test du paquet sur un dépôt temporaire : commande, test visé et paths changés tour à tour, statut `MANUAL` et raison nommant le contrôle.
+**Contrôle** : `tests-qua-184`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : attestations-sur-l-effet-et-couvre — « Une attestation tombe quand l'effet d'un contrôle change (commande, test visé ou `paths`), comme avant : QUA-013 (un contrôle non exécuté n'est pas passé) reste vrai »
+**Raison** : Alléger l'empreinte ne doit pas laisser vivre une preuve humaine sur un contrôle qui ne dit plus la même chose (QUA-013).
+
+## QUA-185 — Chaque contrat attesté déclare ce qu'il couvre, ou `aucun` avec sa raison
+**Règle** : Livré à tout projet pour la lecture de `aucun` ; dans ce dépôt, chaque contrat à partie humaine déclare ce qu'il juge par le champ `**Couvre**` : des motifs de chemins, ou `` `aucun` `` suivi de sa raison pour un contrat de conduite que des fichiers ne jugent pas (SEC-001). `aucun` (ou `none`) compte comme déclaré pour `drwil verify` et `drwil doctor`, ne couvre aucun fichier et n'est jamais lu comme un chemin. `drwil doctor` ne signale plus aucun contrat attesté sans couverture déclarée.
+**Périmètre** : `drwil doctor`, `drwil verify` ; le registre de ce dépôt.
+**Source de vérité** : `packages/drwil/src/coverage.ts` (`coverageOf`, `lacksCoverage`), `docs/contracts.md` (champs `**Couvre**`).
+**Preuve** : test du paquet : `aucun` déclaré dans un dépôt temporaire (aucun fichier couvert, attestation intacte, doctor muet) et `drwil doctor` sur ce dépôt (point de couverture au vert).
+**Contrôle** : `tests-qua-185`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : attestations-sur-l-effet-et-couvre — « Chaque contrat attesté du dépôt déclare ce qu'il couvre (`**Couvre**`) ; `drwil doctor` ne signale plus aucun contrat attesté sans couverture déclarée »
+**Raison** : 15 contrats attestés sur 17 ne déclaraient rien : le code jugé pouvait changer sans que l'attestation tombe (le workflow de CI de QUA-013 a changé ainsi).
+
+## QUA-186 — Les attestations tombées par le passage à la version 4 sont réattestées en une séance
+**Règle** : Les attestations tombées par le chantier attestations-sur-l-effet-et-couvre (empreinte sur l'effet, `Couvre` déclaré) sont réattestées par l'humain en une seule séance, et `drwil verify --evidence` rend `GOVERNANCE: PASS`.
+**Périmètre** : les attestations de `.drwil/evidence/attestations/` des contrats qui repassent en `MANUAL` à ce chantier.
+**Source de vérité** : `.drwil/evidence/attestations/` ; sortie de `drwil verify`.
+**Preuve** : jugement humain : la liste des contrats `MANUAL` de `drwil verify` est vide, chacun réattesté par `drwil attest <ID>` en une séance.
+**Manuel** : relancer `drwil verify` : plus aucun contrat `MANUAL` hors celui-ci ; réattester chaque contrat tombé (`drwil attest <ID>`), puis attester celui-ci (`drwil attest QUA-186`) ; `drwil verify --evidence` rend `GOVERNANCE: PASS`.
+**Couvre** : `aucun` — jugement ponctuel d'une séance : aucun fichier ne le juge, ses attestations changent à chaque séance
+**Origine** : attestations-sur-l-effet-et-couvre — « Les attestations tombées par le chantier sont réattestées par l'humain en une seule séance, et `drwil verify --evidence` rend `GOVERNANCE: PASS` »
+**Raison** : Changer l'empreinte et déclarer `Couvre` périment toutes les attestations ; les faire dans un seul chantier ne coûte à l'humain qu'une séance.
+

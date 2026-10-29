@@ -100,15 +100,15 @@ export function writeEvidence(root: string, v: Verdict, now = new Date()): strin
 }
 
 export interface Attestation {
-  /** 1: bound to the whole section and its checks; 2: to the human part and to each attested check; 3: and to the content of the covered files. */
-  version: 1 | 2 | 3;
+  /** 1: bound to the whole section and its checks; 2: to the human part and to each attested check; 3: and to the content of the covered files; 4: each check by its effect (QUA-183). */
+  version: 1 | 2 | 3 | 4;
   contract: string;
   status: "ATTESTED";
   attestedAt: string;
   actor: { name: string; source: string } | null;
   note: string | null;
   fingerprint: string;
-  /** Version 2: fingerprint of each attested check's definition. */
+  /** Version 2: fingerprint of each attested check's definition (version 4: of its effect). */
   proof?: Record<string, string>;
   /** Version 3: patterns of the `**Covers**` field and fingerprint of each file they matched. */
   covers?: string[] | null;

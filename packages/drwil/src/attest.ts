@@ -1,6 +1,6 @@
 // `drwil attest <ID>` (DRWIL-013, continued): explicit and traceable human proof of a MANUAL contract.
 // It is not "the user typed y": the attestation is bound by fingerprint to the contract's text and to
-// the definition of its proof and to the content of the files it covers; if one changes, it becomes obsolete and the contract is MANUAL again.
+// the effect of its proof and to the content of the files it covers; if one changes, it becomes obsolete and the contract is MANUAL again.
 // It is recorded in .drwil/evidence/attestations/ (versioned, reviewed in PRs).
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -111,7 +111,7 @@ export async function attest(o: AttestOptions): Promise<AttestResult> {
   const name = git("config", "user.name");
   const now = o.now ?? new Date();
   const attestation: Attestation = {
-    version: 3,
+    version: 4,
     contract: k.id,
     status: "ATTESTED",
     attestedAt: now.toISOString(),

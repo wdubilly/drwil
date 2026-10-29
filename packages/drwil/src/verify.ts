@@ -12,7 +12,7 @@ import { judgeDurable } from "./closure.js";
 import { changeLines, coverageOf, lacksCoverage, noCoversMessage } from "./coverage.js";
 import { showOrigins } from "./criteria.js";
 import { type Attestation, readAttestations, reusableVerdicts } from "./evidence.js";
-import { covers, humanFingerprint, proofFingerprints } from "./fingerprint.js";
+import { covers, humanFingerprint, obsoleteReasons, proofFingerprints } from "./fingerprint.js";
 import { fill, projectLang } from "./i18n.js";
 import { judgeGuarantees } from "./guarantees.js";
 import { businessRules } from "./rules.js";
@@ -144,7 +144,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     let attestation: Attestation | null = null;
     const own = attestations.filter((a) => a.contract === k.id);
     if (attestable && own.length) {
-      attestation = own.find((a) => covers(a, k, cfg, proof, coverage)) ?? null;
+      attestation = own.find((a) => covers(a, k, cfg, coverage)) ?? null;
       if (attestation) {
         status = "ATTESTED";
         reasons.push(
@@ -157,7 +157,8 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
         );
       } else {
         reasons.push(fill(T.obsolete, own[0].attestedAt));
-        if (own[0].version === 3) reasons.push(...changeLines(own[0].coverage, coverage, lang));
+        reasons.push(...obsoleteReasons(own[0], k, cfg, coverage, lang));
+        if (own[0].version >= 3) reasons.push(...changeLines(own[0].coverage, coverage, lang));
       }
     }
     if (lacksCoverage(k) && !byContract.has(k.id)) reasons.push(noCoversMessage(lang));

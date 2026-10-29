@@ -4432,7 +4432,7 @@ test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusé
   writeFileSync(
     join(dir, ".drwil/evidence/attestations/QUA-001-main.json"),
     JSON.stringify({
-      version: 2,
+      version: 4,
       contract: "QUA-001",
       status: "ATTESTED",
       attestedAt: "2026-10-06T10:00:00.000Z",
@@ -4997,4 +4997,88 @@ test("QUA-154 : installation neuve : barrière de périmètre bloquante ; projet
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), scopeGate: "off" }, null, 2));
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   assert.equal(config(dir).scopeGate, "off", "le réglage choisi est gardé");
+});
+
+// Projet temporaire avec un contrat à partie humaine qui cite un contrôle, attesté en version 4.
+async function projetAttesteSurEffet() {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const base = read(dir, "docs/contracts.md");
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    `${base}\n## APP-009 — Revue humaine\n**Règle** : relu.\n**Contrôle** : \`c1\`\n**Manuel** : relecture.\n`,
+  );
+  const regler = (c1) => writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), checks: [c1] }, null, 2));
+  const contrat = async () => (await verify({ targetDir: dir, only: ["APP-009"] })).contracts[0];
+  const c1 = { id: "c1", run: "node -e 0 --test-name-pattern=APP-009", paths: ["src/**", "t.test.mjs"] };
+  regler(c1);
+  const r = await attest({ targetDir: dir, id: "APP-009", confirm: async () => true });
+  assert.equal(r.code, 0);
+  return { dir, c1, regler, contrat, fichier: r.file };
+}
+
+test("QUA-183 : l'attestation porte sur l'effet du contrôle ; un champ d'exécution ajouté ou retiré ne la fait pas tomber, une version 3 reste lue", async () => {
+  const { dir, c1, regler, contrat, fichier } = await projetAttesteSurEffet();
+  assert.equal(JSON.parse(read(dir, fichier)).version, 4);
+  assert.equal((await contrat()).status, "ATTESTED");
+  regler({ ...c1, needsBuild: false, parallel: true, paths: [...c1.paths].reverse() });
+  assert.equal((await contrat()).status, "ATTESTED", "champs d'exécution et ordre des paths : l'effet est le même");
+  regler(c1);
+
+  // Version 3, écrite avant ce chantier : jugée par la définition (commande, dossier), sans les paths.
+  const sha = (v) => createHash("sha256").update(JSON.stringify(v)).digest("hex");
+  const v4 = JSON.parse(read(dir, fichier));
+  rmSync(join(dir, fichier));
+  const v3 = { ...v4, version: 3, proof: { c1: sha({ id: "c1", run: c1.run, cwd: null }) } };
+  writeFileSync(join(dir, ".drwil/evidence/attestations/APP-009-v3.json"), JSON.stringify(v3));
+  assert.equal((await contrat()).status, "ATTESTED", "version 3 : lue par son ancienne empreinte");
+  regler({ ...c1, run: `${c1.run} autre` });
+  const k = await contrat();
+  assert.equal(k.status, "MANUAL");
+  assert.ok(
+    k.reasons.some((l) => /attestation de version 3/.test(l) && /version 4/.test(l)),
+    "dit laquelle est lue par l'ancienne empreinte",
+  );
+});
+
+test("QUA-184 : l'attestation tombe quand la commande, le test visé ou les paths d'un contrôle changent, et le dit", async () => {
+  const { c1, regler, contrat } = await projetAttesteSurEffet();
+  for (const [cas, variante, attendu] of [
+    ["commande", { run: "node -e 1-1" }, /l'effet du contrôle c1 a changé/],
+    ["test visé", { run: c1.run.replace("APP-009", "APP-010") }, /l'effet du contrôle c1 a changé/],
+    ["paths", { paths: ["src/**"] }, /l'effet du contrôle c1 a changé/],
+  ]) {
+    regler({ ...c1, ...variante });
+    const k = await contrat();
+    assert.equal(k.status, "MANUAL", cas);
+    assert.ok(
+      k.reasons.some((l) => attendu.test(l)),
+      `${cas} : la raison est dite`,
+    );
+  }
+  regler(c1);
+  assert.equal((await contrat()).status, "ATTESTED", "effet rétabli : attestation de nouveau valable");
+});
+
+test("QUA-185 : `Couvre : aucun` justifié compte comme déclaré, sans fichier couvert ; chaque contrat attesté de ce dépôt déclare ce qu'il couvre", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    `${read(dir, "docs/contracts.md")}\n## APP-009 — Conduite\n**Règle** : relue.\n**Manuel** : relecture.\n**Couvre** : \`aucun\` — contrat de conduite, aucun fichier ne le juge\n`,
+  );
+  writeFileSync(join(dir, "aucun"), "un fichier nommé comme le mot réservé\n");
+  const contrat = async () => (await verify({ targetDir: dir, only: ["APP-009"] })).contracts[0];
+  const avant = await contrat();
+  assert.deepEqual(avant.coverage, {}, "aucun n'est pas un motif de chemin");
+  assert.ok(!avant.reasons.some((l) => l.includes("aucune couverture déclarée")), "déclaré : pas de signalement");
+  assert.equal((await attest({ targetDir: dir, id: "APP-009", confirm: async () => true })).code, 0);
+  writeFileSync(join(dir, "aucun"), "modifié\n");
+  assert.equal((await contrat()).status, "ATTESTED");
+  const point = (await doctor({ targetDir: dir })).points.find((p) => p.id === "coverage");
+  assert.doesNotMatch(point.detail, /APP-009/);
+
+  const depot = fileURLToPath(new URL("../../../", import.meta.url));
+  const reel = (await doctor({ targetDir: depot })).points.find((p) => p.id === "coverage");
+  assert.equal(reel.state, "ok", `contrats attestés sans Couvre : ${reel.detail}`);
 });

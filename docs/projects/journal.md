@@ -3850,3 +3850,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : la marque ne tombe pas quand l'humain reprogramme la fusion sans rouvrir (`docs/intentions/rappel-fusion-annulee-reprogrammee.md`) ; la voie Windows du test (`gh.cmd`, module préchargé) est écrite mais n'a été exécutée que sous Linux, elle attend un poste ou une CI Windows.
 - **Preuve de clôture** : `docs/preuves/reouverture-dite-et-eprouvee.md`.
 - **Clôturé par** : la branche `workstream/reouverture-dite-et-eprouvee`.
+
+## 2026-10-29 — Une attestation tombe quand ce qu'elle juge change, pas quand la forme d'un contrôle change
+
+- **Décisions clés** : contrats neufs QUA-183 à QUA-186 ; l'empreinte d'une attestation passe en version 4 : elle porte sur la commande, les tests visés et les `paths` des contrôles cités, sans les champs d'exécution (`build`, `needsBuild`, `parallel`, `reuse`) ; les versions 1, 2 et 3 restent lues. Chaque contrat attesté déclare `**Couvre**` (tableau validé par le demandeur le 2026-10-26), SEC-001 déclare « aucun » avec sa raison, compté comme déclaré par `drwil doctor`. QUA-032 et QUA-082 passent à la version 4, QUA-013 précisé sans être affaibli. Une seule séance de réattestation humaine (13 contrats, QUA-186 en dernier) ; les 6 attestations encore valables (QUA-041, QUA-060, QUA-063, QUA-069, QUA-092, QUA-122) restent dans leur version, lue, jusqu'à leur prochain renouvellement.
+- **Cadrage élargi** : `packages/drwil/src/coverage.ts`, `packages/drwil/src/doctor-texts.ts`, `packages/drwil/src/fingerprint.ts` et `packages/drwil/test/cycle.test.mjs` (assertions de version) ajoutés au scope en commits séparés ; `**Couvre**` déclaré aussi pour QUA-175, hors du tableau de la fiche, trouvé en route ; les deux écarts gardés par décision du demandeur le 2026-10-29.
+- **Limites connues** : aucune nouvelle ; chantier mené par Copilot CLI jusqu'au lot 2, puis clos par Claude Code après la séance d'attestation.
+- **Preuve de clôture** : `docs/preuves/attestations-sur-l-effet-et-couvre.md`.
+- **Clôturé par** : la branche `workstream/attestations-sur-l-effet-et-couvre`.

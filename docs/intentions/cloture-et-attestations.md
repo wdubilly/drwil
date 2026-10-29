@@ -127,7 +127,7 @@ corrigés ou rattachés pendant le chantier n'apparaissent pas corrigés.
 
 Les dix parties se cadrent en cinq fiches, décidées par le demandeur le 2026-10-26 :
 
-- `docs/projects/attestations-sur-l-effet-et-couvre.md` : empreinte d'une attestation sur l'effet du contrôle et `Couvre` des 15 contrats attestés, un seul chantier et une seule séance de réattestation (parties « couverture des contrats attestés » et « attestation sur l'effet du contrôle ») ; tableau `Couvre` à valider.
+- `docs/projects/journal.md` (chantier fait le 2026-10-29) : empreinte d'une attestation sur l'effet du contrôle (version 4) et `Couvre` des contrats attestés, une seule séance de réattestation (parties « couverture des contrats attestés » et « attestation sur l'effet du contrôle », QUA-183 à QUA-186).
 - `docs/projects/journal.md` (chantier fait le 2026-10-29) : la réouverture dit ce qu'elle a annulé et qui reprogramme la fusion ; son cycle complet se joue sous Windows (parties « fusion annulée après échec » et « réouverture éprouvée », QUA-181 et QUA-182) ; reste l'essai sur une vraie PR, en note.
 - `docs/projects/journal.md` (ex-`next-attend-la-fusion`, fusionnée le 2026-10-29) : `next` refuse tant que la PR précédente n'est pas fusionnée (partie « arrêt de file »).
 - `docs/projects/journal.md` (chantier fait le 2026-10-28) : registre en SCOPING, code livré couvert, acceptation des critères, hooks déclarés au lancement, ligne d'index retirée (parties « cycle de vie des fiches » et « acceptation par critère »), QUA-172 à QUA-175, QUA-137 et QUA-074 modifiés.

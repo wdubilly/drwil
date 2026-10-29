@@ -2,8 +2,9 @@
 import { createHash } from "node:crypto";
 import { type Coverage, coverageChanges } from "./coverage.js";
 import type { Attestation } from "./evidence.js";
+import { fill, type MessageLang } from "./i18n.js";
 
-type CheckDefinition = { id: string; run?: unknown; cwd?: string };
+type CheckDefinition = { id: string; run?: unknown; cwd?: string; paths?: unknown };
 type ProjectConfig = { checks?: unknown };
 type AttestedContract = Parameters<typeof humanFingerprint>[0] & Parameters<typeof fingerprint>[0];
 
@@ -46,7 +47,7 @@ export function humanFingerprint(k: {
   return sha(k.covers?.length ? { ...base, couvre: [...k.covers].sort() } : base);
 }
 
-export function proofFingerprints(k: { checks?: string[] | null }, cfg: ProjectConfig): Record<string, string> {
+export function legacyProofFingerprints(k: { checks?: string[] | null }, cfg: ProjectConfig): Record<string, string> {
   const checks = definedChecks(cfg);
   return Object.fromEntries(
     (k.checks ?? []).map((id) => {
@@ -57,18 +58,67 @@ export function proofFingerprints(k: { checks?: string[] | null }, cfg: ProjectC
 }
 
 /**
- * Does this attestation still cover the contract? Version 1: its old fingerprint, unchanged; version 2:
- * the human part without coverage, as written then; version 3: also the content of the covered files.
+ * Version 4 (QUA-183): what a cited check does, not how it is run. The command (which carries the
+ * targeted tests), its folder and its `paths`; the execution fields (`build`, `needsBuild`,
+ * `parallel`, `reuse`…) are left out, so adding or removing one keeps the attestation valid.
+ * A command, a targeted test or a path that changes still makes it obsolete (QUA-184, QUA-013).
  */
-export function covers(
-  a: Attestation,
-  k: AttestedContract,
-  cfg: ProjectConfig,
-  proof: Record<string, string>,
-  coverage: Coverage,
-): boolean {
-  if (a.version !== 2 && a.version !== 3) return a.fingerprint === fingerprint(k, cfg);
-  const human = humanFingerprint(a.version === 3 ? k : { ...k, covers: null });
-  const files = a.version !== 3 || coverageChanges(a.coverage ?? {}, coverage).length === 0;
-  return a.fingerprint === human && files && Object.entries(a.proof ?? {}).every(([id, h]) => proof[id] === h);
+export function proofFingerprints(k: { checks?: string[] | null }, cfg: ProjectConfig): Record<string, string> {
+  const checks = definedChecks(cfg);
+  return Object.fromEntries(
+    (k.checks ?? []).map((id) => {
+      const c = checks.find((x) => x.id === id);
+      const paths = Array.isArray(c?.paths) ? [...(c.paths as string[])].sort() : null;
+      return [id, sha(c ? { id, run: c.run, cwd: c.cwd ?? null, paths } : { id })];
+    }),
+  );
+}
+
+/**
+ * Does this attestation still cover the contract? Version 1: its old fingerprint, unchanged; version 2:
+ * the human part without coverage, as written then; version 3: also the content of the covered files;
+ * version 4: the same, and each check by its effect (QUA-183) instead of its whole definition.
+ */
+export function covers(a: Attestation, k: AttestedContract, cfg: ProjectConfig, coverage: Coverage): boolean {
+  if (a.version !== 2 && a.version !== 3 && a.version !== 4) return a.fingerprint === fingerprint(k, cfg);
+  return staleParts(a, k, cfg, coverage).length === 0;
+}
+
+const TEXTS = {
+  fr: {
+    human: "la partie humaine du contrat (règle, Manuel, sévérité ou Couvre) a changé",
+    checks: "l'effet du contrôle {0} a changé (commande, test visé ou paths)",
+    checksLegacy: "la définition du contrôle {0} a changé",
+    files: "un fichier couvert a changé",
+    legacy: "attestation de version {0} : lue par son ancienne empreinte ; la renouveler la passe à la version 4 (effet des contrôles)",
+  },
+  en: {
+    human: "the contract's human part (rule, Manual, severity or Covers) changed",
+    checks: "the effect of check {0} changed (command, targeted test or paths)",
+    checksLegacy: "the definition of check {0} changed",
+    files: "a covered file changed",
+    legacy: "version {0} attestation: read by its old fingerprint; renewing it moves it to version 4 (effect of the checks)",
+  },
+};
+
+type Stale = { part: "human" | "check" | "files"; id?: string };
+
+function staleParts(a: Attestation, k: AttestedContract, cfg: ProjectConfig, coverage: Coverage): Stale[] {
+  const stale: Stale[] = [];
+  const v4 = a.version === 4;
+  if (a.fingerprint !== humanFingerprint(a.version >= 3 ? k : { ...k, covers: null })) stale.push({ part: "human" });
+  const proof = v4 ? proofFingerprints(k, cfg) : legacyProofFingerprints(k, cfg);
+  for (const [id, h] of Object.entries(a.proof ?? {})) if (proof[id] !== h) stale.push({ part: "check", id });
+  if (a.version >= 3 && coverageChanges(a.coverage ?? {}, coverage).length) stale.push({ part: "files" });
+  return stale;
+}
+
+/** Why an attestation of version 2 to 4 is obsolete, and, for an old one, which version still judges it. */
+export function obsoleteReasons(a: Attestation, k: AttestedContract, cfg: ProjectConfig, coverage: Coverage, lang: MessageLang): string[] {
+  if (a.version < 2 || a.version > 4) return [];
+  const T = TEXTS[lang];
+  const lines = staleParts(a, k, cfg, coverage)
+    .filter((s) => s.part !== "files")
+    .map((s) => (s.part === "human" ? T.human : fill(a.version === 4 ? T.checks : T.checksLegacy, s.id)));
+  return a.version < 4 ? [...lines, fill(T.legacy, a.version)] : lines;
 }

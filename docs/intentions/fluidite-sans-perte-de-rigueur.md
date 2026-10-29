@@ -5,7 +5,7 @@ geste, clôture sur évidence de verify), 2 (décision lue par un hook, via
 `/drwil-lancer`) et 7 (rappel de l'état) faits le 2026-10-10, voir
 `docs/projects/journal.md` ; restent les questions 3 et 4, et l'affichage
 de qui décide chaque transition.
-Rangement du 2026-10-26 : deux notes reprises en fin de fichier ; le levier 3 (attestation groupée) touche `docs/projects/attestations-sur-l-effet-et-couvre.md`.
+Rangement du 2026-10-26 : deux notes reprises en fin de fichier ; le levier 3 (attestation groupée) touche `docs/projects/journal.md`.
 
 **Revu le 2026-10-16** : levier 3, « une PR par chantier » est devenu la
 pratique (fusion automatique choisie au lancement, `/drwil-start`) ;
