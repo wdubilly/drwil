@@ -2451,11 +2451,29 @@
       ],
       "degradable": false,
       "needsBuild": true
+    },
+    {
+      "id": "tests-qua-190",
+      "name": "tests de QUA-190, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-190 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".githooks/**",
+        "AGENTS.md",
+        ".claude/**",
+        "docs/ia-first.md",
+        "docs/ia-first/**",
+        "docs/projects/model-brief.md",
+        "docs/projects/routine-maintenance.md",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
     }
   ],
-  "kitSizeLegacy": {
-    "docs/ia-first.md": 916
-  },
   "worktreeInstall": "npm ci",
   "transitions": "human",
   "scopeGate": "blocking",

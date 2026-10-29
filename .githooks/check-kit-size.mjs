@@ -6,7 +6,7 @@
 // - In an adopted project: measures the files of .drwil/installed-files.json, an overrun is a warning
 //   ("[ia-first-warning]") that never blocks an update; a project may enrich a kit file on purpose.
 // A list that is absent, unreadable or empty fails: an unexecuted check is not a passed one (QUA-013).
-// "kitSizeLegacy" ({ "docs/ia-first.md": 916 }) in .drwil/ia-first.json tolerates a file already above
+// "kitSizeLegacy" ({ "<file>": <lines> }) in .drwil/ia-first.json tolerates a file already above
 // its ceiling up to that size: it can only shrink.
 import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { basename, join } from "node:path";

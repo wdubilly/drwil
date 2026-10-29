@@ -2,14 +2,14 @@
 
 Point d'entrée unique pour toute IA (et tout humain) qui travaille sur ce dépôt. `CLAUDE.md` et `GEMINI.md`
 ne font qu'importer ce fichier. Il est court exprès : relu à chaque requête. Le texte complet de chaque
-règle est dans `docs/ia-first.md`, section 8 (en anglais, lu par section, jamais en entier).
+règle est dans `docs/ia-first/8-conduct-rules.md`, section 8 de `docs/ia-first.md` (en anglais).
 
 ## Le projet en 5 lignes
 
 drwil — point d'entrée unique pour toute IA travaillant sur ce dépôt.
 Carte complète : `docs/architecture.md`.
 
-## Conduite (toujours) — détail : `docs/ia-first.md`, section 8
+## Conduite (toujours) — détail : `docs/ia-first/8-conduct-rules.md`
 
 - **Périmètre** : faire ce qui est demandé, pas plus ; aucun changement hors périmètre sans demande explicite.
 - **Dépôt vs livrable (QUA-018)** : drwil-le-dépôt ou drwil-le-livrable (gabarit `packages/drwil/templates/`) ? Si la demande ne précise pas, demander avant d'agir.

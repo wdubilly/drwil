@@ -113,8 +113,21 @@ const checks = (dir) =>
 const git = (dir, ...args) =>
   spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd: dir, encoding: "utf8", env: envTest });
 const read = (dir, f) => readFileSync(join(dir, f), "utf8");
+// docs/ia-first.md est un sommaire : chaque section est un fichier de docs/ia-first/ qu'il cite. Une règle se
+// cherche dans le sommaire et ses sections, jamais à une position fixe d'un seul fichier.
+const sectionsIaFirst = (racine) => {
+  const sommaire = readFileSync(join(racine, "docs/ia-first.md"), "utf8");
+  const chemins = [...new Set([...sommaire.matchAll(/`(docs\/ia-first\/[^`]+\.md)`/g)].map((m) => m[1]))];
+  return { sommaire, sections: chemins.map((chemin) => ({ chemin, texte: readFileSync(join(racine, chemin), "utf8") })) };
+};
+const iaFirst = (racine) => {
+  const { sommaire, sections } = sectionsIaFirst(racine);
+  return [sommaire, ...sections.map((s) => s.texte)].join("\n");
+};
+// La section du sommaire dont le titre (première ligne) correspond au motif.
+const sectionIaFirst = (racine, titre) => sectionsIaFirst(racine).sections.find((s) => titre.test(s.texte.split("\n")[0]));
 // AGENTS.md est un aiguillage court : le texte complet des règles est dans la section 8 de docs/ia-first.md.
-const consignes = (dir) => `${read(dir, "AGENTS.md")}\n${read(dir, "docs/ia-first.md")}`;
+const consignes = (dir) => `${read(dir, "AGENTS.md")}\n${iaFirst(dir)}`;
 const config = (dir) => JSON.parse(read(dir, ".drwil/ia-first.json"));
 // Une installation neuve a la barrière de périmètre bloquante, qui refuse le commit du kit en SCOPING : les tests
 // qui commitent l'installation sans lancer de chantier la règlent en avertissement.
@@ -129,10 +142,10 @@ test("QUA-153 : AGENTS.md du gabarit tient en 100 lignes et chacune de ses règl
   const agents = readFileSync(join(base, "AGENTS.md"), "utf8");
   const lignes = agents.trimEnd().split("\n");
   assert.ok(lignes.length <= 100, `AGENTS.md du gabarit : ${lignes.length} lignes, plafond 100`);
-  const iaFirst = readFileSync(join(base, "docs/ia-first.md"), "utf8");
-  const detail = iaFirst.slice(iaFirst.search(/^## 8\. Conduct rules, in detail$/m));
-  assert.ok(detail.length < iaFirst.length, "section 8 présente");
-  assert.match(agents, /`docs\/ia-first\.md`, section 8/);
+  const section8 = sectionIaFirst(base, /^# 8\. Conduct rules, in detail$/);
+  assert.ok(section8, "section 8 présente au sommaire");
+  const detail = section8.texte;
+  assert.ok(agents.includes(`\`${section8.chemin}\``), `AGENTS.md renvoie au fichier de la section 8 (${section8.chemin})`);
   const noms = (texte) => [...texte.matchAll(/^- \*\*([^*]+)\*\*/gm)].map((m) => m[1]);
   const conduite = agents.slice(agents.indexOf("## Conduct"), agents.indexOf("## Contracts"));
   const regles = noms(conduite);
@@ -142,6 +155,104 @@ test("QUA-153 : AGENTS.md du gabarit tient en 100 lignes et chacune de ses règl
       noms(detail).some((d) => d.startsWith(nom)),
       `règle « ${nom} » sans détail en section 8`,
     );
+});
+
+const GABARIT = fileURLToPath(new URL("../templates/common/", import.meta.url));
+const DEPOT = fileURLToPath(new URL("../../../", import.meta.url));
+// Les renvois les plus lus visent le fichier de section exact (gabarit, puis copie du dépôt).
+const RENVOIS_LES_PLUS_LUS = [
+  "base/AGENTS.md",
+  "tools/claude/.claude/skills/drwil/SKILL.md",
+  "base/docs/projects/model-brief.md",
+  "base/docs/projects/pending.md",
+  "base/docs/projects/routine-maintenance.md",
+].map((f) => join(GABARIT, f));
+const RENVOIS_LES_PLUS_LUS_DEPOT = [
+  "AGENTS.md",
+  ".claude/skills/drwil/SKILL.md",
+  "docs/projects/model-brief.md",
+  "docs/projects/routine-maintenance.md",
+].map((f) => join(DEPOT, f));
+function* fichiersTexte(dossier) {
+  for (const e of readdirSync(dossier, { withFileTypes: true })) {
+    const chemin = join(dossier, e.name);
+    if (e.isDirectory()) yield* fichiersTexte(chemin);
+    else if (/\.(md|mdc|mjs|json|yml)$/.test(e.name)) yield chemin;
+  }
+}
+
+test("QUA-190 : docs/ia-first.md est un sommaire court qui donne le fichier de chaque section, chacune sous le plafond et lisible seule", () => {
+  const base = join(GABARIT, "base");
+  const { sommaire, sections } = sectionsIaFirst(base);
+  const lignes = sommaire.trimEnd().split("\n").length;
+  assert.ok(lignes < 100, `sommaire : ${lignes} lignes, moins de 100 attendues`);
+  for (let n = 1; n <= 8; n++)
+    assert.match(
+      sommaire,
+      new RegExp(`^\\| ${n} \\| .+ \\| \`docs/ia-first/${n}-[^\`]+\\.md\` \\|`, "m"),
+      `section ${n} au sommaire, avec son fichier`,
+    );
+  const livres = readdirSync(join(base, "docs/ia-first")).map((f) => `docs/ia-first/${f}`);
+  assert.deepEqual(sections.map((s) => s.chemin).sort(), livres.sort(), "chaque fichier du dossier est au sommaire, et lui seul");
+  for (const { chemin, texte } of sections) {
+    const n = /^docs\/ia-first\/(\d+)-/.exec(chemin)[1];
+    const taille = texte.split("\n").length - 1;
+    assert.ok(taille <= 400, `${chemin} : ${taille} lignes, plafond 400`);
+    assert.match(texte.split("\n")[0], new RegExp(`^# ${n}\\. `), `${chemin} : titre numéroté de sa section`);
+    assert.ok(texte.includes("`docs/ia-first.md`"), `${chemin} : renvoie au sommaire`);
+  }
+  // La copie du dépôt suit le gabarit.
+  assert.deepEqual(
+    sectionsIaFirst(DEPOT).sections.map((s) => s.chemin),
+    sections.map((s) => s.chemin),
+    "le sommaire du dépôt donne les mêmes fichiers",
+  );
+});
+
+test("QUA-190 : chaque renvoi à docs/ia-first.md mène à une section existante, les plus lus au fichier exact", () => {
+  const base = join(GABARIT, "base");
+  const { sommaire, sections } = sectionsIaFirst(base);
+  const titres = sections.flatMap((s) => [...s.texte.matchAll(/^#+ (?:\d+\. )?(.+)$/gm)].map((m) => m[1]));
+  for (const fichier of fichiersTexte(GABARIT)) {
+    const texte = readFileSync(fichier, "utf8");
+    for (const [, n] of texte.matchAll(/docs\/ia-first\.md`?,? section (\d+)/g))
+      assert.match(sommaire, new RegExp(`^\\| ${n} \\|`, "m"), `${fichier} : section ${n} absente du sommaire`);
+    for (const [chemin] of texte.matchAll(/docs\/ia-first\/[\w.-]+\.md/g))
+      assert.ok(existsSync(join(base, chemin)), `${fichier} : ${chemin} introuvable`);
+    if (fichier.endsWith(".md"))
+      for (const [, titre] of texte.matchAll(/docs\/ia-first\.md`?,? \(?"([^"]+)"/g))
+        assert.ok(titres.includes(titre), `${fichier} : section « ${titre} » introuvable`);
+  }
+  for (const fichier of [...RENVOIS_LES_PLUS_LUS, ...RENVOIS_LES_PLUS_LUS_DEPOT]) {
+    const texte = readFileSync(fichier, "utf8");
+    assert.doesNotMatch(texte, /docs\/ia-first\.md`?,? (section \d|\(?")/, `${fichier} : renvoi à une section par le sommaire`);
+    const cites = [...texte.matchAll(/`(docs\/ia-first\/[\w.-]+\.md)`/g)].map((m) => m[1]);
+    assert.ok(cites.length, `${fichier} : aucun fichier de section cité`);
+    for (const c of cites) assert.ok(existsSync(join(base, c)), `${fichier} : ${c} introuvable`);
+  }
+});
+
+test("QUA-190 : init livre le dossier docs/ia-first/, une mise à jour en rafraîchit une section inchangée et garde une section adaptée", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false, ci: "none" }));
+  const empreinte = (texte) => createHash("sha256").update(texte).digest("hex");
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  const livres = readdirSync(join(GABARIT, "base", "docs/ia-first"));
+  for (const f of livres) {
+    assert.ok(existsSync(join(dir, "docs/ia-first", f)), `docs/ia-first/${f} installé`);
+    assert.ok(manifeste[`docs/ia-first/${f}`], `docs/ia-first/${f} au manifeste`);
+  }
+  const vieille = sectionIaFirst(dir, /^# 8\. /).chemin;
+  writeFileSync(join(dir, vieille), "section de la version précédente\n");
+  manifeste[vieille] = empreinte("section de la version précédente\n");
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2));
+  const adaptee = sectionIaFirst(dir, /^# 2\. /).chemin;
+  appendFileSync(join(dir, adaptee), "\nAdapté par le projet.\n");
+
+  await quiet(() => init({ targetDir: dir, git: false, ci: "none" }));
+
+  assert.match(read(dir, vieille), /^# 8\. Conduct rules, in detail$/m, "section inchangée depuis l'installation : rafraîchie");
+  assert.match(read(dir, adaptee), /Adapté par le projet\./, "section adaptée par le projet : gardée");
 });
 
 test("init d'un projet en français : tous les outils, git et hooks, contrôles verts", async () => {

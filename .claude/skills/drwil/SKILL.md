@@ -13,14 +13,14 @@ anything else):
 
 | Command | Capability | Recipe |
 | --- | --- | --- |
-| `/drwil verify` | Is my work verified? (agent/human workflow below) | `docs/ia-first.md`, section 5 |
+| `/drwil verify` | Is my work verified? (agent/human workflow below) | `docs/ia-first/5-proving-the-work.md` (section 5) |
 | `/drwil-adopt` | Adopt the kit on an existing project | `docs/recipes/adopt-the-kit.md` |
 | `/drwil-audit` | Audit risks and debt | `docs/recipes/audit-risks-and-debt.md` |
 | `/drwil-value` | Discover product value | `docs/recipes/discover-product-value.md` |
 | `/drwil-usage` | Track consumption per increment | `docs/recipes/track-consumption-per-increment.md` |
 | `/drwil-progress` | View progress | `docs/recipes/view-progress.md` |
 | `/drwil-release` | Create a release (tag + GitHub note), optional module | `docs/recipes/create-a-release.md` |
-| `/drwil-start` | Start a workstream: poll of the scoped briefs, the human answer moves to BUILD | `docs/ia-first.md` ("Starting and closing") |
+| `/drwil-start` | Start a workstream: poll of the scoped briefs, the human answer moves to BUILD | `docs/ia-first/7-starting-and-closing.md` |
 | `/drwil-scope` | End a scoping: poll on its PR (automatic merge, manual merge, or continue scoping) | `docs/recipes/working-with-branches.md` |
 
 If `$capability` is `verify`: run `npx drwil verify --agent` at the project

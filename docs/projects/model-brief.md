@@ -30,7 +30,7 @@ files:
 
 (bloc `scope` : un chemin ou un motif par ligne, sous `files:` ; couvre
 les fichiers de code que ce chantier touche, pour le rappel de cadrage —
-`docs/ia-first.md`, section 7. Un motif trop large, `**` ou `scripts/*`, est
+`docs/ia-first/7-scoping-reminder.md`. Un motif trop large, `**` ou `scripts/*`, est
 refusé : nommer le fichier ou un motif d'au moins deux dossiers. Lister
 dès le cadrage tout ce que le chantier touchera : le code, **ses tests**,
 et `.drwil/ia-first.json` quand un critère crée un contrat (son contrôle

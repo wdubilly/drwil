@@ -24,6 +24,13 @@ import { renderBrief } from "../dist/guarantees-briefs.js";
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
 const TEMPLATES = join(dirname(fileURLToPath(import.meta.url)), "..", "templates", "common");
+// docs/ia-first.md est un sommaire : chaque section est un fichier de docs/ia-first/ qu'il cite. Une règle se
+// cherche dans le sommaire et ses sections, jamais à une position fixe d'un seul fichier.
+const iaFirst = (racine) => {
+  const sommaire = readFileSync(join(racine, "docs", "ia-first.md"), "utf8");
+  const chemins = [...new Set([...sommaire.matchAll(/`(docs\/ia-first\/[^`]+\.md)`/g)].map((m) => m[1]))];
+  return [sommaire, ...chemins.map((c) => readFileSync(join(racine, c), "utf8"))].join("\n");
+};
 const lire = (dir, f) => readFileSync(join(dir, f), "utf8");
 const config = (dir) => JSON.parse(lire(dir, ".drwil/ia-first.json"));
 const ecrireConfig = (dir, cfg) => writeFileSync(join(dir, ".drwil/ia-first.json"), `${JSON.stringify(cfg, null, 2)}\n`);
@@ -563,7 +570,7 @@ test("QUA-097 garanties tenues : verify ne signale rien, la commande le dit", as
 });
 
 test("QUA-099 PR de documentation seule : fusion automatique sans la question drwil-merge, gardée pour le code", () => {
-  const agents = readFileSync(join(TEMPLATES, "base", "docs", "ia-first.md"), "utf8");
+  const agents = iaFirst(join(TEMPLATES, "base"));
   assert.match(
     agents,
     /\*\*Documentation-only PR\*\*: a PR that touches only documentation[\s\S]*without asking the `drwil-merge` question[\s\S]*auto-merge not allowed by the\s+repository/,
@@ -576,7 +583,7 @@ test("QUA-099 PR de documentation seule : fusion automatique sans la question dr
 });
 
 test("QUA-100 suivi de la CI : la consigne de lancer pr-watch après un push est livrée", () => {
-  const agents = readFileSync(join(TEMPLATES, "base", "docs", "ia-first.md"), "utf8");
+  const agents = iaFirst(join(TEMPLATES, "base"));
   assert.match(
     agents,
     /`node \.githooks\/pr-watch\.mjs \[<number>\]`[\s\S]*« green », « merged » or « red »[\s\S]*never bypassed \(QUA-019\)/,

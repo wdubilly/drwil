@@ -60,24 +60,25 @@ Aucun autre document lu à la demande du kit ne dépasse 163 lignes.
 
 ## Critères d'acceptation
 
-(les contrats sont à créer au lancement, avec leur champ **Origine** ; ID à
-attribuer à ce moment-là dans le registre.)
+(contrats créés ou modifiés au lot 2, avec leur champ **Origine**.)
 
 - Aucun document lu à la demande du kit ne dépasse le nouveau plafond, et
-  `kitSizeLegacy` est retiré — contrat à créer (ou QUA-157 modifié, voir
-  « Contrats modifiés » au lancement)
+  `kitSizeLegacy` est retiré — `QUA-157` (modifié, voir « Contrats modifiés »)
 - Chaque section issue de la découpe se lit seule : un agent la charge sans
   lire les autres, et chaque renvoi existant vers `docs/ia-first.md` mène à la bonne
-  section — contrat à créer
+  section — `QUA-190`
 - Aucun contenu n'est perdu : le texte de chaque règle de la section 8 et des
   sections 1 à 7 se retrouve, mot pour mot, dans une section — [humain] revue
-  de la découpe
+  de la découpe — `QUA-191`
 
 ## Contrats modifiés
 
 - `.githooks/check-kit-size.mjs` — le plafond des documents lus à la demande
   passe de 800 à 400 lignes (gabarit et copie), QUA-157 modifié (validé par le
   demandeur le 2026-10-29)
+- `QUA-157` — même décision, au registre : plafond des documents lus à la
+  demande à 400 lignes, plus aucun `kitSizeLegacy` dans ce dépôt (validé par
+  le demandeur le 2026-10-29)
 
 ## 2. Hors périmètre
 
@@ -146,7 +147,18 @@ Aucun.
 - **Lot 2, premier essai** (2026-10-29) : arrêté sans rien modifier, le
   périmètre ne couvrait pas les tests qui lisent `docs/ia-first.md` ni
   `KIT_PROSE` ; périmètre élargi sur le oui du demandeur (décision 4 révisée).
+- **Lot 2 fait** (2026-10-29) : `docs/ia-first.md` devenu un sommaire de 36
+  lignes (numérotation gardée, une ligne et un chemin par section) ; 14
+  fichiers dans le dossier docs/ia-first/ (une section par fichier, une
+  sous-section de la section 7 par fichier ; le plus long, la section 8, 187
+  lignes), texte conservé mot pour mot, titres d'un niveau plus haut, une
+  ligne d'en-tête qui renvoie au sommaire. Renvois les plus lus vers le
+  fichier exact (`AGENTS.md`, skill `drwil`, `model-brief.md`, `pending.md`
+  du gabarit, `routine-maintenance.md`, gabarit et copie) ; `KIT_PROSE` livre
+  le dossier ; tests qui cherchent une règle dans le sommaire et ses
+  sections ; `kitSizeLegacy` retiré ; QUA-157 modifié, QUA-190 (sommaire et
+  renvois, tests) et QUA-191 (revue humaine de la découpe) créés.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 2 — découpe (sections courtes dans le dossier docs/ia-first/ à créer,
-  sommaire, renvois vérifiés, `kitSizeLegacy` retiré, carte, `kit-mechanics.md`,
-  changelog).
+- **Prochaine étape** : clôture ; QUA-191 attend l'attestation de l'humain
+  (`drwil attest QUA-191`), ainsi que les attestations tombées par les
+  fichiers qu'elles couvrent (QUA-063, QUA-064, QUA-066, QUA-150).

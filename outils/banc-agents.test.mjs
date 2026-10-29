@@ -21,6 +21,13 @@ import {
 } from "./banc-agents.mjs";
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
+// docs/ia-first.md est un sommaire : chaque section est un fichier de docs/ia-first/ qu'il cite. Une règle se
+// cherche dans le sommaire et ses sections, jamais à une position fixe d'un seul fichier.
+const iaFirst = (racine) => {
+  const sommaire = readFileSync(join(racine, "docs", "ia-first.md"), "utf8");
+  const chemins = [...new Set([...sommaire.matchAll(/`(docs\/ia-first\/[^`]+\.md)`/g)].map((m) => m[1]))];
+  return [sommaire, ...chemins.map((c) => readFileSync(join(racine, c), "utf8"))].join("\n");
+};
 let dossiers = [];
 afterEach(() => {
   for (const d of dossiers) rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
@@ -207,8 +214,8 @@ test("QUA-060 : Gemini reçoit la confiance du dossier par une variable propre �
 });
 
 test("QUA-063 : la matrice de compatibilité donne, pour chaque outil du banc, ce qui est tenu et la date de son essai", () => {
-  const texte = readFileSync(join(RACINE, "packages", "drwil", "templates", "common", "base", "docs", "ia-first.md"), "utf8");
-  const matrice = texte.slice(texte.indexOf("### Tool compatibility matrix"));
+  const texte = iaFirst(join(RACINE, "packages", "drwil", "templates", "common", "base"));
+  const matrice = texte.slice(texte.search(/^#+ Tool compatibility matrix$/m));
   const lignes = (nom) => matrice.split("\n").filter((l) => l.startsWith(`| ${nom} |`));
   for (const [nom, essaye] of [
     ["Claude Code", true],
@@ -222,17 +229,14 @@ test("QUA-063 : la matrice de compatibilité donne, pour chaque outil du banc, c
     assert.equal(/\d{4}-\d{2}-\d{2} \(\S+\)/.test(ligne), essaye, `${nom} : date et version d'essai seulement si l'outil a été essayé`);
     assert.equal(ligne.includes("not tested"), !essaye, `${nom} : « not tested » seulement s'il n'a pas été essayé`);
   }
-  assert.ok(
-    readFileSync(join(RACINE, "docs", "ia-first.md"), "utf8").includes("### Tool compatibility matrix"),
-    "la copie du dépôt porte la matrice",
-  );
+  assert.ok(/^#+ Tool compatibility matrix$/m.test(iaFirst(RACINE)), "la copie du dépôt porte la matrice");
 });
 
 test("QUA-068 : la matrice dit comment lancer un chantier sous Gemini CLI", () => {
-  const texte = readFileSync(join(RACINE, "packages", "drwil", "templates", "common", "base", "docs", "ia-first.md"), "utf8");
+  const texte = iaFirst(join(RACINE, "packages", "drwil", "templates", "common", "base"));
   const gemini = texte.slice(texte.indexOf("Gemini CLI: `--tools gemini`"));
   assert.match(
-    gemini.slice(0, gemini.indexOf("## 7.")),
+    gemini.slice(0, gemini.search(/^# 7\. /m)),
     /start a workstream with\s+`node \.githooks\/state\.mjs start` in an interactive terminal/,
   );
 });

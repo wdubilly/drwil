@@ -43,6 +43,6 @@ In this repository, copies of the shipped hooks: installed from the template by 
 ## Governance of this repository
 
 - Agent instructions: `AGENTS.md`; Claude Code settings and hooks: `.claude/settings.json`, `.claude/hooks/` (including `.claude/hooks/bash-guard.mjs`, the shell guard, and `.claude/hooks/read-guard.mjs`, which refuses reading the registry or the journal whole), skills in `.claude/skills/` (including `scope-a-workstream`, `/drwil-scope`: the end-of-scoping poll on its PR, read by `.claude/hooks/prompt-hook.mjs` through `.claude/hooks/start-poll.mjs`, QUA-187), the `drwil-checks` subagent in `.claude/agents/`.
-- Invariants: `docs/contracts.md`; catalog: `docs/contracts-catalog.md`; principles: `docs/ia-first.md`.
+- Invariants: `docs/contracts.md`; catalog: `docs/contracts-catalog.md`; principles: `docs/ia-first.md` (a short summary; one file per section in `docs/ia-first/`).
 - Workstreams: index and order `docs/projects/pending.md`, briefs in `docs/projects/`, intents in `docs/intentions/`, closed workstreams in `docs/projects/journal.md`; recipes in `docs/recipes/`.
 - Configuration: `.drwil/ia-first.json` (declared checks, settings); local state `.drwil/state.json` (if present), never versioned; evidence `.drwil/evidence/` (if present), including the versioned human attestations.
