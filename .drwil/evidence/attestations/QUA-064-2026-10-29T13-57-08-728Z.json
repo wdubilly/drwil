@@ -1,0 +1,36 @@
+{
+  "version": 4,
+  "contract": "QUA-064",
+  "status": "ATTESTED",
+  "attestedAt": "2026-10-29T13:57:08.728Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "84194c15ef4772785839a96e582d81c2930d7560cb0706dd6a76a8f25c94dec1",
+  "proof": {
+    "tests-qua-064": "eaae8134c7f772ea6040798e4e37ebce6c03776ff4bafb50c18e99e47f075fad"
+  },
+  "covers": [
+    "packages/drwil/src/config.ts",
+    "packages/drwil/src/render.ts",
+    "packages/drwil/src/drift.ts",
+    "packages/drwil/src/essentials.ts",
+    "packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json"
+  ],
+  "coverage": {
+    "packages/drwil/src/config.ts": "4ea35bd21c7e080a826910de934b344e04ad818c7f3a436a2dfd6f40f7c9a624",
+    "packages/drwil/src/drift.ts": "cf576cf95f3f217272b9ee06014eb885f77c40f0a508207fadc0558984e82f2a",
+    "packages/drwil/src/essentials.ts": "0e2750abafc0417796b29564cfc68f8c1dfa1d1301090de412f1fb2882b2800f",
+    "packages/drwil/src/render.ts": "f1008ecb783fa894dd6665f0dbf1fdec33f53260084c93bd52402a8f20829238",
+    "packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json": "df7f6234cba40ee5866d01811d9919ce7da6e4c040f9257b47b01d4bafdfca54"
+  },
+  "commit": "83f6cdcc17bd16eead22d74bd32aacfeba798516",
+  "automated": [
+    {
+      "id": "tests-qua-064",
+      "status": "ok"
+    }
+  ]
+}
