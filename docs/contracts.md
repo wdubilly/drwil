@@ -1318,8 +1318,8 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-138 — Avec la fusion automatique, le retour en SCOPING attend la fusion de la PR
 **Règle** : Livré à tout projet. Quand la fusion automatique est autorisée au lancement, la procédure donnée par l'état (`.githooks/state-texts.mjs`, `autoMerge`, en français et en anglais) et le skill de lancement disent, dans cet ordre : programmer la fusion, vérifier qu'elle est programmée, suivre la PR par `node .githooks/pr-watch.mjs <numéro>` (relancé tant qu'il dit « verte » sans « fusionnée », 30 minutes au plus en tout), et seulement la PR fusionnée revenir en SCOPING ; CI rouge avant la fusion : rester en CLOSING et `node .githooks/state.mjs reopen` (QUA-116) ; délai dépassé ou autre échec : rester en CLOSING et le signaler. `reopen` reste réservé à CLOSING.
-**Périmètre** : `.githooks/state-texts.mjs` (`autoMerge`), skill `start-a-workstream` (Claude Code) ; livrés dans le gabarit.
-**Source de vérité** : `.githooks/state-texts.mjs` (`autoMerge`).
+**Périmètre** : `.githooks/state-texts.mjs` (qui affiche `autoMerge`), `.githooks/state-context-texts.mjs` (son texte), skill `start-a-workstream` (Claude Code) ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/state-context-texts.mjs` (`autoMerge`).
 **Preuve** : test unitaire du texte de l'état : en CLOSING avec la fusion automatique, en français et en anglais, chaque étape vient après la précédente (programmation, vérification de la programmation, suivi par `node .githooks/pr-watch.mjs`, relance tant qu'il dit « verte » sans « fusionnée », 30 minutes au plus, retour en SCOPING seulement la PR fusionnée, CI rouge : CLOSING et `reopen`, délai dépassé ou échec : CLOSING et signalement) et aucun retour en SCOPING n'est cité avant le suivi, ce qui le fait échouer contre l'ancienne procédure (SCOPING dès la programmation) ; test du cycle dans un projet installé : l'état en CLOSING avec la fusion automatique donne la procédure dans l'ordre, en français et en anglais, et le skill installé la reprend.
 **Contrôle** : `tests-qua-138`
 **Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/cycle.test.mjs`
