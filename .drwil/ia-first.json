@@ -2343,6 +2343,21 @@
         ".drwil/ia-first.json"
       ],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-182",
+      "name": "tests de QUA-182, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-182 \" packages/drwil/test/cycle.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".githooks/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
     }
   ],
   "kitSizeLegacy": {

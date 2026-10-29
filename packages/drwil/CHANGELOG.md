@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- A reopening (`state.mjs reopen`) that fails after cancelling the automatic
+  merge now says the merge is cancelled and not scheduled again, that the tool
+  never reschedules it by itself and that the human does; the state context and
+  reminder say it again in CLOSING until a reopening succeeds or the state goes
+  back to SCOPING (QUA-181). The full cycle of a reopened workstream is also
+  played on Windows, with a launchable simulated `gh` (QUA-182).
 - The brief life cycle no longer needs workarounds: the contracts registry is
   written in SCOPING like a brief, in the same commit as the brief that cites
   a new contract; a code file already delivered on the main branch stays

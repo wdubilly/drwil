@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { rulesLine } from "../dist/rules.js";
@@ -797,21 +797,16 @@ test("QUA-086 : sans état local, la fiche jugée est lue depuis le trailer Drwi
   }
 });
 
-// gh simulé par un script du PATH : Windows ne lance sans shell qu'un .exe ; la mécanique y reste
-// prouvée par les tests des hooks (gh injecté).
-test("QUA-118 : cycle complet d'un chantier rouvert — clôture, réouverture, correctif, nouvelle clôture : une entrée de journal, une ligne de consommation, la preuve réécrite", {
-  skip: process.platform === "win32",
-}, async () => {
-  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
-  const outils = mkdtempSync(join(tmpdir(), "drwil-gh-"));
-  const journaux = mkdtempSync(join(tmpdir(), "drwil-journaux-"));
-  // gh simulé dans le PATH : la PR #7 du chantier, ouverte, fusion automatique programmée jusqu'à son annulation.
+// gh simulé par un script du PATH. Sous Windows, spawnSync("gh") sans shell ne lance qu'un .exe : le
+// gh simulé y est un gh.cmd, et un module préchargé (NODE_OPTIONS) donne le shell aux appels « gh » des
+// hooks, sans rien changer aux hooks ni au test sous Linux.
+const PR_SIMULEE = { number: 7, state: "OPEN", autoMergeRequest: { mergeMethod: "MERGE" } };
+
+/** Installe le gh simulé dans `outils` (la PR #7, ouverte, fusion automatique programmée jusqu'à son annulation) ; rend l'environnement qui le lance. */
+function ghSimulePath(outils) {
   const pr = join(outils, "pr.json");
-  writeFileSync(pr, JSON.stringify({ number: 7, state: "OPEN", autoMergeRequest: { mergeMethod: "MERGE" } }));
-  writeFileSync(
-    join(outils, "gh"),
-    `#!/usr/bin/env node
-const fs = require("node:fs");
+  writeFileSync(pr, JSON.stringify(PR_SIMULEE));
+  const corpsGh = `const fs = require("node:fs");
 const a = process.argv.slice(2);
 const pr = JSON.parse(fs.readFileSync(${JSON.stringify(pr)}, "utf8"));
 if (a[0] === "pr" && a[1] === "view") { process.stdout.write(JSON.stringify(pr)); process.exit(0); }
@@ -820,10 +815,52 @@ if (a[0] === "pr" && a[1] === "merge" && a.includes("--disable-auto")) {
   process.exit(0);
 }
 process.exit(1);
+`;
+  const windows = process.platform === "win32";
+  if (windows) {
+    writeFileSync(join(outils, "gh.js"), corpsGh);
+    writeFileSync(join(outils, "gh.cmd"), `@"${process.execPath}" "%~dp0gh.js" %*\r\n`);
+    writeFileSync(
+      join(outils, "shell-gh.cjs"),
+      `const cp = require("node:child_process");
+const spawnSync = cp.spawnSync;
+cp.spawnSync = (cmd, ...rest) => {
+  const [args, options] = Array.isArray(rest[0]) ? rest : [[], rest[0]];
+  return cmd === "gh" ? spawnSync(cmd, args, { ...options, shell: true }) : spawnSync(cmd, ...rest);
+};
 `,
-    { mode: 0o755 },
-  );
-  const envGh = { ...env, PATH: `${outils}:${process.env.PATH}` };
+    );
+  } else {
+    writeFileSync(join(outils, "gh"), `#!/usr/bin/env node\n${corpsGh}`, { mode: 0o755 });
+  }
+  const envGh = { ...env, PATH: `${outils}${delimiter}${process.env.PATH}` };
+  if (windows) envGh.NODE_OPTIONS = `--require "${join(outils, "shell-gh.cjs").replaceAll("\\", "/")}"`;
+  return envGh;
+}
+
+test("QUA-182 : le gh simulé du cycle de réouverture se lance par le PATH, sur chaque plateforme (gh.cmd et shell sous Windows)", () => {
+  const outils = mkdtempSync(join(tmpdir(), "drwil-gh-"));
+  try {
+    const envGh = ghSimulePath(outils);
+    const r = spawnSync(
+      process.execPath,
+      [
+        "-e",
+        'process.stdout.write(require("node:child_process").spawnSync("gh", ["pr", "view", "--json", "number"], { encoding: "utf8" }).stdout)',
+      ],
+      { encoding: "utf8", env: envGh },
+    );
+    assert.equal(JSON.parse(r.stdout).number, 7, r.stderr);
+  } finally {
+    nettoyer(outils);
+  }
+});
+
+test("QUA-118 : cycle complet d'un chantier rouvert — clôture, réouverture, correctif, nouvelle clôture : une entrée de journal, une ligne de consommation, la preuve réécrite", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-cycle-"));
+  const outils = mkdtempSync(join(tmpdir(), "drwil-gh-"));
+  const journaux = mkdtempSync(join(tmpdir(), "drwil-journaux-"));
+  const envGh = ghSimulePath(outils);
   const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8", env });
   const cli = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
   const node = (...args) => spawnSync(process.execPath, args, { cwd: dir, encoding: "utf8", env: envGh });
@@ -920,7 +957,7 @@ process.exit(1);
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /CLOSING → BUILD \(réouverture de docs\/projects\/essai\.md, PR #7 ouverte\)/);
     assert.match(r.stdout, /fusion automatique annulée/);
-    assert.equal(JSON.parse(readFileSync(pr, "utf8")).autoMergeRequest, null);
+    assert.equal(JSON.parse(readFileSync(join(outils, "pr.json"), "utf8")).autoMergeRequest, null);
     assert.ok(existsSync(join(dir, fiche)), "fiche restaurée");
     const etat = JSON.parse(lire(dir, ".drwil/state.json"));
     assert.equal(etat.activity, "BUILD");

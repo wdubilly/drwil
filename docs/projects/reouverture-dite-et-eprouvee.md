@@ -61,7 +61,7 @@ attribuer à ce moment-là dans le registre.)
   CLOSING le redit tant que la fusion n'est pas reprogrammée — `QUA-181`
 - Le test du cycle complet d'une réouverture (QUA-118 : nouvelle clôture d'un
   chantier rouvert) se joue aussi sous Windows, avec un `gh` simulé lançable
-  (`gh.cmd` et shell), au lieu d'être sauté — contrat à créer
+  (`gh.cmd` et shell), au lieu d'être sauté — `QUA-182`
 
 ## Contrats modifiés
 

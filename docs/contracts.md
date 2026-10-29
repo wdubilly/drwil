@@ -1740,3 +1740,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/state.test.mjs`
 **Origine** : reouverture-dite-et-eprouvee — « Quand la réouverture échoue après l'annulation de la fusion automatique, le refus dit que la fusion est annulée, qu'elle n'est pas reprogrammée par l'outil, et qu'il revient à l'humain de la reprogrammer ; le rappel d'état en CLOSING le redit tant que la fusion n'est pas reprogrammée »
 **Raison** : Le message disait « à reprogrammer » sans dire qui ni quand : une fusion annulée par une réouverture échouée pouvait rester oubliée, ou être reprogrammée par l'agent sur du code fautif.
+
+## QUA-182 — Le cycle complet d'un chantier rouvert se joue aussi sous Windows
+**Règle** : Livré à tout projet. Le test du cycle complet d'un chantier rouvert (QUA-118 : clôture, réouverture, correctif, nouvelle clôture) n'est plus sauté sous Windows : son `gh` simulé y est un `gh.cmd` du PATH, et un module préchargé (`NODE_OPTIONS`) donne le shell aux appels `gh` des hooks, sans rien changer aux hooks ni au test sous Linux, où `gh` reste un script à shebang. Aucun test du cycle n'est sauté par plateforme.
+**Périmètre** : `packages/drwil/test/cycle.test.mjs` (cycle de QUA-118).
+**Source de vérité** : `packages/drwil/test/cycle.test.mjs`.
+**Preuve** : test : le `gh` simulé du cycle se lance par le PATH et répond (script à shebang sous Linux, `gh.cmd` et shell préchargé sous Windows) ; le test du cycle (QUA-118) n'a plus de `skip` par plateforme ; la voie Windows n'est exécutée que sur un poste ou une CI Windows.
+**Contrôle** : `tests-qua-182`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Origine** : reouverture-dite-et-eprouvee — « Le test du cycle complet d'une réouverture (QUA-118 : nouvelle clôture d'un chantier rouvert) se joue aussi sous Windows, avec un `gh` simulé lançable (`gh.cmd` et shell), au lieu d'être sauté »
+**Raison** : Le seul test du cycle de réouverture était sauté sous Windows : un script du PATH n'y est pas lancé sans shell, la mécanique n'y était prouvée que par des tests à `gh` injecté.
