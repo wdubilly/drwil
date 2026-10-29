@@ -71,21 +71,20 @@ attribuer à ce moment-là dans le registre.)
 - Lire l'état (`.githooks/state.mjs`) en CLOSING dont la PR est fusionnée (vérifié par
   `gh`, via `closingMerged`) ramène l'état en SCOPING et le dit ; PR ouverte,
   introuvable ou `gh` absent : l'état reste CLOSING et le dit, jamais un retour
-  — contrat à créer
+  — `QUA-176`
 - `state.mjs next` refuse de lancer la tête de file tant que la PR du chantier
   précédent n'est pas fusionnée, et le dit ; PR introuvable ou `gh` absent :
-  refus qui le dit, jamais un lancement — contrat à créer
+  refus qui le dit, jamais un lancement — `QUA-177`
 - Une file décidée au lancement enchaîne le chantier suivant dès que la fusion
   du précédent est constatée, sans nouveau geste ; une file reprise dans une
-  nouvelle session attend toujours le oui explicite de l'humain — contrat à
-  créer
+  nouvelle session attend toujours le oui explicite de l'humain — `QUA-178`
 - Un lancement en « This folder » depuis la branche principale crée et bascule
   sur `workstream/<fiche>` depuis la branche principale à jour ; depuis une
   branche de chantier il la garde ; une branche déjà existante ou un arbre sale
-  est refusé avec un message qui dit quoi faire — contrat à créer
+  est refusé avec un message qui dit quoi faire — `QUA-179`
 - Le skill `/drwil-start` prescrit pour Copilot CLI un champ `fiche` en choix
   unique (`enum` seul), seul lu de façon fiable, et le hook lit cette réponse
-  — contrat à créer
+  — `QUA-180`
 
 ## Contrats modifiés
 
