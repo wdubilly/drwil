@@ -1847,13 +1847,3 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : ia-first-en-sections-courtes — « Chaque section issue de la découpe se lit seule : un agent la charge sans lire les autres, et chaque renvoi existant vers `docs/ia-first.md` mène à la bonne section »
 **Raison** : `docs/ia-first.md` faisait 916 lignes : un agent qui ne cherchait qu'une règle en chargeait des centaines.
-
-## QUA-191 — La découpe de `docs/ia-first.md` ne perd aucun texte : chaque règle des sections 1 à 8 se retrouve mot pour mot dans un fichier de section
-**Règle** : Le texte des sections 1 à 8 de `docs/ia-first.md` d'avant la découpe (916 lignes) se retrouve, mot pour mot et dans l'ordre, dans les fichiers de `docs/ia-first/` ; seuls changent le niveau des titres et la ligne d'en-tête de chaque fichier, qui renvoie au sommaire.
-**Périmètre** : `docs/ia-first/` (gabarit et copie du dépôt).
-**Source de vérité** : `packages/drwil/templates/common/base/docs/ia-first/`, comparé à `packages/drwil/templates/common/base/docs/ia-first.md` à la base de la branche.
-**Preuve** : jugement humain : revue de la découpe.
-**Manuel** : comparer `git show master:packages/drwil/templates/common/base/docs/ia-first.md` aux fichiers de `packages/drwil/templates/common/base/docs/ia-first/`, dans l'ordre du sommaire ; puis `drwil attest QUA-191`.
-**Couvre** : `aucun` — jugement ponctuel de la découpe : une évolution ultérieure d'une section ne la refait pas
-**Origine** : ia-first-en-sections-courtes — « Aucun contenu n'est perdu : le texte de chaque règle de la section 8 et des sections 1 à 7 se retrouve, mot pour mot, dans une section »
-**Raison** : Une découpe de 916 lignes à la main peut perdre une phrase sans qu'aucun test ne le voie : la relecture humaine le garantit une fois.

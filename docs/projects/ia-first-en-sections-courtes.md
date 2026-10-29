@@ -158,10 +158,22 @@ Aucun.
   du gabarit, `routine-maintenance.md`, gabarit et copie) ; `KIT_PROSE` livre
   le dossier ; tests qui cherchent une règle dans le sommaire et ses
   sections ; `kitSizeLegacy` retiré ; QUA-157 modifié, QUA-190 (sommaire et
-  renvois, tests) et QUA-191 (revue humaine de la découpe) créés.
+  renvois, tests) créé. le contrat de revue humaine de la découpe, créé puis
+  supprimé sur décision du demandeur (2026-10-29) : la conservation du texte
+  est prouvée par la comparaison ci-dessous.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : clôture, après l'humain. `drwil verify --agent`
   (2026-10-29, lot 2 commité) : 163 PASS, 16 ATTESTED, 0 FAIL, 4 MANUAL —
-  QUA-191 (revue de la découpe) à attester, et les attestations tombées
-  parce que le lot touche un fichier qu'elles couvrent : QUA-064 et QUA-066
-  (`packages/drwil/src/config.ts`), QUA-150 (`outils/banc-agents.test.mjs`).
+  les attestations tombées parce que le lot touche un fichier qu'elles
+  couvrent : QUA-064 et QUA-066 (`packages/drwil/src/config.ts`), QUA-150
+  (`outils/banc-agents.test.mjs`) . Le contrat de revue humaine de la découpe est supprimé.
+- **Preuve de conservation du texte** (2026-10-29, critère « Aucun contenu
+  n'est perdu ») : script de comparaison hors dépôt,
+  `node comparer-decoupe.mjs <sommaire> <dossier>`, qui compare
+  `git show master:<sommaire>` au sommaire (introduction) suivi des fichiers de
+  section dans l'ordre du sommaire, lignes non vides, en ignorant seulement le
+  niveau des titres, le préfixe « 7. » des titres de sous-section et la ligne
+  d'en-tête de renvoi. Gabarit : 828 lignes de texte de part et d'autre, 828
+  identiques, **0 ligne perdue ou modifiée**. Copie du dépôt : 828 lignes,
+  827 identiques, **0 ligne perdue** ; une ligne modifiée, la date « State as
+  of » de l'introduction (2026-10-27 devenu 2026-10-29, mise à jour voulue).

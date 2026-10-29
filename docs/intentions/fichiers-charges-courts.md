@@ -119,4 +119,4 @@ Cadrées en trois fiches, dans l'ordre : `docs/projects/journal.md` (hooks-agent
   des documents lus à la demande à 400 lignes, `docs/ia-first.md` devenu un
   sommaire de 36 lignes, une section par fichier dans le dossier docs/ia-first/ (la
   plus longue, la section 8, 187 lignes), `kitSizeLegacy` retiré (QUA-157,
-  QUA-190, QUA-191).
+  QUA-190).
