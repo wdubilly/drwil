@@ -60,6 +60,12 @@ attribuer à ce moment-là dans le registre.)
   sections 1 à 7 se retrouve, mot pour mot, dans une section — [humain] revue
   de la découpe
 
+## Contrats modifiés
+
+- `.githooks/check-kit-size.mjs` — le plafond des documents lus à la demande
+  passe de 800 à 400 lignes (gabarit et copie), QUA-157 modifié (validé par le
+  demandeur le 2026-10-29)
+
 ## 2. Hors périmètre
 
 - Les autres documents du kit (recettes, `AGENTS.md`) : leurs plafonds ne
@@ -112,6 +118,12 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-29) : décisions de forme tranchées, fiche prête.
+- **Dernier état** (2026-10-29) : lot 1 fait — plafond des documents lus à la
+  demande abaissé de 800 à 400 lignes dans `.githooks/check-kit-size.mjs`
+  (gabarit et copie), test au nouveau seuil, texte de QUA-157 mis à jour.
+  `docs/ia-first.md` (916 lignes) reste toléré par `kitSizeLegacy` (inchangé) ;
+  aucun autre document lu à la demande du kit ne dépasse 400 lignes.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : lot 2 — découpe (sections courtes dans le dossier docs/ia-first/ à créer,
+  sommaire, renvois vérifiés, `kitSizeLegacy` retiré, carte, `kit-mechanics.md`,
+  changelog).
