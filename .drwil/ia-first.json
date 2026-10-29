@@ -2332,6 +2332,17 @@
       ],
       "degradable": false,
       "needsBuild": true
+    },
+    {
+      "id": "tests-qua-181",
+      "name": "tests de QUA-181, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-181 \" .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "kitSizeLegacy": {

@@ -1858,7 +1858,7 @@ test("QUA-116 : annulation de la fusion automatique en échec, ou fusion encore 
   const r = reopen(racine, { gh: ghSimule(racine, PR_OUVERTE).gh });
   assert.equal(r.code, 1);
   assert.match(r.message, /le commit de la fiche restaurée a échoué \(refusé par le hook\) — fiche retirée, état inchangé/);
-  assert.match(r.message, /fusion automatique annulée : à reprogrammer/);
+  assert.match(r.message, /fusion automatique annulée et NON reprogrammée/);
   assert.equal(git("rev-parse", "HEAD"), tete);
   assert.equal(git("status", "--porcelain"), "");
   assert.equal(readState(racine).state.activity, "CLOSING");
@@ -1901,6 +1901,47 @@ test("QUA-116 : l'état rouvert se valide de BUILD à CLOSING, suit les transiti
   r = await capturer(() => main(["reopen"], en.racine));
   assert.match(r.erreurs, /reopening refused: activity BUILD/);
   assert.match(context(readState(en.racine), en.racine), /Workstream reopened after its closing \(QUA-116\), PR #42 open/);
+});
+
+test("QUA-181 : réouverture échouée après l'annulation de la fusion : le refus dit que l'humain reprogramme, l'état le garde jusqu'à une réouverture réussie ou au retour en SCOPING ; en anglais aussi", async () => {
+  for (const lang of ["fr", "en"]) {
+    const { racine } = depotClos({ lang });
+    writeFileSync(join(racine, ".git", "hooks", "pre-commit"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
+    const r = reopen(racine, { gh: ghSimule(racine, PR_OUVERTE).gh });
+    assert.equal(r.code, 1);
+    assert.match(
+      r.message,
+      lang === "fr"
+        ? /NON reprogrammée.*jamais seul.*à l'humain de la reprogrammer/s
+        : /NOT scheduled again.*never reschedules.*up to the human/s,
+    );
+    assert.deepEqual(readState(racine).state.merge_cancelled, { pr: 42 });
+    assert.equal(readState(racine).state.activity, "CLOSING");
+    const rappel = lang === "fr" ? /PR #42 ANNULÉE .*NON reprogrammée/ : /PR #42 CANCELLED .*NOT scheduled again/;
+    assert.match(shortReminder(readState(racine), racine), rappel);
+    assert.match(context(readState(racine), racine), rappel);
+
+    // Sans le hook, la réouverture réussit : la marque tombe.
+    rmSync(join(racine, ".git", "hooks", "pre-commit"));
+    assert.equal(reopen(racine, { gh: ghSimule(racine, PR_OUVERTE).gh }).code, 0);
+    assert.equal(readState(racine).state.merge_cancelled, undefined);
+    assert.doesNotMatch(shortReminder(readState(racine), racine), rappel);
+  }
+  // Sans fusion programmée, rien n'a été annulé : pas de marque.
+  const { racine } = depotClos();
+  writeFileSync(join(racine, ".git", "hooks", "pre-commit"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
+  reopen(racine, { gh: ghSimule(racine, { ...PR_OUVERTE, autoMergeRequest: null }).gh });
+  assert.equal(readState(racine).state.merge_cancelled, undefined);
+
+  // Validation : seulement en CLOSING, objet { pr } ; le retour en SCOPING l'efface.
+  assert.match(validateState(actif("CLOSING", { merge_cancelled: true }), racine)[0], /merge_cancelled : objet \{ pr \} attendu/);
+  assert.ok(
+    validateState(actif("BUILD", { merge_cancelled: { pr: 42 } }), racine).some((p) => /merge_cancelled : seulement en CLOSING/.test(p)),
+  );
+  const clos = depot({ state: actif("CLOSING", { merge_cancelled: { pr: 42 } }) });
+  assert.deepEqual(readState(clos).problems, []);
+  assert.equal((await move(clos, { to: "SCOPING" })).code, 0);
+  assert.equal(readState(clos).state.merge_cancelled, undefined);
 });
 
 const CRITERES = (extra = "") =>

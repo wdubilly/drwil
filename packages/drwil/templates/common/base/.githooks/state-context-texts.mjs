@@ -19,6 +19,8 @@ export const TEXTS = {
     queueMerge: " (fusion automatique)",
     detour:
       "Détour en cours (QUA-050), ouvert depuis {0} (branche {1}, travail en cours mis de côté par l'outil) : corriger le défaut sous cette fiche courte, sur la branche {2} ; PR intitulée « Détour de {0} : … », au mode de fusion décidé au lancement ; avant le push, entrée de journal citant la branche {2} et fiche supprimée ; une fois la PR fusionnée, `node .githooks/detour.mjs resume`. Jamais de stash ni de changement de branche à la main.",
+    mergeCancelled:
+      "Fusion automatique de la PR #{0} ANNULÉE par une réouverture échouée, et NON reprogrammée : l'outil ne la reprogramme jamais seul (au risque de fusionner le code fautif) ; il revient à l'humain de la reprogrammer, quand il a décidé. Ne pas lancer `merge-auto` sans son oui ; ce rappel dure jusqu'à une réouverture réussie ou au retour en SCOPING.",
     reopened:
       "Chantier rouvert après sa clôture (QUA-116), PR #{0} ouverte : corriger le défaut sur cette branche, sans réécrire l'historique ni pousser en force ; un correctif qui change les règles du jeu (contrat existant modifié ou retiré, hook, seuil, barrière, CI) attend le oui de l'humain (`node .githooks/detour.mjs allow`, terminal ; en file, le sous-agent s'arrête) ; puis EVIDENCE, VERIFY et CLOSING comme la première fois : l'entrée de journal du chantier se met à jour (jamais une seconde), `node .githooks/close.mjs` réécrit la preuve et remplace la ligne de consommation.",
     // Un « continue » ambigu a lancé un chantier le 2026-10-17 : une file reprise exige un oui explicite.
@@ -73,6 +75,8 @@ export const TEXTS = {
     queueMerge: " (automatic merge)",
     detour:
       "Detour in progress (QUA-050), opened from {0} (branch {1}, work in progress set aside by the tool): fix the defect under this short brief, on branch {2}; PR titled « Detour of {0}: … », with the merge mode decided at start; before the push, a journal entry citing branch {2} and the brief deleted; once the PR is merged, `node .githooks/detour.mjs resume`. Never stash or switch branches by hand.",
+    mergeCancelled:
+      "Automatic merge of PR #{0} CANCELLED by a failed reopening, and NOT scheduled again: the tool never reschedules it by itself (it could merge the faulty code); it is up to the human to schedule it again, once decided. Do not run `merge-auto` without their yes; this reminder lasts until a reopening succeeds or back in SCOPING.",
     reopened:
       "Workstream reopened after its closing (QUA-116), PR #{0} open: fix the defect on this branch, without rewriting history or force-pushing; a fix that changes the rules (an existing contract modified or removed, hook, threshold, gate, CI) waits for the human's yes (`node .githooks/detour.mjs allow`, terminal; in a queue, the subagent stops); then EVIDENCE, VERIFY and CLOSING like the first time: the workstream's journal entry is updated (never a second one), `node .githooks/close.mjs` rewrites the proof and replaces the consumption line.",
     queueResume:

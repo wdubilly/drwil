@@ -58,7 +58,7 @@ attribuer à ce moment-là dans le registre.)
 - Quand la réouverture échoue après l'annulation de la fusion automatique, le
   refus dit que la fusion est annulée, qu'elle n'est pas reprogrammée par
   l'outil, et qu'il revient à l'humain de la reprogrammer ; le rappel d'état en
-  CLOSING le redit tant que la fusion n'est pas reprogrammée — contrat à créer
+  CLOSING le redit tant que la fusion n'est pas reprogrammée — `QUA-181`
 - Le test du cycle complet d'une réouverture (QUA-118 : nouvelle clôture d'un
   chantier rouvert) se joue aussi sous Windows, avec un `gh` simulé lançable
   (`gh.cmd` et shell), au lieu d'être sauté — contrat à créer
@@ -66,7 +66,7 @@ attribuer à ce moment-là dans le registre.)
 ## Contrats modifiés
 
 - Aucun contrat existant modifié : QUA-116 et QUA-118 inchangés.
-- `.githooks/state-cli.mjs` — réouverture refusée : pose du marqueur `merge_cancelled` (validé par le demandeur le 2026-10-29).
+- `.githooks/state-cli.mjs` — inchangé (le marqueur est posé par `.githooks/state-reopen.mjs`, le rappel est déjà injecté par `reminderIfChanged`).
 - `.githooks/state-texts.mjs` — rappel d'état en CLOSING tant que la fusion annulée n'est pas reprogrammée (validé par le demandeur le 2026-10-29).
 - `.githooks/state-reopen.mjs` — marqueur `merge_cancelled`, effacé à la réouverture réussie (validé par le demandeur le 2026-10-29).
 - `.githooks/state-validate.mjs` — champ d'état `merge_cancelled` accepté (validé par le demandeur le 2026-10-29).
