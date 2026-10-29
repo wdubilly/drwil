@@ -17,6 +17,13 @@ closing commit; the release renames this section to its version.
   (interactive terminal only); the start names every `.githooks/` file the
   scope cites without a « Modified contracts » bullet; the closing removes the
   index line of a brief even when it also cites another document of `docs/`.
+- The queue now waits for the merge: reading the state in CLOSING whose pull
+  request is merged brings it back to SCOPING and says so (open or unknown
+  pull request, `gh` absent: it stays CLOSING and says so); `node
+  .githooks/state.mjs next` refuses to start the head of the queue until the
+  previous workstream's pull request is merged; a queue decided at start goes
+  on by itself when the merge is seen at a prompt of the running session,
+  while a queue resumed in a new session still waits for the human's yes.
 - A brief with several lots (bullets « **Lot N — title** [IA|human] » of its
   « Increments » section) is now carried lot by lot: `node .githooks/state.mjs
   lot` names the current lot, the lots done and those left, and `lot next`

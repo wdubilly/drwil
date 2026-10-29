@@ -143,6 +143,11 @@ QUA-138, sont probablement modifiés. Le demandeur valide chaque puce.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-29) : cadré, prêt à lancer.
+- **Dernier état** (2026-10-29) : lot 1 réalisé et commité sur `workstream/retour-scoping-branche-sondage`
+  (`settleClosing` et `nextHead` dans `.githooks/state-transitions.mjs`, messages fr/en, contrats QUA-176 à QUA-178 et leurs
+  contrôles, QUA-037 mis à jour, changelog, tests `.githooks/state.test.mjs`). Limite : à chaque invite en CLOSING
+  (fiche supprimée) la fusion est vérifiée, donc un appel `gh` (20 s au plus) quand git ne la voit pas.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`).
+- **Prochaine étape** : lot 2 — branche créée au lancement en « This folder » (`.githooks/worktree.mjs`), puis lot 3 (sondage
+  en choix unique). Section « Contrats modifiés » : QUA-037 modifié (phrase sur le retour en SCOPING), à valider
+  par le demandeur ; QUA-138 inchangé.

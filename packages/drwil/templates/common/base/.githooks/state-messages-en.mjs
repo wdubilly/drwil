@@ -65,6 +65,12 @@ export const MESSAGES_EN = {
   startClosingOpen:
     "start refused: CLOSING, the closing PR is not merged — wait for the merge (and update the main branch), then start again",
   startClosingUnknown: "start refused: CLOSING, the closing PR's merge is not established",
+  settled: "CLOSING → SCOPING: the workstream's pull request is merged",
+  settleOpen: "CLOSING: the workstream's pull request is not merged — the state stays CLOSING (back to SCOPING once the merge is seen)",
+  settleUnknown: "CLOSING: the workstream's pull request merge is not established — the state stays CLOSING",
+  nextOpen:
+    "next refused: the previous workstream's pull request is not merged — wait for the merge (and update the main branch), then retry",
+  nextUnknown: "next refused: the previous workstream's pull request merge is not established",
   startHuman: "start refused: it is a human decision (`/drwil-start` poll, or interactive terminal)",
   startBusy: "start refused: brief {0} is already active in the worktree {1}",
   startNotScoped: `start refused: "{0}" is not a scoped brief (scope block committed, brief not finished)`,

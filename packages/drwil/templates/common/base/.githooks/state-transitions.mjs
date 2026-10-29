@@ -8,7 +8,7 @@ import { activeElsewhere } from "./worktree.mjs";
 import { ACTIVITIES, readState, texts, transitionAllowed, validateState, NEUTRAL_STATE } from "./state-validate.mjs";
 import { requiresHuman, verifyEvidence } from "./state-evidence.mjs";
 import { fill } from "./state-texts.mjs";
-import { writeState } from "./state.mjs";
+import { move as moveAll, start as startAll, writeState } from "./state.mjs";
 
 const STARTABLE_FROM = new Set(["SCOPING", "EXPECTATION", "REQUEST"]);
 
@@ -141,4 +141,34 @@ export async function move(root, { to, brief, request }, { tty = false, confirm,
   }
   writeState(root, prep.state);
   return { code: 0, message: `${resumed}${from} → ${to}${warning}` };
+}
+
+/**
+ * Reading the state in CLOSING (brief deleted) whose closing PR is merged brings it back to SCOPING, and a
+ * queue decided at launch goes on with its head when `chain` (a prompt of the running session, never a session
+ * start: a queue resumed in a new session waits for the human's yes). Open or unknown PR (QUA-013): CLOSING stays.
+ * `{ message }`, empty when there is nothing to say.
+ */
+export async function settleClosing(root, { chain = false, gh } = {}) {
+  const T = texts(root);
+  const { state } = readState(root);
+  if (state.activity !== "CLOSING") return { message: "" };
+  if (existsSync(join(root, state.active_brief))) return { message: fill(T.startClosingBrief, state.active_brief) };
+  const refused = { no: T.settleOpen, unknown: `${T.settleUnknown} — ${noGhText(root)}` }[closingMerged(root, { gh })];
+  if (refused) return { message: refused };
+  // Cannot be refused here: the brief is gone and CLOSING → SCOPING is free.
+  await moveAll(root, { to: "SCOPING" }, {});
+  const head = readState(root).state.queue?.[0];
+  return { message: head && chain ? `${T.settled}\n${startAll(root, head).message}` : T.settled };
+}
+
+/**
+ * Starts the head of the queue (`next`) once the previous workstream's pull request is merged
+ * (closingMerged); open or unknown (QUA-013): refused, said. Without a queue, `start` refuses.
+ */
+export function nextHead(root, { gh } = {}) {
+  const T = texts(root);
+  const head = readState(root).state.queue?.[0];
+  const refused = head && { no: T.nextOpen, unknown: `${T.nextUnknown} — ${noGhText(root)}` }[closingMerged(root, { gh })];
+  return refused ? { code: 1, message: refused } : startAll(root, head);
 }
