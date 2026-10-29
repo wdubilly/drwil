@@ -3839,4 +3839,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Hooks modifiés** : `.githooks/state-transitions.mjs`, `.githooks/state-cli.mjs`, `.githooks/state-texts.mjs`, `.githooks/worktree.mjs`, messages fr et en ; skill `start-a-workstream`.
 - **Cadrage élargi** : `packages/drwil/test/kit.test.mjs` et `outils/banc.test.mjs` ajoutés au scope sur décision humaine (tests QUA-108, QUA-142, QUA-147 adaptés) ; la ligne de `packages/drwil/test/kit.test.mjs` avait été perdue au lot 2 et a été rétablie par un commit séparé.
 - **Limites connues** : à chaque invite en CLOSING, la fusion est vérifiée, donc un appel `gh` (20 s au plus) quand git ne la voit pas ; sous Copilot CLI une file de plusieurs fiches ne se coche plus d'un sondage (une fiche par sondage) ; cause de l'échec du champ à choix multiple non établie.
+- **Preuve de clôture** : `docs/preuves/retour-scoping-branche-sondage.md`.
 - **Clôturé par** : la branche `workstream/retour-scoping-branche-sondage`.
