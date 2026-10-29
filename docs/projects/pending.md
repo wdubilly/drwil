@@ -136,6 +136,11 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P3] Compléter le test unitaire de QUA-138 (retour en SCOPING
   après la fusion), en dernier : il teste les textes que les fiches
   précédentes modifient — `docs/projects/test-unitaire-fusion-automatique.md`.
+- [ ] [IA] [P2] Retour en SCOPING à la fusion constatée (file comprise), branche
+  créée au lancement en « This folder », sondage multi-choix lu (cadré le
+  2026-10-29 ; à affiner : trois points à trancher, dont le chevauchement avec
+  `next-attend-la-fusion`) —
+  `docs/projects/retour-scoping-branche-sondage.md`.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
