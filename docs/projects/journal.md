@@ -3829,5 +3829,6 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Hooks modifiés** : `.githooks/scope-gate.mjs`, `.githooks/scope.mjs`, `.githooks/state.mjs`, `.githooks/closure-proof.mjs`, `.githooks/base-checks.mjs`, `.githooks/doc-coherence.mjs` ; neufs : `.githooks/state-acceptance.mjs`, `.githooks/state-hooks.mjs`.
 - **Cadrage élargi** : trois commits séparés ajoutent au bloc scope les modules neufs, `docs/architecture.md` et les listes de `kit-mechanics.md`, omis du cadrage initial.
 - **Limites connues** : l'acceptation est un fichier local que rien n'empêche un agent d'écrire à la main (les gardes d'écriture des hooks d'agent sont hors périmètre) ; l'attestation `Manuel` de QUA-175 est un geste humain.
+- **Réouverture** : la CI de la PR #298 a refusé la couverture des branches de `.githooks/scope.mjs` (lecture de `origin/HEAD`, absent en CI) ; un test l'a couverte, sur le oui de l'humain (`detour.mjs allow`).
 - **Preuve de clôture** : `docs/preuves/cycle-de-vie-des-fiches.md`.
 - **Clôturé par** : la branche `workstream/cycle-de-vie-des-fiches`.

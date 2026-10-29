@@ -1,7 +1,7 @@
 # Preuve de clôture — cycle-de-vie-des-fiches
 
 **Clos le** : 2026-10-29
-**Commit vérifié** : `c3df43a662` — verdict `drwil verify` : PASS
+**Commit vérifié** : `302ace3861` — verdict `drwil verify` : PASS
 **Critères acceptés** : aucune acceptation enregistrée au lancement (lancement hors sondage ou terminal)
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
