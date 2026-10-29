@@ -988,6 +988,49 @@ test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CL
   );
 });
 
+test("QUA-138 : avec la fusion automatique, le retour en SCOPING attend la fusion suivie par pr-watch ; verte sans fusion : relance, 30 minutes ; CI rouge : reopen ; délai dépassé : CLOSING signalé", () => {
+  const { racine } = depotCadre({ transitions: "agent" });
+  assert.equal(start(racine, FICHE, { human: true, autoMerge: true }).code, 0);
+  const lu = { ...readState(racine), state: { ...readState(racine).state, activity: "CLOSING" } };
+  // Chaque étape doit venir après la précédente : l'ancienne procédure revenait en SCOPING dès la
+  // programmation vérifiée, sans suivi ni fusion effective (PR #232).
+  const etapes = {
+    fr: [
+      "gh pr merge --auto --merge",
+      "`gh pr view --json autoMergeRequest`",
+      "suivre la PR par `node .githooks/pr-watch.mjs <numéro>`",
+      "relancé tant qu'il dit « verte » sans « fusionnée »",
+      "30 minutes au plus en tout",
+      "la PR fusionnée, seulement ensuite revenir en SCOPING",
+      "CI rouge avant la fusion : rester en CLOSING et rouvrir le chantier (`node .githooks/state.mjs reopen`",
+      "Délai dépassé, ou autre échec : rester en CLOSING et le signaler",
+    ],
+    en: [
+      "gh pr merge --auto --merge",
+      "`gh pr view --json autoMergeRequest`",
+      "follow the PR with `node .githooks/pr-watch.mjs <number>`",
+      "run again while it says « green » without « merged »",
+      "30 minutes at most in all",
+      "the PR merged, only then go back to SCOPING",
+      "Red CI before the merge: stay in CLOSING and reopen the workstream (`node .githooks/state.mjs reopen`",
+      "Time limit exceeded, or any other failure: stay in CLOSING and report it",
+    ],
+  };
+  for (const lang of ["fr", "en"]) {
+    writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ transitions: "agent", lang }));
+    const texte = context(lu, racine);
+    let avant = -1;
+    for (const etape of etapes[lang]) {
+      const ici = texte.indexOf(etape, avant + 1);
+      assert.ok(ici > avant, `${lang} : « ${etape} » absent ou hors d'ordre`);
+      avant = ici;
+    }
+    // Aucun retour en SCOPING annoncé avant le suivi par pr-watch.
+    const suivi = texte.indexOf("pr-watch.mjs");
+    assert.doesNotMatch(texte.slice(0, suivi), /SCOPING/, `${lang} : SCOPING cité avant le suivi`);
+  }
+});
+
 test("validation : auto_merge booléenne, jamais vraie en SCOPING", () => {
   const racine = depot();
   assert.match(validateState(actif("BUILD", { auto_merge: "oui" }), racine)[0], /auto_merge/);
