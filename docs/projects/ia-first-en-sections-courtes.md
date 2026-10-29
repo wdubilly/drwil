@@ -23,6 +23,19 @@ files:
   - docs/intentions/fichiers-charges-courts.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - packages/drwil/test/kit.test.mjs
+  - packages/drwil/test/guarantees.test.mjs
+  - outils/banc-agents.test.mjs
+  - packages/drwil/src/config.ts
+  - packages/drwil/templates/common/base/AGENTS.md
+  - AGENTS.md
+  - packages/drwil/templates/common/tools/claude/.claude/skills/drwil/SKILL.md
+  - .claude/skills/drwil/SKILL.md
+  - packages/drwil/templates/common/base/docs/projects/model-brief.md
+  - docs/projects/model-brief.md
+  - packages/drwil/templates/common/base/docs/projects/pending.md
+  - packages/drwil/templates/common/base/docs/projects/routine-maintenance.md
+  - docs/projects/routine-maintenance.md
 -->
 
 ## 1. Besoin
@@ -99,7 +112,14 @@ attribuer à ce moment-là dans le registre.)
    sous-section de la section 7) ; `docs/ia-first.md` devient un sommaire court
    (moins de 100 lignes) qui garde la numérotation et donne, pour chaque
    section, le chemin de son fichier. Les citations « `docs/ia-first.md`,
-   section N » restent vraies ; aucun renvoi n'est réécrit.
+   section N » restent vraies. Révisé par le demandeur le 2026-10-29, au
+   lot 2 : les renvois les plus lus (`AGENTS.md`, `.claude/skills/drwil/SKILL.md`,
+   `model-brief.md`, `pending.md`, `routine-maintenance.md`, gabarit et copie)
+   pointent vers le fichier de section exact, un renvoi « section 7 » nommant
+   sa sous-section ; les autres passent par le sommaire. Les tests cherchent
+   une règle dans le sommaire et ses sections, pas à une position fixe ;
+   `KIT_PROSE` (`packages/drwil/src/config.ts`) livre le dossier docs/ia-first/, prouvé
+   par un test.
 5. Chargement : lecture directe du fichier de section, dont le sommaire donne
    le chemin. Pas d'option `--section` dans `.githooks/glossary.mjs`.
 
@@ -123,6 +143,9 @@ Aucun.
   (gabarit et copie), test au nouveau seuil, texte de QUA-157 mis à jour.
   `docs/ia-first.md` (916 lignes) reste toléré par `kitSizeLegacy` (inchangé) ;
   aucun autre document lu à la demande du kit ne dépasse 400 lignes.
+- **Lot 2, premier essai** (2026-10-29) : arrêté sans rien modifier, le
+  périmètre ne couvrait pas les tests qui lisent `docs/ia-first.md` ni
+  `KIT_PROSE` ; périmètre élargi sur le oui du demandeur (décision 4 révisée).
 - **Travail non commité** : aucun.
 - **Prochaine étape** : lot 2 — découpe (sections courtes dans le dossier docs/ia-first/ à créer,
   sommaire, renvois vérifiés, `kitSizeLegacy` retiré, carte, `kit-mechanics.md`,
