@@ -6,6 +6,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ghRun, mergeAuto, parseArgs } from "./merge-auto.mjs";
+import { context, readState, scopingMerge } from "./state.mjs";
+
+// Un hook lancé par `git commit` reçoit GIT_INDEX_FILE, GIT_DIR… : hérités, ils feraient agir les dépôts de test
+// (fin de cadrage) sur le dépôt qui lance les tests.
+for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "merge-auto.mjs");
 const RACINE = join(dirname(SCRIPT), "..");
@@ -192,4 +197,73 @@ test("QUA-164 fusion automatique : la consigne de l'état et le skill appellent 
     assert.match(texte, /reopen/);
   }
   assert.ok(consigne.indexOf("merge-auto.mjs") < consigne.indexOf("pr-watch.mjs"));
+});
+
+/** Projet en SCOPING, dépôt git sur `branche`, avec (ou non) l'autorisation de fin de cadrage. */
+function cadrage({ branche = "cadrage/essai", autorise = true, lang } = {}) {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-merge-auto-cadrage-"));
+  mkdirSync(join(dir, ".drwil"));
+  if (lang) writeFileSync(join(dir, ".drwil", "ia-first.json"), JSON.stringify({ lang }));
+  const git = (...a) => spawnSync("git", a, { cwd: dir, encoding: "utf8" });
+  git("init", "-q", "-b", "master");
+  git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init");
+  git("checkout", "-q", "-b", branche);
+  if (autorise) assert.equal(scopingMerge(dir, "auto").code, 0);
+  return dir;
+}
+
+test("QUA-188 fusion automatique en SCOPING : la réponse « Automatic merge » ouvre l'outil pour la PR de sa branche seulement", async () => {
+  const dir = cadrage();
+  const programme = faux({
+    vues: [ok(vue("CLEAN", { headRefName: "cadrage/essai" })), ok(vue("CLEAN", { headRefName: "cadrage/essai", autoMergeRequest: {} }))],
+  });
+  const r = await mergeAuto(options(dir, { gh: programme.gh }));
+  assert.deepEqual([r.code, programme.appels], [0, ["pr view", "pr merge", "pr view"]]);
+  // La PR d'une autre branche : refusée, rien n'est programmé.
+  const autre = faux({ vues: [ok(vue("CLEAN", { headRefName: "workstream/autre" }))] });
+  const refus = await mergeAuto(options(dir, { gh: autre.gh }));
+  assert.equal(refus.code, 1);
+  assert.match(refus.message, /la PR #7 est celle de la branche workstream\/autre.*autorisée que pour la branche cadrage\/essai/);
+  assert.deepEqual(autre.appels, ["pr view"]);
+  const en = cadrage({ lang: "en" });
+  assert.match(
+    (await mergeAuto(options(en, { gh: faux({ vues: [ok(vue("CLEAN", { headRefName: "x" }))] }).gh }))).message,
+    /authorised for branch cadrage\/essai only/,
+  );
+  // Le rappel d'état le dit, dans les deux langues.
+  assert.match(
+    context(readState(dir), dir),
+    /Fusion automatique de la PR de cadrage autorisée pour la branche cadrage\/essai.*merge-auto\.mjs <numéro>.*pr-watch\.mjs <numéro>/s,
+  );
+  assert.match(context(readState(en), en), /Automatic merge of the scoping PR authorised for branch cadrage\/essai/);
+  // Sans la réponse, en SCOPING : refus comme avant, sans aucun appel à gh.
+  let lance = false;
+  const sans = await mergeAuto({ pr: "7", root: cadrage({ autorise: false }), gh: () => (lance = true) });
+  assert.equal(sans.code, 1);
+  assert.match(sans.message, /ni en fin de cadrage/);
+  assert.equal(lance, false);
+});
+
+test("QUA-189 « Manual merge » et « Continue scoping » ne programment rien ; « Continue scoping » garde la même branche", async () => {
+  for (const reponse of ["manual", "continue"]) {
+    const dir = cadrage();
+    const r = scopingMerge(dir, reponse);
+    assert.equal(r.code, 0);
+    assert.equal(readState(dir).state.scoping_merge, undefined, reponse);
+    let lance = false;
+    const refus = await mergeAuto({ pr: "7", root: dir, gh: () => (lance = true) });
+    assert.deepEqual([refus.code, lance], [1, false], reponse);
+    if (reponse === "continue")
+      assert.match(r.message, /la PR reste ouverte et les cadrages suivants se commitent sur la même branche \(cadrage\/essai\)/);
+    else assert.match(r.message, /reste un geste humain/);
+  }
+  const skill = readFileSync(
+    join(RACINE, "packages/drwil/templates/common/tools/claude/.claude/skills/scope-a-workstream/SKILL.md"),
+    "utf8",
+  ).replace(/\s+/g, " ");
+  assert.match(
+    skill,
+    /\*\*Continue scoping\*\*: nothing is scheduled; the PR stays open and the next scopings are committed on \*\*the same branch\*\* \(one branch, one PR, no new branch\)/,
+  );
+  assert.match(skill, /\*\*Manual merge\*\*: nothing is scheduled/);
 });

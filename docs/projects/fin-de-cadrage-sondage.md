@@ -132,6 +132,6 @@ Hooks modifiés (QUA-137) :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-29) : lot 1 fait — skill `scope-a-workstream` (`/drwil-scope`), sondage lu par le hook, champ d'état `scoping_merge`, contrat QUA-187.
+- **Dernier état** (2026-10-29) : lots 1 et 2 faits — skill `/drwil-scope`, autorisation `scoping_merge` lue par `.githooks/merge-auto.mjs` en SCOPING (QUA-187 à QUA-189, QUA-163 modifié).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 2 — `.githooks/merge-auto.mjs` accepte `scoping_merge` en SCOPING pour la branche de la PR ; rappel d'état ; doc ; contrats des deux derniers critères, QUA-163 modifié.
+- **Prochaine étape** : clôture (EVIDENCE → VERIFY → CLOSING).

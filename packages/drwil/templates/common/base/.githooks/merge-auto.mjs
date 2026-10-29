@@ -2,7 +2,8 @@
 // Schedules the automatic merge of a pull request in the safe order (QUA-166): wait until GitHub has
 // computed the PR, update it if it is behind the main branch (BEHIND), `gh pr merge --auto --merge`, then
 // check that the merge is really scheduled. Only with the « Automatic merge » authorisation given at start
-// (read in the state); never schedules on a PR whose state is unknown or not up to date, never claims
+// (read in the state), or, in SCOPING, the one given by the end-of-scoping poll for the PR of its branch
+// (`scoping_merge`, QUA-188); never schedules on a PR whose state is unknown or not up to date, never claims
 // the merge is scheduled without having seen it (QUA-013). Following the PR stays `pr-watch.mjs`'s job.
 // Usage: node .githooks/merge-auto.mjs [<pr number>] [--timeout <minutes>]
 // Exit code: 0 scheduled, 1 refused, 2 not run (gh unreachable, state not computed in time).
@@ -15,7 +16,9 @@ import { readState } from "./state.mjs";
 const TEXTS = {
   fr: {
     noAuth:
-      "[merge-auto] refusé : la fusion automatique n'a pas été autorisée au lancement (état : auto_merge absent). La fusion reste un geste humain.",
+      "[merge-auto] refusé : la fusion automatique n'a pas été autorisée au lancement (état : auto_merge absent), ni en fin de cadrage (réponse « Automatic merge » du sondage, état : scoping_merge absent). La fusion reste un geste humain.",
+    otherBranch:
+      "[merge-auto] refusé : la PR #{0} est celle de la branche {1}, alors que la fusion automatique de fin de cadrage n'est autorisée que pour la branche {2}. La fusion reste un geste humain.",
     notRun: "[merge-auto] non exécuté : {0}",
     noGh: "gh injoignable ou non connecté (gh auth login), ou aucune PR pour cette branche",
     timeout: "état de la PR #{0} non calculé ou pas à jour après {1} min (« {2} ») ; relancer la commande",
@@ -33,7 +36,9 @@ const TEXTS = {
   },
   en: {
     noAuth:
-      "[merge-auto] refused: automatic merge was not authorised at start (state: auto_merge missing). The merge stays a human gesture.",
+      "[merge-auto] refused: automatic merge was not authorised at start (state: auto_merge missing), nor at the end of scoping (answer « Automatic merge » to the poll, state: scoping_merge missing). The merge stays a human gesture.",
+    otherBranch:
+      "[merge-auto] refused: PR #{0} is the one of branch {1}, while the end-of-scoping automatic merge is authorised for branch {2} only. The merge stays a human gesture.",
     notRun: "[merge-auto] not run: {0}",
     noGh: "gh unreachable or not logged in (gh auth login), or no PR for this branch",
     timeout: "state of PR #{0} not computed or not up to date after {1} min (« {2} »); run the command again",
@@ -63,7 +68,7 @@ export const ghRun = (args) => spawnSync("gh", args, { encoding: "utf8" });
 
 /** Looks at the PR: parsed JSON, or null when gh fails or answers something unreadable. */
 function view(gh, pr) {
-  const r = gh(["pr", "view", ...(pr ? [pr] : []), "--json", "number,state,mergeStateStatus,autoMergeRequest"]);
+  const r = gh(["pr", "view", ...(pr ? [pr] : []), "--json", "number,state,mergeStateStatus,autoMergeRequest,headRefName"]);
   try {
     return r.status === 0 ? JSON.parse(r.stdout) : null;
   } catch {
@@ -85,12 +90,16 @@ export async function mergeAuto({
   const T = TEXTS[lang(root)];
   const out = (code, key, ...values) => ({ code, message: fill(T[key], ...values) });
   const notRun = (reason) => ({ code: 2, message: fill(T.notRun, reason) });
-  if (readState(root).state.auto_merge !== true) return out(1, "noAuth");
+  const { state } = readState(root);
+  // In SCOPING, only the scoping PR of the branch the human answered for (QUA-188); never another PR.
+  const scoping = state.activity === "SCOPING" ? (state.scoping_merge?.branch ?? null) : null;
+  if (state.auto_merge !== true && !scoping) return out(1, "noAuth");
   const end = now() + timeout * 60_000;
   let updated = false;
   for (;;) {
     const v = view(gh, pr);
     if (!v) return notRun(T.noGh);
+    if (scoping && v.headRefName !== scoping) return out(1, "otherBranch", v.number, v.headRefName, scoping);
     if (v.state !== "OPEN") return out(1, "notOpen", v.number, v.state);
     if (v.mergeStateStatus === "DIRTY") return out(1, "conflict", v.number);
     if (v.mergeStateStatus === "BEHIND" && !updated) {

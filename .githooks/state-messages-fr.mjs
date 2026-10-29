@@ -38,6 +38,8 @@ export const MESSAGES_FR = {
   mergeCancelledActivity: "merge_cancelled : seulement en CLOSING",
   scopingMergeType: "scoping_merge : objet { branch } attendu (branch : la branche de la PR de cadrage)",
   scopingMergeActivity: "scoping_merge : seulement en SCOPING",
+  scopingMergeReminder:
+    "Fusion automatique de la PR de cadrage autorisée pour la branche {0} (réponse « Automatic merge » du sondage de fin de cadrage) : la branche poussée et sa PR ouverte, lancer `node .githooks/merge-auto.mjs <numéro>`, qui refuse toute PR d'une autre branche ; suivre la PR par `node .githooks/pr-watch.mjs <numéro>`, relancé tant qu'il dit « verte » sans « fusionnée », 30 minutes au plus en tout ; ne jamais enchaîner les commandes `gh` à la main. L'autorisation tombe en quittant SCOPING ; une réponse « Manual merge » ou « Continue scoping » la retire.",
   scopingMergeNotScoping:
     "réponse au sondage de fin de cadrage ignorée : l'activité est {0}, pas SCOPING — rien n'est autorisé, l'état est inchangé",
   scopingMergeBranch:

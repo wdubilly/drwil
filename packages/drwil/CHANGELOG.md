@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `/drwil-scope` (skill `scope-a-workstream`, listed in the `/drwil` menu): at the
+  end of a pushed scoping, a poll asks what to do with its PR — « Automatic merge »,
+  « Manual merge » or « Continue scoping » (PR left open, next scopings on the same
+  branch) — with no default or recommended answer. The human's answer, read by the
+  poll hook, is the only way to authorise `.githooks/merge-auto.mjs` in SCOPING,
+  and only for the PR of that branch (QUA-187 to QUA-189).
 - `**Covers**` (`**Couvre**`) accepts `` `aucun` `` (or `` `none` ``) with its reason for a
   contract that judges a conduct: it counts as declared for `verify` and
   `doctor`, and covers no file. The attested contracts of this repository now
