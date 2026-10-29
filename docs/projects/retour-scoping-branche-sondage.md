@@ -18,6 +18,7 @@ files:
   - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
   - .githooks/state.test.mjs
   - .githooks/worktree.test.mjs
+  - packages/drwil/test/kit.test.mjs
   - docs/recipes/working-with-branches.md
   - docs/contracts.md
   - .drwil/ia-first.json
