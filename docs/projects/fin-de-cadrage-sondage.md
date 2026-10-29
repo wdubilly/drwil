@@ -92,8 +92,8 @@ Hooks modifiés (QUA-137) :
 - `.githooks/state-validate.mjs` : nouveau champ d'état `scoping_merge: { branch }`,
   valable en SCOPING seulement (`queue_merge` écarté : il déclencherait la
   fusion du chantier suivant de la file).
-- `.githooks/state-messages-fr.mjs`, `.githooks/state-messages-en.mjs` : messages
-  d'erreur de ce champ.
+- `.githooks/state-messages-fr.mjs` : messages d'erreur de ce champ, en français.
+- `.githooks/state-messages-en.mjs` : messages d'erreur de ce champ, en anglais.
 
 ## 2. Hors périmètre
 
