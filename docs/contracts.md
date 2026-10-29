@@ -1808,3 +1808,13 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : attestations-sur-l-effet-et-couvre — « Les attestations tombées par le chantier sont réattestées par l'humain en une seule séance, et `drwil verify --evidence` rend `GOVERNANCE: PASS` »
 **Raison** : Changer l'empreinte et déclarer `Couvre` périment toutes les attestations ; les faire dans un seul chantier ne coûte à l'humain qu'une séance.
 
+## QUA-187 — En fin de cadrage, le skill pose un sondage à trois réponses, sans réponse par défaut ni recommandée
+**Règle** : Livré à tout projet. Le skill `scope-a-workstream` (`/drwil-scope`, cité au menu `/drwil`) pose, à la fin d'un cadrage poussé et sa PR ouverte, un sondage d'une seule question, en-tête `drwil-scope` (12 caractères au plus), choix unique, à exactement trois réponses : « Automatic merge », « Manual merge », « Continue scoping » ; sous Copilot CLI, un champ `drwil-scope` en choix unique (`enum` seul). Le hook du sondage (`.claude/hooks/prompt-hook.mjs`, lecture dans `.claude/hooks/start-poll.mjs`) refuse avant affichage un sondage recommandé, prérempli, avec valeur par défaut, à choix multiple ou sans exactement ces trois réponses ; après la réponse, il la transmet seul à `.githooks/state.mjs` (`scopingMerge`), qui écrit l'autorisation `scoping_merge: { branch }` en SCOPING seulement, jamais sur la branche principale ni sur un état invalide.
+**Périmètre** : skill `scope-a-workstream`, menu `/drwil`, `.claude/hooks/prompt-hook.mjs`, `.claude/hooks/start-poll.mjs`, `.githooks/state.mjs`, `.githooks/state-validate.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/skills/scope-a-workstream/SKILL.md`, `.claude/hooks/start-poll.mjs` (`scopePoll`, `scopePollValid`, `scopeChoice`).
+**Preuve** : test : le skill livré prescrit l'en-tête, les trois réponses et l'interdiction de recommander ; le hook rejoué refuse les sondages non conformes (Claude Code et Copilot CLI), écrit l'autorisation sur la réponse « Automatic merge » pour la branche courante, la retire sur une autre réponse, et refuse sur la branche principale et hors SCOPING.
+**Contrôle** : `tests-qua-187`
+**Tests** : `.githooks/state.test.mjs`
+**Origine** : fin-de-cadrage-sondage — « Un skill de cadrage pose, à la fin d'un cadrage poussé, un sondage à trois réponses : « Automatic merge », « Manual merge », « Continue scoping » ; jamais de réponse par défaut ni recommandée »
+**Raison** : Un cadrage poussé n'est pris en compte qu'à la fusion de sa PR, et rien ne demandait quoi en faire : quatre PR de cadrage sont restées à fusionner à la main ; la décision reste humaine, lue par l'outil.
+

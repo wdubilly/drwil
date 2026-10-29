@@ -35,6 +35,18 @@ export const MESSAGES_EN = {
     "automatic merge cancelled and NOT scheduled again: the tool never reschedules it by itself (it could merge the faulty code) — it is up to the human to schedule it again, once decided; the state reminder says so again in CLOSING",
   mergeCancelledType: "merge_cancelled: object { pr } expected (pr: the PR number)",
   mergeCancelledActivity: "merge_cancelled: only in CLOSING",
+  scopingMergeType: "scoping_merge: object { branch } expected (branch: the branch of the scoping PR)",
+  scopingMergeActivity: "scoping_merge: only in SCOPING",
+  scopingMergeNotScoping:
+    "answer to the end-of-scoping poll ignored: the activity is {0}, not SCOPING — nothing authorised, the state is unchanged",
+  scopingMergeBranch:
+    "automatic merge of the scoping PR not authorised: the current branch is not a scoping branch (main branch or detached head) — nothing authorised, the state is unchanged",
+  scopingMergeAuthorised:
+    "automatic merge of the scoping PR authorised for branch {0} (answer « Automatic merge »): once the branch is pushed and its PR open, run `node .githooks/merge-auto.mjs <number>`, then follow the PR with `node .githooks/pr-watch.mjs <number>`; the authorisation holds for this branch only, in SCOPING",
+  scopingMergeManual:
+    "nothing scheduled (answer « Manual merge »): merging the scoping PR stays a human gesture; `/drwil-start` offers the brief only once the PR is merged",
+  scopingMergeContinue:
+    "nothing scheduled (answer « Continue scoping »): the PR stays open and the next scopings are committed on the same branch ({0}), one branch, one PR; the poll is asked again at the end of the next scoping",
   reopenCancelled: "automatic merge cancelled: schedule it again after the new closing, like the first time",
   reopenMessage: "Reopening of {0}: defect revealed by PR #{1}",
   reopenCommitFailed: "reopening refused: the commit of the restored brief failed ({0}) — brief removed, state unchanged",

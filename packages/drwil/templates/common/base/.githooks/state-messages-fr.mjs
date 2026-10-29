@@ -36,6 +36,18 @@ export const MESSAGES_FR = {
     "fusion automatique annulée et NON reprogrammée : l'outil ne la reprogramme jamais seul (au risque de fusionner le code fautif) — il revient à l'humain de la reprogrammer, quand il a décidé ; le rappel d'état le redit en CLOSING",
   mergeCancelledType: "merge_cancelled : objet { pr } attendu (pr : numéro de la PR)",
   mergeCancelledActivity: "merge_cancelled : seulement en CLOSING",
+  scopingMergeType: "scoping_merge : objet { branch } attendu (branch : la branche de la PR de cadrage)",
+  scopingMergeActivity: "scoping_merge : seulement en SCOPING",
+  scopingMergeNotScoping:
+    "réponse au sondage de fin de cadrage ignorée : l'activité est {0}, pas SCOPING — rien n'est autorisé, l'état est inchangé",
+  scopingMergeBranch:
+    "fusion automatique de la PR de cadrage non autorisée : la branche courante n'est pas une branche de cadrage (branche principale ou tête détachée) — rien n'est autorisé, l'état est inchangé",
+  scopingMergeAuthorised:
+    "fusion automatique de la PR de cadrage autorisée pour la branche {0} (réponse « Automatic merge ») : la branche poussée et sa PR ouverte, lancer `node .githooks/merge-auto.mjs <numéro>`, puis suivre la PR par `node .githooks/pr-watch.mjs <numéro>` ; l'autorisation ne vaut que pour cette branche, en SCOPING",
+  scopingMergeManual:
+    "rien n'est programmé (réponse « Manual merge ») : la fusion de la PR de cadrage reste un geste humain ; la fiche ne sera proposée par `/drwil-start` qu'une fois la PR fusionnée",
+  scopingMergeContinue:
+    "rien n'est programmé (réponse « Continue scoping ») : la PR reste ouverte et les cadrages suivants se commitent sur la même branche ({0}), une branche, une PR ; le sondage se repose à la fin du cadrage suivant",
   reopenCancelled: "fusion automatique annulée : à reprogrammer après la nouvelle clôture, comme la première fois",
   reopenMessage: "Réouverture de {0} : défaut révélé par la PR #{1}",
   reopenCommitFailed: "réouverture refusée : le commit de la fiche restaurée a échoué ({0}) — fiche retirée, état inchangé",

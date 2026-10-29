@@ -27,6 +27,8 @@ export const NEUTRAL_STATE = Object.freeze({ version: 1, activity: "SCOPING", ac
 // detour (QUA-050): the workstream set aside while a prior defect is fixed (.githooks/detour.mjs).
 // reopened (QUA-116): the workstream reopened after its closing, `{ pr, human? }`, until back in SCOPING.
 // merge_cancelled: the automatic merge a failed reopening cancelled, `{ pr }`, until a reopening succeeds or back in SCOPING.
+// scoping_merge (QUA-188): the automatic merge of the scoping PR of `{ branch }`, authorised by the human's answer to the
+// end-of-scoping poll; SCOPING only, so never `queue_merge`, which would merge the next workstream of the queue.
 const FIELDS = new Set([
   ...Object.keys(NEUTRAL_STATE),
   "auto_merge",
@@ -36,6 +38,7 @@ const FIELDS = new Set([
   "reopened",
   "parallel",
   "merge_cancelled",
+  "scoping_merge",
 ]);
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 export const texts = (root) => STATE_MESSAGES[config(root).lang === "en" ? "en" : "fr"];
@@ -70,6 +73,10 @@ export function validateState(state, root) {
   const m = state.merge_cancelled;
   if (m !== undefined && !(m && typeof m === "object" && Number.isInteger(m.pr))) problems.push(T.mergeCancelledType);
   else if (m !== undefined && state.activity !== "CLOSING") problems.push(T.mergeCancelledActivity);
+  const s = state.scoping_merge;
+  if (s !== undefined && !(s && typeof s === "object" && typeof s.branch === "string" && s.branch !== ""))
+    problems.push(T.scopingMergeType);
+  else if (s !== undefined && state.activity !== "SCOPING") problems.push(T.scopingMergeActivity);
   if (state.active_request !== null && typeof state.active_request !== "string") problems.push(T.request);
   if (state.auto_merge !== undefined && typeof state.auto_merge !== "boolean") problems.push(T.autoMergeType);
   else if (state.auto_merge === true && state.activity === "SCOPING") problems.push(T.autoMergeScoping);

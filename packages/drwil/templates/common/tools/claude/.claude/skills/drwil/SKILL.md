@@ -21,6 +21,7 @@ anything else):
 | `/drwil-progress` | View progress | `docs/recipes/view-progress.md` |
 | `/drwil-release` | Create a release (tag + GitHub note), optional module | `docs/recipes/create-a-release.md` |
 | `/drwil-start` | Start a workstream: poll of the scoped briefs, the human answer moves to BUILD | `docs/ia-first.md` ("Starting and closing") |
+| `/drwil-scope` | End a scoping: poll on its PR (automatic merge, manual merge, or continue scoping) | `docs/recipes/working-with-branches.md` |
 
 If `$capability` is `verify`: run `npx drwil verify --agent` at the project
 root (the project's own `drwil` CLI is the source of truth; never derive a
