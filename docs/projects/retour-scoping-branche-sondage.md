@@ -30,6 +30,8 @@ files:
   - .githooks/state-transitions.mjs
   - .githooks/state-texts.mjs
   - .githooks/worktree.mjs
+  - packages/drwil/test/kit.test.mjs
+  - outils/banc.test.mjs
 -->
 
 ## 1. Besoin
