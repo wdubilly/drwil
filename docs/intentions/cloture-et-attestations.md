@@ -151,12 +151,12 @@ Les dix parties se cadrent en cinq fiches, décidées par le demandeur le 2026-1
 
 - `docs/projects/attestations-sur-l-effet-et-couvre.md` : empreinte d'une attestation sur l'effet du contrôle et `Couvre` des 15 contrats attestés, un seul chantier et une seule séance de réattestation (parties « couverture des contrats attestés » et « attestation sur l'effet du contrôle ») ; tableau `Couvre` à valider.
 - `docs/projects/reouverture-dite-et-eprouvee.md` : la réouverture dit ce qu'elle a annulé et qui reprogramme la fusion ; son cycle complet se joue sous Windows (parties « fusion annulée après échec » et « réouverture éprouvée »).
-- `docs/projects/next-attend-la-fusion.md` : `next` refuse tant que la PR précédente n'est pas fusionnée (partie « arrêt de file »).
+- `docs/projects/retour-scoping-branche-sondage.md` (ex-`next-attend-la-fusion`, fusionnée le 2026-10-29) : `next` refuse tant que la PR précédente n'est pas fusionnée (partie « arrêt de file »).
 - `docs/projects/journal.md` (chantier fait le 2026-10-28) : registre en SCOPING, code livré couvert, acceptation des critères, hooks déclarés au lancement, ligne d'index retirée (parties « cycle de vie des fiches » et « acceptation par critère »), QUA-172 à QUA-175, QUA-137 et QUA-074 modifiés.
 - `docs/projects/release-feu-vert-et-squash.md` : feu vert de publication enregistré, recette qui signale un squash (parties « feu vert » et « recette après squash »).
 
 Décidé de ne rien faire : attendre CodeQL avant la clôture (`reopen` suffit, partie « défaut révélé après la clôture » : la deuxième question est close). Un essai réel de la réouverture sur une vraie PR reste une note, à la prochaine CI rouge après une clôture.
-Rangement du 2026-10-26 : la fiche `docs/projects/release-feu-vert-et-squash.md` attend `docs/intentions/release-allegee.md` (alléger d'abord, décision du demandeur). Reste non cadrée ici : la note « un lancement intercalé efface la file », voisine de `docs/projects/next-attend-la-fusion.md`.
+Rangement du 2026-10-26 : la fiche `docs/projects/release-feu-vert-et-squash.md` attend `docs/intentions/release-allegee.md` (alléger d'abord, décision du demandeur). Reste non cadrée ici : la note « un lancement intercalé efface la file », voisine de `docs/projects/retour-scoping-branche-sondage.md`.
 
 Fait le 2026-10-28 (chantier « la fusion automatique s'enchaîne dans l'ordre par un outil ») : `node .githooks/merge-auto.mjs <numéro>` programme la fusion dans l'ordre (état calculé, mise à jour si `BEHIND`, programmation, vérification), QUA-161 à QUA-164 ; la consigne de l'état et le skill l'appellent. Restent, non traités : le suivi `pr-watch` et le retour en SCOPING, inchangés ; la fusion manuelle et la décision de fusion (sondage).
 
