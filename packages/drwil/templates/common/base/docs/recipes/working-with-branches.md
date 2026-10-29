@@ -48,7 +48,7 @@ request, instead of direct commits on the main branch.
   a pull request like the rest: `/drwil-start` offers a brief only once that
   PR is merged, since it reads the briefs of the main branch.
 - Once the scoping is pushed and its PR open, the `/drwil-scope` skill
-  (`.claude/skills/scope-a-workstream/SKILL.md`) asks the human, in a poll
+  (skill `scope-a-workstream`) asks the human, in a poll
   with no default or recommended answer, what to do with the PR:
   - « Automatic merge »: the hook records the authorisation for the current
     branch (state `scoping_merge`, SCOPING only); the agent runs
