@@ -1797,3 +1797,14 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : attestations-sur-l-effet-et-couvre — « Chaque contrat attesté du dépôt déclare ce qu'il couvre (`**Couvre**`) ; `drwil doctor` ne signale plus aucun contrat attesté sans couverture déclarée »
 **Raison** : 15 contrats attestés sur 17 ne déclaraient rien : le code jugé pouvait changer sans que l'attestation tombe (le workflow de CI de QUA-013 a changé ainsi).
+
+## QUA-186 — Les attestations tombées par le passage à la version 4 sont réattestées en une séance
+**Règle** : Les attestations tombées par le chantier attestations-sur-l-effet-et-couvre (empreinte sur l'effet, `Couvre` déclaré) sont réattestées par l'humain en une seule séance, et `drwil verify --evidence` rend `GOVERNANCE: PASS`.
+**Périmètre** : les attestations de `.drwil/evidence/attestations/` des contrats qui repassent en `MANUAL` à ce chantier.
+**Source de vérité** : `.drwil/evidence/attestations/` ; sortie de `drwil verify`.
+**Preuve** : jugement humain : la liste des contrats `MANUAL` de `drwil verify` est vide, chacun réattesté par `drwil attest <ID>` en une séance.
+**Manuel** : relancer `drwil verify` : plus aucun contrat `MANUAL` hors celui-ci ; réattester chaque contrat tombé (`drwil attest <ID>`), puis attester celui-ci (`drwil attest QUA-186`) ; `drwil verify --evidence` rend `GOVERNANCE: PASS`.
+**Couvre** : `aucun` — jugement ponctuel d'une séance : aucun fichier ne le juge, ses attestations changent à chaque séance
+**Origine** : attestations-sur-l-effet-et-couvre — « Les attestations tombées par le chantier sont réattestées par l'humain en une seule séance, et `drwil verify --evidence` rend `GOVERNANCE: PASS` »
+**Raison** : Changer l'empreinte et déclarer `Couvre` périment toutes les attestations ; les faire dans un seul chantier ne coûte à l'humain qu'une séance.
+
