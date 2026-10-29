@@ -67,10 +67,8 @@ Aucun autre document lu à la demande du kit ne dépasse 163 lignes.
 - Chaque section issue de la découpe se lit seule : un agent la charge sans
   lire les autres, et chaque renvoi existant vers `docs/ia-first.md` mène à la bonne
   section — `QUA-190`
-- Aucun contenu n'est perdu : le texte de chaque règle de la section 8 et des
-  sections 1 à 7 se retrouve, mot pour mot, dans une section, prouvé une fois
-  par une comparaison automatique au moment de la découpe, sortie versée à la
-  preuve de clôture (pas de contrat permanent : le texte évoluera ensuite)
+- `docs/ia-first.md` ne garde que son introduction et le sommaire ; le texte de
+  chaque règle vit dans un seul fichier de section, jamais en double — `QUA-190`
 
 ## Contrats modifiés
 
