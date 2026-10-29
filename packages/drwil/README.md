@@ -460,17 +460,22 @@ declarative, redacted note, fingerprint, commit) goes to
 `.drwil/evidence/attestations/`, which is versioned. `verify` then reports
 the contract as `ATTESTED` — satisfied, but never shown as `PASS` — until the
 rule, the `Manual` field, the severity or an attested check changes, which
-makes the attestation stale; adding a check to the contract does not. Exit 0: recorded; 1: refused or not eligible; 2: unknown contract.
+makes the attestation stale; adding a check to the contract does not. An attested
+check is bound by its effect (version 4): its command, which carries the targeted
+tests, its folder and its `paths`. Adding or removing an execution field
+(`build`, `needsBuild`, `parallel`, `reuse`…) keeps the attestation; changing the
+effect makes it stale and `verify` names the check. Exit 0: recorded; 1: refused or not eligible; 2: unknown contract.
 
 A contract can declare what its attestation judges with a `**Covers**` field
 (path patterns between backticks: `` `package.json`, `src/auth/**` ``). The
-attestation (version 3) then records a fingerprint of the content of each file
+attestation (version 3 and later) then records a fingerprint of the content of each file
 matched, read from the files themselves (not from git; line endings and path
 order change nothing). A covered file modified, added, removed or renamed
 makes the attestation stale and `verify` names it; a file outside the patterns
 changes nothing. A contract with a human part and no `**Covers**` keeps its
-attestation, but `verify` and `doctor` flag it. Attestations of version 1 and 2
-stay valid as they are; the next one is version 3.
+attestation, but `verify` and `doctor` flag it. Attestations of version 1, 2 and 3
+stay valid as they are, read by their original fingerprint (`verify` says which
+version it reads); the next one is version 4.
 
 ```bash
 npx drwil attest QUA-015 --renew

@@ -30,7 +30,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Principe de défense en profondeur.
 
 ## QUA-013 — Contrôle non exécuté n'est pas passé
-**Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé. La règle vaut aussi pour les critères d'acceptation, ceux de la fiche active comme ceux des fiches de preuve de clôture : une preuve absente, périmée ou non rejouée ne vaut jamais un succès, en local comme en CI. Le verdict d'un contrôle joué par `run-checks` sur un arbre et une configuration identiques (QUA-140), ou, pour une itération, sur les seuls fichiers du contrôle identiques (QUA-141, QUA-152 au pre-push), est une exécution du contrôle sur ce même code, pas une preuve périmée ; tout autre verdict repris reste un échec.
+**Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé. La règle vaut aussi pour les critères d'acceptation, ceux de la fiche active comme ceux des fiches de preuve de clôture : une preuve absente, périmée ou non rejouée ne vaut jamais un succès, en local comme en CI. Une attestation dont un contrôle cité change d'effet (commande, test visé ou `paths`) tombe : l'empreinte sur l'effet (QUA-183) ne laisse jamais vivre un jugement dont la preuve n'est plus la même (QUA-184). Le verdict d'un contrôle joué par `run-checks` sur un arbre et une configuration identiques (QUA-140), ou, pour une itération, sur les seuls fichiers du contrôle identiques (QUA-141, QUA-152 au pre-push), est une exécution du contrôle sur ce même code, pas une preuve périmée ; tout autre verdict repris reste un échec.
 **Périmètre** : Tout contrôle listé dans les vérifs, et tout critère d'acceptation jugé par `drwil verify`.
 **Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution, `packages/drwil/src/closure.ts` pour les critères.
 **Preuve** : Sortie lue du contrôle concerné.
@@ -219,7 +219,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : La non-régression métier grandit chantier après chantier ; sans vue, on ne sait ni ce qui est prouvé, ni ce qui reste à compléter, ni quel chantier une règle cassée protège.
 
 ## QUA-032 — Une attestation ne coûte que le jugement demandé
-**Règle** : Une attestation (version 3) couvre la part humaine d'un contrat (règle, champ Manuel, sévérité, motifs du champ Couvre ; toute la section pour un contrat historique en tableau), séparément la définition de chaque contrôle attesté et l'empreinte du contenu des fichiers du champ Couvre (QUA-081) : un contrôle ajouté ensuite ne la rend pas obsolète (il doit passer), un changement de la part humaine, un contrôle attesté retiré ou redéfini ou un fichier couvert changé, si. Une attestation version 2 reste jugée sans couverture, une version 1 par son ancienne empreinte. `drwil attest` annonce chaque contrôle qu'il relance, puis son résultat, avant le résumé et la question.
+**Règle** : Une attestation (version 4) couvre la part humaine d'un contrat (règle, champ Manuel, sévérité, motifs du champ Couvre ; toute la section pour un contrat historique en tableau), séparément l'effet de chaque contrôle attesté (QUA-183, QUA-184) et l'empreinte du contenu des fichiers du champ Couvre (QUA-081) : un contrôle ajouté ensuite ne la rend pas obsolète (il doit passer), un changement de la part humaine, un contrôle attesté retiré ou dont l'effet change ou un fichier couvert changé, si. Une attestation version 3 reste jugée par la définition de ses contrôles (commande et dossier), une version 2 sans couverture, une version 1 par son ancienne empreinte. `drwil attest` annonce chaque contrôle qu'il relance, puis son résultat, avant le résumé et la question.
 **Périmètre** : `drwil attest`, le jugement des attestations par `drwil verify`.
 **Source de vérité** : `packages/drwil/src/verify.ts` (`humanFingerprint`, `proofFingerprints`), `packages/drwil/src/attest.ts`, `packages/drwil/src/coverage.ts`.
 **Preuve** : tests du paquet (`couverture-tests`).
@@ -741,7 +741,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Une attestation restait `ATTESTED` après un changement de ce qu'elle était censée couvrir (une dépendance ajoutée, un workflow modifié) : une preuve humaine périmée valait validation.
 
 ## QUA-082 — Un contrat attestable sans couverture est signalé, ses attestations anciennes restent lisibles
-**Règle** : Livré à tout projet. Un contrat à partie humaine sans champ `**Couvre**` est signalé par `drwil verify` (ligne du contrat) et `drwil doctor` (avertissement), sans faire tomber son attestation existante. Une attestation de version 1 ou 2 reste lisible et valide telle quelle, sans réattestation forcée ; la première réattestation passe à la version 3.
+**Règle** : Livré à tout projet. Un contrat à partie humaine sans champ `**Couvre**` est signalé par `drwil verify` (ligne du contrat) et `drwil doctor` (avertissement), sans faire tomber son attestation existante. Une attestation de version 1 ou 2 reste lisible et valide telle quelle, sans réattestation forcée ; la première réattestation passe à la version 4 (QUA-183).
 **Périmètre** : `drwil verify`, `drwil doctor`, `drwil attest` ; livré dans le gabarit.
 **Source de vérité** : `packages/drwil/src/coverage.ts` (`lacksCoverage`), `packages/drwil/src/verify.ts` (`covers`), `packages/drwil/src/doctor.ts`.
 **Preuve** : tests du paquet sur des dépôts temporaires (attestations des versions 2 et 3, signalement, réattestation).
@@ -1750,3 +1750,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/cycle.test.mjs`
 **Origine** : reouverture-dite-et-eprouvee — « Le test du cycle complet d'une réouverture (QUA-118 : nouvelle clôture d'un chantier rouvert) se joue aussi sous Windows, avec un `gh` simulé lançable (`gh.cmd` et shell), au lieu d'être sauté »
 **Raison** : Le seul test du cycle de réouverture était sauté sous Windows : un script du PATH n'y est pas lancé sans shell, la mécanique n'y était prouvée que par des tests à `gh` injecté.
+
+## QUA-183 — L'empreinte d'une attestation porte sur l'effet des contrôles, pas sur leur forme d'exécution
+**Règle** : Livré à tout projet. L'attestation (version 4) lie chaque contrôle cité à son effet : la commande (qui porte les tests visés), son dossier et ses `paths` (ordre indifférent). Les champs d'exécution (`build`, `needsBuild`, `parallel`, `reuse` et tout autre champ de la déclaration) n'y entrent pas : en ajouter ou en retirer un ne fait pas tomber l'attestation. Les attestations de version 1, 2 et 3 restent lues par leur empreinte d'origine ; la première réattestation passe à la version 4, et `drwil verify` dit pour une attestation obsolète quelle partie a changé et, pour une ancienne version, laquelle est lue.
+**Périmètre** : `drwil attest`, le jugement des attestations par `drwil verify`.
+**Source de vérité** : `packages/drwil/src/fingerprint.ts` (`proofFingerprints`, `covers`, `obsoleteReasons`), `packages/drwil/src/attest.ts`.
+**Preuve** : test du paquet sur un dépôt temporaire : champs d'exécution et ordre des paths changés, attestation intacte ; attestation de version 3 lue puis rendue obsolète avec la raison.
+**Contrôle** : `tests-qua-183`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : attestations-sur-l-effet-et-couvre — « L'empreinte d'une attestation porte sur l'effet des contrôles que le contrat cite (commande, tests visés, `paths`) et plus sur les champs d'exécution (`build`, `needsBuild`, `parallel`, `reuse`) : ajouter ou retirer un champ d'exécution ne fait pas tomber l'attestation »
+**Raison** : Le 2026-10-24, l'ajout de champs de compilation et de parallélisme à une centaine de contrôles a périmé six attestations alors que l'effet des contrôles n'avait pas changé : l'humain a dû tout réattester.
+
+## QUA-184 — Une attestation tombe quand l'effet d'un contrôle cité change
+**Règle** : Livré à tout projet. Une attestation (version 4) devient obsolète, et le contrat repasse en `MANUAL`, quand la commande d'un contrôle cité, un test qu'elle vise ou ses `paths` changent, ou quand un contrôle attesté est retiré ; la sortie de `drwil verify` nomme le contrôle dont l'effet a changé. Rétablir l'effet d'origine rend l'attestation de nouveau valable. Précise QUA-013 : l'empreinte sur l'effet ne rend jamais valable un jugement sur un contrôle qui a vraiment changé.
+**Périmètre** : le jugement des attestations par `drwil verify`.
+**Source de vérité** : `packages/drwil/src/fingerprint.ts` (`proofFingerprints`, `obsoleteReasons`), `packages/drwil/src/verify.ts`.
+**Preuve** : test du paquet sur un dépôt temporaire : commande, test visé et paths changés tour à tour, statut `MANUAL` et raison nommant le contrôle.
+**Contrôle** : `tests-qua-184`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : attestations-sur-l-effet-et-couvre — « Une attestation tombe quand l'effet d'un contrôle change (commande, test visé ou `paths`), comme avant : QUA-013 (un contrôle non exécuté n'est pas passé) reste vrai »
+**Raison** : Alléger l'empreinte ne doit pas laisser vivre une preuve humaine sur un contrôle qui ne dit plus la même chose (QUA-013).

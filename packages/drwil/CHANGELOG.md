@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- An attestation (version 4) is bound to the effect of the checks its contract
+  cites (command, targeted tests, `paths`), no longer to their execution fields:
+  adding `build`, `needsBuild`, `parallel` or `reuse` to checks no longer makes
+  attestations stale, while a changed command, test or path still does and
+  `verify` names the check. Attestations of version 1, 2 and 3 stay readable;
+  the next `drwil attest` writes version 4 (QUA-183, QUA-184).
 - A reopening (`state.mjs reopen`) that fails after cancelling the automatic
   merge now says the merge is cancelled and not scheduled again, that the tool
   never reschedules it by itself and that the human does; the state context and

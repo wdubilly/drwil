@@ -56,10 +56,10 @@ attribuer à ce moment-là dans le registre.)
 - L'empreinte d'une attestation porte sur l'effet des contrôles que le contrat
   cite (commande, tests visés, `paths`) et plus sur les champs d'exécution
   (`build`, `needsBuild`, `parallel`, `reuse`) : ajouter ou retirer un champ
-  d'exécution ne fait pas tomber l'attestation — contrat à créer
+  d'exécution ne fait pas tomber l'attestation — `QUA-183`
 - Une attestation tombe quand l'effet d'un contrôle change (commande, test visé
   ou `paths`), comme avant : QUA-013 (un contrôle non exécuté n'est pas passé)
-  reste vrai — contrat à créer
+  reste vrai — `QUA-184`
 - Chaque contrat attesté du dépôt déclare ce qu'il couvre (`**Couvre**`) ;
   `drwil doctor` ne signale plus aucun contrat attesté sans couverture déclarée — contrat à créer
 - Les attestations tombées par le chantier sont réattestées par l'humain en une
@@ -68,11 +68,20 @@ attribuer à ce moment-là dans le registre.)
 
 ## Contrats modifiés
 
-(à compléter au lancement : le contrat de l'empreinte d'attestation existant,
-trouvé par `node .githooks/glossary.mjs "attestation"`, change de critère —
-nouvelle empreinte —, et QUA-013 est précisé, pas affaibli. Chaque ancien
-critère et sa raison sont à écrire ici et à valider par le demandeur avant le
-lancement.)
+(validés par le demandeur le 2026-10-29)
+
+- `QUA-032` (une attestation ne coûte que le jugement demandé) — ancien
+  critère : l'attestation (version 3) lie chaque contrôle attesté à sa
+  définition (commande et dossier), et les versions 1 et 2 restent lues —
+  nouveau critère : version 4, liée à l'effet du contrôle (commande, dossier,
+  `paths`), les versions 1, 2 et 3 restent lues — raison : ne plus tomber quand
+  seule la forme d'exécution d'un contrôle change ; rien n'est retiré.
+- `QUA-082` (contrat attestable sans couverture signalé) — ancien critère :
+  « la première réattestation passe à la version 3 » — nouveau : version 4 —
+  raison : conséquence de la version 4 ; le signalement et la lecture des
+  anciennes versions ne changent pas.
+- `QUA-013` (un contrôle non exécuté n'est pas passé) — précisé, pas affaibli :
+  une attestation dont un contrôle cité change d'effet tombe toujours (QUA-184).
 
 ## 2. Hors périmètre
 
@@ -157,6 +166,6 @@ trouver quand même des chemins) — **à valider ou corriger** :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-26) : cadré, §5 tranché ; à lancer après `reouverture-dite-et-eprouvee` (décision 7).
+- **Dernier état** (2026-10-29) : lancé ; périmètre élargi (bloc scope) aux fichiers de couverture, de textes du doctor, d'empreintes et au test du cycle (assertions de version) ; lot 1 fait (version 4, QUA-183, QUA-184).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`) à son tour dans le plan d'action de `docs/projects/pending.md`.
+- **Prochaine étape** : lot 2 (`Couvre` des contrats, `aucun` justifié lu comme déclaré, contrat de couverture à créer), puis lot 3 [humain] (contrat Manuel à créer, `drwil attest <ID> --renew`).

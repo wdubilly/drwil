@@ -391,7 +391,7 @@ test("QUA-032 : une attestation tolère un contrôle ajouté ; règle, Manuel, s
     });
     assert.equal(r.code, 0);
     assert.deepEqual(sortie, ["relance de c1…", "  c1 : ok", "question"], "chaque contrôle annoncé, puis son résultat, avant la question");
-    assert.equal(JSON.parse(lire(dir, r.file)).version, 3);
+    assert.equal(JSON.parse(lire(dir, r.file)).version, 4);
     assert.equal(await statut(), "ATTESTED");
 
     ecrire({ controle: "`c1`, `c2`" });
@@ -545,7 +545,7 @@ test("QUA-081 : un fichier couvert modifié, ajouté, supprimé ou renommé fait
     const r = await attest({ targetDir: dir, id: "APP-009", confirm: oui });
     assert.equal(r.code, 0);
     const a = JSON.parse(lire(dir, r.file));
-    assert.equal(a.version, 3);
+    assert.equal(a.version, 4);
     assert.deepEqual(Object.keys(a.coverage), ["package.json", "src/a.js", "src/b.js"], "fichiers couverts, par chemin");
     assert.equal((await contrat()).status, "ATTESTED");
 
@@ -596,7 +596,7 @@ test("QUA-081 : l'ordre des motifs ne change pas l'empreinte ; changer la couver
   }
 });
 
-test("QUA-082 : sans Couvre, l'attestation tient mais verify et doctor le signalent ; les versions 1 et 2 restent valables, la réattestation passe en version 3", async () => {
+test("QUA-082 : sans Couvre, l'attestation tient mais verify et doctor le signalent ; les versions 1 et 2 restent valables, la réattestation passe en version 4", async () => {
   const { dir, contrat, oui } = await projetCouvert("");
   try {
     const avant = await contrat();
@@ -639,7 +639,7 @@ test("QUA-082 : sans Couvre, l'attestation tient mais verify et doctor le signal
     assert.equal((await contrat()).status, "ATTESTED", "version 2 : jugée sans couverture, aucune réattestation forcée");
     const renouvelee = await attest({ targetDir: dir, id: "APP-009", confirm: oui, renew: true });
     assert.equal(renouvelee.code, 0);
-    assert.equal(JSON.parse(lire(dir, renouvelee.file)).version, 3, "la première réattestation passe au nouveau format");
+    assert.equal(JSON.parse(lire(dir, renouvelee.file)).version, 4, "la première réattestation passe au nouveau format");
     k = await contrat();
     assert.equal(k.status, "ATTESTED");
     assert.ok(!k.reasons.some((l) => l.includes("aucune couverture déclarée")), "couverture déclarée : plus de signalement");
