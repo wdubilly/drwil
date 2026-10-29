@@ -90,6 +90,14 @@ attribuer à ce moment-là dans le registre.)
 
 - `QUA-037` (file de chantiers) : phrase sur le retour en SCOPING à la fusion constatée — validé par le demandeur (2026-10-29).
 - `QUA-165` (sondage Copilot CLI) : le skill prescrit le choix unique, QUA-180 fixe le champ — validé par le demandeur (2026-10-29).
+- `.githooks/state.mjs` — commande `lot next`, retour en SCOPING à la fusion constatée, `next` qui attend la fusion (validé par le demandeur le 2026-10-29).
+- `.githooks/state-cli.mjs` — rappel d'état : retour en SCOPING et enchaînement de la file (validé par le demandeur le 2026-10-29).
+- `.githooks/state-transitions.mjs` — `settleClosing`, `nextHead`, `prepareBranch` (branche créée au lancement) (validé par le demandeur le 2026-10-29).
+- `.githooks/state-messages-fr.mjs` — messages du retour en SCOPING, de `next` et de la branche au lancement (validé par le demandeur le 2026-10-29).
+- `.githooks/state-messages-en.mjs` — mêmes messages en anglais (validé par le demandeur le 2026-10-29).
+- `.githooks/worktree.mjs` — `createBranch` : fetch puis `git switch --no-track -c` (validé par le demandeur le 2026-10-29).
+- `.githooks/state.test.mjs` — tests de QUA-176 à QUA-178 (validé par le demandeur le 2026-10-29).
+- `.githooks/worktree.test.mjs` — tests de QUA-179 (validé par le demandeur le 2026-10-29).
 - `QUA-017` (filet de sécurité) et `QUA-138` : inchangés.
 
 ## 2. Hors périmètre
