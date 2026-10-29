@@ -11,6 +11,9 @@ files:
   - packages/drwil/src/verify.ts
   - packages/drwil/src/verdict.ts
   - packages/drwil/src/evidence.ts
+  - packages/drwil/src/coverage.ts
+  - packages/drwil/src/doctor-texts.ts
+  - packages/drwil/src/fingerprint.ts
   - packages/drwil/test/kit.test.mjs
   - docs/contracts.md
   - .drwil/ia-first.json
