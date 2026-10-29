@@ -118,9 +118,9 @@ d'un outil) la dit dans son statut.
 ## Fiches cadrées, dans l'ordre de réalisation
 
 - [ ] [IA] [P2] `docs/ia-first.md` en sections courtes autonomes, plafond des
-  documents lus à la demande abaissé à 400 ou 500 lignes, `kitSizeLegacy`
-  retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
-  puis lancer juste après la fiche précédente) —
+  documents lus à la demande abaissé à 400 lignes, `kitSizeLegacy`
+  retiré (cadré le 2026-10-28 ; décisions de forme tranchées le 2026-10-29 :
+  dossier docs/ia-first/ et sommaire, lecture directe ; prêt à lancer) —
   `docs/projects/ia-first-en-sections-courtes.md`.
 
 En attente d'une décision (à affiner) ou d'un geste humain :

@@ -1,14 +1,16 @@
 # Projet : `docs/ia-first.md` en sections courtes autonomes, sous un plafond de lecture à la demande abaissé
 
-**Statut** : cadré le 2026-10-28 — à affiner (trois décisions ouvertes).
+**Statut** : cadré le 2026-10-28 ; décisions de forme tranchées le 2026-10-29.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 **Intention** : `docs/intentions/fichiers-charges-courts.md`
 
 <!-- scope
 files:
   - packages/drwil/templates/common/base/docs/ia-first.md
   - docs/ia-first.md
+  - packages/drwil/templates/common/base/docs/ia-first/*.md
+  - docs/ia-first/*.md
   - packages/drwil/templates/common/base/.githooks/check-kit-size.mjs
   - .githooks/check-kit-size.mjs
   - .githooks/check-kit-size.test.mjs
@@ -35,9 +37,13 @@ demande (400 ou 500 lignes) et découper `docs/ia-first.md` en sections courtes,
 autonomes, chargées seulement quand leur situation se présente. La fiche retire
 alors `kitSizeLegacy` : plus aucun fichier du kit au-dessus de son plafond.
 
-Fait à peser : environ 250 fichiers citent `docs/ia-first.md` (« section N » dans les
-recettes, les contrats, les messages des hooks). Le nom du fichier et la
+Fait à peser : 70 fichiers citent `docs/ia-first.md`, dont 20 par « section N »
+(sections 4, 5, 7 et 8 ; relevé du 2026-10-29). Le nom du fichier et la
 numérotation de ses sections sont donc un contrat de fait.
+
+Tailles relevées le 2026-10-29 : section 7, 416 lignes (six sous-sections de
+23 à 121 lignes) ; section 8, 183 ; section 5, 119 ; les autres, moins de 60.
+Aucun autre document lu à la demande du kit ne dépasse 163 lignes.
 
 ## Critères d'acceptation
 
@@ -79,22 +85,26 @@ attribuer à ce moment-là dans le registre.)
    `docs/ia-first.md` en sections courtes autonomes.
 2. Retirer `kitSizeLegacy` à la fin du chantier.
 
+(tranchées par le demandeur le 2026-10-29, sondage)
+
+3. Plafond des documents lus à la demande : 400 lignes. La section 7 se
+   découpe donc aussi, par sous-section.
+4. Forme : un dossier docs/ia-first/ (à créer), un fichier par section (et par
+   sous-section de la section 7) ; `docs/ia-first.md` devient un sommaire court
+   (moins de 100 lignes) qui garde la numérotation et donne, pour chaque
+   section, le chemin de son fichier. Les citations « `docs/ia-first.md`,
+   section N » restent vraies ; aucun renvoi n'est réécrit.
+5. Chargement : lecture directe du fichier de section, dont le sommaire donne
+   le chemin. Pas d'option `--section` dans `.githooks/glossary.mjs`.
+
 ## 5. Points à trancher
 
-- [décision] Plafond : 400 ou 500 lignes pour les documents lus à la demande ?
-  (ce document ne doit pas lui-même rester un fichier unique de plus de 100
-  lignes d'index si on garde un sommaire.)
-- [décision] Forme de la découpe : un dossier docs/ia-first/ (dossier) d'un fichier par
-  section avec `docs/ia-first.md` gardé comme sommaire court qui aiguille (les
-  citations « `docs/ia-first.md`, section N » restent vraies), ou des fichiers
-  renommés avec réécriture des ~250 renvois ?
-- [décision] Chargement : `node .githooks/glossary.mjs` lit-il une section par
-  nom (`--section`), ou seule la lecture directe du fichier de section suffit-elle ?
+Aucun.
 
 ## 6. Increments
 
-- **Lot 1 — plafond et forme** [IA] : une fois les décisions prises, le plafond
-  abaissé dans `.githooks/check-kit-size.mjs` (gabarit et copie), test au nouveau seuil.
+- **Lot 1 — plafond et forme** [IA] : le plafond abaissé à 400 lignes dans
+  `.githooks/check-kit-size.mjs` (gabarit et copie), test au nouveau seuil.
 - **Lot 2 — découpe** [IA] : sections courtes autonomes, sommaire, renvois
   vérifiés, `kitSizeLegacy` retiré ; carte d'architecture et `kit-mechanics.md`
   à jour ; ligne « Unreleased » du changelog. Critère de sortie :
@@ -102,6 +112,6 @@ attribuer à ce moment-là dans le registre.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-28) : cadré, trois décisions à prendre avant le lancement.
+- **Dernier état** (2026-10-29) : décisions de forme tranchées, fiche prête.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher les trois points ci-dessus, puis passer la maturité à « prêt ».
+- **Prochaine étape** : lancer le chantier (`/drwil-start`).
