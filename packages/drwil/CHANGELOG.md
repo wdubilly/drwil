@@ -7,6 +7,10 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `**Covers**` (`**Couvre**`) accepts `` `aucun` `` (or `` `none` ``) with its reason for a
+  contract that judges a conduct: it counts as declared for `verify` and
+  `doctor`, and covers no file. The attested contracts of this repository now
+  all declare what they cover (QUA-185).
 - An attestation (version 4) is bound to the effect of the checks its contract
   cites (command, targeted tests, `paths`), no longer to their execution fields:
   adding `build`, `needsBuild`, `parallel` or `reuse` to checks no longer makes

@@ -20,6 +20,8 @@ export interface CoverageChange {
 
 const SKIPPED = new Set([".git", "node_modules"]);
 const GLOB = /[*?]/;
+// A contract that judges a conduct, not files, declares `aucun` (or `none`) with its reason: declared, so doctor does not flag it (QUA-185).
+const NO_COVERAGE = /^(aucun|none)$/i;
 
 // `*` and `?` stay in a folder, `**` crosses folders (followed by a slash it also matches no folder), a trailing slash is the whole folder.
 function toRegExp(pattern: string): RegExp {
@@ -55,6 +57,7 @@ const contentHash = (file: string) => createHash("sha256").update(readFileSync(f
 export function coverageOf(root: string, patterns: string[] | null | undefined): Coverage {
   const matched = new Set<string>();
   for (const pattern of patterns ?? []) {
+    if (NO_COVERAGE.test(pattern)) continue;
     const clean = pattern.replace(/^\.\//, "");
     const literal = clean
       .split("/")

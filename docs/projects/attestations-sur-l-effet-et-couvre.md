@@ -61,7 +61,7 @@ attribuer à ce moment-là dans le registre.)
   ou `paths`), comme avant : QUA-013 (un contrôle non exécuté n'est pas passé)
   reste vrai — `QUA-184`
 - Chaque contrat attesté du dépôt déclare ce qu'il couvre (`**Couvre**`) ;
-  `drwil doctor` ne signale plus aucun contrat attesté sans couverture déclarée — contrat à créer
+  `drwil doctor` ne signale plus aucun contrat attesté sans couverture déclarée — `QUA-185`
 - Les attestations tombées par le chantier sont réattestées par l'humain en une
   seule séance, et `drwil verify --evidence` rend `GOVERNANCE: PASS` [humain]
   — contrat à créer (`Manuel`, attesté par `drwil attest`)
@@ -166,6 +166,6 @@ trouver quand même des chemins) — **à valider ou corriger** :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-29) : lancé ; périmètre élargi (bloc scope) aux fichiers de couverture, de textes du doctor, d'empreintes et au test du cycle (assertions de version) ; lot 1 fait (version 4, QUA-183, QUA-184).
+- **Dernier état** (2026-10-29) : lancé ; périmètre élargi (bloc scope) aux fichiers de couverture, de textes du doctor, d'empreintes et au test du cycle (assertions de version) ; lots 1 (version 4) et 2 (`Couvre` des 15 contrats du tableau et de QUA-175, trouvé en route) faits.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 2 (`Couvre` des contrats, `aucun` justifié lu comme déclaré, contrat de couverture à créer), puis lot 3 [humain] (contrat Manuel à créer, `drwil attest <ID> --renew`).
+- **Prochaine étape** : lot 3 [humain] (contrat Manuel à créer, `drwil attest <ID> --renew`).

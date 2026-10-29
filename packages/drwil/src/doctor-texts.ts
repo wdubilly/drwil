@@ -21,7 +21,7 @@ export const TEXTS = {
     noCheck: " (sans Contrôle, toujours MANUAL : {0})",
     coverage: "Couverture des attestations",
     bypass: "Contournement du ruleset",
-    noCovers: " (sans Couvre, leur attestation ne tombe pas si le code jugé change : {0})",
+    noCovers: " (sans Couvre, leur attestation ne tombe pas si le code jugé change ; `aucun` avec sa raison compte comme déclaré : {0})",
     hooks: "Hooks git",
     hooksOff: "inactifs : lancer `git config core.hooksPath .githooks`",
     hooksChained: "core.hooksPath = {0}, hooks drwil appelés depuis là",
@@ -59,7 +59,8 @@ export const TEXTS = {
     noCheck: " (without Check, always MANUAL: {0})",
     coverage: "Attestation coverage",
     bypass: "Ruleset bypass",
-    noCovers: " (without Covers, their attestation does not fall if the code they judged changes: {0})",
+    noCovers:
+      " (without Covers, their attestation does not fall if the code they judged changes; `none` with its reason counts as declared: {0})",
     hooks: "Git hooks",
     hooksOff: "inactive: run `git config core.hooksPath .githooks`",
     hooksChained: "core.hooksPath = {0}, drwil hooks called from there",

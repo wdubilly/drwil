@@ -473,7 +473,9 @@ matched, read from the files themselves (not from git; line endings and path
 order change nothing). A covered file modified, added, removed or renamed
 makes the attestation stale and `verify` names it; a file outside the patterns
 changes nothing. A contract with a human part and no `**Covers**` keeps its
-attestation, but `verify` and `doctor` flag it. Attestations of version 1, 2 and 3
+attestation, but `verify` and `doctor` flag it. A contract that judges a conduct
+rather than files declares `` `aucun` `` (or `` `none` ``) followed by its reason: that counts
+as declared, covers no file and is not flagged. Attestations of version 1, 2 and 3
 stay valid as they are, read by their original fingerprint (`verify` says which
 version it reads); the next one is version 4.
 

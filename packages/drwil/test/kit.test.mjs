@@ -5059,3 +5059,26 @@ test("QUA-184 : l'attestation tombe quand la commande, le test visé ou les path
   regler(c1);
   assert.equal((await contrat()).status, "ATTESTED", "effet rétabli : attestation de nouveau valable");
 });
+
+test("QUA-185 : `Couvre : aucun` justifié compte comme déclaré, sans fichier couvert ; chaque contrat attesté de ce dépôt déclare ce qu'il couvre", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    `${read(dir, "docs/contracts.md")}\n## APP-009 — Conduite\n**Règle** : relue.\n**Manuel** : relecture.\n**Couvre** : \`aucun\` — contrat de conduite, aucun fichier ne le juge\n`,
+  );
+  writeFileSync(join(dir, "aucun"), "un fichier nommé comme le mot réservé\n");
+  const contrat = async () => (await verify({ targetDir: dir, only: ["APP-009"] })).contracts[0];
+  const avant = await contrat();
+  assert.deepEqual(avant.coverage, {}, "aucun n'est pas un motif de chemin");
+  assert.ok(!avant.reasons.some((l) => l.includes("aucune couverture déclarée")), "déclaré : pas de signalement");
+  assert.equal((await attest({ targetDir: dir, id: "APP-009", confirm: async () => true })).code, 0);
+  writeFileSync(join(dir, "aucun"), "modifié\n");
+  assert.equal((await contrat()).status, "ATTESTED");
+  const point = (await doctor({ targetDir: dir })).points.find((p) => p.id === "coverage");
+  assert.doesNotMatch(point.detail, /APP-009/);
+
+  const depot = fileURLToPath(new URL("../../../", import.meta.url));
+  const reel = (await doctor({ targetDir: depot })).points.find((p) => p.id === "coverage");
+  assert.equal(reel.state, "ok", `contrats attestés sans Couvre : ${reel.detail}`);
+});
