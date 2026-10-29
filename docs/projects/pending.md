@@ -77,7 +77,7 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
    `cycle-de-vie-des-fiches`) ;
    G. clôture, file et chantiers en parallèle (après
    `cycle-de-vie-des-fiches`, qui modifie déjà `.githooks/close.mjs`, et
-   `next-attend-la-fusion`, voisine de la file) : la clôture d'une fiche
+   `retour-scoping-branche-sondage`, voisine de la file) : la clôture d'une fiche
    permanente, la note « un lancement intercalé efface la file » de
    `docs/intentions/cloture-et-attestations.md`, le repositionnement après
    une clôture, les conflits d'index et de journal entre worktrees ;
@@ -122,9 +122,11 @@ d'un outil) la dit dans son statut.
   retiré (cadré le 2026-10-28 ; à affiner : trois décisions de forme à prendre,
   puis lancer juste après la fiche précédente) —
   `docs/projects/ia-first-en-sections-courtes.md`.
-- [ ] [IA] [P2] `next` n'enchaîne pas tant que la PR du chantier précédent
-  n'est pas fusionnée (cadré le 2026-10-26) —
-  `docs/projects/next-attend-la-fusion.md`.
+- [ ] [IA] [P2] La file attend la fusion (`next`), l'état revient en SCOPING à la
+  fusion constatée, branche créée au lancement en « This folder », sondage en
+  choix unique sous Copilot CLI (cadré le 2026-10-29, fusion de l'ancienne fiche
+  `next-attend-la-fusion` du 2026-10-26) —
+  `docs/projects/retour-scoping-branche-sondage.md`.
 - [ ] [IA] [P2] La réouverture dit ce qu'elle a annulé, et son cycle complet se
   joue aussi sous Windows (cadré le 2026-10-26) —
   `docs/projects/reouverture-dite-et-eprouvee.md`.
@@ -613,7 +615,7 @@ touchent les mêmes fichiers (`.githooks/state.mjs` et
 pour deux) ; elles
 s'enchaînent, jamais en parallèle : 1. `verify-rejoue-les-echecs` ;
 2. `attestations-sur-l-effet-et-couvre` ; 3. `cycle-de-vie-des-fiches` ;
-4. `next-attend-la-fusion` ; 5. `reouverture-dite-et-eprouvee` ;
+4. `retour-scoping-branche-sondage` (ex-`next-attend-la-fusion`) ; 5. `reouverture-dite-et-eprouvee` ;
 6. `test-unitaire-fusion-automatique` (il teste un texte que les
 précédentes modifient). `niveau-de-protection` touche un autre code et
 peut s'intercaler ; `release-feu-vert-et-squash` attend
