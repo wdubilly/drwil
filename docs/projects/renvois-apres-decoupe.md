@@ -40,7 +40,7 @@ l'apprend pas.
   cité avec « below » ou « above » absent du même fichier — `QUA-190`
 - La recette livrée `docs/recipes/working-with-branches.md` dit qu'un lancement en « This folder » crée `workstream/<fiche>`
   depuis la branche principale à jour, et quand il refuse — `QUA-179`
-- QUA-063 vise le fichier qui porte la matrice de compatibilité — `QUA-063`
+- QUA-063 vise le fichier qui porte la matrice de compatibilité [human] — `QUA-063`
 
 ## Contrats modifiés
 
@@ -111,4 +111,8 @@ l'apprend pas.
   de `docs/ia-first/1-single-entry-point.md` et `docs/ia-first/7-governance-state.md` vers le fichier exact, puce « This folder » dans la
   recette du gabarit, installation, changelog ; `tests-qua-179` rejoue `packages/drwil/test/kit.test.mjs`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] clôture.
+- **Attestation** : le changement de **Couvre** de QUA-063 a invalidé son attestation, comme prévu (Contraintes) :
+  `drwil verify --agent` rend `GOVERNANCE: MANUAL REVIEW REQUIRED`, seul QUA-063 restant à attester ; le critère
+  QUA-063 porte `[human]`, comme le demande `verify` pour un contrat attesté.
+- **Prochaine étape** : [humain] `drwil attest QUA-063` dans un terminal interactif ; puis [IA] clôture
+  (`drwil verify --agent` en `GOVERNANCE: PASS`, entrée du journal, `node .githooks/close.mjs`).
