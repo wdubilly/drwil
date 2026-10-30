@@ -157,13 +157,16 @@ attribuer à ce moment-là dans le registre.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-30) : lot 1 (le réglage) fait et commité :
-  `release.mode` (`solo` par défaut, `team`) lu par `.githooks/create-release.mjs`, écrit et
-  conservé par `packages/drwil/src/config-write.ts`, contrats QUA-199, QUA-200, QUA-201 et leurs
-  contrôles `tests-qua-*`, annonce au `CHANGELOG`. Il laisse à leurs lots la note
-  de recette, QUA-079 (lot 2) et QUA-048 (lot 3).
+- **Dernier état** (2026-10-30) : lots 1 et 2 faits et commités. Lot 1 : `release.mode`
+  (`solo` par défaut, `team`), QUA-199 à QUA-201. Lot 2 : en `solo`, la note « sans
+  verdict » est le corps de la release GitHub (`gh release create --notes-file`), sans
+  branche ni PR ; `--dry-run` la montre et dit où elle va (corps de la release, ou PR à
+  la promotion pour une candidate) ; QUA-079 réécrit, QUA-080 ajusté, recette, README
+  du module et `CHANGELOG` à jour. La PR de note (`publishNote`) reste pour `team`
+  (promotion).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 2 — la note « sans verdict » dans le corps de la
-  release en `solo` (`--notes-file`), `--dry-run`, recette et README du module,
-  QUA-079 réécrit. Les tests du lot 1 posent `release.mode` par `reglerMode` dans
-  `.githooks/create-release.test.mjs`.
+- **Prochaine étape** : lot 3 — citer `.githooks/recette-note.mjs` dans la fiche des
+  mécaniques livrée et le README du module, retirer le contournement du test du kit,
+  réécrire le texte de QUA-048 (renvoi à QUA-058). Écart signalé hors périmètre :
+  `docs/recettes/README.md` dit encore que la note « sans verdict » arrive par la PR
+  (QUA-079) ; il n'est pas dans le bloc scope.

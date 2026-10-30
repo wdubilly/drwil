@@ -52,7 +52,8 @@ following ones, and never an npm publication (see « Assumed limits »).
 3. Create for real, after the human's agreement or with the green light
    given at launch (see above): `node .githooks/create-release.mjs`
    (annotated tag pushed to `origin`, then `gh release create
-   --generate-notes` if `gh` is available and authenticated).
+   --notes-file <acceptance note>` if `gh` is available and authenticated;
+   the note « without verdict » is the body of the release).
 4. If the repo contains one or more publishable npm packages (a
    `package.json`, if present, tracked by Git, with a `name`, without
    `"private": true`), a tarball (`npm pack`) is built for each and
@@ -105,9 +106,10 @@ before the final release.
    says so with the catch-up command (`node .githooks/recette-note.mjs
    vX.Y.Z <note file>`, or `gh pr create` when only the PR failed) and the
    note is kept in a file. A version released directly, without a
-   candidate, gets the same note marked « without verdict » (with a « to
-   complete » block for the human); `--dry-run` shows the note without
-   creating any branch or PR.
+   candidate (mode `solo`), gets the same note marked « without verdict »
+   (with a « to complete » block for the human) as the **body of its
+   GitHub release** (`gh release create --notes-file`): no branch, no PR.
+   `--dry-run` shows the note and where it goes, without creating anything.
 
 ## Assumed limits
 

@@ -29,6 +29,9 @@ export const TEXTS = {
     sheet: "[create-release] fiche de recette de {0} :",
     prerelease: "[create-release] pré-release {0} publiée avec sa fiche de recette ({1}).",
     mode: "[create-release] mode de release : {0}",
+    noteInRelease: "[create-release] note de recette « sans verdict » : elle sera le corps de la release GitHub (aucune branche ni PR) :",
+    noteByPr: "[create-release] note de recette : proposée par une PR à la promotion, après le verdict.",
+    noteWritten: "[create-release] release {0} publiée, sa note de recette « sans verdict » en est le corps ({1}).",
     badMode: "release.mode vaut « {0} » dans .drwil/ia-first.json : « solo » ou « team » attendu",
     teamDirect:
       "mode « team » : la release directe est refusée, publier une candidate (node .githooks/create-release.mjs --candidate) puis la promouvoir après le verdict",
@@ -58,6 +61,9 @@ export const TEXTS = {
     sheet: "[create-release] acceptance sheet of {0}:",
     prerelease: "[create-release] pre-release {0} published with its acceptance sheet ({1}).",
     mode: "[create-release] release mode: {0}",
+    noteInRelease: '[create-release] acceptance note "no verdict": it will be the body of the GitHub release (no branch nor PR):',
+    noteByPr: "[create-release] acceptance note: proposed by a PR at the promotion, after the verdict.",
+    noteWritten: '[create-release] release {0} published, its acceptance note "no verdict" is its body ({1}).',
     badMode: 'release.mode is "{0}" in .drwil/ia-first.json: "solo" or "team" expected',
     teamDirect:
       'mode "team": a direct release is refused, publish a candidate (node .githooks/create-release.mjs --candidate) then promote it after the verdict',

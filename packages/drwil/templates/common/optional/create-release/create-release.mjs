@@ -10,9 +10,10 @@
 // `--candidate` (QUA-051): publishes the version as a candidate pre-release (vX.Y.Z-rc.N) with its
 // tarball and its generated acceptance sheet (acceptance-sheet.mjs); the final release only comes
 // from promote-release.mjs, after the human verdict (release-verdict.mjs).
-// Without `--candidate`, the version is published directly: its acceptance note, « no verdict », is
-// then proposed through a dedicated branch and a PR (recette-note.mjs, QUA-079); a failure there
-// never undoes the tag and the release (QUA-080).
+// Without `--candidate` (mode "solo"), the version is published directly: its acceptance note,
+// « no verdict », is the body of the GitHub release (`--notes-file`), without any branch or PR
+// (QUA-079); the tag and the release never depend on writing it (QUA-080). In "team", the note of a
+// version comes from the promotion, through a dedicated branch and a PR (recette-note.mjs).
 // `release.mode` (.drwil/ia-first.json): "solo" (default) publishes directly; "team" refuses a direct
 // release and keeps the candidate, verdict and promotion path; any other value is refused.
 // Before any tag, preview included, the review of README.md, docs/features.md and
@@ -68,6 +69,7 @@ async function publishCandidate({ tag, next, packages, existingTags }, T) {
   const sheet = buildSheet(process.cwd(), { tag: rc, version: next, from: tag, tarballs, packages: packages.length ? packages : null });
   if (dryRun) {
     console.log(`${fill(T.sheet, rc)}\n\n${sheet}`);
+    console.log(T.noteByPr);
     console.log(T.dryRun);
     return;
   }
@@ -86,12 +88,12 @@ async function publishCandidate({ tag, next, packages, existingTags }, T) {
   }
 }
 
-// Acceptance note of a version published without a candidate: « no verdict », to complete by hand.
-// `tarballs` null in --dry-run (nothing built).
+// Acceptance note of a version published without a candidate: « no verdict », to complete by hand;
+// it is the body of the release. `tarballs` null in --dry-run (nothing built).
 async function directNote({ next, commits, tarballs }) {
-  const { noteTexts, publishNote, renderNote } = await import("./recette-note.mjs");
+  const { noteTexts, renderNote } = await import("./recette-note.mjs");
   const { sha256 } = await import("./acceptance-sheet.mjs");
-  const note = renderNote(
+  return renderNote(
     {
       version: next,
       tarballs: tarballs?.filter(existsSync).map((f) => ({ name: basename(f), sha256: sha256(f) })),
@@ -100,7 +102,6 @@ async function directNote({ next, commits, tarballs }) {
     },
     noteTexts(process.cwd()),
   );
-  return publishNote(process.cwd(), { version: next, note, dryRun }, {});
 }
 
 async function main() {
@@ -143,7 +144,7 @@ async function main() {
   }
   if (candidate) return publishCandidate({ tag, next, packages, existingTags }, T);
   if (dryRun) {
-    console.log((await directNote({ next, commits, tarballs: packages.length ? null : [] })).message);
+    console.log(`${T.noteInRelease}\n\n${await directNote({ next, commits, tarballs: packages.length ? null : [] })}`);
     console.log(T.dryRun);
     return;
   }
@@ -152,15 +153,17 @@ async function main() {
   git(["push", "origin", next]);
   console.log(fill(T.pushed, next));
   const tarballs = buildTarballs(packages, T);
+  const file = join(mkdtempSync(join(tmpdir(), "create-release-")), `recette-${next}.md`);
+  writeFileSync(file, await directNote({ next, commits, tarballs }));
+  const args = ["release", "create", next, ...tarballs, "--title", next, "--notes-file", file];
   try {
-    execFileSync("gh", ["release", "create", next, ...tarballs, "--generate-notes"], { stdio: "inherit" });
+    execFileSync("gh", args, { stdio: "inherit" });
+    console.log(fill(T.noteWritten, next, file));
     if (tarballs.length > 0) console.log(fill(T.attached, tarballs.join(", ")));
   } catch (e) {
     console.error(fill(T.ghFailed, e.message));
-    console.error(fill(T.catchUp, `gh release create ${next} --generate-notes${tarballs.length ? ` ${tarballs.join(" ")}` : ""}`));
+    console.error(fill(T.catchUp, `gh ${args.join(" ")}`));
   }
-  const written = await directNote({ next, commits, tarballs });
-  (written.code === 0 ? console.log : console.error)(written.message);
 }
 
 // Only runs when launched directly (node create-release.mjs), not when detectBump/nextVersion are

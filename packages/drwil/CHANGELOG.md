@@ -13,7 +13,9 @@ closing commit; the release renames this section to its version.
   promotion path. In `team`, `create-release.mjs` without `--candidate` is refused
   and points to `--candidate`; in `solo` it publishes the version directly. An
   existing value is kept by an update, and any other value is refused
-  (QUA-199 to QUA-201).
+  (QUA-199 to QUA-201). In `solo`, the « no verdict » acceptance note is now the
+  body of the GitHub release (`--notes-file`), with no `recette/vX.Y.Z` branch
+  nor pull request; `--dry-run` shows it and where it goes (QUA-079).
 - `/drwil-scope` (skill `scope-a-workstream`, listed in the `/drwil` menu): at the
   end of a pushed scoping, a poll asks what to do with its PR — « Automatic merge »,
   « Manual merge » or « Continue scoping » (PR left open, next scopings on the same
