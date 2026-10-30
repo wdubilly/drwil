@@ -5,6 +5,8 @@ test, tout le code livré mesuré » à son recadrage
 (`docs/projects/adopter-seuil-couverture.md`).
 Rangement du 2026-10-26 : seule intention de couverture ; reprend la partie « couverture du diff » de `docs/intentions/garanties-la-suite.md` ; la fiche `docs/projects/adopter-seuil-couverture.md` reste le lot d'outillage de la mesure.
 
+**Revu le 2026-10-30** : la cible est tranchée — ordre : mesure complète et cliquet (`docs/projects/adopter-seuil-couverture.md`), puis 100 % du code modifié (`docs/projects/couverture-du-code-modifie.md`), puis le 100 % du paquet, resté ici. Le « 100 % des hooks Claude et du module front » reste à décider quand leur mesure existera. Décisions du demandeur sur le code modifié : lignes et branches qu'elles ouvrent ; exclusions déclarées avec justification ; sans rapport lcov, contrôle non exécuté signalé (QUA-013) ; ce dépôt l'adopte dès le chantier.
+
 ## Besoin
 
 QUA-004 (seuil de couverture de test) vise 100 % pour le paquet
