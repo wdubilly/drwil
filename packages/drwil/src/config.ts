@@ -55,6 +55,7 @@ export const KIT_PROSE = [
   ".gemini/settings.json",
   "docs/recipes/",
   "docs/ia-first.md",
+  "docs/ia-first/",
   "AGENTS.md",
   ".cursor/",
   ".github/copilot-instructions.md",

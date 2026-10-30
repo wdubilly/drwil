@@ -87,7 +87,7 @@ closing commit; the release renames this section to its version.
 - A size check for the files the kit installs (`.githooks/check-kit-size.mjs`,
   declared as `taille-kit` in `.drwil/ia-first.json` by `drwil init`, without
   touching the project's own checks): ceilings in lines of 200 for code, hooks
-  and settings, 100 for `AGENTS.md`, 800 for on-demand documents, 250 for
+  and settings, 100 for `AGENTS.md`, 400 for on-demand documents, 250 for
   recipes. In an installed project an overrun is a warning naming the file and
   its ceiling, never a blocker; the project's own code is never measured.
   `kitSizeLegacy` in `.drwil/ia-first.json` tolerates a file already above its
@@ -101,6 +101,15 @@ closing commit; the release renames this section to its version.
 
 ### Changed
 
+- `docs/ia-first.md` is now a short summary (under 100 lines) that keeps the
+  section numbering and gives the file of each section in `docs/ia-first/`
+  (one per section, and one per subsection of section 7), each under the
+  400-line ceiling and readable on its own: an agent loads only the section it
+  needs. The most-read pointers (`AGENTS.md`, the `drwil` skill, the brief
+  model, the project index, routine maintenance) name the exact section file;
+  the others go through the summary. `drwil init` installs the folder and an
+  update refreshes its files like the rest of the kit's prose, keeping a
+  section the project adapted (QUA-190).
 - The `/drwil-start` poll (`state.mjs briefs`) now lists the briefs in the
   realisation order of the index's "Fiches cadrées" section, not by priority:
   a brief that is not ready keeps its place, and the briefs the index does not

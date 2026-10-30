@@ -3,7 +3,7 @@
 Single entry point for any AI (and any human) working on this repository.
 CLAUDE.md, GEMINI.md and the other tool files only point back here. Short
 on purpose: it is read at every request. Each rule below has its full text
-in `docs/ia-first.md`, section 8 (read by section, never end to end).
+in `docs/ia-first/8-conduct-rules.md` (section 8 of `docs/ia-first.md`).
 
 ## The project in 5 lines
 
@@ -11,7 +11,7 @@ in `docs/ia-first.md`, section 8 (read by section, never end to end).
 Full map and stack: `docs/architecture.md`. A new project fills these five
 lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
 
-## Conduct (always, no machine checks it) — detail: `docs/ia-first.md`, section 8
+## Conduct (always, no machine checks it) — detail: `docs/ia-first/8-conduct-rules.md`
 
 - **Scope**: do what is asked, nothing more; no out-of-scope change, no integration or network flow not asked for.
 - **Commits**: in {{projectLanguage}}; commit or push only when asked; a bug found during a refactor = separate commit.

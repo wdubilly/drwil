@@ -6,7 +6,7 @@ sujet qui grossit ou qui demande une décision devient un chantier normal,
 listé dans `docs/projects/pending.md`.
 
 Le contrôle au commit signale un fichier de code qu'aucune fiche ne couvre
-(rappel de cadrage, sévérité réglable — `docs/ia-first.md`, section 7). Pour une
+(rappel de cadrage, sévérité réglable — `docs/ia-first/7-scoping-reminder.md`). Pour une
 petite tâche, ajouter son chemin au bloc `cadrage` ci-dessous ; un motif trop
 large (`**`, `scripts/*`) est refusé, il faut nommer le fichier ou un motif
 précis.

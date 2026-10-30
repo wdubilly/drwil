@@ -3,7 +3,7 @@
 One line per topic. Detail and **status** live in the linked brief, the only
 source: this index copies no state. A topic without a link fits in two
 lines here. Unscoped ideas: `docs/intentions/README.md`. Writing rules:
-`docs/ia-first.md`, section 7.
+`docs/ia-first/7-projects-and-risk-levels.md`.
 
 Mandatory marker on every open item (QUA-015): `[AI]` doable by an agent in
 the repo; `[human]` a gesture outside the repo (server, vault, approval,

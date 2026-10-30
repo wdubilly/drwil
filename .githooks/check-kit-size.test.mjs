@@ -34,8 +34,8 @@ test("QUA-157 gabarit : chaque sorte a son plafond, un dépassement bloque et no
     [`${TPL}/AGENTS.md`]: lignes(101),
     [`${TPL}/docs/recipes/ok.md`]: lignes(250),
     [`${TPL}/docs/recipes/grosse.md`]: lignes(251),
-    [`${TPL}/docs/doc-ok.md`]: lignes(800),
-    [`${TPL}/docs/doc-gros.md`]: lignes(801),
+    [`${TPL}/docs/doc-ok.md`]: lignes(400),
+    [`${TPL}/docs/doc-gros.md`]: lignes(401),
     "packages/drwil/templates/common/layers/backend.md": lignes(101),
     [`${TPL}/node_modules/x.mjs`]: lignes(900),
     [`${TPL}/__pycache__/x.mjs`]: lignes(900),
@@ -47,7 +47,7 @@ test("QUA-157 gabarit : chaque sorte a son plafond, un dépassement bloque et no
     [`${TPL}/.githooks/gros.mjs`, 201, 200, "code, hooks, réglages"],
     [`${TPL}/AGENTS.md`, 101, 100, "AGENTS.md"],
     [`${TPL}/docs/recipes/grosse.md`, 251, 250, "recette"],
-    [`${TPL}/docs/doc-gros.md`, 801, 800, "document"],
+    [`${TPL}/docs/doc-gros.md`, 401, 400, "document"],
     ["packages/drwil/templates/common/layers/backend.md", 101, 100, "AGENTS.md"],
   ])
     assert.ok(r.stderr.includes(`${fichier} : ${n} lignes, plafond ${plafond} (${sorte})`), fichier);

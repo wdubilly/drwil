@@ -14,7 +14,7 @@ project (kit mechanics): "reference — …", never offered for launch;
 "done on YYYY-MM-DD" only when condensing it: a brief carrying it cannot
 stay — `docs/projects/journal.md`, then deletion.)
 
-(risk level, `docs/ia-first.md` section 7: LOW has no brief — attach to
+(risk level, `docs/ia-first/7-projects-and-risk-levels.md`: LOW has no brief — attach to
 `docs/projects/routine-maintenance.md`; MEDIUM: brief + scope; HIGH: also a
 Decisions section and the related contracts cited. A scope touching
 `.githooks/`, CI or `.drwil/` requires HIGH; it can only be raised.)
@@ -27,7 +27,7 @@ files:
 
 (`scope` block: one path or pattern per line, under `files:`; covers
 the code files this project touches, for the scoping reminder —
-`docs/ia-first.md`, section 7. A pattern that's too broad, `**` or
+`docs/ia-first/7-scoping-reminder.md`. A pattern that's too broad, `**` or
 `scripts/*`, is refused: name the file or use a pattern spanning at least
 two folders. List everything the workstream will touch from the start:
 the code, **its tests**, and `.drwil/ia-first.json` when a criterion

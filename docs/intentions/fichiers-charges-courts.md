@@ -115,3 +115,8 @@ Cadrées en trois fiches, dans l'ordre : `docs/projects/journal.md` (hooks-agent
   sections courtes autonomes, chargées seulement quand leur situation se
   présente ; la fiche retire alors `kitSizeLegacy`. À cadrer pour la 0.11,
   juste après `surveillance-taille-du-kit`.
+  **Fait (2026-10-29)** : chantier `ia-first-en-sections-courtes` — plafond
+  des documents lus à la demande à 400 lignes, `docs/ia-first.md` devenu un
+  sommaire de 36 lignes, une section par fichier dans le dossier docs/ia-first/ (la
+  plus longue, la section 8, 187 lignes), `kitSizeLegacy` retiré (QUA-157,
+  QUA-190).
