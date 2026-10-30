@@ -5280,3 +5280,23 @@ test("QUA-185 : `Couvre : aucun` justifié compte comme déclaré, sans fichier 
   const reel = (await doctor({ targetDir: depot })).points.find((p) => p.id === "coverage");
   assert.equal(reel.state, "ok", `contrats attestés sans Couvre : ${reel.detail}`);
 });
+
+test("QUA-194 : ce dépôt déclare le contrôle de couverture du diff, avec exclusions justifiées, et sa copie est celle du gabarit", () => {
+  const depot = fileURLToPath(new URL("../../../", import.meta.url));
+  const cfg = JSON.parse(readFileSync(join(depot, ".drwil/ia-first.json"), "utf8"));
+  const controle = cfg.checks.find((c) => c.id === "couverture-diff");
+  assert.ok(controle, "contrôle couverture-diff déclaré");
+  assert.equal(controle.ciJob, "checks");
+  assert.match(controle.run, /check-diff-coverage\.mjs/);
+  assert.ok(cfg.diffCoverage.lcov && cfg.diffCoverage.produce, "rapport et commande de production déclarés");
+  assert.ok(
+    cfg.diffCoverage.exclusions.every((e) => String(e.reason).trim()),
+    "chaque exclusion est justifiée",
+  );
+  const copie = "check-diff-coverage.mjs";
+  assert.equal(
+    readFileSync(join(depot, ".githooks", copie), "utf8"),
+    readFileSync(join(depot, "packages/drwil/templates/common/base/.githooks", copie), "utf8"),
+    "la copie du dépôt est le gabarit",
+  );
+});

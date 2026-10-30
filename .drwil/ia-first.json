@@ -2492,6 +2492,72 @@
       ],
       "degradable": false,
       "needsBuild": true
+    },
+    {
+      "id": "tests-qua-191",
+      "name": "tests de QUA-191, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-191 \" .githooks/check-diff-coverage.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-192",
+      "name": "tests de QUA-192, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-192 \" .githooks/check-diff-coverage.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-193",
+      "name": "tests de QUA-193, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-193 \" .githooks/check-diff-coverage.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-194",
+      "name": "tests de QUA-194, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-194 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".githooks/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "couverture-diff",
+      "name": "code modifié couvert à 100 % : lignes et branches du diff de la branche (diffCoverage)",
+      "run": "node .githooks/check-diff-coverage.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "package.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     }
   ],
   "worktreeInstall": "npm ci",
@@ -2514,5 +2580,19 @@
       "outils/"
     ]
   },
-  "newRequirements": "blocking"
+  "newRequirements": "blocking",
+  "diffCoverage": {
+    "lcov": "node_modules/.cache/c8-diff/lcov.info",
+    "produce": "npx c8 --reporter=lcov --all --include=.githooks/*.mjs --exclude=.githooks/*.test.mjs --temp-directory=node_modules/.cache/c8-diff --report-dir=node_modules/.cache/c8-diff node --test \".githooks/*.test.mjs\"",
+    "base": "origin/master",
+    "include": [
+      ".githooks/*.mjs"
+    ],
+    "exclusions": [
+      {
+        "path": ".githooks/*.test.mjs",
+        "reason": "les tests ne sont pas mesurés par leur propre rapport de couverture (--exclude)"
+      }
+    ]
+  }
 }

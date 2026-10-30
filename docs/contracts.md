@@ -1847,3 +1847,43 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : ia-first-en-sections-courtes — « Chaque section issue de la découpe se lit seule : un agent la charge sans lire les autres, et chaque renvoi existant vers `docs/ia-first.md` mène à la bonne section »
 **Raison** : `docs/ia-first.md` faisait 916 lignes : un agent qui ne cherchait qu'une règle en chargeait des centaines.
+
+## QUA-191 — Les lignes ajoutées ou modifiées d'une branche, et les branches qu'elles ouvrent, sont couvertes à 100 % d'après le rapport lcov du projet
+**Règle** : Livré à tout projet qui déclare `diffCoverage` dans `.drwil/ia-first.json`. `.githooks/check-diff-coverage.mjs` lit le diff de la branche contre sa base (`git diff <base>...HEAD`, base : option `--base`, `diffCoverage.base`, puis `origin/master`, `origin/main`, `master`, `main`) et le rapport lcov du projet : toute ligne ajoutée ou modifiée dont le compteur est nul, et toute branche ouverte par une telle ligne et jamais prise, fait échouer le contrôle en nommant fichier et ligne ; un fichier modifié qui correspond à `diffCoverage.include` mais que le rapport ignore compte comme non mesuré, donc en échec. Indépendant de la pile : le rapport est celui de l'outil de couverture de la pile, produit par la commande déclarée (`diffCoverage.produce`). Au push et en CI (job `checks`), pas à l'écriture du code : la PR entière est jugée avant fusion.
+**Périmètre** : `.githooks/check-diff-coverage.mjs` et son gabarit ; `.drwil/ia-first.json` (`diffCoverage`, contrôle `couverture-diff`).
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/check-diff-coverage.mjs` (livré, copie du dépôt `.githooks/check-diff-coverage.mjs`), `.drwil/ia-first.json` (`diffCoverage`).
+**Preuve** : tests du dépôt : lcov (lignes `DA`, branches `BRDA`, chemins absolus ramenés à la racine), diff (lignes ajoutées, fichier supprimé ignoré), verdict (ligne, branche, fichier absent du rapport), contrôle de bout en bout dans un dépôt git temporaire (couvert, ligne non couverte, branche non couverte, ligne non modifiée ignorée, base lue en option, en configuration ou par défaut).
+**Contrôle** : `tests-qua-191`
+**Tests** : `.githooks/check-diff-coverage.test.mjs`
+**Origine** : couverture-du-code-modifie — « Les lignes ajoutées ou modifiées d'une branche, et les branches qu'elles ouvrent, sont couvertes à 100 % d'après le rapport lcov du projet »
+**Raison** : Un projet qui adopte drwil a souvent une couverture basse : un seuil global élevé le bloquerait, un seuil bas laisse entrer du code neuf non testé (QUA-004, seuil de couverture de test). Exiger 100 % sur ce qui change fait monter la couverture d'elle-même.
+
+## QUA-192 — Une exclusion du contrôle de couverture du diff n'est admise que déclarée avec sa justification
+**Règle** : Livré à tout projet qui déclare `diffCoverage`. Une exclusion (code généré, configuration, ligne non testable) est une entrée de `diffCoverage.exclusions` dans `.drwil/ia-first.json` : `path` (motif de chemin), `lines` (ligne ou intervalle `a-b`, absent pour le fichier entier) et `reason`. Une exclusion sans `reason`, ou à `reason` vide, est refusée : elle n'écarte rien et le contrôle échoue en la nommant.
+**Périmètre** : `.githooks/check-diff-coverage.mjs` et son gabarit ; `.drwil/ia-first.json` (`diffCoverage`, contrôle `couverture-diff`).
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/check-diff-coverage.mjs` (livré, copie du dépôt `.githooks/check-diff-coverage.mjs`), `.drwil/ia-first.json` (`diffCoverage`).
+**Preuve** : tests du dépôt : exclusion sans raison ou à raison vide refusée, exclusion justifiée écartant un fichier, un intervalle ou une ligne, bout en bout : le trou écarté laisse passer, la même exclusion sans raison échoue et laisse le trou signalé.
+**Contrôle** : `tests-qua-192`
+**Tests** : `.githooks/check-diff-coverage.test.mjs`
+**Origine** : couverture-du-code-modifie — « Une exclusion du contrôle de couverture du diff n'est admise que déclarée avec sa justification »
+**Raison** : Une exclusion muette est un trou dans la mesure que personne ne revoit.
+
+## QUA-193 — Sans rapport lcov, le contrôle de couverture du diff est non exécuté, jamais passé
+**Règle** : Livré à tout projet qui déclare `diffCoverage`. Si `diffCoverage.lcov` n'est pas déclaré, si le rapport est absent ou vide, si la commande `diffCoverage.produce` échoue ou si la base du diff est introuvable, le contrôle sort en échec avec « Couverture du diff non exécutée : <cause> » : il ne passe jamais faute d'avoir mesuré (QUA-013, un contrôle qui n'a pas tourné n'a pas passé). Le contrôle n'invente pas de rapport pour une pile sans outil de couverture.
+**Périmètre** : `.githooks/check-diff-coverage.mjs` et son gabarit ; `.drwil/ia-first.json` (`diffCoverage`, contrôle `couverture-diff`).
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/check-diff-coverage.mjs` (livré, copie du dépôt `.githooks/check-diff-coverage.mjs`), `.drwil/ia-first.json` (`diffCoverage`).
+**Preuve** : tests du dépôt : rapport absent, vide, non déclaré, configuration illisible, commande de production réussie puis échouée, base introuvable : chaque cas sort en échec avec la cause.
+**Contrôle** : `tests-qua-193`
+**Tests** : `.githooks/check-diff-coverage.test.mjs`
+**Origine** : couverture-du-code-modifie — « Sans rapport lcov, le contrôle de couverture du diff est non exécuté, jamais passé »
+**Raison** : Un contrôle silencieux quand il ne mesure rien ferait croire à une couverture que personne n'a vue.
+
+## QUA-194 — Ce dépôt applique le contrôle à ses propres branches, en plus du cliquet de seuils
+**Règle** : Le contrôle `couverture-diff` de `.drwil/ia-first.json` (job CI `checks`) fait tourner `.githooks/check-diff-coverage.mjs` sur les branches de ce dépôt, avec `diffCoverage` déclaré (rapport lcov des hooks `.githooks/*.mjs`, produit par c8, base `origin/master`, fichiers de test exclus avec leur raison) ; il s'ajoute au cliquet de seuils de QUA-004 sans le remplacer, et la copie du dépôt reste identique au gabarit livré. Limite connue : seuls les hooks sont mesurés par le contrôle ; le paquet `packages/drwil` n'y entre pas (`docs/intentions/couverture-paquet-100.md`).
+**Périmètre** : `.drwil/ia-first.json`, `.githooks/check-diff-coverage.mjs`, gabarit livré.
+**Source de vérité** : `.drwil/ia-first.json` (`checks`, `diffCoverage`).
+**Preuve** : test du paquet : le contrôle `couverture-diff` est déclaré dans le job CI `checks` avec sa commande, son rapport et ses exclusions justifiées, et la copie du dépôt est identique au gabarit.
+**Contrôle** : `tests-qua-194`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : couverture-du-code-modifie — « Ce dépôt applique le contrôle à ses propres branches, en plus du cliquet de seuils »
+**Raison** : Le dépôt qui livre le contrôle l'éprouve sur ses propres branches avant d'y obliger les autres.
