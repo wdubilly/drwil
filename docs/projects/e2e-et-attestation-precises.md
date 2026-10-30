@@ -16,6 +16,11 @@ files:
   - .drwil/ia-first.json
   - docs/contracts.md
   - packages/drwil/test/kit.test.mjs
+  - docs/intentions/e2e-et-attestation-precises.md
+  - docs/projects/pending.md
+  - docs/projects/journal.md
+  - docs/preuves/e2e-et-attestation-precises.md
+  - .drwil/usage.jsonl
 -->
 
 (cadrage : le catalogue, la recette d'adoption et la section 5 de
