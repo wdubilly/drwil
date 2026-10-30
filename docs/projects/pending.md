@@ -525,7 +525,7 @@ Ajoutés le 2026-10-14 (feuille de route du demandeur, phases 1 à 3) :
 
 Séance de décision tenue le 2026-10-11 : non-régression et couverture
 tranchées. Fait : couverture du paquet relevée au réel avec cliquet (lot 3a
-de `docs/projects/adopter-seuil-couverture.md`) ; non-régression continue ;
+de `docs/projects/journal.md`) ; non-régression continue ;
 CLI testée depuis le tarball ; gitleaks en CI (journal, 2026-10-11).
 
 Fait le 2026-10-13 : la protection de master (compte machine de
