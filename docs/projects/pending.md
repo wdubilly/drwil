@@ -208,6 +208,10 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   `init` — `docs/intentions/adoption-et-init.md`.
 - [ ] [décision] Une documentation qui reste juste : renvois, citations,
   index, doc visiteur — `docs/intentions/coherence-de-la-doc.md`.
+- [ ] [décision] Des renvois justes après la découpe de `docs/ia-first.md`
+  (commentaire de hook, renvois relatifs, champ Couvre de QUA-063) et la
+  recette livrée « working with branches » à jour —
+  `docs/intentions/renvois-apres-decoupe.md`.
 - [ ] [décision] [P1] Un CI du kit que la mise à jour n'écrase pas : étape C++
   et job Windows perdus sur drwil_dbox le 2026-10-26 —
   `docs/intentions/ci-extensible-sans-perte.md`.
