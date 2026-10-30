@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-10-29 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-10-30 (rangement du backlog).
 
 ## Besoin
 
@@ -22,3 +22,5 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-10-29 — Garde d'écriture sur .drwil/evidence/acceptance.json : un agent peut encore écrire à la main l'acceptation des critères (limite de QUA-175, gardes d'écriture des hooks d'agent hors périmètre du chantier cycle-de-vie-des-fiches). À cadrer : refuser toute écriture de ce fichier par un outil d'agent, ou la détecter à la clôture.
 - 2026-10-29 — Au cadrage, repérer un critère d'acceptation marqué [humain] qui serait vérifiable par une machine (texte conservé, renvois valides…) et proposer un contrôle à la place, selon la règle de conception de docs/ia-first.md section 3 (une preuve humaine est le prochain contrôle à outiller). Vu sur ia-first-en-sections-courtes, 2026-10-29.
 - 2026-10-29 — Les docs que le kit fait produire par l'agent (docs/audit-risks.md, docs/value-discovery.md, fiches, journal…) n'ont aucun plafond de taille ; les faire entrer sous un plafond bloquant, car des agents les relisent (souhait du demandeur, 2026-10-29). Les fichiers du kit installés chez l'adoptant restent en avertissement.
+- 2026-10-30 — Clôture récurrente bloquée : close.mjs supprime la fiche, et tout renvoi à elle hors du bloc scope (catalogue, dashboard, intentions, index, journal) bloque le commit de clôture, sans retour possible depuis CLOSING (arrivé aux chantiers adopter-seuil-couverture, couverture-du-code-modifie, e2e-et-attestation-precises). À outiller : close.mjs --check en BUILD qui liste ces renvois et propose l'extension de scope, ou réorientation automatique vers le journal avant la clôture.
+- 2026-10-30 — Attente des commandes longues non outillée : les sous-agents lancent des boucles 'while pgrep -f ...; do sleep 5; done' qui se voient elles-mêmes et ne finissent jamais (15 boucles zombies le 2026-10-30), faute d'un outil pour attendre run-checks, verify ou un commit à hooks au-delà du délai de 120 s. À outiller : un script drwil qui lance la commande en tâche de fond, écrit son verdict dans un fichier et expose une attente bornée, plus la consigne run_in_background dans les sous-agents.
