@@ -3936,4 +3936,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Durée de CI (job checks)** : non mesurée — la CI de la PR n'a pas encore passé à l'écriture de cette entrée.
 - **Relevé du cache lu par requête** : en attente du choix des paires comparables. Références du `usage.jsonl`, proposées sans trancher : paire A (80 à 115 requêtes) `premier-commit-avant-adoption` 145 k et `barriere-commit-de-fusion` 105 k (2026-10-23) contre `adopter-seuil-couverture` 141 k et `couverture-du-code-modifie` 106 k (2026-10-30) ; paire B (50 à 60 requêtes) `verify-reprise-par-controle` 105 k et `stab-squash` 92 k contre `e2e-et-attestation-precises` 74 k et `registre-vise-les-sections-d-ia-first` 70 k.
 - **Limites connues** : les deux relevés (durée de CI à hooks inchangés, cache lu sur paires comparables) restent à faire, dans `docs/intentions/suivi-ci-et-contexte.md` ; le texte de la section « Tendances » est dans `.githooks/dashboard.mjs` et non dans `.githooks/dashboard-texts.mjs`, hors du périmètre de la fiche.
+- **Preuve de clôture** : `docs/preuves/releves-de-ci-et-de-contexte.md`.
 - **Clôturé par** : la branche `workstream/releves-de-ci-et-de-contexte`.
