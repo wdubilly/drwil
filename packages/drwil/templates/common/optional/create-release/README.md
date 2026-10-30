@@ -25,6 +25,11 @@ without an extra PR.
   **human** gesture (interactive terminal, the candidate's name typed back);
   an agent never runs it.
 - `promote-release.mjs`: promotes an approved candidate to the final release.
+- `recette-note.mjs`: writes the acceptance note of a version into the
+  repository through a dedicated branch and a PR (a candidate's promotion, or
+  the catch-up of a note); in `solo` mode a direct release carries its « no
+  verdict » note in the release body instead. Its messages are in
+  `recette-note-texts.mjs`.
 - `release-review.mjs`: review of `README.md`, `docs/features.md` and
   `docs/architecture.md` before any tag, preview included (imported by
   `create-release.mjs`): for each one, what changed since the latest tag

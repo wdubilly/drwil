@@ -233,6 +233,11 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   le 2026-10-30 en une fiche (`docs/projects/release-allegee.md`) ; reste à
   outiller le reste, une fois la fiche livrée —
   `docs/intentions/release-allegee.md`.
+- [ ] [décision] [P3] `docs/recettes/README.md` dit encore que la note « sans
+  verdict » arrive par la PR, alors qu'en `solo` elle est le corps de la
+  release — `docs/intentions/recettes-readme-note-sans-verdict.md`.
+- [ ] [décision] [P3] Déclarer les copies `.githooks/` du module de release
+  dans `scopeMirrors` — `docs/intentions/copies-create-release-dans-scope-mirrors.md`.
 
 ### Clôture, file et chantiers en parallèle
 

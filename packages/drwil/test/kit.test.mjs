@@ -3156,15 +3156,6 @@ test("créer une release : module optionnel (pas copié par défaut), recette/sk
   enAvertissement(dir);
   presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
   copierModule(dir, "create-release");
-  const mecanique = join(dir, "docs/projects/kit-mechanics.md");
-  // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).
-  writeFileSync(
-    mecanique,
-    readFileSync(mecanique, "utf8").replace(
-      "  - .githooks/create-release.mjs\n",
-      "  - .githooks/create-release.mjs\n  - .githooks/recette-note.mjs\n  - .githooks/recette-note-texts.mjs\n",
-    ),
-  );
   git(dir, "add", "-A");
   git(dir, "commit", "-m", "feat: premier chantier");
   const r = spawnSync(process.execPath, [".githooks/create-release.mjs", "--dry-run"], { cwd: dir, encoding: "utf8" });
@@ -3202,15 +3193,6 @@ test("créer une release : --dry-run liste le paquet npm à empaqueter quand il 
   enAvertissement(dir);
   presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
   copierModule(dir, "create-release");
-  const mecanique = join(dir, "docs/projects/kit-mechanics.md");
-  // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).
-  writeFileSync(
-    mecanique,
-    readFileSync(mecanique, "utf8").replace(
-      "  - .githooks/create-release.mjs\n",
-      "  - .githooks/create-release.mjs\n  - .githooks/recette-note.mjs\n  - .githooks/recette-note-texts.mjs\n",
-    ),
-  );
   mkdirSync(join(dir, "packages/truc"), { recursive: true });
   writeFileSync(join(dir, "packages/truc/package.json"), JSON.stringify({ name: "truc", version: "1.0.0" }));
   git(dir, "add", "-A");
@@ -3237,15 +3219,6 @@ test("QUA-051 : module de release livré avec la fiche, le verdict et la promoti
     presentationRedigee(dir); // QUA-098 : sans examen fait, la release est refusée
     for (const s of scripts) assert.ok(!existsSync(join(dir, ".githooks", s)), `${s} : module optionnel, jamais copié par défaut`);
     copierModule(dir, "create-release");
-    // Le cadrage de la mécanique du kit livré ne cite pas encore recette-note.mjs (intention dédiée).
-    const mecanique = join(dir, "docs/projects/kit-mechanics.md");
-    writeFileSync(
-      mecanique,
-      readFileSync(mecanique, "utf8").replace(
-        "  - .githooks/promote-release.mjs\n",
-        "  - .githooks/promote-release.mjs\n  - .githooks/recette-note.mjs\n  - .githooks/recette-note-texts.mjs\n",
-      ),
-    );
     git(dir, "add", "-A");
     const c = git(dir, "commit", "-m", "feat: premier chantier");
     assert.equal(c.status, 0, c.stdout + c.stderr);
@@ -3258,7 +3231,7 @@ test("QUA-051 : module de release livré avec la fiche, le verdict et la promoti
       assert.equal(spawnSync(process.execPath, [`.githooks/${s}`], { cwd: dir, encoding: "utf8" }).status, 2, `${s} sans argument : usage`);
   }
   const readme = readFileSync(join(module, "README.md"), "utf8");
-  for (const s of scripts.filter((x) => x !== "recette-note.mjs")) assert.match(readme, new RegExp(s.replace(".", "\\.")));
+  for (const s of scripts) assert.match(readme, new RegExp(s.replace(".", "\\.")));
 });
 
 test("QUA-055 : les README pointent vers la dernière version validée par un lien fixe, sans numéro de version à recommiter", () => {

@@ -1,6 +1,6 @@
 # Intention : alléger la release, puis outiller ce qui reste
 
-**Statut** : cadrée le 2026-10-30 en `docs/projects/release-allegee.md` (patch direct, une PR, réglage `release.mode`, `solo` par défaut ; fiche du feu vert gardée) ; proposée le 2026-10-26 — rangement du backlog : découpage de `petits-defauts` par thème (décision du demandeur du 2026-10-26) ; chaque partie reprend l'une des intentions d'origine, avec son statut d'origine.
+**Statut** : cadrée le 2026-10-30 en `docs/projects/release-allegee.md` (patch direct, une PR, réglage `release.mode`, `solo` par défaut ; fiche du feu vert gardée) ; les deux petites limites (citation de `.githooks/recette-note.mjs`, texte de QUA-048) traitées le 2026-10-30 ; proposée le 2026-10-26 — rangement du backlog : découpage de `petits-defauts` par thème (décision du demandeur du 2026-10-26) ; chaque partie reprend l'une des intentions d'origine, avec son statut d'origine.
 
 ## Besoin
 
