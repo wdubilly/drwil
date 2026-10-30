@@ -49,7 +49,4 @@ sans seuil, dans l'entrée de journal de chaque chantier
 3. Mesure absente ou inexploitable (CI pas encore passée, passage relancé
    ou annulé) : écrire « non mesurée ».
 
-Ces durées et leurs variations ne bloquent ni `verify` ni la clôture. Le
-tableau de bord (`.githooks/dashboard.mjs`) lit les lignes « hooks
-inchangés » et en montre la tendance avec un seuil d'alerte de 3m55, non
-bloquant (QUA-198, tendance de la durée de CI et du cache lu par requête).
+Ces durées et leurs variations ne bloquent ni `verify` ni la clôture.
