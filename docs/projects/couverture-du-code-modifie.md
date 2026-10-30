@@ -57,7 +57,7 @@ modifié arrive couvert, et la couverture globale monte d'elle-même.
 ## 2. Hors périmètre
 
 - La mesure complète et le cliquet des seuils :
-  `docs/projects/adopter-seuil-couverture.md`.
+  `docs/projects/journal.md`.
 - Le 100 % du paquet entier : `docs/intentions/couverture-paquet-100.md`.
 - Les profils par risque du catalogue (`docs/intentions/catalogue-cycle-de-vie.md`) :
   le contrat entre au catalogue actuel et migrera avec les autres.
