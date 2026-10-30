@@ -19,6 +19,8 @@ files:
   - packages/drwil/templates/common/tools/claude/.claude/hooks/*.mjs
   - .claude/hooks/*.test.mjs
   - docs/architecture.md
+  - docs/contracts-catalog.md
+  - docs/dashboard.html
 -->
 
 (cadrage : les scripts de couverture du paquet et du dépôt, leurs
