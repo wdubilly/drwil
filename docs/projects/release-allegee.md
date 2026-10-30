@@ -9,8 +9,12 @@
 files:
   - packages/drwil/templates/common/optional/create-release/create-release.mjs
   - packages/drwil/templates/common/optional/create-release/create-release-texts.mjs
+  - .githooks/create-release.mjs
+  - .githooks/create-release-texts.mjs
   - packages/drwil/templates/common/optional/create-release/recette-note.mjs
   - packages/drwil/templates/common/optional/create-release/recette-note-texts.mjs
+  - .githooks/recette-note.mjs
+  - .githooks/recette-note-texts.mjs
   - packages/drwil/templates/common/optional/create-release/README.md
   - packages/drwil/templates/common/base/docs/recipes/create-a-release.md
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
