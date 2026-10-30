@@ -1,6 +1,6 @@
 # Intention : alléger la release, puis outiller ce qui reste
 
-**Statut** : proposée le 2026-10-26 — rangement du backlog : découpage de `petits-defauts` par thème (décision du demandeur du 2026-10-26) ; chaque partie reprend l'une des intentions d'origine, avec son statut d'origine.
+**Statut** : cadrée le 2026-10-30 en `docs/projects/release-allegee.md` (patch direct, une PR, réglage `release.mode`, `solo` par défaut ; fiche du feu vert gardée) ; proposée le 2026-10-26 — rangement du backlog : découpage de `petits-defauts` par thème (décision du demandeur du 2026-10-26) ; chaque partie reprend l'une des intentions d'origine, avec son statut d'origine.
 
 ## Besoin
 
