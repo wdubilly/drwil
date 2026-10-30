@@ -95,7 +95,9 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
 **Versions visées (décidé avec le demandeur le 2026-10-28)** :
 
 - **0.11.0** : la réalisation des sept fiches cadrées de la section suivante,
-  une par session, dans l'ordre indiqué ; entre deux chantiers, le cadrage des
+  une par session, dans l'ordre indiqué, puis, décidé le 2026-10-30, les deux fiches de
+  correctifs vus à l'installation de `drwil_walk` (`cloture-sur-projet-neuf`, puis
+  `installation-depot-neuf`) ; entre deux chantiers, le cadrage des
   thèmes C (cible de couverture) et D (preuves et contrôles).
 - **0.12.0** : la fluidité de l'adoption (thèmes B, E, F et G), cadrée pendant
   la 0.11 : le premier commit du kit sous la barrière bloquante, le
@@ -120,7 +122,10 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P1] Clôture sur un projet neuf : garanties « pas encore applicables » sans code, clôture qui
+- [ ] [IA] [P1] (0.11.0) Installation d'un dépôt neuf : exception bornée de QUA-017 au premier envoi sur un distant vide,
+  auto-merge activé avec la protection, `init` qui demande les outils IA (cadré le 2026-10-30) —
+  `docs/projects/installation-depot-neuf.md`.
+- [ ] [IA] [P1] (0.11.0) Clôture sur un projet neuf : garanties « pas encore applicables » sans code, clôture qui
   écrit sa ligne de journal et d'index, empreinte des critères sans la marque `[humain]` (cadré le
   2026-10-30) — `docs/projects/cloture-sur-projet-neuf.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
