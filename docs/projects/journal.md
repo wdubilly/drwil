@@ -3918,3 +3918,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : l'identité forte en option (commits signés, revue GitHub authentifiée) n'est pas faite, seule la documentation des niveaux l'est — elle reste dans `docs/intentions/e2e-et-attestation-precises.md`.
 - **Preuve de clôture** : `docs/preuves/e2e-et-attestation-precises.md`.
 - **Clôturé par** : la branche `workstream/e2e-et-attestation-precises`.
+
+## 2026-10-30 — Le registre vise le fichier de section
+
+- **Décisions clés** : aucun contrat neuf. QUA-190 (chaque section de `docs/ia-first/` se lit seule, chaque renvoi y mène) étendu au registre du dépôt et à l'intention sur la compatibilité des outils : un test du paquet refuse « `docs/ia-first.md` (section N) », la matrice et le réglage visés par le sommaire, et exige que chaque fichier de section cité existe. Les renvois de `docs/contracts.md` (QUA-015, QUA-016, QUA-061, QUA-069, QUA-099, QUA-100, QUA-129, QUA-130, QUA-132, QUA-144, QUA-153) visent désormais le fichier exact ; ni règle, ni preuve, ni **Couvre** n'ont changé, l'attestation de QUA-069 tient.
+- **Hooks modifiés** : aucun.
+- **Décisions de l'humain en cours de route** : réécrire tous les contrats concernés, pas seulement QUA-069, et étendre le test plutôt qu'une réécriture unique (au cadrage). Risque relevé de MEDIUM à HIGH par le contrôle, le périmètre élargi au suivi touchant `.drwil/usage.jsonl`.
+- **Limites connues** : restent au sommaire les renvois qui visent le sommaire lui-même (règle de validité d'une attestation, QUA-190 et sa preuve, citation d'origine de QUA-063).
+- **Preuve de clôture** : `docs/preuves/registre-vise-les-sections-d-ia-first.md`.
+- **Clôturé par** : la branche `workstream/registre-vise-les-sections-d-ia-first`.
