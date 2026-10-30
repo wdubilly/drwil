@@ -86,6 +86,31 @@ prefix (`APP` by default; setting `businessPrefixes` of
 `drwil verify --json` (`businessRules`) and in the evidence. No business
 rule in the registry: no summary line.
 
+## What an attestation guarantees: identity, approval, proof of execution
+
+Three different things, which `drwil attest` does not give to the same
+degree:
+
+- **Proof of execution** (guaranteed): before anything is written, the
+  command re-runs the checks the contract cites and shows their result; the
+  attestation is bound by fingerprint to the human part of the contract and
+  to the definition of the checks it covered, and (version 3) to the content
+  of the files under **Covers**. It goes stale when any of them changes.
+- **Approval** (guaranteed as an act, not as a judgment): the attestation is
+  written only from an interactive terminal, after the contract identifier is
+  typed again. An agent, a script or a redirected input cannot produce it.
+  drwil does not judge whether the human looked well; the attestation file
+  is versioned so the change review sees it.
+- **Identity** (not guaranteed): the author recorded comes from the git
+  configuration of the machine, which is declarative; anyone can set any
+  name. Only the review of the attestation commit (who pushed it, who
+  approved the pull request) ties it to a person. Signed commits or an
+  authenticated forge review would give a stronger link; drwil does not
+  require them.
+
+None of this weakens a requirement: a mandatory guarantee has no exception
+or waiver, only the form of its proof varies.
+
 ## Agent / human workflow
 
 ```text

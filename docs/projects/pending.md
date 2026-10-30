@@ -120,9 +120,6 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P2] Preuves : l'e2e et l'attestation disent précisément ce qu'ils
-  prouvent (cadré le 2026-10-30 ; prose et preuve, aucun code livré) —
-  `docs/projects/e2e-et-attestation-precises.md`.
 - [ ] [IA] [P2] Registre : il vise le fichier de section d'`ia-first` qui porte
   la règle (cadré le 2026-10-30) —
   `docs/projects/registre-vise-les-sections-d-ia-first.md`.
@@ -156,8 +153,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
   vraie PR en retard sur la branche principale —
   `docs/intentions/merge-auto-eprouve-en-reel.md`.
-- [ ] [décision] [P1] Préciser ce que prouvent l'e2e et l'attestation (revue
-  externe du 2026-10-22) — `docs/intentions/e2e-et-attestation-precises.md`.
+- [ ] [décision] [P3] Une identité forte en option pour l'attestation (commits
+  signés, revue GitHub authentifiée), les niveaux de garantie étant documentés
+  (`QUA-197`) — `docs/intentions/e2e-et-attestation-precises.md`.
 - [ ] [décision] [P1] Suivre la durée de la CI et le contexte relu, et trancher
   leurs calibrages (dont l'avertissement `[ia-first-warning]` et un `verify`
   en FAIL sans contrat en échec, repris le 2026-10-26) —

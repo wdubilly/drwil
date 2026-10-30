@@ -1,6 +1,6 @@
 # Intention : préciser ce que prouvent l'e2e et l'attestation
 
-**Statut** : proposée le 2026-10-22 — revue externe du dépôt.
+**Statut** : traitée en grande partie le 2026-10-30 (définition de l'e2e par forme de projet, niveaux de garantie de l'attestation : `QUA-195`, `QUA-196`, `QUA-197`). Reste la seule option d'identité forte pour une équipe (commits signés, revue GitHub authentifiée), non faite : décision du 2026-10-30, seule la documentation des niveaux est livrée.
 
 ## Besoin
 

@@ -79,6 +79,8 @@ the requester's place (`AGENTS.md`, Conduct section).
      choice — mandatory guarantees wired at step 3 bis. A new project: 100 %
      and e2e from the start. An existing project in debt: threshold at the
      measured level, diff coverage at 100 %, ratchet; e2e required too.
+     What the e2e test is for each project shape is defined once, in the
+     catalog's « What "end to end" means » section.
    - The catalog's other lines have no ready-made script: propose the
      detected stack's usual tool (lint, typecheck, coverage…).
 5. **Write the first business contract**: `docs/contracts.md` ships

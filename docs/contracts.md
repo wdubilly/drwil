@@ -1887,3 +1887,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : couverture-du-code-modifie — « Ce dépôt applique le contrôle à ses propres branches, en plus du cliquet de seuils »
 **Raison** : Le dépôt qui livre le contrôle l'éprouve sur ses propres branches avant d'y obliger les autres.
+
+## QUA-195 — Le catalogue définit l'e2e une seule fois, par forme de projet
+**Règle** : Livré à tout projet. `docs/contracts-catalog.md` contient une section « What "end to end" means » (gabarit, en anglais) qui donne une définition unique de `catalogue:QUA-020` : un parcours complet depuis une interface publique jusqu'au résultat attendu, sans doublure sur ce que le test doit garantir, avec une ligne par forme de projet (bibliothèque : installer le paquet comme un client, appeler l'API publique, vérifier résultats et erreurs ; service : un parcours à travers son API ; application web : un parcours utilisateur). Le niveau d'exigence est le même pour toutes les formes : ni exception ni dérogation. La copie de ce dépôt, en français, porte la même définition.
+**Périmètre** : `docs/contracts-catalog.md`, gabarit livré et copie du dépôt.
+**Source de vérité** : `packages/drwil/templates/common/base/docs/contracts-catalog.md` (définition), sa copie française `docs/contracts-catalog.md`.
+**Preuve** : test du paquet : la section existe dans le gabarit et dans la copie du dépôt, avec la ligne de chaque forme (bibliothèque, service, application web) et la mention d'absence d'exception.
+**Contrôle** : `tests-qua-195`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : e2e-et-attestation-precises — « Le catalogue définit l'e2e par forme de projet : bibliothèque (installer le paquet comme un client, appeler l'API publique, vérifier résultats et erreurs), service (un parcours à travers son API), application web (un parcours utilisateur) »
+**Raison** : « De bout en bout » ne voulait rien dire pour une bibliothèque ou un outil sans interface ; chacun l'interprétait à sa façon.
+
+## QUA-196 — La recette d'adoption renvoie à la définition de l'e2e sans la recopier
+**Règle** : Livré à tout projet. `docs/recipes/adopt-the-kit.md` renvoie à la section du catalogue qui définit l'e2e (une information, une seule source) et ne recopie aucune ligne de la définition (ni les formes de projet, ni le tableau). Gabarit et copie du dépôt identiques.
+**Périmètre** : `docs/recipes/adopt-the-kit.md`, gabarit livré et copie du dépôt.
+**Source de vérité** : `packages/drwil/templates/common/base/docs/contracts-catalog.md` (la définition) ; la recette ne fait que la citer.
+**Preuve** : test du paquet : la recette cite la section du catalogue, aucune des lignes du tableau de formes n'y figure, et la copie du dépôt est identique au gabarit.
+**Contrôle** : `tests-qua-196`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : e2e-et-attestation-precises — « La recette d'adoption renvoie à cette définition sans la recopier (une information, une seule source) »
+**Raison** : Deux définitions de l'e2e finiraient par diverger.
+
+## QUA-197 — La doc des preuves distingue l'identité, l'approbation et la preuve d'exécution de l'attestation
+**Règle** : Livré à tout projet. `docs/ia-first/5-proving-the-work.md` a une section qui distingue l'identité, l'approbation et la preuve d'exécution, et dit ce que `drwil attest` garantit (preuve d'exécution des contrôles cités, acte interactif lié au texte du contrat) et ce qu'il ne garantit pas (l'identité : l'auteur vient de la configuration git, déclarative). Elle redit qu'aucune exigence n'est assouplie. Gabarit et copie du dépôt identiques.
+**Périmètre** : `docs/ia-first/5-proving-the-work.md`, gabarit livré et copie du dépôt.
+**Source de vérité** : `packages/drwil/templates/common/base/docs/ia-first/5-proving-the-work.md`.
+**Preuve** : test du paquet : la section nomme les trois niveaux, dit que l'identité n'est pas garantie et que l'auteur vient de la configuration git, et la copie du dépôt est identique au gabarit.
+**Contrôle** : `tests-qua-197`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : e2e-et-attestation-precises — « La doc des preuves distingue l'identité, l'approbation et la preuve d'exécution, et dit ce que garantit `drwil attest` et ce qu'il ne garantit pas »
+**Raison** : Une attestation lue comme une preuve d'identité donnerait une fausse assurance.

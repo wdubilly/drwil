@@ -45,3 +45,18 @@ test, not that it is **correct** — the e2e test and the business contracts
 judge the behavior. Unlike the other lines in this catalog, `catalog:QUA-020`
 is not a practice observed as-is in an existing project (its e2e stays
 manual there): it is a guarantee specific to drwil, not a direct carry-over.
+
+## What "end to end" means (`catalog:QUA-020`)
+
+One definition for every project: a complete path, from a public interface
+to the expected result, in a representative environment, with no stand-in
+(mock, stub) for what the test is meant to guarantee. Only the form of the
+proof follows the shape of the project; the level of requirement never
+changes, and there is no exception or waiver.
+
+| Project shape | Public interface | The e2e test |
+|---|---|---|
+| Library | its published API | installs the package as a client would (the built package, not the source tree), calls the public API, checks the results and the errors |
+| Command-line tool | its command | runs the installed command, checks its output, its exit code and its effects |
+| Service | its API | one path through the API, from the request to the observable result |
+| Web application | its screens | one user journey in a browser |

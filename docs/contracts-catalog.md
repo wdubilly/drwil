@@ -45,3 +45,18 @@ propre à drwil, pas un report direct.
 Les contrats très spécifiques à run-box-v2 (documents RH, pont SSH, portail
 isolé, Elasticsearch, ERMv2…) ne sont pas repris ici : ils ont servi
 d'**exemples** pendant la conception du kit, pas de modèle à installer.
+
+## Ce que « de bout en bout » veut dire (`catalogue:QUA-020`)
+
+Une seule définition pour tous les projets : un parcours complet, depuis une
+interface publique jusqu'au résultat attendu, dans un environnement
+représentatif, sans doublure (mock, stub) sur ce que le test doit garantir.
+Seule la forme de la preuve suit la forme du projet ; le niveau d'exigence ne
+change jamais, et il n'y a ni exception ni dérogation.
+
+| Forme du projet | Interface publique | Le test e2e |
+|---|---|---|
+| Bibliothèque | son API publiée | installe le paquet comme le ferait un client (le paquet construit, pas l'arborescence source), appelle l'API publique, vérifie les résultats et les erreurs |
+| Outil en ligne de commande | sa commande | lance la commande installée, vérifie sa sortie, son code de retour et ses effets |
+| Service | son API | un parcours à travers l'API, de la requête au résultat observable |
+| Application web | ses écrans | un parcours utilisateur dans un navigateur |
