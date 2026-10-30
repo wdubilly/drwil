@@ -39,7 +39,7 @@ allowed scope stays the brief's `scope` block, which is versioned.
   opens an expectation from `SCOPING`.
 - **Who decides** (`transitions` setting in `.drwil/ia-first.json`): `human`
   (default) — opening rights is a human decision: starting a workstream (see
-  "Starting and closing" below), or, step by step, opening an expectation
+  `docs/ia-first/7-starting-and-closing.md`), or, step by step, opening an expectation
   and moving from `REQUEST` to `BUILD` in an interactive terminal by
   typing the target activity; the other transitions, which narrow rights or
   go back, stay free, closing included. `agent`: any allowed transition is

@@ -672,6 +672,8 @@
       "paths": [
         "docs/ia-first.md",
         "packages/drwil/templates/common/base/docs/ia-first.md",
+        "docs/ia-first/6-limits-and-tool-compatibility.md",
+        "packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md",
         "outils/**",
         "package.json",
         "package-lock.json",
@@ -753,6 +755,8 @@
       "paths": [
         "docs/ia-first.md",
         "packages/drwil/templates/common/base/docs/ia-first.md",
+        "docs/ia-first/6-limits-and-tool-compatibility.md",
+        "packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md",
         "outils/**",
         "package.json",
         "package-lock.json",
@@ -2306,7 +2310,7 @@
     {
       "id": "tests-qua-179",
       "name": "tests de QUA-179, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-179 \" .githooks/worktree.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-179 \" .githooks/worktree.test.mjs packages/drwil/test/kit.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/**",

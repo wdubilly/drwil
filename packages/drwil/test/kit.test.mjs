@@ -273,6 +273,52 @@ test("QUA-190 : chaque renvoi à docs/ia-first.md mène à une section existante
   }
 });
 
+// Titres des sections de docs/ia-first/, sans leur numéro.
+const titresIaFirst = (texte) => [...texte.matchAll(/^#+ (?:\d+\. )?(.+)$/gm)].map((m) => m[1]);
+
+test("QUA-190 : chaque titre de section cité dans un commentaire d'un hook livré mène à un titre de docs/ia-first/", () => {
+  const titres = sectionsIaFirst(join(GABARIT, "base")).sections.flatMap((s) => titresIaFirst(s.texte));
+  let cites = 0;
+  for (const fichier of fichiersTexte(GABARIT)) {
+    if (!fichier.endsWith(".mjs")) continue;
+    // Un renvoi peut courir sur plusieurs lignes de commentaire : elles sont recousues avant la lecture.
+    const commentaires = readFileSync(fichier, "utf8")
+      .split("\n")
+      .filter((l) => /^\s*(\/\/|\/?\*)/.test(l))
+      .map((l) => l.replace(/^\s*(\/\/+|\/?\*+)\s?/, ""))
+      .join(" ");
+    for (const [, titre] of commentaires.matchAll(/docs\/ia-first\.md`?,?\s+\(?"([^"]+)"/g)) {
+      cites++;
+      assert.ok(titres.includes(titre), `${fichier} : section « ${titre} » introuvable dans docs/ia-first/`);
+    }
+  }
+  assert.ok(cites > 0, "aucun titre cité relevé dans les hooks livrés : le motif ne lit plus rien");
+});
+
+test("QUA-190 : aucun renvoi relatif d'une section de docs/ia-first/ ne sort de son fichier", () => {
+  for (const base of [join(GABARIT, "base"), DEPOT]) {
+    for (const { chemin, texte } of sectionsIaFirst(base).sections) {
+      const lu = texte.replace(/\s+/g, " ");
+      assert.doesNotMatch(lu, /this document/i, `${join(base, chemin)} : « this document » ne désigne plus le fichier lu seul`);
+      const titres = titresIaFirst(texte);
+      for (const [, titre, sens] of lu.matchAll(/"([^"]+)"\)? (below|above)\b/g))
+        assert.ok(titres.includes(titre), `${join(base, chemin)} : « ${titre} » ${sens}, titre absent de ce fichier`);
+    }
+  }
+});
+
+test("QUA-179 : la recette livrée working-with-branches dit qu'un lancement en « This folder » crée workstream/<fiche> depuis la principale à jour, et quand il refuse", () => {
+  const recette = readFileSync(join(GABARIT, "base/docs/recipes/working-with-branches.md"), "utf8");
+  const puce = recette.split(/\n(?=- )/).find((p) => p.includes('"This folder"'));
+  assert.ok(puce, "la recette livrée n'a pas de puce « This folder »");
+  const lu = puce.replace(/\s+/g, " ");
+  assert.match(lu, /creates `workstream\/<[^>]+>`/, "la puce dit que le lancement crée workstream/<fiche>");
+  assert.match(lu, /up-to-date main branch/, "la puce dit que la branche part de la principale à jour");
+  assert.match(lu, /refused/, "la puce dit quand le lancement refuse");
+  for (const cas of [/not merged into the main branch/, /uncommitted changes/, /already exists/])
+    assert.match(lu, cas, `la puce nomme le refus ${cas}`);
+});
+
 test("QUA-190 : init livre le dossier docs/ia-first/, une mise à jour en rafraîchit une section inchangée et garde une section adaptée", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false, ci: "none" }));
