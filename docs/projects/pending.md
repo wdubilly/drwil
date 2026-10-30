@@ -120,9 +120,6 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
-  Claude, module front, cliquet ; recadré le 2026-10-16, cible tranchée le
-  2026-10-30 ; prêt) — `docs/projects/adopter-seuil-couverture.md`.
 - [ ] [IA] [P2] Couverture : le code modifié arrive couvert à 100 % (cadré le
   2026-10-30 ; après la précédente, elles touchent les mêmes fichiers) —
   `docs/projects/couverture-du-code-modifie.md`.

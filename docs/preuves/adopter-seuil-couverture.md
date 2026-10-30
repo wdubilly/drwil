@@ -1,7 +1,7 @@
 # Preuve de clôture — adopter-seuil-couverture
 
 **Clos le** : 2026-10-30
-**Commit vérifié** : `9063760241` — verdict `drwil verify` : PASS
+**Commit vérifié** : `569137d922` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:0e176fb19970b2f4`, acceptés par l'humain au lancement le 2026-10-30
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
