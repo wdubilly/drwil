@@ -2,6 +2,8 @@
 
 **Statut** : proposée le 2026-10-30 — cinq notes de `docs/intentions/notes.md` (2026-10-29) promues sur
 décision du demandeur ; restes du chantier qui a découpé `docs/ia-first.md` en sections courtes (QUA-190).
+Cadrée le 2026-10-30 en fiche : `docs/projects/renvois-apres-decoupe.md` (questions tranchées, voir sa section
+Décisions).
 
 ## Besoin
 
