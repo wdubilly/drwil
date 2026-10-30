@@ -371,3 +371,49 @@ test("QUA-098 release refusée tant que l'examen des documents n'est pas fait (a
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /✓ README\.md : inchangé — correctif interne/);
 });
+
+function reglerMode(racine, release) {
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ lang: "fr", release }));
+}
+
+test("QUA-199 : release.mode inconnu ou illisible — release refusée, rien publié ; absent, solo", posix, () => {
+  const { racine, origine } = depotCandidat();
+  reglerMode(racine, { mode: "equipe" });
+  for (const args of [[], ["--dry-run"], ["--candidate"]]) {
+    const r = lancer(racine, args, chemin());
+    assert.equal(r.status, 1, r.stdout);
+    assert.match(r.stderr, /release refusée : release\.mode vaut « equipe » .* « solo » ou « team » attendu/);
+  }
+  assert.equal(git(origine, "tag", "-l"), "");
+  reglerMode(racine, {});
+  const r = lancer(racine, ["--dry-run"], chemin());
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /mode de release : solo/);
+});
+
+test("QUA-200 : en solo, la release sans --candidate publie directement, sans candidate ni verdict", posix, () => {
+  const { racine, origine } = depotCandidat();
+  reglerMode(racine, { mode: "solo" });
+  const appel = join(racine, "..", `gh-solo-${Date.now()}`);
+  dossiers.push(appel);
+  const r = lancer(racine, [], chemin({ npm: NPM_PACK, gh: GH_PR_OK(appel) }));
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /mode de release : solo/);
+  assert.equal(git(origine, "tag", "-l"), "v1.1.0", "tag définitif, pas de v1.1.0-rc.N");
+  assert.doesNotMatch(readFileSync(appel, "utf8"), /--prerelease/);
+});
+
+test("QUA-201 : en team, la release directe est refusée (aperçu compris) et renvoie à --candidate", posix, () => {
+  const { racine, origine } = depotCandidat();
+  reglerMode(racine, { mode: "team" });
+  for (const args of [[], ["--dry-run"]]) {
+    const r = lancer(racine, args, chemin({ npm: NPM_PACK, gh: "exit 1" }));
+    assert.equal(r.status, 1, r.stdout);
+    assert.match(r.stderr, /release refusée : mode « team » : la release directe est refusée.*--candidate/);
+  }
+  assert.equal(git(origine, "tag", "-l"), "");
+  const c = lancer(racine, ["--candidate", "--dry-run"], chemin());
+  assert.equal(c.status, 0, c.stderr);
+  assert.match(c.stdout, /mode de release : team/);
+  assert.match(c.stdout, /candidate : v1\.1\.0-rc\.1/);
+});

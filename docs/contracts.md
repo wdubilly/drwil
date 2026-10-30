@@ -1927,3 +1927,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/dashboard.test.mjs`
 **Origine** : releves-de-ci-et-de-contexte — « La durée du job `checks` sur une PR à hooks inchangés et le cache lu moyen par requête sont relevés au journal » ; « Le tableau de bord montre la tendance de la durée de la CI et du cache lu par requête, avec un seuil d'alerte non bloquant »
 **Raison** : Sans tendance visible, une CI qui ralentit ou un contexte relu qui grossit ne se remarque qu'à la gêne ; un contrat attesté sur une durée dépend de la charge de la forge, d'où un indicateur.
+
+## QUA-199 — Le réglage `release.mode` vaut `solo` ou `team`, `solo` par défaut, et une mise à jour le conserve
+**Règle** : Livré à tout projet avec le module de release (optionnel). `.drwil/ia-first.json` déclare `release.mode` : `solo` (défaut) ou `team`. Une installation neuve écrit `solo` ; une réinstallation ou une montée de version garde la valeur déjà déclarée (même inconnue, jamais corrigée en silence) et les autres clés de `release`. `node .githooks/create-release.mjs` refuse toute autre valeur (aperçu et candidate compris), sans rien publier, et dit les valeurs attendues ; sans fichier ni clé, c'est `solo`.
+**Périmètre** : `packages/drwil/src/config-write.ts`, `packages/drwil/src/migration-table.ts`, `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `packages/drwil/src/migration-table.ts` (`RELEASE_MODES`) ; le module lit la même liste dans `.githooks/create-release-texts.mjs`.
+**Preuve** : tests du paquet (installation neuve, réinstallation avec `team`, avec une valeur inconnue, projet antérieur au réglage) et des hooks (valeur inconnue refusée sans tag, clé absente = `solo`).
+**Contrôle** : `tests-qua-199`
+**Tests** : `packages/drwil/test/config-write.test.mjs`, `.githooks/create-release.test.mjs`
+**Origine** : release-allegee — « Le réglage `release.mode` vaut `solo` ou `team`, `solo` par défaut ; une autre valeur est refusée et la migration d'un projet existant le conserve »
+**Raison** : Sans réglage, les équipes d'acceptation et les projets solo subiraient le même parcours ; une valeur corrigée en silence cacherait une faute de frappe.
+
+## QUA-200 — En `solo`, la release sans `--candidate` publie directement, sans candidate ni verdict
+**Règle** : Livré à tout projet avec le module de release (optionnel). Avec `release.mode` à `solo`, `node .githooks/create-release.mjs` sans `--candidate` pose le tag définitif et crée la release GitHub, sans candidate ni verdict de recette (QUA-079) ; `--candidate` reste disponible sur demande.
+**Périmètre** : `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `.githooks/create-release.mjs`.
+**Preuve** : test des hooks sur un vrai dépôt git temporaire (origin nu local, gh et npm simulés) : tag définitif poussé, aucune pré-release demandée à `gh`.
+**Contrôle** : `tests-qua-200`
+**Tests** : `.githooks/create-release.test.mjs`
+**Origine** : release-allegee — « En `solo`, `.githooks/create-release.mjs` sans `--candidate` publie directement un patch, sans candidate ni verdict »
+**Raison** : Pour un projet solo, la candidate et le verdict ne servent personne : un patch coûtait 3 h.
+
+## QUA-201 — En `team`, la création directe d'une release est refusée et renvoie à `--candidate`
+**Règle** : Livré à tout projet avec le module de release (optionnel). Avec `release.mode` à `team`, `node .githooks/create-release.mjs` sans `--candidate` (aperçu compris) est refusé, sans tag ni release, et dit d'utiliser `--candidate` puis la promotion après le verdict ; `--candidate` fonctionne comme avant.
+**Périmètre** : `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `.githooks/create-release.mjs`.
+**Preuve** : test des hooks sur un vrai dépôt git temporaire : refus avec et sans `--dry-run`, aucun tag poussé, `--candidate --dry-run` accepté.
+**Contrôle** : `tests-qua-201`
+**Tests** : `.githooks/create-release.test.mjs`
+**Origine** : release-allegee — « En `team`, la création directe d'une release est refusée et dit d'utiliser `--candidate` »
+**Raison** : Une équipe qui a choisi le verdict humain ne doit pas pouvoir le contourner par un geste direct.

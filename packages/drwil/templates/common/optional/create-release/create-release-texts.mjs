@@ -28,6 +28,10 @@ export const TEXTS = {
     candidate: "[create-release] candidate : {0} (pré-release ; la release définitive vient de la promotion, après le verdict de recette)",
     sheet: "[create-release] fiche de recette de {0} :",
     prerelease: "[create-release] pré-release {0} publiée avec sa fiche de recette ({1}).",
+    mode: "[create-release] mode de release : {0}",
+    badMode: "release.mode vaut « {0} » dans .drwil/ia-first.json : « solo » ou « team » attendu",
+    teamDirect:
+      "mode « team » : la release directe est refusée, publier une candidate (node .githooks/create-release.mjs --candidate) puis la promouvoir après le verdict",
   },
   en: {
     disagree: "packages disagree on the version ({0}): align them in a PR",
@@ -53,6 +57,10 @@ export const TEXTS = {
     candidate: "[create-release] candidate: {0} (pre-release; the final release comes from the promotion, after the acceptance verdict)",
     sheet: "[create-release] acceptance sheet of {0}:",
     prerelease: "[create-release] pre-release {0} published with its acceptance sheet ({1}).",
+    mode: "[create-release] release mode: {0}",
+    badMode: 'release.mode is "{0}" in .drwil/ia-first.json: "solo" or "team" expected',
+    teamDirect:
+      'mode "team": a direct release is refused, publish a candidate (node .githooks/create-release.mjs --candidate) then promote it after the verdict',
   },
 };
 
@@ -66,4 +74,18 @@ export function texts() {
   } catch {
     return TEXTS.fr;
   }
+}
+
+export const RELEASE_MODES = ["solo", "team"];
+
+/** `release.mode` of .drwil/ia-first.json: "solo" (default, also without file or key) or "team"; any other value is returned as `error`. */
+export function releaseMode() {
+  let mode;
+  try {
+    mode = JSON.parse(readFileSync(join(".drwil", "ia-first.json"), "utf8")).release?.mode;
+  } catch {
+    mode = undefined;
+  }
+  if (mode === undefined) return { mode: "solo" };
+  return RELEASE_MODES.includes(mode) ? { mode } : { error: String(mode) };
 }

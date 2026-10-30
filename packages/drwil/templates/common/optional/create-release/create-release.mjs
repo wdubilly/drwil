@@ -13,6 +13,8 @@
 // Without `--candidate`, the version is published directly: its acceptance note, « no verdict », is
 // then proposed through a dedicated branch and a PR (recette-note.mjs, QUA-079); a failure there
 // never undoes the tag and the release (QUA-080).
+// `release.mode` (.drwil/ia-first.json): "solo" (default) publishes directly; "team" refuses a direct
+// release and keeps the candidate, verdict and promotion path; any other value is refused.
 // Before any tag, preview included, the review of README.md, docs/features.md and
 // docs/architecture.md must be done (release-review.mjs, QUA-098): otherwise the release is refused.
 // Usage: node create-release.mjs [--candidate] [--dry-run]
@@ -21,7 +23,7 @@ import { fileURLToPath } from "node:url";
 import { existsSync, mkdtempSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, basename } from "node:path";
-import { TEXTS, fill, texts } from "./create-release-texts.mjs";
+import { TEXTS, fill, releaseMode, texts } from "./create-release-texts.mjs";
 import {
   candidateTag,
   commitsSince,
@@ -103,6 +105,12 @@ async function directNote({ next, commits, tarballs }) {
 
 async function main() {
   const T = texts();
+  const { mode, error: badMode } = releaseMode();
+  if (badMode !== undefined || (mode === "team" && !candidate)) {
+    console.error(fill(T.refused, badMode !== undefined ? fill(T.badMode, badMode) : T.teamDirect));
+    process.exitCode = 1;
+    return;
+  }
   const tag = latestTag();
   const commits = commitsSince(tag);
   const bump = detectBump(commits);
@@ -123,6 +131,7 @@ async function main() {
   const next = decision.next;
   console.log(fill(T.bump, packages.length ? T.suggestion : T.detected, bump, commits.length));
   console.log(fill(T.next, next, decision.source));
+  console.log(fill(T.mode, mode));
   if (packages.length > 0) console.log(fill(T.tarballs, packages.join(", ")));
   const { reviewDocuments } = await import("./release-review.mjs");
   const review = reviewDocuments(process.cwd(), { tag, version: next, lang: T === TEXTS.en ? "en" : "fr" });

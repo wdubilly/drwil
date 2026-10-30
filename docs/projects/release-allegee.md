@@ -157,7 +157,13 @@ attribuer à ce moment-là dans le registre.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-30) : cadré, prêt à lancer.
+- **Dernier état** (2026-10-30) : lot 1 (le réglage) fait et commité :
+  `release.mode` (`solo` par défaut, `team`) lu par `.githooks/create-release.mjs`, écrit et
+  conservé par `packages/drwil/src/config-write.ts`, contrats QUA-199, QUA-200, QUA-201 et leurs
+  contrôles `tests-qua-*`, annonce au `CHANGELOG`. Il laisse à leurs lots la note
+  de recette, QUA-079 (lot 2) et QUA-048 (lot 3).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer la fiche (`/drwil-start`), puis
-  `release-feu-vert-et-squash` une fois celle-ci close.
+- **Prochaine étape** : lot 2 — la note « sans verdict » dans le corps de la
+  release en `solo` (`--notes-file`), `--dry-run`, recette et README du module,
+  QUA-079 réécrit. Les tests du lot 1 posent `release.mode` par `reglerMode` dans
+  `.githooks/create-release.test.mjs`.

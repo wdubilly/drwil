@@ -131,3 +131,6 @@ export const PROJECT_CHECK_PREFIX: [string, string] = ["projet:", "project:"];
 
 /** Contract registries rewritten by the check identifiers migration (besides `dirs.contracts`). */
 export const REGISTRIES = ["docs/contracts.md", "docs/contracts-catalog.md"];
+
+/** Levels of guard of the release module (`release.mode` of `.drwil/ia-first.json`, QUA-199); the first is the default. */
+export const RELEASE_MODES = ["solo", "team"] as const;
