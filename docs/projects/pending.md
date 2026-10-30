@@ -121,9 +121,20 @@ d'un outil) la dit dans son statut.
 En attente d'une décision (à affiner) ou d'un geste humain :
 
 - [ ] [IA] [P3] Couverture : tout le code livré mesuré (`--all`, hooks
-  Claude, module front, cliquet ; recadré le 2026-10-16 ; à affiner :
-  attend la cible de `docs/intentions/couverture-paquet-100.md`) —
-  `docs/projects/adopter-seuil-couverture.md`.
+  Claude, module front, cliquet ; recadré le 2026-10-16, cible tranchée le
+  2026-10-30 ; prêt) — `docs/projects/adopter-seuil-couverture.md`.
+- [ ] [IA] [P2] Couverture : le code modifié arrive couvert à 100 % (cadré le
+  2026-10-30 ; après la précédente, elles touchent les mêmes fichiers) —
+  `docs/projects/couverture-du-code-modifie.md`.
+- [ ] [IA] [P2] Preuves : l'e2e et l'attestation disent précisément ce qu'ils
+  prouvent (cadré le 2026-10-30 ; prose et preuve, aucun code livré) —
+  `docs/projects/e2e-et-attestation-precises.md`.
+- [ ] [IA] [P2] Registre : il vise le fichier de section d'`ia-first` qui porte
+  la règle (cadré le 2026-10-30) —
+  `docs/projects/registre-vise-les-sections-d-ia-first.md`.
+- [ ] [IA] [P2] Indicateurs : durée de la CI et contexte relu suivis dans le
+  tableau de bord (cadré le 2026-10-30) —
+  `docs/projects/releves-de-ci-et-de-contexte.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
   qui signale un squash (cadré le 2026-10-26 ; à affiner : attend
   `docs/intentions/release-allegee.md`) —
