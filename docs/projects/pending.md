@@ -117,10 +117,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] Des renvois justes après la découpe de `docs/ia-first.md`
-  (commentaire de hook, renvois relatifs, QUA-063) et la recette livrée
-  « working with branches » à jour (cadré le 2026-10-30, prêt) —
-  `docs/projects/renvois-apres-decoupe.md`.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
@@ -215,6 +211,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] Un écart déclaré entre le gabarit et sa copie ne couvre que
   ce qu'il déclare (`miroirs-gabarit`) —
   `docs/intentions/miroirs-ecart-declare-trop-large.md`.
+- [ ] [décision] Le registre vise le fichier de `docs/ia-first/` qui porte la
+  règle, pas le sommaire (QUA-069, ligne Copilot de la matrice, et d'autres) —
+  `docs/intentions/registre-vise-les-sections-d-ia-first.md`.
 - [ ] [décision] [P1] Un CI du kit que la mise à jour n'écrase pas : étape C++
   et job Windows perdus sur drwil_dbox le 2026-10-26 —
   `docs/intentions/ci-extensible-sans-perte.md`.
