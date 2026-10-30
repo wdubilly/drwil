@@ -45,6 +45,17 @@ n'empêche le défaut de revenir.
   visent le fichier de section exact » — raison : la règle s'étend au
   registre du dépôt (`docs/contracts.md`) ; rien n'est retiré (validé le 2026-10-30 par
   le demandeur au cadrage)
+- `QUA-015` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-016` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-061` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-069` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-099` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-100` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-129` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-130` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-132` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-144` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
+- `QUA-153` — ancien critère : inchangé ; seul le renvoi de **Périmètre** ou de **Source de vérité** passe du sommaire `docs/ia-first.md` au fichier de `docs/ia-first/` qui porte la règle — raison : le registre vise la règle, pas le sommaire (validé le 2026-10-30 par le demandeur, § 4 Décisions)
 
 ## 2. Hors périmètre
 
