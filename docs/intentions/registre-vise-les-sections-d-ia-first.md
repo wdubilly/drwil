@@ -1,6 +1,6 @@
 # Intention : le registre et les intentions visent le fichier de `docs/ia-first/` qui porte la règle
 
-**Statut** : proposée le 2026-10-30 — limite non traitée de la clôture de `renvois-apres-decoupe` (journal
+**Statut** : réalisée et close le 2026-10-30 (journal, entrée « Le registre vise le fichier de section ») ; proposée le 2026-10-30 — limite non traitée de la clôture de `renvois-apres-decoupe` (journal
 du 2026-10-30).
 
 ## Besoin
