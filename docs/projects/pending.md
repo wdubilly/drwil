@@ -120,9 +120,6 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P2] Couverture : le code modifié arrive couvert à 100 % (cadré le
-  2026-10-30 ; après la précédente, elles touchent les mêmes fichiers) —
-  `docs/projects/couverture-du-code-modifie.md`.
 - [ ] [IA] [P2] Preuves : l'e2e et l'attestation disent précisément ce qu'ils
   prouvent (cadré le 2026-10-30 ; prose et preuve, aucun code livré) —
   `docs/projects/e2e-et-attestation-precises.md`.

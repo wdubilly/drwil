@@ -5,7 +5,7 @@ test, tout le code livré mesuré » à son recadrage
 (`docs/projects/journal.md`).
 Rangement du 2026-10-26 : seule intention de couverture ; reprend la partie « couverture du diff » de `docs/intentions/garanties-la-suite.md` ; la fiche `docs/projects/journal.md` reste le lot d'outillage de la mesure.
 
-**Revu le 2026-10-30** : la cible est tranchée — ordre : mesure complète et cliquet (`docs/projects/journal.md`), puis 100 % du code modifié (`docs/projects/couverture-du-code-modifie.md`), puis le 100 % du paquet, resté ici. Le « 100 % des hooks Claude et du module front » reste à décider quand leur mesure existera. Décisions du demandeur sur le code modifié : lignes et branches qu'elles ouvrent ; exclusions déclarées avec justification ; sans rapport lcov, contrôle non exécuté signalé (QUA-013) ; ce dépôt l'adopte dès le chantier.
+**Revu le 2026-10-30** : la cible est tranchée — ordre : mesure complète et cliquet (`docs/projects/journal.md`), puis 100 % du code modifié (`docs/projects/journal.md`), puis le 100 % du paquet, resté ici. Le « 100 % des hooks Claude et du module front » reste à décider quand leur mesure existera. Décisions du demandeur sur le code modifié : lignes et branches qu'elles ouvrent ; exclusions déclarées avec justification ; sans rapport lcov, contrôle non exécuté signalé (QUA-013) ; ce dépôt l'adopte dès le chantier.
 
 ## Besoin
 
@@ -100,3 +100,7 @@ as you code »).
 - [décision] Ce dépôt l'adopte-t-il aussi, en plus de son cliquet ?
 
 - [décision] Une seule cible pour les trois sujets de couverture (cette intention, la partie ci-dessus et `docs/projects/journal.md`) : 100 % du paquet, 100 % du code modifié, ou les deux, et dans quel ordre ?
+
+### Limite du contrôle du diff livré le 2026-10-30 (`docs/projects/journal.md`)
+
+Ce dépôt applique `QUA-191` (code modifié couvert à 100 %) à ses seuls hooks `.githooks/*.mjs`, dont c8 produit le rapport lcov. Le paquet `packages/drwil` (TypeScript compilé vers `dist/`, hooks Claude, module front) n'y entre pas : le rapport est mesuré sur `dist/`, pas sur les sources TypeScript du diff. Le rendre mesurable par le contrôle (cartes de sources, ou lcov du paquet fusionné) se décide avec le 100 % du paquet.

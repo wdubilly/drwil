@@ -61,6 +61,7 @@ files:
   - .githooks/check-contract-tests.test.mjs
   - .githooks/check-file-size.test.mjs
   - .githooks/check-kit-size.test.mjs
+  - .githooks/check-diff-coverage.test.mjs
   - .githooks/create-release.test.mjs
   - .githooks/acceptance-sheet.test.mjs
   - .githooks/release-verdict.test.mjs
@@ -122,6 +123,7 @@ files:
   - .githooks/check-file-size.mjs
   - .githooks/check-file-size.legacy.json
   - .githooks/check-kit-size.mjs
+  - .githooks/check-diff-coverage.mjs
   - .githooks/check-code-rules.mjs
   - .githooks/check-colors.mjs
   - .githooks/check-contrast.mjs

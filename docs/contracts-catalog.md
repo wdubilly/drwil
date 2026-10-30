@@ -29,6 +29,7 @@ modèle des lignes ci-dessous.
 | catalogue:QUA-009 | Un test désactivé (`skip`, `xit`, `@Disabled`…) cite explicitement l'ID d'une fiche ouverte de `docs/projects/` qui justifie la désactivation (QUA-019 appliqué aux tests). | code source du projet, `docs/projects/` | script qui liste les tests désactivés sans citation de fiche à côté |
 | catalogue:QUA-014 | Contraste texte/fond RGAA 4.1 / WCAG AA (4,5:1, 3:1 pour le gros texte), clair et sombre. | écrans du front | `.githooks/check-colors.mjs` (à créer), `.githooks/check-contrast.mjs` (à créer) — copiés depuis `templates/common/optional/front-quality/` du paquet du kit, voir son README |
 | catalogue:QUA-020 | Les parcours critiques du projet sont couverts par un test de bout en bout automatisé, rejoué en CI. | parcours critiques identifiés par le projet | test e2e (ex. Playwright, Cypress) par parcours, job CI dédié |
+| catalogue:QUA-010 | Le code ajouté ou modifié par une branche arrive couvert à 100 % (lignes et branches qu'elles ouvrent), d'après le rapport lcov du projet ; une exclusion n'est admise que déclarée avec sa justification ; sans rapport lcov, le contrôle est non exécuté, jamais passé. | lignes du diff de chaque branche | `.githooks/check-diff-coverage.mjs` (livré), déclaré dans `.drwil/ia-first.json` (`diffCoverage` : commande du rapport, base, exclusions) ; voir `QUA-191` dans `docs/contracts.md` |
 
 Pour ce dépôt, `catalogue:QUA-004` a été adopté — voir `QUA-004` dans
 `docs/contracts.md` et `docs/projects/journal.md`. Il se
