@@ -95,9 +95,9 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
 **Versions visées (décidé avec le demandeur le 2026-10-28)** :
 
 - **0.11.0** : la réalisation des sept fiches cadrées de la section suivante,
-  une par session, dans l'ordre indiqué, puis, décidé le 2026-10-30, les deux fiches de
-  correctifs vus à l'installation de `drwil_walk` (`cloture-sur-projet-neuf`, puis
-  `installation-depot-neuf`) ; entre deux chantiers, le cadrage des
+  une par session, dans l'ordre indiqué, puis, décidé le 2026-10-30, les fiches de
+  correctifs vus à l'installation de `drwil_walk` (`cloture-sur-projet-neuf`, `installation-depot-neuf`,
+  `adoption-fluide-projet-neuf`, `perimetre-visible`, `attente-commandes-longues`, `signaler-un-defaut-du-kit`) ; entre deux chantiers, le cadrage des
   thèmes C (cible de couverture) et D (preuves et contrôles).
 - **0.12.0** : la fluidité de l'adoption (thèmes B, E, F et G), cadrée pendant
   la 0.11 : le premier commit du kit sous la barrière bloquante, le
@@ -122,6 +122,16 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
+- [ ] [IA] [P1] (0.11.0) Élargissement du périmètre rendu visible : avertissement net sur tout commit qui modifie
+  le bloc scope, mention au compte rendu, QUA-050 réaligné (cadré le 2026-10-30) —
+  `docs/projects/perimetre-visible.md`.
+- [ ] [IA] [P1] (0.11.0) Attente outillée des commandes longues : script d'attente bornée, fin des boucles `pgrep`
+  (cadré le 2026-10-30) — `docs/projects/attente-commandes-longues.md`.
+- [ ] [IA] [P2] (0.11.0) Signaler un défaut du kit : commande qui imprime un rapport prêt à coller, sans donnée du
+  projet (cadré le 2026-10-30) — `docs/projects/signaler-un-defaut-du-kit.md`.
+- [ ] [IA] [P1] (0.11.0) Adoption fluide d'un projet sans code existant : autorisations livrées, worktree
+  obligatoire au lancement, commit initial du kit par `init` (cadré le 2026-10-30, après l'installation d'un
+  dépôt neuf) — `docs/projects/adoption-fluide-projet-neuf.md`.
 - [ ] [IA] [P1] (0.11.0) Installation d'un dépôt neuf : exception bornée de QUA-017 au premier envoi sur un distant vide,
   auto-merge activé avec la protection, `init` qui demande les outils IA (cadré le 2026-10-30) —
   `docs/projects/installation-depot-neuf.md`.
