@@ -4,7 +4,7 @@
 d'origine faits (c8 câblé, QUA-004 adopté, seuils au réel avec cliquet,
 le 2026-10-11) ; reste le lot 1 ci-dessous.
 **Risque** : HIGH
-**Maturité** : à affiner (2026-10-26, plan d'action : attend la cible de couverture tranchée dans `docs/intentions/couverture-paquet-100.md`)
+**Maturité** : prêt (2026-10-30 : la cible de couverture est tranchée, `docs/intentions/couverture-paquet-100.md`)
 **Intention** : `docs/intentions/couverture-paquet-100.md` (le 100 % du
 paquet, sorti de ce chantier au recadrage)
 
@@ -94,6 +94,11 @@ Deux trous restent :
   script de release sera testé en mockant `execFileSync`, pas exclu par
   `c8 ignore`.
 
+- 2026-10-30 (demandeur) : ordre des trois sujets de couverture — ce chantier
+  d'abord (mesure complète, cliquet), puis la couverture du code modifié
+  (`docs/projects/couverture-du-code-modifie.md`), puis le 100 % du paquet
+  (`docs/intentions/couverture-paquet-100.md`).
+
 ## 5. Lots
 
 - **Lot 1 — aucun code livré hors mesure** : `--all` sur la mesure du
@@ -104,6 +109,6 @@ Deux trous restent :
 
 ## 6. Reprise
 
-- **Dernier état** (2026-10-16) : recadré ; rien de commencé.
+- **Dernier état** (2026-10-30) : cible tranchée, prêt ; rien de commencé.
 - **Prochaine étape** : lancer le lot 1, mesurer d'abord hooks Claude et
   module front.
