@@ -98,6 +98,9 @@ attribuer à ce moment-là dans le registre.)
   note « sans verdict » par la branche dédiée et la PR — raison : en `solo` la
   note va dans le corps de la release, la PR reste propre à `team` (validé le
   2026-10-30)
+- `.githooks/create-release.mjs` — lit `release.mode` ; `team` refuse la release directe, `solo` publie directement (validé par le demandeur le 2026-10-30)
+- `.githooks/create-release-texts.mjs` — textes du réglage et de la note (validé par le demandeur le 2026-10-30)
+- `.githooks/create-release.test.mjs` — tests de ces comportements (validé par le demandeur le 2026-10-30)
 - `QUA-080` — ancien critère : le tag et la release ne dépendent jamais de la PR de la note — raison : en `solo` la note n'a plus de PR, elle est le corps de la release ; l'indépendance du tag et de la release vaut dans les deux modes (validé par le demandeur le 2026-10-30)
 - `QUA-048` — ancien critère : branches fusionnées supprimées par `git branch -d`
   — raison : renvoyer à QUA-058, qui reconnaît le squash (`git branch -D` quand
