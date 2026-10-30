@@ -31,7 +31,7 @@ modèle des lignes ci-dessous.
 | catalogue:QUA-020 | Les parcours critiques du projet sont couverts par un test de bout en bout automatisé, rejoué en CI. | parcours critiques identifiés par le projet | test e2e (ex. Playwright, Cypress) par parcours, job CI dédié |
 
 Pour ce dépôt, `catalogue:QUA-004` a été adopté — voir `QUA-004` dans
-`docs/contracts.md` et `docs/projects/adopter-seuil-couverture.md`. Il se
+`docs/contracts.md` et `docs/projects/journal.md`. Il se
 complète dans le temps avec `catalogue:QUA-020` : un seuil de couverture
 déclaré bas d'abord pour ne pas bloquer un projet qui démarre, relevé au
 fil de l'eau, puis un e2e automatisé sur les parcours critiques

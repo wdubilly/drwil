@@ -1281,7 +1281,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   Markdown). Le contrôle signale déjà quatre fiches ouvertes à compléter
   (le chantier « La clôture boucle les intentions »,
   `docs/projects/journal.md`, `ci-matrice-sur-pr` (close le 2026-10-18) :
-  `.drwil/ia-first.json` ; `docs/projects/adopter-seuil-couverture.md`,
+  `.drwil/ia-first.json` ; `docs/projects/journal.md`,
   `ci-matrice-sur-pr` : aucun test). Le cadrage a encore
   dû être élargi une fois (le hook Claude) : le rappel de cadrage côté
   agent n'était pas nommé dans le cadrage initial.
@@ -3894,3 +3894,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : QUA-069 (Copilot CLI enchaîne deux chantiers d'un seul sondage) et d'autres contrats du registre visent encore le sommaire `docs/ia-first.md` au lieu du fichier de section — `docs/intentions/registre-vise-les-sections-d-ia-first.md` ; le contrôle `miroirs-gabarit` accepte toute différence d'un fichier déclaré, déjà dans `docs/intentions/miroirs-ecart-declare-trop-large.md`.
 - **Preuve de clôture** : `docs/preuves/renvois-apres-decoupe.md`.
 - **Clôturé par** : la branche `workstream/renvois-apres-decoupe`.
+
+## 2026-10-30 — Couverture de test : tout le code livré mesuré
+
+- **Décisions clés** : aucun contrat neuf, QUA-004 (seuil de couverture de test) étendu. La mesure du paquet compte tout fichier de `packages/drwil/src/` compilé et de `packages/drwil/bin/` (`--all`), seuils relevés aux chiffres mesurés : 98 % lignes, 90 % branches, 98 % fonctions (mesuré : 98,05 / 90,03 / 98,29). Les hooks Claude du gabarit et le module front entrent dans une mesure à eux (`npm run test:claude:coverage`, contrôle `couverture-claude`) à leur niveau réel : 97 % lignes et instructions, 88 % branches, 93 % fonctions (mesuré : 97,54 / 88,46 / 93,58). Tests ajoutés : `packages/drwil/test/claude-hooks.test.mjs` et `packages/drwil/test/front-quality.test.mjs`, sans toucher au code des hooks. Les hooks du gabarit restent exclus de la mesure du paquet, leurs copies étant mesurées à 100 % par le dépôt.
+- **Hooks modifiés** : aucun.
+- **Limites connues** : le 100 % du paquet reste dans `docs/intentions/couverture-paquet-100.md` ; les hooks Claude et le module front ne sont pas à 100 % (cliquet au niveau réel) ; les tests des hooks Claude sont dans `packages/drwil/test/` (non dans `.claude/hooks/`) pour mesurer le fichier livré.
+- **Preuve de clôture** : `docs/preuves/adopter-seuil-couverture.md`.
+- **Clôturé par** : la branche `workstream/adopter-seuil-couverture`.
