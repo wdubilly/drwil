@@ -3945,4 +3945,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Contrats modifiés** : QUA-079 (la note de recette de chaque version : en `solo` elle va dans le corps de la release), QUA-080 ajusté (le tag et la release ne dépendent jamais de l'écriture de la note), QUA-048 (une clôture en un geste : le texte renvoie à QUA-058, la reconnaissance du squash, `git branch -D`) ; tous validés par le demandeur au cadrage, le 2026-10-30.
 - **Hooks modifiés** : `.githooks/create-release.mjs`, `.githooks/create-release-texts.mjs`, `.githooks/recette-note.mjs`, `.githooks/recette-note-texts.mjs` (gabarit et copie), cadrés dans la fiche.
 - **Limites connues** : `docs/recettes/README.md` dit encore que la note « sans verdict » arrive par la PR, dans `docs/intentions/recettes-readme-note-sans-verdict.md` ; les copies `.githooks/` du module de release ne sont pas déclarées dans `scopeMirrors`, dans `docs/intentions/copies-create-release-dans-scope-mirrors.md`.
+- **Preuve de clôture** : `docs/preuves/release-allegee.md`.
 - **Clôturé par** : la branche `workstream/release-allegee`.

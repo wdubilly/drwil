@@ -2,7 +2,7 @@
 
 **Statut** : cadré le 2026-10-26, élargi le même jour (copies du dépôt des hooks et recettes du gabarit ajoutées au cadrage, sur le oui du demandeur).
 **Risque** : HIGH
-**Maturité** : prêt (2026-10-30 : gardée telle quelle, à lancer après `docs/projects/release-allegee.md`)
+**Maturité** : prêt (2026-10-30 : gardée telle quelle, à lancer après `docs/projects/journal.md`)
 **Intention** : `docs/intentions/cloture-et-attestations.md` (parties « le feu vert de publication enregistré par l'outil au lancement » et « la dernière version d'une fiche fusionnée par squash dans la fiche de recette »)
 
 <!-- scope
@@ -98,4 +98,4 @@ attribuer à ce moment-là dans le registre.)
 
 - **Dernier état** (2026-10-26) : cadré, prêt à lancer.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] la lancer après `docs/projects/release-allegee.md` (décision du 2026-10-30 : gardée telle quelle).
+- **Prochaine étape** : [humain] la lancer après `docs/projects/journal.md` (décision du 2026-10-30 : gardée telle quelle).
