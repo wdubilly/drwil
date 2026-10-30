@@ -69,7 +69,7 @@ régression sauf si la fiche active déclare le changement (section
 ## QUA-015 — Chantiers exploitables à froid
 **Règle** : Chaque case ouverte de l'index des chantiers porte un marqueur `[IA]`, `[humain]` ou `[décision]` ; chaque fiche de `docs/projects/` et de `docs/intentions/` (hors index et README) a une ligne « Statut » en tête, datée (AAAA-MM-JJ) ; chaque fiche d'intention a les sections « Besoin », « Existant » et « Questions à trancher » ; chaque fiche de projet a une section « Reprise ». Extension (2026-10-04) : la case d'une ligne d'index qui cite une fiche dont le « Statut » contient `fait`/`terminé`/`clos` doit être cochée, et réciproquement une case cochée doit citer une fiche qui se dit terminée — avertissement non bloquant au commit, bloquant à la clôture (QUA-074) ; la prose de « Statut » n'est pas un champ structuré, angles morts assumés.
 **Périmètre** : `docs/projects/`, `docs/intentions/`.
-**Source de vérité** : `docs/ia-first.md` (section 7).
+**Source de vérité** : `docs/ia-first/7-project-lifecycle.md`.
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI) ; justesse du contenu : humaine.
 **Contrôle** : `docs-references`, `tests-qua-015`
 **Manuel** : justesse du contenu des fiches.
@@ -80,7 +80,7 @@ régression sauf si la fiche active déclare le changement (section
 ## QUA-016 — Rappel de cadrage
 **Règle** : Tout fichier de code indexé est couvert par le bloc `scope` d'une fiche de `docs/projects/` ; un bloc mal formé (sans `files:`, motif trop large) est refusé. Sévérité réglable par projet (`.drwil/ia-first.json` -> `cadrage` : `blocking` par défaut et sur ce dépôt, `warning`, ou `off`). Hors réglage `blocking`, ce contrat n'est pas prouvé : lui ajouter un champ Manuel.
 **Périmètre** : Tout le dépôt (fichiers indexés), hors `docs/` et le markdown.
-**Source de vérité** : `.githooks/scope.mjs`, `docs/ia-first.md` (section 7).
+**Source de vérité** : `.githooks/scope.mjs`, `docs/ia-first/7-scoping-reminder.md`.
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/scope-reminder.mjs`.
 **Contrôle** : `docs-references`, `tests-qua-016`
 **Tests** : `packages/drwil/test/kit.test.mjs`
@@ -521,8 +521,8 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-061 — En SCOPING, une intention se cadre, une demande de réalisation se code
 **Règle** : Livré à tout projet. `AGENTS.md` dit qu'en SCOPING un besoin exprimé par l'humain se cadre (intention ou fiche) et ne se code pas, et qu'en cas de doute l'agent demande « intention ou demande de réalisation ? » avant d'agir. La règle est dans `AGENTS.md`, lu par tous les outils (consigne seulement : elle ne remplace pas le blocage par hook, QUA-060).
-**Périmètre** : `AGENTS.md`, `docs/ia-first.md` (section 8) ; livré dans le gabarit.
-**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first.md` (section 8).
+**Périmètre** : `AGENTS.md`, `docs/ia-first/8-conduct-rules.md` ; livré dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md`.
 **Preuve** : test du paquet qui installe un projet et lit la règle dans son `AGENTS.md`.
 **Contrôle** : `tests-qua-061`
 **Tests** : `packages/drwil/test/kit.test.mjs`
@@ -627,7 +627,7 @@ régression sauf si la fiche active déclare le changement (section
 ## QUA-069 — Copilot CLI enchaîne deux chantiers d'un seul sondage, essai réel attesté
 **Règle** : Un essai sous Copilot CLI réel, fait par l'humain, enchaîne deux fiches prêtes lancées d'un seul sondage (champ `drwil-merge` compris), mène chaque chantier dans un sous-agent qui porte les hooks et l'état, et s'arrête au premier blocage humain.
 **Périmètre** : le sondage de lancement, l'état de gouvernance et la skill `/drwil-start` sous Copilot CLI ; l'essai se fait sur le poste de l'humain.
-**Source de vérité** : `docs/ia-first.md` (matrice de compatibilité, ligne Copilot CLI).
+**Source de vérité** : `docs/ia-first/6-limits-and-tool-compatibility.md` (matrice de compatibilité, ligne Copilot CLI).
 **Preuve** : attestation humaine de l'essai, avec la version de Copilot CLI et la date.
 **Manuel** : l'essai lui-même, que seul l'humain peut faire et attester (`drwil attest QUA-069`).
 **Couvre** : `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`, `.githooks/state-cli.mjs`
@@ -927,8 +927,8 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-099 — Une PR de documentation seule part en fusion automatique sans question
 **Règle** : Livré à tout projet. La consigne d'`AGENTS.md` et le skill de lancement disent : une PR qui ne touche que de la documentation (Markdown, `docs/`) est mise en fusion automatique par l'agent (`gh pr merge --auto --merge`) sans poser la question `drwil-merge`, gardée pour les PR qui touchent du code ; si le dépôt n'autorise pas l'auto-merge, le message de refus existant s'applique.
-**Périmètre** : gabarits `AGENTS.md`, `docs/ia-first.md` (section 8) et skill `start-a-workstream`.
-**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first.md` (section 8), `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
+**Périmètre** : gabarits `AGENTS.md`, `docs/ia-first/8-conduct-rules.md` et skill `start-a-workstream`.
+**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md`, `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
 **Preuve** : test du paquet sur les gabarits livrés.
 **Contrôle** : `tests-qua-099`
 **Tests** : `packages/drwil/test/guarantees.test.mjs`
@@ -937,7 +937,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-100 — Le suivi de la CI d'une PR dit verte, fusionnée ou rouge, jamais « verte » sans l'avoir vu
 **Règle** : Livré à tout projet. `node .githooks/pr-watch.mjs [<n>]` suit la CI d'une PR par `gh` jusqu'à la fin de ses contrôles (30 minutes au plus) et dit « verte », « fusionnée » ou « rouge » avec les contrôles en échec (codes 0, 0, 1) ; sans `gh` joignable, sans contrôle ou après le délai, le suivi est « non exécuté » (code 2), jamais « verte » (QUA-013). `AGENTS.md` consigne de le lancer après chaque push ou création de PR, et de corriger une CI rouge sans la contourner (QUA-019).
-**Périmètre** : `.githooks/pr-watch.mjs` ; consigne d'`AGENTS.md` et son texte complet (`docs/ia-first.md`, section 8).
+**Périmètre** : `.githooks/pr-watch.mjs` ; consigne d'`AGENTS.md` et son texte complet (`docs/ia-first/8-conduct-rules.md`).
 **Source de vérité** : `.githooks/pr-watch.mjs`.
 **Preuve** : tests des hooks (gh simulé, attente, délai, ligne de commande) et du paquet (consigne livrée).
 **Contrôle** : `tests-qua-100`
@@ -1228,7 +1228,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-129 — Les contrôles longs tournent dans un sous-agent qui ne rend que le verdict et les échecs
 **Règle** : Livré à tout projet. Avec Claude Code (et les outils qui reçoivent l'arbre `.claude`), le gabarit livre le sous-agent `drwil-checks` (`.claude/agents/drwil-checks.md`) : il lance `node .githooks/run-checks.mjs` puis `drwil verify --agent` et ne rend que le verdict et les échecs, sans rien modifier. `AGENTS.md` (gabarit et dépôt) donne la consigne pour tout outil : les contrôles longs en sous-agent si l'outil le permet, sans droit d'écriture ; sinon, les lancer directement. Aucune promesse au-delà de cette consigne écrite pour Copilot, Gemini et Codex (QUA-060, un outil n'est tenu que prouvé par le banc). Les hooks et skills de Claude Code ne changent pas (QUA-072).
-**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md`, `docs/ia-first.md` (section 8) ; livrés dans le gabarit.
+**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md`, `docs/ia-first/8-conduct-rules.md` ; livrés dans le gabarit.
 **Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
 **Preuve** : test du paquet qui installe un projet Claude Code (sous-agent livré, commandes lancées, consigne d'`AGENTS.md`) et un projet Codex seul (pas d'arbre `.claude`, consigne présente) ; en-tête du sous-agent dans la preuve de QUA-072.
 **Contrôle** : `tests-qua-129`
@@ -1238,7 +1238,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-130 — Le sous-agent des contrôles recopie le verdict mot pour mot, sans attester ni écrire
 **Règle** : Livré à tout projet. Le sous-agent `drwil-checks` recopie mot pour mot, sans reformulation ni résumé, la ligne de verdict `GOVERNANCE: …` de `drwil verify --agent` et les listes des contrats en échec, non vérifiés ou à attester (et des critères non prouvés), ainsi que les lignes d'échec de `run-checks` ; une commande qui ne tourne pas est dite « not run », jamais réussie. Ses outils sont une liste fermée sans outil d'écriture (`Bash`, `Read`, `Grep`, `Glob`) ; il n'exécute jamais `drwil attest` ni le verdict de recette (`drwil attest` exige de toute façon un terminal interactif et la saisie de l'ID). `AGENTS.md` dit que la session principale n'annonce « vérifié » que sur la ligne recopiée.
-**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md`, `docs/ia-first.md` (section 8) ; livrés dans le gabarit.
+**Périmètre** : `.claude/agents/drwil-checks.md`, `AGENTS.md`, `docs/ia-first/8-conduct-rules.md` ; livrés dans le gabarit.
 **Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
 **Preuve** : test du paquet sur un projet installé : liste d'outils fermée sans écriture, interdits et format de recopie mot pour mot dans le sous-agent, consigne de la session principale dans `AGENTS.md`. Le comportement d'une session réelle n'est pas rejoué (pas de session Claude Code dans les tests, comme pour QUA-072).
 **Contrôle** : `tests-qua-130`
@@ -1258,7 +1258,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-132 — Avec Claude Code, le registre et le journal ne se lisent jamais en entier
 **Règle** : Livré à tout projet qui installe Claude Code. Le hook `PreToolUse` sur l'outil Read (`.claude/hooks/read-guard.mjs`, branché dans `.claude/settings.json`) refuse, avant qu'elle ait lieu, la lecture sans plage (ni `offset` ni `limit`) du registre des contrats (`dirs.contracts` de `.drwil/ia-first.json`, par défaut `docs/contracts.md`) et du journal (fichier journal.md de `dirs.projects`, par défaut `docs/projects/journal.md`) ; `.claude/hooks/bash-guard.mjs` refuse `cat`, `less` ou `more` de ces fichiers dans une commande shell. Le refus renvoie vers `node .githooks/glossary.mjs --contract <ID>`, `--contracts` et `--journal <chantier>`. Restent permises : une lecture par plage (pour éditer), une recherche (Grep, `grep`, `sed -n`, `head`). Chemin absolu ou relatif, normalisé (liens symboliques résolus) ; un fichier absent du projet, une entrée inattendue ou une erreur interne laissent passer la lecture. Limites assumées : la garde shell juge le texte de la commande (une lecture cachée derrière une variable ou un autre programme n'est pas vue) ; les autres outils (Gemini, Copilot, Codex, Cursor) n'ont que la consigne écrite d'`AGENTS.md`.
-**Périmètre** : `.claude/hooks/read-guard.mjs`, `.claude/hooks/bash-guard.mjs`, `.claude/settings.json`, `AGENTS.md`, `docs/ia-first.md` (section 8) ; livrés dans le gabarit.
+**Périmètre** : `.claude/hooks/read-guard.mjs`, `.claude/hooks/bash-guard.mjs`, `.claude/settings.json`, `AGENTS.md`, `docs/ia-first/8-conduct-rules.md` ; livrés dans le gabarit.
 **Source de vérité** : `.claude/hooks/read-guard.mjs` (`guardedFiles`, `decide`).
 **Preuve** : test du paquet qui installe un projet et rejoue les hooks avec des entrées simulées : lecture entière refusée (chemin absolu, relatif, par un lien symbolique, depuis un sous-dossier), lecture par plage permise, autre fichier permis, fichier absent ou entrée invalide permis, chemins lus dans la configuration, message en français et en anglais ; `cat`, `less` et `more` refusés, `sed -n`, `grep` et `head` permis ; le `.claude/settings.json` livré branche le hook sur Read.
 **Contrôle** : `tests-qua-132`
@@ -1378,7 +1378,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-144 — La commande d'installation déclarée est lancée dans le nouveau worktree, son échec est dit sans rien défaire
 **Règle** : Livré à tout projet. Le réglage facultatif `worktreeInstall` de `.drwil/ia-first.json` (par exemple `npm ci`) est lancé dans le nouveau worktree, avant le lancement du chantier. Sans réglage, rien n'est lancé et la sortie dit d'installer les dépendances dans ce dossier. Un échec est dit avec la fin de sa sortie ; le worktree et l'état restent, le chantier est lancé quand même.
-**Périmètre** : `.githooks/worktree.mjs` (`launchInWorktree`) ; `docs/ia-first.md` (réglage) ; livrés dans le gabarit.
+**Périmètre** : `.githooks/worktree.mjs` (`launchInWorktree`) ; `docs/ia-first/7-starting-and-closing.md` (réglage) ; livrés dans le gabarit.
 **Source de vérité** : `.githooks/worktree.mjs`.
 **Preuve** : tests sur dépôts jetables : commande lancée dans le nouveau dossier et pas dans l'autre, échec dit avec sa sortie et état BUILD gardé, absence de réglage dite.
 **Contrôle** : `tests-qua-144`
@@ -1468,8 +1468,8 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-153 — Le `AGENTS.md` livré est un aiguillage de 100 lignes au plus, dont chaque règle a son détail dans `docs/ia-first.md`
 **Règle** : Livré à tout projet. `AGENTS.md`, relu à chaque requête, tient en 100 lignes au plus (gabarit et copie du dépôt) : une ligne par règle de conduite qu'aucun contrôle machine ne rattrape, qui renvoie à la section 8 de `docs/ia-first.md` où le texte complet de chaque règle est conservé sous le même nom en gras ; aucune règle n'est perdue. Le plafond sur le gabarit est tenu par un test du paquet, d'ici à ce que le contrôle de taille du kit le reprenne.
-**Périmètre** : `AGENTS.md`, `docs/ia-first.md` (section 8) ; livrés dans le gabarit.
-**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first.md` (section 8).
+**Périmètre** : `AGENTS.md`, `docs/ia-first/8-conduct-rules.md` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md`.
 **Preuve** : test du paquet qui lit le gabarit : au plus 100 lignes, renvoi à la section 8, et chaque règle de conduite de `AGENTS.md` retrouvée sous son nom dans la section 8.
 **Contrôle** : `tests-qua-153`
 **Tests** : `packages/drwil/test/kit.test.mjs`
@@ -1839,10 +1839,10 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : On cadre souvent plusieurs fiches à la suite et on veut les relire ensemble : la fusion repoussée ne doit rien programmer en douce.
 
 ## QUA-190 — `docs/ia-first.md` est un sommaire court : chaque section est un fichier de `docs/ia-first/` qui se lit seul, et chaque renvoi y mène
-**Règle** : Livré à tout projet. `docs/ia-first.md` ne garde que son introduction et le sommaire : c'est un sommaire de moins de 100 lignes qui garde la numérotation des sections 1 à 8 et donne, pour chacune et pour chaque sous-section de la section 7, le chemin de son fichier dans `docs/ia-first/` ; le dossier ne contient que les fichiers du sommaire. Le texte de chaque règle vit dans un seul fichier de section, jamais en double : aucun paragraphe de règle au sommaire, aucun paragraphe non trivial dans deux fichiers du dossier ni à la fois au sommaire et dans une section. Chaque fichier tient sous le plafond des documents lus à la demande (QUA-157), commence par le titre numéroté de sa section et renvoie au sommaire : un agent le charge sans lire les autres. Chaque renvoi du gabarit à `docs/ia-first.md` mène à une section existante : « section N » à une ligne du sommaire, un chemin du dossier docs/ia-first/ à un fichier livré, un titre cité dans un document ou dans un commentaire d'un hook livré à un titre de section ; aucun renvoi relatif d'un fichier de `docs/ia-first/` ne sort de ce fichier (ni « this document », ni titre cité avec « below » ou « above » absent du même fichier). Les renvois les plus lus (`AGENTS.md`, skill `drwil`, `docs/projects/model-brief.md`, `docs/projects/pending.md`, `docs/projects/routine-maintenance.md`, gabarit et copie du dépôt) visent le fichier de section exact, jamais « section N » du sommaire. `drwil init` livre le dossier et une mise à jour le traite comme la prose du kit (`KIT_PROSE`) : une section restée telle qu'installée est rafraîchie, une section adaptée par le projet est gardée.
+**Règle** : Livré à tout projet. `docs/ia-first.md` ne garde que son introduction et le sommaire : c'est un sommaire de moins de 100 lignes qui garde la numérotation des sections 1 à 8 et donne, pour chacune et pour chaque sous-section de la section 7, le chemin de son fichier dans `docs/ia-first/` ; le dossier ne contient que les fichiers du sommaire. Le texte de chaque règle vit dans un seul fichier de section, jamais en double : aucun paragraphe de règle au sommaire, aucun paragraphe non trivial dans deux fichiers du dossier ni à la fois au sommaire et dans une section. Chaque fichier tient sous le plafond des documents lus à la demande (QUA-157), commence par le titre numéroté de sa section et renvoie au sommaire : un agent le charge sans lire les autres. Chaque renvoi du gabarit à `docs/ia-first.md` mène à une section existante : « section N » à une ligne du sommaire, un chemin du dossier docs/ia-first/ à un fichier livré, un titre cité dans un document ou dans un commentaire d'un hook livré à un titre de section ; aucun renvoi relatif d'un fichier de `docs/ia-first/` ne sort de ce fichier (ni « this document », ni titre cité avec « below » ou « above » absent du même fichier). Les renvois les plus lus (`AGENTS.md`, skill `drwil`, `docs/projects/model-brief.md`, `docs/projects/pending.md`, `docs/projects/routine-maintenance.md`, gabarit et copie du dépôt) visent le fichier de section exact, jamais « section N » du sommaire. Le registre du dépôt (`docs/contracts.md`) et l'intention sur la compatibilité des outils font de même : aucun renvoi « `docs/ia-first.md` (section N) », de la matrice ou du réglage par le sommaire, et chaque fichier de section cité existe. `drwil init` livre le dossier et une mise à jour le traite comme la prose du kit (`KIT_PROSE`) : une section restée telle qu'installée est rafraîchie, une section adaptée par le projet est gardée.
 **Périmètre** : `docs/ia-first.md`, `docs/ia-first/` ; `packages/drwil/src/config.ts` (`KIT_PROSE`) ; livrés dans le gabarit.
 **Source de vérité** : `packages/drwil/templates/common/base/docs/ia-first.md` (sommaire), `packages/drwil/templates/common/base/docs/ia-first/`, `packages/drwil/src/config.ts` (`KIT_PROSE`).
-**Preuve** : tests du paquet : sommaire de moins de 100 lignes avec une ligne et un fichier par section, sommaire réduit à l'introduction et à la table des sections (aucun paragraphe de règle), aucun paragraphe d'au moins 40 caractères en double entre fichiers (hors titres et en-tête de renvoi), dossier et sommaire identiques (gabarit et copie du dépôt), chaque fichier sous 400 lignes, titré et renvoyant au sommaire ; chaque renvoi du gabarit résolu, titres cités dans les commentaires des hooks livrés compris, aucun renvoi relatif hors de son fichier (gabarit et copie du dépôt), renvois les plus lus vers un fichier de section existant ; installation qui livre le dossier au manifeste, mise à jour qui rafraîchit une section inchangée et garde une section adaptée.
+**Preuve** : tests du paquet : sommaire de moins de 100 lignes avec une ligne et un fichier par section, sommaire réduit à l'introduction et à la table des sections (aucun paragraphe de règle), aucun paragraphe d'au moins 40 caractères en double entre fichiers (hors titres et en-tête de renvoi), dossier et sommaire identiques (gabarit et copie du dépôt), chaque fichier sous 400 lignes, titré et renvoyant au sommaire ; chaque renvoi du gabarit résolu, titres cités dans les commentaires des hooks livrés compris, aucun renvoi relatif hors de son fichier (gabarit et copie du dépôt), renvois les plus lus vers un fichier de section existant ; registre du dépôt et intention sur la compatibilité des outils sans renvoi par le sommaire, chaque fichier de section cité existant ; installation qui livre le dossier au manifeste, mise à jour qui rafraîchit une section inchangée et garde une section adaptée.
 **Contrôle** : `tests-qua-190`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : ia-first-en-sections-courtes — « Chaque section issue de la découpe se lit seule : un agent la charge sans lire les autres, et chaque renvoi existant vers `docs/ia-first.md` mène à la bonne section »

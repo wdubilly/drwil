@@ -273,6 +273,21 @@ test("QUA-190 : chaque renvoi à docs/ia-first.md mène à une section existante
   }
 });
 
+test("QUA-190 : le registre du dépôt et ses intentions visent le fichier de section, jamais le sommaire, et ce fichier existe", () => {
+  const fichiers = [join(DEPOT, "docs/contracts.md"), join(DEPOT, "docs/intentions/compatibilite-des-outils.md")];
+  for (const fichier of fichiers) {
+    const texte = readFileSync(fichier, "utf8");
+    assert.doesNotMatch(
+      texte,
+      /docs\/ia-first\.md`?,? \(?(section \d|matrice|réglage)/,
+      `${fichier} : renvoi à une section par le sommaire`,
+    );
+    assert.doesNotMatch(texte, /matrice de `docs\/ia-first\.md`/, `${fichier} : matrice visée par le sommaire`);
+    for (const [chemin] of texte.matchAll(/(?<![\w/])docs\/ia-first\/[\w.-]+\.md/g))
+      assert.ok(existsSync(join(DEPOT, chemin)), `${fichier} : ${chemin} introuvable`);
+  }
+});
+
 // Titres des sections de docs/ia-first/, sans leur numéro.
 const titresIaFirst = (texte) => [...texte.matchAll(/^#+ (?:\d+\. )?(.+)$/gm)].map((m) => m[1]);
 
