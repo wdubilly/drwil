@@ -120,6 +120,9 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
+- [ ] [IA] [P1] Clôture sur un projet neuf : garanties « pas encore applicables » sans code, clôture qui
+  écrit sa ligne de journal et d'index, empreinte des critères sans la marque `[humain]` (cadré le
+  2026-10-30) — `docs/projects/cloture-sur-projet-neuf.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
   qui signale un squash (cadré le 2026-10-26 ; à lancer après
   `docs/projects/journal.md`) —
