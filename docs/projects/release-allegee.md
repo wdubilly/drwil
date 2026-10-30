@@ -72,24 +72,23 @@ le squash.
 attribuer à ce moment-là dans le registre.)
 
 - Le réglage `release.mode` vaut `solo` ou `team`, `solo` par défaut ; une autre
-  valeur est refusée et la migration d'un projet existant le conserve — contrat
-  à créer
+  valeur est refusée et la migration d'un projet existant le conserve — `QUA-199`
 - En `solo`, `.githooks/create-release.mjs` sans `--candidate` publie directement un patch,
-  sans candidate ni verdict — contrat à créer
+  sans candidate ni verdict — `QUA-200`
 - En `team`, la création directe d'une release est refusée et dit d'utiliser
-  `--candidate` — contrat à créer
+  `--candidate` — `QUA-201`
 - En `solo`, la note de recette « sans verdict » est écrite dans le corps de la
   release GitHub, jamais par une branche `recette/vX.Y.Z` ni une PR ; en `team`,
-  elle arrive par la PR dédiée comme aujourd'hui — contrat à créer
+  elle arrive par la PR dédiée comme aujourd'hui — `QUA-079`
 - Le tag et la release publiés ne dépendent jamais de l'écriture de la note, dans
   les deux modes — `QUA-080`
 - `--dry-run` montre, pour chaque mode, ce qui serait publié et où irait la note,
-  sans rien créer — contrat à créer
+  sans rien créer — `QUA-079`
 - La fiche des mécaniques livrée et le README du module citent
   `.githooks/recette-note.mjs`, et le contournement du test du kit est retiré —
-  contrat à créer
+  `QUA-051`
 - Le texte de QUA-048 renvoie à QUA-058 pour les branches fusionnées par squash —
-  `QUA-048`
+  [humain] `QUA-048`
 
 ## Contrats modifiés
 
@@ -99,6 +98,7 @@ attribuer à ce moment-là dans le registre.)
   note « sans verdict » par la branche dédiée et la PR — raison : en `solo` la
   note va dans le corps de la release, la PR reste propre à `team` (validé le
   2026-10-30)
+- `QUA-080` — ancien critère : le tag et la release ne dépendent jamais de la PR de la note — raison : en `solo` la note n'a plus de PR, elle est le corps de la release ; l'indépendance du tag et de la release vaut dans les deux modes (validé par le demandeur le 2026-10-30)
 - `QUA-048` — ancien critère : branches fusionnées supprimées par `git branch -d`
   — raison : renvoyer à QUA-058, qui reconnaît le squash (`git branch -D` quand
   la fusion est prouvée par `gh`) (validé le 2026-10-30)
