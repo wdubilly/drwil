@@ -3910,3 +3910,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : ce dépôt ne mesure par le contrôle que ses hooks `.githooks/*.mjs` ; le paquet `packages/drwil` (rapport sur `dist/`, diff sur les sources TypeScript) n'y entre pas — `docs/intentions/couverture-paquet-100.md`. Le contrôle tourne aussi au commit quand `.githooks/**` est indexé (le moteur ne diffère que hors des `paths`), pas seulement au push.
 - **Preuve de clôture** : `docs/preuves/couverture-du-code-modifie.md`.
 - **Clôturé par** : la branche `workstream/couverture-du-code-modifie`.
+
+## 2026-10-30 — L'e2e et l'attestation disent précisément ce qu'ils prouvent
+
+- **Décisions clés** : trois contrats neufs, QUA-195 (le catalogue définit l'e2e une seule fois, par forme de projet : bibliothèque, outil en ligne de commande, service, application web ; ni exception ni dérogation), QUA-196 (la recette d'adoption renvoie à cette définition sans la recopier) et QUA-197 (la section 5 de `docs/ia-first/` distingue l'identité, l'approbation et la preuve d'exécution, et dit ce que `drwil attest` garantit ou non : l'identité vient de la configuration git, déclarative). Aucun contrat existant modifié ; `catalogue:QUA-020` garde son critère.
+- **Hooks modifiés** : aucun.
+- **Limites connues** : l'identité forte en option (commits signés, revue GitHub authentifiée) n'est pas faite, seule la documentation des niveaux l'est — elle reste dans `docs/intentions/e2e-et-attestation-precises.md`.
+- **Preuve de clôture** : `docs/preuves/e2e-et-attestation-precises.md`.
+- **Clôturé par** : la branche `workstream/e2e-et-attestation-precises`.

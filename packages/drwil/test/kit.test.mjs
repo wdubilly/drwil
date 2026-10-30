@@ -5300,3 +5300,48 @@ test("QUA-194 : ce dépôt déclare le contrôle de couverture du diff, avec exc
     "la copie du dépôt est le gabarit",
   );
 });
+
+// QUA-195 à QUA-197 : la définition de l'e2e par forme et les niveaux de garantie de l'attestation.
+const CATALOGUE_GABARIT = join(GABARIT, "base/docs/contracts-catalog.md");
+const RECETTE_ADOPTION_GABARIT = join(GABARIT, "base/docs/recipes/adopt-the-kit.md");
+const PREUVES_GABARIT = join(GABARIT, "base/docs/ia-first/5-proving-the-work.md");
+
+test("QUA-195 : le catalogue définit l'e2e une seule fois, avec une ligne par forme de projet, sans exception", () => {
+  const gabarit = readFileSync(CATALOGUE_GABARIT, "utf8");
+  assert.match(gabarit, /^## What "end to end" means \(`catalog:QUA-020`\)$/m);
+  const section = gabarit.split(/^## What "end to end" means/m)[1];
+  assert.match(section, /no stand-in/);
+  assert.match(section, /no exception or waiver/);
+  for (const forme of ["Library", "Service", "Web application"])
+    assert.match(section, new RegExp(`^\\| ${forme} \\|`, "m"), `ligne « ${forme} »`);
+  assert.match(section, /installs the package as a client would/);
+  const depot = readFileSync(join(DEPOT, "docs/contracts-catalog.md"), "utf8");
+  assert.match(depot, /^## Ce que « de bout en bout » veut dire \(`catalogue:QUA-020`\)$/m);
+  const sectionDepot = depot.split(/^## Ce que « de bout en bout » veut dire/m)[1];
+  for (const forme of ["Bibliothèque", "Service", "Application web"])
+    assert.match(sectionDepot, new RegExp(`^\\| ${forme} \\|`, "m"), `ligne « ${forme} » du dépôt`);
+  assert.match(sectionDepot, /ni exception ni dérogation/);
+});
+
+test("QUA-196 : la recette d'adoption renvoie à la définition de l'e2e sans la recopier, gabarit et copie identiques", () => {
+  const recette = readFileSync(RECETTE_ADOPTION_GABARIT, "utf8");
+  assert.match(recette, /What "end to end" means/);
+  const section = readFileSync(CATALOGUE_GABARIT, "utf8").split(/^## What "end to end" means/m)[1];
+  const lignes = section.split("\n").filter((l) => l.startsWith("| ") && !l.startsWith("| Project shape"));
+  assert.ok(lignes.length >= 3, "le tableau de formes existe au catalogue");
+  for (const ligne of lignes) assert.ok(!recette.includes(ligne), `la recette ne recopie pas : ${ligne.slice(0, 40)}`);
+  assert.ok(!recette.includes("installs the package as a client"), "la recette ne recopie pas la définition");
+  assert.equal(readFileSync(join(DEPOT, "docs/recipes/adopt-the-kit.md"), "utf8"), recette);
+});
+
+test("QUA-197 : la doc des preuves distingue identité, approbation et preuve d'exécution de l'attestation, gabarit et copie identiques", () => {
+  const texte = readFileSync(PREUVES_GABARIT, "utf8");
+  assert.match(texte, /^## What an attestation guarantees: identity, approval, proof of execution$/m);
+  const section = texte.split(/^## What an attestation guarantees/m)[1].split(/^## /m)[0];
+  for (const niveau of ["Proof of execution", "Approval", "Identity"])
+    assert.match(section, new RegExp(`\\*\\*${niveau}\\*\\* \\(`), `niveau « ${niveau} »`);
+  assert.match(section, /\*\*Identity\*\* \(not guaranteed\)/);
+  assert.match(section, /git\s+configuration/);
+  assert.match(section, /no exception\s+or waiver/);
+  assert.equal(readFileSync(join(DEPOT, "docs/ia-first/5-proving-the-work.md"), "utf8"), texte);
+});
