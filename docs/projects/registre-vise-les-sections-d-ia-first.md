@@ -1,7 +1,7 @@
 # Projet : le registre vise le fichier de section qui porte la règle
 
 **Statut** : cadré le 2026-10-30 — rien de commencé.
-**Risque** : MEDIUM
+**Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/registre-vise-les-sections-d-ia-first.md`
 
@@ -10,6 +10,12 @@ files:
   - docs/contracts.md
   - docs/intentions/compatibilite-des-outils.md
   - packages/drwil/test/kit.test.mjs
+  - docs/intentions/registre-vise-les-sections-d-ia-first.md
+  - docs/intentions/renvois-apres-decoupe.md
+  - docs/projects/pending.md
+  - docs/projects/journal.md
+  - docs/preuves/registre-vise-les-sections-d-ia-first.md
+  - .drwil/usage.jsonl
 -->
 
 (cadrage : le registre du dépôt, l'intention qui parle encore de la
