@@ -3902,3 +3902,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : le 100 % du paquet reste dans `docs/intentions/couverture-paquet-100.md` ; les hooks Claude et le module front ne sont pas à 100 % (cliquet au niveau réel) ; les tests des hooks Claude sont dans `packages/drwil/test/` (non dans `.claude/hooks/`) pour mesurer le fichier livré.
 - **Preuve de clôture** : `docs/preuves/adopter-seuil-couverture.md`.
 - **Clôturé par** : la branche `workstream/adopter-seuil-couverture`.
+
+## 2026-10-30 — Le code modifié arrive couvert à 100 %
+
+- **Décisions clés** : quatre contrats neufs, QUA-191 (lignes ajoutées ou modifiées d'une branche et branches qu'elles ouvrent couvertes à 100 % d'après le lcov du projet), QUA-192 (exclusion admise seulement avec sa justification), QUA-193 (sans rapport lcov, contrôle non exécuté, jamais passé) et QUA-194 (ce dépôt applique le contrôle à ses branches, en plus du cliquet de QUA-004). Le contrôle livré `.githooks/check-diff-coverage.mjs` croise `git diff <base>...HEAD` et le lcov ; le projet déclare `diffCoverage` dans `.drwil/ia-first.json` (rapport, commande qui le produit, base, fichiers inclus, exclusions). Entrée `catalogue:QUA-010` au catalogue.
+- **Hooks modifiés** : `.githooks/check-diff-coverage.mjs` (gabarit et copie), nouveau.
+- **Limites connues** : ce dépôt ne mesure par le contrôle que ses hooks `.githooks/*.mjs` ; le paquet `packages/drwil` (rapport sur `dist/`, diff sur les sources TypeScript) n'y entre pas — `docs/intentions/couverture-paquet-100.md`. Le contrôle tourne aussi au commit quand `.githooks/**` est indexé (le moteur ne diffère que hors des `paths`), pas seulement au push.
+- **Preuve de clôture** : `docs/preuves/couverture-du-code-modifie.md`.
+- **Clôturé par** : la branche `workstream/couverture-du-code-modifie`.
