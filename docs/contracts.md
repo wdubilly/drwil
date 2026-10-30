@@ -386,7 +386,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Chaque `npm run installer-depot` réécrivait la date de `docs/ia-first.md`, seul fichier changé : un faux changement à annuler à la main ou qui polluait le commit ; une mise à jour d'un projet faisait le même bruit sur ses documents datés.
 
 ## QUA-048 — Une clôture en un geste, ses pièges signalés avant le commit
-**Règle** : Livré à tout projet. En CLOSING, `node .githooks/close.mjs` supprime la fiche active, retire sa ligne de l'index et consigne la consommation du chantier ; il ne commite, ne pousse, ne fusionne rien et n'écrit pas l'état. Il signale, avant le commit, ce qui ferait échouer la clôture : critère encore « contrat à créer » (avec l'ID à écrire), références à la fiche qui deviendraient mortes, noms de fichiers sans chemin dans les documents modifiés ; les mêmes signaux sont donnés par `--check` (sans rien écrire) et au passage de BUILD à EVIDENCE, tant que le code peut encore changer. Au lancement du chantier suivant, les branches locales déjà fusionnées dans la branche principale sont supprimées (`git branch -d`) — jamais la branche principale, la courante, une branche encore au sommet de la principale ni une branche non fusionnée.
+**Règle** : Livré à tout projet. En CLOSING, `node .githooks/close.mjs` supprime la fiche active, retire sa ligne de l'index et consigne la consommation du chantier ; il ne commite, ne pousse, ne fusionne rien et n'écrit pas l'état. Il signale, avant le commit, ce qui ferait échouer la clôture : critère encore « contrat à créer » (avec l'ID à écrire), références à la fiche qui deviendraient mortes, noms de fichiers sans chemin dans les documents modifiés ; les mêmes signaux sont donnés par `--check` (sans rien écrire) et au passage de BUILD à EVIDENCE, tant que le code peut encore changer. Au lancement du chantier suivant, les branches locales déjà fusionnées dans la branche principale sont supprimées (`git branch -d`, ou `git branch -D` quand une PR fusionnée prouve la fusion par squash, QUA-058) — jamais la branche principale, la courante, une branche encore au sommet de la principale ni une branche non fusionnée.
 **Périmètre** : `.githooks/close.mjs` (commande de clôture), `.githooks/close-branches.mjs` (suppression des branches fusionnées, exports repris par `.githooks/close.mjs`), `.githooks/state.mjs` (`start`, `move`) ; livré dans le gabarit.
 **Source de vérité** : `.githooks/close.mjs`, `.githooks/close-branches.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (fusions, branches, journaux de session).
@@ -724,18 +724,18 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : note de recette par version — « La promotion d'une candidate approuvée écrit la note de la version dans `docs/recettes/<version>.md` — la fiche de recette, le verdict, les réserves, l'auteur et la date du verdict, le sha256 de chaque tarball — sur une branche dédiée et une PR, jamais sur la branche principale ; `--dry-run` montre la note sans rien écrire »
 **Raison** : La fiche et le verdict n'existaient que sur la pré-release GitHub : ils ne suivaient pas le code et se perdraient avec la forge.
 
-## QUA-079 — Une version publiée sans candidate reçoit quand même sa note, « sans verdict »
-**Règle** : Livré à tout projet avec le module de release (optionnel). `node .githooks/create-release.mjs` (sans `--candidate`) écrit, après le tag et la release, la note de la version par le même module (QUA-078) : la mention « sans verdict — version publiée sans candidate ni verdict de recette ; à compléter par l'humain », les empreintes des tarballs, les changements depuis le dernier tag et une partie « à compléter » (ce qui a été validé, par qui, quand). Elle arrive par la même branche dédiée et la même PR ; `--dry-run` la montre sans rien écrire.
+## QUA-079 — En solo, une version publiée sans candidate porte sa note « sans verdict » dans le corps de sa release
+**Règle** : Livré à tout projet avec le module de release (optionnel). En mode `solo`, `node .githooks/create-release.mjs` (sans `--candidate`) publie la version et donne pour corps à la release GitHub (`gh release create --notes-file`) la note de la version (QUA-078) : la mention « sans verdict — version publiée sans candidate ni verdict de recette ; à compléter par l'humain », les empreintes des tarballs, les changements depuis le dernier tag et une partie « à compléter » (ce qui a été validé, par qui, quand). Aucune branche `recette/vX.Y.Z` ni PR : la note n'arrive par la PR dédiée qu'en `team`, à la promotion. `--dry-run` montre la note et où elle irait (corps de la release en `solo`, PR à la promotion pour une candidate), sans rien créer.
 **Périmètre** : `.githooks/recette-note.mjs`, `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
 **Source de vérité** : `.githooks/recette-note.mjs`.
-**Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, gh et npm simulés) : la note « sans verdict » en français et en anglais, la release directe qui la propose, `--dry-run`.
+**Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, gh et npm simulés) : la note « sans verdict » en français et en anglais, la release directe dont elle est le corps (fichier passé à `--notes-file`, aucune branche ni PR), `--dry-run` en `solo` et pour une candidate.
 **Contrôle** : `tests-qua-079`
 **Tests** : `.githooks/recette-note.test.mjs`, `.githooks/create-release.test.mjs`
-**Origine** : note de recette par version — « Une version publiée sans candidate ni verdict reçoit quand même sa note, générée avec la mention « sans verdict », à compléter par l'humain »
+**Origine** : note de recette par version — « Une version publiée sans candidate ni verdict reçoit quand même sa note, générée avec la mention « sans verdict », à compléter par l'humain » ; réécrit par release-allegee (validé le 2026-10-30) : en `solo`, la note va dans le corps de la release, la PR reste propre à `team`
 **Raison** : La note reste obligatoire à chaque version : une version sans recette doit le dire plutôt que laisser un trou.
 
 ## QUA-080 — Le tag et la release publiés ne dépendent jamais de la PR de la note
-**Règle** : Livré à tout projet avec le module de release (optionnel). Le tag et la release GitHub sont publiés avant la note et ne dépendent pas d'elle : si la branche, la PR ou l'écriture de la note échoue, la promotion (QUA-054) comme la création directe d'une release (QUA-079) le disent, avec la commande de rattrapage (`node .githooks/recette-note.mjs vX.Y.Z <fichier de la note>`, ou `gh pr create` quand seule la PR a échoué), sans défaire ce qui est publié ; la note est gardée dans un fichier. Une branche de note déjà poussée n'est jamais écrasée.
+**Règle** : Livré à tout projet avec le module de release (optionnel). Le tag et la release GitHub sont publiés avant la note et ne dépendent pas d'elle : si la branche, la PR ou l'écriture de la note échoue, la promotion (QUA-054) le dit, avec la commande de rattrapage (`node .githooks/recette-note.mjs vX.Y.Z <fichier de la note>`, ou `gh pr create` quand seule la PR a échoué), sans défaire ce qui est publié ; en `solo` (QUA-079), la note est le corps de la release : si `gh release create` échoue, le tag reste et la commande de rattrapage (`--notes-file`) est donnée. La note est gardée dans un fichier. Une branche de note déjà poussée n'est jamais écrasée.
 **Périmètre** : `.githooks/recette-note.mjs`, `.githooks/promote-release.mjs`, `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
 **Source de vérité** : `.githooks/recette-note.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, sans origin, gh simulé en échec) : tag et release présents malgré l'échec, commande de rattrapage nommée, note gardée, rattrapage par la ligne de commande.
@@ -1927,3 +1927,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/dashboard.test.mjs`
 **Origine** : releves-de-ci-et-de-contexte — « La durée du job `checks` sur une PR à hooks inchangés et le cache lu moyen par requête sont relevés au journal » ; « Le tableau de bord montre la tendance de la durée de la CI et du cache lu par requête, avec un seuil d'alerte non bloquant »
 **Raison** : Sans tendance visible, une CI qui ralentit ou un contexte relu qui grossit ne se remarque qu'à la gêne ; un contrat attesté sur une durée dépend de la charge de la forge, d'où un indicateur.
+
+## QUA-199 — Le réglage `release.mode` vaut `solo` ou `team`, `solo` par défaut, et une mise à jour le conserve
+**Règle** : Livré à tout projet avec le module de release (optionnel). `.drwil/ia-first.json` déclare `release.mode` : `solo` (défaut) ou `team`. Une installation neuve écrit `solo` ; une réinstallation ou une montée de version garde la valeur déjà déclarée (même inconnue, jamais corrigée en silence) et les autres clés de `release`. `node .githooks/create-release.mjs` refuse toute autre valeur (aperçu et candidate compris), sans rien publier, et dit les valeurs attendues ; sans fichier ni clé, c'est `solo`.
+**Périmètre** : `packages/drwil/src/config-write.ts`, `packages/drwil/src/migration-table.ts`, `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `packages/drwil/src/migration-table.ts` (`RELEASE_MODES`) ; le module lit la même liste dans `.githooks/create-release-texts.mjs`.
+**Preuve** : tests du paquet (installation neuve, réinstallation avec `team`, avec une valeur inconnue, projet antérieur au réglage) et des hooks (valeur inconnue refusée sans tag, clé absente = `solo`).
+**Contrôle** : `tests-qua-199`
+**Tests** : `packages/drwil/test/config-write.test.mjs`, `.githooks/create-release.test.mjs`
+**Origine** : release-allegee — « Le réglage `release.mode` vaut `solo` ou `team`, `solo` par défaut ; une autre valeur est refusée et la migration d'un projet existant le conserve »
+**Raison** : Sans réglage, les équipes d'acceptation et les projets solo subiraient le même parcours ; une valeur corrigée en silence cacherait une faute de frappe.
+
+## QUA-200 — En `solo`, la release sans `--candidate` publie directement, sans candidate ni verdict
+**Règle** : Livré à tout projet avec le module de release (optionnel). Avec `release.mode` à `solo`, `node .githooks/create-release.mjs` sans `--candidate` pose le tag définitif et crée la release GitHub, sans candidate ni verdict de recette (QUA-079) ; `--candidate` reste disponible sur demande.
+**Périmètre** : `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `.githooks/create-release.mjs`.
+**Preuve** : test des hooks sur un vrai dépôt git temporaire (origin nu local, gh et npm simulés) : tag définitif poussé, aucune pré-release demandée à `gh`.
+**Contrôle** : `tests-qua-200`
+**Tests** : `.githooks/create-release.test.mjs`
+**Origine** : release-allegee — « En `solo`, `.githooks/create-release.mjs` sans `--candidate` publie directement un patch, sans candidate ni verdict »
+**Raison** : Pour un projet solo, la candidate et le verdict ne servent personne : un patch coûtait 3 h.
+
+## QUA-201 — En `team`, la création directe d'une release est refusée et renvoie à `--candidate`
+**Règle** : Livré à tout projet avec le module de release (optionnel). Avec `release.mode` à `team`, `node .githooks/create-release.mjs` sans `--candidate` (aperçu compris) est refusé, sans tag ni release, et dit d'utiliser `--candidate` puis la promotion après le verdict ; `--candidate` fonctionne comme avant.
+**Périmètre** : `.githooks/create-release.mjs` ; module optionnel livré dans le gabarit.
+**Source de vérité** : `.githooks/create-release.mjs`.
+**Preuve** : test des hooks sur un vrai dépôt git temporaire : refus avec et sans `--dry-run`, aucun tag poussé, `--candidate --dry-run` accepté.
+**Contrôle** : `tests-qua-201`
+**Tests** : `.githooks/create-release.test.mjs`
+**Origine** : release-allegee — « En `team`, la création directe d'une release est refusée et dit d'utiliser `--candidate` »
+**Raison** : Une équipe qui a choisi le verdict humain ne doit pas pouvoir le contourner par un geste direct.

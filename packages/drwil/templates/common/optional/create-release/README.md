@@ -2,7 +2,7 @@
 
 Module **not installed by default**: `scaffold()` does not copy this
 folder. Posts an **annotated Git tag** (`vX.Y.Z`) and a **GitHub release
-note** (`gh release create --generate-notes`) on the current commit — never
+note** (`gh release create --notes-file`: the acceptance note « without verdict » is its body) on the current commit — never
 a modified tracked file (no committed `CHANGELOG.md`, no `package.json`
 bump): compatible with QUA-017 (no direct commit on the main branch)
 without an extra PR.
@@ -25,6 +25,11 @@ without an extra PR.
   **human** gesture (interactive terminal, the candidate's name typed back);
   an agent never runs it.
 - `promote-release.mjs`: promotes an approved candidate to the final release.
+- `recette-note.mjs`: writes the acceptance note of a version into the
+  repository through a dedicated branch and a PR (a candidate's promotion, or
+  the catch-up of a note); in `solo` mode a direct release carries its « no
+  verdict » note in the release body instead. Its messages are in
+  `recette-note-texts.mjs`.
 - `release-review.mjs`: review of `README.md`, `docs/features.md` and
   `docs/architecture.md` before any tag, preview included (imported by
   `create-release.mjs`): for each one, what changed since the latest tag
@@ -97,7 +102,8 @@ version"), not automatically at each merge.
 2. Preview without creating anything: `node .githooks/create-release.mjs --dry-run`.
 3. Actually create the tag and the release: `node .githooks/create-release.mjs`
    (needs `git push` to `origin` and an authenticated `gh` for the release
-   note — the tag is created even if `gh` fails).
+   note — the tag is created even if `gh` fails). The « no verdict » note is
+   the body of the release, never a branch or a PR; `--dry-run` shows it.
 
 Accepted limit: designed for GitHub (`gh release create`). On GitLab, the
 Git tag is posted the same way (`git tag` + `git push`), but the release

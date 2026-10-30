@@ -3938,3 +3938,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : les deux relevés (durée de CI à hooks inchangés, cache lu sur paires comparables) restent à faire, dans `docs/intentions/suivi-ci-et-contexte.md` ; le texte de la section « Tendances » est dans `.githooks/dashboard.mjs` et non dans `.githooks/dashboard-texts.mjs`, hors du périmètre de la fiche.
 - **Preuve de clôture** : `docs/preuves/releves-de-ci-et-de-contexte.md`.
 - **Clôturé par** : la branche `workstream/releves-de-ci-et-de-contexte`.
+
+## 2026-10-30 — La release se règle en solo ou en équipe, un patch se publie directement
+
+- **Décisions clés** : trois contrats neufs, QUA-199 (le réglage `release.mode`, `solo` ou `team`, `solo` par défaut, une autre valeur refusée), QUA-200 (en `solo`, un patch se publie directement, sans candidate ni verdict ; en `team`, la création directe est refusée et renvoie à `--candidate`) et QUA-201 (le réglage est conservé à la réécriture de la configuration et à la migration). En `solo`, la note « sans verdict » est le corps de la release GitHub, sans branche ni PR, montrée par `--dry-run` ; en `team`, elle arrive par la PR à la promotion. La fiche des mécaniques livrée et le README du module citent `.githooks/recette-note.mjs`, le contournement du test du kit est retiré.
+- **Contrats modifiés** : QUA-079 (la note de recette de chaque version : en `solo` elle va dans le corps de la release), QUA-080 ajusté (le tag et la release ne dépendent jamais de l'écriture de la note), QUA-048 (une clôture en un geste : le texte renvoie à QUA-058, la reconnaissance du squash, `git branch -D`) ; tous validés par le demandeur au cadrage, le 2026-10-30.
+- **Hooks modifiés** : `.githooks/create-release.mjs`, `.githooks/create-release-texts.mjs`, `.githooks/recette-note.mjs`, `.githooks/recette-note-texts.mjs` (gabarit et copie), cadrés dans la fiche.
+- **Limites connues** : `docs/recettes/README.md` dit encore que la note « sans verdict » arrive par la PR, dans `docs/intentions/recettes-readme-note-sans-verdict.md` ; les copies `.githooks/` du module de release ne sont pas déclarées dans `scopeMirrors`, dans `docs/intentions/copies-create-release-dans-scope-mirrors.md`.
+- **Preuve de clôture** : `docs/preuves/release-allegee.md`.
+- **Clôturé par** : la branche `workstream/release-allegee`.

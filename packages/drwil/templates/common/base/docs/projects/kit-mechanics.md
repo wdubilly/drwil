@@ -92,6 +92,8 @@ files:
   - .githooks/acceptance-sheet-works.mjs
   - .githooks/release-verdict.mjs
   - .githooks/promote-release.mjs
+  - .githooks/recette-note.mjs
+  - .githooks/recette-note-texts.mjs
   - .githooks/dashboard.mjs
   - .githooks/dashboard-texts.mjs
   - .githooks/dashboard-read.mjs

@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { CI_FILES, ciFromConfig, projectName, readConfig, type Resolved, splitCsv } from "./config.js";
 import { TEXT } from "./config-text.js";
+import { RELEASE_MODES } from "./migration-table.js";
 
 const KIT_SIZE_CHECK = {
   id: "taille-kit",
@@ -14,6 +15,12 @@ const KIT_SIZE_CHECK = {
 function withKitSize(previous: unknown): unknown[] {
   const checks = Array.isArray(previous) ? previous : [];
   return checks.some((c) => c?.id === KIT_SIZE_CHECK.id) ? checks : [...checks, KIT_SIZE_CHECK];
+}
+
+/** `release` key: other keys of the project kept, `mode` defaulted. */
+export function releaseSetting(previous: unknown): { mode: string } {
+  const release = previous && typeof previous === "object" ? (previous as Record<string, unknown>) : {};
+  return { ...release, mode: typeof release.mode === "string" ? release.mode : RELEASE_MODES[0] };
 }
 
 export async function writeConfig(r: Resolved): Promise<void> {
@@ -52,6 +59,9 @@ export async function writeConfig(r: Resolved): Promise<void> {
     // equipped project that does not have this setting yet — an update never breaks a commit
     // that used to pass. Never overwritten afterwards.
     newRequirements: typeof previous?.newRequirements === "string" ? previous.newRequirements : previous ? "warning" : "blocking",
+    // Guard level of the release module (QUA-199): "solo" (default) | "team". The value already
+    // declared is kept as it is, even an unknown one (the release refuses it, it is not corrected silently).
+    release: releaseSetting(previous?.release),
     layerPrefixes: keep("layerPrefixes", ["app", "tests", "src", "scripts"]),
     codePrefixes: keep("codePrefixes", ["scripts", ".githooks", "e2e"]),
     extraCodeFiles: keep("extraCodeFiles", []),

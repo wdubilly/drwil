@@ -7,6 +7,15 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Release module: new setting `release.mode` in `.drwil/ia-first.json`, `solo` (the
+  default) or `team`. Behaviour change for projects that have the module: without
+  the key, `solo` applies, and `team` is the way to keep the candidate, verdict and
+  promotion path. In `team`, `create-release.mjs` without `--candidate` is refused
+  and points to `--candidate`; in `solo` it publishes the version directly. An
+  existing value is kept by an update, and any other value is refused
+  (QUA-199 to QUA-201). In `solo`, the « no verdict » acceptance note is now the
+  body of the GitHub release (`--notes-file`), with no `recette/vX.Y.Z` branch
+  nor pull request; `--dry-run` shows it and where it goes (QUA-079).
 - `/drwil-scope` (skill `scope-a-workstream`, listed in the `/drwil` menu): at the
   end of a pushed scoping, a poll asks what to do with its PR — « Automatic merge »,
   « Manual merge » or « Continue scoping » (PR left open, next scopings on the same

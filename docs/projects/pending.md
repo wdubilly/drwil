@@ -120,12 +120,9 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P2] Release allégée : réglage `release.mode` solo / équipe, patch
-  publié directement, note de recette dans la release (cadré le 2026-10-30) —
-  `docs/projects/release-allegee.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
   qui signale un squash (cadré le 2026-10-26 ; à lancer après
-  `docs/projects/release-allegee.md`) —
+  `docs/projects/journal.md`) —
   `docs/projects/release-feu-vert-et-squash.md`.
 - [ ] [humain] [P3] Vérifier que Cursor et Copilot lisent les fichiers de renvoi —
   `docs/projects/suites-kit-portable.md` (point 2).
@@ -230,9 +227,14 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 ### Release
 
 - [ ] [décision] [P2] Alléger la release, puis outiller ce qui reste : cadré
-  le 2026-10-30 en une fiche (`docs/projects/release-allegee.md`) ; reste à
-  outiller le reste, une fois la fiche livrée —
+  le 2026-10-30 en une fiche, livrée (`docs/projects/journal.md`) ; reste à
+  outiller le reste —
   `docs/intentions/release-allegee.md`.
+- [ ] [décision] [P3] `docs/recettes/README.md` dit encore que la note « sans
+  verdict » arrive par la PR, alors qu'en `solo` elle est le corps de la
+  release — `docs/intentions/recettes-readme-note-sans-verdict.md`.
+- [ ] [décision] [P3] Déclarer les copies `.githooks/` du module de release
+  dans `scopeMirrors` — `docs/intentions/copies-create-release-dans-scope-mirrors.md`.
 
 ### Clôture, file et chantiers en parallèle
 
