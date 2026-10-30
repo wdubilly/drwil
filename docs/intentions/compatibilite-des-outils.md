@@ -159,7 +159,7 @@ Gemini CLI ne lit pas `.claude/skills/` : ses skills se trouvent sous
 `.gemini/skills/` ou `.agents/skills/`, et il a un outil `ask_user` dont le
 format diffère de celui de Claude Code et de Copilot. Sous Gemini, un chantier
 se lance donc par `node .githooks/state.mjs start` dans un terminal (dit dans la
-matrice de `docs/ia-first.md`).
+matrice de `docs/ia-first/6-limits-and-tool-compatibility.md`).
 
 **Existant** :
 

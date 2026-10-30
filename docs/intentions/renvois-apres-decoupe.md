@@ -4,8 +4,8 @@
 décision du demandeur ; restes du chantier qui a découpé `docs/ia-first.md` en sections courtes (QUA-190).
 Cadrée le 2026-10-30 en fiche, réalisée et close le 2026-10-30 : `docs/projects/journal.md` (entrée du
 2026-10-30, « Des renvois justes après la découpe de `docs/ia-first.md` »), questions tranchées. Les cinq
-points sont couverts ; reste, hors cadrage, le registre qui vise encore le sommaire (QUA-069 et d'autres) :
-`docs/intentions/registre-vise-les-sections-d-ia-first.md`.
+points sont couverts ; le registre qui visait encore le sommaire (QUA-069 et d'autres) a été corrigé ensuite :
+`docs/projects/journal.md` (entrée du 2026-10-30, « Le registre vise le fichier de section »).
 
 ## Besoin
 
