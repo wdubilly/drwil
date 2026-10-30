@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome ci --error-on-warnings .",
     "installer-depot": "node outils/installer-depot.mjs",
+    "test:claude:coverage": "c8 --check-coverage --lines 97 --branches 88 --functions 93 --statements 97 --all --include=packages/drwil/templates/common/tools/claude/.claude/hooks/*.mjs --include=packages/drwil/templates/common/optional/front-quality/*.mjs --reporter=text --temp-directory=node_modules/.cache/c8-claude --report-dir=node_modules/.cache/c8-claude node --test packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/front-quality.test.mjs",
     "test:hooks:coverage": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --statements 100 --all --include=.githooks/*.mjs --exclude=.githooks/*.test.mjs --reporter=text --temp-directory=node_modules/.cache/c8-hooks --report-dir=node_modules/.cache/c8-hooks node --test \".githooks/*.test.mjs\""
   },
   "devDependencies": {

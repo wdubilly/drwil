@@ -55,6 +55,22 @@
       "degradable": false
     },
     {
+      "id": "couverture-claude",
+      "name": "hooks Claude et module front : tests + couverture (QUA-004)",
+      "run": "npm run test:claude:coverage",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/templates/common/tools/claude/**",
+        "packages/drwil/templates/common/optional/front-quality/**",
+        "packages/drwil/test/claude-hooks.test.mjs",
+        "packages/drwil/test/front-quality.test.mjs",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "couverture-hooks",
       "name": "hooks de gouvernance : tests + couverture (QUA-004)",
       "run": "npm run test:hooks:coverage",

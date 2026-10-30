@@ -574,12 +574,12 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : `.githooks/state.mjs` imprimait du texte brut que Copilot ignore (rappel jamais reçu), et `scope-reminder` lisait `file_path` alors que Copilot envoie `path` (l'écriture n'était jamais refusée) ; un hook qui attend son entrée sans fin est laissé passer au délai (30 s).
 
 ## QUA-004 — Seuil de couverture de test
-**Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre : `packages/drwil` à 89 % lignes, 81 % branches, 91 % fonctions (relevé le 2026-10-11 aux chiffres mesurés ; un seuil ne redescend jamais, cible 100 % — voir `docs/projects/adopter-seuil-couverture.md`) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11).
-**Périmètre** : `packages/drwil` (code du générateur) et `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`).
-**Source de vérité** : `packages/drwil/package.json` (script `test:coverage`) et `package.json` (script `test:hooks:coverage`), options `c8`.
+**Règle** : La couverture de test ne descend pas sous le seuil déclaré pour chaque périmètre, et un seuil ne redescend jamais (cible 100 %). `packages/drwil` (`packages/drwil/src/` compilé et `packages/drwil/bin/`, tout fichier compté même jamais importé par les tests, `--all`) : 98 % lignes, 90 % branches, 98 % fonctions (relevé le 2026-10-30 aux chiffres mesurés ; cible 100 % — voir `docs/intentions/couverture-paquet-100.md`) ; hooks Claude du gabarit (`packages/drwil/templates/common/tools/claude/.claude/hooks/*.mjs`) et module optionnel front (`packages/drwil/templates/common/optional/front-quality/*.mjs`) : 97 % lignes et instructions, 88 % branches, 93 % fonctions (niveau réel du 2026-10-30) ; hooks de gouvernance (`.githooks/*.mjs`) à 100 % lignes, branches, fonctions et instructions (voir `docs/projects/journal.md`, 2026-10-11). Les hooks du gabarit (`packages/drwil/templates/`) sont exclus de la mesure du paquet : leurs copies sont mesurées à 100 % par le dépôt.
+**Périmètre** : `packages/drwil` (code du générateur), `.githooks/*.mjs` (hooks de ce dépôt, mesurés avec leurs tests `.githooks/*.test.mjs`), hooks Claude et module front du gabarit (mesurés avec `packages/drwil/test/claude-hooks.test.mjs` et `packages/drwil/test/front-quality.test.mjs`).
+**Source de vérité** : `packages/drwil/package.json` (script `test:coverage`) et `package.json` (scripts `test:hooks:coverage` et `test:claude:coverage`), options `c8`.
 **Preuve** : Hook + CI (`.drwil/ia-first.json` → `checks`, job `checks`).
-**Contrôle** : `couverture-tests`, `couverture-hooks`
-**Raison** : Sans seuil vérifié, la couverture peut régresser silencieusement à chaque ajout de code.
+**Contrôle** : `couverture-tests`, `couverture-hooks`, `couverture-claude`
+**Raison** : Sans seuil vérifié, la couverture peut régresser silencieusement à chaque ajout de code, et du code livré hors mesure n'échoue jamais.
 
 ## QUA-001 — Fichier de code plafonné
 **Règle** : Un fichier de code ne dépasse pas 200 lignes, tests exclus ; un fichier déjà au-dessus au 2026-10-27 est plafonné à sa taille mesurée ce jour-là et ne peut que maigrir (`.githooks/check-file-size.legacy.json`). Le livrable propose 200 lignes à l'adoption (recette d'adoption, catalogue, exemple du script) ; le défaut du script livré reste 400 sans plafond donné, pour ne casser aucun projet déjà adopté.
