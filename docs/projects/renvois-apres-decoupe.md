@@ -19,6 +19,7 @@ files:
   - docs/intentions/renvois-apres-decoupe.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - .drwil/ia-first.json
 -->
 
 ## 1. Besoin
@@ -51,6 +52,9 @@ l'apprend pas.
 - `QUA-063` — ancien critère : « `docs/ia-first.md` porte une matrice… » (Règle, Périmètre, Source de vérité,
   Couvre) — raison : la matrice est dans `docs/ia-first/6-limits-and-tool-compatibility.md` depuis la découpe ;
   la règle ne change pas (validé le 2026-10-30)
+- `.githooks/scope-gate.mjs` — une ligne de commentaire remplacée : le renvoi « Scope gate » pointe vers la section de `docs/ia-first/` qui existe, sans changement de comportement (validé par le demandeur le 2026-10-30)
+- `QUA-068` — ancien critère : « la matrice de `docs/ia-first.md` dit qu'un chantier s'y lance par `node .githooks/state.mjs start`… » (Règle, Périmètre, Source de vérité) — raison : même correction que QUA-063, la matrice est dans `docs/ia-first/6-limits-and-tool-compatibility.md` depuis la découpe ; la règle ne change pas (validé le 2026-10-30)
+- `.drwil/ia-first.json` — `tests-qua-179` rejoue aussi `packages/drwil/test/kit.test.mjs`, devenu un fichier des Tests de QUA-179 (QUA-033 : un contrôle par règle, qui rejoue chaque fichier de ses Tests) ; `tests-qua-063` et `tests-qua-068` se déclenchent aussi sur `docs/ia-first/6-limits-and-tool-compatibility.md`, gabarit et dépôt, où vit la matrice (validé par le demandeur le 2026-10-30)
 
 ## 2. Hors périmètre
 
@@ -77,6 +81,11 @@ l'apprend pas.
   test, plutôt qu'une réécriture unique ou un contrat neuf.
 - 2026-10-30 (demandeur) : `miroirs-gabarit` resserré dans une intention séparée.
 - 2026-10-30 (demandeur) : QUA-179 étendu à la recette livrée, prouvé par un test du paquet.
+- 2026-10-30 (demandeur) : les lots 1 et 2 sont livrés en un seul commit, parce que le pre-commit refuse un commit
+  rouge ; le rouge du lot 1 a été constaté avant les corrections.
+- 2026-10-30 (demandeur) : périmètre élargi à `.drwil/ia-first.json` (fichier propre au dépôt, sans source au
+  gabarit), pour que `tests-qua-179` rejoue `packages/drwil/test/kit.test.mjs` (QUA-033).
+- 2026-10-30 (demandeur) : QUA-068 inclus, même correction que QUA-063.
 
 ## 5. Points à trancher
 
@@ -90,9 +99,16 @@ l'apprend pas.
 - **Lot 2 — les corrections** [IA] : commentaire de `.githooks/scope-gate.mjs`, renvois des sections réécrits vers le
   fichier exact, puce « This folder » dans la recette du gabarit, installation ; changelog. Critère de sortie :
   `node .githooks/run-checks.mjs` vert, `drwil verify --agent` en `GOVERNANCE: PASS`.
+- Les lots 1 et 2 sont livrés en un seul commit (le pre-commit refuse un commit rouge ; voir Décisions).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-30) : cadré, PR de cadrage #312 ouverte.
+- **Dernier état** (2026-10-30) : en BUILD, lots 1 et 2 livrés en un seul commit, parce que le pre-commit refuse
+  un commit rouge (décision du demandeur). Lot 1 : trois tests ajoutés à `packages/drwil/test/kit.test.mjs`
+  (QUA-190 : titres cités dans les commentaires des hooks livrés, renvois relatifs des sections ; QUA-179 : puce
+  « This folder » de la recette livrée), constatés rouges pour la bonne raison ; QUA-190, QUA-179, QUA-063 et
+  QUA-068 mis à jour au registre. Lot 2 : « Scope barrier » dans l'en-tête de `.githooks/scope-gate.mjs`, renvois
+  de `docs/ia-first/1-single-entry-point.md` et `docs/ia-first/7-governance-state.md` vers le fichier exact, puce « This folder » dans la
+  recette du gabarit, installation, changelog ; `tests-qua-179` rejoue `packages/drwil/test/kit.test.mjs`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [humain] lancer le chantier (`/drwil-start`) une fois la PR fusionnée.
+- **Prochaine étape** : [IA] clôture.
