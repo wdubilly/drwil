@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Scope gate (docs/ia-first.md, "Scope gate"), the engine's "scope-gate" check
+// Scope gate (docs/ia-first.md, "Scope barrier"), the engine's "scope-gate" check
 // (.githooks/engine.mjs): commit, push, CI, `drwil verify`.
 //
 // - Briefs (docs/projects/, docs/intentions/…) can always be committed; so can the contracts registry in SCOPING.

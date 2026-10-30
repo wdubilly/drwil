@@ -110,6 +110,13 @@ closing commit; the release renames this section to its version.
   the others go through the summary. `drwil init` installs the folder and an
   update refreshes its files like the rest of the kit's prose, keeping a
   section the project adapted (QUA-190).
+- Pointers left behind by that split now lead to their target: the scope gate
+  hook's header cites the "Scope barrier" section, and no section file sends
+  the reader to "this document" or to a title "below" that lives in another
+  file; a package test proves both, hook comments included (QUA-190).
+- The shipped recipe `docs/recipes/working-with-branches.md` now says that a
+  start in "This folder" creates `workstream/<brief>` from the up-to-date main
+  branch, and when the start is refused (QUA-179).
 - The `/drwil-start` poll (`state.mjs briefs`) now lists the briefs in the
   realisation order of the index's "Fiches cadrées" section, not by priority:
   a brief that is not ready keeps its place, and the briefs the index does not

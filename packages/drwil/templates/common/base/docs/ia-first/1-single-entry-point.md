@@ -9,7 +9,7 @@ given assistant:
 - `AGENTS.md` is a short switchboard (100 lines at most, read at every
   request): one line per conduct rule no machine checks, the contracts to
   know, the "if you touch… read first" table, and the context-loading
-  order. The detail of each rule is in section 8 of this document.
+  order. The detail of each rule is in `docs/ia-first/8-conduct-rules.md`.
 - `CLAUDE.md` and `GEMINI.md`, if present, contain only one line,
   `@AGENTS.md` (some tools don't read `AGENTS.md` on their own): there is
   no second copy of the instructions to keep in sync.
