@@ -160,3 +160,57 @@ test("en anglais : statut d'une fiche, audit périmé, audit pas encore génér�
   assert.match(html, /⚠ scan \d+ days old, time to re-run/);
   assert.match(html, /\(docs\/value-discovery\.md missing — not generated yet/);
 });
+
+const ligneCache = (workstream, requests, cache_read) => JSON.stringify({ workstream, requests, cache_read });
+
+test("QUA-198 tendances : durée de CI à hooks inchangés et cache lu par requête, dérive affichée sans refus", () => {
+  const html = generer({
+    "docs/projects/journal.md": [
+      "## 2026-10-01 — a",
+      "- **Durée de CI (job checks)** : 3m02 — PR #1 — hooks modifiés",
+      "- **Durée de CI (job checks)** : 2m10 — PR #2 — hooks inchangés",
+      "## 2026-10-02 — b",
+      "- **Durée de CI (job checks)** : 200 s — PR #3 — hooks inchangés",
+      "- **Durée de CI (job checks)** : non mesurée — pas encore passée",
+      "## 2026-10-03 — c",
+      "- **Durée de CI (job checks)** : 6m00 — PR #4 — hooks inchangés",
+      "## 2026-10-04 — d",
+      "- **Durée de CI (job checks)** : 6m00 — PR #5 — hooks inchangés",
+      "## 2026-10-05 — e",
+      "- **Durée de CI (job checks)** : 6m00 — PR #6 — hooks inchangés",
+      "## 2026-10-06 — f",
+      "- **Durée de CI (job checks)** : 6m00 — PR #7 — hooks inchangés",
+    ].join("\n"),
+    ".drwil/usage.jsonl": [
+      ligneCache("x", 10, 3000000),
+      ligneCache("y", 0, 5),
+      ligneCache("z", 2, 0),
+      ligneCache("w", 5, 1000000),
+      "pas du json",
+    ].join("\n"),
+  });
+  assert.match(html, /Tendances \(indicateurs, jamais bloquants\)/);
+  assert.doesNotMatch(html, /2026-10-01 : |: 182/, "hooks modifiés ignorés, seuls les cinq derniers relevés montrés");
+  assert.match(html, /2026-10-02 : 200<br>2026-10-03 : 360<br>/);
+  assert.match(html, /<strong>⚠ dérive : moyenne 328 au-dessus du seuil 235<\/strong>/);
+  assert.match(html, /x : 300000<br>w : 200000<\/p>/);
+  assert.match(html, /<strong>⚠ dérive : moyenne 250000 au-dessus du seuil 212500<\/strong>/);
+});
+
+test("QUA-198 tendances : sous le seuil, sans relevé, et en anglais", () => {
+  const sous = generer({
+    "docs/projects/journal.md": "## 2026-10-02 — b\n- **Durée de CI (job checks)** : 2m00 — PR — hooks inchangés\n",
+    ".drwil/usage.jsonl": ligneCache("x", 10, 1000000),
+  });
+  assert.match(sous, /<p>moyenne 120, seuil d'alerte 235<\/p>/);
+  assert.match(sous, /<p>moyenne 100000, seuil d'alerte 212500<\/p>/);
+  assert.doesNotMatch(sous, /dérive/);
+  assert.equal(generer({}).split("(aucun relevé)").length - 1, 2);
+  const en = generer({
+    ".drwil/ia-first.json": JSON.stringify({ lang: "en", dirs: { projects: "suivi", index: "suivi/index.md" } }),
+    "suivi/journal.md": "## 2026-10-02 — b\n- **Durée de CI (job checks)** : 9m00 — PR — hooks unchanged\n",
+  });
+  assert.match(en, /Trends \(indicators, never blocking\)/);
+  assert.match(en, /⚠ drift: mean 540 above the threshold 235/);
+  assert.match(en, /\(no reading\)/);
+});

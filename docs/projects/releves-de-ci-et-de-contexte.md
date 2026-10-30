@@ -41,15 +41,17 @@ au catalogue.)
 - La durée du job `checks` sur une PR à hooks inchangés et le cache lu moyen
   par requête (≈ 170 k de référence, `node .githooks/consumption.mjs
   --recorded`, sur deux chantiers comparables) sont relevés au journal —
-  contrat à créer
+  `QUA-198`
 - Le tableau de bord montre la tendance de la durée de la CI et du cache lu
   par requête, avec un seuil d'alerte non bloquant (sévérité indicative) :
-  une dérive est affichée, jamais refusée — contrat à créer
+  une dérive est affichée, jamais refusée — `QUA-198`
 
 ## Contrats modifiés
 
-(aucun : QUA-122 reste une preuve historique du seul
-`docs/mesures-ci-reference.md`.)
+- `.githooks/dashboard.mjs` — section « Tendances » : durée de CI et cache lu par requête, avec seuil d'alerte non bloquant (validé par le demandeur le 2026-10-30)
+- `.githooks/dashboard-read.mjs` — lecture des relevés du journal et de `usage.jsonl`, calcul de la tendance (validé par le demandeur le 2026-10-30)
+
+(QUA-122 reste une preuve historique du seul `docs/mesures-ci-reference.md`.)
 
 ## 2. Hors périmètre
 

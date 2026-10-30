@@ -3927,3 +3927,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : restent au sommaire les renvois qui visent le sommaire lui-même (règle de validité d'une attestation, QUA-190 et sa preuve, citation d'origine de QUA-063).
 - **Preuve de clôture** : `docs/preuves/registre-vise-les-sections-d-ia-first.md`.
 - **Clôturé par** : la branche `workstream/registre-vise-les-sections-d-ia-first`.
+
+## 2026-10-30 — La durée de la CI et le cache lu par requête suivis comme des indicateurs
+
+- **Décisions clés** : un contrat neuf, QUA-198 (le tableau de bord montre la tendance de la durée de la CI et du cache lu par requête, avec un seuil d'alerte non bloquant). Le tableau de bord lit les lignes « Durée de CI (job checks) … hooks inchangés » du journal et le cache lu par requête de `.drwil/usage.jsonl`, montre les cinq derniers relevés et leur moyenne, et affiche en alerte une moyenne au-dessus du seuil (3m55 pour la CI, 212 500 pour le cache lu, soit 25 % au-dessus de la référence d'environ 170 k) ; jamais de refus. Indicateur, pas contrat attesté (décision du 2026-10-25). Seuils à réévaluer au fil des relevés. QUA-122 reste une preuve historique.
+- **Hooks modifiés** : `.githooks/dashboard.mjs` et `.githooks/dashboard-read.mjs` (gabarit et copie), validé par le demandeur le 2026-10-30.
+- **Décisions de l'humain en cours de route** : puce « Contrats modifiés » validée pour les deux fichiers du tableau de bord ; relevé de la durée de CI à hooks inchangés reporté au prochain chantier ordinaire clos ; « comparables » non tranché, l'agent propose deux paires sans choisir.
+- **Durée de CI (job checks)** : non mesurée — la CI de la PR n'a pas encore passé à l'écriture de cette entrée.
+- **Relevé du cache lu par requête** : en attente du choix des paires comparables. Références du `usage.jsonl`, proposées sans trancher : paire A (80 à 115 requêtes) `premier-commit-avant-adoption` 145 k et `barriere-commit-de-fusion` 105 k (2026-10-23) contre `adopter-seuil-couverture` 141 k et `couverture-du-code-modifie` 106 k (2026-10-30) ; paire B (50 à 60 requêtes) `verify-reprise-par-controle` 105 k et `stab-squash` 92 k contre `e2e-et-attestation-precises` 74 k et `registre-vise-les-sections-d-ia-first` 70 k.
+- **Limites connues** : les deux relevés (durée de CI à hooks inchangés, cache lu sur paires comparables) restent à faire, dans `docs/intentions/suivi-ci-et-contexte.md` ; le texte de la section « Tendances » est dans `.githooks/dashboard.mjs` et non dans `.githooks/dashboard-texts.mjs`, hors du périmètre de la fiche.
+- **Clôturé par** : la branche `workstream/releves-de-ci-et-de-contexte`.

@@ -7,13 +7,44 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { TEXTS, fill } from "./dashboard-texts.mjs";
-import { aggregateUsage, loadConfig, readAudit, readBriefs, readContracts, readUsage, staleDays } from "./dashboard-read.mjs";
+import {
+  THRESHOLDS,
+  aggregateUsage,
+  cachePerRequest,
+  loadConfig,
+  readAudit,
+  readBriefs,
+  readCiDurations,
+  readContracts,
+  readUsage,
+  staleDays,
+  trend,
+} from "./dashboard-read.mjs";
 
 const root = process.cwd();
 const cfg = loadConfig(root);
 const lang = cfg.lang === "en" ? "en" : "fr";
 const CATALOG = "docs/contracts-catalog.md";
 const T = TEXTS[lang];
+// Trend texts (a drift is shown, never refused). The sentences of the other sections stay in dashboard-texts.mjs.
+const TREND = {
+  fr: {
+    title: "Tendances (indicateurs, jamais bloquants)",
+    ci: "Durée du job checks, hooks inchangés (s)",
+    cache: "Cache lu par requête (tokens)",
+    none: "(aucun relevé)",
+    ok: "moyenne {0}, seuil d'alerte {1}",
+    alert: "⚠ dérive : moyenne {0} au-dessus du seuil {1}",
+  },
+  en: {
+    title: "Trends (indicators, never blocking)",
+    ci: "`checks` job duration, hooks unchanged (s)",
+    cache: "Cache read per request (tokens)",
+    none: "(no reading)",
+    ok: "mean {0}, alert threshold {1}",
+    alert: "⚠ drift: mean {0} above the threshold {1}",
+  },
+}[lang];
 
 function escapeHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -69,11 +100,22 @@ function renderAudit(path, audit) {
   return `<h3>${escapeHtml(audit.title)} <small>(<code>${escapeHtml(path)}</code>)</small></h3><p>${meta}${warning}</p>`;
 }
 
+function renderTrend(label, t, threshold) {
+  if (!t) return `<h3>${escapeHtml(label)}</h3><p>${TREND.none}</p>`;
+  const rows = t.points.map((p) => `${escapeHtml(p.label)} : ${p.value}`).join("<br>");
+  const verdict = fill(t.alert ? TREND.alert : TREND.ok, t.mean, threshold);
+  return `<h3>${escapeHtml(label)}</h3><p>${rows}</p><p>${t.alert ? "<strong>" : ""}${escapeHtml(verdict)}${t.alert ? "</strong>" : ""}</p>`;
+}
+
 const { index, briefs } = readBriefs(root, cfg);
 const contractsPath = cfg.dirs?.contracts ?? "docs/contracts.md";
 const registry = readContracts(join(root, contractsPath));
 const catalog = readContracts(join(root, CATALOG));
-const usageByWorkstream = aggregateUsage(readUsage(join(root, ".drwil", "usage.jsonl")));
+const usageEntries = readUsage(join(root, ".drwil", "usage.jsonl"));
+const usageByWorkstream = aggregateUsage(usageEntries);
+const journalPath = `${cfg.dirs?.projects ?? "docs/projects"}/journal.md`;
+const ciTrend = trend(readCiDurations(join(root, journalPath)), THRESHOLDS.ci);
+const cacheTrend = trend(cachePerRequest(usageEntries), THRESHOLDS.cache);
 const projectName = cfg.projectName ?? root;
 const risksAuditPath = { fr: "docs/audit-risques.md", en: "docs/audit-risks.md" }[lang];
 const valueDiscoveryPath = { fr: "docs/decouverte-valeur.md", en: "docs/value-discovery.md" }[lang];
@@ -128,6 +170,10 @@ ${renderAudit(valueDiscoveryPath, valueDiscovery)}
 
 <h2>${escapeHtml(T.usage)}</h2>
 ${renderUsage(usageByWorkstream)}
+
+<h2>${escapeHtml(TREND.title)}</h2>
+${renderTrend(TREND.ci, ciTrend, THRESHOLDS.ci)}
+${renderTrend(TREND.cache, cacheTrend, THRESHOLDS.cache)}
 </body>
 </html>
 `;
