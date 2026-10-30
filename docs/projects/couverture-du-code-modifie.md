@@ -1,6 +1,6 @@
 # Projet : le code modifié arrive couvert à 100 %
 
-**Statut** : cadré le 2026-10-30 — rien de commencé.
+**Statut** : cadré le 2026-10-30 ; réalisé le 2026-10-30 (contrôle, câblage, contrats `QUA-191` à `QUA-194`).
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/couverture-paquet-100.md` (section « tout code modifié arrive couvert à 100 % »)
@@ -18,6 +18,8 @@ files:
   - docs/architecture.md
   - docs/projects/kit-mechanics.md
   - packages/drwil/test/kit.test.mjs
+  - docs/intentions/couverture-paquet-100.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
 -->
 
 (cadrage : le contrôle livré et sa copie du dépôt, son test, sa
@@ -41,14 +43,13 @@ modifié arrive couvert, et la couverture globale monte d'elle-même.
 
 - Les lignes ajoutées ou modifiées d'une branche, et les branches qu'elles
   ouvrent, sont couvertes à 100 % d'après le rapport lcov du projet ; une
-  ligne ou une branche non couverte fait échouer le contrôle — contrat à créer
+  ligne ou une branche non couverte fait échouer le contrôle `QUA-191`
 - Une exclusion (code généré, configuration, ligne non testable) n'est
   admise que déclarée avec sa justification dans `.drwil/ia-first.json` ;
-  sans justification, elle est refusée — contrat à créer
-- Sans rapport lcov, le contrôle est signalé non exécuté, jamais passé —
-  contrat à créer
+  sans justification, elle est refusée `QUA-192`
+- Sans rapport lcov, le contrôle est signalé non exécuté, jamais passé `QUA-193`
 - Ce dépôt applique le contrôle à ses propres branches, en plus du cliquet
-  de seuils — contrat à créer
+  de seuils `QUA-194`
 
 ## Contrats modifiés
 
@@ -98,6 +99,6 @@ modifié arrive couvert, et la couverture globale monte d'elle-même.
 
 ## 6. Reprise
 
-- **Dernier état** (2026-10-30) : cadré ; rien de commencé.
+- **Dernier état** (2026-10-30) : lots 1 et 2 faits ; reste la clôture.
 - **Prochaine étape** : lancer le lot 1 une fois `adopter-seuil-couverture`
   clos et fusionné.
