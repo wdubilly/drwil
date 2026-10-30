@@ -58,6 +58,8 @@ est refusée ou faussée pour des raisons qui ne tiennent pas au chantier. Trois
   cite la fiche supprimée — contrat à créer
 - Avant la clôture, la citation de la preuve du chantier actif (`docs/preuves/<fiche>.md`) ne fait plus
   échouer `verify` — contrat à créer
+- En BUILD, `.githooks/close.mjs --check` liste les renvois à la fiche (catalogue, dashboard, intentions, index,
+  journal) qui bloqueraient le commit de clôture, et propose l'extension du bloc scope — contrat à créer
 - Ajouter ou retirer la marque `[humain]` d'un critère ne change pas l'empreinte acceptée ; tout autre
   changement du texte d'un critère la change toujours — `QUA-174`
 
@@ -72,8 +74,6 @@ est refusée ou faussée pour des raisons qui ne tiennent pas au chantier. Trois
 - Une notion officielle de « chantier mis en attente » (état, commande de reprise, rappel) : écartée, le
   point 1 la rend inutile pour les chantiers de garantie.
 - L'attestation de départ des contrats manuels à l'installation.
-- Les renvois à la fiche supprimée qui bloquent le commit de clôture (note du 2026-10-30 « Clôture
-  récurrente bloquée ») : autre mécanisme, reste en note.
 - L'élargissement visible du périmètre et l'alignement de QUA-050 : fiche à part.
 - La première branche principale, l'auto-merge du dépôt neuf, le choix des outils IA, le signalement d'un
   défaut du kit : fiche « installation d'un dépôt neuf ».
@@ -99,6 +99,8 @@ Tranchées par le demandeur le 2026-10-30 :
 - Pas d'état « mis en attente » : pas de nouvelle notion de cycle de vie.
 - `.githooks/close.mjs` fait tout (ligne de journal, ligne d'index) et `verify` tolère la citation de la preuve du
   chantier actif.
+- Renvois à la fiche supprimée : `close --check` en BUILD les liste et propose l'extension de scope (plutôt
+  qu'une réorientation automatique vers le journal, ou les deux).
 - Empreinte des critères sur le sens : la marque `[humain]` n'y entre plus (les IDs n'y entraient déjà plus).
 
 ## 5. Points à trancher
@@ -122,6 +124,11 @@ Tranchées par le demandeur le 2026-10-30 :
   clos de bout en bout sans retouche à la main, ni faux FAIL avant la clôture.
 - **Lot 3 — empreinte sans `[humain]`** [IA] : `.githooks/state-acceptance.mjs`, QUA-174 modifié, tests. Critère de
   sortie : poser `[humain]` après lancement n'impose plus `state.mjs accept`.
+
+- **Lot 4 — renvois visibles avant la clôture** [IA] : `.githooks/close-checks.mjs` et `.githooks/close.mjs
+  --check` en BUILD, sans rien réécrire. Critère de sortie : un renvoi à la fiche hors du bloc scope est
+  nommé avant le commit de clôture, avec l'extension de scope proposée (arrivé à `adopter-seuil-couverture`,
+  `couverture-du-code-modifie` et `e2e-et-attestation-precises`).
 
 ## 7. Reprise
 
