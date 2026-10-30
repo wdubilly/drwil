@@ -2593,6 +2593,19 @@
       "needsBuild": true
     },
     {
+      "id": "tests-qua-198",
+      "name": "tests de QUA-198, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-198 \" .githooks/dashboard.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/templates/common/optional/dashboard/**",
+        "package.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "name": "code modifié couvert à 100 % : lignes et branches du diff de la branche (diffCoverage)",
       "run": "node .githooks/check-diff-coverage.mjs",

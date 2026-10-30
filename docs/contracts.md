@@ -1917,3 +1917,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : e2e-et-attestation-precises — « La doc des preuves distingue l'identité, l'approbation et la preuve d'exécution, et dit ce que garantit `drwil attest` et ce qu'il ne garantit pas »
 **Raison** : Une attestation lue comme une preuve d'identité donnerait une fausse assurance.
+
+## QUA-198 — Le tableau de bord montre la tendance de la durée de la CI et du cache lu par requête, avec un seuil d'alerte non bloquant
+**Règle** : Propre au dépôt drwil (QUA-018) pour l'usage ; le gabarit du module tableau de bord et la copie du dépôt sont identiques. Le tableau de bord (`.githooks/dashboard.mjs`) a une section « Tendances » qui lit deux relevés, sans rien écrire de plus que sa sortie : la ligne `- **Durée de CI (job checks)** : <durée> — … — hooks inchangés` des entrées du journal (une durée « 3m02 » ou « 200 s » ; les lignes « hooks modifiés » et « non mesurée » sont ignorées) et le cache lu par requête de chaque ligne de `.drwil/usage.jsonl` (`cache_read` divisé par `requests`, lignes sans requête ou sans cache ignorées). Chaque tendance montre les cinq derniers relevés, leur moyenne et le seuil d'alerte (3m55, soit 235 s, pour la durée ; 212 500 pour le cache lu, soit 25 % au-dessus de la référence d'environ 170 k) ; une moyenne au-dessus du seuil est affichée en alerte. L'alerte est un indicateur : elle ne bloque ni `verify` ni la clôture, et le seuil se réévalue au fil des relevés. Sans relevé, la section le dit.
+**Périmètre** : `.githooks/dashboard.mjs`, `.githooks/dashboard-read.mjs`, leur gabarit `packages/drwil/templates/common/optional/dashboard/`.
+**Source de vérité** : `.githooks/dashboard-read.mjs` (lecture des relevés, seuils, tendance) ; `docs/mesures-ci-reference.md` (procédure du relevé de durée).
+**Preuve** : test `.githooks/dashboard.test.mjs` : durées et cache lus, lignes ignorées, cinq derniers relevés, moyenne, alerte au-dessus du seuil, absence d'alerte dessous, section sans relevé, en français et en anglais.
+**Contrôle** : `tests-qua-198`
+**Tests** : `.githooks/dashboard.test.mjs`
+**Origine** : releves-de-ci-et-de-contexte — « La durée du job `checks` sur une PR à hooks inchangés et le cache lu moyen par requête sont relevés au journal » ; « Le tableau de bord montre la tendance de la durée de la CI et du cache lu par requête, avec un seuil d'alerte non bloquant »
+**Raison** : Sans tendance visible, une CI qui ralentit ou un contexte relu qui grossit ne se remarque qu'à la gêne ; un contrat attesté sur une durée dépend de la charge de la forge, d'où un indicateur.

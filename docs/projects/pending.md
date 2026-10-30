@@ -120,9 +120,6 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P2] Indicateurs : durée de la CI et contexte relu suivis dans le
-  tableau de bord (cadré le 2026-10-30) —
-  `docs/projects/releves-de-ci-et-de-contexte.md`.
 - [ ] [IA] [P2] Release allégée : réglage `release.mode` solo / équipe, patch
   publié directement, note de recette dans la release (cadré le 2026-10-30) —
   `docs/projects/release-allegee.md`.

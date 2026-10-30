@@ -13,12 +13,18 @@ Statut d'origine : proposée le 2026-10-24 — limite du chantier « accélérer
 Fait le 2026-10-25 (journal) : la durée du job `checks` est relevée à la main
 dans le journal de chaque chantier (référence de CI, catégorie hooks modifiés
 ou inchangés), sans blocage ; QUA-122 est conservé comme preuve historique
-(`docs/mesures-ci-reference.md`). Reste : tendance dans le tableau de bord et
-seuil d'alerte non bloquant, réévalués au fil du projet.
+(`docs/mesures-ci-reference.md`). Fait le 2026-10-30 : tendance dans le
+tableau de bord et seuil d'alerte non bloquant (QUA-198, tendance de la durée
+de CI et du cache lu par requête). Reste : réévaluer le seuil au fil des
+relevés.
 
 ### relever la durée du job `checks` quand les hooks sont inchangés (ex-« releve-duree-checks-hooks-inchanges »)
 
 Statut d'origine : proposée le 2026-10-24 — limite du chantier « accélérer la CI sans perte de qualité » (décision du demandeur, critère de durée, QUA-122).
+
+Reporté par le demandeur le 2026-10-30 : le relevé reste vide jusqu'au
+prochain chantier ordinaire clos à hooks inchangés ; le tableau de bord le
+montrera dès qu'une ligne « hooks inchangés » sera au journal.
 
 Le saut du rejeu par la branche principale (QUA-123) n'agit qu'une fois
 fusionné : la CI lit sur master l'ancienne copie de `.githooks/base-checks.mjs`. Gain
@@ -28,6 +34,18 @@ attendu : environ 2 minutes de moins que les passages à hooks modifiés
 ### relever le cache lu moyen par requête après la réduction du contexte (ex-« releve-cache-lu-par-requete »)
 
 Statut d'origine : proposée le 2026-10-24 — limite du chantier « réduire le contexte relu par chantier » (décision du demandeur : l'indicateur sorti des critères d'acceptation devient un relevé, sans seuil).
+
+En attente du demandeur (2026-10-30) : choisir deux paires de chantiers
+comparables, avant et après la réduction du contexte (journal du 2026-10-24).
+Paires proposées d'après les requêtes et le cache lu par requête de
+`usage.jsonl` (le risque de chaque fiche est à confirmer) : A, de 80 à 115
+requêtes, `premier-commit-avant-adoption` (115, 145 k) et
+`barriere-commit-de-fusion` (99, 105 k) le 2026-10-23, contre
+`adopter-seuil-couverture` (114, 141 k) et `couverture-du-code-modifie` (83,
+106 k) le 2026-10-30 ; B, de 50 à 60 requêtes, `verify-reprise-par-controle`
+(52, 105 k) et `stab-squash` (52, 92 k), contre `e2e-et-attestation-precises`
+(52, 74 k) et `registre-vise-les-sections-d-ia-first` (60, 70 k). Le
+tableau de bord montre déjà la tendance du cache lu par requête.
 
 Savoir si la lecture ciblée (QUA-124, lecture d'un contrat ou d'une entrée de
 journal par son identifiant), les sorties courtes (QUA-126, `run-checks` limité

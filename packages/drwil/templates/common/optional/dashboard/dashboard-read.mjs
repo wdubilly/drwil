@@ -163,3 +163,31 @@ export function staleDays(audit) {
   const days = Math.floor((Date.now() - new Date(m[0]).getTime()) / 86400000);
   return days >= STALE_AFTER_DAYS ? days : null;
 }
+
+// Trends (indicators, never blocking): CI duration noted by hand in the journal, cache read per request
+// from the usage file. Alert thresholds: CI 3m55 (30 % under the ~5m35 reference), cache 25 % above
+// the ~170 k reference — to re-evaluate as readings accumulate.
+export const THRESHOLDS = { ci: 235, cache: 212500 };
+const CI_LINE_RE = /^- \*\*Durée de CI \(job checks\)\*\*\s*:\s*(?:(\d+)\s*m\s*(\d+)|(\d+)\s*s)\b(.*)$/i;
+export function readCiDurations(path) {
+  if (!existsSync(path)) return [];
+  let date = "";
+  const out = [];
+  for (const l of readFileSync(path, "utf8").split(/\r?\n/)) {
+    const h = l.match(/^## (\d{4}-\d{2}-\d{2})/);
+    const m = l.match(CI_LINE_RE);
+    if (h) date = h[1];
+    else if (m && /hooks inchangés|hooks unchanged/i.test(m[4])) out.push({ label: date, value: m[3] ? +m[3] : +m[1] * 60 + +m[2] });
+  }
+  return out;
+}
+export const cachePerRequest = (entries) =>
+  entries
+    .filter((e) => Number(e.requests) > 0 && Number(e.cache_read) > 0)
+    .map((e) => ({ label: e.workstream, value: Math.round(e.cache_read / e.requests) }));
+export function trend(points, threshold, window = 5) {
+  const last = points.slice(-window);
+  if (!last.length) return null;
+  const mean = Math.round(last.reduce((s, p) => s + p.value, 0) / last.length);
+  return { points: last, mean, alert: mean > threshold };
+}
