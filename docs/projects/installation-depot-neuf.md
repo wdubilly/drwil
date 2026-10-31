@@ -54,14 +54,14 @@ panne ou décide à la place de l'utilisateur :
 
 - Sur un dépôt distant sans aucune branche, le tout premier envoi de la branche principale est accepté une
   seule fois par le hook de push ; dès que le distant a une branche principale, tout envoi direct est
-  refusé comme avant — contrat à créer
+  refusé comme avant — `QUA-017`
 - La recette d'un projet neuf dit comment faire ce premier envoi, et que l'exception ne vaut qu'une fois —
-  contrat à créer
+  `QUA-017`
 - `drwil guarantees --protect`, avec l'accord de l'humain, active aussi l'auto-merge du dépôt GitHub avec la
-  protection de la branche principale, et `drwil doctor` dit si l'auto-merge est autorisé — contrat à créer
+  protection de la branche principale, et `drwil doctor` dit si l'auto-merge est autorisé — `QUA-202`
 - `init` demande à l'humain quels outils IA configurer en terminal interactif ; sans terminal, il refuse
-  de choisir à sa place et demande `--tools` — contrat à créer
-- La recette d'adoption dit ce que chaque outil IA ajoute au dépôt — [humain] — contrat à créer
+  de choisir à sa place et demande `--tools` — `QUA-203`
+- La recette d'adoption dit ce que chaque outil IA ajoute au dépôt — [humain] — `QUA-203`
 
 ## Contrats modifiés
 
@@ -70,6 +70,10 @@ panne ou décide à la place de l'utilisateur :
   un distant vide est excepté) — raison : sur un dépôt distant vide, aucune branche principale n'existe pour
   fusionner une PR ; l'exception est bornée à ce seul envoi, sans porte de sortie configurable (validé le
   2026-10-30)
+- `.githooks/pre-push` — passe le distant visé au contrôle (validé par le demandeur le 2026-10-31)
+- `.githooks/engine-branch.mjs` — exception : premier envoi vers un distant sans branche (validé par le demandeur le 2026-10-31)
+- `.githooks/engine-texts.mjs` — texte fr/en de ce cas (validé par le demandeur le 2026-10-31)
+- `.githooks/engine.test.mjs` — tests de l'exception (validé par le demandeur le 2026-10-31)
 
 ## 2. Hors périmètre
 

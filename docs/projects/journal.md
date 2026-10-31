@@ -3947,3 +3947,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : `docs/recettes/README.md` dit encore que la note « sans verdict » arrive par la PR, dans `docs/intentions/recettes-readme-note-sans-verdict.md` ; les copies `.githooks/` du module de release ne sont pas déclarées dans `scopeMirrors`, dans `docs/intentions/copies-create-release-dans-scope-mirrors.md`.
 - **Preuve de clôture** : `docs/preuves/release-allegee.md`.
 - **Clôturé par** : la branche `workstream/release-allegee`.
+
+## 2026-10-31 — L'installation d'un dépôt neuf ne bloque plus et ne choisit plus à la place de l'humain
+
+- **Décisions clés** : deux contrats neufs, QUA-202 (`drwil guarantees --protect` autorise aussi l'auto-merge du dépôt GitHub, `drwil doctor` dit s'il l'est) et QUA-203 (`drwil init` demande les outils IA à l'humain, refuse de les choisir sans terminal et nomme alors `--tools`).
+- **Contrats modifiés** : QUA-017 (pas de travail direct sur la branche principale) : le tout premier envoi vers un distant sans aucune branche est accepté une seule fois ; le commit local reste refusé et l'exception n'est pas configurable.
+- **Hooks modifiés** : `.githooks/pre-push`, `.githooks/engine-branch.mjs`, `.githooks/engine-texts.mjs`, `.githooks/engine.test.mjs` (gabarit et copie), validé par le demandeur le 2026-10-31.
+- **Décisions de l'humain en cours de route** : périmètre élargi à `outils/tester-tarball.mjs` (le contrôle du tarball lance `init` sans terminal et doit passer `--tools`).
+- **Limites connues** : la saisie interactive réelle des outils (`askTerminal` sur un vrai terminal) n'est testée que par des flux simulés.
+- **Preuve de clôture** : docs/preuves/installation-depot-neuf.md.
+- **Clôturé par** : la branche `workstream/installation-depot-neuf`.
