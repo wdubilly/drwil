@@ -47,6 +47,14 @@ local commands (git status, diff, log, add, commit; `gh pr view`, `gh pr checks`
 an allow rule opens no gesture that the hooks or the forge refuse. Personal exemptions go into
 the gitignored local settings file of the same folder.
 
+### First commit of a new project
+
+On an empty folder, `drwil init` creates the git repository on the `workstream/kit-installation` branch and
+commits the kit itself, before enabling the hooks: with `scopeGate` blocking, the files of the kit (outside any
+brief) could not be committed in SCOPING, and the first workstream would start on a refused commit. A folder
+that is already a git repository is never committed by `init`; if git has no identity, `init` says so and the
+commit is left to you.
+
 ## 4. Build the tarball of a version
 
 ```bash

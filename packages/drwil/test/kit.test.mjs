@@ -508,14 +508,15 @@ test("le hook refuse un commit dont la doc cite un chemin inexistant", async () 
   await quiet(() => init({ lang: "fr", targetDir: dir }));
   enAvertissement(dir);
   assert.equal(git(dir, "add", "-A").status, 0);
-  assert.equal(git(dir, "commit", "-qm", "init").status, 0, "premier commit accepté");
+  assert.equal(git(dir, "commit", "-qm", "init", "--allow-empty").status, 0, "premier commit accepté");
+  const avant = git(dir, "rev-list", "--count", "HEAD").stdout.trim();
   appendFileSync(join(dir, "docs/ia-first.md"), "\nVoir `docs/inexistant.md` et SEC-999.\n");
   git(dir, "add", "-A");
   const r = git(dir, "commit", "-qm", "casse");
   assert.notEqual(r.status, 0);
   assert.match(r.stdout + r.stderr, /docs\/inexistant\.md/);
   assert.match(r.stdout + r.stderr, /SEC-999/);
-  assert.equal(git(dir, "rev-list", "--count", "HEAD").stdout.trim(), "1");
+  assert.equal(git(dir, "rev-list", "--count", "HEAD").stdout.trim(), avant);
 });
 
 test("chemin cité : un fichier ignoré par Git ne vaut pas preuve (local = CI) ; « (si présent) » aussi sur la ligne suivante", async () => {
@@ -5416,4 +5417,66 @@ test("QUA-203 init demande les outils IA à l'humain et ne les choisit jamais à
   assert.equal(r.status, 1);
   assert.match(r.stderr, /--tools/);
   assert.equal(existsSync(join(vide, ".drwil")), false);
+});
+
+test("init sur un dossier neuf commite le kit sur la branche d'installation, avant les hooks", async () => {
+  const id = { GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@t", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@t" };
+  const avant = Object.fromEntries(Object.keys(id).map((k) => [k, process.env[k]]));
+  Object.assign(process.env, id);
+  try {
+    const dir = tmp();
+    const lignes = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+    assert.ok(
+      lignes.some((l) => l.includes("Kit commité sur la branche « workstream/kit-installation »")),
+      lignes.join("\n"),
+    );
+    assert.equal(git(dir, "symbolic-ref", "--short", "HEAD").stdout.trim(), "workstream/kit-installation");
+    assert.equal(git(dir, "rev-list", "--count", "HEAD").stdout.trim(), "1");
+    assert.equal(git(dir, "log", "-1", "--format=%s").stdout.trim(), "Installation du kit drwil");
+    assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", "rien à commiter : le premier chantier se lance");
+    assert.ok(git(dir, "ls-files", ".githooks/state.mjs").stdout.includes("state.mjs"));
+    // Un dépôt déjà commité n'est jamais touché : seul un dépôt créé par init reçoit le commit initial.
+    const relance = await capture(() => init({ lang: "en", targetDir: dir, name: "demo" }));
+    assert.ok(!relance.some((l) => l.includes("Kit committed")), relance.join("\n"));
+    assert.equal(git(dir, "rev-list", "--count", "HEAD").stdout.trim(), "1");
+    // Sans identité git : l'échec est dit, l'installation ne casse pas.
+    for (const k of Object.keys(id)) delete process.env[k];
+    const home = tmp();
+    const sauve = {
+      HOME: process.env.HOME,
+      XDG: process.env.XDG_CONFIG_HOME,
+      GC: process.env.GIT_CONFIG_GLOBAL,
+      GS: process.env.GIT_CONFIG_NOSYSTEM,
+    };
+    Object.assign(process.env, { HOME: home, XDG_CONFIG_HOME: home, GIT_CONFIG_GLOBAL: join(home, "none"), GIT_CONFIG_NOSYSTEM: "1" });
+    try {
+      const sans = [];
+      const warn = console.warn;
+      console.warn = (...a) => sans.push(a.join(" "));
+      try {
+        await capture(() => init({ lang: "en", targetDir: tmp(), name: "demo" }));
+      } finally {
+        console.warn = warn;
+      }
+      assert.ok(
+        sans.some((l) => l.includes("initial kit commit not made")),
+        sans.join("\n"),
+      );
+    } finally {
+      process.env.HOME = sauve.HOME;
+      for (const [k, v] of [
+        ["XDG_CONFIG_HOME", sauve.XDG],
+        ["GIT_CONFIG_GLOBAL", sauve.GC],
+        ["GIT_CONFIG_NOSYSTEM", sauve.GS],
+      ]) {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      }
+    }
+  } finally {
+    for (const [k, v] of Object.entries(avant)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
 });

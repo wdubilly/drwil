@@ -4,6 +4,7 @@ import { isKitProse, isMechanics, readConfig, resolve, type InitOptions, type Re
 import { readManifest, sha256 } from "./manifest.js";
 import type { Overwrite } from "./render.js";
 import { detectStack } from "./stack.js";
+import { fill, type MessageLang } from "./i18n.js";
 
 export interface InstallChoices {
   r: Resolved;
@@ -37,4 +38,34 @@ export function installChoices(opts: InitOptions): InstallChoices {
     ? () => true
     : (rel) => (isMechanics(rel) && unchanged(rel)) || (isKitProse(rel) && recorded(rel));
   return { r, existing, previous, shouldOverwrite };
+}
+
+const COMMIT_TEXTS = {
+  fr: {
+    committed: "Kit commité sur la branche « {0} » (commit initial, avant l'activation des hooks).",
+    notCommitted: "⚠ commit initial du kit non fait ({0}) : le commiter à la main avant de lancer un chantier.",
+    message: "Installation du kit drwil",
+  },
+  en: {
+    committed: 'Kit committed on branch "{0}" (initial commit, before the hooks are enabled).',
+    notCommitted: "⚠ initial kit commit not made ({0}): commit it by hand before starting a workstream.",
+    message: "Install the drwil kit",
+  },
+};
+
+// Only on the repository `init` has just created (no commit yet), on the installation branch and
+// before core.hooksPath is set: with `scopeGate` blocking (QUA-154), files outside any brief could not
+// be committed in SCOPING afterwards, so the first workstream would start on a refused commit.
+export function commitKit(lang: MessageLang, branch: string, git: (...args: string[]) => string): void {
+  const T = COMMIT_TEXTS[lang];
+  try {
+    git("add", "-A");
+    git("commit", "-m", T.message);
+    console.log(fill(T.committed, branch));
+  } catch (e) {
+    const detail = String((e as { stderr?: Buffer }).stderr ?? (e as Error).message)
+      .trim()
+      .split("\n")[0];
+    console.warn(fill(T.notCommitted, detail));
+  }
 }

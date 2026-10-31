@@ -113,9 +113,9 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-31) : lots 1 et 2 livrés. Lot 1 : règles `allow` gh en lecture et outils `.githooks` en lecture
+- **Dernier état** (2026-10-31) : lots 1, 2 et 3 livrés. Lot 3 : `init` commite le kit (`workstream/kit-installation`, avant `core.hooksPath`) seulement sur le dépôt qu'il vient de créer ; sans identité git il le dit sans casser ; recette, INSTALL.md et CHANGELOG à jour ; test sur dossier vide. Lot 1 : règles `allow` gh en lecture et outils `.githooks` en lecture
   dans le gabarit et la copie, `ask` conservé. Lot 2 : le hook refuse un sondage sans `drwil-worktree` (formes Claude Code et
   Copilot CLI), `state.mjs start` au terminal pose la question du worktree (`WORKTREE`), le skill dit que la question est
   toujours posée (« Ce dossier » quand aucun dossier frère n'est possible). Les contrats à créer restent à écrire à la clôture.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 3, commit initial du kit.
+- **Prochaine étape** : vérifier et clore (contrats à créer à la clôture).

@@ -32,7 +32,7 @@ export { skeletonFiles, type CoverageTool, type Exec } from "./guarantees-table.
 export { COVERAGE_TOOLS, toolFor } from "./guarantees-tools.js";
 import { readConfig, type InitOptions, type Resolved } from "./config.js";
 import { writeConfig } from "./config-write.js";
-import { installChoices } from "./install.js";
+import { commitKit, installChoices } from "./install.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { scaffold } from "./render.js";
 import { assertSafeManifest, engineVersion, removeObsolete, writeInstall, writeManifest } from "./manifest.js";
@@ -98,6 +98,7 @@ function setupGit(targetDir: string, allowInit: boolean, lang: MessageLang): voi
     // Before any commit: never on master/main (see QUA-017, no more bootstrap exception).
     git("checkout", "-b", INSTALL_BRANCH);
     console.log(fill(T.repoCreated, INSTALL_BRANCH));
+    commitKit(lang, INSTALL_BRANCH, git);
   }
   // A hook manager of the project (husky, lefthook…) is never switched off: findGaps() reports the
   // drwil hooks to call from it.

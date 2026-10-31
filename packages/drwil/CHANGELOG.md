@@ -7,6 +7,10 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil init` on an empty folder now commits the kit itself, on the `workstream/kit-installation`
+  branch it creates and before enabling the hooks, so the first workstream no longer starts on a
+  refused commit (`scopeGate` blocking). A folder that is already a git repository is left untouched;
+  without a git identity, `init` says the commit was not made.
 - Release module: new setting `release.mode` in `.drwil/ia-first.json`, `solo` (the
   default) or `team`. Behaviour change for projects that have the module: without
   the key, `solo` applies, and `team` is the way to keep the candidate, verdict and
