@@ -31,6 +31,16 @@ files:
   - docs/contracts-catalog.md
   - docs/projects/kit-mechanics.md
   - .drwil/ia-first.json
+  - .claude/hooks/prompt-hook.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs
+  - .githooks/state-cli.mjs
+  - .githooks/state-texts.mjs
+  - .githooks/state-messages-fr.mjs
+  - .githooks/state-messages-en.mjs
+  - packages/drwil/templates/common/base/.githooks/state-cli.mjs
+  - packages/drwil/templates/common/base/.githooks/state-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
 -->
 
 ## 1. Besoin
