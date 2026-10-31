@@ -2103,6 +2103,19 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
     allow.filter((r) => r.startsWith("Bash(git ")).every((r) => /^Bash\(git [a-z-]+(:\*)?\)$/.test(r)),
     "allow git = préfixes de sous-commande",
   );
+  // Autorisations livrées : lectures gh et outils .githooks sans demande ; push, merge, rebase gardent leur demande.
+  const reglesPerm = JSON.parse(read(dir, ".claude/settings.json")).permissions;
+  for (const regle of [
+    "Bash(gh pr view:*)",
+    "Bash(gh pr checks:*)",
+    "Bash(node .githooks/state.mjs)",
+    "Bash(node .githooks/glossary.mjs:*)",
+  ])
+    assert.ok(reglesPerm.allow.includes(regle), regle);
+  for (const regle of ["Bash(git push:*)", "Bash(git merge:*)", "Bash(git rebase:*)"]) {
+    assert.ok(reglesPerm.ask.includes(regle), regle);
+    assert.ok(!reglesPerm.allow.includes(regle), regle);
+  }
 });
 
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {

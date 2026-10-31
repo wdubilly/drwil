@@ -38,6 +38,15 @@ From the repository root: `node .githooks/run-checks.mjs` replays every
 check, `node outils/tester-tarball.mjs` exercises the CLI installed from
 the tarball, as a user would.
 
+### Permission prompts in Claude Code
+
+An installed project ships `.claude/settings.json`, which allows without a prompt the everyday read and
+local commands (git status, diff, log, add, commit; `gh pr view`, `gh pr checks`; the read-only
+`.githooks` tools such as `.githooks/state.mjs` and `.githooks/glossary.mjs`). Claude Code still asks before `git push`,
+`merge` and `rebase`, and the deny rules (`--no-verify`, `git -c`, the state file) are untouched:
+an allow rule opens no gesture that the hooks or the forge refuse. Personal exemptions go into
+the gitignored local settings file of the same folder.
+
 ## 4. Build the tarball of a version
 
 ```bash

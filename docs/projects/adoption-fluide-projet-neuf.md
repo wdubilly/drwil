@@ -103,6 +103,8 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-30) : cadré, aucun code.
+- **Dernier état** (2026-10-31) : lot 1 livré (règles `allow` gh en lecture et outils `.githooks` en lecture dans
+  le gabarit et la copie, `ask` conservé, test dans `packages/drwil/test/kit.test.mjs`, section INSTALL.md). Le contrat à créer reste
+  à écrire à la clôture.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] lancer par `/drwil-start`, après `installation-depot-neuf`.
+- **Prochaine étape** : lot 2, worktree obligatoire.

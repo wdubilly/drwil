@@ -134,6 +134,17 @@
       "Bash(git restore:*)",
       "Bash(git stash:*)",
       "Bash(git reset:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr status:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(node .githooks/state.mjs)",
+      "Bash(node .githooks/state.mjs reminder)",
+      "Bash(node .githooks/glossary.mjs:*)",
+      "Bash(node .githooks/pr-watch.mjs:*)",
+      "Bash(node .githooks/note.mjs:*)",
       "Bash(node .githooks/run-checks.mjs)"{{stackAllowJson}}
     ],
     "ask": [
