@@ -6,7 +6,7 @@ const MARK = "drwil-start";
 // Optional second question (Claude Code) or field (Copilot CLI) of the same poll: authorise the automatic merge.
 const MERGE_MARK = "drwil-merge";
 const MERGE_YES_RE = /^(fusion automatique|automatic merge)\b/i;
-// Optional third question or field: run the workstream in a new worktree (QUA-142).
+// Third question or field, required (a poll without it is refused): run the workstream in a new worktree (QUA-142).
 const WORKTREE_MARK = "drwil-worktree";
 const WORKTREE_YES_RE = /^(nouveau worktree|new worktree)\b/i;
 // Optional fourth question or field: run the chosen briefs in parallel, one worktree each (QUA-147).
@@ -32,6 +32,7 @@ export function startPoll(input) {
       question: q.question,
       mergeQuestion: qMerge?.question ?? null,
       worktreeQuestion: qWorktree?.question ?? null,
+      worktreeMissing: !qWorktree,
       parallelQuestion: qParallel?.question ?? null,
       options: Array.isArray(q.options) ? q.options.map((o) => o?.label) : [],
       prefilled: Boolean(e.answers && Object.keys(e.answers).length),
@@ -56,6 +57,7 @@ export function startPoll(input) {
       multiple: field?.type === "array",
       mergeKey,
       worktreeKey,
+      worktreeMissing: !worktreeKey,
       parallelKey,
       keys,
       prefilled: properties.some((p) => p && "default" in p),

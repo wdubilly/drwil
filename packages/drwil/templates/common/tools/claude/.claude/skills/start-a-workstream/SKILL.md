@@ -39,7 +39,7 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      Only for briefs whose scope touches code: a brief whose scope is documentation only
      (Markdown files, `docs/`) gets no `drwil-merge` question — its PR is put in automatic merge
      by the agent (« Documentation-only PR » rule of `AGENTS.md`), if the repository allows it.
-   - **Worktree question** (optional, only when the repository can host sibling folders): Claude
+   - **Worktree question** (required, always asked: a poll without it is refused by the hook; when the repository cannot host sibling folders, the question is still asked and "This folder" is the answer): Claude
      Code, a question of the same poll, `header` exactly `drwil-worktree`, options "New worktree"
      (the workstream runs in a new sibling folder `../<repository>-<brief>`, branch
      `workstream/<brief>` cut from the up-to-date main branch) and "This folder", no recommendation;

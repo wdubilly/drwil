@@ -115,6 +115,7 @@ export const MESSAGES_FR = {
   refine: " · à affiner : à revoir avant de la lancer",
   pick: "Numéro de la fiche à lancer : ",
   confirmStart: `Lancer {0} ? Retapez START : `,
+  askWorktree: "Dans un nouveau worktree frère ? Retapez WORKTREE, sinon Entrée (ce dossier) : ",
   askMerge: "Fusion automatique à la fin du chantier ? Retapez MERGE, sinon Entrée : ",
   notConfirmed: "✗ lancement non confirmé : état inchangé",
   unreadableState: `[drwil] état de gouvernance illisible : {0}`,

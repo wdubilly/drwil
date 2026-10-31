@@ -86,7 +86,7 @@ export async function main(args, root, input = process.stdin) {
     const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
     let choice = args[1];
     let human = false;
-    let autoMerge = false;
+    let [autoMerge, inWorktree] = [false, false];
     if (tty) {
       // An interactive terminal: the human chooses themselves (never a preselected choice).
       const { createInterface } = await import("node:readline/promises");
@@ -106,6 +106,7 @@ export async function main(args, root, input = process.stdin) {
         }
         human = choice !== undefined && (await rl.question(fill(T.confirmStart, choice))).trim() === "START";
         if (human) autoMerge = (await rl.question(T.askMerge)).trim() === "MERGE";
+        if (human) inWorktree = (await rl.question(T.askWorktree)).trim() === "WORKTREE";
       } finally {
         rl.close();
       }
@@ -114,6 +115,7 @@ export async function main(args, root, input = process.stdin) {
         return 1;
       }
     }
+    if (inWorktree) return report(await (await import("./worktree.mjs")).launchInWorktree(root, choice, { autoMerge }), root);
     const r = start(root, choice, { human, autoMerge, request: option(args, "--request") });
     return report(r, root);
   }

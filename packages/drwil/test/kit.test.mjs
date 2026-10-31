@@ -1641,12 +1641,23 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
         ],
         multiSelect: false,
       },
+      { question: "Où lancer ?", header: "drwil-worktree", options: [{ label: "Nouveau worktree" }, { label: "Ce dossier" }] },
     ],
   };
   const copilot = {
     message: "drwil-start : quelle fiche lancer ?",
-    requestedSchema: { properties: { choix: { type: "string", enum: [fiche, "docs/projects/autre.md"] } } },
+    requestedSchema: {
+      properties: {
+        choix: { type: "string", enum: [fiche, "docs/projects/autre.md"] },
+        "drwil-worktree": { type: "string", enum: ["New worktree", "This folder"] },
+      },
+    },
   };
+  // La question drwil-worktree est obligatoire : sans elle, le sondage est refusé avant l'affichage.
+  const sansWorktree = { questions: [claude.questions[0]] };
+  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: sansWorktree }).status, 2);
+  const copilotSans = { message: copilot.message, requestedSchema: { properties: { choix: copilot.requestedSchema.properties.choix } } };
+  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: copilotSans }).status, 2);
 
   // Le modèle ne répond pas à la place de l'humain et ne présélectionne rien : refusé avant l'affichage.
   assert.equal(
@@ -1733,7 +1744,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     hook_event_name: "PostToolUse",
     tool_name: "AskUserQuestion",
     tool_input: copilot,
-    tool_result: { result_type: "success", text_result_for_llm: "User responded: docs/projects/autre.md" },
+    tool_result: { result_type: "success", text_result_for_llm: "User responded: choix=docs/projects/autre.md" },
   });
   assert.match(refus.stdout, /n'est pas une fiche cadrée/);
   assert.equal(etat(), null);
@@ -1741,7 +1752,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     hook_event_name: "PostToolUse",
     tool_name: "AskUserQuestion",
     tool_input: copilot,
-    tool_result: { result_type: "success", text_result_for_llm: `User responded: ${fiche}` },
+    tool_result: { result_type: "success", text_result_for_llm: `User responded: choix=${fiche}` },
   });
   assert.equal(etat().activity, "BUILD");
   assert.equal(etat().auto_merge, undefined);
@@ -1753,6 +1764,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
       properties: {
         choix: copilot.requestedSchema.properties.choix,
         "drwil-merge": { type: "string", enum: ["Automatic merge", "Manual merge"] },
+        "drwil-worktree": copilot.requestedSchema.properties["drwil-worktree"],
       },
     },
   };
@@ -1982,6 +1994,7 @@ test("QUA-165 : sous Copilot CLI, le champ des fiches à choix multiple (array, 
     properties: {
       fiche: { type: "array", items: { type: "string", enum: fiches } },
       "drwil-merge": { type: "string", enum: ["Automatic merge", "Manual merge"] },
+      "drwil-worktree": { type: "string", enum: ["New worktree", "This folder"] },
       "drwil-parallel": { type: "string", enum: ["Parallel queue", "Sequential queue"] },
     },
   };

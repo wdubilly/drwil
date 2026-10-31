@@ -36,6 +36,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const TEXTS = {
   fr: {
     refused: "drwil : sondage de lancement refusé — il ne doit contenir ni réponse ni valeur par défaut ; c'est l'humain qui choisit.",
+    noWorktree:
+      "drwil : sondage de lancement refusé — il manque la question `drwil-worktree` (« Nouveau worktree » ou « Ce dossier ») ; elle est toujours posée, c'est l'humain qui choisit.",
     notNow: "rien n'est lancé (réponse « Pas maintenant ») : l'état est inchangé.",
     noAnswer:
       "aucune réponse lue dans le sondage de lancement : rien n'est lancé, l'état est inchangé. Repli : `node .githooks/state.mjs start` dans un terminal interactif.",
@@ -48,6 +50,8 @@ const TEXTS = {
   },
   en: {
     refused: "drwil: start poll refused — it must contain neither an answer nor a default value; the human chooses.",
+    noWorktree:
+      "drwil: start poll refused — the `drwil-worktree` question is missing (« New worktree » or « This folder »); it is always asked, the human chooses.",
     notNow: "nothing started (answer « Not now »): the state is unchanged.",
     noAnswer:
       "no answer read in the start poll: nothing started, the state is unchanged. Fallback: `node .githooks/state.mjs start` in an interactive terminal.",
@@ -116,10 +120,17 @@ async function main() {
   if (!poll) return scopeHook(input);
   const event = input.hook_event_name;
   if (event === "PreToolUse") {
-    if (!poll.prefilled) return 0;
-    // Exit code 2: the tool blocks the call and gives this message back to the model.
-    console.error(TEXTS[language()].refused);
-    return 2;
+    if (poll.prefilled) {
+      // Exit code 2: the tool blocks the call and gives this message back to the model.
+      console.error(TEXTS[language()].refused);
+      return 2;
+    }
+    // The worktree question is the human's choice and is always asked ("This folder" when no sibling folder is possible).
+    if (poll.worktreeMissing) {
+      console.error(TEXTS[language()].noWorktree);
+      return 2;
+    }
+    return 0;
   }
   if (event !== "PostToolUse") return 0;
   const T = TEXTS[language()];
