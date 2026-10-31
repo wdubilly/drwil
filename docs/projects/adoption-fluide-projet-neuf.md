@@ -62,7 +62,7 @@ l'installation de `drwil_walk` et à `drwil_dbox` :
   première exige une preuve de l'origine humaine, la seconde un choix de conception de la commande).
 - Retirer le « ask » sur `git push`, `merge` et `rebase` : gardé (option écartée).
 - Un projet avec code existant (`docs/intentions/adoption-et-init.md`).
-- Le choix des outils IA et la première branche principale : `docs/projects/installation-depot-neuf.md`.
+- Le choix des outils IA et la première branche principale : `docs/projects/journal.md`.
 
 ## 3. Contraintes
 
@@ -71,7 +71,7 @@ l'installation de `drwil_walk` et à `drwil_dbox` :
   (push sur la branche principale, QUA-017) ; elle ne coupe aucun contrôle.
 - Le commit initial de `init` se fait avant toute barrière active et jamais sur la branche principale
   (QUA-017) : sur la branche d'installation déjà créée par `init`.
-- Chevauche `docs/projects/installation-depot-neuf.md` (`packages/drwil/src/index.ts`,
+- Chevauche `docs/projects/journal.md` (`packages/drwil/src/index.ts`,
   `docs/recipes/adopt-the-kit.md`) : à lancer après elle.
 - Doc visiteur (`INSTALL.md`, `packages/drwil/CHANGELOG.md`) en anglais.
 
