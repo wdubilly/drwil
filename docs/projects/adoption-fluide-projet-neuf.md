@@ -66,6 +66,13 @@ l'installation de `drwil_walk` et à `drwil_dbox` :
 - La recette d'adoption et `INSTALL.md` disent ce que fait `init` du premier commit et pourquoi une
   autorisation n'est pas demandée — [humain] — `QUA-207`
 
+## Contrats modifiés
+
+- `.githooks/state-cli.mjs` — `state.mjs start` propose le worktree (validé par le demandeur le 2026-10-31)
+- `.githooks/state-messages-fr.mjs` — textes français de cette question (validé par le demandeur le 2026-10-31)
+- `.githooks/state-messages-en.mjs` — textes anglais de cette question (validé par le demandeur le 2026-10-31)
+- `.githooks/state.test.mjs` — test du cas WORKTREE au terminal (validé par le demandeur le 2026-10-31)
+
 ## 2. Hors périmètre
 
 - Attester depuis le chat, et ajouter ou adopter un contrat par commande : deux fiches à cadrer ensuite (la
