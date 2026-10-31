@@ -1,7 +1,7 @@
 # Preuve de clôture — installation-depot-neuf
 
 **Clos le** : 2026-10-31
-**Commit vérifié** : `7a658f2f11` — verdict `drwil verify` : PASS
+**Commit vérifié** : `1b87bebd2c` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:24c13fd97b01f55e`, acceptés par l'humain au lancement le 2026-10-31
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
