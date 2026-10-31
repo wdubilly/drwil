@@ -16,7 +16,7 @@ const faux = (regles) => (cmd) => {
   for (const [motif, reponse] of regles) if (motif.test(cmd)) return reponse;
   return { status: 1, stdout: "" };
 };
-const FORGE = [
+const FORGE_SANS_REGLAGE = [
   [/^git rev-parse --is-inside-work-tree/, OK],
   [/^git symbolic-ref/, { status: 0, stdout: "refs/remotes/origin/main\n" }],
   [/^git remote get-url origin/, { status: 0, stdout: "git@github.com:x/y.git\n" }],
@@ -24,6 +24,7 @@ const FORGE = [
   [/rules\/branches\/main/, json([{ ruleset_id: 7, type: "pull_request" }, { type: "required_status_checks" }])],
   [/rulesets\/7/, json({ bypass_actors: [] })],
 ];
+const FORGE = [...FORGE_SANS_REGLAGE, [/^gh api repos\/\{owner\}\/\{repo\}$/, json({ allow_auto_merge: true })]];
 const lire = (dir, f) => readFileSync(join(dir, f), "utf8");
 const reglage = (dir, cle, valeur) =>
   writeFileSync(
@@ -137,4 +138,24 @@ test("QUA-155 : doctor affiche le niveau en texte et en --json, en français et 
   assert.match(english, /Protection level: 1\/4/);
   assert.match(english, /✗ 2 Local governance active — not reached : scope gate \(scopeGate\) is "warning", not blocking/);
   assert.match(english, /Next level: node -e/);
+});
+
+test("QUA-202 : doctor dit si l'auto-merge du dépôt est autorisé ; refusé, le niveau 4 n'est pas atteint, illisible il est non vérifié", async () => {
+  const dir = await projet();
+  const depot = (reponse) => [/^gh api repos\/\{owner\}\/\{repo\}$/, reponse];
+  let p = await niveau(dir, [...FORGE_SANS_REGLAGE, depot(json({ allow_auto_merge: true }))]);
+  assert.equal(p.level, 4);
+  assert.match(p.levels[3].detail, /auto-merge du dépôt autorisé/);
+  p = await niveau(dir, [...FORGE_SANS_REGLAGE, depot(json({ allow_auto_merge: false }))]);
+  assert.equal(p.level, 3);
+  assert.equal(p.levels[3].state, "missing");
+  assert.match(p.levels[3].detail, /auto-merge du dépôt non autorisé/);
+  assert.match(p.next, /drwil guarantees --protect/);
+  p = await niveau(dir, FORGE_SANS_REGLAGE);
+  assert.equal(p.levels[3].state, "unverified");
+  assert.match(p.levels[3].detail, /auto-merge du dépôt non vérifié/);
+  assert.match(
+    formatDiagnosis(await doctor({ targetDir: dir, exec: faux([...FORGE_SANS_REGLAGE, depot(json({ allow_auto_merge: false }))]) })),
+    /✗ 4 .*auto-merge du dépôt non autorisé/,
+  );
 });

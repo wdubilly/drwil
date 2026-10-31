@@ -2643,6 +2643,20 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-202",
+      "name": "tests de QUA-202, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-202 \" packages/drwil/test/guarantees.test.mjs packages/drwil/test/protection.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "name": "code modifié couvert à 100 % : lignes et branches du diff de la branche (diffCoverage)",
       "run": "node .githooks/check-diff-coverage.mjs",

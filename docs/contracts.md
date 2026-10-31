@@ -1957,3 +1957,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/create-release.test.mjs`
 **Origine** : release-allegee — « En `team`, la création directe d'une release est refusée et dit d'utiliser `--candidate` »
 **Raison** : Une équipe qui a choisi le verdict humain ne doit pas pouvoir le contourner par un geste direct.
+
+## QUA-202 — `--protect` autorise aussi l'auto-merge du dépôt GitHub, et `doctor` dit s'il l'est
+**Règle** : Livré à tout projet sur GitHub. `drwil guarantees --protect`, avec l'accord de l'humain et jamais à blanc (`--dry-run`) ni sans `--protect`, active le réglage « Allow auto-merge » du dépôt (`gh api -X PATCH repos/{owner}/{repo} -F allow_auto_merge=true`) lorsqu'il le lit refusé, que la protection de la branche soit posée dans le même geste ou déjà tenue ; il relit le réglage ensuite et ne dit « autorisé » que s'il l'est, un refus de la forge (droit administrateur absent) est dit, jamais annoncé posé. `drwil doctor` lit `allow_auto_merge` : autorisé, il l'écrit au niveau 4 ; refusé, le niveau 4 n'est pas atteint et la commande suivante est `--protect` ; illisible, le niveau 4 est « non vérifié » (QUA-013). Hors GitHub (GitLab n'a pas de réglage équivalent) rien n'est lu ni posé ; le réglage n'est pas un manque des garanties (pas de fiche bloquante).
+**Périmètre** : `drwil guarantees --protect`, `drwil doctor` (niveau de protection 4).
+**Source de vérité** : `packages/drwil/src/guarantees-forge.ts` (`readAutoMerge`), `packages/drwil/src/guarantees.ts` (`enableAutoMerge`).
+**Preuve** : tests du paquet, forge simulée : réglage lu autorisé, refusé, illisible, hors GitHub ; posé avec `--protect` puis relu, refusé par la forge, jamais sans `--protect` ni à blanc ; niveau 4 atteint, non atteint ou non vérifié dans `doctor`.
+**Contrôle** : `tests-qua-202`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`, `packages/drwil/test/protection.test.mjs`
+**Origine** : installation-depot-neuf — « `drwil guarantees --protect`, avec l'accord de l'humain, active aussi l'auto-merge du dépôt GitHub avec la protection de la branche principale, et `drwil doctor` dit si l'auto-merge est autorisé »
+**Raison** : Sur un dépôt neuf, la protection était posée mais pas l'auto-merge : `.githooks/merge-auto.mjs` refusait, et qui choisissait « Automatic merge » au lancement échouait à la clôture.

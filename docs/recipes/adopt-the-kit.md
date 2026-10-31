@@ -60,7 +60,9 @@ the requester's place (`AGENTS.md`, Conduct section).
    skeleton text: each gets a blocking `[P0]` brief, the only one offered
    by `/drwil-start`, and `drwil verify` is FAIL until it is held. The
    branch protection is set by `npx drwil guarantees --protect` **with the
-   requester's agreement** only. No light profile, no waiver: a file
+   requester's agreement** only; on GitHub it also allows the repository's
+   auto-merge (« Allow auto-merge »), without which `.githooks/merge-auto.mjs`
+   refuses and an « Automatic merge » choice fails at closing. No light profile, no waiver: a file
    exclusion (configuration, entry point…) is declared with its reason in
    `.drwil/ia-first.json` → `guarantees.exclusions` (`{ "layer", "path",
    "reason" }`); one without a reason is refused. Each wired check is cited
@@ -110,7 +112,8 @@ the requester's place (`AGENTS.md`, Conduct section).
 7. **Read the protection level**: `npx drwil doctor` says which of the four
    levels the project really holds, each proved by a check (1 diagnosis
    only, 2 local governance active: hooks wired and `scopeGate` blocking,
-   3 CI replaying the hook's checks, 4 forge protection verified), « not
+   3 CI replaying the hook's checks, 4 forge protection verified, the
+   repository's auto-merge allowed on GitHub), « not
    verified » when it could not read the forge, and the command that leads
    to the next level (`--json` included). A new install writes `scopeGate`
    as `blocking`; a project installed before keeps its setting, `warning`
