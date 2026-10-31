@@ -61,7 +61,7 @@ panne ou décide à la place de l'utilisateur :
   protection de la branche principale, et `drwil doctor` dit si l'auto-merge est autorisé — `QUA-202`
 - `init` demande à l'humain quels outils IA configurer en terminal interactif ; sans terminal, il refuse
   de choisir à sa place et demande `--tools` — `QUA-203`
-- La recette d'adoption dit ce que chaque outil IA ajoute au dépôt — [humain] — `QUA-203`
+- La recette d'adoption dit ce que chaque outil IA ajoute au dépôt — `QUA-203`
 
 ## Contrats modifiés
 
