@@ -5382,7 +5382,7 @@ test("QUA-203 init demande les outils IA à l'humain et ne les choisit jamais à
   // Le binaire, sans terminal : première installation refusée, rien d'écrit.
   const vide = mkdtempSync(join(tmpdir(), "drwil-tools-cli-"));
   after(() => rmSync(vide, { recursive: true, force: true }));
-  const r = spawnSync(process.execPath, [new URL("../bin/drwil.js", import.meta.url).pathname, "init", "--no-git"], {
+  const r = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "init", "--no-git"], {
     cwd: vide,
     encoding: "utf8",
     stdio: "pipe",
