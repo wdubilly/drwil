@@ -2621,6 +2621,11 @@ test("QUA-017 : un push ne contenant que des tags ou des suppressions de branche
   assert.equal(pousseTag.status, 0, "un push ne poussant qu'un tag n'est plus bloqué par QUA-017 : " + pousseTag.stdout + pousseTag.stderr);
   assert.doesNotMatch(pousseTag.stdout + pousseTag.stderr, /travail direct sur la branche principale/);
 
+  // Un distant sans aucune branche accepte le tout premier envoi de la principale (exception unique) ; on le dote d'abord d'une branche.
+  git(dir, "checkout", "-qb", "chantier/amorce");
+  assert.equal(git(dir, "push", "-q", "origin", "chantier/amorce").status, 0);
+  git(dir, "checkout", "-q", "master");
+
   const pousseMaster = git(dir, "push", "-q", "origin", "master");
   assert.notEqual(pousseMaster.status, 0, "un push direct de la branche principale reste refusé");
   assert.match(pousseMaster.stdout + pousseMaster.stderr, /travail direct sur la branche principale/);
@@ -2677,6 +2682,25 @@ test("QUA-017 : au push, la référence distante poussée est jugée, pas la bra
   }
   const versTravail = git(dir, "push", "-q", "origin", "travail");
   assert.equal(versTravail.status, 0, versTravail.stdout + versTravail.stderr);
+});
+
+test("QUA-017 : le tout premier envoi de la branche principale passe sur un distant vide, le second est refusé", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
+  enAvertissement(dir);
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-qm", "premier commit").status, 0);
+  git(dir, "checkout", "-qb", "master");
+  const remote = tmp();
+  assert.equal(spawnSync("git", ["init", "-q", "--bare", remote]).status, 0);
+  git(dir, "remote", "add", "origin", remote);
+
+  const premier = git(dir, "push", "-q", "origin", "master");
+  assert.equal(premier.status, 0, "premier envoi vers un distant vide : " + premier.stdout + premier.stderr);
+  git(dir, "commit", "-q", "--allow-empty", "-m", "suite");
+  const second = git(dir, "push", "-q", "origin", "master");
+  assert.notEqual(second.status, 0, "dès que le distant a une branche, l'envoi direct est refusé");
+  assert.match(second.stdout + second.stderr, /travail direct sur la branche principale/);
 });
 
 test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et commit-msg livrés", async () => {

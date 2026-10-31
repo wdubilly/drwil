@@ -17,7 +17,12 @@ the requester's place (`AGENTS.md`, Conduct section).
    with the stack's conventions (structure, build and test commands) and
    declare the stack's checks (step 3). Then wire the mandatory guarantees
    (step 3 bis): a new project is at 100 % coverage and has its e2e test
-   from the start.
+   from the start. Last, the first push to the empty remote repository:
+   `git push -u origin master` (or `main`), once, from the main branch
+   holding your first commit. The branch protection (QUA-017) accepts that
+   push only because the remote has no branch yet; after it, every change
+   goes through a branch and a pull/merge request, and a second direct
+   push is refused (`docs/recipes/working-with-branches.md`).
 1. **Re-read the detected stack** (`.drwil/ia-first.json`): layers, tools,
    CI. Correct it if `init` got it wrong. Then **build the map**
    `docs/architecture.md` from the real code (what the application does,

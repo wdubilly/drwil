@@ -14,6 +14,7 @@ const TEXTS = {
     branchCi: "jamais en CI",
     branchTags: "push de tags uniquement",
     branchNoBranch: "push de tags ou de suppressions de branches uniquement",
+    branchFirstPush: "premier envoi vers un distant sans aucune branche (exception unique de QUA-017)",
     branchProtected: (b) =>
       `travail direct sur la branche principale (${b}) : passer par une branche et une pull/merge request (voir docs/recipes/working-with-branches.md)`,
     selfTests: "tests des contrôles eux-mêmes",
@@ -38,6 +39,7 @@ const TEXTS = {
     branchCi: "never in CI",
     branchTags: "tags-only push",
     branchNoBranch: "push of tags or branch deletions only",
+    branchFirstPush: "first push to a remote with no branch at all (QUA-017's one-time exception)",
     branchProtected: (b) =>
       `direct work on the main branch (${b}): go through a branch and a pull/merge request (see docs/recipes/working-with-branches.md)`,
     selfTests: "tests of the checks themselves",

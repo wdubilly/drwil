@@ -17,6 +17,8 @@ fi
 # (e.g. mixed push + branch), the check applies normally, to be safe.
 # The pushed remote branches (DRWIL_PUSH_REFS) are what QUA-017 judges at push time, not the
 # current branch: pushing `recette/vX.Y.Z` from master does not touch master.
+# The remote ($1: its name or its URL) is passed along (DRWIL_PUSH_REMOTE): a remote with no branch
+# at all accepts the very first push of the main branch, once (QUA-017).
 any_ref=0
 tags_only=1
 no_branch=1
@@ -44,6 +46,6 @@ if [ "$any_ref" = "1" ] && [ "$no_branch" = "1" ]; then
   DRWIL_PUSH_NO_BRANCH=1 exec node "$(dirname "$0")/run-checks.mjs"
 fi
 if [ "$any_ref" = "1" ]; then
-  DRWIL_PUSH_REFS="$pushed" exec node "$(dirname "$0")/run-checks.mjs"
+  DRWIL_PUSH_REFS="$pushed" DRWIL_PUSH_REMOTE="$1" exec node "$(dirname "$0")/run-checks.mjs"
 fi
 exec node "$(dirname "$0")/run-checks.mjs"
