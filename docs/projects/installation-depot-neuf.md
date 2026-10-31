@@ -32,6 +32,7 @@ files:
   - docs/projects/kit-mechanics.md
   - packages/drwil/README.md
   - .drwil/ia-first.json
+  - outils/tester-tarball.mjs
 -->
 
 ## 1. Besoin
