@@ -5,6 +5,19 @@ nothing overwritten), make the kit live on a project that already has
 code. Every choice below is a **`[decision]`**: propose, never decide in
 the requester's place (`AGENTS.md`, Conduct section).
 
+**Before `init`: which AI tools?** `init` asks the human which AI tools to
+configure (`claude`, `codex`, `cursor`, `gemini`, `copilot`, or `all`) in an
+interactive terminal; without a terminal, on a first install, it refuses and
+asks for `--tools <list>`; an update keeps the tools already recorded. What
+each choice adds to the repository: `codex` adds nothing of its own (it reads
+`AGENTS.md`); `claude` adds CLAUDE.md and the .claude/ tree (hooks, agents,
+skills); `gemini` adds GEMINI.md and .gemini/settings.json, running the
+same hooks; `cursor` adds .cursor/rules/; `copilot` adds
+.github/copilot-instructions.md, .github/instructions/ and
+.github/hooks/. Choose only the tools the team really uses: each one adds
+files to review and to keep current. The choice is the requester's, never the
+agent's.
+
 0. **A new project (no code yet, no layer): scope it first.** With the
    requester, one `[decision]` at a time: the need and its users, the
    scope of the first version, the stack (hence the layers), the first

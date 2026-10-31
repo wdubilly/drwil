@@ -1967,3 +1967,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/guarantees.test.mjs`, `packages/drwil/test/protection.test.mjs`
 **Origine** : installation-depot-neuf — « `drwil guarantees --protect`, avec l'accord de l'humain, active aussi l'auto-merge du dépôt GitHub avec la protection de la branche principale, et `drwil doctor` dit si l'auto-merge est autorisé »
 **Raison** : Sur un dépôt neuf, la protection était posée mais pas l'auto-merge : `.githooks/merge-auto.mjs` refusait, et qui choisissait « Automatic merge » au lancement échouait à la clôture.
+
+## QUA-203 — `init` demande les outils IA à l'humain et ne les choisit jamais à sa place
+**Règle** : Livré à tout projet. À la première installation (aucun outil enregistré dans `.drwil/ia-first.json`) sans `--tools`, `drwil init` demande à l'humain les outils IA à configurer en terminal interactif ; sans terminal il s'arrête, sans rien écrire, avec un message qui nomme l'option `--tools`. Une mise à jour lit les outils déjà enregistrés et ne demande rien ; `--tools` explicite est toujours respecté ; `--dry-run` n'écrit rien et ne demande rien.
+**Périmètre** : `drwil init`.
+**Source de vérité** : `packages/drwil/src/cli-install.ts` (`chooseTools`).
+**Preuve** : tests du paquet : première installation sans terminal refusée avec le nom de l'option ; question posée en terminal, « all » et liste acceptés, réponse vide refusée ; mise à jour et `--tools` explicite sans question.
+**Contrôle** : `tests-qua-203`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : installation-depot-neuf — « `init` demande à l'humain quels outils IA configurer en terminal interactif ; sans terminal, il refuse de choisir à sa place et demande `--tools` »
+**Raison** : `init` configurait cinq outils sans le demander ; à l'installation de `drwil_walk` l'agent en a choisi un seul de lui-même, un choix qui revient à l'utilisateur.

@@ -4861,7 +4861,7 @@ test("caractérisation : sans confirmateur ni terminal, la dérive est montrée 
 
 test("caractérisation : git introuvable, l'installation se fait et le dit, sans dépôt ni hooks", () => {
   const dir = tmp();
-  const r = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "init"], {
+  const r = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "init", "--tools", "claude"], {
     cwd: dir,
     encoding: "utf8",
     env: { ...envTest, PATH: "" },
@@ -5356,4 +5356,38 @@ test("QUA-197 : la doc des preuves distingue identité, approbation et preuve d'
   assert.match(section, /git\s+configuration/);
   assert.match(section, /no exception\s+or waiver/);
   assert.equal(readFileSync(join(DEPOT, "docs/ia-first/5-proving-the-work.md"), "utf8"), texte);
+});
+
+test("QUA-203 init demande les outils IA à l'humain et ne les choisit jamais à sa place", async () => {
+  const { chooseTools, askTerminal } = await import("../dist/cli-install.js");
+  const { PassThrough } = await import("node:stream");
+  const entree = new PassThrough();
+  entree.end("codex\n");
+  assert.equal(await askTerminal("? ", entree, new PassThrough()), "codex");
+  const dir = mkdtempSync(join(tmpdir(), "drwil-tools-"));
+  after(() => rmSync(dir, { recursive: true, force: true }));
+  const jamais = async () => assert.fail("aucune question attendue");
+  // Sans terminal, première installation : refus qui nomme l'option, rien d'écrit.
+  await assert.rejects(() => chooseTools(dir, undefined, false, jamais), /--tools/);
+  // --tools explicite : respecté, sans question.
+  assert.equal(await chooseTools(dir, "codex", false, jamais), "codex");
+  // En terminal : la question est posée, « all » et une liste sont acceptés, une réponse vide est refusée.
+  assert.equal(await chooseTools(dir, undefined, true, async () => "all"), "claude,codex,cursor,gemini,copilot");
+  assert.equal(await chooseTools(dir, undefined, true, async () => " claude,codex "), "claude,codex");
+  await assert.rejects(() => chooseTools(dir, undefined, true, async () => "  "), /--tools/);
+  // Mise à jour : les outils déjà enregistrés servent, aucune question.
+  mkdirSync(join(dir, ".drwil"), { recursive: true });
+  writeFileSync(join(dir, ".drwil", "ia-first.json"), JSON.stringify({ tools: ["claude"] }));
+  assert.equal(await chooseTools(dir, undefined, false, jamais), undefined);
+  // Le binaire, sans terminal : première installation refusée, rien d'écrit.
+  const vide = mkdtempSync(join(tmpdir(), "drwil-tools-cli-"));
+  after(() => rmSync(vide, { recursive: true, force: true }));
+  const r = spawnSync(process.execPath, [new URL("../bin/drwil.js", import.meta.url).pathname, "init", "--no-git"], {
+    cwd: vide,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /--tools/);
+  assert.equal(existsSync(join(vide, ".drwil")), false);
 });

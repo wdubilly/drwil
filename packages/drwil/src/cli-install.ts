@@ -1,6 +1,8 @@
 import type { Command, OptionValues } from "commander";
 import { CIS, init, type InitOptions, previewInit, formatPreview, resolveDrift, TOOLS, uninstall } from "./index.js";
 import { texts } from "./cli-texts.js";
+import { readConfig } from "./config.js";
+import { fill } from "./i18n.js";
 
 const DEFAULT = (v: string) => `(default: value of an installed project, else ${v})`;
 
@@ -17,12 +19,45 @@ function addOptions(cmd: Command, layersHelp: string) {
       )
       .option("--layers <layers>", layersHelp)
       .option("-d, --description <text>", "What the application does (fills AGENTS.md and docs/architecture.md)")
-      .option("--tools <tools>", `AI tools to configure, CSV (${TOOLS.join(",")}) ${DEFAULT("all")}`)
+      .option(
+        "--tools <tools>",
+        `AI tools to configure, CSV (${TOOLS.join(",")}); asked on a first interactive install, required without a terminal ${DEFAULT("the tools already installed")}`,
+      )
       .option("--ci <ci>", `CI file to generate (${CIS.join("|")}) ${DEFAULT("none")}`)
       .option("--contract-prefixes <c>", `Contract prefixes CSV ${DEFAULT("SEC,QUA")}`)
       .option("--mode <mode>", `minimal|full ${DEFAULT("full")}`)
       .option("--no-git", "Do not run git init nor enable hooks")
   );
+}
+
+// First install without --tools: the choice belongs to the human (QUA-203). An update reads the tools
+// already recorded; without a terminal nothing is chosen in the human's place.
+export async function chooseTools(
+  targetDir: string,
+  tools: string | undefined,
+  interactive: boolean,
+  ask: (question: string) => Promise<string>,
+): Promise<string | undefined> {
+  if (tools !== undefined || Array.isArray(readConfig(targetDir)?.tools)) return tools;
+  const T = texts();
+  if (!interactive) throw new Error(fill(T.toolsRequired, TOOLS.join(",")));
+  const answer = (await ask(fill(T.toolsQuestion, TOOLS.join(", ")))).trim();
+  if (!answer) throw new Error(fill(T.toolsRequired, TOOLS.join(",")));
+  return answer === "all" ? TOOLS.join(",") : answer;
+}
+
+export async function askTerminal(
+  question: string,
+  input: NodeJS.ReadableStream = process.stdin,
+  output: NodeJS.WritableStream = process.stdout,
+): Promise<string> {
+  const { createInterface } = await import("node:readline/promises");
+  const rl = createInterface({ input, output });
+  try {
+    return await rl.question(question);
+  } finally {
+    rl.close();
+  }
 }
 
 async function run(fn: (o: InitOptions) => Promise<unknown>, opts: OptionValues, message: "initDone") {
@@ -50,6 +85,14 @@ export function registerInstall(program: Command): void {
       "Overwrite every file, even modified ones (erases project docs added since the last install; keeps the settings of .drwil/ia-first.json)",
     )
     .action(async (opts) => {
+      if (!opts.dryRun) {
+        try {
+          opts.tools = await chooseTools(process.cwd(), opts.tools, !!(process.stdin.isTTY && process.stdout.isTTY), askTerminal);
+        } catch (e) {
+          console.error(`✗ ${(e as Error).message}`);
+          process.exit(1);
+        }
+      }
       if (opts.dryRun) {
         try {
           console.log(formatPreview(await previewInit({ targetDir: process.cwd(), ...opts })));
