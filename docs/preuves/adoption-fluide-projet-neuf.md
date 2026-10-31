@@ -1,7 +1,7 @@
 # Preuve de clôture — adoption-fluide-projet-neuf
 
 **Clos le** : 2026-10-31
-**Commit vérifié** : `b140d08309` — verdict `drwil verify` : PASS
+**Commit vérifié** : `5fc04ee761` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:37e3cbbc6d9b403b`, acceptés par l'humain au lancement le 2026-10-31
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
