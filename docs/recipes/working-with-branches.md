@@ -217,6 +217,14 @@ that folder only):
   commit or push directly to the main branch (`master`/`main`), including
   a repository's very first commit: no more bootstrap exception. No
   setting disables this check.
+- One bounded exception, for a new project: the very first push of the main
+  branch to a remote that has no branch at all (an empty GitHub/GitLab
+  repository) is accepted, because no pull/merge request can merge into a
+  branch that does not exist yet. Run `git push -u origin master` (or
+  `main`) once, from the main branch holding your first commit. It holds
+  only once: as soon as the remote has a main branch, every direct push is
+  refused as before. Offline, or if the remote cannot be read, there is no
+  exception. The local commit on the main branch stays refused.
 - This check never runs in CI: it only applies locally, at commit/push
   time, not when CI replays an already-made push (a merge landing on the
   main branch is legitimate).

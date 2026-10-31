@@ -5,6 +5,19 @@ nothing overwritten), make the kit live on a project that already has
 code. Every choice below is a **`[decision]`**: propose, never decide in
 the requester's place (`AGENTS.md`, Conduct section).
 
+**Before `init`: which AI tools?** `init` asks the human which AI tools to
+configure (`claude`, `codex`, `cursor`, `gemini`, `copilot`, or `all`) in an
+interactive terminal; without a terminal, on a first install, it refuses and
+asks for `--tools <list>`; an update keeps the tools already recorded. What
+each choice adds to the repository: `codex` adds nothing of its own (it reads
+`AGENTS.md`); `claude` adds CLAUDE.md and the .claude/ tree (hooks, agents,
+skills); `gemini` adds GEMINI.md and .gemini/settings.json, running the
+same hooks; `cursor` adds .cursor/rules/; `copilot` adds
+.github/copilot-instructions.md, .github/instructions/ and
+.github/hooks/. Choose only the tools the team really uses: each one adds
+files to review and to keep current. The choice is the requester's, never the
+agent's.
+
 0. **A new project (no code yet, no layer): scope it first.** With the
    requester, one `[decision]` at a time: the need and its users, the
    scope of the first version, the stack (hence the layers), the first
@@ -17,7 +30,12 @@ the requester's place (`AGENTS.md`, Conduct section).
    with the stack's conventions (structure, build and test commands) and
    declare the stack's checks (step 3). Then wire the mandatory guarantees
    (step 3 bis): a new project is at 100 % coverage and has its e2e test
-   from the start.
+   from the start. Last, the first push to the empty remote repository:
+   `git push -u origin master` (or `main`), once, from the main branch
+   holding your first commit. The branch protection (QUA-017) accepts that
+   push only because the remote has no branch yet; after it, every change
+   goes through a branch and a pull/merge request, and a second direct
+   push is refused (`docs/recipes/working-with-branches.md`).
 1. **Re-read the detected stack** (`.drwil/ia-first.json`): layers, tools,
    CI. Correct it if `init` got it wrong. Then **build the map**
    `docs/architecture.md` from the real code (what the application does,
@@ -55,7 +73,9 @@ the requester's place (`AGENTS.md`, Conduct section).
    skeleton text: each gets a blocking `[P0]` brief, the only one offered
    by `/drwil-start`, and `drwil verify` is FAIL until it is held. The
    branch protection is set by `npx drwil guarantees --protect` **with the
-   requester's agreement** only. No light profile, no waiver: a file
+   requester's agreement** only; on GitHub it also allows the repository's
+   auto-merge (« Allow auto-merge »), without which `.githooks/merge-auto.mjs`
+   refuses and an « Automatic merge » choice fails at closing. No light profile, no waiver: a file
    exclusion (configuration, entry point…) is declared with its reason in
    `.drwil/ia-first.json` → `guarantees.exclusions` (`{ "layer", "path",
    "reason" }`); one without a reason is refused. Each wired check is cited
@@ -105,7 +125,8 @@ the requester's place (`AGENTS.md`, Conduct section).
 7. **Read the protection level**: `npx drwil doctor` says which of the four
    levels the project really holds, each proved by a check (1 diagnosis
    only, 2 local governance active: hooks wired and `scopeGate` blocking,
-   3 CI replaying the hook's checks, 4 forge protection verified), « not
+   3 CI replaying the hook's checks, 4 forge protection verified, the
+   repository's auto-merge allowed on GitHub), « not
    verified » when it could not read the forge, and the command that leads
    to the next level (`--json` included). A new install writes `scopeGate`
    as `blocking`; a project installed before keeps its setting, `warning`

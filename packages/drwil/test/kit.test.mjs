@@ -2621,6 +2621,11 @@ test("QUA-017 : un push ne contenant que des tags ou des suppressions de branche
   assert.equal(pousseTag.status, 0, "un push ne poussant qu'un tag n'est plus bloqué par QUA-017 : " + pousseTag.stdout + pousseTag.stderr);
   assert.doesNotMatch(pousseTag.stdout + pousseTag.stderr, /travail direct sur la branche principale/);
 
+  // Un distant sans aucune branche accepte le tout premier envoi de la principale (exception unique) ; on le dote d'abord d'une branche.
+  git(dir, "checkout", "-qb", "chantier/amorce");
+  assert.equal(git(dir, "push", "-q", "origin", "chantier/amorce").status, 0);
+  git(dir, "checkout", "-q", "master");
+
   const pousseMaster = git(dir, "push", "-q", "origin", "master");
   assert.notEqual(pousseMaster.status, 0, "un push direct de la branche principale reste refusé");
   assert.match(pousseMaster.stdout + pousseMaster.stderr, /travail direct sur la branche principale/);
@@ -2677,6 +2682,25 @@ test("QUA-017 : au push, la référence distante poussée est jugée, pas la bra
   }
   const versTravail = git(dir, "push", "-q", "origin", "travail");
   assert.equal(versTravail.status, 0, versTravail.stdout + versTravail.stderr);
+});
+
+test("QUA-017 : le tout premier envoi de la branche principale passe sur un distant vide, le second est refusé", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir }));
+  enAvertissement(dir);
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-qm", "premier commit").status, 0);
+  git(dir, "checkout", "-qb", "master");
+  const remote = tmp();
+  assert.equal(spawnSync("git", ["init", "-q", "--bare", remote]).status, 0);
+  git(dir, "remote", "add", "origin", remote);
+
+  const premier = git(dir, "push", "-q", "origin", "master");
+  assert.equal(premier.status, 0, "premier envoi vers un distant vide : " + premier.stdout + premier.stderr);
+  git(dir, "commit", "-q", "--allow-empty", "-m", "suite");
+  const second = git(dir, "push", "-q", "origin", "master");
+  assert.notEqual(second.status, 0, "dès que le distant a une branche, l'envoi direct est refusé");
+  assert.match(second.stdout + second.stderr, /travail direct sur la branche principale/);
 });
 
 test("QUA-013 : couverture CI (GitHub et GitLab) verte par défaut, pre-push et commit-msg livrés", async () => {
@@ -4837,7 +4861,7 @@ test("caractérisation : sans confirmateur ni terminal, la dérive est montrée 
 
 test("caractérisation : git introuvable, l'installation se fait et le dit, sans dépôt ni hooks", () => {
   const dir = tmp();
-  const r = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "init"], {
+  const r = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "init", "--tools", "claude"], {
     cwd: dir,
     encoding: "utf8",
     env: { ...envTest, PATH: "" },
@@ -5332,4 +5356,38 @@ test("QUA-197 : la doc des preuves distingue identité, approbation et preuve d'
   assert.match(section, /git\s+configuration/);
   assert.match(section, /no exception\s+or waiver/);
   assert.equal(readFileSync(join(DEPOT, "docs/ia-first/5-proving-the-work.md"), "utf8"), texte);
+});
+
+test("QUA-203 init demande les outils IA à l'humain et ne les choisit jamais à sa place", async () => {
+  const { chooseTools, askTerminal } = await import("../dist/cli-install.js");
+  const { PassThrough } = await import("node:stream");
+  const entree = new PassThrough();
+  entree.end("codex\n");
+  assert.equal(await askTerminal("? ", entree, new PassThrough()), "codex");
+  const dir = mkdtempSync(join(tmpdir(), "drwil-tools-"));
+  after(() => rmSync(dir, { recursive: true, force: true }));
+  const jamais = async () => assert.fail("aucune question attendue");
+  // Sans terminal, première installation : refus qui nomme l'option, rien d'écrit.
+  await assert.rejects(() => chooseTools(dir, undefined, false, jamais), /--tools/);
+  // --tools explicite : respecté, sans question.
+  assert.equal(await chooseTools(dir, "codex", false, jamais), "codex");
+  // En terminal : la question est posée, « all » et une liste sont acceptés, une réponse vide est refusée.
+  assert.equal(await chooseTools(dir, undefined, true, async () => "all"), "claude,codex,cursor,gemini,copilot");
+  assert.equal(await chooseTools(dir, undefined, true, async () => " claude,codex "), "claude,codex");
+  await assert.rejects(() => chooseTools(dir, undefined, true, async () => "  "), /--tools/);
+  // Mise à jour : les outils déjà enregistrés servent, aucune question.
+  mkdirSync(join(dir, ".drwil"), { recursive: true });
+  writeFileSync(join(dir, ".drwil", "ia-first.json"), JSON.stringify({ tools: ["claude"] }));
+  assert.equal(await chooseTools(dir, undefined, false, jamais), undefined);
+  // Le binaire, sans terminal : première installation refusée, rien d'écrit.
+  const vide = mkdtempSync(join(tmpdir(), "drwil-tools-cli-"));
+  after(() => rmSync(vide, { recursive: true, force: true }));
+  const r = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "init", "--no-git"], {
+    cwd: vide,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /--tools/);
+  assert.equal(existsSync(join(vide, ".drwil")), false);
 });

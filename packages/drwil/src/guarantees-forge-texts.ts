@@ -15,6 +15,13 @@ export const TEXTS = {
     notRun: "protection de la branche non vérifiée (non exécuté) : {0} injoignable ou non connecté",
     rulesetBypass: "le ruleset a des acteurs qui le contournent (bypass_actors : {0})",
     bypassNone: "aucun acteur ne contourne le ruleset de `{0}`",
+    autoMergeSet: "Auto-merge du dépôt autorisé sur github",
+    autoMergeFailed:
+      "auto-merge du dépôt non activé (droit administrateur du dépôt requis, ou réglage « Allow auto-merge » à cocher à la main)",
+    autoMergeOn: "auto-merge du dépôt autorisé",
+    autoMergeOff:
+      "auto-merge du dépôt non autorisé (`merge-auto.mjs` refuserait) : `npx drwil guarantees --protect`, avec l'accord de l'humain",
+    autoMergeUnread: "auto-merge du dépôt non vérifié (réglage illisible)",
     bypassUnverified:
       "contournement du ruleset (bypass_actors) non vérifié : lisible seulement avec un jeton administrateur du dépôt (`gh auth login` d'un administrateur, puis `drwil guarantees`)",
   },
@@ -33,6 +40,12 @@ export const TEXTS = {
     notRun: "branch protection not checked (not run): {0} unreachable or not logged in",
     rulesetBypass: "the ruleset has actors that bypass it (bypass_actors: {0})",
     bypassNone: "no actor bypasses the ruleset of `{0}`",
+    autoMergeSet: "Repository auto-merge allowed on github",
+    autoMergeFailed: 'repository auto-merge not enabled (repository administrator right needed, or tick "Allow auto-merge" by hand)',
+    autoMergeOn: "repository auto-merge allowed",
+    autoMergeOff:
+      "repository auto-merge not allowed (`merge-auto.mjs` would refuse): `npx drwil guarantees --protect`, with the human's agreement",
+    autoMergeUnread: "repository auto-merge not verified (setting unreadable)",
     bypassUnverified:
       "ruleset bypass (bypass_actors) not verified: readable only with a repository administrator token (`gh auth login` as an administrator, then `drwil guarantees`)",
   },

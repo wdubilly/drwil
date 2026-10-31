@@ -525,7 +525,9 @@ each with its fix. It also gives the **protection level** actually held,
 each level proved by a check and never declared: 1 diagnosis only, 2 local
 governance active (hooks wired, `scopeGate` blocking), 3 CI checks active
 (the CI replays the hook's checks), 4 forge protection verified (protected
-branch, required checks, no administrator bypass). A level it could not
+branch, required checks, no administrator bypass, GitHub auto-merge
+allowed: `drwil guarantees --protect` turns it on with the human's
+agreement). A level it could not
 verify (no reachable `gh` or `glab`) is "not verified", never reached, and
 it prints the command that leads to the next level (`protection` in
 `--json`). A new install writes `scopeGate` as `blocking`; an installed

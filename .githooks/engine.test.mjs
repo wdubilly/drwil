@@ -203,6 +203,27 @@ test("branche principale : refusée hors CI, tolérée pour un push sans branche
   assert.equal(executer(maitre, "main-branch", { env: { DRWIL_PUSH_REFS: "" } }).status, "fail");
 });
 
+test("branche principale : le tout premier envoi vers un distant sans aucune branche passe, une seule fois", () => {
+  const travail = depot("travail");
+  const distant = tmp();
+  git(distant, "init", "-q", "--bare");
+  const vers = (remote, refs = "refs/heads/master") =>
+    executer(travail, "main-branch", { env: { DRWIL_PUSH_REFS: refs, DRWIL_PUSH_REMOTE: remote } });
+  // Distant vide : exception unique.
+  assert.equal(vers(distant).status, "ok");
+  assert.equal(vers(distant, "refs/heads/travail refs/heads/main").status, "ok");
+  // Distant injoignable, ou nom de distant absent : pas d'exception (non lu = non prouvé).
+  assert.equal(vers(join(distant, "inexistant")).status, "fail");
+  assert.equal(executer(travail, "main-branch", { env: { DRWIL_PUSH_REFS: "refs/heads/master" } }).status, "fail");
+  // Dès que le distant a une branche, le refus redevient la règle.
+  git(travail, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "x");
+  git(travail, "push", "-q", distant, "travail:refs/heads/travail");
+  const refuse = vers(distant);
+  assert.equal(refuse.status, "fail");
+  assert.match(refuse.message, /branche principale \(master\)/);
+  assert.equal(vers(distant, "refs/heads/travail").status, "ok");
+});
+
 test("autotest : sans dossier ou sans test non applicable ; sinon les tests du dépôt tournent (même sous node --test)", () => {
   const racine = depot();
   assert.equal(executer(racine, "checks-self-test").detail, "tests propres au dépôt drwil, non livrés");

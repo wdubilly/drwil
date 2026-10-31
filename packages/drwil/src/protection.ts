@@ -5,7 +5,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fill, type MessageLang } from "./i18n.js";
 import { inspectForge } from "./guarantees-forge.js";
-import type { Exec, GuaranteeConfig } from "./guarantees-table.js";
+import { TEXTS as FORGE_TEXTS } from "./guarantees-forge-texts.js";
+import { at, type Exec, type GuaranteeConfig } from "./guarantees-table.js";
 
 export type LevelState = "reached" | "missing" | "unverified";
 
@@ -22,6 +23,18 @@ export interface Protection {
   levels: ProtectionLevel[];
   /** Commande qui mène au niveau suivant ; null au niveau 4. */
   next: string | null;
+}
+
+/** GitHub "Allow auto-merge" (`merge-auto.mjs` needs it): "unread" never counts as allowed (QUA-013, QUA-202). */
+export function readAutoMerge(exec: Exec, root: string): "allowed" | "refused" | "unread" {
+  const r = exec("gh api repos/{owner}/{repo}", root);
+  let flag: unknown;
+  try {
+    flag = r.status === 0 ? at(JSON.parse(r.stdout), "allow_auto_merge") : null;
+  } catch {
+    flag = null;
+  }
+  return typeof flag === "boolean" ? (flag ? "allowed" : "refused") : "unread";
 }
 
 const HARDEN =
@@ -107,12 +120,21 @@ export function computeProtection(root: string, cfg: GuaranteeConfig, exec: Exec
   };
   const l3 = ciLevel(root, cfg, T);
   const forge = inspectForge(root, cfg, exec, lang);
-  const unread = forge.notRun ?? forge.unverified;
+  const FT = FORGE_TEXTS[lang];
+  // Auto-merge of the repository (GitHub): `merge-auto.mjs` refuses without it; unread is "not verified".
+  const merge = forge.protected && forge.forge === "github" ? readAutoMerge(exec, root) : "na";
+  const unread = forge.notRun ?? forge.unverified ?? (merge === "unread" ? FT.autoMergeUnread : null);
   const l4: ProtectionLevel & { fix: string } = {
     level: 4,
     fix: unread ? T.nextVerify : T.nextForge,
-    state: unread ? "unverified" : forge.protected ? "reached" : "missing",
-    detail: unread ?? (forge.protected ? fill(T.forgeOk, forge.branch) : forge.missing.join(" ; ")),
+    state: unread ? "unverified" : forge.protected && merge !== "refused" ? "reached" : "missing",
+    detail:
+      unread ??
+      (!forge.protected
+        ? forge.missing.join(" ; ")
+        : [fill(T.forgeOk, forge.branch), ...(merge === "allowed" ? [FT.autoMergeOn] : merge === "refused" ? [FT.autoMergeOff] : [])].join(
+            " ; ",
+          )),
   };
   const all = [{ level: 1 as const, state: "reached" as const, detail: T.diagnostic, fix: "" }, l2, l3, l4];
   const stop = all.find((l) => l.state !== "reached");

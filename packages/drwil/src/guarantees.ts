@@ -8,9 +8,10 @@ import { join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { coverLayer, type LayerContext, type LayerReport } from "./guarantees-layers.js";
 import { TEXTS } from "./guarantees-texts.js";
+import { TEXTS as FORGE_TEXTS } from "./guarantees-forge-texts.js";
 import { type DeclaredCheck, type Exec, type GuaranteeConfig, defaultExec, layersOf, skeletonFiles } from "./guarantees-table.js";
 import { briefTitle, type GuaranteeBrief, writeBriefs } from "./guarantees-briefs.js";
-import { scopeGateFailure } from "./protection.js";
+import { readAutoMerge, scopeGateFailure } from "./protection.js";
 import { guaranteeFailures } from "./guarantees-verify.js";
 import { type ForgeReport, inspectForge, protectBranch } from "./guarantees-forge.js";
 
@@ -33,7 +34,15 @@ export interface GuaranteesReport {
   briefs: GuaranteeBrief[];
   written: string[];
   protectedNow: boolean;
+  /** Auto-merge allowed now by `--protect`: true done, false refused by the forge, null not attempted. */
+  autoMergeNow: boolean | null;
+  /** Repository auto-merge as read at the end ("na" off GitHub or without forge access). */
+  autoMerge: "allowed" | "refused" | "unread" | "na";
 }
+
+/** Allows auto-merge on the GitHub repository (`--protect`, the human's agreement); true when it succeeded. */
+const enableAutoMerge = (root: string, exec: Exec) =>
+  exec("gh api -X PATCH repos/{owner}/{repo} -F allow_auto_merge=true", root).status === 0;
 
 /** Runs the guarantees: wires what can be, writes a blocking brief for the rest. */
 export function guarantees(opts: GuaranteesOptions): GuaranteesReport {
@@ -61,6 +70,12 @@ export function guarantees(opts: GuaranteesOptions): GuaranteesReport {
     protectedNow = protectBranch(root, forge.forge, forge.branch, exec);
     forge = inspectForge(root, cfg, exec, lang);
   }
+  let autoMergeNow: boolean | null = null;
+  if (opts.protect && !opts.dryRun && forge.forge === "github" && forge.notRun === null && readAutoMerge(exec, root) === "refused") {
+    autoMergeNow = enableAutoMerge(root, exec);
+    forge = inspectForge(root, cfg, exec, lang);
+  }
+  const autoMerge = forge.forge === "github" && forge.notRun === null ? readAutoMerge(exec, root) : "na";
   const forgeReasons = [...forge.missing, ...(forge.notRun ? [forge.notRun] : [])];
   if (forgeReasons.length)
     briefs.push({
@@ -94,11 +109,12 @@ export function guarantees(opts: GuaranteesOptions): GuaranteesReport {
     writeFileSync(cfgPath, `${JSON.stringify(cfg, null, 2)}\n`);
     written = writeBriefs(root, briefs, cfg.dirs?.index ?? "docs/projects/pending.md", lang);
   }
-  return { lang, dryRun: Boolean(opts.dryRun), layers, e2e, forge, skeleton, briefs, written, protectedNow };
+  return { lang, dryRun: Boolean(opts.dryRun), layers, e2e, forge, skeleton, briefs, written, protectedNow, autoMergeNow, autoMerge };
 }
 
 export function formatGuarantees(r: GuaranteesReport): string[] {
   const T = TEXTS[r.lang];
+  const FT = FORGE_TEXTS[r.lang];
   const out: string[] = [];
   for (const l of r.layers) {
     out.push(fill(T.layer, l.layer, l.tool ?? "?"));
@@ -106,11 +122,13 @@ export function formatGuarantees(r: GuaranteesReport): string[] {
   }
   out.push(r.e2e ? `✓ ${T.e2eOk}` : `✗ ${T.e2eMissing}`);
   if (r.protectedNow) out.push(`✓ ${fill(T.protected, r.forge.branch, r.forge.forge)}`);
+  if (r.autoMergeNow !== null) out.push(r.autoMergeNow ? `✓ ${FT.autoMergeSet}` : `✗ ${FT.autoMergeFailed}`);
   const gaps = [...r.forge.missing, ...(r.forge.notRun ? [r.forge.notRun] : [])];
   if (!gaps.length) out.push(`✓ ${fill(T.forgeOk, r.forge.forge, r.forge.branch)}`);
   for (const g of gaps) out.push(`✗ ${fill(T.forgeGap, g)}`);
   // QUA-115: unread without an administrator token, said so, never counted as held nor as a gap.
   if (r.forge.unverified) out.push(`⚠ ${fill(T.forgeGap, r.forge.unverified)}`);
+  if (r.autoMerge === "refused" && r.autoMergeNow === null) out.push(`  ${FT.autoMergeOff}`);
   if (r.forge.forge && !r.forge.protected && r.forge.notRun === null) out.push(`  ${T.protectHint}`);
   out.push(r.skeleton.length ? `✗ ${fill(T.skeleton, r.skeleton.join(", "))}` : `✓ ${T.presentationOk}`);
   for (const w of r.written) out.push(fill(T.brief, w));

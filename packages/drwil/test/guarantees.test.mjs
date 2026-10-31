@@ -610,3 +610,57 @@ test("QUA-156 : sous garanties obligatoires, une barrière de périmètre non bl
   ecrireConfig(libre, { ...config(libre), scopeGate: "warning" });
   assert.ok(!(await verify({ targetDir: libre })).errors.some((e) => /scopeGate/.test(e)));
 });
+
+test("QUA-202 auto-merge : --protect l'active avec l'accord de l'humain si le dépôt le refuse, jamais sans --protect ni hors GitHub ; lu autorisé, refusé ou illisible", async () => {
+  const dir = await projet();
+  ecrire(dir, ".github/workflows/ia-first.yml", "jobs:\n  checks:\n    steps:\n      - run: node .githooks/run-checks.mjs\n");
+  const depot = (flag) => [
+    /^gh api repos\/\{owner\}\/\{repo\}$/,
+    flag === undefined ? { status: 1, stdout: "" } : json({ allow_auto_merge: flag }),
+  ];
+  const lu = (...regles) => guarantees({ targetDir: dir, dryRun: true, exec: faux(regles) }).autoMerge;
+  assert.equal(lu(...FORGE_OK, depot(true)), "allowed");
+  assert.equal(lu(...FORGE_OK, depot(false)), "refused");
+  assert.equal(lu(...FORGE_OK), "unread");
+  assert.equal(lu(...FORGE_OK, [/^gh api repos\/\{owner\}\/\{repo\}$/, { status: 0, stdout: "pas du json" }]), "unread");
+  assert.equal(lu([/^git rev-parse/, OK], [/^git remote get-url/, { status: 0, stdout: "git@gitlab.com:x/y.git\n" }]), "na");
+
+  // Sans --protect : une alerte, aucune écriture.
+  const appels = [];
+  const lignes = formatGuarantees(guarantees({ targetDir: dir, exec: faux([...FORGE_OK, depot(false)], appels) })).join("\n");
+  assert.ok(!appels.some((c) => /-X PATCH/.test(c)), "sans --protect, rien n'est posé");
+  assert.match(lignes, /auto-merge du dépôt non autorisé \(`merge-auto\.mjs` refuserait\)/);
+
+  // Avec --protect : le réglage est posé, puis relu.
+  let pose = false;
+  const patch = [
+    /-X PATCH repos\/\{owner\}\/\{repo\} -F allow_auto_merge=true/,
+    () => {
+      pose = true;
+      return OK;
+    },
+  ];
+  const r = guarantees({
+    targetDir: dir,
+    protect: true,
+    exec: faux([patch, [/^gh api repos\/\{owner\}\/\{repo\}$/, () => json({ allow_auto_merge: pose })], ...FORGE_OK], appels),
+  });
+  assert.equal(r.autoMergeNow, true);
+  assert.equal(r.autoMerge, "allowed");
+  assert.match(formatGuarantees(r).join("\n"), /✓ Auto-merge du dépôt autorisé sur github/);
+
+  // Refusé par la forge (pas administrateur) : dit, jamais annoncé posé.
+  const echec = guarantees({
+    targetDir: dir,
+    protect: true,
+    exec: faux([[/-X PATCH/, { status: 1, stdout: "" }], depot(false), ...FORGE_OK]),
+  });
+  assert.equal(echec.autoMergeNow, false);
+  assert.match(formatGuarantees(echec).join("\n"), /✗ auto-merge du dépôt non activé/);
+
+  // Déjà autorisé, illisible, à blanc ou hors GitHub : rien n'est tenté.
+  for (const exec of [faux([...FORGE_OK, depot(true)], appels), faux(FORGE_OK, appels)]) {
+    assert.equal(guarantees({ targetDir: dir, protect: true, exec }).autoMergeNow, null);
+  }
+  assert.equal(guarantees({ targetDir: dir, protect: true, dryRun: true, exec: faux([...FORGE_OK, depot(false)]) }).autoMergeNow, null);
+});

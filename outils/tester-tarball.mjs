@@ -99,7 +99,7 @@ export function derouler({ paquet, temp, lancer = lancerReel }) {
   if (version.status !== 0 || version.stdout.trim() !== info.version)
     return echec(`drwil --version : « ${sortie(version)} », attendu ${info.version}`);
 
-  const init = lancer(bin, ["init", "--name", "essai-tarball", "--ci", "github"], { cwd: projet });
+  const init = lancer(bin, ["init", "--name", "essai-tarball", "--ci", "github", "--tools", "claude"], { cwd: projet });
   if (init.status !== 0) return echec(`drwil init a échoué (code ${init.status}) : ${sortie(init)}`);
   const probleme = lireVerdict(lancer(bin, ["verify", "--json"], { cwd: projet }));
   if (probleme) return echec(probleme);

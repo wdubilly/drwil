@@ -136,9 +136,6 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 - [ ] [IA] [P1] (0.11.0) Adoption fluide d'un projet sans code existant : autorisations livrées, worktree
   obligatoire au lancement, commit initial du kit par `init` (cadré le 2026-10-30, après l'installation d'un
   dépôt neuf) — `docs/projects/adoption-fluide-projet-neuf.md`.
-- [ ] [IA] [P1] (0.11.0) Installation d'un dépôt neuf : exception bornée de QUA-017 au premier envoi sur un distant vide,
-  auto-merge activé avec la protection, `init` qui demande les outils IA (cadré le 2026-10-30) —
-  `docs/projects/installation-depot-neuf.md`.
 - [ ] [IA] [P1] (0.11.0) Clôture sur un projet neuf : garanties « pas encore applicables » sans code, clôture qui
   écrit sa ligne de journal et d'index, empreinte des critères sans la marque `[humain]` (cadré le
   2026-10-30) — `docs/projects/cloture-sur-projet-neuf.md`.

@@ -1,6 +1,13 @@
 // The main-branch check (QUA-017), split from engine.mjs.
 import { spawnSync } from "node:child_process";
 
+/** Vrai si `remote` (nom ou URL) répond et n'a aucune branche. */
+function remoteWithoutBranch(root, remote) {
+  if (!remote) return false;
+  const r = spawnSync("git", ["ls-remote", "--heads", remote], { cwd: root, encoding: "utf8", timeout: 15000 });
+  return r.status === 0 && r.stdout.trim() === "";
+}
+
 /** Verdict of the main-branch check for the environment `env` of the hook that runs it. */
 export function mainBranchVerdict(root, env, T) {
   // QUA-017: never work directly on the main branch, including the very first commit (`init()` always creates a working branch first).
@@ -15,7 +22,11 @@ export function mainBranchVerdict(root, env, T) {
       .split(/\s+/)
       .map((r) => r.replace(/^refs\/heads\//, ""));
     const main = pushed.find((b) => ["master", "main"].includes(b));
-    return main ? { status: "fail", message: T.branchProtected(main) } : { status: "ok" };
+    if (!main) return { status: "ok" };
+    // Exception bornée : sur un distant sans aucune branche, aucune PR ne peut fusionner vers la principale. Hors ligne ou
+    // en erreur, pas d'exception (QUA-013 : ce qui n'est pas lu n'est pas prouvé). Aucun réglage ne la désactive ni ne l'élargit.
+    if (remoteWithoutBranch(root, env.DRWIL_PUSH_REMOTE)) return { status: "ok", detail: T.branchFirstPush };
+    return { status: "fail", message: T.branchProtected(main) };
   }
   const branch = spawnSync("git", ["symbolic-ref", "--short", "HEAD"], { cwd: root, encoding: "utf8" });
   const branchName = branch.status === 0 ? branch.stdout.trim() : null;
