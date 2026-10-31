@@ -5447,8 +5447,20 @@ test("QUA-206 : init sur un dossier neuf commite le kit sur la branche d'install
       XDG: process.env.XDG_CONFIG_HOME,
       GC: process.env.GIT_CONFIG_GLOBAL,
       GS: process.env.GIT_CONFIG_NOSYSTEM,
+      CC: process.env.GIT_CONFIG_COUNT,
+      CK: process.env.GIT_CONFIG_KEY_0,
+      CV: process.env.GIT_CONFIG_VALUE_0,
     };
-    Object.assign(process.env, { HOME: home, XDG_CONFIG_HOME: home, GIT_CONFIG_GLOBAL: join(home, "none"), GIT_CONFIG_NOSYSTEM: "1" });
+    // useConfigOnly : git ne déduit pas d'identité du nom d'utilisateur ni de la machine (macOS, Windows), sinon le commit passerait.
+    Object.assign(process.env, {
+      HOME: home,
+      XDG_CONFIG_HOME: home,
+      GIT_CONFIG_GLOBAL: join(home, "none"),
+      GIT_CONFIG_NOSYSTEM: "1",
+      GIT_CONFIG_COUNT: "1",
+      GIT_CONFIG_KEY_0: "user.useConfigOnly",
+      GIT_CONFIG_VALUE_0: "true",
+    });
     try {
       const sans = [];
       const warn = console.warn;
@@ -5468,6 +5480,9 @@ test("QUA-206 : init sur un dossier neuf commite le kit sur la branche d'install
         ["XDG_CONFIG_HOME", sauve.XDG],
         ["GIT_CONFIG_GLOBAL", sauve.GC],
         ["GIT_CONFIG_NOSYSTEM", sauve.GS],
+        ["GIT_CONFIG_COUNT", sauve.CC],
+        ["GIT_CONFIG_KEY_0", sauve.CK],
+        ["GIT_CONFIG_VALUE_0", sauve.CV],
       ]) {
         if (v === undefined) delete process.env[k];
         else process.env[k] = v;
