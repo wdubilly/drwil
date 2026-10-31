@@ -195,7 +195,10 @@ test("id-glossary et reply-glossary : glosent les identifiants cités, une seule
 const sondage = (extra = {}) => ({
   hook_event_name: "PreToolUse",
   tool_input: {
-    questions: [{ header: "drwil-start", question: "Q", options: [{ label: "fiche-a" }, { label: "Pas maintenant" }] }],
+    questions: [
+      { header: "drwil-start", question: "Q", options: [{ label: "fiche-a" }, { label: "Pas maintenant" }] },
+      { header: "drwil-worktree", question: "W" },
+    ],
     ...extra,
   },
 });
@@ -297,13 +300,23 @@ test("start-poll : sondage de fin de cadrage (QUA-187), valide ou non, et répon
   assert.equal(p.scopePoll({ tool_input: { message: "drwil-scope" } }).answers.length, 0);
 });
 
-test("prompt-hook : refuse un sondage prérempli, annonce un échec sans état, se tait sur un autre outil", async () => {
+test("QUA-205 : prompt-hook : refuse un sondage prérempli, annonce un échec sans état, se tait sur un autre outil", async () => {
   const prompt = await load("prompt-hook.mjs");
   assert.equal(typeof prompt.startPoll, "function");
   const prerempli = run("prompt-hook.mjs", sondage({ answers: { x: "y" } }));
   assert.equal(prerempli.status, 2);
   assert.match(prerempli.stderr, /sondage de lancement refusé/);
   assert.equal(run("prompt-hook.mjs", sondage()).status, 0);
+  // La question drwil-worktree est obligatoire : sans elle le sondage est refusé, sous les deux formes.
+  const sansWorktree = { hook_event_name: "PreToolUse", tool_input: { questions: [sondage().tool_input.questions[0]] } };
+  const sans = run("prompt-hook.mjs", sansWorktree);
+  assert.equal(sans.status, 2);
+  assert.match(sans.stderr, /drwil-worktree/);
+  const copilotSans = {
+    hook_event_name: "PreToolUse",
+    tool_input: { message: "drwil-start : x", requestedSchema: { properties: { fiche: { enum: ["a"] } } } },
+  };
+  assert.equal(run("prompt-hook.mjs", copilotSans).status, 2);
   // Le gabarit n'a pas d'état à lire : le hook dit l'échec, sans rien lancer.
   const contexte = (entree) => JSON.parse(run("prompt-hook.mjs", entree).stdout).hookSpecificOutput.additionalContext;
   const repondu = (answers, questions = []) => ({

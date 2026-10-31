@@ -508,14 +508,15 @@ test("le hook refuse un commit dont la doc cite un chemin inexistant", async () 
   await quiet(() => init({ lang: "fr", targetDir: dir }));
   enAvertissement(dir);
   assert.equal(git(dir, "add", "-A").status, 0);
-  assert.equal(git(dir, "commit", "-qm", "init").status, 0, "premier commit accepté");
+  assert.equal(git(dir, "commit", "-qm", "init", "--allow-empty").status, 0, "premier commit accepté");
+  const avant = git(dir, "rev-list", "--count", "HEAD").stdout.trim();
   appendFileSync(join(dir, "docs/ia-first.md"), "\nVoir `docs/inexistant.md` et SEC-999.\n");
   git(dir, "add", "-A");
   const r = git(dir, "commit", "-qm", "casse");
   assert.notEqual(r.status, 0);
   assert.match(r.stdout + r.stderr, /docs\/inexistant\.md/);
   assert.match(r.stdout + r.stderr, /SEC-999/);
-  assert.equal(git(dir, "rev-list", "--count", "HEAD").stdout.trim(), "1");
+  assert.equal(git(dir, "rev-list", "--count", "HEAD").stdout.trim(), avant);
 });
 
 test("chemin cité : un fichier ignoré par Git ne vaut pas preuve (local = CI) ; « (si présent) » aussi sur la ligne suivante", async () => {
@@ -1641,12 +1642,23 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
         ],
         multiSelect: false,
       },
+      { question: "Où lancer ?", header: "drwil-worktree", options: [{ label: "Nouveau worktree" }, { label: "Ce dossier" }] },
     ],
   };
   const copilot = {
     message: "drwil-start : quelle fiche lancer ?",
-    requestedSchema: { properties: { choix: { type: "string", enum: [fiche, "docs/projects/autre.md"] } } },
+    requestedSchema: {
+      properties: {
+        choix: { type: "string", enum: [fiche, "docs/projects/autre.md"] },
+        "drwil-worktree": { type: "string", enum: ["New worktree", "This folder"] },
+      },
+    },
   };
+  // La question drwil-worktree est obligatoire : sans elle, le sondage est refusé avant l'affichage.
+  const sansWorktree = { questions: [claude.questions[0]] };
+  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: sansWorktree }).status, 2);
+  const copilotSans = { message: copilot.message, requestedSchema: { properties: { choix: copilot.requestedSchema.properties.choix } } };
+  assert.equal(hook({ hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: copilotSans }).status, 2);
 
   // Le modèle ne répond pas à la place de l'humain et ne présélectionne rien : refusé avant l'affichage.
   assert.equal(
@@ -1733,7 +1745,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     hook_event_name: "PostToolUse",
     tool_name: "AskUserQuestion",
     tool_input: copilot,
-    tool_result: { result_type: "success", text_result_for_llm: "User responded: docs/projects/autre.md" },
+    tool_result: { result_type: "success", text_result_for_llm: "User responded: choix=docs/projects/autre.md" },
   });
   assert.match(refus.stdout, /n'est pas une fiche cadrée/);
   assert.equal(etat(), null);
@@ -1741,7 +1753,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     hook_event_name: "PostToolUse",
     tool_name: "AskUserQuestion",
     tool_input: copilot,
-    tool_result: { result_type: "success", text_result_for_llm: `User responded: ${fiche}` },
+    tool_result: { result_type: "success", text_result_for_llm: `User responded: choix=${fiche}` },
   });
   assert.equal(etat().activity, "BUILD");
   assert.equal(etat().auto_merge, undefined);
@@ -1753,6 +1765,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
       properties: {
         choix: copilot.requestedSchema.properties.choix,
         "drwil-merge": { type: "string", enum: ["Automatic merge", "Manual merge"] },
+        "drwil-worktree": copilot.requestedSchema.properties["drwil-worktree"],
       },
     },
   };
@@ -1982,6 +1995,7 @@ test("QUA-165 : sous Copilot CLI, le champ des fiches à choix multiple (array, 
     properties: {
       fiche: { type: "array", items: { type: "string", enum: fiches } },
       "drwil-merge": { type: "string", enum: ["Automatic merge", "Manual merge"] },
+      "drwil-worktree": { type: "string", enum: ["New worktree", "This folder"] },
       "drwil-parallel": { type: "string", enum: ["Parallel queue", "Sequential queue"] },
     },
   };
@@ -2103,6 +2117,19 @@ test("transitions : humain par défaut, façade drwil etat, blocages Claude sur 
     allow.filter((r) => r.startsWith("Bash(git ")).every((r) => /^Bash\(git [a-z-]+(:\*)?\)$/.test(r)),
     "allow git = préfixes de sous-commande",
   );
+  // Autorisations livrées : lectures gh et outils .githooks sans demande ; push, merge, rebase gardent leur demande.
+  const reglesPerm = JSON.parse(read(dir, ".claude/settings.json")).permissions;
+  for (const regle of [
+    "Bash(gh pr view:*)",
+    "Bash(gh pr checks:*)",
+    "Bash(node .githooks/state.mjs)",
+    "Bash(node .githooks/glossary.mjs:*)",
+  ])
+    assert.ok(reglesPerm.allow.includes(regle), regle);
+  for (const regle of ["Bash(git push:*)", "Bash(git merge:*)", "Bash(git rebase:*)"]) {
+    assert.ok(reglesPerm.ask.includes(regle), regle);
+    assert.ok(!reglesPerm.allow.includes(regle), regle);
+  }
 });
 
 test("apply sur un projet existant : stack et couches découvertes, rien d'écrasé, pas de git init", async () => {
@@ -5390,4 +5417,112 @@ test("QUA-203 init demande les outils IA à l'humain et ne les choisit jamais à
   assert.equal(r.status, 1);
   assert.match(r.stderr, /--tools/);
   assert.equal(existsSync(join(vide, ".drwil")), false);
+});
+
+test("QUA-206 : init sur un dossier neuf commite le kit sur la branche d'installation, avant les hooks", async () => {
+  const id = { GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@t", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@t" };
+  const avant = Object.fromEntries(Object.keys(id).map((k) => [k, process.env[k]]));
+  Object.assign(process.env, id);
+  try {
+    const dir = tmp();
+    const lignes = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+    assert.ok(
+      lignes.some((l) => l.includes("Kit commité sur la branche « workstream/kit-installation »")),
+      lignes.join("\n"),
+    );
+    assert.equal(git(dir, "symbolic-ref", "--short", "HEAD").stdout.trim(), "workstream/kit-installation");
+    assert.equal(git(dir, "rev-list", "--count", "HEAD").stdout.trim(), "1");
+    assert.equal(git(dir, "log", "-1", "--format=%s").stdout.trim(), "Installation du kit drwil");
+    assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", "rien à commiter : le premier chantier se lance");
+    assert.ok(git(dir, "ls-files", ".githooks/state.mjs").stdout.includes("state.mjs"));
+    // Un dépôt déjà commité n'est jamais touché : seul un dépôt créé par init reçoit le commit initial.
+    const relance = await capture(() => init({ lang: "en", targetDir: dir, name: "demo" }));
+    assert.ok(!relance.some((l) => l.includes("Kit committed")), relance.join("\n"));
+    assert.equal(git(dir, "rev-list", "--count", "HEAD").stdout.trim(), "1");
+    // Sans identité git : l'échec est dit, l'installation ne casse pas.
+    for (const k of Object.keys(id)) delete process.env[k];
+    const home = tmp();
+    const sauve = {
+      HOME: process.env.HOME,
+      XDG: process.env.XDG_CONFIG_HOME,
+      GC: process.env.GIT_CONFIG_GLOBAL,
+      GS: process.env.GIT_CONFIG_NOSYSTEM,
+      CC: process.env.GIT_CONFIG_COUNT,
+      CK: process.env.GIT_CONFIG_KEY_0,
+      CV: process.env.GIT_CONFIG_VALUE_0,
+    };
+    // useConfigOnly : git ne déduit pas d'identité du nom d'utilisateur ni de la machine (macOS, Windows), sinon le commit passerait.
+    Object.assign(process.env, {
+      HOME: home,
+      XDG_CONFIG_HOME: home,
+      GIT_CONFIG_GLOBAL: join(home, "none"),
+      GIT_CONFIG_NOSYSTEM: "1",
+      GIT_CONFIG_COUNT: "1",
+      GIT_CONFIG_KEY_0: "user.useConfigOnly",
+      GIT_CONFIG_VALUE_0: "true",
+    });
+    try {
+      const sans = [];
+      const warn = console.warn;
+      console.warn = (...a) => sans.push(a.join(" "));
+      try {
+        await capture(() => init({ lang: "en", targetDir: tmp(), name: "demo" }));
+      } finally {
+        console.warn = warn;
+      }
+      assert.ok(
+        sans.some((l) => l.includes("initial kit commit not made")),
+        sans.join("\n"),
+      );
+    } finally {
+      process.env.HOME = sauve.HOME;
+      for (const [k, v] of [
+        ["XDG_CONFIG_HOME", sauve.XDG],
+        ["GIT_CONFIG_GLOBAL", sauve.GC],
+        ["GIT_CONFIG_NOSYSTEM", sauve.GS],
+        ["GIT_CONFIG_COUNT", sauve.CC],
+        ["GIT_CONFIG_KEY_0", sauve.CK],
+        ["GIT_CONFIG_VALUE_0", sauve.CV],
+      ]) {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      }
+    }
+  } finally {
+    for (const [k, v] of Object.entries(avant)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
+});
+
+test("QUA-204 : le gabarit Claude Code livre les lectures gh et outils .githooks sans demande, push, merge et rebase gardent la demande", () => {
+  const perm = JSON.parse(
+    readFileSync(join(GABARIT, "tools/claude/.claude/settings.json"), "utf8").replace("{{stackAllowJson}}", ""),
+  ).permissions;
+  for (const regle of [
+    "Bash(gh pr view:*)",
+    "Bash(gh pr checks:*)",
+    "Bash(node .githooks/state.mjs)",
+    "Bash(node .githooks/glossary.mjs:*)",
+  ])
+    assert.ok(perm.allow.includes(regle), regle);
+  for (const regle of ["Bash(git push:*)", "Bash(git merge:*)", "Bash(git rebase:*)"]) {
+    assert.ok(perm.ask.includes(regle), regle);
+    assert.ok(!perm.allow.includes(regle), regle);
+  }
+  // Une règle allow n'ouvre rien que les refus ne ferment : le contournement des hooks reste interdit.
+  assert.ok(perm.deny.some((r) => r.includes("--no-verify")));
+});
+
+test("QUA-207 : la recette d'adoption et INSTALL.md disent le commit initial de init et pourquoi une autorisation n'est pas demandée", () => {
+  const recette = readFileSync(join(GABARIT, "base/docs/recipes/adopt-the-kit.md"), "utf8");
+  assert.match(recette, /`init` has already committed the kit itself/);
+  assert.match(recette, /workstream\/kit-installation/);
+  assert.match(recette, /`scopeGate` is `blocking`/);
+  const install = readFileSync(join(DEPOT, "INSTALL.md"), "utf8");
+  assert.match(install, /### First commit of a new project/);
+  assert.match(install, /commits the kit itself, before enabling the hooks/);
+  assert.match(install, /### Permission prompts in Claude Code/);
+  assert.match(install, /an allow rule opens no gesture that the hooks or the forge refuse/);
 });

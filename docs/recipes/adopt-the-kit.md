@@ -18,7 +18,14 @@ same hooks; `cursor` adds .cursor/rules/; `copilot` adds
 files to review and to keep current. The choice is the requester's, never the
 agent's.
 
-0. **A new project (no code yet, no layer): scope it first.** With the
+0. **A new project (no code yet, no layer): scope it first.** On an
+   empty folder, `init` has already committed the kit itself, on the
+   `workstream/kit-installation` branch it created, before enabling the
+   hooks (`scopeGate` is `blocking`, so files outside any brief could not be
+   committed afterwards): the first workstream starts on a clean tree. It
+   does so only on the repository it creates: a folder that is already a
+   git repository is never committed by `init`; and when git has no
+   identity, `init` says so and the commit is yours to make. With the
    requester, one `[decision]` at a time: the need and its users, the
    scope of the first version, the stack (hence the layers), the first
    business rules (hence the first `APP` contracts, step 5) and the risk

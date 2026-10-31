@@ -59,7 +59,7 @@ sondage dont la réponse est lue par un hook, sur le modèle du lancement d'un c
 - L'attestation ne coûte que le jugement demandé (QUA-032) ; elle tombe quand un fichier couvert change
   (QUA-081).
 - Chevauche le sondage de lancement (`.claude/hooks/start-poll.mjs`) : à lancer après
-  `docs/projects/adoption-fluide-projet-neuf.md`.
+  `docs/projects/journal.md`.
 
 ## 4. Décisions
 

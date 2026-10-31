@@ -1252,14 +1252,29 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   );
   git("add", "-A");
   git("commit", "-qm", "bloquee");
-  const r = await avecTerminal(["1", "START", "MERGE"], () => capturer(() => main(["start"], racine)));
+  const r = await avecTerminal(["1", "START", "MERGE", ""], () => capturer(() => main(["start"], racine)));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(
     r.sortie,
     /^1\. docs\/projects\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projects\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher · à affiner : à revoir avant de la lancer\]/,
   );
-  assert.deepEqual(r.invites.length, 3);
+  assert.deepEqual(r.invites.length, 4);
   assert.equal(readState(racine).state.auto_merge, true);
+});
+
+test("QUA-205 : principal lancer au terminal : la réponse WORKTREE lance le chantier dans un worktree frère", async () => {
+  const { racine } = depotCadre();
+  const r = await avecTerminal(["START", "", "WORKTREE"], () => capturer(() => main(["start", FICHE], racine)));
+  const dossier = `${racine}-exemple`;
+  try {
+    assert.equal(r.code, 0, r.erreurs);
+    assert.equal(r.invites.length, 3);
+    assert.equal(existsSync(join(dossier, ".git")), true);
+    assert.equal(readState(dossier).state.activity, "BUILD");
+    assert.equal(readState(racine).state.activity, "SCOPING");
+  } finally {
+    rmSync(dossier, { recursive: true, force: true });
+  }
 });
 
 test("principal lancer au terminal : sans confirmation exacte ou numéro inconnu, rien ne change", async () => {
@@ -1270,7 +1285,7 @@ test("principal lancer au terminal : sans confirmation exacte ou numéro inconnu
   r = await avecTerminal(["9"], () => capturer(() => main(["start"], racine)));
   assert.equal(r.code, 1);
   assert.equal(r.invites.length, 1);
-  r = await avecTerminal(["START", ""], () => capturer(() => main(["start", FICHE], racine)));
+  r = await avecTerminal(["START", "", ""], () => capturer(() => main(["start", FICHE], racine)));
   assert.equal(r.code, 0, r.erreurs);
   assert.equal(readState(racine).state.auto_merge, undefined);
 });

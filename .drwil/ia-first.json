@@ -2671,6 +2671,65 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-204",
+      "name": "tests de QUA-204, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-204 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-205",
+      "name": "tests de QUA-205, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-205 \" packages/drwil/test/claude-hooks.test.mjs .githooks/state.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".githooks/**",
+        ".claude/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-206",
+      "name": "tests de QUA-206, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-206 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-207",
+      "name": "tests de QUA-207, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-207 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        "INSTALL.md",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "name": "code modifié couvert à 100 % : lignes et branches du diff de la branche (diffCoverage)",
       "run": "node .githooks/check-diff-coverage.mjs",

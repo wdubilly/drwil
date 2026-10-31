@@ -1,6 +1,6 @@
 # Intention : un parcours d'installation et de chantier sans demande d'autorisation à chaque commande
 
-**Statut** : proposée le 2026-10-25 — demande de l'humain, promue depuis les notes le même jour.
+**Statut** : proposée le 2026-10-25 — demande de l'humain, promue depuis les notes le même jour. Traitée en partie le 2026-10-31 par le chantier adoption-fluide-projet-neuf (autorisations livrées, worktree obligatoire, commit initial du kit : QUA-204 à QUA-207) ; restent attester depuis le chat et la commande de contrat.
 
 ## Besoin
 
@@ -26,9 +26,6 @@ Ajouts du 2026-10-27 (demande de l'humain, constatée sur drwil_dbox) :
 
 ## Questions à trancher
 
-- [décision] Livrer les autorisations dans le gabarit, ou seulement les documenter dans `INSTALL.md` ?
-- [décision] Le « ask » sur `git push`, `merge` et `rebase` reste-t-il utile, vu la protection du pre-push et de la forge ?
-- [décision] La question `drwil-worktree` devient-elle obligatoire dans le sondage de lancement (le hook refuse un sondage sans elle) ? Et `state.mjs start` doit-il aussi proposer le worktree ?
 - [décision] Attester depuis le chat : un sondage dont la réponse est lue par un hook (l'agent ne remplit jamais la réponse), sur le modèle du lancement ? Quel jugement est affiché (le critère du contrat, ce qui a été essayé) pour que l'attestation reste un jugement éclairé (QUA-032, une attestation ne coûte que le jugement demandé) ?
 - [décision] Comment l'attestation faite dans le chat se distingue-t-elle d'une réponse écrite par l'agent (preuve de l'origine humaine), et reste-t-elle compatible avec la couverture (Covers) et le renouvellement (`--renew`) ?
 - [décision] Une commande pour ajouter ou adopter un contrat (par exemple `drwil contracts add` et `drwil contracts adopt <ID>`) : elle déplace la ligne du catalogue vers le registre, sans préfixe, et crée le squelette d'un contrat propre ? Qui écrit le check (déclaration dans ia-first.json) ?
