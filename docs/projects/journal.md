@@ -3961,6 +3961,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 ## 2026-10-31 — L'adoption d'un projet sans code existant ne demande plus d'autorisation à chaque commande et commence par un kit commité
 
 - **Décisions clés** : quatre contrats neufs, QUA-204 (le gabarit Claude Code autorise sans demande les lectures `gh` et les outils `.githooks` en lecture, et garde la demande sur `git push`, `merge` et `rebase`), QUA-205 (le sondage de lancement porte toujours la question `drwil-worktree`, `state.mjs start` la pose aussi), QUA-206 (`drwil init` commite le kit sur la branche d'installation qu'il crée, avant d'activer les hooks, seulement sur un dépôt neuf) et QUA-207 (la recette d'adoption et `INSTALL.md` le disent). Question tranchée : le commit initial n'est fait que sur le dépôt que `init` vient de créer ; sans identité git, `init` le dit et le commit reste à la main.
+- **Hooks modifiés** : `.githooks/state-cli.mjs`, `.githooks/state-messages-fr.mjs`, `.githooks/state-messages-en.mjs`, `.githooks/state.test.mjs` (gabarit et copie), validé par le demandeur le 2026-10-31.
 - **Limites connues** : attester depuis le chat et ajouter ou adopter un contrat par commande restent à cadrer, dans `docs/intentions/installation-fluide.md`.
 - **Preuve de clôture** : docs/preuves/adoption-fluide-projet-neuf.md.
 - **Clôturé par** : la branche `workstream/adoption-fluide-projet-neuf`.
