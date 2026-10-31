@@ -129,6 +129,10 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   (cadré le 2026-10-30) — `docs/projects/attente-commandes-longues.md`.
 - [ ] [IA] [P2] (0.11.0) Signaler un défaut du kit : commande qui imprime un rapport prêt à coller, sans donnée du
   projet (cadré le 2026-10-30) — `docs/projects/signaler-un-defaut-du-kit.md`.
+- [ ] [IA] [P2] Attester une preuve humaine depuis la conversation, par un sondage lu par un hook (cadré le
+  2026-10-30, après l'adoption fluide) — `docs/projects/attester-depuis-le-chat.md`.
+- [ ] [IA] [P2] Ajouter ou adopter un contrat par commande, `drwil contracts add` et `adopt <ID>` (cadré le
+  2026-10-30) — `docs/projects/commande-de-contrat.md`.
 - [ ] [IA] [P1] (0.11.0) Adoption fluide d'un projet sans code existant : autorisations livrées, worktree
   obligatoire au lancement, commit initial du kit par `init` (cadré le 2026-10-30, après l'installation d'un
   dépôt neuf) — `docs/projects/adoption-fluide-projet-neuf.md`.
