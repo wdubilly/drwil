@@ -1977,3 +1977,43 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : installation-depot-neuf — « `init` demande à l'humain quels outils IA configurer en terminal interactif ; sans terminal, il refuse de choisir à sa place et demande `--tools` »
 **Raison** : `init` configurait cinq outils sans le demander ; à l'installation de `drwil_walk` l'agent en a choisi un seul de lui-même, un choix qui revient à l'utilisateur.
+
+## QUA-204 — Le gabarit Claude Code autorise sans demande les lectures courantes et garde la demande sur push, merge et rebase
+**Règle** : Livré à tout projet qui configure Claude Code. Le `.claude/settings.json` du gabarit autorise sans demande les commandes locales courantes, les lectures `gh pr view` et `gh pr checks` et les outils `.githooks` en lecture (`.githooks/state.mjs`, `.githooks/glossary.mjs`…) ; `git push`, `git merge` et `git rebase` restent en `ask`, jamais en `allow` ; les refus (`--no-verify`, `git -c`, le fichier d'état) sont intacts : une règle `allow` n'ouvre aucun geste que le hook ou la forge refusent (QUA-019).
+**Périmètre** : `.claude/settings.json` livré par le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/settings.json`.
+**Preuve** : test du paquet qui lit le gabarit : les règles `allow` attendues y sont, `push`, `merge` et `rebase` sont dans `ask` et absents de `allow`, le refus de `--no-verify` demeure.
+**Contrôle** : `tests-qua-204`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : adoption-fluide-projet-neuf — « Le gabarit livre un `.claude/settings.json` Claude Code qui autorise sans demande les commandes git, gh et `.githooks` courantes et garde une demande sur `git push`, `merge` et `rebase` »
+**Raison** : À l'installation de `drwil_walk`, chaque commande git, gh ou `.githooks` courante déclenchait une demande d'autorisation, sans rien protéger de plus.
+
+## QUA-205 — Le sondage de lancement porte toujours la question drwil-worktree
+**Règle** : Le hook du sondage de lancement (Claude Code et Copilot CLI) refuse un sondage `drwil-start` sans la question `drwil-worktree` : la question du worktree est toujours posée, jamais laissée à l'agent. `state.mjs start` au terminal pose la même question, et sa réponse `WORKTREE` lance le chantier dans un worktree frère (QUA-142) ; le skill de lancement dit que la question est obligatoire.
+**Périmètre** : Sondage de lancement (`/drwil-start`), `node .githooks/state.mjs start`.
+**Source de vérité** : `.claude/hooks/prompt-hook.mjs` (`startPoll`), `.githooks/state-cli.mjs`.
+**Preuve** : tests : sondage sans `drwil-worktree` refusé sous les deux formes (statut 2, message qui nomme la question) ; au terminal, la réponse `WORKTREE` lance le chantier dans un worktree frère et laisse le principal en SCOPING.
+**Contrôle** : `tests-qua-205`
+**Tests** : `packages/drwil/test/claude-hooks.test.mjs`, `.githooks/state.test.mjs`
+**Origine** : adoption-fluide-projet-neuf — « La question `drwil-worktree` devient obligatoire dans le sondage de lancement »
+**Raison** : Le lancement ne proposait pas toujours le worktree : l'agent devait penser à ajouter la question au sondage.
+
+## QUA-206 — `init` commite le kit sur le dépôt neuf qu'il crée, avant d'activer les hooks
+**Règle** : Sur un dossier sans dépôt git, `drwil init` crée le dépôt sur la branche d'installation (jamais la branche principale, QUA-017) et y commite le kit avant de régler `core.hooksPath`, pour que le premier chantier se lance sans commit refusé par la barrière de périmètre bloquante (QUA-154). Un dépôt déjà existant n'est jamais commité par `init`. Sans identité git, `init` le dit et ne casse pas : le commit reste à faire à la main.
+**Périmètre** : `drwil init` sur un dossier sans dépôt git.
+**Source de vérité** : `packages/drwil/src/install.ts` (`commitKit`), appelé par `packages/drwil/src/index.ts`.
+**Preuve** : test du paquet sur un dossier vide : un seul commit sur `workstream/kit-installation`, arbre propre, kit suivi, relance sans nouveau commit ; sans identité git, l'avertissement est émis.
+**Contrôle** : `tests-qua-206`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : adoption-fluide-projet-neuf — « Sur un projet neuf, `drwil init` commite lui-même le kit sur sa branche d'installation, et le premier chantier peut se lancer sans commit refusé »
+**Raison** : Depuis que l'installation neuve écrit `scopeGate` en `blocking`, le premier commit du kit en SCOPING était refusé sans que la recette le dise.
+
+## QUA-207 — La recette d'adoption et `INSTALL.md` disent le commit initial de `init` et pourquoi une autorisation n'est pas demandée
+**Règle** : La recette d'adoption (gabarit) dit ce que `init` fait du premier commit (branche d'installation, avant les hooks, pourquoi, et quand il ne le fait pas) ; `INSTALL.md` le dit aussi et explique pourquoi Claude Code ne demande pas d'autorisation pour les commandes courantes (une règle `allow` n'ouvre aucun geste que les hooks ou la forge refusent).
+**Périmètre** : Recette `adopt-the-kit`, `INSTALL.md`.
+**Source de vérité** : `packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md`, `INSTALL.md`.
+**Preuve** : test du paquet qui lit la recette du gabarit et `INSTALL.md` et y cherche les passages attendus ; la lisibilité du texte reste jugée par l'humain.
+**Contrôle** : `tests-qua-207`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : adoption-fluide-projet-neuf — « La recette d'adoption et `INSTALL.md` disent ce que fait `init` du premier commit et pourquoi une autorisation n'est pas demandée »
+**Raison** : L'adoptant ne devait pas deviner le commit initial de `init` ni la raison des autorisations livrées.

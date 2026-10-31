@@ -5419,7 +5419,7 @@ test("QUA-203 init demande les outils IA à l'humain et ne les choisit jamais à
   assert.equal(existsSync(join(vide, ".drwil")), false);
 });
 
-test("init sur un dossier neuf commite le kit sur la branche d'installation, avant les hooks", async () => {
+test("QUA-206 : init sur un dossier neuf commite le kit sur la branche d'installation, avant les hooks", async () => {
   const id = { GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@t", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@t" };
   const avant = Object.fromEntries(Object.keys(id).map((k) => [k, process.env[k]]));
   Object.assign(process.env, id);
@@ -5479,4 +5479,35 @@ test("init sur un dossier neuf commite le kit sur la branche d'installation, ava
       else process.env[k] = v;
     }
   }
+});
+
+test("QUA-204 : le gabarit Claude Code livre les lectures gh et outils .githooks sans demande, push, merge et rebase gardent la demande", () => {
+  const perm = JSON.parse(
+    readFileSync(join(GABARIT, "tools/claude/.claude/settings.json"), "utf8").replace("{{stackAllowJson}}", ""),
+  ).permissions;
+  for (const regle of [
+    "Bash(gh pr view:*)",
+    "Bash(gh pr checks:*)",
+    "Bash(node .githooks/state.mjs)",
+    "Bash(node .githooks/glossary.mjs:*)",
+  ])
+    assert.ok(perm.allow.includes(regle), regle);
+  for (const regle of ["Bash(git push:*)", "Bash(git merge:*)", "Bash(git rebase:*)"]) {
+    assert.ok(perm.ask.includes(regle), regle);
+    assert.ok(!perm.allow.includes(regle), regle);
+  }
+  // Une règle allow n'ouvre rien que les refus ne ferment : le contournement des hooks reste interdit.
+  assert.ok(perm.deny.some((r) => r.includes("--no-verify")));
+});
+
+test("QUA-207 : la recette d'adoption et INSTALL.md disent le commit initial de init et pourquoi une autorisation n'est pas demandée", () => {
+  const recette = readFileSync(join(GABARIT, "base/docs/recipes/adopt-the-kit.md"), "utf8");
+  assert.match(recette, /`init` has already committed the kit itself/);
+  assert.match(recette, /workstream\/kit-installation/);
+  assert.match(recette, /`scopeGate` is `blocking`/);
+  const install = readFileSync(join(DEPOT, "INSTALL.md"), "utf8");
+  assert.match(install, /### First commit of a new project/);
+  assert.match(install, /commits the kit itself, before enabling the hooks/);
+  assert.match(install, /### Permission prompts in Claude Code/);
+  assert.match(install, /an allow rule opens no gesture that the hooks or the forge refuse/);
 });

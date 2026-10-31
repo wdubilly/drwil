@@ -300,7 +300,7 @@ test("start-poll : sondage de fin de cadrage (QUA-187), valide ou non, et répon
   assert.equal(p.scopePoll({ tool_input: { message: "drwil-scope" } }).answers.length, 0);
 });
 
-test("prompt-hook : refuse un sondage prérempli, annonce un échec sans état, se tait sur un autre outil", async () => {
+test("QUA-205 : prompt-hook : refuse un sondage prérempli, annonce un échec sans état, se tait sur un autre outil", async () => {
   const prompt = await load("prompt-hook.mjs");
   assert.equal(typeof prompt.startPoll, "function");
   const prerempli = run("prompt-hook.mjs", sondage({ answers: { x: "y" } }));

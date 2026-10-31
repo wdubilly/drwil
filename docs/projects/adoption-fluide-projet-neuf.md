@@ -58,13 +58,13 @@ l'installation de `drwil_walk` et à `drwil_dbox` :
 ## Critères d'acceptation
 
 - Le gabarit livre un `.claude/settings.json` Claude Code qui autorise sans demande les commandes git, gh et
-  `.githooks` courantes et garde une demande sur `git push`, `merge` et `rebase` — contrat à créer
+  `.githooks` courantes et garde une demande sur `git push`, `merge` et `rebase` — `QUA-204`
 - Le hook du sondage de lancement refuse un sondage sans la question `drwil-worktree`, et `state.mjs start`
-  propose aussi le worktree — contrat à créer
+  propose aussi le worktree — `QUA-205`
 - Sur un projet neuf, `drwil init` commite lui-même le kit sur sa branche d'installation, et le premier
-  chantier peut se lancer sans commit refusé — contrat à créer
+  chantier peut se lancer sans commit refusé — `QUA-206`
 - La recette d'adoption et `INSTALL.md` disent ce que fait `init` du premier commit et pourquoi une
-  autorisation n'est pas demandée — [humain] — contrat à créer
+  autorisation n'est pas demandée — [humain] — `QUA-207`
 
 ## 2. Hors périmètre
 

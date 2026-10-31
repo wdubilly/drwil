@@ -1262,7 +1262,7 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   assert.equal(readState(racine).state.auto_merge, true);
 });
 
-test("principal lancer au terminal : la réponse WORKTREE lance le chantier dans un worktree frère", async () => {
+test("QUA-205 : principal lancer au terminal : la réponse WORKTREE lance le chantier dans un worktree frère", async () => {
   const { racine } = depotCadre();
   const r = await avecTerminal(["START", "", "WORKTREE"], () => capturer(() => main(["start", FICHE], racine)));
   const dossier = `${racine}-exemple`;
