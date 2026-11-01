@@ -11,7 +11,9 @@ files:
   - .githooks/run-checks.mjs
   - .githooks/run-checks.test.mjs
   - .githooks/run-checks-texts.mjs
+  - .githooks/engine-runat.mjs
   - packages/drwil/templates/common/base/.githooks/engine.mjs
+  - packages/drwil/templates/common/base/.githooks/engine-runat.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks-texts.mjs
   - packages/drwil/test/kit.test.mjs
@@ -115,6 +117,10 @@ le cran `lot` est écarté, `runAt` à `["verify", "ci"]` suffit et le moteur n'
 
 ## 7. Reprise
 
+- **Lot 2 — découpe** (2026-11-01) : `.githooks/engine.mjs` (186 lignes) reçoit le réglage par un seul module neuf,
+  engine-runat.mjs (lecture, validation et report de `runAt`, ses messages fr/en), avec sa copie du gabarit ;
+  `.githooks/run-checks.mjs` (185 lignes) n'est pas touché (un contrôle reporté au push reprend `configured`, déjà
+  un avertissement hors CI). Les deux fichiers sont ajoutés au bloc scope (commit à part).
 - **Dernier état** (2026-11-01) : cadré, aucun code. Les ID de contrat se prennent au lot 2, hors catalogue
   (dernier pris au 2026-11-01 : QUA-207).
 - **Lot 1 — mesure** (2026-11-01) : un passage complet de `run-checks` dure 341 s (17 contrôles mesurés, QUA-136) ;
