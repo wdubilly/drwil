@@ -2,7 +2,7 @@
 
 **Statut** : cadré le 2026-11-01.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 
 <!-- scope
 files:
@@ -79,16 +79,18 @@ demande une nuance, elle est validée par le demandeur avant d'être écrite.
 Tranchées par le demandeur le 2026-11-01 : cadrer l'idée `runAt` comme mécanisme du kit (fiche de chantier, risque
 HIGH puisqu'elle touche `.githooks/`).
 
+Tranchées par le demandeur le 2026-11-01, sur la recommandation de l'agent :
+- Le réglage est une liste `runAt` aux valeurs `commit`, `push`, `verify`, `ci` (défaut : toutes), plus explicite
+  qu'un booléen.
+- Le pre-push ne joue pas un contrôle réservé (`["verify", "ci"]`) : la reprise de verdict (QUA-152) évite déjà
+  le rejeu quand rien n'a changé. Un contrôle qui veut tourner au push le déclare (`push`).
+
 ## 5. Points à trancher
 
-- [décision] Le pre-push joue-t-il un contrôle réservé ? `["verify", "ci"]` l'exclut ; un push sans e2e puis une CI
-  rouge allonge la boucle, un push avec e2e en rejoue un de plus. Recommandation : l'exclure, puisque la reprise
-  de verdict (QUA-152) évite déjà le rejeu quand rien n'a changé.
-- [décision] Nom et forme du réglage : `runAt` avec les valeurs `commit`, `push`, `verify`, `ci` (défaut : tous),
-  ou un booléen plus simple (`slow: true` = verify et CI). Recommandation : la liste, plus explicite.
-- [décision] Après la mesure du lot 1 seulement : un cran `lot`, où le contrôle lent tourne à la fin de chaque lot
+- [IA] Après la mesure du lot 1 seulement : proposer ou écarter un cran `lot`, où le contrôle lent tourne à la fin de chaque lot
   de la fiche plutôt qu'à chaque commit. Compromis entre « à chaque commit » et « seulement au verify », mais plus
-  complexe à définir ; à écarter si la mesure montre que `verify` et la CI suffisent.
+  complexe à définir ; à écarter si la mesure montre que `verify` et la CI suffisent. L'agent pose la proposition au compte rendu
+  du lot 1 ; le demandeur tranche, et ce cran n'est jamais ajouté sans son oui.
 - [IA] Vérifier au lot 1 que le contrôle réservé garde une empreinte propre (QUA-141) et qu'une attestation citant
   ce contrôle tombe bien quand son effet change (QUA-183, QUA-184).
 - [IA] Mesurer le gain avant de coder : durées dans `.drwil/evidence/run-checks.log` (si présent) (QUA-136) et
@@ -96,8 +98,8 @@ HIGH puisqu'elle touche `.githooks/`).
 
 ## 6. Increments
 
-- **Lot 1 — mesure et décisions** [IA] : mesurer le coût réel, trancher les deux points ci-dessus avec le demandeur.
-  Critère de sortie : les décisions sont écrites en section 4.
+- **Lot 1 — mesure et décisions** [IA] : mesurer le coût réel, trancher le cran `lot` avec le demandeur.
+  Critère de sortie : la décision sur le cran `lot` est écrite en section 4.
 - **Lot 2 — moteur, tests et contrats** [IA] : réglage lu par le moteur, report au commit, jeu complet en
   `verify` et en CI, découpe des fichiers proches du plafond, quatre contrats avec leur contrôle.
   Critère de sortie : un contrôle réservé est « non exécuté » au commit et bloquant en `verify` et en CI.
