@@ -2017,3 +2017,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : adoption-fluide-projet-neuf — « La recette d'adoption et `INSTALL.md` disent ce que fait `init` du premier commit et pourquoi une autorisation n'est pas demandée »
 **Raison** : L'adoptant ne devait pas deviner le commit initial de `init` ni la raison des autorisations livrées.
+
+## QUA-212 — Les tests du dépôt ne dépendent pas des variables `DRWIL_PUSH_*` du pre-push
+**Règle** : Le hook pre-push exporte `DRWIL_PUSH_REFS`, `DRWIL_PUSH_REMOTE`, `DRWIL_PUSH_TAGS_ONLY` et `DRWIL_PUSH_NO_BRANCH` aux contrôles qu'il lance. Aucun test du dépôt n'en dépend : un test qui joue le moteur ou `verify` dans son processus part d'un environnement sans elles, et celui qui les lit les pose lui-même par l'`env` de son lancement, jamais par l'héritage. Le jeu de tests lancé avec elles posées passe comme sans.
+**Périmètre** : `.githooks/engine.test.mjs` et `packages/drwil/test/kit.test.mjs`.
+**Source de vérité** : `.githooks/engine.test.mjs` (garde `beforeEach`), `packages/drwil/test/kit.test.mjs` (retrait de `process.env`).
+**Preuve** : test du moteur qui relance les tests du moteur et ceux du paquet, `DRWIL_PUSH_*` posées comme au push, et exige qu'ils passent.
+**Contrôle** : `tests-qua-212`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : tests-isoles-du-pre-push — « Aucun test du dépôt ne dépend des variables `DRWIL_PUSH_*` du processus qui le lance : le jeu complet passe aussi lancé avec elles posées »
+**Raison** : Un test qui hérite de ces variables se croit au push et échoue au pre-push alors qu'il passe au commit : le contrôle bloque le chemin légitime de clôture sans rien protéger (précédent : QUA-057 pour les `GIT_*`).

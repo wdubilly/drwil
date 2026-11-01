@@ -1,4 +1,4 @@
-import { after, afterEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -38,6 +38,19 @@ function depot(branche = "travail") {
   git(racine, "init", "-q", "-b", branche);
   return racine;
 }
+// Le pre-push exporte les références poussées : un test qui joue le moteur sans `env` les hériterait et se
+// croirait au push (runAt). Chaque test part d'un environnement sans elles.
+const VARIABLES_DE_PUSH = ["DRWIL_PUSH_REFS", "DRWIL_PUSH_TAGS_ONLY", "DRWIL_PUSH_NO_BRANCH"];
+let variablesDePush = {};
+beforeEach(() => {
+  variablesDePush = Object.fromEntries(VARIABLES_DE_PUSH.map((k) => [k, process.env[k]]));
+  for (const k of VARIABLES_DE_PUSH) delete process.env[k];
+});
+afterEach(() => {
+  for (const [k, v] of Object.entries(variablesDePush))
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+});
 const parId = (liste) => Object.fromEntries(liste.map((c) => [c.id, c]));
 // La durée (QUA-136) varie à chaque passe : les tests de verdict la retirent, le test de QUA-136 la juge.
 const sansDuree = ({ durationMs, ...r }) => r;
@@ -685,4 +698,22 @@ test("QUA-141 : un contrôle repris sur ses seuls paths les déclare tous — ch
     [],
     'un fichier lu hors de paths ferait reprendre un verdict périmé : l\'ajouter aux paths, ou déclarer reuse: "tree"',
   );
+});
+
+test("QUA-212 : les tests du moteur et du paquet ne dépendent pas des variables DRWIL_PUSH_* du pre-push", () => {
+  const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const env = {
+    ...process.env,
+    DRWIL_PUSH_REFS: "refs/heads/x",
+    DRWIL_PUSH_REMOTE: "origin",
+    DRWIL_PUSH_TAGS_ONLY: "",
+    DRWIL_PUSH_NO_BRANCH: "",
+  };
+  const jouer = (fichier, motif) =>
+    spawnSync(process.execPath, ["--test", `--test-name-pattern=${motif}`, fichier], { cwd: racine, env, encoding: "utf8" });
+  // Le test lui-même est exclu, sinon il se relancerait sans fin.
+  const moteur = jouer(".githooks/engine.test.mjs", "^(?!QUA-212)");
+  assert.equal(moteur.status, 0, `moteur posé comme au push :\n${moteur.stdout.slice(-1500)}`);
+  const paquet = jouer("packages/drwil/test/kit.test.mjs", "^QUA-2");
+  assert.equal(paquet.status, 0, `paquet posé comme au push :\n${paquet.stdout.slice(-1500)}`);
 });

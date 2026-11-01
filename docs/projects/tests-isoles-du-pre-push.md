@@ -29,9 +29,9 @@ chemin légitime de clôture sans rien protéger.
 ## Critères d'acceptation
 
 - Aucun test du dépôt ne dépend des variables `DRWIL_PUSH_*` du processus qui le lance : le jeu complet
-  passe aussi lancé avec elles posées — contrat à créer
+  passe aussi lancé avec elles posées — contrat `QUA-212`
 - Un test qui lit ces variables les pose lui-même, par l'`env` de son lancement, jamais par l'héritage —
-  contrat à créer
+  contrat `QUA-212`
 
 ## 2. Hors périmètre
 
