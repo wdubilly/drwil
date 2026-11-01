@@ -47,8 +47,12 @@ rejouent le contrôle à chaque fois au commit.
 
 ## Contrats modifiés
 
-Aucun attendu. À confirmer au lot 1 : QUA-013, QUA-141 et QUA-152 doivent rester vrais tels quels ; si l'un
-demande une nuance, elle est validée par le demandeur avant d'être écrite.
+- `.githooks/engine.mjs`, `.githooks/run-checks.mjs` et `.githooks/run-checks-texts.mjs` — ajout du réglage
+  `runAt` (un contrôle réservé à `verify` et à la CI), sans changer le sens de QUA-013, QUA-141 ni QUA-152
+  (validé par le demandeur le 2026-11-01).
+
+QUA-013, QUA-141 et QUA-152 doivent rester vrais tels quels ; si l'un demande une nuance, elle est validée par le
+demandeur avant d'être écrite.
 
 ## 2. Hors périmètre
 
@@ -84,6 +88,9 @@ Tranchées par le demandeur le 2026-11-01, sur la recommandation de l'agent :
   qu'un booléen.
 - Le pre-push ne joue pas un contrôle réservé (`["verify", "ci"]`) : la reprise de verdict (QUA-152) évite déjà
   le rejeu quand rien n'a changé. Un contrôle qui veut tourner au push le déclare (`push`).
+
+Tranchée par le demandeur le 2026-11-01, après la mesure du lot 1 (341 s par passage, 92 % dans quatre contrôles) :
+le cran `lot` est écarté, `runAt` à `["verify", "ci"]` suffit et le moteur n'a pas à définir la fin d'un lot.
 
 ## 5. Points à trancher
 
