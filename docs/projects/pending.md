@@ -122,6 +122,9 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
+- [ ] [IA] [P0] Tests isolés des variables du pre-push : un test qui hérite de `DRWIL_PUSH_*` échoue au
+  push et bloque la clôture « contrôles lents » (cadré le 2026-11-01) —
+  `docs/projects/tests-isoles-du-pre-push.md`.
 - [ ] [IA] [P1] (0.11.0) Élargissement du périmètre rendu visible : avertissement net sur tout commit qui modifie
   le bloc scope, mention au compte rendu, QUA-050 réaligné (cadré le 2026-10-30) —
   `docs/projects/perimetre-visible.md`.
