@@ -42,12 +42,12 @@ rejouent le contrôle à chaque fois au commit.
 ## Critères d'acceptation
 
 - Un contrôle déclaré réservé (par exemple `runAt: ["verify", "ci"]`) n'est pas joué au commit et le dit : « non
-  exécuté », jamais « passé » — contrat QUA-208
+  exécuté », jamais « passé » — contrat `QUA-208`
 - `drwil verify` et la CI jouent ce contrôle, et son absence ou son échec bloque la clôture et la fusion, comme
-  pour tout contrôle (QUA-013, un contrôle non exécuté n'est pas passé) — contrat QUA-209
-- Un contrôle sans ce réglage se comporte exactement comme avant — contrat QUA-210
+  pour tout contrôle (QUA-013, un contrôle non exécuté n'est pas passé) — contrat `QUA-209`
+- Un contrôle sans ce réglage se comporte exactement comme avant — contrat `QUA-210`
 - La doc de `paths` (`docs/ia-first/4-checks-in-git.md`) décrit le réglage, et l'attestation (QUA-183, QUA-184)
-  et la reprise par contrôle (QUA-141) restent justes pour un contrôle réservé — contrat QUA-211
+  et la reprise par contrôle (QUA-141) restent justes pour un contrôle réservé — contrat `QUA-211`
 
 ## Contrats modifiés
 
