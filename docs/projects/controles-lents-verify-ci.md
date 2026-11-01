@@ -110,3 +110,17 @@ Tranchées par le demandeur le 2026-11-01, sur la recommandation de l'agent :
 
 - **Dernier état** (2026-11-01) : cadré, aucun code. Les ID de contrat se prennent au lot 2, hors catalogue
   (dernier pris au 2026-11-01 : QUA-207).
+- **Lot 1 — mesure** (2026-11-01) : un passage complet de `run-checks` dure 341 s (17 contrôles mesurés, QUA-136) ;
+  quatre contrôles font 313 s, soit 92 % : couverture des hooks (108 s, `.githooks/**`, `docs/**`, `packages/**`),
+  tests des contrôles eux-mêmes (97 s), miroirs gabarit/dépôt (82 s, `paths: ["**"]` : rejoué à chaque commit),
+  CLI depuis le tarball (26 s). Les deux chantiers récents de code (adoption-fluide-projet-neuf, installation-depot-neuf)
+  comptent 11 commits chacun, dont 17 et 19 fichiers sous `.githooks/`, `packages/` ou `outils/` : le contrôle lent
+  est rejoué jusqu'à 11 fois au commit, bien au-delà du seuil de deux rejeux de la section 5 : on n'abandonne pas.
+  Estimation : environ 5 min par commit de code, soit près d'une heure de contrôles par chantier de ce type, que `verify`
+  et la CI rejouent de toute façon une fois. Le log ne garde que le dernier passage : ces durées sont un échantillon, pas une moyenne.
+- **Reste pour le demandeur** : trancher le cran `lot` (section 5). Proposition de l'agent : l'écarter, car `runAt`
+  `["verify", "ci"]` couvre déjà le gain mesuré et un cran `lot` demande de définir la fin d'un lot pour le moteur.
+  Section 4 non modifiée : le critère de sortie du lot 1 attend ce oui. QUA-013, QUA-141 et QUA-152 restent vrais
+  tels quels d'après la lecture de la fiche ; la vérification de l'empreinte propre (QUA-141) et de l'attestation
+  (QUA-183, QUA-184) se prouve par test au lot 2. Point de vigilance : le moteur et `run-checks` sont cités dans le
+  cadrage sans puce « Contrats modifiés » (QUA-137), à écrire seulement sur le oui du demandeur.
