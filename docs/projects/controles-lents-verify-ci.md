@@ -54,6 +54,7 @@ rejouent le contrôle à chaque fois au commit.
 - `.githooks/engine.mjs`, `.githooks/run-checks.mjs` et `.githooks/run-checks-texts.mjs` — ajout du réglage
   `runAt` (un contrôle réservé à `verify` et à la CI), sans changer le sens de QUA-013, QUA-141 ni QUA-152
   (validé par le demandeur le 2026-11-01).
+- `.githooks/run-checks.test.mjs` — ajout du test de bout en bout de QUA-208 (validé par le demandeur le 2026-11-01).
 
 QUA-013, QUA-141 et QUA-152 doivent rester vrais tels quels ; si l'un demande une nuance, elle est validée par le
 demandeur avant d'être écrite.
