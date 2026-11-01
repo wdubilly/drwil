@@ -22,6 +22,7 @@ files:
   - docs/contracts.md
   - docs/contracts-catalog.md
   - docs/projects/kit-mechanics.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - .drwil/ia-first.json
 -->
 
@@ -120,7 +121,8 @@ le cran `lot` est écarté, `runAt` à `["verify", "ci"]` suffit et le moteur n'
 - **Lot 2 — découpe** (2026-11-01) : `.githooks/engine.mjs` (186 lignes) reçoit le réglage par un seul module neuf,
   engine-runat.mjs (lecture, validation et report de `runAt`, ses messages fr/en), avec sa copie du gabarit ;
   `.githooks/run-checks.mjs` (185 lignes) n'est pas touché (un contrôle reporté au push reprend `configured`, déjà
-  un avertissement hors CI). Les deux fichiers sont ajoutés au bloc scope (commit à part).
+  un avertissement hors CI). Les deux fichiers sont ajoutés au bloc scope (commit à part), puis la copie gabarit de kit-mechanics.md
+  (le cadrage livré doit citer le module neuf, sinon un projet installé refuse son premier commit).
 - **Dernier état** (2026-11-01) : cadré, aucun code. Les ID de contrat se prennent au lot 2, hors catalogue
   (dernier pris au 2026-11-01 : QUA-207).
 - **Lot 1 — mesure** (2026-11-01) : un passage complet de `run-checks` dure 341 s (17 contrôles mesurés, QUA-136) ;
