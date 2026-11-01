@@ -141,3 +141,9 @@ le cran `lot` est écarté, `runAt` à `["verify", "ci"]` suffit et le moteur n'
   tels quels d'après la lecture de la fiche ; la vérification de l'empreinte propre (QUA-141) et de l'attestation
   (QUA-183, QUA-184) se prouve par test au lot 2. Point de vigilance : le moteur et `run-checks` sont cités dans le
   cadrage sans puce « Contrats modifiés » (QUA-137), à écrire seulement sur le oui du demandeur.
+- **Lot 3 — documentation** (2026-11-01) : la page des contrôles (gabarit et copie) et `kit-mechanics.md` (gabarit et
+  copie) étaient déjà à jour depuis le lot 2 ; aucun complément. Le bloc scope a été élargi trois fois pendant le lot 2,
+  chaque fois sur un fichier que le contrôle du dépôt exigeait : `.githooks/engine-runat.mjs` et sa copie gabarit (le module
+  neuf de la découpe), la copie gabarit de `kit-mechanics.md` (le cadrage livré doit citer le module neuf), et
+  `docs/architecture.md` (la carte doit y faire figurer le module neuf) ; ce dernier ajout avait été oublié de la
+  « Reprise » du lot 2 et est consigné ici.
