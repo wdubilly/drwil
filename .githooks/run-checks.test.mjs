@@ -802,3 +802,22 @@ test("QUA-152 : au pre-push, des verdicts qui ne s'écrivent pas ne changent pas
   const p = passe(racine, { env: { DRWIL_PUSH_REFS: "refs/heads/travail" } });
   assert.equal(p.status, 0, p.stdout + p.stderr);
 });
+
+test("QUA-208 : de bout en bout, un contrôle réservé par runAt est non exécuté au commit et au push (sans bloquer), joué et bloquant hors hook et en CI", () => {
+  const config = JSON.stringify({ checks: [{ id: "lent", name: "lent", run: "node -e 'process.exit(1)'", runAt: ["verify", "ci"] }] });
+  const fichiers = { ".drwil/ia-first.json": config, "src/a.js": "x" };
+  const commit = lancer(fichiers, { indexer: ["src/a.js"], env: { DRWIL_HOOK: "pre-commit" } });
+  assert.equal(commit.status, 0, commit.stdout);
+  assert.match(commit.detail, /^\[ia-first\] ⚠ non exécuté : lent \(réservé par runAt \(verify, ci\) : pas joué au commit/m);
+  const push = lancer(fichiers, { valider: true, env: { DRWIL_PUSH_REFS: "refs/heads/travail" } });
+  assert.equal(push.status, 0, push.stdout);
+  assert.match(push.detail, /^\[ia-first\] ⚠ non exécuté : lent \(réservé par runAt : pas joué au push/m);
+  for (const [cas, env] of [
+    ["hors hook (verify)", {}],
+    ["CI", { CI: "true" }],
+  ]) {
+    const r = lancer(fichiers, { valider: true, env });
+    assert.equal(r.status, 1, `${cas} : l'échec du contrôle réservé bloque`);
+    assert.match(r.stdout, /✗ échec : lent/, cas);
+  }
+});

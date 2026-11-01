@@ -13,6 +13,7 @@ import { controlFingerprints, treeFingerprint } from "./fingerprints.mjs";
 import { mainBranchVerdict } from "./engine-branch.mjs";
 import { createLaunchers } from "./engine-launch.mjs";
 import { createPass } from "./engine-pass.mjs";
+import { runAtVerdict, runContext } from "./engine-runat.mjs";
 import { texts } from "./engine-texts.mjs";
 import { checkScope } from "./scope-gate.mjs";
 import { normalize } from "./scope.mjs";
@@ -111,9 +112,12 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
 
   // Stack checks (lint, typecheck, tests) are declared by the project. At pre-commit only (`staged` given), a check declaring `paths`
   // is deferred if no staged file matches: it stays "not run" (QUA-013), and the pre-push as well as CI replay it.
+  // `runAt` (engine-runat.mjs) reserves a check to some contexts; it is judged before `paths`.
   for (const c of Array.isArray(cfg.checks) ? cfg.checks : []) {
     const name = c.name ?? c.run;
     const skipped = () => {
+      const reserved = runAtVerdict(c, name, runContext(staged, env), cfg.lang);
+      if (reserved) return reserved;
       if (docsOnly) return { status: "not-run", detail: T.docsOnly };
       if (staged && Array.isArray(c.paths) && c.paths.length) {
         const patterns = c.paths.map(globToRegex);
