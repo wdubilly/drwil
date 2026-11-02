@@ -824,7 +824,9 @@ test("QUA-212 : les tests du moteur et du paquet ne dépendent pas des variables
   assert.equal(paquet.status, 0, `paquet posé comme au push :\n${paquet.stdout.slice(-1500)}`);
 });
 
-test("QUA-217 : les tests du moteur passent quand node n'est que dans un dossier propre au shell (fnm), jamais dans /usr/bin ni /usr/local/bin", { skip: process.platform === "win32" && "liens symboliques non garantis sous Windows" }, () => {
+test("QUA-217 : les tests du moteur passent quand node n'est que dans un dossier propre au shell (fnm), jamais dans /usr/bin ni /usr/local/bin", {
+  skip: process.platform === "win32" && "liens symboliques non garantis sous Windows",
+}, () => {
   const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
   const bin = join(tmp(), "fnm-like", "bin");
   mkdirSync(bin, { recursive: true });
