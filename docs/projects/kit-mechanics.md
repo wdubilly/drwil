@@ -156,6 +156,15 @@ Le code applicatif du projet : chaque chantier porte son propre bloc
 `cadrage` dans sa fiche, et une petite tâche se rattache à
 `docs/projects/routine-maintenance.md`.
 
+## 3. Hooks d'assistants sans `node` dans le PATH
+
+Les commandes de hook livrées testent `node` avant de l'appeler et disent quoi faire (règle et codes de sortie :
+QUA-215 et QUA-216 ; ne pas les recopier ici). Claude Code (`.claude/settings.json`) et Copilot
+(`packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`, champs `bash` et `powershell`) portent le test dans la commande. Gemini n'a qu'un champ
+`command` lu par deux langages : hors Windows, `init` écrit des commandes qui passent par le lanceur
+`.gemini/hooks/drwil-node.sh` (copie du gabarit, choix de la forme dans `packages/drwil/src/render-gemini.ts`) ; sous
+Windows la commande reste `node` seul. Côté visiteur : `INSTALL.md` (QUA-218).
+
 ## Reprise
 
 - **Dernier état** : fiche posée à l'installation, rien à reprendre. Si le

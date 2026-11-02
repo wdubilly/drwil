@@ -4003,3 +4003,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : lot 1 [humain] non fait (les sondes qui dateront les cases du tableau de parité) ; enchaînement `drwil-file` non essayé en vrai sous Copilot CLI ; sous-agents de Copilot CLI et de Gemini CLI non éprouvés ; le banc ne mesure ni sondage, ni file, ni sous-agent ; pas de worktree ni de file parallèle en sondages enchaînés — toutes reprises dans `docs/intentions/parite-des-outils-suites.md`.
 - **Preuve de clôture** : docs/preuves/parite-des-outils.md.
 - **Clôturé par** : la branche `workstream/parite-des-outils`.
+
+## 2026-11-02 — Hooks indépendants du PATH du shell
+
+- **Décisions clés** : message lisible seulement quand `node` manque (QUA-215), sans chemin absolu ni repli automatique ; sans `node`, les gardes `PreToolUse` de Claude Code refusent toujours (code 2), ses hooks informatifs avertissent (code 1), ceux de Copilot ne bloquent jamais (QUA-216) ; Gemini hors Windows passe par le lanceur `.gemini/hooks/drwil-node.sh`, sous Windows sa commande reste `node` seul ; les tests du moteur ne supposent plus un `node` système (QUA-217) ; `INSTALL.md` décrit le prérequis et le piège fnm (QUA-218, contrat `Manuel`).
+- **Contrats modifiés** : aucun ; QUA-044 et QUA-065 restent vrais.
+- **Hooks modifiés** : `.githooks/engine.test.mjs`, validé par le demandeur le 2026-11-02 (tests QUA-208 à 210 corrigés, test QUA-217 ajouté).
+- **Décisions de l'humain en cours de route** : option 3 pour Gemini (lanceur `sh` hors Windows, aucun repli sous Windows) ; périmètre élargi par commits « Périmètre : … » (lanceur de Gemini et ses copies du dépôt).
+- **Limites connues** : Gemini sous Windows sans message de repli ; formes PowerShell non jouées en CI ; les tests qui lancent les commandes `sh` sont sautés sous Windows ; réglage de Gemini versionné, une équipe mixte garde la forme du système qui a lancé `init` ; 14 tests de `.githooks/run-checks.test.mjs` échouent sans `gitleaks` dans le PATH (intention `docs/intentions/tests-de-run-checks-sans-gitleaks.md`) ; QUA-217 prouve le fichier du moteur seul. Intentions : `docs/intentions/gemini-sous-windows-repli-node.md`, `docs/intentions/formes-powershell-des-hooks-non-jouees-en-ci.md`.
+- **Preuve de clôture** : docs/preuves/hooks-sans-dependance-au-shell.md.
+- **Clôturé par** : la branche `workstream/hooks-sans-dependance-au-shell`.

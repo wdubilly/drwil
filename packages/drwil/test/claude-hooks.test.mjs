@@ -2,9 +2,9 @@
 // `npm run test:claude:coverage` (QUA-004). Les copies installées sont les mêmes fichiers (scopeMirrors).
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -424,4 +424,62 @@ export const draftFinish = (r, o) => ({ code: 0, message: "fin " + o.autoMerge }
   await q.queueHook(post(copilot(enumFile)), { root: sansEtat, lang: "fr", tell: (t) => dit.push(t) });
   assert.match(dit.at(-1), /^✗ erreur à la lecture du sondage de file/);
   for (const d of [racine, sansEtat]) rmSync(d, { recursive: true, force: true });
+});
+
+// QUA-215, QUA-216 : le repli des réglages livrés est une commande `sh` (Git Bash pour Claude Code sous Windows,
+// `bash` pour Copilot) ; les tests la jouent par /bin/sh, donc pas sous Windows.
+const SH = "/bin/sh";
+const OUTILS = join(HOOKS, "..", "..");
+const MESSAGE_SANS_NODE = /node not found in the PATH.*Restart it from a shell where which node answers/;
+const commandes = (fichier) =>
+  Object.entries(JSON.parse(readFileSync(join(OUTILS, fichier), "utf8").replace("{{stackAllowJson}}", "")).hooks).flatMap(
+    ([evenement, groupes]) => groupes.flatMap((g) => (g.hooks ?? [g]).map((h) => ({ evenement, commande: h.command ?? h.bash }))),
+  );
+const sh = (commande, env, input = "") => spawnSync(SH, ["-c", commande], { env, input, encoding: "utf8" });
+const sansNode = (extra = {}) => ({ PATH: "", ...extra });
+const COPILOT = "../copilot/.github/hooks/drwil.json";
+
+test("QUA-215 : sans node dans le PATH, chaque hook de Claude Code et de Copilot dit que node est introuvable et quoi faire", {
+  skip: process.platform === "win32",
+}, () => {
+  const claude = commandes(".claude/settings.json");
+  const copilot = commandes(COPILOT);
+  assert.ok(claude.length >= 10 && copilot.length === 2);
+  for (const { evenement, commande } of [...claude, ...copilot]) {
+    const r = sh(commande, sansNode({ CLAUDE_PROJECT_DIR: OUTILS }));
+    assert.match(r.stderr, MESSAGE_SANS_NODE, `${evenement} : ${commande}`);
+    assert.equal(r.stdout, "", "rien sur stdout : pas de décision lue par l'assistant");
+  }
+});
+
+test("QUA-216 : sans node, les gardes PreToolUse de Claude Code refusent (code 2), les hooks informatifs n'ont pas le code 2 et ceux de Copilot sortent en 0", {
+  skip: process.platform === "win32",
+}, () => {
+  for (const { evenement, commande } of commandes(".claude/settings.json")) {
+    const r = sh(commande, sansNode({ CLAUDE_PROJECT_DIR: OUTILS }));
+    assert.equal(r.status, evenement === "PreToolUse" ? 2 : 1, `${evenement} : ${commande}`);
+  }
+  for (const { commande } of commandes(COPILOT)) assert.equal(sh(commande, sansNode()).status, 0, commande);
+});
+
+test("QUA-216 : avec node, le repli ne change ni la sortie ni le code de chaque garde Claude livrée (un refus reste un refus)", {
+  skip: process.platform === "win32",
+}, () => {
+  const entrees = {
+    "bash-guard.mjs": { tool_name: "Bash", tool_input: { command: "git commit --no-verify -m x" } },
+    "read-guard.mjs": { tool_name: "Read", tool_input: { file_path: join(OUTILS, "absent.txt") } },
+    "scope-reminder.mjs": { hook_event_name: "PreToolUse", tool_name: "Write", tool_input: { file_path: join(OUTILS, "x.md") } },
+    "prompt-hook.mjs": { hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: {} },
+  };
+  const env = { PATH: dirname(process.execPath), CLAUDE_PROJECT_DIR: OUTILS };
+  const gardes = commandes(".claude/settings.json").filter((c) => c.evenement === "PreToolUse");
+  assert.equal(gardes.length, 4);
+  for (const { commande } of gardes) {
+    const script = Object.keys(entrees).find((s) => commande.includes(s));
+    const input = JSON.stringify(entrees[script]);
+    const avec = sh(commande, env, input);
+    const direct = spawnSync(process.execPath, [join(HOOKS, script)], { env, input, encoding: "utf8" });
+    assert.deepEqual([avec.status, avec.stdout, avec.stderr], [direct.status, direct.stdout, direct.stderr], script);
+    assert.equal(avec.stdout.includes("node not found"), false);
+  }
 });

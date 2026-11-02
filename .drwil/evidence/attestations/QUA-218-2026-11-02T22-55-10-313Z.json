@@ -1,0 +1,21 @@
+{
+  "version": 4,
+  "contract": "QUA-218",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-02T22:55:10.313Z",
+  "actor": {
+    "name": "wdubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "e54acea5a582526b07354ab6f1bdc727c53036871b343decfda575a171fed733",
+  "proof": {},
+  "covers": [
+    "INSTALL.md"
+  ],
+  "coverage": {
+    "INSTALL.md": "ff4e2bcff22d4fca70a08269c6bd6baf67407ccd675e64fc0ccc44750e9535af"
+  },
+  "commit": "f9fb9715be2fb9522536629a6080eea5937182b3",
+  "automated": []
+}

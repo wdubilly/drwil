@@ -6,7 +6,7 @@
           {
             "name": "drwil-state",
             "type": "command",
-            "command": "node \"$GEMINI_PROJECT_DIR/.githooks/state.mjs\" gemini-start",
+            "command": "{{geminiNodeWarn}}\"$GEMINI_PROJECT_DIR/.githooks/state.mjs\" gemini-start",
             "timeout": 10000
           }
         ]
@@ -18,7 +18,7 @@
           {
             "name": "drwil-reminder",
             "type": "command",
-            "command": "node \"$GEMINI_PROJECT_DIR/.githooks/state.mjs\" gemini-message",
+            "command": "{{geminiNodeWarn}}\"$GEMINI_PROJECT_DIR/.githooks/state.mjs\" gemini-message",
             "timeout": 10000
           }
         ]
@@ -31,7 +31,7 @@
           {
             "name": "drwil-scope",
             "type": "command",
-            "command": "node \"$GEMINI_PROJECT_DIR/.claude/hooks/scope-reminder.mjs\"",
+            "command": "{{geminiNodeGuard}}\"$GEMINI_PROJECT_DIR/.claude/hooks/scope-reminder.mjs\"",
             "timeout": 10000
           }
         ]
@@ -44,7 +44,7 @@
           {
             "name": "drwil-scope-after",
             "type": "command",
-            "command": "node \"$GEMINI_PROJECT_DIR/.claude/hooks/scope-reminder.mjs\"",
+            "command": "{{geminiNodeWarn}}\"$GEMINI_PROJECT_DIR/.claude/hooks/scope-reminder.mjs\"",
             "timeout": 10000
           }
         ]

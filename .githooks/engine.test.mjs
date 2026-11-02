@@ -701,6 +701,8 @@ test("QUA-141 : un contrôle repris sur ses seuls paths les déclare tous — ch
 });
 
 // Contrôle réservé par `runAt` : lent, il ne tourne qu'au verify et en CI (QUA-208 à QUA-210).
+// Un env réduit garde le PATH hérité : la commande `node -e 0` du contrôle ne se résout que par lui (node n'est pas toujours dans /usr/bin : fnm).
+const avecPath = (env) => ({ PATH: process.env.PATH, ...env });
 const reserve = (runAt, extra = {}) => ({ checks: [{ id: "lent", run: "node -e 0", ...extra, ...(runAt ? { runAt } : {}) }] });
 
 test("QUA-208 : un contrôle réservé par runAt n'est pas joué au commit ni au push et le dit : non exécuté, jamais passé", () => {
@@ -715,7 +717,7 @@ test("QUA-208 : un contrôle réservé par runAt n'est pas joué au commit ni au
   });
   // Au push (références données par le pre-push, tags seuls et suppressions compris), hors CI.
   for (const k of ["DRWIL_PUSH_REFS", "DRWIL_PUSH_TAGS_ONLY", "DRWIL_PUSH_NO_BRANCH"]) {
-    const r = parId(checks(racine, { cfg, env: { [k]: "1" } })).lent.run({ stdio: "pipe" });
+    const r = parId(checks(racine, { cfg, env: avecPath({ [k]: "1" }) })).lent.run({ stdio: "pipe" });
     assert.equal(r.status, "not-run", k);
     assert.match(r.detail, /pas joué au push/, k);
   }
@@ -723,7 +725,7 @@ test("QUA-208 : un contrôle réservé par runAt n'est pas joué au commit ni au
   const auCommit = reserve(["commit", "verify", "ci"]);
   assert.equal(parId(checks(racine, { cfg: auCommit, staged: ["src/a.js"] })).lent.run({ stdio: "pipe" }).status, "ok");
   const auPush = reserve(["push", "verify", "ci"]);
-  assert.equal(parId(checks(racine, { cfg: auPush, env: { DRWIL_PUSH_REFS: "x" } })).lent.run({ stdio: "pipe" }).status, "ok");
+  assert.equal(parId(checks(racine, { cfg: auPush, env: avecPath({ DRWIL_PUSH_REFS: "x" }) })).lent.run({ stdio: "pipe" }).status, "ok");
   assert.equal(parId(checks(racine, { cfg: auPush, staged: ["a.js"] })).lent.run({ stdio: "pipe" }).status, "not-run");
   // En anglais.
   const en = parId(checks(racine, { cfg: { ...cfg, lang: "en" }, staged: ["src/a.js"] })).lent.run({ stdio: "pipe" });
@@ -735,8 +737,8 @@ test("QUA-209 : verify et la CI jouent le contrôle réservé, son échec bloque
   const cfg = reserve(["verify", "ci"]);
   for (const [cas, options] of [
     ["verify (rien d'indexé, pas de push)", {}],
-    ["CI", { env: { CI: "true" } }],
-    ["CI, même avec des références de push", { env: { CI: "true", DRWIL_PUSH_REFS: "x" } }],
+    ["CI", { env: avecPath({ CI: "true" }) }],
+    ["CI, même avec des références de push", { env: avecPath({ CI: "true", DRWIL_PUSH_REFS: "x" }) }],
   ])
     assert.equal(executer(racine, "lent", { cfg, ...options }).status, "ok", cas);
   const echec = reserve(["verify", "ci"], { run: "node -e 'process.exit(1)'" });
@@ -772,9 +774,9 @@ test("QUA-210 : un contrôle sans runAt se comporte comme avant : joué partout,
   for (const [contexte, options, statut] of [
     ["commit sous ses paths", { staged: ["src/a.js"] }, "ok"],
     ["commit hors ses paths", { staged: ["autre.js"] }, "not-run"],
-    ["push", { env: { DRWIL_PUSH_REFS: "x" } }, "ok"],
+    ["push", { env: avecPath({ DRWIL_PUSH_REFS: "x" }) }, "ok"],
     ["verify", {}, "ok"],
-    ["CI", { env: { CI: "true" } }, "ok"],
+    ["CI", { env: avecPath({ CI: "true" }) }, "ok"],
   ])
     assert.equal(executer(racine, "lent", { cfg, ...options }).status, statut, contexte);
   assert.deepEqual(executer(racine, "lent", { cfg, staged: ["autre.js"] }), {
@@ -820,4 +822,24 @@ test("QUA-212 : les tests du moteur et du paquet ne dépendent pas des variables
   assert.equal(moteur.status, 0, `moteur posé comme au push :\n${moteur.stdout.slice(-1500)}`);
   const paquet = jouer("packages/drwil/test/kit.test.mjs", "^QUA-2");
   assert.equal(paquet.status, 0, `paquet posé comme au push :\n${paquet.stdout.slice(-1500)}`);
+});
+
+test("QUA-217 : les tests du moteur passent quand node n'est que dans un dossier propre au shell (fnm), jamais dans /usr/bin ni /usr/local/bin", {
+  skip: process.platform === "win32" && "liens symboliques non garantis sous Windows",
+}, () => {
+  const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const bin = join(tmp(), "fnm-like", "bin");
+  mkdirSync(bin, { recursive: true });
+  symlinkSync(process.execPath, join(bin, "node"));
+  // git reste trouvable (les tests créent des dépôts), mais par son seul dossier système.
+  const gitDir = process.env.PATH.split(delimiter).find((d) => d && spawnSync(join(d, "git"), ["--version"]).status === 0);
+  assert.ok(gitDir, "git introuvable dans le PATH");
+  const env = { ...process.env, PATH: [bin, gitDir].join(delimiter) };
+  // Le test lui-même et QUA-212 sont exclus, sinon ils se relanceraient sans fin.
+  const moteur = spawnSync(process.execPath, ["--test", "--test-name-pattern=^(?!QUA-21[27])", ".githooks/engine.test.mjs"], {
+    cwd: racine,
+    env,
+    encoding: "utf8",
+  });
+  assert.equal(moteur.status, 0, `moteur sans node système dans le PATH :\n${moteur.stdout.slice(-1500)}`);
 });

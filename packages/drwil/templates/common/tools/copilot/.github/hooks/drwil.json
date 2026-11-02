@@ -4,7 +4,8 @@
     "sessionStart": [
       {
         "type": "command",
-        "command": "node .githooks/state.mjs copilot-start",
+        "bash": "command -v node >/dev/null || { echo 'drwil: node not found in the PATH of this assistant. Restart it from a shell where which node answers.' >&2; exit 0; }; node .githooks/state.mjs copilot-start",
+        "powershell": "if (Get-Command node -ErrorAction SilentlyContinue) { node .githooks/state.mjs copilot-start } else { [Console]::Error.WriteLine('drwil: node not found in the PATH of this assistant. Restart it from a shell where which node answers.') }",
         "cwd": ".",
         "timeoutSec": 10
       }
@@ -12,7 +13,8 @@
     "userPromptTransformed": [
       {
         "type": "command",
-        "command": "node .githooks/state.mjs copilot-message",
+        "bash": "command -v node >/dev/null || { echo 'drwil: node not found in the PATH of this assistant. Restart it from a shell where which node answers.' >&2; exit 0; }; node .githooks/state.mjs copilot-message",
+        "powershell": "if (Get-Command node -ErrorAction SilentlyContinue) { node .githooks/state.mjs copilot-message } else { [Console]::Error.WriteLine('drwil: node not found in the PATH of this assistant. Restart it from a shell where which node answers.') }",
         "cwd": ".",
         "timeoutSec": 10
       }
