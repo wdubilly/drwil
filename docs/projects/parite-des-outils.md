@@ -63,13 +63,13 @@ jamais été essayé (`docs/intentions/compat-codex.md`) ; Gemini n'a ni skills 
 - Un tableau de parité, outil par outil (Claude Code, Copilot CLI, Gemini CLI, Codex), dit pour chacun : sondage
   de lancement, choix de plusieurs fiches (file), sous-agent par chantier, blocage avant écriture, rappel d'état ;
   chaque case est « tenu », « contourné par … » ou « impossible », avec date et version d'essai, jamais devinée
-  `QUA-063`
+  — [humain] — `QUA-063`
 - Une file de plusieurs fiches se construit sous chaque outil par des sondages à choix unique enchaînés
   (`drwil-file`), sans cocher plusieurs cases (décision du lot 2) — `QUA-037`
 - Le contournement ne laisse jamais l'agent décider du lancement : l'humain répond, un outil lit (même
   invariant que le sondage actuel) — `QUA-037`
 - Le résultat par outil est prouvé par le banc `outils/banc-agents.mjs` ; l'attestation de la colonne
-  « Attested by the human » reste un geste humain — [humain]
+  « Attested by the human » reste un geste humain — [humain] — `QUA-060`
 
 ## 2. Hors périmètre
 
