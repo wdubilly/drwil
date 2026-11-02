@@ -215,8 +215,14 @@ test("QUA-060 : Gemini reçoit la confiance du dossier par une variable propre �
 
 test("QUA-063 : la matrice de compatibilité donne, pour chaque outil du banc, ce qui est tenu et la date de son essai", () => {
   const texte = iaFirst(join(RACINE, "packages", "drwil", "templates", "common", "base"));
-  const matrice = texte.slice(texte.search(/^#+ Tool compatibility matrix$/m));
+  const depuis = texte.slice(texte.search(/^#+ Tool compatibility matrix$/m));
+  const matrice = depuis.slice(0, depuis.search(/^#+ Workstream cycle parity$/m));
+  const parite = depuis.slice(matrice.length);
   const lignes = (nom) => matrice.split("\n").filter((l) => l.startsWith(`| ${nom} |`));
+  for (const nom of ["Claude Code", "Copilot CLI", "Gemini CLI", "Codex", "Cursor"])
+    assert.equal(parite.split("\n").filter((l) => l.startsWith(`| ${nom} |`)).length, 1, `tableau de parité : une ligne pour ${nom}`);
+  assert.doesNotMatch(parite, /\d{4}-\d{2}-\d{2} \(\d/, "le tableau de parité ne date aucun essai du banc : il n'en a pas fait");
+  assert.match(matrice, /Codex stays "not tested"/, "Codex livré pour sa documentation, jamais annoncé fonctionnel");
   for (const [nom, essaye] of [
     ["Claude Code", true],
     ["Copilot CLI", true],

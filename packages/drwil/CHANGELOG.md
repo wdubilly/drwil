@@ -7,6 +7,15 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Workstream cycle parity across tools (lot 3): the queue reminder no longer tells a tool without a usable
+  subagent to run everything in the same session. Claude Code and Copilot CLI keep one subagent per
+  workstream; for any other tool the agent stops after a closing and merge and offers the human a new
+  conversation for the next workstream (`node .githooks/state.mjs next` runs there on an explicit yes).
+  The compatibility matrix gains a "Workstream cycle parity" table, every cell "not tested" until a human
+  trial dates it.
+- `drwil init --tools codex` now installs `.codex/hooks.json` (state at session start, state reminder at each
+  message, from Codex's documentation). Codex runs it only in a trusted project after the human reviews it with
+  `/hooks`; no write-blocking hook is delivered, and Codex stays "not tested" in the matrix.
 - Queue built by chained single-choice polls (QUA-037): under a tool that reads only a single choice
   reliably (Copilot CLI), the human builds a queue with `drwil-file` polls, one brief added per answer
   (nothing starts), then « Finish the queue » starts the first brief and queues the others, with the merge

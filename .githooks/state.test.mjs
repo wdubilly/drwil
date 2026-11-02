@@ -1610,6 +1610,9 @@ test("QUA-037 : une file se mène un sous-agent par chantier ; reprise confirmé
   assert.match(enFile, /sa consigne commence par lire l'état \(`node \.githooks\/state\.mjs`\)/);
   assert.match(enFile, /jamais dans une copie isolée/, "l'état .drwil/state.json, ignoré par Git, n'y est pas");
   assert.match(enFile, /la session principale ne garde que leurs comptes rendus/);
+  assert.match(enFile, /Autre outil : un sous-agent seulement si l'outil en offre un/);
+  assert.match(enFile, /proposer à l'humain d'ouvrir une nouvelle conversation pour la suivante/);
+  assert.doesNotMatch(enFile, /tout dans la même session/);
   assert.match(enFile, /suit la PR par `gh` jusqu'à la fusion, 30 minutes au plus/);
   assert.match(enFile, /jamais de suivante sur une fusion non faite/);
   assert.match(enFile, /délai de fusion dépassé/);

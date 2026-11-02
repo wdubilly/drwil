@@ -55,3 +55,32 @@ Gemini has no `/drwil-*` commands here: **start a workstream with
 `node .githooks/state.mjs start` in an interactive terminal**, then work in
 Gemini CLI. The free-tier quota of the model can make a bench run fail (429, 503):
 a failed run proves nothing and is run again.
+
+Codex: `--tools codex` installs `AGENTS.md` (read natively) and a hooks.json file in the .codex folder that gives the state at session start (`SessionStart`) and the state
+reminder at each message (`UserPromptSubmit`), the plain text output of
+`.githooks/state.mjs` being added to the context as Codex's documentation
+describes. Codex runs a project's hooks only in a trusted project, and only after
+the human has reviewed and approved them with `/hooks`. No write-blocking hook is
+delivered: the format of the `apply_patch` input has not been checked against the
+shared script. None of this has been tried (no capable model available on
+2026-11-02): Codex stays "not tested", whatever its documentation promises.
+
+## Workstream cycle parity
+
+What each tool offers for the launch poll, the queue and one workstream per
+fresh context. The agent bench covers only the hooks, the write and the reminder
+(table above): every cell below is a delivery or a documented fallback, "not
+tested" until a human trial dates it (project "tool parity", batch 1).
+
+| Tool | Launch poll | Queue of several briefs | One workstream per fresh context |
+|---|---|---|---|
+| Claude Code | `/drwil-start`, read by a hook | one multiple-choice poll | subagent per workstream (instruction delivered), not tested by the bench |
+| Copilot CLI | `/drwil-start`, read by a hook | chained single-choice `drwil-file` polls (multiple choice came back empty, 2026-11-02); the chain is not tested for real | subagent (`task` tool) if it works in the repository folder, not tested; otherwise a new conversation |
+| Gemini CLI | none: `node .githooks/state.mjs start` in a terminal | not tested | new conversation offered to the human between two workstreams; subagents not tested |
+| Codex | none | not tested | new conversation offered to the human between two workstreams; subagents not tested |
+| Cursor | none | not tested | new conversation offered to the human between two workstreams; subagents not tested |
+
+The fallback is never the agent's decision: when the tool has no usable
+subagent, the state reminder tells the agent to stop after a closing and merge
+and to offer the human a new conversation; the next workstream starts there
+(`node .githooks/state.mjs next`) only on the human's explicit yes.

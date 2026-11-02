@@ -632,6 +632,14 @@ test("init en anglais, Codex seul, CI GitHub", async () => {
   const r = checks(dir);
   assert.equal(r.status, 0, r.stdout);
   assert.match(r.stdout, /not run: secrets/);
+  const hooks = JSON.parse(read(dir, ".codex/hooks.json")).hooks;
+  assert.deepEqual(
+    Object.keys(hooks).sort(),
+    ["SessionStart", "UserPromptSubmit"],
+    "état et rappel seulement : aucun blocage d'écriture non éprouvé",
+  );
+  assert.match(hooks.SessionStart[0].hooks[0].command, /\.githooks\/state\.mjs"$/);
+  assert.match(hooks.UserPromptSubmit[0].hooks[0].command, /\.githooks\/state\.mjs" reminder$/);
 });
 
 test("installation anglaise : le cadrage (QUA-016) ne bloque pas le premier commit", async () => {
