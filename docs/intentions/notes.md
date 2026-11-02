@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-10-30 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-02 (rangement du backlog).
 
 ## Besoin
 
@@ -24,3 +24,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-10-29 — Sous Copilot CLI, le champ fiche du sondage /drwil-start en choix multiple (type array, items.enum) revenait vide malgré la case cochée ; le skill prescrit désormais le choix unique (QUA-180), mais la cause n'est pas établie et une file de plusieurs fiches ne se coche plus d'un seul sondage (limites du journal, retour-scoping-branche-sondage, 2026-10-29). À reproduire avant de cadrer.
 - 2026-10-30 — Garanties : le classement « nouveau » ou « existant » d'un projet dépend de la présence de code au moment où on lance guarantees, alors que pour un projet neuf la recette impose d'écrire le code d'abord ; le même projet est donc classé différemment selon l'ordre des gestes (défaut du kit, livrable, à voir avec la fiche docs/projects/cloture-sur-projet-neuf.md).
 - 2026-10-30 — Garanties : drwil guarantees affiche « ✓ couverture » pendant que drwil verify déclare la même garantie non tenue ; les deux outils se contredisent faute d'un même juge (défaut du kit, livrable, à voir avec la fiche docs/projects/cloture-sur-projet-neuf.md).
+- 2026-11-02 — Idée à mettre à l'épreuve : faire systématiquement le build ou la doc/le cadrage dans un worktree, pour pouvoir cadrer et documenter en cours de build sans déranger le build.

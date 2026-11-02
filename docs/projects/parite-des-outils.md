@@ -52,11 +52,11 @@ Tranchées par le demandeur le 2026-11-02 :
 - File par commande dans tous les cas : on n'attend pas la cause du choix multiple vide sous Copilot CLI.
 - Outil sans sous-agent exploitable : proposer à l'humain une nouvelle conversation entre deux chantiers.
 - Tous les outils ensemble, un lot par capacité (et non un lot par outil).
-- Codex : le demandeur l'installe avant le lot 1.
+- Codex : essayé le 2026-11-02 avec un modèle local léger (7B sur processeur) : il n'appelle pas les outils de façon fiable, l'essai est inexploitable ; Codex reste « not tested » (QUA-013) jusqu'à ce qu'un modèle capable soit disponible (abonnement ou clé API), sans bloquer les lots.
 
 ## 5. Points à trancher
 
-- [humain] Installer Codex sur le poste et s'y connecter, avant le lot 1.
+- [humain] Sonder Codex dès qu'un modèle capable est disponible (abonnement ou clé API) ; non bloquant : sans lui, Codex reste « not tested » et l'on livre pour lui ce que sa documentation garantit (`AGENTS.md`, et les hooks déclarés dans le dossier `.codex` du projet).
 
 ## 6. Increments
 
@@ -71,4 +71,4 @@ Tranchées par le demandeur le 2026-11-02 :
 
 - **Dernier état** (2026-11-02) : décisions tranchées, aucun code.
 - **Travail non commité** : cette fiche.
-- **Prochaine étape** : [décision] installer Codex ([humain]), puis lancer par `/drwil-start`.
+- **Prochaine étape** : [décision] lancer par `/drwil-start` ; Codex reste « not tested » en attendant un modèle capable.
