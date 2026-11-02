@@ -14,6 +14,8 @@ files:
   - packages/drwil/src/config.ts
   - packages/drwil/src/render.ts
   - packages/drwil/src/render-gemini.ts
+  - .gemini/settings.json
+  - .gemini/hooks/drwil-node.sh
   - packages/drwil/test/claude-hooks.test.mjs
   - packages/drwil/test/kit.test.mjs
   - .githooks/engine.test.mjs
