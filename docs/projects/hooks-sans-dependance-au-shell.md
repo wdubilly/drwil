@@ -3,7 +3,7 @@
 **Statut** : cadré le 2026-11-02.
 **Risque** : HIGH
 **Maturité** : prêt
-**Intention** : `docs/intentions/hooks-sans-dependance-au-shell.md`
+**Intention** : retirée à la clôture (QUA-036), résumée au journal
 
 <!-- scope
 files:
