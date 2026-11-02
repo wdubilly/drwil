@@ -144,6 +144,11 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 ## Intentions par thème
 
+### Parité des outils
+
+- [ ] [humain] [P1] Sonder les quatre outils (lot 1 non fait) et dater le tableau de parité ; banc et file parallèle à
+  décider — `docs/intentions/parite-des-outils-suites.md`.
+
 ### Fichiers chargés courts
 
 Cadré le 2026-10-27 en trois fiches (livrées), puis le 2026-10-28 en une

@@ -63,12 +63,11 @@ jamais été essayé (`docs/intentions/compat-codex.md`) ; Gemini n'a ni skills 
 - Un tableau de parité, outil par outil (Claude Code, Copilot CLI, Gemini CLI, Codex), dit pour chacun : sondage
   de lancement, choix de plusieurs fiches (file), sous-agent par chantier, blocage avant écriture, rappel d'état ;
   chaque case est « tenu », « contourné par … » ou « impossible », avec date et version d'essai, jamais devinée
-  (rattaché à QUA-063, matrice de compatibilité) — contrat à créer
-- Une file de plusieurs fiches se lance d'un seul geste humain sous chaque outil qui la permet ; sous un outil
-  qui ne la permet pas, le contournement est une file lue par l'état (`state.mjs queue`), sans cocher plusieurs
-  cases — contrat à créer
+  `QUA-063`
+- Une file de plusieurs fiches se construit sous chaque outil par des sondages à choix unique enchaînés
+  (`drwil-file`), sans cocher plusieurs cases (décision du lot 2) — `QUA-037`
 - Le contournement ne laisse jamais l'agent décider du lancement : l'humain répond, un outil lit (même
-  invariant que le sondage actuel) — contrat à créer
+  invariant que le sondage actuel) — `QUA-037`
 - Le résultat par outil est prouvé par le banc `outils/banc-agents.mjs` ; l'attestation de la colonne
   « Attested by the human » reste un geste humain — [humain]
 
@@ -93,6 +92,22 @@ Tranchées par le demandeur le 2026-11-02 :
 - Tous les outils ensemble, un lot par capacité (et non un lot par outil).
 - Lot 2, option B (2026-11-02) : la file se construit par des sondages à choix unique enchaînés (`drwil-file` : « ajouter » une fiche à la fois, puis « Terminer la file »), lus par le hook, sans choix multiple ; l'humain répond, un outil lit, l'agent ne décide jamais du lancement ni de la composition de la file. Amende QUA-037 (un seul sondage à choix multiple).
 - Codex : essayé le 2026-11-02 avec un modèle local léger (7B sur processeur) : il n'appelle pas les outils de façon fiable, l'essai est inexploitable ; Codex reste « not tested » (QUA-013) jusqu'à ce qu'un modèle capable soit disponible (abonnement ou clé API), sans bloquer les lots.
+
+## Contrats modifiés
+
+- `QUA-037` — ancien critère : « une file se décide d'un seul sondage à choix multiple » — raison : Copilot CLI ne
+  lit de façon fiable qu'un choix unique ; la file se construit par des sondages `drwil-file` enchaînés, lus par
+  le hook (validé le 2026-11-02)
+- `QUA-063` — ajout d'un tableau « Workstream cycle parity » à la matrice, toutes cases « not tested » tant
+  qu'un outil n'est pas essayé (validé le 2026-11-02)
+- `.githooks/state.mjs` — file en construction `queue_draft`, lue par le hook (validé par le demandeur le 2026-11-02)
+- `.githooks/state-validate.mjs` — validation de l'état `queue_draft` (validé par le demandeur le 2026-11-02)
+- `.githooks/state-transitions.mjs` — `queue_draft` n'existe qu'en SCOPING (validé par le demandeur le 2026-11-02)
+- `.githooks/state-texts.mjs` — textes de la file en construction (validé par le demandeur le 2026-11-02)
+- `.githooks/state-context-texts.mjs` — rappel d'état : sous-agent si l'outil en offre un, sinon nouvelle conversation, plus de « même session » (validé par le demandeur le 2026-11-02)
+- `.githooks/state-messages-fr.mjs` — messages français de la file (validé par le demandeur le 2026-11-02)
+- `.githooks/state-messages-en.mjs` — messages anglais de la file (validé par le demandeur le 2026-11-02)
+- `.githooks/state.test.mjs` — tests de la file par sondages enchaînés (validé par le demandeur le 2026-11-02)
 
 ## 5. Points à trancher
 
