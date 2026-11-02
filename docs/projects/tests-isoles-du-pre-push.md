@@ -33,6 +33,10 @@ chemin légitime de clôture sans rien protéger.
 - Un test qui lit ces variables les pose lui-même, par l'`env` de son lancement, jamais par l'héritage —
   contrat `QUA-212`
 
+## Contrats modifiés
+
+- `.githooks/engine.test.mjs` — garde d'isolation des `DRWIL_PUSH_*` et test de QUA-212 (validé par le demandeur le 2026-11-01).
+
 ## 2. Hors périmètre
 
 - Modifier le pre-push ou le moteur : seuls les tests sont corrigés.
