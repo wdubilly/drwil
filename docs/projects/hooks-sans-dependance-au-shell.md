@@ -45,7 +45,7 @@ machines. Un développeur sous fnm est alors bloqué par le pre-commit et le pre
   des gardes de Claude Code est conservé (QUA-019), et les hooks de Copilot ne bloquent toujours jamais
   (QUA-065) — `QUA-216`
 - Les tests du moteur passent sans `node` dans le `PATH` système, donc sous fnm : aucun ne suppose un `node`
-  dans `/usr/bin` — contrat à créer
+  dans `/usr/bin` — `QUA-217`
 - Le prérequis (`node` dans le `PATH` du processus de l'assistant) et le piège fnm sont décrits dans
   `INSTALL.md` — [humain] — `QUA-218`
 
