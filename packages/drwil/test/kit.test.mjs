@@ -2621,8 +2621,10 @@ test("QUA-064 : choisir copilot installe aussi l'arbre .claude (hooks, réglages
     assert.ok(existsSync(join(dir, f)), f);
   assert.ok(!existsSync(join(dir, "CLAUDE.md")), "le pointeur CLAUDE.md reste lié à l'outil claude");
   const natifs = JSON.parse(read(dir, ".github/hooks/drwil.json")).hooks;
-  assert.match(natifs.sessionStart[0].command, /state\.mjs copilot-start/);
-  assert.match(natifs.userPromptTransformed[0].command, /state\.mjs copilot-message/);
+  assert.match(natifs.sessionStart[0].bash, /state\.mjs copilot-start/);
+  assert.match(natifs.sessionStart[0].powershell, /state\.mjs copilot-start/);
+  assert.match(natifs.userPromptTransformed[0].bash, /state\.mjs copilot-message/);
+  assert.match(natifs.userPromptTransformed[0].powershell, /state\.mjs copilot-message/);
 });
 
 test("QUA-066 : choisir gemini installe aussi les hooks partagés et ses réglages natifs, sans les skills ni CLAUDE.md propres à Claude", async () => {

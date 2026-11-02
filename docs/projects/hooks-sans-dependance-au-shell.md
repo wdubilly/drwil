@@ -98,7 +98,13 @@ Tranchées par le demandeur le 2026-11-02 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-02) : lot 1 fait. Les tests QUA-208, 209 et 210 de `.githooks/engine.test.mjs`
-  passent désormais le `PATH` hérité à leur `env` réduit ; 794 tests verts sans lien `node` dans `/usr/local/bin`.
+- **Dernier état** (2026-11-02) : lot 2 fait. Les commandes de hook de Claude Code (12) et de Copilot (champs
+  `bash` et `powershell`, 2) testent `node` avant de l'appeler et disent quoi faire (QUA-215) ; sans `node`,
+  codes 2 pour les `PreToolUse` de Claude, 1 pour ses autres hooks, 0 pour Copilot (QUA-216). Gemini non
+  modifié : sa commande tourne sous `bash` (Linux, macOS) ou PowerShell (Windows) sans champ par système, donc
+  aucune forme de repli ne vaut pour les deux ; à trancher avec le demandeur. Lot 1 : tests QUA-208, 209 et 210
+  de `.githooks/engine.test.mjs` corrigés, 794 tests verts sans lien `node` dans `/usr/local/bin`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 2 — message de repli des hooks livrés, dans une nouvelle session.
+- **Prochaine étape** : lot 3 — documentation (`INSTALL.md`, changelog, `docs/projects/kit-mechanics.md`,
+  contrats), dans une nouvelle session. Reste aussi le contrat du critère 3 (tests du moteur sans `node`
+  système), non créé au lot 1.
