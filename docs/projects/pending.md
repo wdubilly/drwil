@@ -95,7 +95,7 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
 **Versions visées (décidé avec le demandeur le 2026-10-28)** :
 
 - **0.11.0** : la réalisation des sept fiches cadrées de la section suivante,
-  une par session, dans l'ordre indiqué, puis, décidé le 2026-10-30, les fiches de
+  une par session, dans l'ordre indiqué (en tête de pile, décidé le 2026-11-02 : `parite-des-outils`), puis, décidé le 2026-10-30, les fiches de
   correctifs vus à l'installation de `drwil_walk` (`cloture-sur-projet-neuf`, `installation-depot-neuf`,
   `adoption-fluide-projet-neuf`, `perimetre-visible`, `attente-commandes-longues`, `signaler-un-defaut-du-kit`) ; entre deux chantiers, le cadrage des
   thèmes C (cible de couverture) et D (preuves et contrôles).
@@ -122,6 +122,8 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
+- [ ] [IA] [P0] (0.11.0) Même gouvernance et même cycle (sondage, file, sous-agents) sous Claude Code, Copilot CLI,
+  Gemini CLI et Codex (cadré le 2026-11-02) — `docs/projects/parite-des-outils.md`.
 - [ ] [IA] [P1] (0.11.0) Attente outillée des commandes longues : script d'attente bornée, fin des boucles `pgrep`
   (cadré le 2026-10-30) — `docs/projects/attente-commandes-longues.md`.
 - [ ] [IA] [P2] (0.11.0) Signaler un défaut du kit : commande qui imprime un rapport prêt à coller, sans donnée du
