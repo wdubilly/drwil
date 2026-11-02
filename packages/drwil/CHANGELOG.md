@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Assistant hooks without `node` in their PATH (fnm and other per-shell version managers): the hooks shipped for
+  Claude Code and Copilot CLI, and for Gemini CLI outside Windows (through the new launcher
+  `.gemini/hooks/drwil-node.sh`), now say "node not found in the PATH of this assistant. Restart it from a
+  shell where which node answers." instead of a mute exit 127. Claude Code's `PreToolUse` guards still refuse,
+  Copilot's hooks still never block, and nothing changes when `node` is present. On Windows, Gemini keeps a
+  plain `node` command, without the message. `INSTALL.md` describes the prerequisite and the fnm pitfall.
 - Workstream cycle parity across tools (lot 3): the queue reminder no longer tells a tool without a usable
   subagent to run everything in the same session. Claude Code and Copilot CLI keep one subagent per
   workstream; for any other tool the agent stops after a closing and merge and offers the human a new

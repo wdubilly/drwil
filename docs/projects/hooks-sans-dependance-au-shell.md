@@ -39,19 +39,20 @@ machines. Un développeur sous fnm est alors bloqué par le pre-commit et le pre
 ## Critères d'acceptation
 
 - Un hook d'assistant lancé sans `node` dans le `PATH` dit en clair que `node` est introuvable et quoi faire,
-  au lieu d'un 127 muet, pour tous les assistants livrés (Claude Code, Copilot, Gemini) — contrat à créer
+  au lieu d'un 127 muet, pour tous les assistants livrés (Claude Code, Copilot, Gemini) — `QUA-215`
 - Ce message ne change ni le refus ni le format de sortie des hooks quand `node` est présent : le fail-closed
   des gardes de Claude Code est conservé (QUA-019), et les hooks de Copilot ne bloquent toujours jamais
-  (QUA-065) — contrat à créer
+  (QUA-065) — `QUA-216`
 - Les tests du moteur passent sans `node` dans le `PATH` système, donc sous fnm : aucun ne suppose un `node`
   dans `/usr/bin` — contrat à créer
 - Le prérequis (`node` dans le `PATH` du processus de l'assistant) et le piège fnm sont décrits dans
-  `INSTALL.md` — [humain] — contrat à créer
+  `INSTALL.md` — [humain] — `QUA-218`
 
 ## Contrats modifiés
 
-Aucun à ce stade : les contrats QUA-044 et QUA-065 doivent rester vrais. Si le lot 1 montre qu'un des deux
-change, le dire ici et le faire valider avant de coder.
+Aucun contrat existant ne change : QUA-044 et QUA-065 restent vrais.
+
+- `.githooks/engine.test.mjs` — les tests QUA-208, 209 et 210 gardent le `PATH` hérité dans l'environnement réduit, et le test QUA-217 est ajouté (validé par le demandeur le 2026-11-02 : « les tests du moteur sont corrigés dans ce chantier »)
 
 ## 2. Hors périmètre
 
@@ -112,7 +113,9 @@ Tranchées par le demandeur le 2026-11-02 :
   `node …` sans repli (pas de forme unique sûre bash/PowerShell). Limite : réglage versionné, une équipe mixte
   garde la forme du système qui a lancé `init` (voir QUA-215). Lot 1 : tests QUA-208, 209 et 210
   de `.githooks/engine.test.mjs` corrigés, 794 tests verts sans lien `node` dans `/usr/local/bin`.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : lot 3 — documentation (`INSTALL.md`, changelog, `docs/projects/kit-mechanics.md`,
-  contrats), dans une nouvelle session. Reste aussi le contrat du critère 3 (tests du moteur sans `node`
-  système), non créé au lot 1.
+  Lot 3 : `INSTALL.md`, changelog, `docs/projects/kit-mechanics.md` écrits ; contrats QUA-217 (tests du moteur
+  rejoués avec un `PATH` sans `node` système) et QUA-218 (`Manuel`, `INSTALL.md`, attesté par l'humain).
+  Intentions créées pour les limites : Gemini sous Windows, formes PowerShell non jouées en CI, tests de
+  `run-checks` qui exigent `gitleaks`.
+- **Travail non commité** : aucun une fois le lot 3 commité.
+- **Prochaine étape** : l'humain atteste QUA-218 (`drwil attest QUA-218`), puis `verify`, clôture et PR.

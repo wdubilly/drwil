@@ -823,3 +823,21 @@ test("QUA-212 : les tests du moteur et du paquet ne dépendent pas des variables
   const paquet = jouer("packages/drwil/test/kit.test.mjs", "^QUA-2");
   assert.equal(paquet.status, 0, `paquet posé comme au push :\n${paquet.stdout.slice(-1500)}`);
 });
+
+test("QUA-217 : les tests du moteur passent quand node n'est que dans un dossier propre au shell (fnm), jamais dans /usr/bin ni /usr/local/bin", { skip: process.platform === "win32" && "liens symboliques non garantis sous Windows" }, () => {
+  const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const bin = join(tmp(), "fnm-like", "bin");
+  mkdirSync(bin, { recursive: true });
+  symlinkSync(process.execPath, join(bin, "node"));
+  // git reste trouvable (les tests créent des dépôts), mais par son seul dossier système.
+  const gitDir = process.env.PATH.split(delimiter).find((d) => d && spawnSync(join(d, "git"), ["--version"]).status === 0);
+  assert.ok(gitDir, "git introuvable dans le PATH");
+  const env = { ...process.env, PATH: [bin, gitDir].join(delimiter) };
+  // Le test lui-même et QUA-212 sont exclus, sinon ils se relanceraient sans fin.
+  const moteur = spawnSync(process.execPath, ["--test", "--test-name-pattern=^(?!QUA-21[27])", ".githooks/engine.test.mjs"], {
+    cwd: racine,
+    env,
+    encoding: "utf8",
+  });
+  assert.equal(moteur.status, 0, `moteur sans node système dans le PATH :\n${moteur.stdout.slice(-1500)}`);
+});

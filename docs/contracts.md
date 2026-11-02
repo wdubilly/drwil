@@ -2110,3 +2110,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/claude-hooks.test.mjs`
 **Origine** : hooks-sans-dependance-au-shell — « Ce message ne change ni le refus ni le format de sortie des hooks quand `node` est présent : le fail-closed des gardes de Claude Code est conservé (QUA-019), et les hooks de Copilot ne bloquent toujours jamais (QUA-065) »
 **Raison** : Avant ce contrat, un code 127 est une erreur non bloquante pour Claude Code (doc des hooks, « Other exit codes ») : sans `node`, les gardes laissaient tout passer sans le dire ; le code 2 les fait refuser avec un message, sans changer le comportement de Copilot (QUA-065) ni la sortie des hooks quand `node` est là.
+
+## QUA-217 — Les tests du moteur passent quand `node` n'est que dans un dossier propre au shell
+**Règle** : Les tests de `.githooks/engine.test.mjs` ne supposent aucun `node` dans `/usr/bin` ni `/usr/local/bin` : un contrôle dont la commande est `node` se résout par le `PATH` hérité, que l'environnement réduit passé au contrôle conserve. Sous un gestionnaire de versions comme fnm (`node` dans un dossier propre au shell), le pre-commit et le pre-push, qui rejouent ces tests, ne sont donc plus bloqués.
+**Périmètre** : `.githooks/engine.test.mjs`.
+**Source de vérité** : `.githooks/engine.test.mjs` (`avecPath`, test `QUA-217`).
+**Preuve** : test du moteur : le fichier est rejoué dans un sous-processus dont le `PATH` ne contient que `git` et un dossier à lien vers `node` (aucun dossier système de `node`), et doit passer en entier. Limite : le test prouve l'absence de dépendance à un `node` système dans ce fichier seul, pas dans les autres suites ; il est sauté sous Windows (liens symboliques) ; si `git` vit dans le même dossier que `node` (cas de la CI), le `PATH` reste réduit mais n'isole plus `node`.
+**Contrôle** : `tests-qua-217`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : hooks-sans-dependance-au-shell — « Les tests du moteur passent sans `node` dans le `PATH` système, donc sous fnm : aucun ne suppose un `node` dans `/usr/bin` »
+**Raison** : Constaté le 2026-11-02 : sous fnm, les tests QUA-208, 209 et 210 passaient un environnement sans `PATH` à un contrôle `node -e 0` (code 127) ; la CI ne le voyait pas parce que `node` est dans `/usr/bin` sur ses machines.
+
+## QUA-218 — `INSTALL.md` décrit le prérequis `node` dans le PATH de l'assistant et le piège fnm
+**Règle** : Livré à ce dépôt (`INSTALL.md`, doc visiteur en anglais). `INSTALL.md` dit que `node` doit être dans le `PATH` du processus de l'assistant et pas seulement d'un shell, décrit le piège des gestionnaires de versions à dossier propre au shell (fnm), le message que les hooks affichent et la marche à suivre, et les limites connues (Gemini sous Windows sans repli, formes PowerShell non jouées en CI).
+**Périmètre** : `INSTALL.md`.
+**Source de vérité** : `INSTALL.md`, section « Node.js in the PATH of your assistant ».
+**Preuve** : relecture humaine ; aucun test ne juge si le texte est clair.
+**Manuel** : lire la section de `INSTALL.md` : le prérequis, le piège fnm, le message des hooks, la marche à suivre et les limites y sont, et sont justes par rapport à QUA-215 et QUA-216.
+**Couvre** : `INSTALL.md`
+**Origine** : hooks-sans-dependance-au-shell — « Le prérequis (`node` dans le `PATH` du processus de l'assistant) et le piège fnm sont décrits dans `INSTALL.md` »
+**Raison** : Sans cette section, un développeur sous fnm voit « hook errored » sans savoir que le shell de l'assistant n'a pas `node`.
