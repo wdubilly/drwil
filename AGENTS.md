@@ -30,7 +30,7 @@ Carte complète : `docs/architecture.md`.
 - **Défaut après la clôture (QUA-116)** : en CLOSING, défaut de la PR ouverte → `node .githooks/state.mjs reopen` ; jamais d'historique réécrit (détail en section 8).
 - **File de chantiers** : l'une après l'autre, la suivante après la fusion de la précédente ; arrêt au premier qui demande un humain.
 - **Une session par chantier** : une clôture faite et l'état revenu en SCOPING, le suivant se lance dans une nouvelle session.
-- **Compte rendu de fin de tâche** : fichiers, contrôles lancés avec résultats exacts, limites et ambiguïtés restantes.
+- **Compte rendu de fin de tâche** : fichiers, contrôles lancés avec résultats exacts, limites et ambiguïtés restantes ; chemins ajoutés au bloc `scope` de la fiche et raison (QUA-214).
 
 ## Contrats
 

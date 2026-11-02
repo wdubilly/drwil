@@ -9,6 +9,8 @@ export const TEXTS = {
     outsideScope: (f, brief) => `${f} : hors du cadrage de ${brief} (dans HEAD) — l'ajouter au bloc scope et commiter la fiche d'abord`,
     noTrailer: (c, n) => `${c} : ${n} fichier(s) hors fiches sans trailer ${TRAILER}`,
     outsideScopeCommit: (c, f, brief) => `${c} : ${f} hors du cadrage de ${brief} (dans le parent)`,
+    widened: (brief, added, removed) =>
+      `ATTENTION — le cadrage de ${brief} change${added.length ? ` ; chemins ajoutés : ${added.join(", ")}` : ""}${removed.length ? ` ; chemins retirés : ${removed.join(", ")}` : ""} — à citer, avec la raison, dans le compte rendu de fin de tâche (QUA-214)`,
     noReference: "aucune branche de référence (origin/HEAD, master, main, ou DRWIL_BASE)",
     failed: (n) => `périmètre de l'attente : ${n} problème(s) (barrière bloquante)`,
     rules: (f) =>
@@ -22,6 +24,8 @@ export const TEXTS = {
     outsideScope: (f, brief) => `${f}: outside the scope of ${brief} (in HEAD) — add it to the scope block and commit the brief first`,
     noTrailer: (c, n) => `${c}: ${n} file(s) outside briefs without a ${TRAILER} trailer`,
     outsideScopeCommit: (c, f, brief) => `${c}: ${f} outside the scope of ${brief} (in the parent)`,
+    widened: (brief, added, removed) =>
+      `WARNING — the scope of ${brief} changes${added.length ? `; paths added: ${added.join(", ")}` : ""}${removed.length ? `; paths removed: ${removed.join(", ")}` : ""} — to be quoted, with the reason, in the end-of-task report (QUA-214)`,
     noReference: "no reference branch (origin/HEAD, master, main, or DRWIL_BASE)",
     failed: (n) => `brief scope: ${n} problem(s) (blocking gate)`,
     rules: (f) =>

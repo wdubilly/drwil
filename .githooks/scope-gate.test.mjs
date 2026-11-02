@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { allow, contractsAddedOnly } from "./detour.mjs";
 import { readState } from "./state.mjs";
 import { addTrailer, checkScope, outsideBriefFiles, checkIndex } from "./scope-gate.mjs";
+import { TEXTS } from "./scope-gate-texts.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -647,4 +648,61 @@ test("QUA-172 : branche : un commit sans trailer qui n'écrit que le registre pa
   git(autre, "add", ".");
   git(autre, "commit", "-q", "-m", "registre en BUILD\n\nDrwil-Brief: docs/projects/exemple.md");
   assert.match(checkScope(autre, { cfg, env }).problems.join("\n"), /docs\/contracts\.md hors du cadrage/);
+});
+
+test("QUA-213 : un commit qui change le bloc scope de la fiche active avertit avec les chemins, quel que soit le réglage — en anglais aussi", () => {
+  const racine = depot(["src/a.js"]);
+  ecrireEtat(racine, "BUILD");
+  ecrire(racine, FICHE, fiche(["src/a.js", "src/b.js"]));
+  git(racine, "add", FICHE);
+  for (const scopeGate of [undefined, "warning", "blocking", "off"]) {
+    const r = checkScope(racine, { cfg: { scopeGate }, staged: [FICHE] });
+    assert.notEqual(r.status, "fail", "l'avertissement n'échoue jamais seul");
+    assert.match(
+      r.problems.join("\n"),
+      /ATTENTION — le cadrage de docs\/projects\/exemple\.md change ; chemins ajoutés : src\/b\.js .*QUA-214/,
+      `scopeGate ${scopeGate}`,
+    );
+  }
+  const en = checkScope(racine, { cfg: { lang: "en" }, staged: [FICHE] });
+  assert.match(en.problems.join("\n"), /WARNING — the scope of .* changes; paths added: src\/b\.js/);
+  ecrire(racine, FICHE, fiche(["src/b.js"]));
+  git(racine, "add", FICHE);
+  assert.match(checkScope(racine, { cfg: {}, staged: [FICHE] }).problems.join("\n"), /ajoutés : src\/b\.js ; chemins retirés : src\/a\.js/);
+  assert.match(
+    checkScope(racine, { cfg: { lang: "en" }, staged: [FICHE] }).problems.join("\n"),
+    /paths added: src\/b\.js; paths removed: src\/a\.js/,
+  );
+  ecrire(racine, FICHE, fiche([]));
+  git(racine, "add", FICHE);
+  const retrait = checkScope(racine, { cfg: {}, staged: [FICHE] }).problems.join("\n");
+  assert.match(retrait, /change ; chemins retirés : src\/a\.js/);
+  assert.doesNotMatch(retrait, /ajoutés/);
+  assert.doesNotMatch(checkScope(racine, { cfg: { lang: "en" }, staged: [FICHE] }).problems.join("\n"), /paths added/);
+});
+
+test("QUA-213 : pas d'avertissement sans changement du bloc scope (texte de la fiche seul, autre fichier, fiche créée)", () => {
+  const racine = depot(["src/a.js"]);
+  ecrireEtat(racine, "BUILD");
+  ecrire(racine, FICHE, fiche(["src/a.js"]) + "\nUne remarque.\n");
+  ecrire(racine, "src/a.js", "x\n");
+  git(racine, "add", ".");
+  assert.deepEqual(checkScope(racine, { cfg: {}, staged: [FICHE, "src/a.js"] }).problems, []);
+  git(racine, "commit", "-q", "-m", "texte");
+  git(racine, "rm", "-q", "--cached", FICHE);
+  assert.deepEqual(
+    checkScope(racine, { cfg: {}, staged: [FICHE] }).problems.filter((p) => /ATTENTION/.test(p)),
+    [],
+  );
+});
+
+test("QUA-214 : la consigne du compte rendu de fin de tâche cite les chemins ajoutés au bloc scope, dépôt et gabarit ; l'avertissement la rappelle", () => {
+  const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const gabarit = "packages/drwil/templates/common/base/";
+  const lire = (f) => readFileSync(join(racine, f), "utf8").replace(/\s+/g, " ");
+  assert.match(lire("AGENTS.md"), /Compte rendu de fin de tâche[^-]*chemins ajoutés au bloc `scope` de la fiche et raison \(QUA-214\)/);
+  assert.match(lire(`${gabarit}AGENTS.md`), /End-of-task report[^-]*paths added to the brief's `scope` block and why/);
+  for (const f of ["docs/ia-first/8-conduct-rules.md", `${gabarit}docs/ia-first/8-conduct-rules.md`])
+    assert.match(lire(f), /End-of-task report.*the paths added to the brief's `scope` block with the reason/);
+  for (const lang of ["fr", "en"]) assert.match(TEXTS[lang].widened("f.md", ["a"], []), /QUA-214/);
 });
