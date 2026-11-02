@@ -30,7 +30,7 @@ export interface InitOptions {
 }
 
 /** Folders whose content `init` refreshes by default: the kit mechanics, not the project's docs. */
-export const KIT_MECHANICS = [".githooks/", ".claude/hooks/", ".github/hooks/"];
+export const KIT_MECHANICS = [".githooks/", ".claude/hooks/", ".github/hooks/", ".gemini/hooks/"];
 
 /**
  * Copilot CLI reads .claude/ (settings, hooks, skills) itself: the tree is installed for it too. Gemini CLI

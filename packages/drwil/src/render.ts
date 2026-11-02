@@ -4,6 +4,7 @@ import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CI_FILES, projectName, splitCsv, TEXT, type Resolved, usesClaudeTree } from "./config.js";
 import { sha256 } from "./manifest.js";
+import { geminiNode } from "./render-gemini.js";
 import { stackAllow } from "./render-stack.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -66,6 +67,7 @@ export function render(content: string, r: Resolved, extra: Record<string, strin
     scopeCi: ciFile ? `  - ${ciFile}` : "",
     scopeClaude: usesClaudeTree(r.tools) ? "  - .claude/settings.json" : "",
     stackAllowJson: stackAllow(r.stack),
+    ...geminiNode(),
     ...extra,
   };
   // Replacement by function: a value containing "$&" or "$1" must stay literal.

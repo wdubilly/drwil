@@ -2641,6 +2641,39 @@ test("QUA-066 : choisir gemini installe aussi les hooks partagés et ses réglag
   }
 });
 
+test("QUA-215 : Gemini hors Windows passe par le lanceur sh : sans node, message et code 2 (garde) ou 1 (informatif) ; avec node, même sortie ; sous Windows la commande reste node", {
+  skip: process.platform === "win32",
+}, async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "gemini", git: false }));
+  assert.ok(existsSync(join(dir, ".gemini/hooks/drwil-node.sh")));
+  const bin = join(dir, "bin-sh-seul");
+  mkdirSync(bin);
+  symlinkSync("/bin/sh", join(bin, "sh"));
+  const sansNode = { PATH: bin, GEMINI_PROJECT_DIR: dir };
+  const hooks = JSON.parse(read(dir, ".gemini/settings.json")).hooks;
+  for (const [evenement, code] of [
+    ["SessionStart", 1],
+    ["BeforeAgent", 1],
+    ["BeforeTool", 2],
+    ["AfterTool", 1],
+  ]) {
+    const commande = hooks[evenement][0].hooks[0].command;
+    assert.match(commande, /^sh "\$GEMINI_PROJECT_DIR\/\.gemini\/hooks\/drwil-node\.sh" \d /);
+    const r = spawnSync("/bin/sh", ["-c", commande], { env: sansNode, encoding: "utf8" });
+    assert.match(r.stderr, /node not found in the PATH.*Restart it from a shell where which node answers/);
+    assert.deepEqual([r.status, r.stdout], [code, ""], evenement);
+  }
+  const garde = hooks.BeforeTool[0].hooks[0].command;
+  const input = JSON.stringify({ hook_event_name: "BeforeTool", tool_name: "write_file", tool_input: { file_path: join(dir, "x.md") } });
+  const avecNode = { PATH: `${bin}:${join(process.execPath, "..")}`, GEMINI_PROJECT_DIR: dir };
+  const via = spawnSync("/bin/sh", ["-c", garde], { env: avecNode, input, encoding: "utf8" });
+  const direct = spawnSync(process.execPath, [join(dir, ".claude/hooks/scope-reminder.mjs")], { env: avecNode, input, encoding: "utf8" });
+  assert.deepEqual([via.status, via.stdout, via.stderr], [direct.status, direct.stdout, direct.stderr]);
+  const { geminiNode } = await import("../dist/render-gemini.js");
+  assert.deepEqual(geminiNode("win32"), { geminiNodeWarn: "node ", geminiNodeGuard: "node " });
+});
+
 test("QUA-067 : scope-reminder refuse write_file et replace sous Gemini avec un decision deny, et rappelle après coup en avertissement", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "gemini", git: false }));

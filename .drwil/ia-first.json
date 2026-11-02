@@ -2824,13 +2824,13 @@
     {
       "id": "tests-qua-215",
       "name": "tests de QUA-215, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-215 \" packages/drwil/test/claude-hooks.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-215 \" packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/kit.test.mjs",
       "ciJob": "checks",
       "paths": [
-        "packages/drwil/templates/common/tools/**",
-        "packages/drwil/test/**",
+        "packages/drwil/**",
         ".drwil/ia-first.json"
       ],
+      "needsBuild": true,
       "degradable": false
     },
     {
