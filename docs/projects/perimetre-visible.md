@@ -34,9 +34,9 @@ d'origine ne s'élargit jamais » : la règle écrite et la barrière divergent.
 ## Critères d'acceptation
 
 - Tout commit qui modifie le bloc `scope` de la fiche active affiche un avertissement net, avec les chemins
-  ajoutés — contrat à créer
+  ajoutés — `QUA-213`
 - Le compte rendu de fin de tâche mentionne les chemins ajoutés au bloc `scope` et la raison — [humain] —
-  contrat à créer
+  `QUA-214`
 - La règle écrite et la barrière disent la même chose de l'élargissement du cadrage — `QUA-050`
 
 ## Contrats modifiés

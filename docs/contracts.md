@@ -2082,8 +2082,8 @@ régression sauf si la fiche active déclare le changement (section
 **Règle** : Livré à tout projet. Quand un chantier a élargi le bloc `scope` de sa fiche (QUA-213), le compte rendu de fin de tâche liste les chemins ajoutés et dit pourquoi ; sans élargissement, il le dit en une ligne ou se tait. Consigne de conduite, reprise par l'avertissement de QUA-213 qui la rappelle à chaque commit concerné : aucune machine ne lit le compte rendu.
 **Périmètre** : `AGENTS.md` et `docs/ia-first/8-conduct-rules.md` (consigne « Compte rendu de fin de tâche »), livrés dans le gabarit.
 **Source de vérité** : `docs/ia-first/8-conduct-rules.md`.
-**Preuve** : Humaine — le contenu d'un compte rendu n'est pas contrôlable par un outil.
-**Manuel** : relire le compte rendu de fin de chantier : chemins ajoutés au bloc `scope` et raison présents.
-**Couvre** : `AGENTS.md`, `docs/ia-first/8-conduct-rules.md`
+**Preuve** : test du dépôt : la consigne « Compte rendu de fin de tâche » de `AGENTS.md` (dépôt et gabarit) et de `docs/ia-first/8-conduct-rules.md` (dépôt et gabarit) cite les chemins ajoutés au bloc `scope` et la raison, et le message de QUA-213 renvoie à QUA-214 ; justesse d'un compte rendu réel : humaine (aucune machine ne le lit).
+**Contrôle** : `tests-qua-214`
+**Tests** : `.githooks/scope-gate.test.mjs`
 **Origine** : perimetre-visible — « Le compte rendu de fin de tâche mentionne les chemins ajoutés au bloc scope et la raison »
 **Raison** : Décision du demandeur du 2026-10-30 : un élargissement visible au commit doit aussi l'être au moment où l'humain relit le chantier ; ligne de preuve de clôture écartée (aucune source machine fiable de la raison).

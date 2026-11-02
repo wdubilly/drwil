@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { allow, contractsAddedOnly } from "./detour.mjs";
 import { readState } from "./state.mjs";
 import { addTrailer, checkScope, outsideBriefFiles, checkIndex } from "./scope-gate.mjs";
+import { TEXTS } from "./scope-gate-texts.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -693,4 +694,15 @@ test("QUA-213 : pas d'avertissement sans changement du bloc scope (texte de la f
     checkScope(racine, { cfg: {}, staged: [FICHE] }).problems.filter((p) => /ATTENTION/.test(p)),
     [],
   );
+});
+
+test("QUA-214 : la consigne du compte rendu de fin de tâche cite les chemins ajoutés au bloc scope, dépôt et gabarit ; l'avertissement la rappelle", () => {
+  const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const gabarit = "packages/drwil/templates/common/base/";
+  const lire = (f) => readFileSync(join(racine, f), "utf8").replace(/\s+/g, " ");
+  assert.match(lire("AGENTS.md"), /Compte rendu de fin de tâche[^-]*chemins ajoutés au bloc `scope` de la fiche et raison \(QUA-214\)/);
+  assert.match(lire(`${gabarit}AGENTS.md`), /End-of-task report[^-]*paths added to the brief's `scope` block and why/);
+  for (const f of ["docs/ia-first/8-conduct-rules.md", `${gabarit}docs/ia-first/8-conduct-rules.md`])
+    assert.match(lire(f), /End-of-task report.*the paths added to the brief's `scope` block with the reason/);
+  for (const lang of ["fr", "en"]) assert.match(TEXTS[lang].widened("f.md", ["a"], []), /QUA-214/);
 });
