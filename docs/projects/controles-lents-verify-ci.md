@@ -27,6 +27,14 @@ résoudre la fusion en gardant les deux côtés, relancer `verify`, puis pousser
 - Un contrôle sans `runAt` se comporte comme avant — contrat `QUA-210`
 - L'empreinte propre et l'attestation restent justes pour un contrôle réservé — contrat `QUA-211`
 
+## Contrats modifiés
+
+- `.githooks/engine.mjs` — ajout du réglage `runAt` (un contrôle réservé à `verify` et à la CI), livré par le chantier
+  « contrôles lents » (validé par le demandeur le 2026-11-02).
+- `.githooks/engine.test.mjs` — tests des contrats QUA-208 à QUA-211 ajoutés à côté de la garde des tests isolés du
+  pre-push venue de master (validé par le demandeur le 2026-11-02).
+- `.githooks/run-checks.test.mjs` — test de bout en bout de QUA-208 (validé par le demandeur le 2026-11-02).
+
 ## 2. Hors périmètre
 
 - Tout changement du mécanisme `runAt` : le code est déjà livré dans la branche.
