@@ -9,6 +9,40 @@ files:
   - docs/projects/parite-des-outils.md
   - docs/projects/pending.md
   - .drwil/ia-first.json
+  - docs/contracts.md
+  - docs/architecture.md
+  - docs/projects/kit-mechanics.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/ia-first/7-starting-and-closing.md
+  - packages/drwil/CHANGELOG.md
+  - packages/drwil/test/kit.test.mjs
+  - packages/drwil/test/claude-hooks.test.mjs
+  - .githooks/state.test.mjs
+  - packages/drwil/templates/common/base/docs/ia-first/7-starting-and-closing.md
+  - packages/drwil/templates/common/base/.githooks/state.mjs
+  - packages/drwil/templates/common/base/.githooks/state-draft.mjs
+  - packages/drwil/templates/common/base/.githooks/state-validate.mjs
+  - packages/drwil/templates/common/base/.githooks/state-transitions.mjs
+  - packages/drwil/templates/common/base/.githooks/state-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/start-poll.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/queue-poll.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
+  - .githooks/state.mjs
+  - .githooks/state-draft.mjs
+  - .githooks/state-validate.mjs
+  - .githooks/state-transitions.mjs
+  - .githooks/state-texts.mjs
+  - .githooks/state-context-texts.mjs
+  - .githooks/state-messages-fr.mjs
+  - .githooks/state-messages-en.mjs
+  - .claude/hooks/prompt-hook.mjs
+  - .claude/hooks/start-poll.mjs
+  - .claude/hooks/queue-poll.mjs
+  - .claude/skills/start-a-workstream/SKILL.md
 -->
 
 ## 1. Besoin
@@ -52,6 +86,7 @@ Tranchées par le demandeur le 2026-11-02 :
 - File par commande dans tous les cas : on n'attend pas la cause du choix multiple vide sous Copilot CLI.
 - Outil sans sous-agent exploitable : proposer à l'humain une nouvelle conversation entre deux chantiers.
 - Tous les outils ensemble, un lot par capacité (et non un lot par outil).
+- Lot 2, option B (2026-11-02) : la file se construit par des sondages à choix unique enchaînés (`drwil-file` : « ajouter » une fiche à la fois, puis « Terminer la file »), lus par le hook, sans choix multiple ; l'humain répond, un outil lit, l'agent ne décide jamais du lancement ni de la composition de la file. Amende QUA-037 (un seul sondage à choix multiple).
 - Codex : essayé le 2026-11-02 avec un modèle local léger (7B sur processeur) : il n'appelle pas les outils de façon fiable, l'essai est inexploitable ; Codex reste « not tested » (QUA-013) jusqu'à ce qu'un modèle capable soit disponible (abonnement ou clé API), sans bloquer les lots.
 
 ## 5. Points à trancher
@@ -69,6 +104,6 @@ Tranchées par le demandeur le 2026-11-02 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-02) : décisions tranchées, aucun code.
-- **Travail non commité** : cette fiche.
-- **Prochaine étape** : [décision] lancer par `/drwil-start` ; Codex reste « not tested » en attendant un modèle capable.
+- **Dernier état** (2026-11-02) : lot 2 réalisé et commité, option B. File en sondages à choix unique enchaînés (`drwil-file`) : état `queue_draft` (SCOPING), `draftAdd`/`draftFinish` dans `.githooks/state-draft.mjs`, lecture par `.claude/hooks/queue-poll.mjs` (appelé par `.claude/hooks/prompt-hook.mjs`), skill, rappel d'état et QUA-037 amendé ; `queue stop` abandonne aussi une file en construction. Contrôles : `run-checks` OK.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : lot 3 (sous-agent ou nouvelle conversation ; banc et matrice à jour). Limite : un essai réel sous Copilot CLI de l'enchaînement `drwil-file` n'a pas été fait (tests simulés des deux formes de réponse) ; Codex reste « not tested ».
