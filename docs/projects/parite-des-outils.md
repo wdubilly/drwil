@@ -8,6 +8,11 @@
 files:
   - docs/projects/parite-des-outils.md
   - docs/projects/pending.md
+  - docs/ia-first/6-limits-and-tool-compatibility.md
+  - packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md
+  - packages/drwil/templates/common/tools/codex/.codex/hooks.json
+  - outils/banc-agents.test.mjs
+  - docs/intentions/compatibilite-des-outils.md
   - .drwil/ia-first.json
   - docs/contracts.md
   - docs/architecture.md
@@ -104,6 +109,6 @@ Tranchées par le demandeur le 2026-11-02 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-02) : lot 2 réalisé et commité, option B. File en sondages à choix unique enchaînés (`drwil-file`) : état `queue_draft` (SCOPING), `draftAdd`/`draftFinish` dans `.githooks/state-draft.mjs`, lecture par `.claude/hooks/queue-poll.mjs` (appelé par `.claude/hooks/prompt-hook.mjs`), skill, rappel d'état et QUA-037 amendé ; `queue stop` abandonne aussi une file en construction. Contrôles : `run-checks` OK.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : lot 3 (sous-agent ou nouvelle conversation ; banc et matrice à jour). Limite : un essai réel sous Copilot CLI de l'enchaînement `drwil-file` n'a pas été fait (tests simulés des deux formes de réponse) ; Codex reste « not tested ».
+- **Dernier état** (2026-11-02) : lots 2 et 3 réalisés. Lot 3 : le rappel d'état de la file (`.githooks/state-context-texts.mjs`) dit sous-agent si l'outil en offre un utilisable, sinon une nouvelle conversation proposée à l'humain (plus « tout dans la même session ») ; la matrice (`docs/ia-first/6-limits-and-tool-compatibility.md`) gagne le tableau « Workstream cycle parity » (cases « not tested », aucune date inventée) et le paragraphe Codex ; `packages/drwil/templates/common/tools/codex/.codex/hooks.json` livré pour Codex (état au démarrage et rappel, soumis à `/hooks`, aucun blocage d'écriture) ; QUA-037 et QUA-063 amendés. Le banc lui-même n'a pas changé : il ne mesure ni sondage, ni file, ni sous-agent.
+- **Travail non commité** : aucun une fois le lot 3 commité.
+- **Prochaine étape** : verify puis clôture par la session principale ; lot 1 [humain] (sondes : dater les cases du tableau de parité) à rappeler. Limites : essai réel sous Copilot CLI de l'enchaînement `drwil-file` non fait ; sous-agents Copilot/Gemini non éprouvés ; Codex « not tested » (hooks livrés d'après la documentation, format `apply_patch` non vérifié pour un blocage d'écriture).
