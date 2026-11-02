@@ -10,14 +10,14 @@
 //   replayed against the scope of the brief named by its `Drwil-Brief` trailer, read in its
 //   parent. A commit is judged by its parent's rules: without a gate in the parent, it is not
 //   checked.
-// Severity: `scopeGate` setting (off | warning | blocking), warning if missing.
-import { existsSync, realpathSync } from "node:fs";
-import { resolve } from "node:path";
+// Severity: `scopeGate` setting (off | warning | blocking), warning if missing. A commit that changes the
+// scope block of the active brief always shows a warning, whatever the setting (QUA-213).
+import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { contractsAddedOnly, isRegistry, rulesFiles } from "./detour.mjs";
 import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
-import { git, resolution } from "./scope-gate-merge.mjs";
+import { git, reference, replaying, resolution, scopeChange } from "./scope-gate-merge.mjs";
 import { TRAILER, texts } from "./scope-gate-texts.mjs";
 
 // Attestations pass like briefs: a human proof already guarded by `drwil attest` (terminal
@@ -83,19 +83,6 @@ function patternsAt(root, rev, brief, cfg) {
   return text === null ? [] : withMirrors(readBlock(text).patterns, cfg);
 }
 
-function reference(root, env) {
-  const candidates = env.DRWIL_BASE ? [env.DRWIL_BASE] : [];
-  const origin = git(root, ["symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"]);
-  if (origin) candidates.push(origin.trim());
-  candidates.push("origin/master", "origin/main", "master", "main");
-  for (const ref of candidates) {
-    if (git(root, ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`]) === null) continue;
-    const base = git(root, ["merge-base", "HEAD", ref]);
-    if (base) return base.trim();
-  }
-  return null;
-}
-
 function checkBranch(root, base, { outOfScope, cfg }) {
   const T = texts(cfg);
   const problems = [];
@@ -134,7 +121,15 @@ function checkBranch(root, base, { outOfScope, cfg }) {
  */
 export function checkScope(root, { cfg = {}, staged = null, env = process.env } = {}) {
   const level = LEVELS.has(cfg.scopeGate) ? cfg.scopeGate : "warning";
-  if (level === "off") return { status: "not-applicable", problems: [], detail: "scopeGate: off" };
+  // QUA-213: shown even with the gate off (QUA-019), never a failure by itself.
+  const warnings = [];
+  if (staged) {
+    const { state } = readState(root);
+    const change =
+      state.active_brief && resolution(root, staged).includes(normalize(state.active_brief)) ? scopeChange(root, state.active_brief) : null;
+    if (change) warnings.push(texts(cfg).widened(state.active_brief, change.added, change.removed));
+  }
+  if (level === "off") return { status: "not-applicable", problems: warnings, detail: "scopeGate: off" };
   const outOfScope = Array.isArray(cfg.outOfScope) ? cfg.outOfScope : OUT_OF_SCOPE;
   let problems;
   if (staged) {
@@ -154,16 +149,9 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
     if (!base) return { status: "not-run", problems: [], detail: texts(cfg).noReference, configured: true };
     problems = checkBranch(root, base, { outOfScope, cfg });
   }
-  if (problems.length && level === "blocking") return { status: "fail", problems, message: texts(cfg).failed(problems.length) };
-  return { status: "ok", problems };
-}
-
-/** True while git replays existing commits (rebase): their message, trailer included, is kept as it is. */
-function replaying(root) {
-  return ["rebase-merge", "rebase-apply"].some((name) => {
-    const path = git(root, ["rev-parse", "--git-path", name]);
-    return path !== null && existsSync(resolve(root, path.trim()));
-  });
+  if (problems.length && level === "blocking")
+    return { status: "fail", problems: [...problems, ...warnings], message: texts(cfg).failed(problems.length) };
+  return { status: "ok", problems: [...problems, ...warnings] };
 }
 
 /**

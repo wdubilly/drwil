@@ -44,6 +44,10 @@ d'origine ne s'élargit jamais » : la règle écrite et la barrière divergent.
 - `QUA-050` — ancien critère : « le cadrage de la fiche d'origine ne s'élargit jamais » — raison : la barrière
   admet l'élargissement par un commit de cadrage séparé ; la règle est alignée sur cette décision, sans
   l'interdire, en l'entourant de visibilité (validé le 2026-10-30)
+- `.githooks/scope-gate.mjs` — avertissement sur tout changement du bloc `scope` de la fiche active (`checkScope`) ; `reference` et `replaying` déplacés dans `.githooks/scope-gate-merge.mjs` (validé par le demandeur le 2026-10-30)
+- `.githooks/scope-gate-merge.mjs` — reçoit `scopeChange` (chemins ajoutés et retirés du bloc `scope`) et les fonctions git déplacées (validé par le demandeur le 2026-10-30)
+- `.githooks/scope-gate-texts.mjs` — message `widened`, français et anglais (validé par le demandeur le 2026-10-30)
+- `.githooks/scope-gate.test.mjs` — tests de QUA-213 (validé par le demandeur le 2026-10-30)
 
 ## 2. Hors périmètre
 
@@ -65,8 +69,9 @@ et la barrière.
 
 ## 5. Points à trancher
 
-- [IA] Où la mention obligatoire est-elle contrôlée : consigne de conduite seule, ou ligne recopiée dans la
-  preuve de clôture (qui rend l'omission visible) ? À fixer au lot 1.
+- [IA] Où la mention obligatoire est-elle contrôlée : **tranché au lot 1** — consigne de conduite seule (QUA-214),
+  rappelée par l'avertissement de QUA-213 à chaque commit concerné ; la ligne de preuve de clôture est écartée
+  (aucune source machine fiable de la raison).
 
 ## 6. Increments
 

@@ -83,7 +83,10 @@ read at every request. The full text of each rule is here, read by section
   aside, branches from the main branch and writes a short brief; its PR is
   titled « Detour of <brief> »; once merged, `node .githooks/detour.mjs
   resume` restores the work on the rebased workstream branch. Never widen
-  an unrelated scope, never stash by hand. A detour that changes the rules
+  an unrelated scope, never stash by hand. A detour is not a way to widen
+  the active brief: widening its `scope` block takes a separate commit,
+  which the gate flags with a warning listing the added paths, whatever
+  the setting. A detour that changes the rules
   (an existing contract modified or removed, hooks, thresholds, the gate)
   waits for the human's yes; adding a new contract does not
   (`docs/recipes/corriger-un-defaut.md`).
@@ -133,7 +136,8 @@ read at every request. The full text of each rule is here, read by section
   cold) ». Its label: `node .githooks/glossary.mjs "<text>"` (read from
   the registry, the catalog and the active brief).
 - **End-of-task report**: files created or changed, checks run and their
-  exact results, remaining limits and ambiguities. Present as proven only
+  exact results, remaining limits and ambiguities, and the paths added to
+  the brief's `scope` block with the reason. Present as proven only
   what a check actually verifies; the rest is labeled "human" or "not
   verified".
 - **Hand-off**: before handing back, update the "Hand-off" section of
