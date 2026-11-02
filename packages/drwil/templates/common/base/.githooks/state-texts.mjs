@@ -60,6 +60,7 @@ export function context(read, root) {
   // End-of-scoping poll answered « Automatic merge » (QUA-188): the scoping PR of that branch only.
   if (state.scoping_merge) lines.push(fill(STATE_MESSAGES[language(root)].scopingMergeReminder, state.scoping_merge.branch));
   if (state.queue?.length) lines.push(fill(T.queue, state.queue.join(", "), state.queue_merge ? T.queueMerge : ""));
+  if (state.queue_draft?.length) lines.push(fill(T.queueDraft, state.queue_draft.join(", ")));
   if (state.parallel?.length) lines.push(fill(T.parallel, state.parallel.join(", ")));
   if (state.queue?.length && state.activity === "SCOPING") lines.push(fill(T.queueResume, state.queue[0]));
   if (state.detour) lines.push(fill(T.detour, state.detour.origin_brief, state.detour.origin_branch, state.detour.branch));

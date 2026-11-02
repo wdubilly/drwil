@@ -91,7 +91,7 @@ function unbracketed(answer) {
 }
 
 /** The value of `key` in a Copilot CLI answer `key=value, key=value`; null if absent. */
-function copilotField(answer, keys, key) {
+export function copilotField(answer, keys, key) {
   const esc = (k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const m = new RegExp(`(?:^|,\\s*)${esc(key ?? "")}=(.*?)(?=,\\s*(?:${keys.map(esc).join("|")})=|$)`, "s").exec(answer);
   return m ? m[1].trim() || null : null;

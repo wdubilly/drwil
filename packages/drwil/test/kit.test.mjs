@@ -1286,6 +1286,91 @@ test("QUA-037 : un sondage à choix multiple lance la première fiche et met les
   assert.equal(etat.auto_merge, true);
 });
 
+test("QUA-037 : une file de deux fiches se construit par deux réponses à choix unique lues par le hook, puis « Terminer la file » ; l'agent ne remplit rien", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
+  const fiches = ["docs/projects/un.md", "docs/projects/deux.md", "docs/projects/brouillon.md"];
+  for (const [i, f] of fiches.entries())
+    writeFileSync(
+      join(dir, f),
+      `# Projet : Essai ${i}\n\n**Statut** : cadré le 2026-11-02.\n**Maturité** : ${i === 2 ? "à affiner" : "prêt"}\n\n<!-- scope\nfiles:\n  - src/essai${i}.ts\n-->\n\n## Critères d'acceptation\n\n- Essai — \`APP-001\`\n\n## Incréments\n\n- **Lot 1** : essai\n`,
+    );
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "init");
+  const etat = () => JSON.parse(read(dir, ".drwil/state.json"));
+  const schema = (extra = {}) => ({
+    properties: {
+      "drwil-file": { type: "string", enum: [...fiches, "Terminer la file"], ...extra },
+      "drwil-merge": { type: "string", enum: ["Automatic merge", "Manual merge"] },
+    },
+  });
+  const rejouer = (evenement, reponse, requestedSchema = schema()) =>
+    spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({
+        hook_event_name: evenement,
+        tool_name: "ask_user",
+        tool_input: { message: "drwil-file : quelle fiche ajouter à la file ?", requestedSchema },
+        tool_result: { result_type: "success", text_result_for_llm: `User responded: ${reponse}` },
+      }),
+    });
+
+  assert.match(
+    rejouer("PostToolUse", `drwil-file=${fiches[0]}, drwil-merge=Manual merge`).stdout,
+    /file en construction : docs\/projects\/un\.md ajoutée/,
+  );
+  assert.match(rejouer("PostToolUse", `drwil-file=${fiches[2]}, drwil-merge=Manual merge`).stdout, /ne peut pas entrer dans une file/);
+  assert.match(
+    rejouer("PostToolUse", `drwil-file=${fiches[1]}, drwil-merge=Manual merge`).stdout,
+    /soit docs\/projects\/un\.md, docs\/projects\/deux\.md/,
+  );
+  assert.equal(etat().activity, "SCOPING", "rien n'est lancé avant la fin");
+  assert.deepEqual(etat().queue_draft, [fiches[0], fiches[1]]);
+
+  rejouer("PostToolUse", "drwil-file=Terminer la file, drwil-merge=Automatic merge");
+  assert.equal(etat().activity, "BUILD");
+  assert.equal(etat().active_brief, fiches[0]);
+  assert.deepEqual(etat().queue, [fiches[1]]);
+  assert.equal(etat().queue_merge, true);
+  assert.equal(etat().queue_draft, undefined);
+
+  // Le hook refuse un sondage déjà répondu, à valeur par défaut, à choix multiple, ou sans « Terminer la file ».
+  assert.equal(rejouer("PreToolUse", "", schema({ default: fiches[0] })).status, 2);
+  assert.equal(
+    rejouer("PreToolUse", "", { properties: { "drwil-file": { type: "array", items: { type: "string", enum: fiches } } } }).status,
+    2,
+  );
+  assert.equal(rejouer("PreToolUse", "", { properties: { "drwil-file": { type: "string", enum: fiches } } }).status, 2);
+  assert.equal(rejouer("PreToolUse", "").status, 0);
+  // Même refus sous Claude Code : réponse déjà remplie ou choix multiple.
+  const claude = (extra) =>
+    spawnSync(process.execPath, [".claude/hooks/prompt-hook.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      input: JSON.stringify({
+        hook_event_name: "PreToolUse",
+        tool_name: "AskUserQuestion",
+        tool_input: {
+          questions: [
+            {
+              question: "Quelle fiche ?",
+              header: "drwil-file",
+              multiSelect: false,
+              options: [...fiches, "Terminer la file"].map((label) => ({ label })),
+              ...extra,
+            },
+          ],
+          ...(extra.answers ? { answers: extra.answers } : {}),
+        },
+      }),
+    });
+  assert.equal(claude({}).status, 0);
+  assert.equal(claude({ multiSelect: true }).status, 2);
+  assert.equal(claude({ answers: { "Quelle fiche ?": fiches[0] } }).status, 2);
+});
+
 test("QUA-037 : la file suit l'ordre des options du sondage, quel que soit l'ordre des clics", async () => {
   // Constaté le 2026-10-18 : Claude Code rend les choix multiples dans l'ordre des clics ; la file
   // suivait ces clics, pas l'ordre des options que range la skill de lancement.

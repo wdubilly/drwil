@@ -5,7 +5,10 @@ Section 7 of the "IA first" description, read on its own. The summary,
 
 Two human gestures per workstream: **start** and **merge the PR** — only one if the merge is
 authorised at start (below), and one for a whole **queue**: ticking several briefs in the start
-poll (multiple choice) queues them, with the merge decision. The agent then runs them one after
+poll (multiple choice) queues them, with the merge decision; a tool that reads only a single
+choice (Copilot CLI) builds the same queue by chained single-choice polls (`drwil-file`: one brief
+added per answer, then « Finish the queue »), each answer read by the hook, never filled in by the
+agent. The agent then runs them one after
 the other — the next brief started by `node .githooks/state.mjs next`, allowed to the agent for
 the head of the queue only, once the previous PR is merged — and stops at the first workstream
 that needs a human (attestation, unfixed FAIL, red CI, decision to make); only ready briefs

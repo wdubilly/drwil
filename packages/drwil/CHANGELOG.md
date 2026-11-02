@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Queue built by chained single-choice polls (QUA-037): under a tool that reads only a single choice
+  reliably (Copilot CLI), the human builds a queue with `drwil-file` polls, one brief added per answer
+  (nothing starts), then « Finish the queue » starts the first brief and queues the others, with the merge
+  decision read from the same poll. The hook reads every answer and refuses a poll that is already answered,
+  preselected or multiple; a brief that is not ready is refused when added; `node .githooks/state.mjs queue stop`
+  drops a queue under construction. The state gains `queue_draft` (SCOPING only).
 - `drwil init` on an empty folder now commits the kit itself, on the `workstream/kit-installation`
   branch it creates and before enabling the hooks, so the first workstream no longer starts on a
   refused commit (`scopeGate` blocking). A folder that is already a git repository is left untouched;

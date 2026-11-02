@@ -11,6 +11,8 @@ import {
   ACTIVITIES,
   acceptanceCriteria,
   declaredContracts,
+  draftAdd,
+  draftFinish,
   NEUTRAL_STATE,
   context,
   main,
@@ -1471,6 +1473,47 @@ test("QUA-037 : un geste humain enregistre une file de fiches prêtes et la fusi
   assert.match(start(refus, A, { human: true, queue: [C] }).message, /« docs\/projects\/c\.md » ne peut pas entrer dans une file/);
   assert.equal(readState(refus).source, "missing", "rien n'est écrit");
   assert.equal(start(depotFile(), C, { human: true }).code, 0, "sans file, une fiche non prête se lance comme avant");
+});
+
+test("QUA-037 : une file se construit par réponses à choix unique : une fiche ajoutée à chaque fois, rien n'est lancé avant « terminer »", () => {
+  const racine = depotFile();
+  assert.equal(draftFinish(racine).code, 1, "file vide : rien à lancer");
+  assert.equal(draftAdd(racine, A).code, 0);
+  assert.equal(readState(racine).state.activity, "SCOPING", "ajouter ne lance rien");
+  const r = draftAdd(racine, B);
+  assert.match(r.message, /file en construction : docs\/projects\/b\.md ajoutée, soit docs\/projects\/a\.md, docs\/projects\/b\.md/);
+  assert.match(draftAdd(racine, B).message, /y est déjà/);
+  assert.match(
+    context(readState(racine), racine),
+    /File en construction par sondages enchaînés \(QUA-037\) : docs\/projects\/a\.md, docs\/projects\/b\.md/,
+  );
+  const fin = draftFinish(racine, { autoMerge: true });
+  assert.equal(fin.code, 0, fin.message);
+  const etat = readState(racine).state;
+  assert.equal(etat.active_brief, A);
+  assert.deepEqual(etat.queue, [B]);
+  assert.equal(etat.queue_merge, true);
+  assert.equal(etat.queue_draft, undefined, "la file en construction disparaît au lancement");
+  assert.match(draftAdd(racine, B).message, /elle se construit en SCOPING/);
+});
+
+test("QUA-037 : une fiche non prête, absente ou déjà en file d'attente est refusée à l'ajout ; l'abandon vide la file en construction", () => {
+  const racine = depotFile();
+  assert.match(draftAdd(racine, C).message, /« docs\/projects\/c\.md » ne peut pas entrer dans une file/);
+  assert.match(draftAdd(racine, "docs/projects/absente.md").message, /absente\.md/);
+  assert.equal(readState(racine).source, "missing", "rien n'est écrit");
+  draftAdd(racine, A);
+  assert.match(stopQueue(racine).message, /file en construction abandonnée : docs\/projects\/a\.md/);
+  assert.equal(readState(racine).state.queue_draft, undefined);
+  writeState(racine, { ...NEUTRAL_STATE, queue: [B] });
+  assert.match(draftAdd(racine, A).message, /une file attend déjà/);
+  assert.deepEqual(validateState({ ...NEUTRAL_STATE, activity: "BUILD", active_brief: A, queue_draft: [B] }, racine).length, 1);
+  assert.deepEqual(validateState({ ...NEUTRAL_STATE, queue_draft: "x" }, racine), ["queue_draft : liste de fiches attendue"]);
+  assert.match(draftAdd(depotFile(), undefined).message, /undefined|introuvable|cadrée/i);
+  const invalide = depotFile();
+  ecrireEtat(invalide, { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: "pas une date" });
+  assert.match(draftAdd(invalide, A).message, /elle se construit en SCOPING.*since/);
+  assert.match(draftFinish(invalide).message, /elle se construit en SCOPING/);
 });
 
 test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec la fusion ; hors file ou hors SCOPING, refusé", () => {

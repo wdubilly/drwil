@@ -7,7 +7,8 @@
 // - PostToolUse (poll): reads the human's answer and starts the chosen brief
 //   (`.githooks/state.mjs`, the only logic, valid for any tool). A multiple-choice poll queues the
 //   chosen briefs, in the order of the poll's options, never in the order of the clicks: the agent
-//   starts the next one after each closing (QUA-037).
+//   starts the next one after each closing (QUA-037). Under a tool that reads a single choice only, the human
+//   builds the same queue by chained `drwil-file` polls, one brief per answer (queue-poll.mjs).
 // - End-of-scoping poll (`drwil-scope`, QUA-187): refused unless it offers exactly the three answers,
 //   none recommended nor filled in; the human's answer is recorded by `.githooks/state.mjs` (`scopingMerge`).
 // The same hooks serve Claude Code and Copilot CLI, which reads this settings file; only the poll
@@ -27,6 +28,7 @@ import {
   startPoll,
   worktreeChosen,
 } from "./start-poll.mjs";
+import { queueHook } from "./queue-poll.mjs";
 
 export { humanAnswer, inPollOrder, mergeAuthorised, parallelChosen, scopeChoice, scopePoll, startPoll, worktreeChosen };
 
@@ -117,7 +119,7 @@ async function main() {
     return 0;
   }
   const poll = startPoll(input);
-  if (!poll) return scopeHook(input);
+  if (!poll) return (await queueHook(input, { root: ROOT, lang: language(), tell })) ?? scopeHook(input);
   const event = input.hook_event_name;
   if (event === "PreToolUse") {
     if (poll.prefilled) {

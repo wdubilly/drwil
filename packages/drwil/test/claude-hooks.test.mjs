@@ -353,3 +353,75 @@ test("QUA-205 : prompt-hook : refuse un sondage prérempli, annonce un échec sa
   assert.equal(run("prompt-hook.mjs", { hook_event_name: "Autre", ...sondage() }).stdout, "");
   assert.equal(run("prompt-hook.mjs", "pas du json").status, 0);
 });
+
+test("queue-poll : sondage de file à choix unique, lu sous les deux formes ; refusé s'il est rempli, multiple ou sans « Terminer la file »", async () => {
+  const q = await load("queue-poll.mjs");
+  const claude = (extra = {}, answers) => ({
+    tool_input: {
+      questions: [
+        { header: "drwil-file", question: "Q", options: [{ label: "a.md" }, { label: "Terminer la file" }], ...extra },
+        { header: "drwil-merge", question: "M" },
+      ],
+      answers,
+    },
+    tool_response: { answers: { Q: "a.md", M: "Automatic merge" } },
+  });
+  assert.equal(q.queuePoll(claude()).valid, true);
+  assert.equal(q.queuePoll(claude({ multiSelect: true })).valid, false);
+  assert.equal(q.queuePoll(claude({}, { Q: "a.md" })).valid, false);
+  assert.equal(q.queuePoll(claude({ options: [{ label: "a.md" }] })).valid, false);
+  assert.equal(q.queuePoll(claude({ options: undefined })).valid, false);
+  assert.equal(q.queuePoll({ tool_input: { questions: [{ header: "x" }] } }), null);
+  assert.equal(q.queuePoll({ tool_input: { message: "autre" } }), null);
+
+  const copilot = (field, merge = true, text = "User responded: drwil-file=a.md, drwil-merge=Manual merge") => ({
+    tool_input: {
+      message: "drwil-file : quelle fiche ?",
+      requestedSchema: { properties: { "drwil-file": field, ...(merge ? { "drwil-merge": { type: "string" } } : {}) } },
+    },
+    tool_result: { text_result_for_llm: text },
+  });
+  const enumFile = { type: "string", enum: ["a.md", "Finish the queue"] };
+  assert.equal(q.queuePoll(copilot(enumFile)).valid, true);
+  assert.equal(q.queuePoll(copilot({ ...enumFile, default: "a.md" })).valid, false);
+  assert.equal(q.queuePoll(copilot({ type: "array", items: enumFile })).valid, false);
+  assert.equal(q.queuePoll(copilot(undefined)).valid, false);
+
+  const racine = projet(
+    {},
+    {
+      ".githooks/state.mjs": `export const draftAdd = (r, b) => ({ code: b === "refus.md" ? 1 : 0, message: "ajout " + b });
+export const draftFinish = (r, o) => ({ code: 0, message: "fin " + o.autoMerge });
+`,
+    },
+  );
+  const dit = [];
+  const ctx = (lang = "fr") => ({ root: racine, lang, tell: (t) => dit.push(t) });
+  const post = (input) => ({ hook_event_name: "PostToolUse", ...input });
+  assert.equal(await q.queueHook({ tool_input: { message: "autre" } }, ctx()), null);
+  assert.equal(await q.queueHook({ hook_event_name: "PreToolUse", ...copilot(enumFile) }, ctx()), 0);
+  assert.equal(await q.queueHook({ hook_event_name: "PreToolUse", ...copilot({ ...enumFile, default: "a.md" }) }, ctx("en")), 2);
+  assert.equal(await q.queueHook({ hook_event_name: "Autre", ...copilot(enumFile) }, ctx()), 0);
+  await q.queueHook(post(copilot(enumFile)), ctx());
+  await q.queueHook(post(copilot(enumFile, true, "User responded: drwil-file=Terminer la file, drwil-merge=Automatic merge")), ctx());
+  await q.queueHook(post(copilot(enumFile, true, "User responded: drwil-file=refus.md, drwil-merge=Manual merge")), ctx());
+  await q.queueHook(post(copilot(enumFile, false, "User responded: drwil-file=a.md")), ctx());
+  await q.queueHook(post(claude()), ctx());
+  await q.queueHook(post(copilot(enumFile, true, "pas de réponse")), ctx());
+  await q.queueHook(post(copilot(enumFile, false, "User responded: a.md")), ctx("en"));
+  assert.deepEqual(dit, [
+    "✓ ajout a.md",
+    "✓ fin true",
+    "✗ ajout refus.md",
+    "✓ ajout a.md",
+    "✓ ajout a.md",
+    "✗ aucune réponse lue dans le sondage de file : rien n'est ajouté ni lancé, l'état est inchangé.",
+    "✓ ajout a.md",
+  ]);
+  const sansEtat = projet();
+  await q.queueHook(post(copilot(enumFile)), { root: sansEtat, lang: "en", tell: (t) => dit.push(t) });
+  assert.match(dit.at(-1), /^✗ error while reading the queue poll/);
+  await q.queueHook(post(copilot(enumFile)), { root: sansEtat, lang: "fr", tell: (t) => dit.push(t) });
+  assert.match(dit.at(-1), /^✗ erreur à la lecture du sondage de file/);
+  for (const d of [racine, sansEtat]) rmSync(d, { recursive: true, force: true });
+});
