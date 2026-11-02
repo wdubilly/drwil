@@ -45,9 +45,23 @@ il ne le peut pas.
 - Un test reproduit le cas avec `env -i` ou un `PATH` vidé.
 - `INSTALL.md` décrit le prérequis.
 
-## Questions ouvertes
+## Existant (relevé le 2026-11-02)
 
-- Où est déclaré le hook `preToolUse` (`.claude/settings.json`, `.github/hooks/` ?) et est-il
-  copié depuis le gabarit `packages/drwil/templates/` ? Il faudra alors éditer le gabarit
+- Les hooks git (`.githooks/pre-commit`) testent déjà `command -v node` et refusent avec un
+  message lisible : le défaut ne les concerne pas.
+- Les hooks des assistants appellent `node` nu, sans ce test : `.claude/settings.json`
+  (`node "${CLAUDE_PROJECT_DIR}/.githooks/state.mjs"`, `.claude/hooks/*.mjs`).
+- Le hook Copilot est déclaré dans le gabarit `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json` ;
+  ce dépôt n'en porte pas de copie installée.
+- Contrats cités par les titres : QUA-044 (les hooks lisent la racine du projet, pas le dossier
+  courant) et QUA-065 (les hooks de Copilot parlent son format, sans jamais bloquer).
+
+## Questions à trancher
+
+- Le hook Copilot ne bloque jamais (QUA-065) : le « fail-closed » vaut-il pour Claude Code
+  seulement ? Lire le texte de QUA-065 et de QUA-044 avant de cadrer.
+- Où écrire le chemin absolu de `node` (piste 1) : à l'installation, dans les réglages des
+  assistants, ou dans un petit lanceur partagé ? Le fichier livré s'édite dans le gabarit
   seulement (miroirs-gabarit).
-- Quel contrat existant s'applique (`node .githooks/glossary.mjs --contracts`) ?
+- Un message lisible est-il possible quand `node` est absent, puisque le hook est lui-même
+  une commande `node` ? Il faudra une commande de repli `sh` dans la déclaration du hook.
