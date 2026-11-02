@@ -2018,6 +2018,46 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : adoption-fluide-projet-neuf — « La recette d'adoption et `INSTALL.md` disent ce que fait `init` du premier commit et pourquoi une autorisation n'est pas demandée »
 **Raison** : L'adoptant ne devait pas deviner le commit initial de `init` ni la raison des autorisations livrées.
 
+## QUA-208 — Un contrôle réservé par `runAt` n'est pas joué au commit ni au push, et le dit
+**Règle** : Livré à tout projet. Un contrôle du projet qui déclare `runAt` (liste parmi `commit`, `push`, `verify`, `ci`) sans `commit` n'est pas joué au pre-commit, sans `push` il n'est pas joué au pre-push : le moteur le rend « non exécuté » avec la raison (« réservé par runAt… »), jamais « passé » (QUA-013). Le report est un avertissement qui ne bloque ni le commit ni le push (la reprise de verdict du pre-push, QUA-152, couvre le reste) ; le déclarer avec `commit` ou `push` le fait tourner là. `runAt` est jugé avant `paths`.
+**Périmètre** : `.githooks/engine.mjs`, `.githooks/engine-runat.mjs`, `.githooks/run-checks.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/engine-runat.mjs` (`runAtVerdict`, `runContext`).
+**Preuve** : tests du moteur sur dépôt temporaire (au commit avec un fichier sous ses `paths`, aux trois formes du push, avec `commit` ou `push` déclaré, en anglais) et de `run-checks` de bout en bout (avertissement sans blocage au commit et au push).
+**Contrôle** : `tests-qua-208`
+**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`
+**Origine** : controles-lents-verify-ci — « Un contrôle déclaré réservé (par exemple `runAt: ["verify", "ci"]`) n'est pas joué au commit et le dit : « non exécuté », jamais « passé » »
+**Raison** : Un contrôle lent (les e2e) rejouait à chaque commit de code puis au push : une heure de contrôles par chantier (mesure du lot 1, 341 s par passage).
+
+## QUA-209 — `drwil verify` et la CI jouent un contrôle réservé, son échec bloque ; un `runAt` mal formé est refusé
+**Règle** : Livré à tout projet. Hors commit et hors push (`drwil verify`, CI, y compris une CI qui reçoit des références de push, passe manuelle de `run-checks`), un contrôle réservé par `runAt` est joué comme tout autre : son échec, ou son absence, bloque la clôture et la fusion (QUA-013). `runAt` doit être une liste non vide de valeurs connues (`commit`, `push`, `verify`, `ci`) contenant `verify` et `ci` : une chaîne, une liste vide, une valeur inconnue ou l'absence de `verify` ou de `ci` est un échec du contrôle avec un message qui nomme le contrôle et la raison, au commit comme ailleurs, jamais un réglage ignoré.
+**Périmètre** : `.githooks/engine-runat.mjs` (`runAtVerdict`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/engine-runat.mjs` (`runAtVerdict`, `RUN_AT`).
+**Preuve** : tests du moteur : contrôle réservé joué hors hook et en CI (avec ou sans références de push), son échec en `fail`, six formes mal formées refusées au commit et hors commit avec leur message, en anglais ; `run-checks` de bout en bout : échec bloquant hors hook et en CI.
+**Contrôle** : `tests-qua-209`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : controles-lents-verify-ci — « `drwil verify` et la CI jouent ce contrôle, et son absence ou son échec bloque la clôture et la fusion, comme pour tout contrôle (QUA-013, un contrôle non exécuté n'est pas passé) ; un réglage inconnu ou mal formé est refusé avec un message clair, jamais ignoré »
+**Raison** : Ignorer un `runAt` mal écrit ferait tourner le contrôle là où l'on croit qu'il ne tourne pas, ou l'inverse ; un contrôle jamais joué à la clôture affaiblirait la preuve.
+
+## QUA-210 — Un contrôle sans `runAt` se comporte exactement comme avant
+**Règle** : Livré à tout projet. Un contrôle du projet qui ne déclare pas `runAt` est joué au commit (ou reporté hors de ses `paths`), au push, en `drwil verify` et en CI exactement comme avant le réglage, avec le même message de report, et sa déclaration (donc son empreinte, QUA-141) n'est pas modifiée : une mise à jour du kit ne change rien aux projets déjà installés.
+**Périmètre** : `.githooks/engine.mjs`, `.githooks/engine-runat.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `.githooks/engine-runat.mjs` (`runAtVerdict` : `null` sans le champ).
+**Preuve** : test du moteur : un contrôle avec `paths` et sans `runAt` joué ou reporté dans les cinq contextes (commit sous et hors ses `paths`, push, verify, CI), message de report inchangé, déclaration inchangée.
+**Contrôle** : `tests-qua-210`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : controles-lents-verify-ci — « Un contrôle sans ce réglage se comporte exactement comme avant »
+**Raison** : Les projets installés ne déclarent pas le réglage : la mise à jour ne devait rien changer pour eux.
+
+## QUA-211 — La page des contrôles décrit `runAt` ; l'empreinte propre et l'attestation restent justes pour un contrôle réservé
+**Règle** : Livré à tout projet. La page `docs/ia-first/4-checks-in-git.md` (gabarit et copie du dépôt) décrit `runAt` : les quatre valeurs, le défaut, le report « non exécuté » sans blocage au commit et au push, le jeu complet en `verify` et en CI, `verify` et `ci` obligatoires, le refus d'un réglage mal formé. `runAt` entre dans l'empreinte propre du contrôle (QUA-141) : le changer rejoue le contrôle, un même réglage garde la même empreinte. Étant un champ d'exécution, il ne fait pas tomber l'attestation d'un contrat qui cite le contrôle (QUA-183) ; un changement de commande, de test visé ou de `paths` la fait toujours tomber (QUA-184).
+**Périmètre** : `docs/ia-first/4-checks-in-git.md`, son gabarit, `.githooks/engine.mjs` (empreinte) et `drwil attest` (attestation).
+**Source de vérité** : `packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md` ; `packages/drwil/src/fingerprint.ts` (`proofFingerprints`) pour l'attestation.
+**Preuve** : test du moteur : trois réglages (aucun, `["verify", "ci"]`, `["push", "verify", "ci"]`) donnent trois empreintes, le même réglage la même ; test du paquet sur un dépôt temporaire : attestation intacte après ajout de `runAt`, tombée quand les `paths` changent, page du gabarit et copie du dépôt qui portent les passages attendus ; la lisibilité du texte reste jugée par l'humain.
+**Contrôle** : `tests-qua-211`
+**Tests** : `.githooks/engine.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : controles-lents-verify-ci — « La doc de `paths` décrit le réglage, et l'attestation (QUA-183, QUA-184) et la reprise par contrôle (QUA-141) restent justes pour un contrôle réservé »
+**Raison** : Un réglage que la doc ne décrit pas ne s'adopte pas ; un verdict repris ou une attestation gardée sous un autre réglage serait une preuve périmée.
+
 ## QUA-212 — Les tests du dépôt ne dépendent pas des variables `DRWIL_PUSH_*` du pre-push
 **Règle** : Le hook pre-push exporte `DRWIL_PUSH_REFS`, `DRWIL_PUSH_REMOTE`, `DRWIL_PUSH_TAGS_ONLY` et `DRWIL_PUSH_NO_BRANCH` aux contrôles qu'il lance. Aucun test du dépôt n'en dépend : un test qui joue le moteur ou `verify` dans son processus part d'un environnement sans elles, et celui qui les lit les pose lui-même par l'`env` de son lancement, jamais par l'héritage. Le jeu de tests lancé avec elles posées passe comme sans.
 **Périmètre** : `.githooks/engine.test.mjs` et `packages/drwil/test/kit.test.mjs`.

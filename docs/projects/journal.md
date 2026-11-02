@@ -3966,6 +3966,15 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Preuve de clôture** : docs/preuves/adoption-fluide-projet-neuf.md.
 - **Clôturé par** : la branche `workstream/adoption-fluide-projet-neuf`.
 
+## 2026-11-01 — Un contrôle lent se réserve à verify et à la CI au lieu d'être rejoué à chaque commit
+
+- **Décisions clés** : quatre contrats neufs, QUA-208 (le réglage `runAt` d'un contrôle le réserve à `verify` et à la CI ; au commit il est reporté et dit « non exécuté », jamais « passé »), QUA-209 (le jeu complet tourne en `verify` et en CI, un contrôle reporté n'est jamais compté comme passé, QUA-013), QUA-210 (un contrôle sans ce réglage se comporte exactement comme avant) et QUA-211 (l'empreinte de l'arbre et la reprise par contrôle, QUA-141, restent justes pour un contrôle réservé). Mesure du lot 1 : 341 s par passage de `run-checks`, dont 92 % dans quatre contrôles ; c'est ce coût, rejoué à chaque commit, qui motive le mécanisme. Le chantier livre le mécanisme, pas la configuration d'un projet.
+- **Contrats modifiés** : aucun contrat existant n'est modifié ; QUA-013, QUA-141 et QUA-152 restent vrais tels quels. Le test de bout en bout de QUA-208 est ajouté à `.githooks/run-checks.test.mjs`, validé par le demandeur le 2026-11-01.
+- **Décisions de l'humain en cours de route** : trois élargissements du bloc scope au lot 2, consignés : `.githooks/engine-runat.mjs` et sa copie gabarit (module neuf, pour tenir les fichiers sous le plafond), la copie gabarit de `docs/projects/kit-mechanics.md`, et `docs/architecture.md`. Reprise le 2026-11-02 par une fiche courte : master (garde des tests isolés du pre-push) fusionné dans la branche, quatre conflits résolus en gardant les deux côtés, `packages/drwil/test/kit.test.mjs` ajouté au scope (fusion combinée des deux côtés, donc jugée par la barrière, QUA-111), attestation QUA-150 renouvelée par le demandeur (`.githooks/engine.test.mjs` avait changé).
+- **Limites connues** : la variante « e2e au commit seulement si le chantier touche un chemin critique », écartée en section 2 de la fiche, dans `docs/intentions/controle-lent-chemin-critique.md`.
+- **Preuve de clôture** : docs/preuves/controles-lents-verify-ci.md.
+- **Clôturé par** : la branche `workstream/controles-lents-verify-ci`.
+
 ## 2026-11-02 — Les tests du dépôt ne dépendent plus des variables du pre-push
 
 - **Décisions clés** : un contrat neuf, QUA-212 (aucun test du dépôt ne dépend des variables `DRWIL_PUSH_*` que le pre-push exporte ; le jeu de tests lancé avec elles posées passe comme sans). `packages/drwil/test/kit.test.mjs` les retire de `process.env`, `.githooks/engine.test.mjs` les isole par une garde avant et après chaque test, et un test du moteur relance les tests du moteur et ceux du paquet avec ces variables posées.

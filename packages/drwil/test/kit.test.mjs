@@ -5529,3 +5529,27 @@ test("QUA-207 : la recette d'adoption et INSTALL.md disent le commit initial de 
   assert.match(install, /### Permission prompts in Claude Code/);
   assert.match(install, /an allow rule opens no gesture that the hooks or the forge refuse/);
 });
+
+test("QUA-211 : un contrôle réservé par runAt garde son attestation (champ d'exécution) ; la page des contrôles décrit le réglage", async () => {
+  const { c1, regler, contrat } = await projetAttesteSurEffet();
+  regler({ ...c1, runAt: ["verify", "ci"] });
+  assert.equal((await contrat()).status, "ATTESTED", "réserver le contrôle ne change pas son effet");
+  regler({ ...c1, runAt: ["verify", "ci"], paths: ["src/**"] });
+  assert.equal((await contrat()).status, "MANUAL", "ses paths changés, l'attestation tombe comme pour tout contrôle");
+  const depot = fileURLToPath(new URL("../../../", import.meta.url));
+  for (const page of [
+    join(depot, "packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md"),
+    join(depot, "docs/ia-first/4-checks-in-git.md"),
+  ]) {
+    const texte = readFileSync(page, "utf8").replace(/\s+/g, " ");
+    for (const attendu of [
+      /`runAt`/,
+      /\["verify", "ci"\]/,
+      /"not run" there \(a warning that blocks neither the commit nor the push\), never "passed"/,
+      /`verify` and `ci` must both be listed/,
+      /reuse of its last verdict/,
+      /attestation citing the check untouched/,
+    ])
+      assert.match(texte, attendu, page);
+  }
+});

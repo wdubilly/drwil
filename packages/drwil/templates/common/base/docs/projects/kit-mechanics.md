@@ -48,6 +48,7 @@ files:
   - .githooks/engine-branch.mjs
   - .githooks/engine-launch.mjs
   - .githooks/engine-pass.mjs
+  - .githooks/engine-runat.mjs
   - .githooks/engine-texts.mjs
   - .githooks/run-checks-texts.mjs
   - .githooks/run-checks-verdicts.mjs

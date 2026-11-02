@@ -700,6 +700,110 @@ test("QUA-141 : un contrôle repris sur ses seuls paths les déclare tous — ch
   );
 });
 
+// Contrôle réservé par `runAt` : lent, il ne tourne qu'au verify et en CI (QUA-208 à QUA-210).
+const reserve = (runAt, extra = {}) => ({ checks: [{ id: "lent", run: "node -e 0", ...extra, ...(runAt ? { runAt } : {}) }] });
+
+test("QUA-208 : un contrôle réservé par runAt n'est pas joué au commit ni au push et le dit : non exécuté, jamais passé", () => {
+  const racine = depot();
+  const cfg = reserve(["verify", "ci"], { paths: ["src/**"] });
+  // Au commit, même avec un fichier sous ses paths.
+  const commit = parId(checks(racine, { cfg, staged: ["src/a.js"] })).lent.run({ stdio: "pipe" });
+  assert.deepEqual(commit, {
+    status: "not-run",
+    detail: "réservé par runAt (verify, ci) : pas joué au commit, rejoué par verify et en CI",
+    configured: true,
+  });
+  // Au push (références données par le pre-push, tags seuls et suppressions compris), hors CI.
+  for (const k of ["DRWIL_PUSH_REFS", "DRWIL_PUSH_TAGS_ONLY", "DRWIL_PUSH_NO_BRANCH"]) {
+    const r = parId(checks(racine, { cfg, env: { [k]: "1" } })).lent.run({ stdio: "pipe" });
+    assert.equal(r.status, "not-run", k);
+    assert.match(r.detail, /pas joué au push/, k);
+  }
+  // Le contrôle qui déclare `commit` ou `push` y tourne.
+  const auCommit = reserve(["commit", "verify", "ci"]);
+  assert.equal(parId(checks(racine, { cfg: auCommit, staged: ["src/a.js"] })).lent.run({ stdio: "pipe" }).status, "ok");
+  const auPush = reserve(["push", "verify", "ci"]);
+  assert.equal(parId(checks(racine, { cfg: auPush, env: { DRWIL_PUSH_REFS: "x" } })).lent.run({ stdio: "pipe" }).status, "ok");
+  assert.equal(parId(checks(racine, { cfg: auPush, staged: ["a.js"] })).lent.run({ stdio: "pipe" }).status, "not-run");
+  // En anglais.
+  const en = parId(checks(racine, { cfg: { ...cfg, lang: "en" }, staged: ["src/a.js"] })).lent.run({ stdio: "pipe" });
+  assert.match(en.detail, /not played at commit/);
+});
+
+test("QUA-209 : verify et la CI jouent le contrôle réservé, son échec bloque ; un runAt mal formé est refusé, jamais ignoré", () => {
+  const racine = depot();
+  const cfg = reserve(["verify", "ci"]);
+  for (const [cas, options] of [
+    ["verify (rien d'indexé, pas de push)", {}],
+    ["CI", { env: { CI: "true" } }],
+    ["CI, même avec des références de push", { env: { CI: "true", DRWIL_PUSH_REFS: "x" } }],
+  ])
+    assert.equal(executer(racine, "lent", { cfg, ...options }).status, "ok", cas);
+  const echec = reserve(["verify", "ci"], { run: "node -e 'process.exit(1)'" });
+  assert.equal(executer(racine, "lent", { cfg: echec }).status, "fail", "l'échec du contrôle réservé remonte");
+  assert.equal(parId(checks(racine, { cfg })).lent.reuse, true, "un contrôle réservé reste un contrôle repris comme un autre (QUA-141)");
+
+  for (const [cas, runAt, attendu] of [
+    ["chaîne au lieu d'une liste", "verify", /liste non vide/],
+    ["liste vide", [], /liste non vide/],
+    ["valeur inconnue", ["verify", "ci", "lot"], /valeur inconnue "lot"/],
+    ["sans ci", ["verify"], /verify et ci y figurent toujours/],
+    ["sans verify", ["commit", "ci"], /verify et ci y figurent toujours/],
+    ["seulement au commit", ["commit"], /verify et ci y figurent toujours/],
+  ])
+    for (const [contexte, options] of [
+      ["commit", { staged: ["a.js"] }],
+      ["verify", {}],
+    ]) {
+      const r = executer(racine, "lent", { cfg: reserve(runAt), ...options });
+      assert.equal(r.status, "fail", `${cas} (${contexte})`);
+      assert.match(r.message, attendu, cas);
+      assert.match(r.message, /^node -e 0 : réglage runAt refusé/);
+    }
+  const en = executer(racine, "lent", { cfg: { ...reserve("verify"), lang: "en" } });
+  assert.match(en.message, /runAt setting refused \(a non-empty list is expected/);
+  const enInconnu = executer(racine, "lent", { cfg: { ...reserve(["verify", "ci", "lot"]), lang: "en" } });
+  assert.match(enInconnu.message, /unknown value "lot", expected: commit, push, verify, ci/);
+});
+
+test("QUA-210 : un contrôle sans runAt se comporte comme avant : joué partout, report par paths inchangé, déclaration inchangée", () => {
+  const racine = depot();
+  const cfg = reserve(null, { paths: ["src/**"] });
+  for (const [contexte, options, statut] of [
+    ["commit sous ses paths", { staged: ["src/a.js"] }, "ok"],
+    ["commit hors ses paths", { staged: ["autre.js"] }, "not-run"],
+    ["push", { env: { DRWIL_PUSH_REFS: "x" } }, "ok"],
+    ["verify", {}, "ok"],
+    ["CI", { env: { CI: "true" } }, "ok"],
+  ])
+    assert.equal(executer(racine, "lent", { cfg, ...options }).status, statut, contexte);
+  assert.deepEqual(executer(racine, "lent", { cfg, staged: ["autre.js"] }), {
+    status: "not-run",
+    detail: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
+  });
+  assert.equal(
+    parId(checks(racine, { cfg })).lent.declaration,
+    JSON.stringify([cfg.checks[0], null]),
+    "aucun champ ajouté à la déclaration",
+  );
+});
+
+test("QUA-211 : runAt entre dans l'empreinte propre du contrôle (QUA-141) : le changer rejoue le contrôle", () => {
+  const racine = depot();
+  ecrire(racine, "src/a.js", "x");
+  const empreinte = (cfg) => controlFingerprints(racine, checks(racine, { cfg })).get("lent");
+  const sans = empreinte(reserve(null, { paths: ["src/**"] }));
+  const avec = empreinte(reserve(["verify", "ci"], { paths: ["src/**"] }));
+  const autre = empreinte(reserve(["push", "verify", "ci"], { paths: ["src/**"] }));
+  assert.match(avec, /^[0-9a-f]{64}$/, "un contrôle réservé a une empreinte propre");
+  assert.equal(
+    new Set([sans, avec, autre]).size,
+    3,
+    "réserver ou élargir un contrôle ne reprend pas un verdict pris sous un autre réglage",
+  );
+  assert.equal(avec, empreinte(reserve(["verify", "ci"], { paths: ["src/**"] })), "même réglage, même empreinte");
+});
+
 test("QUA-212 : les tests du moteur et du paquet ne dépendent pas des variables DRWIL_PUSH_* du pre-push", () => {
   const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
   const env = {

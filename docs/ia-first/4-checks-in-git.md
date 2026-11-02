@@ -40,6 +40,17 @@ always run it. Without `paths`, it runs on every commit. Also list in
 manifest and lockfile, `.drwil/ia-first.json`…): otherwise a commit touching
 only them reruns it only on push.
 
+A slow check can also be **reserved** with `runAt`, a list among `commit`,
+`push`, `verify` and `ci` (default: all four, so a check without it behaves as
+before). `runAt: ["verify", "ci"]` keeps it out of every commit and push: it ends
+up "not run" there (a warning that blocks neither the commit nor the push), never "passed", and `drwil verify` and CI always play it, so
+its absence or failure still blocks the closing and the merge (QUA-013). Add
+`commit` or `push` to play it there too. `verify` and `ci` must both be listed;
+an unknown or malformed `runAt` is refused with a message, never ignored. The
+setting is part of the check's own fingerprint (the reuse of its last verdict)
+and, being an execution field, leaves an attestation citing the check
+untouched: only a change of its command, tests or `paths` makes it lapse.
+
 One detail makes this check actually run rather than get bypassed: **a
 check that did not run is visible** (QUA-013) — a check that cannot run on
 a workstation (missing tool) ends up "not run", never hidden as a silent
