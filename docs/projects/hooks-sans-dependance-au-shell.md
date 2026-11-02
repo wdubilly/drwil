@@ -25,6 +25,7 @@ files:
   - docs/contracts-catalog.md
   - docs/projects/kit-mechanics.md
   - .drwil/ia-first.json
+  - docs/architecture.md
 -->
 
 ## 1. Besoin
