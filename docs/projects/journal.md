@@ -3983,3 +3983,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : sur la branche principale aucun test n'échouait avec ces variables, les tests concernés (ceux du réglage `runAt`) appartenant au chantier « contrôles lents » non encore fusionné ; la garde les protège à leur arrivée, QUA-212 ne prouve pas une régression passée.
 - **Preuve de clôture** : docs/preuves/tests-isoles-du-pre-push.md.
 - **Clôturé par** : la branche `workstream/tests-isoles-du-pre-push`.
+
+## 2026-11-02 — L'élargissement du périmètre rendu visible
+
+- **Décisions clés** : l'élargissement du bloc `scope` de la fiche active en BUILD est gardé, mais rendu visible. Deux contrats neufs : QUA-213 (tout commit qui change le bloc `scope` de la fiche active affiche un avertissement avec les chemins ajoutés et retirés, quel que soit le réglage `scopeGate`, jamais bloquant à lui seul) et QUA-214 (le compte rendu de fin de tâche cite les chemins ajoutés au bloc `scope` et la raison ; consigne de conduite, dont la présence est prouvée par un test ; la justesse d'un compte rendu réel reste humaine ; rappelée par l'avertissement). Point tranché au lot 1 : pas de ligne de preuve de clôture, faute de source machine fiable de la raison.
+- **Contrats modifiés** : QUA-050, dont le texte « le cadrage de la fiche d'origine ne s'élargit jamais » est aligné sur la barrière (le détour ne sert pas à élargir ; le cadrage ne s'élargit que par un commit de cadrage séparé, rendu visible par QUA-213 et QUA-214), validé par le demandeur le 2026-10-30.
+- **Hooks modifiés** : `.githooks/scope-gate.mjs`, `.githooks/scope-gate-merge.mjs` (reçoit `scopeChange`, `reference` et `replaying` pour garder `.githooks/scope-gate.mjs` sous le plafond de lignes), `.githooks/scope-gate-texts.mjs` et `.githooks/scope-gate.test.mjs`, validés par le demandeur le 2026-10-30 ; copies gabarit identiques.
+- **Décisions de l'humain en cours de route** : aucune ; le bloc `scope` n'a pas été élargi.
+- **Limites connues** : l'avertissement n'est émis qu'au commit, pas au rejeu de la branche (push, CI, `verify`) ; QUA-214 n'est pas contrôlable par un outil.
+- **Preuve de clôture** : docs/preuves/perimetre-visible.md.
+- **Clôturé par** : la branche `workstream/perimetre-visible`.
