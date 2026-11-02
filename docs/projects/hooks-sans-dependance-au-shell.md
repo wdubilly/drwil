@@ -10,6 +10,10 @@ files:
   - packages/drwil/templates/common/tools/claude/.claude/settings.json
   - packages/drwil/templates/common/tools/gemini/.gemini/settings.json
   - packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json
+  - packages/drwil/templates/common/tools/gemini/.gemini/hooks/drwil-node.sh
+  - packages/drwil/src/config.ts
+  - packages/drwil/src/render.ts
+  - packages/drwil/src/render-gemini.ts
   - packages/drwil/test/claude-hooks.test.mjs
   - packages/drwil/test/kit.test.mjs
   - .githooks/engine.test.mjs
