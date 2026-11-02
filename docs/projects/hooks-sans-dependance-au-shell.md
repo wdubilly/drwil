@@ -98,6 +98,7 @@ Tranchées par le demandeur le 2026-11-02 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-02) : cadré, aucun code.
+- **Dernier état** (2026-11-02) : lot 1 fait. Les tests QUA-208, 209 et 210 de `.githooks/engine.test.mjs`
+  passent désormais le `PATH` hérité à leur `env` réduit ; 794 tests verts sans lien `node` dans `/usr/local/bin`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] lancer par `/drwil-start`, dans une nouvelle session.
+- **Prochaine étape** : lot 2 — message de repli des hooks livrés, dans une nouvelle session.
