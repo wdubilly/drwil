@@ -126,8 +126,6 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   (cadré le 2026-10-30) — `docs/projects/attente-commandes-longues.md`.
 - [ ] [IA] [P2] (0.11.0) Signaler un défaut du kit : commande qui imprime un rapport prêt à coller, sans donnée du
   projet (cadré le 2026-10-30) — `docs/projects/signaler-un-defaut-du-kit.md`.
-- [ ] [IA] [P1] Hooks du kit indépendants du PATH du shell : message lisible quand `node` est introuvable, tests du
-  moteur sans `node` système (cadré le 2026-11-02) — `docs/projects/hooks-sans-dependance-au-shell.md`.
 - [ ] [IA] [P2] Attester une preuve humaine depuis la conversation, par un sondage lu par un hook (cadré le
   2026-10-30, après l'adoption fluide) — `docs/projects/attester-depuis-le-chat.md`.
 - [ ] [IA] [P2] Ajouter ou adopter un contrat par commande, `drwil contracts add` et `adopt <ID>` (cadré le
