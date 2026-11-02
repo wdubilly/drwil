@@ -44,6 +44,8 @@ il ne le peut pas.
 - Un assistant lancé avec un `PATH` sans `node` produit un message explicite, pas un 127 muet.
 - Un test reproduit le cas avec `env -i` ou un `PATH` vidé.
 - `INSTALL.md` décrit le prérequis.
+- Les tests du moteur (`.githooks/engine.test.mjs`) passent sans `node` dans le `PATH` système
+  (`/usr/bin`, `/usr/local/bin`), donc avec fnm : ils ne dépendent plus d'un `node` « système ».
 
 ## Existant (relevé le 2026-11-02)
 
@@ -55,6 +57,15 @@ il ne le peut pas.
   ce dépôt n'en porte pas de copie installée.
 - Contrats cités par les titres : QUA-044 (les hooks lisent la racine du projet, pas le dossier
   courant) et QUA-065 (les hooks de Copilot parlent son format, sans jamais bloquer).
+- Même défaut côté tests (relevé le 2026-11-02, Node 22 et 26, fnm, sans `node` dans
+  `/usr/bin` ni `/usr/local/bin`) : `.githooks/engine.test.mjs` passe un `env` réduit
+  (`env: { DRWIL_PUSH_REFS: "x" }`, ligne 726) à un contrôle dont la commande est `node -e 0` ;
+  sans `PATH`, `/bin/sh` répond `node: not found` et le contrôle échoue. La CI passe parce que
+  `node` y est dans `/usr/bin`. En local, `run-checks` échoue sur QUA-208, 209 et 210 (tests
+  `runAt`) et sur le test des contrôles eux-mêmes ; d'autres échecs (QUA-126, 140, 152…) ont
+  très probablement la même cause, non vérifiée une à une. Le pre-commit et le pre-push
+  rejouant `run-checks`, un développeur sous fnm est bloqué, d'où la valeur de cette fiche.
+- Contournement local sans toucher au dépôt : un lien `node` dans `/usr/local/bin`.
 
 ## Questions à trancher
 
