@@ -10,6 +10,7 @@ files:
   - .githooks/engine.test.mjs
   - docs/contracts.md
   - docs/projects/journal.md
+  - packages/drwil/test/kit.test.mjs
 -->
 
 ## 1. Besoin
