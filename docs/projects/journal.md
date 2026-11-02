@@ -3993,3 +3993,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : l'avertissement n'est émis qu'au commit, pas au rejeu de la branche (push, CI, `verify`) ; QUA-214 n'est pas contrôlable par un outil.
 - **Preuve de clôture** : docs/preuves/perimetre-visible.md.
 - **Clôturé par** : la branche `workstream/perimetre-visible`.
+
+## 2026-11-02 — La même gouvernance et le même cycle sous plusieurs outils (parité, lots 2 et 3)
+
+- **Décisions clés** : la file de chantiers se construit sans choix multiple, par des sondages `drwil-file` à choix unique enchaînés (une fiche ajoutée par réponse, puis « Terminer la file »), lus par le hook ; l'état `queue_draft` n'existe qu'en SCOPING et l'agent n'a aucune commande pour l'alimenter. Sans sous-agent exploitable, le rappel d'état dit de proposer à l'humain une nouvelle conversation entre deux chantiers. La matrice de compatibilité (QUA-063) porte un tableau « Workstream cycle parity », toutes cases « not tested ». Codex, essayé avec un modèle local léger, reste « not tested » ; `--tools codex` installe un fichier de hooks dans le dossier `.codex` (état au démarrage, rappel à chaque message), soumis à l'approbation humaine par `/hooks`, sans blocage d'écriture.
+- **Contrats modifiés** : QUA-037 (la file ne vient plus d'un seul sondage à choix multiple), QUA-063 (tableau de parité du cycle).
+- **Hooks modifiés** : `.githooks/state.mjs`, `.githooks/state-validate.mjs`, `.githooks/state-transitions.mjs`, `.githooks/state-texts.mjs`, `.githooks/state-context-texts.mjs`, `.githooks/state-messages-fr.mjs`, `.githooks/state-messages-en.mjs`, `.githooks/state.test.mjs`, validés par le demandeur le 2026-11-02.
+- **Décisions de l'humain en cours de route** : option B pour la file (sondages enchaînés, plutôt qu'une commande en terminal) ; Codex « not tested » faute de modèle capable ; critères rattachés à QUA-037 et QUA-063 sans contrat neuf.
+- **Limites connues** : lot 1 [humain] non fait (les sondes qui dateront les cases du tableau de parité) ; enchaînement `drwil-file` non essayé en vrai sous Copilot CLI ; sous-agents de Copilot CLI et de Gemini CLI non éprouvés ; le banc ne mesure ni sondage, ni file, ni sous-agent ; pas de worktree ni de file parallèle en sondages enchaînés — toutes reprises dans `docs/intentions/parite-des-outils-suites.md`.
+- **Preuve de clôture** : docs/preuves/parite-des-outils.md.
+- **Clôturé par** : la branche `workstream/parite-des-outils`.

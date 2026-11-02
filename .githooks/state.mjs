@@ -40,6 +40,7 @@ export {
 export { context, governanceDisabled, shortReminder } from "./state-texts.mjs";
 // The command line lives in state-cli.mjs (QUA-001: files under 200 lines); `node .githooks/state.mjs`
 // stays the entry point.
+export { draftAdd, draftFinish } from "./state-draft.mjs";
 export { readStdinJson, reminderIfChanged, reopen };
 export { ACTIVITIES, NEUTRAL_STATE, readState, transitionAllowed, validateState } from "./state-validate.mjs";
 export { latestEvidence, requiresHuman, verifyEvidence } from "./state-evidence.mjs";
@@ -88,12 +89,12 @@ export async function move(root, args, opts) {
 export function stopQueue(root) {
   const T = texts(root);
   const read = readState(root);
-  if (!read.state.queue) return { code: 0, message: T.noQueue };
+  if (!read.state.queue && !read.state.queue_draft) return { code: 0, message: T.noQueue };
   const state = { ...read.state };
-  delete state.queue;
-  delete state.queue_merge;
+  for (const key of ["queue", "queue_merge", "queue_draft"]) delete state[key];
   writeState(root, state);
-  return { code: 0, message: fill(T.queueStopped, read.state.queue.join(", ")) };
+  const [text, list] = read.state.queue ? [T.queueStopped, read.state.queue] : [T.draftStopped, read.state.queue_draft];
+  return { code: 0, message: fill(text, list.join(", ")) };
 }
 
 /**

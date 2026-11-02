@@ -122,7 +122,7 @@ export function prepareTransition(read, to, { brief, request, now }, root) {
     };
   } else {
     state = { ...read.state, activity: to, active_request: request ?? read.state.active_request, since: now };
-    delete state.merge_cancelled;
+    for (const key of ["merge_cancelled", "queue_draft"]) delete state[key];
   }
   const problems = validateState(state, root);
   return problems.length ? { error: problems.join(" ; ") } : { state };

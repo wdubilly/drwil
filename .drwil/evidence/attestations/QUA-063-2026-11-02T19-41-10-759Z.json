@@ -1,0 +1,28 @@
+{
+  "version": 4,
+  "contract": "QUA-063",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-02T19:41:10.759Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "927892a08eadc37ea8dceb23a11c2c11c867979f3f0cd7e2d999524f38404946",
+  "proof": {
+    "tests-qua-063": "92ea7431b724d49634a02f118152c912a119d3061caa262a91326b5ef8052e45"
+  },
+  "covers": [
+    "docs/ia-first/6-limits-and-tool-compatibility.md"
+  ],
+  "coverage": {
+    "docs/ia-first/6-limits-and-tool-compatibility.md": "e62dbfab0ec63669296020e0a66125c6d6028371d178acdb9ea4a653ee133393"
+  },
+  "commit": "ec1e01d99f2a91d1a0c7cbc11b27de794fd0b48b",
+  "automated": [
+    {
+      "id": "tests-qua-063",
+      "status": "ok"
+    }
+  ]
+}

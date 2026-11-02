@@ -1,0 +1,28 @@
+{
+  "description": "drwil : état de gouvernance au démarrage de session et rappel d'état à chaque message (sortie texte de state.mjs, ajoutée au contexte par Codex).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.githooks/state.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.githooks/state.mjs\" reminder",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

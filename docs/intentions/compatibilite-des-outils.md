@@ -81,9 +81,10 @@ comme avec Claude Code avant la 0.6.4.
 
 **Existant (vérifié le 2026-10-18)** :
 
-- Le rappel d'état et la skill de lancement disent « autre outil : tout
-  dans la même session » ; seul Claude Code reçoit la consigne des
-  sous-agents.
+- Depuis le 2026-11-02 (parité des outils, lot 3), le rappel d'état de la file
+  dit : sous-agent si l'outil en offre un utilisable, sinon une nouvelle
+  conversation proposée à l'humain entre deux chantiers (plus « tout dans la
+  même session »). Aucun sous-agent n'est vérifié par le banc.
 - Copilot CLI lance la skill de lancement (`ask_user`) ; ses sous-agents,
   leurs hooks et leur accès à l'état ne sont pas vérifiés. Codex, Cursor
   et Gemini : non vérifiés.

@@ -21,6 +21,7 @@ files:
   - .githooks/state.mjs
   - .githooks/state-cli.mjs
   - .githooks/state-lots.mjs
+  - .githooks/state-draft.mjs
   - .githooks/state-cli-lots.mjs
   - .githooks/briefs-lots.mjs
   - .githooks/briefs.mjs

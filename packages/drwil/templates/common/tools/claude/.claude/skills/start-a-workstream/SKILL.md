@@ -63,10 +63,23 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      choice**: `type: "string"` and `enum` = the exact paths, **never** `type: "array"` (a multiple
      choice field came back empty under Copilot CLI: only the single choice is read reliably), and a
      **second field named exactly `drwil-merge`** with `enum` "Automatic merge" and "Manual merge"
-     (no `default`, no recommendation): the hook reads `fiche=…, drwil-merge=…`. One brief per poll,
-     so no queue from Copilot CLI (to chain several briefs, use Claude Code); always ask
+     (no `default`, no recommendation): the hook reads `fiche=…, drwil-merge=…`. One brief per poll:
+     to chain several briefs from Copilot CLI, use the **queue polls** below; always ask
      `drwil-merge` and `drwil-worktree` with it, and never `drwil-parallel` (it needs several
      briefs). The hook still reads a multiple choice field if another tool sends one.
+   - **Queue by chained polls** (any tool, the way to a queue under Copilot CLI): when the
+     human wants to chain several briefs and the tool reads a single choice only, open one poll
+     per brief, **single choice**: Claude Code, `header` exactly `drwil-file`, `multiSelect` false;
+     Copilot CLI, `message` starting with `drwil-file :` and one field named exactly `drwil-file`,
+     `type: "string"` and `enum` only. Options: the ready briefs not yet in the queue (exact paths, the
+     state reminder lists the ones already added), plus a last one, `Finish the queue`. Optional
+     second question or field `drwil-merge` as above, read only on « Finish the queue ». The hook
+     reads each answer: a brief is **added** to the queue under construction (nothing starts; the
+     `[drwil]` message says the queue so far), then open the next `drwil-file` poll; « Finish the
+     queue » starts the first brief in this folder and queues the others, with the merge decided. A
+     brief that is not ready is refused when added. Never fill in `answers` or a `default`, never
+     answer yourself and never start the queue: the hook refuses the poll, and the state has no
+     command for the agent to add or finish a queue; `node .githooks/state.mjs queue stop` drops one.
      No `drwil-merge` answer read: manual merge.
    - **Recommend**: the first ready brief, first, with "(Recommended)" and the reason in
      its **description** — never in the label.
