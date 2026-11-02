@@ -102,6 +102,9 @@ delete envTest.DRWIL_PUSH_TAGS_ONLY;
 delete envTest.DRWIL_PUSH_NO_BRANCH;
 delete envTest.DRWIL_PUSH_REFS;
 delete envTest.DRWIL_HOOK;
+// Les tests qui jouent le moteur dans ce processus lisent process.env, pas envTest : sans ce retrait, la
+// suite lancée par le pre-push se croirait au push (runAt) et échouerait.
+for (const k of ["DRWIL_PUSH_REFS", "DRWIL_PUSH_REMOTE", "DRWIL_PUSH_TAGS_ONLY", "DRWIL_PUSH_NO_BRANCH"]) delete process.env[k];
 // run-checks n'affiche que ses échecs et un résumé (QUA-126) : le rapport complet, écrit à côté, s'y ajoute
 // pour que les attentes sur un avertissement ou une annonce gardent leur sens.
 const withDetail = (r, dir) => {

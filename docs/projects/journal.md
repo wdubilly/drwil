@@ -3974,3 +3974,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : la variante « e2e au commit seulement si le chantier touche un chemin critique », écartée en section 2 de la fiche, dans `docs/intentions/controle-lent-chemin-critique.md`.
 - **Preuve de clôture** : docs/preuves/controles-lents-verify-ci.md.
 - **Clôturé par** : la branche `workstream/controles-lents-verify-ci`.
+
+## 2026-11-02 — Les tests du dépôt ne dépendent plus des variables du pre-push
+
+- **Décisions clés** : un contrat neuf, QUA-212 (aucun test du dépôt ne dépend des variables `DRWIL_PUSH_*` que le pre-push exporte ; le jeu de tests lancé avec elles posées passe comme sans). `packages/drwil/test/kit.test.mjs` les retire de `process.env`, `.githooks/engine.test.mjs` les isole par une garde avant et après chaque test, et un test du moteur relance les tests du moteur et ceux du paquet avec ces variables posées.
+- **Hooks modifiés** : `.githooks/engine.test.mjs`, validé par le demandeur le 2026-11-01.
+- **Décisions de l'humain en cours de route** : le défaut a été trouvé en poussant la clôture du chantier « contrôles lents » (le test du réglage `runAt` se croyait au push) ; le demandeur a choisi de corriger le contrôle mal calibré plutôt que de contourner le pre-push.
+- **Limites connues** : sur la branche principale aucun test n'échouait avec ces variables, les tests concernés (ceux du réglage `runAt`) appartenant au chantier « contrôles lents » non encore fusionné ; la garde les protège à leur arrivée, QUA-212 ne prouve pas une régression passée.
+- **Preuve de clôture** : docs/preuves/tests-isoles-du-pre-push.md.
+- **Clôturé par** : la branche `workstream/tests-isoles-du-pre-push`.
