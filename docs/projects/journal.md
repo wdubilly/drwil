@@ -4013,3 +4013,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : Gemini sous Windows sans message de repli ; formes PowerShell non jouées en CI ; les tests qui lancent les commandes `sh` sont sautés sous Windows ; réglage de Gemini versionné, une équipe mixte garde la forme du système qui a lancé `init` ; 14 tests de `.githooks/run-checks.test.mjs` échouent sans `gitleaks` dans le PATH (intention `docs/intentions/tests-de-run-checks-sans-gitleaks.md`) ; QUA-217 prouve le fichier du moteur seul. Intentions : `docs/intentions/gemini-sous-windows-repli-node.md`, `docs/intentions/formes-powershell-des-hooks-non-jouees-en-ci.md`.
 - **Preuve de clôture** : docs/preuves/hooks-sans-dependance-au-shell.md.
 - **Clôturé par** : la branche `workstream/hooks-sans-dependance-au-shell`.
+
+## 2026-11-03 — Détour de docs/projects/attente-commandes-longues.md : le test de rappel de péremption des audits a une date figée
+
+- **Défaut** : le test « rappel de péremption des audits (> 30 jours) » (`packages/drwil/test/kit.test.mjs`) écrivait un rapport « récent » daté du 2026-10-04 : le 2026-11-03, il avait plus de 30 jours et le test échouait, donc la suite du paquet et `run-checks`.
+- **Cause** : une date figée en dur dans le jeu d'essai, que le temps périme seul.
+- **Correction** : la date du rapport récent suit l'horloge (la veille). Vu échouer avant la correction ; sans effet sur le comportement livré.
+- **Clôturé par** : la branche `detour/test-peremption-audit`.

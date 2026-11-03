@@ -3247,11 +3247,9 @@ test("rappel de péremption des audits (> 30 jours) : tableau de bord et run-che
   await quiet(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   copierModule(dir, "dashboard");
 
-  // rapport récent : pas d'avertissement.
-  writeFileSync(
-    join(dir, "docs/audit-risques.md"),
-    "# Audit de risques et dette technique\n\n> Dernier scan : 2026-10-04\n\n## Synthèse\n",
-  );
+  // rapport récent : pas d'avertissement. La date suit l'horloge : une date figée devient périmée seule.
+  const hier = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  writeFileSync(join(dir, "docs/audit-risques.md"), `# Audit de risques et dette technique\n\n> Dernier scan : ${hier}\n\n## Synthèse\n`);
   let r = spawnSync(process.execPath, [".githooks/dashboard.mjs", "docs/dashboard.html"], { cwd: dir, encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.doesNotMatch(read(dir, "docs/dashboard.html"), /à relancer/);
