@@ -1,6 +1,6 @@
 # Projet : attente outillée des commandes longues
 
-**Statut** : cadré le 2026-10-30.
+**Statut** : fait le 2026-11-03.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -29,12 +29,11 @@ un commit à hooks au-delà du délai de 120 s.
 
 ## Critères d'acceptation
 
-- Un script du kit lance une commande longue en tâche de fond et écrit son verdict dans un fichier — contrat
-  à créer
+- Un script du kit lance une commande longue en tâche de fond et écrit son verdict dans un fichier — `QUA-219`
 - Le même script expose une attente bornée : elle rend le verdict ou dit « toujours en cours » à l'échéance,
-  sans jamais boucler indéfiniment — contrat à créer
+  sans jamais boucler indéfiniment — `QUA-220`
 - Les consignes des sous-agents imposent ce script et `run_in_background`, et interdisent la boucle `pgrep` —
-  contrat à créer
+  `QUA-221`
 
 ## 2. Hors périmètre
 
