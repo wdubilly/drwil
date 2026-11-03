@@ -70,14 +70,19 @@ autre dépôt.
 
 - **Dernier état** (2026-11-03) : lot 1 implémenté dans le dépôt réel : commande publique en lecture
   seule, liste fermée de champs et de messages normalisés, recette source synchronisée par l'installateur,
-  documentation et contrats `QUA-231` à `QUA-234` ajoutés. Les tests ciblés passent ; couverture
-  du module : 100 % lignes, branches et fonctions ; contrôles de style et références ciblés sans erreur.
-  Les six tests passent, dont sentinelles de non-exécution ; les contrôles officiels complets passent
-  (51 avertissements). La première passe verify a refusé les origines manquantes des quatre nouveaux
-  contrats ; les champs Origine sont complétés dans le présent commit avant une nouvelle passe complète.
+  documentation et contrats `QUA-231` à `QUA-234` ajoutés. Les six tests ciblés passent ; couverture
+  du module : 100 % lignes, branches et fonctions. Attestation humaine de `QUA-234` reçue et
+  reconnue par la vérification officielle : `node .githooks/run-checks.mjs`, code 0
+  (6 avertissements, 216 contrôles repris et 15 rejoués), puis
+  `node packages/drwil/bin/drwil.js verify --agent` :
+  `Verdict: GOVERNANCE: PASS (exit 0)`. Les origines des quatre contrats sont renseignées.
 - **Extension de périmètre** : `packages/drwil/bin/drwil.js` ajouté pour enregistrer la nouvelle
   commande dans le point d'entrée public ; les modules prévus au cadrage ne peuvent seuls la rendre accessible.
-- **Travail non commité** : aucun attendu après le commit du lot et de cette reprise.
-- **Prochaine étape** : renouveler le verdict officiel sur le commit livré. Le jugement
-  de lisibilité et de reproductibilité du rapport (`QUA-234`) exige une attestation humaine ; ne pas
-  clôturer, programmer une fusion ni lancer le chantier suivant sans verdict global PASS.
+- **Travail non commité** : attestation humaine et présente reprise à conserver dans le commit.
+- **Prochaine étape** : renouveler l'évidence sur ce commit, puis journal et clôture officielle ;
+  pousser et ouvrir la PR, renouveler la validation finale, programmer la fusion autorisée et la
+  suivre jusqu'à son résultat réel. Ne pas lancer le chantier suivant dans cette session.
+- **Limites connues** : messages publics normalisés et instantané non réputé actuel, explicités
+  dans la recette ; hook `.githooks/commit-msg` non exécutable préexistant, déjà consigné dans
+  `docs/intentions/commit-msg-non-executable.md`. Consommation de ce chantier indisponible dans
+  les sources consultées : aucun coût inventé.
