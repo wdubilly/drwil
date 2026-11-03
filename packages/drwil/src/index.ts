@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 
 export { detectStack, type StackEntry } from "./stack.js";
+export { report } from "./cli-report.js";
 export {
   verify,
   formatVerdict,

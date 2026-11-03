@@ -2250,3 +2250,41 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/close.test.mjs`
 **Origine** : clôture-sur-projet-neuf — « En BUILD, close --check liste les renvois à la fiche qui bloqueraient le commit de clôture et propose l'extension du bloc scope »
 **Raison** : Découvrir le hors-périmètre après suppression de la fiche impose une reprise tardive ; l'extension se décide pendant BUILD.
+
+## QUA-231 — Un rapport public de défaut du kit est imprimable sans rejouer les contrôles
+**Règle** : `drwil report` imprime un texte à coller avec la version de la CLI, la version numérique du kit installé lorsqu'elle est lisible, les identifiants fermés des contrôles du kit en échec au dernier instantané run-checks et un message public normalisé d'échec. La source et l'absence de vérification de sa fraîcheur sont explicites ; absence, format invalide ou entrée refusée restent « non lu », jamais un succès. Le code de sortie zéro signifie seulement que le rapport est imprimé.
+**Périmètre** : commande `report` du paquet drwil, recette livrée.
+**Source de vérité** : `packages/drwil/src/cli-report.ts`, messages dans `packages/drwil/src/cli-texts.ts`.
+**Preuve** : commande publique en sous-processus sur des données fictives, versions, échec et entrées absentes ou invalides.
+**Contrôle** : `tests-qua-231`
+**Tests** : `packages/drwil/test/report.test.mjs`
+**Raison** : Un défaut doit pouvoir être décrit depuis le projet installé sans inventer une exécution.
+
+## QUA-232 — Le rapport de défaut n'exporte aucune donnée du projet
+**Règle** : Le rapport n'exporte ni chemin absolu, nom de projet ou de dépôt, contenu de fichier, secret, commande du projet, sortie brute, horodatage ni empreinte. Seuls les identifiants fermés des contrôles intégrés au kit et une version strictement numérique sont repris des entrées locales ; les messages sont normalisés par le paquet. Tout champ libre, contrôle propre au projet, suffixe de version ou donnée douteuse est exclu. Les fichiers d'entrée symboliques ou trop volumineux sont refusés.
+**Périmètre** : texte produit par `drwil report`.
+**Source de vérité** : liste fermée et lecteur dans `packages/drwil/src/cli-report.ts`.
+**Preuve** : marqueurs privés fictifs de formats variés dans tous les champs, version forgée, contrôles inconnus, liens symboliques et volume excessif.
+**Contrôle** : `tests-qua-232`
+**Tests** : `packages/drwil/test/report.test.mjs`
+**Raison** : Un masque de secrets connus ne garantit pas la confidentialité d'un texte arbitraire.
+
+## QUA-233 — Le rapport est strictement local et en lecture seule
+**Règle** : `drwil report` imprime sur stdout ; il n'écrit aucun fichier, ne lance aucun programme, n'exécute pas de contrôle ni de code du projet et ne contacte aucune forge ni autre dépôt. La reproduction indiquée est une instruction pour l'utilisateur, pas une exécution du rapport.
+**Périmètre** : commande et API publique `report`.
+**Source de vérité** : `packages/drwil/src/cli-report.ts`.
+**Preuve** : instantané des fichiers avant/après la CLI et contrôle local sentinelle qui ne doit pas tourner ; lecteur limité à des fichiers locaux non symboliques.
+**Contrôle** : `tests-qua-233`
+**Tests** : `packages/drwil/test/report.test.mjs`
+**Raison** : La remontée d'un défaut n'autorise ni télémétrie ni action dans un autre dépôt.
+
+## QUA-234 — Un humain juge la lisibilité et la reproductibilité du rapport de défaut
+**Règle** : Un humain lit un rapport de défaut généré sur des données fictives et la recette livrée, juge le texte lisible et assez précis pour préparer une reproduction, y compris les limites des messages normalisés et la nécessité d'un exemple fictif.
+**Périmètre** : présentation publique du rapport et recette.
+**Source de vérité** : `packages/drwil/src/cli-report.ts`, `packages/drwil/src/cli-texts.ts`, recette livrée.
+**Preuve** : lecture humaine du rapport et de la recette.
+**Contrôle** : `tests-qua-234`
+**Manuel** : Lire le rapport et la recette ; confirmer la lisibilité et la précision suffisante pour une reproduction sans donnée du projet.
+**Couvre** : `packages/drwil/src/cli-report.ts`, `packages/drwil/src/cli-texts.ts`, `packages/drwil/templates/common/base/docs/recipes/report-a-kit-defect.md`
+**Tests** : `packages/drwil/test/report.test.mjs`
+**Raison** : La présence automatique de champs ne prouve pas qu'un mainteneur peut comprendre le signalement.

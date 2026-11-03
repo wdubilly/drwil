@@ -535,6 +535,22 @@ project keeps its setting (`warning` when it had none), and under the
 mandatory guarantees `verify` fails on a non-blocking one. Exit 0:
 healthy (warnings allowed); 1: problems; 2: not a drwil project.
 
+### `report` — prepare a public kit defect report
+
+```bash
+npx drwil report
+```
+
+Prints text to review and paste into a drwil issue yourself, without running
+checks, writing files or contacting a forge. It reads the last local
+`run-checks` snapshot, not the current state: the CLI version, a strictly
+numeric installed kit version and failed built-in check IDs with normalized
+public messages are exportable. Raw output and project-specific checks are
+never copied; missing or unsafe input is explicitly unread, never passed.
+Exit 0 means printed, not verified. Add only a fictitious minimal reproduction,
+never project files or logs. See the installed
+`docs/recipes/report-a-kit-defect.md` recipe.
+
 ### `contracts` — list and validate the contract registry
 
 ```bash
