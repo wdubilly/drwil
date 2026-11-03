@@ -33,6 +33,17 @@ files:
   - packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md
   - outils/parite-des-outils.test.mjs
   - outils/banc-agents.test.mjs
+  - packages/drwil/src/attest-portable.ts
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/portable-attest.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-adapters.mjs
+  - .claude/hooks/portable-attest.mjs
+  - .claude/hooks/attest-adapters.mjs
+  - packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json
+  - .github/hooks/drwil.json
+  - packages/drwil/templates/common/tools/gemini/.gemini/settings.json
+  - .gemini/settings.json
+  - packages/drwil/test/portable-attest.test.mjs
+  - package.json
 -->
 
 ## 1. Besoin
@@ -89,6 +100,12 @@ Tranchées par le demandeur le 2026-10-30 :
 - Un sondage lu par un hook (plutôt que `! npx drwil attest` dans la session).
 - Le sondage affiche le critère, l'essai et les fichiers couverts (plutôt que le critère seul).
 
+Décision humaine concrète de reprise du 2026-11-03 : **« Adapter le protocole avec les mêmes
+garanties »**. Une corrélation différente de l'identifiant d'appel natif est autorisée : usage unique,
+session et contenu exact du sondage liés, refus des réponses agent, du rejeu et d'une preuve modifiée.
+Cette décision autorise l'adaptation de QUA-235 (frontière du sondage préparé), pas une réduction de
+l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
+
 ## 5. Points à trancher
 
 - [IA, réalisation initiale du 2026-11-03, insuffisante pour le périmètre corrigé] Le hook n'accepte que `AskUserQuestion` de Claude Code :
@@ -115,6 +132,35 @@ Tranchées par le demandeur le 2026-10-30 :
   préalable réel, jamais remplacer l'exigence par « terminal disponible ».
 
 ## 7. Reprise
+
+- **Reprise ciblée, protocole portable (2026-11-03)** : décision ci-dessus reçue ; état BUILD, arbre
+  propre, PR #352 brouillon. Cette étape livre du code pour Copilot CLI et Gemini CLI seulement ;
+  Claude Code est préservé. Codex/Cursor et les jugements humains restent à traiter ensuite.
+- **Conception autorisée** : un nonce aléatoire du moteur est inclus dans la question visible.
+  Le hook avant l'outil réserve atomiquement au plus une demande par session native, lie outil,
+  session, contexte de sous-agent s'il existe, contenu exact, snapshot et date ; le nonce ne peut
+  jamais être réarmé dans ce projet. Le hook après réclame atomiquement cette préparation avant
+  toute attente asynchrone, ne lit que le résultat natif du canal humain et relance les contrôles
+  existants avec comparaison du snapshot exact. Expiration : une heure. Une collision, un autre
+  sondage/appel, un retour hors session/outil ou une préparation modifiée ne confirme rien. Le
+  nonce est une corrélation locale, pas un identifiant natif inventé ni une identité forte ; les
+  fichiers du hook et son runtime sont dans la même frontière de confiance que l'adaptateur Claude.
+- **Formats établis avant code** : Copilot documente `preToolUse` / `postToolUse` avec `sessionId`,
+  `toolName`, `toolArgs` et `toolResult.textResultForLlm` (succès). Son SDK officiel décrit
+  `ask_user` avec `question` et `choices`, et son afficheur distribué en 1.0.105 traite le préfixe
+  `User responded:` ; aucune inférence à partir d'une phrase libre dans le chat. Gemini documente
+  `BeforeTool` / `AfterTool`, `session_id`, `ask_user`, `questions` et la chaîne JSON
+  `tool_response.llmContent` contenant `answers["0"]`. Ces schémas seront simulés dans des projets
+  fictifs, jamais présentés comme une capture réelle.
+- **Scope ajouté avant code, commit de cadrage séparé** :
+  packages/drwil/src/attest-portable.ts (à créer) prépare les formes natives sans grossir le moteur existant ;
+  portable-attest.mjs et attest-adapters.mjs (à créer) dans le gabarit Claude partagé, et leurs deux miroirs
+  `.claude/hooks/`, portent la corrélation et les décodeurs, installés par l'infrastructure existante
+  `usesClaudeTree` (pas une nouvelle couche d'installation).
+  Les deux réglages natifs Copilot/Gemini du gabarit et leurs miroirs branchent ces événements ;
+  packages/drwil/test/portable-attest.test.mjs (à créer) éprouve ces canaux sur données fictives ;
+  `package.json` inclut ces tests dans la couverture des hooks livrés, sans abaisser les seuils.
+  Les sources, contrats, recette, matrice et contrôles déjà cadrés seront mis à jour avec le code.
 
 - **Reprise après correction humaine du périmètre (2026-11-03)** : état initial VERIFY, arbre git propre,
   branche `workstream/attester-depuis-le-chat`, PR #352 brouillon. Transition officielle
