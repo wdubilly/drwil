@@ -78,10 +78,21 @@ autre dépôt.
   `Verdict: GOVERNANCE: PASS (exit 0)`. Les origines des quatre contrats sont renseignées.
 - **Extension de périmètre** : `packages/drwil/bin/drwil.js` ajouté pour enregistrer la nouvelle
   commande dans le point d'entrée public ; les modules prévus au cadrage ne peuvent seuls la rendre accessible.
-- **Travail non commité** : attestation humaine et présente reprise à conserver dans le commit.
-- **Prochaine étape** : renouveler l'évidence sur ce commit, puis journal et clôture officielle ;
-  pousser et ouvrir la PR, renouveler la validation finale, programmer la fusion autorisée et la
-  suivre jusqu'à son résultat réel. Ne pas lancer le chantier suivant dans cette session.
+- **Évidence renouvelée** : `node packages/drwil/bin/drwil.js verify --evidence --agent` sur
+  `936411c` : `Verdict: GOVERNANCE: PASS (exit 0)`, 205 PASS, 21 ATTESTED, aucun FAIL,
+  ERROR ou MANUAL. Évidence : `.drwil/evidence/verify-2026-11-03T19-29-51-082Z.json` (si présent).
+- **Blocage de clôture** : après passage officiel en CLOSING, `node .githooks/close.mjs` refuse
+  l'écriture de la preuve : empreinte des critères acceptée `sha256:ea17be0a5b2599ff`,
+  empreinte actuelle `sha256:9ccee6085b393b9a`. La comparaison avec le lecteur actuel donne cette
+  même empreinte actuelle pour `77fd9c1`, `97da286`, `787710a` et `936411c` : ni l'attestation
+  ni la présente reprise n'ont changé les critères. Aucune acceptation réécrite par l'agent.
+- **Travail non commité** : présente reprise du blocage ; l'entrée de journal préparée a été
+  retirée après le refus, aucune clôture ni suppression de fiche effectuée.
+- **Prochaine étape humaine** : relire les critères puis, dans un terminal humain,
+  `node .githooks/state.mjs accept`, comme demandé par l'outil officiel. Reprendre ensuite
+  l'évidence complète sur le commit courant, le journal et la clôture ; pousser, ouvrir la PR et
+  suivre la fusion autorisée. Rester en CLOSING tant que ce blocage subsiste ; aucune PR créée,
+  aucune fusion programmée, aucun chantier suivant lancé.
 - **Limites connues** : messages publics normalisés et instantané non réputé actuel, explicités
   dans la recette ; hook `.githooks/commit-msg` non exécutable préexistant, déjà consigné dans
   `docs/intentions/commit-msg-non-executable.md`. Consommation de ce chantier indisponible dans
