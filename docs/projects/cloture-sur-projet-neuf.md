@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — quatre lots IA faits et correction de classification commitée ; arrêt BUILD sur quatre attestations humaines manquantes.
+**Statut** : en cours le 2026-11-03 — quatre lots IA faits, correction de classification et attestations humaines reconnues ; préparation de la clôture.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -50,6 +50,8 @@ files:
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/recipes/working-with-branches.md
   - .drwil/ia-first.json
+  - README.md
+  - packages/drwil/CHANGELOG.md
 -->
 
 ## 1. Besoin
@@ -172,6 +174,24 @@ Tranchées par le demandeur le 2026-10-30 :
   `couverture-du-code-modifie` et `e2e-et-attestation-precises`).
 
 ## 7. Reprise
+
+- **Reprise humaine du 2026-11-03 — préparation de clôture** : après le signal
+  « c'est attesté », les quatre fichiers d'attestation humaine ont été préservés.
+  Le sous-agent `drwil-checks` a rejoué `node .githooks/run-checks.mjs` (code 0,
+  7 avertissements, 210 contrôles repris et 17 rejoués), puis
+  `node packages/drwil/bin/drwil.js verify --agent` :
+  **`Verdict: GOVERNANCE: PASS (exit 0)`**. Aucun geste humain exécuté par l'agent.
+  Extension de cadrage documentaire seule avant toute modification :
+  `README.md` (rendre visibles les garanties non applicables et la clôture automatique)
+  et `packages/drwil/CHANGELOG.md` (note utilisateur sous Unreleased), comme l'exige
+  la recette de clôture. Les attestations sont déjà exemptées par la barrière de
+  périmètre : aucun élargissement ni contournement pour les inclure.
+  Préparer le journal, solder les deux notes d'intention couvertes, commiter les
+  preuves humaines, puis renouveler la vérification complète et l'évidence sur ce
+  commit propre avant CLOSING. Aucun chantier suivant ne sera lancé.
+  Consommation Copilot indisponible : la requête sur `session_usage` ne retourne
+  aucune ligne pour cette branche, et le lecteur Claude ne trouve pas ce chantier ;
+  ne pas inventer de coût.
 
 - **Arrêt après correction (2026-11-03)** : cadrage seul `62f5f69`, correction et tests
   `3a20b78`. Hooks du commit de correction : code 0, « contrôles exécutés : OK
