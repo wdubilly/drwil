@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — lots 1 et 2 réalisés, contrôles et commit du lot 2 en cours.
+**Statut** : en cours le 2026-11-03 — lots 1 et 2 commités et contrôlés ; lot 3 à reprendre.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -160,10 +160,12 @@ Tranchées par le demandeur le 2026-10-30 :
 ## 7. Reprise
 
 - **Dernier état** (2026-11-03) : BUILD, lot 1 commité (`3290841` : cadrage ; `76b9fad` : code),
-  `state.mjs lot next` effectué ; lot courant 2 « clôture complète ».
+  lot 2 commité (`b8e53f2` : clôture complète), hooks de commit réussis.
+  Passation vers le lot 3 « empreinte sans [humain] » après commit de cette reprise ;
+  l'état local lu par la commande reste la source du lot courant.
 - **Périmètre ajouté au lot 2, avant code** : module close-mechanics dans le gabarit et son miroir
-  `.githooks/close-mechanics.mjs` (à créer) (extraction préalable de la mécanique et de la consommation) ;
-  `.githooks/close-journal.mjs` (à créer) et son gabarit (préparation et écriture idempotente du renvoi
+  `.githooks/close-mechanics.mjs` (extraction préalable de la mécanique et de la consommation) ;
+  `.githooks/close-journal.mjs` et son gabarit (préparation et écriture idempotente du renvoi
   de preuve dans le journal, sans inventer de décisions métier) ;
   module check-docs dans le gabarit et son miroir, `.githooks/check-docs.test.mjs`
   (le faux échec de `verify` provient du contrôle de références exécuté par son moteur, pas du juge
@@ -212,6 +214,13 @@ Tranchées par le demandeur le 2026-10-30 :
     Variables temporaires normales, aucune garde modifiée.
   - Empreinte relue : `sha256:922f5befc3a3593d`, `acceptanceCheck` retourne `same`.
     Aucun hook modifié non déclaré (`undeclaredHooks` : listes vides).
+  - Hooks du commit de code `b8e53f2` : code 0, contrôles exécutés OK,
+    51 avertissements, non exécutés compris. L'avertissement de Git sur le hook
+    `.githooks/commit-msg` non exécutable reste la limite préexistante consignée dans
+    `docs/intentions/commit-msg-non-executable.md` ; aucune nouvelle intervention humaine demandée.
+- **Commits du lot 2** : `766804f` (cadrage initial seul), `e762f48` (caractérisation verte et
+  intention de limite), `1f94ed7` (complément de cadrage seul), `96e7308` (extraction seule),
+  `b8e53f2` (clôture complète). Aucun travail de code non commité après ce dernier commit.
 - **Complément indispensable de cadrage** : le gabarit
   `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md` doit citer les modules
   extraits, comme sa copie déjà cadrée. La première passe après extraction a révélé 7 contrôles
@@ -270,6 +279,6 @@ Tranchées par le demandeur le 2026-10-30 :
 - **Hooks du lot 1** : réussis, code lot 1 OK, 51 avertissements (non exécutés inclus).
   Aux deux commits, Git a signalé `.githooks/commit-msg` ignoré car non exécutable. Préexistant,
   aucun contrôle réellement refusé pour cette cause ; ni désactivation ni correction hors périmètre.
-- **Prochaine étape** : lire les contrôles globaux du lot 2, commiter le code, puis
-  `node .githooks/state.mjs lot next` et arrêter. Le lot 3 « empreinte sans [humain] » reste à faire
-  dans un contexte neuf, ainsi que le lot 4 ; ne pas clore le chantier.
+- **Prochaine étape** : après le commit de cette passation, `node .githooks/state.mjs lot next`,
+  puis STOP. Reprendre uniquement le lot 3 « empreinte sans [humain] » dans un contexte neuf ;
+  le lot 4 reste aussi à faire. Ne pas clore, ne pas lancer le chantier suivant ni pousser.
