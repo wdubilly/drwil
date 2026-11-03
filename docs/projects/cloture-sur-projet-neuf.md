@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — quatre lots IA commités et marqués faits ; correction de classification autorisée, attestations humaines toujours requises.
+**Statut** : en cours le 2026-11-03 — quatre lots IA faits et correction de classification commitée ; arrêt BUILD sur quatre attestations humaines manquantes.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -173,6 +173,32 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
+- **Arrêt après correction (2026-11-03)** : cadrage seul `62f5f69`, correction et tests
+  `3a20b78`. Hooks du commit de correction : code 0, « contrôles exécutés : OK
+  (66 avertissement(s), non exécutés compris) ». Incident commit-msg non exécutable déjà
+  connu et consigné dans son intention, laissé inchangé ; aucun hook contourné.
+  `node .githooks/wait-command.mjs --wait 600 node packages/drwil/bin/drwil.js verify --failed --agent` :
+  code 1, **`Verdict: GOVERNANCE: PARTIAL (--failed) — NOT A VERDICT (exit 1)`**,
+  7 PASS, 0 FAIL, 0 ERROR, 0 MANUAL rejoués, 215 PASS/ATTESTED non rejugés.
+  Ce verdict partiel ne rejoue pas les critères ni les contrats manuels : il ne suffit
+  donc pas, seul, à constater leur état.
+  Vérification ciblée complémentaire, sans passe globale ni écriture d'évidence :
+  appel API `verify` avec `only: ["QUA-013", "QUA-048", "QUA-092", "QUA-175", "QUA-174"]`
+  et `reuse: true`, puis `evaluateCriteria` sur le critère réel de `QUA-174` et ces résultats
+  (via `node --input-type=module -e`, sous la commande d'attente) : code 0,
+  contrat `QUA-174` PASS, critère `human: false`, `status: pass`, citation intacte ;
+  les quatre autres contrats sont MANUAL, aucun FAIL ni ERROR.
+  **Seuls blocages humains constatés** : `QUA-013` (lecture des sorties des contrôles),
+  `QUA-048` (essai réel de clôture), `QUA-092` (couverture prouvée sur dossier vide),
+  `QUA-175` (aucun agent n'écrit l'acceptation). L'humain réalise/lit les vérifications
+  manuelles puis atteste lui-même dans son terminal interactif.
+  Aucun `drwil attest`, `state accept` ni verdict de recette exécuté par l'agent.
+  État relu BUILD ; file et fusion automatique conservées mais suspendues. Aucun lot,
+  chantier, journal de clôture, push, PR ni clôture lancé. Prochaine étape :
+  gestes humains, puis **vérification complète finale** avant toute clôture.
+  L'ensemble du travail est commité après cette passation documentaire ; aucun travail
+  de code en attente. L'extension de scope et ses quatre chemins motivés sont ci-dessous.
+
 - **Correction après autorisation (2026-11-03)** : cadrage seul commité `62f5f69`,
   puis correction des deux lecteurs. Les expressions régulières reconnaissaient la marque
   même en code et la supprimaient ; le premier lecteur doit aussi conserver les accents
@@ -203,11 +229,6 @@ Tranchées par le demandeur le 2026-10-30 :
   - Lecture seule de l'acceptation : `same`, `sha256:922f5befc3a3593d` inchangée.
     Le critère réel de `QUA-174` garde sa citation et porte désormais `human: false`.
     Aucun texte accepté, état, fichier d'acceptation ou attestation modifié.
-- **Suite après commit de la correction** : relire les hooks, puis
-  `node packages/drwil/bin/drwil.js verify --failed --agent`, verdict partiel uniquement.
-  Sans les quatre attestations humaines, rester BUILD, sans clôture, push, PR ni lot suivant.
-  La vérification complète finale reste requise après les véritables gestes humains.
-
 - **Reprise autorisée du 2026-11-03 — correction de classification** : reprise du chantier
   BUILD après arrêt humain, sans nouveau lot ni lancement. Extension de cadrage à commiter
   seule avant le code : `packages/drwil/templates/common/base/.githooks/briefs-criteria.mjs`
