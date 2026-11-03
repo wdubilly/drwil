@@ -541,7 +541,9 @@ drwil verify
 
 Attestation is deliberately an explicit human action.
 
-It requires an interactive terminal.
+The human uses an interactive terminal, or a Claude Code attestation poll
+prepared with `drwil attest-poll <CONTRACT_ID> --tried "What was tried"`.
+Only the hook reads the human's poll response; preparation never attests.
 
 The agent must not execute it on behalf of the user.
 
@@ -775,8 +777,9 @@ can read directly. The names are the same whatever the project language.
 | `/drwil-progress` | Generate a static HTML progress dashboard |
 | `/drwil-release` | Tag and publish a GitHub release, or a candidate pre-release with its acceptance sheet, then promote it once a human approved it (optional module) |
 
-There is deliberately **no** `/drwil attest`: attestation is a human action,
-run by the human in their own terminal (`drwil attest <CONTRACT_ID>`).
+There is deliberately **no** agent-run `/drwil attest`: the human attests
+in their own terminal (`drwil attest <CONTRACT_ID>`) or answers a Claude Code
+`drwil-attest` poll read by the hook. See `docs/recipes/adopt-the-kit.md`.
 
 ### Working recipes
 

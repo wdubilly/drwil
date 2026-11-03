@@ -29,8 +29,10 @@ import {
   worktreeChosen,
 } from "./start-poll.mjs";
 import { queueHook } from "./queue-poll.mjs";
+import { attestationHook } from "./attest-poll.mjs";
 
 export { humanAnswer, inPollOrder, mergeAuthorised, parallelChosen, scopeChoice, scopePoll, startPoll, worktreeChosen };
+export { attestationHook };
 
 // The folder holding this hook's .claude/, never the current folder: it follows the agent's `cd`.
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -118,6 +120,8 @@ async function main() {
   } catch {
     return 0;
   }
+  const attestation = await attestationHook(input, { root: ROOT, tell });
+  if (attestation !== null) return attestation;
   const poll = startPoll(input);
   if (!poll) return (await queueHook(input, { root: ROOT, lang: language(), tell })) ?? scopeHook(input);
   const event = input.hook_event_name;

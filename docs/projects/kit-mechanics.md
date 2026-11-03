@@ -172,6 +172,11 @@ Windows la commande reste `node` seul. Côté visiteur : `INSTALL.md` (QUA-218).
 
 ## Reprise
 
+- Sondage d'attestation Claude Code : `drwil attest-poll` prépare le jugement ;
+  `.claude/hooks/prompt-hook.mjs` et `.claude/hooks/attest-poll.mjs` lisent seuls
+  la réponse de l'outil (QUA-235). Les préparations locales sont dans
+  le sous-dossier local attest-polls de `.drwil/evidence/`, hors git ; les attestations restent versionnées.
+
 - **Dernier état** : fiche posée à l'installation, rien à reprendre. Si le
   kit ajoute un nouveau fichier de mécanique (`.githooks/` ou un réglage
   d'outil IA), l'ajouter ici. Lot 4 a ajouté `.githooks/check-control-coverage.mjs`

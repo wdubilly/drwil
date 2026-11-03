@@ -2,10 +2,27 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Command } from "commander";
-import { attest, fill } from "./index.js";
+import { attest, fill, prepareAttestationPoll } from "./index.js";
 import { texts } from "./cli-texts.js";
 
 export function registerAttest(program: Command): void {
+  program
+    .command("attest-poll <id>")
+    .description("Prepare a Claude Code human-attestation poll; never records an attestation")
+    .requiredOption("--tried <text>", "What the agent tried (1 to 500 characters)")
+    .option("--renew", "Prepare renewal of a still-valid attestation")
+    .action(async (id, opts) => {
+      try {
+        const r = await prepareAttestationPoll({ targetDir: process.cwd(), id, tried: opts.tried, renew: opts.renew });
+        if ("poll" in r) console.log(JSON.stringify(r.poll, null, 2));
+        else console.error(`✗ ${r.message}`);
+        process.exit(r.code);
+      } catch (e) {
+        console.error(`✗ ${(e as Error).message}`);
+        process.exit(2);
+      }
+    });
+
   program
     .command("attest <id>")
     .description(

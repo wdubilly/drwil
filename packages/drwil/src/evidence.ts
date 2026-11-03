@@ -115,6 +115,8 @@ export interface Attestation {
   coverage?: Coverage;
   commit: string | null;
   automated: { id: string; status: string }[];
+  /** QUA-235 : corrélation locale du sondage Claude Code ; aucune garantie d'identité forte. */
+  origin?: { source: "claude-poll"; sessionId: string; toolUseId: string; askedAt: string };
 }
 
 /** Versioned folder of the attestations (the rest of .drwil/evidence/ is outside git). */

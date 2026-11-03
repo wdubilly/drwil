@@ -141,7 +141,7 @@ Running `init` (new project or existing one) adds:
   each one with an ID (`SEC-xxx`, `QUA-xxx`), a one-line description and
   a pointer to the check that proves it.
 - **`.githooks/`** — Git hooks (`pre-commit` and friends) that run the
-  project's checks (`run-checks.mjs`) before every commit,
+  project's checks (`.githooks/run-checks.mjs`) before every commit,
   and the equivalent CI workflow (GitHub Actions or GitLab CI, your
   choice) so the same checks run server-side too.
 - **`docs/recipes/`** — reusable step-by-step procedures (add an API
@@ -294,7 +294,7 @@ go stale.
    **Check**: `unit-tests`
    ```
 
-4. **Write the work** — here, one test file `sum.test.mjs`:
+4. **Write the work** — here, one example test file named sum.test.mjs:
 
    ```js
    import { test } from "node:test";
@@ -349,7 +349,7 @@ A single command for every case:
   creates each layer's `AGENTS.md`.
 - **Existing project** (code, Git history, dependencies): detects the
   stack (subfolders become the layers) and the CI already in use
-  (`.github/workflows/`, `.gitlab-ci.yml`), and installs the kit on top
+  (`.github/workflows/` or the GitLab CI configuration), and installs the kit on top
   **without ever overwriting a project file**; no new Git repository.
   `/drwil-adopt` then builds the map `docs/architecture.md` from the real
   code; drwil keeps it current (the `architecture-map` check reports a
@@ -492,6 +492,23 @@ npx drwil attest QUA-015 --renew
 `--renew` replaces, on purpose, an attestation that is still valid (the history
 is kept). Same interactive terminal, same typing of the identifier: no `--yes`.
 
+### `attest-poll` — prepare a human judgment in Claude Code
+
+```bash
+npx drwil attest-poll QUA-015 --tried "What the agent tried"
+```
+
+Prints JSON to pass unchanged to `AskUserQuestion`; never writes an attestation.
+Requires the Claude Code hooks and a local drwil dependency. The poll shows
+the criterion, automated results, the agent's declared trial and covered paths.
+Only the human's **Attest** response, read by the hook for the same session
+and tool call, records the unchanged version-4 proof. Decline, no answer,
+prefilled or recommended choices, changed proofs and replays record nothing.
+Preparations expire after an hour; `--renew` deliberately prepares renewal.
+The provenance is declarative, not authenticated identity. Other assistants
+are not tested for this poll: use the interactive terminal fallback above.
+See `docs/recipes/adopt-the-kit.md`.
+
 ### Agent / human workflow (`verify --agent`, `/drwil verify`)
 
 ```text
@@ -621,7 +638,7 @@ defaults below apply to a new install only.
 | `--layers <layers>` | Comma-separated layers | subfolders where a stack is detected, else none (new project: decided at scoping) |
 | `-d, --description <text>` | What the application does — fills `AGENTS.md` and `docs/architecture.md` | — |
 | `--tools <tools>` | AI tools to configure, CSV: `claude,codex,cursor,gemini,copilot` | all five |
-| `--ci <ci>` | CI workflow to generate: `none`, `github`, `gitlab` | the CI already in use (`.github/workflows/`, `.gitlab-ci.yml`), else `none` |
+| `--ci <ci>` | CI workflow to generate: `none`, `github`, `gitlab` | the CI already in use (GitHub workflows or GitLab CI), else `none` |
 | `--contract-prefixes <csv>` | Contract ID prefixes to use | `SEC,QUA` |
 | `--mode <mode>` | `minimal` or `full` | `full` |
 | `--no-git` | Skip `git init` and hook activation | — |

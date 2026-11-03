@@ -7,6 +7,11 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil attest-poll <ID> --tried <text> [--renew]` prepares a Claude Code
+  attestation poll without attesting. Only the human's tool response, read by
+  the hook and tied to the unchanged proof, can record it; refusals, prefilled
+  answers and replays cannot. The interactive terminal remains the fallback.
+
 - `drwil report` prints a privacy-safe kit defect report from the last local
   check snapshot, with CLI/installed versions and normalized built-in failure
   messages. No raw project data, file writes, check execution or forge calls;

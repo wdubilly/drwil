@@ -1,6 +1,6 @@
 # Projet : attester une preuve humaine depuis la conversation
 
-**Statut** : cadré le 2026-10-30.
+**Statut** : en cours le 2026-11-03 ; réalisation faite, jugement humain restant.
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/installation-fluide.md`
@@ -90,11 +90,35 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-03) : BUILD, lot unique en cours sur la branche
-  `workstream/attester-depuis-le-chat` ; aucun essai réel d'attestation par l'agent.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : implémenter et tester le sondage et les refus sur des projets fictifs ; le jugement
-  de lisibilité du sondage reste humain.
+- **Dernier état** (2026-11-03) : lot unique réalisé sur la branche
+  `workstream/attester-depuis-le-chat`, arrêté avant clôture sur le jugement humain de QUA-236
+  (le sondage d'attestation ne demande que le jugement utile). Aucune attestation réelle créée par
+  l'agent, aucun sondage réel soumis, aucun `state accept` ni lancement du chantier suivant.
+- **Travail non commité** : aucun après le commit de réalisation.
+- **Contrôles** :
+  - `npm run build --silent` : code 0.
+  - `node --test --test-name-pattern="QUA-235|QUA-032|QUA-081|QUA-083|QUA-205" packages/drwil/test/cycle.test.mjs packages/drwil/test/claude-hooks.test.mjs` :
+    9 tests passés, 0 échec ; réponse humaine fictive, réponse agent refusée, défaut, recommandation,
+    refus humain, absence de réponse, rejeu, corrélation, expiration, preuve changée, contrôle devenu
+    rouge, renouvellement et terminal inchangé.
+  - `npm run test:claude:coverage` : code 0, lignes 97,91 %, branches 89,75 %.
+  - `npm run installer-depot --silent` : code 0, copies installées depuis le gabarit.
+  - Contrôle des plafonds à 200 lignes sur les sources et les hooks : code 0 après module dédié.
+  - Sous-agent `drwil-checks`, `node .githooks/run-checks.mjs` : code 0, 52 avertissements,
+    229 contrôles rejoués, 3 repris.
+  - Sous-agent `drwil-checks`, `node packages/drwil/bin/drwil.js verify --agent` : code 1,
+    `Verdict: GOVERNANCE: MANUAL REVIEW REQUIRED (exit 1)` ; 206 PASS, 21 ATTESTED,
+    0 FAIL, 0 ERROR, 1 MANUAL : QUA-236 uniquement. Ce verdict n'est pas une validation.
+- **Protocole attendu de la principale** : présenter à l'humain le sondage fictif du test QUA-235
+  dans `packages/drwil/test/claude-hooks.test.mjs` (APP-009, règle fictive, lisibilité fictive,
+  essai fictif, fichier src/objet.js, choix Attester/Refuser) et
+  `docs/recipes/adopt-the-kit.md`, section « Human attestation in the conversation ».
+  L'humain juge la lisibilité et l'absence de choix suggéré ; s'il confirme, lui seul exécute
+  `node packages/drwil/bin/drwil.js attest QUA-236` dans son terminal interactif, ou répond
+  au sondage Claude Code ouvert par la principale suivant la recette. Aucun agent n'exécute cette
+  commande ni ne répond au sondage. Ensuite seulement, contrôles complets avec évidence sur HEAD,
+  journal et clôture, push/PR, fusion automatique autorisée. Une divergence d'acceptation éventuelle
+  doit aussi être traitée par l'humain, jamais acceptée par l'agent.
 - **Extension de périmètre** : `packages/drwil/src/index.ts` exporte la préparation en lecture seule
   utilisée par la CLI et le hook ; `packages/drwil/src/evidence.ts` décrit la provenance optionnelle sans
   changer le jugement des attestations existantes ; `README.md` et `packages/drwil/README.md` corrigent
@@ -104,3 +128,10 @@ Tranchées par le demandeur le 2026-10-30 :
   packages/drwil/templates/common/tools/claude/.claude/hooks/attest-poll.mjs et sa copie
   .claude/hooks/attest-poll.mjs (tous deux à créer) regroupent uniquement la nouvelle logique ; aucun parcours existant n'est
   restructuré. Les tests de régression et du nouveau sondage passent avant ce déplacement (9/9).
+- **Limites** : identité toujours déclarative (intention existante
+  `docs/intentions/e2e-et-attestation-precises.md`), autres assistants non testés pour ce sondage ;
+  hook nécessitant le paquet drwil local, repli terminal documenté. L'intention
+  `docs/intentions/installation-fluide.md` reste à actualiser à la clôture.
+- **Documentation rencontrée** : quatre références ambiguës dans `packages/drwil/README.md`,
+  signalées par `close.mjs --check`, ont été précisées : chemin du contrôle et noms de fichiers
+  d'exemples non présentés comme des références du dépôt. Le contrôle ne les signale plus.

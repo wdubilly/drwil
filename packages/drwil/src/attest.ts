@@ -14,12 +14,14 @@ export interface AttestOptions {
   note?: string;
   /** Renew an attestation that is still valid (QUA-083): the confirmation stays the same. */
   renew?: boolean;
+  /** QUA-235 : provenance du geste lu par le hook, jamais une identité authentifiée. */
+  origin?: Attestation["origin"];
   /**
    * Human confirmation: receives the summary shown, returns true only if the human confirms.
    * The CLI requires an interactive terminal and typing the contract's identifier; no flag allows
    * doing without (an agent or a script cannot attest in a human's place).
    */
-  confirm: (summary: string) => Promise<boolean>;
+  confirm: (summary: string, snapshot: string) => Promise<boolean>;
   /** Progress lines while the cited checks are re-run (they can take minutes): QUA-032. */
   log?: (line: string) => void;
   now?: Date;
@@ -84,7 +86,13 @@ export function contractSummary(k: ContractResult, lang: MessageLang = "en"): st
   if (k.checks.length) l.push(T.automated, ...k.checks.map((c) => `  ✓ ${c.id} : ${c.status}`));
   else l.push(T.noAutomated);
   l.push(fill(T.human, k.manual ?? T.legacy));
-  if (k.covers) l.push(fill(T.covered, `${Object.keys(k.coverage).length} (${k.covers.join(", ")})`));
+  if (k.covers)
+    l.push(
+      fill(T.covered, `${Object.keys(k.coverage).length} (${k.covers.join(", ")})`),
+      ...Object.keys(k.coverage)
+        .sort()
+        .map((p) => `  ${p}`),
+    );
   return l.join("\n");
 }
 
@@ -102,7 +110,9 @@ export async function attest(o: AttestOptions): Promise<AttestResult> {
   if (k.status === "ATTESTED" && !o.renew) return { code: 1, message: fill(T.alreadyAttested, o.id, k.attestation?.attestedAt) };
   if (!k.attestable && !k.renewable) return { code: 1, message: fill(T.notAttestable, o.id, k.status, k.reasons.join(" ; ")) };
   const renewing = k.renewable && k.attestation ? `${fill(T.renewing, k.attestation.attestedAt)}\n` : "";
-  if (!(await o.confirm(renewing + contractSummary(k, v.lang)))) return { code: 1, message: T.refused };
+  const summary = renewing + contractSummary(k, v.lang);
+  const snapshot = JSON.stringify([summary, k.fingerprint, k.proof, k.covers, k.coverage]);
+  if (!(await o.confirm(summary, snapshot))) return { code: 1, message: T.refused };
 
   const git = (...args: string[]) => {
     const r = spawnSync("git", args, { cwd: o.targetDir, encoding: "utf8" });
@@ -124,10 +134,56 @@ export async function attest(o: AttestOptions): Promise<AttestResult> {
     coverage: k.coverage,
     commit: git("rev-parse", "HEAD"),
     automated: k.checks.map((c) => ({ id: c.id, status: c.status })),
+    ...(o.origin ? { origin: o.origin } : {}),
   };
   const dir = join(o.targetDir, ...ATTESTATIONS_DIR);
   mkdirSync(dir, { recursive: true });
   const file = `${k.id}-${attestation.attestedAt.replace(/[:.]/g, "-")}.json`;
   writeFileSync(join(dir, file), JSON.stringify(attestation, null, 2) + "\n");
   return { code: 0, message: fill(T.done, k.id), file: [...ATTESTATIONS_DIR, file].join("/") };
+}
+
+export interface AttestationPollOptions extends Omit<AttestOptions, "confirm" | "origin"> {
+  tried: string;
+}
+
+/** QUA-235 : préparer le jugement ne confirme jamais rien et n'écrit aucune attestation. */
+export async function prepareAttestationPoll(o: AttestationPollOptions) {
+  const fr = projectLang(o.targetDir) === "fr";
+  const raw = o.tried.trim();
+  if (!raw || raw.length > NOTE_MAX)
+    return {
+      code: 2,
+      message: fr ? "décrire l'essai de l'agent (1 à 500 caractères)" : "describe the agent's trial (1 to 500 characters)",
+    };
+  const tried = redact(raw);
+  let prepared: { poll: object; snapshot: string } | undefined;
+  const result = await attest({
+    ...o,
+    confirm: async (summary, snapshot) => {
+      prepared = {
+        snapshot,
+        poll: {
+          questions: [
+            {
+              header: "drwil-attest",
+              question: `drwil-attest ${o.id}${o.renew ? " --renew" : ""}\n${summary}\n\n${fr ? "Essai de l'agent" : "Agent trial"}:\n${tried}`,
+              multiSelect: false,
+              options: fr
+                ? [
+                    { label: "Attester", description: "Je confirme la partie humaine du contrat." },
+                    { label: "Refuser", description: "Je ne l'atteste pas." },
+                  ]
+                : [
+                    { label: "Attest", description: "I confirm the human part of the contract." },
+                    { label: "Decline", description: "I do not attest it." },
+                  ],
+            },
+          ],
+        },
+      };
+      return false;
+    },
+  });
+  return prepared ? { code: 0, message: "", ...prepared } : result;
 }

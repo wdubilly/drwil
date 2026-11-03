@@ -39,6 +39,23 @@
   "parallel": true,
   "checks": [
     {
+      "id": "tests-qua-235",
+      "name": "sondage d'attestation : frontière humain/agent et preuve liée",
+      "run": "node --test --test-name-pattern=\"^QUA-235 \" packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/cycle.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/attest.ts",
+        "packages/drwil/src/cli-attest.ts",
+        "packages/drwil/src/evidence.ts",
+        "packages/drwil/src/index.ts",
+        "packages/drwil/templates/common/tools/claude/.claude/hooks/**",
+        "packages/drwil/test/claude-hooks.test.mjs",
+        "packages/drwil/test/cycle.test.mjs"
+      ],
+      "degradable": false
+    },
+    {
       "id": "tests-qua-231",
       "name": "rapport public du kit : versions et échecs",
       "run": "node --test --test-name-pattern=QUA-231 packages/drwil/test/report.test.mjs",

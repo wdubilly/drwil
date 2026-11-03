@@ -2292,3 +2292,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/report.test.mjs`
 **Origine** : signaler-un-defaut-du-kit — « Le texte du rapport est lisible et assez précis pour être reproduit »
 **Raison** : La présence automatique de champs ne prouve pas qu'un mainteneur peut comprendre le signalement.
+
+## QUA-235 — Le hook d'attestation ne confirme que la réponse humaine à un sondage préparé
+**Règle** : `drwil attest-poll <ID> --tried <essai> [--renew]` prépare sans attester un sondage Claude Code `drwil-attest` : règle, résultats automatiques, jugement humain, essai de l'agent et chemins couverts. Le hook `AskUserQuestion` refuse avant affichage tout champ ajouté, réponse remplie, défaut, recommandation, choix multiple ou résumé différent du moteur. Il corrèle la préparation par session et appel de l'outil ; après affichage, seule la réponse positive de `tool_response.answers` confirme, jamais une valeur de `tool_input`, un texte d'agent, un refus ou une absence de réponse. Une préparation expire après une heure et se consomme une seule fois ; un contrat, une preuve ou une couverture changés pendant la question exigent un nouveau sondage. Le moteur existant réexécute les contrôles et écrit la même attestation version 4, avec date de préparation, session et appel dans la provenance déclarative ; `--renew` reste explicite. Le terminal est inchangé. Les autres outils gardent le repli terminal, sans promesse de compatibilité non testée.
+**Périmètre** : préparation CLI/API et hook Claude Code livré.
+**Source de vérité** : `packages/drwil/src/attest.ts`, `packages/drwil/src/cli-attest.ts`, `packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs`, `packages/drwil/templates/common/tools/claude/.claude/hooks/attest-poll.mjs`.
+**Preuve** : projets fictifs : préparation sans écriture, confirmation via le retour de l'outil, refus d'entrées falsifiées, rejeu, corrélation, changement couvert et renouvellement.
+**Contrôle** : `tests-qua-235`
+**Tests** : `packages/drwil/test/claude-hooks.test.mjs`, `packages/drwil/test/cycle.test.mjs`
+**Origine** : attester-depuis-le-chat — sondage lu par le hook, frontière humain/agent préservée.
+**Raison** : Préparer le jugement dans la conversation ne doit jamais autoriser l'agent à confirmer à la place de l'humain ; la provenance du hook n'est pas une identité forte.
+
+## QUA-236 — Le sondage d'attestation ne demande que le jugement utile
+**Règle** : L'humain lit un sondage d'attestation sur un contrat fictif et juge que le critère, la preuve essayée et les fichiers couverts lui permettent de décider sans reconstituer le contexte ; aucun choix n'est suggéré ni prérempli.
+**Périmètre** : présentation du sondage Claude Code et recette d'adoption.
+**Source de vérité** : `packages/drwil/src/attest.ts`, `packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md`.
+**Preuve** : lecture humaine du sondage fictif et de la recette ; aucun agent n'enregistre ce jugement.
+**Manuel** : Lire le sondage et la recette, confirmer leur lisibilité et que seul le jugement utile est demandé.
+**Couvre** : `packages/drwil/src/attest.ts`, `packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md`
+**Origine** : attester-depuis-le-chat — le sondage est lisible et ne demande que le jugement utile.
+**Raison** : La présence automatique des champs ne prouve pas que le jugement demandé est compréhensible.

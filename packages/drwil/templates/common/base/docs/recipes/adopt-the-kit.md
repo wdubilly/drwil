@@ -141,6 +141,31 @@ agent's.
    `drwil verify` fails on a non-blocking `scopeGate` once the mandatory
    guarantees are enforced.
 
+## Human attestation in the conversation (Claude Code)
+
+For a contract with a remaining human judgment, the agent may run
+`npx drwil attest-poll <ID> --tried "What I tried"` (add `--renew` only for
+an intentional renewal). This prepares JSON for `AskUserQuestion`, never an
+attestation. With drwil installed as a local dependency, pass that JSON to
+the tool unchanged: one `drwil-attest` question, no answer, default,
+recommendation or extra field. The poll shows the rule, automated results,
+human criterion, agent's trial and actual covered paths. The trial is a
+declaration, not proof that the agent executed it.
+
+The human alone chooses **Attest** or **Decline**. Claude Code's hook reads
+the tool response, checks the session and tool-call correlation, reruns the
+contract's checks and records the existing version-4 attestation only if
+the proof is unchanged. An unanswered or declined poll records nothing;
+a changed proof or a poll older than one hour requires a fresh poll.
+The agent never supplies the answer, calls the hook directly or writes an
+attestation. Session, tool call and timestamps trace the hook's gesture;
+they do not authenticate the human's identity.
+
+If the hook or local drwil dependency is unavailable, or under another
+assistant (not tested for this poll), the human uses the unchanged fallback
+`npx drwil attest <ID>` in their own interactive terminal. Never substitute
+an answer in chat that the agent interprets itself.
+
 Out of scope: rewriting the existing code to bring it up to standard —
 that's `docs/recipes/refactor-without-breaking.md`, run next, contract by
 contract.
