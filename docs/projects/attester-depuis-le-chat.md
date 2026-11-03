@@ -52,7 +52,7 @@ disponible, mais ne satisfait pas cette demande de parité du chat.
 
 - L'agent peut ouvrir un sondage d'attestation pour un contrat manuel ; la réponse de l'humain, lue par un
   hook, enregistre l'attestation sous chacun des cinq outils : Claude Code, Copilot CLI, Gemini CLI,
-  Codex et Cursor — `QUA-235`
+  Codex et Cursor — contrat à créer
 - Le sondage affiche le critère du contrat, ce que l'agent a essayé et les fichiers couverts dont la
   modification ferait tomber l'attestation — `QUA-032`
 - Une réponse écrite par l'agent, un sondage sans réponse ou refusé n'enregistre jamais d'attestation —
@@ -161,6 +161,10 @@ Tranchées par le demandeur le 2026-10-30 :
 - **Acceptation relue sans écriture** : `acceptanceCheck` retourne `kind: changed`, empreinte
   acceptée `sha256:e392a794efa36c65`, empreinte courante `sha256:8919976e47b57920`. L'agent ne renouvelle
   pas l'acceptation ; le geste interactif humain reste requis avant clôture, pas une attestation du code.
+- **Preuve de parité non livrée** : le premier critère porte « contrat à créer » tant que le contrat
+  QUA-235 (frontière du sondage préparé), actuellement limité à Claude Code, n'est pas étendu avec des
+  preuves adéquates. Son test existant ne doit pas faire passer un critère qui promet cinq outils.
+  La clôture reste donc refusée même si les seuls jugements humains existants étaient attestés.
 - **Contrôles de cette reprise** :
   - `npm run installer-depot --silent` : code 0, un seul miroir écrit (la matrice).
   - `node --test --test-name-pattern="QUA-235|QUA-032|QUA-081|QUA-083|QUA-205" packages/drwil/test/cycle.test.mjs packages/drwil/test/claude-hooks.test.mjs` :
