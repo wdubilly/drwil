@@ -815,6 +815,18 @@ test("critères d'acceptation : liste structurée (lien, humain), ignore les aut
   ]);
 });
 
+test("QUA-174 : la classification des critères ignore les marques citées en code et conserve leur libellé", () => {
+  for (const marque of ["[humain]", "[human]", "[HUMAIN]", "[HUMAN]"]) {
+    for (const delimiteur of ["`", "``"]) {
+      const citation = `${delimiteur}${marque}${delimiteur}`;
+      const texte = `La marque ${citation} reste du texte`;
+      const lire = (fin = "") => acceptanceCriteria(`## Critères d'acceptation\n- ${texte}${fin} — \`QUA-174\``);
+      assert.deepEqual(lire(), [{ text: texte, link: "QUA-174", human: false }]);
+      assert.deepEqual(lire(` ${marque}`), [{ text: texte, link: "QUA-174", human: true }]);
+    }
+  }
+});
+
 test("maturité : champ explicite lu dans l'en-tête (FR et EN), absent ou inconnu = non renseignée", () => {
   const f = (ligne) => `# F\n\n**Statut** : cadré.\n${ligne}\n`;
   assert.equal(briefMaturity(f("**Maturité** : prêt")), "ready");

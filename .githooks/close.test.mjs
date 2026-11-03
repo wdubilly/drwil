@@ -632,6 +632,15 @@ test("QUA-084 : la clôture écrit la preuve versionnée du chantier — critèr
   assert.ok(!existsSync(join(racine, FICHE)), "la fiche n'est supprimée qu'une fois la preuve écrite");
 });
 
+test("QUA-084 : la preuve conserve la citation d'une marque sans lui ajouter une classification humaine", () => {
+  const racine = depot({ criteres: "- La marque `[humain]` reste du texte — `QUA-001`\n- Relu [human] — `QUA-002`" });
+  const r = close(racine, { logs: journaux() });
+  assert.equal(r.code, 0, r.message);
+  const preuve = readFileSync(join(racine, "docs/preuves/exemple.md"), "utf8");
+  assert.match(preuve, /\| La marque `\[humain\]` reste du texte \| `QUA-001` \|/);
+  assert.match(preuve, /\| Relu \[humain\] \| `QUA-002` \|/);
+});
+
 test("QUA-084 : sans évidence du commit vérifié, la clôture est refusée et la fiche reste ; l'entrée de journal doit citer la preuve", () => {
   const sansEvidence = depot({ evidence: false });
   const r = close(sansEvidence, { logs: journaux() });

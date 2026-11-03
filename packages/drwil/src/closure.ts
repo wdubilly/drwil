@@ -73,8 +73,14 @@ export function parseProof(file: string, text: string): ClosureProof {
     }
     if (!inTable) continue;
     const row = cells(line);
-    const human = /\[(?:humain|human)\]/i.test(row[0] ?? "");
-    const label = (row[0] ?? "").replace(/\[(?:humain|human)\]/gi, "").trim();
+    let human = false;
+    const label = (row[0] ?? "")
+      .replace(/(`+).*?\1|\[(?:humain|human)\]/gi, (m) => {
+        if (m.startsWith("`")) return m;
+        human = true;
+        return "";
+      })
+      .trim();
     const link = /`([^`]+)`/.exec(row[1] ?? "")?.[1] ?? null;
     if (label) criteria.push({ text: label, link, human });
   }

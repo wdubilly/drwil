@@ -23,13 +23,18 @@ export function acceptanceCriteria(text) {
   }
   const criteria = [];
   for (const item of items) {
-    const human = /\[(humain|human)\]/i.test(item);
+    let human = false;
+    // QUA-174 : même distinction code/classification que l'empreinte ; la preuve doit la conserver.
+    const classified = item.replace(/(`+).*?\1|\[(?:humain|human)\]/gi, (m) => {
+      if (m.startsWith("`")) return m;
+      human = true;
+      return "";
+    });
     // The proof is the last backticked ID: code quoted earlier in the sentence (`init`) is not one.
-    const proof = /`([A-Za-z][\w.:-]*)`[^`]*$/.exec(item);
+    const proof = /`([A-Za-z][\w.:-]*)`[^`]*$/.exec(classified);
     const link = proof?.[1] ?? null;
-    const label = (proof ? item.slice(0, proof.index) + item.slice(proof.index + proof[1].length + 2) : item)
-      .replace(/\[(humain|human)\]/gi, "")
-      .replace(/`([^`]*)`/g, "$1")
+    const label = (proof ? classified.slice(0, proof.index) + classified.slice(proof.index + proof[1].length + 2) : classified)
+      .replace(/(`+)(.*?)\1/g, (code, _ticks, text) => (/\[(?:humain|human)\]/i.test(text) ? code : text))
       .replace(/\s*[—–:-]\s*$/, "")
       .replace(/\s+/g, " ")
       .trim();

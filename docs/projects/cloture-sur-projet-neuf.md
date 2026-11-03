@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — quatre lots IA commités et marqués faits ; clôture bloquée par le verdict final et des attestations humaines requises.
+**Statut** : en cours le 2026-11-03 — quatre lots IA commités et marqués faits ; correction de classification autorisée, attestations humaines toujours requises.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -172,6 +172,41 @@ Tranchées par le demandeur le 2026-10-30 :
   `couverture-du-code-modifie` et `e2e-et-attestation-precises`).
 
 ## 7. Reprise
+
+- **Correction après autorisation (2026-11-03)** : cadrage seul commité `62f5f69`,
+  puis correction des deux lecteurs. Les expressions régulières reconnaissaient la marque
+  même en code et la supprimaient ; le premier lecteur doit aussi conserver les accents
+  graves de cette citation, sinon le rejeu de la preuve la reclasserait humaine.
+  La distinction code/classification reprend celle de l'empreinte, sans nouveau module ni
+  refactor. Les vraies marques françaises et anglaises, y compris en majuscules et mêlées
+  à une citation, restent humaines ; la disparition du contrôle d'un critère automatique
+  cité reste bloquante.
+- **Régressions vues échouer puis réussir** :
+  `node .githooks/wait-command.mjs --wait 600 'node --test --test-name-pattern="classification des critères|citation de marque humaine|conserve la citation" .githooks/state.test.mjs .githooks/close.test.mjs packages/drwil/test/cycle.test.mjs'` :
+  avant correction code 1, 3 échecs attendus (classification, libellé et preuve écrite) ;
+  après correction et `npm run build` (code 0), code 0, 3 réussites, 0 échec.
+  `npm run installer-depot` : code 0, un seul miroir écrit depuis le gabarit.
+- **Contrôles de la correction** :
+  - `node .githooks/check-file-size.mjs` et `git diff --check` : code 0.
+  - `node .githooks/check-contract-tests.mjs` : 276 liens, 0 problème ;
+    `node outils/verifier-tests-contrats.mjs` : 620 tests rattachés, 0 problème ;
+    `node outils/verifier-miroirs.mjs` : 183 fichiers, 17 écarts déclarés, 0 problème.
+  - `node .githooks/wait-command.mjs --wait 600 node .githooks/run-checks.mjs` :
+    premier passage code 1 (formatage du nouveau test, corrigé avec Biome) ; deuxième
+    passage code 1 (audit non exécuté, registre npm momentanément injoignable, HTTP 400).
+    Troisième passage code 0 : « contrôles exécutés : OK (6 avertissement(s), non exécutés
+    compris) », 212 repris / 15 rejoués. Aucun contrôle désactivé.
+    Les suites de couverture ont réussi : paquet 282 tests, hooks 552 tests ;
+    hooks à 100 % lignes, instructions, branches et fonctions.
+  - `node .githooks/close.mjs --check` : code 0, « Rien ne ferait échouer la clôture. » ;
+    ce signal ne vaut ni attestation ni autorisation de clore.
+  - Lecture seule de l'acceptation : `same`, `sha256:922f5befc3a3593d` inchangée.
+    Le critère réel de `QUA-174` garde sa citation et porte désormais `human: false`.
+    Aucun texte accepté, état, fichier d'acceptation ou attestation modifié.
+- **Suite après commit de la correction** : relire les hooks, puis
+  `node packages/drwil/bin/drwil.js verify --failed --agent`, verdict partiel uniquement.
+  Sans les quatre attestations humaines, rester BUILD, sans clôture, push, PR ni lot suivant.
+  La vérification complète finale reste requise après les véritables gestes humains.
 
 - **Reprise autorisée du 2026-11-03 — correction de classification** : reprise du chantier
   BUILD après arrêt humain, sans nouveau lot ni lancement. Extension de cadrage à commiter
