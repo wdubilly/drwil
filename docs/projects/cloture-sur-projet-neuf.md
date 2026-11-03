@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — quatre lots IA faits, correction de classification et attestations humaines reconnues ; préparation de la clôture.
+**Statut** : en cours le 2026-11-03 — rouvert après échec Windows sur la PR #350 ; correction de la commande d'échec du test, sans changement de règle.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -174,6 +174,22 @@ Tranchées par le demandeur le 2026-10-30 :
   `couverture-du-code-modifie` et `e2e-et-attestation-precises`).
 
 ## 7. Reprise
+
+- **Réouverture après CI du 2026-11-03** : clôture `2aed1d1` poussée, PR #350,
+  fusion programmée et vérifiée puis annulée par `node .githooks/state.mjs reopen`
+  après CI rouge Windows ; fiche restaurée seule dans `83f88a6`, état BUILD.
+  Cause exacte : le test `QUA-224 contrôles déjà cités` lançait
+  `node -e 'process.exit(1)'`. Sous le shell Windows, les apostrophes restent
+  dans l'argument JavaScript : Node évalue une chaîne et retourne 0, au lieu de 1.
+  La CI constate `PASS !== FAIL`, ligne 163 de `packages/drwil/test/guarantees.test.mjs`
+  (276 réussites, 1 échec, 5 ignorés). Reproduction locale des deux arguments
+  effectivement reçus par Node : expression avec apostrophes, code 0 ; sans, code 1.
+  Correction bornée : guillemets doubles pour l'argument `-e`, portables sous les
+  shells Unix et Windows. Aucune assertion retirée, aucun changement de contrat,
+  hook, CI, seuil ou barrière ; fichier de test déjà au scope, pas d'extension.
+  Refaire test ciblé et contrôles complets, renouveler l'évidence propre puis
+  reclore en actualisant la même entrée du journal, sans nouvelle entrée ni intention.
+  La fusion n'est plus programmée avant la nouvelle clôture.
 
 - **Reprise humaine du 2026-11-03 — préparation de clôture** : après le signal
   « c'est attesté », les quatre fichiers d'attestation humaine ont été préservés.

@@ -146,7 +146,7 @@ test("QUA-224 contrôles déjà cités : aucun outil lancé sans code, puis son 
   for (const f of ["README.md", "AGENTS.md", "docs/features.md"]) ecrire(dir, f, "# Produit\n");
   const cfg = config(dir);
   cfg.parallel = 2;
-  cfg.checks = ["coverage-root", "coverage-diff-root", "e2e"].map((id) => ({ id, run: "node -e 'process.exit(1)'" }));
+  cfg.checks = ["coverage-root", "coverage-diff-root", "e2e"].map((id) => ({ id, run: 'node -e "process.exit(1)"' }));
   ecrireConfig(dir, cfg);
   ecrire(dir, "docs/contracts.md", "# Contrats\n");
   citer(
