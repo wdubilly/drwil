@@ -122,8 +122,6 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P2] (0.11.0) Signaler un défaut du kit : commande qui imprime un rapport prêt à coller, sans donnée du
-  projet (cadré le 2026-10-30) — `docs/projects/signaler-un-defaut-du-kit.md`.
 - [ ] [IA] [P2] Attester une preuve humaine depuis la conversation, par un sondage lu par un hook (cadré le
   2026-10-30, après l'adoption fluide) — `docs/projects/attester-depuis-le-chat.md`.
 - [ ] [IA] [P2] Ajouter ou adopter un contrat par commande, `drwil contracts add` et `adopt <ID>` (cadré le

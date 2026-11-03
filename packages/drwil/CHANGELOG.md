@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil report` prints a privacy-safe kit defect report from the last local
+  check snapshot, with CLI/installed versions and normalized built-in failure
+  messages. No raw project data, file writes, check execution or forge calls;
+  unread inputs and the snapshot's unverified freshness are explicit. A recipe
+  explains how to add a fictitious reproduction before manually opening an issue.
+
 - New-project closing: coverage and e2e are explicitly not yet applicable on a layer without
   code, and become blocking as soon as code appears. `guarantees` and `verify` share their
   judge, and `init` records the new/existing project origin. Closing adds the proof link to

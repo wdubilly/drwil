@@ -4055,3 +4055,15 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/cloture-sur-projet-neuf`.
 
 - **Preuve de clôture** : `docs/preuves/cloture-sur-projet-neuf.md`.
+
+## 2026-11-03 — Signaler un défaut du kit
+
+- **Décisions clés** : `drwil report` imprime un rapport à coller, sans écriture ni appel de forge : versions numériques, contrôles intégrés en échec au dernier instantané et messages publics normalisés. Aucun diagnostic brut, champ libre ou contrôle propre au projet ; l'instantané n'est pas réputé actuel. Recette livrée, README, changelog et carte d'architecture mis à jour.
+- **Critères et preuves** : QUA-231 (version et contrôle en échec), QUA-232 (aucune donnée du projet), QUA-233 (aucune écriture externe ni forge), QUA-234 (lisibilité et reproductibilité jugées par l'humain). Six tests ciblés réussis ; couverture du module à 100 % lignes, branches et fonctions. Attestation humaine conservée par `936411c`. Acceptation humaine des critères relue par le helper officiel : empreinte acceptée et actuelle identiques, `sha256:9ccee6085b393b9a`, le 2026-11-03.
+- **Vérification finale avant clôture** : sur `087cb41`, `node .githooks/run-checks.mjs` code 0 (6 avertissements, 216 contrôles repris et 15 rejoués), puis `node packages/drwil/bin/drwil.js verify --evidence --agent` : `Verdict: GOVERNANCE: PASS (exit 0)`. Évidence locale renouvelée, validée par le helper officiel.
+- **Périmètre élargi avant code** : `packages/drwil/bin/drwil.js`, cadrage seul `77fd9c1`, indispensable pour enregistrer la commande dans le point d'entrée public.
+- **Hooks modifiés** : aucun.
+- **Limites connues** : messages normalisés et instantané non réputé actuel, choix explicites documentés dans la recette, sans promesse de diagnostic brut. Hook `.githooks/commit-msg` non exécutable préexistant : intention existante `docs/intentions/commit-msg-non-executable.md`, sans doublon ni contournement. Consommation indisponible pour cette branche dans les journaux et la recherche Copilot : aucun coût inventé.
+- **Clôturé par** : la branche `workstream/signaler-un-defaut-du-kit` ; implémentation `97da286`, rattachement des preuves `787710a`, attestation `936411c`, reprise `087cb41`.
+
+- **Preuve de clôture** : `docs/preuves/signaler-un-defaut-du-kit.md`.

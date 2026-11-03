@@ -39,6 +39,56 @@
   "parallel": true,
   "checks": [
     {
+      "id": "tests-qua-231",
+      "name": "rapport public du kit : versions et échecs",
+      "run": "node --test --test-name-pattern=QUA-231 packages/drwil/test/report.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/cli-report.ts",
+        "packages/drwil/src/cli-texts.ts",
+        "packages/drwil/src/index.ts",
+        "packages/drwil/bin/drwil.js",
+        "packages/drwil/test/report.test.mjs"
+      ]
+    },
+    {
+      "id": "tests-qua-232",
+      "name": "rapport public du kit : confidentialité",
+      "run": "node --test --test-name-pattern=QUA-232 packages/drwil/test/report.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/cli-report.ts",
+        "packages/drwil/src/cli-texts.ts",
+        "packages/drwil/test/report.test.mjs"
+      ]
+    },
+    {
+      "id": "tests-qua-233",
+      "name": "rapport public du kit : lecture seule",
+      "run": "node --test --test-name-pattern=QUA-233 packages/drwil/test/report.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/cli-report.ts",
+        "packages/drwil/bin/drwil.js",
+        "packages/drwil/test/report.test.mjs"
+      ]
+    },
+    {
+      "id": "tests-qua-234",
+      "name": "rapport public du kit : contexte de reproduction à lire par un humain",
+      "run": "node --test --test-name-pattern=QUA-234 packages/drwil/test/report.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/cli-report.ts",
+        "packages/drwil/src/cli-texts.ts",
+        "packages/drwil/test/report.test.mjs"
+      ]
+    },
+    {
       "id": "couverture-tests",
       "name": "drwil: build + tests + seuil de couverture (QUA-004)",
       "run": "npm run test:coverage",
