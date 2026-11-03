@@ -8,6 +8,8 @@ import { mainBranch } from "./close-branches.mjs";
 import { texts } from "./close-texts.mjs";
 import { proofPath } from "./closure-proof.mjs";
 import { definedIds } from "./contracts.mjs";
+import { outsideBriefFiles } from "./scope-gate.mjs";
+import { fnmatch, readBlock, withMirrors } from "./scope.mjs";
 
 export const git = (root, ...args) => {
   const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
@@ -61,6 +63,23 @@ export function deadReferences(root, brief) {
     .map((l) => /^(.+?):(\d+):/.exec(l))
     .filter(([, f]) => f !== brief && !f.endsWith(".md"))
     .map(([, f, n]) => T.dead(`${f}:${n}`, brief));
+}
+
+/** QUA-230 : anticiper la barrière, qui lit le périmètre commité, pas l'extension en cours. */
+export function referenceScope(root, brief) {
+  const cfg = config(root);
+  const patterns = withMirrors(readBlock(git(root, "show", `HEAD:${brief}`) ?? "").patterns, cfg);
+  const out = git(root, "grep", "-n", "-I", "--untracked", "--exclude-standard", "-F", "-e", brief) ?? "";
+  const places = new Map();
+  for (const line of out.split("\n")) {
+    const match = /^(.+?):(\d+):/.exec(line);
+    if (match && match[1] !== brief && !places.has(match[1])) places.set(match[1], `${match[1]}:${match[2]}`);
+  }
+  const exclusions = Array.isArray(cfg.outOfScope) ? cfg.outOfScope : undefined;
+  const files = outsideBriefFiles([...places.keys()], exclusions).filter((f) => !patterns.some((p) => fnmatch(f, p)));
+  if (!files.length) return [];
+  const T = texts(root);
+  return [...files.map((f) => T.scopeReference(places.get(f), brief)), T.scopeExtension(brief, files)];
 }
 
 const NAME = /`([^`\s/<>{}*?|=:@$]+\.(?:md|mdc|mjs|cjs|js|ts|tsx|jsx|py|sh|json|ya?ml|toml|txt))`(?!\s*\((?:à créer|to create)\))/g;

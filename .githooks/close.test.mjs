@@ -287,6 +287,63 @@ test("QUA-048 : références qui deviendraient mortes et noms de fichiers sans c
   ]);
 });
 
+test("QUA-230 : en BUILD les renvois hors scope proposent une extension commitée séparément, sans écriture", () => {
+  const racine = depot({ activite: "BUILD" });
+  ecrire(racine, {
+    "docs/contracts-catalog.md": `Voir \`${FICHE}\`.\nEncore \`${FICHE}\`.\n`,
+    "dashboard.html": `<a href="${FICHE}">Chantier</a>\n`,
+    "docs/intentions/limite.md": `Voir \`${FICHE}\`.\n`,
+    "docs/projects/journal.md": `Voir \`${FICHE}\`.\n`,
+    "docs/couvert.md": `Voir \`${FICHE}\`.\n`,
+  });
+  const texte = fiche("- Un critère — `QUA-001`").replace("  - src/a.mjs", "  - src/a.mjs\n  - docs/couvert.md");
+  ecrire(racine, { [FICHE]: texte });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "renvois");
+  const avant = git(racine, "status", "--porcelain");
+  ecrire(racine, { "untracked.html": `<a href="${FICHE}">Nouveau</a>\n` });
+  const avantNonSuivi = git(racine, "status", "--porcelain");
+  const r = close(racine, { check: true });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /docs\/contracts-catalog\.md:1.*hors du bloc scope/);
+  assert.match(r.message, /dashboard\.html:1.*hors du bloc scope/);
+  assert.match(r.message, / {2}- docs\/contracts-catalog\.md/);
+  assert.match(r.message, / {2}- dashboard\.html/);
+  assert.match(r.message, / {2}- untracked\.html/);
+  assert.match(r.message, /commit séparé.*avant.*correction/);
+  assert.doesNotMatch(r.message, /(?:couvert\.md|intentions\/limite\.md|projects\/journal\.md).*hors du bloc scope/);
+  assert.equal(git(racine, "status", "--porcelain"), avantNonSuivi, "aucun fichier écrit ou indexé");
+  rmSync(join(racine, "untracked.html"));
+  assert.equal(git(racine, "status", "--porcelain"), avant);
+  // Une extension non commitée ne franchit pas la barrière, qui lit HEAD.
+  ecrire(racine, { [FICHE]: texte.replace("  - src/a.mjs", "  - src/a.mjs\n  - dashboard.html\n  - docs/contracts-catalog.md") });
+  assert.match(close(racine, { check: true }).message, /dashboard\.html:1.*hors du bloc scope/);
+  git(racine, "add", FICHE);
+  git(racine, "commit", "-q", "-m", "périmètre");
+  assert.doesNotMatch(close(racine, { check: true }).message, /hors du bloc scope/);
+});
+
+test("QUA-230 : renvois en anglais, miroirs et exclusions configurées respectés", () => {
+  const racine = depot({ activite: "BUILD", lang: "en" });
+  ecrire(racine, {
+    ".drwil/ia-first.json": JSON.stringify({
+      lang: "en",
+      outOfScope: ["docs/projects/*", "custom/exempt.md"],
+      scopeMirrors: [{ from: "templates/", to: "" }],
+    }),
+    [FICHE]: fiche("- A criterion — `QUA-001`").replace("src/a.mjs", "templates/docs/covered*.md"),
+    "docs/covered.md": `\`${FICHE}\`\n`,
+    "custom/exempt.md": `\`${FICHE}\`\n`,
+    "custom/intent.md": `\`${FICHE}\`\n`,
+  });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "configuration");
+  const r = close(racine, { check: true });
+  assert.match(r.message, /custom\/intent\.md:1.*outside the scope block/);
+  assert.match(r.message, /separate commit/);
+  assert.doesNotMatch(r.message, /(?:covered|exempt)\.md.*outside the scope block/);
+});
+
 test("QUA-048 : un élément d'index commun à plusieurs fiches n'est pas retiré, il est signalé", () => {
   const index = "# Index\n\n- [ ] [IA] Deux fiches — `docs/projects/exemple.md`, `docs/projects/autre.md`.\n";
   const racine = depot({ index });

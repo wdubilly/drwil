@@ -10,7 +10,7 @@ import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { undeclaredHooks } from "./base-checks.mjs";
 import { config } from "./briefs.mjs";
-import { bareNames, criteriaToCreate, deadReferences } from "./close-checks.mjs";
+import { bareNames, criteriaToCreate, deadReferences, referenceScope } from "./close-checks.mjs";
 import { closingMechanics } from "./close-mechanics.mjs";
 import { journalPlan } from "./close-journal.mjs";
 import { texts } from "./close-texts.mjs";
@@ -53,6 +53,7 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
     ...criteriaToCreate(root, brief, text),
     ...undeclaredHooks(root, text).lines,
     ...deadReferences(root, brief),
+    ...referenceScope(root, brief),
     ...bareNames(root),
   ].map((message) => ({ message }));
   const reported = new Set(plain.map((p) => /^(\S+:\d+) /.exec(p.message)?.[1]));

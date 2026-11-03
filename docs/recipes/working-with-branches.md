@@ -153,6 +153,11 @@ that folder only):
   alone, at any time; leaving Build for Evidence gives it too, while code
   can still change. Code cites the contract it serves, never a workstream
   brief: check-docs refuses such a citation in a changed code file.
+- In BUILD, that report also names references whose correction would be outside
+  the scope block committed in HEAD, with the paths to add. Explain
+  and commit that extension separately before correcting those references;
+  an uncommitted extension does not satisfy the scope gate. Already covered
+  files, declared mirrors and scope-gate exclusions need no extension.
 - Local branches already merged into the main branch are deleted when the
   next workstream starts — never an unmerged branch, the current one or
   the main branch. A branch is merged when git sees it in the main branch

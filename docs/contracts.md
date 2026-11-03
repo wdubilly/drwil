@@ -2240,3 +2240,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/check-docs.test.mjs`
 **Origine** : clôture-sur-projet-neuf — « Avant la clôture, la citation de la preuve du chantier actif ne fait plus échouer verify »
 **Raison** : Le fichier est créé par la clôture après verify ; exiger sa présence avant rendait le cycle impossible.
+
+## QUA-230 — Les renvois hors périmètre sont signalés avant la clôture
+**Règle** : Livré à tout projet. Dès BUILD, `node .githooks/close.mjs --check` nomme les fichiers et lignes citant la fiche à supprimer, y compris catalogue, dashboard, intentions, index et journal. Pour les fichiers dont la correction serait hors du bloc scope commité dans HEAD, il propose les chemins à ajouter, à motiver et commiter séparément avant la correction. Les motifs, miroirs et exclusions de la barrière de périmètre sont respectés ; les fichiers déjà couverts ou exemptés ne demandent aucune extension. La ligne d'index retirée automatiquement reste régie par QUA-228. Le signal n'écrit ni renvoi ni périmètre ; il complète les corrections proposées par QUA-076.
+**Périmètre** : `.githooks/close-checks.mjs`, `.githooks/close.mjs`, `.githooks/close-texts.mjs`, gabarit et installation.
+**Source de vérité** : `.githooks/close-checks.mjs` (`referenceScope`), grammaire et exclusions de `.githooks/scope.mjs` et `.githooks/scope-gate.mjs`.
+**Preuve** : dépôts git réels, renvois Markdown et HTML hors scope, plusieurs citations du même fichier, fichiers couverts ou exemptés, extension non commitée puis commitée, langue anglaise, miroirs et exclusions configurés ; aucune écriture par `--check`.
+**Contrôle** : `tests-qua-230`
+**Tests** : `.githooks/close.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « En BUILD, close --check liste les renvois à la fiche qui bloqueraient le commit de clôture et propose l'extension du bloc scope »
+**Raison** : Découvrir le hors-périmètre après suppression de la fiche impose une reprise tardive ; l'extension se décide pendant BUILD.

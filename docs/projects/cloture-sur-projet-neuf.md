@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — lots 1 et 2 commités et contrôlés ; lot 3 réalisé et contrôlé, passation vers le lot 4.
+**Statut** : en cours le 2026-11-03 — lots 1 à 3 commités ; lot 4 réalisé, vérification finale à effectuer avant clôture.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -77,7 +77,7 @@ est refusée ou faussée pour des raisons qui ne tiennent pas au chantier. Trois
 - Avant la clôture, la citation de la preuve du chantier actif (`docs/preuves/<fiche>.md`) ne fait plus
   échouer `verify` — `QUA-229`
 - En BUILD, `.githooks/close.mjs --check` liste les renvois à la fiche (catalogue, dashboard, intentions, index,
-  journal) qui bloqueraient le commit de clôture, et propose l'extension du bloc scope — contrat à créer
+  journal) qui bloqueraient le commit de clôture, et propose l'extension du bloc scope — `QUA-230`
 - Ajouter ou retirer la marque `[humain]` d'un critère ne change pas l'empreinte acceptée ; tout autre
   changement du texte d'un critère la change toujours — `QUA-174`
 
@@ -86,6 +86,11 @@ est refusée ou faussée pour des raisons qui ne tiennent pas au chantier. Trois
 - `QUA-174` — ancien critère : « texte de chaque puce, lignes de continuation jointes, espaces normalisés,
   preuve citée exclue » — raison : la marque `[humain]` est une classification de la preuve, pas le sens du
   critère ; l'exclure de l'empreinte évite un geste humain par marque posée après coup (validé le 2026-10-30)
+- `.githooks/state-acceptance.mjs` — exclusion de la classification humaine, décision du lot 3
+  ci-dessus, réalisée dans le lot 3 explicitement confirmé par le demandeur le 2026-11-03.
+- `.githooks/state.test.mjs` — tests de cette décision du lot 3, confirmé par le demandeur le 2026-11-03.
+- `.githooks/close-checks.mjs` — renvois hors scope et extension proposée, réalisation du lot 4
+  demandée explicitement le 2026-11-03.
 - `.githooks/close.mjs` — mécanique extraite avant ajout ; écrit automatiquement le renvoi de preuve
   dans l'entrée du journal, comme décidé en section 4.
 - `.githooks/check-docs.mjs` — tolère uniquement la preuve future du chantier actif, comme décidé en section 4.
@@ -158,6 +163,52 @@ Tranchées par le demandeur le 2026-10-30 :
   `couverture-du-code-modifie` et `e2e-et-attestation-precises`).
 
 ## 7. Reprise
+
+- **Lot 4 — réalisation du 2026-11-03** : `QUA-230` (renvois hors périmètre avant clôture)
+  ajoute au rapport les fichiers et lignes citant la fiche et dont la correction serait hors du
+  scope commité dans HEAD. Les chemins à ajouter sont proposés avec la consigne de motiver et
+  commiter l'extension séparément ; aucune réécriture automatique. Grammaire, motifs, miroirs et
+  exclusions sont ceux de la barrière existante, sans les recopier. Les renvois déjà couverts ou
+  exemptés restent signalés par les règles de cohérence sans extension inutile ; l'élément d'index
+  supprimé par la mécanique reste inchangé. Français et anglais disponibles.
+- **Cause et reproduction du lot 4** : le rapport de clôture nommait déjà les renvois morts,
+  mais ne confrontait pas leur correction au scope de HEAD. Deux nouveaux tests `QUA-230`
+  ont échoué avant correction (code 1) : absence du signal « hors du bloc scope » et de sa
+  proposition, en français et anglais. Ils couvrent catalogue Markdown, dashboard HTML,
+  intentions et journal exemptés, fichiers couverts, renvois non suivis, motifs, miroirs,
+  exclusions configurées, extension non commitée puis commitée et absence d'écriture.
+- **Documentation du lot 4** : contrat et contrôle dédiés, critère relié à son contrat sans
+  changer son texte, recette du gabarit alignée avec sa copie spécifique au dépôt. Sources des
+  hooks éditées uniquement dans le gabarit, puis `npm run installer-depot` : trois miroirs écrits.
+  Les déclarations des hooks du lot 3 manquaient dans « Contrats modifiés » malgré la décision
+  de ce lot et sa confirmation explicite : elles sont complétées, avec celle du lot 4 demandé,
+  pour que le rejeu CI garde ces changements autorisés ; aucun contrôle assoupli.
+- **Périmètre du lot 4** : aucun chemin ajouté au bloc `scope`, aucune extension nécessaire.
+  Aucun refactor, aucune migration d'empreinte, aucune attestation ni acceptation écrite par
+  l'agent. L'empreinte active reste `sha256:922f5befc3a3593d` (`acceptanceCheck` : `same`).
+- **Preuves du lot 4 avant commit** :
+  - `node .githooks/wait-command.mjs --wait 600 node --test .githooks/close.test.mjs .githooks/doc-coherence.test.mjs` :
+    code 0, 41 tests réussis, aucun échec, y compris après ajout du cas non suivi.
+  - `node .githooks/wait-command.mjs --wait 600 npm run test:hooks:coverage` : code 0,
+    550 tests réussis, couverture à 100 % lignes, instructions, branches et fonctions.
+  - `node .githooks/check-contract-tests.mjs` : 276 liens, 0 problème ;
+    `node outils/verifier-tests-contrats.mjs` : 617 tests rattachés, 0 problème ;
+    `node outils/verifier-miroirs.mjs` : 183 fichiers, 17 écarts déclarés, 0 problème.
+  - `node .githooks/close.mjs --check` : code 0, « Rien ne ferait échouer la clôture. » ;
+    `node .githooks/check-file-size.mjs` : code 0.
+- **Première passe globale du lot 4** : `run-checks` a refusé 13 contrôles (code 1,
+  61 avertissements) pour une cause unique introduite dans la recette livrée :
+  elle citait le nouveau contrat propre au dépôt, absent du registre minimal d'une installation.
+  La citation a été retirée de la recette (gabarit et copie), pas la règle ni le contrôle ;
+  le contrat reste défini et testé dans le dépôt. Rejeu complet :
+  `node .githooks/wait-command.mjs --wait 600 node .githooks/run-checks.mjs` :
+  code 0, « contrôles exécutés : OK (40 avertissement(s), non exécutés compris) »,
+  78 repris / 149 rejoués.
+- **Suite du lot 4** : après commit, `node .githooks/state.mjs lot next` marque le dernier lot
+  fait ; contrôles complets puis `drwil verify --agent` par le sous-agent `drwil-checks`.
+  Si geste humain requis, arrêter en BUILD avec la preuve exacte ; sinon journal et clôture
+  selon la recette. L'intention préexistante `docs/intentions/commit-msg-non-executable.md`
+  reste la seule limite connue à ce stade ; ne pas la doubler ni la corriger hors périmètre.
 
 - **Lot 3 — réalisation du 2026-11-03** : seule la normalisation de l'empreinte change,
   dans `packages/drwil/templates/common/base/.githooks/state-acceptance.mjs`, puis son miroir
