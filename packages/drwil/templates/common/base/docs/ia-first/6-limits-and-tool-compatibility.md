@@ -84,3 +84,18 @@ The fallback is never the agent's decision: when the tool has no usable
 subagent, the state reminder tells the agent to stop after a closing and merge
 and to offer the human a new conversation; the next workstream starts there
 (`node .githooks/state.mjs next`) only on the human's explicit yes.
+
+## Instructions reach every tool
+
+An instruction or mechanism the kit delivers reaches each chosen tool by the
+file every tool reads (`AGENTS.md`) or by its native file; otherwise its gap is
+declared here. The entry files that only point to `AGENTS.md` (Copilot CLI's
+instructions file and Cursor's always-applied rule) also
+repeat the bounded wait of long commands (`.githooks/wait-command.mjs`, never a
+`while pgrep` loop), so that a tool that does not follow the pointer still reads
+it. Claude Code and Gemini CLI import `AGENTS.md`; Codex reads it natively.
+Declared gap: no subagent file of the kit exists for Copilot CLI, Gemini CLI,
+Codex or Cursor, the `AGENTS.md` line is their only instruction. That a tool
+obeys the instruction is "not tested": no trial has measured it. A new
+mechanism is added to the parity test's list of mechanisms in the
+workstream that creates it.

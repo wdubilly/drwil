@@ -22,6 +22,7 @@ Carte complète : `docs/architecture.md`.
 - **Intention ou demande** : en SCOPING un besoin se cadre, il ne se code pas ; si doute, demander « intention ou demande de réalisation ? ».
 - **Cause avant correctif** : reproduire et trouver la cause racine d'abord.
 - **Pas de contournement (QUA-019)** : jamais de contrôle désactivé, sauté (`--no-verify`, skip…) ni contourné ; s'il semble mal calibré, le dire et proposer de le corriger.
+- **Commandes longues** : `node .githooks/wait-command.mjs <commande>` en appel de fond, jamais une boucle `while pgrep` (détail : section 8).
 - **Références lisibles** : un ID cité à un humain est suivi de ce qu'il désigne (`node .githooks/glossary.mjs "<texte>"`).
 - **Laisser propre en passant** : documenter et signaler tout écart trouvé.
 - **La clôture boucle les intentions** : chaque limite non traitée devient une fiche d'intention (`docs/intentions/`), jamais une fiche de chantier.

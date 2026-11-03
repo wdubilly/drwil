@@ -2160,3 +2160,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/wait-command.test.mjs`
 **Origine** : attente-commandes-longues — « Les consignes des sous-agents imposent ce script et `run_in_background`, et interdisent la boucle `pgrep` »
 **Raison** : Sans consigne, un sous-agent continue d'écrire sa propre boucle d'attente.
+
+## QUA-222 — Tout mécanisme ou consigne du kit atteint chaque outil choisi, ou son écart est déclaré dans la matrice
+**Règle** : Livré à tout projet. Une consigne ou un mécanisme que le kit livre atteint chaque outil choisi par le fichier que tous lisent (`AGENTS.md`) ou par son fichier natif ; les fichiers d'entrée natifs qui ne font que renvoyer à `AGENTS.md` (Copilot CLI, Cursor) reprennent en une ligne la consigne, avec les mêmes marqueurs. Un écart (un outil sans fichier propre au kit, comme un sous-agent) est déclaré dans la section « Instructions reach every tool » de `docs/ia-first/6-limits-and-tool-compatibility.md`, qui dit « not tested » pour ce qu'aucun essai n'a mesuré (QUA-060). Une liste déclarée « mécanisme → marqueurs » est relue par le test ; un mécanisme nouveau s'y inscrit dans le chantier qui le crée, la liste ne repère que ce qu'on y met.
+**Périmètre** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/tools/copilot/.github/copilot-instructions.md`, `packages/drwil/templates/common/tools/cursor/.cursor/rules/ia-first.mdc` et `docs/ia-first/6-limits-and-tool-compatibility.md` ; livrés dans le gabarit.
+**Source de vérité** : `outils/parite-des-outils.test.mjs` (la liste des mécanismes) ; textes dans le gabarit.
+**Preuve** : test des outils : chaque marqueur de la liste est dans chacun des fichiers d'entrée, et la matrice porte la section et l'écart déclaré, identique dans le gabarit. Limite : le test juge le texte, pas que l'outil le suive.
+**Contrôle** : `tests-qua-222`
+**Tests** : `outils/parite-des-outils.test.mjs`
+**Origine** : outiller-tous-les-outils — « Toute consigne ou tout mécanisme livré par le kit atteint chaque outil choisi, par le fichier que tous lisent (`AGENTS.md`) ou par son fichier natif, sinon son écart est déclaré dans la matrice de compatibilité »
+**Raison** : Une consigne n'atteignait que Claude Code : les autres outils continuaient d'écrire leur boucle `while pgrep`.
+
+## QUA-223 — La consigne d'attente bornée des commandes longues est lue au démarrage sous tout outil
+**Règle** : Livré à tout projet. Le `AGENTS.md` livré (et celui du dépôt) et les fichiers d'entrée natifs de Copilot CLI et de Cursor disent de lancer les commandes longues par `.githooks/wait-command.mjs` et de ne jamais attendre par une boucle `while pgrep` ; le détail reste dans `docs/ia-first/8-conduct-rules.md` (QUA-221 pour le sous-agent de Claude Code). `AGENTS.md` reste sous le plafond de 100 lignes (QUA-153).
+**Périmètre** : `packages/drwil/templates/common/base/AGENTS.md`, `AGENTS.md`, `packages/drwil/templates/common/tools/copilot/.github/copilot-instructions.md`, `packages/drwil/templates/common/tools/cursor/.cursor/rules/ia-first.mdc` ; livrés dans le gabarit.
+**Source de vérité** : `docs/ia-first/8-conduct-rules.md` (règle « Long commands »), repris dans `packages/drwil/templates/common/base/AGENTS.md`.
+**Preuve** : test des outils : le script et la boucle interdite sont cités dans chacun des quatre fichiers. Limite : le test juge le texte ; que le modèle de chaque outil le suive reste « not tested » dans la matrice.
+**Contrôle** : `tests-qua-223`
+**Tests** : `outils/parite-des-outils.test.mjs`
+**Origine** : outiller-tous-les-outils — « Sous tout outil, la consigne de lancer les commandes longues par `.githooks/wait-command.mjs` et de ne jamais attendre par une boucle `while pgrep` est lue au démarrage »
+**Raison** : Seule la consigne du sous-agent de Claude Code interdisait la boucle ; les autres outils n'en lisaient rien.

@@ -2,8 +2,8 @@
 
 **Statut** : proposée le 2026-11-03 — limites laissées par la clôture du chantier « attente outillée des commandes longues ».
 
-**Revu le 2026-11-03** : la limite des autres outils est cadrée dans `docs/projects/outiller-tous-les-outils.md` ;
-restent vivantes celles de Windows et du contrôle de la consigne.
+**Revu le 2026-11-03** : la limite des autres outils est traitée, voir `docs/projects/journal.md`,
+par le chantier « outiller tous les outils » (QUA-222, QUA-223) ; restent vivantes celles de Windows et du contrôle de la consigne.
 
 ## Besoin
 
@@ -17,8 +17,7 @@ boucles `pgrep` sous Claude Code. Trois limites restent.
 
 ## Questions à trancher
 
-- [décision] Les autres outils (Copilot CLI, Gemini, Codex) : le script est livré à tous, mais seule la consigne de
-  Claude Code l'impose ; faut-il l'imposer aux leurs, au rythme du contrat de compatibilité des outils ?
+- ~~Les autres outils~~ : traité par le chantier « outiller tous les outils » (QUA-222, QUA-223), voir `docs/projects/journal.md`.
 - [IA] Windows : la commande passe par le shell par défaut (`shell: true`) et le test d'attente n'est pas rejoué sous
   Windows en CI ; ajouter la matrice ou documenter la limite.
 - [décision] QUA-221 ne prouve que le texte de la consigne, pas que le modèle la suive ; un contrôle (garde de

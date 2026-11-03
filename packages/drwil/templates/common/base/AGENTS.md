@@ -34,6 +34,7 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
 - **One session per workstream**: once closed and back in SCOPING, the next one starts in a new session.
 - **Documentation-only PR**: put in automatic merge by the agent (`gh pr merge --auto --merge`).
 - **Follow the CI**: after a push or a PR, `node .githooks/pr-watch.mjs [<number>]`; a red CI is fixed at its cause.
+- **Long commands**: `node .githooks/wait-command.mjs <command>` in a background call, never a `while pgrep` loop (detail: section 8).
 - **Mandatory guarantees**: coverage, e2e, protected forge, product presentation (`npx drwil guarantees`); no waiver.
 - **Readable references**: an ID cited to a human is followed by what it designates (`node .githooks/glossary.mjs "<text>"`).
 - **End-of-task report**: files, checks run with exact results, limits; "human" or "not verified" for the rest; paths added to the brief's `scope` block and why.

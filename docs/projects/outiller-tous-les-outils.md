@@ -36,10 +36,9 @@ et en faire un contrat.
 ## Critères d'acceptation
 
 - Toute consigne ou tout mécanisme livré par le kit atteint chaque outil choisi, par le fichier que tous lisent
-  (`AGENTS.md`) ou par son fichier natif, sinon son écart est déclaré dans la matrice de compatibilité — contrat
-  à créer
+  (`AGENTS.md`) ou par son fichier natif, sinon son écart est déclaré dans la matrice de compatibilité — `QUA-222`
 - Sous tout outil, la consigne de lancer les commandes longues par `.githooks/wait-command.mjs` et de ne jamais
-  attendre par une boucle `while pgrep` est lue au démarrage, pas seulement sous Claude Code — contrat à créer
+  attendre par une boucle `while pgrep` est lue au démarrage, pas seulement sous Claude Code — `QUA-223`
 
 ## 2. Hors périmètre
 
@@ -88,6 +87,6 @@ que le test relit. Emplacement de la consigne : celui qui laisse le moins de ris
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-03) : cadré, aucun code.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] lancer par `/drwil-start`.
+- **Dernier état** (2026-11-03) : lot 1 réalisé (QUA-222, QUA-223, consigne dans `AGENTS.md`, Copilot et Cursor, règle, matrice, test) ; `run-checks` OK ; `verify` : MANUAL REVIEW REQUIRED, l'attestation de QUA-063 est tombée (la matrice qu'il couvre a changé).
+- **Travail non commité** : tout le lot 1.
+- **Prochaine étape** : [décision] l'humain relit la section « Instructions reach every tool » de la matrice et lance `drwil attest QUA-063` ; puis verify PASS, journal (preuve de clôture), `node .githooks/close.mjs`, commit, push, PR.

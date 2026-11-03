@@ -2896,6 +2896,34 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-222",
+      "name": "tests de QUA-222, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-222 \" outils/parite-des-outils.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "AGENTS.md",
+        "packages/drwil/templates/**",
+        "docs/ia-first/**",
+        "outils/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-223",
+      "name": "tests de QUA-223, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-223 \" outils/parite-des-outils.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "AGENTS.md",
+        "packages/drwil/templates/**",
+        "docs/ia-first/**",
+        "outils/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "name": "code modifié couvert à 100 % : lignes et branches du diff de la branche (diffCoverage)",
       "run": "node .githooks/check-diff-coverage.mjs",

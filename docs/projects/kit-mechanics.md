@@ -37,6 +37,7 @@ files:
   - .githooks/merge-auto.mjs
   - .githooks/wait-command.mjs
   - .githooks/wait-command.test.mjs
+  - outils/parite-des-outils.test.mjs
   - .githooks/base-checks.mjs
   - .githooks/base-checks.test.mjs
   - .githooks/pr-watch.test.mjs

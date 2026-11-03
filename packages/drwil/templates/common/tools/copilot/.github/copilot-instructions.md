@@ -1,3 +1,5 @@
 Read and apply `AGENTS.md` at the repository root, then the `AGENTS.md` of the layer you touch. This file only points to them.
 
 An identifier cited to a human (contract ID, catalog line, lot or point of a brief) is always followed by what it designates; its label: `node .githooks/glossary.mjs "<text>"`.
+
+Long commands (`run-checks`, `drwil verify`, a commit with hooks): run them through `node .githooks/wait-command.mjs <command>` in a background call; never wait with a `while pgrep` loop (detail: `docs/ia-first/8-conduct-rules.md`).
