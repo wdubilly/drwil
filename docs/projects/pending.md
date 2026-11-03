@@ -122,8 +122,6 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P1] (0.11.0) Attente outillée des commandes longues : script d'attente bornée, fin des boucles `pgrep`
-  (cadré le 2026-10-30) — `docs/projects/attente-commandes-longues.md`.
 - [ ] [IA] [P2] (0.11.0) Signaler un défaut du kit : commande qui imprime un rapport prêt à coller, sans donnée du
   projet (cadré le 2026-10-30) — `docs/projects/signaler-un-defaut-du-kit.md`.
 - [ ] [IA] [P2] Attester une preuve humaine depuis la conversation, par un sondage lu par un hook (cadré le
@@ -317,6 +315,8 @@ critère de sortie de chaque fiche —
 
 ### Autres outils
 
+- [ ] [décision] Suites de l'attente outillée des commandes longues : autres outils, Windows, garde de commande —
+  `docs/intentions/attente-commandes-longues-suites.md`.
 - [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
   d'essayé) — `docs/intentions/compat-codex.md`.
 - [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
