@@ -246,6 +246,16 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
   - Le verdict global précédent reste **`Verdict: GOVERNANCE: FAIL (exit 1)`** :
     absence de parité et cinq jugements MANUAL. Pas de relance répétée de
     `verify --agent` vouée à cet échec, ni de déclaration « vérifié ».
+- **Remise persistante** : cadrage seul `b776926`, réalisation `b3bc4cd`, poussés sur
+  la PR #352 laissée brouillon et sans fusion programmée. Le push a exécuté
+  `run-checks` avec code 0 : 7 avertissements, 215 contrôles repris, 17 rejoués.
+  Suivi `node .githooks/pr-watch.mjs 352 --timeout 20` lancé après le push ;
+  seule la contre-vérification des checks portant le SHA poussé vaut preuve CI,
+  pas une sortie verte portant encore sur le précédent. Le compte rendu de PR
+  garde cette preuve courante. Une ancienne puce du changelog annonçait encore
+  Codex non livré : formulation rendue cohérente avec l'ajout, sans changement de code.
+  La note `e7936a8` est identique octet pour octet ; aucun geste humain ni état
+  de gouvernance modifié pour obtenir un verdict.
 
 ### Reprise ciblée — protocole portable autorisé
 

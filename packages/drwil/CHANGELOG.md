@@ -15,7 +15,7 @@ closing commit; the release renames this section to its version.
   Their hooks correlate the exact poll and native session with a one-use
   random nonce, atomically reserve/consume it, rerun checks and compare the
   proof snapshot. Claude's adapter is unchanged. All three have fictitious
-  event tests only; real trials and Codex/Cursor adapters remain outstanding.
+  event tests only; real trials remain outstanding.
 - `attest-poll --tool codex` prepares `request_user_input`; native hooks bind
   the session, call, one-use nonce, exact question and proof through the same
   portable engine. Codex-only installs receive shared hook scripts without
