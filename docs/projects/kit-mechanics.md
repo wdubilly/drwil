@@ -35,6 +35,8 @@ files:
   - .githooks/briefs.mjs
   - .githooks/pr-watch.mjs
   - .githooks/merge-auto.mjs
+  - .githooks/wait-command.mjs
+  - .githooks/wait-command.test.mjs
   - .githooks/base-checks.mjs
   - .githooks/base-checks.test.mjs
   - .githooks/pr-watch.test.mjs

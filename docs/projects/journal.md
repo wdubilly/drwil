@@ -4020,3 +4020,14 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Cause** : une date figée en dur dans le jeu d'essai, que le temps périme seul.
 - **Correction** : la date du rapport récent suit l'horloge (la veille). Vu échouer avant la correction ; sans effet sur le comportement livré.
 - **Clôturé par** : la branche `detour/test-peremption-audit`.
+
+## 2026-11-03 — Attente outillée des commandes longues
+
+- **Décisions clés** : un seul script, `.githooks/wait-command.mjs <commande>` (attente de 100 s par défaut, sous les 120 s d'un appel d'outil, `--wait`, `--status`) ; la commande tourne détachée, son verdict est son code de sortie seul dans un fichier d'évidences locales, sa sortie reste dans un journal local dont le chemin est dit ; l'échéance ne tue rien, un second lancement rejoint l'exécution en cours, un verdict livré est consommé (QUA-219, QUA-220) ; le sous-agent `drwil-checks` impose le script et `run_in_background` et interdit la boucle `pgrep` (QUA-221).
+- **Contrats** : QUA-219, QUA-220, QUA-221.
+- **Cause d'un défaut trouvé en route** : un verdict lu pendant son écriture passait pour une exécution interrompue ; il est écrit puis renommé en place.
+- **Limites connues** : le test de QUA-221 juge le texte de la consigne, pas que le modèle la suive ; seul Claude Code est outillé (les autres outils suivent le contrat de compatibilité) ; sous Windows la commande passe par le shell par défaut, non éprouvée en CI. Reprises dans l'intention `docs/intentions/attente-commandes-longues-suites.md`.
+- **Hooks modifiés** : aucun hook existant ; `.githooks/wait-command.mjs` ajouté (livré). Périmètre élargi d'un chemin par un commit « Cadrage » séparé : le gabarit de `kit-mechanics.md`, que les projets installés lisent pour admettre un fichier de code.
+- **Détour** : le test « rappel de péremption des audits » avait une date figée au 2026-10-04, périmée depuis 30 jours (branche `detour/test-peremption-audit`, PR #346 fusionnée).
+- **Preuve de clôture** : docs/preuves/attente-commandes-longues.md.
+- **Clôturé par** : la branche `workstream/attente-commandes-longues`.
