@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — lots 1 à 3 commités ; lot 4 réalisé, vérification finale à effectuer avant clôture.
+**Statut** : en cours le 2026-11-03 — quatre lots IA commités et marqués faits ; clôture bloquée par le verdict final et des attestations humaines requises.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -163,6 +163,37 @@ Tranchées par le demandeur le 2026-10-30 :
   `couverture-du-code-modifie` et `e2e-et-attestation-precises`).
 
 ## 7. Reprise
+
+- **Arrêt après vérification finale (2026-11-03)** : lot 4 commité `8590332`,
+  puis `node .githooks/state.mjs lot next` : aucun lot [IA] restant. Le sous-agent
+  `drwil-checks` a exécuté dans le dépôt réel :
+  - `node .githooks/run-checks.mjs` : code 0,
+    « contrôles exécutés : OK (7 avertissement(s), non exécutés compris) »,
+    210 repris / 17 rejoués.
+  - `node packages/drwil/bin/drwil.js verify --agent` : code 1,
+    **`Verdict: GOVERNANCE: FAIL (exit 1)`**.
+    202 PASS, 16 ATTESTED, 0 FAIL, 0 ERROR, 4 MANUAL au registre.
+  - Blocage exact du critère de `QUA-174` :
+    `not-durable (human) — QUA-174 is fully automated: remove [human] from the criterion`.
+    Le critère cite littéralement la marque entre accents graves ; il ne demande pas une
+    preuve humaine. Cause relevée sans correction hors lot : les expressions régulières de
+    `.githooks/briefs-criteria.mjs` et `packages/drwil/src/closure.ts` reconnaissent aussi cette
+    citation comme classification et la retirent du libellé. Ne pas supprimer ce texte accepté
+    pour rendre le verdict vert ; le défaut reste à traiter par décision de l'humain.
+  - **Human attestation required.** : `QUA-013` (contrôle non exécuté n'est pas passé),
+    `QUA-048` (clôture en un geste), `QUA-092` (couverture prouvée sur dossier vide),
+    `QUA-175` (aucun agent ne peut écrire l'acceptation). L'humain doit réaliser/lire les
+    vérifications manuelles de ces contrats, puis les attester lui-même dans son terminal
+    interactif (`drwil attest <CONTRACT_ID>`). Aucune attestation exécutée par l'agent.
+  - État conservé : BUILD sur cette fiche, autorisation de fusion et file conservées.
+    Aucun journal de clôture, aucune suppression de fiche, aucun push, aucune PR ni fusion.
+    Aucun `state next`, aucun nouveau chantier, aucune acceptation réécrite.
+    La clôture n'ayant pas eu lieu, le défaut de classification est conservé ici pour décision,
+    pas transformé en limite acceptée silencieusement. La reprise requiert d'abord les gestes
+    humains ci-dessus ; ensuite refaire les vérifications complètes avant toute clôture.
+  - Hooks du commit `8590332` : code 0, contrôles exécutés OK,
+    51 avertissements (non exécutés compris). Hook commit-msg non exécutable préexistant :
+    intention déjà présente, aucun contournement ni doublon.
 
 - **Lot 4 — réalisation du 2026-11-03** : `QUA-230` (renvois hors périmètre avant clôture)
   ajoute au rapport les fichiers et lignes citant la fiche et dont la correction serait hors du
