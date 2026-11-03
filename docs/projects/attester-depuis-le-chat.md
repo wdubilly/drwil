@@ -16,8 +16,10 @@ files:
   - packages/drwil/README.md
   - .claude/hooks/prompt-hook.mjs
   - .claude/hooks/start-poll.mjs
+  - .claude/hooks/attest-poll.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/start-poll.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-poll.mjs
   - packages/drwil/test/claude-hooks.test.mjs
   - packages/drwil/test/cycle.test.mjs
   - docs/recipes/adopt-the-kit.md
@@ -39,14 +41,14 @@ sondage dont la réponse est lue par un hook, sur le modèle du lancement d'un c
 ## Critères d'acceptation
 
 - L'agent peut ouvrir un sondage d'attestation pour un contrat manuel ; la réponse de l'humain, lue par un
-  hook, enregistre l'attestation — contrat à créer
+  hook, enregistre l'attestation — `QUA-235`
 - Le sondage affiche le critère du contrat, ce que l'agent a essayé et les fichiers couverts dont la
   modification ferait tomber l'attestation — `QUA-032`
 - Une réponse écrite par l'agent, un sondage sans réponse ou refusé n'enregistre jamais d'attestation —
-  contrat à créer
+  `QUA-235`
 - L'attestation faite dans le chat est liée au texte et à la preuve du contrat comme celle du terminal,
   compatible avec la couverture et `--renew` — `QUA-081`
-- Le sondage est lisible et ne demande que le jugement utile — [humain] — contrat à créer
+- Le sondage est lisible et ne demande que le jugement utile — [humain] — `QUA-236`
 
 ## 2. Hors périmètre
 
@@ -97,3 +99,8 @@ Tranchées par le demandeur le 2026-10-30 :
   utilisée par la CLI et le hook ; `packages/drwil/src/evidence.ts` décrit la provenance optionnelle sans
   changer le jugement des attestations existantes ; `README.md` et `packages/drwil/README.md` corrigent
   l'affirmation « terminal uniquement » et documentent la nouvelle commande publique.
+- **Extension de périmètre, taille** : le contrôle de taille refuse l'ajout du sondage dans les deux hooks
+  existants (266 et 202 lignes, plafond 200). Le nouveau module
+  packages/drwil/templates/common/tools/claude/.claude/hooks/attest-poll.mjs et sa copie
+  .claude/hooks/attest-poll.mjs (tous deux à créer) regroupent uniquement la nouvelle logique ; aucun parcours existant n'est
+  restructuré. Les tests de régression et du nouveau sondage passent avant ce déplacement (9/9).
