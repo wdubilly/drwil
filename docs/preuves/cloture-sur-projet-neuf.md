@@ -1,7 +1,7 @@
 # Preuve de clôture — cloture-sur-projet-neuf
 
 **Clos le** : 2026-11-03
-**Commit vérifié** : `d307eefb8b` — verdict `drwil verify` : PASS
+**Commit vérifié** : `4f24b4437b` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:922f5befc3a3593d`, acceptés par l'humain au lancement le 2026-11-03
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
