@@ -815,6 +815,18 @@ test("critères d'acceptation : liste structurée (lien, humain), ignore les aut
   ]);
 });
 
+test("QUA-174 : la classification des critères ignore les marques citées en code et conserve leur libellé", () => {
+  for (const marque of ["[humain]", "[human]", "[HUMAIN]", "[HUMAN]"]) {
+    for (const delimiteur of ["`", "``"]) {
+      const citation = `${delimiteur}${marque}${delimiteur}`;
+      const texte = `La marque ${citation} reste du texte`;
+      const lire = (fin = "") => acceptanceCriteria(`## Critères d'acceptation\n- ${texte}${fin} — \`QUA-174\``);
+      assert.deepEqual(lire(), [{ text: texte, link: "QUA-174", human: false }]);
+      assert.deepEqual(lire(` ${marque}`), [{ text: texte, link: "QUA-174", human: true }]);
+    }
+  }
+});
+
 test("maturité : champ explicite lu dans l'en-tête (FR et EN), absent ou inconnu = non renseignée", () => {
   const f = (ligne) => `# F\n\n**Statut** : cadré.\n${ligne}\n`;
   assert.equal(briefMaturity(f("**Maturité** : prêt")), "ready");
@@ -2062,7 +2074,7 @@ function depotCriteres({ lang, texte = CRITERES() } = {}) {
 }
 const accepte = (racine) => JSON.parse(readFileSync(join(racine, ".drwil", "evidence", "acceptance.json"), "utf8"));
 
-test("QUA-174 : l'empreinte des critères ignore la preuve citée et la mise en forme, pas le texte ni [humain]", () => {
+test("QUA-174 : l'empreinte des critères ignore la preuve citée et la mise en forme, pas le texte", () => {
   const base = criteriaFingerprint(CRITERES());
   assert.match(base, /^sha256:[0-9a-f]{16}$/);
   const lie = CRITERES()
@@ -2071,10 +2083,29 @@ test("QUA-174 : l'empreinte des critères ignore la preuve citée et la mise en 
   assert.equal(criteriaFingerprint(lie), base, "un lien de preuve écrit ensuite ne change pas l'empreinte");
   assert.equal(criteriaFingerprint(CRITERES().replace("Un critère sur\n  deux lignes", "Un  critère sur deux lignes")), base);
   assert.equal(criteriaFingerprint(CRITERES().replace("deux lignes", "trois lignes")) === base, false);
-  assert.equal(criteriaFingerprint(CRITERES().replace("Autre critère [humain]", "Autre critère")) === base, false);
   assert.equal(criteriaFingerprint(CRITERES().replace("— contrat à créer", "— contract to create")), base);
   assert.equal(criteriaFingerprint("# Fiche\n\n## 2. Hors périmètre\n\n- rien\n"), null);
   assert.equal(criteriaFingerprint("## Acceptance criteria\n- One\n"), criteriaFingerprint("## Critères d'acceptation\n- One\n"));
+});
+
+test("QUA-174 : seules les marques de classification humaines sont exclues, pas les changements de sens", () => {
+  const texte = (critere) => `## Critères d'acceptation\n- ${critere} — \`QUA-001\`\n`;
+  const base = criteriaFingerprint(texte("Un résultat visible"));
+  for (const marque of ["[humain]", "[human]", "[HUMAIN]", "[HUMAN]"]) {
+    for (const critere of [`${marque} Un résultat visible`, `Un ${marque}\n  résultat visible`, `Un résultat visible ${marque}`]) {
+      assert.equal(criteriaFingerprint(texte(critere)), base, critere);
+    }
+    assert.notEqual(criteriaFingerprint(texte(`Un résultat invisible ${marque}`)), base);
+  }
+  for (const critere of ["Un résultat visible [IA]", "Un résultat visible [humains]", "Un résultat visible humain"]) {
+    assert.notEqual(criteriaFingerprint(texte(critere)), base, critere);
+  }
+  for (const delimiteur of ["`", "``"]) {
+    const literal = `Un résultat ${delimiteur}[humain]${delimiteur} visible`;
+    assert.notEqual(criteriaFingerprint(texte(literal)), base, "une marque citée comme texte reste du sens");
+    assert.notEqual(criteriaFingerprint(texte(literal)), criteriaFingerprint(texte(literal.replace("[humain]", "[human]"))));
+    assert.equal(criteriaFingerprint(texte(`${literal} [humain]`)), criteriaFingerprint(texte(literal)));
+  }
 });
 
 test("QUA-174 : le lancement humain enregistre l'empreinte des critères acceptés, de la fiche et de celles qu'il met en file", () => {
@@ -2090,6 +2121,9 @@ test("QUA-174 : le lancement humain enregistre l'empreinte des critères accept�
   assert.match(tout[FICHE].acceptedAt, /^\d{4}-\d{2}-\d{2}T/);
   const lu = readFileSync(join(racine, FICHE), "utf8");
   assert.equal(acceptanceCheck(racine, FICHE, lu).kind, "same");
+  assert.equal(acceptanceCheck(racine, FICHE, lu.replace("Un critère sur", "[humain] Un critère sur")).kind, "same");
+  assert.equal(acceptanceCheck(racine, FICHE, lu.replace(" [humain]", "")).kind, "same");
+  assert.deepEqual(accepte(racine), tout, "la classification ne renouvelle pas l'acceptation humaine enregistrée");
   assert.equal(acceptanceCheck(racine, FICHE, lu.replace("Un critère", "Un autre critère")).kind, "changed");
 });
 

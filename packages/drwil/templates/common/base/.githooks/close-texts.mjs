@@ -16,6 +16,9 @@ export const TEXTS = {
     toCreate: (c, b, id) => `critère « ${c} » encore « contrat à créer » : écrire, entre backticks à la fin de ce critère (${b}), ${id}`,
     candidates: (ids) => (ids.length ? `l'ID du contrat créé (${ids.join(" ou ")})` : "l'ID du contrat, une fois créé dans le registre"),
     dead: (place, b) => `${place} cite ${b}, qui sera supprimée : citer le contrat ou le journal à la place`,
+    scopeReference: (place, b) => `${place} cite ${b} : sa correction est hors du bloc scope commité`,
+    scopeExtension: (b, files) =>
+      `Extension proposée du bloc scope de ${b}, à motiver et commiter dans un commit séparé avant toute correction des renvois (rien n'est écrit) :\n${files.map((f) => `  - ${f}`).join("\n")}`,
     bare: (place, n) => `${place} : \`${n}\` sans chemin, refusé par check-docs — écrire son chemin depuis la racine`,
     signals: "Avant le commit, ce qui ferait échouer la clôture :",
     byHand: "à corriger à la main (la case dépend de plusieurs fiches, ou la ligne n'a pas de marqueur)",
@@ -26,6 +29,9 @@ export const TEXTS = {
     rest: "Reste à l'agent : l'entrée du journal (décisions, limites en intentions), puis le commit de clôture.",
     twice: (j, f, n) =>
       `${j} : ${n} entrées citent \`${f}\` — un chantier rouvert met à jour son entrée de journal, il n'en ajoute pas une seconde`,
+    journalProof: (f) => `- **Preuve de clôture** : \`${f}\`.`,
+    journalAmbiguous: (j, f, n) => `${j} : ${n} entrées correspondent à \`${f}\` — identifier une seule entrée avant la clôture`,
+    journalRefused: (r) => `clôture refusée : le journal ne peut pas être complété — ${r}`,
   },
   en: {
     usage: "usage: node .githooks/close.mjs [--check] [--fix] [<brief path>] [--logs <folder>]",
@@ -41,6 +47,9 @@ export const TEXTS = {
     candidates: (ids) =>
       ids.length ? `the ID of the contract created (${ids.join(" or ")})` : "the contract's ID, once created in the registry",
     dead: (place, b) => `${place} cites ${b}, which will be deleted: cite the contract or the journal instead`,
+    scopeReference: (place, b) => `${place} cites ${b}: its correction is outside the scope block committed in HEAD`,
+    scopeExtension: (b, files) =>
+      `Proposed scope block extension for ${b}, to explain and commit in a separate commit before correcting references (nothing is written):\n${files.map((f) => `  - ${f}`).join("\n")}`,
     bare: (place, n) => `${place}: \`${n}\` without a path, refused by check-docs — write its path from the root`,
     signals: "Before the commit, what would make the closing fail:",
     byHand: "to fix by hand (the box depends on several briefs, or the line has no marker)",
@@ -50,6 +59,9 @@ export const TEXTS = {
     warnings: "Warnings (non-blocking):",
     rest: "Left to the agent: the journal entry (decisions, limits as intents), then the closing commit.",
     twice: (j, f, n) => `${j}: ${n} entries cite \`${f}\` — a reopened workstream updates its journal entry, it never adds a second one`,
+    journalProof: (f) => `- **Closing proof**: \`${f}\`.`,
+    journalAmbiguous: (j, f, n) => `${j}: ${n} entries match \`${f}\` — identify a single entry before closing`,
+    journalRefused: (r) => `closing refused: the journal cannot be completed — ${r}`,
   },
 };
 

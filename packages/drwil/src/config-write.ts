@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { CI_FILES, ciFromConfig, projectName, readConfig, type Resolved, splitCsv } from "./config.js";
 import { TEXT } from "./config-text.js";
 import { RELEASE_MODES } from "./migration-table.js";
+import { sourceFiles } from "./guarantees-table.js";
 
 const KIT_SIZE_CHECK = {
   id: "taille-kit",
@@ -31,6 +32,8 @@ export async function writeConfig(r: Resolved): Promise<void> {
   const config = {
     // Project-specific keys, unknown to the kit: never lost.
     ...previous,
+    // QUA-226 : le code écrit après init n'est pas une dette héritée ; une mise à jour ne réinvente pas l'origine.
+    guaranteeBaseline: previous?.guaranteeBaseline ?? (previous ? undefined : sourceFiles(r.opts.targetDir)),
     projectName: projectName(r),
     projectShort: r.opts.short ?? projectName(r),
     lang: r.lang,

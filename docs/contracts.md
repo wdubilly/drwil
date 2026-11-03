@@ -1680,10 +1680,10 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : La clôture supprime la fiche alors que tout fichier de code doit rester couvert : drwil_com a dû créer à la main une fiche de référence « code livré ».
 
 ## QUA-174 — Les critères d'acceptation acceptés au lancement sont figés : un critère modifié ensuite refuse la clôture
-**Règle** : Livré à tout projet. Le lancement décidé par l'humain (sondage lu par le hook, terminal interactif) enregistre, pour la fiche lancée et celles qu'il met en file, l'empreinte (`sha256:` et 16 hexadécimaux) de la section « Critères d'acceptation » : texte de chaque puce, lignes de continuation jointes, espaces normalisés, preuve citée (`` `ID` ``, « contrat à créer ») exclue, si bien qu'un lien de preuve ajouté en cours de chantier ne la change pas. L'enregistrement est local, dans un fichier du dossier d'évidence `.drwil/evidence/` (hors git) : une empreinte, jamais les critères. La clôture (`.githooks/closure-proof.mjs`) relit l'empreinte : identique ou absente (fiche lancée sans l'humain), elle écrit la ligne « Critères acceptés » dans la preuve (empreinte et date, ou « aucune acceptation enregistrée ») ; modifiée, elle est refusée sans rien écrire (ni preuve, ni fiche supprimée) jusqu'à ce que l'humain accepte de nouveau les critères (`node .githooks/state.mjs accept`, terminal interactif, saisie de `ACCEPT` après affichage des critères). Un lancement refusé, une fiche sans critère ou illisible n'enregistrent rien.
+**Règle** : Livré à tout projet. Le lancement décidé par l'humain (sondage lu par le hook, terminal interactif) enregistre, pour la fiche lancée et celles qu'il met en file, l'empreinte (`sha256:` et 16 hexadécimaux) de la section « Critères d'acceptation » : texte de chaque puce, lignes de continuation jointes, espaces normalisés, preuve citée (`` `ID` ``, « contrat à créer ») exclue. Les marques de classification `[humain]` et `[human]` (sans distinction de casse) sont aussi exclues : ajouter ou retirer une marque ou un lien de preuve ne change pas l'empreinte. Une marque citée entre accents graves reste du texte ; tout autre changement du texte d'un critère change l'empreinte. L'enregistrement est local, dans un fichier du dossier d'évidence `.drwil/evidence/` (hors git) : une empreinte, jamais les critères. La clôture (`.githooks/closure-proof.mjs`) relit l'empreinte : identique ou absente (fiche lancée sans l'humain), elle écrit la ligne « Critères acceptés » dans la preuve (empreinte et date, ou « aucune acceptation enregistrée ») ; modifiée, elle est refusée sans rien écrire (ni preuve, ni fiche supprimée) jusqu'à ce que l'humain accepte de nouveau les critères (`node .githooks/state.mjs accept`, terminal interactif, saisie de `ACCEPT` après affichage des critères). Un lancement refusé, une fiche sans critère ou illisible n'enregistrent rien.
 **Périmètre** : `.githooks/state-acceptance.mjs`, `.githooks/state.mjs` (`start`, `move`, commande `accept`), `.githooks/closure-proof.mjs` ; livré dans le gabarit.
 **Source de vérité** : `.githooks/state-acceptance.mjs` (`criteriaFingerprint`, `acceptanceCheck`).
-**Preuve** : tests : empreinte insensible à la preuve citée et à la mise en forme mais sensible au texte, enregistrement au lancement humain (fiche et file), refus sans enregistrement, preuve de clôture avec ou sans acceptation (français, anglais), clôture refusée sur critère modifié ou retiré sans rien écrire, commande `accept` (confirmation, sans chantier, sans critère).
+**Preuve** : tests : empreinte insensible à la preuve citée, à la mise en forme et aux marques de classification humaines, mais sensible au texte (y compris les marques citées en code), enregistrement au lancement humain (fiche et file), ajout ou retrait de marque sans renouveler l'acceptation ni refuser la clôture, refus sans enregistrement, preuve de clôture avec ou sans acceptation (français, anglais), clôture refusée sur critère modifié ou retiré sans rien écrire, commande `accept` (confirmation, sans chantier, sans critère).
 **Contrôle** : `tests-qua-174`
 **Tests** : `.githooks/state.test.mjs`, `.githooks/close.test.mjs`
 **Origine** : cycle-de-vie-des-fiches — « Le lancement par sondage enregistre l'empreinte des critères acceptés par l'humain ; l'empreinte entre dans la preuve de clôture ; un critère modifié ensuite redemande un geste humain avant la clôture »
@@ -2180,3 +2180,73 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `outils/parite-des-outils.test.mjs`
 **Origine** : outiller-tous-les-outils — « Sous tout outil, la consigne de lancer les commandes longues par `.githooks/wait-command.mjs` et de ne jamais attendre par une boucle `while pgrep` est lue au démarrage »
 **Raison** : Seule la consigne du sous-agent de Claude Code interdisait la boucle ; les autres outils n'en lisaient rien.
+
+## QUA-224 — Sans code, couverture et e2e sont pas encore applicables, jamais réputés prouvés
+**Règle** : Livré à tout projet. Une couche sans fichier source présent n'a pas encore de garantie de couverture applicable ; si toutes les couches sont vides, l'e2e n'est pas encore applicable non plus. `drwil guarantees` ne câble aucun contrôle ni n'écrit de fiche bloquante pour ces garanties ; `drwil verify` les explique sans FAIL ni demande d'attestation. Même déjà déclarés et cités, leurs contrôles ne sont pas exécutés et ne sont jamais présentés comme une preuve passée. Les autres garanties et les exclusions sans justification restent exigées.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees-table.ts` (`sourceFiles`), `packages/drwil/src/guarantees-verify.ts` (`pendingGuarantees`, `coverageFailures`).
+**Preuve** : projet installé sans pile puis avec manifeste de pile seul ; absence de fiches couverture/e2e, information texte et JSON ; contrôles déjà cités non lancés, autres garanties toujours bloquantes.
+**Contrôle** : `tests-qua-224`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « Sur un projet sans code, une garantie couverture ou e2e dont la couche n'a aucun code est “pas encore applicable” : elle ne met pas verify en FAIL, et le dit en clair »
+**Raison** : Un chantier de versionnement ne pouvait pas se clore avant même le premier fichier du produit.
+
+## QUA-225 — Le premier fichier source réactive immédiatement les garanties de sa couche
+**Règle** : Livré à tout projet. L'applicabilité est recalculée à chaque commande, sans option de dérogation : dès le premier fichier source, même non encore indexé, la couverture de sa couche et l'e2e redeviennent obligatoires ; une pile inconnue avec du code reste bloquante. La recherche descend sans limite de profondeur dans les couches déclarées (sinon détectées, sinon la racine). Les extensions de source sont définies par `sourceFiles` ; manifestes, configurations `*.config.*`, déclarations TypeScript `*.d.ts`, fichiers cachés, documentation, gabarits (`templates`, `gabarits`), dépendances, sorties de compilation et rapports de couverture ne comptent pas. Un lien symbolique hors de ces dossiers compte conservativement comme du code, sans être suivi. Une erreur de lecture n'est pas assimilée à une couche vide.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees-table.ts` (`sourceFiles`, `layerHasCode`).
+**Preuve** : projet à deux couches vides, ajout profond d'un premier fichier Rust avant tout commit ; seule sa couche est réactivée, l'e2e bloque ; les contrôles déjà déclarés échouent à nouveau après le premier code.
+**Contrôle** : `tests-qua-225`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « Dès que la couche reçoit du code, la garantie redevient applicable et son échec redevient bloquant »
+**Raison** : L'absence de code n'est pas une exclusion permanente et ne doit pas masquer une nouvelle couche.
+
+## QUA-226 — Le code créé après la première installation ne devient pas une dette héritée
+**Règle** : Livré à tout projet. La première installation mémorise les chemins du code présent dans `guaranteeBaseline`. Une réinstallation garde cette photo. Pour chaque couche d'une pile connue, seul le code de sa pile présent sur cette photo la classe « existante » ; le code ajouté ensuite reste neuf, couvert à 100 %, même si `drwil guarantees` n'a jamais été lancé auparavant. Sur une ancienne installation sans photo, le classement conservateur à partir du code courant reste inchangé.
+**Périmètre** : `drwil init`, `drwil guarantees`.
+**Source de vérité** : `packages/drwil/src/config-write.ts`, `packages/drwil/src/guarantees-layers.ts`.
+**Preuve** : init sans code, premier fichier puis réinstallation et guarantees : câblage à 100 %, sans mesure de dette ni diff ; les tests du cliquet restent vrais pour le code présent avant init.
+**Contrôle** : `tests-qua-226`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « le classement “nouveau” ou “existant” dépend de la présence de code au moment où drwil guarantees est lancé, alors que la recette d'un projet neuf impose d'écrire le code d'abord »
+**Raison** : La recette du projet neuf déclenchait une mesure de dette héritée dès son premier test.
+
+## QUA-227 — Déclarer une garantie ne la prouve pas, guarantees et verify partagent le même juge
+**Règle** : Livré à tout projet. Sur une couche applicable, `drwil guarantees` et `drwil verify` jugent par la même fonction la déclaration et la citation des contrôles de couverture et d'e2e. Un contrôle câblé mais cité par aucun contrat laisse la garantie non tenue et écrit une fiche bloquante. Le résumé de `guarantees` distingue le câblage de la preuve d'exécution, qui reste le verdict de `verify` ; il ne promet pas que les garanties sont tenues sur la seule déclaration.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees-verify.ts` (`coverageFailures`), lecteur canonique des contrats livré par le kit.
+**Preuve** : contrôle de couverture câblé puis cité, e2e déclaré puis cité : les deux commandes donnent le même diagnostic, sans faux résumé de réussite.
+**Contrôle** : `tests-qua-227`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « drwil guarantees affiche “✓ couverture” alors que drwil verify déclare la garantie non tenue »
+**Raison** : Deux diagnostics divergents faisaient croire le chantier de garantie fini.
+
+## QUA-228 — La clôture complète automatiquement le renvoi de preuve et l'index
+**Règle** : Livré à tout projet. Après validation de l'évidence et avant suppression de la fiche, la clôture écrit sa preuve et son renvoi dans le journal (`dirs.projects`), sans demander de citation manuelle préalable. L'entrée est reconnue par la preuve déjà citée, le titre de la fiche, son nom ou sa branche ; une ambiguïté ou une erreur de lecture/écriture refuse la suppression. Sans entrée identifiable, seule une entrée minimale nommée par le chantier et citant sa preuve est ajoutée : aucune décision métier n'est inventée. Une relance ne double ni entrée ni renvoi. La ligne propre à cette fiche est retirée de l'index (`dirs.index`), continuations comprises ; les lignes communes à plusieurs fiches gardent la prudence de QUA-074. `--check` prépare et signale sans écrire.
+**Périmètre** : `.githooks/close.mjs`, `.githooks/close-mechanics.mjs`, `.githooks/close-journal.mjs`, gabarit et installation.
+**Source de vérité** : `.githooks/close-journal.mjs` et `.githooks/close-mechanics.mjs`.
+**Preuve** : clôture de bout en bout avec résumé de journal sans citation, plusieurs entrées, index multilignes, relance, dossiers réglés et langue anglaise ; refus avant suppression si journal ambigu ou inaccessible ; preuve refusée sans modification du journal.
+**Contrôle** : `tests-qua-228`
+**Tests** : `.githooks/close.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « La clôture écrit elle-même la ligne “Preuve de clôture” du journal et corrige la ligne de l'index qui cite la fiche supprimée »
+**Raison** : Le renvoi écrit à la main échouait avant que la clôture ait pu créer la preuve ; la mécanique doit finir sans retouche.
+
+## QUA-229 — La référence à la preuve future du seul chantier actif n'est pas une référence morte
+**Règle** : Livré à tout projet. Le contrôle des références utilisé par `drwil verify` tolère un chemin de preuve absent uniquement s'il est exactement celui du chantier actif existant, lu dans un état valide BUILD, EVIDENCE, VERIFY ou CLOSING, selon `dirs.proofs`. Hors chantier actif, après suppression de la fiche, avec un état absent ou illisible, et pour toute autre preuve absente, la référence reste bloquante. Une preuve présente mais ignorée par Git reste jugée par la règle ordinaire ; aucune preuve déjà close n'est dispensée de vérification.
+**Périmètre** : `.githooks/check-docs.mjs`, gabarit et installation.
+**Source de vérité** : `.githooks/check-docs.mjs`, chemin partagé de `.githooks/closure-proof.mjs`.
+**Preuve** : contrôle réel sur projets git : quatre activités actives, dossier de preuves réglé, état absent/invalide/SCOPING, fiche disparue et ancienne preuve absente.
+**Contrôle** : `tests-qua-229`
+**Tests** : `.githooks/check-docs.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « Avant la clôture, la citation de la preuve du chantier actif ne fait plus échouer verify »
+**Raison** : Le fichier est créé par la clôture après verify ; exiger sa présence avant rendait le cycle impossible.
+
+## QUA-230 — Les renvois hors périmètre sont signalés avant la clôture
+**Règle** : Livré à tout projet. Dès BUILD, `node .githooks/close.mjs --check` nomme les fichiers et lignes citant la fiche à supprimer, y compris catalogue, dashboard, intentions, index et journal. Pour les fichiers dont la correction serait hors du bloc scope commité dans HEAD, il propose les chemins à ajouter, à motiver et commiter séparément avant la correction. Les motifs, miroirs et exclusions de la barrière de périmètre sont respectés ; les fichiers déjà couverts ou exemptés ne demandent aucune extension. La ligne d'index retirée automatiquement reste régie par QUA-228. Le signal n'écrit ni renvoi ni périmètre ; il complète les corrections proposées par QUA-076.
+**Périmètre** : `.githooks/close-checks.mjs`, `.githooks/close.mjs`, `.githooks/close-texts.mjs`, gabarit et installation.
+**Source de vérité** : `.githooks/close-checks.mjs` (`referenceScope`), grammaire et exclusions de `.githooks/scope.mjs` et `.githooks/scope-gate.mjs`.
+**Preuve** : dépôts git réels, renvois Markdown et HTML hors scope, plusieurs citations du même fichier, fichiers couverts ou exemptés, extension non commitée puis commitée, langue anglaise, miroirs et exclusions configurés ; aucune écriture par `--check`.
+**Contrôle** : `tests-qua-230`
+**Tests** : `.githooks/close.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « En BUILD, close --check liste les renvois à la fiche qui bloqueraient le commit de clôture et propose l'extension du bloc scope »
+**Raison** : Découvrir le hors-périmètre après suppression de la fiche impose une reprise tardive ; l'extension se décide pendant BUILD.

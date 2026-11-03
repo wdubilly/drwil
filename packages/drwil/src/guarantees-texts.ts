@@ -2,6 +2,8 @@
 export const TEXTS = {
   fr: {
     layer: "Couche `{0}` ({1}) :",
+    layerPending: "Couverture de la couche `{0}` : pas encore applicable — aucun code",
+    e2ePending: "E2E : pas encore applicable — aucune couche ne contient de code",
     unknownStack: "pile non détectée : outil de couverture inconnu",
     outsideTable: "pile `{0}` hors de la table des outils de couverture",
     kept: "contrôle `{0}` déjà déclaré : gardé tel quel, jamais remplacé",
@@ -16,7 +18,7 @@ export const TEXTS = {
     noDiff: "couverture du diff : outil absent ou inconnu pour {0} (`{1}`)",
     exclusion: "exclusion `{0}` refusée : sans raison déclarée",
     cite: "à citer dans le contrat de couverture du projet (`catalog:QUA-004`), sinon `drwil verify` ne le rejoue pas",
-    e2eOk: "E2E : contrôle `e2e` déclaré",
+    e2eOk: "E2E : contrôle `e2e` déclaré et cité (exécution jugée par `drwil verify`)",
     e2eMissing: "E2E : aucun contrôle `e2e` déclaré pour rejouer le test des chemins critiques",
     forgeOk: "Versionnement : dépôt, forge {0}, CI et protection de `{1}` en place",
     forgeGap: "Versionnement : {0}",
@@ -27,7 +29,7 @@ export const TEXTS = {
     skeleton: "Présentation : texte du squelette dans {0}",
     brief: "Fiche écrite : {0}",
     dryRun: "--dry-run : rien n'est écrit.",
-    held: "Toutes les garanties sont tenues.",
+    held: "Garanties applicables câblées et citées ; leur exécution reste à prouver par `drwil verify`.",
     notHeld:
       "{0} garantie(s) non tenue(s) : `drwil verify` est en FAIL tant qu'elles le restent ; `/drwil-start` ne propose que leurs fiches.",
     verifyLayer: "garantie de couverture non tenue sur la couche `{0}` : contrôle `{1}` {2} (`npx drwil guarantees`)",
@@ -40,6 +42,8 @@ export const TEXTS = {
   },
   en: {
     layer: "Layer `{0}` ({1}):",
+    layerPending: "Coverage of layer `{0}`: not yet applicable — no code",
+    e2ePending: "E2E: not yet applicable — no layer contains code",
     unknownStack: "stack not detected: coverage tool unknown",
     outsideTable: "stack `{0}` outside the coverage tools table",
     kept: "check `{0}` already declared: kept as it is, never replaced",
@@ -54,7 +58,7 @@ export const TEXTS = {
     noDiff: "diff coverage: tool missing or unknown for {0} (`{1}`)",
     exclusion: "exclusion `{0}` refused: no declared reason",
     cite: "to cite in the project's coverage contract (`catalog:QUA-004`), otherwise `drwil verify` does not replay it",
-    e2eOk: "E2E: `e2e` check declared",
+    e2eOk: "E2E: `e2e` check declared and cited (execution judged by `drwil verify`)",
     e2eMissing: "E2E: no `e2e` check declared to replay the test of the critical paths",
     forgeOk: "Versioning: repository, forge {0}, CI and protection of `{1}` in place",
     forgeGap: "Versioning: {0}",
@@ -65,7 +69,7 @@ export const TEXTS = {
     skeleton: "Presentation: skeleton text in {0}",
     brief: "Brief written: {0}",
     dryRun: "--dry-run: nothing written.",
-    held: "Every guarantee is held.",
+    held: "Applicable guarantees wired and cited; their execution still needs proving with `drwil verify`.",
     notHeld: "{0} guarantee(s) not held: `drwil verify` is FAIL as long as they stay so; `/drwil-start` offers only their briefs.",
     verifyLayer: "coverage guarantee not held on layer `{0}`: check `{1}` {2} (`npx drwil guarantees`)",
     undeclared: "not declared",

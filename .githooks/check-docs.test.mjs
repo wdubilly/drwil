@@ -37,6 +37,68 @@ function verifier(fichiers, { depot = true } = {}) {
 }
 
 const reprise = "\n## Reprise\n\nrien\n";
+
+test("QUA-229 : seule la preuve future du chantier actif est tolérée, jamais une ancienne preuve disparue", () => {
+  const fichiers = {
+    ".drwil/ia-first.json": JSON.stringify({ dirs: { projects: "docs/projects", proofs: "docs/proofs" } }),
+    ".drwil/state.json": JSON.stringify({
+      version: 1,
+      activity: "BUILD",
+      active_brief: "docs/projects/actif.md",
+      active_request: null,
+      since: null,
+    }),
+    "docs/projects/actif.md": `# Actif\n\n**Statut** : en cours le 2026-11-03.\n${reprise}`,
+    "docs/projects/journal.md": "# Journal\n\n`docs/proofs/actif.md`.\n",
+  };
+  for (const activity of ["BUILD", "EVIDENCE", "VERIFY", "CLOSING"]) {
+    const r = verifier({
+      ...fichiers,
+      ".drwil/state.json": JSON.stringify({
+        version: 1,
+        activity,
+        active_brief: "docs/projects/actif.md",
+        active_request: null,
+        since: null,
+      }),
+    });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+  }
+  for (const state of [
+    null,
+    "{",
+    JSON.stringify({ version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null }),
+  ]) {
+    const cas = { ...fichiers };
+    if (state === null) delete cas[".drwil/state.json"];
+    else cas[".drwil/state.json"] = state;
+    const r = verifier(cas);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /chemin cité introuvable `docs\/proofs\/actif\.md`/);
+  }
+  const ancien = verifier({ ...fichiers, "docs/projects/journal.md": "`docs/proofs/actif.md`\n`docs/proofs/ancien.md`\n" });
+  assert.equal(ancien.status, 1);
+  assert.match(ancien.stdout, /introuvable `docs\/proofs\/ancien\.md`/);
+  const sansFiche = { ...fichiers };
+  delete sansFiche["docs/projects/actif.md"];
+  assert.equal(verifier(sansFiche).status, 1);
+  sansFiche[".drwil/state.json"] = JSON.stringify({
+    version: 1,
+    activity: "CLOSING",
+    active_brief: "docs/projects/actif.md",
+    active_request: null,
+    since: null,
+  });
+  assert.equal(verifier(sansFiche).status, 1, "une clôture sans sa fiche ne dispense pas une preuve disparue");
+  const ignoree = verifier({
+    ...fichiers,
+    ".drwil/ia-first.json": JSON.stringify({ newRequirements: "blocking", dirs: { proofs: "docs/proofs" } }),
+    ".gitignore": "docs/proofs/actif.md\n",
+    "docs/proofs/actif.md": "# Preuve\n",
+  });
+  assert.equal(ignoree.status, 1);
+  assert.match(ignoree.stdout, /fichier ignoré par Git/);
+});
 /** Un projet où chaque règle de check-docs est enfreinte au moins une fois. */
 function projetFautif(cfg) {
   return {

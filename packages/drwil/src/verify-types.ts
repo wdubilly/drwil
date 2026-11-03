@@ -57,6 +57,8 @@ export interface Verdict {
   contracts: ContractResult[];
   /** Errors not attached to a single contract (missing engine, empty registry, duplicate…). */
   errors: string[];
+  /** Garanties pas encore applicables, signalées sans changer le verdict (QUA-224). */
+  notices?: string[];
   /** Engine checks no contract cites: not run by verify, reported for information. */
   unattached: string[];
   /** Acceptance criteria of the active brief, each judged against its proof; absent without an active brief. */

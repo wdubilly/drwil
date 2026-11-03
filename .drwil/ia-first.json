@@ -2924,6 +2924,69 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-224",
+      "name": "tests de QUA-224, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-224 \" packages/drwil/test/guarantees.test.mjs",
+      "ciJob": "checks",
+      "paths": ["packages/drwil/**", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-225",
+      "name": "tests de QUA-225, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-225 \" packages/drwil/test/guarantees.test.mjs",
+      "ciJob": "checks",
+      "paths": ["packages/drwil/**", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-226",
+      "name": "tests de QUA-226, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-226 \" packages/drwil/test/guarantees.test.mjs",
+      "ciJob": "checks",
+      "paths": ["packages/drwil/**", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-227",
+      "name": "tests de QUA-227, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-227 \" packages/drwil/test/guarantees.test.mjs",
+      "ciJob": "checks",
+      "paths": ["packages/drwil/**", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-228",
+      "name": "tests de QUA-228, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-228 \" .githooks/close.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-229",
+      "name": "tests de QUA-229, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-229 \" .githooks/check-docs.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-230",
+      "name": "tests de QUA-230, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-230 \" .githooks/close.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
       "id": "couverture-diff",
       "name": "code modifié couvert à 100 % : lignes et branches du diff de la branche (diffCoverage)",
       "run": "node .githooks/check-diff-coverage.mjs",

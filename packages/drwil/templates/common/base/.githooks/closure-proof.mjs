@@ -3,7 +3,7 @@
 // as a versioned document by the closing (close.mjs). A module of its own, so that neither file goes
 // past the cap (QUA-001), and so that a project can read a proof without going through the closing.
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
 import { acceptanceCriteria, config } from "./briefs.mjs";
 import { latestEvidence } from "./state.mjs";
@@ -17,7 +17,6 @@ const TEXTS = {
     proofOtherCommit: (n) => `l'évidence ${n} ne date pas de HEAD : la renouveler (\`npx drwil verify --evidence\`)`,
     proofNotPass: (s) => `le verdict de la dernière évidence est ${s.toUpperCase()} : rien à prouver tant qu'il n'est pas PASS`,
     proofUnwritable: (f, m) => `${f} : ${m}`,
-    proofNotCited: (j, f) => `${j} : l'entrée de journal du chantier ne cite pas \`${f}\` — la preuve de clôture se cite depuis le journal`,
     proofChanged: (a, b) =>
       `les critères de la fiche ne sont plus ceux que l'humain a acceptés au lancement (empreinte ${a}, aujourd'hui ${b}) : il les accepte de nouveau, dans un terminal (\`node .githooks/state.mjs accept\`)`,
     proofAccepted: (f, d) => `**Critères acceptés** : empreinte \`${f}\`, acceptés par l'humain au lancement le ${d}`,
@@ -38,7 +37,6 @@ const TEXTS = {
     proofOtherCommit: (n) => `evidence ${n} is not from HEAD: renew it (\`npx drwil verify --evidence\`)`,
     proofNotPass: (s) => `the latest evidence's verdict is ${s.toUpperCase()}: nothing to prove until it is PASS`,
     proofUnwritable: (f, m) => `${f}: ${m}`,
-    proofNotCited: (j, f) => `${j}: the workstream's journal entry does not cite \`${f}\` — the closing proof is cited from the journal`,
     proofChanged: (a, b) =>
       `the brief's criteria are no longer those the human accepted at the start (fingerprint ${a}, today ${b}): the human accepts them again, in a terminal (\`node .githooks/state.mjs accept\`)`,
     proofAccepted: (f, d) => `**Criteria accepted**: fingerprint \`${f}\`, accepted by the human at the start on ${d}`,
@@ -62,8 +60,6 @@ export const proofText = (root, key, ...args) => texts(root)[key](...args);
 const PROOFS_DIR = "docs/preuves";
 
 const proofsDir = (root) => config(root).dirs?.proofs ?? PROOFS_DIR;
-
-const journalPath = (root) => `${config(root).dirs?.projects ?? "docs/projects"}/journal.md`;
 
 /** Path of the closing proof of `brief`, relative to the root. */
 export const proofPath = (root, brief) => `${proofsDir(root)}/${posix.basename(brief, ".md")}.md`;
@@ -128,12 +124,4 @@ export function writeProof(root, proof) {
   } catch (e) {
     return texts(root).proofUnwritable(proof.file, e.message);
   }
-}
-
-/** The journal entry cites the closing proof, or says it does not (QUA-084): the proof is reachable from the journal. */
-export function proofNotCited(root, brief) {
-  const file = proofPath(root, brief);
-  const journal = journalPath(root);
-  if (!existsSync(join(root, journal))) return [];
-  return readFileSync(join(root, journal), "utf8").includes(file) ? [] : [texts(root).proofNotCited(journal, file)];
 }

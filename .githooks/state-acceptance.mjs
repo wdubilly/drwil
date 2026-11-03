@@ -14,6 +14,8 @@ const HEADING = /^##\s*(\d+\.\s*)?(Critères d'acceptation|Acceptance criteria)\
 // What follows a criterion's text: its proof (a contract ID, or the contract to create), written as the work
 // goes on without the criterion changing.
 const PROOF_TAIL = /\s+[—–]\s+(?:contrat à créer|contract to create|`[A-Za-z][\w.:-]*`).*$/;
+// QUA-174 : la classification ne change pas le sens ; une marque citée en code reste du texte.
+const HUMAN_MARK = /(`+).*?\1|\[(?:humain|human)\]/gi;
 
 const TEXTS = {
   fr: {
@@ -54,7 +56,13 @@ export function criteriaFingerprint(text) {
     open = Boolean(item) || (open && /^\s+\S/.test(line));
   }
   if (!items.length) return null;
-  const normal = items.map((i) => i.replace(PROOF_TAIL, "").replace(/\s+/g, " ").trim());
+  const normal = items.map((i) =>
+    i
+      .replace(PROOF_TAIL, "")
+      .replace(HUMAN_MARK, (m) => (m.startsWith("`") ? m : ""))
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
   return `sha256:${createHash("sha256").update(JSON.stringify(normal)).digest("hex").slice(0, 16)}`;
 }
 

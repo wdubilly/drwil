@@ -2,28 +2,27 @@
 // Closing of a workstream in one gesture (QUA-048): `node .githooks/close.mjs` (in CLOSING) deletes
 // the brief, removes its index line and records the consumption; `--check` (any activity) only
 // reports, before the commit, what would make the closing fail. It never stages, commits, pushes nor
-// merges anything, and it never writes the state: the journal entry and the limits stay the agent's.
+// merges anything, and it never writes the state: journal decisions and limits stay the agent's.
 // The recognition and deletion of the merged local branches live in close-branches.mjs (QUA-048,
 // QUA-058, QUA-059), re-exported here.
-import { existsSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { undeclaredHooks } from "./base-checks.mjs";
 import { config } from "./briefs.mjs";
-import { bareNames, criteriaToCreate, deadReferences, git, journalTwice } from "./close-checks.mjs";
+import { bareNames, criteriaToCreate, deadReferences, referenceScope } from "./close-checks.mjs";
+import { closingMechanics } from "./close-mechanics.mjs";
+import { journalPlan } from "./close-journal.mjs";
 import { texts } from "./close-texts.mjs";
-import { main as consumption } from "./consumption.mjs";
 import {
   applyProposals,
   checkboxProblems,
   codeCitations,
   deadReferences as deadCitations,
-  indexItem,
   intentLeft,
   proposals,
   twinIntents,
 } from "./doc-coherence.mjs";
-import { closureProof, proofNotCited, proofText, writeProof } from "./closure-proof.mjs";
 import { lateLines } from "./worktree.mjs";
 import { readState, stateRoot, verifyEvidence } from "./state.mjs";
 
@@ -39,36 +38,6 @@ export {
   pruneMergedBranches,
 } from "./close-branches.mjs";
 
-const USAGE = [".drwil", "usage.jsonl"];
-const recorded = (text, name) =>
-  text.split("\n").some((l) => {
-    try {
-      return JSON.parse(l).workstream === name;
-    } catch {
-      return false;
-    }
-  });
-
-/**
- * Records the consumption; for a reopened workstream (QUA-118), its line is replaced by the new total
- * (the logs are read again in full), never doubled, and kept as it was when nothing is measured.
- */
-function recordConsumption(root, name, { reopened, env, logs, log }) {
-  const file = join(root, ...USAGE);
-  const before = reopened && existsSync(file) ? readFileSync(file, "utf8") : null;
-  const replace = before !== null && recorded(before, name);
-  if (replace)
-    writeFileSync(
-      file,
-      before
-        .split("\n")
-        .filter((l) => !recorded(l, name))
-        .join("\n"),
-    );
-  consumption(["--record", name, ...(logs ? ["--logs", logs] : [])], { env, root, log, err: log });
-  if (replace && !recorded(readFileSync(file, "utf8"), name)) writeFileSync(file, before);
-}
-
 /**
  * What would make the closing of `brief` fail and what it only warns about; `text`: the brief, read before it
  * is deleted. `problems`: `{ message }`, with the line rewrite (`file`, `line`, and `edit` or `fixTo`) when
@@ -78,12 +47,13 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
   const cfg = config(root);
   const lang = cfg.lang === "en" ? "en" : "fr";
   const T = texts(root);
+  const journal = journalPlan(root, brief, text);
   const plain = [
+    ...(journal.problem ? [journal.problem] : []),
     ...criteriaToCreate(root, brief, text),
     ...undeclaredHooks(root, text).lines,
-    ...proofNotCited(root, brief),
-    ...journalTwice(root, brief),
     ...deadReferences(root, brief),
+    ...referenceScope(root, brief),
     ...bareNames(root),
   ].map((message) => ({ message }));
   const reported = new Set(plain.map((p) => /^(\S+:\d+) /.exec(p.message)?.[1]));
@@ -139,24 +109,8 @@ export function close(root, { brief, check = false, fix = false, env = process.e
   if (!check) {
     const hooks = undeclaredHooks(root, text); // QUA-137: refused before anything is written
     if (hooks.files.length) return { code: 1, message: [T.signals, ...hooks.lines.map((s) => `  ⚠ ${s}`)].join("\n") };
-    // The proof first: a brief is never deleted while what it had proven would stay unwritten (QUA-084).
-    const proof = closureProof(root, path, text, { head: git(root, "rev-parse", "HEAD") });
-    const problem = proof.problem ?? writeProof(root, proof);
-    if (problem) return { code: 1, message: proofText(root, "proofRefused", problem) };
-    done.push(proofText(root, "proofWritten", proof.file));
-    if (existsSync(join(root, path))) {
-      unlinkSync(join(root, path));
-      done.push(T.deleted(path));
-    }
-    const index = config(root).dirs?.index ?? "docs/projects/pending.md";
-    const lines = existsSync(join(root, index)) ? readFileSync(join(root, index), "utf8").split("\n") : [];
-    const item = indexItem(lines, path);
-    if (item) {
-      lines.splice(item[0], item[1] - item[0]);
-      writeFileSync(join(root, index), lines.join("\n"));
-      done.push(T.indexLine(index));
-    } else done.push(T.noIndexLine(index, path));
-    recordConsumption(root, posix.basename(path, ".md"), { reopened: Boolean(state.reopened), env, logs, log: (m) => done.push(m) });
+    const refused = closingMechanics(root, path, text, { state, env, logs, done });
+    if (refused) return refused;
   }
   let report = closingReport(root, path, text);
   let proposed = proposals(root, report.problems);

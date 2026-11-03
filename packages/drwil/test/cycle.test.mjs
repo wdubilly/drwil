@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { rulesLine } from "../dist/rules.js";
 import { labelIds } from "../dist/verdict.js";
+import { judgeProofs, parseProof } from "../dist/closure.js";
 import {
   attest,
   doctor,
@@ -699,6 +700,26 @@ const preuve = (dir, chantier, ...lignes) => {
       `| Critère | Contrat | Contrôle | Empreinte des fichiers couverts |\n|---|---|---|---|\n${lignes.join("\n")}\n`,
   );
 };
+
+test("QUA-085 : une citation de marque humaine dans la preuve reste automatique, sans masquer la disparition du contrôle", () => {
+  const contrat = { id: "QUA-001", status: "MANUAL", manual: "relecture", checks: [] };
+  for (const marque of ["[humain]", "[human]", "[HUMAIN]", "[HUMAN]"]) {
+    for (const delimiteur of ["`", "``"]) {
+      const texte = `La marque ${delimiteur}${marque}${delimiteur} reste du texte`;
+      const lire = (fin = "") =>
+        parseProof("docs/preuves/exemple.md", `| Critère | Contrat |\n|---|---|\n| ${texte}${fin} | \`QUA-001\` |`);
+      const automatique = lire();
+      assert.deepEqual(automatique.criteria, [{ text: texte, link: "QUA-001", human: false }]);
+      assert.deepEqual(
+        judgeProofs([automatique], [contrat]).map((c) => c.status),
+        ["not-durable"],
+      );
+      const humain = lire(` ${marque}`);
+      assert.deepEqual(humain.criteria, [{ text: texte, link: "QUA-001", human: true }]);
+      assert.deepEqual(judgeProofs([humain], [contrat]), []);
+    }
+  }
+});
 
 test("QUA-085 : après la clôture, les critères du fichier de preuve sont rejoués ; une preuve disparue fait échouer verify en nommant le critère", async () => {
   const dir = await projetPreuve();

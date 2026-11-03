@@ -1,7 +1,7 @@
 // Table of the coverage tools (QUA-087): one row per stack, never an implementation per stack —
 // adding a stack is adding a row. A stack without a row goes through the blocking brief (QUA-088).
 import { spawnSync } from "node:child_process";
-import { type Dirent, existsSync, readdirSync, readFileSync } from "node:fs";
+import { type Dirent, existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { detectStack } from "./stack.js";
 
@@ -43,7 +43,8 @@ export interface GuaranteeConfig {
   layers?: unknown;
   ci?: unknown;
   checks?: unknown;
-  dirs?: { index?: string };
+  dirs?: { index?: string; contracts?: string };
+  guaranteeBaseline?: string[];
   guarantees?: { enforced?: boolean; layers?: Record<string, string>; exclusions?: unknown; protection?: unknown };
   [key: string]: unknown;
 }
@@ -86,7 +87,43 @@ export function skeletonFiles(root: string, files: string[] = PRESENTATION_FILES
   });
 }
 
-const SKIPPED = new Set(["node_modules", ".git", "dist", "build", "target", "vendor", "venv", ".venv", "coverage", ".drwil", "docs"]);
+const SKIPPED = new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  "build",
+  "target",
+  "vendor",
+  "venv",
+  ".venv",
+  "coverage",
+  ".drwil",
+  "docs",
+  "templates",
+  "gabarits",
+]);
+
+const SOURCE =
+  /\.(?:[cm]?[jt]sx?|vue|svelte|py|go|java|kt|kts|rs|php|rb|cs|fsx?|vb|dart|c|h|cpp|hpp|cc|swift|scala|sh|bash|zsh|ps1|sql|html|css|scss|exs?|erl|hrl|hs|lua|r|pl|pm|clj[sc]?|ml|mli|elm|sol|groovy)$/i;
+
+/** QUA-224, QUA-225 : les fichiers présents comptent avant même leur premier commit, sans borne de profondeur. */
+export function sourceFiles(root: string, prefix = ""): string[] {
+  try {
+    if (lstatSync(join(root, prefix)).isSymbolicLink()) return [prefix || "."];
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw e;
+  }
+  return readdirSync(join(root, prefix), { withFileTypes: true }).flatMap((e) => {
+    const path = prefix ? `${prefix}/${e.name}` : e.name;
+    if (SKIPPED.has(e.name) || e.name.startsWith(".")) return [];
+    if (e.isSymbolicLink()) return [path];
+    if (e.isDirectory()) return sourceFiles(root, path);
+    return SOURCE.test(e.name) && !/\.config\.|\.d\.[cm]?ts$/.test(e.name) ? [path] : [];
+  });
+}
+
+export const layerHasCode = (root: string, layer: string): boolean => sourceFiles(join(root, layer)).length > 0;
 
 /** Does the folder hold a source file of the tool's stack (bounded walk)? */
 export function hasSources(dir: string, exts: string[], depth = 6): boolean {

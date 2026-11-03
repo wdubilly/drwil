@@ -149,6 +149,106 @@ test("QUA-048 : hors CLOSING, la mécanique est refusée ; --check signale sans 
   assert.equal(close(racine, { brief: FICHE, check: true }).code, 0, "une fiche donnée se vérifie hors chantier");
 });
 
+test("QUA-048 : caractérisation avant extraction — --check conserve tous les fichiers et un refus de preuve ne touche pas l'index ni la consommation", () => {
+  const racine = depot({ evidence: false });
+  ecrire(racine, { ".drwil/usage.jsonl": '{"workstream":"ancien"}\n' });
+  const chemins = [FICHE, "docs/projects/pending.md", ".drwil/usage.jsonl", ".drwil/state.json"];
+  const avant = chemins.map((f) => readFileSync(join(racine, f), "utf8"));
+  assert.equal(close(racine, { check: true }).code, 0);
+  assert.deepEqual(
+    chemins.map((f) => readFileSync(join(racine, f), "utf8")),
+    avant,
+  );
+  assert.equal(close(racine, { logs: journaux() }).code, 1);
+  assert.deepEqual(
+    chemins.map((f) => readFileSync(join(racine, f), "utf8")),
+    avant,
+  );
+  assert.ok(!existsSync(join(racine, "docs/preuves/exemple.md")));
+  assert.equal(git(racine, "diff", "--cached", "--name-only"), "");
+});
+
+test("QUA-228 : la clôture complète cite sa preuve dans la bonne entrée, retire l'index et reste idempotente sans retouche", () => {
+  const racine = depot();
+  const avant =
+    "# Journal\n\n## Ancien\n\nDécision ancienne.\n\n## 2026-11-03 — Exemple\n\nDécision conservée.\n\n## Suivant\n\nÀ venir.\n";
+  ecrire(racine, { "docs/projects/journal.md": avant });
+  const index = readFileSync(join(racine, "docs/projects/pending.md"), "utf8");
+  assert.equal(close(racine, { check: true }).code, 0);
+  assert.equal(readFileSync(join(racine, "docs/projects/journal.md"), "utf8"), avant);
+  assert.equal(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), index);
+  const r = close(racine, { logs: journaux() });
+  assert.equal(r.code, 0, r.message);
+  const journal = readFileSync(join(racine, "docs/projects/journal.md"), "utf8");
+  assert.match(journal, /Décision conservée\.\n\n- \*\*Preuve de clôture\*\* : `docs\/preuves\/exemple\.md`\.\n\n## Suivant/);
+  assert.ok(journal.startsWith("# Journal\n\n## Ancien\n\nDécision ancienne.\n"));
+  assert.ok(!existsSync(join(racine, FICHE)));
+  assert.doesNotMatch(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), /exemple\.md/);
+  assert.equal(close(racine, { logs: journaux() }).code, 0);
+  assert.equal(readFileSync(join(racine, "docs/projects/journal.md"), "utf8"), journal);
+});
+
+test("QUA-228 : sans entrée identifiable la clôture crée seulement le renvoi, en anglais et dans les dossiers réglés", () => {
+  const racine = depot({ lang: "en" });
+  rmSync(join(racine, "docs/projects/pending.md"));
+  ecrire(racine, {
+    ".drwil/ia-first.json": JSON.stringify({
+      lang: "en",
+      dirs: { projects: "docs/projects", proofs: "docs/proofs", index: "docs/idx.md" },
+    }),
+    "docs/idx.md": INDEX,
+    "docs/projects/journal.md": "# Journal\n\n## Old\n\nUnchanged.\n",
+  });
+  const r = close(racine, { logs: journaux() });
+  assert.equal(r.code, 0, r.message);
+  assert.match(
+    readFileSync(join(racine, "docs/projects/journal.md"), "utf8"),
+    /## exemple\n\n- \*\*Closing proof\*\*: `docs\/proofs\/exemple\.md`\./,
+  );
+  assert.doesNotMatch(readFileSync(join(racine, "docs/idx.md"), "utf8"), /exemple/);
+  assert.ok(existsSync(join(racine, "docs/proofs/exemple.md")));
+  const sansJournal = depot();
+  assert.equal(close(sansJournal, { logs: journaux() }).code, 0);
+  assert.match(readFileSync(join(sansJournal, "docs/projects/journal.md"), "utf8"), /## exemple\n\n- \*\*Preuve de clôture/);
+});
+
+test("QUA-228 : la branche nommée identifie l'entrée ; un journal ambigu ou illisible refuse avant suppression", () => {
+  const branche = depot();
+  ecrire(branche, { "docs/projects/journal.md": "# J\n\n## Autre titre\n\nBranche `workstream/exemple`.\n" });
+  assert.equal(close(branche, { logs: journaux() }).code, 0);
+  assert.equal(readFileSync(join(branche, "docs/projects/journal.md"), "utf8").match(/^## /gm).length, 1);
+  for (const lang of ["fr", "en"]) {
+    const racine = depot({ lang });
+    ecrire(racine, { "docs/projects/journal.md": "# J\n\n## exemple\n\nUn.\n\n## Exemple\n\nDeux.\n" });
+    const r = close(racine, { logs: journaux() });
+    assert.equal(r.code, 1);
+    assert.match(r.message, /journal/);
+    assert.ok(existsSync(join(racine, FICHE)));
+    assert.ok(!existsSync(join(racine, "docs/preuves/exemple.md")));
+  }
+  const illisible = depot();
+  mkdirSync(join(illisible, "docs/projects/journal.md"));
+  assert.equal(close(illisible, { check: true }).code, 1);
+  assert.equal(close(illisible).code, 1);
+  assert.ok(existsSync(join(illisible, FICHE)));
+});
+
+test("QUA-228 : une preuve refusée laisse le journal intact, et un journal non inscriptible garde la fiche", () => {
+  const racine = depot({ evidence: false });
+  const journal = "# J\n\n## exemple\n\nDécision.\n";
+  ecrire(racine, { "docs/projects/journal.md": journal });
+  assert.equal(close(racine, { logs: journaux() }).code, 1);
+  assert.equal(readFileSync(join(racine, "docs/projects/journal.md"), "utf8"), journal);
+  for (const lang of ["fr", "en"]) {
+    const bloque = depot({ lang });
+    ecrire(bloque, {
+      ".drwil/ia-first.json": JSON.stringify({ lang, dirs: { proofs: "docs/projects/journal.md/proofs" } }),
+    });
+    const r = close(bloque, { brief: FICHE, logs: journaux() });
+    assert.equal(r.code, 1, r.message);
+    assert.ok(existsSync(join(bloque, FICHE)));
+  }
+});
 test("QUA-048 : critère encore « contrat à créer » signalé avec l'ID à écrire — contrat créé sur la branche, plusieurs candidats ou aucun", () => {
   const criteres = "- Un export vide est refusé — contrat à créer\n- Déjà prouvé — contrat à créer `QUA-001`";
   const racine = depot({ activite: "BUILD", criteres });
@@ -183,9 +283,65 @@ test("QUA-048 : références qui deviendraient mortes et noms de fichiers sans c
   assert.match(r.message, /docs\/projects\/journal\.md:1 : `close\.mjs` sans chemin/);
   assert.doesNotMatch(r.message, /`(README|autre|neuf|option|-x)\./);
   assert.deepEqual(closingSignals(racine, "docs/projects/absente.md"), [
-    "docs/projects/journal.md : l'entrée de journal du chantier ne cite pas `docs/preuves/absente.md` — la preuve de clôture se cite depuis le journal",
     "docs/projects/journal.md:1 : `close.mjs` sans chemin, refusé par check-docs — écrire son chemin depuis la racine",
   ]);
+});
+
+test("QUA-230 : en BUILD les renvois hors scope proposent une extension commitée séparément, sans écriture", () => {
+  const racine = depot({ activite: "BUILD" });
+  ecrire(racine, {
+    "docs/contracts-catalog.md": `Voir \`${FICHE}\`.\nEncore \`${FICHE}\`.\n`,
+    "dashboard.html": `<a href="${FICHE}">Chantier</a>\n`,
+    "docs/intentions/limite.md": `Voir \`${FICHE}\`.\n`,
+    "docs/projects/journal.md": `Voir \`${FICHE}\`.\n`,
+    "docs/couvert.md": `Voir \`${FICHE}\`.\n`,
+  });
+  const texte = fiche("- Un critère — `QUA-001`").replace("  - src/a.mjs", "  - src/a.mjs\n  - docs/couvert.md");
+  ecrire(racine, { [FICHE]: texte });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "renvois");
+  const avant = git(racine, "status", "--porcelain");
+  ecrire(racine, { "untracked.html": `<a href="${FICHE}">Nouveau</a>\n` });
+  const avantNonSuivi = git(racine, "status", "--porcelain");
+  const r = close(racine, { check: true });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /docs\/contracts-catalog\.md:1.*hors du bloc scope/);
+  assert.match(r.message, /dashboard\.html:1.*hors du bloc scope/);
+  assert.match(r.message, / {2}- docs\/contracts-catalog\.md/);
+  assert.match(r.message, / {2}- dashboard\.html/);
+  assert.match(r.message, / {2}- untracked\.html/);
+  assert.match(r.message, /commit séparé.*avant.*correction/);
+  assert.doesNotMatch(r.message, /(?:couvert\.md|intentions\/limite\.md|projects\/journal\.md).*hors du bloc scope/);
+  assert.equal(git(racine, "status", "--porcelain"), avantNonSuivi, "aucun fichier écrit ou indexé");
+  rmSync(join(racine, "untracked.html"));
+  assert.equal(git(racine, "status", "--porcelain"), avant);
+  // Une extension non commitée ne franchit pas la barrière, qui lit HEAD.
+  ecrire(racine, { [FICHE]: texte.replace("  - src/a.mjs", "  - src/a.mjs\n  - dashboard.html\n  - docs/contracts-catalog.md") });
+  assert.match(close(racine, { check: true }).message, /dashboard\.html:1.*hors du bloc scope/);
+  git(racine, "add", FICHE);
+  git(racine, "commit", "-q", "-m", "périmètre");
+  assert.doesNotMatch(close(racine, { check: true }).message, /hors du bloc scope/);
+});
+
+test("QUA-230 : renvois en anglais, miroirs et exclusions configurées respectés", () => {
+  const racine = depot({ activite: "BUILD", lang: "en" });
+  ecrire(racine, {
+    ".drwil/ia-first.json": JSON.stringify({
+      lang: "en",
+      outOfScope: ["docs/projects/*", "custom/exempt.md"],
+      scopeMirrors: [{ from: "templates/", to: "" }],
+    }),
+    [FICHE]: fiche("- A criterion — `QUA-001`").replace("src/a.mjs", "templates/docs/covered*.md"),
+    "docs/covered.md": `\`${FICHE}\`\n`,
+    "custom/exempt.md": `\`${FICHE}\`\n`,
+    "custom/intent.md": `\`${FICHE}\`\n`,
+  });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "configuration");
+  const r = close(racine, { check: true });
+  assert.match(r.message, /custom\/intent\.md:1.*outside the scope block/);
+  assert.match(r.message, /separate commit/);
+  assert.doesNotMatch(r.message, /(?:covered|exempt)\.md.*outside the scope block/);
 });
 
 test("QUA-048 : un élément d'index commun à plusieurs fiches n'est pas retiré, il est signalé", () => {
@@ -476,6 +632,15 @@ test("QUA-084 : la clôture écrit la preuve versionnée du chantier — critèr
   assert.ok(!existsSync(join(racine, FICHE)), "la fiche n'est supprimée qu'une fois la preuve écrite");
 });
 
+test("QUA-084 : la preuve conserve la citation d'une marque sans lui ajouter une classification humaine", () => {
+  const racine = depot({ criteres: "- La marque `[humain]` reste du texte — `QUA-001`\n- Relu [human] — `QUA-002`" });
+  const r = close(racine, { logs: journaux() });
+  assert.equal(r.code, 0, r.message);
+  const preuve = readFileSync(join(racine, "docs/preuves/exemple.md"), "utf8");
+  assert.match(preuve, /\| La marque `\[humain\]` reste du texte \| `QUA-001` \|/);
+  assert.match(preuve, /\| Relu \[humain\] \| `QUA-002` \|/);
+});
+
 test("QUA-084 : sans évidence du commit vérifié, la clôture est refusée et la fiche reste ; l'entrée de journal doit citer la preuve", () => {
   const sansEvidence = depot({ evidence: false });
   const r = close(sansEvidence, { logs: journaux() });
@@ -491,13 +656,10 @@ test("QUA-084 : sans évidence du commit vérifié, la clôture est refusée et 
   const echouee = depot({ evidence: { statut: "fail" } });
   assert.match(close(echouee, {}).message, /le verdict de la dernière évidence est FAIL/);
 
-  // Entrée de journal : la preuve se cite, sinon elle est introuvable depuis le journal.
+  // Le renvoi manquant sera écrit automatiquement à la clôture.
   const racine = depot({ activite: "BUILD" });
   ecrire(racine, { "docs/projects/journal.md": "# Journal\n\n## exemple\n\nFait.\n" });
-  assert.ok(
-    closingSignals(racine, FICHE).some((s) => /ne cite pas `docs\/preuves\/exemple\.md`/.test(s)),
-    "le journal qui ne cite pas la preuve ferait échouer la clôture",
-  );
+  assert.deepEqual(closingSignals(racine, FICHE), []);
   ecrire(racine, { "docs/projects/journal.md": "# Journal\n\n## exemple\n\nPreuve : `docs/preuves/exemple.md`.\n" });
   assert.deepEqual(closingSignals(racine, FICHE), []);
 });
@@ -552,7 +714,7 @@ test("QUA-084 : la preuve suit la langue du projet, dit quand il n'y a aucun cri
   // Journal d'un projet anglais : la preuve s'y cite aussi.
   const journal = depot({ activite: "BUILD", lang: "en" });
   ecrire(journal, { "docs/projects/journal.md": "# Journal\n" });
-  assert.ok(closingSignals(journal, FICHE).some((s) => /does not cite `docs\/preuves\/exemple\.md`/.test(s)));
+  assert.deepEqual(closingSignals(journal, FICHE), []);
 });
 
 /** Journaux de Claude Code avec `n` réponses sur la branche du chantier (le total d'un chantier rouvert grandit). */
@@ -750,6 +912,24 @@ test("QUA-174 : la preuve de clôture dit les critères acceptés au lancement, 
   assert.match(readFileSync(join(anglais, "docs/preuves/exemple.md"), "utf8"), /\*\*Criteria accepted\*\*: fingerprint `sha256:/);
 });
 
+test("QUA-174 : ajouter ou retirer [humain] après acceptation ne refuse pas la clôture", () => {
+  for (const [avant, apres] of [
+    ["", " [humain]"],
+    [" [humain]", ""],
+  ]) {
+    const racine = depot({ criteres: `- Un critère${avant} — \`QUA-001\`` });
+    const accepte = recordAcceptance(racine, FICHE);
+    ecrire(racine, { [FICHE]: fiche(`- Un critère${apres} — \`QUA-001\``) });
+    git(racine, "add", "-A");
+    git(racine, "commit", "-q", "-m", "classification de la preuve");
+    ecrireEvidence(racine);
+    const r = close(racine, { logs: journaux() });
+    assert.equal(r.code, 0, r.message);
+    assert.ok(!existsSync(join(racine, FICHE)));
+    assert.ok(readFileSync(join(racine, "docs/preuves/exemple.md"), "utf8").includes(accepte.fingerprint));
+  }
+});
+
 test("QUA-174 : un critère modifié depuis l'acceptation refuse la clôture sans rien écrire ; un lien de preuve ajouté ne le modifie pas", () => {
   const racine = depot({ criteres: "- Un critère — contrat à créer" });
   recordAcceptance(racine, FICHE);
@@ -758,7 +938,7 @@ test("QUA-174 : un critère modifié depuis l'acceptation refuse la clôture san
   git(racine, "commit", "-q", "-m", "lien de preuve");
   assert.equal(close(racine, { check: true }).code, 0);
 
-  ecrire(racine, { [FICHE]: fiche("- Un autre critère — `QUA-001`") });
+  ecrire(racine, { [FICHE]: fiche("- Un autre critère [humain] — `QUA-001`") });
   git(racine, "add", "-A");
   git(racine, "commit", "-q", "-m", "critère modifié");
   ecrireEvidence(racine);

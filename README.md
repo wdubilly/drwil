@@ -651,8 +651,10 @@ which drwil keeps current from then on. Once the stack is known,
 `/drwil-adopt` runs `drwil guarantees`: 100 % coverage per layer (a ratchet
 on an existing project in test debt), an `e2e` check of the critical paths,
 a protected forge with a CI, and a README that presents your product; each
-guarantee not held gets a blocking brief, and `drwil verify` stays FAIL
-until it is held.
+applicable guarantee not held gets a blocking brief, and `drwil verify`
+stays FAIL until it is held. Coverage and e2e are explicitly “not yet
+applicable” while their layer has no code; the first source file makes
+them mandatory again.
 
 **Upgrading a project that already had DRWIL:** `init` refreshes what the
 kit installed and the project never modified: its mechanics (hooks) and its
@@ -861,7 +863,9 @@ drwil guarantees --protect   # also protect the main branch (human's agreement o
 
 Run by `/drwil-adopt` once the stack is known: 100 % coverage per layer,
 `e2e` of the critical paths, protected forge with a CI, project
-presentation.
+presentation. `guarantees` and `verify` use the same judge; a layer
+without code does not fail coverage or e2e. The new/existing project
+classification is recorded at `init`, not inferred again after coding.
 
 ### Update and uninstall
 
@@ -912,13 +916,21 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    proof is written (`docs/preuves/<work item>.md`: every criterion, its
    contract, that contract's checks, the verified commit and the
    fingerprint of the covered files) — without it the closing is refused —
-   and the item itself is deleted,
+   and `node .githooks/close.mjs` adds the proof link to its journal entry,
+   removes its index entry and deletes the item itself,
    its token consumption is recorded (`.drwil/usage.jsonl`, read from
    Claude Code's session logs), its untreated limits become intents, the
    README, changelog and
    architecture map are updated when the work changes them, the pull
    request is opened, then back to SCOPING. The merge stays a
    human gesture unless authorised at start.
+
+Before closing, `node .githooks/close.mjs --check` reports references that
+would break, including corrections outside the committed scope: explain
+and commit a scope extension before correcting them. A journal link to
+the active workstream's future proof does not fail verification. Adding
+or removing the `[human]` classification does not change the accepted
+criteria fingerprint; changing their meaning still does.
 
 ```bash
 drwil state              # current activity, work item, scope

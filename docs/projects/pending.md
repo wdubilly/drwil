@@ -128,9 +128,6 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   2026-10-30, après l'adoption fluide) — `docs/projects/attester-depuis-le-chat.md`.
 - [ ] [IA] [P2] Ajouter ou adopter un contrat par commande, `drwil contracts add` et `adopt <ID>` (cadré le
   2026-10-30) — `docs/projects/commande-de-contrat.md`.
-- [ ] [IA] [P1] (0.11.0) Clôture sur un projet neuf : garanties « pas encore applicables » sans code, clôture qui
-  écrit sa ligne de journal et d'index, empreinte des critères sans la marque `[humain]` (cadré le
-  2026-10-30) — `docs/projects/cloture-sur-projet-neuf.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
   qui signale un squash (cadré le 2026-10-26 ; à lancer après
   `docs/projects/journal.md`) —
