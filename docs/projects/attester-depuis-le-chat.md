@@ -208,6 +208,10 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
   déplacé. Trois contrôles en échec : carte, test QUA-066 et suite du paquet contenant ce même
   test ; aucun seuil de couverture baissé. Le garde d'écriture restera en première position,
   le matcher d'attestation sera ajouté après, sans modifier ce test ni sa garantie.
+- **Portabilité du banc fictif** : les nouveaux tests ne doivent pas soumettre une commande Bash
+  à cmd.exe. Sous Windows, ils exécutent donc avec Node l'entrée et les arguments extraits du
+  réglage installé ; ailleurs, ils exécutent aussi sa commande shell. Aucun test de comportement
+  n'est sauté. Cela ne vaut pas essai interactif du shell natif, qui reste à effectuer.
 - **Preuves finales de cette étape** :
   - `npm run installer-depot --silent` : code 0 ; dernière passe, un miroir Gemini écrit.
     Les deux nouveaux modules partagés et les miroirs documentaires ont été installés par les

@@ -87,14 +87,22 @@ for (const tool of ["copilot", "gemini"]) {
         tool === "copilot"
           ? config.hooks[pre ? "preToolUse" : "postToolUse"][0].bash
           : config.hooks[pre ? "BeforeTool" : "AfterTool"].find((g) => new RegExp(g.matcher).test("ask_user")).hooks[0].command;
-      const invoke = (event, pre) =>
-        spawnSync(command(pre), {
-          shell: true,
+      const invoke = (event, pre, failure = false) => {
+        const cmd = failure ? config.hooks.postToolUseFailure[0].bash : command(pre);
+        const options = {
           cwd: p.root,
           input: JSON.stringify(event),
           encoding: "utf8",
           env: { ...process.env, GEMINI_PROJECT_DIR: process.cwd() + "/" + p.root },
-        });
+        };
+        if (process.platform === "win32") {
+          // Le banc teste l'entrée déclarée sans faire passer Bash pour cmd.exe.
+          const entry = cmd.match(/(\.claude\/hooks\/prompt-hook\.mjs)"?\s+(copilot|gemini)(?:\s+(pre|post))?/);
+          assert.ok(entry, cmd);
+          return spawnSync(process.execPath, [join(process.cwd(), p.root, entry[1]), ...entry.slice(2).filter(Boolean)], options);
+        }
+        return spawnSync(cmd, { ...options, shell: true });
+      };
       const event = p.before(args);
       assert.equal(invoke(event, true).status, 0);
       assert.equal((await p.contract()).status, "MANUAL");
@@ -121,12 +129,7 @@ for (const tool of ["copilot", "gemini"]) {
       if (tool === "copilot") {
         const failed = p.before(await p.prepare({ renew: true }));
         assert.equal(invoke(failed, true).status, 0);
-        const failure = spawnSync(config.hooks.postToolUseFailure[0].bash, {
-          shell: true,
-          cwd: p.root,
-          input: JSON.stringify({ ...failed, error: "annulation fictive" }),
-          encoding: "utf8",
-        });
+        const failure = invoke({ ...failed, error: "annulation fictive" }, false, true);
         assert.equal(failure.status, 0);
         assert.match(failure.stdout, /aucune attestation enregistrée/);
         assert.equal(p.files().length, 2);
