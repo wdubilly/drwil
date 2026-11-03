@@ -44,6 +44,7 @@ files:
   - .gemini/settings.json
   - packages/drwil/test/portable-attest.test.mjs
   - package.json
+  - docs/architecture.md
 -->
 
 ## 1. Besoin
@@ -113,10 +114,11 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
   `session_id` et `tool_use_id`, préparation consommée une seule fois. La date, la session et l'appel
   sont conservés dans la provenance ; cette traçabilité n'est pas une identité forte. Le résumé et les
   empreintes sont revérifiés après la réponse : une preuve changée exige un nouveau sondage.
-- [humain, préalable de reprise] Réunir une paire d'événements natifs avant/après un sondage fictif
-  répondu dans chaque outil, sans données personnelles ; vérifier la session, l'identifiant d'appel et
-  le champ qui contient exclusivement la réponse humaine. Copilot CLI et Gemini CLI ne documentent pas
-  d'identifiant d'appel dans ces événements : ne jamais en inventer un ni retirer ce contrôle.
+- [humain, essai réel restant] Réunir une paire d'événements natifs avant/après un sondage fictif
+  répondu dans chaque outil, sans données personnelles ; vérifier la session, la corrélation
+  native ou portable et le champ qui contient exclusivement la réponse humaine. La décision
+  ci-dessus autorise le protocole à nonce pour Copilot CLI et Gemini CLI, sans ID d'appel inventé ;
+  elle lève le préalable de conception, pas l'exigence d'essai réel ni la parité des cinq outils.
 - [humain] Après révision des critères, leur empreinte doit être acceptée à nouveau dans un terminal
   interactif par `node .githooks/state.mjs accept`. Aucun agent ne l'exécute.
 
@@ -132,6 +134,8 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
   préalable réel, jamais remplacer l'exigence par « terminal disponible ».
 
 ## 7. Reprise
+
+### Reprise ciblée — protocole portable autorisé
 
 - **Reprise ciblée, protocole portable (2026-11-03)** : décision ci-dessus reçue ; état BUILD, arbre
   propre, PR #352 brouillon. Cette étape livre du code pour Copilot CLI et Gemini CLI seulement ;
@@ -161,6 +165,50 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
   packages/drwil/test/portable-attest.test.mjs (à créer) éprouve ces canaux sur données fictives ;
   `package.json` inclut ces tests dans la couverture des hooks livrés, sans abaisser les seuils.
   Les sources, contrats, recette, matrice et contrôles déjà cadrés seront mis à jour avec le code.
+- **Réalisation** : `attest-poll --tool copilot` produit `question` et `choices`, et
+  `--tool gemini` produit une question `choice` native. Le nonce visible ne remplace jamais la session
+  native : absence de `sessionId` (Copilot) ou `session_id` (Gemini) → refus. Les décodeurs ne lisent
+  aucune réponse du chat ou de l'entrée du modèle. La réservation du nonce est exclusive dans le
+  projet, celle de la demande exclusive par session ; une empreinte persistée lie préparation et
+  snapshot, la consommation atomique précède la relance des contrôles. Le refus humain et l'erreur
+  native consomment aussi la demande. Les tests exercent deux processus distincts en concurrence.
+- **Entrée existante conservée** : les déclarations natives invoquent `.claude/hooks/prompt-hook.mjs`, qui
+  route explicitement les modes Copilot/Gemini vers le module portable. Le chemin Claude sans mode,
+  ses identifiants natifs et son décodeur restent inchangés. Aucun nouvel exécutable de confirmation
+  n'est ajouté ; le refus existant de l'appel direct à `.claude/hooks/prompt-hook.mjs` par le shell de l'agent
+  est conservé. Comme auparavant, ce protocole fait confiance au runtime, aux hooks et aux fichiers
+  locaux ; ce n'est pas une défense contre un acteur qui les réécrit tous.
+- **Contrats adaptés sur décision explicite** : QUA-235 (frontière du sondage préparé) décrit
+  les trois adaptateurs et leurs preuves fictives sans promettre cinq outils. QUA-236 (jugement de
+  lisibilité utile) couvre aussi la présentation portable, sans attestation ajoutée.
+  QUA-216 (codes des hooks sans Node) conserve tous les codes de repli ; son ancienne expression
+  « Copilot ne bloque jamais » est précisée : ses rappels restent non bloquants, le sondage invalide
+  reçoit le refus natif `permissionDecision: "deny"` avec le code 0. Aucun contrôle n'est retiré.
+- **Miroirs et poste réel** : l'unité Copilot n'est pas installée dans ce dépôt (unités outils
+  présentes : Claude et Gemini). L'installateur officiel ne crée donc pas le miroir Copilot réservé
+  au scope ; le réglage est livré par son gabarit et son installation est exercée sur un projet
+  fictif `init --tools copilot`. Les miroirs Claude/Gemini et les documents suivent l'installateur.
+  La version Copilot relue reste 1.0.105 ; aucune question ni aucun hook de confirmation réel lancé.
+- **Limites opérationnelles** : conserver les tombstones locaux des nonces. Un processus tué peut
+  laisser une session occupée ; une session native neuve permet de refaire une demande, jamais de
+  forger un résultat. Le nonce n'est ni un secret ni une identité authentifiée. Les formats natifs
+  documentés et l'afficheur distribué Copilot ont été inspectés statiquement ; leurs événements de
+  test sont fictifs, les essais interactifs restent « not tested » dans la matrice.
+- **Prochaine étape, hors de cette reprise** : établir les canaux effectifs Codex/Cursor et brancher
+  leurs décodeurs sur la même corrélation. Conserver BUILD et la PR brouillon ; pas de clôture,
+  d'état suivant, de ready ni de fusion programmée. Restent la parité cinq outils, l'acceptation
+  humaine des critères et les jugements de QUA-063 (matrice datée), QUA-150 (tests de timing) et
+  QUA-236 (lisibilité utile). La note distincte ajoutée par la principale dans les intentions
+  sur le renforcement futur de QUA-222 (parité entre outils) est préservée, sans la réaliser.
+- **Complément de scope avant sa modification** : `docs/architecture.md` doit citer le rôle du
+  nouveau module source, conformément à QUA-040 (carte, README et changelog à jour). Le premier
+  contrôle complet a reproduit son absence de la carte et le test QUA-066 (installation Gemini)
+  qui attend le garde d'écriture en première position : le nouveau matcher de question l'avait
+  déplacé. Trois contrôles en échec : carte, test QUA-066 et suite du paquet contenant ce même
+  test ; aucun seuil de couverture baissé. Le garde d'écriture restera en première position,
+  le matcher d'attestation sera ajouté après, sans modifier ce test ni sa garantie.
+
+### Reprise précédente — inventaire sans nouvel adaptateur
 
 - **Reprise après correction humaine du périmètre (2026-11-03)** : état initial VERIFY, arbre git propre,
   branche `workstream/attester-depuis-le-chat`, PR #352 brouillon. Transition officielle
