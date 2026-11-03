@@ -43,6 +43,7 @@ files:
   - docs/contracts-catalog.md
   - docs/architecture.md
   - docs/projects/kit-mechanics.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/recipes/working-with-branches.md
   - .drwil/ia-first.json
 -->
@@ -166,7 +167,20 @@ Tranchées par le demandeur le 2026-10-30 :
   déjà cadrée) ; `docs/intentions/commit-msg-non-executable.md` (limite préexistante à conserver,
   sans la corriger dans ce lot).
 - **Caractérisation préalable** : tests existants de clôture complétés avant extraction, puis commit
-  distinct vert. Aucun lot 3 ou 4 à réaliser dans ce contexte.
+  distinct vert (`e762f48`, précédé du cadrage seul `766804f`).
+  `node .githooks/wait-command.mjs --wait 600 node --test .githooks/close.test.mjs` :
+  26 tests réussis, aucun échec. Contrôles globaux avant ces commits : code 0,
+  31 avertissements, 72 repris / 152 rejoués. Hooks de cadrage : OK, 218 avertissements ;
+  hooks de caractérisation : OK, 104 avertissements, sans désactivation.
+  Aucun lot 3 ou 4 à réaliser dans ce contexte.
+- **Extraction préalable** : mécanique de clôture et consommation déplacées sans changement de
+  comportement dans `.githooks/close-mechanics.mjs` ; miroirs installés par `npm run installer-depot`.
+- **Complément indispensable de cadrage** : le gabarit
+  `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md` doit citer les modules
+  extraits, comme sa copie déjà cadrée. La première passe après extraction a révélé 7 contrôles
+  en échec, tous issus des installations qui signalent le nouveau module hors de toute fiche.
+  Les 26 tests de clôture restent réussis ; aucun contrôle affaibli. Ce chemin est cadré seul
+  avant d'éditer la source de cette fiche.
 - **Périmètre ajouté au lot 1** : `packages/drwil/src/guarantees-layers.ts` (applicabilité et classement de la
   couche), `packages/drwil/src/config-write.ts` (photo du code à la première installation), `packages/drwil/src/verify-types.ts`
   et `packages/drwil/src/verdict.ts` (information non bloquante lisible dans le verdict), `packages/drwil/src/verify.ts`
