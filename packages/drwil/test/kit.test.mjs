@@ -617,7 +617,9 @@ test("les contrôles déclarés par le projet tournent et survivent à une réin
 test("init en anglais, Codex seul, CI GitHub", async () => {
   const dir = tmp();
   await quiet(() => init({ targetDir: dir, lang: "en", tools: "codex", ci: "github", git: false }));
-  for (const f of ["CLAUDE.md", "GEMINI.md", ".claude", ".cursor", "docs/contrats.md"]) assert.ok(!existsSync(join(dir, f)), f);
+  for (const f of ["CLAUDE.md", "GEMINI.md", ".claude/settings.json", ".claude/agents", ".claude/skills", ".cursor", "docs/contrats.md"])
+    assert.ok(!existsSync(join(dir, f)), f);
+  assert.ok(existsSync(join(dir, ".claude/hooks/portable-attest.mjs")));
   for (const f of [
     "AGENTS.md",
     "docs/contracts.md",
@@ -635,8 +637,8 @@ test("init en anglais, Codex seul, CI GitHub", async () => {
   const hooks = JSON.parse(read(dir, ".codex/hooks.json")).hooks;
   assert.deepEqual(
     Object.keys(hooks).sort(),
-    ["SessionStart", "UserPromptSubmit"],
-    "état et rappel seulement : aucun blocage d'écriture non éprouvé",
+    ["PostToolUse", "PreToolUse", "SessionStart", "UserPromptSubmit"],
+    "état, rappel et canal d'attestation ; aucun blocage d'écriture prétendu",
   );
   assert.match(hooks.SessionStart[0].hooks[0].command, /\.githooks\/state\.mjs"$/);
   assert.match(hooks.UserPromptSubmit[0].hooks[0].command, /\.githooks\/state\.mjs" reminder$/);
@@ -3057,7 +3059,7 @@ test("lot 6 : catalogue de contrats et recette d'adoption livrés, skill Claude 
 test("lot 6 : le skill adopter-le-kit n'est pas livré sans Claude Code", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "codex", git: false }));
-  assert.ok(!existsSync(join(dir, ".claude")));
+  assert.ok(!existsSync(join(dir, ".claude/skills")));
   assert.ok(existsSync(join(dir, "docs/contracts-catalog.md")));
 });
 
@@ -3083,7 +3085,7 @@ test("commande /drwil : skill générique et alias par capacité livrés avec Cl
 test("commande /drwil : pas livrée sans Claude Code", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "codex", git: false }));
-  assert.ok(!existsSync(join(dir, ".claude")));
+  assert.ok(!existsSync(join(dir, ".claude/skills")));
 });
 
 test("skills Copilot CLI (applyTo) : parité fonctionnelle sur les 2 recettes qui s'y prêtent, FR et EN", async () => {

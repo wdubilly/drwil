@@ -16,6 +16,13 @@ closing commit; the release renames this section to its version.
   random nonce, atomically reserve/consume it, rerun checks and compare the
   proof snapshot. Claude's adapter is unchanged. All three have fictitious
   event tests only; real trials and Codex/Cursor adapters remain outstanding.
+- `attest-poll --tool codex` prepares `request_user_input`; native hooks bind
+  the session, call, one-use nonce, exact question and proof through the same
+  portable engine. Codex-only installs receive shared hook scripts without
+  Claude settings or agents. Official Codex 0.166.0 schemas and fictitious
+  events are tested, not a real interactive trial. Cursor remains blocked
+  on its question's native hook payload; ACP documentation alone does not
+  establish that payload. Five-tool parity is not delivered.
 
 - `drwil report` prints a privacy-safe kit defect report from the last local
   check snapshot, with CLI/installed versions and normalized built-in failure

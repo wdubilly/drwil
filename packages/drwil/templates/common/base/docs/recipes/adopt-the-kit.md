@@ -146,7 +146,8 @@ agent's.
 For a contract with a remaining human judgment, the agent may run
 `npx drwil attest-poll <ID> --tried "What I tried"` (add `--renew` only for
 an intentional renewal). Default: Claude Code's `AskUserQuestion`. Use
-`--tool copilot` or `--tool gemini` for their native `ask_user`. This prepares
+`--tool copilot` or `--tool gemini` for their native `ask_user`, or
+`--tool codex` for `request_user_input`. This prepares
 JSON, never an attestation. With drwil installed as a local dependency and
 the tool's hooks enabled in a trusted workspace, pass that JSON to
 the tool unchanged: one attestation question, no answer, default,
@@ -155,7 +156,7 @@ human criterion, agent's trial and actual covered paths. The trial is a
 declaration, not proof that the agent executed it.
 
 The human alone chooses **Attest** or **Decline**. Claude Code keeps its
-session/tool-call correlation. Copilot and Gemini use the native session
+session/tool-call correlation. Copilot, Gemini and Codex use the native session
 and a visible random nonce bound to the exact question, choices and proof:
 no invented native call identifier. Their shared hook allows only one
 pending poll per session and reserves/consumes it atomically; the nonce
@@ -173,9 +174,24 @@ and its files. Retain the nonce tombstones in the local evidence directory.
 After a hook crash, an occupied session may require inspecting its pending
 files and opening a fresh native session; do not fabricate a tool response.
 
-These three adapters have fictitious-event tests, **not real interactive
+For Codex, review and trust the exact hook definitions with `/hooks` in a
+trusted project, keep the `hooks` feature enabled, and use an interactive
+root thread with `request_user_input` available (Plan mode in the inspected
+0.166.0 source; Default mode depends on `default_mode_request_user_input`).
+The adapter also binds the native `tool_use_id`; it accepts only a JSON-string
+`tool_response` with one exact `answers["drwil_attest"].answers` choice.
+The JSON must be passed unchanged: Codex's general tool guidance recommends
+an option by default, but an attestation must never add that recommendation.
+Cancelled requests without a native post-event can occupy the session until
+expiry. The shared scripts do not install Claude settings, skills or agents
+when Codex is selected alone. Native Windows commands remain untried.
+
+These four adapters have fictitious-event tests, **not real interactive
 attestation trials**. See the compatibility matrix for versions, native
-formats and remaining prerequisites. Codex and Cursor are not delivered.
+formats and remaining prerequisites. Cursor is not delivered: its ACP
+`cursor/ask_question` request/response is documented, but its mapping to
+native `preToolUse` / `postToolUse` and their exact arguments/result is not
+established. Do not copy an ACP response into a guessed hook payload.
 If the hook or local drwil dependency is unavailable, the human uses the unchanged fallback
 `npx drwil attest <ID>` in their own interactive terminal. Never substitute
 an answer in chat that the agent interprets itself.

@@ -10,11 +10,11 @@ export function registerAttest(program: Command): void {
     .command("attest-poll <id>")
     .description("Prepare a native human-attestation poll; never records an attestation")
     .requiredOption("--tried <text>", "What the agent tried (1 to 500 characters)")
-    .option("--tool <tool>", "Native poll: claude, copilot or gemini", "claude")
+    .option("--tool <tool>", "Native poll: claude, copilot, gemini or codex", "claude")
     .option("--renew", "Prepare renewal of a still-valid attestation")
     .action(async (id, opts) => {
       try {
-        if (!["claude", "copilot", "gemini"].includes(opts.tool)) throw new Error("--tool: claude | copilot | gemini");
+        if (!["claude", "copilot", "gemini", "codex"].includes(opts.tool)) throw new Error("--tool: claude | copilot | gemini | codex");
         const options = { targetDir: process.cwd(), id, tried: opts.tried, renew: opts.renew };
         const r =
           opts.tool === "claude"

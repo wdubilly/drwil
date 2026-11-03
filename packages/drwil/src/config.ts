@@ -53,6 +53,7 @@ export const KIT_PROSE = [
   ".claude/skills/",
   ".claude/settings.json",
   ".gemini/settings.json",
+  ".codex/hooks.json",
   "docs/recipes/",
   "docs/ia-first.md",
   "docs/ia-first/",

@@ -25,6 +25,7 @@ async function projet(tool, lang = "fr") {
     console.log = log;
     console.warn = warn;
   }
+  if (tool === "codex") assert.equal(spawnSync("git", ["init", "-q"], { cwd: root }).status, 0);
   mkdirSync(join(root, "src"), { recursive: true });
   writeFileSync(join(root, "src/objet.js"), "export const valeur = 1;\n");
   const registry = join(root, "docs/contracts.md");
@@ -43,9 +44,10 @@ async function projet(tool, lang = "fr") {
       ? { sessionId: session, toolName: "ask_user", toolArgs: args, timestamp: Date.now(), cwd: root, ...extra }
       : {
           session_id: session,
-          tool_name: "ask_user",
+          tool_name: tool === "codex" ? "request_user_input" : "ask_user",
           tool_input: args,
-          hook_event_name: "BeforeTool",
+          hook_event_name: tool === "codex" ? "PreToolUse" : "BeforeTool",
+          ...(tool === "codex" ? { tool_use_id: "appel-fictif", turn_id: "tour-fictif", permission_mode: "plan" } : {}),
           timestamp: new Date().toISOString(),
           cwd: root,
           ...extra,
@@ -55,8 +57,11 @@ async function projet(tool, lang = "fr") {
       ? { ...event, toolResult: { resultType: "success", textResultForLlm: `User responded: ${answer}` } }
       : {
           ...event,
-          hook_event_name: "AfterTool",
-          tool_response: { llmContent: JSON.stringify({ answers: { 0: answer } }), returnDisplay: "Réponse fictive" },
+          hook_event_name: tool === "codex" ? "PostToolUse" : "AfterTool",
+          tool_response:
+            tool === "codex"
+              ? JSON.stringify({ answers: { drwil_attest: { answers: [answer] } } })
+              : { llmContent: JSON.stringify({ answers: { 0: answer } }), returnDisplay: "Réponse fictive" },
         };
   const hook = (event, phase = "pre") => portableAttestationHook(event, { root, tool, phase, tell: (s) => output.push(s) });
   const contract = async () => (await verify({ targetDir: root, only: ["APP-009"] })).contracts[0];
@@ -67,7 +72,7 @@ async function projet(tool, lang = "fr") {
   return { root, registry, prepare, before, after, hook, contract, files, pending, output, dispose };
 }
 
-for (const tool of ["copilot", "gemini"]) {
+for (const tool of ["copilot", "gemini", "codex"]) {
   test(`QUA-235 : ${tool}, préparation CLI native et hooks réellement installés, sur projet fictif seulement`, async () => {
     const p = await projet(tool);
     try {
@@ -81,12 +86,18 @@ for (const tool of ["copilot", "gemini"]) {
       const other = await p.prepare();
       assert.notEqual(portableIdentity(args).nonce, portableIdentity(other).nonce);
       const config = JSON.parse(
-        readFileSync(join(p.root, tool === "copilot" ? ".github/hooks/drwil.json" : ".gemini/settings.json"), "utf8"),
+        readFileSync(
+          join(p.root, tool === "copilot" ? ".github/hooks/drwil.json" : tool === "codex" ? ".codex/hooks.json" : ".gemini/settings.json"),
+          "utf8",
+        ),
       );
       const command = (pre) =>
         tool === "copilot"
           ? config.hooks[pre ? "preToolUse" : "postToolUse"][0].bash
-          : config.hooks[pre ? "BeforeTool" : "AfterTool"].find((g) => new RegExp(g.matcher).test("ask_user")).hooks[0].command;
+          : tool === "codex"
+            ? config.hooks[pre ? "PreToolUse" : "PostToolUse"].find((g) => new RegExp(g.matcher).test("request_user_input")).hooks[0]
+                .command
+            : config.hooks[pre ? "BeforeTool" : "AfterTool"].find((g) => new RegExp(g.matcher).test("ask_user")).hooks[0].command;
       const invoke = (event, pre, failure = false) => {
         const cmd = failure ? config.hooks.postToolUseFailure[0].bash : command(pre);
         const options = {
@@ -97,13 +108,22 @@ for (const tool of ["copilot", "gemini"]) {
         };
         if (process.platform === "win32") {
           // Le banc teste l'entrée déclarée sans faire passer Bash pour cmd.exe.
-          const entry = cmd.match(/(\.claude\/hooks\/prompt-hook\.mjs)"?\s+(copilot|gemini)(?:\s+(pre|post))?/);
+          const entry = cmd.match(/(\.claude\/hooks\/prompt-hook\.mjs)"?\s+(copilot|gemini|codex)(?:\s+(pre|post))?/);
           assert.ok(entry, cmd);
           return spawnSync(process.execPath, [join(process.cwd(), p.root, entry[1]), ...entry.slice(2).filter(Boolean)], options);
         }
         return spawnSync(cmd, { ...options, shell: true });
       };
       const event = p.before(args);
+      if (tool === "codex") {
+        assert.ok(new RegExp(config.hooks.PreToolUse[0].matcher).test("Bash"));
+        assert.equal(
+          invoke({ ...event, tool_name: "Bash", tool_input: { command: "node .claude/hooks/prompt-hook.mjs codex" } }, true).status,
+          2,
+          "l'agent ne peut pas appeler directement l'entrée de confirmation",
+        );
+        assert.equal(invoke({ ...event, tool_name: "Bash", tool_input: { command: "git status --short" } }, true).status, 0);
+      }
       assert.equal(invoke(event, true).status, 0);
       assert.equal((await p.contract()).status, "MANUAL");
       const response = invoke(p.after(event), false);
@@ -116,7 +136,7 @@ for (const tool of ["copilot", "gemini"]) {
       assert.equal(k.attestation.origin.sessionId, "session-fictive");
       assert.equal(k.attestation.origin.nonce, portableIdentity(args).nonce);
       assert.equal(k.attestation.origin.pollHash, hash(args));
-      assert.equal(k.attestation.origin.toolUseId, undefined, "aucun ID d'appel natif inventé");
+      assert.equal(k.attestation.origin.toolUseId, tool === "codex" ? "appel-fictif" : undefined, "ID natif seulement s'il est fourni");
       assert.ok(Date.parse(k.attestation.origin.askedAt));
       assert.equal(invoke(p.after(event), false).status, 0);
       assert.equal(p.files().length, 1, "rejeu du retour refusé");
@@ -254,7 +274,7 @@ for (const tool of ["copilot", "gemini"]) {
       assert.equal((await p.contract()).status, "MANUAL", "un autre nonce n'est pas le retour de l'appel attendu");
       if (tool === "copilot") {
         assert.equal(await p.hook(p.before(await p.prepare(), "session-fictive", { agentId: "" })), 2);
-      } else {
+      } else if (tool === "gemini") {
         const e = p.before(await p.prepare());
         assert.equal(await p.hook(e), 0);
         const multiple = p.after(e);
@@ -262,6 +282,26 @@ for (const tool of ["copilot", "gemini"]) {
         await p.hook(multiple, "post");
         assert.equal((await p.contract()).status, "MANUAL");
         assert.equal(await p.hook({ ...e, hook_event_name: "BeforeAgent" }), null);
+      } else {
+        for (const call of [undefined, "", 42]) assert.equal(await p.hook({ ...event, tool_use_id: call }), 2);
+        assert.equal(await p.hook({ ...event, agent_id: "" }), 2);
+        for (const change of [
+          (e) => ({ ...p.after(e), tool_use_id: "autre-appel" }),
+          (e) => ({ ...p.after(e), agent_id: "autre-agent" }),
+          (e) => ({ ...p.after(e), tool_response: '{"answers":{"drwil_attest":{"answers":["Attester","Refuser"]}}}' }),
+          (e) => ({
+            ...p.after(e),
+            tool_response: '{"answers":{"drwil_attest":{"answers":["Attester"]},"autre":{"answers":["Attester"]}}}',
+          }),
+          (e) => ({ ...p.after(e), tool_response: '{"answers":{"drwil_attest":{"answers":["Attester"]}},"error":"échec"}' }),
+          (e) => ({ ...p.after(e), tool_response: "Réponse de l'agent : Attester" }),
+          (e) => ({ ...p.after(e), tool_response: { answers: { drwil_attest: { answers: ["Attester"] } } } }),
+        ]) {
+          const e = p.before(await p.prepare());
+          assert.equal(await p.hook(e), 0);
+          await p.hook(change(e), "post");
+          assert.equal((await p.contract()).status, "MANUAL");
+        }
       }
     } finally {
       p.dispose();
@@ -417,30 +457,31 @@ test("QUA-235 : un nonce réservé par Copilot ne peut pas être réarmé sous G
   }
 });
 
-test("QUA-235 : deux processus natifs concurrents ne réservent ni ne consomment deux fois le même sondage", async () => {
-  const p = await projet("copilot");
-  try {
-    const event = p.before(await p.prepare());
-    const invoke = (input, phase) =>
-      new Promise((resolve, reject) => {
-        const child = spawn(process.execPath, [join(p.root, ".claude/hooks/prompt-hook.mjs"), "copilot", phase]);
-        let out = "";
-        child.stdout.on("data", (chunk) => {
-          out += chunk;
+for (const tool of ["copilot", "codex"])
+  test(`QUA-235 : ${tool}, deux processus natifs concurrents ne réservent ni ne consomment deux fois le même sondage`, async () => {
+    const p = await projet(tool);
+    try {
+      const event = p.before(await p.prepare());
+      const invoke = (input, phase) =>
+        new Promise((resolve, reject) => {
+          const child = spawn(process.execPath, [join(p.root, ".claude/hooks/prompt-hook.mjs"), tool, phase]);
+          let out = "";
+          child.stdout.on("data", (chunk) => {
+            out += chunk;
+          });
+          child.stderr.resume();
+          child.on("error", reject);
+          child.on("close", (code) => resolve({ code, out }));
+          child.stdin.end(JSON.stringify(input));
         });
-        child.stderr.resume();
-        child.on("error", reject);
-        child.on("close", (code) => resolve({ code, out }));
-        child.stdin.end(JSON.stringify(input));
-      });
-    const before = await Promise.all([invoke(event, "pre"), invoke(event, "pre")]);
-    assert.ok(before.every((r) => r.code === 0));
-    assert.equal(before.filter((r) => /"deny"/.test(r.out)).length, 1);
-    const after = await Promise.all([invoke(p.after(event), "post"), invoke(p.after(event), "post")]);
-    assert.ok(after.every((r) => r.code === 0));
-    assert.equal(after.filter((r) => /APP-009 attesté/.test(r.out)).length, 1);
-    assert.equal(p.files().length, 1);
-  } finally {
-    p.dispose();
-  }
-});
+      const before = await Promise.all([invoke(event, "pre"), invoke(event, "pre")]);
+      assert.deepEqual(before.map((r) => r.code).sort(), tool === "copilot" ? [0, 0] : [0, 2]);
+      if (tool === "copilot") assert.equal(before.filter((r) => /"deny"/.test(r.out)).length, 1);
+      const after = await Promise.all([invoke(p.after(event), "post"), invoke(p.after(event), "post")]);
+      assert.ok(after.every((r) => r.code === 0));
+      assert.equal(after.filter((r) => /APP-009 attesté/.test(r.out)).length, 1);
+      assert.equal(p.files().length, 1);
+    } finally {
+      p.dispose();
+    }
+  });

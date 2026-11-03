@@ -165,6 +165,87 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
   officielle, sans installation ni lancement d'agent. Aucun payload ne sera inventé.
 - Aucun `attest`, `state accept` ou sondage réel ; jugements humains et acceptation des
   critères restent requis. La note distincte sur QUA-222 (parité générale) reste intacte.
+- **Réalisation bornée et arrêt factuel** : Codex est implémenté et testé fictivement,
+  Cursor ne l'est pas. Le mode `--tool codex` prépare le format natif, les hooks
+  `PreToolUse` / `PostToolUse` suivent le protocole portable existant et lient aussi
+  `tool_use_id` et `agent_id` fourni. Le résultat accepté est uniquement la chaîne JSON
+  native contenant une seule réponse au seul identifiant `drwil_attest`. Aucun ID natif
+  n'est fabriqué. L'appel direct de l'entrée par Bash est refusé ; les autres commandes
+  Bash restent inchangées. Les hooks requièrent un projet de confiance et la revue `/hooks`.
+- **Installation** : le gabarit Codex branche les événements ; `packages/drwil/src/render.ts` installe les
+  seuls scripts partagés dans `.claude/hooks/` pour Codex seul, sans réglages, skills ni
+  agents Claude. Le réglage Codex suit désormais le mécanisme de rafraîchissement du kit.
+  `npm run installer-depot --silent` : code 0, cinq miroirs écrits (trois hooks partagés,
+  recette et matrice). Les unités Codex/Cursor ne sont pas installées ici : aucun de leurs
+  miroirs réservés n'a été créé à la main. Aucun réglage Cursor inventé ou fichier vide.
+- **Schémas Codex établis** : tag officiel `rust-v0.166.0`, schéma de
+  `request_user_input`, protocole `RequestUserInputResponse`, registre commun des outils
+  et conversion du résultat texte vers `tool_response` relus. Mode Plan disponible dans
+  cette source ; mode Default conditionné par la fonctionnalité
+  `default_mode_request_user_input` (en développement, désactivée par défaut).
+  Cette version est une référence de schéma, pas un minimum prétendu ni un binaire
+  essayé. Sources précises dans la matrice, section « Human attestation parity ».
+- **Cursor, tentative concrète avant arrêt** : documentation officielle des hooks relue :
+  `conversation_id`, `tool_use_id`, `tool_input` et `tool_output` chaîne JSON.
+  La documentation ACP donne bien `cursor/ask_question`, ses questions structurées et
+  `outcome.answered.answers[].selectedOptionIds`. L'archive officielle
+  `2026.10.22-27dcf5f`, identifiée par le script officiel d'installation, a été inspectée
+  statiquement en mémoire puis dans des fichiers de recherche locaux supprimés ;
+  rien n'a été installé ou exécuté. Son module 7000.index.js route
+  `askQuestionInteractionQuery` par l'écouteur d'interactions ; 4097.index.js décrit
+  les wrappers d'exécution/hook, sans wrapper de cette question ; index.js contient
+  plusieurs types protobuf de question/résultat et le décodeur d'enveloppe des hooks.
+  Aucun de ces éléments n'établit le nom exact ni le couple arguments/résultat de
+  cette question dans les hooks génériques. Copier la forme ACP ou protobuf dans
+  `tool_output` serait une hypothèse non autorisée, pas un adaptateur.
+- **Équivalents examinés** : un pont ACP dédié pourrait lire directement le canal
+  client humain documenté et réutiliser les réservations ; il changerait le lancement
+  et l'intégration client, au lieu de déclarer un hook natif. Aucun pont ni nouvelle
+  intégration n'a été introduit silencieusement. Prochain préalable : paire native
+  avant/après d'une question fictive Cursor, ou décision humaine explicite de livrer
+  ce transport ACP dédié. Ce n'est pas une nouvelle demande d'autorisation du nonce,
+  déjà accordée, ni une preuve d'impossibilité de Cursor. Le repli terminal ne remplit
+  toujours pas la parité demandée. BUILD et PR brouillon conservés, arrêt sans clôture.
+- **Matrice de remise** : Claude Code, Copilot CLI, Gemini CLI et Codex : adaptateur
+  livré, événements fictifs testés, **aucun essai réel du sondage**. Cursor :
+  adaptateur non livré, aucune fixture d'attestation prétendue, aucun essai réel.
+  Restent humains : essai réel daté des cinq outils, QUA-063 (matrice datée),
+  QUA-064 (installation/lancement Copilot), QUA-066 (installation/confiance Gemini),
+  QUA-150 (tests de timing), QUA-236 (lisibilité utile), et acceptation des critères
+  révisés avant clôture. Aucune attestation renouvelée par l'agent.
+- **Contrôles de cette reprise** :
+  - Baseline avant extension,
+    `node --test --test-name-pattern="QUA-235" packages/drwil/test/portable-attest.test.mjs packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/cycle.test.mjs` :
+    20 tests passés, 0 échec.
+  - `npm run build --silent` : code 0.
+  - `node --test --test-name-pattern="QUA-235|QUA-032|QUA-081|QUA-083|QUA-205|QUA-215|QUA-216|init en anglais, Codex|lot 6 : le skill|commande /drwil : pas livrée" packages/drwil/test/portable-attest.test.mjs packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/cycle.test.mjs packages/drwil/test/kit.test.mjs` :
+    40 tests passés, 0 échec. Concurrence Codex entre deux processus incluse ;
+    la commande shell installée est exercée hors Windows, l'entrée et ses arguments
+    sous Windows ; aucune simulation annoncée comme un essai du shell natif Windows.
+  - `npm run test:claude:coverage` : code 0 ; 42 tests passés, 0 échec ;
+    98,02 % lignes/instructions, 90,70 % branches, 95,09 % fonctions, sans seuil baissé.
+  - `node --test --test-name-pattern="QUA-063|QUA-222|QUA-223" outils/banc-agents.test.mjs outils/parite-des-outils.test.mjs` :
+    3 tests passés, 0 échec. Les marqueurs reflètent quatre adaptateurs, sans réaliser
+    l'intention distincte de renforcement général.
+  - `node outils/verifier-miroirs.mjs` : 187 fichiers comparés, 17 écarts déclarés,
+    0 problème.
+  - `node .githooks/check-docs.mjs` : 212 fichiers scannés, 0 erreur après correction
+    d'une citation de miroir Codex absent ; les chemins futurs de cadrage étaient
+    également cités à tort comme existants au premier essai de commit, refusé.
+  - `node .githooks/check-kit-size.mjs` : code 0, aucun plafond relevé.
+  - `node .githooks/check-architecture.mjs` : 170 éléments attendus, 0 absent.
+  - `npx --no-install biome check packages/drwil/src/attest-portable.ts packages/drwil/src/cli-attest.ts packages/drwil/src/config.ts packages/drwil/src/render.ts packages/drwil/test/portable-attest.test.mjs packages/drwil/test/kit.test.mjs outils/parite-des-outils.test.mjs` :
+    code 0, sept fichiers contrôlés ; `git --no-pager diff --check` : code 0.
+  - `node .githooks/run-checks.mjs` : code 0,
+    « contrôles exécutés : OK (52 avertissement(s), non exécutés compris) »,
+    4 contrôles repris, 228 rejoués. Sa suite du paquet `npm run test:coverage` :
+    316 tests passés, 0 échec ; 98,36 % lignes/instructions, 91,12 % branches,
+    98,72 % fonctions. Sa suite des hooks de gouvernance : 552 tests passés,
+    0 échec, couverture 100 %. Les avertissements, dont les résidus de dossiers
+    des bancs existants et commit-msg non exécutable, ne sont pas un contrôle ignoré.
+  - Le verdict global précédent reste **`Verdict: GOVERNANCE: FAIL (exit 1)`** :
+    absence de parité et cinq jugements MANUAL. Pas de relance répétée de
+    `verify --agent` vouée à cet échec, ni de déclaration « vérifié ».
 
 ### Reprise ciblée — protocole portable autorisé
 

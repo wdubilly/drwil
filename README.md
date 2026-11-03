@@ -543,10 +543,10 @@ Attestation is deliberately an explicit human action.
 
 The human uses an interactive terminal, or a native attestation poll
 prepared with `drwil attest-poll <CONTRACT_ID> --tried "What was tried"`
-(Claude Code by default; `--tool copilot|gemini` for their native channels).
+(Claude Code by default; `--tool copilot|gemini|codex` for their native channels).
 Only the hook reads the human's poll response; preparation never attests.
 These adapters have fictitious-event tests, not real interactive trials;
-Codex and Cursor are not yet delivered for this mechanism.
+Cursor's adapter is not delivered: the native question's hook payload is not established.
 
 The agent must not execute it on behalf of the user.
 

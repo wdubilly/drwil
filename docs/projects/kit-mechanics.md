@@ -176,6 +176,10 @@ Windows la commande reste `node` seul. Côté visiteur : `INSTALL.md` (QUA-218).
   `.claude/hooks/prompt-hook.mjs` et `.claude/hooks/attest-poll.mjs` lisent seuls
   la réponse de l'outil (QUA-235). Les préparations locales sont dans
   le sous-dossier local attest-polls de `.drwil/evidence/`, hors git ; les attestations restent versionnées.
+- Les modes portables `--tool copilot|gemini|codex` passent par cette même entrée ;
+  les garanties et limites restent dans QUA-235 (frontière du sondage préparé).
+  Codex seul reçoit les scripts partagés, sans réglages ni agents Claude.
+  Cursor n'a pas d'adaptateur établi : voir la matrice, section « Human attestation parity ».
 
 - **Dernier état** : fiche posée à l'installation, rien à reprendre. Si le
   kit ajoute un nouveau fichier de mécanique (`.githooks/` ou un réglage

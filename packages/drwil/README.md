@@ -499,18 +499,25 @@ npx drwil attest-poll QUA-015 --tried "What the agent tried"
 ```
 
 Prints JSON to pass unchanged to `AskUserQuestion` by default, or `ask_user`
-with `--tool copilot` / `--tool gemini`; never writes an attestation.
+with `--tool copilot` / `--tool gemini`, or Codex's `request_user_input`
+with `--tool codex`; never writes an attestation.
 Requires the selected tool's hooks and a local drwil dependency. The poll shows
 the criterion, automated results, the agent's declared trial and covered paths.
 Only the human's **Attest** response, read by the hook for the same session
-and tool call (Claude) or one-use nonce and exact poll (Copilot/Gemini),
+and tool call (Claude) or one-use nonce and exact poll (Copilot/Gemini/Codex),
 records the unchanged version-4 proof after rerunning the checks. Decline, no answer,
 prefilled or recommended choices, changed proofs and replays record nothing.
 Preparations expire after an hour; `--renew` deliberately prepares renewal.
 The provenance is declarative, not authenticated identity. Portable polls
 reserve one pending request per native session and never rearm a nonce.
-All three adapters have fictitious-event tests, not real interactive trials.
-Codex and Cursor are not delivered; the terminal fallback remains available.
+Codex also binds its native tool-call identifier. It requires trusted hooks
+reviewed with `/hooks` and an interactive root thread where `request_user_input`
+is available (Plan mode in the inspected source). Only the shared scripts,
+not Claude's settings, skills or agents, are installed for Codex alone.
+All four adapters have fictitious-event tests, not real interactive trials.
+Cursor is not delivered: its question's native hook payload remains unestablished;
+the separately documented ACP transport is not a native-hook schema.
+The terminal fallback remains available.
 See `docs/recipes/adopt-the-kit.md`.
 
 ### Agent / human workflow (`verify --agent`, `/drwil verify`)

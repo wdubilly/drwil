@@ -90,8 +90,9 @@ and to offer the human a new conversation; the next workstream starts there
 The five tools selectable by `init --tools` are all targets for chat
 attestation, not just Claude Code. This is **not delivered parity**:
 `attest-poll` prepares Claude Code's question by default and each native
-`ask_user` with `--tool copilot` or `--tool gemini`. Claude keeps its
-session/tool-call check and `tool_response.answers`. The two portable adapters
+`ask_user` with `--tool copilot` or `--tool gemini`, and Codex's
+`request_user_input` with `--tool codex`. Claude keeps its
+session/tool-call check and `tool_response.answers`. The three portable adapters
 use a visible random nonce bound to the exact poll and native session instead
 of inventing a missing call identifier. A terminal attestation remains
 available to the human, but does not fulfil chat parity.
@@ -104,8 +105,8 @@ trial**. The earlier hook/write bench above did not test attestation.
 | Claude Code | `AskUserQuestion`, `PreToolUse` / `PostToolUse`; session + tool-call correlation, one-use preparation | `tool_response.answers`, never answers in `tool_input` | yes, Claude-shaped fixtures only | not tested |
 | Copilot CLI | native `preToolUse` / `postToolUse`; one-use nonce, exact poll, native session and subagent context | `ask_user` arguments `question` / `choices`; `sessionId`, `toolArgs`, success `toolResult.textResultForLlm`; only the exact `User responded: <positive choice>` result is accepted | yes, documented-shape fictitious events and installed hook commands only | not tested |
 | Gemini CLI | native `BeforeTool` / `AfterTool` declarations for `ask_user`; same portable protocol | `session_id`, `tool_input.questions`; JSON string in `tool_response.llmContent`, only `answers["0"]` with the exact positive choice, no error | yes, documented-shape fictitious events and installed hook commands only | not tested |
-| Codex | none; delivered hooks only remind the state | `request_user_input` is a candidate; `PreToolUse` / `PostToolUse` document session + tool-call identifiers and tool-specific output, but coverage of this question and its exact returned payload have not been tried | not tested | not tested |
-| Cursor | none; only an always-applied instruction rule is installed | native `preToolUse` / `postToolUse` document `tool_use_id` and `tool_output`; the human question's name, arguments, result and session correlation have not been established | not tested | not tested |
+| Codex | native `PreToolUse` / `PostToolUse` for `request_user_input`; shared scripts only, one-use nonce plus native session, call and agent context | official 0.166.0 handler and registry: `tool_input.questions` with fixed ID `drwil_attest`; JSON string `tool_response`, only `answers["drwil_attest"].answers` with exactly one positive choice | yes, official-source-shaped fictitious events and installed hook command only; no binary launched | not tested |
+| Cursor | none; only an always-applied instruction rule is installed | generic hooks expose `conversation_id`, `tool_use_id` and JSON-string `tool_output`; ACP documents `cursor/ask_question` separately, but its exact native hook mapping remains unestablished after distribution inspection | not tested | not tested |
 
 ### Portable protocol and remaining prerequisites
 
@@ -132,11 +133,28 @@ trial**. The earlier hook/write bench above did not test attestation.
   No attestation is written without a valid reservation and native positive
   result. Missing Node or disabled hooks cannot prepare or attest; a hook
   timeout is not a successful validation or human trial.
-- Codex and Cursor: obtain a native before/after pair for a **fictitious**
-  human question in a trusted interactive session, including its exact
-  question and response schema. Generic tool-hook documentation and
-  third-party hook imports do not prove that the human question traverses
-  those hooks.
+- Codex: inspected official source tag `rust-v0.166.0`, not a minimum-version
+  claim. `request_user_input` passes through the local function registry,
+  which emits both native hook events and serializes the handler's text
+  output as a JSON string. The adapter additionally binds `tool_use_id` and
+  provided `agent_id`. Trust the project and review exact hooks in `/hooks`;
+  `features.hooks` must be enabled. Use a root interactive Plan thread;
+  Default-mode availability depends on `default_mode_request_user_input`.
+  A cancelled handler may leave no post-event; expiry/fresh-session recovery
+  applies. The Windows command is declared, not interactively tried.
+- Cursor: docs establish generic hook envelopes and a separate ACP
+  question schema. The inspected official CLI distribution
+  `2026.10.22-27dcf5f` routes `askQuestionInteractionQuery` through its
+  interaction listener, and its local tool-executor wrappers do not include
+  this question. This does **not** prove impossibility or absence of hooks
+  in other runtimes; it leaves the exact hook tool name, arguments and
+  human-only result unestablished. Its protobuf success schema is not proof
+  of the generic hook's `tool_output` encoding. Obtain a real before/after
+  pair on a fictitious question, or explicitly choose a dedicated ACP
+  transport bridge (new launch/client integration, not delivered here).
+  No guessed payload, model-interpreted answer or terminal fallback counts
+  as that adapter. Generic tool-hook docs and third-party imports do not
+  prove the human question traverses those hooks.
 - On the inspected workstation, Claude Code 2.1.317 and Copilot CLI
   1.0.105 are installed; Gemini CLI, Codex and Cursor are not available
   through their CLI names. Reading a version proves no question or hook.
@@ -162,8 +180,15 @@ the `User responded:` prefix; no real response captured),
 [Gemini hooks](https://geminicli.com/docs/hooks/reference/) and
 [ask_user](https://geminicli.com/docs/tools/ask-user/),
 [Codex hooks and tool coverage](https://developers.openai.com/codex/hooks),
+[Codex 0.166.0 question handler](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/core/src/tools/handlers/request_user_input.rs),
+[question schema](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/core/src/tools/handlers/request_user_input_spec.rs),
+[protocol](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/protocol/src/request_user_input.rs),
+[hook registry](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/core/src/tools/registry.rs),
 [Cursor hooks](https://cursor.com/docs/hooks) and
-[third-party imports](https://cursor.com/docs/reference/third-party-hooks).
+[ACP question schema](https://cursor.com/docs/cli/acp#cursorask_question).
+The official [Cursor install script](https://cursor.com/install) identifies
+the inspected [CLI distribution](https://downloads.cursor.com/lab/2026.10.22-27dcf5f/linux/x64/agent-cli-package.tar.gz);
+only its schema/dispatch code was read statically, never installed or run.
 
 ## Instructions reach every tool
 
@@ -180,8 +205,8 @@ obeys the instruction is "not tested": no trial has measured it. A new
 mechanism is added to the parity test's list of mechanisms in the
 workstream that creates it.
 
-Declared gap: chat attestation has Claude Code, Copilot CLI and Gemini CLI adapters,
-with fictitious-event tests and no real interactive trial. Codex and Cursor
-have no delivered attestation adapter. The
+Declared gap: chat attestation has Claude Code, Copilot CLI, Gemini CLI and Codex adapters,
+with fictitious-event tests and no real interactive trial. Cursor
+has no delivered attestation adapter. The
 "Human attestation parity" table records each missing native-event
 prerequisite; shared instructions or shared hook scripts do not fill it.

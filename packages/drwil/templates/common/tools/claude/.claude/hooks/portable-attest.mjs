@@ -21,6 +21,10 @@ function refusal(root) {
 export async function portableAttestationHook(input, { root, tool, phase, tell }) {
   const e = nativeAttestationEvent(input, tool, phase);
   if (!e || (!e.pre && !e.post)) return null;
+  if (tool === "codex" && e.pre && e.name === "Bash" && /prompt-hook/i.test(String(e.args?.command ?? ""))) {
+    console.error(refusal(root));
+    return 2;
+  }
   const poll = portableIdentity(e.args);
   if (!poll) return null;
   const refuse = () => {
@@ -31,7 +35,8 @@ export async function portableAttestationHook(input, { root, tool, phase, tell }
   };
   if (
     poll.tool !== tool ||
-    e.name !== "ask_user" ||
+    e.name !== (tool === "codex" ? "request_user_input" : "ask_user") ||
+    (tool === "codex" && (typeof e.call !== "string" || !e.call.trim())) ||
     typeof e.session !== "string" ||
     !e.session.trim() ||
     (e.agent !== null && (typeof e.agent !== "string" || !e.agent.trim()))
@@ -62,6 +67,7 @@ export async function portableAttestationHook(input, { root, tool, phase, tell }
         tool,
         session: e.session,
         agent: e.agent,
+        ...(tool === "codex" ? { call: e.call } : {}),
         nonce: poll.nonce,
         args: e.args,
         snapshot: prepared.snapshot,
@@ -83,6 +89,7 @@ export async function portableAttestationHook(input, { root, tool, phase, tell }
       pending.tool !== tool ||
       pending.session !== e.session ||
       pending.agent !== e.agent ||
+      (tool === "codex" && pending.call !== e.call) ||
       pending.nonce !== poll.nonce ||
       serialise(pending.args) !== serialise(e.args) ||
       !nativePositive(e, tool)
@@ -94,7 +101,14 @@ export async function portableAttestationHook(input, { root, tool, phase, tell }
       id: poll.id,
       renew: poll.renew,
       note: poll.tried,
-      origin: { source: `${tool}-poll`, sessionId: e.session, nonce: poll.nonce, pollHash: hash(e.args), askedAt: pending.askedAt },
+      origin: {
+        source: `${tool}-poll`,
+        sessionId: e.session,
+        ...(tool === "codex" ? { toolUseId: e.call } : {}),
+        nonce: poll.nonce,
+        pollHash: hash(e.args),
+        askedAt: pending.askedAt,
+      },
       confirm: async (_, snapshot) => snapshot === pending.snapshot,
     });
     tell(`[drwil] ${result.code === 0 ? "✓" : "✗"} ${result.message}`);
@@ -116,7 +130,11 @@ export async function portableAttestationMain({
     const input = JSON.parse(raw);
     const tell = (message) =>
       console.log(
-        JSON.stringify(tool === "copilot" ? { additionalContext: message } : { hookSpecificOutput: { additionalContext: message } }),
+        JSON.stringify(
+          tool === "copilot"
+            ? { additionalContext: message }
+            : { hookSpecificOutput: { ...(tool === "codex" ? { hookEventName: "PostToolUse" } : {}), additionalContext: message } },
+        ),
       );
     const code = (await portableAttestationHook(input, { root, tool, phase, tell })) ?? 0;
     if (tool !== "copilot" || code !== 2) return code;
