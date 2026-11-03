@@ -52,6 +52,10 @@ files:
   - .codex/hooks.json
   - .cursor/hooks.json
   - packages/drwil/test/kit.test.mjs
+  - packages/drwil/src/cursor-acp.ts
+  - packages/drwil/src/cursor-acp-session.ts
+  - packages/drwil/src/cli-cursor.ts
+  - packages/drwil/test/cursor-acp.test.mjs
 -->
 
 ## 1. Besoin
@@ -70,8 +74,8 @@ disponible, mais ne satisfait pas cette demande de parité du chat.
 ## Critères d'acceptation
 
 - L'agent peut ouvrir un sondage d'attestation pour un contrat manuel ; la réponse de l'humain, lue par un
-  hook, enregistre l'attestation sous chacun des cinq outils : Claude Code, Copilot CLI, Gemini CLI,
-  Codex et Cursor — contrat à créer
+  hook ou par le client ACP dédié à Cursor, enregistre l'attestation sous chacun des cinq outils :
+  Claude Code, Copilot CLI, Gemini CLI, Codex et Cursor — contrat à créer
 - Le sondage affiche le critère du contrat, ce que l'agent a essayé et les fichiers couverts dont la
   modification ferait tomber l'attestation — `QUA-032`
 - Une réponse écrite par l'agent, un sondage sans réponse ou refusé n'enregistre jamais d'attestation —
@@ -114,6 +118,13 @@ session et contenu exact du sondage liés, refus des réponses agent, du rejeu e
 Cette décision autorise l'adaptation de QUA-235 (frontière du sondage préparé), pas une réduction de
 l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
 
+Décision humaine nouvelle du 2026-11-04 : **« Construire un pont ACP dédié »**, après explication
+qu'il s'agit d'un client supplémentaire pilotant Cursor, affichant lui-même les choix, avec une
+interface différente, une maintenance supplémentaire et sans garantie d'intégration au chat habituel
+Cursor. Cet ajout d'intégration, et la révision correspondante de QUA-235 (frontière humaine),
+QUA-236 (jugement lisible) et du premier critère, sont explicitement autorisés ; ce n'est pas
+la seule corrélation déjà autorisée. L'acceptation formelle des critères reste un geste humain ultérieur.
+
 ## 5. Points à trancher
 
 - [IA, réalisation initiale du 2026-11-03, insuffisante pour le périmètre corrigé] Le hook n'accepte que `AskUserQuestion` de Claude Code :
@@ -141,6 +152,34 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
   préalable réel, jamais remplacer l'exigence par « terminal disponible ».
 
 ## 7. Reprise
+
+### Reprise ciblée — client ACP Cursor autorisé
+
+- **2026-11-04, cadrage seul avant code** : BUILD relu, même branche et PR #352 brouillon,
+  arbre propre. Réaliser le client dédié, pas reprendre une recherche générale sur les hooks.
+  Source officielle : https://cursor.com/docs/cli/acp (`agent acp`, JSON-RPC 2.0
+  délimité par lignes, initialisation/authentification/session/prompt, requêtes de permission,
+  `cursor/ask_question` et réponse par identifiants). Aucun paquet ni agent Cursor installé,
+  aucune requête réelle au service tiers.
+- **Scope ajouté et motifs** : packages/drwil/src/cursor-acp.ts (à créer) portera le transport
+  local borné et le nettoyage du sous-processus ; packages/drwil/src/cursor-acp-session.ts
+  (à créer) l'orchestration minimale ACP et la question native, en réutilisant le moteur de
+  réservation existant ; packages/drwil/src/cli-cursor.ts (à créer) l'interface TTY humaine
+  dédiée sans réponse en argument/stdin redirigé ; packages/drwil/test/cursor-acp.test.mjs
+  (à créer) les tests locaux avec faux serveur et interaction fictive injectée exclusivement
+  dans les helpers internes. L'enregistrement de commande reste dans
+  `packages/drwil/src/cli-attest.ts`, déjà au scope.
+- **Garanties conservées** : contenu exact/session/appel natif/nonce liés, une demande en attente,
+  usage unique et expiration, relance des contrôles et comparaison de preuve, provenance
+  déclarative. Refus hors TTY, aucune option de confirmation, aucun champ de réponse du modèle.
+  La nouvelle interface montre le résumé du moteur et les choix sans défaut ni recommandation.
+  Permissions demandées à l'humain ; méthode non prise en charge refusée explicitement.
+  Durée et taille des échanges bornées, fermeture spécifique du processus lancé.
+- **Validation attendue** : transports et erreurs ACP locaux fictifs, choix/refus/abandon,
+  concurrence, malformation, fermeture, rejeu, expiration et preuve changée ; contrôles officiels.
+  Les cinq essais interactifs réels, la lisibilité et les autres jugements humains restent
+  non faits. Ne jamais exécuter `attest`, `state accept` ou un verdict humain ; ne pas clore,
+  fusionner ni lancer la suivante. Aucun travail sur l'intention distincte de parité générale.
 
 ### Reprise ciblée — Codex et Cursor
 
