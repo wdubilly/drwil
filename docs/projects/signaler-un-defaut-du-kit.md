@@ -72,9 +72,12 @@ autre dépôt.
   seule, liste fermée de champs et de messages normalisés, recette source synchronisée par l'installateur,
   documentation et contrats `QUA-231` à `QUA-234` ajoutés. Les tests ciblés passent ; couverture
   du module : 100 % lignes, branches et fonctions ; contrôles de style et références ciblés sans erreur.
+  Les six tests passent, dont sentinelles de non-exécution ; les contrôles officiels complets passent
+  (51 avertissements). La première passe verify a refusé les origines manquantes des quatre nouveaux
+  contrats ; les champs Origine sont complétés dans le présent commit avant une nouvelle passe complète.
 - **Extension de périmètre** : `packages/drwil/bin/drwil.js` ajouté pour enregistrer la nouvelle
   commande dans le point d'entrée public ; les modules prévus au cadrage ne peuvent seuls la rendre accessible.
 - **Travail non commité** : aucun attendu après le commit du lot et de cette reprise.
-- **Prochaine étape** : contrôles officiels complets puis verdict agent sur le commit livré. Le jugement
+- **Prochaine étape** : renouveler le verdict officiel sur le commit livré. Le jugement
   de lisibilité et de reproductibilité du rapport (`QUA-234`) exige une attestation humaine ; ne pas
   clôturer, programmer une fusion ni lancer le chantier suivant sans verdict global PASS.

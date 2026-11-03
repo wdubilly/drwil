@@ -2258,6 +2258,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : commande publique en sous-processus sur des données fictives, versions, échec et entrées absentes ou invalides.
 **Contrôle** : `tests-qua-231`
 **Tests** : `packages/drwil/test/report.test.mjs`
+**Origine** : signaler-un-defaut-du-kit — « Une commande drwil imprime un rapport de défaut prêt à coller : version du kit, contrôle en échec et son message »
 **Raison** : Un défaut doit pouvoir être décrit depuis le projet installé sans inventer une exécution.
 
 ## QUA-232 — Le rapport de défaut n'exporte aucune donnée du projet
@@ -2267,6 +2268,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : marqueurs privés fictifs de formats variés dans tous les champs, version forgée, contrôles inconnus, liens symboliques et volume excessif.
 **Contrôle** : `tests-qua-232`
 **Tests** : `packages/drwil/test/report.test.mjs`
+**Origine** : signaler-un-defaut-du-kit — « Le rapport ne contient aucune donnée du projet (chemins absolus, noms de dépôt, contenu de fichiers, secrets) »
 **Raison** : Un masque de secrets connus ne garantit pas la confidentialité d'un texte arbitraire.
 
 ## QUA-233 — Le rapport est strictement local et en lecture seule
@@ -2276,6 +2278,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : instantané des fichiers avant/après la CLI et contrôle local sentinelle qui ne doit pas tourner ; lecteur limité à des fichiers locaux non symboliques.
 **Contrôle** : `tests-qua-233`
 **Tests** : `packages/drwil/test/report.test.mjs`
+**Origine** : signaler-un-defaut-du-kit — « La commande n'écrit jamais dans un autre dépôt et n'appelle aucune forge »
 **Raison** : La remontée d'un défaut n'autorise ni télémétrie ni action dans un autre dépôt.
 
 ## QUA-234 — Un humain juge la lisibilité et la reproductibilité du rapport de défaut
@@ -2287,4 +2290,5 @@ régression sauf si la fiche active déclare le changement (section
 **Manuel** : Lire le rapport et la recette ; confirmer la lisibilité et la précision suffisante pour une reproduction sans donnée du projet.
 **Couvre** : `packages/drwil/src/cli-report.ts`, `packages/drwil/src/cli-texts.ts`, `packages/drwil/templates/common/base/docs/recipes/report-a-kit-defect.md`
 **Tests** : `packages/drwil/test/report.test.mjs`
+**Origine** : signaler-un-defaut-du-kit — « Le texte du rapport est lisible et assez précis pour être reproduit »
 **Raison** : La présence automatique de champs ne prouve pas qu'un mainteneur peut comprendre le signalement.
