@@ -145,6 +145,25 @@ test("QUA-048 : hors CLOSING, la mécanique est refusée ; --check signale sans 
   ecrire(racine, {
     ".drwil/state.json": JSON.stringify({ version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null }),
   });
+
+  test("QUA-048 : caractérisation avant extraction — --check conserve tous les fichiers et un refus de preuve ne touche pas l'index ni la consommation", () => {
+    const racine = depot({ evidence: false });
+    ecrire(racine, { ".drwil/usage.jsonl": '{"workstream":"ancien"}\n' });
+    const chemins = [FICHE, "docs/projects/pending.md", ".drwil/usage.jsonl", ".drwil/state.json"];
+    const avant = chemins.map((f) => readFileSync(join(racine, f), "utf8"));
+    assert.equal(close(racine, { check: true }).code, 0);
+    assert.deepEqual(
+      chemins.map((f) => readFileSync(join(racine, f), "utf8")),
+      avant,
+    );
+    assert.equal(close(racine, { logs: journaux() }).code, 1);
+    assert.deepEqual(
+      chemins.map((f) => readFileSync(join(racine, f), "utf8")),
+      avant,
+    );
+    assert.ok(!existsSync(join(racine, "docs/preuves/exemple.md")));
+    assert.equal(git(racine, "diff", "--cached", "--name-only"), "");
+  });
   assert.match(close(racine).message, /aucune fiche active ni fiche donnée/);
   assert.equal(close(racine, { brief: FICHE, check: true }).code, 0, "une fiche donnée se vérifie hors chantier");
 });
