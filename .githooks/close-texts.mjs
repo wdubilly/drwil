@@ -26,6 +26,9 @@ export const TEXTS = {
     rest: "Reste à l'agent : l'entrée du journal (décisions, limites en intentions), puis le commit de clôture.",
     twice: (j, f, n) =>
       `${j} : ${n} entrées citent \`${f}\` — un chantier rouvert met à jour son entrée de journal, il n'en ajoute pas une seconde`,
+    journalProof: (f) => `- **Preuve de clôture** : \`${f}\`.`,
+    journalAmbiguous: (j, f, n) => `${j} : ${n} entrées correspondent à \`${f}\` — identifier une seule entrée avant la clôture`,
+    journalRefused: (r) => `clôture refusée : le journal ne peut pas être complété — ${r}`,
   },
   en: {
     usage: "usage: node .githooks/close.mjs [--check] [--fix] [<brief path>] [--logs <folder>]",
@@ -50,6 +53,9 @@ export const TEXTS = {
     warnings: "Warnings (non-blocking):",
     rest: "Left to the agent: the journal entry (decisions, limits as intents), then the closing commit.",
     twice: (j, f, n) => `${j}: ${n} entries cite \`${f}\` — a reopened workstream updates its journal entry, it never adds a second one`,
+    journalProof: (f) => `- **Closing proof**: \`${f}\`.`,
+    journalAmbiguous: (j, f, n) => `${j}: ${n} entries match \`${f}\` — identify a single entry before closing`,
+    journalRefused: (r) => `closing refused: the journal cannot be completed — ${r}`,
   },
 };
 

@@ -46,6 +46,7 @@ files:
   - .githooks/state.test.mjs
   - .githooks/close.mjs
   - .githooks/close-mechanics.mjs
+  - .githooks/close-journal.mjs
   - .githooks/close-branches.mjs
   - .githooks/closure-proof.mjs
   - .githooks/close.test.mjs

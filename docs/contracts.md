@@ -2220,3 +2220,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/guarantees.test.mjs`
 **Origine** : clôture-sur-projet-neuf — « drwil guarantees affiche “✓ couverture” alors que drwil verify déclare la garantie non tenue »
 **Raison** : Deux diagnostics divergents faisaient croire le chantier de garantie fini.
+
+## QUA-228 — La clôture complète automatiquement le renvoi de preuve et l'index
+**Règle** : Livré à tout projet. Après validation de l'évidence et avant suppression de la fiche, la clôture écrit sa preuve et son renvoi dans le journal (`dirs.projects`), sans demander de citation manuelle préalable. L'entrée est reconnue par la preuve déjà citée, le titre de la fiche, son nom ou sa branche ; une ambiguïté ou une erreur de lecture/écriture refuse la suppression. Sans entrée identifiable, seule une entrée minimale nommée par le chantier et citant sa preuve est ajoutée : aucune décision métier n'est inventée. Une relance ne double ni entrée ni renvoi. La ligne propre à cette fiche est retirée de l'index (`dirs.index`), continuations comprises ; les lignes communes à plusieurs fiches gardent la prudence de QUA-074. `--check` prépare et signale sans écrire.
+**Périmètre** : `.githooks/close.mjs`, `.githooks/close-mechanics.mjs`, `.githooks/close-journal.mjs`, gabarit et installation.
+**Source de vérité** : `.githooks/close-journal.mjs` et `.githooks/close-mechanics.mjs`.
+**Preuve** : clôture de bout en bout avec résumé de journal sans citation, plusieurs entrées, index multilignes, relance, dossiers réglés et langue anglaise ; refus avant suppression si journal ambigu ou inaccessible ; preuve refusée sans modification du journal.
+**Contrôle** : `tests-qua-228`
+**Tests** : `.githooks/close.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « La clôture écrit elle-même la ligne “Preuve de clôture” du journal et corrige la ligne de l'index qui cite la fiche supprimée »
+**Raison** : Le renvoi écrit à la main échouait avant que la clôture ait pu créer la preuve ; la mécanique doit finir sans retouche.
+
+## QUA-229 — La référence à la preuve future du seul chantier actif n'est pas une référence morte
+**Règle** : Livré à tout projet. Le contrôle des références utilisé par `drwil verify` tolère un chemin de preuve absent uniquement s'il est exactement celui du chantier actif existant, lu dans un état valide BUILD, EVIDENCE, VERIFY ou CLOSING, selon `dirs.proofs`. Hors chantier actif, après suppression de la fiche, avec un état absent ou illisible, et pour toute autre preuve absente, la référence reste bloquante. Une preuve présente mais ignorée par Git reste jugée par la règle ordinaire ; aucune preuve déjà close n'est dispensée de vérification.
+**Périmètre** : `.githooks/check-docs.mjs`, gabarit et installation.
+**Source de vérité** : `.githooks/check-docs.mjs`, chemin partagé de `.githooks/closure-proof.mjs`.
+**Preuve** : contrôle réel sur projets git : quatre activités actives, dossier de preuves réglé, état absent/invalide/SCOPING, fiche disparue et ancienne preuve absente.
+**Contrôle** : `tests-qua-229`
+**Tests** : `.githooks/check-docs.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « Avant la clôture, la citation de la preuve du chantier actif ne fait plus échouer verify »
+**Raison** : Le fichier est créé par la clôture après verify ; exiger sa présence avant rendait le cycle impossible.

@@ -113,15 +113,21 @@ that folder only):
 - If the whole brief is now finished (not just one increment among several of a
   brief that otherwise stays open): summarize the brief into a short entry
   in `docs/projects/journal.md` (date, title, key decisions, closing
-  commit/PR, and the closing proof of the workstream — the entry cites it),
+  commit/PR; identify the entry by its title, brief slug or branch),
   then run `node .githooks/close.mjs` (in Closing): it writes the closing
-  proof (below), deletes
+  proof (below), adds the proof citation to the matching journal entry, then deletes
   the brief file, removes the matching item from `docs/projects/pending.md`
   (don't check it: the journal becomes the closing source, the index only
   lists remaining work; a past entry is read by itself:
   `node .githooks/glossary.mjs --journal <brief>`, never the whole journal) and records the consumption. It stages, commits,
   pushes and merges nothing. Nothing is lost — the full history stays in
   git (`git log --follow -- docs/projects/<brief>.md`).
+- No manual proof citation is required: the closing adds it idempotently,
+  respecting `dirs.projects` and `dirs.proofs`. If no entry matches, it creates
+  only a minimal entry with the proof link, never business decisions.
+  An ambiguous or unreadable/unwritable journal keeps the brief in place.
+  A citation of the active workstream's future proof does not fail the
+  references check before closing; any other missing proof still fails it.
 - The closing writes the workstream's proof first, a versioned file in
   `docs/preuves/` (`dirs.proofs` setting): every acceptance criterion with
   its contract, that contract's checks, the verified commit and the

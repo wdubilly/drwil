@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — lot 1 commité, lot 2 en réalisation.
+**Statut** : en cours le 2026-11-03 — lots 1 et 2 réalisés, contrôles et commit du lot 2 en cours.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -73,9 +73,9 @@ est refusée ou faussée pour des raisons qui ne tiennent pas au chantier. Trois
 - Dès que la couche reçoit du code, la garantie redevient applicable et son échec redevient bloquant —
   `QUA-225`
 - La clôture écrit elle-même la ligne « Preuve de clôture » du journal et corrige la ligne de l'index qui
-  cite la fiche supprimée — contrat à créer
+  cite la fiche supprimée — `QUA-228`
 - Avant la clôture, la citation de la preuve du chantier actif (`docs/preuves/<fiche>.md`) ne fait plus
-  échouer `verify` — contrat à créer
+  échouer `verify` — `QUA-229`
 - En BUILD, `.githooks/close.mjs --check` liste les renvois à la fiche (catalogue, dashboard, intentions, index,
   journal) qui bloqueraient le commit de clôture, et propose l'extension du bloc scope — contrat à créer
 - Ajouter ou retirer la marque `[humain]` d'un critère ne change pas l'empreinte acceptée ; tout autre
@@ -89,6 +89,10 @@ est refusée ou faussée pour des raisons qui ne tiennent pas au chantier. Trois
 - `.githooks/close.mjs` — mécanique extraite avant ajout ; écrit automatiquement le renvoi de preuve
   dans l'entrée du journal, comme décidé en section 4.
 - `.githooks/check-docs.mjs` — tolère uniquement la preuve future du chantier actif, comme décidé en section 4.
+- `.githooks/closure-proof.mjs` — le signal de citation manuelle devient la préparation automatique
+  du renvoi de preuve ; les refus d'évidence et la conservation de la fiche restent inchangés.
+- `.githooks/close-texts.mjs` — messages français et anglais du renvoi automatique et de ses refus,
+  nécessaires à la décision de clôture complète de la section 4.
 
 ## 2. Hors périmètre
 
@@ -179,6 +183,35 @@ Tranchées par le demandeur le 2026-10-30 :
   son bloc scope est mis à jour en plus du gabarit (l'installateur la préserve).
   Après rattachement au gabarit : contrôles globaux code 0, 40 avertissements,
   78 repris / 146 rejoués, sans aucun changement de comportement.
+  Extraction commitée séparément (`96e7308`) ; hooks OK, 68 avertissements.
+- **Cause et reproduction du lot 2** : le contrôle `docs-references` exigeait le fichier que la
+  clôture crée seulement après `verify` ; la clôture n'ajoutait aucun renvoi dans le journal.
+  Cinq tests ciblés nouveaux ont échoué avant correction. Le retrait normal de l'élément d'index
+  multilignes existait déjà : il est conservé et testé dans le cycle complet, pas réinventé.
+- **Réalisation du lot 2** : renvoi ajouté à l'entrée reconnue par preuve, titre, nom ou branche ;
+  sans entrée identifiable, un renvoi minimal seul est créé. Ambiguïté ou journal inaccessible :
+  fiche conservée. Relance idempotente. Une seule preuve future, celle du chantier actif existant
+  dans un état valide, est tolérée par le contrôle de références ; les autres restent bloquantes.
+  Contrats `QUA-228` et `QUA-229` ajoutés. La recette propre au dépôt est aussi un écart déclaré :
+  son texte commun est aligné sur le gabarit, ses compléments locaux préservés.
+- **Preuves du lot 2** :
+  - `node .githooks/wait-command.mjs --wait 600 npm run test:hooks:coverage` : code 0,
+    546 tests réussis, aucun échec ; hooks à 100 % lignes, instructions, branches et fonctions.
+  - `node .githooks/check-docs.mjs` : 211 fichiers, 0 erreur ;
+    `node .githooks/check-contract-tests.mjs` : 275 liens, 0 problème ;
+    `node outils/verifier-tests-contrats.mjs` : 613 tests rattachés, 0 problème ;
+    `node outils/verifier-miroirs.mjs` : 183 fichiers, 17 écarts déclarés, 0 problème ;
+    `node .githooks/check-architecture.mjs` : 167 éléments, 0 absent ;
+    `node .githooks/check-file-size.mjs` : code 0.
+  - Aucun `verify` complet du dépôt exécuté entre lots, aucune attestation, aucune clôture ni push.
+  - Validation principale avant commit de code :
+    `node .githooks/wait-command.mjs --wait 600 node .githooks/run-checks.mjs` :
+    code 0, « contrôles exécutés : OK (51 avertissement(s), non exécutés compris) ».
+    Paquet : 281 tests réussis, couverture 98,30 % lignes/instructions, 90,64 % branches,
+    98,69 % fonctions ; hooks : 546 tests réussis, 100 % ; hooks Claude : 15 tests réussis.
+    Variables temporaires normales, aucune garde modifiée.
+  - Empreinte relue : `sha256:922f5befc3a3593d`, `acceptanceCheck` retourne `same`.
+    Aucun hook modifié non déclaré (`undeclaredHooks` : listes vides).
 - **Complément indispensable de cadrage** : le gabarit
   `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md` doit citer les modules
   extraits, comme sa copie déjà cadrée. La première passe après extraction a révélé 7 contrôles
@@ -237,5 +270,6 @@ Tranchées par le demandeur le 2026-10-30 :
 - **Hooks du lot 1** : réussis, code lot 1 OK, 51 avertissements (non exécutés inclus).
   Aux deux commits, Git a signalé `.githooks/commit-msg` ignoré car non exécutable. Préexistant,
   aucun contrôle réellement refusé pour cette cause ; ni désactivation ni correction hors périmètre.
-- **Prochaine étape** : lot 2 seulement ; caractériser, extraire, puis réaliser la clôture complète,
-  contrôler et commiter ; `state.mjs lot next` seulement après les commits, puis arrêter.
+- **Prochaine étape** : lire les contrôles globaux du lot 2, commiter le code, puis
+  `node .githooks/state.mjs lot next` et arrêter. Le lot 3 « empreinte sans [humain] » reste à faire
+  dans un contexte neuf, ainsi que le lot 4 ; ne pas clore le chantier.

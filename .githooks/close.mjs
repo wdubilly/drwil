@@ -2,7 +2,7 @@
 // Closing of a workstream in one gesture (QUA-048): `node .githooks/close.mjs` (in CLOSING) deletes
 // the brief, removes its index line and records the consumption; `--check` (any activity) only
 // reports, before the commit, what would make the closing fail. It never stages, commits, pushes nor
-// merges anything, and it never writes the state: the journal entry and the limits stay the agent's.
+// merges anything, and it never writes the state: journal decisions and limits stay the agent's.
 // The recognition and deletion of the merged local branches live in close-branches.mjs (QUA-048,
 // QUA-058, QUA-059), re-exported here.
 import { existsSync, readFileSync, realpathSync } from "node:fs";
@@ -10,8 +10,9 @@ import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { undeclaredHooks } from "./base-checks.mjs";
 import { config } from "./briefs.mjs";
-import { bareNames, criteriaToCreate, deadReferences, journalTwice } from "./close-checks.mjs";
+import { bareNames, criteriaToCreate, deadReferences } from "./close-checks.mjs";
 import { closingMechanics } from "./close-mechanics.mjs";
+import { journalPlan } from "./close-journal.mjs";
 import { texts } from "./close-texts.mjs";
 import {
   applyProposals,
@@ -22,7 +23,6 @@ import {
   proposals,
   twinIntents,
 } from "./doc-coherence.mjs";
-import { proofNotCited } from "./closure-proof.mjs";
 import { lateLines } from "./worktree.mjs";
 import { readState, stateRoot, verifyEvidence } from "./state.mjs";
 
@@ -47,11 +47,11 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
   const cfg = config(root);
   const lang = cfg.lang === "en" ? "en" : "fr";
   const T = texts(root);
+  const journal = journalPlan(root, brief, text);
   const plain = [
+    ...(journal.problem ? [journal.problem] : []),
     ...criteriaToCreate(root, brief, text),
     ...undeclaredHooks(root, text).lines,
-    ...proofNotCited(root, brief),
-    ...journalTwice(root, brief),
     ...deadReferences(root, brief),
     ...bareNames(root),
   ].map((message) => ({ message }));

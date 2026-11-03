@@ -2,6 +2,7 @@ import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { config } from "./briefs.mjs";
 import { git } from "./close-checks.mjs";
+import { journalPlan } from "./close-journal.mjs";
 import { texts } from "./close-texts.mjs";
 import { main as consumption } from "./consumption.mjs";
 import { indexItem } from "./doc-coherence.mjs";
@@ -38,8 +39,13 @@ export function closingMechanics(root, path, text, { state, env, logs, done }) {
   const T = texts(root);
   // QUA-084 : aucune suppression tant que la preuve n'est pas écrite.
   const proof = closureProof(root, path, text, { head: git(root, "rev-parse", "HEAD") });
-  const problem = proof.problem ?? writeProof(root, proof);
+  if (proof.problem) return { code: 1, message: proofText(root, "proofRefused", proof.problem) };
+  const journal = journalPlan(root, path, text);
+  if (journal.problem) return { code: 1, message: journal.problem };
+  const problem = writeProof(root, proof);
   if (problem) return { code: 1, message: proofText(root, "proofRefused", problem) };
+  const journalProblem = writeProof(root, journal);
+  if (journalProblem) return { code: 1, message: T.journalRefused(journalProblem) };
   done.push(proofText(root, "proofWritten", proof.file));
   if (existsSync(join(root, path))) {
     unlinkSync(join(root, path));

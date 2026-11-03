@@ -12,6 +12,8 @@ import { checkRisk } from "./risk.mjs";
 import { briefReferenceProblems } from "./check-code-rules.mjs";
 import { checkboxProblems, OPTIONAL_RE, TO_CREATE_RE } from "./doc-coherence.mjs";
 import { skillHeaderProblems } from "./skill-headers.mjs";
+import { readState } from "./state-validate.mjs";
+import { proofPath } from "./closure-proof.mjs";
 
 const root = process.cwd();
 const cfg = loadConfig();
@@ -115,9 +117,16 @@ const ignored = ignoredByGit(citations.flatMap((c) => c.found));
 const newBlocking = cfg.newRequirements === "blocking";
 const newWarnings = [];
 const catalogPath = join(root, cfg.dirs?.catalog ?? "docs/contracts-catalog.md");
+// QUA-229 : la clôture n'a pas encore écrit cette seule preuve ; aucune ancienne preuve n'est dispensée.
+const { state } = readState(root);
+const futureProof =
+  ["BUILD", "EVIDENCE", "VERIFY", "CLOSING"].includes(state.activity) && state.active_brief && existsSync(join(root, state.active_brief))
+    ? proofPath(root, state.active_brief)
+    : null;
 for (const p of existsSync(catalogPath) ? idConflicts(readFileSync(catalogPath, "utf8"), defined, relative(root, contractsPath), lang) : [])
   (newBlocking ? errors : newWarnings).push(`${relative(root, catalogPath)} : ${p}`);
 for (const c of citations) {
+  if (!c.found.length && c.cited === futureProof) continue;
   if (!c.found.length) errors.push(`${c.place} : ${T.path(c.cited)}`);
   else if (!c.found.some((p) => !ignored.has(relPosix(p))))
     (newBlocking ? errors : newWarnings).push(`${c.place} : ${T.path(c.cited)} — ${T.ignoredByGit}`);
