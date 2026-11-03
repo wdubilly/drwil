@@ -31,6 +31,7 @@ files:
   - .drwil/ia-first.json
   - docs/ia-first/6-limits-and-tool-compatibility.md
   - packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md
+  - outils/parite-des-outils.test.mjs
 -->
 
 ## 1. Besoin
@@ -128,7 +129,9 @@ Tranchées par le demandeur le 2026-10-30 :
 - **Extension de scope, correction du cadrage** : la matrice
   `packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md` et son miroir
   `docs/ia-first/6-limits-and-tool-compatibility.md` décrivent le canal d'attestation de chaque outil,
-  les préalables manquants et le protocole d'essai réel. Aucun nouvel adaptateur n'est autorisé sur
+  les préalables manquants et le protocole d'essai réel. `outils/parite-des-outils.test.mjs` inscrit
+  l'attestation parmi les mécanismes suivis et vérifie l'écart déclaré pour les cinq outils configurables,
+  sans confondre présence de texte et preuve de fonctionnement. Aucun nouvel adaptateur n'est autorisé sur
   un format deviné ; ses chemins précis devront entrer dans un cadrage commité avant son code.
 - **Arrêt requis si le canal manque** : garder BUILD et la PR brouillon, aucune clôture ni fusion ;
   rapporter les événements manquants et le geste humain attendu. QUA-236 (jugement de lisibilité du
