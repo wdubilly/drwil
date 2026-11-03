@@ -176,7 +176,21 @@ Tranchées par le demandeur le 2026-10-30 :
   - Premier contrôle complet par `drwil-checks` : `run-checks` code 1, 2 contrôles en échec
     (QUA-063 et le contrôle de miroirs qui lance le même test), 41 avertissements ; `verify --agent` :
     `Verdict: GOVERNANCE: FAIL (exit 1)`. Cause reproduite puis corrigée dans le découpage du test,
-    sans modifier une règle ni désactiver de contrôle. Passe complète à relancer après le correctif.
+    sans modifier une règle ni désactiver de contrôle.
+  - Passe complète après correctif, `node .githooks/run-checks.mjs` : code 0,
+    « contrôles exécutés : OK (10 avertissement(s), non exécutés compris) », 197 contrôles repris
+    sur fichiers inchangés, 35 rejoués.
+  - Puis `node packages/drwil/bin/drwil.js verify --agent` : code 1,
+    `Verdict: GOVERNANCE: FAIL (exit 1)` ; 206 PASS, 19 ATTESTED, 0 FAIL, 0 ERROR,
+    3 MANUAL. Cause du verdict global : premier critère cinq outils sans preuve ; jugements
+    humains restants : QUA-063 (matrice de compatibilité datée), QUA-150 (recensement des tests
+    de timing) et QUA-236 (lisibilité du sondage). La modification documentaire de
+    `outils/banc-agents.test.mjs`, couvert en entier, invalide l'ancienne attestation de QUA-150,
+    sans aucun changement d'un test de durée. Aucune attestation renouvelée par l'agent.
+  - L'avertissement préexistant du hook `.githooks/commit-msg` non exécutable a été laissé inchangé :
+    aucun contrôle désactivé ni réglage modifié.
+- **État de remise** : BUILD, chantier partiel, pas de preuve de parité et pas de validation globale.
+  La PR reste brouillon, fusion non programmée. Aucune clôture ni lancement de la file suivante.
 
 ### Historique avant la correction du périmètre
 
