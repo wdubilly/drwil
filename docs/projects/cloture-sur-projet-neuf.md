@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — lot 1 réalisé, contrôles réussis, commit à effectuer.
+**Statut** : en cours le 2026-11-03 — lot 1 commité, lot 2 en réalisation.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -30,6 +30,15 @@ files:
   - .githooks/state-acceptance.mjs
   - .githooks/close.test.mjs
   - .githooks/state.test.mjs
+  - packages/drwil/templates/common/base/.githooks/close-mechanics.mjs
+  - .githooks/close-mechanics.mjs
+  - packages/drwil/templates/common/base/.githooks/close-journal.mjs
+  - .githooks/close-journal.mjs
+  - packages/drwil/templates/common/base/.githooks/check-docs.mjs
+  - .githooks/check-docs.mjs
+  - .githooks/check-docs.test.mjs
+  - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
+  - docs/intentions/commit-msg-non-executable.md
   - docs/contracts.md
   - docs/contracts-catalog.md
   - docs/architecture.md
@@ -76,6 +85,9 @@ est refusée ou faussée pour des raisons qui ne tiennent pas au chantier. Trois
 - `QUA-174` — ancien critère : « texte de chaque puce, lignes de continuation jointes, espaces normalisés,
   preuve citée exclue » — raison : la marque `[humain]` est une classification de la preuve, pas le sens du
   critère ; l'exclure de l'empreinte évite un geste humain par marque posée après coup (validé le 2026-10-30)
+- `.githooks/close.mjs` — mécanique extraite avant ajout ; écrit automatiquement le renvoi de preuve
+  dans l'entrée du journal, comme décidé en section 4.
+- `.githooks/check-docs.mjs` — tolère uniquement la preuve future du chantier actif, comme décidé en section 4.
 
 ## 2. Hors périmètre
 
@@ -142,7 +154,19 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-03) : BUILD, lot 1 réalisé et testé, non commité ; état non avancé.
+- **Dernier état** (2026-11-03) : BUILD, lot 1 commité (`3290841` : cadrage ; `76b9fad` : code),
+  `state.mjs lot next` effectué ; lot courant 2 « clôture complète ».
+- **Périmètre ajouté au lot 2, avant code** : module close-mechanics dans le gabarit et son miroir
+  `.githooks/close-mechanics.mjs` (à créer) (extraction préalable de la mécanique et de la consommation) ;
+  `.githooks/close-journal.mjs` (à créer) et son gabarit (préparation et écriture idempotente du renvoi
+  de preuve dans le journal, sans inventer de décisions métier) ;
+  module check-docs dans le gabarit et son miroir, `.githooks/check-docs.test.mjs`
+  (le faux échec de `verify` provient du contrôle de références exécuté par son moteur, pas du juge
+  TypeScript) ; gabarit de `docs/recipes/working-with-branches.md` (source de la recette installée
+  déjà cadrée) ; `docs/intentions/commit-msg-non-executable.md` (limite préexistante à conserver,
+  sans la corriger dans ce lot).
+- **Caractérisation préalable** : tests existants de clôture complétés avant extraction, puis commit
+  distinct vert. Aucun lot 3 ou 4 à réaliser dans ce contexte.
 - **Périmètre ajouté au lot 1** : `packages/drwil/src/guarantees-layers.ts` (applicabilité et classement de la
   couche), `packages/drwil/src/config-write.ts` (photo du code à la première installation), `packages/drwil/src/verify-types.ts`
   et `packages/drwil/src/verdict.ts` (information non bloquante lisible dans le verdict), `packages/drwil/src/verify.ts`
@@ -187,12 +211,13 @@ Tranchées par le demandeur le 2026-10-30 :
   malgré l'interdiction explicite transmise dans sa consigne. Résultat FAIL : blocages ci-dessus,
   critères des lots suivants non réalisés et attestations humaines manquantes. Aucune attestation
   ni transition de gouvernance n'a été effectuée ; ne pas réutiliser cette passe comme preuve de clôture.
-- **Travail non commité** : les 16 fichiers du lot sont indexés ; aucun changement préexistant
-  (arbre initialement propre). Aucun commit, push, clôture ni `lot next`.
+- **Travail du lot 1** : les 16 fichiers ont été commités ; arbre propre au démarrage du lot 2.
 - **Validation normale reprise par la session principale** :
   `node .githooks/wait-command.mjs --wait 600 node .githooks/run-checks.mjs` :
   code 0, contrôles exécutés OK, 9 avertissements (non exécutés compris),
   200 repris et 24 rejoués. Aucun répertoire temporaire forcé, aucune garde modifiée.
-- **Prochaine étape** : commiter le lot 1.
-  Seulement ensuite lancer `node .githooks/state.mjs lot next`. Le lot 2 (clôture complète) reste
-  le suivant prévu, non lancé ; les lots 2 à 4 n'ont pas été réalisés.
+- **Hooks du lot 1** : réussis, code lot 1 OK, 51 avertissements (non exécutés inclus).
+  Aux deux commits, Git a signalé `.githooks/commit-msg` ignoré car non exécutable. Préexistant,
+  aucun contrôle réellement refusé pour cette cause ; ni désactivation ni correction hors périmètre.
+- **Prochaine étape** : lot 2 seulement ; caractériser, extraire, puis réaliser la clôture complète,
+  contrôler et commiter ; `state.mjs lot next` seulement après les commits, puis arrêter.
