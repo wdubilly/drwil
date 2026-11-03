@@ -124,7 +124,11 @@ export async function waitFor({ root = process.cwd(), command, wait, status, int
   }
   if (v.state === "running") return { code: 3, message: fill(T.running, status ? 0 : wait) };
   if (v.state === "interrupted") return { code: 2, message: T.interrupted };
-  if (!status) rmSync(verdictFile(root, keyOf(command)));
+  if (!status) {
+    // the pid goes with the verdict: a runner still shutting down must not pass for a live run of the next call
+    rmSync(verdictFile(root, keyOf(command)));
+    rmSync(pidFile(root, keyOf(command)));
+  }
   if (v.exit === 0) return { code: 0, message: fill(T.passed, v.log) };
   return { code: 1, message: fill(T.failed, v.exit, v.log) };
 }
