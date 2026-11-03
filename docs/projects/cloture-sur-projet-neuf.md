@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : cadré le 2026-10-30.
+**Statut** : en cours le 2026-11-03 — lot 1 réalisé, contrôles réussis, commit à effectuer.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -10,6 +10,13 @@ files:
   - packages/drwil/src/guarantees-verify.ts
   - packages/drwil/src/guarantees-table.ts
   - packages/drwil/src/guarantees-texts.ts
+  - packages/drwil/src/guarantees-layers.ts
+  - packages/drwil/src/config-write.ts
+  - packages/drwil/src/verify-types.ts
+  - packages/drwil/src/verdict.ts
+  - packages/drwil/src/verify.ts
+  - packages/drwil/src/verify-checks.ts
+  - packages/drwil/src/verdict-texts.ts
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/templates/common/base/.githooks/close.mjs
   - packages/drwil/templates/common/base/.githooks/close-checks.mjs
@@ -25,6 +32,7 @@ files:
   - .githooks/state.test.mjs
   - docs/contracts.md
   - docs/contracts-catalog.md
+  - docs/architecture.md
   - docs/projects/kit-mechanics.md
   - docs/recipes/working-with-branches.md
   - .drwil/ia-first.json
@@ -51,9 +59,9 @@ est refusée ou faussée pour des raisons qui ne tiennent pas au chantier. Trois
 ## Critères d'acceptation
 
 - Sur un projet sans code, une garantie couverture ou e2e dont la couche n'a aucun code est « pas encore
-  applicable » : elle ne met pas `verify` en FAIL, et le dit en clair — contrat à créer
+  applicable » : elle ne met pas `verify` en FAIL, et le dit en clair — `QUA-224`
 - Dès que la couche reçoit du code, la garantie redevient applicable et son échec redevient bloquant —
-  contrat à créer
+  `QUA-225`
 - La clôture écrit elle-même la ligne « Preuve de clôture » du journal et corrige la ligne de l'index qui
   cite la fiche supprimée — contrat à créer
 - Avant la clôture, la citation de la preuve du chantier actif (`docs/preuves/<fiche>.md`) ne fait plus
@@ -106,13 +114,15 @@ Tranchées par le demandeur le 2026-10-30 :
 ## 5. Points à trancher
 
 - [IA] Définition mécanique de « couche sans code » (aucun fichier source suivi dans les dossiers de la
-  couche, hors gabarits et dépendances) : à fixer au lot 1, avec des tests sur dossier vide.
+  couche, hors gabarits et dépendances) : fixée au lot 1 par `QUA-225`, avec une règle plus prudente :
+  les fichiers présents non encore indexés comptent aussi, et la recherche n'a pas de profondeur limite.
 
 - [IA] Deux défauts liés, vus au même essai : (a) le classement « nouveau » ou « existant » dépend de la
   présence de code au moment où `drwil guarantees` est lancé, alors que la recette d'un projet neuf impose
   d'écrire le code d'abord ; (b) `drwil guarantees` affiche « ✓ couverture » alors que `drwil verify`
   déclare la garantie non tenue. À reproduire au lot 1 (cause avant correctif) ; si les deux outils
-  doivent partager le même juge, l'ajouter au lot 1 plutôt qu'en ouvrir un autre.
+  doivent partager le même juge, l'ajouter au lot 1 plutôt qu'en ouvrir un autre. Reproduits au lot 1 :
+  photo de l'origine à `init` (`QUA-226`) et juge partagé de déclaration/citation (`QUA-227`).
 
 ## 6. Increments
 
@@ -132,6 +142,57 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-30) : cadré, décisions prises, aucun code.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] lancer par `/drwil-start`.
+- **Dernier état** (2026-11-03) : BUILD, lot 1 réalisé et testé, non commité ; état non avancé.
+- **Périmètre ajouté au lot 1** : `packages/drwil/src/guarantees-layers.ts` (applicabilité et classement de la
+  couche), `packages/drwil/src/config-write.ts` (photo du code à la première installation), `packages/drwil/src/verify-types.ts`
+  et `packages/drwil/src/verdict.ts` (information non bloquante lisible dans le verdict), `packages/drwil/src/verify.ts`
+  (ne pas exécuter des contrôles de garantie d'une couche vide, même déjà cités),
+  `packages/drwil/src/verify-checks.ts` et `packages/drwil/src/verdict-texts.ts` (découpage préalable des deux fichiers de 200 lignes,
+  caractérisé par les tests existants d'installation, cycle et verdict), `docs/architecture.md`
+  (carte des deux nouveaux modules, exigée par le contrôle).
+- **Cause** : les couches vides sont jugées comme les couches codées ; le classement est recalculé
+  au lancement de `guarantees` ; son résumé ignore la citation des contrôles par les contrats.
+- **Réalisation** : couverture et e2e pas encore applicables sans code, y compris si les contrôles
+  sont déjà cités ; réactivation dès le premier fichier, même non indexé ; origine photographiée à
+  `init`, conservée aux mises à jour (ancienne installation sans photo : classement conservateur
+  inchangé) ; déclaration et citation jugées par la même fonction. Contrats `QUA-224` à `QUA-227`
+  ajoutés. Aucun fichier installé modifié, donc aucune synchronisation du gabarit nécessaire.
+- **Preuves** :
+  - Avant correction, les quatre premiers tests `QUA-224` à `QUA-227` échouaient.
+  - `npm run build --workspace packages/drwil && TMPDIR="$PWD/.drwil/evidence/lot1-isolation" node --test packages/drwil/test/guarantees.test.mjs packages/drwil/test/config-write.test.mjs packages/drwil/test/kit.test.mjs packages/drwil/test/cycle.test.mjs` :
+    247 tests, 247 réussis, 0 échec. Commande lancée par le script d'attente, en fond.
+  - Le contrôle global exécute `npm run test:coverage` dans `packages/drwil` : 281 tests réussis ;
+    98,30 % lignes/instructions, 90,64 % branches, 98,69 % fonctions, seuils tenus.
+    `npm run test:hooks:coverage` : 540 tests réussis ; `npm run test:claude:coverage` : 15 tests réussis.
+  - `npx biome check` sur les 12 fichiers de code/test touchés : aucune erreur ni avertissement.
+    `node .githooks/check-file-size.mjs` : code 0 ;
+    `node .githooks/check-contract-tests.mjs` : 273 liens, 0 problème ;
+    `node outils/verifier-tests-contrats.mjs` : 607 tests rattachés, 0 problème.
+  - `node outils/verifier-miroirs.mjs` : 181 fichiers, 17 écarts déclarés, 0 problème ;
+    `node .githooks/check-architecture.mjs` : 166 éléments, 0 absent ;
+    `node .githooks/check-docs.mjs` : 210 fichiers, 0 erreur.
+    L'empreinte des critères acceptés reste `sha256:922f5befc3a3593d` : seuls leurs renvois de preuve ont changé.
+- **Première passe globale, diagnostic rectifié** : `node .githooks/run-checks.mjs` par le sous-agent
+  de contrôles, via le script d'attente, avec TMPDIR/TMP/TEMP dans le dépôt : 8 contrôles en échec,
+  38 avertissements, 75 repris, 149 rejoués (détail dans `.drwil/evidence/run-checks.log` (si présent)).
+  Les bancs refusent explicitement toute racine de fixtures située dans le dépôt, y compris après
+  résolution du chemin réel. Ces échecs établissent que le TMPDIR forcé dans le dépôt était
+  inadapté, pas qu'un outil interdisait les fixtures extérieures : aucune création hors dépôt
+  n'a été tentée ni refusée par un outil. L'ancien diagnostic d'interdiction environnementale
+  n'était donc pas établi par les erreurs observées. Les contrôles concernés sont ceux
+  des contrats `QUA-060`, `QUA-101`, `QUA-102`, `QUA-103`, `QUA-104`, `QUA-107`, `QUA-108` et
+  `miroirs-gabarit` (ses tests d'outils s'arrêtent sur les mêmes bancs ; la comparaison des miroirs,
+  exécutée séparément, est verte). Ni garde ni contrôle n'a été affaibli.
+- **Incident de procédure** : le sous-agent de contrôles a également exécuté un `verify` complet,
+  malgré l'interdiction explicite transmise dans sa consigne. Résultat FAIL : blocages ci-dessus,
+  critères des lots suivants non réalisés et attestations humaines manquantes. Aucune attestation
+  ni transition de gouvernance n'a été effectuée ; ne pas réutiliser cette passe comme preuve de clôture.
+- **Travail non commité** : les 16 fichiers du lot sont indexés ; aucun changement préexistant
+  (arbre initialement propre). Aucun commit, push, clôture ni `lot next`.
+- **Validation normale reprise par la session principale** :
+  `node .githooks/wait-command.mjs --wait 600 node .githooks/run-checks.mjs` :
+  code 0, contrôles exécutés OK, 9 avertissements (non exécutés compris),
+  200 repris et 24 rejoués. Aucun répertoire temporaire forcé, aucune garde modifiée.
+- **Prochaine étape** : commiter le lot 1.
+  Seulement ensuite lancer `node .githooks/state.mjs lot next`. Le lot 2 (clôture complète) reste
+  le suivant prévu, non lancé ; les lots 2 à 4 n'ont pas été réalisés.
