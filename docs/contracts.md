@@ -2130,3 +2130,33 @@ régression sauf si la fiche active déclare le changement (section
 **Couvre** : `INSTALL.md`
 **Origine** : hooks-sans-dependance-au-shell — « Le prérequis (`node` dans le `PATH` du processus de l'assistant) et le piège fnm sont décrits dans `INSTALL.md` »
 **Raison** : Sans cette section, un développeur sous fnm voit « hook errored » sans savoir que le shell de l'assistant n'a pas `node`.
+
+## QUA-219 — Un script du kit lance une commande longue en tâche de fond et en écrit le verdict dans un fichier
+**Règle** : Livré à tout projet. `node .githooks/wait-command.mjs <commande>` lance la commande en tâche de fond, détachée (dans le dossier `wait` des évidences locales, hors versionnement), et en écrit le verdict dans un fichier : son code de sortie seul, jamais sa sortie, qui reste dans un journal local dont le chemin est dit (QUA-013 : non exécuté n'est pas passé ; une commande tuée par un signal est un échec). Un verdict livré est consommé : l'appel suivant rejoue la commande.
+**Périmètre** : `.githooks/wait-command.mjs` et son gabarit (`packages/drwil/templates/common/base/.githooks/wait-command.mjs`).
+**Source de vérité** : `.githooks/wait-command.mjs`.
+**Preuve** : tests des hooks : commande de quelques secondes lancée en fond, verdict de réussite et d'échec, contenu du fichier de verdict, rejeu après consommation, signal.
+**Contrôle** : `tests-qua-219`
+**Tests** : `.githooks/wait-command.test.mjs`
+**Origine** : attente-commandes-longues — « Un script du kit lance une commande longue en tâche de fond et écrit son verdict dans un fichier »
+**Raison** : Le 2026-10-30, 15 boucles `while pgrep` zombies : faute d'outil pour attendre `run-checks`, `verify` ou un commit à hooks au-delà de 120 s, les sous-agents bouclaient.
+
+## QUA-220 — L'attente est bornée : elle rend le verdict ou dit « toujours en cours », sans jamais boucler indéfiniment
+**Règle** : Livré à tout projet. `node .githooks/wait-command.mjs [--wait <secondes>] [--status] <commande>` attend au plus `--wait` secondes (100 par défaut, sous les 120 s d'un appel d'outil) et rend le verdict (codes 0 réussie, 1 échec, 2 non exécutée ou interrompue) ou dit « toujours en cours » (code 3) à l'échéance, sans tuer la commande ; un second lancement de la même commande rejoint celle qui tourne au lieu de la dupliquer ; `--status` lit sans lancer ni attendre ni consommer ; une exécution morte sans verdict est dite interrompue, jamais passée.
+**Périmètre** : `.githooks/wait-command.mjs` et son gabarit.
+**Source de vérité** : `.githooks/wait-command.mjs`.
+**Preuve** : tests des hooks : attente trop courte sur une commande de 3 s (« toujours en cours », commande menée à terme), second lancement sans doublon, `--status`, exécution interrompue, ligne de commande et codes de sortie.
+**Contrôle** : `tests-qua-220`
+**Tests** : `.githooks/wait-command.test.mjs`
+**Origine** : attente-commandes-longues — « Le même script expose une attente bornée : elle rend le verdict ou dit « toujours en cours » à l'échéance, sans jamais boucler indéfiniment »
+**Raison** : Une attente qui ne finit pas se voit elle-même (`pgrep`) ; l'échéance ne tue pas la commande, pour ne laisser aucun orphelin ni verdict perdu.
+
+## QUA-221 — La consigne du sous-agent de contrôles impose le script et `run_in_background`, et interdit la boucle `pgrep`
+**Règle** : Livré avec Claude Code. `.claude/agents/drwil-checks.md` (gabarit et copie installée) fait lancer `run-checks` et `verify` par `.githooks/wait-command.mjs`, dans un appel Bash en `run_in_background`, et interdit la boucle `while pgrep …; do sleep …; done`. La règle de conduite (`docs/ia-first/8-conduct-rules.md`) le redit.
+**Périmètre** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`, sa copie `.claude/agents/drwil-checks.md`, `docs/ia-first/8-conduct-rules.md` et son gabarit.
+**Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
+**Preuve** : test des hooks : les deux copies citent le script et `run_in_background` et interdisent la boucle `pgrep`. Limite : le test juge le texte de la consigne, pas que le modèle la suive.
+**Contrôle** : `tests-qua-221`
+**Tests** : `.githooks/wait-command.test.mjs`
+**Origine** : attente-commandes-longues — « Les consignes des sous-agents imposent ce script et `run_in_background`, et interdisent la boucle `pgrep` »
+**Raison** : Sans consigne, un sous-agent continue d'écrire sa propre boucle d'attente.

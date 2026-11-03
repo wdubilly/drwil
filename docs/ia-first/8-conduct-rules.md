@@ -164,6 +164,13 @@ read at every request. The full text of each rule is here, read by section
   to-attest contracts copied word for word; the main session says
   « verified » only on that copied line. Another tool: the same if it
   allows a subagent without write access, otherwise run them directly.
+- **Long commands**: a command that can outlast the 120 s of a tool call
+  (`run-checks`, `drwil verify`, a commit with hooks) is run through `node
+  .githooks/wait-command.mjs <command>` in a Bash call launched with
+  `run_in_background`: it starts the command detached, waits at most 100 s
+  and says its verdict or « still running » (run it again to keep waiting).
+  Never wait with a `while pgrep …; do sleep …; done` loop: it sees itself
+  and never ends.
 - **Human gestures**: `drwil attest` is a **human** action: an agent never
   runs it and never writes an attestation. Likewise, the acceptance verdict
   on a candidate release (`.githooks/release-verdict.mjs` (if present),
