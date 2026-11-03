@@ -6,6 +6,7 @@
 
 <!-- scope
 files:
+  - packages/drwil/bin/drwil.js
   - packages/drwil/src/cli-report.ts
   - packages/drwil/src/cli-texts.ts
   - packages/drwil/src/index.ts
@@ -65,6 +66,8 @@ autre dépôt.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-30) : cadré, aucun code.
+- **Dernier état** (2026-11-03) : BUILD constaté sur la branche du chantier, lot 1 unique.
+- **Extension de périmètre** : `packages/drwil/bin/drwil.js` ajouté pour enregistrer la nouvelle
+  commande dans le point d'entrée public ; les modules prévus au cadrage ne peuvent seuls la rendre accessible.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] lancer par `/drwil-start`.
+- **Prochaine étape** : réaliser le lot 1, puis contrôles officiels ; le jugement de lisibilité reste humain.
