@@ -1,6 +1,6 @@
 # Projet : clôture d'un chantier sur un projet neuf
 
-**Statut** : en cours le 2026-11-03 — lots 1 et 2 commités et contrôlés ; lot 3 à reprendre.
+**Statut** : en cours le 2026-11-03 — lots 1 et 2 commités et contrôlés ; lot 3 réalisé et contrôlé, passation vers le lot 4.
 **Risque** : HIGH
 **Maturité** : prêt
 
@@ -159,6 +159,46 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
+- **Lot 3 — réalisation du 2026-11-03** : seule la normalisation de l'empreinte change,
+  dans `packages/drwil/templates/common/base/.githooks/state-acceptance.mjs`, puis son miroir
+  `.githooks/state-acceptance.mjs` par `npm run installer-depot` (un seul fichier écrit).
+  Les marques de classification `[humain]` / `[human]`, sans distinction de casse, sont
+  ignorées ; une marque citée entre accents graves reste du texte, afin de ne pas masquer
+  un changement de sens. `QUA-174` (critères acceptés figés) est aligné dans `docs/contracts.md`.
+  Les tests `.githooks/state.test.mjs` et `.githooks/close.test.mjs` couvrent ajout, retrait,
+  position, anglais, casse, texte voisin modifié, autres marques et marque citée en code ;
+  la clôture conserve l'empreinte acceptée sans nouveau geste humain.
+- **Cause et reproduction du lot 3** : l'ancienne normalisation excluait seulement la preuve,
+  pas la classification ; un ancien test attendait même une empreinte différente.
+  `node .githooks/wait-command.mjs --wait 600 node --test --test-name-pattern=QUA-174 .githooks/state.test.mjs .githooks/close.test.mjs`
+  a échoué avant correction : 8 tests, 5 réussis, 3 échecs (empreinte différente, acceptation
+  `changed`, clôture refusée en demandant `state.mjs accept`).
+- **Preuves ciblées du lot 3** :
+  - `node .githooks/wait-command.mjs --wait 600 node --test .githooks/state.test.mjs .githooks/close.test.mjs` :
+    code 0, 154 tests réussis, aucun échec.
+  - `npx biome check .githooks/state.test.mjs .githooks/close.test.mjs packages/drwil/templates/common/base/.githooks/state-acceptance.mjs .githooks/state-acceptance.mjs` :
+    4 fichiers, aucune erreur après correction d'une mise en forme du nouveau test.
+  - `node outils/verifier-miroirs.mjs` : 183 fichiers, 17 écarts déclarés, 0 problème ;
+    `node .githooks/check-contract-tests.mjs` : 275 liens, 0 problème ;
+    `node outils/verifier-tests-contrats.mjs` : 615 tests rattachés, 0 problème.
+  - Empreinte de la fiche active inchangée : `sha256:922f5befc3a3593d`,
+    `acceptanceCheck` retourne `same` ; aucun enregistrement d'acceptation réécrit.
+  - `node .githooks/wait-command.mjs --wait 600 node .githooks/run-checks.mjs` :
+    code 0, « contrôles exécutés : OK (50 avertissement(s), non exécutés compris) »,
+    16 repris / 210 rejoués. Hooks : 548 tests réussis, couverture à 100 % lignes,
+    instructions, branches et fonctions ; paquet : 281 tests réussis,
+    98,30 % lignes/instructions, 90,64 % branches, 98,69 % fonctions.
+- **Périmètre du lot 3** : aucun chemin ajouté au bloc `scope`, aucune extension nécessaire.
+  Aucun changement des contrôles d'attestation ni de la mécanique de clôture.
+  Les empreintes anciennes ne sont pas migrées : les critères originaux ne sont pas conservés,
+  et réécrire leur acceptation sans l'humain serait contraire à `QUA-175`.
+  La fiche active ne demande aucune migration ; l'incident préexistant du hook commit-msg
+  reste décrit dans `docs/intentions/commit-msg-non-executable.md`.
+- **Passation du lot 3** : après le commit de ce lot et de cette reprise,
+  `node .githooks/state.mjs lot next`, puis STOP. Reprendre seulement le lot 4
+  « renvois visibles avant la clôture » dans un contexte neuf. Aucun `verify` complet,
+  aucune attestation, aucune clôture ni push entre les lots.
+
 - **Dernier état** (2026-11-03) : BUILD, lot 1 commité (`3290841` : cadrage ; `76b9fad` : code),
   lot 2 commité (`b8e53f2` : clôture complète), hooks de commit réussis.
   Passation vers le lot 3 « empreinte sans [humain] » après commit de cette reprise ;
@@ -279,6 +319,5 @@ Tranchées par le demandeur le 2026-10-30 :
 - **Hooks du lot 1** : réussis, code lot 1 OK, 51 avertissements (non exécutés inclus).
   Aux deux commits, Git a signalé `.githooks/commit-msg` ignoré car non exécutable. Préexistant,
   aucun contrôle réellement refusé pour cette cause ; ni désactivation ni correction hors périmètre.
-- **Prochaine étape** : après le commit de cette passation, `node .githooks/state.mjs lot next`,
-  puis STOP. Reprendre uniquement le lot 3 « empreinte sans [humain] » dans un contexte neuf ;
-  le lot 4 reste aussi à faire. Ne pas clore, ne pas lancer le chantier suivant ni pousser.
+- **Passation précédente (lot 2)** : commit `accfb02`, puis `node .githooks/state.mjs lot next`
+  vers le lot 3. La passation courante est celle du lot 3 en tête de cette section.

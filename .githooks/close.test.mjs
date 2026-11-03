@@ -846,6 +846,24 @@ test("QUA-174 : la preuve de clôture dit les critères acceptés au lancement, 
   assert.match(readFileSync(join(anglais, "docs/preuves/exemple.md"), "utf8"), /\*\*Criteria accepted\*\*: fingerprint `sha256:/);
 });
 
+test("QUA-174 : ajouter ou retirer [humain] après acceptation ne refuse pas la clôture", () => {
+  for (const [avant, apres] of [
+    ["", " [humain]"],
+    [" [humain]", ""],
+  ]) {
+    const racine = depot({ criteres: `- Un critère${avant} — \`QUA-001\`` });
+    const accepte = recordAcceptance(racine, FICHE);
+    ecrire(racine, { [FICHE]: fiche(`- Un critère${apres} — \`QUA-001\``) });
+    git(racine, "add", "-A");
+    git(racine, "commit", "-q", "-m", "classification de la preuve");
+    ecrireEvidence(racine);
+    const r = close(racine, { logs: journaux() });
+    assert.equal(r.code, 0, r.message);
+    assert.ok(!existsSync(join(racine, FICHE)));
+    assert.ok(readFileSync(join(racine, "docs/preuves/exemple.md"), "utf8").includes(accepte.fingerprint));
+  }
+});
+
 test("QUA-174 : un critère modifié depuis l'acceptation refuse la clôture sans rien écrire ; un lien de preuve ajouté ne le modifie pas", () => {
   const racine = depot({ criteres: "- Un critère — contrat à créer" });
   recordAcceptance(racine, FICHE);
@@ -854,7 +872,7 @@ test("QUA-174 : un critère modifié depuis l'acceptation refuse la clôture san
   git(racine, "commit", "-q", "-m", "lien de preuve");
   assert.equal(close(racine, { check: true }).code, 0);
 
-  ecrire(racine, { [FICHE]: fiche("- Un autre critère — `QUA-001`") });
+  ecrire(racine, { [FICHE]: fiche("- Un autre critère [humain] — `QUA-001`") });
   git(racine, "add", "-A");
   git(racine, "commit", "-q", "-m", "critère modifié");
   ecrireEvidence(racine);
