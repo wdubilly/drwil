@@ -4031,3 +4031,12 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Détour** : le test « rappel de péremption des audits » avait une date figée au 2026-10-04, périmée depuis 30 jours (branche `detour/test-peremption-audit`, PR #346 fusionnée).
 - **Preuve de clôture** : docs/preuves/attente-commandes-longues.md.
 - **Clôturé par** : la branche `workstream/attente-commandes-longues`.
+
+## 2026-11-03 — Outiller tous les outils, à chaque consigne ou mécanisme du kit
+
+- **Décisions clés** : une information, une seule source de texte (`docs/ia-first/8-conduct-rules.md`), plusieurs portes pour la lire : une ligne dans `AGENTS.md` (gabarit et dépôt) et la même consigne, en une ligne, dans les fichiers d'entrée natifs de Copilot CLI et de Cursor, qui ne faisaient que renvoyer. Une liste déclarée « mécanisme → marqueurs » est relue par `outils/parite-des-outils.test.mjs` ; un mécanisme nouveau s'y inscrit dans le chantier qui le crée. La matrice de compatibilité gagne la section « Instructions reach every tool » et déclare l'écart (pas de fichier de sous-agent propre au kit hors Claude Code) ; l'obéissance de chaque outil reste « not tested » (QUA-060).
+- **Contrats** : QUA-222, QUA-223.
+- **Limites connues** : le test juge le texte des consignes, pas que le modèle de chaque outil les suive ; la liste ne repère que les mécanismes qu'on y inscrit.
+- **Hooks modifiés** : aucun.
+- **Preuve de clôture** : docs/preuves/outiller-tous-les-outils.md.
+- **Clôturé par** : la branche `workstream/outiller-tous-les-outils`.

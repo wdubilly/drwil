@@ -170,7 +170,8 @@ read at every request. The full text of each rule is here, read by section
   `run_in_background`: it starts the command detached, waits at most 100 s
   and says its verdict or « still running » (run it again to keep waiting).
   Never wait with a `while pgrep …; do sleep …; done` loop: it sees itself
-  and never ends.
+  and never ends. Every tool reads this rule at start, in `AGENTS.md` and, for
+  Copilot and Cursor, in their native entry file, which repeats it in one line.
 - **Human gestures**: `drwil attest` is a **human** action: an agent never
   runs it and never writes an attestation. Likewise, the acceptance verdict
   on a candidate release (`.githooks/release-verdict.mjs` (if present),
