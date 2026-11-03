@@ -541,9 +541,12 @@ drwil verify
 
 Attestation is deliberately an explicit human action.
 
-The human uses an interactive terminal, or a Claude Code attestation poll
-prepared with `drwil attest-poll <CONTRACT_ID> --tried "What was tried"`.
+The human uses an interactive terminal, or a native attestation poll
+prepared with `drwil attest-poll <CONTRACT_ID> --tried "What was tried"`
+(Claude Code by default; `--tool copilot|gemini` for their native channels).
 Only the hook reads the human's poll response; preparation never attests.
+These adapters have fictitious-event tests, not real interactive trials;
+Codex and Cursor are not yet delivered for this mechanism.
 
 The agent must not execute it on behalf of the user.
 

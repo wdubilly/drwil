@@ -16,8 +16,8 @@ const MECANISMES = [
     marqueurs: [
       /## Human attestation parity/,
       /Declared gap: chat attestation/,
-      /Claude Code adapter/,
-      /Copilot CLI, Gemini\s+CLI, Codex and Cursor have no delivered attestation adapter/,
+      /Claude Code, Copilot CLI and Gemini CLI adapters/,
+      /Codex and Cursor\s+have no delivered attestation adapter/,
       /no real interactive trial/,
     ],
   },

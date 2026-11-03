@@ -89,10 +89,11 @@ and to offer the human a new conversation; the next workstream starts there
 
 The five tools selectable by `init --tools` are all targets for chat
 attestation, not just Claude Code. This is **not delivered parity**:
-`attest-poll` currently prepares only Claude Code's question, and its hook
-requires the session and tool-call identifiers and reads only
-`tool_response.answers`. Installing shared hook scripts is not an adapter
-for another tool's question or answer format. A terminal attestation remains
+`attest-poll` prepares Claude Code's question by default and each native
+`ask_user` with `--tool copilot` or `--tool gemini`. Claude keeps its
+session/tool-call check and `tool_response.answers`. The two portable adapters
+use a visible random nonce bound to the exact poll and native session instead
+of inventing a missing call identifier. A terminal attestation remains
 available to the human, but does not fulfil chat parity.
 
 Assessment on 2026-11-03; documentation inspection, **not an interactive
@@ -101,18 +102,36 @@ trial**. The earlier hook/write bench above did not test attestation.
 | Tool | Delivered attestation adapter | Native human channel investigated | Fictitious attestation events tested | Real chat attestation trial |
 |---|---|---|---|---|
 | Claude Code | `AskUserQuestion`, `PreToolUse` / `PostToolUse`; session + tool-call correlation, one-use preparation | `tool_response.answers`, never answers in `tool_input` | yes, Claude-shaped fixtures only | not tested |
-| Copilot CLI | none; the shared Claude hook does not accept its poll format | PascalCase `PreToolUse` / `PostToolUse` expose `session_id`, `tool_input`, then `tool_result.text_result_for_llm`; no `tool_use_id` in the documented payload | not tested | not tested |
-| Gemini CLI | none; the delivered `BeforeTool` / `AfterTool` declarations match only `write_file` / `replace` | `ask_user` returns a JSON string in `tool_response.llmContent`, answers indexed by question position; the documented hooks have `session_id` but no tool-call identifier | not tested | not tested |
+| Copilot CLI | native `preToolUse` / `postToolUse`; one-use nonce, exact poll, native session and subagent context | `ask_user` arguments `question` / `choices`; `sessionId`, `toolArgs`, success `toolResult.textResultForLlm`; only the exact `User responded: <positive choice>` result is accepted | yes, documented-shape fictitious events and installed hook commands only | not tested |
+| Gemini CLI | native `BeforeTool` / `AfterTool` declarations for `ask_user`; same portable protocol | `session_id`, `tool_input.questions`; JSON string in `tool_response.llmContent`, only `answers["0"]` with the exact positive choice, no error | yes, documented-shape fictitious events and installed hook commands only | not tested |
 | Codex | none; delivered hooks only remind the state | `request_user_input` is a candidate; `PreToolUse` / `PostToolUse` document session + tool-call identifiers and tool-specific output, but coverage of this question and its exact returned payload have not been tried | not tested | not tested |
 | Cursor | none; only an always-applied instruction rule is installed | native `preToolUse` / `postToolUse` document `tool_use_id` and `tool_output`; the human question's name, arguments, result and session correlation have not been established | not tested | not tested |
 
-### Prerequisites before enabling another adapter
+### Portable protocol and remaining prerequisites
 
-- Copilot CLI and Gemini CLI: establish a trustworthy per-poll correlation
-  from native events. Do not remove the call-correlation check, invent a
-  missing identifier, or treat a plain model-interpreted answer as an
-  attestation. If a distinct one-use correlation protocol is needed, scope
-  it explicitly before implementing it.
+- The human explicitly authorised the alternative correlation on 2026-11-03.
+  Preparation generates a random UUID nonce in the visible question. The
+  pre-hook recomputes the exact native arguments from the engine's summary
+  and atomically reserves one poll per native session, recording tool,
+  session, subagent context if provided, poll, exact proof snapshot and time.
+  A permanent local nonce tombstone prevents rearming it across tools or
+  sessions. The post-hook claims the reservation atomically before rerunning
+  checks, verifies its commitment, expiry (one hour), native context and exact
+  arguments, and accepts only the native human result. It compares the
+  snapshot before writing. Decline/absence/invalid result consumes the poll.
+  Concurrent calls or returns cannot overwrite a reservation or attest twice.
+  New polls require fresh JSON; no agent-interpreted chat phrase is evidence.
+- This is local correlation, **not strong identity**. It trusts the runtime,
+  hook code and local evidence files, just like the Claude adapter. A crash
+  can leave a session occupied: inspect it and open a fresh native session,
+  never manufacture an answer or delete nonce tombstones to reuse a poll.
+- Copilot CLI and Gemini CLI: perform the real interactive trial below.
+  A version exposing neither documented native session field is refused;
+  no fabricated session, environment-derived guess or call identifier is used.
+  Copilot denials use native `permissionDecision: "deny"` with exit 0.
+  No attestation is written without a valid reservation and native positive
+  result. Missing Node or disabled hooks cannot prepare or attest; a hook
+  timeout is not a successful validation or human trial.
 - Codex and Cursor: obtain a native before/after pair for a **fictitious**
   human question in a trusted interactive session, including its exact
   question and response schema. Generic tool-hook documentation and
@@ -136,6 +155,10 @@ No live attestation was made during this assessment.
 
 Documentation consulted (2026-11-03), not compatibility evidence:
 [Copilot hook payloads](https://docs.github.com/en/copilot/reference/hooks-reference),
+[Copilot SDK user-input contract](https://github.com/github/copilot-sdk/blob/main/nodejs/src/types.ts)
+and [official ask_user example](https://github.com/github/copilot-sdk/blob/main/go/internal/e2e/ask_user_e2e_test.go)
+(`question`, `choices`; the installed CLI 1.0.105 renderer explicitly handles
+the `User responded:` prefix; no real response captured),
 [Gemini hooks](https://geminicli.com/docs/hooks/reference/) and
 [ask_user](https://geminicli.com/docs/tools/ask-user/),
 [Codex hooks and tool coverage](https://developers.openai.com/codex/hooks),
@@ -157,8 +180,8 @@ obeys the instruction is "not tested": no trial has measured it. A new
 mechanism is added to the parity test's list of mechanisms in the
 workstream that creates it.
 
-Declared gap: chat attestation has only a Claude Code adapter, with
-fictitious-event tests and no real interactive trial. Copilot CLI, Gemini
-CLI, Codex and Cursor have no delivered attestation adapter. The
+Declared gap: chat attestation has Claude Code, Copilot CLI and Gemini CLI adapters,
+with fictitious-event tests and no real interactive trial. Codex and Cursor
+have no delivered attestation adapter. The
 "Human attestation parity" table records each missing native-event
 prerequisite; shared instructions or shared hook scripts do not fill it.

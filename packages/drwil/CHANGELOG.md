@@ -11,6 +11,11 @@ closing commit; the release renames this section to its version.
   attestation poll without attesting. Only the human's tool response, read by
   the hook and tied to the unchanged proof, can record it; refusals, prefilled
   answers and replays cannot. The interactive terminal remains the fallback.
+- `attest-poll --tool copilot|gemini` prepares each tool's native question.
+  Their hooks correlate the exact poll and native session with a one-use
+  random nonce, atomically reserve/consume it, rerun checks and compare the
+  proof snapshot. Claude's adapter is unchanged. All three have fictitious
+  event tests only; real trials and Codex/Cursor adapters remain outstanding.
 
 - `drwil report` prints a privacy-safe kit defect report from the last local
   check snapshot, with CLI/installed versions and normalized built-in failure

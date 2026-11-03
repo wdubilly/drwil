@@ -30,6 +30,7 @@ import {
 } from "./start-poll.mjs";
 import { queueHook } from "./queue-poll.mjs";
 import { attestationHook } from "./attest-poll.mjs";
+import { portableAttestationMain } from "./portable-attest.mjs";
 
 export { humanAnswer, inPollOrder, mergeAuthorised, parallelChosen, scopeChoice, scopePoll, startPoll, worktreeChosen };
 export { attestationHook };
@@ -179,7 +180,7 @@ async function main() {
 // still run the hook, not leave it silently idle.
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
-    process.exitCode = await main();
+    process.exitCode = ["copilot", "gemini"].includes(process.argv[2]) ? await portableAttestationMain() : await main();
   } catch {
     // An error never blocks the tool: the state stays unchanged, the Git gate remains.
     process.exitCode = 0;

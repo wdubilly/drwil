@@ -83,7 +83,14 @@ test("QUA-235 : seul le retour du sondage humain attesté, corrélé et consomm�
     assert.match(k.reasons.join(" "), /src\/objet\.js/);
     assert.match(output.join("\n"), /APP-009 attesté/);
     const copied = join(dir, ".claude/hooks");
-    for (const name of ["prompt-hook.mjs", "start-poll.mjs", "queue-poll.mjs", "attest-poll.mjs"])
+    for (const name of [
+      "prompt-hook.mjs",
+      "start-poll.mjs",
+      "queue-poll.mjs",
+      "attest-poll.mjs",
+      "portable-attest.mjs",
+      "attest-adapters.mjs",
+    ])
       copyFileSync(join(HOOKS, name), join(copied, name));
     mkdirSync(join(dir, "node_modules"), { recursive: true });
     symlinkSync(fileURLToPath(new URL("..", import.meta.url)), join(dir, "node_modules/drwil"), "dir");
@@ -662,7 +669,11 @@ test("QUA-215 : sans node dans le PATH, chaque hook de Claude Code et de Copilot
 }, () => {
   const claude = commandes(".claude/settings.json");
   const copilot = commandes(COPILOT);
-  assert.ok(claude.length >= 10 && copilot.length === 2);
+  assert.ok(claude.length >= 10);
+  assert.deepEqual(
+    copilot.map(({ evenement }) => evenement).sort(),
+    ["sessionStart", "userPromptTransformed", "preToolUse", "postToolUse", "postToolUseFailure"].sort(),
+  );
   for (const { evenement, commande } of [...claude, ...copilot]) {
     const r = sh(commande, sansNode({ CLAUDE_PROJECT_DIR: OUTILS }));
     assert.match(r.stderr, MESSAGE_SANS_NODE, `${evenement} : ${commande}`);

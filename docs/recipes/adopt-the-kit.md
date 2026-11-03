@@ -141,28 +141,42 @@ agent's.
    `drwil verify` fails on a non-blocking `scopeGate` once the mandatory
    guarantees are enforced.
 
-## Human attestation in the conversation (Claude Code)
+## Human attestation in the conversation
 
 For a contract with a remaining human judgment, the agent may run
 `npx drwil attest-poll <ID> --tried "What I tried"` (add `--renew` only for
-an intentional renewal). This prepares JSON for `AskUserQuestion`, never an
-attestation. With drwil installed as a local dependency, pass that JSON to
-the tool unchanged: one `drwil-attest` question, no answer, default,
+an intentional renewal). Default: Claude Code's `AskUserQuestion`. Use
+`--tool copilot` or `--tool gemini` for their native `ask_user`. This prepares
+JSON, never an attestation. With drwil installed as a local dependency and
+the tool's hooks enabled in a trusted workspace, pass that JSON to
+the tool unchanged: one attestation question, no answer, default,
 recommendation or extra field. The poll shows the rule, automated results,
 human criterion, agent's trial and actual covered paths. The trial is a
 declaration, not proof that the agent executed it.
 
-The human alone chooses **Attest** or **Decline**. Claude Code's hook reads
-the tool response, checks the session and tool-call correlation, reruns the
-contract's checks and records the existing version-4 attestation only if
-the proof is unchanged. An unanswered or declined poll records nothing;
-a changed proof or a poll older than one hour requires a fresh poll.
+The human alone chooses **Attest** or **Decline**. Claude Code keeps its
+session/tool-call correlation. Copilot and Gemini use the native session
+and a visible random nonce bound to the exact question, choices and proof:
+no invented native call identifier. Their shared hook allows only one
+pending poll per session and reserves/consumes it atomically; the nonce
+cannot be rearmed, even in another session or tool. Only the native tool
+result supplies the answer. The engine reruns the contract's checks and
+compares the exact snapshot before recording the version-4 attestation.
+Decline, no answer, a changed proof, replay or age over one hour records
+nothing. Prepare a new poll after refusal or expiry; never reuse its JSON.
 The agent never supplies the answer, calls the hook directly or writes an
-attestation. Session, tool call and timestamps trace the hook's gesture;
-they do not authenticate the human's identity.
+attestation. Session, tool call (Claude), nonce/question hash (portable)
+and timestamps trace the hook's gesture, not the human's identity.
+The runtime, hooks and local preparation files must be trusted, as for the
+Claude adapter: this is not protection against an actor rewriting the hook
+and its files. Retain the nonce tombstones in the local evidence directory.
+After a hook crash, an occupied session may require inspecting its pending
+files and opening a fresh native session; do not fabricate a tool response.
 
-If the hook or local drwil dependency is unavailable, or under another
-assistant (not tested for this poll), the human uses the unchanged fallback
+These three adapters have fictitious-event tests, **not real interactive
+attestation trials**. See the compatibility matrix for versions, native
+formats and remaining prerequisites. Codex and Cursor are not delivered.
+If the hook or local drwil dependency is unavailable, the human uses the unchanged fallback
 `npx drwil attest <ID>` in their own interactive terminal. Never substitute
 an answer in chat that the agent interprets itself.
 

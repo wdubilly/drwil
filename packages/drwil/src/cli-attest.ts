@@ -2,18 +2,24 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Command } from "commander";
-import { attest, fill, prepareAttestationPoll } from "./index.js";
+import { attest, fill, prepareAttestationPoll, preparePortableAttestationPoll } from "./index.js";
 import { texts } from "./cli-texts.js";
 
 export function registerAttest(program: Command): void {
   program
     .command("attest-poll <id>")
-    .description("Prepare a Claude Code human-attestation poll; never records an attestation")
+    .description("Prepare a native human-attestation poll; never records an attestation")
     .requiredOption("--tried <text>", "What the agent tried (1 to 500 characters)")
+    .option("--tool <tool>", "Native poll: claude, copilot or gemini", "claude")
     .option("--renew", "Prepare renewal of a still-valid attestation")
     .action(async (id, opts) => {
       try {
-        const r = await prepareAttestationPoll({ targetDir: process.cwd(), id, tried: opts.tried, renew: opts.renew });
+        if (!["claude", "copilot", "gemini"].includes(opts.tool)) throw new Error("--tool: claude | copilot | gemini");
+        const options = { targetDir: process.cwd(), id, tried: opts.tried, renew: opts.renew };
+        const r =
+          opts.tool === "claude"
+            ? await prepareAttestationPoll(options)
+            : await preparePortableAttestationPoll({ ...options, tool: opts.tool });
         if ("poll" in r) console.log(JSON.stringify(r.poll, null, 2));
         else console.error(`✗ ${r.message}`);
         process.exit(r.code);

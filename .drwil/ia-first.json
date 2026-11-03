@@ -41,15 +41,19 @@
     {
       "id": "tests-qua-235",
       "name": "sondage d'attestation : frontière humain/agent et preuve liée",
-      "run": "node --test --test-name-pattern=\"^QUA-235 \" packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/cycle.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-235 \" packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/portable-attest.test.mjs packages/drwil/test/cycle.test.mjs",
       "needsBuild": true,
       "ciJob": "checks",
       "paths": [
         "packages/drwil/src/attest.ts",
+        "packages/drwil/src/attest-portable.ts",
         "packages/drwil/src/cli-attest.ts",
         "packages/drwil/src/evidence.ts",
         "packages/drwil/src/index.ts",
         "packages/drwil/templates/common/tools/claude/.claude/hooks/**",
+        "packages/drwil/templates/common/tools/copilot/.github/hooks/**",
+        "packages/drwil/templates/common/tools/gemini/.gemini/settings.json",
+        "packages/drwil/test/portable-attest.test.mjs",
         "packages/drwil/test/claude-hooks.test.mjs",
         "packages/drwil/test/cycle.test.mjs"
       ],
@@ -130,6 +134,7 @@
         "packages/drwil/templates/common/tools/claude/**",
         "packages/drwil/templates/common/optional/front-quality/**",
         "packages/drwil/test/claude-hooks.test.mjs",
+        "packages/drwil/test/portable-attest.test.mjs",
         "packages/drwil/test/front-quality.test.mjs",
         "package.json",
         "package-lock.json",

@@ -35,6 +35,17 @@
             "timeout": 10000
           }
         ]
+      },
+      {
+        "matcher": "^ask_user$",
+        "hooks": [
+          {
+            "name": "drwil-attest",
+            "type": "command",
+            "command": "{{geminiNodeGuard}}\"$GEMINI_PROJECT_DIR/.claude/hooks/prompt-hook.mjs\" gemini",
+            "timeout": 120000
+          }
+        ]
       }
     ],
     "AfterTool": [
@@ -46,6 +57,17 @@
             "type": "command",
             "command": "{{geminiNodeWarn}}\"$GEMINI_PROJECT_DIR/.claude/hooks/scope-reminder.mjs\"",
             "timeout": 10000
+          }
+        ]
+      },
+      {
+        "matcher": "^ask_user$",
+        "hooks": [
+          {
+            "name": "drwil-attest-result",
+            "type": "command",
+            "command": "{{geminiNodeWarn}}\"$GEMINI_PROJECT_DIR/.claude/hooks/prompt-hook.mjs\" gemini",
+            "timeout": 120000
           }
         ]
       }

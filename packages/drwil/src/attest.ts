@@ -147,6 +147,13 @@ export interface AttestationPollOptions extends Omit<AttestOptions, "confirm" | 
   tried: string;
 }
 
+export interface AttestationQuestion {
+  header: string;
+  question: string;
+  multiSelect: boolean;
+  options: { label: string; description: string }[];
+}
+
 /** QUA-235 : préparer le jugement ne confirme jamais rien et n'écrit aucune attestation. */
 export async function prepareAttestationPoll(o: AttestationPollOptions) {
   const fr = projectLang(o.targetDir) === "fr";
@@ -157,7 +164,7 @@ export async function prepareAttestationPoll(o: AttestationPollOptions) {
       message: fr ? "décrire l'essai de l'agent (1 à 500 caractères)" : "describe the agent's trial (1 to 500 characters)",
     };
   const tried = redact(raw);
-  let prepared: { poll: object; snapshot: string } | undefined;
+  let prepared: { poll: { questions: AttestationQuestion[] }; snapshot: string } | undefined;
   const result = await attest({
     ...o,
     confirm: async (summary, snapshot) => {

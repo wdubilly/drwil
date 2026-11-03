@@ -492,21 +492,25 @@ npx drwil attest QUA-015 --renew
 `--renew` replaces, on purpose, an attestation that is still valid (the history
 is kept). Same interactive terminal, same typing of the identifier: no `--yes`.
 
-### `attest-poll` — prepare a human judgment in Claude Code
+### `attest-poll` — prepare a native human judgment
 
 ```bash
 npx drwil attest-poll QUA-015 --tried "What the agent tried"
 ```
 
-Prints JSON to pass unchanged to `AskUserQuestion`; never writes an attestation.
-Requires the Claude Code hooks and a local drwil dependency. The poll shows
+Prints JSON to pass unchanged to `AskUserQuestion` by default, or `ask_user`
+with `--tool copilot` / `--tool gemini`; never writes an attestation.
+Requires the selected tool's hooks and a local drwil dependency. The poll shows
 the criterion, automated results, the agent's declared trial and covered paths.
 Only the human's **Attest** response, read by the hook for the same session
-and tool call, records the unchanged version-4 proof. Decline, no answer,
+and tool call (Claude) or one-use nonce and exact poll (Copilot/Gemini),
+records the unchanged version-4 proof after rerunning the checks. Decline, no answer,
 prefilled or recommended choices, changed proofs and replays record nothing.
 Preparations expire after an hour; `--renew` deliberately prepares renewal.
-The provenance is declarative, not authenticated identity. Other assistants
-are not tested for this poll: use the interactive terminal fallback above.
+The provenance is declarative, not authenticated identity. Portable polls
+reserve one pending request per native session and never rearm a nonce.
+All three adapters have fictitious-event tests, not real interactive trials.
+Codex and Cursor are not delivered; the terminal fallback remains available.
 See `docs/recipes/adopt-the-kit.md`.
 
 ### Agent / human workflow (`verify --agent`, `/drwil verify`)

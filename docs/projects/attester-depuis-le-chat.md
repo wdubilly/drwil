@@ -197,8 +197,9 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
 - **Prochaine étape, hors de cette reprise** : établir les canaux effectifs Codex/Cursor et brancher
   leurs décodeurs sur la même corrélation. Conserver BUILD et la PR brouillon ; pas de clôture,
   d'état suivant, de ready ni de fusion programmée. Restent la parité cinq outils, l'acceptation
-  humaine des critères et les jugements de QUA-063 (matrice datée), QUA-150 (tests de timing) et
-  QUA-236 (lisibilité utile). La note distincte ajoutée par la principale dans les intentions
+  humaine des critères et les jugements de QUA-063 (matrice datée), QUA-064 (installation et
+  lancement interactif Copilot), QUA-066 (installation et dossier de confiance Gemini),
+  QUA-150 (tests de timing) et QUA-236 (lisibilité utile). La note distincte ajoutée par la principale dans les intentions
   sur le renforcement futur de QUA-222 (parité entre outils) est préservée, sans la réaliser.
 - **Complément de scope avant sa modification** : `docs/architecture.md` doit citer le rôle du
   nouveau module source, conformément à QUA-040 (carte, README et changelog à jour). Le premier
@@ -207,6 +208,41 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
   déplacé. Trois contrôles en échec : carte, test QUA-066 et suite du paquet contenant ce même
   test ; aucun seuil de couverture baissé. Le garde d'écriture restera en première position,
   le matcher d'attestation sera ajouté après, sans modifier ce test ni sa garantie.
+- **Preuves finales de cette étape** :
+  - `npm run installer-depot --silent` : code 0 ; dernière passe, un miroir Gemini écrit.
+    Les deux nouveaux modules partagés et les miroirs documentaires ont été installés par les
+    passes précédentes, jamais édités dans leur copie.
+  - `node --test --test-name-pattern="QUA-235|QUA-032|QUA-081|QUA-083|QUA-205|QUA-215|QUA-216" packages/drwil/test/portable-attest.test.mjs packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/cycle.test.mjs` :
+    28 tests passés, 0 échec. La suite complète finale rejoue aussi ces tests après l'ajustement
+    de l'ordre des matchers et la précision de la liste des hooks Copilot attendus.
+  - `node --test --test-name-pattern="QUA-066" packages/drwil/test/kit.test.mjs` :
+    1 test passé, 0 échec après remise du garde d'écriture en première position.
+  - `npm run test:claude:coverage` : code 0, 34 tests passés, 0 échec ;
+    98,16 % lignes/instructions, 90,62 % branches, 95,09 % fonctions. Les deux nouveaux modules
+    de hooks ont 100 % des lignes et fonctions mesurées, sans exclusion nouvelle.
+  - `node --test --test-name-pattern="QUA-063|QUA-222|QUA-223" outils/banc-agents.test.mjs outils/parite-des-outils.test.mjs` :
+    3 tests passés, 0 échec ; aucun essai réel ajouté à la matrice.
+  - `node outils/verifier-miroirs.mjs` : 187 fichiers comparés, 17 écarts déclarés, 0 problème.
+  - `node .githooks/check-docs.mjs` : 212 fichiers scannés, 0 erreur.
+  - `node .githooks/check-kit-size.mjs` : code 0 ; nouveaux modules sous le plafond, aucun seuil relevé.
+  - `node .githooks/check-architecture.mjs` : 170 éléments attendus, 0 absent.
+  - `node .githooks/run-checks.mjs` : code 0, « contrôles exécutés : OK
+    (43 avertissement(s), non exécutés compris) », 79 contrôles repris, 153 rejoués.
+    Dans cette passe, la suite du paquet `npm run test:coverage` passe ses 308 tests :
+    98,36 % lignes, 91,10 % branches, 98,72 % fonctions ; nouveau module TypeScript à 100 %.
+  - `node packages/drwil/bin/drwil.js verify --agent` : code 1,
+    **`Verdict: GOVERNANCE: FAIL (exit 1)`** ; 206 PASS, 17 ATTESTED, 0 FAIL, 0 ERROR,
+    5 MANUAL. Le premier critère cinq outils reste sans preuve. En plus des trois jugements déjà
+    attendus, la modification des réglages natifs invalide les anciennes attestations de
+    QUA-064 (installation/lancement Copilot) et QUA-066 (installation/confiance Gemini) ;
+    aucune n'a été renouvelée par l'agent. Ce verdict n'est pas une validation du chantier.
+  - `git --no-pager diff --check` et
+    `npx --no-install biome check packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/portable-attest.test.mjs` :
+    code 0, sans installation de dépendance.
+- **Remise persistante** : cadrages seuls `fd6ffe4` et `9eb7647`, puis réalisation avec cette
+  documentation. La note distincte de la principale est conservée à l'identique ; elle n'autorise
+  aucune réalisation du renforcement général de parité. Aucun `attest`, `state accept`, sondage
+  humain réel ou verdict humain exécuté par l'agent ; pas de clôture ni de chantier suivant.
 
 ### Reprise précédente — inventaire sans nouvel adaptateur
 
