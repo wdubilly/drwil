@@ -128,6 +128,8 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   2026-10-30, après l'adoption fluide) — `docs/projects/attester-depuis-le-chat.md`.
 - [ ] [IA] [P2] Ajouter ou adopter un contrat par commande, `drwil contracts add` et `adopt <ID>` (cadré le
   2026-10-30) — `docs/projects/commande-de-contrat.md`.
+- [ ] [IA] [P2] Outiller tous les outils à chaque consigne ou mécanisme du kit, contrat général et attente
+  bornée pour tous (cadré le 2026-11-03) — `docs/projects/outiller-tous-les-outils.md`.
 - [ ] [IA] [P1] (0.11.0) Clôture sur un projet neuf : garanties « pas encore applicables » sans code, clôture qui
   écrit sa ligne de journal et d'index, empreinte des critères sans la marque `[humain]` (cadré le
   2026-10-30) — `docs/projects/cloture-sur-projet-neuf.md`.

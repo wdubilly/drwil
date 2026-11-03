@@ -2,6 +2,9 @@
 
 **Statut** : proposée le 2026-11-03 — limites laissées par la clôture du chantier « attente outillée des commandes longues ».
 
+**Revu le 2026-11-03** : la limite des autres outils est cadrée dans `docs/projects/outiller-tous-les-outils.md` ;
+restent vivantes celles de Windows et du contrôle de la consigne.
+
 ## Besoin
 
 `.githooks/wait-command.mjs` (QUA-219, QUA-220) et la consigne du sous-agent `drwil-checks` (QUA-221) évitent les
