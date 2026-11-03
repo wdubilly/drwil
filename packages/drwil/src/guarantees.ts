@@ -1,8 +1,5 @@
-// `drwil guarantees` (QUA-087 to QUA-097): the mandatory guarantees of a governed project, wired
-// once the stack is known (`/drwil-adopt`): 100 % test coverage per layer, an e2e test of the
-// critical paths, a repository on a protected forge with a CI, a presentation of the user's product.
-// A guarantee is either wired and proven, or a blocking [P0] brief is written; `drwil verify` is FAIL
-// as long as it is not held. No light profile, no waiver: only a declared and justified exclusion.
+// Garanties obligatoires (QUA-087 à QUA-097, QUA-224 à QUA-227) : câbler n'est pas prouver ;
+// l'absence de code diffère une garantie, jamais l'exécution d'un contrôle applicable.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
@@ -11,9 +8,12 @@ import { TEXTS } from "./guarantees-texts.js";
 import { TEXTS as FORGE_TEXTS } from "./guarantees-forge-texts.js";
 import { type DeclaredCheck, type Exec, type GuaranteeConfig, defaultExec, layersOf, skeletonFiles } from "./guarantees-table.js";
 import { briefTitle, type GuaranteeBrief, writeBriefs } from "./guarantees-briefs.js";
-import { readAutoMerge, scopeGateFailure } from "./protection.js";
-import { guaranteeFailures } from "./guarantees-verify.js";
+import { readAutoMerge } from "./protection.js";
+import { coverageFailures } from "./guarantees-verify.js";
 import { type ForgeReport, inspectForge, protectBranch } from "./guarantees-forge.js";
+
+// QUA-227 : le lecteur canonique livré par le kit, pas une seconde grammaire des contrats.
+const { readContracts } = await import(new URL("../templates/common/base/.githooks/contracts.mjs", import.meta.url).href);
 
 export interface GuaranteesOptions {
   targetDir: string;
@@ -28,7 +28,9 @@ export interface GuaranteesReport {
   lang: MessageLang;
   dryRun: boolean;
   layers: LayerReport[];
-  e2e: boolean;
+  /** null : pas encore applicable ; true : déclaré et cité, pas une preuve d'exécution. */
+  e2e: boolean | null;
+  gaps?: string[];
   forge: ForgeReport;
   skeleton: string[];
   briefs: GuaranteeBrief[];
@@ -55,13 +57,38 @@ export function guarantees(opts: GuaranteesOptions): GuaranteesReport {
   const briefs: GuaranteeBrief[] = [];
   const ctx: LayerContext = { root, cfg, exec, lang, checks, briefs };
   const layers = layersOf(root, cfg).map(({ layer, technos }) => coverLayer(ctx, layer, technos));
-  const e2e = checks.some((c) => c?.id === "e2e");
-  if (!e2e)
+  const registry = join(root, cfg.dirs?.contracts ?? "docs/contracts.md");
+  const contracts = existsSync(registry) ? readContracts(readFileSync(registry, "utf8")) : [];
+  const judged = {
+    ...cfg,
+    checks,
+    guarantees: {
+      ...cfg.guarantees,
+      layers: {
+        ...cfg.guarantees?.layers,
+        ...Object.fromEntries(layers.filter((l) => l.status !== "not-applicable").map((l) => [l.slug, l.mode])),
+      },
+    },
+  };
+  const gaps = coverageFailures(root, judged, contracts);
+  const e2e = layers.every((l) => l.status === "not-applicable") ? null : !gaps.some((g) => g.layer === null);
+  for (const l of layers) {
+    const reasons = gaps.filter((g) => g.layer === l.layer).map((g) => g.reason);
+    if (!reasons.length || briefs.some((b) => b.path === `docs/projects/couverture-${l.slug}.md`)) continue;
+    briefs.push({
+      kind: "coverage",
+      path: `docs/projects/couverture-${l.slug}.md`,
+      title: briefTitle("coverage", l.layer, lang),
+      reasons,
+      blocking: true,
+    });
+  }
+  if (e2e === false)
     briefs.push({
       kind: "e2e",
       path: "docs/projects/e2e-chemins-critiques.md",
       title: briefTitle("e2e", "", lang),
-      reasons: [TEXTS[lang].e2eMissing],
+      reasons: gaps.filter((g) => g.layer === null).map((g) => g.reason),
       blocking: true,
     });
   let forge = inspectForge(root, cfg, exec, lang);
@@ -101,7 +128,7 @@ export function guarantees(opts: GuaranteesOptions): GuaranteesReport {
     cfg.guarantees = {
       ...previous,
       enforced: true,
-      layers: { ...previous.layers, ...Object.fromEntries(layers.filter((l) => l.tool).map((l) => [l.slug, l.mode])) },
+      layers: judged.guarantees.layers,
       ...(forge.protected
         ? { protection: { forge: forge.forge, branch: forge.branch, verifiedAt: new Date().toISOString().slice(0, 10) } }
         : {}),
@@ -109,7 +136,20 @@ export function guarantees(opts: GuaranteesOptions): GuaranteesReport {
     writeFileSync(cfgPath, `${JSON.stringify(cfg, null, 2)}\n`);
     written = writeBriefs(root, briefs, cfg.dirs?.index ?? "docs/projects/pending.md", lang);
   }
-  return { lang, dryRun: Boolean(opts.dryRun), layers, e2e, forge, skeleton, briefs, written, protectedNow, autoMergeNow, autoMerge };
+  return {
+    lang,
+    dryRun: Boolean(opts.dryRun),
+    layers,
+    e2e,
+    gaps: gaps.map((g) => g.reason),
+    forge,
+    skeleton,
+    briefs,
+    written,
+    protectedNow,
+    autoMergeNow,
+    autoMerge,
+  };
 }
 
 export function formatGuarantees(r: GuaranteesReport): string[] {
@@ -120,7 +160,8 @@ export function formatGuarantees(r: GuaranteesReport): string[] {
     out.push(fill(T.layer, l.layer, l.tool ?? "?"));
     out.push(...l.lines.map((x) => `  ${l.status === "blocked" ? "✗" : "-"} ${x}`));
   }
-  out.push(r.e2e ? `✓ ${T.e2eOk}` : `✗ ${T.e2eMissing}`);
+  if (r.e2e !== false) out.push(r.e2e === null ? `- ${T.e2ePending}` : `✓ ${T.e2eOk}`);
+  out.push(...(r.gaps ?? []).map((gap) => `✗ ${gap}`));
   if (r.protectedNow) out.push(`✓ ${fill(T.protected, r.forge.branch, r.forge.forge)}`);
   if (r.autoMergeNow !== null) out.push(r.autoMergeNow ? `✓ ${FT.autoMergeSet}` : `✗ ${FT.autoMergeFailed}`);
   const gaps = [...r.forge.missing, ...(r.forge.notRun ? [r.forge.notRun] : [])];
@@ -138,20 +179,5 @@ export function formatGuarantees(r: GuaranteesReport): string[] {
   return out;
 }
 
-export { guaranteeFailures } from "./guarantees-verify.js";
-
-/** A guarantee not held makes the verdict FAIL, named among the errors (QUA-088); the scope gate too. */
-export function judgeGuarantees(
-  v: { status: string; code: number; errors: string[] },
-  root: string,
-  cfg: GuaranteeConfig,
-  contracts: { checks?: string[] | null }[],
-): void {
-  const gate = scopeGateFailure(cfg, projectLang(root));
-  const failures = [...guaranteeFailures(root, cfg, contracts), ...(gate ? [gate] : [])];
-  if (!failures.length) return;
-  v.errors.push(...failures);
-  v.status = "FAIL";
-  v.code = 1;
-}
+export { guaranteeFailures, judgeGuarantees } from "./guarantees-verify.js";
 export type { LayerReport };

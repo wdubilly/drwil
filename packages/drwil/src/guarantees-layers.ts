@@ -10,6 +10,7 @@ import {
   type Exec,
   type GuaranteeConfig,
   hasSources,
+  layerHasCode,
   slugOf,
   type Thresholds,
 } from "./guarantees-table.js";
@@ -21,8 +22,8 @@ export interface LayerReport {
   slug: string;
   tool: string | null;
   mode: "new" | "existing";
-  /** wired: check added; kept: already declared, not replaced; blocked: blocking brief. */
-  status: "wired" | "kept" | "blocked";
+  /** wired : ajouté ; kept : conservé ; blocked : fiche bloquante ; not-applicable : aucun code. */
+  status: "wired" | "kept" | "blocked" | "not-applicable";
   lines: string[];
 }
 
@@ -75,9 +76,18 @@ export function coverLayer(ctx: LayerContext, layer: string, technos: string[]):
     });
     return report;
   };
+  if (!layerHasCode(ctx.root, layer)) {
+    report.status = "not-applicable";
+    report.lines.push(fill(T.layerPending, layer));
+    return report;
+  }
   if (!tool) return block(technos.length ? fill(T.outsideTable, technos.join(", ")) : T.unknownStack);
   const dir = join(ctx.root, layer);
-  report.mode = hasSources(dir, tool.sources) ? "existing" : "new";
+  const baseline = ctx.cfg.guaranteeBaseline;
+  const inherited = Array.isArray(baseline)
+    ? baseline.some((p) => (layer === "." || p.startsWith(`${layer}/`)) && tool.sources.some((ext) => p.endsWith(ext)))
+    : hasSources(dir, tool.sources);
+  report.mode = inherited ? "existing" : "new";
   if (ctx.checks.some((c) => c?.id === id)) {
     report.status = "kept";
     report.lines.push(fill(T.kept, id));

@@ -2180,3 +2180,43 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `outils/parite-des-outils.test.mjs`
 **Origine** : outiller-tous-les-outils — « Sous tout outil, la consigne de lancer les commandes longues par `.githooks/wait-command.mjs` et de ne jamais attendre par une boucle `while pgrep` est lue au démarrage »
 **Raison** : Seule la consigne du sous-agent de Claude Code interdisait la boucle ; les autres outils n'en lisaient rien.
+
+## QUA-224 — Sans code, couverture et e2e sont pas encore applicables, jamais réputés prouvés
+**Règle** : Livré à tout projet. Une couche sans fichier source présent n'a pas encore de garantie de couverture applicable ; si toutes les couches sont vides, l'e2e n'est pas encore applicable non plus. `drwil guarantees` ne câble aucun contrôle ni n'écrit de fiche bloquante pour ces garanties ; `drwil verify` les explique sans FAIL ni demande d'attestation. Même déjà déclarés et cités, leurs contrôles ne sont pas exécutés et ne sont jamais présentés comme une preuve passée. Les autres garanties et les exclusions sans justification restent exigées.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees-table.ts` (`sourceFiles`), `packages/drwil/src/guarantees-verify.ts` (`pendingGuarantees`, `coverageFailures`).
+**Preuve** : projet installé sans pile puis avec manifeste de pile seul ; absence de fiches couverture/e2e, information texte et JSON ; contrôles déjà cités non lancés, autres garanties toujours bloquantes.
+**Contrôle** : `tests-qua-224`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « Sur un projet sans code, une garantie couverture ou e2e dont la couche n'a aucun code est “pas encore applicable” : elle ne met pas verify en FAIL, et le dit en clair »
+**Raison** : Un chantier de versionnement ne pouvait pas se clore avant même le premier fichier du produit.
+
+## QUA-225 — Le premier fichier source réactive immédiatement les garanties de sa couche
+**Règle** : Livré à tout projet. L'applicabilité est recalculée à chaque commande, sans option de dérogation : dès le premier fichier source, même non encore indexé, la couverture de sa couche et l'e2e redeviennent obligatoires ; une pile inconnue avec du code reste bloquante. La recherche descend sans limite de profondeur dans les couches déclarées (sinon détectées, sinon la racine). Les extensions de source sont définies par `sourceFiles` ; manifestes, configurations `*.config.*`, déclarations TypeScript `*.d.ts`, fichiers cachés, documentation, gabarits (`templates`, `gabarits`), dépendances, sorties de compilation et rapports de couverture ne comptent pas. Un lien symbolique hors de ces dossiers compte conservativement comme du code, sans être suivi. Une erreur de lecture n'est pas assimilée à une couche vide.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees-table.ts` (`sourceFiles`, `layerHasCode`).
+**Preuve** : projet à deux couches vides, ajout profond d'un premier fichier Rust avant tout commit ; seule sa couche est réactivée, l'e2e bloque ; les contrôles déjà déclarés échouent à nouveau après le premier code.
+**Contrôle** : `tests-qua-225`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « Dès que la couche reçoit du code, la garantie redevient applicable et son échec redevient bloquant »
+**Raison** : L'absence de code n'est pas une exclusion permanente et ne doit pas masquer une nouvelle couche.
+
+## QUA-226 — Le code créé après la première installation ne devient pas une dette héritée
+**Règle** : Livré à tout projet. La première installation mémorise les chemins du code présent dans `guaranteeBaseline`. Une réinstallation garde cette photo. Pour chaque couche d'une pile connue, seul le code de sa pile présent sur cette photo la classe « existante » ; le code ajouté ensuite reste neuf, couvert à 100 %, même si `drwil guarantees` n'a jamais été lancé auparavant. Sur une ancienne installation sans photo, le classement conservateur à partir du code courant reste inchangé.
+**Périmètre** : `drwil init`, `drwil guarantees`.
+**Source de vérité** : `packages/drwil/src/config-write.ts`, `packages/drwil/src/guarantees-layers.ts`.
+**Preuve** : init sans code, premier fichier puis réinstallation et guarantees : câblage à 100 %, sans mesure de dette ni diff ; les tests du cliquet restent vrais pour le code présent avant init.
+**Contrôle** : `tests-qua-226`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « le classement “nouveau” ou “existant” dépend de la présence de code au moment où drwil guarantees est lancé, alors que la recette d'un projet neuf impose d'écrire le code d'abord »
+**Raison** : La recette du projet neuf déclenchait une mesure de dette héritée dès son premier test.
+
+## QUA-227 — Déclarer une garantie ne la prouve pas, guarantees et verify partagent le même juge
+**Règle** : Livré à tout projet. Sur une couche applicable, `drwil guarantees` et `drwil verify` jugent par la même fonction la déclaration et la citation des contrôles de couverture et d'e2e. Un contrôle câblé mais cité par aucun contrat laisse la garantie non tenue et écrit une fiche bloquante. Le résumé de `guarantees` distingue le câblage de la preuve d'exécution, qui reste le verdict de `verify` ; il ne promet pas que les garanties sont tenues sur la seule déclaration.
+**Périmètre** : `drwil guarantees`, `drwil verify`.
+**Source de vérité** : `packages/drwil/src/guarantees-verify.ts` (`coverageFailures`), lecteur canonique des contrats livré par le kit.
+**Preuve** : contrôle de couverture câblé puis cité, e2e déclaré puis cité : les deux commandes donnent le même diagnostic, sans faux résumé de réussite.
+**Contrôle** : `tests-qua-227`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Origine** : clôture-sur-projet-neuf — « drwil guarantees affiche “✓ couverture” alors que drwil verify déclare la garantie non tenue »
+**Raison** : Deux diagnostics divergents faisaient croire le chantier de garantie fini.

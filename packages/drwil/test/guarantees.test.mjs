@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,8 @@ import {
   COVERAGE_TOOLS,
   doctor,
   formatGuarantees,
+  formatVerdict,
+  verdictJson,
   guaranteeFailures,
   guarantees,
   init,
@@ -69,12 +71,139 @@ const FORGE_OK = [
 ];
 
 /** Projet installé (français, CI GitHub), avec un package.json de pile Node. */
-async function projet({ pile = true, lang = "fr" } = {}) {
+async function projet({ pile = true, lang = "fr", code = true, existant = false } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "drwil-garanties-"));
+  if (existant) ecrire(dir, "src/ancien.js", "export const ancien = 1;\n");
   await silence(() => init({ lang, targetDir: dir, git: false, ci: "github", tools: "claude" }));
   if (pile) ecrire(dir, "package.json", JSON.stringify({ name: "p", scripts: { test: "node --test" } }));
+  if (code) ecrire(dir, "src/premier.js", "export const premier = 1;\n");
   return dir;
 }
+
+test("QUA-224 sans code : couverture et e2e pas encore applicables, sans fiche bloquante, verify l'explique", async () => {
+  for (const [pile, lang] of [
+    [false, "fr"],
+    [true, "en"],
+  ]) {
+    const dir = await projet({ pile, lang, code: false });
+    for (const f of ["node_modules/x/a.js", "templates/exemple/a.rs", ".githooks/exemple.mjs", "dist/a.js", "vite.config.ts"])
+      ecrire(dir, f, "exemple");
+    const r = guarantees({ targetDir: dir, exec: faux(FORGE_OK) });
+    assert.equal(r.layers[0].status, "not-applicable");
+    assert.equal(r.e2e, null);
+    assert.ok(!r.briefs.some((b) => b.kind === "coverage" || b.kind === "e2e"));
+    assert.match(formatGuarantees(r).join("\n"), /pas encore applicable|not yet applicable/);
+    assert.ok(!guaranteeFailures(dir, config(dir), []).some((e) => /couverture|e2e/.test(e)));
+    const v = await verify({ targetDir: dir });
+    assert.match(formatVerdict(v), /pas encore applicable|not yet applicable/);
+    assert.ok(!v.errors.some((e) => /couverture|e2e/.test(e)), v.errors.join("\n"));
+    assert.ok(
+      v.errors.some((e) => /versionnement|présentation|versioning|presentation/.test(e)),
+      "les autres garanties restent exigées",
+    );
+  }
+});
+
+test("QUA-225 premier code : réactivation immédiate par couche et e2e, même avant le premier commit", async () => {
+  const dir = await projet({ code: false });
+  const cfg = config(dir);
+  cfg.layers = ["api", "web"];
+  ecrireConfig(dir, cfg);
+  guarantees({ targetDir: dir, exec: faux(FORGE_OK) });
+  ecrire(dir, "api/a/b/c/d/e/f/g/premier.rs", "fn main() {}\n");
+  let echecs = guaranteeFailures(dir, config(dir), []);
+  assert.ok(echecs.some((e) => /coverage-api/.test(e)));
+  assert.ok(echecs.some((e) => /garantie e2e/.test(e)));
+  assert.ok(!echecs.some((e) => /coverage-web/.test(e)));
+  const r = guarantees({ targetDir: dir, exec: faux(FORGE_OK) });
+  assert.equal(r.layers[0].status, "blocked", "une pile inconnue avec du code reste bloquante");
+  assert.equal(r.layers[1].status, "not-applicable");
+  assert.ok(r.briefs.some((b) => b.kind === "coverage"));
+  assert.ok(r.briefs.some((b) => b.kind === "e2e"));
+  const v = await verify({ targetDir: dir });
+  assert.equal(v.status, "FAIL");
+  assert.ok(v.errors.some((e) => /coverage-api/.test(e)));
+  echecs = guaranteeFailures(dir, { ...config(dir), checks: [{ id: "coverage-api" }, { id: "e2e" }] }, [
+    { checks: ["coverage-api", "e2e"] },
+  ]);
+  assert.ok(!echecs.some((e) => /couverture|e2e/.test(e)));
+});
+
+test("QUA-225 une couche liée n'est pas déclarée vide sans avoir suivi son lien", async () => {
+  const dir = await projet({ code: false });
+  ecrire(dir, "ressources/donnees.txt", "x");
+  symlinkSync(join(dir, "ressources"), join(dir, "api"), process.platform === "win32" ? "junction" : "dir");
+  const cfg = { ...config(dir), layers: ["api"], guarantees: { enforced: true } };
+  assert.ok(guaranteeFailures(dir, cfg, []).some((e) => /coverage-api/.test(e)));
+  assert.ok(guaranteeFailures(dir, { ...cfg, layers: ["."] }, []).some((e) => /coverage-root/.test(e)));
+});
+
+test("QUA-224 contrôles déjà cités : aucun outil lancé sans code, puis son échec bloque au premier fichier", async () => {
+  const dir = await projet({ code: false });
+  guarantees({ targetDir: dir, exec: faux(FORGE_OK) });
+  spawnSync("git", ["init", "-q"], { cwd: dir });
+  spawnSync("git", ["remote", "add", "origin", "https://github.com/a/b.git"], { cwd: dir });
+  for (const f of ["README.md", "AGENTS.md", "docs/features.md"]) ecrire(dir, f, "# Produit\n");
+  const cfg = config(dir);
+  cfg.parallel = 2;
+  cfg.checks = ["coverage-root", "coverage-diff-root", "e2e"].map((id) => ({ id, run: "node -e 'process.exit(1)'" }));
+  ecrireConfig(dir, cfg);
+  ecrire(dir, "docs/contracts.md", "# Contrats\n");
+  citer(
+    dir,
+    "QUA-900",
+    cfg.checks.map((c) => c.id),
+  );
+  let v = await verify({ targetDir: dir, reuse: false });
+  assert.equal(v.status, "PASS", JSON.stringify(v));
+  assert.ok(v.contracts[0].checks.every((c) => c.status === "not-applicable" && c.durationMs === undefined));
+  assert.match(verdictJson(v).notices.join("\n"), /pas encore applicable/);
+  ecrire(dir, "src/premier.js", "export const premier = 1;\n");
+  v = await verify({ targetDir: dir, reuse: false });
+  assert.equal(v.status, "FAIL");
+  assert.ok(v.contracts[0].checks.every((c) => c.status === "fail"));
+});
+
+test("QUA-226 origine : le premier code écrit après init reste neuf, une réinstallation conserve cette origine", async () => {
+  const dir = await projet();
+  await silence(() => init({ lang: "fr", targetDir: dir, git: false, ci: "github", tools: "claude" }));
+  const appels = [];
+  const r = guarantees({ targetDir: dir, exec: faux([[/c8 --version/, OK], ...FORGE_OK], appels) });
+  assert.equal(r.layers[0].mode, "new");
+  assert.equal(r.layers[0].status, "wired");
+  assert.ok(!appels.some((c) => /json-summary|diff-cover/.test(c)), appels.join("\n"));
+});
+
+test("QUA-226 ancienne installation sans photo : le code courant reste jugé conservativement existant", async () => {
+  const dir = await projet();
+  const cfg = config(dir);
+  delete cfg.guaranteeBaseline;
+  ecrireConfig(dir, cfg);
+  await silence(() => init({ lang: "fr", targetDir: dir, git: false, ci: "github", tools: "claude" }));
+  const r = guarantees({ targetDir: dir, exec: faux([[/c8 --version/, OK], ...FORGE_OK]) });
+  assert.equal(r.layers[0].mode, "existing");
+  assert.equal(r.layers[0].status, "blocked", "la mesure héritée reste obligatoire sans photo initiale");
+  assert.match(r.layers[0].lines.join("\n"), /mesure de la couverture actuelle impossible/);
+});
+
+test("QUA-227 juge commun : un contrôle câblé mais non cité ne vaut pas une garantie tenue", async () => {
+  const dir = await projet();
+  let r = guarantees({ targetDir: dir, exec: faux([[/c8 --version/, OK], ...FORGE_OK]) });
+  assert.ok(r.briefs.some((b) => b.kind === "coverage"));
+  assert.match(formatGuarantees(r).join("\n"), /cité par aucun contrat/);
+  assert.doesNotMatch(formatGuarantees(r).join("\n"), /Toutes les garanties sont tenues/);
+  assert.ok(guaranteeFailures(dir, config(dir), []).some((e) => /coverage-root.*cité par aucun contrat/.test(e)));
+  citer(dir, "QUA-900", ["coverage-root"]);
+  const cfg = config(dir);
+  cfg.checks.push({ id: "e2e", run: "node -e 0" });
+  ecrireConfig(dir, cfg);
+  r = guarantees({ targetDir: dir, dryRun: true, exec: faux(FORGE_OK) });
+  assert.equal(r.e2e, false, "déclaré mais non cité");
+  citer(dir, "QUA-901", ["e2e"]);
+  r = guarantees({ targetDir: dir, dryRun: true, exec: faux(FORGE_OK) });
+  assert.equal(r.e2e, true);
+  assert.ok(!r.briefs.some((b) => b.kind === "coverage" || b.kind === "e2e"));
+});
 
 /** Ajoute au registre un contrat qui cite ces contrôles (pour que verify les rejoue). */
 function citer(dir, id, controles) {
@@ -167,6 +296,7 @@ test("QUA-089 e2e exigé : fiche bloquante qui demande les chemins critiques, te
   cfg.checks.push({ id: "e2e", name: "e2e", run: "node -e 0" });
   ecrireConfig(dir, cfg);
   assert.ok(guaranteeFailures(dir, config(dir), [{ checks: ["e2e"] }]).every((e) => !/e2e/.test(e)));
+  citer(dir, "QUA-900", ["e2e"]);
   assert.equal(guarantees({ targetDir: dir, dryRun: true, exec: faux([[/c8 --version/, OK], ...FORGE_OK]) }).e2e, true);
 });
 
@@ -207,7 +337,7 @@ test("QUA-091 outil absent ou non lançable : jamais « passé », contrôle non
 });
 
 test("QUA-093 projet existant en dette : cliquet au niveau mesuré, diff à 100 %, fiche de montée [P1] non bloquante", async () => {
-  const dir = await projet();
+  const dir = await projet({ existant: true });
   ecrire(dir, "src/a.js", "export const a = 1;\n");
   const mesure = (_cmd, cwd) => {
     ecrire(
@@ -234,7 +364,7 @@ test("QUA-093 projet existant en dette : cliquet au niveau mesuré, diff à 100 
 
 test("QUA-093 projet existant : mesure à 100 % câblée à 100 %, mesure impossible ou outil de diff absent bloquent", async () => {
   const cas = async (regles, slug = "root") => {
-    const dir = await projet();
+    const dir = await projet({ existant: true });
     ecrire(dir, "src/a.ts", "export const a = 1;\n");
     return { dir, r: guarantees({ targetDir: dir, exec: faux([[/c8 --version/, OK], ...regles, ...FORGE_OK]) }), slug };
   };
@@ -260,6 +390,7 @@ test("QUA-093 projet existant : mesure à 100 % câblée à 100 %, mesure imposs
   assert.match(r.layers[0].lines.join("\n"), /couverture du diff : outil absent ou inconnu pour c8 \(`diff-cover --version`\)/);
   // JVM : pas de mesure prise en charge, le seuil revient au demandeur.
   const jvm = mkdtempSync(join(tmpdir(), "drwil-garanties-jvm-"));
+  ecrire(jvm, "src/main/java/A.java", "class A {}");
   await silence(() => init({ lang: "en", targetDir: jvm, git: false, ci: "github", tools: "claude" }));
   ecrire(jvm, "pom.xml", "<project><artifactId>jacoco</artifactId></project>");
   ecrire(jvm, "src/main/java/A.java", "class A {}");
@@ -563,9 +694,10 @@ test("QUA-097 garanties tenues : verify ne signale rien, la commande le dit", as
   const cfg = config(dir);
   cfg.checks.push({ id: "e2e", name: "e2e", run: "node -e 0" });
   ecrireConfig(dir, cfg);
+  citer(dir, "QUA-900", ["coverage-root", "e2e"]);
   const r = guarantees({ targetDir: dir, exec: faux([[/c8 --version/, OK], ...FORGE_OK]) });
   assert.equal(r.briefs.length, 0);
-  assert.match(formatGuarantees(r).join("\n"), /Toutes les garanties sont tenues\./);
+  assert.match(formatGuarantees(r).join("\n"), /Garanties applicables câblées et citées.*exécution reste à prouver/);
   assert.deepEqual(guaranteeFailures(dir, config(dir), [{ checks: ["coverage-root", "e2e"] }]), []);
 });
 

@@ -11,23 +11,15 @@ import { join } from "node:path";
 import { judgeDurable } from "./closure.js";
 import { changeLines, coverageOf, lacksCoverage, noCoversMessage } from "./coverage.js";
 import { showOrigins } from "./criteria.js";
-import { type Attestation, readAttestations, reusableVerdicts } from "./evidence.js";
+import { type Attestation, readAttestations } from "./evidence.js";
 import { covers, humanFingerprint, obsoleteReasons, proofFingerprints } from "./fingerprint.js";
 import { fill, projectLang } from "./i18n.js";
 import { judgeGuarantees } from "./guarantees.js";
+import { replayChecks } from "./verify-checks.js";
 import { businessRules } from "./rules.js";
 import { globalError, loadProject } from "./verify-project.js";
 import { TEXTS } from "./verify-texts.js";
-import {
-  CODES,
-  type CheckResult,
-  type ContractResult,
-  type Severity,
-  type Status,
-  type Verdict,
-  type VerifyOptions,
-  worst,
-} from "./verify-types.js";
+import { CODES, type ContractResult, type Severity, type Status, type Verdict, type VerifyOptions, worst } from "./verify-types.js";
 
 export { formatVerdict, verdictJson } from "./verdict.js";
 export { ATTESTATIONS_DIR, readAttestations, redact, writeEvidence, type Attestation } from "./evidence.js";
@@ -49,7 +41,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const root = opts.targetDir;
   const project = await loadProject(root);
   if (typeof project === "string") return globalError(project, projectLang(root));
-  const { lang, cfg, registry, engine, contracts: reader } = project;
+  const { lang, cfg, registry, contracts: reader } = project;
   const T = TEXTS[lang];
   const all: any[] = reader.readContracts(readFileSync(join(root, registry), "utf8"));
   if (!all.length) return globalError(fill(T.noContract, registry), lang);
@@ -65,41 +57,9 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     else byContract.set(e.id, [...(byContract.get(e.id) ?? []), e.message]);
   }
 
-  // `whole`: verify judges the whole repository (e.g. gitleaks on the whole history), not an empty index.
-  const available = new Map<string, any>(engine.checks(root, { cfg, whole: true }).map((c: any) => [c.id, c]));
-  const cache = new Map<string, CheckResult>();
+  const { available, cache, deferred } = await replayChecks(root, project, contracts, opts);
   // A check cited by several contracts cannot say which rule its failure breaks: verify says so.
   const citedBy = (id: string) => all.filter((k) => (k.checks ?? []).includes(id)).map((k) => k.id);
-  // QUA-139: with the engine's `parallel` setting the cited command checks are started together (same limit as
-  // run-checks), then read in registry order: the verdict and the reasons are those of a serial pass.
-  const cited = [...new Set(contracts.flatMap((k) => ((k.checks ?? []) as string[]).filter((id) => available.has(id))))];
-  // QUA-140: a verdict `run-checks` left on an identical tree and configuration is taken, not replayed.
-  const reused = opts.reuse === false ? new Map() : reusableVerdicts(root, engine, available, !opts.evidence);
-  const started: Map<string, Promise<any>> | undefined = engine.startParallel?.(
-    cited.filter((id) => !reused.has(id)).map((id) => available.get(id)),
-  );
-  const run = async (id: string): Promise<void> => {
-    opts.onCheck?.(id);
-    const taken = reused.get(id);
-    if (taken) {
-      opts.onCheck?.(id, taken.status);
-      return void cache.set(id, {
-        id,
-        status: taken.status,
-        output: taken.output,
-        durationMs: taken.durationMs,
-        reusedAt: taken.ranAt,
-        reusedBasis: taken.basis,
-      });
-    }
-    const pending = started?.get(id);
-    const { launched: _launched, ...raw } = pending
-      ? await pending.catch((e: Error) => ({ status: "not-run", detail: e.message }))
-      : available.get(id).run({ stdio: "pipe" });
-    opts.onCheck?.(id, raw.status);
-    cache.set(id, { id, ...raw });
-  };
-  for (const id of cited) await run(id);
 
   const results: (ContractResult & { invalidConfig?: boolean })[] = contracts.map((k) => {
     const reasons = [...(byContract.get(k.id) ?? [])];
@@ -122,7 +82,7 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
         statuses.push("ERROR");
         reasons.push(fill(T.notRun, r.id, r.detail));
       } else if (r.status === "not-applicable") {
-        statuses.push("MANUAL");
+        if (!deferred.has(r.id)) statuses.push("MANUAL");
         reasons.push(fill(T.notApplicable, r.id, r.detail));
       }
     }
