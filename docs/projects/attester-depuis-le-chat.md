@@ -45,6 +45,13 @@ files:
   - packages/drwil/test/portable-attest.test.mjs
   - package.json
   - docs/architecture.md
+  - packages/drwil/src/render.ts
+  - packages/drwil/src/config.ts
+  - packages/drwil/templates/common/tools/codex/.codex/hooks.json
+  - packages/drwil/templates/common/tools/cursor/.cursor/hooks.json
+  - .codex/hooks.json
+  - .cursor/hooks.json
+  - packages/drwil/test/kit.test.mjs
 -->
 
 ## 1. Besoin
@@ -134,6 +141,30 @@ l'exigence finale des cinq outils, ni une attestation de compatibilité réelle.
   préalable réel, jamais remplacer l'exigence par « terminal disponible ».
 
 ## 7. Reprise
+
+### Reprise ciblée — Codex et Cursor
+
+- **2026-11-03, cadrage seul avant code** : BUILD relu, branche
+  `workstream/attester-depuis-le-chat`, arbre initial propre. La demande porte sur les deux
+  adaptateurs restants ; le protocole portable autorisé est conservé, Claude inchangé.
+- **Scope ajouté** : `packages/drwil/src/render.ts` installera les hooks partagés seuls
+  pour Codex/Cursor, sans installer les réglages ni les agents Claude ; `packages/drwil/src/config.ts` permettra
+  le suivi du réglage natif Codex déjà installé. Les réglages natifs
+  `packages/drwil/templates/common/tools/codex/.codex/hooks.json` et
+  packages/drwil/templates/common/tools/cursor/.cursor/hooks.json (à créer) brancheront les événements
+  établis ; .codex/hooks.json et .cursor/hooks.json sont réservés aux miroirs seulement si
+  leur unité est installée dans ce dépôt. `packages/drwil/test/kit.test.mjs` fera évoluer
+  l'attente d'installation Codex : hooks partagés requis, toujours sans agents/réglages Claude.
+  Les sources, tests du protocole, contrats, recette et matrice sont déjà au scope.
+- **Sources avant réalisation** : documentation officielle Codex des hooks et source taguée
+  `rust-v0.166.0` : `request_user_input` est un outil local passant par le registre commun ;
+  son résultat est une chaîne JSON `answers[id].answers`. Les hooks exigent revue/confiance
+  dans `/hooks`, et la fonctionnalité `hooks` ne doit pas être désactivée. Cursor documente
+  ses hooks génériques et `cursor/ask_question` dans ACP ; le passage exact de la question
+  native dans les hooks et son encodage sont en cours d'inspection statique de la distribution
+  officielle, sans installation ni lancement d'agent. Aucun payload ne sera inventé.
+- Aucun `attest`, `state accept` ou sondage réel ; jugements humains et acceptation des
+  critères restent requis. La note distincte sur QUA-222 (parité générale) reste intacte.
 
 ### Reprise ciblée — protocole portable autorisé
 
