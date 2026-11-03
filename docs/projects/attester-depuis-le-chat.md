@@ -10,6 +10,10 @@ files:
   - packages/drwil/src/attest.ts
   - packages/drwil/src/cli-attest.ts
   - packages/drwil/src/cli-texts.ts
+  - packages/drwil/src/index.ts
+  - packages/drwil/src/evidence.ts
+  - README.md
+  - packages/drwil/README.md
   - .claude/hooks/prompt-hook.mjs
   - .claude/hooks/start-poll.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs
@@ -70,9 +74,11 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 5. Points à trancher
 
-- [IA] Preuve de l'origine humaine côté hook : que le hook enregistre-t-il (date, identité de session) pour
-  distinguer l'attestation d'une réponse écrite par l'agent ? À fixer au lot 1 avec des tests sur une réponse
-  falsifiée.
+- [IA, fixé le 2026-11-03] Le hook n'accepte que `AskUserQuestion` de Claude Code :
+  préparation avant affichage, réponse exclusivement dans `tool_response.answers`, corrélation par
+  `session_id` et `tool_use_id`, préparation consommée une seule fois. La date, la session et l'appel
+  sont conservés dans la provenance ; cette traçabilité n'est pas une identité forte. Le résumé et les
+  empreintes sont revérifiés après la réponse : une preuve changée exige un nouveau sondage.
 
 ## 6. Increments
 
@@ -82,6 +88,12 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-30) : cadré, aucun code.
+- **Dernier état** (2026-11-03) : BUILD, lot unique en cours sur la branche
+  `workstream/attester-depuis-le-chat` ; aucun essai réel d'attestation par l'agent.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] lancer par `/drwil-start`, après `adoption-fluide-projet-neuf`.
+- **Prochaine étape** : implémenter et tester le sondage et les refus sur des projets fictifs ; le jugement
+  de lisibilité du sondage reste humain.
+- **Extension de périmètre** : `packages/drwil/src/index.ts` exporte la préparation en lecture seule
+  utilisée par la CLI et le hook ; `packages/drwil/src/evidence.ts` décrit la provenance optionnelle sans
+  changer le jugement des attestations existantes ; `README.md` et `packages/drwil/README.md` corrigent
+  l'affirmation « terminal uniquement » et documentent la nouvelle commande publique.
