@@ -175,6 +175,10 @@ Tranchées par le demandeur le 2026-10-30 :
   Aucun lot 3 ou 4 à réaliser dans ce contexte.
 - **Extraction préalable** : mécanique de clôture et consommation déplacées sans changement de
   comportement dans `.githooks/close-mechanics.mjs` ; miroirs installés par `npm run installer-depot`.
+  La fiche permanente du dépôt est un écart déclaré dans `outils/miroirs.json` :
+  son bloc scope est mis à jour en plus du gabarit (l'installateur la préserve).
+  Après rattachement au gabarit : contrôles globaux code 0, 40 avertissements,
+  78 repris / 146 rejoués, sans aucun changement de comportement.
 - **Complément indispensable de cadrage** : le gabarit
   `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md` doit citer les modules
   extraits, comme sa copie déjà cadrée. La première passe après extraction a révélé 7 contrôles
