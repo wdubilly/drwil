@@ -7,6 +7,13 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- New-project closing: coverage and e2e are explicitly not yet applicable on a layer without
+  code, and become blocking as soon as code appears. `guarantees` and `verify` share their
+  judge, and `init` records the new/existing project origin. Closing adds the proof link to
+  the journal and removes the brief's index entry; verification accepts only the active
+  workstream's future proof. In BUILD, `close.mjs --check` names references requiring a
+  separately committed scope extension. Human classification markers no longer change the
+  accepted criteria fingerprint, and a marker quoted in code remains literal text.
 - Assistant hooks without `node` in their PATH (fnm and other per-shell version managers): the hooks shipped for
   Claude Code and Copilot CLI, and for Gemini CLI outside Windows (through the new launcher
   `.gemini/hooks/drwil-node.sh`), now say "node not found in the PATH of this assistant. Restart it from a
@@ -35,7 +42,7 @@ closing commit; the release renames this section to its version.
 - Release module: new setting `release.mode` in `.drwil/ia-first.json`, `solo` (the
   default) or `team`. Behaviour change for projects that have the module: without
   the key, `solo` applies, and `team` is the way to keep the candidate, verdict and
-  promotion path. In `team`, `create-release.mjs` without `--candidate` is refused
+  promotion path. In   `team`, `.githooks/create-release.mjs` without `--candidate` is refused
   and points to `--candidate`; in `solo` it publishes the version directly. An
   existing value is kept by an update, and any other value is refused
   (QUA-199 to QUA-201). In `solo`, the « no verdict » acceptance note is now the
@@ -172,8 +179,8 @@ closing commit; the release renames this section to its version.
 ### Changed
 
 - The agent hooks installed in `.claude/hooks/` that exceeded 200 lines are
-  split, none above 200 lines, with no change of behavior: `bash-guard.mjs`
-  now imports `shell-split.mjs`, and `prompt-hook.mjs` imports `start-poll.mjs`.
+  split, none above 200 lines, with no change of behavior: `.claude/hooks/bash-guard.mjs`
+  now imports `.claude/hooks/shell-split.mjs`, and `.claude/hooks/prompt-hook.mjs` imports `.claude/hooks/start-poll.mjs`.
   A project already equipped gets both new files on update; the hooks stay
   scripts run by Claude Code, Gemini CLI and Copilot CLI alike.
 - The `AGENTS.md` installed by the kit is now a short switchboard (93 lines
@@ -294,7 +301,7 @@ closing commit; the release renames this section to its version.
 - The merged local branches' recognition and deletion move from
   `.githooks/close.mjs` to the new `.githooks/close-branches.mjs` (QUA-048,
   QUA-058, QUA-059), so that the closing command stays under the 400-line cap
-  (QUA-001); `close.mjs` re-exports the same functions and nothing else changes.
+  (QUA-001); `.githooks/close.mjs` re-exports the same functions and nothing else changes.
 
 ### Fixed
 
@@ -390,7 +397,7 @@ closing commit; the release renames this section to its version.
 - The CI replays the checks with the main branch's hooks: off the main
   branch, the `checks` job (GitHub and GitLab) runs the main branch's copy
   of the new `.githooks/base-checks.mjs`, which lays the main branch's
-  `.githooks/` over the working tree for one run of `run-checks.mjs`, with
+  `.githooks/` over the working tree for one run of `.githooks/run-checks.mjs`, with
   the branch's list of checks. A pull request that weakens or deletes a
   hook, or removes a check from `.drwil/ia-first.json`, fails, unless the
   brief declares it in « Modified contracts »; a main branch that cannot be
@@ -605,10 +612,10 @@ closing commit; the release renames this section to its version.
   limits, attestations to redo), each point with a stable ID and its
   workstream's PR; below, the non-regression already proven (`drwil
   verify` verdict, contracts proven by a test, OS tested by the CI, tarball
-  fingerprint). `release-verdict.mjs` records the verdict — approved, with
+  fingerprint). `.githooks/release-verdict.mjs` records the verdict — approved, with
   reserves or refused, a human gesture an agent never runs — on the
   pre-release, and opens an issue per reserve or refusal;
-  `promote-release.mjs` publishes the final release with the same tarball
+  `.githooks/promote-release.mjs` publishes the final release with the same tarball
   once approved. `--dry-run` shows the sheet and the promotion without
   publishing anything.
 - The README install commands point to the latest validated release
@@ -944,7 +951,7 @@ closing commit; the release renames this section to its version.
     the project's keys and rules kept.
   - `.gitleaks.toml`: the kit manifest is added to the allowlist (both
     `[allowlist]` and `[[allowlists]]` forms).
-- The CI already in use (`.github/workflows/`, `.gitlab-ci.yml`) is
+- The CI already in use (`.github/workflows/`, or GitLab CI) is
   detected when `--ci` is not given (it was `none`). An existing CI file is
   not rewritten: `init` prints the `checks` job to add.
 - A `core.hooksPath` already set (husky, lefthook…) is no longer replaced
@@ -1033,7 +1040,7 @@ migrated once by `drwil init` or `drwil apply` (no aliases).
 
 | Before | After |
 |---|---|
-| `docs/projets/`, `en-attente.md` | `docs/projects/`, `pending.md` |
+| `docs/projets/` (historical index: en-attente.md) | `docs/projects/`, `docs/projects/pending.md` |
 | `docs/contrats.md`, `docs/catalogue-contrats.md` | `docs/contracts.md`, `docs/contracts-catalog.md` |
 | `docs/recettes/` | `docs/recipes/` |
 | Activities `CADRAGE`, `ATTENTE`, `DEMANDE`, `REALISATION`, `PREUVES`, `CLOTURE` | `SCOPING`, `EXPECTATION`, `REQUEST`, `BUILD`, `EVIDENCE`, `CLOSING` (`VERIFY` unchanged) |
