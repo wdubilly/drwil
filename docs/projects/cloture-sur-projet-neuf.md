@@ -17,6 +17,10 @@ files:
   - packages/drwil/src/verify.ts
   - packages/drwil/src/verify-checks.ts
   - packages/drwil/src/verdict-texts.ts
+  - packages/drwil/src/closure.ts
+  - packages/drwil/test/cycle.test.mjs
+  - packages/drwil/templates/common/base/.githooks/briefs-criteria.mjs
+  - .githooks/briefs-criteria.mjs
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/templates/common/base/.githooks/close.mjs
   - packages/drwil/templates/common/base/.githooks/close-checks.mjs
@@ -83,6 +87,11 @@ est refusée ou faussée pour des raisons qui ne tiennent pas au chantier. Trois
 
 ## Contrats modifiés
 
+- `.githooks/briefs-criteria.mjs` — correction de classification des marques citées en code,
+  autorisée explicitement le 2026-11-03 : « Corriger le défaut dans ce chantier », à la
+  question « Autorisez-vous la correction du défaut de classification, avec extension de
+  cadrage séparée et tests, sans changer le texte des critères acceptés ? ».
+  Aucun contrôle désactivé, aucune attestation ni acceptation écrite par l'agent.
 - `QUA-174` — ancien critère : « texte de chaque puce, lignes de continuation jointes, espaces normalisés,
   preuve citée exclue » — raison : la marque `[humain]` est une classification de la preuve, pas le sens du
   critère ; l'exclure de l'empreinte évite un geste humain par marque posée après coup (validé le 2026-10-30)
@@ -163,6 +172,21 @@ Tranchées par le demandeur le 2026-10-30 :
   `couverture-du-code-modifie` et `e2e-et-attestation-precises`).
 
 ## 7. Reprise
+
+- **Reprise autorisée du 2026-11-03 — correction de classification** : reprise du chantier
+  BUILD après arrêt humain, sans nouveau lot ni lancement. Extension de cadrage à commiter
+  seule avant le code : `packages/drwil/templates/common/base/.githooks/briefs-criteria.mjs`
+  (lecteur source des critères), `.githooks/briefs-criteria.mjs` (miroir installé),
+  `packages/drwil/src/closure.ts` (lecteur des preuves de clôture),
+  `packages/drwil/test/cycle.test.mjs` (régression du second lecteur). Les tests du premier
+  lecteur restent dans `.githooks/state.test.mjs`, déjà au périmètre.
+  Prior art : `.githooks/state-acceptance.mjs` distingue déjà les segments en code et les marques
+  de classification ; appliquer cette distinction aux deux lecteurs, sans refactor superflu.
+  Préserver la citation dans le libellé et sa preuve durable, ainsi que les vraies marques
+  `[humain]` / `[human]`, sans distinction de casse ; tests vus échouer avant correction.
+  Ne modifier aucun texte accepté, ne renouveler aucune acceptation. Les quatre attestations
+  humaines restent obligatoires ; sans elles, arrêt BUILD après correction, commits et
+  contrôles, sans clôture, push, PR ni suite de file.
 
 - **Arrêt après vérification finale (2026-11-03)** : lot 4 commité `8590332`,
   puis `node .githooks/state.mjs lot next` : aucun lot [IA] restant. Le sous-agent
