@@ -7,6 +7,11 @@
 `.githooks/wait-command.mjs` (QUA-219, QUA-220) et la consigne du sous-agent `drwil-checks` (QUA-221) évitent les
 boucles `pgrep` sous Claude Code. Trois limites restent.
 
+## Existant (relevé le 2026-11-03)
+
+- Le script est livré à tout projet ; la consigne du sous-agent n'existe que dans l'arbre `.claude` (Claude Code).
+- Le script n'a été joué que sous Linux.
+
 ## Questions à trancher
 
 - [décision] Les autres outils (Copilot CLI, Gemini, Codex) : le script est livré à tous, mais seule la consigne de
