@@ -18,7 +18,7 @@ function refusal(root) {
     : "[drwil] Sondage d'attestation refusé : vérifier session, préparation et résultat natif ; aucune attestation enregistrée.";
 }
 
-export async function portableAttestationHook(input, { root, tool, phase, tell }) {
+export async function portableAttestationHook(input, { root, tool, phase, tell, isActive }) {
   const e = nativeAttestationEvent(input, tool, phase);
   if (!e || (!e.pre && !e.post)) return null;
   if (tool === "codex" && e.pre && e.name === "Bash" && /prompt-hook/i.test(String(e.args?.command ?? ""))) {
@@ -35,8 +35,8 @@ export async function portableAttestationHook(input, { root, tool, phase, tell }
   };
   if (
     poll.tool !== tool ||
-    e.name !== (tool === "codex" ? "request_user_input" : "ask_user") ||
-    (tool === "codex" && (typeof e.call !== "string" || !e.call.trim())) ||
+    e.name !== (tool === "cursor" ? "cursor/ask_question" : tool === "codex" ? "request_user_input" : "ask_user") ||
+    ((tool === "codex" || tool === "cursor") && (typeof e.call !== "string" || !e.call.trim())) ||
     typeof e.session !== "string" ||
     !e.session.trim() ||
     (e.agent !== null && (typeof e.agent !== "string" || !e.agent.trim()))
@@ -49,6 +49,7 @@ export async function portableAttestationHook(input, { root, tool, phase, tell }
   let owned = false;
   try {
     if (e.pre) {
+      if (tool === "cursor" && (typeof isActive !== "function" || !isActive())) return refuse();
       mkdirSync(dir, { recursive: true });
       if (existsSync(file) && !existsSync(join(slot, "claimed"))) {
         const previous = JSON.parse(readFileSync(file, "utf8"));
@@ -61,13 +62,16 @@ export async function portableAttestationHook(input, { root, tool, phase, tell }
       const { prepareAttestationPoll, formatPortableAttestationPoll } = await import("drwil");
       const prepared = await prepareAttestationPoll({ targetDir: root, ...poll });
       if (!("poll" in prepared)) return refuse();
-      const expected = formatPortableAttestationPoll(prepared.poll, tool, poll.nonce);
+      const expected = {
+        ...formatPortableAttestationPoll(prepared.poll, tool, poll.nonce),
+        ...(tool === "cursor" ? { toolCallId: e.call } : {}),
+      };
       if (serialise(expected) !== serialise(e.args) || /\((recommended|recommandée?)\)/i.test(serialise(e.args))) return refuse();
       const pending = {
         tool,
         session: e.session,
         agent: e.agent,
-        ...(tool === "codex" ? { call: e.call } : {}),
+        ...(tool === "codex" || tool === "cursor" ? { call: e.call } : {}),
         nonce: poll.nonce,
         args: e.args,
         snapshot: prepared.snapshot,
@@ -89,9 +93,10 @@ export async function portableAttestationHook(input, { root, tool, phase, tell }
       pending.tool !== tool ||
       pending.session !== e.session ||
       pending.agent !== e.agent ||
-      (tool === "codex" && pending.call !== e.call) ||
+      ((tool === "codex" || tool === "cursor") && pending.call !== e.call) ||
       pending.nonce !== poll.nonce ||
       serialise(pending.args) !== serialise(e.args) ||
+      (tool === "cursor" && (typeof isActive !== "function" || !isActive())) ||
       !nativePositive(e, tool)
     )
       return refuse();
@@ -104,12 +109,12 @@ export async function portableAttestationHook(input, { root, tool, phase, tell }
       origin: {
         source: `${tool}-poll`,
         sessionId: e.session,
-        ...(tool === "codex" ? { toolUseId: e.call } : {}),
+        ...(tool === "codex" || tool === "cursor" ? { toolUseId: e.call } : {}),
         nonce: poll.nonce,
         pollHash: hash(e.args),
         askedAt: pending.askedAt,
       },
-      confirm: async (_, snapshot) => snapshot === pending.snapshot,
+      confirm: async (_, snapshot) => snapshot === pending.snapshot && (tool !== "cursor" || isActive()),
     });
     tell(`[drwil] ${result.code === 0 ? "✓" : "✗"} ${result.message}`);
     return 0;
@@ -127,6 +132,7 @@ export async function portableAttestationMain({
   raw = readFileSync(0, "utf8"),
 } = {}) {
   try {
+    if (tool === "cursor") throw new Error("Cursor exige le client humain ACP, pas cette entrée stdin.");
     const input = JSON.parse(raw);
     const tell = (message) =>
       console.log(

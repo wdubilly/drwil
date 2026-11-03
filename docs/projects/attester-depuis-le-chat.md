@@ -1,6 +1,6 @@
 # Projet : attester une preuve humaine depuis la conversation
 
-**Statut** : en cours le 2026-11-03 ; périmètre corrigé à tous les outils, réalisation partielle.
+**Statut** : en cours le 2026-11-04 ; cinq adaptateurs livrés/testés fictivement, essais humains réels et acceptation encore requis.
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/installation-fluide.md`
@@ -75,7 +75,7 @@ disponible, mais ne satisfait pas cette demande de parité du chat.
 
 - L'agent peut ouvrir un sondage d'attestation pour un contrat manuel ; la réponse de l'humain, lue par un
   hook ou par le client ACP dédié à Cursor, enregistre l'attestation sous chacun des cinq outils :
-  Claude Code, Copilot CLI, Gemini CLI, Codex et Cursor — contrat à créer
+  Claude Code, Copilot CLI, Gemini CLI, Codex et Cursor — `QUA-235`
 - Le sondage affiche le critère du contrat, ce que l'agent a essayé et les fichiers couverts dont la
   modification ferait tomber l'attestation — `QUA-032`
 - Une réponse écrite par l'agent, un sondage sans réponse ou refusé n'enregistre jamais d'attestation —
@@ -125,6 +125,18 @@ Cursor. Cet ajout d'intégration, et la révision correspondante de QUA-235 (fro
 QUA-236 (jugement lisible) et du premier critère, sont explicitement autorisés ; ce n'est pas
 la seule corrélation déjà autorisée. L'acceptation formelle des critères reste un geste humain ultérieur.
 
+## Contrats modifiés
+
+- QUA-235 (frontière humaine du sondage préparé) : décision humaine ACP explicite ci-dessus,
+  commit de cadrage seul `05d16fa` avant code. Ajout du client TTY dédié et des identifiants
+  de question/réponse officiels ; réservation, nonce, session, preuve et provenance inchangés
+  dans leur exigence. Ce n'est pas une autorisation de confirmer par le modèle.
+- QUA-236 (jugement lisible) : l'interface dédiée entre dans le périmètre et la couverture,
+  sans remplacer son jugement humain par un test. Aucune attestation renouvelée par l'agent.
+- Le premier critère inclut maintenant ce transport distinct sur cette seule décision.
+  Son acceptation formelle, QUA-174 (critères acceptés figés) et QUA-175 (geste humain
+  d'acceptation), reste attendue ; aucune exécution de `state accept`.
+
 ## 5. Points à trancher
 
 - [IA, réalisation initiale du 2026-11-03, insuffisante pour le périmètre corrigé] Le hook n'accepte que `AskUserQuestion` de Claude Code :
@@ -155,6 +167,79 @@ la seule corrélation déjà autorisée. L'acceptation formelle des critères re
 
 ### Reprise ciblée — client ACP Cursor autorisé
 
+- **Réalisation du 2026-11-04** : `drwil cursor-acp` lance uniquement `agent acp` dans
+  un TTY humain et orchestre initialize/authenticate/session-new/prompt. Le binaire
+  doit être installé/authentifié séparément par l'humain ; aucune dépendance npm
+  ajoutée, aucun agent installé ou lancé ici. La saisie numérotée de la question
+  native provient de readline humain, jamais d'un argument, d'un stdin redirigé
+  ou du texte du modèle. La commande de préparation accepte `--tool cursor`.
+- **Moteur partagé** : format officiel avec titre, question, IDs de choix et
+  `allowMultiple: false` ; seul le `toolCallId` provient du runtime. Préparation
+  exacte réservée atomiquement, session/appel/nonce liés, preuve inchangée et contrôles
+  relancés. Le client fournit un contrôle d'activité, revérifié aussi à la confirmation,
+  pour qu'une fermeture pendant la relance n'atteste pas. Refus de l'entrée stdin de
+  hook pour Cursor. Permissions et notifications explicites ; plan refusé et capacités
+  fichiers/terminal non annoncées. Erreurs visibles, ressources bornées, fermeture
+  récoltée avec SIGTERM puis SIGKILL spécifique si nécessaire.
+- **UX/configuration** : interface nouvelle, pas le chat habituel Cursor ; scripts
+  partagés installés pour Cursor seul, sans réglages Claude ni réglage Cursor inventé.
+  La recette livrée décrit prérequis, messages, limites, confiance déclarative et un
+  protocole humain concret sur contrat et fichiers fictifs. README, architecture,
+  changelog et matrice sont alignés. Gabarits modifiés puis installateur des miroirs,
+  jamais de copie installée éditée directement.
+- **Matrice actuelle, attestation seulement** :
+
+  | Outil | Livré | Tests fictifs | Essai interactif réel |
+  |---|---|---|---|
+  | Claude Code | hook natif conservé | oui | aucun |
+  | Copilot CLI | hook natif conservé | oui | aucun |
+  | Gemini CLI | hook natif conservé | oui | aucun |
+  | Codex | hook natif conservé | oui | aucun |
+  | Cursor | client ACP TTY dédié | oui, sous-processus ACP local et UI contrôlée | aucun |
+
+- **Limites humaines conservées** : cinq essais réels datés, lisibilité du sondage,
+  acceptation des critères et jugements déjà énumérés ci-dessous. BUILD et PR brouillon
+  sans fusion ; aucune clôture ni suivante. La note `e7936a8` sur le renforcement général
+  est inchangée. Aucun `attest`, `state accept` ni verdict humain sur ce dépôt.
+- **Contrôles de cette réalisation ACP** :
+  - `npm run build --silent` : code 0.
+  - `node --test --test-reporter=spec --test-name-pattern='QUA-235' packages/drwil/test/cursor-acp.test.mjs packages/drwil/test/portable-attest.test.mjs packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/cycle.test.mjs` :
+    39 tests passés, 0 échec, dont 11 tests Cursor. Le sous-processus de serveur est
+    un script Node local fictif ; le TTY et l'humain sont simulés dans les helpers,
+    jamais un essai du binaire Cursor. Refus/abandon/choix exact/concurrence/malformation,
+    serveur/fermeture/délai, expiration/rejeu/preuve changée/relance, refus non-TTY
+    et des arguments, nettoyage avec SIGKILL d'un serveur local ignorant SIGTERM inclus.
+  - `node --test --test-reporter=spec --test-name-pattern='QUA-063|QUA-222|QUA-223' outils/banc-agents.test.mjs outils/parite-des-outils.test.mjs` :
+    3 tests passés, 0 échec ; seul le marqueur descriptif Cursor a changé, aucun
+    renforcement du mécanisme général de parité.
+  - `npx --no-install biome ci --error-on-warnings .` : code 0, 359 fichiers.
+  - `node .githooks/check-docs.mjs` : 212 fichiers, 0 erreur ;
+    `node .githooks/check-architecture.mjs` : 173 éléments, 0 absent ;
+    `node .githooks/check-kit-size.mjs` : code 0, aucun plafond relevé.
+    La recette a été réduite à son plafond existant de 250 lignes.
+  - `node outils/verifier-tests-contrats.mjs` : 650 tests rattachés, 0 problème ;
+    `node outils/verifier-miroirs.mjs` : 187 comparaisons, 17 écarts déclarés, 0 problème.
+    `npm run installer-depot --silent` a actualisé les quatre miroirs concernés
+    (deux hooks, recette et matrice), sans modifier les unités Codex/Cursor non installées.
+  - `node outils/audit-dependances.mjs` : code 0, aucune high/critical,
+    quatre moderate non bloquantes, aucune dépendance ajoutée.
+  - `node .githooks/run-checks.mjs`, lancé via wait-command en fond : **code 0**,
+    « contrôles exécutés : OK (43 avertissement(s), non exécutés compris) »,
+    78 repris et 154 rejoués. Sa commande `npm run test:coverage` dans le paquet :
+    327 tests passés, 0 échec ; 98,46 % lignes/instructions, 91,48 % branches,
+    98,83 % fonctions. Sa commande `npm run test:claude:coverage` : 53 tests passés,
+    0 échec ; 98,05 % lignes/instructions, 90,89 % branches, 95,09 % fonctions.
+    Les hooks de gouvernance restent à 552 tests passés, couverture 100 %.
+    Un premier passage complet a refusé du formatage et un audit réseau HTTP 400 :
+    formatage corrigé dans la source puis miroirs installés, audit relancé et passe
+    complète relancée avec succès ; aucun contrôle désactivé ni seuil baissé.
+  - `git --no-pager diff --cached --check` : code 0 ;
+    `git diff --quiet e7936a8 -- docs/intentions/notes.md` : code 0.
+    Aucun `verify --agent` global répété : les preuves humaines manquent toujours.
+- **Remise** : la présente reprise accompagne le commit de réalisation sur la même
+  branche ; le SHA poussé et son résultat CI sont consignés dans la PR #352 après suivi.
+  La PR doit rester brouillon, sans fusion programmée et sans clôture ; seul l'essai
+  humain sur la candidate empaquetée pourra dater le canal réel, pas les fixtures ici.
 - **2026-11-04, cadrage seul avant code** : BUILD relu, même branche et PR #352 brouillon,
   arbre propre. Réaliser le client dédié, pas reprendre une recherche générale sur les hooks.
   Source officielle : https://cursor.com/docs/cli/acp (`agent acp`, JSON-RPC 2.0

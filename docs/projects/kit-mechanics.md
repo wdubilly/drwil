@@ -179,7 +179,10 @@ Windows la commande reste `node` seul. Côté visiteur : `INSTALL.md` (QUA-218).
 - Les modes portables `--tool copilot|gemini|codex` passent par cette même entrée ;
   les garanties et limites restent dans QUA-235 (frontière du sondage préparé).
   Codex seul reçoit les scripts partagés, sans réglages ni agents Claude.
-  Cursor n'a pas d'adaptateur établi : voir la matrice, section « Human attestation parity ».
+  Cursor seul reçoit aussi les scripts partagés ; `--tool cursor` prépare son format,
+  mais seule l'interface humaine dédiée `drwil cursor-acp` lit le choix et réutilise le moteur.
+  Ce client supplémentaire n'est pas le chat habituel Cursor ni un hook natif inventé.
+  Les cinq canaux ont des tests fictifs seulement : voir la matrice, section « Human attestation parity ».
 
 - **Dernier état** : fiche posée à l'installation, rien à reprendre. Si le
   kit ajoute un nouveau fichier de mécanique (`.githooks/` ou un réglage

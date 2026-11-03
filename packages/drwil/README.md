@@ -501,7 +501,7 @@ npx drwil attest-poll QUA-015 --tried "What the agent tried"
 Prints JSON to pass unchanged to `AskUserQuestion` by default, or `ask_user`
 with `--tool copilot` / `--tool gemini`, or Codex's `request_user_input`
 with `--tool codex`; never writes an attestation.
-Requires the selected tool's hooks and a local drwil dependency. The poll shows
+Requires local drwil and the selected tool's hooks (or dedicated Cursor client). The poll shows
 the criterion, automated results, the agent's declared trial and covered paths.
 Only the human's **Attest** response, read by the hook for the same session
 and tool call (Claude) or one-use nonce and exact poll (Copilot/Gemini/Codex),
@@ -514,9 +514,17 @@ Codex also binds its native tool-call identifier. It requires trusted hooks
 reviewed with `/hooks` and an interactive root thread where `request_user_input`
 is available (Plan mode in the inspected source). Only the shared scripts,
 not Claude's settings, skills or agents, are installed for Codex alone.
-All four adapters have fictitious-event tests, not real interactive trials.
-Cursor is not delivered: its question's native hook payload remains unestablished;
-the separately documented ACP transport is not a native-hook schema.
+Cursor uses `--tool cursor` and `drwil cursor-acp`: a dedicated TTY client
+launching separately installed/authenticated `agent acp`, not a guessed hook
+payload or guaranteed integration with the usual Cursor chat. The client
+displays the native question and reads numbered human choices, with no default,
+response argument or redirected input. It shares the session/nonce/proof engine
+and binds Cursor's native `toolCallId`. Cursor-only installs receive shared
+scripts, not Claude settings. No new npm dependency or Cursor installation is
+performed by drwil. Permissions require human choices; plan approval and
+filesystem/terminal client methods are refused explicitly. See the adoption
+recipe for supported messages, limits, trust boundary and a concrete real-trial
+procedure. All five adapters have local fictitious tests, not real interactive trials.
 The terminal fallback remains available.
 See `docs/recipes/adopt-the-kit.md`.
 

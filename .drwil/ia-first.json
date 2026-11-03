@@ -41,13 +41,17 @@
     {
       "id": "tests-qua-235",
       "name": "sondage d'attestation : frontière humain/agent et preuve liée",
-      "run": "node --test --test-name-pattern=\"^QUA-235 \" packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/portable-attest.test.mjs packages/drwil/test/cycle.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-235 \" packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/portable-attest.test.mjs packages/drwil/test/cursor-acp.test.mjs packages/drwil/test/cycle.test.mjs",
       "needsBuild": true,
       "ciJob": "checks",
       "paths": [
         "packages/drwil/src/attest.ts",
         "packages/drwil/src/attest-portable.ts",
         "packages/drwil/src/cli-attest.ts",
+        "packages/drwil/src/cli-cursor.ts",
+        "packages/drwil/src/cursor-acp.ts",
+        "packages/drwil/src/cursor-acp-session.ts",
+        "packages/drwil/test/cursor-acp.test.mjs",
         "packages/drwil/src/evidence.ts",
         "packages/drwil/src/index.ts",
         "packages/drwil/templates/common/tools/claude/.claude/hooks/**",

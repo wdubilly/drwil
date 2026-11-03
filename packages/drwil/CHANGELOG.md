@@ -20,9 +20,15 @@ closing commit; the release renames this section to its version.
   the session, call, one-use nonce, exact question and proof through the same
   portable engine. Codex-only installs receive shared hook scripts without
   Claude settings or agents. Official Codex 0.166.0 schemas and fictitious
-  events are tested, not a real interactive trial. Cursor remains blocked
-  on its question's native hook payload; ACP documentation alone does not
-  establish that payload. Five-tool parity is not delivered.
+  events are tested, not a real interactive trial.
+- `attest-poll --tool cursor` and `drwil cursor-acp`: an explicitly authorised
+  dedicated human TTY client for Cursor's official stdio ACP question method.
+  It launches separately installed/authenticated `agent acp`, displays choices,
+  reads human input only, shares one-use session/nonce/proof reservations and
+  binds `toolCallId`. No response flag, redirected-input confirmation, new npm
+  dependency or automatic Cursor installation. This is a different interface,
+  not guaranteed integration with usual Cursor chat. Local fake-server tests
+  only; five-tool interactive parity is not established.
 
 - `drwil report` prints a privacy-safe kit defect report from the last local
   check snapshot, with CLI/installed versions and normalized built-in failure

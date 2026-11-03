@@ -186,16 +186,65 @@ Cancelled requests without a native post-event can occupy the session until
 expiry. The shared scripts do not install Claude settings, skills or agents
 when Codex is selected alone. Native Windows commands remain untried.
 
-These four adapters have fictitious-event tests, **not real interactive
-attestation trials**. See the compatibility matrix for versions, native
-formats and remaining prerequisites. Cursor is not delivered: its ACP
-`cursor/ask_question` request/response is documented, but its mapping to
-native `preToolUse` / `postToolUse` and their exact arguments/result is not
-established. Do not copy an ACP response into a guessed hook payload.
+These four hook adapters and the dedicated Cursor client below have local
+fictitious tests, **not real interactive attestation trials**. See the
+compatibility matrix for versions, native formats and remaining prerequisites.
 If the hook or local drwil dependency is unavailable, the human uses the unchanged fallback
 `npx drwil attest <ID>` in their own interactive terminal. Never substitute
 an answer in chat that the agent interprets itself.
 
-Out of scope: rewriting the existing code to bring it up to standard —
-that's `docs/recipes/refactor-without-breaking.md`, run next, contract by
-contract.
+### Cursor: dedicated human ACP client
+
+The human chose this extra integration on 2026-11-04: **a different interface**, not guaranteed integration with usual Cursor chat or a guessed hook payload.
+Prerequisites: Node, local drwil dependency, updated `init --tools cursor` (shared scripts,
+no Claude settings/agents), separately installed `agent`, authenticated by the human with `agent login`.
+No new npm dependency or automatic Cursor installation. Opening it can send project context
+to Cursor and consume credits: use only an explicitly chosen project and account.
+
+The human runs `npx drwil cursor-acp` in their interactive terminal and types at `Vous :`.
+The client launches `agent acp` without a shell, negotiates protocol 1, authenticates
+`cursor_login`, creates a new session and forwards typed prompts; it does not resume usual chat.
+Tell Cursor to prepare `npx drwil attest-poll <ID> --tool cursor --tried "What I tried"`
+and invoke its native question tool with the exact JSON: `title`, question ID/prompt,
+option IDs/labels, `allowMultiple: false`. The runtime supplies its native `toolCallId`.
+Only the client displays the question and reads numbered human choices, returning `questionId` / `selectedOptionIds`.
+Zero, empty/invalid input, EOF and Ctrl-C abandon.
+No default, `--yes`, response argument, redirected stdin or model text can confirm; `/quitter` ends between turns, Ctrl-C/EOF stops the running process.
+
+Supported ACP messages: `session/update` displays agent text and accepts other session updates;
+`session/request_permission` shows agent-authored title, full structured tool-call details and
+offered permission names/kinds for explicit human choice (abandon cancels).
+`cursor/update_todos`, `cursor/task`, `cursor/generate_image` are announced by name only.
+`cursor/create_plan` is rejected; filesystem/terminal client capabilities are false;
+other requests return method-not-found. Unsupported notifications, malformed JSON,
+closed sessions, duplicate RPC IDs, server errors and timeouts surface as errors.
+One human request at a time, one simple-choice question with 2–10 options.
+Limits: frame/buffer 1 MiB, total input 32 MiB, RPC five minutes, session thirty minutes,
+prompt 16,000 characters, 100 turns. The RPC deadline precedes shared one-hour expiry.
+Cleanup closes child stdin, sends its PID SIGTERM, then SIGKILL after one second if needed.
+Runtime stderr is drained without printing possible secrets; RPC/process errors remain visible.
+
+The shared engine binds native session/call, exact question/nonce, proof snapshot and time;
+reruns checks and rechecks session activity before writing. Refusal, concurrency, replay,
+expiry and changed proof cannot confirm. Client, runtime, local hooks/evidence and terminal
+are trusted: TTY/provenance `cursor-poll` are **not strong identity** against a local actor
+with PTY/code-write access. The hook's stdin entry refuses Cursor; no answer-supplying CLI
+exists. Test UI injection is internal only, never a CLI option. No real trial is claimed.
+
+**Concrete real-trial protocol (human only, still pending):**
+
+1. Build the candidate on this branch with `npm pack ./packages/drwil` (includes the build).
+   In a disposable project without sensitive data: `npm install --save-dev <candidate.tgz>`,
+   then `npx drwil init --tools cursor`. Record Node/drwil/`agent --version`, OS, date,
+   trust/authentication setup; no minimum tested Cursor version is claimed.
+2. Add fictitious manual APP-009 (“Fictitious judgment”): rule, manual criterion, one covered
+   fictitious file. The agent must not attest or accept real project criteria.
+3. Open `npx drwil cursor-acp` yourself; ask for preparation and native question as above.
+   Read rule/tests/criterion/trial/paths/choices. First **Decline**; with a fresh nonce,
+   **Attest** only on your real judgment. Record session/call/response field without sensitive
+   data. Inspect APP-009 in `npx drwil verify --json`; other proofs can still block the global verdict.
+4. Change the covered file: MANUAL must return. Test abandon and changed proof while a question
+   is open: no new attestation. Reusing the poll must fail; prepare fresh JSON.
+5. Date/version/outcomes/readability go in the matrix; errors mean unverified, never permission to invent results or lower criteria.
+
+Out of scope: rewriting existing code to bring it up to standard — `docs/recipes/refactor-without-breaking.md`, run next, contract by contract.

@@ -44,24 +44,42 @@ export function nativeAttestationEvent(input, tool, phase) {
       args: input?.tool_input,
       result: input?.tool_response,
     };
+  if (tool === "cursor")
+    return {
+      pre: phase === "pre",
+      post: phase === "post",
+      session: input?.sessionId,
+      agent: null,
+      call: input?.params?.toolCallId,
+      name: "cursor/ask_question",
+      args: input?.params,
+      result: input?.response,
+    };
   return null;
 }
 
 export function portableQuestion(args) {
-  return typeof args?.question === "string" ? args.question : args?.questions?.[0]?.question;
+  return typeof args?.question === "string" ? args.question : (args?.questions?.[0]?.question ?? args?.questions?.[0]?.prompt);
 }
 
 export function portableIdentity(args) {
   const text = portableQuestion(args);
   if (typeof text !== "string" || !text.startsWith("drwil-attest-v1 ")) return null;
   const match =
-    /^drwil-attest-v1 (copilot|gemini|codex) ([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\ndrwil-attest ([A-Z][A-Z0-9]*-\d+)( --renew)?\n[\s\S]*\n\n(?:Essai de l'agent|Agent trial):\n([\s\S]+)$/.exec(
+    /^drwil-attest-v1 (copilot|gemini|codex|cursor) ([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\ndrwil-attest ([A-Z][A-Z0-9]*-\d+)( --renew)?\n[\s\S]*\n\n(?:Essai de l'agent|Agent trial):\n([\s\S]+)$/.exec(
       text,
     );
   return match ? { tool: match[1], nonce: match[2], id: match[3], renew: Boolean(match[4]), tried: match[5] } : {};
 }
 
 export function nativePositive(event, tool) {
+  if (tool === "cursor")
+    return (
+      serialise(event.result) ===
+      serialise({
+        outcome: { outcome: "answered", answers: [{ questionId: "drwil_attest", selectedOptionIds: ["attest"] }] },
+      })
+    );
   if (tool === "copilot")
     return event.result?.resultType === "success" && event.result.textResultForLlm === `User responded: ${event.args.choices[0]}`;
   if (tool === "codex") {

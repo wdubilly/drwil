@@ -157,7 +157,7 @@ for (const tool of ["copilot", "gemini", "codex"]) {
       }
       writeFileSync(join(p.root, "src/objet.js"), "export const valeur = 2;\n");
       assert.equal((await p.contract()).status, "MANUAL");
-      const bad = spawnSync(process.execPath, [CLI, "attest-poll", "APP-009", "--tool", "cursor", "--tried", "Essai"], {
+      const bad = spawnSync(process.execPath, [CLI, "attest-poll", "APP-009", "--tool", "inconnu", "--tried", "Essai"], {
         cwd: p.root,
         encoding: "utf8",
       });
@@ -230,7 +230,7 @@ for (const tool of ["copilot", "gemini", "codex"]) {
         assert.equal(await p.hook(missing), 2);
       }
       assert.equal(await p.hook({}), null);
-      assert.equal(nativeAttestationEvent({}, "cursor"), null);
+      assert.equal(nativeAttestationEvent({}, "inconnu"), null);
       assert.equal(portableIdentity({}), null);
     } finally {
       p.dispose();

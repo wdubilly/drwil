@@ -4,17 +4,20 @@ import { pathToFileURL } from "node:url";
 import type { Command } from "commander";
 import { attest, fill, prepareAttestationPoll, preparePortableAttestationPoll } from "./index.js";
 import { texts } from "./cli-texts.js";
+import { registerCursor } from "./cli-cursor.js";
 
 export function registerAttest(program: Command): void {
+  registerCursor(program);
   program
     .command("attest-poll <id>")
     .description("Prepare a native human-attestation poll; never records an attestation")
     .requiredOption("--tried <text>", "What the agent tried (1 to 500 characters)")
-    .option("--tool <tool>", "Native poll: claude, copilot, gemini or codex", "claude")
+    .option("--tool <tool>", "Native poll: claude, copilot, gemini, codex or cursor (dedicated ACP client)", "claude")
     .option("--renew", "Prepare renewal of a still-valid attestation")
     .action(async (id, opts) => {
       try {
-        if (!["claude", "copilot", "gemini", "codex"].includes(opts.tool)) throw new Error("--tool: claude | copilot | gemini | codex");
+        if (!["claude", "copilot", "gemini", "codex", "cursor"].includes(opts.tool))
+          throw new Error("--tool: claude | copilot | gemini | codex | cursor");
         const options = { targetDir: process.cwd(), id, tried: opts.tried, renew: opts.renew };
         const r =
           opts.tool === "claude"
