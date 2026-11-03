@@ -143,6 +143,36 @@ Tranchées par le demandeur le 2026-10-30 :
   rapporter les événements manquants et le geste humain attendu. QUA-236 (jugement de lisibilité du
   sondage) n'a toujours reçu aucune attestation. Les résultats ci-dessous restent l'historique de
   l'implémentation initiale, pas une preuve de parité ni du cadrage révisé.
+- **Constat de cette reprise** : aucun nouvel adaptateur livré. Les cinq lignes et leurs sources
+  officielles figurent dans la section « Human attestation parity » de la matrice. Claude Code seul a
+  des événements fictifs d'attestation testés ; aucun des cinq n'a fait l'objet d'un essai réel du
+  sondage. Copilot CLI et Gemini CLI n'exposent pas l'identifiant d'appel dans le schéma documenté ;
+  Codex documente cet identifiant, mais le passage effectif de `request_user_input` et son résultat
+  restent à établir ; sous Cursor, le format exact de la question humaine et son passage dans les
+  hooks restent également à établir. Ce sont des préalables manquants, pas une preuve d'impossibilité.
+- **Poste disponible** : `claude --version` : 2.1.317 ; `copilot --version` : 1.0.105. Les commandes
+  `gemini`, `codex` et `cursor` sont absentes du PATH. Aucun agent réel lancé pour répondre à une
+  question humaine ; aucune donnée de conversation réelle capturée.
+- **Geste humain préalable** : fournir une paire avant/après d'événements natifs d'un sondage
+  fictif réellement répondu, sous chacun des outils, en particulier Codex et Cursor sur un poste
+  équipé. Pour Copilot/Gemini, si aucun identifiant natif ne relie les appels, décider explicitement
+  d'un protocole alternatif de corrélation à usage unique, à cadrer et tester avant livraison ;
+  ni un identifiant inventé ni la suppression du contrôle ne sont admissibles.
+- **Acceptation relue sans écriture** : `acceptanceCheck` retourne `kind: changed`, empreinte
+  acceptée `sha256:e392a794efa36c65`, empreinte courante `sha256:8919976e47b57920`. L'agent ne renouvelle
+  pas l'acceptation ; le geste interactif humain reste requis avant clôture, pas une attestation du code.
+- **Contrôles de cette reprise** :
+  - `npm run installer-depot --silent` : code 0, un seul miroir écrit (la matrice).
+  - `node --test --test-name-pattern="QUA-235|QUA-032|QUA-081|QUA-083|QUA-205" packages/drwil/test/cycle.test.mjs packages/drwil/test/claude-hooks.test.mjs` :
+    9 tests passés, 0 échec ; aucun de ces tests ne prouve les autres outils.
+  - `node --test --test-name-pattern='QUA-063|QUA-222|QUA-223' outils/banc-agents.test.mjs outils/parite-des-outils.test.mjs` :
+    3 tests passés, 0 échec après isolation du tableau de cycle.
+  - `node outils/verifier-miroirs.mjs` : 185 fichiers comparés, 17 écarts déclarés, 0 problème.
+  - `node .githooks/check-docs.mjs` : 212 fichiers scannés, 0 erreur.
+  - Premier contrôle complet par `drwil-checks` : `run-checks` code 1, 2 contrôles en échec
+    (QUA-063 et le contrôle de miroirs qui lance le même test), 41 avertissements ; `verify --agent` :
+    `Verdict: GOVERNANCE: FAIL (exit 1)`. Cause reproduite puis corrigée dans le découpage du test,
+    sans modifier une règle ni désactiver de contrôle. Passe complète à relancer après le correctif.
 
 ### Historique avant la correction du périmètre
 

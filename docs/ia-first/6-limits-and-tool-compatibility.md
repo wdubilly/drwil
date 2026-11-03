@@ -85,6 +85,63 @@ subagent, the state reminder tells the agent to stop after a closing and merge
 and to offer the human a new conversation; the next workstream starts there
 (`node .githooks/state.mjs next`) only on the human's explicit yes.
 
+## Human attestation parity
+
+The five tools selectable by `init --tools` are all targets for chat
+attestation, not just Claude Code. This is **not delivered parity**:
+`attest-poll` currently prepares only Claude Code's question, and its hook
+requires the session and tool-call identifiers and reads only
+`tool_response.answers`. Installing shared hook scripts is not an adapter
+for another tool's question or answer format. A terminal attestation remains
+available to the human, but does not fulfil chat parity.
+
+Assessment on 2026-11-03; documentation inspection, **not an interactive
+trial**. The earlier hook/write bench above did not test attestation.
+
+| Tool | Delivered attestation adapter | Native human channel investigated | Fictitious attestation events tested | Real chat attestation trial |
+|---|---|---|---|---|
+| Claude Code | `AskUserQuestion`, `PreToolUse` / `PostToolUse`; session + tool-call correlation, one-use preparation | `tool_response.answers`, never answers in `tool_input` | yes, Claude-shaped fixtures only | not tested |
+| Copilot CLI | none; the shared Claude hook does not accept its poll format | PascalCase `PreToolUse` / `PostToolUse` expose `session_id`, `tool_input`, then `tool_result.text_result_for_llm`; no `tool_use_id` in the documented payload | not tested | not tested |
+| Gemini CLI | none; the delivered `BeforeTool` / `AfterTool` declarations match only `write_file` / `replace` | `ask_user` returns a JSON string in `tool_response.llmContent`, answers indexed by question position; the documented hooks have `session_id` but no tool-call identifier | not tested | not tested |
+| Codex | none; delivered hooks only remind the state | `request_user_input` is a candidate; `PreToolUse` / `PostToolUse` document session + tool-call identifiers and tool-specific output, but coverage of this question and its exact returned payload have not been tried | not tested | not tested |
+| Cursor | none; only an always-applied instruction rule is installed | native `preToolUse` / `postToolUse` document `tool_use_id` and `tool_output`; the human question's name, arguments, result and session correlation have not been established | not tested | not tested |
+
+### Prerequisites before enabling another adapter
+
+- Copilot CLI and Gemini CLI: establish a trustworthy per-poll correlation
+  from native events. Do not remove the call-correlation check, invent a
+  missing identifier, or treat a plain model-interpreted answer as an
+  attestation. If a distinct one-use correlation protocol is needed, scope
+  it explicitly before implementing it.
+- Codex and Cursor: obtain a native before/after pair for a **fictitious**
+  human question in a trusted interactive session, including its exact
+  question and response schema. Generic tool-hook documentation and
+  third-party hook imports do not prove that the human question traverses
+  those hooks.
+- On the inspected workstation, Claude Code 2.1.317 and Copilot CLI
+  1.0.105 are installed; Gemini CLI, Codex and Cursor are not available
+  through their CLI names. Reading a version proves no question or hook.
+  Their absence here is not a claim that the tools cannot support this.
+
+For each tool, a human trial must record the tool version, date, trusted
+workspace setup, hook names actually fired, session/call correlation and
+the field carrying only the human response, using no production or
+personal data. First use a fictitious contract and explicitly choose to
+attest or decline. Before any claim of support, fixture tests must cover
+both outcomes, no answer, prefilled answers/defaults/recommendations,
+wrong session/call, replay, expiry and changed proof or covered files;
+then the real interactive trial must confirm the same boundary. An agent
+never records the human's readability judgment or replies to that poll.
+No live attestation was made during this assessment.
+
+Documentation consulted (2026-11-03), not compatibility evidence:
+[Copilot hook payloads](https://docs.github.com/en/copilot/reference/hooks-reference),
+[Gemini hooks](https://geminicli.com/docs/hooks/reference/) and
+[ask_user](https://geminicli.com/docs/tools/ask-user/),
+[Codex hooks and tool coverage](https://developers.openai.com/codex/hooks),
+[Cursor hooks](https://cursor.com/docs/hooks) and
+[third-party imports](https://cursor.com/docs/reference/third-party-hooks).
+
 ## Instructions reach every tool
 
 An instruction or mechanism the kit delivers reaches each chosen tool by the
@@ -99,3 +156,9 @@ Codex or Cursor, the `AGENTS.md` line is their only instruction. That a tool
 obeys the instruction is "not tested": no trial has measured it. A new
 mechanism is added to the parity test's list of mechanisms in the
 workstream that creates it.
+
+Declared gap: chat attestation has only a Claude Code adapter, with
+fictitious-event tests and no real interactive trial. Copilot CLI, Gemini
+CLI, Codex and Cursor have no delivered attestation adapter. The
+"Human attestation parity" table records each missing native-event
+prerequisite; shared instructions or shared hook scripts do not fill it.
