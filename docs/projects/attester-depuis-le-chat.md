@@ -1,6 +1,6 @@
 # Projet : attester une preuve humaine depuis la conversation
 
-**Statut** : en cours le 2026-11-03 ; réalisation faite, jugement humain restant.
+**Statut** : en cours le 2026-11-03 ; périmètre corrigé à tous les outils, réalisation partielle.
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/installation-fluide.md`
@@ -29,6 +29,8 @@ files:
   - docs/contracts-catalog.md
   - docs/projects/kit-mechanics.md
   - .drwil/ia-first.json
+  - docs/ia-first/6-limits-and-tool-compatibility.md
+  - packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md
 -->
 
 ## 1. Besoin
@@ -38,10 +40,17 @@ faire directement dans la conversation avec l'agent (demande du 2026-10-27). L'a
 humain : un agent n'exécute jamais `drwil attest` et n'écrit jamais d'attestation. Décision du 2026-10-30 : un
 sondage dont la réponse est lue par un hook, sur le modèle du lancement d'un chantier.
 
+Correction explicite du demandeur le 2026-11-03 : « mais ca doit etre pour tout les agent ».
+La cible est le **livrable et ses miroirs dépôt**, pour les cinq outils configurables par `TOOLS` dans
+`packages/drwil/src/config.ts` : Claude Code, Copilot CLI, Gemini CLI, Codex et Cursor. Un fichier
+d'instructions installé ne prouve pas qu'un canal d'attestation fonctionne. Le repli terminal reste
+disponible, mais ne satisfait pas cette demande de parité du chat.
+
 ## Critères d'acceptation
 
 - L'agent peut ouvrir un sondage d'attestation pour un contrat manuel ; la réponse de l'humain, lue par un
-  hook, enregistre l'attestation — `QUA-235`
+  hook, enregistre l'attestation sous chacun des cinq outils : Claude Code, Copilot CLI, Gemini CLI,
+  Codex et Cursor — `QUA-235`
 - Le sondage affiche le critère du contrat, ce que l'agent a essayé et les fichiers couverts dont la
   modification ferait tomber l'attestation — `QUA-032`
 - Une réponse écrite par l'agent, un sondage sans réponse ou refusé n'enregistre jamais d'attestation —
@@ -49,13 +58,17 @@ sondage dont la réponse est lue par un hook, sur le modèle du lancement d'un c
 - L'attestation faite dans le chat est liée au texte et à la preuve du contrat comme celle du terminal,
   compatible avec la couverture et `--renew` — `QUA-081`
 - Le sondage est lisible et ne demande que le jugement utile — [humain] — `QUA-236`
+- La matrice distingue, pour chacun des cinq outils, adaptateur livré, événements fictifs testés et essai
+  interactif réel daté ; un canal absent ou non vérifié bloque la parité, sans être présenté comme tenu —
+  [humain] — `QUA-063`
 
 ## 2. Hors périmètre
 
 - La commande `drwil attest` du terminal : inchangée, elle reste la voie de repli.
 - Une identité forte de l'attestation (commits signés, revue authentifiée) : intention à part,
   `docs/intentions/e2e-et-attestation-precises.md`.
-- Les autres outils que Claude Code (Copilot CLI) : leur sondage suit le contrat de compatibilité des outils.
+- Un nouveau protocole de confiance fondé sur une phrase interprétée par le modèle, ou une confirmation
+  exécutée par l'agent : interdit, et non une solution de repli.
 
 ## 3. Contraintes
 
@@ -76,19 +89,53 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 5. Points à trancher
 
-- [IA, fixé le 2026-11-03] Le hook n'accepte que `AskUserQuestion` de Claude Code :
+- [IA, réalisation initiale du 2026-11-03, insuffisante pour le périmètre corrigé] Le hook n'accepte que `AskUserQuestion` de Claude Code :
   préparation avant affichage, réponse exclusivement dans `tool_response.answers`, corrélation par
   `session_id` et `tool_use_id`, préparation consommée une seule fois. La date, la session et l'appel
   sont conservés dans la provenance ; cette traçabilité n'est pas une identité forte. Le résumé et les
   empreintes sont revérifiés après la réponse : une preuve changée exige un nouveau sondage.
+- [humain, préalable de reprise] Réunir une paire d'événements natifs avant/après un sondage fictif
+  répondu dans chaque outil, sans données personnelles ; vérifier la session, l'identifiant d'appel et
+  le champ qui contient exclusivement la réponse humaine. Copilot CLI et Gemini CLI ne documentent pas
+  d'identifiant d'appel dans ces événements : ne jamais en inventer un ni retirer ce contrôle.
+- [humain] Après révision des critères, leur empreinte doit être acceptée à nouveau dans un terminal
+  interactif par `node .githooks/state.mjs accept`. Aucun agent ne l'exécute.
 
 ## 6. Increments
 
-- **Lot 1 — attestation lue par un hook** [IA] : hook, `packages/drwil/src/attest.ts`, tests (réponse humaine,
-  réponse remplie par l'agent, refus), recette. Critère de sortie : un sondage répondu par l'humain enregistre
-  l'attestation, une réponse écrite par l'agent est refusée.
+- **Lot 1 — attestation lue par un hook** [IA], réalisation initiale partielle : préparation commune,
+  hook Claude Code et tests fictifs ; conservée,
+  mais ne suffit pas à clore le chantier.
+- Suite dans le même chantier, sans état de lot artificiel : établir les événements fiables outil par
+  outil ; livrer les adaptateurs seulement sur un format établi, avec tests fictifs de confirmation,
+  refus, absence, réponse agent, corrélation, rejeu, expiration et preuve changée ; mettre à jour la
+  recette et la matrice ; essais interactifs humains. Si un canal manque, arrêter et nommer le
+  préalable réel, jamais remplacer l'exigence par « terminal disponible ».
 
 ## 7. Reprise
+
+- **Reprise après correction humaine du périmètre (2026-11-03)** : état initial VERIFY, arbre git propre,
+  branche `workstream/attester-depuis-le-chat`, PR #352 brouillon. Transition officielle
+  `node .githooks/state.mjs move BUILD` effectuée (code 0), sans toucher directement à l'état.
+  La restriction Claude Code n'est plus une décision du demandeur. Les critères modifiés requièrent
+  une nouvelle acceptation humaine avant la clôture ; aucun `state accept` ni attestation exécuté.
+- **Cause établie** : `prepareAttestationPoll` produit uniquement `questions` pour Claude ;
+  `attestationPoll` exige `AskUserQuestion`, `session_id`, `tool_use_id` et
+  `tool_response.answers`. Les scripts partagés installés chez Copilot/Gemini ne changent pas ces
+  conditions. Codex ne reçoit que les hooks de rappel ; Cursor seulement une règle. La configuration
+  officielle reconnaît pourtant bien les cinq outils. Les tests précédents n'établissent aucune
+  compatibilité de leur sondage d'attestation.
+- **Extension de scope, correction du cadrage** : la matrice
+  `packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md` et son miroir
+  `docs/ia-first/6-limits-and-tool-compatibility.md` décrivent le canal d'attestation de chaque outil,
+  les préalables manquants et le protocole d'essai réel. Aucun nouvel adaptateur n'est autorisé sur
+  un format deviné ; ses chemins précis devront entrer dans un cadrage commité avant son code.
+- **Arrêt requis si le canal manque** : garder BUILD et la PR brouillon, aucune clôture ni fusion ;
+  rapporter les événements manquants et le geste humain attendu. QUA-236 (jugement de lisibilité du
+  sondage) n'a toujours reçu aucune attestation. Les résultats ci-dessous restent l'historique de
+  l'implémentation initiale, pas une preuve de parité ni du cadrage révisé.
+
+### Historique avant la correction du périmètre
 
 - **Dernier état** (2026-11-03) : lot unique réalisé sur la branche
   `workstream/attester-depuis-le-chat`, arrêté avant clôture sur le jugement humain de QUA-236
