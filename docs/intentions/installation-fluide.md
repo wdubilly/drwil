@@ -1,6 +1,6 @@
 # Intention : un parcours d'installation et de chantier sans demande d'autorisation à chaque commande
 
-**Statut** : proposée le 2026-10-25 — demande de l'humain, promue depuis les notes le même jour. Traitée en partie le 2026-10-31 par le chantier adoption-fluide-projet-neuf (autorisations livrées, worktree obligatoire, commit initial du kit : QUA-204 à QUA-207) ; restent attester depuis le chat et la commande de contrat.
+**Statut** : proposée le 2026-10-25 — demande de l'humain, promue depuis les notes le même jour. Traitée en partie le 2026-10-31 par le chantier adoption-fluide-projet-neuf (autorisations livrées, worktree obligatoire, commit initial du kit : QUA-204 à QUA-207) ; attester depuis le chat livré le 2026-11-04 par le chantier attester-depuis-le-chat (essais réels en limite : `docs/intentions/attestation-chat-essais-reels.md`) ; reste la commande de contrat.
 
 ## Besoin
 
@@ -26,7 +26,5 @@ Ajouts du 2026-10-27 (demande de l'humain, constatée sur drwil_dbox) :
 
 ## Questions à trancher
 
-- [décision] Attester depuis le chat : un sondage dont la réponse est lue par un hook (l'agent ne remplit jamais la réponse), sur le modèle du lancement ? Quel jugement est affiché (le critère du contrat, ce qui a été essayé) pour que l'attestation reste un jugement éclairé (QUA-032, une attestation ne coûte que le jugement demandé) ?
-- [décision] Comment l'attestation faite dans le chat se distingue-t-elle d'une réponse écrite par l'agent (preuve de l'origine humaine), et reste-t-elle compatible avec la couverture (Covers) et le renouvellement (`--renew`) ?
 - [décision] Une commande pour ajouter ou adopter un contrat (par exemple `drwil contracts add` et `drwil contracts adopt <ID>`) : elle déplace la ligne du catalogue vers le registre, sans préfixe, et crée le squelette d'un contrat propre ? Qui écrit le check (déclaration dans ia-first.json) ?
 - [décision] Cette commande est-elle un geste de l'agent, de l'humain ou des deux, sachant qu'ajouter un contrat n'est pas un changement des règles du jeu (`AGENTS.md`, détour QUA-050) mais en modifier ou en retirer un l'est ?

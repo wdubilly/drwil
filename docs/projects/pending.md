@@ -139,6 +139,8 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 - [ ] [humain] [P1] Sonder les quatre outils (lot 1 non fait) et dater le tableau de parité ; banc et file parallèle à
   décider — `docs/intentions/parite-des-outils-suites.md`.
+- [ ] [humain] [P2] Essais réels de l'attestation depuis la conversation, cinq outils, au fil des développements du
+  demandeur — `docs/intentions/attestation-chat-essais-reels.md`.
 
 ### Fichiers chargés courts
 
