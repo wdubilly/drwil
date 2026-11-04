@@ -35,13 +35,13 @@ deux commandes, `drwil contracts add` et `drwil contracts adopt <ID>`.
 ## Critères d'acceptation
 
 - `drwil contracts adopt <ID>` déplace le contrat du catalogue vers le registre, sans préfixe, et écrit la
-  déclaration de son contrôle depuis le catalogue pour la pile — contrat à créer
-- `drwil contracts add` crée le squelette d'un contrat propre au projet, d'un ID jamais défini — contrat à
-  créer
+  déclaration de son contrôle depuis le catalogue pour la pile — `QUA-237`
+- `drwil contracts add` crée le squelette d'un contrat propre au projet, d'un ID jamais défini — `QUA-239`
 - Un agent peut lancer l'ajout et l'adoption ; modifier ou retirer un contrat refuse sans le oui de l'humain —
   `QUA-050`
-- Un ID déjà défini, un contrat absent du catalogue ou un registre invalide est refusé, sans rien écrire —
-  contrat à créer
+- Pour l'adoption, un ID déjà défini, un contrat absent du catalogue ou un registre invalide est refusé, sans
+  rien écrire — `QUA-238`
+- Pour l'ajout, un ID déjà défini ou un registre invalide est refusé, sans rien écrire — `QUA-240`
 
 ## 2. Hors périmètre
 
