@@ -187,6 +187,30 @@ légitime ; seule la double forme du préfixe est en question.
   cas (sans message `[drwil]`, la skill dit déjà de redémarrer la
   session), faits en 0.6.2, journal du 2026-10-17.
 
+### une mise à jour du kit ne peut pas être commitée en SCOPING (remontée de `drwil_walk`, 2026-11-04)
+
+Statut : proposée le 2026-11-04 — remontée du demandeur lors de la mise à jour de `drwil_walk` avec le kit non publié.
+
+`drwil init` (mise à jour) rafraîchit une soixantaine de fichiers de mécanique
+(`.githooks/`, `.claude/`, `docs/ia-first/`, `package.json`…) et les laisse non
+commités. La barrière de périmètre (`.githooks/scope-gate.mjs`, `checkIndex`) refuse tout
+fichier hors fiche en SCOPING (« fichier(s) hors fiches commité(s) en SCOPING :
+seule l'activité BUILD l'autorise »). `move BUILD` est interdit depuis SCOPING,
+seul `start` y mène et il exige une fiche de chantier. Le sondage `/drwil-start`
+n'offre que les fiches fonctionnelles : `routine-maintenance` et `kit-mechanics`
+(statut « reference ») n'y figurent pas. Étendre le bloc `scope` de
+`docs/projects/kit-mechanics.md` ne débloque rien, la barrière exigeant BUILD quel que soit le
+périmètre. Sous Copilot CLI, la réponse au sondage n'a de plus déclenché aucune
+transition (aucun message `[drwil]`, l'état reste SCOPING). Aucune procédure ne
+décrit la mise à jour, et `init` n'indique pas la marche à suivre.
+
+Pistes envisagées, non retenues à ce stade : exempter de la barrière les
+fichiers du manifeste du kit (comme `OUT_OF_SCOPE`), ou un mode
+`start --maintenance`. Le demandeur juge le mode de maintenance inutile : il
+ajoute un état pour un symptôme ; la cause est qu'`init` et `/drwil-adopt` sont
+deux gestes séparés. Résultat attendu : un seul geste intelligent qui met à jour
+la mécanique et l'adoption ensemble, et dit d'emblée ce qui reste à décider.
+
 ## Questions à trancher
 
 ### « pas encore de code » dit à un projet qui en a (ex-« message-sans-couche-code-existant »)
@@ -239,3 +263,14 @@ légitime ; seule la double forme du préfixe est en question.
   aussi détecté par `doctor` et dit par la skill de lancement ?
 - [décision] La protection de branche : seulement documentée ici, sa
   vérification relevant de `docs/intentions/forge-dans-le-livrable.md` ?
+
+### une mise à jour du kit ne peut pas être commitée en SCOPING (remontée de `drwil_walk`, 2026-11-04)
+
+- [décision] Un seul geste : fusionner `init` et `/drwil-adopt` en une commande
+  intelligente, ou garder deux gestes et faire dire à `init` la marche à suivre ?
+- [décision] Barrière : exempter les fichiers du manifeste du kit
+  (mécanique du kit, jamais du code du projet), ou faire passer la mise à jour
+  par une fiche de chantier ?
+- [décision] Le mode `start --maintenance` est-il écarté (position du demandeur) ?
+- [à vérifier] Copilot CLI : pourquoi la réponse au sondage `/drwil-start` ne
+  déclenche-t-elle aucune transition ?
