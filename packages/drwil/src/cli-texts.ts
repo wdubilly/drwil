@@ -47,14 +47,17 @@ export const TEXTS = {
     noState: "{0} introuvable : lancer « drwil init » pour installer le lecteur d'état",
     adopt: {
       done: "Contrat {0} adopté : écrit dans {1} (registre du projet), retiré de {2}. À commiter avec le travail en cours.",
-      noId: "adopt : identifiant de contrat attendu (ex. QUA-005)",
+      noId: "identifiant de contrat attendu (ex. QUA-005)",
       notFound: "{0} absent du catalogue {1} : rien écrit",
       defined: "{0} est déjà défini dans {1} : rien écrit",
       noCheck: "{0} : le catalogue ne propose aucun contrôle pour cette pile : rien écrit (écrire le contrat à la main)",
       invalidRegistry: "registre {0} invalide : rien écrit ({1})",
       noCatalog: "catalogue {0} introuvable : rien écrit",
-      activity: "adopt refusé en {0} : seul le SCOPING ou le BUILD accepte une écriture du registre (rien écrit)",
-      outside: "adopt refusé : {0} hors du cadrage de la fiche active {1} (rien écrit) ; élargir le cadrage par un commit séparé",
+      added:
+        "Contrat {0} ajouté : squelette écrit dans {1} (registre du projet), à compléter (règle, périmètre, preuve) puis à commiter avec le travail en cours.",
+      todo: "À compléter",
+      activity: "écriture du registre refusée en {0} : seul le SCOPING ou le BUILD accepte une écriture du registre (rien écrit)",
+      outside: "écriture refusée : {0} hors du cadrage de la fiche active {1} (rien écrit) ; élargir le cadrage par un commit séparé",
     },
   },
   en: {
@@ -102,14 +105,17 @@ export const TEXTS = {
     noState: '{0} not found: run "drwil init" to install the state reader',
     adopt: {
       done: "Contract {0} adopted: written to {1} (the project's registry), removed from {2}. To commit with the work in progress.",
-      noId: "adopt: a contract identifier is expected (e.g. QUA-005)",
+      noId: "a contract identifier is expected (e.g. QUA-005)",
       notFound: "{0} is not in the catalog {1}: nothing written",
       defined: "{0} is already defined in {1}: nothing written",
       noCheck: "{0}: the catalog offers no check for this stack: nothing written (write the contract by hand)",
       invalidRegistry: "registry {0} is invalid: nothing written ({1})",
       noCatalog: "catalog {0} not found: nothing written",
-      activity: "adopt refused in {0}: only SCOPING or BUILD accepts a registry write (nothing written)",
-      outside: "adopt refused: {0} is outside the scope of the active brief {1} (nothing written); widen the scope in a separate commit",
+      added:
+        "Contract {0} added: skeleton written to {1} (the project's registry), to complete (rule, scope, proof) then to commit with the work in progress.",
+      todo: "To complete",
+      activity: "registry write refused in {0}: only SCOPING or BUILD accepts a registry write (nothing written)",
+      outside: "write refused: {0} is outside the scope of the active brief {1} (nothing written); widen the scope in a separate commit",
     },
   },
 };

@@ -39,6 +39,34 @@
   "parallel": true,
   "checks": [
     {
+      "id": "tests-qua-239",
+      "name": "contracts add : squelette d'un contrat propre, registre valide",
+      "run": "node --test --test-name-pattern=\"^QUA-239 \" packages/drwil/test/cycle.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/cli-contracts.ts",
+        "packages/drwil/src/cli-verify.ts",
+        "packages/drwil/src/cli-texts.ts",
+        "packages/drwil/test/cycle.test.mjs"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-240",
+      "name": "contracts add : refus sans rien écrire (ID défini, ID invalide, registre invalide, hors cadrage)",
+      "run": "node --test --test-name-pattern=\"^QUA-240 \" packages/drwil/test/cycle.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/cli-contracts.ts",
+        "packages/drwil/src/cli-verify.ts",
+        "packages/drwil/src/cli-texts.ts",
+        "packages/drwil/test/cycle.test.mjs"
+      ],
+      "degradable": false
+    },
+    {
       "id": "tests-qua-237",
       "name": "contracts adopt : un contrat du catalogue passe au registre, sans préfixe",
       "run": "node --test --test-name-pattern=\"^QUA-237 \" packages/drwil/test/cycle.test.mjs",

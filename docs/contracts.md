@@ -2336,3 +2336,25 @@ régression sauf si la fiche active déclare le changement (section
 **Couvre** : `packages/drwil/src/cli-contracts.ts`, `packages/drwil/src/cli-texts.ts`
 **Origine** : commande-de-contrat — un ID déjà défini, un contrat absent du catalogue ou un registre invalide est refusé, sans rien écrire
 **Raison** : Une commande qui écrit deux fichiers ne doit jamais en laisser un à moitié modifié.
+
+## QUA-239 — `drwil contracts add` écrit le squelette d'un contrat propre au projet
+**Règle** : `drwil contracts add [ID]` ajoute au registre du projet une section d'un ID jamais défini (ni au registre ni au catalogue ; sans ID, le prochain `PRJ-<n>` libre) avec sa règle et son titre s'ils sont donnés, sinon des champs « À compléter » ; le registre reste valide pour `drwil contracts`. Un agent peut la lancer ; modifier ou retirer un contrat reste un geste humain (QUA-050).
+**Périmètre** : `drwil contracts add`, registre du projet de la commande (le dépôt ou le livrable, jamais l'autre : QUA-018).
+**Source de vérité** : `packages/drwil/src/cli-contracts.ts` (`addContract`).
+**Preuve** : test sur un projet installé, en français et en anglais : section écrite, ID proposé puis ID explicite, `drwil contracts` valide.
+**Contrôle** : `tests-qua-239`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Couvre** : `packages/drwil/src/cli-contracts.ts`, `packages/drwil/src/cli-texts.ts`
+**Origine** : commande-de-contrat — `drwil contracts add` crée le squelette d'un contrat propre au projet, d'un ID jamais défini
+**Raison** : Écrire un contrat propre obligeait à recopier la structure d'une section à la main.
+
+## QUA-240 — `drwil contracts add` refuse sans rien écrire
+**Règle** : `drwil contracts add` refuse, sans rien écrire, un ID déjà défini dans le registre ou dans le catalogue, un ID mal formé, un registre invalide et, en BUILD, un registre hors du cadrage de la fiche active (QUA-172) ; le refus dit pourquoi.
+**Périmètre** : `drwil contracts add`.
+**Source de vérité** : `packages/drwil/src/cli-contracts.ts` (`addContract`).
+**Preuve** : test des refus, fichiers inchangés, puis ajout accepté une fois le cadrage élargi.
+**Contrôle** : `tests-qua-240`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Couvre** : `packages/drwil/src/cli-contracts.ts`, `packages/drwil/src/cli-texts.ts`
+**Origine** : commande-de-contrat — un ID déjà défini ou un registre invalide est refusé, sans rien écrire
+**Raison** : Un ID défini deux fois ou un registre cassé rendrait tous les contrats illisibles.

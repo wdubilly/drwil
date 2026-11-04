@@ -57,24 +57,71 @@ async function scopeProblem(root: string, cfg: any, files: string[]): Promise<st
   return outside ? fill(T.outside, outside, state.active_brief) : null;
 }
 
+/** Loads the project and its valid registry; an Outcome when it cannot (invalid registry: nothing may be written). */
+async function openRegistry(root: string) {
+  const T = texts().adopt;
+  const project = await loadProject(root);
+  if (typeof project === "string") return { fail: { code: 2, message: project } as Outcome };
+  const { lang, cfg, registry, contracts: reader } = project;
+  const catalogFile: string = cfg.dirs?.catalog ?? "docs/contracts-catalog.md";
+  const registryText = readFileSync(join(root, registry), "utf8");
+  const existing: any[] = reader.readContracts(registryText);
+  const invalid: any[] = reader.validateContracts(existing, reader.knownChecks(cfg), lang);
+  if (invalid.length) return { fail: { code: 2, message: fill(T.invalidRegistry, registry, invalid[0].message) } as Outcome };
+  const catalogLines = existsSync(join(root, catalogFile)) ? readFileSync(join(root, catalogFile), "utf8").split("\n") : null;
+  return { lang, cfg, registry, reader, catalogFile, registryText, existing, catalogLines };
+}
+
+/** Appends a block to the registry if the result is still valid; the registry is untouched otherwise. */
+function appendBlock(root: string, o: any, id: string, block: string): Outcome | null {
+  const next = `${o.registryText.replace(/\s*$/, "")}\n\n${block}\n`;
+  const after: any[] = o.reader.readContracts(next);
+  if (o.reader.validateContracts(after, o.reader.knownChecks(o.cfg), o.lang).length || !after.some((k) => k.id === id))
+    return { code: 2, message: fill(texts().adopt.invalidRegistry, o.registry, id) };
+  writeFileSync(join(root, o.registry), next);
+  return null;
+}
+
+/** `drwil contracts add [ID]`: writes the skeleton of a project's own contract, under an ID never defined (registry or catalog). */
+export async function addContract(root: string, rawId: string | undefined, opts: { title?: string; rule?: string } = {}): Promise<Outcome> {
+  const T = texts().adopt;
+  const o: any = await openRegistry(root);
+  if (o.fail) return o.fail;
+  const taken = (id: string) => o.existing.some((k: any) => k.id === id) || (o.catalogLines && catalogRow(o.catalogLines, id));
+  let id = rawId;
+  for (let n = 1; id === undefined; n++) if (!taken(`PRJ-${n}`)) id = `PRJ-${n}`;
+  if (!/^[A-Z][A-Z0-9]*-\d+$/.test(id)) return refuse(T.noId);
+  if (taken(id)) return refuse(fill(T.defined, id, `${o.registry} / ${o.catalogFile}`));
+  const blocked = await scopeProblem(root, o.cfg, [o.registry]);
+  if (blocked) return refuse(blocked);
+
+  const L = LABELS[o.lang === "en" ? "en" : "fr"];
+  const todo = T.todo;
+  const failed = appendBlock(
+    root,
+    o,
+    id,
+    [
+      `## ${id} — ${opts.title?.trim() || todo}`,
+      `**${L.rule}** : ${opts.rule?.trim() || todo}`,
+      `**${L.scope}** : ${todo}`,
+      `**${L.manual}** : ${todo}`,
+    ].join("\n"),
+  );
+  return failed ?? { code: 0, message: fill(T.added, id, o.registry) };
+}
+
 /** `drwil contracts adopt <ID>`: moves a catalog contract to the registry; refuses without writing anything. */
 export async function adoptContract(root: string, rawId: string | undefined): Promise<Outcome> {
   const T = texts().adopt;
   const id = (rawId ?? "").replace(/^catal(?:ogue|og):/, "");
   if (!/^[A-Z][A-Z0-9]*-\d+$/.test(id)) return refuse(T.noId);
-  const project = await loadProject(root);
-  if (typeof project === "string") return { code: 2, message: project };
-  const { lang, cfg, registry, contracts: reader } = project;
-  const catalogFile: string = cfg.dirs?.catalog ?? "docs/contracts-catalog.md";
-  if (!existsSync(join(root, catalogFile))) return refuse(fill(T.noCatalog, catalogFile));
+  const o: any = await openRegistry(root);
+  if (o.fail) return o.fail;
+  const { lang, cfg, registry, catalogFile, existing, catalogLines } = o;
+  if (!catalogLines) return refuse(fill(T.noCatalog, catalogFile));
+  if (existing.some((k: any) => k.id === id)) return refuse(fill(T.defined, id, registry));
 
-  const registryText = readFileSync(join(root, registry), "utf8");
-  const existing: any[] = reader.readContracts(registryText);
-  const invalid: any[] = reader.validateContracts(existing, reader.knownChecks(cfg), lang);
-  if (invalid.length) return { code: 2, message: fill(T.invalidRegistry, registry, invalid[0].message) };
-  if (existing.some((k) => k.id === id)) return refuse(fill(T.defined, id, registry));
-
-  const catalogLines = readFileSync(join(root, catalogFile), "utf8").split("\n");
   const row = catalogRow(catalogLines, id);
   if (!row) return refuse(fill(T.notFound, id, catalogFile));
   if (!row.check) return refuse(fill(T.noCheck, id));
@@ -90,16 +137,18 @@ export async function adoptContract(root: string, rawId: string | undefined): Pr
     `**${L.proof}** : ${row.check}`,
     `**${L.manual}** : ${row.check}`,
   ].join("\n");
-  const next = `${registryText.replace(/\s*$/, "")}\n\n${block}\n`;
-  const after: any[] = reader.readContracts(next);
-  if (reader.validateContracts(after, reader.knownChecks(cfg), lang).length || !after.some((k) => k.id === id))
-    return { code: 2, message: fill(T.invalidRegistry, registry, id) };
+  const failed = appendBlock(root, o, id, block);
+  if (failed) return failed;
 
   catalogLines.splice(row.at, 1);
-  writeFileSync(join(root, registry), next);
   writeFileSync(join(root, catalogFile), catalogLines.join("\n"));
   return { code: 0, message: fill(T.done, id, registry, catalogFile) };
 }
+
+const finish = (r: Outcome): never => {
+  (r.code === 0 ? console.log : console.error)(r.code === 0 ? r.message : `✗ ${r.message}`);
+  process.exit(r.code);
+};
 
 export function registerContracts(program: Command): void {
   const contracts = program
@@ -133,9 +182,13 @@ export function registerContracts(program: Command): void {
     .command("adopt")
     .argument("[id]", "ID of the catalog contract to adopt (e.g. QUA-005)")
     .description("Move a contract from the catalog to the registry, with the check the catalog proposes: refuses without writing anything")
-    .action(async (id) => {
-      const r = await adoptContract(process.cwd(), id);
-      (r.code === 0 ? console.log : console.error)(r.code === 0 ? r.message : `✗ ${r.message}`);
-      process.exit(r.code);
-    });
+    .action(async (id) => finish(await adoptContract(process.cwd(), id)));
+
+  contracts
+    .command("add")
+    .argument("[id]", "ID of the new contract (default: next free PRJ-<n>), never already defined")
+    .option("--title <text>", "Title of the contract")
+    .option("--rule <text>", "Rule of the contract")
+    .description("Write the skeleton of a contract of the project's own (registry): refuses without writing anything")
+    .action(async (id, opts) => finish(await addContract(process.cwd(), id, opts)));
 }
