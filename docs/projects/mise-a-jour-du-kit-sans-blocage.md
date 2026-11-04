@@ -2,7 +2,7 @@
 
 **Statut** : cadré le 2026-11-04 — piste A retenue, points à trancher.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : en cours
 **Intention** : `docs/intentions/adoption-et-init.md`
 
 <!-- scope
@@ -49,6 +49,12 @@ Précédent : QUA-206, qui commite le kit sur le dépôt neuf qu'`init` crée, a
   mécanique modifié à la main dans un commit ordinaire reste refusé en SCOPING — contrat à créer
 - `init` dit, à la fin d'une mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante — contrat à créer
 
+## Contrats modifiés
+
+- `QUA-206` — ancien critère : « Un dépôt déjà existant n'est jamais commité par `init` » — raison : `init` commite
+  lui-même la mise à jour d'un projet équipé (branche dédiée, tous les fichiers du manifeste, arbre propre,
+  identité git présente, branche principale à jour), en plus de l'installation sur le dépôt neuf (validé le 2026-11-04)
+
 ## 2. Hors périmètre
 
 - Un mode `start --maintenance` ou une nouvelle activité de gouvernance (écartés par le demandeur).
@@ -73,13 +79,13 @@ Précédent : QUA-206, qui commite le kit sur le dépôt neuf qu'`init` crée, a
 - Piste A retenue (demandeur, 2026-11-04) : `init` commite la mise à jour lui-même.
 - La branche de mise à jour part de la branche principale du projet hôte, mise à jour au préalable
   (récupération distante faite) : jamais d'une branche de travail ni d'une copie en retard (demandeur, 2026-11-04).
+- Arbre déjà sale ou sans identité git : `init` refuse et dit quoi faire (demandeur, 2026-11-04).
+- Branche principale en retard sur le distant : `init` refuse et dit la commande à lancer (`fetch` puis
+  fast-forward) ; il ne met pas la branche à jour lui-même (demandeur, 2026-11-04).
 
 ## 5. Points à trancher
 
-- [décision] Un projet sans identité git, ou avec un arbre déjà sale avant la mise à jour : `init`
-  refuse, ou commite seulement ses propres fichiers ?
-- [décision] Branche principale en retard sur le dépôt distant, ou dépôt sans distant : `init` met la branche
-  à jour (`fetch` puis fast-forward), ou refuse et dit la commande à lancer ?
+(aucun)
 
 ## 6. Increments
 
@@ -92,4 +98,4 @@ Précédent : QUA-206, qui commite le kit sur le dépôt neuf qu'`init` crée, a
 
 - **Dernier état** (2026-11-04) : cadré, rien codé ; la remontée est dans `docs/intentions/adoption-et-init.md`.
 - **Travail non commité** : cette fiche et la remontée dans l'intention.
-- **Prochaine étape** : [décision] trancher les deux points ci-dessus, puis passer la maturité à « prêt ».
+- **Prochaine étape** : [IA] lot 1.
