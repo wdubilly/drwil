@@ -57,6 +57,13 @@ Précédent : QUA-206, qui commite le kit sur le dépôt neuf qu'`init` crée, a
 - `QUA-206` — ancien critère : « Un dépôt déjà existant n'est jamais commité par `init` » — raison : `init` commite
   lui-même la mise à jour d'un projet équipé (branche dédiée, tous les fichiers du manifeste, arbre propre,
   identité git présente, branche principale à jour), en plus de l'installation sur le dépôt neuf (validé le 2026-11-04)
+- `.githooks/scope-gate.mjs` — la barrière reconnaît la mise à jour du kit (trailer `Drwil-Kit-Update`, fichiers du
+  manifeste seulement) au pre-commit et au rejeu ; une retouche à la main reste refusée (demandé par la fiche,
+  décision du demandeur du 2026-11-04)
+- `.githooks/scope-gate-texts.mjs` — le message d'activité dit que la mise à jour du kit se commite par `npx drwil init`
+  (demandé par la fiche, décision du demandeur du 2026-11-04)
+- `.githooks/scope-gate.test.mjs` — tests de la reconnaissance et de son refus (demandé par la fiche, décision du
+  demandeur du 2026-11-04)
 
 ## 2. Hors périmètre
 
