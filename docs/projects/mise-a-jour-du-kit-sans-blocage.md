@@ -26,6 +26,7 @@ files:
   - INSTALL.md
   - docs/contracts.md
   - docs/projects/kit-mechanics.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/architecture.md
   - .drwil/ia-first.json
 -->
