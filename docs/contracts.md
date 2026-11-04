@@ -2002,14 +2002,15 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Le lancement ne proposait pas toujours le worktree : l'agent devait penser à ajouter la question au sondage.
 
 ## QUA-206 — `init` commite le kit sur le dépôt neuf qu'il crée, avant d'activer les hooks
-**Règle** : Sur un dossier sans dépôt git, `drwil init` crée le dépôt sur la branche d'installation (jamais la branche principale, QUA-017) et y commite le kit avant de régler `core.hooksPath`, pour que le premier chantier se lance sans commit refusé par la barrière de périmètre bloquante (QUA-154). Un dépôt déjà existant n'est jamais commité par `init`. Sans identité git, `init` le dit et ne casse pas : le commit reste à faire à la main.
-**Périmètre** : `drwil init` sur un dossier sans dépôt git.
+**Règle** : Sur un dossier sans dépôt git, `drwil init` crée le dépôt sur la branche d'installation (jamais la branche principale, QUA-017) et y commite le kit avant de régler `core.hooksPath`, pour que le premier chantier se lance sans commit refusé par la barrière de périmètre bloquante (QUA-154). `init` commite lui-même dans deux cas : l'installation sur un dépôt neuf (branche d'installation) et la mise à jour d'un projet équipé (branche dédiée, tous les fichiers du manifeste, arbre propre, identité git présente, branche principale à jour, QUA-237) ; une première installation sur un dépôt existant n'est jamais commitée. Sans identité git, `init` le dit et ne casse pas : le commit reste à faire à la main.
+**Périmètre** : `drwil init` sur un dossier sans dépôt git ; la mise à jour d'un projet équipé relève de QUA-237.
 **Source de vérité** : `packages/drwil/src/install.ts` (`commitKit`), appelé par `packages/drwil/src/index.ts`.
 **Preuve** : test du paquet sur un dossier vide : un seul commit sur `workstream/kit-installation`, arbre propre, kit suivi, relance sans nouveau commit ; sans identité git, l'avertissement est émis.
 **Contrôle** : `tests-qua-206`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : adoption-fluide-projet-neuf — « Sur un projet neuf, `drwil init` commite lui-même le kit sur sa branche d'installation, et le premier chantier peut se lancer sans commit refusé »
 **Raison** : Depuis que l'installation neuve écrit `scopeGate` en `blocking`, le premier commit du kit en SCOPING était refusé sans que la recette le dise.
+**Modifié** : 2026-11-04 — décision humaine (mise-a-jour-du-kit-sans-blocage) : l'ancien critère « un dépôt déjà existant n'est jamais commité par `init` » devient « `init` commite aussi la mise à jour d'un projet équipé, sur sa branche dédiée ».
 
 ## QUA-207 — La recette d'adoption et `INSTALL.md` disent le commit initial de `init` et pourquoi une autorisation n'est pas demandée
 **Règle** : La recette d'adoption (gabarit) dit ce que `init` fait du premier commit (branche d'installation, avant les hooks, pourquoi, et quand il ne le fait pas) ; `INSTALL.md` le dit aussi et explique pourquoi Claude Code ne demande pas d'autorisation pour les commandes courantes (une règle `allow` n'ouvre aucun geste que les hooks ou la forge refusent).
@@ -2314,3 +2315,33 @@ régression sauf si la fiche active déclare le changement (section
 **Couvre** : `packages/drwil/src/attest.ts`, `packages/drwil/src/attest-portable.ts`, `packages/drwil/src/cli-cursor.ts`, `packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md`
 **Origine** : attester-depuis-le-chat — le sondage est lisible et ne demande que le jugement utile.
 **Raison** : La présence automatique des champs ne prouve pas que le jugement demandé est compréhensible.
+
+## QUA-237 — `drwil init` sur un projet équipé commite la mise à jour sur sa branche dédiée, ou refuse avant d'écrire
+**Règle** : `drwil init` sur un projet équipé (manifeste présent) dans un dépôt git coupe la branche `workstream/kit-update` depuis la branche principale (origin/HEAD, à défaut master ou main), applique la mise à jour et la commite lui-même (message en français ou anglais selon le projet, trailer `Drwil-Kit-Update: <version>`, hooks du projet joués, aucun contournement) : en SCOPING, l'arbre est propre ensuite et aucun commit n'est refusé par la barrière de périmètre. Avant d'écrire quoi que ce soit, il refuse en disant quoi faire si l'arbre est sale, s'il n'y a pas d'identité git, si la branche principale est en retard sur le distant (la commande à lancer : `git fetch`, puis fast-forward ; `init` ne la met pas à jour lui-même) ou si la branche de mise à jour existe déjà. Rien à commiter : retour sur la branche d'origine, branche supprimée. Sans branche principale trouvée, ou `--no-git` : la mise à jour reste dans l'arbre, sans commit. `core.hooksPath` géré par un autre outil : `init` le dit, sans le casser.
+**Périmètre** : `drwil init` sur un projet déjà équipé dans un dépôt git ; ni première installation, ni `--no-git`.
+**Source de vérité** : `packages/drwil/src/kit-update.ts` (`prepareUpdate`, `finishUpdate`), appelé par `packages/drwil/src/index.ts`.
+**Preuve** : test du paquet sur un dépôt temporaire équipé par une version antérieure : mise à jour en SCOPING commitée sur `workstream/kit-update` avec le trailer, arbre propre, branche principale intacte ; refus sans rien écrire (arbre sale, sans identité git, principale en retard, branche existante) ; mise à jour déjà faite sans nouveau commit.
+**Contrôle** : `tests-qua-237`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : mise-a-jour-du-kit-sans-blocage — « Après `drwil init` sur un projet équipé en SCOPING, `git status` est propre ou la mise à jour est commitée sur sa propre branche, sans commit refusé par la barrière de périmètre »
+**Raison** : Le 2026-11-04, sur `drwil_walk`, une mise à jour laissait une soixantaine de fichiers non commités que la barrière de périmètre refusait en SCOPING, sans issue indiquée (QUA-027, mise à jour sûre).
+
+## QUA-238 — La barrière de périmètre reconnaît la mise à jour du kit par son manifeste, jamais une édition à la main
+**Règle** : Un commit portant le trailer `Drwil-Kit-Update` (rejeu local, pre-push, CI, `verify`) ou posé par `init` (variable `DRWIL_KIT_UPDATE` au pre-commit) n'est pas jugé sur les fichiers que le manifeste du kit (installed-files.json, dans .drwil/) explique : fichier présent dont l'empreinte est celle du manifeste du commit, fichier retiré dont l'empreinte est celle du manifeste du parent, enregistrement de version, configuration où seuls changent les réglages recalculés par `init` (ajout de contrôles et de réglages sans coupure de garde compris). Tout autre fichier du même commit reste jugé comme dans un commit ordinaire ; un fichier de mécanique modifié à la main, avec ou sans trailer, reste refusé en SCOPING.
+**Périmètre** : barrière de périmètre livrée par le gabarit (`.githooks/scope-gate.mjs`, `.githooks/scope-gate-kit.mjs`) ; limite connue : un commit qui falsifie aussi le manifeste et porte le trailer n'est arrêté que par la revue de sa pull request.
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs` (`nonKitFiles`), `packages/drwil/templates/common/base/.githooks/scope-gate.mjs` (`checkScope`, `checkBranch`).
+**Preuve** : tests de la barrière sur un dépôt temporaire : mise à jour reconnue au commit et au rejeu ; hook modifié à la main refusé avec ou sans trailer, même avec la variable ; fichier hors manifeste dans le commit de mise à jour refusé ; configuration dont une garde est coupée refusée ; test du paquet bout en bout.
+**Contrôle** : `tests-qua-238`
+**Tests** : `.githooks/scope-gate.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Origine** : mise-a-jour-du-kit-sans-blocage — « La mise à jour commitée passe la barrière en local et en CI (rejeu de la branche), alors qu'un fichier de mécanique modifié à la main dans un commit ordinaire reste refusé en SCOPING »
+**Raison** : Sans règle écrite, la mise à jour commitée par `init` serait refusée par la barrière, ou la barrière serait contournée (QUA-019).
+
+## QUA-239 — `init` dit, à la fin d'une mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante
+**Règle** : En fin de mise à jour d'un projet équipé, `drwil init` écrit trois choses dans la langue du projet : ce qu'il a fait (version, branche, branche d'origine, nombre de fichiers, ou « déjà à jour »), ce qui reste à décider (relire et fusionner par une pull request ; les fichiers modifiés à la main non réécrits, avec `drwil resolve-drift`) et la commande suivante (`git push -u origin <branche>`, `gh pr create --base <principale>`). Un commit non fait ou un `core.hooksPath` géré par un autre outil est dit, sans casser.
+**Périmètre** : fin de `drwil init` sur un projet équipé dans un dépôt git.
+**Source de vérité** : `packages/drwil/src/kit-update.ts` (`finishUpdate`).
+**Preuve** : test du paquet : les trois messages en français et en anglais après une mise à jour, le message « déjà à jour », le signalement des fichiers non réécrits et d'un `core.hooksPath` externe.
+**Contrôle** : `tests-qua-239`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : mise-a-jour-du-kit-sans-blocage — « `init` dit, à la fin d'une mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante »
+**Raison** : Sans ce compte rendu, l'utilisateur ne sait pas que la mise à jour attend une fusion ni quelle commande lancer.
