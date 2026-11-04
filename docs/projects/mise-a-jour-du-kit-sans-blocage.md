@@ -10,6 +10,8 @@ files:
   - packages/drwil/src/install.ts
   - packages/drwil/src/index.ts
   - packages/drwil/src/manifest.ts
+  - packages/drwil/src/kit-update.ts
+  - packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs
   - packages/drwil/templates/common/base/.githooks/scope-gate.mjs
   - packages/drwil/templates/common/base/.githooks/scope-gate-merge.mjs
   - packages/drwil/templates/common/base/.githooks/scope-gate-texts.mjs
@@ -44,10 +46,10 @@ Précédent : QUA-206, qui commite le kit sur le dépôt neuf qu'`init` crée, a
 ## Critères d'acceptation
 
 - Après `drwil init` sur un projet équipé en SCOPING, `git status` est propre ou la mise à jour est commitée
-  sur sa propre branche, sans commit refusé par la barrière de périmètre — contrat à créer
+  sur sa propre branche, sans commit refusé par la barrière de périmètre — `QUA-237`
 - La mise à jour commitée passe la barrière en local et en CI (rejeu de la branche), alors qu'un fichier de
-  mécanique modifié à la main dans un commit ordinaire reste refusé en SCOPING — contrat à créer
-- `init` dit, à la fin d'une mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante — contrat à créer
+  mécanique modifié à la main dans un commit ordinaire reste refusé en SCOPING — `QUA-238`
+- `init` dit, à la fin d'une mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante — `QUA-239`
 
 ## Contrats modifiés
 
