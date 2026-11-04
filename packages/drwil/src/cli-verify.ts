@@ -8,11 +8,11 @@ import {
   formatGuarantees,
   formatVerdict,
   guarantees,
-  listContracts,
   verdictJson,
   verify,
   writeEvidence,
 } from "./index.js";
+import { registerContracts } from "./cli-contracts.js";
 import { texts } from "./cli-texts.js";
 import { verifyFailed } from "./failed.js";
 
@@ -90,24 +90,5 @@ export function registerVerify(program: Command): void {
     .option("--json", "Machine-readable output (stable format, version 1), same exit codes")
     .action((opts) => machine(doctor, opts.json, formatDiagnosis, diagnosisJson));
 
-  program
-    .command("contracts")
-    .description("List and validate the project's contracts without running them: valid (exit 0), invalid registry (exit 2)")
-    .option("--json", "Machine-readable output (stable format, version 1)")
-    .action((opts) =>
-      machine(
-        listContracts,
-        opts.json,
-        (r) =>
-          [
-            `${r.registry ?? ""}`,
-            ...r.contracts.map(
-              (k) => `  ${k.id.padEnd(8)} ${k.checks.length ? k.checks.join(", ") : "—"}${k.manual ? texts().manual : ""}  ${k.title}`,
-            ),
-            ...r.errors.map((e) => `✗ ${e}`),
-            ...(r.error ? [`✗ ${r.error}`] : []),
-          ].join("\n"),
-        (r) => r,
-      ),
-    );
+  registerContracts(program);
 }

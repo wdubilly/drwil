@@ -3,7 +3,8 @@
 Contrats **génériques** fréquents, pas installés par défaut (seul le socle de
 `docs/contracts.md` l'est). Préfixe `catalogue:` : évite qu'un ID pas encore
 adopté soit pris pour un trou du registre (même mécanisme que pour un ID
-d'un autre dépôt). Un projet qui adopte une ligne la recopie **sans ce
+d'un autre dépôt). Un projet adopte une ligne par `drwil contracts adopt <ID>`, qui la déplace
+vers le registre **sans ce préfixe** ; à la main, il la recopie **sans ce
 préfixe** dans le tableau de `docs/contracts.md`, adaptée à sa pile, puis la
 retire d'ici une fois active (pas de doublon entre catalogue et registre).
 Voir `docs/recipes/adopt-the-kit.md` pour la démarche d'adoption.

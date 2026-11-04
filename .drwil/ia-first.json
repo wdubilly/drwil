@@ -39,6 +39,34 @@
   "parallel": true,
   "checks": [
     {
+      "id": "tests-qua-237",
+      "name": "contracts adopt : un contrat du catalogue passe au registre, sans préfixe",
+      "run": "node --test --test-name-pattern=\"^QUA-237 \" packages/drwil/test/cycle.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/cli-contracts.ts",
+        "packages/drwil/src/cli-verify.ts",
+        "packages/drwil/src/cli-texts.ts",
+        "packages/drwil/test/cycle.test.mjs"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-238",
+      "name": "contracts adopt : refus sans rien écrire (ID défini, absent, sans contrôle, registre invalide, hors cadrage)",
+      "run": "node --test --test-name-pattern=\"^QUA-238 \" packages/drwil/test/cycle.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/src/cli-contracts.ts",
+        "packages/drwil/src/cli-verify.ts",
+        "packages/drwil/src/cli-texts.ts",
+        "packages/drwil/test/cycle.test.mjs"
+      ],
+      "degradable": false
+    },
+    {
       "id": "tests-qua-235",
       "name": "sondage d'attestation : frontière humain/agent et preuve liée",
       "run": "node --test --test-name-pattern=\"^QUA-235 \" packages/drwil/test/claude-hooks.test.mjs packages/drwil/test/portable-attest.test.mjs packages/drwil/test/cursor-acp.test.mjs packages/drwil/test/cycle.test.mjs",

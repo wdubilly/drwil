@@ -7,6 +7,11 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil contracts adopt <ID>` moves a contract from the catalog to the
+  registry in one command (no prefix, catalog line removed, the catalog's
+  proof as its manual part) and refuses, writing nothing, an ID already
+  defined, absent from the catalog, without proposed check, an invalid
+  registry, or outside the active brief's scope in BUILD.
 - `drwil attest-poll <ID> --tried <text> [--renew]` prepares a Claude Code
   attestation poll without attesting. Only the human's tool response, read by
   the hook and tied to the unchanged proof, can record it; refusals, prefilled

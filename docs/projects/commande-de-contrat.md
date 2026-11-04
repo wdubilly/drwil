@@ -83,6 +83,8 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-10-30) : cadré, aucun code.
+- **Dernier état** (2026-11-04) : lot 1 fait — `drwil contracts adopt <ID>` (`packages/drwil/src/cli-contracts.ts`, `adoptContract`),
+  contrats `QUA-237` et `QUA-238`, tests dans `packages/drwil/test/cycle.test.mjs`. Choix : la « déclaration du contrôle » est le
+  contrôle type du catalogue écrit en champs Preuve et Manuel ; une ligne au contrôle vide est refusée.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] lancer par `/drwil-start`.
+- **Prochaine étape** : lot 2 — `drwil contracts add` (squelette d'un contrat propre), recette d'adoption.

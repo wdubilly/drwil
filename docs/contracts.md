@@ -2314,3 +2314,25 @@ régression sauf si la fiche active déclare le changement (section
 **Couvre** : `packages/drwil/src/attest.ts`, `packages/drwil/src/attest-portable.ts`, `packages/drwil/src/cli-cursor.ts`, `packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md`
 **Origine** : attester-depuis-le-chat — le sondage est lisible et ne demande que le jugement utile.
 **Raison** : La présence automatique des champs ne prouve pas que le jugement demandé est compréhensible.
+
+## QUA-237 — `drwil contracts adopt` déplace un contrat du catalogue vers le registre
+**Règle** : `drwil contracts adopt <ID>` retire du catalogue la ligne `catalogue:<ID>` et écrit dans le registre du projet une section du même ID, sans préfixe, avec la règle et le périmètre du catalogue et, comme preuve, le contrôle type du catalogue (champs Preuve et Manuel) ; le registre reste valide pour `drwil contracts`. Un agent peut la lancer ; modifier ou retirer un contrat reste un geste humain (QUA-050).
+**Périmètre** : `drwil contracts adopt`, registre et catalogue du projet de la commande (le dépôt ou le livrable, jamais l'autre : QUA-018).
+**Source de vérité** : `packages/drwil/src/cli-contracts.ts` (`adoptContract`).
+**Preuve** : test sur un projet installé, en français et en anglais : section écrite sans préfixe, ligne retirée du catalogue, `drwil contracts` valide.
+**Contrôle** : `tests-qua-237`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Couvre** : `packages/drwil/src/cli-contracts.ts`, `packages/drwil/src/cli-texts.ts`
+**Origine** : commande-de-contrat — `drwil contracts adopt <ID>` déplace le contrat du catalogue vers le registre, sans préfixe, et écrit la déclaration de son contrôle depuis le catalogue pour la pile
+**Raison** : Adopter un contrat obligeait à recopier une ligne de tableau à la main et à la retirer du catalogue.
+
+## QUA-238 — `drwil contracts adopt` refuse sans rien écrire
+**Règle** : `drwil contracts adopt <ID>` refuse, sans écrire ni le registre ni le catalogue, un ID déjà défini dans le registre, un ID absent du catalogue, une ligne du catalogue sans contrôle proposé pour la pile, un registre invalide et, en BUILD, un registre ou un catalogue hors du cadrage de la fiche active (QUA-172) ; le refus dit pourquoi.
+**Périmètre** : `drwil contracts adopt`.
+**Source de vérité** : `packages/drwil/src/cli-contracts.ts` (`adoptContract`).
+**Preuve** : test des cinq refus, fichiers inchangés, puis adoption acceptée une fois le cadrage élargi.
+**Contrôle** : `tests-qua-238`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Couvre** : `packages/drwil/src/cli-contracts.ts`, `packages/drwil/src/cli-texts.ts`
+**Origine** : commande-de-contrat — un ID déjà défini, un contrat absent du catalogue ou un registre invalide est refusé, sans rien écrire
+**Raison** : Une commande qui écrit deux fichiers ne doit jamais en laisser un à moitié modifié.
