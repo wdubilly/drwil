@@ -32,7 +32,7 @@ export class TransportCursor {
     private readonly processus: ChildProcessWithoutNullStreams,
     private readonly traiter: (méthode: string, paramètres: unknown) => Promise<unknown>,
     private readonly notifier: (méthode: string, paramètres: unknown) => void,
-    private readonly interrompre: () => void,
+    private readonly interrompre: (erreur?: Error) => void,
     private readonly délai = 300_000,
   ) {
     this.fermé = new Promise((resolve) =>
@@ -67,7 +67,7 @@ export class TransportCursor {
     this.minuterie = setTimeout(() => this.échouer(new Error("Durée maximale ACP dépassée.")), 1_800_000);
   }
 
-  private échouer(erreur: Error): void {
+  private échouer(erreur: Error, signaler = true): void {
     if (this.erreur) return;
     this.erreur = erreur;
     for (const a of this.attentes.values()) {
@@ -75,7 +75,7 @@ export class TransportCursor {
       a.reject(erreur);
     }
     this.attentes.clear();
-    this.interrompre();
+    this.interrompre(signaler ? erreur : undefined);
   }
 
   private écrire(message: Objet): void {
@@ -133,7 +133,7 @@ export class TransportCursor {
 
   private async nettoyer(): Promise<void> {
     clearTimeout(this.minuterie);
-    this.échouer(new Error("Client ACP arrêté."));
+    this.échouer(new Error("Client ACP arrêté."), false);
     this.processus.stdin.end();
     if (!this.terminé) this.processus.kill("SIGTERM");
     const arrêtForcé = setTimeout(() => {

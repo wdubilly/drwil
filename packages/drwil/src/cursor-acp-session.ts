@@ -5,7 +5,7 @@ import { ErreurACP, objet, TransportCursor } from "./cursor-acp.js";
 export interface InterfaceCursor {
   choisir: (texte: string, choix: { id: string; label: string }[]) => Promise<string | null>;
   afficher: (texte: string) => void;
-  interrompre: () => void;
+  interrompre: (erreur?: Error) => void;
 }
 export type HookCursor = (
   événement: { sessionId: string; params: unknown; response?: unknown },
@@ -30,9 +30,9 @@ export class SessionCursor {
       processus,
       (m, p) => this.traiter(m, p),
       (m, p) => this.notifier(m, p),
-      () => {
+      (erreur) => {
         this.arrêtée = true;
-        ui.interrompre();
+        ui.interrompre(erreur);
       },
       délai,
     );

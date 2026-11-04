@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { test, mock } from "node:test";
 import { fileURLToPath } from "node:url";
 import { init, preparePortableAttestationPoll, prepareAttestationPoll, formatPortableAttestationPoll, verify } from "../dist/index.js";
@@ -14,8 +14,9 @@ const CLI = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
 const hash = (v) => createHash("sha256").update(serialise(v)).digest("hex");
 
 async function projet(tool, lang = "fr") {
-  mkdirSync(".drwil/evidence", { recursive: true });
-  const root = mkdtempSync(".drwil/evidence/portable-test-");
+  const evidence = relative(process.cwd(), fileURLToPath(new URL("../../../.drwil/evidence/", import.meta.url)));
+  mkdirSync(evidence, { recursive: true });
+  const root = mkdtempSync(join(evidence, "portable-test-"));
   const log = console.log;
   const warn = console.warn;
   try {

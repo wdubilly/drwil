@@ -5,7 +5,7 @@ import childProcess from "node:child_process";
 import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { PassThrough } from "node:stream";
 import readline from "node:readline/promises";
 import { syncBuiltinESMExports } from "node:module";
@@ -22,8 +22,9 @@ const CLI = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
 const hash = (v) => createHash("sha256").update(serialise(v)).digest("hex");
 const attendre = () => new Promise((r) => setImmediate(r));
 async function projet() {
-  mkdirSync(".drwil/evidence", { recursive: true });
-  const root = resolve(mkdtempSync(".drwil/evidence/cursor-test-"));
+  const evidence = relative(process.cwd(), fileURLToPath(new URL("../../../.drwil/evidence/", import.meta.url)));
+  mkdirSync(evidence, { recursive: true });
+  const root = resolve(mkdtempSync(join(evidence, "cursor-test-")));
   const log = console.log;
   const warn = console.warn;
   try {
@@ -602,10 +603,11 @@ test("QUA-235 : lanceur TTY simulé exclusivement en helper, lecture humaine et 
       logs.push(s);
       return true;
     });
-    for (const mode of ["quitter", "sigint", "erreur", "abort"]) {
+    for (const mode of ["quitter", "sigint", "erreur", "abort", "fermeture"]) {
       const rl = new EventEmitter();
       rl.close = () => rl.emit("close");
       rl.question = async () => {
+        if (mode === "fermeture") return new Promise((resolve) => rl.once("close", () => resolve(null)));
         if (mode === "sigint") {
           rl.emit("SIGINT");
           return null;
@@ -618,16 +620,20 @@ test("QUA-235 : lanceur TTY simulé exclusivement en helper, lecture humaine et 
         return "/quitter";
       };
       mock.method(readline, "createInterface", () => rl);
-      const child = automatique((p, m) => envoyer(p, { id: m.id, result: résultatNormal(m) }));
+      const child = automatique((p, m) => {
+        envoyer(p, { id: m.id, result: résultatNormal(m) });
+        if (mode === "fermeture" && m.method === "session/new") setImmediate(() => p.emit("close", 1));
+      });
       mock.method(childProcess, "spawn", (commande, args) => {
         assert.equal(commande, "agent");
         assert.deepEqual(args, ["acp"]);
         return child;
       });
       syncBuiltinESMExports();
-      if (mode === "erreur") await assert.rejects(lancerCursor(), /lecture fictive cassée/);
+      if (mode === "fermeture") await assert.rejects(lancerCursor(), /Session ACP fermée/);
+      else if (mode === "erreur") await assert.rejects(lancerCursor(), /lecture fictive cassée/);
       else await lancerCursor();
-      assert.deepEqual(child.signaux, ["SIGTERM"]);
+      assert.deepEqual(child.signaux, mode === "fermeture" ? [] : ["SIGTERM"]);
     }
   } finally {
     mock.restoreAll();

@@ -248,6 +248,17 @@ la seule corrélation déjà autorisée. L'acceptation formelle des critères re
   11 tests passés, 0 échec, dont un lancement réel de cette entrée **sur événement
   fictif local** qui exige le code 2 et l'absence d'attestation. Source modifiée,
   miroir installé, correction séparée sans réécriture du commit de réalisation.
+- **Erreur au repos, même périmètre** : une fermeture ACP pendant la saisie entre deux
+  tours interrompait l'interface mais retournait sans signaler l'erreur. Le test ajouté
+  au lanceur sur le runtime compilé précédent reproduit `Missing expected rejection`
+  (code 1). La cause est conservée à travers l'interruption puis remontée au lanceur ;
+  une sortie volontaire reste normale. Après `npm run build --prefix packages/drwil`,
+  `node --test --test-reporter=spec packages/drwil/test/cursor-acp.test.mjs` :
+  11 tests passés, 0 échec. Aucun chemin ajouté au scope ni changement de règle.
+  Le hook du commit a ensuite révélé une course de Biome avec les fixtures éphémères
+  créées sous le cwd du paquet. Les deux suites d'attestation ciblent désormais les
+  évidences locales de la racine du dépôt, indépendamment du cwd ; aucun contrôle,
+  réglage d'exclusion ni variable de répertoire temporaire n'est modifié.
 - **2026-11-04, cadrage seul avant code** : BUILD relu, même branche et PR #352 brouillon,
   arbre propre. Réaliser le client dédié, pas reprendre une recherche générale sur les hooks.
   Source officielle : https://cursor.com/docs/cli/acp (`agent acp`, JSON-RPC 2.0

@@ -18,9 +18,13 @@ export async function conversationCursor(
   créer: (ui: InterfaceCursor) => SessionCursor,
   interrompre: () => void,
 ): Promise<void> {
+  let erreur: Error | undefined;
   const session = créer({
     afficher,
-    interrompre,
+    interrompre: (cause) => {
+      erreur = cause;
+      interrompre();
+    },
     choisir: async (texte, choix) => {
       afficher(`\n${texte}\n${choix.map((c, i) => `${i + 1}. ${c.label}`).join("\n")}\n0. Abandonner\n`);
       const saisie = await lire("Votre choix (aucun défaut) : ");
@@ -33,6 +37,7 @@ export async function conversationCursor(
     afficher("Client ACP dédié à Cursor — interface distincte du chat habituel. /quitter pour sortir.\n");
     for (let tours = 0; tours < 100; tours++) {
       const texte = await lire("\nVous : ");
+      if (erreur) throw erreur;
       if (texte === null || texte === "/quitter") return;
       if (!texte.trim()) continue;
       if (texte.length > 16_000) throw new Error("Message trop long (16 000 caractères maximum).");
