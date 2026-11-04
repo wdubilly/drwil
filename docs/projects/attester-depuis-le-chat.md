@@ -134,7 +134,7 @@ la seule corrélation déjà autorisée. L'acceptation formelle des critères re
 - QUA-236 (jugement lisible) : l'interface dédiée entre dans le périmètre et la couverture,
   sans remplacer son jugement humain par un test. Aucune attestation renouvelée par l'agent.
 - Le premier critère inclut maintenant ce transport distinct sur cette seule décision.
-- QUA-216 (gardes sans `node`) : refus natif Copilot explicite du protocole d'attestation, autorisé par la
+- `QUA-216` (gardes sans `node`) : refus natif Copilot explicite du protocole d'attestation, autorisé par la
   décision humaine du 2026-11-03 « adapter le protocole » ; codes de repli et rappels existants inchangés.
   Déclaration validée par le demandeur le 2026-11-04.
   Son acceptation formelle, QUA-174 (critères acceptés figés) et QUA-175 (geste humain
