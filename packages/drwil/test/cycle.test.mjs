@@ -12,6 +12,7 @@ import { labelIds } from "../dist/verdict.js";
 import { judgeProofs, parseProof } from "../dist/closure.js";
 import {
   attest,
+  prepareAttestationPoll,
   doctor,
   fingerprint,
   formatForAgent,
@@ -539,6 +540,57 @@ async function projetCouvert(couvre = "`src/**`, `package.json`") {
   return { dir, contrat, oui };
 }
 const nettoyer = (dir) => rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+
+test("QUA-235 : préparer le sondage affiche la preuve et les chemins sans attester ; la CLI reste non interactive et le terminal protégé", async () => {
+  const { dir, contrat } = await projetCouvert();
+  const bin = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
+  try {
+    const prepare = async (extra = {}) => prepareAttestationPoll({ targetDir: dir, id: "APP-009", tried: "Relecture fictive.", ...extra });
+    const result = await prepare();
+    assert.equal(result.code, 0);
+    const q = result.poll.questions[0];
+    assert.match(q.question, /Partie humaine à attester : relecture/);
+    assert.match(q.question, /src\/a\.js/);
+    assert.match(q.question, /src\/b\.js/);
+    assert.match(q.question, /Essai de l'agent:\nRelecture fictive/);
+    assert.deepEqual(
+      q.options.map((o) => o.label),
+      ["Attester", "Refuser"],
+    );
+    assert.equal((await contrat()).status, "MANUAL");
+    assert.equal(existsSync(join(dir, ".drwil/evidence/attestations")), false);
+    for (const extra of [{ tried: "" }, { tried: "x".repeat(501) }, { id: "APP-999" }, { renew: true }])
+      assert.notEqual((await prepare(extra)).code, 0);
+    const cli = spawnSync(process.execPath, [bin, "attest-poll", "APP-009", "--tried", "Essai CLI fictif."], {
+      cwd: dir,
+      encoding: "utf8",
+      env,
+    });
+    assert.equal(cli.status, 0, cli.stderr);
+    assert.match(JSON.parse(cli.stdout).questions[0].question, /Essai CLI fictif/);
+    const invalide = spawnSync(process.execPath, [bin, "attest-poll", "APP-999", "--tried", "Essai."], {
+      cwd: dir,
+      encoding: "utf8",
+      env,
+    });
+    assert.equal(invalide.status, 2);
+    const terminal = spawnSync(process.execPath, [bin, "attest", "APP-009"], { cwd: dir, encoding: "utf8", env, input: "APP-009\n" });
+    assert.equal(terminal.status, 1);
+    assert.match(terminal.stderr, /terminal interactif/);
+    assert.equal(existsSync(join(dir, ".drwil/evidence/attestations")), false);
+    await attest({ targetDir: dir, id: "APP-009", confirm: async () => true });
+    assert.equal((await prepare()).code, 1);
+    assert.match((await prepare({ renew: true })).poll.questions[0].question, /Renouvellement/);
+    const cfg = JSON.parse(lire(dir, ".drwil/ia-first.json"));
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...cfg, lang: "en" }));
+    const en = await prepare({ renew: true });
+    assert.match(en.poll.questions[0].question, /Agent trial/);
+    assert.equal(en.poll.questions[0].options[0].label, "Attest");
+    assert.match((await prepare({ tried: "" })).message, /describe/);
+  } finally {
+    nettoyer(dir);
+  }
+});
 
 test("QUA-081 : un fichier couvert modifié, ajouté, supprimé ou renommé fait tomber l'attestation et est nommé ; un fichier hors couverture, non", async () => {
   const { dir, contrat, oui } = await projetCouvert();

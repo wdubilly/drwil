@@ -18,7 +18,8 @@ export {
   type CheckResult,
   type Status,
 } from "./verify.js";
-export { attest, contractSummary, type AttestResult } from "./attest.js";
+export { attest, contractSummary, prepareAttestationPoll, type AttestResult } from "./attest.js";
+export { preparePortableAttestationPoll, formatPortableAttestationPoll, type PortableAttestationTool } from "./attest-portable.js";
 export { type ClosureProof, judgeProofs, parseProof, type ProofResult, PROOFS_DIR, readProofs } from "./closure.js";
 export { formatForAgent } from "./agent.js";
 export { doctor, formatDiagnosis, diagnosisJson, listContracts, type Diagnosis } from "./doctor.js";

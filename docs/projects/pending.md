@@ -122,8 +122,6 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P2] Attester une preuve humaine depuis la conversation, par un sondage lu par un hook (cadré le
-  2026-10-30, après l'adoption fluide) — `docs/projects/attester-depuis-le-chat.md`.
 - [ ] [IA] [P2] Ajouter ou adopter un contrat par commande, `drwil contracts add` et `adopt <ID>` (cadré le
   2026-10-30) — `docs/projects/commande-de-contrat.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
@@ -139,6 +137,8 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 - [ ] [humain] [P1] Sonder les quatre outils (lot 1 non fait) et dater le tableau de parité ; banc et file parallèle à
   décider — `docs/intentions/parite-des-outils-suites.md`.
+- [ ] [humain] [P2] Essais réels de l'attestation depuis la conversation, cinq outils, au fil des développements du
+  demandeur — `docs/intentions/attestation-chat-essais-reels.md`.
 
 ### Fichiers chargés courts
 

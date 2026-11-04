@@ -169,6 +169,13 @@ export async function scaffold(r: Resolved, w: WriteOptions): Promise<void> {
   const trees = new Set<string>(r.tools);
   if (usesClaudeTree(r.tools)) trees.add("claude");
   for (const tool of trees) await copyTree(join(template, "tools", tool), r, w);
+  if ((r.tools.includes("codex") || r.tools.includes("cursor")) && !usesClaudeTree(r.tools)) {
+    const shared = join(template, "tools", "claude");
+    for (const file of await walk(join(shared, ".claude", "hooks"))) {
+      const target = join(r.opts.targetDir, relative(shared, file));
+      await writeOut(target, render(await readFile(file, "utf8"), r), r.opts.targetDir, w);
+    }
+  }
   await copyTree(join(template, "ci", r.ci), r, w);
 
   for (const layer of r.layers) {

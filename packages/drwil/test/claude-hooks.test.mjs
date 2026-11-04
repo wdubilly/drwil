@@ -2,7 +2,7 @@
 // `npm run test:claude:coverage` (QUA-004). Les copies installées sont les mêmes fichiers (scopeMirrors).
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
@@ -11,6 +11,231 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const HOOKS = fileURLToPath(new URL("../templates/common/tools/claude/.claude/hooks/", import.meta.url));
 const GITHOOKS = fileURLToPath(new URL("../../../.githooks/", import.meta.url));
 const load = (name) => import(pathToFileURL(join(HOOKS, name)).href);
+
+async function projetAttestation(lang = "fr") {
+  const { init, prepareAttestationPoll, verify } = await import("../dist/index.js");
+  const dir = projet();
+  const log = console.log;
+  const warn = console.warn;
+  try {
+    console.log = console.warn = () => {};
+    await init({ targetDir: dir, lang, git: false });
+  } finally {
+    console.log = log;
+    console.warn = warn;
+  }
+  mkdirSync(join(dir, "src"), { recursive: true });
+  writeFileSync(join(dir, "src/objet.js"), "export const valeur = 1;\n");
+  writeFileSync(
+    join(dir, "docs/contracts.md"),
+    `${readFileSync(join(dir, "docs/contracts.md"), "utf8")}\n## APP-009 — Jugement fictif\n**Règle** : règle fictive.\n**Manuel** : lisibilité fictive.\n**Couvre** : \`src/**\`\n`,
+  );
+  const { attestationHook } = await load("prompt-hook.mjs");
+  const output = [];
+  const hook = (input) => attestationHook(input, { root: dir, tell: (text) => output.push(text) });
+  const prepare = async (extra = {}) => {
+    const r = await prepareAttestationPoll({ targetDir: dir, id: "APP-009", tried: "Essai fictif du sondage.", ...extra });
+    assert.equal(r.code, 0, r.message);
+    return {
+      hook_event_name: "PreToolUse",
+      tool_name: "AskUserQuestion",
+      session_id: "session-fictive",
+      tool_use_id: "appel-fictif",
+      tool_input: r.poll,
+    };
+  };
+  const post = (input, label = input.tool_input.questions[0].options[0].label) => ({
+    ...input,
+    hook_event_name: "PostToolUse",
+    tool_response: { answers: { [input.tool_input.questions[0].question]: label } },
+  });
+  const contract = async () => (await verify({ targetDir: dir, only: ["APP-009"] })).contracts[0];
+  return { dir, hook, prepare, post, contract, output };
+}
+
+test("QUA-235 : seul le retour du sondage humain attesté, corrélé et consommé une fois écrit une preuve liée à sa couverture", async () => {
+  const { dir, hook, prepare, post, contract, output } = await projetAttestation();
+  try {
+    const input = await prepare();
+    assert.equal(await hook(input), 0);
+    assert.equal((await contract()).status, "MANUAL");
+    assert.equal(await hook(post(input)), 0);
+    let k = await contract();
+    assert.equal(k.status, "ATTESTED");
+    assert.equal(k.attestation.version, 4);
+    assert.equal(k.attestation.note, "Essai fictif du sondage.");
+    assert.equal(k.attestation.origin.source, "claude-poll");
+    assert.equal(k.attestation.origin.sessionId, "session-fictive");
+    assert.equal(k.attestation.origin.toolUseId, "appel-fictif");
+    assert.ok(Date.parse(k.attestation.origin.askedAt));
+    const first = k.attestation.attestedAt;
+    await hook(post(input));
+    assert.equal((await contract()).attestation.attestedAt, first, "rejeu sans préparation refusé");
+    const renewal = await prepare({ renew: true });
+    assert.equal(await hook(renewal), 0);
+    await hook(post(renewal));
+    assert.equal((await contract()).status, "ATTESTED");
+    writeFileSync(join(dir, "hors.txt"), "sans effet");
+    assert.equal((await contract()).status, "ATTESTED");
+    writeFileSync(join(dir, "src/objet.js"), "export const valeur = 2;\n");
+    k = await contract();
+    assert.equal(k.status, "MANUAL");
+    assert.match(k.reasons.join(" "), /src\/objet\.js/);
+    assert.match(output.join("\n"), /APP-009 attesté/);
+    const copied = join(dir, ".claude/hooks");
+    for (const name of [
+      "prompt-hook.mjs",
+      "start-poll.mjs",
+      "queue-poll.mjs",
+      "attest-poll.mjs",
+      "portable-attest.mjs",
+      "attest-adapters.mjs",
+    ])
+      copyFileSync(join(HOOKS, name), join(copied, name));
+    mkdirSync(join(dir, "node_modules"), { recursive: true });
+    symlinkSync(fileURLToPath(new URL("..", import.meta.url)), join(dir, "node_modules/drwil"), "dir");
+    const cliInput = await prepare();
+    const invoke = (event) =>
+      spawnSync(process.execPath, [join(copied, "prompt-hook.mjs")], { input: JSON.stringify(event), encoding: "utf8" });
+    assert.equal(invoke(cliInput).status, 0);
+    assert.match(invoke(post(cliInput)).stdout, /APP-009 attesté/);
+    assert.equal((await contract()).status, "ATTESTED");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : le hook refuse réponse agent, défaut, recommandation, faux outil, refus humain et preuve changée", async () => {
+  const { dir, hook, prepare, post, contract, output } = await projetAttestation();
+  try {
+    const base = await prepare();
+    const changes = [
+      (x) => {
+        x.tool_input.answers = { [x.tool_input.questions[0].question]: "Attester" };
+      },
+      (x) => {
+        x.tool_input.questions[0].default = "Attester";
+      },
+      (x) => {
+        x.tool_input.questions[0].options[0].label += " (Recommended)";
+      },
+      (x) => {
+        x.tool_input.questions[0].options[0].description += " (recommandé)";
+      },
+      (x) => {
+        x.tool_input.questions[0].multiSelect = true;
+      },
+      (x) => {
+        x.tool_input.questions[0].question = x.tool_input.questions[0].question.replace("lisibilité fictive", "faux critère");
+      },
+      (x) => {
+        x.tool_name = "Bash";
+      },
+      (x) => {
+        delete x.session_id;
+      },
+      (x) => {
+        delete x.tool_use_id;
+      },
+      (x) => {
+        x.tool_input.questions.push({ header: "autre" });
+      },
+      (x) => {
+        x.tool_input.questions[0].options.reverse();
+      },
+    ];
+    for (const change of changes) {
+      const input = structuredClone(base);
+      change(input);
+      assert.equal(await hook(input), 2);
+      await hook(post(input));
+      assert.equal((await contract()).status, "MANUAL");
+    }
+    for (const change of [
+      (x) => {
+        x.tool_response.answers = {};
+      },
+      (x) => {
+        x.tool_response.answers[x.tool_input.questions[0].question] = "Refuser";
+      },
+      (x) => {
+        x.tool_response = {};
+        x.tool_result = { text_result_for_llm: "User responded: Attester" };
+      },
+      (x) => {
+        x.session_id = "autre-session";
+      },
+      (x) => {
+        x.tool_use_id = "autre-appel";
+      },
+      (x) => {
+        x.tool_input.questions[0].question += "modifié";
+      },
+    ]) {
+      assert.equal(await hook(base), 0);
+      const response = post(base);
+      change(response);
+      await hook(response);
+      assert.equal((await contract()).status, "MANUAL");
+    }
+    assert.equal(await hook(base), 0);
+    writeFileSync(join(dir, "src/objet.js"), "export const valeur = 3;\n");
+    await hook(post(base));
+    assert.equal((await contract()).status, "MANUAL", "empreinte couverte changée pendant la question");
+    assert.equal(await hook(post(base)), 0);
+    const fresh = await prepare();
+    assert.equal(await hook(fresh), 0);
+    const pendingFile = join(dir, ".drwil/evidence/attest-polls", readdirSync(join(dir, ".drwil/evidence/attest-polls"))[0]);
+    const pending = JSON.parse(readFileSync(pendingFile, "utf8"));
+    for (const askedAt of ["date invalide", "2000-01-01T00:00:00Z", "2099-01-01T00:00:00Z"]) {
+      writeFileSync(pendingFile, JSON.stringify({ ...pending, askedAt }));
+      await hook(post(fresh));
+      assert.equal((await contract()).status, "MANUAL", "préparation expirée ou date invalide");
+    }
+    assert.equal(await hook(fresh), 0);
+    const registry = join(dir, "docs/contracts.md");
+    writeFileSync(registry, readFileSync(registry, "utf8").replace("règle fictive.", "règle modifiée."));
+    await hook(post(fresh));
+    assert.equal((await contract()).status, "MANUAL", "contrat changé pendant le sondage");
+    assert.equal(await hook({ ...base, hook_event_name: "Autre" }), 0);
+    assert.equal(await hook({}), null);
+    const parse = (await load("attest-poll.mjs")).attestationPoll;
+    assert.equal(parse({ tool_input: { questions: [{ header: "drwil-attest" }] } }).valid, false);
+    assert.ok(output.some((text) => /aucune attestation/.test(text)));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  const en = await projetAttestation("en");
+  try {
+    const input = await en.prepare();
+    assert.equal(await en.hook(input), 0);
+    await en.hook(en.post(input, "Decline"));
+    assert.match(en.output.join("\n"), /no attestation recorded/);
+    assert.equal((await en.contract()).status, "MANUAL");
+  } finally {
+    rmSync(en.dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : un contrôle devenu rouge pendant la réponse ne peut pas être attesté", async () => {
+  const { dir, hook, prepare, post, contract, output } = await projetAttestation();
+  try {
+    const registry = join(dir, "docs/contracts.md");
+    writeFileSync(registry, `${readFileSync(registry, "utf8")}\n**Contrôle** : \`essai\`\n`);
+    const config = join(dir, ".drwil/ia-first.json");
+    const cfg = JSON.parse(readFileSync(config, "utf8"));
+    const setCheck = (run) => writeFileSync(config, JSON.stringify({ ...cfg, checks: [{ id: "essai", run }] }));
+    setCheck('node -e "process.exit(0)"');
+    const input = await prepare();
+    assert.equal(await hook(input), 0);
+    setCheck('node -e "process.exit(1)"');
+    await hook(post(input));
+    assert.equal((await contract()).status, "FAIL");
+    assert.match(output.join("\n"), /n'est pas attestable/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 function run(name, input) {
   return spawnSync(process.execPath, [join(HOOKS, name)], {
@@ -444,7 +669,11 @@ test("QUA-215 : sans node dans le PATH, chaque hook de Claude Code et de Copilot
 }, () => {
   const claude = commandes(".claude/settings.json");
   const copilot = commandes(COPILOT);
-  assert.ok(claude.length >= 10 && copilot.length === 2);
+  assert.ok(claude.length >= 10);
+  assert.deepEqual(
+    copilot.map(({ evenement }) => evenement).sort(),
+    ["sessionStart", "userPromptTransformed", "preToolUse", "postToolUse", "postToolUseFailure"].sort(),
+  );
   for (const { evenement, commande } of [...claude, ...copilot]) {
     const r = sh(commande, sansNode({ CLAUDE_PROJECT_DIR: OUTILS }));
     assert.match(r.stderr, MESSAGE_SANS_NODE, `${evenement} : ${commande}`);

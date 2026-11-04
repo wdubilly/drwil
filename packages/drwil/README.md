@@ -141,7 +141,7 @@ Running `init` (new project or existing one) adds:
   each one with an ID (`SEC-xxx`, `QUA-xxx`), a one-line description and
   a pointer to the check that proves it.
 - **`.githooks/`** — Git hooks (`pre-commit` and friends) that run the
-  project's checks (`run-checks.mjs`) before every commit,
+  project's checks (`.githooks/run-checks.mjs`) before every commit,
   and the equivalent CI workflow (GitHub Actions or GitLab CI, your
   choice) so the same checks run server-side too.
 - **`docs/recipes/`** — reusable step-by-step procedures (add an API
@@ -294,7 +294,7 @@ go stale.
    **Check**: `unit-tests`
    ```
 
-4. **Write the work** — here, one test file `sum.test.mjs`:
+4. **Write the work** — here, one example test file named sum.test.mjs:
 
    ```js
    import { test } from "node:test";
@@ -349,7 +349,7 @@ A single command for every case:
   creates each layer's `AGENTS.md`.
 - **Existing project** (code, Git history, dependencies): detects the
   stack (subfolders become the layers) and the CI already in use
-  (`.github/workflows/`, `.gitlab-ci.yml`), and installs the kit on top
+  (`.github/workflows/` or the GitLab CI configuration), and installs the kit on top
   **without ever overwriting a project file**; no new Git repository.
   `/drwil-adopt` then builds the map `docs/architecture.md` from the real
   code; drwil keeps it current (the `architecture-map` check reports a
@@ -492,6 +492,42 @@ npx drwil attest QUA-015 --renew
 `--renew` replaces, on purpose, an attestation that is still valid (the history
 is kept). Same interactive terminal, same typing of the identifier: no `--yes`.
 
+### `attest-poll` — prepare a native human judgment
+
+```bash
+npx drwil attest-poll QUA-015 --tried "What the agent tried"
+```
+
+Prints JSON to pass unchanged to `AskUserQuestion` by default, or `ask_user`
+with `--tool copilot` / `--tool gemini`, or Codex's `request_user_input`
+with `--tool codex`; never writes an attestation.
+Requires local drwil and the selected tool's hooks (or dedicated Cursor client). The poll shows
+the criterion, automated results, the agent's declared trial and covered paths.
+Only the human's **Attest** response, read by the hook for the same session
+and tool call (Claude) or one-use nonce and exact poll (Copilot/Gemini/Codex),
+records the unchanged version-4 proof after rerunning the checks. Decline, no answer,
+prefilled or recommended choices, changed proofs and replays record nothing.
+Preparations expire after an hour; `--renew` deliberately prepares renewal.
+The provenance is declarative, not authenticated identity. Portable polls
+reserve one pending request per native session and never rearm a nonce.
+Codex also binds its native tool-call identifier. It requires trusted hooks
+reviewed with `/hooks` and an interactive root thread where `request_user_input`
+is available (Plan mode in the inspected source). Only the shared scripts,
+not Claude's settings, skills or agents, are installed for Codex alone.
+Cursor uses `--tool cursor` and `drwil cursor-acp`: a dedicated TTY client
+launching separately installed/authenticated `agent acp`, not a guessed hook
+payload or guaranteed integration with the usual Cursor chat. The client
+displays the native question and reads numbered human choices, with no default,
+response argument or redirected input. It shares the session/nonce/proof engine
+and binds Cursor's native `toolCallId`. Cursor-only installs receive shared
+scripts, not Claude settings. No new npm dependency or Cursor installation is
+performed by drwil. Permissions require human choices; plan approval and
+filesystem/terminal client methods are refused explicitly. See the adoption
+recipe for supported messages, limits, trust boundary and a concrete real-trial
+procedure. All five adapters have local fictitious tests, not real interactive trials.
+The terminal fallback remains available.
+See `docs/recipes/adopt-the-kit.md`.
+
 ### Agent / human workflow (`verify --agent`, `/drwil verify`)
 
 ```text
@@ -621,7 +657,7 @@ defaults below apply to a new install only.
 | `--layers <layers>` | Comma-separated layers | subfolders where a stack is detected, else none (new project: decided at scoping) |
 | `-d, --description <text>` | What the application does — fills `AGENTS.md` and `docs/architecture.md` | — |
 | `--tools <tools>` | AI tools to configure, CSV: `claude,codex,cursor,gemini,copilot` | all five |
-| `--ci <ci>` | CI workflow to generate: `none`, `github`, `gitlab` | the CI already in use (`.github/workflows/`, `.gitlab-ci.yml`), else `none` |
+| `--ci <ci>` | CI workflow to generate: `none`, `github`, `gitlab` | the CI already in use (GitHub workflows or GitLab CI), else `none` |
 | `--contract-prefixes <csv>` | Contract ID prefixes to use | `SEC,QUA` |
 | `--mode <mode>` | `minimal` or `full` | `full` |
 | `--no-git` | Skip `git init` and hook activation | — |

@@ -7,6 +7,29 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil attest-poll <ID> --tried <text> [--renew]` prepares a Claude Code
+  attestation poll without attesting. Only the human's tool response, read by
+  the hook and tied to the unchanged proof, can record it; refusals, prefilled
+  answers and replays cannot. The interactive terminal remains the fallback.
+- `attest-poll --tool copilot|gemini` prepares each tool's native question.
+  Their hooks correlate the exact poll and native session with a one-use
+  random nonce, atomically reserve/consume it, rerun checks and compare the
+  proof snapshot. Claude's adapter is unchanged. All three have fictitious
+  event tests only; real trials remain outstanding.
+- `attest-poll --tool codex` prepares `request_user_input`; native hooks bind
+  the session, call, one-use nonce, exact question and proof through the same
+  portable engine. Codex-only installs receive shared hook scripts without
+  Claude settings or agents. Official Codex 0.166.0 schemas and fictitious
+  events are tested, not a real interactive trial.
+- `attest-poll --tool cursor` and `drwil cursor-acp`: an explicitly authorised
+  dedicated human TTY client for Cursor's official stdio ACP question method.
+  It launches separately installed/authenticated `agent acp`, displays choices,
+  reads human input only, shares one-use session/nonce/proof reservations and
+  binds `toolCallId`. No response flag, redirected-input confirmation, new npm
+  dependency or automatic Cursor installation. This is a different interface,
+  not guaranteed integration with usual Cursor chat. Local fake-server tests
+  only; five-tool interactive parity is not established.
+
 - `drwil report` prints a privacy-safe kit defect report from the last local
   check snapshot, with CLI/installed versions and normalized built-in failure
   messages. No raw project data, file writes, check execution or forge calls;

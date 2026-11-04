@@ -541,7 +541,16 @@ drwil verify
 
 Attestation is deliberately an explicit human action.
 
-It requires an interactive terminal.
+The human uses an interactive terminal, or a native attestation poll
+prepared with `drwil attest-poll <CONTRACT_ID> --tried "What was tried"`
+(Claude Code by default; `--tool copilot|gemini|codex` for their native channels).
+Only the hook (or dedicated client below) reads the human's poll response; preparation never attests.
+Cursor additionally has `--tool cursor` and **`drwil cursor-acp`**, a dedicated
+human TTY client launching the separately installed/authenticated `agent acp`.
+It displays native questions and reads the human's choice itself, not through
+Cursor's undocumented hook mapping. This is a different interface, not guaranteed
+integration with the usual Cursor chat. All five adapters have local fictitious
+tests only; no real interactive trial has been completed.
 
 The agent must not execute it on behalf of the user.
 
@@ -775,8 +784,9 @@ can read directly. The names are the same whatever the project language.
 | `/drwil-progress` | Generate a static HTML progress dashboard |
 | `/drwil-release` | Tag and publish a GitHub release, or a candidate pre-release with its acceptance sheet, then promote it once a human approved it (optional module) |
 
-There is deliberately **no** `/drwil attest`: attestation is a human action,
-run by the human in their own terminal (`drwil attest <CONTRACT_ID>`).
+There is deliberately **no** agent-run `/drwil attest`: the human attests
+in their own terminal (`drwil attest <CONTRACT_ID>`) or answers a Claude Code
+`drwil-attest` poll read by the hook. See `docs/recipes/adopt-the-kit.md`.
 
 ### Working recipes
 

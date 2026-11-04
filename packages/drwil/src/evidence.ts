@@ -115,6 +115,11 @@ export interface Attestation {
   coverage?: Coverage;
   commit: string | null;
   automated: { id: string; status: string }[];
+  /** QUA-235 : corrélation locale, jamais une identité forte ni un faux identifiant d'appel. */
+  origin?:
+    | { source: "claude-poll"; sessionId: string; toolUseId: string; askedAt: string }
+    | { source: "codex-poll" | "cursor-poll"; sessionId: string; toolUseId: string; nonce: string; pollHash: string; askedAt: string }
+    | { source: "copilot-poll" | "gemini-poll"; sessionId: string; nonce: string; pollHash: string; askedAt: string };
 }
 
 /** Versioned folder of the attestations (the rest of .drwil/evidence/ is outside git). */

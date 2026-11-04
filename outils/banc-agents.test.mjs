@@ -217,10 +217,16 @@ test("QUA-063 : la matrice de compatibilité donne, pour chaque outil du banc, c
   const texte = iaFirst(join(RACINE, "packages", "drwil", "templates", "common", "base"));
   const depuis = texte.slice(texte.search(/^#+ Tool compatibility matrix$/m));
   const matrice = depuis.slice(0, depuis.search(/^#+ Workstream cycle parity$/m));
-  const parite = depuis.slice(matrice.length);
+  const parite = depuis.slice(matrice.length).split("\n## ")[0];
+  const attestation = texte.split("## Human attestation parity\n")[1]?.split("\n## ")[0] ?? "";
+  assert.match(attestation, /not delivered parity/, "le cadrage tous outils n'est pas une livraison");
   const lignes = (nom) => matrice.split("\n").filter((l) => l.startsWith(`| ${nom} |`));
-  for (const nom of ["Claude Code", "Copilot CLI", "Gemini CLI", "Codex", "Cursor"])
+  for (const nom of ["Claude Code", "Copilot CLI", "Gemini CLI", "Codex", "Cursor"]) {
     assert.equal(parite.split("\n").filter((l) => l.startsWith(`| ${nom} |`)).length, 1, `tableau de parité : une ligne pour ${nom}`);
+    const essais = attestation.split("\n").filter((l) => l.startsWith(`| ${nom} |`));
+    assert.equal(essais.length, 1, `tableau d'attestation : une ligne pour ${nom}`);
+    assert.match(essais[0], /\| not tested \|$/, `${nom} : aucun essai réel du sondage n'a été fait`);
+  }
   assert.doesNotMatch(parite, /\d{4}-\d{2}-\d{2} \(\d/, "le tableau de parité ne date aucun essai du banc : il n'en a pas fait");
   assert.match(matrice, /Codex stays "not tested"/, "Codex livré pour sa documentation, jamais annoncé fonctionnel");
   for (const [nom, essaye] of [

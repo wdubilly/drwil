@@ -4067,3 +4067,15 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/signaler-un-defaut-du-kit` ; implémentation `97da286`, rattachement des preuves `787710a`, attestation `936411c`, reprise `087cb41`.
 
 - **Preuve de clôture** : `docs/preuves/signaler-un-defaut-du-kit.md`.
+
+## 2026-11-04 — Attester depuis la conversation
+
+- **Décisions clés** : l'attestation humaine se fait par un sondage natif dont seule la réponse de l'outil enregistre l'attestation (Claude Code, Copilot CLI, Gemini CLI, Codex) ; pour Cursor, décision humaine du 2026-11-04 d'un client ACP dédié, `drwil cursor-acp`, sans hook deviné. Un moteur partagé lie session, appel natif ou nonce, question, preuve et heure, relance les contrôles et consomme le sondage une seule fois. `drwil attest` du terminal reste la voie de repli.
+- **Critères et preuves** : QUA-235 (cinq outils, refus et réponse de l'agent n'enregistrent rien), QUA-032 (sondage lisible avec critère, essai et fichiers couverts), QUA-081 (liaison au texte et à la preuve), QUA-236 (jugement utile) et QUA-063 (matrice par outil), ces deux derniers attestés par l'humain le 2026-11-04. Tests fictifs locaux uniquement.
+- **Périmètre élargi avant code** : le client ACP Cursor (`packages/drwil/src/cursor-acp.ts`, `packages/drwil/src/cursor-acp-session.ts`, `packages/drwil/src/cli-cursor.ts` et `packages/drwil/test/cursor-acp.test.mjs`), cadré seul dans `05d16fa`.
+- **Hooks modifiés** : hooks d'attestation de Claude Code, Copilot CLI, Gemini CLI et Codex ; entrée stdin Cursor qui refuse.
+- **Limites connues** : aucun essai interactif réel des cinq outils, matrice à « aucun » ; confiance déclarative, pas une identité forte face à un acteur local maître du code ou du PTY ; `.githooks/commit-msg` non exécutable préexistant. Le demandeur éprouvera l'attestation dans ses prochains développements et ouvrira une fiche si besoin : `docs/intentions/attestation-chat-essais-reels.md`.
+- **Intentions couvertes** : le volet « attester depuis le chat » de `docs/intentions/installation-fluide.md`.
+- **Clôturé par** : la branche `workstream/attester-depuis-le-chat`, PR #352.
+
+- **Preuve de clôture** : `docs/preuves/attester-depuis-le-chat.md`.

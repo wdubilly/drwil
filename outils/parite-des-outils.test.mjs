@@ -8,7 +8,20 @@ const TPL = "packages/drwil/templates/common";
 const lire = (f) => readFileSync(join(RACINE, f), "utf8");
 
 // Un mécanisme nouveau s'inscrit ici dans le chantier qui le crée (QUA-222).
-const MECANISMES = [{ nom: "attente bornée des commandes longues", marqueurs: [/wait-command\.mjs/, /while pgrep/] }];
+const MECANISMES = [
+  { nom: "attente bornée des commandes longues", marqueurs: [/wait-command\.mjs/, /while pgrep/] },
+  {
+    nom: "attestation humaine dans la conversation",
+    ecart: "docs/ia-first/6-limits-and-tool-compatibility.md",
+    marqueurs: [
+      /## Human attestation parity/,
+      /Declared gap: chat attestation/,
+      /Claude Code, Copilot CLI, Gemini CLI and Codex adapters/,
+      /dedicated Cursor ACP client/,
+      /no real interactive trial/,
+    ],
+  },
+];
 
 const PORTES = [
   `${TPL}/base/AGENTS.md`,
@@ -19,7 +32,7 @@ const PORTES = [
 
 test("QUA-222 : chaque mécanisme déclaré atteint AGENTS.md et les fichiers d'entrée natifs, et la matrice déclare l'écart", () => {
   for (const m of MECANISMES) {
-    for (const f of PORTES) {
+    for (const f of m.ecart ? [m.ecart] : PORTES) {
       for (const re of m.marqueurs) assert.match(lire(f), re, `${m.nom} : ${re} manque dans ${f}`);
     }
   }

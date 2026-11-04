@@ -29,8 +29,11 @@ import {
   worktreeChosen,
 } from "./start-poll.mjs";
 import { queueHook } from "./queue-poll.mjs";
+import { attestationHook } from "./attest-poll.mjs";
+import { portableAttestationMain } from "./portable-attest.mjs";
 
 export { humanAnswer, inPollOrder, mergeAuthorised, parallelChosen, scopeChoice, scopePoll, startPoll, worktreeChosen };
+export { attestationHook };
 
 // The folder holding this hook's .claude/, never the current folder: it follows the agent's `cd`.
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -118,6 +121,8 @@ async function main() {
   } catch {
     return 0;
   }
+  const attestation = await attestationHook(input, { root: ROOT, tell });
+  if (attestation !== null) return attestation;
   const poll = startPoll(input);
   if (!poll) return (await queueHook(input, { root: ROOT, lang: language(), tell })) ?? scopeHook(input);
   const event = input.hook_event_name;
@@ -175,7 +180,7 @@ async function main() {
 // still run the hook, not leave it silently idle.
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
-    process.exitCode = await main();
+    process.exitCode = ["copilot", "gemini", "codex", "cursor"].includes(process.argv[2]) ? await portableAttestationMain() : await main();
   } catch {
     // An error never blocks the tool: the state stays unchanged, the Git gate remains.
     process.exitCode = 0;

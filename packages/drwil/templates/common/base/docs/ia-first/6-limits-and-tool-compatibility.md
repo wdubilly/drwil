@@ -85,6 +85,115 @@ subagent, the state reminder tells the agent to stop after a closing and merge
 and to offer the human a new conversation; the next workstream starts there
 (`node .githooks/state.mjs next`) only on the human's explicit yes.
 
+## Human attestation parity
+
+The five tools selectable by `init --tools` are all targets for chat
+attestation, not just Claude Code. This is **not delivered parity**:
+`attest-poll` prepares Claude Code's question by default and each native
+`ask_user` with `--tool copilot` or `--tool gemini`, and Codex's
+`request_user_input` with `--tool codex`, or the dedicated Cursor client with
+`--tool cursor` and `drwil cursor-acp`. Claude keeps its
+session/tool-call check and `tool_response.answers`. The four portable adapters
+use a visible random nonce bound to the exact poll and native session instead
+of inventing a missing call identifier. A terminal attestation remains
+available to the human, but does not fulfil chat parity.
+
+Assessment on 2026-11-04; documentation inspection and local fixtures, **not an interactive
+trial**. The earlier hook/write bench above did not test attestation.
+
+| Tool | Delivered attestation adapter | Native human channel investigated | Fictitious attestation events tested | Real chat attestation trial |
+|---|---|---|---|---|
+| Claude Code | `AskUserQuestion`, `PreToolUse` / `PostToolUse`; session + tool-call correlation, one-use preparation | `tool_response.answers`, never answers in `tool_input` | yes, Claude-shaped fixtures only | not tested |
+| Copilot CLI | native `preToolUse` / `postToolUse`; one-use nonce, exact poll, native session and subagent context | `ask_user` arguments `question` / `choices`; `sessionId`, `toolArgs`, success `toolResult.textResultForLlm`; only the exact `User responded: <positive choice>` result is accepted | yes, documented-shape fictitious events and installed hook commands only | not tested |
+| Gemini CLI | native `BeforeTool` / `AfterTool` declarations for `ask_user`; same portable protocol | `session_id`, `tool_input.questions`; JSON string in `tool_response.llmContent`, only `answers["0"]` with the exact positive choice, no error | yes, documented-shape fictitious events and installed hook commands only | not tested |
+| Codex | native `PreToolUse` / `PostToolUse` for `request_user_input`; shared scripts only, one-use nonce plus native session, call and agent context | official 0.166.0 handler and registry: `tool_input.questions` with fixed ID `drwil_attest`; JSON string `tool_response`, only `answers["drwil_attest"].answers` with exactly one positive choice | yes, official-source-shaped fictitious events and installed hook command only; no binary launched | not tested |
+| Cursor | dedicated `drwil cursor-acp` human TTY client; not the usual Cursor chat or a native hook | official `agent acp` stdio JSON-RPC, `cursor/ask_question`, native session and `toolCallId`; client displays the exact nonce-bound poll and returns human-chosen `questionId` / `selectedOptionIds` | yes, local fake ACP subprocess plus controlled fictitious UI; no Cursor binary launched | not tested |
+
+### Portable protocol and remaining prerequisites
+
+- The human explicitly authorised the alternative correlation on 2026-11-03.
+  Preparation generates a random UUID nonce in the visible question. The
+  pre-hook recomputes the exact native arguments from the engine's summary
+  and atomically reserves one poll per native session, recording tool,
+  session, subagent context if provided, poll, exact proof snapshot and time.
+  A permanent local nonce tombstone prevents rearming it across tools or
+  sessions. The post-hook claims the reservation atomically before rerunning
+  checks, verifies its commitment, expiry (one hour), native context and exact
+  arguments, and accepts only the native human result. It compares the
+  snapshot before writing. Decline/absence/invalid result consumes the poll.
+  Concurrent calls or returns cannot overwrite a reservation or attest twice.
+  New polls require fresh JSON; no agent-interpreted chat phrase is evidence.
+- This is local correlation, **not strong identity**. It trusts the runtime,
+  hook code and local evidence files, just like the Claude adapter. A crash
+  can leave a session occupied: inspect it and open a fresh native session,
+  never manufacture an answer or delete nonce tombstones to reuse a poll.
+- Copilot CLI and Gemini CLI: perform the real interactive trial below.
+  A version exposing neither documented native session field is refused;
+  no fabricated session, environment-derived guess or call identifier is used.
+  Copilot denials use native `permissionDecision: "deny"` with exit 0.
+  No attestation is written without a valid reservation and native positive
+  result. Missing Node or disabled hooks cannot prepare or attest; a hook
+  timeout is not a successful validation or human trial.
+- Codex: inspected official source tag `rust-v0.166.0`, not a minimum-version
+  claim. `request_user_input` passes through the local function registry,
+  which emits both native hook events and serializes the handler's text
+  output as a JSON string. The adapter additionally binds `tool_use_id` and
+  provided `agent_id`. Trust the project and review exact hooks in `/hooks`;
+  `features.hooks` must be enabled. Use a root interactive Plan thread;
+  Default-mode availability depends on `default_mode_request_user_input`.
+  A cancelled handler may leave no post-event; expiry/fresh-session recovery
+  applies. The Windows command is declared, not interactively tried.
+- Cursor: the human explicitly chose the dedicated ACP client on 2026-11-04.
+  The official ACP request/response schema is used directly, not copied into
+  unestablished generic hook events. The client launches separately installed,
+  authenticated `agent acp`, orchestrates initialise/authenticate/new/prompt,
+  shows native questions and permissions and reads only its controlling human
+  TTY. It reuses the same reservation engine and also binds `toolCallId`;
+  disconnected/closed sessions cannot attest. No response flag or redirected
+  stdin is accepted. This is a new trusted client/interface with additional
+  maintenance, **not guaranteed integration with the usual Cursor chat**.
+  No new npm dependency or automatic Cursor installation. Supported messages,
+  explicit refusals, bounded resources, cleanup and the human real-trial
+  procedure are documented in `docs/recipes/adopt-the-kit.md`.
+  TTY/provenance checks are declarative, not strong identity against a local
+  actor controlling code or a PTY. Native hooks remain unestablished; no native
+  hook payload or real compatibility trial is claimed.
+- On the inspected workstation, Claude Code 2.1.317 and Copilot CLI
+  1.0.105 are installed; Gemini CLI, Codex and Cursor are not available
+  through their CLI names. Reading a version proves no question or hook.
+  Their absence here is not a claim that the tools cannot support this.
+
+For each tool, a human trial must record the tool version, date, trusted
+workspace setup, hook names actually fired, session/call correlation and
+the field carrying only the human response, using no production or
+personal data. First use a fictitious contract and explicitly choose to
+attest or decline. Before any claim of support, fixture tests must cover
+both outcomes, no answer, prefilled answers/defaults/recommendations,
+wrong session/call, replay, expiry and changed proof or covered files;
+then the real interactive trial must confirm the same boundary. An agent
+never records the human's readability judgment or replies to that poll.
+No live attestation was made during this assessment.
+
+Documentation consulted (2026-11-03 and ACP on 2026-11-04), not compatibility evidence:
+[Copilot hook payloads](https://docs.github.com/en/copilot/reference/hooks-reference),
+[Copilot SDK user-input contract](https://github.com/github/copilot-sdk/blob/main/nodejs/src/types.ts)
+and [official ask_user example](https://github.com/github/copilot-sdk/blob/main/go/internal/e2e/ask_user_e2e_test.go)
+(`question`, `choices`; the installed CLI 1.0.105 renderer explicitly handles
+the `User responded:` prefix; no real response captured),
+[Gemini hooks](https://geminicli.com/docs/hooks/reference/) and
+[ask_user](https://geminicli.com/docs/tools/ask-user/),
+[Codex hooks and tool coverage](https://developers.openai.com/codex/hooks),
+[Codex 0.166.0 question handler](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/core/src/tools/handlers/request_user_input.rs),
+[question schema](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/core/src/tools/handlers/request_user_input_spec.rs),
+[protocol](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/protocol/src/request_user_input.rs),
+[hook registry](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/core/src/tools/registry.rs),
+[Cursor hooks](https://cursor.com/docs/hooks) and
+[ACP question schema](https://cursor.com/docs/cli/acp#cursorask_question) and
+[ACP permission schema](https://agentclientprotocol.com/protocol/v1/tool-calls#requesting-permission).
+The official [Cursor install script](https://cursor.com/install) identifies
+the inspected [CLI distribution](https://downloads.cursor.com/lab/2026.10.22-27dcf5f/linux/x64/agent-cli-package.tar.gz);
+only its schema/dispatch code was read statically, never installed or run.
+
 ## Instructions reach every tool
 
 An instruction or mechanism the kit delivers reaches each chosen tool by the
@@ -99,3 +208,9 @@ Codex or Cursor, the `AGENTS.md` line is their only instruction. That a tool
 obeys the instruction is "not tested": no trial has measured it. A new
 mechanism is added to the parity test's list of mechanisms in the
 workstream that creates it.
+
+Declared gap: chat attestation has Claude Code, Copilot CLI, Gemini CLI and Codex adapters,
+and a dedicated Cursor ACP client, with local fictitious tests and
+no real interactive trial. Cursor requires the extra human client, not the usual chat.
+The "Human attestation parity" table records each unverified real channel;
+shared instructions or shared hook scripts do not prove interactive parity.
