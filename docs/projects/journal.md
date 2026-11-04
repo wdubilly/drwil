@@ -4077,3 +4077,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : aucun essai interactif réel des cinq outils, matrice à « aucun » ; confiance déclarative, pas une identité forte face à un acteur local maître du code ou du PTY ; `.githooks/commit-msg` non exécutable préexistant. Le demandeur éprouvera l'attestation dans ses prochains développements et ouvrira une fiche si besoin : `docs/intentions/attestation-chat-essais-reels.md`.
 - **Intentions couvertes** : le volet « attester depuis le chat » de `docs/intentions/installation-fluide.md`.
 - **Clôturé par** : la branche `workstream/attester-depuis-le-chat`, PR #352.
+
+- **Preuve de clôture** : `docs/preuves/attester-depuis-le-chat.md`.
