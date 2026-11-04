@@ -122,6 +122,8 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
+- [ ] [décision] [P1] Une mise à jour du kit sur un projet équipé ne bloque plus, `init` gère tout (cadré le
+  2026-11-04, piste A retenue) — `docs/projects/mise-a-jour-du-kit-sans-blocage.md`.
 - [ ] [IA] [P2] Ajouter ou adopter un contrat par commande, `drwil contracts add` et `adopt <ID>` (cadré le
   2026-10-30) — `docs/projects/commande-de-contrat.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
