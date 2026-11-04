@@ -219,8 +219,8 @@ la seule corrélation déjà autorisée. L'acceptation formelle des critères re
     La recette a été réduite à son plafond existant de 250 lignes.
   - `node outils/verifier-tests-contrats.mjs` : 650 tests rattachés, 0 problème ;
     `node outils/verifier-miroirs.mjs` : 187 comparaisons, 17 écarts déclarés, 0 problème.
-    `npm run installer-depot --silent` a actualisé les quatre miroirs concernés
-    (deux hooks, recette et matrice), sans modifier les unités Codex/Cursor non installées.
+    `npm run installer-depot --silent` a actualisé les cinq miroirs concernés
+    (trois hooks, recette et matrice), sans modifier les unités Codex/Cursor non installées.
   - `node outils/audit-dependances.mjs` : code 0, aucune high/critical,
     quatre moderate non bloquantes, aucune dépendance ajoutée.
   - `node .githooks/run-checks.mjs`, lancé via wait-command en fond : **code 0**,
@@ -240,6 +240,14 @@ la seule corrélation déjà autorisée. L'acceptation formelle des critères re
   branche ; le SHA poussé et son résultat CI sont consignés dans la PR #352 après suivi.
   La PR doit rester brouillon, sans fusion programmée et sans clôture ; seul l'essai
   humain sur la candidate empaquetée pourra dater le canal réel, pas les fixtures ici.
+- **Régression de relecture, même périmètre** : le refus Cursor était présent dans
+  l'adaptateur portable, mais l'entrée installée `prompt-hook` n'aiguillait pas encore
+  le nom `cursor` vers lui : elle retombait sur le décodeur Claude. Aucune attestation
+  Cursor n'était confirmée par ce repli, mais ce n'était pas le refus explicite documenté.
+  L'aiguillage est maintenant explicite ; `node --test --test-reporter=spec packages/drwil/test/cursor-acp.test.mjs` :
+  11 tests passés, 0 échec, dont un lancement réel de cette entrée **sur événement
+  fictif local** qui exige le code 2 et l'absence d'attestation. Source modifiée,
+  miroir installé, correction séparée sans réécriture du commit de réalisation.
 - **2026-11-04, cadrage seul avant code** : BUILD relu, même branche et PR #352 brouillon,
   arbre propre. Réaliser le client dédié, pas reprendre une recherche générale sur les hooks.
   Source officielle : https://cursor.com/docs/cli/acp (`agent acp`, JSON-RPC 2.0

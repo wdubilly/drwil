@@ -296,6 +296,12 @@ test("QUA-235 : Cursor, expiration, session/call liés, entrée stdin interdite 
       if (mode === "session") await hook(poll, "post", { response: { outcome: { outcome: "cancelled" } } });
     }
     assert.equal(await portableAttestationMain({ root: p.root, tool: "cursor", raw: JSON.stringify({ response: positif }) }), 2);
+    const entrée = spawnSync(process.execPath, [join(p.root, ".claude/hooks/prompt-hook.mjs"), "cursor"], {
+      input: JSON.stringify({ response: positif }),
+      encoding: "utf8",
+    });
+    assert.equal(entrée.status, 2, "l'entrée installée refuse Cursor au lieu de retomber sur le hook Claude");
+    assert.match(entrée.stderr, /aucune attestation enregistrée/);
   } finally {
     mock.restoreAll();
     p.dispose();
