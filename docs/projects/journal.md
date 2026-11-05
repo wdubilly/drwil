@@ -4099,3 +4099,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Vérification finale avant clôture** : `npx drwil verify --evidence` : `GOVERNANCE: PASS`.
 - **Limites connues** : modifier ou retirer un contrat par commande : `docs/intentions/modifier-ou-retirer-un-contrat.md`. Le « ask » sur `git push` : `docs/intentions/installation-fluide.md`.
 - **Clôturé par** : la branche `workstream/commande-de-contrat`.
+
+- **Preuve de clôture** : `docs/preuves/commande-de-contrat.md`.
