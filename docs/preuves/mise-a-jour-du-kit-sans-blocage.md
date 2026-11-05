@@ -1,7 +1,7 @@
 # Preuve de clôture — mise-a-jour-du-kit-sans-blocage
 
 **Clos le** : 2026-11-05
-**Commit vérifié** : `494b05096d` — verdict `drwil verify` : PASS
+**Commit vérifié** : `0735437b42` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:b2aa283fac3c5375`, acceptés par l'humain au lancement le 2026-11-04
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
