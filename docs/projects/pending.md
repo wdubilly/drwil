@@ -119,6 +119,9 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P1] Une limite se traite pendant le chantier ; hors cadre, l'humain choisit par un
+  sondage avant VERIFY (cadré le 2026-11-05) —
+  `docs/projects/limites-pendant-le-chantier.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
