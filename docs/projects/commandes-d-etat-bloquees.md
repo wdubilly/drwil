@@ -53,9 +53,9 @@ fait sortir `briefs` et `resume` dans un module chargé à la demande.
 - Chaque sous-commande de `node .githooks/state.mjs` (dont `briefs`, `briefs --json`, `resume`, `lot`,
   `start` vers un worktree), lancée dans un vrai processus sur un dépôt de test, rend la main avec
   sa sortie, jamais le code 13 ; la CLI installée depuis l'archive (`outils/tester-tarball.mjs`)
-  lance aussi `node .githooks/state.mjs briefs --json` dans le projet créé — contrat à créer
+  lance aussi `node .githooks/state.mjs briefs --json` dans le projet créé — `QUA-248`
 - Aucun hook du kit importé par un autre module ne fait d'await de premier niveau : un contrôle du
-  dépôt le refuse en nommant le fichier et la ligne — contrat à créer
+  dépôt le refuse en nommant le fichier et la ligne — `QUA-249`
 
 ## Contrats modifiés
 
