@@ -10,7 +10,10 @@ la personne qui l'utilise sur son projet. Le détail des commandes est dans
 jamais écraser un fichier du projet. `--dry-run` montre ce qui serait
 écrit. Une mise à jour rafraîchit ce que le kit a installé et que le projet
 n'a pas modifié ; sur un projet qui a déjà du code, `init` le rattache à une
-fiche « code existant » pour que le premier commit passe. Un fichier du kit
+fiche « code existant » pour que le premier commit passe. L'installation
+sur un dossier vide et la mise à jour d'un projet équipé sont commitées par
+`init` lui-même, sur leur propre branche ; une nouvelle installation pose la
+barrière de périmètre en mode bloquant. Un fichier du kit
 modifié à la main est signalé en dérive et repris par `drwil resolve-drift`
 (diff, confirmation, sauvegarde `.bak`).
 `drwil uninstall` ne retire que ce que le kit a installé et garde
@@ -44,13 +47,21 @@ changé (`run-checks`, `drwil verify`, le pre-push ; la CI rejoue tout,
 `--no-reuse` et `--replay-all` aussi), et la sortie dit repris ou rejoué ;
 `verify` peut jouer ses contrôles en parallèle, et chaque contrôle dit sa
 durée. `drwil doctor` diagnostique l'installation, `drwil contracts`
-valide le registre sans rien exécuter.
+valide le registre sans rien exécuter. `drwil verify --failed` ne rejoue
+que les contrats en échec (verdict partiel, jamais une preuve de clôture) ;
+`drwil doctor` dit le niveau de protection réellement tenu.
+`drwil contracts add` écrit un contrat propre au projet, `drwil contracts
+adopt <ID>` reprend un contrat du catalogue. `drwil report` imprime un
+rapport de défaut du kit sans donnée du projet.
 
 ## Attestation humaine (`drwil attest`)
 
 Un contrat `MANUAL` se valide par l'humain, dans son propre terminal ;
 l'attestation est versionnée et tombe quand un fichier qu'elle couvre
-change. Un agent ne l'exécute jamais.
+change. Un agent ne l'exécute jamais. `drwil attest-poll` prépare un
+sondage d'attestation dans l'outil de l'agent : seule la réponse de
+l'humain, lue par le hook, l'enregistre ; hors Claude Code (Copilot, Gemini,
+Codex, Cursor par `drwil cursor-acp`), ce n'est prouvé que par des tests.
 
 ## Cycle de chantier
 
@@ -63,8 +74,11 @@ mesurée ; un hook modifié sans être déclaré est signalé avant la clôture,
 qui le refuse. Un chantier peut se lancer dans son propre worktree, et une
 file de chantiers en parallèle, un worktree par fiche (au plus
 `maxParallel` à la fois, fiches dont les périmètres se recoupent
-refusées). Avec la fusion automatique, le retour au cadrage attend la
-fusion de la PR. Un chantier dont la PR révèle un défaut après la clôture se
+refusées). Avec la fusion automatique, programmée par `.githooks/merge-auto.mjs`, le
+retour au cadrage et la suite de la file attendent la fusion de la PR ; en
+cadrage, seule la réponse de l'humain au sondage `/drwil-scope` l'autorise.
+Une fiche à plusieurs lots se mène lot par lot (`node .githooks/state.mjs
+lot`). Un chantier dont la PR révèle un défaut après la clôture se
 rouvre d'une commande (`node .githooks/state.mjs reopen`). Une idée se note
 à tout moment sans changer d'activité (`/drwil-note`).
 
@@ -98,7 +112,8 @@ est tenu, outil par outil, avec sa date d'essai.
 - Release (`/drwil-release`) : examen du README, des fonctionnalités et de
   la carte avant le tag, tag et note GitHub avec le tarball, ou candidate
   avec sa fiche de recette, verdict humain puis promotion ; la note de
-  recette de chaque version arrive par une PR dédiée.
+  recette de chaque version arrive par une PR dédiée ; `release.mode` choisit
+  `solo` (publication directe, par défaut) ou `team` (candidate exigée).
 - Suivi de la CI d'une PR (`.githooks/pr-watch.mjs`) : verte, fusionnée ou
   rouge avec le contrôle en échec.
 

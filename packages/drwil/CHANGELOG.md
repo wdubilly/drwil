@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.11.0 (2026-11-05)
+
 ### Added
 
 - `drwil contracts add [ID] [--title] [--rule]` writes the skeleton of a
