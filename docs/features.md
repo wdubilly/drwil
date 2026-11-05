@@ -13,7 +13,10 @@ n'a pas modifié ; sur un projet qui a déjà du code, `init` le rattache à une
 fiche « code existant » pour que le premier commit passe. L'installation
 sur un dossier vide et la mise à jour d'un projet équipé sont commitées par
 `init` lui-même, sur leur propre branche ; une nouvelle installation pose la
-barrière de périmètre en mode bloquant. Un fichier du kit
+barrière de périmètre en mode bloquant. Un fichier que la mise à jour
+complète (ligne du `.gitignore`, bloc de la fiche de mécanique) garde son
+empreinte, au manifeste s'il était intact, à part s'il a été retouché : le
+commit de mise à jour passe la barrière. Un fichier du kit
 modifié à la main est signalé en dérive et repris par `drwil resolve-drift`
 (diff, confirmation, sauvegarde `.bak`).
 `drwil uninstall` ne retire que ce que le kit a installé et garde

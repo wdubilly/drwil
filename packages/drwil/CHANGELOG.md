@@ -5,6 +5,16 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Fixed
+
+- `drwil init` on an already equipped project no longer gets its update commit
+  refused by the scope gate when it completes a file of the kit manifest
+  (`.gitignore`, the kit mechanics brief): an intact file gets its new
+  fingerprint in the manifest; a file modified by hand keeps its install
+  fingerprint (never removed by `uninstall`) and its fingerprint after
+  completion is noted in `.drwil/completed-files.json`, accepted by the gate
+  for that update commit only.
+
 ## 0.11.0 (2026-11-05)
 
 ### Added
