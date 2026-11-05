@@ -181,5 +181,8 @@ export async function main(args, root, deps = {}) {
 
 // Root: the parent of the `.githooks/` holding this script, never the current folder.
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
-  process.exitCode = await main(process.argv.slice(2), join(dirname(fileURLToPath(import.meta.url)), ".."));
+  // Never a top-level await: a module loaded on demand that imports this file back would wait forever (QUA-249).
+  main(process.argv.slice(2), join(dirname(fileURLToPath(import.meta.url)), "..")).then((code) => {
+    process.exitCode = code;
+  });
 }

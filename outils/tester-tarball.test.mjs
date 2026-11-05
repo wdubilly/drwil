@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ATTENDUS, causeInstallation, comparerContenu, derouler, lireVerdict, principal } from "./tester-tarball.mjs";
+import { ATTENDUS, causeInstallation, comparerContenu, derouler, lireBriefs, lireVerdict, principal } from "./tester-tarball.mjs";
 
 let dossiers = [];
 afterEach(() => {
@@ -41,7 +41,7 @@ const VERDICT = {
 function simulateur(remplacer = {}) {
   const appels = [];
   const lancer = (cmd, args, { cwd }) => {
-    const etape = cmd === "npm" ? args[0] : args[0].replace(/^--/, "");
+    const etape = cmd === "npm" ? args[0] : cmd === process.execPath ? args[1] : args[0].replace(/^--/, "");
     appels.push(etape);
     if (remplacer[etape]) return remplacer[etape]({ cwd });
     if (etape === "pack") {
@@ -55,6 +55,7 @@ function simulateur(remplacer = {}) {
     }
     if (etape === "version") return { status: 0, stdout: "0.3.0\n" };
     if (etape === "init") return { status: 0, stdout: "IA-first scaffolding applied" };
+    if (etape === "briefs") return { status: 0, stdout: "[]\n" };
     return { status: 1, stdout: JSON.stringify(VERDICT) };
   };
   return { lancer, appels };
@@ -92,14 +93,23 @@ test("lireVerdict : MANUAL sur un projet neuf est attendu ; FAIL, ERROR, sortie 
   assert.match(lireVerdict({ status: 1, stdout: JSON.stringify(vide) }), /aucun contrat/);
 });
 
-test("derouler : pack, contenu, installation, --version, init (CI GitHub) puis verify", () => {
+test("QUA-248 : derouler : pack, contenu, installation, --version, init (CI GitHub), state.mjs briefs --json puis verify", () => {
   const { lancer, appels } = simulateur();
   const r = derouler({ paquet: "p", temp: dossier(), lancer });
   assert.deepEqual(r, {
     statut: "ok",
-    message: "tarball drwil-0.3.0.tgz : 8 fichier(s) attendus, installé, --version, init et verify OK",
+    message: "tarball drwil-0.3.0.tgz : 8 fichier(s) attendus, installé, --version, init, briefs et verify OK",
   });
-  assert.deepEqual(appels, ["pack", "install", "version", "init", "verify"]);
+  assert.deepEqual(appels, ["pack", "install", "version", "init", "briefs", "verify"]);
+});
+
+test("QUA-248 : lireBriefs : liste JSON acceptée ; code 13, autre code ou sortie illisible refusés", () => {
+  assert.equal(lireBriefs({ status: 0, stdout: '[{"path":"docs/projects/a.md"}]' }), null);
+  const bloque = { status: 13, stdout: "", stderr: "Warning: Detected unsettled top-level await\n" };
+  assert.equal(lireBriefs(bloque), "node .githooks/state.mjs briefs --json : code 13 Warning: Detected unsettled top-level await");
+  assert.equal(lireBriefs({ status: 1 }), "node .githooks/state.mjs briefs --json : code 1");
+  assert.match(lireBriefs({ status: 0, stdout: "" }), /sortie JSON illisible/);
+  assert.match(lireBriefs({ status: 0, stdout: "{}" }), /sortie JSON illisible/);
 });
 
 test("derouler : chaque étape qui casse arrête le contrôle, avec sa cause", () => {
@@ -120,6 +130,7 @@ test("derouler : chaque étape qui casse arrête le contrôle, avec sa cause", (
     "bin absent": [{ install: () => ({ status: 0 }) }, "echec", /champ bin du manifeste/],
     "mauvaise version": [{ version: () => ({ status: 0, stdout: "0.2.0" }) }, "echec", /« 0\.2\.0 », attendu 0\.3\.0/],
     "init en échec": [{ init: () => ({ status: 1, stderr: "boom" }) }, "echec", /drwil init a échoué \(code 1\) : boom/],
+    "briefs bloqué": [{ briefs: () => ({ status: 13, stderr: "unsettled" }) }, "echec", /briefs --json : code 13 unsettled/],
     "verify sans verdict": [{ verify: () => ({ status: 2, stdout: "" }) }, "echec", /JSON illisible/],
   };
   for (const [nom, [remplacer, statut, message]] of Object.entries(cas)) {
