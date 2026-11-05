@@ -1,7 +1,7 @@
 # Preuve de clôture — empreinte-des-fichiers-completes-par-init
 
 **Clos le** : 2026-11-05
-**Commit vérifié** : `3b31c35673` — verdict `drwil verify` : PASS
+**Commit vérifié** : `5d4788aeb8` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:06e600244e1d4a3a`, acceptés par l'humain au lancement le 2026-11-05
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
