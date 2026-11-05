@@ -5687,6 +5687,8 @@ test("QUA-211 : un contrôle réservé par runAt garde son attestation (champ d'
 async function projetAMettreAJour(lang = "fr") {
   const dir = tmp();
   git(dir, "init", "-q", "-b", "master");
+  // Sous Windows, git du système met core.autocrlf=true : un checkout réécrirait les fichiers en CRLF et fausserait empreintes et arbre propre.
+  git(dir, "config", "core.autocrlf", "false");
   await capture(() => init({ lang, targetDir: dir, name: "demo", git: false }));
   const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
   for (const f of [".githooks/pre-push", "docs/recipes/adopt-the-kit.md"]) {
