@@ -373,7 +373,13 @@ A single command for every case:
 - **Update** (project already equipped): creates what is missing,
   refreshes the kit mechanics (`.githooks/`, `.claude/hooks/`) that did not change since
   their installation, and reports — never overwrites — a file modified by
-  hand (see `resolve-drift` below). A project equipped by an older,
+  hand (see `resolve-drift` below). In a git repository it also commits the
+  update itself, on a `workstream/kit-update` branch cut from the main branch
+  (trailer `Drwil-Kit-Update`, accepted by the scope gate only for the files of
+  the kit manifest), so a project in SCOPING is not blocked by its own update.
+  It refuses, before writing anything and saying what to do, on a dirty tree,
+  without a git identity, or when the main branch is behind the remote; it ends
+  by saying what it did, what is left to decide and the next command. A project equipped by an older,
   French-named version is migrated first (see `CHANGELOG.md`).
 
 The project's settings (`.drwil/ia-first.json`: language, tools, layers,

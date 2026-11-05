@@ -1113,7 +1113,7 @@ test("QUA-138 : avec la fusion automatique, le projet installé ne revient en SC
 const cliDrwil = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
 const contrats = (dir, ...args) => spawnSync(process.execPath, [cliDrwil, "contracts", ...args], { cwd: dir, encoding: "utf8", env });
 
-test("QUA-237 : adopt déplace un contrat du catalogue vers le registre, sans préfixe, et le registre reste valide", async () => {
+test("QUA-240 : adopt déplace un contrat du catalogue vers le registre, sans préfixe, et le registre reste valide", async () => {
   for (const lang of ["fr", "en"]) {
     const dir = mkdtempSync(join(tmpdir(), "drwil-adopt-"));
     try {
@@ -1133,7 +1133,7 @@ test("QUA-237 : adopt déplace un contrat du catalogue vers le registre, sans pr
   }
 });
 
-test("QUA-238 : adopt refuse sans rien écrire un ID déjà défini, absent du catalogue, une ligne sans contrôle, un registre invalide ou un hors-cadrage en BUILD", async () => {
+test("QUA-241 : adopt refuse sans rien écrire un ID déjà défini, absent du catalogue, une ligne sans contrôle, un registre invalide ou un hors-cadrage en BUILD", async () => {
   const dir = mkdtempSync(join(tmpdir(), "drwil-adopt-refus-"));
   try {
     await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
@@ -1182,7 +1182,7 @@ test("QUA-238 : adopt refuse sans rien écrire un ID déjà défini, absent du c
   }
 });
 
-test("QUA-239 : add écrit le squelette d'un contrat propre, d'un ID libre, et le registre reste valide", async () => {
+test("QUA-242 : add écrit le squelette d'un contrat propre, d'un ID libre, et le registre reste valide", async () => {
   for (const lang of ["fr", "en"]) {
     const dir = mkdtempSync(join(tmpdir(), "drwil-add-"));
     try {
@@ -1206,7 +1206,7 @@ test("QUA-239 : add écrit le squelette d'un contrat propre, d'un ID libre, et l
   }
 });
 
-test("QUA-240 : add refuse sans rien écrire un ID déjà défini (registre ou catalogue), un ID invalide, un registre invalide ou un hors-cadrage en BUILD", async () => {
+test("QUA-243 : add refuse sans rien écrire un ID déjà défini (registre ou catalogue), un ID invalide, un registre invalide ou un hors-cadrage en BUILD", async () => {
   const dir = mkdtempSync(join(tmpdir(), "drwil-add-refus-"));
   try {
     await silence(() => init({ lang: "fr", targetDir: dir, git: false }));

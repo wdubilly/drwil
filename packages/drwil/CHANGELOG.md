@@ -17,6 +17,14 @@ closing commit; the release renames this section to its version.
   proof as its manual part) and refuses, writing nothing, an ID already
   defined, absent from the catalog, without proposed check, an invalid
   registry, or outside the active brief's scope in BUILD.
+- `drwil init` on an already equipped project now commits the update itself, on
+  its own `workstream/kit-update` branch cut from the main branch, with a
+  `Drwil-Kit-Update` trailer that the scope gate (local, pre-push, CI) accepts
+  only for the files of the kit manifest: a project in SCOPING is no longer
+  blocked by its own update, and a mechanics file edited by hand is still
+  refused. `init` refuses before writing, and says what to do, on a dirty tree,
+  without a git identity, or when the main branch is behind the remote; it ends
+  by saying what it did, what is left to decide and the next command.
 - `drwil attest-poll <ID> --tried <text> [--renew]` prepares a Claude Code
   attestation poll without attesting. Only the human's tool response, read by
   the hook and tied to the unchanged proof, can record it; refusals, prefilled

@@ -83,9 +83,17 @@ the gitignored local settings file of the same folder.
 
 On an empty folder, `drwil init` creates the git repository on the `workstream/kit-installation` branch and
 commits the kit itself, before enabling the hooks: with `scopeGate` blocking, the files of the kit (outside any
-brief) could not be committed in SCOPING, and the first workstream would start on a refused commit. A folder
-that is already a git repository is never committed by `init`; if git has no identity, `init` says so and the
+brief) could not be committed in SCOPING, and the first workstream would start on a refused commit. The first
+installation on a folder that is already a git repository is never committed by `init`; if git has no identity, `init` says so and the
 commit is left to you.
+
+### Updating an equipped project
+
+`drwil init` on a project that is already equipped commits the update itself, on a `workstream/kit-update` branch cut from the
+main branch, with a `Drwil-Kit-Update` trailer: the scope gate accepts it only for the files of the kit manifest, so a project
+in SCOPING is not blocked by its own update. It refuses, before writing anything and saying what to do, on a dirty tree,
+without a git identity, or when the main branch is behind the remote (`git fetch`, then fast-forward: `init` does not do it
+itself). Push the branch and open a pull request.
 
 ## 4. Build the tarball of a version
 

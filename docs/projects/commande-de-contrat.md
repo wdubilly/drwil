@@ -35,13 +35,13 @@ deux commandes, `drwil contracts add` et `drwil contracts adopt <ID>`.
 ## Critères d'acceptation
 
 - `drwil contracts adopt <ID>` déplace le contrat du catalogue vers le registre, sans préfixe, et écrit la
-  déclaration de son contrôle depuis le catalogue pour la pile — `QUA-237`
-- `drwil contracts add` crée le squelette d'un contrat propre au projet, d'un ID jamais défini — `QUA-239`
+  déclaration de son contrôle depuis le catalogue pour la pile — `QUA-240`
+- `drwil contracts add` crée le squelette d'un contrat propre au projet, d'un ID jamais défini — `QUA-242`
 - Un agent peut lancer l'ajout et l'adoption ; modifier ou retirer un contrat refuse sans le oui de l'humain —
   `QUA-050`
 - Pour l'adoption, un ID déjà défini, un contrat absent du catalogue ou un registre invalide est refusé, sans
-  rien écrire — `QUA-238`
-- Pour l'ajout, un ID déjà défini ou un registre invalide est refusé, sans rien écrire — `QUA-240`
+  rien écrire — `QUA-241`
+- Pour l'ajout, un ID déjà défini ou un registre invalide est refusé, sans rien écrire — `QUA-243`
 
 ## 2. Hors périmètre
 
@@ -83,8 +83,8 @@ Tranchées par le demandeur le 2026-10-30 :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-04) : lots 1 et 2 faits — `drwil contracts adopt <ID>` (`adoptContract`, contrats `QUA-237`, `QUA-238`) et
-  `drwil contracts add [ID] [--title] [--rule]` (`addContract`, contrats `QUA-239`, `QUA-240`) dans `packages/drwil/src/cli-contracts.ts`,
+- **Dernier état** (2026-11-04) : lots 1 et 2 faits — `drwil contracts adopt <ID>` (`adoptContract`, contrats `QUA-240`, `QUA-241`) et
+  `drwil contracts add [ID] [--title] [--rule]` (`addContract`, contrats `QUA-242`, `QUA-243`) dans `packages/drwil/src/cli-contracts.ts`,
   tests dans `packages/drwil/test/cycle.test.mjs`, recette d'adoption à jour. Choix : la « déclaration du contrôle » est le
   contrôle type du catalogue écrit en champs Preuve et Manuel ; une ligne au contrôle vide est refusée ; sans ID, `add` propose le
   prochain `PRJ-<n>` libre, avec des champs « À compléter ».

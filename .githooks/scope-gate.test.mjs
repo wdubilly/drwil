@@ -1,6 +1,7 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -705,4 +706,147 @@ test("QUA-214 : la consigne du compte rendu de fin de tâche cite les chemins aj
   for (const f of ["docs/ia-first/8-conduct-rules.md", `${gabarit}docs/ia-first/8-conduct-rules.md`])
     assert.match(lire(f), /End-of-task report.*the paths added to the brief's `scope` block with the reason/);
   for (const lang of ["fr", "en"]) assert.match(TEXTS[lang].widened("f.md", ["a"], []), /QUA-214/);
+});
+
+const sha = (texte) => createHash("sha256").update(texte).digest("hex");
+const MANIFESTE = ".drwil/installed-files.json";
+const ecrireManifeste = (racine, contenus) =>
+  ecrire(racine, MANIFESTE, JSON.stringify(Object.fromEntries(Object.entries(contenus).map(([f, c]) => [f, sha(c)])), null, 2) + "\n");
+
+/** Projet équipé : hooks et recette au manifeste, enregistrés dans le premier commit (branche main), puis branche de mise à jour. */
+function projetEquipe(config = { scopeGate: "blocking", layers: [], checks: [{ id: "a" }] }) {
+  const racine = depot();
+  const ancien = {
+    ".githooks/pre-push": "ancien hook\n",
+    ".githooks/obsolete.mjs": "obsolete\n",
+    "docs/recipes/x.md": "ancienne recette\n",
+  };
+  for (const [f, c] of Object.entries(ancien)) ecrire(racine, f, c);
+  ecrireManifeste(racine, ancien);
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify(config));
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "kit ancien");
+  git(racine, "checkout", "-q", "-b", "workstream/kit-update");
+  return racine;
+}
+
+/** Applique une mise à jour du kit : nouveau contenu des hooks, manifeste recalculé, obsolète retiré. */
+function appliquerMiseAJour(racine, { extra = {}, config } = {}) {
+  const nouveau = { ".githooks/pre-push": "nouveau hook\n", "docs/recipes/x.md": "nouvelle recette\n" };
+  for (const [f, c] of Object.entries(nouveau)) ecrire(racine, f, c);
+  rmSync(join(racine, ".githooks/obsolete.mjs"));
+  ecrireManifeste(racine, nouveau);
+  ecrire(racine, ".drwil/install.json", '{"format":1,"version":"2.0.0"}\n');
+  if (config) ecrire(racine, ".drwil/ia-first.json", JSON.stringify(config));
+  for (const [f, c] of Object.entries(extra)) ecrire(racine, f, c);
+  git(racine, "add", "-A");
+  return git(racine, "diff", "--cached", "--name-only").split("\n");
+}
+
+const MAJ = { DRWIL_KIT_UPDATE: "2.0.0" };
+const blocage = { cfg: { scopeGate: "blocking" } };
+const commiterMaj = (racine, trailer) =>
+  git(racine, "commit", "-q", "-m", "Mise à jour du kit", ...(trailer ? ["-m", `Drwil-Kit-Update: 2.0.0`] : []));
+
+test("QUA-238 : la mise à jour commitée par init passe la barrière au commit et au rejeu, en SCOPING bloquant", () => {
+  const racine = projetEquipe();
+  const fichiers = appliquerMiseAJour(racine);
+  assert.equal(
+    checkScope(racine, { ...blocage, staged: fichiers }).status,
+    "fail",
+    "sans le signal de init, 5 fichiers de mécanique sont refusés",
+  );
+  assert.deepEqual(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).problems, []);
+  commiterMaj(racine, true);
+  assert.deepEqual(checkScope(racine, { ...blocage, env: { DRWIL_BASE: "main" } }).problems, []);
+  assert.equal(checkScope(racine, { ...blocage, env: { DRWIL_BASE: "main" } }).status, "ok");
+});
+
+test("QUA-238 : un fichier de mécanique modifié à la main reste refusé en SCOPING, avec ou sans trailer, avec ou sans le signal de init", () => {
+  const racine = projetEquipe();
+  ecrire(racine, ".githooks/pre-push", "édité à la main\n");
+  git(racine, "add", "-A");
+  const attendu = /fichier\(s\) hors fiches commité\(s\) en SCOPING.*npx drwil init/;
+  assert.match(checkScope(racine, { ...blocage, staged: [".githooks/pre-push"] }).problems.join("\n"), attendu);
+  const signal = checkScope(racine, { ...blocage, staged: [".githooks/pre-push"], env: MAJ });
+  assert.equal(signal.status, "fail", "la variable ne vaut pas sans l'empreinte du manifeste");
+  commiterMaj(racine, true);
+  const rejeu = checkScope(racine, { ...blocage, env: { DRWIL_BASE: "main" } });
+  assert.equal(rejeu.status, "fail");
+  assert.match(rejeu.problems.join("\n"), /1 fichier\(s\) hors fiches sans trailer Drwil-Brief/);
+});
+
+test("QUA-238 : dans le commit de mise à jour, un fichier hors manifeste, un retrait d'un fichier modifié ou une garde coupée restent jugés", () => {
+  const cas = [
+    { nom: "fichier hors manifeste", options: { extra: { "src/x.js": "x\n" } }, motif: /1 fichier\(s\)/ },
+    { nom: "garde coupée", options: { config: { scopeGate: "off", layers: [], checks: [{ id: "a" }] } }, motif: /1 fichier\(s\)/ },
+    { nom: "réglage de garde retiré", options: { config: { layers: [], checks: [{ id: "a" }] } }, motif: /1 fichier\(s\)/ },
+    { nom: "contrôle du projet retiré", options: { config: { scopeGate: "blocking", layers: [] } }, motif: /1 fichier\(s\)/ },
+    {
+      nom: "contrôle du projet remplacé",
+      options: { config: { scopeGate: "blocking", layers: [], checks: [{ id: "b" }] } },
+      motif: /1 fichier\(s\)/,
+    },
+    {
+      nom: "garde ajoutée coupée",
+      options: { config: { scopeGate: "blocking", layers: [], checks: [{ id: "a" }], transitions: "agent" } },
+      motif: /1 fichier\(s\)/,
+    },
+  ];
+  for (const { nom, options, motif } of cas) {
+    const racine = projetEquipe();
+    const fichiers = appliquerMiseAJour(racine, options);
+    const r = checkScope(racine, { ...blocage, staged: fichiers, env: MAJ });
+    assert.equal(r.status, "fail", nom);
+    assert.match(r.problems.join("\n"), motif, nom);
+    commiterMaj(racine, true);
+    assert.equal(checkScope(racine, { ...blocage, env: { DRWIL_BASE: "main" } }).status, "fail", `${nom} (rejeu)`);
+  }
+  // Un obsolète modifié à la main depuis l'installation n'est pas un retrait du kit.
+  const racine = projetEquipe();
+  ecrire(racine, ".githooks/obsolete.mjs", "modifié\n");
+  git(racine, "commit", "-q", "-am", "retouche", "--allow-empty");
+  const fichiers = appliquerMiseAJour(racine);
+  assert.equal(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).status, "fail");
+});
+
+test("QUA-238 : la configuration recalculée par init, un contrôle et un réglage ajoutés passent ; la pile et les couches changent librement", () => {
+  const racine = projetEquipe();
+  const config = {
+    scopeGate: "blocking",
+    layers: ["app"],
+    stack: [{ path: "app" }],
+    checks: [{ id: "a" }, { id: "taille-kit" }],
+    release: { mode: "solo" },
+  };
+  const fichiers = appliquerMiseAJour(racine, { config });
+  assert.deepEqual(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).problems, []);
+  commiterMaj(racine, true);
+  assert.equal(checkScope(racine, { ...blocage, env: { DRWIL_BASE: "main" } }).status, "ok");
+});
+
+test("QUA-238 : un manifeste ou une configuration illisibles dans le commit de mise à jour ne reconnaissent aucun fichier", () => {
+  for (const [nom, ecrireCorps] of [
+    ["manifeste non JSON", (racine) => ecrire(racine, MANIFESTE, "{")],
+    ["manifeste tableau", (racine) => ecrire(racine, MANIFESTE, "[]")],
+    ["configuration non JSON", (racine) => ecrire(racine, ".drwil/ia-first.json", "{")],
+    ["configuration tableau", (racine) => ecrire(racine, ".drwil/ia-first.json", "[]")],
+    [
+      "contrôles devenus un objet",
+      (racine) => ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ scopeGate: "blocking", layers: [], checks: {} })),
+    ],
+  ]) {
+    const racine = projetEquipe();
+    const fichiers = appliquerMiseAJour(racine);
+    ecrireCorps(racine);
+    git(racine, "add", "-A");
+    const r = checkScope(racine, { ...blocage, staged: [...fichiers, ".drwil/ia-first.json"], env: MAJ });
+    assert.equal(r.status, "fail", nom);
+  }
+});
+
+test("QUA-238 : des contrôles absents avant la mise à jour ne se reconnaissent pas comme une liste complétée", () => {
+  const racine = projetEquipe({ scopeGate: "blocking", layers: [], checks: "aucun" });
+  const fichiers = appliquerMiseAJour(racine, { config: { scopeGate: "blocking", layers: [], checks: [{ id: "taille-kit" }] } });
+  assert.equal(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).status, "fail");
 });

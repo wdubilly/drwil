@@ -4079,3 +4079,15 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/attester-depuis-le-chat`, PR #352.
 
 - **Preuve de clôture** : `docs/preuves/attester-depuis-le-chat.md`.
+
+## 2026-11-05 — Mise à jour du kit sans blocage
+
+- **Décisions clés** : `drwil init` commite lui-même la mise à jour d'un projet équipé, sur la branche `workstream/kit-update`, avec le trailer `Drwil-Kit-Update` et les seuls fichiers du manifeste ; la barrière de périmètre reconnaît ce commit au pre-commit et au rejeu en CI, alors qu'une retouche à la main d'un fichier de mécanique reste refusée en SCOPING. `init` dit en fin de mise à jour ce qu'il a fait, ce qui reste à décider et la commande suivante. Aucun nouvel état ni mode de maintenance. Recettes, README, changelog, INSTALL, architecture et mécanique du kit mis à jour.
+- **Critères et preuves** : QUA-237 (mise à jour commitée sur sa branche, sans refus), QUA-238 (reconnue par la barrière en local et en CI, retouche manuelle refusée), QUA-239 (compte rendu de fin de mise à jour) ; QUA-206 modifié, validé par le demandeur le 2026-11-04. Tests de `.githooks/scope-gate.test.mjs` et `packages/drwil/test/kit.test.mjs`. QUA-218 et QUA-236 attestés par l'humain le 2026-11-05 (`8e4acc6`).
+- **Vérification finale avant clôture** : `node .githooks/run-checks.mjs` code 0, puis `node packages/drwil/bin/drwil.js verify --agent` : `Verdict: GOVERNANCE: PASS (exit 0)`.
+- **Périmètre élargi avant code** : `packages/drwil/src/kit-update.ts` et `packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs` (`packages/drwil/src/index.ts` était déjà à 193 lignes, plafond de 200), puis `docs/projects/kit-mechanics.md` du gabarit (QUA-214).
+- **Hooks modifiés** : `.githooks/scope-gate.mjs`, `.githooks/scope-gate-kit.mjs`, `.githooks/scope-gate-merge.mjs`, `.githooks/scope-gate-texts.mjs` (gabarit et copie du dépôt).
+- **Limites connues** : manifeste forgé jugé conforme par la barrière, absence de branche principale ou de HEAD et `--no-git`, branche `workstream/kit-update` déjà présente, fichiers modifiés à la main : `docs/intentions/adoption-et-init.md`. Hook `.githooks/commit-msg` non exécutable préexistant : intention existante `docs/intentions/commit-msg-non-executable.md`.
+- **Clôturé par** : la branche `workstream/mise-a-jour-du-kit-sans-blocage`.
+
+- **Preuve de clôture** : `docs/preuves/mise-a-jour-du-kit-sans-blocage.md`.

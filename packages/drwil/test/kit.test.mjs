@@ -5681,3 +5681,169 @@ test("QUA-211 : un contrôle réservé par runAt garde son attestation (champ d'
       assert.match(texte, attendu, page);
   }
 });
+
+// Projet équipé par une version antérieure (mécanique d'une version « 0.0.1 » simulée), commité sur master sans hooks,
+// puis mis à jour par `init` : même gestes qu'un utilisateur, sans réseau.
+async function projetAMettreAJour(lang = "fr") {
+  const dir = tmp();
+  git(dir, "init", "-q", "-b", "master");
+  // Sous Windows, git du système met core.autocrlf=true : un checkout réécrirait les fichiers en CRLF et fausserait empreintes et arbre propre.
+  git(dir, "config", "core.autocrlf", "false");
+  await capture(() => init({ lang, targetDir: dir, name: "demo", git: false }));
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  for (const f of [".githooks/pre-push", "docs/recipes/adopt-the-kit.md"]) {
+    appendFileSync(join(dir, f), f.endsWith(".md") ? "\nancienne version\n" : "\n# ancienne version\n");
+    manifeste[f] = createHash("sha256").update(read(dir, f)).digest("hex");
+  }
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2) + "\n");
+  writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version: "0.0.1", firstVersion: "0.0.1" }));
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-q", "-m", "kit ancien").status, 0);
+  return dir;
+}
+
+async function avecIdentite(identite, fn) {
+  const id = { GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@t", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@t" };
+  const avant = Object.fromEntries(Object.keys(id).map((k) => [k, process.env[k]]));
+  const reglages = {
+    GIT_CONFIG_GLOBAL: join(tmp(), "none"),
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_CONFIG_COUNT: "1",
+    GIT_CONFIG_KEY_0: "user.useConfigOnly",
+    GIT_CONFIG_VALUE_0: "true",
+  };
+  const sauve = Object.fromEntries(Object.keys(reglages).map((k) => [k, process.env[k]]));
+  Object.assign(process.env, identite ? id : reglages);
+  if (!identite) for (const k of Object.keys(id)) delete process.env[k];
+  try {
+    return await fn();
+  } finally {
+    for (const [k, v] of Object.entries({ ...avant, ...sauve })) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
+}
+
+const refuse = async (dir) => {
+  try {
+    await init({ lang: "fr", targetDir: dir, name: "demo" });
+  } catch (e) {
+    return e;
+  }
+  return assert.fail("refus attendu");
+};
+const etatDuDepot = (dir) =>
+  [git(dir, "rev-parse", "HEAD").stdout, git(dir, "status", "--porcelain").stdout, read(dir, ".drwil/install.json")].join("|");
+
+test("QUA-237 : init sur un projet équipé en SCOPING commite la mise à jour sur workstream/kit-update, la branche principale reste intacte", async () => {
+  await avecIdentite(true, async () => {
+    const dir = await projetAMettreAJour();
+    const principale = git(dir, "rev-parse", "master").stdout;
+    await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+    assert.equal(git(dir, "symbolic-ref", "--short", "HEAD").stdout.trim(), "workstream/kit-update");
+    assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", "arbre propre : rien de bloqué par la barrière");
+    assert.equal(git(dir, "rev-parse", "HEAD^").stdout, principale, "coupée depuis la branche principale");
+    assert.equal(git(dir, "rev-parse", "master").stdout, principale);
+    const message = git(dir, "log", "-1", "--format=%B").stdout;
+    assert.match(message, /^Mise à jour du kit drwil: 0\.0\.1 → \d+\.\d+\.\d+/);
+    assert.match(message, /^Drwil-Kit-Update: \d+\.\d+\.\d+$/m);
+    assert.ok(!read(dir, ".githooks/pre-push").includes("ancienne version"), "la mécanique est rafraîchie");
+    assert.equal(git(dir, "config", "core.hooksPath").stdout.trim(), ".githooks");
+    // Rien à commiter la fois suivante : retour sur la branche d'origine, branche supprimée.
+    git(dir, "checkout", "-q", "master");
+    git(dir, "merge", "-q", "--ff-only", "workstream/kit-update");
+    git(dir, "branch", "-q", "-d", "workstream/kit-update");
+    const relance = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+    assert.ok(
+      relance.some((l) => l.includes("Kit déjà à jour")),
+      relance.join("\n"),
+    );
+    assert.equal(git(dir, "branch", "--list", "workstream/kit-update").stdout.trim(), "");
+    assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "");
+  });
+});
+
+test("QUA-237 : init refuse avant d'écrire, en disant quoi faire : arbre sale, branche principale en retard, branche de mise à jour déjà là, sans identité git", async () => {
+  await avecIdentite(true, async () => {
+    const dir = await projetAMettreAJour();
+    const avant = etatDuDepot(dir);
+    writeFileSync(join(dir, "notes.txt"), "à moi\n");
+    await refuse(dir).then((e) => assert.match(e.message, /arbre de travail n'est pas propre.*git stash/));
+    rmSync(join(dir, "notes.txt"));
+    git(dir, "branch", "workstream/kit-update");
+    await refuse(dir).then((e) => assert.match(e.message, /« workstream\/kit-update » existe déjà.*git branch -D/));
+    git(dir, "branch", "-q", "-D", "workstream/kit-update");
+    // Principale en retard : un clone pousse un commit que le projet n'a pas encore récupéré.
+    const distant = tmp();
+    git(distant, "init", "-q", "--bare", "-b", "master");
+    git(dir, "remote", "add", "origin", distant);
+    assert.equal(git(dir, "push", "-q", "origin", "master").status, 0);
+    const clone = join(tmp(), "c");
+    assert.equal(git(distant, "clone", "-q", distant, clone).status, 0);
+    writeFileSync(join(clone, "autre.txt"), "autre\n");
+    git(clone, "add", "-A");
+    git(clone, "commit", "-q", "-m", "avance du distant");
+    assert.equal(git(clone, "push", "-q", "origin", "master").status, 0);
+    await refuse(dir).then((e) =>
+      assert.match(
+        e.message,
+        /« master » est en retard sur le distant.*git fetch origin && git checkout master && git merge --ff-only origin\/master/,
+      ),
+    );
+    assert.equal(etatDuDepot(dir), avant, "rien n'a été écrit ni changé de branche");
+    assert.equal(git(dir, "symbolic-ref", "--short", "HEAD").stdout.trim(), "master");
+    await avecIdentite(false, async () => {
+      git(dir, "merge", "-q", "--ff-only", "origin/master");
+      const apres = etatDuDepot(dir);
+      await refuse(dir).then((e) => assert.match(e.message, /aucune identité git.*git config user\.name/));
+      assert.equal(etatDuDepot(dir), apres);
+    });
+  });
+});
+
+test("QUA-238 : de bout en bout, la mise à jour de init passe la barrière du projet au rejeu ; une mécanique modifiée à la main reste refusée par le vrai hook", async () => {
+  await avecIdentite(true, async () => {
+    const dir = await projetAMettreAJour();
+    await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+    const barriere = await import(`${pathToFileURL(join(dir, ".githooks/scope-gate.mjs")).href}?${Date.now()}`);
+    const rejeu = barriere.checkScope(dir, { cfg: JSON.parse(read(dir, ".drwil/ia-first.json")), env: { DRWIL_BASE: "master" } });
+    assert.deepEqual([rejeu.status, rejeu.problems], ["ok", []]);
+    // La barrière est bloquante (installation neuve, QUA-154) : une édition à la main d'un hook, commitée par le vrai pre-commit.
+    appendFileSync(join(dir, ".githooks/pre-push"), "\n# à la main\n");
+    git(dir, "add", "-A");
+    const refus = git(dir, "commit", "-q", "-m", "retouche d'un hook");
+    assert.notEqual(refus.status, 0);
+    assert.match(refus.stdout + refus.stderr, /hors fiches commité\(s\) en SCOPING/);
+  });
+});
+
+test("QUA-239 : init dit, en fin de mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante ; fichiers modifiés à la main et hooks d'un autre outil signalés", async () => {
+  await avecIdentite(true, async () => {
+    const dir = await projetAMettreAJour();
+    // Un hook modifié à la main depuis l'installation : dérive, jamais réécrit.
+    appendFileSync(join(dir, ".githooks/pre-commit"), "\n# du projet\n");
+    git(dir, "commit", "-q", "-am", "hook du projet");
+    git(dir, "config", "core.hooksPath", ".husky");
+    const lignes = await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+    const sortie = lignes.join("\n");
+    assert.match(
+      sortie,
+      /Fait : mise à jour du kit vers \d+\.\d+\.\d+ commitée sur la branche « workstream\/kit-update » \(créée depuis « master »\), \d+ fichier\(s\)\./,
+    );
+    assert.match(sortie, /core\.hooksPath = \.husky\) : ils jugent ce commit à leur façon/);
+    assert.match(sortie, /Reste à décider : 1 fichier\(s\) modifié\(s\) à la main n'ont pas été réécrits — `npx drwil resolve-drift`/);
+    assert.match(sortie, /Reste à décider : relire la mise à jour, puis la fusionner par une pull request\./);
+    assert.match(
+      sortie,
+      /Commande suivante : `git push -u origin workstream\/kit-update`, puis `gh pr create --base master` ; une fois fusionnée, `git checkout master`\./,
+    );
+    assert.ok(sortie.lastIndexOf("Commande suivante") > sortie.indexOf("Fait :"), "le compte rendu vient en dernier");
+    assert.equal(git(dir, "config", "core.hooksPath").stdout.trim(), ".husky", "le réglage d'un autre outil n'est pas cassé");
+    const en = await projetAMettreAJour("en");
+    const anglais = (await capture(() => init({ lang: "en", targetDir: en, name: "demo" }))).join("\n");
+    assert.match(anglais, /Done: kit update to \d+\.\d+\.\d+ committed on branch "workstream\/kit-update" \(created from "master"\)/);
+    assert.match(anglais, /Left to decide: review the update, then merge it through a pull request\./);
+    assert.match(anglais, /Next command: `git push -u origin workstream\/kit-update`, then `gh pr create --base master`/);
+  });
+});

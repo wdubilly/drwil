@@ -10,6 +10,7 @@
 //   replayed against the scope of the brief named by its `Drwil-Brief` trailer, read in its
 //   parent. A commit is judged by its parent's rules: without a gate in the parent, it is not
 //   checked.
+// A kit update commit (trailer `Drwil-Kit-Update`, scope-gate-kit.mjs) is judged on its files outside the kit manifest only.
 // Severity: `scopeGate` setting (off | warning | blocking), warning if missing. A commit that changes the
 // scope block of the active brief always shows a warning, whatever the setting (QUA-213).
 import { realpathSync } from "node:fs";
@@ -19,6 +20,7 @@ import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
 import { git, reference, replaying, resolution, scopeChange } from "./scope-gate-merge.mjs";
 import { TRAILER, texts } from "./scope-gate-texts.mjs";
+import { KIT_ENV, KIT_TRAILER, nonKitFiles } from "./scope-gate-kit.mjs";
 
 // Attestations pass like briefs: a human proof already guarded by `drwil attest` (terminal
 // required, contract fingerprint), reviewed; subjecting them to the scope would force widening
@@ -95,7 +97,10 @@ function checkBranch(root, base, { outOfScope, cfg }) {
     const short = c.slice(0, 7);
     // The parent's rules: without a gate in the parent, the commit is not judged.
     if (git(root, ["cat-file", "-e", `${c}^:${MARKER}`]) === null) continue;
-    const files = git(root, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]).split("\n").filter(Boolean);
+    let files = git(root, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]).split("\n").filter(Boolean);
+    // A kit update (`drwil init`): the files its manifest explains are not judged, any other one is, as usual.
+    if (git(root, ["log", "-1", `--format=%(trailers:key=${KIT_TRAILER},valueonly)`, c]).trim())
+      files = nonKitFiles(root, `${c}^`, c, files);
     const subject = outsideBriefFiles(files, outOfScope);
     if (!subject.length) continue;
     const values = git(root, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c])
@@ -136,8 +141,10 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
     const { state } = readState(root);
     // The staged registry against HEAD's: `git show` fails (null) on a registry created or removed — a doubt.
     const addedOnly = (f) => isRegistry(f, cfg) && contractsAddedOnly(git(root, ["show", `HEAD:${f}`]), git(root, ["show", `:${f}`]));
+    // `init` sets KIT_ENV for the commit of a kit update only: the files its manifest explains are not judged.
+    const files = resolution(root, staged);
     problems = checkIndex({
-      files: resolution(root, staged),
+      files: env[KIT_ENV] ? nonKitFiles(root, "HEAD", null, files) : files,
       state,
       patterns: patternsAt(root, "HEAD", state.active_brief, cfg),
       outOfScope,
