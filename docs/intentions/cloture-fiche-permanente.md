@@ -3,6 +3,12 @@
 **Statut** : à cadrer — limite constatée le 2026-10-26 à la clôture de
 l'entretien courant pour la montée de version 0.9.0 (PR #258).
 
+**Revu le 2026-11-05** : après la 0.11.0 (PR #356, close à la main), décision du demandeur :
+une fiche jetable par montée de version, close par `node .githooks/close.mjs` (la fiche reste
+dans l'historique Git, dans la PR et dans sa preuve `docs/preuves/`). Depuis le 2026-10-24,
+l'entretien courant ne sert plus qu'aux montées de version. La reconnaissance d'une fiche
+permanente est reportée tant qu'aucun projet adoptant n'en a besoin.
+
 ## Besoin
 
 `node .githooks/close.mjs` (clôture en un geste, QUA-048) traite toute fiche

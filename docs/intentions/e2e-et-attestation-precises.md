@@ -2,6 +2,9 @@
 
 **Statut** : traitée en grande partie le 2026-10-30 (définition de l'e2e par forme de projet, niveaux de garantie de l'attestation : `QUA-195`, `QUA-196`, `QUA-197`). Reste la seule option d'identité forte pour une équipe (commits signés, revue GitHub authentifiée), non faite : décision du 2026-10-30, seule la documentation des niveaux est livrée.
 
+**Revu le 2026-11-05** : la première question (définition de l'e2e par forme de projet) est
+tranchée et livrée (QUA-195, QUA-196) ; seule la seconde (identité forte pour une équipe) reste ouverte.
+
 ## Besoin
 
 Deux preuves sont à préciser. L'exigence ne change pas : il n'y a ni exception
