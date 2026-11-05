@@ -4091,3 +4091,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/mise-a-jour-du-kit-sans-blocage`.
 
 - **Preuve de clôture** : `docs/preuves/mise-a-jour-du-kit-sans-blocage.md`.
+
+## 2026-11-05 — Ajouter ou adopter un contrat par commande
+
+- **Décisions clés** : deux commandes dans `packages/drwil/src/cli-contracts.ts`. `drwil contracts adopt <ID>` déplace le contrat du catalogue vers le registre, sans préfixe, et écrit le contrôle type du catalogue en champs Preuve et Manuel ; une ligne au contrôle vide est refusée. `drwil contracts add [ID] [--title] [--rule]` écrit le squelette d'un contrat propre ; sans ID, il propose le prochain `PRJ-<n>` libre, champs « À compléter ». Un agent peut ajouter et adopter ; modifier ou retirer un contrat reste un geste humain. Recette d'adoption, README, changelog et architecture mis à jour.
+- **Critères et preuves** : QUA-240 (adoption), QUA-241 (adoption refusée sans rien écrire), QUA-242 (ajout), QUA-243 (ajout refusé sans rien écrire) ; tests de `packages/drwil/test/cycle.test.mjs`. Les attestations humaines de QUA-234 et QUA-236 du 2026-11-05 sont commitées (`30f579e`).
+- **Vérification finale avant clôture** : `npx drwil verify --evidence` : `GOVERNANCE: PASS`.
+- **Limites connues** : modifier ou retirer un contrat par commande : `docs/intentions/modifier-ou-retirer-un-contrat.md`. Le « ask » sur `git push` : `docs/intentions/installation-fluide.md`.
+- **Clôturé par** : la branche `workstream/commande-de-contrat`.
