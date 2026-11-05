@@ -7,6 +7,16 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil contracts add [ID] [--title] [--rule]` writes the skeleton of a
+  contract of the project's own (next free `PRJ-<n>` without an ID) and
+  refuses, writing nothing, an ID already defined in the registry or the
+  catalog, a malformed ID, an invalid registry, or outside the active brief's
+  scope in BUILD.
+- `drwil contracts adopt <ID>` moves a contract from the catalog to the
+  registry in one command (no prefix, catalog line removed, the catalog's
+  proof as its manual part) and refuses, writing nothing, an ID already
+  defined, absent from the catalog, without proposed check, an invalid
+  registry, or outside the active brief's scope in BUILD.
 - `drwil init` on an already equipped project now commits the update itself, on
   its own `workstream/kit-update` branch cut from the main branch, with a
   `Drwil-Kit-Update` trailer that the scope gate (local, pre-push, CI) accepts

@@ -1109,3 +1109,142 @@ test("QUA-138 : avec la fusion automatique, le projet installé ne revient en SC
     }
   }
 });
+
+const cliDrwil = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
+const contrats = (dir, ...args) => spawnSync(process.execPath, [cliDrwil, "contracts", ...args], { cwd: dir, encoding: "utf8", env });
+
+test("QUA-240 : adopt déplace un contrat du catalogue vers le registre, sans préfixe, et le registre reste valide", async () => {
+  for (const lang of ["fr", "en"]) {
+    const dir = mkdtempSync(join(tmpdir(), "drwil-adopt-"));
+    try {
+      await silence(() => init({ lang, targetDir: dir, git: false }));
+      const catalogue = "docs/contracts-catalog.md";
+      assert.match(lire(dir, catalogue), /^\|\s*catal(?:ogue|og):QUA-005\b/m);
+      const r = contrats(dir, "adopt", "QUA-005");
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.match(lire(dir, "docs/contracts.md"), /^## QUA-005 — .+\n\*\*(Règle|Rule)\*\* : .+\n(.*\n)*\*\*(Manuel|Manual)\*\* : .+/m);
+      assert.doesNotMatch(lire(dir, catalogue), /catal(?:ogue|og):QUA-005\b/);
+      const liste = contrats(dir);
+      assert.equal(liste.status, 0, liste.stdout + liste.stderr);
+      assert.match(liste.stdout, /QUA-005/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    }
+  }
+});
+
+test("QUA-241 : adopt refuse sans rien écrire un ID déjà défini, absent du catalogue, une ligne sans contrôle, un registre invalide ou un hors-cadrage en BUILD", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-adopt-refus-"));
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
+    const fichiers = ["docs/contracts.md", "docs/contracts-catalog.md"];
+    const etat = () => fichiers.map((f) => lire(dir, f));
+    const refuse = (id, motif) => {
+      const avant = etat();
+      const r = contrats(dir, "adopt", id);
+      assert.notEqual(r.status, 0, r.stdout);
+      assert.match(r.stderr, motif);
+      assert.deepEqual(etat(), avant, "rien n'est écrit");
+    };
+    refuse("ZZZ-999", /absent du catalogue/);
+    refuse("pas-un-id", /identifiant de contrat attendu/);
+
+    const registre = lire(dir, "docs/contracts.md");
+    writeFileSync(join(dir, "docs/contracts.md"), `${registre}\n## QUA-002 — déjà là\n**Règle** : exigence.\n**Manuel** : relue.\n`);
+    refuse("QUA-002", /déjà défini/);
+
+    const catalogue = lire(dir, "docs/contracts-catalog.md");
+    writeFileSync(join(dir, "docs/contracts-catalog.md"), `${catalogue}\n| catalogue:QUA-900 | Règle sans contrôle. | tout | |\n`);
+    refuse("QUA-900", /aucun contrôle pour cette pile/);
+
+    writeFileSync(join(dir, "docs/contracts.md"), `${registre}\n## QUA-901 — cassé\n**Règle** : exigence.\n**Contrôle** : \`inconnu\`\n`);
+    refuse("QUA-003", /registre docs\/contracts\.md invalide/);
+    writeFileSync(join(dir, "docs/contracts.md"), registre);
+
+    const fiche = "docs/projects/essai.md";
+    const cadrer = (fichiersFiche) => {
+      writeFileSync(
+        join(dir, fiche),
+        `# Projet : essai\n\n**Statut** : cadré le 2026-10-15.\n\n<!-- scope\nfiles:\n${fichiersFiche.map((f) => `  - ${f}`).join("\n")}\n-->\n`,
+      );
+      writeFileSync(
+        join(dir, ".drwil/state.json"),
+        JSON.stringify({ version: 1, activity: "BUILD", active_brief: fiche, active_request: null, since: null }),
+      );
+    };
+    cadrer(["docs/contracts.md"]);
+    refuse("QUA-003", /hors du cadrage de la fiche active/);
+    cadrer(["docs/contracts.md", "docs/contracts-catalog.md"]);
+    const r = contrats(dir, "adopt", "QUA-003");
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+  } finally {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-242 : add écrit le squelette d'un contrat propre, d'un ID libre, et le registre reste valide", async () => {
+  for (const lang of ["fr", "en"]) {
+    const dir = mkdtempSync(join(tmpdir(), "drwil-add-"));
+    try {
+      await silence(() => init({ lang, targetDir: dir, git: false }));
+      const premier = contrats(dir, "add", "--title", "Mon invariant", "--rule", "Une exigence propre.");
+      assert.equal(premier.status, 0, premier.stdout + premier.stderr);
+      assert.match(
+        lire(dir, "docs/contracts.md"),
+        /^## PRJ-1 — Mon invariant\n\*\*(Règle|Rule)\*\* : Une exigence propre\.\n(.*\n)*\*\*(Manuel|Manual)\*\* : .+/m,
+      );
+      const second = contrats(dir, "add", "ACME-7");
+      assert.equal(second.status, 0, second.stdout + second.stderr);
+      assert.match(lire(dir, "docs/contracts.md"), /^## ACME-7 — /m);
+      assert.match(contrats(dir, "add").stdout, /PRJ-2/);
+      const liste = contrats(dir);
+      assert.equal(liste.status, 0, liste.stdout + liste.stderr);
+      assert.match(liste.stdout, /PRJ-1/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    }
+  }
+});
+
+test("QUA-243 : add refuse sans rien écrire un ID déjà défini (registre ou catalogue), un ID invalide, un registre invalide ou un hors-cadrage en BUILD", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-add-refus-"));
+  try {
+    await silence(() => init({ lang: "fr", targetDir: dir, git: false }));
+    const fichiers = ["docs/contracts.md", "docs/contracts-catalog.md"];
+    const etat = () => fichiers.map((f) => lire(dir, f));
+    const refuse = (args, motif) => {
+      const avant = etat();
+      const r = contrats(dir, "add", ...args);
+      assert.notEqual(r.status, 0, r.stdout);
+      assert.match(r.stderr, motif);
+      assert.deepEqual(etat(), avant, "rien n'est écrit");
+    };
+    refuse(["QUA-002"], /déjà défini/);
+    refuse(["QUA-005"], /déjà défini/);
+    refuse(["pas-un-id"], /identifiant de contrat attendu/);
+
+    const registre = lire(dir, "docs/contracts.md");
+    writeFileSync(join(dir, "docs/contracts.md"), `${registre}\n## QUA-901 — cassé\n**Règle** : exigence.\n**Contrôle** : \`inconnu\`\n`);
+    refuse(["PRJ-1"], /registre docs\/contracts\.md invalide/);
+    writeFileSync(join(dir, "docs/contracts.md"), registre);
+
+    const fiche = "docs/projects/essai.md";
+    const cadrer = (fichiersFiche) => {
+      writeFileSync(
+        join(dir, fiche),
+        `# Projet : essai\n\n**Statut** : cadré le 2026-10-15.\n\n<!-- scope\nfiles:\n${fichiersFiche.map((f) => `  - ${f}`).join("\n")}\n-->\n`,
+      );
+      writeFileSync(
+        join(dir, ".drwil/state.json"),
+        JSON.stringify({ version: 1, activity: "BUILD", active_brief: fiche, active_request: null, since: null }),
+      );
+    };
+    cadrer(["docs/projects/essai.md"]);
+    refuse(["PRJ-1"], /hors du cadrage de la fiche active/);
+    cadrer(["docs/contracts.md"]);
+    const r = contrats(dir, "add", "PRJ-1");
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+  } finally {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});

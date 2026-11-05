@@ -122,8 +122,6 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
-- [ ] [IA] [P2] Ajouter ou adopter un contrat par commande, `drwil contracts add` et `adopt <ID>` (cadré le
-  2026-10-30) — `docs/projects/commande-de-contrat.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
   qui signale un squash (cadré le 2026-10-26 ; à lancer après
   `docs/projects/journal.md`) —
@@ -207,10 +205,12 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 ### Adoption, installation, documentation
 
 - [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
-  d'autorisation à chaque commande, avec le worktree toujours proposé,
-  l'attestation depuis le chat et l'ajout ou l'adoption d'un contrat par
-  commande (demandes des 2026-10-25 et 2026-10-27) —
+  d'autorisation à chaque commande : reste le réexamen du « ask » sur
+  `git push`, `merge` et `rebase` (demande du 2026-10-25) —
   `docs/intentions/installation-fluide.md`.
+- [ ] [décision] Modifier ou retirer un contrat par commande, geste humain
+  (limite du chantier commande-de-contrat, 2026-11-05) —
+  `docs/intentions/modifier-ou-retirer-un-contrat.md`.
 - [ ] [décision] L'adoption et `init` sur un projet réel : code existant,
   couche d'un dossier apparu après l'installation, dépôt git existant avant
   `init` — `docs/intentions/adoption-et-init.md`.

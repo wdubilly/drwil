@@ -603,6 +603,29 @@ Lists each contract with its checks and manual part, without running
 anything. Exit 0: valid registry; 2: invalid (unknown check, missing rule
 or proof, duplicate).
 
+```bash
+npx drwil contracts adopt <ID>
+```
+
+Moves a catalog contract (`docs/contracts-catalog.md`, line `catalog:<ID>`)
+into the project's registry, without the prefix, with the proof the catalog
+proposes written as its `Manual` part (wire a real check afterwards). It
+refuses, writing nothing, an ID already defined, an ID absent from the
+catalog, a catalog line with no proposed check, an invalid registry, and, in
+BUILD, a registry or catalog outside the active brief's scope; an agent may
+run it. Modifying or removing a contract stays a human gesture (QUA-050).
+
+```bash
+npx drwil contracts add [ID] [--title <text>] [--rule <text>]
+```
+
+Writes the skeleton of a contract of the project's own at the end of the
+registry (`To complete` fields unless `--title`/`--rule` are given; without
+an ID, the next free `PRJ-<n>`). It refuses, writing nothing, an ID already
+defined in the registry or the catalog, a malformed ID, an invalid registry,
+and, in BUILD, a registry outside the active brief's scope; an agent may run
+it. Complete the rule, scope and proof, then wire a check.
+
 ### `resolve-drift` — resolve mechanics drift
 
 ```bash

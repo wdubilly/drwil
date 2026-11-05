@@ -2316,6 +2316,50 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : attester-depuis-le-chat — le sondage est lisible et ne demande que le jugement utile.
 **Raison** : La présence automatique des champs ne prouve pas que le jugement demandé est compréhensible.
 
+## QUA-240 — `drwil contracts adopt` déplace un contrat du catalogue vers le registre
+**Règle** : `drwil contracts adopt <ID>` retire du catalogue la ligne `catalogue:<ID>` et écrit dans le registre du projet une section du même ID, sans préfixe, avec la règle et le périmètre du catalogue et, comme preuve, le contrôle type du catalogue (champs Preuve et Manuel) ; le registre reste valide pour `drwil contracts`. Un agent peut la lancer ; modifier ou retirer un contrat reste un geste humain (QUA-050).
+**Périmètre** : `drwil contracts adopt`, registre et catalogue du projet de la commande (le dépôt ou le livrable, jamais l'autre : QUA-018).
+**Source de vérité** : `packages/drwil/src/cli-contracts.ts` (`adoptContract`).
+**Preuve** : test sur un projet installé, en français et en anglais : section écrite sans préfixe, ligne retirée du catalogue, `drwil contracts` valide.
+**Contrôle** : `tests-qua-240`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Couvre** : `packages/drwil/src/cli-contracts.ts`, `packages/drwil/src/cli-texts.ts`
+**Origine** : commande-de-contrat — `drwil contracts adopt <ID>` déplace le contrat du catalogue vers le registre, sans préfixe, et écrit la déclaration de son contrôle depuis le catalogue pour la pile
+**Raison** : Adopter un contrat obligeait à recopier une ligne de tableau à la main et à la retirer du catalogue.
+
+## QUA-241 — `drwil contracts adopt` refuse sans rien écrire
+**Règle** : `drwil contracts adopt <ID>` refuse, sans écrire ni le registre ni le catalogue, un ID déjà défini dans le registre, un ID absent du catalogue, une ligne du catalogue sans contrôle proposé pour la pile, un registre invalide et, en BUILD, un registre ou un catalogue hors du cadrage de la fiche active (QUA-172) ; le refus dit pourquoi.
+**Périmètre** : `drwil contracts adopt`.
+**Source de vérité** : `packages/drwil/src/cli-contracts.ts` (`adoptContract`).
+**Preuve** : test des cinq refus, fichiers inchangés, puis adoption acceptée une fois le cadrage élargi.
+**Contrôle** : `tests-qua-241`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Couvre** : `packages/drwil/src/cli-contracts.ts`, `packages/drwil/src/cli-texts.ts`
+**Origine** : commande-de-contrat — un ID déjà défini, un contrat absent du catalogue ou un registre invalide est refusé, sans rien écrire
+**Raison** : Une commande qui écrit deux fichiers ne doit jamais en laisser un à moitié modifié.
+
+## QUA-242 — `drwil contracts add` écrit le squelette d'un contrat propre au projet
+**Règle** : `drwil contracts add [ID]` ajoute au registre du projet une section d'un ID jamais défini (ni au registre ni au catalogue ; sans ID, le prochain `PRJ-<n>` libre) avec sa règle et son titre s'ils sont donnés, sinon des champs « À compléter » ; le registre reste valide pour `drwil contracts`. Un agent peut la lancer ; modifier ou retirer un contrat reste un geste humain (QUA-050).
+**Périmètre** : `drwil contracts add`, registre du projet de la commande (le dépôt ou le livrable, jamais l'autre : QUA-018).
+**Source de vérité** : `packages/drwil/src/cli-contracts.ts` (`addContract`).
+**Preuve** : test sur un projet installé, en français et en anglais : section écrite, ID proposé puis ID explicite, `drwil contracts` valide.
+**Contrôle** : `tests-qua-242`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Couvre** : `packages/drwil/src/cli-contracts.ts`, `packages/drwil/src/cli-texts.ts`
+**Origine** : commande-de-contrat — `drwil contracts add` crée le squelette d'un contrat propre au projet, d'un ID jamais défini
+**Raison** : Écrire un contrat propre obligeait à recopier la structure d'une section à la main.
+
+## QUA-243 — `drwil contracts add` refuse sans rien écrire
+**Règle** : `drwil contracts add` refuse, sans rien écrire, un ID déjà défini dans le registre ou dans le catalogue, un ID mal formé, un registre invalide et, en BUILD, un registre hors du cadrage de la fiche active (QUA-172) ; le refus dit pourquoi.
+**Périmètre** : `drwil contracts add`.
+**Source de vérité** : `packages/drwil/src/cli-contracts.ts` (`addContract`).
+**Preuve** : test des refus, fichiers inchangés, puis ajout accepté une fois le cadrage élargi.
+**Contrôle** : `tests-qua-243`
+**Tests** : `packages/drwil/test/cycle.test.mjs`
+**Couvre** : `packages/drwil/src/cli-contracts.ts`, `packages/drwil/src/cli-texts.ts`
+**Origine** : commande-de-contrat — un ID déjà défini ou un registre invalide est refusé, sans rien écrire
+**Raison** : Un ID défini deux fois ou un registre cassé rendrait tous les contrats illisibles.
+
 ## QUA-237 — `drwil init` sur un projet équipé commite la mise à jour sur sa branche dédiée, ou refuse avant d'écrire
 **Règle** : `drwil init` sur un projet équipé (manifeste présent) dans un dépôt git coupe la branche `workstream/kit-update` depuis la branche principale (origin/HEAD, à défaut master ou main), applique la mise à jour et la commite lui-même (message en français ou anglais selon le projet, trailer `Drwil-Kit-Update: <version>`, hooks du projet joués, aucun contournement) : en SCOPING, l'arbre est propre ensuite et aucun commit n'est refusé par la barrière de périmètre. Avant d'écrire quoi que ce soit, il refuse en disant quoi faire si l'arbre est sale, s'il n'y a pas d'identité git, si la branche principale est en retard sur le distant (la commande à lancer : `git fetch`, puis fast-forward ; `init` ne la met pas à jour lui-même) ou si la branche de mise à jour existe déjà. Rien à commiter : retour sur la branche d'origine, branche supprimée. Sans branche principale trouvée, ou `--no-git` : la mise à jour reste dans l'arbre, sans commit. `core.hooksPath` géré par un autre outil : `init` le dit, sans le casser.
 **Périmètre** : `drwil init` sur un projet déjà équipé dans un dépôt git ; ni première installation, ni `--no-git`.
