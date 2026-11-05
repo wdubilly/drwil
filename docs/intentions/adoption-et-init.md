@@ -274,3 +274,20 @@ la mécanique et l'adoption ensemble, et dit d'emblée ce qui reste à décider.
 - [décision] Le mode `start --maintenance` est-il écarté (position du demandeur) ?
 - [à vérifier] Copilot CLI : pourquoi la réponse au sondage `/drwil-start` ne
   déclenche-t-elle aucune transition ?
+
+### la mise à jour du kit : limites laissées par « mise-a-jour-du-kit-sans-blocage » (2026-11-04)
+
+Statut d'origine : proposée le 2026-11-04 — limites du chantier « mise à jour du kit sans blocage » (journal du 2026-11-04).
+
+`init` commite désormais la mise à jour d'un projet équipé sur `workstream/kit-update` (QUA-206, QUA-237, QUA-238,
+QUA-239). Restent :
+
+- **Manifeste forgé.** Un commit qui falsifie à la fois un hook et le manifeste du kit et porte le trailer
+  `Drwil-Kit-Update` est jugé conforme par la barrière ; seule la revue de la PR l'arrête. À durcir : comparer le
+  manifeste au contenu du paquet publié, ou signer la mise à jour.
+- **Sans branche principale, sans HEAD ou avec `--no-git`.** La mise à jour reste dans l'arbre de travail, non commitée,
+  donc de nouveau bloquée par la barrière en SCOPING : prévoir un chemin explicite pour ces cas.
+- **Branche `workstream/kit-update` déjà là.** `init` refuse et dit de la supprimer ou de la fusionner ; aucune reprise
+  automatique d'une mise à jour interrompue.
+- **Fichiers modifiés à la main.** Toujours signalés, jamais réécrits : `resolve-drift` reste le geste (hors périmètre
+  de ce chantier).

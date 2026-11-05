@@ -18,6 +18,7 @@ request, instead of direct commits on the main branch.
   the very first commit. Renaming this branch (or creating another one
   named after the current brief) is up to the project.
 
+- Updating the kit (`npx drwil init` on an equipped project) commits itself on its own `workstream/kit-update` branch: push it, open a pull request.
 - At `/drwil-start` in "This folder", the branch is created for you: the start
   creates `workstream/<brief-slug>` from the up-to-date main branch
   (`origin/<main>` after a `git fetch`, or the local main branch if it holds commits `origin` lacks) and switches to it, then goes to BUILD.

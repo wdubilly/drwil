@@ -23,9 +23,9 @@ agent's.
    `workstream/kit-installation` branch it created, before enabling the
    hooks (`scopeGate` is `blocking`, so files outside any brief could not be
    committed afterwards): the first workstream starts on a clean tree. It
-   does so only on the repository it creates: a folder that is already a
-   git repository is never committed by `init`; and when git has no
-   identity, `init` says so and the commit is yours to make. With the
+   does so only on the repository it creates (a first installation on an
+   existing repository, or without a git identity, is yours to commit; an
+   update commits itself on `workstream/kit-update`). With the
    requester, one `[decision]` at a time: the need and its users, the
    scope of the first version, the stack (hence the layers), the first
    business rules (hence the first `APP` contracts, step 5) and the risk

@@ -1,0 +1,27 @@
+{
+  "version": 4,
+  "contract": "QUA-236",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-05T08:09:11.386Z",
+  "actor": {
+    "name": "wdubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "e0160b8544e838418392aa97474d4b9ae054d4b81c702669067064701526aaf8",
+  "proof": {},
+  "covers": [
+    "packages/drwil/src/attest.ts",
+    "packages/drwil/src/attest-portable.ts",
+    "packages/drwil/src/cli-cursor.ts",
+    "packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md"
+  ],
+  "coverage": {
+    "packages/drwil/src/attest-portable.ts": "7b4a578b7be985fd1a4fac5ff32a5750d482896956492ab850085bfd00ed6302",
+    "packages/drwil/src/attest.ts": "c661dad5c29d16eaf5fdc3d69d32c449c7450f745ae40b6d43424d4d3e36712e",
+    "packages/drwil/src/cli-cursor.ts": "eefe8177264d6706efc2e3bc60ed9017acf21b1adc8ea66fba3103ea4dbe5825",
+    "packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md": "273c25946910492123adb88050ee85deb56236e382440748a515c3b34326b263"
+  },
+  "commit": "35fd6d8ee8bb46e5d8ce5c7f80e6af1f0504b967",
+  "automated": []
+}

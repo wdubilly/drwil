@@ -39,6 +39,7 @@ import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { scaffold } from "./render.js";
 import { assertSafeManifest, engineVersion, removeObsolete, writeInstall, writeManifest } from "./manifest.js";
 import { formatMigration, migrate } from "./migration.js";
+import { finishUpdate, prepareUpdate } from "./kit-update.js";
 import { complete, type Addition } from "./complete.js";
 import { formatGaps, hooksPath } from "./essentials.js";
 import { attachExistingCode, type ProjectConfig } from "./existing-code.js";
@@ -162,6 +163,8 @@ async function migrateFirst(targetDir: string): Promise<void> {
  * the kit mechanics are refreshed unless modified by hand. `--force` rewrites everything.
  */
 export async function init(opts: InitOptions): Promise<void> {
+  // Before anything is written: an update of an equipped project refuses, or cuts its own branch (QUA-237).
+  const update = opts.git === false ? null : prepareUpdate(opts.targetDir);
   // First of all: a project in the old format moves to the English names, the only ones the install reads.
   await migrateFirst(opts.targetDir);
   assertSafeManifest(opts.targetDir);
@@ -190,4 +193,5 @@ export async function init(opts: InitOptions): Promise<void> {
   if (left.length) console.log(left.join("\n"));
   // Not yet enforced: wired once the stack is known (QUA-087), never silently skipped.
   if (readConfig(opts.targetDir)?.guarantees === undefined) console.log(TEXTS[r.lang].guarantees);
+  if (update) finishUpdate(opts.targetDir, r.lang, update, engineVersion(), drifted.length);
 }
