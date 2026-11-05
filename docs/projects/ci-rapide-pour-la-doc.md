@@ -8,6 +8,9 @@
 files:
   - packages/drwil/templates/common/base/.githooks/run-checks-verdicts.mjs
   - .githooks/run-checks-verdicts.mjs
+  - packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml
+  - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
+  - packages/drwil/test/kit.test.mjs
   - .githooks/run-checks.test.mjs
   - .github/workflows/ia-first.yml
   - .github/scripts/ci-multi-os.mjs
@@ -17,6 +20,7 @@ files:
   - docs/contracts.md
   - .drwil/ia-first.json
   - docs/architecture.md
+  - docs/features.md
   - packages/drwil/CHANGELOG.md
   - docs/projects/pending.md
   - docs/projects/journal.md
@@ -45,6 +49,10 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
   push sur la branche principale rejoue tout et seul écrit ces verdicts — contrat à créer
 - Sur une PR qui ne touche que la documentation, `kit-tests (ubuntu-latest)` saute les tests du
   paquet comme Windows et macOS, et le dit — `QUA-045`
+- La CI livrée aux projets (GitHub et GitLab, gabarit) restaure les verdicts de la dernière CI
+  de leur branche principale sur une PR (ou merge request) et ne les sauvegarde que sur la branche
+  principale ; un projet adoptant reprend donc ses contrôles inchangés comme ce dépôt — contrat à
+  créer (le même que le premier critère)
 - La protection de la branche principale n'exige plus qu'une PR soit à jour avec elle ;
   `.github/ruleset-master.json` le dit et la CI vérifie que la forge le tient — contrat à créer
 
@@ -59,8 +67,9 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
 
 ## 2. Hors périmètre
 
-- La CI livrée aux projets adoptants (gabarit `packages/drwil/templates/common/ci/`) : à décider à
-  part une fois la reprise éprouvée ici.
+- La règle « à jour avec la branche principale » que `drwil guarantees` pose chez les adoptants
+  (`packages/drwil/src/guarantees-forge.ts`) : inchangée, levée seulement dans ce dépôt (décidé le
+  2026-11-05).
 - Sauter un contrôle sur le seul critère « doc seule » : écarté, la doc est une donnée.
 - Le push local : il reprend déjà les verdicts (`QUA-141`).
 
@@ -81,7 +90,9 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
 ## 4. Décisions
 
 Tranchées par le demandeur le 2026-11-05 : les trois mesures (reprise des verdicts en CI, Ubuntu
-sans tests sur une PR de doc, « à jour avec master » levé).
+sans tests sur une PR de doc, « à jour avec master » levé) ; le kit en profite aussi : la CI du
+gabarit (GitHub et GitLab) reçoit la reprise des verdicts, sans changer la protection de forge
+posée chez les adoptants.
 
 ## 5. Points à trancher
 
@@ -92,7 +103,11 @@ Aucun.
 - **Lot 1 — reprise en CI et Ubuntu sur doc** [IA] : `.githooks/run-checks-verdicts.mjs`,
   `.github/workflows/ia-first.yml`, `.github/scripts/ci-multi-os.mjs`, tests. Critère de sortie :
   le premier contrat vert, une PR de doc mesurée.
-- **Lot 2 — « à jour avec master » levé** [humain] : le demandeur change le réglage de la forge
+- **Lot 2 — CI du gabarit** [IA] : étapes de cache des verdicts dans
+  `packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml` et
+  `packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml`, tests du paquet. Critère de sortie :
+  le contrat prouvé aussi sur la CI livrée.
+- **Lot 3 — « à jour avec master » levé** [humain] : le demandeur change le réglage de la forge
   (commande prête dans la reprise), l'agent met `.github/ruleset-master.json` d'accord. Critère de
   sortie : `.github/scripts/verifier-ruleset.mjs` vert.
 
