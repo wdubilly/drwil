@@ -217,6 +217,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P0] (0.11.1) La mise à jour du kit garde au manifeste l'empreinte des
   fichiers qu'elle complète (`.gitignore`, `docs/projects/kit-mechanics.md`) : sans cela le commit
   de mise à jour d'un projet équipé est refusé — `docs/intentions/empreinte-des-fichiers-completes-par-init.md`.
+- [ ] [décision] [P0] Reprendre un chantier sur une autre machine ou un clone neuf : l'état
+  local absent ou ancien bloque commit et lancement, sans commande pour en sortir —
+  `docs/intentions/reprise-d-etat-sur-un-autre-clone.md`.
 - [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
   d'autorisation à chaque commande : reste le réexamen du « ask » sur
   `git push`, `merge` et `rebase` (demande du 2026-10-25) —
