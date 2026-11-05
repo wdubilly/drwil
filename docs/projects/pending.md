@@ -125,6 +125,9 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P1] Une PR de doc passe la CI et fusionne en quelques minutes (reprise des verdicts
   en CI, Ubuntu sans tests sur la doc, « à jour avec master » levé ; cadré le 2026-11-05) —
   `docs/projects/ci-rapide-pour-la-doc.md`.
+- [ ] [IA] [P1] Une limite se traite pendant le chantier ; hors cadre, l'humain choisit par un
+  sondage avant VERIFY (cadré le 2026-11-05) —
+  `docs/projects/limites-pendant-le-chantier.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
