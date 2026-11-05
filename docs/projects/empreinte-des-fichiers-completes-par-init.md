@@ -54,7 +54,7 @@ la passe (`init`, `packages/drwil/src/index.ts`) ne contient que les fichiers é
   garde son empreinte d'installation (`uninstall` et le retrait des fichiers obsolètes ne le suppriment
   toujours pas) et son empreinte après complétion est notée à part, admise par la barrière seulement
   pour le commit de mise à jour ; prouvé par un test qui installe, modifie ou non, met à jour puis
-  commite — QUA-244
+  commite — `QUA-244`
 
 ## Contrats modifiés
 
