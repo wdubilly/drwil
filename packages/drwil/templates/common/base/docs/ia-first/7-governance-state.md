@@ -29,9 +29,20 @@ allowed scope stays the brief's `scope` block, which is versioned.
   hook follows the `AGENTS.md` instruction: read the state again before
   modifying any file. It is a behavioural barrier: the guarantee stays in
   Git.
-- **Hand-off to someone else**: a clone's state does not travel; resume from
-  the versioned brief ("Hand-off" section) and re-activate the expectation
-  explicitly.
+- **Resume on another clone**: a clone's state does not travel. On the
+  workstream's branch (`workstream/<brief>`), `node .githooks/state.mjs resume`
+  rebuilds it from what Git proves, without any decision, so the agent may
+  run it: `BUILD` on the brief when it is there; `CLOSING` when a commit of
+  the branch deleted it (the closing) and the branch's pull request is not
+  merged. For a brief with several lots, the current lot is the last one read
+  in the `Drwil-Lot: N` trailer the commit hook adds (next to `Drwil-Brief`),
+  the [IA] lots before it count done. `EVIDENCE` and `VERIFY` are never
+  rebuilt (the verify evidence is local: run `drwil verify` again), nor the
+  human decisions (automatic merge, queue, reopening): the message says they
+  are to be asked again. Refused, writing nothing, when the history proves
+  nothing: another branch, brief missing without a closing commit, pull
+  request merged or `gh` silent, local state already active on another
+  brief. A hand-off to someone else reads the brief's "Hand-off" section.
 - **Transitions**: one activity at a time, back to `BUILD` after
   `EVIDENCE` or a failed `VERIFY`, abandon to `SCOPING` from any activity.
   Command: `node .githooks/state.mjs move <ACTIVITY> [--brief <brief>]

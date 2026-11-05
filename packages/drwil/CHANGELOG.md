@@ -5,6 +5,15 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Added
+
+- `node .githooks/state.mjs resume` rebuilds the local governance state on
+  another clone or machine from the workstream branch's history: `BUILD` on
+  its brief, or `CLOSING` when the closing is committed and the pull request
+  not merged; the current lot comes from the new `Drwil-Lot: N` commit
+  trailer. It never rebuilds a human decision (automatic merge, queue,
+  reopening) and refuses, writing nothing, when the history proves nothing.
+
 ### Fixed
 
 - `drwil init` on an already equipped project no longer gets its update commit

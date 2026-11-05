@@ -47,6 +47,8 @@ files:
   - .githooks/state-messages-fr.mjs
   - .githooks/state-context-texts.mjs
   - .githooks/state-reopen.mjs
+  - .githooks/state-resume.mjs
+  - .githooks/state-cli-commands.mjs
   - .githooks/state-acceptance.mjs
   - .githooks/state-hooks.mjs
   - .githooks/engine-branch.mjs

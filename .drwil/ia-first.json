@@ -2910,6 +2910,51 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-245",
+      "name": "tests de QUA-245, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-245 \" .githooks/state-resume.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-246",
+      "name": "tests de QUA-246, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-246 \" .githooks/state-resume.test.mjs .githooks/scope-gate.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-247",
+      "name": "tests de QUA-247, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-247 \" .githooks/state-resume.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
       "id": "tests-qua-207",
       "name": "tests de QUA-207, filtrés par son ID (un contrôle par règle, QUA-033)",
       "run": "node --test --test-name-pattern=\"^QUA-207 \" packages/drwil/test/kit.test.mjs",

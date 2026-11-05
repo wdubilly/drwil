@@ -82,7 +82,11 @@ retour au cadrage et la suite de la file attendent la fusion de la PR ; en
 cadrage, seule la réponse de l'humain au sondage `/drwil-scope` l'autorise.
 Une fiche à plusieurs lots se mène lot par lot (`node .githooks/state.mjs
 lot`). Un chantier dont la PR révèle un défaut après la clôture se
-rouvre d'une commande (`node .githooks/state.mjs reopen`). Une idée se note
+rouvre d'une commande (`node .githooks/state.mjs reopen`). Sur un autre clone
+ou une autre machine, placé sur la branche du chantier, `node .githooks/state.mjs
+resume` reconstruit l'état local d'après l'historique Git (BUILD, ou CLOSING
+si la clôture est commitée, lot courant compris), sans jamais reprendre une
+décision humaine. Une idée se note
 à tout moment sans changer d'activité (`/drwil-note`).
 
 ## Garde-fous contre le contournement

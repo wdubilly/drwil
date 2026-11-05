@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { contractsAddedOnly, isRegistry, rulesFiles } from "./detour.mjs";
 import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
+import { LOT_TRAILER, lotStatus } from "./state-lots.mjs";
 import { git, reference, replaying, resolution, scopeChange } from "./scope-gate-merge.mjs";
 import { TRAILER, texts } from "./scope-gate-texts.mjs";
 import { KIT_ENV, KIT_TRAILER, nonKitFiles } from "./scope-gate-kit.mjs";
@@ -162,15 +163,19 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
 }
 
 /**
- * Adds `Drwil-Brief: <active brief>` to the message (prepare-commit-msg hook); nothing without a brief or
+ * Adds `Drwil-Brief: <active brief>` to the message (prepare-commit-msg hook), and `Drwil-Lot: <current lot>`
+ * when the brief has lots (QUA-246: `resume` reads it back on another clone); nothing without a brief or
  * governance, nor during a rebase: a replayed commit keeps the brief it was made under (a detour's resume
  * rebases the workstream's branch while the state still names the detour's brief).
  */
 export function addTrailer(root, messageFile) {
   if (governanceDisabled(root) || replaying(root)) return;
-  const { state } = readState(root);
-  if (!state.active_brief) return;
-  git(root, ["interpret-trailers", "--in-place", "--if-exists", "replace", "--trailer", `${TRAILER}: ${state.active_brief}`, messageFile]);
+  const read = readState(root);
+  const brief = read.state.active_brief;
+  if (!brief) return;
+  const lot = lotStatus(root, read)?.current.n;
+  const trailers = [`${TRAILER}: ${brief}`, ...(lot ? [`${LOT_TRAILER}: ${lot}`] : [])].flatMap((t) => ["--trailer", t]);
+  git(root, ["interpret-trailers", "--in-place", "--if-exists", "replace", ...trailers, messageFile]);
 }
 
 // `node .githooks/scope-gate.mjs --trailer <file>` (prepare-commit-msg). Never blocks the commit:
