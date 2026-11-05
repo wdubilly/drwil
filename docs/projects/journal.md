@@ -4089,3 +4089,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Hooks modifiés** : `.githooks/scope-gate.mjs`, `.githooks/scope-gate-kit.mjs`, `.githooks/scope-gate-merge.mjs`, `.githooks/scope-gate-texts.mjs` (gabarit et copie du dépôt).
 - **Limites connues** : manifeste forgé jugé conforme par la barrière, absence de branche principale ou de HEAD et `--no-git`, branche `workstream/kit-update` déjà présente, fichiers modifiés à la main : `docs/intentions/adoption-et-init.md`. Hook `.githooks/commit-msg` non exécutable préexistant : intention existante `docs/intentions/commit-msg-non-executable.md`.
 - **Clôturé par** : la branche `workstream/mise-a-jour-du-kit-sans-blocage`.
+
+- **Preuve de clôture** : `docs/preuves/mise-a-jour-du-kit-sans-blocage.md`.
