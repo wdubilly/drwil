@@ -5873,7 +5873,8 @@ test("QUA-244 : une mise à jour qui complète un fichier du manifeste, intact o
       // Admise pour ce seul contenu : une retouche suivante reste refusée, même sous le signal de init.
       appendFileSync(join(dir, ".gitignore"), "autre/\n");
       git(dir, "add", "-A");
-      const refus = spawnSync("git", ["commit", "-q", "-m", "retouche", "-m", "Drwil-Kit-Update: 9.9.9"], {
+      const args = ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "retouche", "-m", "Drwil-Kit-Update: 9.9.9"];
+      const refus = spawnSync("git", args, {
         cwd: dir,
         encoding: "utf8",
         env: { ...envTest, DRWIL_KIT_UPDATE: "9.9.9" },
