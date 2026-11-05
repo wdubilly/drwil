@@ -3,6 +3,9 @@
 **Statut** : proposée le 2026-11-05 — demande du demandeur, bloquante : reprise d'un chantier sur une autre
 machine ou un clone neuf ; cause relevée dans le code le même jour (lecture seule, non reproduite par un test).
 
+**Revu le 2026-11-05** : cadrée le jour même en fiche, `docs/projects/reprise-d-etat-sur-un-autre-clone.md`
+(commande `resume` de l'agent, BUILD ou CLOSING, trailer `Drwil-Lot`, état non versionné) ; questions tranchées.
+
 ## Besoin
 
 L'état de gouvernance (`.drwil/state.json` (si présent), ignoré par Git) est propre à un dossier. Quand un chantier a
