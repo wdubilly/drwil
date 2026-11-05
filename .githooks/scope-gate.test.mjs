@@ -196,6 +196,20 @@ test("trailer : ajouté depuis l'état actif, rien en SCOPING", () => {
   assert.equal(texte.match(/Drwil-Brief/g).length, 1, "jamais en double");
 });
 
+test("QUA-246 : trailer : Drwil-Lot du lot courant ajouté quand la fiche active a des lots", () => {
+  const racine = depot();
+  ecrire(racine, FICHE, `${fiche(["src/a.js"])}\n## 6. Increments\n\n- **Lot 1 — a** [IA] : x.\n- **Lot 2 — b** [IA] : y.\n`);
+  ecrireEtat(racine, "BUILD");
+  ecrire(racine, ".drwil/lot.json", JSON.stringify({ brief: FICHE, current: 2, done: [1] }));
+  const message = join(racine, "MSG");
+  writeFileSync(message, "Un commit\n");
+  addTrailer(racine, message);
+  addTrailer(racine, message);
+  const texte = readFileSync(message, "utf8");
+  assert.match(texte, /^Drwil-Brief: docs\/projects\/exemple\.md\nDrwil-Lot: 2$/m);
+  assert.equal(texte.match(/Drwil-Lot/g).length, 1, "jamais en double");
+});
+
 test("trailer : jamais ajouté quand la gouvernance est désactivée (scopeGate: off)", () => {
   const racine = depot();
   ecrireEtat(racine, "BUILD");

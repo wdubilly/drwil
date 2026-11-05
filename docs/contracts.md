@@ -2399,3 +2399,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : mise-a-jour-du-kit-sans-blocage — « `init` dit, à la fin d'une mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante »
 **Raison** : Sans ce compte rendu, l'utilisateur ne sait pas que la mise à jour attend une fusion ni quelle commande lancer.
+
+## QUA-245 — Sur un clone neuf placé sur la branche d'un chantier, `state.mjs resume` remet l'état en BUILD ou en CLOSING d'après l'historique Git
+**Règle** : Livré à tout projet. Sur la branche `workstream/<nom>`, état local en SCOPING (absent compris), `node .githooks/state.mjs resume` écrit l'état BUILD sur `docs/projects/<nom>.md` quand la fiche est présente ; quand elle est absente, qu'un commit de la branche depuis la branche principale (locale `main` ou `master`, sinon `origin/main` ou `origin/master`) l'a supprimée et que la PR de la branche n'est pas fusionnée (git et `gh`, QUA-058), il écrit l'état CLOSING sur elle. L'état écrit ne porte que l'activité, la fiche et l'horodatage : jamais EVIDENCE ni VERIFY (la preuve de verify est locale, à rejouer), jamais une décision humaine (fusion automatique, file, réouverture), que le message dit à redemander. La commande ne prend aucune décision : l'agent peut la lancer. Une fois l'état repris, le commit suivant d'un fichier du périmètre passe la barrière de périmètre.
+**Périmètre** : `.githooks/state-resume.mjs` (`resume`), `.githooks/state-cli-commands.mjs` (`resumeCommand`), `.githooks/state-cli.mjs` (aiguillage) ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/state-resume.mjs` (`resume`).
+**Preuve** : tests sur un dépôt d'origine et son clone neuf (`git clone -b workstream/<nom>`, sans branche principale locale, identité git explicite) : barrière refusée avant la reprise, BUILD repris et commit accepté après ; fiche supprimée par un commit de clôture, PR non fusionnée : CLOSING sans `auto_merge` ; ligne de commande.
+**Contrôle** : `tests-qua-245`
+**Tests** : `.githooks/state-resume.test.mjs`
+**Origine** : reprise-d-etat-sur-un-autre-clone — « Sur un clone neuf placé sur `workstream/<fiche>`, `node .githooks/state.mjs resume` remet l'état en BUILD sur cette fiche quand elle est présente, et en CLOSING quand un commit de clôture l'a supprimée et que la PR de la branche n'est pas fusionnée ; le commit suivant passe la barrière de périmètre, prouvé par un test qui clone un dépôt de chantier en cours »
+**Raison** : L'état est local et ignoré par Git : sur une autre machine, la branche arrivait sans lui, le commit et le lancement étaient refusés et aucune commande ne remettait l'état d'accord, écrire l'état à la main étant interdit (demande bloquante du 2026-11-05).
+
+## QUA-246 — Chaque commit d'une fiche à lots porte `Drwil-Lot: N`, et `resume` reprend le dernier lot lu dans l'historique
+**Règle** : Livré à tout projet. Le hook `prepare-commit-msg` (`.githooks/scope-gate.mjs --trailer`) ajoute `Drwil-Lot: N`, N le lot courant (`state.mjs lot`, QUA-166), à côté de `Drwil-Brief`, quand la fiche active a un enchaînement de lots ; jamais en double, rien sans lots. `resume` en BUILD lit le dernier trailer `Drwil-Lot` des commits de la branche depuis la branche principale : s'il désigne un lot [IA] de la fiche, il devient le lot courant et les lots [IA] qui le précèdent sont comptés faits ; sans trailer, ou un numéro qui n'est pas un lot [IA], aucun lot n'est repris (le premier lot restant est le courant).
+**Périmètre** : `.githooks/scope-gate.mjs` (`addTrailer`), `.githooks/state-lots.mjs` (`LOT_TRAILER`, `writeLots`), `.githooks/state-resume.mjs` (`lastLot`) ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/state-resume.mjs` (`lastLot`), `packages/drwil/templates/common/base/.githooks/scope-gate.mjs` (`addTrailer`).
+**Preuve** : test du trailer ajouté une seule fois avec le lot courant ; test de reprise sur un clone dont un commit porte `Drwil-Lot: 2` (lot 2 courant, lot 1 fait), puis sans trailer et avec un numéro de lot [humain].
+**Contrôle** : `tests-qua-246`
+**Tests** : `.githooks/state-resume.test.mjs`, `.githooks/scope-gate.test.mjs`
+**Origine** : reprise-d-etat-sur-un-autre-clone — « Pour une fiche à plusieurs lots, chaque commit de lot porte le trailer `Drwil-Lot: N` et `resume` reprend le dernier lot lu dans l'historique de la branche »
+**Raison** : Le lot courant était gardé dans un fichier local de `.drwil/`, perdu avec le dossier : un sous-agent repris sur un autre clone ne savait plus quel lot traiter.
+
+## QUA-247 — `resume` refuse sans rien écrire quand l'historique ne prouve rien, et ne reconstruit jamais une décision humaine
+**Règle** : Livré à tout projet. `node .githooks/state.mjs resume` refuse, sans écrire d'état et en disant pourquoi : sur une branche qui n'est pas `workstream/<nom>` (HEAD détachée comprise) ; sans branche principale, ni locale ni distante ; fiche absente sans commit de la branche qui l'a supprimée ; PR de la branche fusionnée ; `gh` muet sur la fusion (non prouvé, QUA-013) ; état local déjà actif sur une autre fiche (l'état reste tel quel). Déjà actif sur la même fiche : rien à reprendre, rien n'est écrit. Il ne reconstruit jamais la fusion automatique, la file ni la réouverture : le message dit qu'elles sont à redemander.
+**Périmètre** : `.githooks/state-resume.mjs` (`resume`), messages dans `.githooks/state-messages-fr.mjs` et `.githooks/state-messages-en.mjs` ; livrés dans le gabarit.
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/state-resume.mjs` (`resume`).
+**Preuve** : tests sur dépôts temporaires : autre branche, HEAD détachée, fiche inconnue, PR fusionnée, `gh` muet, sans branche principale (aussi en ligne de commande, code 1) : refus nommé, aucun état écrit ; état actif sur une autre fiche gardé ; même fiche : rien à reprendre.
+**Contrôle** : `tests-qua-247`
+**Tests** : `.githooks/state-resume.test.mjs`
+**Origine** : reprise-d-etat-sur-un-autre-clone — « `resume` refuse, sans rien écrire, quand l'historique ne prouve rien (branche qui n'est pas celle d'un chantier, fiche absente sans commit de clôture, PR fusionnée, état local déjà actif sur une autre fiche) et dit pourquoi ; il ne reconstruit jamais une décision humaine (fusion automatique, file, réouverture) : il dit qu'elle est à redemander »
+**Raison** : Une reprise qui devinerait l'état écrirait à la main ce que la gouvernance interdit d'écrire : seul ce que Git prouve est recopié.

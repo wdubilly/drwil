@@ -154,4 +154,19 @@ export const MESSAGES_EN = {
   branchCreated: "Branch created: {0} (from {1}).{2}",
   branchStale: "\ngit fetch failed: the branch starts from the local branch {0}, possibly behind the remote main branch",
   usage: `usage: node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <text>] | start [<brief>] | lot [next] | reopen | briefs [--json] | reminder`,
+  resumeBranch:
+    'resume refused: branch "{0}" is not a workstream\'s (workstream/<brief>); switch to it first (`git switch workstream/<brief>`)',
+  resumeBusy: "resume refused: the local state is already active on {0}, not on {1}; finish or abandon that workstream first",
+  resumeAlready: "nothing to resume: the local state is already {1} on {0}",
+  resumeNoMain:
+    "resume refused: main branch not found (no local main or master, no origin/main or origin/master); `git fetch origin` then run again",
+  resumeNoBrief: "resume refused: {0} is missing and no commit of the branch deleted it (closing): the history proves no workstream",
+  resumeUnknown:
+    "resume refused: gh did not say whether the PR of {0} is merged (missing, not authenticated or offline); not proved, nothing written",
+  resumeMerged: "resume refused: the PR of {0} is merged, the workstream is over; go back to the main branch",
+  resumeDone:
+    "state resumed in {0} on {1}, from the history of {2}{3}. Human decisions not rebuilt, ask again if needed: automatic merge, queue of workstreams, reopening.{4}",
+  resumeLot: "; current lot: {0} (last Drwil-Lot trailer of the branch)",
+  resumeBuildNext: " The verify proof is local: run it again (`npx drwil verify --evidence`) before closing.",
+  resumeClosingNext: " The closing is committed: push the branch, then follow its PR.",
 };

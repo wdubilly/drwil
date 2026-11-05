@@ -32,6 +32,7 @@ files:
   - .githooks/state-cli-lots.mjs
   - .githooks/briefs-lots.mjs
   - .githooks/state-lots.test.mjs
+  - .githooks/state-resume.test.mjs
   - .githooks/briefs.mjs
   - .githooks/pr-watch.mjs
   - .githooks/merge-auto.mjs
@@ -85,6 +86,8 @@ files:
   - .githooks/state-messages-fr.mjs
   - .githooks/state-context-texts.mjs
   - .githooks/state-reopen.mjs
+  - .githooks/state-resume.mjs
+  - .githooks/state-cli-commands.mjs
   - .githooks/state-acceptance.mjs
   - .githooks/state-hooks.mjs
   - .githooks/engine-branch.mjs

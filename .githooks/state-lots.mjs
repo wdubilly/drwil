@@ -10,6 +10,8 @@ import { fill } from "./state-messages.mjs";
 import { readState, texts } from "./state-validate.mjs";
 
 const FILE = [".drwil", "lot.json"];
+/** Trailer of the lot a commit belongs to (scope-gate.mjs adds it, `resume` reads it back: QUA-246). */
+export const LOT_TRAILER = "Drwil-Lot";
 const WITH_LOTS = new Set(["BUILD", "EVIDENCE", "VERIFY", "CLOSING"]);
 
 /** Record of the lots done for `brief`; any other, or unreadable, record counts nothing done (QUA-013). */
@@ -24,6 +26,12 @@ function readRecord(root, brief) {
 /** Forgets the lots: at the closing and back in SCOPING, and when a brief is started. */
 export function clearLots(root) {
   rmSync(join(root, ...FILE), { force: true });
+}
+
+/** Writes the lot record of `brief`: its current lot and the [IA] lots done. */
+export function writeLots(root, { brief, current, done }) {
+  mkdirSync(join(root, ".drwil"), { recursive: true });
+  writeFileSync(join(root, ...FILE), JSON.stringify({ brief, current, done }) + "\n");
 }
 
 /** `{ lots, ia, current, done, left, humans }` of the active brief, or null if it has no chain of lots. */
@@ -79,8 +87,7 @@ export function nextLot(root, read) {
   const next = status.left.find((l) => l.n > current.n);
   if (!next && already) return { code: 1, message: fill(T.lotLast, current.n) };
   const done = [...new Set([...status.record.done, current.n])];
-  mkdirSync(join(root, ".drwil"), { recursive: true });
-  writeFileSync(join(root, ...FILE), JSON.stringify({ brief: read.state.active_brief, current: (next ?? current).n, done }) + "\n");
+  writeLots(root, { brief: read.state.active_brief, current: (next ?? current).n, done });
   const rest = humans.length ? fill(T.lotHumansLeft, list(T, humans)) : "";
   return {
     code: 0,

@@ -74,12 +74,8 @@ function report(r, root) {
 
 /** Entry point shared by `node .githooks/state.mjs` and `drwil state`. Returns the exit code. */
 export async function main(args, root, input = process.stdin) {
-  if (args[0] === "briefs") {
-    const briefs = scopedBriefs(root);
-    if (args.includes("--json")) console.log(JSON.stringify(briefs, null, 2));
-    else console.log(briefs.length ? briefs.map((b, i) => `${i + 1}. ${b.path} — ${b.title}`).join("\n") : texts(root).noBriefs);
-    return 0;
-  }
+  if (args[0] === "briefs") return (await import("./state-cli-commands.mjs")).briefsCommand(args, root);
+  if (args[0] === "resume") return (await import("./state-cli-commands.mjs")).resumeCommand(root);
   if (args[0] === "start") {
     const T = texts(root);
     const briefs = scopedBriefs(root);

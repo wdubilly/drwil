@@ -156,4 +156,20 @@ export const MESSAGES_FR = {
   branchCreated: "Branche créée : {0} (depuis {1}).{2}",
   branchStale: "\ngit fetch a échoué : la branche part de la branche locale {0}, peut-être en retard sur la branche principale distante",
   usage: `usage : node .githooks/state.mjs move <{0}> [--brief <docs/projects/….md>] [--request <texte>] | start [<fiche>] | lot [next] | reopen | briefs [--json] | reminder`,
+  resumeBranch:
+    "reprise refusée : la branche « {0} » n'est pas celle d'un chantier (workstream/<fiche>) ; s'y placer d'abord (`git switch workstream/<fiche>`)",
+  resumeBusy: "reprise refusée : l'état local est déjà actif sur {0}, pas sur {1} ; finir ou abandonner ce chantier d'abord",
+  resumeAlready: "rien à reprendre : l'état local est déjà en {1} sur {0}",
+  resumeNoMain:
+    "reprise refusée : branche principale introuvable (ni main ou master locale, ni origin/main ou origin/master) ; `git fetch origin` puis relancer",
+  resumeNoBrief:
+    "reprise refusée : {0} est absente et aucun commit de la branche ne l'a supprimée (clôture) : l'historique ne prouve aucun chantier",
+  resumeUnknown:
+    "reprise refusée : gh n'a pas dit si la PR de {0} est fusionnée (absent, non authentifié ou hors ligne) ; non prouvé, rien n'est écrit",
+  resumeMerged: "reprise refusée : la PR de {0} est fusionnée, le chantier est terminé ; revenir sur la branche principale",
+  resumeDone:
+    "état repris en {0} sur {1}, d'après l'historique de {2}{3}. Décisions humaines non reconstruites, à redemander s'il y a lieu : fusion automatique, file de chantiers, réouverture.{4}",
+  resumeLot: " ; lot courant : {0} (dernier trailer Drwil-Lot de la branche)",
+  resumeBuildNext: " La preuve de verify est locale : la rejouer (`npx drwil verify --evidence`) avant la clôture.",
+  resumeClosingNext: " La clôture est commitée : pousser la branche, puis suivre sa PR.",
 };
