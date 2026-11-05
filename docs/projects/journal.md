@@ -4120,3 +4120,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Hooks modifiés** : `.githooks/scope-gate.mjs`, `.githooks/state-cli.mjs`, `.githooks/state-lots.mjs`, `.githooks/state-messages-fr.mjs`, `.githooks/state-messages-en.mjs` (gabarit et copie), déclarés dans « Contrats modifiés » sur le oui du demandeur le 2026-11-05.
 - **Limites connues** : le message `usage` de `.githooks/state.mjs` ne cite pas `resume` (la puce validée excluait toute modification d'un message existant) ; seule `docs/projects/` est cherchée, un détour ne se reprend pas ; le lot repris est le dernier commité, un `lot next` sans commit suivant ne se voit pas dans l'historique. Notées dans `docs/intentions/notes.md`.
 - **Clôturé par** : la branche `workstream/reprise-d-etat-sur-un-autre-clone`.
+
+- **Preuve de clôture** : `docs/preuves/reprise-d-etat-sur-un-autre-clone.md`.

@@ -119,9 +119,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] Reprendre un chantier sur un autre clone d'une commande (`state.mjs resume`),
-  sans état écrit à la main (cadré le 2026-11-05, demande bloquante, 0.11.1) —
-  `docs/projects/reprise-d-etat-sur-un-autre-clone.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
