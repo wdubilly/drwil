@@ -1120,7 +1120,13 @@ hook it does not declare; and, with the automatic merge, returns to SCOPING
 only once the pull request is merged. 0.10.0 splits the agent hooks installed
 in `.claude/hooks/` under 200 lines, with no change of behavior (a project
 already equipped gets the new files on update), and installs a short
-`AGENTS.md` that routes to the layers' files.
+`AGENTS.md` that routes to the layers' files. 0.11.0 has `drwil init`
+commit its own install or update on a dedicated branch, adds `drwil contracts
+add|adopt`, `drwil report` and `drwil verify --failed`, prepares human
+attestation polls inside each tool (`drwil attest-poll`), carries a brief lot
+by lot, makes the queue wait for the merge scheduled by
+`.githooks/merge-auto.mjs`, adds the release setting `release.mode` (`solo`
+or `team`) and installs the scope gate as blocking.
 Next: trying it on real projects (V1).
 
 V0.2 covered:
