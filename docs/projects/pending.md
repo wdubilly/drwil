@@ -137,6 +137,10 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   décider — `docs/intentions/parite-des-outils-suites.md`.
 - [ ] [humain] [P2] Essais réels de l'attestation depuis la conversation, cinq outils, au fil des développements du
   demandeur — `docs/intentions/attestation-chat-essais-reels.md`.
+- [ ] [décision] [P3] Les formes PowerShell des hooks de repli jouées en CI —
+  `docs/intentions/formes-powershell-des-hooks-non-jouees-en-ci.md`.
+- [ ] [décision] [P3] Un message de repli pour les hooks de Gemini sous Windows —
+  `docs/intentions/gemini-sous-windows-repli-node.md`.
 
 ### Fichiers chargés courts
 
@@ -179,9 +183,15 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P3] La couverture à 100 %, le paquet et tout code modifié :
   une seule cible à trancher avec la fiche ci-dessus (release testée par
   mock, tranché le 2026-10-16) — `docs/intentions/couverture-paquet-100.md`.
+- [ ] [décision] [P3] Lancer un contrôle lent au commit seulement si le chantier
+  touche un chemin critique — `docs/intentions/controle-lent-chemin-critique.md`.
+- [ ] [décision] [P2] Les tests de run-checks ne doivent pas exiger gitleaks —
+  `docs/intentions/tests-de-run-checks-sans-gitleaks.md`.
 
 ### Protection, garanties, contournements
 
+- [ ] [décision] [P2] Rendre effectif le hook de message de commit (non
+  exécutable) — `docs/intentions/commit-msg-non-executable.md`.
 - [ ] [décision] [P1] (0.12.0, 1) Le premier commit du kit est refusé en SCOPING sous la
   barrière bloquante, et la recette d'adoption ne le dit pas —
   `docs/intentions/premier-commit-du-kit-sous-barriere-bloquante.md`.
@@ -204,6 +214,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Adoption, installation, documentation
 
+- [ ] [décision] [P0] (0.11.1) La mise à jour du kit garde au manifeste l'empreinte des
+  fichiers qu'elle complète (`.gitignore`, `docs/projects/kit-mechanics.md`) : sans cela le commit
+  de mise à jour d'un projet équipé est refusé — `docs/intentions/empreinte-des-fichiers-completes-par-init.md`.
 - [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
   d'autorisation à chaque commande : reste le réexamen du « ask » sur
   `git push`, `merge` et `rebase` (demande du 2026-10-25) —
@@ -237,10 +250,6 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Release
 
-- [ ] [décision] [P2] Alléger la release, puis outiller ce qui reste : cadré
-  le 2026-10-30 en une fiche, livrée (`docs/projects/journal.md`) ; reste à
-  outiller le reste —
-  `docs/intentions/release-allegee.md`.
 - [ ] [décision] [P3] `docs/recettes/README.md` dit encore que la note « sans
   verdict » arrive par la PR, alors qu'en `solo` elle est le corps de la
   release — `docs/intentions/recettes-readme-note-sans-verdict.md`.
@@ -263,9 +272,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] L'enchaînement des lots (un sous-agent neuf par lot) éprouvé sur
   une vraie fiche à lots, consommation mesurée —
   `docs/intentions/essai-reel-lots-en-sous-agents.md`.
-- [ ] [décision] [P1] (0.12.0, 2) La clôture en un geste reconnaît une fiche permanente
-  (l'entretien courant, clos à la main pour les versions 0.8.0 et 0.9.0 ; sans
-  cela l'état reste en BUILD après une montée de version et `/drwil-start` est refusé) —
+- [ ] [décision] [P3] La clôture en un geste reconnaît une fiche permanente
+  (reportée le 2026-11-05 : une fiche jetable par montée de version, close par
+  `node .githooks/close.mjs` ; à reprendre si un projet adoptant en a besoin) —
   `docs/intentions/cloture-fiche-permanente.md`.
 
 ### Fluidité et relecture
@@ -619,5 +628,5 @@ s'enchaînent, jamais en parallèle : 1. `verify-rejoue-les-echecs` ;
 4. `retour-scoping-branche-sondage` (ex-`next-attend-la-fusion`) ; 5. `reouverture-dite-et-eprouvee` ;
 6. `test-unitaire-fusion-automatique` (il teste un texte que les
 précédentes modifient). `niveau-de-protection` touche un autre code et
-peut s'intercaler ; `release-feu-vert-et-squash` attend
-`docs/intentions/release-allegee.md`.
+peut s'intercaler ; `release-feu-vert-et-squash` attendait la release allégée,
+livrée le 2026-10-30 (journal), qui l'a gardée.

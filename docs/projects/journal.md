@@ -2186,7 +2186,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   squash » : entièrement couverte (ménage et reprise, décision du
   2026-10-19 « la PR fusionnée via gh fait foi »), résumée ici et retirée.
 - **Limites connues** : le texte de QUA-048 cite encore `git branch -d` —
-  `docs/intentions/release-allegee.md` (ex-« qua-048-aligne-sur-squash », regroupée le 2026-10-25) ; hors de GitHub, et
+  docs/intentions/release-allegee.md (retirée le 2026-11-05, réalisée) (ex-« qua-048-aligne-sur-squash », regroupée le 2026-10-25) ; hors de GitHub, et
   au-delà des 200 PR fusionnées les plus récentes, une branche fusionnée
   par squash est gardée — l'intention « squash-hors-github » (abandonnée le 2026-10-25).
   Écart relevé : `close.mjs --check` ne signale pas les citations de
@@ -2550,7 +2550,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   mécaniques livrée au kit ni par le README du module, hors du cadrage (la
   fiche des mécaniques du dépôt le cite, ajouté à la clôture) : le test du
   kit contourne le manque dans son projet de test
-  (intention `docs/intentions/release-allegee.md` (ex-« recette-note-dans-la-fiche-des-mecaniques », regroupée le 2026-10-25)).
+  (intention docs/intentions/release-allegee.md (retirée le 2026-11-05, réalisée) (ex-« recette-note-dans-la-fiche-des-mecaniques », regroupée le 2026-10-25)).
   Les notes des versions déjà publiées ne sont pas rétro-écrites (hors
   périmètre). Aucune release réelle n'a été jouée : tests sur dépôts
   temporaires, origine nu local et `gh` simulé.
@@ -3226,7 +3226,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   par le chantier du 2026-10-26) ;
   le test unitaire du nouveau texte reste à écrire dans
   `.githooks/state.test.mjs`, en déclarant le hook
-  (`docs/intentions/test-unitaire-fusion-automatique.md`) ; le test de durée
+  (docs/intentions/test-unitaire-fusion-automatique.md (retirée le 2026-11-05, réalisée)) ; le test de durée
   de QUA-136 a échoué une fois au pre-commit puis passé (fragilité déjà
   suivie par `docs/intentions/suivi-ci-et-contexte.md`).
 - **Preuve de clôture** : `docs/preuves/hooks-declares-et-scoping-apres-ci.md` (si présent).
@@ -3872,7 +3872,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 
 - **Décisions clés** : aucun contrat neuf ; QUA-138 (avec la fusion automatique, le retour en SCOPING attend la fusion de la PR) complété, règle inchangée : test unitaire « QUA-138 : … » dans `.githooks/state.test.mjs` qui vérifie, en français et en anglais, chaque étape après la précédente (programmation, vérification, suivi par `node .githooks/pr-watch.mjs`, relance tant que « verte » sans « fusionnée », 30 minutes au plus, retour en SCOPING seulement la PR fusionnée, CI rouge : CLOSING et `reopen`, délai dépassé ou échec : CLOSING signalé) et qu'aucun SCOPING n'est cité avant le suivi ; sa sensibilité prouvée par une régression locale non commitée (SCOPING dès la programmation), qui le fait échouer dans les deux langues. Le contrôle `tests-qua-138` exécute ce test et celui du cycle installé (`packages/drwil/test/cycle.test.mjs`) ; « Preuve » et « Tests » du contrat à jour. Ancien test « fusion autorisée… » gardé (calcul de la PR, BEHIND, autorisation humaine).
 - **Hooks modifiés** : `.githooks/state.test.mjs` seul, déclaré dans la fiche sur décision du demandeur du 2026-10-25 ; aucun module de production touché.
-- **Limites connues** : « Périmètre » et « Source de vérité » de QUA-138 nomment `.githooks/state-texts.mjs`, alors que le texte `autoMerge` vit dans `.githooks/state-context-texts.mjs` (importé par le premier) : écart de doc préexistant, non corrigé (règle déclarée inchangée), signalé dans `docs/intentions/test-unitaire-fusion-automatique.md`.
+- **Limites connues** : « Périmètre » et « Source de vérité » de QUA-138 nomment `.githooks/state-texts.mjs`, alors que le texte `autoMerge` vit dans `.githooks/state-context-texts.mjs` (importé par le premier) : écart de doc préexistant, non corrigé (règle déclarée inchangée), signalé dans docs/intentions/test-unitaire-fusion-automatique.md (retirée le 2026-11-05, réalisée).
 - **Preuve de clôture** : `docs/preuves/test-unitaire-fusion-automatique.md`.
 - **Clôturé par** : la branche `workstream/test-unitaire-fusion-automatique`.
 
@@ -3891,7 +3891,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Décisions clés** : aucun contrat neuf. QUA-190 (chaque section de `docs/ia-first/` se lit seule, chaque renvoi y mène) étendu par deux tests du paquet dans `packages/drwil/test/kit.test.mjs`, constatés rouges avant les corrections : chaque titre cité dans un commentaire d'un hook livré mène à un titre de section, et aucun renvoi relatif d'une section (« this document », titre cité avec « below » ou « above ») ne sort de son fichier. QUA-179 (lancer en « This folder » crée `workstream/<fiche>`) étendu à la recette livrée `docs/recipes/working-with-branches.md`, qui reçoit la puce « This folder » de la copie du dépôt, prouvée par un test du paquet ; `tests-qua-179` rejoue aussi ce test (`.drwil/ia-first.json`). QUA-063 (la matrice de compatibilité dit ce qui est tenu, outil par outil) et QUA-068 (le lancement sous Gemini est dit dans la matrice) visent `docs/ia-first/6-limits-and-tool-compatibility.md`, règle inchangée. Renvois corrigés dans le gabarit puis installés : en-tête de `.githooks/scope-gate.mjs` (« Scope barrier »), `docs/ia-first/1-single-entry-point.md` et `docs/ia-first/7-governance-state.md` vers le fichier exact ; changelog à jour.
 - **Hooks modifiés** : `.githooks/scope-gate.mjs` (gabarit et copie), une ligne de commentaire, sans changement de comportement.
 - **Décisions de l'humain en cours de route** : lots 1 et 2 en un seul commit (le pre-commit refuse un commit rouge) ; périmètre élargi à `.drwil/ia-first.json` ; QUA-068 inclus, même correction que QUA-063. Attestation de QUA-063 refaite par l'humain, son champ **Couvre** ayant changé.
-- **Limites connues** : QUA-069 (Copilot CLI enchaîne deux chantiers d'un seul sondage) et d'autres contrats du registre visent encore le sommaire `docs/ia-first.md` au lieu du fichier de section — `docs/intentions/registre-vise-les-sections-d-ia-first.md` ; le contrôle `miroirs-gabarit` accepte toute différence d'un fichier déclaré, déjà dans `docs/intentions/miroirs-ecart-declare-trop-large.md`.
+- **Limites connues** : QUA-069 (Copilot CLI enchaîne deux chantiers d'un seul sondage) et d'autres contrats du registre visent encore le sommaire `docs/ia-first.md` au lieu du fichier de section — docs/intentions/registre-vise-les-sections-d-ia-first.md (retirée le 2026-11-05, réalisée) ; le contrôle `miroirs-gabarit` accepte toute différence d'un fichier déclaré, déjà dans `docs/intentions/miroirs-ecart-declare-trop-large.md`.
 - **Preuve de clôture** : `docs/preuves/renvois-apres-decoupe.md`.
 - **Clôturé par** : la branche `workstream/renvois-apres-decoupe`.
 
