@@ -4,6 +4,10 @@
 équipé, mis à jour par `drwil init` ; cause relevée dans le code le même jour (lecture seule, non reproduite
 par un test).
 
+**Revu le 2026-11-05** : cadrée le jour même en fiche, `docs/projects/empreinte-des-fichiers-completes-par-init.md`
+(correction côté `init`, empreinte à part pour un fichier modifié à la main, nouveau contrat, 0.11.1 commune) ;
+questions tranchées.
+
 ## Besoin
 
 Sur un projet déjà équipé, le commit de la mise à jour du kit est refusé par la barrière de périmètre. Le
