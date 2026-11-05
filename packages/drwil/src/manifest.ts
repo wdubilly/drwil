@@ -162,8 +162,9 @@ export async function uninstall(opts: UninstallOptions): Promise<UninstallReport
   // Local governance state (gitignored, outside the manifest): read by no other tool once the
   // mechanics are removed; listed like the rest, so never removed silently.
   if (existsSync(join(opts.targetDir, ".drwil", "state.json"))) removed.push(".drwil/state.json");
-  // Same for the record of the installed version: meaningless once the engine is removed.
+  // Same for the record of the installed version and the fingerprints noted aside: meaningless once the engine is removed.
   if (existsSync(join(opts.targetDir, ".drwil", "install.json"))) removed.push(".drwil/install.json");
+  if (existsSync(join(opts.targetDir, ".drwil", "completed-files.json"))) removed.push(".drwil/completed-files.json");
   const cleaned: { rel: string; content: string }[] = [];
   for (const rel of completable(opts.targetDir)) {
     if (removed.includes(rel) || !existsSync(join(opts.targetDir, rel))) continue;

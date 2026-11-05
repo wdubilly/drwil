@@ -20,6 +20,7 @@ import {
   type Settings,
 } from "./essentials.js";
 import { sha256 } from "./manifest.js";
+import { recordCompletion, type Fingerprints } from "./manifest-completed.js";
 import { render } from "./render.js";
 
 /** Marks a single line drwil inserted inside a TOML table (a block cannot be delimited there). */
@@ -127,15 +128,15 @@ export function agentsPointer(): string {
  * Completes the project's files (dry run: lists only). The drwil instructions go to a file aside
  * when the project already has its own AGENTS.md, recorded in `manifest` like any kit file.
  */
-export async function complete(r: Resolved, opts: { dryRun?: boolean; manifest?: Record<string, string> } = {}): Promise<Completion> {
+export async function complete(r: Resolved, opts: { dryRun?: boolean } & Fingerprints = {}): Promise<Completion> {
   const dir = r.opts.targetDir;
   const added: Addition[] = [];
   const write = async (rel: string, content: string) => {
     if (opts.dryRun) return;
+    const before = existsSync(join(dir, rel)) ? read(rel) : null;
     await mkdir(dirname(join(dir, rel)), { recursive: true });
     await writeFile(join(dir, rel), content);
-    // A file this same install created, then completed: still the kit's, removed whole by uninstall.
-    if (opts.manifest && rel in opts.manifest) opts.manifest[rel] = sha256(content);
+    recordCompletion(opts, rel, before, content);
   };
   const read = (rel: string) => readFileSync(join(dir, rel), "utf8");
 

@@ -4101,3 +4101,14 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/commande-de-contrat`.
 
 - **Preuve de clôture** : `docs/preuves/commande-de-contrat.md`.
+
+## 2026-11-05 — Empreinte des fichiers complétés par init
+
+- **Décisions clés** : la correction se fait côté `init`, à la source (`packages/drwil/src/manifest-completed.ts`, appelé par `complete`). Un fichier complété encore intact depuis l'installation précédente reçoit sa nouvelle empreinte au manifeste ; tout autre fichier complété lors d'une mise à jour (retouché à la main, ou propre au projet) garde son entrée du manifeste et son empreinte après complétion est notée à part dans completed-files.json (dossier .drwil/, forme `{ files: [{ file, sha256 }] }`, jamais un chemin en clé pour ne pas déclencher la règle generic-api-key de gitleaks), réécrit à chaque passage, retiré quand il est vide, rien à une première installation. La barrière (`.githooks/scope-gate-kit.mjs`, gabarit et copie) l'admet dans le commit de mise à jour seulement ; `uninstall` retire ce fichier. Intention d'origine entièrement couverte, résumée ici et retirée.
+- **Critères et preuves** : QUA-244 (la mise à jour du kit garde au manifeste l'empreinte des fichiers qu'elle complète), contrat créé ; test du paquet `packages/drwil/test/kit.test.mjs` qui installe, retouche ou non `.gitignore` et la fiche de mécanique, met à jour puis commite ; il échoue sans le correctif (commit de mise à jour refusé). QUA-238 inchangé.
+- **Vérification finale avant clôture** : `node .githooks/run-checks.mjs` code 0, puis `node packages/drwil/bin/drwil.js verify --agent` : `Verdict: GOVERNANCE: PASS (exit 0)`.
+- **Hooks modifiés** : `.githooks/scope-gate-kit.mjs` (gabarit et copie du dépôt), déclaré dans « Contrats modifiés ». `.githooks/scope-gate.test.mjs` non touché : la barrière est prouvée par le test du paquet, sa couverture tenue sans branche nouvelle.
+- **Limites connues** : le message de refus de la barrière bloquante ne nomme pas les fichiers refusés (cause distincte) : noté dans `docs/intentions/notes.md`. Réouverture après CI rouge (PR #360 : le commit refusé du test n'avait pas d'identité git en CI) : `node .githooks/state.mjs reopen` refusait tant que l'intention retirée à la clôture manquait à la fiche restaurée ; intention restaurée à la main, puis retirée de nouveau ; écart noté dans `docs/intentions/notes.md`.
+- **Clôturé par** : la branche `workstream/empreinte-des-fichiers-completes-par-init`.
+
+- **Preuve de clôture** : `docs/preuves/empreinte-des-fichiers-completes-par-init.md`.

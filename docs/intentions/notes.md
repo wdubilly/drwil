@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-03 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-05 (rangement du backlog).
 
 ## Besoin
 
@@ -24,3 +24,5 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-10-29 — Sous Copilot CLI, le champ fiche du sondage /drwil-start en choix multiple (type array, items.enum) revenait vide malgré la case cochée ; le skill prescrit désormais le choix unique (QUA-180), mais la cause n'est pas établie et une file de plusieurs fiches ne se coche plus d'un seul sondage (limites du journal, retour-scoping-branche-sondage, 2026-10-29). À reproduire avant de cadrer.
 - 2026-11-02 — Idée à mettre à l'épreuve : faire systématiquement le build ou la doc/le cadrage dans un worktree, pour pouvoir cadrer et documenter en cours de build sans déranger le build.
 - 2026-11-03 — « ok mais dans une session on pourra retrouver la meme failel » — Renforcer QUA-222 (parité entre outils) : déclarer un écart dans la matrice ne doit pas suffire à livrer sans parité ; exiger une autorisation humaine explicite et un contrôle bloquant, pour protéger aussi les prochaines sessions.
+- 2026-11-05 — La barrière de périmètre, en mode bloquant, refuse un commit par « N fichier(s) hors fiches commité(s) en SCOPING » sans nommer les fichiers : à la mise à jour du kit (0.11.0), le demandeur n'en voyait qu'un sur deux ; nommer chaque fichier refusé (relevé au chantier empreinte des fichiers complétés par init, cause distincte, non corrigé)
+- 2026-11-05 — La réouverture (node .githooks/state.mjs reopen) est refusée quand la clôture a retiré l'intention d'origine : la fiche restaurée la cite, le contrôle des chemins cités refuse le commit ; il a fallu restaurer l'intention à la main (relevé au chantier empreinte des fichiers complétés par init, PR #360)

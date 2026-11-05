@@ -41,6 +41,7 @@ import { assertSafeManifest, engineVersion, removeObsolete, writeInstall, writeM
 import { formatMigration, migrate } from "./migration.js";
 import { finishUpdate, prepareUpdate } from "./kit-update.js";
 import { complete, type Addition } from "./complete.js";
+import { writeCompleted } from "./manifest-completed.js";
 import { formatGaps, hooksPath } from "./essentials.js";
 import { attachExistingCode, type ProjectConfig } from "./existing-code.js";
 
@@ -176,9 +177,11 @@ export async function init(opts: InitOptions): Promise<void> {
   const manifest: Record<string, string> = {};
   const expected: string[] = [];
   await scaffold(r, { shouldOverwrite, drifted, manifest, expected });
-  const { added } = await complete(r, { manifest });
+  const completed: Record<string, string> = {};
+  const { added } = await complete(r, { manifest, previous, completed });
   const obsolete = await removeObsolete(opts.targetDir, previous, expected);
   await writeManifest(opts.targetDir, manifest, obsolete);
+  await writeCompleted(opts.targetDir, completed);
   await writeInstall(opts.targetDir, engineVersion(), Object.keys(previous).length > 0);
   await writeConfig(r);
   reportStack(r);

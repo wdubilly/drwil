@@ -2895,6 +2895,21 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-244",
+      "name": "tests de QUA-244, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-244 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".githooks/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
       "id": "tests-qua-207",
       "name": "tests de QUA-207, filtrés par son ID (un contrôle par règle, QUA-033)",
       "run": "node --test --test-name-pattern=\"^QUA-207 \" packages/drwil/test/kit.test.mjs",

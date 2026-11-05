@@ -119,9 +119,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.1) La mise à jour du kit garde au manifeste l'empreinte des fichiers
-  qu'elle complète (cadré le 2026-11-05, à lancer avant la reprise sur un autre clone) —
-  `docs/projects/empreinte-des-fichiers-completes-par-init.md`.
 - [ ] [IA] [P0] Reprendre un chantier sur un autre clone d'une commande (`state.mjs resume`),
   sans état écrit à la main (cadré le 2026-11-05, demande bloquante, 0.11.1) —
   `docs/projects/reprise-d-etat-sur-un-autre-clone.md`.

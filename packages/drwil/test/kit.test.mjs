@@ -5818,6 +5818,73 @@ test("QUA-238 : de bout en bout, la mise à jour de init passe la barrière du p
   });
 });
 
+// Projet équipé par une version qui n'avait ni la ligne `.drwil/lot.json` du .gitignore ni la dernière ligne du bloc scope
+// de la fiche de mécanique : `init` les complète. `aLaMain` : le projet a retouché ces deux fichiers depuis l'installation.
+async function projetACompleter(aLaMain) {
+  const dir = await projetAMettreAJour();
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  const empreinte = (f) => createHash("sha256").update(read(dir, f)).digest("hex");
+  const mecanique = "docs/projects/kit-mechanics.md";
+  writeFileSync(join(dir, ".gitignore"), read(dir, ".gitignore").replace(".drwil/lot.json\n", ""));
+  const lignes = read(dir, mecanique).split("\n");
+  lignes.splice(lignes.indexOf("-->") - 1, 1);
+  writeFileSync(join(dir, mecanique), lignes.join("\n"));
+  for (const f of [".gitignore", mecanique]) manifeste[f] = empreinte(f);
+  writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2) + "\n");
+  if (aLaMain) {
+    appendFileSync(join(dir, ".gitignore"), "\n# du projet\nsorties/\n");
+    appendFileSync(join(dir, mecanique), "\nNote du projet.\n");
+  }
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-q", "-m", "version sans les lignes").status, 0);
+  return { dir, avant: { ".gitignore": manifeste[".gitignore"], [mecanique]: manifeste[mecanique] } };
+}
+
+test("QUA-244 : une mise à jour qui complète un fichier du manifeste, intact ou retouché, commite sans refus de la barrière", async () => {
+  await avecIdentite(true, async () => {
+    const mecanique = "docs/projects/kit-mechanics.md";
+    for (const aLaMain of [false, true]) {
+      const { dir, avant } = await projetACompleter(aLaMain);
+      const sortie = (await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }))).join("\n");
+      assert.match(sortie, /Fait : mise à jour du kit vers .* commitée sur la branche « workstream\/kit-update »/, sortie);
+      assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", "commit fait, rien de refusé");
+      assert.match(read(dir, ".gitignore"), /^\.drwil\/lot\.json$/m, "le fichier est bien complété");
+      assert.match(git(dir, "show", "--name-only", "--format=", "HEAD").stdout, /^\.gitignore$/m);
+      const barriere = await import(`${pathToFileURL(join(dir, ".githooks/scope-gate.mjs")).href}?${Date.now()}`);
+      const rejeu = barriere.checkScope(dir, { cfg: JSON.parse(read(dir, ".drwil/ia-first.json")), env: { DRWIL_BASE: "master" } });
+      assert.deepEqual([rejeu.status, rejeu.problems], ["ok", []], `rejeu, retouché : ${aLaMain}`);
+      const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+      const empreinte = (f) => createHash("sha256").update(read(dir, f)).digest("hex");
+      const aPart = join(dir, ".drwil/completed-files.json");
+      if (!aLaMain) {
+        for (const f of [".gitignore", mecanique]) assert.equal(manifeste[f], empreinte(f), `${f} : nouvelle empreinte au manifeste`);
+        assert.ok(!existsSync(aPart), "rien de noté à part");
+        continue;
+      }
+      for (const f of [".gitignore", mecanique]) assert.equal(manifeste[f], avant[f], `${f} : empreinte d'installation gardée`);
+      const notees = JSON.parse(read(dir, ".drwil/completed-files.json")).files;
+      assert.deepEqual(
+        notees.sort((a, b) => a.file.localeCompare(b.file)),
+        [".gitignore", mecanique].map((f) => ({ file: f, sha256: empreinte(f) })),
+      );
+      const retrait = await uninstall({ targetDir: dir });
+      assert.ok(retrait.modified.includes(".gitignore") && !retrait.removed.includes(".gitignore"), "jamais supprimé par uninstall");
+      assert.ok(retrait.removed.includes(".drwil/completed-files.json"));
+      // Admise pour ce seul contenu : une retouche suivante reste refusée, même sous le signal de init.
+      appendFileSync(join(dir, ".gitignore"), "autre/\n");
+      git(dir, "add", "-A");
+      const args = ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "retouche", "-m", "Drwil-Kit-Update: 9.9.9"];
+      const refus = spawnSync("git", args, {
+        cwd: dir,
+        encoding: "utf8",
+        env: { ...envTest, DRWIL_KIT_UPDATE: "9.9.9" },
+      });
+      assert.notEqual(refus.status, 0, refus.stdout + refus.stderr);
+      assert.match(refus.stdout + refus.stderr, /1 fichier\(s\) hors fiches commité\(s\) en SCOPING/);
+    }
+  });
+});
+
 test("QUA-239 : init dit, en fin de mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante ; fichiers modifiés à la main et hooks d'un autre outil signalés", async () => {
   await avecIdentite(true, async () => {
     const dir = await projetAMettreAJour();
