@@ -46,8 +46,7 @@ la passe (`init`, `packages/drwil/src/index.ts`) ne contient que les fichiers é
 
 ## Critères d'acceptation
 
-(contrat à créer au lancement dans le registre, avec son champ **Origine** ; ID à attribuer à ce
-moment-là.)
+(contrat créé au chantier dans le registre, avec son champ **Origine** : QUA-244.)
 
 - Sur un projet équipé par une version précédente, une mise à jour par `init` qui complète un fichier
   du manifeste — intact ou modifié à la main par le projet — commite sans refus de la barrière de
@@ -55,7 +54,7 @@ moment-là.)
   garde son empreinte d'installation (`uninstall` et le retrait des fichiers obsolètes ne le suppriment
   toujours pas) et son empreinte après complétion est notée à part, admise par la barrière seulement
   pour le commit de mise à jour ; prouvé par un test qui installe, modifie ou non, met à jour puis
-  commite — contrat à créer
+  commite — QUA-244
 
 ## Contrats modifiés
 
