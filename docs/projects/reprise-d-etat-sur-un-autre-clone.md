@@ -65,18 +65,22 @@ moment-là, les trois suivants libres du registre et du catalogue.)
 - Sur un clone neuf placé sur `workstream/<fiche>`, `node .githooks/state.mjs resume` remet l'état en
   BUILD sur cette fiche quand elle est présente, et en CLOSING quand un commit de clôture l'a supprimée et
   que la PR de la branche n'est pas fusionnée ; le commit suivant passe la barrière de périmètre, prouvé
-  par un test qui clone un dépôt de chantier en cours — contrat à créer
+  par un test qui clone un dépôt de chantier en cours — `QUA-245`
 - Pour une fiche à plusieurs lots, chaque commit de lot porte le trailer `Drwil-Lot: N` et `resume`
-  reprend le dernier lot lu dans l'historique de la branche — contrat à créer
+  reprend le dernier lot lu dans l'historique de la branche — `QUA-246`
 - `resume` refuse, sans rien écrire, quand l'historique ne prouve rien (branche qui n'est pas celle d'un
   chantier, fiche absente sans commit de clôture, PR fusionnée, état local déjà actif sur une autre
   fiche) et dit pourquoi ; il ne reconstruit jamais une décision humaine (fusion automatique, file,
-  réouverture) : il dit qu'elle est à redemander — contrat à créer
+  réouverture) : il dit qu'elle est à redemander — `QUA-247`
 
 ## Contrats modifiés
 
 - `.githooks/scope-gate.mjs` — le hook `--trailer` ajoute `Drwil-Lot: N` au message quand la fiche active
   a des lots, en plus de `Drwil-Brief` ; aucun refus nouveau (validé par le demandeur le 2026-11-05)
+- `.githooks/state-cli.mjs` — la commande `node .githooks/state.mjs resume` est aiguillée vers `.githooks/state-resume.mjs` (nouveau) ; pour rester sous 200 lignes, des commandes existantes passent sans changement dans `.githooks/state-cli-commands.mjs` (nouveau) ; aucune commande ne change de comportement ni de refus (validé par le demandeur le 2026-11-05)
+- `.githooks/state-lots.mjs` — l'écriture du relevé des lots (`.drwil/lot.json` (si présent)) est exportée, pour que `resume` y recopie le dernier lot lu dans le trailer `Drwil-Lot` ; `lot`, `lot next` et le refus de clôture restent inchangés (validé par le demandeur le 2026-11-05)
+- `.githooks/state-messages-fr.mjs` — messages de `resume` ajoutés (reprise en BUILD ou CLOSING, refus, décisions humaines à redemander) ; aucun message existant modifié (validé par le demandeur le 2026-11-05)
+- `.githooks/state-messages-en.mjs` — mêmes messages de `resume`, en anglais ; aucun message existant modifié (validé par le demandeur le 2026-11-05)
 
 ## 2. Hors périmètre
 
