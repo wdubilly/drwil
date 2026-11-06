@@ -1,4 +1,4 @@
-// Verdicts left by a pass and reused by the next one (QUA-140, QUA-141, QUA-152), split from run-checks.mjs.
+// Verdicts left by a pass and reused by the next one (QUA-140, QUA-141, QUA-152, QUA-250), split from run-checks.mjs.
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { treeFingerprint } from "./engine.mjs";
@@ -15,6 +15,10 @@ function pushedTreeIsWorkTree() {
   const pushed = process.env.DRWIL_PUSH_REFS.trim();
   return branch.status === 0 && status.status === 0 && status.stdout.trim() === "" && pushed === `refs/heads/${branch.stdout.trim()}`;
 }
+
+// QUA-250: in CI, reuse only when the CI asks for it (a pull request, on the verdicts file restored from the main branch's last CI,
+// which only a push on the main branch writes): a pull request never reads a verdict it could have written itself.
+const ciReuseAsked = () => process.env.DRWIL_CI_REUSE === "1";
 
 const readVerdicts = (file) => {
   try {
@@ -35,7 +39,7 @@ export function loadReuse(list, { hooked, atCommit, replayAll }) {
       ]
     : [[VERDICTS, "run-checks"]];
   const sources = files.map(([f, name]) => [readVerdicts(f), name]);
-  const reuseActive = (!hooked || prePush) && !process.env.CI && !replayAll;
+  const reuseActive = (!hooked || prePush) && (!process.env.CI || ciReuseAsked()) && !replayAll;
   // The verdict to keep for a check: an "ok" of a source whose own fingerprint is the current one.
   function lastOf(c) {
     if (!reuseActive || !c.perControl || !controls.get(c.id)) return null;

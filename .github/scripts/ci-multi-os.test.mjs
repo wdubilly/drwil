@@ -35,9 +35,9 @@ test("QUA-045 : une PR de code teste les trois OS", () => {
   assert.deepEqual(lignes(m), ["ubuntu-latest:true", "macos-latest:true", "windows-latest:true"]);
 });
 
-test("QUA-045 : une PR de documentation rapporte les trois OS, seul Ubuntu teste", () => {
+test("QUA-045 : une PR de documentation rapporte les trois OS, aucun ne teste, Ubuntu compris", () => {
   const m = matrice({ evenement: "pull_request", fichiers: ["docs/projects/x.md", "docs/intentions/y.md", ".drwil/usage.jsonl"] });
-  assert.deepEqual(lignes(m), ["ubuntu-latest:true", "macos-latest:false", "windows-latest:false"]);
+  assert.deepEqual(lignes(m), ["ubuntu-latest:false", "macos-latest:false", "windows-latest:false"]);
 });
 
 test("QUA-045 : chaque ligne garde l'archive gitleaks de son OS et sa somme", () => {
