@@ -119,9 +119,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] (0.11.1) Une PR de doc passe la CI et fusionne en quelques minutes (reprise des verdicts
-  en CI, Ubuntu sans tests sur la doc, « à jour avec master » levé ; cadré le 2026-11-05) —
-  `docs/projects/ci-rapide-pour-la-doc.md`.
 - [ ] [IA] [P1] (0.11.1) Une limite se traite pendant le chantier ; hors cadre, l'humain choisit par un
   sondage avant VERIFY (cadré le 2026-11-05) —
   `docs/projects/limites-pendant-le-chantier.md`.
@@ -164,6 +161,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] Le rappel « fusion annulée » de l'état doit tomber quand
   l'humain reprogramme la fusion —
   `docs/intentions/rappel-fusion-annulee-reprogrammee.md`.
+- [ ] [décision] La CI rapide éprouvée en réel (mesure d'une PR de doc, preuve de CI de la branche
+  principale sur une vraie fusion, reprise GitLab par `CI_JOB_TOKEN`) et la preuve de CI de la
+  branche principale hors GitHub — `docs/intentions/ci-rapide-epreuves-reelles.md`.
 - [ ] [décision] La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
   vraie PR en retard sur la branche principale —
   `docs/intentions/merge-auto-eprouve-en-reel.md`.
@@ -328,7 +328,7 @@ critère de sortie de chaque fiche —
 
 ### Autres outils
 
-- [ ] [décision] Suites de l'attente outillée des commandes longues : autres outils, Windows, garde de commande —
+- [ ] [décision] Suites de l'attente outillée des commandes longues : Windows, garde de commande, double lancement simultané —
   `docs/intentions/attente-commandes-longues-suites.md`.
 - [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
   d'essayé) — `docs/intentions/compat-codex.md`.
