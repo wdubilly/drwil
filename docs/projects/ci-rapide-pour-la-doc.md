@@ -8,6 +8,8 @@
 files:
   - packages/drwil/templates/common/base/.githooks/run-checks-verdicts.mjs
   - .githooks/run-checks-verdicts.mjs
+  - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - .githooks/run-checks.mjs
   - packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml
   - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
   - packages/drwil/test/kit.test.mjs
@@ -46,7 +48,7 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
 
 - Sur une PR, la CI reprend le verdict de la dernière CI de la branche principale pour chaque
   contrôle dont l'empreinte (fichiers et commande) est identique ; elle rejoue les autres ; le
-  push sur la branche principale rejoue tout et seul écrit ces verdicts — contrat à créer
+  push sur la branche principale rejoue tout et seul écrit ces verdicts — `QUA-250`
 - Sur une PR qui ne touche que la documentation, `kit-tests (ubuntu-latest)` saute les tests du
   paquet comme Windows et macOS, et le dit — `QUA-045`
 - La CI livrée aux projets (GitHub et GitLab, gabarit) restaure les verdicts de la dernière CI
