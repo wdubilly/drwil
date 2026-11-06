@@ -1759,7 +1759,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/state-reopen.mjs` (`reopen`).
 **Preuve** : tests : hook pre-commit qui refuse avec fusion programmée (marque posée, message, rappel et contexte, en français et en anglais), réouverture réussie ensuite (marque effacée), sans fusion programmée (pas de marque), marque invalide ou hors CLOSING refusée, retour en SCOPING qui l'efface ; `merge-auto` qui voit la fusion programmée sur la PR de la marque l'efface et le dit (en français et en anglais), autre PR, programmation non vue ou PR fusionnée sur-le-champ la laissent.
 **Contrôle** : `tests-qua-181`
-**Tests** : `.githooks/state.test.mjs`
+**Tests** : `.githooks/state.test.mjs`, `.githooks/merge-auto.test.mjs`
 **Origine** : reouverture-dite-et-eprouvee — « Quand la réouverture échoue après l'annulation de la fusion automatique, le refus dit que la fusion est annulée, qu'elle n'est pas reprogrammée par l'outil, et qu'il revient à l'humain de la reprogrammer ; le rappel d'état en CLOSING le redit tant que la fusion n'est pas reprogrammée »
 **Raison** : Le message disait « à reprogrammer » sans dire qui ni quand : une fusion annulée par une réouverture échouée pouvait rester oubliée, ou être reprogrammée par l'agent sur du code fautif.
 

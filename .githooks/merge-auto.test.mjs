@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ghRun, mergeAuto, parseArgs } from "./merge-auto.mjs";
-import { context, readState, scopingMerge } from "./state.mjs";
+import { context, readState, scopingMerge, shortReminder } from "./state.mjs";
 
 // Un hook lancé par `git commit` reçoit GIT_INDEX_FILE, GIT_DIR… : hérités, ils feraient agir les dépôts de test
 // (fin de cadrage) sur le dépôt qui lance les tests.
@@ -16,10 +16,10 @@ const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "merge-auto.mjs");
 const RACINE = join(dirname(SCRIPT), "..");
 
 /** Projet temporaire dont l'état autorise (ou non) la fusion automatique ; langue au choix. */
-function projet({ auto = true, lang } = {}) {
+function projet({ auto = true, lang, etat: extra = {} } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "drwil-merge-auto-"));
   mkdirSync(join(dir, ".drwil"));
-  const etat = { version: 1, activity: "CLOSING", active_brief: "docs/projects/x.md", active_request: null, since: null };
+  const etat = { version: 1, activity: "CLOSING", active_brief: "docs/projects/x.md", active_request: null, since: null, ...extra };
   writeFileSync(join(dir, ".drwil", "state.json"), JSON.stringify(auto ? { ...etat, auto_merge: true } : etat));
   if (lang) writeFileSync(join(dir, ".drwil", "ia-first.json"), JSON.stringify({ lang }));
   return dir;
@@ -287,4 +287,42 @@ test("QUA-189 « Manual merge » et « Continue scoping » ne programment rien ;
     /\*\*Continue scoping\*\*: nothing is scheduled; the PR stays open and the next scopings are committed on \*\*the same branch\*\* \(one branch, one PR, no new branch\)/,
   );
   assert.match(skill, /\*\*Manual merge\*\*: nothing is scheduled/);
+});
+
+test("QUA-181 : merge-auto qui voit la fusion programmée sur la PR de la marque l'efface et le dit ; autre PR ou fusion non programmée : la marque reste ; en anglais aussi", async () => {
+  /** Projet marqué « fusion annulée » sur la PR 7, sa fiche présente pour un état sans problème. */
+  const marque = (lang) => {
+    const dir = projet({ lang, etat: { merge_cancelled: { pr: 7 } } });
+    mkdirSync(join(dir, "docs", "projects"), { recursive: true });
+    writeFileSync(join(dir, "docs/projects/x.md"), "# Projet : X\n\n<!-- scope\nfiles:\n  - a.mjs\n-->\n");
+    return dir;
+  };
+  const programmee = { autoMergeRequest: { mergeMethod: "MERGE" } };
+  for (const lang of ["fr", "en"]) {
+    const dir = marque(lang);
+    const { gh } = faux({ vues: [ok(vue("CLEAN")), ok(vue("CLEAN", programmee))] });
+    const r = await mergeAuto(options(dir, { gh }));
+    assert.equal(r.code, 0);
+    assert.match(
+      r.message,
+      lang === "fr"
+        ? /programmée et vérifiée.*\n\[merge-auto\] marque « fusion annulée » de la PR #7 effacée/s
+        : /scheduled and checked.*\n\[merge-auto\] « merge cancelled » mark of PR #7 cleared/s,
+    );
+    assert.equal(readState(dir).state.merge_cancelled, undefined);
+    assert.deepEqual(readState(dir).problems, []);
+    assert.doesNotMatch(shortReminder(readState(dir), dir), /PR #7 (ANNULÉE|CANCELLED)/);
+  }
+  // Autre PR que celle de la marque, programmation non vue, PR fusionnée sur-le-champ : la marque reste.
+  for (const [apres, number] of [
+    [programmee, 8],
+    [{}, 7],
+    [{ state: "MERGED" }, 7],
+  ]) {
+    const dir = marque();
+    const { gh } = faux({ vues: [ok(vue("CLEAN", { number })), ok(vue("CLEAN", { number, ...apres }))] });
+    const r = await mergeAuto(options(dir, { gh, pr: String(number) }));
+    assert.doesNotMatch(r.message, /effacée/);
+    assert.deepEqual(readState(dir).state.merge_cancelled, { pr: 7 });
+  }
 });
