@@ -119,9 +119,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.1) Les commandes de `node .githooks/state.mjs` rendent toujours la main (`briefs` et
-  `resume` bloqués depuis la PR #361 ; cadré le 2026-11-05, à lancer en premier) —
-  `docs/projects/commandes-d-etat-bloquees.md`.
 - [ ] [IA] [P1] (0.11.1) Une PR de doc passe la CI et fusionne en quelques minutes (reprise des verdicts
   en CI, Ubuntu sans tests sur la doc, « à jour avec master » levé ; cadré le 2026-11-05) —
   `docs/projects/ci-rapide-pour-la-doc.md`.
@@ -170,6 +167,11 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
   vraie PR en retard sur la branche principale —
   `docs/intentions/merge-auto-eprouve-en-reel.md`.
+- [ ] [décision] [P3] `start` vers un worktree prouvé dans un vrai terminal, pas
+  un terminal simulé (`QUA-248`) — `docs/intentions/start-worktree-en-vrai-terminal.md`.
+- [ ] [décision] [P3] Le contrôle des await de premier niveau : `import()` calculés
+  et points d'entrée encore lancés par un await (`QUA-249`) —
+  `docs/intentions/await-premier-niveau-suites.md`.
 - [ ] [décision] [P3] Une identité forte en option pour l'attestation (commits
   signés, revue GitHub authentifiée), les niveaux de garantie étant documentés
   (`QUA-197`) — `docs/intentions/e2e-et-attestation-precises.md`.

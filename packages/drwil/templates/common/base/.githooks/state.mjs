@@ -156,5 +156,8 @@ export function stateRoot(scriptUrl = import.meta.url, env = process.env) {
 
 // Real paths on both sides: a project path through a symbolic link must still run the command.
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
-  process.exitCode = await main(process.argv.slice(2), stateRoot());
+  // Never a top-level await: a module loaded on demand that imports this file back would wait forever (QUA-249).
+  main(process.argv.slice(2), stateRoot()).then((code) => {
+    process.exitCode = code;
+  });
 }

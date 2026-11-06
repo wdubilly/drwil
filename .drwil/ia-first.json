@@ -1219,7 +1219,7 @@
     },
     {
       "id": "tarball",
-      "name": "CLI installée depuis le tarball, comme un utilisateur (contenu, --version, init, verify)",
+      "name": "CLI installée depuis le tarball, comme un utilisateur (contenu, --version, init, state.mjs briefs, verify)",
       "run": "node outils/tester-tarball.mjs",
       "reuse": false,
       "ciJob": "checks",
@@ -2953,6 +2953,50 @@
       ],
       "needsBuild": true,
       "degradable": false
+    },
+    {
+      "id": "tests-qua-248",
+      "name": "tests de QUA-248, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-248 \" .githooks/state-cli-process.test.mjs outils/tester-tarball.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "outils/tester-tarball.mjs",
+        "outils/tester-tarball.test.mjs",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "await-premier-niveau",
+      "name": "aucun hook importé par un autre module ne fait d'await de premier niveau (QUA-249)",
+      "run": "node outils/verifier-await-premier-niveau.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".claude/hooks/**",
+        "packages/drwil/templates/**",
+        "outils/verifier-await-premier-niveau.mjs",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "reuse": "tree"
+    },
+    {
+      "id": "tests-qua-249",
+      "name": "tests de QUA-249, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-249 \" outils/verifier-await-premier-niveau.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        ".claude/hooks/**",
+        "packages/drwil/templates/**",
+        "outils/verifier-await-premier-niveau.mjs",
+        "outils/verifier-await-premier-niveau.test.mjs",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "reuse": "tree"
     },
     {
       "id": "tests-qua-207",

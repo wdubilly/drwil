@@ -2,7 +2,8 @@
 // La CLI telle que la reçoit un utilisateur (journal « Tester la CLI installée depuis le tarball », docs/projects/journal.md). Propre à ce dépôt : les
 // tests du paquet exercent le code depuis le dépôt ; ici on construit le tarball (`npm pack`), on compare
 // son contenu à la liste attendue, on l'installe dans un projet vierge, puis on lance la CLI installée :
-// `drwil --version`, `drwil init` (CI GitHub, cas courant) et `drwil verify` dans un projet temporaire.
+// `drwil --version`, `drwil init` (CI GitHub, cas courant), `node .githooks/state.mjs briefs --json`
+// (une commande d'état en vrai processus, QUA-248) et `drwil verify` dans un projet temporaire.
 // L'installation tire `commander` du registre : sans réseau, « non exécuté », jamais vert (QUA-013).
 // Usage : node outils/tester-tarball.mjs [racine]
 import { spawnSync } from "node:child_process";
@@ -56,6 +57,16 @@ export function lireVerdict(r) {
   return null;
 }
 
+/** Lit la sortie de `node .githooks/state.mjs briefs --json` dans le projet initialisé : rend un problème, ou null. */
+export function lireBriefs(r) {
+  const nom = "node .githooks/state.mjs briefs --json";
+  if (r.status !== 0) return `${nom} : code ${r.status} ${(r.stderr ?? "").trim()}`.trim();
+  try {
+    if (Array.isArray(JSON.parse(r.stdout ?? ""))) return null;
+  } catch {}
+  return `${nom} : sortie JSON illisible`;
+}
+
 const lancerReel = (cmd, args, opts) =>
   // Sous Windows, npm et la CLI installée sont des scripts .cmd : ils ne se lancent que par le shell.
   spawnSync(cmd, args, { encoding: "utf8", shell: process.platform === "win32", timeout: 300_000, ...opts });
@@ -101,11 +112,14 @@ export function derouler({ paquet, temp, lancer = lancerReel }) {
 
   const init = lancer(bin, ["init", "--name", "essai-tarball", "--ci", "github", "--tools", "claude"], { cwd: projet });
   if (init.status !== 0) return echec(`drwil init a échoué (code ${init.status}) : ${sortie(init)}`);
+  // Sans shell : le chemin de node peut contenir une espace (Windows), et ce n'est pas un script .cmd.
+  const briefs = lireBriefs(lancer(process.execPath, [join(".githooks", "state.mjs"), "briefs", "--json"], { cwd: projet, shell: false }));
+  if (briefs) return echec(briefs);
   const probleme = lireVerdict(lancer(bin, ["verify", "--json"], { cwd: projet }));
   if (probleme) return echec(probleme);
   return {
     statut: "ok",
-    message: `tarball ${info.filename} : ${info.files.length} fichier(s) attendus, installé, --version, init et verify OK`,
+    message: `tarball ${info.filename} : ${info.files.length} fichier(s) attendus, installé, --version, init, briefs et verify OK`,
   };
 }
 

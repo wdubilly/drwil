@@ -16,6 +16,11 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- `node .githooks/state.mjs briefs` and `node .githooks/state.mjs resume` no
+  longer exit with code 13 ("unsettled top-level await") without writing
+  anything, so `/drwil-start` lists the briefs again; `start` into a new
+  worktree, `detour.mjs` and `release-verdict.mjs` are launched the same way,
+  without a top-level await.
 - `drwil init` on an already equipped project no longer gets its update commit
   refused by the scope gate when it completes a file of the kit manifest
   (`.gitignore`, the kit mechanics brief): an intact file gets its new
