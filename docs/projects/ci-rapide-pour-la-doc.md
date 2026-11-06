@@ -95,12 +95,24 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
 - `.githooks/pr-watch.mjs` — une PR vue fusionnée, il suit aussi la CI de la branche principale sur
   le commit de fusion et l'issue d'alerte, le dit, et écrit la preuve dans `.drwil/evidence/` sur
   une CI verte ; aucun autre verdict ne change (validé par le demandeur le 2026-11-06)
-- `.githooks/state-cli.mjs`, `.githooks/state-transitions.mjs` — `next` refuse sans cette preuve
-  pour la dernière fusion de la file ; `start`, `queue stop` et les autres transitions ne changent
-  pas (validé par le demandeur le 2026-11-06)
+- `.githooks/state-cli.mjs` — `next` refuse sans cette preuve pour la dernière fusion de la file ;
+  `start`, `queue stop` et les autres transitions ne changent pas (validé par le demandeur le 2026-11-06)
+- `.githooks/state-transitions.mjs` — même décision : `next` refuse sans cette preuve pour la
+  dernière fusion de la file ; `start`, `queue stop` et les autres transitions ne changent pas
+  (validé par le demandeur le 2026-11-06)
 - `.githooks/state-context-texts.mjs`, messages `fr`/`en`, skill `start-a-workstream`, recette
   `docs/recipes/working-with-branches.md` — rappel de la file et refus ajoutés ; aucun texte existant contredit
   (validé par le demandeur le 2026-11-06)
+- `.githooks/state-messages-fr.mjs` — les messages `fr` de la décision précédente : refus de
+  `next` ajoutés (validé par le demandeur le 2026-11-06)
+- `.githooks/state-messages-en.mjs` — les messages `en` de la même décision (validé par le
+  demandeur le 2026-11-06)
+- `.githooks/state.test.mjs` — tests du refus de `next` et de l'enchaînement décidés ci-dessus
+  (`QUA-251`, `QUA-178`), aucun autre test changé (validé par le demandeur le 2026-11-06)
+- `.githooks/run-checks.mjs` — commentaires seuls, qui disent la reprise en CI décidée pour
+  `.githooks/run-checks-verdicts.mjs` (validé par le demandeur le 2026-11-05)
+- `.githooks/run-checks.test.mjs` — tests de cette reprise en CI (`QUA-250`), aucun autre test
+  changé (validé par le demandeur le 2026-11-05)
 - `QUA-100` — ancien critère : « fusionnée » sort en code 0 — raison : la PR fusionnée, `pr-watch` suit
   la CI de la branche principale et son code de sortie devient le sien (0 verte, 1 rouge ou issue
   ouverte, 2 non suivie) ; « fusionnée » est toujours dit (suite du suivi validé par le demandeur le
