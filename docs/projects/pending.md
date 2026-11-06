@@ -119,6 +119,8 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P1] (0.11.1) merge-auto dit vrai sur une PR déjà verte (fusionnée, pas « non programmée »)
+  et efface le rappel « fusion annulée » quand il reprogramme (cadré le 2026-11-06) — `docs/projects/fusion-reprogrammee-efface-le-rappel.md`.
 - [ ] [IA] [P1] (0.11.1) Une limite se traite pendant le chantier ; hors cadre, l'humain choisit par un
   sondage avant VERIFY (cadré le 2026-11-05) —
   `docs/projects/limites-pendant-le-chantier.md`.
@@ -133,8 +135,6 @@ d'un outil) la dit dans son statut.
   le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
 - [ ] [IA] [P2] (0.11.1) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
   signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
-- [ ] [IA] [P2] (0.11.1) Le rappel « fusion annulée » tombe quand merge-auto voit la fusion reprogrammée
-  (cadré le 2026-11-06) — `docs/projects/fusion-reprogrammee-efface-le-rappel.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
