@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { bucket, ghJson, look, parseArgs, texts, watch } from "./pr-watch.mjs";
-import { lookMain, mainCiRefusal, mainTip, PROOF } from "./pr-watch-main.mjs";
+import { lookMain, mainCiGate, mainCiRefusal, mainTip, originForge, PROOF } from "./pr-watch-main.mjs";
 import { MESSAGES_EN } from "./state-messages-en.mjs";
 import { MESSAGES_FR } from "./state-messages-fr.mjs";
 
@@ -349,4 +349,29 @@ test("QUA-251 sommet de la branche principale à jour : origin après fetch s'il
   const sans = tmp();
   git(sans, "init", "-q", "-b", "tronc");
   assert.equal(mainTip(sans), null);
+});
+
+test("QUA-251 forge non GitHub : jamais de refus, une ligne dit la CI de la branche principale à vérifier à la main ; GitHub ou sans origin : le verrou tient", () => {
+  const git = (cwd, ...args) => spawnSync("git", args, { cwd, encoding: "utf8" });
+  const racine = tmp();
+  git(racine, "init", "-q", "-b", "main");
+  assert.equal(originForge(racine), null, "sans origin : aucune forge");
+  git(racine, "remote", "add", "origin", "git@github.com:o/r.git");
+  assert.equal(originForge(racine), "github");
+  git(racine, "remote", "set-url", "origin", "https://gitlab.example.com/o/r.git");
+  assert.equal(originForge(racine), "other");
+  const fr = mainCiGate(racine, MESSAGES_FR);
+  assert.equal(fr.refusal, null, "aucune preuve, et pourtant pas de refus");
+  assert.match(
+    fr.note,
+    /^\nfile : la forge d'origin n'est pas GitHub — pas de preuve possible de la CI de la branche principale sur cette forge, la vérifier à la main/,
+  );
+  assert.equal(fr.note.trim().split("\n").length, 1, "une seule ligne");
+  assert.match(
+    mainCiGate(racine, MESSAGES_EN).note,
+    /^\nqueue: the origin forge is not GitHub — no proof of the main branch's CI possible on this forge, check it by hand/,
+  );
+  const sans = tmp();
+  git(sans, "init", "-q", "-b", "tronc");
+  assert.match(mainCiGate(sans, MESSAGES_FR).refusal, /^next refusé : branche principale introuvable/, "sans origin : le verrou tient");
 });

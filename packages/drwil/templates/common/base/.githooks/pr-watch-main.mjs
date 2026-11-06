@@ -3,7 +3,7 @@
 // saw for that commit; only « green » with no such issue open is the proof a queue requires before starting its
 // next workstream (`start` of the queue's head, so `state.mjs next` and the chaining at the merge seen, QUA-178),
 // the other verdicts let the refusal say why. The proof holds for one commit: the tip of the up-to-date main
-// branch, the one the next workstream's branch is cut from.
+// branch, the one the next workstream's branch is cut from. Only on GitHub: elsewhere the start is not held back.
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -98,6 +98,20 @@ export function mainTip(root) {
   const fetched = spawnSync("git", ["fetch", "--quiet", "origin", main], { cwd: root, timeout: 20000, env }).status === 0;
   const remote = fetched && git(root, "merge-base", "--is-ancestor", main, `origin/${main}`) !== null;
   return git(root, "rev-parse", remote ? `origin/${main}` : main);
+}
+
+/** Forge of the `origin` remote, by the rule of `drwil guarantees` (`forgeOf`): "github", "other", or null without a remote. */
+export function originForge(root) {
+  const url = git(root, "remote", "get-url", "origin");
+  return url === null ? null : /github/i.test(url) ? "github" : "other";
+}
+
+/**
+ * Gate of the queue's next start: `{ refusal }` (null when the proof holds), or, on a forge other than GitHub, where
+ * `gh` cannot follow the main branch's CI, never a refusal but a `note` saying it is to be checked by hand.
+ */
+export function mainCiGate(root, T) {
+  return originForge(root) === "other" ? { refusal: null, note: `\n${T.nextOffGithub}` } : { refusal: mainCiRefusal(root, T) };
 }
 
 /** Why the queue's next workstream may not start (messages `T` of the state), or null when the proof holds for `tip`. */

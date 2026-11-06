@@ -109,6 +109,8 @@ export const MESSAGES_EN = {
   nextIssue:
     "next refused: issue #{0} « CI broken on the main branch » is open — the main branch is reported broken; stop and say so, the next one waits for its fix and the issue closed",
   nextNoMain: "next refused: main branch not found (neither main nor master) — the green CI proof cannot be matched with its last merge",
+  nextOffGithub:
+    "queue: the origin forge is not GitHub — no proof of the main branch's CI possible on this forge, check it by hand on its last merge (QUA-251)",
   startHuman: "start refused: it is a human decision (`/drwil-start` poll, or interactive terminal)",
   startBusy: "start refused: brief {0} is already active in the worktree {1}",
   startNotScoped: `start refused: "{0}" is not a scoped brief (scope block committed, brief not finished)`,

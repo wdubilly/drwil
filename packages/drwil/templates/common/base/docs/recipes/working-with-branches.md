@@ -202,11 +202,11 @@ that folder only):
 - Queue (decided at start, several briefs ticked in the `/drwil-start` poll): once the
   closing commit is pushed and the merge scheduled, `node .githooks/pr-watch.mjs <number>`
   follows the PR until it is merged, then the main branch's CI on the merge commit; green with
-  no « CI broken on the main branch » issue open, it writes the proof that
-  `node .githooks/state.mjs next` (allowed to the agent for the head of the queue only) requires
-  for the tip of the up-to-date main branch (a human start is not blocked). Stop at the
-  first workstream that gets stuck (human attestation, FAIL not fixed, red CI, main branch red,
-  decision to make) and say why; `node .githooks/state.mjs queue stop` drops what is left.
+  no « CI broken on the main branch » issue open, it writes the proof that `node .githooks/state.mjs next`
+  (allowed to the agent for the head of the queue only) requires for the tip of the up-to-date main branch
+  (a human start is not blocked; with `origin` on a forge other than GitHub, no proof is possible: `next`
+  is not blocked and says so). Stop at the first workstream that gets stuck (human attestation, FAIL not
+  fixed, red CI, main branch red, decision to make) and say why; `node .githooks/state.mjs queue stop` drops what is left.
 - Active governance: the brief can be deleted during CLOSING (the state tolerates its absence
   in that activity only), then go back to Scoping (`node .githooks/state.mjs move SCOPING`).
   The next workstream starts in a new session (Claude Code: `/clear`; another tool: a new

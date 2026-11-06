@@ -3030,6 +3030,19 @@
       "needsBuild": true
     },
     {
+      "id": "tests-qua-252",
+      "name": "tests de QUA-252, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-252 \" .github/scripts/workflows-yaml.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".github/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "tests-qua-207",
       "name": "tests de QUA-207, filtrés par son ID (un contrôle par règle, QUA-033)",
       "run": "node --test --test-name-pattern=\"^QUA-207 \" packages/drwil/test/kit.test.mjs",

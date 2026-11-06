@@ -148,7 +148,8 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      merge commit, and the alert issue « CI broken on the main branch »: green with no issue open,
      it writes the proof (`.drwil/evidence/main-ci.json` (if present)) for that commit; `next` refuses without
      a proof for the tip of the up-to-date main branch, and says why. A human `start` is
-     not blocked.
+     not blocked. Only on GitHub: with `origin` on another forge, `next` is not blocked and says in
+     one line that the main branch's CI is to be checked by hand.
    - Stop at the first workstream that gets stuck (human attestation awaited, FAIL not fixed, red
      CI, main branch CI red or alert issue open, merge not done within 30 minutes, decision to make): say why and what is expected; never
      start the next one on a merge not done. The queue goes on once it is unblocked, or

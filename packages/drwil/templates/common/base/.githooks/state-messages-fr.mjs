@@ -111,6 +111,8 @@ export const MESSAGES_FR = {
     "next refusé : l'issue #{0} « CI broken on the main branch » est ouverte — la branche principale est signalée cassée ; s'arrêter et le dire, la suivante attend sa correction et la fermeture de l'issue",
   nextNoMain:
     "next refusé : branche principale introuvable (ni main ni master) — la preuve de CI verte ne peut être rapprochée de sa dernière fusion",
+  nextOffGithub:
+    "file : la forge d'origin n'est pas GitHub — pas de preuve possible de la CI de la branche principale sur cette forge, la vérifier à la main sur sa dernière fusion (QUA-251)",
   startHuman: "lancement refusé : c'est une décision humaine (sondage `/drwil-start`, ou terminal interactif)",
   startBusy: "lancement refusé : la fiche {0} est déjà active dans le worktree {1}",
   startNotScoped: `lancement refusé : « {0} » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)`,

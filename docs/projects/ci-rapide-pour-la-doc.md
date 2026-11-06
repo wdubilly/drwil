@@ -77,7 +77,7 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
   de leur branche principale sur une PR (ou merge request) et ne les sauvegarde que sur la branche
   principale ; un projet adoptant reprend donc ses contrôles inchangés comme ce dépôt — `QUA-250`
 - La protection de la branche principale n'exige plus qu'une PR soit à jour avec elle ;
-  `.github/ruleset-master.json` le dit et la CI vérifie que la forge le tient — contrat à créer
+  `.github/ruleset-master.json` le dit et la CI vérifie que la forge le tient — `QUA-252`
 - Une file de chantiers ne lance le suivant (`node .githooks/state.mjs next`) que sur la preuve,
   écrite par `node .githooks/pr-watch.mjs` après la fusion, que la CI de la branche principale est
   verte sur le commit de fusion et qu'aucune issue « CI broken on the main branch » n'est ouverte ;
@@ -108,7 +108,12 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
 - `QUA-178` — ancien critère : l'enchaînement à la fusion constatée lance aussitôt la tête de file —
   raison : il attend la même preuve que `next`, sinon la file lancerait le suivant sans elle ; refus
   dit, état SCOPING, file gardée (conséquence du dernier critère d'acceptation, « une file ne lance
-  le suivant que sur la preuve », validé par le demandeur le 2026-11-06 ; non tranché à part)
+  le suivant que sur la preuve » ; validé par le demandeur le 2026-11-06)
+- `QUA-251` — le verrou ne vaut que sur une forge GitHub : `origin` sur une autre forge (GitLab…),
+  `next` et l'enchaînement ne sont pas bloqués et la sortie le dit en une ligne (pas de preuve
+  possible sur cette forge, CI de la branche principale à vérifier à la main) ; forge reconnue
+  comme `drwil guarantees` (URL d'`origin`) ; sans `origin`, le verrou tient (validé par le
+  demandeur le 2026-11-06)
 
 ## 2. Hors périmètre
 
@@ -185,6 +190,11 @@ Aucun.
   la « dernière fusion » est le sommet de la branche principale à jour (`origin/<principale>` après
   fetch, comme `createBranch`), vérifié dans `start` pour la tête de file lancée par l'agent (donc
   `next` et l'enchaînement de `QUA-178`). Contrôle `tests-qua-251`.
-- **Prochaine étape** : la clôture ; [humain] lot 3 — lever « à jour avec master » dans le ruleset 24840343
-  (« master protégé ») ; l'agent met ensuite `.github/ruleset-master.json` d'accord.
+- **Lot 3** (2026-11-06) : fait. Le demandeur a levé « à jour avec master » dans le ruleset 24840343
+  (`strict_required_status_checks_policy` à `false`) ; `.github/ruleset-master.json` remis d'accord
+  par `verifier-ruleset.mjs --ecrire`, comparaison verte. `QUA-252` créé, contrôle `tests-qua-252`.
+- **Forge** (2026-11-06, décision du demandeur) : le verrou de `QUA-251` ne vaut que sur GitHub ;
+  `originForge` (URL d'`origin`, règle de `forgeOf` de `drwil guarantees`) et `mainCiGate` dans
+  `.githooks/pr-watch-main.mjs` ; hors GitHub, `next` et l'enchaînement passent et le disent.
+- **Prochaine étape** : la clôture.
 - **Reste à mesurer** : une PR de doc, après la fusion (le cache n'existe qu'après un push sur master).

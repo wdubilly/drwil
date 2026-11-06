@@ -2461,6 +2461,22 @@ test("QUA-251 : next refuse sans la preuve de CI verte sur la dernière fusion, 
   const anglais = depotFile({ lang: "en" });
   ecrireEtat(anglais, { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null, queue: [A] });
   assert.match(nextHead(anglais, { gh: ghAbsent }).message, /^next refused: no proof that the main branch's CI is green on its last merge/);
+  // Forge non GitHub (origin ailleurs) : pas de preuve possible, next et l'enchaînement ne sont pas bloqués, la sortie le dit.
+  const ailleurs = depotFermeture({ activity: "SCOPING", active_brief: null }).racine;
+  const distant = join(tmp("drwil-gitlab-"), "depot.git");
+  spawnSync("git", ["init", "-q", "--bare", distant]);
+  spawnSync("git", ["remote", "add", "origin", distant], { cwd: ailleurs });
+  rmSync(join(ailleurs, ".drwil", "evidence", "main-ci.json"));
+  r = nextHead(ailleurs, { gh: ghAbsent });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /\nfile : la forge d'origin n'est pas GitHub — pas de preuve possible .*la vérifier à la main/);
+  assert.equal(readState(ailleurs).state.active_brief, B);
+  const enchaineAilleurs = depotFermeture().racine;
+  spawnSync("git", ["remote", "add", "origin", distant], { cwd: enchaineAilleurs });
+  rmSync(join(enchaineAilleurs, ".drwil", "evidence", "main-ci.json"));
+  const chaine = (await settleClosing(enchaineAilleurs, { chain: true })).message;
+  assert.match(chaine, /^CLOSING → SCOPING.*la vérifier à la main/s);
+  assert.equal(readState(enchaineAilleurs).state.activity, "BUILD");
 });
 
 test("QUA-176 : un échec de la lecture ne casse jamais le début de session", async () => {

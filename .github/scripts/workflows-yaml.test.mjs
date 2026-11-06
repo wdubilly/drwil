@@ -149,3 +149,22 @@ test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge
   // Pas de cache GitLab : une merge request pourrait l'écrire, ou ne pas le lire (caches protégés séparés).
   assert.ok(!JSON.stringify(ci).includes('"cache"'));
 });
+
+test("QUA-252 : la protection de la branche principale n'exige plus qu'une PR soit à jour avec elle, et la CI vérifie que la forge tient le ruleset versionné", () => {
+  const ruleset = JSON.parse(readFileSync(join(RACINE, ".github/ruleset-master.json"), "utf8"));
+  const statuts = ruleset.rules.find((r) => r.type === "required_status_checks");
+  assert.ok(statuts, "règle des contrôles requis absente");
+  // Les contrôles restent exigés ; seule la mise à jour avec la branche principale est levée.
+  assert.equal(statuts.parameters.strict_required_status_checks_policy, false);
+  assert.ok(statuts.parameters.required_status_checks.some((c) => c.context === "checks"));
+  assert.ok(
+    ruleset.rules.some((r) => r.type === "pull_request"),
+    "fusion par PR toujours exigée",
+  );
+  // Le job exigé compare la forge au fichier versionné, sans condition, avec le jeton de la CI.
+  const ci = parseAllDocuments(readFileSync(join(RACINE, ".github/workflows/ia-first.yml"), "utf8"))[0].toJS();
+  const etape = ci.jobs.checks.steps.find((e) => e.run === "node .github/scripts/verifier-ruleset.mjs");
+  assert.ok(etape, "verifier-ruleset.mjs absent du job checks");
+  assert.equal(etape.if, undefined);
+  assert.match(etape.env?.GH_TOKEN ?? "", /^\$\{\{ github\.token \}\}$/);
+});

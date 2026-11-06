@@ -7,7 +7,7 @@ import { closingMerged, closingSignals, mainBranch, noGhText, pruneMergedBranche
 import { activeElsewhere, createBranch, git } from "./worktree.mjs";
 import { ACTIVITIES, readState, texts, transitionAllowed, validateState, NEUTRAL_STATE } from "./state-validate.mjs";
 import { requiresHuman, verifyEvidence } from "./state-evidence.mjs";
-import { mainCiRefusal } from "./pr-watch-main.mjs";
+import { mainCiGate } from "./pr-watch-main.mjs";
 import { fill } from "./state-texts.mjs";
 import { move as moveAll, start as startAll, writeState } from "./state.mjs";
 
@@ -76,12 +76,12 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   if (rest.length) Object.assign(state, { queue: rest, queue_merge: human ? autoMerge === true : read.state.queue_merge === true });
   const problems = validateState(state, root);
   if (problems.length) return { code: 1, message: fill(T.startInvalid, problems.join(" ; ")) };
-  const unproven = fromQueue && mainCiRefusal(root, T); // a queue waits for its main branch green, a human start does not (QUA-251)
-  if (unproven) return { code: 1, message: unproven };
+  const ci = fromQueue ? mainCiGate(root, T) : {}; // a queue waits for its main branch green on GitHub, a human start does not (QUA-251)
+  if (ci.refusal) return { code: 1, message: ci.refusal };
   const branch = prepareBranch(root, path);
   if (branch.code !== 0) return branch;
   writeState(root, state);
-  const warned = missing ? `\n${fill(T.noCriteria, path)}` : "";
+  const warned = (missing ? `\n${fill(T.noCriteria, path)}` : "") + (ci.note ?? "");
   const next = rest.length ? `\n${fill(T.queued, rest.join(", "))}` : "";
   // The previous workstreams' branches, merged, are no longer needed (QUA-048).
   const pruned = prunedMessage(root, pruneMergedBranches(root));

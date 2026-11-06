@@ -28,7 +28,10 @@ closing commit; the release renames this section to its version.
   merge) refuses to start the next workstream without a green proof for the
   tip of the up-to-date main branch, and says why. A human `start` is not
   blocked. `pr-watch` exits with 1 when the main branch's CI is red after the
-  merge, 2 when it was not followed to the end.
+  merge, 2 when it was not followed to the end. Only on GitHub: with `origin`
+  on another forge (GitLab…), no proof is possible, so `next` and the chaining
+  are not blocked and say in one line that the main branch's CI is to be
+  checked by hand.
 
 ### Fixed
 
