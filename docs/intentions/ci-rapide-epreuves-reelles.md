@@ -16,14 +16,18 @@ tests, rien encore sur une vraie fusion ni sur un vrai GitLab.
 - La CI GitLab du gabarit télécharge l'artefact de verdicts de la branche principale avec
   `CI_JOB_TOKEN` : jamais joué sur un vrai GitLab.
 - `node .githooks/pr-watch.mjs` suit la CI de la branche principale et écrit la preuve
-  (`.drwil/evidence/main-ci.json` (si présent)) avec `gh` simulé dans les tests ; jamais sur une vraie fusion.
+  (`.drwil/evidence/main-ci.json` (si présent)). Éprouvé une fois en vrai le 2026-11-06 sur la PR #366
+  (commit de fusion `4acc3d1`, CI verte, preuve écrite) ; le cas rouge n'a jamais été joué en vrai.
 - Hors GitHub, le verrou de QUA-251 ne s'applique pas (décision du demandeur du 2026-11-06) : la
   file passe et le dit, la CI de la branche principale se vérifie à la main.
 
 ## Questions à trancher
 
 - [IA] Mesurer une PR de doc après la fusion de ce chantier (durée de l'ouverture à la fusion, contrôles repris).
-- [IA] Éprouver la preuve de CI de la branche principale sur une vraie fusion (verte, puis rouge si possible).
+- [IA] Éprouver la preuve de CI de la branche principale sur une vraie fusion rouge (la verte l'est : PR #366).
 - [décision] Éprouver la reprise GitLab par `CI_JOB_TOKEN` sur un vrai GitLab (projet d'essai à choisir).
-- [décision] Une preuve de CI de la branche principale sur GitLab (API des pipelines), pour que le
-  verrou de QUA-251 y vaille aussi.
+- [décision] Parité GitLab de `pr-watch` et `merge-auto` (élargi par le demandeur le 2026-11-06) :
+  aujourd'hui les deux ne parlent qu'à GitHub (`gh`). Porter sur les merge requests GitLab le suivi
+  de la CI, la fusion programmée, le suivi de la CI de la branche principale après la fusion et
+  l'issue d'alerte (déjà ouverte par le job `alert-if-ci-broken` du gabarit GitLab), pour que la
+  fusion automatique et le verrou de QUA-251 y valent aussi (`glab` ou API v4, à trancher).
