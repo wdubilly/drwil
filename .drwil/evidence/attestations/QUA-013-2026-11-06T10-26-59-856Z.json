@@ -1,0 +1,35 @@
+{
+  "version": 4,
+  "contract": "QUA-013",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-06T10:26:59.856Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "ebc4b183668dae8ccfe003378efa316f136ac33f6380906f93e8b3ad2dfc939c",
+  "proof": {
+    "ci-coverage": "92824ec5ee3d3dbf756665fc38f5ed40d4b70dad4ac561b296facad1b47889dd",
+    "tests-qua-013": "faeed41638505011c6a2c33e62d9f6a11234641799973225f4195af736eb25b1"
+  },
+  "covers": [
+    ".github/workflows/ia-first.yml",
+    "packages/drwil/src/verdict.ts"
+  ],
+  "coverage": {
+    ".github/workflows/ia-first.yml": "4aed4af0682417d4654cced5ac810d2a4d2e52f72a82ac71dbcb6ea304c1146c",
+    "packages/drwil/src/verdict.ts": "517ca8b41beee4ddb8776af289304d8ed7989da45c9af74c79c68fcd69b5f8cf"
+  },
+  "commit": "665ebac14cccbf4b4869d2beda3a803af425c23d",
+  "automated": [
+    {
+      "id": "ci-coverage",
+      "status": "ok"
+    },
+    {
+      "id": "tests-qua-013",
+      "status": "ok"
+    }
+  ]
+}
