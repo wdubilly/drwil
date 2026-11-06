@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
+// La passe d'une PR en CI demande la reprise (QUA-250) : héritée, elle ferait reprendre les passes de ces tests.
+delete process.env.DRWIL_CI_REUSE;
 
 const SCRIPT = fileURLToPath(new URL("./run-checks.mjs", import.meta.url));
 // Les dossiers gardés par un contrôle en échec (QUA-133) vont dans un temporaire propre à ce fichier, supprimé à la fin.
