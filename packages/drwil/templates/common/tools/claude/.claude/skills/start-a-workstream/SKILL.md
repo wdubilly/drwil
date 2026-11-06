@@ -142,11 +142,16 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    - One subagent at a time (sequential mode); the main session does not change the state while it works and reads
      it again when it returns. The main session keeps only the reports.
    - **Queue** (the state says « Queue decided at start »): after the closing, the main session follows the PR with `gh` until it is merged, 30 minutes
-     at most (`gh pr view <pr> --json state`), updates the main branch, then starts the next brief
+     at most (`node .githooks/pr-watch.mjs <pr>`), updates the main branch, then starts the next brief
      with `node .githooks/state.mjs next` and hands it to a new subagent — no new poll. No next
-     brief: the summary.
+     brief: the summary. Once the PR is merged, `pr-watch` also follows the main branch's CI on the
+     merge commit, and the alert issue « CI broken on the main branch »: green with no issue open,
+     it writes the proof (`.drwil/evidence/main-ci.json` (if present)) for that commit; `next` refuses without
+     a proof for the tip of the up-to-date main branch, and says why. A human `start` is
+     not blocked. Only on GitHub: with `origin` on another forge, `next` is not blocked and says in
+     one line that the main branch's CI is to be checked by hand.
    - Stop at the first workstream that gets stuck (human attestation awaited, FAIL not fixed, red
-     CI, merge not done within 30 minutes, decision to make): say why and what is expected; never
+     CI, main branch CI red or alert issue open, merge not done within 30 minutes, decision to make): say why and what is expected; never
      start the next one on a merge not done. The queue goes on once it is unblocked, or
      `node .githooks/state.mjs queue stop` drops it. A short report at each closing (criteria,
      checks, limits, intents created), a summary at the end of the queue.

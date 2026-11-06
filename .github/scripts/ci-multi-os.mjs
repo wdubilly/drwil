@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Matrice des OS de kit-tests (contrat QUA-045). Les checks
 // « kit-tests (<os>) » sont exigés par le ruleset de master : sur une PR, les trois sont toujours
-// rapportés ; Windows et macOS n'y lancent la suite que si la PR touche du code. Un push de branche ne
+// rapportés ; aucun n'y lance la suite si la PR ne touche que la documentation. Un push de branche ne
 // rapporte qu'Ubuntu (un check vert sans tests sur le commit de la PR masquerait son échec) ; un push
 // sur master teste tout, filet avant release.
 // En CI : lit GITHUB_EVENT_NAME, GITHUB_REF, PRINCIPALE, et pour une PR BASE et TETE, puis écrit
@@ -37,8 +37,9 @@ export function codeTouche(fichiers) {
 /** Lignes de la matrice : { os, gitleaks, sha256, tester }. */
 export function matrice({ evenement, ref = "", principale = "", fichiers = [] }) {
   if (evenement === "push" && ref !== `refs/heads/${principale}`) return [{ ...OS[0], tester: true }];
-  const autres = evenement === "pull_request" ? codeTouche(fichiers) : true;
-  return OS.map((o, i) => ({ ...o, tester: i === 0 || autres }));
+  // Sur une PR de documentation, Ubuntu saute aussi : le job checks rejoue tous les contrôles, le push sur master teste les trois OS.
+  const tester = evenement === "pull_request" ? codeTouche(fichiers) : true;
+  return OS.map((o) => ({ ...o, tester }));
 }
 
 function principal() {

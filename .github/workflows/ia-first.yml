@@ -27,7 +27,26 @@ jobs:
           echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | sha256sum -c -
           mkdir -p ~/.local/bin && tar -xzf gitleaks.tar.gz -C ~/.local/bin gitleaks && rm gitleaks.tar.gz
           ~/.local/bin/gitleaks version
+      # QUA-250 : sur une PR, les verdicts de la dernière CI de la branche principale sont restaurés et
+      # run-checks reprend chaque contrôle « ok » dont l'empreinte (fichiers et commande) est identique ;
+      # seul un push sur la branche principale, qui rejoue tout, les sauvegarde : une PR ne relit jamais
+      # un verdict qu'elle aurait écrit. Sans cache restauré, tout est rejoué.
+      - name: Restaurer les verdicts de la CI de la branche principale
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v6
+        with:
+          path: .drwil/evidence/run-checks-verdicts.json
+          key: run-checks-verdicts-${{ github.event.pull_request.base.sha }}
+          restore-keys: run-checks-verdicts-
       - run: node .githooks/run-checks.mjs
+        env:
+          DRWIL_CI_REUSE: ${{ github.event_name == 'pull_request' && '1' || '' }}
+      - name: Sauvegarder les verdicts de la branche principale
+        if: always() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && hashFiles('.drwil/evidence/run-checks-verdicts.json') != ''
+        uses: actions/cache/save@v6
+        with:
+          path: .drwil/evidence/run-checks-verdicts.json
+          key: run-checks-verdicts-${{ github.sha }}
       # QUA-113: on a pull request, the checks are replayed with the main branch's hooks (its
       # .githooks/, read through Git) and the PR's list of checks: a PR that weakens a hook or
       # removes a check does not validate itself. The main branch's copy of base-checks.mjs runs;
@@ -68,7 +87,7 @@ jobs:
             grep -F "✗" ../base-checks.log || true
           fi
   # OS à tester (QUA-045) : Ubuntu seul sur un push de branche ;
-  # les trois sur une PR (Windows et macOS sans tests si elle ne touche que la documentation) et sur
+  # les trois sur une PR (aucun ne lance les tests si elle ne touche que la documentation) et sur
   # un push sur master.
   matrice-os:
     runs-on: ubuntu-latest

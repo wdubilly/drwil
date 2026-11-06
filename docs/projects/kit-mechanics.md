@@ -36,6 +36,7 @@ files:
   - .githooks/state-cli-process.test.mjs
   - .githooks/briefs.mjs
   - .githooks/pr-watch.mjs
+  - .githooks/pr-watch-main.mjs
   - .githooks/merge-auto.mjs
   - .githooks/wait-command.mjs
   - .githooks/wait-command.test.mjs

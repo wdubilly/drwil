@@ -8,7 +8,7 @@
 // the full report (each check, its output, every warning) goes to a file — an agent reads the outputs
 // again at each request, a passed check's output is only context to pay for.
 // QUA-140: a pass outside any hook leaves each check's verdict (ok / fail) with the fingerprint of the tree, for `drwil verify` to reuse.
-// QUA-141: outside any hook and CI, a check "ok" whose own fingerprint (its declaration and the files of its `paths`) is the one of the
+// QUA-141: outside any hook and CI (in CI, only when a pull request asks for it, QUA-250), a check "ok" whose own fingerprint (its declaration and the files of its `paths`) is the one of the
 // last pass is not replayed (`--tout-rejouer` / `--replay-all` replays everything); its verdict keeps its own fingerprint only.
 // QUA-152: the pre-push does the same, from the verdicts of `run-checks` and its own (a separate file `verify` ignores), only when the
 // working tree is the pushed commit; never in CI.
@@ -65,7 +65,8 @@ const ranAt = new Date().toISOString();
 // Only `secrets` judges something else here than in `drwil verify` (the index, not the whole history, outside CI): never reusable.
 const reusableByVerify = (id) => id !== "secrets" || Boolean(process.env.CI);
 const list = checks(root, { cfg, staged });
-// QUA-141: the verdicts of the last pass, to keep an "ok" whose check files did not change (never in a hook or in CI, never with the option).
+// QUA-141: the verdicts of the last pass, to keep an "ok" whose check files did not change (never in a hook, in CI only when asked, QUA-250,
+// never with the option).
 const replayAll = process.argv.some((a) => a === "--tout-rejouer" || a === "--replay-all");
 const { prePush, controls, reuseActive, keptFrom } = loadReuse(list, { hooked, atCommit, replayAll });
 const reused = new Set(keptFrom.keys());

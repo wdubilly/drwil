@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
+// La passe d'une PR en CI demande la reprise (QUA-250) : héritée, elle ferait reprendre les passes de ces tests.
+delete process.env.DRWIL_CI_REUSE;
 
 const SCRIPT = fileURLToPath(new URL("./run-checks.mjs", import.meta.url));
 // Les dossiers gardés par un contrôle en échec (QUA-133) vont dans un temporaire propre à ce fichier, supprimé à la fin.
@@ -690,6 +692,56 @@ test("QUA-141 : un arbre changé hors des fichiers du contrôle garde son emprei
   assert.equal(verdicts.fingerprint, null);
   assert.deepEqual(verdicts.played, []);
   assert.match(verdicts.checks.ecrit.control, /^[0-9a-f]{64}$/);
+});
+
+test("QUA-250 : en CI, une PR qui le demande reprend les verdicts restaurés de la CI de la branche principale ; sans demande ni verdict, tout est rejoué", () => {
+  const joue = (nom) => `node -e "require('fs').appendFileSync('compteur.log','x')" ${nom}`;
+  const fichiers = {
+    ".drwil/ia-first.json": JSON.stringify({
+      checks: [
+        { id: "code", run: joue("code"), paths: ["src/**"] },
+        { id: "doc", run: joue("doc"), paths: ["docs/**"] },
+        { id: "rouge", run: `${joue("rouge")} && node -e "process.exit(1)"`, paths: ["src/**"] },
+      ],
+    }),
+    ".gitignore": "compteur.log\n",
+    "src/a.txt": "a\n",
+    "docs/b.md": "b\n",
+  };
+  const ci = { CI: "true" };
+  const pr = { CI: "true", DRWIL_CI_REUSE: "1" };
+  // Push sur la branche principale : CI sans demande, tout joué, verdicts écrits (ceux que la CI met en cache).
+  const principale = lancer(fichiers, { valider: true, env: ci });
+  assert.equal(compte(principale.racine), 3);
+  assert.doesNotMatch(principale.stdout, /repris/);
+  const ecrits = readFileSync(join(principale.racine, VERDICTS), "utf8");
+  assert.equal(JSON.parse(ecrits).checks.code.status, "ok");
+  // Un nouveau push sur la branche principale rejoue tout, même avec des verdicts présents.
+  passe(principale.racine, { env: ci });
+  assert.equal(compte(principale.racine), 6, "la branche principale ne reprend jamais");
+
+  // PR de documentation, autre copie de travail (autre chemin) : verdicts restaurés, comme par le cache.
+  const branche = lancer({ ...fichiers, "docs/b.md": "modifié\n", [VERDICTS]: ecrits }, { valider: true, env: pr });
+  assert.equal(compte(branche.racine), 2, "seuls la doc modifiée et le contrôle en échec sont rejoués");
+  assert.match(branche.detail, /^\[ia-first\] node -e "require.* code : repris \(fichiers du contrôle inchangés, run-checks du \d{4}-/m);
+  assert.match(branche.detail, /^\[ia-first\] node -e "require.* doc : rejoué$/m);
+  assert.match(branche.stdout, /— 1 repris \(fichiers du contrôle inchangés\), \d+ rejoué\(s\)/);
+
+  // Sans demande (CI seule), sans verdict restauré (premier passage, cache expiré), ou avec « tout rejouer » : tout est rejoué.
+  for (const [nom, extra, env, args] of [
+    ["CI sans demande", { [VERDICTS]: ecrits }, ci, []],
+    ["aucun verdict restauré", {}, pr, []],
+    ["verdicts illisibles", { [VERDICTS]: "pas du JSON" }, pr, []],
+    ["tout rejouer", { [VERDICTS]: ecrits }, pr, ["--tout-rejouer"]],
+  ]) {
+    const { racine } = lancer({ ...fichiers, ...extra }, { valider: true, env: { CI: "" } });
+    rmSync(join(racine, "compteur.log"));
+    if (VERDICTS in extra) writeFileSync(join(racine, VERDICTS), extra[VERDICTS]);
+    else rmSync(join(racine, VERDICTS), { force: true });
+    const p = passe(racine, { env, args });
+    assert.equal(compte(racine), 3, `${nom} : tout rejoué`);
+    assert.doesNotMatch(p.stdout, /repris/, nom);
+  }
 });
 
 const PREPUSH = ".drwil/evidence/pre-push-verdicts.json";

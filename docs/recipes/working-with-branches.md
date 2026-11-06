@@ -208,20 +208,21 @@ that folder only):
   again if it was authorised. A PR already merged or closed is refused: a
   new workstream, or routine maintenance.
 - Queue (decided at start, several briefs ticked in the `/drwil-start` poll): once the
-  closing commit is pushed and the merge scheduled, go back to Scoping, wait until the PR is
-  merged, update the main branch, then start the next brief yourself:
-  `node .githooks/state.mjs next` (allowed to the agent for the head of the queue only). Stop
-  at the first workstream that gets stuck (human attestation, FAIL not fixed, red CI, decision
-  to make) and say why; `node .githooks/state.mjs queue stop` drops what is left.
-- Active governance: the brief can be deleted during CLOSING (the state
-  tolerates its absence in that activity only), then go back to Scoping
-  (`node .githooks/state.mjs move SCOPING`). The next workstream starts in a
-  new session (Claude Code: `/clear`; another tool: a new conversation): a
-  fresh context does not read the closed workstream again; a queue keeps its
+  closing commit is pushed and the merge scheduled, `node .githooks/pr-watch.mjs <number>`
+  follows the PR until it is merged, then the main branch's CI on the merge commit; green with
+  no « CI broken on the main branch » issue open, it writes the proof that `node .githooks/state.mjs next`
+  (allowed to the agent for the head of the queue only) requires for the tip of the up-to-date main branch
+  (a human start is not blocked; with `origin` on a forge other than GitHub, no proof is possible: `next`
+  is not blocked and says so). Stop at the first workstream that gets stuck (human attestation, FAIL not
+  fixed, red CI, main branch red, decision to make) and say why; `node .githooks/state.mjs queue stop` drops what is left.
+- Active governance: the brief can be deleted during CLOSING (the state tolerates its absence
+  in that activity only), then go back to Scoping (`node .githooks/state.mjs move SCOPING`).
+  The next workstream starts in a new session (Claude Code: `/clear`; another tool: a new
+  conversation): a fresh context does not read the closed workstream again; a queue keeps its
   subagent per workstream.
-- If the brief still has open points elsewhere (multi-increment project), don't
-  condense anything: check the matching box in the index as before, the
-  brief stays active until it's fully finished.
+- If the brief still has open points elsewhere (multi-increment project), don't condense
+  anything: check the matching box in the index as before, the brief stays active until it's
+  fully finished.
 
 ## What the kit checks (QUA-017)
 
@@ -240,12 +241,11 @@ that folder only):
 - This check never runs in CI: it only applies locally, at commit/push
   time, not when CI replays an already-made push (a merge landing on the
   main branch is legitimate).
-- If the main branch CI breaks anyway (merge landed too fast,
-  flakiness...): a dedicated CI job (`alert-if-ci-broken`, GitHub and
-  GitLab) automatically opens an issue linking to the failed run — only
-  on the main branch, only when the checks failed, without creating a
-  duplicate if an equivalent issue is already open. This job alerts, it
-  does not fix: the fix remains a separate workstream (dedicated brief).
+- If the main branch CI breaks anyway (merge landed too fast, flakiness...): a dedicated CI job
+  (`alert-if-ci-broken`, GitHub and GitLab) automatically opens an issue linking to the failed
+  run — only on the main branch, only when the checks failed, without creating a duplicate if an
+  equivalent issue is already open. This job alerts, it does not fix: the fix remains a separate
+  workstream (dedicated brief).
 
 ## What the kit does not do
 

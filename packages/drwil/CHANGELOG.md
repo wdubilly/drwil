@@ -13,6 +13,25 @@ closing commit; the release renames this section to its version.
   not merged; the current lot comes from the new `Drwil-Lot: N` commit
   trailer. It never rebuilds a human decision (automatic merge, queue,
   reopening) and refuses, writing nothing, when the history proves nothing.
+- The delivered CI (GitHub and GitLab) reuses, on a pull or merge request,
+  the verdict of the main branch's last CI for each check whose files and
+  command are unchanged, and replays the others: `run-checks` reuses a
+  verdict in CI only when the CI asks for it (`DRWIL_CI_REUSE=1`). Only the
+  main branch saves these verdicts (GitHub: Actions cache; GitLab: the
+  `checks` job artifact, downloaded with the job token); without them,
+  everything is replayed.
+- A queue of workstreams waits for a green main branch: once the pull request
+  is merged, `node .githooks/pr-watch.mjs <n>` also follows the main branch's
+  CI on the merge commit and the « CI broken on the main branch » alert issue,
+  says green, red, still running or issue open, and records it in
+  `.drwil/evidence/`; `node .githooks/state.mjs next` (and the chaining at the
+  merge) refuses to start the next workstream without a green proof for the
+  tip of the up-to-date main branch, and says why. A human `start` is not
+  blocked. `pr-watch` exits with 1 when the main branch's CI is red after the
+  merge, 2 when it was not followed to the end. Only on GitHub: with `origin`
+  on another forge (GitLab…), no proof is possible, so `next` and the chaining
+  are not blocked and say in one line that the main branch's CI is to be
+  checked by hand.
 
 ### Fixed
 

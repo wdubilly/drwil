@@ -41,6 +41,7 @@ import {
 } from "./state.mjs";
 
 import { accept, acceptanceCheck, criteriaFingerprint, recordAcceptance } from "./state-acceptance.mjs";
+import { mainTip, writeProof } from "./pr-watch-main.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -1140,6 +1141,7 @@ test("QUA-037 : lancer depuis CLOSING : seulement fiche supprimée et PR de clô
   git("add", "-A");
   git("commit", "-qm", "suivante");
   etat({ queue: [suivante], queue_merge: false });
+  prouver(racine);
   const agent = start(racine, suivante);
   assert.equal(agent.code, 0, agent.message);
   assert.equal(readState(racine).state.activity, "BUILD");
@@ -1473,6 +1475,8 @@ function depotFile(config = {}) {
 }
 const [A, B, C] = ["a", "b", "c"].map((n) => `docs/projects/${n}.md`);
 const ecrireEtat = (racine, etat) => writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(etat));
+/** La preuve qu'écrit pr-watch après la fusion (QUA-251) : CI de la branche principale verte sur son sommet. */
+const prouver = (racine) => writeProof(racine, { pr: 1, sha: mainTip(racine), run: { databaseId: 1, url: "u" } });
 
 test("QUA-037 : un geste humain enregistre une file de fiches prêtes et la fusion ; une fiche non prête la refuse entière", () => {
   const racine = depotFile();
@@ -1544,6 +1548,7 @@ test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec 
   assert.deepEqual(p.state, { ...NEUTRAL_STATE, since: MAINTENANT, queue: [B, A], queue_merge: true });
   ecrireEtat(racine, p.state);
   assert.match(start(racine, C).message, /décision humaine/, "fiche hors file");
+  prouver(racine);
   const r = start(racine, B, { now: MAINTENANT });
   assert.equal(r.code, 0, r.message);
   assert.deepEqual(readState(racine).state, {
@@ -1585,6 +1590,7 @@ test("QUA-037 : arrêter la file ; commandes next et queue stop ; contexte et é
   assert.match(stopQueue(racine).message, /aucune file en cours/);
   const suivante = depotFile();
   ecrireEtat(suivante, { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null, queue: [A] });
+  prouver(suivante);
   r = await capturer(() => main(["next"], suivante));
   assert.equal(r.code, 0, r.sortie);
   assert.equal(readState(suivante).state.active_brief, A);
@@ -2146,6 +2152,7 @@ test("QUA-175 : la fiche prise en file par l'agent garde l'acceptation que l'hum
   assert.equal(start(racine, FICHE, { human: true, queue: ["docs/projects/suivante.md"] }).code, 0);
   const donnee = accepte(racine)["docs/projects/suivante.md"];
   writeState(racine, { ...NEUTRAL_STATE, queue: ["docs/projects/suivante.md"] });
+  prouver(racine);
   assert.equal(start(racine, "docs/projects/suivante.md").code, 0);
   assert.deepEqual(accepte(racine)["docs/projects/suivante.md"], donnee);
   assert.equal(accepte(racine)[FICHE] !== undefined, true);
@@ -2291,6 +2298,7 @@ function depotFermeture(extra = {}) {
     queue: [B],
     ...extra,
   });
+  prouver(racine);
   return { racine, git, principale: git("branch", "--show-current").stdout.trim() };
 }
 const ghVide = () => "[]";
@@ -2334,7 +2342,8 @@ test("QUA-176 : lire l'état en CLOSING dont la PR est fusionnée ramène en SCO
 
 test("QUA-177 : next refuse de lancer la tête de file tant que la PR du chantier précédent n'est pas fusionnée ; inconnue : refus", async () => {
   const { racine, git, principale } = depotFermeture({ activity: "SCOPING", active_brief: null });
-  // Sur la branche principale : la fusion est constatée.
+  // Sur la branche principale : la fusion est constatée (et sa CI prouvée verte, QUA-251).
+  prouver(racine);
   assert.equal(nextHead(racine, { gh: ghAbsent }).code, 0);
   assert.equal(readState(racine).state.active_brief, B);
 
@@ -2364,6 +2373,7 @@ test("QUA-177 : next refuse de lancer la tête de file tant que la PR du chantie
   git("branch", "-m", principale);
   git("checkout", "-qb", "autre");
   git("merge", "-q", "chantier");
+  prouver(racine);
   assert.equal(nextHead(racine, { gh: ghAbsent }).code, 0);
 });
 
@@ -2398,6 +2408,75 @@ test("QUA-178 : la file enchaîne le chantier suivant à la fusion constatée da
     await capturer(() => main(commande, outil));
     assert.equal(readState(outil).state.activity, "BUILD", commande.join());
   }
+});
+
+test("QUA-251 : next refuse sans la preuve de CI verte sur la dernière fusion, et dit pourquoi ; un start humain n'est pas bloqué", async () => {
+  const { racine, git } = depotFermeture({ activity: "SCOPING", active_brief: null });
+  const fichier = join(racine, ".drwil", "evidence", "main-ci.json");
+  const sansPreuve = () => rmSync(fichier, { force: true });
+  // Sans preuve : refus, dit, avec la commande à lancer ; l'état reste SCOPING, file gardée.
+  sansPreuve();
+  let r = await capturer(() => main(["next"], racine));
+  assert.equal(r.code, 1);
+  assert.match(
+    r.erreurs,
+    /next refusé : aucune preuve que la CI de la branche principale est verte sur sa dernière fusion \([0-9a-f]{7}\) — lancer `node \.githooks\/pr-watch\.mjs/,
+  );
+  assert.deepEqual([readState(racine).state.activity, readState(racine).state.queue], ["SCOPING", [B]]);
+  // Preuve d'une autre fusion : la branche principale a avancé depuis.
+  prouver(racine);
+  writeFileSync(join(racine, "y.txt"), "y");
+  git("add", "-A");
+  git("commit", "-qm", "autre fusion");
+  r = nextHead(racine, { gh: ghAbsent });
+  assert.equal(r.code, 1);
+  assert.match(
+    r.message,
+    /next refusé : la CI de la branche principale suivie par pr-watch porte sur le commit [0-9a-f]{7} \(PR #1\), la branche principale à jour est à/,
+  );
+  // CI rouge, en cours, issue ouverte sur le sommet : refus qui le dit.
+  const consigner = (ci, issue) => writeProof(racine, { pr: 4, sha: mainTip(racine), ci, issue });
+  consigner("red");
+  assert.match(nextHead(racine, { gh: ghAbsent }).message, /next refusé : la CI de la branche principale est ROUGE sur sa dernière fusion/);
+  consigner("pending");
+  assert.match(nextHead(racine, { gh: ghAbsent }).message, /encore en cours.*pr-watch\.mjs 4/);
+  consigner("issue", 253);
+  assert.match(nextHead(racine, { gh: ghAbsent }).message, /l'issue #253 « CI broken on the main branch » est ouverte/);
+  assert.equal(readState(racine).state.activity, "SCOPING");
+  // Un start humain n'est pas bloqué, même sans preuve.
+  sansPreuve();
+  assert.equal(start(racine, B, { human: true }).code, 0);
+  // Preuve du sommet : next lance la tête de file.
+  ecrireEtat(racine, { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null, queue: [A] });
+  git("checkout", "-q", "-");
+  prouver(racine);
+  r = nextHead(racine, { gh: ghAbsent });
+  assert.equal(r.code, 0, r.message);
+  // L'enchaînement à la fusion constatée (QUA-178) attend la même preuve : retour en SCOPING seul, refus dit.
+  const enchaine = depotFermeture().racine;
+  rmSync(join(enchaine, ".drwil", "evidence", "main-ci.json"));
+  const { message } = await settleClosing(enchaine, { chain: true });
+  assert.match(message, /^CLOSING → SCOPING.*\nnext refusé : aucune preuve/s);
+  assert.deepEqual([readState(enchaine).state.activity, readState(enchaine).state.queue], ["SCOPING", [B]]);
+  const anglais = depotFile({ lang: "en" });
+  ecrireEtat(anglais, { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null, queue: [A] });
+  assert.match(nextHead(anglais, { gh: ghAbsent }).message, /^next refused: no proof that the main branch's CI is green on its last merge/);
+  // Forge non GitHub (origin ailleurs) : pas de preuve possible, next et l'enchaînement ne sont pas bloqués, la sortie le dit.
+  const ailleurs = depotFermeture({ activity: "SCOPING", active_brief: null }).racine;
+  const distant = join(tmp("drwil-gitlab-"), "depot.git");
+  spawnSync("git", ["init", "-q", "--bare", distant]);
+  spawnSync("git", ["remote", "add", "origin", distant], { cwd: ailleurs });
+  rmSync(join(ailleurs, ".drwil", "evidence", "main-ci.json"));
+  r = nextHead(ailleurs, { gh: ghAbsent });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /\nfile : la forge d'origin n'est pas GitHub — pas de preuve possible .*la vérifier à la main/);
+  assert.equal(readState(ailleurs).state.active_brief, B);
+  const enchaineAilleurs = depotFermeture().racine;
+  spawnSync("git", ["remote", "add", "origin", distant], { cwd: enchaineAilleurs });
+  rmSync(join(enchaineAilleurs, ".drwil", "evidence", "main-ci.json"));
+  const chaine = (await settleClosing(enchaineAilleurs, { chain: true })).message;
+  assert.match(chaine, /^CLOSING → SCOPING.*la vérifier à la main/s);
+  assert.equal(readState(enchaineAilleurs).state.activity, "BUILD");
 });
 
 test("QUA-176 : un échec de la lecture ne casse jamais le début de session", async () => {
