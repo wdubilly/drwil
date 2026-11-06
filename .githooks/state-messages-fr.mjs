@@ -99,6 +99,18 @@ export const MESSAGES_FR = {
   nextOpen:
     "next refusé : la PR du chantier précédent n'est pas fusionnée — attendre la fusion (et mettre la branche principale à jour), puis relancer",
   nextUnknown: "next refusé : la fusion de la PR du chantier précédent n'est pas établie",
+  nextNoProof:
+    "next refusé : aucune preuve que la CI de la branche principale est verte sur sa dernière fusion ({0}) — lancer `node .githooks/pr-watch.mjs <numéro de la PR fusionnée>`, qui la suit sur le commit de fusion et écrit la preuve si elle est verte sans issue « CI broken on the main branch » ouverte ; rouge, encore en cours ou issue ouverte : s'arrêter et le dire",
+  nextOtherMerge:
+    "next refusé : la CI de la branche principale suivie par pr-watch porte sur le commit {0} (PR #{1}), la branche principale à jour est à {2} — lancer `node .githooks/pr-watch.mjs <n>` sur la PR fusionnée en dernier, puis relancer",
+  nextRed:
+    "next refusé : la CI de la branche principale est ROUGE sur sa dernière fusion ({0}, PR #{1}) — s'arrêter et le dire ; la correction est un nouveau chantier, jamais un contournement",
+  nextPending:
+    "next refusé : la CI de la branche principale était encore en cours sur sa dernière fusion ({0}) — relancer `node .githooks/pr-watch.mjs {1}`, puis relancer next",
+  nextIssue:
+    "next refusé : l'issue #{0} « CI broken on the main branch » est ouverte — la branche principale est signalée cassée ; s'arrêter et le dire, la suivante attend sa correction et la fermeture de l'issue",
+  nextNoMain:
+    "next refusé : branche principale introuvable (ni main ni master) — la preuve de CI verte ne peut être rapprochée de sa dernière fusion",
   startHuman: "lancement refusé : c'est une décision humaine (sondage `/drwil-start`, ou terminal interactif)",
   startBusy: "lancement refusé : la fiche {0} est déjà active dans le worktree {1}",
   startNotScoped: `lancement refusé : « {0} » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)`,

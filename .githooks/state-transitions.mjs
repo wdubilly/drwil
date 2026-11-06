@@ -7,6 +7,7 @@ import { closingMerged, closingSignals, mainBranch, noGhText, pruneMergedBranche
 import { activeElsewhere, createBranch, git } from "./worktree.mjs";
 import { ACTIVITIES, readState, texts, transitionAllowed, validateState, NEUTRAL_STATE } from "./state-validate.mjs";
 import { requiresHuman, verifyEvidence } from "./state-evidence.mjs";
+import { mainCiRefusal } from "./pr-watch-main.mjs";
 import { fill } from "./state-texts.mjs";
 import { move as moveAll, start as startAll, writeState } from "./state.mjs";
 
@@ -32,10 +33,9 @@ function prepareBranch(root, path) {
 }
 
 /**
- * Starts a workstream in one gesture: from SCOPING, EXPECTATION or REQUEST, moves straight to
- * BUILD on a scoped brief. In "human" mode (default), `human` must be true: it is only for a
- * human answer to a poll read by the tool's hook, or for a choice made in an interactive
- * terminal. `{ code: 0 | 1, message }`.
+ * Starts a workstream in one gesture: from SCOPING, EXPECTATION or REQUEST, moves straight to BUILD on a scoped
+ * brief. In "human" mode (default), `human` must be true: only for a human answer to a poll read by the tool's
+ * hook, or a choice made in an interactive terminal. `{ code: 0 | 1, message }`.
  */
 export function start(root, brief, { human = false, request, autoMerge = false, queue = [], now = new Date().toISOString() } = {}) {
   const T = texts(root);
@@ -76,6 +76,8 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   if (rest.length) Object.assign(state, { queue: rest, queue_merge: human ? autoMerge === true : read.state.queue_merge === true });
   const problems = validateState(state, root);
   if (problems.length) return { code: 1, message: fill(T.startInvalid, problems.join(" ; ")) };
+  const unproven = fromQueue && mainCiRefusal(root, T); // a queue waits for its main branch green, a human start does not (QUA-251)
+  if (unproven) return { code: 1, message: unproven };
   const branch = prepareBranch(root, path);
   if (branch.code !== 0) return branch;
   writeState(root, state);
@@ -129,9 +131,8 @@ export function prepareTransition(read, to, { brief, request, now }, root) {
 }
 
 /**
- * Applies a transition and writes the state. `{ code: 0 | 1, message }`.
- * `confirm(question)` is only called if a human is required, and only in front of
- * an interactive terminal: without a terminal, a human transition is refused.
+ * Applies a transition and writes the state. `{ code: 0 | 1, message }`. `confirm(question)` is only called if a
+ * human is required, and only in front of an interactive terminal: without a terminal, a human transition is refused.
  */
 export async function move(root, { to, brief, request }, { tty = false, confirm, now = new Date().toISOString() } = {}) {
   const T = texts(root);
@@ -190,7 +191,7 @@ export async function settleClosing(root, { chain = false, gh } = {}) {
   return { message: head && chain ? `${T.settled}\n${startAll(root, head).message}` : T.settled };
 }
 
-/** Starts the head of the queue (`next`) once the previous PR is merged; open or unknown (QUA-013): refused, said. */
+/** `next`: the queue's head, once the previous PR is merged (open or unknown: refused, QUA-013) and main proven green (QUA-251). */
 export function nextHead(root, { gh } = {}) {
   const T = texts(root);
   const head = readState(root).state.queue?.[0];

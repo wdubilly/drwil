@@ -20,6 +20,15 @@ closing commit; the release renames this section to its version.
   main branch saves these verdicts (GitHub: Actions cache; GitLab: the
   `checks` job artifact, downloaded with the job token); without them,
   everything is replayed.
+- A queue of workstreams waits for a green main branch: once the pull request
+  is merged, `node .githooks/pr-watch.mjs <n>` also follows the main branch's
+  CI on the merge commit and the « CI broken on the main branch » alert issue,
+  says green, red, still running or issue open, and records it in
+  `.drwil/evidence/`; `node .githooks/state.mjs next` (and the chaining at the
+  merge) refuses to start the next workstream without a green proof for the
+  tip of the up-to-date main branch, and says why. A human `start` is not
+  blocked. `pr-watch` exits with 1 when the main branch's CI is red after the
+  merge, 2 when it was not followed to the end.
 
 ### Fixed
 

@@ -98,6 +98,17 @@ export const MESSAGES_EN = {
   nextOpen:
     "next refused: the previous workstream's pull request is not merged — wait for the merge (and update the main branch), then retry",
   nextUnknown: "next refused: the previous workstream's pull request merge is not established",
+  nextNoProof:
+    "next refused: no proof that the main branch's CI is green on its last merge ({0}) — run `node .githooks/pr-watch.mjs <number of the merged PR>`, which follows it on the merge commit and writes the proof if it is green with no « CI broken on the main branch » issue open; red, still running or issue open: stop and say so",
+  nextOtherMerge:
+    "next refused: the main branch CI followed by pr-watch is for commit {0} (PR #{1}), the up-to-date main branch is at {2} — run `node .githooks/pr-watch.mjs <n>` on the PR merged last, then retry",
+  nextRed:
+    "next refused: the main branch's CI is RED on its last merge ({0}, PR #{1}) — stop and say so; the fix is a new workstream, never a bypass",
+  nextPending:
+    "next refused: the main branch's CI was still running on its last merge ({0}) — run `node .githooks/pr-watch.mjs {1}` again, then retry next",
+  nextIssue:
+    "next refused: issue #{0} « CI broken on the main branch » is open — the main branch is reported broken; stop and say so, the next one waits for its fix and the issue closed",
+  nextNoMain: "next refused: main branch not found (neither main nor master) — the green CI proof cannot be matched with its last merge",
   startHuman: "start refused: it is a human decision (`/drwil-start` poll, or interactive terminal)",
   startBusy: "start refused: brief {0} is already active in the worktree {1}",
   startNotScoped: `start refused: "{0}" is not a scoped brief (scope block committed, brief not finished)`,

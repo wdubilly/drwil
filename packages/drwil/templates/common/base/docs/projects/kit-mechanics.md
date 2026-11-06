@@ -26,6 +26,7 @@ files:
   - .githooks/briefs-lots.mjs
   - .githooks/briefs.mjs
   - .githooks/pr-watch.mjs
+  - .githooks/pr-watch-main.mjs
   - .githooks/wait-command.mjs
   - .githooks/merge-auto.mjs
   - .githooks/base-checks.mjs
