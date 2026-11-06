@@ -1,6 +1,6 @@
-# Projet : le rappel « fusion annulée » tombe quand la fusion est reprogrammée par merge-auto
+# Projet : merge-auto dit vrai sur une PR déjà verte, et efface le rappel « fusion annulée » quand il reprogramme
 
-**Statut** : cadré le 2026-11-06.
+**Statut** : cadré le 2026-11-06 ; élargi le 2026-11-06 (PR déjà verte fusionnée sur-le-champ).
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/rappel-fusion-annulee-reprogrammee.md`
@@ -28,7 +28,17 @@ de l'état (QUA-181). Elle ne tombe qu'à une réouverture réussie ou au retour
 reprogramme la fusion entre-temps, le rappel « fusion annulée, non reprogrammée » reste affiché alors
 qu'il est faux.
 
+Second défaut, vu le 2026-11-06 sur la PR #367 : quand toute la CI d'une PR est déjà verte,
+`gh pr merge --auto` fusionne sur-le-champ au lieu de programmer. La vérification qui suit
+(`.githooks/merge-auto.mjs:115`) lit alors une PR `MERGED` sans `autoMergeRequest`, et sort en échec
+(code 1) avec « la fusion n'est PAS programmée ». Dans une file de chantiers, ce faux refus arrêterait
+l'enchaînement.
+
 ## Critères d'acceptation
+
+- Quand la PR est fusionnée par la commande elle-même (CI déjà verte), `node .githooks/merge-auto.mjs`
+  sort en succès et dit « fusionnée », jamais « programmée » ; une PR ni programmée ni fusionnée reste un
+  échec — `QUA-162`
 
 - Quand `node .githooks/merge-auto.mjs` voit la fusion programmée sur la PR marquée par `merge_cancelled`,
   il efface la marque et le dit ; une PR autre que celle de la marque, ou une fusion non programmée, la
@@ -42,6 +52,10 @@ qu'il est faux.
   demandeur le 2026-11-06)
 - `.githooks/merge-auto.mjs` — écrit l'état pour effacer `merge_cancelled`, et rien d'autre ; aucun refus
   ni aucune autorisation (QUA-161 à QUA-163, QUA-188) ne change (validé par le demandeur le 2026-11-06)
+
+- `QUA-162` — ancien critère : succès seulement sur une fusion vue programmée — raison : une PR vue
+  fusionnée après la commande est aussi un succès, dit « fusionnée » ; ne jamais dire programmée sans
+  `autoMergeRequest` reste la règle (validé par le demandeur le 2026-11-06)
 
 ## 2. Hors périmètre
 
@@ -59,6 +73,8 @@ qu'il est faux.
 ## 4. Décisions
 
 - 2026-11-06 : `merge-auto` efface la marque, plutôt qu'un appel `gh` à chaque rappel.
+- 2026-11-06 : le faux refus sur une PR déjà verte entre dans cette fiche, pour que la file de la 0.11.1
+  ne s'arrête pas dessus.
 
 ## 5. Points à trancher
 
@@ -66,8 +82,9 @@ Aucun.
 
 ## 6. Increments
 
-- **Lot 1 — effacement par merge-auto** [IA] : `.githooks/merge-auto.mjs`, messages, tests, QUA-181 modifié.
-  Critère de sortie : tests de QUA-181 et de `merge-auto` verts, `GOVERNANCE: PASS`.
+- **Lot 1 — merge-auto dit vrai et efface la marque** [IA] : `.githooks/merge-auto.mjs` (PR fusionnée sur-le-champ,
+  marque effacée), messages, tests, QUA-162 et QUA-181 modifiés. Critère de sortie : tests de QUA-162,
+  QUA-181 et de `merge-auto` verts, `GOVERNANCE: PASS`.
 
 ## 7. Reprise
 
