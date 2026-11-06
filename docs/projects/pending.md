@@ -170,6 +170,11 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
   vraie PR en retard sur la branche principale —
   `docs/intentions/merge-auto-eprouve-en-reel.md`.
+- [ ] [décision] [P3] `start` vers un worktree prouvé dans un vrai terminal, pas
+  un terminal simulé (`QUA-248`) — `docs/intentions/start-worktree-en-vrai-terminal.md`.
+- [ ] [décision] [P3] Le contrôle des await de premier niveau : `import()` calculés
+  et points d'entrée encore lancés par un await (`QUA-249`) —
+  `docs/intentions/await-premier-niveau-suites.md`.
 - [ ] [décision] [P3] Une identité forte en option pour l'attestation (commits
   signés, revue GitHub authentifiée), les niveaux de garantie étant documentés
   (`QUA-197`) — `docs/intentions/e2e-et-attestation-precises.md`.
