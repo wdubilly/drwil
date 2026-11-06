@@ -89,6 +89,10 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
 - `.githooks/run-checks-verdicts.mjs` — en CI, la reprise des verdicts s'active quand la CI le
   demande (PR), sur le fichier de verdicts restauré depuis la branche principale ; hors CI, rien ne
   change (validé par le demandeur le 2026-11-05)
+- `QUA-141` — ancien critère : la reprise d'un verdict n'a jamais lieu en CI — raison : en CI, elle
+  a lieu à la seule passe d'une PR qui la demande (`QUA-250`), sur les verdicts de la branche
+  principale ; c'est la reprise en CI de `.githooks/run-checks-verdicts.mjs` ci-dessus (validé par le
+  demandeur le 2026-11-05)
 - `QUA-045` — ancien critère : Ubuntu joue les tests du paquet sur toute PR — raison : sur une PR
   de doc seule, Ubuntu les saute comme Windows et macOS ; le push sur la branche principale les
   joue toujours (validé par le demandeur le 2026-11-05)
