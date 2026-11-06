@@ -44,6 +44,10 @@ files:
   - .claude/skills/start-a-workstream/SKILL.md
   - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
   - docs/recipes/working-with-branches.md
+  - packages/drwil/templates/common/base/.githooks/pr-watch-main.mjs
+  - .githooks/pr-watch-main.mjs
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
 -->
 
 ## 1. Besoin
@@ -78,7 +82,7 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
   écrite par `node .githooks/pr-watch.mjs` après la fusion, que la CI de la branche principale est
   verte sur le commit de fusion et qu'aucune issue « CI broken on the main branch » n'est ouverte ;
   sinon `next` refuse et dit pourquoi (CI rouge, en cours ou non suivie, issue ouverte) ; un
-  `start` humain n'est pas bloqué — contrat à créer
+  `start` humain n'est pas bloqué — `QUA-251`
 
 ## Contrats modifiés
 
@@ -97,6 +101,14 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
 - `.githooks/state-context-texts.mjs`, messages `fr`/`en`, skill `start-a-workstream`, recette
   `docs/recipes/working-with-branches.md` — rappel de la file et refus ajoutés ; aucun texte existant contredit
   (validé par le demandeur le 2026-11-06)
+- `QUA-100` — ancien critère : « fusionnée » sort en code 0 — raison : la PR fusionnée, `pr-watch` suit
+  la CI de la branche principale et son code de sortie devient le sien (0 verte, 1 rouge ou issue
+  ouverte, 2 non suivie) ; « fusionnée » est toujours dit (suite du suivi validé par le demandeur le
+  2026-11-06, lot 4)
+- `QUA-178` — ancien critère : l'enchaînement à la fusion constatée lance aussitôt la tête de file —
+  raison : il attend la même preuve que `next`, sinon la file lancerait le suivant sans elle ; refus
+  dit, état SCOPING, file gardée (conséquence du dernier critère d'acceptation, « une file ne lance
+  le suivant que sur la preuve », validé par le demandeur le 2026-11-06 ; non tranché à part)
 
 ## 2. Hors périmètre
 
@@ -167,6 +179,12 @@ Aucun.
   `DRWIL_CI_REUSE=1 node .githooks/run-checks.mjs` ; `after_script` efface le fichier hors de la
   branche principale avant l'envoi de l'artefact. `QUA-250` « livré à tout projet », troisième
   critère relié, contrôle `tests-qua-250` étendu à `packages/drwil/test/kit.test.mjs`.
-- **Prochaine étape** : [IA] lot 4 (ajouté le 2026-11-06), puis la clôture ; [humain] lot 3 — lever « à jour avec master » dans le ruleset 24840343
+- **Lot 4** (2026-11-06) : fait. `QUA-251` créé : `.githooks/pr-watch-main.mjs` (nouveau, gabarit et
+  copie : `pr-watch.mjs` et `state-transitions.mjs` étaient à leur plafond) suit la CI `ia-first.yml`
+  du commit de fusion et l'issue d'alerte, consigne le verdict dans `.drwil/evidence/main-ci.json` (si présent) ;
+  la « dernière fusion » est le sommet de la branche principale à jour (`origin/<principale>` après
+  fetch, comme `createBranch`), vérifié dans `start` pour la tête de file lancée par l'agent (donc
+  `next` et l'enchaînement de `QUA-178`). Contrôle `tests-qua-251`.
+- **Prochaine étape** : la clôture ; [humain] lot 3 — lever « à jour avec master » dans le ruleset 24840343
   (« master protégé ») ; l'agent met ensuite `.github/ruleset-master.json` d'accord.
 - **Reste à mesurer** : une PR de doc, après la fusion (le cache n'existe qu'après un push sur master).
