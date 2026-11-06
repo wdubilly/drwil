@@ -122,9 +122,19 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P1] (0.11.1) Une limite se traite pendant le chantier ; hors cadre, l'humain choisit par un
   sondage avant VERIFY (cadré le 2026-11-05) —
   `docs/projects/limites-pendant-le-chantier.md`.
-- [ ] [IA] [P1] Une attestation humaine se propose d'abord par le sondage dans le chat, le terminal en
+- [ ] [IA] [P1] (0.11.1) Une attestation humaine se propose d'abord par le sondage dans le chat, le terminal en
   repli ; le sondage refusé en réel est corrigé d'abord (cadré le 2026-11-06) —
   `docs/projects/attestation-par-sondage-d-abord.md`.
+- [ ] [IA] [P1] (0.11.1) La réouverture ne bloque plus à tort : intention retirée restaurée, test seul
+  plus vu comme règle (cadré le 2026-11-06) — `docs/projects/reouverture-sans-faux-blocage.md`.
+- [ ] [IA] [P1] (0.11.1) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
+  2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
+- [ ] [IA] [P2] (0.11.1) Les tests de run-checks passent sans gitleaks, grâce à un faux gitleaks (cadré
+  le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
+- [ ] [IA] [P2] (0.11.1) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
+  signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
+- [ ] [IA] [P2] (0.11.1) Le rappel « fusion annulée » tombe quand merge-auto voit la fusion reprogrammée
+  (cadré le 2026-11-06) — `docs/projects/fusion-reprogrammee-efface-le-rappel.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
@@ -158,12 +168,6 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Preuves, contrôles, vitesse
 
-- [ ] [décision] L'ordre du sondage `/drwil-start` ne fonctionne pas chez
-  l'adoptant (section « Fiches cadrées » absente du gabarit, aucun signal) —
-  `docs/intentions/ordre-du-sondage-chez-l-adoptant.md`.
-- [ ] [décision] Le rappel « fusion annulée » de l'état doit tomber quand
-  l'humain reprogramme la fusion —
-  `docs/intentions/rappel-fusion-annulee-reprogrammee.md`.
 - [ ] [décision] La CI rapide éprouvée en réel (mesure d'une PR de doc, preuve de CI de la branche
   principale sur une vraie fusion, reprise GitLab par `CI_JOB_TOKEN`) et la preuve de CI de la
   branche principale hors GitHub — `docs/intentions/ci-rapide-epreuves-reelles.md`.
@@ -200,13 +204,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   mock, tranché le 2026-10-16) — `docs/intentions/couverture-paquet-100.md`.
 - [ ] [décision] [P3] Lancer un contrôle lent au commit seulement si le chantier
   touche un chemin critique — `docs/intentions/controle-lent-chemin-critique.md`.
-- [ ] [décision] [P2] Les tests de run-checks ne doivent pas exiger gitleaks —
-  `docs/intentions/tests-de-run-checks-sans-gitleaks.md`.
 
 ### Protection, garanties, contournements
 
-- [ ] [décision] [P2] Rendre effectif le hook de message de commit (non
-  exécutable) — `docs/intentions/commit-msg-non-executable.md`.
 - [ ] [décision] [P1] (0.12.0, 1) Le premier commit du kit est refusé en SCOPING sous la
   barrière bloquante, et la recette d'adoption ne le dit pas —
   `docs/intentions/premier-commit-du-kit-sous-barriere-bloquante.md`.
