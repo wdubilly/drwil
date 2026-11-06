@@ -119,9 +119,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.1) Les commandes de `node .githooks/state.mjs` rendent toujours la main (`briefs` et
-  `resume` bloqués depuis la PR #361 ; cadré le 2026-11-05, à lancer en premier) —
-  `docs/projects/commandes-d-etat-bloquees.md`.
 - [ ] [IA] [P1] (0.11.1) Une PR de doc passe la CI et fusionne en quelques minutes (reprise des verdicts
   en CI, Ubuntu sans tests sur la doc, « à jour avec master » levé ; cadré le 2026-11-05) —
   `docs/projects/ci-rapide-pour-la-doc.md`.

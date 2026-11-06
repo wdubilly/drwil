@@ -4131,3 +4131,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : `start` vers un worktree est prouvé avec un terminal simulé (`isTTY` posé), pas un vrai pseudo-terminal (`docs/intentions/start-worktree-en-vrai-terminal.md`) ; le contrôle ne suit que les imports relatifs littéraux, un `import()` calculé lui échappe, et les points d'entrée que rien n'importe gardent leur await de premier niveau (`docs/intentions/await-premier-niveau-suites.md`).
 - **Attestations** : QUA-048, QUA-067 et QUA-175 (fichiers couverts : `.githooks/state.mjs`) réattestées par l'humain le 2026-11-06.
 - **Clôturé par** : la branche `workstream/commandes-d-etat-bloquees`.
+
+- **Preuve de clôture** : `docs/preuves/commandes-d-etat-bloquees.md`.

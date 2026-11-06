@@ -33,6 +33,7 @@ files:
   - .githooks/briefs-lots.mjs
   - .githooks/state-lots.test.mjs
   - .githooks/state-resume.test.mjs
+  - .githooks/state-cli-process.test.mjs
   - .githooks/briefs.mjs
   - .githooks/pr-watch.mjs
   - .githooks/merge-auto.mjs
