@@ -96,6 +96,20 @@ installée ; sans droit de lecture, il le dit (« non vérifié »), jamais
 « conforme ». Tests : réponses de l'API simulées pour les trois cas et
 pour l'accès refusé.
 
+## « À jour avec la branche principale » (ajouté le 2026-11-06)
+
+Ce dépôt a levé l'exigence « Require branches to be up to date before
+merging » (QUA-252) : la reprise des verdicts en CI (QUA-250) et la file qui
+attend une branche principale verte (QUA-251) la rendent inutile, et elle
+relançait toute la CI d'une PR à chaque fusion d'une autre. Le livrable n'en
+dit rien aujourd'hui (aucun ruleset ni vérificateur dans le gabarit). Le
+demandeur veut qu'il le porte : la protection recommandée dit quels contrôles
+exiger, que « à jour » n'est pas nécessaire et pourquoi (risque accepté : deux
+PR vertes peuvent casser la branche principale ensemble, vu par sa CI et son
+alerte), et le vérificateur de ruleset (`.github/scripts/verifier-ruleset.mjs`
+dans ce dépôt) est livré pour que la CI vérifie que la forge tient la
+protection déclarée.
+
 ## Contraintes
 
 - Ne jamais rendre un projet non fusionnable : exiger une approbation sans
@@ -117,3 +131,6 @@ pour l'accès refusé.
 6. **Vérifier d'abord** (2026-10-17) : un premier lot qui ne fait que
    vérifier la protection (trois cas, `doctor`), la configuration
    restant une recette, avant toute commande qui l'applique ?
+7. **« À jour » et vérificateur** (2026-11-06) : livrer la protection sans
+   « à jour avec la branche principale » et le vérificateur de ruleset dès
+   le premier lot (« vérifier d'abord »), ou à part ?
