@@ -36,6 +36,10 @@ export const MESSAGES_FR = {
     "fusion automatique annulée et NON reprogrammée : l'outil ne la reprogramme jamais seul (au risque de fusionner le code fautif) — il revient à l'humain de la reprogrammer, quand il a décidé ; le rappel d'état le redit en CLOSING",
   mergeCancelledType: "merge_cancelled : objet { pr } attendu (pr : numéro de la PR)",
   mergeCancelledActivity: "merge_cancelled : seulement en CLOSING",
+  mergeCancelledCleared:
+    "[merge-auto] marque « fusion annulée » de la PR #{0} effacée : la fusion est vue programmée, le rappel d'état ne dit plus qu'elle ne l'est pas",
+  mergeAutoMerged:
+    "[merge-auto] PR #{0} fusionnée par la commande elle-même (toute sa CI était déjà verte). Suivre la CI de la branche principale : node .githooks/pr-watch.mjs {0}",
   scopingMergeType: "scoping_merge : objet { branch } attendu (branch : la branche de la PR de cadrage)",
   scopingMergeActivity: "scoping_merge : seulement en SCOPING",
   scopingMergeReminder:

@@ -56,6 +56,11 @@ l'enchaînement.
 - `QUA-162` — ancien critère : succès seulement sur une fusion vue programmée — raison : une PR vue
   fusionnée après la commande est aussi un succès, dit « fusionnée » ; ne jamais dire programmée sans
   `autoMergeRequest` reste la règle (validé par le demandeur le 2026-11-06)
+- `.githooks/state-messages-fr.mjs` — nouveaux messages « PR fusionnée » (et non « programmée ») et
+  « marque fusion annulée effacée » ; aucun texte de refus existant ne change (validé par le demandeur
+  le 2026-11-06)
+- `.githooks/state-messages-en.mjs` — les mêmes messages en anglais (validé par le demandeur le
+  2026-11-06)
 
 ## 2. Hors périmètre
 
@@ -88,5 +93,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-06) : cadré, rien de réalisé.
-- **Prochaine étape** : [IA] lot 1.
+- **Dernier état** (2026-11-06) : lot 1 réalisé — `merge-auto` dit « fusionnée » (code 0) sur une PR
+  fusionnée sur-le-champ, efface la marque `merge_cancelled` quand il voit la fusion programmée sur sa PR ;
+  messages fr/en, tests, QUA-162 et QUA-181 mis à jour.
+- **Prochaine étape** : [IA] clôture.

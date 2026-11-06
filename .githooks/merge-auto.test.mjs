@@ -130,6 +130,27 @@ test("QUA-162 fusion automatique : jamais programmée sur un état inconnu, pas 
   );
   r = await mergeAuto(options(dir, { gh: faux({ vues: [ok(vue("CLEAN")), { status: 1, stdout: "", stderr: "" }] }).gh }));
   assert.equal(r.code, 1);
+  // CI déjà verte : `gh pr merge --auto` fusionne sur-le-champ ; succès dit « fusionnée », jamais « programmée ».
+  const fusion = faux({ vues: [ok(vue("CLEAN")), ok(vue("CLEAN", { state: "MERGED" }))] });
+  r = await mergeAuto(options(dir, { gh: fusion.gh }));
+  assert.deepEqual(
+    [r.code, r.message],
+    [
+      0,
+      "[merge-auto] PR #7 fusionnée par la commande elle-même (toute sa CI était déjà verte). Suivre la CI de la branche principale : node .githooks/pr-watch.mjs 7",
+    ],
+  );
+  assert.doesNotMatch(r.message, /programmée/);
+  assert.deepEqual(fusion.appels, ["pr view", "pr merge", "pr view"]);
+  r = await mergeAuto(
+    options(projet({ lang: "en" }), { gh: faux({ vues: [ok(vue("CLEAN")), ok(vue("CLEAN", { state: "MERGED" }))] }).gh }),
+  );
+  assert.deepEqual([r.code, /^\[merge-auto\] PR #7 merged by the command itself/.test(r.message)], [0, true]);
+  assert.doesNotMatch(r.message, /scheduled/);
+  // Ni programmée ni fusionnée (fermée) : échec.
+  r = await mergeAuto(options(dir, { gh: faux({ vues: [ok(vue("CLEAN")), ok(vue("CLEAN", { state: "CLOSED" }))] }).gh }));
+  assert.equal(r.code, 1);
+  assert.match(r.message, /PAS programmée/);
 });
 
 test("QUA-163 fusion automatique : sans l'autorisation du lancement, l'outil refuse sans rien lancer ; messages en anglais", async () => {

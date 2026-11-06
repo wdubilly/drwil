@@ -42,6 +42,7 @@ import {
 
 import { accept, acceptanceCheck, criteriaFingerprint, recordAcceptance } from "./state-acceptance.mjs";
 import { mainTip, writeProof } from "./pr-watch-main.mjs";
+import { mergeAuto } from "./merge-auto.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -2065,6 +2066,43 @@ test("QUA-181 : réouverture échouée après l'annulation de la fusion : le ref
   assert.deepEqual(readState(clos).problems, []);
   assert.equal((await move(clos, { to: "SCOPING" })).code, 0);
   assert.equal(readState(clos).state.merge_cancelled, undefined);
+});
+
+test("QUA-181 : merge-auto qui voit la fusion programmée sur la PR de la marque l'efface et le dit ; autre PR ou fusion non programmée : la marque reste ; en anglais aussi", async () => {
+  /** gh simulé : la PR 42 propre, puis vue `apres` la commande de fusion. */
+  const gh = (apres, number = 42) => {
+    const vues = [
+      { number, state: "OPEN", mergeStateStatus: "CLEAN", autoMergeRequest: null },
+      { number, ...apres },
+    ];
+    return (args) => (args[1] === "view" ? { status: 0, stdout: JSON.stringify(vues.length > 1 ? vues.shift() : vues[0]) } : { status: 0 });
+  };
+  const programmee = { state: "OPEN", autoMergeRequest: { mergeMethod: "MERGE" } };
+  for (const lang of ["fr", "en"]) {
+    const racine = depot({ state: actif("CLOSING", { auto_merge: true, merge_cancelled: { pr: 42 } }), lang });
+    const r = await mergeAuto({ pr: "42", root: racine, gh: gh(programmee) });
+    assert.equal(r.code, 0);
+    assert.match(
+      r.message,
+      lang === "fr"
+        ? /programmée et vérifiée.*\n\[merge-auto\] marque « fusion annulée » de la PR #42 effacée/s
+        : /scheduled and checked.*\n\[merge-auto\] « merge cancelled » mark of PR #42 cleared/s,
+    );
+    assert.equal(readState(racine).state.merge_cancelled, undefined);
+    assert.deepEqual(readState(racine).problems, []);
+    assert.doesNotMatch(shortReminder(readState(racine), racine), /PR #42 (ANNULÉE|CANCELLED)/);
+  }
+  // Autre PR que celle de la marque, programmation non vue, PR fusionnée sur-le-champ : la marque reste.
+  for (const [apres, number] of [
+    [programmee, 43],
+    [{ state: "OPEN", autoMergeRequest: null }, 42],
+    [{ state: "MERGED", autoMergeRequest: null }, 42],
+  ]) {
+    const racine = depot({ state: actif("CLOSING", { auto_merge: true, merge_cancelled: { pr: 42 } }) });
+    const r = await mergeAuto({ pr: String(number), root: racine, gh: gh(apres, number) });
+    assert.doesNotMatch(r.message, /effacée/);
+    assert.deepEqual(readState(racine).state.merge_cancelled, { pr: 42 });
+  }
 });
 
 const CRITERES = (extra = "") =>

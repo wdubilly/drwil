@@ -6,12 +6,15 @@
 // (`scoping_merge`, QUA-188); never schedules on a PR whose state is unknown or not up to date, never claims
 // the merge is scheduled without having seen it (QUA-013). Following the PR stays `pr-watch.mjs`'s job.
 // Usage: node .githooks/merge-auto.mjs [<pr number>] [--timeout <minutes>]
-// Exit code: 0 scheduled, 1 refused, 2 not run (gh unreachable, state not computed in time).
+// Exit code: 0 scheduled (or merged at once: CI already green), 1 refused, 2 not run (gh unreachable, state not
+// computed in time). Seeing the merge scheduled on the PR of the state's `merge_cancelled` mark (QUA-181) clears
+// the mark, through writeState: the only state this tool writes.
 import { spawnSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readState } from "./state.mjs";
+import { STATE_MESSAGES } from "./state-messages.mjs";
+import { readState, writeState } from "./state.mjs";
 
 const TEXTS = {
   fr: {
@@ -76,6 +79,15 @@ function view(gh, pr) {
   }
 }
 
+/** The merge seen scheduled on the PR of the `merge_cancelled` mark: the reminder became false, the mark goes (QUA-181). */
+function withMarkCleared(root, number, result) {
+  const { state } = readState(root);
+  if (state.merge_cancelled?.pr !== number) return result;
+  const { merge_cancelled: _, ...kept } = state;
+  writeState(root, kept);
+  return { ...result, message: `${result.message}\n${fill(STATE_MESSAGES[lang(root)].mergeCancelledCleared, number)}` };
+}
+
 /** Runs the sequence; returns { code, message }. */
 export async function mergeAuto({
   pr,
@@ -88,6 +100,7 @@ export async function mergeAuto({
   log = () => {},
 }) {
   const T = TEXTS[lang(root)];
+  const M = STATE_MESSAGES[lang(root)];
   const out = (code, key, ...values) => ({ code, message: fill(T[key], ...values) });
   const notRun = (reason) => ({ code: 2, message: fill(T.notRun, reason) });
   const { state } = readState(root);
@@ -112,7 +125,10 @@ export async function mergeAuto({
         const why = `${m.stderr ?? ""}${m.stdout ?? ""}`.trim();
         return /not allowed/i.test(why) ? out(1, "notAllowed", v.number) : out(1, "refused", v.number, why || "(?)");
       }
-      return view(gh, String(v.number))?.autoMergeRequest ? out(0, "scheduled", v.number) : out(1, "notScheduled", v.number);
+      // With the whole CI already green, `gh pr merge --auto` merges at once instead of scheduling (QUA-162).
+      const seen = view(gh, String(v.number));
+      if (seen?.autoMergeRequest) return withMarkCleared(root, v.number, out(0, "scheduled", v.number));
+      return seen?.state === "MERGED" ? { code: 0, message: fill(M.mergeAutoMerged, v.number) } : out(1, "notScheduled", v.number);
     }
     if (now() >= end) return notRun(fill(T.timeout, v.number, timeout, v.mergeStateStatus));
     await sleep(interval);
