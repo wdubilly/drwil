@@ -3001,16 +3001,18 @@
     {
       "id": "tests-qua-250",
       "name": "tests de QUA-250, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-250 \" .githooks/run-checks.test.mjs .github/scripts/workflows-yaml.test.mjs",
+      "run": "node --test --test-name-pattern=\"^QUA-250 \" .githooks/run-checks.test.mjs .github/scripts/workflows-yaml.test.mjs packages/drwil/test/kit.test.mjs",
       "ciJob": "checks",
       "paths": [
+        "packages/drwil/**",
         ".githooks/**",
         ".github/**",
         "package.json",
         "package-lock.json",
         ".drwil/ia-first.json"
       ],
-      "degradable": false
+      "degradable": false,
+      "needsBuild": true
     },
     {
       "id": "tests-qua-207",

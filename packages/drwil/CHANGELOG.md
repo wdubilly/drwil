@@ -13,6 +13,13 @@ closing commit; the release renames this section to its version.
   not merged; the current lot comes from the new `Drwil-Lot: N` commit
   trailer. It never rebuilds a human decision (automatic merge, queue,
   reopening) and refuses, writing nothing, when the history proves nothing.
+- The delivered CI (GitHub and GitLab) reuses, on a pull or merge request,
+  the verdict of the main branch's last CI for each check whose files and
+  command are unchanged, and replays the others: `run-checks` reuses a
+  verdict in CI only when the CI asks for it (`DRWIL_CI_REUSE=1`). Only the
+  main branch saves these verdicts (GitHub: Actions cache; GitLab: the
+  `checks` job artifact, downloaded with the job token); without them,
+  everything is replayed.
 
 ### Fixed
 

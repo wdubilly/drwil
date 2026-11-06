@@ -2317,7 +2317,7 @@ test("projet existant : init complète sans écraser, l'aperçu l'annonce, un se
   assert.equal(config(dir).ci, "gitlab", "CI existante détectée");
   assert.equal(read(dir, ".gitlab-ci.yml"), fichiers[".gitlab-ci.yml"], "fichier CI jamais réécrit");
   assert.equal(git(dir, "config", "core.hooksPath").stdout.trim(), ".husky/_", "gestionnaire de hooks du projet gardé");
-  assert.match(sortie, /\.gitlab-ci\.yml: .*job `checks` absent[\s\S]*- node \.githooks\/run-checks\.mjs/);
+  assert.match(sortie, /\.gitlab-ci\.yml: .*job `checks` absent[\s\S]*node \.githooks\/run-checks\.mjs/);
   assert.match(sortie, /\.husky\/pre-commit: \.githooks\/pre-commit "\$@" \|\| exit \$\?/);
 
   const avant = instantane(dir);
@@ -2905,6 +2905,35 @@ test("alerte CI cassée sur la branche principale : job dédié livré, GitHub e
   assert.match(gl, /no duplicate/);
 
   // Les deux restent couverts par QUA-013 (le nouveau job n'y casse rien).
+  for (const dir of [dirGh, dirGl]) {
+    const r = spawnSync(process.execPath, [".githooks/check-control-coverage.mjs"], { cwd: dir, encoding: "utf8" });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+  }
+});
+
+test("QUA-250 : la CI livrée (GitHub, GitLab) reprend sur une PR les verdicts de la branche principale, que seule la branche principale garde", async () => {
+  // Le détail des étapes est testé sur le gabarit (.github/scripts/workflows-yaml.test.mjs) ; ici, ce qu'init installe.
+  const dirGh = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dirGh, ci: "github", git: false }));
+  const gh = read(dirGh, ".github/workflows/ia-first.yml");
+  assert.match(
+    gh,
+    /uses: actions\/cache\/restore@v\d+[\s\S]*DRWIL_CI_REUSE: \$\{\{ github\.event_name == 'pull_request' && '1' \|\| '' \}\}/,
+  );
+  assert.match(
+    gh,
+    /github\.event_name == 'push' && github\.ref == format\('refs\/heads\/\{0\}', github\.event\.repository\.default_branch\)[^\n]*\n\s*uses: actions\/cache\/save@/,
+  );
+  const dirGl = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dirGl, ci: "gitlab", git: false }));
+  const gl = read(dirGl, ".gitlab-ci.yml");
+  assert.match(
+    gl,
+    /jobs\/artifacts\/\$CI_DEFAULT_BRANCH\/raw\/\$verdicts\?job=checks[\s\S]*DRWIL_CI_REUSE=1 node \.githooks\/run-checks\.mjs/,
+  );
+  assert.match(gl, /after_script:[\s\S]*rm -f \.drwil\/evidence\/run-checks-verdicts\.json[\s\S]*artifacts:\n\s*when: always/);
+  // Le moteur livré lit la demande de la CI (même fichier que celui du dépôt, testé par .githooks/run-checks.test.mjs).
+  assert.match(read(dirGh, ".githooks/run-checks-verdicts.mjs"), /process\.env\.DRWIL_CI_REUSE === "1"/);
   for (const dir of [dirGh, dirGl]) {
     const r = spawnSync(process.execPath, [".githooks/check-control-coverage.mjs"], { cwd: dir, encoding: "utf8" });
     assert.equal(r.status, 0, r.stdout + r.stderr);

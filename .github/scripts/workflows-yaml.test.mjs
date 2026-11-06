@@ -81,38 +81,71 @@ test("QUA-113 : les trois CI rejouent, dans le job checks, les contrôles avec l
   }
 });
 
-test("QUA-250 : sur une PR, la CI du dépôt restaure les verdicts de la branche principale et demande leur reprise ; seul le push sur la branche principale les sauvegarde", () => {
-  const ci = parseAllDocuments(readFileSync(join(RACINE, ".github/workflows/ia-first.yml"), "utf8"))[0].toJS();
-  const etapes = ci.jobs.checks.steps;
-  const VERDICTS = ".drwil/evidence/run-checks-verdicts.json";
-  const indice = (pred, quoi) => {
-    const i = etapes.findIndex(pred);
-    assert.ok(i >= 0, `${quoi} absent du job checks`);
-    return i;
-  };
-  const restaure = indice((e) => /^actions\/cache\/restore@/.test(e.uses ?? ""), "restauration des verdicts");
-  const passe = indice((e) => e.run === "node .githooks/run-checks.mjs", "run-checks");
-  const sauve = indice((e) => /^actions\/cache\/save@/.test(e.uses ?? ""), "sauvegarde des verdicts");
-  assert.ok(restaure < passe && passe < sauve, "restaurés avant la passe, sauvegardés après");
-  // Restauration : sur une PR seulement, le fichier de verdicts, depuis les clés de la branche principale.
-  assert.equal(etapes[restaure].if, "github.event_name == 'pull_request'");
-  assert.equal(etapes[restaure].with.path, VERDICTS);
-  assert.equal(etapes[restaure].with["restore-keys"], "run-checks-verdicts-");
-  // La reprise n'est demandée qu'à la passe de la PR : ni au niveau du job, ni au rejeu avec les hooks de la branche principale (QUA-113).
-  assert.match(etapes[passe].env?.DRWIL_CI_REUSE ?? "", /^\$\{\{ github\.event_name == 'pull_request' && '1' \|\| '' \}\}$/);
-  assert.equal(etapes.filter((e) => JSON.stringify(e).includes("DRWIL_CI_REUSE")).length, 1);
+const VERDICTS = ".drwil/evidence/run-checks-verdicts.json";
+
+for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml"])
+  test(`QUA-250 : sur une PR, ${fichier} restaure les verdicts de la branche principale et demande leur reprise ; seul le push sur la branche principale les sauvegarde`, () => {
+    const ci = parseAllDocuments(readFileSync(join(RACINE, fichier), "utf8"))[0].toJS();
+    const etapes = ci.jobs.checks.steps;
+    const indice = (pred, quoi) => {
+      const i = etapes.findIndex(pred);
+      assert.ok(i >= 0, `${fichier} : ${quoi} absent du job checks`);
+      return i;
+    };
+    const restaure = indice((e) => /^actions\/cache\/restore@/.test(e.uses ?? ""), "restauration des verdicts");
+    const passe = indice((e) => e.run === "node .githooks/run-checks.mjs", "run-checks");
+    const sauve = indice((e) => /^actions\/cache\/save@/.test(e.uses ?? ""), "sauvegarde des verdicts");
+    assert.ok(restaure < passe && passe < sauve, "restaurés avant la passe, sauvegardés après");
+    // Restauration : sur une PR seulement, le fichier de verdicts, depuis les clés de la branche principale.
+    assert.equal(etapes[restaure].if, "github.event_name == 'pull_request'");
+    assert.equal(etapes[restaure].with.path, VERDICTS);
+    assert.equal(etapes[restaure].with["restore-keys"], "run-checks-verdicts-");
+    // La reprise n'est demandée qu'à la passe de la PR : ni au niveau du job, ni au rejeu avec les hooks de la branche principale (QUA-113).
+    assert.match(etapes[passe].env?.DRWIL_CI_REUSE ?? "", /^\$\{\{ github\.event_name == 'pull_request' && '1' \|\| '' \}\}$/);
+    assert.equal(etapes.filter((e) => JSON.stringify(e).includes("DRWIL_CI_REUSE")).length, 1);
+    assert.ok(
+      !JSON.stringify(ci.jobs.checks.env ?? {}).includes("DRWIL_CI_REUSE") && !JSON.stringify(ci.env ?? {}).includes("DRWIL_CI_REUSE"),
+    );
+    // Sauvegarde : push sur la branche principale seulement, même si un contrôle a échoué (un « ok » reste vrai), clé par commit.
+    const garde = etapes[sauve].if;
+    assert.match(
+      garde,
+      /^always\(\) && github\.event_name == 'push' && github\.ref == format\('refs\/heads\/\{0\}', github\.event\.repository\.default_branch\)/,
+    );
+    assert.equal(etapes[sauve].with.path, VERDICTS);
+    assert.match(etapes[sauve].with.key, /^run-checks-verdicts-\$\{\{ github\.sha \}\}$/);
+    // Aucun autre job ni aucune autre étape n'écrit de cache.
+    const sauvegardes = Object.values(ci.jobs).flatMap((j) =>
+      (j.steps ?? []).filter((e) => /^actions\/cache(\/save)?@/.test(e.uses ?? "")),
+    );
+    assert.equal(sauvegardes.length, 1);
+  });
+
+test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge les verdicts de la branche principale et demande leur reprise ; seule la branche principale les garde", () => {
+  const ci = parseAllDocuments(readFileSync(join(RACINE, "packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml"), "utf8"))[0].toJS();
+  const script = ci.checks.script;
+  const passe = script.findIndex((l) => l.includes("DRWIL_CI_REUSE"));
+  assert.ok(passe >= 0, "reprise jamais demandée");
+  const bloc = script[passe];
+  // Hors de la branche principale (ni tag) : l'artefact du job checks de la branche principale, jamais un autre ref.
+  assert.match(bloc, /if \[ -z "\$CI_COMMIT_TAG" \] && \[ "\$CI_COMMIT_BRANCH" != "\$CI_DEFAULT_BRANCH" \]; then/);
+  assert.match(bloc, /\/jobs\/artifacts\/\$CI_DEFAULT_BRANCH\/raw\/\$verdicts\?job=checks/);
+  assert.ok(bloc.includes(`verdicts=${VERDICTS}`));
+  // Téléchargement manqué : fichier effacé, tout rejoué (QUA-013) ; la reprise n'est demandée qu'à cette passe.
+  assert.match(bloc, /\|\| \{ rm -f "\$verdicts";/);
+  assert.match(bloc, /DRWIL_CI_REUSE=1 node \.githooks\/run-checks\.mjs\n\s*else\n\s*node \.githooks\/run-checks\.mjs\n\s*fi/);
+  assert.equal(script.filter((l) => l.includes("DRWIL_CI_REUSE")).length, 1);
   assert.ok(
-    !JSON.stringify(ci.jobs.checks.env ?? {}).includes("DRWIL_CI_REUSE") && !JSON.stringify(ci.env ?? {}).includes("DRWIL_CI_REUSE"),
+    !JSON.stringify(ci.checks.variables ?? {}).includes("DRWIL_CI_REUSE") && !JSON.stringify(ci.variables ?? {}).includes("DRWIL_CI_REUSE"),
   );
-  // Sauvegarde : push sur la branche principale seulement, même si un contrôle a échoué (un « ok » reste vrai), clé par commit.
-  const garde = etapes[sauve].if;
+  // Sauvegarde : l'artefact du fichier de verdicts, même en échec, effacé avant l'envoi hors de la branche principale.
+  assert.equal(ci.checks.artifacts.when, "always");
+  assert.deepEqual(ci.checks.artifacts.paths, [VERDICTS]);
+  const apres = ci.checks.after_script.join("\n");
   assert.match(
-    garde,
-    /^always\(\) && github\.event_name == 'push' && github\.ref == format\('refs\/heads\/\{0\}', github\.event\.repository\.default_branch\)/,
+    apres,
+    /if \[ -n "\$CI_COMMIT_TAG" \] \|\| \[ "\$CI_COMMIT_BRANCH" != "\$CI_DEFAULT_BRANCH" \]; then\n\s*rm -f \.drwil\/evidence\/run-checks-verdicts\.json/,
   );
-  assert.equal(etapes[sauve].with.path, VERDICTS);
-  assert.match(etapes[sauve].with.key, /^run-checks-verdicts-\$\{\{ github\.sha \}\}$/);
-  // Aucun autre job ni aucune autre étape n'écrit de cache.
-  const sauvegardes = Object.values(ci.jobs).flatMap((j) => (j.steps ?? []).filter((e) => /^actions\/cache(\/save)?@/.test(e.uses ?? "")));
-  assert.equal(sauvegardes.length, 1);
+  // Pas de cache GitLab : une merge request pourrait l'écrire, ou ne pas le lire (caches protégés séparés).
+  assert.ok(!JSON.stringify(ci).includes('"cache"'));
 });

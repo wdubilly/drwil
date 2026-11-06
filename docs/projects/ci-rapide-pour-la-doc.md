@@ -53,8 +53,7 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
   paquet comme Windows et macOS, et le dit — `QUA-045`
 - La CI livrée aux projets (GitHub et GitLab, gabarit) restaure les verdicts de la dernière CI
   de leur branche principale sur une PR (ou merge request) et ne les sauvegarde que sur la branche
-  principale ; un projet adoptant reprend donc ses contrôles inchangés comme ce dépôt — contrat à
-  créer (le même que le premier critère)
+  principale ; un projet adoptant reprend donc ses contrôles inchangés comme ce dépôt — `QUA-250`
 - La protection de la branche principale n'exige plus qu'une PR soit à jour avec elle ;
   `.github/ruleset-master.json` le dit et la CI vérifie que la forge le tient — contrat à créer
 
@@ -84,7 +83,7 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
   verdict.
 - Le rejeu avec les hooks de la branche principale (`QUA-113`) reste inchangé.
 - Lever « à jour avec master » touche les réglages de la forge : le changement du réglage
-  lui-même est un geste du demandeur (lot 2), la CI vérifie ensuite que la forge tient
+  lui-même est un geste du demandeur (lot 3), la CI vérifie ensuite que la forge tient
   `.github/ruleset-master.json`.
 - Risque accepté le 2026-11-05 : deux PR vertes chacune peuvent casser une fois fusionnées
   ensemble ; la CI de la branche principale le voit après la fusion et ouvre l'alerte existante.
@@ -122,9 +121,14 @@ Aucun.
   (`actions/cache/save@v6`, push sur la branche principale seulement) le fichier
   `.drwil/evidence/run-checks-verdicts.json` (si présent). `QUA-045` : Ubuntu saute aussi sur une PR de doc.
   Contrôle `tests-qua-250` (`.githooks/run-checks.test.mjs`, `.github/scripts/workflows-yaml.test.mjs`).
-- **Prochaine étape** : [IA] lot 2 — mêmes étapes de cache et `DRWIL_CI_REUSE` dans les CI du
-  gabarit (GitHub, GitLab : cache de la branche principale seulement, `policy: pull` sur une merge
-  request), test `QUA-250` étendu aux deux CI du gabarit dans `.github/scripts/workflows-yaml.test.mjs`
-  et `packages/drwil/test/kit.test.mjs` ; `QUA-250` (périmètre « livré à tout projet ») et
-  `packages/drwil/CHANGELOG.md` mis à jour ; troisième critère relié à `QUA-250`.
+- **Lot 2** (2026-11-06) : fait. CI GitHub du gabarit : mêmes étapes que le dépôt. CI GitLab du
+  gabarit : pas de cache GitLab (non partagé par défaut entre branches protégées et non protégées,
+  et inscriptible par une merge request s'il l'est) ; hors de la branche principale, le job
+  `checks` télécharge avec `CI_JOB_TOKEN` l'artefact de verdicts du dernier pipeline réussi de la
+  branche principale (`jobs/artifacts/<branche>/raw/...?job=checks`) et lance
+  `DRWIL_CI_REUSE=1 node .githooks/run-checks.mjs` ; `after_script` efface le fichier hors de la
+  branche principale avant l'envoi de l'artefact. `QUA-250` « livré à tout projet », troisième
+  critère relié, contrôle `tests-qua-250` étendu à `packages/drwil/test/kit.test.mjs`.
+- **Prochaine étape** : [humain] lot 3 — lever « à jour avec master » dans le ruleset 24840343
+  (« master protégé ») ; l'agent met ensuite `.github/ruleset-master.json` d'accord.
 - **Reste à mesurer** : une PR de doc, après la fusion (le cache n'existe qu'après un push sur master).
