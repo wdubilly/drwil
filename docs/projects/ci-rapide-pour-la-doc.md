@@ -26,6 +26,24 @@ files:
   - packages/drwil/CHANGELOG.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - packages/drwil/templates/common/base/.githooks/pr-watch.mjs
+  - .githooks/pr-watch.mjs
+  - .githooks/pr-watch.test.mjs
+  - packages/drwil/templates/common/base/.githooks/state-cli.mjs
+  - .githooks/state-cli.mjs
+  - packages/drwil/templates/common/base/.githooks/state-transitions.mjs
+  - .githooks/state-transitions.mjs
+  - .githooks/state.test.mjs
+  - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
+  - .githooks/state-context-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
+  - .githooks/state-messages-fr.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
+  - .githooks/state-messages-en.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
+  - .claude/skills/start-a-workstream/SKILL.md
+  - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
+  - docs/recipes/working-with-branches.md
 -->
 
 ## 1. Besoin
@@ -56,6 +74,11 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
   principale ; un projet adoptant reprend donc ses contrôles inchangés comme ce dépôt — `QUA-250`
 - La protection de la branche principale n'exige plus qu'une PR soit à jour avec elle ;
   `.github/ruleset-master.json` le dit et la CI vérifie que la forge le tient — contrat à créer
+- Une file de chantiers ne lance le suivant (`node .githooks/state.mjs next`) que sur la preuve,
+  écrite par `node .githooks/pr-watch.mjs` après la fusion, que la CI de la branche principale est
+  verte sur le commit de fusion et qu'aucune issue « CI broken on the main branch » n'est ouverte ;
+  sinon `next` refuse et dit pourquoi (CI rouge, en cours ou non suivie, issue ouverte) ; un
+  `start` humain n'est pas bloqué — contrat à créer
 
 ## Contrats modifiés
 
@@ -65,6 +88,15 @@ code), `QUA-113` (la CI d'une PR rejoue les contrôles avec les hooks de la bran
 - `QUA-045` — ancien critère : Ubuntu joue les tests du paquet sur toute PR — raison : sur une PR
   de doc seule, Ubuntu les saute comme Windows et macOS ; le push sur la branche principale les
   joue toujours (validé par le demandeur le 2026-11-05)
+- `.githooks/pr-watch.mjs` — une PR vue fusionnée, il suit aussi la CI de la branche principale sur
+  le commit de fusion et l'issue d'alerte, le dit, et écrit la preuve dans `.drwil/evidence/` sur
+  une CI verte ; aucun autre verdict ne change (validé par le demandeur le 2026-11-06)
+- `.githooks/state-cli.mjs`, `.githooks/state-transitions.mjs` — `next` refuse sans cette preuve
+  pour la dernière fusion de la file ; `start`, `queue stop` et les autres transitions ne changent
+  pas (validé par le demandeur le 2026-11-06)
+- `.githooks/state-context-texts.mjs`, messages `fr`/`en`, skill `start-a-workstream`, recette
+  `docs/recipes/working-with-branches.md` — rappel de la file et refus ajoutés ; aucun texte existant contredit
+  (validé par le demandeur le 2026-11-06)
 
 ## 2. Hors périmètre
 
@@ -111,6 +143,12 @@ Aucun.
 - **Lot 3 — « à jour avec master » levé** [humain] : le demandeur change le réglage de la forge
   (commande prête dans la reprise), l'agent met `.github/ruleset-master.json` d'accord. Critère de
   sortie : `.github/scripts/verifier-ruleset.mjs` vert.
+- **Lot 4 — la file attend une branche principale verte** [IA] : ajouté le 2026-11-06 sur décision
+  du demandeur, parce que lever « à jour avec master » laisse deux PR vertes casser la branche
+  principale ensemble, vu seulement après coup. `.githooks/pr-watch.mjs` suit la CI de la branche principale
+  après la fusion et écrit la preuve ; `next` refuse sans elle ; rappels, skill et recette le
+  disent ; gabarit et copies. Critère de sortie : le contrat de la file prouvé par des tests (CI
+  verte, rouge, en cours, issue ouverte, preuve d'une autre fusion), refus de `next` testé.
 
 ## 7. Reprise
 
@@ -129,6 +167,6 @@ Aucun.
   `DRWIL_CI_REUSE=1 node .githooks/run-checks.mjs` ; `after_script` efface le fichier hors de la
   branche principale avant l'envoi de l'artefact. `QUA-250` « livré à tout projet », troisième
   critère relié, contrôle `tests-qua-250` étendu à `packages/drwil/test/kit.test.mjs`.
-- **Prochaine étape** : [humain] lot 3 — lever « à jour avec master » dans le ruleset 24840343
+- **Prochaine étape** : [IA] lot 4 (ajouté le 2026-11-06), puis la clôture ; [humain] lot 3 — lever « à jour avec master » dans le ruleset 24840343
   (« master protégé ») ; l'agent met ensuite `.github/ruleset-master.json` d'accord.
 - **Reste à mesurer** : une PR de doc, après la fusion (le cache n'existe qu'après un push sur master).
