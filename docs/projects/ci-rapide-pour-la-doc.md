@@ -115,5 +115,16 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-05) : cadré, rien de réalisé.
-- **Prochaine étape** : [IA] lot 1.
+- **Dernier état** (2026-11-06) : lot 1 fait (commits 49b5c72, 522795e). `QUA-250` créé :
+  `.githooks/run-checks-verdicts.mjs` (gabarit et copie) ne reprend en CI que si `DRWIL_CI_REUSE=1` ;
+  le job `checks` de `.github/workflows/ia-first.yml` restaure (`actions/cache/restore@v6`, clé
+  `run-checks-verdicts-<sha de base>`, `restore-keys: run-checks-verdicts-`) puis sauvegarde
+  (`actions/cache/save@v6`, push sur la branche principale seulement) le fichier
+  `.drwil/evidence/run-checks-verdicts.json` (si présent). `QUA-045` : Ubuntu saute aussi sur une PR de doc.
+  Contrôle `tests-qua-250` (`.githooks/run-checks.test.mjs`, `.github/scripts/workflows-yaml.test.mjs`).
+- **Prochaine étape** : [IA] lot 2 — mêmes étapes de cache et `DRWIL_CI_REUSE` dans les CI du
+  gabarit (GitHub, GitLab : cache de la branche principale seulement, `policy: pull` sur une merge
+  request), test `QUA-250` étendu aux deux CI du gabarit dans `.github/scripts/workflows-yaml.test.mjs`
+  et `packages/drwil/test/kit.test.mjs` ; `QUA-250` (périmètre « livré à tout projet ») et
+  `packages/drwil/CHANGELOG.md` mis à jour ; troisième critère relié à `QUA-250`.
+- **Reste à mesurer** : une PR de doc, après la fusion (le cache n'existe qu'après un push sur master).
