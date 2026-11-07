@@ -225,7 +225,12 @@ test("QUA-063 : la matrice de compatibilité donne, pour chaque outil du banc, c
     assert.equal(parite.split("\n").filter((l) => l.startsWith(`| ${nom} |`)).length, 1, `tableau de parité : une ligne pour ${nom}`);
     const essais = attestation.split("\n").filter((l) => l.startsWith(`| ${nom} |`));
     assert.equal(essais.length, 1, `tableau d'attestation : une ligne pour ${nom}`);
-    assert.match(essais[0], /\| not tested \|$/, `${nom} : aucun essai réel du sondage n'a été fait`);
+    // Un essai réel du sondage se date et se versionne ; seul Claude Code en a un (2026-11-07).
+    if (nom === "Claude Code") {
+      assert.match(essais[0], /\| yes, \d{4}-\d{2}-\d{2}, Claude Code \d+\.\d+\.\d+: [^|]+\|$/, `${nom} : essai réel daté et versionné`);
+    } else {
+      assert.match(essais[0], /\| not tested \|$/, `${nom} : aucun essai réel du sondage n'a été fait`);
+    }
   }
   assert.doesNotMatch(parite, /\d{4}-\d{2}-\d{2} \(\d/, "le tableau de parité ne date aucun essai du banc : il n'en a pas fait");
   assert.match(matrice, /Codex stays "not tested"/, "Codex livré pour sa documentation, jamais annoncé fonctionnel");
