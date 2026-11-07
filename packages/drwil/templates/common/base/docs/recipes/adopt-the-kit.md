@@ -102,12 +102,12 @@ agent's.
    - `catalog:QUA-014` (contrast): copy
      `templates/common/optional/front-quality/` (see its README) if a
      front end is detected, then declare its two checks.
-   - `catalog:QUA-004` (coverage) and `catalog:QUA-020` (e2e): not a
-     choice — mandatory guarantees wired at step 3 bis. A new project: 100 %
-     and e2e from the start. An existing project in debt: threshold at the
-     measured level, diff coverage at 100 %, ratchet; e2e required too.
-     What the e2e test is for each project shape is defined once, in the
-     catalog's « What "end to end" means » section.
+   - `catalog:QUA-004` (coverage) and `catalog:QUA-020` (e2e): not a choice — mandatory guarantees wired at step 3 bis.
+     A new project: 100 % and e2e from the start. An existing project in debt: threshold at the measured level, diff
+     coverage at 100 %, ratchet; e2e required too. What the e2e test is for each project shape is defined once, in the
+     catalog's « What "end to end" means » section. The e2e check is slow: propose `"runAt": ["ci"]` — played once, by
+     the CI of the PR (GitHub) or MR (GitLab), never at commit, at push or in `drwil verify`, which then says
+     `GOVERNANCE: PASS (CI pending)`; `--with-ci-checks` replays it locally to reproduce a failure.
    - The catalog's other lines have no ready-made script: propose the
      detected stack's usual tool (lint, typecheck, coverage…).
 5. **Write the first business contract**: `docs/contracts.md` ships

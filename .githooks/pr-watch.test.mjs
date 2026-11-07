@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { bucket, ghJson, look, parseArgs, texts, watch } from "./pr-watch.mjs";
+import { changeForge, ciChecks } from "./close-checks.mjs";
 import { lookMain, mainCiGate, mainCiRefusal, mainTip, originForge, PROOF } from "./pr-watch-main.mjs";
 import { MESSAGES_EN } from "./state-messages-en.mjs";
 import { MESSAGES_FR } from "./state-messages-fr.mjs";
@@ -81,7 +82,7 @@ test("QUA-100 suivi de PR : attend la fin des contrôles en cours, puis la fusio
   assert.match(r.message, /fusionnée/);
   assert.deepEqual(attentes, [5, 5]);
   assert.match(journal[0], /PR #7 : 1 contrôle\(s\) en cours/);
-  assert.equal(appels[0], "pr view 7 --json number,state,statusCheckRollup,mergeCommit");
+  assert.equal(appels[0], "pr view 7 --json number,state,statusCheckRollup,mergeCommit,headRefOid");
   // Attente réelle (minuterie par défaut) et journal par défaut.
   const r2 = await watch({
     gh: faux([ouverte(run("c", "IN_PROGRESS")), ouverte(run("c", "COMPLETED", "NEUTRAL"))]).gh,
@@ -374,4 +375,190 @@ test("QUA-251 forge non GitHub : jamais de refus, une ligne dit la CI de la bran
   const sans = tmp();
   git(sans, "init", "-q", "-b", "tronc");
   assert.match(mainCiGate(sans, MESSAGES_FR).refusal, /^next refusé : branche principale introuvable/, "sans origin : le verrou tient");
+});
+
+// --- GitLab et contrôles confiés à la CI (QUA-262) ---
+
+/** glab simulé : `mr view` (réponses successives, la dernière se répète), puis `api` (jobs de la pipeline). */
+function glabFaux({ vues, jobs = [[]] }) {
+  const appels = [];
+  const suivant = (liste) => (liste.length > 1 ? liste.shift() : liste[0]);
+  const glab = (args) => {
+    appels.push(args.join(" "));
+    return suivant({ mr: vues, api: jobs }[args[0]]);
+  };
+  return { glab, appels };
+}
+const mr = (statut, extra = {}) => ({
+  iid: 7,
+  state: "opened",
+  sha: SHA,
+  head_pipeline: statut ? { id: 42, status: statut } : null,
+  ...extra,
+});
+const job = (name, status, allow_failure = false) => ({ name, status, allow_failure });
+
+test("QUA-262 GitLab : la pipeline de la MR verte, rouge (job autorisé à échouer ignoré), absente ou sautée, glab muet ; jamais « verte » sans l'avoir vue", async () => {
+  const T = texts(tmp());
+  let f = glabFaux({ vues: [mr("success")], jobs: [[job("checks", "success"), job("alert-if-ci-broken", "skipped")]] });
+  let r = await watch({ forge: "gitlab", glab: f.glab, pr: "7", T });
+  assert.deepEqual([r.code, r.message], [0, "[pr-watch] MR !7 : CI verte (2 contrôle(s))."]);
+  assert.deepEqual(f.appels, ["mr view 7 --output json", "api projects/:id/pipelines/42/jobs?per_page=100"]);
+  f = glabFaux({ vues: [mr("failed")], jobs: [[job("checks", "failed"), job("optionnel", "failed", true), job("autre", "success")]] });
+  r = await watch({ forge: "gitlab", glab: f.glab, T });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /^\[pr-watch\] MR !7 : CI rouge — en échec : checks\. Corriger la cause/);
+  assert.equal(f.appels[0], "mr view --output json", "sans numéro : la MR de la branche");
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("canceled")], jobs: [null] }).glab, T });
+  assert.match(r.message, /CI rouge — en échec : pipeline #42/, "jobs illisibles : la pipeline nommée");
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr(null)] }).glab, T });
+  assert.deepEqual([r.code, r.message], [2, "[pr-watch] suivi non exécuté : aucun contrôle de CI sur la MR !7"]);
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("skipped")] }).glab, T });
+  assert.equal(r.code, 2, "sautée : rien n'a tourné, jamais verte (QUA-013)");
+  r = await watch({ forge: "gitlab", glab: () => null, T });
+  assert.deepEqual(
+    [r.code, r.message],
+    [2, "[pr-watch] suivi non exécuté : glab injoignable ou non connecté (glab auth login), ou aucune MR pour cette branche"],
+  );
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("success", { state: "closed" })] }).glab, T });
+  assert.deepEqual([r.code, r.message], [1, "[pr-watch] MR !7 fermée sans fusion."]);
+});
+
+test("QUA-262 GitLab : attend la pipeline en cours (manuelle comprise) puis verte ; au délai, « non exécuté » ; fusionnée : CI de la MR dite, branche principale à vérifier à la main", async () => {
+  const T = texts(tmp());
+  const attentes = [];
+  const f = glabFaux({
+    vues: [mr("running"), mr("manual"), mr("success")],
+    jobs: [[job("checks", "running"), job("alert-if-ci-broken", "created")]],
+  });
+  let r = await watch({ forge: "gitlab", glab: f.glab, sleep: async () => {}, log: (l) => attentes.push(l), T });
+  assert.equal(r.code, 0);
+  assert.deepEqual(attentes, ["[pr-watch] MR !7 : 2 contrôle(s) en cours…", "[pr-watch] MR !7 : 2 contrôle(s) en cours…"]);
+  let t = 0;
+  r = await watch({
+    forge: "gitlab",
+    glab: glabFaux({ vues: [mr("pending")], jobs: [[]] }).glab,
+    timeout: 1,
+    now: () => t,
+    sleep: async () => {
+      t += 61_000;
+    },
+    T,
+  });
+  assert.deepEqual(
+    [r.code, r.message],
+    [2, "[pr-watch] suivi non exécuté : délai de 1 min dépassé, contrôles encore en cours sur la MR !7"],
+  );
+  const fusion = (statut) => mr(statut, { state: "merged", merge_commit_sha: SHA });
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [fusion("success")] }).glab, T, root: tmp() });
+  assert.equal(r.code, 0);
+  assert.equal(
+    r.message,
+    "[pr-watch] MR !7 fusionnée.\n[pr-watch] CI de la MR à la fusion : verte ; CI de la branche principale non suivie hors GitHub, à vérifier à la main.",
+  );
+  assert.equal((await watch({ forge: "gitlab", glab: glabFaux({ vues: [fusion("failed")] }).glab, T })).code, 1);
+  assert.equal((await watch({ forge: "gitlab", glab: glabFaux({ vues: [fusion(null)] }).glab, T })).code, 2);
+});
+
+test("QUA-262 contrôles confiés à la CI : verte les dit prouvés ; rouge, absente, muette ou au délai : le chantier reste en CLOSING (GitHub et GitLab, en anglais)", async () => {
+  const T = texts(tmp());
+  const ci = ["e2e", "couverture"];
+  let r = await watch({ gh: faux([ouverte(run("checks", "COMPLETED", "SUCCESS"))]).gh, ci, T });
+  assert.deepEqual(
+    [r.code, r.message],
+    [0, "[pr-watch] PR #7 : CI verte (1 contrôle(s)). Contrôles confiés à la CI joués par cette CI : e2e, couverture."],
+  );
+  const reste =
+    /\n\[pr-watch\] contrôles confiés à la CI non prouvés \(e2e, couverture\) : la clôture n'est pas acquise, le chantier reste en CLOSING\.$/;
+  r = await watch({ gh: faux([ouverte(run("checks", "COMPLETED", "FAILURE"))]).gh, ci, T });
+  assert.equal(r.code, 1);
+  assert.match(r.message, reste);
+  r = await watch({ gh: faux([{ number: 7, state: "OPEN" }]).gh, ci, T });
+  assert.match(r.message, reste, "absente");
+  r = await watch({ gh: () => null, ci, T });
+  assert.match(r.message, reste, "gh muet");
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("failed")] }).glab, ci, T });
+  assert.match(r.message, reste, "MR rouge");
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("success")] }).glab, ci, T });
+  assert.match(r.message, /MR !7 : CI verte \(1 contrôle\(s\)\)\. Contrôles confiés à la CI joués par cette CI : e2e, couverture\.$/);
+  // Sans contrôle confié à la CI : rien n'est ajouté (QUA-100 inchangé).
+  r = await watch({ gh: faux([ouverte(run("checks", "COMPLETED", "FAILURE"))]).gh, T });
+  assert.doesNotMatch(r.message, /confiés à la CI/);
+  const en = tmp();
+  mkdirSync(join(en, ".drwil"));
+  writeFileSync(join(en, ".drwil", "ia-first.json"), JSON.stringify({ lang: "en" }));
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("failed")] }).glab, ci, T: texts(en) });
+  assert.match(r.message, /^\[pr-watch\] MR !7: CI red — failing: pipeline #42\./);
+  assert.match(
+    r.message,
+    /checks left to CI not proven \(e2e, couverture\): the closing is not acquired, the workstream stays in CLOSING\.$/,
+  );
+});
+
+test("QUA-262 forge du changement (origin GitHub, GitLab, autre avec .gitlab-ci.yml) et contrôles confiés à la CI lus dans la configuration", () => {
+  const git = (cwd, ...args) => spawnSync("git", args, { cwd, encoding: "utf8" });
+  const racine = tmp();
+  git(racine, "init", "-q", "-b", "main");
+  assert.equal(changeForge(racine), "github", "sans origin ni .gitlab-ci.yml : gh, comme avant");
+  git(racine, "remote", "add", "origin", "https://gitlab.example.com/o/r.git");
+  assert.equal(changeForge(racine), "gitlab");
+  git(racine, "remote", "set-url", "origin", "git@github.com:o/r.git");
+  assert.equal(changeForge(racine), "github");
+  git(racine, "remote", "set-url", "origin", "git@forge.interne:o/r.git");
+  writeFileSync(join(racine, ".gitlab-ci.yml"), "checks:\n  script: x\n");
+  assert.equal(changeForge(racine), "gitlab", "GitLab auto-hébergé : reconnu par sa CI");
+  mkdirSync(join(racine, ".drwil"));
+  writeFileSync(
+    join(racine, ".drwil", "ia-first.json"),
+    JSON.stringify({ checks: [{ id: "e2e", runAt: ["ci"] }, { id: "lent", runAt: ["verify", "ci"] }, { id: "vite" }] }),
+  );
+  assert.deepEqual(ciChecks(racine), ["e2e"]);
+});
+
+test(
+  "QUA-262 en ligne de commande sur GitLab (origin GitLab, glab factice) : verte 0, rouge 1 et le chantier reste en CLOSING",
+  posix,
+  () => {
+    const outils = tmp();
+    const node = spawnSync("which", ["node"], { encoding: "utf8" }).stdout.trim();
+    const depot = tmp();
+    spawnSync("git", ["init", "-q", depot]);
+    spawnSync("git", ["remote", "add", "origin", "https://gitlab.com/o/r.git"], { cwd: depot });
+    mkdirSync(join(depot, ".drwil"));
+    writeFileSync(join(depot, ".drwil", "ia-first.json"), JSON.stringify({ checks: [{ id: "e2e", runAt: ["ci"] }] }));
+    const lancer = (statut) => {
+      writeFileSync(
+        join(outils, "glab"),
+        `#!/bin/sh\ncase "$1" in mr) echo '{"iid":7,"state":"opened","head_pipeline":{"id":42,"status":"${statut}"}}';; *) echo '[{"name":"checks","status":"${statut}"}]';; esac\n`,
+      );
+      chmodSync(join(outils, "glab"), 0o755);
+      return spawnSync(node, [SCRIPT, "7"], {
+        cwd: depot,
+        encoding: "utf8",
+        env: { ...process.env, PATH: `${outils}:${process.env.PATH}` },
+      });
+    };
+    let r = lancer("success");
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /MR !7 : CI verte \(1 contrôle\(s\)\)\. Contrôles confiés à la CI joués par cette CI : e2e\./);
+    r = lancer("failed");
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /MR !7 : CI rouge — en échec : checks[\s\S]*le chantier reste en CLOSING/);
+  },
+);
+
+test("QUA-262 GitLab : réponses de glab inattendues — vue illisible, jobs illisibles sur une pipeline verte, fusion par squash", async () => {
+  const T = texts(tmp());
+  assert.equal((await watch({ forge: "gitlab", glab: () => 42, T })).code, 2, "réponse qui n'est pas un objet : non exécuté");
+  const r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("success")], jobs: [null] }).glab, T });
+  assert.deepEqual([r.code, r.message], [0, "[pr-watch] MR !7 : CI verte (1 contrôle(s))."]);
+  const { lookMr } = await import("./close-checks.mjs");
+  const squash = mr("success", { state: "merged", squash_commit_sha: SHA });
+  assert.deepEqual(lookMr("7", glabFaux({ vues: [squash], jobs: [[]] }).glab), {
+    state: "merged",
+    number: 7,
+    mergeCommit: SHA,
+    ci: "green",
+    head: SHA,
+  });
 });

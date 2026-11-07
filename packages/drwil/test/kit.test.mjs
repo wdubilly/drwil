@@ -14,6 +14,7 @@ import {
   cpSync,
   rmSync,
   symlinkSync,
+  chmodSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -5533,6 +5534,22 @@ test("QUA-196 : la recette d'adoption renvoie à la définition de l'e2e sans la
   assert.equal(readFileSync(join(DEPOT, "docs/recipes/adopt-the-kit.md"), "utf8"), recette);
 });
 
+test("QUA-196 : la recette et la compétence d'adoption proposent runAt [\"ci\"] pour l'e2e, renvoient au catalogue sans le recopier, gabarit et copies identiques", () => {
+  const recette = readFileSync(RECETTE_ADOPTION_GABARIT, "utf8");
+  const competence = readFileSync(join(GABARIT, "tools/claude/.claude/skills/adopt-the-kit/SKILL.md"), "utf8");
+  for (const [nom, texte] of [
+    ["recette", recette],
+    ["compétence", competence],
+  ]) {
+    const plat = texte.replace(/\s+/g, " ");
+    assert.match(plat, /e2e check[^.]*`"runAt": \["ci"\]`/, `${nom} : e2e proposé en runAt ["ci"]`);
+    assert.match(plat, /What "end to end" means/, `${nom} : renvoi à la définition du catalogue`);
+    assert.ok(!plat.includes("installs the package as a client"), `${nom} : la définition n'est pas recopiée`);
+  }
+  assert.match(recette.replace(/\s+/g, " "), /GOVERNANCE: PASS \(CI pending\)/);
+  assert.equal(readFileSync(join(DEPOT, ".claude/skills/adopt-the-kit/SKILL.md"), "utf8"), competence);
+});
+
 test("QUA-197 : la doc des preuves distingue identité, approbation et preuve d'exécution de l'attestation, gabarit et copie identiques", () => {
   const texte = readFileSync(PREUVES_GABARIT, "utf8");
   assert.match(texte, /^## What an attestation guarantees: identity, approval, proof of execution$/m);
@@ -5685,6 +5702,79 @@ test("QUA-207 : la recette d'adoption et INSTALL.md disent le commit initial de 
   assert.match(install, /commits the kit itself, before enabling the hooks/);
   assert.match(install, /### Permission prompts in Claude Code/);
   assert.match(install, /an allow rule opens no gesture that the hooks or the forge refuse/);
+});
+
+// Contrôle confié à la CI (`runAt: ["ci"]`, QUA-208) : verify ne le joue pas, ne le compte jamais passé et le nomme en attente.
+// Par la CLI, CI vidée (envTest) : en CI, le moteur le jouerait.
+async function projetConfieALaCi(rouge = false) {
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `lent`"));
+  const cfg = config(dir);
+  cfg.ciFiles = [".github/workflows/ia-first.yml"];
+  cfg.checks = [
+    { id: "ok", name: "toujours vert", run: 'node -e "process.exit(0)"' },
+    { id: "lent", name: "lent", run: "node -e \"console.log('rouge en CI'); process.exit(1)\"", runAt: ["ci"] },
+    ...(rouge ? [{ id: "ko", name: "toujours rouge", run: 'node -e "process.exit(1)"' }] : []),
+  ];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+  if (rouge) appendFileSync(join(dir, "docs/contracts.md"), `\n${contrat("QUA-003", "**Contrôle** : `ko`")}`);
+  return dir;
+}
+
+test("QUA-260 : avec un contrôle confié à la CI et le reste vert, verify rend GOVERNANCE: PASS (CI pending) et nomme les contrôles en attente", async () => {
+  const dir = await projetConfieALaCi();
+  const humain = cli(dir, "verify");
+  assert.equal(humain.status, 0, humain.stdout + humain.stderr);
+  assert.match(humain.stdout, /lent : non applicable ici \(confié à la CI \(runAt \["ci"\]\) : pas joué ici, jamais compté passé/);
+  assert.match(
+    humain.stdout,
+    /Contrôles confiés à la CI, non exécutés ici et jamais comptés passés — en attente de la CI de la PR ou MR : lent\n\nGOVERNANCE: PASS \(CI pending\)\n$/,
+  );
+  assert.doesNotMatch(humain.stdout, /lent : ok/, "jamais passé");
+  const agent = cli(dir, "verify", "--agent");
+  assert.equal(agent.status, 0, agent.stdout);
+  assert.match(
+    agent.stdout,
+    /^Verdict: GOVERNANCE: PASS \(CI pending\) \(exit 0\)\nNote: Checks left to CI, not run here and never counted as passed — pending the PR or MR CI: lent$/m,
+  );
+  // Jamais « Work is verified » sous un PASS (CI pending).
+  assert.doesNotMatch(agent.stdout, /Work is verified/);
+  assert.match(agent.stdout, /^Next step: Work is NOT verified yet: the checks left to CI have not run here\./m);
+  const json = JSON.parse(cli(dir, "verify", "--json").stdout);
+  assert.deepEqual(
+    [json.status, json.label, json.ciPending, json.withCiChecks],
+    ["pass", "GOVERNANCE: PASS (CI pending)", ["lent"], undefined],
+  );
+  // La preuve écrite par --evidence le dit aussi : le verdict lui-même porte la réserve.
+  const preuve = cli(dir, "verify", "--evidence");
+  assert.equal(preuve.status, 0, preuve.stdout + preuve.stderr);
+  const ecrite = readdirSync(join(dir, ".drwil/evidence")).filter((f) => /^verify-.*\.json$/.test(f));
+  const ev = JSON.parse(readFileSync(join(dir, ".drwil/evidence", ecrite.at(-1)), "utf8"));
+  assert.deepEqual([ev.status, ev.label, ev.ciPending], ["pass", "GOVERNANCE: PASS (CI pending)", ["lent"]]);
+  // Le reste en échec : le verdict reste FAIL, jamais PASS (CI pending), et les contrôles en attente restent nommés.
+  const rouge = cli(await projetConfieALaCi(true), "verify");
+  assert.equal(rouge.status, 1);
+  assert.match(rouge.stdout, /en attente de la CI de la PR ou MR : lent\n\nGOVERNANCE: FAIL\n$/);
+  // Sans contrôle confié à la CI : PASS sans réserve, sans note.
+  const sans = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`")), "verify", "--agent");
+  assert.match(sans.stdout, /^Verdict: GOVERNANCE: PASS \(exit 0\)$/m);
+  assert.doesNotMatch(sans.stdout, /CI pending|left to CI/);
+});
+
+test("QUA-261 : verify --with-ci-checks joue aussi les contrôles confiés à la CI et dit que l'option est active", async () => {
+  const dir = await projetConfieALaCi();
+  const humain = cli(dir, "verify", "--with-ci-checks");
+  assert.equal(humain.status, 1, "joué en local, son échec remonte");
+  assert.match(humain.stdout, /lent : échec/);
+  assert.match(humain.stdout, /rouge en CI/);
+  assert.match(
+    humain.stdout,
+    /Option --with-ci-checks active : les contrôles confiés à la CI \(runAt \["ci"\]\) sont joués ici, en local\n\nGOVERNANCE: FAIL\n$/,
+  );
+  assert.doesNotMatch(humain.stdout, /CI pending|en attente de la CI/);
+  const agent = cli(dir, "verify", "--agent", "--with-ci-checks");
+  assert.match(agent.stdout, /^Note: Option --with-ci-checks active: the checks left to CI \(runAt \["ci"\]\) are played here, locally$/m);
+  const json = JSON.parse(cli(dir, "verify", "--json", "--with-ci-checks").stdout);
+  assert.deepEqual([json.status, json.ciPending, json.withCiChecks], ["fail", [], true]);
 });
 
 test("QUA-211 : un contrôle réservé par runAt garde son attestation (champ d'exécution) ; la page des contrôles décrit le réglage", async () => {
@@ -5942,4 +6032,74 @@ test("QUA-239 : init dit, en fin de mise à jour, ce qu'il a fait, ce qui reste 
     assert.match(anglais, /Left to decide: review the update, then merge it through a pull request\./);
     assert.match(anglais, /Next command: `git push -u origin workstream\/kit-update`, then `gh pr create --base master`/);
   });
+});
+
+// QUA-263 : la CI livrée ne rejoue pas deux fois le même commit d'une branche dont la PR ou MR est ouverte, et joue les
+// contrôles confiés à la CI (`runAt: ["ci"]`, QUA-208).
+test("QUA-263 : CI GitHub livrée — le push d'une branche à PR ouverte saute ses étapes et le dit ; PR, branche principale, branche sans PR ou gh muet : tout est joué", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github", git: false }));
+  const gh = read(dir, ".github/workflows/ia-first.yml");
+  assert.match(gh, /^on: \[push, pull_request\]$/m);
+  const checks = gh.slice(gh.indexOf("\n  checks:\n"), gh.indexOf("\n  alert-if-ci-broken:"));
+  assert.doesNotMatch(checks, /^ {4}if:/m, "pas de `if` de job : un job sauté n'est pas rapporté sous son nom");
+  assert.match(checks, /permissions:\n\s+contents: read\n\s+pull-requests: read/);
+  // Chaque étape après la décision est sautée sur un tel push, sauf celles qui ne tournent jamais sur un push de branche.
+  const etapes = checks.split(/\n {6}- /).slice(2);
+  for (const e of etapes) {
+    const jamaisSurPushDeBranche =
+      /if: (github\.event_name == 'pull_request'|always\(\) && github\.event_name == 'push' && github\.ref == format)/.test(e);
+    assert.ok(jamaisSurPushDeBranche || /if: steps\.pr\.outputs\.skip != 'true'/.test(e), `étape non sautée : ${e.split("\n")[0]}`);
+  }
+  assert.ok(
+    etapes.some((e) => /run: node \.githooks\/run-checks\.mjs/.test(e)),
+    "run-checks joué",
+  );
+  // Le script de décision, joué par bash avec un gh factice.
+  const script = /- id: pr\n[\s\S]*?run: \|\n([\s\S]*?)\n {6}- /.exec(checks)[1].replace(/^ {10}/gm, "");
+  if (process.platform === "win32") return;
+  const outils = tmp();
+  const decider = (env, ouvertes) => {
+    writeFileSync(join(outils, "gh"), ouvertes === null ? "#!/bin/sh\nexit 1\n" : `#!/bin/sh\necho ${ouvertes}\n`);
+    chmodSync(join(outils, "gh"), 0o755);
+    const sortie = join(tmp(), "sortie");
+    const r = spawnSync("bash", ["-c", script.replace(/\$\{\{ github\.repository \}\}/g, "o/r")], {
+      encoding: "utf8",
+      env: { ...process.env, PATH: `${outils}:${process.env.PATH}`, GITHUB_OUTPUT: sortie, MAIN: "main", BRANCH: "travail", ...env },
+    });
+    assert.equal(r.status, 0, r.stderr);
+    return { skip: readFileSync(sortie, "utf8").trim(), notice: r.stdout };
+  };
+  const push = { EVENT: "push", REF: "refs/heads/travail" };
+  const saute = decider(push, 1);
+  assert.equal(saute.skip, "skip=true");
+  assert.match(saute.notice, /::notice::Push skipped: the open pull request of travail already runs these checks\./);
+  assert.equal(decider(push, 0).skip, "skip=false", "sans PR : le push teste");
+  assert.equal(decider(push, null).skip, "skip=false", "gh muet : le push teste, jamais un saut à l'aveugle");
+  assert.equal(decider({ EVENT: "pull_request", REF: "refs/pull/7/merge" }, 1).skip, "skip=false", "la PR joue tout");
+  assert.equal(decider({ EVENT: "push", REF: "refs/heads/main", BRANCH: "main" }, 1).skip, "skip=false", "branche principale");
+  assert.equal(decider({ EVENT: "push", REF: "refs/tags/v1" }, 1).skip, "skip=false", "tag");
+});
+
+test("QUA-263 : CI GitLab livrée — une seule pipeline par push (aucune pipeline de MR), et la CI joue les contrôles confiés à la CI", async () => {
+  const dir = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "gitlab", git: false }));
+  const gl = read(dir, ".gitlab-ci.yml");
+  assert.match(
+    gl,
+    /^workflow:\n {2}rules:\n {4}- if: \$CI_PIPELINE_SOURCE == "merge_request_event"\n {6}when: never\n {4}- when: always\n/m,
+  );
+  // Aucun job ne se réclame d'une pipeline de MR, que `workflow: rules` refuse.
+  const jobs = gl.slice(gl.indexOf("\nstages:"));
+  assert.doesNotMatch(jobs, /merge_request_event|merge_requests/);
+  assert.match(jobs, /^checks:\n[\s\S]*node \.githooks\/run-checks\.mjs/m);
+  // La CI pose la variable CI (GitHub et GitLab) : le moteur livré y joue un contrôle `["ci"]`, qu'il ne joue pas ailleurs.
+  const { runAtVerdict, runContext } = await import(pathToFileURL(join(dir, ".githooks/engine-runat.mjs")).href);
+  const confie = { runAt: ["ci"] };
+  const options = { ciFiles: [".gitlab-ci.yml"] };
+  assert.equal(runContext(null, { CI: "true", DRWIL_CI_REUSE: "1" }), "ci");
+  assert.equal(runAtVerdict(confie, "e2e", "ci", options), null, "joué en CI");
+  assert.equal(runAtVerdict(confie, "e2e", "verify", options).status, "not-run");
+  const couverture = spawnSync(process.execPath, [".githooks/check-control-coverage.mjs"], { cwd: dir, encoding: "utf8" });
+  assert.equal(couverture.status, 0, couverture.stdout + couverture.stderr);
 });

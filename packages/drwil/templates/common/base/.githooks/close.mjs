@@ -5,12 +5,13 @@
 // merges anything, and it never writes the state: journal decisions and limits stay the agent's.
 // The recognition and deletion of the merged local branches live in close-branches.mjs (QUA-048,
 // QUA-058, QUA-059), re-exported here.
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { undeclaredHooks } from "./base-checks.mjs";
 import { config } from "./briefs.mjs";
-import { bareNames, criteriaToCreate, deadReferences, referenceScope } from "./close-checks.mjs";
+import { bareNames, closingCi, criteriaToCreate, deadReferences, lookMr, referenceScope } from "./close-checks.mjs";
 import { closingMechanics } from "./close-mechanics.mjs";
 import { journalPlan } from "./close-journal.mjs";
 import { texts } from "./close-texts.mjs";
@@ -23,6 +24,7 @@ import {
   proposals,
   twinIntents,
 } from "./doc-coherence.mjs";
+import { ghJson, look } from "./pr-watch.mjs";
 import { lateLines } from "./worktree.mjs";
 import { readState, stateRoot, verifyEvidence } from "./state.mjs";
 
@@ -92,12 +94,16 @@ export function pathToClosing(root, activity) {
   return T.path(steps);
 }
 
+/** One look at the CI of the branch's PR (GitHub) or MR (GitLab), through pr-watch (QUA-262). */
+const lookChange = (forge) =>
+  forge === "gitlab" ? lookMr(undefined, (a) => ghJson(a, spawnSync, "glab")) : look(undefined, (a) => ghJson(a));
+
 /**
- * `{ code, message }`. Without `check`: the mechanics (CLOSING only) — brief deleted, index item
+ * `{ code, message, ciAcquired }`. Without `check`: the mechanics (CLOSING only) — brief deleted, index item
  * removed, consumption recorded — then the signals. With `check`: the signals only. With `fix`, the
  * corrections that need no judgement are written (and only then); otherwise they are proposed as a diff.
  */
-export function close(root, { brief, check = false, fix = false, env = process.env, logs } = {}) {
+export function close(root, { brief, check = false, fix = false, env = process.env, logs, lookCi = lookChange } = {}) {
   const T = texts(root);
   const { state } = readState(root);
   const path = brief ? posix.normalize(brief.replace(/\\/g, "/")) : state.active_brief;
@@ -120,15 +126,18 @@ export function close(root, { brief, check = false, fix = false, env = process.e
     proposed = proposals(root, report.problems);
   }
   const problems = report.problems.map((p) => p.message);
+  // QUA-262: with checks left to CI, the closing is acquired only once the PR or MR CI is green on them; said either way.
+  const ci = closingCi(root, lookCi);
   const diff = proposed.flatMap((p) => [`  ${p.file}:${p.line}`, `    - ${p.from}`, `    + ${p.to}`]);
   const lines = [
     ...done,
     ...(problems.length ? [T.signals, ...problems.map((s) => `  ⚠ ${s}`)] : [T.clean]),
     ...(diff.length ? [T.proposed, ...diff] : []),
     ...(report.warnings.length ? [T.warnings, ...report.warnings.map((w) => `  ⚠ ${w}`)] : []),
+    ...(ci ? [ci.line] : []),
     ...(check ? [...lateLines(root), route] : [T.rest]),
   ];
-  return { code: problems.length ? 1 : 0, message: lines.filter(Boolean).join("\n") };
+  return { code: problems.length ? 1 : 0, message: lines.filter(Boolean).join("\n"), ciAcquired: ci ? ci.acquired : null };
 }
 
 /** Entry point: `node .githooks/close.mjs [--check] [<brief>] [--logs <folder>]`. Returns the exit code. */

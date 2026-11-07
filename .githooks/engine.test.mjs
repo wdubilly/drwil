@@ -732,6 +732,85 @@ test("QUA-208 : un contrôle réservé par runAt n'est pas joué au commit ni au
   assert.match(en.detail, /not played at commit/);
 });
 
+// Contrôle confié à la CI (`runAt: ["ci"]`) : la CI de la PR ou MR seule le joue (QUA-208), l'option locale aussi (QUA-261).
+const github = [".github/workflows/ia-first.yml"];
+const confie = (ciFiles = github, extra = {}) => ({ ...reserve(["ci"], extra), ciFiles });
+
+test('QUA-208 : un contrôle confié à la CI (runAt ["ci"]) ne tourne ni au commit, ni au push, ni en verify : confié à la CI, jamais passé ; la CI le joue', () => {
+  const racine = depot();
+  const cfg = confie(github, { run: "node -e 'process.exit(1)'" });
+  const attendu = {
+    status: "not-run",
+    detail:
+      'confié à la CI (runAt ["ci"]) : pas joué ici, jamais compté passé ; joué par la CI de la PR ou MR, en local par --with-ci-checks',
+    configured: true,
+    ciPending: true,
+  };
+  for (const [cas, options] of [
+    ["commit", { staged: ["src/a.js"] }],
+    ["push", { env: avecPath({ DRWIL_PUSH_REFS: "x" }) }],
+    ["verify", { env: avecPath({}) }],
+  ]) {
+    assert.deepEqual(executer(racine, "lent", { cfg, ...options }), attendu, cas);
+    assert.equal(parId(checks(racine, { cfg, ...options })).lent.ciPending, true, `${cas} : annoncé en attente de la CI`);
+  }
+  // La CI le joue, même avec des références de push : son échec y bloque.
+  for (const env of [{ CI: "true" }, { CI: "true", DRWIL_PUSH_REFS: "x" }]) {
+    assert.equal(executer(racine, "lent", { cfg, env: avecPath(env) }).status, "fail");
+    assert.equal(parId(checks(racine, { cfg, env: avecPath(env) })).lent.ciPending, undefined);
+  }
+  // GitLab est une forge suivie, comme GitHub.
+  assert.equal(executer(racine, "lent", { cfg: confie([".gitlab-ci.yml"]), env: avecPath({}) }).status, "not-run");
+  assert.equal(executer(racine, "lent", { cfg: confie(["ci/.gitlab-ci.yml"]), env: avecPath({ CI: "1" }) }).status, "ok");
+  // Le réglage reste un réglage parmi d'autres : sans runAt, rien n'est en attente de la CI.
+  assert.equal(parId(checks(racine, { cfg: reserve(null), env: avecPath({}) })).lent.ciPending, undefined);
+  // En anglais.
+  const en = executer(racine, "lent", { cfg: { ...cfg, lang: "en" }, env: avecPath({}) });
+  assert.match(en.detail, /^left to CI \(runAt \["ci"\]\): not played here, never counted as passed/);
+});
+
+test('QUA-208 : runAt ["ci"] est refusé avec la raison sans CI déclarée (ciFiles vide) ni CI GitHub ou GitLab, partout', () => {
+  const racine = depot();
+  for (const [cas, cfg, attendu] of [
+    ["ciFiles absent", reserve(["ci"]), /runAt \["ci"\] sans CI déclarée \(ciFiles vide\)/],
+    ["ciFiles vide", confie([]), /sans CI déclarée \(ciFiles vide\)/],
+    ["autre forge", confie(["Jenkinsfile"]), /sans CI GitHub \(\.github\/workflows\/\) ni GitLab \(\.gitlab-ci\.yml\) dans ciFiles/],
+  ])
+    for (const [contexte, options] of [
+      ["commit", { staged: ["a.js"] }],
+      ["verify", { env: avecPath({}) }],
+      ["CI", { env: avecPath({ CI: "true" }) }],
+    ]) {
+      const r = executer(racine, "lent", { cfg, ...options });
+      assert.equal(r.status, "fail", `${cas} (${contexte})`);
+      assert.match(r.message, /^node -e 0 : réglage runAt refusé/, cas);
+      assert.match(r.message, attendu, cas);
+    }
+  // Une liste qui mêle ci à une autre valeur sans verify reste refusée : seul ["ci"] s'ajoute aux réglages permis.
+  assert.match(executer(racine, "lent", { cfg: { ...reserve(["commit", "ci"]), ciFiles: github } }).message, /ou ci seul/);
+  // ["ci", "ci"] est encore « ci seul ».
+  assert.equal(executer(racine, "lent", { cfg: { ...reserve(["ci", "ci"]), ciFiles: github }, env: avecPath({}) }).status, "not-run");
+  const en = executer(racine, "lent", { cfg: { ...confie(["Jenkinsfile"]), lang: "en" }, env: avecPath({}) });
+  assert.match(en.message, /without a GitHub \(\.github\/workflows\/\) or GitLab \(\.gitlab-ci\.yml\) CI in ciFiles/);
+  assert.match(executer(racine, "lent", { cfg: { ...confie([]), lang: "en" } }).message, /without a declared CI \(empty ciFiles\)/);
+});
+
+test("QUA-261 : l'option locale (withCiChecks) joue aussi un contrôle confié à la CI, sans rien changer aux autres réglages", () => {
+  const racine = depot();
+  const options = { cfg: confie(github, { run: "node -e 'process.exit(1)'" }), env: avecPath({}), withCiChecks: true };
+  assert.equal(executer(racine, "lent", options).status, "fail", "joué en local, son échec remonte");
+  const entree = parId(checks(racine, options)).lent;
+  assert.equal(entree.ciPlayed, true, "le contrôle joué par l'option est signalé");
+  assert.equal(entree.ciPending, undefined, "il n'est plus en attente de la CI");
+  // Un contrôle réservé à verify et ci reste non exécuté au commit : l'option ne vise que les contrôles confiés à la CI.
+  const r = executer(racine, "lent", { cfg: reserve(["verify", "ci"]), staged: ["a.js"], withCiChecks: true });
+  assert.equal(r.status, "not-run");
+  assert.equal(parId(checks(racine, { cfg: reserve(["verify", "ci"]), env: avecPath({}), withCiChecks: true })).lent.ciPlayed, undefined);
+  // Un réglage refusé le reste avec l'option.
+  assert.equal(executer(racine, "lent", { cfg: confie([]), env: avecPath({}), withCiChecks: true }).status, "fail");
+  assert.equal(parId(checks(racine, { cfg: confie([]), env: avecPath({}), withCiChecks: true })).lent.ciPlayed, undefined);
+});
+
 test("QUA-209 : verify et la CI jouent le contrôle réservé, son échec bloque ; un runAt mal formé est refusé, jamais ignoré", () => {
   const racine = depot();
   const cfg = reserve(["verify", "ci"]);

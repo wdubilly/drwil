@@ -5,6 +5,8 @@ import { fill } from "./i18n.js";
 import { rulesLine } from "./rules.js";
 import type { Severity, Status, Verdict } from "./verify.js";
 import { TEXTS } from "./verdict-texts.js";
+import type { CiPendingResult } from "./verify-checks.js";
+import { TEXTS as VERIFY_TEXTS } from "./verify-texts.js";
 
 const LABELS: Record<Status, string> = {
   PASS: "GOVERNANCE: PASS",
@@ -15,6 +17,21 @@ const LABELS: Record<Status, string> = {
 };
 // QUA-159: a partial verdict never carries the PASS label an agent or a script reads as "verified".
 export const PARTIAL_LABEL = "GOVERNANCE: PARTIAL (--failed) — NOT A VERDICT";
+// QUA-260: a PASS with checks left to CI (`runAt: ["ci"]`, QUA-208) is never a PASS without reserve, in every output
+// of the verdict (human, --agent, --json and the evidence written by --evidence): only the PR or MR CI proves them.
+export const PENDING_LABEL = "GOVERNANCE: PASS (CI pending)";
+
+/** Checks left to CI cited by the verdict's contracts: neither run nor reused here, pending the PR or MR CI (QUA-260). */
+export function ciPending(v: Verdict): string[] {
+  return [...new Set(v.contracts.flatMap((k) => k.checks.filter((c) => (c as CiPendingResult).ciPending).map((c) => c.id)))];
+}
+
+/** The governance line of the verdict: PASS becomes PASS (CI pending) as long as a check left to CI is pending. */
+export function verdictLabel(v: Verdict): string {
+  if (v.partial) return PARTIAL_LABEL;
+  return LABELS[v.status] === LABELS.PASS && ciPending(v).length ? PENDING_LABEL : LABELS[v.status];
+}
+
 const SYMBOLS: Record<Status, string> = { PASS: "✓", ATTESTED: "◆", FAIL: "✗", MANUAL: "?", ERROR: "!" };
 
 /**
@@ -91,7 +108,9 @@ export function formatVerdict(v: Verdict): string {
     if (p.manual.length) lines.push(fill(T.partialManual, p.manual.join(", ")));
     lines.push(T.partialEnd);
   }
-  lines.push("", v.partial ? PARTIAL_LABEL : LABELS[v.status]);
+  const pending = ciPending(v);
+  if (pending.length) lines.push(fill(VERIFY_TEXTS[v.lang].ciPending, pending.join(", ")));
+  lines.push("", verdictLabel(v));
   return labelIds(lines.join("\n"), v.contracts);
 }
 
@@ -107,6 +126,10 @@ export function verdictJson(v: Verdict) {
     status: v.partial ? "partial" : v.status.toLowerCase(),
     ...(v.partial ? { partial: { ...v.partial, outcome: v.status.toLowerCase() } } : {}),
     exitCode: v.code,
+    /** The governance line, `GOVERNANCE: PASS (CI pending)` included (QUA-260): the status alone says PASS. */
+    label: verdictLabel(v),
+    /** Checks left to CI, pending the PR or MR CI (QUA-260); empty when none. */
+    ciPending: ciPending(v),
     contracts: {
       total: v.contracts.length,
       passed: count("PASS"),
