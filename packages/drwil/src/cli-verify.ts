@@ -15,33 +15,23 @@ import {
 import { registerContracts } from "./cli-contracts.js";
 import { texts } from "./cli-texts.js";
 import { verifyFailed } from "./failed.js";
-import type { CiChecksOption, CiPendingResult } from "./verify-checks.js";
+import type { CiChecksOption } from "./verify-checks.js";
 import { TEXTS as VERIFY_TEXTS } from "./verify-texts.js";
 import type { Verdict, VerifyOptions } from "./verify-types.js";
 
-// QUA-253: a PASS with checks left to CI (`runAt: ["ci"]`, QUA-208) is never a PASS without reserve: it reads
-// `GOVERNANCE: PASS (CI pending)` and names the checks waiting for the PR or MR CI. QUA-254: the option says it is active.
-const PASS_LABEL = "GOVERNANCE: PASS";
-const PENDING_LABEL = "GOVERNANCE: PASS (CI pending)";
+// QUA-254: the option says it is active, next to the verdict line. The CI pending checks and `GOVERNANCE: PASS (CI pending)`
+// belong to the verdict itself (verdict.ts, QUA-253): human, --agent, --json and the evidence say them alike.
+export { ciPending } from "./verdict.js";
 
-export function ciPending(v: Verdict): string[] {
-  return [...new Set(v.contracts.flatMap((k) => k.checks.filter((c) => (c as CiPendingResult).ciPending).map((c) => c.id)))];
-}
-
-const passed = (v: Verdict) => !v.partial && (v.status === "PASS" || v.status === "ATTESTED");
-
-/** Human output (`agent` false) or agent output, with the CI pending checks and the option named next to the verdict line. */
+/** Human output (`agent` false) or agent output, with the option named next to the verdict line. */
 export function withCiNotes(text: string, v: Verdict, { agent, withCiChecks }: { agent: boolean; withCiChecks: boolean }): string {
-  const pending = ciPending(v);
-  const T = VERIFY_TEXTS[agent ? "en" : v.lang];
-  const notes = [...(withCiChecks ? [T.withCiChecks] : []), ...(pending.length ? [fill(T.ciPending, pending.join(", "))] : [])];
-  if (!notes.length) return text;
+  if (!withCiChecks) return text;
+  const note = VERIFY_TEXTS[agent ? "en" : v.lang].withCiChecks;
   const lines = text.split("\n");
   // Human: the verdict is the last line, after an empty one; agent: the line « Verdict: … (exit n) ».
   const at = agent ? lines.findIndex((l) => l.startsWith("Verdict: ")) : lines.length - 1;
-  if (pending.length && passed(v)) lines[at] = lines[at].replace(PASS_LABEL, PENDING_LABEL);
-  if (agent) lines.splice(at + 1, 0, ...notes.map((n) => `Note: ${n}`));
-  else lines.splice(at - 1, 0, ...notes);
+  if (agent) lines.splice(at + 1, 0, `Note: ${note}`);
+  else lines.splice(at - 1, 0, note);
   return lines.join("\n");
 }
 
@@ -95,7 +85,7 @@ export function registerVerify(program: Command): void {
         },
         opts.json,
         (v) => withCiNotes(opts.agent ? formatForAgent(verdictJson(v)) : formatVerdict(v), v, { agent: Boolean(opts.agent), withCiChecks }),
-        (v) => ({ ...verdictJson(v), ciPending: ciPending(v), ...(withCiChecks ? { withCiChecks } : {}) }),
+        (v) => ({ ...verdictJson(v), ...(withCiChecks ? { withCiChecks } : {}) }),
       );
     });
 

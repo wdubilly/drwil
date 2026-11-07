@@ -1,3 +1,13 @@
+# QUA-256: one pipeline per push, the branch pipeline, which the merge request shows as its own: no
+# merge request pipeline replays the same commit a second time (`workflow: rules` refuses them). GitLab
+# sets the variable CI, so run-checks also plays the checks left to CI (`runAt: ["ci"]`, QUA-208),
+# proven by that pipeline only (QUA-255).
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: always
+
 stages:
   - test
   - alert

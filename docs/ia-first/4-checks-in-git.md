@@ -50,7 +50,11 @@ or `ci` alone: `runAt: ["ci"]` leaves the check to the CI of the pull request
 (GitHub) or merge request (GitLab). It runs neither at commit, nor at push, nor
 in `drwil verify`; each output says it is "left to CI", never "passed", and
 `drwil verify` then reads `GOVERNANCE: PASS (CI pending)`, naming the checks
-waiting for CI. `--with-ci-checks` (on `drwil verify` and `run-checks`) also
+waiting for CI (the evidence and `--json` too); the closing is acquired only
+once `node .githooks/pr-watch.mjs` (through `gh` or `glab`) or `node .githooks/close.mjs` sees
+that CI green, and the workstream stays in CLOSING otherwise. The CI shipped
+for GitHub and GitLab plays a pushed commit once, even with a pull or merge
+request open. `--with-ci-checks` (on `drwil verify` and `run-checks`) also
 plays them locally, to reproduce a CI failure, and says so. `["ci"]` is refused
 without a declared GitHub or GitLab CI in `ciFiles`; an unknown or malformed
 `runAt` is refused with a message, never ignored. The

@@ -74,13 +74,13 @@ Deux constats fixent la portée :
   réserve — `QUA-253`
 - La clôture d'un chantier n'est acquise qu'une fois la CI de la PR (GitHub) ou de la MR (GitLab)
   verte sur ces contrôles : `pr-watch` la suit sur les deux forges ; rouge ou absente, le chantier
-  reste en CLOSING et le dit — contrat à créer.
+  reste en CLOSING et le dit — contrat à créer. — `QUA-255`
 - Une option de `verify` et de `run-checks` (nom à fixer au lot 1, par exemple
   `--with-ci-checks`) joue aussi en local les contrôles confiés à la CI, pour reproduire un échec ;
   la sortie dit que l'option est active — `QUA-254`
 - Livrable : les CI du gabarit, GitHub et GitLab, ne jouent plus deux fois les contrôles sur le push
   d'une branche qui a une PR ou une MR ouverte, et jouent bien les contrôles `["ci"]` — contrat à
-  créer.
+  créer. — `QUA-256`
 - Livrable : la recette et la compétence d'adoption proposent `["ci"]` pour le contrôle e2e de
   l'adoptant, en renvoyant à la définition de l'e2e du catalogue sans la recopier (QUA-196).
 - Dépôt : les contrôles `couverture-tests`, `couverture-hooks`, `couverture-claude`, `tarball` et
@@ -166,21 +166,34 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-07) : lot 1 — moteur réalisé. `runAt: ["ci"]` accepté, refusé avec la
-  raison sans CI GitHub ou GitLab dans `ciFiles` ; contexte « ci » quand la variable `CI` est posée
-  (`.githooks/engine-runat.mjs`) ; un contrôle `["ci"]` n'est ni joué ni repris au commit, au push,
-  hors hook ni dans `verify`, annoncé « confié à la CI » (détail du contrôle et résumé de
-  `run-checks`) ; `verify` rend `GOVERNANCE: PASS (CI pending)` et nomme les contrôles en attente
-  (`packages/drwil/src/cli-verify.ts`, `ciPending` en `--json`) ; option locale `--with-ci-checks`
-  sur `verify` et `run-checks`. QUA-208 modifié, QUA-209 aligné (validé par le demandeur le 2026-11-07),
-  QUA-253 et QUA-254 créés ; page `docs/ia-first/4-checks-in-git.md` complétée. Le verdict `PASS (CI pending)` est
-  posé par la CLI (`packages/drwil/src/cli-verify.ts`) : `packages/drwil/src/verify.ts`, `packages/drwil/src/verdict.ts` et `packages/drwil/src/agent.ts` sont hors du bloc
-  scope, la preuve écrite par `--evidence` garde le statut `PASS`.
+- **Dernier état** (2026-11-07) : lots 1 — moteur et 2 — clôture et forges réalisés. Lot 1 : `runAt: ["ci"]`
+  accepté (refusé sans CI GitHub ou GitLab dans `ciFiles`), annoncé « confié à la CI » par chaque sortie,
+  option `--with-ci-checks` ; QUA-208 modifié, QUA-209 aligné, QUA-253 et QUA-254 créés. Lot 2 : le verdict
+  lui-même porte `PASS (CI pending)` (`packages/drwil/src/verdict.ts` : `ciPending`, `verdictLabel` ; `label`
+  et `ciPending` en `--json` et dans la preuve `--evidence`, dont `status` reste `pass` pour les transitions ;
+  `--agent` ne dit plus « Work is verified » sous la réserve) — QUA-253 mis à jour en conséquence.
+  `.githooks/pr-watch.mjs` suit aussi la MR GitLab par `glab` (`glab mr view --output json`, jobs de la
+  pipeline par `glab api projects/:id/pipelines/<id>/jobs`), forge reconnue par `origin` ou un
+  fichier .gitlab-ci.yml (`changeForge`), et dit les contrôles confiés à la CI prouvés (CI verte) ou non (le
+  chantier reste en CLOSING) ; `.githooks/close.mjs` (clôture et `--check`) dit, par `closingCi` de
+  `.githooks/close-checks.mjs`, si la CI de la PR ou MR est verte sur HEAD (clôture acquise) ou non —
+  QUA-255 créé. CI du gabarit : GitHub, étape `pr` du job `checks` qui saute les étapes du push d'une
+  branche à PR ouverte (pas de `if` de job) ; GitLab, `workflow: rules` sans pipeline de MR — QUA-256 créé.
+  Critères 4 et 6 liés. Choix GitLab : `glab` plutôt que l'API brute (authentification et projet déduits
+  du clone, comme `gh`), éprouvé par des réponses simulées.
 - **Décisions du 2026-11-07, après le lot 1** : périmètre élargi à `packages/drwil/src/verify.ts`,
   `packages/drwil/src/verdict.ts` et `packages/drwil/src/agent.ts`, pour que le verdict lui-même
   (preuve `--evidence`, `--json`, sortie `--agent`) porte `PASS (CI pending)` ; la phrase « Work is
   verified » n'est plus dite sous un `PASS (CI pending)`. Critères de sortie des lots 1 et 2 corrigés :
   `GOVERNANCE: PASS` n'est atteignable qu'au dernier lot (QUA-034).
-- **Prochaine étape** : [IA] lot 2 — porter `PASS (CI pending)` dans le verdict (les trois
-  fichiers ci-dessus) ; `pr-watch` et la clôture attendent la CI de la PR (GitHub) et de la MR
-  (GitLab) sur les contrôles `["ci"]` ; CI du gabarit sans doublon sur les deux forges.
+- **Limites connues** : la barrière de clôture est un signal (sortie de `.githooks/close.mjs` et de `.githooks/pr-watch.mjs`,
+  champ `ciAcquired`), pas un refus de transition : le retour en SCOPING reste réglé par `.githooks/state-transitions.mjs`
+  (hors périmètre), qui exige déjà la PR fusionnée. Le placeholder `:id` de `glab api` et le champ
+  `head_pipeline` de `glab mr view --output json` ne sont éprouvés que par simulation. Attestations
+  humaines tombées, à renouveler (`drwil attest`, geste humain) : QUA-013 (contrôle non exécuté n'est pas
+  passé, `packages/drwil/src/verdict.ts` modifié) et QUA-048 (clôture en un geste, `.githooks/close.mjs`
+  modifié) au lot 2 ; QUA-150 et QUA-151 (tests de durée, push sous charge) depuis le lot 1.
+- **Prochaine étape** : [IA] lot 3 — adoption et dépôt : recette et compétence d'adoption (e2e en
+  `["ci"]`), contrôles longs et e2e du dépôt passés à `["ci"]` dans `.drwil/ia-first.json`, mesure du temps
+  de commit et de push avant et après au journal ; `GOVERNANCE: PASS (CI pending)` en local et CI verte sur
+  la PR.

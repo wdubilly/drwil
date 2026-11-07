@@ -3,16 +3,40 @@ on: [push, pull_request]
 jobs:
   checks:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - uses: actions/checkout@v7
+      # QUA-256: a push on a branch whose pull request is open would replay, on the same commit, what the
+      # pull request plays: its steps are skipped, and the skip is said; the pull request keeps its own run.
+      # No job-level `if`: a skipped job is not reported under its name. Without a pull request (or if GitHub
+      # does not answer), the push is tested as before; the main branch and tags are never skipped.
+      - id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          MAIN: ${{ github.event.repository.default_branch }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          skip=false
+          if [ "$EVENT" = push ] && [[ "$REF" == refs/heads/* ]] && [ "$REF" != "refs/heads/$MAIN" ]; then
+            open=$(gh pr list --repo "${{ github.repository }}" --head "$BRANCH" --state open --json number --jq length) || open=0
+            if [ "$open" != "0" ]; then skip=true; echo "::notice::Push skipped: the open pull request of $BRANCH already runs these checks."; fi
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+      - if: steps.pr.outputs.skip != 'true'
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v7
+      - if: steps.pr.outputs.skip != 'true'
+        uses: actions/setup-node@v7
         with:
           node-version: 24
       # Without gitleaks the secrets check is "not run", which fails run-checks in CI (QUA-013).
       # Pinned version, archive checked against its published sum; installed where the engine looks (~/.local/bin).
       - name: Install gitleaks 8.21.2
+        if: steps.pr.outputs.skip != 'true'
         run: |
           curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
           echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | sha256sum -c -
@@ -29,7 +53,10 @@ jobs:
           path: .drwil/evidence/run-checks-verdicts.json
           key: run-checks-verdicts-${{ github.event.pull_request.base.sha }}
           restore-keys: run-checks-verdicts-
-      - run: node .githooks/run-checks.mjs
+      # GitHub sets the variable CI: run-checks also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), whose
+      # only proof is this run on the pull request (QUA-255).
+      - if: steps.pr.outputs.skip != 'true'
+        run: node .githooks/run-checks.mjs
         env:
           DRWIL_CI_REUSE: ${{ github.event_name == 'pull_request' && '1' || '' }}
       - name: Save the main branch's verdicts

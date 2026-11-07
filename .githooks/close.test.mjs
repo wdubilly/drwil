@@ -1,7 +1,7 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -969,4 +969,111 @@ test("QUA-174 : un critère modifié depuis l'acceptation refuse la clôture san
   git(retires, "commit", "-q", "-m", "critères retirés");
   ecrireEvidence(retires);
   assert.match(close(retires, { logs: journaux() }).message, /—/);
+});
+
+// --- Contrôles confiés à la CI : la clôture attend la CI de la PR ou MR (QUA-255) ---
+
+/** Dépôt du chantier dont la configuration confie `e2e` à la CI ; `vues` : ce que pr-watch verrait, par forge demandée. */
+function depotConfie({ lang, origin } = {}) {
+  const racine = depot({ lang });
+  const cfg = { ...(lang ? { lang } : {}), contractPrefixes: ["QUA"], ciFiles: [".github/workflows/ia-first.yml"] };
+  ecrire(racine, { ".drwil/ia-first.json": JSON.stringify({ ...cfg, checks: [{ id: "e2e", runAt: ["ci"] }, { id: "vite" }] }) });
+  if (origin) git(racine, "remote", "add", "origin", origin);
+  return racine;
+}
+const vue = (s) => {
+  const forges = [];
+  const lookCi = (forge) => {
+    forges.push(forge);
+    return s;
+  };
+  return { forges, lookCi };
+};
+
+test("QUA-255 : la clôture n'est acquise qu'une fois la CI de la PR verte sur HEAD ; en cours, rouge, absente ou vue sur un autre commit, le chantier reste en CLOSING et le dit", () => {
+  const racine = depotConfie({ origin: "git@github.com:o/r.git" });
+  const head = git(racine, "rev-parse", "HEAD");
+  const verte = vue({ state: "green", number: 7, total: 2, head });
+  let r = close(racine, { check: true, lookCi: verte.lookCi });
+  assert.deepEqual(verte.forges, ["github"]);
+  assert.equal(r.ciAcquired, true);
+  assert.match(r.message, /CI de la PR #7 verte sur HEAD : contrôles confiés à la CI prouvés \(e2e\) — clôture acquise sur ce point\./);
+  const reste =
+    /contrôles confiés à la CI non prouvés \(e2e\) — clôture non acquise, le chantier reste en CLOSING ; suivre la CI par `node \.githooks\/pr-watch\.mjs`\./;
+  for (const [s, cause] of [
+    [{ state: "green", number: 7, total: 2, head: "0123456789abcdef" }, /CI de la PR #7 vue sur 0123456, pas sur HEAD/],
+    [{ state: "green", number: 7, total: 2 }, /CI de la PR #7 vue sur \?, pas sur HEAD/],
+    [{ state: "pending", number: 7, pending: 1, head }, /CI de la PR #7 en cours/],
+    [
+      { state: "red", number: 7, failed: ["checks"], head },
+      /CI de la PR #7 rouge \(en échec : checks\) ; corriger la cause, jamais contourner \(QUA-019\)/,
+    ],
+    [{ state: "none", number: 7 }, /CI de la PR ou MR absente/],
+    [{ state: "not-run" }, /CI de la PR ou MR absente/],
+    [{ state: "merged", ci: "red", number: 7, head }, /CI de la PR #7 rouge/],
+  ]) {
+    r = close(racine, { check: true, lookCi: vue(s).lookCi });
+    assert.equal(r.ciAcquired, false, JSON.stringify(s));
+    assert.match(r.message, cause);
+    assert.match(r.message, reste);
+  }
+  // En CLOSING, la mécanique se fait et la sortie dit que la clôture attend la CI de la PR (le commit de clôture est à pousser).
+  r = close(racine, { logs: journaux(), lookCi: vue({ state: "green", number: 7, total: 1, head }).lookCi });
+  assert.equal(r.code, 0, r.message);
+  assert.ok(!existsSync(join(racine, FICHE)), "mécanique faite");
+  assert.match(r.message, /fiche supprimée/);
+  assert.equal(r.ciAcquired, true);
+});
+
+test("QUA-255 : sur GitLab la CI de la MR est lue ; sans contrôle confié à la CI, rien n'est demandé à la forge ; en anglais", () => {
+  const racine = depotConfie({ origin: "https://gitlab.example.com/o/r.git" });
+  const rouge = vue({ state: "red", number: 4, failed: ["checks"] });
+  let r = close(racine, { check: true, lookCi: rouge.lookCi });
+  assert.deepEqual(rouge.forges, ["gitlab"]);
+  assert.match(r.message, /CI de la MR !4 rouge \(en échec : checks\)[\s\S]*le chantier reste en CLOSING/);
+  const sans = depot();
+  const muette = vue({ state: "green" });
+  r = close(sans, { check: true, lookCi: muette.lookCi });
+  assert.deepEqual(muette.forges, [], "aucun contrôle confié à la CI : la forge n'est pas interrogée");
+  assert.equal(r.ciAcquired, null);
+  assert.doesNotMatch(r.message, /confiés à la CI/);
+  const en = depotConfie({ lang: "en" });
+  r = close(en, { check: true, lookCi: vue({ state: "pending", number: 7, pending: 1 }).lookCi });
+  assert.match(
+    r.message,
+    /PR #7 CI running: checks left to CI not proven \(e2e\) — closing not acquired, the workstream stays in CLOSING; follow the CI with `node \.githooks\/pr-watch\.mjs`\./,
+  );
+});
+
+test("QUA-255 : sans regard injecté, la clôture interroge gh (GitHub) ou glab (GitLab) ; muets, la CI est absente et dite", {
+  skip: process.platform === "win32" ? "gh factice en script sh" : false,
+}, () => {
+  const outils = dossier();
+  const head = (racine) => git(racine, "rev-parse", "HEAD");
+  const chemin = process.env.PATH;
+  try {
+    process.env.PATH = `${outils}:${chemin}`;
+    const github = depotConfie({ origin: "git@github.com:o/r.git" });
+    writeFileSync(
+      join(outils, "gh"),
+      `#!/bin/sh\necho '{"number":7,"state":"OPEN","headRefOid":"${head(github)}","statusCheckRollup":[{"name":"checks","status":"COMPLETED","conclusion":"SUCCESS"}]}'\n`,
+    );
+    chmodSync(join(outils, "gh"), 0o755);
+    let r = close(github, { check: true });
+    assert.equal(r.ciAcquired, true, r.message);
+    assert.match(r.message, /CI de la PR #7 verte sur HEAD/);
+    const gitlab = depotConfie({ origin: "https://gitlab.example.com/o/r.git" });
+    writeFileSync(
+      join(outils, "glab"),
+      `#!/bin/sh\ncase "$1" in mr) echo '{"iid":4,"state":"opened","sha":"${head(gitlab)}","head_pipeline":{"id":9,"status":"running"}}';; *) echo '[]';; esac\n`,
+    );
+    chmodSync(join(outils, "glab"), 0o755);
+    r = close(gitlab, { check: true });
+    assert.equal(r.ciAcquired, false);
+    assert.match(r.message, /CI de la MR !4 en cours/);
+    writeFileSync(join(outils, "glab"), "#!/bin/sh\nexit 1\n");
+    assert.match(close(gitlab, { check: true }).message, /CI de la PR ou MR absente/);
+  } finally {
+    process.env.PATH = chemin;
+  }
 });

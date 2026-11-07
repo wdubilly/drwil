@@ -3073,6 +3073,23 @@
       "needsBuild": true
     },
     {
+      "id": "tests-qua-255",
+      "name": "tests de QUA-255, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-255 \" .githooks/pr-watch.test.mjs .githooks/close.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/**", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-256",
+      "name": "tests de QUA-256, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-256 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/**", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
       "id": "tests-qua-207",
       "name": "tests de QUA-207, filtrés par son ID (un contrôle par règle, QUA-033)",
       "run": "node --test --test-name-pattern=\"^QUA-207 \" packages/drwil/test/kit.test.mjs",
