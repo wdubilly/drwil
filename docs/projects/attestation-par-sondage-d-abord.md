@@ -141,5 +141,14 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-06) : cadré, rien de réalisé.
-- **Prochaine étape** : [IA] lot 1.
+- **Dernier état** (2026-11-07) : lot 1 codé. Cause établie sur les trois refus réels (QUA-067 le
+  2026-11-05, QUA-013 et QUA-048 le 2026-11-07, transcriptions locales) : réponse « Attester » présente
+  et bien indexée, questions retournées identiques, refus sans erreur de lecture de la préparation ; le
+  schéma de `AskUserQuestion` (Claude Code 2.1.319) déclare `answers` (« collected by the permission
+  component ») et `annotations`, ajoutés à `tool_input` après l'affichage. Le hook exigeait
+  `Object.keys(tool_input).length === 1` et un `tool_input` égal à la préparation. Correctif : ces deux
+  clés tolérées en `PostToolUse` seulement, jamais lues ; seule `questions` est comparée ; toute autre
+  clé refusée. Test rejouant la forme réelle, tests de QUA-235 verts. Texte de QUA-235 inchangé (la cause
+  ne l'exige pas).
+- **Prochaine étape** : [Humain] une attestation par le sondage dans une vraie session Claude Code
+  (critère de sortie du lot 1), puis [IA] lot 2.

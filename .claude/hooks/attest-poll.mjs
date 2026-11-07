@@ -11,16 +11,20 @@ export function attestationPoll(input) {
   const match = /^drwil-attest ([A-Z][A-Z0-9]*-\d+)( --renew)?\n[\s\S]*\n\n(?:Essai de l'agent|Agent trial):\n([\s\S]+)$/.exec(
     q.question ?? "",
   );
+  // L'outil ajoute `answers` et `annotations` à tool_input après la réponse humaine : tolérés en
+  // PostToolUse seulement, jamais lus ; seule la question est comparée à la préparation.
+  const added = input.hook_event_name === "PostToolUse" ? ["answers", "annotations"] : [];
+  const asked = { questions: e.questions };
   const clean =
     input.tool_name === "AskUserQuestion" &&
     typeof input.session_id === "string" &&
     Boolean(input.session_id.trim()) &&
     typeof input.tool_use_id === "string" &&
     Boolean(input.tool_use_id.trim()) &&
-    Object.keys(e).length === 1 &&
+    Object.keys(e).every((k) => k === "questions" || added.includes(k)) &&
     e.questions.length === 1 &&
-    !/\((recommended|recommandée?)\)/i.test(JSON.stringify(e));
-  return { valid: Boolean(match && clean), id: match?.[1], renew: Boolean(match?.[2]), tried: match?.[3] };
+    !/\((recommended|recommandée?)\)/i.test(JSON.stringify(asked));
+  return { valid: Boolean(match && clean), id: match?.[1], renew: Boolean(match?.[2]), tried: match?.[3], asked };
 }
 
 /** Préparation liée à l'appel, consommée une fois ; aucune réponse lue dans tool_input. */
@@ -72,21 +76,21 @@ export async function attestationHook(input, { root, tell }) {
     if (pre) {
       rmSync(file, { force: true });
       const prepared = await prepareAttestationPoll(options);
-      if (!prepared.poll || serialise(prepared.poll) !== serialise(input.tool_input)) return refuse(prepared.message || refused);
+      if (!prepared.poll || serialise(prepared.poll) !== serialise(poll.asked)) return refuse(prepared.message || refused);
       mkdirSync(dir, { recursive: true });
-      writeFileSync(file, JSON.stringify({ poll: input.tool_input, snapshot: prepared.snapshot, askedAt: new Date().toISOString() }));
+      writeFileSync(file, JSON.stringify({ poll: poll.asked, snapshot: prepared.snapshot, askedAt: new Date().toISOString() }));
       return 0;
     }
     const pending = JSON.parse(readFileSync(file, "utf8"));
     rmSync(file);
     if (
-      serialise(pending.poll) !== serialise(input.tool_input) ||
+      serialise(pending.poll) !== serialise(poll.asked) ||
       !Number.isFinite(Date.parse(pending.askedAt)) ||
       Date.now() < Date.parse(pending.askedAt) ||
       Date.now() - Date.parse(pending.askedAt) > 3_600_000
     )
       return refuse(refused);
-    const question = input.tool_input.questions[0];
+    const question = poll.asked.questions[0];
     const answer = input.tool_response?.answers;
     if (!answer || Object.keys(answer).length !== 1 || answer[question.question] !== question.options[0].label) return refuse(refused);
     const result = await attest({

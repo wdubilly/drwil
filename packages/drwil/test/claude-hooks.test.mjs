@@ -44,11 +44,17 @@ async function projetAttestation(lang = "fr") {
       tool_input: r.poll,
     };
   };
-  const post = (input, label = input.tool_input.questions[0].options[0].label) => ({
-    ...input,
-    hook_event_name: "PostToolUse",
-    tool_response: { answers: { [input.tool_input.questions[0].question]: label } },
-  });
+  // Forme réelle du PostToolUse (Claude Code 2.1, refus du 2026-11-05) : le composant de permission
+  // ajoute `answers` et `annotations` à tool_input après l'affichage ; tool_response les répète.
+  const post = (input, label = input.tool_input.questions[0].options[0].label) => {
+    const answers = { [input.tool_input.questions[0].question]: label };
+    return {
+      ...input,
+      hook_event_name: "PostToolUse",
+      tool_input: { ...input.tool_input, answers: { ...answers }, annotations: {} },
+      tool_response: { questions: input.tool_input.questions, answers, annotations: {} },
+    };
+  };
   const contract = async () => (await verify({ targetDir: dir, only: ["APP-009"] })).contracts[0];
   return { dir, hook, prepare, post, contract, output };
 }
@@ -114,6 +120,9 @@ test("QUA-235 : le hook refuse réponse agent, défaut, recommandation, faux out
         x.tool_input.answers = { [x.tool_input.questions[0].question]: "Attester" };
       },
       (x) => {
+        x.tool_input.annotations = {};
+      },
+      (x) => {
         x.tool_input.questions[0].default = "Attester";
       },
       (x) => {
@@ -170,6 +179,15 @@ test("QUA-235 : le hook refuse réponse agent, défaut, recommandation, faux out
       },
       (x) => {
         x.tool_input.questions[0].question += "modifié";
+      },
+      (x) => {
+        x.tool_input.metadata = { source: "agent" };
+      },
+      (x) => {
+        x.tool_input.response = "Attester";
+      },
+      (x) => {
+        delete x.tool_response.answers;
       },
     ]) {
       assert.equal(await hook(base), 0);
