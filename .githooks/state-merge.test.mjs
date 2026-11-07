@@ -190,3 +190,15 @@ test("QUA-265 : hors de BUILD à CLOSING ou sur un état invalide, rien n'est é
   });
   assert.equal(readState(neutre).state.auto_merge, undefined);
 });
+
+test("QUA-265 : le rappel d'état dit la fusion automatique autorisée par l'humain, au lancement ou par le sondage", async () => {
+  const { context } = await import("./state-texts.mjs");
+  const racine = projet({ etat: actif("BUILD", { auto_merge: true }) });
+  assert.match(
+    context(readState(racine), racine),
+    /Fusion automatique autorisée par l'humain \(au lancement ou par le sondage `drwil-merge`\) : en CLOSING/,
+  );
+  const en = projet({ lang: "en", etat: actif("BUILD", { auto_merge: true }) });
+  assert.match(context(readState(en), en), /Automatic merge authorised by the human \(at start or by the `drwil-merge` poll\): in CLOSING/);
+  assert.doesNotMatch(context(readState(projet()), racine), /Fusion automatique autorisée/);
+});
