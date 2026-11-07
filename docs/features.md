@@ -92,7 +92,9 @@ décision humaine ; la fusion automatique se redonne alors par un sondage
 `drwil-merge` dont l'humain choisit la réponse. Une limite dans le cadre de la fiche se traite sur le champ ;
 une limite hors cadre est soumise à l'humain, à la fin de la réalisation, par
 un sondage `drwil-limite` (« Traiter maintenant » ou « Noter en intention »),
-et la clôture refuse une fiche d'intention née sur la branche sans ce choix.
+et la clôture refuse une fiche d'intention née sur la branche sans ce choix ;
+ces deux sondages sont lus par le hook sous Claude Code, Copilot CLI, Gemini CLI,
+Codex et le client ACP de Cursor.
 Une idée se note
 à tout moment sans changer d'activité (`/drwil-note`).
 

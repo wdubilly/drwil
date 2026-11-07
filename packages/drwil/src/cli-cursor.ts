@@ -48,12 +48,24 @@ export async function conversationCursor(
   }
 }
 
+/**
+ * Le crochet des questions du client : sondages des limites et de fusion (QUA-266), sinon attestation (QUA-235).
+ * Un projet dont les hooks précèdent les sondages portables garde l'attestation seule.
+ */
+export async function crochetCursor(root: string): Promise<HookCursor> {
+  const charger = (f: string) => import(pathToFileURL(join(root, ".claude/hooks", f)).href);
+  const attestation: { portableAttestationHook: HookCursor } = await charger("portable-attest.mjs");
+  const sondages: { portablePollHook?: HookCursor } = await charger("portable-polls.mjs").catch(() => ({}));
+  const sondage = sondages.portablePollHook ?? (async () => null);
+  return async (événement, options) => (await sondage(événement, options)) ?? attestation.portableAttestationHook(événement, options);
+}
+
 export async function lancerCursor(): Promise<void> {
   // QUA-235 : pas de --yes, de réponse en argument ni de stdin redirigé, même si /dev/tty existe.
   if (!process.stdin.isTTY || !process.stdout.isTTY)
     throw new Error("Client ACP Cursor : terminal humain interactif requis ; aucune attestation.");
   const root = process.cwd();
-  const module: { portableAttestationHook: HookCursor } = await import(pathToFileURL(join(root, ".claude/hooks/portable-attest.mjs")).href);
+  const crochet = await crochetCursor(root);
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const abort = new AbortController();
   let session: SessionCursor | undefined;
@@ -78,7 +90,7 @@ export async function lancerCursor(): Promise<void> {
       },
       (texte) => process.stdout.write(texteTerminal(texte)),
       (ui) => {
-        session = new SessionCursor(spawn("agent", ["acp"], { cwd: root, stdio: "pipe" }), root, ui, module.portableAttestationHook);
+        session = new SessionCursor(spawn("agent", ["acp"], { cwd: root, stdio: "pipe" }), root, ui, crochet);
         return session;
       },
       arrêter,

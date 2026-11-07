@@ -95,7 +95,7 @@ intentions. Le demandeur veut :
   hors cadre, sondage avant VERIFY — `QUA-036`
 - Sous Copilot CLI, Gemini CLI, Codex et le client ACP de Cursor, les sondages `drwil-limite` et
   `drwil-merge` sont lus par le hook, avec les mêmes refus que sous Claude Code (réponse remplie,
-  défaut, recommandation), prouvés par la vraie commande de chaque outil — contrat à créer
+  défaut, recommandation), prouvés par la vraie commande de chaque outil — `QUA-266`
 - La clôture ne compte plus pour une seconde entrée du journal celle d'un autre chantier qui ne fait
   que citer la branche — `QUA-228`
 
@@ -194,4 +194,9 @@ Aucun.
   parité des sondages `drwil-limite` et `drwil-merge` hors Claude Code (l'entrée native de Gemini CLI et de Codex
   n'aiguillait que l'attestation ; Copilot CLI les lit par `.claude/settings.json`) et reconnaissance de l'entrée du
   journal (`.githooks/close-journal.mjs`). Cadrage élargi dans un commit séparé.
-- **Prochaine étape** : réaliser la réouverture, vérifier et clore à nouveau.
+- **Réalisation de la réouverture** (2026-11-07) : `.claude/hooks/portable-polls.mjs` (QUA-266), entrée native de
+  `.claude/hooks/prompt-hook.mjs`, `crochetCursor` du client ACP, reconnaissance de l'entrée du journal (QUA-228),
+  doc et changelog ; tests verts. Le commit est refusé par la barrière tant que l'humain n'a pas donné son oui au
+  correctif de réouverture (`node .githooks/detour.mjs allow`, terminal) ; QUA-063 et QUA-236 sont à réattester
+  (fichiers couverts modifiés).
+- **Prochaine étape** : commiter (deux commits : journal, puis parité), vérifier et clore à nouveau.

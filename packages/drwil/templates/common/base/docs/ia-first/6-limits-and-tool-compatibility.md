@@ -194,6 +194,24 @@ The official [Cursor install script](https://cursor.com/install) identifies
 the inspected [CLI distribution](https://downloads.cursor.com/lab/2026.10.22-27dcf5f/linux/x64/agent-cli-package.tar.gz);
 only its schema/dispatch code was read statically, never installed or run.
 
+## Limits and merge polls parity
+
+The limits poll (`drwil-limite`) and the merge poll (`drwil-merge`) are read by
+the hook under every tool, with the same refusals as under Claude Code.
+Fictitious events and installed hook commands only, **no real interactive trial**.
+
+| Tool | How the poll is asked | Read by |
+|---|---|---|
+| Claude Code | `AskUserQuestion`, header `drwil-limite` or `drwil-merge` | the poll hook of its settings (the .claude folder) |
+| Copilot CLI | `ask_user` with `message` starting with the header and `requestedSchema` (one field per limit, named by its intent path; one `drwil-merge` field) | the same Claude Code settings hook, which Copilot CLI reads; its native entry stays the attestation's |
+| Gemini CLI | `ask_user`, `type: "choice"` questions with the header | native `BeforeTool` / `AfterTool` entry |
+| Codex | `request_user_input`, questions with an `id` and the header | native `PreToolUse` / `PostToolUse` entry |
+| Cursor | `cursor/ask_question` in the dedicated `drwil cursor-acp` client, one question per poll, the header in `title` | the client, not the usual Cursor chat |
+
+A Copilot CLI session that asks with the legacy `question` / `choices` form
+carries no header: the poll is not read, ask again with `message` and
+`requestedSchema`.
+
 ## Instructions reach every tool
 
 An instruction or mechanism the kit delivers reaches each chosen tool by the

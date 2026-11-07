@@ -19,6 +19,10 @@ closing commit; the release renames this section to its version.
   merge » or « Manual merge ») read by the hook — e.g. after
   `state.mjs resume`, which never rebuilds it and now says how to give it
   back. No command line writes it.
+- The `drwil-limite` and `drwil-merge` polls are read by the hook under
+  Gemini CLI (`ask_user`), Codex (`request_user_input`) and the dedicated
+  Cursor client (`drwil cursor-acp`), with the same refusals as under Claude
+  Code; Copilot CLI keeps reading them through `.claude/settings.json`.
 - A slow check can run once, in CI only: `"runAt": ["ci"]` (refused without a
   declared GitHub or GitLab CI). It never runs at commit, at push or in
   `drwil verify`; every output says « left to CI », never « passed », and
@@ -57,6 +61,9 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- `node .githooks/close.mjs` no longer counts, as a second journal entry,
+  another workstream's entry that merely cites the branch: the branch only
+  identifies an entry on its closing line (« Clôturé par », « Closed by »).
 - `node .githooks/state.mjs briefs` and `node .githooks/state.mjs resume` no
   longer exit with code 13 ("unsettled top-level await") without writing
   anything, so `/drwil-start` lists the briefs again; `start` into a new

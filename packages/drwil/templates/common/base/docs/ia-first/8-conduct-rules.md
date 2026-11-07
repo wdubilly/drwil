@@ -72,7 +72,8 @@ read at every request. The full text of each rule is here, read by section
   per limit, naming the files it would touch, the possible « Changed
   contracts » bullet and the `docs/intentions/<name>.md` path it would
   become; two answers, « Handle now » and « Record as intent », none
-  recommended). « Handle now » is the yes to widen the scope block, in a
+  recommended; its form under each tool: section 6, « Limits and merge polls
+  parity »). « Handle now » is the yes to widen the scope block, in a
   separate commit. A subagent does not ask the poll: it stops with the
   list of the out-of-scope limits. A one-line note (`.githooks/note.mjs`) is not
   where a limit goes.
