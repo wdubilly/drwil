@@ -9,7 +9,7 @@ export const TEXTS = {
     unattached: "Contrôles cités par aucun contrat (non exécutés par verify) : {0}",
     counts: "{0} contrats : {1} PASS, {2} ATTESTED, {3} FAIL, {4} MANUAL, {5} ERROR",
     attested: "dont {0} obligation(s) bloquante(s) validée(s) par attestation humaine, pas par une preuve automatique",
-    attestable: "Attestables par un humain (`drwil attest <ID>`) : {0}",
+    attestable: "Attestables par un humain (sondage dans le chat préparé par `drwil attest-poll <ID>`, sinon `drwil attest <ID>`) : {0}",
     severities:
       "dont {0} bloquant(s) ({1} satisfait(s)), {2} avertissement(s) non satisfait(s), {3} indicatif(s) non satisfait(s) — seuls les bloquants décident du verdict",
     severity: (s: Severity) => SEVERITY_FR[s],
@@ -19,7 +19,8 @@ export const TEXTS = {
     partial:
       "Verdict partiel (--failed), jamais une preuve de clôture : {0} contrat(s) rejoué(s) depuis la preuve {1}, {2} PASS ou ATTESTED non rejoué(s) donc non jugé(s)",
     partialNone: "Aucune preuve précédente lisible dans .drwil/evidence/ : rien n'est rejoué. Lancer `drwil verify --evidence`.",
-    partialManual: "En attente d'attestation, pas en échec, non rejoué(s) : {0} — `drwil attest <ID>`",
+    partialManual:
+      "En attente d'attestation, pas en échec, non rejoué(s) : {0} — sondage dans le chat (`drwil attest-poll <ID>`), sinon `drwil attest <ID>`",
     partialEnd: "Passe complète à faire pour le verdict : `drwil verify --evidence`",
   },
   en: {
@@ -27,7 +28,7 @@ export const TEXTS = {
     unattached: "Checks cited by no contract (not run by verify): {0}",
     counts: "{0} contracts: {1} PASS, {2} ATTESTED, {3} FAIL, {4} MANUAL, {5} ERROR",
     attested: "including {0} blocking obligation(s) validated by human attestation, not by an automated proof",
-    attestable: "Attestable by a human (`drwil attest <ID>`): {0}",
+    attestable: "Attestable by a human (chat poll prepared by `drwil attest-poll <ID>`, otherwise `drwil attest <ID>`): {0}",
     severities:
       "including {0} blocking ({1} satisfied), {2} warning(s) not satisfied, {3} advisory not satisfied — only blocking contracts decide the verdict",
     severity: (s: Severity) => s,
@@ -37,7 +38,8 @@ export const TEXTS = {
     partial:
       "Partial verdict (--failed), never a closing proof: {0} contract(s) replayed since the evidence {1}, {2} PASS or ATTESTED not replayed, so not judged",
     partialNone: "No readable previous evidence in .drwil/evidence/: nothing is replayed. Run `drwil verify --evidence`.",
-    partialManual: "Awaiting attestation, not failing, not replayed: {0} — `drwil attest <ID>`",
+    partialManual:
+      "Awaiting attestation, not failing, not replayed: {0} — chat poll (`drwil attest-poll <ID>`), otherwise `drwil attest <ID>`",
     partialEnd: "A full pass is still needed for the verdict: `drwil verify --evidence`",
   },
 };

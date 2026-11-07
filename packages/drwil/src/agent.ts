@@ -1,6 +1,6 @@
 // Presentation of the `drwil verify` verdict for an agent (Claude, Codex, Cursor…), tied to no
 // particular agent. Pure adapter: it only reads verify's v1 JSON (verdictJson) and recomputes no rule.
-// It never runs `drwil attest`: it presents it as a human action. Output in English, stable whatever
+// It never runs `drwil attest`: it presents the attestation as a human action, chat poll first, terminal as fallback. Output in English, stable whatever
 // the project's language (consumed by agents).
 import { durabilityHint } from "./criteria.js";
 import { rulesLine } from "./rules.js";
@@ -15,11 +15,21 @@ const CONDUCT: Record<string, string> = {
   error: "drwil could not establish the verdict. Report the verification problem to the human; do not claim the work is verified.",
   partial:
     "This is a partial verdict (--failed): the contracts not replayed are not judged. Work is NOT verified. Fix the failing contracts, replay with `drwil verify --failed`, then run the full pass `drwil verify --evidence`.",
-  manual: "Work is NOT verified yet. Stop claiming validation and ask the human to attest the contracts below.",
+  manual:
+    "Work is NOT verified yet. Stop claiming validation and ask the human to attest the contracts below: the attestation poll in the chat first, the terminal as fallback.",
   // QUA-260: never « Work is verified » under a PASS (CI pending).
   ciPending:
     "Work is NOT verified yet: the checks left to CI have not run here. You may continue, but do not claim the work is verified until the PR or MR CI is green on them (`node .githooks/pr-watch.mjs <number>`).",
 };
+
+// QUA-267: the chat poll first, the terminal as fallback; the agent prepares the poll, only the human answers it.
+const ATTEST_STEPS = [
+  "HUMAN ACTION — first, the attestation poll in the chat: prepare it with",
+  '  drwil attest-poll <CONTRACT_ID> --tried "<what you tried>"',
+  "and ask it unchanged through the tool's poll, no answer, default or recommendation added (recipe docs/recipes/attest-a-contract.md); only the human answers it.",
+  "Fallback, for the human in their own interactive terminal; never run it yourself:",
+  "  drwil attest <CONTRACT_ID>",
+];
 
 const LABELS: Record<string, string> = {
   pass: "GOVERNANCE: PASS",
@@ -84,11 +94,7 @@ export function formatForAgent(j: VerdictJson): string {
     l.push("", "Human attestation required.");
     for (const r of manual)
       l.push(`  - ${r.id} — ${r.title}${r.attestable ? "" : " (not attestable as is: needs a human decision first)"}`);
-    l.push(
-      "HUMAN ACTION — for the human, in their own interactive terminal; never run it yourself:",
-      "  drwil attest <CONTRACT_ID>",
-      "Then run `drwil verify` again.",
-    );
+    l.push(...ATTEST_STEPS, "Then run `drwil verify` again.");
   }
   const informational = j.results.filter((r) => r.severity !== "blocking" && r.status !== "pass" && r.status !== "attested");
   if (informational.length)
@@ -106,9 +112,7 @@ function partialLines(j: VerdictJson): string[] {
   return [
     `Partial: ${p.replayed.length} contract(s) replayed (outcome of the replayed ones: ${p.outcome}), ${p.skipped} PASS or ATTESTED at ${p.previous} not replayed, so not judged.`,
     ...(p.manual.length
-      ? [
-          `Awaiting attestation, not failing, not replayed: ${p.manual.join(", ")} — HUMAN ACTION, never run it yourself: \`drwil attest <CONTRACT_ID>\``,
-        ]
+      ? [`Awaiting attestation, not failing, not replayed: ${p.manual.join(", ")} — HUMAN ACTION:`, ...ATTEST_STEPS]
       : []),
   ];
 }

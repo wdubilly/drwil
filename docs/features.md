@@ -61,11 +61,12 @@ rapport de défaut du kit sans donnée du projet.
 
 ## Attestation humaine (`drwil attest`)
 
-Un contrat `MANUAL` se valide par l'humain, dans son propre terminal ;
+Un contrat `MANUAL` se valide par l'humain, d'abord par le sondage
+d'attestation dans le chat, sinon dans son propre terminal (`drwil attest`) ;
 l'attestation est versionnée et tombe quand un fichier qu'elle couvre
-change. Un agent ne l'exécute jamais. `drwil attest-poll` prépare un
-sondage d'attestation dans l'outil de l'agent : seule la réponse de
-l'humain, lue par le hook, l'enregistre ; hors Claude Code (Copilot, Gemini,
+change. Un agent ne l'atteste jamais. `drwil attest-poll` prépare le
+sondage dans l'outil de l'agent (recette `docs/recipes/attest-a-contract.md`) :
+seule la réponse de l'humain, lue par le hook, l'enregistre ; hors Claude Code (Copilot, Gemini,
 Codex, Cursor par `drwil cursor-acp`), ce n'est prouvé que par des tests.
 
 ## Cycle de chantier

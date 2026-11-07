@@ -186,7 +186,12 @@ read at every request. The full text of each rule is here, read by section
   and never ends. Every tool reads this rule at start, in `AGENTS.md` and, for
   Copilot and Cursor, in their native entry file, which repeats it in one line.
 - **Human gestures**: `drwil attest` is a **human** action: an agent never
-  runs it and never writes an attestation. Likewise, the acceptance verdict
+  runs it and never writes an attestation. When an attestation is awaited,
+  the agent proposes first the attestation poll in the chat (it prepares
+  `drwil attest-poll <ID> --tried "<trial>"` and asks it unchanged, with no
+  answer, default or recommendation; only the human answers it), then the
+  terminal `drwil attest <ID>` as fallback, never the terminal alone
+  (`docs/recipes/attest-a-contract.md`). Likewise, the acceptance verdict
   on a candidate release (`.githooks/release-verdict.mjs` (if present),
   release module) is a **human** gesture: an agent never runs it.
 - **Project language** (`lang` in `.drwil/ia-first.json`): reply, and write

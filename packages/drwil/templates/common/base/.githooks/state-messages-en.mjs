@@ -84,7 +84,7 @@ export const MESSAGES_EN = {
   noHead: "HEAD commit not found: closing is judged on committed work",
   otherCommit: `evidence {0} produced on another commit than HEAD: ${RERUN}`,
   dirty: `worktree modified (at verify time or since): commit, then ${RERUN}`,
-  manual: `MANUAL verdict: a human attests (\`npx drwil attest <ID>\`), then ${RERUN}`,
+  manual: `MANUAL verdict: a human attests, first through the poll in the chat (the agent prepares it: \`npx drwil attest-poll <ID> --tried "<trial>"\`, recipe docs/recipes/attest-a-contract.md), otherwise in their terminal (\`npx drwil attest <ID>\`), then ${RERUN}`,
   failed: `{0} verdict: go back to BUILD (\`node .githooks/state.mjs move BUILD\`) to fix`,
   criteria: `unproven acceptance criteria: {0} — link each to a contract with a check (or an attested Manual contract), then ${RERUN}`,
   noVerdict: `evidence {0} without a known verdict: ${RERUN}`,

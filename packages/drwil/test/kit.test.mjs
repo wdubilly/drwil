@@ -4772,7 +4772,7 @@ test("verify --agent : PASS sans action, FAIL à corriger, ERROR à résoudre, s
   assert.match(r.stdout, /Human attestation required\.\n {2}- QUA-001/);
   assert.match(
     r.stdout,
-    /HUMAN ACTION — for the human, in their own interactive terminal; never run it yourself:\n {2}drwil attest <CONTRACT_ID>/,
+    /Fallback, for the human in their own interactive terminal; never run it yourself:\n {2}drwil attest <CONTRACT_ID>/,
   );
   assert.ok(!existsSync(join(dir, ".drwil/evidence")), "verify --agent n'écrit rien, n'atteste rien");
 });

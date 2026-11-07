@@ -85,7 +85,7 @@ export const MESSAGES_FR = {
   noHead: "commit HEAD introuvable : la clôture se juge sur un travail commité",
   otherCommit: `évidence {0} produite sur un autre commit que HEAD : ${RERUN}`,
   dirty: `arbre modifié (au moment de verify ou depuis) : commiter puis ${RERUN}`,
-  manual: `verdict MANUAL : un humain atteste (\`npx drwil attest <ID>\`), puis ${RERUN}`,
+  manual: `verdict MANUAL : un humain atteste, d'abord par le sondage dans le chat (l'agent le prépare : \`npx drwil attest-poll <ID> --tried "<essai>"\`, recette docs/recipes/attest-a-contract.md), sinon dans son terminal (\`npx drwil attest <ID>\`), puis ${RERUN}`,
   failed: `verdict {0} : revenir en BUILD (\`node .githooks/state.mjs move BUILD\`) pour corriger`,
   criteria: `critère(s) d'acceptation non prouvé(s) : {0} — lier chacun à un contrat avec contrôle (ou un contrat Manuel attesté), puis ${RERUN}`,
   noVerdict: `évidence {0} sans verdict reconnu : ${RERUN}`,

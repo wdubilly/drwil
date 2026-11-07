@@ -61,6 +61,7 @@ contract's detail when needed. Nothing else without a reason.
 | a screen | `frontend/AGENTS.md` (if present) | `docs/recipes/add-a-frontend-screen.md` |
 | a large existing file | `node .githooks/glossary.mjs --contracts` | `docs/recipes/refactor-without-breaking.md` |
 | a defect to fix | `node .githooks/glossary.mjs --contract <ID>` | `docs/recipes/corriger-un-defaut.md` |
+| a human attestation awaited (`MANUAL`) | `node .githooks/glossary.mjs --contract <ID>` | `docs/recipes/attest-a-contract.md` |
 | adopting the kit on an existing project | `.drwil/ia-first.json`, `docs/contracts-catalog.md` | `docs/recipes/adopt-the-kit.md` |
 | an idea to scope | `docs/intentions/README.md` | — |
 | a pending project, the project's status | `{{indexFile}}` | `docs/recipes/view-progress.md` |
@@ -85,7 +86,7 @@ their own instructions". Remove otherwise.)*
 - Run all checks: `node .githooks/run-checks.mjs` (failed checks and a summary; detail in `.drwil/evidence/run-checks.log` (if present)).
 - Know whether the work is verified: `npx drwil verify --agent` (only `GOVERNANCE: PASS` counts as validation).
 - Long checks in a subagent if the tool allows it (Claude Code: `drwil-checks`); say « verified » only on the copied `GOVERNANCE: …` line.
-- `drwil attest` and the release verdict (`.githooks/release-verdict.mjs` (if present)) are **human** gestures: an agent never runs them.
+- `drwil attest` and the release verdict (`.githooks/release-verdict.mjs` (if present)) are **human** gestures: an agent never runs them; an awaited attestation is proposed first as the chat poll, the terminal as fallback.
 - Enable hooks (once per clone): `git config core.hooksPath .githooks`
 
 ## Conventions

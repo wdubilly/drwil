@@ -39,8 +39,10 @@ Only **blocking** contracts (the default severity) decide the verdict; a
 `warning` or `advisory` contract is run and shown without changing the exit
 code. A malformed registry stays an `ERROR`, whatever the severity.
 
-**Human attestation** (`drwil attest <ID>`): a `MANUAL` contract whose
-automated part passes can receive an explicit human proof. The command first
+**Human attestation** (first the attestation poll in the chat, prepared by
+`drwil attest-poll <ID>`; as fallback, `drwil attest <ID>` in a terminal):
+a `MANUAL` contract whose automated part passes can receive an explicit
+human proof. Both reach the same engine. The terminal command first
 re-runs the checks the contract cites, announcing each one and its result
 (a test suite can take minutes), then shows the contract, its rule and its
 automated proof, requires an interactive terminal and typing the contract
@@ -119,12 +121,16 @@ DRWIL : PASS / FAIL / ERROR / MANUAL
   FAIL   → the agent fixes, then runs drwil verify again
   ERROR  → the agent reports the problem, never claims it is verified
   MANUAL → the agent stops: "Human attestation required."
-Human : drwil attest <id>       (in their own terminal, if MANUAL)
+Agent : drwil attest-poll <id> --tried "<trial>"   (prepares the chat poll, asks it unchanged)
+Human : answers the poll        (chat poll first, if MANUAL)
+     or drwil attest <id>       (fallback, in their own terminal)
 Then  : drwil verify
 Last  : GOVERNANCE: PASS        (only this verdict counts as validation)
 ```
 
-The agent produces and verifies proofs; only the human attests. `drwil
+The agent produces and verifies proofs; only the human attests. The
+attestation poll in the chat comes first, the terminal as fallback: see
+`docs/recipes/attest-a-contract.md`. `drwil
 attest` refuses any non-interactive environment (agent, script, redirected
 input) and has no `--yes` option. drwil does not prove that a human typed
 the command: it requires an attestation to be explicit, traceable and

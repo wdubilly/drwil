@@ -152,7 +152,10 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      one line that the main branch's CI is to be checked by hand.
    - Stop at the first workstream that gets stuck (human attestation awaited, FAIL not fixed, red
      CI, main branch CI red or alert issue open, merge not done within 30 minutes, decision to make): say why and what is expected; never
-     start the next one on a merge not done. The queue goes on once it is unblocked, or
+     start the next one on a merge not done. An attestation awaited: the subagent stops with the
+     contract ID and the `npx drwil attest-poll <ID> --tried "<trial>"` to prepare; the main session
+     asks that poll in the chat first, the terminal `npx drwil attest <ID>` as fallback
+     (`docs/recipes/attest-a-contract.md`). The queue goes on once it is unblocked, or
      `node .githooks/state.mjs queue stop` drops it. A short report at each closing (criteria,
      checks, limits, intents created), a summary at the end of the queue.
    - **Resuming a queue in a new session** (after `/clear` or a restart, the state in SCOPING with

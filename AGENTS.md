@@ -51,6 +51,7 @@ détail d'un contrat si besoin. Rien d'autre sans raison.
 | un écran | `frontend/AGENTS.md` (si présent) | `docs/recipes/add-a-frontend-screen.md` |
 | refactor important | — | `docs/recipes/refactor-without-breaking.md` |
 | un défaut à corriger | `node .githooks/glossary.mjs --contract <ID>` | `docs/recipes/corriger-un-defaut.md` |
+| une attestation humaine attendue (`MANUAL`) | `node .githooks/glossary.mjs --contract <ID>` | `docs/recipes/attest-a-contract.md` |
 | déploiement | `docs/deployment.md` (si présent) | `docs/recipes/deploy-to-production.md` |
 | où en est le projet | `docs/projects/pending.md` | `docs/recipes/view-progress.md` |
 | un audit de risques/dette technique | `.drwil/ia-first.json` | `docs/recipes/audit-risks-and-debt.md` |
@@ -64,7 +65,7 @@ détail d'un contrat si besoin. Rien d'autre sans raison.
 - Tout vérifier : `node .githooks/run-checks.mjs` (échecs et résumé ; détail dans `.drwil/evidence/run-checks.log` (si présent)).
 - Savoir si le travail est vérifié : `node packages/drwil/bin/drwil.js verify --agent` (seul `GOVERNANCE: PASS` vaut validation).
 - Contrôles longs : sous-agent `drwil-checks` (Claude Code) ; n'annoncer « vérifié » que sur la ligne `GOVERNANCE: …` recopiée.
-- `drwil attest` et le verdict de recette d'une candidate (`node .githooks/release-verdict.mjs`) sont des gestes **humains** : un agent ne les exécute jamais.
+- `drwil attest` et le verdict de recette d'une candidate (`node .githooks/release-verdict.mjs`) sont des gestes **humains** : un agent ne les exécute jamais ; une attestation attendue se propose d'abord par le sondage dans le chat, le terminal en repli.
 - Activer les hooks git une fois par clone : voir `INSTALL.md`.
 - Installer le dépôt depuis son gabarit : `npm run installer-depot` (`-- --dry-run` pour lister). On n'édite que le gabarit
   (`packages/drwil/templates/`), jamais une copie installée (`.githooks/`, `.claude/`, recettes…) : le contrôle

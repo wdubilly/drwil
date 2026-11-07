@@ -76,11 +76,10 @@ terminal en repli.
 - Quand une attestation humaine est attendue, `drwil verify --agent`, les messages de l'état, le skill
   `drwil`, les règles de conduite et la consigne de `drwil-checks` proposent d'abord le sondage dans le
   chat (préparation `drwil attest-poll <ID> --tried …`, recette `attest-a-contract`), puis le terminal
-  `drwil attest <ID>` en repli ; aucun de ces textes ne donne le terminal comme seule voie — contrat à
-  créer, prouvé par un test en dur
+  `drwil attest <ID>` en repli ; aucun de ces textes ne donne le terminal comme seule voie — `QUA-267`
 - La recette `attest-a-contract` dit, pour chaque outil qui a un sondage, comment le préparer et le
   poser, sans réponse préremplie ni recommandation ; `AGENTS.md` et le skill de lancement y renvoient —
-  même contrat à créer
+  `QUA-267`
 
 ## Contrats modifiés
 
@@ -150,5 +149,10 @@ Aucun.
   clés tolérées en `PostToolUse` seulement, jamais lues ; seule `questions` est comparée ; toute autre
   clé refusée. Test rejouant la forme réelle, tests de QUA-235 verts. Texte de QUA-235 inchangé (la cause
   ne l'exige pas).
-- **Prochaine étape** : [Humain] une attestation par le sondage dans une vraie session Claude Code
-  (critère de sortie du lot 1), puis [IA] lot 2.
+- **Lot 1 fait** : attestation réelle de QUA-236 enregistrée par le sondage (origine `claude-poll`).
+- **Lot 2 codé** (2026-11-07) : contrat QUA-267 et son test en dur
+  (`packages/drwil/test/attest-guidance.test.mjs`, contrôle `tests-qua-267`) ; `verify --agent`
+  (`ATTEST_STEPS`), sortie humaine de `verify`, message `MANUAL` et rappel de VERIFY de l'état, skills
+  `drwil` et `start-a-workstream`, règle « Human gestures », consigne de `drwil-checks`, `AGENTS.md`,
+  documents de preuve et d'état, nouvelle recette `docs/recipes/attest-a-contract.md`.
+- **Prochaine étape** : [IA] vérifier (`run-checks`, `verify --agent`) puis clore.
