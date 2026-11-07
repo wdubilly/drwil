@@ -2895,3 +2895,34 @@ test("QUA-253 : recordLimits, appelée par le hook : de BUILD à CLOSING, la der
   r = await recordLimits(depot({ state: NEUTRAL_STATE }), [{ intent: LIMITE_A, choice: "now" }]);
   assert.match(r.message, /l'activité est SCOPING/);
 });
+
+test("QUA-036 : le rappel de BUILD et les règles de conduite disent la règle des limites — dans le cadre, traitée ; hors cadre, sondage avant VERIFY", () => {
+  const racine = depot({ state: actif("BUILD") });
+  assert.match(
+    context(readState(racine), racine),
+    /une limite dans le cadre \(bloc scope, contrats déclarés\) se traite sur le champ, jamais notée ; une limite hors cadre est soumise à l'humain, une fois, à la fin de BUILD et avant VERIFY, par un sondage `drwil-limite`/,
+  );
+  const en = depot({ lang: "en", state: actif("BUILD") });
+  assert.match(
+    context(readState(en), en),
+    /a limit within the scope .* is handled on the spot, never recorded; a limit outside it goes to the human, once, at the end of BUILD and before VERIFY, by a `drwil-limite` poll/,
+  );
+  // Règles de conduite : celles du dépôt (français) et celles du gabarit livré (anglais).
+  const lire = (chemin) => readFileSync(fileURLToPath(new URL(`../${chemin}`, import.meta.url)), "utf8");
+  assert.match(
+    lire("AGENTS.md"),
+    /une limite dans le cadre se traite sur le champ ; hors cadre, l'humain choisit par un sondage `drwil-limite`, à la fin de BUILD et avant VERIFY ; seule « Noter en intention » en fait une fiche d'intention/,
+  );
+  const gabarit = "packages/drwil/templates/common/base/";
+  assert.match(
+    lire(`${gabarit}AGENTS.md`),
+    /a limit within the scope is handled on the spot; outside it, the human chooses by a `drwil-limite` poll, at the end of BUILD and before VERIFY; only « Record as intent » makes it an intent brief/,
+  );
+  for (const regles of [lire(`${gabarit}docs/ia-first/8-conduct-rules.md`), lire("docs/ia-first/8-conduct-rules.md")]) {
+    assert.match(
+      regles.replace(/\s+/g, " "),
+      /a limit within the brief's scope \(scope block, declared contracts\) is handled on the spot, never recorded; a limit outside it goes to the human, once, at the end of BUILD and before VERIFY, by a `drwil-limite` poll/,
+    );
+    assert.match(regles.replace(/\s+/g, " "), /each limit answered « Record as intent » becomes an intent brief/);
+  }
+});

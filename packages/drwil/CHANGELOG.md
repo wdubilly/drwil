@@ -7,6 +7,13 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Limits are handled during the workstream: a limit within the brief's scope
+  is handled on the spot; one outside it goes to the human at the end of
+  BUILD, before VERIFY, through a `drwil-limite` poll (« Handle now » or
+  « Record as intent », one question per limit, read by the hook and
+  recorded in the state). `node .githooks/close.mjs` refuses, before writing
+  anything, an intent brief added by the branch without the « Record as
+  intent » answer for its path, and names the poll to ask.
 - A slow check can run once, in CI only: `"runAt": ["ci"]` (refused without a
   declared GitHub or GitLab CI). It never runs at commit, at push or in
   `drwil verify`; every output says « left to CI », never « passed », and

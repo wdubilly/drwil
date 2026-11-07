@@ -52,9 +52,11 @@ files:
   - .githooks/close-mechanics.mjs
   - .githooks/close-journal.mjs
   - .githooks/close-branches.mjs
+  - .githooks/close-limits.mjs
   - .githooks/closure-proof.mjs
   - .githooks/close.test.mjs
   - .githooks/close-branches.test.mjs
+  - .githooks/close-limits.test.mjs
   - .githooks/worktree.mjs
   - .githooks/worktree.test.mjs
   - .githooks/note.mjs

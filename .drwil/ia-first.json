@@ -495,6 +495,10 @@
       "ciJob": "checks",
       "paths": [
         ".githooks/**",
+        "AGENTS.md",
+        "docs/ia-first/**",
+        "packages/drwil/templates/common/base/AGENTS.md",
+        "packages/drwil/templates/common/base/docs/ia-first/**",
         ".drwil/ia-first.json"
       ],
       "degradable": false
@@ -3116,6 +3120,14 @@
       "paths": [".githooks/**", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
       "degradable": false,
       "needsBuild": true
+    },
+    {
+      "id": "tests-qua-264",
+      "name": "tests de QUA-264, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-264 \" .githooks/close-limits.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/**", ".drwil/ia-first.json"],
+      "degradable": false
     },
     {
       "id": "tests-qua-207",

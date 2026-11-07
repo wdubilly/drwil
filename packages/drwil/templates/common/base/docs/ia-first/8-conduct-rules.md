@@ -65,12 +65,24 @@ read at every request. The full text of each rule is here, read by section
 - **Review remark**: verify it in the code before applying it; if it's
   wrong or out of scope, say so with the reason rather than applying it to
   please.
+- **Limits during the workstream**: a limit within the brief's scope
+  (scope block, declared contracts) is handled on the spot, never recorded;
+  a limit outside it goes to the human, once, at the end of BUILD and
+  before VERIFY, by a `drwil-limite` poll read by the hook (one question
+  per limit, naming the files it would touch, the possible « Changed
+  contracts » bullet and the `docs/intentions/<name>.md` path it would
+  become; two answers, « Handle now » and « Record as intent », none
+  recommended). « Handle now » is the yes to widen the scope block, in a
+  separate commit. A subagent does not ask the poll: it stops with the
+  list of the out-of-scope limits. A one-line note (`.githooks/note.mjs`) is not
+  where a limit goes.
 - **Closing loops intents**: at the closing of a workstream, each limit
-  left untreated becomes an intent brief in `docs/intentions/` — the agent
-  may write it alone, never a workstream brief (re-scoping it is the
+  answered « Record as intent » becomes an intent brief in
+  `docs/intentions/`, never a workstream brief (re-scoping it is the
   requester's decision) — listed in the index as `[decision]` and cited by
-  the journal; the original intent (the brief's `**Intent**` field) is
-  updated, or summarised in the journal and removed when fully covered.
+  the journal; the closing refuses an intent brief added by the branch
+  without that answer. The original intent (the brief's `**Intent**` field)
+  is updated, or summarised in the journal and removed when fully covered.
 - **Closing in one gesture**: once the journal entry is written,
   `node .githooks/close.mjs` deletes the brief, removes its index line,
   records the consumption and reports, before the commit, what would make

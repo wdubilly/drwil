@@ -88,7 +88,11 @@ rouvre d'une commande (`node .githooks/state.mjs reopen`). Sur un autre clone
 ou une autre machine, placé sur la branche du chantier, `node .githooks/state.mjs
 resume` reconstruit l'état local d'après l'historique Git (BUILD, ou CLOSING
 si la clôture est commitée, lot courant compris), sans jamais reprendre une
-décision humaine. Une idée se note
+décision humaine. Une limite dans le cadre de la fiche se traite sur le champ ;
+une limite hors cadre est soumise à l'humain, à la fin de la réalisation, par
+un sondage `drwil-limite` (« Traiter maintenant » ou « Noter en intention »),
+et la clôture refuse une fiche d'intention née sur la branche sans ce choix.
+Une idée se note
 à tout moment sans changer d'activité (`/drwil-note`).
 
 ## Garde-fous contre le contournement

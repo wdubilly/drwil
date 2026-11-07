@@ -36,6 +36,7 @@ files:
   - .githooks/close-mechanics.mjs
   - .githooks/close-journal.mjs
   - .githooks/close-branches.mjs
+  - .githooks/close-limits.mjs
   - .githooks/worktree.mjs
   - .githooks/closure-proof.mjs
   - .githooks/detour.mjs

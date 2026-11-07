@@ -596,6 +596,9 @@ test("QUA-077 : références à la fiche réorientées vers le journal, intentio
   // L'intention d'origine existe avant le chantier : la base de comparaison est ce commit.
   process.env.DRWIL_BASE = git(racine, "rev-parse", "HEAD");
   ecrire(racine, { "docs/intentions/neuve.md": "# Neuve\n\nCite `src/a.mjs`.\n" });
+  // QUA-264 : une intention née sur la branche porte la réponse « Noter en intention » de l'humain.
+  const etat = JSON.parse(readFileSync(join(racine, ".drwil/state.json"), "utf8"));
+  ecrire(racine, { ".drwil/state.json": JSON.stringify({ ...etat, limits: [{ intent: "docs/intentions/neuve.md", choice: "note" }] }) });
   const r = close(racine, { logs: journaux() });
   assert.equal(r.code, 1);
   assert.match(r.message, /sans que son intention docs\/intentions\/origine\.md soit touchée/);

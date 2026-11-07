@@ -35,6 +35,13 @@ queue.
 - **Close**: free as soon as the `drwil verify` evidence is valid (see
   above); closing removes rights, and accepting the work remains the human
   PR merge.
+- **Limits outside the scope**: at the end of BUILD and
+  before VERIFY, the human answers, per limit, a poll headed
+  `drwil-limite` (« Handle now » or « Record as intent », read by the hook
+  and recorded in the state); a limit within the scope is handled on the
+  spot. `node .githooks/close.mjs` refuses, before writing anything, an
+  intent brief added by the branch without the « Record as intent » answer
+  for its path, or answered « Handle now », and names the poll to ask.
 - **Merge authorised at start** (Claude Code: a second question of the
   poll, Copilot CLI: a second field) named `drwil-merge` lets the human
   accept in advance; their answer,

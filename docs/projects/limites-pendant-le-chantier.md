@@ -148,4 +148,8 @@ Aucun.
   `QUA-253` et contrôle `tests-qua-253` (tests verts). `.githooks/state-messages-fr.mjs` est à 200 lignes (plafond) :
   les textes du refus de clôture du lot 2 vont dans `.githooks/close-limits.mjs` (à créer). Un sondage posé alors que
   `.githooks/state-limits.mjs` manque passe sans contrôle (une erreur de hook ne bloque jamais).
-- **Prochaine étape** : [IA] lot 2.
+- **Lot 2** (2026-11-07) : fait — `.githooks/close-limits.mjs` (`limitProblems`) branché dans `.githooks/close.mjs` :
+  une fiche d'intention ajoutée par la branche sans réponse « Noter en intention », ou répondue « Traiter maintenant »,
+  refuse la clôture avant toute écriture (contrat `QUA-264`, contrôle `tests-qua-264`) ; `QUA-036` modifié ; règles de
+  conduite (`AGENTS.md`, section 8), section 7, recette des branches, carte, fonctionnalités et changelog.
+- **Prochaine étape** : vérifier et clore.
