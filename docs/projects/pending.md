@@ -119,6 +119,9 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P1] (0.11.1) Un contrôle lent (couverture, tarball, e2e) se joue une seule fois, en CI, sur
+  GitHub et GitLab ; `verify` dit « PASS (CI pending) » (cadré le 2026-11-07) —
+  `docs/projects/controle-lent-une-seule-fois-en-ci.md`.
 - [ ] [IA] [P1] (0.11.1) Une limite se traite pendant le chantier ; hors cadre, l'humain choisit par un
   sondage avant VERIFY (cadré le 2026-11-05) —
   `docs/projects/limites-pendant-le-chantier.md`.
