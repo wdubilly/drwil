@@ -69,7 +69,7 @@ intentions. Le demandeur veut :
   l'état pour chaque limite — `QUA-253`
 - La clôture refuse une fiche d'intention ajoutée par la branche sans réponse « Noter en
   intention » enregistrée pour son chemin, et une limite répondue « Traiter maintenant » qui finit
-  quand même en fiche d'intention ; elle dit quelle limite et le sondage à poser — contrat à créer
+  quand même en fiche d'intention ; elle dit quelle limite et le sondage à poser — `QUA-264`
 - Le rappel de BUILD et les règles de conduite disent : limite dans le cadre, traitée sur le champ ;
   hors cadre, sondage avant VERIFY — `QUA-036`
 
