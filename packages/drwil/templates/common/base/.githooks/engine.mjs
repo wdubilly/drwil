@@ -13,7 +13,7 @@ import { controlFingerprints, treeFingerprint } from "./fingerprints.mjs";
 import { mainBranchVerdict } from "./engine-branch.mjs";
 import { createLaunchers } from "./engine-launch.mjs";
 import { createPass } from "./engine-pass.mjs";
-import { runAtVerdict, runContext } from "./engine-runat.mjs";
+import { ciOnly, runAtVerdict, runContext } from "./engine-runat.mjs";
 import { texts } from "./engine-texts.mjs";
 import { checkScope } from "./scope-gate.mjs";
 import { normalize } from "./scope.mjs";
@@ -39,7 +39,7 @@ function findGitleaks() {
  * `staged` (pre-commit hook only): staged files, to defer a project check outside its `paths`; null everywhere else.
  * `whole`: analyses the whole repository rather than the staged files only (CI, `drwil verify`).
  */
-export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI) } = {}) {
+export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI), withCiChecks = false } = {}) {
   const T = texts(cfg.lang);
   const full = (cfg.mode ?? "full") === "full";
   const pass = createPass(root, env);
@@ -112,11 +112,13 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
 
   // Stack checks (lint, typecheck, tests) are declared by the project. At pre-commit only (`staged` given), a check declaring `paths`
   // is deferred if no staged file matches: it stays "not run" (QUA-013), and the pre-push as well as CI replay it.
-  // `runAt` (engine-runat.mjs) reserves a check to some contexts; it is judged before `paths`.
+  // `runAt` (engine-runat.mjs) reserves a check to some contexts; it is judged before `paths`. `withCiChecks` (option
+  // `--with-ci-checks`, QUA-254) also plays the checks left to CI (`runAt: ["ci"]`, QUA-208).
+  const runAtOptions = { lang: cfg.lang, ciFiles: cfg.ciFiles, withCi: withCiChecks };
   for (const c of Array.isArray(cfg.checks) ? cfg.checks : []) {
     const name = c.name ?? c.run;
+    const reserved = runAtVerdict(c, name, runContext(staged, env), runAtOptions);
     const skipped = () => {
-      const reserved = runAtVerdict(c, name, runContext(staged, env), cfg.lang);
       if (reserved) return reserved;
       if (docsOnly) return { status: "not-run", detail: T.docsOnly };
       if (staged && Array.isArray(c.paths) && c.paths.length) {
@@ -132,6 +134,9 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
       // QUA-141: what the check declares, for its own fingerprint (a project check only).
       declaration: JSON.stringify([c, c.needsBuild ? cfg.build : null]),
       paths: Array.isArray(c.paths) && c.paths.length ? c.paths : null,
+      // Left to CI in this context: never run nor reused here, announced as such by each output (QUA-208, QUA-253).
+      ...(reserved?.ciPending ? { ciPending: true } : {}),
+      ...(withCiChecks && ciOnly(c) && !reserved ? { ciPlayed: true } : {}),
       run: (o = {}) => skipped() ?? (c.needsBuild ? build(name, o) : null) ?? launch(c.run, [], { ...o, shell: true, cwd }, name),
       ...(parallel && c.parallel !== false
         ? {

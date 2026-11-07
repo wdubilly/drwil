@@ -8,19 +8,31 @@ type RawResult = Omit<CheckResult, "id"> & { launched?: boolean };
 interface Runnable {
   id: string;
   reuse?: boolean;
+  /** Left to CI here (`runAt: ["ci"]`, QUA-208): neither run nor reused, announced as pending (QUA-253). */
+  ciPending?: boolean;
   run: (opts: { stdio: string }) => RawResult;
 }
+
+/** QUA-254 : `--with-ci-checks` joue aussi les contrôles confiés à la CI. */
+export interface CiChecksOption {
+  withCiChecks?: boolean;
+}
+
+/** Résultat d'un contrôle confié à la CI : jamais « ok », reconnu par `drwil verify` pour rendre `PASS (CI pending)` (QUA-253). */
+export type CiPendingResult = CheckResult & { ciPending?: true };
 
 export async function replayChecks(
   root: string,
   { engine, cfg }: Pick<Project, "engine" | "cfg">,
   contracts: { checks?: string[] | null }[],
-  opts: VerifyOptions,
+  opts: VerifyOptions & CiChecksOption,
 ) {
   // `whole` juge le dépôt entier, pas un index vide.
-  const checks = engine.checks(root, { cfg, whole: true }) as Runnable[];
+  const checks = engine.checks(root, { cfg, whole: true, withCiChecks: opts.withCiChecks === true }) as Runnable[];
   const available = new Map(checks.map((c) => [c.id, c] as const));
   const deferred = pendingGuarantees(root, cfg);
+  // Un contrôle confié à la CI n'est ni joué ni repris : en attente de la CI, sans peser sur le verdict des contrats (QUA-253).
+  for (const c of checks) if (c.ciPending) deferred.set(c.id, c.run({ stdio: "pipe" }).detail ?? "");
   const cache = new Map<string, CheckResult>();
   const cited = [...new Set(contracts.flatMap((k) => (k.checks ?? []).filter((id) => available.has(id))))];
   // QUA-140, QUA-141 : la clôture ne reprend que le verdict d'un arbre identique.
@@ -31,7 +43,11 @@ export async function replayChecks(
   );
   const run = async (id: string): Promise<void> => {
     opts.onCheck?.(id);
-    if (deferred.has(id)) return void cache.set(id, { id, status: "not-applicable", detail: deferred.get(id) });
+    if (deferred.has(id)) {
+      const pending: CiPendingResult = { id, status: "not-applicable", detail: deferred.get(id) };
+      if (available.get(id)?.ciPending) pending.ciPending = true;
+      return void cache.set(id, pending);
+    }
     const taken = reused.get(id);
     if (taken) {
       opts.onCheck?.(id, taken.status);

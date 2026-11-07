@@ -45,8 +45,15 @@ A slow check can also be **reserved** with `runAt`, a list among `commit`,
 before). `runAt: ["verify", "ci"]` keeps it out of every commit and push: it ends
 up "not run" there (a warning that blocks neither the commit nor the push), never "passed", and `drwil verify` and CI always play it, so
 its absence or failure still blocks the closing and the merge (QUA-013). Add
-`commit` or `push` to play it there too. `verify` and `ci` must both be listed;
-an unknown or malformed `runAt` is refused with a message, never ignored. The
+`commit` or `push` to play it there too. `verify` and `ci` must both be listed,
+or `ci` alone: `runAt: ["ci"]` leaves the check to the CI of the pull request
+(GitHub) or merge request (GitLab). It runs neither at commit, nor at push, nor
+in `drwil verify`; each output says it is "left to CI", never "passed", and
+`drwil verify` then reads `GOVERNANCE: PASS (CI pending)`, naming the checks
+waiting for CI. `--with-ci-checks` (on `drwil verify` and `run-checks`) also
+plays them locally, to reproduce a CI failure, and says so. `["ci"]` is refused
+without a declared GitHub or GitLab CI in `ciFiles`; an unknown or malformed
+`runAt` is refused with a message, never ignored. The
 setting is part of the check's own fingerprint (the reuse of its last verdict)
 and, being an execution field, leaves an attestation citing the check
 untouched: only a change of its command, tests or `paths` makes it lapse.

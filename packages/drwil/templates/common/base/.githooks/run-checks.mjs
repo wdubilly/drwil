@@ -16,6 +16,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
 import { checks, projectRoot, startParallel, treeFingerprint } from "./engine.mjs";
+import { ciTexts, WITH_CI_CHECKS } from "./engine-runat.mjs";
 import { annotate, glossary } from "./glossary.mjs";
 import { loadReuse, saveVerdicts } from "./run-checks-verdicts.mjs";
 import { TEXTS } from "./run-checks-texts.mjs";
@@ -64,12 +65,15 @@ const verdicts = {};
 const ranAt = new Date().toISOString();
 // Only `secrets` judges something else here than in `drwil verify` (the index, not the whole history, outside CI): never reusable.
 const reusableByVerify = (id) => id !== "secrets" || Boolean(process.env.CI);
-const list = checks(root, { cfg, staged });
+// QUA-254: the option also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), to reproduce a CI failure locally.
+const withCiChecks = process.argv.includes(WITH_CI_CHECKS);
+const list = checks(root, { cfg, staged, withCiChecks });
 // QUA-141: the verdicts of the last pass, to keep an "ok" whose check files did not change (never in a hook, in CI only when asked, QUA-250,
 // never with the option).
 const replayAll = process.argv.some((a) => a === "--tout-rejouer" || a === "--replay-all");
 const { prePush, controls, reuseActive, keptFrom } = loadReuse(list, { hooked, atCommit, replayAll });
-const reused = new Set(keptFrom.keys());
+// A check left to CI is never reused here: an "ok" left by the option would count it as passed (QUA-013, QUA-208).
+const reused = new Set([...keptFrom.keys()].filter((id) => !list.find((c) => c.id === id)?.ciPending));
 // Checks with a `runAsync` (setting `parallel`) are all started up front; their result is read
 // here in the list order, so the report and the verdict are those of a sequential run.
 const started = startParallel(list.filter((c) => !reused.has(c.id)));
@@ -166,7 +170,11 @@ const slowestSummary = ` — ${T.slowestSummary} ${slowest
   .map((t) => `${t.name} ${t.ms} ms`)
   .join(", ")}`;
 const reuseSummary = reused.size ? ` — ${T.reuseSummary(reused.size, timings.length)}` : "";
-const summary = `[ia-first] ${failures.length ? T.ko(failures.length, warnings.length, DETAIL) : T.ok(warnings.length, DETAIL)}${reuseSummary}${slowestSummary}${end.kept ? ` — ${T.keptTmp(end.kept)}` : ""}`;
+// QUA-208, QUA-254: the summary (the only line a hook shows when all is green) names the checks left to CI, and the option when active.
+const CT = ciTexts(lang);
+const pendingCi = list.filter((c) => c.ciPending).map((c) => c.name);
+const ciSummary = `${pendingCi.length ? ` — ${CT.pending(pendingCi)}` : ""}${withCiChecks ? ` — ${CT.option(list.filter((c) => c.ciPlayed).map((c) => c.name))}` : ""}`;
+const summary = `[ia-first] ${failures.length ? T.ko(failures.length, warnings.length, DETAIL) : T.ok(warnings.length, DETAIL)}${ciSummary}${reuseSummary}${slowestSummary}${end.kept ? ` — ${T.keptTmp(end.kept)}` : ""}`;
 // Never at the cost of the verdict: a report that cannot be written changes nothing to the exit code.
 try {
   mkdirSync(".drwil/evidence", { recursive: true });

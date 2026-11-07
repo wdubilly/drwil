@@ -5687,6 +5687,67 @@ test("QUA-207 : la recette d'adoption et INSTALL.md disent le commit initial de 
   assert.match(install, /an allow rule opens no gesture that the hooks or the forge refuse/);
 });
 
+// Contrôle confié à la CI (`runAt: ["ci"]`, QUA-208) : verify ne le joue pas, ne le compte jamais passé et le nomme en attente.
+// Par la CLI, CI vidée (envTest) : en CI, le moteur le jouerait.
+async function projetConfieALaCi(rouge = false) {
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `lent`"));
+  const cfg = config(dir);
+  cfg.ciFiles = [".github/workflows/ia-first.yml"];
+  cfg.checks = [
+    { id: "ok", name: "toujours vert", run: 'node -e "process.exit(0)"' },
+    { id: "lent", name: "lent", run: "node -e \"console.log('rouge en CI'); process.exit(1)\"", runAt: ["ci"] },
+    ...(rouge ? [{ id: "ko", name: "toujours rouge", run: 'node -e "process.exit(1)"' }] : []),
+  ];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+  if (rouge) appendFileSync(join(dir, "docs/contracts.md"), `\n${contrat("QUA-003", "**Contrôle** : `ko`")}`);
+  return dir;
+}
+
+test("QUA-253 : avec un contrôle confié à la CI et le reste vert, verify rend GOVERNANCE: PASS (CI pending) et nomme les contrôles en attente", async () => {
+  const dir = await projetConfieALaCi();
+  const humain = cli(dir, "verify");
+  assert.equal(humain.status, 0, humain.stdout + humain.stderr);
+  assert.match(humain.stdout, /lent : non applicable ici \(confié à la CI \(runAt \["ci"\]\) : pas joué ici, jamais compté passé/);
+  assert.match(
+    humain.stdout,
+    /Contrôles confiés à la CI, non exécutés ici et jamais comptés passés — en attente de la CI de la PR ou MR : lent\n\nGOVERNANCE: PASS \(CI pending\)\n$/,
+  );
+  assert.doesNotMatch(humain.stdout, /lent : ok/, "jamais passé");
+  const agent = cli(dir, "verify", "--agent");
+  assert.equal(agent.status, 0, agent.stdout);
+  assert.match(
+    agent.stdout,
+    /^Verdict: GOVERNANCE: PASS \(CI pending\) \(exit 0\)\nNote: Checks left to CI, not run here and never counted as passed — pending the PR or MR CI: lent$/m,
+  );
+  const json = JSON.parse(cli(dir, "verify", "--json").stdout);
+  assert.deepEqual([json.status, json.ciPending, json.withCiChecks], ["pass", ["lent"], undefined]);
+  // Le reste en échec : le verdict reste FAIL, jamais PASS (CI pending), et les contrôles en attente restent nommés.
+  const rouge = cli(await projetConfieALaCi(true), "verify");
+  assert.equal(rouge.status, 1);
+  assert.match(rouge.stdout, /en attente de la CI de la PR ou MR : lent\n\nGOVERNANCE: FAIL\n$/);
+  // Sans contrôle confié à la CI : PASS sans réserve, sans note.
+  const sans = cli(await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`")), "verify", "--agent");
+  assert.match(sans.stdout, /^Verdict: GOVERNANCE: PASS \(exit 0\)$/m);
+  assert.doesNotMatch(sans.stdout, /CI pending|left to CI/);
+});
+
+test("QUA-254 : verify --with-ci-checks joue aussi les contrôles confiés à la CI et dit que l'option est active", async () => {
+  const dir = await projetConfieALaCi();
+  const humain = cli(dir, "verify", "--with-ci-checks");
+  assert.equal(humain.status, 1, "joué en local, son échec remonte");
+  assert.match(humain.stdout, /lent : échec/);
+  assert.match(humain.stdout, /rouge en CI/);
+  assert.match(
+    humain.stdout,
+    /Option --with-ci-checks active : les contrôles confiés à la CI \(runAt \["ci"\]\) sont joués ici, en local\n\nGOVERNANCE: FAIL\n$/,
+  );
+  assert.doesNotMatch(humain.stdout, /CI pending|en attente de la CI/);
+  const agent = cli(dir, "verify", "--agent", "--with-ci-checks");
+  assert.match(agent.stdout, /^Note: Option --with-ci-checks active: the checks left to CI \(runAt \["ci"\]\) are played here, locally$/m);
+  const json = JSON.parse(cli(dir, "verify", "--json", "--with-ci-checks").stdout);
+  assert.deepEqual([json.status, json.ciPending, json.withCiChecks], ["fail", [], true]);
+});
+
 test("QUA-211 : un contrôle réservé par runAt garde son attestation (champ d'exécution) ; la page des contrôles décrit le réglage", async () => {
   const { c1, regler, contrat } = await projetAttesteSurEffet();
   regler({ ...c1, runAt: ["verify", "ci"] });

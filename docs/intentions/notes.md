@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-06 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-07 (rangement du backlog).
 
 ## Besoin
 
@@ -33,3 +33,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-06 — Attestation par sondage dans le chat : verify --agent (packages/drwil/src/agent.ts, verdict-texts.ts) ne propose que 'drwil attest <ID>' au terminal alors que le hook .claude/hooks/attest-poll.mjs (QUA-235, QUA-236) gère le sondage drwil-attest ; aucune recette ni skill ne décrit le format du sondage. Proposer le sondage d'abord (terminal en repli), recette 'attester un contrat' citée par AGENTS.md et drwil-start, contrat avec test en dur. Constaté le 2026-11-06 : 6 attestations faites au terminal.
 - 2026-11-06 — Réutilisation fiable des preuves (livrable) : une clôture rejoue le même arbre 4 à 6 fois (run-checks, verify --evidence, hooks des commits de journal et de clôture, pre-push, CI). verify --evidence ne reprend aucun verdict (« per-check reuse: not a closing proof »). Prouver les dépendances réelles de chaque contrôle, laisser verify --evidence reprendre un verdict dont fichiers et commande n'ont pas changé, lier la preuve au commit poussé. Réunir reprise-par-controle-limites, pre-push-commit-pousse et la mesure de suivi-ci-et-contexte. Constaté le 2026-11-06, machine saturée par deux clôtures en parallèle.
 - 2026-11-06 — Faux positif de la barrière de réouverture : un changement qui ne touche qu'un test y est traité comme un changement de règle et attend le oui de l'humain. Relevé à la réouverture du chantier ci-rapide-pour-la-doc (PR #366). À reproduire avant de cadrer.
+- 2026-11-07 — controle-lent-chemin-critique : ne le faire que si la durée de la CI d une PR freine les files (mesure via la décision P1 « suivre la durée de la CI »). Risque : « tout est critique » annule le gain ; préférer, par contrôle lent, les chemins dont il dépend (tarball ← packages/drwil, couverture hooks ← .githooks), le passage complet après fusion (QUA-251) en filet. Gain seulement en CI une fois controle-lent-une-seule-fois-en-ci fait.

@@ -62,19 +62,19 @@ Deux constats fixent la portée :
 
 - `runAt: ["ci"]` est accepté (aujourd'hui `verify` et `ci` sont exigés ensemble). Une configuration
   sans CI déclarée (`ciFiles` vide) qui l'utilise est refusée, avec la raison — contrat QUA-208
-  modifié.
+  modifié. — `QUA-208`
 - Un contrôle `["ci"]` ne tourne ni au commit, ni au push, ni dans `verify`. Chaque sortie
   (`run-checks`, pre-commit, pre-push, `verify`) l'annonce « confié à la CI », jamais « passé »
-  (QUA-013, un contrôle non exécuté n'est pas passé) — contrat QUA-208 modifié.
+  (QUA-013, un contrôle non exécuté n'est pas passé) — contrat QUA-208 modifié. — `QUA-208`
 - Avec au moins un contrôle confié à la CI et tout le reste vert, `verify` rend
   `GOVERNANCE: PASS (CI pending)` et nomme les contrôles en attente ; ce n'est jamais un `PASS` sans
-  réserve — contrat à créer.
+  réserve — `QUA-253`
 - La clôture d'un chantier n'est acquise qu'une fois la CI de la PR (GitHub) ou de la MR (GitLab)
   verte sur ces contrôles : `pr-watch` la suit sur les deux forges ; rouge ou absente, le chantier
   reste en CLOSING et le dit — contrat à créer.
 - Une option de `verify` et de `run-checks` (nom à fixer au lot 1, par exemple
   `--with-ci-checks`) joue aussi en local les contrôles confiés à la CI, pour reproduire un échec ;
-  la sortie dit que l'option est active — contrat à créer.
+  la sortie dit que l'option est active — `QUA-254`
 - Livrable : les CI du gabarit, GitHub et GitLab, ne jouent plus deux fois les contrôles sur le push
   d'une branche qui a une PR ou une MR ouverte, et jouent bien les contrôles `["ci"]` — contrat à
   créer.
@@ -90,10 +90,14 @@ Deux constats fixent la portée :
 
 ## Contrats modifiés
 
-- QUA-208 (un contrôle réservé par `runAt` n'est pas joué au commit ni au push, et le dit) — ancien
+- `QUA-208` (un contrôle réservé par `runAt` n'est pas joué au commit ni au push, et le dit) — ancien
   critère : « `verify` et `ci` y figurent toujours » ; nouveau : `["ci"]` seul est permis, le
   contrôle est alors annoncé « confié à la CI » par chaque sortie, et refusé sans CI déclarée.
   Validé par le demandeur le 2026-11-07, en conversation.
+- `QUA-209` (`drwil verify` et la CI jouent un contrôle réservé, son échec bloque ; un `runAt` mal
+  formé est refusé) — ancien critère : « `runAt` contient `verify` et `ci` » ; nouveau : ou `ci`
+  seul (contrôle confié à la CI, QUA-208). Conséquence directe de QUA-208 modifié, ajoutée au lot 1
+  pour que le registre ne se contredise pas : à confirmer par le demandeur.
 - `.githooks/engine.mjs` — accepte `runAt: ["ci"]`, ne joue pas un tel contrôle au commit, au push
   ni dans `verify` et l'annonce « confié à la CI » ; l'option locale les rejoue (validé par le
   demandeur le 2026-11-07)
@@ -157,5 +161,16 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-07) : cadré, points tranchés en conversation, rien de réalisé.
-- **Prochaine étape** : [IA] lot 1.
+- **Dernier état** (2026-11-07) : lot 1 — moteur réalisé. `runAt: ["ci"]` accepté, refusé avec la
+  raison sans CI GitHub ou GitLab dans `ciFiles` ; contexte « ci » quand la variable `CI` est posée
+  (`.githooks/engine-runat.mjs`) ; un contrôle `["ci"]` n'est ni joué ni repris au commit, au push,
+  hors hook ni dans `verify`, annoncé « confié à la CI » (détail du contrôle et résumé de
+  `run-checks`) ; `verify` rend `GOVERNANCE: PASS (CI pending)` et nomme les contrôles en attente
+  (`packages/drwil/src/cli-verify.ts`, `ciPending` en `--json`) ; option locale `--with-ci-checks`
+  sur `verify` et `run-checks`. QUA-208 modifié, QUA-209 aligné (à confirmer par le demandeur),
+  QUA-253 et QUA-254 créés ; page `docs/ia-first/4-checks-in-git.md` complétée. Le verdict `PASS (CI pending)` est
+  posé par la CLI (`packages/drwil/src/cli-verify.ts`) : `packages/drwil/src/verify.ts`, `packages/drwil/src/verdict.ts` et `packages/drwil/src/agent.ts` sont hors du bloc
+  scope, la preuve écrite par `--evidence` garde le statut `PASS`.
+- **Prochaine étape** : [IA] lot 2 — `pr-watch` et la clôture attendent la CI de la PR (GitHub) et
+  de la MR (GitLab) sur les contrôles `["ci"]` (la clôture doit lire `ciPending`, absent de la
+  preuve) ; CI du gabarit sans doublon sur les deux forges.
