@@ -45,6 +45,7 @@ files:
   - docs/architecture.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - packages/drwil/CHANGELOG.md
 -->
 
 ## 1. Besoin
