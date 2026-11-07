@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Matrice des OS de kit-tests (contrat QUA-045). Les checks
-// « kit-tests (<os>) » sont exigés par le ruleset de master : sur une PR, les trois sont toujours
-// rapportés ; aucun n'y lance la suite si la PR ne touche que la documentation. Un push de branche ne
-// rapporte qu'Ubuntu (un check vert sans tests sur le commit de la PR masquerait son échec) ; un push
-// sur master teste tout, filet avant release.
-// En CI : lit GITHUB_EVENT_NAME, GITHUB_REF, PRINCIPALE, et pour une PR BASE et TETE, puis écrit
-// `matrice=<json>` dans GITHUB_OUTPUT. Un diff illisible fait échouer le job : jamais de matrice devinée.
+// Matrice des OS de kit-tests (contrat QUA-045). Les checks « kit-tests (<os>) » sont exigés par le
+// ruleset de master : sur une PR, les trois sont toujours rapportés, mais seul Ubuntu y lance la suite
+// (aucun si la PR ne touche que la documentation). Windows et macOS ne lancent la suite qu'au push d'un
+// tag de release et à un lancement manuel du workflow : c'est là que la release se joue. Un push de
+// branche, master compris, ne rapporte qu'Ubuntu (un check vert sans tests sur le commit d'une PR
+// masquerait son échec).
+// En CI : lit GITHUB_EVENT_NAME, GITHUB_REF, et pour une PR BASE et TETE, puis écrit `matrice=<json>`
+// dans GITHUB_OUTPUT. Un diff illisible fait échouer le job : jamais de matrice devinée.
 import { execFileSync } from "node:child_process";
 import { appendFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -34,12 +35,26 @@ export function codeTouche(fichiers) {
   return fichiers.some((f) => !f.startsWith("docs/") && f !== ".drwil/usage.jsonl");
 }
 
-/** Lignes de la matrice : { os, gitleaks, sha256, tester }. */
-export function matrice({ evenement, ref = "", principale = "", fichiers = [] }) {
-  if (evenement === "push" && ref !== `refs/heads/${principale}`) return [{ ...OS[0], tester: true }];
-  // Sur une PR de documentation, Ubuntu saute aussi : le job checks rejoue tous les contrôles, le push sur master teste les trois OS.
-  const tester = evenement === "pull_request" ? codeTouche(fichiers) : true;
-  return OS.map((o) => ({ ...o, tester }));
+/** Tag posé par la release : `vX.Y.Z` ou `vX.Y.Z-rc.N`. */
+const TAG_RELEASE = /^refs\/tags\/v\d+\.\d+\.\d+(?:-rc\.\d+)?$/;
+
+const RAISON_RELEASE =
+  "Windows et macOS ne lancent la suite qu'au push d'un tag de release (vX.Y.Z, vX.Y.Z-rc.N) ou par un lancement manuel du workflow (QUA-045).";
+const RAISON_DOC = "la PR ne touche que la documentation (docs/, .drwil/usage.jsonl), le job checks y rejoue les contrôles.";
+
+/** Lignes de la matrice : { os, gitleaks, sha256, tester, raison } ; `raison` dit pourquoi un OS rapporté ne teste pas. */
+export function matrice({ evenement, ref = "", fichiers = [] }) {
+  const tous = OS.map((o) => ({ ...o, tester: true, raison: "" }));
+  if (evenement === "pull_request") {
+    const code = codeTouche(fichiers);
+    return OS.map((o, i) => {
+      const tester = code && i === 0;
+      return { ...o, tester, raison: tester ? "" : code ? RAISON_RELEASE : RAISON_DOC };
+    });
+  }
+  if (evenement === "push") return TAG_RELEASE.test(ref) ? tous : [tous[0]];
+  // workflow_dispatch, ou un événement inattendu : jamais moins d'OS que ce qu'on ne sait pas exclure.
+  return tous;
 }
 
 function principal() {
@@ -51,9 +66,9 @@ function principal() {
         .split("\n")
         .filter(Boolean)
     : [];
-  const m = matrice({ evenement: env.GITHUB_EVENT_NAME, ref: env.GITHUB_REF, principale: env.PRINCIPALE, fichiers });
+  const m = matrice({ evenement: env.GITHUB_EVENT_NAME, ref: env.GITHUB_REF, fichiers });
   if (pr) console.log(`${fichiers.length} fichier(s) dans la PR ; code touché : ${codeTouche(fichiers) ? "oui" : "non"}`);
-  for (const l of m) console.log(`${l.os} : ${l.tester ? "suite lancée" : "rapporté sans tests (PR de documentation)"}`);
+  for (const l of m) console.log(`${l.os} : ${l.tester ? "suite lancée" : `rapporté sans tests : ${l.raison}`}`);
   appendFileSync(env.GITHUB_OUTPUT, `matrice=${JSON.stringify(m)}\n`);
 }
 

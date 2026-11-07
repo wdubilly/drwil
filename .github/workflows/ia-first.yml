@@ -1,5 +1,5 @@
 name: ia-first
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 jobs:
   checks:
     # Sauté sur le push d'une branche dont la PR ouverte porte déjà ces checks (voir matrice-os).
@@ -86,9 +86,9 @@ jobs:
             echo "::warning::Échec déjà présent sur la base de la PR ($BASE) : pas introduit par cette PR, à corriger quand même."
             grep -F "✗" ../base-checks.log || true
           fi
-  # OS à tester (QUA-045) : Ubuntu seul sur un push de branche ;
-  # les trois sur une PR (aucun ne lance les tests si elle ne touche que la documentation) et sur
-  # un push sur master.
+  # OS de kit-tests (QUA-045) : Ubuntu seul teste sur une PR (aucun si elle ne touche que la
+  # documentation), Windows et macOS y sont rapportés sans tests ; un push de branche, master compris,
+  # ne rapporte qu'Ubuntu ; le push d'un tag de release et un lancement manuel testent les trois.
   matrice-os:
     runs-on: ubuntu-latest
     outputs:
@@ -117,17 +117,15 @@ jobs:
           echo "saute=$saute" >> "$GITHUB_OUTPUT"
       - id: saute
         if: steps.pr.outputs.saute == 'true'
-        run: echo 'matrice=[{"os":"ubuntu-latest","tester":false}]' >> "$GITHUB_OUTPUT"
+        run: echo 'matrice=[{"os":"ubuntu-latest","tester":false,"raison":"ce push a une PR ouverte qui porte déjà ces checks."}]' >> "$GITHUB_OUTPUT"
       - id: calcul
         if: steps.pr.outputs.saute != 'true'
         env:
-          PRINCIPALE: ${{ github.event.repository.default_branch }}
           BASE: ${{ github.event.pull_request.base.sha }}
           TETE: ${{ github.event.pull_request.head.sha }}
         run: node .github/scripts/ci-multi-os.mjs
-  # Portabilité du kit (fiche « suites du kit portable », point 1) :
-  # npm test de packages/drwil (pas la suite complète run-checks.mjs, qui
-  # dépend de gitleaks) doit rester vert sur les trois OS.
+  # Portabilité du kit (QUA-045) : npm test de packages/drwil (pas la suite complète run-checks.mjs,
+  # qui dépend de gitleaks), sur les OS que matrice-os fait tester.
   kit-tests:
     needs: matrice-os
     # Nom fixé : le ruleset de master exige « kit-tests (<os>) », or `include` ajouterait gitleaks et sha256 au nom.
@@ -140,7 +138,11 @@ jobs:
     # un check exigé qui ne vient jamais. Sans tests, chaque étape est sautée, et le saut est dit.
     steps:
       - if: ${{ !matrix.tester }}
-        run: 'echo "::notice::${{ matrix.os }} non testé : la PR ne touche que la documentation (docs/, .drwil/usage.jsonl), ou ce push a une PR ouverte qui porte déjà ces checks."'
+        shell: bash
+        env:
+          OS: ${{ matrix.os }}
+          RAISON: ${{ matrix.raison }}
+        run: 'echo "::notice::$OS non testé : $RAISON"'
       - if: ${{ matrix.tester }}
         uses: actions/checkout@v7
       - if: ${{ matrix.tester }}

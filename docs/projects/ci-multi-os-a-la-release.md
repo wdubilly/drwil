@@ -127,5 +127,15 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-07) : cadré, rien de réalisé.
-- **Prochaine étape** : [IA] lot 1.
+- **Dernier état** (2026-11-07) : lot 1 fait. `.github/scripts/ci-multi-os.mjs` (`matrice`) : sur une PR,
+  Ubuntu seul teste (aucun si documentation seule), Windows et macOS rapportés sans tests avec une
+  `raison` ; push de branche (master compris) : Ubuntu seul ; tag `vX.Y.Z` / `vX.Y.Z-rc.N` et
+  `workflow_dispatch` : les trois OS. Workflow : `on: [push, pull_request, workflow_dispatch]`, notice de
+  saut qui lit `matrix.raison` par l'environnement (bash), commentaires de `matrice-os` et `kit-tests`.
+  QUA-045 réécrit dans `docs/contracts.md`, carte (`docs/architecture.md`) précisée. Ajout au scope :
+  `.githooks/run-checks.test.mjs` (son test QUA-121 exigeait `on: [push, pull_request]`).
+- **Prochaine étape** : [IA] lot 2 — réglage des OS exigés (`.drwil/ia-first.json`, `packages/drwil/src/config-write.ts`),
+  barrière dans `.githooks/create-release.mjs` et `.githooks/promote-release.mjs` (gabarit puis `npm run installer-depot`),
+  `ciOs` de la fiche de recette qui ignore un job dont les étapes de test ont été sautées (avec
+  `raison`, la notice « non testé » ; le job reste `success`), recette et README du module, contrat à
+  créer et son test, `GOVERNANCE: PASS`. `workflow_dispatch` ne s'essaie qu'après fusion sur master.
