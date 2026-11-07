@@ -4155,3 +4155,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/fusion-reprogrammee-efface-le-rappel`.
 
 - **Preuve de clôture** : `docs/preuves/fusion-reprogrammee-efface-le-rappel.md`.
+
+## 2026-11-07 — Un contrôle lent se joue une seule fois, en CI
+
+- **Mesure (lot 3)** : temps d'un commit et d'un push dans le dépôt, avant et après le passage de `couverture-tests`, `couverture-hooks`, `couverture-claude`, `tarball` et `couverture-diff` à `runAt: ["ci"]`. Méthode, identique avant et après : une ligne de commentaire unique ajoutée à `.githooks/engine-runat.mjs` et à sa copie du gabarit, indexée ; chronométrage de `DRWIL_HOOK=pre-commit node .githooks/run-checks.mjs` (ce que lance le hook pre-commit), puis du hook `.githooks/pre-push origin <url>` nourri sur son entrée d'une ligne de référence de la branche (nouvelle branche distante), sans pousser ; changement retiré ensuite. Avant : commit 235,6 s, push 251,8 s (le plus lent, `couverture-tests`, 226 à 228 s). Après : commit 109,1 s, push 133,8 s, les cinq contrôles annoncés « confié à la CI, non exécuté ici ». Une mesure par cas, sur un poste WSL2 : un ordre de grandeur, pas un banc.
+- **Décisions clés** : `couverture-diff` suit en CI : il rejoue toute la suite des hooks sous c8 (47,5 s au push avant le changement), un doublon de `couverture-hooks` en temps ; les tests rapides des contrats (`tests-qua-*`) restent en local. Aucun contrôle e2e n'est déclaré dans le dépôt. La recette et la compétence d'adoption proposent `runAt: ["ci"]` pour l'e2e de l'adoptant, en renvoyant à la section « What "end to end" means » du catalogue.

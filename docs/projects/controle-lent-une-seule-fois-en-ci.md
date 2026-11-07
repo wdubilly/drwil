@@ -82,14 +82,14 @@ Deux constats fixent la portée :
   d'une branche qui a une PR ou une MR ouverte, et jouent bien les contrôles `["ci"]` — contrat à
   créer. — `QUA-263`
 - Livrable : la recette et la compétence d'adoption proposent `["ci"]` pour le contrôle e2e de
-  l'adoptant, en renvoyant à la définition de l'e2e du catalogue sans la recopier (QUA-196).
+  l'adoptant, en renvoyant à la définition de l'e2e du catalogue sans la recopier (QUA-196). — `QUA-196`
 - Dépôt : les contrôles `couverture-tests`, `couverture-hooks`, `couverture-claude`, `tarball` et
   tout contrôle e2e passent à `["ci"]` dans `.drwil/ia-first.json` ; les tests rapides des contrats
-  restent en local. Temps de commit et de push mesurés avant et après, consignés au journal.
+  restent en local. Temps de commit et de push mesurés avant et après, consignés au journal. — `QUA-208`
 - Le passage de la CI sur la branche principale après fusion reste inchangé : il rejoue tout, et la
-  preuve d'une CI verte sur la dernière fusion (QUA-251) reste exigée avant le chantier suivant.
+  preuve d'une CI verte sur la dernière fusion (QUA-251) reste exigée avant le chantier suivant. — `QUA-251`
 - Chaque critère est prouvé par un test qui porte l'ID de son contrat (le critère sur la configuration du dépôt, par la
-  configuration validée et la mesure au journal).
+  configuration validée et la mesure au journal). — `QUA-034`
 
 ## Contrats modifiés
 
@@ -166,7 +166,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-07) : lots 1 — moteur et 2 — clôture et forges réalisés. Lot 1 : `runAt: ["ci"]`
+- **Dernier état** (2026-11-07) : lots 1 — moteur, 2 — clôture et forges et 3 — adoption et dépôt réalisés. Lot 1 : `runAt: ["ci"]`
   accepté (refusé sans CI GitHub ou GitLab dans `ciFiles`), annoncé « confié à la CI » par chaque sortie,
   option `--with-ci-checks` ; QUA-208 modifié, QUA-209 aligné, QUA-260 et QUA-261 créés. Lot 2 : le verdict
   lui-même porte `PASS (CI pending)` (`packages/drwil/src/verdict.ts` : `ciPending`, `verdictLabel` ; `label`
@@ -181,6 +181,13 @@ Aucun.
   branche à PR ouverte (pas de `if` de job) ; GitLab, `workflow: rules` sans pipeline de MR — QUA-263 créé.
   Critères 4 et 6 liés. Choix GitLab : `glab` plutôt que l'API brute (authentification et projet déduits
   du clone, comme `gh`), éprouvé par des réponses simulées.
+  Lot 3 : recette et compétence d'adoption proposent `"runAt": ["ci"]` pour l'e2e de l'adoptant et renvoient
+  à la section « What "end to end" means » du catalogue (test QUA-196) ; dans `.drwil/ia-first.json`,
+  `couverture-tests`, `couverture-hooks`, `couverture-claude`, `tarball` et `couverture-diff` (suite des hooks
+  sous c8, lente) confiés à la CI, les `tests-qua-*` en local, aucun e2e déclaré dans le dépôt ; la CI du dépôt
+  joue `run-checks` avec la variable `CI` de la forge (test QUA-208, preuve du contrat complétée). Mesure au
+  journal : commit 235,6 s → 109,1 s, push 251,8 s → 133,8 s. Critères 7 à 10 liés (QUA-196, QUA-208,
+  QUA-251, QUA-034).
 - **Décisions du 2026-11-07, après le lot 1** : périmètre élargi à `packages/drwil/src/verify.ts`,
   `packages/drwil/src/verdict.ts` et `packages/drwil/src/agent.ts`, pour que le verdict lui-même
   (preuve `--evidence`, `--json`, sortie `--agent`) porte `PASS (CI pending)` ; la phrase « Work is
@@ -192,8 +199,10 @@ Aucun.
   `head_pipeline` de `glab mr view --output json` ne sont éprouvés que par simulation. Attestations
   humaines tombées, à renouveler (`drwil attest`, geste humain) : QUA-013 (contrôle non exécuté n'est pas
   passé, `packages/drwil/src/verdict.ts` modifié) et QUA-048 (clôture en un geste, `.githooks/close.mjs`
-  modifié) au lot 2 ; QUA-150 et QUA-151 (tests de durée, push sous charge) depuis le lot 1.
-- **Prochaine étape** : [IA] lot 3 — adoption et dépôt : recette et compétence d'adoption (e2e en
-  `["ci"]`), contrôles longs et e2e du dépôt passés à `["ci"]` dans `.drwil/ia-first.json`, mesure du temps
-  de commit et de push avant et après au journal ; `GOVERNANCE: PASS (CI pending)` en local et CI verte sur
-  la PR.
+  modifié) au lot 2 ; QUA-150 et QUA-151 (tests de durée, push sous charge) depuis le lot 1 ; QUA-236 (le
+  sondage d'attestation ne demande que le jugement utile, recette d'adoption modifiée) au lot 3. Le texte de
+  QUA-196 ne nomme pas encore la compétence ni `runAt: ["ci"]` : son test les éprouve, l'amender est une
+  décision humaine. Une seule mesure par cas, sur un poste WSL2 : un ordre de grandeur.
+- **Prochaine étape** : [humain] réattester QUA-013, QUA-048, QUA-150, QUA-151 et QUA-236 (`drwil attest`),
+  puis vérifier (`GOVERNANCE: PASS (CI pending)` attendu), clore, pousser et suivre la CI de la PR
+  (`node .githooks/pr-watch.mjs`), seule preuve des contrôles confiés à la CI.

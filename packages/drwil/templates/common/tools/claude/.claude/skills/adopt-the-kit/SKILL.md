@@ -11,8 +11,10 @@ the layer `AGENTS.md` files, declare the checks, propose the contracts
 from `docs/contracts-catalog.md` one by one). Once the stack is known, run
 `npx drwil guarantees` (step 3 bis): 100 % coverage per layer and an e2e test
 of the critical paths on a new project, a ratchet and 100 % diff coverage on
-an existing one in debt, a protected forge with a CI and a written
-presentation of the product — each guarantee not held gets a blocking `[P0]`
+an existing one in debt (the e2e check proposed with `"runAt": ["ci"]`,
+played once by the CI of the PR or MR; what it is stays defined in the
+catalog's « What "end to end" means » section), a protected forge with a
+CI and a written presentation of the product — each guarantee not held gets a blocking `[P0]`
 brief, handled first; the branch protection (`--protect`) only with the
 requester's agreement. An adopted contract migrates
 from the catalog to the registry (`docs/contracts.md`), with its check

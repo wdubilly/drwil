@@ -943,3 +943,28 @@ test("QUA-261 : run-checks --with-ci-checks joue aussi les contrôles confiés �
     /— option --with-ci-checks active: checks left to CI played locally \(lent\)/,
   );
 });
+
+test("QUA-208 : dans ce dépôt, les contrôles lents sont confiés à la CI, acceptés par le moteur et joués par la CI du dépôt ; les tests des contrats restent en local", async () => {
+  const { runAtVerdict } = await import("./engine-runat.mjs");
+  const depot = dirname(dirname(SCRIPT));
+  const config = JSON.parse(readFileSync(join(depot, ".drwil/ia-first.json"), "utf8"));
+  const confies = config.checks.filter((c) => Array.isArray(c.runAt) && c.runAt.every((v) => v === "ci")).map((c) => c.id);
+  for (const id of ["couverture-tests", "couverture-hooks", "couverture-claude", "tarball", "couverture-diff"])
+    assert.ok(confies.includes(id), `${id} confié à la CI`);
+  for (const c of config.checks.filter((k) => "runAt" in k)) {
+    for (const contexte of ["commit", "push", "verify"])
+      assert.equal(runAtVerdict(c, c.id, contexte, { ciFiles: config.ciFiles })?.status, "not-run", `${c.id} non joué : ${contexte}`);
+    assert.equal(runAtVerdict(c, c.id, "ci", { ciFiles: config.ciFiles }), null, `${c.id} joué en CI`);
+  }
+  const contrats = config.checks.filter((c) => /^tests-qua-\d+$/.test(c.id));
+  assert.ok(contrats.length > 100, "les tests des contrats sont déclarés");
+  assert.deepEqual(
+    contrats.filter((c) => "runAt" in c).map((c) => c.id),
+    [],
+    "les tests rapides des contrats restent en local",
+  );
+  assert.deepEqual(config.ciFiles, [".github/workflows/ia-first.yml"]);
+  const flux = readFileSync(join(depot, ".github/workflows/ia-first.yml"), "utf8");
+  assert.match(flux, /^ {6}- run: node \.githooks\/run-checks\.mjs$/m, "la CI du dépôt joue run-checks (variable CI posée par la forge)");
+  assert.doesNotMatch(flux, /^\s+CI:/m, "la variable CI n'est jamais écrasée");
+});

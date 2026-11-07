@@ -5534,6 +5534,22 @@ test("QUA-196 : la recette d'adoption renvoie à la définition de l'e2e sans la
   assert.equal(readFileSync(join(DEPOT, "docs/recipes/adopt-the-kit.md"), "utf8"), recette);
 });
 
+test("QUA-196 : la recette et la compétence d'adoption proposent runAt [\"ci\"] pour l'e2e, renvoient au catalogue sans le recopier, gabarit et copies identiques", () => {
+  const recette = readFileSync(RECETTE_ADOPTION_GABARIT, "utf8");
+  const competence = readFileSync(join(GABARIT, "tools/claude/.claude/skills/adopt-the-kit/SKILL.md"), "utf8");
+  for (const [nom, texte] of [
+    ["recette", recette],
+    ["compétence", competence],
+  ]) {
+    const plat = texte.replace(/\s+/g, " ");
+    assert.match(plat, /e2e check[^.]*`"runAt": \["ci"\]`/, `${nom} : e2e proposé en runAt ["ci"]`);
+    assert.match(plat, /What "end to end" means/, `${nom} : renvoi à la définition du catalogue`);
+    assert.ok(!plat.includes("installs the package as a client"), `${nom} : la définition n'est pas recopiée`);
+  }
+  assert.match(recette.replace(/\s+/g, " "), /GOVERNANCE: PASS \(CI pending\)/);
+  assert.equal(readFileSync(join(DEPOT, ".claude/skills/adopt-the-kit/SKILL.md"), "utf8"), competence);
+});
+
 test("QUA-197 : la doc des preuves distingue identité, approbation et preuve d'exécution de l'attestation, gabarit et copie identiques", () => {
   const texte = readFileSync(PREUVES_GABARIT, "utf8");
   assert.match(texte, /^## What an attestation guarantees: identity, approval, proof of execution$/m);
