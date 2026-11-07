@@ -1,6 +1,6 @@
 # Intention : traiter les limites pendant le chantier, pas en fiches d'intention à la clôture
 
-**Statut** : proposée le 2026-11-05, cadrée le même jour, clôturée puis rouverte le 2026-11-07 (parité hors Claude Code) : voir `docs/projects/journal.md`.
+**Statut** : proposée le 2026-11-05, cadrée le même jour : `docs/projects/limites-pendant-le-chantier.md` ; rouverte le 2026-11-07, elle couvre aussi la parité des sondages `drwil-limite` et `drwil-merge` hors Claude Code (Copilot CLI, Gemini CLI, Codex, client ACP de Cursor).
 
 ## Besoin
 
@@ -10,6 +10,10 @@ les intentions). Le demandeur voit ces fiches s'accumuler alors que plusieurs li
 la fiche se traite sur le champ, et qu'une limite hors cadre lui soit soumise avant la vérification :
 « traiter maintenant » (cadrage élargi sur son oui) ou « noter ». La fiche d'intention ne naît plus
 que d'un report choisi.
+
+Le choix de l'humain vaut sous chaque outil livré : le sondage des limites, et celui qui redonne la
+fusion automatique, sont lus par le hook sous Copilot CLI, Gemini CLI, Codex et le client ACP de
+Cursor comme sous Claude Code (ajouté à la réouverture du 2026-11-07).
 
 Exemple du 2026-11-05 (chantier « reprise sur un autre clone ») : le message d'aide de
 `node .githooks/state.mjs` ne cite pas `resume`, faute d'une puce « Contrats modifiés » un peu plus
