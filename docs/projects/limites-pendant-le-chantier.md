@@ -13,6 +13,8 @@ files:
   - packages/drwil/templates/common/base/.githooks/close-limits.mjs
   - packages/drwil/templates/common/base/.githooks/close.mjs
   - packages/drwil/templates/common/base/.githooks/state-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/close-texts.mjs
   - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
   - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
   - packages/drwil/templates/common/base/.githooks/state-validate.mjs
@@ -27,6 +29,8 @@ files:
   - .githooks/close-limits.mjs
   - .githooks/close.mjs
   - .githooks/state-texts.mjs
+  - .githooks/state-context-texts.mjs
+  - .githooks/close-texts.mjs
   - .githooks/state-messages-fr.mjs
   - .githooks/state-messages-en.mjs
   - .githooks/state-validate.mjs
@@ -88,6 +92,9 @@ intentions. Le demandeur veut :
 - `.githooks/state-messages-en.mjs` — mêmes messages, en anglais ; aucun message existant modifié (validé par le demandeur le 2026-11-05)
 - `.githooks/state.test.mjs` — tests du rappel de BUILD et de l'enregistrement des limites ajoutés ; aucun test existant modifié (validé par le demandeur le 2026-11-07)
 - `.githooks/state-validate.mjs` — champ des réponses aux limites ajouté, valable hors SCOPING seulement ; aucune autre validation ne change (validé par le demandeur le 2026-11-07)
+- `.githooks/state-context-texts.mjs` — le rappel de CLOSING dit qu'une limite ne devient fiche d'intention que sur la réponse « Noter en intention » au sondage des limites ; aucun autre rappel ne change (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
+- `.githooks/close-texts.mjs` — le texte `rest` de la clôture dit la même règle ; aucun autre message ne change (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
+- `.githooks/state.test.mjs` — le test QUA-036 du rappel de CLOSING suit la nouvelle phrase (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
 
 ## 2. Hors périmètre
 
