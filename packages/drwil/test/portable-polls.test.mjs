@@ -75,7 +75,15 @@ async function lancer(root, tool, pre, event) {
     }
   }
   const env = { ...process.env, GEMINI_PROJECT_DIR: root, CLAUDE_PROJECT_DIR: root };
-  const r = spawnSync(commande(root, tool, pre), { cwd: root, input: JSON.stringify(event), encoding: "utf8", env, shell: true });
+  const cmd = commande(root, tool, pre);
+  const options = { cwd: root, input: JSON.stringify(event), encoding: "utf8", env };
+  // Comme portable-attest.test.mjs : sous Windows, l'entrée déclarée est lancée sans faire passer Bash pour cmd.exe.
+  const entree = cmd.match(/(\.claude\/hooks\/prompt-hook\.mjs)"?((?:\s+(?:copilot|gemini|codex|pre|post)\b)*)/);
+  assert.ok(entree, cmd);
+  const r =
+    process.platform === "win32"
+      ? spawnSync(process.execPath, [join(root, entree[1]), ...entree[2].split(/\s+/).filter(Boolean)], options)
+      : spawnSync(cmd, { ...options, shell: true });
   if (code !== null) assert.equal(r.status, code, "même code dans ce processus et par la commande de l'outil");
   return { ...r, contexte: r.stdout ? JSON.stringify(JSON.parse(r.stdout)) : "" };
 }
