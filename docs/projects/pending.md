@@ -119,8 +119,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] (0.11.1) merge-auto dit vrai sur une PR déjà verte (fusionnée, pas « non programmée »)
-  et efface le rappel « fusion annulée » quand il reprogramme (cadré le 2026-11-06) — `docs/projects/fusion-reprogrammee-efface-le-rappel.md`.
 - [ ] [IA] [P1] (0.11.1) Une limite se traite pendant le chantier ; hors cadre, l'humain choisit par un
   sondage avant VERIFY (cadré le 2026-11-05) —
   `docs/projects/limites-pendant-le-chantier.md`.
@@ -288,6 +286,11 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   (reportée le 2026-11-05 : une fiche jetable par montée de version, close par
   `node .githooks/close.mjs` ; à reprendre si un projet adoptant en a besoin) —
   `docs/intentions/cloture-fiche-permanente.md`.
+- [ ] [décision] Le commentaire de `merge_cancelled` dans `.githooks/state-validate.mjs` dit encore
+  l'ancienne règle de QUA-181 —
+  `docs/intentions/commentaire-merge-cancelled-a-jour.md`.
+- [ ] [décision] Le hook qui ajoute `Drwil-Brief` fait, sur un message vide, un commit dont le
+  trailer est le sujet — `docs/intentions/trailer-sur-message-vide.md`.
 
 ### Fluidité et relecture
 

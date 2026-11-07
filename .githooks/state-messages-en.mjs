@@ -35,6 +35,10 @@ export const MESSAGES_EN = {
     "automatic merge cancelled and NOT scheduled again: the tool never reschedules it by itself (it could merge the faulty code) — it is up to the human to schedule it again, once decided; the state reminder says so again in CLOSING",
   mergeCancelledType: "merge_cancelled: object { pr } expected (pr: the PR number)",
   mergeCancelledActivity: "merge_cancelled: only in CLOSING",
+  mergeCancelledCleared:
+    "[merge-auto] « merge cancelled » mark of PR #{0} cleared: the merge is seen scheduled, the state reminder no longer says it is not",
+  mergeAutoMerged:
+    "[merge-auto] PR #{0} merged by the command itself (its whole CI was already green). Follow the main branch's CI: node .githooks/pr-watch.mjs {0}",
   scopingMergeType: "scoping_merge: object { branch } expected (branch: the branch of the scoping PR)",
   scopingMergeActivity: "scoping_merge: only in SCOPING",
   scopingMergeReminder:
