@@ -24,6 +24,9 @@ files:
   - packages/drwil/templates/common/base/.githooks/close-checks.mjs
   - packages/drwil/templates/common/base/.githooks/close.mjs
   - packages/drwil/src/cli-verify.ts
+  - packages/drwil/src/verify.ts
+  - packages/drwil/src/verdict.ts
+  - packages/drwil/src/agent.ts
   - packages/drwil/src/verify-checks.ts
   - packages/drwil/src/verify-texts.ts
   - packages/drwil/test/kit.test.mjs
@@ -97,7 +100,7 @@ Deux constats fixent la portée :
 - `QUA-209` (`drwil verify` et la CI jouent un contrôle réservé, son échec bloque ; un `runAt` mal
   formé est refusé) — ancien critère : « `runAt` contient `verify` et `ci` » ; nouveau : ou `ci`
   seul (contrôle confié à la CI, QUA-208). Conséquence directe de QUA-208 modifié, ajoutée au lot 1
-  pour que le registre ne se contredise pas : à confirmer par le demandeur.
+  pour que le registre ne se contredise pas. Validé par le demandeur le 2026-11-07, en conversation.
 - `.githooks/engine.mjs` — accepte `runAt: ["ci"]`, ne joue pas un tel contrôle au commit, au push
   ni dans `verify` et l'annonce « confié à la CI » ; l'option locale les rejoue (validé par le
   demandeur le 2026-11-07)
@@ -151,10 +154,12 @@ Aucun.
 
 - **Lot 1 — moteur** [IA] : `runAt: ["ci"]` et son refus sans CI, sorties « confié à la CI »,
   `verify` `PASS (CI pending)`, option locale, QUA-208 modifié et contrats créés. Critère de sortie :
-  tests de `["ci"]`, des sorties « confié à la CI », de `PASS (CI pending)` et de l'option locale verts, `GOVERNANCE: PASS`.
+  tests de `["ci"]`, des sorties « confié à la CI », de `PASS (CI pending)` et de l'option locale verts ; `verify` sans contrat en FAIL, seuls les critères des lots suivants restant
+  sans preuve (QUA-034).
 - **Lot 2 — clôture et forges** [IA] : `pr-watch` et la clôture attendent la CI de la PR (GitHub)
   et de la MR (GitLab) ; CI du gabarit sans doublon sur les deux forges. Critère de sortie : tests
-  des critères 4 et 6 verts.
+  des critères 4 et 6 verts ; `verify` sans contrat en FAIL, seuls les critères du lot 3 restant sans
+  preuve (QUA-034).
 - **Lot 3 — adoption et dépôt** [IA] : recette et compétence d'adoption (e2e en `["ci"]`), contrôles
   longs et e2e du dépôt passés à `["ci"]`, mesure avant et après au journal. Critère de sortie :
   critères 7 à 10 tenus, `GOVERNANCE: PASS (CI pending)` en local et CI verte sur la PR.
@@ -167,10 +172,15 @@ Aucun.
   hors hook ni dans `verify`, annoncé « confié à la CI » (détail du contrôle et résumé de
   `run-checks`) ; `verify` rend `GOVERNANCE: PASS (CI pending)` et nomme les contrôles en attente
   (`packages/drwil/src/cli-verify.ts`, `ciPending` en `--json`) ; option locale `--with-ci-checks`
-  sur `verify` et `run-checks`. QUA-208 modifié, QUA-209 aligné (à confirmer par le demandeur),
+  sur `verify` et `run-checks`. QUA-208 modifié, QUA-209 aligné (validé par le demandeur le 2026-11-07),
   QUA-253 et QUA-254 créés ; page `docs/ia-first/4-checks-in-git.md` complétée. Le verdict `PASS (CI pending)` est
   posé par la CLI (`packages/drwil/src/cli-verify.ts`) : `packages/drwil/src/verify.ts`, `packages/drwil/src/verdict.ts` et `packages/drwil/src/agent.ts` sont hors du bloc
   scope, la preuve écrite par `--evidence` garde le statut `PASS`.
-- **Prochaine étape** : [IA] lot 2 — `pr-watch` et la clôture attendent la CI de la PR (GitHub) et
-  de la MR (GitLab) sur les contrôles `["ci"]` (la clôture doit lire `ciPending`, absent de la
-  preuve) ; CI du gabarit sans doublon sur les deux forges.
+- **Décisions du 2026-11-07, après le lot 1** : périmètre élargi à `packages/drwil/src/verify.ts`,
+  `packages/drwil/src/verdict.ts` et `packages/drwil/src/agent.ts`, pour que le verdict lui-même
+  (preuve `--evidence`, `--json`, sortie `--agent`) porte `PASS (CI pending)` ; la phrase « Work is
+  verified » n'est plus dite sous un `PASS (CI pending)`. Critères de sortie des lots 1 et 2 corrigés :
+  `GOVERNANCE: PASS` n'est atteignable qu'au dernier lot (QUA-034).
+- **Prochaine étape** : [IA] lot 2 — porter `PASS (CI pending)` dans le verdict (les trois
+  fichiers ci-dessus) ; `pr-watch` et la clôture attendent la CI de la PR (GitHub) et de la MR
+  (GitLab) sur les contrôles `["ci"]` ; CI du gabarit sans doublon sur les deux forges.
