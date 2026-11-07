@@ -21,6 +21,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
   - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md
   - packages/drwil/src/agent.ts
   - packages/drwil/src/verdict-texts.ts
   - .claude/hooks/attest-poll.mjs
@@ -36,6 +37,7 @@ files:
   - .githooks/state-messages-en.mjs
   - .githooks/state-context-texts.mjs
   - docs/projects/kit-mechanics.md
+  - docs/ia-first/6-limits-and-tool-compatibility.md
   - packages/drwil/test/claude-hooks.test.mjs
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/attest-guidance.test.mjs
@@ -155,4 +157,8 @@ Aucun.
   (`ATTEST_STEPS`), sortie humaine de `verify`, message `MANUAL` et rappel de VERIFY de l'état, skills
   `drwil` et `start-a-workstream`, règle « Human gestures », consigne de `drwil-checks`, `AGENTS.md`,
   documents de preuve et d'état, nouvelle recette `docs/recipes/attest-a-contract.md`.
+- **Bloc scope élargi** (2026-11-07) : `packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md`
+  et sa copie `docs/ia-first/6-limits-and-tool-compatibility.md`, limite hors cadre traitée sur le sondage
+  `drwil-limite` du 2026-11-07 (« Traiter maintenant ») : la matrice de compatibilité marquait encore
+  « not tested » l'essai réel d'attestation par le chat sous Claude Code, fait au lot 1.
 - **Prochaine étape** : [IA] vérifier (`run-checks`, `verify --agent`) puis clore.
