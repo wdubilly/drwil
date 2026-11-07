@@ -311,10 +311,16 @@ test("QUA-040 : rappel CLOSING : README, changelog « Unreleased » et carte d'a
 
 test("QUA-036 : rappel CLOSING : boucler les intentions (limites en intentions, intention d'origine mise à jour ou close), en anglais aussi", () => {
   const fr = context(readState(depot({ state: actif("CLOSING") })), depot({ state: actif("CLOSING") }));
-  assert.match(fr, /chaque limite non traitée devient une fiche d'intention \(jamais une fiche de chantier\)/);
+  assert.match(
+    fr,
+    /une limite dans le cadre a été traitée ; chaque limite hors cadre répondue « Noter en intention » au sondage des limites \(`drwil-limite`\) devient une fiche d'intention \(jamais une fiche de chantier ; la clôture refuse/,
+  );
   assert.match(fr, /l'intention d'origine \(champ Intention de la fiche\) est mise à jour, ou résumée au journal et retirée/);
   const racine = depot({ state: actif("CLOSING"), lang: "en" });
-  assert.match(context(readState(racine), racine), /each limit left untreated becomes an intent brief \(never a workstream brief\)/);
+  assert.match(
+    context(readState(racine), racine),
+    /a limit within the scope has been handled; each out-of-scope limit answered « Record as intent » to the limits poll \(`drwil-limite`\) becomes an intent brief \(never a workstream brief; the closing refuses/,
+  );
 });
 
 test("QUA-036 : champ Intention et date de revue : la plus récente compte (Statut, Revu le, Existant daté)", () => {
