@@ -42,6 +42,7 @@ files:
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/attest-guidance.test.mjs
   - .githooks/state.test.mjs
+  - outils/banc-agents.test.mjs
   - docs/contracts.md
   - .drwil/ia-first.json
   - docs/architecture.md
@@ -161,4 +162,6 @@ Aucun.
   et sa copie `docs/ia-first/6-limits-and-tool-compatibility.md`, limite hors cadre traitée sur le sondage
   `drwil-limite` du 2026-11-07 (« Traiter maintenant ») : la matrice de compatibilité marquait encore
   « not tested » l'essai réel d'attestation par le chat sous Claude Code, fait au lot 1.
+  Puis `outils/banc-agents.test.mjs` (test de QUA-063), qui exigeait « not tested » pour les cinq outils :
+  ajusté pour accepter l'essai daté et versionné de Claude Code, les quatre autres restant « not tested ».
 - **Prochaine étape** : [IA] vérifier (`run-checks`, `verify --agent`) puis clore.
