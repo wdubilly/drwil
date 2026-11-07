@@ -56,6 +56,12 @@ queue.
   (or `next`) goes back to Scoping by itself: the brief is deleted and the
   PR merged (main branch current, or the branch merged, `gh` for a
   squash).
+- **Merge given back during the workstream**: from BUILD to CLOSING, a
+  standalone poll headed `drwil-merge` (one single-choice question,
+  exactly « Automatic merge » and « Manual merge », none recommended nor
+  filled in; Copilot CLI: one `drwil-merge` field) writes or withdraws
+  `auto_merge`, read by the hook — e.g. after `state.mjs resume`, which
+  never rebuilds it and says so. No command line writes it.
 - **Worktree at start**: an optional
   third question of the poll (Claude Code) or field (Copilot CLI) named
   `drwil-worktree`, "New worktree" or "This folder", lets the human run the

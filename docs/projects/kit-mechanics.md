@@ -30,6 +30,8 @@ files:
   - .githooks/state-lots.mjs
   - .githooks/state-draft.mjs
   - .githooks/state-limits.mjs
+  - .githooks/state-merge.mjs
+  - .githooks/state-merge.test.mjs
   - .githooks/state-cli-lots.mjs
   - .githooks/briefs-lots.mjs
   - .githooks/state-lots.test.mjs

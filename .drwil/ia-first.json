@@ -3130,6 +3130,14 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-265",
+      "name": "tests de QUA-265, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-265 \" .githooks/state-merge.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/**", ".claude/**", "packages/drwil/templates/**", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
       "id": "tests-qua-207",
       "name": "tests de QUA-207, filtrés par son ID (un contrôle par règle, QUA-033)",
       "run": "node --test --test-name-pattern=\"^QUA-207 \" packages/drwil/test/kit.test.mjs",

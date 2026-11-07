@@ -14,6 +14,11 @@ closing commit; the release renames this section to its version.
   recorded in the state). `node .githooks/close.mjs` refuses, before writing
   anything, an intent brief added by the branch without the « Record as
   intent » answer for its path, and names the poll to ask.
+- The automatic merge can be given back (or withdrawn) during a workstream,
+  from BUILD to CLOSING, by a standalone `drwil-merge` poll (« Automatic
+  merge » or « Manual merge ») read by the hook — e.g. after
+  `state.mjs resume`, which never rebuilds it and now says how to give it
+  back. No command line writes it.
 - A slow check can run once, in CI only: `"runAt": ["ci"]` (refused without a
   declared GitHub or GitLab CI). It never runs at commit, at push or in
   `drwil verify`; every output says « left to CI », never « passed », and

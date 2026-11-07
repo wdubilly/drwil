@@ -30,6 +30,7 @@ import {
 } from "./start-poll.mjs";
 import { queueHook } from "./queue-poll.mjs";
 import { limitHook } from "./limit-poll.mjs";
+import { mergeHook } from "./merge-poll.mjs";
 import { attestationHook } from "./attest-poll.mjs";
 import { portableAttestationMain } from "./portable-attest.mjs";
 
@@ -126,7 +127,8 @@ async function main() {
   if (attestation !== null) return attestation;
   const poll = startPoll(input);
   const ctx = { root: ROOT, lang: language(), tell };
-  if (!poll) return (await queueHook(input, ctx)) ?? (await limitHook(input, ctx)) ?? scopeHook(input);
+  // A standalone `drwil-merge` poll (QUA-265) gives the automatic merge back from BUILD to CLOSING.
+  if (!poll) return (await queueHook(input, ctx)) ?? (await limitHook(input, ctx)) ?? (await mergeHook(input, ctx)) ?? scopeHook(input);
   const event = input.hook_event_name;
   if (event === "PreToolUse") {
     if (poll.prefilled) {

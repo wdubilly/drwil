@@ -188,3 +188,20 @@ test("QUA-247 : resume refuse sans rien écrire quand l'historique ne prouve rie
   assert.equal(existsSync(join(actif, ".drwil", "lot.json")), false);
   assert.ok(readFileSync(join(actif, ".drwil", "state.json"), "utf8").includes("VERIFY"));
 });
+
+test("QUA-247 : resume ne redonne pas la fusion automatique, et dit comment la redonner : le sondage drwil-merge, jamais une commande", () => {
+  const racine = clone(origine());
+  const r = resume(racine, { gh: sansGh });
+  assert.equal(r.code, 0, r.message);
+  assert.match(
+    r.message,
+    /Fusion automatique : la redonner par le sondage `drwil-merge` \(« Automatic merge » ou « Manual merge »\), lu par le hook ; aucune commande ne l'écrit\./,
+  );
+  assert.equal(etat(racine).state.auto_merge, undefined);
+  const en = clone(origine());
+  ecrire(en, ".drwil/ia-first.json", JSON.stringify({ lang: "en" }));
+  assert.match(
+    resume(en, { gh: sansGh }).message,
+    /Automatic merge: give it back with the `drwil-merge` poll \(« Automatic merge » or « Manual merge »\), read by the hook; no command writes it\./,
+  );
+});
