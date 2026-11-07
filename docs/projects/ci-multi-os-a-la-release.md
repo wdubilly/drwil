@@ -12,6 +12,7 @@ files:
   - .github/scripts/ci-multi-os.mjs
   - .github/scripts/ci-multi-os.test.mjs
   - .github/scripts/workflows-yaml.test.mjs
+  - .githooks/run-checks.test.mjs
   - packages/drwil/templates/common/optional/create-release/create-release.mjs
   - packages/drwil/templates/common/optional/create-release/create-release-texts.mjs
   - packages/drwil/templates/common/optional/create-release/promote-release.mjs
