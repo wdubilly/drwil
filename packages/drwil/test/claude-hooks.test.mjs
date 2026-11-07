@@ -651,6 +651,93 @@ export const draftFinish = (r, o) => ({ code: 0, message: "fin " + o.autoMerge }
   for (const d of [racine, sansEtat]) rmSync(d, { recursive: true, force: true });
 });
 
+test("limit-poll : sondage des limites lu sous les deux formes ; refusé s'il est rempli, recommandé ou mal formé (QUA-253)", async () => {
+  const l = await load("limit-poll.mjs");
+  // Le module d'état est simulé : seul le hook est mesuré ici (le vrai est éprouvé par les tests de l'état).
+  const racine = projet(
+    {},
+    {
+      ".githooks/state-limits.mjs": `export const limitChoice = (l) => ({ "Traiter maintenant": "now", "Noter en intention": "note" })[l] ?? null;
+export const intentPath = (r, t) => /docs\\/intentions\\/[a-z-]+\\.md/.exec(String(t))?.[0] ?? null;
+export const recordLimits = async (r, a) => ({ code: a.some((x) => x.intent.includes("refus")) ? 1 : 0, message: a.map((x) => x.intent + "=" + x.choice).join(",") });
+`,
+    },
+  );
+  const dit = [];
+  const ctx = (lang = "fr", root = racine) => ({ root, lang, tell: (t) => dit.push(t) });
+  const q = (chemin, extra = {}) => ({
+    header: "drwil-limite",
+    question: `Limite : deviendrait ${chemin}`,
+    options: [{ label: "Traiter maintenant" }, { label: "Noter en intention" }],
+    ...extra,
+  });
+  const claude = (questions, answers, reponses = {}) => ({ tool_input: { questions, answers }, tool_response: { answers: reponses } });
+  const avant = (input, lang) => l.limitHook({ hook_event_name: "PreToolUse", ...input }, ctx(lang));
+  const post = (input, lang, root) => l.limitHook({ hook_event_name: "PostToolUse", ...input }, ctx(lang, root));
+  const [A, B] = ["docs/intentions/a.md", "docs/intentions/b.md"];
+  assert.equal(await l.limitHook({ tool_input: { questions: [{ header: "x" }] } }, ctx()), null);
+  assert.equal(await l.limitHook({ tool_input: { message: "autre" } }, ctx()), null);
+  assert.equal(await l.limitHook({}, ctx()), null);
+  assert.equal(await avant(claude([q(A), q(B)])), 0);
+  for (const refus of [
+    claude([q(A)], { [q(A).question]: "Noter en intention" }),
+    claude([q(A, { multiSelect: true })]),
+    claude([q(A, { options: [{ label: "Traiter maintenant (Recommended)" }, { label: "Noter en intention" }] })]),
+    claude([q(A, { options: undefined })]),
+    claude([q("sans chemin")]),
+    claude([q(A), q(A)]),
+  ])
+    assert.equal(await avant(refus), 2);
+  assert.equal(await avant(claude([q(A, { options: [{ label: "Traiter maintenant" }] })]), "en"), 2);
+  assert.equal(await l.limitHook({ hook_event_name: "Autre", ...claude([q(A)]) }, ctx()), 0);
+
+  const copilot = (champ, text = `User responded: ${A}=Noter en intention`) => ({
+    tool_input: { message: "drwil-limite : que faire ?", requestedSchema: { properties: { [A]: champ } } },
+    tool_result: { text_result_for_llm: text },
+  });
+  const champ = { type: "string", enum: ["Traiter maintenant", "Noter en intention"] };
+  assert.equal(await avant(copilot(champ)), 0);
+  for (const refus of [{ ...champ, default: "Noter en intention" }, { type: "array", items: champ, enum: champ.enum }, undefined])
+    assert.equal(await avant(copilot(refus)), 2);
+  assert.equal(
+    await avant({
+      tool_input: {
+        message: "drwil-limite",
+        requestedSchema: { properties: { x: { enum: ["Traiter maintenant (Recommended)", "Noter en intention"] } } },
+      },
+    }),
+    2,
+  );
+  assert.equal(await avant({ tool_input: { message: "drwil-limite" } }), 2);
+
+  await post(claude([q(A), q(B)], undefined, { [q(A).question]: "Traiter maintenant", [q(B).question]: "Noter en intention" }));
+  await post(claude([q(A), q(B)], undefined, { [q(A).question]: "Traiter maintenant" }));
+  await post(claude([q(A)]));
+  await post(claude([q("docs/intentions/refus.md")], undefined, { "Limite : deviendrait docs/intentions/refus.md": "Noter en intention" }));
+  await post(copilot(champ));
+  await post(copilot(champ, "User responded: Traiter maintenant"));
+  await post(copilot(champ, "pas de réponse"));
+  await post(claude([q(A), q(B)], undefined, { [q(A).question]: "Traiter maintenant" }), "en");
+  assert.deepEqual(dit, [
+    `✓ ${A}=now,${B}=note`,
+    `✓ ${A}=now Sans réponse lue, non enregistrée(s), à soumettre de nouveau : ${B}.`,
+    "✗ aucune réponse lue dans le sondage des limites : rien n'est enregistré, l'état est inchangé.",
+    "✗ docs/intentions/refus.md=note",
+    `✓ ${A}=note`,
+    `✓ ${A}=now`,
+    "✗ aucune réponse lue dans le sondage des limites : rien n'est enregistré, l'état est inchangé.",
+    `✓ ${A}=now No answer read, not recorded, to ask again: ${B}.`,
+  ]);
+  // Module d'état absent : jamais bloquant avant le sondage, l'erreur dite après.
+  const sansEtat = projet();
+  assert.equal(await l.limitHook({ hook_event_name: "PreToolUse", ...claude([q(A)]) }, ctx("fr", sansEtat)), 0);
+  await post(claude([q(A)]), "en", sansEtat);
+  assert.match(dit.at(-1), /^✗ error while reading the limits poll/);
+  await post(claude([q(A)]), "fr", sansEtat);
+  assert.match(dit.at(-1), /^✗ erreur à la lecture du sondage des limites/);
+  for (const d of [racine, sansEtat]) rmSync(d, { recursive: true, force: true });
+});
+
 // QUA-215, QUA-216 : le repli des réglages livrés est une commande `sh` (Git Bash pour Claude Code sous Windows,
 // `bash` pour Copilot) ; les tests la jouent par /bin/sh, donc pas sous Windows.
 const SH = "/bin/sh";

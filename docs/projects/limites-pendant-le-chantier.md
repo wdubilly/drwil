@@ -66,7 +66,7 @@ intentions. Le demandeur veut :
 
 - Le sondage des limites (`drwil-limite`) est refusé avec une réponse remplie, une valeur par
   défaut ou une recommandation ; la réponse de l'humain, lue par le hook, est enregistrée dans
-  l'état pour chaque limite — contrat à créer
+  l'état pour chaque limite — `QUA-253`
 - La clôture refuse une fiche d'intention ajoutée par la branche sans réponse « Noter en
   intention » enregistrée pour son chemin, et une limite répondue « Traiter maintenant » qui finit
   quand même en fiche d'intention ; elle dit quelle limite et le sondage à poser — contrat à créer
@@ -142,5 +142,10 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-05) : cadré, rien de réalisé.
-- **Prochaine étape** : [IA] lot 1.
+- **Dernier état** (2026-11-07) : lot 1 fait — sondage `drwil-limite` (`.claude/hooks/limit-poll.mjs`, aiguillé
+  par `.claude/hooks/prompt-hook.mjs`), enregistrement `limits: [{ intent, choice }]` (`.githooks/state-limits.mjs`,
+  champ validé par `.githooks/state-validate.mjs`), règle des limites et réponses dans le contexte de BUILD, contrat
+  `QUA-253` et contrôle `tests-qua-253` (tests verts). `.githooks/state-messages-fr.mjs` est à 200 lignes (plafond) :
+  les textes du refus de clôture du lot 2 vont dans `.githooks/close-limits.mjs` (à créer). Un sondage posé alors que
+  `.githooks/state-limits.mjs` manque passe sans contrôle (une erreur de hook ne bloque jamais).
+- **Prochaine étape** : [IA] lot 2.

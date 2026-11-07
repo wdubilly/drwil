@@ -29,6 +29,7 @@ import {
   worktreeChosen,
 } from "./start-poll.mjs";
 import { queueHook } from "./queue-poll.mjs";
+import { limitHook } from "./limit-poll.mjs";
 import { attestationHook } from "./attest-poll.mjs";
 import { portableAttestationMain } from "./portable-attest.mjs";
 
@@ -124,7 +125,8 @@ async function main() {
   const attestation = await attestationHook(input, { root: ROOT, tell });
   if (attestation !== null) return attestation;
   const poll = startPoll(input);
-  if (!poll) return (await queueHook(input, { root: ROOT, lang: language(), tell })) ?? scopeHook(input);
+  const ctx = { root: ROOT, lang: language(), tell };
+  if (!poll) return (await queueHook(input, ctx)) ?? (await limitHook(input, ctx)) ?? scopeHook(input);
   const event = input.hook_event_name;
   if (event === "PreToolUse") {
     if (poll.prefilled) {

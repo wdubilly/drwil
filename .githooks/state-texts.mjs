@@ -7,6 +7,7 @@ import { config } from "./briefs.mjs";
 import { worktreeLines } from "./worktree.mjs";
 import { TEXTS } from "./state-context-texts.mjs";
 import { lotLabel, lotStatus } from "./state-lots.mjs";
+import { limitLines } from "./state-limits.mjs";
 
 import { fill, STATE_MESSAGES } from "./state-messages.mjs";
 
@@ -68,6 +69,8 @@ export function context(read, root) {
   if (state.merge_cancelled) lines.push(fill(T.mergeCancelled, state.merge_cancelled.pr));
   if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
   lines.push(...lotContext(read, root, T));
+  // Limits (QUA-253): within the scope, handled on the spot; outside it, the human's poll before VERIFY.
+  lines.push(...limitLines(state, STATE_MESSAGES[language(root)], language(root)));
   lines.push(T.rule(T.rules[state.activity]));
   if (state.activity === "CLOSING") lines.push(T.docLanguage(docLanguage(root)));
   if (state.activity === "CLOSING" && !state.queue?.length) lines.push(T.closingNoQueue);

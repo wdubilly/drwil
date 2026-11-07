@@ -190,4 +190,11 @@ export const MESSAGES_FR = {
   resumeLot: " ; lot courant : {0} (dernier trailer Drwil-Lot de la branche)",
   resumeBuildNext: " La preuve de verify est locale : la rejouer (`npx drwil verify --evidence`) avant la clôture.",
   resumeClosingNext: " La clôture est commitée : pousser la branche, puis suivre sa PR.",
+  limitsType: "limits : liste de { intent, choice } (choice : now ou note), un chemin une fois, de BUILD à CLOSING",
+  limitsNotActive: "réponse au sondage des limites ignorée : l'activité est {0}, hors de BUILD à CLOSING ; état inchangé",
+  limitsRecorded:
+    "réponses de l'humain au sondage des limites enregistrées : {0}. « Traiter maintenant » : la traiter dans ce chantier (élargir le bloc scope dans un commit séparé : cette réponse en est le oui, puce « Contrats modifiés » comprise) ; « Noter en intention » : écrire cette fiche d'intention, jamais une fiche de chantier",
+  limitsRule:
+    "Limites : une limite dans le cadre (bloc scope, contrats déclarés) se traite sur le champ, jamais notée ; une limite hors cadre est soumise à l'humain, une fois, à la fin de BUILD et avant VERIFY, par un sondage `drwil-limite` lu par le hook : une question par limite (4 au plus par sondage), qui nomme la limite, les fichiers qu'elle toucherait, la puce « Contrats modifiés » éventuelle et le chemin `docs/intentions/<nom>.md` qu'elle deviendrait ; deux réponses, « Traiter maintenant » et « Noter en intention », aucune recommandée ni remplie. Un sous-agent ne pose pas le sondage : il s'arrête avec la liste des limites hors cadre (chemin d'intention prévu, fichiers touchés, puce éventuelle), la session principale le pose.",
+  limitsAnswers: "Réponses de l'humain aux limites hors cadre (sondage `drwil-limite`) : {0}.",
 };
