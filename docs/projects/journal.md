@@ -4165,3 +4165,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Hooks modifiés** : `.githooks/engine.mjs`, `.githooks/engine-runat.mjs`, `.githooks/run-checks.mjs`, `.githooks/pr-watch.mjs`, `.githooks/close-checks.mjs`, `.githooks/close.mjs` (gabarit et copies), déclarés dans « Contrats modifiés » sur le oui du demandeur le 2026-11-07.
 - **Limites connues** : GitLab prouvé par des réponses simulées seulement (`docs/intentions/gitlab-ci-de-la-mr-essai-reel.md`) ; la clôture sans CI verte est un signal, pas un refus (`docs/intentions/cloture-refusee-sans-ci-verte.md`) ; texte de QUA-196 et `couverture-diff` sans contrat (`docs/intentions/contrats-a-aligner-apres-controles-en-ci.md`) ; sondage d'attestation refusé au premier essai réel sous Claude Code (`docs/intentions/sondage-d-attestation-refuse-sous-claude-code.md`) ; échec ponctuel de `couverture-hooks` et `miroirs-gabarit` au lot 1, passés au rejeu (`docs/intentions/couverture-hooks-intermittente.md`).
 - **Clôturé par** : la branche `workstream/controle-lent-une-seule-fois-en-ci`.
+
+- **Preuve de clôture** : `docs/preuves/controle-lent-une-seule-fois-en-ci.md`.
