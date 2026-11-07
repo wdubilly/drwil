@@ -123,8 +123,6 @@ d'un outil) la dit dans son statut.
   plus vu comme règle (cadré le 2026-11-06) — `docs/projects/reouverture-sans-faux-blocage.md`.
 - [ ] [IA] [P1] (0.11.1) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
-- [ ] [IA] [P1] Windows et macOS testés à la release, ubuntu seul à chaque PR, barrière avant publication
-  (cadré le 2026-11-07) — `docs/projects/ci-multi-os-a-la-release.md`.
 - [ ] [IA] [P2] (0.11.1) Les tests de run-checks passent sans gitleaks, grâce à un faux gitleaks (cadré
   le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
 - [ ] [IA] [P2] (0.11.1) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
