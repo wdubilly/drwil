@@ -58,9 +58,21 @@ closing commit; the release renames this section to its version.
   on another forge (GitLab…), no proof is possible, so `next` and the chaining
   are not blocked and say in one line that the main branch's CI is to be
   checked by hand.
+- A human attestation is proposed first as the attestation poll in the chat,
+  the terminal as fallback: `drwil verify --agent` (and `drwil verify`), the
+  `MANUAL` state message and VERIFY reminder, the `drwil` skill, the
+  conduct rules, the `drwil-checks` instructions and `AGENTS.md` give the
+  preparation `drwil attest-poll <ID> --tried "…"` before
+  `drwil attest <ID>`, never the terminal alone. The new recipe
+  `docs/recipes/attest-a-contract.md` says, tool by tool, how to prepare and
+  ask the poll, with no answer, default or recommendation.
 
 ### Fixed
 
+- The attestation poll answered « Attest » in Claude Code is recorded again:
+  the hook now tolerates, after the answer only, the `answers` and
+  `annotations` keys Claude Code adds to the tool input, and never reads
+  them; any other added key is still refused.
 - `node .githooks/close.mjs` no longer counts, as a second journal entry,
   another workstream's entry that merely cites the branch: the branch only
   identifies an entry on its closing line (« Clôturé par », « Closed by »).

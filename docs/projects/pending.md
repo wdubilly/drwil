@@ -119,9 +119,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] (0.11.1) Une attestation humaine se propose d'abord par le sondage dans le chat, le terminal en
-  repli ; le sondage refusé en réel est corrigé d'abord (cadré le 2026-11-06) —
-  `docs/projects/attestation-par-sondage-d-abord.md`.
 - [ ] [IA] [P1] (0.11.1) La réouverture ne bloque plus à tort : intention retirée restaurée, test seul
   plus vu comme règle (cadré le 2026-11-06) — `docs/projects/reouverture-sans-faux-blocage.md`.
 - [ ] [IA] [P1] (0.11.1) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le

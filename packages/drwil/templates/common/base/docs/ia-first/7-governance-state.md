@@ -61,7 +61,9 @@ allowed scope stays the brief's `scope` block, which is versioned.
   or `ATTESTED`, on the `HEAD` commit, clean worktree. `.githooks/state.mjs` reads that
   evidence without running anything: verify stays the only judge, over all
   blocking contracts. `FAIL` or `ERROR`: go back to `BUILD` to fix.
-  `MANUAL`: a human attests (`drwil attest <ID>`), then verify runs again. A
+  `MANUAL`: a human attests, through the attestation poll in the chat
+  (prepared by `drwil attest-poll <ID>`, `docs/recipes/attest-a-contract.md`),
+  otherwise in their terminal (`drwil attest <ID>`), then verify runs again. A
   brief's acceptance criteria are not a parallel system: every workstream
   brief has some (starting and closing are refused without any, a warning
   only if the project does not enforce recent requirements:

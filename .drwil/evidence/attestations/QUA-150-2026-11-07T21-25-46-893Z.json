@@ -1,0 +1,31 @@
+{
+  "version": 4,
+  "contract": "QUA-150",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-07T21:25:46.893Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "outils/banc-agents.test.mjs modifié pour la seule assertion du test de QUA-063 (essai daté de Claude Code accepté, commit 2c9c604) ; aucune mesure de durée ajoutée ni touchée",
+  "fingerprint": "be1f48eb5f9e36f5762e77149d720dcabe6cb008d6335dbd084f5bcbc86f1b65",
+  "proof": {},
+  "covers": [
+    ".githooks/engine.test.mjs",
+    "outils/banc.test.mjs",
+    "outils/banc-agents.test.mjs"
+  ],
+  "coverage": {
+    ".githooks/engine.test.mjs": "21154c13550dd01b209cb13e382ec6e2690eeca526dbb9d41e2f24437c7bd073",
+    "outils/banc-agents.test.mjs": "83d2b3466e6ae064d196ee55a864ec7523d01eddc1114c2a7844b1991c8accaf",
+    "outils/banc.test.mjs": "5b3ccd6cf48c104a789f118f75f1528a3131774817824e60178e25dbea938367"
+  },
+  "commit": "2c9c604d607733a841599e85db87eb79e18c9738",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "2ba26ab7-f04c-4455-9f1a-dbf2c2bfa6ff",
+    "toolUseId": "toolu_014iGuwmCvG2uD1KLFm5kEKN",
+    "askedAt": "2026-11-07T21:25:43.653Z"
+  }
+}

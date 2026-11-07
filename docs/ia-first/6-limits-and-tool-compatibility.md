@@ -103,7 +103,7 @@ trial**. The earlier hook/write bench above did not test attestation.
 
 | Tool | Delivered attestation adapter | Native human channel investigated | Fictitious attestation events tested | Real chat attestation trial |
 |---|---|---|---|---|
-| Claude Code | `AskUserQuestion`, `PreToolUse` / `PostToolUse`; session + tool-call correlation, one-use preparation | `tool_response.answers`, never answers in `tool_input` | yes, Claude-shaped fixtures only | not tested |
+| Claude Code | `AskUserQuestion`, `PreToolUse` / `PostToolUse`; session + tool-call correlation, one-use preparation | `tool_response.answers`, never answers in `tool_input` | yes, Claude-shaped fixtures only | yes, 2026-11-07, Claude Code 2.1.319: one real attestation through the chat poll (`origin.source` `claude-poll`), after the hook accepted the `answers` / `annotations` keys Claude Code adds to `tool_input` |
 | Copilot CLI | native `preToolUse` / `postToolUse`; one-use nonce, exact poll, native session and subagent context | `ask_user` arguments `question` / `choices`; `sessionId`, `toolArgs`, success `toolResult.textResultForLlm`; only the exact `User responded: <positive choice>` result is accepted | yes, documented-shape fictitious events and installed hook commands only | not tested |
 | Gemini CLI | native `BeforeTool` / `AfterTool` declarations for `ask_user`; same portable protocol | `session_id`, `tool_input.questions`; JSON string in `tool_response.llmContent`, only `answers["0"]` with the exact positive choice, no error | yes, documented-shape fictitious events and installed hook commands only | not tested |
 | Codex | native `PreToolUse` / `PostToolUse` for `request_user_input`; shared scripts only, one-use nonce plus native session, call and agent context | official 0.166.0 handler and registry: `tool_input.questions` with fixed ID `drwil_attest`; JSON string `tool_response`, only `answers["drwil_attest"].answers` with exactly one positive choice | yes, official-source-shaped fictitious events and installed hook command only; no binary launched | not tested |
@@ -172,7 +172,14 @@ both outcomes, no answer, prefilled answers/defaults/recommendations,
 wrong session/call, replay, expiry and changed proof or covered files;
 then the real interactive trial must confirm the same boundary. An agent
 never records the human's readability judgment or replies to that poll.
-No live attestation was made during this assessment.
+No live attestation was made during the 2026-11-04 assessment. Since then,
+one real chat attestation was made with Claude Code 2.1.319 on 2026-11-07:
+the human answered the `AskUserQuestion` poll in the chat and the hook wrote
+the attestation with origin `claude-poll`. Earlier real polls had been refused
+because Claude Code adds `answers` and `annotations` to `tool_input` after
+display; the hook now tolerates those two keys in `PostToolUse` only. This
+trial covered the attest outcome only, not a decline. Copilot CLI, Gemini CLI,
+Codex and Cursor remain without any real chat attestation trial.
 
 Documentation consulted (2026-11-03 and ACP on 2026-11-04), not compatibility evidence:
 [Copilot hook payloads](https://docs.github.com/en/copilot/reference/hooks-reference),
@@ -228,7 +235,7 @@ mechanism is added to the parity test's list of mechanisms in the
 workstream that creates it.
 
 Declared gap: chat attestation has Claude Code, Copilot CLI, Gemini CLI and Codex adapters,
-and a dedicated Cursor ACP client, with local fictitious tests and
-no real interactive trial. Cursor requires the extra human client, not the usual chat.
+and a dedicated Cursor ACP client, with local fictitious tests; Claude Code has
+one real interactive trial (2026-11-07), the four others no real interactive trial. Cursor requires the extra human client, not the usual chat.
 The "Human attestation parity" table records each unverified real channel;
 shared instructions or shared hook scripts do not prove interactive parity.

@@ -35,7 +35,12 @@ run-checks (exit <its exit code>):
 verify (exit <its exit code>):
 <the line containing "GOVERNANCE:">
 <each heading ending with ":" followed by its "  - " lines: failing contracts, contracts not verified, unproven criteria, attestation required, registry errors>
+<under "Human attestation required.", the HUMAN ACTION lines: the attestation poll in the chat first, the terminal as fallback>
 ```
+
+When an attestation is required, the copied `HUMAN ACTION` lines propose
+the attestation poll in the chat first and the terminal as fallback: never
+shorten them to the terminal command alone.
 
 A command that cannot run, or whose output has no `GOVERNANCE:` line, is
 reported as « not run » with its error: never as passed. Add nothing else:
