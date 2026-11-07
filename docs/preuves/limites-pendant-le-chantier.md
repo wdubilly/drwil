@@ -1,7 +1,7 @@
 # Preuve de clôture — limites-pendant-le-chantier
 
 **Clos le** : 2026-11-07
-**Commit vérifié** : `6511544457` — verdict `drwil verify` : PASS
+**Commit vérifié** : `6c1134d52c` — verdict `drwil verify` : PASS
 **Critères acceptés** : aucune acceptation enregistrée au lancement (lancement hors sondage ou terminal)
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
