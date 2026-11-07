@@ -60,6 +60,15 @@ files:
   - docs/intentions/limites-pendant-le-chantier.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/portable-polls.mjs
+  - .claude/hooks/portable-polls.mjs
+  - packages/drwil/src/cli-cursor.ts
+  - packages/drwil/test/portable-polls.test.mjs
+  - package.json
+  - packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md
+  - docs/ia-first/6-limits-and-tool-compatibility.md
+  - packages/drwil/templates/common/base/.githooks/close-journal.mjs
+  - .githooks/close-journal.mjs
 -->
 
 ## 1. Besoin
@@ -84,6 +93,11 @@ intentions. Le demandeur veut :
   quand même en fiche d'intention ; elle dit quelle limite et le sondage à poser — `QUA-264`
 - Le rappel de BUILD et les règles de conduite disent : limite dans le cadre, traitée sur le champ ;
   hors cadre, sondage avant VERIFY — `QUA-036`
+- Sous Copilot CLI, Gemini CLI, Codex et le client ACP de Cursor, les sondages `drwil-limite` et
+  `drwil-merge` sont lus par le hook, avec les mêmes refus que sous Claude Code (réponse remplie,
+  défaut, recommandation), prouvés par la vraie commande de chaque outil — contrat à créer
+- La clôture ne compte plus pour une seconde entrée du journal celle d'un autre chantier qui ne fait
+  que citer la branche — `QUA-228`
 
 ## Contrats modifiés
 
@@ -107,14 +121,19 @@ intentions. Le demandeur veut :
 - `.githooks/state-resume.mjs` — le message de reprise dit comment redonner la fusion automatique (sondage `drwil-merge`) ; rien d'autre ne change (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
 - `.claude/hooks/prompt-hook.mjs` — aiguillage du sondage autonome `drwil-merge` (fusion automatique redonnée de BUILD à CLOSING) ; aucun autre sondage ne change (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
 - `.githooks/state-resume.test.mjs` — test du message de reprise ajouté ; aucun test existant modifié (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
+- `.claude/hooks/prompt-hook.mjs` — sous Gemini CLI et Codex, l'entrée native (`prompt-hook.mjs gemini|codex`) aiguille aussi les sondages `drwil-limite` et `drwil-merge` vers `.claude/hooks/portable-polls.mjs` (à créer), au lieu de la seule attestation ; l'attestation et les autres sondages ne changent pas (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites, parité des sondages hors Claude Code)
+- `packages/drwil/src/cli-cursor.ts` — le client ACP de Cursor (`drwil cursor-acp`) passe aussi ses questions au hook des sondages `drwil-limite` et `drwil-merge` ; l'attestation ne change pas (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites, parité des sondages hors Claude Code)
+- `package.json` — le contrôle de couverture des hooks partagés (`test:claude:coverage`) inclut les tests des sondages portables ; seuils inchangés (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites, parité des sondages hors Claude Code)
+- `QUA-228` — ancien critère : « L'entrée est reconnue par la preuve déjà citée, le titre de la fiche, son nom ou sa branche » — raison : une simple mention de la branche dans l'entrée d'un autre chantier comptait pour une seconde entrée et refusait la clôture ; la branche ne compte plus que sur la ligne de clôture de l'entrée (« Clôturé par », « Closed by »), ou à défaut de toute autre entrée reconnue (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites, reconnaissance de l'entrée du journal)
+- `.githooks/close-journal.mjs` — reconnaissance de l'entrée du journal resserrée (QUA-228) ; aucun autre comportement de la clôture ne change (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites, reconnaissance de l'entrée du journal)
+- `.githooks/close.test.mjs` — tests de la reconnaissance de l'entrée du journal ajoutés ; aucun test existant modifié (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites, reconnaissance de l'entrée du journal)
 
 ## 2. Hors périmètre
 
 - Les notes d'une ligne (`node .githooks/note.mjs`) : elles restent libres, l'humain s'en sert
   aussi en cours de chantier ; la règle de conduite dit seulement qu'une limite ne s'y range pas.
-- Gemini CLI, Codex, Cursor : sans sondage lu par un hook, la règle de conduite seule s'applique
-  (question en conversation) ; le refus de clôture vaut pour tous, l'humain y répond alors par un
-  sondage Claude Code ou Copilot CLI.
+- Le chat habituel de Cursor : aucun hook natif n'y est établi ; les sondages `drwil-limite` et
+  `drwil-merge` y passent par le client ACP dédié (`drwil cursor-acp`), comme l'attestation.
 - Reconstruire les réponses sur un autre clone : `resume` ne reconstruit jamais une décision
   humaine (QUA-245) ; le sondage se repose.
 - L'élargissement du bloc `scope` lui-même : il reste un commit séparé signalé par la barrière ;
@@ -171,4 +190,8 @@ Aucun.
   une fiche d'intention ajoutée par la branche sans réponse « Noter en intention », ou répondue « Traiter maintenant »,
   refuse la clôture avant toute écriture (contrat `QUA-264`, contrôle `tests-qua-264`) ; `QUA-036` modifié ; règles de
   conduite (`AGENTS.md`, section 8), section 7, recette des branches, carte, fonctionnalités et changelog.
-- **Prochaine étape** : vérifier et clore.
+- **Réouverture** (2026-11-07, QUA-116, PR #373) : deux limites hors cadre répondues « Traiter maintenant » —
+  parité des sondages `drwil-limite` et `drwil-merge` hors Claude Code (l'entrée native de Gemini CLI et de Codex
+  n'aiguillait que l'attestation ; Copilot CLI les lit par `.claude/settings.json`) et reconnaissance de l'entrée du
+  journal (`.githooks/close-journal.mjs`). Cadrage élargi dans un commit séparé.
+- **Prochaine étape** : réaliser la réouverture, vérifier et clore à nouveau.
