@@ -119,9 +119,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] (0.11.1) Un contrôle lent (couverture, tarball, e2e) se joue une seule fois, en CI, sur
-  GitHub et GitLab ; `verify` dit « PASS (CI pending) » (cadré le 2026-11-07) —
-  `docs/projects/controle-lent-une-seule-fois-en-ci.md`.
 - [ ] [IA] [P1] (0.11.1) Une limite se traite pendant le chantier ; hors cadre, l'humain choisit par un
   sondage avant VERIFY (cadré le 2026-11-05) —
   `docs/projects/limites-pendant-le-chantier.md`.
@@ -190,6 +187,16 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] Le pre-push connaît le commit local poussé, pas seulement la
   référence distante (reprise d'un verdict au pre-push, QUA-152) —
   `docs/intentions/pre-push-commit-pousse.md`.
+- [ ] [décision] La lecture de la CI d'une MR GitLab (QUA-262) et la CI GitLab du
+  gabarit (QUA-263), éprouvées en réel —
+  `docs/intentions/gitlab-ci-de-la-mr-essai-reel.md`.
+- [ ] [décision] Sortir de CLOSING refusé en dur sans CI verte sur les contrôles
+  confiés à la CI (QUA-262) — `docs/intentions/cloture-refusee-sans-ci-verte.md`.
+- [ ] [décision] Aligner QUA-196 et la couverture du diff sur les contrôles
+  confiés à la CI — `docs/intentions/contrats-a-aligner-apres-controles-en-ci.md`.
+- [ ] [décision] Le sondage d'attestation sous Claude Code enregistre la réponse
+  (refusée au premier essai réel, QUA-235) —
+  `docs/intentions/sondage-d-attestation-refuse-sous-claude-code.md`.
 - [ ] [décision] Comprendre l'échec intermittent de la couverture des hooks
   (QUA-004) vu deux fois sous charge parallèle, jamais reproduit seul —
   `docs/intentions/couverture-hooks-intermittente.md`.

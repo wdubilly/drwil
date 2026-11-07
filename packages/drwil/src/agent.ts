@@ -4,7 +4,7 @@
 // the project's language (consumed by agents).
 import { durabilityHint } from "./criteria.js";
 import { rulesLine } from "./rules.js";
-import { labelIds, PARTIAL_LABEL } from "./verdict.js";
+import { labelIds, PARTIAL_LABEL, PENDING_LABEL } from "./verdict.js";
 import type { verdictJson } from "./verify.js";
 
 type VerdictJson = ReturnType<typeof verdictJson>;
@@ -16,6 +16,9 @@ const CONDUCT: Record<string, string> = {
   partial:
     "This is a partial verdict (--failed): the contracts not replayed are not judged. Work is NOT verified. Fix the failing contracts, replay with `drwil verify --failed`, then run the full pass `drwil verify --evidence`.",
   manual: "Work is NOT verified yet. Stop claiming validation and ask the human to attest the contracts below.",
+  // QUA-260: never « Work is verified » under a PASS (CI pending).
+  ciPending:
+    "Work is NOT verified yet: the checks left to CI have not run here. You may continue, but do not claim the work is verified until the PR or MR CI is green on them (`node .githooks/pr-watch.mjs <number>`).",
 };
 
 const LABELS: Record<string, string> = {
@@ -36,9 +39,12 @@ export function formatForAgent(j: VerdictJson): string {
   const l = [
     "drwil verify — result for the agent",
     `Contracts: ${c.passed} PASS · ${c.attested} ATTESTED · ${c.failed} FAIL · ${c.error} ERROR · ${c.manual} MANUAL (${c.total} total)`,
-    `Verdict: ${j.status === "partial" ? PARTIAL_LABEL : (LABELS[j.status] ?? j.status)} (exit ${j.exitCode})`,
+    `Verdict: ${j.label ?? (j.status === "partial" ? PARTIAL_LABEL : (LABELS[j.status] ?? j.status))} (exit ${j.exitCode})`,
+    ...(j.ciPending.length
+      ? [`Note: Checks left to CI, not run here and never counted as passed — pending the PR or MR CI: ${j.ciPending.join(", ")}`]
+      : []),
     ...reuseLine(j),
-    `Next step: ${CONDUCT[j.status] ?? CONDUCT.error}`,
+    `Next step: ${(j.label === PENDING_LABEL ? CONDUCT.ciPending : CONDUCT[j.status]) ?? CONDUCT.error}`,
     ...partialLines(j),
   ];
   if (j.status === "pass" && c.attested)

@@ -7,6 +7,16 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- A slow check can run once, in CI only: `"runAt": ["ci"]` (refused without a
+  declared GitHub or GitLab CI). It never runs at commit, at push or in
+  `drwil verify`; every output says « left to CI », never « passed », and
+  `drwil verify` answers `GOVERNANCE: PASS (CI pending)`, naming the pending
+  checks. `--with-ci-checks` (on `verify` and `run-checks`) runs them locally
+  to reproduce a failure. `pr-watch` and the closing read the CI of the pull
+  request (GitHub) or merge request (GitLab, through `glab`): the closing is
+  only achieved once it is green. The delivered CI no longer runs twice on
+  the push of a branch with an open pull or merge request, and the adoption
+  recipe proposes `["ci"]` for the e2e check.
 - `node .githooks/state.mjs resume` rebuilds the local governance state on
   another clone or machine from the workstream branch's history: `BUILD` on
   its brief, or `CLOSING` when the closing is committed and the pull request
@@ -38,7 +48,8 @@ closing commit; the release renames this section to its version.
 - `node .githooks/state.mjs briefs` and `node .githooks/state.mjs resume` no
   longer exit with code 13 ("unsettled top-level await") without writing
   anything, so `/drwil-start` lists the briefs again; `start` into a new
-  worktree, `detour.mjs` and `release-verdict.mjs` are launched the same way,
+  worktree, `.githooks/detour.mjs` and `.githooks/release-verdict.mjs` are
+  launched the same way,
   without a top-level await.
 - `drwil init` on an already equipped project no longer gets its update commit
   refused by the scope gate when it completes a file of the kit manifest

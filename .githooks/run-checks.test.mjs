@@ -873,3 +873,98 @@ test("QUA-208 : de bout en bout, un contrôle réservé par runAt est non exécu
     assert.match(r.stdout, /✗ échec : lent/, cas);
   }
 });
+
+test("QUA-208 : de bout en bout, un contrôle confié à la CI est annoncé « confié à la CI » au commit, au push et hors hook (sans bloquer), joué et bloquant en CI", () => {
+  const config = JSON.stringify({
+    ciFiles: [".github/workflows/ia-first.yml"],
+    checks: [{ id: "lent", name: "lent", run: "node -e 'process.exit(1)'", runAt: ["ci"] }],
+  });
+  // La CI déclarée active la couverture CI de chaque contrôle : un bouchon, ce test éprouve l'adaptateur.
+  const fichiers = { ".drwil/ia-first.json": config, "src/a.js": "x", ".githooks/check-control-coverage.mjs": "process.exit(0);\n" };
+  for (const [cas, options] of [
+    ["commit", { indexer: ["src/a.js"], env: { DRWIL_HOOK: "pre-commit" } }],
+    ["push", { valider: true, env: { DRWIL_PUSH_REFS: "refs/heads/travail" } }],
+    ["hors hook (verify)", { valider: true }],
+  ]) {
+    const r = lancer(fichiers, options);
+    assert.equal(r.status, 0, `${cas} : ${r.stdout}`);
+    assert.match(r.stdout, /— confié à la CI, non exécuté ici : lent/, `${cas} : le résumé, seule ligne d'une passe verte, le dit`);
+    assert.match(
+      r.detail,
+      /^\[ia-first\] ⚠ non exécuté : lent \(confié à la CI \(runAt \["ci"\]\) : pas joué ici, jamais compté passé/m,
+      cas,
+    );
+    assert.doesNotMatch(r.detail, /\[ia-first\] lent : durée : \d+ ms/, `${cas} : jamais lancé`);
+  }
+  const ci = lancer(fichiers, { valider: true, env: { CI: "true" } });
+  assert.equal(ci.status, 1, "en CI, l'échec du contrôle confié à la CI bloque");
+  assert.match(ci.stdout, /✗ échec : lent/);
+  assert.doesNotMatch(ci.stdout, /confié à la CI/);
+  // Sans CI déclarée, le réglage est refusé : un échec qui nomme la raison.
+  const sansCi = lancer({ ...fichiers, ".drwil/ia-first.json": config.replace('".github/workflows/ia-first.yml"', "") }, { valider: true });
+  assert.equal(sansCi.status, 1);
+  assert.match(sansCi.stdout, /lent : réglage runAt refusé \(runAt \["ci"\] sans CI déclarée \(ciFiles vide\)/);
+});
+
+test("QUA-261 : run-checks --with-ci-checks joue aussi les contrôles confiés à la CI et le dit ; sans l'option, leur verdict n'est jamais repris", () => {
+  const vert = JSON.stringify({
+    lang: "fr",
+    ciFiles: [".github/workflows/ia-first.yml"],
+    checks: [{ id: "lent", name: "lent", run: "node -e 0", runAt: ["ci"], paths: ["src/**"] }],
+  });
+  const { racine, ...premiere } = lancer(
+    { ".drwil/ia-first.json": vert, "src/a.js": "x", ".githooks/check-control-coverage.mjs": "process.exit(0);\n" },
+    { valider: true },
+  );
+  assert.equal(premiere.status, 0, premiere.stdout);
+  const avec = passe(racine, { args: ["--with-ci-checks"] });
+  assert.equal(avec.status, 0, avec.stdout);
+  assert.match(avec.stdout, /— option --with-ci-checks active : contrôles confiés à la CI joués en local \(lent\)/);
+  assert.doesNotMatch(avec.stdout, /confié à la CI, non exécuté/);
+  assert.match(avec.detail, /^\[ia-first\] lent : durée : \d+ ms/m, "joué pour de bon");
+  // Le verdict « ok » laissé par l'option n'est pas repris par une passe sans elle : le contrôle reste confié à la CI.
+  const sans = passe(racine);
+  assert.match(sans.stdout, /— confié à la CI, non exécuté ici : lent/);
+  assert.doesNotMatch(sans.detail, /lent : repris/);
+  // L'échec d'un contrôle confié à la CI se reproduit en local par l'option.
+  writeFileSync(join(racine, ".drwil/ia-first.json"), vert.replace("node -e 0", "node -e 'process.exit(1)'"));
+  const rouge = passe(racine, { args: ["--with-ci-checks"] });
+  assert.equal(rouge.status, 1);
+  assert.match(rouge.stdout, /✗ échec : lent/);
+  // Aucun contrôle confié à la CI : l'option le dit aussi ; en anglais, l'attente de la CI comme l'option.
+  writeFileSync(join(racine, ".drwil/ia-first.json"), JSON.stringify({ checks: [{ id: "x", run: "node -e 0" }] }));
+  assert.match(passe(racine, { args: ["--with-ci-checks"] }).stdout, /— option --with-ci-checks active : aucun contrôle confié à la CI/);
+  writeFileSync(join(racine, ".drwil/ia-first.json"), JSON.stringify({ lang: "en", checks: [{ id: "x", run: "node -e 0" }] }));
+  assert.match(passe(racine, { args: ["--with-ci-checks"] }).stdout, /— option --with-ci-checks active: no check left to CI/);
+  writeFileSync(join(racine, ".drwil/ia-first.json"), vert.replace('"lang":"fr"', '"lang":"en"'));
+  assert.match(passe(racine).stdout, /— left to CI, not run here: lent/);
+  assert.match(
+    passe(racine, { args: ["--with-ci-checks"] }).stdout,
+    /— option --with-ci-checks active: checks left to CI played locally \(lent\)/,
+  );
+});
+
+test("QUA-208 : dans ce dépôt, les contrôles lents sont confiés à la CI, acceptés par le moteur et joués par la CI du dépôt ; les tests des contrats restent en local", async () => {
+  const { runAtVerdict } = await import("./engine-runat.mjs");
+  const depot = dirname(dirname(SCRIPT));
+  const config = JSON.parse(readFileSync(join(depot, ".drwil/ia-first.json"), "utf8"));
+  const confies = config.checks.filter((c) => Array.isArray(c.runAt) && c.runAt.every((v) => v === "ci")).map((c) => c.id);
+  for (const id of ["couverture-tests", "couverture-hooks", "couverture-claude", "tarball", "couverture-diff"])
+    assert.ok(confies.includes(id), `${id} confié à la CI`);
+  for (const c of config.checks.filter((k) => "runAt" in k)) {
+    for (const contexte of ["commit", "push", "verify"])
+      assert.equal(runAtVerdict(c, c.id, contexte, { ciFiles: config.ciFiles })?.status, "not-run", `${c.id} non joué : ${contexte}`);
+    assert.equal(runAtVerdict(c, c.id, "ci", { ciFiles: config.ciFiles }), null, `${c.id} joué en CI`);
+  }
+  const contrats = config.checks.filter((c) => /^tests-qua-\d+$/.test(c.id));
+  assert.ok(contrats.length > 100, "les tests des contrats sont déclarés");
+  assert.deepEqual(
+    contrats.filter((c) => "runAt" in c).map((c) => c.id),
+    [],
+    "les tests rapides des contrats restent en local",
+  );
+  assert.deepEqual(config.ciFiles, [".github/workflows/ia-first.yml"]);
+  const flux = readFileSync(join(depot, ".github/workflows/ia-first.yml"), "utf8");
+  assert.match(flux, /^ {6}- run: node \.githooks\/run-checks\.mjs$/m, "la CI du dépôt joue run-checks (variable CI posée par la forge)");
+  assert.doesNotMatch(flux, /^\s+CI:/m, "la variable CI n'est jamais écrasée");
+});

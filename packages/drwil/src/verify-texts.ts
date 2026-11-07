@@ -19,6 +19,8 @@ export const TEXTS = {
     attested: "attesté le {0}{1}{2}",
     by: " par {0} ({1})",
     obsolete: "attestation du {0} obsolète : le contrat ou sa preuve a changé depuis, à attester de nouveau",
+    ciPending: "Contrôles confiés à la CI, non exécutés ici et jamais comptés passés — en attente de la CI de la PR ou MR : {0}",
+    withCiChecks: 'Option --with-ci-checks active : les contrôles confiés à la CI (runAt ["ci"]) sont joués ici, en local',
   },
   en: {
     noEngine: "check engine missing (.githooks/engine.mjs, .githooks/contracts.mjs): run `drwil init` again",
@@ -38,5 +40,7 @@ export const TEXTS = {
     attested: "attested on {0}{1}{2}",
     by: " by {0} ({1})",
     obsolete: "attestation of {0} obsolete: the contract or its proof changed since, to attest again",
+    ciPending: "Checks left to CI, not run here and never counted as passed — pending the PR or MR CI: {0}",
+    withCiChecks: 'Option --with-ci-checks active: the checks left to CI (runAt ["ci"]) are played here, locally',
   },
 };

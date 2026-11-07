@@ -174,6 +174,9 @@
     },
     {
       "id": "couverture-tests",
+      "runAt": [
+        "ci"
+      ],
       "name": "drwil: build + tests + seuil de couverture (QUA-004)",
       "run": "npm run test:coverage",
       "cwd": "packages/drwil",
@@ -190,6 +193,9 @@
     },
     {
       "id": "couverture-claude",
+      "runAt": [
+        "ci"
+      ],
       "name": "hooks Claude et module front : tests + couverture (QUA-004)",
       "run": "npm run test:claude:coverage",
       "ciJob": "checks",
@@ -207,6 +213,9 @@
     },
     {
       "id": "couverture-hooks",
+      "runAt": [
+        "ci"
+      ],
       "name": "hooks de gouvernance : tests + couverture (QUA-004)",
       "run": "npm run test:hooks:coverage",
       "ciJob": "checks",
@@ -1219,6 +1228,9 @@
     },
     {
       "id": "tarball",
+      "runAt": [
+        "ci"
+      ],
       "name": "CLI installée depuis le tarball, comme un utilisateur (contenu, --version, init, state.mjs briefs, verify)",
       "run": "node outils/tester-tarball.mjs",
       "reuse": false,
@@ -3043,6 +3055,53 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-260",
+      "name": "tests de QUA-260, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-260 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-261",
+      "name": "tests de QUA-261, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-261 \" .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-262",
+      "name": "tests de QUA-262, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-262 \" .githooks/pr-watch.test.mjs .githooks/close.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/**", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-263",
+      "name": "tests de QUA-263, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-263 \" packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/**", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
       "id": "tests-qua-207",
       "name": "tests de QUA-207, filtrés par son ID (un contrôle par règle, QUA-033)",
       "run": "node --test --test-name-pattern=\"^QUA-207 \" packages/drwil/test/kit.test.mjs",
@@ -3316,6 +3375,9 @@
     },
     {
       "id": "couverture-diff",
+      "runAt": [
+        "ci"
+      ],
       "name": "code modifié couvert à 100 % : lignes et branches du diff de la branche (diffCoverage)",
       "run": "node .githooks/check-diff-coverage.mjs",
       "ciJob": "checks",
