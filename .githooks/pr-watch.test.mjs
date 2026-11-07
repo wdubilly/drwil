@@ -377,7 +377,7 @@ test("QUA-251 forge non GitHub : jamais de refus, une ligne dit la CI de la bran
   assert.match(mainCiGate(sans, MESSAGES_FR).refusal, /^next refusé : branche principale introuvable/, "sans origin : le verrou tient");
 });
 
-// --- GitLab et contrôles confiés à la CI (QUA-255) ---
+// --- GitLab et contrôles confiés à la CI (QUA-262) ---
 
 /** glab simulé : `mr view` (réponses successives, la dernière se répète), puis `api` (jobs de la pipeline). */
 function glabFaux({ vues, jobs = [[]] }) {
@@ -398,7 +398,7 @@ const mr = (statut, extra = {}) => ({
 });
 const job = (name, status, allow_failure = false) => ({ name, status, allow_failure });
 
-test("QUA-255 GitLab : la pipeline de la MR verte, rouge (job autorisé à échouer ignoré), absente ou sautée, glab muet ; jamais « verte » sans l'avoir vue", async () => {
+test("QUA-262 GitLab : la pipeline de la MR verte, rouge (job autorisé à échouer ignoré), absente ou sautée, glab muet ; jamais « verte » sans l'avoir vue", async () => {
   const T = texts(tmp());
   let f = glabFaux({ vues: [mr("success")], jobs: [[job("checks", "success"), job("alert-if-ci-broken", "skipped")]] });
   let r = await watch({ forge: "gitlab", glab: f.glab, pr: "7", T });
@@ -424,7 +424,7 @@ test("QUA-255 GitLab : la pipeline de la MR verte, rouge (job autorisé à écho
   assert.deepEqual([r.code, r.message], [1, "[pr-watch] MR !7 fermée sans fusion."]);
 });
 
-test("QUA-255 GitLab : attend la pipeline en cours (manuelle comprise) puis verte ; au délai, « non exécuté » ; fusionnée : CI de la MR dite, branche principale à vérifier à la main", async () => {
+test("QUA-262 GitLab : attend la pipeline en cours (manuelle comprise) puis verte ; au délai, « non exécuté » ; fusionnée : CI de la MR dite, branche principale à vérifier à la main", async () => {
   const T = texts(tmp());
   const attentes = [];
   const f = glabFaux({
@@ -460,7 +460,7 @@ test("QUA-255 GitLab : attend la pipeline en cours (manuelle comprise) puis vert
   assert.equal((await watch({ forge: "gitlab", glab: glabFaux({ vues: [fusion(null)] }).glab, T })).code, 2);
 });
 
-test("QUA-255 contrôles confiés à la CI : verte les dit prouvés ; rouge, absente, muette ou au délai : le chantier reste en CLOSING (GitHub et GitLab, en anglais)", async () => {
+test("QUA-262 contrôles confiés à la CI : verte les dit prouvés ; rouge, absente, muette ou au délai : le chantier reste en CLOSING (GitHub et GitLab, en anglais)", async () => {
   const T = texts(tmp());
   const ci = ["e2e", "couverture"];
   let r = await watch({ gh: faux([ouverte(run("checks", "COMPLETED", "SUCCESS"))]).gh, ci, T });
@@ -495,7 +495,7 @@ test("QUA-255 contrôles confiés à la CI : verte les dit prouvés ; rouge, abs
   );
 });
 
-test("QUA-255 forge du changement (origin GitHub, GitLab, autre avec .gitlab-ci.yml) et contrôles confiés à la CI lus dans la configuration", () => {
+test("QUA-262 forge du changement (origin GitHub, GitLab, autre avec .gitlab-ci.yml) et contrôles confiés à la CI lus dans la configuration", () => {
   const git = (cwd, ...args) => spawnSync("git", args, { cwd, encoding: "utf8" });
   const racine = tmp();
   git(racine, "init", "-q", "-b", "main");
@@ -516,7 +516,7 @@ test("QUA-255 forge du changement (origin GitHub, GitLab, autre avec .gitlab-ci.
 });
 
 test(
-  "QUA-255 en ligne de commande sur GitLab (origin GitLab, glab factice) : verte 0, rouge 1 et le chantier reste en CLOSING",
+  "QUA-262 en ligne de commande sur GitLab (origin GitLab, glab factice) : verte 0, rouge 1 et le chantier reste en CLOSING",
   posix,
   () => {
     const outils = tmp();
@@ -547,7 +547,7 @@ test(
   },
 );
 
-test("QUA-255 GitLab : réponses de glab inattendues — vue illisible, jobs illisibles sur une pipeline verte, fusion par squash", async () => {
+test("QUA-262 GitLab : réponses de glab inattendues — vue illisible, jobs illisibles sur une pipeline verte, fusion par squash", async () => {
   const T = texts(tmp());
   assert.equal((await watch({ forge: "gitlab", glab: () => 42, T })).code, 2, "réponse qui n'est pas un objet : non exécuté");
   const r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("success")], jobs: [null] }).glab, T });

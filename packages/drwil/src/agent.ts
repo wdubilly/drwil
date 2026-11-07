@@ -16,7 +16,7 @@ const CONDUCT: Record<string, string> = {
   partial:
     "This is a partial verdict (--failed): the contracts not replayed are not judged. Work is NOT verified. Fix the failing contracts, replay with `drwil verify --failed`, then run the full pass `drwil verify --evidence`.",
   manual: "Work is NOT verified yet. Stop claiming validation and ask the human to attest the contracts below.",
-  // QUA-253: never « Work is verified » under a PASS (CI pending).
+  // QUA-260: never « Work is verified » under a PASS (CI pending).
   ciPending:
     "Work is NOT verified yet: the checks left to CI have not run here. You may continue, but do not claim the work is verified until the PR or MR CI is green on them (`node .githooks/pr-watch.mjs <number>`).",
 };

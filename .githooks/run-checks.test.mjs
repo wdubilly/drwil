@@ -906,7 +906,7 @@ test("QUA-208 : de bout en bout, un contrôle confié à la CI est annoncé « c
   assert.match(sansCi.stdout, /lent : réglage runAt refusé \(runAt \["ci"\] sans CI déclarée \(ciFiles vide\)/);
 });
 
-test("QUA-254 : run-checks --with-ci-checks joue aussi les contrôles confiés à la CI et le dit ; sans l'option, leur verdict n'est jamais repris", () => {
+test("QUA-261 : run-checks --with-ci-checks joue aussi les contrôles confiés à la CI et le dit ; sans l'option, leur verdict n'est jamais repris", () => {
   const vert = JSON.stringify({
     lang: "fr",
     ciFiles: [".github/workflows/ia-first.yml"],

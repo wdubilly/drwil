@@ -1,5 +1,5 @@
 // Checks of the closing that read the repository (split from close.mjs), and what the closing and pr-watch.mjs read of the
-// forge (QUA-255): its kind, the checks left to CI, the merge request's pipeline on GitLab.
+// forge (QUA-262): its kind, the checks left to CI, the merge request's pipeline on GitLab.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -103,7 +103,7 @@ export function bareNames(root) {
   return found;
 }
 
-// QUA-255: a check left to CI (`runAt: ["ci"]`, QUA-208) is proven only by the PR (GitHub) or MR (GitLab) CI on the
+// QUA-262: a check left to CI (`runAt: ["ci"]`, QUA-208) is proven only by the PR (GitHub) or MR (GitLab) CI on the
 // commit closed: until it is seen green there, the closing is not acquired and the workstream stays in CLOSING.
 const CI_TEXTS = {
   fr: {
@@ -125,7 +125,7 @@ const CI_TEXTS = {
 };
 const fill = (message, ...values) => message.replace(/\{(\d)\}/g, (_, i) => values[i]);
 
-// QUA-255: a GitLab pipeline is green on `success` only; skipped (nothing ran) is no CI, never green (QUA-013).
+// QUA-262: a GitLab pipeline is green on `success` only; skipped (nothing ran) is no CI, never green (QUA-013).
 const GITLAB = { success: "green", failed: "red", canceled: "red", skipped: "none" };
 const OVER = new Set(["success", "failed", "canceled", "skipped", "manual"]);
 

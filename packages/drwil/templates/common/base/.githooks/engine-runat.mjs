@@ -2,7 +2,7 @@
 // Un contrôle réservé est « non exécuté » là où il ne tourne pas, jamais « passé » (QUA-013).
 // Sans le réglage, le contrôle tourne partout, comme avant.
 // QUA-208 : `["ci"]` seul confie le contrôle à la CI de la PR ou MR ; il exige une CI déclarée sur GitHub ou GitLab, les seules
-// forges dont la CI est suivie. QUA-254 : l'option `--with-ci-checks` (verify, run-checks) le joue aussi en local.
+// forges dont la CI est suivie. QUA-261 : l'option `--with-ci-checks` (verify, run-checks) le joue aussi en local.
 
 export const RUN_AT = ["commit", "push", "verify", "ci"];
 export const WITH_CI_CHECKS = "--with-ci-checks";

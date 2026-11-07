@@ -5704,7 +5704,7 @@ async function projetConfieALaCi(rouge = false) {
   return dir;
 }
 
-test("QUA-253 : avec un contrôle confié à la CI et le reste vert, verify rend GOVERNANCE: PASS (CI pending) et nomme les contrôles en attente", async () => {
+test("QUA-260 : avec un contrôle confié à la CI et le reste vert, verify rend GOVERNANCE: PASS (CI pending) et nomme les contrôles en attente", async () => {
   const dir = await projetConfieALaCi();
   const humain = cli(dir, "verify");
   assert.equal(humain.status, 0, humain.stdout + humain.stderr);
@@ -5744,7 +5744,7 @@ test("QUA-253 : avec un contrôle confié à la CI et le reste vert, verify rend
   assert.doesNotMatch(sans.stdout, /CI pending|left to CI/);
 });
 
-test("QUA-254 : verify --with-ci-checks joue aussi les contrôles confiés à la CI et dit que l'option est active", async () => {
+test("QUA-261 : verify --with-ci-checks joue aussi les contrôles confiés à la CI et dit que l'option est active", async () => {
   const dir = await projetConfieALaCi();
   const humain = cli(dir, "verify", "--with-ci-checks");
   assert.equal(humain.status, 1, "joué en local, son échec remonte");
@@ -6018,9 +6018,9 @@ test("QUA-239 : init dit, en fin de mise à jour, ce qu'il a fait, ce qui reste 
   });
 });
 
-// QUA-256 : la CI livrée ne rejoue pas deux fois le même commit d'une branche dont la PR ou MR est ouverte, et joue les
+// QUA-263 : la CI livrée ne rejoue pas deux fois le même commit d'une branche dont la PR ou MR est ouverte, et joue les
 // contrôles confiés à la CI (`runAt: ["ci"]`, QUA-208).
-test("QUA-256 : CI GitHub livrée — le push d'une branche à PR ouverte saute ses étapes et le dit ; PR, branche principale, branche sans PR ou gh muet : tout est joué", async () => {
+test("QUA-263 : CI GitHub livrée — le push d'une branche à PR ouverte saute ses étapes et le dit ; PR, branche principale, branche sans PR ou gh muet : tout est joué", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github", git: false }));
   const gh = read(dir, ".github/workflows/ia-first.yml");
@@ -6065,7 +6065,7 @@ test("QUA-256 : CI GitHub livrée — le push d'une branche à PR ouverte saute 
   assert.equal(decider({ EVENT: "push", REF: "refs/tags/v1" }, 1).skip, "skip=false", "tag");
 });
 
-test("QUA-256 : CI GitLab livrée — une seule pipeline par push (aucune pipeline de MR), et la CI joue les contrôles confiés à la CI", async () => {
+test("QUA-263 : CI GitLab livrée — une seule pipeline par push (aucune pipeline de MR), et la CI joue les contrôles confiés à la CI", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, ci: "gitlab", git: false }));
   const gl = read(dir, ".gitlab-ci.yml");

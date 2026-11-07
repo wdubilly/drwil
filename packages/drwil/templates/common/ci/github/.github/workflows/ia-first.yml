@@ -7,7 +7,7 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      # QUA-256: a push on a branch whose pull request is open would replay, on the same commit, what the
+      # QUA-263: a push on a branch whose pull request is open would replay, on the same commit, what the
       # pull request plays: its steps are skipped, and the skip is said; the pull request keeps its own run.
       # No job-level `if`: a skipped job is not reported under its name. Without a pull request (or if GitHub
       # does not answer), the push is tested as before; the main branch and tags are never skipped.
@@ -54,7 +54,7 @@ jobs:
           key: run-checks-verdicts-${{ github.event.pull_request.base.sha }}
           restore-keys: run-checks-verdicts-
       # GitHub sets the variable CI: run-checks also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), whose
-      # only proof is this run on the pull request (QUA-255).
+      # only proof is this run on the pull request (QUA-262).
       - if: steps.pr.outputs.skip != 'true'
         run: node .githooks/run-checks.mjs
         env:

@@ -94,7 +94,7 @@ export function pathToClosing(root, activity) {
   return T.path(steps);
 }
 
-/** One look at the CI of the branch's PR (GitHub) or MR (GitLab), through pr-watch (QUA-255). */
+/** One look at the CI of the branch's PR (GitHub) or MR (GitLab), through pr-watch (QUA-262). */
 const lookChange = (forge) =>
   forge === "gitlab" ? lookMr(undefined, (a) => ghJson(a, spawnSync, "glab")) : look(undefined, (a) => ghJson(a));
 
@@ -126,7 +126,7 @@ export function close(root, { brief, check = false, fix = false, env = process.e
     proposed = proposals(root, report.problems);
   }
   const problems = report.problems.map((p) => p.message);
-  // QUA-255: with checks left to CI, the closing is acquired only once the PR or MR CI is green on them; said either way.
+  // QUA-262: with checks left to CI, the closing is acquired only once the PR or MR CI is green on them; said either way.
   const ci = closingCi(root, lookCi);
   const diff = proposed.flatMap((p) => [`  ${p.file}:${p.line}`, `    - ${p.from}`, `    + ${p.to}`]);
   const lines = [

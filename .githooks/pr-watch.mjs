@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Follows the CI of a pull request after a push or its creation (QUA-100): waits until its checks are
-// over (`gh pr view --json statusCheckRollup`; on GitLab, the merge request's pipeline through `glab`, QUA-255), then says
+// over (`gh pr view --json statusCheckRollup`; on GitLab, the merge request's pipeline through `glab`, QUA-262), then says
 // « green », « merged » or « red » with the failing checks. A red CI is fixed, never
 // bypassed (QUA-019). Without gh reachable, or past the time limit, the follow-up is « not run »,
 // never « green » (QUA-013). Once the PR is merged, it follows the main branch's CI on the merge commit
 // and writes the proof a queue needs before its next workstream (QUA-251, pr-watch-main.mjs), within the
-// same time limit (GitHub only). Valid for every AI tool: a plain Node script on top of `gh` or `glab`. QUA-255: the checks left
+// same time limit (GitHub only). Valid for every AI tool: a plain Node script on top of `gh` or `glab`. QUA-262: the checks left
 // to CI (`runAt: ["ci"]`) are proven by that CI alone: green names them, anything else says the workstream stays in CLOSING.
 // Usage: node .githooks/pr-watch.mjs [<pr or mr number>] [--timeout <minutes>]
 // Exit code: 0 green, or merged with the main branch's CI green; 1 red, closed without merge, main branch's
@@ -135,7 +135,7 @@ export function look(pr, gh) {
 
 /**
  * Waits until the PR's (or MR's, `forge` "gitlab") CI is over, then, once merged, the main branch's CI (GitHub); at most
- * `timeout` minutes; returns { code, message }. `ci`: the checks left to CI, named by every verdict (QUA-255).
+ * `timeout` minutes; returns { code, message }. `ci`: the checks left to CI, named by every verdict (QUA-262).
  */
 export async function watch({ root = process.cwd(), pr, timeout = 30, interval = 15_000, forge = "github", ci = [], sleep, ...rest }) {
   const { gh = (a) => ghJson(a), glab = (a) => ghJson(a, spawnSync, "glab"), now = Date.now, log = () => {}, T = texts() } = rest;

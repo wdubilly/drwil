@@ -732,7 +732,7 @@ test("QUA-208 : un contrôle réservé par runAt n'est pas joué au commit ni au
   assert.match(en.detail, /not played at commit/);
 });
 
-// Contrôle confié à la CI (`runAt: ["ci"]`) : la CI de la PR ou MR seule le joue (QUA-208), l'option locale aussi (QUA-254).
+// Contrôle confié à la CI (`runAt: ["ci"]`) : la CI de la PR ou MR seule le joue (QUA-208), l'option locale aussi (QUA-261).
 const github = [".github/workflows/ia-first.yml"];
 const confie = (ciFiles = github, extra = {}) => ({ ...reserve(["ci"], extra), ciFiles });
 
@@ -795,7 +795,7 @@ test('QUA-208 : runAt ["ci"] est refusé avec la raison sans CI déclarée (ciFi
   assert.match(executer(racine, "lent", { cfg: { ...confie([]), lang: "en" } }).message, /without a declared CI \(empty ciFiles\)/);
 });
 
-test("QUA-254 : l'option locale (withCiChecks) joue aussi un contrôle confié à la CI, sans rien changer aux autres réglages", () => {
+test("QUA-261 : l'option locale (withCiChecks) joue aussi un contrôle confié à la CI, sans rien changer aux autres réglages", () => {
   const racine = depot();
   const options = { cfg: confie(github, { run: "node -e 'process.exit(1)'" }), env: avecPath({}), withCiChecks: true };
   assert.equal(executer(racine, "lent", options).status, "fail", "joué en local, son échec remonte");

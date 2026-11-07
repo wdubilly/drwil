@@ -19,8 +19,8 @@ import type { CiChecksOption } from "./verify-checks.js";
 import { TEXTS as VERIFY_TEXTS } from "./verify-texts.js";
 import type { Verdict, VerifyOptions } from "./verify-types.js";
 
-// QUA-254: the option says it is active, next to the verdict line. The CI pending checks and `GOVERNANCE: PASS (CI pending)`
-// belong to the verdict itself (verdict.ts, QUA-253): human, --agent, --json and the evidence say them alike.
+// QUA-261: the option says it is active, next to the verdict line. The CI pending checks and `GOVERNANCE: PASS (CI pending)`
+// belong to the verdict itself (verdict.ts, QUA-260): human, --agent, --json and the evidence say them alike.
 export { ciPending } from "./verdict.js";
 
 /** Human output (`agent` false) or agent output, with the option named next to the verdict line. */

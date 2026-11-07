@@ -65,7 +65,7 @@ const verdicts = {};
 const ranAt = new Date().toISOString();
 // Only `secrets` judges something else here than in `drwil verify` (the index, not the whole history, outside CI): never reusable.
 const reusableByVerify = (id) => id !== "secrets" || Boolean(process.env.CI);
-// QUA-254: the option also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), to reproduce a CI failure locally.
+// QUA-261: the option also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), to reproduce a CI failure locally.
 const withCiChecks = process.argv.includes(WITH_CI_CHECKS);
 const list = checks(root, { cfg, staged, withCiChecks });
 // QUA-141: the verdicts of the last pass, to keep an "ok" whose check files did not change (never in a hook, in CI only when asked, QUA-250,
@@ -170,7 +170,7 @@ const slowestSummary = ` — ${T.slowestSummary} ${slowest
   .map((t) => `${t.name} ${t.ms} ms`)
   .join(", ")}`;
 const reuseSummary = reused.size ? ` — ${T.reuseSummary(reused.size, timings.length)}` : "";
-// QUA-208, QUA-254: the summary (the only line a hook shows when all is green) names the checks left to CI, and the option when active.
+// QUA-208, QUA-261: the summary (the only line a hook shows when all is green) names the checks left to CI, and the option when active.
 const CT = ciTexts(lang);
 const pendingCi = list.filter((c) => c.ciPending).map((c) => c.name);
 const ciSummary = `${pendingCi.length ? ` — ${CT.pending(pendingCi)}` : ""}${withCiChecks ? ` — ${CT.option(list.filter((c) => c.ciPlayed).map((c) => c.name))}` : ""}`;

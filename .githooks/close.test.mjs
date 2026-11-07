@@ -971,7 +971,7 @@ test("QUA-174 : un critère modifié depuis l'acceptation refuse la clôture san
   assert.match(close(retires, { logs: journaux() }).message, /—/);
 });
 
-// --- Contrôles confiés à la CI : la clôture attend la CI de la PR ou MR (QUA-255) ---
+// --- Contrôles confiés à la CI : la clôture attend la CI de la PR ou MR (QUA-262) ---
 
 /** Dépôt du chantier dont la configuration confie `e2e` à la CI ; `vues` : ce que pr-watch verrait, par forge demandée. */
 function depotConfie({ lang, origin } = {}) {
@@ -990,7 +990,7 @@ const vue = (s) => {
   return { forges, lookCi };
 };
 
-test("QUA-255 : la clôture n'est acquise qu'une fois la CI de la PR verte sur HEAD ; en cours, rouge, absente ou vue sur un autre commit, le chantier reste en CLOSING et le dit", () => {
+test("QUA-262 : la clôture n'est acquise qu'une fois la CI de la PR verte sur HEAD ; en cours, rouge, absente ou vue sur un autre commit, le chantier reste en CLOSING et le dit", () => {
   const racine = depotConfie({ origin: "git@github.com:o/r.git" });
   const head = git(racine, "rev-parse", "HEAD");
   const verte = vue({ state: "green", number: 7, total: 2, head });
@@ -1025,7 +1025,7 @@ test("QUA-255 : la clôture n'est acquise qu'une fois la CI de la PR verte sur H
   assert.equal(r.ciAcquired, true);
 });
 
-test("QUA-255 : sur GitLab la CI de la MR est lue ; sans contrôle confié à la CI, rien n'est demandé à la forge ; en anglais", () => {
+test("QUA-262 : sur GitLab la CI de la MR est lue ; sans contrôle confié à la CI, rien n'est demandé à la forge ; en anglais", () => {
   const racine = depotConfie({ origin: "https://gitlab.example.com/o/r.git" });
   const rouge = vue({ state: "red", number: 4, failed: ["checks"] });
   let r = close(racine, { check: true, lookCi: rouge.lookCi });
@@ -1045,7 +1045,7 @@ test("QUA-255 : sur GitLab la CI de la MR est lue ; sans contrôle confié à la
   );
 });
 
-test("QUA-255 : sans regard injecté, la clôture interroge gh (GitHub) ou glab (GitLab) ; muets, la CI est absente et dite", {
+test("QUA-262 : sans regard injecté, la clôture interroge gh (GitHub) ou glab (GitLab) ; muets, la CI est absente et dite", {
   skip: process.platform === "win32" ? "gh factice en script sh" : false,
 }, () => {
   const outils = dossier();

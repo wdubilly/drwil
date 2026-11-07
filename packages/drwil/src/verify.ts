@@ -1,5 +1,5 @@
 // `drwil verify`: validation gate of the work (DRWIL-003). Chain obligation (contract) → check →
-// proof → verdict. Work is verified by drwil only if the verdict is PASS without reserve (PASS (CI pending), QUA-253, waits
+// proof → verdict. Work is verified by drwil only if the verdict is PASS without reserve (PASS (CI pending), QUA-260, waits
 // for the PR or MR CI on the checks left to it): FAIL is to fix, MANUAL is
 // not validated yet (never a deferred success), ERROR means drwil cannot establish the verdict.
 //
