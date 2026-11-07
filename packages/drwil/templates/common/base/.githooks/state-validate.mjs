@@ -30,6 +30,7 @@ export const NEUTRAL_STATE = Object.freeze({ version: 1, activity: "SCOPING", ac
 // merge_cancelled: the automatic merge a failed reopening cancelled, `{ pr }`, until a reopening succeeds or back in SCOPING.
 // scoping_merge (QUA-188): the automatic merge of the scoping PR of `{ branch }`, authorised by the human's answer to the
 // end-of-scoping poll; SCOPING only, so never `queue_merge`, which would merge the next workstream of the queue.
+// limits (QUA-253): the human's answers to the limits poll, `[{ intent, choice: "now" | "note" }]`, from BUILD to CLOSING.
 const FIELDS = new Set([
   ...Object.keys(NEUTRAL_STATE),
   "auto_merge",
@@ -41,6 +42,7 @@ const FIELDS = new Set([
   "parallel",
   "merge_cancelled",
   "scoping_merge",
+  "limits",
 ]);
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 export const texts = (root) => STATE_MESSAGES[config(root).lang === "en" ? "en" : "fr"];
@@ -79,6 +81,8 @@ export function validateState(state, root) {
   if (s !== undefined && !(s && typeof s === "object" && typeof s.branch === "string" && s.branch !== ""))
     problems.push(T.scopingMergeType);
   else if (s !== undefined && state.activity !== "SCOPING") problems.push(T.scopingMergeActivity);
+  if (state.limits !== undefined && !(validLimits(state.limits) && ["BUILD", "EVIDENCE", "VERIFY", "CLOSING"].includes(state.activity)))
+    problems.push(T.limitsType);
   if (state.active_request !== null && typeof state.active_request !== "string") problems.push(T.request);
   if (state.auto_merge !== undefined && typeof state.auto_merge !== "boolean") problems.push(T.autoMergeType);
   else if (state.auto_merge === true && state.activity === "SCOPING") problems.push(T.autoMergeScoping);
@@ -100,6 +104,19 @@ export function validateState(state, root) {
     problems.push(T.since);
   }
   return problems;
+}
+
+/** The limits answers: each a `.md` intent path, once, and a choice "now" or "note", nothing else. */
+function validLimits(limits) {
+  if (!Array.isArray(limits)) return false;
+  const ok = (l) =>
+    l &&
+    typeof l === "object" &&
+    Object.keys(l).length === 2 &&
+    typeof l.intent === "string" &&
+    l.intent.endsWith(".md") &&
+    ["now", "note"].includes(l.choice);
+  return limits.every(ok) && new Set(limits.map((l) => l.intent)).size === limits.length;
 }
 
 function validateBrief(brief, root, mayBeMissing, T) {

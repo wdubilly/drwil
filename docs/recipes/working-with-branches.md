@@ -181,13 +181,13 @@ that folder only):
   `.drwil/usage.jsonl` (if present) (tokens, models, active time, read from Claude
   Code's session logs; never twice for the same workstream). Another AI
   tool: estimate by hand (`docs/recipes/track-consumption-per-increment.md`).
-- Close the intent loop, in the closing commit: each limit left untreated
-  becomes an intent brief (`docs/intentions/`, one per limit, never a
-  workstream brief), listed in `docs/projects/pending.md` as `[decision]`
-  and cited from the journal's « Known limits »; the original intent (the
-  brief's `**Intent**` field) is updated, or summarised in the journal and
-  removed when fully covered. A closing commit that deletes the brief
-  without touching its intent gets a warning.
+- Close the intent loop, in the closing commit: a limit within the scope is
+  handled; one answered « Record as intent » to the `drwil-limite` poll (end of
+  BUILD) becomes an intent brief (`docs/intentions/`, never a workstream brief;
+  `.githooks/close.mjs` refuses one born without that answer), listed in
+  `docs/projects/pending.md` as `[decision]`, cited from the journal's « Known
+  limits »; the original intent (`**Intent**` field) is updated, or summarised
+  and removed when covered (deleted brief, untouched intent: a warning).
 - Defect revealed by the PR after the closing commit, before the merge (red
   CI, forge code analysis): never a workaround nor routine maintenance —
   `node .githooks/state.mjs reopen` (in CLOSING, on the workstream's branch,

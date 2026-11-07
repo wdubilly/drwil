@@ -13,6 +13,7 @@ import { undeclaredHooks } from "./base-checks.mjs";
 import { config } from "./briefs.mjs";
 import { bareNames, closingCi, criteriaToCreate, deadReferences, lookMr, referenceScope } from "./close-checks.mjs";
 import { closingMechanics } from "./close-mechanics.mjs";
+import { limitProblems } from "./close-limits.mjs";
 import { journalPlan } from "./close-journal.mjs";
 import { texts } from "./close-texts.mjs";
 import {
@@ -54,6 +55,7 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
     ...(journal.problem ? [journal.problem] : []),
     ...criteriaToCreate(root, brief, text),
     ...undeclaredHooks(root, text).lines,
+    ...limitProblems(root, text),
     ...deadReferences(root, brief),
     ...referenceScope(root, brief),
     ...bareNames(root),
@@ -113,8 +115,10 @@ export function close(root, { brief, check = false, fix = false, env = process.e
   const text = existsSync(join(root, path)) ? readFileSync(join(root, path), "utf8") : "";
   const done = [];
   if (!check) {
-    const hooks = undeclaredHooks(root, text); // QUA-137: refused before anything is written
-    if (hooks.files.length) return { code: 1, message: [T.signals, ...hooks.lines.map((s) => `  ⚠ ${s}`)].join("\n") };
+    // QUA-137 (undeclared hook) and QUA-264 (intent born without the human's choice): refused before anything is written.
+    const hooks = undeclaredHooks(root, text);
+    const before = [...(hooks.files.length ? hooks.lines : []), ...limitProblems(root, text)];
+    if (before.length) return { code: 1, message: [T.signals, ...before.map((s) => `  ⚠ ${s}`)].join("\n") };
     const refused = closingMechanics(root, path, text, { state, env, logs, done });
     if (refused) return refused;
   }

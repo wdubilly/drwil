@@ -25,7 +25,7 @@ Carte complète : `docs/architecture.md`.
 - **Commandes longues** : `node .githooks/wait-command.mjs <commande>` en appel de fond, jamais une boucle `while pgrep` (détail : section 8).
 - **Références lisibles** : un ID cité à un humain est suivi de ce qu'il désigne (`node .githooks/glossary.mjs "<texte>"`).
 - **Laisser propre en passant** : documenter et signaler tout écart trouvé.
-- **La clôture boucle les intentions** : chaque limite non traitée devient une fiche d'intention (`docs/intentions/`), jamais une fiche de chantier.
+- **Limites pendant le chantier** : une limite dans le cadre se traite sur le champ ; hors cadre, l'humain choisit par un sondage `drwil-limite`, à la fin de BUILD et avant VERIFY ; seule « Noter en intention » en fait une fiche d'intention (`docs/intentions/`), jamais une fiche de chantier (la clôture refuse toute autre).
 - **Clôture en un geste (QUA-048)** : entrée du journal, puis `node .githooks/close.mjs` (`--check` : le signal seul) ; le code cite le contrat (QUA-049), jamais une fiche.
 - **Détour (QUA-050)** : défaut hors cadrage → `node .githooks/detour.mjs open <nom> --title <défaut>` ; un détour qui change les règles attend le oui de l'humain (`docs/recipes/corriger-un-defaut.md`).
 - **Défaut après la clôture (QUA-116)** : en CLOSING, défaut de la PR ouverte → `node .githooks/state.mjs reopen` ; jamais d'historique réécrit (détail en section 8).

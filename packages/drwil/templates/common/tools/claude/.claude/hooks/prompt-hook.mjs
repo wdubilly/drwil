@@ -12,7 +12,7 @@
 // - End-of-scoping poll (`drwil-scope`, QUA-187): refused unless it offers exactly the three answers,
 //   none recommended nor filled in; the human's answer is recorded by `.githooks/state.mjs` (`scopingMerge`).
 // The same hooks serve Claude Code and Copilot CLI, which reads this settings file; only the poll
-// formats differ. A poll that is not drwil's passes through untouched.
+// formats differ. Gemini CLI and Codex call `prompt-hook.mjs <tool>`: portable-polls.mjs (QUA-266).
 import { readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -29,8 +29,10 @@ import {
   worktreeChosen,
 } from "./start-poll.mjs";
 import { queueHook } from "./queue-poll.mjs";
+import { limitHook } from "./limit-poll.mjs";
+import { mergeHook } from "./merge-poll.mjs";
 import { attestationHook } from "./attest-poll.mjs";
-import { portableAttestationMain } from "./portable-attest.mjs";
+import { portableMain } from "./portable-polls.mjs";
 
 export { humanAnswer, inPollOrder, mergeAuthorised, parallelChosen, scopeChoice, scopePoll, startPoll, worktreeChosen };
 export { attestationHook };
@@ -124,7 +126,9 @@ async function main() {
   const attestation = await attestationHook(input, { root: ROOT, tell });
   if (attestation !== null) return attestation;
   const poll = startPoll(input);
-  if (!poll) return (await queueHook(input, { root: ROOT, lang: language(), tell })) ?? scopeHook(input);
+  const ctx = { root: ROOT, lang: language(), tell };
+  // A standalone `drwil-merge` poll (QUA-265) gives the automatic merge back from BUILD to CLOSING.
+  if (!poll) return (await queueHook(input, ctx)) ?? (await limitHook(input, ctx)) ?? (await mergeHook(input, ctx)) ?? scopeHook(input);
   const event = input.hook_event_name;
   if (event === "PreToolUse") {
     if (poll.prefilled) {
@@ -180,7 +184,7 @@ async function main() {
 // still run the hook, not leave it silently idle.
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
-    process.exitCode = ["copilot", "gemini", "codex", "cursor"].includes(process.argv[2]) ? await portableAttestationMain() : await main();
+    process.exitCode = ["copilot", "gemini", "codex", "cursor"].includes(process.argv[2]) ? await portableMain() : await main();
   } catch {
     // An error never blocks the tool: the state stays unchanged, the Git gate remains.
     process.exitCode = 0;

@@ -26,7 +26,7 @@ export const TEXTS = {
     proposed: "Corrections proposées, rien n'est écrit (`node .githooks/close.mjs --fix` les applique) :",
     applied: (n) => `corrections appliquées : ${n}`,
     warnings: "Avertissements (non bloquants) :",
-    rest: "Reste à l'agent : l'entrée du journal (décisions, limites en intentions), puis le commit de clôture.",
+    rest: "Reste à l'agent : l'entrée du journal (décisions, limites répondues « Noter en intention » en intentions), puis le commit de clôture.",
     twice: (j, f, n) =>
       `${j} : ${n} entrées citent \`${f}\` — un chantier rouvert met à jour son entrée de journal, il n'en ajoute pas une seconde`,
     journalProof: (f) => `- **Preuve de clôture** : \`${f}\`.`,
@@ -57,7 +57,7 @@ export const TEXTS = {
     proposed: "Proposed corrections, nothing is written (`node .githooks/close.mjs --fix` applies them):",
     applied: (n) => `corrections applied: ${n}`,
     warnings: "Warnings (non-blocking):",
-    rest: "Left to the agent: the journal entry (decisions, limits as intents), then the closing commit.",
+    rest: "Left to the agent: the journal entry (decisions, limits answered « Record as intent » as intents), then the closing commit.",
     twice: (j, f, n) => `${j}: ${n} entries cite \`${f}\` — a reopened workstream updates its journal entry, it never adds a second one`,
     journalProof: (f) => `- **Closing proof**: \`${f}\`.`,
     journalAmbiguous: (j, f, n) => `${j}: ${n} entries match \`${f}\` — identify a single entry before closing`,

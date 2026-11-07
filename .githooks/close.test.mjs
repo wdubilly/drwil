@@ -233,6 +233,31 @@ test("QUA-228 : la branche nommée identifie l'entrée ; un journal ambigu ou il
   assert.ok(existsSync(join(illisible, FICHE)));
 });
 
+test("QUA-228 : l'entrée d'un autre chantier qui cite seulement la branche ne compte pas pour une seconde entrée", () => {
+  const autre = "## 2026-11-01 — Autre chantier\n\nRelevé en passant sur `workstream/exemple`.\n\n";
+  const titre = depot();
+  ecrire(titre, { "docs/projects/journal.md": `# J\n\n${autre}## 2026-11-03 — Exemple\n\nDécision.\n` });
+  assert.equal(close(titre, { logs: journaux() }).code, 0);
+  const journal = readFileSync(join(titre, "docs/projects/journal.md"), "utf8");
+  assert.ok(journal.includes(autre), "l'entrée de l'autre chantier reste intacte");
+  assert.match(journal, /Décision\.\n\n- \*\*Preuve de clôture\*\* : `docs\/preuves\/exemple\.md`\.\n$/);
+  for (const [lang, ligne] of [
+    ["fr", "- **Clôturé par** : la branche `workstream/exemple`."],
+    ["en", "- **Closed by**: the `workstream/exemple` branch."],
+  ]) {
+    const cloture = depot({ lang });
+    ecrire(cloture, { "docs/projects/journal.md": `# J\n\n${autre}## Sans titre commun\n\nDécision.\n${ligne}\n` });
+    assert.equal(close(cloture, { logs: journaux() }).code, 0);
+    const texte = readFileSync(join(cloture, "docs/projects/journal.md"), "utf8");
+    assert.ok(texte.includes(autre));
+    assert.ok(texte.trimEnd().endsWith("`docs/preuves/exemple.md`."), texte);
+  }
+  const ambigu = depot();
+  ecrire(ambigu, { "docs/projects/journal.md": `# J\n\n${autre}## Encore un autre\n\nVoir \`workstream/exemple\`.\n` });
+  assert.equal(close(ambigu, { logs: journaux() }).code, 1, "deux simples mentions restent ambiguës");
+  assert.ok(existsSync(join(ambigu, FICHE)));
+});
+
 test("QUA-228 : une preuve refusée laisse le journal intact, et un journal non inscriptible garde la fiche", () => {
   const racine = depot({ evidence: false });
   const journal = "# J\n\n## exemple\n\nDécision.\n";
@@ -596,6 +621,9 @@ test("QUA-077 : références à la fiche réorientées vers le journal, intentio
   // L'intention d'origine existe avant le chantier : la base de comparaison est ce commit.
   process.env.DRWIL_BASE = git(racine, "rev-parse", "HEAD");
   ecrire(racine, { "docs/intentions/neuve.md": "# Neuve\n\nCite `src/a.mjs`.\n" });
+  // QUA-264 : une intention née sur la branche porte la réponse « Noter en intention » de l'humain.
+  const etat = JSON.parse(readFileSync(join(racine, ".drwil/state.json"), "utf8"));
+  ecrire(racine, { ".drwil/state.json": JSON.stringify({ ...etat, limits: [{ intent: "docs/intentions/neuve.md", choice: "note" }] }) });
   const r = close(racine, { logs: journaux() });
   assert.equal(r.code, 1);
   assert.match(r.message, /sans que son intention docs\/intentions\/origine\.md soit touchée/);

@@ -26,7 +26,7 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
 - **Cause before fix**: reproduce and find the root cause first; never bypass or disable a check (QUA-019, no bypassing a check).
 - **Leave it cleaner**: fix a wrong doc or brief found in passing in a separate commit, and report it.
 - **Review remark**: verify it in the code before applying it; say so if it is wrong or out of scope.
-- **Closing loops intents**: each untreated limit becomes an intent brief in `docs/intentions/`, never a workstream brief.
+- **Limits during the workstream**: a limit within the scope is handled on the spot; outside it, the human chooses by a `drwil-limite` poll, at the end of BUILD and before VERIFY; only « Record as intent » makes it an intent brief in `docs/intentions/`, never a workstream brief (the closing refuses any other).
 - **Closing in one gesture**: journal entry, then `node .githooks/close.mjs` (`--check` for the report alone).
 - **Detour**: a defect outside the brief's scope → `node .githooks/detour.mjs open`; a detour that changes the rules waits for the human.
 - **Defect revealed after the closing**: in CLOSING, a defect of the open PR → `node .githooks/state.mjs reopen`, never a rewritten history.

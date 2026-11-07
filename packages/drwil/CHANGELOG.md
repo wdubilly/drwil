@@ -7,6 +7,22 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Limits are handled during the workstream: a limit within the brief's scope
+  is handled on the spot; one outside it goes to the human at the end of
+  BUILD, before VERIFY, through a `drwil-limite` poll (« Handle now » or
+  « Record as intent », one question per limit, read by the hook and
+  recorded in the state). `node .githooks/close.mjs` refuses, before writing
+  anything, an intent brief added by the branch without the « Record as
+  intent » answer for its path, and names the poll to ask.
+- The automatic merge can be given back (or withdrawn) during a workstream,
+  from BUILD to CLOSING, by a standalone `drwil-merge` poll (« Automatic
+  merge » or « Manual merge ») read by the hook — e.g. after
+  `state.mjs resume`, which never rebuilds it and now says how to give it
+  back. No command line writes it.
+- The `drwil-limite` and `drwil-merge` polls are read by the hook under
+  Gemini CLI (`ask_user`), Codex (`request_user_input`) and the dedicated
+  Cursor client (`drwil cursor-acp`), with the same refusals as under Claude
+  Code; Copilot CLI keeps reading them through `.claude/settings.json`.
 - A slow check can run once, in CI only: `"runAt": ["ci"]` (refused without a
   declared GitHub or GitLab CI). It never runs at commit, at push or in
   `drwil verify`; every output says « left to CI », never « passed », and
@@ -45,6 +61,9 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- `node .githooks/close.mjs` no longer counts, as a second journal entry,
+  another workstream's entry that merely cites the branch: the branch only
+  identifies an entry on its closing line (« Clôturé par », « Closed by »).
 - `node .githooks/state.mjs briefs` and `node .githooks/state.mjs resume` no
   longer exit with code 13 ("unsettled top-level await") without writing
   anything, so `/drwil-start` lists the briefs again; `start` into a new

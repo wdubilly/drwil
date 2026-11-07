@@ -35,6 +35,13 @@ queue.
 - **Close**: free as soon as the `drwil verify` evidence is valid (see
   above); closing removes rights, and accepting the work remains the human
   PR merge.
+- **Limits outside the scope**: at the end of BUILD and
+  before VERIFY, the human answers, per limit, a poll headed
+  `drwil-limite` (« Handle now » or « Record as intent », read by the hook
+  and recorded in the state); a limit within the scope is handled on the
+  spot. `node .githooks/close.mjs` refuses, before writing anything, an
+  intent brief added by the branch without the « Record as intent » answer
+  for its path, or answered « Handle now », and names the poll to ask.
 - **Merge authorised at start** (Claude Code: a second question of the
   poll, Copilot CLI: a second field) named `drwil-merge` lets the human
   accept in advance; their answer,
@@ -49,6 +56,12 @@ queue.
   (or `next`) goes back to Scoping by itself: the brief is deleted and the
   PR merged (main branch current, or the branch merged, `gh` for a
   squash).
+- **Merge given back during the workstream**: from BUILD to CLOSING, a
+  standalone poll headed `drwil-merge` (one single-choice question,
+  exactly « Automatic merge » and « Manual merge », none recommended nor
+  filled in; Copilot CLI: one `drwil-merge` field) writes or withdraws
+  `auto_merge`, read by the hook — e.g. after `state.mjs resume`, which
+  never rebuilds it and says so. No command line writes it.
 - **Worktree at start**: an optional
   third question of the poll (Claude Code) or field (Copilot CLI) named
   `drwil-worktree`, "New worktree" or "This folder", lets the human run the

@@ -42,6 +42,7 @@ import {
 
 import { accept, acceptanceCheck, criteriaFingerprint, recordAcceptance } from "./state-acceptance.mjs";
 import { mainTip, writeProof } from "./pr-watch-main.mjs";
+import { intentPath, limitChoice, recordLimits } from "./state-limits.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -310,10 +311,16 @@ test("QUA-040 : rappel CLOSING : README, changelog « Unreleased » et carte d'a
 
 test("QUA-036 : rappel CLOSING : boucler les intentions (limites en intentions, intention d'origine mise à jour ou close), en anglais aussi", () => {
   const fr = context(readState(depot({ state: actif("CLOSING") })), depot({ state: actif("CLOSING") }));
-  assert.match(fr, /chaque limite non traitée devient une fiche d'intention \(jamais une fiche de chantier\)/);
+  assert.match(
+    fr,
+    /une limite dans le cadre a été traitée ; chaque limite hors cadre répondue « Noter en intention » au sondage des limites \(`drwil-limite`\) devient une fiche d'intention \(jamais une fiche de chantier ; la clôture refuse/,
+  );
   assert.match(fr, /l'intention d'origine \(champ Intention de la fiche\) est mise à jour, ou résumée au journal et retirée/);
   const racine = depot({ state: actif("CLOSING"), lang: "en" });
-  assert.match(context(readState(racine), racine), /each limit left untreated becomes an intent brief \(never a workstream brief\)/);
+  assert.match(
+    context(readState(racine), racine),
+    /a limit within the scope has been handled; each out-of-scope limit answered « Record as intent » to the limits poll \(`drwil-limite`\) becomes an intent brief \(never a workstream brief; the closing refuses/,
+  );
 });
 
 test("QUA-036 : champ Intention et date de revue : la plus récente compte (Statut, Revu le, Existant daté)", () => {
@@ -2672,4 +2679,256 @@ test("QUA-187 : scopingMerge, appelée par le hook : autorise sur une branche de
   assert.equal(scopingMerge(horsGit, "auto").code, 1);
   assert.match(scopingMerge(horsGit, "continue").message, /même branche \(\?\)/);
   assert.match(scopingMerge(depot({ state: actif("BUILD") }), "auto").message, /l'activité est BUILD/);
+});
+
+// Sondage des limites hors cadre (QUA-253) : le hook rejoué dans un projet temporaire, comme le sondage de fin de cadrage.
+const [LIMITE_A, LIMITE_B] = ["docs/intentions/limite-a.md", "docs/intentions/limite-b.md"];
+
+function projetLimites({ lang, activite = "BUILD", config } = {}) {
+  const racine = projetCadrage({ branche: "workstream/exemple", lang, etat: actif(activite) });
+  if (config) writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify(config));
+  mkdirSync(join(racine, "docs/projects"), { recursive: true });
+  writeFileSync(join(racine, FICHE), "# Projet : Exemple\n");
+  return racine;
+}
+
+const questionLimite = (chemin, extra = {}) => ({
+  question: `Limite hors cadre : export CSV absent ; fichiers touchés : src/export.mjs ; deviendrait \`${chemin}\``,
+  header: "drwil-limite",
+  multiSelect: false,
+  options: [
+    { label: "Traiter maintenant", description: "cadrage élargi sur ce oui" },
+    { label: "Noter en intention", description: `fiche ${chemin}` },
+  ],
+  ...extra,
+});
+const SONDAGE_LIMITES = { questions: [questionLimite(LIMITE_A), questionLimite(LIMITE_B)] };
+const SONDAGE_LIMITES_COPILOT = (champ = { type: "string", enum: ["Traiter maintenant", "Noter en intention"] }) => ({
+  message: "drwil-limite : que faire de chaque limite hors cadre ?",
+  requestedSchema: {
+    properties: { [LIMITE_A]: champ, [LIMITE_B]: { type: "string", enum: ["Traiter maintenant", "Noter en intention"] } },
+  },
+});
+
+const reponseLimites = (racine, reponses, sondage = SONDAGE_LIMITES) =>
+  hookCadrage(racine, {
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: sondage,
+    tool_response: {
+      ...sondage,
+      answers: Object.fromEntries(Object.entries(reponses).map(([chemin, r]) => [questionLimite(chemin).question, r])),
+    },
+  });
+
+test("QUA-253 : le hook refuse un sondage des limites prérempli, recommandé, à valeur par défaut ou mal formé", () => {
+  const racine = projetLimites();
+  const avant = (tool_input) => hookCadrage(racine, { hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input });
+  assert.equal(avant(SONDAGE_LIMITES).status, 0, "une question par limite, deux réponses, rien de prérempli : posé");
+  const q = questionLimite(LIMITE_A);
+  const anglais = questionLimite(LIMITE_A, { options: [{ label: "Handle now" }, { label: "Record as intent" }] });
+  assert.equal(avant({ questions: [anglais] }).status, 0, "réponses en anglais : posé");
+  const refuses = {
+    preremplie: { ...SONDAGE_LIMITES, answers: { [q.question]: "Noter en intention" } },
+    recommandee: { questions: [{ ...q, options: [{ label: "Traiter maintenant (Recommended)" }, q.options[1]] }] },
+    "recommandée en description": {
+      questions: [{ ...q, options: [q.options[0], { label: "Noter en intention", description: "(Recommandé)" }] }],
+    },
+    "choix multiple": { questions: [{ ...q, multiSelect: true }] },
+    "une seule réponse": { questions: [{ ...q, options: [q.options[0]] }] },
+    "trois réponses": { questions: [{ ...q, options: [...q.options, { label: "Plus tard" }] }] },
+    "deux fois la même réponse": { questions: [{ ...q, options: [q.options[0], q.options[0]] }] },
+    "sans chemin d'intention": { questions: [{ ...q, question: "Limite hors cadre : export CSV absent" }] },
+    "chemin hors du dossier des intentions": { questions: [questionLimite("docs/projects/limite-a.md")] },
+    "deux chemins dans une question": { questions: [{ ...q, question: `${q.question} ou \`${LIMITE_B}\`` }] },
+    "même chemin deux fois": { questions: [q, questionLimite(LIMITE_A)] },
+    "cinq questions": { questions: ["a", "b", "c", "d", "e"].map((n) => questionLimite(`docs/intentions/${n}.md`)) },
+  };
+  for (const [cas, sondage] of Object.entries(refuses)) {
+    const r = avant(sondage);
+    assert.equal(r.status, 2, cas);
+    assert.match(r.stderr, /sondage des limites refusé/, cas);
+  }
+  // Copilot CLI : un champ par limite, choix unique (`enum` seul), jamais de valeur par défaut, de tableau ni de recommandation.
+  assert.equal(avant(SONDAGE_LIMITES_COPILOT()).status, 0);
+  const champ = { type: "string", enum: ["Traiter maintenant", "Noter en intention"] };
+  assert.equal(avant(SONDAGE_LIMITES_COPILOT({ ...champ, default: "Noter en intention" })).status, 2);
+  assert.equal(avant(SONDAGE_LIMITES_COPILOT({ type: "array", items: champ, enum: champ.enum })).status, 2);
+  assert.equal(avant(SONDAGE_LIMITES_COPILOT({ ...champ, enum: ["Traiter maintenant (Recommended)", "Noter en intention"] })).status, 2);
+  // Le dossier des intentions suit la configuration (`dirs.intentions`).
+  const autre = projetLimites({ config: { dirs: { intentions: "notes/intentions" } } });
+  const avantAutre = (tool_input) => hookCadrage(autre, { hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input });
+  assert.equal(avantAutre({ questions: [questionLimite("notes/intentions/x.md")] }).status, 0);
+  assert.equal(avantAutre(SONDAGE_LIMITES).status, 2);
+  // En anglais selon la langue du projet ; un autre sondage passe sans rien changer.
+  assert.match(
+    hookCadrage(projetLimites({ lang: "en" }), { hook_event_name: "PreToolUse", tool_input: refuses.preremplie }).stderr,
+    /limits poll refused/,
+  );
+  assert.equal(avant({ questions: [{ ...q, header: "autre" }] }).status, 0);
+});
+
+test("QUA-253 : la réponse humaine, lue par le hook, est enregistrée dans l'état pour chaque limite", () => {
+  const racine = projetLimites();
+  const limites = () => readState(racine).state.limits;
+  let r = reponseLimites(racine, { [LIMITE_A]: "Traiter maintenant", [LIMITE_B]: "Noter en intention" });
+  assert.match(
+    r.contexte,
+    /^\[drwil\] ✓ réponses de l'humain au sondage des limites enregistrées : docs\/intentions\/limite-a\.md → « Traiter maintenant » ; docs\/intentions\/limite-b\.md → « Noter en intention »/,
+  );
+  assert.deepEqual(limites(), [
+    { intent: LIMITE_A, choice: "now" },
+    { intent: LIMITE_B, choice: "note" },
+  ]);
+  // Une nouvelle réponse pour un chemin remplace la précédente ; une question sans réponse n'est pas enregistrée et le hook le dit.
+  r = reponseLimites(racine, { [LIMITE_A]: "Noter en intention" });
+  assert.match(r.contexte, /Sans réponse lue, non enregistrée\(s\), à soumettre de nouveau : docs\/intentions\/limite-b\.md/);
+  assert.deepEqual(limites(), [
+    { intent: LIMITE_B, choice: "note" },
+    { intent: LIMITE_A, choice: "note" },
+  ]);
+  // Aucune réponse, ou une réponse libre : rien n'est enregistré, l'état est inchangé.
+  const avant = readFileSync(join(racine, ".drwil", "state.json"), "utf8");
+  assert.match(reponseLimites(racine, {}).contexte, /✗ aucune réponse lue dans le sondage des limites/);
+  assert.match(
+    reponseLimites(racine, { [LIMITE_A]: "Je ne sais pas" }, { questions: [questionLimite(LIMITE_A)] }).contexte,
+    /✗ aucune réponse lue/,
+  );
+  assert.equal(readFileSync(join(racine, ".drwil", "state.json"), "utf8"), avant);
+  // Copilot CLI : réponse en texte libre, un champ par limite.
+  const copilot = projetLimites();
+  hookCadrage(copilot, {
+    hook_event_name: "PostToolUse",
+    tool_input: SONDAGE_LIMITES_COPILOT(),
+    tool_result: { text_result_for_llm: `User responded: ${LIMITE_A}=Noter en intention, ${LIMITE_B}=Traiter maintenant` },
+  });
+  assert.deepEqual(readState(copilot).state.limits, [
+    { intent: LIMITE_A, choice: "note" },
+    { intent: LIMITE_B, choice: "now" },
+  ]);
+  // Hors de BUILD à CLOSING : rien n'est enregistré, l'état est inchangé.
+  const cadrage = projetCadrage();
+  assert.match(
+    reponseLimites(cadrage, { [LIMITE_A]: "Traiter maintenant" }).contexte,
+    /✗ réponse au sondage des limites ignorée : l'activité est SCOPING/,
+  );
+  assert.equal(readState(cadrage).state.limits, undefined);
+  // En CLOSING (refus de clôture), la réponse s'enregistre ; en anglais selon la langue du projet.
+  const cloture = projetLimites({ activite: "CLOSING" });
+  assert.match(reponseLimites(cloture, { [LIMITE_A]: "Record as intent" }).contexte, /✓ /);
+  assert.deepEqual(readState(cloture).state.limits, [{ intent: LIMITE_A, choice: "note" }]);
+  assert.match(
+    reponseLimites(projetLimites({ lang: "en" }), { [LIMITE_A]: "Handle now", [LIMITE_B]: "Record as intent" }).contexte,
+    /the human's answers to the limits poll recorded: docs\/intentions\/limite-a\.md → « Handle now »/,
+  );
+});
+
+test("QUA-253 : champ limits valable de BUILD à CLOSING, liste de { intent, choice }, un chemin une fois", () => {
+  const racine = depot();
+  const ok = [{ intent: LIMITE_A, choice: "now" }];
+  for (const a of ["BUILD", "EVIDENCE", "VERIFY", "CLOSING"]) assert.deepEqual(validateState(actif(a, { limits: ok }), racine), [], a);
+  assert.match(validateState({ ...NEUTRAL_STATE, limits: ok }, racine)[0], /limits : liste de \{ intent, choice \}/);
+  for (const limits of [
+    true,
+    [{ intent: LIMITE_A, choice: "plus tard" }],
+    [{ intent: "docs/intentions/x", choice: "now" }],
+    [{ intent: LIMITE_A, choice: "now", recommande: true }],
+    [...ok, { intent: LIMITE_A, choice: "note" }],
+  ])
+    assert.match(validateState(actif("BUILD", { limits }), racine)[0] ?? "", /limits/, JSON.stringify(limits));
+});
+
+test("QUA-253 : le contexte de BUILD dit la règle des limites et liste les réponses ; elles tombent au retour en SCOPING", () => {
+  const racine = depot({ state: actif("BUILD", { limits: [{ intent: LIMITE_A, choice: "note" }] }) });
+  const texte = context(readState(racine), racine);
+  assert.match(texte, /Limites : une limite dans le cadre \(bloc scope, contrats déclarés\) se traite sur le champ, jamais notée/);
+  assert.match(texte, /sondage `drwil-limite` lu par le hook/);
+  assert.match(texte, /« Traiter maintenant » et « Noter en intention », aucune recommandée ni remplie/);
+  assert.match(texte, /Un sous-agent ne pose pas le sondage : il s'arrête avec la liste des limites hors cadre/);
+  assert.match(
+    texte,
+    /Réponses de l'humain aux limites hors cadre \(sondage `drwil-limite`\) : docs\/intentions\/limite-a\.md → « Noter en intention »/,
+  );
+  // Hors de BUILD : les réponses seules, pas la règle ; sans réponse, pas de liste.
+  const verif = depot({ state: actif("VERIFY", { limits: [{ intent: LIMITE_A, choice: "now" }] }) });
+  assert.doesNotMatch(context(readState(verif), verif), /Limites : une limite/);
+  assert.match(context(readState(verif), verif), /limite-a\.md → « Traiter maintenant »/);
+  assert.doesNotMatch(context(readState(depot({ state: actif("BUILD") })), racine), /Réponses de l'humain aux limites/);
+  // En anglais.
+  const en = depot({ lang: "en", state: actif("BUILD", { limits: [{ intent: LIMITE_A, choice: "now" }] }) });
+  assert.match(context(readState(en), en), /Limits: a limit within the scope .* is handled on the spot, never recorded/);
+  assert.match(context(readState(en), en), /limite-a\.md → « Handle now »/);
+  // Retour en SCOPING : état neutre, les réponses tombent.
+  const t = prepareTransition(readState(racine), "SCOPING", { now: MAINTENANT }, racine);
+  assert.equal(t.state.limits, undefined);
+});
+
+test("QUA-253 : recordLimits, appelée par le hook : de BUILD à CLOSING, la dernière réponse d'un chemin remplace la précédente", async () => {
+  const racine = depot({ state: actif("BUILD") });
+  assert.deepEqual(["Traiter maintenant", "noter en intention", " Handle now ", "Record as intent", "Autre", undefined].map(limitChoice), [
+    "now",
+    "note",
+    "now",
+    "note",
+    null,
+    null,
+  ]);
+  assert.equal(intentPath(racine, `deviendrait \`${LIMITE_A}\` (voir ${LIMITE_A})`), LIMITE_A);
+  assert.equal(intentPath(racine, `${LIMITE_A} ou ${LIMITE_B}`), null, "deux chemins : aucun");
+  assert.equal(intentPath(racine, "docs/projects/x.md"), null);
+  assert.equal(intentPath(racine, undefined), null);
+  const autre = depot({ config: { dirs: { intentions: "notes/intentions/" } } });
+  assert.equal(intentPath(autre, "deviendrait notes/intentions/x.md"), "notes/intentions/x.md");
+  let r = await recordLimits(racine, [{ intent: LIMITE_A, choice: "now" }]);
+  assert.equal(r.code, 0);
+  assert.match(r.message, /limite-a\.md → « Traiter maintenant »/);
+  await recordLimits(racine, [
+    { intent: LIMITE_B, choice: "note" },
+    { intent: LIMITE_A, choice: "note" },
+  ]);
+  assert.deepEqual(readState(racine).state.limits, [
+    { intent: LIMITE_B, choice: "note" },
+    { intent: LIMITE_A, choice: "note" },
+  ]);
+  r = await recordLimits(depot({ lang: "en", state: actif("EVIDENCE") }), [{ intent: LIMITE_A, choice: "note" }]);
+  assert.match(r.message, /limite-a\.md → « Record as intent »/);
+  // Un état invalide n'est jamais réécrit ; hors de BUILD à CLOSING, rien n'est écrit.
+  const invalide = depot({ state: "{ pas du json" });
+  r = await recordLimits(invalide, [{ intent: LIMITE_A, choice: "now" }]);
+  assert.equal(r.code, 1);
+  assert.match(r.message, /illisible/);
+  assert.equal(readFileSync(join(invalide, ".drwil", "state.json"), "utf8"), "{ pas du json");
+  r = await recordLimits(depot({ state: NEUTRAL_STATE }), [{ intent: LIMITE_A, choice: "now" }]);
+  assert.match(r.message, /l'activité est SCOPING/);
+});
+
+test("QUA-036 : le rappel de BUILD et les règles de conduite disent la règle des limites — dans le cadre, traitée ; hors cadre, sondage avant VERIFY", () => {
+  const racine = depot({ state: actif("BUILD") });
+  assert.match(
+    context(readState(racine), racine),
+    /une limite dans le cadre \(bloc scope, contrats déclarés\) se traite sur le champ, jamais notée ; une limite hors cadre est soumise à l'humain, une fois, à la fin de BUILD et avant VERIFY, par un sondage `drwil-limite`/,
+  );
+  const en = depot({ lang: "en", state: actif("BUILD") });
+  assert.match(
+    context(readState(en), en),
+    /a limit within the scope .* is handled on the spot, never recorded; a limit outside it goes to the human, once, at the end of BUILD and before VERIFY, by a `drwil-limite` poll/,
+  );
+  // Règles de conduite : celles du dépôt (français) et celles du gabarit livré (anglais).
+  const lire = (chemin) => readFileSync(fileURLToPath(new URL(`../${chemin}`, import.meta.url)), "utf8");
+  assert.match(
+    lire("AGENTS.md"),
+    /une limite dans le cadre se traite sur le champ ; hors cadre, l'humain choisit par un sondage `drwil-limite`, à la fin de BUILD et avant VERIFY ; seule « Noter en intention » en fait une fiche d'intention/,
+  );
+  const gabarit = "packages/drwil/templates/common/base/";
+  assert.match(
+    lire(`${gabarit}AGENTS.md`),
+    /a limit within the scope is handled on the spot; outside it, the human chooses by a `drwil-limite` poll, at the end of BUILD and before VERIFY; only « Record as intent » makes it an intent brief/,
+  );
+  for (const regles of [lire(`${gabarit}docs/ia-first/8-conduct-rules.md`), lire("docs/ia-first/8-conduct-rules.md")]) {
+    assert.match(
+      regles.replace(/\s+/g, " "),
+      /a limit within the brief's scope \(scope block, declared contracts\) is handled on the spot, never recorded; a limit outside it goes to the human, once, at the end of BUILD and before VERIFY, by a `drwil-limite` poll/,
+    );
+    assert.match(regles.replace(/\s+/g, " "), /each limit answered « Record as intent » becomes an intent brief/);
+  }
 });

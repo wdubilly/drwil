@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readLots } from "./briefs-lots.mjs";
+import { config } from "./briefs.mjs";
 import { branchMerged, ghRun, mainBranch, mergedPullRequests } from "./close-branches.mjs";
 import { LOT_TRAILER, clearLots, writeLots } from "./state-lots.mjs";
 import { fill } from "./state-messages.mjs";
@@ -12,6 +13,12 @@ import { readState, texts } from "./state-validate.mjs";
 import { writeState } from "./state.mjs";
 
 const BRANCH_RE = /^workstream\/([^/]+)$/;
+
+// How to give the automatic merge back (QUA-265): its texts live here, state-messages-fr.mjs is full.
+const MERGE_BACK = {
+  fr: " Fusion automatique : la redonner par le sondage `drwil-merge` (« Automatic merge » ou « Manual merge »), lu par le hook ; aucune commande ne l'écrit.",
+  en: " Automatic merge: give it back with the `drwil-merge` poll (« Automatic merge » or « Manual merge »), read by the hook; no command writes it.",
+};
 
 function git(root, ...args) {
   const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
@@ -80,13 +87,14 @@ export function resume(root, { gh = ghRun, now = new Date().toISOString() } = {}
   const lot = activity === "BUILD" ? resumeLot(root, brief, base) : null;
   return {
     code: 0,
-    message: fill(
-      T.resumeDone,
-      activity,
-      brief,
-      branch,
-      lot === null ? "" : fill(T.resumeLot, lot),
-      activity === "BUILD" ? T.resumeBuildNext : T.resumeClosingNext,
-    ),
+    message:
+      fill(
+        T.resumeDone,
+        activity,
+        brief,
+        branch,
+        lot === null ? "" : fill(T.resumeLot, lot),
+        activity === "BUILD" ? T.resumeBuildNext : T.resumeClosingNext,
+      ) + MERGE_BACK[config(root).lang === "en" ? "en" : "fr"],
   };
 }

@@ -186,4 +186,11 @@ export const MESSAGES_EN = {
   resumeLot: "; current lot: {0} (last Drwil-Lot trailer of the branch)",
   resumeBuildNext: " The verify proof is local: run it again (`npx drwil verify --evidence`) before closing.",
   resumeClosingNext: " The closing is committed: push the branch, then follow its PR.",
+  limitsType: "limits: list of { intent, choice } (choice: now or note), a path once, from BUILD to CLOSING",
+  limitsNotActive: "answer to the limits poll ignored: the activity is {0}, outside BUILD to CLOSING; state unchanged",
+  limitsRecorded:
+    "the human's answers to the limits poll recorded: {0}. « Handle now »: handle it in this workstream (widen the scope block in a separate commit: this answer is its yes, « Changed contracts » bullet included); « Record as intent »: write that intent brief, never a workstream brief",
+  limitsRule:
+    "Limits: a limit within the scope (scope block, declared contracts) is handled on the spot, never recorded; a limit outside it goes to the human, once, at the end of BUILD and before VERIFY, by a `drwil-limite` poll read by the hook: one question per limit (4 at most per poll), naming the limit, the files it would touch, the possible « Changed contracts » bullet and the `docs/intentions/<name>.md` path it would become; two answers, « Handle now » and « Record as intent », none recommended nor filled in. A subagent does not ask the poll: it stops with the list of the out-of-scope limits (planned intent path, files touched, possible bullet), the main session asks it.",
+  limitsAnswers: "The human's answers to the out-of-scope limits (`drwil-limite` poll): {0}.",
 };

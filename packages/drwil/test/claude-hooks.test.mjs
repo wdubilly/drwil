@@ -651,6 +651,93 @@ export const draftFinish = (r, o) => ({ code: 0, message: "fin " + o.autoMerge }
   for (const d of [racine, sansEtat]) rmSync(d, { recursive: true, force: true });
 });
 
+test("limit-poll : sondage des limites lu sous les deux formes ; refusé s'il est rempli, recommandé ou mal formé (QUA-253)", async () => {
+  const l = await load("limit-poll.mjs");
+  // Le module d'état est simulé : seul le hook est mesuré ici (le vrai est éprouvé par les tests de l'état).
+  const racine = projet(
+    {},
+    {
+      ".githooks/state-limits.mjs": `export const limitChoice = (l) => ({ "Traiter maintenant": "now", "Noter en intention": "note" })[l] ?? null;
+export const intentPath = (r, t) => /docs\\/intentions\\/[a-z-]+\\.md/.exec(String(t))?.[0] ?? null;
+export const recordLimits = async (r, a) => ({ code: a.some((x) => x.intent.includes("refus")) ? 1 : 0, message: a.map((x) => x.intent + "=" + x.choice).join(",") });
+`,
+    },
+  );
+  const dit = [];
+  const ctx = (lang = "fr", root = racine) => ({ root, lang, tell: (t) => dit.push(t) });
+  const q = (chemin, extra = {}) => ({
+    header: "drwil-limite",
+    question: `Limite : deviendrait ${chemin}`,
+    options: [{ label: "Traiter maintenant" }, { label: "Noter en intention" }],
+    ...extra,
+  });
+  const claude = (questions, answers, reponses = {}) => ({ tool_input: { questions, answers }, tool_response: { answers: reponses } });
+  const avant = (input, lang) => l.limitHook({ hook_event_name: "PreToolUse", ...input }, ctx(lang));
+  const post = (input, lang, root) => l.limitHook({ hook_event_name: "PostToolUse", ...input }, ctx(lang, root));
+  const [A, B] = ["docs/intentions/a.md", "docs/intentions/b.md"];
+  assert.equal(await l.limitHook({ tool_input: { questions: [{ header: "x" }] } }, ctx()), null);
+  assert.equal(await l.limitHook({ tool_input: { message: "autre" } }, ctx()), null);
+  assert.equal(await l.limitHook({}, ctx()), null);
+  assert.equal(await avant(claude([q(A), q(B)])), 0);
+  for (const refus of [
+    claude([q(A)], { [q(A).question]: "Noter en intention" }),
+    claude([q(A, { multiSelect: true })]),
+    claude([q(A, { options: [{ label: "Traiter maintenant (Recommended)" }, { label: "Noter en intention" }] })]),
+    claude([q(A, { options: undefined })]),
+    claude([q("sans chemin")]),
+    claude([q(A), q(A)]),
+  ])
+    assert.equal(await avant(refus), 2);
+  assert.equal(await avant(claude([q(A, { options: [{ label: "Traiter maintenant" }] })]), "en"), 2);
+  assert.equal(await l.limitHook({ hook_event_name: "Autre", ...claude([q(A)]) }, ctx()), 0);
+
+  const copilot = (champ, text = `User responded: ${A}=Noter en intention`) => ({
+    tool_input: { message: "drwil-limite : que faire ?", requestedSchema: { properties: { [A]: champ } } },
+    tool_result: { text_result_for_llm: text },
+  });
+  const champ = { type: "string", enum: ["Traiter maintenant", "Noter en intention"] };
+  assert.equal(await avant(copilot(champ)), 0);
+  for (const refus of [{ ...champ, default: "Noter en intention" }, { type: "array", items: champ, enum: champ.enum }, undefined])
+    assert.equal(await avant(copilot(refus)), 2);
+  assert.equal(
+    await avant({
+      tool_input: {
+        message: "drwil-limite",
+        requestedSchema: { properties: { x: { enum: ["Traiter maintenant (Recommended)", "Noter en intention"] } } },
+      },
+    }),
+    2,
+  );
+  assert.equal(await avant({ tool_input: { message: "drwil-limite" } }), 2);
+
+  await post(claude([q(A), q(B)], undefined, { [q(A).question]: "Traiter maintenant", [q(B).question]: "Noter en intention" }));
+  await post(claude([q(A), q(B)], undefined, { [q(A).question]: "Traiter maintenant" }));
+  await post(claude([q(A)]));
+  await post(claude([q("docs/intentions/refus.md")], undefined, { "Limite : deviendrait docs/intentions/refus.md": "Noter en intention" }));
+  await post(copilot(champ));
+  await post(copilot(champ, "User responded: Traiter maintenant"));
+  await post(copilot(champ, "pas de réponse"));
+  await post(claude([q(A), q(B)], undefined, { [q(A).question]: "Traiter maintenant" }), "en");
+  assert.deepEqual(dit, [
+    `✓ ${A}=now,${B}=note`,
+    `✓ ${A}=now Sans réponse lue, non enregistrée(s), à soumettre de nouveau : ${B}.`,
+    "✗ aucune réponse lue dans le sondage des limites : rien n'est enregistré, l'état est inchangé.",
+    "✗ docs/intentions/refus.md=note",
+    `✓ ${A}=note`,
+    `✓ ${A}=now`,
+    "✗ aucune réponse lue dans le sondage des limites : rien n'est enregistré, l'état est inchangé.",
+    `✓ ${A}=now No answer read, not recorded, to ask again: ${B}.`,
+  ]);
+  // Module d'état absent : jamais bloquant avant le sondage, l'erreur dite après.
+  const sansEtat = projet();
+  assert.equal(await l.limitHook({ hook_event_name: "PreToolUse", ...claude([q(A)]) }, ctx("fr", sansEtat)), 0);
+  await post(claude([q(A)]), "en", sansEtat);
+  assert.match(dit.at(-1), /^✗ error while reading the limits poll/);
+  await post(claude([q(A)]), "fr", sansEtat);
+  assert.match(dit.at(-1), /^✗ erreur à la lecture du sondage des limites/);
+  for (const d of [racine, sansEtat]) rmSync(d, { recursive: true, force: true });
+});
+
 // QUA-215, QUA-216 : le repli des réglages livrés est une commande `sh` (Git Bash pour Claude Code sous Windows,
 // `bash` pour Copilot) ; les tests la jouent par /bin/sh, donc pas sous Windows.
 const SH = "/bin/sh";
@@ -711,4 +798,94 @@ test("QUA-216 : avec node, le repli ne change ni la sortie ni le code de chaque 
     assert.deepEqual([avec.status, avec.stdout, avec.stderr], [direct.status, direct.stdout, direct.stderr], script);
     assert.equal(avec.stdout.includes("node not found"), false);
   }
+});
+
+test("merge-poll : sondage de fusion autonome lu sous les deux formes ; refusé s'il est rempli, recommandé ou mal formé (QUA-265)", async () => {
+  const m = await load("merge-poll.mjs");
+  // Le module d'état est simulé : seul le hook est mesuré ici (le vrai est éprouvé par les tests de l'état).
+  const racine = projet(
+    {},
+    {
+      ".githooks/state-merge.mjs": `export const mergeChoice = (l) => ({ "Automatic merge": "auto", "Manual merge": "manual" })[String(l ?? "").trim()] ?? null;
+export const recordMerge = (r, c) => ({ code: r.includes("refus") ? 1 : 0, message: "fusion=" + c });
+`,
+    },
+  );
+  const dit = [];
+  const ctx = (lang = "fr", root = racine) => ({ root, lang, tell: (t) => dit.push(t) });
+  const Q = "Fusion de la PR ?";
+  const q = (extra = {}) => ({
+    header: "drwil-merge",
+    question: Q,
+    options: [{ label: "Automatic merge" }, { label: "Manual merge" }],
+    ...extra,
+  });
+  const claude = (questions, answers, reponses = {}) => ({ tool_input: { questions, answers }, tool_response: { answers: reponses } });
+  const avant = (input, lang) => m.mergeHook({ hook_event_name: "PreToolUse", ...input }, ctx(lang));
+  const post = (input, lang, root) => m.mergeHook({ hook_event_name: "PostToolUse", ...input }, ctx(lang, root));
+  assert.equal(await m.mergeHook({ tool_input: { questions: [{ header: "x" }] } }, ctx()), null);
+  assert.equal(await m.mergeHook({ tool_input: { message: "autre" } }, ctx()), null);
+  assert.equal(await m.mergeHook({}, ctx()), null);
+  assert.equal(await avant(claude([q()])), 0);
+  for (const refus of [
+    claude([q()], { [Q]: "Automatic merge" }),
+    claude([q({ multiSelect: true })]),
+    claude([q({ options: [{ label: "Automatic merge (Recommended)" }, { label: "Manual merge" }] })]),
+    claude([q({ options: [{ label: "Automatic merge" }, { label: "Manual merge", description: "(recommandée)" }] })]),
+    claude([q({ options: undefined })]),
+    claude([q(), { header: "autre", question: "?" }]),
+  ])
+    assert.equal(await avant(refus), 2);
+  assert.equal(await avant(claude([q({ options: [{ label: "Automatic merge" }] })]), "en"), 2);
+  assert.equal(await m.mergeHook({ hook_event_name: "Autre", ...claude([q()]) }, ctx()), 0);
+
+  const copilot = (props, text = "User responded: drwil-merge=Automatic merge") => ({
+    tool_input: { message: "drwil-merge : fusion ?", requestedSchema: props === undefined ? undefined : { properties: props } },
+    tool_result: { text_result_for_llm: text },
+  });
+  const champ = { type: "string", enum: ["Automatic merge", "Manual merge"] };
+  assert.equal(await avant(copilot({ "drwil-merge": champ })), 0);
+  for (const refus of [
+    { "drwil-merge": { ...champ, default: "Manual merge" } },
+    { "drwil-merge": { type: "array", items: champ, enum: champ.enum } },
+    { "drwil-merge": { ...champ, enum: ["Automatic merge (Recommended)", "Manual merge"] } },
+    { "drwil-merge": champ, autre: champ },
+    { autre: champ },
+    undefined,
+  ])
+    assert.equal(await avant(copilot(refus)), 2);
+
+  await post(claude([q()], undefined, { [Q]: "Automatic merge" }));
+  await post(claude([q()], undefined, { [Q]: "Manual merge" }));
+  await post(claude([q()]));
+  await post(copilot({ "drwil-merge": champ }));
+  await post(copilot({ "drwil-merge": champ }, "User responded: Manual merge"));
+  await post(copilot({ "drwil-merge": champ }, "pas de réponse"));
+  await post(claude([q()]), "en");
+  const refusRacine = projet(
+    {},
+    {
+      ".githooks/state-merge.mjs":
+        "export const mergeChoice = () => 'auto'; export const recordMerge = () => ({ code: 1, message: 'non' });\n",
+    },
+  );
+  await post(claude([q()], undefined, { [Q]: "Automatic merge" }), "fr", refusRacine);
+  assert.deepEqual(dit, [
+    "✓ fusion=auto",
+    "✓ fusion=manual",
+    "✗ aucune réponse lue dans le sondage de fusion : rien n'est autorisé, l'état est inchangé.",
+    "✓ fusion=auto",
+    "✓ fusion=manual",
+    "✗ aucune réponse lue dans le sondage de fusion : rien n'est autorisé, l'état est inchangé.",
+    "✗ no answer read in the merge poll: nothing authorised, the state is unchanged.",
+    "✗ non",
+  ]);
+  // Module d'état absent : jamais bloquant avant le sondage, l'erreur dite après.
+  const sansEtat = projet();
+  assert.equal(await m.mergeHook({ hook_event_name: "PreToolUse", ...claude([q()]) }, ctx("fr", sansEtat)), 0);
+  await post(claude([q()]), "en", sansEtat);
+  assert.match(dit.at(-1), /^✗ error while reading the merge poll/);
+  await post(claude([q()]), "fr", sansEtat);
+  assert.match(dit.at(-1), /^✗ erreur à la lecture du sondage de fusion/);
+  for (const d of [racine, sansEtat, refusRacine]) rmSync(d, { recursive: true, force: true });
 });
