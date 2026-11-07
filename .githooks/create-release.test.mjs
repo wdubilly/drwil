@@ -490,3 +490,14 @@ test("QUA-268 : les trois OS exigés verts — la release est créée ; réglage
   assert.doesNotMatch(sansReglage.stdout + sansReglage.stderr, /CI|requiredOs/);
   assert.equal(git(autre.origine, "tag", "-l"), "v1.1.0");
 });
+
+test("QUA-268 : la recette et le README du module disent l'ordre — lancer le workflow, attendre les OS verts, créer la release", () => {
+  const racine = join(dirname(SCRIPT), "..");
+  const recette = readFileSync(join(racine, "docs/recipes/create-a-release.md"), "utf8");
+  const readme = readFileSync(join(racine, "packages/drwil/templates/common/optional/create-release/README.md"), "utf8");
+  assert.match(
+    recette,
+    /1\. Run the workflow on the commit to release:\s+`gh workflow run ia-first\.yml --ref master`\.\n2\. Wait for the three OS to be green[^\n]*\n3\. Create the release/,
+  );
+  assert.match(readme, /Order: run the workflow on the\s+commit[\s\S]*wait for every\s+required OS to be green, then create the release/);
+});

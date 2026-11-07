@@ -62,19 +62,19 @@ outillée avant la publication.
 
 - Une PR (code ou documentation) et un push sur une branche, `master` compris, ne lancent la suite du
   kit que sur ubuntu ; `kit-tests (windows-latest)` et `kit-tests (macos-latest)` restent rapportés
-  sous leur nom exigé par le ruleset, étapes sautées et notice qui le dit — QUA-045 modifié
+  sous leur nom exigé par le ruleset, étapes sautées et notice qui le dit — `QUA-045` modifié
 - Le push d'un tag de release (`vX.Y.Z`, `vX.Y.Z-rc.N`) et un lancement manuel du workflow
-  (`workflow_dispatch`) lancent la suite sur les trois OS — QUA-045 modifié
+  (`workflow_dispatch`) lancent la suite sur les trois OS — `QUA-045` modifié
 - Avec le réglage des OS exigés renseigné dans `.drwil/ia-first.json`, `.githooks/create-release.mjs` (création
   directe ou candidate) et `.githooks/promote-release.mjs` refusent, sans rien créer, tant qu'un OS exigé n'a pas
   réellement lancé la suite avec succès sur le commit visé, et disent lequel et la commande pour lancer
-  le workflow à la main ; `--dry-run` le signale sans refuser — contrat à créer, prouvé par un test en dur
+  le workflow à la main ; `--dry-run` le signale sans refuser — contrat créé `QUA-268`, prouvé par un test en dur
 - Un job dont les étapes de test ont été sautées ne compte jamais comme OS testé, ni pour la barrière
-  ni dans la fiche de recette (« OS testés par la CI ») — même contrat
+  ni dans la fiche de recette (« OS testés par la CI ») — même contrat `QUA-268`
 - Réglage absent ou vide (défaut de l'adoptant) : comportement de la release inchangé ; une mise à jour
-  du kit ne l'ajoute pas — même contrat ; renseigné dans ce dépôt avec les trois OS
+  du kit ne l'ajoute pas — même contrat ; renseigné dans ce dépôt avec les trois OS — même contrat `QUA-268`
 - La recette `docs/recipes/create-a-release.md` et le README du module disent l'ordre : lancer le workflow sur le
-  commit, attendre les trois OS verts, puis créer la release
+  commit, attendre les trois OS verts, puis créer la release — même contrat `QUA-268`
 
 ## Contrats modifiés
 
