@@ -85,6 +85,10 @@ outillée avant la publication.
   `matrice-os` et `kit-tests` mis à jour (validé par le demandeur le 2026-11-07)
 - `QUA-051`, `QUA-054`, `QUA-200` — textes inchangés ; leurs tests peuvent devoir simuler une CI verte
   quand le réglage est renseigné, la nouvelle barrière vit dans le contrat à créer
+- `.githooks/create-release.mjs`, `.githooks/create-release-texts.mjs`, `.githooks/promote-release.mjs`,
+  `.githooks/acceptance-sheet.mjs`, `.githooks/acceptance-sheet-texts.mjs` (copies du gabarit create-release) —
+  barrière : refus de créer ou de promouvoir une release tant qu'un OS exigé n'a pas sa CI verte ; textes associés
+  (validé par le demandeur le 2026-11-07)
 
 ## 2. Hors périmètre
 
