@@ -15,12 +15,14 @@ files:
   - .githooks/pr-watch.mjs
   - .githooks/pr-watch.test.mjs
   - .githooks/close-checks.mjs
+  - .githooks/close.mjs
   - .githooks/close.test.mjs
   - packages/drwil/templates/common/base/.githooks/engine.mjs
   - packages/drwil/templates/common/base/.githooks/engine-runat.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
   - packages/drwil/templates/common/base/.githooks/pr-watch.mjs
   - packages/drwil/templates/common/base/.githooks/close-checks.mjs
+  - packages/drwil/templates/common/base/.githooks/close.mjs
   - packages/drwil/src/cli-verify.ts
   - packages/drwil/src/verify-checks.ts
   - packages/drwil/src/verify-texts.ts
@@ -104,8 +106,8 @@ Deux constats fixent la portée :
 - `.githooks/close-checks.mjs` — la clôture n'est acquise qu'une fois la CI de la PR ou MR verte sur
   ces contrôles ; rouge ou absente, le chantier reste en CLOSING et le dit (validé par le demandeur
   le 2026-11-07)
-- `.githooks/close.mjs` — inchangé hors de ce que `.githooks/close-checks.mjs` lui rend : il relaie l'attente de
-  la CI de la PR ou MR (validé par le demandeur le 2026-11-07)
+- `.githooks/close.mjs` — relaie l'attente de la CI de la PR ou MR rendue par
+  `.githooks/close-checks.mjs` et la dit dans sa sortie (validé par le demandeur le 2026-11-07)
 
 ## 2. Hors périmètre
 
