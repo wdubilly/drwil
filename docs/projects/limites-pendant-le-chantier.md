@@ -9,6 +9,9 @@
 files:
   - packages/drwil/templates/common/tools/claude/.claude/hooks/limit-poll.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/merge-poll.mjs
+  - packages/drwil/templates/common/base/.githooks/state-merge.mjs
+  - packages/drwil/templates/common/base/.githooks/state-resume.mjs
   - packages/drwil/templates/common/base/.githooks/state-limits.mjs
   - packages/drwil/templates/common/base/.githooks/close-limits.mjs
   - packages/drwil/templates/common/base/.githooks/close.mjs
@@ -25,6 +28,9 @@ files:
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - .claude/hooks/limit-poll.mjs
   - .claude/hooks/prompt-hook.mjs
+  - .claude/hooks/merge-poll.mjs
+  - .githooks/state-merge.mjs
+  - .githooks/state-resume.mjs
   - .githooks/state-limits.mjs
   - .githooks/close-limits.mjs
   - .githooks/close.mjs
@@ -43,6 +49,8 @@ files:
   - .githooks/close-limits.test.mjs
   - .githooks/close.test.mjs
   - .githooks/state.test.mjs
+  - .githooks/state-merge.test.mjs
+  - .githooks/state-resume.test.mjs
   - packages/drwil/test/claude-hooks.test.mjs
   - docs/contracts.md
   - .drwil/ia-first.json
@@ -95,6 +103,10 @@ intentions. Le demandeur veut :
 - `.githooks/state-context-texts.mjs` — le rappel de CLOSING dit qu'une limite ne devient fiche d'intention que sur la réponse « Noter en intention » au sondage des limites ; aucun autre rappel ne change (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
 - `.githooks/close-texts.mjs` — le texte `rest` de la clôture dit la même règle ; aucun autre message ne change (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
 - `.githooks/state.test.mjs` — le test QUA-036 du rappel de CLOSING suit la nouvelle phrase (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
+- `QUA-247` — ancien critère : « Il ne reconstruit jamais la fusion automatique, la file ni la réouverture : le message dit qu'elles sont à redemander » — raison : il ne les reconstruit toujours pas, et son message dit en plus comment redonner la fusion automatique : le sondage `drwil-merge`, lu par le hook (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
+- `.githooks/state-resume.mjs` — le message de reprise dit comment redonner la fusion automatique (sondage `drwil-merge`) ; rien d'autre ne change (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
+- `.claude/hooks/prompt-hook.mjs` — aiguillage du sondage autonome `drwil-merge` (fusion automatique redonnée de BUILD à CLOSING) ; aucun autre sondage ne change (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
+- `.githooks/state-resume.test.mjs` — test du message de reprise ajouté ; aucun test existant modifié (validé par le demandeur le 2026-11-07, réponse « Traiter maintenant » au sondage des limites)
 
 ## 2. Hors périmètre
 
