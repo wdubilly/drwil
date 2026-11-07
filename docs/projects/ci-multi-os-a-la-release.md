@@ -90,6 +90,12 @@ outillée avant la publication.
   `.githooks/acceptance-sheet.mjs`, `.githooks/acceptance-sheet-texts.mjs` (copies du gabarit create-release) —
   barrière : refus de créer ou de promouvoir une release tant qu'un OS exigé n'a pas sa CI verte ; textes associés
   (validé par le demandeur le 2026-11-07)
+- `.githooks/promote-release.mjs` — la promotion refuse tant qu'un OS exigé n'a pas sa CI verte (validé par le demandeur le 2026-11-08)
+- `.githooks/acceptance-sheet.mjs` — `ciGate`, `testedOs`, `testedJob` : la barrière, et un job aux étapes de test sautées ne compte pas comme OS testé (validé par le demandeur le 2026-11-08)
+- `.githooks/acceptance-sheet-texts.mjs` — textes de la barrière et de la fiche de recette (validé par le demandeur le 2026-11-08)
+- `.githooks/acceptance-sheet.test.mjs` — tests de la barrière et des jobs sautés (validé par le demandeur le 2026-11-08)
+- `.githooks/promote-release.test.mjs` — tests de la promotion refusée puis faite (validé par le demandeur le 2026-11-08)
+- `.githooks/run-checks.test.mjs` — le test de QUA-121 suit le déclencheur `workflow_dispatch` ajouté au workflow (validé par le demandeur le 2026-11-08)
 
 ## 2. Hors périmètre
 

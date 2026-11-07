@@ -1,0 +1,25 @@
+{
+  "version": 4,
+  "contract": "QUA-019",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-07T23:33:02.250Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "9a2e478c815ac88214a5eefb820dba618bf143829fbfdc2e9a972ab91a1fcc54",
+  "proof": {},
+  "covers": [
+    ".githooks/pre-commit",
+    ".githooks/pre-push",
+    ".github/workflows/ia-first.yml"
+  ],
+  "coverage": {
+    ".githooks/pre-commit": "71d53a07cb9526e9b53d4e86413c167acc11cd029dac7706dc6bd5e8a257ea94",
+    ".githooks/pre-push": "7fa0997ccea218d080d58aca0aef41a6cf4f22322cdef402d6ed35a00c14d4c1",
+    ".github/workflows/ia-first.yml": "b13e4d587f54abf1b578ae9ab6a3ae7219e379d1b374ce67a8874632ea1ff451"
+  },
+  "commit": "6ea8298c10e1d783759b5e9d3500385d1dd0a81c",
+  "automated": []
+}

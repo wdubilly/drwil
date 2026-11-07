@@ -4193,3 +4193,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/attestation-par-sondage-d-abord`.
 
 - **Preuve de clôture** : `docs/preuves/attestation-par-sondage-d-abord.md`.
+
+## 2026-11-08 — Windows et macOS testés à la release, Ubuntu seul à chaque PR, barrière avant publication
+
+- **Ce qui change** : une PR et un push de branche (`master` compris) ne lancent la suite du kit que sur Ubuntu ; Windows et macOS restent rapportés sous leur nom exigé par le ruleset, étapes sautées et notice qui le dit. Un tag de release (`vX.Y.Z`, `vX.Y.Z-rc.N`) et un lancement manuel (`workflow_dispatch`) testent les trois OS. Avec `release.requiredOs` renseigné, `.githooks/create-release.mjs` (directe ou candidate) et `.githooks/promote-release.mjs` refusent tant qu'un OS exigé n'a pas sa CI verte sur le commit visé
+- **Décisions clés** : trois OS seulement à la release (demandeur, 2026-11-07, sondage « Moment ») ; barrière avant publication, réglage livré vide, actif dans ce dépôt (sondage « Barrière »). Un job aux étapes de test sautées ne compte jamais comme OS testé, ni pour la barrière ni dans la fiche de recette ; `gh` illisible : refus, jamais une release devinée verte (QUA-013)
+- **Critères et preuves** : QUA-045 réécrit (`.github/scripts/ci-multi-os.test.mjs`) ; QUA-268 créé (barrière, jobs sautés, réglage absent, ordre dit par la recette et le README ; tests en dur, contrôle `tests-qua-268`)
+- **Hooks modifiés** : `.githooks/create-release.mjs`, `.githooks/create-release-texts.mjs`, `.githooks/promote-release.mjs`, `.githooks/acceptance-sheet.mjs`, `.githooks/acceptance-sheet-texts.mjs` et leurs tests, `.githooks/run-checks.test.mjs` (gabarit et copies), déclarés dans « Contrats modifiés » sur le oui du demandeur des 2026-11-07 et 2026-11-08.
+- **Limites connues** : `workflow_dispatch` ne s'essaie qu'une fois le workflow fusionné sur `master` ; le premier essai réel se fait à la release suivante. Notes ajoutées pendant le chantier, hors cadre : `drwil serve` (serveur de suivi dans le package) et la lecture de la réponse au sondage d'attestation par Copilot CLI, dans `docs/intentions/notes.md`.
