@@ -92,6 +92,20 @@ Deux constats fixent la portée :
   critère : « `verify` et `ci` y figurent toujours » ; nouveau : `["ci"]` seul est permis, le
   contrôle est alors annoncé « confié à la CI » par chaque sortie, et refusé sans CI déclarée.
   Validé par le demandeur le 2026-11-07, en conversation.
+- `.githooks/engine.mjs` — accepte `runAt: ["ci"]`, ne joue pas un tel contrôle au commit, au push
+  ni dans `verify` et l'annonce « confié à la CI » ; l'option locale les rejoue (validé par le
+  demandeur le 2026-11-07)
+- `.githooks/engine-runat.mjs` — `["ci"]` seul permis, refusé avec la raison sans CI déclarée
+  (`ciFiles` vide) ni forge GitHub ou GitLab (validé par le demandeur le 2026-11-07)
+- `.githooks/run-checks.mjs` — sortie « confié à la CI » pour les contrôles `["ci"]`, et option
+  locale qui les joue en le disant (validé par le demandeur le 2026-11-07)
+- `.githooks/pr-watch.mjs` — suit la CI de la PR (GitHub) et de la MR (GitLab) sur les contrôles
+  confiés à la CI (validé par le demandeur le 2026-11-07)
+- `.githooks/close-checks.mjs` — la clôture n'est acquise qu'une fois la CI de la PR ou MR verte sur
+  ces contrôles ; rouge ou absente, le chantier reste en CLOSING et le dit (validé par le demandeur
+  le 2026-11-07)
+- `.githooks/close.mjs` — inchangé hors de ce que `.githooks/close-checks.mjs` lui rend : il relaie l'attente de
+  la CI de la PR ou MR (validé par le demandeur le 2026-11-07)
 
 ## 2. Hors périmètre
 
