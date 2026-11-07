@@ -1,0 +1,34 @@
+{
+  "version": 4,
+  "contract": "QUA-063",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-07T21:25:32.554Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Ligne Claude Code du tableau Human attestation parity passée de not tested à l'essai réel du 2026-11-07 (Claude Code 2.1.319, attestation de QUA-236 par le sondage, origine claude-poll) ; paragraphe de l'évaluation et écart déclaré mis à jour ; les quatre autres outils restent not tested ; test de QUA-063 ajusté (commits 2da7711 et 2c9c604)",
+  "fingerprint": "927892a08eadc37ea8dceb23a11c2c11c867979f3f0cd7e2d999524f38404946",
+  "proof": {
+    "tests-qua-063": "92ea7431b724d49634a02f118152c912a119d3061caa262a91326b5ef8052e45"
+  },
+  "covers": [
+    "docs/ia-first/6-limits-and-tool-compatibility.md"
+  ],
+  "coverage": {
+    "docs/ia-first/6-limits-and-tool-compatibility.md": "85a724ed68d49d410a7d328392e30f6b1e96d38762c512f157bc4e4070d76783"
+  },
+  "commit": "2c9c604d607733a841599e85db87eb79e18c9738",
+  "automated": [
+    {
+      "id": "tests-qua-063",
+      "status": "ok"
+    }
+  ],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "2ba26ab7-f04c-4455-9f1a-dbf2c2bfa6ff",
+    "toolUseId": "toolu_017YA9dEuVWNsRVjvD5rtYF6",
+    "askedAt": "2026-11-07T21:23:36.864Z"
+  }
+}
