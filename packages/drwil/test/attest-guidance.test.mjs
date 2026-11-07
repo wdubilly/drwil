@@ -92,7 +92,7 @@ test("QUA-267 : skill drwil, règles, consigne de drwil-checks et AGENTS.md livr
     const manuel = skill.slice(skill.indexOf("MANUAL REVIEW REQUIRED"));
     sondageDAbord(manuel, `skill drwil (${lang})`);
     assert.ok(manuel.includes(RECETTE));
-    assert.match(manuel, /Never answer the poll, never run `drwil attest`/);
+    assert.match(manuel, /Never run `drwil attest`, never answer the poll/);
     const regles = plat(lire(dir, "docs/ia-first/8-conduct-rules.md"));
     const gestes = regles.slice(regles.indexOf("**Human gestures**"), regles.indexOf("**Project language**"));
     sondageDAbord(gestes, `règle « Human gestures » (${lang})`);

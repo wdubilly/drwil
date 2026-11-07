@@ -41,7 +41,7 @@ verdict yourself) and follow its "Next step" line:
   fallback, give `drwil attest <CONTRACT_ID>` to the human, as an action
   **for them** in their own terminal.
 
-Never answer the poll, never run `drwil attest`, never write or edit anything in the attestations
+Never run `drwil attest`, never answer the poll, never write or edit anything in the attestations
 folder (.drwil/evidence/attestations), never present a human attestation as
 done by the agent: an agent never attests its own work.
 
