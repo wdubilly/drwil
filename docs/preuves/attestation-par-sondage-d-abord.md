@@ -1,7 +1,7 @@
 # Preuve de clôture — attestation-par-sondage-d-abord
 
 **Clos le** : 2026-11-07
-**Commit vérifié** : `40e86decdb` — verdict `drwil verify` : PASS
+**Commit vérifié** : `adade2c94e` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:76fa57679c1349db`, acceptés par l'humain au lancement le 2026-11-07
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
