@@ -78,6 +78,7 @@ function exec(
     assets = {},
     create = true,
     pr = true,
+    ci = null,
   } = {},
 ) {
   const vrai = runner(racine);
@@ -85,6 +86,8 @@ function exec(
   const run = (cmd, args, o) => {
     if (cmd !== "gh") return vrai(cmd, args, o);
     appels.push(args);
+    if (args[0] === "run") return ci ? JSON.stringify([{ databaseId: 1 }]) : null;
+    if (args[0] === "api") return ci ? JSON.stringify({ jobs: ci }) : null;
     if (args[0] === "pr") return pr ? "https://exemple.invalid/pull/9\n" : null;
     if (args[1] === "view") return view ? JSON.stringify(view) : null;
     if (args[1] === "download") {
@@ -298,4 +301,41 @@ test("QUA-054 : ligne de commande — usage, --dry-run, refus, en anglais ; lanc
   assert.match(r.sortie, /^✓ \[promote-release\] v1\.1\.0-rc\.1 \(approved with reserves\)/);
   const lance = spawnSync(process.execPath, [SCRIPT], { encoding: "utf8" });
   assert.equal(lance.status, 2);
+});
+
+const TROIS = ["ubuntu-latest", "windows-latest", "macos-latest"];
+/** Jobs de la CI du commit de la candidate : étapes de test jouées pour les OS `testes`, sautées pour les autres. */
+const jobs = (testes) =>
+  TROIS.map((os) => ({
+    conclusion: "success",
+    labels: [os],
+    steps: ["Run npm ci", "Run npm test"].map((name) => ({ name, conclusion: testes.includes(os) ? "success" : "skipped" })),
+  }));
+
+test("QUA-268 : promotion refusée sans rien publier tant qu'un OS exigé n'a pas sa CI verte ; --dry-run le dit ; trois OS verts, promue", () => {
+  const racine = depot();
+  mkdirSync(join(racine, ".drwil"));
+  writeFileSync(
+    join(racine, ".drwil", "ia-first.json"),
+    JSON.stringify({ lang: "fr", ciFiles: [".github/workflows/ia-first.yml"], release: { requiredOs: TROIS } }),
+  );
+  let { run, appels } = PUBLIEE(racine, { ci: jobs(["ubuntu-latest", "macos-latest"]) });
+  let r = promote(racine, { tag: TAG }, { run });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /CI verte manquante sur le commit \w{7} pour : windows-latest/);
+  assert.match(r.message, /`gh workflow run ia-first\.yml --ref v1\.1\.0-rc\.1`/);
+  assert.ok(!appels.some((a) => a[1] === "create" || a[0] === "pr"));
+  assert.equal(git(racine, "tag", "-l", "v1.1.0"), "");
+  r = promote(racine, { tag: TAG }, PUBLIEE(racine, { ci: null }));
+  assert.equal(r.code, 1);
+  assert.match(r.message, /CI illisible sur le commit .*jamais une release devinée verte/);
+  r = promote(racine, { tag: TAG, dryRun: true }, PUBLIEE(racine, { ci: jobs(["ubuntu-latest"]) }));
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /⚠ --dry-run : sans cette CI verte, la création serait refusée — .*windows-latest, macos-latest/);
+  ({ run, appels } = PUBLIEE(racine, { ci: jobs(TROIS) }));
+  r = promote(racine, { tag: TAG }, { run });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /✓ CI verte sur le commit \w{7} pour les OS exigés/);
+  assert.match(r.message, /release v1\.1\.0 publiée/);
+  assert.equal(git(racine, "rev-parse", "v1.1.0^{commit}"), git(racine, "rev-parse", `${TAG}^{commit}`));
 });

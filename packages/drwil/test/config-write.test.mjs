@@ -1,4 +1,4 @@
-// Réglage `release.mode` de .drwil/ia-first.json : valeur par défaut et conservation (QUA-199).
+// Réglages `release.mode` (QUA-199) et `release.requiredOs` (QUA-268) de .drwil/ia-first.json : défaut et conservation.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -50,4 +50,17 @@ test("QUA-199 : une installation neuve déclare solo ; une réinstallation garde
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(ancienne));
   await silencieux(() => init({ lang: "fr", targetDir: dir }));
   assert.equal(config(dir).release.mode, "solo", "projet antérieur au réglage : solo");
+});
+
+test("QUA-268 : release.requiredOs n'est jamais ajouté par une installation ni une mise à jour, et le réglage du projet est gardé", async () => {
+  assert.equal("requiredOs" in releaseSetting(undefined), false);
+  const dir = tmp();
+  await silencieux(() => init({ lang: "fr", targetDir: dir }));
+  assert.equal("requiredOs" in config(dir).release, false, "livré absent : pas de barrière chez l'adoptant");
+  await silencieux(() => init({ lang: "fr", targetDir: dir }));
+  assert.equal("requiredOs" in config(dir).release, false, "une mise à jour ne l'ajoute pas");
+  const os = ["ubuntu-latest", "windows-latest"];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), release: { mode: "solo", requiredOs: os } }));
+  await silencieux(() => init({ lang: "fr", targetDir: dir }));
+  assert.deepEqual(config(dir).release.requiredOs, os);
 });

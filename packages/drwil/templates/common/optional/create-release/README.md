@@ -58,7 +58,8 @@ not read the repository:
    commits). Below, the **non-regression** already proven: `drwil verify`
    verdict (not counting the rule against direct work on the main branch,
    where a release is always created, and saying so), contracts proven by a
-   test (IDs and titles), OS tested by the CI on the commit, tarball
+   test (IDs and titles), OS tested by the CI on the commit (a job whose
+   test steps were skipped does not count), tarball
    fingerprint (sha256). `--candidate
    --dry-run` prints the sheet without building or publishing anything.
 2. The acceptance team gives its verdict (human command):
@@ -76,6 +77,24 @@ not read the repository:
    sheet), the reserves listed in its note. It becomes `releases/latest`,
    which never shows a pre-release: a README can link there once and for
    all, with no commit at each version.
+
+## Required OS: green CI before the release (optional)
+
+Absent by default, never added by an update of the kit:
+`release.requiredOs` in `.drwil/ia-first.json`, a list of runner labels
+(e.g. `["ubuntu-latest", "windows-latest", "macos-latest"]`), for a
+project whose CI does not test every OS at each pull request. Once set,
+`create-release.mjs` (direct release or `--candidate`) and
+`promote-release.mjs` refuse, without creating anything, as long as one of
+those OS has no successful CI job that really ran its test steps on the
+commit concerned (`HEAD`, or the candidate's commit) — read through `gh`,
+like the acceptance sheet; a job whose test steps were skipped never
+counts, in the sheet either. The refusal names the missing OS and the
+command to run the workflow by hand; `gh` unavailable is a refusal too;
+`--dry-run` says it without refusing. Order: run the workflow on the
+commit (`gh workflow run <workflow file> --ref <branch>`, a
+`workflow_dispatch` trigger testing every required OS), wait for every
+required OS to be green, then create the release.
 
 ## npm tarball attached to the release (downloadable)
 

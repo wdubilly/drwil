@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import {
   buildSheet,
+  ciGate,
   ciOs,
   knownLimits,
   points,
@@ -20,6 +21,8 @@ import {
   sections,
   sha256,
   sheetTexts,
+  testedJob,
+  testedOs,
   verifyJson,
   workstreams,
 } from "./acceptance-sheet.mjs";
@@ -195,14 +198,10 @@ test("QUA-052 : non-régression — verify, contrats prouvés par un test, OS de
   const reponses = {
     "run list --commit abc --json databaseId --limit 50": JSON.stringify([{ databaseId: 1 }, { databaseId: 2 }, { databaseId: 3 }]),
     "api repos/{owner}/{repo}/actions/runs/1/jobs": JSON.stringify({
-      jobs: [
-        { conclusion: "success", labels: ["ubuntu-latest"] },
-        { conclusion: "failure", labels: ["windows-latest"] },
-        { conclusion: "success" },
-      ],
+      jobs: [job("success", ["ubuntu-latest"]), job("failure", ["windows-latest"]), job("success", undefined)],
     }),
     "api repos/{owner}/{repo}/actions/runs/2/jobs": JSON.stringify({
-      jobs: [{ conclusion: "success", labels: ["macos-latest", "ubuntu-latest"] }],
+      jobs: [job("success", ["macos-latest", "ubuntu-latest"])],
     }),
     "api repos/{owner}/{repo}/actions/runs/3/jobs": "{}",
   };
@@ -418,4 +417,79 @@ test("QUA-052 : créée sur la branche principale, la fiche ne fait pas tomber v
   const en = tmp();
   ecrire(en, { ".drwil/ia-first.json": JSON.stringify({ lang: "en" }) });
   assert.match(renderSheet({ ...base, verdict }, sheetTexts(en)), /verdict: PASS — not counting QUA-017 \(Pas de travail direct/);
+});
+
+/** Job de CI tel que le rend l'API GitHub : `testees` faux, ses étapes propres sautées sauf la notice. */
+function job(conclusion, labels, testees = true) {
+  const propre = (name, ok) => ({ name, conclusion: ok ? "success" : "skipped" });
+  const steps = [{ name: "Set up job", conclusion: "success" }, propre("Run echo notice", !testees)];
+  for (const n of ["Run actions/checkout@v7", "Run npm ci", "Installer gitleaks", "Run npm test --workspace packages/drwil"])
+    steps.push(propre(n, testees));
+  steps.push(propre("Post Run actions/checkout@v7", testees), { name: "Complete job", conclusion: "success" });
+  return { conclusion, labels, steps };
+}
+const RUNS = "run list --commit abc --json databaseId --limit 50";
+const ghFaux =
+  (reponses, appels = []) =>
+  (_cmd, args) => {
+    appels.push(args.join(" "));
+    return reponses[args.join(" ")] ?? null;
+  };
+const CI = (jobs) => ({
+  [RUNS]: JSON.stringify([{ databaseId: 1 }]),
+  "api repos/{owner}/{repo}/actions/runs/1/jobs": JSON.stringify({ jobs }),
+});
+const TROIS = ["ubuntu-latest", "windows-latest", "macos-latest"];
+
+test("QUA-268 : un job réussi dont les étapes de test ont été sautées ne compte pas comme OS testé (barrière et fiche)", () => {
+  assert.equal(testedJob(job("success", ["ubuntu-latest"])), true);
+  assert.equal(testedJob(job("success", ["windows-latest"], false)), false, "notice seule : étapes de test sautées");
+  assert.equal(testedJob(job("failure", ["ubuntu-latest"])), false);
+  assert.equal(testedJob({ conclusion: "success", labels: ["x"] }), false, "sans étape connue, rien ne prouve un test");
+  const reponses = CI([
+    job("success", ["ubuntu-latest"]),
+    job("success", ["windows-latest"], false),
+    job("success", ["macos-latest"], false),
+  ]);
+  assert.deepEqual(ciOs(ghFaux(reponses), "abc"), ["ubuntu-latest"]);
+  assert.deepEqual(testedOs(ghFaux(reponses), "abc"), { os: ["ubuntu-latest"], unreadable: false });
+  assert.deepEqual(testedOs(ghFaux({}), "abc"), { os: [], unreadable: true }, "gh muet : CI illisible");
+  assert.equal(testedOs(ghFaux({ [RUNS]: JSON.stringify([{ databaseId: 1 }]) }), "abc").unreadable, true);
+});
+
+test("QUA-268 : barrière — réglage absent ou vide sans effet ; OS manquant, CI illisible ou réglage invalide refusés ; --dry-run le dit sans refuser", () => {
+  const racine = tmp();
+  const regler = (release) =>
+    ecrire(racine, { ".drwil/ia-first.json": JSON.stringify({ lang: "fr", ciFiles: [".github/workflows/ci.yml"], release }) });
+  const appels = [];
+  const avec = (reponses) => ghFaux(reponses, appels);
+  for (const release of [undefined, { mode: "solo" }, { requiredOs: [] }]) {
+    regler(release);
+    assert.deepEqual(ciGate(racine, avec({}), { sha: "abc", ref: "master" }), { ok: true, message: null });
+  }
+  assert.deepEqual(appels, [], "sans réglage, la CI n'est même pas lue");
+  regler({ requiredOs: TROIS });
+  const partielle = CI([job("success", ["ubuntu-latest"]), job("success", ["windows-latest"], false), job("success", ["macos-latest"])]);
+  let g = ciGate(racine, avec(partielle), { sha: "abc", ref: "master" });
+  assert.equal(g.ok, false);
+  assert.match(g.message, /CI verte manquante sur le commit abc pour : windows-latest \(release\.requiredOs/);
+  assert.match(g.message, /`gh workflow run ci\.yml --ref master`/);
+  g = ciGate(racine, avec(partielle), { sha: "abc", ref: "master", dryRun: true });
+  assert.equal(g.ok, true);
+  assert.match(g.message, /⚠ --dry-run : sans cette CI verte, la création serait refusée — CI verte manquante .* windows-latest/);
+  g = ciGate(racine, avec({}), { sha: "abc", ref: "v1.0.0-rc.1" });
+  assert.equal(g.ok, false);
+  assert.match(g.message, /CI illisible sur le commit abc .*: ubuntu-latest, windows-latest, macos-latest non vérifié/);
+  assert.match(g.message, /--ref v1\.0\.0-rc\.1/);
+  g = ciGate(racine, avec(CI(TROIS.map((os) => job("success", [os])))), { sha: "abc", ref: "master" });
+  assert.deepEqual(g, {
+    ok: true,
+    message: "[release] ✓ CI verte sur le commit abc pour les OS exigés (release.requiredOs) : ubuntu-latest, windows-latest, macos-latest",
+  });
+  for (const requiredOs of ["ubuntu-latest", [""], [3]]) {
+    regler({ requiredOs });
+    g = ciGate(racine, avec({}), { sha: "abc", ref: "master" });
+    assert.equal(g.ok, false);
+    assert.match(g.message, /release\.requiredOs vaut .* une liste de libellés de runner/);
+  }
 });

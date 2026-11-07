@@ -31,6 +31,29 @@ without a green light, it stops after the `--dry-run` and gives the human
 the exact command to run. The green light covers one release, never the
 following ones, and never an npm publication (see « Assumed limits »).
 
+## Required OS: green CI before the release
+
+Optional setting, absent by default (an update of the kit never adds
+it): `release.requiredOs` in `.drwil/ia-first.json`, a list of runner
+labels — e.g. `["ubuntu-latest", "windows-latest", "macos-latest"]` — for
+a project whose CI does not test every OS at each pull request. Once set,
+`node .githooks/create-release.mjs` (direct release or
+`--candidate`) and `node .githooks/promote-release.mjs` refuse, without creating any tag or release, as long
+as one of those OS has no successful CI job that really ran its test steps
+on the commit concerned (`HEAD`, or the candidate's commit); a job whose
+test steps were skipped never counts, nor in the acceptance sheet. The
+refusal names the missing OS and the command that runs the workflow by
+hand; `gh` unavailable is a refusal too, never a release guessed green;
+`--dry-run` says it without refusing. The order is then:
+
+1. Run the workflow on the commit to release:
+   `gh workflow run <workflow file> --ref <branch>` (the workflow needs a
+   `workflow_dispatch` trigger that tests every required OS).
+2. Wait for every required OS to be green on that commit
+   (`gh run watch`).
+3. Create the release (method below). A candidate's tag push also runs
+   the CI on its commit: wait for it before the promotion.
+
 ## Method (once the module is activated)
 
 1. Preview without creating anything: `node .githooks/create-release.mjs

@@ -422,3 +422,71 @@ test("QUA-201 : en team, la release directe est refusée (aperçu compris) et re
   assert.match(c.stdout, /mode de release : team/);
   assert.match(c.stdout, /candidate : v1\.1\.0-rc\.1/);
 });
+
+/** gh simulé (PATH réduit : ni cat ni coreutils) : la CI du commit (jobs donnés, étapes de test jouées ou sautées), puis la création de release, notée. */
+function ghCi(racine, testes) {
+  const jobs = join(racine, "..", `jobs-${Date.now()}.json`);
+  const appel = `${jobs}.appel`;
+  dossiers.push(jobs, appel);
+  const etapes = (oui) => ["Run npm ci", "Run npm test"].map((name) => ({ name, conclusion: oui ? "success" : "skipped" }));
+  const liste = ["ubuntu-latest", "windows-latest", "macos-latest"].map((os) => ({
+    conclusion: "success",
+    labels: [os],
+    steps: etapes(testes.includes(os)),
+  }));
+  writeFileSync(jobs, JSON.stringify({ jobs: liste }));
+  return {
+    appel,
+    gh: `case "$1" in run) echo '[{"databaseId":1}]' ;; api) node -e 'process.stdout.write(require("fs").readFileSync(process.argv[1]))' "${jobs}" ;; *) echo "$@" >> "${appel}" ;; esac`,
+  };
+}
+const EXIGES = { mode: "solo", requiredOs: ["ubuntu-latest", "windows-latest", "macos-latest"] };
+
+test(
+  "QUA-268 : OS exigé sans CI verte — release directe et candidate refusées sans rien créer ; --dry-run le dit sans refuser",
+  posix,
+  () => {
+    const { racine, origine } = depotCandidat();
+    ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ lang: "fr", ciFiles: [".github/workflows/ia-first.yml"], release: EXIGES }));
+    const { appel, gh } = ghCi(racine, ["ubuntu-latest"]);
+    for (const args of [[], ["--candidate"]]) {
+      const r = lancer(racine, args, chemin({ npm: NPM_PACK, gh }));
+      assert.equal(r.status, 1, r.stdout);
+      assert.match(r.stderr, /release refusée : CI verte manquante sur le commit \w{7} pour : windows-latest, macos-latest/);
+      assert.match(r.stderr, /`gh workflow run ia-first\.yml --ref master`/);
+    }
+    assert.equal(git(origine, "tag", "-l"), "");
+    assert.equal(git(racine, "tag", "-l", "v1.1.0*"), "");
+    assert.throws(() => readFileSync(appel), "gh n'a créé aucune release");
+    const d = lancer(racine, ["--dry-run"], chemin({ gh }));
+    assert.equal(d.status, 0, d.stderr);
+    assert.match(
+      d.stdout,
+      /⚠ --dry-run : sans cette CI verte, la création serait refusée — CI verte manquante .*windows-latest, macos-latest/,
+    );
+    const sansGh = lancer(racine, [], chemin({ npm: NPM_PACK }));
+    assert.equal(sansGh.status, 1);
+    assert.match(sansGh.stderr, /release refusée : CI illisible sur le commit .*jamais une release devinée verte/);
+    assert.equal(git(origine, "tag", "-l"), "");
+  },
+);
+
+test("QUA-268 : les trois OS exigés verts — la release est créée ; réglage absent — la CI n'est pas lue", posix, () => {
+  const { racine, origine } = depotCandidat();
+  reglerMode(racine, EXIGES);
+  const { appel, gh } = ghCi(racine, EXIGES.requiredOs);
+  const r = lancer(racine, [], chemin({ npm: NPM_PACK, gh }));
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(
+    r.stdout,
+    /✓ CI verte sur le commit \w{7} pour les OS exigés \(release\.requiredOs\) : ubuntu-latest, windows-latest, macos-latest/,
+  );
+  assert.equal(git(origine, "tag", "-l"), "v1.1.0");
+  assert.match(readFileSync(appel, "utf8"), /^release create v1\.1\.0 /);
+  const autre = depotCandidat();
+  reglerMode(autre.racine, { mode: "solo" });
+  const sansReglage = lancer(autre.racine, [], chemin({ npm: NPM_PACK, gh: 'case "$1" in run|api) exit 1 ;; esac' }));
+  assert.equal(sansReglage.status, 0, sansReglage.stderr);
+  assert.doesNotMatch(sansReglage.stdout + sansReglage.stderr, /CI|requiredOs/);
+  assert.equal(git(autre.origine, "tag", "-l"), "v1.1.0");
+});

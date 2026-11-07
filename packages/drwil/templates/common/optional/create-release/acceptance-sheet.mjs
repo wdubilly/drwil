@@ -83,15 +83,47 @@ const parse = (text, fallback) => {
   }
 };
 
-/** Runner labels of the CI jobs that succeeded on `sha` (gh), sorted; empty when none is found. */
-export function ciOs(run, sha) {
-  const runs = parse(run("gh", ["run", "list", "--commit", sha, "--json", "databaseId", "--limit", "50"]), []);
+/**
+ * A successful job tested its OS only when most of its own steps ran (QUA-268): a matrix job whose test
+ * steps were skipped still concludes « success »; GitHub's set up, complete and post steps always run.
+ */
+export function testedJob(job) {
+  const own = (job.steps ?? []).filter((s) => !/^(Set up job|Complete job|Post )/.test(s.name ?? ""));
+  const ran = own.filter((s) => s.conclusion !== "skipped").length;
+  return job.conclusion === "success" && ran > own.length - ran;
+}
+
+/** Runner labels of the jobs that tested successfully on `sha` (gh), sorted; `unreadable` when gh did not answer. */
+export function testedOs(run, sha) {
+  const runs = parse(run("gh", ["run", "list", "--commit", sha, "--json", "databaseId", "--limit", "50"]), null);
   const os = new Set();
-  for (const { databaseId } of Array.isArray(runs) ? runs : []) {
-    const jobs = parse(run("gh", ["api", `repos/{owner}/{repo}/actions/runs/${databaseId}/jobs`]), {}).jobs ?? [];
-    for (const j of jobs) if (j.conclusion === "success") for (const l of j.labels ?? []) os.add(l);
+  let unreadable = !Array.isArray(runs);
+  for (const { databaseId } of unreadable ? [] : runs) {
+    const jobs = parse(run("gh", ["api", `repos/{owner}/{repo}/actions/runs/${databaseId}/jobs`]), {}).jobs;
+    if (!Array.isArray(jobs)) unreadable = true;
+    for (const j of jobs ?? []) if (testedJob(j)) for (const l of j.labels ?? []) os.add(l);
   }
-  return [...os].sort();
+  return { os: [...os].sort(), unreadable };
+}
+
+export const ciOs = (run, sha) => testedOs(run, sha).os;
+
+/** Release barrier (QUA-268): each OS of `release.requiredOs` tested green on `sha`; absent or empty, none. */
+export function ciGate(root, run, { sha, ref, dryRun = false }) {
+  const T = sheetTexts(root);
+  const { release, ciFiles } = config(root);
+  const required = release?.requiredOs;
+  if (required === undefined || (Array.isArray(required) && !required.length)) return { ok: true, message: null };
+  let message = fill(T.gateBad, JSON.stringify(required));
+  if (Array.isArray(required) && required.every((o) => typeof o === "string" && o)) {
+    const { os, unreadable } = testedOs(run, sha);
+    const missing = required.filter((o) => !os.includes(o));
+    if (!missing.length) return { ok: true, message: fill(T.gateOk, sha.slice(0, 7), required.join(", ")) };
+    const wf = ciFiles?.map((f) => /^\.github\/workflows\/([^/]+\.ya?ml)$/.exec(f)?.[1]).find(Boolean) ?? "<workflow>";
+    const how = `gh workflow run ${wf} --ref ${ref}`;
+    message = fill(unreadable ? T.gateUnreadable : T.gateMissing, sha.slice(0, 7), missing.join(", "), how);
+  }
+  return dryRun ? { ok: true, message: fill(T.gateDryRun, message) } : { ok: false, message };
 }
 
 /** sha256 of a file, hexadecimal. */

@@ -130,7 +130,9 @@ est tenu, outil par outil, avec sa date d'essai.
   la carte avant le tag, tag et note GitHub avec le tarball, ou candidate
   avec sa fiche de recette, verdict humain puis promotion ; la note de
   recette de chaque version arrive par une PR dédiée ; `release.mode` choisit
-  `solo` (publication directe, par défaut) ou `team` (candidate exigée).
+  `solo` (publication directe, par défaut) ou `team` (candidate exigée) ;
+  `release.requiredOs` (absent par défaut) refuse la release et la promotion
+  tant qu'un OS exigé n'a pas sa CI verte sur le commit (QUA-268).
 - Suivi de la CI d'une PR (`.githooks/pr-watch.mjs`) : verte, fusionnée ou
   rouge avec le contrôle en échec.
 

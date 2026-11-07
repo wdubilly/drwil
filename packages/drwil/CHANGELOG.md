@@ -7,6 +7,14 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- Release module: an optional `release.requiredOs` setting (absent by
+  default, never added by an update) makes `create-release.mjs` (direct
+  release or `--candidate`) and `promote-release.mjs` refuse, without
+  creating anything, as long as one of the listed OS has no green CI job
+  that really ran its tests on the commit; the refusal names the missing OS
+  and the `gh workflow run` command, `--dry-run` only says it. A job whose
+  test steps were skipped no longer counts as a tested OS in the acceptance
+  sheet either.
 - Limits are handled during the workstream: a limit within the brief's scope
   is handled on the spot; one outside it goes to the human at the end of
   BUILD, before VERIFY, through a `drwil-limite` poll (« Handle now » or

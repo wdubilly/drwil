@@ -18,6 +18,7 @@
 // release and keeps the candidate, verdict and promotion path; any other value is refused.
 // Before any tag, preview included, the review of README.md, docs/features.md and
 // docs/architecture.md must be done (release-review.mjs, QUA-098): otherwise the release is refused.
+// With `release.requiredOs` set, every OS listed must have tested the commit green in CI (QUA-268).
 // Usage: node create-release.mjs [--candidate] [--dry-run]
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -142,6 +143,15 @@ async function main() {
     process.exitCode = 1;
     return;
   }
+  const { ciGate, runner } = await import("./acceptance-sheet.mjs");
+  const [sha, branch] = [git(["rev-parse", "HEAD"]), git(["rev-parse", "--abbrev-ref", "HEAD"])];
+  const gate = ciGate(process.cwd(), runner(process.cwd()), { sha, ref: branch === "HEAD" ? sha : branch, dryRun });
+  if (!gate.ok) {
+    console.error(fill(T.refused, gate.message));
+    process.exitCode = 1;
+    return;
+  }
+  if (gate.message) console.log(gate.message);
   if (candidate) return publishCandidate({ tag, next, packages, existingTags }, T);
   if (dryRun) {
     console.log(`${T.noteInRelease}\n\n${await directNote({ next, commits, tarballs: packages.length ? null : [] })}`);
