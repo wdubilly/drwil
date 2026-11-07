@@ -15,6 +15,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/state-texts.mjs
   - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
   - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
+  - packages/drwil/templates/common/base/.githooks/state-validate.mjs
   - packages/drwil/templates/common/base/AGENTS.md
   - packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md
   - packages/drwil/templates/common/base/docs/ia-first/7-starting-and-closing.md
@@ -28,6 +29,7 @@ files:
   - .githooks/state-texts.mjs
   - .githooks/state-messages-fr.mjs
   - .githooks/state-messages-en.mjs
+  - .githooks/state-validate.mjs
   - AGENTS.md
   - docs/ia-first/8-conduct-rules.md
   - docs/ia-first/7-starting-and-closing.md
@@ -84,6 +86,8 @@ intentions. Le demandeur veut :
 - `.githooks/state-messages-fr.mjs` — messages des limites ajoutés (rappel, enregistrement, refus) ;
   aucun message existant modifié (validé par le demandeur le 2026-11-05)
 - `.githooks/state-messages-en.mjs` — mêmes messages, en anglais ; aucun message existant modifié (validé par le demandeur le 2026-11-05)
+- `.githooks/state.test.mjs` — tests du rappel de BUILD et de l'enregistrement des limites ajoutés ; aucun test existant modifié (validé par le demandeur le 2026-11-07)
+- `.githooks/state-validate.mjs` — champ des réponses aux limites ajouté, valable hors SCOPING seulement ; aucune autre validation ne change (validé par le demandeur le 2026-11-07)
 
 ## 2. Hors périmètre
 
