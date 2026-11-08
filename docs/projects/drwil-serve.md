@@ -18,6 +18,12 @@ files:
   - packages/drwil/src/serve-journal.ts
   - packages/drwil/src/serve-read.ts
   - packages/drwil/src/serve-texts.ts
+  - packages/drwil/src/serve-github.ts
+  - packages/drwil/src/serve-gitlab.ts
+  - packages/drwil/src/serve-board.ts
+  - packages/drwil/src/serve-releases.ts
+  - packages/drwil/src/serve-details.ts
+  - packages/drwil/src/serve-watch.ts
   - packages/drwil/src/cli-install.ts
   - packages/drwil/src/cli-texts.ts
   - packages/drwil/src/config.ts
