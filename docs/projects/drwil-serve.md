@@ -180,6 +180,8 @@ Toutes du demandeur, le 2026-11-08 :
 - Démarrage automatique proposé à l'installation, jamais activé par défaut.
 - `drwil-progress` est retiré, une fois `drwil serve` à parité.
 - Sondages cliquables hors de la première version : lecture seule.
+- Liens vers les PR et MR de la page : par une redirection côté serveur ; aucune réponse de l'API ne contient d'adresse de
+  forge (QUA-271).
 
 ## 5. Points à trancher
 
@@ -203,7 +205,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-08) : lots 1 et 2 faits côté code (essai réel GitLab en attente, voir plus bas). Lot 1 : `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
+- **Dernier état** (2026-11-08) : lots 1 et 2 faits, essais réels compris. Lot 1 : `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
   `packages/drwil/src/serve-auth.ts`, `packages/drwil/src/serve-read.ts`, `packages/drwil/src/serve-texts.ts`, `packages/drwil/src/serve-journal.ts`), contrats QUA-269 à QUA-272, tests `packages/drwil/test/serve.test.mjs`.
 - **Choix du lot 1, à garder** :
   - Le jeton vient de la seule variable `DRWIL_SERVE_TOKEN` (32 caractères au moins), jamais d'une option. L'entrée par
@@ -212,13 +214,14 @@ Aucun.
   - Enregistrement server.json dans `projectCacheDir(racine)` (cache de l'utilisateur, un dossier par chemin réel) ; le
     journal d'événements du lot 2 ira dans ce même dossier.
 - **Lot 2 fait côté code** (2026-11-08) : couche forge `packages/drwil/src/serve-forge.ts` et ses adapteurs `packages/drwil/src/serve-github.ts`, `packages/drwil/src/serve-gitlab.ts`, tableau `packages/drwil/src/serve-board.ts`, releases `packages/drwil/src/serve-releases.ts`, détails `packages/drwil/src/serve-details.ts`, journal `packages/drwil/src/serve-journal.ts` alimenté par `packages/drwil/src/serve-watch.ts`, contrats QUA-273 à QUA-275. Routes : `/api/ci`, `/api/board`, `/api/releases`, `/api/events`, `/api/detail?key=`, `/api/workstream?name=`. Essai réel sur GitHub fait sur ce dépôt.
-- **Reste du critère de sortie du lot 2** : l'essai réel sur gitlab.com. `glab` n'est pas installé sur le poste et aucun projet d'essai n'existe : geste humain (installation, `glab auth login`, projet d'essai). L'adapteur GitLab n'est prouvé que sur des réponses factices conformes à la documentation de l'API.
+- **Essai réel sur gitlab.com fait** (2026-11-08), sur un projet d'essai privé du demandeur, avec une MR ouverte, un pipeline en cours et un pipeline terminé, depuis un clone local initialisé : forge détectée `gitlab` ; `/api/ci`, `/api/board`, `/api/releases`, `/api/events`, `/api/usage`, `/api/contracts`, `/api/docs` et `/api/detail` (MR, pipeline, commit) répondent 200 avec les bonnes données, sans login, courriel, jeton ni adresse de forge. Non essayés sur GitLab : une MR fusionnée, une release publiée, `/api/workstream`.
 - **Choix du lot 2, à garder** :
   - Aucune adresse de forge dans une réponse : le namespace d'une adresse est souvent un login (QUA-271). Une PR se désigne par son numéro, `url` n'existe plus.
   - Les textes du journal et de `missing` viennent de `packages/drwil/src/serve-texts.ts`, dans la langue du projet ; le tableau rend des codes (`stage`, `ready`), à traduire par la page.
   - Une clé d'événement de commit porte 12 caractères de SHA : un SHA entier serait masqué comme secret.
   - `glab api` (REST stable) plutôt que `glab mr list` ; les étapes d'un job n'existent que sur GitHub.
 - **Pour les lots suivants** :
+  - Lot 3 : les liens vers les PR et MR passent par une redirection côté serveur, décidée par le demandeur (section Décisions) : aucune adresse de forge dans une réponse de l'API, et la nouvelle route suit QUA-269 et QUA-271.
   - Lot 3 : `serve/page.html` n'est qu'une page minimale, à refondre, sur les routes ci-dessus (`missing` à afficher tel quel). `/api/contracts` remplace les routes `registry` et
     `contracts` du prototype : les titres y sont déjà.
   - Lot 4 : avec `tailscale serve`, l'en-tête `Host` reçu en `127.0.0.1` sera sans doute le nom du réseau privé, refusé
