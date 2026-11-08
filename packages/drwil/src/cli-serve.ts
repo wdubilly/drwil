@@ -71,9 +71,16 @@ function listening(host: string, port: number): Promise<boolean> {
   });
 }
 
-function readRecord(file: string): ServerRecord | null {
+/** `undefined` : pas de fichier ; `null` : fichier illisible, donc périmé (il n'apparaît jamais incomplet). */
+function readRecord(file: string): ServerRecord | null | undefined {
+  let text: string;
   try {
-    return JSON.parse(readFileSync(file, "utf8"));
+    text = readFileSync(file, "utf8");
+  } catch {
+    return undefined;
+  }
+  try {
+    return JSON.parse(text);
   } catch {
     return null;
   }
@@ -86,7 +93,8 @@ async function findRunning(file: string): Promise<ServerRecord | null> {
     if (record.port !== undefined && (await listening(record.host as string, record.port))) return record;
     if (record.port === undefined && Date.now() - record.at < CLAIM_TTL_MS) return record;
   }
-  rmSync(file, { force: true });
+  // Sans fichier lu, rien à effacer : celui apparu depuis la lecture est la réservation d'un concurrent.
+  if (record !== undefined) rmSync(file, { force: true });
   return null;
 }
 
