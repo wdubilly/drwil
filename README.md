@@ -699,6 +699,11 @@ not run never counts as passed. Declare a CI to get out of it:
 `npx drwil init --ci github` (or `--ci gitlab`). `verify` and `doctor` say the
 same.
 
+`npx drwil serve` shows a live, read-only view of the project on
+`127.0.0.1` (`--detach` runs it in the background, one server per project or
+worktree). Listening anywhere else (`--host`) requires a token of at least 32
+characters in the `DRWIL_SERVE_TOKEN` environment variable.
+
 ### 4. Attest a MANUAL contract (human, in your own terminal)
 
 ```bash

@@ -2583,3 +2583,43 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/acceptance-sheet.test.mjs`, `.githooks/create-release.test.mjs`, `.githooks/promote-release.test.mjs`, `packages/drwil/test/config-write.test.mjs`
 **Origine** : ci-multi-os-a-la-release — « Avec le réglage des OS exigés renseigné dans `.drwil/ia-first.json`, `.githooks/create-release.mjs` (création directe ou candidate) et `.githooks/promote-release.mjs` refusent, sans rien créer, tant qu'un OS exigé n'a pas réellement lancé la suite avec succès sur le commit visé »
 **Raison** : Windows et macOS ne sont plus testés à chaque PR (QUA-045) : sans barrière, une release que Windows casserait partirait sans que personne ne l'ait vue (décidé le 2026-11-07, sondage « Barrière »).
+
+## QUA-269 — `drwil serve` sert le dépôt courant en lecture seule, sur `127.0.0.1` par défaut, sans écrire aucun fichier suivi ni ajouter de dépendance d'exécution
+**Règle** : Livré à tout projet par la CLI du paquet. `drwil serve` écoute par défaut sur `127.0.0.1`, n'accepte que `GET` et n'écrit rien dans le projet : son état d'exécution vit dans le cache de l'utilisateur. Il ne lit que le projet, par les dossiers de `dirs` (`.drwil/ia-first.json`), sans suivre un lien symbolique ; `/api/file` ne sert qu'un fichier Markdown directement dans le dossier des fiches ou des intentions. Il ne lance que des commandes de lecture (`git`, `.githooks/state.mjs briefs --json`), sans shell. Sans jeton, un en-tête `Host` autre que local est refusé (DNS rebinding). Une source absente donne une vue vide, sans erreur ; une erreur interne ne renvoie ni pile ni chemin. `commander` reste la seule dépendance d'exécution.
+**Périmètre** : `packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`, `packages/drwil/src/serve-read.ts`, `packages/drwil/src/serve-texts.ts`, `packages/drwil/serve/page.html`, `packages/drwil/bin/drwil.js`, `packages/drwil/package.json`.
+**Source de vérité** : `packages/drwil/src/serve.ts` (`startServer`), `packages/drwil/src/serve-read.ts` (`createReader`).
+**Preuve** : tests en dur sur un projet d'essai installé depuis le paquet : toutes les routes appelées, empreinte de chaque fichier du projet inchangée, `git status` vide, `POST` refusé, chemins hors fiches et liens symboliques refusés, `Host` étranger refusé, dossier vide sans erreur, dépendances du paquet.
+**Contrôle** : `tests-qua-269`
+**Tests** : `packages/drwil/test/serve.test.mjs`
+**Origine** : drwil-serve — « `drwil serve` sert le dépôt courant en lecture seule, sur `127.0.0.1` par défaut, sans écrire aucun fichier suivi et sans dépendance d'exécution nouvelle »
+**Raison** : Une vue du projet ne doit jamais pouvoir le modifier, ni s'ouvrir au réseau sans qu'on le demande.
+
+## QUA-270 — Hors de `127.0.0.1`, `drwil serve` refuse de démarrer sans jeton et refuse toute requête sans jeton valide ; le jeton n'apparaît dans aucune sortie
+**Règle** : Livré à tout projet par la CLI du paquet. Avec `--host` autre que `127.0.0.1`, le jeton vient de la seule variable d'environnement `DRWIL_SERVE_TOKEN` (au moins 32 caractères, jamais une option de ligne de commande) : absent ou trop court, le serveur refuse de démarrer, détaché ou non, et dit quoi faire sans valeur à copier. Toute requête sans jeton valide reçoit 401, page comprise ; le jeton se présente par `Authorization: Bearer`, ou une fois par `/?token=`, qui pose un cookie `HttpOnly` et `SameSite=Strict` portant son empreinte et retire le jeton de l'adresse. Comparaison à temps constant. Le jeton ne figure ni dans la sortie, ni dans les erreurs, ni dans l'enregistrement du serveur, ni dans son journal, ni dans une réponse, et les commandes lancées par le serveur n'en héritent pas.
+**Périmètre** : `packages/drwil/src/serve-auth.ts`, `packages/drwil/src/serve.ts`, `packages/drwil/src/cli-serve.ts`.
+**Source de vérité** : `packages/drwil/src/serve-auth.ts` (`accessToken`, `hasValidToken`).
+**Preuve** : tests en dur : refus sans jeton et avec un jeton trop court, 401 sur chaque route sans jeton, avec un mauvais jeton ou un mauvais cookie, jeton d'adresse sans effet hors de l'entrée, Bearer et cookie acceptés, recherche du jeton dans la sortie, les erreurs, l'enregistrement, le journal et les réponses, absence du jeton dans l'environnement d'une commande lancée.
+**Contrôle** : `tests-qua-270`
+**Tests** : `packages/drwil/test/serve.test.mjs`
+**Origine** : drwil-serve — « Hors de `127.0.0.1` (`--host`), le serveur refuse de démarrer sans jeton et refuse toute requête sans jeton valide ; le jeton n'apparaît jamais dans une sortie lue par le modèle »
+**Raison** : La vue montre l'état d'un projet : hors de la machine, seul son propriétaire doit la lire, et un jeton lu par le modèle finirait dans un journal.
+
+## QUA-271 — Aucune réponse de l'API de `drwil serve` ne porte de donnée nominative ni de secret
+**Règle** : Livré à tout projet par la CLI du paquet. Toute réponse JSON passe par un filtre unique : une clé nominative (auteur, login, courriel, acteur, relecteur…) disparaît à toute profondeur ; dans le texte libre, un courriel, une mention `@login`, le `user.name` Git du projet et un secret (jetons de forge, clés d'accès, clé privée, longue valeur à forte entropie) sont masqués. `@AGENTS.md`, `@types/node` et un long chemin de fiche restent lisibles. Un nom écrit à la main dans un document, autre que le `user.name` Git, n'est pas détectable : le contrat porte sur les champs et les formes ci-dessus.
+**Périmètre** : `packages/drwil/src/serve-auth.ts` (`maskPersonal`), `packages/drwil/src/serve.ts` (`send`).
+**Source de vérité** : `packages/drwil/src/serve-auth.ts` (`maskPersonal`).
+**Preuve** : tests en dur : projet d'essai semé d'un nom, d'un courriel, d'une mention et d'un secret dans ses fiches, sa consommation et ses preuves, aucune de ces valeurs dans les réponses de toutes les routes ; filtre sur des structures imbriquées.
+**Contrôle** : `tests-qua-271`
+**Tests** : `packages/drwil/test/serve.test.mjs`
+**Origine** : drwil-serve — « Aucune donnée nominative (auteur, login, courriel) ni secret dans une réponse de l'API »
+**Raison** : La page se consulte sur un téléphone et peut être montrée : elle ne doit exposer personne.
+
+## QUA-272 — `drwil serve --detach` est idempotent, un serveur par projet ou worktree
+**Règle** : Livré à tout projet par la CLI du paquet. Serveur déjà démarré pour ce projet, `drwil serve --detach` redonne son adresse sans en lancer un second, y compris lancé plusieurs fois en même temps ; `drwil serve` au premier plan fait de même. Chaque dossier réel (projet ou worktree) a son propre enregistrement dans le cache de l'utilisateur, et son port, stable d'un redémarrage à l'autre, le suivant s'il est pris. Un enregistrement périmé (processus mort, PID réattribué, port fermé, fichier illisible) est remplacé ; l'arrêt du serveur l'efface. Un port demandé et occupé est refusé ; détaché, l'échec renvoie au journal.
+**Périmètre** : `packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts` (`projectCacheDir`, `preferredPort`).
+**Source de vérité** : `packages/drwil/src/cli-serve.ts` (`findRunning`, `claim`, `detach`).
+**Preuve** : tests en dur : deux `--detach` successifs et trois simultanés donnent une seule adresse, même PID, premier plan sans second serveur, deux worktrees avec deux serveurs, enregistrements périmés remplacés, port occupé.
+**Contrôle** : `tests-qua-272`
+**Tests** : `packages/drwil/test/serve.test.mjs`
+**Origine** : drwil-serve — « `drwil serve --detach` est idempotent : serveur déjà démarré pour ce projet, il redonne son adresse sans en lancer un second ; deux projets ou worktrees ouverts ensemble ont chacun leur serveur »
+**Raison** : Le démarrage à l'ouverture d'une session se répète à chaque session : il ne doit ni empiler les serveurs ni mêler deux projets.

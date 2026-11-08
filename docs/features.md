@@ -58,6 +58,10 @@ que les contrats en échec (verdict partiel, jamais une preuve de clôture) ;
 `drwil contracts add` écrit un contrat propre au projet, `drwil contracts
 adopt <ID>` reprend un contrat du catalogue. `drwil report` imprime un
 rapport de défaut du kit sans donnée du projet.
+`drwil serve [--host] [--port] [--detach]` sert en direct une vue du projet
+courant, en lecture seule, sur `127.0.0.1` par défaut : un jeton est
+obligatoire ailleurs, aucune réponse ne porte de donnée nominative, et chaque
+projet ou worktree a son unique serveur.
 
 ## Attestation humaine (`drwil attest`)
 

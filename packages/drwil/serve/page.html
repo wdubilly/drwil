@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="__LANG__">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>drwil — __PROJECT__</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 16px; }
+      pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+    </style>
+  </head>
+  <body>
+    <h1>__PROJECT__</h1>
+    <pre id="state"></pre>
+    <script>
+      fetch("/api/docs")
+        .then((r) => r.json())
+        .then((d) => {
+          document.getElementById("state").textContent = JSON.stringify(d.state, null, 2);
+        });
+    </script>
+  </body>
+</html>

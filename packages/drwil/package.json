@@ -12,6 +12,7 @@
   "files": [
     "dist",
     "bin",
+    "serve",
     "templates",
     "CHANGELOG.md"
   ],

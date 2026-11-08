@@ -101,12 +101,12 @@ téléphone. Le tableau de bord statique (`drwil-progress`) est remplacé.
 ## Critères d'acceptation
 
 - `drwil serve` sert le dépôt courant en lecture seule, sur `127.0.0.1` par défaut, sans écrire aucun fichier suivi et
-  sans dépendance d'exécution nouvelle — contrat à créer
+  sans dépendance d'exécution nouvelle — contrat à créer `QUA-269`
 - Hors de `127.0.0.1` (`--host`), le serveur refuse de démarrer sans jeton et refuse toute requête sans jeton valide ;
-  le jeton n'apparaît jamais dans une sortie lue par le modèle — contrat à créer
-- Aucune donnée nominative (auteur, login, courriel) ni secret dans une réponse de l'API — contrat à créer
+  le jeton n'apparaît jamais dans une sortie lue par le modèle — contrat à créer `QUA-270`
+- Aucune donnée nominative (auteur, login, courriel) ni secret dans une réponse de l'API — contrat à créer `QUA-271`
 - `drwil serve --detach` est idempotent : serveur déjà démarré pour ce projet, il redonne son adresse sans en lancer
-  un second ; deux projets ou worktrees ouverts ensemble ont chacun leur serveur — contrat à créer
+  un second ; deux projets ou worktrees ouverts ensemble ont chacun leur serveur — contrat à créer `QUA-272`
 - Un projet sans `.drwil/usage.jsonl`, sans preuves ou sans forge joignable affiche ses vues vides, sans erreur, et
   dit ce qui manque — contrat à créer
 - Les vues CI, PR et MR fonctionnent à parité sur GitHub (`gh`) et GitLab (`glab`), la forge étant détectée — contrat
@@ -130,6 +130,9 @@ téléphone. Le tableau de bord statique (`drwil-progress`) est remplacé.
 - QUA-198 (« Le tableau de bord montre la tendance de la durée de la CI et du cache lu par requête ») : la règle, le
   périmètre, la source de vérité et la preuve passent de `.githooks/dashboard*.mjs` et `optional/dashboard` à
   `drwil serve` ; les seuils et l'alerte non bloquante ne changent pas. Validé par le demandeur le 2026-11-08.
+- `.githooks/dashboard.mjs` — retiré au lot 5, remplacé par `drwil serve` (validé par le demandeur le 2026-11-08)
+- `.githooks/dashboard-read.mjs` — retiré au lot 5, ses lectures portées dans `packages/drwil/src/serve-read.ts` (validé par le demandeur le 2026-11-08)
+- `.githooks/dashboard-texts.mjs` — retiré au lot 5, ses textes portés dans `packages/drwil/src/serve-texts.ts` (validé par le demandeur le 2026-11-08)
 
 ## 2. Hors périmètre
 
@@ -194,5 +197,23 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-08) : cadré dans le worktree `drwil-serve`, branche `cadrage/drwil-serve`, rien de réalisé.
-- **Prochaine étape** : fusionner le cadrage, puis lancer le chantier par `/drwil-start`, réponse « Nouveau worktree ».
+- **Dernier état** (2026-11-08) : lot 1 fait. `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
+  `packages/drwil/src/serve-auth.ts`, `packages/drwil/src/serve-read.ts`, `packages/drwil/src/serve-texts.ts`, `packages/drwil/src/serve-journal.ts`), contrats QUA-269 à QUA-272, tests `packages/drwil/test/serve.test.mjs`.
+- **Choix du lot 1, à garder** :
+  - Le jeton vient de la seule variable `DRWIL_SERVE_TOKEN` (32 caractères au moins), jamais d'une option. L'entrée par
+    `/?token=` pose un cookie d'empreinte et redirige.
+  - `packages/drwil/src/serve-auth.ts` : `maskPersonal` est le filtre unique des réponses, appelé par `send` ; toute route nouvelle y passe.
+  - Enregistrement server.json dans `projectCacheDir(racine)` (cache de l'utilisateur, un dossier par chemin réel) ; le
+    journal d'événements du lot 2 ira dans ce même dossier.
+- **Prochaine étape, lot 2** (forges et journal, fichiers prévus du bloc scope : serve-forge.ts, serve-journal.ts) : les vues CI, PR et MR, plus les
+  lectures du prototype qui dépendent de la forge ou du journal et ne sont pas encore portées : tableau (board.mjs),
+  releases, détail d'un commit, d'une exécution ou d'un chantier (details.mjs, detail de usage.mjs).
+- **Pour les lots suivants** :
+  - Lot 3 : `serve/page.html` n'est qu'une page minimale, à refondre. `/api/contracts` remplace les routes `registry` et
+    `contracts` du prototype : les titres y sont déjà.
+  - Lot 4 : avec `tailscale serve`, l'en-tête `Host` reçu en `127.0.0.1` sera sans doute le nom du réseau privé, refusé
+    aujourd'hui par `localHostHeader` (QUA-269, défense contre le DNS rebinding) : à autoriser explicitement, sans
+    ouvrir le contrôle aux autres noms.
+  - `packages/drwil/src/serve-read.ts` et `packages/drwil/src/cli-serve.ts` approchent le plafond de 200 lignes (QUA-001, fichier de code plafonné) ;
+    `packages/drwil/src/serve-journal.ts` tient déjà la consommation, avant le journal d'événements du lot 2 : ce qui s'ajoute peut demander un
+    nouveau fichier, à déclarer au bloc `scope`.

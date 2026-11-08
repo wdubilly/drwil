@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil serve [--host] [--port] [--detach]`: a live, read-only view of the
+  current project, on `127.0.0.1` by default. Anywhere else the server refuses
+  to start without a token (`DRWIL_SERVE_TOKEN`) and refuses any request
+  without it; no API response carries a personal name, login, email or
+  secret; each project or worktree has its single server, whose record lives
+  in the user's cache, never in the repository.
 - Release module: an optional `release.requiredOs` setting (absent by
   default, never added by an update) makes `create-release.mjs` (direct
   release or `--candidate`) and `promote-release.mjs` refuse, without
