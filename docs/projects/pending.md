@@ -127,6 +127,9 @@ d'un outil) la dit dans son statut.
   le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
 - [ ] [IA] [P2] (0.11.1) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
   signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
+- [ ] [décision] [P0] Une CI plus rapide, pour le dépôt et pour l'adoptant : rejeu QUA-113 avec reprise,
+  push sur `master`, `run-checks`, gitleaks (cadré le 2026-11-08, à affiner) —
+  `docs/projects/ci-plus-rapide.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
