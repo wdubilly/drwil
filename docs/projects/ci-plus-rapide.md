@@ -93,6 +93,9 @@ doit en bénéficier : un projet adopté paie aujourd'hui le même double passag
 - `QUA-113` — ancien critère : la CI rejoue toute la passe avec les hooks de la branche principale — raison : le rejeu
   reprend le verdict de chaque contrôle dont les hooks et l'empreinte sont identiques, un hook affaibli restant refusé
   (lot 2) (validé par le demandeur le 2026-11-08)
+- `QUA-136` — ancien critère : le classement des durées par contrôle n'est écrit qu'en fin de fichier de détail
+  (`.drwil/evidence/run-checks.log` (si présent)) — raison : en CI ce fichier ne survit pas au job, le classement complet est aussi dans
+  la sortie, avant le résumé (limite hors cadre du lot 1, « Traiter maintenant » de l'humain le 2026-11-08) (validé par le demandeur le 2026-11-08)
 - `.githooks/base-checks.mjs` — reprise des verdicts au rejeu par la branche principale, un hook affaibli restant refusé (lot 2, QUA-113) (validé par le demandeur le 2026-11-08)
 - `.githooks/base-checks.test.mjs` — tests de la reprise des verdicts au rejeu et des branches que la couverture ne voyait pas (lot 2, QUA-113) (validé par le demandeur le 2026-11-08)
 - `.githooks/engine.mjs` — le moteur pose l'identifiant de passe qui partage les résultats par fichier de test (lot 4, QUA-033) (validé par le demandeur le 2026-11-08)
