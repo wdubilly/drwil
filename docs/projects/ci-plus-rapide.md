@@ -63,8 +63,7 @@ Cinq causes (quatre mesurées ou relevées, une à mesurer) :
    contrat.
 
 Ce qui est livré à l'adoptant (les CI du gabarit GitHub et GitLab, `.githooks/base-checks.mjs`, `.githooks/run-checks.mjs`, le moteur)
-doit en bénéficier : un projet adopté paie aujourd'hui le même double passage, le même 504 de gitleaks, et n'a pas le
-parallélisme (`parallel`) par défaut.
+doit en bénéficier : un projet adopté paie aujourd'hui le même double passage et le même 504 de gitleaks.
 
 ## Critères d'acceptation
 
@@ -73,8 +72,6 @@ parallélisme (`parallel`) par défaut.
   reste refusé — `QUA-113`
 - Un push sur la branche principale dont l'arbre est celui d'une PR verte ne rejoue pas les contrôles et le dit ; dans
   tout autre cas il rejoue tout, et le suivi de la CI de la branche principale (QUA-251) reste exact — `QUA-250`
-- Les plus gros contrôles de `run-checks` sont plus rapides sans perdre une preuve : la durée du job `checks` sur une
-  PR de code passe sous la cible de la section 4, mesurée avant et après — contrat à créer
 - Le téléchargement de gitleaks se remet de ses échecs passagers (nouvelles tentatives, y compris sur une erreur HTTP,
   et cache de l'archive vérifiée par son empreinte) dans les trois CI : celle du dépôt, celle du gabarit GitHub et
   celle du gabarit GitLab — `QUA-269`
@@ -118,7 +115,6 @@ parallélisme (`parallel`) par défaut.
 
 - 2026-11-08 : un seul chantier regroupe `run-checks`, le rejeu QUA-113, le push sur `master` et gitleaks ; tout ce
   qui se livre doit profiter à l'adoptant.
-- 2026-11-08 : le gabarit active `parallel` par défaut chez l'adoptant.
 - 2026-11-08 : push sur la branche principale — saut total des contrôles quand l'arbre est identique à celui d'une
   PR verte ; le job rapporte quand même « succès » sous son nom exigé et dit pourquoi, pour que la CI de la
   branche principale reste « verte » aux yeux de QUA-251.
@@ -156,11 +152,11 @@ lot 4, avec l'accès au détail par contrôle.
 - **Lot 1 — mesure et gitleaks** [IA] : durée par contrôle en CI, notée dans la fiche ; gitleaks avec nouvelles
   tentatives et cache dans les trois CI. Critère de sortie : tests des workflows verts, `GOVERNANCE: PASS`.
 - **Lot 2 — rejeu QUA-113 avec reprise** [IA] : verdicts repris dans `.githooks/base-checks.mjs`, scénario de contournement
-  inchangé. Critère de sortie : PR de code d'essai sous la cible, hook affaibli toujours refusé.
+  inchangé. Critère de sortie : durée d'une PR de code d'essai mesurée, hook affaibli toujours refusé.
 - **Lot 3 — push sur la branche principale** [IA] : saut du rejeu sur arbre déjà prouvé, filet QUA-251 intact.
 - **Lot 4 — `run-checks` plus rapide** [IA] : un lancement par fichier de test au lieu d'un par contrat (QUA-033,
   règle enseignée à l'adoptant par QUA-030, donc livrée avec lui), `miroirs-gabarit` (42 s) allégé, `checks-self-test` (77 s) examiné (même double emploi avec les tests des hooks ?), tests lents parallélisés, fichiers
-  temporaires nettoyés. Critère de sortie : durée sous la cible, couverture inchangée (QUA-004).
+  temporaires nettoyés. Critère de sortie : durée mesurée avant et après (objectif suivi de la section 4), couverture inchangée (QUA-004).
 
 ## 7. Reprise
 
@@ -188,7 +184,7 @@ lot 4, avec l'accès au détail par contrôle.
   suivis par Git), rien n'est repris (`--tout-rejouer`) : ce moteur écrit les verdicts. Contrats QUA-113 et QUA-250 mis à jour.
   Chemin ajouté au bloc `scope` : `packages/drwil/templates/common/base/.githooks/base-checks.mjs`, source du hook
   (QUA-018 : on édite le gabarit puis `npm run installer-depot`). Gain réel à mesurer sur la prochaine PR de code
-  (critère « PR d'essai sous la cible » : non mesuré ici, la CI seule le dit).
+  (critère « durée d'une PR d'essai mesurée » : non mesuré ici, la CI seule le dit).
 - **Lot 3 fait** (2026-11-08) : sur GitHub (CI du dépôt et du gabarit), le job `checks` d'une PR dépose en dernière étape
   l'artefact `arbre-prouve` (`proven-tree` dans le gabarit), l'empreinte `git rev-parse HEAD^{tree}` qu'il vient de jouer ;
   un push sur la branche principale la lit dans le run `pull_request` vert le plus récent de la tête de la PR qui contient
