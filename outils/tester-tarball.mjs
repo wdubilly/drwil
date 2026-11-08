@@ -19,6 +19,7 @@ export const ATTENDUS = [
   /^package\.json$/,
   /^bin\/drwil\.js$/,
   /^dist\/[^/]+\.(js|d\.ts)(\.map)?$/,
+  /^serve\/page\.html$/,
   /^templates\/common\/.+$/,
   /^CHANGELOG\.md$/,
 ];
