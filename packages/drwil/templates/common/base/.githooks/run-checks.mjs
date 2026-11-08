@@ -14,6 +14,7 @@
 // working tree is the pushed commit; never in CI.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { rm } from "node:fs/promises";
 import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
 import { checks, projectRoot, startParallel, treeFingerprint } from "./engine.mjs";
 import { ciTexts, WITH_CI_CHECKS } from "./engine-runat.mjs";
@@ -116,6 +117,8 @@ for (const c of list) {
   } else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
 }
 const end = list.finish();
+// The results shared inside the pass (see DRWIL_PASS_ID in the engine) are of no use after it.
+await rm(".drwil/evidence/passe", { recursive: true, force: true }).catch(Boolean);
 saveVerdicts({ root, list, verdicts, reused, fingerprint, ranAt, hooked, prePush });
 if (!Array.isArray(cfg.checks) || !cfg.checks.length) unrun(`${T.project} (${T.noCheck})`, true);
 

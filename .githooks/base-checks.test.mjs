@@ -396,6 +396,21 @@ test("QUA-113 un module du moteur de run-checks modifié, même importé de loin
   assert.equal(trace(d), "|--tout-rejouer\n");
 });
 
+test("QUA-113 un module du moteur supprimé par la PR : aucune reprise ; un import cité deux fois ou absent de la base n'y change rien", () => {
+  const d = depot();
+  // Imports cités en commentaire : lus par le repérage du moteur, jamais exécutés.
+  d.ecrire(".githooks/run-checks.mjs", `${ENREGISTREUR}// import "./lib.mjs"; import "./disparu.mjs"; import "./jamais-ecrit.mjs";\n`);
+  d.ecrire(".githooks/disparu.mjs", "export const v = 1;\n");
+  d.commit("base enregistreuse");
+  d.git("checkout", "-q", "-B", "main");
+  d.git("checkout", "-q", "-b", "travail2");
+  d.git("rm", "-q", ".githooks/disparu.mjs");
+  d.commit("module du moteur supprimé");
+  const r = d.rejouer();
+  assert.match(r.lines[0], /^aucune reprise : le moteur de run-checks diffère de celui de « main »/);
+  assert.equal(trace(d), "|--tout-rejouer\n");
+});
+
 test("QUA-113 un module du moteur gardé à la version de la PR (déclaré) ne bloque pas la reprise", () => {
   const d = depot();
   d.ecrire(".githooks/run-checks.mjs", ENREGISTREUR);

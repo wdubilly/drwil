@@ -235,12 +235,12 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : L'attestation est le seul geste humain obligatoire de la clôture : réattester une preuve seulement renforcée, ou attendre deux minutes devant un terminal muet, coûtait plus que le jugement demandé.
 
 ## QUA-033 — Un contrôle par règle dans ce dépôt
-**Règle** : Chaque contrat du registre qui cite des tests (champ Tests) cite aussi son propre contrôle, `tests-<id>` (`tests-qua-016` pour QUA-016), qui ne rejoue que les fichiers de son champ Tests, filtrés par son ID (`node --test --test-name-pattern`) : un test cassé fait échouer ce seul contrat. La couverture (`couverture-tests`, `couverture-hooks`) n'est citée que par QUA-004 (seuil de couverture).
+**Règle** : Chaque contrat du registre qui cite des tests (champ Tests) cite aussi son propre contrôle, `tests-<id>` (`tests-qua-016` pour QUA-016), dont le verdict vient des seuls tests des fichiers de son champ Tests dont le nom commence par son ID : un test cassé fait échouer ce seul contrat. Chaque fichier de test n'est lancé qu'une fois par passe de `run-checks` (`node outils/tests-par-fichier.mjs <ID> <fichiers>`, un reporter laisse le résultat de chaque test, lu ensuite par ID ; l'identifiant de passe `DRWIL_PASS_ID` est posé par le moteur et le dossier des résultats partagés, sous .drwil/evidence, effacé en fin de passe), jamais une fois par contrat. Un contrôle dont aucun test ne porte l'ID, ou dont le fichier n'a rien joué (erreur de chargement, processus mort), échoue : jamais un succès (QUA-013). Hors passe (lancement à la main), le fichier est rejoué. Le contrôle `miroirs-gabarit` lit de même les tests de `outils/` (`--tous`, tous les tests du fichier doivent passer) dans la même exécution par fichier. La couverture (`couverture-tests`, `couverture-hooks`) n'est citée que par QUA-004 (seuil de couverture).
 **Périmètre** : `docs/contracts.md` et `.drwil/ia-first.json` de ce dépôt (règle enseignée au livrable par QUA-030).
-**Source de vérité** : `outils/verifier-tests-contrats.mjs`.
-**Preuve** : contrôle `tests-contrats` (hook + CI) ; un filtre qui ne sélectionnerait aucun test est déjà refusé par ce même contrôle (chaque fichier cité porte un test au nom commençant par l'ID).
+**Source de vérité** : `outils/verifier-tests-contrats.mjs`, `outils/tests-par-fichier.mjs`.
+**Preuve** : contrôle `tests-contrats` (hook + CI) ; tests du lanceur par fichier (verdict par ID, aucun test à l'ID ou fichier mort refusés, un seul lancement par fichier et par passe) ; un filtre qui ne sélectionnerait aucun test est déjà refusé par ce même contrôle (chaque fichier cité porte un test au nom commençant par l'ID).
 **Contrôle** : `tests-contrats`, `tests-qua-033`
-**Tests** : `outils/verifier-tests-contrats.test.mjs`
+**Tests** : `outils/verifier-tests-contrats.test.mjs`, `outils/tests-par-fichier.test.mjs`
 **Origine** : un contrôle par règle dans le dépôt drwil — « Chaque contrat qui cite des tests a son propre contrôle »
 **Raison** : `couverture-tests` partagé par 13 contrats faisait échouer les 13 sur un seul test cassé, chacun « non attribuable » : le dépôt n'appliquait pas la règle qu'il enseigne.
 

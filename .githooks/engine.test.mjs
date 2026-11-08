@@ -246,6 +246,15 @@ test("autotest : sans dossier ou sans test non applicable ; sinon les tests du d
   assert.equal(executer(racine, "checks-self-test").status, "fail");
 });
 
+test("autotest : avec le lanceur par fichier du dépôt, les tests passent par lui (une exécution par fichier et par passe)", () => {
+  const racine = depot();
+  ecrire(racine, ".githooks/a.test.mjs", "import { test } from 'node:test'; test('t', () => {});\n");
+  ecrire(racine, "outils/tests-par-fichier.mjs", "console.log(process.argv.slice(2).join(' '));\nprocess.exitCode = 1;\n");
+  const r = executer(racine, "checks-self-test");
+  assert.equal(r.status, "fail");
+  assert.match(r.output, /--tous .githooks.a\.test\.mjs/);
+});
+
 test("couverture CI : sans CI non exécuté, sinon check-control-coverage du projet", () => {
   const racine = depot();
   assert.equal(executer(racine, "ci-coverage").status, "not-run");
