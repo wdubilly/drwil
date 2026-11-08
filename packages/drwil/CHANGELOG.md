@@ -7,6 +7,13 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil init` refuses to run, before writing anything, with a version older
+  than the one recorded in `.drwil/install.json` (it would downgrade the
+  mechanics), naming both versions and the command to run instead;
+  `--allow-older` goes ahead anyway, and `--target-version <v>` refuses any
+  other version. An update leaves no `.bak` file: the commit of the update
+  branch keeps the old version.
+
 - `drwil serve [--host] [--port] [--detach]`: a live, read-only view of the
   current project, on `127.0.0.1` by default. Anywhere else the server refuses
   to start without a token (`DRWIL_SERVE_TOKEN`) and refuses any request

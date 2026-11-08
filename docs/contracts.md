@@ -2716,3 +2716,13 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : drwil-serve — « Hors de `127.0.0.1` (`--host`), le serveur refuse de démarrer sans jeton et refuse toute requête sans jeton valide ; le jeton n'apparaît jamais dans une sortie lue par le modèle »
 **Raison** : La vue montre l'état d'un projet : hors de la machine, seul son propriétaire doit la lire, et un jeton lu par le modèle finirait dans un journal.
 
+## QUA-282 — `drwil init` refuse, avant d'écrire, une version plus ancienne que celle de `.drwil/install.json` ou différente de la version visée, et la montée ne laisse aucun `.bak`
+**Règle** : Livré à tout projet par la CLI du paquet. Avant toute écriture, la commande `init` compare sa version à celle de `.drwil/install.json` (si présent) : plus ancienne, elle refuse (code de sortie 1, rien de modifié) en nommant les deux versions et la commande à relancer (`npx drwil@<version enregistrée> init`) ; l'option `--allow-older` passe outre. `--target-version <v>` refuse aussi toute version différente de `<v>`. Sans enregistrement, ou à version égale ou plus récente, aucun refus. La montée vers la version courante, commitée sur `workstream/kit-update` (QUA-237), ne crée ni ne laisse aucun fichier `.bak` : le commit de la branche garde l'ancienne version.
+**Périmètre** : la ligne de commande `drwil init` ; l'appel de l'API `init()` n'est pas gardé.
+**Source de vérité** : `packages/drwil/src/install.ts` (`assertVersion`), appelé par `packages/drwil/src/cli-install.ts`.
+**Preuve** : tests du paquet sur un projet d'essai : refus d'une version plus ancienne sans rien modifier, message nommant les versions et l'option, `--allow-older`, projet sans enregistrement, version égale et plus récente, `--target-version` différent et égal ; montée commitée sur sa branche sans aucun `.bak`, suivi ou non.
+**Contrôle** : `tests-qua-282`
+**Tests** : `packages/drwil/test/montee-de-version.test.mjs`
+**Origine** : montee-de-version-sure — « `init` d'une version plus ancienne que `.drwil/install.json` (si présent) refuse avec un message clair ; l'option passe outre » et « aucun `.bak` »
+**Raison** : Le 2026-11-08, sur `drwil_walk`, `resolve-drift` lancé avec la version locale a rétrogradé la mécanique de 0.11.0 à 0.10.0.
+

@@ -3,6 +3,7 @@ import { CIS, init, type InitOptions, previewInit, formatPreview, resolveDrift, 
 import { texts } from "./cli-texts.js";
 import { readConfig } from "./config.js";
 import { fill } from "./i18n.js";
+import { assertVersion } from "./install.js";
 
 const DEFAULT = (v: string) => `(default: value of an installed project, else ${v})`;
 
@@ -96,12 +97,22 @@ export function registerInstall(program: Command): void {
   )
     .option("--serve-autostart", "Start drwil serve at each session (127.0.0.1 only)")
     .option("--no-serve-autostart", "Do not start drwil serve at each session, and do not ask")
+    .option("--allow-older", "Run even if this version is older than the one recorded in .drwil/install.json (downgrades the mechanics)")
+    .option("--target-version <version>", "Refuse to run unless this command is exactly this version")
     .option("--dry-run", "Only audit the repository and preview what would be written; write nothing")
     .option(
       "--force",
       "Overwrite every file, even modified ones (erases project docs added since the last install; keeps the settings of .drwil/ia-first.json)",
     )
     .action(async (opts) => {
+      try {
+        assertVersion(process.cwd(), { allowOlder: opts.allowOlder, targetVersion: opts.targetVersion });
+      } catch (e) {
+        console.error(`✗ ${(e as Error).message}`);
+        process.exit(1);
+      }
+      delete opts.allowOlder;
+      delete opts.targetVersion;
       if (!opts.dryRun) {
         try {
           const interactive = !!(process.stdin.isTTY && process.stdout.isTTY);
