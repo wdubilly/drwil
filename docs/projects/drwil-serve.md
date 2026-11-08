@@ -24,6 +24,7 @@ files:
   - packages/drwil/src/serve-releases.ts
   - packages/drwil/src/serve-details.ts
   - packages/drwil/src/serve-watch.ts
+  - packages/drwil/src/serve-publish.ts
   - packages/drwil/src/cli-install.ts
   - packages/drwil/src/cli-texts.ts
   - packages/drwil/src/config.ts
