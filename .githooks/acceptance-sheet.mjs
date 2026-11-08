@@ -88,7 +88,7 @@ const parse = (text, fallback) => {
  * steps were skipped still concludes « success »; GitHub's set up, complete and post steps always run.
  */
 export function testedJob(job) {
-  const own = (job.steps ?? []).filter((s) => !/^(Set up job|Complete job|Post )/.test(s.name ?? ""));
+  const own = (job.steps ?? []).filter((s) => !/^(Set up job|Complete job|Post )/.test(s.name));
   const ran = own.filter((s) => s.conclusion !== "skipped").length;
   return job.conclusion === "success" && ran > own.length - ran;
 }

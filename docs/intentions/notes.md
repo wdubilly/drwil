@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-07 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-08 (rangement du backlog).
 
 ## Besoin
 
@@ -40,3 +40,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-07 — Précision sur l'intention drwil serve : version 1 lecture seule + rafraîchissement en direct ; ensuite sondages cliquables derrière un jeton ; attestation et verdict de recette restent au terminal (gestes humains) ; accès distant via réseau privé, jeton obligatoire dès qu'on écoute hors 127.0.0.1, actions en liste fermée, journal des actions ; authentification à deux niveaux : jeton local par défaut, couche OIDC optionnelle (--oidc-issuer, compatible Keycloak) sans embarquer de fournisseur ; chat web intégré = intention distincte, plus tard
 - 2026-11-07 — Copilot CLI : la réponse au sondage d'attestation (drwil-attest, posé par l'outil ask_user) n'est pas lue par le hook, donc l'attestation n'est pas enregistrée (constaté le 2026-11-08 sur QUA-013 et QUA-019 : réponse « Attester » sans effet, verify réclame toujours l'attestation). Faire lire par le hook de Copilot CLI la réponse du sondage d'attestation, comme pour Claude Code, avec essai réel à l'appui (voir QUA-069, QUA-236) ; l'agent n'exécute toujours jamais drwil attest lui-même
 - 2026-11-07 — Gestes humains depuis le chat : permettre l'acceptation des critères (node .githooks/state.mjs accept) et, de façon générale, tous les gestes humains aujourd'hui réservés à un terminal interactif (attest, verdict de recette, lancement…), par un sondage dans le chat lu par le hook (même mécanisme que drwil-attest), pour ne plus demander à l'humain d'ouvrir un terminal à part ; à regrouper avec la note sur la lecture par Copilot CLI de la réponse au sondage d'attestation ; garde-fou à garder : l'agent ne peut jamais répondre lui-même au sondage (QUA-175 : aucun agent n'écrit l'acceptation des critères)
+- 2026-11-08 — Accélérer run-checks : miroirs-gabarit (QUA-018) relance tous les outils/*.test.mjs avec paths ** et reuse tree, dont banc.test.mjs (34 s) déjà couvert par tests-qua-101 à 109 ; le réduire à verifier-miroirs et son test. Ensuite : paralléliser les tests lents du banc (QUA-108, QUA-101) et des hooks (56 s), et supprimer les fichiers que les tests laissent dans le dossier temporaire.

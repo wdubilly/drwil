@@ -471,6 +471,17 @@ test(
   },
 );
 
+test("QUA-268 : HEAD détaché sans workflow déclaré — la commande de rattrapage vise le commit, avec un workflow générique", posix, () => {
+  const { racine } = depotCandidat();
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ lang: "fr", release: EXIGES }));
+  const { gh } = ghCi(racine, ["ubuntu-latest"]);
+  git(racine, "checkout", "--detach", "-q");
+  const sha = git(racine, "rev-parse", "HEAD");
+  const d = lancer(racine, ["--dry-run"], chemin({ gh }));
+  assert.equal(d.status, 0, d.stderr);
+  assert.ok(d.stdout.includes(`gh workflow run <workflow> --ref ${sha}`), d.stdout);
+});
+
 test("QUA-268 : les trois OS exigés verts — la release est créée ; réglage absent — la CI n'est pas lue", posix, () => {
   const { racine, origine } = depotCandidat();
   reglerMode(racine, EXIGES);
