@@ -74,8 +74,16 @@ parallélisme (`parallel`) par défaut.
 
 ## Contrats modifiés
 
-Aucun à ce stade ; QUA-033 (« un contrôle par règle »), QUA-250 (« le push sur la branche principale rejoue tout ») et QUA-113 (« rejoue les contrôles »)
-seront probablement touchés : une puce, validée par le demandeur, sera ajoutée avant le lancement.
+- `QUA-033` — ancien critère : chaque contrat qui cite des tests a son propre contrôle `tests-<id>`, qui rejoue les
+  fichiers de son champ Tests filtrés par son ID — raison : un seul lancement par fichier de test, avec un verdict par
+  ID de contrat, pour ne plus payer 238 lancements (lot 4) (validé par le demandeur le 2026-11-08)
+- `QUA-250` — ancien critère : le push sur la branche principale rejoue tout et seul écrit les verdicts — raison : un
+  push dont l'arbre est celui d'une PR verte saute le rejeu et le dit (lot 3) ; au lot 1, la preuve « aucun cache »
+  du gabarit GitLab devient « aucun cache des verdicts » (l'archive de gitleaks, vérifiée par sa somme, est cachée)
+  (validé par le demandeur le 2026-11-08)
+- `QUA-113` — ancien critère : la CI rejoue toute la passe avec les hooks de la branche principale — raison : le rejeu
+  reprend le verdict de chaque contrôle dont les hooks et l'empreinte sont identiques, un hook affaibli restant refusé
+  (lot 2) (validé par le demandeur le 2026-11-08)
 
 ## 2. Hors périmètre
 
@@ -103,15 +111,33 @@ seront probablement touchés : une puce, validée par le demandeur, sera ajouté
   PR verte ; le job rapporte quand même « succès » sous son nom exigé et dit pourquoi, pour que la CI de la
   branche principale reste « verte » aux yeux de QUA-251.
 - 2026-11-08 : parallélisme limité à la moitié des cœurs, deux au moins (comportement actuel du moteur).
-- 2026-11-08 : cible de durée non fixée par le demandeur ; l'agent propose, après la mesure du lot 1, au moins
-  la moitié du temps actuel d'une PR de code (visée : 8 min au plus), à confirmer par le demandeur.
+- 2026-11-08 : la cible de durée du job `checks` sur une PR de code est un **objectif suivi** (visée : 8 min au
+  plus), jamais un seuil : aucun contrôle ne fait échouer la CI sur la durée (décision du demandeur, par sondage).
+- 2026-11-08 : « arbre identique à celui d'une PR verte » (lot 3) s'établit par l'empreinte `git rev-parse HEAD^{tree}`
+  lue dans la preuve de la dernière CI de PR verte (décision du demandeur, par sondage) ; si le merge change l'arbre
+  (PR non à jour), tout est rejoué.
 
 ## 5. Points à trancher
 
-- [décision] Confirmer la cible de durée (visée 8 min au plus) après la mesure du lot 1.
-- [décision] Comment établir « arbre identique à celui d'une PR verte » au push : empreinte de l'arbre Git
-  (`git rev-parse HEAD^{tree}`) lue dans la preuve de la dernière CI de PR verte ? À trancher au lot 3, avec le
-  risque d'un merge qui change l'arbre (PR non à jour avec `master`) : alors tout est rejoué.
+- ~~Cible de durée~~ : tranché le 2026-11-08, objectif suivi de 8 min, jamais un seuil (section 4).
+- ~~Arbre identique à celui d'une PR verte~~ : tranché le 2026-11-08, empreinte `git rev-parse HEAD^{tree}` lue dans la
+  preuve de la dernière CI de PR verte (section 4).
+
+## Mesures du lot 1 (2026-11-08, API REST des runs, étapes du job `checks`)
+
+| Run | Événement | `npm ci` | `run-checks` | Rejeu QUA-113 | Gitleaks |
+|---|---|---|---|---|---|
+| 42470247549 | push `master` | 2 s | 369 s | 0 s (saut) | < 1 s |
+| 42465180967 | PR de code | 3 s | 437 s | 441 s | < 1 s |
+| 42426518816 | PR de code | — | 435 s | 439 s | < 1 s |
+
+Hors `run-checks` et rejeu, chaque étape dure moins de 3 s : checkout, installation et gitleaks sont négligeables
+quand le téléchargement réussit. La CI ne donne que les trois contrôles les plus lents de la passe (le détail par
+contrôle reste dans `.drwil/evidence/run-checks.log` (si présent), non conservé en CI) : « drwil: build + tests + seuil de
+couverture » 172 à 224 s, « tests des contrôles eux-mêmes » 80 à 98 s, « hooks de gouvernance : tests + couverture »
+67 à 81 s. Une PR de code paie donc deux passes complètes (~880 s) ; objectif suivi : 8 min (480 s), jamais un seuil.
+Les installations du contrôle `tarball` et du banc (cause 4) ne sont pas ventilées en CI : chiffrage reporté au
+lot 4, avec l'accès au détail par contrôle.
 
 ## 6. Increments
 
@@ -126,5 +152,12 @@ seront probablement touchés : une puce, validée par le demandeur, sera ajouté
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-08) : cadré, mesures faites, décisions prises (section 4), rien de réalisé.
-- **Prochaine étape** : [décision] commiter le cadrage, puis lancer le chantier.
+- **Dernier état** (2026-11-08) : lot 1 fait. Gitleaks : nouvelles tentatives (`--retry 5 --retry-all-errors`) et cache
+  de l'archive sous sa version épinglée (somme vérifiée à chaque passe) dans les trois CI ; tests des workflows verts ; mesures
+  consignées ci-dessus. Décisions ouvertes tranchées (section 4), puce « Contrats modifiés » ajoutée.
+- **Limite hors cadre du lot 1 (2)** : le job `checks` du dépôt ne cache pas l'archive : son étape gitleaks doit rester
+  identique à celle de `.github/workflows/banc.yml` (test QUA-109, `outils/banc.test.mjs`), tous deux absents du bloc `scope`.
+- **Limite hors cadre du lot 1** : la durée par contrôle en CI exige d'afficher le classement complet dans la sortie
+  de `run-checks` (en CI), donc de modifier le gabarit `packages/drwil/templates/common/base/.githooks/run-checks.mjs`
+  (source de `.githooks/run-checks.mjs`, QUA-018), absent du bloc `scope` : non fait ; le lot 4 y touchera aussi.
+- **Prochaine étape** : lot 2 — rejeu QUA-113 avec reprise (`.githooks/base-checks.mjs`).

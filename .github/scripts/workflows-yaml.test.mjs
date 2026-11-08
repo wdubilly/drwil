@@ -114,11 +114,10 @@ for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templat
     );
     assert.equal(etapes[sauve].with.path, VERDICTS);
     assert.match(etapes[sauve].with.key, /^run-checks-verdicts-\$\{\{ github\.sha \}\}$/);
-    // Aucun autre job ni aucune autre étape n'écrit de cache.
-    const sauvegardes = Object.values(ci.jobs).flatMap((j) =>
-      (j.steps ?? []).filter((e) => /^actions\/cache(\/save)?@/.test(e.uses ?? "")),
-    );
-    assert.equal(sauvegardes.length, 1);
+    // Aucun autre job ni aucune autre étape n'écrit les verdicts ; seule l'archive de gitleaks peut être cachée par une PR,
+    // et sa somme est vérifiée à chaque passe : un cache empoisonné échoue, il ne valide rien.
+    const ecritures = Object.values(ci.jobs).flatMap((j) => (j.steps ?? []).filter((e) => /^actions\/cache(\/save)?@/.test(e.uses ?? "")));
+    assert.equal(ecritures.filter((e) => !String(e.with.key).startsWith("gitleaks-8.21.2-")).length, 1);
   });
 
 test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge les verdicts de la branche principale et demande leur reprise ; seule la branche principale les garde", () => {
@@ -146,8 +145,26 @@ test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge
     apres,
     /if \[ -n "\$CI_COMMIT_TAG" \] \|\| \[ "\$CI_COMMIT_BRANCH" != "\$CI_DEFAULT_BRANCH" \]; then\n\s*rm -f \.drwil\/evidence\/run-checks-verdicts\.json/,
   );
-  // Pas de cache GitLab : une merge request pourrait l'écrire, ou ne pas le lire (caches protégés séparés).
-  assert.ok(!JSON.stringify(ci).includes('"cache"'));
+  // Pas de cache GitLab des verdicts : une merge request pourrait l'écrire, ou ne pas le lire (caches protégés séparés) ; seule l'archive de gitleaks est cachée.
+  assert.deepEqual(ci.checks.cache.paths, [".drwil/evidence/gitleaks.tar.gz"]);
+});
+
+test("gitleaks : les trois CI retentent le téléchargement (erreur HTTP comprise), cachent l'archive sous sa version épinglée et la vérifient à chaque passe", () => {
+  const lire = (f) => readFileSync(join(RACINE, f), "utf8");
+  const ci = {
+    depot: lire(".github/workflows/ia-first.yml"),
+    github: lire("packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml"),
+    gitlab: lire("packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml"),
+  };
+  for (const [nom, texte] of Object.entries(ci)) {
+    const curls = texte.split("\n").filter((l) => l.includes("curl") && l.includes("gitleaks"));
+    assert.ok(curls.length >= 1, `${nom} : téléchargement de gitleaks introuvable`);
+    // L'étape du dépôt est comparée mot pour mot à celle du banc (QUA-109) : ses tentatives passent par ~/.curlrc.
+    if (nom === "depot") assert.match(texte, /printf .*'retry = 5' 'retry-all-errors'.*> ~\/\.curlrc/);
+    else for (const l of curls) assert.match(l, /--retry 5 --retry-all-errors/, `${nom} : ${l.trim()}`);
+    assert.match(texte, /gitleaks-8\.21\.2-/, `${nom} : cache de l'archive sous sa version épinglée`);
+    assert.match(texte, /sha256sum -c -|shasum -a 256 -c -/, `${nom} : somme vérifiée`);
+  }
 });
 
 test("QUA-252 : la protection de la branche principale n'exige plus qu'une PR soit à jour avec elle, et la CI vérifie que la forge tient le ruleset versionné", () => {

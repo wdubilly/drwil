@@ -21,6 +21,11 @@ jobs:
       # Sans gitleaks, SEC-007 (pas de secret) serait « non exécuté » ici, et verify en ERROR dans le
       # projet d'essai du contrôle tarball (journal « Gitleaks en CI », docs/projects/journal.md). Version épinglée, archive
       # vérifiée par sa somme publiée ; installé là où le moteur le cherche (~/.local/bin).
+      # Le téléchargement ci-dessous se remet d'une erreur passagère (504 compris) : curl lit ~/.curlrc. L'étape
+      # d'installation reste identique à celle du banc (.github/workflows/banc.yml, QUA-109), qui la compare.
+      - name: Nouvelles tentatives de curl
+        run: |
+          printf '%s\n' 'retry = 5' 'retry-all-errors' 'retry-delay = 5' 'connect-timeout = 20' 'max-time = 120' > ~/.curlrc
       - name: Installer gitleaks 8.21.2
         run: |
           curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
@@ -154,11 +159,17 @@ jobs:
         run: npm ci
       # Les tests du paquet lancent run-checks dans des projets temporaires : sans gitleaks, le
       # contrôle des secrets y est « non exécuté », donc en échec (QUA-013). Archive vérifiée par sha256.
+      - name: Restaurer l'archive gitleaks
+        if: ${{ matrix.tester }}
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/${{ matrix.gitleaks }}
+          key: gitleaks-8.21.2-${{ matrix.sha256 }}
       - name: Installer gitleaks 8.21.2
         if: ${{ matrix.tester }}
         shell: bash
         run: |
-          curl -sSfL -o "$RUNNER_TEMP/${{ matrix.gitleaks }}" "https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/${{ matrix.gitleaks }}"
+          [ -s "$RUNNER_TEMP/${{ matrix.gitleaks }}" ] || curl -sSfL --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 120 -o "$RUNNER_TEMP/${{ matrix.gitleaks }}" "https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/${{ matrix.gitleaks }}"
           cd "$RUNNER_TEMP"
           if command -v sha256sum >/dev/null; then echo "${{ matrix.sha256 }}  ${{ matrix.gitleaks }}" | sha256sum -c -; else echo "${{ matrix.sha256 }}  ${{ matrix.gitleaks }}" | shasum -a 256 -c -; fi
           mkdir -p "$RUNNER_TEMP/gitleaks-bin"
