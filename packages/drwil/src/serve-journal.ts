@@ -83,7 +83,7 @@ export function openJournal(dir: string, mask: (e: JournalEvent) => JournalEvent
 export type Journal = ReturnType<typeof openJournal>;
 
 const TOTALS = ["tokens", "output", "cache_read", "requests", "duration_min"] as const;
-type Totals = Record<(typeof TOTALS)[number] | "increments", number> & { workstream: string; date: string };
+type Totals = Record<(typeof TOTALS)[number] | "increments", number> & { workstream: string; date: string; model?: unknown };
 
 function usageRows(usage: string): Totals[] {
   return usage
@@ -92,7 +92,8 @@ function usageRows(usage: string): Totals[] {
     .flatMap((line) => {
       try {
         const row = JSON.parse(line) as Totals;
-        return typeof row.workstream === "string" && typeof row.date === "string" ? [row] : [];
+        // Une ligne sans date reste comptée : seule sa version est inconnue.
+        return typeof row.workstream === "string" ? [{ ...row, date: typeof row.date === "string" ? row.date : "" }] : [];
       } catch {
         return [];
       }
@@ -101,7 +102,7 @@ function usageRows(usage: string): Totals[] {
 
 /** Agrège par chantier ; un chantier compte pour la première version publiée à sa date ou après (`tagLines` : tag, date). */
 export function summarizeUsage(usage: string, tagLines: string) {
-  const byName = new Map<string, Totals>();
+  const byName = new Map<string, Totals & { models: Set<string> }>();
   for (const r of usageRows(usage)) {
     const w = byName.get(r.workstream) ?? {
       workstream: r.workstream,
@@ -112,8 +113,10 @@ export function summarizeUsage(usage: string, tagLines: string) {
       duration_min: 0,
       date: r.date,
       increments: 0,
+      models: new Set<string>(),
     };
-    for (const key of TOTALS) w[key] += r[key] ?? 0;
+    for (const key of TOTALS) w[key] += Number(r[key]) || 0;
+    if (typeof r.model === "string" && r.model) w.models.add(r.model);
     if (r.date > w.date) w.date = r.date;
     w.increments++;
     byName.set(r.workstream, w);
@@ -123,7 +126,11 @@ export function summarizeUsage(usage: string, tagLines: string) {
     .filter(Boolean)
     .map((l) => l.split("\x1f"))
     .map(([tag, date]) => ({ tag, date }));
-  const workstreams = [...byName.values()].map((w) => ({ ...w, version: tags.find((t) => t.date >= w.date)?.tag ?? null }));
+  const workstreams = [...byName.values()].map((w) => ({
+    ...w,
+    models: [...w.models],
+    version: w.date ? (tags.find((t) => t.date >= w.date)?.tag ?? null) : null,
+  }));
   return { workstreams: workstreams.sort((a, b) => b.date.localeCompare(a.date)), tags };
 }
 

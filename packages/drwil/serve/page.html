@@ -93,6 +93,7 @@
   <section id="ct"><input id="cq" type="search"><details class="kinds"><summary id="cfl"></summary><div id="cf"></div></details><div id="ctl"></div></section>
   <section id="us"></section>
   <section id="me"></section>
+  <section id="au"></section>
   <section id="briefs"></section>
   <section id="int"><input id="q" type="search"><select id="qs"></select><div id="intl"></div></section>
   <section id="notes"></section>
@@ -101,7 +102,7 @@
 <script type="application/json" id="i18n">
 {
   "fr": {
-    "tab-ci": "CI en direct", "tab-kb": "Tableau", "tab-tl": "Fil", "tab-rel": "Releases", "tab-ct": "Contrats", "tab-us": "Consommation", "tab-me": "Mesures", "tab-briefs": "Fiches", "tab-int": "Intentions", "tab-notes": "Notes",
+    "tab-ci": "CI en direct", "tab-kb": "Tableau", "tab-tl": "Fil", "tab-rel": "Releases", "tab-ct": "Contrats", "tab-us": "Consommation", "tab-me": "Mesures", "tab-au": "Audits", "tab-briefs": "Fiches", "tab-int": "Intentions", "tab-notes": "Notes",
     "branch": "branche", "lot": "lot {0}", "updated": "mis à jour {0}", "offline": "serveur injoignable, nouvel essai dans 10 s", "denied": "accès refusé : rouvrir le lien avec le jeton", "loading": "chargement…", "unreadable": "illisible", "block": "bloc {0}", "comment": "commentaire",
     "running": "en cours", "open": "ouvrir", "noRun": "Aucune exécution.", "noTarget": "Aucune PR ouverte ni branche principale à suivre.",
     "noBrief": "Aucune fiche cadrée.", "ready": "prête", "notReady": "pas prête", "mat-ready": "prêt", "mat-refine": "à affiner", "mat-in-progress": "en cours", "mat-unset": "sans maturité", "decisions": "{0} décision(s)",
@@ -118,10 +119,11 @@
     "versionAll": "Toutes les versions", "versionOnly": "seulement cette version", "versionTitle": "Version {0}", "versionDone": "{0} sur {1} fusionnée(s)", "since": " depuis {0}", "detail": "le détail", "boardNote": "Les cartes se placent seules (fichiers, état, Git, forge) : lancer, fusionner et publier restent des gestes gouvernés par drwil.",
     "reopened": "rouvert (PR #{0})", "autoMerge": "fusion automatique autorisée", "toDecide": "{0} décision(s) à prendre", "toAnswer": "{0} question(s) à trancher", "files": "{0} fichier(s)", "codeDoc": "{0} de code, {1} de doc",
     "latest": "dernière", "pre": "pré-version", "tagOnly": "tag sans release publiée", "nextVersion": "prochaine version, pas encore publiée", "relMeta": "{0} {1} de code, {2} de doc · {3} chantier(s) · {4} tokens", "relWs": "Chantiers", "relPrs": "{0} fusionnées", "relChangelog": "Journal des changements", "relNoChangelog": "Pas de section dans le journal des changements.",
-    "trendCi": "Durée du job checks, hooks inchangés", "trendCache": "Cache lu par requête (tokens)", "trendOk": "moyenne {0}, seuil d'alerte {1}", "trendAlert": "dérive : moyenne {0} au-dessus du seuil {1}", "trendNone": "Aucun relevé.", "trendNote": "Indicateurs, jamais bloquants. En plein : les cinq derniers relevés, ceux de la moyenne.", "lastRuns": "Durées de la dernière CI"
+    "trendCi": "Durée du job checks, hooks inchangés", "trendCache": "Cache lu par requête (tokens)", "trendOk": "moyenne {0}, seuil d'alerte {1}", "trendAlert": "dérive : moyenne {0} au-dessus du seuil {1}", "trendNone": "Aucun relevé.", "trendNote": "Indicateurs, jamais bloquants. En plein : les cinq derniers relevés, ceux de la moyenne.", "lastRuns": "Durées de la dernière CI",
+    "auditStale": "scan vieux de {0} jours, à relancer", "indexTitle": "Chantiers en attente ({0})", "othersTitle": "Autres documents du dossier des fiches ({0})", "catalogTitle": "Au catalogue, non installés ({0})", "noStatus": "(pas de ligne Statut)", "noIndex": "Aucune case dans l'index.", "models": "modèles : {0}"
   },
   "en": {
-    "tab-ci": "Live CI", "tab-kb": "Board", "tab-tl": "Timeline", "tab-rel": "Releases", "tab-ct": "Contracts", "tab-us": "Consumption", "tab-me": "Measures", "tab-briefs": "Briefs", "tab-int": "Intents", "tab-notes": "Notes",
+    "tab-ci": "Live CI", "tab-kb": "Board", "tab-tl": "Timeline", "tab-rel": "Releases", "tab-ct": "Contracts", "tab-us": "Consumption", "tab-me": "Measures", "tab-au": "Audits", "tab-briefs": "Briefs", "tab-int": "Intents", "tab-notes": "Notes",
     "branch": "branch", "lot": "increment {0}", "updated": "updated {0}", "offline": "server unreachable, retrying in 10 s", "denied": "access denied: open the link with the token again", "loading": "loading…", "unreadable": "unreadable", "block": "{0} block", "comment": "comment",
     "running": "running", "open": "open", "noRun": "No run.", "noTarget": "No open PR nor main branch to follow.",
     "noBrief": "No scoped brief.", "ready": "ready", "notReady": "not ready", "mat-ready": "ready", "mat-refine": "to refine", "mat-in-progress": "in progress", "mat-unset": "no maturity", "decisions": "{0} decision(s)",
@@ -138,7 +140,8 @@
     "versionAll": "All versions", "versionOnly": "this version only", "versionTitle": "Version {0}", "versionDone": "{0} of {1} merged", "since": " since {0}", "detail": "details", "boardNote": "Cards place themselves (files, state, Git, forge): starting, merging and releasing stay gestures governed by drwil.",
     "reopened": "reopened (PR #{0})", "autoMerge": "automatic merge allowed", "toDecide": "{0} decision(s) to take", "toAnswer": "{0} question(s) to settle", "files": "{0} file(s)", "codeDoc": "{0} code, {1} doc",
     "latest": "latest", "pre": "pre-release", "tagOnly": "tag without a published release", "nextVersion": "next version, not released yet", "relMeta": "{0} {1} code, {2} doc · {3} workstream(s) · {4} tokens", "relWs": "Workstreams", "relPrs": "Merged {0}", "relChangelog": "Changelog", "relNoChangelog": "No section in the changelog.",
-    "trendCi": "Duration of the checks job, hooks unchanged", "trendCache": "Cache read per request (tokens)", "trendOk": "mean {0}, alert threshold {1}", "trendAlert": "drift: mean {0} above the threshold {1}", "trendNone": "No reading.", "trendNote": "Indicators, never blocking. Solid bars: the last five readings, those of the mean.", "lastRuns": "Latest CI durations"
+    "trendCi": "Duration of the checks job, hooks unchanged", "trendCache": "Cache read per request (tokens)", "trendOk": "mean {0}, alert threshold {1}", "trendAlert": "drift: mean {0} above the threshold {1}", "trendNone": "No reading.", "trendNote": "Indicators, never blocking. Solid bars: the last five readings, those of the mean.", "lastRuns": "Latest CI durations",
+    "auditStale": "scan {0} days old, time to re-run", "indexTitle": "Pending work ({0})", "othersTitle": "Other files in the briefs folder ({0})", "catalogTitle": "In the catalog, not installed ({0})", "noStatus": "(no Status line)", "noIndex": "No checkbox in the index.", "models": "models: {0}"
   }
 }
 </script>
@@ -239,10 +242,10 @@ function md(text) {
 
 const data = {};
 let tab = store.get("tab", "ci");
-const TABS = ["ci", "kb", "tl", "rel", "ct", "us", "me", "briefs", "int", "notes"];
+const TABS = ["ci", "kb", "tl", "rel", "ct", "us", "me", "au", "briefs", "int", "notes"];
 if (!TABS.includes(tab)) tab = "ci";
 // Chaque onglet ne lit que ses routes : un téléphone n'interroge pas la forge pour ce qu'il ne regarde pas.
-const FEEDS = { ci: ["ci"], kb: ["board"], tl: ["events"], rel: ["releases"], ct: ["contracts"], us: ["usage"], me: ["measures", "ci"], briefs: [], int: [], notes: [] };
+const FEEDS = { ci: ["ci"], kb: ["board"], tl: ["events"], rel: ["releases"], ct: ["contracts"], us: ["usage"], me: ["measures", "ci"], au: ["audits"], briefs: [], int: [], notes: [] };
 const RENDER = {};
 
 async function getJson(url) {
@@ -296,15 +299,21 @@ const docHtml = (path) => {
 const loadFile = (path, render) => loadInto(fileCache, path, `/api/file?path=${encodeURIComponent(path)}`, render);
 
 const briefOpen = new Set();
+const statusLine = (b) => `<div class="mute">${b.status ? code(b.status) : esc(t("noStatus"))}</div>`;
 RENDER.briefs = () => {
   const docs = data.docs;
   if (!docs) return;
-  stable($("#briefs"), docs.briefs.map((b, i) => {
+  const briefCard = (b, head, tags) => {
     const open = briefOpen.has(b.path);
-    return `<div class="card can" data-key="${esc(b.path)}"><h3>${i + 1}. ${code(String(b.title).replace(/^(?:Projet|Project)\s*:\s*/, ""))} <span class="mute">${open ? "▾" : "▸"}</span></h3>
-      ${b.priority ? `<span class="tag ${esc(b.priority)}">${esc(b.priority)}</span>` : ""}<span class="tag ${b.ready ? "ready" : ""}">${esc(t(b.ready ? "ready" : "notReady"))}</span><span class="tag">${esc(t(`mat-${b.maturity}`))}</span>${b.decisions ? `<span class="tag P1">${esc(t("decisions", b.decisions))}</span>` : ""}
-      <div class="mute">${esc(b.path)}</div>${open ? docHtml(b.path) : ""}</div>`;
-  }).join("") || none(t("noBrief")));
+    return `<div class="card can" data-key="${esc(b.path)}"><h3>${head}${code(String(b.title).replace(/^(?:Projet|Project)\s*:\s*/, ""))} <span class="mute">${open ? "▾" : "▸"}</span></h3>
+      ${tags}${statusLine(b)}<div class="mute">${esc(b.path)}</div>${open ? docHtml(b.path) : ""}</div>`;
+  };
+  const scoped = docs.briefs.map((b, i) => briefCard(b, `${i + 1}. `, `${b.priority ? `<span class="tag ${esc(b.priority)}">${esc(b.priority)}</span>` : ""}<span class="tag ${b.ready ? "ready" : ""}">${esc(t(b.ready ? "ready" : "notReady"))}</span><span class="tag">${esc(t(`mat-${b.maturity}`))}</span>${b.decisions ? `<span class="tag P1">${esc(t("decisions", b.decisions))}</span>` : ""}`)).join("") || none(t("noBrief"));
+  const index = docs.index ?? [];
+  const others = docs.others ?? [];
+  stable($("#briefs"), `${scoped}
+    <details class="card" data-id="index"><summary>${esc(t("indexTitle", index.length))}</summary>${index.map((l) => `<div class="li ${l.done ? "mute" : ""}">${l.done ? "☑" : "☐"} ${rich(l.text)}</div>`).join("") || `<div class="mute">${esc(t("noIndex"))}</div>`}</details>
+    ${others.length ? `<h2>${esc(t("othersTitle", others.length))}</h2>${others.map((b) => briefCard(b, "", "")).join("")}` : ""}`);
 };
 clickable(".card[data-key]", $("#briefs"), (c) => { if (flip(briefOpen, c.dataset.key)) loadFile(c.dataset.key, RENDER.briefs); RENDER.briefs(); });
 
@@ -455,9 +464,11 @@ RENDER.ct = () => {
       ${c.severity && c.severity !== "blocking" ? `<span class="tag">${esc(c.severity)}</span>` : ""}
       ${control ? `<span class="mute">${t("control", code(control))}</span>` : field(c, "Manuel", "Manual") ? `<span class="mute">${esc(t("manual"))}</span>` : ""}
       ${open ? `<dl>${Object.entries(c.fields).map(([k, val]) => `<dt>${esc(k)}</dt><dd>${rich(val)}</dd>`).join("")}${c.reasons.length ? `<dt>${esc(t("atLastVerify"))}</dt><dd class="mute">${c.reasons.map(esc).join("<br>")}</dd>` : ""}</dl>`
-        : `<div class="mute">${code(rule.replace(/^(?:Livré à tout projet[^.]*|Shipped to every project[^.]*)\.\s*/, "").slice(0, 200))}${rule.length > 200 ? "…" : ""}</div>`}
+        : rule && rule !== c.title ? `<div class="mute">${code(rule.replace(/^(?:Livré à tout projet[^.]*|Shipped to every project[^.]*)\.\s*/, "").slice(0, 200))}${rule.length > 200 ? "…" : ""}</div>` : ""}
     </div>`;
   }
+  const catalog = (reg.catalog ?? []).filter((c) => !q || JSON.stringify(c).toLowerCase().includes(q));
+  html += `<details class="card" data-id="catalog"><summary>${esc(t("catalogTitle", catalog.length))}</summary>${catalog.map((c) => `<div class="li"><code>${esc(c.id)}</code> ${code(c.rule)}</div>`).join("") || '<div class="mute">—</div>'}</details>`;
   stable($("#ctl"), html);
 };
 clickable(".card[data-key]", $("#ctl"), (c) => { flip(ctOpen, c.dataset.key); RENDER.ct(); }, "a, dl");
@@ -494,7 +505,7 @@ RENDER.us = () => {
     <h2>${esc(t("byWs"))}</h2>${use.workstreams.map((w) => {
       const open = wsOpen.has(w.workstream);
       return `<div class="card can" data-key="${esc(w.workstream)}"><div class="row" style="border:0"><b>${esc(w.workstream)} <span class="mute">${open ? "▾" : "▸"}</span></b><span class="d"><b>${tok(w.tokens)}</b></span></div>${bar(w.tokens, max)}
-        <div class="stats"><span class="mute">${esc(w.date)}</span><span class="mute">${esc(w.version ?? unreleased)}</span><span>${hm(w.duration_min)}</span><span>${w.requests} ${esc(t("requests"))}</span><span>${tok(w.output)} ${esc(t("output"))}</span><span>${tok(w.cache_read)} ${esc(t("cacheRead"))}</span></div>
+        <div class="stats"><span class="mute">${esc(w.date)}</span><span class="mute">${esc(w.version ?? unreleased)}</span><span>${hm(w.duration_min)}</span><span>${w.requests} ${esc(t("requests"))}</span><span>${tok(w.output)} ${esc(t("output"))}</span><span>${tok(w.cache_read)} ${esc(t("cacheRead"))}</span>${w.models?.length ? `<span class="mute">${esc(t("models", w.models.join(", ")))}</span>` : ""}</div>
         ${open ? `<div class="doc">${wsDetail(wsCache[w.workstream])}</div>` : ""}</div>`;
     }).join("")}` : ""}`);
 };
@@ -612,6 +623,14 @@ RENDER.me = () => {
   const runs = (data.ci?.targets ?? []).flatMap((x) => x.workflows.filter((w) => w.status === "completed").map((w) => ({ branch: x.branch, ...w })));
   const last = runs.length ? `<h2>${esc(t("lastRuns"))}</h2>${runs.map((w) => `<div class="card"><h3><span class="${cls(w)}">${ICON[cls(w)]}</span> ${esc(w.name)} <span class="mute">${esc(w.branch)}</span></h3>${w.jobs.map((j) => `<div class="row"><span>${esc(j.name)}</span><span class="d">${dur(j.started, j.completed)}</span></div>`).join("")}</div>`).join("")}` : "";
   stable($("#me"), `${missing(m)}<div class="band">${trendCard(t("trendCi"), m.ci, secs)}${trendCard(t("trendCache"), m.cache, tok)}</div><div class="mute">${esc(t("trendNote"))}</div>${last}`);
+};
+
+RENDER.au = () => {
+  const view = data.audits;
+  if (!view) return;
+  stable($("#au"), missing(view) + view.audits.map((a) => `<div class="card ${a.staleDays !== null ? "warn" : ""}"><h3>${code(a.title || a.path)}</h3><div class="mute"><code>${esc(a.path)}</code></div>
+    ${a.staleDays !== null ? `<div class="run">⚠ ${esc(t("auditStale", a.staleDays))}</div>` : ""}
+    <dl>${a.entries.map((e) => `<dt>${esc(e.key)}</dt><dd>${rich(e.value)}</dd>`).join("")}</dl></div>`).join(""));
 };
 
 const stateDocs = () => { renderHeader(); RENDER.briefs(); RENDER.notes(); RENDER.int(); };

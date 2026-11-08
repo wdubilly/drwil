@@ -151,6 +151,7 @@ const ROUTES = [
   "api/releases",
   "api/events",
   "api/measures",
+  "api/audits",
   "api/detail?key=x",
   "api/workstream?name=x",
 ];
@@ -409,6 +410,7 @@ test("QUA-271 : aucune réponse de l'API ne porte de donnée nominative ni de se
     "docs/intentions/idee.md": texte,
     "docs/projects/fiche.md": texte,
     ".drwil/usage.jsonl": `{"workstream":"a","date":"2026-01-01","author":"Jeanne","email":"jeanne@example.invalid"}\n`,
+    "docs/audit-risques.md": `# Audit\n\n> Dernier scan : 2026-11-01\n> Auteur : ${NOM_GIT}\n> Auditeur : Une Personne\n> Note : revu par jeanne@example.invalid et ${secret}\n`,
   });
   ecrire(
     p.dir,
@@ -425,10 +427,12 @@ test("QUA-271 : aucune réponse de l'API ne porte de donnée nominative ni de se
     "api/usage",
     "api/file?path=docs/intentions/idee.md",
     "api/file?path=docs/projects/fiche.md",
+    "api/audits",
   ])
     corps.push(await (await fetch(s.url + route)).text());
   const tout = corps.join("\n");
-  for (const interdit of [NOM_GIT, "jeanne@example.invalid", "@jeanne-t", secret]) assert.ok(!tout.includes(interdit), interdit);
+  for (const interdit of [NOM_GIT, "jeanne@example.invalid", "@jeanne-t", secret, "Une Personne"])
+    assert.ok(!tout.includes(interdit), interdit);
   assert.match(tout, /@AGENTS\.md/);
   assert.match(tout, /@types\/node/);
   assert.match(tout, /un-chemin-de-fiche-vraiment-tres-long-et-lisible\.md/);
@@ -1323,6 +1327,10 @@ test("QUA-275 : sans forge, sans preuve et sans consommation, les vues sont vide
   assert.ok(!("cli" in ci), "le champ interne ne sort pas");
   assert.match((await jsonDe(`${s.url}api/usage`)).missing, /usage\.jsonl/);
   assert.match((await jsonDe(`${s.url}api/contracts`)).missing, /drwil verify/);
+  const audits = await jsonDe(`${s.url}api/audits`);
+  assert.deepEqual(audits.audits, []);
+  assert.match(audits.missing, /docs\/audit-risques\.md absent/);
+  assert.match(audits.missing, /docs\/decouverte-valeur\.md absent/);
   assert.deepEqual(await jsonDe(`${s.url}api/detail?key=pr-1-open`), { error: "forge unavailable" });
   assert.equal(s.erreurs(), "");
 });
@@ -1769,7 +1777,7 @@ test("QUA-276 : français et anglais ont les mêmes libellés, chaque code rendu
       "ci-ko",
     ].map((c) => `kind-${c}`),
     ...["notes", "intentions", "fiches", "chantier", "prs", "fusionnees", "publiees"].map((c) => `col-${c}`),
-    ...["ci", "kb", "tl", "rel", "ct", "us", "me", "briefs", "int", "notes"].map((c) => `tab-${c}`),
+    ...["ci", "kb", "tl", "rel", "ct", "us", "me", "au", "briefs", "int", "notes"].map((c) => `tab-${c}`),
     "ready",
     "notReady",
   ])
@@ -1782,6 +1790,86 @@ test("QUA-276 : la page ne porte aucune adresse de forge et ne fait ses liens de
   assert.ok(!/(?:github|gitlab)\.com/.test(PAGE));
   assert.match(scriptDeLaPage, /href="\/forge\/pr\/\$\{Number\(n\)\}"/);
   assert.ok(!/href="\$\{(?!Number)/.test(scriptDeLaPage), "aucun lien bâti sur une valeur de l'API");
+});
+
+const AUJOURDHUI = new Date().toISOString().slice(0, 10);
+const FICHE_SANS_STATUT = "# Projet : sans statut\n\nPas de ligne.\n";
+
+test("QUA-276 : la page montre audits, index, statut des fiches, autres documents, catalogue et modèles", async () => {
+  const p = await projet({
+    "docs/audit-risques.md": `# Audit des risques\n\n> Dernier scan : ${AUJOURDHUI}\n> Niveau : fragile\n> suite de la ligne\n\n## Synthèse\n`,
+    "docs/decouverte-valeur.md": "# Découverte\n\n> Dernier scan : 2020-01-01\n\nTexte.\n",
+    "docs/projects/pending.md": "# Index\n\n- [ ] Un chantier — `docs/projects/x.md`\n  sur deux lignes.\n- [x] Fait\n\n- Pas une case\n",
+    "docs/projects/journal.md": "# Journal\n",
+    "docs/projects/model-brief.md": "# Modèle\n",
+    "docs/projects/sans-statut.md": FICHE_SANS_STATUT,
+    "docs/contracts-catalog.md":
+      "# Catalogue\n\n| ID | Règle | Périmètre |\n|---|---|---|\n| catalogue:SEC-013 | Toute route déclare sa permission. | API |\n\nFin.\n",
+    ".drwil/usage.jsonl":
+      '{"workstream":"a","tokens":10,"model":"m1","date":"2026-01-01"}\n{"workstream":"a","tokens":"oups","model":"m2","date":"2026-01-02"}\n{"workstream":"sans-date","tokens":3}\n',
+  });
+  const s = await demarrer(p);
+
+  const docs = await jsonDe(`${s.url}api/docs`);
+  assert.deepEqual(docs.index, [
+    { done: false, text: "Un chantier — `docs/projects/x.md` sur deux lignes." },
+    { done: true, text: "Fait" },
+  ]);
+  const autres = Object.fromEntries(docs.others.map((o) => [o.path, o]));
+  assert.ok(autres["docs/projects/journal.md"], "le journal figure parmi les autres documents");
+  assert.equal(autres["docs/projects/sans-statut.md"]?.status, null);
+  assert.equal(autres["docs/projects/model-brief.md"], undefined);
+  assert.equal(autres["docs/projects/pending.md"], undefined);
+
+  const contrats = await jsonDe(`${s.url}api/contracts`);
+  assert.deepEqual(contrats.catalog, [{ id: "catalogue:SEC-013", rule: "Toute route déclare sa permission." }]);
+
+  const audits = await jsonDe(`${s.url}api/audits`);
+  assert.equal(audits.missing, null);
+  const [risques, valeur] = audits.audits;
+  assert.equal(risques.path, "docs/audit-risques.md");
+  assert.equal(risques.title, "Audit des risques");
+  assert.deepEqual(risques.entries[1], { key: "Niveau", value: "fragile suite de la ligne" });
+  assert.equal(risques.staleDays, null);
+  assert.ok(valeur.staleDays >= 30, "un scan de plus de 30 jours est signalé");
+
+  const conso = await jsonDe(`${s.url}api/usage`);
+  const parNom = Object.fromEntries(conso.workstreams.map((w) => [w.workstream, w]));
+  assert.deepEqual(parNom.a.models, ["m1", "m2"]);
+  assert.equal(parNom.a.tokens, 10, "un total illisible compte pour zéro");
+  assert.equal(parNom["sans-date"].tokens, 3, "une ligne sans date reste comptée");
+  assert.equal(parNom["sans-date"].version, null);
+  assert.equal(s.erreurs(), "");
+});
+
+test("QUA-276 : un registre en tableau se lit comme un registre en titres, statut de fiche compris", async () => {
+  const p = await projet({
+    "docs/contracts.md":
+      "# Registre\n\n| ID | Règle |\n|---|---|\n| QUA-900 | Une règle en tableau. |\n\n## QUA-901\n**Règle** : Une règle sans titre.\n",
+    "docs/projects/une-fiche.md":
+      "# Projet : une fiche\n\n**Statut** : cadré le 2026-11-08.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n  - src/x.mjs\n-->\n\n## Critères d'acceptation\n\n- un critère\n",
+  });
+  const s = await demarrer(p);
+  const ids = Object.fromEntries((await jsonDe(`${s.url}api/contracts`)).contracts.map((c) => [c.id, c]));
+  assert.equal(ids["QUA-900"].title, "Une règle en tableau.");
+  assert.equal(ids["QUA-900"].fields.Règle, "Une règle en tableau.");
+  assert.equal(ids["QUA-901"].title, "Une règle sans titre.");
+  const { briefs } = await jsonDe(`${s.url}api/docs`);
+  assert.equal(briefs.find((b) => b.path === "docs/projects/une-fiche.md")?.status, "cadré le 2026-11-08.");
+});
+
+test("QUA-276 : les audits d'un projet en anglais se lisent à leurs noms anglais, absents ils le disent en anglais", async () => {
+  const p = await projet({ "docs/audit-risks.md": `# Risk audit\n\n> Last scan: ${AUJOURDHUI}\n` });
+  const cfg = JSON.parse(readFileSync(join(p.dir, ".drwil/ia-first.json"), "utf8"));
+  ecrire(p.dir, ".drwil/ia-first.json", JSON.stringify({ ...cfg, lang: "en" }));
+  const s = await demarrer(p);
+  const v = await jsonDe(`${s.url}api/audits`);
+  assert.deepEqual(
+    v.audits.map((a) => a.path),
+    ["docs/audit-risks.md"],
+  );
+  assert.equal(v.audits[0].staleDays, null);
+  assert.match(v.missing, /docs\/value-discovery\.md missing/);
 });
 
 test("QUA-276 : la page se sert dans la langue du projet", async () => {

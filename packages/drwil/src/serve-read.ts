@@ -5,33 +5,14 @@ import { lstatSync, readdirSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { promisify } from "node:util";
 import { summarizeUsage } from "./serve-journal.js";
+import { parseContracts } from "./serve-views.js";
 
 const run = promisify(execFile);
 const MAX_SIZE = 4 * 1024 * 1024;
 const MARKS = /\[(décision|decision|humain|human|IA|AI|P\d)\]/g;
 const FILE_NAME = /^[\w.-]+\.md$/;
-const CONTRACT = /^## ((?:[a-z][\w-]*:)?[A-Z]{2,6}-\d{2,4}) — (.*)$/;
 type Json = Record<string, unknown>;
-type Contract = { id: string; title: string; fields: Record<string, string>; raw: string };
 type Tag = { marks: string[]; theme: string; done: boolean };
-
-function parseContracts(text: string): Contract[] {
-  const out: Contract[] = [];
-  let cur: Contract | null = null;
-  for (const line of text.split("\n")) {
-    const head = CONTRACT.exec(line);
-    if (head) {
-      cur = { id: head[1], title: head[2], fields: {}, raw: "" };
-      out.push(cur);
-    } else if (/^#{1,2} /.test(line)) cur = null;
-    else if (cur) {
-      cur.raw += `${line}\n`;
-      const field = /^\*\*([^*]+)\*\*\s*:\s*(.*)$/.exec(line);
-      if (field) cur.fields[field[1]] = field[2];
-    }
-  }
-  return out;
-}
 
 export function createReader(root: string, signal?: AbortSignal) {
   // QUA-269 : un lien symbolique du dépôt ne fait pas sortir la lecture du projet.
@@ -73,6 +54,7 @@ export function createReader(root: string, signal?: AbortSignal) {
     intentions: "docs/intentions",
     contracts: "docs/contracts.md",
     index: "docs/projects/pending.md",
+    catalog: "docs/contracts-catalog.md",
     ...(config.dirs as Record<string, string> | undefined),
   };
 

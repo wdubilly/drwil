@@ -9,10 +9,11 @@ import { allowedHost, COOKIE_NAME, cookieValue, hasValidToken, maskPersonal, sam
 import { createBoard } from "./serve-board.js";
 import { createDetails } from "./serve-details.js";
 import { createForge, type Missing } from "./serve-forge.js";
-import { type JournalEvent, measures, openJournal } from "./serve-journal.js";
+import { type JournalEvent, openJournal } from "./serve-journal.js";
 import { createReader } from "./serve-read.js";
 import { createReleases } from "./serve-releases.js";
 import { SERVE_TEXTS } from "./serve-texts.js";
+import { projectViews } from "./serve-views.js";
 import { startWatch } from "./serve-watch.js";
 
 const BASE_PORT = 4317;
@@ -115,25 +116,7 @@ export async function startServer(o: ServeOptions): Promise<RunningServer> {
   });
 
   const routes: Record<string, (url: URL) => unknown> = {
-    "/api/docs": async () => ({
-      state: await reader.state(),
-      briefs: await reader.briefs(),
-      intentions: reader.intentions(),
-      notes: reader.notes(),
-    }),
-    "/api/contracts": async () => {
-      const view = await reader.contracts();
-      const head = (await reader.git("rev-parse", "--short=7", "HEAD")).trim();
-      return { ...view, head, missing: view.verify ? null : T.noEvidence };
-    },
-    "/api/usage": async () => {
-      const view = await reader.usage();
-      return { ...view, missing: view.workstreams.length ? null : T.noUsage };
-    },
-    "/api/measures": () => {
-      const view = measures(reader.text(".drwil/usage.jsonl"), reader.text(`${reader.dirs.projects}/journal.md`));
-      return { ...view, missing: view.ci || view.cache ? null : T.noMeasures };
-    },
+    ...projectViews(reader, lang, T),
     "/api/ci": async () => said(await forge.ci()),
     "/api/board": async () => said(await board()),
     "/api/releases": async () => said(await releases()),

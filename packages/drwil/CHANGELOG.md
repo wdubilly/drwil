@@ -17,7 +17,10 @@ closing commit; the release renames this section to its version.
   event journal is per project and lives in the user's cache; a view with no
   source stays empty and says what is missing. The page is mobile first (no
   horizontal scrolling at 360 px) and in the project's language (French or
-  English), with the CI measures and their trends; a PR or MR link
+  English), with the CI measures and their trends, the audit reports with their
+  staleness warning, the index checkboxes, every file of the briefs folder, the
+  contract catalog and the models used per workstream; a contract registry
+  written as a table reads like one written in headings; a PR or MR link
   goes through a server redirect, never a forge address in a response body.
 - `/drwil-serve` and `drwil serve --welcome`: start the view if needed and print
   its link. `drwil init` offers to start it at each session, off unless the
