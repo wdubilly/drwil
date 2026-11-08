@@ -78,12 +78,12 @@ le commit du résultat était refusé par la barrière de périmètre, sans issu
 ## Critères d'acceptation
 
 - Sur un projet de test en version N équipé, `init` de la version N+1 crée `workstream/kit-update`, commite, et laisse
-  l'arbre propre ; aucun `.bak` — contrat à créer
+  l'arbre propre ; aucun `.bak` — `QUA-282`
 - Un fichier de CI avec étapes du projet (jeu d'essai tiré de `drwil_walk`) garde ces étapes dans la zone, GitHub et
-  GitLab ; le reste est conforme au gabarit N+1 — contrat à créer
-- Un fichier de CI sans marqueurs : `init` nomme ce qui disparaîtrait, ne change rien sans confirmation — contrat à créer
-- `init` d'une version plus ancienne que `.drwil/install.json` (si présent) refuse avec un message clair ; l'option passe outre — contrat à créer
-- Rejouer `init` sur un projet déjà à jour ne change rien — contrat à créer
+  GitLab ; le reste est conforme au gabarit N+1 — `QUA-283`
+- Un fichier de CI sans marqueurs : `init` nomme ce qui disparaîtrait, ne change rien sans confirmation — `QUA-283`
+- `init` d'une version plus ancienne que `.drwil/install.json` (si présent) refuse avec un message clair ; l'option passe outre — `QUA-282`
+- Rejouer `init` sur un projet déjà à jour ne change rien — `QUA-283`
 - `node .githooks/run-checks.mjs` et `node packages/drwil/bin/drwil.js verify --agent` : `GOVERNANCE: PASS` — `QUA-013`
 
 ## 5. Contrats
