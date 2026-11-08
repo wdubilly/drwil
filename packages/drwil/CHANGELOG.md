@@ -14,6 +14,13 @@ closing commit; the release renames this section to its version.
   other version. An update leaves no `.bak` file: the commit of the update
   branch keeps the old version.
 
+- The CI file `drwil init` ships (GitHub and GitLab) has two project zones,
+  between `# drwil-project-begin steps|jobs` and `# drwil-project-end
+  steps|jobs` markers: an update rewrites everything outside them and keeps
+  the zones as they are. A CI file without markers, modified since it was
+  installed, is never replaced silently: `init` names the jobs and steps that
+  would disappear and, in a terminal, shows the removed lines and asks first.
+
 - `drwil serve [--host] [--port] [--detach]`: a live, read-only view of the
   current project, on `127.0.0.1` by default. Anywhere else the server refuses
   to start without a token (`DRWIL_SERVE_TOKEN`) and refuses any request

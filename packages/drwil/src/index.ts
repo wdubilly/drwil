@@ -176,7 +176,7 @@ export async function init(opts: InitOptions): Promise<void> {
   const drifted: string[] = [];
   const manifest: Record<string, string> = {};
   const expected: string[] = [];
-  await scaffold(r, { shouldOverwrite, drifted, manifest, expected });
+  await scaffold(r, { shouldOverwrite, drifted, manifest, expected, confirmCi: opts.confirmCi });
   const completed: Record<string, string> = {};
   const { added } = await complete(r, { manifest, previous, completed });
   const obsolete = await removeObsolete(opts.targetDir, previous, expected);

@@ -63,6 +63,9 @@ checks:
           node .githooks/base-checks.mjs --base "$base"
         fi
       fi
+    # drwil-project-begin steps
+    # Script lines of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
+    # drwil-project-end steps
   # QUA-250: only a main-branch pipeline, which never asks for reuse and so replays everything,
   # keeps its verdicts (even when a check failed: an "ok" stays true); elsewhere the file is
   # removed before the upload, so a merge request never writes a verdict it could read.
@@ -75,6 +78,10 @@ checks:
     when: always
     paths:
       - .drwil/evidence/run-checks-verdicts.json
+
+# drwil-project-begin jobs
+# Jobs of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
+# drwil-project-end jobs
 
 # No branch protection is possible on an equivalent GitLab plan (merging stays
 # an unconditional click): only an after-the-fact alert is possible.

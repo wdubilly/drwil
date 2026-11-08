@@ -128,6 +128,12 @@ jobs:
         with:
           name: proven-tree
           path: ${{ runner.temp }}/proven-tree.txt
+      # drwil-project-begin steps
+      # Steps of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
+      # drwil-project-end steps
+  # drwil-project-begin jobs
+  # Jobs of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
+  # drwil-project-end jobs
   # No branch protection is possible on a private repository on the free plan
   # (GitHub.com's "Merge" button stays unconditional): only an after-the-fact
   # alert is possible. Triggers only on a push to the main branch (not on

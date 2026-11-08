@@ -6,6 +6,7 @@ import { CI_FILES, projectName, splitCsv, TEXT, type Resolved, usesClaudeTree } 
 import { sha256 } from "./manifest.js";
 import { geminiNode } from "./render-gemini.js";
 import { stackAllow } from "./render-stack.js";
+import { ciContent, type ConfirmCi } from "./ci-zone.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -120,23 +121,26 @@ export interface WriteOptions {
   simulation?: { created: string[]; kept: string[]; replaced: string[] };
   // resolve-drift on the kit's prose: the template's content of each file, as the install renders it.
   rendered?: Map<string, string>;
+  /** CI file (QUA-283): asked before an unmarked one, modified since the install, is replaced (absent: kept). */
+  confirmCi?: ConfirmCi;
 }
 
 async function writeOut(target: string, content: string, targetDir: string, w: WriteOptions): Promise<void> {
   const { shouldOverwrite, drifted, manifest, expected, simulation, rendered } = w;
-  content = keepDate(content, existsSync(target) ? readFileSync(target, "utf8") : undefined);
+  const existing = existsSync(target) ? readFileSync(target, "utf8") : undefined;
+  content = keepDate(content, existing);
   const rel = relPosix(targetDir, target);
   if (expected) expected.push(rel);
   if (rendered) rendered.set(rel, content);
-  if (existsSync(target) && !shouldOverwrite(rel)) {
+  let overwrite = existing === undefined || shouldOverwrite(rel);
+  const ci = existing === undefined ? undefined : await ciContent(targetDir, rel, content, existing, overwrite, w);
+  if (ci !== undefined) [overwrite, content] = [ci !== null, ci ?? content];
+  if (!overwrite) {
     if (drifted && hasDrifted(target, content)) drifted.push(rel);
     if (simulation) simulation.kept.push(rel);
     return;
   }
-  if (simulation) {
-    (existsSync(target) ? simulation.replaced : simulation.created).push(rel);
-    return;
-  }
+  if (simulation) return void (existing === undefined ? simulation.created : simulation.replaced).push(rel);
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, content);
   if (manifest) manifest[rel] = sha256(content);

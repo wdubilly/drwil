@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
+import type { ConfirmCi } from "./ci-zone.js";
 import { TEXT } from "./config-text.js";
 import { detectStack, type StackEntry } from "./stack.js";
 
@@ -29,6 +30,8 @@ export interface InitOptions {
   serveAutostart?: boolean;
   /** `init` only: rewrites everything (otherwise only the kit mechanics, KIT_MECHANICS, are rewritten). */
   force?: boolean;
+  /** `init` only: the human's answer before an unmarked CI file is replaced; absent, such a file is kept (QUA-283). */
+  confirmCi?: ConfirmCi;
 }
 
 /** Folders whose content `init` refreshes by default: the kit mechanics, not the project's docs. */
