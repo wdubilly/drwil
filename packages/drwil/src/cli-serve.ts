@@ -148,13 +148,16 @@ async function detach(o: ServeCommandOptions, file: string, say: (key: ServeMess
   const args = [bin, "serve", "--host", o.host, ...(o.port === undefined ? [] : ["--port", o.port])];
   const child = spawn(process.execPath, args, { cwd: o.root, detached: true, stdio: ["ignore", out, out], windowsHide: true });
   closeSync(out);
-  let failed = false;
-  child.once("exit", (code) => (failed = code !== 0));
+  const ended: { code?: number | null } = {};
+  child.once("exit", (code) => (ended.code = code));
   child.unref();
-  for (const end = Date.now() + DETACH_TIMEOUT_MS; Date.now() < end && !failed; await sleep(100)) {
-    const record = await findRunning(file);
-    if (record?.url) return say("started", record.url);
+  let record: ServerRecord | null = null;
+  // Un enfant qui a perdu la course peut démarrer après l'arrêt du gagnant : on l'attend, sinon il servirait seul.
+  for (const end = Date.now() + DETACH_TIMEOUT_MS; Date.now() < end && !ended.code; await sleep(100)) {
+    record = await findRunning(file);
+    if (record?.url && (record.pid === child.pid || ended.code !== undefined)) return say("started", record.url);
   }
+  if (record?.url) return say("started", record.url);
   throw new ServeRefusal("startFailed", [log]);
 }
 
