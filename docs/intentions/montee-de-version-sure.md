@@ -52,9 +52,9 @@ Relevé le 2026-11-08 à l'usage sur drwil_walk (`master`, arbre propre, 0.10.0 
 
 ## Décisions
 
-Tranchées le 2026-11-08 par le demandeur ; la source unique est `docs/projects/montee-de-version-sure.md` (D1 à D10),
+Tranchées le 2026-11-08 par le demandeur ; la source unique est `docs/projects/journal.md` (D1 à D10),
 qui cadre le chantier.
 
 ## Questions à trancher
 
-Aucune : voir la fiche `docs/projects/montee-de-version-sure.md`.
+Aucune : voir la fiche `docs/projects/journal.md`.

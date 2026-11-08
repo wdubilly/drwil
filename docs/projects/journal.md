@@ -4245,3 +4245,4 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : essai final sur `drwil_walk` à lancer par le demandeur (risque HIGH) ; le CI confirmé perd ses étapes propres au lieu de les replacer dans la zone ; `resolve-drift` (et son `.bak`) subsiste jusqu'à la suite ; la CI du dépôt n'est pas rejouée sur son propre fichier à zones (marqueurs posés autour de `kit-tests` et `matrice-os`). Test `packages/drwil/test/serve.test.mjs` (QUA-272) vu en échec une fois sur `EADDRINUSE` (port 4680) pendant le lot 1, non reproduit ensuite : instable, non traité ici.
 - **Clôturé par** : la branche `workstream/montee-de-version-sure`.
 
+- **Preuve de clôture** : `docs/preuves/montee-de-version-sure.md`.
