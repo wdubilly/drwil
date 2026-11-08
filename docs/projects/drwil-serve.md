@@ -36,6 +36,8 @@ files:
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/test/claude-hooks.test.mjs
+  - outils/tester-tarball.mjs
+  - outils/tester-tarball.test.mjs
   - packages/drwil/templates/common/base/AGENTS.md
   - packages/drwil/templates/common/base/.githooks/check-kit-size.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/serve-welcome.mjs
