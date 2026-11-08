@@ -38,6 +38,7 @@ files:
   - packages/drwil/test/migration.test.mjs
   - packages/drwil/test/claude-hooks.test.mjs
   - packages/drwil/templates/common/base/AGENTS.md
+  - packages/drwil/templates/common/base/.githooks/check-kit-size.mjs
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - packages/drwil/templates/common/base/docs/recipes/audit-risks-and-debt.md
   - packages/drwil/templates/common/base/docs/recipes/track-consumption-per-increment.md
@@ -64,6 +65,8 @@ files:
   - .codex/hooks.json
   - .github/hooks/drwil.json
   - .gemini/settings.json
+  - .githooks/check-kit-size.mjs
+  - .githooks/check-kit-size.test.mjs
   - .githooks/dashboard-read.mjs
   - .githooks/dashboard-texts.mjs
   - .githooks/dashboard.mjs
@@ -140,6 +143,8 @@ téléphone. Le tableau de bord statique (`drwil-progress`) est remplacé.
 - `.githooks/dashboard.mjs` — retiré au lot 5, remplacé par `drwil serve` (validé par le demandeur le 2026-11-08)
 - `.githooks/dashboard-read.mjs` — retiré au lot 5, ses lectures portées dans `packages/drwil/src/serve-read.ts` (validé par le demandeur le 2026-11-08)
 - `.githooks/dashboard-texts.mjs` — retiré au lot 5, ses textes portés dans `packages/drwil/src/serve-texts.ts` (validé par le demandeur le 2026-11-08)
+- `.githooks/check-kit-size.mjs` — nouvelle sorte « réglages », plafond 250 lignes, pour les seuls fichiers de réglages des outils (`.claude/settings.json`, `.gemini/settings.json`) ; les autres plafonds ne changent pas (validé par le demandeur le 2026-11-08)
+- QUA-157 (« La taille de chaque fichier que le kit installe est surveillée ») : les fichiers de réglages des outils (`.claude/settings.json`, `.gemini/settings.json`) ont leur propre plafond, 250 lignes, au lieu des 200 du code et des hooks ; les autres plafonds ne changent pas. Validé par le demandeur le 2026-11-08.
 
 ## 2. Hors périmètre
 
