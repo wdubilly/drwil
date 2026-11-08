@@ -45,7 +45,14 @@ function depot({ lang = "fr", hooks = true, cfg = true } = {}) {
   git("checkout", "-q", "-b", "travail");
   ecrire(".drwil/ia-first.json", JSON.stringify({ lang, checks: CHECKS }));
   const rejouer = (argv = ["--base", "main"]) => replay(dir, { argv, env, stdio: "pipe" });
-  return { dir, git, ecrire, commit, rejouer, lire: (f) => readFileSync(join(dir, f), "utf8") };
+  return {
+    dir,
+    git,
+    ecrire,
+    commit,
+    rejouer,
+    lire: (f) => readFileSync(join(dir, f), "utf8"),
+  };
 }
 
 test("QUA-113 un hook affaibli par la PR échoue au rejeu ; le hook de la PR est remis en place après", () => {
@@ -54,7 +61,13 @@ test("QUA-113 un hook affaibli par la PR échoue au rejeu ; le hook de la PR est
   d.commit("travail sain");
   d.ecrire(".githooks/run-checks.mjs", `${RUN_CHECKS}// retouche\n`);
   d.commit("hook retouché");
-  assert.deepEqual(d.rejouer(), { status: "ok", lines: ["contrôles rejoués avec les hooks de « main » : OK"] });
+  assert.deepEqual(d.rejouer(), {
+    status: "ok",
+    lines: [
+      "aucune reprise : le moteur de run-checks diffère de celui de « main », tout est rejoué",
+      "contrôles rejoués avec les hooks de « main » : OK",
+    ],
+  });
 
   d.ecrire(".githooks/run-checks.mjs", AFFAIBLI);
   d.ecrire("faute", "x\n");
@@ -62,7 +75,7 @@ test("QUA-113 un hook affaibli par la PR échoue au rejeu ; le hook de la PR est
   assert.equal(spawnSync(process.execPath, [".githooks/run-checks.mjs"], { cwd: d.dir }).status, 0, "le hook de la PR se valide lui-même");
   const r = d.rejouer();
   assert.equal(r.status, "fail");
-  assert.deepEqual(r.lines, ["les contrôles échouent avec les hooks de « main » : un hook affaibli ou contourné par la PR ?"]);
+  assert.deepEqual(r.lines.slice(1), ["les contrôles échouent avec les hooks de « main » : un hook affaibli ou contourné par la PR ?"]);
   assert.equal(d.lire(".githooks/run-checks.mjs"), AFFAIBLI, "copie de travail rendue telle quelle");
   assert.equal(d.git("status", "--porcelain").stdout, "");
 });
@@ -86,7 +99,7 @@ test("QUA-113 un contrôle retiré sans déclaration échoue, qu'il soit nommé 
     ["a", "b", "c"],
   );
   assert.match(r.lines[0], /retiré de \.drwil\/ia-first\.json sans déclaration.*« Contrats modifiés »/);
-  assert.match(r.lines[3], /OK$/, "les hooks, eux, passent : seul le retrait fait échouer");
+  assert.match(r.lines[4], /OK$/, "les hooks, eux, passent : seul le retrait fait échouer");
 });
 
 test("QUA-113 un contrôle retiré déclaré dans « Contrats modifiés » passe, même fiche supprimée à la clôture", () => {
@@ -157,6 +170,7 @@ test("QUA-113 base sans .githooks/ (adoption) : non applicable ; projet en angla
   assert.equal(r.status, "fail");
   assert.deepEqual(r.lines, [
     'check "c" removed from .drwil/ia-first.json without declaration: cite it in backticks in the « Modified contracts » section of the brief, approved by the requester',
+    'reuse asked: a check "ok" of the first pass, of identical fingerprint with the hooks of "main", keeps its verdict',
     'checks replayed with the hooks of "main": OK',
   ]);
 });
@@ -165,7 +179,13 @@ test("QUA-113 la branche principale vient de --base, DRWIL_BASE, puis des variab
   assert.equal(baseRef(["--base", "x"], { DRWIL_BASE: "y" }), "x");
   assert.equal(baseRef([], { DRWIL_BASE: "y", GITHUB_BASE_REF: "z" }), "y");
   assert.equal(baseRef([], { GITHUB_BASE_REF: "master" }), "origin/master");
-  assert.equal(baseRef([], { CI_MERGE_REQUEST_TARGET_BRANCH_NAME: "dev", CI_DEFAULT_BRANCH: "main" }), "origin/dev");
+  assert.equal(
+    baseRef([], {
+      CI_MERGE_REQUEST_TARGET_BRANCH_NAME: "dev",
+      CI_DEFAULT_BRANCH: "main",
+    }),
+    "origin/dev",
+  );
   assert.equal(baseRef([], { CI_DEFAULT_BRANCH: "main" }), "origin/main");
   assert.equal(baseRef([], {}), null);
   assert.deepEqual(declaredIn("## Contrats modifiés\r\n\r\n- `QUA-001` — x\r\n  - `sous-puce` aussi\r\n## Suite\n- `hors`\n"), [
@@ -175,7 +195,12 @@ test("QUA-113 la branche principale vient de --base, DRWIL_BASE, puis des variab
 });
 
 test("QUA-113 en ligne de commande : code 0 si rejoué ou non applicable, 1 sinon", () => {
-  const cli = (dir, ...args) => spawnSync(process.execPath, [SCRIPT, ...args], { cwd: dir, encoding: "utf8", env });
+  const cli = (dir, ...args) =>
+    spawnSync(process.execPath, [SCRIPT, ...args], {
+      cwd: dir,
+      encoding: "utf8",
+      env,
+    });
   const d = depot();
   d.ecrire(".githooks/lib.mjs", "export const v = 4;\n");
   d.commit("hook modifié");
@@ -284,7 +309,9 @@ test("QUA-137 branche principale introuvable ou historique illisible : non exéc
   ]);
   assert.deepEqual(undeclaredHooks(d.dir, "", { env: { ...env, DRWIL_BASE: "tronc" } }).files, [".githooks/lib.mjs"], "DRWIL_BASE d'abord");
   d.git("checkout", "-q", "--orphan", "orpheline");
-  const orpheline = undeclaredHooks(d.dir, "", { env: { ...env, DRWIL_BASE: "tronc" } });
+  const orpheline = undeclaredHooks(d.dir, "", {
+    env: { ...env, DRWIL_BASE: "tronc" },
+  });
   assert.deepEqual(orpheline.files, []);
   assert.match(orpheline.lines[0], /^hooks non déclarés : non exécuté — git merge-base /);
   const sans = depot({ hooks: false });
@@ -301,7 +328,14 @@ test("QUA-137 branche principale introuvable ou historique illisible : non exéc
 
 test("QUA-137 la branche principale vient d'origin/HEAD avant les noms usuels ; dossier des fiches réglé ; sans configuration, en français", () => {
   const d = depot({ lang: "en" });
-  d.ecrire(".drwil/ia-first.json", JSON.stringify({ lang: "en", dirs: { projects: "briefs" }, checks: CHECKS }));
+  d.ecrire(
+    ".drwil/ia-first.json",
+    JSON.stringify({
+      lang: "en",
+      dirs: { projects: "briefs" },
+      checks: CHECKS,
+    }),
+  );
   d.ecrire(".githooks/lib.mjs", "export const v = 2;\n");
   d.ecrire("briefs/x.md", "## Modified contracts\n\n- `.githooks/lib.mjs` — v2\n");
   d.commit("declared");
@@ -323,4 +357,54 @@ test("QUA-137 : hookDeclared : un hook est déclaré par sa puce, un fichier de 
   assert.equal(hookDeclared(declared, ".githooks/etat.test.mjs"), true);
   assert.equal(hookDeclared(declared, ".githooks/autre.mjs"), false);
   assert.equal(hookDeclared(declared, ".githooks/autre.test.mjs"), false);
+});
+
+// run-checks de la branche principale qui note ce que le rejeu lui demande (reprise, arguments) et importe un module du moteur.
+const ENREGISTREUR = [
+  'import "./lib.mjs";',
+  'import { appendFileSync } from "node:fs";',
+  'appendFileSync("trace", [process.env.DRWIL_CI_REUSE ?? "", process.argv.slice(2).join(" ")].join("|") + "\\n");',
+  "",
+].join("\n");
+const trace = (d) => (existsSync(join(d.dir, "trace")) ? d.lire("trace") : null);
+
+test("QUA-113 hooks modifiés hors du moteur de run-checks : le rejeu demande la reprise des verdicts de la première passe", () => {
+  const d = depot();
+  d.ecrire(".githooks/run-checks.mjs", ENREGISTREUR);
+  d.commit("base enregistreuse");
+  d.git("checkout", "-q", "-B", "main");
+  d.git("checkout", "-q", "-b", "travail2");
+  d.ecrire(".githooks/lib.test.mjs", "// test retouché\n");
+  d.commit("test d'un hook retouché");
+  const r = d.rejouer();
+  assert.equal(r.status, "ok");
+  assert.match(r.lines[0], /^reprise demandée : .*d'empreinte identique avec les hooks de « main »/);
+  assert.equal(trace(d), "1|\n");
+});
+
+test("QUA-113 un module du moteur de run-checks modifié, même importé de loin : aucune reprise, tout est rejoué", () => {
+  const d = depot();
+  d.ecrire(".githooks/run-checks.mjs", ENREGISTREUR);
+  d.commit("base enregistreuse");
+  d.git("checkout", "-q", "-B", "main");
+  d.git("checkout", "-q", "-b", "travail2");
+  d.ecrire(".githooks/lib.mjs", "export const v = 2;\n");
+  d.commit("module du moteur retouché");
+  const r = d.rejouer();
+  assert.equal(r.status, "ok");
+  assert.match(r.lines[0], /^aucune reprise : le moteur de run-checks diffère de celui de « main », tout est rejoué$/);
+  assert.equal(trace(d), "|--tout-rejouer\n");
+});
+
+test("QUA-113 un module du moteur gardé à la version de la PR (déclaré) ne bloque pas la reprise", () => {
+  const d = depot();
+  d.ecrire(".githooks/run-checks.mjs", ENREGISTREUR);
+  d.commit("base enregistreuse");
+  d.git("checkout", "-q", "-B", "main");
+  d.git("checkout", "-q", "-b", "travail2");
+  d.ecrire(".githooks/lib.mjs", "export const v = 2;\n");
+  d.ecrire("docs/projects/x.md", "## Contrats modifiés\n\n- `.githooks/lib.mjs` — correctif\n");
+  d.commit("module déclaré");
+  assert.equal(d.rejouer().status, "ok");
+  assert.equal(trace(d), "1|\n");
 });
