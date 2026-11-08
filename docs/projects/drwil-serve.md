@@ -122,7 +122,7 @@ téléphone. Le retrait du tableau de bord statique (`drwil-progress`) est repor
 ## Contrats modifiés
 
 - `.githooks/check-kit-size.mjs` — nouvelle sorte « réglages », plafond 250 lignes, pour les seuls fichiers de réglages des outils (`.claude/settings.json`, `.gemini/settings.json`) ; les autres plafonds ne changent pas (validé par le demandeur le 2026-11-08)
-- QUA-157 (« La taille de chaque fichier que le kit installe est surveillée ») : les fichiers de réglages des outils (`.claude/settings.json`, `.gemini/settings.json`) ont leur propre plafond, 250 lignes, au lieu des 200 du code et des hooks ; les autres plafonds ne changent pas. Validé par le demandeur le 2026-11-08.
+- `QUA-157` (« La taille de chaque fichier que le kit installe est surveillée ») : les fichiers de réglages des outils (`.claude/settings.json`, `.gemini/settings.json`) ont leur propre plafond, 250 lignes, au lieu des 200 du code et des hooks ; les autres plafonds ne changent pas. Validé par le demandeur le 2026-11-08.
 
 ## 2. Hors périmètre
 
