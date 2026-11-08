@@ -10,23 +10,55 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      # Lot 3 de ci-plus-rapide : un push sur la branche principale dont l'arbre (`git rev-parse HEAD^{tree}`)
+      # est celui que la dernière CI verte d'une PR a joué ne rejoue pas les contrôles et le dit. La preuve est
+      # l'artefact `arbre-prouve` de cette CI de PR ; elle n'est lue que par ce push. Tout manque (aucune PR,
+      # CI non verte, artefact absent ou expiré, arbre différent : PR non à jour) rejoue tout. Le job reste
+      # rapporté « succès » sous son nom exigé : la CI de la branche principale reste verte pour QUA-251.
+      - name: Arbre déjà prouvé par la dernière CI verte d'une PR ?
+        id: prouve
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPOT: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          saute=false
+          arbre=$(git rev-parse 'HEAD^{tree}')
+          for tete in $(gh api "repos/$DEPOT/commits/$COMMIT/pulls" --jq '.[].head.sha' 2>/dev/null); do
+            run=$(gh api "repos/$DEPOT/actions/runs?head_sha=$tete&event=pull_request&per_page=100" --jq '[.workflow_runs[] | select(.path | startswith(".github/workflows/ia-first.yml"))] | sort_by(.created_at) | last | select(.conclusion == "success") | .id' 2>/dev/null) || continue
+            [ -n "$run" ] || continue
+            rm -rf "$RUNNER_TEMP/preuve"
+            gh run download "$run" --repo "$DEPOT" --name arbre-prouve --dir "$RUNNER_TEMP/preuve" 2>/dev/null || continue
+            if [ "$(cat "$RUNNER_TEMP/preuve/arbre-prouve.txt" 2>/dev/null)" = "$arbre" ]; then
+              saute=true
+              echo "::notice::Contrôles non rejoués : l'arbre $arbre est celui que la CI verte de la PR (run $run) a prouvé."
+              break
+            fi
+          done
+          [ "$saute" = true ] || echo "Arbre non prouvé par une CI verte de PR : tout est rejoué."
+          echo "saute=$saute" >> "$GITHUB_OUTPUT"
       # La plus ancienne version de Node prise en charge (engines : >= 22) joue ici toute la suite, une
       # seule fois (couverture-tests, couverture-hooks…) : le job est exigé par la forge, une ligne de
       # matrice en plus renommerait les checks exigés. Node 24 joue la suite du paquet dans kit-tests.
-      - uses: actions/setup-node@v7
+      - if: steps.prouve.outputs.saute != 'true'
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - if: steps.prouve.outputs.saute != 'true'
+        run: npm ci
       # Sans gitleaks, SEC-007 (pas de secret) serait « non exécuté » ici, et verify en ERROR dans le
       # projet d'essai du contrôle tarball (journal « Gitleaks en CI », docs/projects/journal.md). Version épinglée, archive
       # vérifiée par sa somme publiée ; installé là où le moteur le cherche (~/.local/bin).
       # Le téléchargement ci-dessous se remet d'une erreur passagère (504 compris) : curl lit ~/.curlrc. L'étape
       # d'installation reste identique à celle du banc (.github/workflows/banc.yml, QUA-109), qui la compare.
       - name: Nouvelles tentatives de curl
+        if: steps.prouve.outputs.saute != 'true'
         run: |
           printf '%s\n' 'retry = 5' 'retry-all-errors' 'retry-delay = 5' 'connect-timeout = 20' 'max-time = 120' > ~/.curlrc
       - name: Installer gitleaks 8.21.2
+        if: steps.prouve.outputs.saute != 'true'
         run: |
           curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
           echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | sha256sum -c -
@@ -43,7 +75,8 @@ jobs:
           path: .drwil/evidence/run-checks-verdicts.json
           key: run-checks-verdicts-${{ github.event.pull_request.base.sha }}
           restore-keys: run-checks-verdicts-
-      - run: node .githooks/run-checks.mjs
+      - if: steps.prouve.outputs.saute != 'true'
+        run: node .githooks/run-checks.mjs
         env:
           DRWIL_CI_REUSE: ${{ github.event_name == 'pull_request' && '1' || '' }}
       - name: Sauvegarder les verdicts de la branche principale
@@ -73,6 +106,16 @@ jobs:
       - run: node .github/scripts/verifier-ruleset.mjs
         env:
           GH_TOKEN: ${{ github.token }}
+      # Preuve lue par le push sur la branche principale (étape « Arbre déjà prouvé… ») : posée en dernier, donc
+      # seulement si chaque étape du job a réussi, avec l'arbre exact que cette CI a joué.
+      - name: Consigner l'arbre prouvé par cette CI
+        if: github.event_name == 'pull_request'
+        run: git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/arbre-prouve.txt"
+      - if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arbre-prouve
+          path: ${{ runner.temp }}/arbre-prouve.txt
       # Non-régression (journal « Capitaliser les tests de non-régression », docs/projects/journal.md) : sur une PR en échec, les mêmes
       # contrôles sont rejoués sur la base de la PR pour dire si l'échec était déjà là. Le verdict ne
       # change pas — le job reste en échec : un échec préexistant se corrige aussi, il ne s'excuse pas.

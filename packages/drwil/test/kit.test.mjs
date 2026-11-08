@@ -6048,7 +6048,7 @@ test("QUA-263 : CI GitHub livrée — le push d'une branche à PR ouverte saute 
   const etapes = checks.split(/\n {6}- /).slice(2);
   for (const e of etapes) {
     const jamaisSurPushDeBranche =
-      /if: (github\.event_name == 'pull_request'|always\(\) && github\.event_name == 'push' && github\.ref == format)/.test(e);
+      /if: (github\.event_name == 'pull_request'|(always\(\) && )?github\.event_name == 'push' && github\.ref == format)/.test(e);
     assert.ok(jamaisSurPushDeBranche || /if: steps\.pr\.outputs\.skip != 'true'/.test(e), `étape non sautée : ${e.split("\n")[0]}`);
   }
   assert.ok(

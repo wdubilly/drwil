@@ -120,6 +120,42 @@ for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templat
     assert.equal(ecritures.filter((e) => !String(e.with.key).startsWith("gitleaks-8.21.2-")).length, 1);
   });
 
+for (const [fichier, preuve] of [
+  [".github/workflows/ia-first.yml", "arbre-prouve"],
+  ["packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml", "proven-tree"],
+])
+  test(`QUA-250 : ${fichier} saute les contrôles d'un push sur la branche principale dont l'arbre est celui que la dernière CI verte d'une PR a prouvé, et seule une CI de PR pose cette preuve`, () => {
+    const ci = parseAllDocuments(readFileSync(join(RACINE, fichier), "utf8"))[0].toJS();
+    const etapes = ci.jobs.checks.steps;
+    const lit = etapes.findIndex((e) => /^(prouve|proven)$/.test(e.id ?? ""));
+    const passe = etapes.findIndex((e) => e.run === "node .githooks/run-checks.mjs");
+    assert.ok(lit >= 0 && lit < passe, `${fichier} : preuve lue avant la passe`);
+    // Lue sur un push de la branche principale seulement, par l'empreinte de l'arbre, dans le run de PR vert, jamais un autre.
+    assert.match(
+      etapes[lit].if,
+      /^github\.event_name == 'push' && github\.ref == format\('refs\/heads\/\{0\}', github\.event\.repository\.default_branch\)$/,
+    );
+    assert.ok(etapes[lit].run.includes("git rev-parse 'HEAD^{tree}'"));
+    assert.ok(etapes[lit].run.includes("event=pull_request") && etapes[lit].run.includes('select(.conclusion == "success")'));
+    assert.ok(etapes[lit].run.includes(`--name ${preuve}`));
+    assert.match(etapes[lit].run, /= "\$(arbre|tree)" \]; then/);
+    // Aucune preuve lue : tout est rejoué ; sauté, la passe, l'installation et gitleaks ne tournent pas.
+    const saut = new RegExp(`steps\\.${etapes[lit].id}\\.outputs\\.(saute|skip) != 'true'`);
+    assert.match(etapes[passe].if, saut);
+    for (const e of etapes
+      .slice(lit + 1, passe + 1)
+      .filter((x) => /npm ci|gitleaks|run-checks|setup-node/.test(`${x.run ?? ""}${x.uses ?? ""}${x.name ?? ""}`)))
+      assert.match(e.if ?? "", saut, `${fichier} : ${e.name ?? e.run ?? e.uses} doit être sauté`);
+    // La preuve : arbre posé par une PR, en dernière étape du job, donc seulement si tout a réussi.
+    const pose = etapes.findLastIndex((e) => /^actions\/upload-artifact@/.test(e.uses ?? ""));
+    assert.equal(etapes[pose].with.name, preuve);
+    assert.equal(etapes[pose].if, "github.event_name == 'pull_request'");
+    assert.ok(etapes[pose - 1].run.includes("git rev-parse 'HEAD^{tree}'"));
+    const apres = etapes.slice(pose + 1).filter((e) => !e.if?.includes("failure()"));
+    assert.deepEqual(apres, [], "aucune étape de contrôle après la pose de la preuve");
+    assert.ok(ci.jobs.checks.permissions === undefined || ci.jobs.checks.permissions.actions === "read", "lecture des artefacts autorisée");
+  });
+
 test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge les verdicts de la branche principale et demande leur reprise ; seule la branche principale les garde", () => {
   const ci = parseAllDocuments(readFileSync(join(RACINE, "packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml"), "utf8"))[0].toJS();
   const script = ci.checks.script;

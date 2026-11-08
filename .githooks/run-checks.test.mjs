@@ -965,6 +965,10 @@ test("QUA-208 : dans ce dépôt, les contrôles lents sont confiés à la CI, ac
   );
   assert.deepEqual(config.ciFiles, [".github/workflows/ia-first.yml"]);
   const flux = readFileSync(join(depot, ".github/workflows/ia-first.yml"), "utf8");
-  assert.match(flux, /^ {6}- run: node \.githooks\/run-checks\.mjs$/m, "la CI du dépôt joue run-checks (variable CI posée par la forge)");
+  assert.match(
+    flux,
+    /^ {6}- if: steps\.prouve\.outputs\.saute != 'true'\n {8}run: node \.githooks\/run-checks\.mjs$/m,
+    "la CI du dépôt joue run-checks (variable CI posée par la forge)",
+  );
   assert.doesNotMatch(flux, /^\s+CI:/m, "la variable CI n'est jamais écrasée");
 });

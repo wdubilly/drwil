@@ -169,6 +169,17 @@ lot 4, avec l'accès au détail par contrôle.
   Chemin ajouté au bloc `scope` : `packages/drwil/templates/common/base/.githooks/base-checks.mjs`, source du hook
   (QUA-018 : on édite le gabarit puis `npm run installer-depot`). Gain réel à mesurer sur la prochaine PR de code
   (critère « PR d'essai sous la cible » : non mesuré ici, la CI seule le dit).
-- **Prochaine étape** : lot 3 — push sur la branche principale (saut sur arbre déjà prouvé, empreinte
-  `git rev-parse HEAD^{tree}` lue dans la preuve de la dernière CI de PR verte). Le lot 4 touche aussi le gabarit
+- **Lot 3 fait** (2026-11-08) : sur GitHub (CI du dépôt et du gabarit), le job `checks` d'une PR dépose en dernière étape
+  l'artefact `arbre-prouve` (`proven-tree` dans le gabarit), l'empreinte `git rev-parse HEAD^{tree}` qu'il vient de jouer ;
+  un push sur la branche principale la lit dans le run `pull_request` vert le plus récent de la tête de la PR qui contient
+  son commit et, si l'arbre est identique, saute installation, gitleaks et `run-checks` en le disant (`::notice::`) ; sinon
+  (aucune PR, run non vert, artefact absent ou expiré, arbre différent) tout est rejoué. Le job reste « succès » sous son nom
+  exigé : QUA-251 et `alert-if-ci-broken` inchangés. Contrat QUA-250 mis à jour ; test des workflows ajouté. Aucun chemin
+  ajouté au bloc `scope`. Gain réel à mesurer au premier push sur `master` après la fusion (la CI seule le dit ; l'artefact
+  n'existe qu'à partir de la première PR portant ce workflow).
+- **GitLab, non fait au lot 3** (dans le cadre, mais non prouvable ici) : la CI GitLab du gabarit rejoue tout sur la branche
+  principale. Retrouver le pipeline de la MR fusionnée et lire son artefact passe par des API (pipelines, jobs) que le jeton
+  de job n'ouvre pas partout, et rien ici ne les essaie : sauter sans preuve violerait QUA-013. Le contrat le dit ; à
+  reprendre quand un GitLab d'essai existe.
+- **Prochaine étape** : lot 4 — `run-checks` plus rapide. Il touche aussi le gabarit
   `packages/drwil/templates/common/base/.githooks/run-checks.mjs` (limite hors cadre du lot 1).
