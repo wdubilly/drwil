@@ -81,6 +81,8 @@ test("QUA-282 : la montée vers la version courante, commitée sur sa branche, n
   const dir = tmp();
   git(dir, "init", "-q", "-b", "master");
   git(dir, "config", "core.autocrlf", "false");
+  git(dir, "config", "user.email", "t@t");
+  git(dir, "config", "user.name", "t");
   await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   enregistrer(dir, "0.0.1");
   assert.equal(git(dir, "add", "-A").status, 0);
