@@ -31,6 +31,8 @@ files:
   - docs/projects/ci-plus-rapide.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - .github/workflows/banc.yml
+  - outils/banc.test.mjs
 -->
 
 ## 1. Besoin
@@ -88,6 +90,9 @@ parallélisme (`parallel`) par défaut.
   push dont l'arbre est celui d'une PR verte saute le rejeu et le dit (lot 3) ; au lot 1, la preuve « aucun cache »
   du gabarit GitLab devient « aucun cache des verdicts » (l'archive de gitleaks, vérifiée par sa somme, est cachée)
   (validé par le demandeur le 2026-11-08)
+- `QUA-109` — ancien critère : l'étape gitleaks du banc télécharge et vérifie l'archive à chaque passe — raison : l'archive est
+  cachée sous la version épinglée (clé sans hash), la somme restant vérifiée à chaque passe ; étape identique à celle du job
+  `checks` de la CI du dépôt (limite hors cadre du lot 1, « Handle now » de l'humain le 2026-11-08)
 - `QUA-113` — ancien critère : la CI rejoue toute la passe avec les hooks de la branche principale — raison : le rejeu
   reprend le verdict de chaque contrôle dont les hooks et l'empreinte sont identiques, un hook affaibli restant refusé
   (lot 2) (validé par le demandeur le 2026-11-08)
@@ -162,11 +167,20 @@ lot 4, avec l'accès au détail par contrôle.
 - **Dernier état** (2026-11-08) : lot 1 fait. Gitleaks : nouvelles tentatives (`--retry 5 --retry-all-errors`) et cache
   de l'archive sous sa version épinglée (somme vérifiée à chaque passe) dans les trois CI ; tests des workflows verts ; mesures
   consignées ci-dessus. Décisions ouvertes tranchées (section 4), puce « Contrats modifiés » ajoutée.
-- **Limite hors cadre du lot 1 (2)** : le job `checks` du dépôt ne cache pas l'archive : son étape gitleaks doit rester
-  identique à celle de `.github/workflows/banc.yml` (test QUA-109, `outils/banc.test.mjs`), tous deux absents du bloc `scope`.
-- **Limite hors cadre du lot 1** : la durée par contrôle en CI exige d'afficher le classement complet dans la sortie
+- **Limites hors cadre du lot 1 : traitées** (2026-11-08, « Handle now » de l'humain au sondage `drwil-limite`, commit séparé) :
+  (1) en CI, `run-checks` affiche le classement complet des durées par contrôle dans sa sortie, avant le résumé (hors CI,
+  inchangé : trois plus lents au résumé, classement au détail) — gabarit `packages/drwil/templates/common/base/.githooks/run-checks.mjs`
+  (QUA-018, puis `npm run installer-depot`), miroir `.githooks/run-checks.mjs`, test `.githooks/run-checks.test.mjs` ; contrat QUA-136
+  précisé ; (2) l'archive gitleaks est cachée (`actions/cache@v6`, clé `gitleaks-8.21.2-linux-x64`, somme vérifiée à chaque passe)
+  dans le job `checks` et dans `.github/workflows/banc.yml`, étape d'installation identique (QUA-109, `outils/banc.test.mjs` compare
+  aussi le cache) ; contrat QUA-109 mis à jour. **Chemins ajoutés au bloc `scope`** (QUA-214) : `.github/workflows/banc.yml` et
+  `outils/banc.test.mjs` (cache de l'étape identique exigée par QUA-109) ; le gabarit de `run-checks` y était déjà (lot 4).
+  Gain du cache non mesuré (la CI seule le dit).
+- **Limite hors cadre du lot 1 (2)** : *(traitée, voir ci-dessus)* le job `checks` du dépôt ne cachait pas l'archive : son étape gitleaks doit rester
+  identique à celle de `.github/workflows/banc.yml` (test QUA-109, `outils/banc.test.mjs`), tous deux alors absents du bloc `scope`.
+- **Limite hors cadre du lot 1** : *(traitée, voir ci-dessus)* la durée par contrôle en CI exigeait d'afficher le classement complet dans la sortie
   de `run-checks` (en CI), donc de modifier le gabarit `packages/drwil/templates/common/base/.githooks/run-checks.mjs`
-  (source de `.githooks/run-checks.mjs`, QUA-018), absent du bloc `scope` : non fait ; le lot 4 y touchera aussi.
+  (source de `.githooks/run-checks.mjs`, QUA-018).
 - **Lot 2 fait** (2026-11-08) : le rejeu QUA-113 demande la reprise (`DRWIL_CI_REUSE=1`) des verdicts que la première
   passe de la PR vient de laisser ; un contrôle « ok » dont l'empreinte propre est identique sous les hooks de la base
   est repris, les autres rejoués (un hook affaibli lu par un contrôle change son empreinte : refusé comme avant).
@@ -206,5 +220,4 @@ lot 4, avec l'accès au détail par contrôle.
 - **Limites** : le plus gros fichier (`packages/drwil/test/kit.test.mjs`, ~200 s en série) est joué d'un bloc, donc il borne
   la durée de la passe : le couper (ou rendre ses tests concurrents) serait un autre chantier ; un contrôle qui attend le
   résultat d'un fichier joué par un autre occupe un créneau de `parallel` sans calculer. Les doubles emplois qui restent :
-  les couvertures (`couverture-tests`, `couverture-hooks`) rejouent les mêmes tests sous c8 (non partageables). La durée par contrôle
-  en CI (gabarit `packages/drwil/templates/common/base/.githooks/run-checks.mjs`) et le cache gitleaks du job `checks` / `.github/workflows/banc.yml` restent hors cadre (limites du lot 1).
+  les couvertures (`couverture-tests`, `couverture-hooks`) rejouent les mêmes tests sous c8 (non partageables).
