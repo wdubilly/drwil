@@ -2,7 +2,18 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { request } from "node:http";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -11,7 +22,14 @@ import { afterEach, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { init } from "../dist/index.js";
 import { accessToken, maskPersonal, ServeRefusal } from "../dist/serve-auth.js";
+import { createBoard } from "../dist/serve-board.js";
+import { createDetails } from "../dist/serve-details.js";
+import { createForge, hostOf, natureOf } from "../dist/serve-forge.js";
+import { openJournal } from "../dist/serve-journal.js";
 import { createReader } from "../dist/serve-read.js";
+import { createReleases } from "../dist/serve-releases.js";
+import { SERVE_TEXTS } from "../dist/serve-texts.js";
+import { startWatch } from "../dist/serve-watch.js";
 import { cacheRoot, hostForUrl, preferredPort, projectCacheDir, startServer } from "../dist/serve.js";
 
 // Un hook lancé par `git commit` transmet GIT_DIR, GIT_INDEX_FILE… : hérités, ils feraient agir le projet d'essai sur ce dépôt.
@@ -119,7 +137,19 @@ function brut(port, chemin, entetes = {}) {
 }
 
 const jsonDe = async (url, options) => (await fetch(url, options)).json();
-const ROUTES = ["", "api/docs", "api/contracts", "api/usage", "api/file?path=docs/projects/pending.md"];
+const ROUTES = [
+  "",
+  "api/docs",
+  "api/contracts",
+  "api/usage",
+  "api/file?path=docs/projects/pending.md",
+  "api/ci",
+  "api/board",
+  "api/releases",
+  "api/events",
+  "api/detail?key=x",
+  "api/workstream?name=x",
+];
 
 test("QUA-269 : drwil serve sert un projet installé sur 127.0.0.1, en lecture seule, sans rien y écrire", async () => {
   const p = await projet({
@@ -524,7 +554,7 @@ test("QUA-272 : port occupé : refus au port demandé, port suivant au port du p
   const prefere = createServer().listen(preferredPort(p.dir), "127.0.0.1");
   await new Promise((res) => prefere.once("listening", res));
   aArreter.push(() => new Promise((res) => prefere.close(res)));
-  const s = await startServer({ root: p.dir, host: "127.0.0.1", port: null, token: null });
+  const s = await startServer({ root: p.dir, host: "127.0.0.1", port: null, token: null, cacheDir: tmp() });
   aArreter.push(() => s.stop());
   assert.equal(s.port, preferredPort(p.dir) + 1);
 });
@@ -539,4 +569,1043 @@ test("QUA-272 : l'état d'exécution vit dans le cache de l'utilisateur, un doss
   assert.equal(hostForUrl("::1"), "[::1]");
   assert.equal(hostForUrl("0.0.0.0"), "0.0.0.0");
   assert.ok(preferredPort("/a") >= 4317 && preferredPort("/a") < 5317);
+});
+
+// --- Forges (QUA-273), journal (QUA-274), vues vides (QUA-275) ---
+
+const posix = { skip: process.platform === "win32" ? "outils de forge factices en script" : false };
+const ORIGINE_HUB = "https://github.com/jeanne-owner/projet.git";
+const ORIGINE_LAB = "git@gitlab.com:jeanne-owner/projet.git";
+const GIT_MAIN = { "symbolic-ref": "origin/main\n" };
+const VERSION = [/--version/, "1.0\n"];
+const FICHIERS_DOC = ["docs/a.md", "README.md"];
+const CREEE = "2026-01-01T10:00:00Z";
+const SHA = "abcdef0123456789";
+
+/** `sh` et `git` factices : la première expression qui reconnaît la commande donne la réponse ; sinon, échec. */
+function forgeInjectee(reponses, { remote = ORIGINE_HUB, git: gitReponses = {} } = {}) {
+  const appels = [];
+  const sh = async (cmd, args) => {
+    const ligne = `${cmd} ${args.join(" ")}`;
+    appels.push(ligne);
+    for (const [motif, r] of reponses) if (motif.test(ligne)) return typeof r === "string" ? r : JSON.stringify(r);
+    return "";
+  };
+  const gitFaux = async (...args) => {
+    const ligne = args.join(" ");
+    if (ligne === "remote get-url origin") return `${remote}\n`;
+    for (const [motif, r] of Object.entries(gitReponses)) if (ligne.includes(motif)) return r;
+    return "";
+  };
+  return { forge: createForge(sh, gitFaux), appels };
+}
+
+const HUB_PR = (over = {}) => ({
+  number: 7,
+  title: "Une PR",
+  state: "OPEN",
+  headRefName: "ma-branche",
+  createdAt: CREEE,
+  mergedAt: null,
+  closedAt: null,
+  files: FICHIERS_DOC.map((path) => ({ path })),
+  ...over,
+});
+const LAB_MR = (over = {}) => ({
+  iid: 7,
+  sha: SHA,
+  title: "Une PR",
+  description: "corps",
+  state: "opened",
+  source_branch: "ma-branche",
+  target_branch: "main",
+  created_at: CREEE,
+  merged_at: null,
+  closed_at: null,
+  author: { username: "jeanne-t" },
+  ...over,
+});
+const HUB_RUN = (over = {}) => ({
+  databaseId: 11,
+  name: "ci",
+  status: "completed",
+  conclusion: "success",
+  event: "push",
+  createdAt: CREEE,
+  headSha: SHA,
+  ...over,
+});
+const LAB_PIPE = (over = {}) => ({ id: 11, sha: SHA, status: "success", source: "push", created_at: CREEE, ...over });
+const DEBUT = "2026-01-01T10:00:01Z";
+const FIN = "2026-01-01T10:01:00Z";
+const HUB_JOB = {
+  name: "tests",
+  status: "completed",
+  conclusion: "success",
+  started_at: DEBUT,
+  completed_at: FIN,
+  steps: [
+    { name: "etape", status: "completed", conclusion: "success", started_at: DEBUT, completed_at: FIN },
+    { name: "jamais lancee", status: "pending", conclusion: "", started_at: null, completed_at: null },
+  ],
+};
+const LAB_JOB = { name: "tests", status: "success", started_at: DEBUT, finished_at: FIN, user: { username: "jeanne-t" } };
+const HUB_VUE_PR = {
+  number: 7,
+  title: "Une PR",
+  body: "corps",
+  state: "OPEN",
+  headRefName: "ma-branche",
+  baseRefName: "main",
+  additions: 4,
+  deletions: 2,
+  changedFiles: 2,
+  commits: [{}, {}],
+};
+const LAB_API = [
+  VERSION,
+  [/merge_requests\?state=all/, [LAB_MR(), LAB_MR()]],
+  [/merge_requests\/7\/diffs/, FICHIERS_DOC.map((new_path) => ({ new_path, diff: "@@ -1 +1 @@\n+a\n+b\n-c\n" }))],
+  [/merge_requests\/7\/commits/, [{}, {}]],
+  [/merge_requests\/7$/, LAB_MR()],
+  [/pipelines\/11\/jobs/, [LAB_JOB]],
+  [/pipelines\?ref=/, [LAB_PIPE(), LAB_PIPE({ id: 12, sha: "autre" })]],
+  [
+    /releases\?/,
+    [
+      { tag_name: "v1.0.0", released_at: CREEE, upcoming_release: false },
+      { tag_name: "v0.9.0", released_at: null },
+    ],
+  ],
+];
+const HUB_API = [
+  VERSION,
+  [/pr list/, [HUB_PR()]],
+  [/pr view 7/, HUB_VUE_PR],
+  [/run list/, [HUB_RUN(), HUB_RUN({ databaseId: 12, headSha: "autre" })]],
+  [/actions\/runs\/11\/jobs/, { jobs: [HUB_JOB] }],
+  [
+    /release list/,
+    [
+      { tagName: "v1.0.0", isLatest: true, isPrerelease: false, publishedAt: CREEE },
+      { tagName: "v0.9.0", isLatest: false, isPrerelease: false, publishedAt: null },
+    ],
+  ],
+];
+
+test("QUA-273 : GitHub et GitLab rendent les mêmes vues, de même forme, forge détectée d'après origin", async () => {
+  const hub = forgeInjectee(HUB_API, { git: GIT_MAIN });
+  const lab = forgeInjectee(LAB_API, { remote: ORIGINE_LAB, git: GIT_MAIN });
+  assert.deepEqual(await hub.forge.availability(), { forge: "github", cli: "gh", missing: null });
+  assert.deepEqual(await lab.forge.availability(), { forge: "gitlab", cli: "glab", missing: null });
+
+  const prsHub = (await hub.forge.prs()).prs;
+  assert.deepEqual(prsHub, [
+    {
+      number: 7,
+      title: "Une PR",
+      state: "open",
+      branch: "ma-branche",
+      createdAt: CREEE,
+      mergedAt: null,
+      closedAt: null,
+      paths: FICHIERS_DOC,
+    },
+  ]);
+  assert.deepEqual((await lab.forge.prs()).prs.slice(0, 1), prsHub);
+
+  const ciHub = await hub.forge.ci();
+  const ciLab = await lab.forge.ci();
+  const cibles = (ci) => ci.targets.map((t) => [t.kind, t.number, t.branch, t.sha]);
+  assert.deepEqual(cibles(ciHub), [
+    ["pr", 7, "ma-branche", "abcdef0"],
+    ["main", null, "main", "abcdef0"],
+  ]);
+  assert.deepEqual(cibles(ciLab).at(-1), ["main", null, "main", "abcdef0"]);
+  assert.equal(ciHub.targets[0].workflows.length, 1, "seules les exécutions du dernier commit");
+  const [wHub] = ciHub.targets[0].workflows;
+  const [wLab] = ciLab.targets[0].workflows;
+  assert.deepEqual(Object.keys(wLab).sort(), Object.keys(wHub).sort());
+  for (const w of [wHub, wLab])
+    assert.deepEqual([w.id, w.event, w.status, w.conclusion, w.sha], ["11", "push", "completed", "success", "abcdef0"]);
+  assert.deepEqual(
+    wHub.jobs[0].steps.map((s) => s.name),
+    ["etape"],
+    "une étape jamais lancée n'a pas de durée",
+  );
+  assert.deepEqual(wLab.jobs[0], { name: "tests", status: "completed", conclusion: "success", started: DEBUT, completed: FIN, steps: [] });
+  assert.deepEqual(await lab.forge.releases(), await hub.forge.releases());
+  const detail = {
+    number: 7,
+    title: "Une PR",
+    body: "corps",
+    state: "open",
+    branch: "ma-branche",
+    base: "main",
+    additions: 4,
+    deletions: 2,
+    changedFiles: 2,
+    commits: 2,
+  };
+  assert.deepEqual(await hub.forge.pr(7), detail);
+  assert.deepEqual(await lab.forge.pr(7), detail);
+});
+
+test("QUA-273 : les états de GitLab sont traduits vers ceux de GitHub ; ni auteur ni adresse ne sort d'un adapteur", async () => {
+  const etats = {
+    running: ["in_progress", null],
+    pending: ["queued", null],
+    manual: ["queued", null],
+    failed: ["completed", "failure"],
+    canceled: ["completed", "cancelled"],
+    skipped: ["completed", "skipped"],
+  };
+  for (const [statut, attendu] of Object.entries(etats)) {
+    const { forge } = forgeInjectee(
+      [
+        VERSION,
+        [/merge_requests/, []],
+        [/pipelines\/1\/jobs/, [{ ...LAB_JOB, status: statut }]],
+        [/pipelines\?/, [LAB_PIPE({ id: 1, status: statut })]],
+      ],
+      { remote: ORIGINE_LAB, git: GIT_MAIN },
+    );
+    const [w] = (await forge.ci()).targets[0].workflows;
+    assert.deepEqual([w.status, w.conclusion], attendu, statut);
+    assert.deepEqual([w.jobs[0].status, w.jobs[0].conclusion], attendu, statut);
+  }
+  const fusionnee = LAB_MR({
+    iid: 2,
+    sha: "b",
+    state: "merged",
+    merged_at: CREEE,
+    web_url: "https://gitlab.com/jeanne-owner/projet/-/merge_requests/2",
+  });
+  const fermee = LAB_MR({ iid: 3, sha: "c", state: "closed", closed_at: CREEE });
+  const { forge } = forgeInjectee(
+    [VERSION, [/merge_requests\?/, [fusionnee, fermee]], [/merge_requests\/2\/diffs/, [{ new_path: "src/a.ts" }]]],
+    { remote: ORIGINE_LAB },
+  );
+  const { prs } = await forge.prs();
+  assert.deepEqual(
+    prs.map((p) => [p.number, p.state, p.mergedAt, p.closedAt, p.paths]),
+    [
+      [2, "merged", CREEE, null, ["src/a.ts"]],
+      [3, "closed", null, CREEE, []],
+    ],
+  );
+  assert.ok(!JSON.stringify(prs).includes("jeanne"), "ni auteur ni adresse");
+  assert.equal(await forge.pr(2), null, "une MR illisible n'est pas une erreur");
+});
+
+test("QUA-273 : GitLab pagine jusqu'à la limite de GitHub, et ne demande les fichiers que des MR récentes", async () => {
+  const page = (n, taille) => Array.from({ length: taille }, (_, i) => LAB_MR({ iid: n * 1000 + i, sha: `s${i}` }));
+  const { forge, appels } = forgeInjectee(
+    [VERSION, [/page=1$/, page(1, 100)], [/page=2$/, page(2, 40)], [/\/diffs/, [{ new_path: "x.ts" }]]],
+    { remote: ORIGINE_LAB },
+  );
+  assert.equal((await forge.prs()).prs.length, 140);
+  assert.equal(appels.filter((a) => a.includes("/diffs")).length, 30);
+  const coupure = forgeInjectee([VERSION, [/page=1$/, page(1, 100)], [/\/diffs/, []]], { remote: ORIGINE_LAB });
+  assert.equal((await coupure.forge.prs()).prs.length, 100, "une page 2 en échec laisse la première");
+  const pauvre = forgeInjectee([VERSION, [/merge_requests\/9$/, LAB_MR({ iid: 9, description: null })]], { remote: ORIGINE_LAB });
+  assert.deepEqual(await pauvre.forge.pr(9), {
+    number: 9,
+    title: "Une PR",
+    body: "",
+    state: "open",
+    branch: "ma-branche",
+    base: "main",
+    additions: null,
+    deletions: null,
+    changedFiles: null,
+    commits: 0,
+  });
+});
+
+test("QUA-273 : aucune commande d'écriture ; un nom de branche ne devient ni option ni morceau d'adresse", async () => {
+  const hub = forgeInjectee(
+    [
+      VERSION,
+      [/pr list/, [HUB_PR({ headRefName: "-x;rm&y" })]],
+      [/run list/, [HUB_RUN()]],
+      [/\/jobs/, { jobs: [HUB_JOB] }],
+      [/release/, []],
+      [/pr view/, HUB_VUE_PR],
+    ],
+    { git: GIT_MAIN },
+  );
+  await hub.forge.ci();
+  await hub.forge.releases();
+  await hub.forge.pr(7);
+  assert.ok(hub.appels.some((a) => a.startsWith("gh run list --branch=-x;rm&y --limit")));
+  const lecturesGh =
+    /^gh (--version|pr list |pr view \d+ |run list --branch=|release list |api repos\/\{owner\}\/\{repo\}\/actions\/runs\/\d+\/jobs)/;
+  for (const a of hub.appels) assert.match(a, lecturesGh);
+
+  const lab = forgeInjectee(
+    [
+      VERSION,
+      [/merge_requests\?/, [LAB_MR({ source_branch: "a&b=c" })]],
+      [/\/diffs/, []],
+      [/pipelines\?/, [LAB_PIPE()]],
+      [/\/jobs/, [LAB_JOB]],
+      [/releases/, []],
+      [/merge_requests\/7/, LAB_MR()],
+    ],
+    { remote: ORIGINE_LAB, git: GIT_MAIN },
+  );
+  await lab.forge.ci();
+  await lab.forge.releases();
+  await lab.forge.pr(7);
+  assert.ok(lab.appels.some((a) => a.includes("pipelines?ref=a%26b%3Dc&")));
+  for (const a of lab.appels) {
+    assert.match(a, /^glab (--version|api projects\/:id\/)/);
+    assert.doesNotMatch(a, / (-X|--method|-f|-F|--field|--raw-field)\b/);
+  }
+});
+
+test("QUA-273 : la forge se lit sur l'hôte d'origin seul, la branche principale sans valeur en dur, les jobs finis une seule fois", async () => {
+  assert.equal(hostOf("https://user:x@gitlab.example/x/github-miroir.git\n"), "gitlab.example");
+  assert.equal(hostOf("git@github.com:a/gitlab-outils.git"), "github.com");
+  assert.equal(hostOf("ssh://git@gitlab.com:22/a/b"), "gitlab.com");
+  const miroir = forgeInjectee([VERSION], { remote: "https://gitlab.com/a/github-miroir.git" });
+  assert.equal((await miroir.forge.availability()).forge, "gitlab");
+
+  for (const [reponses, attendu] of [
+    [{ "refs/remotes/origin/main": "abc\n" }, ["main"]],
+    [{ "refs/remotes/origin/master": "abc\n" }, ["master"]],
+    [{}, []],
+  ]) {
+    const { forge } = forgeInjectee([VERSION, [/pr list/, []]], { git: reponses });
+    assert.deepEqual(
+      (await forge.ci()).targets.map((t) => t.branch),
+      attendu,
+    );
+  }
+  const sansExecution = forgeInjectee([VERSION, [/pr list/, []], [/run list/, []]], { git: GIT_MAIN });
+  assert.deepEqual((await sansExecution.forge.ci()).targets, [
+    { kind: "main", number: null, title: null, branch: "main", sha: null, workflows: [] },
+  ]);
+
+  const nombreux = Array.from({ length: 205 }, (_, i) => HUB_RUN({ databaseId: i + 1 }));
+  const beaucoup = forgeInjectee(
+    [
+      VERSION,
+      [/pr list/, [HUB_PR()]],
+      [/run list --branch=main/, nombreux.concat(nombreux[204])],
+      [/run list/, [HUB_RUN({ status: "in_progress", conclusion: "" })]],
+      [/\/jobs/, { jobs: [HUB_JOB] }],
+    ],
+    { git: GIT_MAIN },
+  );
+  const { targets } = await beaucoup.forge.ci();
+  assert.equal(targets[0].workflows[0].conclusion, null);
+  assert.equal(targets[1].workflows.length, 206);
+  assert.equal(beaucoup.appels.filter((a) => a.includes("/runs/205/jobs")).length, 1, "une exécution finie n'est demandée qu'une fois");
+});
+
+/** Faux `gh` et `glab` sur le PATH : table de [expression, réponse], chaque appel noté. */
+function outilsFactices(table) {
+  const bin = tmp();
+  const journal = join(bin, "appels.log");
+  for (const outil of ["gh", "glab"]) {
+    const script = `#!/usr/bin/env node
+const { appendFileSync } = require("node:fs");
+const args = process.argv.slice(2).join(" ");
+appendFileSync(${JSON.stringify(journal)}, ${JSON.stringify(outil)} + " " + args + "\\n");
+if (args === "--version") { console.log("1.0"); process.exit(0); }
+for (const [motif, r] of ${JSON.stringify(table)}) if (new RegExp(motif).test(args)) { process.stdout.write(typeof r === "string" ? r : JSON.stringify(r)); process.exit(0); }
+process.exit(1);
+`;
+    writeFileSync(join(bin, outil), script);
+    chmodSync(join(bin, outil), 0o755);
+  }
+  return {
+    path: `${bin}:${process.env.PATH}`,
+    appels: () => (existsSync(journal) ? readFileSync(journal, "utf8").trim().split("\n") : []),
+  };
+}
+
+function brancher(p, origine) {
+  git(p.dir, "remote", "add", "origin", origine);
+  git(p.dir, "update-ref", "refs/remotes/origin/main", "HEAD");
+  git(p.dir, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main");
+}
+
+const attendreVrai = async (condition, essais = 200) => {
+  for (let i = 0; i < essais; i++) {
+    if (await condition()) return;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  throw new Error("condition jamais vraie");
+};
+
+test("QUA-273 : les vues CI et le tableau répondent de bout en bout par gh et par glab", posix, async () => {
+  for (const [origine, table, outil] of [
+    [
+      ORIGINE_HUB,
+      [
+        ["pr list", [HUB_PR()]],
+        ["run list", [HUB_RUN()]],
+        ["runs/11/jobs", { jobs: [HUB_JOB] }],
+        ["release list", []],
+      ],
+      "gh",
+    ],
+    [
+      ORIGINE_LAB,
+      [
+        ["merge_requests\\?", [LAB_MR()]],
+        ["merge_requests/7/diffs", [{ new_path: "x.ts" }]],
+        ["pipelines/11/jobs", [LAB_JOB]],
+        ["pipelines\\?", [LAB_PIPE()]],
+        ["releases", []],
+      ],
+      "glab",
+    ],
+  ]) {
+    const p = await projet({});
+    brancher(p, origine);
+    const faux = outilsFactices(table);
+    const avant = empreintes(p.dir);
+    const s = await demarrer(p, ["--port", "0"], { PATH: faux.path });
+    const ci = await jsonDe(`${s.url}api/ci`);
+    assert.equal(ci.missing, null);
+    assert.equal(ci.forge, outil === "gh" ? "github" : "gitlab");
+    assert.equal(ci.targets.at(-1).workflows[0].jobs[0].name, "tests");
+    assert.equal((await jsonDe(`${s.url}api/board`)).cols.prs[0].number, 7);
+    assert.ok(Array.isArray((await jsonDe(`${s.url}api/releases`)).releases));
+    assert.equal(s.erreurs(), "");
+    await s.arreter();
+    assert.deepEqual(empreintes(p.dir), avant, "aucun fichier du projet ne change");
+    assert.ok(
+      faux.appels().every((a) => a.startsWith(`${outil} `)),
+      "seul l'outil de la forge détectée est appelé",
+    );
+  }
+});
+
+test("QUA-269 : à l'arrêt du serveur, une commande de forge en cours ne survit pas", posix, async () => {
+  const p = await projet({});
+  git(p.dir, "remote", "add", "origin", ORIGINE_HUB);
+  const bin = tmp();
+  const trace = join(bin, "pid");
+  writeFileSync(
+    join(bin, "gh"),
+    `#!/usr/bin/env node\nif (process.argv[2] === "--version") { console.log("1"); process.exit(0); }\nrequire("node:fs").writeFileSync(${JSON.stringify(trace)}, String(process.pid));\nsetTimeout(() => {}, 60000);\n`,
+  );
+  chmodSync(join(bin, "gh"), 0o755);
+  const s = await demarrer(p, ["--port", "0"], { PATH: `${bin}:${process.env.PATH}` });
+  await attendreVrai(() => existsSync(trace) && readFileSync(trace, "utf8") !== "");
+  const pid = Number(readFileSync(trace, "utf8"));
+  await s.arreter();
+  await attendreVrai(() => {
+    try {
+      process.kill(pid, 0);
+      return false;
+    } catch {
+      return true;
+    }
+  });
+});
+
+test(
+  "QUA-271 : ni l'adresse de la forge, ni l'auteur, ni le login écrit par Git n'atteignent une réponse ni le journal",
+  posix,
+  async () => {
+    const secret = `glpat-${"a1".repeat(12)}`;
+    const adresse = "https://github.com/jeanne-owner/projet";
+    const p = await projet({ "docs/intentions/idee.md": `# Intention : voir ${adresse}/releases\n` });
+    brancher(p, ORIGINE_HUB);
+    git(
+      p.dir,
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "Merge pull request #3 from jeanne-owner/branche",
+      "-m",
+      "Corps du commit\n\nSigned-off-by: Paul Martin\nCo-Authored-By: Marie Curie <mc@ex.fr>\nDrwil-Lot: 2",
+    );
+    git(
+      p.dir,
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "Merge branch 'x' of github.com:jeanne-owner/projet",
+      "-m",
+      "See merge request jeanne-owner/projet!4",
+    );
+    const sha = git(p.dir, "rev-parse", "HEAD~1").stdout.trim().slice(0, 12);
+    const titre = `Titre @jeanne-t ${secret}`;
+    const auteur = { login: "jeanne-t" };
+    const faux = outilsFactices([
+      ["pr list", [HUB_PR({ title: titre, author: auteur, url: `${adresse}/pull/7` })]],
+      ["pr view", { ...HUB_VUE_PR, title: titre, body: "de @jeanne-t", author: auteur, url: `${adresse}/pull/7` }],
+      ["run list", [HUB_RUN({ url: `${adresse}/actions/runs/11` })]],
+      ["runs/11/jobs", { jobs: [{ ...HUB_JOB, html_url: `${adresse}/x`, runner_name: "jeanne-t" }] }],
+      ["release list", [{ tagName: "v1", isLatest: true, isPrerelease: false, publishedAt: null, author: auteur }]],
+    ]);
+    const s = await demarrer(p, ["--port", "0"], { PATH: faux.path });
+    await attendreVrai(async () => JSON.stringify(await jsonDe(`${s.url}api/events`)).includes("#7"));
+    const corps = [];
+    for (const route of [
+      "api/ci",
+      "api/board",
+      "api/releases",
+      "api/events",
+      "api/detail?key=pr-7-open",
+      "api/detail?key=ci-11-end",
+      `api/detail?key=c-${sha}`,
+      "api/file?path=docs/intentions/idee.md",
+    ])
+      corps.push(await (await fetch(s.url + route)).text());
+    const tout = corps.join("\n");
+    for (const interdit of ["jeanne-owner", "jeanne-t", secret, "Paul Martin", "Marie Curie", "mc@ex.fr", NOM_GIT])
+      assert.ok(!tout.includes(interdit), interdit);
+    assert.match(tout, /Corps du commit/);
+    assert.equal((await jsonDe(`${s.url}api/detail?key=c-${sha}`)).type, "commit", "la clé d'un commit passe le masquage");
+    const brut2 = readFileSync(join(projectCacheDir(p.dir, p.env), "events.jsonl"), "utf8");
+    for (const interdit of ["jeanne-owner", "jeanne-t", secret, NOM_GIT]) assert.ok(!brut2.includes(interdit), `journal : ${interdit}`);
+  },
+);
+
+test("QUA-271 : le filtre masque les logins des phrases de Git et des adresses de forge", () => {
+  assert.equal(maskPersonal("Merge pull request #12 from jeanne/fix"), "Merge pull request #12 from [REDACTED]/fix");
+  assert.equal(maskPersonal("Merge branch 'a' of git.ex:jeanne/p"), "Merge branch 'a' of [REDACTED]");
+  assert.equal(maskPersonal("See merge request jeanne/p!1"), "See merge request [REDACTED]");
+  assert.equal(maskPersonal("a\nCo-authored-by: Jeanne\nReviewed-By: Paul"), "a\nCo-authored-by: [REDACTED]\nReviewed-By: [REDACTED]");
+  assert.equal(maskPersonal("voir https://gitlab.example.org/jeanne/p"), "voir https://gitlab.example.org/[REDACTED]/p");
+  assert.equal(maskPersonal("voir https://www.github.com/jeanne"), "voir https://www.github.com/[REDACTED]");
+  assert.equal(maskPersonal("Drwil-Lot: 2 et https://example.org/jeanne"), "Drwil-Lot: 2 et https://example.org/jeanne");
+});
+
+function observer(p, forge, dossier) {
+  const journal = openJournal(dossier, (e) => maskPersonal(e, [NOM_GIT]));
+  const veille = startWatch({ reader: createReader(p.dir), forge, journal, T: SERVE_TEXTS.fr });
+  aArreter.push(async () => veille.stop());
+  return { journal, veille };
+}
+
+const AUCUNE = { forge: null, cli: null, missing: "forgeNone" };
+const FORGE_VIDE = {
+  availability: async () => AUCUNE,
+  prs: async () => ({ ...AUCUNE, prs: [] }),
+  ci: async () => ({ ...AUCUNE, targets: [] }),
+  releases: async () => [],
+  pr: async () => null,
+};
+
+test("QUA-274 : le journal est propre à chaque projet, vit dans le cache de l'utilisateur et survit à un redémarrage sans doublon", async () => {
+  const a = await projet({});
+  const b = await projet({});
+  git(a.dir, "commit", "--allow-empty", "-qm", "Clôture de quelque chose");
+  git(a.dir, "commit", "--allow-empty", "-qm", "Commit avec lot", "-m", "Un corps\nsur deux lignes\n\nDrwil-Lot: 3");
+  const avant = empreintes(a.dir);
+  const av = await demarrer(a);
+  const bv = await demarrer(b);
+  const evA = (await jsonDe(`${av.url}api/events`)).events;
+  const evB = (await jsonDe(`${bv.url}api/events`)).events;
+  assert.ok(evA.some((e) => e.kind === "cloture"));
+  const avecLot = evA.find((e) => e.text.startsWith("Commit avec lot"));
+  assert.equal(avecLot.text, "Commit avec lot (lot 3)");
+  assert.equal(avecLot.body, "Un corps sur deux lignes");
+  assert.equal(avecLot.sha.length, 7);
+  assert.ok(!evB.some((e) => e.kind === "cloture"), "le journal de l'un n'est pas celui de l'autre");
+  await av.arreter();
+  await bv.arreter();
+
+  const dossierA = projectCacheDir(a.dir, a.env);
+  assert.notEqual(dossierA, projectCacheDir(b.dir, a.env));
+  assert.ok(existsSync(join(dossierA, "events.jsonl")));
+  assert.equal(git(a.dir, "status", "--porcelain").stdout, "");
+  assert.deepEqual(empreintes(a.dir), avant);
+  const lignes = () => readFileSync(join(dossierA, "events.jsonl"), "utf8").trim().split("\n").length;
+  const n = lignes();
+  const encore = await demarrer(a);
+  assert.equal((await jsonDe(`${encore.url}api/events`)).events.filter((e) => e.kind === "cloture").length, 1);
+  await encore.arreter();
+  assert.equal(lignes(), n, "un même fait n'est écrit qu'une fois");
+});
+
+test("QUA-274 : le journal relève état, lots, décisions, attestations, PR et CI", async () => {
+  const p = await projet({});
+  const dossier = tmp();
+  const ecrireEtat = (etat, lot) => {
+    ecrire(p.dir, ".drwil/state.json", JSON.stringify(etat));
+    ecrire(p.dir, ".drwil/lot.json", JSON.stringify(lot));
+  };
+  const fiche = "docs/projects/x.md";
+  ecrireEtat(
+    {
+      activity: "BUILD",
+      since: "2026-03-01T10:00:00Z",
+      active_brief: fiche,
+      auto_merge: true,
+      limits: [{ intent: "i", choice: "now" }],
+      reopened: { pr: 5 },
+      queue: ["y.md"],
+    },
+    { brief: fiche, current: 2, done: [1] },
+  );
+  ecrire(p.dir, ".drwil/evidence/attestations/QUA-001-2026-03-02T10-20-30-400Z.json", "{}");
+  ecrire(p.dir, ".drwil/evidence/attestations/autre.json", "{}");
+  const pr = (over) => ({
+    number: 1,
+    title: "t",
+    state: "open",
+    branch: "b",
+    createdAt: CREEE,
+    mergedAt: null,
+    closedAt: null,
+    paths: ["docs/a.md"],
+    ...over,
+  });
+  const job = { name: "j", status: "completed", conclusion: "success", started: DEBUT, completed: FIN, steps: [] };
+  const run = (over) => ({
+    id: "9",
+    name: "w",
+    event: "push",
+    status: "completed",
+    conclusion: "success",
+    created: CREEE,
+    sha: "abc1234",
+    jobs: [job],
+    ...over,
+  });
+  const CIBLE = { forge: "gitlab", cli: "glab", missing: null };
+  const forge = {
+    ...FORGE_VIDE,
+    prs: async () => ({
+      ...CIBLE,
+      prs: [pr({}), pr({ number: 2, mergedAt: CREEE, paths: ["src/a.ts"] }), pr({ number: 3, closedAt: CREEE })],
+    }),
+    ci: async () => ({
+      ...CIBLE,
+      targets: [
+        {
+          kind: "pr",
+          number: 2,
+          title: "t",
+          branch: "b",
+          sha: "abc1234",
+          workflows: [
+            run({}),
+            run({ id: "10", conclusion: "failure", jobs: [] }),
+            run({ id: "11", status: "in_progress", conclusion: null }),
+          ],
+        },
+        {
+          kind: "main",
+          number: null,
+          title: null,
+          branch: "main",
+          sha: "abc1234",
+          workflows: [run({ id: "12", jobs: [{ ...job, started: null, completed: null }] })],
+        },
+      ],
+    }),
+  };
+  const un = observer(p, forge, dossier);
+  await attendreVrai(() => un.journal.list().some((e) => e.key === "ci-12-end"));
+  un.veille.stop();
+  const textes = un.journal.list().map((e) => e.text);
+  for (const attendu of [
+    "Activité BUILD (premier relevé)",
+    "Relevé initial : Lot 1 fait",
+    "Relevé initial : Lot courant : 2",
+    "Relevé initial : Fusion automatique autorisée par l'humain",
+    "Relevé initial : Limite hors cadre : i → « Traiter maintenant »",
+    "Relevé initial : Chantier rouvert (PR #5)",
+    "File de chantiers : y.md",
+    "Attestation humaine de QUA-001",
+    "MR #1 ouverte — t",
+    "MR #2 fusionnée — t",
+    "MR #3 fermée sans fusion — t",
+    "CI démarrée : w sur MR #2 (abc1234)",
+    "CI verte : w sur MR #2 (abc1234)",
+    "CI rouge (failure) : w sur MR #2 (abc1234)",
+    "CI verte : w sur main (abc1234)",
+  ])
+    assert.ok(textes.includes(attendu), attendu);
+  const trouver = (cle) => un.journal.list().find((e) => e.key === cle);
+  assert.equal(un.journal.list().find((e) => e.kind === "attestation").at, "2026-03-02T10:20:30.400Z");
+  assert.equal(trouver("pr-2-merged").nature, "code");
+  assert.equal(trouver("pr-1-open").nature, "doc");
+  assert.equal(trouver("ci-11-end"), undefined, "une exécution en cours n'a pas de fin");
+  assert.equal(trouver("ci-12-end").at, new Date(CREEE).toISOString(), "sans date de job, celle de l'exécution");
+
+  ecrireEtat(
+    {
+      activity: "VERIFY",
+      since: "2026-03-07T10:00:00Z",
+      active_brief: "docs/projects/z.md",
+      auto_merge: false,
+      limits: [
+        { intent: "i", choice: "note" },
+        { intent: "j", choice: "maison" },
+      ],
+      reopened: { pr: 6 },
+      queue: [],
+    },
+    { brief: "docs/projects/z.md", current: 3, done: [1, 2] },
+  );
+  const deux = observer(p, FORGE_VIDE, dossier);
+  await deux.veille.localReady;
+  deux.veille.stop();
+  const apres = deux.journal.list().map((e) => e.text);
+  for (const attendu of [
+    "Activité BUILD → VERIFY",
+    "Fiche active : docs/projects/z.md",
+    "Lot 2 fait",
+    "Lot courant : 3",
+    "Fusion automatique retirée",
+    "Limite hors cadre : i → « Noter en intention »",
+    "Limite hors cadre : j → « maison »",
+    "Chantier rouvert (PR #6)",
+  ])
+    assert.ok(apres.includes(attendu), attendu);
+  assert.equal(apres.filter((t) => t === "Attestation humaine de QUA-001").length, 1, "pas de doublon");
+});
+
+test("QUA-274 : le journal est borné, tolère une ligne illisible, un état illisible et un cache inutilisable", async () => {
+  const borne = tmp();
+  const grosses = Array.from({ length: 5100 }, (_, i) => JSON.stringify({ at: "2026-01-01", kind: "k", key: `k${i}`, text: "x" }));
+  writeFileSync(join(borne, "events.jsonl"), `pas du json\nnull\n${grosses.join("\n")}\n`);
+  const grand = openJournal(borne, (e) => e);
+  const lignes = () => readFileSync(join(borne, "events.jsonl"), "utf8").trim().split("\n").length;
+  assert.equal(grand.list().length, 1000);
+  assert.equal(lignes(), 5000);
+  assert.equal(grand.empty, false);
+  grand.add({ at: "pas une date", kind: "k", key: "k5099", text: "doublon" });
+  grand.add({ at: "pas une date", kind: "k", key: "neuf", text: "n" });
+  assert.equal(grand.list().filter((e) => e.key === "neuf").length, 1);
+  assert.equal(lignes(), 5001);
+  writeFileSync(join(borne, "state-last.json"), "pas du json");
+  assert.equal(grand.snapshot(), null);
+
+  const p = await projet({});
+  const fichier = join(tmp(), "un-fichier");
+  writeFileSync(fichier, "x");
+  const s = await startServer({ root: p.dir, host: "127.0.0.1", port: 0, token: null, cacheDir: join(fichier, "sous-dossier") });
+  aArreter.push(() => s.stop());
+  const vue = await jsonDe(`${s.url}api/events`);
+  assert.ok(
+    vue.events.some((e) => e.kind === "commit"),
+    "le journal reste en mémoire",
+  );
+});
+
+test("QUA-275 : sans forge, sans preuve et sans consommation, les vues sont vides, sans erreur, et disent ce qui manque", async () => {
+  const p = await projet({});
+  const s = await demarrer(p);
+  for (const route of ["api/ci", "api/board", "api/releases", "api/events"]) {
+    const r = await fetch(s.url + route);
+    assert.equal(r.status, 200, route);
+    assert.match((await r.json()).missing, /Aucune forge détectée/, route);
+  }
+  const ci = await jsonDe(`${s.url}api/ci`);
+  assert.deepEqual(ci.targets, []);
+  assert.equal(ci.forge, null);
+  assert.ok(!("cli" in ci), "le champ interne ne sort pas");
+  assert.match((await jsonDe(`${s.url}api/usage`)).missing, /usage\.jsonl/);
+  assert.match((await jsonDe(`${s.url}api/contracts`)).missing, /drwil verify/);
+  assert.deepEqual(await jsonDe(`${s.url}api/detail?key=pr-1-open`), { error: "forge unavailable" });
+  assert.equal(s.erreurs(), "");
+});
+
+test("QUA-275 : outil absent ou forge injoignable sont distingués ; une réponse inattendue vaut injoignable", async () => {
+  const sansOutil = forgeInjectee([]);
+  assert.equal((await sansOutil.forge.prs()).missing, "forgeNoCli");
+  assert.equal(await sansOutil.forge.pr(1), null);
+  assert.deepEqual(await sansOutil.forge.releases(), []);
+  for (const reponses of [[VERSION], [VERSION, [/pr list/, { message: "401" }]], [VERSION, [/pr list/, [{ number: 1 }]]]]) {
+    const { forge } = forgeInjectee(reponses, { git: GIT_MAIN });
+    assert.equal((await forge.prs()).missing, "forgeUnreachable");
+    const ci = await forge.ci();
+    assert.deepEqual([ci.missing, ci.targets], ["forgeUnreachable", []]);
+  }
+  assert.equal(natureOf([]), "code");
+  assert.equal(natureOf(["a.md", ".drwil/usage.jsonl", ".drwil/evidence/v.json", "docs/x.png"]), "doc");
+  assert.equal(natureOf(["a.md", "b.ts"]), "code");
+  assert.deepEqual(Object.keys(SERVE_TEXTS.en).sort(), Object.keys(SERVE_TEXTS.fr).sort(), "mêmes messages dans les deux langues");
+});
+
+const LIGNE_INDEX = (titre, version, chemin, marques = "") => `- [ ] ${marques}${titre} (${version}) — \`${chemin}\`\n`;
+
+async function projetTableau() {
+  const index = (extra = "") =>
+    `# Index\n\n## Thème\n\n${LIGNE_INDEX("Active", "1.2.0, 2", "docs/projects/active.md", "[P1] [IA] ")}${LIGNE_INDEX("Cadrée", "1.2.0, 1", "docs/projects/cadree.md")}${LIGNE_INDEX("Idée", "1.3.0", "docs/intentions/idee.md", "[décision] ")}  suite de la puce.\n${LIGNE_INDEX("Référence", "1.3.0", "docs/projects/reference.md")}${LIGNE_INDEX("Disparue", "1.3.0", "docs/projects/disparue.md")}${LIGNE_INDEX("Fusionnée", "1.2.0", "docs/projects/mergee.md")}${LIGNE_INDEX("Ouverte", "1.2.0", "docs/projects/ouverte.md")}${LIGNE_INDEX("Close", "1.3.0", "docs/projects/close.md")}${LIGNE_INDEX("Sur main", "1.3.0", "docs/projects/sur-main.md")}- [x] Faite (1.2.0) — \`docs/projects/faite.md\`\n${extra}\nFin.\n`;
+  const BRIEFS = [
+    { path: "docs/projects/cadree.md", title: "Cadrée", priority: "P1", decisions: 0, ready: true, maturity: "prêt" },
+    { path: "docs/projects/active.md", title: "Active", priority: null, decisions: 0, ready: true, maturity: "prêt" },
+  ];
+  const p = await projet({
+    "docs/projects/pending.md": index(`- [ ] Retirée (1.2.0) — \`docs/projects/retiree.md\`\n  sur deux lignes.\n`),
+    ".githooks/state.mjs": `console.log(${JSON.stringify(JSON.stringify(BRIEFS))});\n`,
+    "docs/projects/active.md": "# Projet : le chantier actif\n\n**Intention** : `docs/intentions/couverte.md`\n",
+    "docs/projects/cadree.md": "# Cadrée\n\n**Intent**: `docs/intentions/couverte2.md`\n",
+    "docs/projects/reference.md": "# Référence\n",
+    "docs/projects/journal.md":
+      "# Journal\n\n## Ancienne entrée\n\nsur workstream/close\n\n## Autre\n\n- **Clôturé par** : commit `abc`, workstream/close\n",
+    "docs/intentions/idee.md": "# Intention : une idée\n\n## Questions à trancher\n\n- une\n",
+    "docs/intentions/couverte.md": "# Intention : couverte\n",
+    "docs/intentions/couverte2.md": "# Intention : couverte aussi\n",
+    "docs/intentions/notes.md": "# Notes\n\n- 2026-11-08 — une note\n- sans date\n",
+    "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\nÀ venir.\n\n## [1.0.0] - date\n\nPremière.\n",
+    ".drwil/usage.jsonl": '{"workstream":"a","tokens":5,"date":"2000-01-01"}\n{"workstream":"b","tokens":3,"date":"2999-01-01"}\n',
+  });
+  // Annotés et datés : sur un même commit, deux tags légers ont la même date et leur ordre n'est pas garanti.
+  const etiqueter = (tag, date) =>
+    spawnSync("git", ["tag", "-a", "-m", tag, tag], { cwd: p.dir, env: { ...process.env, GIT_COMMITTER_DATE: date } });
+  etiqueter("v0.9.0-rc1", "2020-01-01T00:00:00Z");
+  etiqueter("v1.0.0", "2020-06-01T00:00:00Z");
+  const journalPrincipal = "# Journal\n\n## Clôturé\n\nworkstream/sur-main\n";
+  ecrire(p.dir, "docs/projects/journal.md", journalPrincipal);
+  git(p.dir, "add", "-A");
+  git(p.dir, "commit", "-qm", "Journal principal");
+  git(p.dir, "update-ref", "refs/remotes/origin/main", "HEAD");
+  git(p.dir, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main");
+  ecrire(p.dir, "docs/projects/pending.md", index());
+  git(p.dir, "add", "-A");
+  git(p.dir, "commit", "-qm", "Retirée de l'index");
+  ecrire(p.dir, "docs/projects/journal.md", `${journalPrincipal}\n## Close\n\n- **Clôturé par** : commit \`abc\`, workstream/close\n`);
+  ecrire(
+    p.dir,
+    ".drwil/state.json",
+    JSON.stringify({ activity: "BUILD", active_brief: "docs/projects/active.md", auto_merge: true, reopened: { pr: 4 } }),
+  );
+  ecrire(p.dir, ".drwil/lot.json", JSON.stringify({ brief: "docs/projects/active.md", current: 2, done: [1] }));
+  return p;
+}
+
+const PR_FAITE = (number, branch, state, over = {}) => ({
+  number,
+  title: `pr ${number}`,
+  state,
+  branch,
+  createdAt: "2030-01-01T00:00:00Z",
+  mergedAt: null,
+  closedAt: null,
+  paths: ["docs/a.md"],
+  ...over,
+});
+const AVEC_PRS = (prs, ouverte = { forge: "github", cli: "gh", missing: null }) => ({
+  ...FORGE_VIDE,
+  prs: async () => ({ ...ouverte, prs }),
+});
+
+test("QUA-273 : le tableau se déduit des fichiers, de l'état, de Git et de la forge, sans carte déplacée à la main", async () => {
+  const p = await projetTableau();
+  const prs = [
+    PR_FAITE(1, "workstream/active", "open"),
+    PR_FAITE(2, "workstream/ouverte", "open", { paths: ["src/a.ts"] }),
+    PR_FAITE(3, "workstream/mergee", "merged", { mergedAt: "2030-02-01T00:00:00Z" }),
+    PR_FAITE(4, "x", "merged", { mergedAt: "2030-03-01T00:00:00Z", paths: ["src/b.ts"] }),
+    PR_FAITE(5, "y", "merged", { mergedAt: "2000-01-01T00:00:00Z" }),
+  ];
+  const vue = await createBoard(createReader(p.dir), AVEC_PRS(prs))();
+  assert.equal(vue.forge, "github");
+  assert.equal(vue.missing, null);
+  assert.equal(vue.lastRelease, "v1.0.0");
+  const { cols, targets } = vue;
+  assert.deepEqual(
+    cols.notes.map((n) => [n.title, n.date]),
+    [
+      ["sans date", null],
+      ["une note", "2026-11-08"],
+    ],
+  );
+  assert.deepEqual(
+    cols.intentions.map((i) => i.id),
+    ["docs/intentions/idee.md"],
+    "une intention couverte par une fiche n'y est plus",
+  );
+  assert.deepEqual(cols.intentions[0].marks, ["décision"]);
+  assert.equal(cols.intentions[0].questions, 1);
+  assert.equal(cols.intentions[0].version, "1.3.0");
+  assert.deepEqual(
+    cols.fiches.map((f) => [f.id, f.priority, f.version, f.order]),
+    [["docs/projects/cadree.md", "P1", "1.2.0", 1]],
+  );
+  assert.equal(cols.chantier[0].title, "le chantier actif");
+  assert.deepEqual(cols.chantier[0].lot, { current: 2, done: [1] });
+  assert.deepEqual([cols.chantier[0].number, cols.chantier[0].reopened, cols.chantier[0].autoMerge], [1, 4, true]);
+  assert.deepEqual(
+    cols.prs.map((c) => [c.id, c.nature, c.branch]),
+    [["pr-2", "code", "workstream/ouverte"]],
+  );
+  assert.deepEqual(
+    cols.fusionnees.map((c) => c.number),
+    [4, 3],
+    "après la dernière release, la plus récente d'abord",
+  );
+  assert.deepEqual(cols.publiees[0], { id: "v1.0.0", title: "v1.0.0", date: cols.publiees[0].date, code: 0, doc: 0 });
+
+  const v120 = targets.find((t) => t.version === "1.2.0");
+  const stadeDe = (t, chemin) => t.items.find((i) => i.path === chemin);
+  assert.deepEqual([stadeDe(v120, "docs/projects/active.md").stage, stadeDe(v120, "docs/projects/active.md").number], ["chantier", 1]);
+  assert.equal(stadeDe(v120, "docs/projects/cadree.md").stage, "fiche");
+  assert.deepEqual([stadeDe(v120, "docs/projects/mergee.md").stage, stadeDe(v120, "docs/projects/mergee.md").number], ["fusionnee", 3]);
+  assert.deepEqual([stadeDe(v120, "docs/projects/ouverte.md").stage, stadeDe(v120, "docs/projects/ouverte.md").number], ["pr", 2]);
+  const retiree = stadeDe(v120, "docs/projects/retiree.md");
+  assert.equal(retiree.removed, true, "un élément retiré de l'index depuis la release reste compté");
+  assert.equal(retiree.stage, "autre");
+  assert.equal(v120.items[0].order, 1, "ordre du repère");
+  assert.deepEqual([v120.done, v120.total], [1, v120.items.length]);
+  const v130 = targets.find((t) => t.version === "1.3.0");
+  assert.equal(stadeDe(v130, "docs/intentions/idee.md").stage, "intention");
+  assert.equal(stadeDe(v130, "docs/projects/reference.md"), undefined, "un document de référence n'est pas un élément de version");
+  assert.equal(stadeDe(v130, "docs/projects/disparue.md").stage, "autre");
+  assert.deepEqual([stadeDe(v130, "docs/projects/close.md").stage, stadeDe(v130, "docs/projects/close.md").number], ["pr", null]);
+  assert.deepEqual(
+    [stadeDe(v130, "docs/projects/sur-main.md").stage, stadeDe(v130, "docs/projects/sur-main.md").number],
+    ["fusionnee", null],
+  );
+});
+
+test("QUA-273 : sans chantier ni release, le tableau reste complet ; un état en SCOPING n'a pas de carte active", async () => {
+  const p = await projet({
+    ".githooks/state.mjs": 'console.log("[]");\n',
+    "docs/projects/pending.md": "- [ ] Sans version — `docs/intentions/x.md`\n",
+  });
+  ecrire(p.dir, ".drwil/state.json", JSON.stringify({ activity: "SCOPING", active_brief: "docs/projects/x.md" }));
+  const vue = await createBoard(createReader(p.dir), FORGE_VIDE)();
+  assert.deepEqual(vue.cols.chantier, []);
+  assert.deepEqual(vue.targets, []);
+  assert.equal(vue.lastRelease, null);
+  assert.equal(vue.missing, "forgeNone");
+  ecrire(p.dir, ".drwil/state.json", JSON.stringify({ activity: "BUILD", active_brief: "docs/projects/sans-titre.md" }));
+  ecrire(p.dir, ".drwil/lot.json", JSON.stringify({ brief: "docs/projects/autre.md", current: 1, done: [] }));
+  const actif = await createBoard(createReader(p.dir), AVEC_PRS([PR_FAITE(1, "x", "open")]))();
+  assert.equal(actif.cols.chantier[0].title, "docs/projects/sans-titre.md");
+  assert.equal(actif.cols.chantier[0].lot, null);
+  assert.equal(actif.cols.chantier[0].number, null);
+  assert.equal(actif.cols.fusionnees.length, 0);
+  assert.equal(actif.cols.prs.length, 1);
+});
+
+test("QUA-273 : les releases croisent tags, journal des changements, PR et consommation ; le journal d'un paquet est trouvé", async () => {
+  const p = await projetTableau();
+  const prs = [
+    PR_FAITE(1, "a", "merged", { mergedAt: "2000-01-02T00:00:00Z", paths: ["src/a.ts"] }),
+    PR_FAITE(2, "b", "merged", { mergedAt: "2999-01-01T00:00:00Z" }),
+    PR_FAITE(3, "c", "merged", { mergedAt: "2999-02-01T00:00:00Z" }),
+    PR_FAITE(4, "d", "open"),
+  ];
+  const forge = { ...AVEC_PRS(prs), releases: async () => [{ tag: "v1.0.0", latest: true, prerelease: false, publishedAt: CREEE }] };
+  const { releases, missing, forge: nom } = await createReleases(createReader(p.dir), forge)();
+  assert.deepEqual([nom, missing], ["github", null]);
+  const [avenir, v1, rc] = releases;
+  assert.equal(avenir.tag, "Unreleased");
+  assert.equal(avenir.changelog, "À venir.");
+  assert.deepEqual(
+    avenir.prs.map((x) => x.number),
+    [3, 2],
+  );
+  assert.deepEqual(avenir.workstreams, [{ name: "b", tokens: 3 }]);
+  assert.equal(avenir.tokens, 3);
+  assert.equal(avenir.date, null);
+  assert.deepEqual([v1.tag, v1.latest, v1.published, v1.prerelease, v1.changelog], ["v1.0.0", true, true, false, "Première."]);
+  assert.deepEqual([rc.tag, rc.published, rc.prerelease, rc.latest], ["v0.9.0-rc1", false, true, false]);
+  assert.deepEqual(
+    v1.workstreams
+      .map((w) => w.name)
+      .concat(rc.workstreams.map((w) => w.name))
+      .sort(),
+    ["a"],
+  );
+
+  const paquet = await projet({ "packages/lib/README.md": "x", "packages/app/CHANGELOG.md": "## Unreleased\n\nDu paquet.\n" });
+  const vue = await createReleases(createReader(paquet.dir), FORGE_VIDE)();
+  assert.equal(vue.releases[0].changelog, "Du paquet.");
+  assert.equal(vue.missing, "forgeNone");
+  const sansJournal = await projet({});
+  assert.equal((await createReleases(createReader(sansJournal.dir), FORGE_VIDE)()).releases[0].changelog, "");
+});
+
+test("QUA-269 : un détail n'accepte qu'une clé ou un nom valide, et se lit sans rien de nominatif", async () => {
+  const p = await projet({
+    "docs/projects/journal.md": "# J\n\n## Mention seule\n\nworkstream/mention\n\n## Vraie\n\n- **Closed by**: workstream/vrai\n",
+    "docs/contracts.md": "# Registre\n\n## ABC-001 — Un contrat\n**Règle** : r\n",
+  });
+  git(p.dir, "commit", "--allow-empty", "-qm", "Commit du chantier", "-m", "Corps\n\nDrwil-Brief: docs/projects/vrai.md\nDrwil-Lot: 3");
+  git(p.dir, "commit", "--allow-empty", "-qm", "Sans lot", "-m", "Drwil-Brief: docs/projects/vrai.md");
+  const sha = git(p.dir, "rev-parse", "HEAD~1").stdout.trim();
+  ecrire(
+    p.dir,
+    ".drwil/evidence/attestations/a.json",
+    JSON.stringify({
+      contract: "ABC-001",
+      status: "ok",
+      actor: { name: NOM_GIT, source: "terminal" },
+      note: "vu",
+      commit: "0123456789",
+      covers: ["x"],
+    }),
+  );
+  ecrire(p.dir, ".drwil/evidence/attestations/b.json", JSON.stringify({ contract: "ZZZ-999", status: "ok" }));
+  const forge = {
+    ...FORGE_VIDE,
+    pr: async (n) => (n === 7 ? { number: 7, body: "b" } : null),
+    ci: async () => ({ ...AUCUNE, targets: [{ workflows: [{ id: "11", jobs: [{ name: "j" }] }] }] }),
+  };
+  const { detail, workstream } = createDetails(createReader(p.dir), forge);
+
+  for (const cle of ["", "c-xyz", "c-12", "pr-1", "pr-a-open", "ci-a-end", "att-../secret.json", "att-a b.json", "autre"])
+    assert.deepEqual(await detail(cle), { error: "key refused" }, cle);
+  const commit = await detail(`c-${sha}`);
+  assert.equal(commit.type, "commit");
+  assert.equal(commit.message.split("\n")[0], "Commit du chantier");
+  assert.equal(commit.summary, "");
+  assert.deepEqual(commit.files, []);
+  assert.ok(commit.branches.length > 0);
+  assert.ok(!("author" in commit));
+  assert.deepEqual(await detail("c-0000000000"), { error: "not found" });
+  assert.deepEqual(await detail("pr-7-open"), { type: "pr", number: 7, body: "b" });
+  assert.deepEqual(await detail("pr-8-open"), { error: "forge unavailable" });
+  assert.deepEqual(await detail("ci-11-end"), { type: "ci", jobs: [{ name: "j" }] });
+  assert.deepEqual(await detail("ci-12-end"), { error: "run not found" });
+  assert.deepEqual(await detail("att-a.json"), {
+    type: "attestation",
+    contract: "ABC-001",
+    title: "Un contrat",
+    status: "ok",
+    source: "terminal",
+    note: "vu",
+    commit: "0123456",
+    covers: ["x"],
+  });
+  assert.deepEqual(await detail("att-b.json"), {
+    type: "attestation",
+    contract: "ZZZ-999",
+    title: "",
+    status: "ok",
+    source: null,
+    note: "",
+    commit: null,
+    covers: [],
+  });
+  assert.deepEqual(await detail("att-absente.json"), { error: "attestation not found" });
+
+  assert.deepEqual(await workstream("../x", []), { error: "name refused" });
+  const decisions = [
+    { brief: "docs/projects/vrai.md", kind: "lot", key: "1", at: "a", text: "t" },
+    { brief: "docs/projects/vrai.md", kind: "commit", key: "2", at: "a", text: "t" },
+    { brief: "autre", kind: "lot", key: "3", at: "a", text: "t" },
+  ];
+  const vue = await workstream("vrai", decisions);
+  assert.equal(vue.commits, 2);
+  assert.equal(vue.lots["3"][0].subject, "Commit du chantier");
+  assert.equal(vue.lots[""][0].subject, "Sans lot");
+  assert.match(vue.entry, /Closed by/);
+  assert.deepEqual(
+    vue.decisions.map((e) => e.key),
+    ["1"],
+  );
+  assert.match((await workstream("mention", [])).entry, /Mention seule/);
+  assert.equal((await workstream("rien", [])).entry, "");
+  assert.equal((await workstream("rien", [])).commits, 0);
 });

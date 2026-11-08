@@ -1,5 +1,87 @@
-// Historique d'un projet pour `drwil serve`. Consommation par chantier (`.drwil/usage.jsonl`) : les champs
-// retenus sont une liste fermée, une colonne ajoutée au fichier n'atteint jamais l'API (QUA-271).
+// Historique d'un projet pour `drwil serve`. Journal d'événements : un fichier par projet, dans le cache de
+// l'utilisateur (QUA-274). Consommation par chantier (`.drwil/usage.jsonl`) : les champs retenus sont une
+// liste fermée, une colonne ajoutée au fichier n'atteint jamais l'API (QUA-271).
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const KEPT_EVENTS = 5000;
+const LISTED_EVENTS = 1000;
+export interface JournalEvent {
+  at: string;
+  kind: string;
+  key: string;
+  text: string;
+  brief?: string | null;
+  [field: string]: unknown;
+}
+
+function readLines(file: string): JournalEvent[] {
+  try {
+    return readFileSync(file, "utf8")
+      .split("\n")
+      .flatMap((line) => {
+        try {
+          const e = JSON.parse(line) as JournalEvent;
+          return e && typeof e.key === "string" ? [e] : [];
+        } catch {
+          return [];
+        }
+      });
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Journal d'un projet. Tout ce qui s'y écrit est déjà masqué (`mask`) : le fichier non plus ne porte personne.
+ * Une écriture impossible (cache en lecture seule) laisse le journal en mémoire, jamais une erreur de la vue.
+ */
+export function openJournal(dir: string, mask: (e: JournalEvent) => JournalEvent) {
+  const file = join(dir, "events.jsonl");
+  const snapshotFile = join(dir, "state-last.json");
+  const write = (action: () => void) => {
+    try {
+      mkdirSync(dir, { recursive: true });
+      action();
+    } catch {
+      // Voir ci-dessus : le journal reste en mémoire.
+    }
+  };
+  const loaded = readLines(file);
+  const events = loaded.slice(-KEPT_EVENTS);
+  if (events.length < loaded.length) write(() => writeFileSync(file, `${events.map((e) => JSON.stringify(e)).join("\n")}\n`));
+  const keys = new Set(events.map((e) => e.key));
+  const empty = events.length === 0;
+
+  function add(event: JournalEvent): void {
+    if (keys.has(event.key)) return;
+    // Git date en heure locale, la forge en UTC : une seule forme, sinon le tri par texte se trompe.
+    const at = new Date(event.at);
+    const e = mask({ ...event, at: Number.isNaN(at.getTime()) ? event.at : at.toISOString() });
+    keys.add(event.key);
+    events.push(e);
+    write(() => appendFileSync(file, `${JSON.stringify(e)}\n`));
+  }
+
+  function snapshot<T>(): T | null {
+    try {
+      return JSON.parse(readFileSync(snapshotFile, "utf8")) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  return {
+    empty,
+    add,
+    snapshot,
+    saveSnapshot: (value: unknown) => write(() => writeFileSync(snapshotFile, JSON.stringify(value))),
+    list: () => [...events].sort((a, b) => b.at.localeCompare(a.at)).slice(0, LISTED_EVENTS),
+  };
+}
+
+export type Journal = ReturnType<typeof openJournal>;
+
 const TOTALS = ["tokens", "output", "cache_read", "requests", "duration_min"] as const;
 type Totals = Record<(typeof TOTALS)[number] | "increments", number> & { workstream: string; date: string };
 

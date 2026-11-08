@@ -114,10 +114,10 @@ téléphone. Le tableau de bord statique (`drwil-progress`) est remplacé.
 - `drwil serve --detach` est idempotent : serveur déjà démarré pour ce projet, il redonne son adresse sans en lancer
   un second ; deux projets ou worktrees ouverts ensemble ont chacun leur serveur — contrat à créer `QUA-272`
 - Un projet sans `.drwil/usage.jsonl`, sans preuves ou sans forge joignable affiche ses vues vides, sans erreur, et
-  dit ce qui manque — contrat à créer
+  dit ce qui manque — contrat `QUA-275`
 - Les vues CI, PR et MR fonctionnent à parité sur GitHub (`gh`) et GitLab (`glab`), la forge étant détectée — contrat
-  à créer
-- Le journal d'événements est propre à chaque projet et vit hors du dépôt — contrat à créer
+  `QUA-273`
+- Le journal d'événements est propre à chaque projet et vit hors du dépôt — contrat `QUA-274`
 - La page s'utilise sur un écran de 360 px de large, sans défilement horizontal, en français et en anglais selon `lang`
   — contrat à créer
 - À l'ouverture d'une session, un projet qui a choisi le démarrage automatique voit le serveur démarré s'il ne tournait
@@ -203,7 +203,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-08) : lot 1 fait. `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
+- **Dernier état** (2026-11-08) : lots 1 et 2 faits côté code (essai réel GitLab en attente, voir plus bas). Lot 1 : `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
   `packages/drwil/src/serve-auth.ts`, `packages/drwil/src/serve-read.ts`, `packages/drwil/src/serve-texts.ts`, `packages/drwil/src/serve-journal.ts`), contrats QUA-269 à QUA-272, tests `packages/drwil/test/serve.test.mjs`.
 - **Choix du lot 1, à garder** :
   - Le jeton vient de la seule variable `DRWIL_SERVE_TOKEN` (32 caractères au moins), jamais d'une option. L'entrée par
@@ -211,15 +211,19 @@ Aucun.
   - `packages/drwil/src/serve-auth.ts` : `maskPersonal` est le filtre unique des réponses, appelé par `send` ; toute route nouvelle y passe.
   - Enregistrement server.json dans `projectCacheDir(racine)` (cache de l'utilisateur, un dossier par chemin réel) ; le
     journal d'événements du lot 2 ira dans ce même dossier.
-- **Prochaine étape, lot 2** (forges et journal, fichiers prévus du bloc scope : serve-forge.ts, serve-journal.ts) : les vues CI, PR et MR, plus les
-  lectures du prototype qui dépendent de la forge ou du journal et ne sont pas encore portées : tableau (board.mjs),
-  releases, détail d'un commit, d'une exécution ou d'un chantier (details.mjs, detail de usage.mjs).
+- **Lot 2 fait côté code** (2026-11-08) : couche forge `packages/drwil/src/serve-forge.ts` et ses adapteurs `packages/drwil/src/serve-github.ts`, `packages/drwil/src/serve-gitlab.ts`, tableau `packages/drwil/src/serve-board.ts`, releases `packages/drwil/src/serve-releases.ts`, détails `packages/drwil/src/serve-details.ts`, journal `packages/drwil/src/serve-journal.ts` alimenté par `packages/drwil/src/serve-watch.ts`, contrats QUA-273 à QUA-275. Routes : `/api/ci`, `/api/board`, `/api/releases`, `/api/events`, `/api/detail?key=`, `/api/workstream?name=`. Essai réel sur GitHub fait sur ce dépôt.
+- **Reste du critère de sortie du lot 2** : l'essai réel sur gitlab.com. `glab` n'est pas installé sur le poste et aucun projet d'essai n'existe : geste humain (installation, `glab auth login`, projet d'essai). L'adapteur GitLab n'est prouvé que sur des réponses factices conformes à la documentation de l'API.
+- **Choix du lot 2, à garder** :
+  - Aucune adresse de forge dans une réponse : le namespace d'une adresse est souvent un login (QUA-271). Une PR se désigne par son numéro, `url` n'existe plus.
+  - Les textes du journal et de `missing` viennent de `packages/drwil/src/serve-texts.ts`, dans la langue du projet ; le tableau rend des codes (`stage`, `ready`), à traduire par la page.
+  - Une clé d'événement de commit porte 12 caractères de SHA : un SHA entier serait masqué comme secret.
+  - `glab api` (REST stable) plutôt que `glab mr list` ; les étapes d'un job n'existent que sur GitHub.
 - **Pour les lots suivants** :
-  - Lot 3 : `serve/page.html` n'est qu'une page minimale, à refondre. `/api/contracts` remplace les routes `registry` et
+  - Lot 3 : `serve/page.html` n'est qu'une page minimale, à refondre, sur les routes ci-dessus (`missing` à afficher tel quel). `/api/contracts` remplace les routes `registry` et
     `contracts` du prototype : les titres y sont déjà.
   - Lot 4 : avec `tailscale serve`, l'en-tête `Host` reçu en `127.0.0.1` sera sans doute le nom du réseau privé, refusé
     aujourd'hui par `localHostHeader` (QUA-269, défense contre le DNS rebinding) : à autoriser explicitement, sans
     ouvrir le contrôle aux autres noms.
   - `packages/drwil/src/serve-read.ts` et `packages/drwil/src/cli-serve.ts` approchent le plafond de 200 lignes (QUA-001, fichier de code plafonné) ;
-    `packages/drwil/src/serve-journal.ts` tient déjà la consommation, avant le journal d'événements du lot 2 : ce qui s'ajoute peut demander un
+    ce qui s'y ajoute peut demander un
     nouveau fichier, à déclarer au bloc `scope`.

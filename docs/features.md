@@ -61,7 +61,10 @@ rapport de défaut du kit sans donnée du projet.
 `drwil serve [--host] [--port] [--detach]` sert en direct une vue du projet
 courant, en lecture seule, sur `127.0.0.1` par défaut : un jeton est
 obligatoire ailleurs, aucune réponse ne porte de donnée nominative, et chaque
-projet ou worktree a son unique serveur.
+projet ou worktree a son unique serveur. Les vues CI, PR et MR marchent à
+parité sur GitHub (`gh`) et GitLab (`glab`), le journal d'événements est propre
+à chaque projet et vit dans le cache de l'utilisateur, et une vue sans source
+reste vide en disant ce qui manque.
 
 ## Attestation humaine (`drwil attest`)
 

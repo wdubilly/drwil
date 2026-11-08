@@ -33,7 +33,7 @@ function parseContracts(text: string): Contract[] {
   return out;
 }
 
-export function createReader(root: string) {
+export function createReader(root: string, signal?: AbortSignal) {
   // QUA-269 : un lien symbolique du dépôt ne fait pas sortir la lecture du projet.
   const safe = (rel: string): boolean => {
     const parts = rel.split("/");
@@ -59,8 +59,8 @@ export function createReader(root: string) {
   const list = (rel: string): string[] => (safe(rel) && lstatSync(join(root, rel)).isDirectory() ? readdirSync(join(root, rel)) : []);
   const sh = async (cmd: string, args: string[]): Promise<string> => {
     try {
-      const env = { ...process.env, GIT_OPTIONAL_LOCKS: "0" };
-      return (await run(cmd, args, { cwd: root, timeout: 15000, maxBuffer: 2e7, windowsHide: true, env })).stdout;
+      const env = { ...process.env, GIT_OPTIONAL_LOCKS: "0", GH_PROMPT_DISABLED: "1", NO_COLOR: "1" };
+      return (await run(cmd, args, { cwd: root, timeout: 15000, maxBuffer: 2e7, windowsHide: true, env, signal })).stdout;
     } catch {
       return "";
     }
@@ -190,5 +190,7 @@ export function createReader(root: string) {
     return allowed && FILE_NAME.test(name) ? { path, text: text(path) } : { error: "path refused" };
   }
 
-  return { config, state, briefs, intentions, notes, contracts, usage, file, git };
+  return { config, dirs, state, briefs, intentions, notes, contracts, usage, file, git, sh, text, json, list };
 }
+
+export type Reader = ReturnType<typeof createReader>;

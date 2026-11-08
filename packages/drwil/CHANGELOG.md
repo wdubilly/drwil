@@ -12,7 +12,10 @@ closing commit; the release renames this section to its version.
   to start without a token (`DRWIL_SERVE_TOKEN`) and refuses any request
   without it; no API response carries a personal name, login, email or
   secret; each project or worktree has its single server, whose record lives
-  in the user's cache, never in the repository.
+  in the user's cache, never in the repository. The CI, PR and MR views work
+  alike on GitHub (`gh`) and GitLab (`glab`), the forge being detected; the
+  event journal is per project and lives in the user's cache; a view with no
+  source stays empty and says what is missing.
 - Release module: an optional `release.requiredOs` setting (absent by
   default, never added by an update) makes `create-release.mjs` (direct
   release or `--candidate`) and `promote-release.mjs` refuse, without

@@ -702,7 +702,9 @@ same.
 `npx drwil serve` shows a live, read-only view of the project on
 `127.0.0.1` (`--detach` runs it in the background, one server per project or
 worktree). Listening anywhere else (`--host`) requires a token of at least 32
-characters in the `DRWIL_SERVE_TOKEN` environment variable.
+characters in the `DRWIL_SERVE_TOKEN` environment variable. Its CI, PR and MR
+views use `gh` or `glab`, whichever matches the `origin` remote; without them,
+those views stay empty and say what is missing.
 
 ### 4. Attest a MANUAL contract (human, in your own terminal)
 

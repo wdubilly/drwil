@@ -1,11 +1,19 @@
 // Serveur de `drwil serve` : lecture seule, GET uniquement, toute réponse passée par maskPersonal (QUA-271).
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
+import { fill } from "./i18n.js";
 import { COOKIE_NAME, cookieValue, hasValidToken, localHostHeader, maskPersonal, sameToken, ServeRefusal } from "./serve-auth.js";
+import { createBoard } from "./serve-board.js";
+import { createDetails } from "./serve-details.js";
+import { createForge, type Missing } from "./serve-forge.js";
+import { type JournalEvent, openJournal } from "./serve-journal.js";
 import { createReader } from "./serve-read.js";
+import { createReleases } from "./serve-releases.js";
+import { SERVE_TEXTS } from "./serve-texts.js";
+import { startWatch } from "./serve-watch.js";
 
 const BASE_PORT = 4317;
 const PORT_RANGE = 1000;
@@ -23,6 +31,8 @@ export interface ServeOptions {
   /** null : port propre au projet, le suivant s'il est pris ; 0 : choisi par le système. */
   port: number | null;
   token: string | null;
+  /** Dossier du journal d'événements ; par défaut, celui du projet dans le cache de l'utilisateur (QUA-274). */
+  cacheDir?: string;
 }
 
 export interface RunningServer {
@@ -80,7 +90,8 @@ async function bind(server: Server, o: ServeOptions): Promise<number> {
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 export async function startServer(o: ServeOptions): Promise<RunningServer> {
-  const reader = createReader(o.root);
+  const abort = new AbortController();
+  const reader = createReader(o.root, abort.signal);
   const names = [(await reader.git("config", "user.name")).trim()].filter(Boolean);
   const project = escapeHtml(String(reader.config.projectName ?? basename(o.root)));
   const lang = reader.config.lang === "fr" ? "fr" : "en";
@@ -89,6 +100,20 @@ export async function startServer(o: ServeOptions): Promise<RunningServer> {
     .replaceAll("__LANG__", lang);
   let port = 0;
 
+  const T = SERVE_TEXTS[lang];
+  const forge = createForge(reader.sh, reader.git);
+  const cacheDir = o.cacheDir ?? projectCacheDir(realpathSync(o.root));
+  const journal = openJournal(cacheDir, (e) => maskPersonal(e, names) as JournalEvent);
+  const watch = startWatch({ reader, forge, journal, T });
+  const board = createBoard(reader, forge);
+  const releases = createReleases(reader, forge);
+  const details = createDetails(reader, forge);
+  // Une vue vide dit ce qui manque, dans la langue du projet (QUA-275).
+  const said = <V extends { missing: Missing | null; cli: string | null }>({ cli, missing, ...view }: V) => ({
+    ...view,
+    missing: missing && fill(T[missing], cli),
+  });
+
   const routes: Record<string, (url: URL) => unknown> = {
     "/api/docs": async () => ({
       state: await reader.state(),
@@ -96,8 +121,24 @@ export async function startServer(o: ServeOptions): Promise<RunningServer> {
       intentions: reader.intentions(),
       notes: reader.notes(),
     }),
-    "/api/contracts": () => reader.contracts(),
-    "/api/usage": () => reader.usage(),
+    "/api/contracts": async () => {
+      const view = await reader.contracts();
+      return { ...view, missing: view.verify ? null : T.noEvidence };
+    },
+    "/api/usage": async () => {
+      const view = await reader.usage();
+      return { ...view, missing: view.workstreams.length ? null : T.noUsage };
+    },
+    "/api/ci": async () => said(await forge.ci()),
+    "/api/board": async () => said(await board()),
+    "/api/releases": async () => said(await releases()),
+    "/api/events": async () => {
+      await watch.localReady;
+      const { missing, cli } = await forge.availability();
+      return said({ events: journal.list(), missing, cli });
+    },
+    "/api/detail": (url) => details.detail(url.searchParams.get("key") ?? ""),
+    "/api/workstream": (url) => details.workstream(url.searchParams.get("name") ?? "", journal.list()),
     "/api/file": (url) => reader.file(url.searchParams.get("path") ?? ""),
   };
 
@@ -121,6 +162,7 @@ export async function startServer(o: ServeOptions): Promise<RunningServer> {
     }
     const route = routes[url.pathname];
     if (!route) return send(res, 404, { error: "not found" }, names);
+    watch.touch();
     return send(res, 200, await route(url), names);
   }
 
@@ -134,6 +176,9 @@ export async function startServer(o: ServeOptions): Promise<RunningServer> {
     port,
     stop: () =>
       new Promise((resolve) => {
+        watch.stop();
+        // Une commande en cours (`git`, `gh`, `glab`) ne survit pas au serveur.
+        abort.abort();
         server.closeAllConnections();
         server.close(() => resolve());
       }),

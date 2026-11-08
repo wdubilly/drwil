@@ -2585,10 +2585,10 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Windows et macOS ne sont plus testés à chaque PR (QUA-045) : sans barrière, une release que Windows casserait partirait sans que personne ne l'ait vue (décidé le 2026-11-07, sondage « Barrière »).
 
 ## QUA-269 — `drwil serve` sert le dépôt courant en lecture seule, sur `127.0.0.1` par défaut, sans écrire aucun fichier suivi ni ajouter de dépendance d'exécution
-**Règle** : Livré à tout projet par la CLI du paquet. `drwil serve` écoute par défaut sur `127.0.0.1`, n'accepte que `GET` et n'écrit rien dans le projet : son état d'exécution vit dans le cache de l'utilisateur. Il ne lit que le projet, par les dossiers de `dirs` (`.drwil/ia-first.json`), sans suivre un lien symbolique ; `/api/file` ne sert qu'un fichier Markdown directement dans le dossier des fiches ou des intentions. Il ne lance que des commandes de lecture (`git`, `.githooks/state.mjs briefs --json`), sans shell. Sans jeton, un en-tête `Host` autre que local est refusé (DNS rebinding). Une source absente donne une vue vide, sans erreur ; une erreur interne ne renvoie ni pile ni chemin. `commander` reste la seule dépendance d'exécution.
+**Règle** : Livré à tout projet par la CLI du paquet. `drwil serve` écoute par défaut sur `127.0.0.1`, n'accepte que `GET` et n'écrit rien dans le projet : son état d'exécution vit dans le cache de l'utilisateur. Il ne lit que le projet, par les dossiers de `dirs` (`.drwil/ia-first.json`), sans suivre un lien symbolique ; `/api/file` ne sert qu'un fichier Markdown directement dans le dossier des fiches ou des intentions, `/api/detail` et `/api/workstream` qu'une clé ou un nom de forme reconnue. Il ne lance que des commandes de lecture (`git`, `.githooks/state.mjs briefs --json`, `gh` et `glab` en lecture : QUA-273), sans shell, et une commande en cours ne survit pas à l'arrêt du serveur. Chaque paramètre d'adresse est validé avant d'atteindre une commande. Sans jeton, un en-tête `Host` autre que local est refusé (DNS rebinding). Une source absente donne une vue vide, sans erreur ; une erreur interne ne renvoie ni pile ni chemin. `commander` reste la seule dépendance d'exécution.
 **Périmètre** : `packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`, `packages/drwil/src/serve-read.ts`, `packages/drwil/src/serve-texts.ts`, `packages/drwil/serve/page.html`, `packages/drwil/bin/drwil.js`, `packages/drwil/package.json`.
 **Source de vérité** : `packages/drwil/src/serve.ts` (`startServer`), `packages/drwil/src/serve-read.ts` (`createReader`).
-**Preuve** : tests en dur sur un projet d'essai installé depuis le paquet : toutes les routes appelées, empreinte de chaque fichier du projet inchangée, `git status` vide, `POST` refusé, chemins hors fiches et liens symboliques refusés, `Host` étranger refusé, dossier vide sans erreur, dépendances du paquet.
+**Preuve** : tests en dur sur un projet d'essai installé depuis le paquet : toutes les routes appelées, empreinte de chaque fichier du projet inchangée, `git status` vide, `POST` refusé, chemins hors fiches et liens symboliques refusés, clés de détail invalides refusées, `Host` étranger refusé, dossier vide sans erreur, dépendances du paquet, commande de forge arrêtée avec le serveur.
 **Contrôle** : `tests-qua-269`
 **Tests** : `packages/drwil/test/serve.test.mjs`
 **Origine** : drwil-serve — « `drwil serve` sert le dépôt courant en lecture seule, sur `127.0.0.1` par défaut, sans écrire aucun fichier suivi et sans dépendance d'exécution nouvelle »
@@ -2605,10 +2605,10 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : La vue montre l'état d'un projet : hors de la machine, seul son propriétaire doit la lire, et un jeton lu par le modèle finirait dans un journal.
 
 ## QUA-271 — Aucune réponse de l'API de `drwil serve` ne porte de donnée nominative ni de secret
-**Règle** : Livré à tout projet par la CLI du paquet. Toute réponse JSON passe par un filtre unique : une clé nominative (auteur, login, courriel, acteur, relecteur…) disparaît à toute profondeur ; dans le texte libre, un courriel, une mention `@login`, le `user.name` Git du projet et un secret (jetons de forge, clés d'accès, clé privée, longue valeur à forte entropie) sont masqués. `@AGENTS.md`, `@types/node` et un long chemin de fiche restent lisibles. Un nom écrit à la main dans un document, autre que le `user.name` Git, n'est pas détectable : le contrat porte sur les champs et les formes ci-dessus.
-**Périmètre** : `packages/drwil/src/serve-auth.ts` (`maskPersonal`), `packages/drwil/src/serve.ts` (`send`).
+**Règle** : Livré à tout projet par la CLI du paquet. Toute réponse JSON passe par un filtre unique : une clé nominative (auteur, login, courriel, acteur, relecteur…) disparaît à toute profondeur ; dans le texte libre, un courriel, une mention `@login`, le `user.name` Git du projet, un secret (jetons de forge, clés d'accès, clé privée, longue valeur à forte entropie), le login que Git ou la forge écrivent d'eux-mêmes (`Merge pull request #n from <login>`, `Merge branch … of …`, `See merge request …`, trailers `…-by:`) et le namespace d'une adresse GitHub ou GitLab sont masqués. Les réponses de la forge sont réduites à une liste fermée de champs, sans auteur ni adresse ; une PR se désigne par son numéro. `@AGENTS.md`, `@types/node` et un long chemin de fiche restent lisibles. Un nom écrit à la main dans un document, autre que le `user.name` Git, n'est pas détectable : le contrat porte sur les champs et les formes ci-dessus.
+**Périmètre** : `packages/drwil/src/serve-auth.ts` (`maskPersonal`), `packages/drwil/src/serve.ts` (`send`), `packages/drwil/src/serve-github.ts`, `packages/drwil/src/serve-gitlab.ts`, `packages/drwil/src/serve-details.ts`.
 **Source de vérité** : `packages/drwil/src/serve-auth.ts` (`maskPersonal`).
-**Preuve** : tests en dur : projet d'essai semé d'un nom, d'un courriel, d'une mention et d'un secret dans ses fiches, sa consommation et ses preuves, aucune de ces valeurs dans les réponses de toutes les routes ; filtre sur des structures imbriquées.
+**Preuve** : tests en dur : projet d'essai semé d'un nom, d'un courriel, d'une mention et d'un secret dans ses fiches, sa consommation et ses preuves, aucune de ces valeurs dans les réponses de toutes les routes ; forge factice semée d'auteurs, d'adresses et de logins, absents des réponses et du journal ; filtre sur des structures imbriquées.
 **Contrôle** : `tests-qua-271`
 **Tests** : `packages/drwil/test/serve.test.mjs`
 **Origine** : drwil-serve — « Aucune donnée nominative (auteur, login, courriel) ni secret dans une réponse de l'API »
@@ -2623,3 +2623,33 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/serve.test.mjs`
 **Origine** : drwil-serve — « `drwil serve --detach` est idempotent : serveur déjà démarré pour ce projet, il redonne son adresse sans en lancer un second ; deux projets ou worktrees ouverts ensemble ont chacun leur serveur »
 **Raison** : Le démarrage à l'ouverture d'une session se répète à chaque session : il ne doit ni empiler les serveurs ni mêler deux projets.
+
+## QUA-273 — Les vues CI, PR et MR de `drwil serve` fonctionnent à parité sur GitHub et GitLab, la forge étant détectée
+**Règle** : Livré à tout projet par la CLI du paquet. La forge se détecte sur l'hôte du remote `origin` ; `gh` ou `glab` sont lancés en lecture seule, sans shell (`gh pr list`, `pr view`, `run list`, `release list`, `api` sans `-f` ni `-X` ; `glab api` sans `-X` ni `-f`). `/api/ci`, `/api/board`, `/api/releases` et le détail d'une PR ou MR rendent les mêmes champs sur les deux forges ; les états de GitLab sont traduits vers ceux de GitHub. Un nom de branche venu de la forge ne devient ni une option ni un morceau d'adresse. Les appels sont bornés : réponses gardées quelques secondes, jobs d'une exécution finie demandés une fois, fichiers des 30 MR les plus récentes seulement, cadence réduite quand personne ne regarde. Le détail des étapes d'un job n'existe que sur GitHub (GitLab n'en expose pas) : la liste est vide sur GitLab.
+**Périmètre** : `packages/drwil/src/serve-forge.ts`, `packages/drwil/src/serve-github.ts`, `packages/drwil/src/serve-gitlab.ts`, `packages/drwil/src/serve-board.ts`, `packages/drwil/src/serve-releases.ts`, `packages/drwil/src/serve-details.ts`.
+**Source de vérité** : `packages/drwil/src/serve-forge.ts` (`createForge`).
+**Preuve** : tests en dur des deux adapteurs sur des réponses factices de même contenu, résultats comparés champ à champ ; liste blanche des commandes lancées ; de bout en bout par de faux `gh` et `glab` sur le `PATH`. Essai réel : dit par la fiche du chantier.
+**Contrôle** : `tests-qua-273`
+**Tests** : `packages/drwil/test/serve.test.mjs`
+**Origine** : drwil-serve — « Les vues CI, PR et MR fonctionnent à parité sur GitHub (`gh`) et GitLab (`glab`), la forge étant détectée »
+**Raison** : Le kit livre les deux forges : une vue qui ne marcherait que sur l'une laisserait une partie des adoptants sans suivi.
+
+## QUA-274 — Le journal d'événements de `drwil serve` est propre à chaque projet et vit hors du dépôt
+**Règle** : Livré à tout projet par la CLI du paquet. Le journal (`events.jsonl`) et son dernier relevé d'état vivent dans le dossier du projet du cache de l'utilisateur, un par chemin réel, donc un par worktree ; rien n'est écrit dans le projet. Chaque événement a une clé : un même fait vu deux fois, y compris après un redémarrage, n'est écrit qu'une fois. Le fichier ne garde que les 5000 derniers événements ; ce qui s'y écrit est déjà masqué (QUA-271). Un cache inutilisable laisse le journal en mémoire, sans erreur.
+**Périmètre** : `packages/drwil/src/serve-journal.ts`, `packages/drwil/src/serve-watch.ts`, `packages/drwil/src/serve.ts`.
+**Source de vérité** : `packages/drwil/src/serve-journal.ts` (`openJournal`).
+**Preuve** : tests en dur : deux projets servis ensemble, chacun son journal, empreinte des fichiers du projet inchangée, redémarrage sans doublon, état, lots, décisions, attestations, PR et CI relevés, borne de taille, ligne illisible, cache inutilisable.
+**Contrôle** : `tests-qua-274`
+**Tests** : `packages/drwil/test/serve.test.mjs`
+**Origine** : drwil-serve — « Le journal d'événements est propre à chaque projet et vit hors du dépôt »
+**Raison** : Un journal rangé à côté de l'outil mêlerait tous les projets d'un même poste, et dans le dépôt il salirait chaque commit.
+
+## QUA-275 — Une vue de `drwil serve` sans source est vide, sans erreur, et dit ce qui manque
+**Règle** : Livré à tout projet par la CLI du paquet. Sans remote sur une forge reconnue, sans `gh` ou `glab`, avec une forge injoignable ou une réponse inattendue, sans preuves ou sans `.drwil/usage.jsonl`, la route concernée répond 200 avec une vue vide et un champ `missing` qui dit ce qui manque, dans la langue du projet ; `missing` vaut `null` si rien ne manque. Les trois cas de forge se distinguent.
+**Périmètre** : `packages/drwil/src/serve-forge.ts`, `packages/drwil/src/serve.ts`, `packages/drwil/src/serve-texts.ts`.
+**Source de vérité** : `packages/drwil/src/serve-forge.ts` (`createForge`), `packages/drwil/src/serve.ts` (`said`).
+**Preuve** : tests en dur : projet sans forge, outil absent, forge injoignable, réponse inattendue, projet sans preuves ni consommation ; statut 200 et message attendu sur chaque route.
+**Contrôle** : `tests-qua-275`
+**Tests** : `packages/drwil/test/serve.test.mjs`
+**Origine** : drwil-serve — « Un projet sans `.drwil/usage.jsonl`, sans preuves ou sans forge joignable affiche ses vues vides, sans erreur, et dit ce qui manque »
+**Raison** : Une vue qui plante ou reste muette laisse croire à une panne de l'outil plutôt qu'à une source absente.

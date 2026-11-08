@@ -64,8 +64,18 @@ const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
 // `@AGENTS.md` et `@types/node` ne sont pas des personnes ; « @login. » en fin de phrase en est une.
 const MENTION = /(^|[\s(«"'])@[a-z\d](?:[a-z\d-]*[a-z\d])?(?![\w/-]|\.\w)/gim;
 
+// Git et les forges écrivent d'eux-mêmes un login dans ces phrases, sans « @ » ni courriel.
+const FORGE_PHRASES: [RegExp, string][] = [
+  [/\b(Merge pull request #\d+ from )[^\s/]+/g, `$1${MASK}`],
+  [/\b(Merge branch '[^']*' of )\S+/g, `$1${MASK}`],
+  [/\b(See merge request )\S+/g, `$1${MASK}`],
+  [/^([\w-]+-by: ).*$/gim, `$1${MASK}`],
+  [/\b(https?:\/\/(?:www\.)?(?:github|gitlab)\.[\w.-]+\/)[\w.-]+/g, `$1${MASK}`],
+];
+
 function maskText(text: string, names: readonly string[]): string {
   let out = text.replace(EMAIL, MASK).replace(MENTION, `$1${MASK}`);
+  for (const [pattern, mask] of FORGE_PHRASES) out = out.replace(pattern, mask);
   for (const pattern of SECRETS) out = out.replace(pattern, MASK);
   for (const name of names) out = out.replaceAll(name, MASK);
   return out;
