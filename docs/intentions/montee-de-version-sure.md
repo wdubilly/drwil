@@ -1,6 +1,6 @@
 # Intention : une montée de version du kit qui ne rétrograde rien, n'écrase rien du projet et se commite
 
-**Statut** : proposée le 2026-11-08, décisions du demandeur le 2026-11-08 — constatée à la montée de drwil_walk de 0.10.0 à 0.11.0 (candidate `drwil-0.11.0.tgz`).
+**Statut** : proposée le 2026-11-08, décisions du demandeur le 2026-11-08 ; premier chantier réalisé le 2026-11-08 (refus de version QUA-282, zone du projet du CI QUA-283), reste la suite (`docs/projects/montee-de-version-sure-suite.md`) — constatée à la montée de drwil_walk de 0.10.0 à 0.11.0 (candidate `drwil-0.11.0.tgz`).
 
 ## Besoin
 

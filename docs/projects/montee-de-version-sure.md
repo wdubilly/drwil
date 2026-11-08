@@ -84,7 +84,7 @@ le commit du résultat était refusé par la barrière de périmètre, sans issu
 - Un fichier de CI sans marqueurs : `init` nomme ce qui disparaîtrait, ne change rien sans confirmation — `QUA-283`
 - `init` d'une version plus ancienne que `.drwil/install.json` (si présent) refuse avec un message clair ; l'option passe outre — `QUA-282`
 - Rejouer `init` sur un projet déjà à jour ne change rien — `QUA-283`
-- `node .githooks/run-checks.mjs` et `node packages/drwil/bin/drwil.js verify --agent` : `GOVERNANCE: PASS` — `QUA-013`
+- `node .githooks/run-checks.mjs` et `node packages/drwil/bin/drwil.js verify --agent` : `GOVERNANCE: PASS` — `QUA-013` [humain]
 
 ## 5. Contrats
 
