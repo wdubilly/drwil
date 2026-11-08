@@ -96,9 +96,9 @@ téléphone. Le retrait du tableau de bord statique (`drwil-progress`) est repor
 ## Critères d'acceptation
 
 - `drwil serve` sert le dépôt courant en lecture seule, sur `127.0.0.1` par défaut, sans écrire aucun fichier suivi et
-  sans dépendance d'exécution nouvelle — contrat à créer `QUA-269`
+  sans dépendance d'exécution nouvelle — contrat à créer `QUA-280`
 - Hors de `127.0.0.1` (`--host`), le serveur refuse de démarrer sans jeton et refuse toute requête sans jeton valide ;
-  le jeton n'apparaît jamais dans une sortie lue par le modèle — contrat à créer `QUA-270`
+  le jeton n'apparaît jamais dans une sortie lue par le modèle — contrat à créer `QUA-281`
 - Aucune donnée nominative (auteur, login, courriel) ni secret dans une réponse de l'API — contrat à créer `QUA-271`
 - `drwil serve --detach` est idempotent : serveur déjà démarré pour ce projet, il redonne son adresse sans en lancer
   un second ; deux projets ou worktrees ouverts ensemble ont chacun leur serveur — contrat à créer `QUA-272`
@@ -192,7 +192,7 @@ Aucun.
 ## 7. Reprise
 
 - **Dernier état** (2026-11-08) : lots 1 à 5 faits (le lot 5 porte la parité, le retrait est reporté) ; reste à vérifier et clore. Lot 1 : `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
-  `packages/drwil/src/serve-auth.ts`, `packages/drwil/src/serve-read.ts`, `packages/drwil/src/serve-texts.ts`, `packages/drwil/src/serve-journal.ts`), contrats QUA-269 à QUA-272, tests `packages/drwil/test/serve.test.mjs`.
+  `packages/drwil/src/serve-auth.ts`, `packages/drwil/src/serve-read.ts`, `packages/drwil/src/serve-texts.ts`, `packages/drwil/src/serve-journal.ts`), contrats QUA-280 à QUA-272, tests `packages/drwil/test/serve.test.mjs`.
 - **Choix du lot 1, à garder** :
   - Le jeton vient de la seule variable `DRWIL_SERVE_TOKEN` (32 caractères au moins), jamais d'une option. L'entrée par
     `/?token=` pose un cookie d'empreinte et redirige.
@@ -206,16 +206,16 @@ Aucun.
   - Les textes du journal et de `missing` viennent de `packages/drwil/src/serve-texts.ts`, dans la langue du projet ; le tableau rend des codes (`stage`, `ready`), à traduire par la page.
   - Une clé d'événement de commit porte 12 caractères de SHA : un SHA entier serait masqué comme secret.
   - `glab api` (REST stable) plutôt que `glab mr list` ; les étapes d'un job n'existent que sur GitHub.
-- **Lot 3 fait** (2026-11-08) : `packages/drwil/serve/page.html` refondue, mobile first, FR/EN selon `lang` (dix onglets : CI, tableau, fil, releases, contrats, consommation, mesures, fiches, intentions, notes). Liens PR et MR par `GET /forge/pr/<n>` (302, corps vide, QUA-269, QUA-271, QUA-273). `/api/measures` : tendances de QUA-198 (tendance de la durée de CI et du cache lu) lues dans `.drwil/usage.jsonl` et le journal, sur le code du tableau de bord. `/api/contracts` donne `head`. Contrat QUA-276 (page à 360 px, FR/EN) : tests en dur, part humaine `**Manuel**`.
+- **Lot 3 fait** (2026-11-08) : `packages/drwil/serve/page.html` refondue, mobile first, FR/EN selon `lang` (dix onglets : CI, tableau, fil, releases, contrats, consommation, mesures, fiches, intentions, notes). Liens PR et MR par `GET /forge/pr/<n>` (302, corps vide, QUA-280, QUA-271, QUA-273). `/api/measures` : tendances de QUA-198 (tendance de la durée de CI et du cache lu) lues dans `.drwil/usage.jsonl` et le journal, sur le code du tableau de bord. `/api/contracts` donne `head`. Contrat QUA-276 (page à 360 px, FR/EN) : tests en dur, part humaine `**Manuel**`.
 - **Choix du lot 3, à garder** :
   - Chaque onglet ne lit que ses routes, et rien quand l'onglet du navigateur est masqué : un téléphone n'interroge pas la forge pour rien.
   - Les libellés sont dans un bloc JSON de la page (`#i18n`), lu par les tests de QUA-276 (parité FR/EN, codes) ; les textes `missing` et le journal restent dans `packages/drwil/src/serve-texts.ts`, dans la langue du projet.
   - Mesure réelle du 2026-11-08 dans Chromium, 360 px, tous onglets dépliés, sur ce dépôt (français) et sur un projet d'essai anglais à données longues : `scrollWidth` égal à la largeur, aucune erreur de script. La CI n'a pas de navigateur : la preuve durable est structurelle, la lisibilité sur téléphone reste à attester (QUA-276, attestation humaine attendue en VERIFY).
 - **Course corrigée au lot 3** : `findRunning` effaçait server.json même sans l'avoir lu, donc parfois la réservation d'un concurrent : deux serveurs, dont un orphelin (QUA-272). Reproduit 1 fois sur 25 sous charge ; 0 sur 25 avec le correctif, ce qui à cette fréquence ne prouve pas seul : la preuve est la lecture du code. Reste une fenêtre plus étroite, sur un enregistrement périmé relu par deux démarrages simultanés.
-- **Lot 4 fait** (2026-11-08) : skill `/drwil-serve` et `drwil serve --welcome` (`packages/drwil/src/serve-publish.ts`), hook d'accueil `.claude/hooks/serve-welcome.mjs` (`SessionStart` de Claude Code, Gemini CLI, Codex ; `sessionStart` de Copilot CLI, muet), question à l'installation (`chooseServeAutostart`, clé `serveAutostart`, options `--serve-autostart` et `--no-serve-autostart`), publication par `tailscale serve`. Contrats QUA-277 (accueil de session sans octet au modèle), QUA-278 (Tailscale jamais requis, lien du réseau privé), QUA-279 (démarrage automatique sur réponse de l'humain, `127.0.0.1` seul) ; règle de `Host` de QUA-269 (lecture seule) étendue au nom publié.
+- **Lot 4 fait** (2026-11-08) : skill `/drwil-serve` et `drwil serve --welcome` (`packages/drwil/src/serve-publish.ts`), hook d'accueil `.claude/hooks/serve-welcome.mjs` (`SessionStart` de Claude Code, Gemini CLI, Codex ; `sessionStart` de Copilot CLI, muet), question à l'installation (`chooseServeAutostart`, clé `serveAutostart`, options `--serve-autostart` et `--no-serve-autostart`), publication par `tailscale serve`. Contrats QUA-277 (accueil de session sans octet au modèle), QUA-278 (Tailscale jamais requis, lien du réseau privé), QUA-279 (démarrage automatique sur réponse de l'humain, `127.0.0.1` seul) ; règle de `Host` de QUA-280 (lecture seule) étendue au nom publié.
 - **Choix du lot 4, à garder** :
   - `--welcome` écoute toujours sur `127.0.0.1` sans jeton : sa ligne ne porte aucun secret, elle peut donc passer par le chat d'un outil sans canal vers l'humain.
-  - Le nom Tailscale admis vient d'un fichier d'enregistrement, published.json, écrit dans le cache du projet par la commande avant la publication et effacé sans publication : le serveur ne lance pas `tailscale` (QUA-269).
+  - Le nom Tailscale admis vient d'un fichier d'enregistrement, published.json, écrit dans le cache du projet par la commande avant la publication et effacé sans publication : le serveur ne lance pas `tailscale` (QUA-280).
   - Port HTTPS du réseau privé égal au port local du projet : plusieurs projets coexistent, le lien reste stable.
 - **Plafond des réglages, décision du demandeur du 2026-11-08** : l'entrée `SessionStart` du hook d'accueil faisait passer `packages/drwil/templates/common/tools/claude/.claude/settings.json` de 199 à 209 lignes, au-delà des 200 du code et des hooks (QUA-157, taille des fichiers du kit). Sur son choix, par sondage, `.claude/settings.json` et `.gemini/settings.json` ont leur propre plafond de 250 lignes ; les autres plafonds n'ont pas changé.
 - **Comportement de chaque outil relevé** (2026-11-08) :

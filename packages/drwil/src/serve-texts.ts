@@ -1,4 +1,4 @@
-// Messages de `drwil serve`, dans la langue du projet. Aucun ne reçoit jamais le jeton (QUA-270).
+// Messages de `drwil serve`, dans la langue du projet. Aucun ne reçoit jamais le jeton (QUA-281).
 export const SERVE_TEXTS = {
   fr: {
     listening: "drwil serve : {0} (lecture seule, Ctrl+C pour arrêter)",

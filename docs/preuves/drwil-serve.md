@@ -8,8 +8,8 @@ critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par 
 
 | Critère | Contrat | Contrôle | Empreinte des fichiers couverts |
 |---|---|---|---|
-| drwil serve sert le dépôt courant en lecture seule, sur 127.0.0.1 par défaut, sans écrire aucun fichier suivi et sans dépendance d'exécution nouvelle — contrat à créer | `QUA-269` | `tests-qua-269` | — |
-| Hors de 127.0.0.1 (--host), le serveur refuse de démarrer sans jeton et refuse toute requête sans jeton valide ; le jeton n'apparaît jamais dans une sortie lue par le modèle — contrat à créer | `QUA-270` | `tests-qua-270` | — |
+| drwil serve sert le dépôt courant en lecture seule, sur 127.0.0.1 par défaut, sans écrire aucun fichier suivi et sans dépendance d'exécution nouvelle — contrat à créer | `QUA-280` | `tests-qua-280` | — |
+| Hors de 127.0.0.1 (--host), le serveur refuse de démarrer sans jeton et refuse toute requête sans jeton valide ; le jeton n'apparaît jamais dans une sortie lue par le modèle — contrat à créer | `QUA-281` | `tests-qua-281` | — |
 | Aucune donnée nominative (auteur, login, courriel) ni secret dans une réponse de l'API — contrat à créer | `QUA-271` | `tests-qua-271` | — |
 | drwil serve --detach est idempotent : serveur déjà démarré pour ce projet, il redonne son adresse sans en lancer un second ; deux projets ou worktrees ouverts ensemble ont chacun leur serveur — contrat à créer | `QUA-272` | `tests-qua-272` | — |
 | Un projet sans .drwil/usage.jsonl, sans preuves ou sans forge joignable affiche ses vues vides, sans erreur, et dit ce qui manque — contrat | `QUA-275` | `tests-qua-275` | — |

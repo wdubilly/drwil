@@ -1,5 +1,5 @@
 // Lectures du projet pour `drwil serve`, génériques (`dirs` de la configuration) et tolérantes : une
-// source absente donne une vue vide. Aucune écriture, aucun shell, que des commandes de lecture (QUA-269).
+// source absente donne une vue vide. Aucune écriture, aucun shell, que des commandes de lecture (QUA-280).
 import { execFile } from "node:child_process";
 import { lstatSync, readdirSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
@@ -15,7 +15,7 @@ type Json = Record<string, unknown>;
 type Tag = { marks: string[]; theme: string; done: boolean };
 
 export function createReader(root: string, signal?: AbortSignal) {
-  // QUA-269 : un lien symbolique du dépôt ne fait pas sortir la lecture du projet.
+  // QUA-280 : un lien symbolique du dépôt ne fait pas sortir la lecture du projet.
   const safe = (rel: string): boolean => {
     const parts = rel.split("/");
     if (isAbsolute(rel) || parts.some((p) => p === ".." || p === "")) return false;

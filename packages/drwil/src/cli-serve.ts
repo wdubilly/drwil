@@ -1,5 +1,5 @@
 // Commande `drwil serve` : un seul serveur par projet, détaché ou non (QUA-272). L'état d'exécution vit dans
-// le cache de l'utilisateur, jamais dans le dépôt (QUA-269), et ne porte jamais le jeton (QUA-270).
+// le cache de l'utilisateur, jamais dans le dépôt (QUA-280), et ne porte jamais le jeton (QUA-281).
 import { spawn } from "node:child_process";
 import {
   closeSync,

@@ -1,5 +1,5 @@
 // Détail d'un événement, chargé à la demande (commit, PR ou MR, exécution, attestation) et d'un chantier.
-// Chaque paramètre est validé avant d'atteindre une commande (QUA-269) ; rien de nominatif n'est lu (QUA-271).
+// Chaque paramètre est validé avant d'atteindre une commande (QUA-280) ; rien de nominatif n'est lu (QUA-271).
 import { forgeOf } from "./guarantees-forge.js";
 import type { ForgeReader } from "./serve-forge.js";
 import type { JournalEvent } from "./serve-journal.js";

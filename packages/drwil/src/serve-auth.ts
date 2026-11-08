@@ -1,4 +1,4 @@
-// Barrières de `drwil serve` : jeton hors de 127.0.0.1 (QUA-270), masquage de toute réponse (QUA-271).
+// Barrières de `drwil serve` : jeton hors de 127.0.0.1 (QUA-281), masquage de toute réponse (QUA-271).
 import { createHash, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { IncomingHttpHeaders } from "node:http";

@@ -3179,9 +3179,9 @@
       "degradable": false
     },
     {
-      "id": "tests-qua-269",
-      "name": "tests de QUA-269, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-269 \" packages/drwil/test/serve.test.mjs",
+      "id": "tests-qua-280",
+      "name": "tests de QUA-280, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-280 \" packages/drwil/test/serve.test.mjs",
       "needsBuild": true,
       "ciJob": "checks",
       "paths": [
@@ -3193,9 +3193,9 @@
       "degradable": false
     },
     {
-      "id": "tests-qua-270",
-      "name": "tests de QUA-270, filtrés par son ID (un contrôle par règle, QUA-033)",
-      "run": "node --test --test-name-pattern=\"^QUA-270 \" packages/drwil/test/serve.test.mjs",
+      "id": "tests-qua-281",
+      "name": "tests de QUA-281, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-281 \" packages/drwil/test/serve.test.mjs",
       "needsBuild": true,
       "ciJob": "checks",
       "paths": [

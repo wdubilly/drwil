@@ -156,7 +156,7 @@ const ROUTES = [
   "api/workstream?name=x",
 ];
 
-test("QUA-269 : drwil serve sert un projet installé sur 127.0.0.1, en lecture seule, sans rien y écrire", async () => {
+test("QUA-280 : drwil serve sert un projet installé sur 127.0.0.1, en lecture seule, sans rien y écrire", async () => {
   const p = await projet({
     "docs/intentions/idee.md":
       "# Intention : une idée\n\n**Statut** : ouverte\n\n## Questions à trancher\n\n- [décision] Quel port ?\n  Sur deux lignes.\n\n## Suite\n\n- pas une question\n",
@@ -210,14 +210,14 @@ test("QUA-269 : drwil serve sert un projet installé sur 127.0.0.1, en lecture s
   assert.equal(git(p.dir, "status", "--porcelain").stdout, "");
 });
 
-test("QUA-269 : le paquet publie la page et n'ajoute aucune dépendance d'exécution", () => {
+test("QUA-280 : le paquet publie la page et n'ajoute aucune dépendance d'exécution", () => {
   const pkg = JSON.parse(readFileSync(join(racinePaquet, "package.json"), "utf8"));
   assert.deepEqual(Object.keys(pkg.dependencies), ["commander"]);
   assert.ok(pkg.files.includes("serve"));
   assert.match(readFileSync(join(racinePaquet, "serve", "page.html"), "utf8"), /name="viewport"/);
 });
 
-test("QUA-269 : une lecture ne sort pas des fiches et des intentions, ni par un lien symbolique", async () => {
+test("QUA-280 : une lecture ne sort pas des fiches et des intentions, ni par un lien symbolique", async () => {
   const p = await projet({ "docs/intentions/vraie.md": "# Vraie\n" });
   ecrire(p.dir, "secret.txt", "contenu privé");
   symlinkSync(join(p.dir, "secret.txt"), join(p.dir, "docs/intentions/lien.md"));
@@ -245,7 +245,7 @@ test("QUA-269 : une lecture ne sort pas des fiches et des intentions, ni par un 
   assert.equal(lecteur.intentions().find((i) => i.file === "lien.md").title, "lien.md", "le lien n'est pas suivi");
 });
 
-test("QUA-269 : un dossier d'essai vide donne des vues vides, sans erreur", async () => {
+test("QUA-280 : un dossier d'essai vide donne des vues vides, sans erreur", async () => {
   const dir = tmp();
   const lecteur = createReader(dir);
   assert.deepEqual(await lecteur.state(), { activity: null, brief: null, lot: null, branch: "" });
@@ -256,7 +256,7 @@ test("QUA-269 : un dossier d'essai vide donne des vues vides, sans erreur", asyn
   assert.deepEqual(await lecteur.usage(), { workstreams: [], tags: [] });
 });
 
-test("QUA-269 : état, lot, statut des contrats et version d'un chantier sont lus du projet", async () => {
+test("QUA-280 : état, lot, statut des contrats et version d'un chantier sont lus du projet", async () => {
   const contrat = (texte) => `# Registre\n\n## ABC-001 — Un\n**Règle** : ${texte}\n## ABC-002 — Deux\n**Règle** : stable\n`;
   const p = await projet({ "docs/contracts.md": contrat("ancienne"), ".drwil/usage.jsonl": '{"workstream":"a","date":"2026-01-01"}\n' });
   git(p.dir, "update-ref", "refs/remotes/origin/main", "HEAD");
@@ -301,7 +301,7 @@ test("QUA-269 : état, lot, statut des contrats et version d'un chantier sont lu
   assert.equal((await lecteur.state()).lot, null, "le lot d'une autre fiche n'est pas celui-ci");
 });
 
-test("QUA-269 : un en-tête Host étranger est refusé, une requête invalide ne révèle rien, la page échappe le nom du projet", async () => {
+test("QUA-280 : un en-tête Host étranger est refusé, une requête invalide ne révèle rien, la page échappe le nom du projet", async () => {
   const p = await projet({});
   const cfg = JSON.parse(readFileSync(join(p.dir, ".drwil/ia-first.json"), "utf8"));
   ecrire(p.dir, ".drwil/ia-first.json", JSON.stringify({ ...cfg, projectName: "<b>x</b>" }));
@@ -316,7 +316,7 @@ test("QUA-269 : un en-tête Host étranger est refusé, une requête invalide ne
   assert.ok(!page.includes("<b>x</b>"));
 });
 
-test("QUA-269 : hors d'un projet ou avec un port invalide, le refus est dit sans démarrer", async () => {
+test("QUA-280 : hors d'un projet ou avec un port invalide, le refus est dit sans démarrer", async () => {
   const p = await projet({});
   const vide = tmp();
   const horsProjet = lancer(p, [], {}, vide);
@@ -329,7 +329,7 @@ test("QUA-269 : hors d'un projet ou avec un port invalide, le refus est dit sans
   }
 });
 
-test("QUA-270 : hors de 127.0.0.1, le serveur refuse de démarrer sans jeton valide, détaché ou non", async () => {
+test("QUA-281 : hors de 127.0.0.1, le serveur refuse de démarrer sans jeton valide, détaché ou non", async () => {
   const p = await projet({});
   for (const args of [
     ["--host", "0.0.0.0", "--port", "0"],
@@ -351,7 +351,7 @@ test("QUA-270 : hors de 127.0.0.1, le serveur refuse de démarrer sans jeton val
   );
 });
 
-test("QUA-270 : toute requête sans jeton valide est refusée, le jeton n'apparaît dans aucune sortie", async () => {
+test("QUA-281 : toute requête sans jeton valide est refusée, le jeton n'apparaît dans aucune sortie", async () => {
   const jeton = randomBytes(24).toString("hex");
   const trace = join(tmp(), "env.txt");
   const p = await projet({
@@ -385,7 +385,7 @@ test("QUA-270 : toute requête sans jeton valide est refusée, le jeton n'appara
   assert.ok(!readFileSync(fichierServeur(p), "utf8").includes(jeton));
 });
 
-test("QUA-270 : détaché, le jeton n'est ni dans la sortie, ni dans l'enregistrement, ni dans le journal", async () => {
+test("QUA-281 : détaché, le jeton n'est ni dans la sortie, ni dans l'enregistrement, ni dans le journal", async () => {
   const jeton = randomBytes(24).toString("hex");
   const p = await projet({});
   const r = lancer(p, ["--host", "0.0.0.0", "--port", "0", "--detach"], { DRWIL_SERVE_TOKEN: jeton });
@@ -1001,7 +1001,7 @@ test("QUA-273 : les vues CI et le tableau répondent de bout en bout par gh et p
   }
 });
 
-test("QUA-269 : à l'arrêt du serveur, une commande de forge en cours ne survit pas", posix, async () => {
+test("QUA-280 : à l'arrêt du serveur, une commande de forge en cours ne survit pas", posix, async () => {
   const p = await projet({});
   git(p.dir, "remote", "add", "origin", ORIGINE_HUB);
   const bin = tmp();
@@ -1545,7 +1545,7 @@ test("QUA-273 : les releases croisent tags, journal des changements, PR et conso
   assert.equal((await createReleases(createReader(sansJournal.dir), FORGE_VIDE)()).releases[0].changelog, "");
 });
 
-test("QUA-269 : un détail n'accepte qu'une clé ou un nom valide, et se lit sans rien de nominatif", async () => {
+test("QUA-280 : un détail n'accepte qu'une clé ou un nom valide, et se lit sans rien de nominatif", async () => {
   const p = await projet({
     "docs/projects/journal.md": "# J\n\n## Mention seule\n\nworkstream/mention\n\n## Vraie\n\n- **Closed by**: workstream/vrai\n",
     "docs/contracts.md": "# Registre\n\n## ABC-001 — Un contrat\n**Règle** : r\n",
@@ -1653,7 +1653,7 @@ test("QUA-273 : un lien de PR ou MR se déduit d'origin seul, sans identifiant e
     assert.equal(forgeLink(refuse, 12), null, refuse);
 });
 
-test("QUA-269 : la redirection vers une PR ou MR n'accepte qu'un numéro, en GET, et sans en-tête Host étranger", async () => {
+test("QUA-280 : la redirection vers une PR ou MR n'accepte qu'un numéro, en GET, et sans en-tête Host étranger", async () => {
   for (const [origine, attendu] of [
     [ORIGINE_HUB, /^https:\/\/github\.com\/.+\/pull\/12$/],
     [ORIGINE_LAB, /^https:\/\/gitlab\.com\/.+\/-\/merge_requests\/12$/],
@@ -1706,7 +1706,7 @@ test("QUA-275 : sans forge reconnue, la redirection répond 404 sans adresse", a
   assert.equal(r.entetes.location, undefined);
 });
 
-test("QUA-270 : la redirection est refusée sans jeton valide", async () => {
+test("QUA-281 : la redirection est refusée sans jeton valide", async () => {
   const p = await projet({});
   brancher(p, ORIGINE_HUB);
   const jeton = randomBytes(32).toString("hex");
@@ -1983,7 +1983,7 @@ test("QUA-277 : à l'ouverture d'une session choisie, le serveur démarre et le 
   const sortie = JSON.parse(r.stdout);
   assert.deepEqual(Object.keys(sortie), ["systemMessage"], "aucun octet destiné au modèle");
   assert.equal(r.stdout.trim().split("\n").length, 1);
-  assert.ok(!r.stdout.includes(jeton), "QUA-270 : le jeton n'apparaît pas");
+  assert.ok(!r.stdout.includes(jeton), "QUA-281 : le jeton n'apparaît pas");
   const lien = /http:\/\/127\.0\.0\.1:(\d+)\//.exec(sortie.systemMessage);
   assert.ok(lien, sortie.systemMessage);
   assert.equal((await fetch(`${lien[0]}api/docs`)).status, 200);
