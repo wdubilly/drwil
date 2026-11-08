@@ -9,7 +9,7 @@ import { COOKIE_NAME, cookieValue, hasValidToken, localHostHeader, maskPersonal,
 import { createBoard } from "./serve-board.js";
 import { createDetails } from "./serve-details.js";
 import { createForge, type Missing } from "./serve-forge.js";
-import { type JournalEvent, openJournal } from "./serve-journal.js";
+import { type JournalEvent, measures, openJournal } from "./serve-journal.js";
 import { createReader } from "./serve-read.js";
 import { createReleases } from "./serve-releases.js";
 import { SERVE_TEXTS } from "./serve-texts.js";
@@ -123,11 +123,16 @@ export async function startServer(o: ServeOptions): Promise<RunningServer> {
     }),
     "/api/contracts": async () => {
       const view = await reader.contracts();
-      return { ...view, missing: view.verify ? null : T.noEvidence };
+      const head = (await reader.git("rev-parse", "--short=7", "HEAD")).trim();
+      return { ...view, head, missing: view.verify ? null : T.noEvidence };
     },
     "/api/usage": async () => {
       const view = await reader.usage();
       return { ...view, missing: view.workstreams.length ? null : T.noUsage };
+    },
+    "/api/measures": () => {
+      const view = measures(reader.text(".drwil/usage.jsonl"), reader.text(`${reader.dirs.projects}/journal.md`));
+      return { ...view, missing: view.ci || view.cache ? null : T.noMeasures };
     },
     "/api/ci": async () => said(await forge.ci()),
     "/api/board": async () => said(await board()),
@@ -159,6 +164,14 @@ export async function startServer(o: ServeOptions): Promise<RunningServer> {
     if (url.pathname === "/") {
       res.writeHead(200, { ...HEADERS, "content-type": "text/html; charset=utf-8" });
       return res.end(page);
+    }
+    // Seule adresse de forge qui sorte, en en-tête et jamais dans un corps (QUA-271), vers la forge d'`origin` seule.
+    const link = /^\/forge\/pr\/([1-9]\d{0,8})$/.exec(url.pathname);
+    if (link) {
+      const location = await details.prLink(Number(link[1]));
+      if (!location) return send(res, 404, { error: "no forge" }, names);
+      res.writeHead(302, { ...HEADERS, location });
+      return res.end();
     }
     const route = routes[url.pathname];
     if (!route) return send(res, 404, { error: "not found" }, names);

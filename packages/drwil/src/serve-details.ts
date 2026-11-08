@@ -1,11 +1,29 @@
 // Détail d'un événement, chargé à la demande (commit, PR ou MR, exécution, attestation) et d'un chantier.
 // Chaque paramètre est validé avant d'atteindre une commande (QUA-269) ; rien de nominatif n'est lu (QUA-271).
+import { forgeOf } from "./guarantees-forge.js";
 import type { ForgeReader } from "./serve-forge.js";
 import type { JournalEvent } from "./serve-journal.js";
 import type { Reader } from "./serve-read.js";
 
 const MAX_BRANCHES = 8;
 const DECISIONS = ["decision", "reouverture", "lot", "activite"];
+
+/** Adresse de la PR ou MR, déduite d'`origin` seul : aucun identifiant d'adresse ni host d'alias SSH (QUA-271). */
+export function forgeLink(remote: string, number: number): string | null {
+  const url = remote.trim();
+  const web = /^(https?):\/\/(?:[^@/]*@)?([\w.-]+(?::\d{1,5})?)\/(.+)$/i.exec(url);
+  const ssh = /^(?:(?:git\+)?ssh:\/\/(?:[^@/]*@)?([\w.-]+)(?::\d{1,5})?\/|[\w.-]+@([\w.-]+):)(.+)$/i.exec(url);
+  const scheme = web ? web[1].toLowerCase() : "https";
+  // Le port d'une adresse SSH n'est pas celui du site web ; un hôte sans point y serait un alias de ~/.ssh/config.
+  const host = web ? web[2] : (ssh?.[1] ?? ssh?.[2]);
+  if (!host || (!web && !host.includes("."))) return null;
+  const path = (web ? web[3] : (ssh as RegExpExecArray)[3]).replace(/\/+$/, "").replace(/\.git$/, "");
+  const parts = path.split("/");
+  if (parts.length < 2 || !parts.every((p) => /^[\w.-]+$/.test(p) && !/^\.+$/.test(p))) return null;
+  const forge = forgeOf(host.split(":")[0]);
+  if (!forge) return null;
+  return `${scheme}://${host}/${path}/${forge === "github" ? "pull" : "-/merge_requests"}/${number}`;
+}
 
 export function createDetails(reader: Reader, forge: ForgeReader) {
   const { dirs } = reader;
@@ -96,5 +114,7 @@ export function createDetails(reader: Reader, forge: ForgeReader) {
     return { brief, lots, commits: commits.length, entry: entry.trim(), decisions };
   }
 
-  return { detail, workstream };
+  const prLink = async (number: number) => forgeLink(await reader.git("remote", "get-url", "origin"), number);
+
+  return { detail, workstream, prLink };
 }

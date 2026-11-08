@@ -19,13 +19,14 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, test } from "node:test";
+import { Script } from "node:vm";
 import { fileURLToPath } from "node:url";
 import { init } from "../dist/index.js";
 import { accessToken, maskPersonal, ServeRefusal } from "../dist/serve-auth.js";
 import { createBoard } from "../dist/serve-board.js";
-import { createDetails } from "../dist/serve-details.js";
+import { createDetails, forgeLink } from "../dist/serve-details.js";
 import { createForge, hostOf, natureOf } from "../dist/serve-forge.js";
-import { openJournal } from "../dist/serve-journal.js";
+import { measures, openJournal } from "../dist/serve-journal.js";
 import { createReader } from "../dist/serve-read.js";
 import { createReleases } from "../dist/serve-releases.js";
 import { SERVE_TEXTS } from "../dist/serve-texts.js";
@@ -129,7 +130,7 @@ function brut(port, chemin, entetes = {}) {
     const req = request({ host: "127.0.0.1", port, path: chemin, headers: entetes }, (res) => {
       let corps = "";
       res.on("data", (d) => (corps += d));
-      res.on("end", () => resolve({ status: res.statusCode, corps }));
+      res.on("end", () => resolve({ status: res.statusCode, corps, entetes: res.headers }));
     });
     req.on("error", reject);
     req.end();
@@ -147,6 +148,7 @@ const ROUTES = [
   "api/board",
   "api/releases",
   "api/events",
+  "api/measures",
   "api/detail?key=x",
   "api/workstream?name=x",
 ];
@@ -1608,4 +1610,231 @@ test("QUA-269 : un détail n'accepte qu'une clé ou un nom valide, et se lit san
   assert.match((await workstream("mention", [])).entry, /Mention seule/);
   assert.equal((await workstream("rien", [])).entry, "");
   assert.equal((await workstream("rien", [])).commits, 0);
+});
+
+test("QUA-273 : un lien de PR ou MR se déduit d'origin seul, sans identifiant et vers cette forge seulement", () => {
+  for (const [origine, attendu] of [
+    ["https://github.com/acme/outil.git", "https://github.com/acme/outil/pull/12"],
+    ["git@github.com:acme/outil.git", "https://github.com/acme/outil/pull/12"],
+    ["https://jeton:secret@github.com/acme/outil", "https://github.com/acme/outil/pull/12"],
+    ["git@gitlab.com:groupe/sous/outil.git\n", "https://gitlab.com/groupe/sous/outil/-/merge_requests/12"],
+    ["ssh://git@gitlab.example.com:2222/groupe/outil.git", "https://gitlab.example.com/groupe/outil/-/merge_requests/12"],
+    ["http://gitlab.interne:8080/groupe/outil.git/", "http://gitlab.interne:8080/groupe/outil/-/merge_requests/12"],
+  ])
+    assert.equal(forgeLink(origine, 12), attendu, origine);
+  for (const refuse of [
+    "",
+    "git@github-perso:acme/outil.git",
+    "github-perso:acme/outil.git",
+    "https://ailleurs.example/acme/outil",
+    "https://github.com/seul",
+    "https://github.com/acme/../outil",
+    "https://github.com/acme/outil?x=1",
+    "https://github.com/acme/outil#f",
+    "javascript://github.com/acme/outil",
+  ])
+    assert.equal(forgeLink(refuse, 12), null, refuse);
+});
+
+test("QUA-269 : la redirection vers une PR ou MR n'accepte qu'un numéro, en GET, et sans en-tête Host étranger", async () => {
+  for (const [origine, attendu] of [
+    [ORIGINE_HUB, /^https:\/\/github\.com\/.+\/pull\/12$/],
+    [ORIGINE_LAB, /^https:\/\/gitlab\.com\/.+\/-\/merge_requests\/12$/],
+  ]) {
+    const p = await projet({});
+    brancher(p, origine);
+    const s = await demarrer(p);
+    const lien = await brut(s.port, "/forge/pr/12");
+    assert.equal(lien.status, 302);
+    assert.match(lien.entetes.location, attendu);
+    assert.equal(lien.corps, "", "aucune adresse dans un corps de réponse (QUA-271)");
+    for (const mauvais of ["0", "abc", "12x", "1234567890", "12/13", "%31"]) {
+      const r = await brut(s.port, `/forge/pr/${mauvais}`);
+      assert.equal(r.status, 404, mauvais);
+      assert.equal(r.entetes.location, undefined, mauvais);
+    }
+    assert.equal((await brut(s.port, "/forge/pr/12", { host: "attaquant.example" })).status, 403);
+    const poste = await fetch(`${s.url}forge/pr/12`, { method: "POST", redirect: "manual" });
+    assert.equal(poste.status, 405);
+    assert.equal(poste.headers.get("location"), null);
+    await s.arreter();
+  }
+});
+
+test("QUA-271 : l'adresse de forge ne sort que par l'en-tête de la redirection, jamais dans un corps de réponse", posix, async () => {
+  const p = await projet({});
+  brancher(p, ORIGINE_HUB);
+  const faux = outilsFactices([
+    ["pr list", [HUB_PR()]],
+    ["run list", [HUB_RUN()]],
+    ["runs/11/jobs", { jobs: [HUB_JOB] }],
+    ["release list", []],
+  ]);
+  const s = await demarrer(p, ["--port", "0"], { PATH: faux.path });
+  for (const route of ROUTES.filter(Boolean)) {
+    const { corps } = await brut(s.port, `/${route}`);
+    assert.ok(!corps.includes("github.com/jeanne-owner"), route);
+  }
+  const lien = await brut(s.port, "/forge/pr/7");
+  assert.equal(lien.corps, "");
+  assert.ok(lien.entetes.location.includes("github.com/jeanne-owner/projet/pull/7"));
+});
+
+test("QUA-275 : sans forge reconnue, la redirection répond 404 sans adresse", async () => {
+  const p = await projet({});
+  const s = await demarrer(p);
+  const r = await brut(s.port, "/forge/pr/12");
+  assert.equal(r.status, 404);
+  assert.deepEqual(JSON.parse(r.corps), { error: "no forge" });
+  assert.equal(r.entetes.location, undefined);
+});
+
+test("QUA-270 : la redirection est refusée sans jeton valide", async () => {
+  const p = await projet({});
+  brancher(p, ORIGINE_HUB);
+  const jeton = randomBytes(32).toString("hex");
+  const s = await demarrer(p, ["--host", "127.0.0.2", "--port", "0"], { DRWIL_SERVE_TOKEN: jeton });
+  const brutJeton = (entetes) =>
+    new Promise((resolve, reject) => {
+      const req = request({ host: "127.0.0.2", port: s.port, path: "/forge/pr/12", headers: entetes }, (res) => {
+        res.resume();
+        res.on("end", () => resolve({ status: res.statusCode, location: res.headers.location }));
+      });
+      req.on("error", reject);
+      req.end();
+    });
+  const refus = await brutJeton({});
+  assert.equal(refus.status, 401);
+  assert.equal(refus.location, undefined);
+  const ok = await brutJeton({ authorization: `Bearer ${jeton}` });
+  assert.equal(ok.status, 302);
+  assert.match(ok.location, /\/pull\/12$/);
+});
+
+const PAGE = readFileSync(join(racinePaquet, "serve", "page.html"), "utf8");
+const textes = JSON.parse(/<script type="application\/json" id="i18n">\s*([\s\S]*?)<\/script>/.exec(PAGE)[1]);
+const scriptDeLaPage = /<script>\n([\s\S]*?)<\/script>/.exec(PAGE)[1];
+
+test("QUA-276 : la page tient sur 360 px par sa structure : pas de largeur fixe, de cellule de tableau ni de débordement masqué", () => {
+  assert.match(PAGE, /name="viewport" content="width=device-width, initial-scale=1"/);
+  const base = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("@media (min-width:900px)"));
+  for (const m of base.matchAll(/(?:^|[;{\s])(?:min-width|width|flex-basis)\s*:\s*(\d+)px/g))
+    assert.ok(Number(m[1]) <= 360, `largeur fixe trop grande : ${m[0]}`);
+  assert.ok(!/flex\s*:\s*0 0 \d{3,}px/.test(base), "colonne de largeur fixe hors du grand écran");
+  assert.ok(!/nowrap/.test(base), "aucun texte insécable hors du grand écran");
+  assert.ok(
+    !/overflow(?:-x)?\s*:\s*(?:hidden|clip)/.test(
+      PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>")).replace(/\.prog \{[^}]*\}/, ""),
+    ),
+    "le débordement n'est pas masqué",
+  );
+  assert.ok(!/<table|<td/.test(PAGE), "pas de tableau, trop large sur téléphone");
+  assert.match(base, /overflow-wrap:\s*anywhere/);
+});
+
+test("QUA-276 : français et anglais ont les mêmes libellés, chaque code rendu par l'API est traduit, le script se compile", () => {
+  assert.deepEqual(Object.keys(textes.fr).sort(), Object.keys(textes.en).sort());
+  for (const cles of Object.values(textes))
+    for (const [cle, valeur] of Object.entries(cles)) assert.ok(typeof valeur === "string" && valeur.trim(), cle);
+  for (const cle of [
+    ...["fusionnee", "pr", "chantier", "fiche", "intention", "autre"].map((c) => `stage-${c}`),
+    ...["ready", "refine", "in-progress", "unset"].map((c) => `mat-${c}`),
+    ...["open", "merged", "closed"].map((c) => `state-${c}`),
+    ...["pass", "attested", "manual", "fail", "error", "other"].map((c) => `st-${c}`),
+    ...["new", "changed"].map((c) => `change-${c}`),
+    ...[
+      "activite",
+      "decision",
+      "attestation",
+      "lot",
+      "reouverture",
+      "fiche",
+      "file",
+      "commit",
+      "cloture",
+      "pr",
+      "fusion",
+      "fusion-doc",
+      "ci",
+      "ci-ok",
+      "ci-ko",
+    ].map((c) => `kind-${c}`),
+    ...["notes", "intentions", "fiches", "chantier", "prs", "fusionnees", "publiees"].map((c) => `col-${c}`),
+    ...["ci", "kb", "tl", "rel", "ct", "us", "me", "briefs", "int", "notes"].map((c) => `tab-${c}`),
+    "ready",
+    "notReady",
+  ])
+    assert.ok(textes.fr[cle] && textes.en[cle], cle);
+  for (const m of scriptDeLaPage.matchAll(/\bt\("([\w-]+)"/g)) assert.ok(textes.fr[m[1]], `libellé inconnu : ${m[1]}`);
+  assert.doesNotThrow(() => new Script(scriptDeLaPage));
+});
+
+test("QUA-276 : la page ne porte aucune adresse de forge et ne fait ses liens de PR que par la redirection", () => {
+  assert.ok(!/(?:github|gitlab)\.com/.test(PAGE));
+  assert.match(scriptDeLaPage, /href="\/forge\/pr\/\$\{Number\(n\)\}"/);
+  assert.ok(!/href="\$\{(?!Number)/.test(scriptDeLaPage), "aucun lien bâti sur une valeur de l'API");
+});
+
+test("QUA-276 : la page se sert dans la langue du projet", async () => {
+  for (const lang of ["fr", "en"]) {
+    const p = await projet({});
+    const cfg = JSON.parse(readFileSync(join(p.dir, ".drwil/ia-first.json"), "utf8"));
+    ecrire(p.dir, ".drwil/ia-first.json", JSON.stringify({ ...cfg, lang }));
+    const s = await demarrer(p);
+    const page = await (await fetch(s.url)).text();
+    assert.ok(page.includes(`<html lang="${lang}">`), lang);
+    assert.ok(!page.includes("__LANG__"));
+    await s.arreter();
+  }
+});
+
+const JOURNAL_MESURES = [
+  "# Journal",
+  "## 2026-10-01 — a",
+  "- **Durée de CI (job checks)** : 3m02 — run — hooks inchangés",
+  "## 2026-10-02 — b",
+  "- **Durée de CI (job checks)** : 200 s — run — hooks unchanged",
+  "## 2026-10-03 — c",
+  "- **Durée de CI (job checks)** : 9m00 — run — hooks modifiés",
+  "- **Durée de CI (job checks)** : non mesurée — hooks inchangés",
+].join("\n");
+
+test("QUA-276 : les mesures donnent relevés, moyenne, seuil et alerte, sans compter les lignes ignorées", () => {
+  const vue = measures(
+    [
+      JSON.stringify({ workstream: "a", date: "2026-10-01", requests: 2, cache_read: 300000 }),
+      JSON.stringify({ workstream: "b", date: "2026-10-02", requests: 0, cache_read: 5 }),
+      "illisible",
+    ].join("\n"),
+    JOURNAL_MESURES,
+  );
+  assert.deepEqual(vue.ci.points, [
+    { label: "2026-10-01", value: 182 },
+    { label: "2026-10-02", value: 200 },
+  ]);
+  assert.equal(vue.ci.mean, 191);
+  assert.equal(vue.ci.threshold, 235);
+  assert.equal(vue.ci.alert, false);
+  assert.deepEqual(vue.cache.points, [{ label: "a", value: 150000 }]);
+  assert.equal(vue.cache.alert, false);
+  const haute = measures("", ["## 2026-10-01", ...Array(7).fill("- **Durée de CI (job checks)** : 5m00 — hooks inchangés")].join("\n"));
+  assert.equal(haute.ci.points.length, 5, "cinq derniers relevés");
+  assert.equal(haute.ci.history.length, 7);
+  assert.equal(haute.ci.alert, true);
+});
+
+test("QUA-275 : sans relevé, les mesures répondent vides et disent ce qui manque ; avec relevés, sans manque", async () => {
+  const vide = await projet({});
+  const s = await demarrer(vide);
+  const r = await jsonDe(`${s.url}api/measures`);
+  assert.equal(r.ci, null);
+  assert.equal(r.cache, null);
+  assert.equal(r.missing, SERVE_TEXTS.fr.noMeasures);
+  await s.arreter();
+  const plein = await projet({ "docs/projects/journal.md": JOURNAL_MESURES });
+  const s2 = await demarrer(plein);
+  const r2 = await jsonDe(`${s2.url}api/measures`);
+  assert.equal(r2.missing, null);
+  assert.equal(r2.ci.points.length, 2);
+  assert.match((await jsonDe(`${s2.url}api/contracts`)).head, /^[0-9a-f]{7}$/);
 });

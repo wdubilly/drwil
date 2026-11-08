@@ -15,7 +15,10 @@ closing commit; the release renames this section to its version.
   in the user's cache, never in the repository. The CI, PR and MR views work
   alike on GitHub (`gh`) and GitLab (`glab`), the forge being detected; the
   event journal is per project and lives in the user's cache; a view with no
-  source stays empty and says what is missing.
+  source stays empty and says what is missing. The page is mobile first (no
+  horizontal scrolling at 360 px) and in the project's language (French or
+  English), with the CI measures and their trends; a PR or MR link
+  goes through a server redirect, never a forge address in a response body.
 - Release module: an optional `release.requiredOs` setting (absent by
   default, never added by an update) makes `create-release.mjs` (direct
   release or `--candidate`) and `promote-release.mjs` refuse, without

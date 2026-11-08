@@ -704,7 +704,10 @@ same.
 worktree). Listening anywhere else (`--host`) requires a token of at least 32
 characters in the `DRWIL_SERVE_TOKEN` environment variable. Its CI, PR and MR
 views use `gh` or `glab`, whichever matches the `origin` remote; without them,
-those views stay empty and say what is missing.
+those views stay empty and say what is missing. The page is made for a phone
+(360 px wide and up) and follows the project's `lang`, in French or English; a
+link to a PR or MR goes through the server's own redirect, so no forge address
+appears in any response body.
 
 ### 4. Attest a MANUAL contract (human, in your own terminal)
 

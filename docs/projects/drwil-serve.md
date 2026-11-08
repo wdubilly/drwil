@@ -119,7 +119,7 @@ téléphone. Le tableau de bord statique (`drwil-progress`) est remplacé.
   `QUA-273`
 - Le journal d'événements est propre à chaque projet et vit hors du dépôt — contrat `QUA-274`
 - La page s'utilise sur un écran de 360 px de large, sans défilement horizontal, en français et en anglais selon `lang`
-  — contrat à créer
+  — contrat `QUA-276`
 - À l'ouverture d'une session, un projet qui a choisi le démarrage automatique voit le serveur démarré s'il ne tournait
   pas, et l'humain reçoit le lien sans qu'aucun octet n'entre dans le contexte du modèle ; un outil qui ne sait pas
   montrer ce message donne le lien par le skill — contrat à créer
@@ -220,10 +220,13 @@ Aucun.
   - Les textes du journal et de `missing` viennent de `packages/drwil/src/serve-texts.ts`, dans la langue du projet ; le tableau rend des codes (`stage`, `ready`), à traduire par la page.
   - Une clé d'événement de commit porte 12 caractères de SHA : un SHA entier serait masqué comme secret.
   - `glab api` (REST stable) plutôt que `glab mr list` ; les étapes d'un job n'existent que sur GitHub.
+- **Lot 3 fait** (2026-11-08) : `packages/drwil/serve/page.html` refondue, mobile first, FR/EN selon `lang` (dix onglets : CI, tableau, fil, releases, contrats, consommation, mesures, fiches, intentions, notes). Liens PR et MR par `GET /forge/pr/<n>` (302, corps vide, QUA-269, QUA-271, QUA-273). `/api/measures` : tendances de QUA-198 (tendance de la durée de CI et du cache lu) lues dans `.drwil/usage.jsonl` et le journal, sur le code du tableau de bord. `/api/contracts` donne `head`. Contrat QUA-276 (page à 360 px, FR/EN) : tests en dur, part humaine `**Manuel**`.
+- **Choix du lot 3, à garder** :
+  - Chaque onglet ne lit que ses routes, et rien quand l'onglet du navigateur est masqué : un téléphone n'interroge pas la forge pour rien.
+  - Les libellés sont dans un bloc JSON de la page (`#i18n`), lu par les tests de QUA-276 (parité FR/EN, codes) ; les textes `missing` et le journal restent dans `packages/drwil/src/serve-texts.ts`, dans la langue du projet.
+  - Mesure réelle du 2026-11-08 dans Chromium, 360 px, tous onglets dépliés, sur ce dépôt (français) et sur un projet d'essai anglais à données longues : `scrollWidth` égal à la largeur, aucune erreur de script. La CI n'a pas de navigateur : la preuve durable est structurelle, la lisibilité sur téléphone reste à attester (QUA-276, attestation humaine attendue en VERIFY).
+- **Course corrigée au lot 3** : `findRunning` effaçait server.json même sans l'avoir lu, donc parfois la réservation d'un concurrent : deux serveurs, dont un orphelin (QUA-272). Reproduit 1 fois sur 25 sous charge ; 0 sur 25 avec le correctif, ce qui à cette fréquence ne prouve pas seul : la preuve est la lecture du code. Reste une fenêtre plus étroite, sur un enregistrement périmé relu par deux démarrages simultanés.
 - **Pour les lots suivants** :
-  - Lot 3 : les liens vers les PR et MR passent par une redirection côté serveur, décidée par le demandeur (section Décisions) : aucune adresse de forge dans une réponse de l'API, et la nouvelle route suit QUA-269 et QUA-271.
-  - Lot 3 : `serve/page.html` n'est qu'une page minimale, à refondre, sur les routes ci-dessus (`missing` à afficher tel quel). `/api/contracts` remplace les routes `registry` et
-    `contracts` du prototype : les titres y sont déjà.
   - Lot 4 : avec `tailscale serve`, l'en-tête `Host` reçu en `127.0.0.1` sera sans doute le nom du réseau privé, refusé
     aujourd'hui par `localHostHeader` (QUA-269, défense contre le DNS rebinding) : à autoriser explicitement, sans
     ouvrir le contrôle aux autres noms.

@@ -64,7 +64,9 @@ obligatoire ailleurs, aucune réponse ne porte de donnée nominative, et chaque
 projet ou worktree a son unique serveur. Les vues CI, PR et MR marchent à
 parité sur GitHub (`gh`) et GitLab (`glab`), le journal d'événements est propre
 à chaque projet et vit dans le cache de l'utilisateur, et une vue sans source
-reste vide en disant ce qui manque.
+reste vide en disant ce qui manque. La page se lit sur un téléphone (360 px de
+large), dans la langue du projet ; ses liens de PR et MR passent par une
+redirection du serveur, aucune adresse de forge n'étant dans une réponse.
 
 ## Attestation humaine (`drwil attest`)
 

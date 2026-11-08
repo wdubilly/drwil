@@ -1,23 +1,659 @@
 <!doctype html>
 <html lang="__LANG__">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>drwil — __PROJECT__</title>
-    <style>
-      body { font-family: system-ui, sans-serif; margin: 16px; }
-      pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-    </style>
-  </head>
-  <body>
-    <h1>__PROJECT__</h1>
-    <pre id="state"></pre>
-    <script>
-      fetch("/api/docs")
-        .then((r) => r.json())
-        .then((d) => {
-          document.getElementById("state").textContent = JSON.stringify(d.state, null, 2);
-        });
-    </script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>drwil — __PROJECT__</title>
+<style>
+  :root { color-scheme:light dark; --bg:#f6f6f3; --card:#fff; --ink:#1d1d1f; --mute:#62626a; --line:#dfdfda; --ok:#1a7f45; --ko:#bf3226; --run:#99620f; --acc:#2a55c9; --vio:#7c3aa8; --doc:#3f6fae; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141416; --card:#1e1e21; --ink:#ececee; --mute:#a2a2aa; --line:#303036; --ok:#46b877; --ko:#ee7468; --run:#dca34a; --acc:#86a4f5; --vio:#c198e0; --doc:#8fb4e2; } }
+  * { box-sizing:border-box; min-width:0; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); overflow-wrap:anywhere; }
+  header { padding:10px 14px 6px; }
+  header h1 { font-size:17px; margin:0 0 2px; }
+  #state,#upd { font-size:13px; color:var(--mute); }
+  #state b { color:var(--ink); }
+  .pill { display:inline-block; padding:0 8px; border-radius:99px; background:var(--card); border:1px solid var(--line); color:var(--ink); font-size:12.5px; }
+  nav { position:sticky; top:0; z-index:5; display:flex; gap:4px; padding:6px 10px; overflow-x:auto; background:var(--bg); border-bottom:1px solid var(--line); scrollbar-width:none; }
+  nav::-webkit-scrollbar { display:none; }
+  nav button { flex:none; min-height:38px; border:1px solid var(--line); background:var(--card); color:var(--ink); padding:0 12px; border-radius:99px; font:inherit; font-size:14px; cursor:pointer; }
+  nav button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); font-weight:600; }
+  main { padding:10px 12px 48px; max-width:1100px; margin:0 auto; }
+  section { display:none; } section.on { display:block; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .card h3 { margin:0 0 4px; font-size:15px; }
+  .can { cursor:pointer; }
+  .warn { border-color:var(--run); }
+  .mute { color:var(--mute); font-size:13px; }
+  .tag { display:inline-block; font-size:12px; padding:0 6px; border-radius:6px; border:1px solid var(--line); margin-right:4px; }
+  .tag.P0,.tag.P1 { border-color:var(--ko); color:var(--ko); } .tag.P2 { border-color:var(--run); color:var(--run); }
+  .tag.ready,.tag.code { border-color:var(--ok); color:var(--ok); } .tag.doc { border-color:var(--doc); color:var(--doc); }
+  .tag.new { border-color:var(--acc); color:var(--acc); } .tag.changed { border-color:var(--run); color:var(--run); }
+  .chip { font-size:12px; padding:0 6px; border-radius:6px; border:1px solid var(--run); color:var(--run); }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--mute); margin:18px 0 6px; }
+  h2.plain { text-transform:none; letter-spacing:0; font-size:14px; color:var(--ink); }
+  a { color:var(--acc); }
+  input[type=search],select { width:100%; max-width:460px; min-height:40px; padding:6px 10px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink); font:inherit; margin-bottom:8px; }
+  .kinds { margin-bottom:8px; font-size:13px; } .kinds label { display:inline-flex; align-items:center; gap:4px; margin:0 12px 6px 0; min-height:28px; cursor:pointer; }
+  .ok { color:var(--ok); } .ko { color:var(--ko); } .run { color:var(--run); font-weight:600; } .skip { color:var(--mute); }
+  .st { font-weight:600; } .st.pass { color:var(--ok); } .st.attested { color:var(--vio); } .st.fail,.st.error { color:var(--ko); } .st.manual { color:var(--run); }
+  .row { display:flex; justify-content:space-between; gap:10px; padding:3px 0; border-top:1px solid var(--line); }
+  .row > :first-child { flex:1; } .row .d { flex:none; font-variant-numeric:tabular-nums; }
+  details > summary { cursor:pointer; padding:3px 0; }
+  dl { margin:8px 0 0; } dt { font-weight:600; font-size:13px; margin-top:6px; } dd { margin:0; }
+  pre { white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.45 ui-monospace,monospace; margin:6px 0; }
+  code { font:.92em ui-monospace,monospace; overflow-wrap:anywhere; }
+  abbr { text-decoration:none; border-bottom:1px dotted var(--mute); }
+  .doc { margin-top:8px; padding-top:6px; border-top:1px solid var(--line); cursor:auto; }
+  .doc p { margin:6px 0; } .doc .li { margin:2px 0; } .doc .mdh { margin:12px 0 4px; font-size:14px; }
+  .doc pre { background:var(--bg); padding:6px 8px; border-radius:6px; }
+  .bar { height:8px; border-radius:4px; background:var(--acc); margin:2px 0 4px; }
+  .bar.over { background:var(--ko); } .bar.old { opacity:.45; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:2px 12px; font-size:13px; margin-top:4px; }
+  .prog { display:flex; height:10px; border-radius:5px; overflow:hidden; background:var(--line); margin:6px 0; } .prog > div { height:100%; }
+  .s-fusionnee { background:var(--ok); } .s-pr { background:var(--doc); } .s-chantier { background:var(--run); } .s-fiche { background:var(--acc); } .s-intention { background:var(--vio); } .s-autre { background:var(--mute); }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; }
+  .board { display:grid; gap:8px; }
+  .col { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:4px 10px 8px; }
+  .col > summary { font-size:13px; font-weight:600; min-height:32px; }
+  .kc { border:1px solid var(--line); border-left:3px solid var(--line); border-radius:8px; padding:6px 8px; margin-top:6px; font-size:14px; background:var(--bg); cursor:pointer; }
+  .kc.hl { border-left-color:var(--run); }
+  .tl { border-left:2px solid var(--line); margin-left:5px; padding-left:12px; }
+  .ev { position:relative; padding:6px 0; }
+  .ev::before { content:""; position:absolute; left:-18px; top:12px; width:10px; height:10px; border-radius:50%; background:var(--mute); }
+  .ev.activite::before,.ev.reouverture::before { background:var(--acc); } .ev.decision::before,.ev.attestation::before { background:var(--vio); }
+  .ev.ci-ok::before,.ev.fusion::before,.ev.cloture::before { background:var(--ok); } .ev.ci-ko::before { background:var(--ko); }
+  .ev.ci::before,.ev.lot::before { background:var(--run); } .ev.fusion-doc::before { background:var(--doc); }
+  .ev .h { font-variant-numeric:tabular-nums; color:var(--mute); font-size:13px; margin-right:6px; }
+  .ev .k { font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--mute); margin-right:6px; }
+  .ev.decision .t,.ev.attestation .t,.ev.activite .t,.ev.reouverture .t { font-weight:600; }
+  .ev .det { margin:6px 0 4px; padding:8px 10px; background:var(--card); border:1px solid var(--line); border-radius:8px; cursor:default; }
+  @media (min-width:900px) {
+    header { padding:14px 24px 8px; } nav { padding:8px 22px; } main { padding:14px 24px 48px; }
+    .board { display:flex; gap:10px; overflow-x:auto; align-items:flex-start; padding-bottom:10px; }
+    .col { flex:0 0 250px; max-height:72vh; overflow-y:auto; }
+    .band { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .stats { grid-template-columns:repeat(4,1fr); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>__PROJECT__</h1>
+  <div id="state">…</div>
+  <div id="upd"></div>
+</header>
+<nav id="tabs"></nav>
+<main>
+  <section id="ci"></section>
+  <section id="kb"></section>
+  <section id="tl"><input id="tq" type="search"><details class="kinds"><summary id="tkl"></summary><div id="tk"></div></details><div id="tll"></div></section>
+  <section id="rel"></section>
+  <section id="ct"><input id="cq" type="search"><details class="kinds"><summary id="cfl"></summary><div id="cf"></div></details><div id="ctl"></div></section>
+  <section id="us"></section>
+  <section id="me"></section>
+  <section id="briefs"></section>
+  <section id="int"><input id="q" type="search"><select id="qs"></select><div id="intl"></div></section>
+  <section id="notes"></section>
+</main>
+<!-- Les libellés et les codes de l'API (étapes, statuts, types d'événements) se traduisent ici ; QUA-276 vérifie la parité des deux langues. -->
+<script type="application/json" id="i18n">
+{
+  "fr": {
+    "tab-ci": "CI en direct", "tab-kb": "Tableau", "tab-tl": "Fil", "tab-rel": "Releases", "tab-ct": "Contrats", "tab-us": "Consommation", "tab-me": "Mesures", "tab-briefs": "Fiches", "tab-int": "Intentions", "tab-notes": "Notes",
+    "branch": "branche", "lot": "lot {0}", "updated": "mis à jour {0}", "offline": "serveur injoignable, nouvel essai dans 10 s", "denied": "accès refusé : rouvrir le lien avec le jeton", "loading": "chargement…", "unreadable": "illisible", "block": "bloc {0}", "comment": "commentaire",
+    "running": "en cours", "open": "ouvrir", "noRun": "Aucune exécution.", "noTarget": "Aucune PR ouverte ni branche principale à suivre.",
+    "noBrief": "Aucune fiche cadrée.", "ready": "prête", "notReady": "pas prête", "mat-ready": "prêt", "mat-refine": "à affiner", "mat-in-progress": "en cours", "mat-unset": "sans maturité", "decisions": "{0} décision(s)",
+    "noNote": "Aucune note.", "intentCount": "{0} intention(s) ouvertes", "noTheme": "Sans thème", "qSearch": "Filtrer (CI, couverture, P1, décision…)", "sort-theme": "Tri : par thème", "sort-priority": "Tri : par priorité", "sort-questions": "Tri : par questions à trancher",
+    "filters": "Filtres", "tlSearch": "Filtrer (QUA-264, CI, limite, #373, BUILD…)", "tlCount": "{0} événement(s) sur {1} — toucher un commit, une PR, une CI ou une attestation pour son détail", "duration": "durée : {0}", "workstream": "chantier {0}",
+    "kind-activite": "Activité", "kind-decision": "Décision humaine", "kind-attestation": "Attestation", "kind-lot": "Lot", "kind-reouverture": "Réouverture", "kind-fiche": "Fiche", "kind-file": "File", "kind-commit": "Commit", "kind-cloture": "Clôture", "kind-pr": "PR ou MR", "kind-fusion": "Fusion code", "kind-fusion-doc": "Fusion doc", "kind-ci": "CI démarrée", "kind-ci-ok": "CI verte", "kind-ci-ko": "CI rouge",
+    "branches": "branches : {0}", "noBody": "(pas de description)", "prMeta": "{0} → {1} · {2} · {3} commit(s), {4} fichier(s)", "state-open": "ouverte", "state-merged": "fusionnée", "state-closed": "fermée", "openForge": "ouvrir sur la forge", "attMeta": "{0} ({1}) sur le commit {2}", "note": "Note : {0}", "covers": "fichiers couverts : {0}",
+    "st-pass": "passe", "st-attested": "attesté", "st-manual": "attestation attendue", "st-fail": "en échec", "st-error": "en erreur", "st-other": "hors dernier verify", "onlyBranch": "Nouveaux ou modifiés sur la branche seulement", "ctSearch": "Filtrer (ID, titre, fichier, mot de la règle…)",
+    "lastVerify": "Dernier verify : {0} le {1} sur {2}", "dirty": " (arbre modifié)", "stale": "HEAD est maintenant {0} : statuts peut-être périmés, relancer verify.", "noVerify": "Aucune preuve de verify enregistrée.", "ctCount": "{0} contrats · {1} · {2} nouveaux ou modifiés", "shown": "{0} affiché(s)", "change-new": "nouveau sur la branche", "change-changed": "modifié sur la branche", "control": "contrôle {0}", "manual": "manuel", "atLastVerify": "Au dernier verify",
+    "usageTotal": "{0} tokens sur {1} chantiers", "byVersion": "Par version", "byWs": "Par chantier", "unreleased": "Non publié", "wsCount": "{0} chantier(s) · {1}", "output": "sortie", "cacheRead": "cache lu", "requests": "requêtes", "tokens": "tokens",
+    "wsDecisions": "Décisions et étapes", "wsCommits": "Commits par lot ({0})", "wsNoLot": "Hors lot (cadrage, clôture…)", "wsLot": "Lot {0}", "wsNoCommit": "Aucun commit ne porte la fiche {0}.", "wsEntry": "Entrée du journal", "wsNoEntry": "Pas d'entrée de journal pour ce chantier.", "commits": "{0} commit(s)",
+    "stage-fusionnee": "fusionnée", "stage-pr": "PR ou MR ouverte ou close", "stage-chantier": "en chantier", "stage-fiche": "cadrée", "stage-intention": "intention", "stage-autre": "retirée",
+    "col-notes": "Notes", "col-intentions": "Intentions", "col-fiches": "Fiches cadrées", "col-chantier": "En chantier", "col-prs": "{0} ouvertes", "col-fusionnees": "Fusionnées, non publiées", "col-publiees": "Publiées",
+    "versionAll": "Toutes les versions", "versionOnly": "seulement cette version", "versionTitle": "Version {0}", "versionDone": "{0} sur {1} fusionnée(s)", "since": " depuis {0}", "detail": "le détail", "boardNote": "Les cartes se placent seules (fichiers, état, Git, forge) : lancer, fusionner et publier restent des gestes gouvernés par drwil.",
+    "reopened": "rouvert (PR #{0})", "autoMerge": "fusion automatique autorisée", "toDecide": "{0} décision(s) à prendre", "toAnswer": "{0} question(s) à trancher", "files": "{0} fichier(s)", "codeDoc": "{0} de code, {1} de doc",
+    "latest": "dernière", "pre": "pré-version", "tagOnly": "tag sans release publiée", "nextVersion": "prochaine version, pas encore publiée", "relMeta": "{0} {1} de code, {2} de doc · {3} chantier(s) · {4} tokens", "relWs": "Chantiers", "relPrs": "{0} fusionnées", "relChangelog": "Journal des changements", "relNoChangelog": "Pas de section dans le journal des changements.",
+    "trendCi": "Durée du job checks, hooks inchangés", "trendCache": "Cache lu par requête (tokens)", "trendOk": "moyenne {0}, seuil d'alerte {1}", "trendAlert": "dérive : moyenne {0} au-dessus du seuil {1}", "trendNone": "Aucun relevé.", "trendNote": "Indicateurs, jamais bloquants. En plein : les cinq derniers relevés, ceux de la moyenne.", "lastRuns": "Durées de la dernière CI"
+  },
+  "en": {
+    "tab-ci": "Live CI", "tab-kb": "Board", "tab-tl": "Timeline", "tab-rel": "Releases", "tab-ct": "Contracts", "tab-us": "Consumption", "tab-me": "Measures", "tab-briefs": "Briefs", "tab-int": "Intents", "tab-notes": "Notes",
+    "branch": "branch", "lot": "increment {0}", "updated": "updated {0}", "offline": "server unreachable, retrying in 10 s", "denied": "access denied: open the link with the token again", "loading": "loading…", "unreadable": "unreadable", "block": "{0} block", "comment": "comment",
+    "running": "running", "open": "open", "noRun": "No run.", "noTarget": "No open PR nor main branch to follow.",
+    "noBrief": "No scoped brief.", "ready": "ready", "notReady": "not ready", "mat-ready": "ready", "mat-refine": "to refine", "mat-in-progress": "in progress", "mat-unset": "no maturity", "decisions": "{0} decision(s)",
+    "noNote": "No note.", "intentCount": "{0} open intent(s)", "noTheme": "No theme", "qSearch": "Filter (CI, coverage, P1, decision…)", "sort-theme": "Sort: by theme", "sort-priority": "Sort: by priority", "sort-questions": "Sort: by open questions",
+    "filters": "Filters", "tlSearch": "Filter (QUA-264, CI, limit, #373, BUILD…)", "tlCount": "{0} event(s) of {1} — tap a commit, a PR, a CI run or an attestation for its detail", "duration": "duration: {0}", "workstream": "workstream {0}",
+    "kind-activite": "Activity", "kind-decision": "Human decision", "kind-attestation": "Attestation", "kind-lot": "Increment", "kind-reouverture": "Reopening", "kind-fiche": "Brief", "kind-file": "Queue", "kind-commit": "Commit", "kind-cloture": "Closing", "kind-pr": "PR or MR", "kind-fusion": "Code merge", "kind-fusion-doc": "Doc merge", "kind-ci": "CI started", "kind-ci-ok": "CI green", "kind-ci-ko": "CI red",
+    "branches": "branches: {0}", "noBody": "(no description)", "prMeta": "{0} → {1} · {2} · {3} commit(s), {4} file(s)", "state-open": "open", "state-merged": "merged", "state-closed": "closed", "openForge": "open on the forge", "attMeta": "{0} ({1}) on commit {2}", "note": "Note: {0}", "covers": "covered files: {0}",
+    "st-pass": "passes", "st-attested": "attested", "st-manual": "attestation expected", "st-fail": "failing", "st-error": "in error", "st-other": "not in last verify", "onlyBranch": "Only new or changed on the branch", "ctSearch": "Filter (ID, title, file, word of the rule…)",
+    "lastVerify": "Last verify: {0} on {1} at {2}", "dirty": " (modified tree)", "stale": "HEAD is now {0}: statuses may be stale, run verify again.", "noVerify": "No verify evidence recorded.", "ctCount": "{0} contracts · {1} · {2} new or changed", "shown": "{0} shown", "change-new": "new on the branch", "change-changed": "changed on the branch", "control": "check {0}", "manual": "manual", "atLastVerify": "At last verify",
+    "usageTotal": "{0} tokens across {1} workstreams", "byVersion": "By version", "byWs": "By workstream", "unreleased": "Unreleased", "wsCount": "{0} workstream(s) · {1}", "output": "output", "cacheRead": "cache read", "requests": "requests", "tokens": "tokens",
+    "wsDecisions": "Decisions and steps", "wsCommits": "Commits per increment ({0})", "wsNoLot": "Outside increments (scoping, closing…)", "wsLot": "Increment {0}", "wsNoCommit": "No commit carries the brief {0}.", "wsEntry": "Journal entry", "wsNoEntry": "No journal entry for this workstream.", "commits": "{0} commit(s)",
+    "stage-fusionnee": "merged", "stage-pr": "PR or MR open or closed", "stage-chantier": "in progress", "stage-fiche": "scoped", "stage-intention": "intent", "stage-autre": "removed",
+    "col-notes": "Notes", "col-intentions": "Intents", "col-fiches": "Scoped briefs", "col-chantier": "In progress", "col-prs": "Open {0}", "col-fusionnees": "Merged, unreleased", "col-publiees": "Released",
+    "versionAll": "All versions", "versionOnly": "this version only", "versionTitle": "Version {0}", "versionDone": "{0} of {1} merged", "since": " since {0}", "detail": "details", "boardNote": "Cards place themselves (files, state, Git, forge): starting, merging and releasing stay gestures governed by drwil.",
+    "reopened": "reopened (PR #{0})", "autoMerge": "automatic merge allowed", "toDecide": "{0} decision(s) to take", "toAnswer": "{0} question(s) to settle", "files": "{0} file(s)", "codeDoc": "{0} code, {1} doc",
+    "latest": "latest", "pre": "pre-release", "tagOnly": "tag without a published release", "nextVersion": "next version, not released yet", "relMeta": "{0} {1} code, {2} doc · {3} workstream(s) · {4} tokens", "relWs": "Workstreams", "relPrs": "Merged {0}", "relChangelog": "Changelog", "relNoChangelog": "No section in the changelog.",
+    "trendCi": "Duration of the checks job, hooks unchanged", "trendCache": "Cache read per request (tokens)", "trendOk": "mean {0}, alert threshold {1}", "trendAlert": "drift: mean {0} above the threshold {1}", "trendNone": "No reading.", "trendNote": "Indicators, never blocking. Solid bars: the last five readings, those of the mean.", "lastRuns": "Latest CI durations"
+  }
+}
+</script>
+<script>
+const $ = (s) => document.querySelector(s);
+const LANG = document.documentElement.lang === "fr" ? "fr" : "en";
+const LOCALE = LANG === "fr" ? "fr-FR" : "en-GB";
+const TX = JSON.parse($("#i18n").textContent)[LANG];
+const t = (key, ...v) => (TX[key] ?? key).replace(/\{(\d)\}/g, (_, i) => v[i] ?? "");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const code = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+// Le navigateur peut refuser le stockage (navigation privée) : un réglage perdu, jamais une page cassée.
+const store = {
+  get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+};
+const stem = (p) => String(p ?? "").split("/").pop().replace(/\.md$/, "");
+const dateTime = (d) => new Date(d).toLocaleString(LOCALE, { dateStyle: "short", timeStyle: "short" });
+const plabel = (forge) => (forge === "gitlab" ? "MR" : "PR");
+// Jamais d'adresse de forge dans la page : le lien passe par la redirection du serveur (QUA-271).
+const plink = (n) => `<a href="/forge/pr/${Number(n)}" target="_blank" rel="noreferrer">#${Number(n)}</a>`;
+const missing = (v) => (v && v.missing ? `<div class="card warn">${esc(v.missing)}</div>` : "");
+const none = (text) => `<div class="card mute">${esc(text)}</div>`;
+
+function dur(a, b) {
+  if (!a) return "";
+  const s = Math.max(0, Math.round(((b ? new Date(b) : new Date()) - new Date(a)) / 1000));
+  const txt = s >= 60 ? `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")} s` : `${s} s`;
+  return b ? txt : `${t("running")} · ${txt}`;
+}
+function cls(x) {
+  if (x.status !== "completed") return x.status === "in_progress" ? "run" : "skip";
+  return x.conclusion === "success" ? "ok" : x.conclusion === "skipped" ? "skip" : "ko";
+}
+const ICON = { ok: "✓", ko: "✗", run: "●", skip: "–" };
+const tok = (n) => (n >= 1e6 ? `${(n / 1e6).toLocaleString(LOCALE, { maximumFractionDigits: 1 })} M` : n >= 1e3 ? `${Math.round(n / 1e3)} k` : String(n));
+const hm = (m) => (m >= 60 ? `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, "0")}` : `${Math.round(m)} min`);
+
+// Un ID de contrat n'est jamais montré seul : suivi de son titre abrégé.
+let titles = {};
+const ids = (html) =>
+  html.replace(/\b([A-Z]{2,5}-\d{3})\b/g, (m) => {
+    const title = titles[m];
+    return title ? `<abbr title="${esc(title)}">${m}</abbr> <span class="mute">(${esc(title.length > 60 ? `${title.slice(0, 60)}…` : title)})</span>` : m;
+  });
+const rich = (s) => ids(code(s));
+
+// Redessiner sans gêner la lecture : rien si rien n'a changé, pas pendant une sélection de texte,
+// les blocs dépliés le restent, la ligne lue reste sous les yeux.
+const userOpen = new Map();
+document.addEventListener("toggle", (e) => { const id = e.target.dataset?.id; if (id && e.isTrusted) userOpen.set(id, e.target.open); }, true);
+function stable(el, html) {
+  if (el._html === html) return;
+  const sel = window.getSelection();
+  if (sel && !sel.isCollapsed && el.contains(sel.anchorNode)) return;
+  let anchor = null;
+  if (el.offsetParent !== null) {
+    for (const n of el.querySelectorAll("[data-key],[data-id],h2")) {
+      const top = n.getBoundingClientRect().top;
+      if (top >= 0) { anchor = { key: n.dataset.key || n.dataset.id || `h2:${n.textContent}`, top }; break; }
+    }
+  }
+  el._html = html;
+  el.innerHTML = html;
+  for (const d of el.querySelectorAll("details[data-id]")) if (userOpen.has(d.dataset.id)) d.open = userOpen.get(d.dataset.id);
+  if (anchor) {
+    const n = [...el.querySelectorAll("[data-key],[data-id],h2")].find((x) => (x.dataset.key || x.dataset.id || `h2:${x.textContent}`) === anchor.key);
+    if (n) window.scrollBy(0, n.getBoundingClientRect().top - anchor.top);
+  }
+}
+
+function md(text) {
+  const out = [];
+  let inCode = false, inComment = false, para = [];
+  const inline = (s) => ids(esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>"));
+  const flush = () => { if (para.length) { out.push(`<p>${inline(para.join(" "))}</p>`); para = []; } };
+  for (const line of String(text).split("\n")) {
+    if (inCode) { if (/^\s*```/.test(line)) { out.push("</pre>"); inCode = false; } else out.push(`${esc(line)}\n`); continue; }
+    if (inComment) { if (line.includes("-->")) { out.push("</pre></details>"); inComment = false; } else out.push(`${esc(line)}\n`); continue; }
+    if (/^\s*```/.test(line)) { flush(); out.push("<pre>"); inCode = true; continue; }
+    const c = /^<!--\s*(\w*)/.exec(line);
+    if (c && !line.includes("-->")) { flush(); out.push(`<details><summary class="mute">${esc(t("block", c[1] || t("comment")))}</summary><pre>`); inComment = true; continue; }
+    const h = /^(#{1,4})\s+(.*)$/.exec(line);
+    if (h) { flush(); const n = Math.min(h[1].length + 2, 6); out.push(`<h${n} class="mdh">${inline(h[2])}</h${n}>`); continue; }
+    const li = /^(\s*)(?:[-*]|\d+\.)\s+(.*)$/.exec(line);
+    if (li) { flush(); out.push(`<div class="li" style="margin-left:${Math.min(li[1].length * 6 + 2, 32)}px">• ${inline(li[2])}</div>`); continue; }
+    if (/^\s+\S/.test(line) && out.length && out[out.length - 1].startsWith('<div class="li"')) {
+      out[out.length - 1] = out[out.length - 1].replace(/<\/div>$/, ` ${inline(line.trim())}</div>`);
+      continue;
+    }
+    if (!line.trim()) { flush(); continue; }
+    para.push(line.trim());
+  }
+  flush();
+  if (inCode || inComment) out.push("</pre>");
+  return out.join("");
+}
+
+const data = {};
+let tab = store.get("tab", "ci");
+const TABS = ["ci", "kb", "tl", "rel", "ct", "us", "me", "briefs", "int", "notes"];
+if (!TABS.includes(tab)) tab = "ci";
+// Chaque onglet ne lit que ses routes : un téléphone n'interroge pas la forge pour ce qu'il ne regarde pas.
+const FEEDS = { ci: ["ci"], kb: ["board"], tl: ["events"], rel: ["releases"], ct: ["contracts"], us: ["usage"], me: ["measures", "ci"], briefs: [], int: [], notes: [] };
+const RENDER = {};
+
+async function getJson(url) {
+  const r = await fetch(url);
+  if (r.status === 401) { denied = true; throw new Error("denied"); }
+  return r.json();
+}
+let denied = false;
+async function loadInto(cache, key, url, render) {
+  if (cache[key]) return;
+  try { cache[key] = await getJson(url); } catch { cache[key] = { error: t("unreadable") }; }
+  render();
+}
+function clickable(selector, root, action, skip = "a, .doc, details, input, select, label") {
+  root.addEventListener("click", (ev) => {
+    if (window.getSelection()?.toString() || ev.target.closest(skip)) return;
+    const hit = ev.target.closest(selector);
+    if (hit) action(hit);
+  });
+}
+const flip = (set, key) => { if (set.has(key)) set.delete(key); else set.add(key); return set.has(key); };
+
+function renderHeader() {
+  const s = data.docs?.state;
+  if (!s) return;
+  const lot = s.lot ? ` · ${esc(t("lot", s.lot.current))}` : "";
+  stable($("#state"), `<span class="pill">${esc(s.activity ?? "—")}</span> ${esc(t("branch"))} <b>${esc(s.branch)}</b>${s.brief ? ` · ${esc(stem(s.brief))}` : ""}${lot}`);
+}
+
+RENDER.ci = () => {
+  const ci = data.ci;
+  if (!ci) return;
+  const L = plabel(ci.forge);
+  const blocks = ci.targets.map((x) => {
+    const title = x.kind === "pr" ? `${L} ${plink(x.number)} ${rich(x.title)}` : esc(x.branch);
+    const runs = x.workflows.map((w) => `<div class="card"><h3><span class="${cls(w)}">${ICON[cls(w)]}</span> ${esc(w.name)} <span class="mute">(${esc(w.event)})</span></h3>
+      ${w.jobs.map((j) => `<details data-id="${esc(`ci|${x.branch}|${w.name}|${j.name}`)}" ${j.status !== "completed" || cls(j) === "ko" ? "open" : ""}>
+        <summary><span class="${cls(j)}">${ICON[cls(j)]} ${esc(j.name)}</span> <span class="mute">${dur(j.started, j.completed)}</span></summary>
+        ${j.steps.filter((s) => s.started).map((s) => `<div class="row"><span class="${cls(s)}">${ICON[cls(s)]} ${esc(s.name)}</span><span class="d ${cls(s)}">${dur(s.started, s.completed)}</span></div>`).join("")}
+      </details>`).join("")}</div>`).join("");
+    return `<h2 class="plain">${title}${x.sha ? ` <span class="mute">· <code>${esc(x.sha)}</code></span>` : ""}</h2>${runs || none(t("noRun"))}`;
+  });
+  stable($("#ci"), missing(ci) + (blocks.join("") || (ci.missing ? "" : none(t("noTarget")))));
+};
+
+const fileCache = {};
+const docHtml = (path) => {
+  const f = fileCache[path];
+  return `<div class="doc">${!f ? `<div class="mute">${esc(t("loading"))}</div>` : f.error ? `<div class="ko">${esc(f.error)}</div>` : md(f.text)}</div>`;
+};
+const loadFile = (path, render) => loadInto(fileCache, path, `/api/file?path=${encodeURIComponent(path)}`, render);
+
+const briefOpen = new Set();
+RENDER.briefs = () => {
+  const docs = data.docs;
+  if (!docs) return;
+  stable($("#briefs"), docs.briefs.map((b, i) => {
+    const open = briefOpen.has(b.path);
+    return `<div class="card can" data-key="${esc(b.path)}"><h3>${i + 1}. ${code(String(b.title).replace(/^(?:Projet|Project)\s*:\s*/, ""))} <span class="mute">${open ? "▾" : "▸"}</span></h3>
+      ${b.priority ? `<span class="tag ${esc(b.priority)}">${esc(b.priority)}</span>` : ""}<span class="tag ${b.ready ? "ready" : ""}">${esc(t(b.ready ? "ready" : "notReady"))}</span><span class="tag">${esc(t(`mat-${b.maturity}`))}</span>${b.decisions ? `<span class="tag P1">${esc(t("decisions", b.decisions))}</span>` : ""}
+      <div class="mute">${esc(b.path)}</div>${open ? docHtml(b.path) : ""}</div>`;
+  }).join("") || none(t("noBrief")));
+};
+clickable(".card[data-key]", $("#briefs"), (c) => { if (flip(briefOpen, c.dataset.key)) loadFile(c.dataset.key, RENDER.briefs); RENDER.briefs(); });
+
+RENDER.notes = () => {
+  if (data.docs) stable($("#notes"), data.docs.notes.slice().reverse().map((n) => `<div class="card">${rich(n)}</div>`).join("") || none(t("noNote")));
+};
+
+const prio = (i) => { const m = i.marks.find((x) => /^P\d$/.test(x)); return m ? Number(m[1]) : 9; };
+const SORTS = {
+  theme: (a, b) => a.theme.localeCompare(b.theme) || a.title.localeCompare(b.title),
+  priority: (a, b) => prio(a) - prio(b) || a.title.localeCompare(b.title),
+  questions: (a, b) => b.questions.length - a.questions.length || a.title.localeCompare(b.title),
+};
+$("#qs").innerHTML = Object.keys(SORTS).map((k) => `<option value="${k}">${esc(t(`sort-${k}`))}</option>`).join("");
+$("#qs").value = store.get("int-sort", "theme");
+if (!SORTS[$("#qs").value]) $("#qs").value = "theme";
+RENDER.int = () => {
+  if (!data.docs) return;
+  const q = $("#q").value.toLowerCase();
+  const by = $("#qs").value;
+  const list = data.docs.intentions.filter((i) => !i.done && (!q || JSON.stringify(i).toLowerCase().includes(q))).sort(SORTS[by]);
+  let group = null;
+  let html = `<div class="mute">${esc(t("intentCount", list.length))}</div>`;
+  for (const i of list) {
+    if (by === "theme" && i.theme !== group) { group = i.theme; html += `<h2>${esc(group || t("noTheme"))}</h2>`; }
+    html += `<div class="card"><h3>${rich(i.title)}</h3>${i.marks.map((m) => `<span class="tag ${esc(m)}">${esc(m)}</span>`).join("")}
+      <div class="mute">${code(i.status)} — ${esc(i.file)}</div>
+      ${i.questions.length ? `<ul>${i.questions.map((x) => `<li>${rich(x)}</li>`).join("")}</ul>` : ""}</div>`;
+  }
+  stable($("#intl"), html);
+};
+$("#q").oninput = () => RENDER.int();
+$("#qs").onchange = () => { store.set("int-sort", $("#qs").value); RENDER.int(); };
+
+const KINDS = ["activite", "decision", "attestation", "lot", "reouverture", "fiche", "file", "commit", "cloture", "pr", "fusion", "fusion-doc", "ci", "ci-ok", "ci-ko"];
+let kindsOff;
+try { kindsOff = new Set(JSON.parse(store.get("tl-off", '["ci"]'))); } catch { kindsOff = new Set(["ci"]); }
+$("#tkl").textContent = t("filters");
+$("#tq").placeholder = t("tlSearch");
+$("#tk").innerHTML = KINDS.map((k) => `<label><input type="checkbox" data-k="${k}" ${kindsOff.has(k) ? "" : "checked"}>${esc(t(`kind-${k}`))}</label>`).join("");
+$("#tk").onchange = (e) => { const k = e.target.dataset.k; if (e.target.checked) kindsOff.delete(k); else kindsOff.add(k); store.set("tl-off", JSON.stringify([...kindsOff])); RENDER.tl(); };
+$("#tq").oninput = () => RENDER.tl();
+const kindOf = (e) => (e.kind === "fusion" && e.nature === "doc" ? "fusion-doc" : e.kind);
+const DETAILED = /^(c-|pr-|ci-\d|att-)/;
+const opened = new Set();
+const detailCache = {};
+const openDetail = (key, render) => loadInto(detailCache, key, `/api/detail?key=${encodeURIComponent(key)}`, render);
+function detailHtml(key) {
+  const d = detailCache[key];
+  if (!d) return `<div class="mute">${esc(t("loading"))}</div>`;
+  if (d.error) return `<div class="ko">${esc(d.error)}</div>`;
+  if (d.type === "commit") return `<div class="mute">${esc(dateTime(d.date))}</div><pre>${ids(esc(d.message))}</pre>
+    ${d.branches.length ? `<div class="mute">${esc(t("branches", d.branches.join(", ")))}</div>` : ""}
+    <details data-id="${esc(`files|${key}`)}" ${d.files.length <= 8 ? "open" : ""}><summary class="mute">${esc(d.summary)}</summary><pre>${d.files.map(esc).join("\n")}</pre></details>`;
+  if (d.type === "pr") return `<div class="mute">${esc(t("prMeta", d.branch, d.base, t(`state-${d.state}`), d.commits, d.changedFiles ?? "?"))}
+      ${d.additions != null ? `<span class="ok">+${Number(d.additions)}</span> <span class="ko">−${Number(d.deletions)}</span>` : ""} · <a href="/forge/pr/${Number(d.number)}" target="_blank" rel="noreferrer">${esc(t("openForge"))}</a></div>
+    <pre>${ids(esc(d.body || t("noBody")))}</pre>`;
+  if (d.type === "ci") return d.jobs.map((j) => `<details data-id="${esc(`job|${key}|${j.name}`)}" ${cls(j) === "ko" || j.status !== "completed" ? "open" : ""}><summary><span class="${cls(j)}">${ICON[cls(j)]} ${esc(j.name)}</span> <span class="mute">${dur(j.started, j.completed)}</span></summary>
+    ${j.steps.map((s) => `<div class="row"><span class="${cls(s)}">${ICON[cls(s)]} ${esc(s.name)}</span><span class="d ${cls(s)}">${dur(s.started, s.completed)}</span></div>`).join("")}</details>`).join("");
+  if (d.type === "attestation") return `<div><b>${esc(d.contract)}</b> — ${esc(d.title)}</div>
+    <div class="mute">${esc(t("attMeta", d.status, d.source ?? "?", d.commit ?? "?"))}</div>
+    ${d.note ? `<div>${esc(t("note", d.note))}</div>` : ""}
+    <div class="mute">${t("covers", d.covers.map((c) => `<code>${esc(c)}</code>`).join(", "))}</div>`;
+  return "";
+}
+function fmtDur(ms) {
+  const m = Math.round(ms / 60000);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")}`;
+}
+function activityDurations(events) {
+  const acts = events.filter((e) => e.kind === "activite").sort((a, b) => (a.at < b.at ? -1 : 1));
+  const out = {};
+  acts.forEach((e, i) => { out[e.key] = (i + 1 < acts.length ? new Date(acts[i + 1].at) : new Date()) - new Date(e.at); });
+  return out;
+}
+RENDER.tl = () => {
+  const view = data.events;
+  if (!view) return;
+  const q = $("#tq").value.toLowerCase();
+  const list = view.events.filter((e) => !kindsOff.has(kindOf(e)) && (!q || JSON.stringify(e).toLowerCase().includes(q)));
+  const durs = activityDurations(view.events);
+  let day = null;
+  let html = missing(view) + `<div class="mute">${esc(t("tlCount", list.length, view.events.length))}</div>`;
+  for (const e of list) {
+    const d = new Date(e.at);
+    const label = d.toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
+    if (label !== day) { html += `${day ? "</div>" : ""}<h2>${esc(label)}</h2><div class="tl">`; day = label; }
+    const can = DETAILED.test(e.key);
+    const sub = [
+      e.kind === "activite" && durs[e.key] ? esc(t("duration", fmtDur(durs[e.key]))) : "",
+      e.files ? esc(e.files) : "",
+      e.sha ? `<code>${esc(e.sha)}</code>` : "",
+      e.brief ? esc(t("workstream", stem(e.brief))) : "",
+    ].filter(Boolean).join(" · ");
+    html += `<div class="ev ${esc(kindOf(e))} ${can ? "can" : ""}" data-key="${esc(e.key)}">
+      <span class="h">${esc(d.toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" }))}</span><span class="k">${esc(t(`kind-${kindOf(e)}`))}</span>${e.nature && e.kind === "pr" ? `<span class="tag ${esc(e.nature)}">${esc(e.nature)}</span>` : ""}<span class="t">${rich(e.text)}</span>${can ? ` <span class="mute">${opened.has(e.key) ? "▾" : "▸"}</span>` : ""}
+      ${sub ? `<div class="mute">${sub}</div>` : ""}
+      ${e.body && !opened.has(e.key) ? `<div class="mute">${rich(e.body)}</div>` : ""}
+      ${opened.has(e.key) ? `<div class="det">${detailHtml(e.key)}</div>` : ""}
+    </div>`;
+  }
+  stable($("#tll"), html + (day ? "</div>" : ""));
+};
+clickable(".ev[data-key]", $("#tll"), (row) => {
+  const key = row.dataset.key;
+  if (!DETAILED.test(key)) return;
+  if (flip(opened, key)) openDetail(key, RENDER.tl);
+  RENDER.tl();
+}, "a, details, pre");
+
+const ST = ["pass", "attested", "manual", "fail", "error"];
+const statusOf = (c) => { const s = String(c.status ?? "").toLowerCase(); return ST.includes(s) ? s : "other"; };
+const field = (c, ...names) => names.map((n) => c.fields[n]).find(Boolean) ?? "";
+const ctOff = new Set();
+let onlyBranch = false;
+$("#cfl").textContent = t("filters");
+$("#cq").placeholder = t("ctSearch");
+$("#cf").innerHTML = [...ST, "other"].map((k) => `<label><input type="checkbox" data-c="${k}" checked>${esc(t(`st-${k}`))}</label>`).join("") + `<label><input type="checkbox" id="cb">${esc(t("onlyBranch"))}</label>`;
+$("#cf").onchange = (e) => {
+  if (e.target.id === "cb") onlyBranch = e.target.checked;
+  else if (e.target.checked) ctOff.delete(e.target.dataset.c);
+  else ctOff.add(e.target.dataset.c);
+  RENDER.ct();
+};
+$("#cq").oninput = () => RENDER.ct();
+const ctOpen = new Set();
+RENDER.ct = () => {
+  const reg = data.contracts;
+  if (!reg) return;
+  const q = $("#cq").value.toLowerCase();
+  const list = reg.contracts.filter((c) => !ctOff.has(statusOf(c)) && (!onlyBranch || c.change) && (!q || JSON.stringify(c).toLowerCase().includes(q)));
+  const v = reg.verify;
+  const stale = v && v.commit && reg.head && !reg.head.startsWith(v.commit) && !v.commit.startsWith(reg.head);
+  const counts = {};
+  reg.contracts.forEach((c) => { const s = statusOf(c); counts[s] = (counts[s] || 0) + 1; });
+  const tally = Object.entries(counts).map(([k, n]) => `${n} ${t(`st-${k}`)}`).join(" · ");
+  let html = `<div class="card ${stale ? "warn" : ""}">${v ? `${esc(t("lastVerify", v.label, dateTime(v.at), v.commit))}${v.dirty ? esc(t("dirty")) : ""}${stale ? ` <span class="run">${esc(t("stale", reg.head))}</span>` : ""}` : esc(reg.missing ?? t("noVerify"))}
+    <div class="mute">${esc(t("ctCount", reg.contracts.length, tally, reg.contracts.filter((c) => c.change).length))}</div></div>
+    <div class="mute">${esc(t("shown", list.length))}</div>`;
+  for (const c of list) {
+    const open = ctOpen.has(c.id);
+    const st = statusOf(c);
+    const rule = field(c, "Règle", "Rule");
+    const control = field(c, "Contrôle", "Check");
+    html += `<div class="card can" data-key="${esc(c.id)}"><h3>${esc(c.id)} — ${code(c.title)}</h3>
+      <span class="st ${st}">${esc(t(`st-${st}`))}</span>
+      ${c.change ? `<span class="tag ${esc(c.change)}">${esc(t(`change-${c.change}`))}</span>` : ""}
+      ${c.severity && c.severity !== "blocking" ? `<span class="tag">${esc(c.severity)}</span>` : ""}
+      ${control ? `<span class="mute">${t("control", code(control))}</span>` : field(c, "Manuel", "Manual") ? `<span class="mute">${esc(t("manual"))}</span>` : ""}
+      ${open ? `<dl>${Object.entries(c.fields).map(([k, val]) => `<dt>${esc(k)}</dt><dd>${rich(val)}</dd>`).join("")}${c.reasons.length ? `<dt>${esc(t("atLastVerify"))}</dt><dd class="mute">${c.reasons.map(esc).join("<br>")}</dd>` : ""}</dl>`
+        : `<div class="mute">${code(rule.replace(/^(?:Livré à tout projet[^.]*|Shipped to every project[^.]*)\.\s*/, "").slice(0, 200))}${rule.length > 200 ? "…" : ""}</div>`}
+    </div>`;
+  }
+  stable($("#ctl"), html);
+};
+clickable(".card[data-key]", $("#ctl"), (c) => { flip(ctOpen, c.dataset.key); RENDER.ct(); }, "a, dl");
+
+const wsOpen = new Set();
+const wsCache = {};
+function wsDetail(d) {
+  if (!d) return `<div class="mute">${esc(t("loading"))}</div>`;
+  if (d.error) return `<div class="ko">${esc(d.error)}</div>`;
+  const lots = Object.entries(d.lots);
+  return `${d.decisions.length ? `<h4 class="mdh">${esc(t("wsDecisions"))}</h4>${d.decisions.map((e) => `<div class="li">• <span class="mute">${esc(dateTime(e.at))}</span> ${rich(e.text)}</div>`).join("")}` : ""}
+    <h4 class="mdh">${esc(t("wsCommits", d.commits))}</h4>
+    ${lots.length ? lots.map(([lot, cs]) => `<details data-id="${esc(`lot|${d.brief}|${lot}`)}" open><summary><b>${esc(lot ? t("wsLot", lot) : t("wsNoLot"))}</b> <span class="mute">${esc(t("commits", cs.length))}</span></summary>
+      ${cs.map((c) => `<div class="li">• <span class="mute">${esc(dateTime(c.at))} <code>${esc(c.sha)}</code></span> ${rich(c.subject)}</div>`).join("")}</details>`).join("") : `<div class="mute">${esc(t("wsNoCommit", d.brief))}</div>`}
+    ${d.entry ? `<h4 class="mdh">${esc(t("wsEntry"))}</h4>${md(d.entry)}` : `<div class="mute">${esc(t("wsNoEntry"))}</div>`}`;
+}
+const bar = (n, max, extra = "") => `<div class="bar ${extra}" style="width:${Math.max(1, Math.min(100, (100 * n) / max))}%"></div>`;
+RENDER.us = () => {
+  const use = data.usage;
+  if (!use) return;
+  const unreleased = t("unreleased");
+  const versions = new Map();
+  for (const w of use.workstreams) {
+    const key = w.version ?? unreleased;
+    const v = versions.get(key) ?? { tokens: 0, count: 0, minutes: 0 };
+    v.tokens += w.tokens; v.count += 1; v.minutes += w.duration_min;
+    versions.set(key, v);
+  }
+  const max = Math.max(1, ...use.workstreams.map((w) => w.tokens));
+  const vmax = Math.max(1, ...[...versions.values()].map((v) => v.tokens));
+  const total = use.workstreams.reduce((a, w) => a + w.tokens, 0);
+  stable($("#us"), `${missing(use)}${use.workstreams.length ? `<div class="card"><b>${esc(t("usageTotal", tok(total), use.workstreams.length))}</b></div>
+    <h2>${esc(t("byVersion"))}</h2><div class="card">${[...versions.entries()].map(([name, v]) => `<div><div class="row"><b>${esc(name)}</b><span class="d">${tok(v.tokens)}</span></div>${bar(v.tokens, vmax)}<div class="mute">${esc(t("wsCount", v.count, hm(v.minutes)))}</div></div>`).join("")}</div>
+    <h2>${esc(t("byWs"))}</h2>${use.workstreams.map((w) => {
+      const open = wsOpen.has(w.workstream);
+      return `<div class="card can" data-key="${esc(w.workstream)}"><div class="row" style="border:0"><b>${esc(w.workstream)} <span class="mute">${open ? "▾" : "▸"}</span></b><span class="d"><b>${tok(w.tokens)}</b></span></div>${bar(w.tokens, max)}
+        <div class="stats"><span class="mute">${esc(w.date)}</span><span class="mute">${esc(w.version ?? unreleased)}</span><span>${hm(w.duration_min)}</span><span>${w.requests} ${esc(t("requests"))}</span><span>${tok(w.output)} ${esc(t("output"))}</span><span>${tok(w.cache_read)} ${esc(t("cacheRead"))}</span></div>
+        ${open ? `<div class="doc">${wsDetail(wsCache[w.workstream])}</div>` : ""}</div>`;
+    }).join("")}` : ""}`);
+};
+clickable(".card[data-key]", $("#us"), (c) => {
+  const w = c.dataset.key;
+  if (flip(wsOpen, w)) loadInto(wsCache, w, `/api/workstream?name=${encodeURIComponent(w)}`, RENDER.us);
+  RENDER.us();
+});
+
+let kbVersion = store.get("kb-version", "");
+const kbOpen = new Set();
+const STAGES = ["fusionnee", "pr", "chantier", "fiche", "intention", "autre"];
+const COLS = ["notes", "intentions", "fiches", "chantier", "prs", "fusionnees", "publiees"];
+const COL_OPEN = new Set(["chantier", "prs"]);
+const wide = () => window.matchMedia("(min-width:900px)").matches;
+function cardHtml(c) {
+  const open = kbOpen.has(c.id);
+  const isDoc = String(c.id).endsWith(".md");
+  const prKey = /^pr-\d+$/.test(c.id) ? `${c.id}-card` : "";
+  const meta = [
+    c.version ? `<span class="chip">${esc(c.version)}${c.order ? ` · ${Number(c.order)}` : ""}</span>` : "",
+    (c.marks || []).map((m) => `<span class="tag ${esc(m)}">${esc(m)}</span>`).join(""),
+    c.nature ? `<span class="tag ${esc(c.nature)}">${esc(c.nature)}</span>` : "",
+    c.number ? plink(c.number) : "",
+    c.activity ? `<span class="pill">${esc(c.activity)}</span>` : "",
+    c.date ? `<span class="mute">${esc(c.date)}</span>` : "",
+    c.maturity ? `<span class="tag">${esc(t(`mat-${c.maturity}`))}</span>` : "",
+    c.ready !== undefined ? `<span class="tag ${c.ready ? "ready" : ""}">${esc(t(c.ready ? "ready" : "notReady"))}</span>` : "",
+  ].filter(Boolean).join(" ");
+  const extra = [
+    c.lot ? t("lot", c.lot.current) : "",
+    c.reopened ? t("reopened", c.reopened) : "",
+    c.autoMerge ? t("autoMerge") : "",
+    c.decisions ? t("toDecide", c.decisions) : "",
+    c.questions ? t("toAnswer", c.questions) : "",
+    c.files ? t("files", c.files) : "",
+    c.code !== undefined ? t("codeDoc", c.code, c.doc) : "",
+  ].filter(Boolean).map(esc).join(" · ");
+  const body = !open ? "" : isDoc ? docHtml(c.id) : prKey ? `<div class="doc">${detailHtml(prKey)}</div>` : "";
+  return `<div class="kc ${kbVersion && c.version === kbVersion ? "hl" : ""}" data-key="${esc(c.id)}" data-doc="${isDoc ? "1" : ""}" data-pr="${esc(prKey)}" data-tag="${c.code !== undefined ? esc(c.id) : ""}">
+    <div>${rich(String(c.title).length > 160 && !open ? `${String(c.title).slice(0, 160)}…` : c.title)}</div>
+    <div>${meta}</div>${extra ? `<div class="mute">${extra}</div>` : ""}${body}</div>`;
+}
+RENDER.kb = () => {
+  const kb = data.board;
+  if (!kb) return;
+  const L = plabel(kb.forge);
+  const band = kb.targets.map((x) => {
+    const counts = {};
+    x.items.forEach((i) => { counts[i.stage] = (counts[i.stage] || 0) + 1; });
+    const present = STAGES.filter((k) => counts[k]);
+    return `<div class="card"><h3>${esc(t("versionTitle", x.version))} <span class="mute">· ${esc(t("versionDone", x.done, x.total))}${kb.lastRelease ? esc(t("since", kb.lastRelease)) : ""}</span></h3>
+      <div class="prog">${present.map((k) => `<div class="s-${k}" style="width:${(100 * counts[k]) / x.total}%"></div>`).join("")}</div>
+      <div class="mute">${present.map((k) => `<span class="dot s-${k}"></span>${counts[k]} ${esc(t(`stage-${k}`))}`).join(" &nbsp; ")}</div>
+      <details data-id="${esc(`band|${x.version}`)}"><summary class="mute">${esc(t("detail"))}</summary>${x.items.map((i) => `<div class="li"><span class="dot s-${esc(i.stage)}"></span>${i.order ? `${Number(i.order)}. ` : ""}${rich(i.title)} <span class="mute">— ${esc(t(`stage-${i.stage}`))}${i.number ? ` ${plink(i.number)}` : ""}</span></div>`).join("")}</details></div>`;
+  }).join("");
+  const versions = kb.targets.map((x) => x.version);
+  if (kbVersion && !versions.includes(kbVersion)) kbVersion = "";
+  const only = store.get("kb-only", "0") === "1" && kbVersion;
+  const select = versions.length ? `<select id="kbv"><option value="">${esc(t("versionAll"))}</option>${versions.map((v) => `<option ${v === kbVersion ? "selected" : ""} value="${esc(v)}">${esc(t("versionTitle", v))}</option>`).join("")}</select>
+    <label class="kinds"><input type="checkbox" id="kbonly" ${only ? "checked" : ""}> ${esc(t("versionOnly"))}</label>` : "";
+  const cols = COLS.map((k) => {
+    const list = (kb.cols[k] || []).filter((c) => !only || c.version === kbVersion || k === "publiees");
+    return `<details class="col" data-id="${esc(`col|${k}`)}" ${wide() || (COL_OPEN.has(k) && list.length) ? "open" : ""}><summary>${esc(t(`col-${k}`, L))} · ${list.length}</summary>${list.map(cardHtml).join("") || '<div class="mute">—</div>'}</details>`;
+  }).join("");
+  stable($("#kb"), `${missing(kb)}<div class="band">${band}</div>${select}<div class="board">${cols}</div><div class="mute" style="margin-top:8px">${esc(t("boardNote"))}</div>`);
+};
+$("#kb").addEventListener("change", (ev) => {
+  if (ev.target.id === "kbv") { kbVersion = ev.target.value; store.set("kb-version", kbVersion); }
+  if (ev.target.id === "kbonly") store.set("kb-only", ev.target.checked ? "1" : "0");
+  RENDER.kb();
+});
+clickable(".kc", $("#kb"), (k) => {
+  if (k.dataset.tag) { relOpen.add(k.dataset.tag); show("rel"); return; }
+  const id = k.dataset.key;
+  if (flip(kbOpen, id)) {
+    if (k.dataset.doc) loadFile(id, RENDER.kb);
+    else if (k.dataset.pr) openDetail(k.dataset.pr, RENDER.kb);
+  }
+  RENDER.kb();
+}, "a, .doc, input, select, label");
+
+const relOpen = new Set(["Unreleased"]);
+RENDER.rel = () => {
+  const rel = data.releases;
+  if (!rel) return;
+  const L = plabel(rel.forge);
+  stable($("#rel"), missing(rel) + rel.releases.map((r) => {
+    const open = relOpen.has(r.tag);
+    const nCode = r.prs.filter((p) => p.nature === "code").length;
+    return `<div class="card can" data-key="${esc(r.tag)}"><h3>${esc(r.tag === "Unreleased" ? t("unreleased") : r.tag)} ${r.latest ? `<span class="tag ready">${esc(t("latest"))}</span>` : ""}${r.prerelease ? `<span class="tag">${esc(t("pre"))}</span>` : ""}${r.tag !== "Unreleased" && !r.published ? `<span class="tag P2">${esc(t("tagOnly"))}</span>` : ""} <span class="mute">${open ? "▾" : "▸"}</span></h3>
+      <div class="mute">${esc(r.date ?? t("nextVersion"))} · ${esc(t("relMeta", L, nCode, r.prs.length - nCode, r.workstreams.length, tok(r.tokens)))}</div>
+      ${open ? `<div class="doc">
+        ${r.workstreams.length ? `<h4 class="mdh">${esc(t("relWs"))}</h4>${r.workstreams.map((w) => `<div class="li">• ${esc(w.name)} <span class="mute">${tok(w.tokens)}</span></div>`).join("")}` : ""}
+        ${r.prs.length ? `<h4 class="mdh">${esc(t("relPrs", L))}</h4>${r.prs.map((p) => `<div class="li">• <span class="tag ${esc(p.nature)}">${esc(p.nature)}</span>${plink(p.number)} ${rich(p.title)} <span class="mute">${esc(p.date)}</span></div>`).join("")}` : ""}
+        ${r.changelog ? `<h4 class="mdh">${esc(t("relChangelog"))}</h4>${md(r.changelog)}` : `<div class="mute">${esc(t("relNoChangelog"))}</div>`}
+      </div>` : ""}</div>`;
+  }).join(""));
+};
+clickable(".card[data-key]", $("#rel"), (c) => { flip(relOpen, c.dataset.key); RENDER.rel(); });
+
+const secs = (v) => (v >= 60 ? `${Math.floor(v / 60)} min ${String(v % 60).padStart(2, "0")} s` : `${v} s`);
+function trendCard(label, tr, fmt) {
+  if (!tr) return `<div class="card"><h3>${esc(label)}</h3><div class="mute">${esc(t("trendNone"))}</div></div>`;
+  const max = Math.max(tr.threshold, ...tr.history.map((p) => p.value));
+  const recent = tr.history.length - tr.points.length;
+  const verdict = t(tr.alert ? "trendAlert" : "trendOk", fmt(tr.mean), fmt(tr.threshold));
+  return `<div class="card ${tr.alert ? "warn" : ""}"><h3>${esc(label)}</h3>
+    <div class="${tr.alert ? "ko" : "mute"}">${tr.alert ? "⚠ " : ""}${esc(verdict)}</div>
+    ${tr.history.map((p, i) => `<div class="row" style="border:0"><span class="mute">${esc(p.label)}</span><span class="d">${esc(fmt(p.value))}</span></div>${bar(p.value, max, `${p.value > tr.threshold ? "over" : ""} ${i < recent ? "old" : ""}`)}`).join("")}</div>`;
+}
+RENDER.me = () => {
+  const m = data.measures;
+  if (!m) return;
+  const runs = (data.ci?.targets ?? []).flatMap((x) => x.workflows.filter((w) => w.status === "completed").map((w) => ({ branch: x.branch, ...w })));
+  const last = runs.length ? `<h2>${esc(t("lastRuns"))}</h2>${runs.map((w) => `<div class="card"><h3><span class="${cls(w)}">${ICON[cls(w)]}</span> ${esc(w.name)} <span class="mute">${esc(w.branch)}</span></h3>${w.jobs.map((j) => `<div class="row"><span>${esc(j.name)}</span><span class="d">${dur(j.started, j.completed)}</span></div>`).join("")}</div>`).join("")}` : "";
+  stable($("#me"), `${missing(m)}<div class="band">${trendCard(t("trendCi"), m.ci, secs)}${trendCard(t("trendCache"), m.cache, tok)}</div><div class="mute">${esc(t("trendNote"))}</div>${last}`);
+};
+
+const stateDocs = () => { renderHeader(); RENDER.briefs(); RENDER.notes(); RENDER.int(); };
+function show(name) {
+  tab = name;
+  store.set("tab", name);
+  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === name));
+  document.querySelectorAll("main section").forEach((s) => s.classList.toggle("on", s.id === name));
+  RENDER[name]?.();
+  document.querySelector("#tabs button.on")?.scrollIntoView({ inline: "center", block: "nearest" });
+  tick();
+}
+$("#tabs").innerHTML = TABS.map((k) => `<button data-t="${k}">${esc(t(`tab-${k}`))}</button>`).join("");
+$("#tabs").addEventListener("click", (ev) => { const b = ev.target.closest("button"); if (b) show(b.dataset.t); });
+$("#q").placeholder = t("qSearch");
+
+// Un onglet ouvert pendant une lecture relance un tour à sa fin : sinon il resterait vide jusqu'au tour suivant.
+let busy = false, again = false;
+async function tick() {
+  if (busy) { again = true; return; }
+  busy = true;
+  again = false;
+  denied = false;
+  let failed = false;
+  const load = async (name) => {
+    try { data[name] = await getJson(`/api/${name}`); } catch { failed = true; }
+  };
+  await load("docs");
+  if (data.docs) stateDocs();
+  if (!data.contracts) await load("contracts");
+  if (data.contracts?.contracts) titles = Object.fromEntries(data.contracts.contracts.map((c) => [c.id, c.title]));
+  await Promise.all(FEEDS[tab].map(load));
+  RENDER[tab]?.();
+  $("#upd").textContent = denied ? t("denied") : failed ? t("offline") : t("updated", new Date().toLocaleTimeString(LOCALE));
+  busy = false;
+  if (again) tick();
+}
+show(tab);
+setInterval(() => { if (!document.hidden) tick(); }, 10000);
+// Les durées d'une CI en cours avancent entre deux lectures.
+setInterval(() => { if (!document.hidden && tab === "ci") RENDER.ci(); }, 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
+</script>
+</body>
 </html>

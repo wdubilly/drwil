@@ -126,3 +126,38 @@ export function summarizeUsage(usage: string, tagLines: string) {
   const workstreams = [...byName.values()].map((w) => ({ ...w, version: tags.find((t) => t.date >= w.date)?.tag ?? null }));
   return { workstreams: workstreams.sort((a, b) => b.date.localeCompare(a.date)), tags };
 }
+
+// Seuils d'alerte de QUA-198 : un indicateur, jamais bloquant (réévalué au fil des relevés).
+const THRESHOLDS = { ci: 235, cache: 212500 };
+const TREND_WINDOW = 5;
+const HISTORY_SHOWN = 30;
+const CI_LINE = /^- \*\*Durée de CI \(job checks\)\*\*\s*:\s*(?:(\d+)\s*m\s*(\d+)|(\d+)\s*s)\b(.*)$/i;
+type Reading = { label: string; value: number };
+
+function ciReadings(journal: string): Reading[] {
+  let date = "";
+  const out: Reading[] = [];
+  for (const line of journal.split(/\r?\n/)) {
+    const day = /^## (\d{4}-\d{2}-\d{2})/.exec(line);
+    const m = CI_LINE.exec(line);
+    if (day) date = day[1];
+    else if (m && /hooks inchangés|hooks unchanged/i.test(m[4]))
+      out.push({ label: date, value: m[3] ? Number(m[3]) : Number(m[1]) * 60 + Number(m[2]) });
+  }
+  return out;
+}
+
+function trend(readings: Reading[], threshold: number) {
+  const points = readings.slice(-TREND_WINDOW);
+  if (!points.length) return null;
+  const mean = Math.round(points.reduce((sum, p) => sum + p.value, 0) / points.length);
+  return { points, mean, threshold, alert: mean > threshold, history: readings.slice(-HISTORY_SHOWN) };
+}
+
+/** Mesures de la CI et du contexte, avec la tendance et le seuil de chacune ; null : aucun relevé. */
+export function measures(usage: string, journal: string) {
+  const cache = usageRows(usage)
+    .filter((r) => r.requests > 0 && r.cache_read > 0)
+    .map((r) => ({ label: r.workstream, value: Math.round(r.cache_read / r.requests) }));
+  return { ci: trend(ciReadings(journal), THRESHOLDS.ci), cache: trend(cache, THRESHOLDS.cache) };
+}
