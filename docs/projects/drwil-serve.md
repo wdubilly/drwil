@@ -76,7 +76,7 @@ files:
 
 Le demandeur suit ses chantiers avec un prototype personnel, `drwil-vue` (`~/outils/drwil-vue`), et veut l'offrir à
 tout adoptant : le lancer depuis le chat, recevoir le lien à l'ouverture d'une session, et le consulter d'abord sur
-téléphone. Le tableau de bord statique (`drwil-progress`) est remplacé.
+téléphone. Le retrait du tableau de bord statique (`drwil-progress`) est reporté (`docs/intentions/retrait-de-drwil-progress.md`).
 
 Écarts relevés le 2026-11-08 entre le prototype et un usage générique :
 
@@ -113,18 +113,11 @@ téléphone. Le tableau de bord statique (`drwil-progress`) est remplacé.
   l'accès au téléphone ; avec Tailscale, le lien donné est celui du réseau privé — contrat `QUA-278`
 - Le démarrage automatique est proposé à l'installation et n'est jamais activé sans réponse de l'humain ; il n'écoute
   que sur `127.0.0.1` — contrat `QUA-279`
-- `drwil-progress` et le module `optional/dashboard` sont retirés ; `drwil serve` montre tout ce qu'ils montraient,
-  tendances de QUA-198 comprises ; un projet déjà équipé est migré par la mise à jour, sans fichier orphelin — contrat
-  à créer, QUA-198 modifié
+- `drwil serve` montre tout ce que montraient `drwil-progress` et le module `optional/dashboard`, tendances de QUA-198
+  comprises — QUA-276 ; leur retrait est reporté à `docs/intentions/retrait-de-drwil-progress.md`.
 
 ## Contrats modifiés
 
-- QUA-198 (« Le tableau de bord montre la tendance de la durée de la CI et du cache lu par requête ») : la règle, le
-  périmètre, la source de vérité et la preuve passent de `.githooks/dashboard*.mjs` et `optional/dashboard` à
-  `drwil serve` ; les seuils et l'alerte non bloquante ne changent pas. Validé par le demandeur le 2026-11-08.
-- `.githooks/dashboard.mjs` — retiré au lot 5, remplacé par `drwil serve` (validé par le demandeur le 2026-11-08)
-- `.githooks/dashboard-read.mjs` — retiré au lot 5, ses lectures portées dans `packages/drwil/src/serve-read.ts` (validé par le demandeur le 2026-11-08)
-- `.githooks/dashboard-texts.mjs` — retiré au lot 5, ses textes portés dans `packages/drwil/src/serve-texts.ts` (validé par le demandeur le 2026-11-08)
 - `.githooks/check-kit-size.mjs` — nouvelle sorte « réglages », plafond 250 lignes, pour les seuls fichiers de réglages des outils (`.claude/settings.json`, `.gemini/settings.json`) ; les autres plafonds ne changent pas (validé par le demandeur le 2026-11-08)
 - QUA-157 (« La taille de chaque fichier que le kit installe est surveillée ») : les fichiers de réglages des outils (`.claude/settings.json`, `.gemini/settings.json`) ont leur propre plafond, 250 lignes, au lieu des 200 du code et des hooks ; les autres plafonds ne changent pas. Validé par le demandeur le 2026-11-08.
 
@@ -134,6 +127,7 @@ téléphone. Le tableau de bord statique (`drwil-progress`) est remplacé.
 - Tout geste humain depuis la page : lancer un chantier, attester, verdict de recette.
 - Chat web intégré : intention distincte.
 - Ouverture automatique du navigateur sur l'ordinateur.
+- Le retrait de `drwil-progress`, sa migration et le passage de QUA-198 sur `drwil serve` : `docs/intentions/retrait-de-drwil-progress.md`.
 - Le reste de l'accueil de session (`docs/intentions/accueil-drwil-a-l-ouverture.md`) : ce chantier n'y prend que la
   ligne du lien.
 - Vue de relecture d'une PR (`docs/intentions/vue-de-relecture.md`) : intention à part, qui pourra s'y greffer.
@@ -166,7 +160,8 @@ Toutes du demandeur, le 2026-11-08 :
 - Au démarrage d'une session : démarrer le serveur s'il ne tourne pas et donner le lien dans le chat, sans ouvrir de
   navigateur.
 - Démarrage automatique proposé à l'installation, jamais activé par défaut.
-- `drwil-progress` est retiré, une fois `drwil serve` à parité.
+- `drwil-progress` est retiré, une fois `drwil serve` à parité : reporté à un chantier à part, sur décision du demandeur
+  le 2026-11-08 (PR plus petite). Seule la parité reste dans ce chantier.
 - Sondages cliquables hors de la première version : lecture seule.
 - Liens vers les PR et MR de la page : par une redirection côté serveur ; aucune réponse de l'API ne contient d'adresse de
   forge (QUA-271).
@@ -188,12 +183,12 @@ Aucun.
 - **Lot 4 — chat et accueil** [IA] : skill `/drwil-serve`, hook d'accueil par `systemMessage`, question à l'installation,
   publication par `tailscale serve`, parité des outils. Critère de sortie : aucun octet injecté au modèle prouvé par
   test, comportement de chaque outil relevé.
-- **Lot 5 — retrait de `drwil-progress`** [IA] : module, skill, recette et références retirés, migration d'un projet
-  équipé, QUA-198 déplacé. Critère de sortie : `GOVERNANCE: PASS`, projet équipé migré sans orphelin.
+- **Lot 5 — parité avec le tableau de bord** [IA] : audits, index, catalogue, statut des fiches et modèles dans la page.
+  Critère de sortie : `GOVERNANCE: PASS`, tout ce que montrait le tableau de bord est visible.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-08) : lots 1 à 4 faits ; reste le lot 5 (retrait de `drwil-progress`). Lot 1 : `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
+- **Dernier état** (2026-11-08) : lots 1 à 5 faits (le lot 5 porte la parité, le retrait est reporté) ; reste à vérifier et clore. Lot 1 : `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
   `packages/drwil/src/serve-auth.ts`, `packages/drwil/src/serve-read.ts`, `packages/drwil/src/serve-texts.ts`, `packages/drwil/src/serve-journal.ts`), contrats QUA-269 à QUA-272, tests `packages/drwil/test/serve.test.mjs`.
 - **Choix du lot 1, à garder** :
   - Le jeton vient de la seule variable `DRWIL_SERVE_TOKEN` (32 caractères au moins), jamais d'une option. L'entrée par
@@ -228,9 +223,7 @@ Aucun.
   - Cursor : documentation seule (`sessionStart` ne connaît que `additional_context`, lu par le modèle, `user_message` n'est pas affiché) : aucun canal, aucun hook livré, `AGENTS.md` donne la commande.
 - **Reste à essayer par un humain** : `tailscale serve` réel. Le poste de développement n'a pas HTTPS activé sur son réseau (`CertDomains` vide) : le chemin publié n'est prouvé que par un binaire factice, dont l'hypothèse que Tailscale transmet l'en-tête `Host` d'origine (les deux formes, avec et sans port, sont admises).
 - **Port corrigé au lot 4** : un projet dont l'empreinte tombait sur 5060 ou 5061 recevait un lien que les navigateurs refusent (« bad port »), ce qui a fait échouer une fois un test de QUA-277 (accueil de session sans octet au modèle). La plage du port propre au projet est réduite à 4317–5016, essais compris sous 5060. Le port d'un projet change donc d'une version à l'autre, sans conséquence avant la première sortie.
-- **Lot 5, parité faite** (2026-11-08), retrait pas commencé : `packages/drwil/src/serve-views.ts` porte les routes documentaires (`/api/docs`, `/api/contracts`, `/api/usage`, `/api/measures`, `/api/audits`) et `parseContracts` (titres `## ID` et lignes de tableau). Ajouts : onglet Audits (QUA-275 si absent, avertissement au-delà de 30 jours, ligne nominative écartée, QUA-271), cases de l'index, statut des fiches, autres fichiers du dossier des fiches, catalogue, modèles par chantier ; une ligne de consommation sans date reste comptée. Comparaison réelle sur ce dépôt, tableau de bord contre API : 84 cases, 11 fiches (8 + 3), 280 contrats et catalogue sans écart, 76 chantiers. Mesure dans Chromium à 360 px, les onze onglets, tout déplié : `scrollWidth` 360, aucune erreur de script.
-- **Lot 5, blocage du retrait** : la migration ne tient pas dans `packages/drwil/src/migration-table.ts` seul. Ajouter les fichiers à `OLD_KIT_FILES` ferait passer tout projet équipé pour un projet à l'ancien format (`oldFormat`) et réécrirait sa prose ; `removeObsolete` ne retire jamais une recette (`isProtected`, QUA-027 mise à jour sûre d'une version à la suivante) ; `.githooks/dashboard*.mjs`, copiés à la main, ne sont pas au manifeste. Il faut `packages/drwil/src/migration.ts` au bloc `scope` et trois décisions du demandeur : voir le rapport de la session du lot 5.
+- **Lot 5, parité faite** (2026-11-08) : `packages/drwil/src/serve-views.ts` porte les routes documentaires (`/api/docs`, `/api/contracts`, `/api/usage`, `/api/measures`, `/api/audits`) et `parseContracts` (titres `## ID` et lignes de tableau). Ajouts : onglet Audits (QUA-275 si absent, avertissement au-delà de 30 jours, ligne nominative écartée, QUA-271), cases de l'index, statut des fiches, autres fichiers du dossier des fiches, catalogue, modèles par chantier ; une ligne de consommation sans date reste comptée. Comparaison réelle sur ce dépôt, tableau de bord contre API : 84 cases, 11 fiches (8 + 3), 280 contrats et catalogue sans écart, 76 chantiers. Mesure dans Chromium à 360 px, les onze onglets, tout déplié : `scrollWidth` 360, aucune erreur de script.
+- **Retrait reporté** (2026-11-08, décision du demandeur) : le constat et les décisions déjà prises sont dans `docs/intentions/retrait-de-drwil-progress.md`.
 - **Pour les lots suivants** :
-  - Lot 5 à reprendre : retrait de `drwil-progress` (module `optional/dashboard`, skill, recette et références), migration d'un projet équipé, QUA-198 (tendances de la CI et du cache au tableau de bord) déplacé ; critère de sortie `GOVERNANCE: PASS` et projet équipé migré sans orphelin. Les `.githooks/dashboard*.mjs` et `.githooks/check-kit-size.mjs` sont déclarés aux « Contrats modifiés » : à garder ainsi (QUA-113, rejeu par la branche principale ; QUA-137, hook non déclaré).
-  - Lot 5 : `/drwil-progress` reste au menu de `.claude/skills/drwil/SKILL.md`, à côté de `/drwil-serve` : à retirer avec le reste.
   - `packages/drwil/src/cli-serve.ts` est à 200 lignes, `packages/drwil/src/serve.ts` à 199 (QUA-001, fichier de code plafonné) : tout ajout y demande un nouveau fichier, à déclarer au bloc `scope`.
