@@ -34,6 +34,7 @@ test("QUA-033 : le verdict d'un contrat ne regarde que les tests qui portent son
 test("QUA-033 : aucun test à l'ID, ou un fichier qui n'a rien joué, n'est jamais un succès", () => {
   assert.equal(verdict("QUA-903", ["f.test.mjs"], lire([{ nom: "QUA-901 : x", ok: true }])).ok, false);
   assert.equal(verdict("QUA-901", ["f.test.mjs"], lire([], 1)).ok, false);
+  assert.equal(verdict("QUA-.*", ["f.test.mjs"], lire([{ nom: "QUA-901 : x", ok: true }])).ok, false);
   assert.equal(verdict(null, ["f.test.mjs"], lire([{ nom: "sans ID", ok: false }], 1)).ok, false);
   assert.equal(verdict(null, ["f.test.mjs"], lire([{ nom: "sans ID", ok: true }])).ok, true);
 });

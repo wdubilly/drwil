@@ -96,10 +96,11 @@ function resultat(fichier, passe) {
 export function verdict(id, fichiers, lire) {
   const lignes = [];
   let concernes = 0;
-  const motif = id ? new RegExp(`^${id}(?![\\w-])`) : null;
+  // Sans RegExp construite depuis l'ID : une valeur de la ligne de commande n'est jamais un motif.
+  const porte = (nom) => nom.startsWith(id) && !/[\w-]/.test(nom.charAt(id.length));
   for (const fichier of fichiers) {
     const r = lire(fichier);
-    const choisis = motif ? r.tests.filter((t) => motif.test(t.nom)) : r.tests;
+    const choisis = id ? r.tests.filter((t) => porte(t.nom)) : r.tests;
     concernes += choisis.length;
     const echecs = choisis.filter((t) => !t.ok);
     const avant = lignes.length;
