@@ -1,7 +1,7 @@
 # Preuve de clôture — ci-plus-rapide
 
 **Clos le** : 2026-11-08
-**Commit vérifié** : `ab8f10818a` — verdict `drwil verify` : PASS
+**Commit vérifié** : `4e56fd3a4d` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:64c43331bc391d3d`, acceptés par l'humain au lancement le 2026-11-08
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :

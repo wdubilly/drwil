@@ -4216,6 +4216,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Bloc scope élargi** : `.github/workflows/banc.yml` et `outils/banc.test.mjs` (limite hors cadre « Traiter maintenant »), `outils/tests-par-fichier.mjs` et son test, les gabarits de `.githooks/engine.mjs`, `.githooks/run-checks.mjs` et `.githooks/base-checks.mjs`, `.githooks/engine.test.mjs`, `docs/architecture.md`.
 - **Intention d'origine** : `docs/intentions/suivi-ci-et-contexte.md`, mise à jour (reste ouverte : durées en CI à relever, `checks-self-test` contre `couverture-hooks`, mise à jour de la configuration des projets existants).
 - **Limites connues** : GitLab ne saute pas le rejeu d'un push sur la branche principale (rien ne permet de le prouver ici) ; `packages/drwil/test/kit.test.mjs` (~200 s) est joué d'un bloc et borne la passe ; gain en CI non mesuré.
+- **Réouverture** (2026-11-08, CI rouge de la PR #380) : CodeQL signalait `js/regex-injection` dans `outils/tests-par-fichier.mjs` (l'ID de contrat compilé en expression régulière) ; l'ID est comparé par préfixe, un test couvre un ID à métacaractères.
 - **Clôturé par** : la branche `workstream/ci-plus-rapide`.
 
 - **Preuve de clôture** : `docs/preuves/ci-plus-rapide.md`.
