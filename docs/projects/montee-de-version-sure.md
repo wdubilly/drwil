@@ -12,6 +12,9 @@ files:
   - packages/drwil/src/render.ts
   - packages/drwil/src/cli-install.ts
   - packages/drwil/src/cli-texts.ts
+  - packages/drwil/src/ci-zone.ts
+  - packages/drwil/src/index.ts
+  - packages/drwil/src/config.ts
   - packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml
   - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
   - .github/workflows/ia-first.yml
