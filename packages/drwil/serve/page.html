@@ -204,7 +204,7 @@ function stable(el, html) {
     }
   }
   el._html = html;
-  el.innerHTML = html;
+  el.replaceChildren(...new DOMParser().parseFromString(html, "text/html").body.childNodes);
   for (const d of el.querySelectorAll("details[data-id]")) if (userOpen.has(d.dataset.id)) d.open = userOpen.get(d.dataset.id);
   if (anchor) {
     const n = [...el.querySelectorAll("[data-key],[data-id],h2")].find((x) => (x.dataset.key || x.dataset.id || `h2:${x.textContent}`) === anchor.key);

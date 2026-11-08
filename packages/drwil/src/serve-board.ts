@@ -56,7 +56,7 @@ export function createBoard(reader: Reader, forge: ForgeReader) {
 
   /** Repères de version retirés de l'index depuis la dernière release : les éléments faits ou abandonnés. */
   async function pastTargets(version: string, since: string) {
-    const pattern = `-G\\(${version.replace(/\./g, "\\.")}`;
+    const pattern = `-G\\(${version.replace(/[\\.]/g, "\\$&")}`;
     const out = await reader.git("log", "-p", "--format=", `--since=${since}`, pattern, "--", dirs.index);
     const removed = out
       .split("\n")

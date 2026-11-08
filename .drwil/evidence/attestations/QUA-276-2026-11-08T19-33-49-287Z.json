@@ -1,0 +1,28 @@
+{
+  "version": 4,
+  "contract": "QUA-276",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-08T19:33:49.287Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "82cffdb2d940476dbef17fc63bae5860d183e6473b8efd296163681a15ccabae",
+  "proof": {
+    "tests-qua-276": "0806d1c9b025566712ad4a3f612636e973528fdf8be0777980675b23f36de8ff"
+  },
+  "covers": [
+    "packages/drwil/serve/page.html"
+  ],
+  "coverage": {
+    "packages/drwil/serve/page.html": "0c2ac4894d7b855ba7e6c5bab9044d5a6d6672c029ae08e47f04c35eb57724b1"
+  },
+  "commit": "308ec3984f61288fd2130c6303a11ba79a4e36c7",
+  "automated": [
+    {
+      "id": "tests-qua-276",
+      "status": "ok"
+    }
+  ]
+}
