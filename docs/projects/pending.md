@@ -127,9 +127,6 @@ d'un outil) la dit dans son statut.
   le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
 - [ ] [IA] [P2] (0.11.1) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
   signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
-- [ ] [décision] [P0] Une CI plus rapide, pour le dépôt et pour l'adoptant : rejeu QUA-113 avec reprise,
-  push sur `master`, `run-checks`, gitleaks (cadré le 2026-11-08, à affiner) —
-  `docs/projects/ci-plus-rapide.md`.
 - [ ] [décision] [P2] Retirer `drwil-progress`, maintenant que `drwil serve` est à parité (notée le 2026-11-08) —
   `docs/intentions/retrait-de-drwil-progress.md`.
 - [ ] [décision] [P2] Documenter `drwil serve` dans le README du paquet (notée le 2026-11-08) —
@@ -138,6 +135,8 @@ d'un outil) la dit dans son statut.
   2026-11-08) — `docs/intentions/forge-detectee-sur-l-hote.md`.
 - [ ] [décision] [P3] Reporter dans le document de compatibilité ce que chaque outil montre de l'accueil de session
   (notée le 2026-11-08) — `docs/intentions/releve-accueil-par-outil.md`.
+- [ ] [IA] [P2] `drwil serve`, une vue du projet en direct pour tout adoptant : mobile first, GitHub et GitLab,
+  lancée depuis le chat, remplace `drwil-progress` (cadré le 2026-11-08) — `docs/projects/drwil-serve.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :

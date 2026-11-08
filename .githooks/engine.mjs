@@ -4,6 +4,7 @@
 // "ok" / "fail"; "not-run": it should have run but could not (missing tool, deferred at commit time), never a success (QUA-013);
 // "not-applicable": excluded by design in this context (e.g. QUA-017 in CI).
 import { spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { existsSync, readdirSync } from "node:fs";
 import { availableParallelism, homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -41,6 +42,8 @@ function findGitleaks() {
  */
 export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI), withCiChecks = false } = {}) {
   const T = texts(cfg.lang);
+  // Identifies this pass, for the checks sharing a result inside it; never inherited from a parent pass.
+  env.DRWIL_PASS_ID = randomUUID();
   const full = (cfg.mode ?? "full") === "full";
   const pass = createPass(root, env);
   const { finish } = pass;
@@ -88,7 +91,9 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     // These tests try drwil's code: an equipped project does not receive them.
     if (!tests.length) return { status: "not-applicable", detail: T.noTests };
     if (docsOnly) return { status: "not-run", detail: T.docsOnly };
-    return { args: ["--test", ...tests.map((f) => join(".githooks", f))] };
+    const files = tests.map((f) => join(".githooks", f));
+    const shared = join("outils", "tests-par-fichier.mjs"); // drwil's repository: one run per file and pass, shared with the contracts' checks (QUA-033)
+    return { args: existsSync(join(root, shared)) ? [shared, "--tous", ...files] : ["--test", ...files] };
   };
   add(
     "checks-self-test",

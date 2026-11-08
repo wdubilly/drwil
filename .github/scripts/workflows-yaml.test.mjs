@@ -114,11 +114,46 @@ for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templat
     );
     assert.equal(etapes[sauve].with.path, VERDICTS);
     assert.match(etapes[sauve].with.key, /^run-checks-verdicts-\$\{\{ github\.sha \}\}$/);
-    // Aucun autre job ni aucune autre étape n'écrit de cache.
-    const sauvegardes = Object.values(ci.jobs).flatMap((j) =>
-      (j.steps ?? []).filter((e) => /^actions\/cache(\/save)?@/.test(e.uses ?? "")),
+    // Aucun autre job ni aucune autre étape n'écrit les verdicts ; seule l'archive de gitleaks peut être cachée par une PR,
+    // et sa somme est vérifiée à chaque passe : un cache empoisonné échoue, il ne valide rien.
+    const ecritures = Object.values(ci.jobs).flatMap((j) => (j.steps ?? []).filter((e) => /^actions\/cache(\/save)?@/.test(e.uses ?? "")));
+    assert.equal(ecritures.filter((e) => !String(e.with.key).startsWith("gitleaks-8.21.2-")).length, 1);
+  });
+
+for (const [fichier, preuve] of [
+  [".github/workflows/ia-first.yml", "arbre-prouve"],
+  ["packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml", "proven-tree"],
+])
+  test(`QUA-250 : ${fichier} saute les contrôles d'un push sur la branche principale dont l'arbre est celui que la dernière CI verte d'une PR a prouvé, et seule une CI de PR pose cette preuve`, () => {
+    const ci = parseAllDocuments(readFileSync(join(RACINE, fichier), "utf8"))[0].toJS();
+    const etapes = ci.jobs.checks.steps;
+    const lit = etapes.findIndex((e) => /^(prouve|proven)$/.test(e.id ?? ""));
+    const passe = etapes.findIndex((e) => e.run === "node .githooks/run-checks.mjs");
+    assert.ok(lit >= 0 && lit < passe, `${fichier} : preuve lue avant la passe`);
+    // Lue sur un push de la branche principale seulement, par l'empreinte de l'arbre, dans le run de PR vert, jamais un autre.
+    assert.match(
+      etapes[lit].if,
+      /^github\.event_name == 'push' && github\.ref == format\('refs\/heads\/\{0\}', github\.event\.repository\.default_branch\)$/,
     );
-    assert.equal(sauvegardes.length, 1);
+    assert.ok(etapes[lit].run.includes("git rev-parse 'HEAD^{tree}'"));
+    assert.ok(etapes[lit].run.includes("event=pull_request") && etapes[lit].run.includes('select(.conclusion == "success")'));
+    assert.ok(etapes[lit].run.includes(`--name ${preuve}`));
+    assert.match(etapes[lit].run, /= "\$(arbre|tree)" \]; then/);
+    // Aucune preuve lue : tout est rejoué ; sauté, la passe, l'installation et gitleaks ne tournent pas.
+    const saut = new RegExp(`steps\\.${etapes[lit].id}\\.outputs\\.(saute|skip) != 'true'`);
+    assert.match(etapes[passe].if, saut);
+    for (const e of etapes
+      .slice(lit + 1, passe + 1)
+      .filter((x) => /npm ci|gitleaks|run-checks|setup-node/.test(`${x.run ?? ""}${x.uses ?? ""}${x.name ?? ""}`)))
+      assert.match(e.if ?? "", saut, `${fichier} : ${e.name ?? e.run ?? e.uses} doit être sauté`);
+    // La preuve : arbre posé par une PR, en dernière étape du job, donc seulement si tout a réussi.
+    const pose = etapes.findLastIndex((e) => /^actions\/upload-artifact@/.test(e.uses ?? ""));
+    assert.equal(etapes[pose].with.name, preuve);
+    assert.equal(etapes[pose].if, "github.event_name == 'pull_request'");
+    assert.ok(etapes[pose - 1].run.includes("git rev-parse 'HEAD^{tree}'"));
+    const apres = etapes.slice(pose + 1).filter((e) => !e.if?.includes("failure()"));
+    assert.deepEqual(apres, [], "aucune étape de contrôle après la pose de la preuve");
+    assert.ok(ci.jobs.checks.permissions === undefined || ci.jobs.checks.permissions.actions === "read", "lecture des artefacts autorisée");
   });
 
 test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge les verdicts de la branche principale et demande leur reprise ; seule la branche principale les garde", () => {
@@ -146,8 +181,26 @@ test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge
     apres,
     /if \[ -n "\$CI_COMMIT_TAG" \] \|\| \[ "\$CI_COMMIT_BRANCH" != "\$CI_DEFAULT_BRANCH" \]; then\n\s*rm -f \.drwil\/evidence\/run-checks-verdicts\.json/,
   );
-  // Pas de cache GitLab : une merge request pourrait l'écrire, ou ne pas le lire (caches protégés séparés).
-  assert.ok(!JSON.stringify(ci).includes('"cache"'));
+  // Pas de cache GitLab des verdicts : une merge request pourrait l'écrire, ou ne pas le lire (caches protégés séparés) ; seule l'archive de gitleaks est cachée.
+  assert.deepEqual(ci.checks.cache.paths, [".drwil/evidence/gitleaks.tar.gz"]);
+});
+
+test("QUA-269 : les trois CI retentent le téléchargement de gitleaks (erreur HTTP comprise), cachent l'archive sous sa version épinglée et la vérifient à chaque passe", () => {
+  const lire = (f) => readFileSync(join(RACINE, f), "utf8");
+  const ci = {
+    depot: lire(".github/workflows/ia-first.yml"),
+    github: lire("packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml"),
+    gitlab: lire("packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml"),
+  };
+  for (const [nom, texte] of Object.entries(ci)) {
+    const curls = texte.split("\n").filter((l) => l.includes("curl") && l.includes("gitleaks"));
+    assert.ok(curls.length >= 1, `${nom} : téléchargement de gitleaks introuvable`);
+    // L'étape du dépôt est comparée mot pour mot à celle du banc (QUA-109) : ses tentatives passent par ~/.curlrc.
+    if (nom === "depot") assert.match(texte, /printf .*'retry = 5' 'retry-all-errors'.*> ~\/\.curlrc/);
+    else for (const l of curls) assert.match(l, /--retry 5 --retry-all-errors/, `${nom} : ${l.trim()}`);
+    assert.match(texte, /gitleaks-8\.21\.2-/, `${nom} : cache de l'archive sous sa version épinglée`);
+    assert.match(texte, /sha256sum -c -|shasum -a 256 -c -/, `${nom} : somme vérifiée`);
+  }
 });
 
 test("QUA-252 : la protection de la branche principale n'exige plus qu'une PR soit à jour avec elle, et la CI vérifie que la forge tient le ruleset versionné", () => {

@@ -6,6 +6,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
+      actions: read
     steps:
       # QUA-263: a push on a branch whose pull request is open would replay, on the same commit, what the
       # pull request plays: its steps are skipped, and the skip is said; the pull request keeps its own run.
@@ -29,18 +30,54 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - if: steps.pr.outputs.skip != 'true'
+      # A push on the main branch whose tree (`git rev-parse HEAD^{tree}`) is the one the last green pull request CI
+      # played does not replay the checks, and says so. The proof is that CI's `proven-tree` artifact, read by this
+      # push only. Anything missing (no pull request, CI not green, artifact absent or expired, different tree: a
+      # pull request not up to date) replays everything. The job still reports "success" under its required name.
+      - name: Is the tree already proven by the last green pull request CI?
+        id: proven
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          skip=false
+          tree=$(git rev-parse 'HEAD^{tree}')
+          for head in $(gh api "repos/$REPO/commits/$COMMIT/pulls" --jq '.[].head.sha' 2>/dev/null); do
+            run=$(gh api "repos/$REPO/actions/runs?head_sha=$head&event=pull_request&per_page=100" --jq '[.workflow_runs[] | select(.path | startswith(".github/workflows/ia-first.yml"))] | sort_by(.created_at) | last | select(.conclusion == "success") | .id' 2>/dev/null) || continue
+            [ -n "$run" ] || continue
+            rm -rf "$RUNNER_TEMP/proof"
+            gh run download "$run" --repo "$REPO" --name proven-tree --dir "$RUNNER_TEMP/proof" 2>/dev/null || continue
+            if [ "$(cat "$RUNNER_TEMP/proof/proven-tree.txt" 2>/dev/null)" = "$tree" ]; then
+              skip=true
+              echo "::notice::Checks not replayed: tree $tree is the one the green pull request CI (run $run) proved."
+              break
+            fi
+          done
+          [ "$skip" = true ] || echo "Tree not proven by a green pull request CI: everything is replayed."
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+      - if: steps.pr.outputs.skip != 'true' && steps.proven.outputs.skip != 'true'
         uses: actions/setup-node@v7
         with:
           node-version: 24
       # Without gitleaks the secrets check is "not run", which fails run-checks in CI (QUA-013).
       # Pinned version, archive checked against its published sum; installed where the engine looks (~/.local/bin).
+      # The download retries a transient error (a 504 included); the archive is cached under its pinned version and
+      # checked on every pass, restored or not.
+      - name: Restore the gitleaks archive
+        if: steps.pr.outputs.skip != 'true' && steps.proven.outputs.skip != 'true'
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/gitleaks.tar.gz
+          key: gitleaks-8.21.2-linux-x64
       - name: Install gitleaks 8.21.2
-        if: steps.pr.outputs.skip != 'true'
+        if: steps.pr.outputs.skip != 'true' && steps.proven.outputs.skip != 'true'
         run: |
-          curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
-          echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | sha256sum -c -
-          mkdir -p ~/.local/bin && tar -xzf gitleaks.tar.gz -C ~/.local/bin gitleaks && rm gitleaks.tar.gz
+          a="$RUNNER_TEMP/gitleaks.tar.gz"
+          [ -s "$a" ] || curl -sSfL --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 120 -o "$a" https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
+          echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | (cd "$RUNNER_TEMP" && sha256sum -c -)
+          mkdir -p ~/.local/bin && tar -xzf "$a" -C ~/.local/bin gitleaks
           ~/.local/bin/gitleaks version
       # QUA-250: on a pull request, the verdicts of the main branch's last CI are restored and
       # run-checks reuses each "ok" check whose fingerprint (files and command) is unchanged; only a
@@ -55,7 +92,7 @@ jobs:
           restore-keys: run-checks-verdicts-
       # GitHub sets the variable CI: run-checks also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), whose
       # only proof is this run on the pull request (QUA-262).
-      - if: steps.pr.outputs.skip != 'true'
+      - if: steps.pr.outputs.skip != 'true' && steps.proven.outputs.skip != 'true'
         run: node .githooks/run-checks.mjs
         env:
           DRWIL_CI_REUSE: ${{ github.event_name == 'pull_request' && '1' || '' }}
@@ -81,6 +118,16 @@ jobs:
           else
             node .githooks/base-checks.mjs --base "$base"
           fi
+      # Read by the push on the main branch (step "Is the tree already proven…"): last, so only if every step of
+      # the job succeeded, with the exact tree this CI played.
+      - name: Record the tree proven by this CI
+        if: github.event_name == 'pull_request'
+        run: git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/proven-tree.txt"
+      - if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: proven-tree
+          path: ${{ runner.temp }}/proven-tree.txt
   # No branch protection is possible on a private repository on the free plan
   # (GitHub.com's "Merge" button stays unconditional): only an after-the-fact
   # alert is possible. Triggers only on a push to the main branch (not on
