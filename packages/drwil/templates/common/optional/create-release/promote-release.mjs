@@ -7,13 +7,14 @@
 // never a commit on the current or the main branch (QUA-017), and a failure there never undoes the
 // published tag and release (QUA-080). The final release becomes `releases/latest`, which never shows
 // a pre-release (QUA-055). `--dry-run` shows what the promotion would do, note included, without
-// publishing anything.
+// publishing anything. With `release.requiredOs` set, the candidate's commit must have its CI green
+// on every OS listed (QUA-268).
 // Usage: node .githooks/promote-release.mjs <vX.Y.Z-rc.N> [--dry-run]
 import { mkdtempSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { fill, readFingerprints, repoUrl, runner, sha256 } from "./acceptance-sheet.mjs";
+import { ciGate, fill, readFingerprints, repoUrl, runner, sha256 } from "./acceptance-sheet.mjs";
 import { config } from "./briefs.mjs";
 import { publishNote, noteTexts, renderNote } from "./recette-note.mjs";
 import { asset, CANDIDATE_RE, sheetAsset, VERDICT_ASSET } from "./release-verdict.mjs";
@@ -110,6 +111,8 @@ export function promote(root, { tag, dryRun = false }, { run = runner(root) } = 
   if ((run("git", ["tag", "-l", final]) ?? "").trim()) return refused(fill(T.exists, final));
   const commit = (run("git", ["rev-parse", "--verify", "--quiet", `${tag}^{commit}`]) ?? "").trim();
   if (!commit) return refused(fill(T.noTag, tag));
+  const gate = ciGate(root, run, { sha: commit, ref: tag, dryRun });
+  if (!gate.ok) return refused(gate.message);
   const sheet = asset(run, tag, sheetAsset(tag), dir);
   if (sheet === null) return refused(fill(T.noSheet, tag, sheetAsset(tag)));
   const prints = readFingerprints(sheet);
@@ -122,6 +125,7 @@ export function promote(root, { tag, dryRun = false }, { run = runner(root) } = 
   }
   const note = releaseNote({ tag, url: view.url, verdict, tarballs, repo: repoUrl(run), final }, T);
   const lines = [fill(T.plan, tag, T.kinds[verdict.verdict], final, commit.slice(0, 7), tarballs.map((t) => t.name).join(", ") || T.none)];
+  if (gate.message) lines.push(gate.message);
   lines.push(T.note, "", note);
   const recette = {
     version: final,

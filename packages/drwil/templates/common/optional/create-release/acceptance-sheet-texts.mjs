@@ -1,5 +1,5 @@
-// Messages of the acceptance sheet (QUA-051, QUA-052), in the project's language. Imported by
-// acceptance-sheet.mjs, which re-exports them.
+// Messages of the acceptance sheet (QUA-051, QUA-052) and of the release barrier (QUA-268), in the
+// project's language. Imported by acceptance-sheet.mjs, which re-exports them.
 import { config } from "./briefs.mjs";
 
 const TEXTS = {
@@ -31,6 +31,13 @@ const TEXTS = {
     prints: "Empreinte du tarball :",
     noPrint: "calculée à la création du tarball (rien de construit en --dry-run)",
     noTarball: "aucun paquet npm publiable : pas de tarball",
+    gateOk: "[release] ✓ CI verte sur le commit {0} pour les OS exigés (release.requiredOs) : {1}",
+    gateMissing:
+      "CI verte manquante sur le commit {0} pour : {1} (release.requiredOs ; un job aux étapes de test sautées ne compte pas). Lancer le workflow à la main sur ce commit (`{2}`), attendre ces OS verts, puis relancer",
+    gateUnreadable:
+      "CI illisible sur le commit {0} (gh indisponible ou sans réponse) : {1} non vérifié(s) (release.requiredOs), jamais une release devinée verte. Vérifier gh, ou lancer le workflow (`{2}`), puis relancer",
+    gateBad: "release.requiredOs vaut {0} dans .drwil/ia-first.json : une liste de libellés de runner (ex. « ubuntu-latest ») attendue",
+    gateDryRun: "[release] ⚠ --dry-run : sans cette CI verte, la création serait refusée — {0}",
   },
   en: {
     title: "Acceptance sheet — {0}",
@@ -60,6 +67,13 @@ const TEXTS = {
     prints: "Tarball fingerprint:",
     noPrint: "computed when the tarball is built (nothing built in --dry-run)",
     noTarball: "no publishable npm package: no tarball",
+    gateOk: "[release] ✓ green CI on commit {0} for the required OS (release.requiredOs): {1}",
+    gateMissing:
+      "no green CI on commit {0} for: {1} (release.requiredOs; a job whose test steps were skipped does not count). Run the workflow by hand on this commit (`{2}`), wait for these OS to be green, then run again",
+    gateUnreadable:
+      "CI unreadable on commit {0} (gh unavailable or not answering): {1} not checked (release.requiredOs), never a release guessed green. Check gh, or run the workflow (`{2}`), then run again",
+    gateBad: 'release.requiredOs is {0} in .drwil/ia-first.json: a list of runner labels (e.g. "ubuntu-latest") expected',
+    gateDryRun: "[release] ⚠ --dry-run: without this green CI, the creation would be refused — {0}",
   },
 };
 

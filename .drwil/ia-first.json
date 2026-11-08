@@ -34,6 +34,14 @@
     ".github/workflows/ia-first.yml"
   ],
   "mode": "full",
+  "release": {
+    "mode": "solo",
+    "requiredOs": [
+      "ubuntu-latest",
+      "windows-latest",
+      "macos-latest"
+    ]
+  },
   "scopeReminder": "blocking",
   "build": "npx tsc --build packages/drwil",
   "parallel": true,
@@ -3153,6 +3161,21 @@
       "needsBuild": true,
       "ciJob": "checks",
       "paths": [".githooks/**", ".claude/**", "packages/drwil/templates/**", "packages/drwil/src/agent.ts", "packages/drwil/src/verdict-texts.ts", "packages/drwil/test/attest-guidance.test.mjs", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-268",
+      "name": "tests de QUA-268, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-268 \" .githooks/acceptance-sheet.test.mjs .githooks/create-release.test.mjs .githooks/promote-release.test.mjs packages/drwil/test/config-write.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        ".githooks/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
       "degradable": false
     },
     {

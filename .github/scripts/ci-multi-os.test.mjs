@@ -1,4 +1,4 @@
-// Tests de la matrice multi-OS de la CI du dépôt (QUA-045, Windows et macOS avant la fusion) : le calcul
+// Tests de la matrice multi-OS de la CI du dépôt (QUA-045, Windows et macOS testés à la release) : le calcul
 // lui-même, puis le workflow qui doit s'en servir — un script juste mais non branché ne prouve rien.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -18,30 +18,40 @@ const job = (nom) => {
 };
 const lignes = (m) => m.map(({ os, tester }) => `${os}:${tester}`);
 
-test("QUA-045 : un push sur une autre branche que master ne rapporte qu'Ubuntu", () => {
-  assert.deepEqual(lignes(matrice({ evenement: "push", ref: "refs/heads/workstream/x", principale: "master" })), ["ubuntu-latest:true"]);
+const TROIS = ["ubuntu-latest:true", "macos-latest:true", "windows-latest:true"];
+
+test("QUA-045 : un push de branche, master compris, ne rapporte et ne teste qu'Ubuntu", () => {
+  for (const ref of ["refs/heads/workstream/x", "refs/heads/master"])
+    assert.deepEqual(lignes(matrice({ evenement: "push", ref })), ["ubuntu-latest:true"], ref);
 });
 
-test("QUA-045 : un push sur master teste les trois OS", () => {
-  assert.deepEqual(lignes(matrice({ evenement: "push", ref: "refs/heads/master", principale: "master" })), [
-    "ubuntu-latest:true",
-    "macos-latest:true",
-    "windows-latest:true",
-  ]);
+test("QUA-045 : le push d'un tag de release teste les trois OS, un autre tag Ubuntu seul", () => {
+  for (const ref of ["refs/tags/v0.7.0", "refs/tags/v1.12.3-rc.2"])
+    assert.deepEqual(lignes(matrice({ evenement: "push", ref })), TROIS, ref);
+  for (const ref of ["refs/tags/essai", "refs/tags/v1.2", "refs/tags/v1.2.3-beta.1", "refs/tags/v1.2.3.4"])
+    assert.deepEqual(lignes(matrice({ evenement: "push", ref })), ["ubuntu-latest:true"], ref);
 });
 
-test("QUA-045 : une PR de code teste les trois OS", () => {
+test("QUA-045 : un lancement manuel du workflow teste les trois OS, quelle que soit la branche", () => {
+  for (const ref of ["refs/heads/master", "refs/heads/workstream/x"])
+    assert.deepEqual(lignes(matrice({ evenement: "workflow_dispatch", ref })), TROIS, ref);
+});
+
+test("QUA-045 : une PR de code rapporte les trois OS, seul Ubuntu teste, les autres disent pourquoi", () => {
   const m = matrice({ evenement: "pull_request", fichiers: ["docs/projects/x.md", ".githooks/state.mjs"] });
-  assert.deepEqual(lignes(m), ["ubuntu-latest:true", "macos-latest:true", "windows-latest:true"]);
+  assert.deepEqual(lignes(m), ["ubuntu-latest:true", "macos-latest:false", "windows-latest:false"]);
+  assert.equal(m[0].raison, "");
+  for (const l of m.slice(1)) assert.match(l.raison, /tag de release.*lancement manuel/);
 });
 
 test("QUA-045 : une PR de documentation rapporte les trois OS, aucun ne teste, Ubuntu compris", () => {
   const m = matrice({ evenement: "pull_request", fichiers: ["docs/projects/x.md", "docs/intentions/y.md", ".drwil/usage.jsonl"] });
   assert.deepEqual(lignes(m), ["ubuntu-latest:false", "macos-latest:false", "windows-latest:false"]);
+  for (const l of m) assert.match(l.raison, /documentation/);
 });
 
 test("QUA-045 : chaque ligne garde l'archive gitleaks de son OS et sa somme", () => {
-  for (const { os, gitleaks, sha256 } of matrice({ evenement: "push", ref: "refs/heads/master", principale: "master" })) {
+  for (const { os, gitleaks, sha256 } of matrice({ evenement: "push", ref: "refs/tags/v1.0.0" })) {
     assert.match(gitleaks, os.startsWith("windows") ? /windows_x64\.zip$/ : os.startsWith("macos") ? /darwin_arm64/ : /linux_x64/);
     assert.match(sha256, /^[0-9a-f]{64}$/);
   }
@@ -56,8 +66,7 @@ test("QUA-045 : seuls docs/ et la ligne de consommation ne sont pas du code", ()
 });
 
 test("QUA-045 : un événement inattendu teste les trois OS", () => {
-  assert.equal(matrice({ evenement: "workflow_dispatch" }).length, 3);
-  assert.ok(matrice({ evenement: "workflow_dispatch" }).every((l) => l.tester));
+  assert.deepEqual(lignes(matrice({ evenement: "schedule" })), TROIS);
 });
 
 test("QUA-045 : kit-tests tire sa matrice du calcul, sous le nom exigé par le ruleset", () => {
@@ -78,17 +87,22 @@ test("QUA-045 : sans tests, chaque étape de kit-tests est sautée et le saut es
   const annonce = etapes.filter((e) => /if: \$\{\{ !matrix\.tester \}\}/.test(e));
   assert.equal(annonce.length, 1, "une étape annonce les tests non lancés");
   assert.match(annonce[0], /::notice::/);
+  // La raison passe par l'environnement, jamais interpolée dans le script ; bash, car Windows lancerait PowerShell.
+  assert.match(annonce[0], /RAISON: \$\{\{ matrix\.raison \}\}/);
+  assert.match(annonce[0], /shell: bash/);
   for (const e of etapes.filter((x) => !annonce.includes(x))) assert.match(e, /^(?: {8})?if: \$\{\{ matrix\.tester \}\}$/m, e);
 });
 
-test("QUA-045 : le calcul lit tout le diff de la PR, et l'alerte de master suit toujours kit-tests", () => {
+test("QUA-045 : le calcul lit tout le diff de la PR, le workflow se lance à la main, et l'alerte de master suit toujours kit-tests", () => {
   const calcul = job("matrice-os");
   assert.match(calcul, /fetch-depth: 0/);
   assert.match(calcul, /github\.event\.pull_request\.base\.sha/);
   assert.match(calcul, /github\.event\.pull_request\.head\.sha/);
   assert.match(calcul, /node \.github\/scripts\/ci-multi-os\.mjs/);
+  // Le push sauté garde la forme de la matrice calculée : sa notice dit aussi pourquoi.
+  assert.match(calcul, /"tester":false,"raison":"[^"]+"/);
   assert.match(job("alert-if-ci-broken"), /needs: \[checks, kit-tests\]/);
-  assert.match(WORKFLOW, /^on: \[push, pull_request\]$/m);
+  assert.match(WORKFLOW, /^on: \[push, pull_request, workflow_dispatch\]$/m);
 });
 
 test("QUA-045 : les dépendances npm sont mises en cache partout où elles s'installent", () => {

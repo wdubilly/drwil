@@ -302,7 +302,7 @@ test("QUA-119 : avec `parallel`, rapport dans l'ordre de la liste, sorties group
 test("QUA-121 : le workflow saute le push d'une branche à PR ouverte, jamais master, et garde noms exigés et alerte", () => {
   const wf = readFileSync(join(dirname(SCRIPT), "..", ".github", "workflows", "ia-first.yml"), "utf8");
   const job = (nom) => wf.split(/^ {2}(?=[\w-]+:$)/m).find((b) => b.startsWith(`${nom}:`)) ?? "";
-  assert.match(wf, /^on: \[push, pull_request\]$/m);
+  assert.match(wf, /^on: \[push, pull_request, workflow_dispatch\]$/m);
   const calcul = job("matrice-os");
   assert.match(calcul, /gh pr list .*--head "\$BRANCHE" --state open/);
   assert.match(calcul, /\|\| ouvertes=0/, "GitHub muet : le push teste");
