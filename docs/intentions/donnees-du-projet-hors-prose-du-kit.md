@@ -2,6 +2,9 @@
 
 **Statut** : proposée le 2026-10-26.
 
+**Revu le 2026-11-08** : absorbée par `docs/intentions/montee-de-version-sure.md` (décision du demandeur : la montée
+conserve les fichiers du projet) ; le relevé de drwil_dbox reste ici, l'index généré (2026-11-05) reste vivant.
+
 **Revu le 2026-11-05** : décision du demandeur, pour éviter les conflits entre branches menées en
 parallèle (worktrees, clones) : l'index des chantiers (`docs/projects/pending.md`) devient une vue
 générée depuis les fiches et les intentions (piste « index généré »), et le journal
