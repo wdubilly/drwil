@@ -117,7 +117,7 @@ téléphone. Le retrait du tableau de bord statique (`drwil-progress`) est repor
 - Le démarrage automatique est proposé à l'installation et n'est jamais activé sans réponse de l'humain ; il n'écoute
   que sur `127.0.0.1` — contrat `QUA-279`
 - `drwil serve` montre tout ce que montraient `drwil-progress` et le module `optional/dashboard`, tendances de QUA-198
-  comprises — QUA-276 ; leur retrait est reporté à `docs/intentions/retrait-de-drwil-progress.md`.
+  comprises ; leur retrait est reporté à `docs/intentions/retrait-de-drwil-progress.md` [humain] — contrat `QUA-276`
 
 ## Contrats modifiés
 
