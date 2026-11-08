@@ -135,8 +135,6 @@ d'un outil) la dit dans son statut.
   2026-11-08) — `docs/intentions/forge-detectee-sur-l-hote.md`.
 - [ ] [décision] [P3] Reporter dans le document de compatibilité ce que chaque outil montre de l'accueil de session
   (notée le 2026-11-08) — `docs/intentions/releve-accueil-par-outil.md`.
-- [ ] [IA] [P2] `drwil serve`, une vue du projet en direct pour tout adoptant : mobile first, GitHub et GitLab,
-  lancée depuis le chat, remplace `drwil-progress` (cadré le 2026-11-08) — `docs/projects/drwil-serve.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
