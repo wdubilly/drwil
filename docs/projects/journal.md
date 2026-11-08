@@ -4201,6 +4201,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Critères et preuves** : QUA-045 réécrit (`.github/scripts/ci-multi-os.test.mjs`) ; QUA-268 créé (barrière, jobs sautés, réglage absent, ordre dit par la recette et le README ; tests en dur, contrôle `tests-qua-268`)
 - **Hooks modifiés** : `.githooks/create-release.mjs`, `.githooks/create-release-texts.mjs`, `.githooks/promote-release.mjs`, `.githooks/acceptance-sheet.mjs`, `.githooks/acceptance-sheet-texts.mjs` et leurs tests, `.githooks/run-checks.test.mjs` (gabarit et copies), déclarés dans « Contrats modifiés » sur le oui du demandeur des 2026-11-07 et 2026-11-08.
 - **Limites connues** : `workflow_dispatch` ne s'essaie qu'une fois le workflow fusionné sur `master` ; le premier essai réel se fait à la release suivante. Notes ajoutées pendant le chantier, hors cadre : `drwil serve` (serveur de suivi dans le package) et la lecture de la réponse au sondage d'attestation par Copilot CLI, dans `docs/intentions/notes.md`.
+- **Réouverture** (2026-11-08, CI rouge de la PR #376) : le seuil de couverture des hooks (100 % des branches) n'était pas atteint, trois branches de `.githooks/acceptance-sheet.mjs` et `.githooks/create-release.mjs` non couvertes ; une branche morte retirée (gabarit et copie), HEAD détaché couvert par un test. Correctif sur le oui du demandeur (`detour.mjs allow`). Aucune règle changée.
 
 ## ci-multi-os-a-la-release
 

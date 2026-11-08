@@ -1,7 +1,7 @@
 # Preuve de clôture — ci-multi-os-a-la-release
 
-**Clos le** : 2026-11-07
-**Commit vérifié** : `fbfdd0351e` — verdict `drwil verify` : PASS
+**Clos le** : 2026-11-08
+**Commit vérifié** : `395884248c` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:745af078d25aa867`, acceptés par l'humain au lancement le 2026-11-07
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
