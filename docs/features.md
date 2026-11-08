@@ -58,6 +58,21 @@ que les contrats en échec (verdict partiel, jamais une preuve de clôture) ;
 `drwil contracts add` écrit un contrat propre au projet, `drwil contracts
 adopt <ID>` reprend un contrat du catalogue. `drwil report` imprime un
 rapport de défaut du kit sans donnée du projet.
+`drwil serve [--host] [--port] [--detach]` sert en direct une vue du projet
+courant, en lecture seule, sur `127.0.0.1` par défaut : un jeton est
+obligatoire ailleurs, aucune réponse ne porte de donnée nominative, et chaque
+projet ou worktree a son unique serveur. Les vues CI, PR et MR marchent à
+parité sur GitHub (`gh`) et GitLab (`glab`), le journal d'événements est propre
+à chaque projet et vit dans le cache de l'utilisateur, et une vue sans source
+reste vide en disant ce qui manque. La page se lit sur un téléphone (360 px de
+large), dans la langue du projet ; ses liens de PR et MR passent par une
+redirection du serveur, aucune adresse de forge n'étant dans une réponse.
+`drwil serve --welcome` (ou `/drwil-serve` dans le chat) le démarre au besoin et
+donne le lien ; avec Tailscale et HTTPS actif, la vue est publiée sur le réseau
+privé par `tailscale serve`, l'écoute restant sur `127.0.0.1` ; sans lui, le
+message dit comment ouvrir l'accès au téléphone. Le démarrage à chaque session,
+proposé par `drwil init` et inactif sans réponse de l'humain, donne le lien à
+l'humain sans rien faire entrer dans le contexte du modèle.
 
 ## Attestation humaine (`drwil attest`)
 

@@ -46,6 +46,21 @@ export async function chooseTools(
   return answer === "all" ? TOOLS.join(",") : answer;
 }
 
+// Off unless the human says yes (QUA-279): no terminal or an empty answer never turns it on. Cursor alone has no session hook.
+export async function chooseServeAutostart(
+  targetDir: string,
+  given: boolean | undefined,
+  tools: string | undefined,
+  interactive: boolean,
+  ask: (question: string) => Promise<string>,
+): Promise<boolean | undefined> {
+  const config = readConfig(targetDir);
+  const installed = tools === undefined ? (config?.tools as string[]) : tools.split(",").map((t) => t.trim());
+  if (given !== undefined || typeof config?.serveAutostart === "boolean" || !interactive || installed.every((t) => t === "cursor"))
+    return given;
+  return /^(y|yes|o|oui)$/i.test((await ask(texts().serveQuestion)).trim());
+}
+
 export async function askTerminal(
   question: string,
   input: NodeJS.ReadableStream = process.stdin,
@@ -79,6 +94,8 @@ export function registerInstall(program: Command): void {
       ),
     `Layers CSV ${DEFAULT("subfolders where a stack is detected, else none: declared once the stack is chosen")}`,
   )
+    .option("--serve-autostart", "Start drwil serve at each session (127.0.0.1 only)")
+    .option("--no-serve-autostart", "Do not start drwil serve at each session, and do not ask")
     .option("--dry-run", "Only audit the repository and preview what would be written; write nothing")
     .option(
       "--force",
@@ -87,7 +104,9 @@ export function registerInstall(program: Command): void {
     .action(async (opts) => {
       if (!opts.dryRun) {
         try {
-          opts.tools = await chooseTools(process.cwd(), opts.tools, !!(process.stdin.isTTY && process.stdout.isTTY), askTerminal);
+          const interactive = !!(process.stdin.isTTY && process.stdout.isTTY);
+          opts.tools = await chooseTools(process.cwd(), opts.tools, interactive, askTerminal);
+          opts.serveAutostart = await chooseServeAutostart(process.cwd(), opts.serveAutostart, opts.tools, interactive, askTerminal);
         } catch (e) {
           console.error(`✗ ${(e as Error).message}`);
           process.exit(1);

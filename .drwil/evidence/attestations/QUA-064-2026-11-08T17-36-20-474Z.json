@@ -1,0 +1,42 @@
+{
+  "version": 4,
+  "contract": "QUA-064",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-08T17:36:20.474Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Aucun essai manuel dans Copilot CLI pendant ce chantier. Le fichier de hooks Copilot reçoit seulement le hook d'accueil de drwil serve, silencieux pour Copilot ; tests automatiques verts.",
+  "fingerprint": "84194c15ef4772785839a96e582d81c2930d7560cb0706dd6a76a8f25c94dec1",
+  "proof": {
+    "tests-qua-064": "eaae8134c7f772ea6040798e4e37ebce6c03776ff4bafb50c18e99e47f075fad"
+  },
+  "covers": [
+    "packages/drwil/src/config.ts",
+    "packages/drwil/src/render.ts",
+    "packages/drwil/src/drift.ts",
+    "packages/drwil/src/essentials.ts",
+    "packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json"
+  ],
+  "coverage": {
+    "packages/drwil/src/config.ts": "fecae756c207c6d866189b4b3acfeceb3711f119351c577c3ad284c96bcb1940",
+    "packages/drwil/src/drift.ts": "cf576cf95f3f217272b9ee06014eb885f77c40f0a508207fadc0558984e82f2a",
+    "packages/drwil/src/essentials.ts": "0e2750abafc0417796b29564cfc68f8c1dfa1d1301090de412f1fb2882b2800f",
+    "packages/drwil/src/render.ts": "3bbde937b09bb9400e572888b40fb92ed04554360062884d8119253f03661b5f",
+    "packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json": "c412e1a5262686f5b30e2006b998e1c05abf53a6a0d4fa54ec28c9a5610c9c2a"
+  },
+  "commit": "3f0f35019ea0771dc9121c4513ad7b01e908cf93",
+  "automated": [
+    {
+      "id": "tests-qua-064",
+      "status": "ok"
+    }
+  ],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "40635a88-0d7f-45ed-8b46-224af970d476",
+    "toolUseId": "toolu_01Uj5LQUT3GGWc6Z2J2QmVEB",
+    "askedAt": "2026-11-08T17:36:16.340Z"
+  }
+}

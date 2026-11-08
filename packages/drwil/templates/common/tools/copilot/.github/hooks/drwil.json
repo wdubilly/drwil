@@ -8,6 +8,13 @@
         "powershell": "if (Get-Command node -ErrorAction SilentlyContinue) { node .githooks/state.mjs copilot-start } else { [Console]::Error.WriteLine('drwil: node not found in the PATH of this assistant. Restart it from a shell where which node answers.') }",
         "cwd": ".",
         "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "bash": "command -v node >/dev/null || { echo 'drwil: node not found in the PATH of this assistant. Restart it from a shell where which node answers.' >&2; exit 0; }; node .claude/hooks/serve-welcome.mjs copilot",
+        "powershell": "if (Get-Command node -ErrorAction SilentlyContinue) { node .claude/hooks/serve-welcome.mjs copilot } else { [Console]::Error.WriteLine('drwil: node not found in the PATH of this assistant. Restart it from a shell where which node answers.') }",
+        "cwd": ".",
+        "timeoutSec": 15
       }
     ],
     "preToolUse": [

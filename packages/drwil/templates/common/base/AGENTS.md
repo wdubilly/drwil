@@ -85,6 +85,7 @@ their own instructions". Remove otherwise.)*
 
 - Run all checks: `node .githooks/run-checks.mjs` (failed checks and a summary; detail in `.drwil/evidence/run-checks.log` (if present)).
 - Know whether the work is verified: `npx drwil verify --agent` (only `GOVERNANCE: PASS` counts as validation).
+- Live, read-only view of the project: `npx drwil serve --welcome` (starts it if needed, prints the link to give the human; never start it with `--host` nor handle its token).
 - Long checks in a subagent if the tool allows it (Claude Code: `drwil-checks`); say « verified » only on the copied `GOVERNANCE: …` line.
 - `drwil attest` and the release verdict (`.githooks/release-verdict.mjs` (if present)) are **human** gestures: an agent never runs them; an awaited attestation is proposed first as the chat poll, the terminal as fallback.
 - Enable hooks (once per clone): `git config core.hooksPath .githooks`

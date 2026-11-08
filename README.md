@@ -699,6 +699,24 @@ not run never counts as passed. Declare a CI to get out of it:
 `npx drwil init --ci github` (or `--ci gitlab`). `verify` and `doctor` say the
 same.
 
+`npx drwil serve` shows a live, read-only view of the project on
+`127.0.0.1` (`--detach` runs it in the background, one server per project or
+worktree). Listening anywhere else (`--host`) requires a token of at least 32
+characters in the `DRWIL_SERVE_TOKEN` environment variable. Its CI, PR and MR
+views use `gh` or `glab`, whichever matches the `origin` remote; without them,
+those views stay empty and say what is missing. The page is made for a phone
+(360 px wide and up) and follows the project's `lang`, in French or English; a
+link to a PR or MR goes through the server's own redirect, so no forge address
+appears in any response body.
+
+`npx drwil serve --welcome` (or `/drwil-serve` in the chat) starts it if needed
+and prints the link. When Tailscale is present with HTTPS turned on, the view is
+published on your private network with `tailscale serve`, still listening on
+`127.0.0.1` only; without Tailscale everything works on the computer and the
+message says how to open it from a phone. `drwil init` offers to start it at each
+session (off unless you say yes; `--serve-autostart` or `--no-serve-autostart` to
+change the answer): the hook then shows the link to you, never to the model.
+
 ### 4. Attest a MANUAL contract (human, in your own terminal)
 
 ```bash

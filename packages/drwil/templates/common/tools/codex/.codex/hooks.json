@@ -37,6 +37,17 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.claude/hooks/serve-welcome.mjs\"",
+            "commandWindows": "powershell -NoProfile -Command \"& node (Join-Path (git rev-parse --show-toplevel) '.claude/hooks/serve-welcome.mjs'); exit $LASTEXITCODE\"",
+            "timeout": 15
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [

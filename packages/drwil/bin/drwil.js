@@ -5,6 +5,7 @@ import { registerAttest } from "../dist/cli-attest.js";
 import { registerInstall } from "../dist/cli-install.js";
 import { registerVerify } from "../dist/cli-verify.js";
 import { registerReport } from "../dist/cli-report.js";
+import { registerServe } from "../dist/cli-serve.js";
 
 const program = new Command();
 program
@@ -17,5 +18,6 @@ registerInstall(program);
 registerVerify(program);
 registerAttest(program);
 registerReport(program);
+registerServe(program);
 
 program.parse();

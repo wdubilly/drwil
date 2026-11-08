@@ -26,6 +26,7 @@ const LIVRES = [
   "bin/drwil.js",
   "dist/index.js",
   "dist/index.d.ts.map",
+  "serve/page.html",
   "templates/common/a",
 ];
 const VERDICT = {
@@ -98,7 +99,7 @@ test("QUA-248 : derouler : pack, contenu, installation, --version, init (CI GitH
   const r = derouler({ paquet: "p", temp: dossier(), lancer });
   assert.deepEqual(r, {
     statut: "ok",
-    message: "tarball drwil-0.3.0.tgz : 8 fichier(s) attendus, installé, --version, init, briefs et verify OK",
+    message: "tarball drwil-0.3.0.tgz : 9 fichier(s) attendus, installé, --version, init, briefs et verify OK",
   });
   assert.deepEqual(appels, ["pack", "install", "version", "init", "briefs", "verify"]);
 });

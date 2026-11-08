@@ -39,6 +39,8 @@ export const TEXTS = {
     ignored: "Dérive laissée en l'état (confirmation refusée ou terminal non interactif sans --force) :",
     toolsRequired: "choix des outils IA requis : relancer avec --tools <liste> parmi {0}, ou dans un terminal interactif",
     toolsQuestion: "Quels outils IA configurer ? ({0}) Liste séparée par des virgules, ou « all » : ",
+    serveQuestion:
+      "Démarrer drwil serve à chaque session (vue en lecture seule sur 127.0.0.1, publiée aussi sur votre réseau privé si Tailscale est présent) ? [o/N] ",
     evidence: "évidence : {0}",
     manual: "  [manuel]",
     noTerminal: "attestation refusée : un terminal interactif est requis (un agent ou un script ne peut pas attester {0})",
@@ -97,6 +99,8 @@ export const TEXTS = {
     ignored: "Drift left as it is (confirmation refused, or non-interactive terminal without --force):",
     toolsRequired: "AI tools choice required: rerun with --tools <list> among {0}, or in an interactive terminal",
     toolsQuestion: 'Which AI tools to configure? ({0}) Comma-separated list, or "all": ',
+    serveQuestion:
+      "Start drwil serve at each session (read-only view on 127.0.0.1, also published on your private network when Tailscale is present)? [y/N] ",
     evidence: "evidence: {0}",
     manual: "  [manual]",
     noTerminal: "attestation refused: an interactive terminal is required (an agent or a script cannot attest {0})",
