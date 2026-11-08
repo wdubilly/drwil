@@ -67,6 +67,9 @@ files:
   - .drwil/ia-first.json
   - docs/intentions/drwil-serve.md
   - docs/intentions/retrait-de-drwil-progress.md
+  - docs/intentions/drwil-serve-readme-du-paquet.md
+  - docs/intentions/forge-detectee-sur-l-hote.md
+  - docs/intentions/releve-accueil-par-outil.md
   - docs/projects/drwil-serve.md
   - docs/projects/pending.md
   - docs/projects/journal.md
