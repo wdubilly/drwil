@@ -1729,8 +1729,8 @@ test("QUA-281 : la redirection est refusée sans jeton valide", async () => {
 });
 
 const PAGE = readFileSync(join(racinePaquet, "serve", "page.html"), "utf8");
-const textes = JSON.parse(/<script type="application\/json" id="i18n">\s*([\s\S]*?)<\/script>/.exec(PAGE)[1]);
 const scriptDeLaPage = /<script>\n([\s\S]*?)<\/script>/.exec(PAGE)[1];
+const textes = JSON.parse(/const I18N = (\{[\s\S]*?\n\});\n/.exec(scriptDeLaPage)[1]);
 
 test("QUA-276 : la page tient sur 360 px par sa structure : pas de largeur fixe, de cellule de tableau ni de débordement masqué", () => {
   assert.match(PAGE, /name="viewport" content="width=device-width, initial-scale=1"/);

@@ -98,8 +98,8 @@
   <section id="notes"></section>
 </main>
 <!-- Les libellés et les codes de l'API (étapes, statuts, types d'événements) se traduisent ici ; QUA-276 vérifie la parité des deux langues. -->
-<script type="application/json" id="i18n">
-{
+<script>
+const I18N = {
   "fr": {
     "tab-ci": "CI en direct", "tab-kb": "Tableau", "tab-tl": "Fil", "tab-rel": "Releases", "tab-ct": "Contrats", "tab-us": "Consommation", "tab-me": "Mesures", "tab-au": "Audits", "tab-briefs": "Fiches", "tab-int": "Intentions", "tab-notes": "Notes",
     "branch": "branche", "lot": "lot {0}", "updated": "mis à jour {0}", "offline": "serveur injoignable, nouvel essai dans 10 s", "denied": "accès refusé : rouvrir le lien avec le jeton", "loading": "chargement…", "unreadable": "illisible", "block": "bloc {0}", "comment": "commentaire",
@@ -142,13 +142,11 @@
     "trendCi": "Duration of the checks job, hooks unchanged", "trendCache": "Cache read per request (tokens)", "trendOk": "mean {0}, alert threshold {1}", "trendAlert": "drift: mean {0} above the threshold {1}", "trendNone": "No reading.", "trendNote": "Indicators, never blocking. Solid bars: the last five readings, those of the mean.", "lastRuns": "Latest CI durations",
     "auditStale": "scan {0} days old, time to re-run", "indexTitle": "Pending work ({0})", "othersTitle": "Other files in the briefs folder ({0})", "catalogTitle": "In the catalog, not installed ({0})", "noStatus": "(no Status line)", "noIndex": "No checkbox in the index.", "models": "models: {0}"
   }
-}
-</script>
-<script>
+};
 const $ = (s) => document.querySelector(s);
 const LANG = document.documentElement.lang === "fr" ? "fr" : "en";
 const LOCALE = LANG === "fr" ? "fr-FR" : "en-GB";
-const TX = JSON.parse($("#i18n").textContent)[LANG];
+const TX = I18N[LANG];
 const t = (key, ...v) => (TX[key] ?? key).replace(/\{(\d)\}/g, (_, i) => v[i] ?? "");
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const code = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
