@@ -193,5 +193,7 @@ try {
     ].join("\n")}\n`,
   );
 } catch {}
-for (const line of [...shown, summary]) console.log(line);
+// In CI the detail file does not outlive the job: the whole ranking goes to the log, before the summary line.
+const ranking = process.env.CI ? [`[ia-first] ${T.slowest}`, ...slowest.map((t) => `  ${t.ms} ms  ${t.name}`)] : [];
+for (const line of [...shown, ...ranking, summary]) console.log(line);
 if (failures.length) process.exitCode = 1;
