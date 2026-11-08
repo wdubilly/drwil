@@ -108,7 +108,7 @@ téléphone. Le retrait du tableau de bord statique (`drwil-progress`) est repor
   `QUA-273`
 - Le journal d'événements est propre à chaque projet et vit hors du dépôt — contrat `QUA-274`
 - La page s'utilise sur un écran de 360 px de large, sans défilement horizontal, en français et en anglais selon `lang`
-  — contrat `QUA-276`
+  [humain] — contrat `QUA-276`
 - À l'ouverture d'une session, un projet qui a choisi le démarrage automatique voit le serveur démarré s'il ne tournait
   pas, et l'humain reçoit le lien sans qu'aucun octet n'entre dans le contexte du modèle ; un outil qui ne sait pas
   montrer ce message donne le lien par le skill — contrat `QUA-277`
