@@ -655,4 +655,11 @@ test("QUA-109 : le job de passage installe gitleaks comme la CI principale, vers
     .find((e) => etapeGitleaks({ steps: [e] }) === 0);
   assert.equal(run, principale.run, "même URL, même somme, même emplacement que la CI principale");
   assert.ok(i < etapes.findIndex((e) => /banc\.mjs passage/.test(e.run ?? "")), "installé avant le passage");
+  const cache = (etapesJob) => etapesJob.find((e) => /actions\/cache@/.test(e.uses ?? "") && /gitleaks/.test(e.with?.key ?? ""));
+  const cacheBanc = cache(etapes);
+  assert.ok(cacheBanc, "archive gitleaks cachée dans le job passage");
+  assert.ok(etapes.indexOf(cacheBanc) < i, "cache restauré avant l'installation");
+  assert.doesNotMatch(cacheBanc.with.key, /hashFiles|sha256/, "clé sans hash : la somme est vérifiée à chaque passe");
+  const cachePrincipale = cache(Object.values(lire("ia-first.yml").jobs).flatMap((j) => j.steps ?? []));
+  assert.deepEqual(cacheBanc.with, cachePrincipale.with, "même chemin et même clé que la CI principale");
 });

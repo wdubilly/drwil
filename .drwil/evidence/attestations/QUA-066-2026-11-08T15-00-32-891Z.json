@@ -1,0 +1,30 @@
+{
+  "version": 4,
+  "contract": "QUA-066",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-08T15:00:32.891Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "add417a61718ec1d3cec72cc36224dfe1efc69ea733c9f3a01acf85d3371a614",
+  "proof": {
+    "tests-qua-066": "e0102bc885b48108caf66cf612b36eae7415867f75a5deea261fc039d5d58b1b"
+  },
+  "covers": [
+    "packages/drwil/src/config.ts",
+    "packages/drwil/templates/common/tools/gemini/.gemini/settings.json"
+  ],
+  "coverage": {
+    "packages/drwil/src/config.ts": "f766f8b42edd46dc8742b905384b93ea50ae7cd2503113fb947761e34f01ec11",
+    "packages/drwil/templates/common/tools/gemini/.gemini/settings.json": "103afbb55b7d6df2446cebdfc69746bf8aa2fa4fe4483d56bec53cc9c3d27cf5"
+  },
+  "commit": "fae234188b5a2fc11b1fa03771688e8c4e1a664a",
+  "automated": [
+    {
+      "id": "tests-qua-066",
+      "status": "ok"
+    }
+  ]
+}

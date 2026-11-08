@@ -18,6 +18,13 @@ tableau de bord et seuil d'alerte non bloquant (QUA-198, tendance de la durée
 de CI et du cache lu par requête). Reste : réévaluer le seuil au fil des
 relevés.
 
+Chantier « une CI plus rapide, pour le dépôt et pour l'adoptant » (2026-11-08,
+`docs/projects/journal.md`) : durée par contrôle affichée en CI (QUA-136, classement
+complet avant le résumé), reprise des verdicts au rejeu par la branche principale
+(QUA-113), saut du rejeu d'un push sur un arbre déjà prouvé (QUA-250), un lancement
+par fichier de test (QUA-033). Gain mesuré en local seulement (`run-checks
+--tout-rejouer`, 352 s avant, 182 s après) ; les durées en CI restent à relever.
+
 ### relever la durée du job `checks` quand les hooks sont inchangés (ex-« releve-duree-checks-hooks-inchanges »)
 
 Statut d'origine : proposée le 2026-10-24 — limite du chantier « accélérer la CI sans perte de qualité » (décision du demandeur, critère de durée, QUA-122).
@@ -62,6 +69,11 @@ Mesuré au chantier : `checks-self-test` (≈ 30 s) et `couverture-hooks`
 retiré : l'absence de perte de garantie n'est pas prouvée (couverture-hooks
 exige 100 %, checks-self-test nomme son propre contrat).
 
+Le 2026-11-08 (chantier « une CI plus rapide ») : dans le dépôt drwil, `checks-self-test`
+lit les résultats du lanceur par fichier (`outils/tests-par-fichier.mjs`) au lieu de
+rejouer les tests de `.githooks/` ; les deux contrôles existent toujours, et la
+question de retirer l'un d'eux reste ouverte.
+
 ### jouer aussi les tests de `.githooks/` sur Node 24 (ex-« tests-des-hooks-sur-node-24 »)
 
 Statut d'origine : proposée le 2026-10-24 — limite du chantier « accélérer la CI sans perte de qualité » (journal du 2026-10-24).
@@ -74,6 +86,12 @@ des projets temporaires) sur Node 24, pas ces tests-là.
 ### le gain de CI atteint-il les projets adoptés ? (ex-« ci-livree-aux-projets-non-mis-a-jour »)
 
 Statut d'origine : proposée le 2026-10-24 — limite du chantier « accélérer la CI sans perte de qualité » (journal du 2026-10-24).
+
+Le 2026-11-08 (chantier « une CI plus rapide ») : les CI du gabarit GitHub et GitLab
+portent les nouvelles tentatives et le cache de gitleaks, et le gabarit de
+`.githooks/base-checks.mjs` la reprise des verdicts ; l'artefact `arbre-prouve` n'existe
+que côté GitHub. Reste ouvert : `drwil update` ou `doctor` ne propose pas
+`parallel` ni `build` aux projets existants.
 
 Le moteur (`build`, `parallel`) et le saut du rejeu (QUA-123) sont livrés par
 le gabarit des hooks ; `.drwil/ia-first.json` d'un projet existant ne déclare

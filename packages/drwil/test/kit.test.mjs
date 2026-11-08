@@ -2941,6 +2941,35 @@ test("QUA-250 : la CI livrée (GitHub, GitLab) reprend sur une PR les verdicts d
   }
 });
 
+test("QUA-270 : un projet d'essai installé depuis le paquet reçoit les mécanismes de CI rapide du dépôt, GitHub et GitLab", async () => {
+  const dirGh = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dirGh, ci: "github", git: false }));
+  const dirGl = tmp();
+  await quiet(() => init({ lang: "fr", targetDir: dirGl, ci: "gitlab", git: false }));
+  const gh = read(dirGh, ".github/workflows/ia-first.yml");
+  const gl = read(dirGl, ".gitlab-ci.yml");
+  for (const [nom, ci] of [
+    ["GitHub", gh],
+    ["GitLab", gl],
+  ]) {
+    // gitleaks : nouvelles tentatives sur toute erreur, archive cachée sous la version épinglée et vérifiée par sa somme.
+    assert.match(ci, /curl [^\n]*--retry 5 --retry-all-errors/, nom);
+    assert.match(ci, /gitleaks-\d+\.\d+\.\d+-linux-x64/, nom);
+    assert.match(ci, /sha256sum -c -/, nom);
+    // Rejeu avec les hooks de la branche principale (QUA-113) : la copie de base-checks.mjs de la base, lue par Git.
+    assert.match(ci, /git show "\$base:\.githooks\/base-checks\.mjs"/, nom);
+    assert.match(ci, /DRWIL_CI_REUSE/, nom);
+  }
+  // Un push sur la branche principale lit la preuve d'arbre de la PR verte (GitHub seulement, GitLab rejoue tout).
+  assert.match(gh, /gh run download[^\n]*--name proven-tree/);
+  assert.match(gh, /git rev-parse 'HEAD\^\{tree\}' > "\$RUNNER_TEMP\/proven-tree\.txt"/);
+  assert.doesNotMatch(gl, /proven-tree/);
+  // Le moteur livré est celui du dépôt : reprise des verdicts, rejeu QUA-113 et classement des durées.
+  for (const f of ["base-checks", "run-checks", "run-checks-verdicts", "engine"])
+    assert.equal(read(dirGh, `.githooks/${f}.mjs`), readFileSync(join(DEPOT, `.githooks/${f}.mjs`), "utf8"), `${f}.mjs`);
+  assert.match(read(dirGh, ".githooks/base-checks.mjs"), /DRWIL_CI_REUSE/);
+});
+
 test("gabarits de pull/merge request : livrés selon le ci, un seul gabarit en anglais quelle que soit la langue", async () => {
   const cas = [
     { lang: "fr", ci: "github", chemin: ".github/pull_request_template.md", motif: /Related brief/ },
@@ -6048,7 +6077,7 @@ test("QUA-263 : CI GitHub livrée — le push d'une branche à PR ouverte saute 
   const etapes = checks.split(/\n {6}- /).slice(2);
   for (const e of etapes) {
     const jamaisSurPushDeBranche =
-      /if: (github\.event_name == 'pull_request'|always\(\) && github\.event_name == 'push' && github\.ref == format)/.test(e);
+      /if: (github\.event_name == 'pull_request'|(always\(\) && )?github\.event_name == 'push' && github\.ref == format)/.test(e);
     assert.ok(jamaisSurPushDeBranche || /if: steps\.pr\.outputs\.skip != 'true'/.test(e), `étape non sautée : ${e.split("\n")[0]}`);
   }
   assert.ok(

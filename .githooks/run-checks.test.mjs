@@ -502,6 +502,26 @@ test("QUA-136 : chaque contrôle exécuté a sa durée au détail, du plus lent 
   assert.match(en.stdout, /— slowest: (.+ \d+ ms, ){2}.+ \d+ ms\n$/);
 });
 
+test("QUA-136 : en CI, le classement complet des durées est dans la sortie, avant le résumé ; hors CI, seul le résumé nomme les trois plus lents", () => {
+  const fichiers = {
+    ".drwil/ia-first.json": JSON.stringify({
+      lang: "fr",
+      checks: ["a", "b", "c", "d", "e"].map((name) => ({ name, run: "node -e 0" })),
+    }),
+  };
+  const ci = lancer(fichiers, { env: { CI: "true" } });
+  const lignes = ci.stdout.split("\n");
+  const debut = lignes.findIndex((l) => /^\[ia-first\] contrôles du plus lent au plus rapide/.test(l));
+  assert.ok(debut >= 0, ci.stdout);
+  const classe = lignes.slice(debut + 1).filter((l) => /^ {2}\d+ ms {2}/.test(l));
+  const fin = lignes.findIndex((l) => /— les plus lents :/.test(l));
+  assert.ok(debut < fin, "le classement précède le résumé");
+  const noms = classe.map((l) => l.replace(/^ {2}\d+ ms {2}/, ""));
+  for (const nom of ["a", "b", "c", "d", "e"]) assert.ok(noms.includes(nom), `${nom} au classement`);
+  assert.ok(classe.length > 3, "plus que les trois plus lents");
+  assert.doesNotMatch(lancer(fichiers).stdout, /contrôles du plus lent au plus rapide/);
+});
+
 const VERDICTS = ".drwil/evidence/run-checks-verdicts.json";
 
 test("QUA-140 : une passe hors hook consigne le verdict ok ou fail de chaque contrôle avec l'empreinte de l'arbre ; ni non exécuté, ni passe de hook", async () => {
@@ -965,6 +985,10 @@ test("QUA-208 : dans ce dépôt, les contrôles lents sont confiés à la CI, ac
   );
   assert.deepEqual(config.ciFiles, [".github/workflows/ia-first.yml"]);
   const flux = readFileSync(join(depot, ".github/workflows/ia-first.yml"), "utf8");
-  assert.match(flux, /^ {6}- run: node \.githooks\/run-checks\.mjs$/m, "la CI du dépôt joue run-checks (variable CI posée par la forge)");
+  assert.match(
+    flux,
+    /^ {6}- if: steps\.prouve\.outputs\.saute != 'true'\n {8}run: node \.githooks\/run-checks\.mjs$/m,
+    "la CI du dépôt joue run-checks (variable CI posée par la forge)",
+  );
   assert.doesNotMatch(flux, /^\s+CI:/m, "la variable CI n'est jamais écrasée");
 });
