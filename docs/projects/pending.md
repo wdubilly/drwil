@@ -129,6 +129,9 @@ d'un outil) la dit dans son statut.
   signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
 - [ ] [IA] [P2] `drwil serve`, une vue du projet en direct pour tout adoptant : mobile first, GitHub et GitLab,
   lancée depuis le chat, remplace `drwil-progress` (cadré le 2026-11-08) — `docs/projects/drwil-serve.md`.
+- [ ] [IA] [P2] Les contrôles lents (e2e Playwright) sont accélérés par la CI livrée : tranches parallèles
+  (`shards`) puis reprise de verdict d'une PR à l'autre, GitHub et GitLab ; rouvre QUA-250 ; à affiner, décisions D1
+  à D7 (cadré le 2026-11-08) — `docs/projects/ci-lents-controles.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
