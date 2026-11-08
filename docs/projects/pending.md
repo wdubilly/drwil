@@ -130,8 +130,14 @@ d'un outil) la dit dans son statut.
 - [ ] [décision] [P0] Une CI plus rapide, pour le dépôt et pour l'adoptant : rejeu QUA-113 avec reprise,
   push sur `master`, `run-checks`, gitleaks (cadré le 2026-11-08, à affiner) —
   `docs/projects/ci-plus-rapide.md`.
-- [ ] [IA] [P2] `drwil serve`, une vue du projet en direct pour tout adoptant : mobile first, GitHub et GitLab,
-  lancée depuis le chat ; retrait de `drwil-progress` reporté (cadré le 2026-11-08) — `docs/projects/drwil-serve.md`.
+- [ ] [décision] [P2] Retirer `drwil-progress`, maintenant que `drwil serve` est à parité (notée le 2026-11-08) —
+  `docs/intentions/retrait-de-drwil-progress.md`.
+- [ ] [décision] [P2] Documenter `drwil serve` dans le README du paquet (notée le 2026-11-08) —
+  `docs/intentions/drwil-serve-readme-du-paquet.md`.
+- [ ] [décision] [P2] Détecter la forge d'après l'hôte d'`origin`, pas d'après toute son adresse (notée le
+  2026-11-08) — `docs/intentions/forge-detectee-sur-l-hote.md`.
+- [ ] [décision] [P3] Reporter dans le document de compatibilité ce que chaque outil montre de l'accueil de session
+  (notée le 2026-11-08) — `docs/intentions/releve-accueil-par-outil.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
