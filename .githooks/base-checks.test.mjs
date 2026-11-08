@@ -13,7 +13,8 @@ for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete p
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "base-checks.mjs");
 // Sans les variables de la forge : en CI (GITHUB_BASE_REF sur une PR), elles désigneraient une base
 // absente des dépôts temporaires.
-const env = { ...process.env, CI: "", DRWIL_HOOK: "" };
+// La CI pose DRWIL_CI_REUSE pour sa première passe : le rejeu ne doit la transmettre que quand il reprend.
+const env = { ...process.env, CI: "", DRWIL_HOOK: "", DRWIL_CI_REUSE: "1" };
 for (const nom of ["DRWIL_BASE", "GITHUB_BASE_REF", "CI_MERGE_REQUEST_TARGET_BRANCH_NAME", "CI_DEFAULT_BRANCH"]) delete env[nom];
 // run-checks de la branche principale : échoue sur un fichier `faute`, ou si son module a disparu.
 const RUN_CHECKS =

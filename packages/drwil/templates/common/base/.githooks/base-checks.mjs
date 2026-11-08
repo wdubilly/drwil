@@ -166,7 +166,7 @@ export function replay(root, { argv = [], env = process.env, stdio = "inherit" }
     const kept = hooks.filter((f) => declared.has(f) || declared.has(f.replace(/\.test\.mjs$/, ".mjs")));
     const laid = hooks.filter((f) => !kept.includes(f));
     const reuse = machineryChanged(root, base, laid).length === 0;
-    const [args, runEnv] = reuse ? [[], { ...env, DRWIL_CI_REUSE: "1" }] : [["--tout-rejouer"], env];
+    const [args, runEnv] = reuse ? [[], { ...env, DRWIL_CI_REUSE: "1" }] : [["--tout-rejouer"], { ...env, DRWIL_CI_REUSE: "" }];
     const run = () => spawnSync(process.execPath, [join(".githooks", "run-checks.mjs"), ...args], { cwd: root, env: runEnv, stdio }).status;
     const status = overlay(root, base, laid, run);
     const lines = [...kept.map((f) => say(T.kept, f)), ...removed.map((k) => say(T.removed, k)), say(reuse ? T.reuse : T.noReuse, ref)];
