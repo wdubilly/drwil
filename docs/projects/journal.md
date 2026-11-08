@@ -4217,3 +4217,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Intention d'origine** : `docs/intentions/suivi-ci-et-contexte.md`, mise à jour (reste ouverte : durées en CI à relever, `checks-self-test` contre `couverture-hooks`, mise à jour de la configuration des projets existants).
 - **Limites connues** : GitLab ne saute pas le rejeu d'un push sur la branche principale (rien ne permet de le prouver ici) ; `packages/drwil/test/kit.test.mjs` (~200 s) est joué d'un bloc et borne la passe ; gain en CI non mesuré.
 - **Clôturé par** : la branche `workstream/ci-plus-rapide`.
+
+- **Preuve de clôture** : `docs/preuves/ci-plus-rapide.md`.
