@@ -1747,6 +1747,9 @@ test("QUA-276 : la page tient sur 360 px par sa structure : pas de largeur fixe,
   );
   assert.ok(!/<table|<td/.test(PAGE), "pas de tableau, trop large sur téléphone");
   assert.match(base, /overflow-wrap:\s*anywhere/);
+  const nav = base.match(/\n\s*nav \{[^}]*\}/)?.[0] ?? "";
+  assert.match(nav, /flex-wrap:\s*wrap/, "les onglets passent à la ligne");
+  assert.ok(!/overflow-x/.test(nav), "aucun onglet accessible seulement en faisant défiler la barre");
 });
 
 test("QUA-276 : français et anglais ont les mêmes libellés, chaque code rendu par l'API est traduit, le script se compile", () => {
