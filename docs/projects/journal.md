@@ -4206,3 +4206,14 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 ## ci-multi-os-a-la-release
 
 - **Preuve de clôture** : `docs/preuves/ci-multi-os-a-la-release.md`.
+
+## 2026-11-08 — Une CI plus rapide, pour le dépôt et pour l'adoptant
+
+- **Ce qui change** : le rejeu par la branche principale reprend les verdicts des contrôles dont les hooks et l'empreinte sont identiques (QUA-113, un hook affaibli reste refusé) ; un push sur la branche principale dont l'arbre est celui d'une PR verte saute le rejeu et le dit (QUA-250, GitHub seulement) ; le téléchargement de gitleaks est retenté et son archive cachée, somme vérifiée à chaque passe, dans les trois CI (QUA-269, QUA-109) ; `run-checks` joue chaque fichier de test une fois par passe, avec un verdict par ID de contrat (QUA-033), et affiche en CI le classement complet des durées (QUA-136) ; les CI du gabarit portent les mêmes mécanismes (QUA-270).
+- **Décisions clés** : lanceur `outils/tests-par-fichier.mjs` plutôt qu'un lancement par contrat ; reprise bornée par l'empreinte propre de chaque contrôle ; `--tout-rejouer` quand la pose change le moteur de `run-checks`.
+- **Critères et preuves** : QUA-113, QUA-250, QUA-269, QUA-270 ; QUA-033, QUA-109 et QUA-136 mis à jour. Mesure locale (8 cœurs, `run-checks --tout-rejouer`) : 352 s avant, 182 s après ; non mesuré en CI.
+- **Hooks modifiés** : `.githooks/base-checks.mjs`, `.githooks/engine.mjs`, `.githooks/run-checks.mjs` et leurs tests (gabarit et copies), déclarés dans « Contrats modifiés » sur le oui du demandeur du 2026-11-08.
+- **Bloc scope élargi** : `.github/workflows/banc.yml` et `outils/banc.test.mjs` (limite hors cadre « Traiter maintenant »), `outils/tests-par-fichier.mjs` et son test, les gabarits de `.githooks/engine.mjs`, `.githooks/run-checks.mjs` et `.githooks/base-checks.mjs`, `.githooks/engine.test.mjs`, `docs/architecture.md`.
+- **Intention d'origine** : `docs/intentions/suivi-ci-et-contexte.md`, mise à jour (reste ouverte : durées en CI à relever, `checks-self-test` contre `couverture-hooks`, mise à jour de la configuration des projets existants).
+- **Limites connues** : GitLab ne saute pas le rejeu d'un push sur la branche principale (rien ne permet de le prouver ici) ; `packages/drwil/test/kit.test.mjs` (~200 s) est joué d'un bloc et borne la passe ; gain en CI non mesuré.
+- **Clôturé par** : la branche `workstream/ci-plus-rapide`.

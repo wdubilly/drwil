@@ -1,0 +1,28 @@
+{
+  "version": 4,
+  "contract": "QUA-018",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-08T15:00:05.455Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "b3d650bc33cae0b12d132c890dc0950ab4a5f89ac04dd93c27117ed73e60c975",
+  "proof": {
+    "miroirs-gabarit": "6e253387beb75172c46f2d0b68788b8a01dc7b86e8d565ad863fcabef0cbc091"
+  },
+  "covers": [
+    "outils/miroirs.json"
+  ],
+  "coverage": {
+    "outils/miroirs.json": "d40c2e1b75b36763f69f43eb19402b88bd603d94f55a52b48e304883a6d6c928"
+  },
+  "commit": "fae234188b5a2fc11b1fa03771688e8c4e1a664a",
+  "automated": [
+    {
+      "id": "miroirs-gabarit",
+      "status": "ok"
+    }
+  ]
+}
