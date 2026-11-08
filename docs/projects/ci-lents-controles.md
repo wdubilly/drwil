@@ -1,8 +1,8 @@
 # Projet : les contrôles lents (e2e Playwright) sont accélérés par la CI livrée
 
-**Statut** : cadré le 2026-11-08.
+**Statut** : cadré le 2026-11-08 ; décisions D1 à D7 tranchées le 2026-11-08 par le demandeur.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 **Intention** : `docs/intentions/ci-rapide-epreuves-reelles.md` (suite : la CI rapide livrée n'aide pas un projet dont un contrôle lent domine la CI)
 
 <!-- scope
@@ -85,8 +85,7 @@ est **déjà livré**. Ce qui ne l'est pas, et que ce chantier peut ouvrir :
   QUA-250 interdit ; c'est la seule vraie ouverture du contrat ;
 - (b) un meilleur calibrage des `paths` du contrôle e2e d'un adoptant : c'est le contrôle du projet, hors périmètre.
 
-Le lot de reprise ci-dessous traite donc (a), après décision. Si le demandeur ne veut pas (a), le lot 4 est retiré et
-QUA-250 reste intact : le sharding seul réduit déjà le temps mur.
+Le lot de reprise ci-dessous traite donc (a) : le demandeur a rouvert QUA-250 pour cela (D3, 2026-11-08).
 
 ## Critères d'acceptation
 
@@ -100,10 +99,10 @@ QUA-250 reste intact : le sharding seul réduit déjà le temps mur.
   `drwil verify` et `run-checks` locaux jouent une seule passe sans tranche, et un contrôle sans `shards` est joué
   comme avant — contrat à créer
 - Un contrôle lent n'est repris d'une passe de PR à la suivante que sur une empreinte de ses `paths` identique, liée au
-  commit et à la configuration du verdict, et rejoué au moindre doute — contrat à créer (conditionnel à la décision D3)
+  commit et à la configuration du verdict, et rejoué au moindre doute — contrat à créer (D3 tranchée : oui)
 - Un verdict de PR ne s'écrit que depuis le job de cette PR, ne se lit que par la même PR sur le même dépôt, et
-  son intégrité se vérifie avant reprise (D4) ; un verdict falsifié, d'un autre commit, d'une autre PR ou d'un fork est
-  rejoué — contrat à créer (conditionnel à la décision D3)
+  son intégrité se vérifie avant reprise (D4 : somme et identité du run) ; un verdict falsifié, d'un autre commit, d'une autre PR ou d'un fork est
+  rejoué — contrat à créer (D3 tranchée : oui)
 - Un projet d'essai installé depuis le paquet, avec un faux contrôle lent découpé, prouve sur GitHub et sur GitLab : la
   répartition des tranches, l'échec d'une tranche absente, le nom exigé inchangé et le local sans tranche — `QUA-270`
   étendu (preuve de même forme, projet d'essai synthétique ; aucune mesure réelle sur `drwil_walk`)
@@ -114,7 +113,7 @@ QUA-250 reste intact : le sharding seul réduit déjà le temps mur.
 a pas validés.)
 
 - `QUA-250` — ancien critère : « la passe de la PR ne relit jamais un verdict qu'elle aurait pu écrire ; seul un push
-  sur la branche principale sauvegarde ces verdicts ; aucun cache GitLab partagé » — raison : le lot 4 (D3) fait lire
+  sur la branche principale sauvegarde ces verdicts ; aucun cache GitLab partagé » — raison : le lot 4 (D3, tranchée : oui) fait lire
   à une PR le verdict de sa propre passe précédente pour un contrôle lent ; la clause sur la branche principale et sur
   GitLab reste vraie pour tout le reste — à valider par le demandeur
 - `QUA-113` — ancien critère : « le rejeu avec les hooks de la branche principale reprend le verdict de la première
@@ -124,7 +123,7 @@ a pas validés.)
   le job exigé devient l'agrégateur des tranches ; son nom et la règle ne changent pas, la preuve s'étend aux tranches —
   à valider par le demandeur
 - `QUA-270` — ancien critère : « un projet installé reçoit les mécanismes de la CI rapide » — raison : la liste des
-  mécanismes reçus s'allonge du découpage et, sous D3, de la reprise d'une PR à l'autre — à valider par le demandeur
+  mécanismes reçus s'allonge du découpage et de la reprise d'une PR à l'autre — à valider par le demandeur
 - `QUA-208` (réglage `runAt`) : la tranche ne change pas ses règles ; un contrôle `runAt: ["ci"]` découpé reste
   « confié à la CI » en local — à confirmer par le demandeur
 
@@ -139,6 +138,7 @@ a pas validés.)
   les variables ; le kit ne devine rien.
 - La parité GitLab de `pr-watch` et de `merge-auto` (intention `docs/intentions/ci-rapide-epreuves-reelles.md`).
 - Un cache de verdicts GitLab partagé : il reste refusé par QUA-250.
+- Une alerte avant l'écrasement d'une CI modifiée à la main chez l'adoptant (D7 : comportement actuel gardé).
 - Un autre moteur que `run-checks` (`drwil verify` local reprend ses règles actuelles).
 
 ## 3. Contraintes
@@ -159,7 +159,7 @@ a pas validés.)
 - Le local reste inchangé : sans les deux variables, un contrôle se joue en une seule passe, sans tranche.
 - Les CI GitHub et GitLab doivent tenir la même règle (parité) ; la préparation ne peut pas dépendre d'un secret.
 
-### Conception retenue pour le cadrage (à confirmer, voir D1, D2)
+### Conception retenue (D1 et D2 tranchées)
 
 - **Nom du réglage : `shards: N`** (entier de 2 à 16 par défaut), placé dans la déclaration du contrôle de
   `.drwil/ia-first.json`. Justification : même mot que l'option `--shard` de Playwright (le cas d'origine), de Jest et
@@ -191,24 +191,19 @@ Toutes du demandeur, le 2026-11-08, par sondage :
 
 ## 5. Points à trancher
 
-Risque HIGH : la fiche touche `.githooks/`, la CI et `.drwil/`. Aucun point ci-dessous n'est tranché par l'agent.
+Risque HIGH : la fiche touche `.githooks/`, la CI et `.drwil/`. Aucun point ouvert : D1 à D7 ont été tranchés par le demandeur le 2026-11-08 ; l'agent n'en a tranché aucun. Reste hors « Points à trancher » la confirmation de `QUA-208` et la validation des contrats modifiés (section « Contrats modifiés »).
 
-- [décision] **D1 — nom et forme du réglage** : `shards: N` (proposé) ; variables `DRWIL_SHARD_INDEX` /
-  `DRWIL_SHARD_TOTAL` de 1 à N ; plafond de N (proposé : 16). À décider : ce nom, la borne, et le refus d'une commande
-  qui ne cite pas la variable. *Alternative* : un objet `{ "shards": { "count": N } }`, plus extensible, plus lourd.
-- [décision] **D2 — nombre de tranches sur GitLab** : `parallel:` ne se calcule pas depuis le dépôt. Options : (a) la
+- **D1 — nom et forme du réglage** (décision) : `shards: N` ; variables `DRWIL_SHARD_INDEX` /
+  `DRWIL_SHARD_TOTAL` de 1 à N ; plafond de N : 16 ; refus d'une commande qui ne cite pas la variable. *Alternative écartée* : un objet `{ "shards": { "count": N } }`, plus extensible, plus lourd. **Tranché le 2026-11-08 (tranché par le demandeur)** : `shards: N` comme proposé, variables de 1 à N, plafond 16, commande qui ignore la variable refusée.
+- **D2 — nombre de tranches sur GitLab** : `parallel:` ne se calcule pas depuis le dépôt. Options : (a) la
   CI livrée porte un nombre maximal de jobs (par exemple 16) et les tranches au-delà de N sortent en « non
   applicable » sans compter comme passées ; (b) un pipeline enfant dynamique généré par un job de plan ; (c) un
   fichier d'inclusion que `drwil` régénère à chaque mise à jour à partir de N (le YAML n'est plus identique pour tous
-  les adoptants). Recommandation de l'agent à confirmer : (a) pour GitHub comme GitLab, tant que le nombre maximal reste
-  petit ; (b) seulement si l'humain accepte un pipeline enfant et le coût de sa maintenance.
-- [décision] **D3 — rouvrir QUA-250 pour la reprise d'un push à l'autre de la même PR (lot 4)** : oui, non, ou
-  seulement sur GitHub d'abord. Si non, le lot 4 est retiré, les deux critères conditionnels aussi, QUA-250 n'est plus
-  listé dans « Contrats modifiés » et la fiche passe en « prêt » après D1, D2, D5. Le gain réel dépend du
+  les adoptants). (b) et (c) écartées. **Tranché le 2026-11-08 (tranché par le demandeur)** : (a), nombre maximal de jobs fixe dans le gabarit GitLab, tranches au-delà de N « non applicable ».
+- **D3 — rouvrir QUA-250 pour la reprise d'un push à l'autre de la même PR (lot 4)**. **Tranché le 2026-11-08 (tranché par le demandeur)** : oui, QUA-250 est rouvert, lot 4 gardé, GitHub et GitLab. Le gain réel dépend du
   projet : il est nul si chaque push d'une PR change les `paths` de l'e2e, ce que le chantier ne mesure pas (hors
   périmètre : pas de mesure sur `drwil_walk`).
-- [décision] **D4 — intégrité et provenance du verdict repris d'une PR** (si D3 = oui). Garanties exigées, à
-  valider une à une :
+- **D4 — intégrité et provenance du verdict repris d'une PR**. **Tranché le 2026-11-08 (tranché par le demandeur)** : somme du fichier de verdicts + identité du run (SHA, numéro, PR), sans HMAC ni secret. Garanties :
   1. Le verdict est lié à l'empreinte propre du contrôle (QUA-141), à la configuration du contrôle, au commit qui l'a
      joué (SHA de la tête de la PR) et au commit de la branche principale dont les hooks ont jugé (QUA-113) ;
      tout écart le rejoue.
@@ -219,28 +214,21 @@ Risque HIGH : la fiche touche `.githooks/`, la CI et `.drwil/`. Aucun point ci-d
      `pull_request` précédent de la même PR, lu par `gh run download` avec le jeton du job ; GitLab : artefact du
      pipeline précédent de la même merge request (`CI_MERGE_REQUEST_IID`), jamais un cache partagé.
   4. Intégrité : somme du fichier de verdicts écrite à part et recalculée, plus identité du run (SHA, numéro du run,
-     PR) comparée à celle attendue ; une signature (HMAC avec un secret du dépôt) est la variante forte. **À décider :**
-     somme seule (détecte la corruption, pas un auteur malveillant qui contrôle l'artefact) ou HMAC avec un secret de CI
-     (un secret en plus à configurer chez chaque adoptant, absent des forks).
+     PR) comparée à celle attendue ; la signature HMAC avec un secret est écartée (la somme détecte la corruption, pas un auteur qui contrôle l'artefact : risque accepté, voir D6).
   5. Le verdict repris ne devient jamais une preuve de fusion ni de clôture : la preuve d'arbre et le rejeu de
      QUA-113 restent ; une reprise dit « repris du run … » et n'entre pas dans l'empreinte d'arbre (QUA-141).
   6. Toute lecture manquée, expirée, illisible, ou d'un autre commit : rejeu complet (QUA-013).
-- [décision] **D5 — tranches et hooks de la branche principale (QUA-113)** : les tranches jouent-elles avec les hooks de
-  la branche contrôlée (plus simple, mais une PR affaiblissant `.githooks/engine.mjs` pourrait faire passer ses propres
-  tranches) ou chacune rejoue avec la copie de `.githooks/base-checks.mjs` de la branche principale (recommandé, le même rejeu que
-  le job `checks` actuel, mais un rejeu par tranche) ? L'agrégateur doit en tout cas être lancé par la copie de la base.
-- [décision] **D6 — risques résiduels à accepter ou refuser** : (i) un verdict falsifié par une PR qui contrôle
+- **D5 — tranches et hooks de la branche principale (QUA-113)** : hooks de la branche contrôlée (écartés : une PR affaiblissant `.githooks/engine.mjs` pourrait faire passer ses propres tranches) ou copie de la base. **Tranché le 2026-11-08 (tranché par le demandeur)** : chaque tranche rejoue avec les hooks de la base (QUA-113), l'agrégateur est lancé par la copie de la base.
+- **D6 — risques résiduels** : (i) un verdict falsifié par une PR qui contrôle
   l'artefact de sa propre passe (limité par D4.2 à 4) ; (ii) un cache empoisonné : aucun cache n'est écrit par une PR
   et lu par une autre branche ; l'artefact de PR n'est lu que par cette PR ; (iii) une PR qui prétend reprendre : la
   reprise est calculée par le moteur de la base, jamais par une étape du YAML de la PR (la base pose ses hooks avant) ;
   (iv) un nombre de tranches abaissé dans la PR pour « perdre » des fichiers : l'agrégation compare N à la configuration
   de la **base** quand elle existe, sinon à celle de la branche et le dit ; (v) un contrôle qui ignore les variables :
-  refusé par D1. À décider : ce niveau de garantie est-il suffisant, ou le lot 4 se limite-t-il à GitHub tant que
-  l'essai réel sur GitLab (`docs/intentions/ci-rapide-epreuves-reelles.md`) n'a pas eu lieu ?
-- [décision] **D7 — mise à jour des adoptants** : les CI du gabarit changent de forme (job de plan, tranches,
-  agrégateur) ; la migration passe par la mise à jour habituelle des fichiers du gabarit. À décider : détecter et
-  signaler une CI de l'adoptant modifiée à la main avant de l'écraser (alerte avant écrasement, intention existante
-  `docs/intentions/alertes-avant-et-apres-ecrasement.md`) ou laisser le comportement actuel.
+  refusé par D1.  **Tranché le 2026-11-08 (tranché par le demandeur)** : niveau de garantie suffisant, lot 4 sur GitHub et GitLab.
+- **D7 — mise à jour des adoptants** : les CI du gabarit changent de forme (job de plan, tranches,
+  agrégateur) ; la migration passe par la mise à jour habituelle des fichiers du gabarit. Option écartée : signaler une CI de l'adoptant modifiée à la main avant de l'écraser (intention existante
+  `docs/intentions/alertes-avant-et-apres-ecrasement.md`). **Tranché le 2026-11-08 (tranché par le demandeur)** : garder le comportement actuel, pas d'alerte avant écrasement.
 
 ## 6. Increments
 
@@ -256,7 +244,7 @@ Risque HIGH : la fiche touche `.githooks/`, la CI et `.drwil/`. Aucun point ci-d
   défaut) ; copie du dépôt et gabarit alignés (`miroirs-gabarit`).
 - **Lot 3 — CI GitLab** [IA] : même règle, selon D2 ; le job exigé garde son nom ; artefacts de tranches de la même
   pipeline ; aucun cache de verdicts. Critère de sortie : test de structure du gabarit GitLab, parité des cas du lot 2.
-- **Lot 4 — reprise d'une PR à l'autre** [IA], **seulement si D3 = oui** : verdict de PR lié à l'empreinte, au commit
+- **Lot 4 — reprise d'une PR à l'autre** [IA], (D3 tranchée : oui) : verdict de PR lié à l'empreinte, au commit
   et à la base, intégrité (D4), lecture limitée à la même PR, rejeu au moindre doute ; QUA-250 et QUA-113 amendés après
   validation. Critère de sortie : tests de falsification (verdict d'un autre commit, d'un autre contrôle, d'une autre
   PR, d'un fork, somme fausse, artefact expiré : tout est rejoué), jamais de lecture depuis une branche de PR ou
@@ -270,8 +258,7 @@ Risque HIGH : la fiche touche `.githooks/`, la CI et `.drwil/`. Aucun point ci-d
 ## 7. Reprise
 
 - **Dernier état** (2026-11-08) : cadré sur la branche `cadrage/ci-lents-controles`, rien de réalisé ; sondage de
-  portée, de forges et de preuve tranché par le demandeur le même jour.
+  portée, de forges et de preuve, puis D1 à D7, tranchés par le demandeur le même jour.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [décision] trancher D1 à D7 (surtout D3, qui conditionne le lot 4 et la modification de
-  QUA-250, D2 et D4), valider les contrats modifiés, passer la maturité à « prêt », puis fusionner le cadrage et lancer
-  le chantier par `/drwil-start`.
+- **Prochaine étape** : valider les contrats modifiés (`QUA-250`, `QUA-113`, `QUA-251`, `QUA-270`), confirmer `QUA-208`
+  (non tranché à ce jour), puis fusionner le cadrage et lancer le chantier par `/drwil-start`.
