@@ -22,6 +22,12 @@ files:
   - packages/drwil/test/kit.test.mjs
   - docs/contracts.md
   - .drwil/ia-first.json
+  - packages/drwil/templates/common/base/.githooks/engine.mjs
+  - packages/drwil/templates/common/base/.githooks/run-checks.mjs
+  - .githooks/engine.test.mjs
+  - outils/tests-par-fichier.mjs
+  - outils/tests-par-fichier.test.mjs
+  - docs/architecture.md
   - docs/projects/ci-plus-rapide.md
   - docs/projects/pending.md
   - docs/projects/journal.md
@@ -181,5 +187,24 @@ lot 4, avec l'accès au détail par contrôle.
   principale. Retrouver le pipeline de la MR fusionnée et lire son artefact passe par des API (pipelines, jobs) que le jeton
   de job n'ouvre pas partout, et rien ici ne les essaie : sauter sans preuve violerait QUA-013. Le contrat le dit ; à
   reprendre quand un GitLab d'essai existe.
-- **Prochaine étape** : lot 4 — `run-checks` plus rapide. Il touche aussi le gabarit
-  `packages/drwil/templates/common/base/.githooks/run-checks.mjs` (limite hors cadre du lot 1).
+- **Lot 4 fait** (2026-11-08) : un lanceur, `outils/tests-par-fichier.mjs`, remplace les 238 `node --test --test-name-pattern`
+  de `tests-qua-*` : chaque fichier de test n'est joué qu'une fois par passe (`DRWIL_PASS_ID`, posé par `checks()` du moteur ;
+  résultats partagés sous `.drwil/evidence/passe` (si présent), effacé en fin de passe par `run-checks`), un reporter laisse le résultat de
+  chaque test, lu ensuite par ID de contrat. Aucun test à l'ID, ou fichier qui n'a rien joué : échec (QUA-013). `miroirs-gabarit`
+  lit les tests de `outils/` par la même exécution (`--tous`, motif développé par le lanceur) au lieu de les rejouer ;
+  `checks-self-test` y passe aussi quand le lanceur existe (dépôt drwil seulement : un projet adopté n'a ni lanceur ni tests des
+  hooks), donc les tests de `.githooks/` ne sont plus joués deux fois. Contrat QUA-033 mis à jour ; tests ajoutés (lanceur,
+  moteur) ; test de `.githooks/base-checks.mjs` ajouté pour trois branches du lot 2 que la couverture à 100 % des hooks ne voyait pas.
+  **Mesure locale** (8 cœurs, `run-checks --tout-rejouer`, passe hors contrôles confiés à la CI : couvertures, build, tarball) :
+  avant 352 s (CPU 18,4 min), après 182 s (CPU 6,8 min). Non mesuré en CI (la CI seule le dit, 4 cœurs, deux contrôles en parallèle).
+  Couverture inchangée (QUA-004) : hooks 100 % (621 tests), paquet (355 tests) verts.
+  **Chemins ajoutés au bloc `scope`** (QUA-214) : `outils/tests-par-fichier.mjs` et son test (le lanceur, nouveau) ;
+  `packages/drwil/templates/common/base/.githooks/engine.mjs` et `packages/drwil/templates/common/base/.githooks/run-checks.mjs` (sources de `.githooks/engine.mjs` et
+  `.githooks/run-checks.mjs`, QUA-018 : on édite le gabarit puis `npm run installer-depot`) ; `.githooks/engine.test.mjs` (test de la
+  voie partagée de `checks-self-test`) ; `docs/architecture.md` (QUA-040 : la carte cite le nouveau lanceur). outils/miroirs.mjs,
+  cité au bloc, n'existe pas : rien n'y a été modifié.
+- **Limites** : le plus gros fichier (`packages/drwil/test/kit.test.mjs`, ~200 s en série) est joué d'un bloc, donc il borne
+  la durée de la passe : le couper (ou rendre ses tests concurrents) serait un autre chantier ; un contrôle qui attend le
+  résultat d'un fichier joué par un autre occupe un créneau de `parallel` sans calculer. Les doubles emplois qui restent :
+  les couvertures (`couverture-tests`, `couverture-hooks`) rejouent les mêmes tests sous c8 (non partageables). La durée par contrôle
+  en CI (gabarit `packages/drwil/templates/common/base/.githooks/run-checks.mjs`) et le cache gitleaks du job `checks` / `.github/workflows/banc.yml` restent hors cadre (limites du lot 1).
