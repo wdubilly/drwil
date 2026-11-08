@@ -22,12 +22,14 @@ import { afterEach, test } from "node:test";
 import { Script } from "node:vm";
 import { fileURLToPath } from "node:url";
 import { init } from "../dist/index.js";
+import { chooseServeAutostart } from "../dist/cli-install.js";
 import { accessToken, maskPersonal, ServeRefusal } from "../dist/serve-auth.js";
 import { createBoard } from "../dist/serve-board.js";
 import { createDetails, forgeLink } from "../dist/serve-details.js";
 import { createForge, hostOf, natureOf } from "../dist/serve-forge.js";
 import { measures, openJournal } from "../dist/serve-journal.js";
 import { createReader } from "../dist/serve-read.js";
+import { publish, welcomeCommand } from "../dist/serve-publish.js";
 import { createReleases } from "../dist/serve-releases.js";
 import { SERVE_TEXTS } from "../dist/serve-texts.js";
 import { startWatch } from "../dist/serve-watch.js";
@@ -570,7 +572,14 @@ test("QUA-272 : l'état d'exécution vit dans le cache de l'utilisateur, un doss
   assert.notEqual(projectCacheDir("/a", { XDG_CACHE_HOME: "/c" }), projectCacheDir("/b", { XDG_CACHE_HOME: "/c" }));
   assert.equal(hostForUrl("::1"), "[::1]");
   assert.equal(hostForUrl("0.0.0.0"), "0.0.0.0");
-  assert.ok(preferredPort("/a") >= 4317 && preferredPort("/a") < 5317);
+  assert.ok(preferredPort("/a") >= 4317 && preferredPort("/a") < 5017);
+});
+
+test("QUA-272 : le port propre au projet et ses essais restent sous 5060 et 5061, refusés par les navigateurs", () => {
+  const ports = Array.from({ length: 20000 }, (_, i) => preferredPort(`/projet-${i}`));
+  assert.ok(Math.min(...ports) >= 4317);
+  assert.equal(Math.max(...ports), 5016, "plage entière parcourue : le plus haut port de départ");
+  assert.ok(Math.max(...ports) + 19 < 5060, "vingt essais au plus depuis ce port");
 });
 
 // --- Forges (QUA-273), journal (QUA-274), vues vides (QUA-275) ---
@@ -1837,4 +1846,269 @@ test("QUA-275 : sans relevé, les mesures répondent vides et disent ce qui manq
   assert.equal(r2.missing, null);
   assert.equal(r2.ci.points.length, 2);
   assert.match((await jsonDe(`${s2.url}api/contracts`)).head, /^[0-9a-f]{7}$/);
+});
+
+const NOM_TAILNET = "poste.reseau-essai.ts.net";
+const TAILSCALE_ACTIF = { BackendState: "Running", Self: { DNSName: `${NOM_TAILNET}.` }, CertDomains: [NOM_TAILNET] };
+
+/** Un binaire `tailscale` factice, seul sur le PATH de ce nom : l'essai ne touche jamais au vrai réseau privé. */
+function tailscaleFactice({ statut = JSON.stringify(TAILSCALE_ACTIF), publication = 0 } = {}) {
+  const dossier = tmp();
+  ecrire(dossier, "statut.json", statut);
+  ecrire(
+    dossier,
+    "tailscale",
+    `#!/bin/sh\necho "$@" >> "${dossier}/appels"\ncase "$1 $2" in\n  "status --json") cat "${dossier}/statut.json" ;;\n  "serve status") echo '{}' ;;\n  *) exit ${publication} ;;\nesac\n`,
+  );
+  chmodSync(join(dossier, "tailscale"), 0o755);
+  return {
+    env: { PATH: `${dossier}:${process.env.PATH}` },
+    appels: () => (existsSync(join(dossier, "appels")) ? readFileSync(join(dossier, "appels"), "utf8") : ""),
+  };
+}
+
+function reglerAccueil(p, reglage) {
+  const cfg = JSON.parse(readFileSync(join(p.dir, ".drwil/ia-first.json"), "utf8"));
+  ecrire(p.dir, ".drwil/ia-first.json", JSON.stringify({ ...cfg, ...reglage }));
+  mkdirSync(join(p.dir, "node_modules"), { recursive: true });
+  symlinkSync(racinePaquet, join(p.dir, "node_modules/drwil"), "junction");
+}
+
+const hookAccueil = (p, env, ...args) =>
+  spawnSync(process.execPath, [join(p.dir, ".claude/hooks/serve-welcome.mjs"), ...args], {
+    cwd: p.dir,
+    env: { ...p.env, ...env },
+    encoding: "utf8",
+  });
+
+test("QUA-277 : à l'ouverture d'une session choisie, le serveur démarre et le lien ne passe que par systemMessage", async () => {
+  const p = await projet({});
+  reglerAccueil(p, { serveAutostart: true });
+  const ts = tailscaleFactice({ statut: "pas du JSON" });
+  arreterDetache(p);
+  const jeton = "j".repeat(40);
+  const r = hookAccueil(p, { ...ts.env, DRWIL_SERVE_TOKEN: jeton });
+  assert.deepEqual([r.status, r.stderr], [0, ""]);
+  const sortie = JSON.parse(r.stdout);
+  assert.deepEqual(Object.keys(sortie), ["systemMessage"], "aucun octet destiné au modèle");
+  assert.equal(r.stdout.trim().split("\n").length, 1);
+  assert.ok(!r.stdout.includes(jeton), "QUA-270 : le jeton n'apparaît pas");
+  const lien = /http:\/\/127\.0\.0\.1:(\d+)\//.exec(sortie.systemMessage);
+  assert.ok(lien, sortie.systemMessage);
+  assert.equal((await fetch(`${lien[0]}api/docs`)).status, 200);
+  const { pid } = JSON.parse(readFileSync(fichierServeur(p), "utf8"));
+
+  const seconde = hookAccueil(p, ts.env);
+  assert.deepEqual(JSON.parse(seconde.stdout), sortie, "une session suivante redonne le même lien");
+  assert.equal(JSON.parse(readFileSync(fichierServeur(p), "utf8")).pid, pid, "pas de second serveur");
+  const copilot = hookAccueil(p, ts.env, "copilot");
+  assert.deepEqual([copilot.status, copilot.stdout, copilot.stderr], [0, "", ""], "Copilot CLI : rien sur stdout");
+});
+
+test("QUA-277 : sans réponse de l'humain, le hook ne démarre rien", async () => {
+  const p = await projet({});
+  reglerAccueil(p, {});
+  const r = hookAccueil(p, tailscaleFactice().env);
+  assert.deepEqual([r.status, r.stdout, r.stderr], [0, "", ""]);
+  assert.equal(existsSync(fichierServeur(p)), false);
+});
+
+test("QUA-278 : avec Tailscale, le lien est celui du réseau privé et seul ce nom passe le contrôle de Host", async () => {
+  const p = await projet({});
+  const ts = tailscaleFactice();
+  arreterDetache(p);
+  const r = lancer(p, ["--welcome"], ts.env);
+  assert.equal(r.status, 0, r.stderr);
+  const port = Number(/ts\.net:(\d+)\//.exec(r.stdout)[1]);
+  assert.ok(r.stdout.includes(`https://${NOM_TAILNET}:${port}/`), r.stdout);
+  assert.ok(r.stdout.includes(`http://127.0.0.1:${port}/`), r.stdout);
+  assert.match(ts.appels(), new RegExp(`serve --bg --https=${port} http://127\\.0\\.0\\.1:${port}`));
+  assert.equal(JSON.parse(readFileSync(fichierServeur(p), "utf8")).host, "127.0.0.1", "écoute locale seulement");
+  assert.equal((await brut(port, "/api/docs", { host: `${NOM_TAILNET}:${port}` })).status, 200);
+  assert.equal((await brut(port, "/api/docs", { host: NOM_TAILNET })).status, 200);
+  assert.equal((await brut(port, "/api/docs", { host: "attaquant.example" })).status, 403);
+  assert.equal((await brut(port, "/api/docs", { host: `${NOM_TAILNET}.attaquant.example:${port}` })).status, 403);
+});
+
+test("QUA-278 : sans publication, tout marche en local, le message dit comment ouvrir l'accès et aucun nom n'est admis", async () => {
+  const p = await projet({});
+  const ts = tailscaleFactice({ publication: 1 });
+  arreterDetache(p);
+  const r = lancer(p, ["--welcome"], ts.env);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /http:\/\/127\.0\.0\.1:\d+\/ \(sur cet ordinateur\)\. .*sudo tailscale set --operator/);
+  const port = JSON.parse(readFileSync(fichierServeur(p), "utf8")).port;
+  assert.equal(existsSync(join(dirname(fichierServeur(p)), "published.json")), false);
+  assert.equal((await brut(port, "/api/docs")).status, 200);
+  assert.equal((await brut(port, "/api/docs", { host: `${NOM_TAILNET}:${port}` })).status, 403);
+
+  // Un enregistrement sans nom utilisable n'ouvre rien.
+  const publie = join(dirname(fichierServeur(p)), "published.json");
+  for (const contenu of ["{}", "pas du JSON"]) {
+    writeFileSync(publie, contenu);
+    assert.equal((await brut(port, "/api/docs", { host: `undefined:${port}` })).status, 403, contenu);
+  }
+});
+
+test("QUA-278 : chaque état de Tailscale donne son conseil, sans jamais remplacer une autre publication", () => {
+  const cacheDir = tmp();
+  const repond = (statut, publication = { TCP: {} }, ecriture = "") => {
+    const appels = [];
+    const run = (commande, args) => {
+      appels.push(`${commande} ${args.join(" ")}`);
+      if (args[0] === "status") return statut;
+      return args[1] === "status" ? JSON.stringify(publication) : ecriture;
+    };
+    return { resultat: publish(4400, cacheDir, run), appels };
+  };
+  const actif = JSON.stringify(TAILSCALE_ACTIF);
+  assert.deepEqual(repond(null).resultat, { advice: "phoneNoTailscale" });
+  assert.deepEqual(repond("pas du JSON").resultat, { advice: "phoneNoTailscale" });
+  assert.deepEqual(repond(JSON.stringify({ BackendState: "NeedsLogin" })).resultat, { advice: "phoneDown" });
+  assert.deepEqual(repond(JSON.stringify({ ...TAILSCALE_ACTIF, CertDomains: [] })).resultat, { advice: "phoneNoHttps" });
+  assert.deepEqual(repond(JSON.stringify({ ...TAILSCALE_ACTIF, CertDomains: undefined })).resultat, { advice: "phoneNoHttps" });
+  assert.deepEqual(repond(JSON.stringify({ BackendState: "Running", CertDomains: [NOM_TAILNET] })).resultat, { advice: "phoneNoHttps" });
+
+  const prise = {
+    TCP: { 4400: { HTTPS: true } },
+    Web: { [`${NOM_TAILNET}:4400`]: { Handlers: { "/": { Proxy: "http://127.0.0.1:9999" } } } },
+  };
+  const refus = repond(actif, prise);
+  assert.deepEqual(refus.resultat, { advice: "phoneTaken" });
+  assert.equal(
+    refus.appels.some((a) => a.includes("--bg")),
+    false,
+    "aucune écriture sur un port pris",
+  );
+  assert.deepEqual(repond(actif, { TCP: { 4400: {} } }).resultat, { advice: "phoneTaken" }, "sans proxy lisible : pris");
+
+  const deja = {
+    TCP: { 4400: { HTTPS: true } },
+    Web: { [`${NOM_TAILNET}:4400`]: { Handlers: { "/": { Proxy: "http://127.0.0.1:4400/" } } } },
+  };
+  const memeLien = repond(actif, deja);
+  assert.deepEqual(memeLien.resultat, { url: `https://${NOM_TAILNET}:4400/` });
+  assert.equal(
+    memeLien.appels.some((a) => a.includes("--bg")),
+    false,
+    "déjà publié : rien à changer",
+  );
+
+  assert.deepEqual(
+    repond(actif, null).resultat,
+    { url: `https://${NOM_TAILNET}:4400/` },
+    "statut de publication illisible : publication tentée",
+  );
+  assert.deepEqual(repond(actif, { TCP: {} }, null).resultat, { advice: "phoneDenied" });
+  assert.deepEqual(JSON.parse(readFileSync(join(cacheDir, "published.json"), "utf8")), { host: NOM_TAILNET });
+});
+
+test("QUA-278 : le message d'accueil est dans la langue du projet, sans Tailscale comme avec", async () => {
+  for (const [lang, sansLui, avecLui] of [
+    ["fr", /Pour l'ouvrir depuis le téléphone : installer Tailscale/, /réseau privé Tailscale/],
+    ["en", /To open it from your phone: install Tailscale/, /private Tailscale network/],
+  ]) {
+    const p = await projet({});
+    reglerLangue(p, lang);
+    const lignes = [];
+    const log = console.log;
+    console.log = (l) => lignes.push(l);
+    const start = async (_o, report) => report("started", "http://127.0.0.1:4400/");
+    try {
+      await welcomeCommand(p.dir, undefined, start, () => null, p.env);
+      await welcomeCommand(p.dir, undefined, start, (_c, a) => (a[0] === "status" ? JSON.stringify(TAILSCALE_ACTIF) : "{}"), p.env);
+    } finally {
+      console.log = log;
+    }
+    assert.match(lignes[0], sansLui);
+    assert.match(lignes[1], avecLui);
+  }
+});
+
+function reglerLangue(p, lang) {
+  const cfg = JSON.parse(readFileSync(join(p.dir, ".drwil/ia-first.json"), "utf8"));
+  ecrire(p.dir, ".drwil/ia-first.json", JSON.stringify({ ...cfg, lang }));
+}
+
+test("QUA-279 : l'accueil n'écoute que sur 127.0.0.1 et un serveur lancé à la main avec --host n'est pas publié", async () => {
+  const p = await projet({});
+  const lignes = [];
+  const log = console.log;
+  console.log = (l) => lignes.push(l);
+  let demande;
+  const appels = [];
+  try {
+    await welcomeCommand(
+      p.dir,
+      "4400",
+      async (o, report) => {
+        demande = o;
+        report("already", "http://192.0.2.1:4400/");
+      },
+      (_c, a) => {
+        appels.push(a);
+        return null;
+      },
+      p.env,
+    );
+  } finally {
+    console.log = log;
+  }
+  assert.deepEqual(demande, { root: p.dir, host: "127.0.0.1", port: "4400", detach: true });
+  assert.deepEqual(appels, [], "rien de publié");
+  assert.match(lignes[0], /déjà démarré .*192\.0\.2\.1/);
+});
+
+test("QUA-279 : le démarrage automatique n'est actif que sur la réponse de l'humain", async () => {
+  const dir = tmp();
+  const jamais = async () => assert.fail("aucune question attendue");
+  assert.equal(await chooseServeAutostart(dir, true, "claude", false, jamais), true);
+  assert.equal(await chooseServeAutostart(dir, false, "claude", true, jamais), false);
+  assert.equal(await chooseServeAutostart(dir, undefined, "claude", false, jamais), undefined, "sans terminal : non répondu");
+  assert.equal(await chooseServeAutostart(dir, undefined, "cursor", true, jamais), undefined, "Cursor seul : pas de hook");
+  for (const [reponse, attendu] of [
+    ["o", true],
+    ["YES", true],
+    [" oui ", true],
+    ["y", true],
+    ["", false],
+    ["n", false],
+    ["peut-être", false],
+  ]) {
+    assert.equal(await chooseServeAutostart(dir, undefined, "claude,cursor", true, async () => reponse), attendu, reponse);
+  }
+  ecrire(dir, ".drwil/ia-first.json", JSON.stringify({ tools: ["claude"], serveAutostart: false }));
+  assert.equal(await chooseServeAutostart(dir, undefined, undefined, true, jamais), undefined, "déjà répondu : pas redemandé");
+  ecrire(dir, ".drwil/ia-first.json", JSON.stringify({ tools: ["claude"] }));
+  assert.equal(await chooseServeAutostart(dir, undefined, undefined, true, async () => "o"), true, "mise à jour : proposé une fois");
+
+  // Installation et mise à jour réelles : absent sans réponse, écrit sur réponse, gardé ensuite.
+  const clefs = async (options) => {
+    const log = console.log;
+    console.log = () => {};
+    try {
+      await init({ lang: "fr", targetDir: cible, tools: "claude", git: false, ci: "none", ...options });
+    } finally {
+      console.log = log;
+    }
+    return JSON.parse(readFileSync(join(cible, ".drwil/ia-first.json"), "utf8")).serveAutostart;
+  };
+  const cible = tmp();
+  assert.equal(await clefs({}), undefined, "sans réponse, la clé n'existe pas");
+  assert.equal(await clefs({ serveAutostart: true }), true);
+  assert.equal(await clefs({}), true, "une mise à jour garde la réponse");
+  assert.equal(await clefs({ serveAutostart: false }), false);
+
+  const parCli = tmp();
+  for (const [option, attendu] of [
+    ["--serve-autostart", true],
+    ["--no-serve-autostart", false],
+  ]) {
+    const r = spawnSync(process.execPath, [cli, "init", "--no-git", "--tools", "claude", "--ci", "none", "--lang", "fr", option], {
+      cwd: parCli,
+      encoding: "utf8",
+    });
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(JSON.parse(readFileSync(join(parCli, ".drwil/ia-first.json"), "utf8")).serveAutostart, attendu, option);
+  }
 });

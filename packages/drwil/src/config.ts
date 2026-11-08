@@ -25,6 +25,8 @@ export interface InitOptions {
   /** CSV among TOOLS. Default: all. */
   tools?: string;
   ci?: string;
+  /** The human's answer on starting `drwil serve` at each session; undefined: not answered, stays off (QUA-279). */
+  serveAutostart?: boolean;
   /** `init` only: rewrites everything (otherwise only the kit mechanics, KIT_MECHANICS, are rewritten). */
   force?: boolean;
 }

@@ -1,12 +1,15 @@
 // Barrières de `drwil serve` : jeton hors de 127.0.0.1 (QUA-270), masquage de toute réponse (QUA-271).
 import { createHash, timingSafeEqual } from "node:crypto";
+import { readFileSync } from "node:fs";
 import type { IncomingHttpHeaders } from "node:http";
+import { join } from "node:path";
 import type { ServeMessage } from "./serve-texts.js";
 
 export const LOCAL_HOST = "127.0.0.1";
 export const TOKEN_ENV = "DRWIL_SERVE_TOKEN";
 export const MIN_TOKEN_LENGTH = 32;
 export const COOKIE_NAME = "drwil_serve";
+export const PUBLISHED_FILE = "published.json";
 const MASK = "[REDACTED]";
 
 /** Refus prévu, dit à l'humain dans la langue du projet ; `values` ne porte jamais le jeton. */
@@ -40,12 +43,24 @@ export function hasValidToken(headers: IncomingHttpHeaders, token: string): bool
   return (bearer !== undefined && sameToken(bearer, token)) || (cookie !== undefined && sameToken(cookie, cookieValue(token)));
 }
 
+/** Le nom écrit par la publication Tailscale de ce projet, le seul nom non local admis (QUA-278). */
+function publishedName(cacheDir: string): string | null {
+  try {
+    const { host } = JSON.parse(readFileSync(join(cacheDir, PUBLISHED_FILE), "utf8"));
+    return typeof host === "string" ? host : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Sans jeton, seul un `Host` local passe : une page web qui ferait pointer son domaine sur 127.0.0.1
- * (DNS rebinding) lirait sinon l'API depuis le navigateur de l'humain.
+ * Sans jeton, seul un `Host` local ou le nom publié passe : une page web qui ferait pointer son domaine sur
+ * 127.0.0.1 (DNS rebinding) lirait sinon l'API depuis le navigateur de l'humain.
  */
-export function localHostHeader(host: string | undefined, port: number): boolean {
-  return host === `${LOCAL_HOST}:${port}` || host === `localhost:${port}`;
+export function allowedHost(host: string | undefined, port: number, cacheDir: string): boolean {
+  if (host === `${LOCAL_HOST}:${port}` || host === `localhost:${port}`) return true;
+  const name = publishedName(cacheDir);
+  return name !== null && (host === name || host === `${name}:${port}`);
 }
 
 const PERSONAL_KEY = /^(authors?|committers?|actor|login|e?mail|user|username|mergedBy|assignees?|reviewers?)$/i;

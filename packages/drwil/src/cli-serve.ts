@@ -20,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import type { Command } from "commander";
 import { fill, projectLang } from "./i18n.js";
 import { accessToken, LOCAL_HOST, ServeRefusal, TOKEN_ENV } from "./serve-auth.js";
+import { welcomeCommand } from "./serve-publish.js";
 import { projectCacheDir, type RunningServer, startServer } from "./serve.js";
 import { SERVE_TEXTS, type ServeMessage } from "./serve-texts.js";
 
@@ -169,9 +170,9 @@ async function detach(o: ServeCommandOptions, file: string, say: (key: ServeMess
   throw new ServeRefusal("startFailed", [log]);
 }
 
-export async function serveCommand(o: ServeCommandOptions): Promise<void> {
+export async function serveCommand(o: ServeCommandOptions, report?: (key: ServeMessage, ...v: unknown[]) => void): Promise<void> {
   const T = SERVE_TEXTS[projectLang(o.root)];
-  const say = (key: ServeMessage, ...values: unknown[]) => console.log(fill(T[key], ...values));
+  const say = report ?? ((key: ServeMessage, ...values: unknown[]) => console.log(fill(T[key], ...values)));
   if (!existsSync(join(o.root, ".drwil", "ia-first.json"))) throw new ServeRefusal("notProject");
   const file = join(projectCacheDir(realpathSync(o.root)), "server.json");
   await (o.detach ? detach : foreground)(o, file, say);
@@ -184,10 +185,12 @@ export function registerServe(program: Command): void {
     .option("--host <host>", `Listening address; anything but ${LOCAL_HOST} requires ${TOKEN_ENV}`, LOCAL_HOST)
     .option("--port <port>", "Listening port (default: a port of its own for this project)")
     .option("--detach", "Run in the background and print the address; reuse the project's server if it is already running")
+    .option("--welcome", `Start in the background on ${LOCAL_HOST}, publish with tailscale serve when possible, print the link`)
     .action(async (opts) => {
       const root = process.cwd();
       try {
-        await serveCommand({ root, host: opts.host, port: opts.port, detach: opts.detach });
+        if (opts.welcome) await welcomeCommand(root, opts.port, serveCommand);
+        else await serveCommand({ root, host: opts.host, port: opts.port, detach: opts.detach });
       } catch (e) {
         const T = SERVE_TEXTS[projectLang(root)];
         console.error(e instanceof ServeRefusal ? fill(T[e.key], ...e.values) : (e as Error).message);

@@ -709,6 +709,14 @@ those views stay empty and say what is missing. The page is made for a phone
 link to a PR or MR goes through the server's own redirect, so no forge address
 appears in any response body.
 
+`npx drwil serve --welcome` (or `/drwil-serve` in the chat) starts it if needed
+and prints the link. When Tailscale is present with HTTPS turned on, the view is
+published on your private network with `tailscale serve`, still listening on
+`127.0.0.1` only; without Tailscale everything works on the computer and the
+message says how to open it from a phone. `drwil init` offers to start it at each
+session (off unless you say yes; `--serve-autostart` or `--no-serve-autostart` to
+change the answer): the hook then shows the link to you, never to the model.
+
 ### 4. Attest a MANUAL contract (human, in your own terminal)
 
 ```bash

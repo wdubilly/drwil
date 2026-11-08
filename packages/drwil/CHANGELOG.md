@@ -19,6 +19,14 @@ closing commit; the release renames this section to its version.
   horizontal scrolling at 360 px) and in the project's language (French or
   English), with the CI measures and their trends; a PR or MR link
   goes through a server redirect, never a forge address in a response body.
+- `/drwil-serve` and `drwil serve --welcome`: start the view if needed and print
+  its link. `drwil init` offers to start it at each session, off unless the
+  human says yes (`--serve-autostart`, `--no-serve-autostart`); a session-start
+  hook then shows the link through `systemMessage`, which never reaches the
+  model (Claude Code, Gemini CLI, Codex; Copilot CLI has no such channel and
+  uses `/drwil-serve`). It only ever listens on `127.0.0.1`; with Tailscale and
+  HTTPS on, the port is published with `tailscale serve` and the private-network
+  link is given. Tailscale is never required.
 - Release module: an optional `release.requiredOs` setting (absent by
   default, never added by an update) makes `create-release.mjs` (direct
   release or `--candidate`) and `promote-release.mjs` refuse, without
@@ -86,6 +94,11 @@ closing commit; the release renames this section to its version.
   `drwil attest <ID>`, never the terminal alone. The new recipe
   `docs/recipes/attest-a-contract.md` says, tool by tool, how to prepare and
   ask the poll, with no answer, default or recommendation.
+
+### Changed
+
+- `taille-kit`: `.claude/settings.json` and `.gemini/settings.json` now have
+  their own ceiling of 250 lines; every other ceiling stays the same.
 
 ### Fixed
 

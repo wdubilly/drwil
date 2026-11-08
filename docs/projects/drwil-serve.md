@@ -126,11 +126,11 @@ téléphone. Le tableau de bord statique (`drwil-progress`) est remplacé.
   — contrat `QUA-276`
 - À l'ouverture d'une session, un projet qui a choisi le démarrage automatique voit le serveur démarré s'il ne tournait
   pas, et l'humain reçoit le lien sans qu'aucun octet n'entre dans le contexte du modèle ; un outil qui ne sait pas
-  montrer ce message donne le lien par le skill — contrat à créer
+  montrer ce message donne le lien par le skill — contrat `QUA-277`
 - Sans Tailscale, le serveur et le message d'accueil fonctionnent en local, sans erreur, et le message dit comment ouvrir
-  l'accès au téléphone ; avec Tailscale, le lien donné est celui du réseau privé — contrat à créer
+  l'accès au téléphone ; avec Tailscale, le lien donné est celui du réseau privé — contrat `QUA-278`
 - Le démarrage automatique est proposé à l'installation et n'est jamais activé sans réponse de l'humain ; il n'écoute
-  que sur `127.0.0.1` — contrat à créer
+  que sur `127.0.0.1` — contrat `QUA-279`
 - `drwil-progress` et le module `optional/dashboard` sont retirés ; `drwil serve` montre tout ce qu'ils montraient,
   tendances de QUA-198 comprises ; un projet déjà équipé est migré par la mise à jour, sans fichier orphelin — contrat
   à créer, QUA-198 modifié
@@ -211,7 +211,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-08) : lots 1 et 2 faits, essais réels compris. Lot 1 : `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
+- **Dernier état** (2026-11-08) : lots 1 à 4 faits ; reste le lot 5 (retrait de `drwil-progress`). Lot 1 : `drwil serve [--host] [--port] [--detach]` existe (`packages/drwil/src/cli-serve.ts`, `packages/drwil/src/serve.ts`,
   `packages/drwil/src/serve-auth.ts`, `packages/drwil/src/serve-read.ts`, `packages/drwil/src/serve-texts.ts`, `packages/drwil/src/serve-journal.ts`), contrats QUA-269 à QUA-272, tests `packages/drwil/test/serve.test.mjs`.
 - **Choix du lot 1, à garder** :
   - Le jeton vient de la seule variable `DRWIL_SERVE_TOKEN` (32 caractères au moins), jamais d'une option. L'entrée par
@@ -232,10 +232,21 @@ Aucun.
   - Les libellés sont dans un bloc JSON de la page (`#i18n`), lu par les tests de QUA-276 (parité FR/EN, codes) ; les textes `missing` et le journal restent dans `packages/drwil/src/serve-texts.ts`, dans la langue du projet.
   - Mesure réelle du 2026-11-08 dans Chromium, 360 px, tous onglets dépliés, sur ce dépôt (français) et sur un projet d'essai anglais à données longues : `scrollWidth` égal à la largeur, aucune erreur de script. La CI n'a pas de navigateur : la preuve durable est structurelle, la lisibilité sur téléphone reste à attester (QUA-276, attestation humaine attendue en VERIFY).
 - **Course corrigée au lot 3** : `findRunning` effaçait server.json même sans l'avoir lu, donc parfois la réservation d'un concurrent : deux serveurs, dont un orphelin (QUA-272). Reproduit 1 fois sur 25 sous charge ; 0 sur 25 avec le correctif, ce qui à cette fréquence ne prouve pas seul : la preuve est la lecture du code. Reste une fenêtre plus étroite, sur un enregistrement périmé relu par deux démarrages simultanés.
+- **Lot 4 fait** (2026-11-08) : skill `/drwil-serve` et `drwil serve --welcome` (`packages/drwil/src/serve-publish.ts`), hook d'accueil `.claude/hooks/serve-welcome.mjs` (`SessionStart` de Claude Code, Gemini CLI, Codex ; `sessionStart` de Copilot CLI, muet), question à l'installation (`chooseServeAutostart`, clé `serveAutostart`, options `--serve-autostart` et `--no-serve-autostart`), publication par `tailscale serve`. Contrats QUA-277 (accueil de session sans octet au modèle), QUA-278 (Tailscale jamais requis, lien du réseau privé), QUA-279 (démarrage automatique sur réponse de l'humain, `127.0.0.1` seul) ; règle de `Host` de QUA-269 (lecture seule) étendue au nom publié.
+- **Choix du lot 4, à garder** :
+  - `--welcome` écoute toujours sur `127.0.0.1` sans jeton : sa ligne ne porte aucun secret, elle peut donc passer par le chat d'un outil sans canal vers l'humain.
+  - Le nom Tailscale admis vient d'un fichier d'enregistrement, published.json, écrit dans le cache du projet par la commande avant la publication et effacé sans publication : le serveur ne lance pas `tailscale` (QUA-269).
+  - Port HTTPS du réseau privé égal au port local du projet : plusieurs projets coexistent, le lien reste stable.
+- **Plafond des réglages, décision du demandeur du 2026-11-08** : l'entrée `SessionStart` du hook d'accueil faisait passer `packages/drwil/templates/common/tools/claude/.claude/settings.json` de 199 à 209 lignes, au-delà des 200 du code et des hooks (QUA-157, taille des fichiers du kit). Sur son choix, par sondage, `.claude/settings.json` et `.gemini/settings.json` ont leur propre plafond de 250 lignes ; les autres plafonds n'ont pas changé.
+- **Comportement de chaque outil relevé** (2026-11-08) :
+  - Claude Code 2.1.319, essai réel avec un hook `SessionStart` portant une valeur témoin dans chaque champ : le modèle voit `additionalContext`, jamais `systemMessage`.
+  - Gemini CLI 0.61.0 : documentation seule (`systemMessage` « Displayed immediately to the user ») ; l'essai réel n'a pas abouti (délai dépassé).
+  - Codex (non installé sur le poste) : documentation seule (`systemMessage` « Surfaced as a warning in the UI or event stream », texte brut sur stdout ajouté au contexte, d'où le JSON seul).
+  - Copilot CLI 1.0.107 : documentation seule (« Only `additionalContext` is consumed for `sessionStart` ») : aucun canal vers l'humain, le lien passe par `/drwil-serve`. Essai réel non fait : le lancement de cet agent a été refusé à l'agent de ce lot.
+  - Cursor : documentation seule (`sessionStart` ne connaît que `additional_context`, lu par le modèle, `user_message` n'est pas affiché) : aucun canal, aucun hook livré, `AGENTS.md` donne la commande.
+- **Reste à essayer par un humain** : `tailscale serve` réel. Le poste de développement n'a pas HTTPS activé sur son réseau (`CertDomains` vide) : le chemin publié n'est prouvé que par un binaire factice, dont l'hypothèse que Tailscale transmet l'en-tête `Host` d'origine (les deux formes, avec et sans port, sont admises).
+- **Port corrigé au lot 4** : un projet dont l'empreinte tombait sur 5060 ou 5061 recevait un lien que les navigateurs refusent (« bad port »), ce qui a fait échouer une fois un test de QUA-277 (accueil de session sans octet au modèle). La plage du port propre au projet est réduite à 4317–5016, essais compris sous 5060. Le port d'un projet change donc d'une version à l'autre, sans conséquence avant la première sortie.
 - **Pour les lots suivants** :
-  - Lot 4 : avec `tailscale serve`, l'en-tête `Host` reçu en `127.0.0.1` sera sans doute le nom du réseau privé, refusé
-    aujourd'hui par `localHostHeader` (QUA-269, défense contre le DNS rebinding) : à autoriser explicitement, sans
-    ouvrir le contrôle aux autres noms.
-  - `packages/drwil/src/serve-read.ts` et `packages/drwil/src/cli-serve.ts` approchent le plafond de 200 lignes (QUA-001, fichier de code plafonné) ;
-    ce qui s'y ajoute peut demander un
-    nouveau fichier, à déclarer au bloc `scope`.
+  - Lot 5 à reprendre : retrait de `drwil-progress` (module `optional/dashboard`, skill, recette et références), migration d'un projet équipé, QUA-198 (tendances de la CI et du cache au tableau de bord) déplacé ; critère de sortie `GOVERNANCE: PASS` et projet équipé migré sans orphelin. Les `.githooks/dashboard*.mjs` et `.githooks/check-kit-size.mjs` sont déclarés aux « Contrats modifiés » : à garder ainsi (QUA-113, rejeu par la branche principale ; QUA-137, hook non déclaré).
+  - Lot 5 : `/drwil-progress` reste au menu de `.claude/skills/drwil/SKILL.md`, à côté de `/drwil-serve` : à retirer avec le reste.
+  - `packages/drwil/src/cli-serve.ts` est à 200 lignes, `packages/drwil/src/serve.ts` à 199 (QUA-001, fichier de code plafonné) : tout ajout y demande un nouveau fichier, à déclarer au bloc `scope`.

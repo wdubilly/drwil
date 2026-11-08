@@ -12,6 +12,17 @@ export const SERVE_TEXTS = {
       "--host {0} : hors de 127.0.0.1, un jeton est obligatoire. Dans votre propre terminal, définir la variable d'environnement DRWIL_SERVE_TOKEN (au moins {1} caractères), puis relancer. Ne jamais la coller dans le chat.",
     tokenWeak: "DRWIL_SERVE_TOKEN est trop court : au moins {0} caractères.",
     startFailed: "drwil serve : le serveur n'a pas démarré. Journal : {0}",
+    welcomeTailnet: "drwil serve : {0} (réseau privé Tailscale, aussi depuis le téléphone) ; sur cet ordinateur : {1}",
+    welcomeLocal: "drwil serve : {0} (sur cet ordinateur).",
+    phoneNoTailscale:
+      "Pour l'ouvrir depuis le téléphone : installer Tailscale (tailscale.com/download) sur les deux appareils, puis ouvrir une nouvelle session ; sans Tailscale, voir l'option --host de drwil serve et son jeton.",
+    phoneDown:
+      "Pour l'ouvrir depuis le téléphone : Tailscale n'est pas connecté, lancer « tailscale up », puis ouvrir une nouvelle session.",
+    phoneNoHttps:
+      "Pour l'ouvrir depuis le téléphone : activer MagicDNS et les certificats HTTPS dans la console d'administration de Tailscale, puis ouvrir une nouvelle session.",
+    phoneDenied:
+      "Pour l'ouvrir depuis le téléphone : tailscale serve a échoué ; sur Linux, lancer « sudo tailscale set --operator=$USER », puis ouvrir une nouvelle session.",
+    phoneTaken: "Accès au téléphone non ouvert : le port {0} de Tailscale sert déjà une autre application, rien n'a été changé.",
     forgeNone: "Aucune forge détectée : le dépôt n'a pas de remote origin sur GitHub ou GitLab.",
     forgeNoCli: "L'outil « {0} » n'est pas installé : les vues CI, PR et MR restent vides.",
     forgeUnreachable: "Forge injoignable : vérifier le réseau et la connexion de « {0} » (commande auth login).",
@@ -52,6 +63,16 @@ export const SERVE_TEXTS = {
       "--host {0}: outside 127.0.0.1 a token is mandatory. In your own terminal, set the DRWIL_SERVE_TOKEN environment variable (at least {1} characters), then start again. Never paste it in the chat.",
     tokenWeak: "DRWIL_SERVE_TOKEN is too short: at least {0} characters.",
     startFailed: "drwil serve: the server did not start. Log: {0}",
+    welcomeTailnet: "drwil serve: {0} (private Tailscale network, from your phone too); on this computer: {1}",
+    welcomeLocal: "drwil serve: {0} (on this computer).",
+    phoneNoTailscale:
+      "To open it from your phone: install Tailscale (tailscale.com/download) on both devices, then open a new session; without Tailscale, see the --host option of drwil serve and its token.",
+    phoneDown: 'To open it from your phone: Tailscale is not connected, run "tailscale up", then open a new session.',
+    phoneNoHttps:
+      "To open it from your phone: turn on MagicDNS and HTTPS certificates in the Tailscale admin console, then open a new session.",
+    phoneDenied:
+      'To open it from your phone: tailscale serve failed; on Linux, run "sudo tailscale set --operator=$USER", then open a new session.',
+    phoneTaken: "Phone access not opened: Tailscale port {0} already serves another application, nothing was changed.",
     forgeNone: "No forge detected: the repository has no origin remote on GitHub or GitLab.",
     forgeNoCli: 'The "{0}" tool is not installed: the CI, PR and MR views stay empty.',
     forgeUnreachable: 'Forge unreachable: check the network and the "{0}" login (auth login command).',

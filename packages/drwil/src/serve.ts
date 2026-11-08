@@ -5,7 +5,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import { fill } from "./i18n.js";
-import { COOKIE_NAME, cookieValue, hasValidToken, localHostHeader, maskPersonal, sameToken, ServeRefusal } from "./serve-auth.js";
+import { allowedHost, COOKIE_NAME, cookieValue, hasValidToken, maskPersonal, sameToken, ServeRefusal } from "./serve-auth.js";
 import { createBoard } from "./serve-board.js";
 import { createDetails } from "./serve-details.js";
 import { createForge, type Missing } from "./serve-forge.js";
@@ -16,7 +16,7 @@ import { SERVE_TEXTS } from "./serve-texts.js";
 import { startWatch } from "./serve-watch.js";
 
 const BASE_PORT = 4317;
-const PORT_RANGE = 1000;
+const PORT_RANGE = 700; // Essais compris, la plage s'arrête avant 5060 et 5061, que les navigateurs refusent.
 const PORT_TRIES = 20;
 const HEADERS = {
   "cache-control": "no-store",
@@ -149,7 +149,7 @@ export async function startServer(o: ServeOptions): Promise<RunningServer> {
 
   async function handle(req: IncomingMessage, res: ServerResponse) {
     const url = new URL(req.url ?? "/", "http://serve.invalid");
-    if (o.token === null && !localHostHeader(req.headers.host, port)) return send(res, 403, { error: "host refused" }, names);
+    if (o.token === null && !allowedHost(req.headers.host, port, cacheDir)) return send(res, 403, { error: "host refused" }, names);
     if (o.token !== null && url.pathname === "/" && sameToken(url.searchParams.get("token") ?? "", o.token)) {
       // Le jeton quitte l'adresse aussitôt : il ne reste ni dans l'historique ni dans un en-tête Referer.
       res.writeHead(303, {

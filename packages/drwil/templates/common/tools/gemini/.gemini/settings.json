@@ -10,6 +10,16 @@
             "timeout": 10000
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "name": "drwil-serve-welcome",
+            "type": "command",
+            "command": "{{geminiNodeWarn}}\"$GEMINI_PROJECT_DIR/.claude/hooks/serve-welcome.mjs\"",
+            "timeout": 15000
+          }
+        ]
       }
     ],
     "BeforeAgent": [
