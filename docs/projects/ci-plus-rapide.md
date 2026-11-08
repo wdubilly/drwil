@@ -70,16 +70,16 @@ parallélisme (`parallel`) par défaut.
 
 - Sur une PR, le rejeu avec les hooks de la branche principale reprend le verdict de chaque contrôle dont les hooks et
   l'empreinte sont identiques à ceux déjà joués : une PR de code ne paie plus deux passes complètes, et un hook affaibli
-  reste refusé — contrat à créer
+  reste refusé — `QUA-113`
 - Un push sur la branche principale dont l'arbre est celui d'une PR verte ne rejoue pas les contrôles et le dit ; dans
-  tout autre cas il rejoue tout, et le suivi de la CI de la branche principale (QUA-251) reste exact — contrat à créer
+  tout autre cas il rejoue tout, et le suivi de la CI de la branche principale (QUA-251) reste exact — `QUA-250`
 - Les plus gros contrôles de `run-checks` sont plus rapides sans perdre une preuve : la durée du job `checks` sur une
   PR de code passe sous la cible de la section 4, mesurée avant et après — contrat à créer
 - Le téléchargement de gitleaks se remet de ses échecs passagers (nouvelles tentatives, y compris sur une erreur HTTP,
   et cache de l'archive vérifiée par son empreinte) dans les trois CI : celle du dépôt, celle du gabarit GitHub et
-  celle du gabarit GitLab — contrat à créer
+  celle du gabarit GitLab — `QUA-269`
 - Un projet adopté reçoit ces gains : les CI du gabarit portent les mêmes mécanismes, et un projet d'essai installé
-  depuis le paquet le prouve — contrat à créer
+  depuis le paquet le prouve — `QUA-270`
 
 ## Contrats modifiés
 

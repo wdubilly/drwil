@@ -185,7 +185,7 @@ test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge
   assert.deepEqual(ci.checks.cache.paths, [".drwil/evidence/gitleaks.tar.gz"]);
 });
 
-test("gitleaks : les trois CI retentent le téléchargement (erreur HTTP comprise), cachent l'archive sous sa version épinglée et la vérifient à chaque passe", () => {
+test("QUA-269 : les trois CI retentent le téléchargement de gitleaks (erreur HTTP comprise), cachent l'archive sous sa version épinglée et la vérifient à chaque passe", () => {
   const lire = (f) => readFileSync(join(RACINE, f), "utf8");
   const ci = {
     depot: lire(".github/workflows/ia-first.yml"),

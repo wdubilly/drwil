@@ -2583,3 +2583,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/acceptance-sheet.test.mjs`, `.githooks/create-release.test.mjs`, `.githooks/promote-release.test.mjs`, `packages/drwil/test/config-write.test.mjs`
 **Origine** : ci-multi-os-a-la-release — « Avec le réglage des OS exigés renseigné dans `.drwil/ia-first.json`, `.githooks/create-release.mjs` (création directe ou candidate) et `.githooks/promote-release.mjs` refusent, sans rien créer, tant qu'un OS exigé n'a pas réellement lancé la suite avec succès sur le commit visé »
 **Raison** : Windows et macOS ne sont plus testés à chaque PR (QUA-045) : sans barrière, une release que Windows casserait partirait sans que personne ne l'ait vue (décidé le 2026-11-07, sondage « Barrière »).
+
+## QUA-269 — Les trois CI retentent le téléchargement de gitleaks et cachent son archive vérifiée
+**Règle** : Livré à tout projet (CI GitHub et GitLab du gabarit) ; la CI de ce dépôt suit la même règle. Le téléchargement de gitleaks se remet de ses échecs passagers : nouvelles tentatives sur toute erreur, y compris une erreur HTTP (`--retry 5 --retry-all-errors`, dans `~/.curlrc` pour l'étape du dépôt, dont le texte est comparé à celui du banc par QUA-109). L'archive est cachée sous la version épinglée (clé `gitleaks-<version>-linux-x64`, sans hash) et sa somme sha256 publiée est vérifiée à chaque passe, cache lu ou non : une archive cachée altérée échoue, jamais un succès (QUA-013).
+**Périmètre** : étape d'installation de gitleaks du job `checks` de `.github/workflows/ia-first.yml`, de `packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml` et de `packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml`.
+**Source de vérité** : l'étape d'installation de gitleaks de chacune des trois CI.
+**Preuve** : test qui lit les trois fichiers de CI : téléchargement de gitleaks avec nouvelles tentatives sur toute erreur, clé de cache sous la version épinglée, somme vérifiée. Le gain d'un cache lu ou d'une nouvelle tentative réussie n'est pas mesuré ici : seule la forge le montre.
+**Contrôle** : `tests-qua-269`
+**Tests** : `.github/scripts/workflows-yaml.test.mjs`
+**Origine** : ci-plus-rapide — « Le téléchargement de gitleaks se remet de ses échecs passagers (nouvelles tentatives, y compris sur une erreur HTTP, et cache de l'archive vérifiée par son empreinte) dans les trois CI : celle du dépôt, celle du gabarit GitHub et celle du gabarit GitLab »
+**Raison** : Un 504 du téléchargement de gitleaks (2026-11-08) a rendu la CI rouge deux fois sans rapport avec le code, et un projet adopté recevait la même CI fragile.
+
+## QUA-270 — Un projet installé depuis le paquet reçoit les mécanismes de la CI rapide
+**Règle** : Livré à tout projet (CI GitHub et GitLab du gabarit). Un projet installé par `init` reçoit, dans sa CI et ses hooks, les mêmes mécanismes de rapidité que ce dépôt, sans perte de preuve : téléchargement de gitleaks retenté et archive cachée vérifiée par sa somme (QUA-269) ; rejeu avec la copie de `.githooks/base-checks.mjs` de la branche principale et reprise des verdicts de la première passe de la PR (QUA-113, QUA-250) ; sur GitHub, preuve d'arbre déposée par la PR et lue par le push sur la branche principale (QUA-250), GitLab rejouant tout ; moteur de `run-checks` (`.githooks/base-checks.mjs`, `.githooks/run-checks.mjs`, `.githooks/run-checks-verdicts.mjs`, `.githooks/engine.mjs`) identique à celui de ce dépôt.
+**Périmètre** : `packages/drwil/templates/common/ci/github/`, `packages/drwil/templates/common/ci/gitlab/` et `packages/drwil/templates/common/base/.githooks/` (les quatre fichiers du moteur).
+**Source de vérité** : `packages/drwil/templates/common/` (QUA-018).
+**Preuve** : test du paquet : deux projets d'essai installés par `init` (GitHub, GitLab) dont les CI portent chaque mécanisme et dont les quatre fichiers du moteur sont ceux du dépôt, octet pour octet. Ne prouve pas la durée gagnée chez l'adoptant, que seule sa forge mesure, ni l'activation par défaut du réglage `parallel` (hors de ce contrat).
+**Contrôle** : `tests-qua-270`
+**Tests** : `packages/drwil/test/kit.test.mjs`
+**Origine** : ci-plus-rapide — « Un projet adopté reçoit ces gains : les CI du gabarit portent les mêmes mécanismes, et un projet d'essai installé depuis le paquet le prouve »
+**Raison** : Un projet adopté payait le même double passage de PR et le même 504 de gitleaks que ce dépôt : un gain qui ne se livre pas ne profite qu'à nous.
