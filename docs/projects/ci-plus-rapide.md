@@ -12,6 +12,7 @@ files:
   - packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml
   - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
   - .githooks/base-checks.mjs
+  - packages/drwil/templates/common/base/.githooks/base-checks.mjs
   - .githooks/base-checks.test.mjs
   - .githooks/run-checks.mjs
   - .githooks/run-checks.test.mjs
@@ -160,4 +161,14 @@ lot 4, avec l'accès au détail par contrôle.
 - **Limite hors cadre du lot 1** : la durée par contrôle en CI exige d'afficher le classement complet dans la sortie
   de `run-checks` (en CI), donc de modifier le gabarit `packages/drwil/templates/common/base/.githooks/run-checks.mjs`
   (source de `.githooks/run-checks.mjs`, QUA-018), absent du bloc `scope` : non fait ; le lot 4 y touchera aussi.
-- **Prochaine étape** : lot 2 — rejeu QUA-113 avec reprise (`.githooks/base-checks.mjs`).
+- **Lot 2 fait** (2026-11-08) : le rejeu QUA-113 demande la reprise (`DRWIL_CI_REUSE=1`) des verdicts que la première
+  passe de la PR vient de laisser ; un contrôle « ok » dont l'empreinte propre est identique sous les hooks de la base
+  est repris, les autres rejoués (un hook affaibli lu par un contrôle change son empreinte : refusé comme avant).
+  Quand la pose change le moteur de `run-checks` (modules importés depuis `.githooks/run-checks.mjs` de la base,
+  suivis par Git), rien n'est repris (`--tout-rejouer`) : ce moteur écrit les verdicts. Contrats QUA-113 et QUA-250 mis à jour.
+  Chemin ajouté au bloc `scope` : `packages/drwil/templates/common/base/.githooks/base-checks.mjs`, source du hook
+  (QUA-018 : on édite le gabarit puis `npm run installer-depot`). Gain réel à mesurer sur la prochaine PR de code
+  (critère « PR d'essai sous la cible » : non mesuré ici, la CI seule le dit).
+- **Prochaine étape** : lot 3 — push sur la branche principale (saut sur arbre déjà prouvé, empreinte
+  `git rev-parse HEAD^{tree}` lue dans la preuve de la dernière CI de PR verte). Le lot 4 touche aussi le gabarit
+  `packages/drwil/templates/common/base/.githooks/run-checks.mjs` (limite hors cadre du lot 1).
