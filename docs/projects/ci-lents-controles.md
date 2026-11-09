@@ -37,6 +37,7 @@ files:
   - docs/contracts.md
   - docs/architecture.md
   - docs/projects/kit-mechanics.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/projects/journal.md
   - .drwil/ia-first.json
   - outils/miroirs.json
@@ -257,8 +258,16 @@ Risque HIGH : la fiche touche `.githooks/`, la CI et `.drwil/`. Aucun point ouve
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-08) : cadré sur la branche `cadrage/ci-lents-controles`, rien de réalisé ; sondage de
-  portée, de forges et de preuve, puis D1 à D7, tranchés par le demandeur le même jour.
+- **Dernier état** (2026-11-09) : lot 1 (le moteur) réalisé et commité : `shards: N` validé, `.githooks/engine-shards.mjs` (réglage,
+  variables, plan, agrégation) et `.githooks/run-checks-shards.mjs` (options `--shard i/N`, `--without-shards`,
+  `--aggregate-shards <dossier>`, verdict de tranche dans le dossier `shards` de `.drwil/evidence`), tests `.githooks/engine-shards.test.mjs` et
+  `.githooks/run-checks-shards.test.mjs`, couverture des hooks à 100 %. Sans option, une seule passe : la commande reçoit
+  `DRWIL_SHARD_INDEX=1` et `DRWIL_SHARD_TOTAL=1`. Les contrôles non découpés ne sont pas joués par `--shard` ; avec
+  `--without-shards`, le contrôle découpé est « non applicable » (confié aux tranches), avec `--aggregate-shards` il est jugé
+  sur les verdicts du dossier (nombre, indices, commit, empreinte, statut).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : valider les contrats modifiés (`QUA-250`, `QUA-113`, `QUA-251`, `QUA-270`), confirmer `QUA-208`
-  (non tranché à ce jour), puis fusionner le cadrage et lancer le chantier par `/drwil-start`.
+- **Prochaine étape** : lot 2 (CI GitHub) : job de plan lisant `shards` de la configuration, matrice de tranches lançant
+  `run-checks --shard i/N` avec les hooks de la base (D5) et déposant le dossier `shards` de `.drwil/evidence` en artefact, `checks` (nom
+  inchangé) lançant `run-checks --aggregate-shards <dossier>` ; l'agrégateur compare aussi N à la configuration de la base
+  (D6 iv), ce que le moteur ne fait pas encore. Restent à valider : contrats modifiés (`QUA-250`, `QUA-113`, `QUA-251`,
+  `QUA-270`) et confirmation de `QUA-208`.
