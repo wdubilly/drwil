@@ -5,6 +5,8 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+## 0.11.1 (2026-11-10)
+
 ### Added
 
 - A slow check can be split into parallel slices in CI: declare `shards: N`

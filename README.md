@@ -1141,7 +1141,9 @@ add|adopt`, `drwil report` and `drwil verify --failed`, prepares human
 attestation polls inside each tool (`drwil attest-poll`), carries a brief lot
 by lot, makes the queue wait for the merge scheduled by
 `.githooks/merge-auto.mjs`, adds the release setting `release.mode` (`solo`
-or `team`) and installs the scope gate as blocking.
+or `team`) and installs the scope gate as blocking. 0.11.1 makes updating a
+project safer and lets a slow check be split into `shards: N` parallel slices
+in CI, with the verdict of a pull request resumed from one push to the next.
 Next: trying it on real projects (V1).
 
 V0.2 covered:

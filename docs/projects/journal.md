@@ -4297,3 +4297,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 ## ci-lents-controles
 
 - **Preuve de clôture** : `docs/preuves/ci-lents-controles.md`.
+
+## 2026-11-10 — Version 0.11.1 : montée de version et changelog (1 lot)
+
+- **Ce qui change** : `package.json`, `package-lock.json` et `packages/drwil/package.json` passent à 0.11.1 ; la section « Unreleased » du changelog devient `0.11.1 (2026-11-10)`, une « Unreleased » vide la remplace ; README et `docs/features.md` disent ce qu'apporte la 0.11.1 (montée de version sûre, contrôles lents en tranches `shards: N`, reprise de verdict).
+- **Décisions clés** : les 3 fiches restantes prévues en 0.11.1 passent en 0.12.0 (décision du demandeur, 2026-11-09).
+- **Critères et preuves** : `GOVERNANCE: PASS` à la clôture ; `create-release.mjs --dry-run` se vérifie après la fusion.
+- **Limites connues** : `shards` et la reprise de verdict n'ont jamais tourné sur un vrai runner ; la publication (tag, note GitHub, CI trois OS) est le lot 2, geste humain, hors de ce chantier.
+- **Clôturé par** : la branche `workstream/version-0-11-1`.
+
+- **Preuve de clôture** : `docs/preuves/version-0-11-1.md`.
