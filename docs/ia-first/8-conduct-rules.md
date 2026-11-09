@@ -209,8 +209,7 @@ read at every request. The full text of each rule is here, read by section
   implementation detail — that's what lets you refactor without breaking.
 - **Updating the kit**: `drwil init` on an equipped project refreshes
   `AGENTS.md` only when the kit installed it and the project never changed
-  it; a modified one is reported as drift and is only replaced after the
-  per-file diff is confirmed, with a `.bak` backup (`drwil resolve-drift`).
+  it; a modified one is never rewritten (it stays the project's).
   A project whose own `AGENTS.md` is long keeps its rules: the kit writes
   its instructions aside (`.drwil/AGENTS.md` (if present)) and adds one pointer line.
   Moving a long project `AGENTS.md` to the short pointer is done by the

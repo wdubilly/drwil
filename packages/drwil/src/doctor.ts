@@ -12,6 +12,7 @@ import { AUTO_KINDS, describeGap, findGaps, hooksPath, scriptsDir, unchainedHook
 import { compareVersions, engineVersion, readInstall } from "./manifest.js";
 import { bypassDiagnosis } from "./guarantees-forge.js";
 import { computeProtection, formatProtection, protectionJson, type Protection } from "./protection.js";
+import { upgradeTraces } from "./doctor-upgrade.js";
 import { defaultExec, type Exec } from "./guarantees-table.js";
 
 export type PointState = "ok" | "warning" | "problem";
@@ -136,6 +137,8 @@ export async function doctor(opts: { targetDir: string; exec?: Exec }): Promise<
     !ciFiles.length ? T.noCi : ciMissing.length ? fill(T.ciMissing, ciMissing.join(", ")) : ciFiles.join(", "),
   );
 
+  const traces = upgradeTraces(root, cfg, lang);
+  point("upgrade", T.upgrade, traces.length ? "warning" : "ok", traces.join(" ; ") || T.upgradeClean);
   // QUA-115: read with the human's token, the only one that sees a ruleset's bypass list.
   const bypass = bypassDiagnosis(root, opts.exec ?? defaultExec, lang);
   if (bypass) point("bypass", T.bypass, bypass.state, bypass.detail);

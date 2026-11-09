@@ -7,6 +7,20 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil doctor` warns, after the fact, of what an upgrade removed or left
+  behind (an "Upgrade traces" point): installed kit files now missing, `.bak`
+  files, an empty `stack` while layers are declared, a CI file without project
+  zone. The keys of the project in `.drwil/ia-first.json` are kept and a new
+  key gets a safe value, as before.
+
+- `drwil init` handles by itself the kit files modified by hand: in a
+  terminal it shows the diff of each (mechanics, skills, settings) and
+  replaces it only on your yes, with no `.bak` (the update branch keeps the old
+  version); without a terminal or a yes, the file is left as it is and named.
+  `AGENTS.md`, the recipes, `docs/intentions/README.md` and
+  `docs/contracts-catalog.md` modified by the project are never rewritten, and
+  the project's keys of `.drwil/ia-first.json` and `.drwil/state.json` are left as they are.
+
 - `drwil init` refuses to run, before writing anything, with a version older
   than the one recorded in `.drwil/install.json` (it would downgrade the
   mechanics), naming both versions and the command to run instead;
@@ -111,6 +125,11 @@ closing commit; the release renames this section to its version.
   `drwil attest <ID>`, never the terminal alone. The new recipe
   `docs/recipes/attest-a-contract.md` says, tool by tool, how to prepare and
   ask the poll, with no answer, default or recommendation.
+
+### Removed
+
+- `drwil resolve-drift`: `drwil init` now does it (see Added). It rewrote
+  files with the templates of the version that ran it, even an older one.
 
 ### Changed
 

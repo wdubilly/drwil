@@ -670,13 +670,11 @@ kit installed and the project never modified: its mechanics (hooks) and its
 prose and settings (skills, recipes, `docs/ia-first.md`, the agents'
 instructions, the contract catalog, `.claude/settings.json`). Your own
 documents (README, architecture map, contract registry, briefs…) are never
-touched, even unchanged. A kit file modified by hand stays in place and is
-reported as drifted. Update it with a diff and a confirmation per file (a
-`.bak` backup is kept):
-
-```bash
-npx drwil resolve-drift
-```
+touched, even unchanged. A kit file modified by hand stays in place:
+`drwil init` shows its diff and replaces it only
+on your yes (no `.bak`: the update branch keeps the old version); the project's
+own files (`AGENTS.md`, recipes, intentions index, contracts catalog) are never
+rewritten.
 
 A project equipped by an older, French-named version is migrated first (see
 `packages/drwil/CHANGELOG.md`).
@@ -898,7 +896,6 @@ classification is recorded at `init`, not inferred again after coding.
 ### Update and uninstall
 
 ```bash
-drwil resolve-drift   # take over kit files modified by hand, with a diff and a .bak
 drwil uninstall       # dry run; add --yes to remove only what the kit installed
 ```
 

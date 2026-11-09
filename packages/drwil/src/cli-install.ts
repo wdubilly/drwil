@@ -1,10 +1,11 @@
 import type { Command, OptionValues } from "commander";
-import { CIS, init, type InitOptions, previewInit, formatPreview, resolveDrift, TOOLS, uninstall } from "./index.js";
+import { CIS, init, type InitOptions, previewInit, formatPreview, TOOLS, uninstall } from "./index.js";
 import { texts } from "./cli-texts.js";
 import { readConfig } from "./config.js";
 import { fill } from "./i18n.js";
 import { assertVersion } from "./install.js";
 import { confirmCiWith } from "./ci-zone.js";
+import { type ConfirmDrift, confirmDriftWith } from "./drift.js";
 
 const DEFAULT = (v: string) => `(default: value of an installed project, else ${v})`;
 
@@ -77,9 +78,9 @@ export async function askTerminal(
   }
 }
 
-async function run(fn: (o: InitOptions) => Promise<unknown>, opts: OptionValues, message: "initDone") {
+async function run(fn: (o: InitOptions & { confirmDrift?: ConfirmDrift }) => Promise<unknown>, opts: OptionValues, message: "initDone") {
   try {
-    await fn({ targetDir: process.cwd(), ...opts } as InitOptions);
+    await fn({ targetDir: process.cwd(), ...opts } as InitOptions & { confirmDrift?: ConfirmDrift });
     console.log(texts()[message], process.cwd());
   } catch (e) {
     console.error(`✗ ${(e as Error).message}`);
@@ -92,7 +93,7 @@ export function registerInstall(program: Command): void {
     program
       .command("init")
       .description(
-        "Install IA-first in the current directory, or update an installed project: creates what is missing, refreshes the kit mechanics unless modified by hand, never overwrites project files",
+        "Install IA-first in the current directory, or update an installed project: creates what is missing, refreshes the kit files, asks (diff first) before replacing one modified by hand, never overwrites project files",
       ),
     `Layers CSV ${DEFAULT("subfolders where a stack is detected, else none: declared once the stack is chosen")}`,
   )
@@ -119,7 +120,10 @@ export function registerInstall(program: Command): void {
           const interactive = !!(process.stdin.isTTY && process.stdout.isTTY);
           opts.tools = await chooseTools(process.cwd(), opts.tools, interactive, askTerminal);
           opts.serveAutostart = await chooseServeAutostart(process.cwd(), opts.serveAutostart, opts.tools, interactive, askTerminal);
-          if (interactive) opts.confirmCi = confirmCiWith(askTerminal);
+          if (interactive) {
+            opts.confirmCi = confirmCiWith(askTerminal);
+            opts.confirmDrift = confirmDriftWith(askTerminal);
+          }
         } catch (e) {
           console.error(`✗ ${(e as Error).message}`);
           process.exit(1);
@@ -159,31 +163,6 @@ export function registerInstall(program: Command): void {
         if (modified.length) {
           console.log(T.modified);
           for (const r of modified) console.log(`  - ${r}`);
-        }
-      } catch (e) {
-        console.error(`✗ ${(e as Error).message}`);
-        process.exit(1);
-      }
-    });
-
-  program
-    .command("resolve-drift")
-    .description(
-      "Resolve the mechanics drift reported by init (.githooks/, .claude/settings.json, CI file): diff + confirmation, .bak backup before overwrite",
-    )
-    .option("--force", "Non-interactive: overwrite every drifted mechanics file without asking (scripted use)")
-    .action(async (opts) => {
-      try {
-        const T = texts();
-        const { resolved, ignored } = await resolveDrift({ targetDir: process.cwd(), force: opts.force });
-        if (!resolved.length && !ignored.length) console.log(T.noDrift);
-        if (resolved.length) {
-          console.log(T.resolved);
-          for (const r of resolved) console.log(`  - ${r}`);
-        }
-        if (ignored.length) {
-          console.log(T.ignored);
-          for (const r of ignored) console.log(`  - ${r}`);
         }
       } catch (e) {
         console.error(`✗ ${(e as Error).message}`);

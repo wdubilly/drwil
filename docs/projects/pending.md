@@ -241,11 +241,11 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Adoption, installation, documentation
 
-- [ ] [décision] [P1] (0.12.0, 1) Un `init` intelligent : une seule commande qui monte un projet d'une version
+- [x] [décision] [P1] (0.12.0, 1) Un `init` intelligent : une seule commande qui monte un projet d'une version
   à la suivante, ne rétrograde rien, conserve les données du projet et se commite sur la branche kit ;
   absorbe les trois intentions ci-dessous marquées « absorbée » ; constaté sur drwil_walk le 2026-11-08 ;
-  deux chantiers à suivre : `docs/projects/journal.md` (refus de version, CI du projet), puis
-  `docs/projects/montee-de-version-sure-suite.md` (fichiers modifiés, retrait de `resolve-drift`) —
+  deux chantiers réalisés, relatés dans `docs/projects/journal.md` (refus de version et CI du projet ; fichiers
+  modifiés et retrait de `resolve-drift`) —
   `docs/intentions/montee-de-version-sure.md`.
 - [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
   d'autorisation à chaque commande : reste le réexamen du « ask » sur
