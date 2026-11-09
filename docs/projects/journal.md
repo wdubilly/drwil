@@ -4282,3 +4282,4 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : le décompte des `assert` se fait par ligne du test nommé par l'ID, sans analyse syntaxique.
 - **Clôturé par** : la branche `workstream/reouverture-sans-faux-blocage`.
 
+- **Preuve de clôture** : `docs/preuves/reouverture-sans-faux-blocage.md`.

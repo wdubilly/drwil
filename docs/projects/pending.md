@@ -121,8 +121,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] (0.11.1) La réouverture ne bloque plus à tort : intention retirée restaurée, test seul
-  plus vu comme règle (cadré le 2026-11-06) — `docs/projects/reouverture-sans-faux-blocage.md`.
 - [ ] [IA] [P1] (0.11.1) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
 - [ ] [IA] [P2] (0.11.1) Les tests de run-checks passent sans gitleaks, grâce à un faux gitleaks (cadré
@@ -244,7 +242,7 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Adoption, installation, documentation
 
-- [x] [décision] [P1] (0.11.1) Un `init` intelligent : une seule commande qui monte un projet d'une version
+- [ ] [décision] [P1] (0.11.1) Un `init` intelligent : une seule commande qui monte un projet d'une version
   à la suivante, ne rétrograde rien, conserve les données du projet et se commite sur la branche kit ;
   absorbe les trois intentions ci-dessous marquées « absorbée » ; constaté sur drwil_walk le 2026-11-08 ;
   deux chantiers réalisés, relatés dans `docs/projects/journal.md` (refus de version et CI du projet ; fichiers
