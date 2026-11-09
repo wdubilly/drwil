@@ -4246,3 +4246,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/montee-de-version-sure`.
 
 - **Preuve de clôture** : `docs/preuves/montee-de-version-sure.md`.
+
+## 2026-11-09 — `init` traite les fichiers modifiés à la main, `resolve-drift` est retiré, `doctor` signale les traces d'une montée (2 sur 2)
+
+- **Ce qui change** : `init` montre le diff de chaque fichier du kit modifié à la main et ne le remplace que sur un oui, sans `.bak` (QUA-286) ; `AGENTS.md`, les recettes, l'index des intentions et le catalogue du projet ne sont jamais réécrits (QUA-284) ; les clés du projet de `.drwil/ia-first.json` et `.drwil/state.json` (si présent) sont gardés, une clé nouvelle reçoit une valeur sûre (QUA-285) ; la commande `resolve-drift` n'existe plus ; `doctor` signale après coup un fichier du kit disparu, un `.bak`, une stack vide avec couches déclarées, un CI sans zone du projet (QUA-287).
+- **Décisions clés** : D4 à D8 de la fiche ; QUA-027 et QUA-239 modifiés (validés par D7) ; les traces de `doctor` sont des avertissements, jamais des problèmes.
+- **Critères et preuves** : QUA-284 à QUA-287, tests de `packages/drwil/test/montee-de-version.test.mjs` dont un scénario de montée dans un dépôt git ; QUA-064 et QUA-234 réattestés par l'humain. `GOVERNANCE: PASS` à la clôture.
+- **Bloc scope élargi** : `packages/drwil/src/doctor-upgrade.ts` (module nouveau, `packages/drwil/src/doctor.ts` est au plafond de 200 lignes, QUA-001).
+- **Limites connues** : commentaire `resolve-drift` de `packages/drwil/src/render.ts` (~l.122) hors scope ; `docs/recipes/adopt-the-kit.md` est un miroir du gabarit, non modifié ; essai sur `drwil_walk` à lancer par le demandeur (risque HIGH).
+- **Clôturé par** : la branche `workstream/montee-de-version-sure-suite`.
+
