@@ -184,6 +184,11 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Preuves, contrôles, vitesse
 
+- [ ] [décision] [P2] (0.12.0) Le corps d'une PR suit `.github/pull_request_template.md`, contrôlé par une machine
+  (note du 2026-10-27, écart sur la PR #273) — `docs/intentions/corps-de-pr-conforme-au-modele.md`.
+- [ ] [décision] [P3] (0.13.0) `pr-watch` montre la CI en temps réel : jobs, étapes et durées, GitHub et GitLab (note du
+  2026-11-07) — `docs/intentions/pr-watch-en-temps-reel.md`.
+
 - [ ] [décision] (0.13.0) La CI rapide éprouvée en réel (mesure d'une PR de doc, preuve de CI de la branche
   principale sur une vraie fusion, reprise GitLab par `CI_JOB_TOKEN`) et la preuve de CI de la
   branche principale hors GitHub — `docs/intentions/ci-rapide-epreuves-reelles.md`.
@@ -200,6 +205,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   (`QUA-197`) ; montée de P3 en P1 le 2026-11-09 : l'analyse externe y voit la
   faiblesse principale (une attestation se fabrique) —
   `docs/intentions/e2e-et-attestation-precises.md`.
+- [ ] [décision] [P1] (0.12.0) Les sondages posés sous Copilot CLI (`drwil-start`, `drwil-scope`, attestation) sont lus par le hook :
+  réponse sans effet constatée les 2026-11-08 et 2026-11-09, cause à reproduire (notes regroupées le 2026-11-09) —
+  `docs/intentions/sondages-lus-sous-copilot-cli.md`.
 - [ ] [décision] [P1] (0.12.0) Un contrôle exigé sauté (job de la forge, branche principale déjà prouvée) se dit
   « non exécuté » au lieu d'être rapporté réussi (analyse externe du 2026-11-09) —
   `docs/intentions/controles-sautes-dits-non-executes.md`.
@@ -295,6 +303,10 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   dans `scopeMirrors` — `docs/intentions/copies-create-release-dans-scope-mirrors.md`.
 
 ### Clôture, file et chantiers en parallèle
+
+- [ ] [décision] [P2] (0.12.0) Clôture, réouverture et reprise : la barrière de périmètre nomme chaque fichier refusé, la
+  réouverture rend l'intention retirée, `resume` et les faux positifs de la barrière de réouverture (4 notes
+  regroupées le 2026-11-09) — `docs/intentions/cloture-reouverture-et-reprise-defauts.md`.
 
 - [ ] [décision] (0.13.0) Clôture, réouverture et attestations : cadrée en cinq fiches
   le 2026-10-26 ; reste la note « un lancement intercalé efface la file » —
