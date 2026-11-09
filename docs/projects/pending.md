@@ -127,6 +127,9 @@ d'un outil) la dit dans son statut.
   le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
 - [ ] [IA] [P2] (0.11.1) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
   signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
+- [ ] [décision] [P2] (0.12.0) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
+  outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
+  2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
 - [ ] [décision] [P2] Retirer `drwil-progress`, maintenant que `drwil serve` est à parité (notée le 2026-11-08) —
   `docs/intentions/retrait-de-drwil-progress.md`.
 - [ ] [décision] [P2] Documenter `drwil serve` dans le README du paquet (notée le 2026-11-08) —
