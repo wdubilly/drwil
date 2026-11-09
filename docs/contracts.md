@@ -2716,3 +2716,23 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : drwil-serve — « Hors de `127.0.0.1` (`--host`), le serveur refuse de démarrer sans jeton et refuse toute requête sans jeton valide ; le jeton n'apparaît jamais dans une sortie lue par le modèle »
 **Raison** : La vue montre l'état d'un projet : hors de la machine, seul son propriétaire doit la lire, et un jeton lu par le modèle finirait dans un journal.
 
+## QUA-282 — `drwil init` refuse, avant d'écrire, une version plus ancienne que celle de `.drwil/install.json` ou différente de la version visée, et la montée ne laisse aucun `.bak`
+**Règle** : Livré à tout projet par la CLI du paquet. Avant toute écriture, la commande `init` compare sa version à celle de `.drwil/install.json` (si présent) : plus ancienne, elle refuse (code de sortie 1, rien de modifié) en nommant les deux versions et la commande à relancer (`npx drwil@<version enregistrée> init`) ; l'option `--allow-older` passe outre. `--target-version <v>` refuse aussi toute version différente de `<v>`. Sans enregistrement, ou à version égale ou plus récente, aucun refus. La montée vers la version courante, commitée sur `workstream/kit-update` (QUA-237), ne crée ni ne laisse aucun fichier `.bak` : le commit de la branche garde l'ancienne version.
+**Périmètre** : la ligne de commande `drwil init` ; l'appel de l'API `init()` n'est pas gardé.
+**Source de vérité** : `packages/drwil/src/install.ts` (`assertVersion`), appelé par `packages/drwil/src/cli-install.ts`.
+**Preuve** : tests du paquet sur un projet d'essai : refus d'une version plus ancienne sans rien modifier, message nommant les versions et l'option, `--allow-older`, projet sans enregistrement, version égale et plus récente, `--target-version` différent et égal ; montée commitée sur sa branche sans aucun `.bak`, suivi ou non.
+**Contrôle** : `tests-qua-282`
+**Tests** : `packages/drwil/test/montee-de-version.test.mjs`
+**Origine** : montee-de-version-sure — « `init` d'une version plus ancienne que `.drwil/install.json` (si présent) refuse avec un message clair ; l'option passe outre » et « aucun `.bak` »
+**Raison** : Le 2026-11-08, sur `drwil_walk`, `resolve-drift` lancé avec la version locale a rétrogradé la mécanique de 0.11.0 à 0.10.0.
+
+## QUA-283 — Le fichier de CI livré a une zone du projet que `drwil init` ne réécrit jamais ; sans marqueurs, rien n'est remplacé sans confirmation
+**Règle** : Livré à tout projet (CI GitHub et GitLab). Le fichier de CI a deux zones du projet, chacune entre un marqueur `# drwil-project-begin <zone>` et `# drwil-project-end <zone>` : `steps` (à la fin des étapes du job `checks`) et `jobs` (parmi les jobs). `drwil init` sur un projet équipé réécrit tout ce qui est hors zone d'après le gabarit de la version et reprend chaque zone telle quelle ; une ligne modifiée à la main hors zone est réécrite et nommée dans un avertissement. Un fichier de CI sans les deux zones, tel que `init` l'a installé (empreinte du manifeste), est remis au gabarit sans question ; modifié depuis, `init` nomme ce qui disparaîtrait (jobs, étapes, nombre d'autres lignes) et, dans un terminal, montre les lignes retirées et ne le remplace qu'après un oui (le gabarit a alors sa zone vide) ; hors terminal ou sans oui, le fichier reste tel quel et l'avertissement dit quoi relancer. Rejouer `init` sur un projet à jour ne change pas le fichier.
+**Périmètre** : le fichier de CI que `init` livre (GitHub : `.github/workflows/ia-first.yml` ; GitLab : le gabarit `packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml`) ; les autres forges et les fichiers de CI que le kit ne livre pas ne sont pas concernés.
+**Source de vérité** : `packages/drwil/src/ci-zone.ts` (`ciContent`, `mergeZones`), `packages/drwil/src/render.ts` (`writeOut`), gabarits `packages/drwil/templates/common/ci/`.
+**Preuve** : tests du paquet sur un projet d'essai, jeu tiré de `drwil_walk` (étape et job du projet) sur les deux forges : zones conservées, hors zone conforme au gabarit, rejeu sans effet ; CI sans marqueurs gardé sans confirmation, avec noms des éléments, remplacé sur oui ; CI installé remis au gabarit ; diff et réponse de la confirmation au terminal.
+**Contrôle** : `tests-qua-283`
+**Tests** : `packages/drwil/test/montee-de-version.test.mjs`
+**Origine** : montee-de-version-sure — « Un fichier de CI avec étapes du projet garde ces étapes dans la zone, GitHub et GitLab » et « Un fichier de CI sans marqueurs : `init` nomme ce qui disparaîtrait, ne change rien sans confirmation »
+**Raison** : Le 2026-11-08, monter `drwil_walk` a écrasé les étapes de CI ajoutées par le projet.
+

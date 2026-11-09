@@ -1,6 +1,6 @@
 # Projet : un `init` intelligent traite les fichiers modifiés à la main et remplace `resolve-drift` (2 sur 2)
 
-**Statut** : cadré le 2026-11-08 ; décisions D1 à D10 tranchées le 2026-11-08 par le demandeur, dans `docs/projects/montee-de-version-sure.md`. Démarre après la fusion de ce chantier.
+**Statut** : cadré le 2026-11-08 ; décisions D1 à D10 tranchées le 2026-11-08 par le demandeur, dans `docs/projects/journal.md`. Démarre après la fusion de ce chantier.
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/montee-de-version-sure.md`
@@ -40,7 +40,7 @@ modifiés à la main et renvoie vers `resolve-drift`, qui rétrograde et écrase
 
 ## 2. Décisions
 
-Celles de `docs/projects/montee-de-version-sure.md` : D4 (fichiers du projet), D5 (clés de configuration), D6
+Celles de `docs/projects/journal.md` : D4 (fichiers du projet), D5 (clés de configuration), D6
 (alertes après coup par `doctor`), D7 (retrait de `resolve-drift`), D8 (état de gouvernance).
 
 ## 3. Hors périmètre
