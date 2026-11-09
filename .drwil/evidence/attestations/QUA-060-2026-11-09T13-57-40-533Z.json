@@ -1,0 +1,28 @@
+{
+  "version": 4,
+  "contract": "QUA-060",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-09T13:57:40.533Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "0e365593d03505777daa0bc5a2fb8f29d05644972ec0279c6097729d7f5e6ca3",
+  "proof": {
+    "tests-qua-060": "db02abbb8b5002e54f1bc84179bf7e6a36e7563eb894ba8702521995ce569eb2"
+  },
+  "covers": [
+    "outils/banc-agents.mjs"
+  ],
+  "coverage": {
+    "outils/banc-agents.mjs": "9579dd92cb37e1decc0f52a21af6bcf07f43ce61844e1ca632250e3c5b21c62e"
+  },
+  "commit": "5cf575c41863d65983bd5109628b464254eb7ae7",
+  "automated": [
+    {
+      "id": "tests-qua-060",
+      "status": "ok"
+    }
+  ]
+}

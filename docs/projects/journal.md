@@ -4271,3 +4271,14 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Cause** : le test occupait lui-même `preferredPort(dossier temporaire)` ; un autre rejeu du fichier tenant ce port levait EADDRINUSE non géré (vu : 127.0.0.1:4937 au run-checks). Non reproduit en 12 processus parallèles (collision rare), mais reproduit de façon déterministe par un tiers qui tient le port.
 - **Preuve** : nouveau test « port du projet déjà pris par un autre processus », vu échouer (EADDRINUSE) avec l'ancien comportement, vert ensuite.
 - **Clôturé par** : la branche `detour/serve-port-occupe-stable`.
+
+## 2026-11-09 — La réouverture ne bloque plus à tort : fichiers cités restaurés, un test n'est plus une règle (2 lots)
+
+- **Ce qui change** : `state.mjs reopen` restaure aussi, dans le commit de la fiche, les fichiers cités que la branche a supprimés, l'intention d'origine en tête (QUA-116) ; un fichier `.githooks/*.test.mjs` ajouté ou corrigé n'est plus un changement de règle au détour comme à la réouverture, seul un test dont le nom porte l'ID d'un contrat, retiré ou avec moins d'`assert`, attend le oui de l'humain et le refus le nomme (QUA-117, QUA-050).
+- **Décisions clés** : test ajouté ou corrigé libre ; restauration limitée aux fichiers supprimés par la branche (`main..HEAD`), jamais un fichier absent de la branche principale.
+- **Critères et preuves** : tests de `.githooks/state.test.mjs`, `.githooks/detour.test.mjs` et `.githooks/scope-gate.test.mjs` ; QUA-060 et QUA-150 attestés par l'humain ; `GOVERNANCE: PASS` à la clôture.
+- **Bloc scope élargi** : `.githooks/scope-gate-texts.mjs` (original et gabarit), pour le message de refus d'un test de contrat affaibli.
+- **Détour** : `detour/serve-port-occupe-stable` (test « port occupé » de `packages/drwil/test/serve.test.mjs`, QUA-272, PR #391) ; `detour/banc-absent-node26` (PR #390).
+- **Limites connues** : le décompte des `assert` se fait par ligne du test nommé par l'ID, sans analyse syntaxique.
+- **Clôturé par** : la branche `workstream/reouverture-sans-faux-blocage`.
+

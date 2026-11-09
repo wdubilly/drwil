@@ -72,6 +72,14 @@ Deux défauts de la réouverture (QUA-116), vus sur de vrais chantiers :
 - `.githooks/detour-rules.mjs`, `.githooks/detour.mjs`, `.githooks/scope-gate.mjs` — la liste des règles
   exclut les tests, sauf affaiblissement d'un test de contrat ; aucun autre fichier ne sort de la liste
   (validé par le demandeur le 2026-11-06)
+- `.githooks/detour.mjs` — réexporte `isHookTest` et `weakenedTests` (validé par le demandeur le 2026-11-09)
+- `.githooks/scope-gate.mjs` — lit le diff indexé des tests de hooks et refuse, en le nommant, un test de contrat retiré ou affaibli (validé par le demandeur le 2026-11-09)
+- `.githooks/scope-gate-texts.mjs` — message de refus d'un test de contrat affaibli, en français et en anglais (validé par le demandeur le 2026-11-09)
+- `.githooks/state-messages-fr.mjs` — message de restauration des fichiers cités supprimés par la branche (lot 1, validé par le demandeur le 2026-11-09)
+- `.githooks/state-messages-en.mjs` — message de restauration des fichiers cités supprimés par la branche (lot 1, validé par le demandeur le 2026-11-09)
+- `.githooks/detour.test.mjs` — tests ajoutés pour le lot 2 (validé par le demandeur le 2026-11-09)
+- `.githooks/scope-gate.test.mjs` — tests ajoutés pour le lot 2 (validé par le demandeur le 2026-11-09)
+- `.githooks/state.test.mjs` — tests ajoutés pour le lot 1 (validé par le demandeur le 2026-11-09)
 - `.githooks/state-reopen.mjs` — restaure aussi les fichiers cités supprimés par la branche ; aucun refus
   existant ne change (validé par le demandeur le 2026-11-06)
 
