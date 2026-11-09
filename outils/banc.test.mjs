@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, sep } from "node:path";
 import { afterEach, test } from "node:test";
@@ -193,6 +193,19 @@ test("QUA-101 : le vrai lanceur horodate chaque ligne du flux et dit un agent ab
     (await lancerAgent(process.execPath, ["-e", "setTimeout(()=>{},5000)"], { cwd: tmpdir(), env: process.env, timeout: 100 })).delai,
     true,
   );
+});
+
+test("QUA-101 : une commande introuvable derrière un dossier du PATH inaccessible (EACCES, courant sous WSL) est dite absente", async (t) => {
+  if (process.getuid?.() === 0 || process.platform === "win32") return t.skip("dossier inaccessible impossible à produire ici");
+  const ferme = mkdtempSync(join(tmpdir(), "banc-path-"));
+  chmodSync(ferme, 0o000);
+  try {
+    const r = await lancerAgent("commande-absente-du-banc", [], { cwd: tmpdir(), env: { PATH: ferme }, timeout: 30000 });
+    assert.equal(r.absent, true);
+  } finally {
+    chmodSync(ferme, 0o700);
+    rmSync(ferme, { recursive: true, force: true });
+  }
 });
 
 test("QUA-102 : les tests cachés ne sont copiés qu'après le passage, puis jugent le travail", async () => {
