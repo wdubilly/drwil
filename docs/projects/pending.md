@@ -110,7 +110,7 @@ Ordre de la 0.12.0 (tag `(0.12.0, n)` sur chaque intention de « Intentions par
 thème »), décidé le 2026-11-08 après la montée de drwil_walk en 0.11.0 : la montée de version
 passe en tête, car elle rétrograde et écrase des fichiers du projet ; elle absorbe les données du
 projet hors prose du kit, le CI que la mise à jour n'écrase pas et l'alerte avant et après
-écrasement. 1 la montée de version sûre, 2 le premier commit du kit, 3 la clôture d'une fiche
+écrasement. 1 la montée de version sûre (passée en 0.11.1 le 2026-11-09, réalisée et fusionnée), 2 le premier commit du kit, 3 la clôture d'une fiche
 permanente, 4 le `judgeGuarantees` mort, 5 le contrôle du kit qui masque l'alerte, 6 les
 garanties, la suite ; puis les thèmes E (worktree toujours proposé, attestation depuis le chat) et F,
 à cadrer pendant la 0.11.
@@ -244,7 +244,7 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Adoption, installation, documentation
 
-- [x] [décision] [P1] (0.12.0, 1) Un `init` intelligent : une seule commande qui monte un projet d'une version
+- [x] [décision] [P1] (0.11.1) Un `init` intelligent : une seule commande qui monte un projet d'une version
   à la suivante, ne rétrograde rien, conserve les données du projet et se commite sur la branche kit ;
   absorbe les trois intentions ci-dessous marquées « absorbée » ; constaté sur drwil_walk le 2026-11-08 ;
   deux chantiers réalisés, relatés dans `docs/projects/journal.md` (refus de version et CI du projet ; fichiers
