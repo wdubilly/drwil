@@ -408,6 +408,8 @@ test("QUA-287 : scénario de montée dans un dépôt git : les données du proje
   const dir = tmp();
   git(dir, "init", "-q", "-b", "master");
   git(dir, "config", "core.autocrlf", "false");
+  git(dir, "config", "user.email", "t@t");
+  git(dir, "config", "user.name", "t");
   await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
   enregistrer(dir, "0.10.0");
   const config = JSON.parse(readFileSync(join(dir, ".drwil/ia-first.json"), "utf8"));
