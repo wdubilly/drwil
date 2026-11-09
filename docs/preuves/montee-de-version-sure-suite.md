@@ -1,7 +1,7 @@
 # Preuve de clôture — montee-de-version-sure-suite
 
 **Clos le** : 2026-11-09
-**Commit vérifié** : `d802e1d291` — verdict `drwil verify` : PASS
+**Commit vérifié** : `011c6342c8` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:2d3fb54826f189be`, acceptés par l'humain au lancement le 2026-11-09
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
