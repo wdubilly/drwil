@@ -7,6 +7,12 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil doctor` warns, after the fact, of what an upgrade removed or left
+  behind (an "Upgrade traces" point): installed kit files now missing, `.bak`
+  files, an empty `stack` while layers are declared, a CI file without project
+  zone. The keys of the project in `.drwil/ia-first.json` are kept and a new
+  key gets a safe value, as before.
+
 - `drwil init` handles by itself the kit files modified by hand: in a
   terminal it shows the diff of each (mechanics, skills, settings) and
   replaces it only on your yes, with no `.bak` (the update branch keeps the old

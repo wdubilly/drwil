@@ -2765,3 +2765,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/montee-de-version.test.mjs`
 **Origine** : montee-de-version-sure-suite — « `resolve-drift` n'existe plus ; `init` montre un diff et demande confirmation, il ne renvoie pas vers lui »
 **Raison** : Le 2026-11-08, sur `drwil_walk`, `resolve-drift` a rétrogradé la mécanique et écrasé des fichiers du projet ; la montée doit tenir en un seul geste, `init`.
+
+## QUA-287 — `drwil doctor` signale après coup ce qu'une montée a supprimé ou laissé
+**Règle** : Livré à tout projet. `drwil doctor` affiche un point « Traces d'une montée » : en avertissement (jamais en problème), il nomme au plus cinq fichiers du kit installés puis absents, les `.bak` laissés à côté d'un fichier du kit, une `stack` vide dans `.drwil/ia-first.json` alors que des couches sont déclarées alors que des couches sont déclarées, et chaque fichier de CI sans zone du projet (marqueurs `drwil-project-begin/end`) ; sans trace, le point est « ok ». Il ne lit que le disque et ne modifie rien.
+**Périmètre** : `drwil doctor` sur un projet équipé.
+**Source de vérité** : `packages/drwil/src/doctor-upgrade.ts` (`upgradeTraces`), appelé par `packages/drwil/src/doctor.ts`.
+**Preuve** : tests du paquet sur un projet d'essai : point « ok » à l'installation ; avertissement qui nomme chaque trace ; liste coupée à cinq fichiers.
+**Contrôle** : `tests-qua-287`
+**Tests** : `packages/drwil/test/montee-de-version.test.mjs`
+**Origine** : montee-de-version-sure-suite — « `doctor` signale après coup ce qu'une montée a supprimé »
+**Raison** : Le 2026-10-26, sur `drwil_dbox`, la montée en 0.9.0 a supprimé une étape de CI, un job et un tableau de fiches sans que `doctor` cesse de répondre « Healthy installation ».

@@ -1,4 +1,4 @@
-// Montée de version sûre : `init` refuse la mauvaise version, la montée ne laisse aucun `.bak` (QUA-282), garde le CI (QUA-283), les fichiers du projet (QUA-284) et les réglages (QUA-285), traite les fichiers modifiés (QUA-286).
+// Montée de version sûre : `init` refuse la mauvaise version, la montée ne laisse aucun `.bak` (QUA-282), garde le CI (QUA-283), les fichiers du projet (QUA-284) et les réglages (QUA-285), traite les fichiers modifiés (QUA-286) ; `doctor` signale après coup ce qu'une montée a supprimé (QUA-287).
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -7,7 +7,7 @@ import { appendFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmS
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { init } from "../dist/index.js";
+import { doctor, init } from "../dist/index.js";
 import { engineVersion } from "../dist/install-record.js";
 import { confirmCiWith } from "../dist/ci-zone.js";
 import { confirmDriftWith } from "../dist/drift.js";
@@ -375,4 +375,51 @@ test("QUA-286 : la confirmation au terminal montre le diff (coupé au-delà de 6
   );
   assert.equal(await confirmDriftWith(async () => "")("a.mjs", "- x"), false);
   assert.match(questions[0], /a\.mjs.*\n- ligne 0\n[\s\S]*- ligne 59\n… \(5\)\n/);
+});
+
+const traces = async (dir) => (await doctor({ targetDir: dir })).points.find((p) => p.id === "upgrade");
+
+test("QUA-287 : doctor signale un fichier du kit disparu, un .bak laissé, une stack vide et un CI sans zone du projet", async () => {
+  const dir = tmp();
+  await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github" }));
+  assert.equal((await traces(dir)).state, "ok");
+  const manifeste = Object.keys(JSON.parse(readFileSync(join(dir, ".drwil/installed-files.json"), "utf8")));
+  const kit = manifeste.find((f) => f.startsWith(".githooks/") && f.endsWith(".mjs"));
+  rmSync(join(dir, kit));
+  writeFileSync(join(dir, "docs/contracts-catalog.md.bak"), "ancien");
+  const config = JSON.parse(readFileSync(join(dir, ".drwil/ia-first.json"), "utf8"));
+  const ci = config.ciFiles[0];
+  writeFileSync(join(dir, ci), readFileSync(join(dir, ci), "utf8").replaceAll("drwil-project-", "x-"));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config, stack: [], layers: ["app"] }));
+  const point = await traces(dir);
+  assert.equal(point.state, "warning");
+  for (const attendu of [kit, "docs/contracts-catalog.md.bak", "stack vide", ci]) assert.ok(point.detail.includes(attendu), attendu);
+});
+
+test("QUA-287 : doctor nomme au plus cinq fichiers du kit disparus et reste sain (avertissement seul)", async () => {
+  const dir = await projetEquipe();
+  const manifeste = Object.keys(JSON.parse(readFileSync(join(dir, ".drwil/installed-files.json"), "utf8")));
+  for (const f of manifeste.filter((f) => f.startsWith("docs/recipes/")).slice(0, 7)) rmSync(join(dir, f));
+  const point = await traces(dir);
+  assert.match(point.detail, /7 fichier\(s\) du kit .*…/);
+});
+
+test("QUA-287 : scénario de montée dans un dépôt git : les données du projet survivent, le point de doctor reste sain", async () => {
+  const dir = tmp();
+  git(dir, "init", "-q", "-b", "master");
+  git(dir, "config", "core.autocrlf", "false");
+  await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
+  enregistrer(dir, "0.10.0");
+  const config = JSON.parse(readFileSync(join(dir, ".drwil/ia-first.json"), "utf8"));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config, risk: "HIGH", scopeGate: undefined }));
+  appendFileSync(join(dir, "AGENTS.md"), "\nPropre au projet.\n");
+  assert.equal(git(dir, "add", "-A").status, 0);
+  assert.equal(git(dir, "commit", "-q", "-m", "kit 0.10.0").status, 0);
+  const r = cli(dir, "init", "--tools", "claude");
+  assert.equal(r.status, 0, r.stderr);
+  const apres = JSON.parse(readFileSync(join(dir, ".drwil/ia-first.json"), "utf8"));
+  assert.equal(apres.risk, "HIGH");
+  assert.equal(apres.scopeGate, "warning");
+  assert.match(readFileSync(join(dir, "AGENTS.md"), "utf8"), /Propre au projet\./);
+  assert.equal((await traces(dir)).state, "ok");
 });

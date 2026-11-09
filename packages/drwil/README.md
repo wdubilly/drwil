@@ -572,7 +572,9 @@ governance active (hooks wired, `scopeGate` blocking), 3 CI checks active
 (the CI replays the hook's checks), 4 forge protection verified (protected
 branch, required checks, no administrator bypass, GitHub auto-merge
 allowed: `drwil guarantees --protect` turns it on with the human's
-agreement). A level it could not
+agreement). A warning "Upgrade traces" names what an upgrade removed or left
+behind: installed kit files now missing, `.bak` files, an empty `stack`, a CI
+file without project zone (QUA-287). A level it could not
 verify (no reachable `gh` or `glab`) is "not verified", never reached, and
 it prints the command that leads to the next level (`protection` in
 `--json`). A new install writes `scopeGate` as `blocking`; an installed
