@@ -101,7 +101,8 @@ read at every request. The full text of each rule is here, read by section
   which the gate flags with a warning listing the added paths, whatever
   the setting. A detour that changes the rules
   (an existing contract modified or removed, hooks, thresholds, the gate)
-  waits for the human's yes; adding a new contract does not
+  waits for the human's yes; adding a new contract does not, nor does adding
+  or fixing a hook test unless it removes or weakens a contract's test
   (`docs/recipes/corriger-un-defaut.md`).
 - **Defect revealed after the closing**: in CLOSING, when the workstream's
   PR, open and not merged yet, reveals a defect (red CI, forge analysis),

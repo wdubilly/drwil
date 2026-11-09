@@ -138,6 +138,13 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- Reopening a closed workstream (`state.mjs reopen`) also restores, in the
+  brief's commit, the files the brief cites that the branch deleted (the
+  original intention first), so the cited-paths check no longer refuses it.
+  A hook test (`.githooks/*.test.mjs`) added or fixed no longer waits for the
+  human's yes at a detour or a reopening; one that removes or weakens a
+  contract's test (fewer `assert`) still does, and the refusal names it
+  (QUA-116, QUA-117, QUA-050).
 - The attestation poll answered « Attest » in Claude Code is recorded again:
   the hook now tolerates, after the answer only, the `answers` and
   `annotations` keys Claude Code adds to the tool input, and never reads

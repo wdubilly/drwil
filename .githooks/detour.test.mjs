@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { PassThrough } from "node:stream";
 import { fileURLToPath } from "node:url";
-import { allow, main, open, resume, rulesFiles } from "./detour.mjs";
+import { allow, main, open, resume, rulesFiles, weakenedTests } from "./detour.mjs";
 import { checkScope } from "./scope-gate.mjs";
 import { readState } from "./state.mjs";
 
@@ -352,6 +352,32 @@ test("QUA-050 : les règles du jeu — registre des contrats, hooks, seuils, CI,
   const scopeMirrors = [null, { from: "", to: "" }, { from: "x/" }, { from: "tpl/", to: "" }];
   assert.deepEqual(rulesFiles(["tpl/.githooks/a.mjs", "tpl/src/a.js", "x/.githooks/a.mjs"], { scopeMirrors }), ["tpl/.githooks/a.mjs"]);
   assert.deepEqual(rulesFiles(["tpl/.githooks/a.mjs"], { scopeMirrors: "tpl/" }), []);
+  assert.deepEqual(rulesFiles([".githooks/a.test.mjs", "tpl/.githooks/a.test.mjs", ".githooks/a.mjs"], { scopeMirrors }), [
+    ".githooks/a.mjs",
+  ]);
+});
+
+test("QUA-117 : un test de contrat retiré ou affaibli est nommé ; un test ajouté, renforcé ou sans ID ne l'est pas", () => {
+  const avant = [
+    'test("QUA-001 : a", () => {',
+    "  assert.equal(1, 1);",
+    "  assert.ok(true);",
+    "});",
+    'test("sans id", () => {',
+    "  assert.ok(true);",
+    "});",
+    "",
+  ].join("\n");
+  assert.deepEqual(weakenedTests(avant, avant), []);
+  assert.deepEqual(weakenedTests(null, avant), [], "fichier nouveau");
+  assert.deepEqual(weakenedTests(avant, `${avant}test("QUA-002 : b", () => {\n  assert.ok(1);\n});\n`), []);
+  assert.deepEqual(weakenedTests(avant, avant.replace('  assert.ok(true);\n});\ntest("sans', '});\ntest("sans')), ["QUA-001 : a"]);
+  assert.deepEqual(weakenedTests(avant, avant.replace('test("QUA-001 : a"', 'test("a"')), ["QUA-001 : a"], "ID retiré du nom");
+  assert.deepEqual(
+    weakenedTests(avant, avant.replace('assert.ok(true);\n});\ntest("sans', 'assert.ok(true);\n  assert.ok(2);\n});\ntest("sans')),
+    [],
+  );
+  assert.deepEqual(weakenedTests(avant, null), ["QUA-001 : a"], "fichier retiré");
 });
 
 /** Capture console.log et console.error pendant `fn`. */

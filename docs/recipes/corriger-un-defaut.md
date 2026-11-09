@@ -52,7 +52,10 @@ human's yes: the scope gate refuses those commits until
 `node .githooks/detour.mjs allow`, run by the human in an interactive
 terminal. In a queue, the subagent stops there and reports. Adding a new
 contract to the registry, every existing one kept word for word, needs no
-yes; in doubt, the yes is still asked.
+yes; in doubt, the yes is still asked. A hook test (`.githooks/*.test.mjs`)
+added or fixed is no rule change; one that removes a `test(` named after a
+contract ID, or has fewer `assert` calls in it, still needs the yes, and the
+refusal names the test.
 
 ## A reserve or a refusal from the acceptance team: sort the issue
 

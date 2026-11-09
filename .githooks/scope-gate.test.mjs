@@ -591,6 +591,51 @@ test("QUA-117 : chantier rouvert, un correctif qui change les règles du jeu att
   assert.deepEqual(checkIndex({ files, state: { ...state, reopened: { pr: 42, human: true } }, patterns, cfg: {} }), []);
 });
 
+test("QUA-117 : un test ajouté ou corrigé n'est pas une règle ; un test de contrat affaibli attend le oui, au détour comme à la réouverture — en anglais aussi", () => {
+  const patterns = [".githooks/x.test.mjs"];
+  const files = [".githooks/x.test.mjs"];
+  for (const exception of [{ reopened: { pr: 42 } }, { detour: { branch: "detour/x" } }]) {
+    const state = { ...etat("BUILD"), ...exception };
+    assert.deepEqual(checkIndex({ files, state, patterns, cfg: {}, weakened: () => [] }), []);
+    assert.deepEqual(checkIndex({ files, state, patterns, cfg: {} }), [], "sans lecture du diff : rien de reproché");
+    const fr = checkIndex({ files, state, patterns, cfg: {}, weakened: () => ["QUA-001 : a"] });
+    assert.equal(fr.length, 1);
+    assert.match(fr[0], /^\.githooks\/x\.test\.mjs : QUA-001 : a — test de contrat retiré ou affaibli .*detour\.mjs allow/);
+    assert.match(
+      checkIndex({ files, state, patterns, cfg: { lang: "en" }, weakened: () => ["QUA-001 : a"] })[0],
+      /contract test removed or weakened/,
+    );
+    assert.deepEqual(
+      checkIndex({
+        files,
+        state: { ...state, [Object.keys(exception)[0]]: { human: true } },
+        patterns,
+        cfg: {},
+        weakened: () => ["QUA-001 : a"],
+      }),
+      [],
+    );
+  }
+});
+
+test("QUA-117 : pre-commit réel : un test de contrat affaibli dans l'index est refusé et nommé, un test ajouté passe", () => {
+  const racine = depot([".githooks/t.test.mjs"]);
+  ecrire(racine, ".drwil/state.json", JSON.stringify({ ...etat("BUILD"), reopened: { pr: 42 } }));
+  const test = (extra) => `test("QUA-001 : a", () => {\n  assert.ok(1);\n  assert.ok(2);${extra}\n});\n`;
+  ecrire(racine, ".githooks/t.test.mjs", test(""));
+  git(racine, "add", ".githooks/t.test.mjs");
+  git(racine, "commit", "-q", "-m", "t");
+  ecrire(racine, ".githooks/t.test.mjs", `${test("")}test("QUA-002 : b", () => {\n  assert.ok(1);\n});\n`);
+  git(racine, "add", ".githooks/t.test.mjs");
+  assert.deepEqual(checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: [".githooks/t.test.mjs"] }).problems, [], "ajout : libre");
+  ecrire(racine, ".githooks/t.test.mjs", 'test("QUA-001 : a", () => {\n  assert.ok(1);\n});\n');
+  git(racine, "add", ".githooks/t.test.mjs");
+  assert.match(
+    checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: [".githooks/t.test.mjs"] }).problems.join("\n"),
+    /QUA-001 : a — test de contrat/,
+  );
+});
+
 test("QUA-117 : chantier rouvert, un ajout pur au registre passe sans le oui ; modifier un contrat l'attend ; le oui se donne dans un terminal", async () => {
   const rouvert = () => {
     const racine = depotEnDetour();

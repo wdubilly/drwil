@@ -11,7 +11,37 @@ export const RULES = [".githooks/*", ".drwil/ia-first.json", ".github/workflows/
  */
 export function rulesFiles(files, cfg = {}) {
   const patterns = [registryPath(cfg), ...RULES, ...(Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [])];
-  return files.map(normalize).filter((f) => targets(f, cfg).some((p) => patterns.some((g) => fnmatch(p, g))));
+  return files.map(normalize).filter((f) => !isHookTest(f, cfg) && targets(f, cfg).some((p) => patterns.some((g) => fnmatch(p, g))));
+}
+
+/** True if `f` is a hook test (`.githooks/*.test.mjs`) or its template source: a test is not a rule (QUA-117). */
+export function isHookTest(f, cfg = {}) {
+  return targets(normalize(f), cfg).some((p) => fnmatch(p, ".githooks/*.test.mjs"));
+}
+
+const CONTRACT_ID = /\b[A-Z][A-Z0-9]*-\d+\b/;
+
+/** Asserts per `test(` name carrying a contract ID, in a test file's text (the same name twice adds up). */
+function contractTests(text) {
+  const map = new Map();
+  let key = null;
+  for (const line of text.split(/\r?\n/)) {
+    const head = /^test\(\s*(["'`])(.*?)\1/.exec(line);
+    if (head) key = CONTRACT_ID.test(head[2]) ? head[2] : null;
+    if (key !== null) map.set(key, (map.get(key) ?? 0) + (line.match(/\bassert\b/g) ?? []).length);
+  }
+  return map;
+}
+
+/**
+ * QUA-117: names of the contract tests (`test(` whose name carries a contract ID) that `before` has and
+ * `after` removes or weakens (fewer `assert` calls). A test file new to `before` weakens nothing; in doubt
+ * (a text missing on the `after` side of an existing file), every contract test counts as removed.
+ */
+export function weakenedTests(before, after) {
+  if (typeof before !== "string") return [];
+  const next = contractTests(typeof after === "string" ? after : "");
+  return [...contractTests(before)].filter(([name, n]) => (next.get(name) ?? -1) < n).map(([name]) => name);
 }
 
 const registryPath = (cfg) => cfg.dirs?.contracts ?? "docs/contracts.md";
