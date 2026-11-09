@@ -87,6 +87,6 @@ Validés par la décision D7 du demandeur (2026-11-08, `resolve-drift` retiré, 
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-08) : lot 1 réalisé et commité (`init` confirme et remplace les fichiers du kit modifiés à la main, `resolve-drift` retiré, fichiers du projet jamais touchés : QUA-284, QUA-285, QUA-286 ; QUA-027 et QUA-239 modifiés).
+- **Dernier état** (2026-11-09) : lots 1 et 2 réalisés et commités (`init` traite les fichiers modifiés, `resolve-drift` retiré : QUA-284 à QUA-286 ; `doctor` signale les traces d'une montée : QUA-287). Le lot 2 n'a pas touché aux clés de configuration : QUA-285 (lot 1) les couvrait déjà.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 2 (signalement par `doctor` des clés de configuration absentes, clé nouvelle éventuelle), puis clôture.
+- **Prochaine étape** : clôture (checks, verify, journal, close, PR). Limites : commentaire `resolve-drift` de `packages/drwil/src/render.ts` (~l.122) hors scope ; `docs/recipes/adopt-the-kit.md` est un miroir du gabarit (non modifié).
