@@ -4241,7 +4241,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Décisions clés** : D1 à D3 et D6 de la fiche ; un CI sans marqueurs tel qu'installé (empreinte du manifeste) est remis au gabarit sans question ; confirmé, il est remplacé par le gabarit à zone vide (les étapes du projet ne sont pas replacées dans la zone) ; hors terminal, il reste intact et l'avertissement dit quoi relancer.
 - **Critères et preuves** : QUA-282, QUA-283, tests de `packages/drwil/test/montee-de-version.test.mjs` (jeu d'essai de type `drwil_walk` sur les deux forges). `GOVERNANCE: PASS` à la clôture.
 - **Bloc scope élargi** : `packages/drwil/src/ci-zone.ts` (module nouveau, plafond de 200 lignes de QUA-001), `packages/drwil/src/index.ts` et `packages/drwil/src/config.ts` (confirmation transmise à `init`), `docs/architecture.md` (carte, QUA-040).
-- **Intention d'origine** : `docs/intentions/montee-de-version-sure.md`, mise à jour (reste ouverte : la suite `docs/projects/montee-de-version-sure-suite.md`).
+- **Intention d'origine** : `docs/intentions/montee-de-version-sure.md`, mise à jour (reste ouverte : la suite `docs/projects/journal.md`).
 - **Limites connues** : essai final sur `drwil_walk` à lancer par le demandeur (risque HIGH) ; le CI confirmé perd ses étapes propres au lieu de les replacer dans la zone ; `resolve-drift` (et son `.bak`) subsiste jusqu'à la suite ; la CI du dépôt n'est pas rejouée sur son propre fichier à zones (marqueurs posés autour de `kit-tests` et `matrice-os`). Test `packages/drwil/test/serve.test.mjs` (QUA-272) vu en échec une fois sur `EADDRINUSE` (port 4680) pendant le lot 1, non reproduit ensuite : instable, non traité ici.
 - **Clôturé par** : la branche `workstream/montee-de-version-sure`.
 
@@ -4256,3 +4256,4 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : commentaire `resolve-drift` de `packages/drwil/src/render.ts` (~l.122) hors scope ; `docs/recipes/adopt-the-kit.md` est un miroir du gabarit, non modifié ; essai sur `drwil_walk` à lancer par le demandeur (risque HIGH).
 - **Clôturé par** : la branche `workstream/montee-de-version-sure-suite`.
 
+- **Preuve de clôture** : `docs/preuves/montee-de-version-sure-suite.md`.
