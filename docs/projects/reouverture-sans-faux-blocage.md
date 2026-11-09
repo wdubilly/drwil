@@ -12,6 +12,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/detour-rules.mjs
   - packages/drwil/templates/common/base/.githooks/detour.mjs
   - packages/drwil/templates/common/base/.githooks/scope-gate.mjs
+  - packages/drwil/templates/common/base/.githooks/scope-gate-texts.mjs
   - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
   - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
   - packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md
@@ -20,6 +21,7 @@ files:
   - .githooks/detour-rules.mjs
   - .githooks/detour.mjs
   - .githooks/scope-gate.mjs
+  - .githooks/scope-gate-texts.mjs
   - .githooks/state-messages-fr.mjs
   - .githooks/state-messages-en.mjs
   - docs/ia-first/8-conduct-rules.md
