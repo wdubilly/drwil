@@ -66,5 +66,6 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-09) : cadré, rien de réalisé.
-- **Prochaine étape** : [IA] lot 1, dans une nouvelle session (`/drwil-start`).
+- **Dernier état** (2026-11-10) : lot 1 réalisé (versions, changelog, README, features, index, journal).
+- **Prochaine étape** : [humain] lot 2, publication après la fusion : CI trois OS sur master, `--dry-run`, accord, puis
+  `node .githooks/create-release.mjs`.

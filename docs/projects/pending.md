@@ -134,7 +134,7 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] (0.11.1) Version 0.11.1 : montée de version et changelog, pour patcher les adoptants (cadré le
+- [x] [IA] [P1] (0.11.1) Version 0.11.1 : montée de version et changelog, pour patcher les adoptants (cadré le
   2026-11-09) — `docs/projects/version-0-11-1.md`.
 - [ ] [IA] [P1] (0.12.0) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
