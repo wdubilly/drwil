@@ -15,6 +15,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks-verdicts.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks-shards.mjs
+  - packages/drwil/templates/common/base/.githooks/run-checks-pr.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks-texts.mjs
   - packages/drwil/templates/common/base/.githooks/base-checks.mjs
   - .githooks/engine.mjs
@@ -23,10 +24,12 @@ files:
   - .githooks/run-checks.mjs
   - .githooks/run-checks-verdicts.mjs
   - .githooks/run-checks-shards.mjs
+  - .githooks/run-checks-pr.mjs
   - .githooks/run-checks-texts.mjs
   - .githooks/base-checks.mjs
   - .githooks/engine-shards.test.mjs
   - .githooks/run-checks-shards.test.mjs
+  - .githooks/run-checks-pr.test.mjs
   - .githooks/engine.test.mjs
   - .githooks/run-checks.test.mjs
   - .github/workflows/ia-first.yml
@@ -48,7 +51,9 @@ files:
 `.githooks/run-checks.mjs` (199 lignes) sont au plafond : la tranche vit dans de nouveaux modules (engine-shards et run-checks-shards),
 et ne s'ajoute pas aux fichiers existants au-delà du branchement. Deux modules de plus : la carte d'architecture et
 `docs/projects/kit-mechanics.md` les citent. Un nouveau fichier de tests du paquet (ci-shards.test) porte le projet d'essai, `packages/drwil/test/kit.test.mjs`
-étant déjà grand ; si l'implémentation montre qu'un autre fichier doit changer, l'élargissement sera un commit séparé.)
+étant déjà grand ; si l'implémentation montre qu'un autre fichier doit changer, l'élargissement sera un commit séparé. Lot 4 : les deux CI livrées
+étaient au plafond de 200 lignes (QUA-157), l'humain a choisi de déplacer dans le moteur la recherche du run précédent et l'identité de la PR/MR :
+nouveau module run-checks-pr des hooks, sa copie du gabarit et son fichier de tests (chemins du bloc ci-dessus).)
 
 ## 1. Besoin
 
