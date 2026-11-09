@@ -124,12 +124,12 @@ d'un outil) la dit dans son statut.
 Étiquette `(version)` sur chaque ligne ouverte ; sans étiquette = plus tard. Remplace « Versions visées » pour ce qui reste.
 
 - **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
-- **0.12.0, gouvernance crédible** : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
+- **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
   restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; le découpage des
   contrôles lents dès le départ ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
 - **0.13.0, adoption, clôture et parallèle** : `init` sur projet réel, stack élargie, contrat modifiable par commande,
   worktrees et clôture, accueil de session, relecture avant fusion, CI éprouvée en réel (GitHub, GitLab, `merge-auto`).
-- **0.14.0, mesurer** : mini-banc et coût en tokens, tests de mutation, catalogue et profils, publication npm.
+- **0.14.0, mesurer** : coût en tokens, tests de mutation, catalogue et profils, publication npm.
 - **Plus tard** : fabrique autonome, banc complet, validation commerciale, Community Ready, autres outils, forge du livrable.
 
 ## Fiches cadrées, dans l'ordre de réalisation
@@ -393,8 +393,9 @@ drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
   contrats à attester, humain absent (limite du chantier « Mini-banc :
   copie « avec » adoptée » du 2026-10-23) —
   `docs/intentions/banc-verify-jamais-pass.md`.
-- [ ] [décision] [P2] (0.14.0) Campagne du mini-banc : essai réel en CI avec
-  l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
+- [ ] [décision] [P2] (0.12.0) Campagne du mini-banc : essai réel en CI avec
+  l'abonnement, puis 12 passages et leur rapport ; critères de décision écrits le 2026-11-09 (re-datation du protocole et de son test, au chantier) —
+  `docs/intentions/campagne-mini-banc.md`.
 - [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
   mutation, rôles séparés, une session par fiche, auto-fusion LOW),
   cadrée sur les chiffres du mini-banc et de la consommation —
