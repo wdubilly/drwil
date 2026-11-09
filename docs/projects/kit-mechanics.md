@@ -84,6 +84,9 @@ files:
   - .githooks/glob.test.mjs
   - .githooks/engine.test.mjs
   - .githooks/run-checks.test.mjs
+  - .githooks/engine-shards.test.mjs
+  - .githooks/run-checks-shards.test.mjs
+  - .githooks/run-checks-pr.test.mjs
   - .githooks/dashboard.test.mjs
   - .githooks/state-evidence.mjs
   - .githooks/state-transitions.mjs

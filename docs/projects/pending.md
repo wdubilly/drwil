@@ -127,9 +127,6 @@ d'un outil) la dit dans son statut.
   le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
 - [ ] [IA] [P2] (0.11.1) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
   signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
-- [ ] [IA] [P2] (0.11.1) Les contrôles lents (e2e Playwright) sont accélérés par la CI livrée : tranches parallèles
-  (`shards`) puis reprise de verdict d'une PR à l'autre, GitHub et GitLab ; rouvre QUA-250 ; prêt, décisions D1
-  à D7 tranchées (cadré le 2026-11-08) — `docs/projects/ci-lents-controles.md`.
 - [ ] [décision] [P2] Retirer `drwil-progress`, maintenant que `drwil serve` est à parité (notée le 2026-11-08) —
   `docs/intentions/retrait-de-drwil-progress.md`.
 - [ ] [décision] [P2] Documenter `drwil serve` dans le README du paquet (notée le 2026-11-08) —

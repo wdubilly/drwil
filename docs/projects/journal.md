@@ -4294,3 +4294,6 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Bloc scope élargi** : `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md` (QUA-110), `.githooks/run-checks-pr.mjs` (original et gabarit) et son test.
 - **Limites connues** : aucun YAML n'a tourné sur un vrai runner, aucune mesure réelle de gain (hors périmètre, décision du demandeur) ; une PR peut falsifier l'artefact de sa propre passe (D6 i, risque accepté) ; GitLab identifie la MR par projet et branche ; le seuil de lenteur de 60 s (`DRWIL_PR_SLOW_MS`) est un choix de réalisation ; le découpage automatique est noté en intention (`docs/intentions/notes.md`).
 
+## ci-lents-controles
+
+- **Preuve de clôture** : `docs/preuves/ci-lents-controles.md`.
