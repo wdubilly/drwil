@@ -86,6 +86,6 @@ Validés par la décision D7 du demandeur (2026-11-08, `resolve-drift` retiré, 
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-08) : cadré, rien de réalisé ; attend la fusion de la première fiche.
-- **Travail non commité** : aucun propre à cette fiche.
-- **Prochaine étape** : après la clôture de la première fiche, relever les contrats à modifier puis `/drwil-start`.
+- **Dernier état** (2026-11-08) : lot 1 réalisé et commité (`init` confirme et remplace les fichiers du kit modifiés à la main, `resolve-drift` retiré, fichiers du projet jamais touchés : QUA-284, QUA-285, QUA-286 ; QUA-027 et QUA-239 modifiés).
+- **Travail non commité** : aucun.
+- **Prochaine étape** : lot 2 (signalement par `doctor` des clés de configuration absentes, clé nouvelle éventuelle), puis clôture.
