@@ -26,12 +26,12 @@ chantier : c'est un geste distinct, sur accord de l'humain, après la fusion.
 
 ## Critères d'acceptation
 
-- `package.json`, `package-lock.json` et `packages/drwil/package.json` portent `0.11.1`.
+- `package.json`, `package-lock.json` et `packages/drwil/package.json` portent `0.11.1` — `QUA-098`
 - La section « Unreleased » de `packages/drwil/CHANGELOG.md` devient `0.11.1 (date)` et une section
-  « Unreleased » vide la remplace.
-- `README.md` et `docs/features.md` disent en une phrase ce que la 0.11.1 apporte, comme pour la 0.11.0.
-- `node .githooks/create-release.mjs --dry-run` calcule `v0.11.1` sans refus, une fois la PR fusionnée.
-- `GOVERNANCE: PASS`.
+  « Unreleased » vide la remplace — `QUA-040`
+- `README.md` et `docs/features.md` disent en une phrase ce que la 0.11.1 apporte, comme pour la 0.11.0 — `QUA-098`
+- `node .githooks/create-release.mjs --dry-run` calcule la version 0.11.1 sans refus, une fois la PR fusionnée — `QUA-268`
+- `GOVERNANCE: PASS` — `QUA-084`
 
 ## 2. Hors périmètre
 
