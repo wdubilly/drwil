@@ -10,15 +10,22 @@ jobs:
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
       count: ${{ steps.plan.outputs.count }}
+      precedent: ${{ steps.plan.outputs.previous }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
       # Un plan illisible fait échouer ce job, donc checks : jamais « aucune tranche » par défaut (QUA-013).
+      # QUA-250 : le run précédent de cette PR est lu d'abord (ses verdicts lents, rejoués au moindre doute) : aucune tranche pour ce qu'il a réglé.
       - name: Planifier les tranches des contrôles découpés
         id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          node .githooks/run-checks.mjs --pr-previous >> "$GITHUB_OUTPUT"
           matrix=$(node .githooks/run-checks.mjs --shard-plan)
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "count=$(jq '.include | length' <<< "$matrix")" >> "$GITHUB_OUTPUT"
@@ -160,6 +167,12 @@ jobs:
           path: .drwil/evidence/run-checks-verdicts.json
           key: run-checks-verdicts-${{ github.event.pull_request.base.sha }}
           restore-keys: run-checks-verdicts-
+      # QUA-250 : le run que le plan a lu (jamais un autre) ; les verdicts de cette passe sont ensuite gardés pour le push suivant de la PR.
+      - if: steps.prouve.outputs.saute != 'true' && needs.plan.outputs.precedent != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRECEDENT: ${{ needs.plan.outputs.precedent }}
+        run: node .githooks/run-checks.mjs --pr-previous "$PRECEDENT"
       # Les contrôles découpés sont jugés sur les verdicts des tranches (`--aggregate-shards`) : toutes leurs tranches de ce commit « ok », aucune absente.
       - name: Télécharger les verdicts des tranches
         if: steps.prouve.outputs.saute != 'true' && needs.plan.outputs.count != '0'
@@ -194,6 +207,13 @@ jobs:
           else
             node .githooks/base-checks.mjs --base "$base" --aggregate-shards .drwil/evidence/shards
           fi
+      - if: github.event_name == 'pull_request' && always() && hashFiles('.drwil/evidence/pr-verdicts/pr-verdicts.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-verdicts
+          path: .drwil/evidence/pr-verdicts
+          retention-days: 14
+          overwrite: true
       # La protection de master vit dans les réglages de GitHub : elle doit rester celle
       # versionnée (.github/ruleset-master.json), sinon un changement passerait sans PR.
       - run: node .github/scripts/verifier-ruleset.mjs

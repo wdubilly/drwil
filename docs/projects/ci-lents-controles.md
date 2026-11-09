@@ -288,7 +288,16 @@ Risque HIGH : la fiche touche `.githooks/`, la CI et `.drwil/`. Aucun point ouve
 - **Travail non commité** : aucun.
 - **Limites GitLab** : un seul pipeline sans MR (`workflow: rules`) ; une tranche ne peut pas dépasser 16 (plafond de `shards`) ; `checks` ne tourne pas si une étape amont échoue (il n'est alors pas « réussi »).
   Le test d'`init` GitLab ne couvre pas le comportement réel d'un runner GitLab (non joué ici).
-- **Prochaine étape** : lot 4 (reprise d'une PR à l'autre, D3 et D4 : verdict lié à l'empreinte, au commit, à la base, somme + identité du run, lecture
-  limitée à la même PR/MR, rejeu au moindre doute ; GitHub : artefact du run `pull_request` précédent ; GitLab : artefact du pipeline précédent de la même MR,
-  or le `workflow: rules` actuel n'a pas de pipeline de MR : à trancher dans le lot, hors cadre si cela change la règle `QUA-263`). Restent à
-  valider : contrats modifiés (`QUA-250`, `QUA-113`, `QUA-251`, `QUA-270`) et confirmation de `QUA-208`.
+- **Lot 4 réalisé** (reprise d'une PR à l'autre, D3 et D4) : `.githooks/run-checks-verdicts.mjs` (`loadPrVerdicts`, `prCovered`, `savePrVerdicts`) lit le dossier `pr-previous` de `.drwil/evidence`
+  et écrit le dossier `pr-verdicts` (fichiers pr-verdicts.json et pr-verdicts.sum). Le nouveau module `.githooks/run-checks-pr.mjs` porte l'identité de la PR/MR (`prContext`, déduite de l'environnement de la forge :
+  GitHub lit l'événement de la PR, un fork n'a pas d'identité ; GitLab : projet + branche, base = branche cible) et le téléchargement du run précédent (`--pr-previous [run]`, imprime `previous=<run>`) ;
+  les YAML ne font que l'appeler, ils n'ont plus de variable `DRWIL_PR_*` (la CI d'un autre forge peut les poser : `DRWIL_PR_ID`, `_HEAD`, `_BASE`, `_RUN`, `_PREVIOUS_RUN` ; `DRWIL_PR_SLOW_MS` : seuil de lenteur, 60 000 par défaut, choix de l'agent).
+  Seuls les « ok » de contrôles lents (découpés ou au-dessus du seuil) sont repris, rejoués au moindre doute (somme, id, run, empreinte, base, commit non ancêtre de la tête) ; la reprise exige `DRWIL_CI_REUSE=1`.
+  `--shard-plan` ne planifie aucune tranche si tous les contrôles découpés sont couverts, jamais si la PR change `.githooks` ou `.drwil/ia-first.json` (`hooksChanged`). GitHub : artefact `pr-verdicts` du run `pull_request`
+  précédent de la même PR, lu par le plan puis, à l'identique, par `checks` (gabarit et dépôt). GitLab : artefact du dernier pipeline réussi de la même branche, sans changer `workflow: rules` (QUA-263).
+  Plafond de 200 lignes (QUA-157) : cadrage séparé (dd51d99) puis déplacement dans le moteur ; gabarits CI GitHub 196 lignes, GitLab 176.
+  Tests : `.githooks/run-checks-pr.test.mjs`, `.githooks/run-checks-shards.test.mjs`, `.githooks/engine-shards.test.mjs`, `.github/scripts/workflows-yaml.test.mjs`, `packages/drwil/test/ci-shards.test.mjs` ; couverture des hooks à 100 %. YAML non joué sur de vrais runners.
+- **Limites du lot 4** : GitLab sans identité de MR ni vérification du run lu (le dernier pipeline réussi de la branche) ; une PR peut falsifier l'artefact de sa propre passe (D6 i, risque accepté, la somme ne détecte que la corruption) ;
+  verdicts repris de la branche principale potentiellement reportés avec la tête courante ; un fork n'a aucune reprise.
+- **Prochaine étape** : lot 5 (contrats et documentation) : amender `QUA-250`, `QUA-113`, `QUA-251`, `QUA-270`, confirmer `QUA-208` ; `docs/contracts.md`, `docs/architecture.md`,
+  `docs/projects/kit-mechanics.md` (dépôt et gabarit), `packages/drwil/CHANGELOG.md` (anglais), `.drwil/ia-first.json` ; projet d'essai synthétique. Restent à valider par le demandeur : contrats modifiés.

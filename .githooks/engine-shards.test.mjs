@@ -218,6 +218,13 @@ test("shardMatrix : une tranche par indice, vide sans contrôle découpé, refus
     { index: 2, total: 3 },
     { index: 3, total: 3 },
   ]);
+  // Aucune tranche quand la passe précédente de la PR a réglé tous les contrôles découpés (par id ou, sans id, par nom) ; un seul non réglé les garde.
+  const deux = { checks: [E2E, { ...E2E, id: "autre-id", name: "autre" }] };
+  assert.deepEqual(shardMatrix(deux, T, new Set(["project:e2e", "autre-id"])).include, []);
+  assert.equal(shardMatrix(deux, T, new Set(["project:e2e"])).include.length, 3);
+  assert.equal(shardMatrix(deux, T, new Set(["project:lint"])).include.length, 3);
+  const sansNom = { checks: [{ run: 'echo "$DRWIL_SHARD_INDEX"', shards: 2 }] };
+  assert.deepEqual(shardMatrix(sansNom, T, new Set(['project:echo "$DRWIL_SHARD_INDEX"'])).include, []);
   // Une déclaration refusée ne laisse aucune tranche : jamais « aucune tranche » par défaut (QUA-013).
   const refusee = shardMatrix(
     {

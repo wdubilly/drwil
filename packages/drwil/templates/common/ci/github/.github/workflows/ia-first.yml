@@ -12,6 +12,7 @@ jobs:
       skip: ${{ steps.pr.outputs.skip == 'true' || steps.proven.outputs.skip == 'true' }}
       matrix: ${{ steps.plan.outputs.matrix || '{"include":[]}' }}
       count: ${{ steps.plan.outputs.count || '0' }}
+      previous: ${{ steps.plan.outputs.previous }}
     steps:
       # QUA-263: a push on a branch whose pull request is open would replay what the pull request plays: its steps are skipped, and the
       # skip is said. No job-level `if` (a skipped job is not reported under its name). No pull request, or GitHub mute: tested; main and tags never skipped.
@@ -53,10 +54,13 @@ jobs:
         uses: actions/setup-node@v7
         with: { node-version: 24 }
       # No sharded check: empty matrix, count 0, no slices job. A declaration the engine refuses fails this job (QUA-013), never "no slice".
+      # QUA-250: the previous run of this pull request is read first (its slow verdicts, replayed at the least doubt): no slice is planned for what it settled.
       - name: Plan the slices of the sharded checks
         id: plan
         if: steps.pr.outputs.skip != 'true' && steps.proven.outputs.skip != 'true'
+        env: { GH_TOKEN: "${{ github.token }}" }
         run: |
+          node .githooks/run-checks.mjs --pr-previous >> "$GITHUB_OUTPUT"
           matrix=$(node .githooks/run-checks.mjs --shard-plan)
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "count=$(jq '.include | length' <<< "$matrix")" >> "$GITHUB_OUTPUT"
@@ -86,10 +90,7 @@ jobs:
       # Even after a failure: a failed slice leaves its verdict "fail"; one that left none is missing for the aggregation.
       - if: always()
         uses: actions/upload-artifact@v4
-        with:
-          name: shard-${{ matrix.index }}-of-${{ matrix.total }}
-          path: .drwil/evidence/shards
-          overwrite: true
+        with: { name: "shard-${{ matrix.index }}-of-${{ matrix.total }}", path: .drwil/evidence/shards, overwrite: true }
   # The job the branch protection requires, name unchanged (QUA-251); it aggregates the slices, and fails if the plan or a slice did not succeed (QUA-013).
   checks:
     needs: [plan, shards]
@@ -115,9 +116,7 @@ jobs:
       - name: Restore the gitleaks archive
         if: needs.plan.outputs.skip != 'true'
         uses: actions/cache@v6
-        with:
-          path: ${{ runner.temp }}/gitleaks.tar.gz
-          key: gitleaks-8.21.2-linux-x64
+        with: { path: "${{ runner.temp }}/gitleaks.tar.gz", key: gitleaks-8.21.2-linux-x64 }
       - name: Install gitleaks 8.21.2
         if: needs.plan.outputs.skip != 'true'
         run: |
@@ -131,18 +130,16 @@ jobs:
       - name: Restore the verdicts of the main branch's CI
         if: github.event_name == 'pull_request'
         uses: actions/cache/restore@v6
-        with:
-          path: .drwil/evidence/run-checks-verdicts.json
-          key: run-checks-verdicts-${{ github.event.pull_request.base.sha }}
-          restore-keys: run-checks-verdicts-
+        with: { path: .drwil/evidence/run-checks-verdicts.json, key: "run-checks-verdicts-${{ github.event.pull_request.base.sha }}", restore-keys: run-checks-verdicts- }
       # Sharded checks are judged on the slices' verdicts (`--aggregate-shards`): every slice of this commit "ok", none missing.
       - name: Download the slices' verdicts
         if: needs.plan.outputs.skip != 'true' && needs.plan.outputs.count != '0'
         uses: actions/download-artifact@v4
-        with:
-          pattern: shard-*
-          merge-multiple: true
-          path: .drwil/evidence/shards
+        with: { pattern: "shard-*", merge-multiple: true, path: .drwil/evidence/shards }
+      # QUA-250: the very run the plan read (never another), then the verdicts of this pass for the next push; run-checks judges them all.
+      - if: needs.plan.outputs.skip != 'true' && needs.plan.outputs.previous != ''
+        env: { GH_TOKEN: "${{ github.token }}", PREVIOUS: "${{ needs.plan.outputs.previous }}" }
+        run: node .githooks/run-checks.mjs --pr-previous "$PREVIOUS"
       # GitHub sets CI: run-checks also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), proved only by this run (QUA-262).
       - if: needs.plan.outputs.skip != 'true'
         run: node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards
@@ -151,9 +148,7 @@ jobs:
       - name: Save the main branch's verdicts
         if: always() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && hashFiles('.drwil/evidence/run-checks-verdicts.json') != ''
         uses: actions/cache/save@v6
-        with:
-          path: .drwil/evidence/run-checks-verdicts.json
-          key: run-checks-verdicts-${{ github.sha }}
+        with: { path: .drwil/evidence/run-checks-verdicts.json, key: "run-checks-verdicts-${{ github.sha }}" }
       # QUA-113: a pull request is replayed with the main branch's hooks (read through Git) and the PR's list of checks: a PR that weakens
       # a hook or removes a check does not validate itself. The PR's base-checks.mjs runs only while the main branch has none (adoption).
       - name: Replay the checks with the main branch's hooks
@@ -163,15 +158,16 @@ jobs:
           base="origin/$BASE_REF"
           git show "$base:.githooks/base-checks.mjs" > "$RUNNER_TEMP/base-checks.mjs" 2>/dev/null || cp .githooks/base-checks.mjs "$RUNNER_TEMP/base-checks.mjs"
           node "$RUNNER_TEMP/base-checks.mjs" --base "$base" --aggregate-shards .drwil/evidence/shards
+      - if: github.event_name == 'pull_request' && always() && hashFiles('.drwil/evidence/pr-verdicts/pr-verdicts.json') != ''
+        uses: actions/upload-artifact@v4
+        with: { name: pr-verdicts, path: .drwil/evidence/pr-verdicts, retention-days: 14, overwrite: true }
       # Read by the push on the main branch (step "Is the tree already proven…"): last, so only if every step succeeded.
       - name: Record the tree proven by this CI
         if: github.event_name == 'pull_request'
         run: git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/proven-tree.txt"
       - if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
-        with:
-          name: proven-tree
-          path: ${{ runner.temp }}/proven-tree.txt
+        with: { name: proven-tree, path: "${{ runner.temp }}/proven-tree.txt" }
       # drwil-project-begin steps
       # Steps of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
       # drwil-project-end steps

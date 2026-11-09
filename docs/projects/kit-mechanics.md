@@ -103,6 +103,7 @@ files:
   - .githooks/engine-runat.mjs
   - .githooks/engine-shards.mjs
   - .githooks/engine-texts.mjs
+  - .githooks/run-checks-pr.mjs
   - .githooks/run-checks-shards.mjs
   - .githooks/run-checks-texts.mjs
   - .githooks/run-checks-verdicts.mjs

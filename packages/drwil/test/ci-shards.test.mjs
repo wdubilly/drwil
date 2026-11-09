@@ -35,7 +35,9 @@ test("QUA-251, QUA-013 : la CI GitLab livrée planifie, découpe (16 jobs au plu
   assert.equal(ci.shards.cache, undefined);
   assert.equal(ci.plan.cache, undefined);
   // L'agrégation lit les verdicts de la même pipeline, dans les deux passes (celle de la PR et le rejeu avec les hooks de la base).
-  const passes = ci.checks.script.filter((l) => l.includes("run-checks.mjs") || l.includes("base-checks.mjs"));
+  const passes = ci.checks.script.filter(
+    (l) => (l.includes("run-checks.mjs") && !l.includes("--pr-previous")) || l.includes("base-checks.mjs"),
+  );
   assert.ok(passes.length >= 2);
   for (const l of passes) assert.match(l, /--aggregate-shards \.drwil\/evidence\/shards/);
   // L'alerte suit les étapes précédentes, tranches comprises.

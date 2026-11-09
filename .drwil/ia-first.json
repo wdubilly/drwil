@@ -3227,7 +3227,7 @@
     {
       "id": "tests-qua-250",
       "name": "tests de QUA-250, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-250 .githooks/run-checks.test.mjs .github/scripts/workflows-yaml.test.mjs packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-250 .githooks/run-checks.test.mjs .githooks/run-checks-shards.test.mjs .githooks/run-checks-pr.test.mjs .github/scripts/workflows-yaml.test.mjs packages/drwil/test/kit.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",

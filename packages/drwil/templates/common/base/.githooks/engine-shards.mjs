@@ -20,13 +20,16 @@ export function shardProblem(c, name, T) {
   return null;
 }
 
-/** Matrix of the CI's slices (`--shard-plan`): `include` lists `{ index, total }`, `problems` refuses a declaration or several totals (one pass per total is not planned). */
-export function shardMatrix(cfg, T) {
+/**
+ * Matrix of the CI's slices (`--shard-plan`): `include` lists `{ index, total }`, `problems` refuses a declaration or several totals (one pass
+ * per total is not planned). No slice is planned when `covered` (ids) holds every sharded check: the pull request's previous pass settled them.
+ */
+export function shardMatrix(cfg, T, covered = new Set()) {
   const sharded = (Array.isArray(cfg.checks) ? cfg.checks : []).filter(isSharded);
   const problems = sharded.map((c) => shardProblem(c, c.name ?? c.run, T)).filter(Boolean);
   const totals = [...new Set(sharded.map((c) => c.shards))];
   if (totals.length > 1) problems.push(T.shardsSeveral(totals.join(", ")));
-  const total = totals[0] ?? 0;
+  const total = covered.size && sharded.every((c) => covered.has(c.id ?? `project:${c.name ?? c.run}`)) ? 0 : (totals[0] ?? 0);
   return { include: problems.length ? [] : Array.from({ length: total }, (_, i) => ({ index: i + 1, total })), problems };
 }
 

@@ -21,8 +21,12 @@ stages:
 plan:
   stage: plan
   image: node:24
+  variables:
+    GIT_DEPTH: "0"
   script:
     - mkdir -p .drwil/evidence
+    # QUA-250: the previous pipeline of this branch settled some sharded checks (its slow verdicts, replayed at the least doubt): no slice is planned for them.
+    - node .githooks/run-checks.mjs --pr-previous
     # A declaration the engine refuses fails this job: that is no plan, never "no slice".
     - node .githooks/run-checks.mjs --shard-plan > .drwil/evidence/shard-plan.json
     - cat .drwil/evidence/shard-plan.json
@@ -85,6 +89,8 @@ checks:
     - '[ -s .drwil/evidence/gitleaks.tar.gz ] || curl -sSfL --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 120 -o .drwil/evidence/gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz'
     - echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  .drwil/evidence/gitleaks.tar.gz" | sha256sum -c -
     - tar -xzf .drwil/evidence/gitleaks.tar.gz -C ~/.local/bin gitleaks
+    # QUA-250: the last successful pipeline of this branch (the identity of its merge request) leaves its slow verdicts (artifact `pr-verdicts`).
+    - node .githooks/run-checks.mjs --pr-previous
     # QUA-250: off the main branch, the verdicts of the main branch's last successful pipeline are
     # downloaded (its artifact, which only a main-branch pipeline keeps, see after_script) and
     # run-checks reuses each "ok" check whose fingerprint (files and command) is unchanged. The sharded checks are judged on the
@@ -128,11 +134,14 @@ checks:
     - |
       if [ -n "$CI_COMMIT_TAG" ] || [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then
         rm -f .drwil/evidence/run-checks-verdicts.json
+      else
+        rm -rf .drwil/evidence/pr-verdicts
       fi
   artifacts:
     when: always
     paths:
       - .drwil/evidence/run-checks-verdicts.json
+      - .drwil/evidence/pr-verdicts
 
 # drwil-project-begin jobs
 # Jobs of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.

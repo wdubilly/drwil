@@ -191,7 +191,7 @@ test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge
   );
   // Sauvegarde : l'artefact du fichier de verdicts, même en échec, effacé avant l'envoi hors de la branche principale.
   assert.equal(ci.checks.artifacts.when, "always");
-  assert.deepEqual(ci.checks.artifacts.paths, [VERDICTS]);
+  assert.deepEqual(ci.checks.artifacts.paths, [VERDICTS, ".drwil/evidence/pr-verdicts"]);
   const apres = ci.checks.after_script.join("\n");
   assert.match(
     apres,
@@ -292,3 +292,54 @@ for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templat
     for (const plan of ["failure", "skipped", "cancelled"])
       assert.equal(juger({ PLAN: plan, SHARDS: "skipped", COUNT: "" }), 1, `plan « ${plan} » refusé`);
   });
+
+// D3 et D4 (reprise d'une PR à l'autre) : la décision et l'identité vivent dans run-checks (run-checks-pr.mjs) ; la CI ne fait que l'appeler et acheminer l'artefact.
+for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml"])
+  test(`QUA-250 : ${fichier} lit le run précédent de la PR dans le plan, le même dans checks, et ne garde les verdicts que par artefact (jamais par cache)`, () => {
+    const texte = readFileSync(join(RACINE, fichier), "utf8");
+    const ci = parseAllDocuments(texte)[0].toJS();
+    assert.doesNotMatch(texte, /pull_request_target|DRWIL_PR_/);
+    const plan = ci.jobs.plan.steps.find((e) => e.id === "plan");
+    assert.match(plan.run, /^node \.githooks\/run-checks\.mjs --pr-previous >> "\$GITHUB_OUTPUT"\n/);
+    assert.ok(plan.run.indexOf("--pr-previous") < plan.run.indexOf("--shard-plan"), "le run précédent est lu avant le plan");
+    assert.equal(plan.env.GH_TOKEN, `$${"{{ github.token }}"}`);
+    assert.match(ci.jobs.plan.outputs.previous ?? ci.jobs.plan.outputs.precedent, /^\$\{\{ steps\.plan\.outputs\.previous \}\}$/);
+    // Le job checks télécharge exactement le run que le plan a lu, avant la passe, le rejeu et le dépôt de l'artefact.
+    const etapes = ci.jobs.checks.steps;
+    const lecture = etapes.findIndex((e) => /--pr-previous "\$(PREVIOUS|PRECEDENT)"$/.test(e.run ?? ""));
+    const passe = etapes.findIndex((e) => e.run === "node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards");
+    const rejeu = etapes.findIndex((e) => e.run?.includes("base-checks.mjs") && e.run.includes("--aggregate-shards"));
+    const depose = etapes.findIndex((e) => e.with?.name === "pr-verdicts");
+    const preuve = etapes.findIndex((e) => e.with?.name === "proven-tree" || e.with?.name === "arbre-prouve");
+    assert.ok(lecture >= 0 && lecture < passe && passe < rejeu && rejeu < depose && depose < preuve);
+    assert.match(Object.values(etapes[lecture].env).join(" "), /needs\.plan\.outputs\.(previous|precedent)/);
+    assert.match(etapes[lecture].if, /needs\.plan\.outputs\.(previous|precedent) != ''/);
+    // Dépôt : sur une PR seulement, même après un échec, et seulement si la passe a écrit quelque chose.
+    assert.equal(
+      etapes[depose].if,
+      "github.event_name == 'pull_request' && always() && hashFiles('.drwil/evidence/pr-verdicts/pr-verdicts.json') != ''",
+    );
+    assert.equal(etapes[depose].with.path, ".drwil/evidence/pr-verdicts");
+    const caches = Object.values(ci.jobs).flatMap((j) => (j.steps ?? []).filter((e) => /^actions\/cache/.test(e.uses ?? "")));
+    assert.equal(JSON.stringify(caches).includes("pr-verdicts"), false);
+  });
+
+test("QUA-250 : la CI GitLab livrée reprend d'un push à l'autre d'une branche par l'artefact du dernier pipeline réussi, dans le plan et dans checks, jamais sur la branche principale ni par cache", () => {
+  const ci = parseAllDocuments(readFileSync(join(RACINE, "packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml"), "utf8"))[0].toJS();
+  assert.ok(JSON.stringify(ci).includes("DRWIL_PR_") === false, "l'identité n'est pas dite par le YAML");
+  for (const [nom, job] of [
+    ["plan", ci.plan],
+    ["checks", ci.checks],
+  ]) {
+    assert.ok(job.script.includes("node .githooks/run-checks.mjs --pr-previous"), `${nom} : reprise absente`);
+    assert.equal(job.variables.GIT_DEPTH, "0", `${nom} : historique complet (la base, les hooks)`);
+  }
+  assert.ok(
+    ci.plan.script.indexOf("node .githooks/run-checks.mjs --pr-previous") < ci.plan.script.findIndex((l) => l.includes("--shard-plan")),
+  );
+  const lit = ci.checks.script.indexOf("node .githooks/run-checks.mjs --pr-previous");
+  assert.ok(lit < ci.checks.script.findIndex((l) => l.includes("DRWIL_CI_REUSE")));
+  assert.ok(lit < ci.checks.script.findIndex((l) => l.includes("base-checks.mjs --base")));
+  assert.match(ci.checks.after_script.join("\n"), /else\n\s*rm -rf \.drwil\/evidence\/pr-verdicts\n\s*fi/);
+  assert.deepEqual(ci.checks.cache.paths, [".drwil/evidence/gitleaks.tar.gz"]);
+});
