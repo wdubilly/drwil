@@ -144,7 +144,8 @@ export function lancerAgent(commande, args, { cwd, env, timeout, horloge = Date.
     p.stderr.resume();
     p.on("error", (e) => {
       clearTimeout(minuterie);
-      resolve({ code: null, lignes, absent: e.code === "ENOENT", delai });
+      // EACCES : un dossier du PATH inaccessible (WSL, dossiers Windows) fait dire « accès refusé » à une commande introuvable.
+      resolve({ code: null, lignes, absent: e.code === "ENOENT" || e.code === "EACCES", delai });
     });
     p.on("close", (code) => {
       clearTimeout(minuterie);

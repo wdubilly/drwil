@@ -96,7 +96,8 @@ export function lancer(commande, args, { cwd, timeout, env: ajout = {} }) {
   return {
     code: r.status,
     sortie: `${r.stdout ?? ""}${r.stderr ?? ""}`,
-    absent: r.error?.code === "ENOENT",
+    // EACCES : un dossier du PATH inaccessible (WSL) le fait renvoyer pour une commande introuvable.
+    absent: r.error?.code === "ENOENT" || r.error?.code === "EACCES",
     delai: r.error?.code === "ETIMEDOUT",
   };
 }

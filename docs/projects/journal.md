@@ -4257,3 +4257,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/montee-de-version-sure-suite`.
 
 - **Preuve de clôture** : `docs/preuves/montee-de-version-sure-suite.md`.
+
+## 2026-11-09 — Détour de docs/projects/reouverture-sans-faux-blocage.md : banc-run, agent absent non détecté (EACCES)
+
+- **Ce qui change** : `lancerAgent` (`outils/banc-run.mjs`, QUA-101) et `lancer` (`outils/banc-agents.mjs`, QUA-060) disent « absent » aussi sur `EACCES`, pas seulement `ENOENT`.
+- **Cause** : sous WSL, un dossier du PATH inaccessible (dossiers Windows) fait renvoyer `EACCES` par `spawn` pour une commande introuvable ; les tests QUA-101 et QUA-060 échouaient donc dans cet environnement, sans lien avec la version de Node.
+- **Preuve** : nouveau test `outils/banc.test.mjs` (PATH réduit à un dossier inaccessible) et test QUA-060 existant de `outils/banc-agents.test.mjs`, vus échouer avant le correctif.
+- **Clôturé par** : la branche `detour/banc-absent-node26`.
