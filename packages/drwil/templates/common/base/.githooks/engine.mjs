@@ -15,17 +15,15 @@ import { mainBranchVerdict } from "./engine-branch.mjs";
 import { createLaunchers } from "./engine-launch.mjs";
 import { createPass } from "./engine-pass.mjs";
 import { ciOnly, runAtVerdict, runContext } from "./engine-runat.mjs";
+import { keepSharded, shardPlan } from "./engine-shards.mjs";
 import { texts } from "./engine-texts.mjs";
 import { checkScope } from "./scope-gate.mjs";
 import { normalize } from "./scope.mjs";
-
 export { controlFingerprints, texts, treeFingerprint };
-
 /** Project root for run-checks.mjs (`scriptUrl`: its import.meta.url): the parent of `.githooks/`; `DRWIL_ROOT` replaces it, for its tests only. */
 export function projectRoot(scriptUrl, env = process.env) {
   return env.DRWIL_ROOT || join(dirname(fileURLToPath(scriptUrl)), "..");
 }
-
 function findGitleaks() {
   for (const candidate of ["gitleaks", join(homedir(), ".local", "bin", "gitleaks")]) {
     if (!spawnSync(candidate, ["version"], { stdio: "ignore" }).error) return candidate;
@@ -39,8 +37,9 @@ function findGitleaks() {
  * the name); `beforeRun` is called just before actually launching the command (not for a skipped check).
  * `staged` (pre-commit hook only): staged files, to defer a project check outside its `paths`; null everywhere else.
  * `whole`: analyses the whole repository rather than the staged files only (CI, `drwil verify`).
+ * `shard` (engine-shards.mjs): a pass of one slice of the checks declaring `shards`, or the pass of all the others; null: a single pass.
  */
-export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI), withCiChecks = false } = {}) {
+export function checks(root, { cfg = {}, env = process.env, staged = null, whole = Boolean(env.CI), withCiChecks, shard } = {}) {
   const T = texts(cfg.lang);
   // Identifies this pass, for the checks sharing a result inside it; never inherited from a parent pass.
   env.DRWIL_PASS_ID = randomUUID();
@@ -56,7 +55,6 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   // A commit staging documentation only (docs/ or Markdown, not isCode()) does not replay the tests on the working tree (QUA-035);
   // push and CI always do.
   const docsOnly = Boolean(staged?.length) && staged.every((f) => /^docs\//.test(normalize(f)) || /\.md$/i.test(f));
-
   add("secrets", T.secrets, (o, name) => {
     if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const gitleaks = findGitleaks();
@@ -68,7 +66,6 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     // Must see the index of the commit in progress: under `git commit -a`, the one named by GIT_INDEX_FILE.
     return launch(gitleaks, args, { ...o, keepGit: true }, name);
   });
-
   add("docs-references", T.docs, (o, name) => launch(process.execPath, [".githooks/check-docs.mjs"], o, name));
   add("contract-tests", T.contractTests, (o, name) => launch(process.execPath, [".githooks/check-contract-tests.mjs"], o, name));
   add("architecture-map", T.architecture, (o, name) => launch(process.execPath, [".githooks/check-architecture.mjs"], o, name));
@@ -81,9 +78,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     if (output && o.stdio !== "pipe") console.log(output);
     return { status: r.status, message: r.message, detail: r.detail, configured: r.configured, output };
   });
-
   add("main-branch", T.branch, () => mainBranchVerdict(root, env, T));
-
   const selfTests = () => {
     if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const dir = join(root, ".githooks");
@@ -107,7 +102,6 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
       return t.args ? launchAsync(process.execPath, t.args, {}, name) : t;
     },
   );
-
   add("ci-coverage", T.ciCoverage, (o, name) => {
     if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const ciFiles = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
@@ -123,34 +117,38 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   for (const c of Array.isArray(cfg.checks) ? cfg.checks : []) {
     const name = c.name ?? c.run;
     const reserved = runAtVerdict(c, name, runContext(staged, env), runAtOptions);
+    const id = c.id ?? `project:${name}`;
+    const sh = shardPlan(c, shard, { env, root, id, name, T, list });
+    const shellOpts = { shell: true, cwd: c.cwd ? join(root, c.cwd) : root, env: sh?.env };
     const skipped = () => {
       if (reserved) return reserved;
       if (docsOnly) return { status: "not-run", detail: T.docsOnly };
+      if (sh?.skip) return sh.skip();
       if (staged && Array.isArray(c.paths) && c.paths.length) {
         const patterns = c.paths.map(globToRegex);
         if (!staged.some((f) => patterns.some((p) => p.test(f)))) return { status: "not-run", detail: T.deferred };
       }
       return null;
     };
-    const cwd = c.cwd ? join(root, c.cwd) : root;
     list.push({
-      id: c.id ?? `project:${name}`,
+      id,
       name,
+      sharded: Boolean(sh),
       // QUA-141: what the check declares, for its own fingerprint (a project check only).
       declaration: JSON.stringify([c, c.needsBuild ? cfg.build : null]),
       paths: Array.isArray(c.paths) && c.paths.length ? c.paths : null,
       // Left to CI in this context: never run nor reused here, announced as such by each output (QUA-208, QUA-260).
       ...(reserved?.ciPending ? { ciPending: true } : {}),
       ...(withCiChecks && ciOnly(c) && !reserved ? { ciPlayed: true } : {}),
-      run: (o = {}) => skipped() ?? (c.needsBuild ? build(name, o) : null) ?? launch(c.run, [], { ...o, shell: true, cwd }, name),
+      run: (o = {}) => skipped() ?? (c.needsBuild ? build(name, o) : null) ?? launch(c.run, [], { ...o, ...shellOpts }, name),
       ...(parallel && c.parallel !== false
         ? {
-            runAsync: async () =>
-              skipped() ?? (c.needsBuild ? await buildAsync(name) : null) ?? launchAsync(c.run, [], { shell: true, cwd }, name),
+            runAsync: async () => skipped() ?? (c.needsBuild ? await buildAsync(name) : null) ?? launchAsync(c.run, [], shellOpts, name),
           }
         : {}),
     });
   }
+  if (shard?.index) keepSharded(list);
   // QUA-136: a check that ran reports `durationMs` (whole ms, its own on a parallel pass); not-run and not-applicable have none, never 0.
   const timed = (fn) => (o) => {
     const start = performance.now();

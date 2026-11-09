@@ -251,7 +251,7 @@
     {
       "id": "tests-qua-013",
       "name": "tests de QUA-013, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-013 packages/drwil/test/kit.test.mjs .githooks/run-checks.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-013 packages/drwil/test/kit.test.mjs .githooks/run-checks.test.mjs .githooks/engine-shards.test.mjs .githooks/run-checks-shards.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",

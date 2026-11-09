@@ -23,6 +23,7 @@ export const TEXTS = {
     staleIntent: (f, n) => `intention sans revue depuis ${n} jours (${f}) : la revoir, la mettre à jour (ligne « Revu le ») ou la clore`,
     intentLeft: (b, i) =>
       `la fiche ${b} est supprimée sans que son intention ${i} soit touchée : la mettre à jour, ou la résumer au journal et la retirer si elle est couverte`,
+    shardUsage: "options de tranche : --shard <i>/<N> (1 ≤ i ≤ N ≤ 16), --without-shards, --aggregate-shards <dossier> ; non combinables",
   },
   en: {
     project: "project checks (lint, tests…)",
@@ -46,5 +47,6 @@ export const TEXTS = {
     staleIntent: (f, n) => `intent not reviewed for ${n} days (${f}): review it, update it ("Reviewed on" line) or close it`,
     intentLeft: (b, i) =>
       `brief ${b} is deleted without touching its intent ${i}: update it, or summarise it in the journal and remove it when covered`,
+    shardUsage: "slice options: --shard <i>/<N> (1 ≤ i ≤ N ≤ 16), --without-shards, --aggregate-shards <folder>; not combinable",
   },
 };

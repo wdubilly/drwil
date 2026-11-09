@@ -39,7 +39,7 @@ régression sauf si la fiche active déclare le changement (section
 **Contrôle** : `ci-coverage`, `tests-qua-013`
 **Manuel** : lecture de la sortie du contrôle concerné.
 **Couvre** : `.github/workflows/ia-first.yml`, `packages/drwil/src/verdict.ts`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`
+**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`, `.githooks/engine-shards.test.mjs`, `.githooks/run-checks-shards.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
 
 ## SEC-006 — Pas de dépendance vulnérable connue
