@@ -31,3 +31,10 @@ tests, rien encore sur une vraie fusion ni sur un vrai GitLab.
   de la CI, la fusion programmée, le suivi de la CI de la branche principale après la fusion et
   l'issue d'alerte (déjà ouverte par le job `alert-if-ci-broken` du gabarit GitLab), pour que la
   fusion automatique et le verrou de QUA-251 y valent aussi (`glab` ou API v4, à trancher).
+
+## Suite livrée (2026-11-09)
+
+Le chantier « les contrôles lents sont accélérés par la CI livrée » (voir `docs/projects/journal.md`) a ajouté le
+réglage `shards: N` (tranches parallèles GitHub et GitLab) et la reprise d'un verdict de PR d'un push à l'autre
+(QUA-288 à QUA-291), prouvés par un projet d'essai synthétique. Restent ouverts ici : la mesure réelle d'un gain
+(sur un projet adoptant) et l'essai sur un vrai GitLab.

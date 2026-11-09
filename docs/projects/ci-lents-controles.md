@@ -96,42 +96,48 @@ Le lot de reprise ci-dessous traite donc (a) : le demandeur a rouvert QUA-250 po
 ## Critères d'acceptation
 
 - Un contrôle déclaré `shards: N` est joué par N jobs parallèles en CI GitHub et GitLab, une tranche chacun, le
-  contrôle recevant son numéro et le total par `DRWIL_SHARD_INDEX` et `DRWIL_SHARD_TOTAL` — contrat à créer
+  contrôle recevant son numéro et le total par `DRWIL_SHARD_INDEX` et `DRWIL_SHARD_TOTAL` — `QUA-288`
 - Une tranche absente, en échec, annulée ou jouée deux fois fait échouer l'agrégation ; l'agrégation n'écrit « ok »
-  que si les N tranches du même commit sont « ok » — `QUA-013`
+  que si les N tranches du même commit sont « ok » — `QUA-288`
 - Le job exigé par la protection de branche garde son nom unique et stable, et `alert-if-ci-broken` suit son
   résultat, tranches et agrégation comprises — `QUA-251`
 - Aucun contrôle n'est affaibli : un contrôle découpé juge les mêmes fichiers et la même commande que non découpé,
   `drwil verify` et `run-checks` locaux jouent une seule passe sans tranche, et un contrôle sans `shards` est joué
-  comme avant — contrat à créer
+  comme avant — `QUA-289`
 - Un contrôle lent n'est repris d'une passe de PR à la suivante que sur une empreinte de ses `paths` identique, liée au
-  commit et à la configuration du verdict, et rejoué au moindre doute — contrat à créer (D3 tranchée : oui)
+  commit et à la configuration du verdict, et rejoué au moindre doute — `QUA-290` (D3 tranchée : oui)
 - Un verdict de PR ne s'écrit que depuis le job de cette PR, ne se lit que par la même PR sur le même dépôt, et
   son intégrité se vérifie avant reprise (D4 : somme et identité du run) ; un verdict falsifié, d'un autre commit, d'une autre PR ou d'un fork est
-  rejoué — contrat à créer (D3 tranchée : oui)
+  rejoué — `QUA-291` (D3 tranchée : oui)
 - Un projet d'essai installé depuis le paquet, avec un faux contrôle lent découpé, prouve sur GitHub et sur GitLab : la
-  répartition des tranches, l'échec d'une tranche absente, le nom exigé inchangé et le local sans tranche — `QUA-270`
-  étendu (preuve de même forme, projet d'essai synthétique ; aucune mesure réelle sur `drwil_walk`)
+  répartition des tranches, l'échec d'une tranche absente, le nom exigé inchangé et le local sans tranche (preuve de même forme que QUA-270, projet d'essai synthétique ;
+  aucune mesure réelle sur drwil_walk) — `QUA-270`
 
 ## Contrats modifiés
 
-(à valider par le demandeur : aucune ligne n'est validée à ce jour, la clôture les refuse tant que le demandeur ne les
-a pas validés.)
+(validées par le demandeur le 2026-11-09, par le sondage de clôture.)
 
 - `QUA-250` — ancien critère : « la passe de la PR ne relit jamais un verdict qu'elle aurait pu écrire ; seul un push
   sur la branche principale sauvegarde ces verdicts ; aucun cache GitLab partagé » — raison : le lot 4 (D3, tranchée : oui) fait lire
   à une PR le verdict de sa propre passe précédente pour un contrôle lent ; la clause sur la branche principale et sur
-  GitLab reste vraie pour tout le reste — à valider par le demandeur
+  GitLab reste vraie pour tout le reste — validé par le demandeur le 2026-11-09
 - `QUA-113` — ancien critère : « le rejeu avec les hooks de la branche principale reprend le verdict de la première
   passe de la PR ; le moteur de `run-checks` inchangé » — raison : les tranches rejouent aussi avec les hooks de la
-  base (D5) et l'agrégation lit leurs verdicts ; la règle de reprise du rejeu ne change pas — à valider par le demandeur
+  base (D5) et l'agrégation lit leurs verdicts ; la règle de reprise du rejeu ne change pas — validé par le demandeur le 2026-11-09
 - `QUA-251` — ancien critère : le job `checks` (`alert-if-ci-broken`) porte la CI de la branche principale — raison :
   le job exigé devient l'agrégateur des tranches ; son nom et la règle ne changent pas, la preuve s'étend aux tranches —
-  à valider par le demandeur
+  validé par le demandeur le 2026-11-09
 - `QUA-270` — ancien critère : « un projet installé reçoit les mécanismes de la CI rapide » — raison : la liste des
-  mécanismes reçus s'allonge du découpage et de la reprise d'une PR à l'autre — à valider par le demandeur
+  mécanismes reçus s'allonge du découpage et de la reprise d'une PR à l'autre — validé par le demandeur le 2026-11-09
 - `QUA-208` (réglage `runAt`) : la tranche ne change pas ses règles ; un contrôle `runAt: ["ci"]` découpé reste
-  « confié à la CI » en local — à confirmer par le demandeur
+  « confié à la CI » en local — confirmé par le demandeur le 2026-11-09
+- `.githooks/base-checks.mjs` — l'agrégation des tranches et la reprise d'une PR à l'autre (options de tranche, verdicts liés à l'empreinte) (validé par le demandeur le 2026-11-09)
+- `.githooks/engine.mjs` — le réglage `shards`, les variables de tranche et le verdict de tranche (validé par le demandeur le 2026-11-09)
+- `.githooks/engine-texts.mjs` — les messages du réglage `shards` et des tranches (validé par le demandeur le 2026-11-09)
+- `.githooks/run-checks.mjs` — les options `--shard`, `--without-shards`, `--aggregate-shards` et la reprise d'une PR à l'autre (validé par le demandeur le 2026-11-09)
+- `.githooks/run-checks-texts.mjs` — les messages des tranches et de la reprise (validé par le demandeur le 2026-11-09)
+- `.githooks/run-checks-verdicts.mjs` — le verdict de tranche et le verdict de PR lié à l'empreinte, au commit et à la somme (validé par le demandeur le 2026-11-09)
+- `.githooks/run-checks.test.mjs` — les tests de `run-checks` pour les tranches et la reprise (validé par le demandeur le 2026-11-09)
 
 ## 2. Hors périmètre
 
