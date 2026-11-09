@@ -119,14 +119,30 @@ Une limite trouvée à une clôture rejoint l'intention de son thème, jamais un
 doublon. Une intention qui attend une condition (chiffres du banc, essai réel
 d'un outil) la dit dans son statut.
 
+## Feuille de route par version (2026-11-09)
+
+Étiquette `(version)` sur chaque ligne ouverte ; sans étiquette = plus tard. Remplace « Versions visées » pour ce qui reste.
+
+- **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
+- **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
+  restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; le découpage des
+  contrôles lents dès le départ ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
+- **0.13.0, adoption, clôture et parallèle** : `init` sur projet réel, stack élargie, contrat modifiable par commande,
+  worktrees et clôture, accueil de session, relecture avant fusion, CI éprouvée en réel (GitHub, GitLab, `merge-auto`).
+- **0.14.0, mesurer** : coût en tokens, tests de mutation, catalogue et profils, publication npm.
+- **Plus tard** : fabrique autonome, banc complet, validation commerciale, Community Ready, autres outils, forge du livrable.
+
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P1] (0.11.1) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
+- [ ] [IA] [P1] (0.12.0) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
-- [ ] [IA] [P2] (0.11.1) Les tests de run-checks passent sans gitleaks, grâce à un faux gitleaks (cadré
+- [ ] [IA] [P2] (0.12.0) Les tests de run-checks passent sans gitleaks, grâce à un faux gitleaks (cadré
   le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
-- [ ] [IA] [P2] (0.11.1) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
+- [ ] [IA] [P2] (0.12.0) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
   signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
+- [ ] [décision] [P2] (0.12.0) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
+  outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
+  2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
 - [ ] [décision] [P2] Retirer `drwil-progress`, maintenant que `drwil serve` est à parité (notée le 2026-11-08) —
   `docs/intentions/retrait-de-drwil-progress.md`.
 - [ ] [décision] [P2] Documenter `drwil serve` dans le README du paquet (notée le 2026-11-08) —
@@ -168,10 +184,15 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Preuves, contrôles, vitesse
 
-- [ ] [décision] La CI rapide éprouvée en réel (mesure d'une PR de doc, preuve de CI de la branche
+- [ ] [décision] [P2] (0.12.0) Le corps d'une PR suit `.github/pull_request_template.md`, contrôlé par une machine
+  (note du 2026-10-27, écart sur la PR #273) — `docs/intentions/corps-de-pr-conforme-au-modele.md`.
+- [ ] [décision] [P3] (0.13.0) `pr-watch` montre la CI en temps réel : jobs, étapes et durées, GitHub et GitLab (note du
+  2026-11-07) — `docs/intentions/pr-watch-en-temps-reel.md`.
+
+- [ ] [décision] (0.13.0) La CI rapide éprouvée en réel (mesure d'une PR de doc, preuve de CI de la branche
   principale sur une vraie fusion, reprise GitLab par `CI_JOB_TOKEN`) et la preuve de CI de la
   branche principale hors GitHub — `docs/intentions/ci-rapide-epreuves-reelles.md`.
-- [ ] [décision] La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
+- [ ] [décision] (0.13.0) La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
   vraie PR en retard sur la branche principale —
   `docs/intentions/merge-auto-eprouve-en-reel.md`.
 - [ ] [décision] [P3] `start` vers un worktree prouvé dans un vrai terminal, pas
@@ -179,40 +200,48 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P3] Le contrôle des await de premier niveau : `import()` calculés
   et points d'entrée encore lancés par un await (`QUA-249`) —
   `docs/intentions/await-premier-niveau-suites.md`.
-- [ ] [décision] [P3] Une identité forte en option pour l'attestation (commits
+- [ ] [décision] [P1] (0.12.0) Une identité forte pour l'attestation (commits
   signés, revue GitHub authentifiée), les niveaux de garantie étant documentés
-  (`QUA-197`) — `docs/intentions/e2e-et-attestation-precises.md`.
-- [ ] [décision] [P1] Suivre la durée de la CI et le contexte relu, et trancher
+  (`QUA-197`) ; montée de P3 en P1 le 2026-11-09 : l'analyse externe y voit la
+  faiblesse principale (une attestation se fabrique) —
+  `docs/intentions/e2e-et-attestation-precises.md`.
+- [ ] [décision] [P1] (0.12.0) Les sondages posés sous Copilot CLI (`drwil-start`, `drwil-scope`, attestation) sont lus par le hook :
+  réponse sans effet constatée les 2026-11-08 et 2026-11-09, cause à reproduire (notes regroupées le 2026-11-09) —
+  `docs/intentions/sondages-lus-sous-copilot-cli.md`.
+- [ ] [décision] [P1] (0.12.0) Un contrôle exigé sauté (job de la forge, branche principale déjà prouvée) se dit
+  « non exécuté » au lieu d'être rapporté réussi (analyse externe du 2026-11-09) —
+  `docs/intentions/controles-sautes-dits-non-executes.md`.
+- [ ] [décision] [P2] (0.14.0) Des tests de mutation sur les contrats de sécurité et d'attestation, et la relecture
+  humaine exigée en nombre sur la forge (analyse externe du 2026-11-09) —
+  `docs/intentions/tests-de-mutation-et-relecture-exigee.md`.
+- [ ] [décision] [P1] (0.13.0) Suivre la durée de la CI et le contexte relu, et trancher
   leurs calibrages (dont l'avertissement `[ia-first-warning]` et un `verify`
   en FAIL sans contrat en échec, repris le 2026-10-26) —
   `docs/intentions/suivi-ci-et-contexte.md`.
-- [ ] [décision] Le pre-push connaît le commit local poussé, pas seulement la
+- [ ] [décision] (0.12.0) Le pre-push connaît le commit local poussé, pas seulement la
   référence distante (reprise d'un verdict au pre-push, QUA-152) —
   `docs/intentions/pre-push-commit-pousse.md`.
-- [ ] [décision] La lecture de la CI d'une MR GitLab (QUA-262) et la CI GitLab du
+- [ ] [décision] (0.13.0) La lecture de la CI d'une MR GitLab (QUA-262) et la CI GitLab du
   gabarit (QUA-263), éprouvées en réel —
   `docs/intentions/gitlab-ci-de-la-mr-essai-reel.md`.
-- [ ] [décision] Sortir de CLOSING refusé en dur sans CI verte sur les contrôles
+- [ ] [décision] (0.12.0) Sortir de CLOSING refusé en dur sans CI verte sur les contrôles
   confiés à la CI (QUA-262) — `docs/intentions/cloture-refusee-sans-ci-verte.md`.
-- [ ] [décision] Aligner QUA-196 et la couverture du diff sur les contrôles
+- [ ] [décision] (0.12.0) Aligner QUA-196 et la couverture du diff sur les contrôles
   confiés à la CI — `docs/intentions/contrats-a-aligner-apres-controles-en-ci.md`.
-- [ ] [décision] Le sondage d'attestation sous Claude Code enregistre la réponse
-  (refusée au premier essai réel, QUA-235) —
-  `docs/intentions/sondage-d-attestation-refuse-sous-claude-code.md`.
-- [ ] [décision] Comprendre l'échec intermittent de la couverture des hooks
+- [ ] [décision] (0.12.0) Comprendre l'échec intermittent de la couverture des hooks
   (QUA-004) vu deux fois sous charge parallèle, jamais reproduit seul —
   `docs/intentions/couverture-hooks-intermittente.md`.
-- [ ] [décision] Surveiller qu'un contrôle ne lit que ses `paths` (reprise
+- [ ] [décision] (0.12.0) Surveiller qu'un contrôle ne lit que ses `paths` (reprise
   par contrôle, QUA-141) —
   `docs/intentions/reprise-par-controle-limites.md`.
-- [ ] [décision] Les tests qui laissent des fichiers dans leur dossier
+- [ ] [décision] (0.12.0) Les tests qui laissent des fichiers dans leur dossier
   temporaire se corrigent à la source (31 contrôles nommés par
   `run-checks` le 2026-10-25) —
   `docs/intentions/tests-qui-laissent-des-fichiers-temporaires.md`.
-- [ ] [décision] [P3] La couverture à 100 %, le paquet et tout code modifié :
+- [ ] [décision] [P3] (0.14.0) La couverture à 100 %, le paquet et tout code modifié :
   une seule cible à trancher avec la fiche ci-dessus (release testée par
   mock, tranché le 2026-10-16) — `docs/intentions/couverture-paquet-100.md`.
-- [ ] [décision] [P3] Lancer un contrôle lent au commit seulement si le chantier
+- [ ] [décision] [P3] (0.13.0) Lancer un contrôle lent au commit seulement si le chantier
   touche un chemin critique — `docs/intentions/controle-lent-chemin-critique.md`.
 
 ### Protection, garanties, contournements
@@ -220,8 +249,6 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P1] (0.12.0, 2) Le premier commit du kit est refusé en SCOPING sous la
   barrière bloquante, et la recette d'adoption ne le dit pas —
   `docs/intentions/premier-commit-du-kit-sous-barriere-bloquante.md`.
-- [ ] [décision] [P2] (0.12.0, 4) Un `judgeGuarantees` mort reste dans `packages/drwil/src/guarantees-verify.ts` —
-  `docs/intentions/juge-des-garanties-en-double.md`.
 - [ ] [décision] [P2] (0.12.0, 5) Le contrôle `taille-kit` déclaré à l'installation compte comme
   contrôle du projet et masque l'alerte « aucun contrôle du projet déclaré »,
   même en CI chez un projet neuf —
@@ -229,7 +256,7 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P2] (0.12.0, 6) Les garanties obligatoires, la suite (`doctor` sur le dépôt
   drwil compris), à cadrer avec ou juste après la fiche du niveau de
   protection — `docs/intentions/garanties-la-suite.md`.
-- [ ] [décision] [P1] Les contournements encore ouverts : juger l'effet, pas
+- [ ] [décision] [P1] (0.12.0) Les contournements encore ouverts : juger l'effet, pas
   le texte (garde shell, juge du banc), le clone superficiel,
   l'auto-élargissement du cadrage, les seuils d'un détour —
   `docs/intentions/contournements-restants.md`.
@@ -245,31 +272,22 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   deux chantiers réalisés, relatés dans `docs/projects/journal.md` (refus de version et CI du projet ; fichiers
   modifiés et retrait de `resolve-drift`) —
   `docs/intentions/montee-de-version-sure.md`.
-- [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
+- [ ] [décision] [P1] (0.13.0) Un parcours d'installation et de chantier sans demande
   d'autorisation à chaque commande : reste le réexamen du « ask » sur
   `git push`, `merge` et `rebase` (demande du 2026-10-25) —
   `docs/intentions/installation-fluide.md`.
-- [ ] [décision] Modifier ou retirer un contrat par commande, geste humain
+- [ ] [décision] (0.13.0) Modifier ou retirer un contrat par commande, geste humain
   (limite du chantier commande-de-contrat, 2026-11-05) —
   `docs/intentions/modifier-ou-retirer-un-contrat.md`.
-- [ ] [décision] L'adoption et `init` sur un projet réel : code existant,
+- [ ] [décision] (0.13.0) L'adoption et `init` sur un projet réel : code existant,
   couche d'un dossier apparu après l'installation, dépôt git existant avant
   `init` — `docs/intentions/adoption-et-init.md`.
-- [ ] [décision] Une documentation qui reste juste : renvois, citations,
+- [ ] [décision] (0.13.0) Une documentation qui reste juste : renvois, citations,
   index, doc visiteur — `docs/intentions/coherence-de-la-doc.md`.
-- [ ] [décision] Un écart déclaré entre le gabarit et sa copie ne couvre que
+- [ ] [décision] (0.12.0) Un écart déclaré entre le gabarit et sa copie ne couvre que
   ce qu'il déclare (`miroirs-gabarit`) —
   `docs/intentions/miroirs-ecart-declare-trop-large.md`.
-- [ ] [décision] [P1] (absorbée par la montée de version sûre) Un CI du kit que la mise à jour n'écrase pas : étape C++
-  et job Windows perdus sur drwil_dbox le 2026-10-26 —
-  `docs/intentions/ci-extensible-sans-perte.md`.
-- [ ] [décision] [P1] (absorbée par la montée de version sûre) Les données du projet (tableau des fiches) hors des
-  fichiers de prose que le kit réécrit —
-  `docs/intentions/donnees-du-projet-hors-prose-du-kit.md`.
-- [ ] [décision] [P1] (absorbée par la montée de version sûre) Alerter avant et après un écrasement (diff de `resolve-drift`,
-  `doctor` sur stack vide ou `.bak`) —
-  `docs/intentions/alertes-avant-et-apres-ecrasement.md`.
-- [ ] [décision] La détection de stack reconnaît plus de technologies (C/C++,
+- [ ] [décision] (0.13.0) La détection de stack reconnaît plus de technologies (C/C++,
   Swift, Elixir…) et signale une stack vide (constaté sur drwil_dbox le
   2026-10-26) — `docs/intentions/detection-de-stack-elargie.md`.
 - [ ] [décision] [P3] Aider l'adoptant à alléger ses fichiers (outil de
@@ -281,20 +299,24 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P3] `docs/recettes/README.md` dit encore que la note « sans
   verdict » arrive par la PR, alors qu'en `solo` elle est le corps de la
   release — `docs/intentions/recettes-readme-note-sans-verdict.md`.
-- [ ] [décision] [P3] Déclarer les copies `.githooks/` du module de release
+- [ ] [décision] [P3] (0.12.0) Déclarer les copies `.githooks/` du module de release
   dans `scopeMirrors` — `docs/intentions/copies-create-release-dans-scope-mirrors.md`.
 
 ### Clôture, file et chantiers en parallèle
 
-- [ ] [décision] Clôture, réouverture et attestations : cadrée en cinq fiches
+- [ ] [décision] [P2] (0.12.0) Clôture, réouverture et reprise : la barrière de périmètre nomme chaque fichier refusé, la
+  réouverture rend l'intention retirée, `resume` et les faux positifs de la barrière de réouverture (4 notes
+  regroupées le 2026-11-09) — `docs/intentions/cloture-reouverture-et-reprise-defauts.md`.
+
+- [ ] [décision] (0.13.0) Clôture, réouverture et attestations : cadrée en cinq fiches
   le 2026-10-26 ; reste la note « un lancement intercalé efface la file » —
   `docs/intentions/cloture-et-attestations.md`.
-- [ ] [décision] Se repositionner après une clôture : nettoyer le worktree et
+- [ ] [décision] (0.13.0) Se repositionner après une clôture : nettoyer le worktree et
   les branches, revenir sur `master`, créer la branche de cadrage —
   `docs/intentions/nettoyage-des-worktrees.md`.
-- [ ] [décision] Conflits d'index et de journal entre chantiers en parallèle —
+- [ ] [décision] (0.13.0) Conflits d'index et de journal entre chantiers en parallèle —
   `docs/intentions/conflits-de-cloture-entre-worktrees.md`.
-- [ ] [décision] Le sondage parallèle (plusieurs worktrees) vérifié dans
+- [ ] [décision] (0.13.0) Le sondage parallèle (plusieurs worktrees) vérifié dans
   Copilot CLI ; le sondage à une fiche l'est (2026-10-26) —
   `docs/intentions/sondage-worktree-copilot-cli.md`.
 - [ ] [décision] L'enchaînement des lots (un sous-agent neuf par lot) éprouvé sur
@@ -304,31 +326,31 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   (reportée le 2026-11-05 : une fiche jetable par montée de version, close par
   `node .githooks/close.mjs` ; à reprendre si un projet adoptant en a besoin) —
   `docs/intentions/cloture-fiche-permanente.md`.
-- [ ] [décision] Le commentaire de `merge_cancelled` dans `.githooks/state-validate.mjs` dit encore
+- [ ] [décision] (0.12.0) Le commentaire de `merge_cancelled` dans `.githooks/state-validate.mjs` dit encore
   l'ancienne règle de QUA-181 —
   `docs/intentions/commentaire-merge-cancelled-a-jour.md`.
-- [ ] [décision] Le hook qui ajoute `Drwil-Brief` fait, sur un message vide, un commit dont le
+- [ ] [décision] (0.12.0) Le hook qui ajoute `Drwil-Brief` fait, sur un message vide, un commit dont le
   trailer est le sujet — `docs/intentions/trailer-sur-message-vide.md`.
 
 ### Fluidité et relecture
 
-- [ ] [décision] [P1] Fluidité sans perte de rigueur : restent le
+- [ ] [décision] [P1] (0.13.0) Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
   `docs/intentions/fluidite-sans-perte-de-rigueur.md`.
-- [ ] [décision] [P1] Vue de relecture et relecture avant fusion, choisie
+- [ ] [décision] [P1] (0.13.0) Vue de relecture et relecture avant fusion, choisie
   au lancement : montrer à l'humain ce qui demande son jugement dans une PR
   (décisions, cadrage, règles, preuves, exceptions), et une question de plus
   dans le sondage (`drwil-review`), cadrées ensemble avec la protection de
   master — `docs/intentions/vue-de-relecture.md`.
-- [ ] [décision] Un accueil drwil court à l'ouverture d'une session (où en
+- [ ] [décision] (0.13.0) Un accueil drwil court à l'ouverture d'une session (où en
   est le projet, commandes utiles ; l'essentiel seulement, le détail à la
   demande ; demande du 2026-10-27) —
   `docs/intentions/accueil-drwil-a-l-ouverture.md`.
 
 ### Coût en tokens
 
-- [ ] [décision] La consommation de tokens mesurée aussi pour les autres
+- [ ] [décision] (0.14.0) La consommation de tokens mesurée aussi pour les autres
   outils IA (Copilot CLI, Cursor, Codex, Gemini) —
   `docs/intentions/consommation-autres-outils.md`.
 
@@ -352,7 +374,7 @@ critère de sortie de chaque fiche —
 
 ### Autres outils
 
-- [ ] [décision] Suites de l'attente outillée des commandes longues : Windows, garde de commande, double lancement simultané —
+- [ ] [décision] (0.13.0) Suites de l'attente outillée des commandes longues : Windows, garde de commande, double lancement simultané —
   `docs/intentions/attente-commandes-longues-suites.md`.
 - [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
   d'essayé) — `docs/intentions/compat-codex.md`.
@@ -367,12 +389,13 @@ critère de sortie de chaque fiche —
 Prérequis : la protection de master (faite le 2026-10-13) ; le banc mesure le
 drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
 
-- [ ] [décision] `verify` ne donne jamais PASS dans la copie du banc :
+- [ ] [décision] (0.14.0) `verify` ne donne jamais PASS dans la copie du banc :
   contrats à attester, humain absent (limite du chantier « Mini-banc :
   copie « avec » adoptée » du 2026-10-23) —
   `docs/intentions/banc-verify-jamais-pass.md`.
-- [ ] [décision] [P2] Campagne du mini-banc : essai réel en CI avec
-  l'abonnement, puis 12 passages et leur rapport — `docs/intentions/campagne-mini-banc.md`.
+- [ ] [décision] [P2] (0.12.0) Campagne du mini-banc : essai réel en CI avec
+  l'abonnement, puis 12 passages et leur rapport ; critères de décision écrits le 2026-11-09 (re-datation du protocole et de son test, au chantier) —
+  `docs/intentions/campagne-mini-banc.md`.
 - [ ] [décision] [P2] Fabrique autonome graduée par le risque (outillage,
   mutation, rôles séparés, une session par fiche, auto-fusion LOW),
   cadrée sur les chiffres du mini-banc et de la consommation —
@@ -382,7 +405,7 @@ drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
 
 ### Produit, quand tout est opérationnel
 
-- [ ] [décision] [P2] Publication npm du kit, avec une porte avant
+- [ ] [décision] [P2] (0.14.0) Publication npm du kit, avec une porte avant
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
   `docs/intentions/packager-kit-ia-first.md`.

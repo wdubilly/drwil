@@ -45,10 +45,9 @@ Relevé le 2026-11-08 à l'usage sur drwil_walk (`master`, arbre propre, 0.10.0 
   (si présent) : les clés du projet (`checks`, `risk`, `extraCodeGlobs`, `release`…) sont conservées, celles que le
   kit dérive (`projectName`, `lang`, `layers`, `tools`, `ci`, `stack`, `mode`) sont recalculées ; `init` ne touche
   pas à `.drwil/state.json` (si présent). Son message de fin renvoie à `resolve-drift` pour les fichiers modifiés à la main.
-- **Intentions voisines, qui ne couvrent pas cela** : `donnees-du-projet-hors-prose-du-kit` (l'index des
-  intentions seul), `ci-extensible-sans-perte` (point d'extension de la CI, pas le commit),
-  `alertes-avant-et-apres-ecrasement` (dire ce qui est supprimé, pas l'éviter),
-  `premier-commit-du-kit-sous-barriere-bloquante` (installation neuve seulement).
+- **Intentions voisines, absorbées puis supprimées le 2026-11-09** (livrées, voir le CHANGELOG) : les données du
+  projet hors prose du kit, le CI que la mise à jour n'écrase pas, les alertes avant et après un écrasement.
+  Reste voisine : `premier-commit-du-kit-sous-barriere-bloquante` (installation neuve seulement).
 
 ## Décisions
 
