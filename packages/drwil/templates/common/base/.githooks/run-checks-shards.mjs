@@ -1,10 +1,21 @@
 // Slices in run-checks.mjs (engine-shards.mjs): reading of the options, and the verdict file each slice leaves for the aggregation.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { gitCommit, parseShardArgs, SHARDS_DIR } from "./engine-shards.mjs";
+import { texts } from "./engine-texts.mjs";
+import { gitCommit, parseShardArgs, shardMatrix, SHARDS_DIR } from "./engine-shards.mjs";
 
-/** `--shard i/N`, `--without-shards`, `--aggregate-shards <dir>`: the options for `checks()`, or exit 2 on a malformed one. */
-export function shardOptions(argv, T) {
+/**
+ * `--shard i/N`, `--without-shards`, `--aggregate-shards <dir>`: the options for `checks()`, or exit 2 on a malformed one.
+ * `--shard-plan` plays nothing: it prints the matrix of the slices the CI plays (`{"include":[{"index":1,"total":4}…]}`, empty without
+ * sharded check), or exits 1 naming the declarations it refuses (a plan that cannot be read is no plan, QUA-013).
+ */
+export function shardOptions(argv, T, cfg = {}) {
+  if (argv.includes("--shard-plan")) {
+    const { include, problems } = shardMatrix(cfg, texts(cfg.lang === "en" ? "en" : "fr"));
+    if (problems.length) console.error(problems.join("\n"));
+    else console.log(JSON.stringify({ include }));
+    process.exit(problems.length ? 1 : 0);
+  }
   const shard = parseShardArgs(argv);
   if (!shard?.error) return shard;
   console.error(T.shardUsage);

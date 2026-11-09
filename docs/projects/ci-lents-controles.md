@@ -265,9 +265,18 @@ Risque HIGH : la fiche touche `.githooks/`, la CI et `.drwil/`. Aucun point ouve
   `DRWIL_SHARD_INDEX=1` et `DRWIL_SHARD_TOTAL=1`. Les contrôles non découpés ne sont pas joués par `--shard` ; avec
   `--without-shards`, le contrôle découpé est « non applicable » (confié aux tranches), avec `--aggregate-shards` il est jugé
   sur les verdicts du dossier (nombre, indices, commit, empreinte, statut).
+- **Lot 2 réalisé** (CI GitHub, gabarit et CI du dépôt) : job `plan` (décisions `pr` et `proven`, `run-checks --shard-plan` : matrice, `skip`,
+  `count`), job `shards` (matrice `fromJSON`, `fail-fast: false`, tranche jouée par `base-checks --base … --shard` sur PR sinon
+  `run-checks --shard`, artefact `shard-<i>-of-<N>`), `checks` (nom inchangé, `if: always()`, garde : plan ou tranche non « success » = échec,
+  téléchargement des artefacts, `run-checks --aggregate-shards`). D6 iv faite dans `engine-shards` (`againstBase`), pas dans
+  `base-checks` (plafond de 200 lignes) : N comparé à `origin/<base>:.drwil/ia-first.json`, écart accepté s'il est cité dans
+  « Contrats modifiés » d'une fiche de `base..HEAD`, avertissement si la base ne déclare pas de tranches. `base-checks` transmet les options de
+  tranche (jamais « skipped » ni « not-applicable » pour une tranche).
+- **Limites connues** : un seul N par projet (le plan refuse plusieurs totaux) ; pas de zone « projet » pour le setup du job `shards`
+  (il faudrait modifier le fichier des zones `ci-zone`, hors scope) : la commande du contrôle fait son propre setup ; base antérieure au lot : tranches ignorées par son
+  `base-checks` (échec sûr, QUA-013) ; CI du dépôt : `plan` ne reprend que le saut de `matrice-os`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 2 (CI GitHub) : job de plan lisant `shards` de la configuration, matrice de tranches lançant
-  `run-checks --shard i/N` avec les hooks de la base (D5) et déposant le dossier `shards` de `.drwil/evidence` en artefact, `checks` (nom
-  inchangé) lançant `run-checks --aggregate-shards <dossier>` ; l'agrégateur compare aussi N à la configuration de la base
-  (D6 iv), ce que le moteur ne fait pas encore. Restent à valider : contrats modifiés (`QUA-250`, `QUA-113`, `QUA-251`,
-  `QUA-270`) et confirmation de `QUA-208`.
+- **Prochaine étape** : lot 3 (CI GitLab, D2 a) : nombre maximal de jobs de tranche fixe, tranches au-delà de N « non applicable »,
+  job `checks` au nom inchangé qui agrège (`--aggregate-shards`), aucun cache de verdicts ; test dans le fichier ci-shards.test du paquet
+  (à créer). Réutiliser `run-checks --shard-plan` et `againstBase` (variable `CI_MERGE_REQUEST_TARGET_BRANCH_NAME` déjà lue). Restent à
+  valider : contrats modifiés (`QUA-250`, `QUA-113`, `QUA-251`, `QUA-270`) et confirmation de `QUA-208`.

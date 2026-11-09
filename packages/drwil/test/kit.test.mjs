@@ -5997,22 +5997,30 @@ test("QUA-263 : CI GitHub livrée — le push d'une branche à PR ouverte saute 
   await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github", git: false }));
   const gh = read(dir, ".github/workflows/ia-first.yml");
   assert.match(gh, /^on: \[push, pull_request\]$/m);
+  // La décision de sauter vit dans le job plan, que lit le job exigé `checks` : ni l'un ni l'autre n'est sauté au niveau du job
+  // (un job sauté n'est pas rapporté sous son nom) ; `always()` seul tient `checks` en vie quand une tranche échoue.
+  const plan = gh.slice(gh.indexOf("\n  plan:\n"), gh.indexOf("\n  shards:\n"));
   const checks = gh.slice(gh.indexOf("\n  checks:\n"), gh.indexOf("\n  alert-if-ci-broken:"));
-  assert.doesNotMatch(checks, /^ {4}if:/m, "pas de `if` de job : un job sauté n'est pas rapporté sous son nom");
+  assert.doesNotMatch(plan, /^ {4}if:/m, "pas de `if` de job : un job sauté n'est pas rapporté sous son nom");
+  assert.equal(/^ {4}if: (.*)$/m.exec(checks)?.[1], "always()");
+  assert.match(plan, /permissions:\n\s+contents: read\n\s+pull-requests: read/);
   assert.match(checks, /permissions:\n\s+contents: read\n\s+pull-requests: read/);
   // Chaque étape après la décision est sautée sur un tel push, sauf celles qui ne tournent jamais sur un push de branche.
-  const etapes = checks.split(/\n {6}- /).slice(2);
+  const etapes = [...plan.split(/\n {6}- /).slice(2), ...checks.split(/\n {6}- /).slice(2)];
   for (const e of etapes) {
     const jamaisSurPushDeBranche =
       /if: (github\.event_name == 'pull_request'|(always\(\) && )?github\.event_name == 'push' && github\.ref == format)/.test(e);
-    assert.ok(jamaisSurPushDeBranche || /if: steps\.pr\.outputs\.skip != 'true'/.test(e), `étape non sautée : ${e.split("\n")[0]}`);
+    assert.ok(
+      jamaisSurPushDeBranche || /if: (steps\.pr|needs\.plan)\.outputs\.skip != 'true'/.test(e),
+      `étape non sautée : ${e.split("\n")[0]}`,
+    );
   }
   assert.ok(
-    etapes.some((e) => /run: node \.githooks\/run-checks\.mjs/.test(e)),
+    etapes.some((e) => /run: node \.githooks\/run-checks\.mjs --aggregate-shards/.test(e)),
     "run-checks joué",
   );
   // Le script de décision, joué par bash avec un gh factice.
-  const script = /- id: pr\n[\s\S]*?run: \|\n([\s\S]*?)\n {6}- /.exec(checks)[1].replace(/^ {10}/gm, "");
+  const script = /- id: pr\n[\s\S]*?run: \|\n([\s\S]*?)\n {6}- /.exec(plan)[1].replace(/^ {10}/gm, "");
   if (process.platform === "win32") return;
   const outils = tmp();
   const decider = (env, ouvertes) => {

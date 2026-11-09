@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { replay } from "./base-checks.mjs";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 delete process.env.DRWIL_CI_REUSE;
@@ -123,4 +124,79 @@ test("une option de tranche mal formée : message d'usage et code 2, rien n'est 
     assert.match(r.stderr, attendu);
     assert.deepEqual(trace(racine), []);
   }
+});
+
+test("--shard-plan : la matrice des tranches de la configuration, sans rien jouer", () => {
+  const racine = projet({ shards: 3 });
+  const r = passe(racine, "--shard-plan");
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(JSON.parse(r.stdout), { include: [1, 2, 3].map((index) => ({ index, total: 3 })) });
+  assert.deepEqual(trace(racine), []);
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ checks: [{ name: "lint", run: "x" }] }));
+  assert.deepEqual(JSON.parse(passe(racine, "--shard-plan").stdout), { include: [] });
+});
+
+test("QUA-013 : --shard-plan refuse une déclaration invalide (code 1, rien sur la sortie), dans la langue du projet", () => {
+  for (const [lang, attendu] of [
+    ["fr", /doit être un entier de 2 à 16/],
+    ["en", /must be an integer from 2 to 16/],
+  ]) {
+    const racine = projet({ shards: 1, lang });
+    const r = passe(racine, "--shard-plan");
+    assert.equal(r.status, 1);
+    assert.equal(r.stdout, "");
+    assert.match(r.stderr, attendu);
+  }
+});
+
+/** Dépôt d'essai du rejeu : le run-checks de chaque branche note ses arguments dans `args.txt` ; `base` pose ou non .githooks/ sur main. */
+function depotRejeu({ base = true } = {}) {
+  const racine = tmp();
+  const git = (...a) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd: racine, encoding: "utf8" });
+  const stub = (marque) =>
+    `import { appendFileSync } from "node:fs";\nappendFileSync("args.txt", ${JSON.stringify(marque)} + process.argv.slice(2).join(" ") + "\\n");\n`;
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ checks: [{ name: "e2e", run: "echo $DRWIL_SHARD_INDEX", shards: 2 }] }));
+  if (base) ecrire(racine, ".githooks/run-checks.mjs", stub("base:"));
+  else ecrire(racine, "README.md", "projet\n");
+  git("init", "-q", "-b", "main");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  git("checkout", "-q", "-b", "travail");
+  return {
+    racine,
+    git,
+    args: () => (existsSync(join(racine, "args.txt")) ? readFileSync(join(racine, "args.txt"), "utf8").trim().split("\n") : []),
+    stub,
+  };
+}
+const rejouer = (racine, ...argv) =>
+  replay(racine, { argv: ["--base", "main", ...argv], env: { ...process.env, CI: "", DRWIL_CI_REUSE: "" }, stdio: "pipe" });
+
+test("QUA-113 : une tranche est toujours jouée par le rejeu, avec les hooks de la base ou, sans eux, ceux de la branche ; jamais sautée", () => {
+  const d = depotRejeu();
+  // Hooks identiques à ceux de la base : sans option de tranche, le rejeu est sauté ; une tranche est jouée quand même.
+  assert.equal(rejouer(d.racine).status, "skipped");
+  assert.equal(rejouer(d.racine, "--shard", "1/2").status, "ok");
+  assert.deepEqual(d.args(), ["base:--shard 1/2"]);
+  // Un hook modifié par la branche : la tranche est jouée par la version de la base, `--base` n'étant pas transmis.
+  rmSync(join(d.racine, "args.txt"), { force: true });
+  ecrire(d.racine, ".githooks/run-checks.mjs", d.stub("branche:"));
+  d.git("add", "-A");
+  d.git("commit", "-qm", "hook de la branche");
+  assert.equal(rejouer(d.racine, "--shard=2/2").status, "ok");
+  assert.deepEqual(d.args(), ["base:--tout-rejouer --shard=2/2"]);
+});
+
+test("QUA-113 : l'agrégation passe par le rejeu avec les hooks de la base ; une base sans hooks ne rejoue que les tranches", () => {
+  const d = depotRejeu();
+  ecrire(d.racine, ".githooks/run-checks.mjs", d.stub("branche:"));
+  d.git("add", "-A");
+  d.git("commit", "-qm", "hook de la branche");
+  assert.equal(rejouer(d.racine, "--aggregate-shards", ".drwil/evidence/shards").status, "ok");
+  assert.deepEqual(d.args(), ["base:--tout-rejouer --aggregate-shards .drwil/evidence/shards"]);
+  const sans = depotRejeu({ base: false });
+  assert.equal(rejouer(sans.racine, "--aggregate-shards", "d").status, "not-applicable");
+  ecrire(sans.racine, ".githooks/run-checks.mjs", sans.stub("branche:"));
+  assert.equal(rejouer(sans.racine, "--shard", "1/2").status, "ok");
+  assert.deepEqual(sans.args(), ["branche:--shard 1/2"]);
 });

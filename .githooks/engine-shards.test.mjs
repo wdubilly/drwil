@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { checks, texts } from "./engine.mjs";
-import { aggregateShards, gitCommit, keepSharded, parseShardArgs, shardPlan, shardProblem } from "./engine-shards.mjs";
+import { aggregateShards, gitCommit, keepSharded, parseShardArgs, shardMatrix, shardPlan, shardProblem } from "./engine-shards.mjs";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -208,4 +208,89 @@ test("les messages de tranche existent en anglais comme en français", () => {
     assert.equal(typeof en[k], typeof fr[k], k);
     if (typeof en[k] === "function") assert.notEqual(en[k]("a", 1, 2), fr[k]("a", 1, 2), k);
   }
+});
+
+test("shardMatrix : une tranche par indice, vide sans contrôle découpé, refusée si une déclaration ou les totaux sont incohérents", () => {
+  assert.deepEqual(shardMatrix({}, T), { include: [], problems: [] });
+  assert.deepEqual(shardMatrix({ checks: [{ name: "lint", run: "x" }] }, T), { include: [], problems: [] });
+  assert.deepEqual(shardMatrix({ checks: [E2E, { ...E2E, name: "autre" }] }, T).include, [
+    { index: 1, total: 3 },
+    { index: 2, total: 3 },
+    { index: 3, total: 3 },
+  ]);
+  // Une déclaration refusée ne laisse aucune tranche : jamais « aucune tranche » par défaut (QUA-013).
+  const refusee = shardMatrix(
+    {
+      checks: [
+        { ...E2E, shards: 1 },
+        { run: "sans nom", shards: 2 },
+      ],
+    },
+    T,
+  );
+  assert.deepEqual(refusee.include, []);
+  assert.equal(refusee.problems.length, 3);
+  assert.match(
+    refusee.problems.join("\n"),
+    /e2e : « shards » doit être un entier de 2 à 16.*sans nom : sa commande doit citer DRWIL_SHARD_INDEX.*plusieurs nombres de tranches \(1, 2\)/s,
+  );
+});
+
+test("D6 iv : l'agrégation compare N à celui de la branche principale, sauf changement déclaré dans « Contrats modifiés »", () => {
+  const racine = tmp();
+  const git = (...a) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd: racine, encoding: "utf8" });
+  const cfg = (shards) => JSON.stringify({ checks: [{ ...E2E, shards }] });
+  git("init", "-q", "-b", "main");
+  ecrire(racine, ".drwil/ia-first.json", cfg(3));
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  git("update-ref", "refs/remotes/origin/main", "HEAD");
+  const commit = gitCommit(racine);
+  const tranches = (n) => {
+    for (let i = 1; i <= n; i++)
+      ecrire(racine, `t/${i}.json`, JSON.stringify({ check: "project:e2e", control: "e", commit, index: i, total: n, status: "ok" }));
+  };
+  const agrege = (n, env, cfgProjet = {}) =>
+    aggregateShards({
+      root: racine,
+      dir: "t",
+      c: { ...E2E, shards: n },
+      id: "project:e2e",
+      name: "e2e",
+      fingerprint: () => "e",
+      T,
+      env,
+      cfg: cfgProjet,
+      commit,
+    });
+  tranches(3);
+  // Hors PR : rien à comparer. Sur une PR (GitHub ou GitLab) au même N : « ok » sans remarque.
+  assert.deepEqual(agrege(3, {}), { status: "ok" });
+  assert.deepEqual(agrege(3, { GITHUB_BASE_REF: "main" }), { status: "ok" });
+  assert.deepEqual(agrege(3, { CI_MERGE_REQUEST_TARGET_BRANCH_NAME: "main" }), { status: "ok" });
+  // Base sans cette déclaration (ou illisible) : le N de la branche est pris, et l'agrégation le dit.
+  const inconnue = agrege(3, { GITHUB_BASE_REF: "inconnue" });
+  assert.equal(inconnue.status, "ok");
+  assert.match(inconnue.output, /^\[ia-first-warning\] e2e : la branche principale ne déclare pas de tranches/);
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ checks: [{ name: "e2e", run: "x" }] }));
+  git("add", "-A");
+  git("commit", "-qm", "base sans tranches");
+  git("update-ref", "refs/remotes/origin/sans", "HEAD");
+  assert.match(agrege(3, { GITHUB_BASE_REF: "sans" }).output, /ne déclare pas de tranches/);
+  // N abaissé par la branche : refusé (même si ses tranches sont complètes) tant qu'aucune fiche de la branche ne le déclare.
+  rmSync(join(racine, "t"), { recursive: true });
+  tranches(2);
+  const abaisse = agrege(2, { GITHUB_BASE_REF: "main" });
+  assert.equal(abaisse.status, "fail");
+  assert.match(abaisse.output, /la branche déclare 2 tranches, la branche principale 3/);
+  const horsDepot = agrege(2, { GITHUB_BASE_REF: "main" }, { dirs: { projects: "../hors" } });
+  assert.equal(horsDepot.status, "fail", "une fiche illisible ne vaut jamais déclaration");
+  ecrire(
+    racine,
+    "docs/projects/fiche.md",
+    "# Fiche\n\n## Contrats modifiés\n\n- `e2e` — passe de 3 à 2 tranches (validé par le demandeur)\n",
+  );
+  git("add", "-A");
+  git("commit", "-qm", "fiche");
+  assert.deepEqual(agrege(2, { GITHUB_BASE_REF: "main" }), { status: "ok" }, "changement cité dans la fiche de la branche : accepté");
 });

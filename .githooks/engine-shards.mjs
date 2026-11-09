@@ -4,6 +4,7 @@
 import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { declarations } from "./base-checks.mjs";
 
 export const SHARD_MAX = 16;
 export const SHARDS_DIR = ".drwil/evidence/shards";
@@ -17,6 +18,16 @@ export function shardProblem(c, name, T) {
   if (c.reuse === "tree") return T.shardsTree(name);
   if (typeof c.run !== "string" || !c.run.includes("DRWIL_SHARD_INDEX")) return T.shardsNoVariable(name);
   return null;
+}
+
+/** Matrix of the CI's slices (`--shard-plan`): `include` lists `{ index, total }`, `problems` refuses a declaration or several totals (one pass per total is not planned). */
+export function shardMatrix(cfg, T) {
+  const sharded = (Array.isArray(cfg.checks) ? cfg.checks : []).filter(isSharded);
+  const problems = sharded.map((c) => shardProblem(c, c.name ?? c.run, T)).filter(Boolean);
+  const totals = [...new Set(sharded.map((c) => c.shards))];
+  if (totals.length > 1) problems.push(T.shardsSeveral(totals.join(", ")));
+  const total = totals[0] ?? 0;
+  return { include: problems.length ? [] : Array.from({ length: total }, (_, i) => ({ index: i + 1, total })), problems };
 }
 
 /**
@@ -44,13 +55,13 @@ export function parseShardArgs(argv) {
  * What the engine does with a check declaring `shards` under the option `shard`: `{ skip }` (a function giving the result instead of
  * running it) or `{ env }` (the environment of its command). Without option, one single pass: slice 1 of 1 (never the variables absent).
  */
-export function shardPlan(c, shard, { env, root, list, id, name, T }) {
+export function shardPlan(c, shard, { env, root, list, id, name, T, cfg }) {
   if (!isSharded(c)) return null;
   const fingerprint = () => list.fingerprints().get(id);
   const problem = shardProblem(c, name, T);
   if (problem) return { skip: () => ({ status: "fail", message: problem }) };
   if (shard?.without) {
-    if (shard.aggregate) return { skip: () => aggregateShards({ root, dir: shard.aggregate, c, id, name, fingerprint, T }) };
+    if (shard.aggregate) return { skip: () => aggregateShards({ root, dir: shard.aggregate, c, id, name, fingerprint, T, env, cfg }) };
     return { skip: () => ({ status: "not-applicable", detail: T.shardsEntrusted }) };
   }
   const [index, total] = shard ? [shard.index, shard.total] : [1, 1];
@@ -74,7 +85,7 @@ function jsonFiles(dir) {
 }
 
 /** The result of an aggregated check: "ok" only if its N slices, all of this commit and this fingerprint, are "ok" and none is missing or doubled. */
-export function aggregateShards({ root, dir, c, id, name, fingerprint, T, commit = gitCommit(root) }) {
+export function aggregateShards({ root, dir, c, id, name, fingerprint, T, env = {}, cfg = {}, commit = gitCommit(root) }) {
   const mine = [];
   const problems = [];
   for (const file of jsonFiles(join(root, dir))) {
@@ -99,8 +110,32 @@ export function aggregateShards({ root, dir, c, id, name, fingerprint, T, commit
     if (v.status !== "ok") problems.push(T.shardsFailed(at));
   }
   for (let i = 1; i <= c.shards; i++) if (!seen.has(i)) problems.push(T.shardsMissing(`${i}/${c.shards}`));
-  if (!problems.length) return { status: "ok" };
+  const base = againstBase({ root, c, id, name, env, cfg, T });
+  if (base?.problem) problems.push(base.problem);
+  if (!problems.length) return { status: "ok", ...(base?.note ? { output: `[ia-first-warning] ${base.note}` } : {}) };
   return { status: "fail", message: T.shardsAggregate(name), output: problems.map((p) => `  ✗ ${p}`).join("\n") };
+}
+
+/**
+ * D6 (iv): on a pull request, N is compared to the one the main branch declares for the check, so that a branch lowering it cannot lose
+ * files; a change declared in a « Contrats modifiés » section of the branch is accepted. Without a declaration on the main branch, the
+ * branch's N is the only one and the aggregation says so (`note`).
+ */
+function againstBase({ root, c, id, name, env, cfg, T }) {
+  const branch = env.GITHUB_BASE_REF || env.CI_MERGE_REQUEST_TARGET_BRANCH_NAME;
+  if (!branch) return null;
+  const ref = `origin/${branch}`;
+  let base;
+  try {
+    const shown = spawnSync("git", ["show", `${ref}:.drwil/ia-first.json`], { cwd: root, encoding: "utf8" });
+    base = JSON.parse(shown.stdout).checks.find((b) => (b.id ?? `project:${b.name}`) === id);
+  } catch {}
+  if (!isSharded(base ?? {})) return { note: T.shardsNoBase(name) };
+  if (base.shards === c.shards) return null;
+  try {
+    if (declarations(root, ref, cfg.dirs?.projects ?? "docs/projects").has(String(c.id ?? c.name))) return null;
+  } catch {}
+  return { problem: T.shardsBase(name, base.shards, c.shards) };
 }
 
 export function gitCommit(root) {

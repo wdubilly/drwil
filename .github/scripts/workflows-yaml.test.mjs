@@ -2,6 +2,7 @@
 // GitHub rejette en bloc un workflow invalide, sans lancer aucun job ; un contrôle placé dans ce
 // workflow ne tournerait donc jamais. Seul un test local attrape l'erreur avant le push.
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { test } from "node:test";
@@ -93,7 +94,7 @@ for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templat
       return i;
     };
     const restaure = indice((e) => /^actions\/cache\/restore@/.test(e.uses ?? ""), "restauration des verdicts");
-    const passe = indice((e) => e.run === "node .githooks/run-checks.mjs", "run-checks");
+    const passe = indice((e) => e.run === "node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards", "run-checks");
     const sauve = indice((e) => /^actions\/cache\/save@/.test(e.uses ?? ""), "sauvegarde des verdicts");
     assert.ok(restaure < passe && passe < sauve, "restaurés avant la passe, sauvegardés après");
     // Restauration : sur une PR seulement, le fichier de verdicts, depuis les clés de la branche principale.
@@ -127,25 +128,37 @@ for (const [fichier, preuve] of [
   test(`QUA-250 : ${fichier} saute les contrôles d'un push sur la branche principale dont l'arbre est celui que la dernière CI verte d'une PR a prouvé, et seule une CI de PR pose cette preuve`, () => {
     const ci = parseAllDocuments(readFileSync(join(RACINE, fichier), "utf8"))[0].toJS();
     const etapes = ci.jobs.checks.steps;
-    const lit = etapes.findIndex((e) => /^(prouve|proven)$/.test(e.id ?? ""));
-    const passe = etapes.findIndex((e) => e.run === "node .githooks/run-checks.mjs");
-    assert.ok(lit >= 0 && lit < passe, `${fichier} : preuve lue avant la passe`);
+    // Gabarit : la décision vit dans le job plan, que lit `checks` (needs.plan.outputs.skip) ; dépôt : tout dans checks.
+    const gabarit = Boolean(ci.jobs.plan?.outputs?.skip);
+    const lecteur = gabarit ? ci.jobs.plan.steps : etapes;
+    const lit = lecteur.findIndex((e) => /^(prouve|proven)$/.test(e.id ?? ""));
+    const passe = etapes.findIndex((e) => e.run?.startsWith("node .githooks/run-checks.mjs"));
+    assert.ok(lit >= 0 && passe >= 0 && (gabarit || lit < passe), `${fichier} : preuve lue avant la passe`);
     // Lue sur un push de la branche principale seulement, par l'empreinte de l'arbre, dans le run de PR vert, jamais un autre.
     assert.match(
-      etapes[lit].if,
+      lecteur[lit].if,
       /^github\.event_name == 'push' && github\.ref == format\('refs\/heads\/\{0\}', github\.event\.repository\.default_branch\)$/,
     );
-    assert.ok(etapes[lit].run.includes("git rev-parse 'HEAD^{tree}'"));
-    assert.ok(etapes[lit].run.includes("event=pull_request") && etapes[lit].run.includes('select(.conclusion == "success")'));
-    assert.ok(etapes[lit].run.includes(`--name ${preuve}`));
-    assert.match(etapes[lit].run, /= "\$(arbre|tree)" \]; then/);
-    // Aucune preuve lue : tout est rejoué ; sauté, la passe, l'installation et gitleaks ne tournent pas.
-    const saut = new RegExp(`steps\\.${etapes[lit].id}\\.outputs\\.(saute|skip) != 'true'`);
+    assert.ok(lecteur[lit].run.includes("git rev-parse 'HEAD^{tree}'"));
+    assert.ok(lecteur[lit].run.includes("event=pull_request") && lecteur[lit].run.includes('select(.conclusion == "success")'));
+    assert.ok(lecteur[lit].run.includes(`--name ${preuve}`));
+    assert.match(lecteur[lit].run, /= "\$(arbre|tree)" \]; then/);
+    // Aucune preuve lue : tout est rejoué ; sautée, la passe, l'installation et gitleaks ne tournent pas.
+    const saut = gabarit ? /needs\.plan\.outputs\.skip != 'true'/ : new RegExp(`steps\\.${lecteur[lit].id}\\.outputs\\.saute != 'true'`);
     assert.match(etapes[passe].if, saut);
     for (const e of etapes
-      .slice(lit + 1, passe + 1)
-      .filter((x) => /npm ci|gitleaks|run-checks|setup-node/.test(`${x.run ?? ""}${x.uses ?? ""}${x.name ?? ""}`)))
+      .slice(gabarit ? 0 : lit + 1, passe + 1)
+      .filter(
+        (x) =>
+          /npm ci|gitleaks|run-checks|setup-node/.test(`${x.run ?? ""}${x.uses ?? ""}${x.name ?? ""}`) && !/^Refuse/.test(x.name ?? ""),
+      ))
       assert.match(e.if ?? "", saut, `${fichier} : ${e.name ?? e.run ?? e.uses} doit être sauté`);
+    if (gabarit) {
+      // Le plan lui-même, la tranche et l'agrégation ne tournent pas non plus : rien n'est joué pour rien.
+      assert.match(ci.jobs.plan.outputs.skip, /steps\.pr\.outputs\.skip == 'true' \|\| steps\.proven\.outputs\.skip == 'true'/);
+      assert.match(ci.jobs.plan.steps.find((e) => e.id === "plan").if, /steps\.proven\.outputs\.skip != 'true'/);
+      assert.match(ci.jobs.shards.if, /needs\.plan\.outputs\.skip != 'true'/);
+    }
     // La preuve : arbre posé par une PR, en dernière étape du job, donc seulement si tout a réussi.
     const pose = etapes.findLastIndex((e) => /^actions\/upload-artifact@/.test(e.uses ?? ""));
     assert.equal(etapes[pose].with.name, preuve);
@@ -221,3 +234,58 @@ test("QUA-252 : la protection de la branche principale n'exige plus qu'une PR so
   assert.equal(etape.if, undefined);
   assert.match(etape.env?.GH_TOKEN ?? "", /^\$\{\{ github\.token \}\}$/);
 });
+
+for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml"])
+  test(`QUA-251, QUA-013 : ${fichier} découpe les contrôles lents en tranches, et le job exigé « checks » les agrège sans jamais réussir par défaut`, () => {
+    const ci = parseAllDocuments(readFileSync(join(RACINE, fichier), "utf8"))[0].toJS();
+    const { plan, shards, checks } = ci.jobs;
+    // Le plan lit la configuration : la matrice des tranches ne vient jamais du YAML.
+    assert.ok(
+      plan.steps.some((e) => e.run?.includes("run-checks.mjs --shard-plan")),
+      "plan : tranches lues de la configuration",
+    );
+    // Un job de tranche par indice, sans interrompre les autres, et seulement s'il y a des tranches.
+    assert.match(shards.strategy.matrix, /^\$\{\{ fromJSON\(needs\.plan\.outputs\.matrix\) \}\}$/);
+    assert.equal(shards.strategy["fail-fast"], false);
+    assert.match(shards.if, /needs\.plan\.outputs\.count != '0'/);
+    const jouee = shards.steps.find((e) => e.run?.includes("--shard"));
+    assert.match(
+      jouee.run,
+      /base-checks\.mjs" --base "\$base" --shard "\$SLICE"/,
+      "pull request : tranche jouée avec les hooks de la base (QUA-113)",
+    );
+    assert.match(jouee.run, /else\n\s+node \.githooks\/run-checks\.mjs --shard "\$SLICE"/);
+    const depot = shards.steps.find((e) => /^actions\/upload-artifact@/.test(e.uses ?? ""));
+    assert.equal(depot.if, "always()", "une tranche en échec dépose aussi son verdict");
+    assert.match(depot.with.name, /^shard-\$\{\{ matrix\.index \}\}-of-\$\{\{ matrix\.total \}\}$/);
+    assert.equal(depot.with.path, ".drwil/evidence/shards");
+    // Le job exigé garde son nom (aucun `name:`), dépend du plan et des tranches, et tourne même si elles échouent.
+    assert.equal(checks.name, undefined);
+    assert.deepEqual(
+      checks.needs.filter((n) => n === "plan" || n === "shards"),
+      ["plan", "shards"],
+    );
+    assert.match(checks.if, /^always\(\)/);
+    const telecharge = checks.steps.findIndex((e) => /^actions\/download-artifact@/.test(e.uses ?? ""));
+    const passe = checks.steps.findIndex((e) => e.run === "node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards");
+    assert.ok(telecharge >= 0 && telecharge < passe, "verdicts des tranches téléchargés avant l'agrégation");
+    assert.equal(checks.steps[telecharge].with.pattern, "shard-*");
+    assert.equal(checks.steps[telecharge].with.path, ".drwil/evidence/shards");
+    // Le rejeu avec les hooks de la base agrège aussi (N comparé à celui de la base, D6 iv).
+    const rejeu = checks.steps.find((e) => e.run?.includes("base-checks.mjs"));
+    assert.ok(rejeu.run.match(/--aggregate-shards \.drwil\/evidence\/shards/g).length >= 1);
+    // L'alerte suit `checks`, donc le plan, les tranches et l'agrégation (QUA-251).
+    assert.ok([ci.jobs["alert-if-ci-broken"].needs].flat().includes("checks"));
+    // Aucune combinaison de résultats ne donne un succès par défaut : le premier pas du job le prouve, joué par bash.
+    const garde = checks.steps.find((e) => /^(Refuse|Refuser)/.test(e.name ?? ""));
+    assert.equal(garde, checks.steps[0], "la garde est la première étape");
+    if (process.platform === "win32") return;
+    const juger = (env) =>
+      spawnSync("bash", ["-ec", garde.run], { encoding: "utf8", env: { PATH: process.env.PATH, SKIP: "false", ...env } }).status;
+    assert.equal(juger({ PLAN: "success", SHARDS: "skipped", COUNT: "0" }), 0, "aucun contrôle découpé : rien à refuser");
+    assert.equal(juger({ PLAN: "success", SHARDS: "success", COUNT: "4" }), 0);
+    for (const shards of ["failure", "skipped", "cancelled"])
+      assert.equal(juger({ PLAN: "success", SHARDS: shards, COUNT: "4" }), 1, `tranches « ${shards} » refusées`);
+    for (const plan of ["failure", "skipped", "cancelled"])
+      assert.equal(juger({ PLAN: plan, SHARDS: "skipped", COUNT: "" }), 1, `plan « ${plan} » refusé`);
+  });

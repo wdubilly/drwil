@@ -308,7 +308,7 @@ test("QUA-121 : le workflow saute le push d'une branche à PR ouverte, jamais ma
   assert.match(calcul, /\|\| ouvertes=0/, "GitHub muet : le push teste");
   assert.match(calcul, /\[ "\$REF" != "refs\/heads\/\$PRINCIPALE" \]/, "master jamais sauté");
   assert.match(calcul, /"tester":false/, "push sauté : kit-tests ne teste pas");
-  assert.match(job("checks"), /needs: matrice-os\n\s+if: needs\.matrice-os\.outputs\.saute != 'true'/);
+  assert.match(job("checks"), /needs: \[matrice-os, plan, shards\]\n\s+if: always\(\) && needs\.matrice-os\.outputs\.saute != 'true'/);
   assert.match(job("kit-tests"), /needs: matrice-os/);
   assert.match(job("kit-tests"), /name: kit-tests \(\$\{\{ matrix\.os \}\}\)/);
   assert.match(job("alert-if-ci-broken"), /needs: \[checks, kit-tests\]/);
@@ -987,7 +987,7 @@ test("QUA-208 : dans ce dépôt, les contrôles lents sont confiés à la CI, ac
   const flux = readFileSync(join(depot, ".github/workflows/ia-first.yml"), "utf8");
   assert.match(
     flux,
-    /^ {6}- if: steps\.prouve\.outputs\.saute != 'true'\n {8}run: node \.githooks\/run-checks\.mjs$/m,
+    /^ {6}- if: steps\.prouve\.outputs\.saute != 'true'\n {8}run: node \.githooks\/run-checks\.mjs --aggregate-shards \.drwil\/evidence\/shards$/m,
     "la CI du dépôt joue run-checks (variable CI posée par la forge)",
   );
   assert.doesNotMatch(flux, /^\s+CI:/m, "la variable CI n'est jamais écrasée");

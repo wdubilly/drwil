@@ -118,7 +118,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     const name = c.name ?? c.run;
     const reserved = runAtVerdict(c, name, runContext(staged, env), runAtOptions);
     const id = c.id ?? `project:${name}`;
-    const sh = shardPlan(c, shard, { env, root, id, name, T, list });
+    const sh = shardPlan(c, shard, { env, root, id, name, T, list, cfg });
     const shellOpts = { shell: true, cwd: c.cwd ? join(root, c.cwd) : root, env: sh?.env };
     const skipped = () => {
       if (reserved) return reserved;

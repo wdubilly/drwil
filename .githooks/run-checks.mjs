@@ -30,7 +30,7 @@ try {
 } catch {}
 const lang = cfg.lang === "en" ? "en" : "fr";
 const T = TEXTS[lang];
-const shard = shardOptions(process.argv, T);
+const shard = shardOptions(process.argv, T, cfg);
 // At pre-commit only (DRWIL_HOOK=pre-commit, set by .githooks/pre-commit), the engine defers
 // a project check outside its `paths`. If git does not answer, everything runs (never deferred by default).
 function stagedFiles() {

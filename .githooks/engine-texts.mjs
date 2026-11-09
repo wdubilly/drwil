@@ -38,6 +38,11 @@ const TEXTS = {
     shardsControl: (at) => `tranche ${at} jouée sur d'autres fichiers ou une autre déclaration du contrôle`,
     shardsFailed: (at) => `tranche ${at} non « ok »`,
     shardsMissing: (at) => `tranche ${at} absente`,
+    shardsSeveral: (totals) => `les contrôles découpés déclarent plusieurs nombres de tranches (${totals}) : un seul par projet`,
+    shardsBase: (n, base, got) =>
+      `${n} : la branche déclare ${got} tranches, la branche principale ${base} — le citer entre backticks dans « Contrats modifiés » d'une fiche de la branche (validé par le demandeur)`,
+    shardsNoBase: (n) =>
+      `${n} : la branche principale ne déclare pas de tranches pour ce contrôle, le nombre de la branche est pris tel quel`,
   },
   en: {
     secrets: "secrets (gitleaks)",
@@ -76,6 +81,10 @@ const TEXTS = {
     shardsControl: (at) => `slice ${at} played on other files or another declaration of the check`,
     shardsFailed: (at) => `slice ${at} not "ok"`,
     shardsMissing: (at) => `slice ${at} missing`,
+    shardsSeveral: (totals) => `the sharded checks declare several slice counts (${totals}): only one per project`,
+    shardsBase: (n, base, got) =>
+      `${n}: the branch declares ${got} slices, the main branch ${base} — cite it in backticks in « Modified contracts » of a brief of the branch (approved by the requester)`,
+    shardsNoBase: (n) => `${n}: the main branch declares no slices for this check, the branch's count is taken as is`,
   },
 };
 
