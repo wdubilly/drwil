@@ -66,11 +66,10 @@ export function reopen(root, { gh = ghRun, now = new Date().toISOString() } = {}
   }
   if (restoredFiles.length) {
     let r;
-    for (const file of restoredFiles) {
-      const from = lastDeletion(file);
-      r = spawnSync("git", ["checkout", `${from}^`, "--", file], { cwd: root, encoding: "utf8" });
-      if (r.status !== 0) break;
-    }
+    restoredFiles.every((file) => {
+      r = spawnSync("git", ["checkout", `${lastDeletion(file)}^`, "--", file], { cwd: root, encoding: "utf8" });
+      return r.status === 0;
+    });
     if (r.status === 0) {
       for (const args of [
         ["add", "--", ...restoredFiles],
