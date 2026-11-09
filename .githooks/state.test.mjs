@@ -1831,7 +1831,7 @@ files:
  * Dépôt git : branche principale, branche workstream/exemple où la fiche est commitée puis supprimée
  * par le commit de clôture ; état CLOSING (fusion automatique et file décidées au lancement).
  */
-function depotClos({ lang } = {}) {
+function depotClos({ lang, intention = false } = {}) {
   const racine = depot({ fiche: false, lang });
   const git = (...args) => {
     const r = spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: racine, encoding: "utf8" });
@@ -1843,19 +1843,25 @@ function depotClos({ lang } = {}) {
   git("init", "-q", "-b", "master");
   git("config", "user.name", "t");
   git("config", "user.email", "t@t");
+  if (intention) {
+    mkdirSync(join(racine, "docs", "intentions"), { recursive: true });
+    writeFileSync(join(racine, "docs", "intentions", "origine.md"), "# Origine\n");
+  }
   git("add", "-A");
   git("commit", "-qm", "init");
   git("checkout", "-qb", "workstream/exemple");
-  writeFileSync(join(racine, FICHE), CONTENU_FICHE);
+  const citations = intention ? "\n**Intention** : `docs/intentions/origine.md`, `docs/introuvable.md`\n" : "";
+  writeFileSync(join(racine, FICHE), CONTENU_FICHE + citations);
   git("add", "-A");
   git("commit", "-qm", "cadrage");
   mkdirSync(join(racine, "src"));
   writeFileSync(join(racine, "src", "a.ts"), "a\n");
   git("add", "-A");
   git("commit", "-qm", "travail");
-  writeFileSync(join(racine, FICHE), `${CONTENU_FICHE}\nDernière retouche avant la clôture.\n`);
+  writeFileSync(join(racine, FICHE), `${CONTENU_FICHE}${citations}\nDernière retouche avant la clôture.\n`);
   git("commit", "-qam", "reprise");
   rmSync(join(racine, FICHE));
+  if (intention) rmSync(join(racine, "docs", "intentions", "origine.md"));
   writeFileSync(join(racine, "docs", "projects", "journal.md"), "# Journal\n\n## Exemple\n\n- Clos.\n");
   git("add", "-A");
   git("commit", "-qm", "clôture");
@@ -1914,6 +1920,24 @@ test("QUA-116 : depuis CLOSING, PR ouverte, la réouverture annule d'abord la fu
   const texte = context(readState(racine), racine);
   assert.match(texte, /Chantier rouvert après sa clôture \(QUA-116\), PR #42 ouverte : corriger le défaut sur cette branche/);
   assert.match(texte, /attend le oui de l'humain \(`node \.githooks\/detour\.mjs allow`/);
+});
+
+test("QUA-116 : la réouverture restaure, dans le même commit que la fiche, les fichiers cités que la branche a supprimés, jamais un fichier absent de la branche", () => {
+  const { racine, git } = depotClos({ intention: true });
+  assert.ok(!existsSync(join(racine, "docs", "intentions", "origine.md")));
+  const r = reopen(racine, { gh: ghSimule(racine, PR_OUVERTE).gh, now: MAINTENANT });
+  assert.equal(r.code, 0, r.message);
+  assert.match(
+    r.message,
+    /1 fichier\(s\) cité\(s\) par la fiche, supprimé\(s\) par la branche, restauré\(s\) dans ce même commit \(\w+\) : docs\/intentions\/origine\.md/,
+  );
+  assert.equal(readFileSync(join(racine, "docs", "intentions", "origine.md"), "utf8"), "# Origine\n");
+  assert.ok(!existsSync(join(racine, "docs", "introuvable.md")), "un chemin jamais présent n'est pas inventé");
+  assert.deepEqual(git("diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD").split("\n").sort(), [
+    "docs/intentions/origine.md",
+    FICHE,
+  ]);
+  assert.equal(git("status", "--porcelain"), "");
 });
 
 test("QUA-116 : sans fusion automatique programmée, rien n'est annulé ; fiche encore dans HEAD, rien n'est restauré", () => {

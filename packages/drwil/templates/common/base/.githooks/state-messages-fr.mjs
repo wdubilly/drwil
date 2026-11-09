@@ -57,8 +57,8 @@ export const MESSAGES_FR = {
   reopenCancelled: "fusion automatique annulée : à reprogrammer après la nouvelle clôture, comme la première fois",
   reopenMessage: "Réouverture de {0} : défaut révélé par la PR #{1}",
   reopenCommitFailed: "réouverture refusée : le commit de la fiche restaurée a échoué ({0}) — fiche retirée, état inchangé",
-  reopenRestored:
-    "fiche {0} restaurée telle qu'avant la clôture, dans son propre commit ({1}) ; son cadrage s'élargit comme d'habitude, dans un commit séparé",
+  reopenRestored: "fiche {0} restaurée telle qu'avant la clôture, dans son propre commit ({1}) ; son cadrage s'élargit à part",
+  reopenRestoredCited: "{0} fichier(s) cité(s) par la fiche, supprimé(s) par la branche, restauré(s) dans ce même commit ({2}) : {1}",
   reopened: "CLOSING → BUILD (réouverture de {0}, PR #{1} ouverte)",
   queueNotReady:
     "lancement refusé : « {0} » ne peut pas entrer dans une file — il faut une fiche prête (maturité « prêt », aucune [décision] ouverte, critères d'acceptation)",
