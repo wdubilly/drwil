@@ -69,7 +69,7 @@ Celles de `docs/projects/journal.md` : D4 (fichiers du projet), D5 (clés de con
   au début du chantier) ; section « Contrats modifiés » à remplir alors, avec validation du demandeur.
 - **Créés** : un contrat de fichiers du projet jamais réécrits, chacun avec son contrôle déclaré dans `.drwil/ia-first.json`.
 
-### Contrats modifiés
+## Contrats modifiés
 
 Validés par la décision D7 du demandeur (2026-11-08, `resolve-drift` retiré, `init` traite les fichiers modifiés) :
 
