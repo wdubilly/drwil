@@ -175,7 +175,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Un écart de version silencieux fait tourner des hooks d'une version avec une CLI d'une autre.
 
 ## QUA-027 — Mise à jour sûre d'une version à la suivante
-**Règle** : `drwil init` sur un projet équipé par une version antérieure préserve les fichiers du projet et la mécanique modifiée par le client (signalée comme dérive), rafraîchit la mécanique jamais modifiée, rafraîchit aussi la prose et les réglages du kit (skills, recettes, `docs/ia-first.md`, instructions des agents, catalogue, `.claude/settings.json`) installés par le kit et jamais modifiés — jamais les documents de départ du projet ni une prose absente du manifeste —, retire les fichiers obsolètes jamais modifiés (en gardant ceux modifiés ; jamais les fiches ni les recettes), tient le manifeste à jour et enregistre la nouvelle version ; `drwil resolve-drift` propose le diff d'une mécanique ou d'une prose du kit modifiée, avec confirmation par fichier et sauvegarde `.bak`.
+**Règle** : `drwil init` sur un projet équipé par une version antérieure préserve les fichiers du projet et la mécanique modifiée par le client (signalée comme dérive), rafraîchit la mécanique jamais modifiée, rafraîchit aussi la prose et les réglages du kit (skills, recettes, `docs/ia-first.md`, instructions des agents, catalogue, `.claude/settings.json`) installés par le kit et jamais modifiés — jamais les documents de départ du projet ni une prose absente du manifeste —, retire les fichiers obsolètes jamais modifiés (en gardant ceux modifiés ; jamais les fiches ni les recettes), tient le manifeste à jour et enregistre la nouvelle version ; `drwil init` montre en diff chaque mécanique ou prose du kit modifiée à la main et ne la remplace que sur le oui de l'humain, fichier par fichier (QUA-286).
 **Périmètre** : `drwil init` sur un projet déjà équipé.
 **Source de vérité** : `packages/drwil/src/index.ts` (`init`), `packages/drwil/src/manifest.ts` (`removeObsolete`, `writeManifest`, `writeInstall`).
 **Preuve** : Test de mise à jour sur un dépôt temporaire, version antérieure simulée hors réseau.
@@ -2397,7 +2397,7 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Le 2026-11-05, sur un projet équipé, `drwil init` 0.11.0 complétait `.gitignore` et la fiche de mécanique sans mettre leur empreinte à jour : la barrière les jugeait hors kit et refusait le commit, la mise à jour du kit était bloquée.
 
 ## QUA-239 — `init` dit, à la fin d'une mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante
-**Règle** : En fin de mise à jour d'un projet équipé, `drwil init` écrit trois choses dans la langue du projet : ce qu'il a fait (version, branche, branche d'origine, nombre de fichiers, ou « déjà à jour »), ce qui reste à décider (relire et fusionner par une pull request ; les fichiers modifiés à la main non réécrits, avec `drwil resolve-drift`) et la commande suivante (`git push -u origin <branche>`, `gh pr create --base <principale>`). Un commit non fait ou un `core.hooksPath` géré par un autre outil est dit, sans casser.
+**Règle** : En fin de mise à jour d'un projet équipé, `drwil init` écrit trois choses dans la langue du projet : ce qu'il a fait (version, branche, branche d'origine, nombre de fichiers, ou « déjà à jour »), ce qui reste à décider (relire et fusionner par une pull request ; les fichiers modifiés à la main non réécrits, avec `drwil init` à relancer dans un terminal pour en voir le diff) et la commande suivante (`git push -u origin <branche>`, `gh pr create --base <principale>`). Un commit non fait ou un `core.hooksPath` géré par un autre outil est dit, sans casser.
 **Périmètre** : fin de `drwil init` sur un projet équipé dans un dépôt git.
 **Source de vérité** : `packages/drwil/src/kit-update.ts` (`finishUpdate`).
 **Preuve** : test du paquet : les trois messages en français et en anglais après une mise à jour, le message « déjà à jour », le signalement des fichiers non réécrits et d'un `core.hooksPath` externe.
@@ -2736,3 +2736,32 @@ régression sauf si la fiche active déclare le changement (section
 **Origine** : montee-de-version-sure — « Un fichier de CI avec étapes du projet garde ces étapes dans la zone, GitHub et GitLab » et « Un fichier de CI sans marqueurs : `init` nomme ce qui disparaîtrait, ne change rien sans confirmation »
 **Raison** : Le 2026-11-08, monter `drwil_walk` a écrasé les étapes de CI ajoutées par le projet.
 
+## QUA-284 — `AGENTS.md`, les recettes, l'index des intentions et le catalogue des contrats modifiés par le projet ne sont jamais réécrits par `drwil init`
+**Règle** : Livré à tout projet. `drwil init` sur un projet équipé ne réécrit jamais `AGENTS.md`, un fichier de `docs/recipes/`, `docs/intentions/README.md` ni `docs/contracts-catalog.md` une fois modifié depuis son installation, même sur un oui ou avec une confirmation acceptée ; il ne les propose pas en diff ni ne les signale comme à décider. Il n'y ajoute que ce que la version exige (ligne ou bloc délimité de `complete`). Un tel fichier resté intact depuis son installation est rafraîchi comme le reste du kit (QUA-027).
+**Périmètre** : `drwil init` sur un projet équipé (hors `--force`, qui réécrit tout).
+**Source de vérité** : `packages/drwil/src/drift.ts` (`isProjectFile`, `confirmedReplacements`), `packages/drwil/src/index.ts` (`init`).
+**Preuve** : tests du paquet sur un projet d'essai : les quatre fichiers modifiés sont identiques après `init`, une confirmation qui répond oui n'est jamais appelée pour eux, aucun n'est signalé comme à décider.
+**Contrôle** : `tests-qua-284`
+**Tests** : `packages/drwil/test/montee-de-version.test.mjs`
+**Origine** : montee-de-version-sure-suite — « `AGENTS.md`, une recette, `docs/intentions/README.md` et le catalogue modifiés par le projet sont identiques après `init`, hors ajouts exigés »
+**Raison** : Le 2026-11-08, sur `drwil_walk`, la résolution des écarts a remplacé la description du projet dans `AGENTS.md`, les commandes de `run-locally`, le tableau des fiches et le catalogue des contrats adoptés.
+
+## QUA-285 — `drwil init` garde les clés du projet de `.drwil/ia-first.json`, remet à jour celles du kit, donne une valeur sûre à une clé nouvelle et ne touche pas `.drwil/state.json`
+**Règle** : Livré à tout projet. Sur un projet équipé, `drwil init` conserve les clés de `.drwil/ia-first.json` (si présent) que le projet a saisies (`checks`, `risk`, `extraCodeGlobs`, `release`, clés inconnues du kit…), recalcule celles que le kit dérive (`projectName`, `lang`, `layers`, `tools`, `ci`, `stack`, `mode`) et ajoute une clé que le projet n'a pas encore avec une valeur qui ne bloque aucun commit qui passait (`scopeGate` et `newRequirements` : `warning`). Il ne lit ni n'écrit `.drwil/state.json` (si présent) : son contenu est identique après `init`.
+**Périmètre** : `drwil init` sur un projet équipé.
+**Source de vérité** : `packages/drwil/src/config-write.ts` (`writeConfig`).
+**Preuve** : tests du paquet sur un projet d'essai : clés du projet conservées (dont une clé inconnue), clés du kit recalculées, clés absentes valant `warning`, `.drwil/state.json` (si présent) identique octet pour octet.
+**Contrôle** : `tests-qua-285`
+**Tests** : `packages/drwil/test/montee-de-version.test.mjs`
+**Origine** : montee-de-version-sure-suite — « les clés du projet de `.drwil/ia-first.json` sont conservées ; les clés du kit sont à jour, une clé nouvelle a une valeur sûre ; `.drwil/state.json` (si présent) est identique »
+**Raison** : Une montée de version ne doit effacer ni les contrôles ni le niveau de risque que le projet a déclarés, ni l'état de gouvernance en cours.
+
+## QUA-286 — `drwil resolve-drift` n'existe plus : `drwil init` montre le diff de chaque fichier du kit modifié à la main et ne le remplace que sur un oui, sans `.bak`
+**Règle** : Livré à tout projet par la CLI du paquet. La commande `resolve-drift` n'existe plus (ni commande, ni texte, ni documentation). Dans un terminal, `drwil init` sur un projet équipé affiche, avant d'écrire, le diff de chaque mécanique ou prose du kit modifiée à la main depuis son installation (hors fichiers du projet, QUA-284, et fichier de CI, QUA-283) et ne la remplace qu'après un oui pour ce fichier ; l'ancienne version reste dans le commit de la branche de mise à jour, aucun `.bak` n'est écrit. Hors terminal, ou sans oui, le fichier reste intact et `init` le nomme en disant de le relancer dans un terminal ; `--force` remplace sans demander.
+**Périmètre** : la ligne de commande `drwil init` ; l'appel de l'API `init()` ne demande rien sans `confirmDrift`.
+**Source de vérité** : `packages/drwil/src/drift.ts` (`confirmedReplacements`, `confirmDriftWith`), appelé par `packages/drwil/src/index.ts` (`init`) et `packages/drwil/src/cli-install.ts`.
+**Preuve** : tests du paquet : commande absente de l'aide et refusée, fichier modifié intact sans confirmation et sur un non, diff transmis et fichier remplacé sur un oui, aucun `.bak`, `--force` sans question, diff coupé au-delà de 60 lignes et seul un oui accepté au terminal.
+**Contrôle** : `tests-qua-286`
+**Tests** : `packages/drwil/test/montee-de-version.test.mjs`
+**Origine** : montee-de-version-sure-suite — « `resolve-drift` n'existe plus ; `init` montre un diff et demande confirmation, il ne renvoie pas vers lui »
+**Raison** : Le 2026-11-08, sur `drwil_walk`, `resolve-drift` a rétrogradé la mécanique et écrasé des fichiers du projet ; la montée doit tenir en un seul geste, `init`.

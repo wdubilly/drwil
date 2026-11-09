@@ -25,7 +25,6 @@ export { formatForAgent } from "./agent.js";
 export { doctor, formatDiagnosis, diagnosisJson, listContracts, type Diagnosis } from "./doctor.js";
 export { LANGS, TOOLS, CIS, type InitOptions } from "./config.js";
 export { uninstall, type UninstallOptions, type UninstallReport } from "./manifest.js";
-export { resolveDrift, type ResolveDriftOptions, type ResolveDriftReport } from "./drift.js";
 export { previewInit, formatPreview, type InitPreview } from "./preview.js";
 export { migrate, formatMigration, type MigrationPlan } from "./migration.js";
 export { fill, projectLang, type MessageLang } from "./i18n.js";
@@ -37,6 +36,7 @@ import { writeConfig } from "./config-write.js";
 import { commitKit, installChoices } from "./install.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { scaffold } from "./render.js";
+import { type ConfirmDrift, isProjectFile, replaceOnConfirm } from "./drift.js";
 import { assertSafeManifest, engineVersion, removeObsolete, writeInstall, writeManifest } from "./manifest.js";
 import { formatMigration, migrate } from "./migration.js";
 import { finishUpdate, prepareUpdate } from "./kit-update.js";
@@ -61,7 +61,7 @@ const TEXTS = {
     noStack: "Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).",
     noLayers:
       "Aucune couche écrite : le projet n'a pas encore de code. Le cadrer d'abord (/drwil-adopt : besoin, pile, couches), ou déclarer les couches avec --layers.",
-    drifted: "⚠ Fichiers dérivés du template du kit (nombre de lignes ou sections différents, jamais réécrits automatiquement) :",
+    drifted: "⚠ Fichiers du kit modifiés à la main, laissés tels quels (`npx drwil init` dans un terminal en montre le diff) :",
     obsolete: "Fichiers obsolètes d'une version antérieure du kit supprimés (jamais modifiés depuis l'installation) :",
     guarantees:
       "Garanties obligatoires (couverture 100 %, e2e, forge protégée, présentation) : `npx drwil guarantees` une fois la pile connue (/drwil-adopt).",
@@ -77,7 +77,7 @@ const TEXTS = {
     noStack: "Stack not detected: for the user to decide (see docs/architecture.md).",
     noLayers:
       "No layer written: the project has no code yet. Scope it first (/drwil-adopt: need, stack, layers), or declare the layers with --layers.",
-    drifted: "⚠ Files drifted from the kit's template (different line count or sections, never rewritten automatically):",
+    drifted: "⚠ Kit files modified by hand, left as they are (`npx drwil init` in a terminal shows the diff of each):",
     obsolete: "Obsolete files of an earlier kit version removed (never modified since installation):",
     guarantees:
       "Mandatory guarantees (100 % coverage, e2e, protected forge, presentation): `npx drwil guarantees` once the stack is known (/drwil-adopt).",
@@ -129,8 +129,6 @@ function reportStack(r: Resolved): void {
   if (r.opts.layers === undefined && !r.layers.length) console.log(T.noLayers);
 }
 
-// Never an automatic rewrite: only tells that an already present file drifted from the kit's
-// template (mechanics or prose), to compare/update by hand if needed.
 function reportDrifted(drifted: string[], lang: MessageLang): void {
   if (!drifted.length) return;
   console.log(TEXTS[lang].drifted);
@@ -163,20 +161,22 @@ async function migrateFirst(targetDir: string): Promise<void> {
  * only written if missing, so as not to erase the contracts and workstreams added by the project;
  * the kit mechanics are refreshed unless modified by hand. `--force` rewrites everything.
  */
-export async function init(opts: InitOptions): Promise<void> {
+export async function init(opts: InitOptions & { confirmDrift?: ConfirmDrift }): Promise<void> {
   // Before anything is written: an update of an equipped project refuses, or cuts its own branch (QUA-237).
   const update = opts.git === false ? null : prepareUpdate(opts.targetDir);
   // First of all: a project in the old format moves to the English names, the only ones the install reads.
   await migrateFirst(opts.targetDir);
   assertSafeManifest(opts.targetDir);
-  const { r, existing, previous, shouldOverwrite } = installChoices(opts);
+  const { r, existing, previous, shouldOverwrite: base } = installChoices(opts);
+  const shouldOverwrite = await replaceOnConfirm(r, previous, base, opts.force ? undefined : opts.confirmDrift);
   // Read before anything is written: only a first install attaches the existing code (QUA-110).
   const firstInstall = readConfig(opts.targetDir) === null && !Object.keys(previous).length;
   const hadMap = existsSync(join(opts.targetDir, "docs", "architecture.md"));
-  const drifted: string[] = [];
+  const flagged: string[] = [];
   const manifest: Record<string, string> = {};
   const expected: string[] = [];
-  await scaffold(r, { shouldOverwrite, drifted, manifest, expected, confirmCi: opts.confirmCi });
+  await scaffold(r, { shouldOverwrite, drifted: flagged, manifest, expected, confirmCi: opts.confirmCi });
+  const drifted = flagged.filter((f) => !isProjectFile(f));
   const completed: Record<string, string> = {};
   const { added } = await complete(r, { manifest, previous, completed });
   const obsolete = await removeObsolete(opts.targetDir, previous, expected);

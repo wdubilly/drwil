@@ -39,7 +39,7 @@ const TEXTS = {
       "⚠ Mise à jour appliquée sur la branche « {0} » mais commit non fait ({1}) : les fichiers sont dans l'arbre de travail, à commiter une fois la cause levée.",
     decide: "Reste à décider : relire la mise à jour, puis la fusionner par une pull request.",
     drift:
-      "Reste à décider : {0} fichier(s) modifié(s) à la main n'ont pas été réécrits — `npx drwil resolve-drift` propose le diff de chacun.",
+      "Reste à décider : {0} fichier(s) modifié(s) à la main n'ont pas été réécrits — `npx drwil init` dans un terminal propose le diff de chacun.",
     next: "Commande suivante : `git push -u origin {0}`, puis `gh pr create --base {1}` ; une fois fusionnée, `git checkout {1}`.",
     hooks: "Les hooks du projet sont gérés par un autre outil (core.hooksPath = {0}) : ils jugent ce commit à leur façon.",
   },
@@ -60,7 +60,7 @@ const TEXTS = {
     notCommitted:
       '⚠ Update applied on branch "{0}" but not committed ({1}): the files are in the working tree, to be committed once the cause is fixed.',
     decide: "Left to decide: review the update, then merge it through a pull request.",
-    drift: "Left to decide: {0} file(s) modified by hand were not rewritten — `npx drwil resolve-drift` offers the diff of each.",
+    drift: "Left to decide: {0} file(s) modified by hand were not rewritten — `npx drwil init` in a terminal offers the diff of each.",
     next: "Next command: `git push -u origin {0}`, then `gh pr create --base {1}`; once merged, `git checkout {1}`.",
     hooks: "The project's hooks are managed by another tool (core.hooksPath = {0}): they judge this commit their own way.",
   },

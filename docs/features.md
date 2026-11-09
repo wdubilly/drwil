@@ -17,8 +17,10 @@ barrière de périmètre en mode bloquant. Un fichier que la mise à jour
 complète (ligne du `.gitignore`, bloc de la fiche de mécanique) garde son
 empreinte, au manifeste s'il était intact, à part s'il a été retouché : le
 commit de mise à jour passe la barrière. Un fichier du kit
-modifié à la main est signalé en dérive et repris par `drwil resolve-drift`
-(diff, confirmation, sauvegarde `.bak`).
+modifié à la main est montré en diff par `init` lui-même, qui ne le remplace
+que sur un oui, sans `.bak` (la branche de mise à jour garde l'ancienne
+version) ; `AGENTS.md`, les recettes, l'index des intentions et le catalogue
+des contrats modifiés ne sont jamais réécrits.
 `drwil uninstall` ne retire que ce que le kit a installé et garde
 l'historique de gouvernance (`.drwil/`).
 

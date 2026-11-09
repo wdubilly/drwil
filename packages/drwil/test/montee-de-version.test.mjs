@@ -1,15 +1,16 @@
-// Montée de version sûre : `init` refuse la mauvaise version, la montée ne laisse aucun `.bak` (QUA-282).
+// Montée de version sûre : `init` refuse la mauvaise version, la montée ne laisse aucun `.bak` (QUA-282), garde le CI (QUA-283), les fichiers du projet (QUA-284) et les réglages (QUA-285), traite les fichiers modifiés (QUA-286).
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { init } from "../dist/index.js";
 import { engineVersion } from "../dist/install-record.js";
 import { confirmCiWith } from "../dist/ci-zone.js";
+import { confirmDriftWith } from "../dist/drift.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 const env = { ...process.env, CI: "", DRWIL_HOOK: "" };
@@ -240,4 +241,138 @@ test("QUA-283 : hors zone, une ligne modifiée à la main est réécrite et sign
   const vus = await avertissements(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" }));
   assert.match(vus.join("\n"), /réécrit hors de la zone du projet.*checks-maison/);
   assert.ok(readFileSync(chemin, "utf8").includes("  checks:"));
+});
+
+const PROJET = ["AGENTS.md", "docs/recipes/run-locally.md", "docs/intentions/README.md", "docs/contracts-catalog.md"];
+const sorties = async (fn) => {
+  const [log, warn, lignes] = [console.log, console.warn, []];
+  console.log = console.warn = (...a) => lignes.push(a.join(" "));
+  try {
+    await fn();
+    return lignes;
+  } finally {
+    console.log = log;
+    console.warn = warn;
+  }
+};
+
+test("QUA-284 : AGENTS.md, une recette, l'index des intentions et le catalogue modifiés sont identiques après init, même sur oui", async () => {
+  const dir = await projetEquipe();
+  for (const f of PROJET) appendFileSync(join(dir, f), "\nPropre au projet.\n");
+  const avant = PROJET.map((f) => readFileSync(join(dir, f), "utf8"));
+  const proposes = [];
+  const vus = await sorties(() =>
+    init({ lang: "fr", targetDir: dir, name: "demo", git: false, confirmDrift: (rel) => !!proposes.push(rel) }),
+  );
+  assert.deepEqual(proposes, []);
+  assert.deepEqual(
+    PROJET.map((f) => readFileSync(join(dir, f), "utf8")),
+    avant,
+  );
+  assert.ok(!vus.some((l) => PROJET.some((f) => l.includes(`- ${f}`))), "ni proposés ni signalés comme à décider");
+});
+
+test("QUA-285 : init garde les clés du projet de .drwil/ia-first.json, remet à jour celles du kit et ne touche pas .drwil/state.json", async () => {
+  const dir = await projetEquipe();
+  const chemin = join(dir, ".drwil/ia-first.json");
+  const config = JSON.parse(readFileSync(chemin, "utf8"));
+  const propres = {
+    risk: "HIGH",
+    extraCodeGlobs: ["*.sql"],
+    checks: [{ id: "mien", name: "le mien", run: "node -v" }],
+    cleInconnue: { a: 1 },
+  };
+  writeFileSync(chemin, JSON.stringify({ ...config, ...propres, tools: ["codex"], projectName: "autre" }));
+  const etat = JSON.stringify({ activity: "BUILD" });
+  writeFileSync(join(dir, ".drwil/state.json"), etat);
+  await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, tools: "claude" }));
+  const apres = JSON.parse(readFileSync(chemin, "utf8"));
+  assert.equal(apres.risk, "HIGH");
+  assert.deepEqual(apres.extraCodeGlobs, ["*.sql"]);
+  assert.deepEqual(apres.cleInconnue, { a: 1 });
+  assert.ok(apres.checks.some((c) => c.id === "mien"));
+  assert.deepEqual(apres.tools, ["claude"]);
+  assert.equal(apres.projectName, "demo");
+  assert.equal(readFileSync(join(dir, ".drwil/state.json"), "utf8"), etat);
+});
+
+test("QUA-285 : une clé que le projet n'a pas encore reçoit une valeur sûre, jamais bloquante", async () => {
+  const dir = await projetEquipe();
+  const chemin = join(dir, ".drwil/ia-first.json");
+  const config = JSON.parse(readFileSync(chemin, "utf8"));
+  delete config.scopeGate;
+  delete config.newRequirements;
+  writeFileSync(chemin, JSON.stringify(config));
+  await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
+  const apres = JSON.parse(readFileSync(chemin, "utf8"));
+  assert.equal(apres.scopeGate, "warning");
+  assert.equal(apres.newRequirements, "warning");
+});
+
+test("QUA-286 : resolve-drift n'existe plus, ni dans l'aide ni en commande", async () => {
+  const dir = await projetEquipe();
+  const aide = cli(dir, "--help");
+  assert.doesNotMatch(aide.stdout, /resolve-drift/);
+  const r = cli(dir, "resolve-drift");
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /unknown command/);
+});
+
+test("QUA-286 : un fichier du kit modifié à la main est montré en diff et remplacé sur le oui, sans .bak ; sans oui il reste intact et est signalé", async () => {
+  const dir = await projetEquipe();
+  const cible = ".githooks/check-docs.mjs";
+  const original = readFileSync(join(dir, cible), "utf8");
+  const modifie = `// personnalisé par le projet\n${original}`;
+  writeFileSync(join(dir, cible), modifie);
+  const relance = (confirmDrift) => sorties(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, confirmDrift }));
+
+  const sansTerminal = await relance(undefined);
+  assert.equal(readFileSync(join(dir, cible), "utf8"), modifie);
+  assert.ok(sansTerminal.some((l) => l.includes(`- ${cible}`)) && sansTerminal.some((l) => l.includes("npx drwil init")));
+  await relance(() => false);
+  assert.equal(readFileSync(join(dir, cible), "utf8"), modifie, "refusé : intact");
+
+  const vus = [];
+  let diff = "";
+  await relance((rel, d) => {
+    vus.push(rel);
+    diff = d;
+    return true;
+  });
+  assert.deepEqual(vus, [cible]);
+  assert.match(diff, /^- \/\/ personnalisé par le projet$/m);
+  assert.equal(readFileSync(join(dir, cible), "utf8"), original);
+  assert.ok(!existsSync(join(dir, `${cible}.bak`)), "aucun .bak");
+
+  writeFileSync(join(dir, cible), modifie);
+  let appele = false;
+  await sorties(() =>
+    init({
+      lang: "fr",
+      targetDir: dir,
+      name: "demo",
+      git: false,
+      force: true,
+      confirmDrift: () => {
+        appele = true;
+        return true;
+      },
+    }),
+  );
+  assert.ok(!appele, "--force ne demande rien");
+  assert.equal(readFileSync(join(dir, cible), "utf8"), original);
+});
+
+test("QUA-286 : la confirmation au terminal montre le diff (coupé au-delà de 60 lignes) et n'accepte que oui", async () => {
+  const questions = [];
+  const diff = Array.from({ length: 65 }, (_, i) => `- ligne ${i}`).join("\n");
+  assert.equal(
+    await confirmDriftWith(async (q) => {
+      questions.push(q);
+      return "oui";
+    })("a.mjs", diff),
+    true,
+  );
+  assert.equal(await confirmDriftWith(async () => "")("a.mjs", "- x"), false);
+  assert.match(questions[0], /a\.mjs.*\n- ligne 0\n[\s\S]*- ligne 59\n… \(5\)\n/);
 });
