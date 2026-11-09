@@ -181,7 +181,10 @@ test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge
   assert.ok(bloc.includes(`verdicts=${VERDICTS}`));
   // Téléchargement manqué : fichier effacé, tout rejoué (QUA-013) ; la reprise n'est demandée qu'à cette passe.
   assert.match(bloc, /\|\| \{ rm -f "\$verdicts";/);
-  assert.match(bloc, /DRWIL_CI_REUSE=1 node \.githooks\/run-checks\.mjs\n\s*else\n\s*node \.githooks\/run-checks\.mjs\n\s*fi/);
+  assert.match(
+    bloc,
+    /DRWIL_CI_REUSE=1 node \.githooks\/run-checks\.mjs --aggregate-shards \.drwil\/evidence\/shards\n\s*else\n\s*node \.githooks\/run-checks\.mjs --aggregate-shards \.drwil\/evidence\/shards\n\s*fi/,
+  );
   assert.equal(script.filter((l) => l.includes("DRWIL_CI_REUSE")).length, 1);
   assert.ok(
     !JSON.stringify(ci.checks.variables ?? {}).includes("DRWIL_CI_REUSE") && !JSON.stringify(ci.variables ?? {}).includes("DRWIL_CI_REUSE"),

@@ -9,8 +9,62 @@ workflow:
     - when: always
 
 stages:
+  - plan
+  - slices
   - test
   - alert
+
+# Sharded checks (`shards: N` in .drwil/ia-first.json, never in this file). The plan stage reads N from the configuration; `parallel:` is
+# static in GitLab, so the slices job always starts the maximum (16, the ceiling of `shards`) and a slice above N plays nothing and leaves
+# no verdict: it is "not applicable", never counted as passed (QUA-013). A stage that fails stops the next ones, so `checks` never
+# succeeds by default when the plan or a slice failed; no sharded check: count 0, every slice is not applicable.
+plan:
+  stage: plan
+  image: node:24
+  script:
+    - mkdir -p .drwil/evidence
+    # A declaration the engine refuses fails this job: that is no plan, never "no slice".
+    - node .githooks/run-checks.mjs --shard-plan > .drwil/evidence/shard-plan.json
+    - cat .drwil/evidence/shard-plan.json
+  artifacts:
+    paths:
+      - .drwil/evidence/shard-plan.json
+    expire_in: 1 day
+
+# One job per slice. Off the main branch, it plays with the main branch's hooks (QUA-113); its verdict is an artifact of this pipeline
+# that `checks` downloads (same pipeline, never a cache), even after a failure: a failed slice leaves "fail", one that left none is missing.
+shards:
+  stage: slices
+  image: node:24
+  parallel: 16
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - |
+      count=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).include.length)' .drwil/evidence/shard-plan.json)
+      if [ "$CI_NODE_INDEX" -gt "$count" ]; then
+        echo "Slice $CI_NODE_INDEX not applicable: $count slice(s) declared."
+        exit 0
+      fi
+      slice="$CI_NODE_INDEX/$count"
+      target="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-$CI_DEFAULT_BRANCH}"
+      if [ -z "$CI_COMMIT_TAG" ] && [ "$CI_COMMIT_BRANCH" != "$target" ]; then
+        git fetch --quiet origin "+refs/heads/$target:refs/remotes/origin/$target"
+        base="origin/$target"
+        if git cat-file -e "$base:.githooks/base-checks.mjs" 2>/dev/null; then
+          git show "$base:.githooks/base-checks.mjs" > /tmp/base-checks.mjs
+        else
+          cp .githooks/base-checks.mjs /tmp/base-checks.mjs
+        fi
+        node /tmp/base-checks.mjs --base "$base" --shard "$slice"
+      else
+        node .githooks/run-checks.mjs --shard "$slice"
+      fi
+  artifacts:
+    when: always
+    paths:
+      - .drwil/evidence/shards
+    expire_in: 1 day
 
 checks:
   stage: test
@@ -33,7 +87,8 @@ checks:
     - tar -xzf .drwil/evidence/gitleaks.tar.gz -C ~/.local/bin gitleaks
     # QUA-250: off the main branch, the verdicts of the main branch's last successful pipeline are
     # downloaded (its artifact, which only a main-branch pipeline keeps, see after_script) and
-    # run-checks reuses each "ok" check whose fingerprint (files and command) is unchanged. Not the
+    # run-checks reuses each "ok" check whose fingerprint (files and command) is unchanged. The sharded checks are judged on the
+    # verdicts of the slices of this pipeline (`--aggregate-shards`, downloaded from the slices stage). Not the
     # GitLab cache: protected and unprotected branches do not share it by default, and a shared one
     # could be written by a merge request. No verdict downloaded: everything is replayed.
     - |
@@ -43,9 +98,9 @@ checks:
         curl -sSfL --header "JOB-TOKEN: $CI_JOB_TOKEN" -o "$verdicts" \
           "$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_DEFAULT_BRANCH/raw/$verdicts?job=checks" \
           || { rm -f "$verdicts"; echo "No verdict of the main branch's CI: every check is replayed."; }
-        DRWIL_CI_REUSE=1 node .githooks/run-checks.mjs
+        DRWIL_CI_REUSE=1 node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards
       else
-        node .githooks/run-checks.mjs
+        node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards
       fi
     # QUA-113: off the main branch, the checks are replayed with the main branch's hooks (its
     # .githooks/, read through Git) and the branch's list of checks: a merge request that weakens
@@ -58,9 +113,9 @@ checks:
         base="origin/$target"
         if git cat-file -e "$base:.githooks/base-checks.mjs" 2>/dev/null; then
           git show "$base:.githooks/base-checks.mjs" > /tmp/base-checks.mjs
-          node /tmp/base-checks.mjs --base "$base"
+          node /tmp/base-checks.mjs --base "$base" --aggregate-shards .drwil/evidence/shards
         else
-          node .githooks/base-checks.mjs --base "$base"
+          node .githooks/base-checks.mjs --base "$base" --aggregate-shards .drwil/evidence/shards
         fi
       fi
     # drwil-project-begin steps

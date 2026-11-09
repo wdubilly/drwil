@@ -39,7 +39,7 @@ régression sauf si la fiche active déclare le changement (section
 **Contrôle** : `ci-coverage`, `tests-qua-013`
 **Manuel** : lecture de la sortie du contrôle concerné.
 **Couvre** : `.github/workflows/ia-first.yml`, `packages/drwil/src/verdict.ts`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`, `.githooks/engine-shards.test.mjs`, `.githooks/run-checks-shards.test.mjs`
+**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`, `.githooks/engine-shards.test.mjs`, `.githooks/run-checks-shards.test.mjs`, `packages/drwil/test/ci-shards.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
 
 ## SEC-006 — Pas de dépendance vulnérable connue
@@ -2473,7 +2473,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/pr-watch-main.mjs` (`followMain`, `mainCiRefusal`, `mainCiGate`).
 **Preuve** : tests de `pr-watch` (`gh` simulé : CI verte sans issue, preuve écrite liée au SHA ; rouge ; en cours puis verte, en cours au délai ; issue ouverte, même CI en cours ; `gh` muet, commit de fusion inconnu ; en anglais) ; refus de la suivante (aucune preuve, preuve d'une autre fusion, rouge, en cours, issue ouverte, verdict inconnu, branche principale introuvable ; preuve du sommet acceptée ; forge reconnue par `origin` : GitHub, autre, aucune ; forge non GitHub : aucun refus, une ligne le dit, en français et en anglais ; sans `origin`, le verrou tient) ; tests de l'état sur dépôts jetables (`next` refusé et dit, la branche principale avancée depuis la preuve, rouge, en cours, issue ; `start` humain non bloqué ; `next` lancé sur la preuve du sommet ; enchaînement à la fusion refusé sans preuve, état SCOPING et file gardés ; en anglais ; `origin` hors GitHub sans preuve : `next` et l'enchaînement lancent la tête de file et le disent).
 **Contrôle** : `tests-qua-251`
-**Tests** : `.githooks/pr-watch.test.mjs`, `.githooks/state.test.mjs`, `.github/scripts/workflows-yaml.test.mjs`
+**Tests** : `.githooks/pr-watch.test.mjs`, `.githooks/state.test.mjs`, `.github/scripts/workflows-yaml.test.mjs`, `packages/drwil/test/ci-shards.test.mjs`
 **Origine** : ci-rapide-pour-la-doc — « Une file de chantiers ne lance le suivant (`node .githooks/state.mjs next`) que sur la preuve, écrite par `node .githooks/pr-watch.mjs` après la fusion, que la CI de la branche principale est verte sur le commit de fusion et qu'aucune issue « CI broken on the main branch » n'est ouverte ; sinon `next` refuse et dit pourquoi (CI rouge, en cours ou non suivie, issue ouverte) ; un `start` humain n'est pas bloqué »
 **Raison** : Lever « à jour avec master » laisse deux PR vertes chacune casser la branche principale une fois fusionnées ensemble, vu seulement après coup par sa CI : une file aurait lancé le chantier suivant sur une branche principale rouge. Hors GitHub, `gh` ne peut pas suivre la CI : bloquer la file sans preuve possible l'arrêterait pour toujours (décidé par le demandeur le 2026-11-06).
 

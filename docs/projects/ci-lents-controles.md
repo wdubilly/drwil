@@ -272,11 +272,18 @@ Risque HIGH : la fiche touche `.githooks/`, la CI et `.drwil/`. Aucun point ouve
   `base-checks` (plafond de 200 lignes) : N comparé à `origin/<base>:.drwil/ia-first.json`, écart accepté s'il est cité dans
   « Contrats modifiés » d'une fiche de `base..HEAD`, avertissement si la base ne déclare pas de tranches. `base-checks` transmet les options de
   tranche (jamais « skipped » ni « not-applicable » pour une tranche).
+- **Lot 3 réalisé** (CI GitLab, gabarit seul : le dépôt n'a pas de CI GitLab) : étapes `plan`, `slices`, `test`, `alert` ; job `plan` (`run-checks --shard-plan` écrit le plan en artefact),
+  job `shards` (`parallel: 16`, D2 a : une tranche au-delà de N sort en « non applicable », exit 0, sans verdict ; sinon `base-checks --base … --shard i/N`
+  hors branche principale, `run-checks --shard i/N` sur elle ; artefact du dossier des verdicts de tranche, `when: always`), `checks` au nom et à l'étape inchangés,
+  `--aggregate-shards` dans ses deux passes ; un job en échec arrête les étapes suivantes (pas de succès par défaut, QUA-013), aucun cache de verdicts.
+  Tests : `packages/drwil/test/ci-shards.test.mjs` (structure + scripts `plan` et `shards` joués par bash sur un projet d'essai) ; regex QUA-250 de `.github/scripts/workflows-yaml.test.mjs` mise à jour.
 - **Limites connues** : un seul N par projet (le plan refuse plusieurs totaux) ; pas de zone « projet » pour le setup du job `shards`
   (il faudrait modifier le fichier des zones `ci-zone`, hors scope) : la commande du contrôle fait son propre setup ; base antérieure au lot : tranches ignorées par son
   `base-checks` (échec sûr, QUA-013) ; CI du dépôt : `plan` ne reprend que le saut de `matrice-os`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : lot 3 (CI GitLab, D2 a) : nombre maximal de jobs de tranche fixe, tranches au-delà de N « non applicable »,
-  job `checks` au nom inchangé qui agrège (`--aggregate-shards`), aucun cache de verdicts ; test dans le fichier ci-shards.test du paquet
-  (à créer). Réutiliser `run-checks --shard-plan` et `againstBase` (variable `CI_MERGE_REQUEST_TARGET_BRANCH_NAME` déjà lue). Restent à
+- **Limites GitLab** : un seul pipeline sans MR (`workflow: rules`) ; une tranche ne peut pas dépasser 16 (plafond de `shards`) ; `checks` ne tourne pas si une étape amont échoue (il n'est alors pas « réussi »).
+  Le test d'`init` GitLab ne couvre pas le comportement réel d'un runner GitLab (non joué ici).
+- **Prochaine étape** : lot 4 (reprise d'une PR à l'autre, D3 et D4 : verdict lié à l'empreinte, au commit, à la base, somme + identité du run, lecture
+  limitée à la même PR/MR, rejeu au moindre doute ; GitHub : artefact du run `pull_request` précédent ; GitLab : artefact du pipeline précédent de la même MR,
+  or le `workflow: rules` actuel n'a pas de pipeline de MR : à trancher dans le lot, hors cadre si cela change la règle `QUA-263`). Restent à
   valider : contrats modifiés (`QUA-250`, `QUA-113`, `QUA-251`, `QUA-270`) et confirmation de `QUA-208`.
