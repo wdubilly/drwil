@@ -55,13 +55,13 @@ Celles de `docs/projects/journal.md` : D4 (fichiers du projet), D5 (clés de con
 ## Critères d'acceptation
 
 - `AGENTS.md`, une recette, `docs/intentions/README.md` et le catalogue modifiés par le projet sont identiques après
-  `init`, hors ajouts exigés — contrat à créer
+  `init`, hors ajouts exigés — `QUA-284`
 - Les clés du projet de `.drwil/ia-first.json` (`checks`, `risk`, `extraCodeGlobs`…) sont conservées ; les clés du kit
-  sont à jour, une clé nouvelle a une valeur sûre ; `.drwil/state.json` (si présent) est identique — contrat à créer
+  sont à jour, une clé nouvelle a une valeur sûre ; `.drwil/state.json` (si présent) est identique — `QUA-285`
 - `resolve-drift` n'existe plus (commande, texte, documentation) ; `init` montre un diff et demande confirmation, il ne
-  renvoie pas vers lui — contrat à créer
-- `doctor` signale après coup ce qu'une montée a supprimé — contrat à créer
-- `node .githooks/run-checks.mjs` et `node packages/drwil/bin/drwil.js verify --agent` : `GOVERNANCE: PASS` — `QUA-013`
+  renvoie pas vers lui — `QUA-286`
+- `doctor` signale après coup ce qu'une montée a supprimé — `QUA-287`
+- `node .githooks/run-checks.mjs` et `node packages/drwil/bin/drwil.js verify --agent` : `GOVERNANCE: PASS` — `QUA-013` [humain]
 
 ## 5. Contrats
 
