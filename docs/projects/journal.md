@@ -4264,3 +4264,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Cause** : sous WSL, un dossier du PATH inaccessible (dossiers Windows) fait renvoyer `EACCES` par `spawn` pour une commande introuvable ; les tests QUA-101 et QUA-060 échouaient donc dans cet environnement, sans lien avec la version de Node.
 - **Preuve** : nouveau test `outils/banc.test.mjs` (PATH réduit à un dossier inaccessible) et test QUA-060 existant de `outils/banc-agents.test.mjs`, vus échouer avant le correctif.
 - **Clôturé par** : la branche `detour/banc-absent-node26`.
+
+## 2026-11-09 — Détour de docs/projects/reouverture-sans-faux-blocage.md : serve.test, test « port occupé » instable sous charge parallèle (QUA-272)
+
+- **Ce qui change** : le test « port occupé » de `packages/drwil/test/serve.test.mjs` tolère un port du projet déjà tenu par un autre processus (c'est l'état qu'il veut) et vérifie que le serveur passe à un port plus haut, au lieu d'exiger exactement le suivant.
+- **Cause** : le test occupait lui-même `preferredPort(dossier temporaire)` ; un autre rejeu du fichier tenant ce port levait EADDRINUSE non géré (vu : 127.0.0.1:4937 au run-checks). Non reproduit en 12 processus parallèles (collision rare), mais reproduit de façon déterministe par un tiers qui tient le port.
+- **Preuve** : nouveau test « port du projet déjà pris par un autre processus », vu échouer (EADDRINUSE) avec l'ancien comportement, vert ensuite.
+- **Clôturé par** : la branche `detour/serve-port-occupe-stable`.
