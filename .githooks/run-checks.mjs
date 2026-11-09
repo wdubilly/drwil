@@ -20,18 +20,17 @@ import { checks, projectRoot, startParallel, treeFingerprint } from "./engine.mj
 import { ciTexts, WITH_CI_CHECKS } from "./engine-runat.mjs";
 import { annotate, glossary } from "./glossary.mjs";
 import { loadReuse, saveVerdicts } from "./run-checks-verdicts.mjs";
+import { shardOptions, writeShardVerdicts } from "./run-checks-shards.mjs";
 import { TEXTS } from "./run-checks-texts.mjs";
-
 const root = projectRoot(import.meta.url);
 process.chdir(root);
-
 let cfg = {};
 try {
   cfg = JSON.parse(readFileSync(".drwil/ia-first.json", "utf8"));
 } catch {}
 const lang = cfg.lang === "en" ? "en" : "fr";
 const T = TEXTS[lang];
-
+const shard = shardOptions(process.argv, T, cfg);
 // At pre-commit only (DRWIL_HOOK=pre-commit, set by .githooks/pre-commit), the engine defers
 // a project check outside its `paths`. If git does not answer, everything runs (never deferred by default).
 function stagedFiles() {
@@ -60,7 +59,8 @@ const announce = (name) => report.push(`[ia-first] ${name}…`);
 // "not-applicable" (excluded by design: minimal mode, QUA-017 in CI…) is not shown, as before.
 const staged = stagedFiles();
 // A hook pass judges the index or the pushed reference, not the whole tree `drwil verify` judges: it leaves nothing to reuse.
-const hooked = ["DRWIL_HOOK", "DRWIL_PUSH_REFS", "DRWIL_PUSH_TAGS_ONLY", "DRWIL_PUSH_NO_BRANCH"].some((k) => process.env[k]);
+const hooked =
+  Boolean(shard?.index) || ["DRWIL_HOOK", "DRWIL_PUSH_REFS", "DRWIL_PUSH_TAGS_ONLY", "DRWIL_PUSH_NO_BRANCH"].some((k) => process.env[k]);
 const fingerprint = hooked ? null : treeFingerprint(root);
 const verdicts = {};
 const ranAt = new Date().toISOString();
@@ -68,7 +68,7 @@ const ranAt = new Date().toISOString();
 const reusableByVerify = (id) => id !== "secrets" || Boolean(process.env.CI);
 // QUA-261: the option also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), to reproduce a CI failure locally.
 const withCiChecks = process.argv.includes(WITH_CI_CHECKS);
-const list = checks(root, { cfg, staged, withCiChecks });
+const list = checks(root, { cfg, staged, withCiChecks, shard });
 // QUA-141: the verdicts of the last pass, to keep an "ok" whose check files did not change (never in a hook, in CI only when asked, QUA-250,
 // never with the option).
 const replayAll = process.argv.some((a) => a === "--tout-rejouer" || a === "--replay-all");
@@ -116,6 +116,7 @@ for (const c of list) {
     outputs.set(failures.at(-1), r.output);
   } else if (r.status === "not-run") unrun(`${c.name} (${r.detail})`, r.configured);
 }
+if (shard?.index) writeShardVerdicts({ root, list, verdicts, shard });
 const end = list.finish();
 // The results shared inside the pass (see DRWIL_PASS_ID in the engine) are of no use after it.
 await rm(".drwil/evidence/passe", { recursive: true, force: true }).catch(Boolean);

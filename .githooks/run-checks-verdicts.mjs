@@ -1,10 +1,20 @@
 // Verdicts left by a pass and reused by the next one (QUA-140, QUA-141, QUA-152, QUA-250), split from run-checks.mjs.
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { treeFingerprint } from "./engine.mjs";
+import { prContext } from "./run-checks-pr.mjs";
 
 const VERDICTS = ".drwil/evidence/run-checks-verdicts.json";
 const PREPUSH = ".drwil/evidence/pre-push-verdicts.json";
+const PR_WRITTEN = ".drwil/evidence/pr-verdicts";
+const PR_PREVIOUS = ".drwil/evidence/pr-previous";
+const SHA = /^[0-9a-f]{40,64}$/;
+const sha256 = (text) => createHash("sha256").update(text).digest("hex");
+
+// A slow check is a sharded one, or one that took the project's threshold (a minute by default) the pass that played it.
+const slow = (c, v) => c.sharded || v.durationMs >= Number(process.env.DRWIL_PR_SLOW_MS ?? 60000);
+const isAncestor = (older, head) => spawnSync("git", ["merge-base", "--is-ancestor", older, head], { stdio: "ignore" }).status === 0;
 
 // QUA-152: at push time the pre-push judges the working tree, so it only reuses when that tree is the pushed commit: a clean tree, and the
 // one pushed reference is the current branch (the hook gives remote references only: any other push is replayed in full).
@@ -28,6 +38,58 @@ const readVerdicts = (file) => {
   }
 };
 
+/**
+ * The verdicts the previous pass of this same pull request left (`.drwil/evidence/pr-previous`, downloaded by the CI), Map id → verdict.
+ * Every doubt replays (QUA-013): sum of the file not matching, another pull request or run, a verdict of another fingerprint (QUA-141) or
+ * base, a commit that is not an ancestor of this head (a rewritten history), a check that is not slow or not "ok".
+ */
+export function loadPrVerdicts(list, controls) {
+  const ctx = prContext();
+  const kept = new Map();
+  let text;
+  let sum;
+  try {
+    text = readFileSync(`${PR_PREVIOUS}/pr-verdicts.json`, "utf8");
+    sum = readFileSync(`${PR_PREVIOUS}/pr-verdicts.sum`, "utf8").trim();
+  } catch {}
+  if (!ctx || !text || sum !== sha256(text)) return kept;
+  let file;
+  try {
+    file = JSON.parse(text);
+  } catch {
+    return kept;
+  }
+  if (file?.identity?.id !== ctx.id || (ctx.previousRun !== undefined && String(file.identity.run) !== ctx.previousRun)) return kept;
+  for (const c of list) {
+    const v = file.checks?.[c.id];
+    const control = controls.get(c.id);
+    const sound = v?.status === "ok" && v.reusable !== false && c.perControl && control && v.control === control && v.base === ctx.base;
+    if (sound && slow(c, v) && SHA.test(v.head) && isAncestor(v.head, ctx.head)) kept.set(c.id, v);
+  }
+  return kept;
+}
+
+/** Ids of the sharded checks the previous pass of this pull request already settled: the plan of the CI plays no slice for them. */
+export const prCovered = (list) => new Set(loadPrVerdicts(list, list.fingerprints()).keys());
+
+// The "ok" verdicts of the slow checks of this pass, with the commit that played them, for the next pass of the same pull request.
+function savePrVerdicts(list, verdicts) {
+  const ctx = prContext();
+  if (!ctx) return;
+  const checks = {};
+  for (const [id, v] of Object.entries(verdicts)) {
+    const c = list.find((x) => x.id === id);
+    if (v.status === "ok" && v.reusable !== false && v.control && c.perControl && slow(c, v))
+      checks[id] = { ...v, head: v.head ?? ctx.head, base: ctx.base, run: v.run ?? ctx.run };
+  }
+  const text = JSON.stringify({ identity: { id: ctx.id, run: ctx.run }, checks }, null, 2);
+  try {
+    mkdirSync(PR_WRITTEN, { recursive: true });
+    writeFileSync(`${PR_WRITTEN}/pr-verdicts.json`, text);
+    writeFileSync(`${PR_WRITTEN}/pr-verdicts.sum`, sha256(text));
+  } catch {}
+}
+
 /** Reuse of the last pass: `{ prePush, controls, reuseActive, keptFrom }`, `keptFrom` mapping the id of each reused check to its kept verdict. */
 export function loadReuse(list, { hooked, atCommit, replayAll }) {
   const prePush = Boolean(process.env.DRWIL_PUSH_REFS) && !atCommit && !process.env.CI && !replayAll && pushedTreeIsWorkTree();
@@ -49,7 +111,12 @@ export function loadReuse(list, { hooked, atCommit, replayAll }) {
     }
     return null;
   }
-  const keptFrom = new Map(list.map((c) => [c.id, lastOf(c)]).filter(([, k]) => k));
+  const pr = reuseActive ? loadPrVerdicts(list, controls) : new Map();
+  const keptFrom = new Map(
+    list
+      .map((c) => [c.id, lastOf(c) ?? (pr.has(c.id) ? { v: pr.get(c.id), name: `PR run ${pr.get(c.id).run}` } : null)])
+      .filter(([, k]) => k),
+  );
   return { prePush, controls, reuseActive, keptFrom };
 }
 
@@ -75,6 +142,7 @@ export function saveVerdicts({ root, list, verdicts, reused, fingerprint, ranAt,
       } catch {}
     }
   }
+  if (!hooked) savePrVerdicts(list, verdicts);
   if (prePush) {
     const after = list.fingerprints();
     const ok = Object.entries(verdicts).filter(([id, v]) => v.status === "ok" && v.control && after.get(id) === v.control);

@@ -3,10 +3,9 @@
 // would otherwise validate itself. The hooks are read from the main branch through Git, laid over the PR's working tree for one run of
 // `run-checks.mjs`, then restored; the list of checks stays the PR's. A check removed from it, or a hook kept at its PR version, is cited in
 // backticks at the head of a bullet of the « Contrats modifiés » section of a brief of the PR (approved by the requester). The replay asks
-// to reuse the verdicts the PR's first pass left (QUA-250): a check "ok" whose own fingerprint (QUA-141) is the same under the main branch's
-// hooks keeps it; if the overlay changes the machinery of `run-checks.mjs` (its relative imports) it reuses nothing (`--tout-rejouer`).
-// A hook a check reads changes its fingerprint: judged again. Self-contained (Node built-ins only, no sibling import): the CI runs the
-// main branch's copy of this very file, alone. QUA-013: a main branch that cannot be found or read is "not run", never a success.
+// to reuse the verdicts the PR's first pass left (QUA-250): a check "ok" whose fingerprint (QUA-141) is the same under the main branch's hooks
+// keeps it; if the overlay changes the machinery of `run-checks.mjs` it reuses nothing (`--tout-rejouer`). Shard options (`--shard i/N`,
+// `--aggregate-shards <dir>`) go through, a slice is never skipped. Self-contained (Node built-ins only): the CI runs the main branch's copy alone.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, realpathSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
@@ -157,17 +156,19 @@ export function replay(root, { argv = [], env = process.env, stdio = "inherit" }
     if (found === null) return { status: "not-run", lines: [say(T.unknownBase, ref)] };
     const base = found.trim();
     const hooks = git(root, ["ls-tree", "-r", "-z", "--name-only", base, "--", ".githooks/"]).split("\0").filter(Boolean);
-    if (!hooks.length) return { status: "not-applicable", lines: [say(T.noHooks, ref)] };
-    if (unchanged(root, base)) return { status: "skipped", lines: [say(T.skipped, ref)] };
+    const through = argv.filter((a, i) => a !== "--base" && argv[i - 1] !== "--base");
+    const slice = through.some((a) => a.startsWith("--shard"));
+    if (!hooks.length && !slice) return { status: "not-applicable", lines: [say(T.noHooks, ref)] };
+    if (!slice && unchanged(root, base)) return { status: "skipped", lines: [say(T.skipped, ref)] };
     const declared = declarations(root, base, cfg.dirs?.projects ?? "docs/projects");
     const baseCfg = git(root, ["show", `${base}:.drwil/ia-first.json`], true);
-    const now = new Set(keys(cfg));
-    const removed = keys(JSON.parse(baseCfg ?? "{}")).filter((k) => !now.has(k) && !declared.has(k));
+    const removed = keys(JSON.parse(baseCfg ?? "{}")).filter((k) => !keys(cfg).includes(k) && !declared.has(k));
     const kept = hooks.filter((f) => declared.has(f) || declared.has(f.replace(/\.test\.mjs$/, ".mjs")));
     const laid = hooks.filter((f) => !kept.includes(f));
     const reuse = machineryChanged(root, base, laid).length === 0;
     const [args, runEnv] = reuse ? [[], { ...env, DRWIL_CI_REUSE: "1" }] : [["--tout-rejouer"], { ...env, DRWIL_CI_REUSE: "" }];
-    const run = () => spawnSync(process.execPath, [join(".githooks", "run-checks.mjs"), ...args], { cwd: root, env: runEnv, stdio }).status;
+    const run = () =>
+      spawnSync(process.execPath, [join(".githooks", "run-checks.mjs"), ...args, ...through], { cwd: root, env: runEnv, stdio }).status;
     const status = overlay(root, base, laid, run);
     const lines = [...kept.map((f) => say(T.kept, f)), ...removed.map((k) => say(T.removed, k)), say(reuse ? T.reuse : T.noReuse, ref)];
     lines.push(say(status === 0 ? T.ok : T.failed, ref));

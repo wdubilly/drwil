@@ -1,12 +1,96 @@
 name: ia-first
 on: [push, pull_request, workflow_dispatch]
 jobs:
-  checks:
-    # Sauté sur le push d'une branche dont la PR ouverte porte déjà ces checks (voir matrice-os).
+  # Tranches des contrôles découpés (`shards: N` dans .drwil/ia-first.json) : le nombre vient du plan, jamais du YAML.
+  # Sauté comme checks sur le push d'une branche dont la PR ouverte porte déjà ces checks (voir matrice-os).
+  plan:
     needs: matrice-os
     if: needs.matrice-os.outputs.saute != 'true'
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      count: ${{ steps.plan.outputs.count }}
+      precedent: ${{ steps.plan.outputs.previous }}
     steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      # Un plan illisible fait échouer ce job, donc checks : jamais « aucune tranche » par défaut (QUA-013).
+      # QUA-250 : le run précédent de cette PR est lu d'abord (ses verdicts lents, rejoués au moindre doute) : aucune tranche pour ce qu'il a réglé.
+      - name: Planifier les tranches des contrôles découpés
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node .githooks/run-checks.mjs --pr-previous >> "$GITHUB_OUTPUT"
+          matrix=$(node .githooks/run-checks.mjs --shard-plan)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "count=$(jq '.include | length' <<< "$matrix")" >> "$GITHUB_OUTPUT"
+  # Un job par tranche. Une PR joue la tranche avec les hooks de la branche principale (QUA-113), comme le rejeu de checks ;
+  # la tranche laisse son verdict (contrôle, empreinte, commit, indice, total, statut) en artefact, lu par l'agrégation.
+  shards:
+    needs: plan
+    if: needs.plan.outputs.count != '0'
+    name: shard ${{ matrix.index }}/${{ matrix.total }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Jouer la tranche
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          SLICE: ${{ matrix.index }}/${{ matrix.total }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+            base="origin/$BASE_REF"
+            if git cat-file -e "$base:.githooks/base-checks.mjs" 2>/dev/null; then
+              git show "$base:.githooks/base-checks.mjs" > "$RUNNER_TEMP/base-checks.mjs"
+              node "$RUNNER_TEMP/base-checks.mjs" --base "$base" --shard "$SLICE"
+            else
+              node .githooks/base-checks.mjs --base "$base" --shard "$SLICE"
+            fi
+          else
+            node .githooks/run-checks.mjs --shard "$SLICE"
+          fi
+      # Même après un échec : une tranche en échec laisse son verdict « fail », une tranche sans verdict manque à l'agrégation.
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.index }}-of-${{ matrix.total }}
+          path: .drwil/evidence/shards
+          if-no-files-found: warn
+          overwrite: true
+  checks:
+    # Sauté sur le push d'une branche dont la PR ouverte porte déjà ces checks (voir matrice-os). Le job exigé garde son nom (QUA-251) et
+    # agrège les tranches : `always()`, un plan ou une tranche en échec, sautée ou annulée le fait échouer, jamais un succès par défaut (QUA-013).
+    needs: [matrice-os, plan, shards]
+    if: always() && needs.matrice-os.outputs.saute != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuser un plan ou une tranche qui n'a pas réussi
+        env:
+          PLAN: ${{ needs.plan.result }}
+          SHARDS: ${{ needs.shards.result }}
+          COUNT: ${{ needs.plan.outputs.count }}
+        run: |
+          [ "$PLAN" = success ] || { echo "::error::Le plan n'a pas réussi ($PLAN) : les tranches des contrôles découpés sont inconnues."; exit 1; }
+          if [ "$COUNT" != 0 ] && [ "$SHARDS" != success ]; then
+            echo "::error::Les tranches n'ont pas réussi ($SHARDS) : les contrôles découpés ne sont pas passés."
+            exit 1
+          fi
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -83,8 +167,22 @@ jobs:
           path: .drwil/evidence/run-checks-verdicts.json
           key: run-checks-verdicts-${{ github.event.pull_request.base.sha }}
           restore-keys: run-checks-verdicts-
+      # QUA-250 : le run que le plan a lu (jamais un autre) ; les verdicts de cette passe sont ensuite gardés pour le push suivant de la PR.
+      - if: steps.prouve.outputs.saute != 'true' && needs.plan.outputs.precedent != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRECEDENT: ${{ needs.plan.outputs.precedent }}
+        run: node .githooks/run-checks.mjs --pr-previous "$PRECEDENT"
+      # Les contrôles découpés sont jugés sur les verdicts des tranches (`--aggregate-shards`) : toutes leurs tranches de ce commit « ok », aucune absente.
+      - name: Télécharger les verdicts des tranches
+        if: steps.prouve.outputs.saute != 'true' && needs.plan.outputs.count != '0'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: shard-*
+          merge-multiple: true
+          path: .drwil/evidence/shards
       - if: steps.prouve.outputs.saute != 'true'
-        run: node .githooks/run-checks.mjs
+        run: node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards
         env:
           DRWIL_CI_REUSE: ${{ github.event_name == 'pull_request' && '1' || '' }}
       - name: Sauvegarder les verdicts de la branche principale
@@ -105,10 +203,17 @@ jobs:
           base="origin/$BASE_REF"
           if git cat-file -e "$base:.githooks/base-checks.mjs" 2>/dev/null; then
             git show "$base:.githooks/base-checks.mjs" > "$RUNNER_TEMP/base-checks.mjs"
-            node "$RUNNER_TEMP/base-checks.mjs" --base "$base"
+            node "$RUNNER_TEMP/base-checks.mjs" --base "$base" --aggregate-shards .drwil/evidence/shards
           else
-            node .githooks/base-checks.mjs --base "$base"
+            node .githooks/base-checks.mjs --base "$base" --aggregate-shards .drwil/evidence/shards
           fi
+      - if: github.event_name == 'pull_request' && always() && hashFiles('.drwil/evidence/pr-verdicts/pr-verdicts.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-verdicts
+          path: .drwil/evidence/pr-verdicts
+          retention-days: 14
+          overwrite: true
       # La protection de master vit dans les réglages de GitHub : elle doit rester celle
       # versionnée (.github/ruleset-master.json), sinon un changement passerait sans PR.
       - run: node .github/scripts/verifier-ruleset.mjs

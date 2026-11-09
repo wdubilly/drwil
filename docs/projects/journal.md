@@ -4284,3 +4284,16 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/reouverture-sans-faux-blocage`.
 
 - **Preuve de clôture** : `docs/preuves/reouverture-sans-faux-blocage.md`.
+
+## 2026-11-09 — Les contrôles lents sont accélérés par la CI livrée : tranches parallèles et reprise d'une PR à l'autre (5 lots)
+
+- **Ce qui change** : un contrôle déclaré `shards: N` (2 à 16, sa commande cite `DRWIL_SHARD_INDEX`) est joué par N jobs parallèles en CI GitHub (plan, matrice, agrégateur `checks` au nom inchangé) et GitLab (`parallel: 16`, tranches au-delà de N « non applicable ») ; `run-checks` gagne `--shard`, `--without-shards` et `--aggregate-shards` ; un verdict de PR lié à l'empreinte, au commit, à la base et à une somme est repris d'un push à l'autre (QUA-250 rouvert, D3) ; le local joue une seule passe.
+- **Décisions clés** : D1 à D7 tranchées par le demandeur le 2026-11-08 ; la logique de recherche du run précédent vit dans `.githooks/run-checks-pr.mjs` (voie choisie par le demandeur le 2026-11-09 pour tenir le plafond de 200 lignes, QUA-157).
+- **Critères et preuves** : contrats créés QUA-288 à QUA-291, projet d'essai synthétique de `packages/drwil/test/ci-shards.test.mjs` (QUA-270 étendu) ; QUA-013, QUA-019 et QUA-151 attestés par l'humain ; `GOVERNANCE: PASS (CI pending)` à la clôture.
+- **Contrats modifiés** : QUA-250, QUA-113, QUA-251, QUA-270 et sept hooks déclarés, validés par le demandeur le 2026-11-09 ; QUA-208 confirmé.
+- **Bloc scope élargi** : `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md` (QUA-110), `.githooks/run-checks-pr.mjs` (original et gabarit) et son test.
+- **Limites connues** : aucun YAML n'a tourné sur un vrai runner, aucune mesure réelle de gain (hors périmètre, décision du demandeur) ; une PR peut falsifier l'artefact de sa propre passe (D6 i, risque accepté) ; GitLab identifie la MR par projet et branche ; le seuil de lenteur de 60 s (`DRWIL_PR_SLOW_MS`) est un choix de réalisation ; le découpage automatique est noté en intention (`docs/intentions/notes.md`).
+
+## ci-lents-controles
+
+- **Preuve de clôture** : `docs/preuves/ci-lents-controles.md`.

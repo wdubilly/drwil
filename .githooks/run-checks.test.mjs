@@ -308,7 +308,7 @@ test("QUA-121 : le workflow saute le push d'une branche à PR ouverte, jamais ma
   assert.match(calcul, /\|\| ouvertes=0/, "GitHub muet : le push teste");
   assert.match(calcul, /\[ "\$REF" != "refs\/heads\/\$PRINCIPALE" \]/, "master jamais sauté");
   assert.match(calcul, /"tester":false/, "push sauté : kit-tests ne teste pas");
-  assert.match(job("checks"), /needs: matrice-os\n\s+if: needs\.matrice-os\.outputs\.saute != 'true'/);
+  assert.match(job("checks"), /needs: \[matrice-os, plan, shards\]\n\s+if: always\(\) && needs\.matrice-os\.outputs\.saute != 'true'/);
   assert.match(job("kit-tests"), /needs: matrice-os/);
   assert.match(job("kit-tests"), /name: kit-tests \(\$\{\{ matrix\.os \}\}\)/);
   assert.match(job("alert-if-ci-broken"), /needs: \[checks, kit-tests\]/);
@@ -894,6 +894,18 @@ test("QUA-208 : de bout en bout, un contrôle réservé par runAt est non exécu
   }
 });
 
+test("QUA-208 : un contrôle confié à la CI et découpé (shards) reste « confié à la CI » en local, jamais joué ni compté passé", () => {
+  const config = JSON.stringify({
+    ciFiles: [".github/workflows/ia-first.yml"],
+    checks: [{ id: "lent", name: "lent", run: "node -e 'process.exit(1)' $DRWIL_SHARD_INDEX", runAt: ["ci"], shards: 2 }],
+  });
+  const fichiers = { ".drwil/ia-first.json": config, "src/a.js": "x", ".githooks/check-control-coverage.mjs": "process.exit(0);\n" };
+  const r = lancer(fichiers, { valider: true });
+  assert.equal(r.status, 0, r.stdout);
+  assert.match(r.stdout, /— confié à la CI, non exécuté ici : lent/);
+  assert.doesNotMatch(r.detail, /\[ia-first\] lent : durée : \d+ ms/);
+});
+
 test("QUA-208 : de bout en bout, un contrôle confié à la CI est annoncé « confié à la CI » au commit, au push et hors hook (sans bloquer), joué et bloquant en CI", () => {
   const config = JSON.stringify({
     ciFiles: [".github/workflows/ia-first.yml"],
@@ -987,7 +999,7 @@ test("QUA-208 : dans ce dépôt, les contrôles lents sont confiés à la CI, ac
   const flux = readFileSync(join(depot, ".github/workflows/ia-first.yml"), "utf8");
   assert.match(
     flux,
-    /^ {6}- if: steps\.prouve\.outputs\.saute != 'true'\n {8}run: node \.githooks\/run-checks\.mjs$/m,
+    /^ {6}- if: steps\.prouve\.outputs\.saute != 'true'\n {8}run: node \.githooks\/run-checks\.mjs --aggregate-shards \.drwil\/evidence\/shards$/m,
     "la CI du dépôt joue run-checks (variable CI posée par la forge)",
   );
   assert.doesNotMatch(flux, /^\s+CI:/m, "la variable CI n'est jamais écrasée");
