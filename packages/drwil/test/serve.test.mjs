@@ -545,6 +545,20 @@ test("QUA-272 : un enregistrement périmé est remplacé ; une réservation en c
   await s.arreter();
 });
 
+/**
+ * Le port du projet dépend du dossier temporaire : sous charge parallèle un autre processus (un autre
+ * rejeu du même fichier) peut déjà l'occuper, ce qui est exactement l'état voulu. EADDRINUSE n'est donc pas un échec.
+ */
+async function occuperLePortDuProjet(dir) {
+  const prefere = createServer();
+  await new Promise((res, rej) => {
+    prefere.once("listening", res);
+    prefere.once("error", (e) => (e.code === "EADDRINUSE" ? res() : rej(e)));
+    prefere.listen(preferredPort(dir), "127.0.0.1");
+  });
+  aArreter.push(() => new Promise((res) => (prefere.listening ? prefere.close(res) : res())));
+}
+
 test("QUA-272 : port occupé : refus au port demandé, port suivant au port du projet ; détaché, l'échec renvoie au journal", async () => {
   const p = await projet({});
   const occupe = createServer().listen(0, "127.0.0.1");
@@ -559,12 +573,19 @@ test("QUA-272 : port occupé : refus au port demandé, port suivant au port du p
   assert.equal(d.status, 1);
   assert.match(d.stderr, /n'a pas démarré\. Journal : .*serve\.log/);
 
-  const prefere = createServer().listen(preferredPort(p.dir), "127.0.0.1");
-  await new Promise((res) => prefere.once("listening", res));
-  aArreter.push(() => new Promise((res) => prefere.close(res)));
+  await occuperLePortDuProjet(p.dir);
   const s = await startServer({ root: p.dir, host: "127.0.0.1", port: null, token: null, cacheDir: tmp() });
   aArreter.push(() => s.stop());
-  assert.equal(s.port, preferredPort(p.dir) + 1);
+  assert.ok(s.port > preferredPort(p.dir), "le port du projet est occupé : le suivant libre");
+});
+
+test("QUA-272 : port du projet déjà pris par un autre processus : le test qui l'occupe le tolère, le serveur passe au suivant", async () => {
+  const p = await projet({});
+  await occuperLePortDuProjet(p.dir); // l'autre processus
+  await occuperLePortDuProjet(p.dir); // le test : EADDRINUSE attendu, toléré
+  const s = await startServer({ root: p.dir, host: "127.0.0.1", port: null, token: null, cacheDir: tmp() });
+  aArreter.push(() => s.stop());
+  assert.ok(s.port > preferredPort(p.dir));
 });
 
 test("QUA-272 : l'état d'exécution vit dans le cache de l'utilisateur, un dossier par système", () => {
