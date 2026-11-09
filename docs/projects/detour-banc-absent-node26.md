@@ -8,6 +8,10 @@
 files:
   - outils/banc-run.mjs
   - outils/banc.test.mjs
+  - outils/banc-agents.mjs
+  - outils/banc-agents.test.mjs
+  - docs/projects/journal.md
+  - docs/projects/detour-banc-absent-node26.md
 -->
 
 (cadrage : la correction et son test, rien d'autre ; le cadrage de docs/projects/reouverture-sans-faux-blocage.md ne s'élargit jamais pour un détour.)
