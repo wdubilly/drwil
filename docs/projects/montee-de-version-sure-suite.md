@@ -15,6 +15,7 @@ files:
   - packages/drwil/src/config-write.ts
   - packages/drwil/src/doctor.ts
   - packages/drwil/src/doctor-texts.ts
+  - packages/drwil/src/doctor-upgrade.ts
   - packages/drwil/test/kit.test.mjs
   - packages/drwil/test/config-write.test.mjs
   - packages/drwil/test/montee-de-version.test.mjs
