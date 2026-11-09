@@ -27,6 +27,9 @@ files:
   - docs/projects/journal.md
   - .drwil/ia-first.json
   - outils/miroirs.json
+  - README.md
+  - docs/ia-first/8-conduct-rules.md
+  - packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md
 -->
 
 (Seconde des deux fiches de la montée sûre, 20 chemins. Si l'implémentation montre qu'un autre fichier doit changer,
@@ -64,6 +67,14 @@ Celles de `docs/projects/journal.md` : D4 (fichiers du projet), D5 (clés de con
 - **Modifiés** : les contrats qui citent `resolve-drift` (à relever avec `node .githooks/glossary.mjs "resolve-drift"`
   au début du chantier) ; section « Contrats modifiés » à remplir alors, avec validation du demandeur.
 - **Créés** : un contrat de fichiers du projet jamais réécrits, chacun avec son contrôle déclaré dans `.drwil/ia-first.json`.
+
+### Contrats modifiés
+
+Validés par la décision D7 du demandeur (2026-11-08, `resolve-drift` retiré, `init` traite les fichiers modifiés) :
+
+- `QUA-027` : « `drwil resolve-drift` propose le diff… avec sauvegarde `.bak` » devient « `drwil init` montre en diff chaque
+  mécanique ou prose du kit modifiée et ne la remplace que sur le oui de l'humain » (QUA-286).
+- `QUA-239` : le message de fin renvoie à `drwil init` dans un terminal, plus à `drwil resolve-drift`.
 
 ## 6. Increments
 
