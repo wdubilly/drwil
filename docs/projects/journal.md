@@ -4306,3 +4306,4 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : `shards` et la reprise de verdict n'ont jamais tourné sur un vrai runner ; la publication (tag, note GitHub, CI trois OS) est le lot 2, geste humain, hors de ce chantier.
 - **Clôturé par** : la branche `workstream/version-0-11-1`.
 
+- **Preuve de clôture** : `docs/preuves/version-0-11-1.md`.
