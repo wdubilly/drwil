@@ -295,7 +295,7 @@ for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templat
 
 // D3 et D4 (reprise d'une PR à l'autre) : la décision et l'identité vivent dans run-checks (run-checks-pr.mjs) ; la CI ne fait que l'appeler et acheminer l'artefact.
 for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml"])
-  test(`QUA-250 : ${fichier} lit le run précédent de la PR dans le plan, le même dans checks, et ne garde les verdicts que par artefact (jamais par cache)`, () => {
+  test(`QUA-291 : ${fichier} lit le run précédent de la PR dans le plan, le même dans checks, et ne garde les verdicts que par artefact (jamais par cache)`, () => {
     const texte = readFileSync(join(RACINE, fichier), "utf8");
     const ci = parseAllDocuments(texte)[0].toJS();
     assert.doesNotMatch(texte, /pull_request_target|DRWIL_PR_/);
@@ -324,7 +324,7 @@ for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templat
     assert.equal(JSON.stringify(caches).includes("pr-verdicts"), false);
   });
 
-test("QUA-250 : la CI GitLab livrée reprend d'un push à l'autre d'une branche par l'artefact du dernier pipeline réussi, dans le plan et dans checks, jamais sur la branche principale ni par cache", () => {
+test("QUA-291 : la CI GitLab livrée reprend d'un push à l'autre d'une branche par l'artefact du dernier pipeline réussi, dans le plan et dans checks, jamais sur la branche principale ni par cache", () => {
   const ci = parseAllDocuments(readFileSync(join(RACINE, "packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml"), "utf8"))[0].toJS();
   assert.ok(JSON.stringify(ci).includes("DRWIL_PR_") === false, "l'identité n'est pas dite par le YAML");
   for (const [nom, job] of [

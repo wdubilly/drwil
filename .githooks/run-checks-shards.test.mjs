@@ -54,7 +54,7 @@ function passe(racine, ...args) {
 const lire = (racine, chemin) => JSON.parse(readFileSync(join(racine, chemin), "utf8"));
 const trace = (racine) => (existsSync(join(racine, "trace.txt")) ? readFileSync(join(racine, "trace.txt"), "utf8").trim().split("\n") : []);
 
-test("--shard i/N : ne joue que le contrôle découpé, laisse le verdict de sa tranche, aucun verdict de passe", () => {
+test("QUA-288 : --shard i/N : ne joue que le contrôle découpé, laisse le verdict de sa tranche, aucun verdict de passe", () => {
   const racine = projet();
   const r = passe(racine, "--shard", "2/2");
   assert.equal(r.status, 0, r.stdout + r.stderr);
@@ -66,7 +66,7 @@ test("--shard i/N : ne joue que le contrôle découpé, laisse le verdict de sa 
   assert.equal(existsSync(join(racine, ".drwil/evidence/run-checks-verdicts.json")), false);
 });
 
-test("QUA-013 : une tranche en échec laisse son verdict « fail » et fait échouer la passe", () => {
+test("QUA-288 : une tranche en échec laisse son verdict « fail » et fait échouer la passe", () => {
   const racine = projet();
   ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ checks: [{ name: "e2e", run: "exit 3 # $DRWIL_SHARD_INDEX", shards: 2 }] }));
   const r = passe(racine, "--shard=1/2");
@@ -74,7 +74,7 @@ test("QUA-013 : une tranche en échec laisse son verdict « fail » et fait éch
   assert.equal(lire(racine, `${DOSSIER}/project_e2e.1-of-2.json`).status, "fail");
 });
 
-test("les N tranches puis l'agrégation : « ok » entre dans le verdict de passe, le reste est joué une fois", () => {
+test("QUA-288 : les N tranches puis l'agrégation : « ok » entre dans le verdict de passe, le reste est joué une fois", () => {
   const racine = projet();
   for (const i of ["1/2", "2/2"]) assert.equal(passe(racine, "--shard", i).status, 0);
   const r = passe(racine, "--aggregate-shards", DOSSIER);
@@ -83,7 +83,7 @@ test("les N tranches puis l'agrégation : « ok » entre dans le verdict de pass
   assert.equal(lire(racine, ".drwil/evidence/run-checks-verdicts.json").checks["project:e2e"].status, "ok");
 });
 
-test("QUA-013 : une tranche absente fait échouer l'agrégation, sans verdict « ok » du contrôle", () => {
+test("QUA-288 : une tranche absente fait échouer l'agrégation, sans verdict « ok » du contrôle", () => {
   const racine = projet();
   assert.equal(passe(racine, "--shard", "1/2").status, 0);
   const r = passe(racine, "--aggregate-shards", DOSSIER);
@@ -92,7 +92,7 @@ test("QUA-013 : une tranche absente fait échouer l'agrégation, sans verdict «
   assert.equal(lire(racine, ".drwil/evidence/run-checks-verdicts.json").checks["project:e2e"].status, "fail");
 });
 
-test("QUA-013 : un fichier du contrôle modifié après les tranches fait échouer l'agrégation", () => {
+test("QUA-288 : un fichier du contrôle modifié après les tranches fait échouer l'agrégation", () => {
   const racine = projet();
   for (const i of ["1/2", "2/2"]) assert.equal(passe(racine, "--shard", i).status, 0);
   ecrire(racine, "e2e/test.txt", "deux\n");
@@ -101,7 +101,7 @@ test("QUA-013 : un fichier du contrôle modifié après les tranches fait échou
   assert.match(r.stdout, /autres fichiers ou une autre déclaration/);
 });
 
-test("--without-shards : le contrôle découpé est confié aux tranches, non passé ; le reste est joué", () => {
+test("QUA-289 : --without-shards : le contrôle découpé est confié aux tranches, non passé ; le reste est joué", () => {
   const racine = projet();
   const r = passe(racine, "--without-shards");
   assert.equal(r.status, 0, r.stdout + r.stderr);
@@ -109,13 +109,13 @@ test("--without-shards : le contrôle découpé est confié aux tranches, non pa
   assert.equal(readdirSync(join(racine, ".drwil/evidence")).includes("shards"), false);
 });
 
-test("sans option : une seule passe locale, sans tranche (1/1)", () => {
+test("QUA-289 : sans option : une seule passe locale, sans tranche (1/1)", () => {
   const racine = projet();
   assert.equal(passe(racine).status, 0);
   assert.deepEqual(trace(racine), ["e2e 1/1", "lint"]);
 });
 
-test("une option de tranche mal formée : message d'usage et code 2, rien n'est joué", () => {
+test("QUA-288 : une option de tranche mal formée : message d'usage et code 2, rien n'est joué", () => {
   for (const [lang, attendu] of [
     ["fr", /options de tranche/],
     ["en", /slice options/],
@@ -128,7 +128,7 @@ test("une option de tranche mal formée : message d'usage et code 2, rien n'est 
   }
 });
 
-test("--shard-plan : la matrice des tranches de la configuration, sans rien jouer", () => {
+test("QUA-288 : --shard-plan : la matrice des tranches de la configuration, sans rien jouer", () => {
   const racine = projet({ shards: 3 });
   const r = passe(racine, "--shard-plan");
   assert.equal(r.status, 0, r.stderr);
@@ -138,7 +138,7 @@ test("--shard-plan : la matrice des tranches de la configuration, sans rien joue
   assert.deepEqual(JSON.parse(passe(racine, "--shard-plan").stdout), { include: [] });
 });
 
-test("QUA-013 : --shard-plan refuse une déclaration invalide (code 1, rien sur la sortie), dans la langue du projet", () => {
+test("QUA-288 : --shard-plan refuse une déclaration invalide (code 1, rien sur la sortie), dans la langue du projet", () => {
   for (const [lang, attendu] of [
     ["fr", /doit être un entier de 2 à 16/],
     ["en", /must be an integer from 2 to 16/],
@@ -246,7 +246,7 @@ function premierePasse({ env = {}, config } = {}) {
 }
 const tranches = (racine, env = {}) => JSON.parse(passePr(racine, { args: ["--shard-plan"], env }).stdout).include.length;
 
-test("QUA-250 : la passe suivante de la même PR reprend le verdict du contrôle découpé : aucune tranche planifiée, aucun contrôle rejoué", () => {
+test("QUA-290 : la passe suivante de la même PR reprend le verdict du contrôle découpé : aucune tranche planifiée, aucun contrôle rejoué", () => {
   const racine = premierePasse();
   const ecrit = lire(racine, `${PREC}/pr-verdicts.json`);
   assert.deepEqual(Object.keys(ecrit.checks), ["project:e2e"]);
@@ -268,7 +268,7 @@ test("QUA-250 : la passe suivante de la même PR reprend le verdict du contrôle
   assert.equal(lire(racine, ".drwil/evidence/run-checks-verdicts.json").played.includes("project:e2e"), false);
 });
 
-test("QUA-013 : tout doute rejoue (somme fausse, autre PR, autre run, autre base, fichiers changés, historique réécrit, verdict non « ok », illisible, fork)", () => {
+test("QUA-291 : tout doute rejoue (somme fausse, autre PR, autre run, autre base, fichiers changés, historique réécrit, verdict non « ok », illisible, fork)", () => {
   const cas = {
     "somme fausse": [(r) => ecrire(r, `${PREC}/pr-verdicts.sum`, "0".repeat(64))],
     "somme absente": [(r) => rmSync(join(r, `${PREC}/pr-verdicts.sum`))],
@@ -312,7 +312,7 @@ test("QUA-013 : tout doute rejoue (somme fausse, autre PR, autre run, autre base
   assert.equal(tranches(sans), 2);
 });
 
-test("QUA-250 : un contrôle non découpé n'est repris d'une PR à l'autre que s'il est lent (seuil du projet), jamais autrement ; un verdict écrit sans lui ne l'ouvre pas", () => {
+test("QUA-290 : un contrôle non découpé n'est repris d'une PR à l'autre que s'il est lent (seuil du projet), jamais autrement ; un verdict écrit sans lui ne l'ouvre pas", () => {
   const config = {
     checks: [
       { name: "e2e", run: "echo $DRWIL_SHARD_INDEX", shards: 2, paths: ["e2e/**"] },
@@ -333,7 +333,7 @@ test("QUA-250 : un contrôle non découpé n'est repris d'une PR à l'autre que 
   assert.deepEqual(trace(lent), []);
 });
 
-test("QUA-013 : un dossier de verdicts de PR qui ne s'écrit pas ne change pas le verdict de la passe", () => {
+test("QUA-291 : un dossier de verdicts de PR qui ne s'écrit pas ne change pas le verdict de la passe", () => {
   const racine = projet();
   ecrire(racine, PR, "un fichier, pas un dossier");
   for (const i of ["1/2", "2/2"]) assert.equal(passePr(racine, { args: ["--shard", i] }).status, 0);
@@ -342,7 +342,7 @@ test("QUA-013 : un dossier de verdicts de PR qui ne s'écrit pas ne change pas l
   assert.equal(lire(racine, ".drwil/evidence/run-checks-verdicts.json").checks["project:e2e"].status, "ok");
 });
 
-test("QUA-250 : une PR qui change les hooks ou la configuration planifie toutes ses tranches (le rejeu avec les hooks de la base rejoue tout)", () => {
+test("QUA-290 : une PR qui change les hooks ou la configuration planifie toutes ses tranches (le rejeu avec les hooks de la base rejoue tout)", () => {
   const racine = premierePasse();
   assert.equal(tranches(racine), 0);
   commiter(racine, "docs/autre.md", "une doc\n");
@@ -358,7 +358,7 @@ test("QUA-250 : une PR qui change les hooks ou la configuration planifie toutes 
   assert.equal(tranches(configuration), 2);
 });
 
-test("QUA-250 : --pr-previous télécharge les verdicts du run précédent de la même PR et dit lequel (le run donné par le plan est pris tel quel, une valeur qui n'est pas un numéro est ignorée)", () => {
+test("QUA-291 : --pr-previous télécharge les verdicts du run précédent de la même PR et dit lequel (le run donné par le plan est pris tel quel, une valeur qui n'est pas un numéro est ignorée)", () => {
   if (process.platform === "win32") return;
   const racine = projet();
   const evenement = join(tmp(), "evenement.json");

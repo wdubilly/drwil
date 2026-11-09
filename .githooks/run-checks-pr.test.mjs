@@ -41,7 +41,7 @@ function depot() {
 const SHA_A = "a".repeat(40);
 const SHA_B = "b".repeat(40);
 
-test("QUA-250 : hors CI ou sans identité de PR, la CI ne décrit aucune PR : rien n'est écrit ni lu", () => {
+test("QUA-291 : hors CI ou sans identité de PR, la CI ne décrit aucune PR : rien n'est écrit ni lu", () => {
   assert.equal(prContext({ DRWIL_PR_ID: "o/d#1", DRWIL_PR_HEAD: SHA_A, DRWIL_PR_BASE: SHA_B }), null);
   assert.equal(prContext({ CI: "true" }), null);
   // Identité dite par une autre CI : la tête et la base doivent être des empreintes lisibles.
@@ -58,7 +58,7 @@ test("QUA-250 : hors CI ou sans identité de PR, la CI ne décrit aucune PR : ri
   assert.equal(prContext({ ...dite, DRWIL_PR_BASE: "x" }), null);
 });
 
-test("QUA-250 : GitHub — l'identité est celle d'une PR du dépôt, jamais celle d'une branche poussée, d'un fork ou d'un événement illisible", () => {
+test("QUA-291 : GitHub — l'identité est celle d'une PR du dépôt, jamais celle d'une branche poussée, d'un fork ou d'un événement illisible", () => {
   const racine = mkdtempSync(join(tmpdir(), "drwil-run-pr-"));
   dossiers.push(racine);
   process.chdir(racine);
@@ -86,7 +86,7 @@ test("QUA-250 : GitHub — l'identité est celle d'une PR du dépôt, jamais cel
   assert.equal(prContext({ ...evenement(pr), DRWIL_PR_PREVIOUS_RUN: "40" }).previousRun, "40");
 });
 
-test("QUA-250 : GitLab — la branche est l'identité de la merge request (une seule pipeline par push) ; la branche principale, une étiquette ou une branche sans base lisible n'en ont pas", () => {
+test("QUA-291 : GitLab — la branche est l'identité de la merge request (une seule pipeline par push) ; la branche principale, une étiquette ou une branche sans base lisible n'en ont pas", () => {
   const { base, head } = depot();
   const gitlab = {
     CI: "true",
@@ -107,7 +107,7 @@ test("QUA-250 : GitLab — la branche est l'identité de la merge request (une s
   assert.equal(prContext({ CI: "true", CI_COMMIT_BRANCH: "feature" }), null);
 });
 
-test("QUA-250 : une PR qui change les hooks ou la configuration est reconnue (ou une base illisible : par prudence, changée)", () => {
+test("QUA-290 : une PR qui change les hooks ou la configuration est reconnue (ou une base illisible : par prudence, changée)", () => {
   const { racine, base, head } = depot();
   assert.equal(hooksChanged({ base: head }), false);
   assert.equal(hooksChanged({ base }), false, "seul un fichier hors des hooks a changé");
@@ -144,7 +144,7 @@ function github(racine) {
   };
 }
 
-test("QUA-250 : GitHub — seul le run précédent de cette même PR est téléchargé ; au moindre doute rien n'est repris", () => {
+test("QUA-291 : GitHub — seul le run précédent de cette même PR est téléchargé ; au moindre doute rien n'est repris", () => {
   const racine = mkdtempSync(join(tmpdir(), "drwil-run-pr-"));
   dossiers.push(racine);
   process.chdir(racine);
@@ -200,7 +200,7 @@ test("QUA-250 : GitHub — seul le run précédent de cette même PR est téléc
   assert.deepEqual(appels, []);
 });
 
-test("QUA-250 : GitLab — les deux fichiers de verdicts viennent de l'artefact du job checks du dernier pipeline réussi de la branche ; l'un manque, rien n'est repris", () => {
+test("QUA-291 : GitLab — les deux fichiers de verdicts viennent de l'artefact du job checks du dernier pipeline réussi de la branche ; l'un manque, rien n'est repris", () => {
   const { head } = depot();
   const env = {
     CI: "true",

@@ -26,7 +26,7 @@ const ecrire = (racine, chemin, contenu) => {
 };
 const E2E = { name: "e2e", run: 'echo "tranche $DRWIL_SHARD_INDEX/$DRWIL_SHARD_TOTAL"', shards: 3, paths: ["e2e/**"] };
 
-test("QUA-013 : un réglage « shards » invalide est refusé, jamais joué", () => {
+test("QUA-288 : un réglage « shards » invalide est refusé, jamais joué", () => {
   const cas = [
     [{ shards: 1 }, /entier de 2 à 16/],
     [{ shards: 17 }, /entier de 2 à 16/],
@@ -48,7 +48,7 @@ test("QUA-013 : un réglage « shards » invalide est refusé, jamais joué", ()
   assert.match(r.message, /entier de 2 à 16/);
 });
 
-test("les options de tranche : forme, combinaisons refusées", () => {
+test("QUA-288 : les options de tranche : forme, combinaisons refusées", () => {
   assert.equal(parseShardArgs(["--tout-rejouer"]), null);
   assert.deepEqual(parseShardArgs(["--shard", "2/3"]), { index: 2, total: 3 });
   assert.deepEqual(parseShardArgs(["--shard=1/16"]), { index: 1, total: 16 });
@@ -68,7 +68,7 @@ test("les options de tranche : forme, combinaisons refusées", () => {
     assert.deepEqual(parseShardArgs(mauvais), { error: true }, mauvais.join(" "));
 });
 
-test("le moteur pose les variables au seul contrôle découpé ; sans option, une seule passe (1/1)", () => {
+test("QUA-289 : le moteur pose les variables au seul contrôle découpé ; sans option, une seule passe (1/1)", () => {
   const racine = tmp();
   const cfg = { checks: [E2E, { name: "lint", run: 'echo "lint:$DRWIL_SHARD_INDEX"' }] };
   const env = { ...process.env, CI: "" };
@@ -96,7 +96,7 @@ test("le moteur pose les variables au seul contrôle découpé ; sans option, un
   assert.equal(sortie(reste, "project:lint").status, "ok");
 });
 
-test("shardPlan : un contrôle non découpé n'a pas de plan, keepSharded garde la liste et ses méthodes", () => {
+test("QUA-288 : shardPlan : un contrôle non découpé n'a pas de plan, keepSharded garde la liste et ses méthodes", () => {
   const liste = Object.assign([{ id: "a" }, { id: "b", sharded: true }], { finish: () => "fini" });
   keepSharded(liste);
   assert.deepEqual(
@@ -129,13 +129,13 @@ function agreger(fichiers, { shards = 3, control = "empreinte", commit = COMMIT 
 const v = (index, extra = {}) => ({ check: "project:e2e", control: "empreinte", commit: COMMIT, index, total: 3, status: "ok", ...extra });
 const complet = () => ({ "a/1.json": v(1), "b/2.json": v(2), "c/3.json": v(3) });
 
-test("QUA-013 : l'agrégation n'écrit « ok » que si les N tranches du même commit sont « ok »", () => {
+test("QUA-288 : l'agrégation n'écrit « ok » que si les N tranches du même commit sont « ok »", () => {
   assert.deepEqual(agreger(complet()), { status: "ok" });
   // Un fichier étranger au contrôle, ou qui n'est pas un verdict, ne compte pas.
   assert.equal(agreger({ ...complet(), "autre.json": v(1, { check: "project:autre" }), "note.txt": "x", "nul.json": "null" }).status, "ok");
 });
 
-test("QUA-013 : tranche absente, dupliquée, en échec, d'un autre commit ou contrôle : l'agrégation échoue", () => {
+test("QUA-288 : tranche absente, dupliquée, en échec, d'un autre commit ou contrôle : l'agrégation échoue", () => {
   const sans3 = { "a/1.json": v(1), "b/2.json": v(2) };
   const cas = [
     [{}, /tranche 1\/3 absente.*tranche 2\/3 absente.*tranche 3\/3 absente/s],
@@ -159,7 +159,7 @@ test("QUA-013 : tranche absente, dupliquée, en échec, d'un autre commit ou con
   }
 });
 
-test("QUA-013 : sans commit lisible, ou sans fingerprint des deux côtés, l'agrégation reste prudente", () => {
+test("QUA-288 : sans commit lisible, ou sans fingerprint des deux côtés, l'agrégation reste prudente", () => {
   assert.equal(agreger(complet(), { commit: null }).status, "fail");
   // Contrôle sans `paths` : pas d'empreinte (null) des deux côtés, les tranches du même commit suffisent.
   const sansPaths = Object.fromEntries(Object.entries(complet()).map(([k, x]) => [k, { ...x, control: null }]));
@@ -167,7 +167,7 @@ test("QUA-013 : sans commit lisible, ou sans fingerprint des deux côtés, l'agr
   assert.equal(agreger(complet(), { control: null }).status, "fail");
 });
 
-test("gitCommit : le commit courant, ou null hors dépôt ; l'agrégation le lit seule", () => {
+test("QUA-288 : gitCommit : le commit courant, ou null hors dépôt ; l'agrégation le lit seule", () => {
   const racine = tmp();
   assert.equal(gitCommit(racine), null);
   spawnSync("git", ["init", "-q", "-b", "travail"], { cwd: racine });
@@ -180,7 +180,7 @@ test("gitCommit : le commit courant, ou null hors dépôt ; l'agrégation le lit
   assert.equal(r.status, "ok");
 });
 
-test("l'agrégation par le moteur : tout est joué sauf le contrôle découpé, jugé sur les tranches", () => {
+test("QUA-288 : l'agrégation par le moteur : tout est joué sauf le contrôle découpé, jugé sur les tranches", () => {
   const racine = tmp();
   const cfg = { checks: [{ ...E2E, shards: 2 }] };
   const env = { ...process.env, CI: "" };
@@ -190,7 +190,7 @@ test("l'agrégation par le moteur : tout est joué sauf le contrôle découpé, 
   assert.match(r.output, /tranche 1\/2 absente/);
 });
 
-test("en passe parallèle, le contrôle découpé reçoit aussi ses variables", async () => {
+test("QUA-289 : en passe parallèle, le contrôle découpé reçoit aussi ses variables", async () => {
   const racine = tmp();
   const cfg = { parallel: true, checks: [E2E, { name: "lint", run: 'echo "lint:$DRWIL_SHARD_INDEX"' }] };
   const liste = checks(racine, { cfg, env: { ...process.env, CI: "" }, shard: { index: 3, total: 3 } });
@@ -199,7 +199,7 @@ test("en passe parallèle, le contrôle découpé reçoit aussi ses variables", 
   assert.equal((await seule.find((c) => c.id === "project:lint").runAsync()).output.trim(), "lint:");
 });
 
-test("les messages de tranche existent en anglais comme en français", () => {
+test("QUA-288 : les messages de tranche existent en anglais comme en français", () => {
   const fr = texts("fr");
   const en = texts("en");
   const cles = Object.keys(fr).filter((k) => k.startsWith("shards"));
@@ -210,7 +210,7 @@ test("les messages de tranche existent en anglais comme en français", () => {
   }
 });
 
-test("shardMatrix : une tranche par indice, vide sans contrôle découpé, refusée si une déclaration ou les totaux sont incohérents", () => {
+test("QUA-288 : shardMatrix : une tranche par indice, vide sans contrôle découpé, refusée si une déclaration ou les totaux sont incohérents", () => {
   assert.deepEqual(shardMatrix({}, T), { include: [], problems: [] });
   assert.deepEqual(shardMatrix({ checks: [{ name: "lint", run: "x" }] }, T), { include: [], problems: [] });
   assert.deepEqual(shardMatrix({ checks: [E2E, { ...E2E, name: "autre" }] }, T).include, [
@@ -243,7 +243,7 @@ test("shardMatrix : une tranche par indice, vide sans contrôle découpé, refus
   );
 });
 
-test("D6 iv : l'agrégation compare N à celui de la branche principale, sauf changement déclaré dans « Contrats modifiés »", () => {
+test("QUA-288 : D6 iv : l'agrégation compare N à celui de la branche principale, sauf changement déclaré dans « Contrats modifiés »", () => {
   const racine = tmp();
   const git = (...a) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd: racine, encoding: "utf8" });
   const cfg = (shards) => JSON.stringify({ checks: [{ ...E2E, shards }] });

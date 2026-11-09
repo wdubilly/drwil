@@ -7,6 +7,22 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- A slow check can be split into parallel slices in CI: declare `shards: N`
+  (2 to 16) on a check of `.drwil/ia-first.json` whose command reads
+  `DRWIL_SHARD_INDEX` (1 to N) and `DRWIL_SHARD_TOTAL`. The GitHub and GitLab
+  CI plan the slices, play one per job and aggregate their verdicts in the
+  required `checks` job, whose name is unchanged; a missing, duplicated,
+  failed or other-commit slice fails the aggregation. Locally, `run-checks`
+  and `drwil verify` still play the check in one single pass. GitLab runs up
+  to 16 slice jobs, those beyond N being « not applicable ».
+
+- On a pull request, a slow check (sliced, or longer than
+  `DRWIL_PR_SLOW_MS`, 60 s by default) is no longer replayed when its files
+  are unchanged since the previous push of the same pull request: its
+  verdict is reused, checked against its fingerprint, the commit and a
+  checksum, and replayed at the slightest doubt (other pull request, fork,
+  changed hooks or configuration).
+
 - `drwil doctor` warns, after the fact, of what an upgrade removed or left
   behind (an "Upgrade traces" point): installed kit files now missing, `.bak`
   files, an empty `stack` while layers are declared, a CI file without project

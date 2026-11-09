@@ -894,6 +894,18 @@ test("QUA-208 : de bout en bout, un contrôle réservé par runAt est non exécu
   }
 });
 
+test("QUA-208 : un contrôle confié à la CI et découpé (shards) reste « confié à la CI » en local, jamais joué ni compté passé", () => {
+  const config = JSON.stringify({
+    ciFiles: [".github/workflows/ia-first.yml"],
+    checks: [{ id: "lent", name: "lent", run: "node -e 'process.exit(1)' $DRWIL_SHARD_INDEX", runAt: ["ci"], shards: 2 }],
+  });
+  const fichiers = { ".drwil/ia-first.json": config, "src/a.js": "x", ".githooks/check-control-coverage.mjs": "process.exit(0);\n" };
+  const r = lancer(fichiers, { valider: true });
+  assert.equal(r.status, 0, r.stdout);
+  assert.match(r.stdout, /— confié à la CI, non exécuté ici : lent/);
+  assert.doesNotMatch(r.detail, /\[ia-first\] lent : durée : \d+ ms/);
+});
+
 test("QUA-208 : de bout en bout, un contrôle confié à la CI est annoncé « confié à la CI » au commit, au push et hors hook (sans bloquer), joué et bloquant en CI", () => {
   const config = JSON.stringify({
     ciFiles: [".github/workflows/ia-first.yml"],
