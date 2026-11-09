@@ -1,6 +1,6 @@
 // Reopening of a closed workstream (split from state-cli.mjs; QUA-116).
 import { spawnSync } from "node:child_process";
-import { unlinkSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { ghRun, mainBranch } from "./close.mjs";
 import { readState, writeState } from "./state.mjs";
@@ -10,8 +10,8 @@ import { texts } from "./state-validate.mjs";
 /**
  * Reopens a closed workstream whose pull request revealed a defect before its merge (QUA-116): from
  * CLOSING, on the workstream's branch, clean worktree, its PR open. The automatic merge is cancelled
- * first (a branch whose merge is scheduled receives no push); the brief comes back as it was before the
- * commit that deleted it, in a commit of its own (hooks run); then BUILD on it, `reopened` set, the
+ * first (a branch whose merge is scheduled receives no push); the brief, and each file it cites that the
+ * branch deleted, come back as they were before the commit that deleted them, in a commit of their own (hooks run); then BUILD on it, `reopened` set, the
  * merge authorisation and the queue kept. History is never rewritten, nothing is pushed. Refused
  * without changing anything otherwise; a failed git or gh call refuses, never lets through (QUA-013).
  * `{ code, message }`.
@@ -43,31 +43,45 @@ export function reopen(root, { gh = ghRun, now = new Date().toISOString() } = {}
   if (!pr) return refused("reopenUnknown", branch);
   if (pr.state !== "OPEN") return refused("reopenNotOpen", pr.number, pr.state);
   // The brief before the closing: the parent of the branch's commit that deleted it; still in HEAD, nothing to restore.
+  const lastDeletion = (file) => git("log", "-1", "--diff-filter=D", "--format=%H", `${main}..HEAD`, "--", file);
+  const missing = (file) => git("cat-file", "-e", `HEAD:${file}`) === null;
   let text = null;
-  if (git("cat-file", "-e", `HEAD:${brief}`) === null) {
-    const closing = git("log", "-1", "--diff-filter=D", "--format=%H", `${main}..HEAD`, "--", brief);
+  if (missing(brief)) {
+    const closing = lastDeletion(brief);
     text = closing ? raw("show", `${closing}^:${brief}`) : null;
     if (!text) return refused("reopenNoBrief", brief, branch);
   }
+  // Files the brief cites (code spans, scope block) that the branch deleted, the origin intention first: the restored
+  // brief would otherwise cite a missing path and the commit be refused. Never a file deleted elsewhere than on the branch.
+  const briefText = text ?? readFileSync(join(root, brief), "utf8");
+  const cited = [
+    ...new Set([...briefText.matchAll(/`([^`\s*]+\/[^`\s*]*[^`\s*/])`|^\s+- (\S+\/\S*[^\s/])$/gm)].map((m) => m[1] ?? m[2])),
+  ].filter((f) => f !== brief && !f.includes("..") && !f.includes("://") && missing(f) && lastDeletion(f));
+  const restoredFiles = [...(text === null ? [] : [brief]), ...cited];
   let cancelled = "";
   if (pr.autoMergeRequest) {
     const after = gh(root, ["pr", "merge", String(pr.number), "--disable-auto"]) === null ? null : view();
     if (!after || after.autoMergeRequest) return refused("reopenAutoMerge", pr.number);
     cancelled = `\n${T.reopenCancelled}`;
   }
-  if (text !== null) {
-    writeFileSync(join(root, brief), text);
+  if (restoredFiles.length) {
     let r;
-    for (const args of [
-      ["add", "--", brief],
-      ["commit", "-q", "-m", fill(T.reopenMessage, brief, pr.number), "--", brief],
-    ]) {
-      r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
-      if (r.status !== 0) break;
+    restoredFiles.every((file) => {
+      r = spawnSync("git", ["checkout", `${lastDeletion(file)}^`, "--", file], { cwd: root, encoding: "utf8" });
+      return r.status === 0;
+    });
+    if (r.status === 0) {
+      for (const args of [
+        ["add", "--", ...restoredFiles],
+        ["commit", "-q", "-m", fill(T.reopenMessage, brief, pr.number), "--", ...restoredFiles],
+      ]) {
+        r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+        if (r.status !== 0) break;
+      }
     }
     if (r.status !== 0) {
-      raw("reset", "-q", "--", brief);
-      unlinkSync(join(root, brief));
+      raw("reset", "-q", "--", ...restoredFiles);
+      for (const file of restoredFiles) rmSync(join(root, file), { force: true });
       // The tool never reschedules the merge (it could merge the faulty code): the mark keeps the reminder alive.
       if (cancelled) writeState(root, { ...state, merge_cancelled: { pr: pr.number } });
       return {
@@ -78,6 +92,8 @@ export function reopen(root, { gh = ghRun, now = new Date().toISOString() } = {}
   }
   const { merge_cancelled: _, ...kept } = state;
   writeState(root, { ...kept, activity: "BUILD", since: now, reopened: { pr: pr.number } });
-  const restored = text === null ? "" : `\n${fill(T.reopenRestored, brief, git("rev-parse", "--short", "HEAD"))}`;
-  return { code: 0, message: fill(T.reopened, brief, pr.number) + restored + cancelled };
+  const sha = restoredFiles.length ? git("rev-parse", "--short", "HEAD") : "";
+  const restored = text === null ? "" : `\n${fill(T.reopenRestored, brief, sha)}`;
+  const restoredCited = cited.length ? `\n${fill(T.reopenRestoredCited, cited.length, cited.join(", "), sha)}` : "";
+  return { code: 0, message: fill(T.reopened, brief, pr.number) + restored + restoredCited + cancelled };
 }

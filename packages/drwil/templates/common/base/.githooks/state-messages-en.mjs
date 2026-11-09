@@ -58,6 +58,7 @@ export const MESSAGES_EN = {
   reopenCommitFailed: "reopening refused: the commit of the restored brief failed ({0}) — brief removed, state unchanged",
   reopenRestored:
     "brief {0} restored as it was before the closing, in a commit of its own ({1}); its scope widens as usual, in a separate commit",
+  reopenRestoredCited: "{0} file(s) cited by the brief, deleted by the branch, restored in the same commit ({2}): {1}",
   reopened: "CLOSING → BUILD (reopening of {0}, PR #{1} open)",
   queueNotReady:
     'start refused: "{0}" cannot enter a queue — it takes a ready brief (maturity « ready », no open [decision], acceptance criteria)',

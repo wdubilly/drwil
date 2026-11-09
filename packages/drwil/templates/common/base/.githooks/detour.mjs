@@ -16,14 +16,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BRIEF_DIRS, config } from "./briefs.mjs";
 import { branchMerged, mainBranch, mergedPullRequests, noGhText } from "./close.mjs";
-import { contractsAddedOnly, isRegistry, RULES, rulesFiles } from "./detour-rules.mjs";
+import { contractsAddedOnly, isHookTest, isRegistry, RULES, rulesFiles, weakenedTests } from "./detour-rules.mjs";
 import { JOURNAL, TEXTS } from "./detour-texts.mjs";
 import { minimumLevel, SENSITIVE_PATHS } from "./risk.mjs";
 import { normalize } from "./scope.mjs";
 import { readState, setDetour, stateRoot, writeState } from "./state.mjs";
 import { fill } from "./state-texts.mjs";
 
-export { contractsAddedOnly, isRegistry, RULES, rulesFiles };
+export { contractsAddedOnly, isHookTest, isRegistry, RULES, rulesFiles, weakenedTests };
 
 const texts = (root) => TEXTS[config(root).lang === "en" ? "en" : "fr"];
 const done = (message) => ({ code: 0, message });

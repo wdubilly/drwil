@@ -17,6 +17,8 @@ export const TEXTS = {
       `${f} : un détour qui change les règles du jeu (contrat existant modifié ou retiré, hook, seuil, barrière, CI) demande le oui de l'humain — \`node .githooks/detour.mjs allow\` dans un terminal ; en file, le sous-agent s'arrête et le signale`,
     reopenRules: (f) =>
       `${f} : un correctif de réouverture qui change les règles du jeu (contrat existant modifié ou retiré, hook, seuil, barrière, CI) demande le oui de l'humain — \`node .githooks/detour.mjs allow\` dans un terminal ; en file, le sous-agent s'arrête et le signale`,
+    weakenedTest: (f, names, detour) =>
+      `${f} : ${names.join(", ")} — test de contrat retiré ou affaibli (moins d'assert) : un ${detour ? "détour" : "correctif de réouverture"} qui l'affaiblit demande le oui de l'humain — \`node .githooks/detour.mjs allow\` dans un terminal ; en file, le sous-agent s'arrête et le signale`,
   },
   en: {
     activity: (a, n) =>
@@ -32,6 +34,8 @@ export const TEXTS = {
       `${f}: a detour that changes the rules (an existing contract modified or removed, hook, threshold, gate, CI) needs the human's yes — \`node .githooks/detour.mjs allow\` in a terminal; in a queue, the subagent stops and reports it`,
     reopenRules: (f) =>
       `${f}: a reopening fix that changes the rules (an existing contract modified or removed, hook, threshold, gate, CI) needs the human's yes — \`node .githooks/detour.mjs allow\` in a terminal; in a queue, the subagent stops and reports it`,
+    weakenedTest: (f, names, detour) =>
+      `${f}: ${names.join(", ")} — contract test removed or weakened (fewer asserts): a ${detour ? "detour" : "reopening fix"} that weakens it needs the human's yes — \`node .githooks/detour.mjs allow\` in a terminal; in a queue, the subagent stops and reports it`,
   },
 };
 

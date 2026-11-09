@@ -15,7 +15,7 @@
 // scope block of the active brief always shows a warning, whatever the setting (QUA-213).
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { contractsAddedOnly, isRegistry, rulesFiles } from "./detour.mjs";
+import { contractsAddedOnly, isHookTest, isRegistry, rulesFiles, weakenedTests } from "./detour.mjs";
 import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
 import { LOT_TRAILER, lotStatus } from "./state-lots.mjs";
@@ -58,8 +58,10 @@ const covered = (f, patterns) => patterns.some((p) => fnmatch(f, p));
 /**
  * Problems of a commit being prepared (pure). `addedOnly(f)`: true when the staged registry `f` only
  * adds new contracts (read by checkScope); without it, any registry change waits for the yes.
+ * `weakened(f)`: names of the contract tests the staged test file `f` removes or weakens; a test file otherwise
+ * is no rule.
  */
-export function checkIndex({ files, state, patterns, outOfScope, cfg, addedOnly = () => false }) {
+export function checkIndex({ files, state, patterns, outOfScope, cfg, addedOnly = () => false, weakened = () => [] }) {
   const T = texts(cfg);
   // The registry is written in SCOPING, like a brief: a criterion cites a contract already in it, and a new contract
   // enters in the same commit as the brief that cites it. The guard stays the regression check of `verify` (QUA-023).
@@ -76,6 +78,11 @@ export function checkIndex({ files, state, patterns, outOfScope, cfg, addedOnly 
       ...rulesFiles(subject, cfg)
         .filter((f) => !addedOnly(f))
         .map(state.detour ? T.rules : T.reopenRules),
+      ...subject
+        .filter((f) => isHookTest(f, cfg))
+        .map((f) => [f, weakened(f)])
+        .filter(([, names]) => names.length)
+        .map(([f, names]) => T.weakenedTest(f, names, Boolean(state.detour))),
     );
   return problems;
 }
@@ -142,6 +149,7 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
     const { state } = readState(root);
     // The staged registry against HEAD's: `git show` fails (null) on a registry created or removed — a doubt.
     const addedOnly = (f) => isRegistry(f, cfg) && contractsAddedOnly(git(root, ["show", `HEAD:${f}`]), git(root, ["show", `:${f}`]));
+    const weakened = (f) => weakenedTests(git(root, ["show", `HEAD:${f}`]), git(root, ["show", `:${f}`]));
     // `init` sets KIT_ENV for the commit of a kit update only: the files its manifest explains are not judged.
     const files = resolution(root, staged);
     problems = checkIndex({
@@ -151,6 +159,7 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
       outOfScope,
       cfg,
       addedOnly,
+      weakened,
     });
   } else {
     const base = reference(root, env);
