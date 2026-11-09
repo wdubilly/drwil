@@ -20,18 +20,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import {
-  init,
-  uninstall,
-  resolveDrift,
-  verify,
-  formatVerdict,
-  verdictJson,
-  doctor,
-  previewInit,
-  formatPreview,
-  attest,
-} from "../dist/index.js";
+import { init, uninstall, verify, formatVerdict, verdictJson, doctor, previewInit, formatPreview, attest } from "../dist/index.js";
 import { criteriaTable, evaluateCriteria, redact, writeEvidence } from "../dist/verify.js";
 import { verifyFailed } from "../dist/failed.js";
 
@@ -2409,26 +2398,26 @@ test("init() signale (sans réécrire) un fichier déjà présent qui a dérivé
 
   // fichier identique au template (mêmes couches entre init et apply) : pas signalé.
   let lignes = await capture(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
-  assert.ok(!lignes.some((l) => l.includes("dérivés")), lignes.join("\n"));
+  assert.ok(!lignes.some((l) => l.includes("modifiés à la main")), lignes.join("\n"));
 
-  // une recette dérive (contenu raccourci, une section en moins) : signalée, jamais réécrite.
-  const avant = read(dir, "docs/recipes/refactor-without-breaking.md");
-  writeFileSync(join(dir, "docs/recipes/refactor-without-breaking.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n");
+  // une mécanique dérive (contenu raccourci, une section en moins) : signalée, jamais réécrite.
+  const avant = read(dir, ".githooks/check-docs.mjs");
+  writeFileSync(join(dir, ".githooks/check-docs.mjs"), "# Refactorer\n\nTexte raccourci, une seule section.\n");
   lignes = await capture(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
   assert.ok(
-    lignes.some((l) => l.includes("dérivés")),
+    lignes.some((l) => l.includes("modifiés à la main")),
     lignes.join("\n"),
   );
   assert.ok(
-    lignes.some((l) => l.includes("docs/recipes/refactor-without-breaking.md")),
+    lignes.some((l) => l.includes(".githooks/check-docs.mjs")),
     lignes.join("\n"),
   );
   assert.equal(
-    read(dir, "docs/recipes/refactor-without-breaking.md"),
+    read(dir, ".githooks/check-docs.mjs"),
     "# Refactorer\n\nTexte raccourci, une seule section.\n",
     "jamais réécrit automatiquement",
   );
-  assert.notEqual(read(dir, "docs/recipes/refactor-without-breaking.md"), avant);
+  assert.notEqual(read(dir, ".githooks/check-docs.mjs"), avant);
 });
 
 test("init écrit un manifeste des fichiers installés (chemin + sha256), fusionné sans perte entre deux init()", async () => {
@@ -2487,78 +2476,6 @@ test("lot 6 (gouvernance) : uninstall liste l'état local, ne le supprime qu'ave
   assert.ok((await uninstall({ targetDir: dir, dryRun: false })).removed.includes(".drwil/state.json"));
   assert.ok(!existsSync(etat), "--yes supprime l'état local");
   assert.ok(!(await uninstall({ targetDir: dir })).removed.includes(".drwil/state.json"), "absent : rien à lister");
-});
-
-test("lot 2 (résolution de dérive) : diff affiché, confirmation respectée, .bak créé, --forcer fonctionnel", async () => {
-  const dir = tmp();
-  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
-
-  const cible = ".githooks/check-docs.mjs";
-  const original = read(dir, cible);
-  writeFileSync(join(dir, cible), "// personnalisé par le projet\n" + original);
-
-  // rien à résoudre si pas de dérive (autre fichier, comparé au modèle exact).
-
-  // confirmation refusée : le fichier n'est jamais réécrit, pas de .bak, signalé dans `ignores`.
-  let rapport = await quiet(() => resolveDrift({ targetDir: dir }, () => false));
-  assert.ok(rapport.ignored.includes(cible), rapport.ignored.join(","));
-  assert.ok(!rapport.resolved.length);
-  assert.equal(read(dir, cible), "// personnalisé par le projet\n" + original, "jamais réécrit sans confirmation");
-  assert.ok(!existsSync(join(dir, `${cible}.bak`)));
-
-  // confirmation acceptée : réécrit, .bak créé avec l'ancien contenu, diff transmis au confirmateur.
-  let diffRecu = "";
-  rapport = await quiet(() =>
-    resolveDrift({ targetDir: dir }, (rel, diff) => {
-      diffRecu = diff;
-      return rel === cible;
-    }),
-  );
-  assert.ok(rapport.resolved.includes(cible), rapport.resolved.join(","));
-  assert.match(diffRecu, /personnalisé par le projet/);
-  assert.equal(read(dir, cible), original, "réécrit avec le contenu du modèle");
-  assert.equal(read(dir, `${cible}.bak`), "// personnalisé par le projet\n" + original, ".bak garde l'ancien contenu");
-
-  // plus rien à résoudre une fois réécrit (confirmateur jamais appelé).
-  let appele = false;
-  rapport = await quiet(() =>
-    resolveDrift({ targetDir: dir }, () => {
-      appele = true;
-      return true;
-    }),
-  );
-  assert.ok(!appele);
-  assert.ok(!rapport.resolved.length && !rapport.ignored.length);
-
-  // --forcer : écrase sans passer par le confirmateur (dérive réintroduite pour le test).
-  writeFileSync(join(dir, cible), "// re-personnalisé\n" + original);
-  appele = false;
-  rapport = await quiet(() =>
-    resolveDrift({ targetDir: dir, force: true }, () => {
-      appele = true;
-      return true;
-    }),
-  );
-  assert.ok(!appele, "--forcer n'appelle jamais le confirmateur");
-  assert.ok(rapport.resolved.includes(cible));
-  assert.equal(read(dir, cible), original);
-});
-
-test("lot 2 (résolution de dérive) : jamais appliquée automatiquement par init()/init(), ne crée aucun fichier absent", async () => {
-  const dir = tmp();
-  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
-
-  // rien n'a dérivé juste après init() : aucune résolution nécessaire.
-  let rapport = await quiet(() => resolveDrift({ targetDir: dir, force: true }));
-  assert.ok(!rapport.resolved.length && !rapport.ignored.length);
-
-  // un fichier mécanique absent (supprimé par le projet) n'est jamais recréé par resolveDrift.
-  const absent = join(dir, ".githooks/check-docs.mjs");
-  const fs = await import("node:fs/promises");
-  await fs.rm(absent);
-  rapport = await quiet(() => resolveDrift({ targetDir: dir, force: true }));
-  assert.ok(!rapport.resolved.includes(".githooks/check-docs.mjs"));
-  assert.ok(!existsSync(absent), "jamais recréé par resolveDrift");
 });
 
 test("point 3 (suites-kit-portable) : un fichier obsolète d'une ancienne version du kit, jamais modifié, est supprimé par init()/init()", async () => {
@@ -4086,27 +4003,29 @@ test("QUA-027 : mise à jour : la prose du kit inchangée est rafraîchie, modif
   assert.equal(read(dir, "docs/architecture.md"), "carte de la version précédente\n", "document du projet : jamais rafraîchi");
   assert.match(read(dir, "AGENTS.md"), /^AGENTS du projet/, "prose hors manifeste : jamais écrasée");
   assert.match(read(dir, recette), /Adapté par le projet/, "prose modifiée : gardée");
-  assert.ok(
-    lignes.some((l) => l.includes(recette)),
-    "et signalée comme dérive",
-  );
+  assert.ok(!lignes.some((l) => l.includes(`- ${recette}`)), "fichier du projet : pas une dérive à décider");
   const apres = JSON.parse(read(dir, ".drwil/installed-files.json"));
   assert.equal(apres[skill], empreinte(read(dir, skill)), "le manifeste suit la prose rafraîchie");
 
-  // resolve-drift propose la prose modifiée installée par le kit, jamais celle du projet.
+  // Un fichier du kit (hors fichiers du projet) modifié à la main : diff proposé ; la recette du projet, jamais.
   const proposes = [];
+  writeFileSync(join(dir, ".claude/skills/start-a-workstream/SKILL.md"), "skill adaptée\n");
   await quiet(() =>
-    resolveDrift({ targetDir: dir }, (rel) => {
-      proposes.push(rel);
-      return false;
+    init({
+      targetDir: dir,
+      git: false,
+      ci: "none",
+      confirmDrift: (rel) => {
+        proposes.push(rel);
+        return rel === skill;
+      },
     }),
   );
-  assert.ok(proposes.includes(recette), "prose modifiée : diff proposé");
-  assert.ok(!proposes.includes("AGENTS.md"), "prose du projet : jamais proposée");
-  const r = await quiet(() => resolveDrift({ targetDir: dir }, (rel) => rel === recette));
-  assert.ok(r.resolved.includes(recette));
-  assert.match(read(dir, `${recette}.bak`), /Adapté par le projet/, "sauvegarde .bak");
-  assert.doesNotMatch(read(dir, recette), /Adapté par le projet/);
+  assert.ok(proposes.includes(skill), "prose du kit modifiée : diff proposé");
+  assert.ok(!proposes.includes(recette) && !proposes.includes("AGENTS.md"), "fichiers du projet : jamais proposés");
+  assert.notEqual(read(dir, skill), "skill adaptée\n");
+  assert.match(read(dir, recette), /Adapté par le projet/, "recette du projet : intacte");
+  assert.ok(!existsSync(join(dir, `${skill}.bak`)), "aucun .bak");
 });
 
 test("DRWIL-010 : doctor diagnostique sans exécuter de contrôle ; --json ; contracts liste le registre", async () => {
@@ -5026,54 +4945,59 @@ test("init sur un projet installé : une option passée remplace sa valeur, les 
 
 // Caractérisation avant découpage d'index.ts (QUA-001, fichier de code plafonné ; journal du 2026-10-12) :
 // comportements actuels sans test, figés tels quels.
-test("caractérisation : resolveDrift sur un dossier sans installation refuse, avec la commande à lancer", async () => {
-  await assert.rejects(
-    resolveDrift({ targetDir: tmp() }, () => true),
-    /project not initialised .*run "drwil init" first/,
-  );
-});
-
-test("caractérisation : dérive du fichier de CI, diff ligne à ligne (ajouts, retraits, fins de fichier)", async () => {
+test("caractérisation : diff ligne à ligne montré à la confirmation (ajouts, retraits, fins de fichier)", async () => {
   const dir = tmp();
-  await quiet(() => init({ lang: "fr", targetDir: dir, ci: "github", git: false }));
-  const ci = ".github/workflows/ia-first.yml";
-  const original = read(dir, ci);
+  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
+  const cible = ".githooks/check-docs.mjs";
+  const original = read(dir, cible);
   const lignes = original.split("\n");
   // Première ligne remplacée, une ligne insérée au milieu, la fin tronquée puis rallongée.
   const modifie = ["# modifié", ...lignes.slice(1, 3), "# inséré", ...lignes.slice(3, -3), "# fin 1", "# fin 2", "# fin 3", "# fin 4"].join(
     "\n",
   );
-  writeFileSync(join(dir, ci), modifie);
+  writeFileSync(join(dir, cible), modifie);
   let diff = "";
-  const rapport = await quiet(() =>
-    resolveDrift({ targetDir: dir }, (rel, d) => {
-      if (rel === ci) diff = d;
-      return false;
+  await quiet(() =>
+    init({
+      lang: "fr",
+      targetDir: dir,
+      git: false,
+      confirmDrift: (rel, d) => {
+        if (rel === cible) diff = d;
+        return false;
+      },
     }),
   );
-  assert.ok(rapport.ignored.includes(ci));
-  assert.match(diff, /^- /m);
   assert.match(diff, /^- # modifié$/m);
   assert.match(diff, /^- # inséré$/m);
   assert.match(diff, /^- # fin 4$/m);
   assert.match(diff, new RegExp(`^\\+ ${lignes[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"));
-});
-
-test("caractérisation : sans confirmateur ni terminal, la dérive est montrée et jamais écrasée", async () => {
-  const dir = tmp();
-  await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
-  const cible = ".githooks/check-docs.mjs";
-  writeFileSync(join(dir, cible), "// personnalisé\n");
-  let rapport;
-  const lignes = await capture(async () => {
-    rapport = await resolveDrift({ targetDir: dir });
-  });
-  assert.ok(rapport.ignored.includes(cible));
-  assert.ok(
-    lignes.some((l) => l.includes("--- .githooks/check-docs.mjs ---")),
-    lignes.join("\n"),
+  writeFileSync(join(dir, cible), `${original}// ajout 1\n\n// ajout 2`);
+  await quiet(() =>
+    init({
+      lang: "fr",
+      targetDir: dir,
+      git: false,
+      confirmDrift: (rel, d) => {
+        if (rel === cible) diff = d;
+        return false;
+      },
+    }),
   );
-  assert.equal(read(dir, cible), "// personnalisé\n");
+  assert.match(diff, /^- \/\/ ajout 2$/m);
+  writeFileSync(join(dir, cible), `${lignes.slice(0, -2).join("\n")}\n`);
+  await quiet(() =>
+    init({
+      lang: "fr",
+      targetDir: dir,
+      git: false,
+      confirmDrift: (rel, d) => {
+        if (rel === cible) diff = d;
+        return false;
+      },
+    }),
+  );
+  assert.match(diff, /^\+ /m);
 });
 
 test("caractérisation : git introuvable, l'installation se fait et le dit, sans dépôt ni hooks", () => {
@@ -6047,7 +5971,10 @@ test("QUA-239 : init dit, en fin de mise à jour, ce qu'il a fait, ce qui reste 
       /Fait : mise à jour du kit vers \d+\.\d+\.\d+ commitée sur la branche « workstream\/kit-update » \(créée depuis « master »\), \d+ fichier\(s\)\./,
     );
     assert.match(sortie, /core\.hooksPath = \.husky\) : ils jugent ce commit à leur façon/);
-    assert.match(sortie, /Reste à décider : 1 fichier\(s\) modifié\(s\) à la main n'ont pas été réécrits — `npx drwil resolve-drift`/);
+    assert.match(
+      sortie,
+      /Reste à décider : 1 fichier\(s\) modifié\(s\) à la main n'ont pas été réécrits — `npx drwil init` dans un terminal/,
+    );
     assert.match(sortie, /Reste à décider : relire la mise à jour, puis la fusionner par une pull request\./);
     assert.match(
       sortie,

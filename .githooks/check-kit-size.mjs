@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Watches the size of the files the kit installs, never the project's own code (that is
-// check-file-size.mjs, opt-in). Ceilings in lines, by kind: code, hooks and settings 200,
-// AGENTS.md 100, on-demand documents 400, recipes 250.
+// check-file-size.mjs, opt-in). Ceilings in lines, by kind: code and hooks 200,
+// tool settings 250, AGENTS.md 100, on-demand documents 400, recipes 250.
 // - In the drwil repository (packages/drwil/templates/ present): measures the template, an overrun fails.
 // - In an adopted project: measures the files of .drwil/installed-files.json, an overrun is a warning
 //   ("[ia-first-warning]") that never blocks an update; a project may enrich a kit file on purpose.
@@ -12,7 +12,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const CEILINGS = { code: 200, agents: 100, docs: 400, recipes: 250 };
+export const CEILINGS = { code: 200, settings: 250, agents: 100, docs: 400, recipes: 250 };
 const TEMPLATES = join("packages", "drwil", "templates");
 const MANIFEST = join(".drwil", "installed-files.json");
 
@@ -22,14 +22,14 @@ const TEXTS = {
     legacy: "{0} : {1} lignes, plafond hérité {2} (ne doit plus grossir)",
     noList: "Liste des fichiers installés absente, illisible ou vide ({0}) : rien n'a été mesuré.",
     title: "Fichiers du kit trop gros :",
-    kinds: { code: "code, hooks, réglages", agents: "AGENTS.md", docs: "document", recipes: "recette" },
+    kinds: { code: "code, hooks", settings: "réglages", agents: "AGENTS.md", docs: "document", recipes: "recette" },
   },
   en: {
     over: "{0}: {1} lines, ceiling {2} ({3}) — reduce it",
     legacy: "{0}: {1} lines, legacy cap {2} (must not grow any more)",
     noList: "List of installed files missing, unreadable or empty ({0}): nothing was measured.",
     title: "Kit files too big:",
-    kinds: { code: "code, hooks, settings", agents: "AGENTS.md", docs: "document", recipes: "recipe" },
+    kinds: { code: "code, hooks", settings: "settings", agents: "AGENTS.md", docs: "document", recipes: "recipe" },
   },
 };
 
@@ -47,6 +47,8 @@ function readJson(path) {
 export function kindOf(file, recipesDir = "docs/recipes") {
   if (basename(file) === "AGENTS.md" || /(^|\/)layers\/[^/]+\.md$/.test(file)) return "agents";
   if (`/${file}`.includes(`/${recipesDir}/`)) return "recipes";
+  // Each session-start hook of a tool adds its declaration here: the JSON cannot be split.
+  if (/(^|\/)\.(claude|gemini)\/settings\.json$/.test(file)) return "settings";
   return /\.(md|mdc)$/.test(file) ? "docs" : "code";
 }
 

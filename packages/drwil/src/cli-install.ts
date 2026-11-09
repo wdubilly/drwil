@@ -1,8 +1,11 @@
 import type { Command, OptionValues } from "commander";
-import { CIS, init, type InitOptions, previewInit, formatPreview, resolveDrift, TOOLS, uninstall } from "./index.js";
+import { CIS, init, type InitOptions, previewInit, formatPreview, TOOLS, uninstall } from "./index.js";
 import { texts } from "./cli-texts.js";
 import { readConfig } from "./config.js";
 import { fill } from "./i18n.js";
+import { assertVersion } from "./install.js";
+import { confirmCiWith } from "./ci-zone.js";
+import { type ConfirmDrift, confirmDriftWith } from "./drift.js";
 
 const DEFAULT = (v: string) => `(default: value of an installed project, else ${v})`;
 
@@ -46,6 +49,21 @@ export async function chooseTools(
   return answer === "all" ? TOOLS.join(",") : answer;
 }
 
+// Off unless the human says yes (QUA-279): no terminal or an empty answer never turns it on. Cursor alone has no session hook.
+export async function chooseServeAutostart(
+  targetDir: string,
+  given: boolean | undefined,
+  tools: string | undefined,
+  interactive: boolean,
+  ask: (question: string) => Promise<string>,
+): Promise<boolean | undefined> {
+  const config = readConfig(targetDir);
+  const installed = tools === undefined ? (config?.tools as string[]) : tools.split(",").map((t) => t.trim());
+  if (given !== undefined || typeof config?.serveAutostart === "boolean" || !interactive || installed.every((t) => t === "cursor"))
+    return given;
+  return /^(y|yes|o|oui)$/i.test((await ask(texts().serveQuestion)).trim());
+}
+
 export async function askTerminal(
   question: string,
   input: NodeJS.ReadableStream = process.stdin,
@@ -60,9 +78,9 @@ export async function askTerminal(
   }
 }
 
-async function run(fn: (o: InitOptions) => Promise<unknown>, opts: OptionValues, message: "initDone") {
+async function run(fn: (o: InitOptions & { confirmDrift?: ConfirmDrift }) => Promise<unknown>, opts: OptionValues, message: "initDone") {
   try {
-    await fn({ targetDir: process.cwd(), ...opts } as InitOptions);
+    await fn({ targetDir: process.cwd(), ...opts } as InitOptions & { confirmDrift?: ConfirmDrift });
     console.log(texts()[message], process.cwd());
   } catch (e) {
     console.error(`✗ ${(e as Error).message}`);
@@ -75,19 +93,37 @@ export function registerInstall(program: Command): void {
     program
       .command("init")
       .description(
-        "Install IA-first in the current directory, or update an installed project: creates what is missing, refreshes the kit mechanics unless modified by hand, never overwrites project files",
+        "Install IA-first in the current directory, or update an installed project: creates what is missing, refreshes the kit files, asks (diff first) before replacing one modified by hand, never overwrites project files",
       ),
     `Layers CSV ${DEFAULT("subfolders where a stack is detected, else none: declared once the stack is chosen")}`,
   )
+    .option("--serve-autostart", "Start drwil serve at each session (127.0.0.1 only)")
+    .option("--no-serve-autostart", "Do not start drwil serve at each session, and do not ask")
+    .option("--allow-older", "Run even if this version is older than the one recorded in .drwil/install.json (downgrades the mechanics)")
+    .option("--target-version <version>", "Refuse to run unless this command is exactly this version")
     .option("--dry-run", "Only audit the repository and preview what would be written; write nothing")
     .option(
       "--force",
       "Overwrite every file, even modified ones (erases project docs added since the last install; keeps the settings of .drwil/ia-first.json)",
     )
     .action(async (opts) => {
+      try {
+        assertVersion(process.cwd(), { allowOlder: opts.allowOlder, targetVersion: opts.targetVersion });
+      } catch (e) {
+        console.error(`✗ ${(e as Error).message}`);
+        process.exit(1);
+      }
+      delete opts.allowOlder;
+      delete opts.targetVersion;
       if (!opts.dryRun) {
         try {
-          opts.tools = await chooseTools(process.cwd(), opts.tools, !!(process.stdin.isTTY && process.stdout.isTTY), askTerminal);
+          const interactive = !!(process.stdin.isTTY && process.stdout.isTTY);
+          opts.tools = await chooseTools(process.cwd(), opts.tools, interactive, askTerminal);
+          opts.serveAutostart = await chooseServeAutostart(process.cwd(), opts.serveAutostart, opts.tools, interactive, askTerminal);
+          if (interactive) {
+            opts.confirmCi = confirmCiWith(askTerminal);
+            opts.confirmDrift = confirmDriftWith(askTerminal);
+          }
         } catch (e) {
           console.error(`✗ ${(e as Error).message}`);
           process.exit(1);
@@ -127,31 +163,6 @@ export function registerInstall(program: Command): void {
         if (modified.length) {
           console.log(T.modified);
           for (const r of modified) console.log(`  - ${r}`);
-        }
-      } catch (e) {
-        console.error(`✗ ${(e as Error).message}`);
-        process.exit(1);
-      }
-    });
-
-  program
-    .command("resolve-drift")
-    .description(
-      "Resolve the mechanics drift reported by init (.githooks/, .claude/settings.json, CI file): diff + confirmation, .bak backup before overwrite",
-    )
-    .option("--force", "Non-interactive: overwrite every drifted mechanics file without asking (scripted use)")
-    .action(async (opts) => {
-      try {
-        const T = texts();
-        const { resolved, ignored } = await resolveDrift({ targetDir: process.cwd(), force: opts.force });
-        if (!resolved.length && !ignored.length) console.log(T.noDrift);
-        if (resolved.length) {
-          console.log(T.resolved);
-          for (const r of resolved) console.log(`  - ${r}`);
-        }
-        if (ignored.length) {
-          console.log(T.ignored);
-          for (const r of ignored) console.log(`  - ${r}`);
         }
       } catch (e) {
         console.error(`✗ ${(e as Error).message}`);

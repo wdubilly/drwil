@@ -777,7 +777,7 @@ test("QUA-215 : sans node dans le PATH, chaque hook de Claude Code et de Copilot
   assert.ok(claude.length >= 10);
   assert.deepEqual(
     copilot.map(({ evenement }) => evenement).sort(),
-    ["sessionStart", "userPromptTransformed", "preToolUse", "postToolUse", "postToolUseFailure"].sort(),
+    ["sessionStart", "sessionStart", "userPromptTransformed", "preToolUse", "postToolUse", "postToolUseFailure"].sort(),
   );
   for (const { evenement, commande } of [...claude, ...copilot]) {
     const r = sh(commande, sansNode({ CLAUDE_PROJECT_DIR: OUTILS }));
@@ -906,4 +906,81 @@ export const recordMerge = (r, c) => ({ code: r.includes("refus") ? 1 : 0, messa
   await post(claude([q()]), "fr", sansEtat);
   assert.match(dit.at(-1), /^✗ erreur à la lecture du sondage de fusion/);
   for (const d of [racine, sansEtat, refusRacine]) rmSync(d, { recursive: true, force: true });
+});
+
+const existsSyncLocal = (f) => readdirSync(dirname(f)).includes("lancee");
+
+/** Dossier de projet avec le hook d'accueil copié, et une CLI factice à la place de `drwil`. */
+function projetAccueil(config, cliFactice) {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-accueil-"));
+  mkdirSync(join(dir, ".drwil"), { recursive: true });
+  mkdirSync(join(dir, ".claude/hooks"), { recursive: true });
+  writeFileSync(join(dir, ".drwil/ia-first.json"), config);
+  copyFileSync(join(HOOKS, "serve-welcome.mjs"), join(dir, ".claude/hooks/serve-welcome.mjs"));
+  if (cliFactice) {
+    mkdirSync(join(dir, "node_modules/drwil/bin"), { recursive: true });
+    writeFileSync(join(dir, "node_modules/drwil/bin/drwil.js"), cliFactice);
+  }
+  return dir;
+}
+
+test("QUA-277 : serve-welcome ne parle que par systemMessage, et se tait sans choix de l'humain", async () => {
+  const { welcome } = await load("serve-welcome.mjs");
+  const actif = JSON.stringify({ serveAutostart: true, lang: "fr" });
+  const lancer = (dir, ...args) =>
+    spawnSync(process.execPath, [join(dir, ".claude/hooks/serve-welcome.mjs"), ...args], { encoding: "utf8" });
+
+  const lien = projetAccueil(actif, "console.log('drwil serve : http://127.0.0.1:4400/ (sur cet ordinateur).');");
+  const r = lancer(lien);
+  assert.deepEqual([r.status, r.stderr], [0, ""]);
+  assert.deepEqual(JSON.parse(r.stdout), { systemMessage: "drwil serve : http://127.0.0.1:4400/ (sur cet ordinateur)." });
+  assert.equal(r.stdout.trim().split("\n").length, 1, "rien d'autre sur stdout");
+
+  // Copilot CLI ne lit que additionalContext : le serveur démarre, stdout reste vide.
+  const trace = join(lien, "lancee");
+  writeFileSync(
+    join(lien, "node_modules/drwil/bin/drwil.js"),
+    `require("node:fs").writeFileSync(${JSON.stringify(trace)}, "1"); console.log("lien");`,
+  );
+  writeFileSync(join(lien, "node_modules/drwil/package.json"), "{}");
+  const copilot = lancer(lien, "copilot");
+  assert.deepEqual([copilot.status, copilot.stdout, copilot.stderr], [0, "", ""]);
+  assert.equal(readFileSync(trace, "utf8"), "1", "la CLI a été lancée");
+
+  for (const config of [JSON.stringify({ serveAutostart: false }), JSON.stringify({ serveAutostart: "true" }), "{}", "pas du JSON"]) {
+    const dir = projetAccueil(config, "require('node:fs').writeFileSync('lancee', '1'); console.log('lien');");
+    const muet = lancer(dir);
+    assert.deepEqual([muet.status, muet.stdout, muet.stderr], [0, "", ""], config);
+    assert.equal(existsSyncLocal(join(dir, "lancee")), false, "aucun serveur sans réponse de l'humain");
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  const echec = projetAccueil(actif, "process.exit(1);");
+  assert.match(welcome(echec), /n'a pas démarré/);
+  const vide = projetAccueil(JSON.stringify({ serveAutostart: true, lang: "en" }), "");
+  assert.match(welcome(vide), /did not start/, "une sortie vide n'est pas un lien");
+
+  // Sans CLI locale : npx, introuvable ici ; le hook le dit à l'humain, sans erreur.
+  const sansCli = projetAccueil(actif);
+  const chemin = process.env.PATH;
+  process.env.PATH = "";
+  try {
+    assert.match(welcome(sansCli), /n'a pas démarré/);
+  } finally {
+    process.env.PATH = chemin;
+  }
+  for (const dir of [lien, echec, vide, sansCli]) rmSync(dir, { recursive: true, force: true });
+});
+
+test("QUA-277 : chaque outil à hook de session lance serve-welcome, Copilot CLI en silence", () => {
+  const lire = (f) => readFileSync(join(OUTILS, f), "utf8").replaceAll(/\{\{\w+\}\}/g, "");
+  const session = (f, cle) =>
+    JSON.parse(lire(f))
+      .hooks[cle].flatMap((g) => g.hooks ?? [g])
+      .map((h) => h.command ?? h.bash);
+  assert.ok(session(".claude/settings.json", "SessionStart").some((c) => c.endsWith('.claude/hooks/serve-welcome.mjs"')));
+  assert.ok(session("../gemini/.gemini/settings.json", "SessionStart").some((c) => c.includes(".claude/hooks/serve-welcome.mjs")));
+  assert.ok(session("../codex/.codex/hooks.json", "SessionStart").some((c) => c.endsWith('.claude/hooks/serve-welcome.mjs"')));
+  assert.ok(session(COPILOT, "sessionStart").some((c) => c.endsWith(".claude/hooks/serve-welcome.mjs copilot")));
+  assert.equal(readFileSync(join(HOOKS, "serve-welcome.mjs"), "utf8").includes('"additionalContext":'), false);
 });

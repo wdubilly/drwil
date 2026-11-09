@@ -32,6 +32,8 @@ export async function writeConfig(r: Resolved): Promise<void> {
   const config = {
     // Project-specific keys, unknown to the kit: never lost.
     ...previous,
+    // QUA-279 : seule une réponse de l'humain l'écrit ; sans réponse, la clé reste absente, donc inactive.
+    ...(r.opts.serveAutostart === undefined ? {} : { serveAutostart: r.opts.serveAutostart }),
     // QUA-226 : le code écrit après init n'est pas une dette héritée ; une mise à jour ne réinvente pas l'origine.
     guaranteeBaseline: previous?.guaranteeBaseline ?? (previous ? undefined : sourceFiles(r.opts.targetDir)),
     projectName: projectName(r),

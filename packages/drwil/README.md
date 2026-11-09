@@ -158,7 +158,7 @@ Running `init` (new project or existing one) adds:
 
 Nothing above is ever force-installed over your own files: an existing
 file is never overwritten, and flagged if it has drifted from the shipped
-template (see `resolve-drift` below). When one of them lacks something
+template (see "Update" below). When one of them lacks something
 drwil needs, `init` adds only that, without touching the rest (see
 "Existing project" below).
 
@@ -371,9 +371,12 @@ A single command for every case:
   hooks from yours (`.githooks/pre-commit "$@" || exit $?`), or set
   `git config core.hooksPath .githooks`.
 - **Update** (project already equipped): creates what is missing,
-  refreshes the kit mechanics (`.githooks/`, `.claude/hooks/`) that did not change since
-  their installation, and reports — never overwrites — a file modified by
-  hand (see `resolve-drift` below). In a git repository it also commits the
+  refreshes the kit files (mechanics, skills, settings) that did not change since
+  their installation, and for one modified by hand shows its diff and replaces
+  it only on your yes (in a terminal; otherwise it is left as it is and named).
+  `AGENTS.md`, the recipes, `docs/intentions/README.md` and
+  `docs/contracts-catalog.md` are the project's: never rewritten once
+  modified. In a git repository it also commits the
   update itself, on a `workstream/kit-update` branch cut from the main branch
   (trailer `Drwil-Kit-Update`, accepted by the scope gate only for the files of
   the kit manifest), so a project in SCOPING is not blocked by its own update.
@@ -569,7 +572,9 @@ governance active (hooks wired, `scopeGate` blocking), 3 CI checks active
 (the CI replays the hook's checks), 4 forge protection verified (protected
 branch, required checks, no administrator bypass, GitHub auto-merge
 allowed: `drwil guarantees --protect` turns it on with the human's
-agreement). A level it could not
+agreement). A warning "Upgrade traces" names what an upgrade removed or left
+behind: installed kit files now missing, `.bak` files, an empty `stack`, a CI
+file without project zone (QUA-287). A level it could not
 verify (no reachable `gh` or `glab`) is "not verified", never reached, and
 it prints the command that leads to the next level (`protection` in
 `--json`). A new install writes `scopeGate` as `blocking`; an installed
@@ -625,21 +630,6 @@ an ID, the next free `PRJ-<n>`). It refuses, writing nothing, an ID already
 defined in the registry or the catalog, a malformed ID, an invalid registry,
 and, in BUILD, a registry outside the active brief's scope; an agent may run
 it. Complete the rule, scope and proof, then wire a check.
-
-### `resolve-drift` — resolve mechanics drift
-
-```bash
-npx drwil resolve-drift
-```
-
-When `init` detects that a mechanics file (`.githooks/`,
-`.claude/settings.json`, CI workflow file), or a piece of the kit's prose it
-installed (skills, recipes, agents' instructions…), has drifted from the
-version shipped by the kit, this command walks through each drifted file, shows a
-unified diff, and asks for confirmation before overwriting — always
-creating a `.bak` backup first, and never creating a file that doesn't
-exist yet. `--force` skips the confirmation for scripted/non-interactive
-use.
 
 ### `uninstall` — remove the kit's mechanics
 

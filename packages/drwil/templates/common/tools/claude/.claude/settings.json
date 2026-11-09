@@ -9,6 +9,16 @@
             "command": "command -v node >/dev/null || { echo 'drwil: node not found in the PATH of this assistant. Restart it from a shell where which node answers.' >&2; exit 1; }; node \"${CLAUDE_PROJECT_DIR}/.githooks/state.mjs\""
           }
         ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null || { echo 'drwil: node not found in the PATH of this assistant. Restart it from a shell where which node answers.' >&2; exit 1; }; node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/serve-welcome.mjs\"",
+            "timeout": 15
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [

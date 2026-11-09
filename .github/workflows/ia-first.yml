@@ -142,6 +142,9 @@ jobs:
             echo "::warning::Échec déjà présent sur la base de la PR ($BASE) : pas introduit par cette PR, à corriger quand même."
             grep -F "✗" ../base-checks.log || true
           fi
+      # drwil-project-begin steps
+      # drwil-project-end steps
+  # drwil-project-begin jobs
   # OS de kit-tests (QUA-045) : Ubuntu seul teste sur une PR (aucun si elle ne touche que la
   # documentation), Windows et macOS y sont rapportés sans tests ; un push de branche, master compris,
   # ne rapporte qu'Ubuntu ; le push d'un tag de release et un lancement manuel testent les trois.
@@ -230,6 +233,7 @@ jobs:
         run: gitleaks version
       - if: ${{ matrix.tester }}
         run: npm test --workspace packages/drwil
+  # drwil-project-end jobs
   # No branch protection is possible on a private repository on the free plan
   # (GitHub.com's "Merge" button stays unconditional): only an after-the-fact
   # alert is possible. Triggers only on a push to the main branch (not on

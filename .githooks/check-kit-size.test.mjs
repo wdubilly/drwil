@@ -44,7 +44,7 @@ test("QUA-157 gabarit : chaque sorte a son plafond, un dépassement bloque et no
   assert.equal(r.status, 1);
   assert.match(r.stderr, /Fichiers du kit trop gros/);
   for (const [fichier, n, plafond, sorte] of [
-    [`${TPL}/.githooks/gros.mjs`, 201, 200, "code, hooks, réglages"],
+    [`${TPL}/.githooks/gros.mjs`, 201, 200, "code, hooks"],
     [`${TPL}/AGENTS.md`, 101, 100, "AGENTS.md"],
     [`${TPL}/docs/recipes/grosse.md`, 251, 250, "recette"],
     [`${TPL}/docs/doc-gros.md`, 401, 400, "document"],
@@ -52,6 +52,44 @@ test("QUA-157 gabarit : chaque sorte a son plafond, un dépassement bloque et no
   ])
     assert.ok(r.stderr.includes(`${fichier} : ${n} lignes, plafond ${plafond} (${sorte})`), fichier);
   assert.doesNotMatch(r.stderr, /ok\.|doc-ok|node_modules|__pycache__/);
+});
+
+test("QUA-157 gabarit : les réglages des outils ont 250 lignes, un code, un hook ou un autre settings.json reste à 200", () => {
+  const OUTILS = "packages/drwil/templates/common/tools";
+  const dir = racine({
+    [`${OUTILS}/claude/.claude/settings.json`]: lignes(250),
+    [`${OUTILS}/gemini/.gemini/settings.json`]: lignes(251),
+    [`${OUTILS}/claude/.claude/hooks/gros.mjs`]: lignes(201),
+    [`${OUTILS}/codex/.codex/hooks.json`]: lignes(201),
+    [`${OUTILS}/claude/.claude/settings.local.json`]: lignes(201),
+    [`${TPL}/settings.json`]: lignes(201),
+    [`${TPL}/.githooks/settings.json`]: lignes(201),
+    [`${TPL}/.githooks/gros.mjs`]: lignes(201),
+  });
+  const r = lancer(dir);
+  assert.equal(r.status, 1);
+  assert.ok(r.stderr.includes(`${OUTILS}/gemini/.gemini/settings.json : 251 lignes, plafond 250 (réglages)`), r.stderr);
+  assert.doesNotMatch(r.stderr, /\.claude\/settings\.json/);
+  for (const fichier of [
+    `${OUTILS}/claude/.claude/hooks/gros.mjs`,
+    `${OUTILS}/codex/.codex/hooks.json`,
+    `${OUTILS}/claude/.claude/settings.local.json`,
+    `${TPL}/settings.json`,
+    `${TPL}/.githooks/settings.json`,
+    `${TPL}/.githooks/gros.mjs`,
+  ])
+    assert.ok(r.stderr.includes(`${fichier} : 201 lignes, plafond 200 (code, hooks)`), fichier);
+});
+
+test("QUA-157 projet adopté : un fichier de réglages avertit au-delà de 250 lignes, pas avant", () => {
+  const config = JSON.stringify({ lang: "en" });
+  const liste = manifeste(".claude/settings.json");
+  const sous = racine({ ".drwil/ia-first.json": config, ".drwil/installed-files.json": liste, ".claude/settings.json": lignes(250) });
+  assert.deepEqual([lancer(sous).status, lancer(sous).stdout], [0, ""]);
+  const au = racine({ ".drwil/ia-first.json": config, ".drwil/installed-files.json": liste, ".claude/settings.json": lignes(251) });
+  const r = lancer(au);
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, "[ia-first-warning] .claude/settings.json: 251 lines, ceiling 250 (settings) — reduce it\n");
 });
 
 test("QUA-157 gabarit : sous les plafonds, rien n'est dit ; un plafond hérité tolère sa taille, pas davantage", () => {
@@ -91,7 +129,7 @@ test("QUA-157 projet adopté : un dépassement avertit sans bloquer, le code et 
     r.stdout,
     [
       "[ia-first-warning] AGENTS.md: 120 lines, ceiling 100 (AGENTS.md) — reduce it",
-      "[ia-first-warning] .githooks/gros.mjs: 300 lines, ceiling 200 (code, hooks, settings) — reduce it",
+      "[ia-first-warning] .githooks/gros.mjs: 300 lines, ceiling 200 (code, hooks) — reduce it",
       "[ia-first-warning] docs/guides/longue.md: 260 lines, ceiling 250 (recipe) — reduce it",
       "",
     ].join("\n"),

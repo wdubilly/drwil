@@ -107,11 +107,13 @@ des fiches suivent cet ordre, pour que `/drwil-start` le propose tel quel.
   chat.
 
 Ordre de la 0.12.0 (tag `(0.12.0, n)` sur chaque intention de « Intentions par
-thème ») : 1 le premier commit du kit, 2 la clôture d'une fiche permanente,
-3 le `judgeGuarantees` mort, 4 le contrôle du kit qui masque l'alerte, 5 les
-garanties, la suite ; puis les thèmes E (montée de version sans perte,
-worktree toujours proposé, attestation depuis le chat) et F, à cadrer pendant
-la 0.11.
+thème »), décidé le 2026-11-08 après la montée de drwil_walk en 0.11.0 : la montée de version
+passe en tête, car elle rétrograde et écrase des fichiers du projet ; elle absorbe les données du
+projet hors prose du kit, le CI que la mise à jour n'écrase pas et l'alerte avant et après
+écrasement. 1 la montée de version sûre, 2 le premier commit du kit, 3 la clôture d'une fiche
+permanente, 4 le `judgeGuarantees` mort, 5 le contrôle du kit qui masque l'alerte, 6 les
+garanties, la suite ; puis les thèmes E (worktree toujours proposé, attestation depuis le chat) et F,
+à cadrer pendant la 0.11.
 
 Une limite trouvée à une clôture rejoint l'intention de son thème, jamais un
 doublon. Une intention qui attend une condition (chiffres du banc, essai réel
@@ -127,11 +129,17 @@ d'un outil) la dit dans son statut.
   le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
 - [ ] [IA] [P2] (0.11.1) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
   signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
-- [ ] [IA] [P2] `drwil serve`, une vue du projet en direct pour tout adoptant : mobile first, GitHub et GitLab,
-  lancée depuis le chat, remplace `drwil-progress` (cadré le 2026-11-08) — `docs/projects/drwil-serve.md`.
 - [ ] [IA] [P2] Les contrôles lents (e2e Playwright) sont accélérés par la CI livrée : tranches parallèles
   (`shards`) puis reprise de verdict d'une PR à l'autre, GitHub et GitLab ; rouvre QUA-250 ; prêt, décisions D1
   à D7 tranchées (cadré le 2026-11-08) — `docs/projects/ci-lents-controles.md`.
+- [ ] [décision] [P2] Retirer `drwil-progress`, maintenant que `drwil serve` est à parité (notée le 2026-11-08) —
+  `docs/intentions/retrait-de-drwil-progress.md`.
+- [ ] [décision] [P2] Documenter `drwil serve` dans le README du paquet (notée le 2026-11-08) —
+  `docs/intentions/drwil-serve-readme-du-paquet.md`.
+- [ ] [décision] [P2] Détecter la forge d'après l'hôte d'`origin`, pas d'après toute son adresse (notée le
+  2026-11-08) — `docs/intentions/forge-detectee-sur-l-hote.md`.
+- [ ] [décision] [P3] Reporter dans le document de compatibilité ce que chaque outil montre de l'accueil de session
+  (notée le 2026-11-08) — `docs/intentions/releve-accueil-par-outil.md`.
 
 
 En attente d'une décision (à affiner) ou d'un geste humain :
@@ -214,16 +222,16 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Protection, garanties, contournements
 
-- [ ] [décision] [P1] (0.12.0, 1) Le premier commit du kit est refusé en SCOPING sous la
+- [ ] [décision] [P1] (0.12.0, 2) Le premier commit du kit est refusé en SCOPING sous la
   barrière bloquante, et la recette d'adoption ne le dit pas —
   `docs/intentions/premier-commit-du-kit-sous-barriere-bloquante.md`.
-- [ ] [décision] [P2] (0.12.0, 3) Un `judgeGuarantees` mort reste dans `packages/drwil/src/guarantees-verify.ts` —
+- [ ] [décision] [P2] (0.12.0, 4) Un `judgeGuarantees` mort reste dans `packages/drwil/src/guarantees-verify.ts` —
   `docs/intentions/juge-des-garanties-en-double.md`.
-- [ ] [décision] [P2] (0.12.0, 4) Le contrôle `taille-kit` déclaré à l'installation compte comme
+- [ ] [décision] [P2] (0.12.0, 5) Le contrôle `taille-kit` déclaré à l'installation compte comme
   contrôle du projet et masque l'alerte « aucun contrôle du projet déclaré »,
   même en CI chez un projet neuf —
   `docs/intentions/controle-du-kit-masque-l-alerte-sans-controle.md`.
-- [ ] [décision] [P2] (0.12.0, 5) Les garanties obligatoires, la suite (`doctor` sur le dépôt
+- [ ] [décision] [P2] (0.12.0, 6) Les garanties obligatoires, la suite (`doctor` sur le dépôt
   drwil compris), à cadrer avec ou juste après la fiche du niveau de
   protection — `docs/intentions/garanties-la-suite.md`.
 - [ ] [décision] [P1] Les contournements encore ouverts : juger l'effet, pas
@@ -236,6 +244,12 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Adoption, installation, documentation
 
+- [x] [décision] [P1] (0.12.0, 1) Un `init` intelligent : une seule commande qui monte un projet d'une version
+  à la suivante, ne rétrograde rien, conserve les données du projet et se commite sur la branche kit ;
+  absorbe les trois intentions ci-dessous marquées « absorbée » ; constaté sur drwil_walk le 2026-11-08 ;
+  deux chantiers réalisés, relatés dans `docs/projects/journal.md` (refus de version et CI du projet ; fichiers
+  modifiés et retrait de `resolve-drift`) —
+  `docs/intentions/montee-de-version-sure.md`.
 - [ ] [décision] [P1] Un parcours d'installation et de chantier sans demande
   d'autorisation à chaque commande : reste le réexamen du « ask » sur
   `git push`, `merge` et `rebase` (demande du 2026-10-25) —
@@ -251,13 +265,13 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] Un écart déclaré entre le gabarit et sa copie ne couvre que
   ce qu'il déclare (`miroirs-gabarit`) —
   `docs/intentions/miroirs-ecart-declare-trop-large.md`.
-- [ ] [décision] [P1] Un CI du kit que la mise à jour n'écrase pas : étape C++
+- [ ] [décision] [P1] (absorbée par la montée de version sûre) Un CI du kit que la mise à jour n'écrase pas : étape C++
   et job Windows perdus sur drwil_dbox le 2026-10-26 —
   `docs/intentions/ci-extensible-sans-perte.md`.
-- [ ] [décision] [P1] Les données du projet (tableau des fiches) hors des
+- [ ] [décision] [P1] (absorbée par la montée de version sûre) Les données du projet (tableau des fiches) hors des
   fichiers de prose que le kit réécrit —
   `docs/intentions/donnees-du-projet-hors-prose-du-kit.md`.
-- [ ] [décision] Alerter avant et après un écrasement (diff de `resolve-drift`,
+- [ ] [décision] [P1] (absorbée par la montée de version sûre) Alerter avant et après un écrasement (diff de `resolve-drift`,
   `doctor` sur stack vide ou `.bak`) —
   `docs/intentions/alertes-avant-et-apres-ecrasement.md`.
 - [ ] [décision] La détection de stack reconnaît plus de technologies (C/C++,

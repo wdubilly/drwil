@@ -2,6 +2,9 @@
 
 **Statut** : proposée le 2026-10-26.
 
+**Revu le 2026-11-08** : absorbée par `docs/intentions/montee-de-version-sure.md` ; le relevé de drwil_dbox reste ici,
+le point d'extension du CI y devient une question de la fiche d'absorption.
+
 ## Besoin
 
 Sur drwil_dbox (C++/JUCE), la montée en 0.9.0 a remplacé le fichier CI

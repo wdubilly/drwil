@@ -1,0 +1,36 @@
+{
+  "version": 4,
+  "contract": "QUA-066",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-08T17:36:22.896Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Aucun essai réel dans Gemini CLI : abandonné sur décision du demandeur. Les réglages Gemini reçoivent seulement le hook d'accueil de drwil serve ; tests automatiques verts.",
+  "fingerprint": "add417a61718ec1d3cec72cc36224dfe1efc69ea733c9f3a01acf85d3371a614",
+  "proof": {
+    "tests-qua-066": "23864a4d90c4699c040aaa92d2149ca3111790df484282af8fcfe0c2f5022b6f"
+  },
+  "covers": [
+    "packages/drwil/src/config.ts",
+    "packages/drwil/templates/common/tools/gemini/.gemini/settings.json"
+  ],
+  "coverage": {
+    "packages/drwil/src/config.ts": "fecae756c207c6d866189b4b3acfeceb3711f119351c577c3ad284c96bcb1940",
+    "packages/drwil/templates/common/tools/gemini/.gemini/settings.json": "9705323a9c10e3feed14140c4d6d1911b0543b2b8e16913752ea712c23193153"
+  },
+  "commit": "3f0f35019ea0771dc9121c4513ad7b01e908cf93",
+  "automated": [
+    {
+      "id": "tests-qua-066",
+      "status": "ok"
+    }
+  ],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "40635a88-0d7f-45ed-8b46-224af970d476",
+    "toolUseId": "toolu_01T4FYYCbgsyzC2bo1B6UPm1",
+    "askedAt": "2026-11-08T17:36:21.424Z"
+  }
+}

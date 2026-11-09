@@ -1,0 +1,34 @@
+{
+  "version": 4,
+  "contract": "QUA-276",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-08T17:20:08.210Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Page de drwil serve ouverte par le lien Tailscale du réseau privé ; barre de navigation corrigée (onglets à la ligne) après le retour du demandeur sur un vrai téléphone, 11 onglets, français et anglais.",
+  "fingerprint": "82cffdb2d940476dbef17fc63bae5860d183e6473b8efd296163681a15ccabae",
+  "proof": {
+    "tests-qua-276": "0806d1c9b025566712ad4a3f612636e973528fdf8be0777980675b23f36de8ff"
+  },
+  "covers": [
+    "packages/drwil/serve/page.html"
+  ],
+  "coverage": {
+    "packages/drwil/serve/page.html": "226bc7693f82b6a7d24da06cbd124c16203c98e6f869e4f7ff7dcc5f5e57690d"
+  },
+  "commit": "44a0d81045c848d882edb403988ad358f56ce8fc",
+  "automated": [
+    {
+      "id": "tests-qua-276",
+      "status": "ok"
+    }
+  ],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "40635a88-0d7f-45ed-8b46-224af970d476",
+    "toolUseId": "toolu_01QKfK8QRpjL5CNWvCW3wXB1",
+    "askedAt": "2026-11-08T17:19:34.018Z"
+  }
+}

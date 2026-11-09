@@ -1,46 +1,20 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { join, relative } from "node:path";
-import { isKitProse, resolveFromConfig, type Resolved, usesClaudeTree } from "./config.js";
-import { fill, projectLang } from "./i18n.js";
-import { readManifest } from "./manifest.js";
-import { relPosix, render, scaffold, templatesDir, walk } from "./render.js";
+import { isMechanics, isKitProse, type Resolved } from "./config.js";
+import { isCiFile } from "./ci-zone.js";
+import { texts } from "./cli-texts.js";
+import { fill } from "./i18n.js";
+import { type Overwrite, scaffold } from "./render.js";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
-// The kit's prose (KIT_PROSE) the kit itself installed (in the manifest): a project's own AGENTS.md,
-// never installed by the kit, is never proposed. Same walk as the install, writing nothing.
-async function renderedProse(r: Resolved): Promise<Map<string, string>> {
-  const all = new Map<string, string>();
-  await scaffold(r, { shouldOverwrite: () => false, simulation: { created: [], kept: [], replaced: [] }, rendered: all });
-  const installed = readManifest(r.opts.targetDir);
-  const prose = new Map<string, string>();
-  for (const [rel, content] of all) if (isKitProse(rel) && rel in installed) prose.set(join(r.opts.targetDir, rel), content);
-  return prose;
+/** Files the project owns once installed (QUA-284): never rewritten, only completed by what a version requires. */
+const PROJECT_FILES = ["AGENTS.md", "docs/recipes/", "docs/intentions/README.md", "docs/contracts-catalog.md"];
+
+export function isProjectFile(rel: string): boolean {
+  return PROJECT_FILES.some((p) => (p.endsWith("/") ? rel.startsWith(p) : rel === p));
 }
 
-// Mechanics "with no legitimate customisation expected" — .githooks/, .claude/settings.json and the
-// CI file; the prose comes from renderedProse.
-async function renderedMechanics(r: Resolved): Promise<Map<string, string>> {
-  const rendered = new Map<string, string>();
-  // `walkDir`: folder walked; `relBase`: folder the relative path is computed from (keeps the
-  // `.githooks/` prefix instead of losing it by walking that folder directly).
-  const add = async (walkDir: string, relBase: string) => {
-    for (const file of await walk(walkDir)) {
-      const target = join(r.opts.targetDir, relative(relBase, file));
-      rendered.set(target, render(await readFile(file, "utf8"), r));
-    }
-  };
-  const base = join(templatesDir, "common", "base");
-  await add(join(base, ".githooks"), base);
-  if (usesClaudeTree(r.tools)) {
-    const settings = join(templatesDir, "common", "tools", "claude", ".claude", "settings.json");
-    rendered.set(join(r.opts.targetDir, ".claude", "settings.json"), render(await readFile(settings, "utf8"), r));
-  }
-  if (r.ci !== "none") {
-    const srcCi = join(templatesDir, "common", "ci", r.ci);
-    await add(srcCi, srcCi);
-  }
-  return rendered;
-}
+/** The human's answer before a kit file modified by hand is replaced: its diff is shown first. */
+export type ConfirmDrift = (rel: string, diff: string) => boolean | Promise<boolean>;
 
 // Minimal unified diff (line by line, closest possible, no external library): just enough to show
 // the user what would change before confirmation — not a patch tool.
@@ -80,66 +54,37 @@ function unifiedDiff(before: string, after: string): string {
   return lines.join("\n");
 }
 
-export interface ResolveDriftOptions {
-  targetDir: string;
-  /** Non-interactive use (scripted/CI): overwrites without asking. Default `false` — without it,
-   * never an overwrite without explicit confirmation. */
-  force?: boolean;
-}
-
-export interface ResolveDriftReport {
-  /** Mechanics files rewritten (confirmed, or forced). */
-  resolved: string[];
-  /** Mechanics files that drifted but were left untouched (confirmation refused). */
-  ignored: string[];
-}
-
-/** Resolves the drift of the mechanics files (`.githooks/`, `.claude/settings.json`, CI file) and of
- * the kit's prose it installed (skills, recipes, instructions…) reported by `init()`: shows a diff,
- * asks for confirmation (unless forced), backs the old file up as `.bak` before overwriting. Never
- * called automatically by `init()`. */
-export async function resolveDrift(
-  opts: ResolveDriftOptions,
-  confirm: (rel: string, diff: string) => boolean | Promise<boolean> = defaultConfirm,
-): Promise<ResolveDriftReport> {
-  const r = resolveFromConfig(opts.targetDir);
-  const rendered = new Map([...(await renderedMechanics(r)), ...(await renderedProse(r))]);
-  const resolved: string[] = [];
-  const ignored: string[] = [];
-  for (const [target, templateContent] of rendered) {
-    if (!existsSync(target)) continue; // creates nothing: only the files that already drifted are handled.
-    const rel = relPosix(opts.targetDir, target);
-    const existing = await readFile(target, "utf8");
-    if (existing === templateContent) continue; // no drift.
-    const ok = opts.force || (await confirm(rel, unifiedDiff(existing, templateContent)));
-    if (!ok) {
-      ignored.push(rel);
-      continue;
-    }
-    await writeFile(`${target}.bak`, existing);
-    await writeFile(target, templateContent);
-    resolved.push(rel);
+/**
+ * Kit files (mechanics and prose) modified by hand since their installation that the update would replace: each
+ * is shown as a diff and replaced only on the human's yes. Project files (QUA-284) and CI files (QUA-283) are
+ * never offered. Writes nothing: the update branch keeps the old version, so no `.bak`.
+ */
+export async function replaceOnConfirm(
+  r: Resolved,
+  previous: Record<string, string>,
+  base: Overwrite,
+  confirm?: ConfirmDrift,
+): Promise<Overwrite> {
+  if (!confirm) return base;
+  const rendered = new Map<string, string>();
+  await scaffold(r, { shouldOverwrite: () => false, simulation: { created: [], kept: [], replaced: [] }, rendered });
+  const approved = new Set<string>();
+  for (const [rel, content] of rendered) {
+    if (!(rel in previous) || isProjectFile(rel) || isCiFile(rel) || !(isMechanics(rel) || isKitProse(rel))) continue;
+    const target = join(r.opts.targetDir, rel);
+    if (!existsSync(target) || base(rel)) continue;
+    const existing = readFileSync(target, "utf8");
+    if (existing === content) continue;
+    if (await confirm(rel, unifiedDiff(existing, content))) approved.add(rel);
   }
-  return { resolved, ignored };
+  return (rel) => base(rel) || approved.has(rel);
 }
 
-const TEXTS = {
-  fr: { question: "Écraser {0} ? [o/N] ", yes: /^o(ui)?$/i },
-  en: { question: "Overwrite {0}? [y/N] ", yes: /^y(es)?$/i },
-};
-
-// Real interactive confirmation (stdin): kept apart from resolveDrift() so that it stays testable
-// without a terminal (the test provides a synthetic `confirm`).
-async function defaultConfirm(rel: string, diff: string): Promise<boolean> {
-  console.log(`\n--- ${rel} ---`);
-  console.log(diff);
-  if (!process.stdin.isTTY) return false; // non-interactive without force: never an overwrite.
-  const T = TEXTS[projectLang(process.cwd())];
-  const { createInterface } = await import("node:readline/promises");
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    return T.yes.test((await rl.question(fill(T.question, rel))).trim());
-  } finally {
-    rl.close();
-  }
-}
+/** The terminal's confirmation: the diff (cut when long), then the human's yes (`ask` reads one answer). */
+export const confirmDriftWith =
+  (ask: (question: string) => Promise<string>): ConfirmDrift =>
+  async (rel, diff) => {
+    const lines = diff.split("\n");
+    const shown = lines.length > 60 ? [...lines.slice(0, 60), `… (${lines.length - 60})`] : lines;
+    return /^(y|yes|o|oui)$/i.test((await ask(fill(texts().driftQuestion, rel, shown.join("\n")))).trim());
+  };

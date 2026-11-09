@@ -7,6 +7,57 @@ closing commit; the release renames this section to its version.
 
 ### Added
 
+- `drwil doctor` warns, after the fact, of what an upgrade removed or left
+  behind (an "Upgrade traces" point): installed kit files now missing, `.bak`
+  files, an empty `stack` while layers are declared, a CI file without project
+  zone. The keys of the project in `.drwil/ia-first.json` are kept and a new
+  key gets a safe value, as before.
+
+- `drwil init` handles by itself the kit files modified by hand: in a
+  terminal it shows the diff of each (mechanics, skills, settings) and
+  replaces it only on your yes, with no `.bak` (the update branch keeps the old
+  version); without a terminal or a yes, the file is left as it is and named.
+  `AGENTS.md`, the recipes, `docs/intentions/README.md` and
+  `docs/contracts-catalog.md` modified by the project are never rewritten, and
+  the project's keys of `.drwil/ia-first.json` and `.drwil/state.json` are left as they are.
+
+- `drwil init` refuses to run, before writing anything, with a version older
+  than the one recorded in `.drwil/install.json` (it would downgrade the
+  mechanics), naming both versions and the command to run instead;
+  `--allow-older` goes ahead anyway, and `--target-version <v>` refuses any
+  other version. An update leaves no `.bak` file: the commit of the update
+  branch keeps the old version.
+
+- The CI file `drwil init` ships (GitHub and GitLab) has two project zones,
+  between `# drwil-project-begin steps|jobs` and `# drwil-project-end
+  steps|jobs` markers: an update rewrites everything outside them and keeps
+  the zones as they are. A CI file without markers, modified since it was
+  installed, is never replaced silently: `init` names the jobs and steps that
+  would disappear and, in a terminal, shows the removed lines and asks first.
+
+- `drwil serve [--host] [--port] [--detach]`: a live, read-only view of the
+  current project, on `127.0.0.1` by default. Anywhere else the server refuses
+  to start without a token (`DRWIL_SERVE_TOKEN`) and refuses any request
+  without it; no API response carries a personal name, login, email or
+  secret; each project or worktree has its single server, whose record lives
+  in the user's cache, never in the repository. The CI, PR and MR views work
+  alike on GitHub (`gh`) and GitLab (`glab`), the forge being detected; the
+  event journal is per project and lives in the user's cache; a view with no
+  source stays empty and says what is missing. The page is mobile first (no
+  horizontal scrolling at 360 px) and in the project's language (French or
+  English), with the CI measures and their trends, the audit reports with their
+  staleness warning, the index checkboxes, every file of the briefs folder, the
+  contract catalog and the models used per workstream; a contract registry
+  written as a table reads like one written in headings; a PR or MR link
+  goes through a server redirect, never a forge address in a response body.
+- `/drwil-serve` and `drwil serve --welcome`: start the view if needed and print
+  its link. `drwil init` offers to start it at each session, off unless the
+  human says yes (`--serve-autostart`, `--no-serve-autostart`); a session-start
+  hook then shows the link through `systemMessage`, which never reaches the
+  model (Claude Code, Gemini CLI, Codex; Copilot CLI has no such channel and
+  uses `/drwil-serve`). It only ever listens on `127.0.0.1`; with Tailscale and
+  HTTPS on, the port is published with `tailscale serve` and the private-network
+  link is given. Tailscale is never required.
 - Release module: an optional `release.requiredOs` setting (absent by
   default, never added by an update) makes `create-release.mjs` (direct
   release or `--candidate`) and `promote-release.mjs` refuse, without
@@ -74,6 +125,16 @@ closing commit; the release renames this section to its version.
   `drwil attest <ID>`, never the terminal alone. The new recipe
   `docs/recipes/attest-a-contract.md` says, tool by tool, how to prepare and
   ask the poll, with no answer, default or recommendation.
+
+### Removed
+
+- `drwil resolve-drift`: `drwil init` now does it (see Added). It rewrote
+  files with the templates of the version that ran it, even an older one.
+
+### Changed
+
+- `taille-kit`: `.claude/settings.json` and `.gemini/settings.json` now have
+  their own ceiling of 250 lines; every other ceiling stays the same.
 
 ### Fixed
 

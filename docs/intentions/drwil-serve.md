@@ -1,6 +1,6 @@
 # Intention : `drwil serve`, une vue du projet en direct, pour tout adoptant
 
-**Statut** : cadrée le 2026-11-08 — fiche de chantier : `docs/projects/drwil-serve.md`. Rassemble les notes des
+**Statut** : cadrée le 2026-11-08 — fiche de chantier : `docs/projects/journal.md`. Rassemble les notes des
 2026-11-07 et 2026-11-08 et la fiche du 2026-10-27 (branche `cadrage/tableau-de-bord-serveur-leger`, PR #267 fermée
 sans fusion).
 
