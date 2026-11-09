@@ -4280,6 +4280,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Bloc scope élargi** : `.githooks/scope-gate-texts.mjs` (original et gabarit), pour le message de refus d'un test de contrat affaibli.
 - **Détour** : `detour/serve-port-occupe-stable` (test « port occupé » de `packages/drwil/test/serve.test.mjs`, QUA-272, PR #391) ; `detour/banc-absent-node26` (PR #390).
 - **Limites connues** : le décompte des `assert` se fait par ligne du test nommé par l'ID, sans analyse syntaxique.
+- **Réouverture** : la CI de la PR #392 était rouge (branche jamais atteinte à 100 % de couverture des hooks, QUA-004) ; boucle de restauration de `.githooks/state-reopen.mjs` simplifiée, correctif accepté par le oui de l'humain (QUA-117).
 - **Clôturé par** : la branche `workstream/reouverture-sans-faux-blocage`.
 
 - **Preuve de clôture** : `docs/preuves/reouverture-sans-faux-blocage.md`.

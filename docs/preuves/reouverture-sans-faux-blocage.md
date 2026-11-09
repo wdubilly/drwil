@@ -1,7 +1,7 @@
 # Preuve de clôture — reouverture-sans-faux-blocage
 
 **Clos le** : 2026-11-09
-**Commit vérifié** : `d2a9a512f9` — verdict `drwil verify` : PASS
+**Commit vérifié** : `7d7b9c1ed7` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:8f2afbafbf8e3bd8`, acceptés par l'humain au lancement le 2026-11-09
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
