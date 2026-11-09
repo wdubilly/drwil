@@ -2398,26 +2398,26 @@ test("init() signale (sans réécrire) un fichier déjà présent qui a dérivé
 
   // fichier identique au template (mêmes couches entre init et apply) : pas signalé.
   let lignes = await capture(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
-  assert.ok(!lignes.some((l) => l.includes("dérivés")), lignes.join("\n"));
+  assert.ok(!lignes.some((l) => l.includes("modifiés à la main")), lignes.join("\n"));
 
-  // une recette dérive (contenu raccourci, une section en moins) : signalée, jamais réécrite.
-  const avant = read(dir, "docs/recipes/refactor-without-breaking.md");
-  writeFileSync(join(dir, "docs/recipes/refactor-without-breaking.md"), "# Refactorer\n\nTexte raccourci, une seule section.\n");
+  // une mécanique dérive (contenu raccourci, une section en moins) : signalée, jamais réécrite.
+  const avant = read(dir, ".githooks/check-docs.mjs");
+  writeFileSync(join(dir, ".githooks/check-docs.mjs"), "# Refactorer\n\nTexte raccourci, une seule section.\n");
   lignes = await capture(() => init({ lang: "fr", targetDir: dir, git: false, layers: "backend,frontend" }));
   assert.ok(
-    lignes.some((l) => l.includes("dérivés")),
+    lignes.some((l) => l.includes("modifiés à la main")),
     lignes.join("\n"),
   );
   assert.ok(
-    lignes.some((l) => l.includes("docs/recipes/refactor-without-breaking.md")),
+    lignes.some((l) => l.includes(".githooks/check-docs.mjs")),
     lignes.join("\n"),
   );
   assert.equal(
-    read(dir, "docs/recipes/refactor-without-breaking.md"),
+    read(dir, ".githooks/check-docs.mjs"),
     "# Refactorer\n\nTexte raccourci, une seule section.\n",
     "jamais réécrit automatiquement",
   );
-  assert.notEqual(read(dir, "docs/recipes/refactor-without-breaking.md"), avant);
+  assert.notEqual(read(dir, ".githooks/check-docs.mjs"), avant);
 });
 
 test("init écrit un manifeste des fichiers installés (chemin + sha256), fusionné sans perte entre deux init()", async () => {
@@ -4972,6 +4972,32 @@ test("caractérisation : diff ligne à ligne montré à la confirmation (ajouts,
   assert.match(diff, /^- # inséré$/m);
   assert.match(diff, /^- # fin 4$/m);
   assert.match(diff, new RegExp(`^\\+ ${lignes[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"));
+  writeFileSync(join(dir, cible), `${original}// ajout 1\n\n// ajout 2`);
+  await quiet(() =>
+    init({
+      lang: "fr",
+      targetDir: dir,
+      git: false,
+      confirmDrift: (rel, d) => {
+        if (rel === cible) diff = d;
+        return false;
+      },
+    }),
+  );
+  assert.match(diff, /^- \/\/ ajout 2$/m);
+  writeFileSync(join(dir, cible), `${lignes.slice(0, -2).join("\n")}\n`);
+  await quiet(() =>
+    init({
+      lang: "fr",
+      targetDir: dir,
+      git: false,
+      confirmDrift: (rel, d) => {
+        if (rel === cible) diff = d;
+        return false;
+      },
+    }),
+  );
+  assert.match(diff, /^\+ /m);
 });
 
 test("caractérisation : git introuvable, l'installation se fait et le dit, sans dépôt ni hooks", () => {
