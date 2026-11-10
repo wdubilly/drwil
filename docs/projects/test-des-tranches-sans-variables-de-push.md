@@ -29,7 +29,6 @@ variables, et les sous-processus la reçoivent. Le fichier passe seul (18 verts)
 
 - Le fichier `.githooks/run-checks-shards.test.mjs` passe en entier même quand `DRWIL_PUSH_TAGS_ONLY`,
   `DRWIL_PUSH_NO_BRANCH` ou `DRWIL_PUSH_REFS` sont définies dans l'environnement du pré-push — contrat `QUA-290`
-- Le test est vu échouer avec `DRWIL_PUSH_TAGS_ONLY=1` avant la correction, et passer après
 
 ## 2. Hors périmètre
 

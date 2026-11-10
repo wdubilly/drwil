@@ -4335,3 +4335,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/tests-de-serve-sous-windows`.
 
 - **Preuve de clôture** : `docs/preuves/tests-de-serve-sous-windows.md`.
+
+## 2026-11-10 — Détour de docs/projects/test-des-tranches-sans-variables-de-push.md : critère sans preuve
+
+- **Ce qui change** : le critère « le test est vu échouer avant la correction » est retiré de la fiche : il décrit une méthode, aucun contrat ne peut le prouver, `drwil verify` le classait `no-proof` et refusait la clôture.
+- **Décisions clés** : retrait plutôt que lien à un contrat ou critère `[humain]` (décision du demandeur, 2026-11-10) ; la preuve « vu échouer » reste dans le message du commit du chantier (11 verts et 7 en échec avant, 18 verts après) et dans la recette de correction.
+- **Critères et preuves** : correction de fiche seule, sans comportement du code ; la fiche garde un critère, lié à `QUA-290`.
+- **Limites connues** : le cadrage a de nouveau produit un critère sans lien ; `verify` ne le dit qu'à la fin de BUILD.
+- **Clôturé par** : la branche `detour/critere-sans-preuve`.
