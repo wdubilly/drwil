@@ -1731,10 +1731,10 @@ test("QUA-281 : la redirection est refusée sans jeton valide", async () => {
   const p = await projet({});
   brancher(p, ORIGINE_HUB);
   const jeton = randomBytes(32).toString("hex");
-  const s = await demarrer(p, ["--host", "127.0.0.2", "--port", "0"], { DRWIL_SERVE_TOKEN: jeton });
+  const s = await demarrer(p, ["--host", "0.0.0.0", "--port", "0"], { DRWIL_SERVE_TOKEN: jeton });
   const brutJeton = (entetes) =>
     new Promise((resolve, reject) => {
-      const req = request({ host: "127.0.0.2", port: s.port, path: "/forge/pr/12", headers: entetes }, (res) => {
+      const req = request({ host: "127.0.0.1", port: s.port, path: "/forge/pr/12", headers: entetes }, (res) => {
         res.resume();
         res.on("end", () => resolve({ status: res.statusCode, location: res.headers.location }));
       });
