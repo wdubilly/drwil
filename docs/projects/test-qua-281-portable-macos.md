@@ -25,10 +25,11 @@ la barrière `release.requiredOs` refuse la publication de la version 0.11.1
 
 - Le test de la redirection écoute sur `--host 0.0.0.0` (hors de 127.0.0.1, donc le jeton reste
   obligatoire) et s'y connecte par `127.0.0.1` ; il garde ses trois assertions : 401 sans jeton, sans
-  adresse de redirection, puis 302 vers `/pull/12` avec le jeton valide — QUA-281
-- Aucune autre adresse `127.0.0.x` autre que `127.0.0.1` ne reste dans les tests de `drwil serve` — QUA-281
-- La CI trois systèmes, lancée sur `master` après la fusion, est verte (geste suivant, hors fiche : elle
-  ne se prouve qu'après la fusion).
+  adresse de redirection, puis 302 vers `/pull/12` avec le jeton valide — `QUA-281`
+- Aucune autre adresse `127.0.0.x` autre que `127.0.0.1` ne reste dans les tests de `drwil serve` — `QUA-281`
+
+Hors critères (geste suivant, lot 2 humain) : la CI trois systèmes, lancée sur `master` après la fusion, doit être
+verte ; elle ne se prouve qu'après la fusion.
 
 ## 2. Hors périmètre
 
