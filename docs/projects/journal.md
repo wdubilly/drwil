@@ -4351,3 +4351,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Critères et preuves** : `node --test .githooks/run-checks-shards.test.mjs` : 11 verts et 7 en échec avec `DRWIL_PUSH_TAGS_ONLY=1` avant, 18 verts et 0 échec après, avec ou sans les variables ; `GOVERNANCE: PASS (CI pending)` à la clôture.
 - **Limites connues** : la publication 0.11.1 est le lot 2, geste humain ; le test instable QUA-268 (`.githooks/create-release.test.mjs`) reste noté en intention.
 - **Clôturé par** : la branche `workstream/test-des-tranches-sans-variables-de-push`.
+
+- **Preuve de clôture** : `docs/preuves/test-des-tranches-sans-variables-de-push.md`.
