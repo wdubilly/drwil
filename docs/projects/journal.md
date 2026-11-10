@@ -4333,3 +4333,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Critères et preuves** : `node --test packages/drwil/test/serve.test.mjs` : 60 tests verts, aucun sauté sous Linux ; `GOVERNANCE: PASS` à la clôture.
 - **Limites connues** : la CI trois systèmes sur `master` et la release 0.11.1 sont le lot 2, geste humain ; un vrai arrêt propre sous Windows reste hors cadre.
 - **Clôturé par** : la branche `workstream/tests-de-serve-sous-windows`.
+
+- **Preuve de clôture** : `docs/preuves/tests-de-serve-sous-windows.md`.
