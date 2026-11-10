@@ -4343,3 +4343,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Critères et preuves** : correction de fiche seule, sans comportement du code ; la fiche garde un critère, lié à `QUA-290`.
 - **Limites connues** : le cadrage a de nouveau produit un critère sans lien ; `verify` ne le dit qu'à la fin de BUILD.
 - **Clôturé par** : la branche `detour/critere-sans-preuve`.
+
+## 2026-11-10 — Le test des tranches ne dépend plus des variables du push (2 lots)
+
+- **Ce qui change** : `.githooks/run-checks-shards.test.mjs` retire de son environnement toutes les variables `DRWIL_PUSH_*` en début de fichier ; au push d'un tag seul, `pre-push` exporte `DRWIL_PUSH_TAGS_ONLY` et `DRWIL_PUSH_NO_BRANCH`, `.githooks/run-checks.mjs` se croyait alors « hooké » et n'écrivait plus le fichier de verdicts, ce qui faisait échouer sept tests et refuser le push du tag 0.11.1.
+- **Décisions clés** : on neutralise l'environnement du test plutôt que de changer `.githooks/run-checks.mjs`, dont le comportement hooké est voulu ; aucun code produit modifié.
+- **Critères et preuves** : `node --test .githooks/run-checks-shards.test.mjs` : 11 verts et 7 en échec avec `DRWIL_PUSH_TAGS_ONLY=1` avant, 18 verts et 0 échec après, avec ou sans les variables ; `GOVERNANCE: PASS (CI pending)` à la clôture.
+- **Limites connues** : la publication 0.11.1 est le lot 2, geste humain ; le test instable QUA-268 (`.githooks/create-release.test.mjs`) reste noté en intention.
+- **Clôturé par** : la branche `workstream/test-des-tranches-sans-variables-de-push`.
