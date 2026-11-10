@@ -134,6 +134,9 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P1] (0.11.1) Les tests de `drwil serve` passent sous Windows, barrière de la publication de la
+  0.11.1 (cadré le 2026-11-10) — `docs/projects/tests-de-serve-sous-windows.md`.
+
 
 - [ ] [IA] [P1] (0.12.0) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
