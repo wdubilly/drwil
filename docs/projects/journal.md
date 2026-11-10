@@ -4325,3 +4325,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Critères et preuves** : l'analyseur des critères lit les trois liens (`QUA-278`, `QUA-272`, `QUA-278`) ; aucun test de non-régression, c'est une correction de fiche, sans comportement du code.
 - **Limites connues** : `verify` ne signale pas qu'un identifiant entre accents graves n'est pas un contrat quand il est le dernier de la phrase (`posix` lu comme preuve) ; à noter en intention.
 - **Clôturé par** : la branche `detour/liens-des-criteres`.
+
+## 2026-11-10 — Les tests de `drwil serve` passent sous Windows (1 lot)
+
+- **Ce qui change** : les deux tests QUA-278 au faux binaire `tailscale` en script sont sautés sous Windows par la constante `posix` ; le test QUA-272 ne vérifie l'effacement de l'enregistrement à l'arrêt que hors Windows (`kill` n'y lance pas le gestionnaire de `SIGTERM`), le reste du test tourne partout.
+- **Décisions clés** : le faux Tailscale n'a pas à tourner sous Windows ; l'arrêt par signal n'y est pas vérifié (décision du demandeur, 2026-11-10) ; aucun code produit modifié.
+- **Critères et preuves** : `node --test packages/drwil/test/serve.test.mjs` : 60 tests verts, aucun sauté sous Linux ; `GOVERNANCE: PASS` à la clôture.
+- **Limites connues** : la CI trois systèmes sur `master` et la release 0.11.1 sont le lot 2, geste humain ; un vrai arrêt propre sous Windows reste hors cadre.
+- **Clôturé par** : la branche `workstream/tests-de-serve-sous-windows`.
+
+- **Preuve de clôture** : `docs/preuves/tests-de-serve-sous-windows.md`.

@@ -538,7 +538,8 @@ test("QUA-272 : un enregistrement périmé est remplacé ; une réservation en c
     const s = await demarrer(p);
     assert.equal((await fetch(`${s.url}api/usage`)).status, 200);
     await s.arreter();
-    assert.equal(existsSync(fichier), false, "l'arrêt efface l'enregistrement");
+    // Sous Windows, kill() termine le processus sans lancer le gestionnaire de SIGTERM : l'enregistrement reste.
+    if (process.platform !== "win32") assert.equal(existsSync(fichier), false, "l'arrêt efface l'enregistrement");
   }
   writeFileSync(fichier, "pas du json");
   const s = await demarrer(p);
@@ -2025,7 +2026,7 @@ test("QUA-277 : sans réponse de l'humain, le hook ne démarre rien", async () =
   assert.equal(existsSync(fichierServeur(p)), false);
 });
 
-test("QUA-278 : avec Tailscale, le lien est celui du réseau privé et seul ce nom passe le contrôle de Host", async () => {
+test("QUA-278 : avec Tailscale, le lien est celui du réseau privé et seul ce nom passe le contrôle de Host", posix, async () => {
   const p = await projet({});
   const ts = tailscaleFactice();
   arreterDetache(p);
@@ -2042,25 +2043,29 @@ test("QUA-278 : avec Tailscale, le lien est celui du réseau privé et seul ce n
   assert.equal((await brut(port, "/api/docs", { host: `${NOM_TAILNET}.attaquant.example:${port}` })).status, 403);
 });
 
-test("QUA-278 : sans publication, tout marche en local, le message dit comment ouvrir l'accès et aucun nom n'est admis", async () => {
-  const p = await projet({});
-  const ts = tailscaleFactice({ publication: 1 });
-  arreterDetache(p);
-  const r = lancer(p, ["--welcome"], ts.env);
-  assert.equal(r.status, 0, r.stderr);
-  assert.match(r.stdout, /http:\/\/127\.0\.0\.1:\d+\/ \(sur cet ordinateur\)\. .*sudo tailscale set --operator/);
-  const port = JSON.parse(readFileSync(fichierServeur(p), "utf8")).port;
-  assert.equal(existsSync(join(dirname(fichierServeur(p)), "published.json")), false);
-  assert.equal((await brut(port, "/api/docs")).status, 200);
-  assert.equal((await brut(port, "/api/docs", { host: `${NOM_TAILNET}:${port}` })).status, 403);
+test(
+  "QUA-278 : sans publication, tout marche en local, le message dit comment ouvrir l'accès et aucun nom n'est admis",
+  posix,
+  async () => {
+    const p = await projet({});
+    const ts = tailscaleFactice({ publication: 1 });
+    arreterDetache(p);
+    const r = lancer(p, ["--welcome"], ts.env);
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /http:\/\/127\.0\.0\.1:\d+\/ \(sur cet ordinateur\)\. .*sudo tailscale set --operator/);
+    const port = JSON.parse(readFileSync(fichierServeur(p), "utf8")).port;
+    assert.equal(existsSync(join(dirname(fichierServeur(p)), "published.json")), false);
+    assert.equal((await brut(port, "/api/docs")).status, 200);
+    assert.equal((await brut(port, "/api/docs", { host: `${NOM_TAILNET}:${port}` })).status, 403);
 
-  // Un enregistrement sans nom utilisable n'ouvre rien.
-  const publie = join(dirname(fichierServeur(p)), "published.json");
-  for (const contenu of ["{}", "pas du JSON"]) {
-    writeFileSync(publie, contenu);
-    assert.equal((await brut(port, "/api/docs", { host: `undefined:${port}` })).status, 403, contenu);
-  }
-});
+    // Un enregistrement sans nom utilisable n'ouvre rien.
+    const publie = join(dirname(fichierServeur(p)), "published.json");
+    for (const contenu of ["{}", "pas du JSON"]) {
+      writeFileSync(publie, contenu);
+      assert.equal((await brut(port, "/api/docs", { host: `undefined:${port}` })).status, 403, contenu);
+    }
+  },
+);
 
 test("QUA-278 : chaque état de Tailscale donne son conseil, sans jamais remplacer une autre publication", () => {
   const cacheDir = tmp();
