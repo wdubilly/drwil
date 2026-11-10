@@ -33,11 +33,11 @@ Les trois causes, lues dans le journal de la CI et le code :
 ## Critères d'acceptation
 
 - Les deux tests Tailscale de `QUA-278` sont sautés sous Windows avec la raison de la constante `posix` (faux
-  outil en script), et jouent comme avant sous Linux et macOS — contrat QUA-278
+  outil en script), et jouent comme avant sous Linux et macOS — contrat `QUA-278`
 - Le test de `QUA-272` ne vérifie l'effacement de l'enregistrement à l'arrêt que hors Windows, avec la raison dite
   dans un commentaire ; le remplacement d'un enregistrement périmé et le respect d'une réservation en cours
   restent vérifiés sur les trois systèmes — contrat QUA-272
-- Le fichier serve.test.mjs passe en entier en local (Linux), sans test supplémentaire sauté hors Windows
+- Le fichier serve.test.mjs passe en entier en local (Linux), sans test supplémentaire sauté hors Windows — contrat `QUA-278`
 
 ## 2. Hors périmètre
 

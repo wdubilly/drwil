@@ -4317,3 +4317,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/test-qua-281-portable-macos`.
 
 - **Preuve de clôture** : `docs/preuves/test-qua-281-portable-macos.md`.
+
+## 2026-11-10 — Détour de docs/projects/tests-de-serve-sous-windows.md : liens des critères d'acceptation
+
+- **Ce qui change** : les critères 1 et 3 de la fiche citent `QUA-278` entre accents graves ; `drwil verify` lit comme preuve le dernier identifiant entre accents graves, et le critère 1 pointait sur `posix`, le critère 3 n'avait aucun lien.
+- **Décisions clés** : critère 3 lié au contrat automatisé `QUA-278` plutôt que marqué `[humain]` (décision du demandeur, 2026-11-10) : un critère humain exige un contrat à attester, aucun n'existe pour ce point.
+- **Critères et preuves** : l'analyseur des critères lit les trois liens (`QUA-278`, `QUA-272`, `QUA-278`) ; aucun test de non-régression, c'est une correction de fiche, sans comportement du code.
+- **Limites connues** : `verify` ne signale pas qu'un identifiant entre accents graves n'est pas un contrat quand il est le dernier de la phrase (`posix` lu comme preuve) ; à noter en intention.
+- **Clôturé par** : la branche `detour/liens-des-criteres`.
