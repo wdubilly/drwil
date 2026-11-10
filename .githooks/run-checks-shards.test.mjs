@@ -11,6 +11,8 @@ import { replay } from "./base-checks.mjs";
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 delete process.env.DRWIL_CI_REUSE;
 for (const nom of Object.keys(process.env)) if (nom.startsWith("DRWIL_PR_")) delete process.env[nom];
+// Le pré-push les exporte au push d'un tag : run-checks se croirait « hooké » et n'écrirait plus de verdicts.
+for (const nom of Object.keys(process.env)) if (nom.startsWith("DRWIL_PUSH_")) delete process.env[nom];
 
 const SCRIPT = fileURLToPath(new URL("./run-checks.mjs", import.meta.url));
 let dossiers = [];
