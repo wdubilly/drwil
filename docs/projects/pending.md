@@ -134,6 +134,8 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P1] (0.11.1) Le test des tranches ne dépend plus des variables du push, barrière de la publication
+  de la 0.11.1 (cadré le 2026-11-10) — `docs/projects/test-des-tranches-sans-variables-de-push.md`.
 
 
 - [ ] [IA] [P1] (0.12.0) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
