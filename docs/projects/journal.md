@@ -4307,3 +4307,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/version-0-11-1`.
 
 - **Preuve de clôture** : `docs/preuves/version-0-11-1.md`.
+
+## 2026-11-10 — Le test de la redirection de `drwil serve` (QUA-281) passe sur macOS (1 lot)
+
+- **Ce qui change** : le test « QUA-281 : la redirection est refusée sans jeton valide » écoute sur `--host 0.0.0.0` (jeton obligatoire) et se connecte par `127.0.0.1`, au lieu de `127.0.0.2`, absent de macOS ; ses trois assertions sont inchangées.
+- **Décisions clés** : corriger le test plutôt que le sauter sous macOS (décision du demandeur, 2026-11-10) ; aucun code produit modifié.
+- **Critères et preuves** : `node --test packages/drwil/test/serve.test.mjs` : 60 tests verts ; plus aucune adresse `127.0.0.x` autre que `127.0.0.1` dans les tests de `drwil serve` ; `GOVERNANCE: PASS` à la clôture.
+- **Limites connues** : la CI trois systèmes sur `master` après la fusion et la release 0.11.1 sont le lot 2, geste humain.
+- **Clôturé par** : la branche `workstream/test-qua-281-portable-macos`.

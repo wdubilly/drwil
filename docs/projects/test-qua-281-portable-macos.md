@@ -58,5 +58,5 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-10) : cadré, rien de réalisé.
-- **Prochaine étape** : [IA] lot 1, dans une nouvelle session (`/drwil-start`).
+- **Dernier état** (2026-11-10) : lot 1 réalisé et commité (test portable, `packages/drwil/test/serve.test.mjs` : 60 tests verts) ; clôture en cours.
+- **Prochaine étape** : [humain] lot 2 — CI trois systèmes sur `master` après la fusion, puis la release 0.11.1.
