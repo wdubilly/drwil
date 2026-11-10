@@ -4315,3 +4315,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Critères et preuves** : `node --test packages/drwil/test/serve.test.mjs` : 60 tests verts ; plus aucune adresse `127.0.0.x` autre que `127.0.0.1` dans les tests de `drwil serve` ; `GOVERNANCE: PASS` à la clôture.
 - **Limites connues** : la CI trois systèmes sur `master` après la fusion et la release 0.11.1 sont le lot 2, geste humain.
 - **Clôturé par** : la branche `workstream/test-qua-281-portable-macos`.
+
+- **Preuve de clôture** : `docs/preuves/test-qua-281-portable-macos.md`.
