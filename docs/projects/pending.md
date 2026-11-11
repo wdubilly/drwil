@@ -124,6 +124,7 @@ d'un outil) la dit dans son statut.
 Étiquette `(version)` sur chaque ligne ouverte ; sans étiquette = plus tard. Remplace « Versions visées » pour ce qui reste.
 
 - **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
+- **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre à respecter** (il suit celui de la section « Fiches cadrées » ci-dessous) : 1 contrôles rejoués, 2 cache de verdicts en CI, 3 un seul run de couverture, 4 tranches dès le départ, 5 tests du kit découpés par thème, 6 preuves fiables, 7 temps des contrôles journalisé, 8 doublon des tests des hooks. Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : le 3 avant le 4 (`doctor` et `guarantees` partagés) ; le 1 avant le 8 (module engine-selftest) ; le 6 avant le 7 (`run-checks-verdicts`).
 - **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
   restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; le découpage des
   contrôles lents dès le départ ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
@@ -136,18 +137,34 @@ d'un outil) la dit dans son statut.
 
 
 
+- [ ] [IA] [P0] (0.11.2) Les contrôles longs sont repris tant que leurs fichiers n'ont pas changé : `checks-self-test`,
+  `tests-qua-039` et `047`, `miroirs-gabarit` ; prêt, D1 à D4 tranchées (cadré le 2026-11-11) —
+  `docs/projects/controles-rejoues-reduits.md`.
+- [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
+  sauvegardait plus depuis le 2026-11-08 ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
+  `docs/projects/cache-des-verdicts-de-ci-retabli.md`.
+- [ ] [IA] [P1] (0.11.2) Un seul run de tests pour le seuil de couverture et la couverture du diff : contrôle unique
+  `coverage-diff-<couche>`, fusion des projets existants, avertissement de `doctor` ; prêt, D1 à D5 tranchées (cadré le
+  2026-11-11) — `docs/projects/couverture-un-seul-run-de-tests.md`.
+- [ ] [IA] [P1] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
+  outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
+  2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
+- [ ] [IA] [P1] (0.11.2) Le plus gros fichier de tests du kit (68 s sur 213 s) est découpé par thème pour être joué en
+  parallèle ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) — `docs/projects/tests-du-kit-decoupes-par-theme.md`.
+- [ ] [IA] [P1] (0.11.2) Les rejeux d'une clôture sont mesurés et le pre-push juge le commit réellement poussé ; prêt,
+  D1 à D3 tranchées (cadré le 2026-11-11) — `docs/projects/preuves-fiables-rejeux-mesures.md`.
+- [ ] [IA] [P1] (0.11.2) Le temps passé dans les contrôles d'un chantier est journalisé à la clôture, dans
+  `.drwil/usage.jsonl`, et livré aux projets ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
+  `docs/projects/temps-des-controles-journalise.md`.
+- [ ] [IA] [P1] (0.11.2) Les tests des hooks ne sont plus joués deux fois en CI (`checks-self-test` et
+  `couverture-hooks`) ; prêt, D1 à D4 tranchées (cadré le 2026-11-11) —
+  `docs/projects/doublon-des-tests-des-hooks-en-ci.md`.
 - [ ] [IA] [P1] (0.12.0) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
 - [ ] [IA] [P2] (0.12.0) Les tests de run-checks passent sans gitleaks, grâce à un faux gitleaks (cadré
   le 2026-11-06) — `docs/projects/tests-de-run-checks-sans-gitleaks.md`.
 - [ ] [IA] [P2] (0.12.0) L'ordre du sondage /drwil-start fonctionne chez l'adoptant, un ordre non lu se
   signale (cadré le 2026-11-06) — `docs/projects/ordre-du-sondage-chez-l-adoptant.md`.
-- [ ] [décision] [P2] (0.12.0) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
-  outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
-  2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
-- [ ] [décision] [P1] (0.12.0) Un seul run de tests pour le seuil de couverture et la couverture du diff : c8 rejoue
-  `npm test` deux fois par couche, ~48 s gagnées chez drwil_walk (tranchée le 2026-11-11) —
-  `docs/intentions/couverture-un-seul-run.md`.
 - [ ] [décision] [P2] Retirer `drwil-progress`, maintenant que `drwil serve` est à parité (notée le 2026-11-08) —
   `docs/intentions/retrait-de-drwil-progress.md`.
 - [ ] [décision] [P2] Documenter `drwil serve` dans le README du paquet (notée le 2026-11-08) —
@@ -219,13 +236,10 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P2] (0.14.0) Des tests de mutation sur les contrats de sécurité et d'attestation, et la relecture
   humaine exigée en nombre sur la forge (analyse externe du 2026-11-09) —
   `docs/intentions/tests-de-mutation-et-relecture-exigee.md`.
-- [ ] [décision] [P1] (0.13.0) Suivre la durée de la CI et le contexte relu, et trancher
+- [ ] [décision] [P1] Suivre la durée de la CI et le contexte relu, et trancher
   leurs calibrages (dont l'avertissement `[ia-first-warning]` et un `verify`
   en FAIL sans contrat en échec, repris le 2026-10-26) —
   `docs/intentions/suivi-ci-et-contexte.md`.
-- [ ] [décision] (0.12.0) Le pre-push connaît le commit local poussé, pas seulement la
-  référence distante (reprise d'un verdict au pre-push, QUA-152) —
-  `docs/intentions/pre-push-commit-pousse.md`.
 - [ ] [décision] (0.13.0) La lecture de la CI d'une MR GitLab (QUA-262) et la CI GitLab du
   gabarit (QUA-263), éprouvées en réel —
   `docs/intentions/gitlab-ci-de-la-mr-essai-reel.md`.
@@ -236,7 +250,7 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] (0.12.0) Comprendre l'échec intermittent de la couverture des hooks
   (QUA-004) vu deux fois sous charge parallèle, jamais reproduit seul —
   `docs/intentions/couverture-hooks-intermittente.md`.
-- [ ] [décision] (0.12.0) Surveiller qu'un contrôle ne lit que ses `paths` (reprise
+- [ ] [décision] (0.11.2) Surveiller qu'un contrôle ne lit que ses `paths` (reprise
   par contrôle, QUA-141) —
   `docs/intentions/reprise-par-controle-limites.md`.
 - [ ] [décision] (0.12.0) Les tests qui laissent des fichiers dans leur dossier

@@ -1,6 +1,6 @@
 # Intention : un seul run de tests pour le seuil de couverture et la couverture du diff
 
-**Statut** : proposée le 2026-11-11 — notée le 2026-11-11, cadrée et priorisée P1 (0.12.0), en suite de la note P0 « réduire le coût des contrôles rejoués ».
+**Statut** : proposée le 2026-11-11 — notée le 2026-11-11, cadrée et priorisée P1 (0.11.2), en suite de la note P0 « réduire le coût des contrôles rejoués ».
 
 ## Besoin
 
@@ -22,5 +22,6 @@ Toutes tranchées le 2026-11-11 par le demandeur :
 - **Partage** : un seul contrôle enchaîne le seuil puis `diff-cover` (un run de tests, un rapport). Le contrat QUA-093 nomme `coverage-diff-<couche>` : son texte est à revoir au chantier.
 - **Fraîcheur** : le rapport est produit dans le même contrôle et effacé avant le run, jamais de rapport périmé (QUA-019).
 - **Parallélisme** : sans objet avec un seul contrôle.
-- **Adoptants existants** : régénération par `drwil guarantees`, qui doit préserver les options ajoutées à la main (`--compare-branch`).
+- **Adoptants existants** (précisé le 2026-11-11 : `guarantees` conserve tout contrôle déjà déclaré, la simple régénération ne suffisait pas) : `guarantees` fusionne les deux contrôles quand ils sont ceux que le kit génère, jamais un contrôle modifié à la main (`--compare-branch`), que `drwil doctor` signale.
+- **ID du contrôle unique** : `coverage-diff-<couche>`.
 - **Critère de réussite** : un seul passage des tests ; gain d'au moins 30 s chez drwil_walk, relevé à la main dans `run-checks.log` (non automatisable).
