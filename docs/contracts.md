@@ -2819,3 +2819,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/run-checks-shards.test.mjs`, `.githooks/run-checks-pr.test.mjs`, `.github/scripts/workflows-yaml.test.mjs`
 **Origine** : ci-lents-controles — « Un verdict de PR ne s'écrit que depuis le job de cette PR, ne se lit que par la même PR sur le même dépôt, et son intégrité se vérifie avant reprise ; un verdict falsifié, d'un autre commit, d'une autre PR ou d'un fork est rejoué » (D4, tranchée par le demandeur le 2026-11-08)
 **Raison** : Lire un verdict écrit par une branche de PR ouvre la CI à un verdict falsifié : seule la provenance (même PR, même dépôt) et l'intégrité bornent ce risque.
+
+## QUA-292 — Un contrôle dont les tests lisent des documents n'est rejoué que par un fichier qu'ils lisent, jamais servi repris après le changement d'un fichier lu
+**Règle** : Livré au dépôt drwil (contrôles de `.drwil/ia-first.json`). Les `paths` de `tests-qua-039` et `tests-qua-047` sont la liste des fichiers que leurs tests lisent, relevée par traçage des lectures : sans `docs/**`, donc ni fiche de projet ni intention ne les invalide ; `tests-qua-047` n'est plus déclaré `reuse: "tree"` et est repris dès que ses `paths` sont inchangés. Un fichier lu hors des `paths` s'y ajoute, jamais l'inverse (QUA-013). Les tests de glossaire ne lisent plus le registre du vrai dépôt : le lancement par chemin se fait par un lien vers `.githooks/` dans un projet d'essai. Le « ok » repris n'est jamais servi après le changement d'un fichier lu : l'empreinte propre du contrôle (QUA-141) change à chaque fichier de la liste.
+**Périmètre** : `.drwil/ia-first.json` (contrôles `tests-qua-039`, `tests-qua-047`), `.githooks/glossary.test.mjs`.
+**Source de vérité** : `.drwil/ia-first.json` (`paths` des deux contrôles).
+**Preuve** : test du moteur sur la vraie configuration (empreinte inchangée par une fiche de projet ou d'intention, changée par chaque fichier lu, contrôle repris par fichier) ; test statique de QUA-141 (chaque fichier de test lancé est sous les `paths`).
+**Contrôle** : `tests-qua-292`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : controles-rejoues-reduits — « Un contrôle dont les tests lisent des documents n'est invalidé que par le changement d'un document qu'ils lisent, pas par une fiche d'intention ou de projet ; un test prouve qu'un « ok » repris n'est jamais servi après le changement d'un fichier lu » (D2, tranchée par le demandeur le 2026-11-11)
+**Raison** : Leurs `paths` contenaient `docs/**` : la moindre fiche d'intention rejouait ~166 s de tests qui ne lisent aucun document vivant.

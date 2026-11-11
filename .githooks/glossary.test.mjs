@@ -131,8 +131,12 @@ test("QUA-039 : commande : arguments ou entrée standard, directe ou par un lien
   symlinkSync(SCRIPT, lien);
   const r = spawnSync(process.execPath, [lien], { cwd: racine, input: "SEC-007 et rien", encoding: "utf8" });
   assert.equal(r.stdout, "SEC-007 — Pas de secret dans le dépôt\n");
+  // La racine vient du chemin appelé (le parent de son .githooks/), pas du dossier courant : un lien vers le vrai
+  // `.githooks/` dans le projet d'essai garde le test hors des documents du dépôt (paths du contrôle tests-qua-039).
+  const projetLie = projet(COMPLET);
+  symlinkSync(dirname(SCRIPT), join(projetLie, ".githooks"));
   assert.equal(
-    spawnSync(process.execPath, [SCRIPT, "QUA-015"], { cwd: projet(COMPLET), encoding: "utf8" }).stdout,
+    spawnSync(process.execPath, [join(projetLie, ".githooks", "glossary.mjs"), "QUA-015"], { cwd: projetLie, encoding: "utf8" }).stdout,
     "QUA-015 — Chantiers exploitables à froid\n",
   );
 });

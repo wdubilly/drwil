@@ -721,6 +721,40 @@ test("QUA-141 : checks-self-test a une empreinte propre — inchangée par une f
   }
 });
 
+test("QUA-292 : tests-qua-039 et tests-qua-047 — repris malgré une fiche ou une intention, jamais servis après un fichier qu'ils lisent", () => {
+  const config = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", ".drwil", "ia-first.json"), "utf8");
+  const cfg = JSON.parse(config);
+  const racine = depot();
+  ecrire(racine, ".drwil/ia-first.json", config);
+  ecrire(racine, "docs/projects/fiche.md", "un\n");
+  ecrire(racine, "docs/intentions/idee.md", "un\n");
+  const lus = {
+    "tests-qua-039": [".githooks/glossary.mjs", "packages/drwil/src/verdict.ts", "outils/tests-par-fichier.mjs", "package.json"],
+    "tests-qua-047": [
+      "packages/drwil/src/render.ts",
+      "outils/installer-depot.mjs",
+      "docs/ia-first.md",
+      ".claude/settings.json",
+      "AGENTS.md",
+    ],
+  };
+  for (const [id, fichiers] of Object.entries(lus)) {
+    for (const f of fichiers) ecrire(racine, f, "un\n");
+    assert.equal(checks(racine, { cfg }).find((c) => c.id === id).perControl, true, `${id} peut être repris`);
+    const empreinte = () => controlFingerprints(racine, checks(racine, { cfg })).get(id);
+    const avant = empreinte();
+    assert.match(avant, /^[0-9a-f]{64}$/);
+    ecrire(racine, "docs/projects/fiche.md", `${id} deux\n`);
+    ecrire(racine, "docs/intentions/idee.md", `${id} deux\n`);
+    assert.equal(empreinte(), avant, `${id} : une fiche de projet ou d'intention ne le rejoue pas`);
+    for (const f of fichiers) {
+      const base = empreinte();
+      ecrire(racine, f, `${f} change\n`);
+      assert.notEqual(empreinte(), base, `${id} : ${f} le rejoue`);
+    }
+  }
+});
+
 test("QUA-141 : un contrôle repris sur ses seuls paths les déclare tous — chaque fichier de test qu'il lance est sous ses paths", () => {
   const cfg = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", ".drwil", "ia-first.json"), "utf8"));
   const oublis = [];

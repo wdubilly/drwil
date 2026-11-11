@@ -582,8 +582,6 @@
         ".githooks/**",
         "package.json",
         "package-lock.json",
-        "docs/**",
-        ".drwil/state.json",
         ".drwil/ia-first.json"
       ],
       "degradable": false,
@@ -684,11 +682,27 @@
         "outils/**",
         "package.json",
         "package-lock.json",
+        ".githooks/**",
+        ".claude/**",
+        ".gemini/**",
+        ".github/**",
+        "bench/**",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "GEMINI.md",
+        ".gitignore",
+        ".gitattributes",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "tsconfig.json",
+        "tsconfig.base.json",
+        "biome.jsonc",
+        "docs/ia-first.md",
+        ".drwil/installed-files.json",
         ".drwil/ia-first.json"
       ],
       "degradable": false,
-      "needsBuild": true,
-      "reuse": "tree"
+      "needsBuild": true
     },
     {
       "id": "tests-qua-048",
@@ -3951,6 +3965,14 @@
       "run": "node outils/tests-par-fichier.mjs QUA-291 .githooks/run-checks-shards.test.mjs .githooks/run-checks-pr.test.mjs .github/scripts/workflows-yaml.test.mjs",
       "ciJob": "checks",
       "paths": ["outils/tests-par-fichier.mjs", ".githooks/**", "packages/drwil/**", ".github/**", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-292",
+      "name": "tests de QUA-292, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-292 .githooks/engine.test.mjs",
+      "ciJob": "checks",
+      "paths": ["outils/tests-par-fichier.mjs", ".githooks/**", ".drwil/ia-first.json"],
       "degradable": false
     },
     {
