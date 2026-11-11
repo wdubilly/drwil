@@ -137,9 +137,6 @@ d'un outil) la dit dans son statut.
 
 
 
-- [ ] [IA] [P0] (0.11.2) Les contrôles longs sont repris tant que leurs fichiers n'ont pas changé : `checks-self-test`,
-  `tests-qua-039` et `047`, `miroirs-gabarit` ; prêt, D1 à D4 tranchées (cadré le 2026-11-11) —
-  `docs/projects/controles-rejoues-reduits.md`.
 - [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
   sauvegardait plus depuis le 2026-11-08 ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
   `docs/projects/cache-des-verdicts-de-ci-retabli.md`.
