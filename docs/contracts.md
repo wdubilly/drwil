@@ -2829,3 +2829,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/engine.test.mjs`
 **Origine** : controles-rejoues-reduits — « Un contrôle dont les tests lisent des documents n'est invalidé que par le changement d'un document qu'ils lisent, pas par une fiche d'intention ou de projet ; un test prouve qu'un « ok » repris n'est jamais servi après le changement d'un fichier lu » (D2, tranchée par le demandeur le 2026-11-11)
 **Raison** : Leurs `paths` contenaient `docs/**` : la moindre fiche d'intention rejouait ~166 s de tests qui ne lisent aucun document vivant.
+
+## QUA-293 — Le contrôle des miroirs ne rejoue que son propre test et n'est rejoué que par un fichier qu'il compare ou lance, un écart de miroir étant toujours détecté
+**Règle** : Livré au dépôt drwil (contrôles de `.drwil/ia-first.json`). `miroirs-gabarit` ne lance que `outils/verifier-miroirs.test.mjs` puis `outils/verifier-miroirs.mjs` (les autres tests des outils ont leurs contrôles) ; ses `paths` sont le gabarit, `outils/miroirs.json`, ses scripts et les dossiers où le gabarit s'installe (copies installées) ; il n'est plus déclaré `reuse: "tree"`. Un fichier lu hors des `paths` s'y ajoute, jamais l'inverse (QUA-013). Un écart de miroir (fichier différent, présent d'un seul côté, déclaré à tort) reste détecté par `verifier-miroirs` (QUA-018) ; le « ok » repris n'est jamais servi après le changement d'un fichier de la liste.
+**Périmètre** : `.drwil/ia-first.json` (contrôle `miroirs-gabarit`).
+**Source de vérité** : `.drwil/ia-first.json` (commande et `paths` du contrôle).
+**Preuve** : test du moteur sur la vraie configuration (empreinte inchangée par un autre test d'outil ou le code du paquet, changée par chaque fichier comparé ou lancé, contrôle repris par fichier) ; tests de `verifier-miroirs` (écart non déclaré, résolu, d'un seul côté).
+**Contrôle** : `tests-qua-293`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : controles-rejoues-reduits — « `miroirs-gabarit` ne rejoue que `verifier-miroirs` et son test, et n'est invalidé que par le gabarit, `outils/miroirs.json` et les copies installées ; un écart de miroir est toujours détecté » (D3, tranchée par le demandeur le 2026-11-11)
+**Raison** : Ses `paths ["**"]` le rejouaient à chaque changement, et il relançait tous les tests des outils, dont le banc (34 s) déjà couvert par `tests-qua-101` à `109`.

@@ -1275,13 +1275,40 @@
     {
       "id": "miroirs-gabarit",
       "name": "dépôt et gabarit identiques, écarts déclarés (QUA-018)",
-      "run": "node outils/tests-par-fichier.mjs --tous \"outils/*.test.mjs\" && node outils/verifier-miroirs.mjs",
+      "run": "node outils/tests-par-fichier.mjs --tous outils/verifier-miroirs.test.mjs && node outils/verifier-miroirs.mjs",
       "ciJob": "checks",
       "paths": [
-        "**"
+        "outils/tests-par-fichier.mjs",
+        "outils/verifier-miroirs.mjs",
+        "outils/verifier-miroirs-lib.mjs",
+        "outils/verifier-miroirs.test.mjs",
+        "outils/miroirs.json",
+        "packages/drwil/templates/**",
+        ".githooks/**",
+        ".claude/**",
+        ".codex/**",
+        ".cursor/**",
+        ".gemini/**",
+        ".github/**",
+        ".gitlab/**",
+        "docs/**",
+        ".env.example",
+        ".gitleaks.toml",
+        ".gitignore",
+        ".gitlab-ci.yml",
+        "AGENTS.md",
+        "INSTALL.md",
+        "README.md"
       ],
-      "degradable": false,
-      "reuse": "tree"
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-293",
+      "name": "tests de QUA-293, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-293 .githooks/engine.test.mjs",
+      "ciJob": "checks",
+      "paths": ["outils/tests-par-fichier.mjs", ".githooks/**", ".drwil/ia-first.json"],
+      "degradable": false
     },
     {
       "id": "lint",

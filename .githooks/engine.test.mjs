@@ -755,6 +755,40 @@ test("QUA-292 : tests-qua-039 et tests-qua-047 — repris malgré une fiche ou u
   }
 });
 
+test("QUA-293 : miroirs-gabarit — repris malgré un autre test d'outil ou le code du paquet, jamais servi après un fichier qu'il compare ou lance", () => {
+  const config = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", ".drwil", "ia-first.json"), "utf8");
+  const cfg = JSON.parse(config);
+  const declare = cfg.checks.find((c) => c.id === "miroirs-gabarit");
+  assert.doesNotMatch(declare.run, /banc|\*\.test/, "ne relance pas tous les tests des outils");
+  const racine = depot();
+  ecrire(racine, ".drwil/ia-first.json", config);
+  assert.equal(checks(racine, { cfg }).find((c) => c.id === "miroirs-gabarit").perControl, true);
+  const empreinte = () => controlFingerprints(racine, checks(racine, { cfg })).get("miroirs-gabarit");
+  const lus = [
+    "outils/verifier-miroirs.mjs",
+    "outils/verifier-miroirs-lib.mjs",
+    "outils/verifier-miroirs.test.mjs",
+    "outils/miroirs.json",
+    "packages/drwil/templates/common/base/docs/recipes/x.md",
+    ".githooks/engine.mjs",
+    ".github/workflows/ia-first.yml",
+    "AGENTS.md",
+    ".gitignore",
+  ];
+  for (const f of [...lus, "outils/banc.test.mjs", "packages/drwil/src/verdict.ts"]) ecrire(racine, f, "un\n");
+  const avant = empreinte();
+  assert.match(avant, /^[0-9a-f]{64}$/);
+  for (const f of ["outils/banc.test.mjs", "packages/drwil/src/verdict.ts"]) {
+    ecrire(racine, f, `${f} change\n`);
+    assert.equal(empreinte(), avant, `${f} ne le rejoue pas`);
+  }
+  for (const f of lus) {
+    const base = empreinte();
+    ecrire(racine, f, `${f} change\n`);
+    assert.notEqual(empreinte(), base, `${f} le rejoue`);
+  }
+});
+
 test("QUA-141 : un contrôle repris sur ses seuls paths les déclare tous — chaque fichier de test qu'il lance est sous ses paths", () => {
   const cfg = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", ".drwil", "ia-first.json"), "utf8"));
   const oublis = [];
