@@ -4353,3 +4353,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/test-des-tranches-sans-variables-de-push`.
 
 - **Preuve de clôture** : `docs/preuves/test-des-tranches-sans-variables-de-push.md`.
+
+## 2026-11-11 — Les contrôles longs sont repris tant que leurs fichiers n'ont pas changé (5 lots)
+
+- **Ce qui change** : `checks-self-test` sort du moteur vers `.githooks/engine-selftest.mjs` et déclare ses `paths` ; les `paths` de `tests-qua-039` et `tests-qua-047` sont réduits aux fichiers lus (sans `docs/**`) ; `miroirs-gabarit` ne lance plus que `outils/verifier-miroirs.test.mjs` puis `outils/verifier-miroirs.mjs`, sans `reuse: "tree"` ; le garde-fou statique de QUA-141 couvre tout script cité par la commande d'un contrôle. Contrats QUA-292 à QUA-295 (contrôles `tests-qua-292` à `295`).
+- **Décisions clés** : D1 à D4 du demandeur (2026-11-11) : `paths` pour `checks-self-test`, resserrement par la liste des fichiers lus, `miroirs-gabarit` réduit, test statique sans traçage des lectures.
+- **Critères et preuves** : mesure dans `run-checks.log` : avant, `checks-self-test` rejoué en ~49 s à chaque passe, `tests-qua-039` et `tests-qua-047` invalidés par toute fiche de `docs/` ; après, une passe sans fichier modifié reprend ces trois contrôles (« repris (fichiers du contrôle inchangés) »). `miroirs-gabarit` : sa ligne n'a pas été retrouvée dans `run-checks.log`, la mesure avant/après de ce contrôle n'est pas relevée ; son rejeu sur un écart reste prouvé par `outils/verifier-miroirs.test.mjs` et sa configuration par QUA-293. `GOVERNANCE: PASS (CI pending)` avant clôture.
+- **Limites connues** : la durée de `miroirs-gabarit` n'est pas mesurée ; la liste des `paths` de `checks-self-test` est large (`packages/**`, `.github/**`…) car les tests des hooks lisent ces fichiers (QUA-013) ; le cache des verdicts en CI et le reste de l'optimisation sont les chantiers suivants de la 0.11.2.
+- **Clôturé par** : la branche `workstream/controles-rejoues-reduits`.

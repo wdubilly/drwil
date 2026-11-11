@@ -62,8 +62,11 @@ Le projet : que ces contrôles ne soient rejoués que quand un fichier qu'ils li
 
 ## Contrats modifiés
 
-(aucun à ce stade ; si les décisions de réalisation modifient `QUA-141` ou `QUA-033`, la puce s'écrit ici sur le oui
-du demandeur.)
+- `.githooks/engine.mjs` — `checks-self-test` sort du moteur vers `.githooks/engine-selftest.mjs` et porte des `paths`
+  (validé par le demandeur le 2026-11-11, décision D1)
+- `.githooks/engine.test.mjs` — tests d'empreinte de `checks-self-test`, de `tests-qua-039`, `tests-qua-047` et `miroirs-gabarit`, et
+  garde-fou statique des scripts cités hors `paths` (validé par le demandeur le 2026-11-11, décisions D1 à D4)
+- `.githooks/glossary.test.mjs` — les tests ne lisent plus le registre du vrai dépôt (validé par le demandeur le 2026-11-11, décision D2)
 
 ## 2. Hors périmètre
 
