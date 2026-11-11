@@ -59,7 +59,7 @@ demandeur à la réalisation.)
 
 ## 3. Contraintes
 
-- Dépend du chantier 1 (`docs/projects/controles-rejoues-reduits.md`) : `checks-self-test` y sort de `.githooks/engine.mjs`
+- Dépend du chantier 1 (`docs/projects/journal.md`) : `checks-self-test` y sort de `.githooks/engine.mjs`
   (198 lignes, plafond 200) dans un module engine-selftest ; ce chantier s'y branche après sa fusion.
 - QUA-013 : un contrôle non exécuté n'est pas passé ; « couvert par `couverture-hooks` » ne vaut que si ce dernier a joué et
   réussi dans la même passe. S'il échoue ou ne joue pas, `checks-self-test` rejoue.

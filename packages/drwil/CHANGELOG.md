@@ -5,6 +5,16 @@
 Each workstream that changes what a user sees adds its line here, in its
 closing commit; the release renames this section to its version.
 
+### Changed
+
+- `run-checks` no longer replays four long checks on every pass: the tests of
+  the hooks themselves (`checks-self-test`), `tests-qua-039`, `tests-qua-047`
+  and `miroirs-gabarit` are reused as long as the files they read are
+  unchanged (a project or intention sheet no longer replays them), and
+  replayed as soon as one of those files changes. `miroirs-gabarit` only runs
+  the mirror check and its own test. A static test refuses a check whose
+  command cites a script outside its `paths`.
+
 ## 0.11.1 (2026-11-10)
 
 ### Added

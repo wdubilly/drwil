@@ -1,0 +1,25 @@
+{
+  "version": 4,
+  "contract": "QUA-150",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-11T20:28:35.075Z",
+  "actor": {
+    "name": "wdubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "be1f48eb5f9e36f5762e77149d720dcabe6cb008d6335dbd084f5bcbc86f1b65",
+  "proof": {},
+  "covers": [
+    ".githooks/engine.test.mjs",
+    "outils/banc.test.mjs",
+    "outils/banc-agents.test.mjs"
+  ],
+  "coverage": {
+    ".githooks/engine.test.mjs": "94fe844b11425fb5213b29d14465ecb1a9b4a0560c1dc3ec13dc89d9023f79eb",
+    "outils/banc-agents.test.mjs": "83d2b3466e6ae064d196ee55a864ec7523d01eddc1114c2a7844b1991c8accaf",
+    "outils/banc.test.mjs": "aaa279f3774427225ecf086adfd867bf3d3d310716c1173a24ba99ae9f6099d6"
+  },
+  "commit": "27dee84bb2d64f88731ecd4ffddfb9cc80a8a3fd",
+  "automated": []
+}

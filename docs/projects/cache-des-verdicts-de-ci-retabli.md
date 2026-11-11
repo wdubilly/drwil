@@ -52,7 +52,7 @@ sur le même arbre, sans qu'une PR relise jamais ses propres verdicts, et que l'
 
 ## 2. Hors périmètre
 
-- Les contrôles longs repris tant que leurs fichiers n'ont pas changé : chantier 1 (`docs/projects/controles-rejoues-reduits.md`).
+- Les contrôles longs repris tant que leurs fichiers n'ont pas changé : chantier 1 (`docs/projects/journal.md`).
 - Le repli par l'API GitHub sur le dernier commit vert (écarté, D2) : une fois les sauvegardes rétablies, le préfixe prend le plus récent cache.
 - La CI GitLab du gabarit.
 - Le suivi de la durée de la CI et du contexte relu (`docs/intentions/suivi-ci-et-contexte.md`) : chantier à part, à cadrer ensuite.

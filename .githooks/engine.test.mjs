@@ -685,7 +685,7 @@ test("QUA-141 : sans paths, avec reuse: false ou reuse: \"tree\", sans fichier s
   for (const id of ["sans", "reseau", "arbre", "vide", "docs-references"]) assert.equal(empreintes.get(id), null, id);
   assert.deepEqual(
     liste.filter((c) => c.perControl).map((c) => c.id),
-    ["avec", "vide"],
+    ["checks-self-test", "avec", "vide"],
   );
   assert.equal(parId(liste).arbre.reuse, true, 'reuse: "tree" reste repris sur l\'arbre entier (QUA-140)');
   const horsGit = tmp();
@@ -694,13 +694,109 @@ test("QUA-141 : sans paths, avec reuse: false ou reuse: \"tree\", sans fichier s
   assert.equal(controlFingerprints(racine, liste).get("avec"), null, "un fichier qui ne se lit pas : rien n'est repris");
 });
 
-test("QUA-141 : un contrôle repris sur ses seuls paths les déclare tous — chaque fichier de test qu'il lance est sous ses paths", () => {
+test("QUA-295 : checks-self-test a une empreinte propre — inchangée par une fiche de projet, changée par un fichier qu'il lit", () => {
+  const racine = depot();
+  ecrire(racine, ".githooks/a.test.mjs", "import { test } from 'node:test'; test('t', () => {});\n");
+  ecrire(racine, "docs/projects/fiche.md", "un\n");
+  ecrire(racine, "docs/intentions/idee.md", "un\n");
+  const empreinte = () => controlFingerprints(racine, checks(racine)).get("checks-self-test");
+  const avant = empreinte();
+  assert.match(avant, /^[0-9a-f]{64}$/);
+  assert.equal(checks(racine).find((c) => c.id === "checks-self-test").perControl, true);
+  ecrire(racine, "docs/projects/fiche.md", "deux\n");
+  ecrire(racine, "docs/intentions/idee.md", "deux\n");
+  assert.equal(empreinte(), avant, "une fiche de projet ou d'intention ne rejoue pas les tests des hooks");
+  for (const f of [
+    ".githooks/a.test.mjs",
+    "outils/b.mjs",
+    "package.json",
+    "package-lock.json",
+    ".drwil/ia-first.json",
+    "packages/drwil/c.js",
+    "docs/contracts.md",
+  ]) {
+    const base = empreinte();
+    ecrire(racine, f, `${f} change\n`);
+    assert.notEqual(empreinte(), base, `${f} rejoue les tests des hooks`);
+  }
+});
+
+test("QUA-292 : tests-qua-039 et tests-qua-047 — repris malgré une fiche ou une intention, jamais servis après un fichier qu'ils lisent", () => {
+  const config = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", ".drwil", "ia-first.json"), "utf8");
+  const cfg = JSON.parse(config);
+  const racine = depot();
+  ecrire(racine, ".drwil/ia-first.json", config);
+  ecrire(racine, "docs/projects/fiche.md", "un\n");
+  ecrire(racine, "docs/intentions/idee.md", "un\n");
+  const lus = {
+    "tests-qua-039": [".githooks/glossary.mjs", "packages/drwil/src/verdict.ts", "outils/tests-par-fichier.mjs", "package.json"],
+    "tests-qua-047": [
+      "packages/drwil/src/render.ts",
+      "outils/installer-depot.mjs",
+      "docs/ia-first.md",
+      ".claude/settings.json",
+      "AGENTS.md",
+    ],
+  };
+  for (const [id, fichiers] of Object.entries(lus)) {
+    for (const f of fichiers) ecrire(racine, f, "un\n");
+    assert.equal(checks(racine, { cfg }).find((c) => c.id === id).perControl, true, `${id} peut être repris`);
+    const empreinte = () => controlFingerprints(racine, checks(racine, { cfg })).get(id);
+    const avant = empreinte();
+    assert.match(avant, /^[0-9a-f]{64}$/);
+    ecrire(racine, "docs/projects/fiche.md", `${id} deux\n`);
+    ecrire(racine, "docs/intentions/idee.md", `${id} deux\n`);
+    assert.equal(empreinte(), avant, `${id} : une fiche de projet ou d'intention ne le rejoue pas`);
+    for (const f of fichiers) {
+      const base = empreinte();
+      ecrire(racine, f, `${f} change\n`);
+      assert.notEqual(empreinte(), base, `${id} : ${f} le rejoue`);
+    }
+  }
+});
+
+test("QUA-293 : miroirs-gabarit — repris malgré un autre test d'outil ou le code du paquet, jamais servi après un fichier qu'il compare ou lance", () => {
+  const config = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", ".drwil", "ia-first.json"), "utf8");
+  const cfg = JSON.parse(config);
+  const declare = cfg.checks.find((c) => c.id === "miroirs-gabarit");
+  assert.doesNotMatch(declare.run, /banc|\*\.test/, "ne relance pas tous les tests des outils");
+  const racine = depot();
+  ecrire(racine, ".drwil/ia-first.json", config);
+  assert.equal(checks(racine, { cfg }).find((c) => c.id === "miroirs-gabarit").perControl, true);
+  const empreinte = () => controlFingerprints(racine, checks(racine, { cfg })).get("miroirs-gabarit");
+  const lus = [
+    "outils/verifier-miroirs.mjs",
+    "outils/verifier-miroirs-lib.mjs",
+    "outils/verifier-miroirs.test.mjs",
+    "outils/miroirs.json",
+    "packages/drwil/templates/common/base/docs/recipes/x.md",
+    ".githooks/engine.mjs",
+    ".github/workflows/ia-first.yml",
+    "AGENTS.md",
+    ".gitignore",
+  ];
+  for (const f of [...lus, "outils/banc.test.mjs", "packages/drwil/src/verdict.ts"]) ecrire(racine, f, "un\n");
+  const avant = empreinte();
+  assert.match(avant, /^[0-9a-f]{64}$/);
+  for (const f of ["outils/banc.test.mjs", "packages/drwil/src/verdict.ts"]) {
+    ecrire(racine, f, `${f} change\n`);
+    assert.equal(empreinte(), avant, `${f} ne le rejoue pas`);
+  }
+  for (const f of lus) {
+    const base = empreinte();
+    ecrire(racine, f, `${f} change\n`);
+    assert.notEqual(empreinte(), base, `${f} le rejoue`);
+  }
+});
+
+test("QUA-294 : un contrôle repris sur ses seuls paths les déclare tous — chaque script cité par sa commande est sous ses paths", () => {
   const cfg = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", ".drwil", "ia-first.json"), "utf8"));
   const oublis = [];
   for (const c of cfg.checks) {
     if (!Array.isArray(c.paths) || c.reuse === false || c.reuse === "tree") continue;
     const motifs = c.paths.map(globToRegex);
-    for (const f of c.run.match(/[\w./-]+\.test\.mjs/g) ?? []) if (!motifs.some((m) => m.test(f))) oublis.push(`${c.id} : ${f}`);
+    for (const f of c.run.match(/[\w./-]+\.(?:mjs|cjs|js|ts|sh)\b/g) ?? [])
+      if (!motifs.some((m) => m.test(f))) oublis.push(`${c.id} : ${f}`);
   }
   assert.deepEqual(
     oublis,

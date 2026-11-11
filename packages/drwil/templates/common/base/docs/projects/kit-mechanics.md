@@ -59,6 +59,7 @@ files:
   - .githooks/engine-launch.mjs
   - .githooks/engine-pass.mjs
   - .githooks/engine-runat.mjs
+  - .githooks/engine-selftest.mjs
   - .githooks/engine-shards.mjs
   - .githooks/engine-texts.mjs
   - .githooks/run-checks-pr.mjs
