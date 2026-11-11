@@ -145,6 +145,9 @@ d'un outil) la dit dans son statut.
 - [ ] [décision] [P2] (0.12.0) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
   outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
   2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
+- [ ] [décision] [P1] (0.12.0) Un seul run de tests pour le seuil de couverture et la couverture du diff : c8 rejoue
+  `npm test` deux fois par couche, ~48 s gagnées chez drwil_walk (tranchée le 2026-11-11) —
+  `docs/intentions/couverture-un-seul-run.md`.
 - [ ] [décision] [P2] Retirer `drwil-progress`, maintenant que `drwil serve` est à parité (notée le 2026-11-08) —
   `docs/intentions/retrait-de-drwil-progress.md`.
 - [ ] [décision] [P2] Documenter `drwil serve` dans le README du paquet (notée le 2026-11-08) —
