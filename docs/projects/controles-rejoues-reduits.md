@@ -49,14 +49,14 @@ Le projet : que ces contrôles ne soient rejoués que quand un fichier qu'ils li
 ## Critères d'acceptation
 
 - Les tests du moteur (`checks-self-test`) sont repris quand `.githooks/**`, `outils/**`, `package.json`,
-  `package-lock.json` et `.drwil/ia-first.json` sont inchangés, et rejoués dès qu'un seul de ces fichiers change — contrat à créer
+  `package-lock.json` et `.drwil/ia-first.json` sont inchangés, et rejoués dès qu'un seul de ces fichiers change — `QUA-295`
 - Un contrôle dont les tests lisent des documents (`tests-qua-039`, `tests-qua-047`) n'est invalidé que par le changement
   d'un document qu'ils lisent (contrats, glossaire, kit), pas par une fiche d'intention ou de projet ; un test prouve
-  qu'un « ok » repris n'est jamais servi après le changement d'un fichier lu — contrat à créer
+  qu'un « ok » repris n'est jamais servi après le changement d'un fichier lu — `QUA-292`
 - `miroirs-gabarit` ne rejoue que `verifier-miroirs` et son test, et n'est invalidé que par le gabarit, `outils/miroirs.json`
-  et les copies installées ; un écart de miroir est toujours détecté — contrat à créer
+  et les copies installées ; un écart de miroir est toujours détecté — `QUA-293`
 - Chaque script cité par la commande d'un contrôle est sous les `paths` de ce contrôle ; un contrôle dont un script
-  cité sort de ses `paths` est refusé par un test statique, sans traçage des lectures — contrat à créer
+  cité sort de ses `paths` est refusé par un test statique, sans traçage des lectures — `QUA-294`
 - Une passe de `run-checks` sans fichier modifié depuis la précédente ne rejoue aucun de ces quatre contrôles : mesure
   avant et après dans `run-checks.log`, relevée à la main dans le journal de clôture — [humain] `QUA-013`
 
