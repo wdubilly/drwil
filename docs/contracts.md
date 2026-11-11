@@ -2849,3 +2849,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/engine.test.mjs`
 **Origine** : controles-rejoues-reduits — « Chaque script cité par la commande d'un contrôle est sous les `paths` de ce contrôle ; un contrôle dont un script cité sort de ses `paths` est refusé par un test statique, sans traçage des lectures » (D4, tranchée par le demandeur le 2026-11-11)
 **Raison** : Le test ne couvrait que les fichiers `*.test.mjs` cités ; un script lancé hors des `paths` (comme `outils/verifier-miroirs.mjs`) ferait reprendre un verdict périmé.
+
+## QUA-295 — Les tests des contrôles eux-mêmes (`checks-self-test`) sont repris tant que les fichiers qu'ils lisent n'ont pas changé, et rejoués dès qu'un seul change
+**Règle** : Livré au dépôt drwil (moteur `.githooks/engine.mjs`, module `.githooks/engine-selftest.mjs`). Le contrôle intégré `checks-self-test` déclare ses `paths` (`SELF_TEST_PATHS`) : `.githooks/**`, `outils/**`, `package.json`, `package-lock.json`, `.drwil/ia-first.json`, complétés des fichiers que les tests des hooks lisent réellement (`packages/**`, `.claude/**`, `.github/**`, `AGENTS.md`, `docs/contracts.md`, `docs/contracts-catalog.md`, `docs/ia-first/**`, `docs/recipes/**`). Son empreinte (QUA-141) porte ces `paths` et sa déclaration : un « ok » est repris tant qu'aucun de ces fichiers n'a changé, jamais servi après le changement d'un seul ; une fiche de projet ou d'intention ne le rejoue pas. Un fichier lu hors de cette liste s'y ajoute, jamais l'inverse (QUA-013).
+**Périmètre** : `.githooks/engine.mjs`, `.githooks/engine-selftest.mjs`.
+**Source de vérité** : `.githooks/engine-selftest.mjs` (`SELF_TEST_PATHS`).
+**Preuve** : test du moteur : l'empreinte de `checks-self-test` est inchangée par une fiche de projet ou d'intention et change à chaque fichier de la liste.
+**Contrôle** : `tests-qua-295`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : controles-rejoues-reduits — « Les tests du moteur (`checks-self-test`) sont repris quand `.githooks/**`, `outils/**`, `package.json`, `package-lock.json` et `.drwil/ia-first.json` sont inchangés, et rejoués dès qu'un seul de ces fichiers change » (D1, tranchée par le demandeur le 2026-11-11)
+**Raison** : Intégré au moteur et sans `paths`, il n'était jamais repris et rejouait ~65 s de tests à chaque passe.

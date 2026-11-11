@@ -113,6 +113,6 @@ tout fichier lu trouvé hors de la liste s'ajoute aux `paths`, jamais l'inverse.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-11) : lot 4 fait. Le test statique existant (chaque script cité par la commande d'un contrôle repris sur ses `paths` est sous ces `paths`) ne couvrait que `*.test.mjs` : il couvre maintenant les scripts mjs, cjs, js, ts et sh, sans traçage ; il passe sur la vraie configuration. Contrat QUA-294 créé (contrôle `tests-qua-294`). Les contrats de reprise de `checks-self-test` (lot 1) restent à créer avec la documentation au lot 5.
+- **Dernier état** (2026-11-11) : lot 5 fait. Contrat QUA-295 créé pour `checks-self-test` (contrôle `tests-qua-295`, test renommé en QUA-295), CHANGELOG « Unreleased » rédigé, carte d'architecture et `kit-mechanics.md` déjà à jour depuis le lot 1. Tous les lots [IA] sont faits ; reste la clôture (mesure avant et après au journal).
 - **Travail non commité** : aucun une fois le lot commité.
-- **Prochaine étape** : [IA] lot 5 (documentation et mesure), dans une nouvelle session.
+- **Prochaine étape** : vérifier, entrée du journal, clôture.

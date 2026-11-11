@@ -694,7 +694,7 @@ test("QUA-141 : sans paths, avec reuse: false ou reuse: \"tree\", sans fichier s
   assert.equal(controlFingerprints(racine, liste).get("avec"), null, "un fichier qui ne se lit pas : rien n'est repris");
 });
 
-test("QUA-141 : checks-self-test a une empreinte propre — inchangée par une fiche de projet, changée par un fichier qu'il lit", () => {
+test("QUA-295 : checks-self-test a une empreinte propre — inchangée par une fiche de projet, changée par un fichier qu'il lit", () => {
   const racine = depot();
   ecrire(racine, ".githooks/a.test.mjs", "import { test } from 'node:test'; test('t', () => {});\n");
   ecrire(racine, "docs/projects/fiche.md", "un\n");
