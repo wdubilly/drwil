@@ -1,6 +1,6 @@
 # Intention : suivre la durée de la CI et le contexte relu, et trancher leurs calibrages
 
-**Statut** : proposée le 2026-10-25 — regroupement de 10 intentions et 1 note(s) lors du ménage du 2026-10-25 ; chaque partie reprend l'une d'elles, avec son statut d'origine.
+**Statut** : en partie reprise en 0.11.2 le 2026-11-11 par `docs/projects/temps-des-controles-journalise.md` (journal des passes, durée de la CI, relevé hooks inchangés) et `docs/projects/doublon-des-tests-des-hooks-en-ci.md` (doublon `checks-self-test`, QUA-004, budget Windows) ; le reste (cache lu, gardes de lecture, découpage du registre, Node 24, gain pour les projets adoptés, `[ia-first-warning]`) reste ouvert sans version ; proposée le 2026-10-25 — regroupement de 10 intentions et 1 note(s) lors du ménage du 2026-10-25 ; chaque partie reprend l'une d'elles, avec son statut d'origine.
 
 ## Besoin
 

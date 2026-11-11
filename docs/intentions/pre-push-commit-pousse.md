@@ -1,6 +1,6 @@
 # Intention : que le pre-push connaisse le commit poussé, pas seulement la référence distante
 
-**Statut** : proposée le 2026-10-26 — limite non traitée de la clôture « le pre-push reprend un verdict « ok » dont les fichiers n'ont pas changé » (journal du 2026-10-26).
+**Statut** : repris en 0.11.2 par `docs/projects/preuves-fiables-rejeux-mesures.md` (décidé le 2026-11-11) ; proposée le 2026-10-26 — limite non traitée de la clôture « le pre-push reprend un verdict « ok » dont les fichiers n'ont pas changé » (journal du 2026-10-26).
 
 ## Besoin
 

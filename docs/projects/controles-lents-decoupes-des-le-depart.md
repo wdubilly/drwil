@@ -1,6 +1,6 @@
 # Projet : un contrôle lent est découpé en tranches dès sa déclaration, chez tout adoptant
 
-**Statut** : cadré le 2026-11-09 ; décisions D1 à D6 tranchées le 2026-11-09.
+**Statut** : cadré le 2026-11-09 ; décisions D1 à D6 tranchées le 2026-11-09 ; relu et rangé en 0.11.2 le 2026-11-11 (chantier 4 sur 8).
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/intentions/notes.md` (note du 2026-11-09 « Rendre le découpage en tranches systématique pour l'adoptant ») ; suite de `docs/intentions/ci-rapide-epreuves-reelles.md`
@@ -80,7 +80,8 @@ demandeur.)
 - QUA-013 : un contrôle non exécuté n'est pas passé ; une déclaration découpée refusée par le moteur (commande qui ne
   cite pas `DRWIL_SHARD_INDEX`, N hors de 2 à 16) ne doit jamais être proposée.
 - QUA-019 : rien ne contourne le moteur ; la proposition respecte ses règles de validation.
-- Un fichier de code à 180 lignes ou plus est découpé (plafond 200) : `packages/drwil/src/guarantees.ts` et `packages/drwil/src/doctor.ts`.
+- Un fichier de code à 180 lignes ou plus est découpé (plafond 200) : `packages/drwil/src/guarantees.ts`, `packages/drwil/src/doctor.ts` (200 lignes, aucune place pour un import et un appel) et `packages/drwil/src/guarantees-briefs.ts` (197 lignes). Relu le 2026-11-11 : le lot 0 ci-dessous libère d'abord de la place dans `packages/drwil/src/doctor.ts` (modèle : `packages/drwil/src/doctor-upgrade.ts`), en commit séparé et sans changement de comportement.
+- Fichiers partagés avec le chantier « un seul run de couverture » (`docs/projects/couverture-un-seul-run-de-tests.md`) : `packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/doctor.ts`, `packages/drwil/test/guarantees.test.mjs`, `docs/contracts.md`, `.drwil/ia-first.json`. Les deux chantiers se jouent l'un après l'autre (une fusion avant le lancement du suivant) ; le premier fait le lot 0, le second le trouve fait.
 - Textes en français et en anglais, comme les autres textes de `guarantees` et de `doctor`.
 
 ## 4. Décisions
@@ -107,6 +108,10 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
 (aucun : D1 à D6 sont tranchées.)
 
 ## 6. Increments
+
+- **Lot 0 — de la place dans `packages/drwil/src/doctor.ts`** [IA] : extraire un bloc de points existant vers un module voisin, sans changer
+  le comportement (tests de `doctor` inchangés et verts avant et après) ; sauté si le chantier « un seul run de
+  couverture » l'a déjà fait. Critère de sortie : `packages/drwil/src/doctor.ts` sous 190 lignes.
 
 - **Lot 1 — la table des outils e2e et la déclaration** [IA] : le module guarantees-e2e-tools (outil, sonde, comptage des
   tests, commande de tranche et setup), `guarantees` déclare le contrôle `e2e` sans réécrire un contrôle existant, la
