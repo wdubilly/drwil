@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-10 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-11 (rangement du backlog).
 
 ## Besoin
 
