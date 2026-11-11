@@ -685,13 +685,40 @@ test("QUA-141 : sans paths, avec reuse: false ou reuse: \"tree\", sans fichier s
   for (const id of ["sans", "reseau", "arbre", "vide", "docs-references"]) assert.equal(empreintes.get(id), null, id);
   assert.deepEqual(
     liste.filter((c) => c.perControl).map((c) => c.id),
-    ["avec", "vide"],
+    ["checks-self-test", "avec", "vide"],
   );
   assert.equal(parId(liste).arbre.reuse, true, 'reuse: "tree" reste repris sur l\'arbre entier (QUA-140)');
   const horsGit = tmp();
   assert.equal(controlFingerprints(horsGit, checks(horsGit, { cfg })).get("avec"), null, "sans dépôt git : rien n'est repris");
   symlinkSync(".", join(racine, "src", "boucle"));
   assert.equal(controlFingerprints(racine, liste).get("avec"), null, "un fichier qui ne se lit pas : rien n'est repris");
+});
+
+test("QUA-141 : checks-self-test a une empreinte propre — inchangée par une fiche de projet, changée par un fichier qu'il lit", () => {
+  const racine = depot();
+  ecrire(racine, ".githooks/a.test.mjs", "import { test } from 'node:test'; test('t', () => {});\n");
+  ecrire(racine, "docs/projects/fiche.md", "un\n");
+  ecrire(racine, "docs/intentions/idee.md", "un\n");
+  const empreinte = () => controlFingerprints(racine, checks(racine)).get("checks-self-test");
+  const avant = empreinte();
+  assert.match(avant, /^[0-9a-f]{64}$/);
+  assert.equal(checks(racine).find((c) => c.id === "checks-self-test").perControl, true);
+  ecrire(racine, "docs/projects/fiche.md", "deux\n");
+  ecrire(racine, "docs/intentions/idee.md", "deux\n");
+  assert.equal(empreinte(), avant, "une fiche de projet ou d'intention ne rejoue pas les tests des hooks");
+  for (const f of [
+    ".githooks/a.test.mjs",
+    "outils/b.mjs",
+    "package.json",
+    "package-lock.json",
+    ".drwil/ia-first.json",
+    "packages/drwil/c.js",
+    "docs/contracts.md",
+  ]) {
+    const base = empreinte();
+    ecrire(racine, f, `${f} change\n`);
+    assert.notEqual(empreinte(), base, `${f} rejoue les tests des hooks`);
+  }
 });
 
 test("QUA-141 : un contrôle repris sur ses seuls paths les déclare tous — chaque fichier de test qu'il lance est sous ses paths", () => {

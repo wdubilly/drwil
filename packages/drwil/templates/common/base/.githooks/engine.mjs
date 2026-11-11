@@ -5,7 +5,6 @@
 // "not-applicable": excluded by design in this context (e.g. QUA-017 in CI).
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { existsSync, readdirSync } from "node:fs";
 import { availableParallelism, homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +14,7 @@ import { mainBranchVerdict } from "./engine-branch.mjs";
 import { createLaunchers } from "./engine-launch.mjs";
 import { createPass } from "./engine-pass.mjs";
 import { ciOnly, runAtVerdict, runContext } from "./engine-runat.mjs";
+import { SELF_TEST_ENTRY, selfTestPlan } from "./engine-selftest.mjs";
 import { keepSharded, shardPlan } from "./engine-shards.mjs";
 import { texts } from "./engine-texts.mjs";
 import { checkScope } from "./scope-gate.mjs";
@@ -79,17 +79,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
     return { status: r.status, message: r.message, detail: r.detail, configured: r.configured, output };
   });
   add("main-branch", T.branch, () => mainBranchVerdict(root, env, T));
-  const selfTests = () => {
-    if (!full) return { status: "not-applicable", detail: T.minimalMode };
-    const dir = join(root, ".githooks");
-    const tests = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".test.mjs")) : [];
-    // These tests try drwil's code: an equipped project does not receive them.
-    if (!tests.length) return { status: "not-applicable", detail: T.noTests };
-    if (docsOnly) return { status: "not-run", detail: T.docsOnly };
-    const files = tests.map((f) => join(".githooks", f));
-    const shared = join("outils", "tests-par-fichier.mjs"); // drwil's repository: one run per file and pass, shared with the contracts' checks (QUA-033)
-    return { args: existsSync(join(root, shared)) ? [shared, "--tous", ...files] : ["--test", ...files] };
-  };
+  const selfTests = () => selfTestPlan(root, { full, docsOnly, T });
   add(
     "checks-self-test",
     T.selfTests,
@@ -102,6 +92,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
       return t.args ? launchAsync(process.execPath, t.args, {}, name) : t;
     },
   );
+  Object.assign(list.at(-1), SELF_TEST_ENTRY);
   add("ci-coverage", T.ciCoverage, (o, name) => {
     if (!full) return { status: "not-applicable", detail: T.minimalMode };
     const ciFiles = Array.isArray(cfg.ciFiles) ? cfg.ciFiles : [];
