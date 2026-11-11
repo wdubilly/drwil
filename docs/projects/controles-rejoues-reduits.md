@@ -10,6 +10,7 @@ files:
   - .githooks/engine.mjs
   - .githooks/engine-selftest.mjs
   - .githooks/engine.test.mjs
+  - .githooks/glossary.test.mjs
   - packages/drwil/templates/common/base/.githooks/engine.mjs
   - packages/drwil/templates/common/base/.githooks/engine-selftest.mjs
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
@@ -112,6 +113,6 @@ tout fichier lu trouvé hors de la liste s'ajoute aux `paths`, jamais l'inverse.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-11) : lot 1 fait et commité : `checks-self-test` déclare ses `paths` (module `.githooks/engine-selftest.mjs`, gabarit et copie) ; test de l'empreinte dans `.githooks/engine.test.mjs`. Les tests des hooks lisant aussi le gabarit et le paquet, les consignes, `.claude/`, `.github/` et une partie de `docs/` (relevé des lectures), les `paths` de D1 sont complétés en conséquence (QUA-013) ; `docs/projects/` et `docs/intentions/` restent exclus.
-- **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 2 (`tests-qua-039` et `047`), dans une nouvelle session.
+- **Dernier état** (2026-11-11) : lot 2 fait. Lecture tracée (préchargement de `fs`) de `tests-qua-039` et `047` : `.githooks/glossary.test.mjs` lisait par son dernier appel le vrai registre, le vrai catalogue, `docs/intentions` et `docs/projects` du dépôt (racine = parent du `.githooks/` appelé) ; il passe maintenant par un lien vers `.githooks/` dans un projet d'essai (`.githooks/glossary.test.mjs` ajouté au scope), donc plus aucune lecture de `docs/`. `tests-qua-039` : `docs/**` et le fichier d'état retirés des `paths`. `tests-qua-047` : copie de tous les fichiers suivis par l'installateur, comparaison de `docs/ia-first.md` ; `paths` complétés (`.githooks`, `.claude`, `.gemini`, `.github`, `bench`, consignes, racine, `docs/ia-first.md`, le manifeste d'installation) et `reuse: "tree"` retiré, pour qu'il soit repris. Contrat QUA-292 créé (contrôle `tests-qua-292`, test du moteur sur la vraie configuration). Le contrat de reprise de `checks-self-test` (lot 1) n'a pas été créé au lot 1 : à créer avec la documentation au lot 5.
+- **Travail non commité** : aucun une fois le lot commité.
+- **Prochaine étape** : [IA] lot 3 (`miroirs-gabarit`), dans une nouvelle session.
