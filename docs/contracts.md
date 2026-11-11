@@ -2839,3 +2839,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/engine.test.mjs`
 **Origine** : controles-rejoues-reduits — « `miroirs-gabarit` ne rejoue que `verifier-miroirs` et son test, et n'est invalidé que par le gabarit, `outils/miroirs.json` et les copies installées ; un écart de miroir est toujours détecté » (D3, tranchée par le demandeur le 2026-11-11)
 **Raison** : Ses `paths ["**"]` le rejouaient à chaque changement, et il relançait tous les tests des outils, dont le banc (34 s) déjà couvert par `tests-qua-101` à `109`.
+
+## QUA-294 — Chaque script cité par la commande d'un contrôle repris sur ses `paths` est sous ces `paths`, sans traçage des lectures
+**Règle** : Livré au dépôt drwil (contrôles de `.drwil/ia-first.json`). Pour tout contrôle repris sur ses seuls `paths` (ni `reuse: false` ni `reuse: "tree"`), chaque fichier de script (extensions mjs, cjs, js, ts, sh) cité par sa commande correspond à l'un de ses `paths` ; un contrôle dont un script cité sort de ses `paths` est refusé par un test statique, qui ne trace aucune lecture. Un fichier cité hors des `paths` s'y ajoute, ou le contrôle se déclare `reuse: "tree"` (QUA-013 : jamais un « ok » repris sur un fichier lu hors de ses `paths`).
+**Périmètre** : `.drwil/ia-first.json` (commandes et `paths` des contrôles).
+**Source de vérité** : `.drwil/ia-first.json`.
+**Preuve** : test statique du moteur, lu sur la vraie configuration : la liste des scripts cités hors `paths` doit être vide.
+**Contrôle** : `tests-qua-294`
+**Tests** : `.githooks/engine.test.mjs`
+**Origine** : controles-rejoues-reduits — « Chaque script cité par la commande d'un contrôle est sous les `paths` de ce contrôle ; un contrôle dont un script cité sort de ses `paths` est refusé par un test statique, sans traçage des lectures » (D4, tranchée par le demandeur le 2026-11-11)
+**Raison** : Le test ne couvrait que les fichiers `*.test.mjs` cités ; un script lancé hors des `paths` (comme `outils/verifier-miroirs.mjs`) ferait reprendre un verdict périmé.

@@ -113,6 +113,6 @@ tout fichier lu trouvé hors de la liste s'ajoute aux `paths`, jamais l'inverse.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-11) : lot 3 fait. `miroirs-gabarit` ne lance plus que `outils/verifier-miroirs.test.mjs` puis `outils/verifier-miroirs.mjs` ; `reuse: "tree"` et `paths ["**"]` retirés, `paths` = ses scripts, `outils/miroirs.json`, le gabarit et les dossiers où il s'installe (`.githooks`, `.claude`, `.codex`, `.cursor`, `.gemini`, `.github`, `.gitlab`, `docs`, fichiers racine miroirs), `docs/**` restant car les fichiers suivis de `docs/` sont comparés. Contrat QUA-293 créé (contrôle `tests-qua-293`, test du moteur sur la vraie configuration ; l'écart de miroir détecté reste prouvé par `outils/verifier-miroirs.test.mjs`). Les contrats de reprise de `checks-self-test` (lot 1) restent à créer avec la documentation au lot 5.
+- **Dernier état** (2026-11-11) : lot 4 fait. Le test statique existant (chaque script cité par la commande d'un contrôle repris sur ses `paths` est sous ces `paths`) ne couvrait que `*.test.mjs` : il couvre maintenant les scripts mjs, cjs, js, ts et sh, sans traçage ; il passe sur la vraie configuration. Contrat QUA-294 créé (contrôle `tests-qua-294`). Les contrats de reprise de `checks-self-test` (lot 1) restent à créer avec la documentation au lot 5.
 - **Travail non commité** : aucun une fois le lot commité.
-- **Prochaine étape** : [IA] lot 4 (garde-fou statique), dans une nouvelle session.
+- **Prochaine étape** : [IA] lot 5 (documentation et mesure), dans une nouvelle session.

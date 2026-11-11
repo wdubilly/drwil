@@ -1311,6 +1311,14 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-294",
+      "name": "tests de QUA-294, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-294 .githooks/engine.test.mjs",
+      "ciJob": "checks",
+      "paths": ["outils/tests-par-fichier.mjs", ".githooks/**", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
       "id": "lint",
       "name": "lint et formatage du code (Biome, avertissements bloquants)",
       "run": "npm run lint",

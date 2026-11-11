@@ -789,13 +789,14 @@ test("QUA-293 : miroirs-gabarit — repris malgré un autre test d'outil ou le c
   }
 });
 
-test("QUA-141 : un contrôle repris sur ses seuls paths les déclare tous — chaque fichier de test qu'il lance est sous ses paths", () => {
+test("QUA-294 : un contrôle repris sur ses seuls paths les déclare tous — chaque script cité par sa commande est sous ses paths", () => {
   const cfg = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", ".drwil", "ia-first.json"), "utf8"));
   const oublis = [];
   for (const c of cfg.checks) {
     if (!Array.isArray(c.paths) || c.reuse === false || c.reuse === "tree") continue;
     const motifs = c.paths.map(globToRegex);
-    for (const f of c.run.match(/[\w./-]+\.test\.mjs/g) ?? []) if (!motifs.some((m) => m.test(f))) oublis.push(`${c.id} : ${f}`);
+    for (const f of c.run.match(/[\w./-]+\.(?:mjs|cjs|js|ts|sh)\b/g) ?? [])
+      if (!motifs.some((m) => m.test(f))) oublis.push(`${c.id} : ${f}`);
   }
   assert.deepEqual(
     oublis,
