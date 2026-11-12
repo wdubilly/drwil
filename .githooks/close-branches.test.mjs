@@ -4,7 +4,18 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { branchMerged, closingMerged, mainBranch, mergedPullRequests, pruneMergedBranches, prunedMessage } from "./close-branches.mjs";
+import {
+  branchMerged,
+  closingMerged,
+  mainBranch,
+  mergedPullRequests,
+  noGhText,
+  pruneMergedBranches,
+  prunedMessage,
+} from "./close-branches.mjs";
+import { context, readState, shortReminder, writeState } from "./state.mjs";
+import { reopen } from "./state-reopen.mjs";
+import { resume } from "./state-resume.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -164,4 +175,127 @@ test("QUA-058 : sans simulation injectée, la commande gh du PATH est interrogé
   } finally {
     process.env.PATH = chemin;
   }
+});
+
+const GITLAB = "https://gitlab.example.com/o/r.git";
+
+test("QUA-058 : sur GitLab, la branche d'une MR fusionnée en squash est reconnue par glab et supprimée au lancement — pas une branche allée plus loin", () => {
+  const { racine, branches } = depotSquash();
+  git(racine, "remote", "add", "origin", GITLAB);
+  const appels = [];
+  const glab = (_racine, args) => {
+    appels.push(args.join(" "));
+    return JSON.stringify([
+      { iid: 1, source_branch: "squash", sha: branches.squash },
+      { iid: 2, source_branch: "plus-loin", sha: branches["plus-loin"] },
+      { iid: 3, source_branch: "autre-pr", sha: "0".repeat(40) },
+    ]);
+  };
+  const r = pruneMergedBranches(racine, { gh: () => assert.fail("gh jamais interrogé sur GitLab"), glab });
+  assert.deepEqual(r, { deleted: ["squash"], unproven: [] });
+  assert.deepEqual(appels, ["mr list --merged --output json --per-page 100"], "une seule question à glab pour toutes les branches");
+  const restantes = git(racine, "branch", "--format=%(refname:short)").split("\n").sort();
+  assert.deepEqual(restantes, ["autre-pr", "chantier/exemple", "master", "plus-loin"]);
+  const seule = [];
+  mergedPullRequests(racine, {
+    branch: "plus-loin",
+    glab: (_r, a) => {
+      seule.push(a.join(" "));
+      return "[]";
+    },
+  });
+  assert.deepEqual(seule, ["mr list --merged --output json --per-page 20 --source-branch plus-loin"]);
+  assert.equal(mergedPullRequests(racine, { glab: () => "pas du json" }), null);
+  assert.equal(mergedPullRequests(racine, { glab: () => "{}" }), null);
+  git(racine, "checkout", "-q", "plus-loin");
+  assert.equal(closingMerged(racine, { glab: () => "[]" }), "no");
+});
+
+test("QUA-059 : sur GitLab, sans glab joignable, seule la fusion classique est reconnue et le message nomme glab et la MR", () => {
+  const { racine } = depotSquash();
+  git(racine, "remote", "add", "origin", GITLAB);
+  git(racine, "merge", "-q", "--no-ff", "-m", "fusion", "chantier/exemple");
+  const r = pruneMergedBranches(racine, { glab: () => null });
+  assert.deepEqual(r, { deleted: ["chantier/exemple"], unproven: ["autre-pr", "plus-loin", "squash"] });
+  assert.equal(
+    prunedMessage(racine, r),
+    "\nbranches locales fusionnées supprimées : chantier/exemple" +
+      "\nglab injoignable : seule la fusion classique est reconnue, une MR fusionnée par squash ne l'est pas — branches gardées : autre-pr, plus-loin, squash",
+  );
+  ecrire(racine, { ".drwil/ia-first.json": JSON.stringify({ lang: "en" }) });
+  assert.equal(noGhText(racine), "glab unreachable: classic merge only is recognised, a merge request merged by squash is not");
+});
+
+/** Dépôt GitLab sur workstream/x : la fiche, puis sa suppression (clôture) si `clos`. Rend la racine et la pointe. */
+function depotChantier({ clos = true } = {}) {
+  const racine = dossier();
+  git(racine, "init", "-q", "-b", "master");
+  ecrire(racine, { ".gitignore": ".drwil/\n", "docs/projects/x.md": "# Projet : X\n" });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "cadrage");
+  git(racine, "remote", "add", "origin", GITLAB);
+  git(racine, "checkout", "-q", "-b", "workstream/x");
+  ecrire(racine, { "a.txt": "a" });
+  if (clos) rmSync(join(racine, "docs/projects/x.md"));
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "clôture");
+  return { racine, pointe: git(racine, "rev-parse", "HEAD") };
+}
+
+test("QUA-247 : sur GitLab, la reprise d'un chantier clos interroge glab — muet : refus qui le nomme ; MR fusionnée : refus ; aucune : CLOSING", () => {
+  const { racine, pointe } = depotChantier();
+  let r = resume(racine, { gh: () => assert.fail("gh jamais interrogé sur GitLab"), glab: () => null });
+  assert.equal(r.code, 1);
+  assert.match(r.message, /^reprise refusée : glab n'a pas dit si la MR de workstream\/x est fusionnée/);
+  r = resume(racine, { glab: () => JSON.stringify([{ source_branch: "workstream/x", sha: pointe }]) });
+  assert.match(r.message, /^reprise refusée : la MR de workstream\/x est fusionnée/);
+  r = resume(racine, { glab: (_r, a) => (a.includes("--source-branch") ? "[]" : null) });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /^état repris en CLOSING sur docs\/projects\/x\.md/);
+});
+
+test("QUA-116 : sur GitLab, la réouverture lit la MR par glab, annule sa fusion automatique et le dit en MR ; MR fermée, inconnue ou annulation ratée : refus", () => {
+  const preparer = () => {
+    const { racine } = depotChantier({ clos: false });
+    writeState(racine, { version: 1, activity: "CLOSING", active_brief: "docs/projects/x.md", active_request: null, since: null });
+    return racine;
+  };
+  const mr = (extra) =>
+    JSON.stringify({ iid: 4, state: "opened", source_branch: "workstream/x", detailed_merge_status: "mergeable", ...extra });
+  let racine = preparer();
+  assert.match(
+    reopen(racine, { glab: () => null }).message,
+    /^réouverture refusée : l'état de la MR de workstream\/x est inconnu \(glab absent/,
+  );
+  assert.match(reopen(racine, { glab: () => mr({ state: "merged" }) }).message, /^réouverture refusée : la MR !4 est MERGED, pas ouverte/);
+  assert.match(
+    reopen(racine, { glab: (_r, a) => (a[0] === "api" ? null : mr({ merge_when_pipeline_succeeds: true })) }).message,
+    /^réouverture refusée : la fusion automatique de la MR !4 n'a pas pu être annulée \(`glab api --method POST projects\/:id\/merge_requests\/4\/cancel_merge_when_pipeline_succeeds`\)/,
+  );
+  const appels = [];
+  let programmee = true;
+  const glab = (_r, a) => {
+    appels.push(a.join(" "));
+    if (a[0] === "api") {
+      programmee = false;
+      return "{}";
+    }
+    return mr({ merge_when_pipeline_succeeds: programmee });
+  };
+  const r = reopen(racine, { gh: () => assert.fail("gh jamais interrogé sur GitLab"), glab, now: "2026-11-12T10:00:00Z" });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /^CLOSING → BUILD \(réouverture de docs\/projects\/x\.md, MR !4 ouverte\)\nfusion automatique annulée/);
+  assert.deepEqual(appels, [
+    "mr view workstream/x --output json",
+    "api --method POST projects/:id/merge_requests/4/cancel_merge_when_pipeline_succeeds",
+    "mr view workstream/x --output json",
+  ]);
+  // Le rappel d'état nomme la MR comme GitLab (« MR !4 »), jamais « PR #4 ».
+  assert.match(context(readState(racine), racine), /Chantier rouvert après sa clôture \(QUA-116\), MR !4 ouverte/);
+  assert.doesNotMatch(context(readState(racine), racine), /PR #4/);
+  writeState(racine, { ...readState(racine).state, activity: "CLOSING", merge_cancelled: { pr: 4 } });
+  assert.match(shortReminder(readState(racine), racine), /Fusion automatique de la MR !4 ANNULÉE/);
+  racine = preparer();
+  ecrire(racine, { ".drwil/ia-first.json": JSON.stringify({ lang: "en" }) });
+  assert.match(reopen(racine, { glab: () => mr({ state: "closed" }) }).message, /^reopening refused: MR !4 is CLOSED, not open/);
 });

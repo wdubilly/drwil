@@ -36,13 +36,13 @@ export const MESSAGES_EN = {
   mergeCancelledType: "merge_cancelled: object { pr } expected (pr: the PR number)",
   mergeCancelledActivity: "merge_cancelled: only in CLOSING",
   mergeCancelledCleared:
-    "[merge-auto] « merge cancelled » mark of PR #{0} cleared: the merge is seen scheduled, the state reminder no longer says it is not",
+    "[merge-auto] « merge cancelled » mark of {0} cleared: the merge is seen scheduled, the state reminder no longer says it is not",
   mergeAutoMerged:
     "[merge-auto] PR #{0} merged by the command itself (its whole CI was already green). Follow the main branch's CI: node .githooks/pr-watch.mjs {0}",
   scopingMergeType: "scoping_merge: object { branch } expected (branch: the branch of the scoping PR)",
   scopingMergeActivity: "scoping_merge: only in SCOPING",
   scopingMergeReminder:
-    "Automatic merge of the scoping PR authorised for branch {0} (answer « Automatic merge » to the end-of-scoping poll): once the branch is pushed and its PR open, run `node .githooks/merge-auto.mjs <number>`, which refuses any PR of another branch; follow the PR with `node .githooks/pr-watch.mjs <number>`, run again while it says « green » without « merged », 30 minutes at most in all; never chain the `gh` commands by hand. The authorisation falls when leaving SCOPING; a « Manual merge » or « Continue scoping » answer withdraws it.",
+    "Automatic merge of the scoping PR authorised for branch {0} (answer « Automatic merge » to the end-of-scoping poll): once the branch is pushed and its PR open, run `node .githooks/merge-auto.mjs <number>`, which refuses any PR of another branch; follow the PR with `node .githooks/pr-watch.mjs <number>`, run again while it says « green » without « merged », 30 minutes at most in all; never chain the forge's commands (`gh`, `glab`) by hand. The authorisation falls when leaving SCOPING; a « Manual merge » or « Continue scoping » answer withdraws it.",
   scopingMergeNotScoping:
     "answer to the end-of-scoping poll ignored: the activity is {0}, not SCOPING — nothing authorised, the state is unchanged",
   scopingMergeBranch:

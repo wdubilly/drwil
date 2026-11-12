@@ -7,6 +7,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ghRun, mergeAuto, parseArgs } from "./merge-auto.mjs";
 import { context, readState, scopingMerge, shortReminder } from "./state.mjs";
+import { STATE_MESSAGES } from "./state-messages.mjs";
 
 // Un hook lancé par `git commit` reçoit GIT_INDEX_FILE, GIT_DIR… : hérités, ils feraient agir les dépôts de test
 // (fin de cadrage) sur le dépôt qui lance les tests.
@@ -218,6 +219,21 @@ test("QUA-164 fusion automatique : la consigne de l'état et le skill appellent 
     assert.match(texte, /reopen/);
   }
   assert.ok(consigne.indexOf("merge-auto.mjs") < consigne.indexOf("pr-watch.mjs"));
+  // Sur GitLab, la consigne nomme les équivalents glab de chaque étape, sans laisser GitHub seul.
+  for (const texte of [
+    consigne.match(/autoMerge:\s*"Fusion automatique[^"]*"/)[0],
+    consigne.match(/autoMerge:\s*"Automatic merge[^"]*"/)[0],
+  ]) {
+    assert.match(
+      texte,
+      /mergeStateStatus.*detailed_merge_status.*glab mr rebase.*glab mr merge --auto-merge.*merge_when_pipeline_succeeds/,
+    );
+    assert.match(texte, /`gh` (ou|or) `glab`/);
+    assert.doesNotMatch(texte, /GitHub (ait|has) calculé|GitHub has computed/);
+  }
+  // Le suivi de la PR par la session principale (file, file parallèle) vaut aussi pour la MR, par glab.
+  for (const phrase of ["sur GitLab la MR par `glab`", "on GitLab the MR with `glab`"])
+    assert.equal(consigne.split(phrase).length - 1, 2, phrase);
 });
 
 /** Projet en SCOPING, dépôt git sur `branche`, avec (ou non) l'autorisation de fin de cadrage. */
@@ -287,6 +303,12 @@ test("QUA-189 « Manual merge » et « Continue scoping » ne programment rien ;
     /\*\*Continue scoping\*\*: nothing is scheduled; the PR stays open and the next scopings are committed on \*\*the same branch\*\* \(one branch, one PR, no new branch\)/,
   );
   assert.match(skill, /\*\*Manual merge\*\*: nothing is scheduled/);
+  // Formulation neutre GitHub/GitLab : la MR et ses commandes glab sont nommées à côté de gh.
+  assert.match(skill, /glab mr create --target-branch <main branch>/);
+  assert.match(skill, /never chain the forge's commands \(`gh`, `glab`\) by hand/);
+  assert.match(skill, /`glab mr merge --auto-merge`\) without the "Automatic merge" answer/);
+  for (const lang of ["fr", "en"])
+    assert.match(STATE_MESSAGES[lang].scopingMergeReminder, /(commandes de la forge|forge's commands) \(`gh`, `glab`\)/);
 });
 
 test("QUA-181 : merge-auto qui voit la fusion programmée sur la PR de la marque l'efface et le dit ; autre PR ou fusion non programmée : la marque reste ; en anglais aussi", async () => {

@@ -41,6 +41,7 @@ files:
   - .githooks/pr-watch.mjs
   - .githooks/pr-watch-main.mjs
   - .githooks/merge-auto.mjs
+  - .githooks/merge-auto-forge.mjs
   - .githooks/wait-command.mjs
   - .githooks/wait-command.test.mjs
   - outils/parite-des-outils.test.mjs
@@ -48,6 +49,7 @@ files:
   - .githooks/base-checks.test.mjs
   - .githooks/pr-watch.test.mjs
   - .githooks/merge-auto.test.mjs
+  - .githooks/merge-auto-forge.test.mjs
   - .githooks/state-texts.mjs
   - .githooks/state.test.mjs
   - .githooks/close.mjs

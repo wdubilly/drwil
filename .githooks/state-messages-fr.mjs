@@ -37,13 +37,13 @@ export const MESSAGES_FR = {
   mergeCancelledType: "merge_cancelled : objet { pr } attendu (pr : numéro de la PR)",
   mergeCancelledActivity: "merge_cancelled : seulement en CLOSING",
   mergeCancelledCleared:
-    "[merge-auto] marque « fusion annulée » de la PR #{0} effacée : la fusion est vue programmée, le rappel d'état ne dit plus qu'elle ne l'est pas",
+    "[merge-auto] marque « fusion annulée » de la {0} effacée : la fusion est vue programmée, le rappel d'état ne dit plus qu'elle ne l'est pas",
   mergeAutoMerged:
     "[merge-auto] PR #{0} fusionnée par la commande elle-même (toute sa CI était déjà verte). Suivre la CI de la branche principale : node .githooks/pr-watch.mjs {0}",
   scopingMergeType: "scoping_merge : objet { branch } attendu (branch : la branche de la PR de cadrage)",
   scopingMergeActivity: "scoping_merge : seulement en SCOPING",
   scopingMergeReminder:
-    "Fusion automatique de la PR de cadrage autorisée pour la branche {0} (réponse « Automatic merge » du sondage de fin de cadrage) : la branche poussée et sa PR ouverte, lancer `node .githooks/merge-auto.mjs <numéro>`, qui refuse toute PR d'une autre branche ; suivre la PR par `node .githooks/pr-watch.mjs <numéro>`, relancé tant qu'il dit « verte » sans « fusionnée », 30 minutes au plus en tout ; ne jamais enchaîner les commandes `gh` à la main. L'autorisation tombe en quittant SCOPING ; une réponse « Manual merge » ou « Continue scoping » la retire.",
+    "Fusion automatique de la PR de cadrage autorisée pour la branche {0} (réponse « Automatic merge » du sondage de fin de cadrage) : la branche poussée et sa PR ouverte, lancer `node .githooks/merge-auto.mjs <numéro>`, qui refuse toute PR d'une autre branche ; suivre la PR par `node .githooks/pr-watch.mjs <numéro>`, relancé tant qu'il dit « verte » sans « fusionnée », 30 minutes au plus en tout ; ne jamais enchaîner les commandes de la forge (`gh`, `glab`) à la main. L'autorisation tombe en quittant SCOPING ; une réponse « Manual merge » ou « Continue scoping » la retire.",
   scopingMergeNotScoping:
     "réponse au sondage de fin de cadrage ignorée : l'activité est {0}, pas SCOPING — rien n'est autorisé, l'état est inchangé",
   scopingMergeBranch:

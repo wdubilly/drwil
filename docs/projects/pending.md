@@ -135,9 +135,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.2) La fusion automatique et le nettoyage des branches fonctionnent sur GitLab : merge-auto et
-  close-branches parlent `glab` (cadré le 2026-11-12, urgent, signalé par un adoptant GitLab) —
-  `docs/projects/support-gitlab-merge-auto.md`.
 - [ ] [IA] [P0] (0.11.2) Le lancement dit pourquoi il est refusé, arbre sale compris (cadré le 2026-11-12) —
   `docs/projects/lancement-refuse-dit-pourquoi.md`.
 - [ ] [IA] [P0] (0.11.2) `drwil init` marque [IA] ce qu'un agent peut faire (cadré le 2026-11-12) —

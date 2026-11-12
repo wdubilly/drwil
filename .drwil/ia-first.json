@@ -1748,7 +1748,7 @@
     {
       "id": "tests-qua-116",
       "name": "tests de QUA-116, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-116 .githooks/state.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-116 .githooks/state.test.mjs .githooks/close-branches.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -3222,7 +3222,7 @@
     {
       "id": "tests-qua-247",
       "name": "tests de QUA-247, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-247 .githooks/state-resume.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-247 .githooks/state-resume.test.mjs .githooks/close-branches.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
