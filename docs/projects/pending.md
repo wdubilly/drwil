@@ -135,6 +135,30 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P0] (0.11.2) La couverture de `closedBriefPatterns` ne dépend plus de l'historique de la branche : le
+  test importe le module réel, la CI de toute PR sans fiche supprimée repasse (cadré le 2026-11-12, urgent) —
+  `docs/projects/couverture-de-closedbriefpatterns-en-ci.md`.
+- [ ] [IA] [P0] (0.11.2) La fusion automatique et le nettoyage des branches fonctionnent sur GitLab : merge-auto et
+  close-branches parlent `glab` (cadré le 2026-11-12, urgent, signalé par un adoptant GitLab) —
+  `docs/projects/support-gitlab-merge-auto.md`.
+- [ ] [IA] [P0] (0.11.2) Le lancement dit pourquoi il est refusé, arbre sale compris (cadré le 2026-11-12) —
+  `docs/projects/lancement-refuse-dit-pourquoi.md`.
+- [ ] [IA] [P0] (0.11.2) `drwil init` marque [IA] ce qu'un agent peut faire (cadré le 2026-11-12) —
+  `docs/projects/init-marque-ia-ce-qui-est-faisable.md`.
+- [ ] [IA] [P0] (0.11.2) Un chantier se mène dans la session principale, sans sous-agent (cadré le 2026-11-12) —
+  `docs/projects/fin-des-sous-agents-de-chantier.md`.
+- [ ] [IA] [P0] (0.11.2) La fusion automatique est le comportement par défaut, sans sondage, après le support GitLab
+  (cadré le 2026-11-12) — `docs/projects/fusion-automatique-par-defaut.md`.
+- [ ] [IA] [P0] (0.11.2) Une fiche P0 passe d'abord une analyse d'urgence (cadré le 2026-11-12) —
+  `docs/projects/analyse-d-urgence-des-fiches.md`.
+- [ ] [IA] [P0] (0.11.2) La consommation de Copilot CLI est mesurée comme celle de Claude Code (cadré le 2026-11-12) —
+  `docs/projects/consommation-copilot-cli.md`.
+- [ ] [IA] [P0] (0.11.2) Une relecture critique légère avant la clôture, sans frein au full auto (cadré le 2026-11-12) —
+  `docs/projects/relecture-critique-avant-cloture.md`.
+- [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
+  `docs/projects/cadrage-en-build.md`.
+- [ ] [IA] [P0] (0.11.2) Un fichier d'index par fiche, sans conflit sur l'index commun (cadré le 2026-11-12) — `docs/projects/index-par-fiche.md`.
+
 
 - [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
   sauvegardait plus depuis le 2026-11-08 ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
