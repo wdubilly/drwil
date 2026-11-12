@@ -45,6 +45,7 @@ refus n'arrive pas toujours jusqu'à l'humain.
 - `.githooks/state-cli-commands.mjs` — gardé à sa version de la branche (QUA-113), si le chantier le modifie (validé le 2026-11-12)
 - `.githooks/state-cli.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
 - `.githooks/wait-command.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
+- `.githooks/state.test.mjs` — tests du refus de lancement lisible, gardés à leur version de la branche (QUA-113) (validé le 2026-11-12)
 
 ## 2. Hors périmètre
 
