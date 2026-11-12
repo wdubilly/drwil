@@ -135,6 +135,10 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P0] (0.11.2) La fusion automatique et le nettoyage des branches fonctionnent sur GitLab : merge-auto et
+  close-branches parlent `glab` (cadré le 2026-11-12, urgent, signalé par un adoptant GitLab) —
+  `docs/projects/support-gitlab-merge-auto.md`.
+
 
 - [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
   sauvegardait plus depuis le 2026-11-08 ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
