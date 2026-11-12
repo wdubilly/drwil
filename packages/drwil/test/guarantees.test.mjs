@@ -21,7 +21,8 @@ import {
 } from "../dist/index.js";
 import { bypassDiagnosis, forgeOf, inspectForge, protectBranch, rulesetBypass } from "../dist/guarantees-forge.js";
 import { hasSources } from "../dist/guarantees-table.js";
-import { renderBrief } from "../dist/guarantees-briefs.js";
+import { renderBrief, writeBriefs } from "../dist/guarantees-briefs.js";
+import { readLots } from "../templates/common/base/.githooks/briefs-lots.mjs";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -264,7 +265,7 @@ test("QUA-088 pile hors table : fiche bloquante [P0], verify en FAIL sur la couc
   assert.match(fiche, /pile `Rust` hors de la table des outils de couverture/);
   assert.match(
     lire(dir, "docs/projects/pending.md"),
-    /- \[ \] \[humain\] \[P0\] Garantie : couverture de test de la couche `\.` — `docs\/projects\/couverture-root\.md`/,
+    /- \[ \] \[IA\] \[P0\] Garantie : couverture de test de la couche `\.` — `docs\/projects\/couverture-root\.md`/,
   );
   let v = await verify({ targetDir: dir });
   assert.equal(v.status, "FAIL");
@@ -795,4 +796,36 @@ test("QUA-202 auto-merge : --protect l'active avec l'accord de l'humain si le d�
     assert.equal(guarantees({ targetDir: dir, protect: true, exec }).autoMergeNow, null);
   }
   assert.equal(guarantees({ targetDir: dir, protect: true, dryRun: true, exec: faux([...FORGE_OK, depot(false)]) }).autoMergeNow, null);
+});
+
+test("QUA-088 marques : le lot et la ligne d'index d'une garantie sont [IA], sauf le versionnement (forge hors du dépôt) [humain]", () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-marques-"));
+  const kinds = ["coverage", "climb", "e2e", "versioning", "presentation"];
+  for (const lang of ["fr", "en"]) {
+    const index = `docs/projects/pending-${lang}.md`;
+    const briefs = kinds.map((kind) => ({
+      kind,
+      path: `docs/projects/${lang}-${kind}.md`,
+      title: kind,
+      reasons: [],
+      blocking: kind !== "climb",
+    }));
+    writeBriefs(dir, briefs, index, lang);
+    const lignes = lire(dir, index).trim().split("\n");
+    for (const b of briefs) {
+      const humain = b.kind === "versioning";
+      const marque = humain ? (lang === "fr" ? "[humain]" : "[human]") : lang === "fr" ? "[IA]" : "[AI]";
+      const ligne = lignes.find((l) => l.includes(`\`${b.path}\``));
+      assert.ok(ligne?.startsWith(`- [ ] ${marque} [P${b.blocking ? 0 : 1}] `), `${lang} ${b.kind} : ${ligne}`);
+      // Le lot porte la même marque, lue par l'enchaînement des lots (une fiche sans lot lisible n'en a aucun).
+      const lots = readLots(lire(dir, b.path));
+      assert.deepEqual(
+        lots.map((l) => l.kind),
+        [humain ? "human" : "ia"],
+        `${lang} ${b.kind}`,
+      );
+      // Toujours bloquante (QUA-088) : le marqueur d'en-tête ne dépend pas de la marque.
+      assert.equal(/\*\*(Garantie|Guarantee)\*\* ?: (bloquante|blocking)/.test(lire(dir, b.path)), b.blocking);
+    }
+  }
 });
