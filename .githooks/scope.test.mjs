@@ -11,6 +11,7 @@ import { pathToFileURL } from "node:url";
 import { undeclaredHooks } from "./base-checks.mjs";
 import {
   briefsCovering,
+  closedBriefPatterns,
   deliveredFiles,
   fnmatch,
   isCode,
@@ -192,16 +193,20 @@ function depotCloture() {
   d.git("commit", "-q", "-m", "chantier");
   d.git("rm", "-q", "docs/projects/f.md");
   d.git("commit", "-q", "-m", "clôture");
-  mkdirSync(join(d.racine, ".githooks"));
-  copyFileSync(new URL("./scope.mjs", import.meta.url), join(d.racine, ".githooks", "scope.mjs"));
   return d;
 }
 
 test("QUA-173 : un fichier neuf listé par la fiche que la branche a supprimée à la clôture reste couvert ; un fichier jamais listé reste refusé (QUA-016)", async () => {
   const { racine } = depotCloture();
   try {
-    const installe = await import(pathToFileURL(join(racine, ".githooks", "scope.mjs")).href);
-    const hors = installe.outsideBriefs(["src/livre.js", "src/neuf.js", "src/jamais.js"], new Map(), { codePrefixes: ["src"] });
+    const cfg = { codePrefixes: ["src"] };
+    const hors = outsideBriefs(
+      ["src/livre.js", "src/neuf.js", "src/jamais.js"],
+      new Map(),
+      cfg,
+      deliveredFiles(racine),
+      closedBriefPatterns(racine, cfg),
+    );
     assert.deepEqual(hors, ["src/jamais.js"]);
   } finally {
     rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
@@ -235,14 +240,15 @@ test("QUA-173 : la déclaration QUA-113 « Contrats modifiés » de la fiche sup
 test("QUA-173 : historique illisible (clone superficiel, pas de branche principale) : aucune fiche supprimée n'est lue, rien n'est couvert (QUA-013)", async () => {
   const { racine, git } = depotCloture();
   try {
-    const installe = await import(pathToFileURL(join(racine, ".githooks", "scope.mjs")).href);
     const cfg = { codePrefixes: ["src"] };
-    assert.equal(installe.closedBriefPatterns(racine, cfg, { DRWIL_BASE: "main" }).size, 1, "base lisible : la fiche supprimée est lue");
+    assert.equal(closedBriefPatterns(racine, cfg, { DRWIL_BASE: "main" }).size, 1, "base lisible : la fiche supprimée est lue");
     git("branch", "-q", "-m", "chantier", "isolee");
     git("branch", "-q", "-D", "main");
-    assert.equal(installe.closedBriefPatterns(racine, cfg, {}).size, 0, "pas de branche principale");
-    assert.equal(installe.closedBriefPatterns(join(racine, "src", "absent"), cfg, {}).size, 0, "hors dépôt git");
-    assert.deepEqual(installe.outsideBriefs(["src/neuf.js"], new Map(), cfg), ["src/neuf.js"]);
+    assert.equal(closedBriefPatterns(racine, cfg, {}).size, 0, "pas de branche principale");
+    assert.equal(closedBriefPatterns(join(racine, "src", "absent"), cfg, {}).size, 0, "hors dépôt git");
+    assert.deepEqual(outsideBriefs(["src/neuf.js"], new Map(), cfg, deliveredFiles(racine), closedBriefPatterns(racine, cfg, {})), [
+      "src/neuf.js",
+    ]);
   } finally {
     rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
