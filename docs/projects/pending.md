@@ -135,6 +135,9 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P0] (0.11.2) La couverture de `closedBriefPatterns` ne dépend plus de l'historique de la branche : le
+  test importe le module réel, la CI de toute PR sans fiche supprimée repasse (cadré le 2026-11-12, urgent) —
+  `docs/projects/couverture-de-closedbriefpatterns-en-ci.md`.
 - [ ] [IA] [P0] (0.11.2) La fusion automatique et le nettoyage des branches fonctionnent sur GitLab : merge-auto et
   close-branches parlent `glab` (cadré le 2026-11-12, urgent, signalé par un adoptant GitLab) —
   `docs/projects/support-gitlab-merge-auto.md`.
