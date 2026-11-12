@@ -4,4 +4,19 @@
 # with the option that skips pre-commit. Never blocks: without node or an active brief,
 # nothing is added and CI will refuse a commit outside briefs without a trailer.
 command -v node >/dev/null 2>&1 || exit 0
-exec node "$(dirname "$0")/scope-gate.mjs" --trailer "$1"
+node "$(dirname "$0")/scope-gate.mjs" --trailer "$1"
+# The closing commit deletes the active brief: the state no longer validates, so scope-gate adds nothing.
+# The trailer is then kept when the commit stages that very deletion (QUA-172).
+grep -q '^Drwil-Brief:' "$1" 2>/dev/null && exit 0
+brief=$(node -e '
+const fs = require("fs");
+try {
+  const off = fs.existsSync(".drwil/ia-first.json") && JSON.parse(fs.readFileSync(".drwil/ia-first.json", "utf8")).scopeGate === "off";
+  const b = JSON.parse(fs.readFileSync(".drwil/state.json", "utf8")).active_brief;
+  if (!off && typeof b === "string") process.stdout.write(b);
+} catch {}
+' 2>/dev/null)
+[ -n "$brief" ] || exit 0
+[ -n "$(git diff --cached --name-only --diff-filter=D -- "$brief" 2>/dev/null)" ] || exit 0
+git interpret-trailers --in-place --if-exists replace --trailer "Drwil-Brief: $brief" "$1" 2>/dev/null
+exit 0

@@ -4,10 +4,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { undeclaredHooks } from "./base-checks.mjs";
 import {
   briefsCovering,
   deliveredFiles,
@@ -176,6 +177,104 @@ test("QUA-173 : sans ensemble donné, outsideBriefs lit le dépôt où le hook e
     const installe = await import(pathToFileURL(join(racine, ".githooks", "scope.mjs")).href);
     const hors = installe.outsideBriefs(["src/livre.js", "src/neuf.js"], new Map(), { codePrefixes: ["src"] });
     assert.deepEqual(hors, ["src/neuf.js"]);
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+/** Dépôt de chantier : fichier neuf listé par une fiche, fiche supprimée par la clôture ; la base n'a pas le fichier. */
+function depotCloture() {
+  const d = depotLivre();
+  d.ecrire("src/neuf.js", "n\n");
+  d.ecrire("src/jamais.js", "j\n");
+  d.ecrire("docs/projects/f.md", "<!-- scope\nfiles:\n  - src/neuf.js\n-->\n");
+  d.git("add", ".");
+  d.git("commit", "-q", "-m", "chantier");
+  d.git("rm", "-q", "docs/projects/f.md");
+  d.git("commit", "-q", "-m", "clôture");
+  mkdirSync(join(d.racine, ".githooks"));
+  copyFileSync(new URL("./scope.mjs", import.meta.url), join(d.racine, ".githooks", "scope.mjs"));
+  return d;
+}
+
+test("QUA-173 : un fichier neuf listé par la fiche que la branche a supprimée à la clôture reste couvert ; un fichier jamais listé reste refusé (QUA-016)", async () => {
+  const { racine } = depotCloture();
+  try {
+    const installe = await import(pathToFileURL(join(racine, ".githooks", "scope.mjs")).href);
+    const hors = installe.outsideBriefs(["src/livre.js", "src/neuf.js", "src/jamais.js"], new Map(), { codePrefixes: ["src"] });
+    assert.deepEqual(hors, ["src/jamais.js"]);
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-173 : la déclaration QUA-113 « Contrats modifiés » de la fiche supprimée à la clôture déclare scope.mjs et son test, qui passent le rejeu", () => {
+  const { racine, git, ecrire } = depotLivre();
+  try {
+    mkdirSync(join(racine, ".githooks"));
+    ecrire(".githooks/scope.mjs", "export const v = 1;\n");
+    ecrire(".githooks/scope.test.mjs", "// test\n");
+    git("add", ".");
+    git("commit", "-q", "-m", "hooks");
+    git("branch", "-q", "-f", "main", "HEAD");
+    ecrire(".githooks/scope.mjs", "export const v = 2;\n");
+    ecrire(".githooks/scope.test.mjs", "// test v2\n");
+    ecrire("docs/projects/f.md", "## Contrats modifiés\n\n- `.githooks/scope.mjs` — correctif (validé le 2026-11-12)\n");
+    git("add", ".");
+    git("commit", "-q", "-m", "chantier");
+    const env = { ...process.env, DRWIL_BASE: "main" };
+    assert.deepEqual(undeclaredHooks(racine, "", { env }).files, [], "déclarée par la fiche commitée");
+    git("rm", "-q", "docs/projects/f.md");
+    git("commit", "-q", "-m", "clôture");
+    assert.deepEqual(undeclaredHooks(racine, "", { env }).files, [], "fiche supprimée : lue à sa dernière version");
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-173 : historique illisible (clone superficiel, pas de branche principale) : aucune fiche supprimée n'est lue, rien n'est couvert (QUA-013)", async () => {
+  const { racine, git } = depotCloture();
+  try {
+    const installe = await import(pathToFileURL(join(racine, ".githooks", "scope.mjs")).href);
+    const cfg = { codePrefixes: ["src"] };
+    assert.equal(installe.closedBriefPatterns(racine, cfg, { DRWIL_BASE: "main" }).size, 1, "base lisible : la fiche supprimée est lue");
+    git("branch", "-q", "-m", "chantier", "isolee");
+    git("branch", "-q", "-D", "main");
+    assert.equal(installe.closedBriefPatterns(racine, cfg, {}).size, 0, "pas de branche principale");
+    assert.equal(installe.closedBriefPatterns(join(racine, "src", "absent"), cfg, {}).size, 0, "hors dépôt git");
+    assert.deepEqual(installe.outsideBriefs(["src/neuf.js"], new Map(), cfg), ["src/neuf.js"]);
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
+test("QUA-172 : le commit qui supprime la fiche active (la clôture) porte son trailer Drwil-Brief sans amendement", () => {
+  const { racine, git, ecrire } = depotLivre();
+  try {
+    const hook = join(racine, ".githooks", "prepare-commit-msg");
+    mkdirSync(join(racine, ".githooks"));
+    copyFileSync(new URL("./prepare-commit-msg", import.meta.url), hook);
+    // L'état invalide (fiche absente) ne donne aucun trailer à scope-gate : sa sortie est vide.
+    writeFileSync(join(racine, ".githooks", "scope-gate.mjs"), "process.exit(0);\n");
+    ecrire("docs/projects/f.md", "fiche\n");
+    ecrire(".drwil/state.json", JSON.stringify({ activity: "BUILD", active_brief: "docs/projects/f.md" }));
+    git("add", ".");
+    git("commit", "-q", "-m", "fiche");
+    const message = join(racine, "MSG");
+    const lancer = () => assert.equal(spawnSync("sh", [hook, message], { cwd: racine }).status, 0);
+    writeFileSync(message, "Clôture\n");
+    lancer();
+    assert.doesNotMatch(readFileSync(message, "utf8"), /Drwil-Brief/, "fiche encore présente : rien de plus que scope-gate");
+    git("rm", "-q", "docs/projects/f.md");
+    lancer();
+    lancer();
+    const texte = readFileSync(message, "utf8");
+    assert.match(texte, /^Drwil-Brief: docs\/projects\/f\.md$/m);
+    assert.equal(texte.match(/Drwil-Brief/g).length, 1, "jamais en double");
+    writeFileSync(message, "Autre\n");
+    ecrire(".drwil/ia-first.json", JSON.stringify({ scopeGate: "off" }));
+    lancer();
+    assert.doesNotMatch(readFileSync(message, "utf8"), /Drwil-Brief/, "gouvernance désactivée : aucun trailer");
   } finally {
     rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }

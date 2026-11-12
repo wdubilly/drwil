@@ -60,6 +60,7 @@ dans `docs/intentions/support-gitlab-et-abandon-de-detour.md`.
 ## Contrats modifiés
 
 - `QUA-173` — ancien critère : « Un fichier nouveau, modifié ou retiré par la branche n'est pas livré et reste soumis à une fiche » — raison : la clôture supprime la fiche dans le commit de la MR, le fichier neuf n'est alors ni couvert ni livré jusqu'à la fusion ; il reste couvert s'il était listé par une fiche supprimée par la branche (validé le 2026-11-12)
+- `QUA-172` — précision : le commit qui supprime la fiche active garde son trailer `Drwil-Brief` (ajouté par `.githooks/prepare-commit-msg` quand l'index supprime la fiche active) ; aucune règle existante ne change (validé le 2026-11-12)
 - `.githooks/scope.mjs` — gardé à sa version de la branche (QUA-113) : le rejeu avec les hooks de `main` ne peut pas juger sa propre correction (validé le 2026-11-12)
 - `.githooks/scope.test.mjs` — gardé à sa version de la branche avec son fichier (QUA-113) (validé le 2026-11-12)
 - `.githooks/prepare-commit-msg` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
@@ -104,6 +105,6 @@ contrat neuf si nécessaire (origine : ce chantier), architecture et `kit-mechan
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-12) : cadrage terminé, non commité, non poussé.
-- **Travail non commité** : cette fiche.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-12) : lots 1, 2 et 2 bis faits en un seul commit (le hook refuse un commit rouge : le test de reproduction du lot 1 et le correctif du lot 2 ne se commitent pas séparément). `closedBriefPatterns` dans `.githooks/scope.mjs` (gabarit puis `npm run installer-depot`), trailer de clôture dans `.githooks/prepare-commit-msg` ; tests dans `.githooks/scope.test.mjs` ; QUA-173 et QUA-172 à jour dans `docs/contracts.md`, `docs/architecture.md` à jour (`docs/projects/kit-mechanics.md` ne liste que des fichiers, rien à changer).
+- **Travail non commité** : aucun une fois ce commit fait.
+- **Prochaine étape** : lot 3 (MR du correctif) ; l'entrée du journal et `docs/projects/pending.md` à la clôture.
