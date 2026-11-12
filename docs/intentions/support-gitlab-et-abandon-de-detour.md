@@ -23,4 +23,4 @@
 - [décision] Comportement de `merge-auto` sur GitLab quand le pipeline tourne (attendre, puis fusionner).
 
 Le défaut voisin (fichier neuf non couvert à la clôture, trailer perdu) est cadré à part :
-`docs/projects/fichier-neuf-couvert-apres-cloture.md`.
+`docs/projects/journal.md`.

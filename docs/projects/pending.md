@@ -135,10 +135,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.1) Un fichier de code neuf reste couvert après la clôture de sa fiche, et le commit de
-  clôture garde son trailer (cadré le 2026-11-12, urgent, signalé par un adoptant GitLab) —
-  `docs/projects/fichier-neuf-couvert-apres-cloture.md`.
-
 
 - [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
   sauvegardait plus depuis le 2026-11-08 ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
