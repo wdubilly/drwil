@@ -1558,7 +1558,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/merge-auto.mjs` (`mergeAuto`).
 **Preuve** : test avec `gh` simulé : ordre exact des appels (état inconnu, `BEHIND`, mise à jour, programmation, vérification), PR déjà à jour, PR de la branche courante sans numéro.
 **Contrôle** : `tests-qua-161`
-**Tests** : `.githooks/merge-auto.test.mjs`
+**Tests** : `.githooks/merge-auto.test.mjs`, `.githooks/merge-auto-forge.test.mjs`
 **Origine** : fusion-auto-ordonnee — « `node .githooks/merge-auto.mjs <numéro>` enchaîne, dans cet ordre : attendre que GitHub ait calculé la PR, la mettre à jour si elle est `BEHIND`, programmer l'auto-merge, vérifier qu'il est programmé »
 **Raison** : L'ordre sûr de la fusion automatique ne vivait que dans un texte : un sous-agent (PR #292) puis l'agent principal (PR #293) ont programmé l'auto-merge avant la mise à jour de la branche, le 2026-10-28.
 
@@ -1568,7 +1568,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/merge-auto.mjs` (`mergeAuto`).
 **Preuve** : test avec `gh` simulé : état inconnu, `BEHIND` persistant, conflit, PR fermée, échec de la mise à jour, `gh` absent ou illisible, refus du dépôt, autre refus, programmation non vue ; PR fusionnée sur-le-champ (succès dit « fusionnée », en français et en anglais), PR ni programmée ni fusionnée (refus) ; aucun appel de programmation avant un état à jour.
 **Contrôle** : `tests-qua-162`
-**Tests** : `.githooks/merge-auto.test.mjs`
+**Tests** : `.githooks/merge-auto.test.mjs`, `.githooks/merge-auto-forge.test.mjs`
 **Origine** : fusion-auto-ordonnee — « L'outil ne programme jamais l'auto-merge sur une PR dont l'état n'est pas calculé ou pas à jour ; délai dépassé, `gh` absent ou refus : il le dit, avec la sortie à suivre, et ne prétend jamais que la fusion est programmée »
 **Raison** : Un état inconnu pris pour un feu vert est un contrôle non exécuté pris pour un succès (QUA-013) ; le refus du dépôt doit rester dit tel quel, avec la sortie.
 
@@ -1578,7 +1578,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/merge-auto.mjs` (`mergeAuto`).
 **Preuve** : test : état sans `auto_merge` ou absent, refus sans aucun appel `gh`, en français et en anglais ; ligne de commande avec un `gh` factice.
 **Contrôle** : `tests-qua-163`
-**Tests** : `.githooks/merge-auto.test.mjs`
+**Tests** : `.githooks/merge-auto.test.mjs`, `.githooks/merge-auto-forge.test.mjs`
 **Origine** : fusion-auto-ordonnee — « Il ne s'exécute qu'avec l'autorisation « Automatic merge » donnée au lancement (lue dans l'état) ; sans elle il refuse »
 **Raison** : La fusion est la décision d'acceptation, prise par l'humain au lancement : un outil qui programme l'auto-merge sans cette autorisation la lui prendrait.
 

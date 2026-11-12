@@ -31,6 +31,7 @@ files:
   - .githooks/pr-watch-main.mjs
   - .githooks/wait-command.mjs
   - .githooks/merge-auto.mjs
+  - .githooks/merge-auto-forge.mjs
   - .githooks/base-checks.mjs
   - .githooks/state-texts.mjs
   - .githooks/close.mjs

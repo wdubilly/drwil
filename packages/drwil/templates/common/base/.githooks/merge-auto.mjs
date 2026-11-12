@@ -1,18 +1,21 @@
 #!/usr/bin/env node
-// Schedules the automatic merge of a pull request in the safe order (QUA-166): wait until GitHub has
+// Schedules the automatic merge of a pull request in the safe order (QUA-166): wait until the forge has
 // computed the PR, update it if it is behind the main branch (BEHIND), `gh pr merge --auto --merge`, then
-// check that the merge is really scheduled. Only with the « Automatic merge » authorisation given at start
+// check that the merge is really scheduled. On GitLab, the same sequence on the merge request through `glab`
+// (QUA-161, client in merge-auto-forge.mjs: `glab mr rebase`, `glab mr merge --auto-merge`, merge_when_pipeline_succeeds). Only with the « Automatic merge » authorisation given at start
 // (read in the state), or, in SCOPING, the one given by the end-of-scoping poll for the PR of its branch
 // (`scoping_merge`, QUA-188); never schedules on a PR whose state is unknown or not up to date, never claims
 // the merge is scheduled without having seen it (QUA-013). Following the PR stays `pr-watch.mjs`'s job.
 // Usage: node .githooks/merge-auto.mjs [<pr number>] [--timeout <minutes>]
-// Exit code: 0 scheduled (or merged at once: CI already green), 1 refused, 2 not run (gh unreachable, state not
+// Exit code: 0 scheduled (or merged at once: CI already green), 1 refused, 2 not run (gh or glab unreachable, state not
 // computed in time). Seeing the merge scheduled on the PR of the state's `merge_cancelled` mark (QUA-181) clears
 // the mark, through writeState: the only state this tool writes.
-import { spawnSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { changeForge } from "./close-checks.mjs";
+import { forgeClient, ghRun } from "./merge-auto-forge.mjs";
+import { texts } from "./pr-watch.mjs";
 import { STATE_MESSAGES } from "./state-messages.mjs";
 import { readState, writeState } from "./state.mjs";
 
@@ -21,39 +24,35 @@ const TEXTS = {
     noAuth:
       "[merge-auto] refusé : la fusion automatique n'a pas été autorisée au lancement (état : auto_merge absent), ni en fin de cadrage (réponse « Automatic merge » du sondage, état : scoping_merge absent). La fusion reste un geste humain.",
     otherBranch:
-      "[merge-auto] refusé : la PR #{0} est celle de la branche {1}, alors que la fusion automatique de fin de cadrage n'est autorisée que pour la branche {2}. La fusion reste un geste humain.",
+      "[merge-auto] refusé : la {0} est celle de la branche {1}, alors que la fusion automatique de fin de cadrage n'est autorisée que pour la branche {2}. La fusion reste un geste humain.",
     notRun: "[merge-auto] non exécuté : {0}",
-    noGh: "gh injoignable ou non connecté (gh auth login), ou aucune PR pour cette branche",
-    timeout: "état de la PR #{0} non calculé ou pas à jour après {1} min (« {2} ») ; relancer la commande",
-    notOpen: "[merge-auto] refusé : la PR #{0} n'est pas ouverte ({1}).",
-    conflict: "[merge-auto] refusé : la PR #{0} est en conflit avec la branche principale ; résoudre le conflit, puis relancer.",
-    updateFailed:
-      "[merge-auto] non exécuté : la mise à jour de la PR #{0} a échoué ; à faire à la main (`gh pr update-branch {0}`), puis relancer.",
-    updated: "[merge-auto] PR #{0} en retard sur la branche principale : mise à jour.",
+    timeout: "état de la {0} non calculé ou pas à jour après {1} min (« {2} ») ; relancer la commande",
+    notOpen: "[merge-auto] refusé : la {0} n'est pas ouverte ({1}).",
+    conflict: "[merge-auto] refusé : la {0} est en conflit avec la branche principale ; résoudre le conflit, puis relancer.",
+    updateFailed: "[merge-auto] non exécuté : la mise à jour de la {0} a échoué ; à faire à la main (`{1}`), puis relancer.",
+    updated: "[merge-auto] {0} en retard sur la branche principale : mise à jour.",
     notAllowed:
-      "[merge-auto] auto-merge non autorisé par le dépôt (PR #{0}) : un administrateur coche « Allow auto-merge » (réglages GitHub, General → Pull Requests), ou l'humain fusionne à la main. Rester en CLOSING ; la fusion n'est PAS programmée.",
-    refused: "[merge-auto] refusé par gh pour la PR #{0} : {1} La fusion n'est PAS programmée.",
-    notScheduled:
-      "[merge-auto] la fusion de la PR #{0} n'apparaît pas programmée (autoMergeRequest vide) : la fusion n'est PAS programmée.",
-    scheduled: "[merge-auto] fusion de la PR #{0} programmée et vérifiée. Suivre : node .githooks/pr-watch.mjs {0}",
+      "[merge-auto] auto-merge non autorisé par le dépôt ({0}) : un administrateur coche « Allow auto-merge » (réglages GitHub, General → Pull Requests), ou l'humain fusionne à la main. Rester en CLOSING ; la fusion n'est PAS programmée.",
+    refused: "[merge-auto] refusé par {2} pour la {0} : {1} La fusion n'est PAS programmée.",
+    notScheduled: "[merge-auto] la fusion de la {0} n'apparaît pas programmée (autoMergeRequest vide) : la fusion n'est PAS programmée.",
+    scheduled: "[merge-auto] fusion de la {0} programmée et vérifiée. Suivre : node .githooks/pr-watch.mjs {1}",
   },
   en: {
     noAuth:
       "[merge-auto] refused: automatic merge was not authorised at start (state: auto_merge missing), nor at the end of scoping (answer « Automatic merge » to the poll, state: scoping_merge missing). The merge stays a human gesture.",
     otherBranch:
-      "[merge-auto] refused: PR #{0} is the one of branch {1}, while the end-of-scoping automatic merge is authorised for branch {2} only. The merge stays a human gesture.",
+      "[merge-auto] refused: {0} is the one of branch {1}, while the end-of-scoping automatic merge is authorised for branch {2} only. The merge stays a human gesture.",
     notRun: "[merge-auto] not run: {0}",
-    noGh: "gh unreachable or not logged in (gh auth login), or no PR for this branch",
-    timeout: "state of PR #{0} not computed or not up to date after {1} min (« {2} »); run the command again",
-    notOpen: "[merge-auto] refused: PR #{0} is not open ({1}).",
-    conflict: "[merge-auto] refused: PR #{0} conflicts with the main branch; resolve the conflict, then run again.",
-    updateFailed: "[merge-auto] not run: updating PR #{0} failed; do it by hand (`gh pr update-branch {0}`), then run again.",
-    updated: "[merge-auto] PR #{0} is behind the main branch: updating it.",
+    timeout: "state of {0} not computed or not up to date after {1} min (« {2} »); run the command again",
+    notOpen: "[merge-auto] refused: {0} is not open ({1}).",
+    conflict: "[merge-auto] refused: {0} conflicts with the main branch; resolve the conflict, then run again.",
+    updateFailed: "[merge-auto] not run: updating {0} failed; do it by hand (`{1}`), then run again.",
+    updated: "[merge-auto] {0} is behind the main branch: updating it.",
     notAllowed:
-      "[merge-auto] auto-merge not allowed by the repository (PR #{0}): an admin ticks « Allow auto-merge » (GitHub settings, General → Pull Requests), or the human merges by hand. Stay in CLOSING; the merge is NOT scheduled.",
-    refused: "[merge-auto] refused by gh for PR #{0}: {1} The merge is NOT scheduled.",
-    notScheduled: "[merge-auto] the merge of PR #{0} does not appear scheduled (empty autoMergeRequest): the merge is NOT scheduled.",
-    scheduled: "[merge-auto] merge of PR #{0} scheduled and checked. Follow it: node .githooks/pr-watch.mjs {0}",
+      "[merge-auto] auto-merge not allowed by the repository ({0}): an admin ticks « Allow auto-merge » (GitHub settings, General → Pull Requests), or the human merges by hand. Stay in CLOSING; the merge is NOT scheduled.",
+    refused: "[merge-auto] refused by {2} for {0}: {1} The merge is NOT scheduled.",
+    notScheduled: "[merge-auto] the merge of {0} does not appear scheduled (empty autoMergeRequest): the merge is NOT scheduled.",
+    scheduled: "[merge-auto] merge of {0} scheduled and checked. Follow it: node .githooks/pr-watch.mjs {1}",
   },
 };
 
@@ -66,18 +65,7 @@ const lang = (root) => {
   }
 };
 
-/** `gh` for real: { status, stdout, stderr }; status null when gh does not start. */
-export const ghRun = (args) => spawnSync("gh", args, { encoding: "utf8" });
-
-/** Looks at the PR: parsed JSON, or null when gh fails or answers something unreadable. */
-function view(gh, pr) {
-  const r = gh(["pr", "view", ...(pr ? [pr] : []), "--json", "number,state,mergeStateStatus,autoMergeRequest,headRefName"]);
-  try {
-    return r.status === 0 ? JSON.parse(r.stdout) : null;
-  } catch {
-    return null;
-  }
-}
+export { ghRun };
 
 /** The merge seen scheduled on the PR of the `merge_cancelled` mark: the reminder became false, the mark goes (QUA-181). */
 function withMarkCleared(root, number, result) {
@@ -95,13 +83,18 @@ export async function mergeAuto({
   interval = 5000,
   root = process.cwd(),
   gh = ghRun,
+  glab,
+  forge = changeForge(root),
   sleep = (ms) => new Promise((r) => setTimeout(r, ms)),
   now = Date.now,
   log = () => {},
 }) {
-  const T = TEXTS[lang(root)];
+  const client = forgeClient(forge, { gh, glab });
+  const T = { ...TEXTS[lang(root)], ...client.texts[lang(root)] };
   const M = STATE_MESSAGES[lang(root)];
-  const out = (code, key, ...values) => ({ code, message: fill(T[key], ...values) });
+  const W = texts(root);
+  const name = (n) => fill(forge === "gitlab" ? W.mr : W.pr, n);
+  const out = (code, key, n, ...values) => ({ code, message: fill(T[key], name(n), ...values) });
   const notRun = (reason) => ({ code: 2, message: fill(T.notRun, reason) });
   const { state } = readState(root);
   // In SCOPING, only the scoping PR of the branch the human answered for (QUA-188); never another PR.
@@ -110,27 +103,28 @@ export async function mergeAuto({
   const end = now() + timeout * 60_000;
   let updated = false;
   for (;;) {
-    const v = view(gh, pr);
-    if (!v) return notRun(T.noGh);
+    const v = client.view(pr);
+    if (!v) return notRun(forge === "gitlab" ? W.noGlab : W.noGh);
     if (scoping && v.headRefName !== scoping) return out(1, "otherBranch", v.number, v.headRefName, scoping);
     if (v.state !== "OPEN") return out(1, "notOpen", v.number, v.state);
     if (v.mergeStateStatus === "DIRTY") return out(1, "conflict", v.number);
     if (v.mergeStateStatus === "BEHIND" && !updated) {
-      if (gh(["pr", "update-branch", String(v.number)]).status !== 0) return out(2, "updateFailed", v.number);
+      if (client.update(v.number).status !== 0) return out(2, "updateFailed", v.number, client.updateHint(v.number));
       updated = true;
-      log(fill(T.updated, v.number));
+      log(fill(T.updated, name(v.number)));
     } else if (!["UNKNOWN", "BEHIND", undefined].includes(v.mergeStateStatus)) {
-      const m = gh(["pr", "merge", String(v.number), "--auto", "--merge"]);
+      const m = client.merge(v.number);
       if (m.status !== 0) {
         const why = `${m.stderr ?? ""}${m.stdout ?? ""}`.trim();
-        return /not allowed/i.test(why) ? out(1, "notAllowed", v.number) : out(1, "refused", v.number, why || "(?)");
+        return client.notAllowed.test(why) ? out(1, "notAllowed", v.number) : out(1, "refused", v.number, why || "(?)", client.tool);
       }
-      // With the whole CI already green, `gh pr merge --auto` merges at once instead of scheduling (QUA-162).
-      const seen = view(gh, String(v.number));
-      if (seen?.autoMergeRequest) return withMarkCleared(root, v.number, out(0, "scheduled", v.number));
-      return seen?.state === "MERGED" ? { code: 0, message: fill(M.mergeAutoMerged, v.number) } : out(1, "notScheduled", v.number);
+      // With the whole CI already green, `gh pr merge --auto` (or `glab mr merge --auto-merge`) merges at once (QUA-162).
+      const seen = client.view(String(v.number));
+      if (seen?.autoMergeRequest) return withMarkCleared(root, v.number, out(0, "scheduled", v.number, v.number));
+      if (seen?.state !== "MERGED") return out(1, "notScheduled", v.number);
+      return T.merged ? out(0, "merged", v.number) : { code: 0, message: fill(M.mergeAutoMerged, v.number) };
     }
-    if (now() >= end) return notRun(fill(T.timeout, v.number, timeout, v.mergeStateStatus));
+    if (now() >= end) return notRun(fill(T.timeout, name(v.number), timeout, v.mergeStateStatus));
     await sleep(interval);
   }
 }

@@ -131,6 +131,13 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-12) : cadrage terminé, non commité.
-- **Travail non commité** : cette fiche.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-12) : lot 1 commité — client forge `.githooks/merge-auto-forge.mjs` (gh et glab, MR
+  normalisée au format GitHub), injecté dans le hook de fusion automatique par `changeForge` ; messages PR/MR et
+  outil de la forge ; tests GitLab dans `.githooks/merge-auto-forge.test.mjs`, tests GitHub inchangés et verts ;
+  couverture 100 % des deux fichiers. Corrigé en passant : le message « en retard » disait « 7 » au lieu de « PR #7 ».
+  Bloc scope élargi (décision humaine, sondage `drwil-limite`) au gabarit du cadrage livré
+  `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md`, qui liste désormais le nouveau hook.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [IA] lot 2 — close-branches, reopen, resume (`glab mr list --merged`, message `noGh` selon
+  la forge). Déjà fait au lot 1 (le commit l'exige) : `.githooks/merge-auto-forge.mjs` cité dans `docs/architecture.md`,
+  `docs/projects/kit-mechanics.md` et le champ Tests de QUA-161 à QUA-163.
