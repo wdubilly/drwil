@@ -141,6 +141,20 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P0] (0.11.2) La fusion automatique et le nettoyage des branches fonctionnent sur GitLab : merge-auto et
   close-branches parlent `glab` (cadré le 2026-11-12, urgent, signalé par un adoptant GitLab) —
   `docs/projects/support-gitlab-merge-auto.md`.
+- [ ] [IA] [P0] (0.11.2) Le lancement dit pourquoi il est refusé, arbre sale compris (cadré le 2026-11-12) —
+  `docs/projects/lancement-refuse-dit-pourquoi.md`.
+- [ ] [IA] [P0] (0.11.2) `drwil init` marque [IA] ce qu'un agent peut faire (cadré le 2026-11-12) —
+  `docs/projects/init-marque-ia-ce-qui-est-faisable.md`.
+- [ ] [IA] [P0] (0.11.2) Un chantier se mène dans la session principale, sans sous-agent (cadré le 2026-11-12) —
+  `docs/projects/fin-des-sous-agents-de-chantier.md`.
+- [ ] [IA] [P0] (0.11.2) La fusion automatique est le comportement par défaut, sans sondage, après le support GitLab
+  (cadré le 2026-11-12) — `docs/projects/fusion-automatique-par-defaut.md`.
+- [ ] [IA] [P0] (0.11.2) Une fiche P0 passe d'abord une analyse d'urgence (cadré le 2026-11-12) —
+  `docs/projects/analyse-d-urgence-des-fiches.md`.
+- [ ] [IA] [P0] (0.11.2) La consommation de Copilot CLI est mesurée comme celle de Claude Code (cadré le 2026-11-12) —
+  `docs/projects/consommation-copilot-cli.md`.
+- [ ] [IA] [P0] (0.11.2) Une relecture critique légère avant la clôture, sans frein au full auto (cadré le 2026-11-12) —
+  `docs/projects/relecture-critique-avant-cloture.md`.
 
 
 - [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
@@ -188,23 +202,6 @@ En attente d'une décision (à affiner) ou d'un geste humain :
   `docs/projects/suites-kit-portable.md` (point 2).
 
 ## Intentions par thème
-
-### Retours du demandeur, 0.11.2
-
-- [ ] [décision] [P0] (0.11.2) Mesurer la consommation de Copilot CLI et la centraliser —
-  `docs/intentions/retours-du-demandeur-0-11-2.md`.
-- [ ] [décision] [P0] (0.11.2) Analyser l'urgence avant de prioriser une fiche —
-  `docs/intentions/retours-du-demandeur-0-11-2.md`.
-- [ ] [IA] [P0] (0.11.2) Fusion automatique par défaut, sans sondage —
-  `docs/intentions/retours-du-demandeur-0-11-2.md`.
-- [ ] [décision] [P0] (0.11.2) Relecteur critique ou test de qualité et fonctionnel, léger —
-  `docs/intentions/retours-du-demandeur-0-11-2.md`.
-- [ ] [IA] [P0] (0.11.2) `init` : corriger les transitions en [humain] au lieu de [IA] —
-  `docs/intentions/retours-du-demandeur-0-11-2.md`.
-- [ ] [IA] [P0] (0.11.2) `start` n'échoue plus en silence sur un arbre sale —
-  `docs/intentions/retours-du-demandeur-0-11-2.md`.
-- [ ] [IA] [P0] (0.11.2) Arrêter les sous-agents du skill start —
-  `docs/intentions/retours-du-demandeur-0-11-2.md`.
 
 ### Parité des outils
 
