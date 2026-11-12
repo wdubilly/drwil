@@ -2,7 +2,7 @@
 
 **Statut** : cadré le 2026-11-12.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 **Intention** : `docs/intentions/cadrer-pendant-un-chantier.md`
 
 <!-- scope
@@ -10,6 +10,8 @@ files:
   - .githooks/briefs-order.mjs
   - .githooks/briefs.mjs
   - .githooks/check-docs-workstreams.mjs
+  - .githooks/check-docs.test.mjs
+  - .githooks/briefs.test.mjs
   - docs/projects/pending.md
   - docs/projects/model-brief.md
   - docs/projects/journal.md
@@ -29,6 +31,7 @@ fichier d'index par fiche supprime le conflit.
 
 ## 2. Hors périmètre
 
+- Le journal des chantiers (`docs/projects/journal.md`), conservé tel quel : son conflit éventuel est hors de ce chantier.
 - Le cadrage en BUILD lui-même : `docs/projects/cadrage-en-build.md`.
 
 ## 3. Contraintes
@@ -40,18 +43,22 @@ fichier d'index par fiche supprime le conflit.
 ## 4. Décisions
 
 - 2026-11-12 : un index par fiche (conflits), P0 (0.11.2).
+- 2026-11-12 : ordre = priorité, version, date de cadrage lus dans la fiche, plus un champ « Rang » facultatif pour départager ; journal conservé tel quel.
 
 ## 5. Points à trancher
 
-- [décision] Où vit l'ordre relatif des fiches (champ « Rang » dans la fiche, ou ordre par priorité puis date) et
-  comment se remplace la lecture manuelle de l'index ?
-- [décision] Le journal (`docs/projects/journal.md`) : une entrée par fichier, ou conservé tel quel ?
+Aucun.
 
 ## 6. Increments
 
-- **Lot 1 — à découper** [IA] : après les décisions ci-dessus.
+- **Lot 1 — lire l'ordre dans les fiches** [IA] : l'en-tête de la fiche porte priorité (`P0` à `P3`) et version
+  cible ; `.githooks/briefs-order.mjs` trie par priorité, version, date de cadrage, un champ « Rang » facultatif
+  départageant ; `.githooks/check-docs-workstreams.mjs` ne lit plus la section « Fiches cadrées » de l'index.
+  Critère de sortie : tests de l'ordre verts, l'ordre des fiches actuelles inchangé.
+- **Lot 2 — retirer les lignes de l'index** [IA] : créer ou clore une fiche ne touche plus l'index commun ;
+  `docs/projects/model-brief.md` et la clôture à jour. Critère de sortie : `node .githooks/run-checks.mjs` sans échec.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-12) : cadrage commencé, non commité.
-- **Prochaine étape** : le demandeur tranche les deux points ; puis lots.
+- **Dernier état** (2026-11-12) : cadrage terminé.
+- **Prochaine étape** : [humain] `/drwil-start`.
