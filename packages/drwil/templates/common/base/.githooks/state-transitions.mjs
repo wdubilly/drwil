@@ -187,8 +187,8 @@ export async function settleClosing(root, { chain = false, gh } = {}) {
   if (refused) return { message: refused };
   // Cannot be refused here: the brief is gone and CLOSING → SCOPING is free.
   await moveAll(root, { to: "SCOPING" }, {});
-  const head = readState(root).state.queue?.[0];
-  return { message: head && chain ? `${T.settled}\n${startAll(root, head).message}` : T.settled };
+  const launch = chain && readState(root).state.queue?.[0] && startAll(root, readState(root).state.queue[0]);
+  return { message: launch ? `${T.settled}\n${launch.message}` : T.settled, launch };
 }
 
 /** `next`: the queue's head, once the previous PR is merged (open or unknown: refused, QUA-013) and main proven green (QUA-251). */

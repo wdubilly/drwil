@@ -5289,6 +5289,9 @@ test("QUA-072 : le skill /drwil-note a la forme des autres skills /drwil-*, et l
       additionalContext:
         "[drwil] ✗ lancement refusé : « docs/projects/absente.md » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)",
     },
+    // Un refus s'affiche aussi à l'humain (QUA-179) : le contexte de l'agent seul peut ne jamais lui parvenir.
+    systemMessage:
+      "[drwil] ✗ lancement refusé : « docs/projects/absente.md » n'est pas une fiche cadrée (bloc scope commité, fiche non terminée)",
   });
 });
 

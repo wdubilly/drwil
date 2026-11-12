@@ -71,7 +71,10 @@ const TEXTS = {
   },
 };
 
-/** What the agent reads after the poll: never silent on a drwil start poll. */
+/**
+ * What the agent reads after the poll: never silent on a drwil start poll. A refusal (✗) is also shown to the
+ * human (`systemMessage`): the agent's context alone may never reach them (QUA-179).
+ */
 function tell(text) {
   console.log(
     JSON.stringify({
@@ -79,6 +82,7 @@ function tell(text) {
         hookEventName: "PostToolUse",
         additionalContext: `[drwil] ${text}`,
       },
+      ...(text.startsWith("✗") ? { systemMessage: `[drwil] ${text}` } : {}),
     }),
   );
 }

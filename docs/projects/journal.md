@@ -4393,3 +4393,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/support-gitlab-merge-auto`.
 
 - **Preuve de clôture** : `docs/preuves/support-gitlab-merge-auto.md`.
+
+## 2026-11-12 — Un lancement refusé le dit, à l'invite comme au sondage
+
+- **Ce qui change** : cause trouvée — le refus d'un lancement enchaîné à l'invite était jeté par `.githooks/state-cli.mjs` : `settleClosing` (`.githooks/state-transitions.mjs`) renvoie désormais le résultat du lancement, et son refus (arbre sale compris, avec ce qu'il faut faire) s'affiche avant le rappel d'état. Le refus « ✗ » du sondage `/drwil-start` est aussi montré à l'humain par `systemMessage` (`.claude/hooks/prompt-hook.mjs`), plus seulement à l'agent. `.githooks/wait-command.mjs` : plusieurs appels rattachés à la même commande reçoivent tous son verdict au lieu de planter sur ENOENT.
+- **Décisions clés** : quatre limites hors cadre traitées sur décision humaine (« Traiter maintenant » au sondage `drwil-limite`) : `.githooks/state-cli.mjs`, `systemMessage` du sondage, sortie figée du test de QUA-072 (rappel au sondage de lancement), `.githooks/wait-command.mjs` à rattachements multiples ; bloc scope élargi en conséquence. Puces « Contrats modifiés » de `.githooks/state-cli.mjs`, `.githooks/wait-command.mjs` et `.githooks/state.test.mjs` validées par le demandeur (QUA-113, fichiers de gouvernance gardés à leur version de la branche). Point 7a de `docs/intentions/retours-du-demandeur-0-11-2.md` marqué traité.
+- **Critères et preuves** : tests du refus de lancement lisible (`.githooks/state.test.mjs`, QUA-179), du `systemMessage` (`packages/drwil/test/claude-hooks.test.mjs`), des rattachements multiples (`.githooks/wait-command.test.mjs`) ; QUA-067 attesté par l'humain le 2026-11-12 (`.drwil/evidence/attestations/QUA-067-2026-11-12T20-41-24-517Z.json`), le banc Gemini n'ayant pas répondu en 300 s sur le poste ; `GOVERNANCE: PASS (CI pending)` à la clôture (258 PASS, 23 ATTESTED, 0 FAIL, 0 MANUAL).
+- **Limites connues** : le sondage d'attestation de QUA-067 dans le chat a été refusé deux fois par `.claude/hooks/attest-poll.mjs` sans raison lisible ; repli sur l'attestation au terminal.
+- **Clôturé par** : la branche `workstream/lancement-refuse-dit-pourquoi`.
+
+- **Preuve de clôture** : `docs/preuves/lancement-refuse-dit-pourquoi.md`.

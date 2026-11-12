@@ -572,6 +572,11 @@ test("QUA-205 : prompt-hook : refuse un sondage prérempli, annonce un échec sa
   assert.match(contexte(repondu({})), /aucune réponse lue/);
   assert.match(contexte(repondu({ Q: "Pas maintenant" })), /rien n'est lancé/);
   assert.match(contexte(repondu({ Q: "fiche-a" })), /erreur au lancement/);
+  // Un refus est aussi montré à l'humain (systemMessage), pas seulement à l'agent (QUA-179) ; « Pas maintenant » n'en est pas un.
+  const humain = (entree) => JSON.parse(run("prompt-hook.mjs", entree).stdout).systemMessage;
+  assert.match(humain(repondu({ Q: "fiche-a" })), /^\[drwil\] ✗ erreur au lancement/);
+  assert.match(humain(repondu({})), /^\[drwil\] ✗ aucune réponse lue/);
+  assert.equal(humain(repondu({ Q: "Pas maintenant" })), undefined);
   assert.match(
     contexte(repondu({ Q: "fiche-a", W: "Nouveau worktree" }, [{ header: "drwil-worktree", question: "W" }])),
     /erreur au lancement/,
