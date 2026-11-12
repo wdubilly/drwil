@@ -16,6 +16,10 @@ files:
   - packages/drwil/test/claude-hooks.test.mjs
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - packages/drwil/templates/common/base/.githooks/state-cli.mjs
+  - .githooks/state-cli.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/prompt-hook.mjs
+  - .claude/hooks/prompt-hook.mjs
 -->
 
 ## 1. Besoin
@@ -35,6 +39,7 @@ refus n'arrive pas toujours jusqu'à l'humain.
 
 - `.githooks/state-transitions.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
 - `.githooks/state-cli-commands.mjs` — gardé à sa version de la branche (QUA-113), si le chantier le modifie (validé le 2026-11-12)
+- `.githooks/state-cli.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
 
 ## 2. Hors périmètre
 
