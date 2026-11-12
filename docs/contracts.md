@@ -1108,7 +1108,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/state-cli.mjs` (`reopen`).
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires, `gh` simulé : PR ouverte avec et sans fusion automatique, fusionnée, fermée, inconnue, réponse illisible, annulation en échec ou sans effet, hook pre-commit qui refuse, fiche encore dans HEAD ; ordre vérifié (annulation avant le premier commit) ; cycle complet dans un projet installé, hooks réels.
 **Contrôle** : `tests-qua-116`
-**Tests** : `.githooks/state.test.mjs`
+**Tests** : `.githooks/state.test.mjs`, `.githooks/close-branches.test.mjs`
 **Origine** : reouvrir-apres-cloture — « En CLOSING, quand la PR du chantier est ouverte et non fusionnée, l'agent rouvre le chantier seul, par une commande : la fiche revient telle qu'elle était au commit qui précède la clôture, l'activité repasse en BUILD sur elle, sur la même branche, sans réécrire l'historique ni pousser en force ; une fusion automatique programmée est annulée avant tout ; la réouverture est refusée, sans rien changer, hors CLOSING, sur une PR fusionnée ou fermée, et quand l'état de la PR est inconnu (`gh` absent) »
 **Raison** : Un défaut révélé après le commit de clôture (CodeQL le 2026-10-21, CI rouge sur la PR #213 le 2026-10-23) laissait l'agent sans chemin gouverné : CLOSING ne mène qu'à SCOPING, la fiche est supprimée, la barrière n'accepte le code qu'en BUILD et un détour part de la branche principale, où le code fautif n'est pas.
 
@@ -2434,7 +2434,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/.githooks/state-resume.mjs` (`resume`).
 **Preuve** : tests sur dépôts temporaires : autre branche, HEAD détachée, fiche inconnue, PR fusionnée, `gh` muet, sans branche principale (aussi en ligne de commande, code 1) : refus nommé, aucun état écrit ; état actif sur une autre fiche gardé ; même fiche : rien à reprendre ; reprise réussie : fusion automatique non reconstruite, message qui nomme le sondage `drwil-merge`, en français et en anglais.
 **Contrôle** : `tests-qua-247`
-**Tests** : `.githooks/state-resume.test.mjs`
+**Tests** : `.githooks/state-resume.test.mjs`, `.githooks/close-branches.test.mjs`
 **Origine** : reprise-d-etat-sur-un-autre-clone — « `resume` refuse, sans rien écrire, quand l'historique ne prouve rien (branche qui n'est pas celle d'un chantier, fiche absente sans commit de clôture, PR fusionnée, état local déjà actif sur une autre fiche) et dit pourquoi ; il ne reconstruit jamais une décision humaine (fusion automatique, file, réouverture) : il dit qu'elle est à redemander »
 **Raison** : Une reprise qui devinerait l'état écrirait à la main ce que la gouvernance interdit d'écrire : seul ce que Git prouve est recopié.
 **Modifié** : 2026-11-07 — le message de reprise dit aussi comment redonner la fusion automatique (sondage `drwil-merge`, QUA-265) ; rien n'est reconstruit de plus ; validé par le demandeur le 2026-11-07 (réponse « Traiter maintenant » au sondage des limites, chantier « limites pendant le chantier »).

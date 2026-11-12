@@ -131,13 +131,21 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-12) : lot 1 commité — client forge `.githooks/merge-auto-forge.mjs` (gh et glab, MR
-  normalisée au format GitHub), injecté dans le hook de fusion automatique par `changeForge` ; messages PR/MR et
-  outil de la forge ; tests GitLab dans `.githooks/merge-auto-forge.test.mjs`, tests GitHub inchangés et verts ;
-  couverture 100 % des deux fichiers. Corrigé en passant : le message « en retard » disait « 7 » au lieu de « PR #7 ».
-  Bloc scope élargi (décision humaine, sondage `drwil-limite`) au gabarit du cadrage livré
-  `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md`, qui liste désormais le nouveau hook.
+- **Dernier état** (2026-11-12) : lots 1 et 2 commités. Lot 1 : client forge `.githooks/merge-auto-forge.mjs` (gh et
+  glab, MR normalisée au format GitHub), injecté dans le hook de fusion automatique par `changeForge` ; bloc scope
+  élargi (décision humaine) au gabarit du cadrage livré `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md`.
+  Lot 2 : `mergedPullRequests` (`.githooks/close-branches.mjs`) choisit la forge par `changeForge` et, sur GitLab,
+  interroge `glab mr list --merged --output json` (filtré par `--source-branch`), normalisé en `{headRefName, headRefOid}` ;
+  le message `noGhText` nomme glab et la MR sur GitLab ; la reprise (`.githooks/state-resume.mjs`) et la réouverture
+  (`.githooks/state-reopen.mjs`, MR lue par `glab mr view` et `normalizeMr`, fusion automatique annulée par
+  `glab api --method POST projects/:id/merge_requests/<n>/cancel_merge_when_pipeline_succeeds`) suivent, avec leurs
+  messages GitLab locaux (les fichiers de messages d'état sont pleins). Tests GitLab dans
+  `.githooks/close-branches.test.mjs` (les fichiers de tests de reprise et de réouverture sont hors bloc scope : le champ Tests de QUA-116 et QUA-247
+  et leurs contrôles `tests-qua-116` et `tests-qua-247` citent désormais aussi ce fichier) ;
+  la ligne de close-branches dans `docs/architecture.md` est à jour.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 2 — close-branches, reopen, resume (`glab mr list --merged`, message `noGh` selon
-  la forge). Déjà fait au lot 1 (le commit l'exige) : `.githooks/merge-auto-forge.mjs` cité dans `docs/architecture.md`,
-  `docs/projects/kit-mechanics.md` et le champ Tests de QUA-161 à QUA-163.
+- **Prochaine étape** : [IA] lot 3 — skill start-a-workstream et sa copie du gabarit en formulation neutre,
+  `docs/projects/kit-mechanics.md`, QUA-058 et QUA-059 mis à jour (critère et champ Tests : les tests GitLab de
+  `.githooks/close-branches.test.mjs`), `npm run installer-depot`, puis `node .githooks/run-checks.mjs` et
+  `drwil verify --agent`. Écart restant (hors scope) : le rappel d'état (`.githooks/state-texts.mjs`)
+  dit « PR #n » pour un chantier rouvert, même sur GitLab.

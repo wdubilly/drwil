@@ -6,7 +6,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readLots } from "./briefs-lots.mjs";
 import { config } from "./briefs.mjs";
-import { branchMerged, ghRun, mainBranch, mergedPullRequests } from "./close-branches.mjs";
+import { branchMerged, ghRun, glabRun, mainBranch, mergedPullRequests } from "./close-branches.mjs";
+import { changeForge } from "./close-checks.mjs";
 import { LOT_TRAILER, clearLots, writeLots } from "./state-lots.mjs";
 import { fill } from "./state-messages.mjs";
 import { readState, texts } from "./state-validate.mjs";
@@ -18,6 +19,20 @@ const BRANCH_RE = /^workstream\/([^/]+)$/;
 const MERGE_BACK = {
   fr: " Fusion automatique : la redonner par le sondage `drwil-merge` (« Automatic merge » ou « Manual merge »), lu par le hook ; aucune commande ne l'écrit.",
   en: " Automatic merge: give it back with the `drwil-merge` poll (« Automatic merge » or « Manual merge »), read by the hook; no command writes it.",
+};
+
+// GitLab's words for the refusals that name the merge request or its tool (QUA-247).
+const GITLAB_TEXTS = {
+  fr: {
+    resumeUnknown:
+      "reprise refusée : glab n'a pas dit si la MR de {0} est fusionnée (absent, non authentifié ou hors ligne) ; non prouvé, rien n'est écrit",
+    resumeMerged: "reprise refusée : la MR de {0} est fusionnée, le chantier est terminé ; revenir sur la branche principale",
+  },
+  en: {
+    resumeUnknown:
+      "resume refused: glab did not say whether the MR of {0} is merged (missing, not authenticated or offline); not proved, nothing written",
+    resumeMerged: "resume refused: the MR of {0} is merged, the workstream is over; go back to the main branch",
+  },
 };
 
 function git(root, ...args) {
@@ -60,8 +75,9 @@ function resumeLot(root, brief, base) {
  * when a commit of the branch deleted it (the closing) and the branch's PR is not merged. Refused without
  * writing anything when the history proves nothing (QUA-247). `{ code, message }`.
  */
-export function resume(root, { gh = ghRun, now = new Date().toISOString() } = {}) {
-  const T = texts(root);
+export function resume(root, { gh = ghRun, glab = glabRun, forge = changeForge(root), now = new Date().toISOString() } = {}) {
+  const lang = config(root).lang === "en" ? "en" : "fr";
+  const T = forge === "gitlab" ? { ...texts(root), ...GITLAB_TEXTS[lang] } : texts(root);
   const refused = (key, ...args) => ({ code: 1, message: fill(T[key], ...args) });
   const branch = git(root, "symbolic-ref", "--quiet", "--short", "HEAD");
   const name = branch?.match(BRANCH_RE)?.[1];
@@ -78,7 +94,7 @@ export function resume(root, { gh = ghRun, now = new Date().toISOString() } = {}
   if (!existsSync(join(root, brief))) {
     // A failed git call proves no closing: refused, never let through (QUA-013).
     if (!git(root, "log", "--diff-filter=D", "--format=%H", `${base}..HEAD`, "--", brief)) return refused("resumeNoBrief", brief);
-    const merged = branchMerged(root, branch, base, mergedPullRequests(root, { branch, gh }));
+    const merged = branchMerged(root, branch, base, mergedPullRequests(root, { branch, gh, glab, forge }));
     if (merged === "unknown") return refused("resumeUnknown", branch);
     if (merged !== "no") return refused("resumeMerged", branch);
     activity = "CLOSING";
@@ -95,6 +111,6 @@ export function resume(root, { gh = ghRun, now = new Date().toISOString() } = {}
         branch,
         lot === null ? "" : fill(T.resumeLot, lot),
         activity === "BUILD" ? T.resumeBuildNext : T.resumeClosingNext,
-      ) + MERGE_BACK[config(root).lang === "en" ? "en" : "fr"],
+      ) + MERGE_BACK[lang],
   };
 }
