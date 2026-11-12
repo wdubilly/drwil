@@ -36,7 +36,7 @@ export const MESSAGES_EN = {
   mergeCancelledType: "merge_cancelled: object { pr } expected (pr: the PR number)",
   mergeCancelledActivity: "merge_cancelled: only in CLOSING",
   mergeCancelledCleared:
-    "[merge-auto] « merge cancelled » mark of PR #{0} cleared: the merge is seen scheduled, the state reminder no longer says it is not",
+    "[merge-auto] « merge cancelled » mark of {0} cleared: the merge is seen scheduled, the state reminder no longer says it is not",
   mergeAutoMerged:
     "[merge-auto] PR #{0} merged by the command itself (its whole CI was already green). Follow the main branch's CI: node .githooks/pr-watch.mjs {0}",
   scopingMergeType: "scoping_merge: object { branch } expected (branch: the branch of the scoping PR)",

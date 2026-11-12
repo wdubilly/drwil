@@ -144,6 +144,13 @@ test("QUA-162 fusion automatique sur GitLab : jamais programmée sur un état in
     );
     assert.doesNotMatch(r.message, /programmée|scheduled/);
   }
+  // Marque « fusion annulée » effacée sur GitLab (QUA-181) : le message nomme la MR, jamais « PR #7 ».
+  for (const lang of ["fr", "en"]) {
+    const marque = faux({ vues: [ok(mr("mergeable")), ok(mr("mergeable", programmee))] });
+    r = await mergeAuto(options(projet({ lang, etat: { merge_cancelled: { pr: 7 } } }), { glab: marque.glab }));
+    assert.equal(r.code, 0, r.message);
+    assert.match(r.message, lang === "fr" ? /marque « fusion annulée » de la MR !7 effacée/ : /« merge cancelled » mark of MR !7 cleared/);
+  }
 });
 
 test("QUA-163 fusion automatique sur GitLab : sans autorisation, rien n'est lancé ; en SCOPING, seule la MR de la branche autorisée", async () => {

@@ -68,12 +68,12 @@ const lang = (root) => {
 export { ghRun };
 
 /** The merge seen scheduled on the PR of the `merge_cancelled` mark: the reminder became false, the mark goes (QUA-181). */
-function withMarkCleared(root, number, result) {
+function withMarkCleared(root, number, result, label) {
   const { state } = readState(root);
   if (state.merge_cancelled?.pr !== number) return result;
   const { merge_cancelled: _, ...kept } = state;
   writeState(root, kept);
-  return { ...result, message: `${result.message}\n${fill(STATE_MESSAGES[lang(root)].mergeCancelledCleared, number)}` };
+  return { ...result, message: `${result.message}\n${fill(STATE_MESSAGES[lang(root)].mergeCancelledCleared, label)}` };
 }
 
 /** Runs the sequence; returns { code, message }. */
@@ -120,7 +120,7 @@ export async function mergeAuto({
       }
       // With the whole CI already green, `gh pr merge --auto` (or `glab mr merge --auto-merge`) merges at once (QUA-162).
       const seen = client.view(String(v.number));
-      if (seen?.autoMergeRequest) return withMarkCleared(root, v.number, out(0, "scheduled", v.number, v.number));
+      if (seen?.autoMergeRequest) return withMarkCleared(root, v.number, out(0, "scheduled", v.number, v.number), name(v.number));
       if (seen?.state !== "MERGED") return out(1, "notScheduled", v.number);
       return T.merged ? out(0, "merged", v.number) : { code: 0, message: fill(M.mergeAutoMerged, v.number) };
     }

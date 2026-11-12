@@ -231,6 +231,9 @@ test("QUA-164 fusion automatique : la consigne de l'état et le skill appellent 
     assert.match(texte, /`gh` (ou|or) `glab`/);
     assert.doesNotMatch(texte, /GitHub (ait|has) calculé|GitHub has computed/);
   }
+  // Le suivi de la PR par la session principale (file, file parallèle) vaut aussi pour la MR, par glab.
+  for (const phrase of ["sur GitLab la MR par `glab`", "on GitLab the MR with `glab`"])
+    assert.equal(consigne.split(phrase).length - 1, 2, phrase);
 });
 
 /** Projet en SCOPING, dépôt git sur `branche`, avec (ou non) l'autorisation de fin de cadrage. */
