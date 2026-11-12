@@ -25,6 +25,16 @@ files:
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - .claude/skills/start-a-workstream/SKILL.md
   - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
+  - .githooks/state-texts.mjs
+  - .githooks/state-context-texts.mjs
+  - .githooks/state-messages-fr.mjs
+  - .githooks/state-messages-en.mjs
+  - packages/drwil/templates/common/base/.githooks/state-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
+  - .claude/skills/scope-a-workstream/SKILL.md
+  - packages/drwil/templates/common/tools/claude/.claude/skills/scope-a-workstream/SKILL.md
   - docs/architecture.md
   - docs/projects/kit-mechanics.md
   - docs/projects/pending.md
@@ -71,6 +81,10 @@ Hors périmètre : `.githooks/run-checks-pr.mjs` (gh api, gh run download, verdi
 - `.githooks/close-checks.mjs` — gardé à sa version de la branche (QUA-113), si le chantier le modifie (validé le 2026-11-12)
 - `.githooks/state-resume.mjs` — gardé à sa version de la branche (QUA-113), si le chantier le modifie (validé le 2026-11-12)
 - `.githooks/state-reopen.mjs` — gardé à sa version de la branche (QUA-113), si le chantier le modifie (validé le 2026-11-12)
+- `.githooks/state-texts.mjs` — gardé à sa version de la branche (QUA-113) : le rappel d'état d'un chantier rouvert dit « MR !n » sur GitLab (validé le 2026-11-12)
+- `.githooks/state-context-texts.mjs` — gardé à sa version de la branche (QUA-113) : la consigne de fusion automatique nomme aussi les équivalents GitLab (validé le 2026-11-12)
+- `.githooks/state-messages-fr.mjs` — gardé à sa version de la branche (QUA-113) : le rappel d'autorisation de la PR de cadrage nomme l'outil de la forge (validé le 2026-11-12)
+- `.githooks/state-messages-en.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
 
 ## 2. Hors périmètre
 
