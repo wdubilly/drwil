@@ -4371,3 +4371,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Critères et preuves** : QUA-173 et QUA-016 par `.githooks/scope.test.mjs` (fichier neuf listé par une fiche supprimée couvert, fichier jamais listé refusé, historique illisible sans fiche lue) ; QUA-172 par le test du commit de clôture ; QUA-113 par le test de la déclaration de `.githooks/scope.mjs` et de son test.
 - **Limites connues** : `prepare-commit-msg` n'ajoute pas le trailer pendant un rebase ; le support GitLab complet et l'abandon d'un détour restent notés dans `docs/intentions/support-gitlab-et-abandon-de-detour.md`.
 - **Clôturé par** : la branche `workstream/fichier-neuf-couvert-apres-cloture`.
+
+- **Preuve de clôture** : `docs/preuves/fichier-neuf-couvert-apres-cloture.md`.
