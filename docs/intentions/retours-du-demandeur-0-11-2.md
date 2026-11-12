@@ -31,9 +31,8 @@ Déjà traité : QUA-173, chantier fusionné par #409. Reste le défaut de couve
 ### 4. Fusion automatique par défaut
 
 Retirer le sondage `drwil-merge` : la fusion automatique devient le comportement par défaut.
-- [décision] Garder un moyen de refuser (réglage dans `.drwil/ia-first.json`) ou la rendre inconditionnelle.
-- [décision] Le contrat de l'autorisation humaine (QUA-163 : sans réponse « Automatic merge », rien n'est programmé) est à modifier, validé par le demandeur : que devient l'autorisation ?
-- Le sondage `drwil-scope` de fin de cadrage est-il concerné ? À trancher.
+- Décidé le 2026-11-12 : inconditionnelle, sans réglage pour la refuser ; les sondages `drwil-merge` et `drwil-scope` disparaissent.
+- [décision] QUA-163 (sans réponse « Automatic merge », rien n'est programmé) est modifié par ce choix, validé par le demandeur : reste à écrire ce qui le remplace (garde-fous qui demeurent : PR de la branche, CI verte, vérification relue sur la forge).
 
 ### 5. Relecteur critique, ou test de qualité et fonctionnel
 
@@ -50,8 +49,8 @@ Un skill ou un relecteur de code critique, sans être trop astreignant, compatib
 
 - **7a** : `state.mjs start` échoue en silence quand l'arbre de travail est sale. Il doit dire pourquoi, et ce qu'il faut faire.
 - **7b** : arrêter de travailler en sous-agent, qui semblerait plus consommateur.
-  - [décision] Mesurer d'abord le coût réel (lien avec le point 1) ou trancher sans mesure.
-  - [décision] Le skill `start-a-workstream` impose le sous-agent (règle de l'`AGENTS.md`) : la règle change, validée par le demandeur.
+  - Décidé le 2026-11-12 : supprimer les sous-agents du skill `start-a-workstream` maintenant, sans mesure préalable ; le chantier se fait dans la session principale.
+  - Cette règle de l'`AGENTS.md` change, validée par le demandeur : un lot par session ou par `lot next` reste à décider (reprise via « Reprise » de la fiche).
 
 ## Questions à trancher
 
