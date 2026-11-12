@@ -8,6 +8,7 @@ import { worktreeLines } from "./worktree.mjs";
 import { TEXTS } from "./state-context-texts.mjs";
 import { lotLabel, lotStatus } from "./state-lots.mjs";
 import { limitLines } from "./state-limits.mjs";
+import { changeForge } from "./close-checks.mjs";
 
 import { fill, STATE_MESSAGES } from "./state-messages.mjs";
 
@@ -20,6 +21,9 @@ export const docLanguage = (root) => config(root).docLang ?? config(root).lang ?
 
 /** `scopeGate: off` switches off all governance (gate, trailer, context): withdrawal without deleting anything. */
 export const governanceDisabled = (root) => config(root).scopeGate === "off";
+
+/** The change request as its forge names it (QUA-116): « MR !n » on GitLab, « PR #n » otherwise. */
+const changeRef = (root, n) => (changeForge(root) === "gitlab" ? `MR !${n}` : `PR #${n}`);
 
 /** Lines of a brief with lots: the current lot to work on alone (BUILD), the [human] lots to do (BUILD, CLOSING). */
 function lotContext(read, root, T) {
@@ -65,8 +69,8 @@ export function context(read, root) {
   if (state.parallel?.length) lines.push(fill(T.parallel, state.parallel.join(", ")));
   if (state.queue?.length && state.activity === "SCOPING") lines.push(fill(T.queueResume, state.queue[0]));
   if (state.detour) lines.push(fill(T.detour, state.detour.origin_brief, state.detour.origin_branch, state.detour.branch));
-  if (state.reopened) lines.push(fill(T.reopened, state.reopened.pr));
-  if (state.merge_cancelled) lines.push(fill(T.mergeCancelled, state.merge_cancelled.pr));
+  if (state.reopened) lines.push(fill(T.reopened, changeRef(root, state.reopened.pr)));
+  if (state.merge_cancelled) lines.push(fill(T.mergeCancelled, changeRef(root, state.merge_cancelled.pr)));
   if (patterns) lines.push(T.scope, ...(patterns.length ? patterns.map((p) => `  - ${p}`) : [T.noScope]));
   lines.push(...lotContext(read, root, T));
   // Limits (QUA-253): within the scope, handled on the spot; outside it, the human's poll before VERIFY.
@@ -103,6 +107,6 @@ export function shortReminder(read, root) {
         return T.reminder(state.activity, state.active_brief, n);
       })();
   const lot = problems.length ? [] : lotContext(read, root, T);
-  const cancelled = !problems.length && state.merge_cancelled ? [fill(T.mergeCancelled, state.merge_cancelled.pr)] : [];
+  const cancelled = !problems.length && state.merge_cancelled ? [fill(T.mergeCancelled, changeRef(root, state.merge_cancelled.pr))] : [];
   return [head, ...lot, ...cancelled, T.rule(T.rules[state.activity])].join("\n");
 }

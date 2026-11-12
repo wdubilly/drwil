@@ -13,7 +13,7 @@ import {
   pruneMergedBranches,
   prunedMessage,
 } from "./close-branches.mjs";
-import { writeState } from "./state.mjs";
+import { context, readState, shortReminder, writeState } from "./state.mjs";
 import { reopen } from "./state-reopen.mjs";
 import { resume } from "./state-resume.mjs";
 
@@ -290,6 +290,11 @@ test("QUA-116 : sur GitLab, la réouverture lit la MR par glab, annule sa fusion
     "api --method POST projects/:id/merge_requests/4/cancel_merge_when_pipeline_succeeds",
     "mr view workstream/x --output json",
   ]);
+  // Le rappel d'état nomme la MR comme GitLab (« MR !4 »), jamais « PR #4 ».
+  assert.match(context(readState(racine), racine), /Chantier rouvert après sa clôture \(QUA-116\), MR !4 ouverte/);
+  assert.doesNotMatch(context(readState(racine), racine), /PR #4/);
+  writeState(racine, { ...readState(racine).state, activity: "CLOSING", merge_cancelled: { pr: 4 } });
+  assert.match(shortReminder(readState(racine), racine), /Fusion automatique de la MR !4 ANNULÉE/);
   racine = preparer();
   ecrire(racine, { ".drwil/ia-first.json": JSON.stringify({ lang: "en" }) });
   assert.match(reopen(racine, { glab: () => mr({ state: "closed" }) }).message, /^reopening refused: MR !4 is CLOSED, not open/);

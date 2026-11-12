@@ -13,7 +13,8 @@ that records it — never the agent.
 1. Read the state: `node .githooks/state.mjs`. Anything other than SCOPING: say so and stop (a
    workstream's merge is decided at its start, `drwil-merge`).
 2. The scoping is committed on its own branch, never on the main branch, pushed, and its PR opened
-   (`gh pr create --base <main branch>`); follow its CI with `node .githooks/pr-watch.mjs <number>`.
+   (GitHub: `gh pr create --base <main branch>`; GitLab: its MR, `glab mr create --target-branch <main
+   branch>`); follow its CI with `node .githooks/pr-watch.mjs <number>`.
 3. Open **one** poll, a single question, single choice:
    - Claude Code (`AskUserQuestion`): `header` exactly `drwil-scope`, `multiSelect: false`, exactly
      three options, labels exactly `Automatic merge` (the agent schedules the merge of this PR with
@@ -27,8 +28,9 @@ that records it — never the agent.
      The human chooses alone.
 4. After the answer, read the `[drwil]` message the hook gives back:
    - **Automatic merge** (`✓`, authorisation recorded for the branch): run
-     `node .githooks/merge-auto.mjs <number>` — never chain the `gh` commands by hand, never say the
-     merge is scheduled unless it said so; then follow the PR with `node .githooks/pr-watch.mjs <number>`,
+     `node .githooks/merge-auto.mjs <number>` — never chain the forge's commands (`gh`, `glab`) by
+     hand, never say the merge is scheduled unless it said so; then follow the PR with
+     `node .githooks/pr-watch.mjs <number>`,
      run again while it says green without merged, 30 minutes at most in all. A refusal or a red CI:
      report it as is, fix a red CI on the same branch, never bypass it.
    - **Manual merge**: nothing is scheduled; give the human the PR number and say the brief is offered
@@ -38,7 +40,7 @@ that records it — never the agent.
      next scoping.
    - A refusal (`✗`): report it as is, without retrying another way. No `[drwil]` message at all: the
      hooks are not active in this session — say so and suggest restarting the session.
-5. Never schedule `gh pr merge --auto` on a scoping PR without the "Automatic merge" answer, in any
-   tool: `.githooks/merge-auto.mjs` is the only way, and it refuses without that answer.
+5. Never schedule the automatic merge of a scoping PR (`gh pr merge --auto`; GitLab: `glab mr merge
+   --auto-merge`) without the "Automatic merge" answer, in any tool: `.githooks/merge-auto.mjs` is the only way, and it refuses without that answer.
 
 Without a poll in the tool: the merge of the scoping PR stays a human gesture.
