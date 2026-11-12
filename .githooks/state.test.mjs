@@ -2441,6 +2441,27 @@ test("QUA-178 : la file enchaîne le chantier suivant à la fusion constatée da
   }
 });
 
+test("QUA-178 : un enchaînement refusé à l'invite (arbre sale) le dit avant le rappel, dans les trois invites", async () => {
+  const message = JSON.stringify({ prompt: "p", transformedPrompt: "bonjour" });
+  const sorties = {
+    reminder: (s) => s,
+    "copilot-message": (s) => JSON.parse(s).modifiedTransformedPrompt,
+    "gemini-message": (s) => JSON.parse(s).hookSpecificOutput.additionalContext,
+  };
+  for (const [commande, texte] of Object.entries(sorties)) {
+    const { racine } = depotFermeture();
+    writeFileSync(join(racine, "sale.txt"), "x");
+    const r = await capturer(() => main([commande], racine, Readable.from([message])));
+    assert.equal(r.code, 0, commande);
+    assert.match(
+      texte(r.sortie),
+      /CLOSING → SCOPING[\s\S]*lancement refusé : l'arbre de travail a des modifications non commitées[\s\S]*\[drwil\] Rappel/,
+      commande,
+    );
+    assert.deepEqual([readState(racine).state.activity, readState(racine).state.queue], ["SCOPING", [B]], commande);
+  }
+});
+
 test("QUA-251 : next refuse sans la preuve de CI verte sur la dernière fusion, et dit pourquoi ; un start humain n'est pas bloqué", async () => {
   const { racine, git } = depotFermeture({ activity: "SCOPING", active_brief: null });
   const fichier = join(racine, ".drwil", "evidence", "main-ci.json");

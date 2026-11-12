@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -71,6 +71,42 @@ test("QUA-220 : un second lancement ne duplique pas la commande en cours", async
   assert.equal((await waitFor({ root, command, wait: 0 })).code, 3);
   assert.equal((await waitFor({ root, command, wait: 15, interval: 50 })).code, 0);
   assert.equal(readFileSync(trace, "utf8"), "x\n");
+});
+
+test("QUA-220 : plusieurs appels rattachés à la même commande reçoivent tous son verdict, sans planter", async () => {
+  for (const [fin, code, motif] of [
+    ["exit 0", 0, /réussie/],
+    ["exit 4", 1, /code 4/],
+  ]) {
+    const root = tmp();
+    const trace = join(root, "trace");
+    const command = `echo x >> "${trace}" && ${dormir(1)} && ${fin}`;
+    assert.equal((await waitFor({ root, command, wait: 0 })).code, 3);
+    // Le premier consomme le verdict ; les suivants, rattachés pendant l'exécution, le lisent quand même.
+    const [a, b] = await Promise.all([
+      waitFor({ root, command, wait: 15, interval: 50 }),
+      waitFor({ root, command, wait: 15, interval: 80 }),
+    ]);
+    for (const r of [a, b]) {
+      assert.equal(r.code, code, r.message);
+      assert.match(r.message, motif);
+    }
+    assert.equal(readFileSync(trace, "utf8"), "x\n");
+    // Le verdict reste consommé : l'appel suivant rejoue la commande.
+    assert.equal((await waitFor({ root, command, wait: 15, interval: 50 })).code, code);
+    assert.equal(readFileSync(trace, "utf8"), "x\nx\n");
+  }
+});
+
+test("QUA-220 : une exécution dont toute trace disparaît pendant l'attente est dite interrompue, pas réussie ni échouée", async () => {
+  const root = tmp();
+  const command = dormir(2);
+  const attente = waitFor({ root, command, wait: 15, interval: 50 });
+  await new Promise((r) => setTimeout(r, 300));
+  rmSync(join(root, ".drwil", "evidence", "wait"), { recursive: true, force: true });
+  const r = await attente;
+  assert.equal(r.code, 2, r.message);
+  assert.match(r.message, /interrompue/);
 });
 
 test("QUA-220 : --status ne lance rien et lit sans consommer ; une exécution morte sans verdict est dite interrompue", async () => {

@@ -59,6 +59,8 @@ const keyOf = (command) => createHash("sha256").update(command).digest("hex").sl
 const verdictFile = (root, key) => join(dir(root), `${key}.json`);
 const pidFile = (root, key) => join(dir(root), `${key}.pid`);
 const logFile = (root, key) => join(dir(root), `${key}.log`);
+// A consumed verdict is kept aside, not deleted: another call joined to the same run still reads it.
+const consumedFile = (root, key) => join(dir(root), `${key}.consumed.json`);
 
 const alive = (pid) => {
   try {
@@ -85,11 +87,22 @@ export function read(root, command) {
   }
 }
 
+/** The verdict consumed by another call joined to the same run; null if there is none. */
+function consumed(root, command) {
+  const key = keyOf(command);
+  try {
+    return { state: "done", exit: JSON.parse(readFileSync(consumedFile(root, key), "utf8")).exit, log: logFile(root, key) };
+  } catch {
+    return null;
+  }
+}
+
 /** Starts the command detached; only the runner writes the verdict, only the launcher writes the pid. */
 export function launch(root, command, script = fileURLToPath(import.meta.url)) {
   const key = keyOf(command);
   mkdirSync(dir(root), { recursive: true });
   rmSync(verdictFile(root, key), { force: true });
+  rmSync(consumedFile(root, key), { force: true });
   const runner = spawn(process.execPath, [script, "--exec", root, command], { detached: true, stdio: "ignore" });
   runner.unref();
   writeFileSync(pidFile(root, key), String(runner.pid));
@@ -121,13 +134,20 @@ export async function waitFor({ root = process.cwd(), command, wait, status, int
   while (v.state === "running" && Date.now() < end) {
     await new Promise((r) => setTimeout(r, interval));
     v = read(root, command);
+    // seen running, now gone: another call joined to the same run consumed the verdict first; else lost
+    if (v.state === "none") v = consumed(root, command) ?? { state: "interrupted" };
   }
   if (v.state === "running") return { code: 3, message: fill(T.running, status ? 0 : wait) };
   if (v.state === "interrupted") return { code: 2, message: T.interrupted };
   if (!status) {
-    // the pid goes with the verdict: a runner still shutting down must not pass for a live run of the next call
-    rmSync(verdictFile(root, keyOf(command)));
-    rmSync(pidFile(root, keyOf(command)));
+    // the pid goes with the verdict: a runner still shutting down must not pass for a live run of the next call;
+    // renamed, not deleted: several calls joined to the same run all get its verdict (the losers find no file)
+    try {
+      renameSync(verdictFile(root, keyOf(command)), consumedFile(root, keyOf(command)));
+    } catch {
+      // already consumed by another joined call
+    }
+    rmSync(pidFile(root, keyOf(command)), { force: true });
   }
   if (v.exit === 0) return { code: 0, message: fill(T.passed, v.log) };
   return { code: 1, message: fill(T.failed, v.exit, v.log) };

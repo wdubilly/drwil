@@ -127,17 +127,20 @@ export async function main(args, root, input = process.stdin) {
     return report(r, root);
   }
   const prompt = ["reminder", "copilot-message", "gemini-message"].includes(args[0]);
-  let settled = "";
+  let [settled, said] = ["", ""];
   if (args[0] !== "move") {
     // Reading: the closing whose PR is merged is over; a failure here never breaks a session.
     try {
-      settled = (await settleClosing(root, { chain: prompt })).message;
+      const s = await settleClosing(root, { chain: prompt });
+      // A chained launch (refused or not) is said before the reminder: the prompt hooks would drop it (QUA-179).
+      [settled, said] = [s.message, s.launch ? s.message : ""];
     } catch {}
   }
+  const withSaid = (text) => [said, text].filter(Boolean).join("\n\n") || null;
   if (args[0] === "reminder") {
     // Prompt hook (Claude Code: UserPromptSubmit): writes only if the state changed, never breaks a prompt.
     try {
-      const text = reminderIfChanged(root);
+      const text = withSaid(reminderIfChanged(root));
       if (text) console.log(text);
     } catch {}
     return 0;
@@ -149,7 +152,7 @@ export async function main(args, root, input = process.stdin) {
       if (args[0] === "copilot-start") out = { additionalContext: context(readState(root), root) };
       else {
         const prompt = (await readStdinJson(input))?.transformedPrompt;
-        const text = typeof prompt === "string" ? reminderIfChanged(root) : null;
+        const text = typeof prompt === "string" ? withSaid(reminderIfChanged(root)) : null;
         if (text) out = { modifiedTransformedPrompt: `${text}\n\n${prompt}` };
       }
     } catch {}
@@ -161,7 +164,7 @@ export async function main(args, root, input = process.stdin) {
     const hookEventName = args[0] === "gemini-start" ? "SessionStart" : "BeforeAgent";
     let out = {};
     try {
-      const text = hookEventName === "SessionStart" ? context(readState(root), root) : reminderIfChanged(root);
+      const text = hookEventName === "SessionStart" ? context(readState(root), root) : withSaid(reminderIfChanged(root));
       if (text) out = { hookSpecificOutput: { hookEventName, additionalContext: text } };
     } catch {}
     console.log(JSON.stringify(out));
