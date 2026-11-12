@@ -91,22 +91,23 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    No `[drwil]` message at all: the hooks are not active in this session (e.g. opened before
    `init`) — say so and suggest restarting the session. If the state
    says "Automatic merge authorised": in CLOSING, after verify PASS and pushing the closing
-   commit, in this order — run `node .githooks/merge-auto.mjs <number>` (never chain the `gh` commands by hand): it waits until GitHub has
-   computed the PR, updates it if it is behind the main branch (BEHIND), schedules
-   `gh pr merge --auto --merge` and checks that the merge is scheduled
-   (`gh pr view --json autoMergeRequest`); follow the PR with
+   commit, in this order — run `node .githooks/merge-auto.mjs <number>` (never chain the forge's commands by hand, `gh` or `glab`): on
+   GitHub or GitLab alike, it waits until the forge has computed the pull or merge request (PR or MR), updates
+   it if it is behind the main branch, schedules the automatic merge and reads it back on the forge to check
+   that the merge is scheduled (GitLab: `merge_when_pipeline_succeeds`; GitHub:
+   `gh pr view --json autoMergeRequest`); follow the PR with
    `node .githooks/pr-watch.mjs <number>`, run again while it says green without merged, 30 minutes
    at most in all; the PR merged, only then go back to Scoping, which clears the authorisation —
    never before: once in Scoping, a red CI can no longer reopen the workstream. Red CI before the
    merge: stay in CLOSING and `node .githooks/state.mjs reopen` (it cancels the scheduled merge).
    Time limit exceeded, or any other failure: stay in CLOSING and report it. If `.githooks/merge-auto.mjs` refuses
-   because the repository does not allow it (« Auto merge is not allowed for this repository »),
-   say « auto-merge not allowed by the repository » and the way out — a repository admin ticks
-   « Allow auto-merge » in the GitHub repository settings (General → Pull Requests), or the
-   human merges by hand — stay in CLOSING, and never say the merge is scheduled: a mergeable PR,
+   because the repository does not allow it, say « auto-merge not allowed by the repository » and the
+   way out its message gives — on GitHub a repository admin ticks « Allow auto-merge » (General → Pull
+   Requests), on GitLab the project runs a pipeline on the MR and allows auto-merge; or the human
+   merges by hand — stay in CLOSING, and never say the merge is scheduled: a mergeable PR,
    auto-merge allowed by the repository, auto-merge scheduled and merge done are four different
-   states. Otherwise the merge stays a human gesture: never schedule `gh pr merge --auto` without
-   the "Automatic merge" answer, in any tool. Once the PR is merged and the main branch updated,
+   states. Otherwise the merge stays a human gesture: never schedule an automatic merge (`gh pr merge --auto`,
+   `glab mr merge --auto-merge`) without the "Automatic merge" answer, in any tool. Once the PR is merged and the main branch updated,
    the next `node .githooks/state.mjs start` or `next` goes back to SCOPING by itself (brief deleted,
    closing PR merged): no `move SCOPING` to run.
    After each push or PR creation, follow its CI with `node .githooks/pr-watch.mjs <number>`
@@ -142,13 +143,13 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    - One subagent at a time (sequential mode); the main session does not change the state while it works and reads
      it again when it returns. The main session keeps only the reports.
    - **Queue** (the state says « Queue decided at start »): after the closing, the main session follows the PR with `gh` until it is merged, 30 minutes
-     at most (`node .githooks/pr-watch.mjs <pr>`), updates the main branch, then starts the next brief
+     at most (on GitLab the MR with `glab`, both through `node .githooks/pr-watch.mjs <pr>`), updates the main branch, then starts the next brief
      with `node .githooks/state.mjs next` and hands it to a new subagent — no new poll. No next
      brief: the summary. Once the PR is merged, `pr-watch` also follows the main branch's CI on the
      merge commit, and the alert issue « CI broken on the main branch »: green with no issue open,
      it writes the proof (`.drwil/evidence/main-ci.json` (if present)) for that commit; `next` refuses without
      a proof for the tip of the up-to-date main branch, and says why. A human `start` is
-     not blocked. Only on GitHub: with `origin` on another forge, `next` is not blocked and says in
+     not blocked. That proof is written on GitHub only: with `origin` on GitLab or another forge, `next` is not blocked and says in
      one line that the main branch's CI is to be checked by hand.
    - Stop at the first workstream that gets stuck (human attestation awaited, FAIL not fixed, red
      CI, main branch CI red or alert issue open, merge not done within 30 minutes, decision to make): say why and what is expected; never
@@ -168,7 +169,7 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      `isolation: "worktree"`, which would be a copy without the state): its instructions start by
      reading the state in that folder (`node <worktree>/.githooks/state.mjs`), it modifies no other
      folder, carries the workstream until the closing is pushed (merge scheduled if authorised) and
-     ends with the report. The main session keeps only the reports, follows each PR with `gh` until
+     ends with the report. The main session keeps only the reports, follows each PR with `pr-watch` until
      it is merged, 30 minutes at most each, without waiting for another workstream's merge. On a
      closing conflict on the workstreams' index or journal, the subagent rebases and resolves it
      alone. A workstream that needs a human (attestation, FAIL not fixed, red CI, merge not done
