@@ -76,6 +76,13 @@ Hors périmètre : `.githooks/run-checks-pr.mjs` (gh api, gh run download, verdi
 
 - `QUA-058` — ancien critère : « Une branche dont la PR est fusionnée sur GitHub est reconnue fusionnée, squash compris » — raison : la reconnaissance s'étend aux MR GitLab (glab mr list --merged) (validé le 2026-11-12)
 - `QUA-059` — ancien critère : « Sans gh joignable, seule la fusion classique est reconnue, et c'est dit » — raison : l'outil est celui de la forge (gh ou glab), le message le nomme (validé le 2026-11-12)
+- `QUA-048` — ancien critère : « Une clôture en un geste, ses pièges signalés avant le commit », dont la marque de fusion annulée nommée seulement pour une PR GitHub — raison : la marque et la file nomment la MR et `glab` sur GitLab, alignées sur le code (validé le 2026-11-12)
+- `QUA-116` — ancien critère : « Un chantier clos dont la PR révèle un défaut se rouvre sur sa branche, d'une commande », l'état de la PR lu par `gh` seul — raison : la réouverture lit la MR par `glab` sur GitLab et annule sa fusion programmée ; test `.githooks/close-branches.test.mjs` ajouté (validé le 2026-11-12)
+- `QUA-161` — ancien critère : « La fusion automatique d'une PR s'enchaîne dans l'ordre par un outil : état calculé, mise à jour si BEHIND, programmation, vérification », par `gh` seul — raison : le même enchaînement passe par le client forge `merge-auto-forge` (`glab` sur GitLab) ; test `.githooks/merge-auto-forge.test.mjs` ajouté (validé le 2026-11-12)
+- `QUA-162` — ancien critère : « L'outil de fusion automatique ne programme jamais sur un état inconnu ou pas à jour, et ne dit jamais la fusion programmée sans l'avoir vue », périmètre `.githooks/merge-auto.mjs` seul — raison : périmètre étendu à `.githooks/merge-auto-forge.mjs`, mêmes refus sur GitLab ; test `.githooks/merge-auto-forge.test.mjs` ajouté (validé le 2026-11-12)
+- `QUA-163` — ancien critère : « L'outil de fusion automatique ne s'exécute qu'avec l'autorisation « Automatic merge » donnée au lancement », état lu avant tout appel à `gh` — raison : avant tout appel à l'outil de la forge (`gh` ou `glab`) ; test `.githooks/merge-auto-forge.test.mjs` ajouté (validé le 2026-11-12)
+- `QUA-245` — ancien critère : « Sur un clone neuf placé sur la branche d'un chantier, `state.mjs resume` remet l'état en BUILD ou en CLOSING d'après l'historique Git », la PR lue par `gh` seul — raison : la PR ou la MR lue par l'outil de la forge (validé le 2026-11-12)
+- `QUA-247` — ancien critère : « `resume` refuse sans rien écrire quand l'historique ne prouve rien, et ne reconstruit jamais une décision humaine », refus quand `gh` est muet — raison : refus quand l'outil de la forge (`gh` ou `glab`) est muet ; test `.githooks/close-branches.test.mjs` ajouté (validé le 2026-11-12)
 - `.githooks/merge-auto.mjs` — gardé à sa version de la branche (QUA-113) : le rejeu avec les hooks de main ne peut pas juger sa propre correction (validé le 2026-11-12)
 - `.githooks/close-branches.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
 - `.githooks/close-checks.mjs` — gardé à sa version de la branche (QUA-113), si le chantier le modifie (validé le 2026-11-12)
@@ -124,6 +131,7 @@ Hors périmètre : `.githooks/run-checks-pr.mjs` (gh api, gh run download, verdi
 
 - 2026-11-12 : urgence demandée par le demandeur, priorité P0 en tête de l'index ; fiche reprise du rapport de l'adoptant.
 - 2026-11-12 : modification de QUA-058 et QUA-059 validée par le demandeur.
+- 2026-11-12 : modification de QUA-048, QUA-116, QUA-161, QUA-162, QUA-163, QUA-245 et QUA-247 déclarée sur décision du demandeur (sondage dans le chat), règles gardées alignées sur le code GitLab.
 
 ## 5. Points à trancher
 
