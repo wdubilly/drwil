@@ -47,7 +47,7 @@ Un skill ou un relecteur de code critique, sans être trop astreignant, compatib
 
 ### 7. `start` et les sous-agents
 
-- **7a** : traité le 2026-11-12 par le chantier `docs/projects/lancement-refuse-dit-pourquoi.md` (journal, entrée du 2026-11-12 « Un lancement refusé le dit ») : tout refus de lancement, arbre sale compris, est dit à l'invite comme au sondage. Rien d'autre à cadrer ici.
+- **7a** : traité le 2026-11-12 par le chantier « le lancement dit pourquoi il est refusé » (`docs/projects/journal.md`, entrée du 2026-11-12 « Un lancement refusé le dit ») : tout refus de lancement, arbre sale compris, est dit à l'invite comme au sondage. Rien d'autre à cadrer ici.
 - **7b** : arrêter de travailler en sous-agent, qui semblerait plus consommateur.
   - Décidé le 2026-11-12 : supprimer les sous-agents du skill `start-a-workstream` maintenant, sans mesure préalable ; le chantier se fait dans la session principale.
   - Cette règle de l'`AGENTS.md` change, validée par le demandeur : un lot par session ou par `lot next` reste à décider (reprise via « Reprise » de la fiche).
