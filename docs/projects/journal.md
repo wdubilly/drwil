@@ -4381,3 +4381,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Critères et preuves** : QUA-173 et QUA-004 par `.githooks/scope.test.mjs` (15 tests passent) et la CI de la PR.
 - **Limites connues** : aucune.
 - **Clôturé par** : la branche `workstream/couverture-de-closedbriefpatterns-en-ci`.
+
+- **Preuve de clôture** : `docs/preuves/couverture-de-closedbriefpatterns-en-ci.md`.
