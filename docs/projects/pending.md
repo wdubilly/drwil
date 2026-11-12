@@ -189,6 +189,23 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 
 ## Intentions par thème
 
+### Retours du demandeur, 0.11.2
+
+- [ ] [décision] [P0] (0.11.2) Mesurer la consommation de Copilot CLI et la centraliser —
+  `docs/intentions/retours-du-demandeur-0-11-2.md`.
+- [ ] [décision] [P0] (0.11.2) Analyser l'urgence avant de prioriser une fiche —
+  `docs/intentions/retours-du-demandeur-0-11-2.md`.
+- [ ] [décision] [P0] (0.11.2) Fusion automatique par défaut, sans sondage —
+  `docs/intentions/retours-du-demandeur-0-11-2.md`.
+- [ ] [décision] [P0] (0.11.2) Relecteur critique ou test de qualité et fonctionnel, léger —
+  `docs/intentions/retours-du-demandeur-0-11-2.md`.
+- [ ] [IA] [P0] (0.11.2) `init` : corriger les transitions en [humain] au lieu de [IA] —
+  `docs/intentions/retours-du-demandeur-0-11-2.md`.
+- [ ] [IA] [P0] (0.11.2) `start` n'échoue plus en silence sur un arbre sale —
+  `docs/intentions/retours-du-demandeur-0-11-2.md`.
+- [ ] [décision] [P0] (0.11.2) Arrêter les sous-agents si le coût le confirme —
+  `docs/intentions/retours-du-demandeur-0-11-2.md`.
+
 ### Parité des outils
 
 - [ ] [humain] [P1] Sonder les quatre outils (lot 1 non fait) et dater le tableau de parité ; banc et file parallèle à
