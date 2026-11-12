@@ -4373,3 +4373,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/fichier-neuf-couvert-apres-cloture`.
 
 - **Preuve de clôture** : `docs/preuves/fichier-neuf-couvert-apres-cloture.md`.
+
+## 2026-11-12 — La couverture de `closedBriefPatterns` ne dépend plus de l'historique de la branche
+
+- **Ce qui change** : `.githooks/scope.test.mjs` importe le vrai `closedBriefPatterns` de `.githooks/scope.mjs` au lieu d'une copie dans le dépôt temporaire, que c8 n'instrumentait pas ; les lignes 178 à 180 sont couvertes sur toute branche, y compris sans fiche supprimée.
+- **Décisions clés** : aucun contrôle assoupli (QUA-019) ; `.githooks/scope.test.mjs` gardé à sa version de la branche par la déclaration « Contrats modifiés » (QUA-113).
+- **Critères et preuves** : QUA-173 et QUA-004 par `.githooks/scope.test.mjs` (15 tests passent) et la CI de la PR.
+- **Limites connues** : aucune.
+- **Clôturé par** : la branche `workstream/couverture-de-closedbriefpatterns-en-ci`.
+
+- **Preuve de clôture** : `docs/preuves/couverture-de-closedbriefpatterns-en-ci.md`.
