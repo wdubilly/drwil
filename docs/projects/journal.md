@@ -4363,3 +4363,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/controles-rejoues-reduits`.
 
 - **Preuve de clôture** : `docs/preuves/controles-rejoues-reduits.md`.
+
+## 2026-11-12 — Un fichier de code neuf reste couvert après la clôture de la fiche qui le listait (3 lots)
+
+- **Ce qui change** : `closedBriefPatterns` (`.githooks/scope.mjs`) lit par Git les fiches que la branche a supprimées depuis sa base ; `outsideBriefs` les compte comme couvrantes, donc le job `checks` ne refuse plus un fichier neuf après la clôture, sur GitHub comme sur GitLab. `.githooks/prepare-commit-msg` garde le trailer `Drwil-Brief` du commit qui supprime la fiche active.
+- **Décisions clés** : piste (a), lecture par Git de la fiche supprimée ; le correctif de hook passe par la déclaration « Contrats modifiés » de QUA-113 (`.githooks/scope.mjs`, son test, `.githooks/prepare-commit-msg`), sans contrôle désactivé ; QUA-173 précisé et QUA-172 complété (validés par le demandeur le 2026-11-12). Le hook refusant un commit rouge, le test de reproduction et le correctif forment un seul commit.
+- **Critères et preuves** : QUA-173 et QUA-016 par `.githooks/scope.test.mjs` (fichier neuf listé par une fiche supprimée couvert, fichier jamais listé refusé, historique illisible sans fiche lue) ; QUA-172 par le test du commit de clôture ; QUA-113 par le test de la déclaration de `.githooks/scope.mjs` et de son test.
+- **Limites connues** : `prepare-commit-msg` n'ajoute pas le trailer pendant un rebase ; le support GitLab complet et l'abandon d'un détour restent notés dans `docs/intentions/support-gitlab-et-abandon-de-detour.md`.
+- **Clôturé par** : la branche `workstream/fichier-neuf-couvert-apres-cloture`.
