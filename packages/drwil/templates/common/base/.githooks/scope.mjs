@@ -176,8 +176,7 @@ export function closedBriefPatterns(root, cfg = {}, env = process.env) {
   let commit = "";
   for (const line of (log || "").split("\n").filter(Boolean)) {
     if (/^[0-9a-f]{40}$/.test(line)) commit = line;
-    else if (line.endsWith(".md") && !seen.has(line) && seen.add(line))
-      texts.push([line, gitOut(root, ["show", `${commit}^:${line}`]) ?? ""]);
+    else if (line.endsWith(".md") && !seen.has(line) && seen.add(line)) texts.push([line, gitOut(root, ["show", `${commit}^:${line}`])]);
   }
   return patternsByBrief(texts, cfg);
 }
