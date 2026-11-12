@@ -1,7 +1,7 @@
 # Preuve de clôture — fichier-neuf-couvert-apres-cloture
 
 **Clos le** : 2026-11-12
-**Commit vérifié** : `bd12443c18` — verdict `drwil verify` : PASS
+**Commit vérifié** : `710463b3f9` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:d2dbeb5a07f702c2`, acceptés par l'humain au lancement le 2026-11-12
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
