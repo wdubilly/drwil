@@ -22,6 +22,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/close-checks.mjs
   - packages/drwil/templates/common/base/.githooks/state-resume.mjs
   - packages/drwil/templates/common/base/.githooks/state-reopen.mjs
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - .claude/skills/start-a-workstream/SKILL.md
   - packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md
   - docs/architecture.md
