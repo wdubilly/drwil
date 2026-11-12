@@ -155,6 +155,10 @@ d'un outil) la dit dans son statut.
   `docs/projects/consommation-copilot-cli.md`.
 - [ ] [IA] [P0] (0.11.2) Une relecture critique légère avant la clôture, sans frein au full auto (cadré le 2026-11-12) —
   `docs/projects/relecture-critique-avant-cloture.md`.
+- [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
+  `docs/projects/cadrage-en-build.md`.
+- [ ] [décision] [P0] (0.11.2) Un fichier d'index par fiche, sans conflit sur l'index commun ; 2 décisions ouvertes
+  (cadré le 2026-11-12) — `docs/projects/index-par-fiche.md`.
 
 
 - [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
