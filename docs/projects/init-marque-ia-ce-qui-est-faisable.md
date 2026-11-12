@@ -50,5 +50,8 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-12) : cadrage terminé, non commité.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-12) : lot 1 fait. Reproduit sur un projet neuf (`init` puis `guarantees`) : chaque
+  ligne d'index écrite en `[humain]`, le lot sans marque sous un titre « Lots » que l'enchaînement ne lit pas. Le
+  lot et la ligne d'index portent `[IA]`, sauf le versionnement (dépôt distant et protection sur la forge, hors du
+  dépôt) en `[humain]` ; la décision reste en « Points à trancher » `[décision]` ; titre français « Incréments ».
+- **Prochaine étape** : [IA] EVIDENCE, VERIFY, clôture.
