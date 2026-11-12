@@ -4403,3 +4403,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/lancement-refuse-dit-pourquoi`.
 
 - **Preuve de clôture** : `docs/preuves/lancement-refuse-dit-pourquoi.md`.
+
+## 2026-11-12 — init marque [IA] ce qu'un agent peut faire
+
+- **Ce qui change** : cause trouvée en reproduisant sur un projet neuf (`drwil init` puis `drwil guarantees`) — les fiches de garantie écrites par `packages/drwil/src/guarantees-briefs.ts` marquaient chaque ligne d'index `[humain]`, et leur lot sans marque sous un titre « Lots » que l'enchaînement des lots ne lisait pas. Correctif dans `packages/drwil/src/guarantees-briefs.ts` : le lot et la ligne d'index portent `[IA]`, sous le titre français « Incréments » lu par l'enchaînement ; la décision reste en « Points à trancher » `[décision]`.
+- **Décisions clés** : le versionnement est gardé `[humain]`, car il se règle sur la forge (dépôt distant, protection de branche), hors du dépôt. Point 6 de `docs/intentions/retours-du-demandeur-0-11-2.md` marqué traité.
+- **Critères et preuves** : tests des marques `[IA]`/`[humain]` et du titre « Incréments » (`packages/drwil/test/guarantees.test.mjs`) ; QUA-092 attesté par l'humain le 2026-11-12 après un essai réel sur une pile Node et une pile Rust (`.drwil/evidence/attestations/QUA-092-2026-11-12T22-11-08-371Z.json`), le point `/drwil-start` vérifié par l'humain ; `GOVERNANCE: PASS (CI pending)` à la clôture (258 PASS, 23 ATTESTED, 0 FAIL, 0 MANUAL).
+- **Limites connues** : la ligne « Unreleased » de `packages/drwil/CHANGELOG.md` n'est pas écrite, le fichier étant hors du bloc scope de la fiche.
+- **Clôturé par** : la branche `workstream/init-marque-ia-ce-qui-est-faisable`.
+
+- **Preuve de clôture** : `docs/preuves/init-marque-ia-ce-qui-est-faisable.md`.

@@ -135,8 +135,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.2) `drwil init` marque [IA] ce qu'un agent peut faire (cadré le 2026-11-12) —
-  `docs/projects/init-marque-ia-ce-qui-est-faisable.md`.
 - [ ] [IA] [P0] (0.11.2) Un chantier se mène dans la session principale, sans sous-agent (cadré le 2026-11-12) —
   `docs/projects/fin-des-sous-agents-de-chantier.md`.
 - [ ] [IA] [P0] (0.11.2) La fusion automatique est le comportement par défaut, sans sondage, après le support GitLab

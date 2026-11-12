@@ -18,6 +18,8 @@ export interface GuaranteeBrief {
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
+// QUA-015 marker: its [decision] taken, an agent resolves a guarantee in the repo; the forge lives outside it.
+const mark = (l: MessageLang, k: BriefKind) => (l === "fr" ? ["[IA]", "[humain]"] : ["[AI]", "[human]"])[k === "versioning" ? 1 : 0];
 
 const TEXTS = {
   fr: {
@@ -64,12 +66,12 @@ const TEXTS = {
       versioning: "- [décision] Accord pour poser la protection de la branche principale (`drwil guarantees --protect`) ?",
       presentation: "- [décision] Que fait l'application, pour qui, et comment la lancer ?",
     },
-    lots: "## 5. Lots",
-    lot: "- **Lot 1 — résoudre la garantie** : voir le besoin ci-dessus, puis relancer `npx drwil guarantees`.",
+    lots: "## 5. Incréments",
+    lot: "- **Lot 1 — résoudre la garantie** {0} : voir le besoin ci-dessus, puis relancer `npx drwil guarantees`.",
     resume: "## 6. Reprise",
     resumeText:
       "- **Dernier état** : écrite par `drwil guarantees` ; tant qu'elle n'est pas résolue, `drwil verify` est en FAIL et `/drwil-start` ne propose qu'elle.",
-    index: (title: string, path: string, blocking: boolean) => `- [ ] [humain] [P${blocking ? 0 : 1}] ${title} — \`${path}\``,
+    index: (m: string, title: string, path: string, blocking: boolean) => `- [ ] ${m} [P${blocking ? 0 : 1}] ${title} — \`${path}\``,
   },
   en: {
     titles: {
@@ -116,11 +118,11 @@ const TEXTS = {
       presentation: "- [decision] What does the application do, for whom, and how is it run?",
     },
     lots: "## 5. Increments",
-    lot: "- **Increment 1 — resolve the guarantee**: see the need above, then run `npx drwil guarantees` again.",
+    lot: "- **Increment 1 — resolve the guarantee** {0}: see the need above, then run `npx drwil guarantees` again.",
     resume: "## 6. Hand-off",
     resumeText:
       "- **Last state**: written by `drwil guarantees`; as long as it is not resolved, `drwil verify` is FAIL and `/drwil-start` offers only it.",
-    index: (title: string, path: string, blocking: boolean) => `- [ ] [human] [P${blocking ? 0 : 1}] ${title} — \`${path}\``,
+    index: (m: string, title: string, path: string, blocking: boolean) => `- [ ] ${m} [P${blocking ? 0 : 1}] ${title} — \`${path}\``,
   },
 };
 
@@ -161,7 +163,7 @@ export function renderBrief(b: GuaranteeBrief, lang: MessageLang): string {
     "",
     T.lots,
     "",
-    T.lot,
+    T.lot.replace("{0}", mark(lang, b.kind)),
     "",
     T.resume,
     "",
@@ -188,7 +190,7 @@ export function writeBriefs(root: string, briefs: GuaranteeBrief[], index: strin
   const before = existsSync(indexPath) ? readFileSync(indexPath, "utf8") : "";
   const lines = briefs
     .filter((b) => written.includes(b.path) && !before.includes(`\`${b.path}\``))
-    .map((b) => TEXTS[lang].index(b.title, b.path, b.blocking));
+    .map((b) => TEXTS[lang].index(mark(lang, b.kind), b.title, b.path, b.blocking));
   if (lines.length) {
     mkdirSync(dirname(indexPath), { recursive: true });
     writeFileSync(indexPath, `${before.replace(/\s*$/, "")}${before ? "\n\n" : ""}${lines.join("\n")}\n`);

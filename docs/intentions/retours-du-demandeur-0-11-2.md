@@ -42,8 +42,7 @@ Un skill ou un relecteur de code critique, sans être trop astreignant, compatib
 
 ### 6. `init` : transitions en [humain] au lieu de [IA]
 
-`drwil init` écrit des transitions ou des lignes marquées `[humain]` qui devraient être `[IA]`.
-- À reproduire d'abord : quelle sortie de `init` exactement (lignes d'index de `packages/drwil/src/guarantees-briefs.ts` ?), sur quel type de projet.
+Traité le 2026-11-12 par le chantier « `drwil init` marque [IA] ce qu'un agent peut faire » (`docs/projects/journal.md`, entrée du 2026-11-12 « init marque [IA] ce qu'un agent peut faire ») : reproduit sur un projet neuf (`init` puis `guarantees`), les fiches de garantie et leurs lignes d'index portent `[IA]`, sauf le versionnement (réglé sur la forge) gardé `[humain]` ; titre français « Incréments ». Rien d'autre à cadrer ici.
 
 ### 7. `start` et les sous-agents
 
