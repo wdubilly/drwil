@@ -65,7 +65,7 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
 
 ## 2. Hors périmètre
 
-- Le client GitLab de merge-auto (`docs/projects/support-gitlab-merge-auto.md`) : à faire avant, les deux chantiers touchent le même hook.
+- Le client GitLab de merge-auto (`docs/projects/journal.md`, fait le 2026-11-12) : à faire avant, les deux chantiers touchent le même hook.
 - Le sondage `drwil-limite`, le sondage de lancement lui-même (fiche, worktree).
 - Un réglage pour refuser la fusion automatique (décidé : inconditionnelle).
 

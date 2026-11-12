@@ -1,0 +1,38 @@
+{
+  "version": 4,
+  "contract": "QUA-048",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-12T17:39:57.219Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Règle complétée au lot 3 : le ménage des branches au lancement reconnaît aussi une MR GitLab fusionnée (glab mr list --merged, squash compris) ; tests tests-qua-048 et .githooks/close-branches.test.mjs au vert ; run-checks OK",
+  "fingerprint": "91b5ea501a2a79a769cd1f0690c6ef94efeda5e063a144a84f727160f208c3e1",
+  "proof": {
+    "tests-qua-048": "cdb538b1a751e318de6699116c6436f203817383752094ee39e3b89c5ee051e2"
+  },
+  "covers": [
+    ".githooks/close.mjs",
+    ".githooks/close-branches.mjs",
+    ".githooks/state.mjs"
+  ],
+  "coverage": {
+    ".githooks/close-branches.mjs": "6ff3d863c229fd1a07e19fff304211d4278440b0b35816776c8a20a165a67b30",
+    ".githooks/close.mjs": "6568729e9d70b79c44690c329cf28dcfef799d002242f219397eba2f388b804d",
+    ".githooks/state.mjs": "0d31209458ea27cc777bf6c8cc0374c938297cf23d679f01c1c33cbd420ba9d0"
+  },
+  "commit": "ebb7f498368d9638775273b5d4c3e830886a71c8",
+  "automated": [
+    {
+      "id": "tests-qua-048",
+      "status": "ok"
+    }
+  ],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "c2804e2b-f269-4a41-b02d-f5ee3277b3c9",
+    "toolUseId": "toolu_018Jo86wZ5RKN8pvGVuwcobP",
+    "askedAt": "2026-11-12T17:34:00.342Z"
+  }
+}
