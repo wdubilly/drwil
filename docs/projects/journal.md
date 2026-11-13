@@ -4444,3 +4444,14 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/cache-des-verdicts-de-ci-retabli`.
 
 - **Preuve de clôture** : `docs/preuves/cache-des-verdicts-de-ci-retabli.md`.
+
+## 2026-11-13 — La ligne « Unreleased » du changelog s'écrit en fin de BUILD
+
+- **Ce qui change** : la consigne d'état BUILD (français et anglais, `.githooks/state-context-texts.mjs`) demande la ligne « Unreleased » du changelog dans le dernier lot quand le chantier change ce que voit l'utilisateur ; le rappel CLOSING ne la demande plus dans le commit de clôture, que la barrière de périmètre de CLOSING refusait (`.githooks/scope-gate.mjs`, liste fermée inchangée — QUA-016). L'en-tête « Unreleased » de `packages/drwil/CHANGELOG.md` et les recettes `docs/recipes/working-with-branches.md` et `docs/recipes/create-a-release.md` disent la même chose. `node .githooks/close.mjs --check` signale, sans bloquer, une branche qui change du code livré (fichiers du dossier d'un changelog hors tests, Markdown, `docs/` et dossiers en point) sans toucher la section « Unreleased » de ce changelog, et rien sans changelog — QUA-040. Lignes manquantes des trois chantiers du 2026-11-12 (fusion automatique GitLab, lancement refusé dit, marques [IA] d'`init`) ajoutées. Gabarit puis `npm run installer-depot` (QUA-018).
+- **Intention couverte** : RSK-3 de `docs/audit-risques.md` et OPT-5 de `docs/decouverte-valeur.md` (scans du 2026-11-12 : la consigne « Unreleased » au commit de clôture ne se suivait pas sans contournement), entièrement couverts ; leur suite donnée renvoie à cette entrée.
+- **Décisions clés** : 2026-11-13, la ligne s'écrit en fin de BUILD plutôt que d'admettre le changelog en CLOSING (option écartée) ; signal non bloquant. `QUA-040` modifié sur le oui du demandeur le 2026-11-13 (« Modifié » du contrat). Le README et la carte, de même logique, restent hors périmètre.
+- **Critères et preuves** : tests QUA-040 dans `.githooks/state.test.mjs` (consignes BUILD et CLOSING ; signal : code livré sans ligne, ligne hors section, ligne non commitée, changelog d'un paquet, sans changelog), en échec contre le code d'avant ; QUA-048 attesté par l'humain le 2026-11-13 (`.drwil/evidence/attestations/QUA-048-2026-11-13T18-26-55-274Z.json`) ; `GOVERNANCE: PASS (CI pending)` à la clôture (260 PASS, 23 ATTESTED, 0 FAIL, 0 MANUAL).
+- **Limites connues** : le signal compare la section « Unreleased » à celle de la base de la branche, pas la pertinence de la ligne écrite ; la carte et le README gardent leur rappel en CLOSING.
+- **Clôturé par** : la branche `workstream/unreleased-en-fin-de-build`.
+
+- **Preuve de clôture** : `docs/preuves/unreleased-en-fin-de-build.md`.
