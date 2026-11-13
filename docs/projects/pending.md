@@ -137,6 +137,8 @@ d'un outil) la dit dans son statut.
 
 - [ ] [IA] [P0] (0.11.2) Un chantier se mène dans la session principale, sans sous-agent (cadré le 2026-11-12) —
   `docs/projects/fin-des-sous-agents-de-chantier.md`.
+- [ ] [IA] [P0] (0.11.2) Le suivi de PR attend que la CI apparaisse avant de la dire absente (cadré le 2026-11-13) —
+  `docs/projects/pr-watch-attend-la-ci.md`.
 - [ ] [IA] [P0] (0.11.2) La fusion automatique est le comportement par défaut, sans sondage, après le support GitLab
   (cadré le 2026-11-12) — `docs/projects/fusion-automatique-par-defaut.md`.
 - [ ] [IA] [P0] (0.11.2) Une fiche P0 passe d'abord une analyse d'urgence (cadré le 2026-11-12) —
