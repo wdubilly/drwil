@@ -42,6 +42,7 @@ import {
 
 import { accept, acceptanceCheck, criteriaFingerprint, recordAcceptance } from "./state-acceptance.mjs";
 import { mainTip, writeProof } from "./pr-watch-main.mjs";
+import { close } from "./close.mjs";
 import { intentPath, limitChoice, recordLimits } from "./state-limits.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
@@ -296,16 +297,24 @@ test("QUA-040 : rappel CLOSING : langue de la carte, du README et du changelog, 
   assert.doesNotMatch(context(readState(build), build), /docLang/, "seulement en CLOSING");
 });
 
-test("QUA-040 : rappel CLOSING : README, changelog « Unreleased » et carte d'architecture, en anglais aussi", () => {
+test("QUA-040 : la ligne « Unreleased » se demande en BUILD, dans le dernier lot ; le rappel CLOSING ne la demande plus, en anglais aussi", () => {
   const fr = depot({ state: actif("CLOSING") });
-  assert.match(
-    context(readState(fr), fr),
-    /README et ligne « Unreleased » du changelog[^.]*carte docs\/architecture\.md s'il change la structure/,
-  );
+  const closingFr = context(readState(fr), fr);
+  assert.match(closingFr, /README si le chantier change ce qu'il voit, carte docs\/architecture\.md s'il change la structure/);
+  assert.doesNotMatch(closingFr, /Unreleased/);
   const en = depot({ state: actif("CLOSING"), lang: "en" });
+  const closingEn = context(readState(en), en);
+  assert.match(closingEn, /README if the workstream changes what they see, map docs\/architecture\.md if it changes the structure/);
+  assert.doesNotMatch(closingEn, /Unreleased/);
+  const buildFr = depot({ state: actif("BUILD") });
   assert.match(
-    context(readState(en), en),
-    /README and « Unreleased » changelog line[^.]*map docs\/architecture\.md if it changes the structure/,
+    context(readState(buildFr), buildFr),
+    /ajouter sa ligne sous « Unreleased » du changelog \(s'il y en a un\) dans le dernier lot : la barrière de CLOSING refuse le changelog/,
+  );
+  const buildEn = depot({ state: actif("BUILD"), lang: "en" });
+  assert.match(
+    context(readState(buildEn), buildEn),
+    /add its line under « Unreleased » in the changelog \(if there is one\) in the last increment: the CLOSING scope gate refuses the changelog/,
   );
 });
 
@@ -2976,4 +2985,69 @@ test("QUA-036 : le rappel de BUILD et les règles de conduite disent la règle d
     );
     assert.match(regles.replace(/\s+/g, " "), /each limit answered « Record as intent » becomes an intent brief/);
   }
+});
+
+/** QUA-040 : dépôt git temporaire, branche `chantier` partie de master, fiche donnée à `close --check`. */
+function depotChangelog({ lang, changelog } = {}) {
+  const racine = tmp("drwil-unreleased-");
+  const git = (...args) => {
+    const r = spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t.invalid", "-c", "core.hooksPath=/dev/null", ...args], {
+      cwd: racine,
+      encoding: "utf8",
+    });
+    assert.equal(r.status, 0, `git ${args.join(" ")} : ${r.stderr}`);
+  };
+  const ecrire = (fichiers) => {
+    for (const [chemin, contenu] of Object.entries(fichiers)) {
+      mkdirSync(dirname(join(racine, chemin)), { recursive: true });
+      writeFileSync(join(racine, chemin), contenu);
+    }
+  };
+  git("init", "-q", "-b", "master");
+  ecrire({
+    ".drwil/ia-first.json": JSON.stringify({ ...(lang ? { lang } : {}), contractPrefixes: ["QUA"] }),
+    ".gitignore": ".drwil/state.json\n.drwil/evidence/\n",
+    "docs/projects/exemple.md": "# Projet : Exemple\n",
+    "src/a.mjs": "export const a = 0;\n",
+    ...(changelog ? { [changelog]: "# Changelog\n\n## Unreleased\n\n## 1.0.0\n\n- Début.\n" } : {}),
+  });
+  git("add", "-A");
+  git("commit", "-q", "-m", "initial");
+  git("checkout", "-q", "-b", "chantier");
+  const verifier = () => close(racine, { brief: "docs/projects/exemple.md", check: true, lookCi: () => ({ state: "none" }) });
+  return { racine, git, ecrire, verifier };
+}
+
+test("QUA-040 : close --check signale, sans bloquer, une branche qui change du code livré sans toucher « Unreleased » ; sans changelog, rien", () => {
+  const avertit =
+    /Avertissements \(non bloquants\) :\n {2}⚠ CHANGELOG\.md : la branche change du code livré \(src\/a\.mjs\) sans ligne sous « Unreleased »/;
+  const sans = depotChangelog();
+  sans.ecrire({ "src/a.mjs": "export const a = 1;\n" });
+  assert.doesNotMatch(sans.verifier().message, /Unreleased/, "sans changelog, aucun signal");
+
+  const d = depotChangelog({ changelog: "CHANGELOG.md" });
+  d.ecrire({ "src/a.mjs": "export const a = 1;\n" });
+  d.git("commit", "-qam", "code");
+  const r = d.verifier();
+  assert.equal(r.code, 0, "le signal ne bloque pas");
+  assert.match(r.message, avertit);
+  d.ecrire({ "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n## 1.0.0\n\n- Début.\n- Ajout tardif.\n" });
+  assert.match(d.verifier().message, avertit, "une ligne hors de « Unreleased » ne compte pas");
+  d.ecrire({ "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n- Nouveau.\n\n## 1.0.0\n\n- Début.\n" });
+  assert.doesNotMatch(d.verifier().message, /Unreleased/, "ligne sous « Unreleased », même non commitée");
+
+  const doc = depotChangelog({ changelog: "CHANGELOG.md" });
+  doc.ecrire({ "src/a.test.mjs": "test;\n", "docs/guide.md": "# Guide\n", "README.md": "# Lisez-moi\n", ".githooks/h.mjs": "//\n" });
+  assert.doesNotMatch(doc.verifier().message, /Unreleased/, "tests, Markdown, docs/ et dossiers en point : pas du code livré");
+});
+
+test("QUA-040 : le changelog d'un paquet ne couvre que son dossier ; message en anglais", () => {
+  const d = depotChangelog({ lang: "en", changelog: "packages/p/CHANGELOG.md" });
+  d.ecrire({ "src/a.mjs": "export const a = 1;\n" });
+  assert.doesNotMatch(d.verifier().message, /Unreleased/, "hors du dossier du paquet");
+  d.ecrire({ "packages/p/src/b.mjs": "export const b = 1;\n" });
+  assert.match(
+    d.verifier().message,
+    /Warnings \(non-blocking\):\n {2}⚠ packages\/p\/CHANGELOG\.md: the branch changes shipped code \(packages\/p\/src\/b\.mjs\) without a line under « Unreleased »/,
+  );
 });

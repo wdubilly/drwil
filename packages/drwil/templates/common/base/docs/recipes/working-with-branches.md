@@ -160,13 +160,12 @@ that folder only):
   reachable (absent, not logged in, another forge), only a classic merge
   is recognised, and the start or the resume says so: a branch merged by
   squash is then kept, to delete by hand.
-- Keep what the user reads current, in the closing commit: a workstream
-  that changes what the user sees updates the `README.md` and adds its line
-  under « Unreleased » in `CHANGELOG.md` (if present); one
-  that changes the structure (folder or module, layer, stack) updates the
-  map `docs/architecture.md` — drwil maintains it, and its check reports
-  any code folder it does not cite yet. These three are written in the
-  `docLang` language (absent: the project language).
+- Keep what the user reads current: a workstream changing what the user sees
+  adds its « Unreleased » line to `CHANGELOG.md` (if present) in its last BUILD
+  increment (refused in CLOSING; `close.mjs --check` warns if shipped code
+  changes without it) and updates `README.md` when closing; one changing the
+  structure updates the map `docs/architecture.md` (its check reports any
+  uncited code folder). All three in the `docLang` language (else the project's).
 - Record the workstream's consumption, in the closing commit (done by
   `node .githooks/close.mjs`; by hand:
   `node .githooks/consumption.mjs --record <brief>`), which appends its line to
