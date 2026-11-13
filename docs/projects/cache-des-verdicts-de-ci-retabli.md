@@ -41,7 +41,7 @@ sur le même arbre, sans qu'une PR relise jamais ses propres verdicts, et que l'
 - Une PR ne restaure que des verdicts sauvegardés par la branche principale, jamais ceux d'une PR (même la sienne) —
   `QUA-250`
 - Sur une PR, la CI écrit au journal le commit du cache de verdicts restauré et son retard en nombre de commits sur
-  la base de la PR, sans bloquer ; l'absence de cache est dite — contrat à créer
+  la base de la PR, sans bloquer ; l'absence de cache est dite — `QUA-297`
 - Une PR de documentation seule, ouverte après la fusion d'une PR précédente, ne rejoue pas les contrôles dont les
   fichiers sont inchangés : durée du job `checks` mesurée avant (8 min sur la PR #405) et après, relevée au journal de
   clôture — [humain] `QUA-013`
