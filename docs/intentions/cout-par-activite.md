@@ -1,6 +1,6 @@
 # Intention : le coût d'un chantier se répartit entre production, vérification et gouvernance
 
-**Statut** : proposée le 2026-11-13 (proposition du demandeur triée, seul ce qui a de la valeur est gardé).
+**Statut** : cadrée le 2026-11-13 — `docs/projects/cout-par-activite.md`.
 
 ## Besoin
 

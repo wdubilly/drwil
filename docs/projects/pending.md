@@ -124,7 +124,7 @@ d'un outil) la dit dans son statut.
 Étiquette `(version)` sur chaque ligne ouverte ; sans étiquette = plus tard. Remplace « Versions visées » pour ce qui reste.
 
 - **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
-- **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre à respecter** (il suit celui de la section « Fiches cadrées » ci-dessous) : 1 contrôles rejoués, 2 cache de verdicts en CI, 3 un seul run de couverture, 4 tranches dès le départ, 5 tests du kit découpés par thème, 6 preuves fiables, 7 temps des contrôles journalisé, 8 doublon des tests des hooks. Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : le 3 avant le 4 (`doctor` et `guarantees` partagés) ; le 1 avant le 8 (module engine-selftest) ; le 6 avant le 7 (`run-checks-verdicts`).
+- **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre à respecter** (il suit celui de la section « Fiches cadrées » ci-dessous) : 1 contrôles rejoués, 2 cache de verdicts en CI, 3 un seul run de couverture, 4 tranches dès le départ, 5 tests du kit découpés par thème, 6 preuves fiables, 7 temps des contrôles journalisé, 8 doublon des tests des hooks. Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : le 3 avant le 4 (`doctor` et `guarantees` partagés) ; le 1 avant le 8 (module engine-selftest) ; le 6 avant le 7 (`run-checks-verdicts`). Quatre fiches y sont aussi rangées, cadrées le 2026-11-13, juste après la fusion automatique par défaut : périmètre prévu au cadrage (OPT-6), limites classées par lien, attestations qui ne tombent que pour leur objet (OPT-4), puis, après la consommation de Copilot CLI, coût par activité ; la fiche sans sous-agent de chantier attend sa mesure.
 - **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
   restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; le découpage des
   contrôles lents dès le départ ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
@@ -138,12 +138,35 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
   sauvegardait plus depuis le 2026-11-08 ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
   `docs/projects/cache-des-verdicts-de-ci-retabli.md`.
-- [ ] [IA] [P0] (0.11.2) Un chantier se mène dans la session principale, sans sous-agent (cadré le 2026-11-12) —
-  `docs/projects/fin-des-sous-agents-de-chantier.md`.
+- [ ] [IA] [P0] (0.11.2) Un seul run de tests pour le seuil de couverture et la couverture du diff : contrôle unique
+  `coverage-diff-<couche>`, fusion des projets existants, avertissement de `doctor` ; prêt, D1 à D5 tranchées (cadré le
+  2026-11-11) — `docs/projects/couverture-un-seul-run-de-tests.md`.
+- [ ] [IA] [P0] (0.11.2) Les tests des hooks ne sont plus joués deux fois en CI (`checks-self-test` et
+  `couverture-hooks`) ; prêt, D1 à D4 tranchées (cadré le 2026-11-11) —
+  `docs/projects/doublon-des-tests-des-hooks-en-ci.md`.
+- [ ] [IA] [P0] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
+  outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
+  2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
 - [ ] [IA] [P0] (0.11.2) La ligne « Unreleased » du changelog s'écrit en fin de BUILD (cadré le 2026-11-13) —
   `docs/projects/unreleased-en-fin-de-build.md`.
 - [ ] [IA] [P0] (0.11.2) La fusion automatique est le comportement par défaut, sans sondage, après le support GitLab
   (cadré le 2026-11-12) — `docs/projects/fusion-automatique-par-defaut.md`.
+- [ ] [IA] [P0] (0.11.2) Les fichiers dérivés du périmètre (tests d'un module cité, `**Périmètre**` des contrats
+  touchés, découpe, copie de gabarit) sont admis d'office, jamais un fichier de règles, chaque admission comptée
+  (OPT-6 ; cadré le 2026-11-13) — `docs/projects/perimetre-prevu-au-cadrage.md`.
+- [ ] [IA] [P0] (0.11.2) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
+  l'élargissement se compte au journal (cadré le 2026-11-13) — `docs/projects/limites-classees-par-lien.md`.
+- [ ] [IA] [P0] (0.11.2) Une attestation ne tombe plus pour un changement sans rapport avec son objet : inventaire,
+  `**Couvre**` resserrés, tests en dur (OPT-4 ; cadré le 2026-11-13) —
+  `docs/projects/attestations-qui-tombent-pour-leur-objet.md`.
+- [ ] [IA] [P0] (0.11.2) La consommation de Copilot CLI est mesurée comme celle de Claude Code (cadré le 2026-11-12) —
+  `docs/projects/consommation-copilot-cli.md`.
+- [ ] [IA] [P0] (0.11.2) Le coût d'un chantier se répartit entre production, vérification et gouvernance, mesuré
+  sur 10 chantiers, Copilot CLI compris ; après consommation-copilot-cli (cadré le 2026-11-13) —
+  `docs/projects/cout-par-activite.md`.
+- [ ] [IA] [P0] (0.11.2) Un chantier se mène dans la session principale, sans sous-agent : à affiner, attend la
+  mesure de cout-par-activite (cadré le 2026-11-12, suspendu le 2026-11-13) —
+  `docs/projects/fin-des-sous-agents-de-chantier.md`.
 - [ ] [IA] [P0] (0.11.2) Un fichier d'index par fiche, sans conflit sur l'index commun (cadré le 2026-11-12) — `docs/projects/index-par-fiche.md`.
 - [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
   `docs/projects/cadrage-en-build.md`.
@@ -155,15 +178,7 @@ d'un outil) la dit dans son statut.
   recette d'audit, jeton GitLab (cadré le 2026-11-13) — `docs/projects/durcissements-audit-2026-11-12.md`.
 - [ ] [IA] [P1] (0.11.2) Une fiche P0 passe d'abord une analyse d'urgence (cadré le 2026-11-12) —
   `docs/projects/analyse-d-urgence-des-fiches.md`.
-- [ ] [IA] [P1] (0.11.2) La consommation de Copilot CLI est mesurée comme celle de Claude Code (cadré le 2026-11-12) —
-  `docs/projects/consommation-copilot-cli.md`.
 
-- [ ] [IA] [P1] (0.11.2) Un seul run de tests pour le seuil de couverture et la couverture du diff : contrôle unique
-  `coverage-diff-<couche>`, fusion des projets existants, avertissement de `doctor` ; prêt, D1 à D5 tranchées (cadré le
-  2026-11-11) — `docs/projects/couverture-un-seul-run-de-tests.md`.
-- [ ] [IA] [P1] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
-  outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
-  2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
 - [ ] [IA] [P1] (0.11.2) Le plus gros fichier de tests du kit (68 s sur 213 s) est découpé par thème pour être joué en
   parallèle ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) — `docs/projects/tests-du-kit-decoupes-par-theme.md`.
 - [ ] [IA] [P1] (0.11.2) Les rejeux d'une clôture sont mesurés et le pre-push juge le commit réellement poussé ; prêt,
@@ -171,9 +186,6 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P1] (0.11.2) Le temps passé dans les contrôles d'un chantier est journalisé à la clôture, dans
   `.drwil/usage.jsonl`, et livré aux projets ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
   `docs/projects/temps-des-controles-journalise.md`.
-- [ ] [IA] [P1] (0.11.2) Les tests des hooks ne sont plus joués deux fois en CI (`checks-self-test` et
-  `couverture-hooks`) ; prêt, D1 à D4 tranchées (cadré le 2026-11-11) —
-  `docs/projects/doublon-des-tests-des-hooks-en-ci.md`.
 - [ ] [IA] [P1] (0.12.0) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
 - [ ] [IA] [P2] (0.12.0) Les tests de run-checks passent sans gitleaks, grâce à un faux gitleaks (cadré
@@ -321,9 +333,6 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P3] Aider l'adoptant à alléger ses fichiers (outil de
   découpe, fiches d'allègement à l'adoption) — demande du 2026-10-27, après
   la 0.10.0 — `docs/intentions/alleger-les-fichiers-de-l-adoptant.md`.
-- [ ] [décision] Un fichier découpé ou neuf entre dans le bloc scope sans détour ni élargissement
-  humain (admission des fichiers dérivés ; le rappel au cadrage est fait le 2026-10-28) —
-  `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`.
 
 ### Release
 
@@ -443,12 +452,6 @@ drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
   `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [décision] [P2] Une limite découverte en chantier dit son lien avec le
-  problème (bloquant, lié, périphérique) et l'élargissement du périmètre se
-  compte au journal — `docs/intentions/limites-classees-par-lien.md`.
-- [ ] [décision] [P2] Le coût d'un chantier se répartit entre production,
-  vérification et gouvernance, mesuré avant toute optimisation —
-  `docs/intentions/cout-par-activite.md`.
 - [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.
