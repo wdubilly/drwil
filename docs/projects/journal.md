@@ -4413,3 +4413,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/init-marque-ia-ce-qui-est-faisable`.
 
 - **Preuve de clôture** : `docs/preuves/init-marque-ia-ce-qui-est-faisable.md`.
+
+## 2026-11-13 — Le contrôle des hooks Claude compile le paquet qu'il teste
+
+- **Ce qui change** : cause reproduite (sans `packages/drwil/dist/`, `npm run test:claude:coverage` échouait sur `ERR_MODULE_NOT_FOUND`) — le script comptait sur `couverture-tests` pour compiler, or ce contrôle est repris d'un verdict précédent sur une PR hors `packages/`. Le script `test:claude:coverage` (`package.json`) compile d'abord (`tsc --build`) ; les `paths` de `couverture-claude` (`.drwil/ia-first.json`) couvrent `packages/drwil/src/**`, les deux `tsconfig.json` et les cinq fichiers de test de sa commande. Même lancement, `dist/` absent : réussi.
+- **Décisions clés** : puce « Contrats modifiés » `.githooks/run-checks.mjs` validée par le demandeur le 2026-11-13 ; test de non-régression dans `.githooks/run-checks.test.mjs`, sans ID de contrat dans son titre, car rattacher le fichier au champ Tests de QUA-004 demanderait `docs/contracts.md`, hors du bloc scope.
+- **Critères et preuves** : test de non-régression (échoue sur l'état d'avant, passe après) ; `node .githooks/run-checks.mjs` OK ; `GOVERNANCE: PASS (CI pending)` à la clôture (258 PASS, 23 ATTESTED, 0 FAIL, 0 MANUAL) ; CI de la PR et rejeu de la PR #416 à suivre après fusion.
+- **Limites connues** : le test de non-régression n'est rattaché à aucun contrat (voir ci-dessus).
+- **Clôturé par** : la branche `workstream/couverture-claude-compile-le-paquet`.
+
+- **Preuve de clôture** : `docs/preuves/couverture-claude-compile-le-paquet.md`.
