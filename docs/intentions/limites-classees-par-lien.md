@@ -1,6 +1,6 @@
 # Intention : une limite découverte en chantier dit son lien avec le problème, et l'élargissement se compte
 
-**Statut** : proposée le 2026-11-13 (proposition du demandeur triée, seul ce qui a de la valeur est gardé).
+**Statut** : cadrée le 2026-11-13 — `docs/projects/limites-classees-par-lien.md`.
 
 ## Besoin
 
