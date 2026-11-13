@@ -987,13 +987,13 @@ test("QUA-088 fiches cadrées : tant qu'une fiche de garantie bloquante existe, 
 
 test("QUA-188 : aucun lancement n'écrit plus auto_merge ; une marque héritée reste lisible, gardée jusqu'à CLOSING, effacée en SCOPING", () => {
   const { racine } = depotCadre({ transitions: "agent" });
-  const agent = start(racine, FICHE, { autoMerge: true });
+  const agent = start(racine, FICHE);
   assert.equal(agent.code, 0);
   assert.equal(readState(racine).state.auto_merge, undefined, "lancement par l'agent");
   assert.doesNotMatch(agent.message, /fusion automatique autorisée/);
   rmSync(join(racine, ".drwil", "state.json"));
-  assert.equal(start(racine, FICHE, { human: true, autoMerge: true }).code, 0);
-  assert.equal(readState(racine).state.auto_merge, undefined, "lancement humain avec la fusion choisie");
+  assert.equal(start(racine, FICHE, { human: true }).code, 0);
+  assert.equal(readState(racine).state.auto_merge, undefined, "lancement humain");
   // Marque héritée : l'état reste valide et le rappel la dit encore (consigne de fusion, en français et en anglais).
   let lu = { ...readState(racine), state: { ...readState(racine).state, auto_merge: true } };
   assert.deepEqual(validateState(lu.state, racine), []);
@@ -1019,7 +1019,7 @@ test("QUA-188 : aucun lancement n'écrit plus auto_merge ; une marque héritée 
 
 test("QUA-138 : avec la fusion automatique, le retour en SCOPING attend la fusion suivie par pr-watch ; verte sans fusion : relance, 30 minutes ; CI rouge : reopen ; délai dépassé : CLOSING signalé", () => {
   const { racine } = depotCadre({ transitions: "agent" });
-  assert.equal(start(racine, FICHE, { human: true, autoMerge: true }).code, 0);
+  assert.equal(start(racine, FICHE, { human: true }).code, 0);
   // Consigne de fusion lue sur une marque héritée (le lancement ne l'écrit plus, QUA-188).
   const lu = { ...readState(racine), state: { ...readState(racine).state, activity: "CLOSING", auto_merge: true } };
   // Chaque étape doit venir après la précédente : l'ancienne procédure revenait en SCOPING dès la
@@ -1498,7 +1498,7 @@ const prouver = (racine) => writeProof(racine, { pr: 1, sha: mainTip(racine), ru
 
 test("QUA-037 : un geste humain enregistre une file de fiches prêtes, sans marque de fusion ; une fiche non prête la refuse entière", () => {
   const racine = depotFile();
-  const r = start(racine, A, { human: true, autoMerge: true, queue: [B] });
+  const r = start(racine, A, { human: true, queue: [B] });
   assert.equal(r.code, 0, r.message);
   assert.match(r.message, /file : ensuite docs\/projects\/b\.md/);
   assert.deepEqual(readState(racine).state.queue, [B]);
@@ -1522,7 +1522,7 @@ test("QUA-037 : une file se construit par réponses à choix unique : une fiche 
     context(readState(racine), racine),
     /File en construction par sondages enchaînés \(QUA-037\) : docs\/projects\/a\.md, docs\/projects\/b\.md/,
   );
-  const fin = draftFinish(racine, { autoMerge: true });
+  const fin = draftFinish(racine);
   assert.equal(fin.code, 0, fin.message);
   const etat = readState(racine).state;
   assert.equal(etat.active_brief, A);

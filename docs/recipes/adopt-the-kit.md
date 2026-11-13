@@ -82,7 +82,7 @@ agent's.
    branch protection is set by `npx drwil guarantees --protect` **with the
    requester's agreement** only; on GitHub it also allows the repository's
    auto-merge (« Allow auto-merge »), without which `.githooks/merge-auto.mjs`
-   refuses and an « Automatic merge » choice fails at closing. No light profile, no waiver: a file
+   refuses and the automatic merge of every PR fails at closing. No light profile, no waiver: a file
    exclusion (configuration, entry point…) is declared with its reason in
    `.drwil/ia-first.json` → `guarantees.exclusions` (`{ "layer", "path",
    "reason" }`); one without a reason is refused. Each wired check is cited

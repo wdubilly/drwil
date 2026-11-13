@@ -90,7 +90,7 @@ test("QUA-142 la réponse humaine crée le worktree frère depuis la branche pri
   const d = depot();
   avancerOrigine(d);
   const configAvant = readFileSync(join(d.racine, ".git", "config"), "utf8");
-  const r = await launchInWorktree(d.racine, FICHE, { autoMerge: true });
+  const r = await launchInWorktree(d.racine, FICHE);
   assert.equal(r.code, 0, r.message);
   assert.equal(r.path, d.voisin);
   assert.equal(git(d.voisin, "rev-parse", "--abbrev-ref", "HEAD"), "workstream/exemple");
@@ -282,9 +282,9 @@ function depotParallele(config = {}) {
   return { ...d, dossier: (f) => join(d.parent, `projet-${f}`) };
 }
 
-test("QUA-147 une file en parallèle lance chaque fiche dans son worktree, porte la fusion et s'enregistre dans le dossier d'origine", async () => {
+test("QUA-147 une file en parallèle lance chaque fiche dans son worktree et s'enregistre dans le dossier d'origine", async () => {
   const d = depotParallele();
-  const r = await launchParallel(d.racine, [A, B], { autoMerge: true });
+  const r = await launchParallel(d.racine, [A, B]);
   assert.equal(r.code, 0, r.message);
   for (const [fiche, nom] of [
     [A, "a"],

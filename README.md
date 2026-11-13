@@ -618,7 +618,10 @@ smoother and safer:
 
 **Options**:
 
-* **Automatic merge** (chosen when starting a workstream). On GitHub, an
+* **Automatic merge** (the default behaviour, nothing to choose: every PR,
+  code or documentation, is put in automatic merge by
+  `.githooks/merge-auto.mjs`, with no question at start and no poll at the
+  end of a scoping). On GitHub, an
   admin must tick « Allow auto-merge » (Settings → General → Pull
   Requests); otherwise `gh pr merge --auto` fails, and the agent says
   « auto-merge not allowed by the repository » and leaves the merge to you —
@@ -925,7 +928,8 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    **acceptance criteria**, each proven by a contract of the registry: the
    business non-regression grows with every workstream.
 2. **Start (human)**: the human picks a framed work item (`/drwil-start`
-   or `drwil state start`) and may authorise the merge in advance. The
+   or `drwil state start`); every PR then goes into automatic merge
+   (`.githooks/merge-auto.mjs`), with no question. The
    agent cannot start work by itself. Several ready work items ticked at
    once form a queue the agent chains, stopping at the first human gate.
 3. **BUILD**: the agent implements inside the scope; each commit carries a
@@ -947,8 +951,8 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    Claude Code's session logs), its untreated limits become intents, the
    README, changelog and
    architecture map are updated when the work changes them, the pull
-   request is opened, then back to SCOPING. The merge stays a
-   human gesture unless authorised at start.
+   request is opened and put in automatic merge
+   (`.githooks/merge-auto.mjs`), then back to SCOPING once it is merged.
 
 Before closing, `node .githooks/close.mjs --check` reports references that
 would break, including corrections outside the committed scope: explain

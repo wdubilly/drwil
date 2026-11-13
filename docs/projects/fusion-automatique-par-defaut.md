@@ -211,7 +211,6 @@ Aucun.
   code mort retiré : le module `state-merge` et son test, textes de fusion de `drwil serve`, `queue_merge` plus
   écrit) ; ligne « Unreleased » du changelog.
 - **Prochaine étape** : [IA] `node .githooks/state.mjs lot next`, vérification et clôture.
-- **Limites hors cadre relevées** (fichiers hors du bloc scope, non traitées) : documentation visiteur qui décrit encore
-  la fusion choisie au lancement ou le sondage de fin de cadrage (`README.md`, `packages/drwil/README.md`,
-  `docs/recipes/adopt-the-kit.md`) ; paramètre `autoMerge` encore passé, sans effet, par `.githooks/worktree.mjs` et
-  `.githooks/state-draft.mjs`.
+- **Limites hors cadre relevées** : documentation visiteur (`README.md`, `packages/drwil/README.md`, recette
+  `adopt-the-kit`) et paramètre `autoMerge` mort (`.githooks/worktree.mjs`, `.githooks/state-draft.mjs`), répondues
+  « Traiter maintenant » le 2026-11-13 et traitées au lot 2.
