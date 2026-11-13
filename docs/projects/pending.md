@@ -438,6 +438,9 @@ drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
   `docs/intentions/packager-kit-ia-first.md`.
+- [ ] [décision] [P2] Une limite découverte en chantier dit son lien avec le
+  problème (bloquant, lié, périphérique) et l'élargissement du périmètre se
+  compte au journal — `docs/intentions/limites-classees-par-lien.md`.
 - [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.
