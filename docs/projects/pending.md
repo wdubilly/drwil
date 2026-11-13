@@ -138,6 +138,15 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
   sauvegardait plus depuis le 2026-11-08 ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
   `docs/projects/cache-des-verdicts-de-ci-retabli.md`.
+- [ ] [IA] [P0] (0.11.2) Un seul run de tests pour le seuil de couverture et la couverture du diff : contrôle unique
+  `coverage-diff-<couche>`, fusion des projets existants, avertissement de `doctor` ; prêt, D1 à D5 tranchées (cadré le
+  2026-11-11) — `docs/projects/couverture-un-seul-run-de-tests.md`.
+- [ ] [IA] [P0] (0.11.2) Les tests des hooks ne sont plus joués deux fois en CI (`checks-self-test` et
+  `couverture-hooks`) ; prêt, D1 à D4 tranchées (cadré le 2026-11-11) —
+  `docs/projects/doublon-des-tests-des-hooks-en-ci.md`.
+- [ ] [IA] [P0] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
+  outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
+  2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
 - [ ] [IA] [P0] (0.11.2) La ligne « Unreleased » du changelog s'écrit en fin de BUILD (cadré le 2026-11-13) —
   `docs/projects/unreleased-en-fin-de-build.md`.
 - [ ] [IA] [P0] (0.11.2) La fusion automatique est le comportement par défaut, sans sondage, après le support GitLab
@@ -170,12 +179,6 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P1] (0.11.2) Une fiche P0 passe d'abord une analyse d'urgence (cadré le 2026-11-12) —
   `docs/projects/analyse-d-urgence-des-fiches.md`.
 
-- [ ] [IA] [P1] (0.11.2) Un seul run de tests pour le seuil de couverture et la couverture du diff : contrôle unique
-  `coverage-diff-<couche>`, fusion des projets existants, avertissement de `doctor` ; prêt, D1 à D5 tranchées (cadré le
-  2026-11-11) — `docs/projects/couverture-un-seul-run-de-tests.md`.
-- [ ] [IA] [P1] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
-  outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
-  2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
 - [ ] [IA] [P1] (0.11.2) Le plus gros fichier de tests du kit (68 s sur 213 s) est découpé par thème pour être joué en
   parallèle ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) — `docs/projects/tests-du-kit-decoupes-par-theme.md`.
 - [ ] [IA] [P1] (0.11.2) Les rejeux d'une clôture sont mesurés et le pre-push juge le commit réellement poussé ; prêt,
@@ -183,9 +186,6 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P1] (0.11.2) Le temps passé dans les contrôles d'un chantier est journalisé à la clôture, dans
   `.drwil/usage.jsonl`, et livré aux projets ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
   `docs/projects/temps-des-controles-journalise.md`.
-- [ ] [IA] [P1] (0.11.2) Les tests des hooks ne sont plus joués deux fois en CI (`checks-self-test` et
-  `couverture-hooks`) ; prêt, D1 à D4 tranchées (cadré le 2026-11-11) —
-  `docs/projects/doublon-des-tests-des-hooks-en-ci.md`.
 - [ ] [IA] [P1] (0.12.0) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
 - [ ] [IA] [P2] (0.12.0) Les tests de run-checks passent sans gitleaks, grâce à un faux gitleaks (cadré
