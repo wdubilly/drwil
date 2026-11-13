@@ -72,7 +72,7 @@ read at every request. The full text of each rule is here, read by section
   per limit, naming the files it would touch, the possible « Changed
   contracts » bullet and the `docs/intentions/<name>.md` path it would
   become; two answers, « Handle now » and « Record as intent », none
-  recommended; its form under each tool: section 6, « Limits and merge polls
+  recommended; its form under each tool: section 6, « Limits poll
   parity »). « Handle now » is the yes to widen the scope block, in a
   separate commit. A subagent does not ask the poll: it stops with the
   list of the out-of-scope limits. A one-line note (`.githooks/note.mjs`) is not
@@ -127,12 +127,11 @@ read at every request. The full text of each rule is here, read by section
   Code: `/clear`; another tool: a new conversation): a fresh context does
   not read the closed workstream again. A queue keeps its subagent per
   workstream.
-- **Documentation-only PR**: a PR that touches only documentation
-  (Markdown files, `docs/`) is put in automatic merge by the agent
-  (`gh pr merge --auto --merge`) without asking the `drwil-merge` question;
-  the poll keeps that question for PRs that touch code. The repository must
-  allow auto-merge, otherwise say « auto-merge not allowed by the
-  repository » and leave the merge to the human.
+- **Every PR in automatic merge**: any PR, code or documentation, is put
+  in automatic merge by the agent with `node .githooks/merge-auto.mjs
+  <number>`, without asking any question: there is no merge poll. The
+  repository must allow auto-merge, otherwise say « auto-merge not allowed
+  by the repository » and leave the merge to the human.
 - **Follow the CI of a PR**: after a push or creating a PR, run
   `node .githooks/pr-watch.mjs [<number>]`: it waits for the end of the CI
   and says « green », « merged » or « red » with the failing check. A red

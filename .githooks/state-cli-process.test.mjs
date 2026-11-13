@@ -156,7 +156,6 @@ test("QUA-248 : start vers un nouveau worktree, réponses d'un terminal, rend la
   // Chaque réponse part quand sa question est affichée : une ligne reçue avant serait perdue.
   const reponses = [
     [fill(T.confirmStart, FICHE), "START"],
-    [T.askMerge, ""],
     [T.askWorktree, "WORKTREE"],
   ];
   let [sortie, erreurs] = ["", ""];

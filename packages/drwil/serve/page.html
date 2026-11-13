@@ -116,7 +116,7 @@ const I18N = {
     "stage-fusionnee": "fusionnée", "stage-pr": "PR ou MR ouverte ou close", "stage-chantier": "en chantier", "stage-fiche": "cadrée", "stage-intention": "intention", "stage-autre": "retirée",
     "col-notes": "Notes", "col-intentions": "Intentions", "col-fiches": "Fiches cadrées", "col-chantier": "En chantier", "col-prs": "{0} ouvertes", "col-fusionnees": "Fusionnées, non publiées", "col-publiees": "Publiées",
     "versionAll": "Toutes les versions", "versionOnly": "seulement cette version", "versionTitle": "Version {0}", "versionDone": "{0} sur {1} fusionnée(s)", "since": " depuis {0}", "detail": "le détail", "boardNote": "Les cartes se placent seules (fichiers, état, Git, forge) : lancer, fusionner et publier restent des gestes gouvernés par drwil.",
-    "reopened": "rouvert (PR #{0})", "autoMerge": "fusion automatique autorisée", "toDecide": "{0} décision(s) à prendre", "toAnswer": "{0} question(s) à trancher", "files": "{0} fichier(s)", "codeDoc": "{0} de code, {1} de doc",
+    "reopened": "rouvert (PR #{0})", "toDecide": "{0} décision(s) à prendre", "toAnswer": "{0} question(s) à trancher", "files": "{0} fichier(s)", "codeDoc": "{0} de code, {1} de doc",
     "latest": "dernière", "pre": "pré-version", "tagOnly": "tag sans release publiée", "nextVersion": "prochaine version, pas encore publiée", "relMeta": "{0} {1} de code, {2} de doc · {3} chantier(s) · {4} tokens", "relWs": "Chantiers", "relPrs": "{0} fusionnées", "relChangelog": "Journal des changements", "relNoChangelog": "Pas de section dans le journal des changements.",
     "trendCi": "Durée du job checks, hooks inchangés", "trendCache": "Cache lu par requête (tokens)", "trendOk": "moyenne {0}, seuil d'alerte {1}", "trendAlert": "dérive : moyenne {0} au-dessus du seuil {1}", "trendNone": "Aucun relevé.", "trendNote": "Indicateurs, jamais bloquants. En plein : les cinq derniers relevés, ceux de la moyenne.", "lastRuns": "Durées de la dernière CI",
     "auditStale": "scan vieux de {0} jours, à relancer", "indexTitle": "Chantiers en attente ({0})", "othersTitle": "Autres documents du dossier des fiches ({0})", "catalogTitle": "Au catalogue, non installés ({0})", "noStatus": "(pas de ligne Statut)", "noIndex": "Aucune case dans l'index.", "models": "modèles : {0}"
@@ -137,7 +137,7 @@ const I18N = {
     "stage-fusionnee": "merged", "stage-pr": "PR or MR open or closed", "stage-chantier": "in progress", "stage-fiche": "scoped", "stage-intention": "intent", "stage-autre": "removed",
     "col-notes": "Notes", "col-intentions": "Intents", "col-fiches": "Scoped briefs", "col-chantier": "In progress", "col-prs": "Open {0}", "col-fusionnees": "Merged, unreleased", "col-publiees": "Released",
     "versionAll": "All versions", "versionOnly": "this version only", "versionTitle": "Version {0}", "versionDone": "{0} of {1} merged", "since": " since {0}", "detail": "details", "boardNote": "Cards place themselves (files, state, Git, forge): starting, merging and releasing stay gestures governed by drwil.",
-    "reopened": "reopened (PR #{0})", "autoMerge": "automatic merge allowed", "toDecide": "{0} decision(s) to take", "toAnswer": "{0} question(s) to settle", "files": "{0} file(s)", "codeDoc": "{0} code, {1} doc",
+    "reopened": "reopened (PR #{0})", "toDecide": "{0} decision(s) to take", "toAnswer": "{0} question(s) to settle", "files": "{0} file(s)", "codeDoc": "{0} code, {1} doc",
     "latest": "latest", "pre": "pre-release", "tagOnly": "tag without a published release", "nextVersion": "next version, not released yet", "relMeta": "{0} {1} code, {2} doc · {3} workstream(s) · {4} tokens", "relWs": "Workstreams", "relPrs": "Merged {0}", "relChangelog": "Changelog", "relNoChangelog": "No section in the changelog.",
     "trendCi": "Duration of the checks job, hooks unchanged", "trendCache": "Cache read per request (tokens)", "trendOk": "mean {0}, alert threshold {1}", "trendAlert": "drift: mean {0} above the threshold {1}", "trendNone": "No reading.", "trendNote": "Indicators, never blocking. Solid bars: the last five readings, those of the mean.", "lastRuns": "Latest CI durations",
     "auditStale": "scan {0} days old, time to re-run", "indexTitle": "Pending work ({0})", "othersTitle": "Other files in the briefs folder ({0})", "catalogTitle": "In the catalog, not installed ({0})", "noStatus": "(no Status line)", "noIndex": "No checkbox in the index.", "models": "models: {0}"
@@ -535,7 +535,6 @@ function cardHtml(c) {
   const extra = [
     c.lot ? t("lot", c.lot.current) : "",
     c.reopened ? t("reopened", c.reopened) : "",
-    c.autoMerge ? t("autoMerge") : "",
     c.decisions ? t("toDecide", c.decisions) : "",
     c.questions ? t("toAnswer", c.questions) : "",
     c.files ? t("files", c.files) : "",

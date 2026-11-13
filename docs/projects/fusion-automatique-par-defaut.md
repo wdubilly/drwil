@@ -113,7 +113,7 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
 - `QUA-162` — ancien critère : « L'outil de fusion automatique ne programme jamais sur un état inconnu ou pas à jour, et ne dit jamais la fusion programmée sans l'avoir vue » (sans condition sur la branche hors SCOPING) — raison : la PR dont la branche (`headRefName`) n'est pas la branche git courante est refusée, garde-fou qui remplace l'autorisation (validé le 2026-11-13)
 - `QUA-181` — ancien critère : « `merge-auto` qui voit la fusion programmée sur la PR de la marque `merge_cancelled` l'efface ; l'outil ne reprogramme jamais seul : `merge-auto` exige toujours l'autorisation de l'humain (QUA-163, QUA-188) » — raison : sans autorisation, `merge-auto` refuse tant que la marque est présente (réouverture non aboutie), la reprogrammation reste à l'humain (validé le 2026-11-13)
 - `QUA-189` — marqué « Retiré le 2026-11-13 » au registre (règle conservée pour l'historique), sans contrôle ni tests ; ancien critère : « « Manual merge » et « Continue scoping » ne programment rien ; « Continue scoping » garde la branche et la PR » — raison : le sondage de fin de cadrage est retiré, la PR de cadrage est mise en fusion automatique d'office (validé le 2026-11-13)
-- `QUA-265` — marqué « Retiré le 2026-11-13 » au registre (règle conservée pour l'historique), sans contrôle ni tests ; ancien critère : « La fusion automatique se redonne en cours de chantier par un sondage `drwil-merge` dont la réponse humaine est lue par le hook » — raison : la fusion automatique est le comportement par défaut, il n'y a plus rien à redonner ; `.githooks/state-merge.mjs` lit encore les marques héritées sans les produire (validé le 2026-11-13)
+- `QUA-265` — marqué « Retiré le 2026-11-13 » au registre (règle conservée pour l'historique), sans contrôle ni tests ; ancien critère : « La fusion automatique se redonne en cours de chantier par un sondage `drwil-merge` dont la réponse humaine est lue par le hook » — raison : la fusion automatique est le comportement par défaut, il n'y a plus rien à redonner ; le module `state-merge` (supprimé au lot 2) lit encore les marques héritées sans les produire (validé le 2026-11-13)
 - `QUA-037` — ancien critère : « Une file de chantiers décidée d'un geste », la fusion automatique de la file décidée par l'humain (seconde question `drwil-merge`, `queue_merge`) et portée au chantier suivant (`auto_merge`) — raison : la fusion automatique est le comportement par défaut, le lancement d'une file n'écrit plus `auto_merge` (validé le 2026-11-13)
 - `QUA-142` — ancien critère : « Le sondage de lancement peut mener le chantier dans un nouveau worktree, sur la seule réponse de l'humain », la fusion choisie écrite dans l'état du worktree — raison : `auto_merge` n'est plus écrit (validé le 2026-11-13)
 - `QUA-147` — ancien critère : « Une file de chantiers peut se lancer en parallèle, un worktree par fiche, sur la seule réponse de l'humain », chaque worktree portant la fusion — raison : `auto_merge` n'est plus écrit (validé le 2026-11-13)
@@ -134,7 +134,7 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
 - `tests-qua-189` — contrôle retiré avec QUA-189 (validé le 2026-11-13)
 - `tests-qua-265` — contrôle retiré avec QUA-265 (validé le 2026-11-13)
 - `.githooks/merge-auto.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
-- `.githooks/state-merge.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
+- `.githooks/state-merge.mjs` — gardé à sa version de la branche (QUA-113), c'est-à-dire supprimé avec son test au lot 2 : la CI le compare à la branche principale, où il reste présent jusqu'à la fusion (si présent) (validé le 2026-11-12)
 - `.githooks/state-validate.mjs` — gardé à sa version de la branche (QUA-113), si le chantier le modifie (validé le 2026-11-12)
 - `.githooks/state-context-texts.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/state-messages-fr.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
@@ -177,7 +177,7 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
   (`docs/ia-first/6-limits-and-tool-compatibility.md`, gabarit et copie ; QUA-266) ; le menu du skill `drwil` ne
   décrit plus `/drwil-scope` comme un sondage et `docs/features.md` ne cite plus `drwil-merge` (QUA-187) ; code mort
   retiré : textes de fusion de `drwil serve` (`packages/drwil/src/serve-texts.ts`, `packages/drwil/serve/page.html`),
-  `.githooks/state-merge.mjs` plus appelé (gabarit, copie, test ; `docs/projects/kit-mechanics.md` et la carte),
+  le module `state-merge` plus appelé (gabarit, copie, test ; `docs/projects/kit-mechanics.md` et la carte),
   `queue_merge` plus écrit (`.githooks/state-transitions.mjs`), un état ancien qui porte ces marques restant valide
   (QUA-188) — décidé par le demandeur.
 
@@ -187,34 +187,18 @@ Aucun.
 
 ## 6. Increments
 
-- **Lot 1 — outil et état** [IA] : `.githooks/merge-auto.mjs` n'exige plus d'autorisation, refuse la PR d'une autre branche que la branche courante et tant que la marque `merge_cancelled` est présente ; `.githooks/state-merge.mjs`, `.githooks/state.mjs`, `.githooks/state-transitions.mjs` et `.githooks/state-validate.mjs` lisent sans la produire les marques héritées ; QUA-189 et QUA-265 retirés avec leurs tests et contrôles ; tests. Critère de sortie : tests de merge-auto et de l'état verts.
+- **Lot 1 — outil et état** [IA] : `.githooks/merge-auto.mjs` n'exige plus d'autorisation, refuse la PR d'une autre branche que la branche courante et tant que la marque `merge_cancelled` est présente ; le module `state-merge`, `.githooks/state.mjs`, `.githooks/state-transitions.mjs` et `.githooks/state-validate.mjs` lisent sans la produire les marques héritées ; QUA-189 et QUA-265 retirés avec leurs tests et contrôles ; tests. Critère de sortie : tests de merge-auto et de l'état verts.
 - **Lot 2 — sondages, skills, docs, contrats** [IA] : retrait de `drwil-merge` et `drwil-scope` des hooks et skills, consignes, `AGENTS.md`, `docs/contracts.md`, `npm run installer-depot`. Critère de sortie : `node .githooks/run-checks.mjs` sans échec, `drwil verify --agent` en `GOVERNANCE: PASS`.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-13) : lot 1 commité ; lot 2 commité en partie, **arrêté** (non marqué fait).
-  Fait au lot 2 : `judgeProofs` rapporte « retiré » un critère de preuve de clôture lié à un contrat retiré
-  (QUA-298, texte à jour) ; consigne de CLOSING d'appeler `.githooks/merge-auto.mjs` affichée sans condition hors
-  SCOPING, sauf avec `merge_cancelled` (QUA-164) ; le hook `merge-poll` supprimé ; `prompt-hook`,
-  `start-poll`, `queue-poll` et `portable-polls` ne refusent ni ne lisent plus `drwil-merge` ni `drwil-scope` (un
-  ancien champ `drwil-merge` est ignoré) ; `scopingMerge` retiré de `.githooks/state.mjs` ; skill
-  `scope-a-workstream` sans sondage ; message de `resume` (QUA-247) ; PR de détour en fusion automatique
-  (QUA-050) ; `drwil serve` n'affiche plus `auto_merge` ; sections 7 et 8, recette `working-with-branches`,
-  carte ; textes de QUA-037, QUA-050, QUA-147, QUA-164, QUA-165, QUA-180, QUA-187, QUA-188, QUA-247, QUA-266.
-- **Bloquant** : QUA-099 (« Une PR de documentation seule part en fusion automatique sans question ») n'est pas
-  dans « Contrats modifiés » ; son test exige que le skill `start-a-workstream` et la section 8 (« Documentation-only
-  PR ») parlent encore de la question `drwil-merge`. Le skill de lancement, `AGENTS.md` (gabarit) et ce passage de
-  la section 8 sont donc restés tels quels : le skill pose encore une question `drwil-merge` que le hook ne lit plus.
-  À décider : modifier ou retirer QUA-099 (puce « Contrats modifiés »), puis retirer `drwil-merge` du skill de
-  lancement, de `AGENTS.md` et de la section 8.
-- **Prochaine étape** : [IA] après la décision sur QUA-099 : skill `start-a-workstream`, `AGENTS.md`, section 8 ;
-  ligne « Unreleased » du changelog ; `node .githooks/run-checks.mjs` sans échec ; `node .githooks/state.mjs lot
-  next` ; vérification et clôture.
-- **Limites hors cadre relevées** (fichiers hors du bloc scope) : `.githooks/state-cli.mjs` (`start` au terminal
-  pose encore « Retapez MERGE », qui n'écrit plus que `queue_merge`, sans effet) ;
-  `docs/ia-first/6-limits-and-tool-compatibility.md` (parité des sondages `drwil-limite` et `drwil-merge`) ;
-  skill `drwil` (menu : `/drwil-scope` décrit comme un sondage) ; `docs/features.md` (sondages `/drwil-scope` et
-  `drwil-merge`) ; `packages/drwil/src/serve-texts.ts` et `packages/drwil/serve/page.html` (textes de fusion
-  devenus inutilisés) ; `.githooks/state-merge.mjs` (plus appelé, listé dans
-  `docs/projects/kit-mechanics.md`) ; `queue_merge` encore écrit (sans effet) ; le message de reprise liste encore
-  la fusion automatique parmi les décisions à redemander (texte de QUA-245, hors « Contrats modifiés »).
+- **Dernier état** (2026-11-13) : lot 1 commité ; lot 2 commité en entier (QUA-099 réécrit, `drwil-merge` retiré du
+  skill de lancement, d'`AGENTS.md` et de la section 8 ; les quatre limites répondues « Traiter maintenant » traitées :
+  `start` au terminal sans « Retapez MERGE », section 6 « Limits poll parity », menu `/drwil` et `docs/features.md`,
+  code mort retiré : le module `state-merge` et son test, textes de fusion de `drwil serve`, `queue_merge` plus
+  écrit) ; ligne « Unreleased » du changelog.
+- **Prochaine étape** : [IA] `node .githooks/state.mjs lot next`, vérification et clôture.
+- **Limites hors cadre relevées** (fichiers hors du bloc scope, non traitées) : documentation visiteur qui décrit encore
+  la fusion choisie au lancement ou le sondage de fin de cadrage (`README.md`, `packages/drwil/README.md`,
+  `docs/recipes/adopt-the-kit.md`) ; paramètre `autoMerge` encore passé, sans effet, par `.githooks/worktree.mjs` et
+  `.githooks/state-draft.mjs`.

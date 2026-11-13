@@ -4,7 +4,7 @@
 
 ## Existant
 
-- Le sondage `drwil-merge` (« Automatic merge » / « Manual merge ») est lu par `.githooks/state-merge.mjs` ; le skill `start-a-workstream` le décrit.
+- Le sondage `drwil-merge` (« Automatic merge » / « Manual merge ») était lu par le module `state-merge`, supprimé le 2026-11-13 (la fusion automatique est devenue le comportement par défaut, sans sondage) ; le skill `start-a-workstream` le décrit.
 - Le suivi de consommation (`drwil-usage`, `.drwil/usage.jsonl`) ne lit que les sessions de Claude Code.
 - Le skill `start-a-workstream` lance un sous-agent par lot (Claude Code et Copilot CLI).
 - `drwil init` écrit des lignes d'index et de lots que l'on voit en `[humain]` là où un `[IA]` est attendu (`packages/drwil/src/guarantees-briefs.ts` produit des lignes `[humain]`).

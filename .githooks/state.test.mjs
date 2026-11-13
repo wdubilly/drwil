@@ -1275,7 +1275,7 @@ test("principal lancer sans terminal : refusé en mode humain, lancé en mode ag
   assert.equal(readState(autre).state.active_request, null);
 });
 
-test("principal lancer au terminal : l'humain choisit, confirme et décide de la fusion", async () => {
+test("principal lancer au terminal : l'humain choisit et confirme, sans question de fusion (QUA-037)", async () => {
   const { racine, git } = depotCadre();
   writeFileSync(
     join(racine, "docs", "projects", "bloquee.md"),
@@ -1283,23 +1283,26 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   );
   git("add", "-A");
   git("commit", "-qm", "bloquee");
-  const r = await avecTerminal(["1", "START", "MERGE", ""], () => capturer(() => main(["start"], racine)));
+  const r = await avecTerminal(["1", "START", ""], () => capturer(() => main(["start"], racine)));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(
     r.sortie,
     /^1\. docs\/projects\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projects\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher · à affiner : à revoir avant de la lancer\]/,
   );
-  assert.deepEqual(r.invites.length, 4);
-  assert.equal(readState(racine).state.auto_merge, undefined, "la fusion choisie n'écrit plus rien (QUA-188)");
+  // Choix, confirmation, worktree : plus de « Retapez MERGE », la fusion automatique est le comportement par défaut.
+  assert.deepEqual(r.invites.length, 3);
+  assert.ok(!r.invites.some((i) => /MERGE/.test(i)), "plus de question de fusion");
+  assert.equal(readState(racine).state.auto_merge, undefined, "aucune marque de fusion écrite (QUA-188)");
+  assert.equal(readState(racine).state.queue_merge, undefined);
 });
 
 test("QUA-205 : principal lancer au terminal : la réponse WORKTREE lance le chantier dans un worktree frère", async () => {
   const { racine } = depotCadre();
-  const r = await avecTerminal(["START", "", "WORKTREE"], () => capturer(() => main(["start", FICHE], racine)));
+  const r = await avecTerminal(["START", "WORKTREE"], () => capturer(() => main(["start", FICHE], racine)));
   const dossier = `${racine}-exemple`;
   try {
     assert.equal(r.code, 0, r.erreurs);
-    assert.equal(r.invites.length, 3);
+    assert.equal(r.invites.length, 2);
     assert.equal(existsSync(join(dossier, ".git")), true);
     assert.equal(readState(dossier).state.activity, "BUILD");
     assert.equal(readState(racine).state.activity, "SCOPING");
@@ -1493,13 +1496,14 @@ const ecrireEtat = (racine, etat) => writeFileSync(join(racine, ".drwil", "state
 /** La preuve qu'écrit pr-watch après la fusion (QUA-251) : CI de la branche principale verte sur son sommet. */
 const prouver = (racine) => writeProof(racine, { pr: 1, sha: mainTip(racine), run: { databaseId: 1, url: "u" } });
 
-test("QUA-037 : un geste humain enregistre une file de fiches prêtes et la fusion ; une fiche non prête la refuse entière", () => {
+test("QUA-037 : un geste humain enregistre une file de fiches prêtes, sans marque de fusion ; une fiche non prête la refuse entière", () => {
   const racine = depotFile();
   const r = start(racine, A, { human: true, autoMerge: true, queue: [B] });
   assert.equal(r.code, 0, r.message);
   assert.match(r.message, /file : ensuite docs\/projects\/b\.md/);
   assert.deepEqual(readState(racine).state.queue, [B]);
-  assert.equal(readState(racine).state.queue_merge, true);
+  // La fusion automatique est le comportement par défaut (QUA-188) : `queue_merge` n'est plus écrit.
+  assert.equal(readState(racine).state.queue_merge, undefined);
   const refus = depotFile();
   assert.match(start(refus, A, { human: true, queue: [C] }).message, /« docs\/projects\/c\.md » ne peut pas entrer dans une file/);
   assert.equal(readState(refus).source, "missing", "rien n'est écrit");
@@ -1523,7 +1527,7 @@ test("QUA-037 : une file se construit par réponses à choix unique : une fiche 
   const etat = readState(racine).state;
   assert.equal(etat.active_brief, A);
   assert.deepEqual(etat.queue, [B]);
-  assert.equal(etat.queue_merge, true);
+  assert.equal(etat.queue_merge, undefined, "plus de marque de fusion écrite (QUA-188)");
   assert.equal(etat.queue_draft, undefined, "la file en construction disparaît au lancement");
   assert.match(draftAdd(racine, B).message, /elle se construit en SCOPING/);
 });
@@ -1547,7 +1551,7 @@ test("QUA-037 : une fiche non prête, absente ou déjà en file d'attente est re
   assert.match(draftFinish(invalide).message, /elle se construit en SCOPING/);
 });
 
-test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec la fusion ; hors file ou hors SCOPING, refusé", () => {
+test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête ; une marque de fusion héritée n'est pas recopiée ; hors file ou hors SCOPING, refusé", () => {
   const racine = depotFile();
   ecrireEtat(racine, {
     version: 1,
@@ -1560,7 +1564,8 @@ test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec 
     queue_merge: true,
   });
   const p = prepareTransition(readState(racine), "SCOPING", { now: MAINTENANT }, racine);
-  assert.deepEqual(p.state, { ...NEUTRAL_STATE, since: MAINTENANT, queue: [B, A], queue_merge: true });
+  // État ancien avec `queue_merge` : valide, lu, mais plus recopié (QUA-188).
+  assert.deepEqual(p.state, { ...NEUTRAL_STATE, since: MAINTENANT, queue: [B, A] });
   ecrireEtat(racine, p.state);
   assert.match(start(racine, C).message, /décision humaine/, "fiche hors file");
   prouver(racine);
@@ -1573,7 +1578,6 @@ test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec 
     active_request: null,
     since: MAINTENANT,
     queue: [A],
-    queue_merge: true,
   });
   assert.match(start(racine, B).message, /activité BUILD/, "pas de relance en pleine réalisation");
   const abandon = depotFile();
@@ -2597,7 +2601,11 @@ test("QUA-187 : le skill de cadrage met la PR de cadrage en fusion automatique p
   assert.match(texte, /only schedules the PR of the current git branch/);
   assert.match(texte, /never chain the forge's commands \(`gh`, `glab`\) by hand/);
   assert.match(texte, /\*\*the same branch\*\* \(one branch, one PR, no new branch\)/);
-  assert.match(readFileSync(join(GABARIT_CLAUDE, "skills/drwil/SKILL.md"), "utf8"), /^\| `\/drwil-scope` \|/m);
+  const menu = readFileSync(join(GABARIT_CLAUDE, "skills/drwil/SKILL.md"), "utf8").match(/^\| `\/drwil-scope` \|.*$/m)?.[0];
+  assert.ok(menu, "/drwil-scope cité au menu /drwil");
+  // Le menu ne le décrit plus comme un sondage (QUA-187).
+  assert.match(menu, /automatic merge by the tool, without a poll/);
+  assert.doesNotMatch(menu, /poll on|manual merge|continue scoping/i);
   // Copies installées identiques au gabarit (npm run installer-depot).
   for (const f of ["skills/scope-a-workstream/SKILL.md", "skills/drwil/SKILL.md", "hooks/start-poll.mjs", "hooks/prompt-hook.mjs"])
     assert.equal(readFileSync(join(RACINE_DEPOT, ".claude", f), "utf8"), readFileSync(join(GABARIT_CLAUDE, f), "utf8"), f);

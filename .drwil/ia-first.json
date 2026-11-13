@@ -2838,7 +2838,7 @@
     {
       "id": "tests-qua-188",
       "name": "tests de QUA-188, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-188 .githooks/merge-auto.test.mjs .githooks/state-merge.test.mjs .githooks/state.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-188 .githooks/merge-auto.test.mjs .githooks/state.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",

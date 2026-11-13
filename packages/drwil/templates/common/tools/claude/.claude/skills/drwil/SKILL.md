@@ -22,7 +22,7 @@ anything else):
 | `/drwil-serve` | Live, read-only view of the project, and its link | `npx drwil serve --welcome` |
 | `/drwil-release` | Create a release (tag + GitHub note), optional module | `docs/recipes/create-a-release.md` |
 | `/drwil-start` | Start a workstream: poll of the scoped briefs, the human answer moves to BUILD | `docs/ia-first/7-starting-and-closing.md` |
-| `/drwil-scope` | End a scoping: poll on its PR (automatic merge, manual merge, or continue scoping) | `docs/recipes/working-with-branches.md` |
+| `/drwil-scope` | End a scoping: its PR put in automatic merge by the tool, without a poll | `docs/recipes/working-with-branches.md` |
 
 If `$capability` is `verify`: run `npx drwil verify --agent` at the project
 root (the project's own `drwil` CLI is the source of truth; never derive a

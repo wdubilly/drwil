@@ -129,7 +129,6 @@ export const MESSAGES_EN = {
   pick: "Number of the brief to start: ",
   confirmStart: `Start {0}? Type START: `,
   askWorktree: "In a new sibling worktree? Type WORKTREE, otherwise Enter (this folder): ",
-  askMerge: "Automatic merge at the end of the workstream? Type MERGE, otherwise Enter: ",
   notConfirmed: "✗ start not confirmed: state unchanged",
   unreadableState: `[drwil] governance state unreadable: {0}`,
   lotNone:
