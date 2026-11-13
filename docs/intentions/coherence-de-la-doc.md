@@ -2,6 +2,8 @@
 
 **Statut** : proposée le 2026-10-26 — rangement du backlog : découpage de `petits-defauts` par thème (décision du demandeur du 2026-10-26) ; chaque partie reprend l'une des intentions d'origine, avec son statut d'origine.
 
+**Revu le 2026-11-13** : ajout au ménage — la preuve de QUA-018 (périmètre dépôt drwil ou livrable gabarit, `docs/contracts.md`) cite encore, parmi ce qui est hors de portée du contrôle `miroirs-gabarit`, « la comparaison des miroirs pour une autre langue que celle du dépôt (`packages/drwil/templates/en/`) » ; ce dossier n'existe plus depuis le gabarit unique en anglais (commit `cb15b3c`). Corriger la phrase change le texte d'un contrat attesté : l'attestation tombe et se renouvelle (geste humain). Question ajoutée en fin de fiche.
+
 ## Besoin
 
 Des écarts de documentation relevés pendant les chantiers : renvois au registre entier, citations restées en place, intitulés devenus faux, doc visiteur en retard. Chacun est petit ; ensemble, ils font un chantier d'entretien de la doc, chaque point vérifiable seul.
@@ -217,3 +219,4 @@ Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10
   fiche pour l'entretien courant) ? Refus ou avertissement ?
 - [décision] Le rappel CLOSING distingue-t-il l'entretien courant (pas de
   condensation ni de suppression, mais le reste de l'exercice) ?
+- [décision] QUA-018 : retirer de sa preuve la mention du gabarit `templates/en/` disparu, dans un chantier court qui renouvelle son attestation, ou à l'occasion du prochain chantier qui touche ce contrat ?

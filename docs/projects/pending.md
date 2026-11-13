@@ -208,7 +208,7 @@ En attente d'une décision (à affiner) ou d'un geste humain :
 - [ ] [humain] [P1] Sonder les quatre outils (lot 1 non fait) et dater le tableau de parité ; banc et file parallèle à
   décider — `docs/intentions/parite-des-outils-suites.md`.
 - [ ] [humain] [P2] Essais réels de l'attestation depuis la conversation, cinq outils, au fil des développements du
-  demandeur — `docs/intentions/attestation-chat-essais-reels.md`.
+  demandeur — `docs/intentions/essais-reels-en-attente.md` (partie « ex-attestation-chat-essais-reels »).
 - [ ] [décision] [P3] Les formes PowerShell des hooks de repli jouées en CI —
   `docs/intentions/formes-powershell-des-hooks-non-jouees-en-ci.md`.
 - [ ] [décision] [P3] Un message de repli pour les hooks de Gemini sous Windows —
@@ -230,12 +230,12 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 - [ ] [décision] (0.13.0) La CI rapide éprouvée en réel (mesure d'une PR de doc, preuve de CI de la branche
   principale sur une vraie fusion, reprise GitLab par `CI_JOB_TOKEN`) et la preuve de CI de la
-  branche principale hors GitHub — `docs/intentions/ci-rapide-epreuves-reelles.md`.
+  branche principale hors GitHub — `docs/intentions/essais-reels-en-attente.md` (partie « ex-ci-rapide-epreuves-reelles »).
 - [ ] [décision] (0.13.0) La fusion automatique ordonnée (`merge-auto`) éprouvée sur une
   vraie PR en retard sur la branche principale —
-  `docs/intentions/merge-auto-eprouve-en-reel.md`.
+  `docs/intentions/essais-reels-en-attente.md` (partie « ex-merge-auto-eprouve-en-reel »).
 - [ ] [décision] [P3] `start` vers un worktree prouvé dans un vrai terminal, pas
-  un terminal simulé (`QUA-248`) — `docs/intentions/start-worktree-en-vrai-terminal.md`.
+  un terminal simulé (`QUA-248`) — `docs/intentions/essais-reels-en-attente.md` (partie « ex-start-worktree-en-vrai-terminal »).
 - [ ] [décision] [P3] Le contrôle des await de premier niveau : `import()` calculés
   et points d'entrée encore lancés par un await (`QUA-249`) —
   `docs/intentions/await-premier-niveau-suites.md`.
@@ -243,30 +243,30 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   signés, revue GitHub authentifiée), les niveaux de garantie étant documentés
   (`QUA-197`) ; montée de P3 en P1 le 2026-11-09 : l'analyse externe y voit la
   faiblesse principale (une attestation se fabrique) —
-  `docs/intentions/e2e-et-attestation-precises.md`.
+  `docs/intentions/garanties-la-suite.md` (partie « ex-e2e-et-attestation-precises »).
 - [ ] [décision] [P1] (0.12.0) Les sondages posés sous Copilot CLI (`drwil-start`, `drwil-scope`, attestation) sont lus par le hook :
   réponse sans effet constatée les 2026-11-08 et 2026-11-09, cause à reproduire (notes regroupées le 2026-11-09) —
-  `docs/intentions/sondages-lus-sous-copilot-cli.md`.
+  `docs/intentions/sondage-worktree-copilot-cli.md` (partie « ex-sondages-lus-sous-copilot-cli »).
 - [ ] [décision] [P1] (0.12.0) Un contrôle exigé sauté (job de la forge, branche principale déjà prouvée) se dit
   « non exécuté » au lieu d'être rapporté réussi (analyse externe du 2026-11-09) —
-  `docs/intentions/controles-sautes-dits-non-executes.md`.
+  `docs/intentions/garanties-la-suite.md` (partie « ex-controles-sautes-dits-non-executes »).
 - [ ] [décision] [P2] (0.14.0) Des tests de mutation sur les contrats de sécurité et d'attestation, et la relecture
   humaine exigée en nombre sur la forge (analyse externe du 2026-11-09) —
-  `docs/intentions/tests-de-mutation-et-relecture-exigee.md`.
+  `docs/intentions/garanties-la-suite.md` (partie « ex-tests-de-mutation-et-relecture-exigee »).
 - [ ] [décision] [P1] Suivre la durée de la CI et le contexte relu, et trancher
   leurs calibrages (dont l'avertissement `[ia-first-warning]` et un `verify`
   en FAIL sans contrat en échec, repris le 2026-10-26) —
   `docs/intentions/suivi-ci-et-contexte.md`.
 - [ ] [décision] (0.13.0) La lecture de la CI d'une MR GitLab (QUA-262) et la CI GitLab du
   gabarit (QUA-263), éprouvées en réel —
-  `docs/intentions/gitlab-ci-de-la-mr-essai-reel.md`.
+  `docs/intentions/essais-reels-en-attente.md` (partie « ex-gitlab-ci-de-la-mr-essai-reel »).
 - [ ] [décision] (0.12.0) Sortir de CLOSING refusé en dur sans CI verte sur les contrôles
-  confiés à la CI (QUA-262) — `docs/intentions/cloture-refusee-sans-ci-verte.md`.
+  confiés à la CI (QUA-262) — `docs/intentions/cloture-et-attestations.md` (partie « ex-cloture-refusee-sans-ci-verte »).
 - [ ] [décision] (0.12.0) Aligner QUA-196 et la couverture du diff sur les contrôles
-  confiés à la CI — `docs/intentions/contrats-a-aligner-apres-controles-en-ci.md`.
+  confiés à la CI — `docs/intentions/garanties-la-suite.md` (partie « ex-contrats-a-aligner-apres-controles-en-ci »).
 - [ ] [décision] (0.12.0) Comprendre l'échec intermittent de la couverture des hooks
   (QUA-004) vu deux fois sous charge parallèle, jamais reproduit seul —
-  `docs/intentions/couverture-hooks-intermittente.md`.
+  `docs/intentions/couverture-paquet-100.md` (partie « ex-couverture-hooks-intermittente »).
 - [ ] [décision] (0.11.2) Surveiller qu'un contrôle ne lit que ses `paths` (reprise
   par contrôle, QUA-141) —
   `docs/intentions/reprise-par-controle-limites.md`.
@@ -302,12 +302,6 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Adoption, installation, documentation
 
-- [ ] [décision] [P1] (0.11.1) Un `init` intelligent : une seule commande qui monte un projet d'une version
-  à la suivante, ne rétrograde rien, conserve les données du projet et se commite sur la branche kit ;
-  absorbe les trois intentions ci-dessous marquées « absorbée » ; constaté sur drwil_walk le 2026-11-08 ;
-  deux chantiers réalisés, relatés dans `docs/projects/journal.md` (refus de version et CI du projet ; fichiers
-  modifiés et retrait de `resolve-drift`) —
-  `docs/intentions/montee-de-version-sure.md`.
 - [ ] [décision] [P1] (0.13.0) Un parcours d'installation et de chantier sans demande
   d'autorisation à chaque commande : reste le réexamen du « ask » sur
   `git push`, `merge` et `rebase` (demande du 2026-10-25) —
@@ -329,6 +323,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P3] Aider l'adoptant à alléger ses fichiers (outil de
   découpe, fiches d'allègement à l'adoption) — demande du 2026-10-27, après
   la 0.10.0 — `docs/intentions/alleger-les-fichiers-de-l-adoptant.md`.
+- [ ] [décision] Un fichier découpé ou neuf entre dans le bloc scope sans détour ni élargissement
+  humain (admission des fichiers dérivés ; le rappel au cadrage est fait le 2026-10-28) —
+  `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`.
 
 ### Release
 
@@ -342,7 +339,7 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 - [ ] [décision] [P2] (0.12.0) Clôture, réouverture et reprise : la barrière de périmètre nomme chaque fichier refusé, la
   réouverture rend l'intention retirée, `resume` et les faux positifs de la barrière de réouverture (4 notes
-  regroupées le 2026-11-09) — `docs/intentions/cloture-reouverture-et-reprise-defauts.md`.
+  regroupées le 2026-11-09) — `docs/intentions/cloture-et-attestations.md` (partie « ex-cloture-reouverture-et-reprise-defauts »).
 
 - [ ] [décision] (0.13.0) Clôture, réouverture et attestations : cadrée en cinq fiches
   le 2026-10-26 ; reste la note « un lancement intercalé efface la file » —
@@ -351,22 +348,25 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   les branches, revenir sur `master`, créer la branche de cadrage —
   `docs/intentions/nettoyage-des-worktrees.md`.
 - [ ] [décision] (0.13.0) Conflits d'index et de journal entre chantiers en parallèle —
-  `docs/intentions/conflits-de-cloture-entre-worktrees.md`.
+  `docs/intentions/cloture-et-attestations.md` (partie « ex-conflits-de-cloture-entre-worktrees »).
 - [ ] [décision] (0.13.0) Le sondage parallèle (plusieurs worktrees) vérifié dans
   Copilot CLI ; le sondage à une fiche l'est (2026-10-26) —
   `docs/intentions/sondage-worktree-copilot-cli.md`.
 - [ ] [décision] L'enchaînement des lots (un sous-agent neuf par lot) éprouvé sur
   une vraie fiche à lots, consommation mesurée —
-  `docs/intentions/essai-reel-lots-en-sous-agents.md`.
+  `docs/intentions/essais-reels-en-attente.md` (partie « ex-essai-reel-lots-en-sous-agents »).
 - [ ] [décision] [P3] La clôture en un geste reconnaît une fiche permanente
   (reportée le 2026-11-05 : une fiche jetable par montée de version, close par
   `node .githooks/close.mjs` ; à reprendre si un projet adoptant en a besoin) —
-  `docs/intentions/cloture-fiche-permanente.md`.
+  `docs/intentions/cloture-et-attestations.md` (partie « ex-cloture-fiche-permanente »).
 - [ ] [décision] (0.12.0) Le commentaire de `merge_cancelled` dans `.githooks/state-validate.mjs` dit encore
   l'ancienne règle de QUA-181 —
   `docs/intentions/commentaire-merge-cancelled-a-jour.md`.
 - [ ] [décision] (0.12.0) Le hook qui ajoute `Drwil-Brief` fait, sur un message vide, un commit dont le
   trailer est le sujet — `docs/intentions/trailer-sur-message-vide.md`.
+- [ ] [décision] Abandonner un détour par une commande, `merge-auto` qui attend le pipeline GitLab avant
+  de programmer la fusion, repli quand `glab mr close` échoue (constaté par un projet adoptant sous GitLab) —
+  `docs/intentions/support-gitlab-et-abandon-de-detour.md`.
 
 ### Fluidité et relecture
 
@@ -413,9 +413,9 @@ critère de sortie de chaque fiche —
 - [ ] [décision] (0.13.0) Suites de l'attente outillée des commandes longues : Windows, garde de commande, double lancement simultané —
   `docs/intentions/attente-commandes-longues-suites.md`.
 - [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
-  d'essayé) — `docs/intentions/compat-codex.md`.
+  d'essayé) — `docs/intentions/compatibilite-des-outils.md` (partie « ex-compat-codex »).
 - [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
-  choisir) — `docs/intentions/compat-cursor.md`.
+  choisir) — `docs/intentions/compatibilite-des-outils.md` (partie « ex-compat-cursor »).
 - [ ] [décision] Les autres outils au niveau de Claude Code (5 suites
   regroupées le 2026-10-25 dans l'intention mère) —
   `docs/intentions/compatibilite-des-outils.md`.
@@ -566,8 +566,8 @@ avant les points 5 à 13, en trois versions.
   socle (fait, journal du 2026-10-19), Copilot CLI
   (fait, journal du 2026-10-19), Gemini CLI
   (fait, journal du 2026-10-19), Codex
-  (`docs/intentions/compat-codex.md`), Cursor
-  (`docs/intentions/compat-cursor.md`), ces deux derniers repassés en
+  (`docs/intentions/compatibilite-des-outils.md` (partie « ex-compat-codex »)), Cursor
+  (`docs/intentions/compatibilite-des-outils.md` (partie « ex-compat-cursor »)), ces deux derniers repassés en
   intention le 2026-10-19 (demande de l'humain) : le périmètre de la
   0.6.7 est donc ramené à trois outils (socle, Copilot CLI, Gemini CLI),
   puis la release (faite, journal du 2026-10-20).

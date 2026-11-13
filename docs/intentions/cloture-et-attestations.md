@@ -2,6 +2,8 @@
 
 **Statut** : proposée le 2026-10-25 — regroupement de 10 intentions lors du ménage du 2026-10-25 ; chaque partie reprend l'une d'elles, avec son statut d'origine. Cadrée le 2026-10-26 en cinq fiches (voir « Cadrage du 2026-10-26 » ci-dessous) ; l'intention reste là tant que ces fiches ne sont pas closes.
 
+**Revu le 2026-11-13** : ménage — regroupe ici les intentions « cloture-fiche-permanente », « cloture-refusee-sans-ci-verte », « cloture-reouverture-et-reprise-defauts », « conflits-de-cloture-entre-worktrees », chacune avec son statut d'origine ; leur existant est repris à sa date, non revérifié.
+
 ## Besoin
 
 Plusieurs chantiers sur le cycle des fiches (critères, clôture, file, réouverture, attestations, recette) ont laissé leurs limites en intentions séparées. Elles touchent la même mécanique, la vie d'une fiche de son lancement à sa preuve, et se cadrent ensemble, par lots vérifiables seuls.
@@ -123,6 +125,54 @@ corrigés ou rattachés pendant le chantier n'apparaissent pas corrigés.
 
 - 2026-10-23 — Un lancement intercalé efface la file en silence : le 2026-10-24, lancer l'entretien courant par /drwil-start (pour corriger la PR #218 bloquée en CLOSING) a remplacé la file décidée au lancement (reouvrir-apres-cloture, contournements-completes) ; state.mjs next a ensuite refusé, sans dire que la file avait disparu. Attendu : un lancement intercalé suspend la file (ou demande), et next/state disent clairement qu'il n'y a plus de file et pourquoi.
 
+### la clôture en un geste reconnaît une fiche permanente (ex-« cloture-fiche-permanente »)
+
+Statut d'origine : à cadrer — limite constatée le 2026-10-26 à la clôture de
+l'entretien courant pour la montée de version 0.9.0 (PR #258).
+
+**Revu le 2026-11-05** : après la 0.11.0 (PR #356, close à la main), décision du demandeur :
+une fiche jetable par montée de version, close par `node .githooks/close.mjs` (la fiche reste
+dans l'historique Git, dans la PR et dans sa preuve `docs/preuves/`). Depuis le 2026-10-24,
+l'entretien courant ne sert plus qu'aux montées de version. La reconnaissance d'une fiche
+permanente est reportée tant qu'aucun projet adoptant n'en a besoin.
+
+`node .githooks/close.mjs` (clôture en un geste, QUA-048) traite toute fiche
+active comme une fiche de chantier : il la supprime, retire sa ligne de
+l'index et consigne la consommation. Sur la fiche permanente
+`docs/projects/routine-maintenance.md` (entretien courant), il supprimerait
+la fiche et signale une trentaine de références à réorienter. Les montées de
+version 0.8.0 et 0.9.0 ont donc été closes à la main : une ligne au journal
+de la fiche, sans l'outil de clôture.
+
+Conséquences :
+
+- rien ne vérifie qu'une clôture d'entretien est complète (ligne de journal
+  présente, datée, chemins cités valides) ;
+- la consommation d'un entretien n'est jamais consignée dans
+  `.drwil/usage.jsonl` ;
+- un agent qui applique « Clôture en un geste » d'`AGENTS.md` à la lettre
+  peut supprimer la fiche permanente.
+
+### sortir de CLOSING est refusé tant que la CI de la PR ou MR n'est pas verte sur les contrôles confiés à la CI (ex-« cloture-refusee-sans-ci-verte »)
+
+Statut d'origine : proposée le 2026-11-07 — limite du chantier « un contrôle lent se joue une seule fois, en CI » (journal du 2026-11-07).
+
+QUA-262 (la clôture n'est acquise qu'une fois la CI de la PR ou MR verte sur les contrôles confiés à la CI) est aujourd'hui un signal : `.githooks/close.mjs` dit « clôture non acquise, le chantier reste en CLOSING », mais rien ne refuse en dur. Le retour en SCOPING exige déjà la PR fusionnée, ce qui tient la CI en pratique quand la branche principale protège la fusion ; sans cette protection (autre forge, fusion à la main), rien ne l'empêche.
+
+### la clôture, la réouverture et la reprise d'un chantier sans défauts relevés (ex-« cloture-reouverture-et-reprise-defauts »)
+
+Statut d'origine : proposée le 2026-11-09 — regroupe quatre notes en vrac (2026-11-05 et 2026-11-06), à reproduire avant tout cadrage.
+
+Quatre défauts relevés en réalisant des chantiers : le refus d'un commit par la barrière de périmètre sans nommer les
+fichiers, la réouverture qui échoue quand la clôture a retiré l'intention, un faux positif de la barrière de
+réouverture, et la reprise d'état (`resume`) aux limites. Le demandeur veut un parcours de clôture et de reprise sans surprise.
+
+### conflits de clôture entre chantiers menés en parallèle (ex-« conflits-de-cloture-entre-worktrees »)
+
+Statut d'origine : proposée le 2026-10-26 — limite du chantier « un chantier par worktree, lancé d'un geste humain » (journal du 2026-10-26).
+
+Deux chantiers en worktrees touchent chacun l'index des chantiers et le journal : le second à fusionner a un conflit. Le besoin : que ce conflit soit rare ou résolu sans perte.
+
 ## Cadrage du 2026-10-26
 
 Les dix parties se cadrent en cinq fiches, décidées par le demandeur le 2026-10-26 :
@@ -234,6 +284,57 @@ Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10
 - Les commits de la branche d'un squash ne sont plus dans l'historique de
   la branche principale ; gh peut encore les donner (commits de la PR).
 
+### la clôture en un geste reconnaît une fiche permanente (ex-« cloture-fiche-permanente »)
+
+Existant (relevé le 2026-10-26) :
+
+- `.githooks/close.mjs` : clôture en un geste, sans notion de fiche
+  permanente.
+- `docs/projects/routine-maintenance.md` : fiche permanente, journal des
+  petites tâches, dont les montées de version 0.8.0 et 0.9.0.
+
+**Piste** :
+
+L'outil de clôture reconnaît une fiche permanente (marqueur explicite dans la fiche,
+ou liste déclarée) : il vérifie la ligne du jour au journal de la fiche,
+consigne la consommation, ne supprime ni la fiche ni sa ligne d'index et ne
+demande aucune réorientation de références. `AGENTS.md` et la règle CLOSING
+le disent.
+
+**Constat du 2026-10-28** :
+
+Après la montée de version 0.10.0, la clôture a été faite à la main : l'état
+est resté en BUILD sur `routine-maintenance`, et `/drwil-start` a été refusé
+(`state.mjs start` n'accepte que SCOPING, EXPECTATION, REQUEST ou CLOSING avec
+PR fusionnée). Il a fallu `state.mjs move SCOPING`. `.githooks/close.mjs` ne convient pas
+tel quel : il supprimerait la fiche (plus de 15 citations). Le chantier prévoit
+donc aussi le retour en SCOPING à la clôture d'une fiche permanente.
+
+### sortir de CLOSING est refusé tant que la CI de la PR ou MR n'est pas verte sur les contrôles confiés à la CI (ex-« cloture-refusee-sans-ci-verte »)
+
+Existant (relevé le 2026-11-07) :
+
+- Transitions : `.githooks/state-transitions.mjs`, hors du périmètre du chantier.
+- `.githooks/close-checks.mjs` sait déjà lire la CI de la PR (GitHub) ou MR (GitLab).
+
+### la clôture, la réouverture et la reprise d'un chantier sans défauts relevés (ex-« cloture-reouverture-et-reprise-defauts »)
+
+Relevé dans les notes en vrac :
+
+- 2026-11-05 : en mode bloquant, la barrière de périmètre refuse par « N fichier(s) hors fiches commité(s) en SCOPING »
+  sans nommer les fichiers ; à la mise à jour du kit (0.11.0), le demandeur n'en voyait qu'un sur deux.
+- 2026-11-05 : `node .githooks/state.mjs reopen` est refusé quand la clôture a retiré l'intention d'origine : la fiche
+  restaurée la cite, le contrôle des chemins cités refuse le commit ; l'intention a dû être restaurée à la main (PR #360).
+- 2026-11-05 : le message d'usage de `.githooks/state.mjs` ne cite pas `resume` (puce QUA-137 limitée aux messages ajoutés) ; seule
+  `docs/projects/` est cherchée par `resume`, un détour ne se reprend pas ; le lot repris est le dernier commité
+  (trailer `Drwil-Lot`), un `lot next` sans commit suivant ne se voit pas dans l'historique.
+- 2026-11-06 : faux positif de la barrière de réouverture : un changement qui ne touche qu'un test y est traité comme un
+  changement de règle et attend le oui de l'humain (PR #366). À reproduire avant de cadrer.
+
+### conflits de clôture entre chantiers menés en parallèle (ex-« conflits-de-cloture-entre-worktrees »)
+
+Relevé le 2026-10-26 : le signal de retard de `close --check` (QUA-146) prévient la branche en retard sur la principale ; la recette décrit les conflits attendus. Aucune résolution automatique ; non mesuré sur des chantiers réels. Relevé le 2026-10-26 (chantier « une file en parallèle ») : en file parallèle, le sous-agent rebase et résout seul ces conflits (QUA-148) ; essai sur des chantiers réels à faire.
+
 ## Questions à trancher
 
 - [décision] Découper ce regroupement en lots, chacun vérifiable seul, et choisir le premier.
@@ -304,3 +405,23 @@ Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10
 - [décision] Lire la fiche au dernier commit de la PR (gh) quand le
   commit qui la supprime est un squash, ou le signaler dans la fiche de
   recette (« version du cadrage, fusion par squash ») ?
+
+### la clôture en un geste reconnaît une fiche permanente (ex-« cloture-fiche-permanente »)
+
+- [décision] Comment une fiche se déclare-t-elle permanente : marqueur dans
+  la fiche, ou réglage de `.drwil/ia-first.json` ?
+- [décision] La consommation d'un entretien est-elle consignée à chaque
+  clôture, comme pour un chantier ?
+
+### sortir de CLOSING est refusé tant que la CI de la PR ou MR n'est pas verte sur les contrôles confiés à la CI (ex-« cloture-refusee-sans-ci-verte »)
+
+- [décision] Refuser en dur la sortie de CLOSING sans CI verte, ou garder le signal tant que la fusion exigée suffit ?
+
+### la clôture, la réouverture et la reprise d'un chantier sans défauts relevés (ex-« cloture-reouverture-et-reprise-defauts »)
+
+- [décision] Les traiter en une fiche, ou séparer le défaut de la barrière de périmètre (0.12.0) des trois autres (0.13.0) ?
+- [décision] La réouverture restaure-t-elle l'intention retirée, ou la fiche cesse-t-elle de la citer ?
+
+### conflits de clôture entre chantiers menés en parallèle (ex-« conflits-de-cloture-entre-worktrees »)
+
+- [décision] Une résolution assistée des conflits d'index et de journal, ou la mise à jour de la branche suffit-elle ?

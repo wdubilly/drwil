@@ -3,6 +3,7 @@
 **Statut** (2026-10-09) : à cadrer — intention posée par le demandeur,
 questions à trancher en fin de fiche.
 Rangement du 2026-10-26 : la relecture avant fusion, qui n'avait qu'une ligne d'index, est reprise en fin de fichier.
+**Revu le 2026-11-13** : toujours vivante. Devenu faux dans « Existant » : le module du tableau de bord s'appelle `dashboard` (skill `drwil-progress`), dont le retrait est envisagé (`docs/intentions/retrait-de-drwil-progress.md`) ; `drwil serve` (QUA-277) donne depuis le 2026-11-08 une vue en direct du projet, base possible pour la question 1 (forme). Voisine : la fiche cadrée `docs/projects/relecture-critique-avant-cloture.md` (une relecture critique par un agent avant la clôture) couvre une partie de la question « relecture avant fusion » en fin de fichier, pas la vue humaine. La question `drwil-review` du sondage n'existe pas.
 
 **Projet** : DRWIL — **Cible** : après la gouvernance (machine d'état et
 double barrière) — **Niveau de risque** : MEDIUM.

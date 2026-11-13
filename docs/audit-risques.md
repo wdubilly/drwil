@@ -98,7 +98,7 @@ Claude Code, 3 estimées à la main au début).
     réelle : c'est précisément le défaut.
   - Test : `packages/drwil/test/claude-hooks.test.mjs` l. 47-57 simule le PostToolUse « Claude Code 2.1 » à la
     main ; aucun test ne rejoue une charge utile capturée d'une vraie session, et le contrat le reconnaît (« aucun
-    essai réel prétendu »), voir aussi `docs/intentions/attestation-chat-essais-reels.md`.
+    essai réel prétendu »), voir aussi `docs/intentions/essais-reels-en-attente.md` (partie « ex-attestation-chat-essais-reels »).
 - **Risque encouru** : l'attestation depuis le chat ne fonctionne pas en pratique et l'humain repasse par le
   terminal ; chaque refus coûte une boucle de diagnostic à l'aveugle.
 - **Correctif recommandé** : un message par cause (avec, pour un écart de forme, la liste des clés en trop et, pour

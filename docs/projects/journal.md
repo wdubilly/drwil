@@ -2398,8 +2398,8 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 ## 2026-10-20 — Release 0.6.7, la compatibilité des agents (socle, Copilot CLI, Gemini CLI)
 
 - **Décisions clés** : périmètre ramené à trois outils sur cinq, Codex et
-  Cursor repassés en intentions (`docs/intentions/compat-codex.md`,
-  `docs/intentions/compat-cursor.md`). Lot 1 : version 0.6.7 partout (paquet,
+  Cursor repassés en intentions (`docs/intentions/compatibilite-des-outils.md` (partie « ex-compat-codex »),
+  `docs/intentions/compatibilite-des-outils.md` (partie « ex-compat-cursor »)). Lot 1 : version 0.6.7 partout (paquet,
   racine, verrou), changelog daté, PR #183 fusionnée. Un détour (PR #182) a
   corrigé une mise à jour du kit qui laissait la fiche des mécaniques
   incomplète, trouvée par l'essai réel 0.6.6 → 0.6.7.
@@ -2900,7 +2900,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   ligne) et `tests-qua-112` ; carte d'architecture complétée (cadrage
   élargi à `docs/architecture.md` dans un commit de fiche seul). Intention
   d'origine couverte, résumée ici et retirée
-  (docs/intentions/codeowners-registre.md). Preuve de clôture :
+  (docs/intentions/codeowners-registre.md (retirée le 2026-10-24)). Preuve de clôture :
   `docs/preuves/codeowners-registre.md`.
 - **Limites connues** : le contrôle ne juge que les chemins, pas les
   propriétaires ni les erreurs que GitHub relève —
@@ -3387,7 +3387,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (`docs/intentions/sondage-worktree-copilot-cli.md`) ; nettoyage des worktrees
   fusionnés à la main (`docs/intentions/nettoyage-des-worktrees.md`) ; conflits
   d'index et de journal entre chantiers parallèles non résolus
-  (`docs/intentions/conflits-de-cloture-entre-worktrees.md`). Une file de
+  (`docs/intentions/cloture-et-attestations.md` (partie « ex-conflits-de-cloture-entre-worktrees »)). Une file de
   plusieurs fiches reste dans le dossier du dépôt.
 - **Défaut révélé après la clôture** : la CI Windows de la PR a échoué, git y
   rendant le nom long d'un dossier que le dossier temporaire désignait par son
@@ -3424,7 +3424,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   lancement par vagues au-delà de N. Le nettoyage des worktrees fusionnés reste
   à la main (`docs/intentions/nettoyage-des-worktrees.md`) ; la résolution des
   conflits de clôture par le sous-agent n'est pas essayée sur des chantiers
-  réels (`docs/intentions/conflits-de-cloture-entre-worktrees.md`) ; la file
+  réels (`docs/intentions/cloture-et-attestations.md` (partie « ex-conflits-de-cloture-entre-worktrees »)) ; la file
   parallèle n'est pas essayée dans Copilot CLI
   (`docs/intentions/sondage-worktree-copilot-cli.md`).
 - **Preuve de clôture** : `docs/preuves/file-en-parallele.md`.
@@ -3670,7 +3670,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   (QUA-004, seuil de couverture de test) est apparu deux fois sous charge
   parallèle (96,55 % puis 94,24 %), jamais en passage seul ni sur la principale ;
   sa cause n'a pas été diagnostiquée, par décision du demandeur : intention
-  `docs/intentions/couverture-hooks-intermittente.md`.
+  `docs/intentions/couverture-paquet-100.md` (partie « ex-couverture-hooks-intermittente »).
 - **Preuve de clôture** : `docs/preuves/agents-md-court.md` (si présent).
 - **Clôturé par** : la branche `chantier/agents-md-court`.
 
@@ -3732,7 +3732,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   l'humain après l'essai réel Node.
 - **Limites connues** : le premier commit du kit en SCOPING est refusé sous barrière bloquante, sans que la recette d'adoption le
   dise (`docs/intentions/premier-commit-du-kit-sous-barriere-bloquante.md`) ; un `judgeGuarantees` mort reste dans
-  `packages/drwil/src/guarantees-verify.ts` (`docs/intentions/juge-des-garanties-en-double.md`) ; essai Rust non refait (pas de cargo).
+  `packages/drwil/src/guarantees-verify.ts` (`docs/intentions/juge-des-garanties-en-double.md` (retirée le 2026-11-09)) ; essai Rust non refait (pas de cargo).
 - **Preuve de clôture** : `docs/preuves/niveau-de-protection.md` (si présent).
 - **Clôturé par** : la branche `workstream/niveau-de-protection`.
 
@@ -3802,7 +3802,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 
 - **Décisions clés** : contrats neufs QUA-161 à QUA-164 ; `node .githooks/merge-auto.mjs [<n>]` (module livré à part, `pr-watch` inchangé) lit l'autorisation `auto_merge` de l'état avant tout appel à `gh`, attend que `mergeStateStatus` soit connu, met à jour la PR si elle est `BEHIND` (une fois, puis attend de nouveau l'état), programme `gh pr merge --auto --merge`, vérifie `autoMergeRequest` et dit où suivre la PR. Un état inconnu ou pas à jour après 5 minutes, `gh` absent ou illisible : « non exécuté » (code 2) ; conflit, PR fermée, refus du dépôt (« Auto merge is not allowed… », avec la sortie à suivre) ou programmation non vue : « refusé » (code 1) ; jamais un message qui prétend la fusion programmée (QUA-013). La consigne de l'état (fr, en) et le skill `start-a-workstream` appellent l'outil au lieu de lister les commandes `gh` ; les phrases suivantes (suivi par `pr-watch`, retour en SCOPING après la fusion, `reopen`) sont inchangées (QUA-138). Test de l'outil à 100 % de couverture, `gh` simulé, une ligne de commande avec un `gh` factice.
 - **Hooks modifiés** : `.githooks/state-context-texts.mjs` (consigne `autoMerge`) ; neufs : `.githooks/merge-auto.mjs`, `.githooks/merge-auto.test.mjs`.
-- **Limites connues** : le test de la consigne (QUA-164) lit les gabarits livrés, il n'éprouve pas le texte injecté par l'état en projet installé (`packages/drwil/test/cycle.test.mjs`, QUA-138, le fait toujours) ; l'outil ne suit pas la CI (`pr-watch`) ; `gh pr update-branch` n'a pas été éprouvé sur une vraie PR `BEHIND` (`gh` simulé seulement ; intention `docs/intentions/merge-auto-eprouve-en-reel.md`).
+- **Limites connues** : le test de la consigne (QUA-164) lit les gabarits livrés, il n'éprouve pas le texte injecté par l'état en projet installé (`packages/drwil/test/cycle.test.mjs`, QUA-138, le fait toujours) ; l'outil ne suit pas la CI (`pr-watch`) ; `gh pr update-branch` n'a pas été éprouvé sur une vraie PR `BEHIND` (`gh` simulé seulement ; intention `docs/intentions/essais-reels-en-attente.md` (partie « ex-merge-auto-eprouve-en-reel »)).
 - **Preuve de clôture** : `docs/preuves/fusion-auto-ordonnee.md`.
 - **Clôturé par** : la branche `cadrage/merge-auto-ordonnee`.
 
@@ -3819,7 +3819,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Décisions clés** : contrats neufs QUA-166 à QUA-171 ; `.githooks/briefs-lots.mjs` lit les puces « **Lot N — titre** [IA|humain] » de la section « Increments » (sans étiquette : IA) ; `state.mjs lot` dit le lot courant, les lots [IA] faits et restants, les lots [humain] à faire ; `lot next` marque le lot courant fait (arbre propre exigé) et passe au lot [IA] suivant, jamais au-delà du dernier ; le rappel d'état nomme le lot courant et dit de ne traiter que lui ; un lot [humain] est sauté, nommé et rappelé en CLOSING ; le passage à CLOSING est refusé tant qu'un lot [IA] n'est pas fait, une fiche à un lot ou sans lot restant inchangée. Le lot courant tient dans un fichier local de `.drwil/` (le validateur d'état, hors cadrage, n'a pas de champ de plus), effacé au lancement d'un chantier et au retour en SCOPING ; `start` et `move` sont enveloppés dans `.githooks/state.mjs`. Le skill `start-a-workstream` dit : un sous-agent neuf par lot, passation par les commits et la section « Reprise », `verify --failed` seulement après un échec.
 - **Hooks modifiés** : `.githooks/state.mjs`, `.githooks/state-cli.mjs`, `.githooks/briefs.mjs`, `.githooks/state-texts.mjs`, `.githooks/state-context-texts.mjs`, `.githooks/state-messages-fr.mjs`, `.githooks/state-messages-en.mjs` ; neufs : `.githooks/briefs-lots.mjs`, `.githooks/state-lots.mjs`, `.githooks/state-cli-lots.mjs`, `.githooks/state-lots.test.mjs`.
 - **Cadrage élargi** : le gabarit de `kit-mechanics.md` (liste des fichiers livrés), omis du bloc scope, ajouté dans un commit séparé.
-- **Limites connues** : aucun outil ne lance les sous-agents, la consigne du skill les enchaîne (Claude Code et Copilot CLI ; Gemini CLI reste en une session) et n'a pas été éprouvée sur une vraie fiche à lots (`docs/intentions/essai-reel-lots-en-sous-agents.md`) ; le dernier lot doit lui aussi passer par `lot next` avant la clôture.
+- **Limites connues** : aucun outil ne lance les sous-agents, la consigne du skill les enchaîne (Claude Code et Copilot CLI ; Gemini CLI reste en une session) et n'a pas été éprouvée sur une vraie fiche à lots (`docs/intentions/essais-reels-en-attente.md` (partie « ex-essai-reel-lots-en-sous-agents »)) ; le dernier lot doit lui aussi passer par `lot next` avant la clôture.
 - **Preuve de clôture** : `docs/preuves/lots-en-sous-agents.md`.
 - **Clôturé par** : la branche `workstream/lots-en-sous-agents`.
 
@@ -3915,7 +3915,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 
 - **Décisions clés** : trois contrats neufs, QUA-195 (le catalogue définit l'e2e une seule fois, par forme de projet : bibliothèque, outil en ligne de commande, service, application web ; ni exception ni dérogation), QUA-196 (la recette d'adoption renvoie à cette définition sans la recopier) et QUA-197 (la section 5 de `docs/ia-first/` distingue l'identité, l'approbation et la preuve d'exécution, et dit ce que `drwil attest` garantit ou non : l'identité vient de la configuration git, déclarative). Aucun contrat existant modifié ; `catalogue:QUA-020` garde son critère.
 - **Hooks modifiés** : aucun.
-- **Limites connues** : l'identité forte en option (commits signés, revue GitHub authentifiée) n'est pas faite, seule la documentation des niveaux l'est — elle reste dans `docs/intentions/e2e-et-attestation-precises.md`.
+- **Limites connues** : l'identité forte en option (commits signés, revue GitHub authentifiée) n'est pas faite, seule la documentation des niveaux l'est — elle reste dans `docs/intentions/garanties-la-suite.md` (partie « ex-e2e-et-attestation-precises »).
 - **Preuve de clôture** : `docs/preuves/e2e-et-attestation-precises.md`.
 - **Clôturé par** : la branche `workstream/e2e-et-attestation-precises`.
 
@@ -4074,7 +4074,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Critères et preuves** : QUA-235 (cinq outils, refus et réponse de l'agent n'enregistrent rien), QUA-032 (sondage lisible avec critère, essai et fichiers couverts), QUA-081 (liaison au texte et à la preuve), QUA-236 (jugement utile) et QUA-063 (matrice par outil), ces deux derniers attestés par l'humain le 2026-11-04. Tests fictifs locaux uniquement.
 - **Périmètre élargi avant code** : le client ACP Cursor (`packages/drwil/src/cursor-acp.ts`, `packages/drwil/src/cursor-acp-session.ts`, `packages/drwil/src/cli-cursor.ts` et `packages/drwil/test/cursor-acp.test.mjs`), cadré seul dans `05d16fa`.
 - **Hooks modifiés** : hooks d'attestation de Claude Code, Copilot CLI, Gemini CLI et Codex ; entrée stdin Cursor qui refuse.
-- **Limites connues** : aucun essai interactif réel des cinq outils, matrice à « aucun » ; confiance déclarative, pas une identité forte face à un acteur local maître du code ou du PTY ; `.githooks/commit-msg` non exécutable préexistant. Le demandeur éprouvera l'attestation dans ses prochains développements et ouvrira une fiche si besoin : `docs/intentions/attestation-chat-essais-reels.md`.
+- **Limites connues** : aucun essai interactif réel des cinq outils, matrice à « aucun » ; confiance déclarative, pas une identité forte face à un acteur local maître du code ou du PTY ; `.githooks/commit-msg` non exécutable préexistant. Le demandeur éprouvera l'attestation dans ses prochains développements et ouvrira une fiche si besoin : `docs/intentions/essais-reels-en-attente.md` (partie « ex-attestation-chat-essais-reels »).
 - **Intentions couvertes** : le volet « attester depuis le chat » de `docs/intentions/installation-fluide.md`.
 - **Clôturé par** : la branche `workstream/attester-depuis-le-chat`, PR #352.
 
@@ -4128,7 +4128,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Décisions clés** : cause reproduite (`briefs --json` et `resume` en code 13, « unsettled top-level await ») et confirmée : `.githooks/state.mjs` attendait sa commande par un await de premier niveau, et `.githooks/state-resume.mjs`, chargé à la demande par `.githooks/state-cli-commands.mjs`, le réimportait encore en évaluation ; `start` vers un worktree (`.githooks/worktree.mjs`) bloquait de la même façon. `.githooks/state.mjs`, `.githooks/detour.mjs` et `.githooks/release-verdict.mjs` (gabarit et copies) lancent la commande par `main(…).then(…)`, même code de sortie. Le contrôle maison lit l'arbre syntaxique de TypeScript (déjà dépendance du dépôt) et ne vise que les hooks importés par un autre module : les points d'entrée seuls (`.githooks/run-checks.mjs`, `.githooks/pr-watch.mjs`, hooks Claude…) gardent leur await, sans danger. Le test de `start` vers un worktree simule un terminal (`--import` qui pose `isTTY`) et répond à chaque question quand elle s'affiche.
 - **Critères et preuves** : QUA-248 (chaque sous-commande en vrai processus rend la main, dont `briefs --json`, `resume`, `lot`, `lot next` et `start` vers un worktree ; l'archive installée lance `briefs --json`), QUA-249 (await de premier niveau d'un hook importé refusé, nommé par fichier, ligne et importeur), contrats créés ; tests `.githooks/state-cli-process.test.mjs`, `outils/tester-tarball.test.mjs`, `outils/verifier-await-premier-niveau.test.mjs`. Les trois tests en vrai processus échouent en code 13 sur la version d'avant le correctif ; le contrôle y nomme les trois hooks, gabarit et copies.
 - **Hooks modifiés** : `.githooks/state.mjs`, `.githooks/detour.mjs`, `.githooks/release-verdict.mjs` (gabarit et copie), déclarés dans « Contrats modifiés » sur le oui du demandeur le 2026-11-05.
-- **Limites connues** : `start` vers un worktree est prouvé avec un terminal simulé (`isTTY` posé), pas un vrai pseudo-terminal (`docs/intentions/start-worktree-en-vrai-terminal.md`) ; le contrôle ne suit que les imports relatifs littéraux, un `import()` calculé lui échappe, et les points d'entrée que rien n'importe gardent leur await de premier niveau (`docs/intentions/await-premier-niveau-suites.md`).
+- **Limites connues** : `start` vers un worktree est prouvé avec un terminal simulé (`isTTY` posé), pas un vrai pseudo-terminal (`docs/intentions/essais-reels-en-attente.md` (partie « ex-start-worktree-en-vrai-terminal »)) ; le contrôle ne suit que les imports relatifs littéraux, un `import()` calculé lui échappe, et les points d'entrée que rien n'importe gardent leur await de premier niveau (`docs/intentions/await-premier-niveau-suites.md`).
 - **Attestations** : QUA-048, QUA-067 et QUA-175 (fichiers couverts : `.githooks/state.mjs`) réattestées par l'humain le 2026-11-06.
 - **Clôturé par** : la branche `workstream/commandes-d-etat-bloquees`.
 
@@ -4139,7 +4139,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Décisions clés** : sur une PR, la CI reprend le verdict de la dernière CI de la branche principale pour chaque contrôle inchangé (`DRWIL_CI_REUSE=1`, fichier de verdicts restauré par `actions/cache/restore`, sauvegardé seulement par un push sur la branche principale) ; Ubuntu saute les tests du paquet sur une PR de doc comme Windows et macOS ; la CI livrée en fait autant (GitHub : cache Actions ; GitLab : artefact du job `checks` de la branche principale, téléchargé avec `CI_JOB_TOKEN`, pas de cache). Le demandeur a levé « à jour avec master » (ruleset 24840343), `.github/ruleset-master.json` remis d'accord. Parce que deux PR vertes peuvent alors casser la branche principale ensemble, `node .githooks/pr-watch.mjs` suit après la fusion la CI de la branche principale et l'issue d'alerte, et une file ne lance le suivant (`next`, enchaînement de QUA-178) que sur la preuve verte du sommet de la branche principale ; un `start` humain n'est pas bloqué. Décision du demandeur du 2026-11-06 : ce verrou ne vaut que sur GitHub ; avec `origin` sur une autre forge (reconnue comme `drwil guarantees`, par l'URL), la file passe et le dit en une ligne ; sans `origin`, le verrou tient.
 - **Critères et preuves** : QUA-250 (reprise en CI, dépôt et CI livrées), QUA-251 (preuve de CI de la branche principale, refus de `next` et de l'enchaînement, forge non GitHub non bloquée et dite), QUA-252 (protection sans « à jour », comparée à la forge en CI), contrats créés ; QUA-045, QUA-100, QUA-141 et QUA-178 modifiés et déclarés. Tests `.githooks/run-checks.test.mjs`, `.github/scripts/workflows-yaml.test.mjs`, `packages/drwil/test/kit.test.mjs`, `.githooks/pr-watch.test.mjs`, `.githooks/state.test.mjs` ; `node .github/scripts/verifier-ruleset.mjs` vert le 2026-11-06.
 - **Hooks modifiés** : `.githooks/run-checks-verdicts.mjs`, `.githooks/run-checks.mjs`, `.githooks/pr-watch.mjs`, `.githooks/pr-watch-main.mjs` (nouveau), `.githooks/state-cli.mjs`, `.githooks/state-transitions.mjs`, `.githooks/state-context-texts.mjs`, messages `fr`/`en` (gabarit et copies), déclarés dans « Contrats modifiés » sur le oui du demandeur (2026-11-05 et 2026-11-06).
-- **Limites connues** : aucune PR de doc encore mesurée avec la reprise, la preuve de CI de la branche principale jamais éprouvée sur une vraie fusion, la reprise GitLab par `CI_JOB_TOKEN` jamais jouée sur un vrai GitLab, et hors GitHub aucune preuve de CI de la branche principale (verrou absent) (`docs/intentions/ci-rapide-epreuves-reelles.md`) ; `.githooks/wait-command.mjs` lancé deux fois en même temps sur la même commande plante (`lstat ENOENT`) (`docs/intentions/attente-commandes-longues-suites.md`).
+- **Limites connues** : aucune PR de doc encore mesurée avec la reprise, la preuve de CI de la branche principale jamais éprouvée sur une vraie fusion, la reprise GitLab par `CI_JOB_TOKEN` jamais jouée sur un vrai GitLab, et hors GitHub aucune preuve de CI de la branche principale (verrou absent) (`docs/intentions/essais-reels-en-attente.md` (partie « ex-ci-rapide-epreuves-reelles »)) ; `.githooks/wait-command.mjs` lancé deux fois en même temps sur la même commande plante (`lstat ENOENT`) (`docs/intentions/attente-commandes-longues-suites.md`).
 - **Réouverture** : la CI de la PR #366 était rouge (tests de QUA-141 et QUA-250 dans `.githooks/run-checks.test.mjs`) : la passe d'une PR exporte `DRWIL_CI_REUSE=1`, dont les passes simulées des tests héritaient ; reproduit en local, la variable est retirée de l'environnement de ces tests (correctif accordé par l'humain, `detour.mjs allow`).
 - **Attestations** : QUA-013, QUA-019 et QUA-151 réattestées par l'humain le 2026-11-06.
 - **Clôturé par** : la branche `workstream/ci-rapide-pour-la-doc`.
@@ -4163,7 +4163,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Ce qui change** : `runAt: ["ci"]` est permis (refusé sans CI GitHub ou GitLab déclarée) ; un tel contrôle ne tourne ni au commit, ni au push, ni dans `drwil verify`, chaque sortie le dit « confié à la CI » ; `verify` rend `GOVERNANCE: PASS (CI pending)` (verdict, `--json`, `--evidence`, `--agent`) ; `--with-ci-checks` le joue en local ; `pr-watch` et la clôture lisent la CI de la PR (GitHub) ou de la MR (GitLab, par `glab`) ; la CI livrée ne rejoue plus le push d'une branche à PR ou MR ouverte.
 - **Critères et preuves** : QUA-208 et QUA-209 modifiés (validés par le demandeur le 2026-11-07) ; QUA-260 (`PASS (CI pending)`), QUA-261 (`--with-ci-checks`), QUA-262 (clôture acquise sur CI verte de la PR ou MR), QUA-263 (CI livrée sans double passage) créés — numérotés après le numéro 253, déjà pris par le chantier « une limite se traite pendant le chantier », alors en cours ; QUA-196, QUA-251 et QUA-034 prouvent les critères 7, 9 et 10. Attestations QUA-013, QUA-048, QUA-150, QUA-151 et QUA-236 renouvelées par le demandeur, au terminal.
 - **Hooks modifiés** : `.githooks/engine.mjs`, `.githooks/engine-runat.mjs`, `.githooks/run-checks.mjs`, `.githooks/pr-watch.mjs`, `.githooks/close-checks.mjs`, `.githooks/close.mjs` (gabarit et copies), déclarés dans « Contrats modifiés » sur le oui du demandeur le 2026-11-07.
-- **Limites connues** : GitLab prouvé par des réponses simulées seulement (`docs/intentions/gitlab-ci-de-la-mr-essai-reel.md`) ; la clôture sans CI verte est un signal, pas un refus (`docs/intentions/cloture-refusee-sans-ci-verte.md`) ; texte de QUA-196 et `couverture-diff` sans contrat (`docs/intentions/contrats-a-aligner-apres-controles-en-ci.md`) ; sondage d'attestation refusé au premier essai réel sous Claude Code (intention « sondage d'attestation refusé sous Claude Code », supprimée le 2026-11-09) ; échec ponctuel de `couverture-hooks` et `miroirs-gabarit` au lot 1, passés au rejeu (`docs/intentions/couverture-hooks-intermittente.md`).
+- **Limites connues** : GitLab prouvé par des réponses simulées seulement (`docs/intentions/essais-reels-en-attente.md` (partie « ex-gitlab-ci-de-la-mr-essai-reel »)) ; la clôture sans CI verte est un signal, pas un refus (`docs/intentions/cloture-et-attestations.md` (partie « ex-cloture-refusee-sans-ci-verte »)) ; texte de QUA-196 et `couverture-diff` sans contrat (`docs/intentions/garanties-la-suite.md` (partie « ex-contrats-a-aligner-apres-controles-en-ci »)) ; sondage d'attestation refusé au premier essai réel sous Claude Code (intention « sondage d'attestation refusé sous Claude Code », supprimée le 2026-11-09) ; échec ponctuel de `couverture-hooks` et `miroirs-gabarit` au lot 1, passés au rejeu (`docs/intentions/couverture-paquet-100.md` (partie « ex-couverture-hooks-intermittente »)).
 - **Clôturé par** : la branche `workstream/controle-lent-une-seule-fois-en-ci`.
 
 - **Preuve de clôture** : `docs/preuves/controle-lent-une-seule-fois-en-ci.md`.
@@ -4188,7 +4188,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Hooks modifiés** : `.githooks/state-messages-fr.mjs`, `.githooks/state-messages-en.mjs`, `.githooks/state-context-texts.mjs` (gabarit et copies), déclarés dans « Contrats modifiés » sur le oui du demandeur du 2026-11-06.
 - **Bloc scope élargi** : `packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md` et sa copie `docs/ia-first/6-limits-and-tool-compatibility.md`, limite hors cadre répondue « Traiter maintenant » au sondage `drwil-limite` du 2026-11-07 : la matrice de compatibilité marquait encore « not tested » l'essai réel d'attestation par le chat sous Claude Code, fait au lot 1 ; puis `outils/banc-agents.test.mjs` (test de QUA-063), qui exigeait « not tested » pour les cinq outils, ajusté pour accepter l'essai daté et versionné de Claude Code, les quatre autres outils restant « not tested ».
 - **Intention d'origine** : notes du 2026-11-05 (refus du sondage sous Claude Code, terminal relayé seul) et du 2026-11-06 (`verify --agent` sans sondage, aucune recette) de `docs/intentions/notes.md`, entièrement couvertes, résumées ici et retirées.
-- **Limites connues** : aucune notée en intention. Essais réels sous Copilot CLI, Gemini CLI, Codex et Cursor toujours à faire (`docs/intentions/attestation-chat-essais-reels.md`). L'intention « sondage d'attestation refusé sous Claude Code », couverte par le lot 1, est hors du bloc scope et n'a pas été retirée : à retirer au prochain cadrage.
+- **Limites connues** : aucune notée en intention. Essais réels sous Copilot CLI, Gemini CLI, Codex et Cursor toujours à faire (`docs/intentions/essais-reels-en-attente.md` (partie « ex-attestation-chat-essais-reels »)). L'intention « sondage d'attestation refusé sous Claude Code », couverte par le lot 1, est hors du bloc scope et n'a pas été retirée : à retirer au prochain cadrage.
 - **Réouverture** (2026-11-07, CI rouge de la PR #374) : `kit-tests` attendait « Never run `drwil attest` » dans le skill `drwil`, que le lot 2 avait fait précéder de « Never answer the poll » ; la phrase est rétablie en tête, les deux interdictions gardées, le test de QUA-267 suit le nouvel ordre. Aucune règle changée.
 - **Clôturé par** : la branche `workstream/attestation-par-sondage-d-abord`.
 
@@ -4241,7 +4241,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Décisions clés** : D1 à D3 et D6 de la fiche ; un CI sans marqueurs tel qu'installé (empreinte du manifeste) est remis au gabarit sans question ; confirmé, il est remplacé par le gabarit à zone vide (les étapes du projet ne sont pas replacées dans la zone) ; hors terminal, il reste intact et l'avertissement dit quoi relancer.
 - **Critères et preuves** : QUA-282, QUA-283, tests de `packages/drwil/test/montee-de-version.test.mjs` (jeu d'essai de type `drwil_walk` sur les deux forges). `GOVERNANCE: PASS` à la clôture.
 - **Bloc scope élargi** : `packages/drwil/src/ci-zone.ts` (module nouveau, plafond de 200 lignes de QUA-001), `packages/drwil/src/index.ts` et `packages/drwil/src/config.ts` (confirmation transmise à `init`), `docs/architecture.md` (carte, QUA-040).
-- **Intention d'origine** : `docs/intentions/montee-de-version-sure.md`, mise à jour (reste ouverte : la suite `docs/projects/journal.md`).
+- **Intention d'origine** : intention « une montée de version du kit qui ne rétrograde rien », couverte et supprimée le 2026-11-13, mise à jour (reste ouverte : la suite `docs/projects/journal.md`).
 - **Limites connues** : essai final sur `drwil_walk` à lancer par le demandeur (risque HIGH) ; le CI confirmé perd ses étapes propres au lieu de les replacer dans la zone ; `resolve-drift` (et son `.bak`) subsiste jusqu'à la suite ; la CI du dépôt n'est pas rejouée sur son propre fichier à zones (marqueurs posés autour de `kit-tests` et `matrice-os`). Test `packages/drwil/test/serve.test.mjs` (QUA-272) vu en échec une fois sur `EADDRINUSE` (port 4680) pendant le lot 1, non reproduit ensuite : instable, non traité ici.
 - **Clôturé par** : la branche `workstream/montee-de-version-sure`.
 

@@ -4,7 +4,7 @@
 **Risque** : HIGH
 **Maturité** : prêt
 **Intention** : `docs/audit-risques.md` (RSK-2, RSK-8, RSK-9) et `docs/decouverte-valeur.md` (OPT-3), scans du
-2026-11-12 ; `docs/intentions/attestation-chat-essais-reels.md`
+2026-11-12 ; `docs/intentions/essais-reels-en-attente.md` (partie « ex-attestation-chat-essais-reels »)
 
 <!-- scope
 files:
@@ -57,7 +57,7 @@ préparés (QUA-067, QUA-092) ont été refusés « sans raison lisible », puis
 - Les adaptateurs de Copilot CLI, Gemini CLI, Codex et le client ACP de Cursor (`.claude/hooks/portable-attest.mjs`,
   `.claude/hooks/attest-adapters.mjs`, `packages/drwil/src/cursor-acp.ts`) : à aligner à part si le défaut s'y retrouve.
 - Le moteur d'attestation (`packages/drwil/src/attest.ts`) et le format de l'attestation version 4.
-- Un essai interactif réel (`docs/intentions/attestation-chat-essais-reels.md`).
+- Un essai interactif réel (`docs/intentions/essais-reels-en-attente.md` (partie « ex-attestation-chat-essais-reels »)).
 
 ## 3. Contraintes
 

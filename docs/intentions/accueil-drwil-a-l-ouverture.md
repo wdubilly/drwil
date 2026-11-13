@@ -2,6 +2,8 @@
 
 **Statut** : proposée le 2026-10-27 — demande de l'humain.
 
+**Revu le 2026-11-13** : toujours ouverte. QUA-277 (`drwil serve` démarré à l'ouverture d'une session) a livré le canal gratuit sous Claude Code : `.claude/hooks/serve-welcome.mjs` envoie le lien par `systemMessage`, vu de l'humain seul, jamais du modèle. L'accueil lui-même (activité, fiche active, attente, commandes utiles) n'existe pas encore ; Copilot CLI n'a toujours pas ce canal.
+
 ## Besoin
 
 À l'ouverture d'une session, afficher un accueil drwil : où en est le projet
