@@ -3,7 +3,7 @@
 **Statut** : cadré le 2026-11-09 ; décisions D1 à D6 tranchées le 2026-11-09 ; relu et rangé en 0.11.2 le 2026-11-11 (chantier 4 sur 8).
 **Risque** : HIGH
 **Maturité** : prêt
-**Intention** : `docs/intentions/notes.md` (note du 2026-11-09 « Rendre le découpage en tranches systématique pour l'adoptant ») ; suite de `docs/intentions/ci-rapide-epreuves-reelles.md`
+**Intention** : `docs/intentions/notes.md` (note du 2026-11-09 « Rendre le découpage en tranches systématique pour l'adoptant ») ; suite de `docs/intentions/essais-reels-en-attente.md` (partie « ex-ci-rapide-epreuves-reelles »)
 
 <!-- scope
 files:

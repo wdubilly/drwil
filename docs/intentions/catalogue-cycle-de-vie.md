@@ -1,42 +1,28 @@
 # Intention : un catalogue de contrats couvrant le cycle de vie logiciel
 
-**Statut** (2026-10-13) : à cadrer — questions 1, 2, 4, 5, 7 et 9
-tranchées, question 3 reportée à la vague 7, table de correspondance
-validée ligne par ligne, découpage en trois fiches décidé (voir
-« Décisions prises (demandeur, 2026-10-13) »). Restent : validation
-explicite de l'intention, critère de sortie mesurable de chaque fiche et
-points ouverts 10 à 14 (côté utilisateur).
+**Statut** (2026-10-13) : à cadrer — questions 1, 2, 4, 5, 7 et 9 tranchées, question 3 reportée à la phase produit,
+table de correspondance validée ligne par ligne, découpage en trois fiches décidé (voir « Décisions prises
+(demandeur, 2026-10-13) »). Restent : validation explicite de l'intention, critère de sortie mesurable de chaque fiche
+et points ouverts 10 à 14 (côté utilisateur).
 
-**Revu le 2026-10-16** : l'« Existant » du 2026-10-11 compte 11 contrats ;
-le registre en a 23 (QUA-021 à QUA-031 nés des chantiers de
-non-régression, d'ID et de règles métier). Le fond de l'intention reste
-valable (vague 5).
+**Revu le 2026-11-13** : condensée au ménage — les options proposées pour les questions déjà tranchées et l'existant
+du 2026-10-11 sont résumés ; texte intégral : `git log --follow -- docs/intentions/catalogue-cycle-de-vie.md`.
+L'annexe (catalogue v1.0 tel que soumis) est gardée telle quelle : c'est la matière première des trois fiches, citée
+par l'index. Toujours vivante, rien de construit : pas de JSON canonique, pas de statut NOT_APPLICABLE. Devenu faux :
+le registre compte 281 contrats (11 le 2026-10-11, 23 le 2026-10-16) et le catalogue 16 ; `drwil contracts adopt`
+adopte un contrat du catalogue dans le registre Markdown et `drwil contracts add` écrit le squelette d'un contrat
+propre au projet (chantier « commande de contrat », 2026-11-05) — la décision Q4 (registre JSON, `contracts add <ID>`
+pour adopter) est à relire avec la fiche 1. Revues précédentes : le 2026-10-16 (le fond reste valable) ; le
+2026-10-22, les garanties obligatoires d'un projet gouverné (couverture à 100 %, e2e des chemins critiques, forge
+protégée, présentation du projet) sont **hors de l'adaptation au risque** : la fiche 2 (profils, Q9) ne peut ni les
+alléger ni les retirer (décision du demandeur, chantier « garanties obligatoires à l'adoption »).
 
-**Revu le 2026-10-22** : le chantier « garanties obligatoires à
-l'adoption » (journal du 2026-10-22) tranche, par décision du demandeur du
-2026-10-22, que les garanties obligatoires d'un projet gouverné — couverture
-à 100 % (cliquet et couverture du diff sur un projet existant), e2e des
-chemins critiques, forge protégée, présentation du projet — sont **hors de
-l'adaptation au risque** : la fiche 2 (profils par risque, Q9) ne peut ni les
-alléger ni les retirer, quel que soit le profil. Le reste de l'intention
-reste vivant.
+**Projet** : DRWIL — **Niveau de risque** : HIGH (change la source de vérité des contrats, le moteur de vérification
+et le livrable).
 
-**Projet** : DRWIL — **Niveau de risque** : HIGH (change la source de
-vérité des contrats, le moteur de vérification et le livrable).
-
-Lecture : chaque section dit si elle porte des **faits vérifiés** (relus
-dans le dépôt le 2026-10-11, source citée), des **décisions prises**
-(datées, par le demandeur) ou des **propositions** (de l'agent, à
-arbitrer). Une proposition n'engage rien tant qu'elle n'est pas devenue
-une décision.
-
-Notation : les identifiants du catalogue proposé (« Catalogue des contrats
-de gouvernance logicielle », version 1.0, soumis le 2026-10-11) sont
-préfixés `v1:` (ex. v1:SEC-002). Sans ce préfixe, un identifiant désigne
-un contrat du registre actuel, `docs/contracts.md`. Les deux espaces se
-chevauchent (v1:SEC-001 n'est pas SEC-001) : le préfixe évite toute
-confusion, y compris pour le contrôle des références (QUA-011, doc jamais
-fausse).
+Notation : les identifiants du catalogue proposé (« Catalogue des contrats de gouvernance logicielle », version 1.0,
+soumis le 2026-10-11) sont préfixés `v1:` (ex. v1:SEC-002) ; sans ce préfixe, un identifiant désigne un contrat du
+registre, `docs/contracts.md`. Les deux espaces se chevauchent (v1:SEC-001 n'est pas SEC-001).
 
 ## Besoin
 
@@ -136,63 +122,20 @@ y compris quand elle s'écarte de la recommandation de l'agent (signalé).
   2. profils — les quatre niveaux, DOGFOODING, applicabilité ;
   3. adoption — détection et questions à `init`, `drwil contracts add`.
 
-## Existant (faits vérifiés le 2026-10-11)
+## Existant
 
-### Registre actuel
+Relevé le 2026-10-11, résumé au ménage du 2026-11-13 (les chiffres ont changé, voir la revue en tête) :
 
-`docs/contracts.md`, forme sections (ADR-001 de
-la fiche V0.2, close : `docs/projects/journal.md`, « Fiche close : drwil V0.2 » ; ce fichier est
-aujourd'hui la source canonique) : 11 contrats — SEC-001, SEC-006,
-SEC-007, QUA-004, QUA-011, QUA-013, QUA-015, QUA-016, QUA-017, QUA-018,
-QUA-019. Champs lus par `.githooks/contracts.mjs` : Règle, Contrôle,
-Manuel, Sévérité.
-
-- **Statuts produits par `drwil verify`** : PASS, FAIL, ERROR, MANUAL,
-  ATTESTED (attestation humaine par `drwil attest`, empreinte du
-  contrat). Un contrôle non exécuté donne ERROR, jamais PASS (test
-  « verify : outil indisponible (contrôle non exécuté) → ERROR, jamais
-  PASS » de `packages/drwil/test/kit.test.mjs`). Le moteur
-  (`.githooks/engine.mjs`) distingue en interne ok, echec, non-execute
-  et non-applicable.
-- **Sévérités** : bloquant, avertissement, indicatif (DRWIL-020,
-  `SEVERITES` dans `.githooks/contracts.mjs`) ; seuls les contrats
-  bloquants décident du verdict de `verify`.
-- **Catalogue existant** : `docs/contracts-catalog.md`, 15 contrats
-  préfixés `catalogue:` (non installés, adoptés un par un).
-
-### QUA-018 (vérifié pour établir sa correspondance)
-
-Introduit le 2026-10-05 par le commit `1b5e9a9` (« docs: contrat
-QUA-018, distinguer drwil-le-dépôt de drwil-le-livrable »), dans
-`docs/contracts.md`. Règle : ce dépôt a deux casquettes, le dépôt et le
-livrable ; si une demande ne précise pas laquelle est visée, l'IA le
-demande avant d'agir. Preuve humaine (Manuel : appréciation
-contextuelle). Raison : un changement fuyait du dépôt vers le gabarit
-(job CI de release). Absent du gabarit : jamais livré aux clients.
-
-### Mécanismes en place utiles au catalogue
-
-- Hooks : pre-commit, pre-push et CI rejouent les mêmes contrôles par un
-  moteur unique (ADR-003) ; report des contrôles hors de leurs chemins au
-  seul pre-commit ; budget de temps au commit d'un projet équipé
-  (1 500 ms, test « budget de temps » du kit).
-- `drwil verify --json` (format stable, DRWIL-004), `drwil doctor`
-  (DRWIL-010), aperçu d'`apply` sans écriture (DRWIL-011), manifeste des
-  fichiers installés avec sha256, détection de dérive, `uninstall` en
-  simulation par défaut (fichier modifié conservé).
-- Forge de **ce dépôt** (`.github/ruleset-master.json`, vérifié en CI) :
-  checks `checks` et `kit-tests` (3 OS) exigés, aucun contournement,
-  suppression et réécriture d'historique interdites. **Mais** :
-  0 approbation exigée et revue des CODEOWNERS non imposée
-  (`require_code_owner_review: false`) ; `.github/CODEOWNERS` existe
-  sans être obligatoire.
-- Couverture : QUA-004 (`couverture-tests`, `couverture-hooks`), hooks à
-  100 % avec seuil bloquant depuis le 2026-10-11.
-- **Absents** : aucun lint ni formateur déclaré ; aucun audit de
-  dépendances (SEC-006 le dit : « écart à outiller ») ; aucun champ
-  `engines` dans `packages/drwil/package.json` ; aucune porte avant
-  `npm publish` (seul `prepack` lance le build) ; la publication npm
-  elle-même reste à décider (`docs/intentions/packager-kit-ia-first.md`).
+- **Statuts de `drwil verify`** : PASS, FAIL, ERROR, MANUAL, ATTESTED ; un contrôle non exécuté donne ERROR, jamais
+  PASS (QUA-013). Le moteur (`.githooks/engine.mjs`) distingue en interne ok, échec, non exécuté et non applicable.
+- **Sévérités** : bloquant, avertissement, indicatif (DRWIL-020) ; seuls les contrats bloquants décident du verdict.
+- **QUA-018** (périmètre dépôt drwil ou livrable gabarit) : introduit le 2026-10-05 (commit `1b5e9a9`), preuve
+  humaine, absent du gabarit, jamais livré aux clients.
+- **Mécanismes utiles au catalogue** : moteur unique pour pre-commit, pre-push et CI ; `verify --json` (format stable,
+  DRWIL-004), `doctor`, aperçu d'`apply`, manifeste sha256 et dérive, `uninstall` simulé ; forge de ce dépôt protégée
+  par un ruleset vérifié en CI (mais 0 approbation exigée, revue des CODEOWNERS non imposée) ; couverture QUA-004.
+- **Absents le 2026-10-11** : lint et formateur, audit des dépendances (SEC-006 MANUAL), champ `engines`, porte avant
+  `npm publish` ; publication npm à décider (`docs/intentions/packager-kit-ia-first.md`).
 
 ## Correspondance du registre actuel (validée ligne par ligne le 2026-10-13, établie sur le contenu)
 
@@ -366,80 +309,12 @@ et doit le déclarer (v1:X-010).
 
 ## Questions à trancher
 
-Tranchées le 2026-10-13, sauf la question 3, reportée à la vague 7 :
-réponses dans « Décisions prises (demandeur, 2026-10-13) ». Les options
-ci-dessous restent comme trace des choix proposés.
+Les questions 1 à 9 sont tranchées (le 2026-10-11 pour 6 et 8, le 2026-10-13 pour les autres), sauf la question 3,
+**porte avant `npm publish`**, reportée à la phase produit et tranchée avec la fiche de publication
+(`docs/intentions/packager-kit-ia-first.md`) : `prepublishOnly` local, publication depuis la CI seule (tag,
+environnement protégé, approbation humaine, provenance npm), ou les deux. Les réponses sont dans « Décisions prises » ;
+les options A, B, C proposées pour chacune sont dans l'historique git.
 
-1. **Statuts : NOT_VERIFIED face à MANUAL et ATTESTED.**
-   - A. Garder les statuts de drwil ; NOT_VERIFIED du catalogue devient
-     MANUAL (en attente d'un humain) ou ERROR (contrôle impossible).
-     Conséquence : aucune rupture de `verify --json` (DRWIL-004) ; deux
-     vocabulaires à documenter.
-   - B. Adopter les cinq statuts du catalogue et ajouter ATTESTED.
-     Conséquence : rupture du format JSON (version du schéma montée,
-     migration des intégrations) ; NOT_VERIFIED mélange « humain
-     attendu » et « outil absent », que drwil distingue aujourd'hui.
-   - C. Union versionnée : PASS, FAIL, ERROR, MANUAL, ATTESTED,
-     NOT_APPLICABLE ; NOT_VERIFIED réservé au rapport. Conséquence :
-     schéma versionné, compatibilité ascendante possible.
-2. **Sévérité et applicabilité séparées.**
-   - A. Sévérité : bloquant, avertissement, indicatif (DRWIL-020) ;
-     applicabilité dans un champ distinct (profil, pile détectée,
-     chemins). CONDITIONNEL disparaît ; MAJEUR correspond à
-     avertissement, MINEUR à indicatif. Conséquence : aucun changement
-     du moteur pour la sévérité.
-   - B. BLOQUANT, MAJEUR, MINEUR plus applicabilité. Conséquence :
-     MAJEUR (« dans le délai convenu ») exige un champ d'échéance et un
-     mécanisme (avertissement qui devient bloquant à la date) : nouveau
-     comportement à concevoir et à tester.
-   - C. Les quatre niveaux tels quels. Conséquence : deux axes mêlés,
-     un contrat CONDITIONNEL n'a pas de sévérité une fois actif.
-3. **Porte avant `npm publish`** (dépend de la décision de publication,
-   `docs/intentions/packager-kit-ia-first.md`).
-   - A. Script `prepublishOnly` qui lance tests et `verify`.
-     Conséquence : simple, mais contournable (`--ignore-scripts`) et
-     local.
-   - B. Publication seulement depuis la CI, sur tag, environnement
-     protégé et approbation humaine, avec provenance npm. Conséquence :
-     robuste et traçable ; demande un secret npm, un environnement
-     GitHub et la protection de la forge.
-   - C. A et B : A comme filet local, B comme seule autorité.
-     Conséquence : coût de B, plus un retour rapide en local.
-4. **Le registre client face au JSON.** Aujourd'hui un projet adopte un
-   contrat en recopiant une ligne dans `docs/contracts.md`
-   (`docs/recipes/adopt-the-kit.md`). JSON canonique : le client
-   édite-t-il le JSON (commande `drwil` d'adoption) ou garde-t-il un
-   Markdown local, régénéré ? Conséquence directe sur l'expérience
-   d'adoption et sur le principe « une information, une seule source ».
-5. **Collisions d'ID** : v1:SEC-001 (modèle de menace), v1:SEC-006
-   (injection) et v1:SEC-007 (chiffrement) n'ont pas le sens de SEC-001,
-   SEC-006 et SEC-007 du registre. Renuméroter les
-   nouveaux (jamais les historiques) ou les espacer par domaine
-   (ex. SEC-1xx) ?
-6. ~~Phrase interrompue sur la génération du Markdown~~ — tranchée le
-   2026-10-11 : divergence bloquante en CI (voir « Décisions prises »).
-7. **Doublons** : valider la fusion des six identiques et l'arbitrage de
-   chaque inclusion.
-8. ~~Correspondance de QUA-018~~ — tranchée le 2026-10-11 : règle locale
-   du profil DOGFOODING (voir « Décisions prises »).
-9. **Profils par risque du produit** (ajouté par le demandeur le
-   2026-10-11 : « une page HTML n'a pas les mêmes contraintes qu'un
-   logiciel bancaire »). Les trois profils (section 20) décrivent surtout
-   le *type* de dépôt ; proposition : un axe de **risque du produit** —
-   ce que coûte une erreur en production — qui choisit les contrats
-   applicables et leur sévérité :
-   - **LÉGER** (nouveau) : page statique, prototype, outil interne
-     jetable ; socle minimal (v1:SEC secrets, v1:GIT, v1:TST de base),
-     le reste en indicatif ;
-   - **CLIENT-STANDARD** : application métier courante ;
-   - **CLIENT-RENFORCE** : argent, santé, données sensibles, conformité
-     (le logiciel bancaire) ;
-   - **DOGFOODING** reste à part : il qualifie un dépôt qui produit un
-     paquet, et se cumule avec un niveau de risque.
-   À trancher : nombre de niveaux, choix du profil (déclaré à `init`,
-   questions posées par `drwil`, ou détecté puis confirmé), et le lien
-   avec les niveaux de risque des fiches (DRWIL-012), qui notent un
-   chantier et non le produit.
 
 ### Points ouverts côté utilisateur (ajoutés le 2026-10-13)
 
@@ -513,21 +388,16 @@ Aucune implémentation ne commence avant que **tous** soient remplis :
 - [ ] [IA] Fiche `docs/projects/` créée, avec bloc `cadrage` (fichiers
   listés), niveau de risque HIGH, section Décisions et contrats
   concernés.
-- [ ] [humain] Fiche lancée par le demandeur (`/drwil-lancer`).
+- [ ] [humain] Fiche lancée par le demandeur (`/drwil-start`).
 
 ## Liens
 
-- `docs/contracts.md` : registre actuel (11 contrats), source canonique
-  à ce jour.
-- `docs/contracts-catalog.md` : catalogue existant (15 contrats
-  `catalogue:`).
-- `docs/intentions/forge-dans-le-livrable.md` : forge (v1:GIT-003,
-  v1:HOOK-014) dans le livrable.
-- `docs/projects/journal.md`, « Intentions closes : livrable en anglais,
-  non-régression continue » : v1:TST-004.
-- `docs/intentions/packager-kit-ia-first.md` : publication npm
-  (question 3).
-- `docs/projects/journal.md` : couverture des hooks (2026-10-11).
+- `docs/contracts.md` : registre du dépôt, source canonique à ce jour.
+- `docs/contracts-catalog.md` : catalogue existant (contrats `catalogue:`).
+- `docs/intentions/forge-dans-le-livrable.md` : forge (v1:GIT-003, v1:HOOK-014) dans le livrable.
+- `docs/intentions/packager-kit-ia-first.md` : publication npm (question 3).
+- `docs/projects/journal.md`, « Intentions closes : livrable en anglais, non-régression continue » : v1:TST-004.
+
 
 ## Annexe — catalogue v1.0 tel que soumis (2026-10-11)
 

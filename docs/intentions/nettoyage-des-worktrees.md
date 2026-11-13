@@ -13,6 +13,8 @@ Un worktree créé au lancement (`../<dépôt>-<fiche>`) reste sur le disque apr
 - **branches fusionnées supprimées**, locales et distantes (le nettoyage actuel n'a lieu qu'au prochain `start` ou `next`, QUA-048) ;
 - **fermeture du worktree** : retrait depuis le dossier principal, jamais depuis le worktree lui-même ; la session de l'agent qui y travaille est d'abord terminée, l'agent finissant par dire à l'humain que le chantier est fusionné et que le worktree sera retiré.
 
+Note du 2026-11-09, reprise de `docs/intentions/notes.md` au ménage du 2026-11-13 : (0.13.0) Fin de chantier : après la fusion de la PR, le kit laisse l'humain sur la branche workstream/<fiche> fusionnée et le master local en retard (aucun outil ne fait git switch/pull ; start coupe depuis origin/master via createBranch, worktree.mjs, QUA-179, sans toucher au master local). À cadrer : au start (ou au retour en SCOPING constaté), revenir sur master et le mettre à jour (ff-only), puis supprimer la branche locale fusionnée par git branch -d (refus si non fusionnée), jamais la branche distante, rien dans un worktree ; refuser si l'arbre n'est pas propre. Constat de session du 2026-11-09.
+
 ## Existant
 
 Relevé le 2026-10-26 : la recette `docs/recipes/working-with-branches.md` indique le nettoyage à la main (`git worktree remove`) ; aucun outil ne le fait, et la suppression des branches fusionnées (QUA-048) ne retire pas le dossier. Relevé le 2026-10-26 (chantier « une file en parallèle ») : une file parallèle (QUA-147) laisse jusqu'à N worktrees à retirer d'un coup.

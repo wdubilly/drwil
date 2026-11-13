@@ -2,6 +2,8 @@
 
 **Statut** : proposée le 2026-10-25 — regroupement de 6 intentions lors du ménage du 2026-10-25 ; chaque partie reprend l'une d'elles, avec son statut d'origine.
 
+**Revu le 2026-11-13** : ménage — regroupe ici les intentions « controles-sautes-dits-non-executes », « tests-de-mutation-et-relecture-exigee », « contrats-a-aligner-apres-controles-en-ci », « e2e-et-attestation-precises », chacune avec son statut d'origine ; leur existant est repris à sa date, non revérifié.
+
 ## Besoin
 
 Le chantier « garanties obligatoires à l'adoption » (2026-10-22) a laissé ses suites en intentions séparées : imposer les garanties dès `init`, bloquer ce qui ne les tient pas, les rendre lisibles dans `verify --agent`, y soumettre le dépôt drwil lui-même. Elles décrivent une même mécanique et se cadrent ensemble.
@@ -84,6 +86,56 @@ avertissements permanents finissent par ne plus être lus.
 
 - 2026-10-23 — Désinstallation : après drwil guarantees --protect (contrôle checks requis, enforce_admins), uninstall retire le workflow de CI sans toucher la forge, donc toute PR vers la branche principale reste bloquée sur un contrôle qui ne vient plus. uninstall devrait au moins le signaler (et la doc Uninstalling du README le dire) ; piste : proposer la commande gh qui lève la protection, avec l'accord de l'humain.
 
+### un contrôle exigé qui n'a pas tourné ne se rapporte jamais comme réussi (ex-« controles-sautes-dits-non-executes »)
+
+Statut d'origine : proposée le 2026-11-09 — issue d'une analyse externe de la gouvernance, relevés à vérifier avant tout cadrage.
+
+Le principe du kit est « non exécuté ne vaut jamais réussi » (QUA-013). Vue de la forge, deux sauts le contredisent :
+les jobs `kit-tests` sous Windows et macOS d'une PR sont rapportés réussis sans exécuter les tests, et sur la
+branche principale le contrôle `checks` se termine en quelques secondes quand l'arbre a déjà été prouvé par une PR.
+Le demandeur veut que la forge voie « non exécuté » (ou que le job sauté ne porte pas le nom d'un contrôle exigé).
+
+### prouver que les tests des contrats critiques échoueraient si la règle était violée, et exiger une relecture (ex-« tests-de-mutation-et-relecture-exigee »)
+
+Statut d'origine : proposée le 2026-11-09 — issue d'une analyse externe de la gouvernance, relevés à vérifier avant tout cadrage.
+
+Chaque contrat pointe vers des tests identifiés par son numéro, mais rien ne vérifie qu'un test trop faible échouerait
+si la règle était violée. De plus le ruleset de la forge exige 0 approbation : dans un dépôt solo, la séparation entre
+celui qui produit et celui qui valide repose sur la discipline du demandeur. Le demandeur veut quelques tests de
+mutation sur les contrats de sécurité et d'attestation, et peser une relecture exigée en nombre.
+
+### aligner QUA-196 et la couverture du diff sur les contrôles confiés à la CI (ex-« contrats-a-aligner-apres-controles-en-ci »)
+
+Statut d'origine : proposée le 2026-11-07 — limite du chantier « un contrôle lent se joue une seule fois, en CI » (journal du 2026-11-07).
+
+- QUA-196 (la recette d'adoption renvoie à la définition de l'e2e sans la recopier) : son texte ne nomme ni la compétence d'adoption ni `runAt: ["ci"]`, que son test éprouve désormais. L'amender est une modification de contrat (oui du demandeur).
+- `couverture-diff` est confié à la CI dans `.drwil/ia-first.json`, mais aucun contrat ne le cite : `drwil verify` ne le nomme pas parmi les contrôles en attente de la CI (sa note en cite quatre, `run-checks` cinq).
+
+### préciser ce que prouvent l'e2e et l'attestation (ex-« e2e-et-attestation-precises »)
+
+Statut d'origine : traitée en grande partie le 2026-10-30 (définition de l'e2e par forme de projet, niveaux de garantie de l'attestation : `QUA-195`, `QUA-196`, `QUA-197`). Reste la seule option d'identité forte pour une équipe (commits signés, revue GitHub authentifiée), non faite : décision du 2026-10-30, seule la documentation des niveaux est livrée.
+
+**Revu le 2026-11-05** : la première question (définition de l'e2e par forme de projet) est
+tranchée et livrée (QUA-195, QUA-196) ; seule la seconde (identité forte pour une équipe) reste ouverte.
+
+Deux preuves sont à préciser. L'exigence ne change pas : il n'y a ni exception
+ni dérogation aux garanties obligatoires, décision du demandeur du
+2026-10-22.
+
+1. **L'e2e** (`catalog:QUA-020`) : que veut dire « de bout en bout » pour une
+   bibliothèque ou un outil sans interface ? Définition proposée : un parcours
+   complet depuis une interface publique jusqu'au résultat attendu, dans un
+   environnement représentatif, sans doublure sur ce qu'on veut garantir. Pour
+   une bibliothèque, ça veut dire installer le paquet comme un client, appeler
+   son API publique, vérifier les résultats et les erreurs. Pour un service :
+   un parcours à travers son API. Pour une application web : un parcours
+   utilisateur. La forme de la preuve change, pas le niveau d'exigence.
+2. **L'attestation** (`drwil attest`) : elle prouve une action interactive
+   (un terminal, l'ID retapé), liée au texte et à la preuve du contrat. Elle
+   ne prouve pas l'identité : l'auteur vient de la configuration git, qui est
+   déclarative. Il faut distinguer l'identité, l'approbation et la preuve
+   d'exécution.
+
 ## Existant
 
 Relevé dans chaque intention d'origine, à sa date ; non revérifié le 2026-10-25.
@@ -150,6 +202,31 @@ le dépôt dans une copie temporaire puis recopie les fichiers du gabarit,
 sans manifeste ni enregistrement de version. L'avertissement du manifeste
 existait avant le chantier ; celui de la version est nouveau.
 
+### un contrôle exigé qui n'a pas tourné ne se rapporte jamais comme réussi (ex-« controles-sautes-dits-non-executes »)
+
+Relevé par l'analyse externe du 2026-11-09, non revérifié dans le code : sauts assumés et documentés. Les gabarits
+CI et la reprise de verdict d'une PR à l'autre (livrée en 0.11.1, contrats QUA-288 à QUA-291) sont les points à relire.
+
+### prouver que les tests des contrats critiques échoueraient si la règle était violée, et exiger une relecture (ex-« tests-de-mutation-et-relecture-exigee »)
+
+Relevé par l'analyse externe du 2026-11-09, non revérifié dans le code : aucun test de mutation ; ruleset actif sur la
+branche par défaut, qui exige `checks` et les trois `kit-tests`, sans approbation.
+
+### aligner QUA-196 et la couverture du diff sur les contrôles confiés à la CI (ex-« contrats-a-aligner-apres-controles-en-ci »)
+
+Existant (relevé le 2026-11-07) :
+
+- Test de QUA-196 dans `packages/drwil/test/kit.test.mjs` : recette et compétence d'adoption proposent `runAt ["ci"]`, renvoient au catalogue sans le recopier.
+- `.drwil/ia-first.json` : `couverture-diff` en `runAt: ["ci"]` ; note de `drwil verify` : quatre contrôles en attente (`couverture-tests`, `couverture-hooks`, `couverture-claude`, `tarball`).
+
+### préciser ce que prouvent l'e2e et l'attestation (ex-« e2e-et-attestation-precises »)
+
+Existant (relevé le 2026-10-22) :
+
+- `packages/drwil/templates/common/base/docs/contracts-catalog.md` : ligne
+  e2e, sans définition par forme de projet.
+- `packages/drwil/bin/drwil.js` : `attest` exige un terminal interactif.
+
 ## Questions à trancher
 
 - [décision] Découper ce regroupement en lots, chacun vérifiable seul, et choisir le premier.
@@ -195,3 +272,29 @@ existait avant le chantier ; celui de la version est nouveau.
   l'enregistrement de version, comme `init` ?
 - [décision] Ou `doctor` doit-il reconnaître le dépôt drwil (réglage dans
   `.drwil/ia-first.json`) et adapter son conseil ?
+
+### un contrôle exigé qui n'a pas tourné ne se rapporte jamais comme réussi (ex-« controles-sautes-dits-non-executes »)
+
+- [décision] Le saut se dit-il dans le verdict (statut « non exécuté ») ou par un nom de job différent de celui que la
+  forge exige ?
+- [décision] Quel statut une reprise de verdict d'une PR à l'autre doit-elle porter, pour ne pas se confondre avec une passe ?
+- [décision] Windows et macOS : jouer les tests, ou ne plus les exiger sous le nom `kit-tests` ?
+
+### prouver que les tests des contrats critiques échoueraient si la règle était violée, et exiger une relecture (ex-« tests-de-mutation-et-relecture-exigee »)
+
+- [décision] Quels contrats couvrir en premier (attestation, périmètre, rejeu de la CI avec les hooks de la branche principale) ?
+- [décision] Outil de mutation (Stryker ou un petit script maison) et coût en temps de CI ?
+- [décision] Exiger une approbation dans un dépôt solo, ou documenter la limite (niveau de garantie, QUA-197) ?
+
+### aligner QUA-196 et la couverture du diff sur les contrôles confiés à la CI (ex-« contrats-a-aligner-apres-controles-en-ci »)
+
+- [décision] Amender le texte de QUA-196 ?
+- [décision] Rattacher `couverture-diff` à un contrat (QUA-004 ou celui de la couverture du diff), pour que `verify` le compte en attente ?
+
+### préciser ce que prouvent l'e2e et l'attestation (ex-« e2e-et-attestation-precises »)
+
+- [décision] Adopter la définition de l'e2e ci-dessus dans le catalogue et la
+  recette d'adoption ?
+- [décision] Pour une équipe : proposer une identité forte (commits signés,
+  revue GitHub authentifiée) en option, et documenter le niveau de garantie
+  de chaque mode ?

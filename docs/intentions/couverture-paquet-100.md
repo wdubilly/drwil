@@ -7,6 +7,8 @@ Rangement du 2026-10-26 : seule intention de couverture ; reprend la partie « c
 
 **Revu le 2026-10-30** : la cible est tranchée — ordre : mesure complète et cliquet (`docs/projects/journal.md`), puis 100 % du code modifié (`docs/projects/journal.md`), puis le 100 % du paquet, resté ici. Le « 100 % des hooks Claude et du module front » reste à décider quand leur mesure existera. Décisions du demandeur sur le code modifié : lignes et branches qu'elles ouvrent ; exclusions déclarées avec justification ; sans rapport lcov, contrôle non exécuté signalé (QUA-013) ; ce dépôt l'adopte dès le chantier.
 
+**Revu le 2026-11-13** : ménage — regroupe ici l'intention « couverture-hooks-intermittente », chacune avec son statut d'origine ; leur existant est repris à sa date, non revérifié.
+
 ## Besoin
 
 QUA-004 (seuil de couverture de test) vise 100 % pour le paquet
@@ -104,3 +106,24 @@ as you code »).
 ### Limite du contrôle du diff livré le 2026-10-30 (`docs/projects/journal.md`)
 
 Ce dépôt applique `QUA-191` (code modifié couvert à 100 %) à ses seuls hooks `.githooks/*.mjs`, dont c8 produit le rapport lcov. Le paquet `packages/drwil` (TypeScript compilé vers `dist/`, hooks Claude, module front) n'y entre pas : le rapport est mesuré sur `dist/`, pas sur les sources TypeScript du diff. Le rendre mesurable par le contrôle (cartes de sources, ou lcov du paquet fusionné) se décide avec le 100 % du paquet.
+
+## Suites regroupées (ménage du 2026-11-13)
+
+Chaque partie reprend une ancienne intention, avec son statut, son besoin, son existant (à sa date, non revérifié) et ses questions.
+
+### comprendre l'échec intermittent de la couverture des hooks sous charge (ex-« couverture-hooks-intermittente »)
+
+Statut d'origine : proposée le 2026-10-27 — relevé pendant la vérification du chantier de l'`AGENTS.md` court ; cause non diagnostiquée, décision du demandeur de poursuivre sans la chercher.
+
+**Besoin** :
+
+Le contrôle « hooks de gouvernance : tests + couverture » (QUA-004, seuil de couverture de test) a échoué deux fois, lancé par `run-checks` à travers le sous-agent `drwil-checks`, pendant un build de plus de 200 secondes en parallèle : couverture à 96,55 % puis 94,24 % au lieu de 100 %, avec `state-cli`, `state-reopen`, `state-texts` et `worktree` presque non couverts, comme si leurs tests ne s'étaient pas exécutés. Le même contrôle a toujours réussi en passage seul, sur la branche du chantier comme sur la branche principale (`run-checks` complet, `npm run test:hooks:coverage`, y compris sous charge CPU artificielle). Un contrôle qui échoue sans cause connue fait perdre une vérification et pousse à la relancer jusqu'au vert.
+
+**Existant** :
+
+Relevé le 2026-10-27, non diagnostiqué : la sortie complète du test en échec n'a pas été conservée (le dossier temporaire gardé ne contenait que des répertoires de test de `create-release`). Aucun code du chantier n'a touché `.githooks/`.
+
+**Questions** :
+
+- [décision] Faut-il conserver la sortie complète d'un contrôle en échec dans `.drwil/evidence/run-checks.log` (si présent), pour pouvoir diagnostiquer un échec non reproduit ?
+- [décision] Faut-il chercher la cause (concurrence entre le build et les tests des hooks, durée limite, état partagé), et dans quel chantier ?

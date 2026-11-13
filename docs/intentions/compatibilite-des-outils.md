@@ -6,6 +6,8 @@
 « compatibilité », 0.6.7, après la stabilisation 0.6.6) ; découpée en un socle et une fiche par
 outil.
 
+**Revu le 2026-11-13** : ménage — regroupe ici les intentions « compat-codex », « compat-cursor », chacune avec son statut d'origine ; leur existant est repris à sa date, non revérifié.
+
 ## Besoin
 
 drwil se veut agnostique de l'agent, mais seul Claude Code est réellement
@@ -43,8 +45,8 @@ l'humain.
 - le socle (fait, journal du 2026-10-19)
 - Copilot CLI (fait, journal du 2026-10-19)
 - Gemini CLI (fait, journal du 2026-10-19)
-- Codex : `docs/intentions/compat-codex.md` (intention, pas encore une fiche)
-- Cursor : `docs/intentions/compat-cursor.md` (intention, pas encore une fiche)
+- Codex : la partie « ex-compat-codex » ci-dessous (intention, pas encore une fiche)
+- Cursor : la partie « ex-compat-cursor » ci-dessous (intention, pas encore une fiche)
 
 ## Questions à trancher
 
@@ -141,7 +143,7 @@ Copilot CLI, Codex et Cursor n'ont que la consigne écrite d'`AGENTS.md`.
 
 - Gemini CLI et Copilot CLI ont des hooks avant outil (déjà utilisés par
   drwil pour l'état de gouvernance) ; Codex et Cursor : à examiner
-  (`docs/intentions/compat-codex.md`, `docs/intentions/compat-cursor.md`).
+  (la partie « ex-compat-codex » ci-dessous, la partie « ex-compat-cursor » ci-dessous).
 - Aucune promesse au-delà de la consigne écrite tant que le banc ne l'a pas
   prouvée (QUA-060, un outil n'est tenu que prouvé par le banc).
 
@@ -195,3 +197,95 @@ partiels). Les trois preuves (hooks lancés, écriture refusée, rappel reçu) o
 
 - [décision] Faire relancer le banc par le banc lui-même tant que l'agent
   sort en erreur de quota, ou attester sur un compte payant ?
+
+## Suites regroupées (ménage du 2026-11-13)
+
+Chaque partie reprend une ancienne intention, avec son statut, son besoin, son existant (à sa date, non revérifié) et ses questions.
+
+### Codex tenu par la même gouvernance (0.6.7, 4 sur 5) (ex-« compat-codex »)
+
+Statut d'origine : repassée de fiche à intention le 2026-10-19 (demande de l'humain) ; cadrée le 2026-10-18, rien de construit. Fait partie de `docs/intentions/compatibilite-des-outils.md`.
+
+**Besoin** :
+
+Codex lit `AGENTS.md` nativement, mais `init --tools codex` n'installe rien
+de plus : la gouvernance n'y tient que par consignes et par la barrière Git
+au commit. Faire tenir à Codex les quatre points de Claude Code (consignes,
+rappel d'état, blocage avant écriture, lancement) ou déclarer honnêtement
+« consignes et barrière Git seulement ».
+
+**Existant** :
+
+Existant (vérifié le 2026-10-19) :
+
+- Codex n'est pas installé sur le poste : rien n'a été essayé.
+- Le socle, Copilot CLI et Gemini CLI sont faits ; un seul jeu de scripts de
+  hooks sert tous les outils (`.claude/hooks/*.mjs`).
+- Preuve par le banc `outils/banc-agents.mjs` ; résultat attesté par l'humain.
+
+**Critères d'acceptation envisagés** :
+
+- Si Codex offre des hooks : en SCOPING, une écriture de code est refusée avec
+  le motif drwil et le rappel d'état arrive, prouvés par le banc [humain].
+- Sinon : la matrice déclare « consignes et barrière Git seulement », et le
+  banc montre que la barrière refuse le commit d'un fichier de code écrit par
+  Codex en SCOPING [humain].
+
+**Lots envisagés** :
+
+1. Sonde : hooks offerts par Codex, format d'événement, noms des outils
+   d'écriture, mode non interactif.
+2. Déclaration installée par `init --tools codex`, ou déclaration honnête de
+   la limite.
+3. Preuve par le banc ; matrice à jour.
+
+**Questions** :
+
+- [décision] Prérequis humain : installer Codex sur le poste et s'y connecter.
+- [décision] Quand la reprendre en fiche (la version 0.6.7 attend Codex et Cursor) ?
+- Hors périmètre : la file et les sous-agents sous Codex
+  (`docs/intentions/compatibilite-des-outils.md`).
+
+### Cursor tenu par la même gouvernance (0.6.7, 5 sur 5) (ex-« compat-cursor »)
+
+Statut d'origine : repassée de fiche à intention le 2026-10-19 (demande de l'humain) ; cadrée le 2026-10-18, rien de construit. Fait partie de `docs/intentions/compatibilite-des-outils.md`.
+
+**Besoin** :
+
+Pour Cursor, `init` ne livre que des règles
+(`packages/drwil/templates/common/tools/cursor/.cursor/rules/ia-first.mdc`) :
+des consignes, sans rappel d'état ni blocage avant écriture. Faire tenir à
+Cursor les quatre points de Claude Code, ou déclarer honnêtement « consignes
+et barrière Git seulement ».
+
+**Existant** :
+
+Existant (vérifié le 2026-10-19) :
+
+- Cursor est un outil graphique : le banc non interactif ne s'y applique pas
+  tel quel.
+- Le socle, Copilot CLI et Gemini CLI sont faits ; un seul jeu de scripts de
+  hooks sert tous les outils (`.claude/hooks/*.mjs`).
+
+**Critères d'acceptation envisagés** :
+
+- Si Cursor offre des hooks : en SCOPING, une écriture de code est refusée
+  avec le motif drwil, prouvé par le banc (agent en ligne de commande de
+  Cursor, s'il existe) ou par un essai manuel guidé [humain].
+- Sinon : la matrice déclare « consignes et barrière Git seulement » [humain].
+
+**Lots envisagés** :
+
+1. Sonde : hooks offerts par Cursor, agent en ligne de commande, format
+   d'événement.
+2. Déclaration installée par `init --tools cursor`, ou déclaration honnête de
+   la limite.
+3. Preuve (banc ou essai manuel guidé) ; matrice à jour.
+
+**Questions** :
+
+- [décision] Mode de preuve : banc (agent en ligne de commande) ou essai
+  manuel guidé ?
+- [décision] Quand la reprendre en fiche (la version 0.6.7 attend Codex et Cursor) ?
+- Hors périmètre : la file et les sous-agents sous Cursor
+  (`docs/intentions/compatibilite-des-outils.md`).
