@@ -157,8 +157,9 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   showOrigins(results, all, lang);
   const verdict: Verdict = { lang, status, code: CODES[status], contracts: results, errors, unattached };
   verdict.rules = businessRules(results, all, cfg);
-  // Criteria of the active brief and of the closed workstreams (QUA-034, QUA-085), judged outside this file (QUA-001).
-  if (!only) await judgeDurable(verdict, { root, registry, cfg, contracts: all, read: reader.readContracts });
+  // Criteria of the active brief and of the closed workstreams (QUA-034, QUA-085), judged outside this file (QUA-001);
+  // after the guarantees, which set the notices that a criterion of a retired contract adds to (QUA-298).
   if (!only) judgeGuarantees(verdict, root, cfg, all);
+  if (!only) await judgeDurable(verdict, { root, registry, cfg, contracts: all, read: reader.readContracts });
   return verdict;
 }

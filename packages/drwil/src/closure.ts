@@ -2,7 +2,6 @@
 // versioned proof file per workstream (docs/preuves/<workstream>.md); verify replays its criteria
 // afterwards, and names any whose proof has disappeared. Judged without local state: the brief comes
 // from .drwil/state.json when it exists, from the branch's Drwil-Brief trailer otherwise (CI).
-// Split from verify.ts (QUA-001: files under 200 lines).
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
@@ -17,6 +16,7 @@ import {
   readBrief,
   stateBrief,
 } from "./criteria.js";
+import { fill } from "./i18n.js";
 import { CODES, type ContractResult, type Verdict, worst } from "./verify.js";
 
 /** The only setting this module reads: where the closing proofs live. */
@@ -39,8 +39,9 @@ export interface ClosureProof {
   criteria: Criterion[];
 }
 
-/** A criterion of a closed workstream, judged again today against the registry. */
-export interface ProofResult extends CriterionResult {
+/** A criterion of a closed workstream, judged again today; « retired »: its contract was retired (QUA-298). */
+export interface ProofResult extends Omit<CriterionResult, "status"> {
+  status: CriterionResult["status"] | "retired";
   file: string;
   workstream: string;
 }
@@ -109,12 +110,12 @@ export function readProofs(root: string, dir: string = PROOFS_DIR): ClosureProof
 }
 
 /**
- * Criteria of the closed workstreams whose proof has disappeared (QUA-085): a contract left the
- * registry (unknown-proof), lost the check that made it durable (not-durable) or no longer passes
- * (not-pass). A contract awaiting its attestation is not a disappearance: the verdict already says
- * MANUAL, and what is missing is the human's judgement, not the proof.
+ * Criteria of the closed workstreams whose proof has disappeared (QUA-085): a contract left the registry
+ * (unknown-proof), lost the check that made it durable (not-durable) or no longer passes (not-pass). One
+ * awaiting its attestation has not disappeared: the verdict says MANUAL, the human's judgement is missing,
+ * not the proof. A retired contract (QUA-298) is reported « retired », neither a success nor a disappearance.
  */
-export function judgeProofs(proofs: ClosureProof[], contracts: ContractResult[]): ProofResult[] {
+export function judgeProofs(proofs: ClosureProof[], contracts: ContractResult[], retired: ReadonlySet<string> = new Set()): ProofResult[] {
   const broken: ProofResult[] = [];
   for (const proof of proofs) {
     for (const c of proof.criteria) {
@@ -122,7 +123,9 @@ export function judgeProofs(proofs: ClosureProof[], contracts: ContractResult[])
       const status = !c.link
         ? "no-proof"
         : !contract
-          ? "unknown-proof"
+          ? retired.has(c.link)
+            ? "retired"
+            : "unknown-proof"
           : contract.status === "FAIL" || contract.status === "ERROR"
             ? "not-pass"
             : !c.human && contract.checks.length === 0
@@ -168,14 +171,17 @@ export interface DurableContext {
   root: string;
   registry: string;
   cfg: ProofsConfig | undefined;
-  contracts: { id: string; text?: string }[];
+  contracts: { id: string; text?: string; retired?: string | null }[];
   read: (text: string) => { id: string; text?: string }[];
 }
 
-/**
- * What the active brief's criteria and the closed workstreams' proofs do to the verdict (QUA-034,
- * QUA-085): an unproven criterion is a FAIL, before the closing as after it.
- */
+const RETIRED = {
+  fr: "Critères de chantiers clos liés à un contrat retiré (QUA-298), ni succès ni échec : {0}",
+  en: "Criteria of closed workstreams linked to a retired contract (QUA-298), neither success nor failure: {0}",
+} as const;
+
+// What the active brief's criteria and the closed workstreams' proofs do to the verdict (QUA-034,
+// QUA-085): an unproven criterion is a FAIL, before the closing as after it.
 export async function judgeDurable(v: Verdict, ctx: DurableContext): Promise<void> {
   const brief = await briefToJudge(ctx.root);
   if (brief) {
@@ -184,7 +190,11 @@ export async function judgeDurable(v: Verdict, ctx: DurableContext): Promise<voi
     const fromCriteria = criteriaVerdict(v.criteria ?? []);
     if (fromCriteria) v.status = worst([v.status, fromCriteria]);
   }
-  v.proofs = judgeProofs(readProofs(ctx.root, proofsDir(ctx.cfg)), v.contracts);
+  const retired = new Set(ctx.contracts.filter((k) => k.retired).map((k) => k.id));
+  const replayed = judgeProofs(readProofs(ctx.root, proofsDir(ctx.cfg)), v.contracts, retired);
+  v.proofs = replayed.filter((c) => c.status !== "retired");
+  const gone = replayed.filter((c) => c.status === "retired").map((c) => `${c.workstream} « ${c.text} » (${c.link})`);
+  if (gone.length) v.notices = [...(v.notices ?? []), fill(RETIRED[v.lang], gone.join(", "))];
   if (v.proofs.length) v.status = worst([v.status, "FAIL"]);
   v.code = CODES[v.status];
 }

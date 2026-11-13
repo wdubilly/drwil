@@ -23,6 +23,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { init, uninstall, verify, formatVerdict, verdictJson, doctor, previewInit, formatPreview, attest } from "../dist/index.js";
 import { criteriaTable, evaluateCriteria, redact, writeEvidence } from "../dist/verify.js";
 import { verifyFailed } from "../dist/failed.js";
+import { judgeDurable } from "../dist/closure.js";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les projets de test (et leurs hooks) sur le dépôt qui lance la suite.
@@ -3492,6 +3493,47 @@ test("QUA-298 : verify ne juge jamais un contrat retiré (ni PASS, ni attestable
     [["QUA-002", "ERROR"]],
   );
   assert.match(v.contracts[0].reasons.join(), /champ Retiré mal formé « un jour\. »/);
+});
+
+test("QUA-298 : un critère d'une preuve de clôture lié à un contrat retiré est rapporté « retiré », ni succès ni échec, et verify le dit", async () => {
+  const retire = contrat("QUA-002", "**Retiré** : 2026-11-13 — remplacé par QUA-001.");
+  const dir = await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + retire);
+  mkdirSync(join(dir, "docs/preuves"), { recursive: true });
+  const ligne = (texte, id) => `| ${texte} | \`${id}\` | — | — |\n`;
+  const tableau = `| Critère | Contrat | Contrôle | Empreinte |\n|---|---|---|---|\n`;
+  writeFileSync(
+    join(dir, "docs/preuves/ancien.md"),
+    `# Preuve\n\n${tableau}${ligne("Règle retirée", "QUA-002")}${ligne("Règle vivante", "QUA-001")}`,
+  );
+  let v = await verify({ targetDir: dir });
+  assert.deepEqual([v.status, v.proofs], ["PASS", []], "ni échec ni preuve disparue");
+  assert.match((v.notices ?? []).join(), /contrat retiré \(QUA-298\), ni succès ni échec : ancien « Règle retirée » \(QUA-002\)/);
+  assert.match(formatVerdict(v), /ancien « Règle retirée » \(QUA-002\)/);
+  assert.doesNotMatch(formatVerdict(v), /Règle vivante/, "un critère prouvé n'est jamais signalé");
+  const seul = { lang: "en", status: "PASS", code: 0, contracts: v.contracts, errors: [], unattached: [] };
+  await judgeDurable(seul, {
+    root: dir,
+    registry: "docs/contracts.md",
+    cfg: undefined,
+    contracts: [{ id: "QUA-002", retired: "x" }],
+    read: () => [],
+  });
+  assert.deepEqual(
+    [seul.status, seul.notices],
+    [
+      "PASS",
+      [
+        "Criteria of closed workstreams linked to a retired contract (QUA-298), neither success nor failure: ancien « Règle retirée » (QUA-002)",
+      ],
+    ],
+  );
+  writeFileSync(join(dir, "docs/preuves/ancien.md"), `# Preuve\n\n${tableau}${ligne("Règle effacée", "QUA-009")}`);
+  v = await verify({ targetDir: dir });
+  assert.deepEqual(
+    [v.status, v.proofs.map((c) => [c.link, c.status])],
+    ["FAIL", [["QUA-009", "unknown-proof"]]],
+    "absent du registre : toujours un échec",
+  );
 });
 
 test("verify : ERROR (exit 2) pour un contrôle inconnu, une obligation invérifiable ou un doublon ; FAIL l'emporte", async () => {
