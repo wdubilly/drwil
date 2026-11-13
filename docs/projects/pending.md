@@ -137,10 +137,14 @@ d'un outil) la dit dans son statut.
 
 - [ ] [IA] [P0] (0.11.2) Un chantier se mène dans la session principale, sans sous-agent (cadré le 2026-11-12) —
   `docs/projects/fin-des-sous-agents-de-chantier.md`.
-- [ ] [IA] [P0] (0.11.2) Le suivi de PR attend que la CI apparaisse avant de la dire absente (cadré le 2026-11-13) —
-  `docs/projects/pr-watch-attend-la-ci.md`.
+- [ ] [IA] [P0] (0.11.2) Le suivi de PR ne dit « verte » que sur la CI de la PR, qu'il attend si elle tarde (cadré le
+  2026-11-13) — `docs/projects/pr-watch-attend-la-ci.md`.
 - [ ] [IA] [P0] (0.11.2) La fusion automatique est le comportement par défaut, sans sondage, après le support GitLab
   (cadré le 2026-11-12) — `docs/projects/fusion-automatique-par-defaut.md`.
+- [ ] [IA] [P0] (0.11.2) Le refus du sondage d'attestation dit sa cause et se rejoue (cadré le 2026-11-13) —
+  `docs/projects/refus-d-attestation-lisible.md`.
+- [ ] [IA] [P0] (0.11.2) La ligne « Unreleased » du changelog s'écrit en fin de BUILD (cadré le 2026-11-13) —
+  `docs/projects/unreleased-en-fin-de-build.md`.
 - [ ] [IA] [P0] (0.11.2) Une fiche P0 passe d'abord une analyse d'urgence (cadré le 2026-11-12) —
   `docs/projects/analyse-d-urgence-des-fiches.md`.
 - [ ] [IA] [P0] (0.11.2) La consommation de Copilot CLI est mesurée comme celle de Claude Code (cadré le 2026-11-12) —
@@ -150,6 +154,8 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
   `docs/projects/cadrage-en-build.md`.
 - [ ] [IA] [P0] (0.11.2) Un fichier d'index par fiche, sans conflit sur l'index commun (cadré le 2026-11-12) — `docs/projects/index-par-fiche.md`.
+- [ ] [IA] [P1] (0.11.2) Durcissements de l'audit du 2026-11-12 : préfixes de code, preuve de file protégée,
+  recette d'audit, jeton GitLab (cadré le 2026-11-13) — `docs/projects/durcissements-audit-2026-11-12.md`.
 
 
 - [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
