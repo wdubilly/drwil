@@ -147,8 +147,8 @@ reproduire (aucune lecture de la forge faite pour ce scan).
 ## Suite donnée (2026-11-13)
 
 - OPT-1, volet cadrage : fait (puces de hooks et CHANGELOG ajoutés aux sept fiches P0).
-- OPT-2 : fiche `docs/projects/pr-watch-attend-la-ci.md`, élargie aux risques RSK-1, RSK-5 et RSK-6 de
-  `docs/audit-risques.md`.
+- OPT-2 : fait, élargi aux risques RSK-1, RSK-5 et RSK-6 de `docs/audit-risques.md` (journal
+  `docs/projects/journal.md`, 2026-11-13, « Le suivi de PR ne dit « verte » que sur la CI de la PR »).
 - OPT-3 : fiche `docs/projects/refus-d-attestation-lisible.md`, avec RSK-2, RSK-8 et RSK-9.
 - OPT-5 : tranché autrement — la ligne « Unreleased » s'écrit en fin de BUILD
   (`docs/projects/unreleased-en-fin-de-build.md`, RSK-3).
