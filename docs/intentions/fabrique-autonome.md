@@ -68,6 +68,16 @@ fiches (DRWIL-012, niveaux de risque).
 3. **Rôles séparés** : testeur, codeur, relecteur ; périmètre par rôle
    dans le bloc `cadrage` (évolution du mécanisme) ; relecteur d'un autre
    modèle, sans accès au raisonnement du codeur.
+   Précisé le 2026-11-13 (demandeur, proposition « module REVIEW » triée) :
+   en attente ici, jamais avant la preuve de leur utilité, le relecteur
+   indépendant (autre modèle ou autre outil), une relecture bloquante selon
+   le risque de la fiche, et des statuts de relecture distincts des verdicts
+   de `verify` (une relecture ne change jamais un FAIL, un ERROR ni un
+   MANUAL). Écartés : une seconde machine d'états avec rapports immuables et
+   invalidation automatique (le coût des attestations qui tombent le
+   déconseille). Condition de reprise : les constats de la relecture
+   consultative (`docs/projects/relecture-critique-avant-cloture.md`), notés
+   au journal, montrent des défauts significatifs que `verify` ne détecte pas.
 4. **Références vérifiées** : chemins cités (existe), dépendances réelles
    (paquets inventés), audit de vulnérabilités (SEC-006).
 5. **Orchestration** : boucle pilotée, bac à sable éphémère (réseau

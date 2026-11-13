@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-11 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-13 (rangement du backlog).
 
 ## Besoin
 
@@ -35,3 +35,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-09 — (0.12.0) Rendre le découpage en tranches systématique pour l'adoptant : init/doctor détecte un contrôle lent connu (Playwright, Vitest, Jest) et propose ou pose shards: N avec la bonne commande ; doctor signale un contrôle lent sans shards. Suite de ci-lents-controles, qui écarte le découpage automatique d'une commande qui ne sait pas se découper.
 - 2026-11-09 — (0.11.2) [P0] Réduire le coût des contrôles rejoués : fait (2026-11-11, chantier controles-rejoues-reduits, journal) pour checks-self-test, tests-qua-039, tests-qua-047 et miroirs-gabarit. Reste à mesurer les doublons entre run-checks, verify, hooks et CI (chantiers 2 et 6 de la 0.11.2).
 - 2026-11-10 — Test instable : .githooks/create-release.test.mjs:485 (QUA-268, réglage absent) refuse /CI|requiredOs/ sur la sortie, qui contient le chemin temporaire au suffixe aléatoire (ex. create-release-CCIUIm) ; échec de CI par hasard sur la PR #400. Aussi : verify lit comme preuve d'un critère le dernier identifiant entre accents graves sans alerter quand ce n'est pas un contrat (posix).
+- 2026-11-13 — glossary --journal <fiche> ne trouve que la section de la preuve de clôture, pas l'entrée datée du chantier (ex. ci-multi-os-a-la-release : entrée du 2026-11-08 présente dans docs/projects/journal.md, jugée absente à tort) ; l'entrée datée devrait citer la fiche ou la recherche la retrouver
