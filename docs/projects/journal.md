@@ -4444,3 +4444,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/cache-des-verdicts-de-ci-retabli`.
 
 - **Preuve de clôture** : `docs/preuves/cache-des-verdicts-de-ci-retabli.md`.
+
+## 2026-11-13 — Détour de docs/projects/unreleased-en-fin-de-build.md : test QUA-268 instable sur un chemin temporaire contenant « CI »
+
+- **Ce qui change** : dans `.githooks/create-release.test.mjs`, l'assertion « réglage absent — la CI n'est pas lue » (QUA-268) retire les chemins temporaires (`tmpdir()`) de la sortie avant de chercher `/CI|requiredOs/` ; l'assertion elle-même est inchangée.
+- **Décisions clés** : cause reproduite — la CI de la PR #423 a échoué sur un nom aléatoire `create-release-2XsCIS` contenant « CI » ; défaut préalable, hors du cadrage du chantier, d'où ce détour. Pas de changement de règle (test de hook corrigé, autant d'assertions).
+- **Critères et preuves** : test vu échouer avant la correction avec `TMPDIR` contenant « CI », passe après ; fichier complet vert (28 tests).
+- **Limites connues** : d'autres assertions `doesNotMatch` sur une sortie contenant des chemins temporaires pourraient avoir le même défaut ; seule celle-ci a été vue échouer.
+- **Clôturé par** : la branche `detour/ci-dans-chemin-temporaire`.
