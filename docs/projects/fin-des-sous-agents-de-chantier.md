@@ -2,7 +2,7 @@
 
 **Statut** : cadré le 2026-11-12.
 **Risque** : MEDIUM
-**Maturité** : prêt
+**Maturité** : à affiner
 **Intention** : `docs/intentions/retours-du-demandeur-0-11-2.md` (point 7b)
 
 <!-- scope
@@ -51,10 +51,14 @@ commits et la section « Reprise » de la fiche.
 ## 4. Décisions
 
 - 2026-11-12 : sous-agents de chantier supprimés ; modification de QUA-171 validée par le demandeur.
+- 2026-11-13 : décision du 2026-11-12 suspendue jusqu'à la mesure de `docs/projects/cout-par-activite.md` (10 chantiers
+  mesurés) ; la fiche repasse « à affiner ».
 
 ## 5. Points à trancher
 
-Aucun.
+- [décision] D1 — garder ou retirer les sous-agents de chantier, au vu des 10 chantiers mesurés par
+  `docs/projects/cout-par-activite.md` (relecture du contexte par sous-agent contre accumulation en session
+  principale).
 
 ## 6. Increments
 
@@ -63,4 +67,4 @@ Aucun.
 ## 7. Reprise
 
 - **Dernier état** (2026-11-12) : cadrage terminé, non commité.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Prochaine étape** : [décision] D1, après les 10 chantiers mesurés par `docs/projects/cout-par-activite.md`.

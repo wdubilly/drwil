@@ -1,7 +1,6 @@
 # Intention : une attestation ne tombe plus pour un changement sans rapport avec son objet
 
-**Statut** : proposée le 2026-11-13 — OPT-4 du scan de valeur du 2026-11-12 (`docs/decouverte-valeur.md`), rangée en
-0.11.2 sur décision du demandeur.
+**Statut** : cadrée le 2026-11-13 — `docs/projects/attestations-qui-tombent-pour-leur-objet.md`.
 
 ## Besoin
 

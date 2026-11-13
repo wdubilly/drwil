@@ -1,6 +1,6 @@
 # Intention : le scope d'une fiche suit les fichiers découpés et la carte d'architecture
 
-**Statut** : proposée le 2026-10-28 — limite relevée aux chantiers `niveau-de-protection` et `surveillance-taille-du-kit`.
+**Statut** : cadrée le 2026-11-13 — `docs/projects/perimetre-prevu-au-cadrage.md`.
 **Revu le 2026-10-28** : cadrée le jour même en `docs/projects/journal.md` (piste retenue : alerter au cadrage et rappeler dans le modèle de fiche, barrière inchangée). Reste vivante : l'admission automatique des fichiers dérivés, à reprendre si les arrêts persistent.
 **Revu le 2026-11-13** : les arrêts persistent, la condition de reprise est remplie (OPT-6 du scan de valeur du
 2026-11-12, `docs/decouverte-valeur.md`) ; rangée en 0.11.2 sur décision du demandeur, élargie au périmètre prévu au
