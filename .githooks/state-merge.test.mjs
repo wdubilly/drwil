@@ -81,14 +81,16 @@ const etat = (racine) => readFileSync(join(racine, ".drwil", "state.json"), "utf
 test("QUA-188 : la réponse au sondage de fusion n'écrit plus rien, une marque héritée auto_merge reste lisible", () => {
   const racine = projet();
   const avantEtat = etat(racine);
+  // Plus de sondage de fusion : le hook ne le lit plus, rien n'est dit ni écrit (QUA-163).
   for (const choix of ["Automatic merge", "Manual merge"]) {
     const r = reponse(racine, choix);
-    assert.match(
-      r.contexte,
-      /^\[drwil\] ✓ réponse au sondage de fusion lue, état inchangé : la fusion automatique est le comportement par défaut/,
-    );
+    assert.equal(r.contexte, "", choix);
     assert.equal(etat(racine), avantEtat, choix);
   }
+  assert.match(
+    recordMerge(racine, "auto").message,
+    /^réponse au sondage de fusion lue, état inchangé : la fusion automatique est le comportement par défaut/,
+  );
   // Marque héritée : état valide, gardée telle quelle par une réponse ; en anglais selon la langue du projet.
   const herite = projet({ etat: actif("CLOSING", { auto_merge: true }) });
   assert.deepEqual(readState(herite).problems, []);
@@ -97,7 +99,7 @@ test("QUA-188 : la réponse au sondage de fusion n'écrit plus rien, une marque 
   assert.match(recordMerge(projet({ lang: "en" }), "auto").message, /^answer to the merge poll read, state unchanged/);
   // Hors de BUILD à CLOSING ou sur un état invalide : ignorée, rien n'est écrit.
   const neutre = projet({ etat: null });
-  assert.match(reponse(neutre, "Automatic merge").contexte, /✗ réponse au sondage de fusion ignorée : l'activité est SCOPING/);
+  assert.match(recordMerge(neutre, "auto").message, /réponse au sondage de fusion ignorée : l'activité est SCOPING/);
   assert.equal(readState(neutre).source, "missing");
   assert.match(recordMerge(projet({ lang: "en", etat: null }), "auto").message, /the activity is SCOPING/);
   const invalide = projet({ etat: actif("BUILD", { auto_merge: "oui" }) });

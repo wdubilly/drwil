@@ -56,19 +56,16 @@ request, instead of direct commits on the main branch.
 - A scoping (brief, intention) is committed on its own branch and goes through
   a pull request like the rest: `/drwil-start` offers a brief only once that
   PR is merged, since it reads the briefs of the main branch.
-- Once the scoping is pushed and its PR open, the `/drwil-scope` skill
-  (skill `scope-a-workstream`) asks the human, in a poll
-  with no default or recommended answer, what to do with the PR:
-  - « Automatic merge »: the hook records the authorisation for the current
-    branch (state `scoping_merge`, SCOPING only); the agent runs
-    `node .githooks/merge-auto.mjs <number>`, which refuses the PR of any
-    other branch, then follows it with `node .githooks/pr-watch.mjs <number>`.
-  - « Manual merge »: nothing is scheduled, the human merges.
-  - « Continue scoping »: nothing is scheduled, the PR stays open and the
-    next scopings are committed on the same branch — one branch, one PR —
-    until the poll is asked again.
-- Without the « Automatic merge » answer, the merge of a scoping PR stays a
-  human gesture; leaving SCOPING drops the authorisation.
+- Once the scoping is pushed and its PR open, the agent puts it in
+  automatic merge, without a poll (skill `scope-a-workstream`,
+  `/drwil-scope`): `node .githooks/merge-auto.mjs <number>`, which refuses
+  the PR of any other branch than the current one, then follows it with
+  `node .githooks/pr-watch.mjs <number>`. The automatic merge is the default
+  behaviour: its guard is the proof (green CI, PR of the current branch,
+  scheduling read back on the forge), never an answer to give.
+- Several scopings to read together before they are merged: the next
+  scopings are committed on the same branch — one branch, one PR — and the
+  merge is scheduled once the last one is pushed.
 
 ## One workstream per worktree
 

@@ -41,16 +41,6 @@ export const MESSAGES_EN = {
   scopingMergeActivity: "scoping_merge: only in SCOPING",
   scopingMergeReminder:
     "Automatic merge of the scoping PR authorised for branch {0} (legacy mark: the automatic merge is now the default behaviour): once the branch is pushed and its PR open, run `node .githooks/merge-auto.mjs <number>`, which refuses any PR of another branch than the current one; follow the PR with `node .githooks/pr-watch.mjs <number>`, run again while it says « green » without « merged », 30 minutes at most in all; never chain the forge's commands (`gh`, `glab`) by hand. The mark falls when leaving SCOPING.",
-  scopingMergeNotScoping:
-    "answer to the end-of-scoping poll ignored: the activity is {0}, not SCOPING — nothing authorised, the state is unchanged",
-  scopingMergeBranch:
-    "no automatic merge of a scoping PR: the current branch is not a scoping branch (main branch or detached head) — the state is unchanged",
-  scopingMergeAuthorised:
-    "automatic merge by default, no authorisation to write: once branch {0} is pushed and its PR open, run `node .githooks/merge-auto.mjs <number>`, which schedules only the PR of the current branch, then follow the PR with `node .githooks/pr-watch.mjs <number>`; the state is unchanged",
-  scopingMergeManual:
-    "nothing scheduled (answer « Manual merge »): `/drwil-start` offers the brief only once the PR is merged; the state is unchanged",
-  scopingMergeContinue:
-    "nothing scheduled (answer « Continue scoping »): the PR stays open and the next scopings are committed on the same branch ({0}), one branch, one PR; the state is unchanged",
   reopenCancelled: "automatic merge cancelled: schedule it again after the new closing, like the first time",
   reopenMessage: "Reopening of {0}: defect revealed by PR #{1}",
   reopenCommitFailed: "reopening refused: the commit of the restored brief failed ({0}) — brief removed, state unchanged",

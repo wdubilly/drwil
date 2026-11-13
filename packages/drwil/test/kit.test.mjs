@@ -1232,7 +1232,7 @@ test("rappel court : hook de saisie Claude livré, empreinte ignorée par Git, r
   assert.equal(rappel().stdout, "", "état inchangé : rien n'est injecté");
 });
 
-test("QUA-037 : un sondage à choix multiple lance la première fiche et met les suivantes en file, avec la fusion", async () => {
+test("QUA-037 : un sondage à choix multiple lance la première fiche et met les suivantes en file, sans lire de fusion", async () => {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, tools: "claude", git: false }));
   const fiche = (nom) =>
@@ -1283,7 +1283,8 @@ test("QUA-037 : un sondage à choix multiple lance la première fiche et met les
   const etat = JSON.parse(read(dir, ".drwil/state.json"));
   assert.equal(etat.active_brief, "docs/projects/un.md");
   assert.deepEqual(etat.queue, ["docs/projects/trois.md"]);
-  assert.equal(etat.queue_merge, true);
+  // La question de fusion n'est plus lue : la fusion automatique est le comportement par défaut (QUA-163).
+  assert.equal(etat.queue_merge, false);
   assert.equal(etat.auto_merge, undefined, "la fusion automatique est le comportement par défaut : plus d'auto_merge écrit");
 });
 
@@ -1334,7 +1335,7 @@ test("QUA-037 : une file de deux fiches se construit par deux réponses à choix
   assert.equal(etat().activity, "BUILD");
   assert.equal(etat().active_brief, fiches[0]);
   assert.deepEqual(etat().queue, [fiches[1]]);
-  assert.equal(etat().queue_merge, true);
+  assert.equal(etat().queue_merge, false, "la réponse de fusion n'est plus lue (QUA-163)");
   assert.equal(etat().queue_draft, undefined);
 
   // Le hook refuse un sondage déjà répondu, à valeur par défaut, à choix multiple, ou sans « Terminer la file ».
@@ -2105,7 +2106,7 @@ test("QUA-165 : sous Copilot CLI, le champ des fiches à choix multiple (array, 
   rejouer("PostToolUse", `fiche=${fiches[1]}, ${fiches[0]}, drwil-merge=Automatic merge, drwil-parallel=Sequential queue`);
   assert.equal(etat().active_brief, fiches[0]);
   assert.deepEqual(etat().queue, [fiches[1]]);
-  assert.equal(etat().queue_merge, true, "la fusion choisie reste lue pour la file");
+  assert.equal(etat().queue_merge, false, "la fusion n'est plus lue au sondage : comportement par défaut (QUA-163)");
   assert.equal(etat().auto_merge, undefined);
   rmSync(join(dir, ".drwil/state.json"));
 

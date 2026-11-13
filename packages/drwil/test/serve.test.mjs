@@ -1253,7 +1253,6 @@ test("QUA-274 : le journal relève état, lots, décisions, attestations, PR et 
     "Activité BUILD (premier relevé)",
     "Relevé initial : Lot 1 fait",
     "Relevé initial : Lot courant : 2",
-    "Relevé initial : Fusion automatique autorisée par l'humain",
     "Relevé initial : Limite hors cadre : i → « Traiter maintenant »",
     "Relevé initial : Chantier rouvert (PR #5)",
     "File de chantiers : y.md",
@@ -1298,13 +1297,14 @@ test("QUA-274 : le journal relève état, lots, décisions, attestations, PR et 
     "Fiche active : docs/projects/z.md",
     "Lot 2 fait",
     "Lot courant : 3",
-    "Fusion automatique retirée",
     "Limite hors cadre : i → « Noter en intention »",
     "Limite hors cadre : j → « maison »",
     "Chantier rouvert (PR #6)",
   ])
     assert.ok(apres.includes(attendu), attendu);
   assert.equal(apres.filter((t) => t === "Attestation humaine de QUA-001").length, 1, "pas de doublon");
+  // La fusion automatique est le comportement par défaut (QUA-163) : une marque héritée n'est plus relevée.
+  assert.ok(![...textes, ...apres].some((t) => /Fusion automatique/.test(t)), "auto_merge hérité jamais relevé");
 });
 
 test("QUA-274 : le journal est borné, tolère une ligne illisible, un état illisible et un cache inutilisable", async () => {
@@ -1473,7 +1473,8 @@ test("QUA-273 : le tableau se déduit des fichiers, de l'état, de Git et de la 
   );
   assert.equal(cols.chantier[0].title, "le chantier actif");
   assert.deepEqual(cols.chantier[0].lot, { current: 2, done: [1] });
-  assert.deepEqual([cols.chantier[0].number, cols.chantier[0].reopened, cols.chantier[0].autoMerge], [1, 4, true]);
+  // auto_merge hérité dans l'état : plus affiché, la fusion automatique est le comportement par défaut (QUA-163).
+  assert.deepEqual([cols.chantier[0].number, cols.chantier[0].reopened, "autoMerge" in cols.chantier[0]], [1, 4, false]);
   assert.deepEqual(
     cols.prs.map((c) => [c.id, c.nature, c.branch]),
     [["pr-2", "code", "workstream/ouverte"]],

@@ -42,16 +42,6 @@ export const MESSAGES_FR = {
   scopingMergeActivity: "scoping_merge : seulement en SCOPING",
   scopingMergeReminder:
     "Fusion automatique de la PR de cadrage autorisée pour la branche {0} (marque héritée : la fusion automatique est désormais le comportement par défaut) : la branche poussée et sa PR ouverte, lancer `node .githooks/merge-auto.mjs <numéro>`, qui refuse toute PR d'une autre branche que la branche courante ; suivre la PR par `node .githooks/pr-watch.mjs <numéro>`, relancé tant qu'il dit « verte » sans « fusionnée », 30 minutes au plus en tout ; ne jamais enchaîner les commandes de la forge (`gh`, `glab`) à la main. La marque tombe en quittant SCOPING.",
-  scopingMergeNotScoping:
-    "réponse au sondage de fin de cadrage ignorée : l'activité est {0}, pas SCOPING — rien n'est autorisé, l'état est inchangé",
-  scopingMergeBranch:
-    "pas de fusion automatique de PR de cadrage : la branche courante n'est pas une branche de cadrage (branche principale ou tête détachée) — l'état est inchangé",
-  scopingMergeAuthorised:
-    "fusion automatique par défaut, sans autorisation à écrire : la branche {0} poussée et sa PR ouverte, lancer `node .githooks/merge-auto.mjs <numéro>`, qui ne programme que la PR de la branche courante, puis suivre la PR par `node .githooks/pr-watch.mjs <numéro>` ; l'état est inchangé",
-  scopingMergeManual:
-    "rien n'est programmé (réponse « Manual merge ») : la fiche ne sera proposée par `/drwil-start` qu'une fois la PR fusionnée ; l'état est inchangé",
-  scopingMergeContinue:
-    "rien n'est programmé (réponse « Continue scoping ») : la PR reste ouverte et les cadrages suivants se commitent sur la même branche ({0}), une branche, une PR ; l'état est inchangé",
   reopenCancelled: "fusion automatique annulée : à reprogrammer après la nouvelle clôture, comme la première fois",
   reopenMessage: "Réouverture de {0} : défaut révélé par la PR #{1}",
   reopenCommitFailed: "réouverture refusée : le commit de la fiche restaurée a échoué ({0}) — fiche retirée, état inchangé",

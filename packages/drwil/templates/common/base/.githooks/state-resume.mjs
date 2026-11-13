@@ -15,10 +15,11 @@ import { writeState } from "./state.mjs";
 
 const BRANCH_RE = /^workstream\/([^/]+)$/;
 
-// How to give the automatic merge back (QUA-265): its texts live here, state-messages-fr.mjs is full.
+// The automatic merge after a resume (QUA-247): the default behaviour, nothing to give back; its texts live here,
+// state-messages-fr.mjs is full.
 const MERGE_BACK = {
-  fr: " Fusion automatique : la redonner par le sondage `drwil-merge` (« Automatic merge » ou « Manual merge »), lu par le hook ; aucune commande ne l'écrit.",
-  en: " Automatic merge: give it back with the `drwil-merge` poll (« Automatic merge » or « Manual merge »), read by the hook; no command writes it.",
+  fr: " Fusion automatique : en fait rien à redemander, c'est le comportement par défaut ; à la clôture, `node .githooks/merge-auto.mjs <numéro>`.",
+  en: " Automatic merge: actually nothing to ask again, it is the default behaviour; at the closing, `node .githooks/merge-auto.mjs <number>`.",
 };
 
 // GitLab's words for the refusals that name the merge request or its tool (QUA-247).

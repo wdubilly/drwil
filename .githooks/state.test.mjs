@@ -25,7 +25,6 @@ import {
   prepareTransition,
   verifyEvidence,
   scopedBriefs,
-  scopingMerge,
   setDetour,
   reopen,
   writeState,
@@ -1597,7 +1596,8 @@ test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec 
 test("QUA-037 : arrêter la file ; commandes next et queue stop ; contexte et état invalide, en anglais aussi", async () => {
   const racine = depotFile();
   ecrireEtat(racine, { version: 1, activity: "BUILD", active_brief: A, active_request: null, since: null, queue: [B], queue_merge: true });
-  assert.match(context(readState(racine), racine), /File décidée au lancement : ensuite docs\/projects\/b\.md \(fusion automatique\)/);
+  // queue_merge hérité : plus dit, la fusion automatique est le comportement par défaut pour toute la file (QUA-163).
+  assert.match(context(readState(racine), racine), /File décidée au lancement : ensuite docs\/projects\/b\.md\. /);
   let r = await capturer(() => main(["queue", "stop"], racine));
   assert.equal(r.code, 0);
   assert.match(r.sortie, /file arrêtée : docs\/projects\/b\.md ne seront pas lancés/);
@@ -2566,21 +2566,6 @@ function projetCadrage({ branche = "cadrage/essai", lang, etat } = {}) {
   return racine;
 }
 
-const SONDAGE_CADRAGE = {
-  questions: [
-    {
-      question: "Que faire de la PR de cadrage ?",
-      header: "drwil-scope",
-      multiSelect: false,
-      options: [
-        { label: "Automatic merge", description: "la fusion est programmée par merge-auto" },
-        { label: "Manual merge", description: "rien n'est programmé" },
-        { label: "Continue scoping", description: "la PR reste ouverte, même branche" },
-      ],
-    },
-  ],
-};
-
 function hookCadrage(racine, entree) {
   const r = spawnSync(process.execPath, [join(racine, ".claude/hooks/prompt-hook.mjs")], {
     encoding: "utf8",
@@ -2590,110 +2575,61 @@ function hookCadrage(racine, entree) {
   return { status: r.status, stderr: r.stderr, contexte };
 }
 
-const reponseClaude = (racine, reponse, sondage = SONDAGE_CADRAGE) =>
-  hookCadrage(racine, {
-    hook_event_name: "PostToolUse",
-    tool_name: "AskUserQuestion",
-    tool_input: sondage,
-    tool_response: { ...sondage, answers: reponse === undefined ? {} : { "Que faire de la PR de cadrage ?": reponse } },
-  });
+// Le sondage `drwil-scope` d'avant (QUA-187, modifié) : posé par un ancien skill, il n'est plus ni refusé ni lu.
+const SONDAGE_CADRAGE = {
+  questions: [
+    {
+      question: "Que faire de la PR de cadrage ?",
+      header: "drwil-scope",
+      multiSelect: false,
+      options: [{ label: "Automatic merge (Recommended)" }, { label: "Manual merge" }],
+    },
+  ],
+};
 
-const SONDAGE_COPILOT = (champ = { type: "string", enum: ["Automatic merge", "Manual merge", "Continue scoping"] }) => ({
-  message: "drwil-scope : que faire de la PR de cadrage ?",
-  requestedSchema: { properties: { "drwil-scope": champ } },
-});
-
-test("QUA-187 : le skill de cadrage pose un sondage drwil-scope à trois réponses, sans recommandation, cité au menu /drwil", () => {
+test("QUA-187 : le skill de cadrage met la PR de cadrage en fusion automatique par l'outil, sans sondage, cité au menu /drwil", () => {
   const skill = readFileSync(join(GABARIT_CLAUDE, "skills/scope-a-workstream/SKILL.md"), "utf8");
   assert.match(skill, /^---\nname: drwil-scope\ndescription: .+\. Use when .+\n---\n/);
   const texte = skill.replace(/\s+/g, " ");
-  assert.match(texte, /`header` exactly `drwil-scope`, `multiSelect: false`, exactly three options/);
-  for (const label of ["Automatic merge", "Manual merge", "Continue scoping"]) assert.match(texte, new RegExp(`\`${label}\``));
-  assert.match(texte, /\*\*Forbidden\*\*: a recommendation/);
-  assert.match(texte, /never `type: "array"`/);
-  assert.ok("drwil-scope".length <= 12, "en-tête de question de Claude Code : 12 caractères au plus");
+  assert.match(texte, /without a poll/);
+  assert.doesNotMatch(texte, /AskUserQuestion|ask_user|`header`|Manual merge|Continue scoping/);
+  assert.ok(texte.indexOf("`node .githooks/merge-auto.mjs <number>`") < texte.indexOf("`node .githooks/pr-watch.mjs <number>`"));
+  assert.match(texte, /only schedules the PR of the current git branch/);
+  assert.match(texte, /never chain the forge's commands \(`gh`, `glab`\) by hand/);
+  assert.match(texte, /\*\*the same branch\*\* \(one branch, one PR, no new branch\)/);
   assert.match(readFileSync(join(GABARIT_CLAUDE, "skills/drwil/SKILL.md"), "utf8"), /^\| `\/drwil-scope` \|/m);
   // Copies installées identiques au gabarit (npm run installer-depot).
-  for (const f of ["skills/scope-a-workstream/SKILL.md", "skills/drwil/SKILL.md", "hooks/start-poll.mjs"])
+  for (const f of ["skills/scope-a-workstream/SKILL.md", "skills/drwil/SKILL.md", "hooks/start-poll.mjs", "hooks/prompt-hook.mjs"])
     assert.equal(readFileSync(join(RACINE_DEPOT, ".claude", f), "utf8"), readFileSync(join(GABARIT_CLAUDE, f), "utf8"), f);
+  assert.ok(!existsSync(join(RACINE_DEPOT, ".claude/hooks/merge-poll.mjs")), "plus de hook de sondage de fusion");
 });
 
-test("QUA-187 : le hook refuse un sondage de fin de cadrage recommandé, prérempli, incomplet ou à choix multiple", () => {
-  const racine = projetCadrage();
-  const avant = (tool_input) => hookCadrage(racine, { hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input });
-  const question = SONDAGE_CADRAGE.questions[0];
-  const variante = (q, extra = {}) => ({ questions: [{ ...question, ...q }], ...extra });
-  assert.equal(avant(SONDAGE_CADRAGE).status, 0, "les trois réponses, rien de prérempli : posé");
-  const refuses = {
-    recommandee: variante({ options: [{ label: "Automatic merge (Recommended)" }, ...question.options.slice(1)] }),
-    "recommandée en description": variante({
-      options: [{ label: "Automatic merge", description: "(Recommandé)" }, ...question.options.slice(1)],
-    }),
-    preremplie: variante({}, { answers: { [question.question]: "Automatic merge" } }),
-    "deux réponses": variante({ options: question.options.slice(0, 2) }),
-    "quatre réponses": variante({ options: [...question.options, { label: "Autre chose" }] }),
-    "choix multiple": variante({ multiSelect: true }),
-  };
-  for (const [cas, sondage] of Object.entries(refuses)) {
-    const r = avant(sondage);
-    assert.equal(r.status, 2, cas);
-    assert.match(r.stderr, /sondage de fin de cadrage refusé/, cas);
-  }
-  // Copilot CLI : choix unique (`enum` seul), jamais de valeur par défaut ni de tableau.
-  assert.equal(avant(SONDAGE_COPILOT()).status, 0);
-  assert.equal(
-    avant(SONDAGE_COPILOT({ type: "string", enum: ["Automatic merge", "Manual merge", "Continue scoping"], default: "Manual merge" }))
-      .status,
-    2,
-  );
-  assert.equal(
-    avant(
-      SONDAGE_COPILOT({
-        type: "array",
-        items: { enum: ["Automatic merge"] },
-        enum: ["Automatic merge", "Manual merge", "Continue scoping"],
-      }),
-    ).status,
-    2,
-  );
-  // Un autre sondage passe sans rien changer.
-  assert.equal(avant({ questions: [{ ...question, header: "autre" }] }).status, 0);
-});
-
-test("QUA-187 : la réponse humaine, lue par le hook, n'écrit plus d'autorisation : la fusion automatique est le comportement par défaut", () => {
+test("QUA-187 : un sondage de fin de cadrage n'est plus ni refusé ni lu : rien n'est écrit, aucune autorisation", () => {
   const racine = projetCadrage({ etat: NEUTRAL_STATE });
   const brut = () => readFileSync(join(racine, ".drwil", "state.json"), "utf8");
   const avantEtat = brut();
-  let r = reponseClaude(racine, "Automatic merge");
-  assert.match(r.contexte, /^\[drwil\] ✓ fusion automatique par défaut, sans autorisation à écrire : la branche cadrage\/essai poussée/);
-  r = reponseClaude(racine, "Manual merge");
-  assert.match(r.contexte, /rien n'est programmé \(réponse « Manual merge »\).*l'état est inchangé/);
-  assert.match(reponseClaude(racine, undefined).contexte, /aucune réponse lue dans le sondage de fin de cadrage/);
-  // Copilot CLI : réponse en texte libre, avec ou sans le nom du champ.
-  for (const texte of ["Automatic merge", "drwil-scope=Automatic merge"]) {
-    hookCadrage(racine, {
-      hook_event_name: "PostToolUse",
-      tool_input: SONDAGE_COPILOT(),
-      tool_result: { text_result_for_llm: `User responded: ${texte}` },
-    });
-  }
+  const avant = hookCadrage(racine, { hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: SONDAGE_CADRAGE });
+  assert.deepEqual([avant.status, avant.stderr], [0, ""], "plus de refus du sondage de fin de cadrage");
+  const apres = hookCadrage(racine, {
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: SONDAGE_CADRAGE,
+    tool_response: { ...SONDAGE_CADRAGE, answers: { "Que faire de la PR de cadrage ?": "Automatic merge" } },
+  });
+  assert.deepEqual([apres.status, apres.contexte], [0, ""]);
+  // Copilot CLI : un champ `drwil-scope` répondu n'est pas lu non plus.
+  hookCadrage(racine, {
+    hook_event_name: "PostToolUse",
+    tool_input: {
+      message: "drwil-scope : que faire ?",
+      requestedSchema: { properties: { "drwil-scope": { type: "string", enum: ["Automatic merge"] } } },
+    },
+    tool_result: { text_result_for_llm: "User responded: Automatic merge" },
+  });
   assert.equal(brut(), avantEtat, "aucune réponse n'écrit l'état");
-  // Sur la branche principale, ou hors SCOPING : refusé, l'état est inchangé.
-  const principale = projetCadrage({ branche: "master" });
-  assert.match(reponseClaude(principale, "Automatic merge").contexte, /✗ .*pas une branche de cadrage/);
-  assert.equal(readState(principale).state.scoping_merge, undefined);
-  const enCours = projetCadrage({ etat: { ...NEUTRAL_STATE, activity: "BUILD", active_brief: FICHE } });
-  mkdirSync(join(enCours, "docs/projects"), { recursive: true });
-  writeFileSync(join(enCours, FICHE), "# Projet : Exemple\n");
-  assert.match(reponseClaude(enCours, "Automatic merge").contexte, /✗ réponse au sondage de fin de cadrage ignorée : l'activité est BUILD/);
-  // En anglais selon la langue du projet.
-  assert.match(
-    reponseClaude(projetCadrage({ lang: "en" }), "Automatic merge").contexte,
-    /automatic merge by default, no authorisation to write: once branch cadrage\/essai is pushed/,
-  );
 });
 
-test("QUA-187 : scoping_merge valable en SCOPING seulement, objet { branch }", () => {
+test("QUA-188 : une marque héritée scoping_merge reste valable en SCOPING seulement, objet { branch }", () => {
   const racine = depot();
   assert.deepEqual(validateState({ ...NEUTRAL_STATE, scoping_merge: { branch: "cadrage/x" } }, racine), []);
   assert.match(validateState({ ...NEUTRAL_STATE, scoping_merge: true }, racine)[0], /scoping_merge : objet \{ branch \}/);
@@ -2702,31 +2638,6 @@ test("QUA-187 : scoping_merge valable en SCOPING seulement, objet { branch }", (
     validateState(actif("BUILD", { scoping_merge: { branch: "cadrage/x" } }), racine)[0],
     /scoping_merge : seulement en SCOPING/,
   );
-  // Un état invalide n'est jamais réécrit par la réponse au sondage.
-  const invalide = depot({ state: "{ pas du json" });
-  assert.equal(scopingMerge(invalide, "auto").code, 1);
-  assert.equal(readFileSync(join(invalide, ".drwil", "state.json"), "utf8"), "{ pas du json");
-});
-
-test("QUA-187 : scopingMerge, appelée par le hook, n'écrit rien ; une marque héritée scoping_merge reste telle quelle", () => {
-  const racine = projetCadrage();
-  assert.match(scopingMerge(racine, "continue").message, /même branche \(cadrage\/essai\)/);
-  assert.equal(scopingMerge(racine, "auto").code, 0);
-  assert.equal(readState(racine).source, "missing", "aucun état écrit");
-  assert.match(scopingMerge(racine, "manual").message, /Manual merge/);
-  writeState(racine, { ...NEUTRAL_STATE, scoping_merge: { branch: "cadrage/essai" } });
-  for (const choix of ["auto", "manual", "continue"]) {
-    assert.equal(scopingMerge(racine, choix).code, 0, choix);
-    assert.deepEqual(readState(racine).state.scoping_merge, { branch: "cadrage/essai" }, choix);
-  }
-  // Tête détachée, branche principale, hors dépôt git : refusé.
-  spawnSync("git", ["checkout", "-q", "--detach"], { cwd: racine });
-  assert.equal(scopingMerge(racine, "auto").code, 1);
-  assert.equal(scopingMerge(projetCadrage({ branche: "master" }), "auto").code, 1);
-  const horsGit = depot({ fiche: false });
-  assert.equal(scopingMerge(horsGit, "auto").code, 1);
-  assert.match(scopingMerge(horsGit, "continue").message, /même branche \(\?\)/);
-  assert.match(scopingMerge(depot({ state: actif("BUILD") }), "auto").message, /l'activité est BUILD/);
 });
 
 // Sondage des limites hors cadre (QUA-253) : le hook rejoué dans un projet temporaire, comme le sondage de fin de cadrage.

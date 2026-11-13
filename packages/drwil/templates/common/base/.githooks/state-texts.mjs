@@ -61,10 +61,12 @@ export function context(read, root) {
     }
   }
   lines.push(T.brief(brief), T.request(state.active_request));
-  if (state.auto_merge === true) lines.push(T.autoMerge);
+  // The automatic merge is the default (QUA-163): the closing instruction is given to any workstream, without a mark;
+  // not once a failed reopening cancelled it (QUA-181): rescheduling it is then up to the human.
+  if (state.activity !== "SCOPING" && !state.merge_cancelled) lines.push(T.autoMerge);
   // End-of-scoping poll answered « Automatic merge » (QUA-188): the scoping PR of that branch only.
   if (state.scoping_merge) lines.push(fill(STATE_MESSAGES[language(root)].scopingMergeReminder, state.scoping_merge.branch));
-  if (state.queue?.length) lines.push(fill(T.queue, state.queue.join(", "), state.queue_merge ? T.queueMerge : ""));
+  if (state.queue?.length) lines.push(fill(T.queue, state.queue.join(", ")));
   if (state.queue_draft?.length) lines.push(fill(T.queueDraft, state.queue_draft.join(", ")));
   if (state.parallel?.length) lines.push(fill(T.parallel, state.parallel.join(", ")));
   if (state.queue?.length && state.activity === "SCOPING") lines.push(fill(T.queueResume, state.queue[0]));

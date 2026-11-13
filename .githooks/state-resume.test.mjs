@@ -189,19 +189,20 @@ test("QUA-247 : resume refuse sans rien écrire quand l'historique ne prouve rie
   assert.ok(readFileSync(join(actif, ".drwil", "state.json"), "utf8").includes("VERIFY"));
 });
 
-test("QUA-247 : resume ne redonne pas la fusion automatique, et dit comment la redonner : le sondage drwil-merge, jamais une commande", () => {
+test("QUA-247 : resume n'écrit pas la fusion automatique, et dit qu'elle est le comportement par défaut, sans sondage à redonner", () => {
   const racine = clone(origine());
   const r = resume(racine, { gh: sansGh });
   assert.equal(r.code, 0, r.message);
   assert.match(
     r.message,
-    /Fusion automatique : la redonner par le sondage `drwil-merge` \(« Automatic merge » ou « Manual merge »\), lu par le hook ; aucune commande ne l'écrit\./,
+    /Fusion automatique : en fait rien à redemander, c'est le comportement par défaut ; à la clôture, `node \.githooks\/merge-auto\.mjs <numéro>`\./,
   );
+  assert.doesNotMatch(r.message, /drwil-merge/);
   assert.equal(etat(racine).state.auto_merge, undefined);
   const en = clone(origine());
   ecrire(en, ".drwil/ia-first.json", JSON.stringify({ lang: "en" }));
   assert.match(
     resume(en, { gh: sansGh }).message,
-    /Automatic merge: give it back with the `drwil-merge` poll \(« Automatic merge » or « Manual merge »\), read by the hook; no command writes it\./,
+    /Automatic merge: actually nothing to ask again, it is the default behaviour; at the closing, `node \.githooks\/merge-auto\.mjs <number>`\./,
   );
 });

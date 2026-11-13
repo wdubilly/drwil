@@ -132,7 +132,6 @@ export function createBoard(reader: Reader, forge: ForgeReader) {
               activity: st?.activity,
               lot: lot && lot.brief === active ? { current: lot.current, done: lot.done } : null,
               reopened: (st?.reopened as { pr?: unknown } | undefined)?.pr ?? null,
-              autoMerge: st?.auto_merge === true,
               number: prOf(active)?.number ?? null,
               version: versionOf(active)?.version ?? null,
             },

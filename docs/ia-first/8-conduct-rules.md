@@ -94,7 +94,8 @@ read at every request. The full text of each rule is here, read by section
   active brief's scope is fixed by a detour the agent opens alone —
   `node .githooks/detour.mjs open <name> --title <defect>` sets the work
   aside, branches from the main branch and writes a short brief; its PR is
-  titled « Detour of <brief> »; once merged, `node .githooks/detour.mjs
+  titled « Detour of <brief> » and put in automatic merge like any PR
+  (`node .githooks/merge-auto.mjs <number>`); once merged, `node .githooks/detour.mjs
   resume` restores the work on the rebased workstream branch. Never widen
   an unrelated scope, never stash by hand. A detour is not a way to widen
   the active brief: widening its `scope` block takes a separate commit,

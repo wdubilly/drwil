@@ -136,7 +136,7 @@ function apres(tool, args, reponses) {
 }
 
 for (const tool of ["gemini", "codex"]) {
-  test(`QUA-266 : ${tool}, la commande installée lit la réponse humaine aux sondages drwil-limite et drwil-merge`, async () => {
+  test(`QUA-266 : ${tool}, la commande installée lit la réponse humaine au sondage drwil-limite, plus au sondage drwil-merge`, async () => {
     const p = await projet(tool);
     try {
       assert.equal((await lancer(p.root, tool, true, avant(tool, limite(tool)))).status, 0, "sondage conforme : posé");
@@ -149,26 +149,24 @@ for (const tool of ["gemini", "codex"]) {
       r = await lancer(p.root, tool, false, apres(tool, limite(tool, LIMITE, AUTRE), ["Traiter maintenant", null]));
       assert.match(r.contexte, /« Traiter maintenant ».*à soumettre de nouveau : docs\/intentions\/autre-limite\.md/);
       assert.deepEqual(p.etat().limits, [{ intent: LIMITE, choice: "now" }]);
-      assert.equal((await lancer(p.root, tool, true, avant(tool, fusion(tool)))).status, 0);
-      // Réponse lue, état inchangé : la fusion automatique est le comportement par défaut (QUA-188).
-      for (const choix of ["Automatic merge", "Manual merge"]) {
-        r = await lancer(p.root, tool, false, apres(tool, fusion(tool), [choix]));
-        assert.match(r.contexte, /✓ réponse au sondage de fusion lue, état inchangé/, choix);
-        assert.equal(p.etat().auto_merge, undefined, choix);
-      }
       // Sans réponse lue (résultat illisible, en erreur, réponse libre ou double) : rien n'est écrit.
       const avantEtat = JSON.stringify(p.etat());
       const sans = [
-        { ...apres(tool, fusion(tool), ["Automatic merge"]), tool_response: tool === "codex" ? "pas du json" : { error: "annulé" } },
-        apres(tool, fusion(tool), ["Je ne sais pas"]),
+        { ...apres(tool, limite(tool), ["Noter en intention"]), tool_response: tool === "codex" ? "pas du json" : { error: "annulé" } },
+        apres(tool, limite(tool), ["Je ne sais pas"]),
         tool === "codex"
           ? {
-              ...apres(tool, fusion(tool), []),
-              tool_response: JSON.stringify({ answers: { q0: { answers: ["Automatic merge", "Manual merge"] } } }),
+              ...apres(tool, limite(tool), []),
+              tool_response: JSON.stringify({ answers: { q0: { answers: ["Traiter maintenant", "Noter en intention"] } } }),
             }
-          : { ...apres(tool, fusion(tool), []), tool_response: {} },
+          : { ...apres(tool, limite(tool), []), tool_response: {} },
       ];
-      for (const e of sans) assert.match((await lancer(p.root, tool, false, e)).contexte, /✗ aucune réponse lue dans le sondage de fusion/);
+      for (const e of sans)
+        assert.match((await lancer(p.root, tool, false, e)).contexte, /✗ aucune réponse lue dans le sondage des limites/);
+      // Plus de sondage de fusion (QUA-163) : un ancien `drwil-merge` n'est ni refusé ni lu, rien n'est écrit.
+      assert.equal((await lancer(p.root, tool, true, avant(tool, fusion(tool)))).status, 0);
+      for (const choix of ["Automatic merge", "Manual merge"])
+        assert.doesNotMatch((await lancer(p.root, tool, false, apres(tool, fusion(tool), [choix]))).contexte, /sondage de fusion/, choix);
       assert.equal(JSON.stringify(p.etat()), avantEtat);
     } finally {
       p.dispose();
@@ -202,8 +200,7 @@ for (const tool of ["gemini", "codex"]) {
         true,
         avant(tool, { questions: [{ ...m, options: [{ label: "Automatic merge (Recommended)" }, m.options[1]] }] }),
       );
-      assert.equal(r.status, 2);
-      assert.match(r.stderr, /sondage de fusion refusé/);
+      assert.deepEqual([r.status, r.stderr], [0, ""], "plus de sondage de fusion à refuser");
       assert.match(
         (await lancer(en.root, tool, true, avant(tool, { questions: [{ ...q, multiSelect: true }] }))).stderr,
         /limits poll refused/,
@@ -271,7 +268,7 @@ test("QUA-266 : copilot, les sondages passent par .claude/settings.json ; l'entr
     );
     assert.deepEqual(p.etat().limits, [{ intent: LIMITE, choice: "note" }]);
     const lu = await lancer(p.root, "claude", false, claude(false, fusionCopilot, "Automatic merge"));
-    assert.match(lu.contexte, /✓ réponse au sondage de fusion lue, état inchangé/);
+    assert.equal(lu.contexte, "", "plus de sondage de fusion lu");
     assert.equal(p.etat().auto_merge, undefined);
     const prerempli = {
       ...sondage,
@@ -326,7 +323,7 @@ const acp = (title, prompt, labels) => ({
   questions: [{ id: "q", prompt, allowMultiple: false, options: labels.map((label, i) => ({ id: `o${i}`, label })) }],
 });
 
-test("QUA-266 : cursor, le client ACP dédié lit la réponse humaine aux sondages drwil-limite et drwil-merge", async () => {
+test("QUA-266 : cursor, le client ACP dédié lit la réponse humaine au sondage drwil-limite, plus au sondage drwil-merge", async () => {
   const p = await projet("cursor");
   try {
     let vu = "";
@@ -337,22 +334,21 @@ test("QUA-266 : cursor, le client ACP dédié lit la réponse humaine aux sondag
     assert.match(vu, /^drwil-limite\nLimite : sondes absentes/);
     assert.match(m, /✓ .*« Noter en intention »/);
     assert.deepEqual(p.etat().limits, [{ intent: LIMITE, choice: "note" }]);
+    // Plus de sondage de fusion (QUA-163) : un ancien `drwil-merge` n'est pas lu, rien n'est écrit.
     m = await cursor(p, acp("drwil-merge", "Fusion de la PR ?", ["Automatic merge", "Manual merge"]), async (_, choix) => choix[0].id);
-    assert.match(m, /✓ réponse au sondage de fusion lue, état inchangé/);
+    assert.doesNotMatch(m, /sondage de fusion/);
     assert.equal(p.etat().auto_merge, undefined);
-    // Abandon : rien n'est lu ; sondage recommandé : refusé avant affichage.
-    m = await cursor(p, acp("drwil-merge", "Fusion de la PR ?", ["Automatic merge", "Manual merge"]), async () => null);
-    assert.match(m, /✗ aucune réponse lue dans le sondage de fusion/);
-    assert.equal(p.etat().auto_merge, undefined);
+    // Abandon : rien n'est lu ; sondage à choix multiple : refusé avant affichage.
+    m = await cursor(p, acp("drwil-limite", texte(AUTRE), ["Traiter maintenant", "Noter en intention"]), async () => null);
+    assert.match(m, /✗ aucune réponse lue dans le sondage des limites/);
     const multiple = acp("drwil-limite", texte(AUTRE), ["Traiter maintenant", "Noter en intention"]);
     multiple.questions[0].allowMultiple = true;
     let affiche = false;
-    for (const refuse of [acp("drwil-merge", "Fusion ?", ["Automatic merge (Recommended)", "Manual merge"]), multiple])
-      await cursor(p, refuse, async () => {
-        affiche = true;
-        return "o0";
-      });
-    assert.equal(affiche, false, "refusés avant affichage");
+    await cursor(p, multiple, async () => {
+      affiche = true;
+      return "o0";
+    });
+    assert.equal(affiche, false, "refusé avant affichage");
     assert.equal(p.etat().auto_merge, undefined);
     assert.deepEqual(p.etat().limits, [{ intent: LIMITE, choice: "note" }]);
     // Le crochet lu par le client, et le module du gabarit qu'il charge : réponse étrangère, double ou absente,

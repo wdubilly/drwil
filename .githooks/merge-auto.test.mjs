@@ -282,6 +282,22 @@ test("QUA-164 fusion automatique : la consigne de l'état et le skill appellent 
   // Le suivi de la PR par la session principale (file, file parallèle) vaut aussi pour la MR, par glab.
   for (const phrase of ["sur GitLab la MR par `glab`", "on GitLab the MR with `glab`"])
     assert.equal(consigne.split(phrase).length - 1, 2, phrase);
+
+  // Sans marque ni autorisation : la consigne est donnée à tout chantier, jamais en SCOPING ni après une fusion
+  // annulée par une réouverture échouée (QUA-181 : la reprogrammation revient à l'humain).
+  for (const [activite, extra, attendue] of [
+    ["BUILD", {}, true],
+    ["CLOSING", {}, true],
+    ["SCOPING", { active_brief: null }, false],
+    ["CLOSING", { merge_cancelled: { pr: 7 } }, false],
+  ]) {
+    const dir = projet({ etat: { activity: activite, ...extra } });
+    mkdirSync(join(dir, "docs/projects"), { recursive: true });
+    writeFileSync(join(dir, "docs/projects/x.md"), "# Projet : x\n");
+    assert.equal(/Fusion automatique, comportement par défaut \(QUA-163\)/.test(context(readState(dir), dir)), attendue, activite);
+  }
+  const en = projet({ lang: "en" });
+  assert.match(context(readState(en), en), /Automatic merge, the default behaviour \(QUA-163\), with no authorisation to ask for/);
 });
 
 /** Projet en SCOPING, dépôt git sur `branche`, avec (ou non) la marque héritée de fin de cadrage. */
