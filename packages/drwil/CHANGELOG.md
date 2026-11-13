@@ -15,6 +15,17 @@ closing commit; the release renames this section to its version.
   the mirror check and its own test. A static test refuses a check whose
   command cites a script outside its `paths`.
 
+### Fixed
+
+- `pr-watch` no longer says « green » before the PR's own CI has run: a
+  skipped or neutral check never counts as passed, a verdict is only given on
+  the PR head equal to the local commit of its branch, and a CI not yet
+  registered is waited for up to 3 minutes (inside the 30-minute limit, GitHub
+  and GitLab) before « not run ». At the time limit, checks still queued
+  (never started) are named apart from those running. Every `gh` or `glab`
+  call of `pr-watch` and `merge-auto` now has a time limit; a call cut at it
+  is « not run », never a success.
+
 ## 0.11.1 (2026-11-10)
 
 ### Added

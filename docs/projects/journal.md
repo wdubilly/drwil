@@ -4423,3 +4423,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/couverture-claude-compile-le-paquet`.
 
 - **Preuve de clôture** : `docs/preuves/couverture-claude-compile-le-paquet.md`.
+
+## 2026-11-13 — Le suivi de PR ne dit « verte » que sur la CI de la PR, qu'il attend si elle tarde
+
+- **Ce qui change** : causes reproduites par des tests en échec contre le code d'avant (push seul visible, CI de PR absente puis inscrite, tête de PR en retard, file d'attente au délai, appel bloqué). `bucket` classe `SKIPPED` et `NEUTRAL` en « sauté », jamais réussi ; `ciOf` exige un contrôle réellement réussi et retient la verte, pendant le délai de grâce, tant que des contrôles sautés n'ont aucun run du même nom (run sauté d'un push avant celui de la PR) ; `watch` n'énonce « verte », « rouge » ou « fusionnée » que si la tête de la PR est le commit local de sa branche, attend 3 minutes (dans le délai global) une CI pas encore inscrite, sur GitHub comme sur GitLab, et nomme au délai les contrôles en cours et ceux en file d'attente, sans relance ; `ghJson`, `ghRun` et `glabRun` ont un délai de 60 s, un appel coupé valant « non exécuté ». Les lectures de la forge (`ghJson`, `bucket`, `ciOf`, `look`, `localTip`, `lookGitlab`) rejoignent `.githooks/merge-auto-forge.mjs`, réexportées par `.githooks/pr-watch.mjs`, pour tenir le plafond de 200 lignes (QUA-001) ; `lookMr` leur est passé en paramètre (l'importer bouclait sur `.githooks/close.mjs`). QUA-100 réécrit.
+- **Décisions clés** : la tête de PR se compare au commit local de la branche de la PR (`HEAD` quand on est dessus), pas à `HEAD` seul : une session sur `master` qui suit la PR par son numéro n'attend pas 30 minutes ; branche absente en local, rien à comparer. Dans la fiche, `QUA-100` passe en dernière preuve de deux critères (queue de preuve, hors de l'empreinte d'acceptation) : `verify` lisait `QUA-013`, attesté par un humain, et les jugeait « non durables ».
+- **Critères et preuves** : tests de `.githooks/pr-watch.test.mjs` et `.githooks/merge-auto-forge.test.mjs` (100 % des lignes et branches des deux hooks) ; `node .githooks/run-checks.mjs` OK ; `GOVERNANCE: PASS (CI pending)` à la clôture (258 PASS, 23 ATTESTED, 0 FAIL, 0 MANUAL).
+- **Limites connues** : si le run de la PR n'apparaît pas dans les 3 minutes, le seul run sauté du push (avec ses jobs réussis) est jugé vert ; un `gh pr merge` coupé au délai est dit « refusé » (code 1) par `.githooks/merge-auto.mjs`, hors du cadre, jamais un succès.
+- **Clôturé par** : la branche `workstream/pr-watch-attend-la-ci`.
+
+- **Preuve de clôture** : `docs/preuves/pr-watch-attend-la-ci.md`.
