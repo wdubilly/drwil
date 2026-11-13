@@ -135,9 +135,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.2) Le cache de verdicts de la CI est de nouveau sauvegardé à chaque fusion : le push sauté ne
-  sauvegardait plus depuis le 2026-11-08 ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
-  `docs/projects/cache-des-verdicts-de-ci-retabli.md`.
 - [ ] [IA] [P0] (0.11.2) Un seul run de tests pour le seuil de couverture et la couverture du diff : contrôle unique
   `coverage-diff-<couche>`, fusion des projets existants, avertissement de `doctor` ; prêt, D1 à D5 tranchées (cadré le
   2026-11-11) — `docs/projects/couverture-un-seul-run-de-tests.md`.
