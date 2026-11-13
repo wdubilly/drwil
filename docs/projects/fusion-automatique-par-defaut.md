@@ -75,6 +75,11 @@ files:
   - packages/drwil/serve/page.html
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - docs/projects/kit-mechanics.md
+  - README.md
+  - packages/drwil/README.md
+  - packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md
+  - packages/drwil/templates/common/base/.githooks/worktree.mjs
+  - packages/drwil/templates/common/base/.githooks/state-draft.mjs
 -->
 
 ## 1. Besoin
@@ -123,6 +128,8 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
 - `QUA-050` — ancien critère : « La PR du détour est intitulée « Détour de <fiche> », au mode de fusion décidé au lancement » — raison : la PR de détour est en fusion automatique, comme toute PR (validé le 2026-11-13)
 - `QUA-099` — ancien critère : « Une PR de documentation seule part en fusion automatique sans question », la question `drwil-merge` gardée pour les PR qui touchent du code — raison : toute PR (code ou documentation) part en fusion automatique, sans question ; `drwil-merge` retiré du skill de lancement, d'`AGENTS.md` et de la section 8 (validé le 2026-11-13)
 - `.githooks/state-cli.mjs` — gardé à sa version de la branche (QUA-113) : `start` au terminal ne pose plus « Retapez MERGE » (QUA-037) (validé le 2026-11-13)
+- `.githooks/worktree.mjs` — gardé à sa version de la branche (QUA-113) : paramètre `autoMerge` mort retiré de `launchInWorktree` et `launchParallel` (validé le 2026-11-13)
+- `.githooks/state-draft.mjs` — gardé à sa version de la branche (QUA-113) : paramètre `autoMerge` mort retiré de `draftFinish` (validé le 2026-11-13)
 - `.githooks/state-cli-process.test.mjs` — gardé à sa version de la branche (QUA-113) : le terminal simulé ne répond plus à la question MERGE (validé le 2026-11-13)
 - `.githooks/state-transitions.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/contracts.mjs` — gardé à sa version de la branche (QUA-113) : lit le champ Retiré (validé le 2026-11-13)
@@ -180,6 +187,12 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
   le module `state-merge` plus appelé (gabarit, copie, test ; `docs/projects/kit-mechanics.md` et la carte),
   `queue_merge` plus écrit (`.githooks/state-transitions.mjs`), un état ancien qui porte ces marques restant valide
   (QUA-188) — décidé par le demandeur.
+- 2026-11-13 (suite) : second sondage des limites, « Traiter maintenant » aux deux limites (la réponse vaut le oui de
+  l'élargissement) : la documentation visiteur (`README.md`, `packages/drwil/README.md`, recette `adopt-the-kit`,
+  gabarit et copie) dit que toute PR part en fusion automatique par `merge-auto`, sans choix au lancement ni sondage
+  de fin de cadrage ; le paramètre `autoMerge` mort est retiré de `launchInWorktree`, `launchParallel` et
+  `draftFinish` (`.githooks/worktree.mjs`, `.githooks/state-draft.mjs`, gabarit, copies et tests) — décidé par le
+  demandeur.
 
 ## 5. Points à trancher
 
