@@ -99,6 +99,9 @@ jobs:
       # l'artefact `arbre-prouve` de cette CI de PR ; elle n'est lue que par ce push. Tout manque (aucune PR,
       # CI non verte, artefact absent ou expiré, arbre différent : PR non à jour) rejoue tout. Le job reste
       # rapporté « succès » sous son nom exigé : la CI de la branche principale reste verte pour QUA-251.
+      # QUA-296 : sauté, ce push sauvegarde quand même le cache de verdicts (clé : son sha), avec les verdicts que cette
+      # CI de PR a laissés dans la même preuve, posés seulement après la comparaison des arbres. Verdicts absents ou
+      # illisibles (preuve d'avant QUA-296, artefact expiré) : rien n'est sauvegardé, et c'est dit sans faire échouer la CI.
       - name: Arbre déjà prouvé par la dernière CI verte d'une PR ?
         id: prouve
         if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
@@ -117,6 +120,13 @@ jobs:
             if [ "$(cat "$RUNNER_TEMP/preuve/arbre-prouve.txt" 2>/dev/null)" = "$arbre" ]; then
               saute=true
               echo "::notice::Contrôles non rejoués : l'arbre $arbre est celui que la CI verte de la PR (run $run) a prouvé."
+              if jq -e '.checks | type == "object"' "$RUNNER_TEMP/preuve/run-checks-verdicts.json" > /dev/null 2>&1; then
+                mkdir -p .drwil/evidence
+                cp "$RUNNER_TEMP/preuve/run-checks-verdicts.json" .drwil/evidence/run-checks-verdicts.json
+                echo "::notice::Verdicts de la CI de la PR (run $run) repris pour le cache de verdicts de $COMMIT."
+              else
+                echo "::warning::Aucun verdict lisible dans la preuve du run $run : le cache de verdicts n'est pas sauvegardé pour $COMMIT."
+              fi
               break
             fi
           done
@@ -185,6 +195,11 @@ jobs:
         run: node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards
         env:
           DRWIL_CI_REUSE: ${{ github.event_name == 'pull_request' && '1' || '' }}
+      # QUA-296 : les verdicts de cette passe, mis de côté avant le rejeu avec les hooks de la branche principale (qui
+      # réécrit le fichier) ; joints à la preuve de l'arbre, ils ne sont lus que par le push de la fusion, jamais par une PR.
+      - name: Garder les verdicts de cette passe pour la fusion
+        if: github.event_name == 'pull_request' && hashFiles('.drwil/evidence/run-checks-verdicts.json') != ''
+        run: mkdir -p "$RUNNER_TEMP/arbre-prouve" && cp .drwil/evidence/run-checks-verdicts.json "$RUNNER_TEMP/arbre-prouve/"
       - name: Sauvegarder les verdicts de la branche principale
         if: always() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && hashFiles('.drwil/evidence/run-checks-verdicts.json') != ''
         uses: actions/cache/save@v6
@@ -220,15 +235,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       # Preuve lue par le push sur la branche principale (étape « Arbre déjà prouvé… ») : posée en dernier, donc
-      # seulement si chaque étape du job a réussi, avec l'arbre exact que cette CI a joué.
+      # seulement si chaque étape du job a réussi, avec l'arbre exact que cette CI a joué (et ses verdicts, QUA-296).
       - name: Consigner l'arbre prouvé par cette CI
         if: github.event_name == 'pull_request'
-        run: git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/arbre-prouve.txt"
+        run: mkdir -p "$RUNNER_TEMP/arbre-prouve" && git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/arbre-prouve/arbre-prouve.txt"
       - if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: arbre-prouve
-          path: ${{ runner.temp }}/arbre-prouve.txt
+          path: ${{ runner.temp }}/arbre-prouve
       # Non-régression (journal « Capitaliser les tests de non-régression », docs/projects/journal.md) : sur une PR en échec, les mêmes
       # contrôles sont rejoués sur la base de la PR pour dire si l'échec était déjà là. Le verdict ne
       # change pas — le job reste en échec : un échec préexistant se corrige aussi, il ne s'excuse pas.

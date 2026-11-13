@@ -37,7 +37,7 @@ sur le même arbre, sans qu'une PR relise jamais ses propres verdicts, et que l'
 
 - Un push sur la branche principale dont l'arbre est déjà prouvé par la CI verte d'une PR sauvegarde quand même le
   cache de verdicts, sous la clé du commit poussé, à partir des verdicts de cette PR ; l'arbre prouvé et l'arbre poussé
-  sont comparés avant toute sauvegarde — contrat à créer
+  sont comparés avant toute sauvegarde — `QUA-296`
 - Une PR ne restaure que des verdicts sauvegardés par la branche principale, jamais ceux d'une PR (même la sienne) —
   `QUA-250`
 - Sur une PR, la CI écrit au journal le commit du cache de verdicts restauré et son retard en nombre de commits sur
@@ -93,6 +93,21 @@ même chemin que l'artefact d'arbre prouvé (commit de fusion → PR → dernier
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-11) : fiche cadrée, D1 à D3 tranchées, prête ; rien d'implémenté.
-- **Travail non commité** : cette fiche et sa ligne d'index.
-- **Prochaine étape** : [IA] lot 1, au lancement de la fiche par le demandeur.
+- **Dernier état** (2026-11-13) : lot 1 fait et commité. Cause reproduite : sur le push de `afb44e5` (fusion #420),
+  l'étape « Sauvegarder les verdicts de la branche principale » est `skipped` (aucun fichier de verdicts, la passe
+  étant sautée) ; dernier cache `run-checks-verdicts-*` posé par un push non sauté. Correctif dans
+  `.github/workflows/ia-first.yml` (dépôt seulement) : la PR garde ses verdicts juste après sa passe, avant le rejeu
+  QUA-113 (qui réécrit le fichier), dans `$RUNNER_TEMP/arbre-prouve/` ; l'artefact `arbre-prouve` porte désormais ce
+  dossier (fichier de l'arbre et fichier de verdicts) ; au push, après comparaison des arbres, les verdicts
+  lisibles (`jq`) sont copiés dans `.drwil/evidence/run-checks-verdicts.json` (si présent), et l'étape de sauvegarde existante (non
+  sautée) les enregistre sous `github.sha` ; sinon un `::warning::`. Contrat `QUA-296` créé, contrôle `tests-qua-296`
+  déclaré, test QUA-296 dans `.github/scripts/workflows-yaml.test.mjs` (dépôt seulement, échoue sur l'ancien workflow).
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [IA] lot 2 (âge du cache restauré, contrat à créer), puis lot 3 : porter QUA-296 dans le
+  gabarit GitHub (décision dans le job `plan`, artefact `proven-tree`, étapes en anglais), étendre le test QUA-296 au
+  gabarit (la boucle du test ne liste que le dépôt), retirer « le gabarit livré suit » de la règle de QUA-296,
+  CHANGELOG, `kit-mechanics.md`.
+- **Pièges** : la première fusion après ce chantier ne sauvegarde rien si la PR a été prouvée par une CI d'avant le
+  correctif (preuve sans verdicts : avertissement attendu). QUA-250 dit encore « le push … rejoue donc tout » avant de
+  sauvegarder : désormais un push sauté sauvegarde des verdicts de PR ; la fiche réserve la modification de QUA-250 au
+  oui du demandeur (« Contrats modifiés ») — QUA-296 a été créé à la place, sans toucher QUA-250 ; à soumettre.
