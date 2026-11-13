@@ -190,6 +190,14 @@ QUA-215 et QUA-216 ; ne pas les recopier ici). Claude Code (`.claude/settings.js
 `.gemini/hooks/drwil-node.sh` (copie du gabarit, choix de la forme dans `packages/drwil/src/render-gemini.ts`) ; sous
 Windows la commande reste `node` seul. Côté visiteur : `INSTALL.md` (QUA-218).
 
+## 4. Cache de verdicts de la CI GitHub
+
+Une PR restaure les verdicts de la branche principale (QUA-250) et dit au journal quel commit le cache restauré
+porte et son retard sur la base (QUA-297). La fusion sauvegarde ce cache même quand son push est sauté sur arbre
+prouvé : les verdicts voyagent avec la preuve d'arbre de la PR (QUA-296). Dans le workflow du dépôt tout se passe dans
+le job `checks` (artefact `arbre-prouve`) ; dans celui du gabarit, le job `plan` compare les arbres et passe les
+verdicts à `checks` (artefacts `proven-tree` et `proven-verdicts`). Règles et preuves : ces contrats, non recopiés ici.
+
 ## Reprise
 
 - Sondage d'attestation Claude Code : `drwil attest-poll` prépare le jugement ;

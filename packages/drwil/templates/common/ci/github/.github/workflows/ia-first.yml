@@ -13,14 +13,13 @@ jobs:
       matrix: ${{ steps.plan.outputs.matrix || '{"include":[]}' }}
       count: ${{ steps.plan.outputs.count || '0' }}
       previous: ${{ steps.plan.outputs.previous }}
+      verdicts: ${{ steps.proven.outputs.verdicts }}
     steps:
-      # QUA-263: a push on a branch whose pull request is open would replay what the pull request plays: its steps are skipped, and the
-      # skip is said. No job-level `if` (a skipped job is not reported under its name). No pull request, or GitHub mute: tested; main and tags never skipped.
+      # QUA-263: a push on a branch with an open PR skips its steps and says so (no job-level `if`); no PR or GitHub mute: tested; main never skipped.
       - id: pr
         env: { GH_TOKEN: "${{ github.token }}", EVENT: "${{ github.event_name }}", REF: "${{ github.ref }}", MAIN: "${{ github.event.repository.default_branch }}", BRANCH: "${{ github.ref_name }}" }
         run: |
-          skip=false
-          if [ "$EVENT" = push ] && [[ "$REF" == refs/heads/* ]] && [ "$REF" != "refs/heads/$MAIN" ]; then
+          skip=false; if [ "$EVENT" = push ] && [[ "$REF" == refs/heads/* ]] && [ "$REF" != "refs/heads/$MAIN" ]; then
             open=$(gh pr list --repo "${{ github.repository }}" --head "$BRANCH" --state open --json number --jq length) || open=0
             if [ "$open" != "0" ]; then skip=true; echo "::notice::Push skipped: the open pull request of $BRANCH already runs these checks."; fi
           fi
@@ -28,42 +27,41 @@ jobs:
       - if: steps.pr.outputs.skip != 'true'
         uses: actions/checkout@v7
         with: { fetch-depth: 0 }
-      # A push on the main branch whose tree is the one the last green pull request CI played (its `proven-tree` artifact) does not replay
-      # the checks, and says so; anything missing (no pull request, CI not green, artifact expired, different tree) replays everything.
+      # A main-branch push whose tree a green PR CI proved (`proven-tree`) skips the checks, else all replayed; QUA-296: its verdicts still saved.
       - name: Is the tree already proven by the last green pull request CI?
         id: proven
         if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env: { GH_TOKEN: "${{ github.token }}", REPO: "${{ github.repository }}", COMMIT: "${{ github.sha }}" }
         run: |
-          skip=false
-          tree=$(git rev-parse 'HEAD^{tree}')
+          skip=false; tree=$(git rev-parse 'HEAD^{tree}')
           for head in $(gh api "repos/$REPO/commits/$COMMIT/pulls" --jq '.[].head.sha' 2>/dev/null); do
             run=$(gh api "repos/$REPO/actions/runs?head_sha=$head&event=pull_request&per_page=100" --jq '[.workflow_runs[] | select(.path | startswith(".github/workflows/ia-first.yml"))] | sort_by(.created_at) | last | select(.conclusion == "success") | .id' 2>/dev/null) || continue
-            [ -n "$run" ] || continue
-            rm -rf "$RUNNER_TEMP/proof"
+            [ -n "$run" ] || continue; rm -rf "$RUNNER_TEMP/proof"
             gh run download "$run" --repo "$REPO" --name proven-tree --dir "$RUNNER_TEMP/proof" 2>/dev/null || continue
             if [ "$(cat "$RUNNER_TEMP/proof/proven-tree.txt" 2>/dev/null)" = "$tree" ]; then
-              skip=true
-              echo "::notice::Checks not replayed: tree $tree is the one the green pull request CI (run $run) proved."
+              skip=true; echo "::notice::Checks not replayed: tree $tree is the one the green pull request CI (run $run) proved."
+              if jq -e '.checks | type == "object"' "$RUNNER_TEMP/proof/run-checks-verdicts.json" > /dev/null 2>&1; then
+                mkdir -p .drwil/evidence && cp "$RUNNER_TEMP/proof/run-checks-verdicts.json" .drwil/evidence/run-checks-verdicts.json && echo "verdicts=true" >> "$GITHUB_OUTPUT"
+              else echo "::warning::No readable verdict in the proof of run $run: the verdicts cache is not saved for $COMMIT."; fi
               break
             fi
           done
           [ "$skip" = true ] || echo "Tree not proven by a green pull request CI: everything is replayed."
           echo "skip=$skip" >> "$GITHUB_OUTPUT"
+      - if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && steps.proven.outputs.verdicts == 'true'
+        uses: actions/upload-artifact@v4
+        with: { name: proven-verdicts, path: .drwil/evidence/run-checks-verdicts.json, retention-days: 1 }
       - if: steps.pr.outputs.skip != 'true' && steps.proven.outputs.skip != 'true'
         uses: actions/setup-node@v7
         with: { node-version: 24 }
-      # No sharded check: empty matrix, count 0, no slices job. A declaration the engine refuses fails this job (QUA-013), never "no slice".
-      # QUA-250: the previous run of this pull request is read first (its slow verdicts, replayed at the least doubt): no slice is planned for what it settled.
+      # No sharded check: no slices job; a refused declaration fails this job (QUA-013). QUA-250: no slice for what this PR's previous run settled.
       - name: Plan the slices of the sharded checks
         id: plan
         if: steps.pr.outputs.skip != 'true' && steps.proven.outputs.skip != 'true'
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           node .githooks/run-checks.mjs --pr-previous >> "$GITHUB_OUTPUT"
-          matrix=$(node .githooks/run-checks.mjs --shard-plan)
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-          echo "count=$(jq '.include | length' <<< "$matrix")" >> "$GITHUB_OUTPUT"
+          matrix=$(node .githooks/run-checks.mjs --shard-plan); { echo "matrix=$matrix"; echo "count=$(jq '.include | length' <<< "$matrix")"; } >> "$GITHUB_OUTPUT"
   # One job per slice. A pull request plays it with the main branch's hooks (QUA-113); its verdict is an artifact the aggregation reads.
   shards:
     needs: plan
@@ -123,14 +121,20 @@ jobs:
           a="$RUNNER_TEMP/gitleaks.tar.gz"
           [ -s "$a" ] || curl -sSfL --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 120 -o "$a" https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
           echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | (cd "$RUNNER_TEMP" && sha256sum -c -)
-          mkdir -p ~/.local/bin && tar -xzf "$a" -C ~/.local/bin gitleaks
-          ~/.local/bin/gitleaks version
-      # QUA-250: a pull request restores the main branch's last verdicts and run-checks reuses each "ok" check whose fingerprint is
-      # unchanged; only a push on the main branch (everything replayed) saves them. Without a restored cache, everything is replayed.
+          mkdir -p ~/.local/bin && tar -xzf "$a" -C ~/.local/bin gitleaks && ~/.local/bin/gitleaks version
+      # QUA-250: a PR reuses the main branch's last verdicts for unchanged checks; only a push on the main branch saves them (QUA-296 when skipped).
       - name: Restore the verdicts of the main branch's CI
+        id: verdicts
         if: github.event_name == 'pull_request'
         uses: actions/cache/restore@v6
         with: { path: .drwil/evidence/run-checks-verdicts.json, key: "run-checks-verdicts-${{ github.event.pull_request.base.sha }}", restore-keys: run-checks-verdicts- }
+      - name: Age of the restored verdicts cache (QUA-297, the prefix may serve an old one; never blocking, it only costs time)
+        if: github.event_name == 'pull_request'
+        env: { KEY: "${{ steps.verdicts.outputs.cache-matched-key }}", BASE: "${{ github.event.pull_request.base.sha }}" }
+        run: |
+          commit=${KEY##*-}; if [ -z "$KEY" ]; then echo "::notice::verdicts cache: none restored (first run or cache expired): everything is replayed."
+          elif behind=$(git rev-list --count "$commit..$BASE" 2>/dev/null); then echo "::notice::verdicts cache: commit $commit, $behind commits behind the base $BASE."
+          else echo "::notice::verdicts cache: commit $commit, unknown lag (commit missing from the history of the base $BASE)."; fi
       # Sharded checks are judged on the slices' verdicts (`--aggregate-shards`): every slice of this commit "ok", none missing.
       - name: Download the slices' verdicts
         if: needs.plan.outputs.skip != 'true' && needs.plan.outputs.count != '0'
@@ -145,12 +149,18 @@ jobs:
         run: node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards
         env:
           DRWIL_CI_REUSE: ${{ github.event_name == 'pull_request' && '1' || '' }}
+      - name: Keep this pass's verdicts for the merge (QUA-296, before the replay rewrites them; a skipped push takes those the plan read)
+        if: github.event_name == 'pull_request' && hashFiles('.drwil/evidence/run-checks-verdicts.json') != ''
+        run: cp .drwil/evidence/run-checks-verdicts.json "$RUNNER_TEMP/"
+      - name: Take the proven pull request's verdicts
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.plan.outputs.verdicts == 'true'
+        uses: actions/download-artifact@v4
+        with: { name: proven-verdicts, path: .drwil/evidence }
       - name: Save the main branch's verdicts
         if: always() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && hashFiles('.drwil/evidence/run-checks-verdicts.json') != ''
         uses: actions/cache/save@v6
         with: { path: .drwil/evidence/run-checks-verdicts.json, key: "run-checks-verdicts-${{ github.sha }}" }
-      # QUA-113: a pull request is replayed with the main branch's hooks (read through Git) and the PR's list of checks: a PR that weakens
-      # a hook or removes a check does not validate itself. The PR's base-checks.mjs runs only while the main branch has none (adoption).
+      # QUA-113: replayed with the main branch's hooks (read through Git): a PR that weakens a hook or removes a check does not validate itself.
       - name: Replay the checks with the main branch's hooks
         if: github.event_name == 'pull_request'
         env: { BASE_REF: "${{ github.base_ref }}" }
@@ -161,13 +171,13 @@ jobs:
       - if: github.event_name == 'pull_request' && always() && hashFiles('.drwil/evidence/pr-verdicts/pr-verdicts.json') != ''
         uses: actions/upload-artifact@v4
         with: { name: pr-verdicts, path: .drwil/evidence/pr-verdicts, retention-days: 14, overwrite: true }
-      # Read by the push on the main branch (step "Is the tree already proven…"): last, so only if every step succeeded.
+      # Read by the push on the main branch (step "Is the tree already proven…"): last, so only if every step succeeded (verdicts joined, QUA-296).
       - name: Record the tree proven by this CI
         if: github.event_name == 'pull_request'
         run: git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/proven-tree.txt"
       - if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
-        with: { name: proven-tree, path: "${{ runner.temp }}/proven-tree.txt" }
+        with: { name: proven-tree, path: "${{ runner.temp }}/proven-tree.txt\n${{ runner.temp }}/run-checks-verdicts.json" }
       # drwil-project-begin steps
       # Steps of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
       # drwil-project-end steps
@@ -179,18 +189,12 @@ jobs:
     needs: checks
     if: always() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.checks.result == 'failure'
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
+    permissions: { issues: write }
     steps:
       - name: Open an issue if CI breaks on the main branch
-        env:
-          GH_TOKEN: ${{ github.token }}
+        env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           title="CI broken on the main branch (run ${{ github.run_id }})"
           open=$(gh issue list --repo "${{ github.repository }}" --search "CI broken on the main branch in:title" --state open --json number --jq 'length')
-          if [ "$open" = "0" ]; then
-            gh issue create --repo "${{ github.repository }}" --title "$title" \
-              --body "The \`checks\` job failed on the main branch (${{ github.event.repository.default_branch }}). See ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. To fix before any new workstream."
-          else
-            echo "A broken-CI issue is already open, no duplicate."
-          fi
+          if [ "$open" = "0" ]; then gh issue create --repo "${{ github.repository }}" --title "$title" --body "The \`checks\` job failed on the main branch (${{ github.event.repository.default_branch }}). See ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. To fix before any new workstream."
+          else echo "A broken-CI issue is already open, no duplicate."; fi
