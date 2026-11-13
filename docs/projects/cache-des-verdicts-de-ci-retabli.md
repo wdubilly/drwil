@@ -48,7 +48,9 @@ sur le même arbre, sans qu'une PR relise jamais ses propres verdicts, et que l'
 
 ## Contrats modifiés
 
-(aucun à ce stade ; si la réalisation de D1 modifie `QUA-250`, la puce s'écrit ici sur le oui du demandeur.)
+- `QUA-250` — ancien critère : « Seul un push sur la branche principale, qui ne demande jamais la reprise et rejoue
+  donc tout, sauvegarde ces verdicts » — raison : un push sauté sur arbre prouvé sauvegarde aussi les verdicts, ceux
+  de la PR qui a prouvé cet arbre (exception `QUA-296`, D1) (validé le 2026-11-13).
 
 ## 2. Hors périmètre
 
@@ -111,12 +113,18 @@ même chemin que l'artefact d'arbre prouvé (commit de fusion → PR → dernier
   écrire « run-checks » dans le script ferait exiger à tort la garde de saut par le test QUA-250 (filtre par texte).
   Contrat `QUA-297` créé, contrôle `tests-qua-297` déclaré, test QUA-297 (dépôt seulement, échoue sur l'ancien
   workflow ; joue le script par bash sur un dépôt git temporaire).
+- **Lot 3** (2026-11-13) : fait et commité. Gabarit GitHub : le job `plan` copie les verdicts de la preuve
+  `proven-tree` après la comparaison des arbres (`::warning::` sinon) et les passe au job `checks` du même run par
+  l'artefact `proven-verdicts` (sortie `verdicts`) : `checks` reste le seul à écrire le cache (test QUA-250 : un seul
+  écrivain). La preuve garde `$RUNNER_TEMP/proven-tree.txt` (attendu par le test du paquet QUA-270, hors scope) et y
+  joint `$RUNNER_TEMP/run-checks-verdicts.json` (deux chemins dans le même dépôt d'artefact). Âge du cache en anglais
+  (`KEY`, `id: verdicts`). Tests QUA-296 et QUA-297 étendus au gabarit. `QUA-250` modifié (décision du demandeur),
+  QUA-296 et QUA-297 livrés, CHANGELOG et `kit-mechanics.md` (section 4). Le gabarit est tenu à 200 lignes (plafond
+  QUA-157) : commentaires et scripts resserrés ; les étapes ajoutées gardées pour un push de la branche principale
+  (test QUA-263 du paquet : toute étape d'un push de branche à PR ouverte est sautée).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 3 : porter QUA-296 et QUA-297 dans le gabarit GitHub (décision QUA-296 dans le job
-  `plan`, artefact `proven-tree`, étapes et messages en anglais ; id de la restauration à donner), étendre les tests
-  QUA-296 et QUA-297 au gabarit (leurs boucles ne listent que le dépôt), retirer « le gabarit livré suit » des règles
-  de QUA-296 et QUA-297, `npm run installer-depot`, CHANGELOG « Unreleased » (anglais), `kit-mechanics.md`.
+- **Prochaine étape** : vérifier et clore ; la mesure (cache sauvegardé à la première fusion, durée d'une PR de doc
+  suivante) se relève après la fusion, au journal.
 - **Pièges** : la première fusion après ce chantier ne sauvegarde rien si la PR a été prouvée par une CI d'avant le
-  correctif (preuve sans verdicts : avertissement attendu). QUA-250 dit encore « le push … rejoue donc tout » avant de
-  sauvegarder : désormais un push sauté sauvegarde des verdicts de PR ; la fiche réserve la modification de QUA-250 au
-  oui du demandeur (« Contrats modifiés ») — QUA-296 a été créé à la place, sans toucher QUA-250 ; à soumettre.
+  correctif (preuve sans verdicts : avertissement attendu). QUA-250 a été modifié sur le oui du demandeur (« Contrats
+  modifiés ») pour renvoyer à l'exception QUA-296.

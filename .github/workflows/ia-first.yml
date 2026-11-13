@@ -168,8 +168,8 @@ jobs:
           ~/.local/bin/gitleaks version
       # QUA-250 : sur une PR, les verdicts de la dernière CI de la branche principale sont restaurés et
       # run-checks reprend chaque contrôle « ok » dont l'empreinte (fichiers et commande) est identique ;
-      # seul un push sur la branche principale, qui rejoue tout, les sauvegarde : une PR ne relit jamais
-      # un verdict qu'elle aurait écrit. Sans cache restauré, tout est rejoué.
+      # seul un push sur la branche principale les sauvegarde (rejoués, ou ceux de la PR qui a prouvé son arbre,
+      # QUA-296) : une PR ne relit jamais un verdict qu'elle aurait écrit. Sans cache restauré, tout est rejoué.
       - name: Restaurer les verdicts de la CI de la branche principale
         id: verdicts
         if: github.event_name == 'pull_request'

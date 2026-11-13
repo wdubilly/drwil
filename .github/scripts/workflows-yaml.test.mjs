@@ -170,65 +170,112 @@ for (const [fichier, preuve] of [
     assert.ok(ci.jobs.checks.permissions === undefined || ci.jobs.checks.permissions.actions === "read", "lecture des artefacts autorisée");
   });
 
-// Lot 1 : la CI du dépôt ; le gabarit livré suit au lot 3 de la même fiche.
-for (const [fichier, preuve] of [[".github/workflows/ia-first.yml", "arbre-prouve"]])
+// Dépôt (tout dans checks, artefact `arbre-prouve`, messages en français) et gabarit livré (décision dans le job plan,
+// artefact `proven-tree`, messages en anglais).
+const GABARIT_GH = "packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml";
+for (const [fichier, preuve, temp] of [
+  [".github/workflows/ia-first.yml", "arbre-prouve", "preuve"],
+  [GABARIT_GH, "proven-tree", "proof"],
+])
   test(`QUA-296 : ${fichier} sauvegarde le cache de verdicts d'un push sauté, avec les verdicts de la PR joints à la preuve, après la comparaison des arbres`, () => {
     const ci = parseAllDocuments(readFileSync(join(RACINE, fichier), "utf8"))[0].toJS();
     const etapes = ci.jobs.checks.steps;
+    const gabarit = fichier === GABARIT_GH;
     const passe = etapes.findIndex((e) => e.run === "node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards");
     const rejeu = etapes.findIndex((e) => e.run?.includes("base-checks.mjs") && e.run.includes("--aggregate-shards"));
     const pose = etapes.findLastIndex((e) => /^actions\/upload-artifact@/.test(e.uses ?? ""));
-    const dossier = etapes[pose].with.path;
     assert.equal(etapes[pose].with.name, preuve);
     // PR : les verdicts de sa passe sont mis de côté avant le rejeu avec les hooks de la branche principale (qui réécrit le
-    // fichier), dans le dossier de la preuve, posé en dernier : seulement si tout le job a réussi.
+    // fichier), avec l'arbre de la preuve, posée en dernier : seulement si tout le job a réussi.
     const garde = etapes.findIndex((e) => e.run?.includes(`cp ${VERDICTS} `));
     assert.ok(passe >= 0 && passe < garde && garde < rejeu && rejeu < pose, `${fichier} : verdicts gardés entre la passe et le rejeu`);
     assert.match(
       etapes[garde].if,
       /^github\.event_name == 'pull_request' && hashFiles\('\.drwil\/evidence\/run-checks-verdicts\.json'\) != ''$/,
     );
-    assert.ok(
-      etapes[garde].run.endsWith(`"$RUNNER_TEMP/${preuve}/"`) && dossier === `\${{ runner.temp }}/${preuve}`,
+    const dossierVerdicts = gabarit ? "$RUNNER_TEMP/" : `$RUNNER_TEMP/${preuve}/`;
+    assert.ok(etapes[garde].run.endsWith(`"${dossierVerdicts}"`), "verdicts gardés pour la preuve");
+    const chemins = String(etapes[pose].with.path).trim().split("\n");
+    assert.deepEqual(
+      chemins,
+      gabarit ? [`\${{ runner.temp }}/${preuve}.txt`, `\${{ runner.temp }}/run-checks-verdicts.json`] : [`\${{ runner.temp }}/${preuve}`],
       "verdicts dans la preuve",
     );
-    assert.ok(etapes[pose - 1].run.includes(`"$RUNNER_TEMP/${preuve}/${preuve}.txt"`), "arbre dans le même dossier");
+    assert.ok(
+      etapes[pose - 1].run.includes(gabarit ? `"$RUNNER_TEMP/${preuve}.txt"` : `"$RUNNER_TEMP/${preuve}/${preuve}.txt"`),
+      "arbre à côté",
+    );
     // Push : les verdicts de la preuve ne sont posés qu'une fois l'arbre comparé, et seulement s'ils sont lisibles.
-    const lit = etapes.findIndex((e) => e.id === "prouve");
-    const run = etapes[lit].run;
-    const compare = run.search(/= "\$arbre" \]; then/);
-    const copie = run.indexOf(`cp "$RUNNER_TEMP/preuve/run-checks-verdicts.json" ${VERDICTS}`);
-    const lisible = run.indexOf('jq -e \'.checks | type == "object"\' "$RUNNER_TEMP/preuve/run-checks-verdicts.json"');
+    const lecteur = gabarit ? ci.jobs.plan.steps : etapes;
+    const lit = lecteur.findIndex((e) => /^(prouve|proven)$/.test(e.id ?? ""));
+    const run = lecteur[lit].run;
+    const compare = run.search(/= "\$(arbre|tree)" \]; then/);
+    const copie = run.indexOf(`cp "$RUNNER_TEMP/${temp}/run-checks-verdicts.json" ${VERDICTS}`);
+    const lisible = run.indexOf(`jq -e '.checks | type == "object"' "$RUNNER_TEMP/${temp}/run-checks-verdicts.json"`);
     assert.ok(compare >= 0 && compare < lisible && lisible < copie, `${fichier} : arbres comparés, puis verdicts lus, puis copiés`);
-    assert.match(run, /::warning::Aucun verdict lisible/, "une sauvegarde impossible est dite");
+    assert.match(
+      run,
+      gabarit ? /::warning::No readable verdict/ : /::warning::Aucun verdict lisible/,
+      "une sauvegarde impossible est dite",
+    );
     // La sauvegarde n'est pas sautée avec les contrôles : elle suit la seule présence du fichier, clé = sha du push.
     const sauve = etapes.findIndex((e) => /^actions\/cache\/save@/.test(e.uses ?? ""));
-    assert.ok(lit < sauve && !etapes[sauve].if.includes("saute"));
+    assert.ok(!/saute|skip/.test(etapes[sauve].if));
     assert.match(etapes[sauve].if, /hashFiles\('\.drwil\/evidence\/run-checks-verdicts\.json'\) != ''$/);
     assert.match(etapes[sauve].with.key, /^run-checks-verdicts-\$\{\{ github\.sha \}\}$/);
+    if (gabarit) {
+      // Gabarit : le plan, qui a comparé les arbres, passe les verdicts au job checks du même run, seul à sauvegarder (QUA-250).
+      const passeAuChecks = lecteur.findIndex((e) => /^actions\/upload-artifact@/.test(e.uses ?? ""));
+      assert.ok(lit < passeAuChecks, "verdicts passés après la comparaison");
+      assert.equal(lecteur[passeAuChecks].if, `${lecteur[lit].if} && steps.proven.outputs.verdicts == 'true'`);
+      assert.equal(lecteur[passeAuChecks].with.path, VERDICTS);
+      assert.match(run, /echo "verdicts=true" >> "\$GITHUB_OUTPUT"/);
+      assert.ok(run.indexOf('echo "verdicts=true"') > copie, "drapeau posé après la copie");
+      assert.match(ci.jobs.plan.outputs.verdicts, /^\$\{\{ steps\.proven\.outputs\.verdicts \}\}$/);
+      const recoit = etapes.findIndex(
+        (e) => /^actions\/download-artifact@/.test(e.uses ?? "") && e.with?.name === lecteur[passeAuChecks].with.name,
+      );
+      assert.ok(recoit >= 0 && recoit < sauve, "verdicts reçus avant la sauvegarde");
+      assert.equal(etapes[recoit].if, `${lecteur[lit].if} && needs.plan.outputs.verdicts == 'true'`);
+      assert.equal(etapes[recoit].with.path, ".drwil/evidence");
+    } else assert.ok(lit < sauve);
     // La preuve n'est lue que par le push de la branche principale : une PR ne relit jamais ces verdicts (QUA-250).
     const lecteurs = Object.values(ci.jobs).flatMap((j) => (j.steps ?? []).filter((e) => (e.run ?? "").includes(`--name ${preuve}`)));
     assert.deepEqual(
       lecteurs.map((e) => e.id),
-      ["prouve"],
+      [lecteur[lit].id],
     );
-    assert.match(etapes[lit].if, /^github\.event_name == 'push'/);
+    assert.match(lecteur[lit].if, /^github\.event_name == 'push'/);
   });
 
-// Lot 2 : la CI du dépôt ; le gabarit livré suit au lot 3 de la même fiche.
-for (const fichier of [".github/workflows/ia-first.yml"])
+for (const [fichier, cle, dit] of [
+  [
+    ".github/workflows/ia-first.yml",
+    "CLE",
+    {
+      retard: (c) => `cache de verdicts : commit ${c}, 2 commits de retard`,
+      absent: /cache de verdicts : aucun restauré/,
+      inconnu: /retard inconnu/,
+    },
+  ],
+  [
+    GABARIT_GH,
+    "KEY",
+    { retard: (c) => `verdicts cache: commit ${c}, 2 commits behind`, absent: /verdicts cache: none restored/, inconnu: /unknown lag/ },
+  ],
+])
   test(`QUA-297 : sur une PR, ${fichier} écrit au journal le commit du cache de verdicts restauré et son retard sur la base, ou son absence, sans bloquer`, () => {
     const ci = parseAllDocuments(readFileSync(join(RACINE, fichier), "utf8"))[0].toJS();
     const etapes = ci.jobs.checks.steps;
     const restaure = etapes.findIndex((e) => /^actions\/cache\/restore@/.test(e.uses ?? ""));
-    const age = etapes.findIndex((e) => (e.env?.CLE ?? "").includes("cache-matched-key"));
+    const age = etapes.findIndex((e) => (e.env?.[cle] ?? "").includes("cache-matched-key"));
     const passe = etapes.findIndex((e) => e.run === "node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards");
     assert.ok(restaure >= 0 && age === restaure + 1 && age < passe, `${fichier} : âge dit juste après la restauration, avant la passe`);
     const etape = etapes[age];
     assert.equal(etape.if, "github.event_name == 'pull_request'");
     // La clé réellement restaurée (exacte ou par le préfixe), jamais la clé demandée ; la base est celle de la PR.
     assert.ok(etapes[restaure].id, "restauration identifiée");
-    assert.equal(etape.env.CLE, `\${{ steps.${etapes[restaure].id}.outputs.cache-matched-key }}`);
+    assert.equal(etape.env[cle], `\${{ steps.${etapes[restaure].id}.outputs.cache-matched-key }}`);
     assert.match(etape.env.BASE, /^\$\{\{ github\.event\.pull_request\.base\.sha \}\}$/);
     assert.ok(!etape["continue-on-error"], "non bloquante par son script, pas par un échec toléré");
     if (process.platform === "win32") return;
@@ -239,17 +286,17 @@ for (const fichier of [".github/workflows/ia-first.yml"])
       git("init", "-q");
       for (const n of [1, 2, 3]) git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", `c${n}`);
       const [base, , ancien] = git("rev-list", "HEAD").split("\n");
-      const jouer = (cle) =>
-        spawnSync("bash", ["-ec", etape.run], { cwd: depot, encoding: "utf8", env: { PATH: process.env.PATH, CLE: cle, BASE: base } });
+      const jouer = (valeur) =>
+        spawnSync("bash", ["-ec", etape.run], { cwd: depot, encoding: "utf8", env: { PATH: process.env.PATH, [cle]: valeur, BASE: base } });
       const vieux = jouer(`run-checks-verdicts-${ancien}`);
       assert.equal(vieux.status, 0);
-      assert.match(vieux.stdout, new RegExp(`cache de verdicts : commit ${ancien}, 2 commits de retard`));
+      assert.ok(vieux.stdout.includes(dit.retard(ancien)), vieux.stdout);
       const absent = jouer("");
       assert.equal(absent.status, 0);
-      assert.match(absent.stdout, /cache de verdicts : aucun restauré/);
+      assert.match(absent.stdout, dit.absent);
       const inconnu = jouer(`run-checks-verdicts-${"0".repeat(40)}`);
       assert.equal(inconnu.status, 0, "commit absent de l'historique : dit, sans bloquer");
-      assert.match(inconnu.stdout, /retard inconnu/);
+      assert.match(inconnu.stdout, dit.inconnu);
     } finally {
       rmSync(depot, { recursive: true, force: true });
     }

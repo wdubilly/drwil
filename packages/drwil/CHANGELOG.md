@@ -14,6 +14,17 @@ closing commit; the release renames this section to its version.
   replayed as soon as one of those files changes. `miroirs-gabarit` only runs
   the mirror check and its own test. A static test refuses a check whose
   command cites a script outside its `paths`.
+- The delivered GitHub CI saves the verdicts cache again on every merge: a
+  push on the main branch whose checks are skipped because a green pull
+  request CI proved its tree now saves, under its own commit, the verdicts
+  that pull request's pass wrote (carried with the `proven-tree` artifact,
+  read only after the trees are compared). Before, a skipped push saved
+  nothing, and every pull request restored an ever older cache and replayed
+  almost everything. Missing or unreadable verdicts are warned about, never
+  failing the CI.
+- On a pull request, the delivered GitHub CI says in its log which commit the
+  restored verdicts cache comes from and how many commits it lags behind the
+  base (or that none was restored), without ever failing.
 
 ### Fixed
 
