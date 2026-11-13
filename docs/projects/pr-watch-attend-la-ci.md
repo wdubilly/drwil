@@ -44,13 +44,13 @@ verdict. Quatre défauts, vérifiés dans le code le 2026-11-13 :
 - « verte », « rouge » ou « fusionnée » ne se disent que si la tête de la PR (`headRefOid`) est le commit `HEAD`
   local ; sinon le suivi attend, dans le délai global — `QUA-100`
 - Sans aucun contrôle inscrit (ou seulement des contrôles sautés), le suivi attend jusqu'à 3 minutes que la CI
-  apparaisse (GitHub et GitLab) ; passé ce délai, il reste « non exécuté » (code 2), jamais « verte » — `QUA-100`,
-  `QUA-013`
+  apparaisse (GitHub et GitLab) ; passé ce délai, il reste « non exécuté » (code 2), jamais « verte » — `QUA-013`,
+  `QUA-100`
 - Le délai de grâce compte dans les 30 minutes du délai global, jamais en plus — `QUA-100`
 - Au délai global dépassé, le message nomme les contrôles restés en file d'attente (jamais démarrés), distincts de
   ceux en cours ; aucune relance automatique — `QUA-100`
 - Chaque appel à `gh` ou `glab` de `.githooks/pr-watch.mjs` et `.githooks/merge-auto-forge.mjs` a un délai ; un délai atteint vaut
-  « non exécuté », jamais un succès — `QUA-100`, `QUA-161`, `QUA-013`
+  « non exécuté », jamais un succès — `QUA-013`, `QUA-161`, `QUA-100`
 - Tests : push seul visible (contrôles sautés et un succès hors PR), CI de PR absente puis inscrite, tête de PR en
   retard sur `HEAD`, appel bloqué ; chacun en échec contre le code actuel — `QUA-100`
 
