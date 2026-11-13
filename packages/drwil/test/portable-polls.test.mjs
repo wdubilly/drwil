@@ -150,11 +150,12 @@ for (const tool of ["gemini", "codex"]) {
       assert.match(r.contexte, /« Traiter maintenant ».*à soumettre de nouveau : docs\/intentions\/autre-limite\.md/);
       assert.deepEqual(p.etat().limits, [{ intent: LIMITE, choice: "now" }]);
       assert.equal((await lancer(p.root, tool, true, avant(tool, fusion(tool)))).status, 0);
-      r = await lancer(p.root, tool, false, apres(tool, fusion(tool), ["Automatic merge"]));
-      assert.match(r.contexte, /✓ fusion automatique autorisée par l'humain/);
-      assert.equal(p.etat().auto_merge, true);
-      await lancer(p.root, tool, false, apres(tool, fusion(tool), ["Manual merge"]));
-      assert.equal(p.etat().auto_merge, undefined);
+      // Réponse lue, état inchangé : la fusion automatique est le comportement par défaut (QUA-188).
+      for (const choix of ["Automatic merge", "Manual merge"]) {
+        r = await lancer(p.root, tool, false, apres(tool, fusion(tool), [choix]));
+        assert.match(r.contexte, /✓ réponse au sondage de fusion lue, état inchangé/, choix);
+        assert.equal(p.etat().auto_merge, undefined, choix);
+      }
       // Sans réponse lue (résultat illisible, en erreur, réponse libre ou double) : rien n'est écrit.
       const avantEtat = JSON.stringify(p.etat());
       const sans = [
@@ -269,8 +270,9 @@ test("QUA-266 : copilot, les sondages passent par .claude/settings.json ; l'entr
       /✓ .*« Noter en intention »/,
     );
     assert.deepEqual(p.etat().limits, [{ intent: LIMITE, choice: "note" }]);
-    await lancer(p.root, "claude", false, claude(false, fusionCopilot, "Automatic merge"));
-    assert.equal(p.etat().auto_merge, true);
+    const lu = await lancer(p.root, "claude", false, claude(false, fusionCopilot, "Automatic merge"));
+    assert.match(lu.contexte, /✓ réponse au sondage de fusion lue, état inchangé/);
+    assert.equal(p.etat().auto_merge, undefined);
     const prerempli = {
       ...sondage,
       requestedSchema: {
@@ -335,12 +337,13 @@ test("QUA-266 : cursor, le client ACP dédié lit la réponse humaine aux sondag
     assert.match(vu, /^drwil-limite\nLimite : sondes absentes/);
     assert.match(m, /✓ .*« Noter en intention »/);
     assert.deepEqual(p.etat().limits, [{ intent: LIMITE, choice: "note" }]);
-    await cursor(p, acp("drwil-merge", "Fusion de la PR ?", ["Automatic merge", "Manual merge"]), async (_, choix) => choix[0].id);
-    assert.equal(p.etat().auto_merge, true);
+    m = await cursor(p, acp("drwil-merge", "Fusion de la PR ?", ["Automatic merge", "Manual merge"]), async (_, choix) => choix[0].id);
+    assert.match(m, /✓ réponse au sondage de fusion lue, état inchangé/);
+    assert.equal(p.etat().auto_merge, undefined);
     // Abandon : rien n'est lu ; sondage recommandé : refusé avant affichage.
     m = await cursor(p, acp("drwil-merge", "Fusion de la PR ?", ["Automatic merge", "Manual merge"]), async () => null);
     assert.match(m, /✗ aucune réponse lue dans le sondage de fusion/);
-    assert.equal(p.etat().auto_merge, true);
+    assert.equal(p.etat().auto_merge, undefined);
     const multiple = acp("drwil-limite", texte(AUTRE), ["Traiter maintenant", "Noter en intention"]);
     multiple.questions[0].allowMultiple = true;
     let affiche = false;
@@ -350,7 +353,7 @@ test("QUA-266 : cursor, le client ACP dédié lit la réponse humaine aux sondag
         return "o0";
       });
     assert.equal(affiche, false, "refusés avant affichage");
-    assert.equal(p.etat().auto_merge, true);
+    assert.equal(p.etat().auto_merge, undefined);
     assert.deepEqual(p.etat().limits, [{ intent: LIMITE, choice: "note" }]);
     // Le crochet lu par le client, et le module du gabarit qu'il charge : réponse étrangère, double ou absente,
     // rien d'enregistré.

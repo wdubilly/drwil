@@ -823,7 +823,7 @@ test("QUA-216 : avec node, le repli ne change ni la sortie ni le code de chaque 
   }
 });
 
-test("merge-poll : sondage de fusion autonome lu sous les deux formes ; refusé s'il est rempli, recommandé ou mal formé (QUA-265)", async () => {
+test("merge-poll : sondage de fusion autonome lu sous les deux formes ; refusé s'il est rempli, recommandé ou mal formé", async () => {
   const m = await load("merge-poll.mjs");
   // Le module d'état est simulé : seul le hook est mesuré ici (le vrai est éprouvé par les tests de l'état).
   const racine = projet(

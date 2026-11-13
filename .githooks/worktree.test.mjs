@@ -98,7 +98,7 @@ test("QUA-142 la réponse humaine crée le worktree frère depuis la branche pri
   const etat = readState(d.voisin).state;
   assert.equal(etat.activity, "BUILD");
   assert.equal(etat.active_brief, FICHE);
-  assert.equal(etat.auto_merge, true);
+  assert.equal(etat.auto_merge, undefined, "la fusion automatique est le comportement par défaut : plus d'auto_merge écrit");
   assert.equal(existsSync(join(d.racine, ".drwil", "state.json")), false, "l'état du dossier d'origine ne change pas");
   assert.equal(readFileSync(join(d.racine, ".git", "config"), "utf8"), configAvant, "la configuration du dépôt principal n'est pas écrite");
   assert.equal(git(d.racine, "rev-parse", "--abbrev-ref", "HEAD"), "master");
@@ -293,7 +293,7 @@ test("QUA-147 une file en parallèle lance chaque fiche dans son worktree, porte
     const etat = readState(d.dossier(nom)).state;
     assert.equal(etat.activity, "BUILD");
     assert.equal(etat.active_brief, fiche);
-    assert.equal(etat.auto_merge, true);
+    assert.equal(etat.auto_merge, undefined, "la fusion automatique est le comportement par défaut");
     assert.equal(etat.queue, undefined, "aucune file dans un worktree : chacun mène sa fiche");
   }
   const origine = readState(d.racine).state;

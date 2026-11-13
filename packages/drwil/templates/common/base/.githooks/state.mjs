@@ -109,26 +109,19 @@ export function setDetour(root, brief, detour, now = new Date().toISOString()) {
 }
 
 /**
- * Records the human's answer to the end-of-scoping poll (QUA-187), read by the poll hook — never called by the agent:
- * « Automatic merge » (`auto`) authorises `.githooks/merge-auto.mjs` for the scoping PR of the current branch, in
- * SCOPING only (QUA-188); « Manual merge » and « Continue scoping » schedule nothing and withdraw an earlier
- * authorisation (QUA-189).
+ * Answers the end-of-scoping poll (QUA-187), read by the poll hook — never called by the agent. The automatic merge is
+ * the default (`.githooks/merge-auto.mjs`, PR of the current branch only): no answer writes anything any more, a legacy
+ * `scoping_merge` is left as read.
  */
 export function scopingMerge(root, choice) {
   const T = texts(root);
   const { state, problems } = readState(root);
-  // An invalid state is never overwritten: it would hide it (read as neutral SCOPING).
   if (problems.length || state.activity !== "SCOPING")
     return { code: 1, message: fill(T.scopingMergeNotScoping, problems.length ? problems.join(" ; ") : state.activity) };
   const branch = git(root, "rev-parse", "--abbrev-ref", "HEAD");
-  const rest = { ...state };
-  delete rest.scoping_merge;
-  if (choice !== "auto") {
-    if (state.scoping_merge) writeState(root, rest);
+  if (choice !== "auto")
     return { code: 0, message: choice === "continue" ? fill(T.scopingMergeContinue, branch ?? "?") : T.scopingMergeManual };
-  }
   if (!branch || branch === "HEAD" || branch === mainBranch(root)) return { code: 1, message: T.scopingMergeBranch };
-  writeState(root, { ...rest, scoping_merge: { branch } });
   return { code: 0, message: fill(T.scopingMergeAuthorised, branch) };
 }
 

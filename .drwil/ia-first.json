@@ -2838,24 +2838,7 @@
     {
       "id": "tests-qua-188",
       "name": "tests de QUA-188, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-188 .githooks/merge-auto.test.mjs",
-      "ciJob": "checks",
-      "paths": [
-        "outils/tests-par-fichier.mjs",
-        ".githooks/**",
-        ".claude/**",
-        "packages/drwil/**",
-        "package.json",
-        "package-lock.json",
-        ".drwil/ia-first.json"
-      ],
-      "degradable": false,
-      "needsBuild": true
-    },
-    {
-      "id": "tests-qua-189",
-      "name": "tests de QUA-189, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-189 .githooks/merge-auto.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-188 .githooks/merge-auto.test.mjs .githooks/state-merge.test.mjs .githooks/state.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -3406,14 +3389,6 @@
       "run": "node outils/tests-par-fichier.mjs QUA-264 .githooks/close-limits.test.mjs",
       "ciJob": "checks",
       "paths": ["outils/tests-par-fichier.mjs", ".githooks/**", ".drwil/ia-first.json"],
-      "degradable": false
-    },
-    {
-      "id": "tests-qua-265",
-      "name": "tests de QUA-265, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-265 .githooks/state-merge.test.mjs",
-      "ciJob": "checks",
-      "paths": ["outils/tests-par-fichier.mjs", ".githooks/**", ".claude/**", "packages/drwil/templates/**", ".drwil/ia-first.json"],
       "degradable": false
     },
     {
@@ -4038,6 +4013,22 @@
       "ciJob": "checks",
       "paths": ["outils/tests-par-fichier.mjs", ".github/**", ".drwil/ia-first.json"],
       "degradable": false
+    },
+    {
+      "id": "tests-qua-298",
+      "name": "tests de QUA-298, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-298 .githooks/contracts.test.mjs packages/drwil/test/kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
     },
     {
       "id": "couverture-diff",

@@ -95,17 +95,17 @@ export async function doctor(opts: { targetDir: string; exec?: Exec }): Promise<
       ? fill(T.contractErrors, errors.length, errors.map((e) => e.message).join(" ; "))
       : fill(T.validContracts, contracts.length, registry),
   );
-  const provable = contracts.filter((k) => k.checks?.length).length;
-  const noCheck = contracts.filter((k) => !k.checks?.length).map((k) => k.id);
+  const live = contracts.filter((k) => !k.retired); // a retired contract, without proof (QUA-298), is not counted
+  const noCheck = live.filter((k) => !k.checks?.length).map((k) => k.id);
   point(
     "proofs",
     T.proofs,
     noCheck.length ? "warning" : "ok",
-    `${provable}/${contracts.length}${noCheck.length ? fill(T.noCheck, noCheck.join(", ")) : ""}`,
+    `${live.filter((k) => k.checks?.length).length}/${live.length}${noCheck.length ? fill(T.noCheck, noCheck.join(", ")) : ""}`,
   );
 
-  const uncovered = contracts.filter(lacksCoverage);
-  const human = contracts.filter((k) => k.form === "section" && (k.manual || k.checks === null)).length;
+  const uncovered = live.filter(lacksCoverage);
+  const human = live.filter((k) => k.form === "section" && (k.manual || k.checks === null)).length;
   point(
     "coverage",
     T.coverage,

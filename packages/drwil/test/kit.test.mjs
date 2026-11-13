@@ -1283,7 +1283,7 @@ test("QUA-037 : un sondage à choix multiple lance la première fiche et met les
   assert.equal(etat.active_brief, "docs/projects/un.md");
   assert.deepEqual(etat.queue, ["docs/projects/trois.md"]);
   assert.equal(etat.queue_merge, true);
-  assert.equal(etat.auto_merge, true);
+  assert.equal(etat.auto_merge, undefined, "la fusion automatique est le comportement par défaut : plus d'auto_merge écrit");
 });
 
 test("QUA-037 : une file de deux fiches se construit par deux réponses à choix unique lues par le hook, puis « Terminer la file » ; l'agent ne remplit rien", async () => {
@@ -1824,8 +1824,9 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     tool_input: claudeFusion,
     tool_response: { ...claudeFusion, answers: { "Quelle fiche lancer ?": fiche, "Fusion à la fin du chantier ?": "Fusion automatique" } },
   });
-  assert.match(rf.stdout, /fusion automatique autorisée/i);
-  assert.equal(etat().auto_merge, true);
+  assert.equal(rf.status, 0);
+  assert.equal(etat().activity, "BUILD");
+  assert.equal(etat().auto_merge, undefined, "la fusion automatique est le comportement par défaut : plus d'auto_merge écrit");
 
   // Copilot CLI : même hook, réponse en texte libre ; une fiche non cadrée est refusée.
   rmSync(join(dir, ".drwil/state.json"));
@@ -1873,11 +1874,11 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
     }).status,
     2,
   );
-  for (const [reponse, auto] of [
-    [`choix=${fiche}, drwil-merge=Automatic merge`, true],
-    [`drwil-merge=Automatic merge, choix=${fiche}`, true],
-    [`choix=${fiche}, drwil-merge=Manual merge`, false],
-    [`choix=${fiche}`, false],
+  for (const reponse of [
+    `choix=${fiche}, drwil-merge=Automatic merge`,
+    `drwil-merge=Automatic merge, choix=${fiche}`,
+    `choix=${fiche}, drwil-merge=Manual merge`,
+    `choix=${fiche}`,
   ]) {
     rmSync(join(dir, ".drwil/state.json"));
     hook({
@@ -1887,7 +1888,7 @@ test("lancer par sondage : la réponse humaine lance (formats Claude Code et Cop
       tool_result: { result_type: "success", text_result_for_llm: `User responded: ${reponse}` },
     });
     assert.equal(etat().activity, "BUILD", reponse);
-    assert.equal(etat().auto_merge, auto ? true : undefined, reponse);
+    assert.equal(etat().auto_merge, undefined, reponse);
   }
 });
 
@@ -2103,7 +2104,8 @@ test("QUA-165 : sous Copilot CLI, le champ des fiches à choix multiple (array, 
   rejouer("PostToolUse", `fiche=${fiches[1]}, ${fiches[0]}, drwil-merge=Automatic merge, drwil-parallel=Sequential queue`);
   assert.equal(etat().active_brief, fiches[0]);
   assert.deepEqual(etat().queue, [fiches[1]]);
-  assert.equal(etat().auto_merge, true);
+  assert.equal(etat().queue_merge, true, "la fusion choisie reste lue pour la file");
+  assert.equal(etat().auto_merge, undefined);
   rmSync(join(dir, ".drwil/state.json"));
 
   // Liste entre crochets : mêmes valeurs ; une seule fiche cochée est un lancement simple.
@@ -2155,7 +2157,8 @@ test("QUA-180 : le skill prescrit à Copilot CLI le champ des fiches en choix un
 
   rejouer({ type: "string", enum: [fiche] }, `fiche=${fiche}, drwil-merge=Automatic merge`);
   assert.equal(etat().active_brief, fiche);
-  assert.equal(etat().auto_merge, true);
+  assert.equal(etat().activity, "BUILD");
+  assert.equal(etat().auto_merge, undefined);
   rmSync(join(dir, ".drwil/state.json"));
 
   rejouer({ type: "array", items: { type: "string", enum: [fiche] } }, `fiche=["${fiche}"], drwil-merge=Manual merge`);
@@ -3474,6 +3477,21 @@ test("verify : contrat historique en tableau sans contrôle = MANUAL, jamais ign
     ],
   );
   assert.equal(v.status, "MANUAL");
+});
+
+test("QUA-298 : verify ne juge jamais un contrat retiré (ni PASS, ni attestable) ; un champ Retiré mal formé est une ERROR", async () => {
+  const retire = contrat("QUA-002", "**Retiré** : 2026-11-13 — remplacé par QUA-001.");
+  let v = await verify({ targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + retire) });
+  assert.deepEqual([v.status, v.contracts.map((k) => k.id)], ["PASS", ["QUA-001"]]);
+  v = await verify({ targetDir: await projetVerify(contrat("QUA-001", "**Contrôle** : `ok`") + retire), only: ["QUA-002"] });
+  assert.deepEqual(v.contracts, [], "jamais listé, donc jamais attestable");
+  v = await verify({ targetDir: await projetVerify(contrat("QUA-002", "**Retiré** : un jour.")) });
+  assert.equal(v.status, "ERROR");
+  assert.deepEqual(
+    v.contracts.map((k) => [k.id, k.status]),
+    [["QUA-002", "ERROR"]],
+  );
+  assert.match(v.contracts[0].reasons.join(), /champ Retiré mal formé « un jour\. »/);
 });
 
 test("verify : ERROR (exit 2) pour un contrôle inconnu, une obligation invérifiable ou un doublon ; FAIL l'emporte", async () => {

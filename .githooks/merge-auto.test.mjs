@@ -6,8 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ghRun, mergeAuto, parseArgs } from "./merge-auto.mjs";
-import { context, readState, scopingMerge, shortReminder } from "./state.mjs";
-import { STATE_MESSAGES } from "./state-messages.mjs";
+import { context, readState } from "./state.mjs";
 
 // Un hook lancé par `git commit` reçoit GIT_INDEX_FILE, GIT_DIR… : hérités, ils feraient agir les dépôts de test
 // (fin de cadrage) sur le dépôt qui lance les tests.
@@ -16,8 +15,8 @@ for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete p
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "merge-auto.mjs");
 const RACINE = join(dirname(SCRIPT), "..");
 
-/** Projet temporaire dont l'état autorise (ou non) la fusion automatique ; langue au choix. */
-function projet({ auto = true, lang, etat: extra = {} } = {}) {
+/** Projet temporaire en CLOSING, avec ou sans la marque héritée `auto_merge` (sans effet) ; langue au choix. */
+function projet({ auto = false, lang, etat: extra = {} } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "drwil-merge-auto-"));
   mkdirSync(join(dir, ".drwil"));
   const etat = { version: 1, activity: "CLOSING", active_brief: "docs/projects/x.md", active_request: null, since: null, ...extra };
@@ -26,7 +25,15 @@ function projet({ auto = true, lang, etat: extra = {} } = {}) {
   return dir;
 }
 
-const vue = (mergeStateStatus, extra = {}) => ({ number: 7, state: "OPEN", mergeStateStatus, autoMergeRequest: null, ...extra });
+const BRANCHE = "workstream/x";
+const vue = (mergeStateStatus, extra = {}) => ({
+  number: 7,
+  state: "OPEN",
+  headRefName: BRANCHE,
+  mergeStateStatus,
+  autoMergeRequest: null,
+  ...extra,
+});
 const ok = (corps) => ({ status: 0, stdout: JSON.stringify(corps), stderr: "" });
 
 /**
@@ -43,7 +50,16 @@ function faux({ vues, merge = { status: 0, stdout: "", stderr: "" }, update = { 
   return { gh, appels };
 }
 
-const options = (dir, extra) => ({ pr: "7", root: dir, sleep: async () => {}, ...extra });
+const options = (dir, extra) => ({ pr: "7", root: dir, branch: BRANCHE, sleep: async () => {}, ...extra });
+
+/** Fait de `dir` un dépôt git sur `branche` (branche courante lue par merge-auto). */
+function depotGit(dir, branche = BRANCHE) {
+  const git = (...a) => spawnSync("git", a, { cwd: dir, encoding: "utf8" });
+  git("init", "-q", "-b", "master");
+  git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init");
+  git("checkout", "-q", "-b", branche);
+  return dir;
+}
 
 test("QUA-161 fusion automatique : attend l'état, met à jour si BEHIND, programme, vérifie — dans cet ordre", async () => {
   const dir = projet();
@@ -66,11 +82,11 @@ test("QUA-161 fusion automatique : attend l'état, met à jour si BEHIND, progra
   assert.match(journal[0], /en retard sur la branche principale : mise à jour/);
   // Déjà à jour : aucune mise à jour ; PR de la branche courante sans numéro.
   const direct = faux({ vues: [ok(vue("CLEAN", { autoMergeRequest: {} }))] });
-  const r2 = await mergeAuto({ root: dir, gh: direct.gh });
+  const r2 = await mergeAuto({ root: dir, branch: BRANCHE, gh: direct.gh });
   assert.equal(r2.code, 0);
   // Minuterie et journal par défaut, langue française explicite.
   const defauts = faux({ vues: [ok(vue("BEHIND")), ok(vue("UNKNOWN")), ok(vue("CLEAN", { autoMergeRequest: {} }))] });
-  const r3 = await mergeAuto({ root: projet({ lang: "fr" }), gh: defauts.gh, interval: 1 });
+  const r3 = await mergeAuto({ root: projet({ lang: "fr" }), branch: BRANCHE, gh: defauts.gh, interval: 1 });
   assert.equal(r3.code, 0);
   assert.deepEqual(direct.appels, ["pr view", "pr merge", "pr view"]);
 });
@@ -86,12 +102,39 @@ test("QUA-162 fusion automatique : jamais programmée sur un état inconnu, pas 
     assert.match(r.message, /^\[merge-auto\] non exécuté : état de la PR #7 non calculé ou pas à jour après 1 min/);
     assert.ok(!appels.includes("pr merge"), "aucune programmation sans état à jour");
   }
-  let r = await mergeAuto(options(dir, { gh: faux({ vues: [ok(vue("DIRTY"))] }).gh }));
+  // La PR d'une autre branche que la branche courante : refusée après une seule lecture, rien n'est programmé.
+  const autre = faux({ vues: [ok(vue("CLEAN", { headRefName: "workstream/autre" }))] });
+  let r = await mergeAuto(options(dir, { gh: autre.gh }));
+  assert.deepEqual(
+    [r.code, r.message, autre.appels],
+    [
+      1,
+      "[merge-auto] refusé : la PR #7 est celle de la branche workstream/autre, pas de la branche courante workstream/x ; seule la PR de la branche courante se programme. La fusion n'est PAS programmée.",
+      ["pr view"],
+    ],
+  );
+  r = await mergeAuto(options(projet({ lang: "en" }), { gh: faux({ vues: [ok(vue("CLEAN", { headRefName: "y" }))] }).gh }));
+  assert.match(r.message, /^\[merge-auto\] refused: PR #7 is the one of branch y, not of the current branch workstream\/x/);
+  r = await mergeAuto(options(dir, { gh: faux({ vues: [ok({ number: 7, state: "OPEN", mergeStateStatus: "CLEAN" })] }).gh }));
+  assert.match(r.message, /est celle de la branche \?, pas de la branche courante/, "branche de la PR illisible : refusée");
+  // Branche courante inconnue (hors dépôt git, tête détachée) : refus sans appel à gh.
+  let lance = false;
+  for (const branche of [undefined, null]) {
+    r = await mergeAuto({ pr: "7", root: dir, ...(branche === null ? { branch: null } : {}), gh: () => (lance = true) });
+    assert.deepEqual([r.code, /branche git courante inconnue/.test(r.message)], [1, true]);
+  }
+  const detachee = depotGit(projet());
+  spawnSync("git", ["checkout", "-q", "--detach"], { cwd: detachee });
+  r = await mergeAuto({ pr: "7", root: detachee, gh: () => (lance = true) });
+  assert.equal(r.code, 1);
+  assert.match((await mergeAuto({ root: projet({ lang: "en" }), gh: () => (lance = true) })).message, /current git branch unknown/);
+  assert.equal(lance, false);
+  r = await mergeAuto(options(dir, { gh: faux({ vues: [ok(vue("DIRTY"))] }).gh }));
   assert.deepEqual(
     [r.code, r.message],
     [1, "[merge-auto] refusé : la PR #7 est en conflit avec la branche principale ; résoudre le conflit, puis relancer."],
   );
-  r = await mergeAuto(options(dir, { gh: faux({ vues: [ok({ number: 7, state: "MERGED" })] }).gh }));
+  r = await mergeAuto(options(dir, { gh: faux({ vues: [ok({ number: 7, state: "MERGED", headRefName: BRANCHE })] }).gh }));
   assert.deepEqual([r.code, r.message], [1, "[merge-auto] refusé : la PR #7 n'est pas ouverte (MERGED)."]);
   r = await mergeAuto(options(dir, { gh: faux({ vues: [ok(vue("BEHIND"))], update: { status: 1, stdout: "", stderr: "boom" } }).gh }));
   assert.equal(r.code, 2);
@@ -154,19 +197,19 @@ test("QUA-162 fusion automatique : jamais programmée sur un état inconnu, pas 
   assert.match(r.message, /PAS programmée/);
 });
 
-test("QUA-163 fusion automatique : sans l'autorisation du lancement, l'outil refuse sans rien lancer ; messages en anglais", async () => {
-  let lance = false;
-  const gh = () => {
-    lance = true;
-  };
-  for (const dir of [projet({ auto: false }), mkdtempSync(join(tmpdir(), "drwil-merge-auto-vide-"))]) {
-    const r = await mergeAuto({ pr: "7", root: dir, gh });
-    assert.equal(r.code, 1);
-    assert.match(r.message, /la fusion automatique n'a pas été autorisée au lancement/);
+test("QUA-163 fusion automatique : sans autorisation, en CLOSING comme en SCOPING, la PR de la branche courante est programmée ; marques héritées sans effet ; messages en anglais", async () => {
+  const sansEtat = mkdtempSync(join(tmpdir(), "drwil-merge-auto-vide-"));
+  const cadrage = projet({ etat: { activity: "SCOPING", active_brief: null } });
+  for (const dir of [projet(), sansEtat, cadrage, projet({ auto: true })]) {
+    const programme = faux({ vues: [ok(vue("CLEAN")), ok(vue("CLEAN", { autoMergeRequest: {} }))] });
+    const r = await mergeAuto(options(dir, { gh: programme.gh }));
+    assert.deepEqual([r.code, programme.appels], [0, ["pr view", "pr merge", "pr view"]], dir);
+    assert.match(r.message, /programmée et vérifiée/);
   }
-  assert.equal(lance, false);
-  const en = projet({ auto: false, lang: "en" });
-  assert.match((await mergeAuto({ root: en, gh })).message, /automatic merge was not authorised at start/);
+  // Marque héritée de fin de cadrage pour une autre branche : sans effet, seule la branche courante compte.
+  const herite = projet({ etat: { activity: "SCOPING", active_brief: null, scoping_merge: { branch: "cadrage/autre" } } });
+  const r0 = await mergeAuto(options(herite, { gh: faux({ vues: [ok(vue("CLEAN", { autoMergeRequest: {} }))] }).gh }));
+  assert.equal(r0.code, 0);
   const enOk = projet({ lang: "en" });
   const r = await mergeAuto(options(enOk, { gh: faux({ vues: [ok(vue("CLEAN", { autoMergeRequest: {} }))] }).gh }));
   assert.equal(r.message, "[merge-auto] merge of PR #7 scheduled and checked. Follow it: node .githooks/pr-watch.mjs 7");
@@ -194,14 +237,19 @@ test("QUA-163 fusion automatique : ligne de commande et arguments", {
       env: { ...process.env, ...env, PATH: `${outils}:${process.env.PATH}` },
     });
   };
-  let r = lancer(`echo '{"number":7,"state":"OPEN","mergeStateStatus":"CLEAN","autoMergeRequest":{"mergeMethod":"MERGE"}}'`, projet());
+  let r = lancer(
+    `echo '{"number":7,"state":"OPEN","headRefName":"workstream/x","mergeStateStatus":"CLEAN","autoMergeRequest":{"mergeMethod":"MERGE"}}'`,
+    depotGit(projet()),
+  );
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /fusion de la PR #7 programmée et vérifiée/);
-  r = lancer(`exit 1`, projet(), { DRWIL_MERGE_AUTO_INTERVAL: "1" });
+  r = lancer(`exit 1`, depotGit(projet()), { DRWIL_MERGE_AUTO_INTERVAL: "1" });
   assert.equal(r.status, 2);
   assert.match(r.stderr, /non exécuté : gh injoignable/);
-  r = lancer(`exit 1`, projet({ auto: false }));
+  // Hors dépôt git : branche courante inconnue, refus.
+  r = lancer(`exit 1`, projet());
   assert.equal(r.status, 1);
+  assert.match(r.stderr, /branche git courante inconnue/);
 });
 
 test("QUA-164 fusion automatique : la consigne de l'état et le skill appellent l'outil, le suivi et le retour en SCOPING restent", () => {
@@ -236,82 +284,43 @@ test("QUA-164 fusion automatique : la consigne de l'état et le skill appellent 
     assert.equal(consigne.split(phrase).length - 1, 2, phrase);
 });
 
-/** Projet en SCOPING, dépôt git sur `branche`, avec (ou non) l'autorisation de fin de cadrage. */
-function cadrage({ branche = "cadrage/essai", autorise = true, lang } = {}) {
+/** Projet en SCOPING, dépôt git sur `branche`, avec (ou non) la marque héritée de fin de cadrage. */
+function cadrage({ branche = "cadrage/essai", herite = false, lang } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "drwil-merge-auto-cadrage-"));
   mkdirSync(join(dir, ".drwil"));
   if (lang) writeFileSync(join(dir, ".drwil", "ia-first.json"), JSON.stringify({ lang }));
-  const git = (...a) => spawnSync("git", a, { cwd: dir, encoding: "utf8" });
-  git("init", "-q", "-b", "master");
-  git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init");
-  git("checkout", "-q", "-b", branche);
-  if (autorise) assert.equal(scopingMerge(dir, "auto").code, 0);
-  return dir;
+  const etat = { version: 1, activity: "SCOPING", active_brief: null, active_request: null, since: null };
+  writeFileSync(join(dir, ".drwil", "state.json"), JSON.stringify(herite ? { ...etat, scoping_merge: { branch: branche } } : etat));
+  return depotGit(dir, branche);
 }
 
-test("QUA-188 fusion automatique en SCOPING : la réponse « Automatic merge » ouvre l'outil pour la PR de sa branche seulement", async () => {
+test("QUA-188 fusion automatique en SCOPING : la PR de cadrage de la branche courante est programmée sans réponse au sondage ; une autre branche refusée", async () => {
   const dir = cadrage();
   const programme = faux({
     vues: [ok(vue("CLEAN", { headRefName: "cadrage/essai" })), ok(vue("CLEAN", { headRefName: "cadrage/essai", autoMergeRequest: {} }))],
   });
-  const r = await mergeAuto(options(dir, { gh: programme.gh }));
+  const r = await mergeAuto({ pr: "7", root: dir, sleep: async () => {}, gh: programme.gh });
   assert.deepEqual([r.code, programme.appels], [0, ["pr view", "pr merge", "pr view"]]);
   // La PR d'une autre branche : refusée, rien n'est programmé.
   const autre = faux({ vues: [ok(vue("CLEAN", { headRefName: "workstream/autre" }))] });
-  const refus = await mergeAuto(options(dir, { gh: autre.gh }));
+  const refus = await mergeAuto({ pr: "7", root: dir, gh: autre.gh });
   assert.equal(refus.code, 1);
-  assert.match(refus.message, /la PR #7 est celle de la branche workstream\/autre.*autorisée que pour la branche cadrage\/essai/);
+  assert.match(refus.message, /la PR #7 est celle de la branche workstream\/autre, pas de la branche courante cadrage\/essai/);
   assert.deepEqual(autre.appels, ["pr view"]);
   const en = cadrage({ lang: "en" });
   assert.match(
-    (await mergeAuto(options(en, { gh: faux({ vues: [ok(vue("CLEAN", { headRefName: "x" }))] }).gh }))).message,
-    /authorised for branch cadrage\/essai only/,
+    (await mergeAuto({ pr: "7", root: en, gh: faux({ vues: [ok(vue("CLEAN", { headRefName: "x" }))] }).gh })).message,
+    /not of the current branch cadrage\/essai/,
   );
-  // Le rappel d'état le dit, dans les deux langues.
-  assert.match(
-    context(readState(dir), dir),
-    /Fusion automatique de la PR de cadrage autorisée pour la branche cadrage\/essai.*merge-auto\.mjs <numéro>.*pr-watch\.mjs <numéro>/s,
-  );
-  assert.match(context(readState(en), en), /Automatic merge of the scoping PR authorised for branch cadrage\/essai/);
-  // Sans la réponse, en SCOPING : refus comme avant, sans aucun appel à gh.
-  let lance = false;
-  const sans = await mergeAuto({ pr: "7", root: cadrage({ autorise: false }), gh: () => (lance = true) });
-  assert.equal(sans.code, 1);
-  assert.match(sans.message, /ni en fin de cadrage/);
-  assert.equal(lance, false);
+  // Une marque héritée reste lisible : l'état est valide et le rappel la dit encore, dans les deux langues.
+  const herite = cadrage({ herite: true });
+  assert.deepEqual(readState(herite).problems, []);
+  assert.match(context(readState(herite), herite), /Fusion automatique de la PR de cadrage autorisée pour la branche cadrage\/essai/);
+  const heriteEn = cadrage({ herite: true, lang: "en" });
+  assert.match(context(readState(heriteEn), heriteEn), /Automatic merge of the scoping PR authorised for branch cadrage\/essai/);
 });
 
-test("QUA-189 « Manual merge » et « Continue scoping » ne programment rien ; « Continue scoping » garde la même branche", async () => {
-  for (const reponse of ["manual", "continue"]) {
-    const dir = cadrage();
-    const r = scopingMerge(dir, reponse);
-    assert.equal(r.code, 0);
-    assert.equal(readState(dir).state.scoping_merge, undefined, reponse);
-    let lance = false;
-    const refus = await mergeAuto({ pr: "7", root: dir, gh: () => (lance = true) });
-    assert.deepEqual([refus.code, lance], [1, false], reponse);
-    if (reponse === "continue")
-      assert.match(r.message, /la PR reste ouverte et les cadrages suivants se commitent sur la même branche \(cadrage\/essai\)/);
-    else assert.match(r.message, /reste un geste humain/);
-  }
-  const skill = readFileSync(
-    join(RACINE, "packages/drwil/templates/common/tools/claude/.claude/skills/scope-a-workstream/SKILL.md"),
-    "utf8",
-  ).replace(/\s+/g, " ");
-  assert.match(
-    skill,
-    /\*\*Continue scoping\*\*: nothing is scheduled; the PR stays open and the next scopings are committed on \*\*the same branch\*\* \(one branch, one PR, no new branch\)/,
-  );
-  assert.match(skill, /\*\*Manual merge\*\*: nothing is scheduled/);
-  // Formulation neutre GitHub/GitLab : la MR et ses commandes glab sont nommées à côté de gh.
-  assert.match(skill, /glab mr create --target-branch <main branch>/);
-  assert.match(skill, /never chain the forge's commands \(`gh`, `glab`\) by hand/);
-  assert.match(skill, /`glab mr merge --auto-merge`\) without the "Automatic merge" answer/);
-  for (const lang of ["fr", "en"])
-    assert.match(STATE_MESSAGES[lang].scopingMergeReminder, /(commandes de la forge|forge's commands) \(`gh`, `glab`\)/);
-});
-
-test("QUA-181 : merge-auto qui voit la fusion programmée sur la PR de la marque l'efface et le dit ; autre PR ou fusion non programmée : la marque reste ; en anglais aussi", async () => {
+test("QUA-181 : tant que la marque « fusion annulée » est dans l'état, merge-auto refuse sans appel à la forge, quelle que soit la PR ; la marque reste ; en anglais aussi", async () => {
   /** Projet marqué « fusion annulée » sur la PR 7, sa fiche présente pour un état sans problème. */
   const marque = (lang) => {
     const dir = projet({ lang, etat: { merge_cancelled: { pr: 7 } } });
@@ -319,32 +328,23 @@ test("QUA-181 : merge-auto qui voit la fusion programmée sur la PR de la marque
     writeFileSync(join(dir, "docs/projects/x.md"), "# Projet : X\n\n<!-- scope\nfiles:\n  - a.mjs\n-->\n");
     return dir;
   };
-  const programmee = { autoMergeRequest: { mergeMethod: "MERGE" } };
-  for (const lang of ["fr", "en"]) {
-    const dir = marque(lang);
-    const { gh } = faux({ vues: [ok(vue("CLEAN")), ok(vue("CLEAN", programmee))] });
-    const r = await mergeAuto(options(dir, { gh }));
-    assert.equal(r.code, 0);
-    assert.match(
-      r.message,
-      lang === "fr"
-        ? /programmée et vérifiée.*\n\[merge-auto\] marque « fusion annulée » de la PR #7 effacée/s
-        : /scheduled and checked.*\n\[merge-auto\] « merge cancelled » mark of PR #7 cleared/s,
-    );
-    assert.equal(readState(dir).state.merge_cancelled, undefined);
-    assert.deepEqual(readState(dir).problems, []);
-    assert.doesNotMatch(shortReminder(readState(dir), dir), /PR #7 (ANNULÉE|CANCELLED)/);
-  }
-  // Autre PR que celle de la marque, programmation non vue, PR fusionnée sur-le-champ : la marque reste.
-  for (const [apres, number] of [
-    [programmee, 8],
-    [{}, 7],
-    [{ state: "MERGED" }, 7],
+  for (const [lang, attendu] of [
+    [
+      "fr",
+      /^\[merge-auto\] refusé : la fusion automatique de la PR #7 a été annulée par une réouverture non aboutie.*c'est à l'humain de le faire\. La fusion n'est PAS programmée\.$/,
+    ],
+    [
+      "en",
+      /^\[merge-auto\] refused: the automatic merge of PR #7 was cancelled by a failed reopening.*the human does\. The merge is NOT scheduled\.$/,
+    ],
   ]) {
-    const dir = marque();
-    const { gh } = faux({ vues: [ok(vue("CLEAN", { number })), ok(vue("CLEAN", { number, ...apres }))] });
-    const r = await mergeAuto(options(dir, { gh, pr: String(number) }));
-    assert.doesNotMatch(r.message, /effacée/);
-    assert.deepEqual(readState(dir).state.merge_cancelled, { pr: 7 });
+    for (const pr of ["7", "8", undefined]) {
+      const dir = marque(lang);
+      let lance = false;
+      const r = await mergeAuto({ pr, root: dir, branch: BRANCHE, gh: () => (lance = true) });
+      assert.deepEqual([r.code, lance], [1, false], `${lang} ${pr}`);
+      assert.match(r.message, attendu);
+      assert.deepEqual(readState(dir).state.merge_cancelled, { pr: 7 });
+    }
   }
 });

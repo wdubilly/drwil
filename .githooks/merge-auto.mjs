@@ -2,14 +2,15 @@
 // Schedules the automatic merge of a pull request in the safe order (QUA-166): wait until the forge has
 // computed the PR, update it if it is behind the main branch (BEHIND), `gh pr merge --auto --merge`, then
 // check that the merge is really scheduled. On GitLab, the same sequence on the merge request through `glab`
-// (QUA-161, client in merge-auto-forge.mjs: `glab mr rebase`, `glab mr merge --auto-merge`, merge_when_pipeline_succeeds). Only with the « Automatic merge » authorisation given at start
-// (read in the state), or, in SCOPING, the one given by the end-of-scoping poll for the PR of its branch
-// (`scoping_merge`, QUA-188); never schedules on a PR whose state is unknown or not up to date, never claims
-// the merge is scheduled without having seen it (QUA-013). Following the PR stays `pr-watch.mjs`'s job.
+// (QUA-161, client in merge-auto-forge.mjs: `glab mr rebase`, `glab mr merge --auto-merge`, merge_when_pipeline_succeeds).
+// No authorisation needed: the guard is the proof — only the PR of the current git branch (QUA-162), never while a
+// failed reopening's `merge_cancelled` mark is in the state (QUA-181: rescheduling stays the human's), never on a PR
+// whose state is unknown or not up to date, never claimed scheduled without having seen it (QUA-013). The legacy
+// `auto_merge` and `scoping_merge` marks are no longer read. Following the PR stays `pr-watch.mjs`'s job.
 // Usage: node .githooks/merge-auto.mjs [<pr number>] [--timeout <minutes>]
 // Exit code: 0 scheduled (or merged at once: CI already green), 1 refused, 2 not run (gh or glab unreachable, state not
-// computed in time). Seeing the merge scheduled on the PR of the state's `merge_cancelled` mark (QUA-181) clears
-// the mark, through writeState: the only state this tool writes.
+// computed in time). It writes no state.
+import { spawnSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,14 +18,16 @@ import { changeForge } from "./close-checks.mjs";
 import { forgeClient, ghRun } from "./merge-auto-forge.mjs";
 import { texts } from "./pr-watch.mjs";
 import { STATE_MESSAGES } from "./state-messages.mjs";
-import { readState, writeState } from "./state.mjs";
+import { readState } from "./state.mjs";
 
 const TEXTS = {
   fr: {
-    noAuth:
-      "[merge-auto] refusé : la fusion automatique n'a pas été autorisée au lancement (état : auto_merge absent), ni en fin de cadrage (réponse « Automatic merge » du sondage, état : scoping_merge absent). La fusion reste un geste humain.",
+    cancelled:
+      "[merge-auto] refusé : la fusion automatique de la {0} a été annulée par une réouverture non aboutie (marque merge_cancelled) ; l'outil ne la reprogramme jamais seul, c'est à l'humain de le faire. La fusion n'est PAS programmée.",
+    noBranch:
+      "[merge-auto] refusé : branche git courante inconnue (hors dépôt git ou tête détachée) ; seule la PR de la branche courante se programme. La fusion n'est PAS programmée.",
     otherBranch:
-      "[merge-auto] refusé : la {0} est celle de la branche {1}, alors que la fusion automatique de fin de cadrage n'est autorisée que pour la branche {2}. La fusion reste un geste humain.",
+      "[merge-auto] refusé : la {0} est celle de la branche {1}, pas de la branche courante {2} ; seule la PR de la branche courante se programme. La fusion n'est PAS programmée.",
     notRun: "[merge-auto] non exécuté : {0}",
     timeout: "état de la {0} non calculé ou pas à jour après {1} min (« {2} ») ; relancer la commande",
     notOpen: "[merge-auto] refusé : la {0} n'est pas ouverte ({1}).",
@@ -38,10 +41,12 @@ const TEXTS = {
     scheduled: "[merge-auto] fusion de la {0} programmée et vérifiée. Suivre : node .githooks/pr-watch.mjs {1}",
   },
   en: {
-    noAuth:
-      "[merge-auto] refused: automatic merge was not authorised at start (state: auto_merge missing), nor at the end of scoping (answer « Automatic merge » to the poll, state: scoping_merge missing). The merge stays a human gesture.",
+    cancelled:
+      "[merge-auto] refused: the automatic merge of {0} was cancelled by a failed reopening (merge_cancelled mark); the tool never schedules it again by itself, the human does. The merge is NOT scheduled.",
+    noBranch:
+      "[merge-auto] refused: current git branch unknown (outside a git repository or detached head); only the PR of the current branch is scheduled. The merge is NOT scheduled.",
     otherBranch:
-      "[merge-auto] refused: {0} is the one of branch {1}, while the end-of-scoping automatic merge is authorised for branch {2} only. The merge stays a human gesture.",
+      "[merge-auto] refused: {0} is the one of branch {1}, not of the current branch {2}; only the PR of the current branch is scheduled. The merge is NOT scheduled.",
     notRun: "[merge-auto] not run: {0}",
     timeout: "state of {0} not computed or not up to date after {1} min (« {2} »); run the command again",
     notOpen: "[merge-auto] refused: {0} is not open ({1}).",
@@ -67,13 +72,11 @@ const lang = (root) => {
 
 export { ghRun };
 
-/** The merge seen scheduled on the PR of the `merge_cancelled` mark: the reminder became false, the mark goes (QUA-181). */
-function withMarkCleared(root, number, result, label) {
-  const { state } = readState(root);
-  if (state.merge_cancelled?.pr !== number) return result;
-  const { merge_cancelled: _, ...kept } = state;
-  writeState(root, kept);
-  return { ...result, message: `${result.message}\n${fill(STATE_MESSAGES[lang(root)].mergeCancelledCleared, label)}` };
+/** The current git branch of `root`, or null (not a repository, detached head). */
+export function currentBranch(root) {
+  const r = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: root, encoding: "utf8" });
+  const name = r.status === 0 ? r.stdout.trim() : "";
+  return name && name !== "HEAD" ? name : null;
 }
 
 /** Runs the sequence; returns { code, message }. */
@@ -82,6 +85,7 @@ export async function mergeAuto({
   timeout = 5,
   interval = 5000,
   root = process.cwd(),
+  branch = currentBranch(root),
   gh = ghRun,
   glab,
   forge = changeForge(root),
@@ -97,15 +101,15 @@ export async function mergeAuto({
   const out = (code, key, n, ...values) => ({ code, message: fill(T[key], name(n), ...values) });
   const notRun = (reason) => ({ code: 2, message: fill(T.notRun, reason) });
   const { state } = readState(root);
-  // In SCOPING, only the scoping PR of the branch the human answered for (QUA-188); never another PR.
-  const scoping = state.activity === "SCOPING" ? (state.scoping_merge?.branch ?? null) : null;
-  if (state.auto_merge !== true && !scoping) return out(1, "noAuth");
+  // A failed reopening cancelled the merge (QUA-181): scheduling it again could merge the faulty code.
+  if (state.merge_cancelled) return out(1, "cancelled", state.merge_cancelled.pr);
+  if (!branch) return out(1, "noBranch");
   const end = now() + timeout * 60_000;
   let updated = false;
   for (;;) {
     const v = client.view(pr);
     if (!v) return notRun(forge === "gitlab" ? W.noGlab : W.noGh);
-    if (scoping && v.headRefName !== scoping) return out(1, "otherBranch", v.number, v.headRefName, scoping);
+    if (v.headRefName !== branch) return out(1, "otherBranch", v.number, v.headRefName ?? "?", branch);
     if (v.state !== "OPEN") return out(1, "notOpen", v.number, v.state);
     if (v.mergeStateStatus === "DIRTY") return out(1, "conflict", v.number);
     if (v.mergeStateStatus === "BEHIND" && !updated) {
@@ -120,7 +124,7 @@ export async function mergeAuto({
       }
       // With the whole CI already green, `gh pr merge --auto` (or `glab mr merge --auto-merge`) merges at once (QUA-162).
       const seen = client.view(String(v.number));
-      if (seen?.autoMergeRequest) return withMarkCleared(root, v.number, out(0, "scheduled", v.number, v.number), name(v.number));
+      if (seen?.autoMergeRequest) return out(0, "scheduled", v.number, v.number);
       if (seen?.state !== "MERGED") return out(1, "notScheduled", v.number);
       return T.merged ? out(0, "merged", v.number) : { code: 0, message: fill(M.mergeAutoMerged, v.number) };
     }

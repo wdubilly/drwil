@@ -35,24 +35,22 @@ export const MESSAGES_EN = {
     "automatic merge cancelled and NOT scheduled again: the tool never reschedules it by itself (it could merge the faulty code) — it is up to the human to schedule it again, once decided; the state reminder says so again in CLOSING",
   mergeCancelledType: "merge_cancelled: object { pr } expected (pr: the PR number)",
   mergeCancelledActivity: "merge_cancelled: only in CLOSING",
-  mergeCancelledCleared:
-    "[merge-auto] « merge cancelled » mark of {0} cleared: the merge is seen scheduled, the state reminder no longer says it is not",
   mergeAutoMerged:
     "[merge-auto] PR #{0} merged by the command itself (its whole CI was already green). Follow the main branch's CI: node .githooks/pr-watch.mjs {0}",
   scopingMergeType: "scoping_merge: object { branch } expected (branch: the branch of the scoping PR)",
   scopingMergeActivity: "scoping_merge: only in SCOPING",
   scopingMergeReminder:
-    "Automatic merge of the scoping PR authorised for branch {0} (answer « Automatic merge » to the end-of-scoping poll): once the branch is pushed and its PR open, run `node .githooks/merge-auto.mjs <number>`, which refuses any PR of another branch; follow the PR with `node .githooks/pr-watch.mjs <number>`, run again while it says « green » without « merged », 30 minutes at most in all; never chain the forge's commands (`gh`, `glab`) by hand. The authorisation falls when leaving SCOPING; a « Manual merge » or « Continue scoping » answer withdraws it.",
+    "Automatic merge of the scoping PR authorised for branch {0} (legacy mark: the automatic merge is now the default behaviour): once the branch is pushed and its PR open, run `node .githooks/merge-auto.mjs <number>`, which refuses any PR of another branch than the current one; follow the PR with `node .githooks/pr-watch.mjs <number>`, run again while it says « green » without « merged », 30 minutes at most in all; never chain the forge's commands (`gh`, `glab`) by hand. The mark falls when leaving SCOPING.",
   scopingMergeNotScoping:
     "answer to the end-of-scoping poll ignored: the activity is {0}, not SCOPING — nothing authorised, the state is unchanged",
   scopingMergeBranch:
-    "automatic merge of the scoping PR not authorised: the current branch is not a scoping branch (main branch or detached head) — nothing authorised, the state is unchanged",
+    "no automatic merge of a scoping PR: the current branch is not a scoping branch (main branch or detached head) — the state is unchanged",
   scopingMergeAuthorised:
-    "automatic merge of the scoping PR authorised for branch {0} (answer « Automatic merge »): once the branch is pushed and its PR open, run `node .githooks/merge-auto.mjs <number>`, then follow the PR with `node .githooks/pr-watch.mjs <number>`; the authorisation holds for this branch only, in SCOPING",
+    "automatic merge by default, no authorisation to write: once branch {0} is pushed and its PR open, run `node .githooks/merge-auto.mjs <number>`, which schedules only the PR of the current branch, then follow the PR with `node .githooks/pr-watch.mjs <number>`; the state is unchanged",
   scopingMergeManual:
-    "nothing scheduled (answer « Manual merge »): merging the scoping PR stays a human gesture; `/drwil-start` offers the brief only once the PR is merged",
+    "nothing scheduled (answer « Manual merge »): `/drwil-start` offers the brief only once the PR is merged; the state is unchanged",
   scopingMergeContinue:
-    "nothing scheduled (answer « Continue scoping »): the PR stays open and the next scopings are committed on the same branch ({0}), one branch, one PR; the poll is asked again at the end of the next scoping",
+    "nothing scheduled (answer « Continue scoping »): the PR stays open and the next scopings are committed on the same branch ({0}), one branch, one PR; the state is unchanged",
   reopenCancelled: "automatic merge cancelled: schedule it again after the new closing, like the first time",
   reopenMessage: "Reopening of {0}: defect revealed by PR #{1}",
   reopenCommitFailed: "reopening refused: the commit of the restored brief failed ({0}) — brief removed, state unchanged",
@@ -125,7 +123,6 @@ export const MESSAGES_EN = {
     'closing refused: brief "{0}" has no acceptance criterion — write some, each proven by a contract, then run `drwil verify` again',
   startInvalid: `start refused: {0}`,
   started: `{0} → BUILD (started: {1}){2}`,
-  mergeAuthorised: " — automatic merge authorised",
   forbidden: `transition {0} → {1} forbidden (from {0}: {2})`,
   briefOption: "--brief only opens an expectation (SCOPING → EXPECTATION)",
   briefNeeded: "opening an expectation requires --brief <docs/projects/….md>",

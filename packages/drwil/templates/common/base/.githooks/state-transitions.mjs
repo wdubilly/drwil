@@ -71,8 +71,7 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   const missing = missingCriteria(root, path);
   if (missing === "blocking") return { code: 1, message: fill(T.startNoCriteria, path) };
   const state = { version: 1, activity: "BUILD", active_brief: path, active_request: request ?? null, since: now };
-  // Authorising the merge is an acceptance decision: human only, even in agent mode; a queue carries it.
-  if ((autoMerge === true && human) || (fromQueue && read.state.queue_merge === true)) state.auto_merge = true;
+  // The automatic merge is the default (merge-auto.mjs): `auto_merge` is no longer written, a legacy one is only read.
   if (rest.length) Object.assign(state, { queue: rest, queue_merge: human ? autoMerge === true : read.state.queue_merge === true });
   const problems = validateState(state, root);
   if (problems.length) return { code: 1, message: fill(T.startInvalid, problems.join(" ; ")) };
@@ -87,12 +86,7 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   const pruned = prunedMessage(root, pruneMergedBranches(root));
   return {
     code: 0,
-    message:
-      (branch.message ? `${branch.message}\n` : "") +
-      fill(T.started, origin, path, state.auto_merge ? T.mergeAuthorised : "") +
-      next +
-      warned +
-      pruned,
+    message: (branch.message ? `${branch.message}\n` : "") + fill(T.started, origin, path, "") + next + warned + pruned,
   };
 }
 
