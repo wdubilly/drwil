@@ -11,7 +11,8 @@ import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { undeclaredHooks } from "./base-checks.mjs";
 import { config } from "./briefs.mjs";
-import { bareNames, closingCi, criteriaToCreate, deadReferences, lookMr, referenceScope } from "./close-checks.mjs";
+import { bareNames, closingCi, criteriaToCreate, deadReferences, git, lookMr, referenceScope } from "./close-checks.mjs";
+import { mainBranch } from "./close-branches.mjs";
 import { closingMechanics } from "./close-mechanics.mjs";
 import { limitProblems } from "./close-limits.mjs";
 import { journalPlan } from "./close-journal.mjs";
@@ -40,6 +41,28 @@ export {
   prunedMessage,
   pruneMergedBranches,
 } from "./close-branches.mjs";
+
+// QUA-040: the « Unreleased » line is written in the BUILD (the CLOSING scope gate refuses the changelog); the closing
+// only reminds it. Shipped code of a changelog: its folder's files outside tests, Markdown, docs/ and dot folders.
+const NOT_SHIPPED = /(^|\/)(tests?|__tests__|docs)\/|\.(test|spec)\.[^/]+$|\.md$|^\./i;
+const unreleased = (text) => /^##\s+\[?unreleased\]?\s*$(.*?)(?=^##\s|(?![\s\S]))/ims.exec(text ?? "")?.[1].trim() ?? null;
+
+/** Changelogs whose folder has shipped code changed on the branch while their « Unreleased » section is untouched. */
+export function unreleasedMissing(root) {
+  const main = mainBranch(root);
+  const base = main ? git(root, "merge-base", "HEAD", main) : null;
+  const list = (...args) => (git(root, ...args) ?? "").split("\n").filter(Boolean);
+  if (!base) return [];
+  const changed = [...new Set([...list("diff", "--name-only", base), ...list("ls-files", "--others", "--exclude-standard")])];
+  const logs = list("ls-files", "--cached", "--others", "--exclude-standard").filter((f) => /(^|\/)changelog\.md$/i.test(f));
+  return logs.flatMap((log) => {
+    const dir = log.slice(0, log.lastIndexOf("/") + 1);
+    const code = changed.filter((f) => f.startsWith(dir) && f !== log && !NOT_SHIPPED.test(f.slice(dir.length)));
+    const now = existsSync(join(root, log)) ? readFileSync(join(root, log), "utf8") : "";
+    if (!code.length || unreleased(now) !== unreleased(git(root, "show", `${base}:${log}`))) return [];
+    return [texts(root).unreleased(log, code.slice(0, 3).join(", ") + (code.length > 3 ? `, … (${code.length})` : ""))];
+  });
+}
 
 /**
  * What would make the closing of `brief` fail and what it only warns about; `text`: the brief, read before it
@@ -73,7 +96,7 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
     ...code,
     ...intentLeft(root, lang, brief, text).map((message) => ({ message })),
   ];
-  return { problems, warnings: twinIntents(root, cfg, lang) };
+  return { problems, warnings: [...twinIntents(root, cfg, lang), ...unreleasedMissing(root)] };
 }
 
 /** What would make the closing of `brief` fail, as messages. */

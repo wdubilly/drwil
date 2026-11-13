@@ -87,5 +87,6 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-13) : cadrage terminé.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-13) : lot 1 réalisé (consignes, recettes, signal de `close.mjs --check`, QUA-040
+  réécrit, lignes « Unreleased » rattrapées).
+- **Prochaine étape** : [IA] vérification puis clôture.

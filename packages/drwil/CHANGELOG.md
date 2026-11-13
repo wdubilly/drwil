@@ -2,10 +2,26 @@
 
 ## Unreleased
 
-Each workstream that changes what a user sees adds its line here, in its
-closing commit; the release renames this section to its version.
+Each workstream that changes what a user sees adds its line here, in the
+last increment of its build (the closing scope gate refuses this file); the
+release renames this section to its version.
+
+### Added
+
+- The automatic merge and the cleanup of merged branches work on GitLab:
+  `merge-auto` reads, updates (`glab mr rebase`) and schedules the merge
+  request (`glab mr merge --auto-merge`) through `glab`, and a merge request
+  merged by squash is recognised when deleting branches, resuming a detour or
+  reopening a workstream. The state reminder says « MR !n » on GitLab.
 
 ### Changed
+
+- The « Unreleased » line of the changelog is now asked in the build, in the
+  last increment, instead of the closing commit, which the closing scope
+  gate refused: the build reminder says so, the closing reminder no longer
+  asks for it, and `close.mjs --check` warns, without blocking, about a
+  branch that changes shipped code without touching « Unreleased » in the
+  changelog of its folder (nothing without a changelog).
 
 - `run-checks` no longer replays four long checks on every pass: the tests of
   the hooks themselves (`checks-self-test`), `tests-qua-039`, `tests-qua-047`
@@ -28,6 +44,14 @@ closing commit; the release renames this section to its version.
 
 ### Fixed
 
+- A refused start chained at the prompt now says why (dirty tree included,
+  with what to do) instead of being dropped, and the « ✗ » refusal of the
+  `/drwil-start` poll is shown to the human too. Several calls attached to
+  the same command in `wait-command` all receive its verdict instead of
+  crashing.
+- `init` marks `[IA]` what an agent can do: the guarantee briefs' increment
+  and index line carry `[IA]` (versioning, set on the forge, stays
+  `[humain]`), under the « Incréments » heading the increment chain reads.
 - `pr-watch` no longer says « green » before the PR's own CI has run: a
   skipped or neutral check never counts as passed, a verdict is only given on
   the PR head equal to the local commit of its branch, and a CI not yet
@@ -109,8 +133,8 @@ closing commit; the release renames this section to its version.
   HTTPS on, the port is published with `tailscale serve` and the private-network
   link is given. Tailscale is never required.
 - Release module: an optional `release.requiredOs` setting (absent by
-  default, never added by an update) makes `create-release.mjs` (direct
-  release or `--candidate`) and `promote-release.mjs` refuse, without
+  default, never added by an update) makes `.githooks/create-release.mjs`
+  (direct release or `--candidate`) and `.githooks/promote-release.mjs` refuse, without
   creating anything, as long as one of the listed OS has no green CI job
   that really ran its tests on the commit; the refusal names the missing OS
   and the `gh workflow run` command, `--dry-run` only says it. A job whose
