@@ -20,17 +20,34 @@ files:
 Le demandeur veut un regard critique sur le code avant la clôture, sans alourdir le « full auto » : un skill de
 relecture, éventuellement un test de qualité et fonctionnel.
 
+Complété le 2026-11-13 (proposition « module REVIEW » triée par le demandeur, seul ce qui a de la valeur est
+gardé) : `verify` dit si le travail est conforme aux contrats, pas s'il est juste. La journée du 2026-11-12 l'a
+montré : trois chantiers en `GOVERNANCE: PASS`, puis un audit qui trouve un test validant un défaut de `pr-watch`.
+La relecture pose donc aussi les questions que `verify` ne pose pas : un test peut-il réussir alors que le
+comportement est faux ? l'agent a-t-il réduit le périmètre ou interprété un critère trop largement ?
+
 ## Critères d'acceptation
 
 - Un skill `review-before-closing` relit le diff du chantier contre les critères de la fiche et rend une liste
   courte d'écarts (bug probable, critère non couvert, risque), sans rien modifier — `QUA-062`
 - La relecture est consultative : elle ne bloque jamais la clôture ni la fusion ; ses constats se corrigent ou se
   notent en intention — `QUA-062`
+- La relecture pose aussi deux questions de preuve et de biais : un test du chantier peut-il réussir alors que le
+  comportement attendu est faux ? un critère a-t-il été interprété trop largement, ou le périmètre réduit sans le
+  dire ? — `QUA-062`
+- Chaque constat a une sévérité (`BLOCKER`, `MAJOR`, `MINOR`, `OBSERVATION`) et cite un fichier ou une preuve réels ;
+  sans élément concret, il est rendu comme une question, jamais comme un défaut établi ; les constats et leur suite
+  (corrigé, noté en intention, écarté avec sa raison) sont résumés dans l'entrée du journal du chantier — `QUA-062`
+- Un constat qui révèle une classe d'erreurs détectable de façon répétable devient une intention de contrat
+  (`docs/intentions/`), jamais un contrat écrit d'office ; un défaut isolé ou une préférence ne le devient pas — `QUA-062`
 
 ## 2. Hors périmètre
 
 - Un test fonctionnel automatique généré : les critères de la fiche, liés à des contrats rejoués, en tiennent lieu (QUA-049).
 - Un blocage de la clôture sur la relecture.
+- Un relecteur indépendant (autre modèle ou autre outil), une relecture obligatoire selon le risque, des statuts de
+  relecture et des rapports immuables : notés dans `docs/intentions/fabrique-autonome.md` (rôles séparés), repris
+  seulement si les constats notés au journal montrent des défauts que `verify` ne détecte pas.
 
 ## 3. Contraintes
 
@@ -42,6 +59,9 @@ relecture, éventuellement un test de qualité et fonctionnel.
 ## 4. Décisions
 
 - 2026-11-12 : consultatif, un skill, pas de test généré.
+- 2026-11-13 : de la proposition « module REVIEW », gardés les questions de preuve et de biais, la sévérité des
+  constats, leur trace au journal et la règle « classe d'erreurs → intention de contrat » ; le reste est en attente
+  dans `docs/intentions/fabrique-autonome.md`. La relecture reste consultative.
 
 ## 5. Points à trancher
 
