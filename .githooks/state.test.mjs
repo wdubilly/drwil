@@ -3050,4 +3050,20 @@ test("QUA-040 : le changelog d'un paquet ne couvre que son dossier ; message en 
     d.verifier().message,
     /Warnings \(non-blocking\):\n {2}⚠ packages\/p\/CHANGELOG\.md: the branch changes shipped code \(packages\/p\/src\/b\.mjs\) without a line under « Unreleased »/,
   );
+  d.ecrire({ "packages/p/c.mjs": "1\n", "packages/p/d.mjs": "1\n", "packages/p/e.mjs": "1\n" });
+  assert.match(
+    d.verifier().message,
+    /\(packages\/p\/c\.mjs, packages\/p\/d\.mjs, packages\/p\/e\.mjs, … \(4\)\)/,
+    "trois fichiers cités, puis le nombre",
+  );
+});
+
+test("QUA-040 : changelog né sur la branche ou sans section « Unreleased », branche principale absente", () => {
+  const neuf = depotChangelog();
+  neuf.ecrire({ "src/a.mjs": "export const a = 1;\n", "CHANGELOG.md": "# Changelog\n\n## 1.0.0\n" });
+  assert.match(neuf.verifier().message, /CHANGELOG\.md : la branche change du code livré \(src\/a\.mjs\)/, "sans section : signalé");
+  neuf.ecrire({ "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n- Nouveau.\n" });
+  assert.doesNotMatch(neuf.verifier().message, /Unreleased/, "né sur la branche avec sa ligne");
+  neuf.git("branch", "-q", "-m", "master", "ancienne");
+  assert.doesNotMatch(neuf.verifier().message, /Unreleased/, "sans branche principale, rien à comparer");
 });

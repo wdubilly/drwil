@@ -45,21 +45,28 @@ export {
 // QUA-040: the « Unreleased » line is written in the BUILD (the CLOSING scope gate refuses the changelog); the closing
 // only reminds it. Shipped code of a changelog: its folder's files outside tests, Markdown, docs/ and dot folders.
 const NOT_SHIPPED = /(^|\/)(tests?|__tests__|docs)\/|\.(test|spec)\.[^/]+$|\.md$|^\./i;
-const unreleased = (text) => /^##\s+\[?unreleased\]?\s*$(.*?)(?=^##\s|(?![\s\S]))/ims.exec(text ?? "")?.[1].trim() ?? null;
+const unreleased = (text) => /^##\s+\[?unreleased\]?\s*$(.*?)(?=^##\s|(?![\s\S]))/ims.exec(text)?.[1].trim() ?? null;
 
 /** Changelogs whose folder has shipped code changed on the branch while their « Unreleased » section is untouched. */
 export function unreleasedMissing(root) {
   const main = mainBranch(root);
-  const base = main ? git(root, "merge-base", "HEAD", main) : null;
-  const list = (...args) => (git(root, ...args) ?? "").split("\n").filter(Boolean);
+  const base = main && git(root, "merge-base", "HEAD", main);
   if (!base) return [];
+  // Raw output: empty when git refuses (a changelog absent from the base reads as "").
+  const raw = (...args) => spawnSync("git", args, { cwd: root, encoding: "utf8" }).stdout;
+  const list = (...args) =>
+    raw(...args)
+      .split("\n")
+      .filter(Boolean);
   const changed = [...new Set([...list("diff", "--name-only", base), ...list("ls-files", "--others", "--exclude-standard")])];
-  const logs = list("ls-files", "--cached", "--others", "--exclude-standard").filter((f) => /(^|\/)changelog\.md$/i.test(f));
+  const logs = list("ls-files", "--cached", "--others", "--exclude-standard").filter(
+    (f) => /(^|\/)changelog\.md$/i.test(f) && existsSync(join(root, f)),
+  );
   return logs.flatMap((log) => {
     const dir = log.slice(0, log.lastIndexOf("/") + 1);
     const code = changed.filter((f) => f.startsWith(dir) && f !== log && !NOT_SHIPPED.test(f.slice(dir.length)));
-    const now = existsSync(join(root, log)) ? readFileSync(join(root, log), "utf8") : "";
-    if (!code.length || unreleased(now) !== unreleased(git(root, "show", `${base}:${log}`))) return [];
+    const now = readFileSync(join(root, log), "utf8");
+    if (!code.length || unreleased(now) !== unreleased(raw("show", `${base}:${log}`))) return [];
     return [texts(root).unreleased(log, code.slice(0, 3).join(", ") + (code.length > 3 ? `, … (${code.length})` : ""))];
   });
 }
