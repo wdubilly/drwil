@@ -65,6 +65,16 @@ files:
   - docs/projects/journal.md
   - .drwil/ia-first.json
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/test/guarantees.test.mjs
+  - packages/drwil/templates/common/base/.githooks/state-cli.mjs
+  - .githooks/state-cli-process.test.mjs
+  - packages/drwil/templates/common/base/docs/ia-first/6-limits-and-tool-compatibility.md
+  - packages/drwil/templates/common/tools/claude/.claude/skills/drwil/SKILL.md
+  - docs/features.md
+  - packages/drwil/src/serve-texts.ts
+  - packages/drwil/serve/page.html
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
 -->
 
 ## 1. Besoin
@@ -111,6 +121,9 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
 - `QUA-180` — ancien critère : « Sous Copilot CLI, le sondage de lancement pose le champ des fiches en choix unique », la fusion lue écrite dans l'état — raison : `auto_merge` n'est plus écrit (validé le 2026-11-13)
 - `QUA-247` — ancien critère : « `resume` … ne reconstruit jamais une décision humaine », le message disant comment redonner la fusion automatique par le sondage `drwil-merge` (QUA-265) — raison : plus de sondage, la fusion automatique est le comportement par défaut (validé le 2026-11-13)
 - `QUA-050` — ancien critère : « La PR du détour est intitulée « Détour de <fiche> », au mode de fusion décidé au lancement » — raison : la PR de détour est en fusion automatique, comme toute PR (validé le 2026-11-13)
+- `QUA-099` — ancien critère : « Une PR de documentation seule part en fusion automatique sans question », la question `drwil-merge` gardée pour les PR qui touchent du code — raison : toute PR (code ou documentation) part en fusion automatique, sans question ; `drwil-merge` retiré du skill de lancement, d'`AGENTS.md` et de la section 8 (validé le 2026-11-13)
+- `.githooks/state-cli.mjs` — gardé à sa version de la branche (QUA-113) : `start` au terminal ne pose plus « Retapez MERGE » (QUA-037) (validé le 2026-11-13)
+- `.githooks/state-cli-process.test.mjs` — gardé à sa version de la branche (QUA-113) : le terminal simulé ne répond plus à la question MERGE (validé le 2026-11-13)
 - `.githooks/state-transitions.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/contracts.mjs` — gardé à sa version de la branche (QUA-113) : lit le champ Retiré (validé le 2026-11-13)
 - `.githooks/contracts-validate.mjs` — gardé à sa version de la branche (QUA-113) : accepte un contrat retiré sans preuve (validé le 2026-11-13)
@@ -153,6 +166,20 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
   lié à QUA-189, inchangée) ; rattaché à QUA-298 (créé par ce chantier, texte mis à jour) — décidé par le demandeur.
 - 2026-11-13 (suite) : la recette `docs/recipes/working-with-branches.md` (gabarit et copie) entre au périmètre : la PR
   de cadrage passe en fusion automatique, sans sondage — décidé par le demandeur.
+
+- 2026-11-13 (suite) : QUA-099 modifié, réécrit en « toute PR (code ou documentation) part en fusion automatique,
+  sans question » ; son test (`packages/drwil/test/guarantees.test.mjs`) adapté ; `drwil-merge` retiré du skill de
+  lancement `start-a-workstream`, d'`AGENTS.md` (gabarit) et de la section 8 (gabarit et copies) — décidé par le
+  demandeur.
+- 2026-11-13 (suite) : sondage des limites, « Traiter maintenant » aux quatre limites hors cadre (la réponse vaut le oui
+  de l'élargissement) : `start` au terminal ne pose plus « Retapez MERGE » (`.githooks/state-cli.mjs`, gabarit, copie
+  et test ; QUA-037) ; la section 6 ne décrit plus la parité du sondage `drwil-merge`
+  (`docs/ia-first/6-limits-and-tool-compatibility.md`, gabarit et copie ; QUA-266) ; le menu du skill `drwil` ne
+  décrit plus `/drwil-scope` comme un sondage et `docs/features.md` ne cite plus `drwil-merge` (QUA-187) ; code mort
+  retiré : textes de fusion de `drwil serve` (`packages/drwil/src/serve-texts.ts`, `packages/drwil/serve/page.html`),
+  `.githooks/state-merge.mjs` plus appelé (gabarit, copie, test ; `docs/projects/kit-mechanics.md` et la carte),
+  `queue_merge` plus écrit (`.githooks/state-transitions.mjs`), un état ancien qui porte ces marques restant valide
+  (QUA-188) — décidé par le demandeur.
 
 ## 5. Points à trancher
 
