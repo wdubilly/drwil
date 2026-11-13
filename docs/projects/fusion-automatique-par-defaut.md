@@ -28,9 +28,11 @@ files:
   - packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md
   - packages/drwil/templates/common/base/AGENTS.md
   - .githooks/merge-auto.test.mjs
+  - .githooks/merge-auto-forge.test.mjs
   - .githooks/state-merge.test.mjs
   - .githooks/state.test.mjs
   - packages/drwil/test/claude-hooks.test.mjs
+  - packages/drwil/test/portable-polls.test.mjs
   - docs/contracts.md
   - docs/architecture.md
   - docs/projects/pending.md
