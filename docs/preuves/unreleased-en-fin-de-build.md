@@ -1,7 +1,7 @@
 # Preuve de clôture — unreleased-en-fin-de-build
 
 **Clos le** : 2026-11-13
-**Commit vérifié** : `9556abd195` — verdict `drwil verify` : PASS
+**Commit vérifié** : `9a2d43da89` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:2016cd998dd4ed3c`, acceptés par l'humain au lancement le 2026-11-13
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
