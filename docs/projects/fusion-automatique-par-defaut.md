@@ -31,6 +31,7 @@ files:
   - .githooks/contracts-validate.mjs
   - .githooks/contracts.test.mjs
   - packages/drwil/src/verify.ts
+  - packages/drwil/src/closure.ts
   - packages/drwil/src/coverage.ts
   - packages/drwil/src/doctor.ts
   - packages/drwil/src/serve-watch.ts
@@ -45,6 +46,8 @@ files:
   - packages/drwil/templates/common/base/docs/ia-first/7-starting-and-closing.md
   - packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md
   - packages/drwil/templates/common/base/AGENTS.md
+  - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
+  - docs/recipes/working-with-branches.md
   - .githooks/merge-auto.test.mjs
   - .githooks/merge-auto-forge.test.mjs
   - .githooks/worktree.test.mjs
@@ -144,6 +147,12 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
 - 2026-11-13 : QUA-181 garde son garde-fou (`merge-auto` refuse tant que la marque `merge_cancelled` est présente) ; QUA-189 et QUA-265 retirés du registre avec leurs tests ; `.githooks/state.mjs` et `.githooks/state-transitions.mjs` (gabarit, copies, tests) entrent dans le périmètre au lot 1, l'outil cesse d'y écrire `auto_merge` et `scoping_merge` ; le refus d'une PR d'une autre branche que la branche git courante s'ajoute à QUA-162 — décidé par le demandeur.
 - 2026-11-13 (suite) : QUA-189 et QUA-265 restent au registre, marqués « Retiré le 2026-11-13 », sans contrôle (leurs contrôles `tests-qua-189` et `tests-qua-265` retirés) ; QUA-037, QUA-142, QUA-147, QUA-165 et QUA-180 modifiés (plus d'`auto_merge` écrit), leurs tests `.githooks/worktree.test.mjs` et `packages/drwil/test/kit.test.mjs` au périmètre ; `.githooks/merge-auto-forge.test.mjs` et `packages/drwil/test/portable-polls.test.mjs` validés au périmètre ; pour le lot 2, `.githooks/state-texts.mjs` (consigne de CLOSING inconditionnelle, QUA-164), `.githooks/state-resume.mjs` (QUA-247), `.githooks/detour.mjs` (QUA-050) et `drwil serve` (`packages/drwil/src/serve-watch.ts`, `packages/drwil/src/serve-board.ts`) entrent au périmètre — décidé par le demandeur.
 - 2026-11-13 (suite) : le validateur du registre reconnaît un champ « **Retiré** : <date> — <raison> » ; un contrat qui le porte est accepté sans Contrôle ni Manuel, n'est jamais compté PASS ni ATTESTED par `drwil verify`, reste citable ; un champ Retiré mal formé est refusé ; nouveau contrat au lot 1 — décidé par le demandeur (change une règle du jeu, avec son oui).
+- 2026-11-13 (suite) : `packages/drwil/src/closure.ts` (`judgeProofs`) et son test (`packages/drwil/test/kit.test.mjs`)
+  entrent au périmètre : un critère d'une preuve de clôture passée lié à un contrat retiré (champ « Retiré ») est
+  rapporté « retiré », ni succès ni échec, et `drwil verify` le dit (cas concret : `docs/preuves/fin-de-cadrage-sondage.md`,
+  lié à QUA-189, inchangée) ; rattaché à QUA-298 (créé par ce chantier, texte mis à jour) — décidé par le demandeur.
+- 2026-11-13 (suite) : la recette `docs/recipes/working-with-branches.md` (gabarit et copie) entre au périmètre : la PR
+  de cadrage passe en fusion automatique, sans sondage — décidé par le demandeur.
 
 ## 5. Points à trancher
 
