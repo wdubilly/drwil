@@ -26,6 +26,8 @@ export const TEXTS = {
     proposed: "Corrections proposées, rien n'est écrit (`node .githooks/close.mjs --fix` les applique) :",
     applied: (n) => `corrections appliquées : ${n}`,
     warnings: "Avertissements (non bloquants) :",
+    unreleased: (log, files) =>
+      `${log} : la branche change du code livré (${files}) sans ligne sous « Unreleased » — si le chantier change ce que voit l'utilisateur, l'ajouter dans le dernier lot du BUILD (la barrière de CLOSING refuse le changelog)`,
     rest: "Reste à l'agent : l'entrée du journal (décisions, limites répondues « Noter en intention » en intentions), puis le commit de clôture.",
     twice: (j, f, n) =>
       `${j} : ${n} entrées citent \`${f}\` — un chantier rouvert met à jour son entrée de journal, il n'en ajoute pas une seconde`,
@@ -57,6 +59,8 @@ export const TEXTS = {
     proposed: "Proposed corrections, nothing is written (`node .githooks/close.mjs --fix` applies them):",
     applied: (n) => `corrections applied: ${n}`,
     warnings: "Warnings (non-blocking):",
+    unreleased: (log, files) =>
+      `${log}: the branch changes shipped code (${files}) without a line under « Unreleased » — if the workstream changes what the user sees, add it in the last increment of the BUILD (the CLOSING scope gate refuses the changelog)`,
     rest: "Left to the agent: the journal entry (decisions, limits answered « Record as intent » as intents), then the closing commit.",
     twice: (j, f, n) => `${j}: ${n} entries cite \`${f}\` — a reopened workstream updates its journal entry, it never adds a second one`,
     journalProof: (f) => `- **Closing proof**: \`${f}\`.`,

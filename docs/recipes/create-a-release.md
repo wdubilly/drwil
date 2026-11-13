@@ -69,8 +69,8 @@ order is then:
    last tag, Conventional-Commits style (`feat:` → minor, announced
    breaking change → major, otherwise patch by default); with packages,
    that computation is only a displayed suggestion. In the same PR, if the
-   project keeps a `CHANGELOG.md` (if present), its « Unreleased » section, fed by each
-   workstream's closing, is renamed to that version (a new empty
+   project keeps a `CHANGELOG.md` (if present), its « Unreleased » section, fed by the
+   last increment of each workstream's BUILD, is renamed to that version (a new empty
    « Unreleased » above it).
 3. Create for real, after the human's agreement or with the green light
    given at launch (see above): `node .githooks/create-release.mjs`
