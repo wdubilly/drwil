@@ -5,7 +5,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileS
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { bucket, ghJson, look, parseArgs, texts, watch } from "./pr-watch.mjs";
+import { bucket, ghJson, localTip, look, parseArgs, texts, watch } from "./pr-watch.mjs";
 import { changeForge, ciChecks } from "./close-checks.mjs";
 import { lookMain, mainCiGate, mainCiRefusal, mainTip, originForge, PROOF } from "./pr-watch-main.mjs";
 import { MESSAGES_EN } from "./state-messages-en.mjs";
@@ -41,16 +41,30 @@ const SHA = "abcdef0123456789abcdef0123456789abcdef01";
 const fusionnee = { number: 7, state: "MERGED", mergeCommit: { oid: SHA } };
 
 const run = (name, status, conclusion = "") => ({ __typename: "CheckRun", name, status, conclusion });
+
+/** Horloge simulée : chaque attente avance le temps de `pas` ms ; `ecoule()` dit le temps passé. */
+function horloge(pas = 15_000) {
+  let t = 0;
+  return {
+    now: () => t,
+    sleep: async () => {
+      t += pas;
+    },
+    ecoule: () => t,
+  };
+}
 const ouverte = (...controles) => ({ number: 7, state: "OPEN", statusCheckRollup: controles });
 
 test("QUA-100 suivi de PR : verte, rouge, fusionnée, fermée", async () => {
   const T = texts(tmp());
+  // Un contrôle sauté ne compte jamais comme réussi : seul le run de la PR, réussi, fait la verte (son jumeau du push est sauté).
   let r = await watch({
-    gh: faux([ouverte(run("checks", "COMPLETED", "SUCCESS"), run("x", "COMPLETED", "SKIPPED"), { context: "ci/ext", state: "SUCCESS" })])
-      .gh,
+    gh: faux([
+      ouverte(run("checks", "COMPLETED", "SKIPPED"), run("checks", "COMPLETED", "SUCCESS"), { context: "ci/ext", state: "SUCCESS" }),
+    ]).gh,
     T,
   });
-  assert.deepEqual([r.code, r.message], [0, "[pr-watch] PR #7 : CI verte (3 contrôle(s))."]);
+  assert.deepEqual([r.code, r.message], [0, "[pr-watch] PR #7 : CI verte (2 contrôle(s))."]);
   r = await watch({
     gh: faux([ouverte(run("checks", "COMPLETED", "FAILURE"), run("e2e", "COMPLETED", "CANCELLED"), { context: "ci/ext", state: "ERROR" })])
       .gh,
@@ -82,10 +96,10 @@ test("QUA-100 suivi de PR : attend la fin des contrôles en cours, puis la fusio
   assert.match(r.message, /fusionnée/);
   assert.deepEqual(attentes, [5, 5]);
   assert.match(journal[0], /PR #7 : 1 contrôle\(s\) en cours/);
-  assert.equal(appels[0], "pr view 7 --json number,state,statusCheckRollup,mergeCommit,headRefOid");
+  assert.equal(appels[0], "pr view 7 --json number,state,statusCheckRollup,mergeCommit,headRefOid,headRefName");
   // Attente réelle (minuterie par défaut) et journal par défaut.
   const r2 = await watch({
-    gh: faux([ouverte(run("c", "IN_PROGRESS")), ouverte(run("c", "COMPLETED", "NEUTRAL"))]).gh,
+    gh: faux([ouverte(run("c", "IN_PROGRESS")), ouverte(run("c", "COMPLETED", "SUCCESS"))]).gh,
     interval: 1,
     T: texts(tmp()),
   });
@@ -99,8 +113,8 @@ test("QUA-100 suivi de PR : sans gh, sans contrôle ou après le délai, « non 
     [r.code, r.message],
     [2, "[pr-watch] suivi non exécuté : gh injoignable ou non connecté (gh auth login), ou aucune PR pour cette branche"],
   );
-  r = await watch({ gh: faux([{ number: 7, state: "OPEN" }]).gh, T });
-  assert.deepEqual([r.code, r.message], [2, "[pr-watch] suivi non exécuté : aucun contrôle de CI sur la PR #7"]);
+  r = await watch({ gh: faux([{ number: 7, state: "OPEN" }]).gh, T, ...horloge() });
+  assert.deepEqual([r.code, r.message], [2, "[pr-watch] suivi non exécuté : aucun contrôle de CI sur la PR #7 après 3 min d'attente"]);
   let t = 0;
   r = await watch({
     gh: faux([ouverte(run("c", "QUEUED"))]).gh,
@@ -113,9 +127,17 @@ test("QUA-100 suivi de PR : sans gh, sans contrôle ou après le délai, « non 
   });
   assert.deepEqual(
     [r.code, r.message],
-    [2, "[pr-watch] suivi non exécuté : délai de 1 min dépassé, contrôles encore en cours sur la PR #7"],
+    [
+      2,
+      "[pr-watch] suivi non exécuté : délai de 1 min dépassé sur la PR #7 — en file d'attente, jamais démarrés : c (aucune relance automatique)",
+    ],
   );
-  assert.equal(bucket({ state: "EXPECTED" }), "pending");
+  assert.equal(bucket({ state: "EXPECTED" }), "queued");
+  assert.equal(bucket({ state: "PENDING" }), "pending");
+  assert.deepEqual(
+    ["SKIPPED", "NEUTRAL", "SUCCESS", "STALE"].map((conclusion) => bucket({ status: "COMPLETED", conclusion })),
+    ["skip", "skip", "pass", "fail"],
+  );
 });
 
 test("QUA-100 suivi de PR : lecture de gh, langue, arguments", () => {
@@ -402,7 +424,7 @@ test("QUA-262 GitLab : la pipeline de la MR verte, rouge (job autorisé à écho
   const T = texts(tmp());
   let f = glabFaux({ vues: [mr("success")], jobs: [[job("checks", "success"), job("alert-if-ci-broken", "skipped")]] });
   let r = await watch({ forge: "gitlab", glab: f.glab, pr: "7", T });
-  assert.deepEqual([r.code, r.message], [0, "[pr-watch] MR !7 : CI verte (2 contrôle(s))."]);
+  assert.deepEqual([r.code, r.message], [0, "[pr-watch] MR !7 : CI verte (1 contrôle(s))."], "le job sauté ne compte pas");
   assert.deepEqual(f.appels, ["mr view 7 --output json", "api projects/:id/pipelines/42/jobs?per_page=100"]);
   f = glabFaux({ vues: [mr("failed")], jobs: [[job("checks", "failed"), job("optionnel", "failed", true), job("autre", "success")]] });
   r = await watch({ forge: "gitlab", glab: f.glab, T });
@@ -411,9 +433,9 @@ test("QUA-262 GitLab : la pipeline de la MR verte, rouge (job autorisé à écho
   assert.equal(f.appels[0], "mr view --output json", "sans numéro : la MR de la branche");
   r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("canceled")], jobs: [null] }).glab, T });
   assert.match(r.message, /CI rouge — en échec : pipeline #42/, "jobs illisibles : la pipeline nommée");
-  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr(null)] }).glab, T });
-  assert.deepEqual([r.code, r.message], [2, "[pr-watch] suivi non exécuté : aucun contrôle de CI sur la MR !7"]);
-  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("skipped")] }).glab, T });
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr(null)] }).glab, T, ...horloge() });
+  assert.deepEqual([r.code, r.message], [2, "[pr-watch] suivi non exécuté : aucun contrôle de CI sur la MR !7 après 3 min d'attente"]);
+  r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [mr("skipped")] }).glab, T, ...horloge() });
   assert.equal(r.code, 2, "sautée : rien n'a tourné, jamais verte (QUA-013)");
   r = await watch({ forge: "gitlab", glab: () => null, T });
   assert.deepEqual(
@@ -445,10 +467,7 @@ test("QUA-262 GitLab : attend la pipeline en cours (manuelle comprise) puis vert
     },
     T,
   });
-  assert.deepEqual(
-    [r.code, r.message],
-    [2, "[pr-watch] suivi non exécuté : délai de 1 min dépassé, contrôles encore en cours sur la MR !7"],
-  );
+  assert.deepEqual([r.code, r.message], [2, "[pr-watch] suivi non exécuté : délai de 1 min dépassé sur la MR !7"]);
   const fusion = (statut) => mr(statut, { state: "merged", merge_commit_sha: SHA });
   r = await watch({ forge: "gitlab", glab: glabFaux({ vues: [fusion("success")] }).glab, T, root: tmp() });
   assert.equal(r.code, 0);
@@ -457,7 +476,7 @@ test("QUA-262 GitLab : attend la pipeline en cours (manuelle comprise) puis vert
     "[pr-watch] MR !7 fusionnée.\n[pr-watch] CI de la MR à la fusion : verte ; CI de la branche principale non suivie hors GitHub, à vérifier à la main.",
   );
   assert.equal((await watch({ forge: "gitlab", glab: glabFaux({ vues: [fusion("failed")] }).glab, T })).code, 1);
-  assert.equal((await watch({ forge: "gitlab", glab: glabFaux({ vues: [fusion(null)] }).glab, T })).code, 2);
+  assert.equal((await watch({ forge: "gitlab", glab: glabFaux({ vues: [fusion(null)] }).glab, T, ...horloge() })).code, 2);
 });
 
 test("QUA-262 contrôles confiés à la CI : verte les dit prouvés ; rouge, absente, muette ou au délai : le chantier reste en CLOSING (GitHub et GitLab, en anglais)", async () => {
@@ -473,7 +492,7 @@ test("QUA-262 contrôles confiés à la CI : verte les dit prouvés ; rouge, abs
   r = await watch({ gh: faux([ouverte(run("checks", "COMPLETED", "FAILURE"))]).gh, ci, T });
   assert.equal(r.code, 1);
   assert.match(r.message, reste);
-  r = await watch({ gh: faux([{ number: 7, state: "OPEN" }]).gh, ci, T });
+  r = await watch({ gh: faux([{ number: 7, state: "OPEN" }]).gh, ci, T, ...horloge() });
   assert.match(r.message, reste, "absente");
   r = await watch({ gh: () => null, ci, T });
   assert.match(r.message, reste, "gh muet");
@@ -561,4 +580,154 @@ test("QUA-262 GitLab : réponses de glab inattendues — vue illisible, jobs ill
     ci: "green",
     head: SHA,
   });
+});
+
+// --- Verdict sur la seule CI de la PR, tête de PR, délai de grâce, file d'attente, délai des appels (QUA-100) ---
+
+const ANCIEN = "1111111111111111111111111111111111111111";
+const NOUVEAU = "2222222222222222222222222222222222222222";
+/** Run du push d'une branche à PR ouverte : la CI saute ses jobs, seuls ceux qui décident du saut réussissent. */
+const pushSeul = [
+  run("matrice-os", "COMPLETED", "SUCCESS"),
+  run("kit-tests (ubuntu-latest)", "COMPLETED", "SUCCESS"),
+  run("checks", "COMPLETED", "SKIPPED"),
+  run("plan", "COMPLETED", "SKIPPED"),
+];
+
+test("QUA-100 push seul visible (contrôles sautés et un succès hors PR) : jamais « verte », attend la CI de la PR", async () => {
+  const h = horloge();
+  const journal = [];
+  const { gh } = faux([
+    ouverte(...pushSeul),
+    ouverte(...pushSeul, run("checks", "QUEUED")),
+    ouverte(...pushSeul, run("checks", "COMPLETED", "SUCCESS")),
+  ]);
+  const r = await watch({ gh, T: texts(tmp()), log: (m) => journal.push(m), ...h });
+  assert.deepEqual([r.code, r.message], [0, "[pr-watch] PR #7 : CI verte (3 contrôle(s))."]);
+  assert.equal(h.ecoule(), 30_000, "deux attentes : la CI de la PR pas encore inscrite, puis en file");
+  assert.match(journal[0], /PR #7 : CI de la PR pas encore inscrite, attente \(délai de grâce de 3 min\)/);
+  // Seulement des contrôles sautés, jusqu'au bout du délai de grâce : « non exécuté », jamais « verte » (QUA-013).
+  const h2 = horloge();
+  const seuls = await watch({
+    gh: faux([ouverte(run("checks", "COMPLETED", "SKIPPED"), run("n", "COMPLETED", "NEUTRAL"))]).gh,
+    T: texts(tmp()),
+    ...h2,
+  });
+  assert.deepEqual(
+    [seuls.code, seuls.message],
+    [2, "[pr-watch] suivi non exécuté : aucun contrôle de CI sur la PR #7 après 3 min d'attente"],
+  );
+  assert.equal(h2.ecoule(), 180_000);
+});
+
+test("QUA-100 CI de la PR absente puis inscrite : attend (GitHub et GitLab) ; délai de grâce compté dans le délai global", async () => {
+  const T = texts(tmp());
+  let r = await watch({
+    gh: faux([
+      { number: 7, state: "OPEN" },
+      { number: 7, state: "OPEN", statusCheckRollup: [] },
+      ouverte(run("checks", "COMPLETED", "SUCCESS")),
+    ]).gh,
+    T,
+    ...horloge(),
+  });
+  assert.equal(r.code, 0);
+  const glab = glabFaux({ vues: [mr(null), mr("success")], jobs: [[job("checks", "success")]] }).glab;
+  r = await watch({ forge: "gitlab", glab, T, ...horloge() });
+  assert.deepEqual([r.code, r.message], [0, "[pr-watch] MR !7 : CI verte (1 contrôle(s))."]);
+  // Délai global de 2 min : la grâce s'arrête avec lui, jamais en plus.
+  const h = horloge(60_000);
+  r = await watch({ gh: faux([{ number: 7, state: "OPEN" }]).gh, T, timeout: 2, ...h });
+  assert.equal(r.code, 2);
+  assert.equal(h.ecoule(), 120_000);
+});
+
+test("QUA-100 tête de PR en retard sur le commit local : ni verte, ni rouge, ni fusionnée ; attend, puis délai nommé", async () => {
+  const T = texts(tmp());
+  const vue = (head, ...controles) => ({ ...ouverte(...controles), headRefOid: head, headRefName: "workstream/x" });
+  const branches = [];
+  const localHead = (b) => {
+    branches.push(b);
+    return NOUVEAU;
+  };
+  const journal = [];
+  let r = await watch({
+    gh: faux([vue(ANCIEN, run("checks", "COMPLETED", "FAILURE")), vue(NOUVEAU, run("checks", "COMPLETED", "SUCCESS"))]).gh,
+    T,
+    localHead,
+    log: (m) => journal.push(m),
+    ...horloge(),
+  });
+  assert.equal(r.code, 0, "le rouge du commit d'avant n'est pas dit");
+  assert.equal(branches[0], "workstream/x");
+  assert.match(journal[0], /PR #7 : tête de la PR 1111111, commit local 2222222 — attente/);
+  r = await watch({
+    gh: faux([{ ...fusionnee, headRefOid: ANCIEN, headRefName: "workstream/x" }]).gh,
+    T,
+    localHead,
+    timeout: 1,
+    ...horloge(61_000),
+  });
+  assert.deepEqual(
+    [r.code, r.message],
+    [2, "[pr-watch] suivi non exécuté : délai de 1 min dépassé sur la PR #7 — sa tête (1111111) n'est pas le commit local 2222222"],
+  );
+  // Tête de PR inconnue : jamais égale au commit local, dite « ? ».
+  r = await watch({ gh: faux([{ ...ouverte(), headRefName: "workstream/x" }]).gh, T, localHead, timeout: 1, ...horloge(61_000) });
+  assert.match(r.message, /sa tête \(\?\) n'est pas le commit local 2222222$/);
+  // Commit local d'une branche : celui de Git ; branche inconnue, sans nom ou hors dépôt : aucun.
+  const depot = tmp();
+  const git = (...a) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd: depot, encoding: "utf8" });
+  git("init", "-q", "-b", "workstream/x");
+  git("commit", "-q", "--allow-empty", "-m", "un");
+  assert.equal(localTip(depot, "workstream/x"), git("rev-parse", "HEAD").stdout.trim());
+  assert.deepEqual([localTip(depot, "autre"), localTip(depot, undefined), localTip(tmp(), "workstream/x")], [null, null, null]);
+  // Branche absente en local (PR d'une autre branche suivie par son numéro) : rien à comparer.
+  r = await watch({ gh: faux([vue(ANCIEN, run("checks", "COMPLETED", "SUCCESS"))]).gh, T, localHead: () => null });
+  assert.equal(r.code, 0);
+});
+
+test("QUA-100 délai dépassé : contrôles en file d'attente (jamais démarrés) nommés à part de ceux en cours, sans relance", async () => {
+  const appels = [];
+  const gh = (a) => {
+    appels.push(a.join(" "));
+    return ouverte(run("a", "IN_PROGRESS"), run("b", "QUEUED"), { context: "ext", state: "EXPECTED" });
+  };
+  const r = await watch({ gh, T: texts(tmp()), timeout: 1, ...horloge(61_000) });
+  assert.deepEqual(
+    [r.code, r.message],
+    [
+      2,
+      "[pr-watch] suivi non exécuté : délai de 1 min dépassé sur la PR #7 — en cours : a — en file d'attente, jamais démarrés : b, ext (aucune relance automatique)",
+    ],
+  );
+  assert.ok(
+    appels.every((a) => a.startsWith("pr view")),
+    "aucune relance de la CI",
+  );
+  const en = tmp();
+  mkdirSync(join(en, ".drwil"));
+  writeFileSync(join(en, ".drwil", "ia-first.json"), JSON.stringify({ lang: "en" }));
+  const r2 = await watch({ gh, T: texts(en), timeout: 1, ...horloge(61_000) });
+  assert.match(r2.message, /1 min limit reached on PR #7 — running: a — queued, never started: b, ext \(no automatic restart\)$/);
+  // GitLab : les jobs créés ou en attente sont en file, ceux qui tournent en cours.
+  const glab = glabFaux({ vues: [mr("running")], jobs: [[job("checks", "running"), job("e2e", "pending"), job("fin", "created")]] }).glab;
+  const r3 = await watch({ forge: "gitlab", glab, T: texts(tmp()), timeout: 1, ...horloge(61_000) });
+  assert.match(r3.message, /sur la MR !7 — en cours : checks — en file d'attente, jamais démarrés : e2e, fin/);
+});
+
+test("QUA-100 appel à gh bloqué : délai sur chaque appel, « non exécuté », jamais un succès (QUA-013)", async () => {
+  let options;
+  ghJson(["pr", "view"], (_c, _a, o) => {
+    options = o;
+    return { status: 0, stdout: "{}" };
+  });
+  assert.ok(options.timeout > 0, "un délai est passé à chaque appel");
+  const bloque = (_c, _a, o) => spawnSync(process.execPath, ["-e", "setTimeout(() => console.log('{\"number\":7}'), 3000)"], o);
+  const debut = Date.now();
+  assert.equal(ghJson(["pr", "view"], bloque, "gh", 200), null);
+  assert.ok(Date.now() - debut < 2500, "l'appel est coupé au délai");
+  const r = await watch({ gh: (a) => ghJson(a, bloque, "gh", 200), T: texts(tmp()) });
+  assert.equal(r.code, 2);
+  assert.match(r.message, /suivi non exécuté : gh injoignable/);
 });

@@ -213,3 +213,32 @@ test("QUA-161 fusion automatique sur GitLab : ligne de commande, forge lue sur l
   assert.equal(r.status, 2);
   assert.match(r.stderr, /non exécuté : glab injoignable/);
 });
+
+test("QUA-161 appel à gh ou glab bloqué : délai sur chaque appel, statut nul (« non exécuté »), jamais un succès (QUA-013)", async () => {
+  const { ghRun, FORGE_TIMEOUT_MS } = await import("./merge-auto-forge.mjs");
+  assert.ok(FORGE_TIMEOUT_MS > 0);
+  const bloque = (_c, _a, o) => spawnSync(process.execPath, ["-e", "setTimeout(() => console.log('{}'), 3000)"], o);
+  const debut = Date.now();
+  for (const appel of [ghRun, glabRun]) {
+    const r = appel(["pr", "view"], { run: bloque, timeout: 200 });
+    assert.equal(r.status, null);
+    assert.match(r.stderr, /délai de 0\.2 s dépassé/);
+  }
+  assert.ok(Date.now() - debut < 5000, "chaque appel est coupé au délai");
+  let options;
+  ghRun(["x"], {
+    run: (_c, _a, o) => {
+      options = o;
+      return { status: 0, stdout: "" };
+    },
+  });
+  assert.equal(options.timeout, FORGE_TIMEOUT_MS, "délai par défaut");
+  // Tué par un signal sans code : coupé, jamais un succès ; gh absent : rendu tel quel (status nul, son erreur).
+  assert.match(ghRun(["x"], { run: () => ({ status: null, signal: "SIGTERM" }) }).stderr, /délai de 60 s dépassé/);
+  assert.deepEqual(glabRun(["x"], { run: () => ({ status: null, error: { code: "ENOENT" } }) }), {
+    status: null,
+    error: { code: "ENOENT" },
+  });
+  const client = forgeClient("github", { gh: (a) => ghRun(a, { run: bloque, timeout: 200 }) });
+  assert.equal(client.view("7"), null, "vue coupée : illisible, jamais un état");
+});
