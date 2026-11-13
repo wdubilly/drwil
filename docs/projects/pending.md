@@ -135,6 +135,8 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P0] (0.11.2) Le contrôle des hooks Claude compile le paquet qu'il teste : une PR de documentation seule
+  a une CI rouge (cadré le 2026-11-13) — `docs/projects/couverture-claude-compile-le-paquet.md`.
 - [ ] [IA] [P0] (0.11.2) Un chantier se mène dans la session principale, sans sous-agent (cadré le 2026-11-12) —
   `docs/projects/fin-des-sous-agents-de-chantier.md`.
 - [ ] [IA] [P0] (0.11.2) Le suivi de PR ne dit « verte » que sur la CI de la PR, qu'il attend si elle tarde (cadré le
