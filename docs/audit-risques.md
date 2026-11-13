@@ -176,6 +176,7 @@ réel est que la recette ne cite que le nom anglais. Ce rapport remplace donc ce
 
 - RSK-1, RSK-5, RSK-6 : fait avec OPT-2 de `docs/decouverte-valeur.md` (journal `docs/projects/journal.md`, 2026-11-13).
 - RSK-2, RSK-8, RSK-9 : `docs/projects/refus-d-attestation-lisible.md`.
-- RSK-3 : la ligne « Unreleased » s'écrit en fin de BUILD (décision du 2026-11-13) —
-  `docs/projects/unreleased-en-fin-de-build.md`.
+- RSK-3 : fait — la ligne « Unreleased » s'écrit en fin de BUILD (décision du 2026-11-13) et
+  `close.mjs --check` signale son absence (journal `docs/projects/journal.md`, 2026-11-13, « La ligne
+  « Unreleased » du changelog s'écrit en fin de BUILD »).
 - RSK-4, RSK-7, RSK-10, RSK-11 : `docs/projects/durcissements-audit-2026-11-12.md`.
