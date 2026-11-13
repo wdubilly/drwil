@@ -498,7 +498,12 @@ test("QUA-268 : les trois OS exigés verts — la release est créée ; réglage
   reglerMode(autre.racine, { mode: "solo" });
   const sansReglage = lancer(autre.racine, [], chemin({ npm: NPM_PACK, gh: 'case "$1" in run|api) exit 1 ;; esac' }));
   assert.equal(sansReglage.status, 0, sansReglage.stderr);
-  assert.doesNotMatch(sansReglage.stdout + sansReglage.stderr, /CI|requiredOs/);
+  // Les chemins temporaires aléatoires (« create-release-2XsCIS ») contiendraient « CI » par hasard : retirés d'abord.
+  const sansChemins = (sansReglage.stdout + sansReglage.stderr).replace(
+    new RegExp(`${tmpdir().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\S*`, "g"),
+    "<tmp>",
+  );
+  assert.doesNotMatch(sansChemins, /CI|requiredOs/);
   assert.equal(git(autre.origine, "tag", "-l"), "v1.1.0");
 });
 
