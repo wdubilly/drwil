@@ -16,6 +16,7 @@ files:
   - docs/projects/pending.md
   - docs/projects/journal.md
   - .drwil/ia-first.json
+  - packages/drwil/CHANGELOG.md
 -->
 
 ## 1. Besoin
@@ -29,6 +30,12 @@ elle peut attendre ou non, avant de poser un P0.
   un adoptant ou la CI, existe-t-il un contournement, quelle échéance ; sinon `check-docs` avertit — `QUA-088`
 - Le modèle de fiche contient cette section et dit de n'y poser un P0 que si la première réponse est oui ou
   l'échéance proche — `QUA-088`
+
+## Contrats modifiés
+
+- `.githooks/check-docs-workstreams.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/check-docs-texts.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/check-docs.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 
 ## 2. Hors périmètre
 

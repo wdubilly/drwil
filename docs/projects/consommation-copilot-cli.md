@@ -18,6 +18,7 @@ files:
   - docs/projects/kit-mechanics.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - packages/drwil/CHANGELOG.md
 -->
 
 ## 1. Besoin
@@ -32,6 +33,13 @@ comme celle de Claude Code.
   attribue chaque chantier par sa branche, comme avec Claude Code ; sans journal lisible, il le dit, sans bloquer — `QUA-042`
 - `--record <fiche>` écrit la ligne de `.drwil/usage.jsonl` avec `"source"` nommant l'outil ; jamais de contenu de
   message lu ni écrit — `QUA-042`
+
+## Contrats modifiés
+
+- `.githooks/consumption.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/consumption-log.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/consumption-format.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/consumption-texts.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 
 ## 2. Hors périmètre
 

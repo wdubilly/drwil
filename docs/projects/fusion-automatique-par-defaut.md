@@ -32,6 +32,7 @@ files:
   - docs/projects/pending.md
   - docs/projects/journal.md
   - .drwil/ia-first.json
+  - packages/drwil/CHANGELOG.md
 -->
 
 ## 1. Besoin
@@ -62,6 +63,10 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
 - `.githooks/merge-auto.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
 - `.githooks/state-merge.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
 - `.githooks/state-validate.mjs` — gardé à sa version de la branche (QUA-113), si le chantier le modifie (validé le 2026-11-12)
+- `.githooks/state-context-texts.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/state-messages-fr.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/state-messages-en.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/state.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 
 ## 2. Hors périmètre
 

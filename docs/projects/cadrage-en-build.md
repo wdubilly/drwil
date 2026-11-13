@@ -19,6 +19,7 @@ files:
   - docs/contracts.md
   - docs/projects/pending.md
   - docs/projects/journal.md
+  - packages/drwil/CHANGELOG.md
 -->
 
 ## 1. Besoin
@@ -36,6 +37,12 @@ ou modifiées voyagent sur la branche du chantier et fusionnent avec sa PR.
   hors de la fiche active reste refusé — `QUA-016`
 - Les contrats ne se créent toujours qu'en SCOPING ou par le chantier lui-même (le registre reste refusé en BUILD
   hors périmètre) — `QUA-016`
+
+## Contrats modifiés
+
+- `.githooks/scope-gate.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/scope-gate-kit.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/scope-gate-texts.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 
 ## 2. Hors périmètre
 

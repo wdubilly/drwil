@@ -15,6 +15,7 @@ files:
   - docs/projects/pending.md
   - docs/projects/model-brief.md
   - docs/projects/journal.md
+  - packages/drwil/CHANGELOG.md
 -->
 
 ## 1. Besoin
@@ -28,6 +29,13 @@ fichier d'index par fiche supprime le conflit.
 - Une fiche porte elle-même sa priorité, sa version cible et son rang ; l'ordre de réalisation se calcule en
   lisant les fiches, sans éditer un index commun — `QUA-166`
 - Créer ou clore une fiche ne modifie aucun autre fichier partagé — `QUA-166`
+
+## Contrats modifiés
+
+- `.githooks/briefs-order.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/briefs.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/check-docs-workstreams.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/check-docs.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 
 ## 2. Hors périmètre
 
