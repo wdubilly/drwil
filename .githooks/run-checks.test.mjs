@@ -1004,3 +1004,20 @@ test("QUA-208 : dans ce dépôt, les contrôles lents sont confiés à la CI, ac
   );
   assert.doesNotMatch(flux, /^\s+CI:/m, "la variable CI n'est jamais écrasée");
 });
+
+test("dans ce dépôt, couverture-claude compile le paquet avant ses tests et ses paths couvrent ce que ses tests lisent", async () => {
+  // Couverture des tests (QUA-004) : sans compilation propre, couverture-claude dépendait de couverture-tests ; repris
+  // d'un verdict précédent sur une PR hors packages/, celui-ci ne compilait plus et dist/ manquait.
+  const { globToRegex } = await import("./glob.mjs");
+  const depot = dirname(dirname(SCRIPT));
+  const script = JSON.parse(readFileSync(join(depot, "package.json"), "utf8")).scripts["test:claude:coverage"];
+  assert.match(script, /^tsc --build && /, "le paquet est compilé avant les tests");
+  const config = JSON.parse(readFileSync(join(depot, ".drwil/ia-first.json"), "utf8"));
+  const controle = config.checks.find((c) => c.id === "couverture-claude");
+  assert.equal(controle.run, "npm run test:claude:coverage");
+  const couvert = (f) => controle.paths.some((g) => globToRegex(g).test(f));
+  const tests = script.match(/packages\/drwil\/test\/[\w-]+\.test\.mjs/g);
+  assert.equal(tests.length, 5);
+  for (const f of [...tests, "packages/drwil/src/index.ts", "tsconfig.json", "packages/drwil/tsconfig.json"])
+    assert.ok(couvert(f), `${f} rejoue couverture-claude`);
+});

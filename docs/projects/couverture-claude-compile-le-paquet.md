@@ -43,6 +43,10 @@ Tant que ce n'est pas corrigé, toute PR qui ne touche pas `packages/` a une CI 
 - La CI de la PR du chantier est verte ; la PR #416 rejouée après la fusion est verte sur `couverture-claude` —
   `QUA-004`
 
+## Contrats modifiés
+
+- `.githooks/run-checks.mjs` — test : couverture-claude compile le paquet et ses paths couvrent ce que ses tests lisent (validé par le demandeur le 2026-11-13)
+
 ## 2. Hors périmètre
 
 - La reprise des verdicts elle-même (`.githooks/run-checks-verdicts.mjs`) et le cache de la CI

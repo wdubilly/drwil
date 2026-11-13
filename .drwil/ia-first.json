@@ -219,8 +219,13 @@
       "paths": [
         "packages/drwil/templates/common/tools/claude/**",
         "packages/drwil/templates/common/optional/front-quality/**",
+        "packages/drwil/src/**",
+        "tsconfig.json",
+        "packages/drwil/tsconfig.json",
         "packages/drwil/test/claude-hooks.test.mjs",
         "packages/drwil/test/portable-attest.test.mjs",
+        "packages/drwil/test/portable-polls.test.mjs",
+        "packages/drwil/test/cursor-acp.test.mjs",
         "packages/drwil/test/front-quality.test.mjs",
         "package.json",
         "package-lock.json",
