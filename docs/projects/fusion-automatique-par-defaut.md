@@ -13,6 +13,10 @@ files:
   - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
   - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
   - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
+  - packages/drwil/templates/common/base/.githooks/state.mjs
+  - packages/drwil/templates/common/base/.githooks/state-transitions.mjs
+  - .githooks/state.mjs
+  - .githooks/state-transitions.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/merge-poll.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/start-poll.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/queue-poll.mjs
@@ -48,7 +52,12 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
   préalable de l'humain, avec toutes ses autres garanties (état calculé, mise à jour si en retard, relecture sur la
   forge) — `QUA-161`
 - Les garde-fous restent : jamais de fusion programmée sur un état inconnu, en retard, en conflit, une MR fermée ou
-  d'une autre branche — `QUA-162`
+  d'une autre branche ; la PR (MR) dont la branche (`headRefName`) n'est pas la branche git courante est refusée sans
+  rien programmer — `QUA-162`
+- Tant que la marque `merge_cancelled` (fusion annulée par une réouverture non aboutie) est dans l'état,
+  `.githooks/merge-auto.mjs` refuse sans appel à la forge : la reprogrammation reste à l'humain — `QUA-181`
+- L'outil d'état n'écrit plus `auto_merge` (lancement, file, sondage `drwil-merge`) ni `scoping_merge` (fin de
+  cadrage) ; les marques déjà écrites restent lisibles, sans effet — `QUA-188`
 - Le sondage de lancement ne pose plus `drwil-merge` et celui de fin de cadrage disparaît ; un cadrage poussé voit sa
   PR mise en fusion automatique par l'agent — `QUA-187`
 - Un réglage hérité (`auto_merge`, `scoping_merge`) dans un état existant ne casse rien — `QUA-188`
@@ -60,6 +69,12 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
 - `QUA-188` — ancien critère : « La réponse « Automatic merge » de fin de cadrage ouvre l'outil de fusion automatique pour la PR de sa branche » — raison : plus de réponse, la PR de la branche est mise en fusion automatique d'office (validé le 2026-11-12)
 - `QUA-164` — ancien critère : « La consigne de l'état et le skill de lancement appellent l'outil de fusion automatique » — raison : l'appel n'est plus conditionné à une autorisation (validé le 2026-11-12)
 - `QUA-266` — ancien critère : sondages `drwil-limite` et `drwil-merge` lus par le hook sous les autres outils — raison : `drwil-merge` n'existe plus (validé le 2026-11-12)
+- `QUA-162` — ancien critère : « L'outil de fusion automatique ne programme jamais sur un état inconnu ou pas à jour, et ne dit jamais la fusion programmée sans l'avoir vue » (sans condition sur la branche hors SCOPING) — raison : la PR dont la branche (`headRefName`) n'est pas la branche git courante est refusée, garde-fou qui remplace l'autorisation (validé le 2026-11-13)
+- `QUA-181` — ancien critère : « `merge-auto` qui voit la fusion programmée sur la PR de la marque `merge_cancelled` l'efface ; l'outil ne reprogramme jamais seul : `merge-auto` exige toujours l'autorisation de l'humain (QUA-163, QUA-188) » — raison : sans autorisation, `merge-auto` refuse tant que la marque est présente (réouverture non aboutie), la reprogrammation reste à l'humain (validé le 2026-11-13)
+- `QUA-189` — retiré du registre avec ses tests ; ancien critère : « « Manual merge » et « Continue scoping » ne programment rien ; « Continue scoping » garde la branche et la PR » — raison : le sondage de fin de cadrage est retiré, la PR de cadrage est mise en fusion automatique d'office (validé le 2026-11-13)
+- `QUA-265` — retiré du registre avec ses tests ; ancien critère : « La fusion automatique se redonne en cours de chantier par un sondage `drwil-merge` dont la réponse humaine est lue par le hook » — raison : la fusion automatique est le comportement par défaut, il n'y a plus rien à redonner ; `.githooks/state-merge.mjs` lit encore les marques héritées sans les produire (validé le 2026-11-13)
+- `tests-qua-189` — contrôle retiré avec QUA-189 (validé le 2026-11-13)
+- `tests-qua-265` — contrôle retiré avec QUA-265 (validé le 2026-11-13)
 - `.githooks/merge-auto.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
 - `.githooks/state-merge.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-12)
 - `.githooks/state-validate.mjs` — gardé à sa version de la branche (QUA-113), si le chantier le modifie (validé le 2026-11-12)
@@ -84,6 +99,7 @@ lancement d'un chantier, plus de sondage `drwil-scope` à la fin d'un cadrage. A
 ## 4. Décisions
 
 - 2026-11-12 : fusion automatique inconditionnelle, sans réglage ; sondages `drwil-merge` et `drwil-scope` retirés ; modification de QUA-163, QUA-164, QUA-187, QUA-188 et QUA-266 validée par le demandeur.
+- 2026-11-13 : QUA-181 garde son garde-fou (`merge-auto` refuse tant que la marque `merge_cancelled` est présente) ; QUA-189 et QUA-265 retirés du registre avec leurs tests ; `.githooks/state.mjs` et `.githooks/state-transitions.mjs` (gabarit, copies, tests) entrent dans le périmètre au lot 1, l'outil cesse d'y écrire `auto_merge` et `scoping_merge` ; le refus d'une PR d'une autre branche que la branche git courante s'ajoute à QUA-162 — décidé par le demandeur.
 
 ## 5. Points à trancher
 
@@ -91,7 +107,7 @@ Aucun.
 
 ## 6. Increments
 
-- **Lot 1 — outil et état** [IA] : `.githooks/merge-auto.mjs` n'exige plus d'autorisation ; `.githooks/state-merge.mjs` et `.githooks/state-validate.mjs` lisent sans la produire les marques héritées ; tests. Critère de sortie : tests de merge-auto et de l'état verts.
+- **Lot 1 — outil et état** [IA] : `.githooks/merge-auto.mjs` n'exige plus d'autorisation, refuse la PR d'une autre branche que la branche courante et tant que la marque `merge_cancelled` est présente ; `.githooks/state-merge.mjs`, `.githooks/state.mjs`, `.githooks/state-transitions.mjs` et `.githooks/state-validate.mjs` lisent sans la produire les marques héritées ; QUA-189 et QUA-265 retirés avec leurs tests et contrôles ; tests. Critère de sortie : tests de merge-auto et de l'état verts.
 - **Lot 2 — sondages, skills, docs, contrats** [IA] : retrait de `drwil-merge` et `drwil-scope` des hooks et skills, consignes, `AGENTS.md`, `docs/contracts.md`, `npm run installer-depot`. Critère de sortie : `node .githooks/run-checks.mjs` sans échec, `drwil verify --agent` en `GOVERNANCE: PASS`.
 
 ## 7. Reprise
