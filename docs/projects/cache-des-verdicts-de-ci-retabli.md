@@ -102,11 +102,20 @@ même chemin que l'artefact d'arbre prouvé (commit de fusion → PR → dernier
   lisibles (`jq`) sont copiés dans `.drwil/evidence/run-checks-verdicts.json` (si présent), et l'étape de sauvegarde existante (non
   sautée) les enregistre sous `github.sha` ; sinon un `::warning::`. Contrat `QUA-296` créé, contrôle `tests-qua-296`
   déclaré, test QUA-296 dans `.github/scripts/workflows-yaml.test.mjs` (dépôt seulement, échoue sur l'ancien workflow).
+- **Lot 2** (2026-11-13) : fait et commité. Cause : aucune étape ne disait quelle clé la restauration avait servie
+  (le préfixe `run-checks-verdicts-` peut servir un cache très ancien sans bruit). Correctif dans
+  `.github/workflows/ia-first.yml` (dépôt seulement) : la restauration porte `id: verdicts` ; l'étape suivante « Âge
+  du cache de verdicts restauré » (PR seulement, avant la passe) lit `steps.verdicts.outputs.cache-matched-key` et
+  la base de la PR, et écrit un `::notice::` « cache de verdicts : commit X, N commits de retard » (`git rev-list
+  --count X..base`), « aucun restauré » ou « retard inconnu » ; toujours code 0. Le sha est pris par `${CLE##*-}` :
+  écrire « run-checks » dans le script ferait exiger à tort la garde de saut par le test QUA-250 (filtre par texte).
+  Contrat `QUA-297` créé, contrôle `tests-qua-297` déclaré, test QUA-297 (dépôt seulement, échoue sur l'ancien
+  workflow ; joue le script par bash sur un dépôt git temporaire).
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 2 (âge du cache restauré, contrat à créer), puis lot 3 : porter QUA-296 dans le
-  gabarit GitHub (décision dans le job `plan`, artefact `proven-tree`, étapes en anglais), étendre le test QUA-296 au
-  gabarit (la boucle du test ne liste que le dépôt), retirer « le gabarit livré suit » de la règle de QUA-296,
-  CHANGELOG, `kit-mechanics.md`.
+- **Prochaine étape** : [IA] lot 3 : porter QUA-296 et QUA-297 dans le gabarit GitHub (décision QUA-296 dans le job
+  `plan`, artefact `proven-tree`, étapes et messages en anglais ; id de la restauration à donner), étendre les tests
+  QUA-296 et QUA-297 au gabarit (leurs boucles ne listent que le dépôt), retirer « le gabarit livré suit » des règles
+  de QUA-296 et QUA-297, `npm run installer-depot`, CHANGELOG « Unreleased » (anglais), `kit-mechanics.md`.
 - **Pièges** : la première fusion après ce chantier ne sauvegarde rien si la PR a été prouvée par une CI d'avant le
   correctif (preuve sans verdicts : avertissement attendu). QUA-250 dit encore « le push … rejoue donc tout » avant de
   sauvegarder : désormais un push sauté sauvegarde des verdicts de PR ; la fiche réserve la modification de QUA-250 au

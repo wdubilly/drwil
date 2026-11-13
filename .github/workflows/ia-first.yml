@@ -171,12 +171,29 @@ jobs:
       # seul un push sur la branche principale, qui rejoue tout, les sauvegarde : une PR ne relit jamais
       # un verdict qu'elle aurait écrit. Sans cache restauré, tout est rejoué.
       - name: Restaurer les verdicts de la CI de la branche principale
+        id: verdicts
         if: github.event_name == 'pull_request'
         uses: actions/cache/restore@v6
         with:
           path: .drwil/evidence/run-checks-verdicts.json
           key: run-checks-verdicts-${{ github.event.pull_request.base.sha }}
           restore-keys: run-checks-verdicts-
+      # QUA-297 : la clé réellement restaurée (le préfixe peut servir un cache ancien) et son retard sur la base de la
+      # PR, dits au journal ; jamais bloquant : un cache ancien ou absent ne coûte que du temps (contrôles rejoués).
+      - name: Âge du cache de verdicts restauré
+        if: github.event_name == 'pull_request'
+        env:
+          CLE: ${{ steps.verdicts.outputs.cache-matched-key }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          commit=${CLE##*-}
+          if [ -z "$CLE" ]; then
+            echo "::notice::cache de verdicts : aucun restauré (premier passage ou cache expiré) : tout est rejoué."
+          elif retard=$(git rev-list --count "$commit..$BASE" 2>/dev/null); then
+            echo "::notice::cache de verdicts : commit $commit, $retard commits de retard sur la base $BASE."
+          else
+            echo "::notice::cache de verdicts : commit $commit, retard inconnu (commit absent de l'historique de la base $BASE)."
+          fi
       # QUA-250 : le run que le plan a lu (jamais un autre) ; les verdicts de cette passe sont ensuite gardés pour le push suivant de la PR.
       - if: steps.prouve.outputs.saute != 'true' && needs.plan.outputs.precedent != ''
         env:

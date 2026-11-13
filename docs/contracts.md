@@ -2871,3 +2871,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.github/scripts/workflows-yaml.test.mjs`
 **Origine** : cache-des-verdicts-de-ci-retabli — « Un push sur la branche principale dont l'arbre est déjà prouvé par la CI verte d'une PR sauvegarde quand même le cache de verdicts, sous la clé du commit poussé, à partir des verdicts de cette PR ; l'arbre prouvé et l'arbre poussé sont comparés avant toute sauvegarde » (D1, tranchée par le demandeur le 2026-11-11)
 **Raison** : Le push sauté ne sauvegardait plus rien : le dernier cache datait du 2026-11-08 et une PR de documentation rejouait presque tout (8 min sur la PR #405).
+
+## QUA-297 — Sur une PR, la CI dit au journal le commit du cache de verdicts restauré et son retard sur la base, ou son absence, sans bloquer
+**Règle** : CI GitHub de ce dépôt (le gabarit livré suit). Sur une PR, juste après la restauration du cache de verdicts (QUA-250), une étape écrit au journal (`::notice::`) le commit de la clé réellement restaurée (exacte ou servie par le préfixe) et son retard en nombre de commits sur la base de la PR ; aucun cache restauré : c'est dit (tout est rejoué) ; commit absent de l'historique : le retard est dit inconnu. L'étape ne fait jamais échouer la CI : un cache ancien ou absent ne coûte que du temps, il ne fausse aucun verdict (QUA-013).
+**Périmètre** : job `checks` de `.github/workflows/ia-first.yml` (étapes « Restaurer les verdicts de la CI de la branche principale » et « Âge du cache de verdicts restauré »).
+**Source de vérité** : le job `checks` de `.github/workflows/ia-first.yml`.
+**Preuve** : test du workflow : étape sur une PR seulement, juste après la restauration et avant la passe, qui lit la clé restaurée (`cache-matched-key`) et la base de la PR ; jouée par bash sur un historique réel : commit et retard dits, absence dite, commit inconnu dit, sortie toujours 0.
+**Contrôle** : `tests-qua-297`
+**Tests** : `.github/scripts/workflows-yaml.test.mjs`
+**Origine** : cache-des-verdicts-de-ci-retabli — « Sur une PR, la CI écrit au journal le commit du cache de verdicts restauré et son retard en nombre de commits sur la base de la PR, sans bloquer ; l'absence de cache est dite » (D3, tranchée par le demandeur le 2026-11-11)
+**Raison** : Le cache restauré par le préfixe datait de plusieurs jours sans que rien ne le dise : une PR de documentation rejouait presque tout (8 min sur la PR #405) sans signe de la cause.

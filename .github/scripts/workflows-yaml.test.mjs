@@ -3,7 +3,8 @@
 // workflow ne tournerait donc jamais. Seul un test local attrape l'erreur avant le push.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -212,6 +213,46 @@ for (const [fichier, preuve] of [[".github/workflows/ia-first.yml", "arbre-prouv
       ["prouve"],
     );
     assert.match(etapes[lit].if, /^github\.event_name == 'push'/);
+  });
+
+// Lot 2 : la CI du dépôt ; le gabarit livré suit au lot 3 de la même fiche.
+for (const fichier of [".github/workflows/ia-first.yml"])
+  test(`QUA-297 : sur une PR, ${fichier} écrit au journal le commit du cache de verdicts restauré et son retard sur la base, ou son absence, sans bloquer`, () => {
+    const ci = parseAllDocuments(readFileSync(join(RACINE, fichier), "utf8"))[0].toJS();
+    const etapes = ci.jobs.checks.steps;
+    const restaure = etapes.findIndex((e) => /^actions\/cache\/restore@/.test(e.uses ?? ""));
+    const age = etapes.findIndex((e) => (e.env?.CLE ?? "").includes("cache-matched-key"));
+    const passe = etapes.findIndex((e) => e.run === "node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards");
+    assert.ok(restaure >= 0 && age === restaure + 1 && age < passe, `${fichier} : âge dit juste après la restauration, avant la passe`);
+    const etape = etapes[age];
+    assert.equal(etape.if, "github.event_name == 'pull_request'");
+    // La clé réellement restaurée (exacte ou par le préfixe), jamais la clé demandée ; la base est celle de la PR.
+    assert.ok(etapes[restaure].id, "restauration identifiée");
+    assert.equal(etape.env.CLE, `\${{ steps.${etapes[restaure].id}.outputs.cache-matched-key }}`);
+    assert.match(etape.env.BASE, /^\$\{\{ github\.event\.pull_request\.base\.sha \}\}$/);
+    assert.ok(!etape["continue-on-error"], "non bloquante par son script, pas par un échec toléré");
+    if (process.platform === "win32") return;
+    // Joué par bash sur un historique réel : trois commits, le cache posé sur le premier, la base sur le dernier.
+    const depot = mkdtempSync(join(tmpdir(), "qua-297-"));
+    try {
+      const git = (...a) => spawnSync("git", a, { cwd: depot, encoding: "utf8" }).stdout.trim();
+      git("init", "-q");
+      for (const n of [1, 2, 3]) git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", `c${n}`);
+      const [base, , ancien] = git("rev-list", "HEAD").split("\n");
+      const jouer = (cle) =>
+        spawnSync("bash", ["-ec", etape.run], { cwd: depot, encoding: "utf8", env: { PATH: process.env.PATH, CLE: cle, BASE: base } });
+      const vieux = jouer(`run-checks-verdicts-${ancien}`);
+      assert.equal(vieux.status, 0);
+      assert.match(vieux.stdout, new RegExp(`cache de verdicts : commit ${ancien}, 2 commits de retard`));
+      const absent = jouer("");
+      assert.equal(absent.status, 0);
+      assert.match(absent.stdout, /cache de verdicts : aucun restauré/);
+      const inconnu = jouer(`run-checks-verdicts-${"0".repeat(40)}`);
+      assert.equal(inconnu.status, 0, "commit absent de l'historique : dit, sans bloquer");
+      assert.match(inconnu.stdout, /retard inconnu/);
+    } finally {
+      rmSync(depot, { recursive: true, force: true });
+    }
   });
 
 test("QUA-250 : hors de la branche principale, la CI GitLab livrée télécharge les verdicts de la branche principale et demande leur reprise ; seule la branche principale les garde", () => {
