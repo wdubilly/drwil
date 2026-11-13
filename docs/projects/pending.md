@@ -441,6 +441,9 @@ drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
 - [ ] [décision] [P2] Une limite découverte en chantier dit son lien avec le
   problème (bloquant, lié, périphérique) et l'élargissement du périmètre se
   compte au journal — `docs/intentions/limites-classees-par-lien.md`.
+- [ ] [décision] [P2] Le coût d'un chantier se répartit entre production,
+  vérification et gouvernance, mesuré avant toute optimisation —
+  `docs/intentions/cout-par-activite.md`.
 - [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.
