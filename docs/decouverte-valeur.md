@@ -152,3 +152,5 @@ reproduire (aucune lecture de la forge faite pour ce scan).
 - OPT-3 : fiche `docs/projects/refus-d-attestation-lisible.md`, avec RSK-2, RSK-8 et RSK-9.
 - OPT-5 : tranché autrement — la ligne « Unreleased » s'écrit en fin de BUILD
   (`docs/projects/unreleased-en-fin-de-build.md`, RSK-3).
+- OPT-4 : intention `docs/intentions/attestations-qui-tombent-pour-leur-objet.md`, rangée en 0.11.2.
+- OPT-6 : relance de `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`, rangée en 0.11.2.

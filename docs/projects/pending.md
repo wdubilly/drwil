@@ -124,7 +124,7 @@ d'un outil) la dit dans son statut.
 Étiquette `(version)` sur chaque ligne ouverte ; sans étiquette = plus tard. Remplace « Versions visées » pour ce qui reste.
 
 - **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
-- **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre à respecter** (il suit celui de la section « Fiches cadrées » ci-dessous) : 1 contrôles rejoués, 2 cache de verdicts en CI, 3 un seul run de couverture, 4 tranches dès le départ, 5 tests du kit découpés par thème, 6 preuves fiables, 7 temps des contrôles journalisé, 8 doublon des tests des hooks. Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : le 3 avant le 4 (`doctor` et `guarantees` partagés) ; le 1 avant le 8 (module engine-selftest) ; le 6 avant le 7 (`run-checks-verdicts`).
+- **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre à respecter** (il suit celui de la section « Fiches cadrées » ci-dessous) : 1 contrôles rejoués, 2 cache de verdicts en CI, 3 un seul run de couverture, 4 tranches dès le départ, 5 tests du kit découpés par thème, 6 preuves fiables, 7 temps des contrôles journalisé, 8 doublon des tests des hooks. Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : le 3 avant le 4 (`doctor` et `guarantees` partagés) ; le 1 avant le 8 (module engine-selftest) ; le 6 avant le 7 (`run-checks-verdicts`). Quatre intentions y sont aussi rangées, à cadrer (décision du 2026-11-13) : limites classées par lien, coût par activité, attestations qui ne tombent que pour leur objet (OPT-4), périmètre prévu au cadrage (OPT-6).
 - **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
   restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; le découpage des
   contrôles lents dès le départ ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
@@ -297,6 +297,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P1] drwil_com, priorité 3 : vérifier la barrière de
   fusion (protection absente, mal configurée, conforme) — section « Retour
   de drwil_com » de `docs/intentions/forge-dans-le-livrable.md`.
+- [ ] [décision] (0.11.2) Une attestation ne tombe plus pour un changement sans rapport avec son objet :
+  `**Couvre**` resserré, attestations mécaniques remplacées par des tests (OPT-4) —
+  `docs/intentions/attestations-qui-tombent-pour-leur-objet.md`.
 
 ### Adoption, installation, documentation
 
@@ -321,9 +324,13 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] [P3] Aider l'adoptant à alléger ses fichiers (outil de
   découpe, fiches d'allègement à l'adoption) — demande du 2026-10-27, après
   la 0.10.0 — `docs/intentions/alleger-les-fichiers-de-l-adoptant.md`.
-- [ ] [décision] Un fichier découpé ou neuf entre dans le bloc scope sans détour ni élargissement
-  humain (admission des fichiers dérivés ; le rappel au cadrage est fait le 2026-10-28) —
+- [ ] [décision] (0.11.2) Un fichier découpé ou neuf entre dans le bloc scope sans détour ni élargissement
+  humain, et le périmètre se prévoit au cadrage (tests qui importent un module cité, `**Périmètre**` des contrats
+  touchés ; relancé le 2026-11-13, OPT-6) —
   `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`.
+- [ ] [décision] [P2] (0.11.2) Une limite découverte en chantier dit son lien avec le
+  problème (bloquant, lié, périphérique) et l'élargissement du périmètre se
+  compte au journal — `docs/intentions/limites-classees-par-lien.md`.
 
 ### Release
 
@@ -384,6 +391,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Coût en tokens
 
+- [ ] [décision] [P2] (0.11.2) Le coût d'un chantier se répartit entre production,
+  vérification et gouvernance, mesuré avant toute optimisation —
+  `docs/intentions/cout-par-activite.md`.
 - [ ] [décision] (0.14.0) La consommation de tokens mesurée aussi pour les autres
   outils IA (Copilot CLI, Cursor, Codex, Gemini) —
   `docs/intentions/consommation-autres-outils.md`.
@@ -443,12 +453,6 @@ drwil qui fera tourner la fabrique, et la fabrique a besoin de ses chiffres.
   `npm publish` (v1:HOOK-013, v1:REL-006, v1:PKG-010) ; tranche aussi la
   question 3 du catalogue, reportée ici le 2026-10-13 —
   `docs/intentions/packager-kit-ia-first.md`.
-- [ ] [décision] [P2] Une limite découverte en chantier dit son lien avec le
-  problème (bloquant, lié, périphérique) et l'élargissement du périmètre se
-  compte au journal — `docs/intentions/limites-classees-par-lien.md`.
-- [ ] [décision] [P2] Le coût d'un chantier se répartit entre production,
-  vérification et gouvernance, mesuré avant toute optimisation —
-  `docs/intentions/cout-par-activite.md`.
 - [ ] [décision] [P2] Protection de la forge dans le livrable (ruleset,
   CODEOWNERS, vérification en CI, diagnostic, identité de l'agent guidée) —
   `docs/intentions/forge-dans-le-livrable.md`.

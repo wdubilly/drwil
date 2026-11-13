@@ -2,6 +2,9 @@
 
 **Statut** : proposée le 2026-10-28 — limite relevée aux chantiers `niveau-de-protection` et `surveillance-taille-du-kit`.
 **Revu le 2026-10-28** : cadrée le jour même en `docs/projects/journal.md` (piste retenue : alerter au cadrage et rappeler dans le modèle de fiche, barrière inchangée). Reste vivante : l'admission automatique des fichiers dérivés, à reprendre si les arrêts persistent.
+**Revu le 2026-11-13** : les arrêts persistent, la condition de reprise est remplie (OPT-6 du scan de valeur du
+2026-11-12, `docs/decouverte-valeur.md`) ; rangée en 0.11.2 sur décision du demandeur, élargie au périmètre prévu au
+cadrage (section « Relance du 2026-11-13 »).
 
 ## Besoin
 
@@ -30,7 +33,21 @@ décision humaine et une relance de sous-agent.
   force une découpe, donc un fichier neuf absent du scope : le même arrêt est
   à prévoir.
 
+## Relance du 2026-11-13 (OPT-6)
+
+- 72 commits d'élargissement du périmètre depuis le 2026-10-22 ; chaque limite coûte un sondage, un commit et une
+  reprise.
+- Ce qui manque au scope le plus souvent : les tests qui importent un module cité ou figent ses messages, et les
+  fichiers du `**Périmètre**` des contrats que la fiche touche. Les deux se calculent au cadrage.
+- Briques existantes : `readBlock` et `withMirrors` (`.githooks/scope.mjs`), le réglage `scopeMirrors`.
+- Lien : `docs/intentions/limites-classees-par-lien.md` compte les élargissements à la clôture ; celle-ci les évite au
+  cadrage.
+
 ## Questions à trancher
+
+- [décision] Au cadrage, proposer (ou ajouter d'office) au bloc scope les tests qui importent un module cité et les
+  fichiers du `**Périmètre**` des contrats touchés : avertissement de `check-docs`, ou ajout par un outil sur le oui
+  du demandeur ?
 
 - [décision] Relire maintenant le scope des fiches cadrées restantes pour qu'il
   suive les fichiers découpés, et faire rappeler par le modèle de fiche la
