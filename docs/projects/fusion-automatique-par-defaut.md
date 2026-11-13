@@ -31,6 +31,8 @@ files:
   - .githooks/contracts-validate.mjs
   - .githooks/contracts.test.mjs
   - packages/drwil/src/verify.ts
+  - packages/drwil/src/coverage.ts
+  - packages/drwil/src/doctor.ts
   - packages/drwil/src/serve-watch.ts
   - packages/drwil/src/serve-board.ts
   - packages/drwil/templates/common/tools/claude/.claude/hooks/merge-poll.mjs
