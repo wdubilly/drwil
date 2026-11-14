@@ -57,7 +57,7 @@ function check(id: string, layer: string, run: string, name: string) {
   return { id, name, run, ...(layer === "." ? {} : { cwd: layer }), paths: [layer === "." ? "**" : `${layer}/**`], degradable: false };
 }
 
-/** One layer: wired, kept or blocked (QUA-087, QUA-088, QUA-090, QUA-091, QUA-093). */
+/** One layer: wired, kept or blocked (QUA-087, QUA-088, QUA-090, QUA-091, QUA-093, QUA-301). */
 export function coverLayer(ctx: LayerContext, layer: string, technos: string[]): LayerReport {
   const T = TEXTS[ctx.lang];
   const slug = slugOf(layer);
@@ -88,9 +88,12 @@ export function coverLayer(ctx: LayerContext, layer: string, technos: string[]):
     ? baseline.some((p) => (layer === "." || p.startsWith(`${layer}/`)) && tool.sources.some((ext) => p.endsWith(ext)))
     : hasSources(dir, tool.sources);
   report.mode = inherited ? "existing" : "new";
-  if (ctx.checks.some((c) => c?.id === id)) {
+  // Existing layer with a single run (QUA-301): its check is `coverage-diff-<layer>`, kept as declared too.
+  const declared = [id, ...(report.mode === "existing" && tool.single ? [`coverage-diff-${slug}`] : [])];
+  const keptId = declared.find((d) => ctx.checks.some((c) => c?.id === d));
+  if (keptId) {
     report.status = "kept";
-    report.lines.push(fill(T.kept, id));
+    report.lines.push(fill(T.kept, keptId));
     return report;
   }
   if (tool.metricsNote) report.lines.push(fill(T.metricsNote, tool.metricsNote));
@@ -129,9 +132,19 @@ function existing(
   report.lines.push(fill(T.measures, fmt(measured)));
   if (tool.metrics.every((m) => (measured[m] ?? 0) >= 100)) return wire(ctx, report, tool, id, {}, ex);
   const floor = Object.fromEntries(ALL_METRICS.filter((m) => tool.metrics.includes(m)).map((m) => [m, measured[m] ?? 0]));
-  ctx.checks.push(check(id, report.layer, tool.run(floor, ex), `coverage ratchet of ${report.layer} (${tool.tool})`));
+  const diffId = `coverage-diff-${report.slug}`;
+  const diffTool = () => !!tool.diff && ctx.exec(tool.diff.probe, dir).status === 0;
+  if (tool.single) {
+    // One run judges the ratchet then the diff (QUA-301): never wired without the diff tool, the brief blocks.
+    if (!diffTool()) return block(fill(T.noDiff, tool.tool, tool.diff?.probe ?? "—"));
+    const run = tool.single(floor, ex);
+    ctx.checks.push(check(diffId, report.layer, run, `coverage ratchet and diff of ${report.layer} (${tool.tool})`));
+    report.lines.push(fill(T.single, diffId, fmt(floor)), T.cite);
+  } else {
+    ctx.checks.push(check(id, report.layer, tool.run(floor, ex), `coverage ratchet of ${report.layer} (${tool.tool})`));
+    report.lines.push(fill(T.ratchet, id, fmt(floor)), T.cite);
+  }
   report.status = "wired";
-  report.lines.push(fill(T.ratchet, id, fmt(floor)), T.cite);
   ctx.briefs.push({
     kind: "climb",
     path: `docs/projects/couverture-${report.slug}-montee.md`,
@@ -139,9 +152,9 @@ function existing(
     reasons: [fmt(floor)],
     blocking: false,
   });
-  const diffId = `coverage-diff-${report.slug}`;
+  if (tool.single) return report;
   if (ctx.checks.some((c) => c?.id === diffId)) report.lines.push(fill(T.kept, diffId));
-  else if (tool.diff && ctx.exec(tool.diff.probe, dir).status === 0) {
+  else if (tool.diff && diffTool()) {
     ctx.checks.push(check(diffId, report.layer, tool.diff.run, `diff coverage of ${report.layer}`));
     report.lines.push(fill(T.diffWired, diffId));
   } else return block(fill(T.noDiff, tool.tool, tool.diff?.probe ?? "—"));

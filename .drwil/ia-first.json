@@ -4059,6 +4059,21 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-301",
+      "name": "tests de QUA-301, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-301 packages/drwil/test/guarantees.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"

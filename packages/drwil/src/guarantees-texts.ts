@@ -15,6 +15,8 @@ export const TEXTS = {
     noMeasure: "mesure de la couverture actuelle non prise en charge pour {0} : seuil à poser par le demandeur",
     ratchet: "contrôle `{0}` câblé au niveau mesuré ({1}), cliquet jamais en baisse",
     diffWired: "contrôle `{0}` câblé : 100 % sur le code nouveau ou modifié",
+    single:
+      "contrôle `{0}` câblé en un seul run de tests : seuil au niveau mesuré ({1}), cliquet jamais en baisse, puis 100 % sur le code nouveau ou modifié",
     noDiff: "couverture du diff : outil absent ou inconnu pour {0} (`{1}`)",
     exclusion: "exclusion `{0}` refusée : sans raison déclarée",
     cite: "à citer dans le contrat de couverture du projet (`catalog:QUA-004`), sinon `drwil verify` ne le rejoue pas",
@@ -55,6 +57,8 @@ export const TEXTS = {
     noMeasure: "measure of the current coverage not supported for {0}: threshold to set by the requester",
     ratchet: "check `{0}` wired at the measured level ({1}), ratchet never lowered",
     diffWired: "check `{0}` wired: 100 % on new or modified code",
+    single:
+      "check `{0}` wired in a single test run: threshold at the measured level ({1}), ratchet never lowered, then 100 % on new or modified code",
     noDiff: "diff coverage: tool missing or unknown for {0} (`{1}`)",
     exclusion: "exclusion `{0}` refused: no declared reason",
     cite: "to cite in the project's coverage contract (`catalog:QUA-004`), otherwise `drwil verify` does not replay it",

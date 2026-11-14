@@ -124,9 +124,15 @@ personnalisé, par prudence.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-14) : lot 0 fait — les points `proofs` et `coverage` de `doctor` vivent dans
-  `packages/drwil/src/doctor-coverage.ts` (`coveragePoints`), `packages/drwil/src/doctor.ts` passe à 185 lignes, sans
-  changement de comportement (tests de `doctor` verts) ; le module est cité dans `docs/architecture.md`. Le lot 3 y
-  ajoutera le point « Couverture jouée en double ».
+- **Dernier état** (2026-11-14) : lots 0 et 1 faits. Lot 0 : les points `proofs` et `coverage` de `doctor` vivent dans
+  `packages/drwil/src/doctor-coverage.ts` (`coveragePoints`), `packages/drwil/src/doctor.ts` à 185 lignes. Lot 1 : la
+  ligne c8 de `packages/drwil/src/guarantees-tools.ts` porte `single(t, ex)` (`rm -f coverage/cobertura-coverage.xml &&
+  npx c8 --check-coverage … --reporter=cobertura --report-dir=coverage … npm test && diff-cover … --fail-under=100`) ;
+  `existing` (`packages/drwil/src/guarantees-layers.ts`) déclare pour une couche Node en dette le seul
+  `coverage-diff-<couche>` (sans `diff-cover` : bloqué, rien câblé ; déjà déclaré : gardé) ;
+  `coverageFailures` (`packages/drwil/src/guarantees-verify.ts`) n'exige plus que lui. Contrat `QUA-301` créé, contrôle
+  `tests-qua-301` déclaré. L'ancienne commande `diff.run` et `run(t, ex)` restent : le lot 2 s'en sert pour reconnaître
+  la paire de série (égalité des commandes). `QUA-093` (texte) reste à modifier au lot 4.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 1, la commande unique (`guarantees-tools`, `guarantees-layers`, `guarantees-verify`).
+- **Prochaine étape** : [IA] lot 2, la fusion des projets existants (nouveaux module guarantees-merge et test
+  coverage-merge, au bloc scope) ; seuil de la paire de série lu dans la commande `coverage-<couche>`.
