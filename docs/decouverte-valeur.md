@@ -153,6 +153,6 @@ reproduire (aucune lecture de la forge faite pour ce scan).
 - OPT-5 : tranché autrement, fait — la ligne « Unreleased » s'écrit en fin de BUILD
   (journal `docs/projects/journal.md`, 2026-11-13, avec RSK-3).
 - OPT-4 : intention `docs/intentions/attestations-qui-tombent-pour-leur-objet.md`, cadrée le 2026-11-13 en
-  `docs/projects/attestations-qui-tombent-pour-leur-objet.md` (0.11.2).
+  `docs/projects/journal.md` (0.11.2).
 - OPT-6 : relance de `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`, cadrée le 2026-11-13 en
   `docs/projects/perimetre-prevu-au-cadrage.md` (0.11.2).

@@ -4478,6 +4478,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 
 ## 2026-11-14 — Une attestation ne tombe plus pour un changement sans rapport avec son objet
 
+- **Ce qui change** : `outils/inventaire-attestations.mjs` donne, par contrat qui déclare `**Couvre**`, ses fichiers couverts, ses attestations archivées et les commits qui ont changé chaque fichier couvert depuis une date, sans rien écrire (QUA-299, nouveau). QUA-013 (contrôle non exécuté n'est pas passé) et QUA-175 (aucun agent ne peut écrire l'acceptation des critères) passent en test en dur, sans `**Manuel**` ni `**Couvre**`. Les `**Couvre**` de QUA-048, QUA-064, QUA-066, QUA-067 et QUA-234 sont resserrés sur leurs modules dédiés : `usesClaudeTree` passe dans `packages/drwil/src/config-tools.ts`, les textes du rapport de défaut dans `packages/drwil/src/cli-report-texts.ts`, sans changement de comportement ; la source de vérité de QUA-231 suit. QUA-081 est inchangé.
+- **Intention couverte** : `docs/intentions/attestations-qui-tombent-pour-leur-objet.md` (OPT-4 de `docs/decouverte-valeur.md`), marquée faite.
+- **Décisions clés** : 2026-11-13, contrat par contrat plutôt qu'une règle générale ; test en dur quand le jugement est mécanique (QUA-013, QUA-175), module dédié sinon ; QUA-081 non affaibli. 2026-11-14, sur les sondages du demandeur : limite QUA-231 (source de vérité qui citait encore `packages/drwil/src/cli-texts.ts`) « Traiter maintenant », et `.githooks/state.test.mjs` déclaré dans « Contrats modifiés ».
+- **Critères et preuves** : tests de `outils/inventaire-attestations.test.mjs`, `packages/drwil/test/kit.test.mjs`, `.githooks/state.test.mjs`, `packages/drwil/test/report.test.mjs` ; `drwil verify --evidence` : `GOVERNANCE: PASS (CI pending)` ; QUA-048, QUA-064, QUA-066, QUA-067 et QUA-234 réattestés par l'humain le 2026-11-14, une dernière fois pour le changement de leur contrat (`.drwil/evidence/attestations/`).
+- **Limites connues** : le sondage d'attestation dans le chat a été refusé par le hook sans cause dite (PostToolUse, message générique) ; repli au terminal — couvert par la fiche `docs/projects/refus-d-attestation-lisible.md`. Une marque `[humain]` placée entre le tiret et l'ID de preuve d'un critère (« — [humain] `QUA-…` ») change l'empreinte des critères acceptés (`.githooks/state-acceptance.mjs` retire la preuve avant la marque) : la clôture a refusé jusqu'à ce que la marque passe en tête du critère. Doublon de clés d'un ancien `tests-qua-207` dans l'objet de `tests-qua-269` de `.drwil/ia-first.json`, sans effet, non corrigé.
+- **Clôturé par** : la branche `workstream/attestations-qui-tombent-pour-leur-objet`.
+
 - **Inventaire avant** (lot 1, `node outils/inventaire-attestations.mjs --depuis 2026-10-22`, le 2026-11-14 ; 26 contrats déclarent `**Couvre**`) : attestations archivées, commits (fusions exclues) sur l'ensemble des fichiers couverts, puis par fichier.
 
   | Contrat | Attestations | Commits | Fichiers couverts (commits) |
@@ -4539,3 +4546,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
   | QUA-242 | 0 | 8 | `packages/drwil/src/cli-contracts.ts` 2, `packages/drwil/src/cli-texts.ts` 8 |
   | QUA-243 | 0 | 8 | `packages/drwil/src/cli-contracts.ts` 2, `packages/drwil/src/cli-texts.ts` 8 |
   | QUA-276 | 4 | 7 | `packages/drwil/serve/page.html` 7 |
+
+- **Preuve de clôture** : `docs/preuves/attestations-qui-tombent-pour-leur-objet.md`.
