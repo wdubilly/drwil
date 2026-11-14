@@ -1,6 +1,7 @@
 # Intention : un seul run de tests pour le seuil de couverture et la couverture du diff
 
 **Statut** : proposée le 2026-11-11 — notée le 2026-11-11, cadrée et priorisée P1 (0.11.2), en suite de la note P0 « réduire le coût des contrôles rejoués ».
+Réalisée le 2026-11-14 par le chantier « un seul run de tests pour le seuil de couverture et la couverture du diff » (journal du 2026-11-14 : contrôle unique `coverage-diff-<couche>`, fusion de la paire de série, point de `drwil doctor`). Reste ouverte pour une seule chose : relever à la main, après la publication, le gain chez drwil_walk (au moins 30 s par vérification complète, avant et après dans `run-checks.log`), puis retirer cette intention.
 
 ## Besoin
 

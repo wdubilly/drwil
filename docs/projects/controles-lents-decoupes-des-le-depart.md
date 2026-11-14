@@ -81,7 +81,7 @@ demandeur.)
   cite pas `DRWIL_SHARD_INDEX`, N hors de 2 à 16) ne doit jamais être proposée.
 - QUA-019 : rien ne contourne le moteur ; la proposition respecte ses règles de validation.
 - Un fichier de code à 180 lignes ou plus est découpé (plafond 200) : `packages/drwil/src/guarantees.ts`, `packages/drwil/src/doctor.ts` (200 lignes, aucune place pour un import et un appel) et `packages/drwil/src/guarantees-briefs.ts` (197 lignes). Relu le 2026-11-11 : le lot 0 ci-dessous libère d'abord de la place dans `packages/drwil/src/doctor.ts` (modèle : `packages/drwil/src/doctor-upgrade.ts`), en commit séparé et sans changement de comportement.
-- Fichiers partagés avec le chantier « un seul run de couverture » (`docs/projects/couverture-un-seul-run-de-tests.md`) : `packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/doctor.ts`, `packages/drwil/test/guarantees.test.mjs`, `docs/contracts.md`, `.drwil/ia-first.json`. Les deux chantiers se jouent l'un après l'autre (une fusion avant le lancement du suivant) ; le premier fait le lot 0, le second le trouve fait.
+- Fichiers partagés avec le chantier « un seul run de couverture » (`docs/projects/journal.md`) : `packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/doctor.ts`, `packages/drwil/test/guarantees.test.mjs`, `docs/contracts.md`, `.drwil/ia-first.json`. Les deux chantiers se jouent l'un après l'autre (une fusion avant le lancement du suivant) ; le premier fait le lot 0, le second le trouve fait.
 - Textes en français et en anglais, comme les autres textes de `guarantees` et de `doctor`.
 
 ## 4. Décisions

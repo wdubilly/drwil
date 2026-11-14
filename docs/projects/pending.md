@@ -135,9 +135,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.2) Un seul run de tests pour le seuil de couverture et la couverture du diff : contrôle unique
-  `coverage-diff-<couche>`, fusion des projets existants, avertissement de `doctor` ; prêt, D1 à D5 tranchées (cadré le
-  2026-11-11) — `docs/projects/couverture-un-seul-run-de-tests.md`.
 - [ ] [IA] [P0] (0.11.2) Les tests des hooks ne sont plus joués deux fois en CI (`checks-self-test` et
   `couverture-hooks`) ; prêt, D1 à D4 tranchées (cadré le 2026-11-11) —
   `docs/projects/doublon-des-tests-des-hooks-en-ci.md`.
