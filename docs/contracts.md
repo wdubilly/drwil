@@ -35,10 +35,8 @@ régression sauf si la fiche active déclare le changement (section
 **Règle** : Un contrôle qui n'a pas tourné n'est pas un contrôle passé. La règle vaut aussi pour les critères d'acceptation, ceux de la fiche active comme ceux des fiches de preuve de clôture : une preuve absente, périmée ou non rejouée ne vaut jamais un succès, en local comme en CI. Une attestation dont un contrôle cité change d'effet (commande, test visé ou `paths`) tombe : l'empreinte sur l'effet (QUA-183) ne laisse jamais vivre un jugement dont la preuve n'est plus la même (QUA-184). Le verdict d'un contrôle joué par `run-checks` sur un arbre et une configuration identiques (QUA-140), ou, pour une itération, sur les seuls fichiers du contrôle identiques (QUA-141, QUA-152 au pre-push), est une exécution du contrôle sur ce même code, pas une preuve périmée ; tout autre verdict repris reste un échec.
 **Périmètre** : Tout contrôle listé dans les vérifs, et tout critère d'acceptation jugé par `drwil verify`.
 **Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution, `packages/drwil/src/closure.ts` pour les critères.
-**Preuve** : Sortie lue du contrôle concerné.
+**Preuve** : tests : un contrôle non exécuté est dit tel, jamais « ok », dans chaque sortie de `drwil verify` (humaine, `--agent`, JSON), sans attestation possible à sa place, et un verdict « non exécuté » consigné par `run-checks` est rejoué, jamais repris comme un succès.
 **Contrôle** : `ci-coverage`, `tests-qua-013`
-**Manuel** : lecture de la sortie du contrôle concerné.
-**Couvre** : `.github/workflows/ia-first.yml`, `packages/drwil/src/verdict.ts`
 **Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
 
@@ -398,7 +396,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (fusions, branches, journaux de session).
 **Contrôle** : `tests-qua-048`
 **Manuel** : un essai réel d'une clôture depuis BUILD, en suivant seulement les messages, aboutit sans lire le code, sous Copilot CLI ou en terminal ; l'essai sous Claude Code est reporté (attestation humaine : `drwil attest QUA-048`).
-**Couvre** : `.githooks/close.mjs`, `.githooks/close-branches.mjs`, `.githooks/state.mjs`
+**Couvre** : `.githooks/close.mjs`, `.githooks/close-branches.mjs`
 **Tests** : `.githooks/close.test.mjs`, `.githooks/close-branches.test.mjs`
 **Origine** : clôture allégée (0.6.5) — « Une commande de clôture fait la mécanique d'un geste — fiche supprimée, ligne d'index retirée, consommation consignée — et signale avant le commit ce qui ferait échouer la clôture ; les branches locales déjà fusionnées sont supprimées au lancement du chantier suivant »
 **Raison** : Relevé dans la session de la 0.6.4 : la clôture coûtait des gestes et des reprises sans gain de qualité — un commit à part pour citer l'ID d'un contrat créé, des références à une fiche supprimée restées fausses, un commit de clôture refusé pour un nom de fichier sans chemin, 53 branches fusionnées jamais supprimées.
@@ -561,12 +559,12 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-064 — Choisir Copilot installe aussi l'arbre `.claude` et les hooks natifs de Copilot
 **Règle** : Livré à tout projet. Quand `copilot` est parmi les outils, `drwil init` installe aussi `.claude/` (réglages, hooks, skills) — Copilot CLI le lit lui-même, ce qui lui donne le blocage d'écriture (QUA-016) et les commandes `/drwil-*` — et les hooks natifs de Copilot (dossier .github/hooks), qui donnent l'état au démarrage de session et le rappel d'état à chaque message. Le pointeur `CLAUDE.md` reste lié au seul outil `claude`.
-**Périmètre** : `packages/drwil/src/config.ts` (`usesClaudeTree`), `packages/drwil/src/render.ts`, `packages/drwil/src/drift.ts`, `packages/drwil/src/essentials.ts` ; `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`.
-**Source de vérité** : `packages/drwil/src/config.ts` (`usesClaudeTree`).
+**Périmètre** : `packages/drwil/src/config-tools.ts` (`usesClaudeTree`), `packages/drwil/src/render.ts`, `packages/drwil/src/drift.ts`, `packages/drwil/src/essentials.ts` ; `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`.
+**Source de vérité** : `packages/drwil/src/config-tools.ts` (`usesClaudeTree`).
 **Preuve** : test du paquet qui installe un projet avec le seul outil `copilot` et y trouve les hooks, les réglages, les skills et les hooks natifs, sans `CLAUDE.md`.
 **Contrôle** : `tests-qua-064`
 **Manuel** : un `/drwil-start` tapé dans Copilot CLI interactif lance un chantier (le banc ne lance que le mode non interactif).
-**Couvre** : `packages/drwil/src/config.ts`, `packages/drwil/src/render.ts`, `packages/drwil/src/drift.ts`, `packages/drwil/src/essentials.ts`, `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`
+**Couvre** : `packages/drwil/src/config-tools.ts`, `packages/drwil/src/render.ts`, `packages/drwil/src/drift.ts`, `packages/drwil/src/essentials.ts`, `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : compatibilité des agents, volet Copilot (0.6.7) — « Copilot lit `.claude/` : hooks, réglages et skills lui sont donnés, et ses hooks natifs apportent l'état et le rappel »
 **Raison** : Essais du 2026-10-18 : `--tools copilot` n'installait que des consignes, donc aucun hook ni commande `/drwil-*` ; l'écriture de code hors chantier n'était arrêtée par rien.
@@ -600,12 +598,12 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-066 — Choisir Gemini installe aussi les hooks partagés et ses réglages natifs
 **Règle** : Livré à tout projet. Quand `gemini` est parmi les outils, `drwil init` installe `.gemini/settings.json` — les hooks natifs de Gemini CLI : état au démarrage de session, rappel d'état à chaque message, et le même script `scope-reminder` avant et après `write_file` et `replace` — et les scripts partagés du dossier `.claude/hooks` (un seul jeu pour tous les outils, seule la déclaration diffère). Le pointeur `CLAUDE.md` reste lié au seul outil `claude`.
-**Périmètre** : `packages/drwil/src/config.ts` (`usesClaudeTree`), `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`.
+**Périmètre** : `packages/drwil/src/config-tools.ts` (`usesClaudeTree`), `packages/drwil/src/render-gemini.ts` (commandes des hooks de Gemini), `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`.
 **Source de vérité** : `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`.
 **Preuve** : test du paquet qui installe un projet avec le seul outil `gemini` et y trouve les réglages natifs, les hooks partagés et `GEMINI.md`, sans `CLAUDE.md`.
 **Contrôle** : `tests-qua-066`
 **Manuel** : approuver le dossier dans une session Gemini CLI interactive (sans cela, Gemini ne lance aucun hook du dépôt).
-**Couvre** : `packages/drwil/src/config.ts`, `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`
+**Couvre** : `packages/drwil/src/render-gemini.ts`, `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`
 **Tests** : `packages/drwil/test/kit.test.mjs`
 **Origine** : compatibilité des agents, volet Gemini (0.6.7) — « Sous Gemini CLI, en SCOPING, une écriture de fichier de code (`write_file`, `replace`) est refusée avec le motif drwil »
 **Raison** : Essai du 2026-10-18 : `--tools gemini` ne posait que `GEMINI.md`, aucun hook ; sonde du 2026-10-19 : Gemini ne charge les hooks d'un dépôt que dans un dossier de confiance (`--skip-trust` seul ne suffit pas), et lit `GEMINI_PROJECT_DIR`.
@@ -617,7 +615,7 @@ régression sauf si la fiche active déclare le changement (section
 **Preuve** : tests des deux modes (rappel, une seule fois, racine inutilisable) et de `scope-reminder` (refus, avertissement, doc jamais refusée) ; essai réel du banc sur Gemini (hooks lancés, écriture refusée, rappel reçu).
 **Contrôle** : `tests-qua-067`
 **Manuel** : lancer le banc sur le poste et attester la ligne Gemini de la matrice.
-**Couvre** : `.githooks/state-cli.mjs`, `.githooks/state.mjs`, `.claude/hooks/scope-reminder.mjs`
+**Couvre** : `.githooks/state-cli.mjs`, `.claude/hooks/scope-reminder.mjs`
 **Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`
 **Origine** : compatibilité des agents, volet Gemini (0.6.7) — « Gemini CLI reçoit le rappel d'état au démarrage et à chaque message »
 **Raison** : `.githooks/state.mjs` imprimait du texte brut et `scope-reminder` rendait le format de Claude Code (`permissionDecision`), que Gemini ignore ; sans le format natif, ni refus ni rappel n'arrivent.
@@ -1708,9 +1706,7 @@ régression sauf si la fiche active déclare le changement (section
 **Règle** : Livré à tout projet. L'acceptation n'est enregistrée que par un lancement dont l'appelant atteste la décision humaine (`start(…, { human: true })` : sondage lu par le hook, `.githooks/worktree.mjs`) ou par la commande `accept` d'un terminal interactif (entrée et sortie standard attachées à un terminal). Un lancement en mode agent (`transitions: agent`, sans sondage) n'enregistre rien et oublie l'acceptation de la fiche lancée, sauf celle qu'elle avait reçue en tête de file d'un lancement humain ; le retour en SCOPING oublie celle de la fiche quittée. `accept` sans terminal est refusée sans rien écrire. Un fichier d'acceptation absent, illisible ou d'une autre forme vaut « aucune acceptation », jamais une erreur ni un succès par défaut (QUA-013).
 **Périmètre** : `.githooks/state-acceptance.mjs` (`accept`), `.githooks/state.mjs` (`start`, `move`) ; livré dans le gabarit.
 **Source de vérité** : `.githooks/state-acceptance.mjs` et `.githooks/state.mjs` (`start`).
-**Preuve** : tests : lancement en mode agent sans enregistrement et effaçant une ancienne acceptation, fiche prise en file conservée, retour en SCOPING, fichier illisible ou d'une autre forme, `accept` refusée sans terminal.
-**Manuel** : vérifier qu'aucune commande, aucun hook ni aucun outil de l'agent n'écrit ce fichier d'acceptation ; l'écriture directe du fichier par un agent n'est pas empêchée par ce contrat (gardes d'écriture hors périmètre).
-**Couvre** : `.githooks/state-acceptance.mjs`, `.githooks/state.mjs`
+**Preuve** : tests : lancement en mode agent sans enregistrement et effaçant une ancienne acceptation, fiche prise en file conservée, retour en SCOPING, fichier illisible ou d'une autre forme, `accept` refusée sans terminal ; recensement de tout le code livré (gabarit, CLI, vue) : seul `.githooks/state-acceptance.mjs` nomme et écrit le fichier d'acceptation, ses écrivains ne sont appelés que par `.githooks/state.mjs`, et les lancements déclarés humains sont ceux du sondage lu par le hook, de `.githooks/worktree.mjs` et de la file construite par sondages. L'écriture directe du fichier par un agent n'est pas empêchée par ce contrat (gardes d'écriture hors périmètre).
 **Contrôle** : `tests-qua-175`
 **Tests** : `.githooks/state.test.mjs`
 **Origine** : cycle-de-vie-des-fiches — « Aucun agent ne peut écrire l'acceptation : elle vient du sondage lu par le hook ou du terminal interactif »
@@ -2310,11 +2306,11 @@ régression sauf si la fiche active déclare le changement (section
 ## QUA-234 — Un humain juge la lisibilité et la reproductibilité du rapport de défaut
 **Règle** : Un humain lit un rapport de défaut généré sur des données fictives et la recette livrée, juge le texte lisible et assez précis pour préparer une reproduction, y compris les limites des messages normalisés et la nécessité d'un exemple fictif.
 **Périmètre** : présentation publique du rapport et recette.
-**Source de vérité** : `packages/drwil/src/cli-report.ts`, `packages/drwil/src/cli-texts.ts`, recette livrée.
+**Source de vérité** : `packages/drwil/src/cli-report.ts`, `packages/drwil/src/cli-report-texts.ts`, recette livrée.
 **Preuve** : lecture humaine du rapport et de la recette.
 **Contrôle** : `tests-qua-234`
 **Manuel** : Lire le rapport et la recette ; confirmer la lisibilité et la précision suffisante pour une reproduction sans donnée du projet.
-**Couvre** : `packages/drwil/src/cli-report.ts`, `packages/drwil/src/cli-texts.ts`, `packages/drwil/templates/common/base/docs/recipes/report-a-kit-defect.md`
+**Couvre** : `packages/drwil/src/cli-report.ts`, `packages/drwil/src/cli-report-texts.ts`, `packages/drwil/templates/common/base/docs/recipes/report-a-kit-defect.md`
 **Tests** : `packages/drwil/test/report.test.mjs`
 **Origine** : signaler-un-defaut-du-kit — « Le texte du rapport est lisible et assez précis pour être reproduit »
 **Raison** : La présence automatique de champs ne prouve pas qu'un mainteneur peut comprendre le signalement.

@@ -2,7 +2,8 @@
 // found missing here, reported with their fix by `init`, its preview and `doctor`, never silently.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { CI_FILES, type Resolved, usesClaudeTree } from "./config.js";
+import { CI_FILES, type Resolved } from "./config.js";
+import { usesClaudeTree } from "./config-tools.js";
 import { render, templatesDir } from "./render.js";
 import { hooksPath, scriptsDir, unchainedHooks } from "./essentials-hooks.js";
 

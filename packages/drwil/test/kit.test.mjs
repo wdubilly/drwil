@@ -3609,6 +3609,49 @@ test("verify : outil indisponible (contrôle non exécuté) → ERROR, jamais PA
   assert.match(v.contracts[0].reasons.join(), /ci-coverage : non exécuté/);
 });
 
+test("QUA-013 : la sortie d'un contrôle non exécuté ne vaut jamais un succès — sortie humaine, --agent, JSON, verdict repris", async () => {
+  // Ce que l'humain lisait à chaque attestation : dans chaque sortie, un contrôle non exécuté est dit tel, jamais « ok ».
+  const contrats = contrat("QUA-013", "**Contrôle** : `ci-coverage`") + contrat("QUA-001", "**Contrôle** : `ok`");
+  const dir = await projetVerify(contrats);
+  const v = await verify({ targetDir: dir });
+  assert.equal(v.status, "ERROR");
+  assert.notEqual(v.code, 0);
+  const k = v.contracts.find((c) => c.id === "QUA-013");
+  assert.deepEqual(
+    k.checks.map((c) => [c.id, c.status]),
+    [["ci-coverage", "not-run"]],
+  );
+  const humain = formatVerdict(v);
+  assert.match(humain, /! ERROR\s+QUA-013/);
+  assert.match(humain, /ci-coverage : non exécuté/);
+  assert.doesNotMatch(humain, /ci-coverage : (ok|repris)/);
+  assert.doesNotMatch(humain, /GOVERNANCE: PASS/);
+  const json = verdictJson(v);
+  assert.equal(json.status, "error");
+  assert.notEqual(json.label, "GOVERNANCE: PASS");
+  const resultat = json.results.find((r) => r.id === "QUA-013");
+  assert.equal(resultat.status, "error");
+  assert.equal(resultat.attestable, false, "un contrôle non exécuté ne se remplace pas par une attestation");
+  assert.deepEqual(
+    resultat.checks.map((c) => c.status),
+    ["not-run"],
+  );
+  const agent = spawnSync(process.execPath, [fileURLToPath(new URL("../bin/drwil.js", import.meta.url)), "verify", "--agent"], {
+    cwd: dir,
+    encoding: "utf8",
+    env: envTest,
+  });
+  assert.equal(agent.status, 2, agent.stdout + agent.stderr);
+  assert.doesNotMatch(agent.stdout, /GOVERNANCE: PASS/);
+  assert.match(agent.stdout, /GOVERNANCE: VERIFY ERROR/);
+  // Un verdict « non exécuté » consigné par run-checks n'est jamais repris comme un succès : le contrôle est rejoué.
+  const repris = await verify({
+    targetDir: await projetReprise(contrat("QUA-001", "**Contrôle** : `ko`"), { verdicts: { ko: { status: "not-run" } } }),
+  });
+  assert.equal(repris.status, "FAIL");
+  assert.equal(repris.contracts[0].checks[0].reusedAt, undefined);
+});
+
 test("verify : critères d'acceptation de la fiche active jugés contre le registre, écrits dans l'évidence", async () => {
   const dir = await projetVerify(
     contrat("QUA-001", "**Contrôle** : `ok`") + contrat("QUA-002", "**Contrôle** : `ko`") + contrat("QUA-003", "**Manuel** : appréciation"),
