@@ -43,7 +43,7 @@ comme celle de Claude Code.
   qui nomme chaque outil et sa part ; aucune session comptée deux fois — `QUA-042`
 - `drwil serve` montre, pour chaque chantier, la répartition de la consommation par outil (Claude Code, Copilot CLI) ;
   une ligne ancienne sans outil nommé reste comptée et s'affiche « outil inconnu » ; seuls le nom de l'outil et ses
-  totaux atteignent l'API, jamais une autre colonne du fichier — contrat à créer
+  totaux atteignent l'API, jamais une autre colonne du fichier — `QUA-304`
 
 ## Contrats modifiés
 
@@ -101,9 +101,9 @@ Aucun.
   `readCopilotLog(texte, racine)` et `copilotFolder(env)` dans `.githooks/consumption-log.mjs` (158 lignes, réexportés par
   `.githooks/consumption.mjs`), même forme de réponse que `readLog` ; tests dans `.githooks/consumption.test.mjs`. `main` ne lit
   pas encore les sessions de Copilot CLI.
-- **Prochaine étape** : [IA] lot 2 — brancher `readCopilotLog` dans `main` (fichiers `*/events.jsonl` de
-  `copilotFolder()`, filtrés par la racine du projet), `--record` avec `"source"` par outil et parts additionnées
-  (clés `usageId` et `requestId` distinctes : aucune session comptée deux fois), répartition par outil dans
-  `drwil serve`, recette (dire le format relevé ci-dessus), QUA-042, architecture et `docs/projects/kit-mechanics.md`.
-  `.githooks/consumption-log.mjs` approche du plafond de 200 lignes : la logique par outil va de préférence dans
-  `.githooks/consumption.mjs` ou `.githooks/consumption-format.mjs`.
+- **Lot 2** (2026-11-15) : fait. `main` lit aussi `copilotFolder()` (`--copilot-logs` pour un autre dossier ; un
+  journal qui ne cite pas le chemin du projet n'est pas analysé), clés préfixées par l'outil, `aggregateTools` donne la
+  part de chaque outil ; `usageLine` écrit `source` (`claude-code-logs`, `copilot-cli-logs`, les deux joints par `+`)
+  et `tools` pour un chantier à deux outils. `drwil serve` : `tools` par chantier (`summarizeUsage`), affiché sous
+  chaque chantier, contrat QUA-304 et contrôle `tests-qua-304`. Recette, QUA-042, carte, kit-mechanics, changelog à jour.
+- **Prochaine étape** : vérifier et clore.

@@ -46,8 +46,20 @@ const reponse = ({ id, t, branche = "workstream/a", modele = "claude-opus-5-5", 
     },
   });
 
+/** Un dossier de sessions de Copilot CLI (COPILOT_HOME), une session par texte ; vide sans texte. */
+function copilotHome(sessions = []) {
+  const home = dossier();
+  sessions.forEach((texte, i) => {
+    mkdirSync(join(home, "session-state", `s${i}`), { recursive: true });
+    writeFileSync(join(home, "session-state", `s${i}`, "events.jsonl"), texte);
+  });
+  return home;
+}
+/** Environnement isolé : jamais les sessions réelles de l'utilisateur. */
+const ENV = () => ({ COPILOT_HOME: copilotHome(), CLAUDE_CONFIG_DIR: dossier() });
+
 /** Un projet avec un dossier de journaux ; rend { racine, journaux, lancer }. */
-function projet(lignes, { lang } = {}) {
+function projet(lignes, { lang, env = ENV() } = {}) {
   const racine = dossier();
   const journaux = join(dossier(), "journaux");
   mkdirSync(join(journaux, "sous"), { recursive: true });
@@ -61,7 +73,7 @@ function projet(lignes, { lang } = {}) {
   const lancer = (args, now = new Date("2026-10-16T12:00:00Z")) => {
     const out = [];
     const err = [];
-    const code = main([...args, "--logs", journaux], { root: racine, log: (l) => out.push(l), err: (l) => err.push(l), now });
+    const code = main([...args, "--logs", journaux], { env, root: racine, log: (l) => out.push(l), err: (l) => err.push(l), now });
     return { code, out: out.join("\n"), err: err.join("\n") };
   };
   return { racine, journaux, lancer };
@@ -190,7 +202,7 @@ test("QUA-042 : relevé lisible ou JSON, dans la langue du projet ; aucun conten
 test("QUA-042 : jamais bloquant : sans journal ou sans réponse, il le dit et sort en succès ; argument illisible : 2", () => {
   const racine = dossier();
   const sansJournal = [];
-  assert.equal(main(["--logs", join(racine, "absent")], { root: racine, err: (l) => sansJournal.push(l) }), 0);
+  assert.equal(main(["--logs", join(racine, "absent")], { env: ENV(), root: racine, err: (l) => sansJournal.push(l) }), 0);
   assert.match(sansJournal[0], /aucun journal de session lisible .* — non mesuré ; autre outil IA : estimer à la main/);
   const p = projet([reponse({ id: "r1", t: "2026-10-16T10:00:00Z" })], { lang: "en" });
   const vide = p.lancer(["--since", "2027-01-01"]);
@@ -208,7 +220,8 @@ test("QUA-042 : messages dans les deux langues ; fiche manquante en fin de ligne
     mkdirSync(join(racine, ".drwil"));
     writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ lang }));
     const err = [];
-    const lancer = (args) => main(args, { root: racine, err: (l) => err.push(l), log: () => {} });
+    const env = ENV();
+    const lancer = (args) => main(args, { env, root: racine, err: (l) => err.push(l), log: () => {} });
     assert.equal(lancer(["--logs", join(racine, "absent"), "--inconnue"]), 0);
     const journaux = join(racine, "j");
     mkdirSync(journaux);
@@ -222,7 +235,7 @@ test("QUA-042 : messages dans les deux langues ; fiche manquante en fin de ligne
   mkdirSync(join(nulle, ".drwil"));
   writeFileSync(join(nulle, ".drwil", "ia-first.json"), "null");
   const err = [];
-  main(["--logs", join(nulle, "absent")], { root: nulle, err: (l) => err.push(l) });
+  main(["--logs", join(nulle, "absent")], { env: ENV(), root: nulle, err: (l) => err.push(l) });
   assert.match(err[0], /^consommation :/);
 });
 
@@ -274,7 +287,7 @@ test("QUA-042 : dossier des journaux de Claude Code ; ligne de commande, directe
   );
   assert.match(logsFolder("/a", {}), /\.claude/);
   const racine = dossier();
-  const env = { ...process.env, CLAUDE_CONFIG_DIR: dossier() };
+  const env = { ...process.env, ...ENV() };
   const direct = spawnSync(process.execPath, [SCRIPT], { cwd: racine, encoding: "utf8", env });
   assert.equal(direct.status, 0);
   assert.match(direct.stderr, /non mesuré/);
@@ -383,6 +396,118 @@ test("QUA-042 : Copilot CLI : jetons, modèle et branche des appels du projet ; 
 test("QUA-042 : Copilot CLI : dossier des sessions, sous COPILOT_HOME ou ~/.copilot", () => {
   assert.equal(copilotFolder({ COPILOT_HOME: "/conf" }), join("/conf", "session-state"));
   assert.match(copilotFolder({}), /\.copilot[\\/]session-state$/);
+});
+
+test("QUA-042 : Copilot CLI lu par le relevé et --record, seul ou avec Claude Code : parts additionnées, chaque outil nommé, rien compté deux fois", () => {
+  const racine = dossier();
+  const ici = (branche, t = "2026-10-16T10:04:00Z") => copilot.debut({ cwd: racine, gitRoot: racine, branche, t });
+  const session = [ici("workstream/a"), copilot.appel({ id: "c1", t: "2026-10-16T10:05:00Z" }), "{illisible"].join("\n");
+  const ailleurs = [
+    copilot.debut({ cwd: dossier(), branche: "workstream/a" }),
+    copilot.appel({ id: "x1", t: "2026-10-16T10:05:00Z" }),
+    "{illisible",
+    JSON.stringify({ type: "user.message", data: { content: SECRET } }),
+  ].join("\n");
+  const lancer = (args, sessions, claude = join(racine, "absent")) => {
+    const out = [];
+    const err = [];
+    const env = { COPILOT_HOME: copilotHome(sessions), CLAUDE_CONFIG_DIR: dossier() };
+    const code = main([...args, "--logs", claude], {
+      env,
+      root: racine,
+      log: (l) => out.push(l),
+      err: (l) => err.push(l),
+      now: new Date("2026-10-16T12:00:00Z"),
+    });
+    return { code, out: out.join("\n"), err: err.join("\n") };
+  };
+  const usage = () =>
+    readFileSync(join(racine, ".drwil", "usage.jsonl"), "utf8")
+      .trim()
+      .split("\n")
+      .map((l) => JSON.parse(l));
+
+  // Copilot CLI seul (aucun journal de Claude Code) ; la session d'un autre projet n'est même pas lue.
+  const seul = lancer(["--json"], [session, ailleurs]);
+  assert.equal(seul.code, 0, seul.err);
+  const json = JSON.parse(seul.out);
+  assert.equal(json.unreadable, 1, "seules les sessions du projet sont lues");
+  assert.deepEqual(
+    json.workstreams.map((w) => [w.workstream, w.requests, w.input, Object.keys(w.tools)]),
+    [["a", 1, 110, ["copilot-cli"]]],
+  );
+  assert.match(lancer([], [session]).out, /^a +1 +110 /m);
+  assert.equal(lancer(["--record", "a"], [session, session]).code, 0);
+  assert.deepEqual(usage()[0], {
+    workstream: "a",
+    increment: "all",
+    tokens: 773,
+    input: 110,
+    output: 100,
+    cache_read: 1000,
+    cache_write: 50,
+    requests: 1,
+    model: "claude-sonnet-5.5",
+    duration_min: 0,
+    date: "2026-10-16",
+    source: "copilot-cli-logs",
+  });
+
+  // Commencé sous Claude Code, repris sous Copilot CLI : une ligne, les deux parts, chaque outil nommé.
+  const journaux = join(dossier(), "journaux");
+  mkdirSync(journaux);
+  writeFileSync(join(journaux, "s.jsonl"), [reponse({ id: "c1", t: "2026-10-16T10:00:00Z", branche: "workstream/b" })].join("\n"));
+  const repris = [ici("workstream/b", "2026-10-16T10:01:00Z"), copilot.appel({ id: "c1", t: "2026-10-16T10:05:00Z" })].join("\n");
+  const deux = lancer(["--record", "b"], [repris, repris], journaux);
+  assert.equal(deux.code, 0, deux.err);
+  assert.match(
+    deux.out,
+    /^consommation : « b » consigné dans \.drwil\/usage\.jsonl \(1445 tokens pondérés, cache lu moyen par requête : 1 k\) — Claude Code : 673 ; Copilot CLI : 773$/,
+  );
+  const ligne = usage()[1];
+  assert.deepEqual(ligne, {
+    workstream: "b",
+    increment: "all",
+    tokens: 1445,
+    input: 120,
+    output: 200,
+    cache_read: 2000,
+    cache_write: 100,
+    requests: 2,
+    model: "claude-opus-5-5, claude-sonnet-5.5",
+    duration_min: 5,
+    date: "2026-10-16",
+    source: "claude-code-logs+copilot-cli-logs",
+    tools: {
+      "claude-code": {
+        tokens: 673,
+        input: 10,
+        output: 100,
+        cache_read: 1000,
+        cache_write: 50,
+        requests: 1,
+        model: "claude-opus-5-5",
+        duration_min: 0,
+      },
+      "copilot-cli": {
+        tokens: 773,
+        input: 110,
+        output: 100,
+        cache_read: 1000,
+        cache_write: 50,
+        requests: 1,
+        model: "claude-sonnet-5.5",
+        duration_min: 0,
+      },
+    },
+  });
+
+  // Ni l'un ni l'autre : non mesuré, les deux dossiers nommés, jamais bloquant.
+  const rien = lancer([], [ailleurs]);
+  assert.equal(rien.code, 0);
+  assert.match(rien.err, /aucun journal de session lisible pour ce projet .*absent.*session-state .*— non mesuré/);
+  for (const r of [seul, deux, rien]) assert.doesNotMatch(r.out + r.err, new RegExp(SECRET));
+  assert.doesNotMatch(readFileSync(join(racine, ".drwil", "usage.jsonl"), "utf8"), new RegExp(SECRET));
 });
 
 test("QUA-042 : --recorded compare les chantiers consignés par leur cache lu moyen par requête, sans journal de session", () => {

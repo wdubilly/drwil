@@ -8,6 +8,14 @@ release renames this section to its version.
 
 ### Added
 
+- Copilot CLI's consumption is measured like Claude Code's:
+  `node .githooks/consumption.mjs` also reads Copilot CLI's local session
+  logs (`~/.copilot/session-state`, only the calls made in the project) and
+  `--record` writes the closing line with `"source": "copilot-cli-logs"`. A
+  workstream led with both tools gets one line, the two consumptions summed,
+  `source` naming both and `tools` giving each tool's part. `drwil serve`
+  shows, for each workstream, its consumption per tool; an older line
+  without a named tool counts as « unknown tool ».
 - The automatic merge and the cleanup of merged branches work on GitLab:
   `merge-auto` reads, updates (`glab mr rebase`) and schedules the merge
   request (`glab mr merge --auto-merge`) through `glab`, and a merge request
