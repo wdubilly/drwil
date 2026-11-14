@@ -124,6 +124,9 @@ personnalisé, par prudence.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-11) : fiche cadrée, D1 à D5 tranchées, prête ; rien d'implémenté.
-- **Travail non commité** : cette fiche et sa ligne d'index.
-- **Prochaine étape** : [IA] lot 1, au lancement de la fiche par le demandeur.
+- **Dernier état** (2026-11-14) : lot 0 fait — les points `proofs` et `coverage` de `doctor` vivent dans
+  `packages/drwil/src/doctor-coverage.ts` (`coveragePoints`), `packages/drwil/src/doctor.ts` passe à 185 lignes, sans
+  changement de comportement (tests de `doctor` verts) ; le module est cité dans `docs/architecture.md`. Le lot 3 y
+  ajoutera le point « Couverture jouée en double ».
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [IA] lot 1, la commande unique (`guarantees-tools`, `guarantees-layers`, `guarantees-verify`).
