@@ -135,10 +135,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.2) La reprise d'un détour ne réécrit jamais une branche déjà poussée : fusion de la
-  branche principale si la branche a un amont, conflit du journal résolu en gardant les deux entrées, branche déjà à
-  jour reprise telle quelle ; prêt, D1 à D4 tranchées (cadré le 2026-11-14) —
-  `docs/projects/reprise-de-detour-sans-reecriture.md`.
 - [ ] [IA] [P0] (0.11.2) Un seul run de tests pour le seuil de couverture et la couverture du diff : contrôle unique
   `coverage-diff-<couche>`, fusion des projets existants, avertissement de `doctor` ; prêt, D1 à D5 tranchées (cadré le
   2026-11-11) — `docs/projects/couverture-un-seul-run-de-tests.md`.
