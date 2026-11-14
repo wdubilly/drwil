@@ -4,8 +4,9 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { guaranteeFailures, guarantees, init, toolFor } from "../dist/index.js";
-import { mergeSeriesPair, seriesThresholds, thresholdsOf } from "../dist/guarantees-merge.js";
+import { doctor, guaranteeFailures, guarantees, init, toolFor } from "../dist/index.js";
+import { mergeSeriesPair, seriesThresholds, singleFromPair, thresholdsOf } from "../dist/guarantees-merge.js";
+import { doubleRunPoints } from "../dist/doctor-coverage.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -121,4 +122,78 @@ test("QUA-302 Python : la paire coverage.py reste deux contrôles", () => {
   assert.equal(seriesThresholds(NODE, { ...pairNode, threshold: { id: "coverage-api" } }, []), null, "commande absente");
   assert.equal(seriesThresholds(NODE, pairNode, []).single, NODE.single(SEUIL, []));
   assert.equal(mergeSeriesPair([{ id: "coverage-diff-api", run: "x" }], NODE, "api", "api", []), null, "paire incomplète");
+});
+
+/** Point « Couverture jouée en double » d'un diagnostic, ou undefined. */
+const enDouble = async (dir) =>
+  (await doctor({ targetDir: dir, exec: () => ({ status: 1, stdout: "" }) })).points.find((p) => p.id === "coverage-twice");
+
+test("QUA-303 doctor : une paire de série est signalée avec la commande unique, sans rien écrire", async () => {
+  const ex = ["src/genere/**"];
+  const dir = await projet(paire(ex), [{ path: ex[0], reason: "code généré" }]);
+  const avant = lire(dir, ".drwil/ia-first.json");
+  const point = await enDouble(dir);
+  assert.equal(point.state, "warning");
+  assert.equal(point.label, "Couverture jouée en double");
+  assert.ok(point.detail.includes(`\`${NODE.single(SEUIL, ex)}\``), "commande unique du kit pour une paire de série");
+  assert.match(point.detail, /`coverage-root` et `coverage-diff-root` jouent les tests deux fois/);
+  assert.equal(lire(dir, ".drwil/ia-first.json"), avant, "rien écrit");
+});
+
+test("QUA-303 doctor : une paire personnalisée est signalée, la commande unique garde les options du demandeur", async () => {
+  const p = paire();
+  p[0].run = p[0].run.replace(" --all", " --reporter=text --all");
+  p[1].run = `${NODE.diff.run} --compare-branch=origin/dev`;
+  const dir = await projet(p);
+  const avant = lire(dir, ".drwil/ia-first.json");
+  const { detail } = await enDouble(dir);
+  const single = singleFromPair({ threshold: p[0], diff: p[1] });
+  assert.ok(detail.includes(single));
+  assert.match(single, /^rm -f coverage\/cobertura-coverage\.xml && /, "rapport effacé avant le run");
+  assert.match(single, /--reporter=text --reporter=cobertura --report-dir=coverage --all/, "option du seuil gardée");
+  assert.match(single, /&& diff-cover coverage\/cobertura-coverage\.xml --fail-under=100 --compare-branch=origin\/dev$/);
+  assert.equal(single.match(/npm test/g).length, 1, "un seul run de tests");
+  assert.equal(lire(dir, ".drwil/ia-first.json"), avant, "rien écrit");
+});
+
+test("QUA-303 doctor : déjà fusionné, couche à 100 % ou Python : pas de signalement", async () => {
+  const unique = { id: "coverage-diff-root", name: "n", run: NODE.single(SEUIL, []), paths: ["**"], degradable: false };
+  const cent = { id: "coverage-root", name: "n", run: NODE.run({}, []), paths: ["**"], degradable: false };
+  for (const checks of [[unique], [cent]]) assert.equal(await enDouble(await projet(checks)), undefined);
+  const py = toolFor(["Python"]);
+  assert.deepEqual(
+    doubleRunPoints(
+      [
+        { id: "coverage-api", run: py.run({ lines: 70 }, []) },
+        { id: "coverage-diff-api", run: py.diff.run },
+      ],
+      "fr",
+    ),
+    [],
+  );
+  assert.deepEqual(doubleRunPoints(undefined, "fr"), []);
+  assert.deepEqual(doubleRunPoints([null, { id: 3 }, { id: "coverage-diff-x", run: "y" }], "fr"), [], "contrôles illisibles ou incomplets");
+});
+
+test("QUA-303 composition : rapport ailleurs, seuil sans --all, cobertura déjà demandé, paire sans diff-cover ; textes anglais", () => {
+  const seuil = (run) => ({ id: "coverage-a", run });
+  const diff = (run) => ({ id: "coverage-diff-a", run });
+  assert.equal(
+    singleFromPair({
+      threshold: seuil("npx c8 --check-coverage --lines 50 npm test"),
+      diff: diff("x && diff-cover out/c.xml --fail-under=100"),
+    }),
+    "rm -f out/c.xml && npx c8 --reporter=cobertura --report-dir=out --check-coverage --lines 50 npm test && diff-cover out/c.xml --fail-under=100",
+  );
+  const deja = "npx c8 --check-coverage --reporter=cobertura --report-dir=coverage --all npm test";
+  assert.equal(
+    singleFromPair({ threshold: seuil(deja), diff: diff(NODE.diff.run) }),
+    `rm -f coverage/cobertura-coverage.xml && ${deja} && diff-cover coverage/cobertura-coverage.xml --fail-under=100`,
+  );
+  assert.equal(singleFromPair({ threshold: seuil(NODE.run(SEUIL, [])), diff: diff("npm run diff") }), null, "sans diff-cover");
+  assert.equal(singleFromPair({ threshold: seuil(undefined), diff: diff(NODE.diff.run) }), null);
+  assert.equal(singleFromPair({ threshold: seuil(NODE.run(SEUIL, [])), diff: diff(undefined) }), null);
+  const [en] = doubleRunPoints(paire(), "en");
+  assert.equal(en.label, "Coverage run twice");
+  assert.match(en.detail, /^`coverage-root` and `coverage-diff-root` run the tests twice/);
 });

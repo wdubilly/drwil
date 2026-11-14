@@ -2945,3 +2945,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/coverage-merge.test.mjs`
 **Origine** : couverture-un-seul-run-de-tests — « Quand `coverage-<couche>` et `coverage-diff-<couche>` existent et sont exactement ceux que le kit génère, `drwil guarantees` les remplace par le contrôle unique ; un contrôle modifié à la main (par exemple `--compare-branch`) n'est jamais réécrit »
 **Raison** : `drwil guarantees` garde tout contrôle déjà déclaré : sans fusion, les projets adoptés avant QUA-301 joueraient toujours leurs tests deux fois ; réécrire un contrôle réglé à la main abaisserait ce que le demandeur a choisi (décidé par le demandeur le 2026-11-11, D5).
+
+## QUA-303 — `drwil doctor` signale une couche Node qui joue encore ses tests deux fois pour la couverture, sans rien écrire
+**Règle** : Livré à tout projet. Quand une couche déclare à la fois `coverage-<couche>` (seuil c8) et `coverage-diff-<couche>` (`diff-cover`), de série ou réglés à la main, `drwil doctor` affiche un avertissement « Couverture jouée en double » qui nomme les deux contrôles et donne la commande unique à poser dans `coverage-diff-<couche>` : le rapport lu par `diff-cover` effacé d'abord, la commande de seuil telle que déclarée avec le rapport cobertura en plus, puis la partie `diff-cover` du contrôle de diff telle que déclarée ; les options du demandeur sont gardées. Il ne lit que la configuration et n'écrit rien. Un projet déjà fusionné (QUA-301, QUA-302), une couche à 100 % et une paire Python ne sont pas signalés.
+**Périmètre** : `drwil doctor`.
+**Source de vérité** : `packages/drwil/src/doctor-coverage.ts` (`doubleRunPoints`), `packages/drwil/src/guarantees-merge.ts` (`singleFromPair`).
+**Preuve** : tests du paquet : paire de série signalée avec la commande unique du kit, paire personnalisée signalée avec ses options gardées (seuil et `diff-cover`), configuration inchangée, projet déjà fusionné, couche à 100 % et paire Python non signalés, composition (rapport ailleurs, seuil sans `--all`, cobertura déjà demandé, paire sans `diff-cover`), textes français et anglais.
+**Contrôle** : `tests-qua-303`
+**Tests** : `packages/drwil/test/coverage-merge.test.mjs`
+**Origine** : couverture-un-seul-run-de-tests — « `drwil doctor` signale, sans rien écrire, un projet qui joue encore les deux contrôles (de série ou modifiés à la main) et donne la commande unique à poser en conservant les options du demandeur ; un projet déjà fusionné n'est pas signalé »
+**Raison** : `drwil guarantees` ne réécrit jamais une paire réglée à la main (QUA-302) : sans signalement, ces projets joueraient leurs tests deux fois sans le savoir (décidé par le demandeur le 2026-11-11, D5).

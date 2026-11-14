@@ -4089,6 +4089,21 @@
       "needsBuild": true
     },
     {
+      "id": "tests-qua-303",
+      "name": "tests de QUA-303, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-303 packages/drwil/test/coverage-merge.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"

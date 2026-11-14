@@ -96,7 +96,7 @@ export async function doctor(opts: { targetDir: string; exec?: Exec }): Promise<
       : fill(T.validContracts, contracts.length, registry),
   );
   const live = contracts.filter((k) => !k.retired); // a retired contract, without proof (QUA-298), is not counted
-  points.push(...coveragePoints(live, lang));
+  points.push(...coveragePoints(live, lang, cfg.checks));
 
   // A hook manager of the project (husky…) is fine as long as it calls the drwil hooks.
   const path = hooksPath(root);
