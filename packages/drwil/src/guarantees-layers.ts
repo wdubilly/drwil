@@ -15,6 +15,7 @@ import {
   type Thresholds,
 } from "./guarantees-table.js";
 import { toolFor } from "./guarantees-tools.js";
+import { mergeSeriesPair } from "./guarantees-merge.js";
 import { fill, type MessageLang } from "./i18n.js";
 
 export interface LayerReport {
@@ -57,7 +58,7 @@ function check(id: string, layer: string, run: string, name: string) {
   return { id, name, run, ...(layer === "." ? {} : { cwd: layer }), paths: [layer === "." ? "**" : `${layer}/**`], degradable: false };
 }
 
-/** One layer: wired, kept or blocked (QUA-087, QUA-088, QUA-090, QUA-091, QUA-093, QUA-301). */
+/** One layer: wired, kept or blocked (QUA-087, QUA-088, QUA-090, QUA-091, QUA-093, QUA-301, QUA-302). */
 export function coverLayer(ctx: LayerContext, layer: string, technos: string[]): LayerReport {
   const T = TEXTS[ctx.lang];
   const slug = slugOf(layer);
@@ -88,6 +89,14 @@ export function coverLayer(ctx: LayerContext, layer: string, technos: string[]):
     ? baseline.some((p) => (layer === "." || p.startsWith(`${layer}/`)) && tool.sources.some((ext) => p.endsWith(ext)))
     : hasSources(dir, tool.sources);
   report.mode = inherited ? "existing" : "new";
+  const merged = mergeSeriesPair(ctx.checks, tool, slug, layer, exclusionsOf(ctx.cfg, layer).kept);
+  if (merged) {
+    // Paire de série fusionnée (QUA-302) : seule une couche en dette la porte.
+    report.mode = "existing";
+    report.status = "kept";
+    report.lines.push(fill(T.merged, id, `coverage-diff-${slug}`, fmt(merged)));
+    return report;
+  }
   // Existing layer with a single run (QUA-301): its check is `coverage-diff-<layer>`, kept as declared too.
   const declared = [id, ...(report.mode === "existing" && tool.single ? [`coverage-diff-${slug}`] : [])];
   const keptId = declared.find((d) => ctx.checks.some((c) => c?.id === d));

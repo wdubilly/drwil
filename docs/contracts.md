@@ -2935,3 +2935,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/guarantees.test.mjs`
 **Origine** : couverture-un-seul-run-de-tests — « Pour une couche Node en dette, `drwil guarantees` déclare un seul contrôle `coverage-diff-<couche>` qui joue `npm test` une seule fois sous c8, juge le seuil mesuré (cliquet) et passe le rapport cobertura à `diff-cover` ; le rapport est effacé avant le run, jamais un rapport périmé »
 **Raison** : Chez l'adoptant drwil_walk (c8 sur Vitest), le seuil et le diff rejouaient chacun toute la suite de tests : deux runs pour une seule mesure, ~48 s par vérification complète (décidé par le demandeur le 2026-11-11, D1 à D3).
+
+## QUA-302 — Les deux contrôles de couverture de série d'une couche Node en dette sont fusionnés en un seul run, un contrôle personnalisé jamais réécrit
+**Règle** : Livré à tout projet. Quand `coverage-<couche>` et `coverage-diff-<couche>` sont tous deux déclarés et sont exactement ceux que le kit génère (commande de seuil égale à celle que la table produit pour les seuils qu'elle porte et les exclusions déclarées, commande de diff égale à celle de la table), `drwil guarantees` les remplace par le seul contrôle `coverage-diff-<couche>` de QUA-301, au même seuil, sans rien mesurer ni jouer, les autres champs du contrôle de diff gardés. La moindre différence (option ajoutée, exclusion changée) compte comme personnalisée : la paire n'est jamais réécrite. Un projet déjà fusionné, une couche à 100 % (un seul `coverage-<couche>`) et une pile sans run unique dans la table (Python) sont inchangés.
+**Périmètre** : `drwil guarantees`.
+**Source de vérité** : `packages/drwil/src/guarantees-merge.ts` (`mergeSeriesPair`), `packages/drwil/src/guarantees-layers.ts` (`coverLayer`).
+**Preuve** : tests du paquet : paire de série fusionnée (avec et sans exclusion, seuil gardé, un seul `npm test`, rien mesuré, `verify` satisfait), paire personnalisée intacte (option au diff ou au seuil, exclusion changée), projet déjà fusionné et couche à 100 % inchangés, paire Python jamais fusionnée.
+**Contrôle** : `tests-qua-302`
+**Tests** : `packages/drwil/test/coverage-merge.test.mjs`
+**Origine** : couverture-un-seul-run-de-tests — « Quand `coverage-<couche>` et `coverage-diff-<couche>` existent et sont exactement ceux que le kit génère, `drwil guarantees` les remplace par le contrôle unique ; un contrôle modifié à la main (par exemple `--compare-branch`) n'est jamais réécrit »
+**Raison** : `drwil guarantees` garde tout contrôle déjà déclaré : sans fusion, les projets adoptés avant QUA-301 joueraient toujours leurs tests deux fois ; réécrire un contrôle réglé à la main abaisserait ce que le demandeur a choisi (décidé par le demandeur le 2026-11-11, D5).

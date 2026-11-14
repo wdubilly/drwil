@@ -124,15 +124,19 @@ personnalisé, par prudence.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-14) : lots 0 et 1 faits. Lot 0 : les points `proofs` et `coverage` de `doctor` vivent dans
-  `packages/drwil/src/doctor-coverage.ts` (`coveragePoints`), `packages/drwil/src/doctor.ts` à 185 lignes. Lot 1 : la
-  ligne c8 de `packages/drwil/src/guarantees-tools.ts` porte `single(t, ex)` (`rm -f coverage/cobertura-coverage.xml &&
-  npx c8 --check-coverage … --reporter=cobertura --report-dir=coverage … npm test && diff-cover … --fail-under=100`) ;
-  `existing` (`packages/drwil/src/guarantees-layers.ts`) déclare pour une couche Node en dette le seul
-  `coverage-diff-<couche>` (sans `diff-cover` : bloqué, rien câblé ; déjà déclaré : gardé) ;
-  `coverageFailures` (`packages/drwil/src/guarantees-verify.ts`) n'exige plus que lui. Contrat `QUA-301` créé, contrôle
-  `tests-qua-301` déclaré. L'ancienne commande `diff.run` et `run(t, ex)` restent : le lot 2 s'en sert pour reconnaître
-  la paire de série (égalité des commandes). `QUA-093` (texte) reste à modifier au lot 4.
+- **Dernier état** (2026-11-14) : lots 0, 1 et 2 faits. Lot 0 : les points `proofs` et `coverage` de `doctor` vivent
+  dans `packages/drwil/src/doctor-coverage.ts` (`coveragePoints`), `packages/drwil/src/doctor.ts` à 185 lignes. Lot 1 :
+  la ligne c8 de `packages/drwil/src/guarantees-tools.ts` porte `single(t, ex)` ; `existing`
+  (`packages/drwil/src/guarantees-layers.ts`) déclare pour une couche Node en dette le seul `coverage-diff-<couche>` ;
+  `coverageFailures` (`packages/drwil/src/guarantees-verify.ts`) n'exige plus que lui ; contrat `QUA-301`. Lot 2 :
+  `packages/drwil/src/guarantees-merge.ts` (`thresholdsOf`, `declaredPair`, `seriesThresholds`, `mergeSeriesPair`)
+  reconnaît la paire de série par égalité des commandes (`run(t, ex)` aux seuils lus dans `coverage-<couche>`, exclusions
+  déclarées ; `diff.run`) et la remplace par le contrôle unique, autres champs du contrôle de diff gardés ; branché dans
+  `coverLayer` avant le « déjà déclaré » (texte `merged`, français et anglais) ; paire personnalisée, projet déjà
+  fusionné, couche à 100 % et Python inchangés. Contrat `QUA-302` créé, contrôle `tests-qua-302`, tests dans
+  `packages/drwil/test/coverage-merge.test.mjs` ; module cité dans `docs/architecture.md`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 2, la fusion des projets existants (nouveaux module guarantees-merge et test
-  coverage-merge, au bloc scope) ; seuil de la paire de série lu dans la commande `coverage-<couche>`.
+- **Prochaine étape** : [IA] lot 3, l'avertissement de `doctor` dans `packages/drwil/src/doctor-coverage.ts` : point
+  « Couverture jouée en double » quand `declaredPair` trouve les deux contrôles (de série ou personnalisés), commande
+  unique proposée en conservant les options du demandeur, sans rien écrire ; projet déjà fusionné non signalé. `QUA-093`
+  (texte), CHANGELOG et mesure restent au lot 4.
