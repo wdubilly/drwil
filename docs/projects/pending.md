@@ -377,6 +377,8 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Fluidité et relecture
 
+- [ ] [décision] [P1] Lancer les fiches d'un thème depuis `/drwil-start` : ne proposer que ce thème, et le mettre
+  en file d'un geste (demande du 2026-11-14) — `docs/intentions/lancer-un-theme.md`.
 - [ ] [décision] [P1] (0.13.0) Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
