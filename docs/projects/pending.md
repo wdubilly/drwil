@@ -361,6 +361,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Fluidité et relecture
 
+- [ ] [décision] [P1] La place de la marque `[humain]` dans un critère ne change plus l'empreinte des critères
+  acceptés (deux clôtures gênées le 2026-11-14, dont une nouvelle acceptation au terminal) —
+  `docs/intentions/marque-humain-et-empreinte-des-criteres.md`.
 - [ ] [décision] [P1] (0.13.0) Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
