@@ -144,8 +144,6 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P0] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
   outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
   2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
-- [ ] [IA] [P0] (0.11.2) La fusion automatique est le comportement par défaut, sans sondage, après le support GitLab
-  (cadré le 2026-11-12) — `docs/projects/fusion-automatique-par-defaut.md`.
 - [ ] [IA] [P0] (0.11.2) Les fichiers dérivés du périmètre (tests d'un module cité, `**Périmètre**` des contrats
   touchés, découpe, copie de gabarit) sont admis d'office, jamais un fichier de règles, chaque admission comptée
   (OPT-6 ; cadré le 2026-11-13) — `docs/projects/perimetre-prevu-au-cadrage.md`.

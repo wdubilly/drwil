@@ -32,7 +32,7 @@ Déjà traité : QUA-173, chantier fusionné par #409. Reste le défaut de couve
 
 Retirer le sondage `drwil-merge` : la fusion automatique devient le comportement par défaut.
 - Décidé le 2026-11-12 : inconditionnelle, sans réglage pour la refuser ; les sondages `drwil-merge` et `drwil-scope` disparaissent.
-- Tranché, voir la fiche : QUA-163 (sans réponse « Automatic merge », rien n'est programmé) est modifié par ce choix, validé par le demandeur : reste à écrire ce qui le remplace (garde-fous qui demeurent : PR de la branche, CI verte, vérification relue sur la forge).
+- Fait : chantier « la fusion automatique est le comportement par défaut, sans sondage », clos le 2026-11-14 (voir `docs/projects/journal.md`) ; plus rien à cadrer ici.
 
 ### 5. Relecteur critique, ou test de qualité et fonctionnel
 
