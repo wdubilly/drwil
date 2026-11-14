@@ -1,0 +1,32 @@
+{
+  "version": 4,
+  "contract": "QUA-234",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-14T12:46:53.740Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "b338bf47f73bbff9d09f1643a927036d996a2a856e37368c2871b05e44c10368",
+  "proof": {
+    "tests-qua-234": "4397065a00506be6e59de649b7fe79cfb57dd102d1934a91e9c363ba659d09b6"
+  },
+  "covers": [
+    "packages/drwil/src/cli-report.ts",
+    "packages/drwil/src/cli-report-texts.ts",
+    "packages/drwil/templates/common/base/docs/recipes/report-a-kit-defect.md"
+  ],
+  "coverage": {
+    "packages/drwil/src/cli-report-texts.ts": "08708fd567193ee7528e6c3a4df391d1cf576443851ed3578314577273a5322e",
+    "packages/drwil/src/cli-report.ts": "d6ab5c42c10faf3d6d42349e92b04b04a3d26e3b08e8175d5b40d8bc010ac1e2",
+    "packages/drwil/templates/common/base/docs/recipes/report-a-kit-defect.md": "9fbcfceaa52496537f7628e28e1cb57f650587fdef498a35f15854c99aa71f5a"
+  },
+  "commit": "0f04035948c7e81f916c5eaed76066e269c78a87",
+  "automated": [
+    {
+      "id": "tests-qua-234",
+      "status": "ok"
+    }
+  ]
+}
