@@ -1,0 +1,30 @@
+{
+  "version": 4,
+  "contract": "QUA-067",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-14T12:46:46.617Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": null,
+  "fingerprint": "3c3b634a91838604054933239ffc2b60a00bdb99dbba278299aa4cf3f2e75897",
+  "proof": {
+    "tests-qua-067": "dc9d0183350f156c861e5cb160943734b5b4c64fd2fd25c820a23e27b0b5a162"
+  },
+  "covers": [
+    ".githooks/state-cli.mjs",
+    ".claude/hooks/scope-reminder.mjs"
+  ],
+  "coverage": {
+    ".claude/hooks/scope-reminder.mjs": "1a6ffc70668ad200304f286170e52b722bd4b2aec688747f3acd021af332e332",
+    ".githooks/state-cli.mjs": "8a56ef6559fb333ff55c3df8c2e4f47b87d9341729fe0a1fdde701fbc1ce031d"
+  },
+  "commit": "0f04035948c7e81f916c5eaed76066e269c78a87",
+  "automated": [
+    {
+      "id": "tests-qua-067",
+      "status": "ok"
+    }
+  ]
+}

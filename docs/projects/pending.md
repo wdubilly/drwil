@@ -135,9 +135,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-- [ ] [IA] [P0] (0.11.2) Une attestation ne tombe plus pour un changement sans rapport avec son objet : inventaire,
-  `**Couvre**` resserrés, tests en dur (OPT-4 ; cadré le 2026-11-13) —
-  `docs/projects/attestations-qui-tombent-pour-leur-objet.md`.
 - [ ] [IA] [P0] (0.11.2) La reprise d'un détour ne réécrit jamais une branche déjà poussée : fusion de la
   branche principale si la branche a un amont, conflit du journal résolu en gardant les deux entrées, branche déjà à
   jour reprise telle quelle ; prêt, D1 à D4 tranchées (cadré le 2026-11-14) —

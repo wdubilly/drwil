@@ -1,7 +1,7 @@
 import { lstatSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Command } from "commander";
-import { TEXTS } from "./cli-texts.js";
+import { REPORT_TEXTS } from "./cli-report-texts.js";
 import { engineVersion } from "./install-record.js";
 
 // QUA-232 : une liste fermée, jamais les noms, commandes ou sorties définis par le projet.
@@ -35,7 +35,7 @@ function record(value: unknown): value is Record<string, unknown> {
 /** QUA-231, QUA-232, QUA-233 : rapport public, sans exécuter le code du projet ni exporter ses sorties. */
 export function report(opts: { targetDir: string }): string {
   const config = readLocal(opts.targetDir, [".drwil", "ia-first.json"]);
-  const T = TEXTS[record(config) && config.lang === "fr" ? "fr" : "en"].report;
+  const T = REPORT_TEXTS[record(config) && config.lang === "fr" ? "fr" : "en"];
   const install = readLocal(opts.targetDir, [".drwil", "install.json"]);
   const version =
     record(install) && typeof install.version === "string" && /^\d{1,6}\.\d{1,6}\.\d{1,6}$/.test(install.version)

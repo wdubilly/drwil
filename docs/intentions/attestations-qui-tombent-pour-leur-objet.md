@@ -1,6 +1,7 @@
 # Intention : une attestation ne tombe plus pour un changement sans rapport avec son objet
 
-**Statut** : cadrée le 2026-11-13 — `docs/projects/attestations-qui-tombent-pour-leur-objet.md`.
+**Statut** : faite le 2026-11-14 — journal `docs/projects/journal.md`, 2026-11-14, « Une attestation ne tombe plus pour
+un changement sans rapport avec son objet » (les trois questions tranchées par les décisions D1 à D3 du cadrage).
 
 ## Besoin
 

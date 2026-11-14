@@ -1,6 +1,6 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -2239,6 +2239,45 @@ test("QUA-175 : accept refusé sans terminal interactif, ligne de commande compr
   const en = depotCriteres({ lang: "en" }).racine;
   r = await capturer(() => main(["accept"], en));
   assert.match(r.erreurs, /^✗ acceptance refused: only an interactive terminal/);
+});
+
+test("QUA-175 : parmi les hooks et commandes du kit, seul state-acceptance.mjs écrit le fichier d'acceptation", () => {
+  // Ce que l'humain vérifiait à chaque attestation, recensé ici : tout le code livré (gabarit, CLI, vue) est lu.
+  const PAQUET = join(RACINE_DEPOT, "packages/drwil");
+  const fichiers = [];
+  const parcourir = (dossier) => {
+    for (const e of readdirSync(dossier, { withFileTypes: true })) {
+      const chemin = join(dossier, e.name);
+      if (e.isDirectory()) parcourir(chemin);
+      else if (/\.(mjs|cjs|js|ts|json|sh|ps1|html)$/.test(e.name) && !/\.test\.mjs$/.test(e.name)) fichiers.push(chemin);
+    }
+  };
+  for (const d of ["templates", "src", "bin", "serve"]) parcourir(join(PAQUET, d));
+  const rel = (f) => f.slice(PAQUET.length + 1).replace(/\\/g, "/");
+  const qui = (motif) =>
+    fichiers
+      .filter((f) => motif.test(readFileSync(f, "utf8")))
+      .map(rel)
+      .sort();
+  const MODULE = "templates/common/base/.githooks/state-acceptance.mjs";
+  assert.ok(fichiers.length > 100, "le code livré est bien lu");
+  assert.deepEqual(qui(/acceptance\.json/), [MODULE], "seul le module nomme le fichier d'acceptation");
+  assert.deepEqual(
+    qui(/\b(recordAcceptance|forgetAcceptance)\b/),
+    [MODULE, "templates/common/base/.githooks/state.mjs"],
+    "ses écrivains ne sont appelés que par state.mjs (start, move)",
+  );
+  const module = readFileSync(join(PAQUET, MODULE), "utf8");
+  assert.equal(module.match(/writeFileSync\(/g).length, 1, "une seule écriture, dans writeAll");
+  assert.match(module, /function writeAll\(root, all\) \{\n\s+mkdirSync[^\n]+\n\s+writeFileSync\(/);
+  assert.equal(module.match(/\bwriteAll\(/g).length, 3, "writeAll : sa définition, recordAcceptance et forgetAcceptance");
+  // L'acceptation n'est enregistrée que par un lancement que l'appelant déclare humain : sondage lu par le hook,
+  // worktree, file construite par sondages (state-draft.mjs). Un nouvel appelant fait échouer ce test : il se juge avant d'entrer ici.
+  assert.deepEqual(qui(/\bstart\([^)]*human:\s*true/), [
+    "templates/common/base/.githooks/state-draft.mjs",
+    "templates/common/base/.githooks/worktree.mjs",
+    "templates/common/tools/claude/.claude/hooks/prompt-hook.mjs",
+  ]);
 });
 
 test("QUA-174 : accept au terminal : l'humain voit les critères et confirme ; sans confirmation, sans chantier ou sans critère, rien", async () => {
