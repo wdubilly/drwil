@@ -25,7 +25,23 @@ seul geste.
 - Une option « Tout le thème (N fiches prêtes) », que le hook transforme en file dans l'ordre de l'index : elle lève
   la limite de 4 options.
 
+## Le thème porté par chaque fiche, et contrôlé (demande du 2026-11-14)
+
+Le demandeur veut que le thème ne vive pas seulement dans l'index : chaque fiche le déclare, et un contrôle vérifie
+que l'agent le renseigne systématiquement.
+
+- Un champ d'en-tête **Thème** dans chaque fiche, à côté de **Risque** et **Maturité**, pris dans une liste fermée
+  (Expérience au quotidien, Mesure, Vitesse, Fiabilité, Plus tard) déclarée en un seul endroit.
+- Un contrôle (`check-docs` ou celui du cadrage) refuse une fiche cadrée sans thème, ou avec un thème hors liste, dès
+  le commit de cadrage ; il vérifie aussi que la fiche est rangée sous le sous-titre de son thème dans l'index.
+- Le cadrage (skill et recette) demande le thème au même moment que le risque et la maturité.
+- Reprise : ajouter le thème aux fiches déjà cadrées, d'après le sous-titre qui les range aujourd'hui.
+
 ## Questions à trancher
+
+- Une seule source pour le thème (règle « une information, une seule source » d'`AGENTS.md`) : le champ de la fiche fait foi et le
+  sous-titre de l'index est vérifié contre lui, ou l'index fait foi et le champ est vérifié contre lui ?
+- La liste des thèmes : fixe dans le kit, ou propre à chaque projet (déclarée dans `.drwil/ia-first.json`) ?
 
 - Argument de la commande, question de thème dans le sondage, ou les deux ?
 - L'option « tout le thème » : file séquentielle seulement, ou aussi parallèle (`drwil-parallel`) ?
