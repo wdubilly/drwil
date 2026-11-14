@@ -7,11 +7,16 @@
 
 <!-- scope
 files:
-  - packages/drwil/templates/common/base/.githooks/consumption.mjs
-  - packages/drwil/templates/common/base/.githooks/consumption-log.mjs
-  - packages/drwil/templates/common/base/.githooks/consumption-format.mjs
-  - packages/drwil/templates/common/base/.githooks/consumption-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/consumption*.mjs
+  - .githooks/consumption.mjs
+  - .githooks/consumption-log.mjs
+  - .githooks/consumption-format.mjs
+  - .githooks/consumption-texts.mjs
+  - .drwil/ia-first.json
   - .githooks/consumption.test.mjs
+  - packages/drwil/src/serve-journal.ts
+  - packages/drwil/serve/page.html
+  - packages/drwil/test/serve.test.mjs
   - packages/drwil/templates/common/base/docs/recipes/track-consumption-per-increment.md
   - docs/contracts.md
   - docs/architecture.md
@@ -33,6 +38,12 @@ comme celle de Claude Code.
   attribue chaque chantier par sa branche, comme avec Claude Code ; sans journal lisible, il le dit, sans bloquer — `QUA-042`
 - `--record <fiche>` écrit la ligne de `.drwil/usage.jsonl` avec `"source"` nommant l'outil ; jamais de contenu de
   message lu ni écrit — `QUA-042`
+- Un chantier mené avec les deux outils (commencé sous Claude Code, repris sous Copilot CLI, ou l'inverse) : les
+  consommations des deux journaux attribuées à sa branche s'additionnent sur une seule ligne de `.drwil/usage.jsonl`,
+  qui nomme chaque outil et sa part ; aucune session comptée deux fois — `QUA-042`
+- `drwil serve` montre, pour chaque chantier, la répartition de la consommation par outil (Claude Code, Copilot CLI) ;
+  une ligne ancienne sans outil nommé reste comptée et s'affiche « outil inconnu » ; seuls le nom de l'outil et ses
+  totaux atteignent l'API, jamais une autre colonne du fichier — contrat à créer
 
 ## Contrats modifiés
 
@@ -45,6 +56,7 @@ comme celle de Claude Code.
 
 - Une centralisation hors du dépôt : la remontée reste `.drwil/usage.jsonl`, versionné par dépôt, vu par le tableau de bord.
 - Les autres outils (Gemini, Codex, Cursor).
+- La répartition par outil dans le tableau de bord statique (`packages/drwil/templates/common/optional/dashboard/dashboard.mjs`) : seul `drwil serve` l'affiche.
 
 ## 3. Contraintes
 
@@ -57,6 +69,12 @@ comme celle de Claude Code.
 ## 4. Décisions
 
 - 2026-11-12 : source et centralisation tranchées (journaux locaux, fichier par dépôt).
+- 2026-11-14 : un chantier mené avec Claude Code et Copilot CLI additionne les deux consommations sur une ligne qui
+  nomme chaque outil ; le bloc scope couvre gabarits (motif, un lecteur Copilot dans un
+  fichier neuf compris) et copies installées de `consumption*.mjs` (la copie d'un fichier neuf s'ajoute par un commit
+  de cadrage séparé) — demande du demandeur.
+- 2026-11-14 : la répartition par outil s'affiche dans `drwil serve` (agrégation `packages/drwil/src/serve-journal.ts`, page
+  `serve/page.html`) — demande du demandeur. Le tableau de bord statique (`packages/drwil/templates/common/optional/dashboard/dashboard.mjs`) n'est pas touché.
 
 ## 5. Points à trancher
 
@@ -66,7 +84,8 @@ Aucun.
 
 - **Lot 1 — lecteur Copilot CLI** [IA] : reconnaître le format, lire jetons, modèle, durée et branche ; tests avec
   des journaux factices. Critère de sortie : tests de `.githooks/consumption.test.mjs` verts.
-- **Lot 2 — enregistrement, recette, contrat** [IA] : `--record` pour Copilot CLI, recette et QUA-042 à jour, architecture et
+- **Lot 2 — enregistrement, recette, contrat** [IA] : `--record` pour Copilot CLI et pour un chantier mené avec les deux
+  outils (parts additionnées, chaque outil nommé), répartition par outil dans `drwil serve`, recette et QUA-042 à jour, architecture et
   `docs/projects/kit-mechanics.md`. Critère de sortie : `node .githooks/run-checks.mjs` sans échec.
 
 ## 7. Reprise
