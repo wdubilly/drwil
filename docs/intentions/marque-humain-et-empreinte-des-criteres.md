@@ -1,6 +1,6 @@
 # Intention : la place de la marque [humain] ne change jamais l'empreinte des critères acceptés
 
-**Statut** : noté le 2026-11-14, demande du demandeur après deux occurrences le même jour.
+**Statut** : noté le 2026-11-14, demande du demandeur après deux occurrences le même jour ; cadré le 2026-11-14 dans `docs/projects/marque-humain-et-empreinte-des-criteres.md` (D1 : marque effacée avant la preuve, sans place imposée ; D2 : ancienne empreinte relue en repli).
 
 ## Besoin
 
