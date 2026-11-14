@@ -90,5 +90,20 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-12) : cadrage terminé, non commité.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-15) : lot 1 fait. Format relevé sur les sessions locales de Copilot CLI
+  (`~/.copilot/session-state/<session>/events.jsonl`, ou `$COPILOT_HOME/session-state`), toutes les sessions de
+  l'utilisateur dans un seul dossier : un événement `session.usage_record` par appel de modèle (`data.usage` :
+  `model`, `inputTokens`, `outputTokens`, `cacheReadTokens`, `cacheWriteTokens`, `accounting.usageId` unique ; les
+  appels d'un sous-agent sont dans le journal du parent, avec `agentId`, sans dossier de session propre) ; la branche et
+  le projet viennent du dernier `session.start` (`data.context`) ou `session.context_changed` (`data` :
+  `cwd`, `gitRoot`, `branch`). `inputTokens` inclut le cache lu et écrit (les totaux de `session.shutdown` les
+  retranchent) : l'entrée sans cache est la différence. Aucun champ manquant (jetons de cache et branche présents).
+  `readCopilotLog(texte, racine)` et `copilotFolder(env)` dans `.githooks/consumption-log.mjs` (158 lignes, réexportés par
+  `.githooks/consumption.mjs`), même forme de réponse que `readLog` ; tests dans `.githooks/consumption.test.mjs`. `main` ne lit
+  pas encore les sessions de Copilot CLI.
+- **Prochaine étape** : [IA] lot 2 — brancher `readCopilotLog` dans `main` (fichiers `*/events.jsonl` de
+  `copilotFolder()`, filtrés par la racine du projet), `--record` avec `"source"` par outil et parts additionnées
+  (clés `usageId` et `requestId` distinctes : aucune session comptée deux fois), répartition par outil dans
+  `drwil serve`, recette (dire le format relevé ci-dessus), QUA-042, architecture et `docs/projects/kit-mechanics.md`.
+  `.githooks/consumption-log.mjs` approche du plafond de 200 lignes : la logique par outil va de préférence dans
+  `.githooks/consumption.mjs` ou `.githooks/consumption-format.mjs`.

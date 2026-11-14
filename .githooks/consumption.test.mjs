@@ -5,7 +5,19 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSyn
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { activeTime, aggregate, format, group, logsFolder, main, PAUSE_MS, readLog, usageLine } from "./consumption.mjs";
+import {
+  activeTime,
+  aggregate,
+  copilotFolder,
+  format,
+  group,
+  logsFolder,
+  main,
+  PAUSE_MS,
+  readCopilotLog,
+  readLog,
+  usageLine,
+} from "./consumption.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./consumption.mjs", import.meta.url));
 let dossiers = [];
@@ -269,6 +281,105 @@ test("QUA-042 : dossier des journaux de Claude Code ; ligne de commande, directe
   const lien = join(racine, "lien.mjs");
   symlinkSync(SCRIPT, lien);
   assert.equal(spawnSync(process.execPath, [lien], { cwd: racine, encoding: "utf8", env }).status, 0);
+});
+
+/** Événements d'une session de Copilot CLI (events.jsonl), au format relevé le 2026-11-15 sur Copilot CLI. */
+const copilot = {
+  debut: ({ cwd, gitRoot, branche, t = "2026-10-16T09:59:00Z" }) =>
+    JSON.stringify({ type: "session.start", timestamp: t, data: { sessionId: "s", context: { cwd, gitRoot, branch: branche } } }),
+  contexte: ({ cwd, gitRoot, branche, t }) =>
+    JSON.stringify({ type: "session.context_changed", timestamp: t, data: { cwd, gitRoot, branch: branche } }),
+  appel: ({ id, t, modele = "claude-sonnet-5.5", u = [1160, 100, 1000, 50], agent }) =>
+    JSON.stringify({
+      type: "session.usage_record",
+      timestamp: t,
+      id: `e-${id}`,
+      ...(agent ? { agentId: agent } : {}),
+      data: {
+        usage: {
+          model: modele,
+          inputTokens: u[0],
+          outputTokens: u[1],
+          cacheReadTokens: u[2],
+          cacheWriteTokens: u[3],
+          apiCallId: `api-${id}`,
+          accounting: { sourceSessionId: agent ?? "s", usageId: id },
+        },
+      },
+    }),
+};
+
+test("QUA-042 : Copilot CLI : jetons, modèle et branche des appels du projet ; l'entrée sans le cache ; aucun contenu lu", () => {
+  const racine = resolve("/projets/app");
+  const texte = [
+    copilot.debut({ cwd: join(racine, "sous"), gitRoot: racine, branche: "workstream/a" }),
+    JSON.stringify({ type: "user.message", timestamp: "2026-10-16T10:00:00Z", data: { content: SECRET } }),
+    JSON.stringify({ type: "assistant.message", timestamp: "2026-10-16T10:00:00Z", data: { content: SECRET, model: "x" } }),
+    copilot.appel({ id: "c1", t: "2026-10-16T10:00:00Z" }),
+    copilot.appel({ id: "c2", t: "2026-10-16T10:05:00Z", agent: "sous-agent", modele: "gpt-6", u: [10, 1, 20, 0] }),
+    copilot.contexte({ cwd: racine, gitRoot: racine, branche: "scoping/b", t: "2026-10-16T10:06:00Z" }),
+    copilot.appel({ id: "c3", t: "2026-10-16T10:07:00Z" }),
+    copilot.contexte({
+      cwd: resolve("/projets/autre"),
+      gitRoot: resolve("/projets/autre"),
+      branche: "workstream/a",
+      t: "2026-10-16T10:08:00Z",
+    }),
+    copilot.appel({ id: "c4", t: "2026-10-16T10:09:00Z" }),
+    copilot.contexte({ cwd: resolve("/projets/app-bis"), branche: "workstream/a", t: "2026-10-16T10:10:00Z" }),
+    copilot.appel({ id: "c5", t: "2026-10-16T10:11:00Z" }),
+    copilot.contexte({ cwd: join(racine, "x"), t: "2026-10-16T10:12:00Z" }),
+    JSON.stringify({ type: "session.usage_record", timestamp: "2026-10-16T10:13:00Z", id: "e6", data: { usage: {} } }),
+    JSON.stringify({ type: "session.usage_record", data: { usage: { inputTokens: 5 } } }),
+    "{pas du json",
+  ].join("\n");
+  const { answers, unreadable } = readCopilotLog(texte, racine);
+  assert.equal(unreadable, 1);
+  assert.deepEqual(answers, [
+    {
+      key: "c1",
+      time: Date.parse("2026-10-16T10:00:00Z"),
+      branch: "workstream/a",
+      model: "claude-sonnet-5.5",
+      usage: { input: 110, output: 100, cacheRead: 1000, cacheWrite: 50 },
+    },
+    {
+      key: "c2",
+      time: Date.parse("2026-10-16T10:05:00Z"),
+      branch: "workstream/a",
+      model: "gpt-6",
+      usage: { input: 0, output: 1, cacheRead: 20, cacheWrite: 0 },
+    },
+    {
+      key: "c3",
+      time: Date.parse("2026-10-16T10:07:00Z"),
+      branch: "scoping/b",
+      model: "claude-sonnet-5.5",
+      usage: { input: 110, output: 100, cacheRead: 1000, cacheWrite: 50 },
+    },
+    {
+      key: "e6",
+      time: Date.parse("2026-10-16T10:13:00Z"),
+      branch: null,
+      model: "unknown",
+      usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    },
+  ]);
+  assert.doesNotMatch(JSON.stringify(answers), new RegExp(SECRET));
+  // Sans projet donné, tous les appels ; sans contexte connu, aucun appel attribué au projet.
+  assert.equal(readCopilotLog(texte).answers.length, 6);
+  assert.deepEqual(readCopilotLog(copilot.appel({ id: "c1", t: "2026-10-16T10:00:00Z" }), racine).answers, []);
+  // Un appel compté une fois, même relu ; temps actif et regroupement comme pour Claude Code.
+  const [a, b] = aggregate([...answers, ...answers]);
+  assert.deepEqual(
+    [a.workstream, a.requests, a.input, a.cacheRead, a.minutes, a.models, b.workstream, b.requests],
+    ["a", 2, 110, 1020, 5, ["claude-sonnet-5.5", "gpt-6"], "b", 1],
+  );
+});
+
+test("QUA-042 : Copilot CLI : dossier des sessions, sous COPILOT_HOME ou ~/.copilot", () => {
+  assert.equal(copilotFolder({ COPILOT_HOME: "/conf" }), join("/conf", "session-state"));
+  assert.match(copilotFolder({}), /\.copilot[\\/]session-state$/);
 });
 
 test("QUA-042 : --recorded compare les chantiers consignés par leur cache lu moyen par requête, sans journal de session", () => {

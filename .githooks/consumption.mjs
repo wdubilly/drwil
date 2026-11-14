@@ -11,11 +11,24 @@
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { activeTime, aggregate, group, logsFolder, PAUSE_MS, readLog, WEIGHTS } from "./consumption-log.mjs";
+import { activeTime, aggregate, copilotFolder, group, logsFolder, PAUSE_MS, readCopilotLog, readLog, WEIGHTS } from "./consumption-log.mjs";
 import { format, formatRecorded, readable, usageLine } from "./consumption-format.mjs";
 import { TEXTS, USAGE } from "./consumption-texts.mjs";
 
-export { PAUSE_MS, WEIGHTS, activeTime, aggregate, group, format, formatRecorded, logsFolder, readLog, usageLine };
+export {
+  PAUSE_MS,
+  WEIGHTS,
+  activeTime,
+  aggregate,
+  copilotFolder,
+  group,
+  format,
+  formatRecorded,
+  logsFolder,
+  readCopilotLog,
+  readLog,
+  usageLine,
+};
 
 const jsonlFiles = (folder) =>
   readdirSync(folder).flatMap((name) => {
