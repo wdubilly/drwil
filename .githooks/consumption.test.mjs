@@ -331,6 +331,9 @@ test("QUA-042 : Copilot CLI : jetons, modèle et branche des appels du projet ; 
     copilot.contexte({ cwd: join(racine, "x"), t: "2026-10-16T10:12:00Z" }),
     JSON.stringify({ type: "session.usage_record", timestamp: "2026-10-16T10:13:00Z", id: "e6", data: { usage: {} } }),
     JSON.stringify({ type: "session.usage_record", data: { usage: { inputTokens: 5 } } }),
+    "",
+    JSON.stringify({ type: "session.context_changed", timestamp: "2026-10-16T10:14:00Z", data: {} }),
+    copilot.appel({ id: "c7", t: "2026-10-16T10:15:00Z" }),
     "{pas du json",
   ].join("\n");
   const { answers, unreadable } = readCopilotLog(texte, racine);
@@ -367,7 +370,7 @@ test("QUA-042 : Copilot CLI : jetons, modèle et branche des appels du projet ; 
   ]);
   assert.doesNotMatch(JSON.stringify(answers), new RegExp(SECRET));
   // Sans projet donné, tous les appels ; sans contexte connu, aucun appel attribué au projet.
-  assert.equal(readCopilotLog(texte).answers.length, 6);
+  assert.equal(readCopilotLog(texte).answers.length, 7);
   assert.deepEqual(readCopilotLog(copilot.appel({ id: "c1", t: "2026-10-16T10:00:00Z" }), racine).answers, []);
   // Un appel compté une fois, même relu ; temps actif et regroupement comme pour Claude Code.
   const [a, b] = aggregate([...answers, ...answers]);
