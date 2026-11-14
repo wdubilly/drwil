@@ -65,6 +65,7 @@ files:
   - .githooks/note.test.mjs
   - .githooks/detour.mjs
   - .githooks/detour.test.mjs
+  - .githooks/detour-resume.test.mjs
   - .githooks/scope-gate.mjs
   - .githooks/scope-gate.test.mjs
   - .githooks/check-code-rules.test.mjs
@@ -113,6 +114,7 @@ files:
   - .githooks/run-checks-verdicts.mjs
   - .githooks/detour-rules.mjs
   - .githooks/detour-texts.mjs
+  - .githooks/detour-resume.mjs
   - .githooks/briefs-criteria.mjs
   - .githooks/briefs-intents.mjs
   - .githooks/briefs-overlap.mjs

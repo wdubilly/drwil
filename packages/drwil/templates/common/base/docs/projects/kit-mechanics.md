@@ -68,6 +68,7 @@ files:
   - .githooks/run-checks-verdicts.mjs
   - .githooks/detour-rules.mjs
   - .githooks/detour-texts.mjs
+  - .githooks/detour-resume.mjs
   - .githooks/briefs-criteria.mjs
   - .githooks/briefs-intents.mjs
   - .githooks/briefs-overlap.mjs

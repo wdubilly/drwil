@@ -39,12 +39,17 @@ The agent opens it alone: the check is at the merge of its PR.
    alone; then steps 1 to 7 above.
 3. Before the push: a journal entry « Detour of <brief>: … » citing the
    branch `detour/<name>`, and the short brief deleted.
-4. Push, open the PR titled « Detour of <brief>: … », with the merge mode
-   decided at start (automatic merge authorised: schedule it).
+4. Push, open the PR titled « Detour of <brief>: … », put in automatic merge
+   like any PR (`node .githooks/merge-auto.mjs <number>`).
 5. Once the PR is merged: `node .githooks/detour.mjs resume`. The
-   workstream's branch is rebased on the fixed main branch, the work is
-   restored and the state is back in BUILD on the original brief. If a step
-   fails, the command refuses without losing anything: say what blocks.
+   workstream's branch is brought up to the fixed main branch without ever
+   rewriting it once pushed: merged when it was pushed (never a forced push,
+   a plain push is enough), rebased when it never was, taken as it is when it
+   already contains the main branch; a conflict limited to the
+   journal, both sides having only appended an entry, keeps both entries, the
+   main branch's first. The work is restored and the state is back
+   in BUILD on the original brief. Any other conflict, or a failed step, is
+   refused without losing anything: say what blocks, a human decides.
 
 A detour that changes the rules of the game (an existing contract of the
 registry modified or removed, hook, threshold, scope gate, CI) needs the

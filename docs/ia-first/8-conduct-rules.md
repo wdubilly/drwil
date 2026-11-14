@@ -96,7 +96,10 @@ read at every request. The full text of each rule is here, read by section
   aside, branches from the main branch and writes a short brief; its PR is
   titled « Detour of <brief> » and put in automatic merge like any PR
   (`node .githooks/merge-auto.mjs <number>`); once merged, `node .githooks/detour.mjs
-  resume` restores the work on the rebased workstream branch. Never widen
+  resume` restores the work on the workstream branch brought up to the main
+  branch: merged when already pushed, never rewritten nor force-pushed; a
+  journal conflict of two appended entries keeps both, the main branch's
+  first, any other conflict is refused. Never widen
   an unrelated scope, never stash by hand. A detour is not a way to widen
   the active brief: widening its `scope` block takes a separate commit,
   which the gate flags with a warning listing the added paths, whatever

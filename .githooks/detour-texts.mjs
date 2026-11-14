@@ -35,8 +35,19 @@ export const TEXTS = {
     stashMissing: "reprise refusée : la mise de côté {0} est introuvable dans `git stash list` — état inchangé",
     restore:
       "reprise refusée : la restauration du travail entre en conflit — arbre remis propre, mise de côté {0} intacte, état inchangé ; un humain tranche",
-    resumed: "détour clos : retour sur {1}, rebasée sur {2}, travail restauré ; BUILD sur {0}.",
-    forcePush: "La branche était déjà poussée : `git push --force-with-lease`.",
+    merge:
+      "reprise refusée : {0} ne se fusionne pas avec {1} sans conflit (fusion annulée) — état inchangé, branche à son commit d'avant, travail mis de côté intact ; un humain tranche",
+    gitFailed:
+      "reprise refusée : git ne dit pas si {0} contient {1} — état inchangé, branche à son commit d'avant, travail mis de côté intact",
+    // {0} detour branch, {1} main branch: the merge commit of a resume on a branch already pushed.
+    mergeMessage: "Reprise après le détour {0} : fusion de {1}",
+    // {0} workstream brief, {1} its branch, {2} main branch. A pushed branch is merged, never rebased.
+    resumed: {
+      rebase: "détour clos : retour sur {1}, rebasée sur {2}, travail restauré ; BUILD sur {0}.",
+      merge:
+        "détour clos : retour sur {1}, {2} fusionnée dans la branche (déjà poussée : rien de réécrit, un simple push suffit), travail restauré ; BUILD sur {0}.",
+      upToDate: "détour clos : retour sur {1}, qui contient déjà {2} (rien à rejouer), travail restauré ; BUILD sur {0}.",
+    },
     human: "le oui de l'humain se donne dans un terminal interactif (`node .githooks/detour.mjs allow`) ; en file, le sous-agent s'arrête",
     confirm: "Le détour {0} change les règles du jeu. L'autoriser ? Retapez DETOUR : ",
     refused: "oui non donné : rien n'a changé",
@@ -104,8 +115,17 @@ files:
       "resume refused: {0} does not rebase on {1} without conflict (rebase aborted) — state unchanged, set-aside work intact; a human decides",
     stashMissing: "resume refused: the set-aside work {0} is not in `git stash list` — state unchanged",
     restore: "resume refused: restoring the work conflicts — worktree cleaned, set-aside work {0} intact, state unchanged; a human decides",
-    resumed: "detour closed: back on {1}, rebased on {2}, work restored; BUILD on {0}.",
-    forcePush: "The branch was already pushed: `git push --force-with-lease`.",
+    merge:
+      "resume refused: {0} does not merge with {1} without conflict (merge aborted) — state unchanged, branch at its previous commit, set-aside work intact; a human decides",
+    gitFailed:
+      "resume refused: git cannot tell whether {0} contains {1} — state unchanged, branch at its previous commit, set-aside work intact",
+    mergeMessage: "Resume after detour {0}: merge of {1}",
+    resumed: {
+      rebase: "detour closed: back on {1}, rebased on {2}, work restored; BUILD on {0}.",
+      merge:
+        "detour closed: back on {1}, {2} merged into the branch (already pushed: nothing rewritten, a plain push is enough), work restored; BUILD on {0}.",
+      upToDate: "detour closed: back on {1}, which already contains {2} (nothing to replay), work restored; BUILD on {0}.",
+    },
     human: "the human's yes is given in an interactive terminal (`node .githooks/detour.mjs allow`); in a queue, the subagent stops",
     confirm: "Detour {0} changes the rules. Allow it? Type DETOUR: ",
     refused: "yes not given: nothing changed",
