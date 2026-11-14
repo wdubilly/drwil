@@ -437,6 +437,12 @@ test("QUA-042 : Copilot CLI lu par le relevé et --record, seul ou avec Claude C
     [["a", 1, 110, ["copilot-cli"]]],
   );
   assert.match(lancer([], [session]).out, /^a +1 +110 /m);
+  // --copilot-logs : un autre dossier de sessions ; un dossier de session sans events.jsonl est ignoré.
+  const autre = join(copilotHome([session]), "session-state");
+  mkdirSync(join(autre, "sans-journal"));
+  const out = [];
+  main(["--logs", join(racine, "absent"), "--copilot-logs", autre, "--json"], { env: ENV(), root: racine, log: (l) => out.push(l) });
+  assert.equal(JSON.parse(out[0]).workstreams[0].requests, 1);
   assert.equal(lancer(["--record", "a"], [session, session]).code, 0);
   assert.deepEqual(usage()[0], {
     workstream: "a",

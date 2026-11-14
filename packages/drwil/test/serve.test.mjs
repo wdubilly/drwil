@@ -456,7 +456,7 @@ test("QUA-304 : la consommation de chaque chantier est répartie par outil ; une
       ligne({ workstream: "b", tokens: 7, date: "2026-01-03", source: "copilot-cli-logs" }),
       ligne({ workstream: "c", tokens: 4, date: "2026-01-04", source: "estimate" }),
       ligne({ workstream: "d", tokens: 3, date: "2026-01-05", tools: { "Jeanne Dupont": { tokens: 3 }, x: null } }),
-      ligne({ workstream: "e", tokens: 2 }),
+      ligne({ workstream: "e", tokens: 2, tools: [{ tokens: 99 }] }),
     ].join("\n"),
   });
   const s = await demarrer(p);
