@@ -156,6 +156,9 @@ d'un outil) la dit dans son statut.
   `docs/projects/cadrage-en-build.md`.
 - [ ] [IA] [P0] (0.11.2) Le refus du sondage d'attestation dit sa cause et se rejoue (cadré le 2026-11-13) —
   `docs/projects/refus-d-attestation-lisible.md`.
+- [ ] [IA] [P0] (0.11.2) La place de la marque `[humain]` ne change plus l'empreinte des critères acceptés (QUA-174
+  non tenu, deux clôtures gênées le 2026-11-14) ; prêt, D1 et D2 tranchées (cadré le 2026-11-14) —
+  `docs/projects/marque-humain-et-empreinte-des-criteres.md`.
 - [ ] [IA] [P0] (0.11.2) Une relecture critique légère avant la clôture, sans frein au full auto (cadré le 2026-11-12) —
   `docs/projects/relecture-critique-avant-cloture.md`.
 - [ ] [IA] [P1] (0.11.2) Durcissements de l'audit du 2026-11-12 : préfixes de code, preuve de file protégée,
@@ -361,9 +364,6 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Fluidité et relecture
 
-- [ ] [décision] [P1] La place de la marque `[humain]` dans un critère ne change plus l'empreinte des critères
-  acceptés (deux clôtures gênées le 2026-11-14, dont une nouvelle acceptation au terminal) —
-  `docs/intentions/marque-humain-et-empreinte-des-criteres.md`.
 - [ ] [décision] [P1] (0.13.0) Fluidité sans perte de rigueur : restent le
   regroupement (PR, attestations) et qui décide chaque transition (agent ou
   humain), déclaré et affiché (v1:CTR-015, v1:GOV-002) —
