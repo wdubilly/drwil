@@ -155,13 +155,12 @@ test("QUA-050 : ouvrir met le travail en cours de côté, part de la branche pri
   );
 });
 
-test("QUA-050 : un rebase de reprise garde le trailer de chaque commit du chantier ; branche poussée : push forcé indiqué", () => {
+test("QUA-050 : un rebase de reprise (branche jamais poussée) garde le trailer de chaque commit du chantier, sans push forcé", () => {
   const racine = depot({ autoMerge: true });
   const origine = dossier();
   git(origine, "init", "-q", "--bare");
   git(racine, "remote", "add", "origin", origine);
   git(racine, "push", "-q", "origin", "master");
-  git(racine, "push", "-q", "-u", "origin", "chantier/x");
   // Le vrai hook prepare-commit-msg : il ajoute le trailer de la fiche active, sauf pendant un rebase.
   ecrire(racine, { "hooks/prepare-commit-msg": `#!/bin/sh\nexec node "${BARRIERE}" --trailer "$1"\n` });
   chmodSync(join(racine, "hooks/prepare-commit-msg"), 0o755);
@@ -180,7 +179,7 @@ test("QUA-050 : un rebase de reprise garde le trailer de chaque commit du chanti
   const fin = resume(racine);
   assert.equal(fin.code, 0, fin.message);
   assert.match(fin.message, /rebasée sur origin\/master/);
-  assert.match(fin.message, /git push --force-with-lease/);
+  assert.doesNotMatch(fin.message, /force/);
   const trailers = (plage) => git(racine, "log", "--format=%s|%(trailers:key=Drwil-Brief,valueonly,separator=)", plage).split("\n");
   assert.ok(trailers("master").includes(`cadrage du détour|${FICHE}`), "le hook est actif : les commits du détour portent sa fiche");
   assert.deepEqual(

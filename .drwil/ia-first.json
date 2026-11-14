@@ -737,7 +737,7 @@
     {
       "id": "tests-qua-050",
       "name": "tests de QUA-050, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-050 .githooks/detour.test.mjs .githooks/state.test.mjs .githooks/scope-gate.test.mjs packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-050 .githooks/detour.test.mjs .githooks/detour-resume.test.mjs .githooks/state.test.mjs .githooks/scope-gate.test.mjs packages/drwil/test/kit.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
