@@ -54,7 +54,7 @@ const commiter = (racine, fichiers, message) => {
  * (un commit de travail) en BUILD sur sa fiche, poussée selon `pousser` ("amont" : avec -u ; "sans-amont" :
  * sans -u ; rien : jamais poussée). Travail en cours `enCours` mis de côté par l'ouverture du détour.
  */
-function chantier({ pousser = "amont", enCours = { "src/b.txt": "travail en cours\n" }, chantierTouche = {} } = {}) {
+function chantier({ pousser = "amont", enCours = { "src/b.txt": "travail en cours\n" }, chantierTouche = {}, chantierRetire = [] } = {}) {
   const racine = dossier();
   git(racine, "init", "-q", "-b", "master");
   git(racine, "config", "user.name", "t");
@@ -77,6 +77,7 @@ function chantier({ pousser = "amont", enCours = { "src/b.txt": "travail en cour
   ecrire(racine, {
     ".drwil/state.json": JSON.stringify({ version: 1, activity: "BUILD", active_brief: ORIGINE, active_request: null, since: null }),
   });
+  for (const chemin of chantierRetire) git(racine, "rm", "-q", chemin);
   commiter(racine, { "src/b.txt": "travail commité\n", ...chantierTouche }, "travail");
   const distant = dossier();
   git(distant, "init", "-q", "--bare");
@@ -240,3 +241,65 @@ test("QUA-300 : appendBoth garde les deux ajouts une seule fois, branche princip
   assert.equal(appendBoth("# J\n", "# J\nA\n", "B\n# J\n"), null, "ajout en tête : refusé");
   assert.equal(appendBoth(null, "# J\nA\n", "# J\nB\n"), null, "journal sans ancêtre commun : refusé");
 });
+
+test("QUA-300 : un journal retiré par le chantier et complété sur la branche principale (sans ancêtre des deux côtés) est refusé", () => {
+  const racine = chantier({ chantierRetire: ["docs/projects/journal.md"] });
+  const avant = git(racine, "rev-parse", "chantier/x");
+  const r = resume(racine);
+  assert.equal(r.code, 1, r.message);
+  assert.match(r.message, /fusion annulée/);
+  assert.equal(tete(racine), avant);
+  assert.equal(git(racine, "status", "--porcelain"), "");
+  assert.equal(etat(racine).active_brief, FICHE);
+});
+
+test("QUA-050 : une branche dont l'amont configuré a disparu est traitée comme poussée — fusion, pas de réécriture", () => {
+  const racine = chantier({ pousser: null });
+  git(racine, "config", "branch.chantier/x.remote", "origin");
+  git(racine, "config", "branch.chantier/x.merge", "refs/heads/disparue");
+  const avant = git(racine, "rev-parse", "chantier/x");
+  const r = resume(racine);
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /fusionnée dans la branche/);
+  assert.equal(git(racine, "rev-parse", "HEAD^1"), avant);
+});
+
+/**
+ * Lance `resume` avec un git du PATH qui échoue (code 2) sur un seul appel, nommé par ses arguments exacts ;
+ * tout autre appel passe au vrai git. Un appel git qui échoue refuse, jamais un succès (QUA-013).
+ */
+function reprendreAvecEchec(racine, appel) {
+  const outils = dossier();
+  const vrai = spawnSync("sh", ["-c", "command -v git"], { encoding: "utf8" }).stdout.trim();
+  ecrire(outils, { git: `#!/bin/sh\n[ "$*" = "$FAUX_GIT_ECHEC" ] && exit 2\nexec "${vrai}" "$@"\n` });
+  chmodSync(join(outils, "git"), 0o755);
+  const chemin = process.env.PATH;
+  process.env.PATH = `${outils}:${chemin}`;
+  process.env.FAUX_GIT_ECHEC = appel;
+  try {
+    return resume(racine);
+  } finally {
+    process.env.PATH = chemin;
+    delete process.env.FAUX_GIT_ECHEC;
+  }
+}
+
+for (const [appel, attendu] of [
+  ["merge-base --is-ancestor origin/master HEAD", /git ne dit pas si chantier\/x contient origin\/master/],
+  ["rev-parse HEAD", /git ne dit pas si chantier\/x contient origin\/master/],
+  ["stash list --format=%H", /mise de côté .* introuvable/],
+  ["stash drop -q stash@{0}", /la restauration du travail entre en conflit/],
+]) {
+  test(`QUA-050 : \`git ${appel}\` en échec pendant la reprise refuse — état, branche et mise de côté inchangés`, () => {
+    const racine = chantier();
+    const avant = git(racine, "rev-parse", "chantier/x");
+    const detour = etat(racine).detour;
+    const r = reprendreAvecEchec(racine, appel);
+    assert.equal(r.code, 1, r.message);
+    assert.match(r.message, attendu);
+    assert.equal(git(racine, "rev-parse", "chantier/x"), avant, "branche à son commit d'avant");
+    assert.equal(git(racine, "status", "--porcelain"), "");
+    assert.deepEqual(etat(racine).detour, detour, "état inchangé");
+    assert.equal(git(racine, "stash", "list", "--format=%H"), detour.stash, "mise de côté intacte");
+  });
+}
