@@ -124,7 +124,7 @@ d'un outil) la dit dans son statut.
 Étiquette `(version)` sur chaque ligne ouverte ; sans étiquette = plus tard. Remplace « Versions visées » pour ce qui reste.
 
 - **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
-- **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre à respecter** (il suit celui de la section « Fiches cadrées » ci-dessous) : 1 contrôles rejoués, 2 cache de verdicts en CI, 3 un seul run de couverture, 4 tranches dès le départ, 5 tests du kit découpés par thème, 6 preuves fiables, 7 temps des contrôles journalisé, 8 doublon des tests des hooks. Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : le 3 avant le 4 (`doctor` et `guarantees` partagés) ; le 1 avant le 8 (module engine-selftest) ; le 6 avant le 7 (`run-checks-verdicts`). Quatre fiches y sont aussi rangées, cadrées le 2026-11-13, juste après la fusion automatique par défaut : périmètre prévu au cadrage (OPT-6), limites classées par lien, attestations qui ne tombent que pour leur objet (OPT-4), puis, après la consommation de Copilot CLI, coût par activité ; la fiche sans sous-agent de chantier attend sa mesure.
+- **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre à respecter** (il suit celui de la section « Fiches cadrées » ci-dessous) : 1 contrôles rejoués, 2 cache de verdicts en CI, 3 un seul run de couverture, 4 tranches dès le départ, 5 tests du kit découpés par thème, 6 preuves fiables, 7 temps des contrôles journalisé, 8 doublon des tests des hooks. Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : le 3 avant le 4 (`doctor` et `guarantees` partagés) ; le 1 avant le 8 (module engine-selftest) ; le 6 avant le 7 (`run-checks-verdicts`). Quatre fiches y sont aussi rangées, cadrées le 2026-11-13, juste après la fusion automatique par défaut : périmètre prévu au cadrage (OPT-6), limites classées par lien, attestations qui ne tombent que pour leur objet (OPT-4), puis, après la consommation de Copilot CLI, coût par activité ; la fiche sans sous-agent de chantier attend sa mesure. **Ordre décidé le 2026-11-14** (il prime sur celui ci-dessus) : 1 attestations qui ne tombent que pour leur objet (OPT-4), 2 reprise de détour sans réécriture (nouvelle), 3 un seul run de couverture, 4 doublon des tests des hooks, 5 tranches dès le départ, puis le reste dans l'ordre de la section « Fiches cadrées ». La mesure de la durée du job `checks` sur une PR de documentation seule (gain du cache de verdicts, contre 8 min sur la PR #405) se fait sur la PR de ce cadrage (branche `cadrage/priorites-opt4-detour`).
 - **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
   restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; le découpage des
   contrôles lents dès le départ ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
@@ -135,6 +135,13 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+- [ ] [IA] [P0] (0.11.2) Une attestation ne tombe plus pour un changement sans rapport avec son objet : inventaire,
+  `**Couvre**` resserrés, tests en dur (OPT-4 ; cadré le 2026-11-13) —
+  `docs/projects/attestations-qui-tombent-pour-leur-objet.md`.
+- [ ] [IA] [P0] (0.11.2) La reprise d'un détour ne réécrit jamais une branche déjà poussée : fusion de la
+  branche principale si la branche a un amont, conflit du journal résolu en gardant les deux entrées, branche déjà à
+  jour reprise telle quelle ; prêt, D1 à D4 tranchées (cadré le 2026-11-14) —
+  `docs/projects/reprise-de-detour-sans-reecriture.md`.
 - [ ] [IA] [P0] (0.11.2) Un seul run de tests pour le seuil de couverture et la couverture du diff : contrôle unique
   `coverage-diff-<couche>`, fusion des projets existants, avertissement de `doctor` ; prêt, D1 à D5 tranchées (cadré le
   2026-11-11) — `docs/projects/couverture-un-seul-run-de-tests.md`.
@@ -149,9 +156,6 @@ d'un outil) la dit dans son statut.
   (OPT-6 ; cadré le 2026-11-13) — `docs/projects/perimetre-prevu-au-cadrage.md`.
 - [ ] [IA] [P0] (0.11.2) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
   l'élargissement se compte au journal (cadré le 2026-11-13) — `docs/projects/limites-classees-par-lien.md`.
-- [ ] [IA] [P0] (0.11.2) Une attestation ne tombe plus pour un changement sans rapport avec son objet : inventaire,
-  `**Couvre**` resserrés, tests en dur (OPT-4 ; cadré le 2026-11-13) —
-  `docs/projects/attestations-qui-tombent-pour-leur-objet.md`.
 - [ ] [IA] [P0] (0.11.2) La consommation de Copilot CLI est mesurée comme celle de Claude Code (cadré le 2026-11-12) —
   `docs/projects/consommation-copilot-cli.md`.
 - [ ] [IA] [P0] (0.11.2) Le coût d'un chantier se répartit entre production, vérification et gouvernance, mesuré
