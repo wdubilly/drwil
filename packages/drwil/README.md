@@ -47,7 +47,7 @@ URL; an old `drwil-*.tgz` left by a previous install can be deleted.
 
 After `init`, restart your agent's session: Claude Code loads its hooks when
 a session starts. Prerequisites, recommendations (session restart, branch
-protection) and options (automatic merge) are in the repository README,
+protection) and the auto-merge setting are in the repository README,
 « Before you start ».
 
 ## What you gain
@@ -198,17 +198,17 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    contract of the registry (or `[human]`, through an attested contract).
    Nothing is built. The scoping is committed on its own branch and goes
    through a pull request: `/drwil-start` offers a brief only once that PR
-   is merged. Once it is pushed, `/drwil-scope` asks the human what to do
-   with the PR — « Automatic merge », « Manual merge » or « Continue
-   scoping » (same branch, same PR), with no default answer; only the
-   human's « Automatic merge », read by the hook, lets the agent schedule
-   that PR's merge (`.githooks/merge-auto.mjs`, for that branch only).
+   is merged. Once it is pushed, `/drwil-scope` puts that PR in automatic
+   merge with `.githooks/merge-auto.mjs` (only the PR of the current
+   branch), without a poll; several scopings to review together share the
+   same branch and PR.
 2. **Start (human).** The human picks a framed work item (`/drwil-start`
-   in Claude Code or Copilot CLI, or `drwil state start` in a terminal)
-   and decides at once whether the merge is authorised in advance. The
+   in Claude Code or Copilot CLI, or `drwil state start` in a terminal).
+   There is no merge choice: every PR, code or documentation, goes into
+   automatic merge through `.githooks/merge-auto.mjs`. The
    agent cannot start work by itself. Ticking several ready work items
    queues them: the agent chains them, each after the previous merge, and
-   stops at the first one that needs a human. A third question of the poll
+   stops at the first one that needs a human. Another question of the poll
    (`drwil-worktree`) can run the work item in a new sibling worktree
    `../<repository>-<work item>` instead: the human's answer creates it
    from the up-to-date main branch, runs the optional `worktreeInstall`
@@ -218,7 +218,7 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    state reminder tells each agent the folders are one repository, and
    `node .githooks/close.mjs --check` reports a branch behind the main
    branch without refusing the closing. With several work items ticked, a
-   fourth question (`drwil-parallel`: "Parallel queue" / "Sequential queue")
+   further question (`drwil-parallel`: "Parallel queue" / "Sequential queue")
    runs the queue in parallel instead: the hook launches each work item in its
    own worktree, at most `maxParallel` at once (`.drwil/ia-first.json`, 3 by
    default) and refuses work items whose `scope` blocks overlap; the main
@@ -250,10 +250,9 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    its untreated limits become intents; the README, the `CHANGELOG.md`
    « Unreleased » section and the map `docs/architecture.md` are updated
    when the work changes them; the pull request is opened, then back to
-   **SCOPING**. The merge is a
-   human gesture, unless it was authorised at start: the agent then
-   schedules `gh pr merge --auto --merge`, and the host merges once the
-   required checks pass.
+   **SCOPING** once it is merged. The merge is automatic by default, with
+   no poll: the agent runs `node .githooks/merge-auto.mjs <number>`, which
+   schedules it, and the host merges once the required checks pass.
 
 ```bash
 npx drwil state                  # current activity, active work item, scope

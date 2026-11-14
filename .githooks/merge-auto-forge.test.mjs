@@ -14,8 +14,8 @@ for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete p
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "merge-auto.mjs");
 
-/** Projet temporaire dont l'état autorise (ou non) la fusion automatique ; langue au choix. */
-function projet({ auto = true, lang, etat: extra = {} } = {}) {
+/** Projet temporaire en CLOSING, avec ou sans la marque héritée `auto_merge` (sans effet) ; langue au choix. */
+function projet({ auto = false, lang, etat: extra = {} } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "drwil-merge-auto-gitlab-"));
   mkdirSync(join(dir, ".drwil"));
   const etat = { version: 1, activity: "CLOSING", active_brief: "docs/projects/x.md", active_request: null, since: null, ...extra };
@@ -48,7 +48,7 @@ function faux({ vues, merge = vide, rebase = vide }) {
   return { glab, appels };
 }
 
-const options = (dir, extra) => ({ pr: "7", root: dir, forge: "gitlab", sleep: async () => {}, ...extra });
+const options = (dir, extra) => ({ pr: "7", root: dir, branch: "workstream/x", forge: "gitlab", sleep: async () => {}, ...extra });
 const programmee = { merge_when_pipeline_succeeds: true };
 
 test("QUA-161 fusion automatique sur GitLab : MR en retard rebasée, fusion programmée, merge_when_pipeline_succeeds relu", async () => {
@@ -80,7 +80,7 @@ test("QUA-161 fusion automatique sur GitLab : MR en retard rebasée, fusion prog
   assert.deepEqual(journal, ["[merge-auto] MR !7 en retard sur la branche principale : mise à jour."]);
   // MR de la branche courante, sans numéro ; champ récent auto_merge_enabled.
   const courante = faux({ vues: [ok(mr("mergeable", { merge_when_pipeline_succeeds: undefined, auto_merge_enabled: true }))] });
-  assert.equal((await mergeAuto({ root: dir, forge: "gitlab", glab: courante.glab })).code, 0);
+  assert.equal((await mergeAuto({ root: dir, branch: "workstream/x", forge: "gitlab", glab: courante.glab })).code, 0);
   assert.equal(courante.appels[0], "mr view --output json");
   const en = await mergeAuto(options(projet({ lang: "en" }), { glab: faux({ vues: [ok(mr("mergeable", programmee))] }).glab }));
   assert.equal(en.message, "[merge-auto] merge of MR !7 scheduled and checked. Follow it: node .githooks/pr-watch.mjs 7");
@@ -144,25 +144,24 @@ test("QUA-162 fusion automatique sur GitLab : jamais programmée sur un état in
     );
     assert.doesNotMatch(r.message, /programmée|scheduled/);
   }
-  // Marque « fusion annulée » effacée sur GitLab (QUA-181) : le message nomme la MR, jamais « PR #7 ».
+  // Marque « fusion annulée » sur GitLab (QUA-181) : refus sans appel à glab, le message nomme la MR, jamais « PR #7 ».
   for (const lang of ["fr", "en"]) {
-    const marque = faux({ vues: [ok(mr("mergeable")), ok(mr("mergeable", programmee))] });
-    r = await mergeAuto(options(projet({ lang, etat: { merge_cancelled: { pr: 7 } } }), { glab: marque.glab }));
-    assert.equal(r.code, 0, r.message);
-    assert.match(r.message, lang === "fr" ? /marque « fusion annulée » de la MR !7 effacée/ : /« merge cancelled » mark of MR !7 cleared/);
+    let lance = false;
+    r = await mergeAuto(options(projet({ lang, etat: { merge_cancelled: { pr: 7 } } }), { glab: () => (lance = true) }));
+    assert.deepEqual([r.code, lance], [1, false], r.message);
+    assert.match(r.message, lang === "fr" ? /fusion automatique de la MR !7 a été annulée/ : /automatic merge of MR !7 was cancelled/);
   }
 });
 
-test("QUA-163 fusion automatique sur GitLab : sans autorisation, rien n'est lancé ; en SCOPING, seule la MR de la branche autorisée", async () => {
-  let lance = false;
-  const glab = () => (lance = true);
-  const r = await mergeAuto({ pr: "7", root: projet({ auto: false }), forge: "gitlab", glab });
-  assert.deepEqual([r.code, lance], [1, false]);
-  const cadrage = projet({ auto: false, etat: { activity: "SCOPING", active_brief: null, scoping_merge: { branch: "cadrage/essai" } } });
+test("QUA-163 fusion automatique sur GitLab : sans autorisation, la MR de la branche courante est programmée ; celle d'une autre branche refusée", async () => {
+  const sans = faux({ vues: [ok(mr("mergeable")), ok(mr("mergeable", programmee))] });
+  const r = await mergeAuto(options(projet(), { glab: sans.glab }));
+  assert.deepEqual([r.code, sans.appels.length], [0, 3], r.message);
+  const cadrage = projet({ etat: { activity: "SCOPING", active_brief: null, scoping_merge: { branch: "workstream/autre" } } });
   const autre = faux({ vues: [ok(mr("mergeable", { source_branch: "workstream/autre" }))] });
   const refus = await mergeAuto(options(cadrage, { glab: autre.glab }));
   assert.equal(refus.code, 1);
-  assert.match(refus.message, /la MR !7 est celle de la branche workstream\/autre.*autorisée que pour la branche cadrage\/essai/);
+  assert.match(refus.message, /la MR !7 est celle de la branche workstream\/autre, pas de la branche courante workstream\/x/);
   assert.equal(autre.appels.length, 1);
 });
 
@@ -201,7 +200,8 @@ test("QUA-161 fusion automatique sur GitLab : ligne de commande, forge lue sur l
   };
   const depot = () => {
     const dir = projet();
-    spawnSync("git", ["init", "-q"], { cwd: dir });
+    spawnSync("git", ["init", "-q", "-b", "workstream/x"], { cwd: dir });
+    spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init"], { cwd: dir });
     spawnSync("git", ["remote", "add", "origin", "git@gitlab.com:groupe/projet.git"], { cwd: dir });
     return dir;
   };

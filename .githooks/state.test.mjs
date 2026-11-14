@@ -25,7 +25,6 @@ import {
   prepareTransition,
   verifyEvidence,
   scopedBriefs,
-  scopingMerge,
   setDetour,
   reopen,
   writeState,
@@ -986,19 +985,18 @@ test("QUA-088 fiches cadrées : tant qu'une fiche de garantie bloquante existe, 
   assert.ok(scopedBriefs(racine).some((f) => f.path === FICHE));
 });
 
-test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CLOSING, effacée en SCOPING", () => {
+test("QUA-188 : aucun lancement n'écrit plus auto_merge ; une marque héritée reste lisible, gardée jusqu'à CLOSING, effacée en SCOPING", () => {
   const { racine } = depotCadre({ transitions: "agent" });
-  assert.equal(start(racine, FICHE, { autoMerge: true }).code, 0);
-  assert.equal(readState(racine).state.auto_merge, undefined, "un lancement par l'agent n'autorise jamais la fusion");
-  assert.doesNotMatch(context(readState(racine), racine), /fusion automatique/i);
+  const agent = start(racine, FICHE);
+  assert.equal(agent.code, 0);
+  assert.equal(readState(racine).state.auto_merge, undefined, "lancement par l'agent");
+  assert.doesNotMatch(agent.message, /fusion automatique autorisée/);
   rmSync(join(racine, ".drwil", "state.json"));
-  assert.equal(start(racine, FICHE, { human: true, autoMerge: true }).code, 0);
-  let lu = readState(racine);
-  assert.deepEqual(lu.problems, []);
-  assert.equal(lu.state.auto_merge, true);
-  assert.match(context(lu, racine), /fusion automatique autorisée/i);
-  // Ordre sûr (PR #29 : fusion refusée, retour en SCOPING quand même, autorisation perdue) : la PR
-  // calculée et à jour, la fusion programmée puis vérifiée, et seulement ensuite le retour en SCOPING.
+  assert.equal(start(racine, FICHE, { human: true }).code, 0);
+  assert.equal(readState(racine).state.auto_merge, undefined, "lancement humain");
+  // Marque héritée : l'état reste valide et le rappel la dit encore (consigne de fusion, en français et en anglais).
+  let lu = { ...readState(racine), state: { ...readState(racine).state, auto_merge: true } };
+  assert.deepEqual(validateState(lu.state, racine), []);
   assert.match(
     context(lu, racine),
     /mergeStateStatus.*BEHIND.*gh pr merge --auto --merge.*autoMergeRequest.*seulement ensuite revenir en SCOPING.*rester en CLOSING/s,
@@ -1021,8 +1019,9 @@ test("fusion autorisée : seulement par un lancement humain, gardée jusqu'à CL
 
 test("QUA-138 : avec la fusion automatique, le retour en SCOPING attend la fusion suivie par pr-watch ; verte sans fusion : relance, 30 minutes ; CI rouge : reopen ; délai dépassé : CLOSING signalé", () => {
   const { racine } = depotCadre({ transitions: "agent" });
-  assert.equal(start(racine, FICHE, { human: true, autoMerge: true }).code, 0);
-  const lu = { ...readState(racine), state: { ...readState(racine).state, activity: "CLOSING" } };
+  assert.equal(start(racine, FICHE, { human: true }).code, 0);
+  // Consigne de fusion lue sur une marque héritée (le lancement ne l'écrit plus, QUA-188).
+  const lu = { ...readState(racine), state: { ...readState(racine).state, activity: "CLOSING", auto_merge: true } };
   // Chaque étape doit venir après la précédente : l'ancienne procédure revenait en SCOPING dès la
   // programmation vérifiée, sans suivi ni fusion effective (PR #232).
   const etapes = {
@@ -1276,7 +1275,7 @@ test("principal lancer sans terminal : refusé en mode humain, lancé en mode ag
   assert.equal(readState(autre).state.active_request, null);
 });
 
-test("principal lancer au terminal : l'humain choisit, confirme et décide de la fusion", async () => {
+test("principal lancer au terminal : l'humain choisit et confirme, sans question de fusion (QUA-037)", async () => {
   const { racine, git } = depotCadre();
   writeFileSync(
     join(racine, "docs", "projects", "bloquee.md"),
@@ -1284,23 +1283,26 @@ test("principal lancer au terminal : l'humain choisit, confirme et décide de la
   );
   git("add", "-A");
   git("commit", "-qm", "bloquee");
-  const r = await avecTerminal(["1", "START", "MERGE", ""], () => capturer(() => main(["start"], racine)));
+  const r = await avecTerminal(["1", "START", ""], () => capturer(() => main(["start"], racine)));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(
     r.sortie,
     /^1\. docs\/projects\/exemple\.md — Projet : Exemple \[P2\]\n2\. docs\/projects\/bloquee\.md — Bloquée \[P2 · non prête : 1 décision\(s\) à trancher · à affiner : à revoir avant de la lancer\]/,
   );
-  assert.deepEqual(r.invites.length, 4);
-  assert.equal(readState(racine).state.auto_merge, true);
+  // Choix, confirmation, worktree : plus de « Retapez MERGE », la fusion automatique est le comportement par défaut.
+  assert.deepEqual(r.invites.length, 3);
+  assert.ok(!r.invites.some((i) => /MERGE/.test(i)), "plus de question de fusion");
+  assert.equal(readState(racine).state.auto_merge, undefined, "aucune marque de fusion écrite (QUA-188)");
+  assert.equal(readState(racine).state.queue_merge, undefined);
 });
 
 test("QUA-205 : principal lancer au terminal : la réponse WORKTREE lance le chantier dans un worktree frère", async () => {
   const { racine } = depotCadre();
-  const r = await avecTerminal(["START", "", "WORKTREE"], () => capturer(() => main(["start", FICHE], racine)));
+  const r = await avecTerminal(["START", "WORKTREE"], () => capturer(() => main(["start", FICHE], racine)));
   const dossier = `${racine}-exemple`;
   try {
     assert.equal(r.code, 0, r.erreurs);
-    assert.equal(r.invites.length, 3);
+    assert.equal(r.invites.length, 2);
     assert.equal(existsSync(join(dossier, ".git")), true);
     assert.equal(readState(dossier).state.activity, "BUILD");
     assert.equal(readState(racine).state.activity, "SCOPING");
@@ -1494,13 +1496,14 @@ const ecrireEtat = (racine, etat) => writeFileSync(join(racine, ".drwil", "state
 /** La preuve qu'écrit pr-watch après la fusion (QUA-251) : CI de la branche principale verte sur son sommet. */
 const prouver = (racine) => writeProof(racine, { pr: 1, sha: mainTip(racine), run: { databaseId: 1, url: "u" } });
 
-test("QUA-037 : un geste humain enregistre une file de fiches prêtes et la fusion ; une fiche non prête la refuse entière", () => {
+test("QUA-037 : un geste humain enregistre une file de fiches prêtes, sans marque de fusion ; une fiche non prête la refuse entière", () => {
   const racine = depotFile();
-  const r = start(racine, A, { human: true, autoMerge: true, queue: [B] });
+  const r = start(racine, A, { human: true, queue: [B] });
   assert.equal(r.code, 0, r.message);
   assert.match(r.message, /file : ensuite docs\/projects\/b\.md/);
   assert.deepEqual(readState(racine).state.queue, [B]);
-  assert.equal(readState(racine).state.queue_merge, true);
+  // La fusion automatique est le comportement par défaut (QUA-188) : `queue_merge` n'est plus écrit.
+  assert.equal(readState(racine).state.queue_merge, undefined);
   const refus = depotFile();
   assert.match(start(refus, A, { human: true, queue: [C] }).message, /« docs\/projects\/c\.md » ne peut pas entrer dans une file/);
   assert.equal(readState(refus).source, "missing", "rien n'est écrit");
@@ -1519,12 +1522,12 @@ test("QUA-037 : une file se construit par réponses à choix unique : une fiche 
     context(readState(racine), racine),
     /File en construction par sondages enchaînés \(QUA-037\) : docs\/projects\/a\.md, docs\/projects\/b\.md/,
   );
-  const fin = draftFinish(racine, { autoMerge: true });
+  const fin = draftFinish(racine);
   assert.equal(fin.code, 0, fin.message);
   const etat = readState(racine).state;
   assert.equal(etat.active_brief, A);
   assert.deepEqual(etat.queue, [B]);
-  assert.equal(etat.queue_merge, true);
+  assert.equal(etat.queue_merge, undefined, "plus de marque de fusion écrite (QUA-188)");
   assert.equal(etat.queue_draft, undefined, "la file en construction disparaît au lancement");
   assert.match(draftAdd(racine, B).message, /elle se construit en SCOPING/);
 });
@@ -1548,7 +1551,7 @@ test("QUA-037 : une fiche non prête, absente ou déjà en file d'attente est re
   assert.match(draftFinish(invalide).message, /elle se construit en SCOPING/);
 });
 
-test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec la fusion ; hors file ou hors SCOPING, refusé", () => {
+test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête ; une marque de fusion héritée n'est pas recopiée ; hors file ou hors SCOPING, refusé", () => {
   const racine = depotFile();
   ecrireEtat(racine, {
     version: 1,
@@ -1561,7 +1564,8 @@ test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec 
     queue_merge: true,
   });
   const p = prepareTransition(readState(racine), "SCOPING", { now: MAINTENANT }, racine);
-  assert.deepEqual(p.state, { ...NEUTRAL_STATE, since: MAINTENANT, queue: [B, A], queue_merge: true });
+  // État ancien avec `queue_merge` : valide, lu, mais plus recopié (QUA-188).
+  assert.deepEqual(p.state, { ...NEUTRAL_STATE, since: MAINTENANT, queue: [B, A] });
   ecrireEtat(racine, p.state);
   assert.match(start(racine, C).message, /décision humaine/, "fiche hors file");
   prouver(racine);
@@ -1573,9 +1577,7 @@ test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec 
     active_brief: B,
     active_request: null,
     since: MAINTENANT,
-    auto_merge: true,
     queue: [A],
-    queue_merge: true,
   });
   assert.match(start(racine, B).message, /activité BUILD/, "pas de relance en pleine réalisation");
   const abandon = depotFile();
@@ -1598,7 +1600,8 @@ test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête avec 
 test("QUA-037 : arrêter la file ; commandes next et queue stop ; contexte et état invalide, en anglais aussi", async () => {
   const racine = depotFile();
   ecrireEtat(racine, { version: 1, activity: "BUILD", active_brief: A, active_request: null, since: null, queue: [B], queue_merge: true });
-  assert.match(context(readState(racine), racine), /File décidée au lancement : ensuite docs\/projects\/b\.md \(fusion automatique\)/);
+  // queue_merge hérité : plus dit, la fusion automatique est le comportement par défaut pour toute la file (QUA-163).
+  assert.match(context(readState(racine), racine), /File décidée au lancement : ensuite docs\/projects\/b\.md\. /);
   let r = await capturer(() => main(["queue", "stop"], racine));
   assert.equal(r.code, 0);
   assert.match(r.sortie, /file arrêtée : docs\/projects\/b\.md ne seront pas lancés/);
@@ -2423,7 +2426,7 @@ test("QUA-178 : la file enchaîne le chantier suivant à la fusion constatée da
   const sortie = await capturer(() => main(["reminder"], racine));
   assert.equal(sortie.code, 0);
   const apres = readState(racine).state;
-  assert.deepEqual([apres.activity, apres.active_brief, apres.auto_merge], ["BUILD", B, true]);
+  assert.deepEqual([apres.activity, apres.active_brief, apres.auto_merge], ["BUILD", B, undefined]);
   const { message } = await settleClosing(racine, { chain: true });
   assert.equal(message, "", "plus en CLOSING : rien à enchaîner");
 
@@ -2567,21 +2570,6 @@ function projetCadrage({ branche = "cadrage/essai", lang, etat } = {}) {
   return racine;
 }
 
-const SONDAGE_CADRAGE = {
-  questions: [
-    {
-      question: "Que faire de la PR de cadrage ?",
-      header: "drwil-scope",
-      multiSelect: false,
-      options: [
-        { label: "Automatic merge", description: "la fusion est programmée par merge-auto" },
-        { label: "Manual merge", description: "rien n'est programmé" },
-        { label: "Continue scoping", description: "la PR reste ouverte, même branche" },
-      ],
-    },
-  ],
-};
-
 function hookCadrage(racine, entree) {
   const r = spawnSync(process.execPath, [join(racine, ".claude/hooks/prompt-hook.mjs")], {
     encoding: "utf8",
@@ -2591,115 +2579,65 @@ function hookCadrage(racine, entree) {
   return { status: r.status, stderr: r.stderr, contexte };
 }
 
-const reponseClaude = (racine, reponse, sondage = SONDAGE_CADRAGE) =>
-  hookCadrage(racine, {
-    hook_event_name: "PostToolUse",
-    tool_name: "AskUserQuestion",
-    tool_input: sondage,
-    tool_response: { ...sondage, answers: reponse === undefined ? {} : { "Que faire de la PR de cadrage ?": reponse } },
-  });
+// Le sondage `drwil-scope` d'avant (QUA-187, modifié) : posé par un ancien skill, il n'est plus ni refusé ni lu.
+const SONDAGE_CADRAGE = {
+  questions: [
+    {
+      question: "Que faire de la PR de cadrage ?",
+      header: "drwil-scope",
+      multiSelect: false,
+      options: [{ label: "Automatic merge (Recommended)" }, { label: "Manual merge" }],
+    },
+  ],
+};
 
-const SONDAGE_COPILOT = (champ = { type: "string", enum: ["Automatic merge", "Manual merge", "Continue scoping"] }) => ({
-  message: "drwil-scope : que faire de la PR de cadrage ?",
-  requestedSchema: { properties: { "drwil-scope": champ } },
-});
-
-test("QUA-187 : le skill de cadrage pose un sondage drwil-scope à trois réponses, sans recommandation, cité au menu /drwil", () => {
+test("QUA-187 : le skill de cadrage met la PR de cadrage en fusion automatique par l'outil, sans sondage, cité au menu /drwil", () => {
   const skill = readFileSync(join(GABARIT_CLAUDE, "skills/scope-a-workstream/SKILL.md"), "utf8");
   assert.match(skill, /^---\nname: drwil-scope\ndescription: .+\. Use when .+\n---\n/);
   const texte = skill.replace(/\s+/g, " ");
-  assert.match(texte, /`header` exactly `drwil-scope`, `multiSelect: false`, exactly three options/);
-  for (const label of ["Automatic merge", "Manual merge", "Continue scoping"]) assert.match(texte, new RegExp(`\`${label}\``));
-  assert.match(texte, /\*\*Forbidden\*\*: a recommendation/);
-  assert.match(texte, /never `type: "array"`/);
-  assert.ok("drwil-scope".length <= 12, "en-tête de question de Claude Code : 12 caractères au plus");
-  assert.match(readFileSync(join(GABARIT_CLAUDE, "skills/drwil/SKILL.md"), "utf8"), /^\| `\/drwil-scope` \|/m);
+  assert.match(texte, /without a poll/);
+  assert.doesNotMatch(texte, /AskUserQuestion|ask_user|`header`|Manual merge|Continue scoping/);
+  assert.ok(texte.indexOf("`node .githooks/merge-auto.mjs <number>`") < texte.indexOf("`node .githooks/pr-watch.mjs <number>`"));
+  assert.match(texte, /only schedules the PR of the current git branch/);
+  assert.match(texte, /never chain the forge's commands \(`gh`, `glab`\) by hand/);
+  assert.match(texte, /\*\*the same branch\*\* \(one branch, one PR, no new branch\)/);
+  const menu = readFileSync(join(GABARIT_CLAUDE, "skills/drwil/SKILL.md"), "utf8").match(/^\| `\/drwil-scope` \|.*$/m)?.[0];
+  assert.ok(menu, "/drwil-scope cité au menu /drwil");
+  // Le menu ne le décrit plus comme un sondage (QUA-187).
+  assert.match(menu, /automatic merge by the tool, without a poll/);
+  assert.doesNotMatch(menu, /poll on|manual merge|continue scoping/i);
   // Copies installées identiques au gabarit (npm run installer-depot).
-  for (const f of ["skills/scope-a-workstream/SKILL.md", "skills/drwil/SKILL.md", "hooks/start-poll.mjs"])
+  for (const f of ["skills/scope-a-workstream/SKILL.md", "skills/drwil/SKILL.md", "hooks/start-poll.mjs", "hooks/prompt-hook.mjs"])
     assert.equal(readFileSync(join(RACINE_DEPOT, ".claude", f), "utf8"), readFileSync(join(GABARIT_CLAUDE, f), "utf8"), f);
+  assert.ok(!existsSync(join(RACINE_DEPOT, ".claude/hooks/merge-poll.mjs")), "plus de hook de sondage de fusion");
 });
 
-test("QUA-187 : le hook refuse un sondage de fin de cadrage recommandé, prérempli, incomplet ou à choix multiple", () => {
-  const racine = projetCadrage();
-  const avant = (tool_input) => hookCadrage(racine, { hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input });
-  const question = SONDAGE_CADRAGE.questions[0];
-  const variante = (q, extra = {}) => ({ questions: [{ ...question, ...q }], ...extra });
-  assert.equal(avant(SONDAGE_CADRAGE).status, 0, "les trois réponses, rien de prérempli : posé");
-  const refuses = {
-    recommandee: variante({ options: [{ label: "Automatic merge (Recommended)" }, ...question.options.slice(1)] }),
-    "recommandée en description": variante({
-      options: [{ label: "Automatic merge", description: "(Recommandé)" }, ...question.options.slice(1)],
-    }),
-    preremplie: variante({}, { answers: { [question.question]: "Automatic merge" } }),
-    "deux réponses": variante({ options: question.options.slice(0, 2) }),
-    "quatre réponses": variante({ options: [...question.options, { label: "Autre chose" }] }),
-    "choix multiple": variante({ multiSelect: true }),
-  };
-  for (const [cas, sondage] of Object.entries(refuses)) {
-    const r = avant(sondage);
-    assert.equal(r.status, 2, cas);
-    assert.match(r.stderr, /sondage de fin de cadrage refusé/, cas);
-  }
-  // Copilot CLI : choix unique (`enum` seul), jamais de valeur par défaut ni de tableau.
-  assert.equal(avant(SONDAGE_COPILOT()).status, 0);
-  assert.equal(
-    avant(SONDAGE_COPILOT({ type: "string", enum: ["Automatic merge", "Manual merge", "Continue scoping"], default: "Manual merge" }))
-      .status,
-    2,
-  );
-  assert.equal(
-    avant(
-      SONDAGE_COPILOT({
-        type: "array",
-        items: { enum: ["Automatic merge"] },
-        enum: ["Automatic merge", "Manual merge", "Continue scoping"],
-      }),
-    ).status,
-    2,
-  );
-  // Un autre sondage passe sans rien changer.
-  assert.equal(avant({ questions: [{ ...question, header: "autre" }] }).status, 0);
+test("QUA-187 : un sondage de fin de cadrage n'est plus ni refusé ni lu : rien n'est écrit, aucune autorisation", () => {
+  const racine = projetCadrage({ etat: NEUTRAL_STATE });
+  const brut = () => readFileSync(join(racine, ".drwil", "state.json"), "utf8");
+  const avantEtat = brut();
+  const avant = hookCadrage(racine, { hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", tool_input: SONDAGE_CADRAGE });
+  assert.deepEqual([avant.status, avant.stderr], [0, ""], "plus de refus du sondage de fin de cadrage");
+  const apres = hookCadrage(racine, {
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: SONDAGE_CADRAGE,
+    tool_response: { ...SONDAGE_CADRAGE, answers: { "Que faire de la PR de cadrage ?": "Automatic merge" } },
+  });
+  assert.deepEqual([apres.status, apres.contexte], [0, ""]);
+  // Copilot CLI : un champ `drwil-scope` répondu n'est pas lu non plus.
+  hookCadrage(racine, {
+    hook_event_name: "PostToolUse",
+    tool_input: {
+      message: "drwil-scope : que faire ?",
+      requestedSchema: { properties: { "drwil-scope": { type: "string", enum: ["Automatic merge"] } } },
+    },
+    tool_result: { text_result_for_llm: "User responded: Automatic merge" },
+  });
+  assert.equal(brut(), avantEtat, "aucune réponse n'écrit l'état");
 });
 
-test("QUA-187 : la réponse humaine, lue par le hook, est la seule qui écrit l'autorisation, pour la branche du cadrage", () => {
-  const racine = projetCadrage();
-  const etat = () => readState(racine).state;
-  let r = reponseClaude(racine, "Automatic merge");
-  assert.match(r.contexte, /^\[drwil\] ✓ fusion automatique de la PR de cadrage autorisée pour la branche cadrage\/essai/);
-  assert.deepEqual(etat().scoping_merge, { branch: "cadrage/essai" });
-  assert.equal(etat().activity, "SCOPING");
-  r = reponseClaude(racine, "Manual merge");
-  assert.match(r.contexte, /rien n'est programmé \(réponse « Manual merge »\)/);
-  assert.equal(etat().scoping_merge, undefined, "une réponse suivante retire l'autorisation");
-  assert.match(reponseClaude(racine, undefined).contexte, /aucune réponse lue dans le sondage de fin de cadrage/);
-  assert.equal(etat().scoping_merge, undefined);
-  // Copilot CLI : réponse en texte libre, avec ou sans le nom du champ.
-  for (const texte of ["Automatic merge", "drwil-scope=Automatic merge"]) {
-    writeFileSync(join(racine, ".drwil", "state.json"), JSON.stringify(NEUTRAL_STATE));
-    hookCadrage(racine, {
-      hook_event_name: "PostToolUse",
-      tool_input: SONDAGE_COPILOT(),
-      tool_result: { text_result_for_llm: `User responded: ${texte}` },
-    });
-    assert.deepEqual(etat().scoping_merge, { branch: "cadrage/essai" }, texte);
-  }
-  // Sur la branche principale, ou hors SCOPING : rien n'est autorisé, l'état est inchangé.
-  const principale = projetCadrage({ branche: "master" });
-  assert.match(reponseClaude(principale, "Automatic merge").contexte, /✗ .*pas une branche de cadrage/);
-  assert.equal(readState(principale).state.scoping_merge, undefined);
-  const enCours = projetCadrage({ etat: { ...NEUTRAL_STATE, activity: "BUILD", active_brief: FICHE } });
-  mkdirSync(join(enCours, "docs/projects"), { recursive: true });
-  writeFileSync(join(enCours, FICHE), "# Projet : Exemple\n");
-  assert.match(reponseClaude(enCours, "Automatic merge").contexte, /✗ réponse au sondage de fin de cadrage ignorée : l'activité est BUILD/);
-  assert.equal(readState(enCours).state.scoping_merge, undefined);
-  // En anglais selon la langue du projet.
-  assert.match(
-    reponseClaude(projetCadrage({ lang: "en" }), "Automatic merge").contexte,
-    /automatic merge of the scoping PR authorised for branch cadrage\/essai/,
-  );
-});
-
-test("QUA-187 : scoping_merge valable en SCOPING seulement, objet { branch }", () => {
+test("QUA-188 : une marque héritée scoping_merge reste valable en SCOPING seulement, objet { branch }", () => {
   const racine = depot();
   assert.deepEqual(validateState({ ...NEUTRAL_STATE, scoping_merge: { branch: "cadrage/x" } }, racine), []);
   assert.match(validateState({ ...NEUTRAL_STATE, scoping_merge: true }, racine)[0], /scoping_merge : objet \{ branch \}/);
@@ -2708,31 +2646,6 @@ test("QUA-187 : scoping_merge valable en SCOPING seulement, objet { branch }", (
     validateState(actif("BUILD", { scoping_merge: { branch: "cadrage/x" } }), racine)[0],
     /scoping_merge : seulement en SCOPING/,
   );
-  // Un état invalide n'est jamais réécrit par la réponse au sondage.
-  const invalide = depot({ state: "{ pas du json" });
-  assert.equal(scopingMerge(invalide, "auto").code, 1);
-  assert.equal(readFileSync(join(invalide, ".drwil", "state.json"), "utf8"), "{ pas du json");
-});
-
-test("QUA-187 : scopingMerge, appelée par le hook : autorise sur une branche de cadrage, retire sur les autres réponses", () => {
-  const racine = projetCadrage();
-  assert.match(scopingMerge(racine, "continue").message, /même branche \(cadrage\/essai\)/);
-  assert.equal(readState(racine).state.scoping_merge, undefined);
-  assert.equal(scopingMerge(racine, "auto").code, 0);
-  assert.deepEqual(readState(racine).state.scoping_merge, { branch: "cadrage/essai" });
-  assert.match(scopingMerge(racine, "continue").message, /Continue scoping/);
-  assert.equal(readState(racine).state.scoping_merge, undefined);
-  scopingMerge(racine, "auto");
-  assert.match(scopingMerge(racine, "manual").message, /Manual merge/);
-  assert.equal(readState(racine).state.scoping_merge, undefined);
-  // Tête détachée, branche principale, hors dépôt git : jamais autorisé.
-  spawnSync("git", ["checkout", "-q", "--detach"], { cwd: racine });
-  assert.equal(scopingMerge(racine, "auto").code, 1);
-  assert.equal(scopingMerge(projetCadrage({ branche: "master" }), "auto").code, 1);
-  const horsGit = depot({ fiche: false });
-  assert.equal(scopingMerge(horsGit, "auto").code, 1);
-  assert.match(scopingMerge(horsGit, "continue").message, /même branche \(\?\)/);
-  assert.match(scopingMerge(depot({ state: actif("BUILD") }), "auto").message, /l'activité est BUILD/);
 });
 
 // Sondage des limites hors cadre (QUA-253) : le hook rejoué dans un projet temporaire, comme le sondage de fin de cadrage.

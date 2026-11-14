@@ -132,7 +132,11 @@ test("QUA-050 : ouvrir met le travail en cours de côté, part de la branche pri
     r.message,
     /détour ouvert : branche detour\/date-mal-lue depuis master, fiche docs\/projects\/detour-date-mal-lue\.md, travail en cours mis de côté/,
   );
-  assert.match(r.message, /PR intitulée « Détour de docs\/projects\/chantier\.md : … », fusion laissée à l'humain/);
+  // Sans marque auto_merge : la PR du détour part en fusion automatique comme toute PR (QUA-050, QUA-163).
+  assert.match(
+    r.message,
+    /PR intitulée « Détour de docs\/projects\/chantier\.md : … », mise en fusion automatique comme toute PR : `node \.githooks\/merge-auto\.mjs <numéro>`/,
+  );
   assert.doesNotMatch(r.message, /règles du jeu/);
 
   corrigerEtFusionner(racine);
@@ -168,7 +172,7 @@ test("QUA-050 : un rebase de reprise garde le trailer de chaque commit du chanti
   assert.equal(r.code, 0, r.message);
   assert.equal(etat(racine).detour.stash, null, "arbre propre : rien à mettre de côté");
   assert.match(r.message, /depuis origin\/master/);
-  assert.match(r.message, /fusion automatique programmée/);
+  assert.match(r.message, /mise en fusion automatique comme toute PR/);
   assert.match(r.message, /ces fichiers changent les règles du jeu .* \.githooks\/x\.mjs/);
   assert.match(lire(racine, FICHE), /\*\*Risque\*\* : HIGH/);
   corrigerEtFusionner(racine);
@@ -423,7 +427,7 @@ test("QUA-050 : ligne de commande — open, resume, allow (terminal), usage ; en
   let r = await capturer(() => main(["open", "date-mal-lue", "--title", "Date misread", "--files", "src/a.txt,test/a.test.mjs"], racine));
   assert.equal(r.code, 0, r.erreurs);
   assert.match(r.sortie, /^✓ detour opened: branch detour\/date-mal-lue from master/);
-  assert.match(r.sortie, /merge left to the human/);
+  assert.match(r.sortie, /set to automatic merge like any PR: `node \.githooks\/merge-auto\.mjs <number>`/);
   const texte = lire(racine, FICHE);
   assert.match(texte, /^# Detour: Date misread \(detour of docs\/projects\/chantier\.md\)/);
   assert.match(texte, /\*\*Risk\*\*: HIGH/, "chemins sensibles du projet");

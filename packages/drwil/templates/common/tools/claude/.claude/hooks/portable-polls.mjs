@@ -1,19 +1,18 @@
-// Limits (`drwil-limite`) and merge (`drwil-merge`) polls outside Claude Code (QUA-266): Gemini CLI (`ask_user`),
-// Codex (`request_user_input`) and Cursor's dedicated ACP client (`cursor/ask_question`) ask them in their native
-// form; it is translated here into Claude Code's form and handed to the same hooks (limit-poll.mjs, merge-poll.mjs),
-// so the same refusals apply and only the human's answer, read from the tool's native result, is recorded.
-// Copilot CLI reads them through `.claude/settings.json` (prompt-hook.mjs without argument): its native entry stays
+// Limits poll (`drwil-limite`) outside Claude Code (QUA-266): Gemini CLI (`ask_user`), Codex (`request_user_input`)
+// and Cursor's dedicated ACP client (`cursor/ask_question`) ask it in their native form; it is translated here into
+// Claude Code's form and handed to the same hook (limit-poll.mjs), so the same refusals apply and only the human's
+// answer, read from the tool's native result, is recorded. No merge poll: the automatic merge is the default (QUA-163).
+// Copilot CLI reads it through `.claude/settings.json` (prompt-hook.mjs without argument): its native entry stays
 // the attestation's. Any other question goes on to the attestation hook, unchanged.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { nativeAttestationEvent } from "./attest-adapters.mjs";
 import { limitHook } from "./limit-poll.mjs";
-import { mergeHook } from "./merge-poll.mjs";
 import { portableAttestationMain } from "./portable-attest.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const MARKS = ["drwil-limite", "drwil-merge"];
+const MARKS = ["drwil-limite"];
 // A value the agent would have put in the poll in the human's place.
 const FILLED = ["answers", "answer", "default", "defaultValue", "selected"];
 const obj = (v) => (v && typeof v === "object" ? v : {});
@@ -76,7 +75,7 @@ function language(root) {
   }
 }
 
-/** A limits or merge poll asked natively: null if the event is not one, else the hook's exit code (2 refuses it). */
+/** A limits poll asked natively: null if the event is not one, else the hook's exit code (2 refuses it). */
 export async function portablePollHook(input, { root, tool, phase, tell }) {
   const e = tool === "copilot" ? null : nativeAttestationEvent(input, tool, phase);
   if (!e || !(e.pre || e.post)) return null;
@@ -90,10 +89,10 @@ export async function portablePollHook(input, { root, tool, phase, tell }) {
     tool_response: { answers: e.post ? answers(e.result, tool, qs) : {} },
   };
   const ctx = { root, lang: language(root), tell };
-  return (await limitHook(claude, ctx)) ?? mergeHook(claude, ctx);
+  return limitHook(claude, ctx);
 }
 
-/** Native entry of `prompt-hook.mjs <tool> [phase]`: the limits and merge polls of Gemini and Codex, else the attestation. */
+/** Native entry of `prompt-hook.mjs <tool> [phase]`: the limits poll of Gemini and Codex, else the attestation. */
 export async function portableMain({ root = ROOT, tool = process.argv[2], phase = process.argv[3], raw = readFileSync(0, "utf8") } = {}) {
   let input = null;
   try {

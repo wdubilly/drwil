@@ -104,7 +104,7 @@ function install(root, dir) {
  * Only for a human's answer: the state of the new folder is written by `start` of state.mjs, the origin
  * folder's state does not change. `{ code, message, path? }`.
  */
-export async function launchInWorktree(root, brief, { autoMerge = false, queue = [], now } = {}) {
+export async function launchInWorktree(root, brief, { queue = [], now } = {}) {
   const T = texts(root);
   const s = situation(root);
   if (!s) return { code: 1, message: T.noRepo };
@@ -129,7 +129,7 @@ export async function launchInWorktree(root, brief, { autoMerge = false, queue =
   if (!fetched) lines.push(fill(T.stale, main));
   lines.push(install(root, dir));
   const { start } = await import("./state.mjs");
-  const started = start(dir, path, { human: true, autoMerge, now });
+  const started = start(dir, path, { human: true, now });
   lines.push(started.code === 0 ? started.message : fill(T.startFailed, started.message), fill(T.open, dir));
   return { code: started.code, message: lines.join("\n"), path: dir };
 }
@@ -146,7 +146,7 @@ const maxParallel = (root) => {
  * fails stops the next ones, never those already launched. The launched briefs are recorded in this
  * folder's state (`parallel`). `{ code, message }`.
  */
-export async function launchParallel(root, briefs, { autoMerge = false, now } = {}) {
+export async function launchParallel(root, briefs, { now } = {}) {
   const T = texts(root);
   const s = situation(root);
   if (!s) return { code: 1, message: T.noRepo };
@@ -170,7 +170,7 @@ export async function launchParallel(root, briefs, { autoMerge = false, now } = 
   const lines = [];
   const launched = [];
   for (const brief of paths) {
-    const r = await launchInWorktree(root, brief, { autoMerge, now });
+    const r = await launchInWorktree(root, brief, { now });
     lines.push(r.message);
     if (r.code !== 0) {
       lines.push(fill(T.parallelStopped, brief));

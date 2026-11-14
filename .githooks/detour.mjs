@@ -80,7 +80,7 @@ export function open(root, name, { title, files = [], now = new Date().toISOStri
   const rules = rulesFiles(list, cfg);
   const report = [
     fill(T.opened, branch, base, brief, stash ? fill(T.stashed, stash.slice(0, 7)) : ""),
-    fill(T.steps, origin, branch, brief, state.auto_merge === true ? T.auto : T.manual),
+    fill(T.steps, origin, branch, brief),
   ];
   if (rules.length) report.push(fill(T.rulesAhead, rules.join(", ")));
   return done(report.join("\n"));

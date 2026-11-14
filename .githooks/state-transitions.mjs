@@ -37,7 +37,7 @@ function prepareBranch(root, path) {
  * brief. In "human" mode (default), `human` must be true: only for a human answer to a poll read by the tool's
  * hook, or a choice made in an interactive terminal. `{ code: 0 | 1, message }`.
  */
-export function start(root, brief, { human = false, request, autoMerge = false, queue = [], now = new Date().toISOString() } = {}) {
+export function start(root, brief, { human = false, request, queue = [], now = new Date().toISOString() } = {}) {
   const T = texts(root);
   const read = readState(root);
   const origin = read.state.activity;
@@ -71,9 +71,9 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   const missing = missingCriteria(root, path);
   if (missing === "blocking") return { code: 1, message: fill(T.startNoCriteria, path) };
   const state = { version: 1, activity: "BUILD", active_brief: path, active_request: request ?? null, since: now };
-  // Authorising the merge is an acceptance decision: human only, even in agent mode; a queue carries it.
-  if ((autoMerge === true && human) || (fromQueue && read.state.queue_merge === true)) state.auto_merge = true;
-  if (rest.length) Object.assign(state, { queue: rest, queue_merge: human ? autoMerge === true : read.state.queue_merge === true });
+  // The automatic merge is the default (merge-auto.mjs): neither `auto_merge` nor `queue_merge` is written any more,
+  // a legacy one is only read.
+  if (rest.length) Object.assign(state, { queue: rest });
   const problems = validateState(state, root);
   if (problems.length) return { code: 1, message: fill(T.startInvalid, problems.join(" ; ")) };
   const ci = fromQueue ? mainCiGate(root, T) : {}; // a queue waits for its main branch green on GitHub, a human start does not (QUA-251)
@@ -87,12 +87,7 @@ export function start(root, brief, { human = false, request, autoMerge = false, 
   const pruned = prunedMessage(root, pruneMergedBranches(root));
   return {
     code: 0,
-    message:
-      (branch.message ? `${branch.message}\n` : "") +
-      fill(T.started, origin, path, state.auto_merge ? T.mergeAuthorised : "") +
-      next +
-      warned +
-      pruned,
+    message: (branch.message ? `${branch.message}\n` : "") + fill(T.started, origin, path, "") + next + warned + pruned,
   };
 }
 
@@ -111,8 +106,7 @@ export function prepareTransition(read, to, { brief, request, now }, root) {
   if (to === "SCOPING") {
     state = { ...NEUTRAL_STATE, since: now };
     // A queue goes on after a closing; any other return to SCOPING abandons it (QUA-037).
-    if (from === "CLOSING" && read.state.queue?.length)
-      Object.assign(state, { queue: read.state.queue, queue_merge: read.state.queue_merge === true });
+    if (from === "CLOSING" && read.state.queue?.length) Object.assign(state, { queue: read.state.queue });
   } else if (to === "EXPECTATION") {
     if (!brief) return { error: T.briefNeeded };
     state = {

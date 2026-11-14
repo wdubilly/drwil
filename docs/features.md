@@ -100,21 +100,22 @@ mesurée ; un hook modifié sans être déclaré est signalé avant la clôture,
 qui le refuse. Un chantier peut se lancer dans son propre worktree, et une
 file de chantiers en parallèle, un worktree par fiche (au plus
 `maxParallel` à la fois, fiches dont les périmètres se recoupent
-refusées). Avec la fusion automatique, programmée par `.githooks/merge-auto.mjs`, le
-retour au cadrage et la suite de la file attendent la fusion de la PR ; en
-cadrage, seule la réponse de l'humain au sondage `/drwil-scope` l'autorise.
+refusées). La fusion automatique est le comportement par défaut, sans sondage :
+toute PR, de chantier ou de cadrage (`/drwil-scope`), est programmée par
+`.githooks/merge-auto.mjs`, et le retour au cadrage comme la suite de la file
+attendent la fusion de la PR.
 Une fiche à plusieurs lots se mène lot par lot (`node .githooks/state.mjs
 lot`). Un chantier dont la PR révèle un défaut après la clôture se
 rouvre d'une commande (`node .githooks/state.mjs reopen`). Sur un autre clone
 ou une autre machine, placé sur la branche du chantier, `node .githooks/state.mjs
 resume` reconstruit l'état local d'après l'historique Git (BUILD, ou CLOSING
 si la clôture est commitée, lot courant compris), sans jamais reprendre une
-décision humaine ; la fusion automatique se redonne alors par un sondage
-`drwil-merge` dont l'humain choisit la réponse. Une limite dans le cadre de la fiche se traite sur le champ ;
+décision humaine ; la fusion automatique, comportement par défaut, n'a rien à
+redonner. Une limite dans le cadre de la fiche se traite sur le champ ;
 une limite hors cadre est soumise à l'humain, à la fin de la réalisation, par
 un sondage `drwil-limite` (« Traiter maintenant » ou « Noter en intention »),
 et la clôture refuse une fiche d'intention née sur la branche sans ce choix ;
-ces deux sondages sont lus par le hook sous Claude Code, Copilot CLI, Gemini CLI,
+ce sondage est lu par le hook sous Claude Code, Copilot CLI, Gemini CLI,
 Codex et le client ACP de Cursor.
 Une idée se note
 à tout moment sans changer d'activité (`/drwil-note`).

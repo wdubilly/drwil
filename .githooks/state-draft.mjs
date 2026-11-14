@@ -35,12 +35,12 @@ export function draftAdd(root, brief) {
   return { code: 0, message: fill(T.draftAdded, path, [...draft, path].join(", ")) };
 }
 
-/** Finishes the queue: starts its head, the rest queued (and the merge the human decided). The draft is then gone. */
-export function draftFinish(root, { autoMerge = false } = {}) {
+/** Finishes the queue: starts its head, the rest queued. The draft is then gone. */
+export function draftFinish(root) {
   const T = texts(root);
   const refused = notBuildable(root, T);
   if (refused) return { code: 1, message: refused };
   const [head, ...rest] = readState(root).state.queue_draft ?? [];
   if (!head) return { code: 1, message: T.draftEmpty };
-  return start(root, head, { human: true, autoMerge, queue: rest });
+  return start(root, head, { human: true, queue: rest });
 }

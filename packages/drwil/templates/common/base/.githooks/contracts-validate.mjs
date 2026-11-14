@@ -5,6 +5,7 @@ const TEXTS = {
     duplicate: (id) => `contrat ${id} défini plusieurs fois`,
     unknown: (id, c, known) => `${id} : contrôle inconnu « ${c} » (connus : ${known})`,
     noProof: (id) => `${id} : aucune preuve déclarée (champ Contrôle ou Manuel)`,
+    retired: (id, v) => `${id} : champ Retiré mal formé « ${v} » (attendu : <AAAA-MM-JJ> — <raison>)`,
     noRule: (id) => `${id} : exigence absente (champ Règle)`,
     severity: (id, v) => `${id} : sévérité « ${v} » inconnue (bloquant, avertissement ou indicatif)`,
     emptyCheck: (id) => `${id} : champ Contrôle vide`,
@@ -16,6 +17,7 @@ const TEXTS = {
     duplicate: (id) => `contract ${id} defined more than once`,
     unknown: (id, c, known) => `${id}: unknown check "${c}" (known: ${known})`,
     noProof: (id) => `${id}: no declared proof (Check or Manual field)`,
+    retired: (id, v) => `${id}: malformed Retired field "${v}" (expected: <YYYY-MM-DD> — <reason>)`,
     noRule: (id) => `${id}: missing requirement (Rule field)`,
     severity: (id, v) => `${id}: unknown severity "${v}" (blocking, warning or advisory)`,
     emptyCheck: (id) => `${id}: empty Check field`,
@@ -25,11 +27,15 @@ const TEXTS = {
   },
 };
 
+// A date then a reason, after a dash: « 2026-11-13 — reason ».
+const RETIRED_RE = /^\d{4}-\d{2}-\d{2}\s*[—–-]\s*\S/;
+
 /**
  * Configuration errors of the registry, each `{ id, line, type, message }`
- * (type: duplicate | empty-check | unknown | no-rule | no-proof | severity):
+ * (type: duplicate | empty-check | unknown | no-rule | no-proof | severity | retired):
  * duplicate, unknown check, section contract without a requirement (Rule) or without
- * any declared proof: an unverifiable obligation is never accepted silently.
+ * any declared proof: an unverifiable obligation is never accepted silently. A retired contract (**Retired** field,
+ * `<date> — <reason>`) stays in the registry for history, without proof; a malformed Retired field is an error.
  * A table contract without Check nor Manual is not an error: it is a legacy
  * contract, treated as MANUAL.
  */
@@ -46,7 +52,8 @@ export function validateContracts(contracts, knownIds, lang = "fr") {
     for (const c of k.checks ?? []) if (!known.has(c)) error(k, "unknown", T.unknown(k.id, c, [...known].join(", ")));
     if (k.severity === null) error(k, "severity", T.severity(k.id, k.rawSeverity));
     if (k.form === "section" && !k.rule) error(k, "no-rule", T.noRule(k.id));
-    if (k.form === "section" && k.checks === null && k.manual === null) error(k, "no-proof", T.noProof(k.id));
+    if (k.retired != null && !RETIRED_RE.test(k.retired)) error(k, "retired", T.retired(k.id, k.retired));
+    else if (k.retired == null && k.form === "section" && k.checks === null && k.manual === null) error(k, "no-proof", T.noProof(k.id));
   }
   return errors;
 }

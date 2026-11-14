@@ -702,17 +702,22 @@ test("QUA-097 garanties tenues : verify ne signale rien, la commande le dit", as
   assert.deepEqual(guaranteeFailures(dir, config(dir), [{ checks: ["coverage-root", "e2e"] }]), []);
 });
 
-test("QUA-099 PR de documentation seule : fusion automatique sans la question drwil-merge, gardée pour le code", () => {
+test("QUA-099 toute PR (code ou documentation) part en fusion automatique, sans question", () => {
   const agents = iaFirst(join(TEMPLATES, "base"));
   assert.match(
     agents,
-    /\*\*Documentation-only PR\*\*: a PR that touches only documentation[\s\S]*without asking the `drwil-merge` question[\s\S]*auto-merge not allowed by the\s+repository/,
+    /\*\*Every PR in automatic merge\*\*: any PR, code or documentation, is put\s+in automatic merge by the agent with `node \.githooks\/merge-auto\.mjs\s+<number>`, without asking any question[\s\S]*auto-merge not allowed\s+by the repository/,
+  );
+  assert.match(
+    readFileSync(join(TEMPLATES, "base", "AGENTS.md"), "utf8"),
+    /\*\*Every PR in automatic merge\*\*: code or documentation, by the agent with `node \.githooks\/merge-auto\.mjs <number>`, no question\./,
   );
   const skill = readFileSync(join(TEMPLATES, "tools", "claude", ".claude", "skills", "start-a-workstream", "SKILL.md"), "utf8");
-  assert.match(
-    skill,
-    /Only for briefs whose scope touches code: a brief whose scope is documentation only[\s\S]*gets no `drwil-merge` question/,
-  );
+  assert.match(skill, /\*\*No merge question\*\*: every PR, code or documentation, is put in automatic merge/);
+  // Plus de question de fusion : ni le skill, ni AGENTS.md ; l'ancienne règle des PR de documentation seule a disparu.
+  for (const texte of [readFileSync(join(TEMPLATES, "base", "AGENTS.md"), "utf8"), skill])
+    assert.doesNotMatch(texte, /drwil-merge|Documentation-only PR/);
+  assert.doesNotMatch(agents, /Documentation-only PR|without asking the `drwil-merge` question/);
 });
 
 test("QUA-100 suivi de la CI : la consigne de lancer pr-watch après un push est livrée", () => {

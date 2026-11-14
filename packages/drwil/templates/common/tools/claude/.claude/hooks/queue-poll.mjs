@@ -4,10 +4,9 @@
 // multiple one: one brief per poll. Never the agent: a poll that arrives answered, preselected or multiple is refused.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { copilotField, mergeAuthorised } from "./start-poll.mjs";
+import { copilotField } from "./start-poll.mjs";
 
 const MARK = "drwil-file";
-const MERGE_MARK = "drwil-merge";
 export const FINISH_RE = /^(terminer la file|finish the queue)\b/i;
 
 /** The queue poll, in one of the two known forms (Claude Code, Copilot CLI); null otherwise. */
@@ -19,7 +18,6 @@ export function queuePoll(input) {
     return {
       form: "claude",
       question: q.question,
-      mergeQuestion: e.questions.find((x) => x?.header === MERGE_MARK)?.question ?? null,
       options,
       valid: options.some((l) => FINISH_RE.test(String(l))) && q.multiSelect !== true && !(e.answers && Object.keys(e.answers).length),
     };
@@ -31,8 +29,7 @@ export function queuePoll(input) {
   return {
     form: "copilot",
     options,
-    fieldKey: MARK,
-    mergeKey: MERGE_MARK in props ? MERGE_MARK : null,
+    // Any other field (a legacy `drwil-merge`, no longer read: the automatic merge is the default) is skipped.
     keys: Object.keys(props),
     // Single choice only (`enum` on a string): an array field came back empty under Copilot CLI.
     valid:
@@ -46,7 +43,7 @@ function answer(input, poll) {
   const text = input?.tool_result?.text_result_for_llm;
   const m = typeof text === "string" ? /User responded:\s*(.+)\s*$/s.exec(text) : null;
   if (!m) return null;
-  return poll.mergeKey ? copilotField(m[1].trim(), poll.keys, poll.fieldKey) : m[1].trim().replace(new RegExp(`^${MARK}=`), "");
+  return poll.keys.length > 1 ? copilotField(m[1].trim(), poll.keys, MARK) : m[1].trim().replace(new RegExp(`^${MARK}=`), "");
 }
 
 const TEXTS = {
@@ -82,7 +79,7 @@ export async function queueHook(input, { root, lang, tell }) {
   }
   try {
     const state = await import(pathToFileURL(join(root, ".githooks", "state.mjs")).href);
-    const r = FINISH_RE.test(choice) ? state.draftFinish(root, { autoMerge: mergeAuthorised(input, poll) }) : state.draftAdd(root, choice);
+    const r = FINISH_RE.test(choice) ? state.draftFinish(root) : state.draftAdd(root, choice);
     tell(`${r.code === 0 ? "✓" : "✗"} ${r.message}`);
   } catch (e) {
     tell(`✗ ${T.error(e?.message ?? String(e))}`);

@@ -90,7 +90,7 @@ test("QUA-142 la réponse humaine crée le worktree frère depuis la branche pri
   const d = depot();
   avancerOrigine(d);
   const configAvant = readFileSync(join(d.racine, ".git", "config"), "utf8");
-  const r = await launchInWorktree(d.racine, FICHE, { autoMerge: true });
+  const r = await launchInWorktree(d.racine, FICHE);
   assert.equal(r.code, 0, r.message);
   assert.equal(r.path, d.voisin);
   assert.equal(git(d.voisin, "rev-parse", "--abbrev-ref", "HEAD"), "workstream/exemple");
@@ -98,7 +98,7 @@ test("QUA-142 la réponse humaine crée le worktree frère depuis la branche pri
   const etat = readState(d.voisin).state;
   assert.equal(etat.activity, "BUILD");
   assert.equal(etat.active_brief, FICHE);
-  assert.equal(etat.auto_merge, true);
+  assert.equal(etat.auto_merge, undefined, "la fusion automatique est le comportement par défaut : plus d'auto_merge écrit");
   assert.equal(existsSync(join(d.racine, ".drwil", "state.json")), false, "l'état du dossier d'origine ne change pas");
   assert.equal(readFileSync(join(d.racine, ".git", "config"), "utf8"), configAvant, "la configuration du dépôt principal n'est pas écrite");
   assert.equal(git(d.racine, "rev-parse", "--abbrev-ref", "HEAD"), "master");
@@ -282,9 +282,9 @@ function depotParallele(config = {}) {
   return { ...d, dossier: (f) => join(d.parent, `projet-${f}`) };
 }
 
-test("QUA-147 une file en parallèle lance chaque fiche dans son worktree, porte la fusion et s'enregistre dans le dossier d'origine", async () => {
+test("QUA-147 une file en parallèle lance chaque fiche dans son worktree et s'enregistre dans le dossier d'origine", async () => {
   const d = depotParallele();
-  const r = await launchParallel(d.racine, [A, B], { autoMerge: true });
+  const r = await launchParallel(d.racine, [A, B]);
   assert.equal(r.code, 0, r.message);
   for (const [fiche, nom] of [
     [A, "a"],
@@ -293,7 +293,7 @@ test("QUA-147 une file en parallèle lance chaque fiche dans son worktree, porte
     const etat = readState(d.dossier(nom)).state;
     assert.equal(etat.activity, "BUILD");
     assert.equal(etat.active_brief, fiche);
-    assert.equal(etat.auto_merge, true);
+    assert.equal(etat.auto_merge, undefined, "la fusion automatique est le comportement par défaut");
     assert.equal(etat.queue, undefined, "aucune file dans un worktree : chacun mène sa fiche");
   }
   const origine = readState(d.racine).state;

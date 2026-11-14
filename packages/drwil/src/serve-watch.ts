@@ -22,7 +22,6 @@ interface Seen {
   activity: unknown;
   since: unknown;
   brief: string | null;
-  auto_merge: boolean;
   limits: Limits;
   reopened: unknown;
   queue: string;
@@ -41,7 +40,6 @@ export function startWatch(deps: { reader: Reader; forge: ForgeReader; journal: 
       activity: s.activity,
       since: s.since,
       brief: (s.active_brief as string | undefined) ?? null,
-      auto_merge: s.auto_merge === true,
       limits: Object.fromEntries(((s.limits ?? []) as { intent: string; choice: string }[]).map((l) => [l.intent, l.choice])),
       reopened: (s.reopened as { pr?: unknown } | undefined)?.pr ?? null,
       queue: ((s.queue ?? []) as string[]).join(", "),
@@ -52,9 +50,8 @@ export function startWatch(deps: { reader: Reader; forge: ForgeReader; journal: 
     const brief = cur.brief ?? prev?.brief ?? null;
     // Au premier relevé, ce qui est déjà dans l'état date d'avant le serveur : on le dit au lieu de le dater faussement.
     const first = prev ? "" : T.firstSeen;
-    const was: Pick<Seen, "limits" | "auto_merge" | "reopened" | "queue" | "lot"> = prev ?? {
+    const was: Pick<Seen, "limits" | "reopened" | "queue" | "lot"> = prev ?? {
       limits: {},
-      auto_merge: false,
       reopened: null,
       queue: "",
       lot: null,
@@ -70,10 +67,6 @@ export function startWatch(deps: { reader: Reader; forge: ForgeReader; journal: 
         add({ at: now, kind: "lot", key: `lotdone-${brief}-${n}`, text: first + fill(T.lotDone, n), brief });
       const key = `lotcur-${brief}-${cur.lot.current}-${cur.lot.done.join(".")}`;
       add({ at: now, kind: "lot", key, text: first + fill(T.lotCurrent, cur.lot.current), brief });
-    }
-    if (was.auto_merge !== cur.auto_merge) {
-      const text = first + (cur.auto_merge ? T.mergeOn : T.mergeOff);
-      add({ at: now, kind: "decision", key: `merge-${cur.auto_merge}-${now}`, text, brief });
     }
     for (const [intent, choice] of Object.entries(cur.limits))
       if (was.limits[intent] !== choice) {

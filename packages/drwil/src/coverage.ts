@@ -117,6 +117,14 @@ export const noCoversMessage = (lang: MessageLang) => TEXTS[lang].noCovers;
 export const changeLines = (before: Coverage | undefined, now: Coverage, lang: MessageLang) =>
   coverageChanges(before ?? {}, now).map((c) => describeChange(c, lang));
 
-/** A contract with a human part and no `**Covers**`: its attestation keeps its validity, but nothing makes it fall (QUA-082). */
-export const lacksCoverage = (k: { form?: string; covers?: string[] | null; manual?: string | null; checks?: string[] | null }) =>
-  k.form === "section" && !k.covers && Boolean(k.manual || k.checks === null);
+/**
+ * A contract with a human part and no `**Covers**`: its attestation keeps its validity, but nothing makes it fall (QUA-082).
+ * A retired contract (QUA-298) has no proof to cover.
+ */
+export const lacksCoverage = (k: {
+  form?: string;
+  covers?: string[] | null;
+  manual?: string | null;
+  checks?: string[] | null;
+  retired?: string | null;
+}) => k.form === "section" && !k.retired && !k.covers && Boolean(k.manual || k.checks === null);

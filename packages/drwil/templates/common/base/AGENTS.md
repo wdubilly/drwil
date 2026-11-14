@@ -32,7 +32,7 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
 - **Defect revealed after the closing**: in CLOSING, a defect of the open PR → `node .githooks/state.mjs reopen`, never a rewritten history.
 - **Queue of workstreams**: one after the other, each merged before the next; stop at the first that needs a human.
 - **One session per workstream**: once closed and back in SCOPING, the next one starts in a new session.
-- **Documentation-only PR**: put in automatic merge by the agent (`gh pr merge --auto --merge`).
+- **Every PR in automatic merge**: code or documentation, by the agent with `node .githooks/merge-auto.mjs <number>`, no question.
 - **Follow the CI**: after a push or a PR, `node .githooks/pr-watch.mjs [<number>]`; a red CI is fixed at its cause.
 - **Long commands**: `node .githooks/wait-command.mjs <command>` in a background call, never a `while pgrep` loop (detail: section 8).
 - **Mandatory guarantees**: coverage, e2e, protected forge, product presentation (`npx drwil guarantees`); no waiver.

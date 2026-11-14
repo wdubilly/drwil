@@ -16,6 +16,18 @@ release renames this section to its version.
 
 ### Changed
 
+- The automatic merge is now the default behaviour, with no poll and no
+  authorisation: `/drwil-start` no longer asks the `drwil-merge` question,
+  `node .githooks/state.mjs start` in a terminal no longer asks « Type MERGE »,
+  and `/drwil-scope` no longer asks what to do with a scoping PR. Every PR, code
+  or documentation, is put in automatic merge by `.githooks/merge-auto.mjs`,
+  which only schedules the PR of the current git branch and refuses while a
+  failed reopening's merge cancellation is in the state. The `merge-poll` hook
+  and `.githooks/state-merge.mjs` are removed; a state written with the legacy
+  `auto_merge`, `queue_merge` or `scoping_merge` marks stays valid. A retired
+  contract stays in the registry, marked « **Retiré** », never counted PASS or
+  ATTESTED by `drwil verify`.
+
 - The « Unreleased » line of the changelog is now asked in the build, in the
   last increment, instead of the closing commit, which the closing scope
   gate refused: the build reminder says so, the closing reminder no longer

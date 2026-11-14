@@ -42,6 +42,7 @@ test("forme sections : Contrôle, Manuel, contrats sans champ", () => {
     manual: null,
     tests: null,
     covers: null,
+    retired: null,
     severity: "blocking",
     rawSeverity: null,
   });
@@ -159,6 +160,49 @@ test("validation : contrôle inconnu, aucune preuve, doublon, Contrôle vide ; t
     "QUA-100 : champ Contrôle vide",
     "QUA-101 : exigence absente (champ Règle)",
   ]);
+});
+
+test("QUA-298 : un contrat retiré est lu et accepté sans preuve ; champ Retiré sans date ou sans raison refusé, dans les deux langues", () => {
+  const k = readContracts(`## QUA-900 — Retiré
+**Retiré** : 2026-11-13 — remplacé par QUA-901.
+**Règle** : x.
+
+## QUA-901 — Retired
+**Retired:** 2026-11-13 – replaced.
+**Rule:** x.
+
+## QUA-902 — Sans date
+**Retiré** : bientôt — plus utile.
+**Règle** : x.
+
+## QUA-903 — Sans raison
+**Retiré** : 2026-11-13 —
+**Règle** : x.
+
+## QUA-904 — Ordinaire
+**Règle** : x.
+`);
+  assert.deepEqual(
+    k.map((c) => c.retired),
+    ["2026-11-13 — remplacé par QUA-901.", "2026-11-13 – replaced.", "bientôt — plus utile.", "2026-11-13 —", null],
+  );
+  assert.equal(readContracts("| ID | Règle |\n|---|---|\n| SEC-006 | historique |\n")[0].retired, null);
+  assert.deepEqual(
+    validateContracts(k, BASE_CHECKS).map((e) => [e.id, e.type]),
+    [
+      ["QUA-902", "retired"],
+      ["QUA-903", "retired"],
+      ["QUA-904", "no-proof"],
+    ],
+  );
+  assert.equal(
+    validateContracts(k, BASE_CHECKS)[0].message,
+    "QUA-902 : champ Retiré mal formé « bientôt — plus utile. » (attendu : <AAAA-MM-JJ> — <raison>)",
+  );
+  assert.equal(
+    validateContracts(k, BASE_CHECKS, "en")[1].message,
+    'QUA-903: malformed Retired field "2026-11-13 —" (expected: <YYYY-MM-DD> — <reason>)',
+  );
 });
 
 test("contrôles connus : socle + id des contrôles du projet", () => {

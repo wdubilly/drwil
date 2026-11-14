@@ -36,24 +36,12 @@ export const MESSAGES_FR = {
     "fusion automatique annulée et NON reprogrammée : l'outil ne la reprogramme jamais seul (au risque de fusionner le code fautif) — il revient à l'humain de la reprogrammer, quand il a décidé ; le rappel d'état le redit en CLOSING",
   mergeCancelledType: "merge_cancelled : objet { pr } attendu (pr : numéro de la PR)",
   mergeCancelledActivity: "merge_cancelled : seulement en CLOSING",
-  mergeCancelledCleared:
-    "[merge-auto] marque « fusion annulée » de la {0} effacée : la fusion est vue programmée, le rappel d'état ne dit plus qu'elle ne l'est pas",
   mergeAutoMerged:
     "[merge-auto] PR #{0} fusionnée par la commande elle-même (toute sa CI était déjà verte). Suivre la CI de la branche principale : node .githooks/pr-watch.mjs {0}",
   scopingMergeType: "scoping_merge : objet { branch } attendu (branch : la branche de la PR de cadrage)",
   scopingMergeActivity: "scoping_merge : seulement en SCOPING",
   scopingMergeReminder:
-    "Fusion automatique de la PR de cadrage autorisée pour la branche {0} (réponse « Automatic merge » du sondage de fin de cadrage) : la branche poussée et sa PR ouverte, lancer `node .githooks/merge-auto.mjs <numéro>`, qui refuse toute PR d'une autre branche ; suivre la PR par `node .githooks/pr-watch.mjs <numéro>`, relancé tant qu'il dit « verte » sans « fusionnée », 30 minutes au plus en tout ; ne jamais enchaîner les commandes de la forge (`gh`, `glab`) à la main. L'autorisation tombe en quittant SCOPING ; une réponse « Manual merge » ou « Continue scoping » la retire.",
-  scopingMergeNotScoping:
-    "réponse au sondage de fin de cadrage ignorée : l'activité est {0}, pas SCOPING — rien n'est autorisé, l'état est inchangé",
-  scopingMergeBranch:
-    "fusion automatique de la PR de cadrage non autorisée : la branche courante n'est pas une branche de cadrage (branche principale ou tête détachée) — rien n'est autorisé, l'état est inchangé",
-  scopingMergeAuthorised:
-    "fusion automatique de la PR de cadrage autorisée pour la branche {0} (réponse « Automatic merge ») : la branche poussée et sa PR ouverte, lancer `node .githooks/merge-auto.mjs <numéro>`, puis suivre la PR par `node .githooks/pr-watch.mjs <numéro>` ; l'autorisation ne vaut que pour cette branche, en SCOPING",
-  scopingMergeManual:
-    "rien n'est programmé (réponse « Manual merge ») : la fusion de la PR de cadrage reste un geste humain ; la fiche ne sera proposée par `/drwil-start` qu'une fois la PR fusionnée",
-  scopingMergeContinue:
-    "rien n'est programmé (réponse « Continue scoping ») : la PR reste ouverte et les cadrages suivants se commitent sur la même branche ({0}), une branche, une PR ; le sondage se repose à la fin du cadrage suivant",
+    "Fusion automatique de la PR de cadrage autorisée pour la branche {0} (marque héritée : la fusion automatique est désormais le comportement par défaut) : la branche poussée et sa PR ouverte, lancer `node .githooks/merge-auto.mjs <numéro>`, qui refuse toute PR d'une autre branche que la branche courante ; suivre la PR par `node .githooks/pr-watch.mjs <numéro>`, relancé tant qu'il dit « verte » sans « fusionnée », 30 minutes au plus en tout ; ne jamais enchaîner les commandes de la forge (`gh`, `glab`) à la main. La marque tombe en quittant SCOPING.",
   reopenCancelled: "fusion automatique annulée : à reprogrammer après la nouvelle clôture, comme la première fois",
   reopenMessage: "Réouverture de {0} : défaut révélé par la PR #{1}",
   reopenCommitFailed: "réouverture refusée : le commit de la fiche restaurée a échoué ({0}) — fiche retirée, état inchangé",
@@ -126,7 +114,6 @@ export const MESSAGES_FR = {
     "clôture refusée : la fiche « {0} » n'a aucun critère d'acceptation — en écrire, chacun prouvé par un contrat, puis relancer `drwil verify`",
   startInvalid: `lancement refusé : {0}`,
   started: `{0} → BUILD (lancé : {1}){2}`,
-  mergeAuthorised: " — fusion automatique autorisée",
   forbidden: `transition {0} → {1} interdite (depuis {0} : {2})`,
   briefOption: "--brief ne sert qu'à ouvrir une attente (SCOPING → EXPECTATION)",
   briefNeeded: "ouvrir une attente exige --brief <docs/projects/….md>",
@@ -143,7 +130,6 @@ export const MESSAGES_FR = {
   pick: "Numéro de la fiche à lancer : ",
   confirmStart: `Lancer {0} ? Retapez START : `,
   askWorktree: "Dans un nouveau worktree frère ? Retapez WORKTREE, sinon Entrée (ce dossier) : ",
-  askMerge: "Fusion automatique à la fin du chantier ? Retapez MERGE, sinon Entrée : ",
   notConfirmed: "✗ lancement non confirmé : état inchangé",
   unreadableState: `[drwil] état de gouvernance illisible : {0}`,
   lotNone:

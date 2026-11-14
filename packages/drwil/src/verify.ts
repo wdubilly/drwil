@@ -47,7 +47,6 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   const all: any[] = reader.readContracts(readFileSync(join(root, registry), "utf8"));
   if (!all.length) return globalError(fill(T.noContract, registry), lang);
   const only = opts.only;
-  const contracts = only ? all.filter((k) => only.includes(k.id)) : all;
   const attestations = readAttestations(root);
 
   // A duplicate makes the registry itself ambiguous: global error. The other errors concern a contract.
@@ -57,6 +56,10 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
     if (e.type === "duplicate") errors.push(e.message);
     else byContract.set(e.id, [...(byContract.get(e.id) ?? []), e.message]);
   }
+  // A retired contract stays in the registry for history, without proof: never judged, so never PASS nor ATTESTED.
+  // A malformed Retired field is a configuration error: that contract stays judged (ERROR).
+  const judged = all.filter((k) => !k.retired || byContract.has(k.id));
+  const contracts = only ? judged.filter((k) => only.includes(k.id)) : judged;
 
   const { available, cache, deferred } = await replayChecks(root, project, contracts, opts);
   // A check cited by several contracts cannot say which rule its failure breaks: verify says so.
@@ -154,8 +157,9 @@ export async function verify(opts: VerifyOptions): Promise<Verdict> {
   showOrigins(results, all, lang);
   const verdict: Verdict = { lang, status, code: CODES[status], contracts: results, errors, unattached };
   verdict.rules = businessRules(results, all, cfg);
-  // Criteria of the active brief and of the closed workstreams (QUA-034, QUA-085), judged outside this file (QUA-001).
-  if (!only) await judgeDurable(verdict, { root, registry, cfg, contracts: all, read: reader.readContracts });
+  // Criteria of the active brief and of the closed workstreams (QUA-034, QUA-085), judged outside this file (QUA-001);
+  // after the guarantees, which set the notices that a criterion of a retired contract adds to (QUA-298).
   if (!only) judgeGuarantees(verdict, root, cfg, all);
+  if (!only) await judgeDurable(verdict, { root, registry, cfg, contracts: all, read: reader.readContracts });
   return verdict;
 }
