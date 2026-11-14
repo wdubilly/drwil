@@ -31,6 +31,8 @@ files:
   - .githooks/state.test.mjs
   - .githooks/dashboard.test.mjs
   - packages/drwil/test/serve.test.mjs
+  - packages/drwil/src/serve-journal.ts
+  - packages/drwil/serve/page.html
   - docs/recipes/track-consumption-per-increment.md
   - docs/projects/kit-mechanics.md
   - docs/contracts.md
@@ -58,8 +60,11 @@ finance la gouvernance et la fiabilité. On mesure d'abord, sur 10 chantiers, av
   CLOSING et tout BUILD qui suit une réouverture ; une requête sans activité connue (historique absent, clone neuf)
   va dans une part « non attribuée », dite, jamais devinée — contrat à créer
 - `--record <fiche>` écrit la répartition en nouveaux champs de la ligne de `.drwil/usage.jsonl` (tokens pondérés et
-  requêtes par part), sans changer les champs existants ; le tableau de bord et `drwil serve` lisent les lignes
-  anciennes et nouvelles sans erreur — contrat à créer
+  requêtes par part), sans changer les champs existants ; le tableau de bord lit les lignes anciennes et nouvelles
+  sans erreur — contrat à créer
+- `drwil serve` montre, pour chaque chantier, la répartition production / vérification / gouvernance / non attribuée
+  (agrégation `packages/drwil/src/serve-journal.ts`, page `serve/page.html`) ; une ligne ancienne, sans répartition,
+  s'affiche sans erreur et dit qu'elle n'est pas répartie — test dans `packages/drwil/test/serve.test.mjs`, contrat à créer
 - Sous Copilot CLI, la même répartition est faite à partir des journaux lus par
   `docs/projects/consommation-copilot-cli.md` ; un champ d'horodatage absent de ces journaux donne la part « non
   attribuée », dite dans la recette — contrat à créer
@@ -82,7 +87,8 @@ finance la gouvernance et la fiabilité. On mesure d'abord, sur 10 chantiers, av
 - Une part « décisions humaines » distincte de la gouvernance : les sondages vivent dans les activités de l'état.
 - Lignes par activité (`increment`) dans `.drwil/usage.jsonl` : écartées, la répartition est un champ de la ligne.
 - Un seuil qui déclencherait une optimisation, ou toute optimisation : le bilan des 10 chantiers les décidera.
-- Montrer la répartition dans le tableau de bord ou `drwil serve` : ils restent compatibles, sans vue neuve.
+- Montrer la répartition dans le tableau de bord statique (`packages/drwil/templates/common/optional/dashboard/dashboard.mjs`) :
+  il reste compatible, sans vue neuve ; seul `drwil serve` l'affiche.
 - Gemini, Codex et Cursor (`docs/intentions/consommation-autres-outils.md`).
 - Les comparaisons d'efficacité entre chantiers et les notes qualitatives écartées par l'intention.
 
@@ -108,6 +114,8 @@ finance la gouvernance et la fiabilité. On mesure d'abord, sur 10 chantiers, av
 - D3 (2026-11-13) : mesure seule, bilan après 10 chantiers mesurés, pas de seuil — réponse du demandeur (question 3).
 - D4 (2026-11-13) : Copilot CLI inclus dans ce chantier, après `docs/projects/consommation-copilot-cli.md` — réponse du
   demandeur (question 4).
+- D5 (2026-11-15) : la répartition s'affiche dans `drwil serve` (comme la répartition par outil de
+  `docs/projects/consommation-copilot-cli.md`) ; le tableau de bord statique n'est pas touché — demande du demandeur.
 
 ## 5. Points à trancher
 
@@ -118,7 +126,8 @@ Aucun.
 - **Lot 1 — historique des transitions** [IA] : test en échec d'abord ; .githooks/state-history.mjs (neuf), validation,
   réouverture marquée ; `npm run installer-depot`. Critère de sortie : tests de l'état verts.
 - **Lot 2 — répartition et ligne** [IA] : .githooks/consumption-split.mjs (neuf) (Claude Code et Copilot CLI), nouveaux
-  champs, compte vers le bilan, recette, rétrocompatibilité du tableau de bord et de `drwil serve` ; carte et
+  champs, compte vers le bilan, recette, rétrocompatibilité du tableau de bord, répartition affichée dans
+  `drwil serve` ; carte et
   `docs/projects/kit-mechanics.md`. Critère de sortie : `node .githooks/run-checks.mjs` sans échec,
   `drwil verify --agent` en `GOVERNANCE: PASS`.
 
