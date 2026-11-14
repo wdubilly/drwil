@@ -4031,6 +4031,21 @@
       "needsBuild": true
     },
     {
+      "id": "tests-qua-299",
+      "name": "tests de QUA-299, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-299 outils/inventaire-attestations.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        "outils/inventaire-attestations.mjs",
+        "outils/inventaire-attestations.test.mjs",
+        ".githooks/contracts.mjs",
+        ".githooks/contracts-validate.mjs",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"

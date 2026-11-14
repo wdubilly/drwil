@@ -4475,3 +4475,38 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Clôturé par** : la branche `workstream/fusion-automatique-par-defaut`.
 
 - **Preuve de clôture** : `docs/preuves/fusion-automatique-par-defaut.md`.
+
+## 2026-11-14 — Une attestation ne tombe plus pour un changement sans rapport avec son objet
+
+- **Inventaire avant** (lot 1, `node outils/inventaire-attestations.mjs --depuis 2026-10-22`, le 2026-11-14 ; 26 contrats déclarent `**Couvre**`) : attestations archivées, commits (fusions exclues) sur l'ensemble des fichiers couverts, puis par fichier.
+
+  | Contrat | Attestations | Commits | Fichiers couverts (commits) |
+  |---|---|---|---|
+  | QUA-013 | 21 | 18 | `.github/workflows/ia-first.yml` 14, `packages/drwil/src/verdict.ts` 4 |
+  | QUA-015 | 9 | 6 | `.githooks/briefs.mjs` 6 |
+  | QUA-018 | 5 | 6 | `outils/miroirs.json` 6 |
+  | QUA-019 | 9 | 16 | `.githooks/pre-commit` 0, `.githooks/pre-push` 2, `.github/workflows/ia-first.yml` 14 |
+  | QUA-041 | 1 | 34 | `README.md` 17, `packages/drwil/README.md` 23 |
+  | QUA-048 | 14 | 26 | `.githooks/close-branches.mjs` 2, `.githooks/close.mjs` 13, `.githooks/state.mjs` 14 |
+  | QUA-060 | 3 | 3 | `outils/banc-agents.mjs` 3 |
+  | QUA-063 | 9 | 10 | `docs/ia-first/6-limits-and-tool-compatibility.md` 10 |
+  | QUA-064 | 11 | 12 | `packages/drwil/src/config.ts` 6, `packages/drwil/src/drift.ts` 1, `packages/drwil/src/essentials.ts` 1, `packages/drwil/src/render.ts` 5, `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json` 3 |
+  | QUA-066 | 10 | 7 | `packages/drwil/src/config.ts` 6, `packages/drwil/templates/common/tools/gemini/.gemini/settings.json` 3 |
+  | QUA-067 | 11 | 18 | `.claude/hooks/scope-reminder.mjs` 0, `.githooks/state-cli.mjs` 8, `.githooks/state.mjs` 14 |
+  | QUA-069 | 1 | 11 | `.githooks/state-cli.mjs` 8, `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json` 3 |
+  | QUA-092 | 9 | 11 | `packages/drwil/src/guarantees-briefs.ts` 2, `packages/drwil/src/guarantees-forge-texts.ts` 2, `packages/drwil/src/guarantees-forge.ts` 4, `packages/drwil/src/guarantees-layers.ts` 3, `packages/drwil/src/guarantees-table.ts` 3, `packages/drwil/src/guarantees-texts.ts` 2, `packages/drwil/src/guarantees-tools.ts` 2, `packages/drwil/src/guarantees-verify.ts` 2, `packages/drwil/src/guarantees.ts` 6 |
+  | QUA-106 | 0 | 5 | `docs/benchmark-protocole.md` 4, `outils/banc-juge.mjs` 4 |
+  | QUA-122 | 9 | 1 | `docs/mesures-ci-reference.md` 1 |
+  | QUA-150 | 15 | 35 | `.githooks/engine.test.mjs` 20, `outils/banc-agents.test.mjs` 6, `outils/banc.test.mjs` 10 |
+  | QUA-151 | 7 | 18 | `.githooks/pre-push` 2, `.githooks/run-checks.mjs` 16 |
+  | QUA-175 | 8 | 15 | `.githooks/state-acceptance.mjs` 2, `.githooks/state.mjs` 14 |
+  | QUA-218 | 2 | 5 | `INSTALL.md` 5 |
+  | QUA-234 | 7 | 8 | `packages/drwil/src/cli-report.ts` 1, `packages/drwil/src/cli-texts.ts` 8, `packages/drwil/templates/common/base/docs/recipes/report-a-kit-defect.md` 1 |
+  | QUA-236 | 7 | 22 | `packages/drwil/src/attest-portable.ts` 3, `packages/drwil/src/attest.ts` 3, `packages/drwil/src/cli-cursor.ts` 3, `packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md` 19 |
+  | QUA-240 | 0 | 8 | `packages/drwil/src/cli-contracts.ts` 2, `packages/drwil/src/cli-texts.ts` 8 |
+  | QUA-241 | 0 | 8 | `packages/drwil/src/cli-contracts.ts` 2, `packages/drwil/src/cli-texts.ts` 8 |
+  | QUA-242 | 0 | 8 | `packages/drwil/src/cli-contracts.ts` 2, `packages/drwil/src/cli-texts.ts` 8 |
+  | QUA-243 | 0 | 8 | `packages/drwil/src/cli-contracts.ts` 2, `packages/drwil/src/cli-texts.ts` 8 |
+  | QUA-276 | 4 | 7 | `packages/drwil/serve/page.html` 7 |
+
+- **Confirmation du tableau de la fiche** (lot 1) : pour les sept contrats visés (QUA-013, QUA-048, QUA-064, QUA-066, QUA-067, QUA-175, QUA-234), le fichier carrefour est le fichier couvert le plus changé (ou à égalité) et aucun ne porte l'objet jugé : `usesClaudeTree` est dans `packages/drwil/src/config.ts` (à déplacer), le rendu de Gemini dans `packages/drwil/src/render-gemini.ts`, aucun format de Gemini dans `.githooks/state.mjs`, qui ne fait qu'appeler `.githooks/state-acceptance.mjs` pour l'acceptation, et les textes du rapport de défaut dans `packages/drwil/src/cli-texts.ts` (à déplacer) : aucune puce « Contrats modifiés » retirée. Les écarts avec le relevé du 2026-11-13 (QUA-013 : 21 attestations au lieu de 20, 18 commits au lieu de 15…) viennent des réattestations depuis et du décompte (fusions exclues, commits distincts sur l'ensemble). Aucun autre contrat désigné : QUA-240 à QUA-243 couvrent `packages/drwil/src/cli-texts.ts` sans `**Manuel**` (aucune attestation, rien ne retombe) ; QUA-151 couvre `.githooks/run-checks.mjs`, son objet même ; QUA-019, QUA-092, QUA-150 et QUA-236 sont hors périmètre par la fiche.

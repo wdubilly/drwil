@@ -126,5 +126,12 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-13) : cadrage terminé.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-14) : lot 1 fait — `outils/inventaire-attestations.mjs` et son test (QUA-299, nouveau,
+  contrôle `tests-qua-299`), carte d'architecture à jour ; inventaire avant recopié au journal (entrée du chantier,
+  déjà titrée comme la fiche) ; tableau confirmé pour les sept contrats, aucune puce « Contrats modifiés » retirée,
+  aucun autre contrat désigné (détail au journal).
+- **Prochaine étape** : [IA] lot 2 — découpes sans changement de comportement (`usesClaudeTree` vers
+  packages/drwil/src/config-tools.ts, textes du rapport vers packages/drwil/src/cli-report-texts.ts), tests en dur
+  de QUA-013 et QUA-175, `**Couvre**` resserrés, carte d'architecture (fichiers neufs) ; en fin de lot, inventaire
+  après (`node outils/inventaire-attestations.mjs --depuis 2026-10-22`) recopié sous l'entrée du journal
+  (« Inventaire après »).
