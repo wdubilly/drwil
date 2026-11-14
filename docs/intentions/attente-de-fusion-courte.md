@@ -1,6 +1,6 @@
 # Intention : attendre la fusion d'une PR sans tourner à vide, et regrouper les retouches de cadrage
 
-**Statut** : noté le 2026-11-14, demande du demandeur (« c'est long »).
+**Statut** : noté le 2026-11-14, demande du demandeur (« c'est long ») ; cadré le 2026-11-14 dans `docs/projects/attente-de-fusion-courte.md` (D1 regroupement d'office, fusion au besoin ; D2 GitHub et GitLab ; D3 Expérience au quotidien, en tête).
 
 ## Besoin
 
