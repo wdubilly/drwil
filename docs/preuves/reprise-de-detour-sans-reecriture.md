@@ -1,7 +1,7 @@
 # Preuve de clôture — reprise-de-detour-sans-reecriture
 
 **Clos le** : 2026-11-14
-**Commit vérifié** : `3e16673b92` — verdict `drwil verify` : PASS
+**Commit vérifié** : `9f1202b4a4` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:d7b17d47bf958063`, acceptés par l'humain au lancement le 2026-11-14
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
