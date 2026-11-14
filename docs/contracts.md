@@ -873,9 +873,9 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Les tests simulent les outils ; seul un essai réel prouve que c8 câblé à 100 % tient sur un vrai projet.
 
 ## QUA-093 — Un projet existant en dette garde un cliquet au niveau mesuré et 100 % sur le diff
-**Règle** : Livré à tout projet. Sur une couche qui a déjà du code de sa pile, `drwil guarantees` mesure la couverture actuelle (outil de la table) : à 100 %, le contrôle est câblé à 100 % ; en dessous, il est câblé au niveau mesuré (cliquet, jamais abaissé par la commande), un contrôle `coverage-diff-<couche>` exige 100 % sur le code nouveau ou modifié (`diff-cover`) et une fiche de montée `[P1]` non bloquante vise 100 %. Mesure impossible, non prise en charge (JVM) ou outil de diff absent : fiche bloquante. L'e2e reste exigé comme sur un projet neuf.
+**Règle** : Livré à tout projet. Sur une couche qui a déjà du code de sa pile, `drwil guarantees` mesure la couverture actuelle (outil de la table) : à 100 %, le contrôle est câblé à 100 % ; en dessous, le cliquet au niveau mesuré (jamais abaissé par la commande) et 100 % sur le code nouveau ou modifié (`diff-cover`) sont exigés : pour une couche Node, par le seul contrôle `coverage-diff-<couche>` qui juge les deux en un run de tests (QUA-301), `coverage-<couche>` n'étant plus déclaré ; pour une autre pile, par `coverage-<couche>` au niveau mesuré et `coverage-diff-<couche>` ; une fiche de montée `[P1]` non bloquante vise 100 %. Mesure impossible, non prise en charge (JVM) ou outil de diff absent : fiche bloquante. L'e2e reste exigé comme sur un projet neuf.
 **Périmètre** : `drwil guarantees`, `drwil verify`.
-**Source de vérité** : `packages/drwil/src/guarantees.ts` (`existing`), `packages/drwil/src/guarantees-table.ts` (`measure`, `diff`).
+**Source de vérité** : `packages/drwil/src/guarantees-layers.ts` (`existing`), `packages/drwil/src/guarantees-table.ts` (`measure`, `diff`, `single`).
 **Preuve** : tests du paquet : mesure simulée (Node, Python, Go), cliquet, diff, fiche de montée, cas bloquants.
 **Contrôle** : `tests-qua-093`
 **Tests** : `packages/drwil/test/guarantees.test.mjs`

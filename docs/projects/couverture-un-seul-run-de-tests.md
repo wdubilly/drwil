@@ -124,7 +124,7 @@ personnalisé, par prudence.)
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-14) : lots 0 à 3 faits. Lot 0 : les points `proofs` et `coverage` de `doctor` vivent
+- **Dernier état** (2026-11-14) : lots 0 à 4 faits. Lot 0 : les points `proofs` et `coverage` de `doctor` vivent
   dans `packages/drwil/src/doctor-coverage.ts` (`coveragePoints`), `packages/drwil/src/doctor.ts` à 185 lignes. Lot 1 :
   la ligne c8 de `packages/drwil/src/guarantees-tools.ts` porte `single(t, ex)` ; `existing`
   (`packages/drwil/src/guarantees-layers.ts`) déclare pour une couche Node en dette le seul `coverage-diff-<couche>` ;
@@ -136,9 +136,9 @@ personnalisé, par prudence.)
   (`packages/drwil/src/guarantees-merge.ts` : rapport effacé, commande de seuil telle quelle plus le rapport
   cobertura, partie `diff-cover` du contrôle de diff telle quelle) ; rien écrit ; projet fusionné, couche à 100 % et
   Python non signalés ; textes dans `packages/drwil/src/doctor-texts.ts`. Contrat `QUA-303` créé, contrôle
-  `tests-qua-303`, tests dans `packages/drwil/test/coverage-merge.test.mjs` ; carte à jour.
+  `tests-qua-303`, tests dans `packages/drwil/test/coverage-merge.test.mjs` ; carte à jour. Lot 4 : ligne « Unreleased » (anglais) de
+  `packages/drwil/CHANGELOG.md` (rubrique Changed) ; règle et source de vérité de `QUA-093` mises à jour dans
+  `docs/contracts.md` ; `docs/architecture.md` relue, déjà à jour.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 4, documentation : ligne CHANGELOG « Unreleased » (anglais) dans
-  `packages/drwil/CHANGELOG.md` (contrôle unique, fusion de la paire de série, avertissement de `doctor`), texte de
-  `QUA-093` modifié dans `docs/contracts.md` selon « Contrats modifiés », relecture de `docs/architecture.md` ; la
-  mesure chez drwil_walk est relevée après la publication, au journal de clôture.
+- **Prochaine étape** : vérification et clôture ; la mesure chez drwil_walk (gain d'au moins 30 s) se relève à la main
+  après la publication, notée au journal de clôture comme à relever.

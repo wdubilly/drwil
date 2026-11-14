@@ -16,6 +16,16 @@ release renames this section to its version.
 
 ### Changed
 
+- On a Node layer with coverage debt, the tests run once for coverage instead
+  of twice: `drwil guarantees` declares a single `coverage-diff-<layer>` check
+  that deletes the cobertura report, runs `npm test` under c8 at the measured
+  threshold (ratchet), then passes that report to `diff-cover` (100 % on new
+  or changed code); `coverage-<layer>` is no longer declared and `drwil verify`
+  only requires `coverage-diff-<layer>`. An existing pair exactly as the kit
+  generates it is merged into that single check; a pair changed by hand is
+  never rewritten, and `drwil doctor` reports « Coverage run twice » with the
+  single command to set, keeping the requester's options. Python and a layer
+  at 100 % are unchanged.
 - `node .githooks/detour.mjs resume` no longer rewrites a workstream branch
   already pushed: it merges the fixed main branch into it (a plain push is
   enough, never a forced push), rebases only a branch never pushed, and takes
