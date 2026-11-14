@@ -125,5 +125,19 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-14) : cadrage terminé.
-- **Prochaine étape** : [humain] `/drwil-start`, après le chantier « attestations qui tombent pour leur objet ».
+- **Dernier état** (2026-11-14) : lot 1 commité (242eef9f). La reprise est dans `.githooks/detour-resume.mjs`
+  (gabarit et copie, ré-exporté par `.githooks/detour.mjs`). Une branche avec un amont, ou dont l'amont est illisible,
+  reçoit une fusion (`catchUp`, `pushed`) ; une branche sans amont est rebasée ; une branche qui contient déjà la
+  branche principale n'est ni rebasée ni fusionnée. Si une étape échoue, `undo` remet la branche à son commit
+  d'avant et l'état tel qu'il était, sans toucher la mise de côté. Tests : `.githooks/detour-resume.test.mjs`
+  (5 tests QUA-050, en échec contre le code d'avant). QUA-050 est à jour au registre, et `tests-qua-050` joue le
+  nouveau fichier. Le gabarit de `docs/projects/kit-mechanics.md` a été ajouté au bloc scope par un commit de
+  cadrage séparé (6e79065a) : limite répondue « Traiter maintenant » ; le module est livré et check-docs d'un projet
+  installé le refusait.
+- **Prochaine étape** : lot 2, le conflit du journal (D2). Dans `catchUp`, quand la fusion ou le rebase échoue, ne
+  résoudre que `docs/projects/journal.md` (ou le journal déclaré), et seulement si ce sont deux ajouts en fin de
+  fichier : garder l'entrée de la branche principale d'abord, puis celle du chantier ; refuser tout autre conflit.
+  Créer le contrat et déclarer son contrôle dans `.drwil/ia-first.json`, puis écrire son ID à la fin du critère
+  « contrat à créer ». Mettre à jour la recette `docs/recipes/corriger-un-defaut.md`, la section 8 des consignes (gabarit et
+  copies) et le changelog (« Unreleased »). Critère de sortie : `run-checks` sans échec et `drwil verify --agent` en
+  `GOVERNANCE: PASS`.
