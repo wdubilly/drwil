@@ -1,4 +1,5 @@
-// Reprise d'un détour sur une branche déjà poussée (QUA-050) : fusion, jamais de réécriture ni de push forcé.
+// Reprise d'un détour sur une branche déjà poussée (QUA-050) : fusion, jamais de réécriture ni de push forcé ;
+// conflit du journal résolu en gardant les deux entrées (QUA-300).
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -7,6 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { open, resume } from "./detour.mjs";
+import { appendBoth } from "./detour-resume.mjs";
 import { readState } from "./state.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
@@ -172,4 +174,69 @@ test("QUA-050 : une restauration en conflit après la fusion remet la branche à
   assert.equal(git(racine, "status", "--porcelain"), "");
   assert.equal(etat(racine).active_brief, FICHE);
   assert.equal(git(racine, "stash", "list", "--format=%H"), detour.stash);
+});
+
+// Conflit du journal à la reprise (QUA-300) : deux ajouts en fin de fichier, l'entrée de la branche principale d'abord.
+const ENTREE_DETOUR = `- Branche ${BRANCHE}.\n`;
+const JOURNAL_CHANTIER = "# Journal\n\n## Entrée du chantier\n";
+const JOURNAL_RESOLU = `# Journal\n\n${ENTREE_DETOUR}\n## Entrée du chantier\n`;
+
+test("QUA-300 : une branche poussée dont seul le journal est en conflit, deux ajouts en fin de fichier, est fusionnée avec les deux entrées", () => {
+  const racine = chantier({ chantierTouche: { "docs/projects/journal.md": JOURNAL_CHANTIER } });
+  const avant = git(racine, "rev-parse", "chantier/x");
+  const r = resume(racine, { now: "2026-11-14T10:00:00.000Z" });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /fusionnée dans la branche/);
+  assert.equal(lire(racine, "docs/projects/journal.md"), JOURNAL_RESOLU, "entrée de la branche principale d'abord, puis celle du chantier");
+  assert.equal(git(racine, "rev-parse", "HEAD^1"), avant, "rien de réécrit");
+  assert.equal(git(racine, "rev-parse", "HEAD^2"), git(racine, "rev-parse", "origin/master"));
+  assert.doesNotMatch(git(racine, "log", "-1", "--format=%B"), /Conflicts/, "message de fusion propre");
+  assert.equal(git(racine, "log", "-1", "--format=%(trailers:key=Drwil-Brief,valueonly,separator=)"), ORIGINE, "hook joué");
+  assert.equal(lire(racine, "src/b.txt"), "travail en cours\n");
+  assert.equal(git(racine, "status", "--porcelain", "--", "docs/projects/journal.md"), "", "journal résolu, rien en suspens");
+  assert.equal(etat(racine).active_brief, ORIGINE);
+});
+
+test("QUA-300 : une branche jamais poussée dont seul le journal est en conflit est rebasée avec les deux entrées, trailer gardé", () => {
+  const racine = chantier({ pousser: null, chantierTouche: { "docs/projects/journal.md": JOURNAL_CHANTIER } });
+  const r = resume(racine);
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /rebasée sur origin\/master/);
+  assert.equal(lire(racine, "docs/projects/journal.md"), JOURNAL_RESOLU);
+  assert.equal(git(racine, "rev-parse", "HEAD^"), git(racine, "rev-parse", "origin/master"), "un seul commit rejoué, sans fusion");
+  assert.equal(git(racine, "log", "-1", "--format=%(trailers:key=Drwil-Brief,valueonly,separator=)"), ORIGINE);
+  assert.equal(etat(racine).active_brief, ORIGINE);
+});
+
+for (const [cas, touche] of [
+  ["un journal dont le chantier a changé une ligne existante", { "docs/projects/journal.md": "# Journal du chantier\n\n## Entrée\n" }],
+  [
+    "un journal en conflit avec un autre fichier",
+    { "docs/projects/journal.md": JOURNAL_CHANTIER, "src/a.txt": "ligne 1 du chantier\nligne 2\n" },
+  ],
+]) {
+  for (const pousser of ["amont", null]) {
+    test(`QUA-300 : ${cas} est refusé (${pousser ? "fusion annulée" : "rebase annulé"}) — état, branche et mise de côté inchangés`, () => {
+      const racine = chantier({ pousser, chantierTouche: touche });
+      const avant = git(racine, "rev-parse", "chantier/x");
+      const detour = etat(racine).detour;
+      const r = resume(racine);
+      assert.equal(r.code, 1, r.message);
+      assert.match(r.message, pousser ? /fusion annulée/ : /rebase annulé/);
+      assert.equal(tete(racine), avant, "branche à son commit d'avant");
+      assert.equal(git(racine, "status", "--porcelain"), "");
+      assert.equal(etat(racine).active_brief, FICHE, "état inchangé");
+      assert.deepEqual(etat(racine).detour, detour);
+      assert.equal(git(racine, "stash", "list", "--format=%H"), detour.stash, "mise de côté intacte");
+    });
+  }
+}
+
+test("QUA-300 : appendBoth garde les deux ajouts une seule fois, branche principale d'abord, et refuse tout autre changement", () => {
+  assert.equal(appendBoth("# J\n", "# J\nA\n", "# J\nB\n"), "# J\nA\nB\n");
+  assert.equal(appendBoth("# J\n", "# J\nA", "# J\nB\n"), "# J\nA\nB\n", "fin de ligne ajoutée entre les entrées");
+  assert.equal(appendBoth("# J\n", "# J\nA\n", "# J\nA\n"), "# J\nA\n", "même entrée des deux côtés : gardée une fois");
+  assert.equal(appendBoth("# J\n", "# K\nA\n", "# J\nB\n"), null);
+  assert.equal(appendBoth("# J\n", "# J\nA\n", "B\n# J\n"), null, "ajout en tête : refusé");
+  assert.equal(appendBoth(null, "# J\nA\n", "# J\nB\n"), null, "journal sans ancêtre commun : refusé");
 });

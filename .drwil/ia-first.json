@@ -4047,6 +4047,18 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-300",
+      "name": "tests de QUA-300, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-300 .githooks/detour-resume.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"

@@ -16,6 +16,13 @@ release renames this section to its version.
 
 ### Changed
 
+- `node .githooks/detour.mjs resume` no longer rewrites a workstream branch
+  already pushed: it merges the fixed main branch into it (a plain push is
+  enough, never a forced push), rebases only a branch never pushed, and takes
+  as it is a branch that already contains the main branch. A conflict limited
+  to the journal, both sides having only appended an entry, is settled by
+  keeping both entries, the main branch's first; any other conflict is still
+  refused with nothing lost.
 - The automatic merge is now the default behaviour, with no poll and no
   authorisation: `/drwil-start` no longer asks the `drwil-merge` question,
   `node .githooks/state.mjs start` in a terminal no longer asks « Type MERGE »,

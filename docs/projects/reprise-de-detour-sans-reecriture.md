@@ -56,7 +56,7 @@ remplaçant la #423. La reprise doit se faire sans réécriture, sans geste manu
   journal déclaré du projet) se résout seul en gardant les deux entrées, celle de la branche principale d'abord puis
   celle du chantier, sans en perdre ni en dupliquer une ; tout autre conflit, ou un conflit du journal qui n'est pas
   un pur ajout en fin de fichier des deux côtés, est refusé comme aujourd'hui : fusion (ou rebase) annulée, état
-  inchangé, travail mis de côté intact, branche à son commit d'avant — contrat à créer
+  inchangé, travail mis de côté intact, branche à son commit d'avant — `QUA-300`
 - Toute étape qui échoue (fusion, rebase, restauration) laisse l'état, la branche et la mise de côté inchangés ; un
   appel git qui échoue refuse, jamais un succès (QUA-013) — `QUA-050`
 
@@ -134,10 +134,8 @@ Aucun.
   nouveau fichier. Le gabarit de `docs/projects/kit-mechanics.md` a été ajouté au bloc scope par un commit de
   cadrage séparé (6e79065a) : limite répondue « Traiter maintenant » ; le module est livré et check-docs d'un projet
   installé le refusait.
-- **Prochaine étape** : lot 2, le conflit du journal (D2). Dans `catchUp`, quand la fusion ou le rebase échoue, ne
-  résoudre que `docs/projects/journal.md` (ou le journal déclaré), et seulement si ce sont deux ajouts en fin de
-  fichier : garder l'entrée de la branche principale d'abord, puis celle du chantier ; refuser tout autre conflit.
-  Créer le contrat et déclarer son contrôle dans `.drwil/ia-first.json`, puis écrire son ID à la fin du critère
-  « contrat à créer ». Mettre à jour la recette `docs/recipes/corriger-un-defaut.md`, la section 8 des consignes (gabarit et
-  copies) et le changelog (« Unreleased »). Critère de sortie : `run-checks` sans échec et `drwil verify --agent` en
-  `GOVERNANCE: PASS`.
+- **Lot 2** (2026-11-14) : `settleJournal` et `appendBoth` dans `.githooks/detour-resume.mjs` (gabarit et copie) :
+  un conflit dont le seul fichier est le journal, pur ajout en fin de fichier des deux côtés, se résout (branche
+  principale d'abord), commit de fusion par `-m` ou `rebase --continue`, hooks joués ; tout autre conflit annule comme
+  avant. Contrat QUA-300 créé, contrôle `tests-qua-300` ; recette, section 8, carte et changelog à jour.
+- **Prochaine étape** : vérifier et clore.

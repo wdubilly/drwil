@@ -3,9 +3,13 @@
 // fixed main branch, the work restored, the state pointed back at the workstream's brief.
 // A branch already pushed (an upstream, or one that cannot be read) is never rewritten: the main branch is
 // merged into it (merge commit, the repository's hooks run); a branch never pushed is rebased; a branch that
-// already contains the main branch is taken as it is. Any failed step puts the state, the branch and the
-// set-aside work back as they were: a failed git call refuses, never a success (QUA-013).
+// already contains the main branch is taken as it is. A conflict limited to the journal, both sides having
+// only appended to it, keeps both entries, the main branch's first (QUA-300); any other conflict refuses. Any
+// failed step puts the state, the branch and the set-aside work back as they were: a failed git call refuses,
+// never a success (QUA-013).
 import { spawnSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { config } from "./briefs.mjs";
 import { branchMerged, mainBranch, mergedPullRequests, noGhText } from "./close.mjs";
 import { JOURNAL, TEXTS } from "./detour-texts.mjs";
@@ -43,6 +47,38 @@ function pushed(root, branch) {
 }
 
 /**
+ * The journal both sides only appended to, the main branch's entries first, then the workstream's; null when
+ * either side changed what was there before (QUA-300). The same entry on both sides is kept once.
+ */
+export function appendBoth(before, main, work) {
+  if (before === null || main === null || work === null) return null;
+  if (!main.startsWith(before) || !work.startsWith(before)) return null;
+  const added = work.slice(before.length);
+  if (added === main.slice(before.length)) return main;
+  return main + (main === "" || main.endsWith("\n") ? "" : "\n") + added;
+}
+
+/** Content of the index stage `n` of `file` (untrimmed), or null. */
+const stage = (root, n, file) => {
+  const r = run(root, ["show", `:${n}:${file}`]);
+  return r.status === 0 ? r.stdout : null;
+};
+
+/**
+ * Settles a stopped merge or rebase when the journal is the only file in conflict and a pure append on both
+ * sides (`appendBoth`), and stages it. `mainStage`: 3 in a merge (theirs: the main branch), 2 in a rebase
+ * (ours: the main branch being built upon). False for any other conflict, or when git cannot say.
+ */
+function settleJournal(root, mainStage) {
+  const files = git(root, "diff", "--name-only", "--diff-filter=U");
+  if (files !== JOURNAL) return false;
+  const text = appendBoth(stage(root, 1, JOURNAL), stage(root, mainStage, JOURNAL), stage(root, 5 - mainStage, JOURNAL));
+  if (text === null) return false;
+  writeFileSync(join(root, JOURNAL), text);
+  return git(root, "add", "--", JOURNAL) !== null;
+}
+
+/**
  * Brings the workstream's branch (checked out) up to `base`. `{ how, ok }`: `how` is "upToDate", "merge" or
  * "rebase" (null when git cannot say); a failed merge or rebase is aborted.
  */
@@ -53,10 +89,15 @@ function catchUp(root, base, mergeMessage, branch) {
   if (ancestor !== 1) return { how: null, ok: false };
   if (pushed(root, branch)) {
     if (run(root, ["merge", "-q", "--no-ff", "-m", mergeMessage, base]).status === 0) return { how: "merge", ok: true };
+    // `-m`, not `--no-edit`: the latter would keep git's "# Conflicts:" lines in the message.
+    if (settleJournal(root, 3) && run(root, ["commit", "-q", "-m", mergeMessage]).status === 0) return { how: "merge", ok: true };
     git(root, "merge", "--abort");
     return { how: "merge", ok: false };
   }
-  if (run(root, ["rebase", "-q", base]).status === 0) return { how: "rebase", ok: true };
+  let r = run(root, ["rebase", "-q", base]);
+  // Each replayed commit can stop on the journal again; the hooks run on each `--continue`.
+  while (r.status !== 0 && settleJournal(root, 2)) r = run(root, ["-c", "core.editor=true", "rebase", "--continue"]);
+  if (r.status === 0) return { how: "rebase", ok: true };
   git(root, "rebase", "--abort");
   return { how: "rebase", ok: false };
 }
