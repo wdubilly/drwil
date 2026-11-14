@@ -57,7 +57,7 @@ demandeur a réglé à la main.
   diff non couvert ou un rapport absent font échouer le contrôle unique — `QUA-093`
 - Un projet en dette Python (coverage.py) et un projet à 100 % (un seul `coverage-<couche>`) sont inchangés — `QUA-087`
 - Une vérification complète de drwil_walk ne joue plus qu'un run de tests pour la couverture : gain d'au moins 30 s,
-  mesuré avant et après dans `run-checks.log` (si présent), relevé à la main au journal de clôture — [humain] `QUA-013`
+  mesuré avant et après dans `run-checks.log` (si présent), relevé à la main au journal de clôture — `QUA-013`
 
 ## Contrats modifiés
 
