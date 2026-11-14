@@ -78,6 +78,8 @@ depuis le 2026-10-22), pour les contrats visés :
 - `QUA-064` — ancien critère : « **Couvre** : `packages/drwil/src/config.ts`, […] » ; **Source de vérité** `packages/drwil/src/config.ts` (`usesClaudeTree`) — raison : `packages/drwil/src/config.ts` est un carrefour ; `usesClaudeTree` passe dans packages/drwil/src/config-tools.ts (neuf), couvert à sa place (validé le 2026-11-13)
 - `QUA-066` — ancien critère : « **Couvre** : `packages/drwil/src/config.ts`, `packages/drwil/templates/common/tools/gemini/.gemini/settings.json` » — raison : le rendu propre à Gemini vit dans `packages/drwil/src/render-gemini.ts`, couvert à la place de `packages/drwil/src/config.ts` (validé le 2026-11-13)
 - `QUA-234` — ancien critère : « **Couvre** : `packages/drwil/src/cli-report.ts`, `packages/drwil/src/cli-texts.ts`, […] » — raison : les textes du rapport passent dans packages/drwil/src/cli-report-texts.ts (neuf), couvert à la place du carrefour de textes de la CLI (validé le 2026-11-13)
+- `QUA-231` — ancien critère : « **Source de vérité** : `packages/drwil/src/cli-report.ts`, messages dans `packages/drwil/src/cli-texts.ts`. » — raison : les textes du rapport sont dans packages/drwil/src/cli-report-texts.ts (validé par le demandeur le 2026-11-14)
+- `.githooks/state.test.mjs` — test en dur de QUA-175 : recensement du code livré, seul state-acceptance.mjs écrit le fichier d'acceptation (validé par le demandeur le 2026-11-14)
 
 ## 2. Hors périmètre
 

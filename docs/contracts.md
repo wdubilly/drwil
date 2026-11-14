@@ -2276,7 +2276,7 @@ régression sauf si la fiche active déclare le changement (section
 ## QUA-231 — Un rapport public de défaut du kit est imprimable sans rejouer les contrôles
 **Règle** : `drwil report` imprime un texte à coller avec la version de la CLI, la version numérique du kit installé lorsqu'elle est lisible, les identifiants fermés des contrôles du kit en échec au dernier instantané run-checks et un message public normalisé d'échec. La source et l'absence de vérification de sa fraîcheur sont explicites ; absence, format invalide ou entrée refusée restent « non lu », jamais un succès. Le code de sortie zéro signifie seulement que le rapport est imprimé.
 **Périmètre** : commande `report` du paquet drwil, recette livrée.
-**Source de vérité** : `packages/drwil/src/cli-report.ts`, messages dans `packages/drwil/src/cli-texts.ts`.
+**Source de vérité** : `packages/drwil/src/cli-report.ts`, messages dans `packages/drwil/src/cli-report-texts.ts`.
 **Preuve** : commande publique en sous-processus sur des données fictives, versions, échec et entrées absentes ou invalides.
 **Contrôle** : `tests-qua-231`
 **Tests** : `packages/drwil/test/report.test.mjs`
