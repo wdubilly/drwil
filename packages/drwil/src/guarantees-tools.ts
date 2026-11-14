@@ -1,12 +1,15 @@
 // Rows of the coverage tools table (QUA-087), split from guarantees-table.ts (QUA-001).
 import { join } from "node:path";
-import { ALL_METRICS, at, type CoverageTool, pct, readJson } from "./guarantees-table.js";
+import { ALL_METRICS, at, type CoverageTool, pct, readJson, type Thresholds } from "./guarantees-table.js";
 
 const C8_EXCLUDE = (ex: string[]) => ex.map((e) => ` --exclude=${JSON.stringify(e)}`).join("");
 // --all compte les fichiers jamais chargés : les scripts du kit installé (jamais exécutés par les tests du projet) ruineraient la mesure.
 const KIT_DIRS = [".githooks", ".claude", ".github", ".gemini", ".cursor"].map((d) => `${d}/**`);
 const C8_KIT = KIT_DIRS.map((e) => ` --exclude=${JSON.stringify(e)}`).join("");
 const DIFF_COVER = "diff-cover --version";
+const C8_CHECK = (t: Thresholds, ex: string[], reporter = "") =>
+  `npx c8 --check-coverage --lines ${t.lines ?? 100} --branches ${t.branches ?? 100} --functions ${t.functions ?? 100} --statements ${t.statements ?? 100}${reporter} --all${C8_KIT}${C8_EXCLUDE(ex)} npm test`;
+const COBERTURA = "coverage/cobertura-coverage.xml";
 
 export const COVERAGE_TOOLS: CoverageTool[] = [
   {
@@ -14,8 +17,7 @@ export const COVERAGE_TOOLS: CoverageTool[] = [
     tool: "c8",
     metrics: ALL_METRICS,
     probe: "npx --no-install c8 --version",
-    run: (t, ex) =>
-      `npx c8 --check-coverage --lines ${t.lines ?? 100} --branches ${t.branches ?? 100} --functions ${t.functions ?? 100} --statements ${t.statements ?? 100} --all${C8_KIT}${C8_EXCLUDE(ex)} npm test`,
+    run: (t, ex) => C8_CHECK(t, ex),
     sources: [".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".mts", ".cts", ".vue", ".svelte"],
     measure: {
       run: (report) => `npx c8 --reporter=json-summary --report-dir=${report} --all${C8_KIT} npm test`,
@@ -29,6 +31,8 @@ export const COVERAGE_TOOLS: CoverageTool[] = [
       run: "npx c8 --reporter=cobertura --report-dir=coverage npm test && diff-cover coverage/cobertura-coverage.xml --fail-under=100",
       probe: DIFF_COVER,
     },
+    single: (t, ex) =>
+      `rm -f ${COBERTURA} && ${C8_CHECK(t, ex, " --reporter=cobertura --report-dir=coverage")} && diff-cover ${COBERTURA} --fail-under=100`,
   },
   {
     stack: "Python",

@@ -20,6 +20,9 @@ export const TEXTS = {
     proofs: "Preuves automatisées",
     noCheck: " (sans Contrôle, toujours MANUAL : {0})",
     coverage: "Couverture des attestations",
+    twice: "Couverture jouée en double",
+    twiceDetail:
+      "`{0}` et `{1}` jouent les tests deux fois : remplacer les deux par le seul `{1}`, de commande `{2}` (`npx drwil guarantees` le fait pour une paire de série)",
     bypass: "Contournement du ruleset",
     noCovers: " (sans Couvre, leur attestation ne tombe pas si le code jugé change ; `aucun` avec sa raison compte comme déclaré : {0})",
     hooks: "Hooks git",
@@ -64,6 +67,9 @@ export const TEXTS = {
     proofs: "Automated proofs",
     noCheck: " (without Check, always MANUAL: {0})",
     coverage: "Attestation coverage",
+    twice: "Coverage run twice",
+    twiceDetail:
+      "`{0}` and `{1}` run the tests twice: replace both with the single `{1}`, command `{2}` (`npx drwil guarantees` does it for a pair as generated)",
     bypass: "Ruleset bypass",
     noCovers:
       " (without Covers, their attestation does not fall if the code they judged changes; `none` with its reason counts as declared: {0})",

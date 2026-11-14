@@ -354,13 +354,112 @@ test("QUA-093 projet existant en dette : cliquet au niveau mesuré, diff à 100 
   });
   assert.equal(r.layers[0].mode, "existing");
   const checks = config(dir).checks;
-  assert.match(checks.find((c) => c.id === "coverage-root").run, /--lines 72 --branches 60 --functions 80 --statements 71 /);
-  assert.match(checks.find((c) => c.id === "coverage-diff-root").run, /diff-cover .* --fail-under=100/);
+  const unique = checks.find((c) => c.id === "coverage-diff-root").run;
+  assert.match(unique, /--lines 72 --branches 60 --functions 80 --statements 71 /);
+  assert.match(unique, /diff-cover .* --fail-under=100/);
   const montee = lire(dir, "docs/projects/couverture-root-montee.md");
   assert.doesNotMatch(montee, /\*\*Garantie\*\* : bloquante/);
   assert.match(lire(dir, "docs/projects/pending.md"), /\[P1\] Montée de couverture de la couche `\.`/);
   assert.equal(config(dir).guarantees.layers.root, "existing");
   assert.ok(guaranteeFailures(dir, config(dir), [{ checks: ["coverage-root"] }]).some((e) => /coverage-diff-root/.test(e)));
+});
+
+/** Projet Node existant en dette (72 % de lignes), câblé par `guarantees` ; `regles` précèdent les règles par défaut. */
+async function enDette(regles = [], appels = []) {
+  const dir = await projet({ existant: true });
+  ecrire(dir, "src/a.js", "export const a = 1;\n");
+  const mesure = (_cmd, cwd) => {
+    ecrire(
+      cwd,
+      ".drwil/coverage-root/coverage-summary.json",
+      JSON.stringify({ total: { lines: { pct: 72.5 }, branches: { pct: 60 }, functions: { pct: 80 }, statements: { pct: 71.2 } } }),
+    );
+    return OK;
+  };
+  const exec = faux([...regles, [/c8 --version/, OK], [/json-summary/, mesure], [/diff-cover --version/, OK], ...FORGE_OK], appels);
+  return { dir, r: guarantees({ targetDir: dir, exec }) };
+}
+
+test("QUA-301 couche Node en dette : un seul contrôle coverage-diff joue les tests une fois, seuil puis diff-cover", async () => {
+  const { dir, r } = await enDette();
+  const checks = config(dir).checks;
+  assert.equal(
+    checks.some((c) => c.id === "coverage-root"),
+    false,
+    "plus de contrôle de seuil séparé",
+  );
+  const unique = checks.filter((c) => c.id === "coverage-diff-root");
+  assert.equal(unique.length, 1);
+  const run = unique[0].run;
+  assert.equal(run.match(/npm test/g).length, 1, "un seul run de tests");
+  assert.match(
+    run,
+    /^rm -f coverage\/cobertura-coverage\.xml && npx c8 --check-coverage --lines 72 --branches 60 --functions 80 --statements 71 --reporter=cobertura --report-dir=coverage --all .* npm test && diff-cover coverage\/cobertura-coverage\.xml --fail-under=100$/,
+  );
+  assert.match(
+    r.layers[0].lines.join("\n"),
+    /contrôle `coverage-diff-root` câblé en un seul run de tests : seuil au niveau mesuré \(lines 72 %/,
+  );
+  assert.equal(r.layers[0].status, "wired");
+  assert.ok(existsSync(join(dir, "docs/projects/couverture-root-montee.md")), "fiche de montée gardée");
+  // verify n'exige plus que coverage-diff-<couche> pour une couche « existing » dont l'outil joue un seul run.
+  assert.deepEqual(
+    guaranteeFailures(dir, config(dir), [])
+      .filter((e) => /coverage-/.test(e))
+      .map((e) => /`(coverage-[^`]+)`/.exec(e)?.[1]),
+    ["coverage-diff-root"],
+  );
+  assert.ok(!guaranteeFailures(dir, config(dir), [{ checks: ["coverage-diff-root"] }]).some((e) => /coverage-/.test(e)));
+});
+
+test("QUA-301 déjà déclaré, outil de diff absent : gardé tel quel, ou bloqué sans contrôle câblé", async () => {
+  const appels = [];
+  const dir = await projet({ existant: true });
+  const cfg = config(dir);
+  cfg.checks = [...(cfg.checks ?? []), { id: "coverage-diff-root", run: "à la main --compare-branch=origin/dev" }];
+  ecrireConfig(dir, cfg);
+  const r = guarantees({ targetDir: dir, exec: faux([[/c8 --version/, OK], ...FORGE_OK], appels) });
+  assert.equal(r.layers[0].status, "kept");
+  assert.match(r.layers[0].lines.join("\n"), /`coverage-diff-root` déjà déclaré/);
+  assert.ok(!appels.some((c) => /json-summary|npm test/.test(c)), "rien mesuré");
+  assert.equal(config(dir).checks.find((c) => c.id === "coverage-diff-root").run, "à la main --compare-branch=origin/dev");
+  assert.equal(
+    config(dir).checks.some((c) => c.id === "coverage-root"),
+    false,
+  );
+  const sansDiff = await enDette([[/diff-cover --version/, { status: 1, stdout: "" }]]);
+  assert.equal(sansDiff.r.layers[0].status, "blocked");
+  assert.ok(!config(sansDiff.dir).checks.some((c) => /^coverage-/.test(c.id)), "jamais un seuil seul sans le diff");
+});
+
+test("QUA-301 le rapport est effacé avant le run : un rapport périmé n'est jamais lu, un échec de seuil ou un rapport absent échouent", () => {
+  const run = toolFor(["Node.js"]).single({ lines: 72, branches: 60, functions: 80, statements: 71 }, []);
+  const dir = mkdtempSync(join(tmpdir(), "drwil-garanties-unique-"));
+  const bin = join(dir, "bin");
+  // Faux npx : écrit le rapport si ECRIRE=1, sort avec CODE ; faux diff-cover : échoue sans rapport.
+  ecrire(
+    bin,
+    "npx",
+    '#!/bin/sh\necho "$@" >> appels.log\n[ "$ECRIRE" = 1 ] && mkdir -p coverage && echo neuf > coverage/cobertura-coverage.xml\nexit "$CODE"\n',
+  );
+  ecrire(bin, "diff-cover", '#!/bin/sh\necho diff-cover >> appels.log\ntest -f "$1" && grep -q neuf "$1"\n');
+  spawnSync("chmod", ["+x", join(bin, "npx"), join(bin, "diff-cover")]);
+  const jouer = (env) => {
+    ecrire(dir, "coverage/cobertura-coverage.xml", "périmé");
+    writeFileSync(join(dir, "appels.log"), "");
+    const r = spawnSync("sh", ["-c", run], { cwd: dir, env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, CODE: "0", ...env } });
+    return { status: r.status, appels: lire(dir, "appels.log") };
+  };
+  let j = jouer({ ECRIRE: "1" });
+  assert.equal(j.status, 0, "seuil tenu, diff couvert");
+  assert.equal(j.appels.match(/npm test/g).length, 1);
+  j = jouer({ ECRIRE: "0" });
+  assert.notEqual(j.status, 0, "rapport absent : le rapport périmé n'est pas lu");
+  assert.equal(existsSync(join(dir, "coverage/cobertura-coverage.xml")), false);
+  j = jouer({ ECRIRE: "1", CODE: "1" });
+  assert.notEqual(j.status, 0, "seuil non tenu");
+  assert.doesNotMatch(j.appels, /diff-cover/);
+  assert.equal(toolFor(["Python"]).single, undefined, "Python : seuil et diff restent deux contrôles");
 });
 
 test("QUA-093 projet existant : mesure à 100 % câblée à 100 %, mesure impossible ou outil de diff absent bloquent", async () => {

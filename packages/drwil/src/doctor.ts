@@ -5,7 +5,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { TEXTS } from "./doctor-texts.js";
-import { lacksCoverage } from "./coverage.js";
 import { loadProject } from "./verify.js";
 import { resolveFromConfig } from "./config.js";
 import { AUTO_KINDS, describeGap, findGaps, hooksPath, scriptsDir, unchainedHooks } from "./essentials.js";
@@ -13,6 +12,7 @@ import { compareVersions, engineVersion, readInstall } from "./manifest.js";
 import { bypassDiagnosis } from "./guarantees-forge.js";
 import { computeProtection, formatProtection, protectionJson, type Protection } from "./protection.js";
 import { upgradeTraces } from "./doctor-upgrade.js";
+import { coveragePoints } from "./doctor-coverage.js";
 import { defaultExec, type Exec } from "./guarantees-table.js";
 
 export type PointState = "ok" | "warning" | "problem";
@@ -96,22 +96,7 @@ export async function doctor(opts: { targetDir: string; exec?: Exec }): Promise<
       : fill(T.validContracts, contracts.length, registry),
   );
   const live = contracts.filter((k) => !k.retired); // a retired contract, without proof (QUA-298), is not counted
-  const noCheck = live.filter((k) => !k.checks?.length).map((k) => k.id);
-  point(
-    "proofs",
-    T.proofs,
-    noCheck.length ? "warning" : "ok",
-    `${live.filter((k) => k.checks?.length).length}/${live.length}${noCheck.length ? fill(T.noCheck, noCheck.join(", ")) : ""}`,
-  );
-
-  const uncovered = live.filter(lacksCoverage);
-  const human = live.filter((k) => k.form === "section" && (k.manual || k.checks === null)).length;
-  point(
-    "coverage",
-    T.coverage,
-    uncovered.length ? "warning" : "ok",
-    `${human - uncovered.length}/${human}${uncovered.length ? fill(T.noCovers, uncovered.map((k) => k.id).join(", ")) : ""}`,
-  );
+  points.push(...coveragePoints(live, lang, cfg.checks));
 
   // A hook manager of the project (husky…) is fine as long as it calls the drwil hooks.
   const path = hooksPath(root);

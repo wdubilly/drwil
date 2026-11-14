@@ -34,6 +34,11 @@ export interface CoverageTool {
   measure?: { run: (report: string) => string; read: (dir: string, report: string, stdout: string) => Thresholds | null };
   /** Diff coverage at 100 % on the new or modified code (existing project), and its probe. */
   diff?: { run: string; probe: string };
+  /**
+   * One run of the tests judging the measured threshold then the diff (existing project in debt): the report is
+   * erased before the run, so a stale one is never read (QUA-301). Without it, the threshold and the diff stay two checks.
+   */
+  single?: (t: Thresholds, exclusions: string[]) => string;
 }
 
 export const pct = (n: unknown): number | undefined => (typeof n === "number" && Number.isFinite(n) ? Math.floor(n) : undefined);

@@ -3,6 +3,7 @@ import { exclusionsOf } from "./guarantees-layers.js";
 import { type Exec, type GuaranteeConfig, at, defaultExec, layerHasCode, layersOf, skeletonFiles, slugOf } from "./guarantees-table.js";
 import { inspectForge } from "./guarantees-forge.js";
 import { TEXTS } from "./guarantees-texts.js";
+import { toolFor } from "./guarantees-tools.js";
 import { fill, projectLang } from "./i18n.js";
 import { scopeGateFailure } from "./protection.js";
 
@@ -17,12 +18,15 @@ export function coverageFailures(root: string, cfg: GuaranteeConfig, contracts: 
   const state = (id: string) => (!declared.has(id) ? T.undeclared : !cited.has(id) ? T.uncited : null);
   const out: { layer: string | null; reason: string }[] = [];
   let code = false;
-  for (const { layer } of layersOf(root, cfg)) {
+  for (const { layer, technos } of layersOf(root, cfg)) {
     for (const r of exclusionsOf(cfg, layer).refused) out.push({ layer, reason: fill(T.exclusion, r) });
     if (!layerHasCode(root, layer)) continue;
     code = true;
     const slug = slugOf(layer);
-    const ids = [`coverage-${slug}`, ...(cfg.guarantees?.layers?.[slug] === "existing" ? [`coverage-diff-${slug}`] : [])];
+    const existing = cfg.guarantees?.layers?.[slug] === "existing";
+    // Existing layer whose tool runs the tests once (QUA-301): `coverage-diff-<layer>` judges threshold and diff.
+    const single = existing && toolFor(technos)?.single;
+    const ids = [...(single ? [] : [`coverage-${slug}`]), ...(existing ? [`coverage-diff-${slug}`] : [])];
     for (const id of ids) {
       const s = state(id);
       if (s) out.push({ layer, reason: fill(T.verifyLayer, layer, id, s) });
