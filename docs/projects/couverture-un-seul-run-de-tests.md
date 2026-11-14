@@ -47,12 +47,12 @@ demandeur a réglé à la main.
 
 - Pour une couche Node en dette, `drwil guarantees` déclare un seul contrôle `coverage-diff-<couche>` qui joue `npm test`
   une seule fois sous c8, juge le seuil mesuré (cliquet) et passe le rapport cobertura à `diff-cover` ; le rapport est
-  effacé avant le run, jamais un rapport périmé — contrat à créer
+  effacé avant le run, jamais un rapport périmé — `QUA-301`
 - Quand `coverage-<couche>` et `coverage-diff-<couche>` existent et sont exactement ceux que le kit génère,
   `drwil guarantees` les remplace par le contrôle unique ; un contrôle modifié à la main (par exemple
-  `--compare-branch`) n'est jamais réécrit — contrat à créer
+  `--compare-branch`) n'est jamais réécrit — `QUA-302`
 - `drwil doctor` signale, sans rien écrire, un projet qui joue encore les deux contrôles (de série ou modifiés à la
-  main) et donne la commande unique à poser en conservant les options du demandeur ; un projet déjà fusionné n'est pas signalé — contrat à créer
+  main) et donne la commande unique à poser en conservant les options du demandeur ; un projet déjà fusionné n'est pas signalé — `QUA-303`
 - Le seuil, le cliquet jamais abaissé et les 100 % sur le diff restent jugés comme avant : un seuil non tenu, un
   diff non couvert ou un rapport absent font échouer le contrôle unique — `QUA-093`
 - Un projet en dette Python (coverage.py) et un projet à 100 % (un seul `coverage-<couche>`) sont inchangés — `QUA-087`
